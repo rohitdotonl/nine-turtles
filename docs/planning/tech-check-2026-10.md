@@ -42,7 +42,7 @@ decision has been changed; this only reports.*
 | Search | SQLite FTS5 | (part of SQLite) | — | Included in the SQLite that sqlx bundles; Milestone 1 adds a test proving it's switched on. Hindi needs a specific setting (vowel signs must count as part of words); this is already called out in ENGINEERING.md. |
 | OPML | opml | 1.1.6 | **Jan 2024** | **Quiet.** Works, small, but not updated in almost three years; hosted on a personal git server. See note 2 above. |
 | Autodiscovery | scraper | 0.29.0 | Oct 2026 | Maintained |
-| Password hashing | argon2 | **0.6.0** | Aug 2026 | New version (0.6); from RustCrypto. Pending your Q1 answer. |
+| Password hashing | argon2 | **0.6.0** | Aug 2026 | New version (0.6); from RustCrypto. Pending the owner's sign-in decision. |
 | Logging | tracing | 0.1.44 | Dec 2025 | Maintained (tokio team); version number has been 0.1 for years, which is normal for it. |
 | Language | Rust | 1.99.1 | Oct 2026 | Stable releases every 6 weeks |
 
@@ -54,10 +54,10 @@ decision has been changed; this only reports.*
 | Build tool | Vite | **8.3.5** | Oct 2026 | **Vite 8**, now built on a faster engine (Rolldown). No impact for a new project. |
 | Styling | Tailwind CSS | **4.3.3** | Jul 2026 | **Tailwind 4**: configured in CSS instead of a JavaScript file, and needs recent browsers (Safari 16.4+, Chrome 111+, i.e. from 2023 onward). Fine for a personal reader. Note it includes animation helpers; our "no motion" check will catch any use. |
 | Language | TypeScript | 7.0.2 (latest) / 6.0.3 | Jul 2026 | **Use 6.0.x for now:** `svelte-check` 4.7.7 only supports TypeScript 5 and 6. |
-| Svelte type check | svelte-check | 4.7.7 | Oct 2026 | Maintained (pending Q3) |
+| Svelte type check | svelte-check | 4.7.7 | Oct 2026 | Maintained (approved) |
 | Installable app | Web app manifest + service worker | — | — | Web standards; no library required. `vite-plugin-pwa` (2.0.0, Oct 2026) exists if we ever want help, but it's not needed and isn't proposed. |
 
-## Proposed supporting tools (pending your answer to Q3)
+## Supporting tools (approved, see `docs/libraries.md`)
 
 | Tool | Latest | Last release |
 |---|---|---|
@@ -69,7 +69,7 @@ decision has been changed; this only reports.*
 | @playwright/test | 1.64.1 | Oct 2026 |
 | @axe-core/playwright | 4.14.0 | Oct 2026 |
 
-## Backups (pending your answer to Q2)
+## Backups (for reference: the owner chose a nightly backup built into slowfeed instead)
 
 | Tool | Latest | Notes |
 |---|---|---|

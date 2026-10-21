@@ -7,8 +7,9 @@ with something you can try yourself, a pull request with a plain-language
 summary, and green automatic checks. The next milestone starts only after
 you've merged the previous one and said go.
 
-How you try each milestone (live on Render after merging, plus screenshots
-in the pull request) is question Q5 in `docs/planning/questions.md`.
+**How you try each milestone:** each pull request includes screenshots (and
+short screen recordings where useful). After you merge, you try it for real
+on the live app; anything found then gets a quick follow-up fix.
 
 **Status key:** ⬜ not started · 🔨 in progress · ✅ merged
 
@@ -44,8 +45,8 @@ in the pull request) is question Q5 in `docs/planning/questions.md`.
   - Frontend: type check and tests.
   - Accessibility and contrast tests of every screen, in all three themes.
   - "No motion": fails if any animation or transition appears in the styles.
-  - Download size budget (see Q24).
-  - Library check: fails if libraries change without your approval (see Q4).
+  - Download size budget (150 KB of app code and styles, 400 KB of fonts).
+  - Library check: fails if the code uses a library not on the approved list in `docs/libraries.md`.
   - A test that the database's search engine (FTS5) is switched on and handles Hindi.
 - `docs/decisions/` started, with a note for each of the technical decisions.
 - `docs/operations/` started (how to build and run).
@@ -62,7 +63,7 @@ you know they bite.
   repeated wrong guesses (section 1 of SPEC).
 - Settings read from environment variables only.
 - A step-by-step guide for you to set up Render (the agent has no access to
-  it), including how to set your password (see Q6).
+  it), including how to set your password (the method is still open).
 
 **You can try:** open the address on your computer and phone, sign in, stay
 signed in, sign out. A private window sees only the password field.
@@ -71,7 +72,9 @@ signed in, sign out. A private window sees only the password field.
 
 **Goal:** before any of your data exists, prove it can be recovered.
 
-- Regular copies of the database to storage outside Render (tool: see Q2).
+- Built into slowfeed: a nightly copy of the database, uploaded to Cloudflare R2
+  (S3-compatible storage outside Render; you create the account, agents never see the keys).
+  Needs one new library for uploading, which will be proposed for your approval.
 - An automatic copy before every database structure change.
 - `docs/operations/backups.md` and `docs/operations/moving-hosts.md`, tested.
 
@@ -83,7 +86,7 @@ into a fresh copy and see it work.
 **Goal:** the empty three-pane app, looking and behaving like slowfeed.
 
 - Three themes, the fonts (served by slowfeed), type scale and muted greys
-  (you choose between options, see Q25), ink blue "where you are".
+  (you choose between two or three options shown as screenshots), ink blue "where you are".
 - Three panes adapting to width, collapsible sidebar, the fixed sidebar views.
 - Keyboard groundwork: the focus outline, `?` cheat sheet, `[`, Escape, `g` keys.
 - Settings screen with reader controls and theme choice, and Sign out.
@@ -130,11 +133,12 @@ and the screen never changed under you.
 
 ## 9. Folders, feed editing and OPML import/export
 
-- Folders (a feed in several), editing and unsubscribing feeds (see Q7), with undo.
+- Folders (a feed in several), "Edit feed" and "Edit folder", unsubscribing, with undo.
+- Sidebar search (find a feed or folder by name).
 - OPML import and export.
 - **This is where you provide your OPML file.** It's used on your live app
   (or locally) only, never committed; `.gitignore` already blocks `*.opml`.
-- Measure how big your database will be with your real feeds (see Q22).
+- Measure how big your database will be with your real feeds, to check the 1 GB disk is enough.
 
 **You can try:** import your OPML file and see your folders and feeds; export it and compare.
 
@@ -167,7 +171,7 @@ and the screen never changed under you.
 
 ## 14. Keeping things tidy, and the finishing pass
 
-- Removing read, unstarred articles after a year (safely, see Q21 and Q22).
+- Removing unstarred articles after a year, only after a successful nightly backup.
 - Export of starred articles.
 - A full accessibility pass with a screen reader, and a speed pass.
 - Docs brought fully up to date.

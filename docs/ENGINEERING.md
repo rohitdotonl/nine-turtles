@@ -78,7 +78,7 @@ slowfeed must be able to move to any host in an afternoon.
 
 The engineering side of "slow app, fast interface." Speed is a requirement with numbers attached:
 - Interface actions under ~100 ms.
-- A small page download, with a size budget checked automatically.
+- A small page download, with a size budget checked automatically: at most 150 KB (compressed) of app code and styles on first visit, and at most 400 KB of fonts (only the alphabets slowfeed needs, cached after the first visit).
 - No database query that searches without an index.
 
 **Test:** Is the speed checked automatically, or are we hoping?
@@ -122,7 +122,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 | Search | SQLite FTS5 |
 | OPML import/export | opml |
 | Feed autodiscovery | scraper |
-| Password hashing | argon2 *(to confirm with owner)* |
+| Password hashing | argon2 *(still to confirm with owner)* |
 | Logging | tracing |
 
 **Frontend: TypeScript**
@@ -143,7 +143,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 - Render's free address (`*.onrender.com`) for V1.
 - One instance only (a service with a disk can't run more than one). Brief downtime during deploys is acceptable.
 - Code lives in a **private GitHub repository**; GitHub Actions runs the automatic checks.
-- **Backups:** continuous or nightly copies of the SQLite database to standard, S3-compatible storage outside Render. Tool *(to confirm with owner)*.
+- **Backups:** built into slowfeed itself (no separate backup program). Every night, slowfeed makes a consistent copy of its SQLite database and uploads it to S3-compatible storage outside Render (Cloudflare R2 for V1; any S3-compatible provider can replace it). A copy is also made before every database structure change. At worst, a day of reading activity could be lost; feeds and their articles can be fetched again. *(Decided with the owner, October 2026.)*
 - Agents are **not** given access to Render. Deploys happen when the owner merges.
 
 ### Fetching feeds (implements the publisher floor)
@@ -156,7 +156,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 - **WebSub (V1):** subscribe when the feed advertises a hub; verify subscriptions; check signatures with a per-subscription secret; renew before leases expire. While WebSub is active, polling continues at a reduced rate as a backup.
 - **Limits:** a timeout and a maximum size for every fetch.
 - **Redirects:** permanent redirects (301/308) update the stored feed address.
-- **Failures:** each feed fails on its own. Repeated failures increase the wait (exponential backoff, capped at one day). Long-running 404/410 marks the feed as dead on the feed health page.
+- **Failures:** each feed fails on its own. Repeated failures increase the wait (exponential backoff, capped at one day). A feed is **dead** after 7 days of 404/410, or 3 weeks of any failure; otherwise a feed with recent errors is "having trouble". Dead feeds are still checked once a day in case they return.
 - **Never fetch article pages** to extract full text. Autodiscovery fetches a website's home page only when the owner adds a feed or asks "Find new address."
 
 ### Duplicates
@@ -173,10 +173,11 @@ These were decided with the owner. Changing any of them needs the owner's approv
 
 ### Data
 
-- Read, unstarred articles older than one year are deleted. Starred articles are kept forever.
+- Unstarred articles older than one year, read or not, are deleted. Starred articles are kept forever.
+- This clean-up runs only if the most recent nightly backup succeeded; otherwise it waits and the feed health page says so. Deleted articles remain recoverable from backups for as long as backups are kept.
 - **Search:** FTS5 configured so words in scripts with combining marks (such as Hindi's vowel signs) are not split apart; covered by tests with Hindi text.
 - **"Mark all as read"** receives the exact list of items on screen, so items fetched in the background are never touched. It is undoable.
-- **Exports:** OPML for feeds and folders; a simple standard-format export of starred articles.
+- **Exports:** OPML for feeds and folders; starred articles as a JSON Feed file.
 
 ### Sign-in and security
 
@@ -197,7 +198,7 @@ Wherever a principle can be checked by a computer, it is. These run on every pul
 | First floor (accessibility) | Automated accessibility and contrast tests on every screen, in all three themes |
 | No motion (DESIGN.md) | Fails if animations or transitions appear in the styles |
 | Fast by design | Fails if the frontend download grows past its size budget |
-| Never add a library without asking | Fails if dependencies change without an approval note in the pull request |
+| Never add a library without asking | Fails if the code uses a library that isn't on the approved list in `docs/libraries.md`. Agents add to that list only after the owner has said yes. |
 | Publisher floor | Tests confirm conditional requests, backoff and that no article pages are fetched |
 | Search for Hindi | Tests search Hindi text and find the right results |
 | Data floor | Database changes are tested against a copy of real-shaped data |

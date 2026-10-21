@@ -1,12 +1,8 @@
 # AGENTS.md: start here
 
-Every agent reads this file at the start of every session. It is the front
-page, not the whole story: the map below says which document to read before
-which kind of work.
-
-**Precedence:** `docs/DESIGN.md` wins over everything else, including this
-file. `docs/ENGINEERING.md` comes next. If two documents disagree, stop and
-tell the owner which ones and how.
+**Precedence:** `docs/DESIGN.md` wins over everything, including this file;
+`docs/ENGINEERING.md` comes next. Read them when the map at the bottom says
+so. If two documents disagree, stop and tell the owner which ones and how.
 
 ## What slowfeed is
 
@@ -26,6 +22,8 @@ book, or more like a feed?
 - **Hosting:** Render (Starter instance, 1 GB disk), free `*.onrender.com` address in V1. One instance only.
 - **Repository:** private GitHub repo; GitHub Actions runs the automatic checks.
 - **Agents never get access to Render.** The owner deploys by merging a pull request.
+- **Backups:** built into slowfeed, nightly, to S3-compatible storage outside Render.
+- **Libraries:** only those on the approved list in `docs/libraries.md`.
 - **Interface language:** English only in V1. Articles can be in any language.
 - **Current plan:** `docs/PLAN.md` (milestones, in order, with status).
 
@@ -82,9 +80,10 @@ ten years › written for the next agent.
 | Anything the reader sees or touches (screens, keys, wording, colors, fonts) | `docs/DESIGN.md` in full, then the matching section of `docs/SPEC.md` |
 | A new feature or a change to how a feature behaves | `docs/DESIGN.md` → "Rules about the rules", then `docs/SPEC.md` |
 | Backend, database, fetching, search, sign-in, security | `docs/ENGINEERING.md` Parts 2 and 3 |
-| Adding, removing or upgrading a library | `docs/ENGINEERING.md` → "Boring and few", then ask the owner |
+| Adding, removing or upgrading a library | `docs/libraries.md` and `docs/ENGINEERING.md` → "Boring and few", then ask the owner |
 | Automatic checks or CI | `docs/ENGINEERING.md` Part 4 |
 | Database structure changes (migrations) | `docs/ENGINEERING.md` → the floor and "Data" |
 | Hosting, deploys, backups | `docs/ENGINEERING.md` → "Hosting", and `docs/operations/` (once it exists) |
 | Undoing or revisiting an earlier choice | `docs/decisions/` (once it exists) |
 | Open questions waiting for the owner | `docs/planning/questions.md` |
+| Changing tools, hosting or how changes reach the live app | `docs/owner-guide.md` (the owner's plain-language explanation; keep it accurate) |

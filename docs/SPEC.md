@@ -8,9 +8,8 @@ Each feature has two parts:
 - **What it does:** the behavior, in plain language.
 - **How to check it:** steps you can follow yourself in the app.
 
-Where a detail is still an open question, it says **(see Qn)**, pointing to
-`docs/planning/questions.md`. The text describes the suggested answer; it
-will be updated once you decide.
+The owner's answers to the planning questions (`docs/planning/questions.md`)
+are included. The one still open is marked **(still open: sign-in)**.
 
 A few words used throughout:
 - **Feed:** the file a website publishes listing its latest writing (RSS, Atom or JSON Feed).
@@ -26,8 +25,8 @@ A few words used throughout:
 - slowfeed has a public web address, so it asks for a password. There is one password and no username.
 - Each device stays signed in for a long time, so you rarely type it.
 - Repeated wrong passwords are slowed down, so nobody can guess by trying thousands.
-- Sign out is in Settings (see Q8).
-- The password itself is never stored, only a scrambled version that can't be turned back into it (a "hash"). How you set the password: see Q6.
+- Sign out is in Settings.
+- The password itself is never stored, only a scrambled version that can't be turned back into it (a "hash"). How you set the password: **(still open: sign-in)**.
 
 **How to check it**
 1. Open the app's address in a private browser window. You see only a password field, nothing about your feeds.
@@ -39,7 +38,7 @@ A few words used throughout:
 
 **What it does**
 - Until you add your first feed, the app shows one field: **"Paste a website or feed URL"**, and below it: **"New to feeds? Here's how they work · Import OPML"**.
-- "Here's how they work" opens a short, plain guide page inside the app (see Q26).
+- "Here's how they work" opens a short, plain guide page inside the app (under 300 words, drafted by an agent in slowfeed's voice, wording approved by the owner).
 - "Import OPML" goes to the import described in section 16.
 
 **How to check it**
@@ -83,7 +82,8 @@ A few words used throughout:
   3. **Feeds not in any folder**, alphabetically
   4. **"+ Add feed"**
 - You can't reorder things by hand; order is always alphabetical.
-- Folders and a sidebar search (to find a feed by name) appear only once they're useful (see Q15).
+- At the top of the sidebar: the "slowfeed" wordmark with a labeled **Settings** link beside it, and below them a **search field to find a feed or folder by name**, always shown.
+- Folders appear once at least one exists.
 - **Unread counts** (inbox mode only): small, muted grey numbers, right-aligned, next to each feed and folder. No count on "Unread", "Starred" or "All", and never a total. Above 999 shows "999+". Never colored, never a badge.
 - Your current place is marked with the ink blue accent.
 - A broken feed looks like any other feed; it just doesn't get new items. Problems are explained on the feed health page (section 17).
@@ -99,7 +99,7 @@ A few words used throughout:
 **What it does**
 - Each row shows the article **title**, and below it the **source name and time** in quiet small text. No images, no site icons.
 - Newest first by default; oldest first can be chosen in Settings.
-- The list has an end: it shows a fixed number of items (see Q13), then a **"Show older items"** button. Nothing more loads unless you press it.
+- The list has an end: it shows 50 items, then a **"Show older items"** button ("Show newer items" when sorting oldest first). Nothing more loads unless you press it.
 - Row states, each recognizable without color:
 
   | State | Looks like |
@@ -110,7 +110,7 @@ A few words used throughout:
   | Starred | A small star mark |
 
 - In river mode there is no read/unread styling; only the selection and the star show.
-- Items you read in the Unread view stay where they are (greyed) until you press `r` or leave the view, so nothing jumps under your cursor (see Q12).
+- Items you read in the Unread view stay where they are (greyed) until you press `r` or leave the view, so nothing jumps under your cursor.
 
 **How to check it**
 1. Open a feed with many articles. Scroll to the bottom: there's a "Show older items" button and no endless loading. Press it: more appear below, and nothing above moves.
@@ -125,6 +125,7 @@ A few words used throughout:
 - Links inside articles are underlined in the normal text color, never blue.
 - If the feed only has a summary, slowfeed shows the summary. It never fetches the rest from the website. **"Open original"** takes you there.
 - "Open original" is always present, always in the same place. **Share** sits next to it (section 21).
+- A labeled **Mark unread** button sits in the article's top bar.
 - The source is always credited and linked.
 - Images load from the publisher's site. Invisible 1×1 "tracking pixels" are removed.
 - Anything unsafe in the feed's content (scripts, embedded frames, code hidden in styles) is removed before display.
@@ -140,9 +141,10 @@ A few words used throughout:
 
 **What it does**
 - An item counts as read as soon as it's shown in the reading pane, by click or by `j`/`k`.
-- `m` marks the current item unread again. There's also a visible control for this, including on phones (see Q9).
-- **Mark all as read** (`Shift+A`, or a visible button): happens instantly, no "are you sure?". It affects **only the items shown on screen right now**. Items that arrived in the background but aren't displayed yet are never touched.
-- **Undo** (`u`, or a visible "Undo" that appears briefly after the action) reverses it (see Q9 and Q10 for what else can be undone).
+- `m` marks the current item unread again. A labeled **Mark unread** button in the article's top bar does the same, on desktop and phones.
+- **Mark all as read** (`Shift+A`, or a labeled button in the list header): happens instantly, no "are you sure?". It affects **only the items shown on screen right now**. Items that arrived in the background but aren't displayed yet are never touched.
+- **Undo** (`u`, or a visible **Undo**): after an undoable action, a line such as "Marked 23 items as read · Undo" appears in the reserved line at the top of the list (the same spot as "New items", so nothing shifts) and stays until your next action.
+- Undo reverses **the last action only**, of these: mark all as read, mark unread, star/unstar, unsubscribe, delete folder.
 - Read state is recorded in both reading modes, so switching modes never loses it.
 
 **How to check it**
@@ -166,7 +168,8 @@ A few words used throughout:
 **What it does**
 - A single setting for the whole app.
 - **Inbox (default):** things to get through. Unread view, read/unread styling and unread counts are all present.
-- **River:** things flowing past. No Unread view, no read/unread styling, no counts. Read state is still recorded quietly (see Q11 for the details).
+- **River:** things flowing past. No Unread view, no read/unread styling, no counts. Read state is still recorded quietly.
+- In river mode the sidebar shows **Starred · All** only, `g u` does nothing, and "Mark all as read" is hidden. The app opens on **All** in river mode and on **Unread** in inbox mode.
 
 **How to check it**
 1. In Settings, switch to river mode. The Unread view, the counts and the grey "read" titles all disappear.
@@ -184,6 +187,8 @@ A few words used throughout:
 - If a feed has moved permanently, slowfeed updates its stored address.
 - A failing feed is retried less and less often (up to once a day) and never affects other feeds.
 - It never visits article pages.
+- If a publisher edits an article you've already seen, the text is updated quietly and it stays read.
+- The same article published in two different feeds appears in both.
 
 **How to check it**
 Most of this is checked by the automatic tests rather than by eye. You can see it working:
@@ -206,7 +211,7 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 
 **What it does**
 - The list on screen changes only when you ask: press `r` or the Refresh button.
-- When new items are waiting, one quiet line appears at the top of the list: **"New items · press r"** (on phones, see Q14). It shows no number. Its space is always reserved, so nothing shifts when it appears.
+- When new items are waiting, one quiet line appears at the top of the list: **"New items · press r"** (on touch screens: **"New items · tap Refresh"**). It shows no number. Its space is always reserved, so nothing shifts when it appears.
 - Because fetching already happened in the background, pressing `r` is instant.
 - Opening or reloading the app always shows the latest state.
 - No pull-to-refresh on phones; there's a labeled Refresh button instead.
@@ -241,7 +246,8 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 
 **What it does**
 - Folders are the only grouping. A feed can be in more than one folder.
-- You can rename a feed, choose its folders, and unsubscribe, from an "Edit feed" panel (see Q7).
+- You can rename a feed, choose its folders, and unsubscribe, from an **Edit feed** button in the item list's header when you're viewing one feed. It offers rename, folders as checkboxes, "New folder", and Unsubscribe (undoable).
+- Viewing a folder, an **Edit folder** button offers rename and delete.
 - You can create, rename and delete folders. Deleting a folder never deletes its feeds.
 
 **How to check it**
@@ -266,7 +272,8 @@ OPML is the standard file format feed readers use to move subscription lists bet
 ## 17. Feed health page
 
 **What it does**
-- In Settings. Lists only feeds with problems, worst first: dead feeds, then feeds with occasional errors (see Q20).
+- In Settings. Lists only feeds with problems, worst first: dead feeds, then feeds "having trouble".
+- A feed is **dead** after 7 days of "not found", or 3 weeks of any failure. Dead feeds are still checked once a day in case they come back.
 - Problems are described in plain words, e.g. "Hasn't worked for 3 weeks — the site may have moved". No error codes.
 - Actions for each feed: **Retry · Find new address · Unsubscribe**. "Find new address" looks for the feed again on the site's home page.
 - Status colors are muted, never blue-ish, and always accompanied by words.
@@ -283,10 +290,10 @@ OPML is the standard file format feed readers use to move subscription lists bet
 - **Themes:** follow the system's light/dark setting by default, or choose off-white, sepia or dark.
 - **Reading:** inbox or river mode; newest or oldest first.
 - **Your data:** OPML import/export, export of starred articles.
-- **Keeping articles:** explains that read, unstarred articles are removed after a year and starred ones are kept forever.
+- **Keeping articles:** explains that unstarred articles, read or not, are removed after a year and starred ones are kept forever.
 - **Feed health** (section 17) and **Sign out**.
 - Fonts are served by slowfeed itself; nothing is loaded from font services. Other scripts such as Hindi use the fonts already on your device.
-- Which settings follow you across devices: see Q19.
+- **Shared across your devices:** reading mode and sort order. **Per device:** theme, font, text size and line width (a phone and a laptop often want different sizes). `+`/`-` change the same text-size setting.
 
 **How to check it**
 1. Switch your computer to dark mode: slowfeed follows. Choose sepia in Settings: it stays sepia regardless of the system.
@@ -332,6 +339,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 - One column you move through: **Feeds → Items → Article**. The feeds list is the home screen; no hamburger menu.
 - Top bar: a back arrow labeled with where it goes (e.g. "‹ Tech") and the screen title. A Refresh button on list screens; search and search-options icons on the feeds and items screens.
 - The system back gesture and back button work.
+- "Settings" sits at the top of the feeds screen.
 - No custom swipes on list items.
 - Article toolbar at the bottom, within thumb reach: previous · next · star · share · open original.
 - Every tap target is at least 44 pixels.
@@ -359,7 +367,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 **What it does**
 - Contrast meets WCAG AA everywhere (an international accessibility standard) and AAA for article text, in all three themes, including grey text.
 - Nothing relies on color alone.
-- Screen readers find the three panes as named regions, hear which item is selected, and hear changes such as "marked as read". Each article is marked with its language so it's pronounced correctly (see Q16).
+- Screen readers find the three panes as named regions, hear which item is selected, and hear changes such as "marked as read". Each article is marked with its language so it's pronounced correctly: the item's language if given, otherwise the feed's; if neither says, it's left unmarked rather than guessed.
 - Follows the system's text size, reduced motion, high contrast and light/dark settings.
 
 **How to check it**
@@ -370,9 +378,10 @@ OPML is the standard file format feed readers use to move subscription lists bet
 ## 23. Your data: keeping, exporting, backups
 
 **What it does**
-- Read, unstarred articles are removed after one year. Starred articles are kept forever. (Unread articles: see Q22. Safety of deletion: see Q21.)
-- Export of starred articles as a file (format: see Q23).
-- The database is copied regularly to storage outside Render (see Q2), and copied before any change to its structure.
+- Unstarred articles, read or not, are removed after one year. Starred articles are kept forever.
+- This clean-up only runs if the latest nightly backup succeeded; otherwise it waits, and the feed health page says so.
+- Export of starred articles as a JSON Feed file (a standard, open format other feed tools can read).
+- Every night slowfeed copies its database to storage outside Render, and it also makes a copy before any change to the database's structure. At worst, a day of reading activity could be lost.
 - Moving to another host is a written, tested procedure.
 
 **How to check it**
@@ -395,7 +404,7 @@ Covered by sections 14 and 22.
 - Every action feels instant (under about a tenth of a second).
 - No spinners for things the app already has.
 - Actions happen on screen first; saving to the server happens quietly behind.
-- The app's download size is kept under a budget checked automatically (see Q24).
+- The app's download size is kept under a budget checked automatically: at most 150 KB of app code and styles, and 400 KB of fonts (downloaded once, then kept by the browser).
 
 **How to check it**
 1. Use the app for a few minutes: you never wait for it.
