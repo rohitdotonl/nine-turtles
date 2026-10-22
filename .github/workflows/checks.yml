@@ -51,7 +51,7 @@ jobs:
         run: scripts/check.sh
 
       - name: Keep the screenshots for the pull request
-        if: always() && github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: screenshots
@@ -62,9 +62,10 @@ jobs:
   screenshots:
     name: Post screenshots
     needs: checks
-    # Only for pull requests from this repository: others can't be given
-    # permission to write, and their content is never trusted.
-    if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    # Screenshots are the last step of the checks, so they exist only when
+    # every check passed. Only for pull requests from this repository: others
+    # can't be given permission to write, and their content is never trusted.
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:

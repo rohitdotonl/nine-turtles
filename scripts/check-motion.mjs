@@ -41,7 +41,10 @@ const sourceRules = [
   [/\b(animate|transition)-[a-z0-9-[\]]+/g, "a Tailwind animation or transition class"],
 ];
 for (const file of files(join(root, "web/src"), [".svelte", ".ts", ".js", ".css", ".html"])) {
-  if (!file.endsWith(".test.ts")) scan(file, sourceRules);
+  if (file.endsWith(".test.ts")) continue;
+  scan(file, sourceRules);
+  // Also name the source file a built style came from, so it's easy to find.
+  if (file.endsWith(".css") || file.endsWith(".svelte")) scan(file, cssRules);
 }
 
 if (problems.length > 0) {
