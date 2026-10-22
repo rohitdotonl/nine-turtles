@@ -67,23 +67,29 @@ Agents have no Render access (on purpose) and can't sign in to slowfeed.
 
 **In simple words:** it's like the dashboard lights in a car. A mechanic can
 glance at them without getting the keys or looking inside your glovebox.
-slowfeed would show a few "warning lights" on one public page; an agent
-looks at that page when you report a problem, sees which light is on (for
-example "last backup: 3 days ago"), and knows where to look. For anything
-deeper, you copy a few lines from Render's Logs tab (slowfeed's diary of what
-happened) into the conversation.
 
-- ⭐ **A small public "health" page** (`/health`) showing only: OK or not,
-  the app version, when the last backup succeeded, when feeds were last
-  checked, and how full the disk is. Nothing personal: no feeds, no articles.
-  The same information appears for you in **Settings → Status**, in plain
-  words, with a warning when the disk is 80% full. When something seems wrong,
-  an agent reads the health page, and for details you copy lines from Render's
-  **Logs** tab into the conversation.
-  One setup step for you at Milestone 2: allow the agents' environment to
-  reach your slowfeed address. It's blocked today (I checked); you add the
-  address under the cloud environment's network settings ("Allowed domains").
-- No health page; you describe problems and copy logs each time.
+- ⭐ **Fully automatic watching; you're only needed to press Merge.**
+  1. A public **status page** with "warning lights" only: working or not,
+     version, last backup, last feed check, disk use. Nothing personal.
+  2. A **diagnostics page** with slowfeed's recent problems in plain words
+     (these can mention feed addresses, so it isn't public). It opens only
+     with a read-only key that can't see or change your feeds or articles.
+     The key is stored in the agents' environment settings, never in GitHub.
+  3. A **scheduled agent check once a day.** If every light is green, it
+     ends silently. If not, it reads the diagnostics, opens a GitHub issue
+     explaining the problem in plain words (GitHub emails you), and, when the
+     cause is clear, a pull request with the fix.
+  You still press Merge, and anything that touches your live data (such as
+  restoring a backup) still waits for you: that's the engineering floor and
+  working agreement 8.
+- **Status page only.** You notice problems and copy logs from Render.
+- **Give agents the full password.** Not suggested: they could then read and
+  change your data, which working agreement 8 rules out.
+
+Setup for you at Milestone 2: allow the agents' environment to reach your
+slowfeed address (blocked today), and add the diagnostics key to the
+environment's settings. Each daily check uses a small amount of your Claude
+usage.
 
 ---
 
