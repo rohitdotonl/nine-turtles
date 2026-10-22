@@ -67,9 +67,10 @@ Prefer well-known, mature tools, and as few of them as possible. Every new libra
 
 slowfeed must be able to move to any host in an afternoon.
 - It runs as one ordinary program plus one SQLite file. No host-specific databases, queues or functions.
-- All settings come from environment variables, never from a host's dashboard alone.
+- All settings come from environment variables, never from a host's dashboard alone. Their names and meanings (never their values) are listed in `docs/operations/settings.md`.
 - Backups use standard formats and go to storage that any provider can replace.
 - Moving hosts is a written, tested procedure (`docs/operations/moving-hosts.md`), not a hope.
+- All automatic checks run through one script in the repository. GitHub Actions only calls that script, so any other CI service, an agent or a person can run exactly the same checks.
 - The same rule applies to libraries: prefer standard, replaceable choices.
 - The same rule applies to AI agents: instructions live in the repository as plain documents (`AGENTS.md`, `docs/operations/`), not only inside one agent tool's settings, so the owner can switch tools.
 

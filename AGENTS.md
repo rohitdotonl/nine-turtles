@@ -72,6 +72,7 @@ ten years › written for the next agent.
 - Never fetch an article's web page. Autodiscovery fetches a site's home page only when the owner adds a feed or asks "Find new address".
 - A feature isn't done until it has tests and the checks pass.
 - Significant decisions get a short note in `docs/decisions/`.
+- **No lock-in, for the owner's sake:** hosts, storage, CI and agent tools must all stay replaceable. Anything a tool needs to know (settings, check steps, scheduled-task instructions) is written in the repository. See `docs/owner-guide.md` → "You're never locked in".
 
 ## Map: read this before that
 

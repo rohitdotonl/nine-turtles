@@ -41,6 +41,7 @@ on the live app; anything found then gets a quick follow-up fix.
   frontend is built into the one program file.
 - A placeholder page in the slowfeed wordmark, with "Nothing here yet."
 - Automatic checks on every pull request (GitHub Actions):
+  - One script that runs every check, so GitHub Actions, any other service, an agent or a person all run the same checks.
   - Rust: formatting, lint ("clippy", a tool that spots likely mistakes), tests.
   - Frontend: type check and tests.
   - Accessibility and contrast tests of every screen, in all three themes.
@@ -67,7 +68,7 @@ you know they bite.
 
 - Single-user password sign-in, long-lived device sessions, slowed-down
   repeated wrong guesses (section 1 of SPEC).
-- Settings read from environment variables only.
+- Settings read from environment variables only, listed (names, never values) in `docs/operations/settings.md`.
 - GitHub Actions builds slowfeed into a container image; Render runs it.
 - Public status page and key-protected diagnostics page, shown to you in Settings → Status.
 - The daily automatic check: its instructions written in `docs/operations/daily-check.md`

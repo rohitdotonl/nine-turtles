@@ -183,7 +183,27 @@ On the GitHub website (or the GitHub phone app):
 **Revert** button. It creates a new pull request that undoes the change;
 merging that puts the previous version back. Or ask an agent to do it.
 
-## 8. Glossary
+## 8. You're never locked in
+
+"Lock-in" means being stuck with a company or tool because leaving would be
+too hard. slowfeed is built so every outside service can be swapped. Here's
+each one, what ties us to it, and what leaving would take.
+
+| Service | What it does for slowfeed | What makes leaving easy | What leaving takes |
+|---|---|---|---|
+| **Render** (hosting) | Runs slowfeed | slowfeed is a standard container image plus one SQLite database file. Every setting is listed in `docs/operations/settings.md`. | Follow `docs/operations/moving-hosts.md` (written and tested at Milestone 3). About an afternoon. |
+| **Cloudflare R2** (backup storage) | Keeps nightly backups | Uses the standard "S3" storage format that many providers offer | Create storage elsewhere and change a few settings |
+| **GitHub** (code, checks, issues) | Holds the code and runs the checks | The code and its full history are in "git", a standard format any code host accepts. All checks run through one script in the repository; GitHub Actions only calls it. | Copy the repository to another host and point its check service at the same script. Issues and pull request discussions stay behind on GitHub unless exported. |
+| **Claude Code** (the agents) | Builds and maintains slowfeed | All instructions are plain documents in the repository: `AGENTS.md` (a convention most coding agents read), the `docs/` folder, and the daily check's steps in `docs/operations/daily-check.md` | Start the new agent in the repository. To move the daily check, set a daily timer in the new tool that says "follow docs/operations/daily-check.md". |
+| **Libraries** | Ready-made code inside slowfeed | Standard, widely used choices, listed in `docs/libraries.md` | Replace one at a time, with your approval |
+| **Your reading data** | Your feeds, folders and starred articles | OPML export (feeds and folders) and JSON Feed export (starred articles), both standard formats | Download both from Settings → Your data and import them into another reader |
+
+**The rule agents follow:** nothing important lives only inside one tool's
+settings or dashboard. If a tool needs to know something, it's written in the
+repository first. That's in `ENGINEERING.md` ("No vendor lock-in") and in
+`AGENTS.md`.
+
+## 9. Glossary
 
 | Term | Meaning |
 |---|---|
@@ -198,6 +218,7 @@ merging that puts the previous version back. Or ask an agent to do it.
 | Environment variable | A setting given to the app by the host (Render), e.g. the scrambled password, kept outside the code |
 | GitHub Actions | GitHub's service that runs the checks on every pull request |
 | Library / dependency | Ready-made code from others that slowfeed uses |
+| Lock-in | Being stuck with a company or tool because leaving would be too hard |
 | Lint | An automatic check for likely mistakes and sloppy code |
 | Main | The official version of the code; what runs live |
 | Merge | Bring a pull request's changes into main (and so, live) |
