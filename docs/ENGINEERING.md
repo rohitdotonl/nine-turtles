@@ -135,6 +135,8 @@ These were decided with the owner. Changing any of them needs the owner's approv
 | Keyboard shortcuts | Small custom handler |
 | Installable on phones | Web app manifest and service worker (PWA) |
 
+**New versions on devices:** the service worker downloads a new version quietly in the background and uses it the next time the app is opened or reloaded. It never swaps the app while it's open. The server keeps accepting the previous frontend version's requests, so a tab left open across an update keeps working.
+
 **Packaging:** the built frontend is embedded into the Rust program, so deploying means one program file. GitHub Actions builds it once into a standard container image (a ready-to-run bundle any host accepts), and Render runs that image, so what was tested is exactly what goes live and Render never has to compile Rust.
 
 ### Hosting

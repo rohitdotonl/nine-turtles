@@ -295,6 +295,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 - **Your data:** OPML import/export, export of starred articles.
 - **Keeping articles:** explains that unstarred articles, read or not, are removed after a year and starred ones are kept forever.
 - **Feed health** (section 17) and **Sign out**.
+- **Status:** which version of slowfeed you're using. When a newer version has been downloaded, it says "A new version is ready" with a **Reload** button. Otherwise new versions are used automatically the next time you open or reload the app, never while you're reading.
 - Fonts are served by slowfeed itself; nothing is loaded from font services. Other scripts such as Hindi use the fonts already on your device.
 - **Shared across your devices:** reading mode and sort order. **Per device:** theme, font, text size and line width (a phone and a laptop often want different sizes). `+`/`-` change the same text-size setting.
 

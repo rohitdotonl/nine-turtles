@@ -61,19 +61,18 @@ included. I couldn't open Render's website from the agent's environment to
 confirm it directly, so the first step of Milestone 2 is for you to check that
 the tab is there. If it isn't, the fallback is the second option above.
 
-### Q27. Keep the repository public?
-
-ENGINEERING.md said "private", but the repository is public.
-- ⭐ **Keep it public.** Main protection and the automatic checks are free,
-  and slowfeed has nothing secret in its code by design. The documents have
-  been updated to say "public". The one thing to remember is that nothing
-  personal goes in it, and the `.gitignore` rule already blocks your OPML file.
-- Make it private. Then protecting main would need GitHub Pro (about $4 a
-  month), and the checks would use up a monthly free allowance.
-
 ### Q28. How agents can see the live app
 
 Agents have no Render access (on purpose) and can't sign in to slowfeed.
+
+**In simple words:** it's like the dashboard lights in a car. A mechanic can
+glance at them without getting the keys or looking inside your glovebox.
+slowfeed would show a few "warning lights" on one public page; an agent
+looks at that page when you report a problem, sees which light is on (for
+example "last backup: 3 days ago"), and knows where to look. For anything
+deeper, you copy a few lines from Render's Logs tab (slowfeed's diary of what
+happened) into the conversation.
+
 - ⭐ **A small public "health" page** (`/health`) showing only: OK or not,
   the app version, when the last backup succeeded, when feeds were last
   checked, and how full the disk is. Nothing personal: no feeds, no articles.
@@ -85,21 +84,6 @@ Agents have no Render access (on purpose) and can't sign in to slowfeed.
   reach your slowfeed address. It's blocked today (I checked); you add the
   address under the cloud environment's network settings ("Allowed domains").
 - No health page; you describe problems and copy logs each time.
-
-### Q29. Getting new versions of slowfeed onto your devices
-
-The app is saved on your devices so it opens instantly, which means an old
-copy could linger after an update. Notifications are out, and nothing may
-change under you while you read.
-- ⭐ **Quietly, at the next natural moment.** Whenever slowfeed talks to the
-  server it notices a newer version and downloads it in the background. The
-  next time you open or reload the app, you're on the new version. Nothing
-  changes while you're reading. For a tab left open for days, **Settings →
-  Status** shows "A new version is ready" with a **Reload** button.
-- Also show a quiet line in the reserved spot at the top of the list:
-  "slowfeed was updated · Reload". More visible, but it's one more thing
-  asking for attention.
-- Reload by itself immediately. Breaks "nothing moves unless you move it".
 
 ---
 
@@ -148,6 +132,9 @@ change under you while you read.
 | Second-agent review | Standard on every pull request. |
 | Times | Shown in the device's time zone. |
 | Phone milestone order | Unchanged. |
+| Repository (Q27) | Stays public. |
+| New app versions (Q29) | Downloaded quietly; used the next time you open or reload slowfeed. Nothing changes while you read. Settings → Status shows "A new version is ready" with a Reload button. |
+| Deleted articles | Remembered by fingerprint (confirmed). |
 | Pace | One session per milestone. No large multi-agent workflows. |
 
 ### Note on Q15 (working agreement 10: a principle is bent)
