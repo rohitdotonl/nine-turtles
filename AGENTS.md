@@ -14,7 +14,7 @@ book, or more like a feed?
 
 ## Project facts
 
-- **Owner:** one person, tech-oriented but not a developer. They direct; agents build.
+- **Owner:** one person, tech-oriented but **not a programmer**: they don't read code. They direct; agents build.
 - **Users:** one person per installation (V1). Single-user password sign-in.
 - **Backend:** Rust (axum, tokio, reqwest, feed-rs, ammonia, sqlx + SQLite with FTS5 search, tracing).
 - **Frontend:** TypeScript, Svelte 5 single-page app, Vite, Tailwind CSS. Installable as a web app (PWA).
@@ -50,6 +50,26 @@ book, or more like a feed?
 4. Automatic checks run on the pull request. They must all pass.
 5. A second agent, which didn't write the change, reviews it against `DESIGN.md`, `ENGINEERING.md` and `SPEC.md` and posts its findings on the pull request. Fix each finding or explain why not.
 6. The owner presses **Merge**. Agents never merge.
+
+## Keeping the docs true
+
+The owner doesn't read code, so the documents are their only view of the
+project. After every change, and before opening the pull request, update
+every document the change affects:
+
+| If the change affects… | Update |
+|---|---|
+| What the reader sees or how a feature behaves | `docs/SPEC.md` (and `docs/DESIGN.md` only with the owner's approval) |
+| A technical rule or choice | `docs/ENGINEERING.md`, plus a short note in `docs/decisions/` |
+| Libraries (added, removed, upgraded) | `docs/libraries.md` |
+| Milestone progress | `docs/PLAN.md` |
+| Tools, hosting, workflow, or how changes reach the live app | `docs/owner-guide.md` |
+| Settings, backups, deploys, moving hosts, the daily check | `docs/operations/` |
+| An open question, or the owner's answer to one | `docs/planning/questions.md` |
+| Project facts, rules or the map below | This file |
+
+The pull request summary lists which documents were updated, or says why
+none needed it. The second-agent review checks this too.
 
 ## The floors (nothing can trade these away)
 
