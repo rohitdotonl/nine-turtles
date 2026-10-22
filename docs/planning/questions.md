@@ -29,12 +29,17 @@ What can be done is making it as painless as possible: you type the password
 once per device, and each device then stays signed in for a long time
 (months).
 
-**Decision 1: confirm the scrambling library.**
-- ⭐ **argon2**: the security community's current first recommendation, and
-  from RustCrypto, a well-established group.
-- bcrypt: older and still fine, but cuts passwords off after 72 characters.
+**Decided:** the scrambling library is **argon2** (argon2id variant).
 
-**Decision 2: how you set the password.**
+**Still open: how you set the password** (needed at Milestone 2, not before).
+
+In short: Render (the company running slowfeed) has a page in its website
+where you can type a command to the running app. You'd type
+`slowfeed set-password`, type your password, and get back a long line of
+scrambled text. You copy that line into a settings box on Render, and
+that's it. slowfeed only ever stores the scrambled line, never the password.
+
+Options:
 - ⭐ **Type a one-line command in Render's web "Shell" tab** (a box in
   Render's website where you can type commands to the running app), e.g.
   `slowfeed set-password`. It asks for your password and shows the scrambled
@@ -55,6 +60,7 @@ once per device, and each device then stays signed in for a long time
 
 | # | Question | Decision |
 |---|---|---|
+| Q1 | Password scrambling | argon2 (argon2id variant). |
 | Q2 | Backups | Built into slowfeed, nightly, to Cloudflare R2 (S3-compatible). A copy is also made before every database structure change. |
 | Q3 | Supporting libraries for Milestone 1 | Approved. All approved libraries are listed in `docs/libraries.md`. |
 | Q4 | How the library check knows you approved | The approved list in `docs/libraries.md`. The check fails if the code uses anything not on it. |

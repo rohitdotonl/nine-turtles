@@ -122,7 +122,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 | Search | SQLite FTS5 |
 | OPML import/export | opml |
 | Feed autodiscovery | scraper |
-| Password hashing | argon2 *(still to confirm with owner)* |
+| Password hashing | argon2 (the argon2id variant) |
 | Logging | tracing |
 
 **Frontend: TypeScript**

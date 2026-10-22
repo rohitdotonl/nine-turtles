@@ -42,7 +42,7 @@ decision has been changed; this only reports.*
 | Search | SQLite FTS5 | (part of SQLite) | — | Included in the SQLite that sqlx bundles; Milestone 1 adds a test proving it's switched on. Hindi needs a specific setting (vowel signs must count as part of words); this is already called out in ENGINEERING.md. |
 | OPML | opml | 1.1.6 | **Jan 2024** | **Quiet.** Works, small, but not updated in almost three years; hosted on a personal git server. See note 2 above. |
 | Autodiscovery | scraper | 0.29.0 | Oct 2026 | Maintained |
-| Password hashing | argon2 | **0.6.0** | Aug 2026 | New version (0.6); from RustCrypto. Pending the owner's sign-in decision. |
+| Password hashing | argon2 | **0.6.0** | Aug 2026 | New version (0.6); from RustCrypto. Approved by the owner. |
 | Logging | tracing | 0.1.44 | Dec 2025 | Maintained (tokio team); version number has been 0.1 for years, which is normal for it. |
 | Language | Rust | 1.99.1 | Oct 2026 | Stable releases every 6 weeks |
 
