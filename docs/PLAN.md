@@ -69,6 +69,10 @@ you know they bite.
   repeated wrong guesses (section 1 of SPEC).
 - Settings read from environment variables only.
 - GitHub Actions builds slowfeed into a container image; Render runs it.
+- Public status page and key-protected diagnostics page, shown to you in Settings → Status.
+- The daily automatic check: its instructions written in `docs/operations/daily-check.md`
+  (so any agent can follow them), then scheduled. You allow the agents' environment
+  to reach your slowfeed address and add the diagnostics key to its settings.
 - First step for you: open Render and confirm the **Shell** tab exists for a
   Starter web service (it decides how you set your password).
 - A step-by-step guide for you to set up Render (the agent has no access to

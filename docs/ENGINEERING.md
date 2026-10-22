@@ -71,6 +71,7 @@ slowfeed must be able to move to any host in an afternoon.
 - Backups use standard formats and go to storage that any provider can replace.
 - Moving hosts is a written, tested procedure (`docs/operations/moving-hosts.md`), not a hope.
 - The same rule applies to libraries: prefer standard, replaceable choices.
+- The same rule applies to AI agents: instructions live in the repository as plain documents (`AGENTS.md`, `docs/operations/`), not only inside one agent tool's settings, so the owner can switch tools.
 
 **Test:** Could slowfeed move to another host in an afternoon?
 

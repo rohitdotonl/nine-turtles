@@ -61,36 +61,6 @@ included. I couldn't open Render's website from the agent's environment to
 confirm it directly, so the first step of Milestone 2 is for you to check that
 the tab is there. If it isn't, the fallback is the second option above.
 
-### Q28. How agents can see the live app
-
-Agents have no Render access (on purpose) and can't sign in to slowfeed.
-
-**In simple words:** it's like the dashboard lights in a car. A mechanic can
-glance at them without getting the keys or looking inside your glovebox.
-
-- ⭐ **Fully automatic watching; you're only needed to press Merge.**
-  1. A public **status page** with "warning lights" only: working or not,
-     version, last backup, last feed check, disk use. Nothing personal.
-  2. A **diagnostics page** with slowfeed's recent problems in plain words
-     (these can mention feed addresses, so it isn't public). It opens only
-     with a read-only key that can't see or change your feeds or articles.
-     The key is stored in the agents' environment settings, never in GitHub.
-  3. A **scheduled agent check once a day.** If every light is green, it
-     ends silently. If not, it reads the diagnostics, opens a GitHub issue
-     explaining the problem in plain words (GitHub emails you), and, when the
-     cause is clear, a pull request with the fix.
-  You still press Merge, and anything that touches your live data (such as
-  restoring a backup) still waits for you: that's the engineering floor and
-  working agreement 8.
-- **Status page only.** You notice problems and copy logs from Render.
-- **Give agents the full password.** Not suggested: they could then read and
-  change your data, which working agreement 8 rules out.
-
-Setup for you at Milestone 2: allow the agents' environment to reach your
-slowfeed address (blocked today), and add the diagnostics key to the
-environment's settings. Each daily check uses a small amount of your Claude
-usage.
-
 ---
 
 ## Decided
@@ -141,6 +111,7 @@ usage.
 | Repository (Q27) | Stays public. |
 | New app versions (Q29) | Downloaded quietly; used the next time you open or reload slowfeed. Nothing changes while you read. Settings → Status shows "A new version is ready" with a Reload button. |
 | Deleted articles | Remembered by fingerprint (confirmed). |
+| Watching the live app (Q28) | Fully automatic: public status page, diagnostics page behind a read-only key, a scheduled agent check once a day that opens an issue (and a fix when clear). The owner still merges. Kept agent-neutral: the check's instructions live in the repository (`docs/operations/daily-check.md`) so any agent can follow them. |
 | Pace | One session per milestone. No large multi-agent workflows. |
 
 ### Note on Q15 (working agreement 10: a principle is bent)
