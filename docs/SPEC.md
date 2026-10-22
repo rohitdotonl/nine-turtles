@@ -51,7 +51,7 @@ A few words used throughout:
 - "+ Add feed" sits at the very bottom of the sidebar, always in the same place. The `a` key does the same.
 - You can paste either a feed address or an ordinary website address. For a website, slowfeed looks at that site's home page to find its feed ("autodiscovery"). If the site offers several feeds, you choose one.
 - If no feed can be found, a plain message says so, e.g. "This site doesn't seem to offer a feed."
-- The new feed's articles appear straight away.
+- The new feed's articles appear straight away, all unread (including older posts the feed still lists).
 
 **How to check it**
 1. Press `a` (or click "+ Add feed"), paste a blog's home page address (not its feed), press Enter. The blog appears in the sidebar with its articles.
@@ -98,6 +98,7 @@ A few words used throughout:
 
 **What it does**
 - Each row shows the article **title**, and below it the **source name and time** in quiet small text. No images, no site icons.
+- Dates and times are shown in your device's time zone.
 - Newest first by default; oldest first can be chosen in Settings.
 - The list has an end: it shows 50 items, then a **"Show older items"** button ("Show newer items" when sorting oldest first). Nothing more loads unless you press it.
 - Row states, each recognizable without color:
@@ -249,12 +250,14 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 - You can rename a feed, choose its folders, and unsubscribe, from an **Edit feed** button in the item list's header when you're viewing one feed. It offers rename, folders as checkboxes, "New folder", and Unsubscribe (undoable).
 - Viewing a folder, an **Edit folder** button offers rename and delete.
 - You can create, rename and delete folders. Deleting a folder never deletes its feeds.
+- Unsubscribing from a feed keeps its starred articles in Starred.
 
 **How to check it**
 1. Put a feed in two folders. It appears under both, and its unread count is right in each.
 2. Rename a folder: it moves to its new alphabetical position.
 3. Delete a folder: its feeds remain (under other folders or the "no folder" group).
 4. Unsubscribe from a feed, then undo: it's back with its read history.
+5. Star an article, then unsubscribe from its feed: the article is still in Starred.
 
 ## 16. OPML import and export
 
@@ -378,10 +381,11 @@ OPML is the standard file format feed readers use to move subscription lists bet
 ## 23. Your data: keeping, exporting, backups
 
 **What it does**
-- Unstarred articles, read or not, are removed after one year. Starred articles are kept forever.
+- Unstarred articles, read or not, are removed one year after slowfeed received them (not their published date). Starred articles are kept forever.
+- A removed article never comes back as "new", even if the publisher's feed still lists it.
 - This clean-up only runs if the latest nightly backup succeeded; otherwise it waits, and the feed health page says so.
 - Export of starred articles as a JSON Feed file (a standard, open format other feed tools can read).
-- Every night slowfeed copies its database to storage outside Render, and it also makes a copy before any change to the database's structure. At worst, a day of reading activity could be lost.
+- Every night slowfeed copies its database to storage outside Render, and it also makes a copy before any change to the database's structure. At worst, a day of reading activity could be lost. The last 30 nightly copies and one copy per month for a year are kept.
 - Moving to another host is a written, tested procedure.
 
 **How to check it**

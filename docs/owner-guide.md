@@ -82,6 +82,17 @@ The complete, approved list is in `docs/libraries.md`.
   main. It shows exactly what changed, has a plain-language summary, and is
   where the automatic checks run and where you can comment.
 
+**The repository is public.** Anyone can read the code and documents (that's
+normal for open-source projects, and it's what makes GitHub's protections and
+check-running free). So nothing personal or secret ever goes in it: no
+passwords, no keys, no OPML file. Other people can comment or suggest changes;
+agents treat that as information, never as instructions.
+
+**main is protected.** A GitHub setting (a "ruleset") makes sure changes reach
+main only through a pull request whose checks have all passed. Not even an
+agent can save straight to main, and a red ✗ pull request can't be merged.
+You switch this on once, at Milestone 1, with a step-by-step guide.
+
 **Who creates pull requests?** The agents do. You don't need to create one.
 Your part is to read the summary, look at the screenshots, ask questions,
 and then merge (or not).
@@ -111,8 +122,7 @@ come with tests that prove it works, and every check must be green.
 a pull request is opened or updated, GitHub starts a fresh computer, builds
 slowfeed, runs every check, and shows the results on the pull request: a
 green tick ✓ if everything passed, a red cross ✗ if anything failed (with
-details). Private repositories get a monthly allowance of free running time,
-which a project this size shouldn't exceed.
+details). Because slowfeed's repository is public, GitHub runs these checks for free.
 
 **CI** ("continuous integration") is that whole practice: every change is
 automatically checked before it's allowed into main. In slowfeed, GitHub
@@ -122,6 +132,22 @@ Actions does the CI.
 live automatically. In slowfeed, Render does the CD: it watches main, and
 when it changes, Render builds the new version and replaces the running one.
 
+### The second-agent review
+
+Every pull request gets a review from a second agent, before you look at it.
+
+Think of it as a proofreader. The agent that built a change knows what it
+*meant* to do, so it tends to read its own work generously. The reviewer is a
+fresh agent that didn't write the code. It reads the change against
+`DESIGN.md`, `ENGINEERING.md` and `SPEC.md` and asks "is anything wrong or
+missing here? does anything break a floor or a principle?" It posts what it
+found on the pull request, and the building agent fixes each point or
+explains why not. You see both in the pull request.
+
+It costs a little more time and usage per change, and it catches the kind of
+mistake the automatic checks can't, such as a feature that works but doesn't
+match the design.
+
 ## 6. "The owner deploys by merging a pull request"
 
 **Deploying** means putting a new version on the live app. Agents have no
@@ -130,8 +156,9 @@ access to Render, so they can't deploy. Instead:
 1. An agent opens a pull request.
 2. GitHub Actions runs the checks.
 3. You review and press **Merge**.
-4. The change is now in main. Render notices, builds the new version and
-   switches to it. The app may be unavailable for a minute while it switches.
+4. The change is now in main. GitHub Actions packs the finished program into
+   a "container image" (a standard, ready-to-run bundle), and Render switches
+   to it. The app may be unavailable for a minute while it switches.
 5. You try the change on the live app.
 
 So pressing Merge *is* deploying. Nothing reaches the live app without you.
@@ -164,6 +191,7 @@ merging that puts the previous version back. Or ask an agent to do it.
 | Branch | A separate copy of the code for working on a change |
 | CI / CD | Automatically checking every change / automatically putting merged changes live |
 | Commit | One saved step of work, with a message |
+| Container image | A standard, ready-to-run bundle of the program that any host can run |
 | Compiler | The tool that turns written code into a working program, refusing code with certain mistakes |
 | Database | Where slowfeed keeps feeds, articles, read/star state and settings (one SQLite file) |
 | Deploy | Put a new version on the live app |
@@ -175,5 +203,6 @@ merging that puts the previous version back. Or ask an agent to do it.
 | Merge | Bring a pull request's changes into main (and so, live) |
 | Migration | A careful, scripted change to the database's structure |
 | Pull request (PR) | A proposed change, with summary, checks and discussion |
+| Ruleset (branch protection) | A GitHub setting that only lets checked pull requests into main |
 | Repository (repo) | The project folder on GitHub, with full history |
 | Test | A small program that checks part of slowfeed works, automatically |

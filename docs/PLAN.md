@@ -48,6 +48,12 @@ on the live app; anything found then gets a quick follow-up fix.
   - Download size budget (150 KB of app code and styles, 400 KB of fonts).
   - Library check: fails if the code uses a library not on the approved list in `docs/libraries.md`.
   - A test that the database's search engine (FTS5) is switched on and handles Hindi.
+  - Screenshots of every screen (three themes, desktop and phone width) attached to the pull request.
+  - A weekly security report on our libraries (reports only).
+  - The second-agent review, set up as a standard step.
+- **You switch on protection for main** (a GitHub "ruleset", free for public
+  repositories), with a step-by-step guide: only pull requests with passing
+  checks can be merged, and nobody can save straight to main.
 - `docs/decisions/` started, with a note for each of the technical decisions.
 - `docs/operations/` started (how to build and run).
 
@@ -62,6 +68,9 @@ you know they bite.
 - Single-user password sign-in, long-lived device sessions, slowed-down
   repeated wrong guesses (section 1 of SPEC).
 - Settings read from environment variables only.
+- GitHub Actions builds slowfeed into a container image; Render runs it.
+- First step for you: open Render and confirm the **Shell** tab exists for a
+  Starter web service (it decides how you set your password).
 - A step-by-step guide for you to set up Render (the agent has no access to
   it), including how to set your password (the method is still open).
 
@@ -75,6 +84,7 @@ signed in, sign out. A private window sees only the password field.
 - Built into slowfeed: a nightly copy of the database, uploaded to Cloudflare R2
   (S3-compatible storage outside Render; you create the account, agents never see the keys).
   Needs one new library for uploading, which will be proposed for your approval.
+- The temporary copy is made outside the data disk. Keeps 30 nightly copies plus one a month for a year.
 - An automatic copy before every database structure change.
 - `docs/operations/backups.md` and `docs/operations/moving-hosts.md`, tested.
 
@@ -100,6 +110,7 @@ move around with only the keyboard.
 - "+ Add feed" and `a`, with autodiscovery from a website address.
 - Fetching a feed once on adding it; storing articles without duplicates.
 - Item list: title, source and time, newest first, "Show older items".
+- A made-up database the size of 500 feeds and a year of articles, used by the speed tests from now on.
 
 **You can try:** add a few of your favorite blogs by their website address and see their articles listed.
 
@@ -171,7 +182,7 @@ and the screen never changed under you.
 
 ## 14. Keeping things tidy, and the finishing pass
 
-- Removing unstarred articles after a year, only after a successful nightly backup.
+- Removing unstarred articles a year after they arrived, only after a successful nightly backup, and never letting them come back as new.
 - Export of starred articles.
 - A full accessibility pass with a screen reader, and a speed pass.
 - Docs brought fully up to date.
@@ -181,5 +192,7 @@ and the screen never changed under you.
 ---
 
 Responsive layout, accessibility and speed aren't left to the end: each
-milestone must pass the automatic checks for them. Milestones 13 and 14 add
+milestone must pass the automatic checks for them, every feature comes with
+keyboard-only tests, and each milestone that changes screens includes a
+5-minute checklist you can follow yourself. Milestones 13 and 14 add
 the phone-specific parts and a final human pass.

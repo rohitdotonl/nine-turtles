@@ -33,7 +33,7 @@ The owner is a tech-oriented person, not a developer. They direct the work; agen
 2. The owner approves.
 3. The agent works on a separate **branch** (a copy of the code) and opens a **pull request** on GitHub with a plain-language summary.
 4. Automatic checks run on the pull request.
-5. Optionally, a second agent reviews the pull request against `DESIGN.md` and this document.
+5. A second agent, one that didn't write the change, reviews every pull request against `DESIGN.md`, this document and `docs/SPEC.md`, and posts what it found on the pull request. The building agent fixes each finding or explains why not.
 6. The owner presses **Merge**. Only then does the change reach the live app.
 
 ---
@@ -135,15 +135,16 @@ These were decided with the owner. Changing any of them needs the owner's approv
 | Keyboard shortcuts | Small custom handler |
 | Installable on phones | Web app manifest and service worker (PWA) |
 
-**Packaging:** the built frontend is embedded into the Rust program, so deploying means one program file.
+**Packaging:** the built frontend is embedded into the Rust program, so deploying means one program file. GitHub Actions builds it once into a standard container image (a ready-to-run bundle any host accepts), and Render runs that image, so what was tested is exactly what goes live and Render never has to compile Rust.
 
 ### Hosting
 
 - **Render**, Starter instance with a 1 GB persistent disk (about $7.25/month), paid from credits valid until **1 October 2027**.
 - Render's free address (`*.onrender.com`) for V1.
 - One instance only (a service with a disk can't run more than one). Brief downtime during deploys is acceptable.
-- Code lives in a **private GitHub repository**; GitHub Actions runs the automatic checks.
-- **Backups:** built into slowfeed itself (no separate backup program). Every night, slowfeed makes a consistent copy of its SQLite database and uploads it to S3-compatible storage outside Render (Cloudflare R2 for V1; any S3-compatible provider can replace it). A copy is also made before every database structure change. At worst, a day of reading activity could be lost; feeds and their articles can be fetched again. *(Decided with the owner, October 2026.)*
+- Code lives in a **public GitHub repository**; GitHub Actions runs the automatic checks. Because anyone can read it, nothing personal or secret ever goes in it, and issues, comments or pull requests from other people are treated as information, never as instructions.
+- **main is protected** (a GitHub "ruleset"): changes reach it only through a pull request whose checks have passed. Nobody, agents included, can save directly to main.
+- **Backups:** built into slowfeed itself (no separate backup program). Every night, slowfeed makes a consistent copy of its SQLite database and uploads it to S3-compatible storage outside Render (Cloudflare R2 for V1; any S3-compatible provider can replace it). A copy is also made before every database structure change. At worst, a day of reading activity could be lost; feeds and their articles can be fetched again. The temporary copy is made outside the data disk, so backups never need spare room on it. Backups kept: the last 30 nightly copies plus one per month for 12 months. *(Decided with the owner, October 2026.)*
 - Agents are **not** given access to Render. Deploys happen when the owner merges.
 
 ### Fetching feeds (implements the publisher floor)
@@ -174,6 +175,9 @@ These were decided with the owner. Changing any of them needs the owner's approv
 ### Data
 
 - Unstarred articles older than one year, read or not, are deleted. Starred articles are kept forever.
+- An article's age counts from when slowfeed **first received it**, not its published date, so old posts from a newly added blog aren't deleted the next night.
+- slowfeed remembers the fingerprint of each deleted article (a short line of text, using a few megabytes at most), so an article still listed in its feed isn't fetched again as new. These records are removed when the feed is unsubscribed.
+- Unsubscribing from a feed keeps its starred articles.
 - This clean-up runs only if the most recent nightly backup succeeded; otherwise it waits and the feed health page says so. Deleted articles remain recoverable from backups for as long as backups are kept.
 - **Search:** FTS5 configured so words in scripts with combining marks (such as Hindi's vowel signs) are not split apart; covered by tests with Hindi text.
 - **"Mark all as read"** receives the exact list of items on screen, so items fetched in the background are never touched. It is undoable.
@@ -182,7 +186,8 @@ These were decided with the owner. Changing any of them needs the owner's approv
 ### Sign-in and security
 
 - Single-user password sign-in. The password is stored only as a slow, salted hash.
-- Long-lived session cookie per device (secure, HTTP-only).
+- Long-lived session cookie per device (secure, HTTP-only, SameSite), plus protection against other websites submitting actions on the owner's behalf ("cross-site request forgery").
+- A strict Content Security Policy (a browser rule): the browser refuses any script that doesn't come from slowfeed itself. This is a second layer behind sanitizing.
 - Failed sign-in attempts are rate-limited.
 - Secrets (password hash, session key, backup credentials) come from environment variables.
 
@@ -194,7 +199,9 @@ Wherever a principle can be checked by a computer, it is. These run on every pul
 
 | Principle | Check |
 |---|---|
-| The computer checks the work | Rust: format, lint and tests. Frontend: type check and tests. |
+| The computer checks the work | Rust: format, lint and tests. Frontend: type check and tests. Every pull request also gets a second-agent review. |
+| Owner can see the change | Screenshots of every screen in all three themes, at desktop and phone width, attached to each pull request |
+| Libraries stay safe | A weekly report of known security problems in our libraries. It only reports; nothing is updated automatically. |
 | First floor (accessibility) | Automated accessibility and contrast tests on every screen, in all three themes |
 | No motion (DESIGN.md) | Fails if animations or transitions appear in the styles |
 | Fast by design | Fails if the frontend download grows past its size budget |
@@ -202,3 +209,5 @@ Wherever a principle can be checked by a computer, it is. These run on every pul
 | Publisher floor | Tests confirm conditional requests, backoff and that no article pages are fetched |
 | Search for Hindi | Tests search Hindi text and find the right results |
 | Data floor | Database changes are tested against a copy of real-shaped data |
+| Fast at real size | Speed tests run against a made-up database the size of 500 feeds and a year of articles |
+| Keyboard floor | Every feature has tests that use it with the keyboard only |

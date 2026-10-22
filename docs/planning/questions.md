@@ -54,6 +54,53 @@ Options:
   Convenient, but for a few minutes after the first deploy, anyone who found
   the address first could claim it.
 
+**About Render's Shell tab:** Render's documentation says the Shell tab and
+SSH (a way to type commands to the server) are available for paid web
+services and not for free ones. Starter is a paid plan, so it should be
+included. I couldn't open Render's website from the agent's environment to
+confirm it directly, so the first step of Milestone 2 is for you to check that
+the tab is there. If it isn't, the fallback is the second option above.
+
+### Q27. Keep the repository public?
+
+ENGINEERING.md said "private", but the repository is public.
+- ⭐ **Keep it public.** Main protection and the automatic checks are free,
+  and slowfeed has nothing secret in its code by design. The documents have
+  been updated to say "public". The one thing to remember is that nothing
+  personal goes in it, and the `.gitignore` rule already blocks your OPML file.
+- Make it private. Then protecting main would need GitHub Pro (about $4 a
+  month), and the checks would use up a monthly free allowance.
+
+### Q28. How agents can see the live app
+
+Agents have no Render access (on purpose) and can't sign in to slowfeed.
+- ⭐ **A small public "health" page** (`/health`) showing only: OK or not,
+  the app version, when the last backup succeeded, when feeds were last
+  checked, and how full the disk is. Nothing personal: no feeds, no articles.
+  The same information appears for you in **Settings → Status**, in plain
+  words, with a warning when the disk is 80% full. When something seems wrong,
+  an agent reads the health page, and for details you copy lines from Render's
+  **Logs** tab into the conversation.
+  One setup step for you at Milestone 2: allow the agents' environment to
+  reach your slowfeed address. It's blocked today (I checked); you add the
+  address under the cloud environment's network settings ("Allowed domains").
+- No health page; you describe problems and copy logs each time.
+
+### Q29. Getting new versions of slowfeed onto your devices
+
+The app is saved on your devices so it opens instantly, which means an old
+copy could linger after an update. Notifications are out, and nothing may
+change under you while you read.
+- ⭐ **Quietly, at the next natural moment.** Whenever slowfeed talks to the
+  server it notices a newer version and downloads it in the background. The
+  next time you open or reload the app, you're on the new version. Nothing
+  changes while you're reading. For a tab left open for days, **Settings →
+  Status** shows "A new version is ready" with a **Reload** button.
+- Also show a quiet line in the reserved spot at the top of the list:
+  "slowfeed was updated · Reload". More visible, but it's one more thing
+  asking for attention.
+- Reload by itself immediately. Breaks "nothing moves unless you move it".
+
 ---
 
 ## Decided
@@ -85,6 +132,23 @@ Options:
 | Q24 | Size budget | 150 KB of app code and styles, 400 KB of fonts. |
 | Q25 | Type scale and greys | You choose at Milestone 4 from 2–3 options shown as screenshots. |
 | Q26 | Feeds guide page | Agent drafts it (under 300 words); you approve the wording. |
+
+### Decided in the plan review (22 October 2026)
+
+| Topic | Decision |
+|---|---|
+| New feeds | Everything arrives unread, including older posts the feed still lists. |
+| Year-old articles | Age counts from when slowfeed received the article. Deleted articles are remembered by fingerprint (a few megabytes at most) so they don't come back as new. |
+| Protecting main | A GitHub ruleset, free for public repositories. Set up at Milestone 1. |
+| Building | GitHub Actions builds a container image; Render runs it. |
+| Unsubscribing | Starred articles are kept. |
+| Security | Content Security Policy and cross-site request protection. Weekly library security report (reports only). |
+| Backups kept | 30 nightly plus 12 monthly. The temporary copy is made outside the data disk. |
+| Testing | Realistic large test database for speed; keyboard-only tests per feature; 5-minute owner checklist per screen milestone; screenshots on every pull request. |
+| Second-agent review | Standard on every pull request. |
+| Times | Shown in the device's time zone. |
+| Phone milestone order | Unchanged. |
+| Pace | One session per milestone. No large multi-agent workflows. |
 
 ### Note on Q15 (working agreement 10: a principle is bent)
 

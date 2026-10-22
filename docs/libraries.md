@@ -58,6 +58,16 @@ SQLite itself (and its FTS5 search) comes bundled with sqlx.
 | @playwright/test | 1.x | Runs the app in a real browser for tests | Approved |
 | @axe-core/playwright | 4.x | Automatic accessibility and contrast checks | Approved |
 
+## Tools used only by the automatic checks
+
+These never become part of slowfeed itself.
+
+| Tool | What it does | Status |
+|---|---|---|
+| cargo-audit | Weekly report of known security problems in our Rust libraries | Approved |
+| npm audit | The same for frontend libraries (built into npm, nothing to add) | Approved |
+| GitHub's own Actions (`actions/checkout` and similar) | Standard building blocks for the checks, pinned to exact versions | Approved |
+
 ## Expected later (not yet approved)
 
 Each will be proposed in its milestone's plan:
