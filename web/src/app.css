@@ -77,3 +77,8 @@ body {
   background-color: var(--paper);
   color: var(--ink);
 }
+
+/* DELIBERATE MISTAKE for the demonstration pull request: slowfeed never animates. */
+h1 {
+  transition: color 0.3s ease;
+}
