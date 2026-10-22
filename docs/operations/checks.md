@@ -8,7 +8,7 @@ The script stops at the first failure and says which step failed.
 
 | Step | What it catches | Where it lives |
 |---|---|---|
-| Libraries are on the approved list | A library in `server/Cargo.toml` or `web/package.json` that isn't approved in `docs/libraries.md`; a GitHub Actions building block that isn't GitHub's own or isn't pinned | `scripts/check-libraries.mjs` |
+| Libraries are on the approved list | A library in `server/Cargo.toml` (in any of the ways Rust allows listing one) or `web/package.json` that isn't approved in `docs/libraries.md`; a GitHub Actions building block that isn't GitHub's own or isn't pinned | `scripts/check-libraries.mjs` |
 | Frontend: build | Frontend code that doesn't build | Vite |
 | Frontend: type check | Mistakes in TypeScript and Svelte code | `svelte-check` |
 | Frontend: tests | Broken frontend logic | `web/src/**/*.test.ts` (Vitest) |
@@ -18,7 +18,7 @@ The script stops at the first failure and says which step failed.
 | Rust: lint | Likely mistakes ("clippy"); every warning counts as a failure | clippy |
 | Rust: tests | Broken server behavior, including the Hindi search test | `server/tests/` |
 | Build the program | The release program doesn't build | cargo |
-| Accessibility, contrast and screenshots | Any WCAG A/AA problem (including color contrast) on any screen, in any theme, at desktop or phone width; the theme or wordmark font not applying. Also photographs every screen | `web/tests/` (Playwright with axe) |
+| Accessibility, contrast and screenshots | Any WCAG A/AA problem (including color contrast) on any screen, in any chosen theme and when following the device's light or dark setting, at desktop or phone width; the theme or the wordmark's Literata font not applying, or a font coming from anywhere but slowfeed. Also photographs every screen | `web/tests/` (Playwright with axe) |
 
 ## Adding a screen
 

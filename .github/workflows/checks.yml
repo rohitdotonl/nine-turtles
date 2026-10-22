@@ -71,6 +71,10 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+    # One pull request at a time replaces the side branch, so two never clash.
+    concurrency:
+      group: pr-screenshots
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 

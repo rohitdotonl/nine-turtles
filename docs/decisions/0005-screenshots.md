@@ -16,7 +16,14 @@ download.
 **Things to know.**
 - The pictures are public, like the whole repository, so screenshots only ever
   show made-up feeds and articles.
-- Each pull request's older pictures are replaced, so the side branch stays small.
+- The side branch is always one single commit holding the latest pictures of
+  each pull request, replaced on every push. Older pictures are dropped from
+  its history, so the repository doesn't grow with every push. Pictures in
+  comments on older commits stop showing once replaced; the latest set is
+  always shown.
+- Pictures of closed pull requests stay on the side branch (a few hundred KB
+  each). If it ever grows too large, delete the branch on GitHub; the next
+  pull request recreates it.
 - Pull requests from other people's copies of the repository don't get the
   comment: they can't be given permission to write. The pictures are still
   downloadable from the checks page.

@@ -3,6 +3,10 @@
 # shows them in one comment on the pull request, updated on every push
 # (docs/decisions/0005-screenshots.md). Runs inside GitHub Actions.
 #
+# The side branch is always a single commit holding only the latest pictures
+# of each pull request. It is replaced (force-pushed) every time, so old
+# pictures don't pile up in the repository's history.
+#
 # Usage: publish-screenshots.sh <folder of .png files>
 # Needs: GH_TOKEN, PR_NUMBER, HEAD_SHA, GITHUB_REPOSITORY.
 
@@ -21,23 +25,23 @@ if [ ${#pictures[@]} -eq 0 ]; then
   exit 0
 fi
 
-# Put the pictures on the side branch, replacing this pull request's older ones.
+# Start from the side branch's current pictures (other pull requests' too),
+# replace this pull request's, and save the result as one fresh commit.
 store=$(mktemp -d)
 git -C "$store" init --quiet
 git -C "$store" remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
 if git -C "$store" fetch --quiet --depth 1 origin "$branch"; then
-  git -C "$store" checkout --quiet -B "$branch" FETCH_HEAD
-else
-  git -C "$store" checkout --quiet --orphan "$branch"
-  printf '# Screenshots\n\nPictures posted on pull requests by the checks. Not part of slowfeed.\n' > "$store/README.md"
+  git -C "$store" checkout --quiet FETCH_HEAD
 fi
+git -C "$store" checkout --quiet --orphan "fresh-$PR_NUMBER"
+printf '# Screenshots\n\nPictures posted on pull requests by the checks. Not part of slowfeed.\n' > "$store/README.md"
 rm -rf "${store:?}/pr-$PR_NUMBER"
 mkdir -p "$store/$folder"
 cp "${pictures[@]}" "$store/$folder/"
 git -C "$store" add -A
 git -C "$store" -c user.name="slowfeed checks" -c user.email="checks@users.noreply.github.com" \
-  commit --quiet -m "Screenshots for pull request $PR_NUMBER at $short_sha"
-git -C "$store" push --quiet origin "$branch"
+  commit --quiet -m "Latest screenshots of each pull request"
+git -C "$store" push --quiet --force origin "HEAD:refs/heads/$branch"
 
 # Build the comment: one row per screen and theme, desktop and phone side by side.
 base="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${branch}/${folder}"

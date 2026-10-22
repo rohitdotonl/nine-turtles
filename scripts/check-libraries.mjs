@@ -19,18 +19,34 @@ for (const line of read("docs/libraries.md").split("\n")) {
   for (const name of cells[1].split(",")) approved.add(name.trim().replaceAll("`", ""));
 }
 
-// 2. Rust: the [dependencies], [dev-dependencies] and [build-dependencies]
-//    tables of server/Cargo.toml.
-let section = "";
+// 2. Rust: every way server/Cargo.toml can name a library:
+//    [dependencies] with one line per library, [dependencies.foo] with one
+//    section per library, the same under [target.'…'.dependencies] (for one
+//    kind of computer only), and the dev- and build- variants of each. A
+//    `package = "…"` setting means the real library has that other name.
+const dependencyTable = /^(target\..+\.)?(dev-|build-)?dependencies(\.(.+))?$/;
+const unquote = (name) => name.trim().replace(/^["']|["']$/g, "");
+const rustLibraries = [];
+let inTable = false; // Inside a table that lists one library per line.
+let sectionLibrary = null; // Inside a [dependencies.foo] section: the library.
 for (const line of read("server/Cargo.toml").split("\n")) {
   const header = line.match(/^\s*\[([^\]]+)\]/);
   if (header) {
-    section = header[1].trim();
+    const table = header[1].trim().match(dependencyTable);
+    inTable = Boolean(table) && !table[4];
+    sectionLibrary = table?.[4] ? { name: unquote(table[4]) } : null;
+    if (sectionLibrary) rustLibraries.push(sectionLibrary);
     continue;
   }
-  if (!/^(dev-|build-)?dependencies$/.test(section)) continue;
-  const name = line.match(/^\s*([A-Za-z0-9_-]+)\s*=/)?.[1];
-  if (name && !approved.has(name)) {
+  const renamed = line.match(/package\s*=\s*["']([^"']+)["']/)?.[1];
+  if (sectionLibrary && renamed) sectionLibrary.name = renamed;
+  if (!inTable) continue;
+  // `foo = …`, `"foo" = …` and the dotted form `foo.version = …`.
+  const name = line.match(/^\s*["']?([A-Za-z0-9_-]+)["']?\s*(\.[\w.-]+\s*)?=/)?.[1];
+  if (name) rustLibraries.push({ name: renamed ?? name });
+}
+for (const { name } of rustLibraries) {
+  if (!approved.has(name)) {
     problems.push(`server/Cargo.toml uses "${name}", which isn't approved in docs/libraries.md`);
   }
 }
