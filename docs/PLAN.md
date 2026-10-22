@@ -16,7 +16,7 @@ on the live app; anything found then gets a quick follow-up fix.
 | # | Milestone | Status |
 |---|---|---|
 | 0 | Planning documents, README, licence (MIT), change history | ✅ |
-| 1 | Skeleton and automatic checks | ⬜ |
+| 1 | Skeleton and automatic checks | 🔨 |
 | 2 | Live on Render, with sign-in | ⬜ |
 | 3 | Backups and recovery | ⬜ |
 | 4 | Look and feel foundations | ⬜ |

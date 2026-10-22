@@ -27,6 +27,7 @@ book, or more like a feed?
 - **Libraries:** only those on the approved list in `docs/libraries.md`.
 - **Interface language:** English only in V1. Articles can be in any language.
 - **Current plan:** `docs/PLAN.md` (milestones, in order, with status).
+- **Code layout:** `server/` (Rust), `web/` (Svelte). **Run every check with `scripts/check.sh`** before opening a pull request.
 
 ## Working agreements
 
@@ -117,9 +118,11 @@ ten years › written for the next agent.
 | A new feature or a change to how a feature behaves | `docs/DESIGN.md` → "Rules about the rules", then `docs/SPEC.md` |
 | Backend, database, fetching, search, sign-in, security | `docs/ENGINEERING.md` Parts 2 and 3 |
 | Adding, removing or upgrading a library | `docs/libraries.md` and `docs/ENGINEERING.md` → "Boring and few", then ask the owner |
-| Automatic checks or CI | `docs/ENGINEERING.md` Part 4 |
+| Automatic checks or CI | `docs/ENGINEERING.md` Part 4, then `docs/operations/checks.md` |
+| Building or running slowfeed on a computer | `docs/operations/building-and-running.md` |
+| Reviewing a pull request (the second-agent review) | `docs/operations/second-agent-review.md` |
 | Database structure changes (migrations) | `docs/ENGINEERING.md` → the floor and "Data" |
-| Hosting, deploys, backups | `docs/ENGINEERING.md` → "Hosting", and `docs/operations/` (once it exists) |
-| Undoing or revisiting an earlier choice | `docs/decisions/` (once it exists) |
+| Hosting, deploys, backups | `docs/ENGINEERING.md` → "Hosting", and `docs/operations/` |
+| Undoing or revisiting an earlier choice | `docs/decisions/` |
 | Open questions waiting for the owner | `docs/planning/questions.md` |
 | Changing tools, hosting or how changes reach the live app | `docs/owner-guide.md` (the owner's plain-language explanation; keep it accurate) |

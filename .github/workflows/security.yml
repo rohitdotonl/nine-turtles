@@ -1,0 +1,61 @@
+# Weekly report of known security problems in our libraries. It only
+# reports, by opening (or updating) an issue; nothing is updated automatically.
+
+name: Weekly security report
+
+on:
+  schedule:
+    - cron: "17 6 * * 1" # Mondays, 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  audit:
+    name: Security report
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+
+      - name: Check the libraries
+        id: audit
+        run: |
+          cargo install cargo-audit --version 0.22.2 --locked
+          status=0
+          {
+            echo "## Rust libraries (cargo audit)"
+            echo '```'
+            (cd server && cargo audit) 2>&1 || status=1
+            echo '```'
+            echo "## Frontend libraries (npm audit)"
+            echo '```'
+            (cd web && npm audit) 2>&1 || status=1
+            echo '```'
+          } > report.md
+          echo "problems=$status" >> "$GITHUB_OUTPUT"
+
+      - name: Open or update the report issue
+        if: steps.audit.outputs.problems == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="Weekly security report: libraries need attention"
+          {
+            echo "The weekly check found known security problems in libraries slowfeed uses."
+            echo "Nothing has been changed. An agent should propose a fix for the owner to approve."
+            echo
+            cat report.md
+          } > body.md
+          existing=$(gh issue list --state open --search "in:title \"$title\"" --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body-file body.md
+          else
+            gh issue create --title "$title" --body-file body.md
+          fi

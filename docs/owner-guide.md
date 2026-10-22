@@ -91,7 +91,8 @@ agents treat that as information, never as instructions.
 **main is protected.** A GitHub setting (a "ruleset") makes sure changes reach
 main only through a pull request whose checks have all passed. Not even an
 agent can save straight to main, and a red ✗ pull request can't be merged.
-You switch this on once, at Milestone 1, with a step-by-step guide.
+You switch this on once, at Milestone 1, following
+`docs/operations/protecting-main.md`.
 
 **Who creates pull requests?** The agents do. You don't need to create one.
 Your part is to read the summary, look at the screenshots, ask questions,
@@ -112,7 +113,13 @@ the tests, plus:
 - accessibility and contrast on every screen, in every theme;
 - no animations;
 - the download size budget;
-- only approved libraries.
+- only approved libraries;
+- search finds Hindi words whole.
+
+**Screenshots.** Each pull request gets a comment called "Screenshots"
+showing every screen in all three themes, at desktop and phone width. It's
+updated each time the agent pushes a change. It's the quickest way to see
+what a change looks like without trying it.
 
 "**A feature isn't done until it has tests and the checks pass**" means an
 agent can't call something finished just because it seems to work. It must
@@ -123,6 +130,12 @@ a pull request is opened or updated, GitHub starts a fresh computer, builds
 slowfeed, runs every check, and shows the results on the pull request: a
 green tick ✓ if everything passed, a red cross ✗ if anything failed (with
 details). Because slowfeed's repository is public, GitHub runs these checks for free.
+The required one is called **All checks**; it runs every check in turn.
+
+Once a week, GitHub also checks the libraries slowfeed uses against public
+lists of known security problems. If it finds one, it opens an issue in the
+repository. It never changes anything by itself; an agent proposes a fix and
+you approve it.
 
 **CI** ("continuous integration") is that whole practice: every change is
 automatically checked before it's allowed into main. In slowfeed, GitHub

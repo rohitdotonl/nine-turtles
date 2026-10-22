@@ -1,0 +1,25 @@
+[package]
+name = "slowfeed"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99"
+license = "MIT"
+publish = false
+
+# Every library here must be on the approved list in docs/libraries.md;
+# scripts/check-libraries.mjs fails the checks otherwise.
+[dependencies]
+axum = "0.8.9"
+tokio = { version = "1.54.1", features = ["rt-multi-thread", "macros", "net", "signal"] }
+rust-embed = { version = "8.13.0", features = ["mime-guess"] }
+tower-http = { version = "0.7.1", features = ["compression-br", "compression-gzip"] }
+
+[dev-dependencies]
+reqwest = { version = "0.13.5", default-features = false }
+sqlx = { version = "0.9.0", default-features = false, features = ["runtime-tokio", "sqlite-bundled"] }
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = { level = "deny", priority = -1 }
