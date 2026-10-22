@@ -23,7 +23,7 @@ Social media is designed to be **infinite, urgent, and attention-grabbing**. slo
 - **A podcast player.** Audio in feeds appears as a link to the original. (YouTube videos will play through YouTube's own player in V2.)
 - **A newsletter inbox.** No email address that turns newsletters into feeds.
 - **A web scraper.** It shows what publishers put in their feeds. See the second floor.
-- **A permanent archive.** Read, unstarred articles are kept for one year.
+- **A permanent archive.** Unstarred articles are kept for one year.
 - **A multi-user service.** Not in V1. (This one is "not yet," not "never.")
 
 ---
@@ -123,6 +123,7 @@ The 500-feed user gets everything they need; the 30-feed user never sees the mac
 | Exception | Principle bent | Why | Limits |
 |---|---|---|---|
 | Unread counts in V1 | 2. Calm over engagement | Power users with hundreds of feeds need to know what they've seen | Inbox mode only. Muted grey numbers, right-aligned in the sidebar. Never badges, never colored. Per feed and per folder only; no global total. Above 999 shows "999+". |
+| Sidebar search always visible | 6. Power is hidden, never missing | The owner wants finding a feed by name to be always available, whatever the number of feeds | A single quiet search field in the sidebar that filters feeds and folders by name. Nothing else in the sidebar skips progressive disclosure. |
 
 ### Never
 
@@ -144,7 +145,7 @@ These are the first applications of the philosophy. The principle behind each is
 
 ### Name and signature
 
-- **Name:** slowfeed. *(Check domains, app stores, and trademarks, including against the Slow Food organization, before committing. V1 uses Render's free address, so this isn't blocking.)*
+- **Name:** slowfeed. *(Check domains, app stores, and trademarks before committing. V1 uses Render's free address, so this isn't blocking.)*
 - **Wordmark:** "slowfeed" in lowercase, set in the reading serif. No logo shape, no mascot.
 - **Signature:** the ink blue "where you are" accent and the calm itself. The signature is functional, not decorative.
 
@@ -208,7 +209,7 @@ Fixed order, top to bottom:
 4. **"+ Add feed"**, always at the bottom
 
 - No manual ordering.
-- Progressive disclosure: folders and sidebar search appear only once they're useful.
+- Progressive disclosure: folders appear once at least one exists. The sidebar search (find a feed by name) is always shown; see the Exceptions log.
 - **Folders:** one concept in the interface. A feed can belong to more than one folder (tags underneath, folders on screen).
 - **Unread counts:** see the Exceptions log.
 - Broken feeds appear normally; they simply show nothing new until fixed. Problems are explained on the feed health page.
@@ -362,7 +363,7 @@ Vim-style keys are first-class. A permanent, unobtrusive hint says "Press ? for 
   - Problems described in plain words ("Hasn't worked for 3 weeks — the site may have moved"), not HTTP codes.
   - Actions per feed: **Retry · Find new address · Unsubscribe.** "Find new address" reruns autodiscovery.
 - **Your data:** OPML import and export; export of starred articles.
-- **Keeping articles:** read, unstarred articles are removed after one year. Starred articles are kept forever.
+- **Keeping articles:** unstarred articles, read or not, are removed after one year. Starred articles are kept forever.
 
 ### Voice
 

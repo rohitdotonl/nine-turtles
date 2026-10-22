@@ -1,0 +1,203 @@
+# slowfeed V1 build plan
+
+*Draft for the owner's approval.*
+
+V1 is built in small milestones, one at a time, in this order. Each one ends
+with something you can try yourself, a pull request with a plain-language
+summary, and green automatic checks. The next milestone starts only after
+you've merged the previous one and said go.
+
+**How you try each milestone:** each pull request includes screenshots (and
+short screen recordings where useful). After you merge, you try it for real
+on the live app; anything found then gets a quick follow-up fix.
+
+**Status key:** ⬜ not started · 🔨 in progress · ✅ merged
+
+| # | Milestone | Status |
+|---|---|---|
+| 0 | Planning documents, README, licence (MIT), change history | ✅ |
+| 1 | Skeleton and automatic checks | ⬜ |
+| 2 | Live on Render, with sign-in | ⬜ |
+| 3 | Backups and recovery | ⬜ |
+| 4 | Look and feel foundations | ⬜ |
+| 5 | Add a feed and see its items | ⬜ |
+| 6 | Reading articles | ⬜ |
+| 7 | Read, unread, star and undo | ⬜ |
+| 8 | Polite background fetching and Refresh | ⬜ |
+| 9 | Folders, feed editing and OPML import/export | ⬜ |
+| 10 | Search | ⬜ |
+| 11 | Feed health page | ⬜ |
+| 12 | WebSub | ⬜ |
+| 13 | Phones and installing the app | ⬜ |
+| 14 | Keeping things tidy, and the finishing pass | ⬜ |
+
+---
+
+## 1. Skeleton and automatic checks
+
+**Goal:** an empty but real app, and the robot reviewers in place before any feature exists.
+
+- The Rust server program and the Svelte frontend, wired together so the
+  frontend is built into the one program file.
+- A placeholder page in the slowfeed wordmark, with "Nothing here yet."
+- Automatic checks on every pull request (GitHub Actions):
+  - One script that runs every check, so GitHub Actions, any other service, an agent or a person all run the same checks.
+  - Rust: formatting, lint ("clippy", a tool that spots likely mistakes), tests.
+  - Frontend: type check and tests.
+  - Accessibility and contrast tests of every screen, in all three themes.
+  - "No motion": fails if any animation or transition appears in the styles.
+  - Download size budget (150 KB of app code and styles, 400 KB of fonts).
+  - Library check: fails if the code uses a library not on the approved list in `docs/libraries.md`.
+  - A test that the database's search engine (FTS5) is switched on and handles Hindi.
+  - Screenshots of every screen (three themes, desktop and phone width) attached to the pull request.
+  - A weekly security report on our libraries (reports only).
+  - The second-agent review, set up as a standard step.
+- **You switch on protection for main** (a GitHub "ruleset", free for public
+  repositories), with a step-by-step guide: only pull requests with passing
+  checks can be merged, and nobody can save straight to main.
+- `docs/decisions/` started, with a note for each of the technical decisions.
+- `docs/operations/` started (how to build and run).
+
+**You can try:** open the pull request and see the list of green checks. The
+agent will also show you a deliberately broken change failing the checks, so
+you know they bite.
+
+## 2. Live on Render, with sign-in
+
+**Goal:** slowfeed exists at its public address and only you can get in.
+
+- Single-user password sign-in, long-lived device sessions, slowed-down
+  repeated wrong guesses (section 1 of SPEC).
+- Settings read from environment variables only, listed (names, never values) in `docs/operations/settings.md`.
+- GitHub Actions builds slowfeed into a container image; Render runs it.
+- Public status page and key-protected diagnostics page, shown to you in Settings → Status.
+- The daily automatic check: its instructions written in `docs/operations/daily-check.md`
+  (so any agent can follow them), then scheduled. You allow the agents' environment
+  to reach your slowfeed address and add the diagnostics key to its settings.
+- First step for you: open Render and confirm the **Shell** tab exists for a
+  Starter web service (it decides how you set your password).
+- A step-by-step guide for you to set up Render (the agent has no access to
+  it), including how to set your password (the method is still open).
+
+**You can try:** open the address on your computer and phone, sign in, stay
+signed in, sign out. A private window sees only the password field.
+
+## 3. Backups and recovery
+
+**Goal:** before any of your data exists, prove it can be recovered.
+
+- Built into slowfeed: a nightly copy of the database, uploaded to Cloudflare R2
+  (S3-compatible storage outside Render; you create the account, agents never see the keys).
+  Needs one new library for uploading, which will be proposed for your approval.
+- The temporary copy is made outside the data disk. Keeps 30 nightly copies plus one a month for a year.
+- An automatic copy before every database structure change.
+- `docs/operations/backups.md` and `docs/operations/moving-hosts.md`, tested.
+
+**You can try:** follow the restore guide with the agent: restore a backup
+into a fresh copy and see it work.
+
+## 4. Look and feel foundations
+
+**Goal:** the empty three-pane app, looking and behaving like slowfeed.
+
+- Three themes, the fonts (served by slowfeed), type scale and muted greys
+  (you choose between two or three options shown as screenshots), ink blue "where you are".
+- Three panes adapting to width, collapsible sidebar, the fixed sidebar views.
+- Keyboard groundwork: the focus outline, `?` cheat sheet, `[`, Escape, `g` keys.
+- Settings screen with reader controls and theme choice, and Sign out.
+
+**You can try:** switch themes and fonts, resize the window, zoom to 200%,
+move around with only the keyboard.
+
+## 5. Add a feed and see its items
+
+- Empty state with the paste field and the feeds guide page.
+- "+ Add feed" and `a`, with autodiscovery from a website address.
+- Fetching a feed once on adding it; storing articles without duplicates.
+- Item list: title, source and time, newest first, "Show older items".
+- A made-up database the size of 500 feeds and a year of articles, used by the speed tests from now on.
+
+**You can try:** add a few of your favorite blogs by their website address and see their articles listed.
+
+## 6. Reading articles
+
+- Article view: cleaned content, safety cleaning, tracking pixels removed,
+  summary-only feeds, "Open original", Copy link / Share, language marking.
+- Next article loaded in advance for instant `j`.
+- `j`/`k`, `Enter`/`o`, `v`, `+`/`-`.
+
+**You can try:** read articles from several blogs with `j` and `k`.
+
+## 7. Read, unread, star and undo
+
+- Read when shown, `m` to mark unread, mark all as read (on-screen items only), undo.
+- Star and the Starred view; Unread and All views.
+- Unread counts (muted, per feed and folder, "999+").
+- Inbox and river modes; sort order setting.
+
+**You can try:** the checks in SPEC sections 8, 9 and 10.
+
+## 8. Polite background fetching and Refresh
+
+- Background checking on each feed's own rhythm, spread out, with ETag /
+  Last-Modified, `Retry-After`, time and size limits, permanent redirects,
+  backoff for failing feeds.
+- "New items · press r", `r` and the Refresh button; fresh on arrival.
+
+**You can try:** leave it for a day; new articles have arrived on their own,
+and the screen never changed under you.
+
+## 9. Folders, feed editing and OPML import/export
+
+- Folders (a feed in several), "Edit feed" and "Edit folder", unsubscribing, with undo.
+- Sidebar search (find a feed or folder by name).
+- OPML import and export.
+- **This is where you provide your OPML file.** It's used on your live app
+  (or locally) only, never committed; `.gitignore` already blocks `*.opml`.
+- Measure how big your database will be with your real feeds, to check the 1 GB disk is enough.
+
+**You can try:** import your OPML file and see your folders and feeds; export it and compare.
+
+## 10. Search
+
+- Full-text search with scope chip, Search options panel, filter syntax, bold
+  matches, Hindi support, results in the normal list.
+
+**You can try:** the checks in SPEC section 14.
+
+## 11. Feed health page
+
+- Problems in plain words, sorted worst first, with Retry · Find new address · Unsubscribe.
+
+**You can try:** look at your real feeds' health after a few days of fetching.
+
+## 12. WebSub
+
+- Subscribe to hubs, verify, check signatures, renew, reduced backup polling.
+
+**You can try:** follow a WebSub blog and see new posts arrive within minutes.
+
+## 13. Phones and installing the app
+
+- Single-column drill-down, labeled back arrow, bottom article toolbar,
+  system share sheet, Refresh button, 44px targets.
+- Web app manifest and service worker so it installs to the home screen.
+
+**You can try:** read on your phone; add it to the home screen.
+
+## 14. Keeping things tidy, and the finishing pass
+
+- Removing unstarred articles a year after they arrived, only after a successful nightly backup, and never letting them come back as new.
+- Export of starred articles.
+- A full accessibility pass with a screen reader, and a speed pass.
+- Docs brought fully up to date.
+
+**You can try:** export your starred articles; run through all of SPEC as a final check.
+
+---
+
+Responsive layout, accessibility and speed aren't left to the end: each
+milestone must pass the automatic checks for them, every feature comes with
+keyboard-only tests, and each milestone that changes screens includes a
+5-minute checklist you can follow yourself. Milestones 13 and 14 add
+the phone-specific parts and a final human pass.

@@ -1,0 +1,251 @@
+# How slowfeed is built: a guide for the owner
+
+This guide explains, in plain language, what slowfeed is made of and how a
+change goes from an idea to the live app. Agents keep it accurate whenever
+tools, hosting or the workflow change.
+
+---
+
+## 1. The big picture
+
+slowfeed has two halves:
+
+- The **backend** runs on a server (a computer at Render that's always on).
+  It fetches feeds, stores articles, handles sign-in, and answers the
+  browser's requests.
+- The **frontend** is the screens you see and use: the sidebar, the list, the
+  article. It runs in your browser or phone.
+
+When the app is built, the frontend is packed *inside* the backend, so the
+whole of slowfeed is **one program file plus one database file**. That's what
+makes it easy to back up and easy to move to another host.
+
+```
+ Your browser / phone                 Render (the server)
+ ┌──────────────────┐   internet   ┌──────────────────────────────┐
+ │  frontend        │ ◄──────────► │  slowfeed program (backend,  │
+ │  (the screens)   │              │  with the frontend inside)   │
+ └──────────────────┘              │  slowfeed database file      │
+                                   └──────────────┬───────────────┘
+                                                  │ fetches feeds
+                                                  ▼
+                                       publishers' websites
+```
+
+## 2. The backend, and why each piece was chosen
+
+**Rust** is the programming language for the backend. It turns into one small,
+fast program that uses little memory (good for a cheap server). Its
+**compiler** (the tool that turns written code into a working program) is
+very strict: it refuses to build code that has many common kinds of mistakes.
+That's valuable when the owner doesn't review code line by line.
+
+The backend uses these **libraries** (ready-made, widely used code, so we
+don't reinvent common things):
+
+| Library | What it is | Why it's a good choice |
+|---|---|---|
+| **axum** | The web server: receives requests from your browser and sends back answers | The most widely used Rust web server, made by the tokio team |
+| **tokio** | Lets the program do many things at the same time, e.g. check hundreds of feeds while you're reading | The standard for this in Rust; almost everything else builds on it |
+| **reqwest** | Downloads feeds from publishers' websites | The standard Rust tool for this; supports the polite-fetching features we need |
+| **feed-rs** | Reads RSS, Atom and JSON Feed files and turns them into articles | Handles all three formats, including the messy real-world ones |
+| **ammonia** | Cleans article content: removes anything that could run code or misbehave on your screen | Built specifically for safely showing other people's HTML |
+| **sqlx** + **SQLite** | SQLite is the database: one ordinary file that holds everything. sqlx is how the program talks to it | SQLite is the most widely used database in the world, needs no separate server, and its file is trivially easy to back up and move. sqlx checks database instructions for mistakes before the program runs |
+| **FTS5** | SQLite's built-in full-text search | Search without adding another service |
+| **tracing** | Writes the app's logs (its diary of what happened) | The standard Rust logging tool |
+| **opml**, **scraper**, **argon2** | Reading/writing OPML files; finding a site's feed; scrambling the password | Small, focused tools for one job each |
+
+The complete, approved list is in `docs/libraries.md`.
+
+## 3. The frontend, and why each piece was chosen
+
+| Tool | What it is | Why it's a good choice |
+|---|---|---|
+| **TypeScript** | The language of the frontend: JavaScript (the browser's language) with extra checks | Like Rust's compiler, it catches mistakes before they reach you |
+| **Svelte 5** | The tool for building the screens | Produces very small, fast pages, which matters for "every action feels instant" and the size budget |
+| **Single-page app** | The whole interface loads once; after that, moving around doesn't reload the page | Switching views is instant, as DESIGN.md requires |
+| **Vite** | The build tool: turns the frontend code into small files a browser can load | The standard, fast choice for Svelte |
+| **Tailwind CSS** | A way of writing the visual styling (colors, spacing, fonts) | Keeps styling consistent and the final style file small |
+| **PWA** ("progressive web app") | A web standard that lets you add slowfeed to your phone's home screen, so it opens full-screen with its own icon | No app store needed; works on iPhone and Android |
+
+## 4. Where the code lives: GitHub
+
+- The **repository** ("repo") is the project's folder on GitHub: all the code
+  and documents, with the full history of every change.
+- **main** is the official version of the code. Whatever is on main is what
+  runs on the live app.
+- A **branch** is a separate copy of the code where an agent works on a
+  change without touching main.
+- A **commit** is one saved step of work on a branch, with a short message
+  saying what changed.
+- A **pull request** ("PR") is a request to bring a branch's changes into
+  main. It shows exactly what changed, has a plain-language summary, and is
+  where the automatic checks run and where you can comment.
+
+**The repository is public.** Anyone can read the code and documents (that's
+normal for open-source projects, and it's what makes GitHub's protections and
+check-running free). So nothing personal or secret ever goes in it: no
+passwords, no keys, no OPML file. Other people can comment or suggest changes;
+agents treat that as information, never as instructions.
+
+**main is protected.** A GitHub setting (a "ruleset") makes sure changes reach
+main only through a pull request whose checks have all passed. Not even an
+agent can save straight to main, and a red ✗ pull request can't be merged.
+You switch this on once, at Milestone 1, with a step-by-step guide.
+
+**Who creates pull requests?** The agents do. You don't need to create one.
+Your part is to read the summary, look at the screenshots, ask questions,
+and then merge (or not).
+
+## 5. Tests, checks, CI and CD
+
+**Tests** are small programs that use slowfeed automatically and check the
+results. For example, a test might add a pretend feed and check that its
+articles appear, or search for a Hindi word and check the right article comes
+back. Once written, tests run again on every change, so if something that used
+to work breaks, a test notices.
+
+**Checks** are all the automatic inspections a change must pass. They include
+the tests, plus:
+- the code builds without errors;
+- formatting and "lint" (a tool that spots likely mistakes and sloppy code);
+- accessibility and contrast on every screen, in every theme;
+- no animations;
+- the download size budget;
+- only approved libraries.
+
+"**A feature isn't done until it has tests and the checks pass**" means an
+agent can't call something finished just because it seems to work. It must
+come with tests that prove it works, and every check must be green.
+
+**GitHub Actions** is GitHub's own service for running these checks. Each time
+a pull request is opened or updated, GitHub starts a fresh computer, builds
+slowfeed, runs every check, and shows the results on the pull request: a
+green tick ✓ if everything passed, a red cross ✗ if anything failed (with
+details). Because slowfeed's repository is public, GitHub runs these checks for free.
+
+**CI** ("continuous integration") is that whole practice: every change is
+automatically checked before it's allowed into main. In slowfeed, GitHub
+Actions does the CI.
+
+**CD** ("continuous deployment") means that once a change is in main, it's put
+live automatically. In slowfeed, Render does the CD: it watches main, and
+when it changes, Render builds the new version and replaces the running one.
+
+### The second-agent review
+
+Every pull request gets a review from a second agent, before you look at it.
+
+Think of it as a proofreader. The agent that built a change knows what it
+*meant* to do, so it tends to read its own work generously. The reviewer is a
+fresh agent that didn't write the code. It reads the change against
+`DESIGN.md`, `ENGINEERING.md` and `SPEC.md` and asks "is anything wrong or
+missing here? does anything break a floor or a principle?" It posts what it
+found on the pull request, and the building agent fixes each point or
+explains why not. You see both in the pull request.
+
+It costs a little more time and usage per change, and it catches the kind of
+mistake the automatic checks can't, such as a feature that works but doesn't
+match the design.
+
+## 6. "The owner deploys by merging a pull request"
+
+**Deploying** means putting a new version on the live app. Agents have no
+access to Render, so they can't deploy. Instead:
+
+1. An agent opens a pull request.
+2. GitHub Actions runs the checks.
+3. You review and press **Merge**.
+4. The change is now in main. GitHub Actions packs the finished program into
+   a "container image" (a standard, ready-to-run bundle), and Render switches
+   to it. The app may be unavailable for a minute while it switches.
+5. You try the change on the live app.
+
+So pressing Merge *is* deploying. Nothing reaches the live app without you.
+(Render's automatic deploy from main is something you'll switch on once,
+following the guide in Milestone 2.)
+
+## 7. How to merge a pull request
+
+On the GitHub website (or the GitHub phone app):
+
+1. Open the repository and click the **Pull requests** tab. Click the pull request.
+2. Read the summary on the **Conversation** tab. The **Files changed** tab
+   shows every change, if you're curious.
+3. Scroll to the bottom. Check that the checks are green ✓. If anything is
+   red ✗, don't merge; ask the agent to fix it.
+4. Want changes? Write a comment (on the pull request, or in your
+   conversation with the agent) and wait for an update.
+5. Happy? Press **Merge pull request**, then **Confirm merge**.
+6. GitHub may offer **Delete branch**. That's safe: the branch's work is now in main.
+
+**If a merged change turns out to be bad:** the merged pull request has a
+**Revert** button. It creates a new pull request that undoes the change;
+merging that puts the previous version back. Or ask an agent to do it.
+
+## 8. You're never locked in
+
+"Lock-in" means being stuck with a company or tool because leaving would be
+too hard. slowfeed is built so every outside service can be swapped. Here's
+each one, what ties us to it, and what leaving would take.
+
+| Service | What it does for slowfeed | What makes leaving easy | What leaving takes |
+|---|---|---|---|
+| **Render** (hosting) | Runs slowfeed | slowfeed is a standard container image plus one SQLite database file. Every setting is listed in `docs/operations/settings.md`. | Follow `docs/operations/moving-hosts.md` (written and tested at Milestone 3). About an afternoon. |
+| **Cloudflare R2** (backup storage) | Keeps nightly backups | Uses the standard "S3" storage format that many providers offer | Create storage elsewhere and change a few settings |
+| **GitHub** (code, checks, issues) | Holds the code and runs the checks | The code and its full history are in "git", a standard format any code host accepts. All checks run through one script in the repository; GitHub Actions only calls it. | Copy the repository to another host and point its check service at the same script. Issues and pull request discussions stay behind on GitHub unless exported. |
+| **Claude Code** (the agents) | Builds and maintains slowfeed | All instructions are plain documents in the repository: `AGENTS.md` (a convention most coding agents read), the `docs/` folder, and the daily check's steps in `docs/operations/daily-check.md` | Start the new agent in the repository. To move the daily check, set a daily timer in the new tool that says "follow docs/operations/daily-check.md". |
+| **Libraries** | Ready-made code inside slowfeed | Standard, widely used choices, listed in `docs/libraries.md` | Replace one at a time, with your approval |
+| **Your reading data** | Your feeds, folders and starred articles | OPML export (feeds and folders) and JSON Feed export (starred articles), both standard formats | Download both from Settings → Your data and import them into another reader |
+
+**The rule agents follow:** nothing important lives only inside one tool's
+settings or dashboard. If a tool needs to know something, it's written in the
+repository first. That's in `ENGINEERING.md` ("No vendor lock-in") and in
+`AGENTS.md`.
+
+## 9. Keeping sessions short
+
+An agent's "context window" is its working memory for one session. Everything
+it reads (documents, code, test results) takes up room, and when it's full,
+older parts get summarized. The documents are deliberately split so agents
+read only what a task needs:
+
+- **Always read:** `AGENTS.md` only (about 1,500 words, a small fraction of
+  the window).
+- **Read when needed:** the map in `AGENTS.md` says which document, and agents
+  read only the relevant section.
+- **Not read during normal work:** this guide, the change history, the README.
+
+In practice, code and test results fill the window far more than the
+documents do. What helps most from your side:
+1. **One milestone per session.** Start a fresh session for each one; the
+   documents carry everything over.
+2. **Start a new session when switching topic,** e.g. from building to a
+   question about hosting.
+3. **Keep the conversation to decisions;** the details belong in the documents,
+   where the next session can find them.
+
+## 10. Glossary
+
+| Term | Meaning |
+|---|---|
+| Backend / frontend | The server half / the screens half of the app |
+| Branch | A separate copy of the code for working on a change |
+| CI / CD | Automatically checking every change / automatically putting merged changes live |
+| Commit | One saved step of work, with a message |
+| Container image | A standard, ready-to-run bundle of the program that any host can run |
+| Compiler | The tool that turns written code into a working program, refusing code with certain mistakes |
+| Database | Where slowfeed keeps feeds, articles, read/star state and settings (one SQLite file) |
+| Deploy | Put a new version on the live app |
+| Environment variable | A setting given to the app by the host (Render), e.g. the scrambled password, kept outside the code |
+| GitHub Actions | GitHub's service that runs the checks on every pull request |
+| Library / dependency | Ready-made code from others that slowfeed uses |
+| Lock-in | Being stuck with a company or tool because leaving would be too hard |
+| Lint | An automatic check for likely mistakes and sloppy code |
+| Main | The official version of the code; what runs live |
+| Merge | Bring a pull request's changes into main (and so, live) |
+| Migration | A careful, scripted change to the database's structure |
+| Pull request (PR) | A proposed change, with summary, checks and discussion |
+| Ruleset (branch protection) | A GitHub setting that only lets checked pull requests into main |
+| Repository (repo) | The project folder on GitHub, with full history |
+| Test | A small program that checks part of slowfeed works, automatically |
