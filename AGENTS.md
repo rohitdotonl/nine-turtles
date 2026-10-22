@@ -66,10 +66,24 @@ every document the change affects:
 | Tools, hosting, workflow, or how changes reach the live app | `docs/owner-guide.md` |
 | Settings, backups, deploys, moving hosts, the daily check | `docs/operations/` |
 | An open question, or the owner's answer to one | `docs/planning/questions.md` |
+| Anything, once merged | `docs/CHANGELOG.md`: one short plain-language entry at the top |
 | Project facts, rules or the map below | This file |
 
 The pull request summary lists which documents were updated, or says why
 none needed it. The second-agent review checks this too.
+
+## Keeping sessions small
+
+- Read only what the map below says, and only the sections you need (search
+  for the heading, e.g. SPEC section 14 for search, rather than the whole file).
+- Don't read `docs/owner-guide.md`, `docs/CHANGELOG.md`, `README.md` or
+  `docs/planning/tech-check-2026-10.md` unless you're updating them. To add a
+  changelog entry, read only its top.
+- One milestone per session. Hand over through the documents, not memory.
+- Send wide searches and research to a helper agent so only its conclusion
+  enters the session.
+- Keep this file under 200 lines and `docs/planning/questions.md` to open
+  questions only; decided answers move into the right document.
 
 ## The floors (nothing can trade these away)
 

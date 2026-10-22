@@ -203,7 +203,29 @@ settings or dashboard. If a tool needs to know something, it's written in the
 repository first. That's in `ENGINEERING.md` ("No vendor lock-in") and in
 `AGENTS.md`.
 
-## 9. Glossary
+## 9. Keeping sessions short
+
+An agent's "context window" is its working memory for one session. Everything
+it reads (documents, code, test results) takes up room, and when it's full,
+older parts get summarized. The documents are deliberately split so agents
+read only what a task needs:
+
+- **Always read:** `AGENTS.md` only (about 1,500 words, a small fraction of
+  the window).
+- **Read when needed:** the map in `AGENTS.md` says which document, and agents
+  read only the relevant section.
+- **Not read during normal work:** this guide, the change history, the README.
+
+In practice, code and test results fill the window far more than the
+documents do. What helps most from your side:
+1. **One milestone per session.** Start a fresh session for each one; the
+   documents carry everything over.
+2. **Start a new session when switching topic,** e.g. from building to a
+   question about hosting.
+3. **Keep the conversation to decisions;** the details belong in the documents,
+   where the next session can find them.
+
+## 10. Glossary
 
 | Term | Meaning |
 |---|---|
