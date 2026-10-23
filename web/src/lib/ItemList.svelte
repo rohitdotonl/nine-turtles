@@ -103,7 +103,9 @@
   /**
    * `r` and Refresh: loads the list again from the top, with what arrived in
    * the background, and the sidebar's counts with it. Articles still listed
-   * keep their place in memory, so the selected one and Undo carry on.
+   * keep their place in memory, so the selected one and Undo carry on. An
+   * article no longer listed (read, in Unread) isn't selected in the list any
+   * more, so `j` starts again from the top, as the list does.
    */
   export async function refresh() {
     if (busy) return;
@@ -128,7 +130,8 @@
       problem = "The articles couldn't be loaded. Try again in a moment.";
     }
     busy = false;
-    // If the keyboard was on a row that's gone (read, in Unread), keep its place nearby.
+    // If the keyboard was on a row that's gone (read, in Unread), it moves to
+    // the selected row, or the first, rather than being lost.
     if (focusWasInList && !rows.some((row) => row === document.activeElement)) {
       queueMicrotask(() => (rows[selectedIndex] ?? rows[0])?.focus());
     }

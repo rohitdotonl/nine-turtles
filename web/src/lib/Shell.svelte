@@ -64,9 +64,21 @@
     return place.kind === "view" || place.kind === "feed";
   }
 
+  /** Counts changed on this screen since the page loaded; see `loadFeeds`. */
+  let countChanges = 0;
+
   async function loadFeeds() {
     try {
-      feeds = await listFeeds();
+      // If a mark (or an undo) changes a count while the feeds are on their
+      // way, the answer may predate it: ask again, so it isn't overwritten.
+      for (let tries = 0; tries < 3; tries++) {
+        const before = countChanges;
+        const loaded = await listFeeds();
+        if (countChanges === before || tries === 2) {
+          feeds = loaded;
+          break;
+        }
+      }
       feedsProblem = false;
     } catch {
       feedsProblem = true;
@@ -97,6 +109,7 @@
   });
 
   function unreadChanged(feedId: number, change: number) {
+    countChanges++;
     const feed = feeds?.find((each) => each.id === feedId);
     if (feed) feed.unread = Math.max(0, feed.unread + change);
   }

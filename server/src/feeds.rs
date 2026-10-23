@@ -256,7 +256,7 @@ async fn follow(
     })
 }
 
-/// Stores new articles, and returns how many were new. One already stored
+/// Stores new articles. One already stored
 /// (same fingerprint, same feed) that the publisher has since edited gets
 /// the new words quietly: it keeps its place in the list, its read mark and
 /// its star (SPEC section 11).
@@ -265,11 +265,7 @@ pub async fn store_articles(
     feed_id: i64,
     articles: &[feed::ParsedArticle],
     received_at: i64,
-) -> Result<u64, sqlx::Error> {
-    let before: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM articles WHERE feed_id = ?")
-        .bind(feed_id)
-        .fetch_one(&mut *connection)
-        .await?;
+) -> Result<(), sqlx::Error> {
     // An article a feed lists twice counts once, as it's first listed, so
     // a check never flips it back and forth between the two.
     let mut seen = std::collections::HashSet::new();
@@ -308,11 +304,7 @@ pub async fn store_articles(
         .execute(&mut *connection)
         .await?;
     }
-    let after: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM articles WHERE feed_id = ?")
-        .bind(feed_id)
-        .fetch_one(&mut *connection)
-        .await?;
-    Ok(u64::try_from(after - before).unwrap_or(0))
+    Ok(())
 }
 
 /// Which articles a list shows (SPEC sections 4 and 6).

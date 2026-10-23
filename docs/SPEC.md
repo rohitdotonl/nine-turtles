@@ -229,7 +229,7 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 **What it does**
 - The list on screen changes only when you ask: press `r` or the Refresh button.
 - When new items are waiting, one quiet line appears at the top of the list: **"New items · press r"** (on touch screens: **"New items · tap Refresh"**). It shows no number. Its space is always reserved, so nothing shifts when it appears. The list asks the server about once a minute, and only about its own articles (none ever arrive in Starred).
-- A labeled **Refresh** button sits at the top of every list, first in its row, on every screen size.
+- A labeled **Refresh** button sits at the top of every list, first in its row. On phones it moves into the top bar when that bar arrives (Milestone 13), so there's only ever one.
 - Because fetching already happened in the background, pressing `r` is instant. It shows the list from the top again, with the new items, and updates the sidebar's unread numbers. Those numbers also wait for `r`, so nothing in the sidebar changes under you either.
 - Opening or reloading the app always shows the latest state.
 - No pull-to-refresh on phones; there's a labeled Refresh button instead.
