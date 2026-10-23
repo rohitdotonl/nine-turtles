@@ -17,4 +17,4 @@
 - [ ] `scripts/check.sh` passes
 - [ ] Tests added or updated for what changed
 - [ ] No new library without the owner's approval in `docs/libraries.md`
-- [ ] Second-agent review done (`docs/operations/second-agent-review.md`)
+- [ ] Second-agent review done, or not needed (documents-only or tiny fix; `docs/operations/second-agent-review.md`)

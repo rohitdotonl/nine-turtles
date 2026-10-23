@@ -33,7 +33,7 @@ The owner is a tech-oriented person, not a developer. They direct the work; agen
 2. The agent asks the owner when the documents don't settle something or another rule says to ask. For example: a real choice, a new library, a feature or behavior not yet in `docs/SPEC.md`, a change to `DESIGN.md` or to what a check enforces, anything that could lose data, or anything it's unsure of. It keeps working on the parts the question doesn't touch.
 3. The agent works on a separate **branch** (a copy of the code) and opens a **pull request** on GitHub with a plain-language summary.
 4. Automatic checks run on the pull request.
-5. A second agent, one that didn't write the change, reviews every pull request against `DESIGN.md`, this document and `docs/SPEC.md`, and posts what it found on the pull request. The building agent fixes each finding or explains why not. Small, low-risk changes get a lighter review (decision 0015).
+5. A second agent, one that didn't write the change, reviews every pull request against `DESIGN.md`, this document and `docs/SPEC.md`, and posts what it found on the pull request. The building agent fixes each finding or explains why not. Small, low-risk changes get a lighter review (decision 0015); documents-only changes and tiny fixes outside the design, spec, rules, checks, screens, data, fetching and sign-in get none (decision 0021).
 6. The change is merged, and only then does it reach the live app. Either the owner presses **Merge**, or an agent merges after giving the owner a short, beginner-friendly brief of what's about to be merged and getting the owner's yes to it (AGENTS.md → "How a change happens", decision 0009).
 
 ---
@@ -223,7 +223,7 @@ Wherever a principle can be checked by a computer, it is. These run on every pul
 
 | Principle | Check |
 |---|---|
-| The computer checks the work | Rust: format, lint and tests. Frontend: type check and tests. Every pull request also gets a second-agent review. |
+| The computer checks the work | Rust: format, lint and tests. Frontend: type check and tests. Every pull request except documents-only changes and tiny fixes also gets a second-agent review. |
 | Owner can see the change | Screenshots of every screen in all three themes, at desktop and phone width, attached to each pull request |
 | Libraries stay safe | A weekly report of known security problems in our libraries. It only reports; nothing is updated automatically. |
 | First floor (accessibility) | Automated accessibility and contrast tests on every screen, in all three themes |

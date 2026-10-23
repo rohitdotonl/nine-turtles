@@ -54,7 +54,7 @@ Nothing at the moment.
 | Security | Content Security Policy and cross-site request protection. Weekly library security report (reports only). |
 | Backups kept (V2) | 30 nightly plus 12 monthly. The temporary copy is made outside the data disk. |
 | Testing | Realistic large test database for speed; keyboard-only tests per feature; 5-minute owner checklist per screen milestone; screenshots on every pull request. |
-| Second-agent review | Standard on every pull request. |
+| Second-agent review | Standard on every pull request, except documents-only changes and tiny fixes (decision 0021, 23 October 2026). |
 | Times | Shown in the device's time zone. |
 | Phone milestone order | Unchanged. |
 | Repository (Q27) | Stays public. |

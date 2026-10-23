@@ -150,7 +150,7 @@ tells Render (through a private "deploy hook" address) to switch to it.
 
 ### The second-agent review
 
-Every pull request gets a review from a second agent, before you look at it.
+Almost every pull request gets a review from a second agent, before you look at it.
 
 Think of it as a proofreader. The agent that built a change knows what it
 *meant* to do, so it tends to read its own work generously. The reviewer is a
@@ -162,10 +162,11 @@ explains why not. You see both in the pull request.
 
 It costs a little more time and usage per change, and it catches the kind of
 mistake the automatic checks can't, such as a feature that works but doesn't
-match the design. Small, low-risk changes (most documents and tiny code
-fixes; never the design, the spec, the rules, the checks, screens, data,
-fetching or sign-in) get a lighter, cheaper review that reads only
-`AGENTS.md` and the change; the summary says which review a pull request got.
+match the design. Small, low-risk code changes (never the design, the spec, the rules, the
+checks, screens, data, fetching or sign-in) get a lighter, cheaper review
+that reads only `AGENTS.md` and the change. Changes to other documents only,
+and tiny fixes of about 10 lines, get no review at all: the automatic checks
+still run. The summary says which review a pull request got.
 
 ## 6. "Merging a pull request deploys it"
 
