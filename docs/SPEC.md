@@ -401,7 +401,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 **What it does**
 - Contrast meets WCAG AA everywhere (an international accessibility standard) and AAA for article text, in all three themes, including grey text.
 - Nothing relies on color alone.
-- Screen readers find the three panes as named regions, hear which item is selected, and hear changes such as "marked as read". Each article is marked with its language so it's pronounced correctly: the item's language if given, otherwise the feed's; if neither says, it's left unmarked rather than guessed.
+- Screen readers find the three panes as named regions, hear which item is selected, and hear changes such as "marked as read" (said when an article is opened, though nothing about it is written on screen). Each article is marked with its language so it's pronounced correctly: the item's language if given, otherwise the feed's; if neither says, it's left unmarked rather than guessed.
 - Follows the system's text size, reduced motion, high contrast and light/dark settings.
 
 **How to check it**
@@ -413,7 +413,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 
 **What it does**
 - In V1, nothing is removed automatically. Unsubscribing removes that feed's articles and read history (starred articles stay in Starred). Undo brings them back only straight away; after your next action they're gone for good.
-- Export of starred articles as a JSON Feed file (a standard, open format other feed tools can read).
+- Export of starred articles as a JSON Feed file (a standard, open format other feed tools can read), from Settings → Your data → **Export starred articles**. It holds every starred article, newest first, with its text, original link and the feed it came from, including starred articles of feeds you've since unsubscribed from.
 - **No backups in V1** (the owner's decision, 23 October 2026). V1 is for the owner alone. Your safety net is your own OPML file (your feeds and folders) and the starred export (your stars). Which articles you've read isn't saved anywhere else. As a last resort, Render keeps its own daily copies of the disk for at least a week, though Render warns they may not bring a database back cleanly.
 
 **Moved to V2:** nightly backups outside Render with a copy before every database structure change; a written, tested guide to moving hosts; and removing unstarred articles a year after slowfeed received them (only after a successful backup, and never letting them come back as new).

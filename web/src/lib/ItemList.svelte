@@ -25,7 +25,7 @@
   server fetched them already.
 -->
 <script lang="ts">
-  import { onMount, untrack } from "svelte";
+  import { onMount, tick, untrack } from "svelte";
   import {
     listArticles,
     markedAllMessage,
@@ -305,9 +305,21 @@
     undoLast = reverse;
   }
 
+  /**
+   * Said only to screen readers: opening an article marks it read quietly
+   * on screen, but someone who can't see the title turn grey hears it.
+   */
+  let spoken = $state("");
+
   /** The reading area showed this article: it counts as read (not an undoable action). */
   export function shown(article: Article) {
+    if (article.read) return;
     setRead([article], true, "An article couldn't be marked as read. It's still unread.");
+    // Said at once, like everything on screen (SPEC section 25); if saving
+    // fails, the line above the list says so and it's unread again.
+    // Emptied first, so the same words are announced again for the next article.
+    spoken = "";
+    tick().then(() => (spoken = "Marked as read"));
   }
 
   /** `m` and "Mark unread": the selected article is unread again. */
@@ -388,6 +400,7 @@
 </p>
 <p class="flex min-h-11 flex-wrap items-center gap-x-1 text-small">
   <span role="status">{line}</span>
+  <span aria-live="polite" class="sr-only">{spoken}</span>
   {#if undoLast}
     <span aria-hidden="true">·</span>
     <button type="button" onclick={undoByButton} class="min-h-11 min-w-11 px-2 underline underline-offset-4">Undo</button>

@@ -35,7 +35,7 @@ same so older documents still point to the right place.
 | 11 | Feed health page | ⏭ |
 | 12 | WebSub | ⏭ |
 | 13 | Phones and installing the app | ✅ |
-| 14 | Keeping things tidy, and the finishing pass | ⬜ |
+| 14 | Keeping things tidy, and the finishing pass | ✅ |
 
 ---
 
@@ -206,6 +206,10 @@ In V1, the daily check reports failing feeds instead (from Milestone 8).
 - Docs brought fully up to date.
 
 **You can try:** export your starred articles; run through all of SPEC as a final check.
+
+*Built and merged on 23 October 2026 (decision 0024). The automatic checks
+cover a screen reader's view; the owner's own pass with VoiceOver or
+TalkBack, through every SPEC "How to check it", is still to do.*
 
 ---
 

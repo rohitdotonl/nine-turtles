@@ -397,6 +397,11 @@ async fn unsubscribing_hides_a_feed_undo_brings_it_back_and_stars_are_kept() {
     assert_eq!(reader.titles("view=starred").await, ["Alpha blog post 3"]);
     let article = reader.get(&format!("/api/articles/{starred}")).await;
     assert_eq!(article["article"]["feed_title"], "Alpha blog");
+    // And the starred export still has it, credited to its feed.
+    let export = reader.get("/api/starred/export").await;
+    assert_eq!(export["items"].as_array().unwrap().len(), 1);
+    assert_eq!(export["items"][0]["title"], "Alpha blog post 3");
+    assert_eq!(export["items"][0]["_slowfeed"]["feed_title"], "Alpha blog");
     let left: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM articles WHERE feed_id = ?")
         .bind(alpha)
         .fetch_one(&reader.state.db)

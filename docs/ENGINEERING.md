@@ -205,7 +205,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 - **Edited articles:** when a publisher edits an article already stored, its title, link, author, text and language are updated; its place in the list, read mark and star are kept (decision 0019).
 - **Background checks** keep each feed's schedule and failure history in a few columns on `feeds` (structure change 4). The screen learns about new articles by asking, once a minute, whether any article numbered above the newest it loaded belongs to its list (decision 0019).
 - **Settings shared across devices** (so far the sort order) live in a small `settings` table; per-device reader controls stay in the browser.
-- **Exports:** OPML for feeds and folders; starred articles as a JSON Feed file.
+- **Exports:** OPML for feeds and folders; starred articles as a JSON Feed 1.1 file, each item carrying the feed it came from in a `_slowfeed` extension (decision 0024).
 
 ### Sign-in and security
 

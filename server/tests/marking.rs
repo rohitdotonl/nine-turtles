@@ -236,6 +236,63 @@ async fn starred_articles_appear_in_starred_and_leave_when_unstarred() {
 }
 
 #[tokio::test]
+async fn the_starred_export_is_a_json_feed_of_every_starred_article() {
+    let reader = Reader::new().await;
+    let empty = reader.get("/api/starred/export").await;
+    assert_eq!(empty["version"], "https://jsonfeed.org/version/1.1");
+    assert_eq!(empty["items"], json!([]));
+
+    let all = reader.list("view=all").await;
+    let ids = [all[3].1, all[60].1, all[110].1];
+    reader
+        .post(
+            "/api/articles/starred",
+            json!({ "ids": ids, "starred": true }),
+        )
+        .await;
+
+    let response = Client::new()
+        .get(format!("{}/api/starred/export", reader.base))
+        .header("cookie", &reader.cookie)
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.headers()["content-type"],
+        "application/feed+json; charset=utf-8"
+    );
+    assert!(
+        response.headers()["content-disposition"]
+            .to_str()
+            .unwrap()
+            .starts_with("attachment")
+    );
+    let file: Value = serde_json::from_str(&response.text().await.unwrap()).unwrap();
+    let titles: Vec<&str> = file["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|item| item["title"].as_str().unwrap())
+        .collect();
+    // Every starred article, newest first, and no others.
+    assert_eq!(titles, ["Post 117", "Post 60", "Post 10"]);
+    let item = &file["items"][0];
+    assert_eq!(item["date_published"], "2026-04-28T12:00:00Z");
+    assert!(item["id"].as_str().unwrap().contains("#id:post-117"));
+    assert_eq!(item["_slowfeed"]["feed_title"], "Quiet Notes");
+    assert_eq!(item["_slowfeed"]["home_page_url"], "https://quiet.example/");
+
+    // Not signed in: nothing.
+    let response = Client::new()
+        .get(format!("{}/api/starred/export", reader.base))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+}
+
+#[tokio::test]
 async fn oldest_first_lists_the_same_articles_the_other_way_round() {
     let reader = Reader::new().await;
     let newest = reader.list("view=all").await;

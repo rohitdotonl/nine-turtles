@@ -11,6 +11,7 @@ use slowfeed::{
     checking::DUE,
     feeds::{FEEDS, LATEST, List, Order, list_sql, new_sql, page},
     search::{Search, find},
+    starred::{EXPORT, Starred, write},
 };
 use sqlx::SqlitePool;
 
@@ -251,6 +252,23 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
     for (what, took) in timings {
         assert!(took < FAST_ENOUGH, "{what} took {took:?}");
     }
+
+    // The starred export walks only the starred articles, from their own
+    // index, already in order. It's a download, not something the screen
+    // waits on, so it has a second, for 2,000 starred articles.
+    let export = plan(&db, EXPORT, &[]).await;
+    assert!(export.contains("INDEX articles_starred"), "{export}");
+    assert!(!export.contains("TEMP B-TREE"), "{export}");
+    let started = Instant::now();
+    let starred: Vec<Starred> = sqlx::query_as(EXPORT).fetch_all(&db).await.unwrap();
+    let file = write(&starred).to_string();
+    let took = started.elapsed();
+    assert_eq!(starred.len(), 2_000);
+    assert!(file.len() > 100_000);
+    assert!(
+        took < Duration::from_secs(1),
+        "the starred export took {took:?}"
+    );
 }
 
 /// A search for a word found in every one of the 100,000 articles reads
