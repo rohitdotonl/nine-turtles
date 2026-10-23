@@ -18,6 +18,13 @@ describe("keyboard shortcuts", () => {
     expect(read(press("Escape"), 0)).toEqual({ kind: "escape" });
   });
 
+  it("opens Add a feed with a, unless it follows g", () => {
+    const read = createKeyReader();
+    expect(read(press("a"), 0)).toEqual({ kind: "add-feed" });
+    read(press("g"), 0);
+    expect(read(press("a"), 10)).toEqual({ kind: "go", view: "all" });
+  });
+
   it("goes to Unread, Starred and All with g then u, s or a", () => {
     const read = createKeyReader();
     for (const [key, view] of [
@@ -48,6 +55,7 @@ describe("keyboard shortcuts", () => {
   it("lists every shortcut in DESIGN.md in the cheat sheet", () => {
     expect(SHORTCUTS).toHaveLength(16);
     expect(SHORTCUTS.filter((shortcut) => shortcut.ready).map((shortcut) => shortcut.keys[0])).toEqual([
+      "a",
       "g then u",
       "[",
       "Esc",

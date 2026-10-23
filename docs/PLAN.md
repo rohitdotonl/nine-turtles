@@ -25,8 +25,8 @@ same so older documents still point to the right place.
 | 1 | Skeleton and automatic checks | ✅ |
 | 2 | Live on Render, with sign-in | ✅ |
 | 3 | Backups and recovery | ⏭ |
-| 4 | Look and feel foundations | 🔨 |
-| 5 | Add a feed and see its items | ⬜ |
+| 4 | Look and feel foundations | ✅ |
+| 5 | Add a feed and see its items | 🔨 |
 | 6 | Reading articles | ⬜ |
 | 7 | Read, unread, star and undo | ⬜ |
 | 8 | Polite background fetching and Refresh | ⬜ |
@@ -118,8 +118,8 @@ move around with only the keyboard.
 
 ## 5. Add a feed and see its items
 
-- Empty state with the paste field and "Import OPML" (the feeds guide page is V2).
-- "+ Add feed" and `a`, with autodiscovery from a website address.
+- Empty state with the paste field (the feeds guide page is V2; the "Import OPML" link arrives with the import itself, Milestone 9).
+- "+ Add feed" and `a`, with autodiscovery from a website address (looking at exactly the page you paste; the owner's choice, October 2026).
 - Fetching a feed once on adding it; storing articles without duplicates.
 - Item list: title, source and time, newest first, "Show older items".
 - A made-up database the size of 500 feeds and a year of articles, used by the speed tests from now on.

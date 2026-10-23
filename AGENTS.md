@@ -95,7 +95,7 @@ years › written for the next agent.
 - **Never commit the owner's OPML file.** `*.opml` is ignored; test fixtures use made-up feeds.
 - No notifications, badges, gamification, infinite scroll, animations or transitions. Ever.
 - Ink blue means "where you are" and nothing else.
-- Never fetch an article's web page. Autodiscovery fetches a home page only when the owner adds a feed or asks "Find new address".
+- Never fetch an article's web page. Autodiscovery fetches only the page the owner pastes, only when they add a feed or ask "Find new address" (`docs/decisions/0016-adding-feeds.md`).
 - A feature isn't done until it has tests and the checks pass.
 - Significant decisions get a short note in `docs/decisions/`.
 - **No lock-in:** hosts, storage, CI and agent tools stay replaceable; anything a tool needs to know is written in the repository. See `docs/owner-guide.md` → "You're never locked in".

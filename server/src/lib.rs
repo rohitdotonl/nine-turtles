@@ -1,12 +1,17 @@
 //! slowfeed: a quiet, single-user reader for writing on the open web.
 //!
-//! Milestone 2: sign-in, the database file, and the status pages. The
-//! frontend is packed into this program (see `assets`).
+//! So far: sign-in, the database file, the status pages, and adding feeds
+//! and listing their articles. The frontend is packed into this program
+//! (see `assets`).
 
 pub mod assets;
 pub mod auth;
 pub mod config;
 pub mod db;
+pub mod discover;
+pub mod feed;
+pub mod feeds;
+pub mod fetch;
 pub mod log;
 pub mod password;
 pub mod search;
@@ -34,6 +39,8 @@ pub const VERSION: &str = match option_env!("SLOWFEED_VERSION") {
 pub struct AppState {
     pub config: Arc<Config>,
     pub db: SqlitePool,
+    /// The one downloader for publishers' websites (see `fetch`).
+    pub http: reqwest::Client,
     pub limiter: Arc<Mutex<auth::Limiter>>,
     pub wrong_passwords: Arc<AtomicU64>,
     /// Seconds since 1970 (UTC) when this run of slowfeed started.
@@ -57,6 +64,7 @@ pub async fn app(config: Config) -> Result<Router, String> {
 
     let state = AppState {
         db: db::open(&config.data_dir).await?,
+        http: fetch::client(config.local_feeds_allowed)?,
         config: Arc::new(config),
         limiter: Arc::default(),
         wrong_passwords: Arc::default(),
@@ -65,6 +73,7 @@ pub async fn app(config: Config) -> Result<Router, String> {
 
     let router = Router::new()
         .merge(auth::routes())
+        .merge(feeds::routes())
         .merge(status::routes())
         .merge(assets::routes())
         .with_state(state);

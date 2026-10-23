@@ -6,6 +6,12 @@ declare const process: { env: Record<string, string | undefined> };
 // Browser tests run against the real slowfeed program (built by
 // scripts/check.sh), not a development server, so they test what ships.
 const PORT = 4318;
+// A second slowfeed for the tests that add feeds, so the first one stays
+// empty for the first-visit screens, and a made-up publisher for it to read.
+const FEEDS_PORT = 4320;
+const FEED_SITE_PORT = 4319;
+export const FEEDS_APP = `http://127.0.0.1:${FEEDS_PORT}`;
+export const FEED_SITE = `http://127.0.0.1:${FEED_SITE_PORT}`;
 const server = process.env.SLOWFEED_BINARY ?? "../server/target/release/slowfeed";
 // Lets a computer with its own copy of Chromium use it instead of downloading one.
 const executablePath = process.env.SLOWFEED_CHROMIUM || undefined;
@@ -27,15 +33,35 @@ export default defineConfig({
     { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } } },
     { name: "phone", use: { ...devices["Pixel 7"] } },
   ],
-  webServer: {
-    command: server,
-    env: {
-      SLOWFEED_LISTEN: `127.0.0.1:${PORT}`,
-      SLOWFEED_PASSWORD_HASH: TEST_PASSWORD_HASH,
-      // A fresh, empty database for every run.
-      SLOWFEED_DATA_DIR: `test-data/run-${Date.now()}`,
+  webServer: [
+    {
+      command: server,
+      env: {
+        SLOWFEED_LISTEN: `127.0.0.1:${PORT}`,
+        SLOWFEED_PASSWORD_HASH: TEST_PASSWORD_HASH,
+        // A fresh, empty database for every run.
+        SLOWFEED_DATA_DIR: `test-data/run-${Date.now()}`,
+      },
+      url: `http://127.0.0.1:${PORT}/`,
+      reuseExistingServer: false,
     },
-    url: `http://127.0.0.1:${PORT}/`,
-    reuseExistingServer: false,
-  },
+    {
+      command: "node tests/feed-server.mjs",
+      env: { FEED_SERVER_PORT: String(FEED_SITE_PORT) },
+      url: `${FEED_SITE}/`,
+      reuseExistingServer: false,
+    },
+    {
+      command: server,
+      env: {
+        SLOWFEED_LISTEN: `127.0.0.1:${FEEDS_PORT}`,
+        SLOWFEED_PASSWORD_HASH: TEST_PASSWORD_HASH,
+        SLOWFEED_DATA_DIR: `test-data/feeds-${Date.now()}`,
+        // Only here: lets this slowfeed read the made-up publisher on this computer.
+        SLOWFEED_ALLOW_LOCAL_FEEDS: "yes",
+      },
+      url: `${FEEDS_APP}/`,
+      reuseExistingServer: false,
+    },
+  ],
 });

@@ -16,15 +16,23 @@ The script stops at the first failure and says which step failed.
 | Download size budget | More than 150 KB (compressed) of app code and styles, or more than 400 KB of fonts | `scripts/check-size.mjs` |
 | Rust: formatting | Code not in the standard Rust layout. Fix with `cargo fmt` in `server/` | rustfmt |
 | Rust: lint | Likely mistakes ("clippy"); every warning counts as a failure | clippy |
-| Rust: tests | Broken server behavior: sign-in, the wait after wrong passwords, signing out, the browser security rules, the status and diagnostics pages, and the Hindi search test | `server/src/` and `server/tests/` |
+| Rust: tests | Broken server behavior: sign-in, the wait after wrong passwords, signing out, the browser security rules, the status and diagnostics pages, the Hindi search test; adding feeds (autodiscovery, duplicates, plain reasons for problems, private addresses refused, unsafe content cleaned) against a made-up publisher; and the **speed tests**, on a made-up library of 500 feeds and a year of articles (100,000), which fail if the item list takes 100 ms or more or stops using its index | `server/src/` and `server/tests/` (`speed.rs`) |
 | Build the program | The release program doesn't build | cargo |
 | Accessibility, contrast and screenshots | Any WCAG A/AA problem (including color contrast) on any screen, in any chosen theme and when following the device's light or dark setting, at desktop or phone width; the theme or the wordmark's Literata font not applying, or a font coming from anywhere but slowfeed; sign-in, the layout, the sidebar toggle, the `?` list, the `g` keys or Settings not working with the keyboard alone, or anything overlapping at 200% zoom; the browser's security rules blocking anything. Also photographs every screen | `web/tests/` (Playwright with axe) |
+
+## The browser tests' two slowfeeds
+
+`web/playwright.config.ts` starts two copies of slowfeed and a made-up
+publisher (`web/tests/feed-server.mjs`, invented blogs only). The first
+slowfeed stays empty, for the first-visit screens; the second may read the
+made-up publisher and is where tests add feeds. Each test that adds a feed
+uses a blog name of its own, so tests never meet each other's feeds.
 
 ## Adding a screen
 
 Add it to `SCREENS` in `web/tests/screens.ts`. It's then automatically
 checked for accessibility in all three themes and photographed for the pull
-request. A screen that needs signing in sets `signedIn: true`; the tests sign
+request. A screen that needs feeds sets `base: FEEDS_APP`. A screen that needs signing in sets `signedIn: true`; the tests sign
 in through the sign-in page with a made-up password (`web/playwright.config.ts`).
 
 ## Outside the script

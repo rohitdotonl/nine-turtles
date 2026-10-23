@@ -39,19 +39,23 @@ A few words used throughout:
 ## 2. First visit (empty state)
 
 **What it does**
-- Until you add your first feed, the app shows one field: **"Paste a website or feed URL"**, and below it: **"Import OPML"**, which goes to the import described in section 16.
+- Until you add your first feed, Unread and All show one field: **"Paste a website or feed URL"**, and below it: **"Import OPML"**, which goes to the import described in section 16. (Until that import exists, Milestone 9, the link isn't shown, so nothing on screen does nothing.)
 - (V2 adds "New to feeds? Here's how they work", a short guide page for newcomers.)
 
 **How to check it**
-1. On a fresh installation, sign in. You see the field and the Import OPML link, and nothing else competing for attention.
+1. On a fresh installation, sign in. You see the field (and, from Milestone 9, the Import OPML link), and nothing else competing for attention.
 
 ## 3. Adding a feed
 
 **What it does**
 - "+ Add feed" sits at the very bottom of the sidebar, always in the same place. The `a` key does the same.
-- You can paste either a feed address or an ordinary website address. For a website, slowfeed looks at that site's home page to find its feed ("autodiscovery"). If the site offers several feeds, you choose one.
-- If no feed can be found, a plain message says so, e.g. "This site doesn't seem to offer a feed."
-- The new feed's articles appear straight away, all unread (including older posts the feed still lists).
+- "+ Add feed" opens its own screen (`/add-feed`) with the same field as the first visit. Escape goes back to the list you were on.
+- You can paste either a feed address or an ordinary website address; leaving off `https://` is fine. For a website, slowfeed looks at exactly the page you pasted to find its feed ("autodiscovery"), once, because you asked. If the page names several feeds, you see their names and choose one.
+- While slowfeed looks, the field says "Looking for a feed…" in plain text. No spinner.
+- If it doesn't work, a plain sentence says why, never an error code: "This site doesn't seem to offer a feed.", "That site didn't answer. Try again later.", "Nothing was found at that address.", "That doesn't look like a web address.", "slowfeed can't visit that address." (an address inside a private network or on slowfeed's own computer), or "That file is too big to be a feed."
+- Adding a feed you already follow says "You already follow this feed." with a link to it, instead of making a copy. The same address written differently (`http` or `https`, a trailing `/` or `#part`) counts as the same feed.
+- The new feed appears in the sidebar and opens, its articles straight away, all unread (including older posts the feed still lists). It's fetched once on adding; new articles arriving on their own come with Milestone 8.
+- Each feed has its own address (`/feeds/3`), so reloading keeps your place. An address for a feed you don't follow says so plainly ("Feed not found").
 
 **How to check it**
 1. Press `a` (or click "+ Add feed"), paste a blog's home page address (not its feed), press Enter. The blog appears in the sidebar with its articles.
@@ -99,7 +103,7 @@ A few words used throughout:
 
 **What it does**
 - Each row shows the article **title**, and below it the **source name and time** in quiet small text. No images, no site icons.
-- Dates and times are shown in your device's time zone.
+- Dates and times are shown in your device's time zone, in words that never change while you look: "14:05" for today, "23 Oct" for this year, "23 Oct 2025" before that. The time is when the publisher says they published it, or when slowfeed received it if they don't say (and never later than that, so a wrong date can't pin an article to the top).
 - Newest first by default; oldest first can be chosen in Settings.
 - The list has an end: it shows 50 items, then a **"Show older items"** button ("Show newer items" when sorting oldest first). Nothing more loads unless you press it.
 - Row states, each recognizable without color:

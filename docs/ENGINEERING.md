@@ -164,20 +164,23 @@ These were decided with the owner. Changing any of them needs the owner's approv
 - **Slow down when asked:** honor HTTP 429 and `Retry-After`.
 - **Identify ourselves:** a clear User-Agent naming slowfeed.
 - **WebSub (V2):** subscribe when the feed advertises a hub; verify subscriptions; check signatures with a per-subscription secret; renew before leases expire. While WebSub is active, polling continues at a reduced rate as a backup.
-- **Limits:** a timeout and a maximum size for every fetch.
-- **Redirects:** permanent redirects (301/308) update the stored feed address.
+- **Limits:** a timeout and a maximum size for every fetch: 20 seconds (10 to connect) and 5 MB, read bit by bit so a huge file is never held whole. slowfeed asks for compressed files (gzip, brotli).
+- **Public addresses only:** slowfeed refuses to fetch anything on its own computer or a private network (checked after the name is looked up, and on every redirect), so a pasted address can't be used to reach things that should be unreachable. Only the tests switch this off (`SLOWFEED_ALLOW_LOCAL_FEEDS`).
+- **Redirects:** followed by hand, at most five. Permanent redirects (301/308) update the stored feed address; a temporary one on the way keeps the original.
 - **Failures:** each feed fails on its own. Repeated failures increase the wait (exponential backoff, capped at one day). A feed is **dead** after 7 days of 404/410, or 3 weeks of any failure; otherwise a feed with recent errors is "having trouble". Dead feeds are still checked once a day in case they return.
-- **Never fetch article pages** to extract full text. Autodiscovery fetches a website's home page only when the owner adds a feed or asks "Find new address."
+- **Never fetch article pages** to extract full text. Autodiscovery fetches only the page the owner pastes, only when they add a feed or ask "Find new address" (the owner's choice, `docs/decisions/0016-adding-feeds.md`), and reads the `<link rel="alternate">` lines it names. It never guesses other addresses on the site.
 
 ### Duplicates
 
 - Each article gets a fingerprint: the feed's own item ID; otherwise the normalized link; otherwise a hash of title plus date.
 - Links are normalized before comparing (for example http vs https, common tracking parameters).
 - The database refuses a second article with the same fingerprint in the same feed.
+- Feeds are deduplicated the same way: each feed's address is stored normalized too (`url_key`), and the database refuses a second feed with the same one.
 
 ### Sanitizing article content
 
 - ammonia with a strict allowlist: no scripts, no styles that can run code, no event handlers, no iframes. (V2 will allow YouTube's player only.)
+- Cleaned **before storing** (from Milestone 5), so the database never holds unsafe content; relative links are made whole using the article's address. Titles and names are stored as plain text, and the screen shows them as text, never as HTML.
 - Remove invisible 1×1 tracking images.
 - Links get `rel="noopener noreferrer"`.
 

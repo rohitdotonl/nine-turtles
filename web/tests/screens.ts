@@ -1,14 +1,47 @@
 import { expect, type Locator, type Page } from "@playwright/test";
-import { TEST_PASSWORD } from "../playwright.config";
+import { FEED_SITE, FEEDS_APP, TEST_PASSWORD } from "../playwright.config";
 import { THEMES, type Theme } from "../src/lib/themes";
 
 // Every screen of slowfeed. Each new screen is added here, so it is
 // automatically checked for accessibility and photographed for the owner.
-export type Screen = { name: string; path: string; signedIn: boolean; open?: (page: Page) => Promise<void> };
+// `base` picks the slowfeed that has feeds (playwright.config.ts); without
+// it, the screen is seen on a slowfeed with none.
+export type Screen = {
+  name: string;
+  path: string;
+  signedIn: boolean;
+  base?: string;
+  open?: (page: Page) => Promise<void>;
+};
 
 export const SCREENS: Screen[] = [
   { name: "sign-in", path: "/", signedIn: false },
-  { name: "unread", path: "/unread", signedIn: true },
+  { name: "first-visit", path: "/unread", signedIn: true },
+  { name: "add-feed", path: "/add-feed", signedIn: true },
+  {
+    name: "articles",
+    path: "/all",
+    signedIn: true,
+    base: FEEDS_APP,
+    open: async (page) => {
+      await follow(page, `${FEED_SITE}/`);
+      await follow(page, `${FEED_SITE}/garden/`);
+      await page.reload();
+      await appReady(page);
+      await expect(page.getByRole("button", { name: "Show older items" })).toBeVisible();
+    },
+  },
+  {
+    name: "add-feed-choice",
+    path: "/add-feed",
+    signedIn: true,
+    base: FEEDS_APP,
+    open: async (page) => {
+      await page.getByLabel("Paste a website or feed URL").fill(`${FEED_SITE}/two/`);
+      await page.keyboard.press("Enter");
+      await expect(page.getByText("This site offers more than one feed. Choose one:")).toBeVisible();
+    },
+  },
   { name: "settings", path: "/settings", signedIn: true },
   {
     name: "shortcuts",
@@ -29,6 +62,15 @@ const BACKGROUNDS: Record<Theme, string> = {
   sepia: "rgb(243, 233, 210)",
   dark: "rgb(28, 27, 25)",
 };
+
+/**
+ * Follows a feed through slowfeed's own API, with the page's sign-in, so a
+ * screen can start with feeds. Following one twice is fine.
+ */
+export async function follow(page: Page, address: string): Promise<void> {
+  const response = await page.request.post(new URL("/api/feeds", page.url()).href, { data: { address } });
+  expect([201, 409]).toContain(response.status());
+}
 
 /** Signs in through the sign-in page, the way the reader does. */
 export async function signIn(page: Page): Promise<void> {
@@ -51,7 +93,7 @@ export async function chooseTheme(page: Page, theme: Theme): Promise<void> {
 
 export async function openScreen(page: Page, screen: Screen, theme: Theme): Promise<void> {
   await chooseTheme(page, theme);
-  await page.goto(screen.path);
+  await page.goto(screen.base ? new URL(screen.path, screen.base).href : screen.path);
   await appReady(page);
   if (screen.signedIn) await signIn(page);
   await screen.open?.(page);

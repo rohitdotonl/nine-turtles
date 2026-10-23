@@ -25,6 +25,11 @@ RUN cd server && cargo build --locked --release
 
 # 3. What runs: a small Linux with only the program on it.
 FROM debian:trixie-slim
+# The list of trusted certificate authorities, so slowfeed can check it's
+# really talking to each publisher's https:// website.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 COPY --from=server /src/server/target/release/slowfeed /usr/local/bin/slowfeed
 # Render sends visitors to port 10000; the database lives on the disk at /data.
 ENV SLOWFEED_LISTEN=0.0.0.0:10000 \

@@ -47,8 +47,12 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - URL (web address)
 - Domain and subdomain
 - Port
+- IP address and DNS (looking up a name)
+- Private networks and `localhost`
 - Status codes (200, 301, 308, 404, 410, 429)
 - Redirect
+- Compression (gzip, brotli)
+- TLS certificates and certificate authorities
 - Headers
 - Cookie
 - HTML
@@ -66,6 +70,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - JSON Feed
 - OPML
 - Feed autodiscovery
+- HTML parsing (scraper)
 - Polling
 - Conditional requests (ETag, Last-Modified)
 - User-Agent
@@ -123,6 +128,9 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - SQL
 - Query
 - Primary key and unique constraint
+- Index and query plan
+- Transaction
+- Pagination (cursor, "keyset")
 - Migration
 - Full-text search (FTS5)
 - Tokenizer
@@ -141,6 +149,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Secure, HTTP-only and SameSite cookies
 - Cross-site request forgery (CSRF)
 - Cross-site scripting (XSS)
+- Server-side request forgery (SSRF)
 - Sanitizing HTML (ammonia) and allowlists
 - Content Security Policy (CSP)
 - Security headers
@@ -164,6 +173,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Integration test
 - End-to-end test (Playwright)
 - Test fixture
+- Speed test (performance test) on made-up data
 - Formatter
 - Linter
 - Continuous integration (CI)
