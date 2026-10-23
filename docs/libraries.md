@@ -32,7 +32,7 @@ whatever the lock files say.*
 | feed-rs | 3.0 | Reads RSS, Atom and JSON Feed files | Approved |
 | ammonia | 4.2 | Cleans article content so nothing unsafe reaches the screen | Approved |
 | sqlx | 0.9 | Talks to the SQLite database, and updates its structure safely ("migrations") | Approved |
-| opml | 1.1 | Reads and writes OPML subscription files | Approved (revisit at the import milestone: not updated since 2024) |
+| opml | 1.1 | Reads and writes OPML subscription files | Approved (checked at Milestone 9: not updated since 2024, but small and enough for OPML 1.0 to 2.0) |
 | scraper | 0.29 | Finds a site's feed in the page you paste (autodiscovery), and finds tracking images to remove | Approved |
 | argon2 | 0.6 | Scrambles the password so it's never stored readable | Approved |
 | tracing | 0.1 | Writes the app's logs | Approved |

@@ -39,11 +39,11 @@ A few words used throughout:
 ## 2. First visit (empty state)
 
 **What it does**
-- Until you add your first feed, Unread and All show one field: **"Paste a website or feed URL"**, and below it: **"Import OPML"**, which goes to the import described in section 16. (Until that import exists, Milestone 9, the link isn't shown, so nothing on screen does nothing.)
+- Until you add your first feed, Unread and All show one field: **"Paste a website or feed URL"**, and below it: **"Import OPML"**, which goes to the import described in section 16 (Settings → Your data).
 - (V2 adds "New to feeds? Here's how they work", a short guide page for newcomers.)
 
 **How to check it**
-1. On a fresh installation, sign in. You see the field (and, from Milestone 9, the Import OPML link), and nothing else competing for attention.
+1. On a fresh installation, sign in. You see the field and the Import OPML link, and nothing else competing for attention.
 
 ## 3. Adding a feed
 
@@ -89,8 +89,9 @@ A few words used throughout:
   4. **"+ Add feed"**
 - You can't reorder things by hand; order is always alphabetical.
 - At the top of the sidebar: the "slowfeed" wordmark with a labeled **Settings** link beside it, and below them a **search field to find a feed or folder by name**, always shown.
-- Folders appear once at least one exists.
-- **Unread counts:** small, muted grey numbers, right-aligned, next to each feed and folder. No count on "Unread", "Starred" or "All", and never a total. Above 999 shows "999+". Never colored, never a badge.
+- Folders appear once at least one exists. Each has a small button beside it that shows or hides the feeds in it, indented beneath; folders start closed, and this device remembers which you opened. Choosing a folder's name lists the articles of all its feeds (`/folders/2`).
+- The search field filters the sidebar as you type: the folders and feeds whose name contains what you typed (capitals and accents don't matter), in one list. Escape empties it.
+- **Unread counts:** small, muted grey numbers, right-aligned, next to each feed and folder (a folder's is its feeds' added up). No count on "Unread", "Starred" or "All", and never a total. Above 999 shows "999+". Never colored, never a badge.
 - Your current place is marked with the ink blue accent.
 - A broken feed looks like any other feed; it just doesn't get new items. In V1 the daily check tells you when feeds are failing; the feed health page (section 17) comes in V2.
 
@@ -264,10 +265,11 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 
 **What it does**
 - Folders are the only grouping. A feed can be in more than one folder.
-- You can rename a feed, choose its folders, and unsubscribe, from an **Edit feed** button in the item list's header when you're viewing one feed. It offers rename, folders as checkboxes, "New folder", and Unsubscribe (undoable).
-- Viewing a folder, an **Edit folder** button offers rename and delete.
-- You can create, rename and delete folders. Deleting a folder never deletes its feeds.
-- Unsubscribing from a feed keeps its starred articles in Starred.
+- You can rename a feed, choose its folders, and unsubscribe, from an **Edit feed** button in the item list's header when you're viewing one feed. It opens its own page (`/feeds/3/edit`) with the name, folders as checkboxes, "New folder" (made when you save, with the feed in it), Save, Cancel, and Unsubscribe. Escape or Cancel goes back unchanged.
+- Viewing a folder, an **Edit folder** button opens a page (`/folders/2/edit`) to rename or delete it.
+- You can create (from "Edit feed"), rename and delete folders. Two folders can't share a name. Deleting a folder never deletes its feeds.
+- Unsubscribing and deleting a folder happen at once and take you to Unread, where the line says "Unsubscribed from …" or "Deleted the folder …" with Undo (or `u`), until your next action.
+- Unsubscribing from a feed keeps its starred articles in Starred. Undo brings the feed back whole, read history and folders included; after your next action (or ten minutes) its other articles are gone for good. Following it again later starts it afresh, all unread.
 
 **How to check it**
 1. Put a feed in two folders. It appears under both, and its unread count is right in each.
@@ -281,7 +283,7 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 OPML is the standard file format feed readers use to move subscription lists between apps.
 
 **What it does**
-- **Import:** from Settings → Your data, or from the empty state. A feed that appears several times in the file becomes one feed in several folders. Feeds you already have are not duplicated. Afterwards, a plain summary says what was added and what couldn't be read.
+- **Import:** from Settings → Your data, or from the empty state. A feed that appears several times in the file becomes one feed in several folders. Feeds you already have are not duplicated (they join the file's folders). Folders inside folders become the innermost one. Afterwards, a plain summary says what was added and what couldn't be read, for example "Added 120 feeds and 8 folders. Their articles arrive over the next few minutes." The feeds appear at once with the file's names; their articles arrive in the background, a few feeds at a time, as with any feed.
 - **Export:** downloads an OPML file of all your feeds and folders. A feed in several folders appears under each of them.
 - Your own OPML file is never stored in the code repository.
 

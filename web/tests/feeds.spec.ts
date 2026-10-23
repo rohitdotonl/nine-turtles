@@ -21,14 +21,17 @@ function newBlog(prefix = "blog"): string {
   return `${prefix}-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
 }
 
-test("a fresh slowfeed shows only the paste field", async ({ page }) => {
+test("a fresh slowfeed shows only the paste field, and Import OPML", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/unread");
   await appReady(page);
   await signIn(page);
   await expect(field(page)).toBeVisible();
   await expect(page.getByText("Nothing to read yet. Add a website you like to begin.")).toBeVisible();
-  await expect(page.getByText("Import OPML")).toHaveCount(0);
+  // "Import OPML" leads to Settings, at Your data.
+  await page.getByRole("link", { name: "Import OPML" }).click();
+  await expect(page).toHaveURL(/\/settings$/);
+  await expect(page.getByRole("heading", { level: 3, name: "Your data" })).toBeFocused();
   await expect(sidebar(page).getByRole("link", { name: "+ Add feed" })).toBeVisible();
 });
 

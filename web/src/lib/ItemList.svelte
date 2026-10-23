@@ -16,13 +16,16 @@
   the mark is taken back (SPEC section 25). Articles read in the Unread view
   stay where they are, greyed, until you leave it or press r.
 
+  Unsubscribing and deleting a folder happen elsewhere, then lead here: the
+  list arrives with their `notice` already in the line, Undo included.
+
   The list never changes on its own (SPEC section 13). Every minute it asks
   the server whether articles have arrived for it; if so, it says "New
   items" and waits. `r` or Refresh loads it again, instantly, since the
   server fetched them already.
 -->
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, untrack } from "svelte";
   import {
     listArticles,
     markedAllMessage,
@@ -33,6 +36,7 @@
     prefetch,
     when,
     type Article,
+    type Notice,
     type Order,
     type Source,
   } from "./feeds";
@@ -41,6 +45,7 @@
     source,
     order,
     empty,
+    notice,
     selected = $bindable(),
     onChoose,
     onUnreadChange,
@@ -49,6 +54,8 @@
     source: Source;
     order: Order;
     empty: string;
+    /** Something done just before arriving, with its Undo. */
+    notice?: Notice;
     selected: Article | undefined;
     /** A row was clicked or Enter was pressed on it. `byKeyboard` tells which. */
     onChoose: (byKeyboard: boolean) => void;
@@ -77,6 +84,19 @@
   /** The reserved line above the list, and what Undo would do, if anything. */
   let line = $state("");
   let undoLast: (() => void) | undefined = $state();
+  // The notice is read once, when the list opens.
+  untrack(() => {
+    if (!notice) return;
+    const { message, undo } = notice;
+    line = message;
+    if (undo) {
+      undoLast = () => {
+        undo().then((problem) => {
+          if (problem) say(problem);
+        });
+      };
+    }
+  });
 
   let selectedIndex = $derived(selected ? articles.findIndex((article) => article.id === selected?.id) : -1);
 
@@ -260,7 +280,7 @@
   }
 
   /** The line says something that has nothing to undo. */
-  function say(message: string) {
+  export function say(message: string) {
     line = message;
     undoLast = undefined;
   }

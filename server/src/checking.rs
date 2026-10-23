@@ -30,7 +30,7 @@ use crate::{
     feed::{self, ParsedFeed},
     feeds::store_articles,
     fetch::{self, Answer, FetchError, Fetched, Known},
-    log, now,
+    folders, log, now,
 };
 
 pub const MINUTE: i64 = 60;
@@ -58,8 +58,8 @@ const AT_ONCE: usize = 4;
 
 /// The feeds whose time has come, the longest-waiting first, from the
 /// `feeds_due` index (tests/speed.rs checks this).
-pub const DUE: &str =
-    "SELECT id FROM feeds WHERE next_check_at <= ? ORDER BY next_check_at, id LIMIT ?";
+pub const DUE: &str = "SELECT id FROM feeds WHERE next_check_at <= ? AND unsubscribed_at IS NULL
+     ORDER BY next_check_at, id LIMIT ?";
 
 /// Runs for as long as slowfeed does: a round, a pause, another round.
 pub async fn run(state: AppState) {
@@ -81,8 +81,10 @@ pub async fn run(state: AppState) {
 }
 
 /// Checks the feeds due at `now`: at most 20, four at a time. Returns how
-/// many were checked.
+/// many were checked. First, feeds unsubscribed long enough ago that Undo
+/// is no longer offered are cleared for good (`folders::clear_unsubscribed`).
 pub async fn round(state: &AppState, now: i64) -> Result<usize, sqlx::Error> {
+    folders::clear_unsubscribed(&state.db, now - folders::UNDO_FOR).await?;
     let due: Vec<i64> = sqlx::query_scalar(DUE)
         .bind(now)
         .bind(PER_ROUND)
@@ -123,11 +125,12 @@ struct Due {
 pub async fn check(state: &AppState, feed_id: i64, now: i64) -> Result<(), sqlx::Error> {
     // Pushed back first, so even if saving the result fails, the publisher
     // isn't asked again in the next round.
-    let claimed = sqlx::query("UPDATE feeds SET next_check_at = ? WHERE id = ?")
-        .bind(now + SHORTEST_WAIT)
-        .bind(feed_id)
-        .execute(&state.db)
-        .await?;
+    let claimed =
+        sqlx::query("UPDATE feeds SET next_check_at = ? WHERE id = ? AND unsubscribed_at IS NULL")
+            .bind(now + SHORTEST_WAIT)
+            .bind(feed_id)
+            .execute(&state.db)
+            .await?;
     if claimed.rows_affected() == 0 {
         // Unsubscribed in the meantime.
         return Ok(());
@@ -183,6 +186,15 @@ async fn worked(
     // other write to finish, so this can't fail half way when a reader's
     // marks are saved at the same moment.
     let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
+    // Unsubscribed while it was being fetched: nothing to store.
+    let followed: Option<i64> =
+        sqlx::query_scalar("SELECT id FROM feeds WHERE id = ? AND unsubscribed_at IS NULL")
+            .bind(feed_id)
+            .fetch_optional(&mut *transaction)
+            .await?;
+    if followed.is_none() {
+        return transaction.commit().await;
+    }
     let (every, etag, last_modified) = match changed {
         Some((fetched, parsed)) => {
             store_articles(&mut transaction, feed_id, &parsed.articles, now).await?;
@@ -375,7 +387,7 @@ pub async fn health(db: &sqlx::SqlitePool, now: i64) -> Result<Health, sqlx::Err
                 COALESCE(SUM(failures > 0), 0) AS feeds_failing,
                 COALESCE(SUM(failing_since <= ?), 0) AS feeds_failing_for_days,
                 COALESCE(SUM(missing_since <= ? OR failing_since <= ?), 0) AS feeds_dead
-         FROM feeds",
+         FROM feeds WHERE unsubscribed_at IS NULL",
     )
     .bind(now - KEEPS_FAILING)
     .bind(now - DEAD_WHEN_MISSING)

@@ -2,10 +2,11 @@
   Settings (SPEC section 18). It fills the list and reading areas while the
   sidebar stays, so the reader never loses their place. "Close settings" or
   Escape goes back. Reading (the sort order) is shared across the reader's
-  devices; the reader controls belong to this device. The reader's data
-  section arrives with the milestone that gives it something to do.
+  devices; the reader controls belong to this device. Your data imports and
+  exports the reader's feeds and folders as an OPML file.
 -->
 <script lang="ts">
+  import ImportOpml from "./ImportOpml.svelte";
   import type { Order } from "./feeds";
   import { LINE_WIDTHS, READING_FONTS, TEXT_SIZES, type Preferences } from "./preferences";
   import { signOut } from "./session";
@@ -15,9 +16,11 @@
     sort,
     onSort,
     heading = $bindable(),
+    dataHeading = $bindable(),
     version,
     onSignedOut,
     onClose,
+    onImported,
   }: {
     preferences: Preferences;
     /** Newest or oldest first; unknown until the server answers. */
@@ -25,9 +28,13 @@
     /** Saves a new sort order; fails if it couldn't be saved. */
     onSort: (sort: Order) => Promise<void>;
     heading?: HTMLHeadingElement;
+    /** "Your data", where the empty state's "Import OPML" leads. */
+    dataHeading?: HTMLHeadingElement;
     version: string;
     onSignedOut: () => void;
     onClose: () => void;
+    /** Feeds were imported: the sidebar loads them. */
+    onImported: () => void;
   } = $props();
 
   const THEME_CHOICES = [
@@ -157,6 +164,17 @@
             </p>
           </div>
         </figure>
+      </section>
+
+      <section aria-labelledby="data-heading" class="flex flex-col gap-4">
+        <div>
+          <h3 id="data-heading" tabindex="-1" bind:this={dataHeading} class="text-large font-semibold">Your data</h3>
+          <p class="max-w-xl">
+            OPML is the file feed readers use to move your feeds and folders between apps. Import one to bring your
+            feeds here; export one now and then, and keep it somewhere safe.
+          </p>
+        </div>
+        <ImportOpml {onImported} />
       </section>
 
       <section aria-labelledby="status-heading" class="flex flex-col gap-2">

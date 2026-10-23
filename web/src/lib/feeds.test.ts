@@ -1,5 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { explain, markedAllMessage, newItemsMessage, unreadLabel, when, type Problem } from "./feeds";
+import {
+  explain,
+  findByName,
+  folderUnread,
+  importMessage,
+  markedAllMessage,
+  newItemsMessage,
+  unreadLabel,
+  when,
+  type Feed,
+  type Problem,
+} from "./feeds";
 
 describe("article times", () => {
   const now = new Date(2026, 9, 23, 18, 0);
@@ -48,5 +59,49 @@ describe("new items", () => {
     expect(newItemsMessage(false)).toBe("New items · press r");
     expect(newItemsMessage(true)).toBe("New items · tap Refresh");
     expect(newItemsMessage(false)).not.toMatch(/[0-9!]/);
+  });
+});
+
+describe("folders and the sidebar search", () => {
+  const feed = (id: number, title: string, unread: number, folders: number[]): Feed => ({
+    id,
+    title,
+    siteUrl: null,
+    unread,
+    folders,
+  });
+  const feeds = [feed(1, "Café notes", 3, [1, 2]), feed(2, "Garden Letters", 5, [1]), feed(3, "Quiet Notes", 7, [])];
+  const folders = [
+    { id: 1, name: "Reading" },
+    { id: 2, name: "Notebooks" },
+  ];
+
+  it("counts a folder's unread articles from its feeds", () => {
+    expect(folderUnread(folders[0]!, feeds)).toBe(8);
+    expect(folderUnread(folders[1]!, feeds)).toBe(3);
+  });
+
+  it("finds feeds and folders by any part of their name, whatever the capitals or accents", () => {
+    const found = findByName({ feeds, folders }, "  NOTE");
+    expect(found.feeds.map((each) => each.title)).toEqual(["Café notes", "Quiet Notes"]);
+    expect(found.folders.map((each) => each.name)).toEqual(["Notebooks"]);
+    expect(findByName({ feeds, folders }, "cafe").feeds.map((each) => each.id)).toEqual([1]);
+    expect(findByName({ feeds, folders }, "nothing like it")).toEqual({ feeds: [], folders: [] });
+    expect(findByName({ feeds, folders }, " ")).toEqual({ feeds, folders });
+  });
+});
+
+describe("the OPML import summary", () => {
+  it("says what was added, what was already here and what couldn't be read", () => {
+    expect(importMessage({ added: 120, already: 3, foldersAdded: 8, unreadable: ["Old blog", "x"] })).toEqual([
+      "Added 120 feeds and 8 folders. Their articles arrive over the next few minutes.",
+      "3 feeds were already here, so they weren't added again.",
+      "2 lines couldn't be read: Old blog, x.",
+    ]);
+    expect(importMessage({ added: 1, already: 1, foldersAdded: 0, unreadable: [] })).toEqual([
+      "Added 1 feed. Its articles arrive over the next few minutes.",
+      "1 feed was already here, so it wasn't added again.",
+    ]);
+    expect(importMessage({ added: 0, already: 0, foldersAdded: 0, unreadable: [] })).toEqual(["No new feeds were added."]);
   });
 });

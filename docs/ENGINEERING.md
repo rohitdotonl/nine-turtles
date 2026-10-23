@@ -197,6 +197,9 @@ These were decided with the owner. Changing any of them needs the owner's approv
 - **Search:** FTS5 configured so words in scripts with combining marks (such as Hindi's vowel signs) are not split apart; covered by tests with Hindi text.
 - **Read and starred** are two yes/no marks on each article, with small "partial" indexes for the Unread and Starred views and the unread counts (decision 0018).
 - **"Mark all as read"** receives the exact list of items on screen, so items fetched in the background are never touched. It is undoable: undo sends the opposite mark for the same items.
+- **Folders** are a `folders` table and a `feed_folders` list of (folder, feed) pairs, so a feed can be in several and deleting a folder never touches feeds (structure change 5, decision 0020).
+- **Unsubscribing hides first, clears later:** the feed is marked `unsubscribed_at` and leaves every list and the background checks at once; ten minutes later, or when the reader unsubscribes from another feed, its unstarred articles and folder pairs are deleted. Its line stays (marked `cleared`) only while starred articles need its name. Following it again reuses the line (decision 0020).
+- **OPML import** writes the feeds and folders down in one transaction and fetches nothing; background checking fetches the new feeds in its usual rounds.
 - **Edited articles:** when a publisher edits an article already stored, its title, link, author, text and language are updated; its place in the list, read mark and star are kept (decision 0019).
 - **Background checks** keep each feed's schedule and failure history in a few columns on `feeds` (structure change 4). The screen learns about new articles by asking, once a minute, whether any article numbered above the newest it loaded belongs to its list (decision 0019).
 - **Settings shared across devices** (so far the sort order) live in a small `settings` table; per-device reader controls stay in the browser.
