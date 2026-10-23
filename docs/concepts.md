@@ -133,6 +133,8 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Primary key and unique constraint
 - Index and query plan
 - Partial index
+- Soft delete (hide first, remove later)
+- Foreign key and "on delete cascade"
 - Transaction
 - Pagination (cursor, "keyset")
 - Migration

@@ -71,6 +71,40 @@ export const SCREENS: Screen[] = [
       await expect(page.getByRole("button", { name: "Undo" })).toBeVisible();
     },
   },
+  {
+    // A folder's list, with the folder open in the sidebar and a search typed.
+    name: "folder",
+    path: "/all",
+    signedIn: true,
+    base: FEEDS_APP,
+    open: async (page) => {
+      const id = await follow(page, `${FEED_SITE}/garden/`);
+      await follow(page, `${FEED_SITE}/`);
+      await page.request.post(new URL(`/api/feeds/${id}`, page.url()).href, {
+        data: { title: "Garden Letters", folders: [], new_folder: "Outdoors" },
+      });
+      const listed = await (await page.request.get(new URL("/api/feeds", page.url()).href)).json();
+      const folder = listed.folders.find((each: { name: string }) => each.name === "Outdoors").id;
+      // Opened in the sidebar, as if its button had been pressed.
+      await page.evaluate((open) => localStorage.setItem("slowfeed.open-folders", JSON.stringify([open])), folder);
+      await page.goto(new URL(`/folders/${folder}`, page.url()).href);
+      await appReady(page);
+      await expect(page.getByRole("heading", { level: 2, name: "Outdoors" })).toBeVisible();
+      await expect(page.getByRole("region", { name: "Outdoors" }).getByRole("listitem").first()).toBeVisible();
+    },
+  },
+  {
+    name: "edit-feed",
+    path: "/all",
+    signedIn: true,
+    base: FEEDS_APP,
+    open: async (page) => {
+      const id = await follow(page, `${FEED_SITE}/garden/`);
+      await page.goto(new URL(`/feeds/${id}/edit`, page.url()).href);
+      await appReady(page);
+      await expect(page.getByRole("heading", { level: 2, name: "Edit feed" })).toBeVisible();
+    },
+  },
   { name: "settings", path: "/settings", signedIn: true },
   {
     name: "shortcuts",

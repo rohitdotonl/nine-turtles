@@ -176,3 +176,95 @@ async fn adding_background_checks_keeps_every_feed_article_mark_and_star() {
         20
     );
 }
+
+#[tokio::test]
+async fn adding_folders_keeps_every_feed_followed_with_its_articles_marks_and_schedule() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database as Milestone 8 left it (structure changes 1 to 4).
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(slowfeed::db::path(&data_dir))
+                .create_if_missing(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(4, &old)
+        .await
+        .unwrap();
+    for feed in 1..=20 {
+        sqlx::query(
+            "INSERT INTO feeds (id, url, url_key, title, added_at, next_check_at, check_every,
+                 failures, failing_since, problem)
+             VALUES (?, ?, ?, ?, 1, 5000, 1800, ?, ?, ?)",
+        )
+        .bind(feed)
+        .bind(format!("https://blog-{feed}.example/feed"))
+        .bind(format!("blog-{feed}.example/feed"))
+        .bind(format!("Blog {feed}"))
+        .bind(feed % 2)
+        .bind((feed % 2 == 1).then_some(4000))
+        .bind((feed % 2 == 1).then_some("unreachable"))
+        .execute(&old)
+        .await
+        .unwrap();
+        for number in 0..50 {
+            sqlx::query(
+                "INSERT INTO articles (feed_id, fingerprint, title, received_at, sort_at, read,
+                     starred)
+                 VALUES (?, ?, ?, 2, ?, ?, ?)",
+            )
+            .bind(feed)
+            .bind(format!("id:{number}"))
+            .bind(format!("Article {number}"))
+            .bind(number)
+            .bind(number % 2)
+            .bind(i64::from(number % 10 == 0))
+            .execute(&old)
+            .await
+            .unwrap();
+        }
+    }
+    old.close().await;
+
+    let db = slowfeed::db::open(&data_dir).await.unwrap();
+    let count = |sql: &'static str| sqlx::query_scalar::<_, i64>(sql).fetch_one(&db);
+    // Every feed is still followed, cleared of nothing, in no folder.
+    assert_eq!(
+        count("SELECT COUNT(*) FROM feeds WHERE unsubscribed_at IS NULL AND cleared = 0")
+            .await
+            .unwrap(),
+        20
+    );
+    assert_eq!(count("SELECT COUNT(*) FROM folders").await.unwrap(), 0);
+    assert_eq!(count("SELECT COUNT(*) FROM feed_folders").await.unwrap(), 0);
+    assert_eq!(count("SELECT COUNT(*) FROM articles").await.unwrap(), 1000);
+    assert_eq!(
+        count("SELECT COUNT(*) FROM articles WHERE read = 1")
+            .await
+            .unwrap(),
+        500
+    );
+    assert_eq!(
+        count("SELECT COUNT(*) FROM articles WHERE starred = 1")
+            .await
+            .unwrap(),
+        100
+    );
+    // Schedules and failure histories are kept as they were.
+    assert_eq!(
+        count("SELECT COUNT(*) FROM feeds WHERE next_check_at = 5000 AND check_every = 1800")
+            .await
+            .unwrap(),
+        20
+    );
+    assert_eq!(
+        count("SELECT COUNT(*) FROM feeds WHERE failures = 1 AND failing_since = 4000")
+            .await
+            .unwrap(),
+        10
+    );
+}

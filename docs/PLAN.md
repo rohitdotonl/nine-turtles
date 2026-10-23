@@ -29,8 +29,8 @@ same so older documents still point to the right place.
 | 5 | Add a feed and see its items | ✅ |
 | 6 | Reading articles | ✅ |
 | 7 | Read, unread, star and undo | ✅ |
-| 8 | Polite background fetching and Refresh | 🔨 |
-| 9 | Folders, feed editing and OPML import/export | ⬜ |
+| 8 | Polite background fetching and Refresh | ✅ |
+| 9 | Folders, feed editing and OPML import/export | 🔨 |
 | 10 | Search | ⬜ |
 | 11 | Feed health page | ⏭ |
 | 12 | WebSub | ⏭ |
@@ -164,7 +164,7 @@ and the screen never changed under you.
 - OPML import and export.
 - **This is where you provide your OPML file.** It's used on your live app
   (or locally) only, never committed; `.gitignore` already blocks `*.opml`.
-- Measure how big your database will be with your real feeds, to check the 1 GB disk is enough. V1 keeps every article (the yearly clean-up is V2), so this also tells us how many years the disk lasts.
+- Measure how big your database will be with your real feeds, to check the 1 GB disk is enough. V1 keeps every article (the yearly clean-up is V2), so this also tells us how many years the disk lasts. This needs your real feeds, so it happens after you import them on the live app: the daily check reports the size then, and again a week later (decision 0020).
 
 **You can try:** import your OPML file and see your folders and feeds; export it and compare.
 

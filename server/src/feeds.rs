@@ -1,6 +1,6 @@
 //! Adding a feed, listing feeds and their articles, and reading one article
 //! (SPEC sections 3, 5, 6 and 7). Marking articles read or starred is in
-//! `marks`.
+//! `marks`; folders, editing feeds and unsubscribing in `folders`.
 //!
 //! Adding: the reader pastes a feed's address or a website's. slowfeed
 //! fetches it once; if it's a web page, it looks in it for the feeds the site
@@ -24,6 +24,7 @@ use crate::{
     auth::{SignedIn, database_problem},
     checking, discover, feed,
     fetch::{self, FetchError, Fetched},
+    folders::{self, FOLDERS, Folder, MEMBERSHIPS},
     now,
 };
 
@@ -45,19 +46,42 @@ struct FeedRow {
     site_url: Option<String>,
     /// How many of its articles are unread, for the sidebar's muted count.
     unread: i64,
+    /// The folders it's in, by number.
+    #[sqlx(skip)]
+    folders: Vec<i64>,
 }
 
-/// Each feed's unread count, counted from the `articles_unread_by_feed`
-/// index alone (tests/speed.rs checks this).
+/// Each followed feed's unread count, counted from the
+/// `articles_unread_by_feed` index alone (tests/speed.rs checks this).
 pub const FEEDS: &str = "SELECT id, title, site_url,
         (SELECT COUNT(*) FROM articles WHERE articles.feed_id = feeds.id AND articles.read = 0) AS unread
-     FROM feeds ORDER BY title COLLATE NOCASE, id";
+     FROM feeds WHERE unsubscribed_at IS NULL ORDER BY title COLLATE NOCASE, id";
 
-/// Every followed feed, alphabetically, with its unread count (SPEC section 5).
+/// Every followed feed, alphabetically, with its unread count and folders,
+/// and every folder, alphabetically (SPEC section 5).
 async fn list_feeds(_: SignedIn, State(state): State<AppState>) -> Response {
-    let feeds: Result<Vec<FeedRow>, sqlx::Error> = sqlx::query_as(FEEDS).fetch_all(&state.db).await;
-    match feeds {
-        Ok(feeds) => Json(json!({ "feeds": feeds })).into_response(),
+    let listed: Result<(Vec<FeedRow>, Vec<Folder>), sqlx::Error> = async {
+        let mut connection = state.db.acquire().await?;
+        // One snapshot, so the feeds, folders and memberships agree.
+        let mut transaction = sqlx::Connection::begin(&mut *connection).await?;
+        let mut feeds: Vec<FeedRow> = sqlx::query_as(FEEDS).fetch_all(&mut *transaction).await?;
+        let folders: Vec<Folder> = sqlx::query_as(FOLDERS).fetch_all(&mut *transaction).await?;
+        let memberships: Vec<(i64, i64)> = sqlx::query_as(MEMBERSHIPS)
+            .fetch_all(&mut *transaction)
+            .await?;
+        transaction.commit().await?;
+        let mut by_feed = std::collections::HashMap::<i64, Vec<i64>>::new();
+        for (feed, folder) in memberships {
+            by_feed.entry(feed).or_default().push(folder);
+        }
+        for feed in &mut feeds {
+            feed.folders = by_feed.remove(&feed.id).unwrap_or_default();
+        }
+        Ok((feeds, folders))
+    }
+    .await;
+    match listed {
+        Ok((feeds, folders)) => Json(json!({ "feeds": feeds, "folders": folders })).into_response(),
         Err(error) => database_problem("listing feeds", &error),
     }
 }
@@ -191,10 +215,11 @@ fn parse_address(address: &str) -> Option<Url> {
 }
 
 async fn already_followed(state: &AppState, url: &Url) -> Result<(), NotAdded> {
-    let id: Option<i64> = sqlx::query_scalar("SELECT id FROM feeds WHERE url_key = ?")
-        .bind(feed::normalize(url))
-        .fetch_optional(&state.db)
-        .await?;
+    let id: Option<i64> =
+        sqlx::query_scalar("SELECT id FROM feeds WHERE url_key = ? AND unsubscribed_at IS NULL")
+            .bind(feed::normalize(url))
+            .fetch_optional(&state.db)
+            .await?;
     id.map_or(Ok(()), |id| Err(NotAdded::Already(id)))
 }
 
@@ -209,13 +234,21 @@ async fn follow(
     let key = feed::normalize(url);
     let now = now();
     let every = checking::rhythm(&parsed, now);
-    let mut transaction = state.db.begin().await?;
+    let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
+    make_room(&mut transaction, &key).await?;
 
     let inserted: Option<i64> = sqlx::query_scalar(
         "INSERT INTO feeds (url, url_key, title, site_url, language, etag, last_modified, added_at,
              fetched_at, check_every, next_check_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT (url_key) DO NOTHING
+         ON CONFLICT (url_key) DO UPDATE SET
+             url = excluded.url, title = excluded.title, site_url = excluded.site_url,
+             language = excluded.language, etag = excluded.etag,
+             last_modified = excluded.last_modified, added_at = excluded.added_at,
+             fetched_at = excluded.fetched_at, check_every = excluded.check_every,
+             next_check_at = excluded.next_check_at, failures = 0, failing_since = NULL,
+             missing_since = NULL, problem = NULL, unsubscribed_at = NULL, cleared = 0
+         WHERE feeds.unsubscribed_at IS NOT NULL
          RETURNING id",
     )
     .bind(url.as_str())
@@ -242,7 +275,7 @@ async fn follow(
     };
 
     store_articles(&mut transaction, feed_id, &parsed.articles, now).await?;
-    let unread = sqlx::query_scalar("SELECT COUNT(*) FROM articles WHERE feed_id = ?")
+    let unread = sqlx::query_scalar("SELECT COUNT(*) FROM articles WHERE feed_id = ? AND read = 0")
         .bind(feed_id)
         .fetch_one(&mut *transaction)
         .await?;
@@ -253,10 +286,33 @@ async fn follow(
         title: parsed.title,
         site_url: parsed.site_url,
         unread,
+        folders: Vec::new(),
     })
 }
 
-/// Stores new articles. One already stored
+/// Following again a feed the reader unsubscribed from starts it afresh:
+/// whatever Undo could still have brought back is cleared first, so only
+/// its starred articles carry over. The feed's line is then reused (or
+/// made anew if nothing needed it).
+pub async fn make_room(
+    connection: &mut sqlx::SqliteConnection,
+    url_key: &str,
+) -> Result<(), sqlx::Error> {
+    let waiting: Option<i64> = sqlx::query_scalar(
+        "SELECT id FROM feeds WHERE url_key = ? AND unsubscribed_at IS NOT NULL AND cleared = 0",
+    )
+    .bind(url_key)
+    .fetch_optional(&mut *connection)
+    .await?;
+    if let Some(id) = waiting {
+        folders::clear(connection, id).await?;
+    }
+    Ok(())
+}
+
+/// Stores new articles, numbered above every article ever stored, even ones
+/// since removed by unsubscribing, so "anything newer than article N?"
+/// never misses one and a number never means two articles. One already stored
 /// (same fingerprint, same feed) that the publisher has since edited gets
 /// the new words quietly: it keeps its place in the list, its read mark and
 /// its star (SPEC section 11).
@@ -277,9 +333,12 @@ pub async fn store_articles(
             .published_at
             .map_or(received_at, |published| published.min(received_at));
         sqlx::query(
-            "INSERT INTO articles (feed_id, fingerprint, title, link, author, content, summary,
-                 language, published_at, received_at, sort_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            "INSERT INTO articles (id, feed_id, fingerprint, title, link, author, content,
+                 summary, language, published_at, received_at, sort_at)
+             VALUES (1 + MAX(COALESCE((SELECT MAX(id) FROM articles), 0),
+                     COALESCE((SELECT CAST(value AS INTEGER) FROM settings
+                               WHERE name = 'articles_high_water'), 0)),
+                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON CONFLICT (feed_id, fingerprint) DO UPDATE SET
                  title = excluded.title, link = excluded.link, author = excluded.author,
                  content = excluded.content, summary = excluded.summary,
@@ -315,6 +374,8 @@ pub enum List {
     Starred,
     /// One feed's articles, read or not.
     Feed(i64),
+    /// The articles of every feed in a folder, read or not.
+    Folder(i64),
 }
 
 /// The list's order: the reader's "Sort" setting (SPEC section 18).
@@ -327,13 +388,14 @@ pub enum Order {
 }
 
 impl List {
-    /// A feed's articles if one is named, otherwise the view's.
-    const fn from_query(feed: Option<i64>, view: View) -> Self {
-        match (feed, view) {
-            (Some(feed), _) => Self::Feed(feed),
-            (None, View::All) => Self::All,
-            (None, View::Unread) => Self::Unread,
-            (None, View::Starred) => Self::Starred,
+    /// A feed's or a folder's articles if one is named, otherwise the view's.
+    const fn from_query(feed: Option<i64>, folder: Option<i64>, view: View) -> Self {
+        match (feed, folder, view) {
+            (Some(feed), _, _) => Self::Feed(feed),
+            (None, Some(folder), _) => Self::Folder(folder),
+            (None, None, View::All) => Self::All,
+            (None, None, View::Unread) => Self::Unread,
+            (None, None, View::Starred) => Self::Starred,
         }
     }
 }
@@ -349,8 +411,10 @@ enum View {
 
 #[derive(Deserialize)]
 struct ArticlesQuery {
-    /// Only this feed's articles (all of them); otherwise `view` decides.
+    /// Only this feed's articles (all of them); otherwise `folder`, then
+    /// `view`, decides.
     feed: Option<i64>,
+    folder: Option<i64>,
     #[serde(default)]
     view: View,
     #[serde(default)]
@@ -385,7 +449,7 @@ async fn list_articles(
         Some(Some(cursor)) => Some(cursor),
         Some(None) => return StatusCode::BAD_REQUEST.into_response(),
     };
-    let list = List::from_query(query.feed, query.view);
+    let list = List::from_query(query.feed, query.folder, query.view);
     // Asked before the list, so an article arriving in between is reported
     // as new rather than missed.
     let latest: Result<i64, sqlx::Error> = sqlx::query_scalar(LATEST).fetch_one(&state.db).await;
@@ -418,6 +482,10 @@ pub const fn new_sql(list: List) -> Option<&'static str> {
         List::Feed(_) => {
             Some("SELECT EXISTS (SELECT 1 FROM articles WHERE id > ? AND +feed_id = ?)")
         }
+        List::Folder(_) => Some(
+            "SELECT EXISTS (SELECT 1 FROM articles WHERE id > ?
+                 AND +feed_id IN (SELECT feed_id FROM feed_folders WHERE folder_id = ?))",
+        ),
         // Nothing arrives starred.
         List::Starred => None,
     }
@@ -426,6 +494,7 @@ pub const fn new_sql(list: List) -> Option<&'static str> {
 #[derive(Deserialize)]
 struct NewQuery {
     feed: Option<i64>,
+    folder: Option<i64>,
     #[serde(default)]
     view: View,
     /// The `latest` the list was loaded with.
@@ -439,13 +508,13 @@ async fn new_articles(
     State(state): State<AppState>,
     Query(query): Query<NewQuery>,
 ) -> Response {
-    let list = List::from_query(query.feed, query.view);
+    let list = List::from_query(query.feed, query.folder, query.view);
     let Some(sql) = new_sql(list) else {
         return Json(json!({ "new": false })).into_response();
     };
     let mut question = sqlx::query_scalar(sql).bind(query.since);
-    if let List::Feed(feed) = list {
-        question = question.bind(feed);
+    if let List::Feed(id) | List::Folder(id) = list {
+        question = question.bind(id);
     }
     let found: Result<bool, sqlx::Error> = question.fetch_one(&state.db).await;
     match found {
@@ -464,7 +533,12 @@ fn parse_cursor(text: &str) -> Option<(i64, i64)> {
 /// `articles_newest_by_feed`, `articles_unread` and `articles_starred`, read
 /// backwards for oldest first. `CROSS JOIN` tells SQLite to walk the
 /// articles in list order and look up each one's feed, rather than sorting
-/// afterwards (tests/speed.rs checks this).
+/// afterwards (tests/speed.rs checks this). A folder's list walks every
+/// article in order too, keeping its feeds' (the `+` stops SQLite from
+/// gathering them feed by feed and sorting them all on the spot).
+///
+/// Unread and All leave out feeds the reader has unsubscribed from; Starred
+/// keeps their starred articles (SPEC section 15).
 macro_rules! list_query {
     ($filter:literal, $past:literal, $order:literal) => {
         concat!(
@@ -486,18 +560,38 @@ macro_rules! list_query {
     };
 }
 
-/// The question for a list in an order. A feed's question takes the feed's
-/// ID first; every question then takes the cursor (time, id) and the limit.
+/// The question for a list in an order. A feed's or folder's question takes
+/// its ID first; every question then takes the cursor (time, id) and the limit.
 pub const fn list_sql(list: List, order: Order) -> &'static str {
     match (list, order) {
-        (List::All, Order::Newest) => list_query!("", "<", "DESC"),
-        (List::All, Order::Oldest) => list_query!("", ">", "ASC"),
-        (List::Unread, Order::Newest) => list_query!("articles.read = 0 AND", "<", "DESC"),
-        (List::Unread, Order::Oldest) => list_query!("articles.read = 0 AND", ">", "ASC"),
+        (List::All, Order::Newest) => list_query!("feeds.unsubscribed_at IS NULL AND", "<", "DESC"),
+        (List::All, Order::Oldest) => list_query!("feeds.unsubscribed_at IS NULL AND", ">", "ASC"),
+        (List::Unread, Order::Newest) => list_query!(
+            "articles.read = 0 AND feeds.unsubscribed_at IS NULL AND",
+            "<",
+            "DESC"
+        ),
+        (List::Unread, Order::Oldest) => list_query!(
+            "articles.read = 0 AND feeds.unsubscribed_at IS NULL AND",
+            ">",
+            "ASC"
+        ),
         (List::Starred, Order::Newest) => list_query!("articles.starred = 1 AND", "<", "DESC"),
         (List::Starred, Order::Oldest) => list_query!("articles.starred = 1 AND", ">", "ASC"),
         (List::Feed(_), Order::Newest) => list_query!("articles.feed_id = ? AND", "<", "DESC"),
         (List::Feed(_), Order::Oldest) => list_query!("articles.feed_id = ? AND", ">", "ASC"),
+        (List::Folder(_), Order::Newest) => list_query!(
+            "+articles.feed_id IN (SELECT feed_id FROM feed_folders WHERE folder_id = ?)
+                 AND feeds.unsubscribed_at IS NULL AND",
+            "<",
+            "DESC"
+        ),
+        (List::Folder(_), Order::Oldest) => list_query!(
+            "+articles.feed_id IN (SELECT feed_id FROM feed_folders WHERE folder_id = ?)
+                 AND feeds.unsubscribed_at IS NULL AND",
+            ">",
+            "ASC"
+        ),
     }
 }
 
@@ -516,8 +610,8 @@ pub async fn page(
     };
     let (after_at, after_id) = after.unwrap_or(start);
     let mut query = sqlx::query_as(list_sql(list, order));
-    if let List::Feed(feed) = list {
-        query = query.bind(feed);
+    if let List::Feed(id) | List::Folder(id) = list {
+        query = query.bind(id);
     }
     let mut rows: Vec<ArticleRow> = query
         .bind(after_at)

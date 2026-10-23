@@ -2,7 +2,8 @@
 //!
 //! So far: sign-in, the database file, the status pages, adding feeds,
 //! listing and reading their articles, marking them read and starring them,
-//! the shared settings, and checking feeds in the background (`checking`).
+//! the shared settings, checking feeds in the background (`checking`),
+//! folders and unsubscribing (`folders`), and OPML files (`subscriptions`).
 //! The frontend is packed into this program (see `assets`).
 
 pub mod assets;
@@ -14,6 +15,7 @@ pub mod discover;
 pub mod feed;
 pub mod feeds;
 pub mod fetch;
+pub mod folders;
 pub mod log;
 pub mod marks;
 pub mod password;
@@ -21,6 +23,7 @@ pub mod search;
 pub mod security;
 pub mod settings;
 pub mod status;
+pub mod subscriptions;
 
 use std::sync::{
     Arc,
@@ -94,6 +97,8 @@ pub fn router(state: AppState) -> Router {
     let router = Router::new()
         .merge(auth::routes())
         .merge(feeds::routes())
+        .merge(folders::routes())
+        .merge(subscriptions::routes())
         .merge(marks::routes())
         .merge(settings::routes())
         .merge(status::routes())

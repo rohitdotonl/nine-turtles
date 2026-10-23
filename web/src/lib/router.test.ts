@@ -9,12 +9,16 @@ describe("addresses", () => {
     expect(parse("/settings")).toEqual({ kind: "settings" });
     expect(parse("/add-feed")).toEqual({ kind: "add-feed" });
     expect(parse("/feeds/12")).toEqual({ kind: "feed", id: 12 });
+    expect(parse("/folders/4")).toEqual({ kind: "folder", id: 4 });
+    expect(parse("/feeds/12/edit")).toEqual({ kind: "edit-feed", id: 12 });
+    expect(parse("/folders/4/edit/")).toEqual({ kind: "edit-folder", id: 4 });
   });
 
   it("only reads well-formed feed addresses", () => {
     expect(parse("/feeds/0")).toEqual({ kind: "view", view: "unread" });
     expect(parse("/feeds/abc")).toEqual({ kind: "view", view: "unread" });
     expect(parse("/feeds/12/more")).toEqual({ kind: "view", view: "unread" });
+    expect(parse("/folders/x/edit")).toEqual({ kind: "view", view: "unread" });
   });
 
   it("opens Unread for the front page or an unknown address", () => {
@@ -30,5 +34,8 @@ describe("addresses", () => {
     expect(pathFor({ kind: "feed", id: 3 })).toBe("/feeds/3");
     expect(titleFor({ kind: "feed", id: 3 }, "Quiet Notes")).toBe("Quiet Notes · slowfeed");
     expect(titleFor({ kind: "add-feed" })).toBe("Add a feed · slowfeed");
+    expect(pathFor({ kind: "edit-folder", id: 4 })).toBe("/folders/4/edit");
+    expect(titleFor({ kind: "folder", id: 4 }, "Tech")).toBe("Tech · slowfeed");
+    expect(titleFor({ kind: "edit-feed", id: 3 })).toBe("Edit feed · slowfeed");
   });
 });

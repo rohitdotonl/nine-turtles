@@ -59,6 +59,29 @@ async fn big_library() -> SqlitePool {
             .unwrap();
         }
     }
+    // Folders, as if an OPML file was imported: every tenth feed in "Big",
+    // feed 250 alone in "Small", the rest in "Other".
+    for (folder, name) in [(1, "Big"), (2, "Small"), (3, "Other")] {
+        sqlx::query("INSERT INTO folders (id, name) VALUES (?, ?)")
+            .bind(folder)
+            .bind(name)
+            .execute(&mut *transaction)
+            .await
+            .unwrap();
+    }
+    for feed in 1..=FEEDS_COUNT {
+        let folder = match feed {
+            250 => 2,
+            _ if feed % 10 == 0 => 1,
+            _ => 3,
+        };
+        sqlx::query("INSERT INTO feed_folders (folder_id, feed_id) VALUES (?, ?)")
+            .bind(folder)
+            .bind(feed)
+            .execute(&mut *transaction)
+            .await
+            .unwrap();
+    }
     transaction.commit().await.unwrap();
     sqlx::query("ANALYZE").execute(&db).await.unwrap();
     db
@@ -107,12 +130,12 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
         (List::Unread, "articles_unread"),
         (List::Starred, "articles_starred"),
         (List::Feed(250), "articles_newest_by_feed"),
+        (List::Folder(1), "articles_newest"),
     ] {
         for order in [Order::Newest, Order::Oldest] {
-            let mut binds = if list == List::Feed(250) {
-                vec![250]
-            } else {
-                vec![]
+            let mut binds = match list {
+                List::Feed(id) | List::Folder(id) => vec![id],
+                _ => vec![],
             };
             binds.extend([i64::MAX, i64::MAX, 51]);
             let plan = plan(&db, list_sql(list, order), &binds).await;
@@ -150,6 +173,21 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
     assert_eq!(deep.len(), 50);
     let (one_feed, _) = time("one feed", List::Feed(250), Order::Newest, None).await;
     assert!(one_feed.iter().all(|article| article.feed_id == 250));
+    // A folder of 49 feeds, and one holding a single feed: the hardest
+    // case, since most articles walked past belong to other feeds.
+    let (big_folder, _) = time("big folder", List::Folder(1), Order::Newest, None).await;
+    assert_eq!(big_folder.len(), 50);
+    assert!(big_folder.iter().all(|article| article.feed_id % 10 == 0));
+    let (small_folder, _) = time("small folder", List::Folder(2), Order::Newest, None).await;
+    assert!(small_folder.iter().all(|article| article.feed_id == 250));
+    let (small_deep, _) = time(
+        "small folder, deep",
+        List::Folder(2),
+        Order::Newest,
+        Some((NOW - YEAR / 2, i64::MAX)),
+    )
+    .await;
+    assert_eq!(small_deep.len(), 50);
     let (unread, _) = time("unread", List::Unread, Order::Newest, None).await;
     assert_eq!(unread.len(), 50);
     assert!(unread.iter().all(|article| !article.read));
@@ -183,12 +221,11 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
     // "New items · press r": each list asks only about articles that arrived
     // since it was loaded, by number, never reading the whole year.
     let since: i64 = sqlx::query_scalar(LATEST).fetch_one(&db).await.unwrap();
-    for list in [List::All, List::Unread, List::Feed(250)] {
+    for list in [List::All, List::Unread, List::Feed(250), List::Folder(1)] {
         let sql = new_sql(list).unwrap();
-        let binds = if list == List::Feed(250) {
-            vec![since - 1000, 250]
-        } else {
-            vec![since - 1000]
+        let binds = match list {
+            List::Feed(id) | List::Folder(id) => vec![since - 1000, id],
+            _ => vec![since - 1000],
         };
         let plan = plan(&db, sql, &binds).await;
         assert!(
@@ -197,8 +234,8 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
         );
         let started = Instant::now();
         let mut question = sqlx::query_scalar::<_, bool>(sql).bind(since - 1000);
-        if list == List::Feed(250) {
-            question = question.bind(250);
+        if let List::Feed(id) | List::Folder(id) = list {
+            question = question.bind(id);
         }
         question.fetch_one(&db).await.unwrap();
         timings.push(("new items", started.elapsed()));

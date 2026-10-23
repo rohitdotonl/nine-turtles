@@ -47,7 +47,7 @@ test("new items wait for r, and mark all as read never touches them", async ({ p
   await publishAndWait(page, blog, "New items · press r");
   // The list hasn't moved: the new article isn't shown, and the counts wait too.
   await expect(row(page, NEW_ARTICLE)).toHaveCount(0);
-  await expect(page.getByRole("list").getByRole("button")).toHaveCount(3);
+  await expect(page.getByRole("region", { name: `Blog ${blog}` }).getByRole("list").getByRole("button")).toHaveCount(3);
   await expect(sidebar.getByRole("link", { name: `Blog ${blog} 3 unread` })).toBeVisible();
 
   // Mark all as read without pressing r: only the three on screen.

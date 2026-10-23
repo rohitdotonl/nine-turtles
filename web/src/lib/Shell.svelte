@@ -1,18 +1,37 @@
 <!--
-  The signed-in app (SPEC sections 2 to 9, 18 and 19): the sidebar with the
-  feeds and their unread counts, the item list and the reading area, side by
-  side as the window's width allows, with adding a feed, Settings and the
-  `?` shortcut list. An article shown in the reading area counts as read.
-  Nothing in it moves unless the reader moves it.
+  The signed-in app (SPEC sections 2 to 9, 15, 16, 18 and 19): the sidebar
+  with its search, the folders and feeds and their unread counts, the item
+  list and the reading area, side by side as the window's width allows, with
+  adding a feed, editing feeds and folders, Settings and the `?` shortcut
+  list. An article shown in the reading area counts as read. Nothing in it
+  moves unless the reader moves it.
 -->
 <script lang="ts">
   import { onMount, untrack } from "svelte";
   import AddFeed from "./AddFeed.svelte";
   import ArticleView from "./ArticleView.svelte";
   import CheatSheet from "./CheatSheet.svelte";
+  import EditFeed from "./EditFeed.svelte";
+  import EditFolder from "./EditFolder.svelte";
   import ItemList from "./ItemList.svelte";
   import Settings from "./Settings.svelte";
-  import { listFeeds, loadSort, saveSort, unreadLabel, type Article, type Feed, type Order, type Source } from "./feeds";
+  import SidebarFeeds from "./SidebarFeeds.svelte";
+  import {
+    createFolder,
+    deleteFolder,
+    listFeeds,
+    loadSort,
+    refused,
+    resubscribe,
+    saveSort,
+    unsubscribe,
+    type Article,
+    type Feed,
+    type Folder,
+    type Notice,
+    type Order,
+    type Source,
+  } from "./feeds";
   import { createKeyReader } from "./keyboard";
   import { panesFor, widthFor, MEDIUM_REM, WIDE_REM, type SidebarChoice, type Width } from "./layout";
   import { TEXT_SIZES, apply, load, save } from "./preferences";
@@ -24,8 +43,13 @@
   let route: Route = $state(start);
   /** Where Escape and "Close settings" go back to: the last list you were on. */
   let lastPlace: Route = $state(isList(start) ? start : { kind: "view", view: "unread" });
-  /** The feeds you follow, alphabetically; unknown until the server answers. */
+  /** The feeds you follow and your folders, alphabetically; unknown until the server answers. */
   let feeds: Feed[] | undefined = $state();
+  let folders: Folder[] = $state([]);
+  /** What's typed in the sidebar search. */
+  let search = $state("");
+  /** What the next list's line says on arrival (after unsubscribing or deleting a folder). */
+  let notice: Notice | undefined = $state();
   let feedsProblem = $state(false);
   /** The reader's sort order, shared across their devices; unknown until the server answers. */
   let sort: Order | undefined = $state();
@@ -45,23 +69,44 @@
   let wordmark: HTMLHeadingElement | undefined = $state();
   let listHeading: HTMLHeadingElement | undefined = $state();
   let settingsHeading: HTMLHeadingElement | undefined = $state();
+  let dataHeading: HTMLHeadingElement | undefined = $state();
   let addField: HTMLInputElement | undefined = $state();
   let sidebar: HTMLElement | undefined = $state();
   let articleHeading: HTMLHeadingElement | undefined = $state();
   let itemList: ItemList | undefined = $state();
 
   /** Which articles the list shows here. */
-  let source: Source = $derived(route.kind === "feed" ? { feed: route.id } : { view: route.kind === "view" ? route.view : "unread" });
+  let source: Source = $derived(
+    route.kind === "feed"
+      ? { feed: route.id }
+      : route.kind === "folder"
+        ? { folder: route.id }
+        : { view: route.kind === "view" ? route.view : "unread" },
+  );
 
   let currentFeed = $derived.by(() => {
     const place = route;
-    return place.kind === "feed" ? feeds?.find((feed) => feed.id === place.id) : undefined;
+    return place.kind === "feed" || place.kind === "edit-feed" ? feeds?.find((feed) => feed.id === place.id) : undefined;
   });
+  let currentFolder = $derived.by(() => {
+    const place = route;
+    return place.kind === "folder" || place.kind === "edit-folder"
+      ? folders.find((folder) => folder.id === place.id)
+      : undefined;
+  });
+  /** The feed's or folder's name, for the heading and the tab's title. */
+  let placeName = $derived(currentFeed?.title ?? currentFolder?.name);
+  /** A feed or folder address that names none you have. */
+  let missing = $derived(
+    feeds !== undefined &&
+      (((route.kind === "feed" || route.kind === "edit-feed") && !currentFeed) ||
+        ((route.kind === "folder" || route.kind === "edit-folder") && !currentFolder)),
+  );
   /** No feeds yet: Unread and All show the add field instead (SPEC section 2). */
   let firstVisit = $derived(feeds !== undefined && feeds.length === 0);
 
   function isList(place: Route): boolean {
-    return place.kind === "view" || place.kind === "feed";
+    return place.kind === "view" || place.kind === "feed" || place.kind === "folder";
   }
 
   /** Counts changed on this screen since the page loaded; see `loadFeeds`. */
@@ -75,7 +120,8 @@
         const before = countChanges;
         const loaded = await listFeeds();
         if (countChanges === before || tries === 2) {
-          feeds = loaded;
+          feeds = loaded.feeds;
+          folders = loaded.folders;
           break;
         }
       }
@@ -91,7 +137,7 @@
   });
 
   $effect(() => {
-    document.title = titleFor(route, currentFeed?.title);
+    document.title = titleFor(route, placeName);
   });
 
   // An article counts as read as soon as the reading area shows it (SPEC
@@ -230,20 +276,26 @@
 
   /** Where the keyboard's place goes on arriving somewhere: its heading, or the add field. */
   function placeFocus(place: Route): HTMLElement | undefined {
+    // Edit pages bind their heading to `listHeading` too.
     if (place.kind === "settings") return settingsHeading;
     if (place.kind === "add-feed") return addField;
     return listHeading;
   }
 
-  /** Goes to a place, and moves the keyboard's place to its heading. */
-  function go(next: Route) {
+  /**
+   * Goes to a place, and moves the keyboard's place to its heading. A list
+   * arrived at with a `withNotice` shows it in its line, with Undo.
+   */
+  function go(next: Route, withNotice?: Notice) {
     if (pathFor(next) !== location.pathname) history.pushState(null, "", pathFor(next));
     if (pathFor(next) !== pathFor(route)) selected = undefined;
     reading = false;
+    notice = withNotice;
     route = next;
     if (isList(next)) lastPlace = next;
-    // A feed added elsewhere (another tab, another device) isn't in the list yet.
+    // A feed or folder added elsewhere (another tab, another device) isn't in the list yet.
     if (next.kind === "feed" && !feeds?.some((feed) => feed.id === next.id)) loadFeeds();
+    if (next.kind === "folder" && !folders.some((folder) => folder.id === next.id)) loadFeeds();
     // On a phone-narrow window the sidebar is the home screen; choosing a
     // place shows it instead.
     if (width === "narrow") sidebarChoice = "hidden";
@@ -253,6 +305,60 @@
   async function added(feed: Feed) {
     await loadFeeds();
     go({ kind: "feed", id: feed.id });
+  }
+
+  /** The empty state's "Import OPML": Settings, at Your data. */
+  function goImport(event: MouseEvent) {
+    follow(event, { kind: "settings" });
+    if (event.defaultPrevented) queueMicrotask(() => dataHeading?.focus());
+  }
+
+  /** Back from an edit page, saved or not, to the feed or folder. */
+  async function edited(saved: boolean) {
+    if (saved) await loadFeeds();
+    if (route.kind === "edit-feed") go({ kind: "feed", id: route.id });
+    else if (route.kind === "edit-folder") go({ kind: "folder", id: route.id });
+  }
+
+  /** Unsubscribes, then shows Unread with "Unsubscribed from … · Undo". */
+  async function unsubscribeFrom(feed: Feed): Promise<string | undefined> {
+    const refusal = await unsubscribe(feed.id);
+    if (refusal) return refused(refusal, "feed");
+    await loadFeeds();
+    go(
+      { kind: "view", view: "unread" },
+      {
+        message: `Unsubscribed from ${feed.title}`,
+        undo: async () => {
+          const problem = await resubscribe(feed.id);
+          if (problem) return refused(problem, "feed");
+          await loadFeeds();
+          return undefined;
+        },
+      },
+    );
+    return undefined;
+  }
+
+  /** Deletes a folder (never its feeds), then shows Unread with "Deleted … · Undo". */
+  async function deleteThis(folder: Folder): Promise<string | undefined> {
+    const inside = (feeds ?? []).filter((feed) => feed.folders.includes(folder.id)).map((feed) => feed.id);
+    const refusal = await deleteFolder(folder.id);
+    if (refusal) return refused(refusal, "folder");
+    await loadFeeds();
+    go(
+      { kind: "view", view: "unread" },
+      {
+        message: `Deleted the folder ${folder.name}`,
+        undo: async () => {
+          const problem = await createFolder(folder.name, inside);
+          if (problem) return refused(problem, "folder");
+          await loadFeeds();
+          return undefined;
+        },
+      },
+    );
+    return undefined;
   }
 
   function follow(event: MouseEvent, next: Route) {
@@ -317,6 +423,7 @@
   /** What an empty list says, plainly. */
   function emptyText(place: Route): string {
     if (place.kind === "feed") return "This feed has no articles yet.";
+    if (place.kind === "folder") return "No articles in this folder yet.";
     if (place.kind === "view" && place.view === "unread") return "Nothing unread.";
     if (place.kind === "view" && place.view === "starred") return "No starred articles yet.";
     return "No articles yet.";
@@ -324,6 +431,7 @@
 
   function escape() {
     if (route.kind === "settings" || route.kind === "add-feed") go(lastPlace);
+    else if (route.kind === "edit-feed" || route.kind === "edit-folder") edited(false);
     else if (reading || (selected && inArticle())) backToList();
     else if (width === "narrow" && !panes.sidebar) {
       sidebarChoice = "shown";
@@ -386,6 +494,25 @@
           ]}>Settings</a
         >
       </div>
+      <!-- Always shown (DESIGN.md → Exceptions log): finds a feed or folder by name. -->
+      <div class="px-4 pb-4">
+        <label for="sidebar-search" class="sr-only">Find a feed or folder</label>
+        <input
+          id="sidebar-search"
+          type="search"
+          bind:value={search}
+          placeholder="Find a feed or folder"
+          autocomplete="off"
+          onkeydown={(event) => {
+            // Escape empties the search first; pressed again, it does what it does elsewhere.
+            if (event.key === "Escape" && search !== "") {
+              event.preventDefault();
+              search = "";
+            }
+          }}
+          class="min-h-11 w-full rounded border border-ink bg-paper px-3 placeholder:text-muted"
+        />
+      </div>
       <ul>
         {#each VIEWS as view (view)}
           {@const current = route.kind === "view" && route.view === view}
@@ -400,28 +527,8 @@
           </li>
         {/each}
       </ul>
-      {#if feeds && feeds.length > 0}
-        <h2 class="sr-only">Feeds</h2>
-        <ul class="mt-4">
-          {#each feeds as feed (feed.id)}
-            {@const current = route.kind === "feed" && route.id === feed.id}
-            <li>
-              <a
-                href={pathFor({ kind: "feed", id: feed.id })}
-                aria-current={current ? "page" : undefined}
-                onclick={(event) => follow(event, { kind: "feed", id: feed.id })}
-                class={[
-                  "flex min-h-11 items-center gap-3 border-l-4 px-4 py-2",
-                  current ? "border-accent bg-tint-sidebar" : "border-transparent",
-                ]}
-                ><span class="min-w-0 flex-1 break-words">{feed.title}</span>{#if unreadLabel(feed.unread)}<span
-                    class="shrink-0 text-small text-muted tabular-nums"
-                    >{unreadLabel(feed.unread)}<span class="sr-only"> unread</span></span
-                  >{/if}</a
-              >
-            </li>
-          {/each}
-        </ul>
+      {#if feeds}
+        <SidebarFeeds {feeds} {folders} {route} {search} {follow} />
       {/if}
       {#if feedsProblem}
         <p class="px-4 pt-4 text-small">Your feeds couldn't be loaded. Reload the page to try again.</p>
@@ -447,10 +554,33 @@
           {sort}
           onSort={changeSort}
           bind:heading={settingsHeading}
+          bind:dataHeading
           {version}
           {onSignedOut}
           onClose={() => go(lastPlace)}
+          onImported={loadFeeds}
         />
+      {:else if route.kind === "edit-feed" && currentFeed}
+        {#key currentFeed.id}
+          <EditFeed
+            feed={currentFeed}
+            {folders}
+            bind:heading={listHeading}
+            onSaved={() => edited(true)}
+            onCancel={() => edited(false)}
+            onUnsubscribe={() => unsubscribeFrom(currentFeed!)}
+          />
+        {/key}
+      {:else if route.kind === "edit-folder" && currentFolder}
+        {#key currentFolder.id}
+          <EditFolder
+            folder={currentFolder}
+            bind:heading={listHeading}
+            onSaved={() => edited(true)}
+            onCancel={() => edited(false)}
+            onDelete={() => deleteThis(currentFolder!)}
+          />
+        {/key}
       {:else if route.kind === "add-feed"}
         <section aria-labelledby="list-heading" class="flex flex-1 flex-col bg-paper pt-16">
           <div class="min-h-0 flex-1 overflow-y-auto px-6 pb-10 md:px-10">
@@ -468,16 +598,40 @@
           class={["flex-col bg-list pt-16", panes.article ? "w-80 shrink-0 xl:w-96" : "flex-1", panes.list && "flex"]}
         >
           <div class="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
-            <h2 id="list-heading" tabindex="-1" bind:this={listHeading} class="text-large font-semibold break-words">
-              {route.kind === "feed" && feeds !== undefined && !currentFeed
-                ? "Feed not found"
-                : nameFor(route, currentFeed?.title)}
-            </h2>
-            {#if route.kind === "feed" && feeds !== undefined && !currentFeed}
+            <div class="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+              <h2 id="list-heading" tabindex="-1" bind:this={listHeading} class="min-w-0 text-large font-semibold break-words">
+                {missing
+                  ? route.kind === "folder" || route.kind === "edit-folder"
+                    ? "Folder not found"
+                    : "Feed not found"
+                  : nameFor(route, placeName)}
+              </h2>
+              {#if currentFeed}
+                <a
+                  href={pathFor({ kind: "edit-feed", id: currentFeed.id })}
+                  onclick={(event) => follow(event, { kind: "edit-feed", id: currentFeed!.id })}
+                  class="flex min-h-11 shrink-0 items-center rounded border border-ink px-4">Edit feed</a
+                >
+              {:else if currentFolder}
+                <a
+                  href={pathFor({ kind: "edit-folder", id: currentFolder.id })}
+                  onclick={(event) => follow(event, { kind: "edit-folder", id: currentFolder!.id })}
+                  class="flex min-h-11 shrink-0 items-center rounded border border-ink px-4">Edit folder</a
+                >
+              {/if}
+            </div>
+            {#if missing && (route.kind === "folder" || route.kind === "edit-folder")}
+              <p class="mt-4">There's no folder here. It may have been deleted or renamed.</p>
+            {:else if missing}
               <p class="mt-4">You don't follow this feed. It may have been an old address.</p>
             {:else if firstVisit && !(route.kind === "view" && route.view === "starred")}
               <p class="mt-4 mb-6">Nothing to read yet. Add a website you like to begin.</p>
               <AddFeed bind:field={addField} feeds={[]} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} />
+              <p class="mt-4">
+                <a href="/settings" onclick={goImport} class="inline-flex min-h-11 items-center underline underline-offset-4"
+                  >Import OPML</a
+                >
+              </p>
             {:else if feeds !== undefined && sort !== undefined}
               <!-- Refresh and "Mark all as read", the reserved lines for "New items · press r" and "Marked … · Undo", then the list. -->
               {#key `${pathFor(route)} ${sort}`}
@@ -486,6 +640,7 @@
                   bind:selected
                   {source}
                   order={sort}
+                  {notice}
                   empty={emptyText(route)}
                   onChoose={chose}
                   onUnreadChange={unreadChanged}
@@ -502,7 +657,7 @@
               bind:heading={articleHeading}
               onStar={() => itemList?.toggleStar()}
               onMarkUnread={() => itemList?.markUnread()}
-              back={width === "narrow" ? { name: nameFor(route, currentFeed?.title), go: backToList } : undefined}
+              back={width === "narrow" ? { name: nameFor(route, placeName), go: backToList } : undefined}
             />
           {:else}
             <section aria-label="Article" class="flex min-w-0 flex-1 flex-col bg-paper pt-16">

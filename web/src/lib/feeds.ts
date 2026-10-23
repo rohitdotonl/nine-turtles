@@ -1,5 +1,6 @@
-// Talking to the server about feeds and their articles (SPEC sections 3, 5,
-// 6, 7, 8, 9 and 18), and the words and times the screens show for them.
+// Talking to the server about feeds, folders and their articles (SPEC
+// sections 3, 5 to 9, 15, 16 and 18), and the words and times the screens
+// show for them.
 import type { View } from "./router";
 
 export type Feed = {
@@ -8,7 +9,14 @@ export type Feed = {
   siteUrl: string | null;
   /** How many of its articles are unread. */
   unread: number;
+  /** The folders it's in, by number. */
+  folders: number[];
 };
+
+export type Folder = { id: number; name: string };
+
+/** Everything the sidebar lists: feeds and folders, each A to Z. */
+export type Library = { feeds: Feed[]; folders: Folder[] };
 
 export type Article = {
   id: number;
@@ -39,8 +47,8 @@ export type FullArticle = Article & {
  */
 export type Page = { articles: Article[]; next: string | null; latest: number };
 
-/** Which articles a list shows: one of the views, or one feed's (all of them). */
-export type Source = { view: View } | { feed: number };
+/** Which articles a list shows: one of the views, or one feed's or folder's (all of them). */
+export type Source = { view: View } | { feed: number } | { folder: number };
 
 /** The reader's sort order, shared across their devices (SPEC section 18). */
 export type Order = "newest" | "oldest";
@@ -64,16 +72,43 @@ export type Problem =
 
 const PROBLEMS: Problem[] = ["not-an-address", "not-allowed", "unreachable", "not-found", "too-big", "no-feed"];
 
-export async function listFeeds(): Promise<Feed[]> {
+export async function listFeeds(): Promise<Library> {
   await saved();
   const body = await getJson("/api/feeds");
   const feeds = isRecord(body) && Array.isArray(body.feeds) ? body.feeds : [];
-  return feeds.filter(isRecord).map(toFeed);
+  const folders = isRecord(body) && Array.isArray(body.folders) ? body.folders : [];
+  return {
+    feeds: feeds.filter(isRecord).map(toFeed),
+    folders: folders.filter(isRecord).map((folder) => ({ id: Number(folder.id), name: String(folder.name ?? "") })),
+  };
+}
+
+/** A folder's unread count: its feeds' counts added up (each article is in one feed). */
+export function folderUnread(folder: Folder, feeds: Feed[]): number {
+  return feeds.filter((feed) => feed.folders.includes(folder.id)).reduce((sum, feed) => sum + feed.unread, 0);
+}
+
+/**
+ * The sidebar search (SPEC section 5): folders and feeds whose name holds
+ * what was typed, whatever its capitals or accents, each A to Z as listed.
+ */
+export function findByName(library: Library, typed: string): Library {
+  const wanted = fold(typed.trim());
+  if (!wanted) return library;
+  return {
+    folders: library.folders.filter((folder) => fold(folder.name).includes(wanted)),
+    feeds: library.feeds.filter((feed) => fold(feed.title).includes(wanted)),
+  };
+}
+
+function fold(text: string): string {
+  return text.normalize("NFKD").replace(/\p{M}/gu, "").toLocaleLowerCase();
 }
 
 function sourceQuery(source: Source): URLSearchParams {
   const query = new URLSearchParams();
   if ("feed" in source) query.set("feed", String(source.feed));
+  else if ("folder" in source) query.set("folder", String(source.folder));
   else query.set("view", source.view);
   return query;
 }
@@ -234,6 +269,128 @@ export async function addFeed(address: string): Promise<AddResult> {
   return { kind: "problem", reason };
 }
 
+/**
+ * What the item list's line says on arriving, after unsubscribing or
+ * deleting a folder. `undo` reverses it; it answers a problem to say, if any.
+ */
+export type Notice = { message: string; undo?: () => Promise<string | undefined> };
+
+/** Why a change to feeds or folders wasn't made. */
+export type Refusal = "no-name" | "already" | "too-late" | "gone" | "trouble";
+
+/** Sends a change to feeds or folders. Unlike marks, the screen waits for the answer. */
+async function change(path: string, body: unknown): Promise<{ refusal?: Refusal; answer?: Record<string, unknown> }> {
+  // Marks sent just before (an article read, then Unsubscribe) are saved first.
+  await saved();
+  let response: Response;
+  try {
+    response = await fetch(path, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(15_000),
+    });
+  } catch {
+    return { refusal: "trouble" };
+  }
+  const answer: unknown = await response.json().catch(() => null);
+  if (response.ok) return { answer: isRecord(answer) ? answer : {} };
+  if (response.status === 404) return { refusal: "gone" };
+  const error = isRecord(answer) ? answer.error : undefined;
+  if (error === "no-name" || error === "already" || error === "too-late") return { refusal: error };
+  return { refusal: "trouble" };
+}
+
+/** "Edit feed": its name and folders; `newFolder` (if any) is created and chosen too. */
+export async function editFeed(id: number, title: string, folders: number[], newFolder: string): Promise<Refusal | undefined> {
+  return (await change(`/api/feeds/${id}`, { title, folders, new_folder: newFolder })).refusal;
+}
+
+export async function unsubscribe(id: number): Promise<Refusal | undefined> {
+  return (await change(`/api/feeds/${id}/unsubscribe`, {})).refusal;
+}
+
+/** Undo for unsubscribing. "too-late" once the feed was cleared for good. */
+export async function resubscribe(id: number): Promise<Refusal | undefined> {
+  return (await change(`/api/feeds/${id}/resubscribe`, {})).refusal;
+}
+
+export async function renameFolder(id: number, name: string): Promise<Refusal | undefined> {
+  return (await change(`/api/folders/${id}`, { name })).refusal;
+}
+
+export async function deleteFolder(id: number): Promise<Refusal | undefined> {
+  return (await change(`/api/folders/${id}/delete`, {})).refusal;
+}
+
+/** Creates a folder with these feeds in it (Undo for deleting one). */
+export async function createFolder(name: string, feeds: number[]): Promise<Refusal | undefined> {
+  return (await change("/api/folders", { name, feeds })).refusal;
+}
+
+/** What an edit page says when a change wasn't made. */
+export function refused(refusal: Refusal, what: "feed" | "folder"): string {
+  switch (refusal) {
+    case "no-name":
+      return `Give the ${what} a name.`;
+    case "already":
+      return "There's already a folder with that name.";
+    case "too-late":
+      return "It's too late to undo that.";
+    case "gone":
+      return `This ${what} isn't here any more.`;
+    case "trouble":
+      return "That couldn't be saved. Try again in a moment.";
+  }
+}
+
+/** What an OPML import did. */
+export type ImportSummary = { added: number; already: number; foldersAdded: number; unreadable: string[] };
+
+/** Imports an OPML file's feeds and folders. A string is a problem, said plainly. */
+export async function importOpml(file: File): Promise<ImportSummary | string> {
+  let response: Response;
+  try {
+    response = await fetch("/api/opml", {
+      method: "POST",
+      headers: { "content-type": "text/x-opml" },
+      body: await file.text(),
+    });
+  } catch {
+    return "The file couldn't be sent. Try again in a moment.";
+  }
+  const body: unknown = await response.json().catch(() => null);
+  if (response.ok && isRecord(body) && isRecord(body.summary)) {
+    const summary = body.summary;
+    return {
+      added: Number(summary.added ?? 0),
+      already: Number(summary.already ?? 0),
+      foldersAdded: Number(summary.folders_added ?? 0),
+      unreadable: Array.isArray(summary.unreadable) ? summary.unreadable.map(String) : [],
+    };
+  }
+  if (isRecord(body) && body.error === "not-opml") return "That file doesn't look like an OPML file.";
+  if (response.status === 413) return "That file lists more feeds than slowfeed can take at once.";
+  return "The file couldn't be imported. Try again in a moment.";
+}
+
+/** The plain summary after an import (SPEC section 16). */
+export function importMessage(summary: ImportSummary): string[] {
+  const count = (number: number, one: string, many: string) => `${number} ${number === 1 ? one : many}`;
+  const lines = [
+    summary.added === 0
+      ? "No new feeds were added."
+      : `Added ${count(summary.added, "feed", "feeds")}${summary.foldersAdded > 0 ? ` and ${count(summary.foldersAdded, "folder", "folders")}` : ""}. ${summary.added === 1 ? "Its" : "Their"} articles arrive over the next few minutes.`,
+  ];
+  if (summary.already > 0) {
+    lines.push(`${count(summary.already, "feed was", "feeds were")} already here, so ${summary.already === 1 ? "it wasn't" : "they weren't"} added again.`);
+  }
+  if (summary.unreadable.length > 0) {
+    lines.push(`${count(summary.unreadable.length, "line", "lines")} couldn't be read: ${summary.unreadable.join(", ")}.`);
+  }
+  return lines;
+}
+
 /** What the add field says when a feed couldn't be added. Plain and calm. */
 export function explain(reason: Problem): string {
   switch (reason) {
@@ -311,6 +468,7 @@ function toFeed(feed: Record<string, unknown>): Feed {
     title: String(feed.title ?? ""),
     siteUrl: text(feed.site_url),
     unread: Number(feed.unread ?? 0),
+    folders: Array.isArray(feed.folders) ? feed.folders.map(Number) : [],
   };
 }
 

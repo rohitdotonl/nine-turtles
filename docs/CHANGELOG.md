@@ -4,6 +4,18 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 23 October 2026: Folders, editing feeds and OPML (Milestone 9)
+
+- Folders: put a feed in one or more from its new "Edit feed" button, where
+  you can also rename it. Folders are listed A to Z in the sidebar with
+  their unread numbers; the small button beside each shows its feeds.
+  "Edit folder" renames or deletes one (its feeds stay).
+- Unsubscribe from "Edit feed". Undo brings the feed back whole; after your
+  next action its articles are gone for good, except starred ones.
+- A search field at the top of the sidebar finds a feed or folder by name.
+- Settings → Your data imports your OPML file (feeds arrive over a few
+  minutes) and exports one. The first screen links to it too.
+
 ## 23 October 2026: New articles arrive on their own (Milestone 8)
 
 - slowfeed now checks your feeds in the background, each on its own
