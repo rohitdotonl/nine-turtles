@@ -189,6 +189,9 @@
         case "undo":
           if (isList(route)) itemList?.undo();
           break;
+        case "refresh":
+          if (isList(route) && (panes.list || reading)) itemList?.refresh();
+          break;
         case "text-size":
           if (selected && panes.article) {
             const size = preferences.textSize + action.step;
@@ -463,7 +466,7 @@
               <p class="mt-4 mb-6">Nothing to read yet. Add a website you like to begin.</p>
               <AddFeed bind:field={addField} feeds={[]} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} />
             {:else if feeds !== undefined && sort !== undefined}
-              <!-- "Mark all as read", the reserved line for "Marked … · Undo" (and "New items · press r", Milestone 8), then the list. -->
+              <!-- Refresh and "Mark all as read", the reserved lines for "New items · press r" and "Marked … · Undo", then the list. -->
               {#key `${pathFor(route)} ${sort}`}
                 <ItemList
                   bind:this={itemList}
@@ -473,6 +476,7 @@
                   empty={emptyText(route)}
                   onChoose={chose}
                   onUnreadChange={unreadChanged}
+                  onRefresh={loadFeeds}
                 />
               {/key}
             {/if}

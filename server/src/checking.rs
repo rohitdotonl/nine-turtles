@@ -179,7 +179,10 @@ async fn worked(
     changed: Option<(&Fetched, &ParsedFeed)>,
     now: i64,
 ) -> Result<(), sqlx::Error> {
-    let mut transaction = state.db.begin().await?;
+    // IMMEDIATE: take the right to write from the start, waiting for any
+    // other write to finish, so this can't fail half way when a reader's
+    // marks are saved at the same moment.
+    let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
     let (every, etag, last_modified) = match changed {
         Some((fetched, parsed)) => {
             store_articles(&mut transaction, feed_id, &parsed.articles, now).await?;

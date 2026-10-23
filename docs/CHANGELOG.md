@@ -4,6 +4,20 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 23 October 2026: New articles arrive on their own (Milestone 8)
+
+- slowfeed now checks your feeds in the background, each on its own
+  rhythm: busy blogs every 30 minutes, quiet ones once a day. It asks
+  publishers "anything new?" so unchanged feeds cost them almost nothing,
+  and it slows down when they ask.
+- The list never changes under you. When new articles are waiting, a quiet
+  line says "New items · press r" (on phones, "tap Refresh"). `r` or the
+  new Refresh button shows them, and updates the unread numbers.
+- If a publisher corrects an article, the new words replace the old
+  quietly, and it stays read.
+- A feed that keeps failing is retried less and less often. The daily
+  check now says when some feeds have failed for three days or more.
+
 ## 23 October 2026: Read, unread, star and undo (Milestone 7)
 
 - An article counts as read once it's shown: its title turns grey and

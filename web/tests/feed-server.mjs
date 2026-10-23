@@ -16,6 +16,8 @@
 //                      (and its comments feed too, if NAME starts with
 //                      "two-"); tests that add a feed use their own NAME,
 //                      so they never meet each other's feeds
+//   /grow/NAME         the blog called NAME publishes one more article, so a
+//                      test can watch it arrive in the background
 
 import { createServer } from "node:http";
 
@@ -39,11 +41,14 @@ const TITLES = [
   "What the river taught me",
 ];
 
-function rss(title, link, count) {
+// Article `number` keeps its title and date as later ones arrive: `first`
+// is how many the feed had to begin with.
+function rss(title, link, count, first = count) {
   const items = Array.from({ length: count }, (_, index) => {
     const number = count - index;
-    const date = new Date(NEWEST - index * DAY).toUTCString();
-    return `<item><title>${TITLES[index % TITLES.length]} (${number})</title>
+    const place = (((first - number) % TITLES.length) + TITLES.length) % TITLES.length;
+    const date = new Date(NEWEST - (first - number) * DAY).toUTCString();
+    return `<item><title>${TITLES[place]} (${number})</title>
 <link>${link}${number}</link><guid>${link}${number}</guid><pubDate>${date}</pubDate>
 <description>&lt;p&gt;A short made-up summary for article ${number}.&lt;/p&gt;</description></item>`;
   });
@@ -95,6 +100,8 @@ const RIVER = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="240" 
 <path d="M0 180 C180 140 380 220 640 170" stroke="#2f4a7a" stroke-width="6" fill="none"/></svg>`;
 
 const visits = new Map();
+// How many articles each /blog/NAME/ has published since it began with three.
+const grown = new Map();
 
 createServer((request, response) => {
   const path = new URL(request.url ?? "/", "http://localhost").pathname;
@@ -125,10 +132,16 @@ createServer((request, response) => {
   if (path === "/reading/pixel.gif") return send("image/gif", "GIF89a");
   if (path === "/visits") return send("application/json", JSON.stringify(Object.fromEntries(visits)));
 
+  const grow = path.match(/^\/grow\/([a-z0-9-]+)$/);
+  if (grow) {
+    grown.set(grow[1], (grown.get(grow[1]) ?? 0) + 1);
+    return send("text/plain", "One more article.");
+  }
+
   const blog = path.match(/^\/blog\/([a-z0-9-]+)\/(feed\.xml|comments\.xml)?$/);
   if (blog) {
     const name = blog[1];
-    if (blog[2] === "feed.xml") return xml(rss(`Blog ${name}`, `https://${name}.example/`, 3));
+    if (blog[2] === "feed.xml") return xml(rss(`Blog ${name}`, `https://${name}.example/`, 3 + (grown.get(name) ?? 0), 3));
     if (blog[2] === "comments.xml") return xml(rss(`Blog ${name}: comments`, `https://${name}.example/comments/`, 1));
     const feeds = [[`Blog ${name}`, `/blog/${name}/feed.xml`]];
     if (name.startsWith("two-")) feeds.push([`Comments`, `/blog/${name}/comments.xml`]);

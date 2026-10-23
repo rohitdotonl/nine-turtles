@@ -67,6 +67,13 @@ describe("keyboard shortcuts", () => {
     expect(read(press("u"), 0)).toEqual({ kind: "undo" });
   });
 
+  it("shows new items with r, but leaves the browser's own reload (Ctrl+R) alone", () => {
+    const read = createKeyReader();
+    expect(read(press("r"), 0)).toEqual({ kind: "refresh" });
+    expect(read(press("r", { ctrlKey: true }), 0)).toBeUndefined();
+    expect(read(press("r", { metaKey: true }), 0)).toBeUndefined();
+  });
+
   it("leaves the browser's own shortcuts alone", () => {
     const read = createKeyReader();
     expect(read(press("[", { metaKey: true }), 0)).toBeUndefined();
@@ -83,6 +90,7 @@ describe("keyboard shortcuts", () => {
       "m",
       "Shift+A",
       "u",
+      "r",
       "a",
       "g then u",
       "[",

@@ -154,7 +154,7 @@ A few words used throughout:
 - An item counts as read as soon as it's shown in the reading pane, by click or by `j`/`k`.
 - `m` marks the current item unread again. A labeled **Mark unread** button in the article's top bar does the same, on desktop and phones.
 - **Mark all as read** (`Shift+A`, or a labeled button in the list header, shown when the list has items): happens instantly, no "are you sure?". It affects **only the items shown on screen right now** (every item listed, including pages added with "Show older items"). Items that arrived in the background but aren't displayed yet are never touched.
-- **Undo** (`u`, or a visible **Undo**): after an undoable action, a line such as "Marked 23 items as read · Undo" appears in the reserved line at the top of the list (the same spot as "New items", so nothing shifts) and stays until your next undoable action or until you leave the list. After an undo it says "Undone."; there's no undoing an undo. Moving through articles doesn't clear it.
+- **Undo** (`u`, or a visible **Undo**): after an undoable action, a line such as "Marked 23 items as read · Undo" appears in the reserved lines at the top of the list (just below "New items", so nothing shifts) and stays until your next undoable action or until you leave the list. Pressing `r` doesn't clear it. After an undo it says "Undone."; there's no undoing an undo. Moving through articles doesn't clear it.
 - Undo reverses **the last action only**, of these: mark all as read, mark unread, star/unstar, unsubscribe, delete folder.
 - Read state is recorded in both reading modes, so switching modes never loses it.
 - Each feed's unread number in the sidebar changes at the same moment.
@@ -197,10 +197,10 @@ A few words used throughout:
 - Checks are spread out over time, never all at once.
 - It tells the publisher what it already has (using "ETag" and "Last-Modified", standard web labels), so unchanged feeds cost them almost nothing.
 - It identifies itself clearly as slowfeed.
-- If a publisher says "slow down" (HTTP 429), it waits as long as asked.
+- If a publisher says "slow down" (HTTP 429, or 503 with a time), it waits as long as asked, up to a week (so a mistaken answer can't silence a feed for good).
 - Each fetch has a time limit and a size limit.
 - If a feed has moved permanently, slowfeed updates its stored address.
-- A failing feed is retried less and less often (up to once a day) and never affects other feeds.
+- A failing feed is retried less and less often (twice as long after each failure, up to once a day) and never affects other feeds. A feed that keeps failing still looks normal in the sidebar; it simply shows nothing new.
 - It never visits article pages.
 - If a publisher edits an article you've already seen, the text is updated quietly and it stays read.
 - The same article published in two different feeds appears in both.
@@ -208,7 +208,7 @@ A few words used throughout:
 **How to check it**
 Most of this is checked by the automatic tests rather than by eye. You can see it working:
 1. Leave the app closed for a day, then open it: the feeds you follow have new articles that arrived on their own.
-2. When a feed keeps failing, the daily check mentions it (the feed health page comes in V2).
+2. When a feed keeps failing for three days or more, the daily check mentions it ("Some feeds keep failing"), without naming it (the feed health page comes in V2).
 
 ## 12. WebSub (instant updates from publishers who offer it)
 
@@ -228,8 +228,9 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 
 **What it does**
 - The list on screen changes only when you ask: press `r` or the Refresh button.
-- When new items are waiting, one quiet line appears at the top of the list: **"New items · press r"** (on touch screens: **"New items · tap Refresh"**). It shows no number. Its space is always reserved, so nothing shifts when it appears.
-- Because fetching already happened in the background, pressing `r` is instant.
+- When new items are waiting, one quiet line appears at the top of the list: **"New items · press r"** (on touch screens: **"New items · tap Refresh"**). It shows no number. Its space is always reserved, so nothing shifts when it appears. The list asks the server about once a minute, and only about its own articles (none ever arrive in Starred).
+- A labeled **Refresh** button sits at the top of every list, first in its row, on every screen size.
+- Because fetching already happened in the background, pressing `r` is instant. It shows the list from the top again, with the new items, and updates the sidebar's unread numbers. Those numbers also wait for `r`, so nothing in the sidebar changes under you either.
 - Opening or reloading the app always shows the latest state.
 - No pull-to-refresh on phones; there's a labeled Refresh button instead.
 

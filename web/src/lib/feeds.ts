@@ -32,8 +32,12 @@ export type FullArticle = Article & {
   language: string | null;
 };
 
-/** One page of the item list. `next` is where the next page starts, or null at the end. */
-export type Page = { articles: Article[]; next: string | null };
+/**
+ * One page of the item list. `next` is where the next page starts, or null
+ * at the end. `latest` is the newest article's number when it was loaded, to
+ * ask later whether anything new has arrived.
+ */
+export type Page = { articles: Article[]; next: string | null; latest: number };
 
 /** Which articles a list shows: one of the views, or one feed's (all of them). */
 export type Source = { view: View } | { feed: number };
@@ -67,10 +71,15 @@ export async function listFeeds(): Promise<Feed[]> {
   return feeds.filter(isRecord).map(toFeed);
 }
 
-export async function listArticles(source: Source, order: Order, after: string | null): Promise<Page> {
+function sourceQuery(source: Source): URLSearchParams {
   const query = new URLSearchParams();
   if ("feed" in source) query.set("feed", String(source.feed));
   else query.set("view", source.view);
+  return query;
+}
+
+export async function listArticles(source: Source, order: Order, after: string | null): Promise<Page> {
+  const query = sourceQuery(source);
   query.set("order", order);
   if (after !== null) query.set("after", after);
   await saved();
@@ -79,7 +88,24 @@ export async function listArticles(source: Source, order: Order, after: string |
   return {
     articles: body.articles.filter(isRecord).map(toArticle),
     next: typeof body.next === "string" ? body.next : null,
+    latest: typeof body.latest === "number" ? body.latest : 0,
   };
+}
+
+/**
+ * Whether articles for this list have arrived in the background since it
+ * was loaded (`latest` from its first page). Never how many (SPEC section 13).
+ */
+export async function newItemsWaiting(source: Source, latest: number): Promise<boolean> {
+  const query = sourceQuery(source);
+  query.set("since", String(latest));
+  const body = await getJson(`/api/articles/new?${query}`);
+  return isRecord(body) && body.new === true;
+}
+
+/** What the line above the list says when new items are waiting: no number. */
+export function newItemsMessage(touch: boolean): string {
+  return touch ? "New items · tap Refresh" : "New items · press r";
 }
 
 // Marks are sent one after another, in the order they were made, so an undo

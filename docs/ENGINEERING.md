@@ -159,15 +159,15 @@ These were decided with the owner. Changing any of them needs the owner's approv
 ### Fetching feeds (implements the publisher floor)
 
 - **Conditional requests:** always send ETag / If-Modified-Since when known.
-- **Adaptive schedule:** each feed is checked based on how often it publishes. Never more often than every 30 minutes; at least once a day.
-- **Spread out:** feed checks are spread across time, never all at once.
-- **Slow down when asked:** honor HTTP 429 and `Retry-After`.
+- **Adaptive schedule:** each feed is checked based on how often it publishes: half the usual gap between its ten newest articles (or the time since the newest, if longer), every four hours if it gives no dates. Never more often than every 30 minutes; at least once a day.
+- **Spread out:** feed checks are spread across time, never all at once: a round every 30 seconds checks at most 20 due feeds, four at a time, and each wait is nudged by up to a tenth at random.
+- **Slow down when asked:** honor HTTP 429 (and 503 with a time) and `Retry-After`, as seconds or a date, up to a week.
 - **Identify ourselves:** a clear User-Agent naming slowfeed.
 - **WebSub (V2):** subscribe when the feed advertises a hub; verify subscriptions; check signatures with a per-subscription secret; renew before leases expire. While WebSub is active, polling continues at a reduced rate as a backup.
 - **Limits:** a timeout and a maximum size for every fetch: 20 seconds (10 to connect) and 5 MB, read bit by bit so a huge file is never held whole. slowfeed asks for compressed files (gzip, brotli).
 - **Public addresses only:** slowfeed refuses to fetch anything on its own computer or a private network (checked after the name is looked up, and on every redirect), so a pasted address can't be used to reach things that should be unreachable. Only the tests switch this off (`SLOWFEED_ALLOW_LOCAL_FEEDS`).
 - **Redirects:** followed by hand, at most five. Permanent redirects (301/308) update the stored feed address; a temporary one on the way keeps the original.
-- **Failures:** each feed fails on its own. Repeated failures increase the wait (exponential backoff, capped at one day). A feed is **dead** after 7 days of 404/410, or 3 weeks of any failure; otherwise a feed with recent errors is "having trouble". Dead feeds are still checked once a day in case they return.
+- **Failures:** each feed fails on its own. Repeated failures increase the wait (exponential backoff from the feed's own rhythm, capped at one day). The diagnostics page counts failing and dead feeds, never naming them; the daily check reports them (V1 has no feed health page). A feed is **dead** after 7 days of 404/410, or 3 weeks of any failure; otherwise a feed with recent errors is "having trouble". Dead feeds are still checked once a day in case they return.
 - **Never fetch article pages** to extract full text. Autodiscovery fetches only the page the owner pastes, only when they add a feed or ask "Find new address" (the owner's choice, `docs/decisions/0016-adding-feeds.md`), and reads the `<link rel="alternate">` lines it names. It never guesses other addresses on the site.
 
 ### Duplicates
@@ -197,6 +197,8 @@ These were decided with the owner. Changing any of them needs the owner's approv
 - **Search:** FTS5 configured so words in scripts with combining marks (such as Hindi's vowel signs) are not split apart; covered by tests with Hindi text.
 - **Read and starred** are two yes/no marks on each article, with small "partial" indexes for the Unread and Starred views and the unread counts (decision 0018).
 - **"Mark all as read"** receives the exact list of items on screen, so items fetched in the background are never touched. It is undoable: undo sends the opposite mark for the same items.
+- **Edited articles:** when a publisher edits an article already stored, its title, link, author, text and language are updated; its place in the list, read mark and star are kept (decision 0019).
+- **Background checks** keep each feed's schedule and failure history in a few columns on `feeds` (structure change 4). The screen learns about new articles by asking, once a minute, whether any article numbered above the newest it loaded belongs to its list (decision 0019).
 - **Settings shared across devices** (so far the sort order) live in a small `settings` table; per-device reader controls stay in the browser.
 - **Exports:** OPML for feeds and folders; starred articles as a JSON Feed file.
 
