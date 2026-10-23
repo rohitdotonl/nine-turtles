@@ -44,6 +44,11 @@ unknown address with the app (`server/src/assets.rs`).
 in or a larger system text size steps the layout down rather than letting
 things overlap. The rules are in `web/src/lib/layout.ts`, tested on their own.
 
+**A band that never scrolls.** The top 4rem of every area stays still and
+only the content below it scrolls. The Sidebar button (top left) and "Press ?
+for shortcuts" (top right) sit in that band, fixed, so they never move and
+nothing ever slides underneath them.
+
 **Keyboard.** `web/src/lib/keyboard.ts` decides what a key means; it ignores
 keys while typing and alongside Ctrl, Cmd or Alt. The cheat sheet lists every
 shortcut in DESIGN.md and marks those whose features don't exist yet as

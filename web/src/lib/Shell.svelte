@@ -61,8 +61,13 @@
     const resized = () => {
       const next = currentWidth();
       if (next !== width) {
+        const focusWasInside = sidebar?.contains(document.activeElement) ?? false;
         width = next;
         sidebarChoice = "auto";
+        // If the sidebar just hid with the keyboard's place in it, don't lose that place.
+        queueMicrotask(() => {
+          if (focusWasInside && !panes.sidebar) (route.kind === "settings" ? settingsHeading : listHeading)?.focus();
+        });
       }
     };
     queries.forEach((query) => query.addEventListener("change", resized));
@@ -165,47 +170,54 @@
       Sidebar
     </button>
   </div>
+  <!--
+    The top 4rem of every area is a band that never scrolls, so these two
+    fixed buttons never sit over text. The hint is always shown on screens
+    with a keyboard (DESIGN.md → "Keyboard": permanent).
+  -->
+  <button
+    type="button"
+    onclick={() => (cheatSheetOpen = true)}
+    class="keyboard-hint fixed top-3 right-4 min-h-11 px-2 text-small text-muted"
+  >
+    Press ? for shortcuts
+  </button>
 
   <nav
     id="sidebar"
     aria-label="Sidebar"
     bind:this={sidebar}
     hidden={!panes.sidebar}
-    class={["flex-col overflow-y-auto bg-sidebar pt-16 pb-4", panes.list ? "w-64 shrink-0" : "flex-1", panes.sidebar && "flex"]}
+    class={["flex-col bg-sidebar pt-16", panes.list ? "w-64 shrink-0" : "flex-1", panes.sidebar && "flex"]}
   >
-    <div class="flex items-baseline justify-between gap-4 px-4 pb-4">
-      <h1 class="font-serif text-xlarge" tabindex="-1" bind:this={wordmark}>slowfeed</h1>
-      <a
-        href="/settings"
-        aria-current={route.kind === "settings" ? "page" : undefined}
-        onclick={(event) => follow(event, { kind: "settings" })}
-        class={[
-          "flex min-h-11 items-center border-b-4 px-1",
-          route.kind === "settings" ? "border-accent" : "border-transparent underline underline-offset-4",
-        ]}>Settings</a
-      >
+    <div class="min-h-0 flex-1 overflow-y-auto pb-4">
+      <div class="flex items-baseline justify-between gap-4 px-4 pb-4">
+        <h1 class="font-serif text-xlarge" tabindex="-1" bind:this={wordmark}>slowfeed</h1>
+        <a
+          href="/settings"
+          aria-current={route.kind === "settings" ? "page" : undefined}
+          onclick={(event) => follow(event, { kind: "settings" })}
+          class={[
+            "flex min-h-11 items-center border-b-4 px-1",
+            route.kind === "settings" ? "border-accent" : "border-transparent underline underline-offset-4",
+          ]}>Settings</a
+        >
+      </div>
+      <ul>
+        {#each VIEWS as view (view)}
+          {@const current = route.kind === "view" && route.view === view}
+          <li>
+            <a
+              href={pathFor({ kind: "view", view })}
+              aria-current={current ? "page" : undefined}
+              onclick={(event) => follow(event, { kind: "view", view })}
+              class={["flex min-h-11 items-center border-l-4 px-4", current ? "border-accent bg-tint-sidebar" : "border-transparent"]}
+              >{VIEW_NAMES[view]}</a
+            >
+          </li>
+        {/each}
+      </ul>
     </div>
-    <ul>
-      {#each VIEWS as view (view)}
-        {@const current = route.kind === "view" && route.view === view}
-        <li>
-          <a
-            href={pathFor({ kind: "view", view })}
-            aria-current={current ? "page" : undefined}
-            onclick={(event) => follow(event, { kind: "view", view })}
-            class={["flex min-h-11 items-center border-l-4 px-4", current ? "border-accent bg-tint-sidebar" : "border-transparent"]}
-            >{VIEW_NAMES[view]}</a
-          >
-        </li>
-      {/each}
-    </ul>
-    <button
-      type="button"
-      onclick={() => (cheatSheetOpen = true)}
-      class="keyboard-hint mt-auto min-h-11 self-start px-4 text-small text-muted"
-    >
-      Press ? for shortcuts
-    </button>
   </nav>
 
   {#if panes.list}
@@ -221,18 +233,22 @@
       {:else}
         <section
           aria-labelledby="list-heading"
-          class={["overflow-y-auto bg-list px-6 pt-16 pb-6", panes.article ? "w-80 shrink-0 xl:w-96" : "flex-1"]}
+          class={["flex flex-col bg-list pt-16", panes.article ? "w-80 shrink-0 xl:w-96" : "flex-1"]}
         >
-          <h2 id="list-heading" tabindex="-1" bind:this={listHeading} class="text-large font-semibold">
-            {VIEW_NAMES[route.view]}
-          </h2>
-          <!-- Reserved for "New items · press r" (Milestone 8), so nothing shifts when it appears. -->
-          <p class="min-h-8 text-small"></p>
-          <p>{EMPTY[route.view]}</p>
+          <div class="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
+            <h2 id="list-heading" tabindex="-1" bind:this={listHeading} class="text-large font-semibold">
+              {VIEW_NAMES[route.view]}
+            </h2>
+            <!-- Reserved for "New items · press r" (Milestone 8), so nothing shifts when it appears. -->
+            <p class="min-h-8 text-small"></p>
+            <p>{EMPTY[route.view]}</p>
+          </div>
         </section>
         {#if panes.article}
-          <section aria-label="Article" class="min-w-0 flex-1 overflow-y-auto bg-paper px-10 pt-16 pb-6">
-            <p class="text-muted">No article open.</p>
+          <section aria-label="Article" class="flex min-w-0 flex-1 flex-col bg-paper pt-16">
+            <div class="min-h-0 flex-1 overflow-y-auto px-10 pb-6">
+              <p class="text-muted">No article open.</p>
+            </div>
           </section>
         {/if}
       {/if}

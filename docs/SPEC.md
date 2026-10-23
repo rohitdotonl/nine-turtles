@@ -84,7 +84,6 @@ A few words used throughout:
   3. **Feeds not in any folder**, alphabetically
   4. **"+ Add feed"**
 - You can't reorder things by hand; order is always alphabetical.
-- At the bottom of the sidebar, on screens with a keyboard: "Press ? for shortcuts", which also opens the list when clicked.
 - At the top of the sidebar: the "slowfeed" wordmark with a labeled **Settings** link beside it, and below them a **search field to find a feed or folder by name**, always shown.
 - Folders appear once at least one exists.
 - **Unread counts:** small, muted grey numbers, right-aligned, next to each feed and folder. No count on "Unread", "Starred" or "All", and never a total. Above 999 shows "999+". Never colored, never a badge.
@@ -336,7 +335,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
   | `Esc` | Back / close |
   | `?` | Shortcut cheat sheet |
 
-- A permanent, quiet hint says "Press ? for shortcuts" (on screens with a keyboard).
+- A permanent, quiet hint says "Press ? for shortcuts" (on screens with a keyboard), in the top-right corner of the window, whether or not the sidebar shows. Clicking it opens the list too.
 - The `?` cheat sheet also documents the search filters. Until a shortcut's feature exists, the cheat sheet marks it "coming later", and the key does nothing.
 - The keyboard's place is shown by a thick outline in the text color (never ink blue, which only marks your place in slowfeed).
 - Shortcuts don't fire while you're typing in a field.

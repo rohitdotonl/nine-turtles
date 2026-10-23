@@ -26,6 +26,8 @@ describe("reader preferences", () => {
     const storage = memory();
     storage.setItem("slowfeed.preferences", JSON.stringify({ theme: "blue", textSize: 99, lineWidth: "huge" }));
     expect(load(storage)).toEqual(DEFAULTS);
+    storage.setItem("slowfeed.preferences", JSON.stringify({ lineWidth: "constructor", readingFont: "toString" }));
+    expect(load(storage)).toEqual(DEFAULTS);
     storage.setItem("slowfeed.preferences", "not json");
     expect(load(storage)).toEqual(DEFAULTS);
   });

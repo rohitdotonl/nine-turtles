@@ -57,7 +57,7 @@ export function load(storage: Pick<Storage, "getItem"> | undefined = safeStorage
       typeof s.textSize === "number" && Number.isInteger(s.textSize) && s.textSize >= 0 && s.textSize < TEXT_SIZES.length
         ? s.textSize
         : DEFAULTS.textSize,
-    lineWidth: typeof s.lineWidth === "string" && s.lineWidth in LINE_WIDTHS ? (s.lineWidth as LineWidth) : DEFAULTS.lineWidth,
+    lineWidth: s.lineWidth === "narrow" || s.lineWidth === "medium" || s.lineWidth === "wide" ? s.lineWidth : DEFAULTS.lineWidth,
   };
 }
 

@@ -208,3 +208,29 @@ test("every font comes from slowfeed itself", async ({ page }) => {
   expect(new Set(families)).toEqual(new Set(["Literata", "Inter", "Atkinson Hyperlegible"]));
   expect(new Set(fontOrigins)).toEqual(new Set([new URL(page.url()).origin]));
 });
+
+test("nothing scrolls underneath the Sidebar button or the shortcut hint", async ({ page }) => {
+  await page.setViewportSize({ width: 640, height: 400 });
+  await openApp(page, "/settings");
+  // Settings is longer than this window, so it scrolls, but only inside its
+  // own box, which starts below the band where the two buttons sit.
+  const scroller = page.getByRole("region", { name: "Settings" }).locator("> div");
+  expect(await scroller.evaluate((element) => element.scrollHeight > element.clientHeight)).toBe(true);
+  const scrollingTop = (await scroller.boundingBox())!.y;
+  for (const button of [toggle(page), page.getByRole("button", { name: "Press ? for shortcuts" })]) {
+    if (!(await button.isVisible())) continue; // The hint is hidden on touch-only screens.
+    const box = (await button.boundingBox())!;
+    expect(box.y + box.height).toBeLessThanOrEqual(scrollingTop);
+  }
+});
+
+test("'Press ? for shortcuts' stays on screen when the sidebar is hidden", async ({ page, isMobile }) => {
+  test.skip(isMobile, "The hint is only for screens with a keyboard.");
+  await page.setViewportSize({ width: 1000, height: 800 });
+  await openApp(page);
+  await expect(sidebar(page)).toBeHidden();
+  const hint = page.getByRole("button", { name: "Press ? for shortcuts" });
+  await expect(hint).toBeVisible();
+  await hint.click();
+  await expect(page.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeVisible();
+});

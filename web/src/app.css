@@ -6,8 +6,8 @@
   are DESIGN.md's values; the three areas are told apart by tone (the reading
   area uses the theme's background, the list and sidebar are a step and two
   steps deeper). The greys are the owner's choice from Milestone 4. The
-  accessibility checks verify every pair against WCAG on all three themes,
-  and docs/decisions/0013-look-and-feel.md lists the contrast of each.
+  accessibility checks and src/lib/contrast.test.ts verify every pair against
+  WCAG on all three themes (the minimums are in docs/decisions/0013-look-and-feel.md).
 
   The text sizes are DESIGN.md's fixed type scale. Tailwind's own sizes are
   switched off, so nothing else can be used by accident.
