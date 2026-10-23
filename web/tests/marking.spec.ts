@@ -184,11 +184,17 @@ test.describe("when saving fails", () => {
     await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 3 unread`);
 
     // Shown again with saving back: read. Then m, and that save fails: back to read, as the server has it.
+    let saved = 0;
+    page.on("response", (response) => {
+      if (response.url().endsWith("/api/articles/read") && response.ok()) saved++;
+    });
     failing = false;
     await page.keyboard.press("j");
     await page.keyboard.press("k");
     await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, unread/);
     await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 1 unread`);
+    // Both saves (j and k) must reach the server before saving fails again.
+    await expect.poll(() => saved).toBe(2);
     failing = true;
     await page.keyboard.press("m");
     await expect(line(page)).toHaveText("That couldn't be saved, so it was taken back.");
