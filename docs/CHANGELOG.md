@@ -4,6 +4,14 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 23 October 2026: Agents start building straight away
+
+- When you ask for the next milestone, agents now start from the plan and
+  the spec instead of writing a new plan for you to approve. They still ask
+  when something isn't settled (a real choice, a new library, a design
+  change, anything that could lose data), and you still say yes before
+  anything is merged.
+
 ## 23 October 2026: Look and feel (Milestone 4)
 
 - The placeholder page is gone. After signing in you see the real, empty
