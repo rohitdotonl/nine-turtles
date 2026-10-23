@@ -122,6 +122,34 @@ test.describe("on a wide window", () => {
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("https://reading-room.example/slow-letter");
   });
 
+  test("a footnote link stays inside the article", async ({ page }) => {
+    await openRoom(page);
+    await page.keyboard.press("j");
+    const text = article(page).locator(".article-text");
+    await text.locator("sup").getByRole("link", { name: "1" }).click();
+    await expect(text.getByText("1. Written in Python, a long time ago.")).toBeFocused();
+    await expect(page).toHaveURL(/\/feeds\/[0-9]+$/);
+    expect(page.context().pages()).toHaveLength(1);
+  });
+
+  test("in high-contrast mode, only the selected article is marked", async ({ page }) => {
+    await page.emulateMedia({ forcedColors: "active" });
+    await openRoom(page);
+    await page.keyboard.press("j");
+    await page.keyboard.press("Enter");
+    const style = (name: string) =>
+      row(page, name).evaluate((element) => {
+        const css = getComputedStyle(element);
+        return { outline: css.outlineStyle, bar: css.borderLeftColor, page: getComputedStyle(document.body).backgroundColor };
+      });
+    const selected = await style("The pleasure of a slow letter");
+    expect(selected.outline).toBe("solid");
+    expect(selected.bar).not.toBe(selected.page);
+    const other = await style("Only the first page");
+    expect(other.outline).toBe("none");
+    expect(other.bar).toBe(other.page);
+  });
+
   test("+ and - change the text size while reading, and Settings remembers it", async ({ page }) => {
     await openRoom(page);
     await page.keyboard.press("j");

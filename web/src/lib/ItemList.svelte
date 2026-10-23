@@ -105,7 +105,7 @@
           }}
           onkeydown={arrows}
           class={[
-            "block w-full border-l-4 py-3 pr-6 pl-5 text-left",
+            "item-row block w-full border-l-4 py-3 pr-6 pl-5 text-left",
             current ? "border-accent bg-tint-list" : "border-transparent",
           ]}
         >

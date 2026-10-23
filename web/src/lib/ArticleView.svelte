@@ -51,6 +51,27 @@
     );
   });
 
+  // Footnotes: a link to a place inside the article (cleaned to `#article-…`
+  // by slowfeed) scrolls there and moves the keyboard's place with it,
+  // rather than opening a new tab.
+  $effect(() => {
+    const area = scroller;
+    if (!area) return;
+    const followAnchor = (event: MouseEvent) => {
+      const link = event.target instanceof Element ? event.target.closest("a") : null;
+      const anchor = link?.getAttribute("href");
+      if (!anchor?.startsWith("#article-")) return;
+      event.preventDefault();
+      const place = document.getElementById(decodeURIComponent(anchor.slice(1)));
+      if (!place || !area.contains(place)) return;
+      place.setAttribute("tabindex", "-1");
+      place.scrollIntoView({ block: "start" });
+      place.focus({ preventScroll: true });
+    };
+    area.addEventListener("click", followAnchor);
+    return () => area.removeEventListener("click", followAnchor);
+  });
+
   async function share() {
     const link = article.link;
     if (!link) return;

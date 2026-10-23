@@ -36,7 +36,14 @@ straight from the list to "Show older items"; the arrow keys move within
 the list for people who don't use the vim keys.
 
 **Links in articles open in a new tab,** like "Open original", so the
-reader never loses their place in slowfeed.
+reader never loses their place in slowfeed. Footnotes are the exception:
+the article's anchors are kept, renamed `article-…` so they can never
+clash with slowfeed's own page, and a link to one scrolls there in place.
+
+**Older articles** (stored during Milestone 5) lose their tracking images
+when shown, after their cleaning. Removing an element from clean HTML can't
+make it unsafe, so this is a documented exception to "ammonia has the last
+word". Their footnote links still point to the publisher's page.
 
 **The address doesn't change when an article opens** in V1. Reloading
 returns to the list. Phone history for articles (Back closing an article)

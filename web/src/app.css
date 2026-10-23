@@ -121,8 +121,14 @@ body {
 
 /* Windows high contrast and similar: let the system draw clear edges. */
 @media (forced-colors: active) {
-  [aria-current="page"] {
+  [aria-current="page"],
+  [aria-current="true"] {
     outline: 2px solid CanvasText;
+  }
+
+  /* The bar marks only the selected article; on the others it would be drawn too. */
+  .item-row:not([aria-current]) {
+    border-left-color: Canvas;
   }
 }
 

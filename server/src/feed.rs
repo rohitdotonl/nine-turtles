@@ -6,6 +6,8 @@
 //! Invisible 1×1 tracking images are taken out at the same time (DESIGN.md →
 //! "Article view").
 
+use std::borrow::Cow;
+
 use blake2::{Blake2s256, Digest};
 use reqwest::Url;
 
@@ -196,7 +198,9 @@ fn plain_text(text: &feed_rs::model::Text) -> String {
 /// Content made safe to show: no scripts, styles, frames or event handlers;
 /// no tracking images; links open safely, in a new tab, without telling the
 /// site where the reader came from; relative addresses made whole. Plain
-/// text is escaped.
+/// text is escaped. Footnotes keep working inside slowfeed: the article's
+/// own anchors (`id`, `#note-1`) are kept, renamed with `article-` in front
+/// so they can never clash with slowfeed's own page.
 fn clean(body: &str, content_type: &str, base: &Url) -> String {
     if !content_type.contains("html") {
         return ammonia::clean_text(body);
@@ -204,11 +208,30 @@ fn clean(body: &str, content_type: &str, base: &Url) -> String {
     // Tracking images go first, so the safety cleaning always has the last word.
     let body = without_tracking_images(body);
     ammonia::Builder::default()
-        .url_relative(ammonia::UrlRelative::RewriteWithBase(base.clone()))
+        .url_relative(ammonia::UrlRelative::Custom(Box::new(Whole(base.clone()))))
+        .add_generic_attributes(["id"])
+        .id_prefix(Some(ANCHOR_PREFIX))
         .set_tag_attribute_value("a", "target", "_blank")
         .clean(&body)
         .to_string()
 }
+
+/// Makes an article's relative addresses whole, using its own address;
+/// `#anchor` links stay inside the article, renamed like the anchors.
+struct Whole(Url);
+
+impl<'a> ammonia::UrlRelativeEvaluate<'a> for Whole {
+    fn evaluate<'url>(&self, url: &'url str) -> Option<Cow<'url, str>> {
+        if let Some(anchor) = url.strip_prefix('#') {
+            return Some(Cow::Owned(format!("#{ANCHOR_PREFIX}{anchor}")));
+        }
+        self.0.join(url).ok().map(|url| Cow::Owned(url.into()))
+    }
+}
+
+/// Put in front of every anchor in an article. The screen scrolls to these
+/// itself rather than opening a new tab (ArticleView.svelte).
+const ANCHOR_PREFIX: &str = "article-";
 
 /// The same HTML without invisible tracking images: images whose width or
 /// height is set to 0 or 1 pixel, and neither bigger. They show nothing and
@@ -223,12 +246,13 @@ pub fn without_tracking_images(html: &str) -> String {
     let pixels: Vec<_> = document
         .select(&images)
         .filter(|image| {
-            let sizes: Vec<u32> = ["width", "height"]
+            // A size that isn't plain pixels (`100%`, `auto`) counts as bigger.
+            let sizes: Vec<Option<u32>> = ["width", "height"]
                 .iter()
                 .filter_map(|name| image.value().attr(name))
-                .filter_map(pixels)
+                .map(pixels)
                 .collect();
-            !sizes.is_empty() && sizes.iter().all(|size| *size <= 1)
+            !sizes.is_empty() && sizes.iter().all(|size| size.is_some_and(|size| size <= 1))
         })
         .map(|image| image.id())
         .collect();
@@ -327,11 +351,31 @@ mod tests {
     }
 
     #[test]
+    fn footnotes_keep_working_inside_the_article() {
+        let rss = br##"<?xml version="1.0"?>
+<rss version="2.0"><channel><title>T</title><link>https://example.com/</link>
+<item><title>First</title><link>https://example.com/first</link>
+<description><![CDATA[<p>Words<sup><a href="#fn1" id="ref1">1</a></sup></p><p id="fn1">The note. <a href="#ref1">Back</a></p>]]></description>
+</item></channel></rss>"##;
+        let feed = parse(rss, &url("https://example.com/feed.xml")).unwrap();
+        let summary = feed.articles[0].summary.as_deref().unwrap();
+        for kept in [
+            r##"href="#article-fn1""##,
+            r#"id="article-fn1""#,
+            r##"href="#article-ref1""##,
+            r#"id="article-ref1""#,
+        ] {
+            assert!(summary.contains(kept), "{kept}: {summary}");
+        }
+    }
+
+    #[test]
     fn tracking_images_are_removed_and_real_images_kept() {
         let html = r#"<p>Hello</p><img src="https://t.example/open.gif" width="1" height="1">
 <img src="https://t.example/b.gif" WIDTH="0" height="0px" alt=""><img src="https://t.example/c.gif" height="1">
 <figure><img src="https://example.com/photo.jpg" width="800" height="600" alt="A river"></figure>
-<img src="https://example.com/wide-rule.png" width="600" height="1"><img src="https://example.com/plain.png">"#;
+<img src="https://example.com/wide-rule.png" width="600" height="1"><img src="https://example.com/plain.png">
+<img src="https://example.com/full-rule.png" width="100%" height="1">"#;
         let cleaned = without_tracking_images(html);
         for pixel in ["open.gif", "b.gif", "c.gif"] {
             assert!(!cleaned.contains(pixel), "{cleaned}");

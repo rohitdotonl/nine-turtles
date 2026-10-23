@@ -33,7 +33,7 @@ whatever the lock files say.*
 | ammonia | 4.2 | Cleans article content so nothing unsafe reaches the screen | Approved |
 | sqlx | 0.9 | Talks to the SQLite database, and updates its structure safely ("migrations") | Approved |
 | opml | 1.1 | Reads and writes OPML subscription files | Approved (revisit at the import milestone: not updated since 2024) |
-| scraper | 0.29 | Finds a site's feed in the page you paste (autodiscovery) | Approved |
+| scraper | 0.29 | Finds a site's feed in the page you paste (autodiscovery), and finds tracking images to remove | Approved |
 | argon2 | 0.6 | Scrambles the password so it's never stored readable | Approved |
 | tracing | 0.1 | Writes the app's logs | Approved |
 | serde, serde_json | 1.0 | Converts data to and from standard formats; used by almost every Rust project | Approved |

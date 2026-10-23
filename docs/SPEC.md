@@ -134,8 +134,8 @@ A few words used throughout:
 - The source is always credited and linked: the feed's name (linking to the publisher's website), the author if the feed names one, and the time.
 - Choosing an article in the list (a click, `j` / `k`, or the arrow keys while in the list) shows it in the reading area. `Enter` or `o` opens it to read: the keyboard's place moves into the article, and `j` / `k` then move from article to article; Escape goes back to the list. On a phone-narrow window the article takes the list's place, with a back button named after the list. `j` never loads older items on its own: at the end of the list it stops.
 - `v` opens the original in a new tab. `+` / `-` change the text size (the same setting as in Settings).
-- Links inside articles open in a new tab.
-- Footnote links lead to the publisher's page, since the feed's own anchors are removed with the cleaning.
+- Links inside articles open in a new tab (links to a place inside the article, like footnotes, stay in it).
+- Footnote links move to the note inside the article (and back), without leaving slowfeed.
 - Images load from the publisher's site. Invisible 1×1 "tracking pixels" are removed (any image sized 0 or 1 pixel), so they're never loaded.
 - Anything unsafe in the feed's content (scripts, embedded frames, code hidden in styles) is removed before display.
 - The next article is loaded in advance so moving to it with `j` is instant.
