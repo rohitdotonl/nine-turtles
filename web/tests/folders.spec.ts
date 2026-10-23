@@ -256,10 +256,12 @@ test("with only the keyboard: Edit feed, a new folder, opening it, Edit folder, 
   await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) })).toBeVisible();
 
   // Import OPML opens the device's file chooser from the keyboard too.
+  // Wait for the chooser before tabbing: the browser takes a moment to start
+  // catching it, and Enter alone can come sooner than that.
+  const chooser = page.waitForEvent("filechooser");
   await page.goto(new URL("/settings", FEEDS_APP).href);
   await appReady(page);
   await tabTo(page, page.getByRole("button", { name: "Import OPML" }), 200);
-  const chooser = page.waitForEvent("filechooser");
   await page.keyboard.press("Enter");
   await chooser;
 });
