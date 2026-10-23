@@ -4,6 +4,12 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 23 October 2026: Fewer reviews for small changes
+
+- Changes to documents only, and tiny fixes, no longer wait for a second
+  agent's review. Features, screens, your data, fetching, sign-in and the
+  rules still get one. The automatic checks run on everything as before.
+
 ## 23 October 2026: slowfeed on your phone (Milestone 13)
 
 - On a phone, slowfeed is one screen at a time: Feeds → a list → an
