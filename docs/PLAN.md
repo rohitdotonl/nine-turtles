@@ -1,6 +1,6 @@
 # slowfeed V1 build plan
 
-*Draft for the owner's approval.*
+*Agreed with the owner. Agents build from this plan without a separate plan step (decision 0014).*
 
 V1 is built in small milestones, one at a time, in this order. Each one ends
 with something you can try yourself, a pull request with a plain-language
