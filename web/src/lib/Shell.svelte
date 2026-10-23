@@ -739,7 +739,9 @@
         <section aria-labelledby="list-heading" class={["flex flex-1 flex-col bg-paper", phone ? "pt-2" : "pt-16"]}>
           {#if phone}
             <div class="flex px-4 pb-2">
-              <button type="button" onclick={() => stepBack("home")} class="min-h-11 rounded px-2">‹ Feeds</button>
+              <button type="button" onclick={() => stepBack("home")} aria-label="Back to Feeds" class="btn-quiet gap-1 px-2"
+                ><Icon name="back" size={20} />Feeds</button
+              >
             </div>
           {/if}
           <div class="min-h-0 flex-1 overflow-y-auto px-6 pb-10 md:px-10">
@@ -765,7 +767,9 @@
             <!-- The phone's top bar (SPEC section 20): back to the feeds, Refresh, and the screen's title. It never scrolls. -->
             <div class="px-6 pb-2">
               <div class="-ml-2 flex items-center justify-between gap-4 pb-2">
-                <button type="button" onclick={() => stepBack("home")} class="min-h-11 rounded px-2">‹ Feeds</button>
+                <button type="button" onclick={() => stepBack("home")} aria-label="Back to Feeds" class="btn-quiet gap-1 px-2"
+                ><Icon name="back" size={20} />Feeds</button
+              >
                 {#if itemList && !missing}
                   <button type="button" onclick={() => itemList?.refresh()} class="btn-quiet -mr-3"
                     ><Icon name="refresh" />Refresh</button

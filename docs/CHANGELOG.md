@@ -4,6 +4,15 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 23 October 2026: A centred page, and clearer back arrows
+
+- On a wide screen the article now sits in the middle of the reading area,
+  like a page in a book, with Open original, Copy link, Star and Mark unread
+  lined up above its first line.
+- On a phone, the back arrow at the top is a small arrow icon beside where
+  it goes, and screen readers hear "Back to Feeds" instead of a stray
+  symbol.
+
 ## 23 October 2026: Settings as tiles, and quieter empty pages
 
 - Settings' choices (sort order, theme, font, text size, line width) are
