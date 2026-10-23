@@ -46,13 +46,15 @@ async fn serve() {
     };
     let address = config.listen;
 
-    let app = match slowfeed::app(config).await {
-        Ok(app) => app,
+    let state = match slowfeed::state(config).await {
+        Ok(state) => state,
         Err(message) => {
             log::problem(&message);
             std::process::exit(1);
         }
     };
+    tokio::spawn(slowfeed::checking::run(state.clone()));
+    let app = slowfeed::router(state);
     let listener = match tokio::net::TcpListener::bind(address).await {
         Ok(listener) => listener,
         Err(error) => {

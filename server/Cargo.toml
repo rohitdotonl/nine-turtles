@@ -10,7 +10,7 @@ publish = false
 # scripts/check-libraries.mjs fails the checks otherwise.
 [dependencies]
 axum = "0.8.9"
-tokio = { version = "1.54.1", features = ["rt-multi-thread", "macros", "net", "signal", "sync"] }
+tokio = { version = "1.54.1", features = ["rt-multi-thread", "macros", "net", "signal", "sync", "time"] }
 rust-embed = { version = "8.13.0", features = ["mime-guess"] }
 tower-http = { version = "0.7.1", features = ["compression-br", "compression-gzip", "set-header"] }
 sqlx = { version = "0.9.0", default-features = false, features = ["runtime-tokio", "sqlite-bundled", "migrate", "macros"] }

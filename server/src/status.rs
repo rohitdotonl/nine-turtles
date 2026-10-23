@@ -11,7 +11,7 @@ use axum::{
 use blake2::{Blake2s256, Digest};
 use serde_json::json;
 
-use crate::{AppState, auth, db, log, now};
+use crate::{AppState, auth, checking, db, log, now};
 
 pub fn routes() -> Router<AppState> {
     Router::new()
@@ -60,6 +60,16 @@ async fn diagnostics(State(state): State<AppState>, headers: HeaderMap) -> Respo
             json!(null)
         }
     };
+    let feeds = match checking::health(&state.db, now()).await {
+        Ok(health) => json!(health),
+        Err(error) => {
+            log::problem(&format!(
+                "the diagnostics page couldn't count the feeds: {error}"
+            ));
+            json!(null)
+        }
+    };
+    let last_round = state.last_round.load(std::sync::atomic::Ordering::Relaxed);
     (
         [(header::CACHE_CONTROL, "no-store")],
         Json(json!({
@@ -71,6 +81,9 @@ async fn diagnostics(State(state): State<AppState>, headers: HeaderMap) -> Respo
             "signed_in_devices": devices,
             "wrong_passwords_since_start": state.wrong_passwords.load(std::sync::atomic::Ordering::Relaxed),
             "recent_problems": log::recent_problems(),
+            // Counts only, never which feeds (the reader's subscriptions are theirs).
+            "feeds": feeds,
+            "background_checks_last_round_at": (last_round > 0).then_some(last_round),
         })),
     )
         .into_response()

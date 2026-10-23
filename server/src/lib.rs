@@ -2,11 +2,12 @@
 //!
 //! So far: sign-in, the database file, the status pages, adding feeds,
 //! listing and reading their articles, marking them read and starring them,
-//! and the shared settings. The frontend is packed into this program
-//! (see `assets`).
+//! the shared settings, and checking feeds in the background (`checking`).
+//! The frontend is packed into this program (see `assets`).
 
 pub mod assets;
 pub mod auth;
+pub mod checking;
 pub mod config;
 pub mod db;
 pub mod discover;
@@ -21,7 +22,10 @@ pub mod security;
 pub mod settings;
 pub mod status;
 
-use std::sync::{Arc, atomic::AtomicU64};
+use std::sync::{
+    Arc,
+    atomic::{AtomicI64, AtomicU64},
+};
 
 use axum::Router;
 use sqlx::SqlitePool;
@@ -48,11 +52,19 @@ pub struct AppState {
     pub wrong_passwords: Arc<AtomicU64>,
     /// Seconds since 1970 (UTC) when this run of slowfeed started.
     pub started_at: i64,
+    /// When background checking last finished a round; 0 before the first.
+    pub last_round: Arc<AtomicI64>,
 }
 
-/// Opens the database and builds the whole web application. `main` serves
-/// it; tests call it directly with their own settings.
+/// Opens the database and builds the whole web application. Tests call it
+/// directly with their own settings; background checking isn't started.
 pub async fn app(config: Config) -> Result<Router, String> {
+    Ok(router(state(config).await?))
+}
+
+/// Opens the database and gets everything ready. `main` then starts
+/// background checking (`checking::run`) and serves the `router`.
+pub async fn state(config: Config) -> Result<AppState, String> {
     match &config.password {
         PasswordSetting::Set(_) => {}
         PasswordSetting::Missing => log::problem(
@@ -72,8 +84,13 @@ pub async fn app(config: Config) -> Result<Router, String> {
         limiter: Arc::default(),
         wrong_passwords: Arc::default(),
         started_at: now(),
+        last_round: Arc::default(),
     };
+    Ok(state)
+}
 
+/// The whole web application.
+pub fn router(state: AppState) -> Router {
     let router = Router::new()
         .merge(auth::routes())
         .merge(feeds::routes())
@@ -82,7 +99,7 @@ pub async fn app(config: Config) -> Result<Router, String> {
         .merge(status::routes())
         .merge(assets::routes())
         .with_state(state);
-    Ok(security::apply(router).layer(CompressionLayer::new()))
+    security::apply(router).layer(CompressionLayer::new())
 }
 
 /// Seconds since 1970 (UTC), the way slowfeed stores times.

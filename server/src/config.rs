@@ -23,6 +23,11 @@ pub struct Config {
     /// Lets slowfeed fetch feeds from this computer and private networks.
     /// Only the browser tests set it, to serve made-up feeds; never on Render.
     pub local_feeds_allowed: bool,
+    /// Checks every feed this many seconds apart, ignoring its rhythm and
+    /// the 30-minute minimum, so a browser test needn't wait half an hour.
+    /// Only honored together with `local_feeds_allowed`, so it can never
+    /// make the live app impolite to real publishers.
+    pub test_check_seconds: Option<i64>,
 }
 
 /// The scrambled password (`SLOWFEED_PASSWORD_HASH`), made by
@@ -68,6 +73,24 @@ impl Config {
             format!("SLOWFEED_LISTEN must look like 127.0.0.1:8080, got {listen_text:?}")
         })?;
 
+        let local_feeds_allowed =
+            var("SLOWFEED_ALLOW_LOCAL_FEEDS").is_some_and(|value| value.trim() == "yes");
+        let test_check_seconds = var("SLOWFEED_TEST_CHECK_SECONDS")
+            .filter(|_| local_feeds_allowed)
+            .map(|value| {
+                value
+                    .trim()
+                    .parse::<i64>()
+                    .ok()
+                    .filter(|seconds| *seconds > 0)
+                    .ok_or_else(|| {
+                        format!(
+                            "SLOWFEED_TEST_CHECK_SECONDS must be a number of seconds, got {value:?}"
+                        )
+                    })
+            })
+            .transpose()?;
+
         Ok(Self {
             listen,
             data_dir: var("SLOWFEED_DATA_DIR")
@@ -75,8 +98,8 @@ impl Config {
                 .into(),
             password: PasswordSetting::from_value(var("SLOWFEED_PASSWORD_HASH")),
             diagnostics_key: var("SLOWFEED_DIAGNOSTICS_KEY").map(|key| key.trim().to_owned()),
-            local_feeds_allowed: var("SLOWFEED_ALLOW_LOCAL_FEEDS")
-                .is_some_and(|value| value.trim() == "yes"),
+            local_feeds_allowed,
+            test_check_seconds,
         })
     }
 }

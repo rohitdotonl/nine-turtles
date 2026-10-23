@@ -5,8 +5,8 @@
 //! Adding: the reader pastes a feed's address or a website's. slowfeed
 //! fetches it once; if it's a web page, it looks in it for the feeds the site
 //! names (autodiscovery). One feed is followed straight away; several are
-//! offered as a choice; none gets a plain message. Background fetching comes
-//! in Milestone 8.
+//! offered as a choice; none gets a plain message. After that, `checking`
+//! looks at the feed again in the background, on its own rhythm.
 
 use axum::{
     Json, Router,
@@ -22,7 +22,7 @@ use serde_json::json;
 use crate::{
     AppState,
     auth::{SignedIn, database_problem},
-    discover, feed,
+    checking, discover, feed,
     fetch::{self, FetchError, Fetched},
     now,
 };
@@ -34,6 +34,7 @@ pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/api/feeds", get(list_feeds).post(add_feed))
         .route("/api/articles", get(list_articles))
+        .route("/api/articles/new", get(new_articles))
         .route("/api/articles/{id}", get(read_article))
 }
 
@@ -107,7 +108,7 @@ impl From<FetchError> for NotAdded {
             FetchError::NotAllowed => Self::NotAllowed,
             FetchError::Unreachable => Self::Unreachable,
             FetchError::Status(404 | 410) => Self::NotFound,
-            FetchError::Status(_) => Self::Unreachable,
+            FetchError::Status(_) | FetchError::SlowDown(_) => Self::Unreachable,
             FetchError::TooBig => Self::TooBig,
         }
     }
@@ -207,11 +208,13 @@ async fn follow(
     let url = &fetched.lasting_url;
     let key = feed::normalize(url);
     let now = now();
+    let every = checking::rhythm(&parsed, now);
     let mut transaction = state.db.begin().await?;
 
     let inserted: Option<i64> = sqlx::query_scalar(
-        "INSERT INTO feeds (url, url_key, title, site_url, language, etag, last_modified, added_at, fetched_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        "INSERT INTO feeds (url, url_key, title, site_url, language, etag, last_modified, added_at,
+             fetched_at, check_every, next_check_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT (url_key) DO NOTHING
          RETURNING id",
     )
@@ -224,6 +227,8 @@ async fn follow(
     .bind(&fetched.last_modified)
     .bind(now)
     .bind(now)
+    .bind(every)
+    .bind(now + checking::wait(state, every))
     .fetch_optional(&mut *transaction)
     .await?;
     let Some(feed_id) = inserted else {
@@ -251,15 +256,27 @@ async fn follow(
     })
 }
 
-/// Stores new articles; one already stored (same fingerprint, same feed) is
-/// left as it is.
+/// Stores new articles, and returns how many were new. One already stored
+/// (same fingerprint, same feed) that the publisher has since edited gets
+/// the new words quietly: it keeps its place in the list, its read mark and
+/// its star (SPEC section 11).
 pub async fn store_articles(
     connection: &mut sqlx::SqliteConnection,
     feed_id: i64,
     articles: &[feed::ParsedArticle],
     received_at: i64,
-) -> Result<(), sqlx::Error> {
+) -> Result<u64, sqlx::Error> {
+    let before: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM articles WHERE feed_id = ?")
+        .bind(feed_id)
+        .fetch_one(&mut *connection)
+        .await?;
+    // An article a feed lists twice counts once, as it's first listed, so
+    // a check never flips it back and forth between the two.
+    let mut seen = std::collections::HashSet::new();
     for article in articles {
+        if !seen.insert(article.fingerprint.as_str()) {
+            continue;
+        }
         let sort_at = article
             .published_at
             .map_or(received_at, |published| published.min(received_at));
@@ -267,7 +284,15 @@ pub async fn store_articles(
             "INSERT INTO articles (feed_id, fingerprint, title, link, author, content, summary,
                  language, published_at, received_at, sort_at)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-             ON CONFLICT (feed_id, fingerprint) DO NOTHING",
+             ON CONFLICT (feed_id, fingerprint) DO UPDATE SET
+                 title = excluded.title, link = excluded.link, author = excluded.author,
+                 content = excluded.content, summary = excluded.summary,
+                 language = excluded.language
+             WHERE articles.title IS NOT excluded.title OR articles.link IS NOT excluded.link
+                 OR articles.author IS NOT excluded.author
+                 OR articles.content IS NOT excluded.content
+                 OR articles.summary IS NOT excluded.summary
+                 OR articles.language IS NOT excluded.language",
         )
         .bind(feed_id)
         .bind(&article.fingerprint)
@@ -283,7 +308,11 @@ pub async fn store_articles(
         .execute(&mut *connection)
         .await?;
     }
-    Ok(())
+    let after: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM articles WHERE feed_id = ?")
+        .bind(feed_id)
+        .fetch_one(&mut *connection)
+        .await?;
+    Ok(u64::try_from(after - before).unwrap_or(0))
 }
 
 /// Which articles a list shows (SPEC sections 4 and 6).
@@ -303,6 +332,18 @@ pub enum Order {
     #[default]
     Newest,
     Oldest,
+}
+
+impl List {
+    /// A feed's articles if one is named, otherwise the view's.
+    const fn from_query(feed: Option<i64>, view: View) -> Self {
+        match (feed, view) {
+            (Some(feed), _) => Self::Feed(feed),
+            (None, View::All) => Self::All,
+            (None, View::Unread) => Self::Unread,
+            (None, View::Starred) => Self::Starred,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Default, Deserialize)]
@@ -352,18 +393,72 @@ async fn list_articles(
         Some(Some(cursor)) => Some(cursor),
         Some(None) => return StatusCode::BAD_REQUEST.into_response(),
     };
-    let list = match (query.feed, query.view) {
-        (Some(feed), _) => List::Feed(feed),
-        (None, View::All) => List::All,
-        (None, View::Unread) => List::Unread,
-        (None, View::Starred) => List::Starred,
+    let list = List::from_query(query.feed, query.view);
+    // Asked before the list, so an article arriving in between is reported
+    // as new rather than missed.
+    let latest: Result<i64, sqlx::Error> = sqlx::query_scalar(LATEST).fetch_one(&state.db).await;
+    let listed = match latest {
+        Ok(latest) => page(&state.db, list, query.order, after)
+            .await
+            .map(|listed| (latest, listed)),
+        Err(error) => Err(error),
     };
-    match page(&state.db, list, query.order, after).await {
-        Ok((articles, next)) => {
+    match listed {
+        Ok((latest, (articles, next))) => {
             let next = next.map(|(at, id)| format!("{at}:{id}"));
-            Json(json!({ "articles": articles, "next": next })).into_response()
+            Json(json!({ "articles": articles, "next": next, "latest": latest })).into_response()
         }
         Err(error) => database_problem("listing articles", &error),
+    }
+}
+
+/// The newest article's number. Articles are numbered as they arrive, so
+/// any article with a higher number came after the list was loaded.
+pub const LATEST: &str = "SELECT COALESCE(MAX(id), 0) FROM articles";
+
+/// "Has anything arrived for this list since article `since`?", one question
+/// per list. Each reads only the articles that arrived since, by number (the
+/// `+` keeps SQLite from reading the whole feed through its index instead).
+pub const fn new_sql(list: List) -> Option<&'static str> {
+    match list {
+        List::All => Some("SELECT EXISTS (SELECT 1 FROM articles WHERE id > ?)"),
+        List::Unread => Some("SELECT EXISTS (SELECT 1 FROM articles WHERE id > ? AND +read = 0)"),
+        List::Feed(_) => {
+            Some("SELECT EXISTS (SELECT 1 FROM articles WHERE id > ? AND +feed_id = ?)")
+        }
+        // Nothing arrives starred.
+        List::Starred => None,
+    }
+}
+
+#[derive(Deserialize)]
+struct NewQuery {
+    feed: Option<i64>,
+    #[serde(default)]
+    view: View,
+    /// The `latest` the list was loaded with.
+    since: i64,
+}
+
+/// Whether new articles are waiting for the list on screen, so it can say
+/// "New items · press r" (SPEC section 13). It never says how many.
+async fn new_articles(
+    _: SignedIn,
+    State(state): State<AppState>,
+    Query(query): Query<NewQuery>,
+) -> Response {
+    let list = List::from_query(query.feed, query.view);
+    let Some(sql) = new_sql(list) else {
+        return Json(json!({ "new": false })).into_response();
+    };
+    let mut question = sqlx::query_scalar(sql).bind(query.since);
+    if let List::Feed(feed) = list {
+        question = question.bind(feed);
+    }
+    let found: Result<bool, sqlx::Error> = question.fetch_one(&state.db).await;
+    match found {
+        Ok(found) => Json(json!({ "new": found })).into_response(),
+        Err(error) => database_problem("looking for new articles", &error),
     }
 }
 
