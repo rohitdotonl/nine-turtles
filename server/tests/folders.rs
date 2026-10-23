@@ -547,3 +547,71 @@ async fn importing_opml_follows_each_feed_once_in_all_its_folders() {
         ]
     );
 }
+
+#[tokio::test]
+async fn background_rounds_clear_an_unsubscribed_feed_only_after_ten_minutes_and_never_after_undo()
+{
+    let reader = Reader::new().await;
+    let alpha = reader.follow("alpha").await;
+    let beta = reader.follow("beta").await;
+    let feed_lines = async |id: i64| -> i64 {
+        sqlx::query_scalar("SELECT COUNT(*) FROM feeds WHERE id = ?")
+            .bind(id)
+            .fetch_one(&reader.state.db)
+            .await
+            .unwrap()
+    };
+    reader
+        .post(&format!("/api/feeds/{alpha}/unsubscribe"), json!({}))
+        .await;
+    let now = slowfeed::now();
+
+    // Nine minutes later: still there, so Undo would still work.
+    checking::round(&reader.state, now + 9 * 60).await.unwrap();
+    assert_eq!(feed_lines(alpha).await, 1);
+    // Eleven minutes later: gone for good (nothing starred kept it).
+    checking::round(&reader.state, now + 11 * 60).await.unwrap();
+    assert_eq!(feed_lines(alpha).await, 0);
+
+    // Undo that arrives before the clean-up wins: clearing then leaves the
+    // feed alone, even though it was listed as waiting.
+    reader
+        .post(&format!("/api/feeds/{beta}/unsubscribe"), json!({}))
+        .await;
+    reader
+        .post(&format!("/api/feeds/{beta}/resubscribe"), json!({}))
+        .await;
+    let mut transaction = reader.state.db.begin().await.unwrap();
+    assert!(!folders::clear(&mut transaction, beta).await.unwrap());
+    transaction.commit().await.unwrap();
+    assert_eq!(reader.titles(&format!("feed={beta}")).await.len(), 3);
+}
+
+#[tokio::test]
+async fn article_numbers_freed_by_unsubscribing_are_never_given_again() {
+    let reader = Reader::new().await;
+    reader.follow("alpha").await;
+    // The newest articles, with the highest numbers, belong to Beta.
+    let beta = reader.follow("beta").await;
+    let latest = reader.get("/api/articles?view=all").await["latest"]
+        .as_i64()
+        .unwrap();
+    reader
+        .post(&format!("/api/feeds/{beta}/unsubscribe"), json!({}))
+        .await;
+    folders::clear_unsubscribed(&reader.state.db, i64::MAX)
+        .await
+        .unwrap();
+    // A list loaded now remembers `latest` from before; Gamma's articles
+    // arrive after it and must count as new.
+    let gamma = reader.follow("gamma").await;
+    let numbers = reader.article_ids(&format!("feed={gamma}")).await;
+    assert!(
+        numbers.iter().all(|&id| id > latest),
+        "{numbers:?} vs {latest}"
+    );
+    let waiting = reader
+        .get(&format!("/api/articles/new?view=all&since={latest}"))
+        .await;
+    assert_eq!(waiting["new"], true);
+}

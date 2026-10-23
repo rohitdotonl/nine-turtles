@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
-import { appReady, follow, signIn } from "./screens";
+import { appReady, follow, signIn, tabTo } from "./screens";
 
 // SPEC sections 5 (sidebar search), 15 (folders and managing feeds) and 16
 // (OPML import and export), "How to check it", done by a browser. Each test
@@ -11,6 +11,9 @@ const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" }
 const line = (page: Page) => page.getByRole("status").filter({ hasText: /\S/ }).first();
 
 test.skip(({ isMobile }) => isMobile, "the wide layout shows the sidebar beside the list");
+// Unsubscribing ends the Undo of any earlier unsubscribe (only the last
+// action can be undone), so the tests that unsubscribe run one at a time.
+test.describe.configure({ mode: "serial" });
 
 /** A name no other test uses. */
 function unique(prefix: string): string {
@@ -108,6 +111,7 @@ test("rename a folder; delete it, its feeds stay, and Undo brings it back", asyn
 test("unsubscribe, then Undo: the feed is back with its read history; a star outlives unsubscribing", async ({ page }) => {
   const [blog, other] = [unique("leaving"), unique("starred")];
   await openBlogs(page, [blog, other]);
+  await expect(page.getByRole("region", { name: `Blog ${blog}` }).getByRole("listitem")).toHaveCount(3);
   // One article read.
   await page.keyboard.press("j");
   await expect(sidebar(page).getByRole("link", { name: `Blog ${blog} 2 unread` })).toBeVisible();
@@ -125,13 +129,22 @@ test("unsubscribe, then Undo: the feed is back with its read history; a star out
 
   // The other blog: star its newest article, then unsubscribe.
   await sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${other}`) }).click();
+  await expect(page.getByRole("region", { name: `Blog ${other}` }).getByRole("listitem")).toHaveCount(3);
   await page.keyboard.press("j");
   await page.keyboard.press("s");
+  await expect(line(page)).toHaveText("Starred");
   await page.getByRole("link", { name: "Edit feed" }).click();
   await page.getByRole("button", { name: `Unsubscribe from Blog ${other}` }).click();
   await expect(line(page)).toHaveText(`Unsubscribed from Blog ${other}`);
-  await sidebar(page).getByRole("link", { name: "Starred" }).click();
-  await expect(page.getByRole("button", { name: new RegExp(`Starred, Blog ${other}`) })).toBeVisible();
+  // Other tests star articles too, so look through every page of Starred.
+  const starredFrom: string[] = [];
+  for (let after: string | null = null, first = true; first || after; first = false) {
+    const query: string = after ? `view=starred&after=${after}` : "view=starred";
+    const body = await (await page.request.get(new URL(`/api/articles?${query}`, FEEDS_APP).href)).json();
+    starredFrom.push(...body.articles.map((each: { feed_title: string }) => each.feed_title));
+    after = body.next;
+  }
+  expect(starredFrom).toContain(`Blog ${other}`);
 });
 
 test("the sidebar search finds feeds and folders by name, and Escape empties it", async ({ page }) => {
@@ -189,4 +202,64 @@ test("import an OPML file from Settings: a plain summary, folders in the sidebar
   const text = await exported.text();
   expect(text).toContain(`<outline text="${folder}"`);
   expect(text).toContain(`xmlUrl="${FEED_SITE}/blog/${one}/feed.xml"`);
+});
+
+test("with only the keyboard: Edit feed, a new folder, opening it, Edit folder, Unsubscribe and Import OPML", async ({ page }) => {
+  const blog = unique("keys");
+  const folder = unique("Keyboard");
+  await openBlogs(page, [blog]);
+
+  await tabTo(page, page.getByRole("link", { name: "Edit feed" }));
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { level: 2, name: "Edit feed" })).toBeFocused();
+  await tabTo(page, page.getByLabel("New folder"));
+  await page.keyboard.type(folder);
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { level: 2, name: `Blog ${blog}` })).toBeFocused();
+
+  // The folder's button shows its feeds; Space or Enter works it.
+  const toggle = sidebar(page).getByRole("button", { name: `Feeds in ${folder}` });
+  await tabTo(page, toggle, 200);
+  await page.keyboard.press("Enter");
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) })).toBeVisible();
+
+  // Untick the folder from Edit feed: Space on the checkbox, then Save.
+  await tabTo(page, page.getByRole("link", { name: "Edit feed" }), 200);
+  await page.keyboard.press("Enter");
+  await tabTo(page, page.getByRole("checkbox", { name: folder }));
+  await page.keyboard.press("Space");
+  await expect(page.getByRole("checkbox", { name: folder })).not.toBeChecked();
+  await tabTo(page, page.getByRole("button", { name: "Save" }));
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { level: 2, name: `Blog ${blog}` })).toBeFocused();
+
+  // Edit folder, from the folder's own list.
+  await tabTo(page, sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) }), 200);
+  await page.keyboard.press("Enter");
+  await tabTo(page, page.getByRole("link", { name: "Edit folder" }));
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { level: 2, name: "Edit folder" })).toBeFocused();
+  await tabTo(page, page.getByRole("button", { name: `Delete ${folder}` }));
+  await page.keyboard.press("Enter");
+  await expect(line(page)).toHaveText(`Deleted the folder ${folder}`);
+
+  // Unsubscribe, and u brings the feed back.
+  await tabTo(page, sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) }), 200);
+  await page.keyboard.press("Enter");
+  await tabTo(page, page.getByRole("link", { name: "Edit feed" }));
+  await page.keyboard.press("Enter");
+  await tabTo(page, page.getByRole("button", { name: `Unsubscribe from Blog ${blog}` }));
+  await page.keyboard.press("Enter");
+  await expect(line(page)).toHaveText(`Unsubscribed from Blog ${blog}`);
+  await page.keyboard.press("u");
+  await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) })).toBeVisible();
+
+  // Import OPML opens the device's file chooser from the keyboard too.
+  await page.goto(new URL("/settings", FEEDS_APP).href);
+  await appReady(page);
+  await tabTo(page, page.getByRole("button", { name: "Import OPML" }), 200);
+  const chooser = page.waitForEvent("filechooser");
+  await page.keyboard.press("Enter");
+  await chooser;
 });
