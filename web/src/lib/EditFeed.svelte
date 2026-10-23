@@ -67,7 +67,7 @@
         {/if}
         {#each folders as folder (folder.id)}
           <label class="flex min-h-11 items-center gap-3">
-            <input type="checkbox" value={folder.id} bind:group={chosen} />
+            <input type="checkbox" value={folder.id} bind:group={chosen} class="size-5 shrink-0" />
             <span class="break-words">{folder.name}</span>
           </label>
         {/each}

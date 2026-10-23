@@ -225,6 +225,8 @@ each with screenshots:
 - ✅ Settings choices as tiles, key caps, a quiet empty reading area, a line
   under the sign-in wordmark, the browser bar in the chosen theme.
 - ✅ Back arrows as icons, and the article centred on wide windows.
+- ✅ A tidier shortcut list, tick boxes the same size everywhere, and
+  "Edit feed" lined up under a long name.
 
 ---
 
