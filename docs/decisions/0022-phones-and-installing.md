@@ -1,4 +1,4 @@
-# 0021: Phones and installing the app
+# 0022: Phones and installing the app
 
 *23 October 2026, Milestone 13. Built from SPEC section 20 and DESIGN.md → "Mobile" without a separate plan (decision 0014). The owner chose to keep all of it in V1, including installing and opening without a connection.*
 
