@@ -58,9 +58,9 @@ environment blocks it, report that to the owner in the agent's own channel
 
 5. **Fix it when the cause is clear.** If the problem is in slowfeed's code
    and the fix is small and clear, open a pull request following AGENTS.md
-   (plan in the issue first if it's not small). Never touch Render: settings
-   and redeploys are the owner's, so the issue says exactly which step of
-   [render-setup.md](render-setup.md) to repeat.
+   (if it's not small, say in the issue what you're about to change). Never
+   touch Render: settings and redeploys are the owner's, so the issue says
+   exactly which step of [render-setup.md](render-setup.md) to repeat.
 
 6. **Close what's fixed.** If an open `daily-check` issue's problem is gone
    today, comment "Gone in today's check" and close it.

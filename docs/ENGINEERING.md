@@ -18,7 +18,7 @@ The owner is a tech-oriented person, not a developer. They direct the work; agen
 
 1. **Talk in simple, plain language first.** Lead with what something means for the owner and the app. Give technical detail only after, or when asked. Explain any technical term the first time you use it.
 2. **One big change at a time.** Finish, check and get approval for one before starting the next.
-3. **Plan first, then wait for approval.** Nothing gets built until the owner says yes.
+3. **When asked, start building.** No separate plan to approve: `docs/PLAN.md` and `docs/SPEC.md` are the plan. Ask when they leave something open, or another rule says to (see "How a change happens").
 4. **Offer choices in plain language,** with your suggestion marked and the reason given.
 5. **Explain every change in plain language:** what changed, why, and how the owner can check it themselves.
 6. **Never add a library without asking.** This includes replacing one library with another.
@@ -29,11 +29,11 @@ The owner is a tech-oriented person, not a developer. They direct the work; agen
 
 ### How a change happens
 
-1. The agent proposes a plan in plain language, with choices where they exist.
-2. The owner approves.
+1. When the owner asks for a milestone or a change, the agent starts from `docs/PLAN.md` and `docs/SPEC.md` straight away, without writing a plan for approval (decision 0014).
+2. The agent asks the owner when the documents don't settle something or another rule says to ask. For example: a real choice, a new library, a feature or behavior not yet in `docs/SPEC.md`, a change to `DESIGN.md` or to what a check enforces, anything that could lose data, or anything it's unsure of. It keeps working on the parts the question doesn't touch.
 3. The agent works on a separate **branch** (a copy of the code) and opens a **pull request** on GitHub with a plain-language summary.
 4. Automatic checks run on the pull request.
-5. A second agent, one that didn't write the change, reviews every pull request against `DESIGN.md`, this document and `docs/SPEC.md`, and posts what it found on the pull request. The building agent fixes each finding or explains why not.
+5. A second agent, one that didn't write the change, reviews every pull request against `DESIGN.md`, this document and `docs/SPEC.md`, and posts what it found on the pull request. The building agent fixes each finding or explains why not. Small, low-risk changes get a lighter review (decision 0015).
 6. The change is merged, and only then does it reach the live app. Either the owner presses **Merge**, or an agent merges after giving the owner a short, beginner-friendly brief of what's about to be merged and getting the owner's yes to it (AGENTS.md → "How a change happens", decision 0009).
 
 ---

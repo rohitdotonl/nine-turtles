@@ -162,7 +162,10 @@ explains why not. You see both in the pull request.
 
 It costs a little more time and usage per change, and it catches the kind of
 mistake the automatic checks can't, such as a feature that works but doesn't
-match the design.
+match the design. Small, low-risk changes (most documents and tiny code
+fixes; never the design, the spec, the rules, the checks, screens, data,
+fetching or sign-in) get a lighter, cheaper review that reads only
+`AGENTS.md` and the change; the summary says which review a pull request got.
 
 ## 6. "Merging a pull request deploys it"
 
@@ -234,7 +237,7 @@ it reads (documents, code, test results) takes up room, and when it's full,
 older parts get summarized. The documents are deliberately split so agents
 read only what a task needs:
 
-- **Always read:** `AGENTS.md` only (about 1,500 words, a small fraction of
+- **Always read:** `AGENTS.md` only (about 1,400 words, a small fraction of
   the window).
 - **Read when needed:** the map in `AGENTS.md` says which document, and agents
   read only the relevant section.
@@ -242,8 +245,10 @@ read only what a task needs:
 
 In practice, code and test results fill the window far more than the
 documents do. What helps most from your side:
-1. **One milestone per session.** Start a fresh session for each one; the
-   documents carry everything over.
+1. **One milestone per thread.** Once a milestone is merged, its thread is
+   done and the next milestone starts in a fresh one; the documents carry
+   everything over. Every message makes the agent re-read its whole thread,
+   so this is the biggest saving.
 2. **Start a new session when switching topic,** e.g. from building to a
    question about hosting.
 3. **Keep the conversation to decisions;** the details belong in the documents,
