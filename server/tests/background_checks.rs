@@ -93,7 +93,7 @@ async fn serve(State(site): State<Shared>, uri: Uri, headers: HeaderMap) -> Resp
         return Redirect::permanent("/new-home.xml").into_response();
     }
     if path == "/daily.xml" {
-        return rss(&site, "Daily", DAY, None);
+        return rss(&site, "Daily", 3, DAY, None);
     }
     let known = path.starts_with("/many/")
         || ["/grow.xml", "/flaky.xml", "/moving.xml", "/new-home.xml"].contains(&path.as_str());
@@ -104,15 +104,15 @@ async fn serve(State(site): State<Shared>, uri: Uri, headers: HeaderMap) -> Resp
     if text(header::IF_NONE_MATCH).as_deref() == Some(etag.as_str()) {
         return StatusCode::NOT_MODIFIED.into_response();
     }
-    rss(&site, "Growing", HOUR, Some(etag))
+    rss(&site, "Growing", site.articles, HOUR, Some(etag))
 }
 
-/// A feed of `site.articles` articles, one every `gap` seconds, newest first.
-fn rss(site: &Site, title: &str, gap: i64, etag: Option<String>) -> Response {
+/// A feed of `count` articles, one every `gap` seconds, newest first.
+fn rss(site: &Site, title: &str, count: u32, gap: i64, etag: Option<String>) -> Response {
     let mut items = String::new();
-    for number in (1..=site.articles).rev() {
+    for number in (1..=count).rev() {
         let at = site.started + (i64::from(number) - 4) * gap;
-        let (name, words) = if number == site.articles && site.edited {
+        let (name, words) = if number == count && site.edited {
             (format!("Post {number}, corrected"), "Better words.")
         } else {
             (format!("Post {number}"), "Words.")
