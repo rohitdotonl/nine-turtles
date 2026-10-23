@@ -36,16 +36,14 @@ A few words used throughout:
 3. Type the right password. You're in. Close the browser, reopen the address: you're still signed in.
 4. Sign out from Settings. Reload: you're back at the password field.
 
-## 2. First visit (empty state) and the feeds guide
+## 2. First visit (empty state)
 
 **What it does**
-- Until you add your first feed, the app shows one field: **"Paste a website or feed URL"**, and below it: **"New to feeds? Here's how they work · Import OPML"**.
-- "Here's how they work" opens a short, plain guide page inside the app (under 300 words, drafted by an agent in slowfeed's voice, wording approved by the owner).
-- "Import OPML" goes to the import described in section 16.
+- Until you add your first feed, the app shows one field: **"Paste a website or feed URL"**, and below it: **"Import OPML"**, which goes to the import described in section 16.
+- (V2 adds "New to feeds? Here's how they work", a short guide page for newcomers.)
 
 **How to check it**
-1. On a fresh installation, sign in. You see the field and the two links, and nothing else competing for attention.
-2. Click "Here's how they work". A short guide opens. Escape or Back returns you.
+1. On a fresh installation, sign in. You see the field and the Import OPML link, and nothing else competing for attention.
 
 ## 3. Adding a feed
 
@@ -86,15 +84,14 @@ A few words used throughout:
 - You can't reorder things by hand; order is always alphabetical.
 - At the top of the sidebar: the "slowfeed" wordmark with a labeled **Settings** link beside it, and below them a **search field to find a feed or folder by name**, always shown.
 - Folders appear once at least one exists.
-- **Unread counts** (inbox mode only): small, muted grey numbers, right-aligned, next to each feed and folder. No count on "Unread", "Starred" or "All", and never a total. Above 999 shows "999+". Never colored, never a badge.
+- **Unread counts:** small, muted grey numbers, right-aligned, next to each feed and folder. No count on "Unread", "Starred" or "All", and never a total. Above 999 shows "999+". Never colored, never a badge.
 - Your current place is marked with the ink blue accent.
-- A broken feed looks like any other feed; it just doesn't get new items. Problems are explained on the feed health page (section 17).
+- A broken feed looks like any other feed; it just doesn't get new items. In V1 the daily check tells you when feeds are failing; the feed health page (section 17) comes in V2.
 
 **How to check it**
 1. Add feeds whose names start with different letters. They're in alphabetical order, under the fixed views.
 2. In inbox mode, a feed with unread items shows a grey number. "Unread" itself shows no number.
 3. A feed with more than 999 unread items shows "999+".
-4. Switch to river mode in Settings. All numbers disappear.
 
 ## 6. Item list
 
@@ -112,7 +109,6 @@ A few words used throughout:
   | Selected | Ink blue bar on the left and a faint ink blue tint |
   | Starred | A small star mark |
 
-- In river mode there is no read/unread styling; only the selection and the star show.
 - Items you read in the Unread view stay where they are (greyed) until you press `r` or leave the view, so nothing jumps under your cursor.
 
 **How to check it**
@@ -168,6 +164,8 @@ A few words used throughout:
 
 ## 10. Reading modes: inbox and river
 
+*V1 has inbox mode only: an Unread view, read/unread styling and unread counts, with the app opening on Unread. River mode is moved to V2 (23 October 2026); the description below is kept for then.*
+
 **What it does**
 - A single setting for the whole app.
 - **Inbox (default):** things to get through. Unread view, read/unread styling and unread counts are all present.
@@ -196,9 +194,11 @@ A few words used throughout:
 **How to check it**
 Most of this is checked by the automatic tests rather than by eye. You can see it working:
 1. Leave the app closed for a day, then open it: the feeds you follow have new articles that arrived on their own.
-2. On the feed health page, a feed that's been failing says so in plain words.
+2. When a feed keeps failing, the daily check mentions it (the feed health page comes in V2).
 
 ## 12. WebSub (instant updates from publishers who offer it)
+
+*Moved to V2 (23 October 2026): V1 is for the owner alone. Kept here so V2 starts from it. See `docs/decisions/0012-v1-for-one-reader.md`.*
 
 **What it does**
 - Some publishers announce new articles the moment they publish, through a service called a "hub" (the standard is called WebSub). When a feed offers this, slowfeed signs up and receives new articles as they're published.
@@ -276,6 +276,8 @@ OPML is the standard file format feed readers use to move subscription lists bet
 
 ## 17. Feed health page
 
+*Moved to V2 (23 October 2026): V1 is for the owner alone. Kept here so V2 starts from it. See `docs/decisions/0012-v1-for-one-reader.md`.*
+
 **What it does**
 - In Settings. Lists only feeds with problems, worst first: dead feeds, then feeds "having trouble".
 - A feed is **dead** after 7 days of "not found", or 3 weeks of any failure. Dead feeds are still checked once a day in case they come back.
@@ -293,11 +295,10 @@ OPML is the standard file format feed readers use to move subscription lists bet
 **What it does**
 - **Reader controls:** reading font (Literata or Atkinson Hyperlegible), text size, line width, theme.
 - **Themes:** follow the system's light/dark setting by default, or choose off-white, sepia or dark.
-- **Reading:** inbox or river mode; newest or oldest first.
+- **Reading:** newest or oldest first. (Inbox or river mode in V2.)
 - **Your data:** OPML import/export, export of starred articles.
-- **Keeping articles:** explains that unstarred articles, read or not, are removed after a year and starred ones are kept forever.
-- **Feed health** (section 17) and **Sign out**.
-- **Status:** which version of slowfeed you're using. When a newer version has been downloaded, it says "A new version is ready" with a **Reload** button. Otherwise new versions are used automatically the next time you open or reload the app, never while you're reading.
+- **Sign out.** (Keeping articles and Feed health come in V2.)
+- **Status:** which version of slowfeed you're using. When a newer version has been downloaded, it says "A new version is ready" with a **Reload** button. Otherwise new versions are used automatically the next time you open or reload the app, never while you're reading. If a tab left open across an update can't carry on, it says so plainly: "slowfeed was updated. Reload to continue."
 - Fonts are served by slowfeed itself; nothing is loaded from font services. Other scripts such as Hindi use the fonts already on your device.
 - **Shared across your devices:** reading mode and sort order. **Per device:** theme, font, text size and line width (a phone and a laptop often want different sizes). `+`/`-` change the same text-size setting.
 
@@ -381,19 +382,18 @@ OPML is the standard file format feed readers use to move subscription lists bet
 2. Turn on your phone's or computer's screen reader (VoiceOver, TalkBack or NVDA). Move through items: it reads the title and says when things are marked as read.
 3. The automatic checks run contrast and accessibility tests on every screen in every theme; a pull request can't pass if they fail.
 
-## 23. Your data: keeping, exporting, backups
+## 23. Your data: keeping and exporting
 
 **What it does**
-- Unstarred articles, read or not, are removed one year after slowfeed received them (not their published date). Starred articles are kept forever.
-- A removed article never comes back as "new", even if the publisher's feed still lists it.
-- This clean-up only runs if the latest nightly backup succeeded; otherwise it waits, and the feed health page says so.
+- In V1, every article is kept; nothing is removed.
 - Export of starred articles as a JSON Feed file (a standard, open format other feed tools can read).
-- Every night slowfeed copies its database to storage outside Render, and it also makes a copy before any change to the database's structure. At worst, a day of reading activity could be lost. The last 30 nightly copies and one copy per month for a year are kept.
-- Moving to another host is a written, tested procedure.
+- **No backups in V1** (the owner's decision, 23 October 2026). V1 is for the owner alone. Your safety net is your own OPML file (your feeds and folders) and the starred export (your stars). Which articles you've read isn't saved anywhere else. As a last resort, Render keeps its own daily copies of the disk for about a week, though Render warns they may not bring a database back cleanly.
+
+**Moved to V2:** nightly backups outside Render with a copy before every database structure change; a written, tested guide to moving hosts; and removing unstarred articles a year after slowfeed received them (only after a successful backup, and never letting them come back as new).
 
 **How to check it**
 1. Export your starred articles and open the file: they're all there.
-2. At the backup milestone, we'll restore a backup into a fresh copy together, so you've seen recovery work, not just been told it does.
+2. Export your OPML file now and then, and keep it somewhere safe.
 
 ## 24. Languages
 
@@ -422,5 +422,7 @@ Covered by sections 14 and 22.
 ## Not in V1
 
 From DESIGN.md: YouTube player, public reading list page, per-feed reading modes, passkey sign-in, Chinese and Japanese search, multiple users, own domain name.
+
+Moved to V2 on 23 October 2026: backups and moving hosts, river mode, WebSub, the feed health page, the yearly clean-up, the feeds guide page, and keeping a tab that was left open across an update working without a reload.
 
 Never: notifications, badges, streaks, reading stats, infinite scroll, algorithmic ranking, likes or comments, platform share buttons, scraping full articles, decorative effects or animation.

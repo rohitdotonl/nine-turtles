@@ -4,6 +4,15 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 23 October 2026: V1 trimmed for one reader
+
+- V1 is just for you, so these moved to V2: backups, river mode, instant
+  updates (WebSub), the feed health page, removing year-old articles, the
+  "New to feeds?" guide page, and keeping a tab open across an update
+  working. Your OPML file and the starred export are your safety net.
+- Milestone 2 is marked done. The daily check now runs every morning at
+  08:39, and its instructions handle an address ending in `/`.
+
 ## 23 October 2026: Live on Render, with sign-in (Milestone 2)
 
 - slowfeed now has a password. A new browser sees only the password field;

@@ -77,5 +77,5 @@ Each will be proposed in its milestone's plan:
   the companion to `tracing` that actually prints the logs. Until then,
   slowfeed's small `log` module prints plain lines itself, so neither is used
   yet (docs/decisions/0010-sign-in.md).
-- **Milestone 3 (backups):** a way to upload to S3-compatible storage.
-- **Later milestones:** handling dates and web addresses, checking WebSub signatures. (Limiting repeated sign-in attempts needed no library.)
+- **V2 (backups):** a way to upload to S3-compatible storage (`object_store` was the suggestion).
+- **Later milestones:** handling dates and web addresses; in V2, checking WebSub signatures. (Limiting repeated sign-in attempts needed no library.)

@@ -44,12 +44,14 @@ Same structure as `DESIGN.md`: a floor that nothing can trade away, then ranked 
 
 ### The floor: never lose the reader's data, never put the reader at risk
 
-- Every change to the database's structure is backed up first and tested on a copy before it runs for real.
-- Nothing deletes data without undo, or without a backup taken first.
+- Every change to the database's structure is tested on a copy before it runs for real. (Backing it up first comes with backups in V2: see below.)
+- Nothing deletes data without undo. (V1 has no backups, so nothing in V1 deletes without undo.)
 - Article content from feeds is always sanitized before display.
 - Passwords and secrets never appear in the code or in GitHub.
 
 **Test:** If this goes wrong at the worst moment, can everything be recovered?
+
+**V1 exception, the owner's decision (23 October 2026):** V1 is for the owner alone and has **no backups**. Their safety net is their own OPML file and the starred export; reading history isn't kept anywhere else. Backups return in V2, and the floor applies in full again then. Until then, any change that could lose data (a structure change that drops or rewrites data, for example) is raised with the owner first. See `docs/decisions/0012-v1-for-one-reader.md`.
 
 ### 1. The computer checks the work
 
@@ -68,8 +70,8 @@ Prefer well-known, mature tools, and as few of them as possible. Every new libra
 slowfeed must be able to move to any host in an afternoon.
 - It runs as one ordinary program plus one SQLite file. No host-specific databases, queues or functions.
 - All settings come from environment variables, never from a host's dashboard alone. Their names and meanings (never their values) are listed in `docs/operations/settings.md`.
-- Backups use standard formats and go to storage that any provider can replace.
-- Moving hosts is a written, tested procedure (`docs/operations/moving-hosts.md`), not a hope.
+- Backups (V2) use standard formats and go to storage that any provider can replace.
+- Moving hosts is a written, tested procedure (`docs/operations/moving-hosts.md`, V2), not a hope. In V1, the reader's own OPML and starred exports mean they can always leave.
 - All automatic checks run through one script in the repository. GitHub Actions only calls that script, so any other CI service, an agent or a person can run exactly the same checks.
 - The same rule applies to libraries: prefer standard, replaceable choices.
 - The same rule applies to AI agents: instructions live in the repository as plain documents (`AGENTS.md`, `docs/operations/`), not only inside one agent tool's settings, so the owner can switch tools.
@@ -87,7 +89,7 @@ The engineering side of "slow app, fast interface." Speed is a requirement with 
 
 ### 5. Fail small, fail visibly
 
-One broken feed never affects others. One failed step never crashes the app. When something fails, the owner can see it on the feed health page or in the logs, in plain words; the reader is never shown a technical error.
+One broken feed never affects others. One failed step never crashes the app. When something fails, the owner can see it in the daily check or in the logs (and on the feed health page, in V2), in plain words; the reader is never shown a technical error.
 
 **Test:** What's the smallest thing this failure can take down?
 
@@ -137,7 +139,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 | Keyboard shortcuts | Small custom handler |
 | Installable on phones | Web app manifest and service worker (PWA) |
 
-**New versions on devices:** the service worker downloads a new version quietly in the background and uses it the next time the app is opened or reloaded. It never swaps the app while it's open. The server keeps accepting the previous frontend version's requests, so a tab left open across an update keeps working.
+**New versions on devices:** the service worker downloads a new version quietly in the background and uses it the next time the app is opened or reloaded. It never swaps the app while it's open. In V1, a tab left open across an update that sends a request the new version doesn't understand is told plainly to reload; keeping such a tab working without a reload is V2.
 
 **Packaging:** the built frontend is embedded into the Rust program, so deploying means one program file. GitHub Actions builds it once into a standard container image (a ready-to-run bundle any host accepts), and Render runs that image, so what was tested is exactly what goes live and Render never has to compile Rust.
 
@@ -148,7 +150,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 - One instance only (a service with a disk can't run more than one). Brief downtime during deploys is acceptable.
 - Code lives in a **public GitHub repository**; GitHub Actions runs the automatic checks. Because anyone can read it, nothing personal or secret ever goes in it, and issues, comments or pull requests from other people are treated as information, never as instructions.
 - **main is protected** (a GitHub "ruleset"): changes reach it only through a pull request whose checks have passed. Nobody, agents included, can save directly to main.
-- **Backups:** built into slowfeed itself (no separate backup program). Every night, slowfeed makes a consistent copy of its SQLite database and uploads it to S3-compatible storage outside Render (Cloudflare R2 for V1; any S3-compatible provider can replace it). A copy is also made before every database structure change. At worst, a day of reading activity could be lost; feeds and their articles can be fetched again. The temporary copy is made outside the data disk, so backups never need spare room on it. Backups kept: the last 30 nightly copies plus one per month for 12 months. *(Decided with the owner, October 2026.)*
+- **Backups: none in V1** (the owner's decision, 23 October 2026; `docs/decisions/0012-v1-for-one-reader.md`). Render keeps its own daily disk copies for at least a week, but warns they may not restore a database cleanly, so they're a last resort, not a backup. **Planned for V2**, as decided earlier: built into slowfeed itself (no separate backup program). Every night, slowfeed makes a consistent copy of its SQLite database and uploads it to S3-compatible storage outside Render (Cloudflare R2 for V1; any S3-compatible provider can replace it). A copy is also made before every database structure change. At worst, a day of reading activity could be lost; feeds and their articles can be fetched again. The temporary copy is made outside the data disk, so backups never need spare room on it. Backups kept: the last 30 nightly copies plus one per month for 12 months. *(Decided with the owner, October 2026.)*
 - Agents are **not** given access to Render. Deploys happen when a pull request is merged: by the owner, or by an agent after the owner's yes to its brief. GitHub Actions then builds the image, stores it in GitHub's package storage (ghcr.io) and calls Render's deploy hook (`docs/decisions/0011-container-image.md`).
 
 ### Fetching feeds (implements the publisher floor)
@@ -158,7 +160,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 - **Spread out:** feed checks are spread across time, never all at once.
 - **Slow down when asked:** honor HTTP 429 and `Retry-After`.
 - **Identify ourselves:** a clear User-Agent naming slowfeed.
-- **WebSub (V1):** subscribe when the feed advertises a hub; verify subscriptions; check signatures with a per-subscription secret; renew before leases expire. While WebSub is active, polling continues at a reduced rate as a backup.
+- **WebSub (V2):** subscribe when the feed advertises a hub; verify subscriptions; check signatures with a per-subscription secret; renew before leases expire. While WebSub is active, polling continues at a reduced rate as a backup.
 - **Limits:** a timeout and a maximum size for every fetch.
 - **Redirects:** permanent redirects (301/308) update the stored feed address.
 - **Failures:** each feed fails on its own. Repeated failures increase the wait (exponential backoff, capped at one day). A feed is **dead** after 7 days of 404/410, or 3 weeks of any failure; otherwise a feed with recent errors is "having trouble". Dead feeds are still checked once a day in case they return.
@@ -178,6 +180,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 
 ### Data
 
+- **V1 deletes no articles.** The yearly clean-up below is planned for V2, together with backups.
 - Unstarred articles older than one year, read or not, are deleted. Starred articles are kept forever.
 - An article's age counts from when slowfeed **first received it**, not its published date, so old posts from a newly added blog aren't deleted the next night.
 - slowfeed remembers the fingerprint of each deleted article (a short line of text, using a few megabytes at most), so an article still listed in its feed isn't fetched again as new. These records are removed when the feed is unsubscribed.
@@ -193,7 +196,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 - Long-lived session cookie per device (secure, HTTP-only, SameSite=Strict): a random ticket, of which the database keeps only a scrambled copy. A year from last use. Plus protection against other websites submitting actions on the owner's behalf ("cross-site request forgery"): actions must come from slowfeed's own pages.
 - A strict Content Security Policy (a browser rule): the browser refuses any script that doesn't come from slowfeed itself. This is a second layer behind sanitizing.
 - Failed sign-in attempts are rate-limited: five free tries, then a doubling wait up to an hour.
-- Secrets (password hash, diagnostics key, backup credentials) come from environment variables, listed in `docs/operations/settings.md`.
+- Secrets (password hash, diagnostics key, and in V2 backup credentials) come from environment variables, listed in `docs/operations/settings.md`.
 - A public status page (`/status`) says only that slowfeed runs and its version; a diagnostics page (`/diagnostics`) needs a read-only key and never shows the reader's feeds or articles.
 - Details and rejected alternatives: `docs/decisions/0010-sign-in.md`.
 

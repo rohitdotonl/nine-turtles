@@ -216,8 +216,7 @@ each one, what ties us to it, and what leaving would take.
 
 | Service | What it does for slowfeed | What makes leaving easy | What leaving takes |
 |---|---|---|---|
-| **Render** (hosting) | Runs slowfeed | slowfeed is a standard container image plus one SQLite database file. Every setting is listed in `docs/operations/settings.md`. | Follow `docs/operations/moving-hosts.md` (written and tested at Milestone 3). About an afternoon. |
-| **Cloudflare R2** (backup storage) | Keeps nightly backups | Uses the standard "S3" storage format that many providers offer | Create storage elsewhere and change a few settings |
+| **Render** (hosting) | Runs slowfeed | slowfeed is a standard container image plus one SQLite database file. Every setting is listed in `docs/operations/settings.md`. | In V1: start slowfeed on the new host and import your OPML file (your read history stays behind). In V2, `docs/operations/moving-hosts.md` moves everything. |
 | **GitHub** (code, checks, issues) | Holds the code and runs the checks | The code and its full history are in "git", a standard format any code host accepts. All checks run through one script in the repository; GitHub Actions only calls it. | Copy the repository to another host and point its check service at the same script. Issues and pull request discussions stay behind on GitHub unless exported. |
 | **Claude Code** (the agents) | Builds and maintains slowfeed | All instructions are plain documents in the repository: `AGENTS.md` (a convention most coding agents read), the `docs/` folder, and the daily check's steps in `docs/operations/daily-check.md` | Start the new agent in the repository. To move the daily check, set a daily timer in the new tool that says "follow docs/operations/daily-check.md". |
 | **Libraries** | Ready-made code inside slowfeed | Standard, widely used choices, listed in `docs/libraries.md` | Replace one at a time, with your approval |
