@@ -36,6 +36,7 @@
   import { panesFor, widthFor, MEDIUM_REM, WIDE_REM, type SidebarChoice, type Width } from "./layout";
   import { TEXT_SIZES, apply, load, save } from "./preferences";
   import { VIEWS, VIEW_NAMES, nameFor, parse, pathFor, titleFor, type Route } from "./router";
+  import { startingStep, stepOf, type Screen } from "./steps";
 
   let { version, onSignedOut }: { version: string; onSignedOut: () => void } = $props();
 
@@ -55,9 +56,11 @@
   let sort: Order | undefined = $state();
   let preferences = $state(load());
   let width: Width = $state(currentWidth());
+  /** Which screen this history entry shows (see steps.ts). */
+  const firstStep = startingStep(history.state, currentWidth() === "narrow", location.pathname, isList(start));
   // On a phone-narrow window the sidebar is the home screen, but an address
   // that names a place opens that place.
-  let sidebarChoice: SidebarChoice = $state(currentWidth() === "narrow" && location.pathname !== "/" ? "hidden" : "auto");
+  let sidebarChoice: SidebarChoice = $state(currentWidth() === "narrow" && firstStep.screen !== "home" ? "hidden" : "auto");
   let cheatSheetOpen = $state(false);
   /** The article chosen in the list, shown in the reading area. */
   let selected: Article | undefined = $state();
@@ -65,6 +68,8 @@
   let reading = $state(false);
 
   let panes = $derived(panesFor(width, sidebarChoice, reading));
+  /** A phone-narrow window: one screen at a time, with a top bar and, while reading, a bottom toolbar. */
+  let phone = $derived(width === "narrow");
 
   let wordmark: HTMLHeadingElement | undefined = $state();
   let listHeading: HTMLHeadingElement | undefined = $state();
@@ -179,7 +184,7 @@
 
   onMount(() => {
     // "/" and unknown addresses open Unread; the address bar says so.
-    history.replaceState(null, "", pathFor(route));
+    history.replaceState(firstStep, "", pathFor(route));
 
     const queries = [WIDE_REM, MEDIUM_REM].map((rem) => matchMedia(`(min-width: ${rem}rem)`));
     const resized = () => {
@@ -196,12 +201,13 @@
     };
     queries.forEach((query) => query.addEventListener("change", resized));
 
+    // The browser's Back and Forward, and on phones the system back gesture.
     const back = () => {
+      const moved = location.pathname !== pathFor(route);
       route = parse(location.pathname);
       if (isList(route)) lastPlace = route;
-      selected = undefined;
-      reading = false;
-      if (width === "narrow") sidebarChoice = "hidden";
+      if (moved) selected = undefined;
+      arrive(stepOf(history.state)?.screen ?? (isList(route) ? "list" : "page"));
     };
     addEventListener("popstate", back);
 
@@ -282,12 +288,50 @@
     return listHeading;
   }
 
+  /** The screen showing now: on a phone, the feeds list is the home screen. */
+  function screenNow(): Screen {
+    if (phone && panes.sidebar) return "home";
+    if (reading) return "article";
+    return isList(route) ? "list" : "page";
+  }
+
+  /** Shows a screen the browser's history went back (or forward) to. */
+  function arrive(screen: Screen) {
+    reading = phone && screen === "article" && selected !== undefined;
+    if (phone) sidebarChoice = screen === "home" ? "shown" : "hidden";
+    queueMicrotask(() => {
+      if (phone && screen === "home") wordmark?.focus();
+      else if (reading) articleHeading?.focus();
+      else if (selected && isList(route)) itemList?.focusSelected();
+      else placeFocus(route)?.focus();
+    });
+  }
+
+  /**
+   * The phone's labeled back arrow, and Escape on a phone: one step back, to
+   * `screen`. If that's the step before this one in the browser's history,
+   * it's the same as the system's back; after arriving straight from a link
+   * or a reload, it moves there in place.
+   */
+  function stepBack(screen: Screen) {
+    if (stepOf(history.state)?.back === screen) {
+      history.back();
+      return;
+    }
+    history.replaceState({ screen }, "", location.pathname);
+    arrive(screen);
+  }
+
   /**
    * Goes to a place, and moves the keyboard's place to its heading. A list
    * arrived at with a `withNotice` shows it in its line, with Undo.
    */
   function go(next: Route, withNotice?: Notice) {
-    if (pathFor(next) !== location.pathname) history.pushState(null, "", pathFor(next));
+    const from = screenNow();
+    const to: Screen = isList(next) ? "list" : "page";
+    if (pathFor(next) !== location.pathname || from !== to) {
+      history.pushState({ screen: to, back: from }, "", pathFor(next));
+    }
     if (pathFor(next) !== pathFor(route)) selected = undefined;
     reading = false;
     notice = withNotice;
@@ -399,7 +443,11 @@
   function open() {
     if (!itemList || (!panes.list && !reading)) return;
     if (!selected && !itemList.move(1)) return;
-    if (width === "narrow") reading = true;
+    if (phone && !reading) {
+      // On a phone the article is a screen of its own, one step on.
+      history.pushState({ screen: "article", back: "list" }, "", location.pathname);
+      reading = true;
+    }
     showArticleArea();
     queueMicrotask(() => articleHeading?.focus());
   }
@@ -416,7 +464,10 @@
 
   /** Back from the article to its row in the list. */
   function backToList() {
-    reading = false;
+    if (reading) {
+      stepBack("list");
+      return;
+    }
     itemList?.focusSelected();
   }
 
@@ -433,12 +484,34 @@
     if (route.kind === "settings" || route.kind === "add-feed") go(lastPlace);
     else if (route.kind === "edit-feed" || route.kind === "edit-folder") edited(false);
     else if (reading || (selected && inArticle())) backToList();
-    else if (width === "narrow" && !panes.sidebar) {
-      sidebarChoice = "shown";
-      queueMicrotask(() => wordmark?.focus());
-    }
+    else if (phone && !panes.sidebar) stepBack("home");
   }
 </script>
+
+{#snippet listHead()}
+            <div class="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+              <h2 id="list-heading" tabindex="-1" bind:this={listHeading} class="min-w-0 text-large font-semibold break-words">
+                {missing
+                  ? route.kind === "folder" || route.kind === "edit-folder"
+                    ? "Folder not found"
+                    : "Feed not found"
+                  : nameFor(route, placeName)}
+              </h2>
+              {#if currentFeed}
+                <a
+                  href={pathFor({ kind: "edit-feed", id: currentFeed.id })}
+                  onclick={(event) => follow(event, { kind: "edit-feed", id: currentFeed!.id })}
+                  class="flex min-h-11 shrink-0 items-center rounded border border-ink px-4">Edit feed</a
+                >
+              {:else if currentFolder}
+                <a
+                  href={pathFor({ kind: "edit-folder", id: currentFolder.id })}
+                  onclick={(event) => follow(event, { kind: "edit-folder", id: currentFolder!.id })}
+                  class="flex min-h-11 shrink-0 items-center rounded border border-ink px-4">Edit folder</a
+                >
+              {/if}
+            </div>
+{/snippet}
 
 <!-- The whole app is the page's main content; the sidebar and areas inside are its named parts. -->
 <main class="flex h-dvh">
@@ -446,7 +519,8 @@
     <!-- The wordmark is the page's main heading; with the sidebar hidden, screen readers still find it. -->
     <h1 class="sr-only">slowfeed</h1>
   {/if}
-  <div class="fixed top-3 left-3">
+  <!-- On a phone there's no sidebar toggle: the feeds list is the home screen, reached with the back arrow. -->
+  <div class={["fixed top-3 left-3", phone && "hidden"]}>
     <button
       type="button"
       aria-expanded={panes.sidebar}
@@ -469,7 +543,7 @@
   <button
     type="button"
     onclick={() => (cheatSheetOpen = true)}
-    class="keyboard-hint fixed top-3 right-4 min-h-11 px-2 text-small text-muted"
+    class={["keyboard-hint fixed top-3 right-4 min-h-11 px-2 text-small text-muted", phone && "hidden"]}
   >
     Press ? for shortcuts
   </button>
@@ -479,11 +553,15 @@
     aria-label="Sidebar"
     bind:this={sidebar}
     hidden={!panes.sidebar}
-    class={["flex-col bg-sidebar pt-16", panes.list ? "w-64 shrink-0" : "flex-1", panes.sidebar && "flex"]}
+    class={["flex-col bg-sidebar", phone ? "pt-2" : "pt-16", panes.list ? "w-64 shrink-0" : "flex-1", panes.sidebar && "flex"]}
   >
     <div class="min-h-0 flex-1 overflow-y-auto pb-4">
-      <div class="flex items-baseline justify-between gap-4 px-4 pb-4">
-        <h1 class="font-serif text-xlarge" tabindex="-1" bind:this={wordmark}>slowfeed</h1>
+      <div class="flex items-baseline gap-4 px-4 pb-4">
+        <h1 class="mr-auto font-serif text-xlarge" tabindex="-1" bind:this={wordmark}>slowfeed</h1>
+        {#if phone}
+          <!-- The feeds screen's top bar (SPEC section 20): its unread numbers wait for this, as they wait for r. -->
+          <button type="button" onclick={loadFeeds} class="min-h-11 rounded border border-ink px-4">Refresh</button>
+        {/if}
         <a
           href="/settings"
           aria-current={route.kind === "settings" ? "page" : undefined}
@@ -582,7 +660,12 @@
           />
         {/key}
       {:else if route.kind === "add-feed"}
-        <section aria-labelledby="list-heading" class="flex flex-1 flex-col bg-paper pt-16">
+        <section aria-labelledby="list-heading" class={["flex flex-1 flex-col bg-paper", phone ? "pt-2" : "pt-16"]}>
+          {#if phone}
+            <div class="flex px-4 pb-2">
+              <button type="button" onclick={() => stepBack("home")} class="min-h-11 rounded px-2">‹ Feeds</button>
+            </div>
+          {/if}
           <div class="min-h-0 flex-1 overflow-y-auto px-6 pb-10 md:px-10">
             <h2 id="list-heading" tabindex="-1" bind:this={listHeading} class="text-xlarge font-semibold">Add a feed</h2>
             <p class="mt-2 mb-6 max-w-xl">
@@ -595,31 +678,31 @@
         <section
           aria-labelledby="list-heading"
           hidden={!panes.list}
-          class={["flex-col bg-list pt-16", panes.article ? "w-80 shrink-0 xl:w-96" : "flex-1", panes.list && "flex"]}
+          class={[
+            "flex-col bg-list",
+            phone ? "pt-2" : "pt-16",
+            panes.article ? "w-80 shrink-0 xl:w-96" : "flex-1",
+            panes.list && "flex",
+          ]}
         >
-          <div class="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
-            <div class="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
-              <h2 id="list-heading" tabindex="-1" bind:this={listHeading} class="min-w-0 text-large font-semibold break-words">
-                {missing
-                  ? route.kind === "folder" || route.kind === "edit-folder"
-                    ? "Folder not found"
-                    : "Feed not found"
-                  : nameFor(route, placeName)}
-              </h2>
-              {#if currentFeed}
-                <a
-                  href={pathFor({ kind: "edit-feed", id: currentFeed.id })}
-                  onclick={(event) => follow(event, { kind: "edit-feed", id: currentFeed!.id })}
-                  class="flex min-h-11 shrink-0 items-center rounded border border-ink px-4">Edit feed</a
-                >
-              {:else if currentFolder}
-                <a
-                  href={pathFor({ kind: "edit-folder", id: currentFolder.id })}
-                  onclick={(event) => follow(event, { kind: "edit-folder", id: currentFolder!.id })}
-                  class="flex min-h-11 shrink-0 items-center rounded border border-ink px-4">Edit folder</a
-                >
-              {/if}
+          {#if phone}
+            <!-- The phone's top bar (SPEC section 20): back to the feeds, Refresh, and the screen's title. It never scrolls. -->
+            <div class="px-6 pb-2">
+              <div class="-ml-2 flex items-center justify-between gap-4 pb-2">
+                <button type="button" onclick={() => stepBack("home")} class="min-h-11 rounded px-2">‹ Feeds</button>
+                {#if itemList && !missing}
+                  <button type="button" onclick={() => itemList?.refresh()} class="min-h-11 rounded border border-ink px-4"
+                    >Refresh</button
+                  >
+                {/if}
+              </div>
+              {@render listHead()}
             </div>
+          {/if}
+          <div class="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
+            {#if !phone}
+              {@render listHead()}
+            {/if}
             {#if missing && (route.kind === "folder" || route.kind === "edit-folder")}
               <p class="mt-4">There's no folder here. It may have been deleted or renamed.</p>
             {:else if missing}
@@ -645,6 +728,7 @@
                   onChoose={chose}
                   onUnreadChange={unreadChanged}
                   onRefresh={loadFeeds}
+                  refreshInTopBar={phone}
                 />
               {/key}
             {/if}
@@ -657,7 +741,16 @@
               bind:heading={articleHeading}
               onStar={() => itemList?.toggleStar()}
               onMarkUnread={() => itemList?.markUnread()}
-              back={width === "narrow" ? { name: nameFor(route, placeName), go: backToList } : undefined}
+              phone={phone
+                ? {
+                    back: nameFor(route, placeName),
+                    onBack: backToList,
+                    onPrevious: () => move(-1),
+                    onNext: () => move(1),
+                    hasPrevious: itemList?.canMove(-1) ?? false,
+                    hasNext: itemList?.canMove(1) ?? false,
+                  }
+                : undefined}
             />
           {:else}
             <section aria-label="Article" class="flex min-w-0 flex-1 flex-col bg-paper pt-16">

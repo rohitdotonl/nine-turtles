@@ -100,7 +100,7 @@ test("g then u, s or a goes to Unread, Starred or All; reload and Back keep your
 test("? opens the shortcut list, Escape closes it and returns the keyboard's place", async ({ page }) => {
   await openApp(page);
   const before = await page.evaluate(() => document.activeElement?.textContent?.trim());
-  const sidebarState = await toggle(page).getAttribute("aria-expanded");
+  const sidebarShown = await sidebar(page).isVisible();
   await page.keyboard.press("?");
   const dialog = page.getByRole("dialog", { name: "Keyboard shortcuts" });
   await expect(dialog).toBeVisible();
@@ -109,7 +109,8 @@ test("? opens the shortcut list, Escape closes it and returns the keyboard's pla
 
   // Shortcuts don't fire behind the open list.
   await page.keyboard.press("[");
-  await expect(toggle(page)).toHaveAttribute("aria-expanded", sidebarState ?? "");
+  if (sidebarShown) await expect(sidebar(page)).toBeVisible();
+  else await expect(sidebar(page)).toBeHidden();
 
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();

@@ -1,6 +1,8 @@
 // Talking to the server about signing in (SPEC section 1). The sign-in
 // cookie itself is invisible to this code: the browser keeps it.
 
+import { api } from "./updates.svelte";
+
 export type Session = { signedIn: true; version: string } | { signedIn: false };
 
 export type SignInResult =
@@ -9,7 +11,7 @@ export type SignInResult =
   | { ok: false; reason: "wait"; waitSeconds: number };
 
 export async function currentSession(): Promise<Session> {
-  const response = await fetch("/api/session", { cache: "no-store" });
+  const response = await api("/api/session", { cache: "no-store" });
   if (!response.ok) throw new Error(`slowfeed answered ${response.status}`);
   const body: unknown = await response.json();
   if (isRecord(body) && body.signed_in === true && typeof body.version === "string") {
@@ -21,7 +23,7 @@ export async function currentSession(): Promise<Session> {
 export async function signIn(password: string): Promise<SignInResult> {
   let response: Response;
   try {
-    response = await fetch("/api/sign-in", {
+    response = await api("/api/sign-in", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ password }),
@@ -43,7 +45,7 @@ export async function signIn(password: string): Promise<SignInResult> {
 }
 
 export async function signOut(): Promise<void> {
-  const response = await fetch("/api/sign-out", { method: "POST" });
+  const response = await api("/api/sign-out", { method: "POST" });
   if (!response.ok) throw new Error(`slowfeed answered ${response.status}`);
 }
 
