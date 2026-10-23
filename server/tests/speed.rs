@@ -10,6 +10,7 @@ use std::time::{Duration, Instant};
 use slowfeed::{
     checking::DUE,
     feeds::{FEEDS, LATEST, List, Order, list_sql, new_sql, page},
+    search::{Search, find},
 };
 use sqlx::SqlitePool;
 
@@ -249,5 +250,119 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
 
     for (what, took) in timings {
         assert!(took < FAST_ENOUGH, "{what} took {took:?}");
+    }
+}
+
+/// A search for a word found in every one of the 100,000 articles reads
+/// the whole of the index's list for that word, then picks the newest 50.
+/// That takes 40 to 70 ms in the real (release) build, about three times
+/// that in the slower test build, so it is allowed this long here, with room
+/// for a slow test computer. Everything else must
+/// be FAST_ENOUGH.
+const WORD_IN_EVERY_ARTICLE: Duration = Duration::from_millis(400);
+
+#[tokio::test]
+async fn search_is_fast_with_500_feeds_and_a_year_of_articles() {
+    let db = big_library().await;
+    // A word in one title in a hundred, and one in a tenth of the titles;
+    // every article shares the rest of its words.
+    sqlx::query("UPDATE articles SET title = title || ' about tomatoes' WHERE id % 100 = 0")
+        .execute(&db)
+        .await
+        .unwrap();
+    sqlx::query("UPDATE articles SET title = title || ' on gardening' WHERE id % 10 = 3")
+        .execute(&db)
+        .await
+        .unwrap();
+    sqlx::query("UPDATE articles SET starred = 1 WHERE id % 50 = 0")
+        .execute(&db)
+        .await
+        .unwrap();
+    let started = Instant::now();
+    let indexed = slowfeed::search::index_missing(&db).await.unwrap();
+    let catching_up = started.elapsed();
+    assert_eq!(
+        indexed,
+        usize::try_from(FEEDS_COUNT * ARTICLES_PER_FEED).unwrap()
+    );
+
+    let words = |q: &str| Search {
+        q: q.into(),
+        ..Search::default()
+    };
+    let mut timings = Vec::new();
+    for (what, search, allowed) in [
+        ("a rare word", words("tomatoes"), FAST_ENOUGH),
+        (
+            "a word in a tenth of the articles",
+            words("gardening"),
+            FAST_ENOUGH,
+        ),
+        ("the start of a word", words("garden"), FAST_ENOUGH),
+        (
+            "a rare word and a common one",
+            words("tomatoes paragraph"),
+            FAST_ENOUGH,
+        ),
+        (
+            "a word in a feed",
+            Search {
+                feed: Some(300),
+                ..words("tomatoes")
+            },
+            FAST_ENOUGH,
+        ),
+        (
+            "unread only",
+            Search {
+                unread: true,
+                ..words("gardening")
+            },
+            FAST_ENOUGH,
+        ),
+        (
+            "starred only, no words",
+            Search {
+                starred: true,
+                ..Search::default()
+            },
+            FAST_ENOUGH,
+        ),
+        (
+            "a date range, no words",
+            Search {
+                since: Some(NOW - YEAR / 2),
+                until: Some(NOW - YEAR / 3),
+                ..Search::default()
+            },
+            FAST_ENOUGH,
+        ),
+        (
+            "a word in every article",
+            words("paragraph"),
+            WORD_IN_EVERY_ARTICLE,
+        ),
+        (
+            "two words in every article",
+            words("made-up text"),
+            WORD_IN_EVERY_ARTICLE,
+        ),
+        (
+            "a word in every article, in a folder",
+            Search {
+                folder: Some(1),
+                ..words("paragraph")
+            },
+            WORD_IN_EVERY_ARTICLE,
+        ),
+    ] {
+        let started = Instant::now();
+        let (articles, _) = find(&db, &search).await.unwrap().unwrap();
+        timings.push((what, started.elapsed(), allowed));
+        assert!(!articles.is_empty(), "{what}");
+    }
+    eprintln!("catching up {indexed} articles took {catching_up:?}; {timings:?}");
+    for (what, took, allowed) in timings {
+        assert!(took < allowed, "{what} took {took:?}");
     }
 }

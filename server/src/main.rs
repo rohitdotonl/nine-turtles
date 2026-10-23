@@ -54,6 +54,7 @@ async fn serve() {
         }
     };
     tokio::spawn(slowfeed::checking::run(state.clone()));
+    tokio::spawn(slowfeed::search::catch_up(state.db.clone()));
     let app = slowfeed::router(state);
     let listener = match tokio::net::TcpListener::bind(address).await {
         Ok(listener) => listener,

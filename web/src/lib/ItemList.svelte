@@ -40,12 +40,14 @@
     type Order,
     type Source,
   } from "./feeds";
+  import { boldParts } from "./search";
   import { STRANDED_MESSAGE, updates } from "./updates.svelte";
 
   let {
     source,
     order,
     empty,
+    bold = [],
     notice,
     selected = $bindable(),
     onChoose,
@@ -56,6 +58,8 @@
     source: Source;
     order: Order;
     empty: string;
+    /** Searched words: words in titles starting with one are shown in bold (SPEC section 14). */
+    bold?: string[];
     /** Something done just before arriving, with its Undo. */
     notice?: Notice;
     selected: Article | undefined;
@@ -415,7 +419,9 @@
           ]}
         >
           <span class={["block", article.read ? "text-muted" : "font-semibold"]}
-            >{article.title || "Untitled"}{#if !article.read}<span class="sr-only">, unread</span>{/if}</span
+            >{#each boldParts(article.title || "Untitled", bold) as part, partIndex (partIndex)}{#if part.bold}<strong
+                  class="match">{part.text}</strong
+                >{:else}{part.text}{/if}{/each}{#if !article.read}<span class="sr-only">, unread</span>{/if}</span
           >
           <span class="block text-small text-muted">
             {#if article.starred}
@@ -441,6 +447,16 @@
 {/if}
 
 <style>
+  /*
+    A searched word in a title: bold, never colored (DESIGN.md → "Item
+    list"). Unread titles are already semibold, and a font may have no
+    heavier weight to show, so the letters are also drawn a little thicker,
+    in the text's own color.
+  */
+  .match {
+    font-weight: 800;
+    -webkit-text-stroke: 0.04em currentColor;
+  }
   .star {
     display: inline;
     vertical-align: -1px;

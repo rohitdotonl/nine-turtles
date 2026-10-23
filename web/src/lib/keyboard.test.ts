@@ -18,6 +18,11 @@ describe("keyboard shortcuts", () => {
     expect(read(press("Escape"), 0)).toEqual({ kind: "escape" });
   });
 
+  it("puts you in the search field with /, but not while typing", () => {
+    const read = createKeyReader();
+    expect(read(press("/"), 0)).toEqual({ kind: "search" });
+  });
+
   it("opens Add a feed with a, unless it follows g", () => {
     const read = createKeyReader();
     expect(read(press("a"), 0)).toEqual({ kind: "add-feed" });
@@ -91,6 +96,7 @@ describe("keyboard shortcuts", () => {
       "Shift+A",
       "u",
       "r",
+      "/",
       "a",
       "g then u",
       "[",

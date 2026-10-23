@@ -243,11 +243,12 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 ## 14. Search
 
 **What it does**
-- `/` puts you in the search field. A search icon and a "Search options" (sliders) icon sit together.
+- `/` puts you in the search field, which sits above the item list. A search icon and a "Search options" (sliders) icon sit together.
+- Results follow a moment after you stop typing, or at once on Enter. Every word must appear; a word also finds longer words it begins ("read" finds "reading"); words in double quotes are found together.
 - The search starts out limited to where you are, shown as a removable chip inside the field, e.g. `[ in: Tech × ]`. Remove the chip to search everything.
 - **Search options** panel: scope (here · all feeds · a folder · a feed), unread only, starred only, date range. The panel and the chips always match.
 - Titles and article text are always searched together; title matches come first.
-- Power-user filters can be typed: `is:unread`, `is:starred`, `feed:name`, `folder:name`, `after:YYYY-MM-DD`, `before:YYYY-MM-DD`. They're suggested as you type and turn into chips.
+- Power-user filters can be typed: `is:unread`, `is:starred`, `feed:name`, `folder:name`, `after:YYYY-MM-DD`, `before:YYYY-MM-DD`. They're suggested as you type (↓ and ↑ choose, Enter takes one) and turn into chips once followed by a space or Enter. A name with spaces goes in quotes (`feed:"Garden Notes"`), or type part of it. `after:` and `before:` don't include the day itself. A filter that can't be understood stays as typed, with a plain line saying why. Backspace at the start of the field removes the last chip.
 - Results look and behave like the normal item list, including "mark all as read".
 - Matching words are shown in **bold**, never highlighted in color.
 - Works for English, other Latin-alphabet languages, and Hindi.

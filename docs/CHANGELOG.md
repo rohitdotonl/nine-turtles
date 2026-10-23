@@ -4,6 +4,21 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 23 October 2026: Search (Milestone 10)
+
+- Press `/` (or use the field above the list) to search every article's
+  title and text. Matching words show in bold; titles that contain your
+  words come first.
+- The search starts where you are, shown as a chip like `in: Tech`; remove
+  it to search everything. Typed filters (`is:unread`, `is:starred`,
+  `feed:name`, `folder:name`, `after:2026-01-31`, `before:...`) are
+  suggested as you type and become chips. The sliders button opens Search
+  options, which shows and changes the same things.
+- Results work like any list, "Mark all as read" included. Escape takes you
+  back to where you were.
+- Hindi words are found whole. Articles you already have are added to the
+  search in the background on the first start; that takes a few seconds.
+
 ## 23 October 2026: Fewer reviews for small changes
 
 - Changes to documents only, and tiny fixes, no longer wait for a second

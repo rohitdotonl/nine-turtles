@@ -32,3 +32,4 @@ says "Replaced by …" at the top.
 | [0020](0020-folders-and-opml.md) | Folders, unsubscribing and OPML: folder pairs, hide first and clear later, edit pages with addresses, import fetches in the background |
 | [0021](0021-no-review-for-small-changes.md) | No second-agent review for documents-only changes and tiny fixes |
 | [0022](0022-phones-and-installing.md) | Phones and installing: history steps for back, a page-first service worker, a version on every answer |
+| [0023](0023-search.md) | Search: a contentless index of tag-free text, every typed word quoted, title matches first, filters as plain settings, speed |

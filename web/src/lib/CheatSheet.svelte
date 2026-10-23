@@ -15,8 +15,8 @@
     ["is:starred", "Starred items only"],
     ["feed:name", "One feed"],
     ["folder:name", "One folder"],
-    ["after:YYYY-MM-DD", "Published after a date"],
-    ["before:YYYY-MM-DD", "Published before a date"],
+    ["after:YYYY-MM-DD", "Published after that day"],
+    ["before:YYYY-MM-DD", "Published before that day"],
   ];
 
   $effect(() => {
@@ -63,7 +63,7 @@
   </table>
 
   <h3 class="mt-8 text-large font-semibold">Search filters</h3>
-  <p class="text-small text-muted">Type these in the search field once search arrives.</p>
+  <p class="text-small text-muted">Type these in the search field; each becomes a chip. Names with spaces go in quotes.</p>
   <table class="mt-2 w-full text-left">
     <tbody>
       {#each FILTERS as [filter, meaning] (filter)}
