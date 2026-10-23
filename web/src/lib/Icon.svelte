@@ -4,11 +4,12 @@
   word, so screen readers skip them.
 -->
 <script lang="ts" module>
-  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "plus" | "settings";
+  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "search" | "sliders" | "star";
 </script>
 
 <script lang="ts">
-  let { name, size = 18 }: { name: IconName; size?: number } = $props();
+  // `filled` fills a shape that has an inside (the star, when starred).
+  let { name, size = 18, filled = false }: { name: IconName; size?: number; filled?: boolean } = $props();
 </script>
 
 <svg
@@ -46,11 +47,17 @@
     <circle cx="10" cy="10" r="2.25" fill="currentColor" />
   {:else if name === "close"}
     <path d="m5 5 10 10M15 5 5 15" />
-  {:else if name === "plus"}
-    <path d="M10 4v12M4 10h12" />
-  {:else if name === "settings"}
-    <path d="M3.5 6h8M15.5 6h1M3.5 14h1M8.5 14h8" />
-    <circle cx="13.5" cy="6" r="2" />
-    <circle cx="6.5" cy="14" r="2" />
+  {:else if name === "search"}
+    <circle cx="8.5" cy="8.5" r="5.75" />
+    <path d="m12.75 12.75 4.5 4.5" />
+  {:else if name === "sliders"}
+    <path d="M3 6h2M9 6h8M3 14h8M15 14h2" />
+    <circle cx="7" cy="6" r="2" />
+    <circle cx="13" cy="14" r="2" />
+  {:else if name === "star"}
+    <path
+      d="M10 2.5l2.4 4.9 5.35.78-3.87 3.77.91 5.33L10 14.77l-4.79 2.51.91-5.33-3.87-3.77 5.35-.78z"
+      fill={filled ? "currentColor" : "none"}
+    />
   {/if}
 </svg>

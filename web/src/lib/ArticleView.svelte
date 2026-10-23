@@ -112,15 +112,7 @@
 
 {#snippet starIcon(size: number)}
   <!-- Filled when starred, an outline when not: the shape says it, not only the color. -->
-  <svg aria-hidden="true" width={size} height={size} viewBox="0 0 12 12">
-    <path
-      d="M6 0.8l1.55 3.3 3.6.42-2.66 2.47.7 3.56L6 8.8 2.81 10.55l.7-3.56L.85 4.52l3.6-.42z"
-      fill={article.starred ? "currentColor" : "none"}
-      stroke="currentColor"
-      stroke-width="1"
-      stroke-linejoin="round"
-    />
-  </svg>
+  <Icon name="star" {size} filled={article.starred} />
 {/snippet}
 
 <section aria-label="Article" class={["flex min-w-0 flex-1 flex-col bg-paper", phone ? "pt-2" : "pt-16"]}>

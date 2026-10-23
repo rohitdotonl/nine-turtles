@@ -147,14 +147,11 @@
         if (event.target === event.currentTarget) field?.focus();
       }}
     >
-      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" class="shrink-0">
-        <circle cx="8.5" cy="8.5" r="5.75" />
-        <line x1="12.75" y1="12.75" x2="17.25" y2="17.25" />
-      </svg>
+      <Icon name="search" />
       {#each chips as chip (chip.key)}
-        <span class="my-1.5 flex max-w-[calc(100%-8rem)] min-w-0 items-center rounded bg-tint-list pl-2 text-small">
+        <span class="my-1.5 flex max-w-[calc(100%-8rem)] min-w-0 items-center rounded bg-[var(--tone)] pl-2 text-small">
           <span class="min-w-0 truncate" title={chip.label}>{chip.label}</span>
-          <button type="button" aria-label="Remove {chip.label}" onclick={() => remove(chip)} class="-my-2 flex h-11 w-9 shrink-0 cursor-pointer items-center justify-center">
+          <button type="button" aria-label="Remove {chip.label}" onclick={() => remove(chip)} class="-my-2 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center">
             <Icon name="close" size={14} />
           </button>
         </span>
@@ -187,14 +184,9 @@
       aria-label="Search options"
       title="Search options"
       onclick={() => (panelOpen = !panelOpen)}
-      class={["btn min-w-11 px-0", panelOpen && "bg-tint-list"]}
+      class={["btn min-w-11 px-0", panelOpen && "bg-[var(--tone)]"]}
     >
-      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
-        <line x1="3" y1="6" x2="17" y2="6" />
-        <line x1="3" y1="14" x2="17" y2="14" />
-        <circle cx="7" cy="6" r="2" fill="var(--paper)" />
-        <circle cx="13" cy="14" r="2" fill="var(--paper)" />
-      </svg>
+      <Icon name="sliders" size={20} />
     </button>
   </div>
 

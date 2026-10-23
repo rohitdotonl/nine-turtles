@@ -399,7 +399,8 @@
     >
   {/if}
 </p>
-<p class="flex min-h-6 flex-wrap items-center gap-x-1 text-small">
+<!-- Its Undo answers a 44px tap, so space is kept below it and the first row never sits under that tap. -->
+<p class="mt-4 mb-3.5 flex min-h-6 flex-wrap items-center gap-x-1 text-small">
   <span role="status">{line}</span>
   <span aria-live="polite" class="sr-only">{spoken}</span>
   {#if undoLast}
@@ -439,9 +440,7 @@
           >
           <span class="block text-small text-muted">
             {#if article.starred}
-              <svg aria-hidden="true" class="star" width="12" height="12" viewBox="0 0 12 12">
-                <path d="M6 0.8l1.55 3.3 3.6.42-2.66 2.47.7 3.56L6 8.8 2.81 10.55l.7-3.56L.85 4.52l3.6-.42z" fill="currentColor" />
-              </svg><span class="sr-only">Starred, </span>
+<span class="star"><Icon name="star" size={13} filled /></span><span class="sr-only">Starred, </span>
             {/if}
             {article.feedTitle} ·
             <time datetime={new Date(article.at * 1000).toISOString()}>{when(article.at)}</time>
@@ -472,8 +471,8 @@
     -webkit-text-stroke: 0.04em currentColor;
   }
   .star {
-    display: inline;
-    vertical-align: -1px;
+    display: inline-block;
+    vertical-align: -2px;
     margin-right: 0.25rem;
   }
 </style>

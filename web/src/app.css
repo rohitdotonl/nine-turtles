@@ -121,11 +121,26 @@ body {
 
 /*
   A heading that receives the keyboard's place when a screen opens (so screen
-  readers start there) isn't something to press, so it draws no outline.
-  Everything that can be pressed or typed in still shows the outline above.
+  readers start there) isn't something to press, so instead of a box it shows
+  a short bar in the text color just left of its first line: the place is
+  still visible (SPEC section 19), without boxing the title.
 */
+:is(h1, h2, h3)[tabindex="-1"] {
+  position: relative;
+}
+
 :is(h1, h2, h3)[tabindex="-1"]:focus {
   outline: none;
+}
+
+:is(h1, h2, h3)[tabindex="-1"]:focus-visible::before {
+  content: "";
+  position: absolute;
+  top: 0.1em;
+  bottom: 0.1em;
+  left: -0.75rem;
+  width: 3px;
+  background-color: var(--ink);
 }
 
 /*
@@ -134,13 +149,33 @@ body {
 */
 .item-row:focus-visible,
 .side-row:focus-visible {
-  outline-offset: -3px;
+  outline: none;
+  box-shadow:
+    inset 0 3px 0 var(--ink),
+    inset -3px 0 0 var(--ink),
+    inset 0 -3px 0 var(--ink);
 }
 
-/* A row under the pointer deepens a little; the selected row keeps its own tint. */
-.item-row:hover:not([aria-current]),
-.side-row:hover:not([aria-current]) {
-  background-color: var(--hover);
+/*
+  The left side is the row's own 4px bar (ink blue when it's where you are),
+  so the outline never covers it. A row with no bar gets the fourth side too.
+*/
+.item-row:focus-visible:not([aria-current]),
+.side-row:focus-visible:not([aria-current]) {
+  box-shadow:
+    inset 0 3px 0 var(--ink),
+    inset -3px 0 0 var(--ink),
+    inset 0 -3px 0 var(--ink),
+    inset 3px 0 0 var(--ink);
+}
+
+/* Only where there's a real pointer: on a touch screen a tint would stay after the tap. */
+@media (hover: hover) {
+  /* A row under the pointer deepens a little; the selected row keeps its own tint. */
+  .item-row:hover:not([aria-current]),
+  .side-row:hover:not([aria-current]) {
+    background-color: var(--hover);
+  }
 }
 
 /* Selected text, the caret and numbers in columns follow the theme too. */
@@ -187,9 +222,15 @@ textarea {
     cursor: pointer;
   }
 
-  .btn:hover,
-  .btn-quiet:hover {
-    background-color: var(--hover);
+  @media (hover: hover) {
+    .btn:hover,
+    .btn-quiet:hover {
+      background-color: var(--hover);
+    }
+
+    .btn-primary:hover {
+      background-color: color-mix(in srgb, var(--ink) 86%, var(--paper));
+    }
   }
 
   .btn-primary {
@@ -197,10 +238,6 @@ textarea {
     background-color: var(--ink);
     color: var(--paper);
     font-weight: 600;
-  }
-
-  .btn-primary:hover {
-    background-color: color-mix(in srgb, var(--ink) 86%, var(--paper));
   }
 
   .btn-quiet {
@@ -227,8 +264,13 @@ textarea {
 }
 
 :root {
-  /* The tone under a pointer: the text color, very faint, so it suits every area. */
+  /*
+    Two faint tones of the text color, so they suit every area and are never
+    blue: under a pointer, and behind a search chip. contrast.test.ts checks
+    text on both.
+  */
   --hover: color-mix(in srgb, var(--ink) 7%, transparent);
+  --tone: color-mix(in srgb, var(--ink) 9%, transparent);
 }
 
 /* Windows high contrast and similar: let the system draw clear edges. */
@@ -236,6 +278,17 @@ textarea {
   [aria-current="page"],
   [aria-current="true"] {
     outline: 2px solid CanvasText;
+  }
+
+  /* Shadows aren't drawn here, so the keyboard's place is a plain outline. */
+  .item-row:focus-visible,
+  .side-row:focus-visible {
+    outline: 3px solid CanvasText;
+    outline-offset: -3px;
+  }
+
+  :is(h1, h2, h3)[tabindex="-1"]:focus-visible::before {
+    background-color: CanvasText;
   }
 
   /* The bar marks only the selected article; on the others it would be drawn too. */
