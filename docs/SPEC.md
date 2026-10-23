@@ -1,6 +1,6 @@
 # slowfeed V1: what it does
 
-*Draft for the owner's approval. Based on `docs/DESIGN.md`, which takes
+*Agreed with the owner; agents build from it (decision 0014). Based on `docs/DESIGN.md`, which takes
 precedence: if this document and DESIGN.md disagree, DESIGN.md is right and
 this document has a bug.*
 

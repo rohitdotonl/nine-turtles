@@ -3,7 +3,7 @@
 //! `<link rel="alternate" type="application/rss+xml" href="/feed">`.
 //!
 //! slowfeed reads only the one page the reader pasted, and only when they
-//! add a feed (docs/decisions/0014-adding-feeds.md). It never guesses other
+//! add a feed (docs/decisions/0016-adding-feeds.md). It never guesses other
 //! addresses on the site.
 
 use reqwest::Url;

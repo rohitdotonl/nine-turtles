@@ -13,6 +13,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Subagent (helper agent)
 - Prompt
 - Context window
+- Token
 - `AGENTS.md` and `CLAUDE.md`
 - Second-agent review
 - Brief

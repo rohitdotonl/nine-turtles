@@ -18,6 +18,23 @@ not how it was done.
 - A speed test now runs on a made-up library of 500 feeds and a year of
   articles, so the app stays fast as yours grows.
 
+## 23 October 2026: Spending fewer tokens
+
+- One milestone per thread: once a milestone is merged, the next starts
+  fresh.
+- Small, low-risk changes get a lighter second-agent review.
+- AGENTS.md and DESIGN.md say the same things in fewer words. No rule
+  changed; agents gained two habits: short command output, and screenshots
+  only when a screen changed.
+
+## 23 October 2026: Agents start building straight away
+
+- When you ask for the next milestone, agents now start from the plan and
+  the spec instead of writing a new plan for you to approve. They still ask
+  when something isn't settled (a real choice, a new library, a design
+  change, anything that could lose data), and you still say yes before
+  anything is merged.
+
 ## 23 October 2026: Look and feel (Milestone 4)
 
 - The placeholder page is gone. After signing in you see the real, empty
