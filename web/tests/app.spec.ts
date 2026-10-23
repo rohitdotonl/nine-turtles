@@ -105,6 +105,9 @@ test("? opens the shortcut list, Escape closes it and returns the keyboard's pla
   const dialog = page.getByRole("dialog", { name: "Keyboard shortcuts" });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText("Go to Unread / Starred / All")).toBeVisible();
+  // A two-press shortcut shows a key cap for each press, with "then" between.
+  const goTo = dialog.getByRole("row", { name: /Go to Unread/ });
+  await expect(goTo.locator("kbd")).toHaveText(["g", "u", "g", "s", "g", "a"]);
   await expect(dialog.getByText("is:unread")).toBeVisible();
 
   // Shortcuts don't fire behind the open list.
@@ -115,6 +118,16 @@ test("? opens the shortcut list, Escape closes it and returns the keyboard's pla
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
   expect(await page.evaluate(() => document.activeElement?.textContent?.trim())).toBe(before);
+});
+
+test("the shortcut list fits a small phone without scrolling sideways", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await openApp(page);
+  await page.keyboard.press("?");
+  const dialog = page.getByRole("dialog", { name: "Keyboard shortcuts" });
+  await expect(dialog).toBeVisible();
+  const { scroll, client } = await dialog.evaluate((element) => ({ scroll: element.scrollWidth, client: element.clientWidth }));
+  expect(scroll).toBeLessThanOrEqual(client);
 });
 
 test("shortcuts don't fire while typing in a field", async ({ page }) => {

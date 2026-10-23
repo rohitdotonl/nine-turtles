@@ -561,7 +561,8 @@
 </script>
 
 {#snippet listHead()}
-            <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+            <!-- When a long name pushes "Edit feed" onto its own line, its icon lines up with the name above. -->
+            <div class="flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
               <h2 id="list-heading" tabindex="-1" bind:this={listHeading} class="min-w-0 text-large font-semibold break-words">
                 {missing
                   ? route.kind === "folder" || route.kind === "edit-folder"
@@ -577,13 +578,13 @@
                 <a
                   href={pathFor({ kind: "edit-feed", id: currentFeed.id })}
                   onclick={(event) => follow(event, { kind: "edit-feed", id: currentFeed!.id })}
-                  class="btn-quiet -mr-3"><Icon name="edit" />Edit feed</a
+                  class="btn-quiet -mx-3"><Icon name="edit" />Edit feed</a
                 >
               {:else if currentFolder}
                 <a
                   href={pathFor({ kind: "edit-folder", id: currentFolder.id })}
                   onclick={(event) => follow(event, { kind: "edit-folder", id: currentFolder!.id })}
-                  class="btn-quiet -mr-3"><Icon name="edit" />Edit folder</a
+                  class="btn-quiet -mx-3"><Icon name="edit" />Edit folder</a
                 >
               {/if}
             </div>

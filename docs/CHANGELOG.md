@@ -4,6 +4,16 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 23 October 2026: A tidier shortcut list
+
+- The `?` list of keyboard shortcuts shows each press as its own key, so
+  "go to Unread" reads as g, then u. Each key sits close to what it does,
+  and the list has a thin edge so it stands out in the dark theme.
+- The tick boxes for a feed's folders are the same size as the ones in
+  search options.
+- When a feed's name is long, "Edit feed" moves under it and lines up with
+  the buttons below.
+
 ## 23 October 2026: A centred page, and clearer back arrows
 
 - On a wide screen the article now sits in the middle of the reading area,
