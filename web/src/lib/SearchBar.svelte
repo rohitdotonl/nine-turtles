@@ -12,6 +12,7 @@
   Escape is the app's: it closes search and returns you to where you were.
 -->
 <script lang="ts">
+  import Icon from "./Icon.svelte";
   import type { Feed, Folder } from "./feeds";
   import {
     chipsFor,
@@ -141,20 +142,17 @@
     <!-- The whole box acts as the field: a click anywhere in it (not on a chip's button) puts you in the field. -->
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
     <div
-      class="search-box flex min-h-11 min-w-0 flex-1 flex-wrap items-center gap-1 rounded border border-ink bg-paper py-0.5 pl-3"
+      class="search-box flex min-h-11 min-w-0 flex-1 cursor-text flex-wrap items-center gap-1 rounded-md border border-muted bg-paper pl-3"
       onclick={(event) => {
         if (event.target === event.currentTarget) field?.focus();
       }}
     >
-      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" class="shrink-0">
-        <circle cx="8.5" cy="8.5" r="5.75" />
-        <line x1="12.75" y1="12.75" x2="17.25" y2="17.25" />
-      </svg>
+      <Icon name="search" />
       {#each chips as chip (chip.key)}
-        <span class="flex items-center rounded border border-ink pl-2 text-small">
-          <span>{chip.label}</span>
-          <button type="button" aria-label="Remove {chip.label}" onclick={() => remove(chip)} class="min-h-11 min-w-11 px-2">
-            <span aria-hidden="true">×</span>
+        <span class="my-1.5 flex max-w-[calc(100%-8rem)] min-w-0 items-center rounded bg-[var(--tone)] pl-2 text-small">
+          <span class="min-w-0 truncate" title={chip.label}>{chip.label}</span>
+          <button type="button" aria-label="Remove {chip.label}" onclick={() => remove(chip)} class="-my-2 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center">
+            <Icon name="close" size={14} />
           </button>
         </span>
       {/each}
@@ -176,7 +174,7 @@
         placeholder={chips.length > 0 ? "" : "Search"}
         autocomplete="off"
         spellcheck="false"
-        class="min-h-11 min-w-32 flex-1 bg-transparent px-2 placeholder:text-muted"
+        class="-my-px min-h-11 min-w-20 flex-1 basis-20 bg-transparent px-2 placeholder:text-muted"
       />
     </div>
     <button
@@ -186,18 +184,13 @@
       aria-label="Search options"
       title="Search options"
       onclick={() => (panelOpen = !panelOpen)}
-      class="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded border border-ink"
+      class={["btn min-w-11 px-0", panelOpen && "bg-[var(--tone)]"]}
     >
-      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
-        <line x1="3" y1="6" x2="17" y2="6" />
-        <line x1="3" y1="14" x2="17" y2="14" />
-        <circle cx="7" cy="6" r="2" fill="var(--paper)" />
-        <circle cx="13" cy="14" r="2" fill="var(--paper)" />
-      </svg>
+      <Icon name="sliders" size={20} />
     </button>
   </div>
 
-  <ul id="search-suggestions" role="listbox" aria-label="Suggestions" hidden={offered.length === 0} class="mt-1 rounded border border-ink bg-paper py-1">
+  <ul id="search-suggestions" role="listbox" aria-label="Suggestions" hidden={offered.length === 0} class="mt-1 rounded-md border border-muted bg-paper py-1">
     {#each offered as suggestion, index (suggestion.label)}
       <!-- Chosen with the mouse on press, before the field loses the keyboard's place. -->
       <li
@@ -224,7 +217,7 @@
     aria-labelledby="search-options-name"
     bind:this={panel}
     hidden={!panelOpen}
-    class="mt-2 rounded border border-ink bg-paper p-4"
+    class="mt-2 rounded-md bg-sidebar p-4"
   >
     <p id="search-options-name" class="font-semibold">Search options</p>
     <div class="mt-3 flex flex-col gap-3">
@@ -233,7 +226,7 @@
         <select
           value={scopeValue(query.scope)}
           onchange={(event) => onChange({ ...query, scope: scopeFrom(event.currentTarget.value) }, true)}
-          class="min-h-11 rounded border border-ink bg-paper px-2"
+          class="field"
         >
           <option value="all">All feeds{hereMark({ kind: "all" })}</option>
           <option value="view:unread">Unread{hereMark({ kind: "view", view: "unread" })}</option>
@@ -267,7 +260,7 @@
             type="date"
             value={query.after}
             onchange={(event) => onChange({ ...query, after: event.currentTarget.value }, true)}
-            class="min-h-11 rounded border border-ink bg-paper px-2"
+            class="field"
           />
         </label>
         <label class="flex flex-col gap-1">
@@ -276,7 +269,7 @@
             type="date"
             value={query.before}
             onchange={(event) => onChange({ ...query, before: event.currentTarget.value }, true)}
-            class="min-h-11 rounded border border-ink bg-paper px-2"
+            class="field"
           />
         </label>
       </div>

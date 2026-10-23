@@ -13,6 +13,7 @@
   thumb reach.
 -->
 <script lang="ts">
+  import Icon from "./Icon.svelte";
   import { articleNow, readArticle, when, type Article, type FullArticle } from "./feeds";
 
   let {
@@ -111,15 +112,7 @@
 
 {#snippet starIcon(size: number)}
   <!-- Filled when starred, an outline when not: the shape says it, not only the color. -->
-  <svg aria-hidden="true" width={size} height={size} viewBox="0 0 12 12">
-    <path
-      d="M6 0.8l1.55 3.3 3.6.42-2.66 2.47.7 3.56L6 8.8 2.81 10.55l.7-3.56L.85 4.52l3.6-.42z"
-      fill={article.starred ? "currentColor" : "none"}
-      stroke="currentColor"
-      stroke-width="1"
-      stroke-linejoin="round"
-    />
-  </svg>
+  <Icon name="star" {size} filled={article.starred} />
 {/snippet}
 
 <section aria-label="Article" class={["flex min-w-0 flex-1 flex-col bg-paper", phone ? "pt-2" : "pt-16"]}>
@@ -127,30 +120,25 @@
   {#if phone}
     <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 pb-2">
       <button type="button" onclick={phone.onBack} class="min-h-11 min-w-0 rounded px-2 text-left break-words">‹ {phone.back}</button>
-      <button type="button" onclick={onMarkUnread} class="min-h-11 shrink-0 rounded border border-ink px-4">Mark unread</button>
+      <button type="button" onclick={onMarkUnread} class="btn-quiet -mr-3"><Icon name="unread" />Mark unread</button>
       <p role="status" class="w-full px-2 text-small empty:hidden">{copied}</p>
     </div>
   {:else}
-  <div class="flex flex-wrap items-center gap-x-4 gap-y-2 px-6 pb-4 md:px-10">
+  <div class="-ml-3 flex flex-wrap items-center gap-x-1 gap-y-2 px-6 pb-4 md:px-10">
     {#if article.link}
-      <a
-        href={article.link}
-        target="_blank"
-        rel="noopener noreferrer"
-        class="flex min-h-11 items-center rounded border border-ink px-4">Open original</a
-      >
-      <button type="button" onclick={share} class="min-h-11 rounded border border-ink px-4">
-        {sharing ? "Share" : "Copy link"}
+      <a href={article.link} target="_blank" rel="noopener noreferrer" class="btn-quiet"><Icon name="open" />Open original</a>
+      <button type="button" onclick={share} class="btn-quiet">
+        <Icon name={sharing ? "share" : "link"} />{sharing ? "Share" : "Copy link"}
       </button>
     {:else}
-      <p class="text-small text-muted">This article has no link to its original.</p>
+      <p class="px-3 text-small text-muted">This article has no link to its original.</p>
     {/if}
-    <button type="button" aria-pressed={article.starred} onclick={onStar} class="flex min-h-11 items-center gap-2 rounded border border-ink px-4">
-      {@render starIcon(16)}
+    <button type="button" aria-pressed={article.starred} onclick={onStar} class="btn-quiet">
+      {@render starIcon(18)}
       Star
     </button>
-    <button type="button" onclick={onMarkUnread} class="min-h-11 rounded border border-ink px-4">Mark unread</button>
-    <p role="status" class="text-small">{copied}</p>
+    <button type="button" onclick={onMarkUnread} class="btn-quiet"><Icon name="unread" />Mark unread</button>
+    <p role="status" class="px-3 text-small">{copied}</p>
   </div>
   {/if}
 
@@ -207,15 +195,11 @@
       </button>
       {#if article.link}
         <button type="button" onclick={share}>
-          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"
-            ><path d="M10 12.5V2.5M6.5 6 10 2.5 13.5 6M5 9.5H4v8h12v-8h-1" /></svg
-          >
+          <Icon name={sharing ? "share" : "link"} size={20} />
           {sharing ? "Share" : "Copy link"}
         </button>
         <a href={article.link} target="_blank" rel="noopener noreferrer">
-          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"
-            ><path d="M11 3h6v6M17 3l-8 8M14 12v5H3V6h5" /></svg
-          >
+          <Icon name="open" size={20} />
           Open original
         </a>
       {:else}

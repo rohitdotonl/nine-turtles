@@ -83,9 +83,9 @@
       spellcheck="false"
       placeholder="example.com"
       aria-describedby="feed-address-status"
-      class="min-h-11 min-w-0 flex-1 rounded border border-ink bg-paper px-3 placeholder:text-muted"
+      class="field min-w-0 flex-1"
     />
-    <button type="submit" aria-disabled={busy} class="min-h-11 rounded border border-ink px-4">Add feed</button>
+    <button type="submit" aria-disabled={busy} class="btn-primary">Add feed</button>
   </div>
   <!-- Screen readers hear each new line here without moving the keyboard's place. -->
   <p id="feed-address-status" role="status" class="min-h-6">
@@ -101,7 +101,7 @@
           type="button"
           aria-disabled={busy}
           onclick={() => add(choice.url, true)}
-          class="flex min-h-11 w-full flex-col items-start rounded border border-ink px-4 py-2 text-left"
+          class="flex min-h-11 w-full cursor-pointer flex-col items-start rounded-md border border-muted px-4 py-2 text-left hover:bg-[var(--hover)]"
         >
           <span>{choice.title}</span>
           <span class="text-small break-all text-muted">{choice.url}</span>

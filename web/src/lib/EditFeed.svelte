@@ -57,7 +57,7 @@
     <form onsubmit={save} class="mt-6 flex max-w-xl flex-col gap-6">
       <label class="flex flex-col gap-2">
         <span class="font-semibold">Name</span>
-        <input bind:value={title} type="text" autocomplete="off" class="min-h-11 rounded border border-ink bg-paper px-3" />
+        <input bind:value={title} type="text" autocomplete="off" class="field" />
       </label>
 
       <fieldset>
@@ -77,7 +77,7 @@
             bind:value={newFolder}
             type="text"
             autocomplete="off"
-            class="min-h-11 rounded border border-ink bg-paper px-3"
+            class="field"
             aria-describedby="new-folder-hint"
           />
           <span id="new-folder-hint" class="text-small text-muted">Optional. The feed goes in it when you save.</span>
@@ -85,8 +85,8 @@
       </fieldset>
 
       <div class="flex flex-wrap gap-2">
-        <button type="submit" aria-disabled={busy} class="min-h-11 rounded border border-ink px-4 font-semibold">Save</button>
-        <button type="button" onclick={onCancel} class="min-h-11 rounded border border-ink px-4">Cancel</button>
+        <button type="submit" aria-disabled={busy} class="btn-primary">Save</button>
+        <button type="button" onclick={onCancel} class="btn">Cancel</button>
       </div>
       <p role="status">{message}</p>
     </form>
@@ -97,7 +97,7 @@
         Stops following this feed and removes its articles. Starred articles stay in Starred. You can undo it straight
         afterwards.
       </p>
-      <button type="button" aria-disabled={busy} onclick={leave} class="min-h-11 rounded border border-ink px-4">
+      <button type="button" aria-disabled={busy} onclick={leave} class="btn">
         Unsubscribe from {feed.title}
       </button>
     </section>

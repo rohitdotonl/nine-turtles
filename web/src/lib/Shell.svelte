@@ -8,6 +8,7 @@
   moves unless the reader moves it.
 -->
 <script lang="ts">
+  import Icon from "./Icon.svelte";
   import { onMount, untrack } from "svelte";
   import AddFeed from "./AddFeed.svelte";
   import ArticleView from "./ArticleView.svelte";
@@ -560,7 +561,7 @@
 </script>
 
 {#snippet listHead()}
-            <div class="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+            <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
               <h2 id="list-heading" tabindex="-1" bind:this={listHeading} class="min-w-0 text-large font-semibold break-words">
                 {missing
                   ? route.kind === "folder" || route.kind === "edit-folder"
@@ -576,13 +577,13 @@
                 <a
                   href={pathFor({ kind: "edit-feed", id: currentFeed.id })}
                   onclick={(event) => follow(event, { kind: "edit-feed", id: currentFeed!.id })}
-                  class="flex min-h-11 shrink-0 items-center rounded border border-ink px-4">Edit feed</a
+                  class="btn-quiet -mr-3"><Icon name="edit" />Edit feed</a
                 >
               {:else if currentFolder}
                 <a
                   href={pathFor({ kind: "edit-folder", id: currentFolder.id })}
                   onclick={(event) => follow(event, { kind: "edit-folder", id: currentFolder!.id })}
-                  class="flex min-h-11 shrink-0 items-center rounded border border-ink px-4">Edit folder</a
+                  class="btn-quiet -mr-3"><Icon name="edit" />Edit folder</a
                 >
               {/if}
             </div>
@@ -635,7 +636,7 @@
         <h1 class="mr-auto font-serif text-xlarge" tabindex="-1" bind:this={wordmark}>slowfeed</h1>
         {#if phone}
           <!-- The feeds screen's top bar (SPEC section 20): its unread numbers wait for this, as they wait for r. -->
-          <button type="button" onclick={loadFeeds} class="min-h-11 rounded border border-ink px-4">Refresh</button>
+          <button type="button" onclick={loadFeeds} class="btn-quiet"><Icon name="refresh" />Refresh</button>
         {/if}
         <a
           href="/settings"
@@ -663,7 +664,7 @@
               search = "";
             }
           }}
-          class="min-h-11 w-full rounded border border-ink bg-paper px-3 placeholder:text-muted"
+          class="field w-full"
         />
       </div>
       <ul>
@@ -674,7 +675,7 @@
               href={pathFor({ kind: "view", view })}
               aria-current={current ? "page" : undefined}
               onclick={(event) => follow(event, { kind: "view", view })}
-              class={["flex min-h-11 items-center border-l-4 px-4", current ? "border-accent bg-tint-sidebar" : "border-transparent"]}
+              class={["side-row flex min-h-11 items-center border-l-4 px-4", current ? "border-accent bg-tint-sidebar" : "border-transparent"]}
               >{VIEW_NAMES[view]}</a
             >
           </li>
@@ -693,7 +694,7 @@
       aria-current={route.kind === "add-feed" ? "page" : undefined}
       onclick={(event) => follow(event, { kind: "add-feed" })}
       class={[
-        "flex min-h-11 shrink-0 items-center border-l-4 px-4 py-2",
+        "side-row flex min-h-11 shrink-0 items-center gap-2 border-l-4 px-4 py-2",
         route.kind === "add-feed" ? "border-accent bg-tint-sidebar" : "border-transparent",
       ]}>+ Add feed</a
     >
@@ -766,8 +767,8 @@
               <div class="-ml-2 flex items-center justify-between gap-4 pb-2">
                 <button type="button" onclick={() => stepBack("home")} class="min-h-11 rounded px-2">‹ Feeds</button>
                 {#if itemList && !missing}
-                  <button type="button" onclick={() => itemList?.refresh()} class="min-h-11 rounded border border-ink px-4"
-                    >Refresh</button
+                  <button type="button" onclick={() => itemList?.refresh()} class="btn-quiet -mr-3"
+                    ><Icon name="refresh" />Refresh</button
                   >
                 {/if}
               </div>

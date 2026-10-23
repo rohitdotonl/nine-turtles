@@ -213,6 +213,18 @@ TalkBack, through every SPEC "How to check it", is still to do.*
 
 ---
 
+## After V1: polishing the look and feel
+
+The owner asked for a professional-grade finish after V1, guided by
+Anthropic's frontend-design skill, Vercel's Web Interface Guidelines and
+Impeccable, always inside DESIGN.md's rules. Done in small pull requests,
+each with screenshots:
+
+- ✅ Calmer controls: four kinds of button and field, one icon set, a
+  one-line search box (decision 0025).
+
+---
+
 Responsive layout, accessibility and speed aren't left to the end: each
 milestone must pass the automatic checks for them, every feature comes with
 keyboard-only tests, and each milestone that changes screens includes a

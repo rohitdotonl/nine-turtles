@@ -4,6 +4,18 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 23 October 2026: Calmer buttons and a tidier search box
+
+- Buttons no longer sit in heavy black boxes. Toolbar actions (Refresh,
+  Mark all as read, Edit feed, Open original, Copy link, Star, Mark unread)
+  are a word with a small icon; each form's main button (Sign in, Add feed,
+  Save) is filled in; text boxes have a softer edge.
+- The search field stays one line tall when it shows where you're
+  searching (`in: Tech`); long names are shortened with "…".
+- The keyboard outline no longer appears around a screen's title, and is
+  drawn whole around a selected row instead of as two lines.
+- Rows and buttons deepen a little under the mouse pointer.
+
 ## 23 October 2026: The final V1 pass (Milestone 14)
 
 - Settings → Your data has **Export starred articles**: a JSON Feed file

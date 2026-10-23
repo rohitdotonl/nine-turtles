@@ -148,6 +148,31 @@ test.describe("on a wide window", () => {
     expect(page.context().pages()).toHaveLength(1);
   });
 
+  test("the controls stay calm: a one-line search box, and the keyboard's place shown without boxing a title", async ({ page }) => {
+    await openRoom(page);
+    // The scope chip sits in the search box without making it taller (decision 0025).
+    await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toBeVisible();
+    const box = (await page.locator(".search-box").boundingBox())!;
+    expect(box.height).toBeLessThanOrEqual(48);
+    // The chip's remove button is small to look at but a full 44px to press.
+    const remove = (await page.getByRole("button", { name: "Remove in: Reading Room" }).boundingBox())!;
+    expect(Math.min(remove.width, remove.height)).toBeGreaterThanOrEqual(44);
+    // The selected row's keyboard outline is drawn inside it on three sides,
+    // leaving its ink blue bar uncovered on the fourth.
+    await page.keyboard.press("j");
+    const selected = row(page, "The pleasure of a slow letter");
+    await expect(selected).toBeFocused();
+    await expect(selected).toHaveCSS("border-left-color", "rgb(47, 74, 122)");
+    await expect(selected).toHaveCSS("box-shadow", /inset/);
+    // Opening an article gives its title the keyboard's place for screen
+    // readers: a short bar beside it instead of a box around it.
+    await page.keyboard.press("o");
+    const heading = title(page, "The pleasure of a slow letter");
+    await expect(heading).toBeFocused();
+    await expect(heading).toHaveCSS("outline-style", "none");
+    expect(await heading.evaluate((element) => getComputedStyle(element, "::before").width)).toBe("3px");
+  });
+
   test("in high-contrast mode, only the selected article is marked", async ({ page }) => {
     await page.emulateMedia({ forcedColors: "active" });
     await openRoom(page);

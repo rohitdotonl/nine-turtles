@@ -63,6 +63,37 @@ describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
   });
 });
 
+// The faint tones under a pointer and behind a search chip are the text color
+// mixed into whatever is behind them, read from app.css (--hover, --tone).
+function mix(ink: string, background: string, share: number): string {
+  const channel = (hex: string, i: number) => parseInt(hex.slice(i, i + 2), 16);
+  return (
+    "#" +
+    [1, 3, 5]
+      .map((i) => Math.round(channel(ink, i) * share + channel(background, i) * (1 - share)))
+      .map((value) => value.toString(16).padStart(2, "0"))
+      .join("")
+  );
+}
+
+describe.each(Object.entries(THEMES))("the %s theme's pointer and chip tones", (_name, colors) => {
+  // Never drawn on the selected row's tint: the selected row isn't tinted under the pointer.
+  it("keep text at 7 : 1 and muted grey at 4.5 : 1 on the three areas", () => {
+    const shares = ["hover", "tone"].map((name) => {
+      const found = css.match(new RegExp(`--${name}: color-mix\\(in srgb, var\\(--ink\\) (\\d+)%, transparent\\)`));
+      expect(found, name).not.toBeNull();
+      return Number(found![1]) / 100;
+    });
+    for (const share of shares) {
+      for (const background of ["paper", "list", "sidebar"]) {
+        const toned = mix(colors.ink!, colors[background]!, share);
+        expect(contrast(colors.ink!, toned), `${background} ${share}`).toBeGreaterThanOrEqual(7);
+        expect(contrast(colors.muted!, toned), `${background} ${share}`).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+  });
+});
+
 it("the device's dark setting uses exactly the dark theme's colors", () => {
   expect(THEMES["device dark"]).toEqual(THEMES.dark);
 });

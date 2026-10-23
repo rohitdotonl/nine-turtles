@@ -25,6 +25,7 @@
   server fetched them already.
 -->
 <script lang="ts">
+  import Icon from "./Icon.svelte";
   import { onMount, tick, untrack } from "svelte";
   import {
     listArticles,
@@ -377,14 +378,14 @@
   load(null);
 </script>
 
-<div class="mt-2 flex min-h-11 flex-wrap gap-2">
+<div class="mt-2 -ml-3 flex min-h-11 flex-wrap gap-1">
   <!-- First, so it never moves when "Mark all as read" comes and goes. -->
   {#if !refreshInTopBar}
-    <button type="button" aria-disabled={busy} onclick={refresh} class="min-h-11 rounded border border-ink px-4">Refresh</button>
+    <button type="button" aria-disabled={busy} onclick={refresh} class="btn-quiet"><Icon name="refresh" />Refresh</button>
   {/if}
   {#if articles.length > 0}
-    <button type="button" bind:this={markAllButton} onclick={markAllRead} class="min-h-11 rounded border border-ink px-4">
-      Mark all as read
+    <button type="button" bind:this={markAllButton} onclick={markAllRead} class="btn-quiet">
+      <Icon name="check" />Mark all as read
     </button>
   {/if}
 </div>
@@ -398,12 +399,13 @@
     >
   {/if}
 </p>
-<p class="flex min-h-11 flex-wrap items-center gap-x-1 text-small">
+<!-- Its Undo answers a 44px tap, so space is kept below it and the first row never sits under that tap. -->
+<p class="mt-4 mb-3.5 flex min-h-6 flex-wrap items-center gap-x-1 text-small">
   <span role="status">{line}</span>
   <span aria-live="polite" class="sr-only">{spoken}</span>
   {#if undoLast}
     <span aria-hidden="true">·</span>
-    <button type="button" onclick={undoByButton} class="min-h-11 min-w-11 px-2 underline underline-offset-4">Undo</button>
+    <button type="button" onclick={undoByButton} class="-my-3.5 min-w-11 px-2 py-3.5 underline underline-offset-4">Undo</button>
   {/if}
 </p>
 
@@ -427,7 +429,7 @@
           }}
           onkeydown={arrows}
           class={[
-            "item-row block w-full border-l-4 py-3 pr-6 pl-5 text-left",
+            "item-row block w-full cursor-pointer border-l-4 py-3 pr-6 pl-5 text-left",
             current ? "border-accent bg-tint-list" : "border-transparent",
           ]}
         >
@@ -438,9 +440,7 @@
           >
           <span class="block text-small text-muted">
             {#if article.starred}
-              <svg aria-hidden="true" class="star" width="12" height="12" viewBox="0 0 12 12">
-                <path d="M6 0.8l1.55 3.3 3.6.42-2.66 2.47.7 3.56L6 8.8 2.81 10.55l.7-3.56L.85 4.52l3.6-.42z" fill="currentColor" />
-              </svg><span class="sr-only">Starred, </span>
+<span class="star"><Icon name="star" size={13} filled /></span><span class="sr-only">Starred, </span>
             {/if}
             {article.feedTitle} ·
             <time datetime={new Date(article.at * 1000).toISOString()}>{when(article.at)}</time>
@@ -450,7 +450,7 @@
     {/each}
   </ul>
   {#if next !== null}
-    <button type="button" aria-disabled={busy} onclick={() => load(next)} class="mt-4 min-h-11 rounded border border-ink px-4">
+    <button type="button" aria-disabled={busy} onclick={() => load(next)} class="btn mt-6">
       {order === "oldest" ? "Show newer items" : "Show older items"}
     </button>
   {/if}
@@ -471,8 +471,8 @@
     -webkit-text-stroke: 0.04em currentColor;
   }
   .star {
-    display: inline;
-    vertical-align: -1px;
+    display: inline-block;
+    vertical-align: -2px;
     margin-right: 0.25rem;
   }
 </style>
