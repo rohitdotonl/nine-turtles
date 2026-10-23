@@ -111,6 +111,7 @@ test("rename a folder; delete it, its feeds stay, and Undo brings it back", asyn
 test("unsubscribe, then Undo: the feed is back with its read history; a star outlives unsubscribing", async ({ page }) => {
   const [blog, other] = [unique("leaving"), unique("starred")];
   await openBlogs(page, [blog, other]);
+  await expect(page.getByRole("region", { name: `Blog ${blog}` }).getByRole("listitem")).toHaveCount(3);
   // One article read.
   await page.keyboard.press("j");
   await expect(sidebar(page).getByRole("link", { name: `Blog ${blog} 2 unread` })).toBeVisible();
@@ -128,8 +129,10 @@ test("unsubscribe, then Undo: the feed is back with its read history; a star out
 
   // The other blog: star its newest article, then unsubscribe.
   await sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${other}`) }).click();
+  await expect(page.getByRole("region", { name: `Blog ${other}` }).getByRole("listitem")).toHaveCount(3);
   await page.keyboard.press("j");
   await page.keyboard.press("s");
+  await expect(line(page)).toHaveText("Starred");
   await page.getByRole("link", { name: "Edit feed" }).click();
   await page.getByRole("button", { name: `Unsubscribe from Blog ${other}` }).click();
   await expect(line(page)).toHaveText(`Unsubscribed from Blog ${other}`);
