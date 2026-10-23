@@ -30,7 +30,7 @@ same so older documents still point to the right place.
 | 6 | Reading articles | ✅ |
 | 7 | Read, unread, star and undo | ✅ |
 | 8 | Polite background fetching and Refresh | ✅ |
-| 9 | Folders, feed editing and OPML import/export | ✅ |
+| 9 | Folders, feed editing and OPML import/export | 🔨 |
 | 10 | Search | ⬜ |
 | 11 | Feed health page | ⏭ |
 | 12 | WebSub | ⏭ |
