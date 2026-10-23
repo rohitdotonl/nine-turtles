@@ -9,6 +9,8 @@ plain steps, no assumed knowledge of a particular tool.
 | [checks.md](checks.md) | Every automatic check: what it catches and how to run it |
 | [second-agent-review.md](second-agent-review.md) | How the review of each pull request is done |
 | [protecting-main.md](protecting-main.md) | The owner's step-by-step guide to switching on protection for main |
+| [settings.md](settings.md) | Every setting slowfeed reads (names and meanings, never values) |
+| [render-setup.md](render-setup.md) | The owner's one-time guide to putting slowfeed on Render and setting the password |
+| [daily-check.md](daily-check.md) | The daily health check an agent runs on the live app |
 
-Coming in later milestones: `settings.md`, `daily-check.md` (Milestone 2),
-`backups.md` and `moving-hosts.md` (Milestone 3).
+Coming in Milestone 3: `backups.md` and `moving-hosts.md`.

@@ -1,65 +1,12 @@
 # Questions and conflicts for the owner
 
-*Updated 21 October 2026 after the owner's first answers. Decisions have been
+*Updated 23 October 2026 (sign-in decided). Decisions have been
 written into `DESIGN.md`, `ENGINEERING.md`, `SPEC.md`, `PLAN.md` and
 `libraries.md`; this file keeps a short record, plus what's still open.*
 
 ## Still open
 
-### Sign-in (was Q1 and Q6)
-
-**How it works, in plain words.** There's no outside service involved. The
-sign-in is a small part of slowfeed's own code: one password, no username, no
-email, no accounts. When you type the password, slowfeed scrambles it and
-compares the result with the scrambled version it has stored. The scrambling
-is done by a **library** (ready-made code that's published for anyone to use
-and runs inside slowfeed) called **argon2**. Scrambling is deliberately slow,
-so anyone who stole the stored version couldn't work backwards to your
-password by trying billions of guesses. "Forgot password" isn't needed: you
-set a new one in Render's settings.
-
-**Can sign-in be skipped in V1?** Not safely. slowfeed lives at a public web
-address. Addresses get found, through a shared link, a screenshot, or
-automated programs that scan the web for new sites. Without a password, anyone who found
-it could read your subscriptions, unsubscribe you from everything and delete
-your starred articles. That breaks the engineering floor ("never put the
-reader at risk"), which nothing can trade away. So I can't suggest skipping it.
-
-What can be done is making it as painless as possible: you type the password
-once per device, and each device then stays signed in for a long time
-(months).
-
-**Decided:** the scrambling library is **argon2** (argon2id variant).
-
-**Still open: how you set the password** (needed at Milestone 2, not before).
-
-In short: Render (the company running slowfeed) has a page in its website
-where you can type a command to the running app. You'd type
-`slowfeed set-password`, type your password, and get back a long line of
-scrambled text. You copy that line into a settings box on Render, and
-that's it. slowfeed only ever stores the scrambled line, never the password.
-
-Options:
-- ⭐ **Type a one-line command in Render's web "Shell" tab** (a box in
-  Render's website where you can type commands to the running app), e.g.
-  `slowfeed set-password`. It asks for your password and shows the scrambled
-  form, which you paste into Render's settings. Nothing to install, and the
-  readable password is never saved anywhere. The milestone 2 guide walks you
-  through it step by step.
-- **Put the readable password in Render's settings**, and slowfeed scrambles
-  it each time it starts. Easiest, but your readable password then sits in
-  Render's dashboard. ENGINEERING.md says it's stored "only as a hash", so
-  this would change that rule.
-- **A "choose your password" page the first time the app starts.**
-  Convenient, but for a few minutes after the first deploy, anyone who found
-  the address first could claim it.
-
-**About Render's Shell tab:** Render's documentation says the Shell tab and
-SSH (a way to type commands to the server) are available for paid web
-services and not for free ones. Starter is a paid plan, so it should be
-included. I couldn't open Render's website from the agent's environment to
-confirm it directly, so the first step of Milestone 2 is for you to check that
-the tab is there. If it isn't, the fallback is the second option above.
+Nothing at the moment.
 
 ---
 
@@ -68,6 +15,7 @@ the tab is there. If it isn't, the fallback is the second option above.
 | # | Question | Decision |
 |---|---|---|
 | Q1 | Password scrambling | argon2 (argon2id variant). |
+| Q6 | How the password is set | `slowfeed set-password` in Render's Shell tab; you paste the scrambled line into Render's settings. Chosen 23 October 2026 (Milestone 2). |
 | Q2 | Backups | Built into slowfeed, nightly, to Cloudflare R2 (S3-compatible). A copy is also made before every database structure change. |
 | Q3 | Supporting libraries for Milestone 1 | Approved. All approved libraries are listed in `docs/libraries.md`. |
 | Q4 | How the library check knows you approved | The approved list in `docs/libraries.md`. The check fails if the code uses anything not on it. |

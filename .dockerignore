@@ -1,0 +1,10 @@
+# Only the source goes into the image build; everything here is rebuilt there.
+.git
+server/target
+server/data
+web/node_modules
+web/dist
+web/test-data
+web/test-results
+web/screenshots
+*.opml

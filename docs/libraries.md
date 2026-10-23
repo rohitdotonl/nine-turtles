@@ -40,6 +40,8 @@ whatever the lock files say.*
 | rust-embed | 8.x | Packs the built frontend into the one program file | Approved |
 | tower-http | 0.7 | Standard web-server extras: compression, security headers | Approved |
 | thiserror | 2.x | Clear error messages inside the code | Approved |
+| getrandom | 0.4 | Asks the computer for unguessable random numbers, for each signed-in device's ticket. Comes with argon2 already | Approved (October 2026, Milestone 2) |
+| blake2 | 0.11 | A fast scrambler: slowfeed stores only a scrambled copy of each device's ticket. Comes with argon2 already | Approved (October 2026, Milestone 2) |
 
 SQLite itself (and its FTS5 search) comes bundled with sqlx.
 
@@ -71,8 +73,9 @@ These never become part of slowfeed itself.
 ## Expected later (not yet approved)
 
 Each will be proposed in its milestone's plan:
-- **Milestone 2 (live, with sign-in):** `tracing-subscriber`, the companion
-  to `tracing` that actually prints the logs. Until then, the program prints
-  its one startup line directly.
+- **When logs get busier (feed fetching, Milestone 8):** `tracing-subscriber`,
+  the companion to `tracing` that actually prints the logs. Until then,
+  slowfeed's small `log` module prints plain lines itself, so neither is used
+  yet (docs/decisions/0010-sign-in.md).
 - **Milestone 3 (backups):** a way to upload to S3-compatible storage.
-- **Later milestones:** handling dates and web addresses, checking WebSub signatures, limiting repeated sign-in attempts.
+- **Later milestones:** handling dates and web addresses, checking WebSub signatures. (Limiting repeated sign-in attempts needed no library.)
