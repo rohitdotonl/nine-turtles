@@ -105,13 +105,14 @@ A few words used throughout:
 - Each row shows the article **title**, and below it the **source name and time** in quiet small text. No images, no site icons.
 - Dates and times are shown in your device's time zone, in words that never change while you look: "14:05" for today, "23 Oct" for this year, "23 Oct 2025" before that. The time is when the publisher says they published it, or when slowfeed received it if they don't say (and never later than that, so a wrong date can't pin an article to the top).
 - Newest first by default; oldest first can be chosen in Settings.
+- Unread, Starred and All list articles from every feed. A feed's own list shows all its articles, read and unread.
 - The list has an end: it shows 50 items, then a **"Show older items"** button ("Show newer items" when sorting oldest first). Nothing more loads unless you press it.
 - Row states, each recognizable without color:
 
   | State | Looks like |
   |---|---|
-  | Unread | Full-strength title |
-  | Read | Muted grey title |
+  | Unread | Full-strength, semibold title |
+  | Read | Muted grey, regular-weight title |
   | Selected | Ink blue bar on the left and a faint ink blue tint |
   | Starred | A small star mark |
 
@@ -130,7 +131,7 @@ A few words used throughout:
 - Links inside articles are underlined in the normal text color, never blue.
 - If the feed only has a summary, slowfeed shows the summary. It never fetches the rest from the website. **"Open original"** takes you there.
 - "Open original" is always present, always in the same place. **Share** sits next to it (section 21).
-- A labeled **Mark unread** button sits in the article's top bar (it arrives with read state, Milestone 7).
+- A labeled **Mark unread** button and a **Star** button sit in the article's top bar, beside them (sections 8 and 9). The Star button shows a filled star when the article is starred and an outline when not.
 - The source is always credited and linked: the feed's name (linking to the publisher's website), the author if the feed names one, and the time.
 - Choosing an article in the list (a click, `j` / `k`, or the arrow keys while in the list) shows it in the reading area. `Enter` or `o` opens it to read: the keyboard's place moves into the article, and `j` / `k` then move from article to article; Escape goes back to the list. On a phone-narrow window the article takes the list's place, with a back button named after the list. `j` never loads older items on its own: at the end of the list it stops.
 - `v` opens the original in a new tab. `+` / `-` change the text size (the same setting as in Settings).
@@ -152,10 +153,12 @@ A few words used throughout:
 **What it does**
 - An item counts as read as soon as it's shown in the reading pane, by click or by `j`/`k`.
 - `m` marks the current item unread again. A labeled **Mark unread** button in the article's top bar does the same, on desktop and phones.
-- **Mark all as read** (`Shift+A`, or a labeled button in the list header): happens instantly, no "are you sure?". It affects **only the items shown on screen right now**. Items that arrived in the background but aren't displayed yet are never touched.
-- **Undo** (`u`, or a visible **Undo**): after an undoable action, a line such as "Marked 23 items as read · Undo" appears in the reserved line at the top of the list (the same spot as "New items", so nothing shifts) and stays until your next action.
+- **Mark all as read** (`Shift+A`, or a labeled button in the list header, shown when the list has items): happens instantly, no "are you sure?". It affects **only the items shown on screen right now** (every item listed, including pages added with "Show older items"). Items that arrived in the background but aren't displayed yet are never touched.
+- **Undo** (`u`, or a visible **Undo**): after an undoable action, a line such as "Marked 23 items as read · Undo" appears in the reserved line at the top of the list (the same spot as "New items", so nothing shifts) and stays until your next undoable action or until you leave the list. After an undo it says "Undone."; there's no undoing an undo. Moving through articles doesn't clear it.
 - Undo reverses **the last action only**, of these: mark all as read, mark unread, star/unstar, unsubscribe, delete folder.
 - Read state is recorded in both reading modes, so switching modes never loses it.
+- Each feed's unread number in the sidebar changes at the same moment.
+- If a mark can't be saved (the connection dropped, say), it's taken back and the reserved line says so plainly, such as "The star couldn't be saved."
 
 **How to check it**
 1. Click an unread item: it turns grey and the feed's unread number drops by one.
@@ -166,7 +169,7 @@ A few words used throughout:
 ## 9. Star
 
 **What it does**
-- One concept: **Star**. `s` (or the star control) stars or unstars the current item.
+- One concept: **Star**. `s` (or the **Star** button in the article's top bar) stars or unstars the current item. It can be undone like the other marks (section 8).
 - Starred items appear in the **Starred** view and are kept forever.
 
 **How to check it**
@@ -307,7 +310,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 - Settings opens in place of the list and reading area; the sidebar stays. **Close settings** or Escape goes back to where you were.
 - **Reader controls:** reading font (Literata or Atkinson Hyperlegible), text size (six steps from Smaller to Largest, Medium by default), line width (Narrow, Medium or Wide: about 62, 68 or 75 characters), theme. A sample paragraph shows how articles will look, and changes apply at once.
 - **Themes:** "Match this device" by default (off-white or dark, following the system's light/dark setting), or choose off-white, sepia or dark.
-- Sections appear once they have something to do: Reading (sort order) with Milestone 7, Your data with Milestone 9.
+- Sections appear once they have something to do: Reading (sort order) since Milestone 7, Your data with Milestone 9.
 - **Reading:** newest or oldest first. (Inbox or river mode in V2.)
 - **Your data:** OPML import/export, export of starred articles.
 - **Sign out.** (Keeping articles and Feed health come in V2.)

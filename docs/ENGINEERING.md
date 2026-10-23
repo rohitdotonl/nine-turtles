@@ -195,7 +195,9 @@ These were decided with the owner. Changing any of them needs the owner's approv
 - Unsubscribing from a feed keeps its starred articles.
 - This clean-up runs only if the most recent nightly backup succeeded; otherwise it waits and the feed health page says so. Deleted articles remain recoverable from backups for as long as backups are kept.
 - **Search:** FTS5 configured so words in scripts with combining marks (such as Hindi's vowel signs) are not split apart; covered by tests with Hindi text.
-- **"Mark all as read"** receives the exact list of items on screen, so items fetched in the background are never touched. It is undoable.
+- **Read and starred** are two yes/no marks on each article, with small "partial" indexes for the Unread and Starred views and the unread counts (decision 0018).
+- **"Mark all as read"** receives the exact list of items on screen, so items fetched in the background are never touched. It is undoable: undo sends the opposite mark for the same items.
+- **Settings shared across devices** (so far the sort order) live in a small `settings` table; per-device reader controls stay in the browser.
 - **Exports:** OPML for feeds and folders; starred articles as a JSON Feed file.
 
 ### Sign-in and security

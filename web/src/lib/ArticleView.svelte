@@ -4,7 +4,8 @@
   and line width. "Open original" and Copy link (Share on phones) always sit
   in the same place above it. The source is always credited and linked.
   A feed that gives only a summary shows the summary; slowfeed never fetches
-  the rest from the publisher's site.
+  the rest from the publisher's site. Star and Mark unread sit beside them
+  (SPEC sections 8 and 9).
 -->
 <script lang="ts">
   import { articleNow, readArticle, when, type Article, type FullArticle } from "./feeds";
@@ -13,12 +14,16 @@
     article,
     heading = $bindable(),
     back,
+    onStar,
+    onMarkUnread,
   }: {
     /** The article chosen in the list; its title, source and time show at once. */
     article: Article;
     heading?: HTMLHeadingElement;
     /** On a phone-narrow window: the list to go back to, and how. */
     back?: { name: string; go: () => void };
+    onStar: () => void;
+    onMarkUnread: () => void;
   } = $props();
 
   // Bumped when an article arrives from the server, so the page looks again.
@@ -111,6 +116,20 @@
     {:else}
       <p class="text-small text-muted">This article has no link to its original.</p>
     {/if}
+    <button type="button" aria-pressed={article.starred} onclick={onStar} class="flex min-h-11 items-center gap-2 rounded border border-ink px-4">
+      <!-- Filled when starred, an outline when not: the shape says it, not only the color. -->
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 12 12">
+        <path
+          d="M6 0.8l1.55 3.3 3.6.42-2.66 2.47.7 3.56L6 8.8 2.81 10.55l.7-3.56L.85 4.52l3.6-.42z"
+          fill={article.starred ? "currentColor" : "none"}
+          stroke="currentColor"
+          stroke-width="1"
+          stroke-linejoin="round"
+        />
+      </svg>
+      Star
+    </button>
+    <button type="button" onclick={onMarkUnread} class="min-h-11 rounded border border-ink px-4">Mark unread</button>
     <p role="status" class="text-small">{copied}</p>
   </div>
 

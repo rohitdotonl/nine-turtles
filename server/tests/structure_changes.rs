@@ -1,0 +1,86 @@
+//! Every change to the database's structure is tried on a copy of
+//! real-shaped data first (ENGINEERING.md → "The floor"). Each test here
+//! builds a database as an earlier version of slowfeed left it, fills it,
+//! then lets today's slowfeed open it, and checks nothing was lost.
+
+mod common;
+
+use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
+
+#[tokio::test]
+async fn adding_read_state_and_stars_keeps_every_feed_article_and_sign_in() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database as Milestone 6 left it (structure changes 1 and 2).
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(slowfeed::db::path(&data_dir))
+                .create_if_missing(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(2, &old)
+        .await
+        .unwrap();
+    sqlx::query(
+        "INSERT INTO sessions (token_hash, created_at, last_used_at, expires_at)
+         VALUES (x'00112233', 1, 1, 9999999999)",
+    )
+    .execute(&old)
+    .await
+    .unwrap();
+    for feed in 1..=20 {
+        sqlx::query("INSERT INTO feeds (id, url, url_key, title, added_at) VALUES (?, ?, ?, ?, 1)")
+            .bind(feed)
+            .bind(format!("https://blog-{feed}.example/feed"))
+            .bind(format!("blog-{feed}.example/feed"))
+            .bind(format!("Blog {feed}"))
+            .execute(&old)
+            .await
+            .unwrap();
+        for number in 0..50 {
+            sqlx::query(
+                "INSERT INTO articles (feed_id, fingerprint, title, content, received_at, sort_at)
+                 VALUES (?, ?, ?, '<p>Words.</p>', 2, ?)",
+            )
+            .bind(feed)
+            .bind(format!("id:{number}"))
+            .bind(format!("Article {number}"))
+            .bind(number)
+            .execute(&old)
+            .await
+            .unwrap();
+        }
+    }
+    old.close().await;
+
+    // Today's slowfeed opens it and brings its structure up to date.
+    let db = slowfeed::db::open(&data_dir).await.unwrap();
+    let count = |sql: &'static str| sqlx::query_scalar::<_, i64>(sql).fetch_one(&db);
+    assert_eq!(count("SELECT COUNT(*) FROM sessions").await.unwrap(), 1);
+    assert_eq!(count("SELECT COUNT(*) FROM feeds").await.unwrap(), 20);
+    assert_eq!(count("SELECT COUNT(*) FROM articles").await.unwrap(), 1000);
+    assert_eq!(
+        count("SELECT COUNT(*) FROM articles WHERE content = '<p>Words.</p>'")
+            .await
+            .unwrap(),
+        1000
+    );
+    // Every article stored before starts unread and not starred.
+    assert_eq!(
+        count("SELECT COUNT(*) FROM articles WHERE read = 0 AND starred = 0")
+            .await
+            .unwrap(),
+        1000
+    );
+    // Only the two values a mark can have are accepted.
+    assert!(
+        sqlx::query("UPDATE articles SET read = 2 WHERE id = 1")
+            .execute(&db)
+            .await
+            .is_err()
+    );
+}

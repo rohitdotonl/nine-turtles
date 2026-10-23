@@ -4,6 +4,19 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 23 October 2026: Read, unread, star and undo (Milestone 7)
+
+- An article counts as read once it's shown: its title turns grey and
+  regular weight, and the feed's grey unread number in the sidebar drops.
+- `m` or "Mark unread" makes it unread again. `Shift+A` or "Mark all as
+  read" marks only the articles listed on screen.
+- `s` or the Star button stars an article; starred ones carry a small star
+  and are listed under Starred.
+- After each of these, the line above the list says what happened, with
+  Undo (or `u`).
+- Unread now lists only unread articles. Settings has a new Reading
+  section: newest or oldest first, shared across your devices.
+
 ## 23 October 2026: Merges reach the live app again
 
 - Since Milestone 2, every merge built correctly but never told Render to

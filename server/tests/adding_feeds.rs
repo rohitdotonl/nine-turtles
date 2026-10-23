@@ -341,8 +341,8 @@ async fn the_list_shows_fifty_at_a_time_and_has_an_end() {
                 .iter()
                 .map(|article| article["title"].as_str().unwrap().to_owned()),
         );
-        match page["older"].as_str() {
-            Some(older) => path = format!("/api/articles?before={older}"),
+        match page["next"].as_str() {
+            Some(next) => path = format!("/api/articles?after={next}"),
             None => break,
         }
     }

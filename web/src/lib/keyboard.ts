@@ -11,6 +11,10 @@ export type Action =
   | { kind: "move"; step: 1 | -1 }
   | { kind: "open" }
   | { kind: "open-original" }
+  | { kind: "star" }
+  | { kind: "mark-unread" }
+  | { kind: "mark-all-read" }
+  | { kind: "undo" }
   | { kind: "text-size"; step: 1 | -1 };
 
 export type KeyPress = {
@@ -61,6 +65,14 @@ export function createKeyReader() {
         return { kind: "open" };
       case "v":
         return { kind: "open-original" };
+      case "s":
+        return { kind: "star" };
+      case "m":
+        return { kind: "mark-unread" };
+      case "A": // Shift+A
+        return { kind: "mark-all-read" };
+      case "u":
+        return { kind: "undo" };
       case "+":
       case "=": // the same key as +, without Shift
         return { kind: "text-size", step: 1 };
@@ -102,10 +114,10 @@ export const SHORTCUTS: { keys: string[]; action: string; ready: boolean }[] = [
   { keys: ["Shift+J", "Shift+K"], action: "Next / previous feed", ready: false },
   { keys: ["Enter", "o"], action: "Open item", ready: true },
   { keys: ["v"], action: "Open original", ready: true },
-  { keys: ["s"], action: "Star / unstar", ready: false },
-  { keys: ["m"], action: "Mark current item unread", ready: false },
-  { keys: ["Shift+A"], action: "Mark all as read", ready: false },
-  { keys: ["u"], action: "Undo", ready: false },
+  { keys: ["s"], action: "Star / unstar", ready: true },
+  { keys: ["m"], action: "Mark current item unread", ready: true },
+  { keys: ["Shift+A"], action: "Mark all as read", ready: true },
+  { keys: ["u"], action: "Undo", ready: true },
   { keys: ["r"], action: "Show new items", ready: false },
   { keys: ["/"], action: "Search", ready: false },
   { keys: ["a"], action: "Add feed", ready: true },
