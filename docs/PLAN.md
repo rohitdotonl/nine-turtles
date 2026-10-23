@@ -150,6 +150,9 @@ move around with only the keyboard.
   Last-Modified, `Retry-After`, time and size limits, permanent redirects,
   backoff for failing feeds.
 - "New items · press r", `r` and the Refresh button; fresh on arrival.
+- Failing feeds visible without the feed health page (V2): the diagnostics page
+  counts them (never naming them) and the daily check reports "Some feeds keep
+  failing", with tests.
 
 **You can try:** leave it for a day; new articles have arrived on their own,
 and the screen never changed under you.
@@ -191,6 +194,8 @@ In V1, the daily check reports failing feeds instead (from Milestone 8).
 - Single-column drill-down, labeled back arrow, bottom article toolbar,
   system share sheet, Refresh button, 44px targets.
 - Web app manifest and service worker so it installs to the home screen.
+- A tab left open across an update that can't carry on says, in the list's
+  reserved line, "slowfeed was updated. Reload to continue.", with tests.
 
 **You can try:** read on your phone; add it to the home screen.
 

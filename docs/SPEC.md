@@ -298,9 +298,9 @@ OPML is the standard file format feed readers use to move subscription lists bet
 - **Reading:** newest or oldest first. (Inbox or river mode in V2.)
 - **Your data:** OPML import/export, export of starred articles.
 - **Sign out.** (Keeping articles and Feed health come in V2.)
-- **Status:** which version of slowfeed you're using. When a newer version has been downloaded, it says "A new version is ready" with a **Reload** button. Otherwise new versions are used automatically the next time you open or reload the app, never while you're reading. If a tab left open across an update can't carry on, it says so plainly: "slowfeed was updated. Reload to continue."
+- **Status:** which version of slowfeed you're using. When a newer version has been downloaded, it says "A new version is ready" with a **Reload** button. Otherwise new versions are used automatically the next time you open or reload the app, never while you're reading. If a tab left open across an update can't carry on, it says so plainly in the reserved line at the top of the list (where "New items" appears): "slowfeed was updated. Reload to continue." (Milestone 13.)
 - Fonts are served by slowfeed itself; nothing is loaded from font services. Other scripts such as Hindi use the fonts already on your device.
-- **Shared across your devices:** reading mode and sort order. **Per device:** theme, font, text size and line width (a phone and a laptop often want different sizes). `+`/`-` change the same text-size setting.
+- **Shared across your devices:** sort order (and reading mode, in V2). **Per device:** theme, font, text size and line width (a phone and a laptop often want different sizes). `+`/`-` change the same text-size setting.
 
 **How to check it**
 1. Switch your computer to dark mode: slowfeed follows. Choose sepia in Settings: it stays sepia regardless of the system.
@@ -385,9 +385,9 @@ OPML is the standard file format feed readers use to move subscription lists bet
 ## 23. Your data: keeping and exporting
 
 **What it does**
-- In V1, every article is kept; nothing is removed.
+- In V1, every article is kept; nothing is removed automatically. Unsubscribing hides the feed but keeps its articles and read history, so subscribing again brings them back.
 - Export of starred articles as a JSON Feed file (a standard, open format other feed tools can read).
-- **No backups in V1** (the owner's decision, 23 October 2026). V1 is for the owner alone. Your safety net is your own OPML file (your feeds and folders) and the starred export (your stars). Which articles you've read isn't saved anywhere else. As a last resort, Render keeps its own daily copies of the disk for about a week, though Render warns they may not bring a database back cleanly.
+- **No backups in V1** (the owner's decision, 23 October 2026). V1 is for the owner alone. Your safety net is your own OPML file (your feeds and folders) and the starred export (your stars). Which articles you've read isn't saved anywhere else. As a last resort, Render keeps its own daily copies of the disk for at least a week, though Render warns they may not bring a database back cleanly.
 
 **Moved to V2:** nightly backups outside Render with a copy before every database structure change; a written, tested guide to moving hosts; and removing unstarred articles a year after slowfeed received them (only after a successful backup, and never letting them come back as new).
 

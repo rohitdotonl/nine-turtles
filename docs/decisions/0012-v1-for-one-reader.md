@@ -29,17 +29,21 @@ nothing deletes without undo or a backup. Without backups, if Render's disk
 is lost, stars and reading history are lost too. Stars can be saved with the
 starred export. Render keeps its own daily disk copies for at least a week,
 but warns they may not restore a database cleanly, so they're a last resort.
-Two safeguards keep the floor's spirit in V1: nothing deletes without undo,
-and any change that could lose data (such as a structure change that drops or
-rewrites data) is raised with the owner first.
+So the owner changed the floor's wording for V1 (a change, not an
+exception, since floors have none): nothing deletes without undo; any change
+that could lose data (such as a structure change that drops or rewrites data)
+is raised with the owner first; and unsubscribing hides a feed instead of
+deleting its articles, because undo only reaches back one action.
 
 Taking WebSub out touches the publisher floor's "fetch politely" line, but
 politeness is still met: each feed is checked on its own rhythm with
 ETag / Last-Modified, `Retry-After` and backoff.
 
 **Rejected for now.** The Milestone 3 plan (nightly copies to Cloudflare R2
-with the `object_store` library), and relying on Render's disk copies as the
-backup.
+with the `object_store` library); relying on Render's disk copies as the
+backup; and the low-cost middle option: slowfeed saving one clean copy of its
+database on its own disk each night, so Render's daily disk copies always hold
+a version that restores cleanly (no library, no account).
 
 **Revisit** when V2 starts, when anyone besides the owner uses slowfeed, or
 if the owner's reading history becomes something they'd mind losing.

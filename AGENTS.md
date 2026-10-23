@@ -94,7 +94,7 @@ none needed it. The second-agent review checks this too.
 
 - **Design floor 1, everyone can read here:** WCAG AA contrast everywhere (AAA for article text), never color alone, fully keyboard-operable with visible focus, screen-reader friendly, respects system settings, 44px touch targets.
 - **Design floor 2, respect the publisher:** show only what the feed contains (never scrape), always credit and link the original, fetch politely, share the publisher's link, play media in the publisher's player.
-- **Engineering floor, never lose the reader's data or put them at risk:** back up before any database change, nothing deletes without undo or a backup, always sanitize feed content, no secrets in code or GitHub. *V1 exception, the owner's decision:* no backups until V2, so V1 deletes nothing without undo, and any change that could lose data is raised with the owner first.
+- **Engineering floor, never lose the reader's data or put them at risk:** always sanitize feed content, no secrets in code or GitHub, nothing deletes without undo. From V2: back up before any database change and before anything deletes. In V1, which has no backups (the owner's change to this floor, `docs/decisions/0012-v1-for-one-reader.md`): any change that could lose data is raised with the owner first, and unsubscribing hides a feed rather than deleting its articles.
 
 Below the floors, ranked principles decide conflicts (higher wins). Design:
 reading first › calm over engagement › clear at a glance › slow app, fast

@@ -103,7 +103,7 @@ The 500-feed user gets everything they need; the 30-feed user never sees the mac
 
 ### Rules about the rules
 
-1. **Exceptions are written down.** When we break a principle, we record where, why, and under what limits. See the Exceptions log below. Floors have no exceptions.
+1. **Exceptions are written down.** When we break a principle, we record where, why, and under what limits. See the Exceptions log below. Floors have no exceptions: they can't be bent case by case. Only the owner can change a floor's wording, deliberately, through a note in `docs/decisions/`.
 2. **New features go through the floors and principles in order** and stop at the first "no":
    1. Does it break a floor (accessibility or publisher)? → no.
    2. Does it hurt reading? → no.
@@ -169,7 +169,7 @@ These are the first applications of the philosophy. The principle behind each is
 - All three accent pairs pass AAA (7 : 1). Re-check if any value changes.
 - **Links in articles** are underlined in the normal text color, **never blue**, so they never compete with the accent.
 - **Muted greys** (read items, counts, source names) are chosen during build and must pass the first floor on all three themes, verified by automatic checks.
-- **Status colors** (errors, warnings on the feed health page) use muted tones that don't drift toward blue, and always come with words.
+- **Status colors** (errors, warnings on the feed health page, V2) use muted tones that don't drift toward blue, and always come with words.
 
 #### Themes
 - Follow the system light/dark setting by default, with a manual override in settings.
