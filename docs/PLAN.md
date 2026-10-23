@@ -28,8 +28,8 @@ same so older documents still point to the right place.
 | 4 | Look and feel foundations | ✅ |
 | 5 | Add a feed and see its items | ✅ |
 | 6 | Reading articles | ✅ |
-| 7 | Read, unread, star and undo | 🔨 |
-| 8 | Polite background fetching and Refresh | ⬜ |
+| 7 | Read, unread, star and undo | ✅ |
+| 8 | Polite background fetching and Refresh | 🔨 |
 | 9 | Folders, feed editing and OPML import/export | ⬜ |
 | 10 | Search | ⬜ |
 | 11 | Feed health page | ⏭ |

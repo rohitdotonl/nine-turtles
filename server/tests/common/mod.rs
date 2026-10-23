@@ -20,16 +20,24 @@ pub fn config() -> Config {
         password: PasswordSetting::Set(slowfeed::password::hash(PASSWORD).unwrap()),
         diagnostics_key: Some(DIAGNOSTICS_KEY.to_owned()),
         local_feeds_allowed: true,
+        test_check_seconds: None,
     }
 }
 
 /// Starts slowfeed on a free port on this computer and returns its address.
 pub async fn start(config: Config) -> String {
-    let app = slowfeed::app(config).await.unwrap();
+    start_with_state(config).await.0
+}
+
+/// Like `start`, and also hands back slowfeed's insides, so a test can run
+/// background checking itself, at a time of its choosing.
+pub async fn start_with_state(config: Config) -> (String, slowfeed::AppState) {
+    let state = slowfeed::state(config).await.unwrap();
+    let app = slowfeed::router(state.clone());
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let address = listener.local_addr().unwrap();
     tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
-    format!("http://{address}")
+    (format!("http://{address}"), state)
 }
 
 fn fresh_data_dir() -> PathBuf {

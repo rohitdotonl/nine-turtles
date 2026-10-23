@@ -64,9 +64,21 @@
     return place.kind === "view" || place.kind === "feed";
   }
 
+  /** Counts changed on this screen since the page loaded; see `loadFeeds`. */
+  let countChanges = 0;
+
   async function loadFeeds() {
     try {
-      feeds = await listFeeds();
+      // If a mark (or an undo) changes a count while the feeds are on their
+      // way, the answer may predate it: ask again, so it isn't overwritten.
+      for (let tries = 0; tries < 3; tries++) {
+        const before = countChanges;
+        const loaded = await listFeeds();
+        if (countChanges === before || tries === 2) {
+          feeds = loaded;
+          break;
+        }
+      }
       feedsProblem = false;
     } catch {
       feedsProblem = true;
@@ -97,6 +109,7 @@
   });
 
   function unreadChanged(feedId: number, change: number) {
+    countChanges++;
     const feed = feeds?.find((each) => each.id === feedId);
     if (feed) feed.unread = Math.max(0, feed.unread + change);
   }
@@ -188,6 +201,9 @@
           break;
         case "undo":
           if (isList(route)) itemList?.undo();
+          break;
+        case "refresh":
+          if (isList(route) && (panes.list || reading)) itemList?.refresh();
           break;
         case "text-size":
           if (selected && panes.article) {
@@ -463,7 +479,7 @@
               <p class="mt-4 mb-6">Nothing to read yet. Add a website you like to begin.</p>
               <AddFeed bind:field={addField} feeds={[]} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} />
             {:else if feeds !== undefined && sort !== undefined}
-              <!-- "Mark all as read", the reserved line for "Marked … · Undo" (and "New items · press r", Milestone 8), then the list. -->
+              <!-- Refresh and "Mark all as read", the reserved lines for "New items · press r" and "Marked … · Undo", then the list. -->
               {#key `${pathFor(route)} ${sort}`}
                 <ItemList
                   bind:this={itemList}
@@ -473,6 +489,7 @@
                   empty={emptyText(route)}
                   onChoose={chose}
                   onUnreadChange={unreadChanged}
+                  onRefresh={loadFeeds}
                 />
               {/key}
             {/if}

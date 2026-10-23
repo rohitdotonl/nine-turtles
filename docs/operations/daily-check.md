@@ -45,6 +45,8 @@ environment blocks it, report that to the owner in the agent's own channel
    | `wrong_passwords_since_start` above 50 | Someone may be guessing the password | "Many wrong passwords" (sign-in slows guessers down; say so calmly) |
    | `database_bytes` above 700 MB | The 1 GB disk is filling up | "The database is getting close to the disk's size" |
    | `uptime_seconds` under one hour with no merge in the last hour | slowfeed restarted by itself | "slowfeed restarted unexpectedly" |
+   | `feeds.feeds_failing_for_days` above 0 | Some feeds haven't worked for three days or more (`feeds_dead` of them for weeks) | "Some feeds keep failing". Give the counts; the page never says which feeds, and that's deliberate. Tell the owner they can find them by looking for feeds with nothing new, and that unsubscribing arrives in a later milestone (the feed health page is V2). Comment again only when the counts change. |
+   | `background_checks_last_round_at` is null, or more than 15 minutes before the time you read the page, with `uptime_seconds` over 15 minutes | Background checking has stopped, so no new articles arrive | "New articles have stopped arriving" |
 
 4. **Report each problem once.** Search open issues with the label
    `daily-check` first. If one already covers it, add a short dated comment
@@ -75,7 +77,3 @@ rohitdotonl/slowfeed. It uses the SLOWFEED_ADDRESS and SLOWFEED_DIAGNOSTICS_KEY
 environment variables (remove any trailing slash from SLOWFEED_ADDRESS before
 adding /status or /diagnostics). Never print, post or commit the diagnostics
 key. If everything is fine, do nothing and say so in one line."
-
-**Coming with feed fetching (Milestone 8):** V1 has no feed health page
-(moved to V2), so the diagnostics page will count failing feeds (never naming
-them) and this check will report "Some feeds keep failing".

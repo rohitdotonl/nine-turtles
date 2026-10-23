@@ -59,6 +59,9 @@ export default defineConfig({
         SLOWFEED_DATA_DIR: `test-data/feeds-${Date.now()}`,
         // Only here: lets this slowfeed read the made-up publisher on this computer.
         SLOWFEED_ALLOW_LOCAL_FEEDS: "yes",
+        // Only here, and only together with the line above: checks every feed
+        // every two seconds, so a test can watch new articles arrive.
+        SLOWFEED_TEST_CHECK_SECONDS: "2",
       },
       url: `${FEEDS_APP}/`,
       reuseExistingServer: false,

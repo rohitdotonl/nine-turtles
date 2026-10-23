@@ -7,7 +7,10 @@ mod common;
 
 use std::time::{Duration, Instant};
 
-use slowfeed::feeds::{FEEDS, List, Order, list_sql, page};
+use slowfeed::{
+    checking::DUE,
+    feeds::{FEEDS, LATEST, List, Order, list_sql, new_sql, page},
+};
 use sqlx::SqlitePool;
 
 const FEEDS_COUNT: i64 = 500;
@@ -176,6 +179,36 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
         timings.push((what, started.elapsed()));
         assert_eq!(rows.len(), 500);
     }
+
+    // "New items · press r": each list asks only about articles that arrived
+    // since it was loaded, by number, never reading the whole year.
+    let since: i64 = sqlx::query_scalar(LATEST).fetch_one(&db).await.unwrap();
+    for list in [List::All, List::Unread, List::Feed(250)] {
+        let sql = new_sql(list).unwrap();
+        let binds = if list == List::Feed(250) {
+            vec![since - 1000, 250]
+        } else {
+            vec![since - 1000]
+        };
+        let plan = plan(&db, sql, &binds).await;
+        assert!(
+            plan.contains("INTEGER PRIMARY KEY (rowid>?)"),
+            "{list:?}: {plan}"
+        );
+        let started = Instant::now();
+        let mut question = sqlx::query_scalar::<_, bool>(sql).bind(since - 1000);
+        if list == List::Feed(250) {
+            question = question.bind(250);
+        }
+        question.fetch_one(&db).await.unwrap();
+        timings.push(("new items", started.elapsed()));
+    }
+    let latest = plan(&db, LATEST, &[]).await;
+    assert!(!latest.contains("SCAN articles"), "{latest}");
+    // Background checking finds the feeds due from its own index.
+    let due = plan(&db, DUE, &[NOW, 20]).await;
+    assert!(due.contains("INDEX feeds_due"), "{due}");
+    assert!(!due.contains("TEMP B-TREE"), "{due}");
 
     for (what, took) in timings {
         assert!(took < FAST_ENOUGH, "{what} took {took:?}");

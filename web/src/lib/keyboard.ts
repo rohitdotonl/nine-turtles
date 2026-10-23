@@ -15,6 +15,7 @@ export type Action =
   | { kind: "mark-unread" }
   | { kind: "mark-all-read" }
   | { kind: "undo" }
+  | { kind: "refresh" }
   | { kind: "text-size"; step: 1 | -1 };
 
 export type KeyPress = {
@@ -73,6 +74,8 @@ export function createKeyReader() {
         return { kind: "mark-all-read" };
       case "u":
         return { kind: "undo" };
+      case "r":
+        return { kind: "refresh" };
       case "+":
       case "=": // the same key as +, without Shift
         return { kind: "text-size", step: 1 };
@@ -118,7 +121,7 @@ export const SHORTCUTS: { keys: string[]; action: string; ready: boolean }[] = [
   { keys: ["m"], action: "Mark current item unread", ready: true },
   { keys: ["Shift+A"], action: "Mark all as read", ready: true },
   { keys: ["u"], action: "Undo", ready: true },
-  { keys: ["r"], action: "Show new items", ready: false },
+  { keys: ["r"], action: "Show new items", ready: true },
   { keys: ["/"], action: "Search", ready: false },
   { keys: ["a"], action: "Add feed", ready: true },
   { keys: ["g then u", "g then s", "g then a"], action: "Go to Unread / Starred / All", ready: true },

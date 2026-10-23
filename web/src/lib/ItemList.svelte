@@ -9,19 +9,27 @@
   selects it and the reading area shows it (SPEC section 7); the next one is
   fetched in advance.
 
-  Above the list: "Mark all as read", which marks only the articles listed
-  here, and the reserved line where "Marked 23 items as read · Undo" appears
-  (and "New items · press r" in Milestone 8), so nothing shifts. Every mark
+  Above the list: Refresh and "Mark all as read", which marks only the
+  articles listed here, then the reserved lines where "New items · press r"
+  and "Marked 23 items as read · Undo" appear, so nothing shifts. Every mark
   shows at once and is saved behind; if saving fails, the line says so and
   the mark is taken back (SPEC section 25). Articles read in the Unread view
-  stay where they are, greyed, until you leave it.
+  stay where they are, greyed, until you leave it or press r.
+
+  The list never changes on its own (SPEC section 13). Every minute it asks
+  the server whether articles have arrived for it; if so, it says "New
+  items" and waits. `r` or Refresh loads it again, instantly, since the
+  server fetched them already.
 -->
 <script lang="ts">
+  import { onMount } from "svelte";
   import {
     listArticles,
     markedAllMessage,
     markRead,
     markStarred,
+    newItemsMessage,
+    newItemsWaiting,
     prefetch,
     when,
     type Article,
@@ -36,6 +44,7 @@
     selected = $bindable(),
     onChoose,
     onUnreadChange,
+    onRefresh,
   }: {
     source: Source;
     order: Order;
@@ -45,7 +54,12 @@
     onChoose: (byKeyboard: boolean) => void;
     /** A feed's unread count went up or down by `change`, for the sidebar. */
     onUnreadChange: (feedId: number, change: number) => void;
+    /** The reader asked for new items; the sidebar's counts load again too. */
+    onRefresh: () => void;
   } = $props();
+
+  /** How often the list asks whether new items are waiting. */
+  const ASK_EVERY_MS = 60_000;
 
   let articles: Article[] = $state([]);
   let next: string | null = $state(null);
@@ -54,6 +68,11 @@
   let problem = $state("");
   let rows: HTMLButtonElement[] = $state([]);
   let markAllButton: HTMLButtonElement | undefined = $state();
+  /** The newest article's number when the list was loaded, and whether anything has arrived since. */
+  let latest = 0;
+  let newWaiting = $state(false);
+  // Touch screens have no r key; they're told to tap Refresh (same test as the keyboard hint).
+  const touch = matchMedia("(hover: none) and (pointer: coarse)").matches;
 
   /** The reserved line above the list, and what Undo would do, if anything. */
   let line = $state("");
@@ -70,6 +89,7 @@
       const page = await listArticles(source, order, after);
       articles = after === null ? page.articles : [...articles, ...page.articles];
       next = page.next;
+      if (after === null) latest = page.latest;
       loaded = true;
     } catch {
       problem = "The articles couldn't be loaded. Try again in a moment.";
@@ -79,6 +99,58 @@
     // place with it, move it to the first article just added.
     if (after !== null && next === null) queueMicrotask(() => rows[firstNew]?.focus());
   }
+
+  /**
+   * `r` and Refresh: loads the list again from the top, with what arrived in
+   * the background, and the sidebar's counts with it. Articles still listed
+   * keep their place in memory, so the selected one and Undo carry on. An
+   * article no longer listed (read, in Unread) isn't selected in the list any
+   * more, so `j` starts again from the top, as the list does.
+   */
+  export async function refresh() {
+    if (busy) return;
+    busy = true;
+    problem = "";
+    const focusWasInList = rows.some((row) => row === document.activeElement);
+    onRefresh();
+    try {
+      const page = await listArticles(source, order, null);
+      const kept = new Map(articles.map((article) => [article.id, article]));
+      articles = page.articles.map((fresh) => {
+        const old = kept.get(fresh.id);
+        if (!old) return fresh;
+        Object.assign(old, fresh);
+        return old;
+      });
+      next = page.next;
+      latest = page.latest;
+      newWaiting = false;
+      loaded = true;
+    } catch {
+      problem = "The articles couldn't be loaded. Try again in a moment.";
+    }
+    busy = false;
+    // If the keyboard was on a row that's gone (read, in Unread), it moves to
+    // the selected row, or the first, rather than being lost.
+    if (focusWasInList && !rows.some((row) => row === document.activeElement)) {
+      queueMicrotask(() => (rows[selectedIndex] ?? rows[0])?.focus());
+    }
+  }
+
+  /** Asks the server, quietly, whether new items are waiting for this list. */
+  async function askForNew() {
+    if (!loaded || newWaiting || busy || document.hidden) return;
+    try {
+      newWaiting = await newItemsWaiting(source, latest);
+    } catch {
+      // Nothing to say: it asks again in a minute.
+    }
+  }
+
+  onMount(() => {
+    const asking = setInterval(askForNew, ASK_EVERY_MS);
+    return () => clearInterval(asking);
+  });
 
   function select(index: number) {
     const article = articles[index];
@@ -259,12 +331,19 @@
   load(null);
 </script>
 
-{#if articles.length > 0}
-  <button type="button" bind:this={markAllButton} onclick={markAllRead} class="mt-2 min-h-11 rounded border border-ink px-4">
-    Mark all as read
-  </button>
-{/if}
-<!-- The reserved line: always this tall, so nothing below moves when it fills. -->
+<div class="mt-2 flex flex-wrap gap-2">
+  <!-- First, so it never moves when "Mark all as read" comes and goes. -->
+  <button type="button" aria-disabled={busy} onclick={refresh} class="min-h-11 rounded border border-ink px-4">Refresh</button>
+  {#if articles.length > 0}
+    <button type="button" bind:this={markAllButton} onclick={markAllRead} class="min-h-11 rounded border border-ink px-4">
+      Mark all as read
+    </button>
+  {/if}
+</div>
+<!-- The reserved lines: always this tall, so nothing below moves when they fill. -->
+<p class="mt-2 flex min-h-6 items-center text-small">
+  <span role="status">{newWaiting ? newItemsMessage(touch) : ""}</span>
+</p>
 <p class="flex min-h-11 flex-wrap items-center gap-x-1 text-small">
   <span role="status">{line}</span>
   {#if undoLast}

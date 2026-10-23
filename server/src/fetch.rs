@@ -10,6 +10,9 @@
 //!   so nobody can use slowfeed to look at things that should be unreachable.
 //!   The check happens after the name is looked up, so a public-looking name
 //!   that leads somewhere private is refused too.
+//! - When checking a feed again, it says what it already has (ETag and
+//!   Last-Modified), so an unchanged feed costs the publisher almost nothing,
+//!   and it listens when a publisher asks it to slow down.
 
 use std::{
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
@@ -55,6 +58,23 @@ pub struct Fetched {
     pub last_modified: Option<String>,
 }
 
+/// What slowfeed already has of a feed, from the publisher's last answer.
+#[derive(Debug, Default)]
+pub struct Known<'a> {
+    pub etag: Option<&'a str>,
+    pub last_modified: Option<&'a str>,
+}
+
+/// A check of a feed slowfeed already has.
+#[derive(Debug)]
+pub enum Answer {
+    Changed(Fetched),
+    /// "Nothing new" (304). `lasting_url` is as in [`Fetched`].
+    Unchanged {
+        lasting_url: Url,
+    },
+}
+
 #[derive(Debug, PartialEq, Eq)]
 pub enum FetchError {
     /// The address points somewhere slowfeed never visits (a private network,
@@ -65,6 +85,9 @@ pub enum FetchError {
     /// The site answered with an error, such as 404 "not found".
     Status(u16),
     TooBig,
+    /// The publisher asked slowfeed to slow down (429, or 503 with a time):
+    /// wait this many seconds, if they said.
+    SlowDown(Option<i64>),
 }
 
 /// Builds the one downloader slowfeed uses. `local_allowed` lets the tests
@@ -92,6 +115,21 @@ pub fn client(local_allowed: bool) -> Result<Client, String> {
 
 /// Downloads one address, following up to five redirects.
 pub async fn get(client: &Client, url: &Url, local_allowed: bool) -> Result<Fetched, FetchError> {
+    match check(client, url, local_allowed, &Known::default()).await? {
+        Answer::Changed(fetched) => Ok(fetched),
+        // Only an answer to "anything new?" can be "nothing new", and `get` never asks.
+        Answer::Unchanged { .. } => Err(FetchError::Unreachable),
+    }
+}
+
+/// Downloads a feed again, telling the publisher what slowfeed already has,
+/// so an unchanged feed can answer "nothing new" in a few bytes.
+pub async fn check(
+    client: &Client,
+    url: &Url,
+    local_allowed: bool,
+    known: &Known<'_>,
+) -> Result<Answer, FetchError> {
     let mut current = url.clone();
     let mut lasting = url.clone();
     let mut moved_for_good = true;
@@ -100,7 +138,14 @@ pub async fn get(client: &Client, url: &Url, local_allowed: bool) -> Result<Fetc
         if !allowed(&current, local_allowed) {
             return Err(FetchError::NotAllowed);
         }
-        let response = client.get(current.clone()).send().await.map_err(|error| {
+        let mut request = client.get(current.clone());
+        if let Some(etag) = known.etag {
+            request = request.header(header::IF_NONE_MATCH, etag);
+        }
+        if let Some(date) = known.last_modified {
+            request = request.header(header::IF_MODIFIED_SINCE, date);
+        }
+        let response = request.send().await.map_err(|error| {
             if is_refused_address(&error) {
                 FetchError::NotAllowed
             } else {
@@ -127,6 +172,21 @@ pub async fn get(client: &Client, url: &Url, local_allowed: bool) -> Result<Fetc
             current = next;
             continue;
         }
+        if status == StatusCode::NOT_MODIFIED {
+            return Ok(Answer::Unchanged {
+                lasting_url: lasting,
+            });
+        }
+        let retry_after = response
+            .headers()
+            .get(header::RETRY_AFTER)
+            .and_then(|value| value.to_str().ok())
+            .and_then(|value| seconds_to_wait(value, crate::now()));
+        if status == StatusCode::TOO_MANY_REQUESTS
+            || (status == StatusCode::SERVICE_UNAVAILABLE && retry_after.is_some())
+        {
+            return Err(FetchError::SlowDown(retry_after));
+        }
         if !status.is_success() {
             return Err(FetchError::Status(status.as_u16()));
         }
@@ -142,16 +202,58 @@ pub async fn get(client: &Client, url: &Url, local_allowed: bool) -> Result<Fetc
         let etag = text(header::ETAG);
         let last_modified = text(header::LAST_MODIFIED);
         let body = read_limited(response).await?;
-        return Ok(Fetched {
+        return Ok(Answer::Changed(Fetched {
             final_url: current,
             lasting_url: lasting,
             content_type,
             body,
             etag,
             last_modified,
-        });
+        }));
     }
     Err(FetchError::Unreachable)
+}
+
+/// A `Retry-After` answer as seconds from `now`: either a number of seconds
+/// or a date (`Wed, 21 Oct 2026 07:28:00 GMT`, the one form the web standard
+/// asks publishers to use). Anything else is ignored.
+pub fn seconds_to_wait(value: &str, now: i64) -> Option<i64> {
+    let value = value.trim();
+    if let Ok(seconds) = value.parse::<i64>() {
+        return (seconds >= 0).then_some(seconds);
+    }
+    http_date(value).map(|at| (at - now).max(0))
+}
+
+/// Seconds since 1970 for a date like `Wed, 21 Oct 2026 07:28:00 GMT`.
+fn http_date(value: &str) -> Option<i64> {
+    const MONTHS: [&str; 12] = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ];
+    let mut parts = value.split_whitespace();
+    let _weekday = parts.next()?;
+    let day: i64 = parts.next()?.parse().ok()?;
+    let month = parts.next()?;
+    let month = i64::try_from(MONTHS.iter().position(|name| *name == month)?).ok()? + 1;
+    let year: i64 = parts.next()?.parse().ok()?;
+    let mut clock = parts.next()?.split(':').map(str::parse::<i64>);
+    let (hour, minute, second) = (
+        clock.next()?.ok()?,
+        clock.next()?.ok()?,
+        clock.next()?.ok()?,
+    );
+    if parts.next()? != "GMT" || !(1..=31).contains(&day) || hour > 23 || minute > 59 || second > 60
+    {
+        return None;
+    }
+    // Days since 1970 for a calendar date (Howard Hinnant's well-known method).
+    let shifted = if month <= 2 { year - 1 } else { year };
+    let era = shifted.div_euclid(400);
+    let year_of_era = shifted - era * 400;
+    let day_of_year = (153 * ((month + 9) % 12) + 2) / 5 + day - 1;
+    let day_of_era = year_of_era * 365 + year_of_era / 4 - year_of_era / 100 + day_of_year;
+    let days = era * 146_097 + day_of_era - 719_468;
+    Some(days * 86_400 + hour * 3_600 + minute * 60 + second)
 }
 
 /// Reads the body bit by bit, stopping as soon as it passes the size limit,
@@ -339,6 +441,28 @@ mod tests {
         let name: Name = "localhost".parse().unwrap();
         let refused = PublicOnly.resolve(name).await.err().unwrap();
         assert!(refused.to_string().contains(REFUSED));
+    }
+
+    #[test]
+    fn a_publishers_slow_down_is_read_as_seconds_or_a_date() {
+        let now = 1_792_567_680; // Wed, 21 Oct 2026 07:28:00 GMT
+        assert_eq!(seconds_to_wait("120", now), Some(120));
+        assert_eq!(seconds_to_wait(" 3600 ", now), Some(3600));
+        assert_eq!(
+            seconds_to_wait("Wed, 21 Oct 2026 09:28:00 GMT", now),
+            Some(7200)
+        );
+        assert_eq!(
+            seconds_to_wait("Thu, 01 Jan 1970 00:00:00 GMT", now),
+            Some(0)
+        );
+        assert_eq!(
+            http_date("Sun, 06 Nov 1994 08:49:37 GMT"),
+            Some(784_111_777)
+        );
+        assert_eq!(seconds_to_wait("-5", now), None);
+        assert_eq!(seconds_to_wait("soon", now), None);
+        assert_eq!(seconds_to_wait("Wed, 21 Oct 2026 07:28:00 PST", now), None);
     }
 
     #[test]

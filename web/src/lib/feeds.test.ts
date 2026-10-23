@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { explain, markedAllMessage, unreadLabel, when, type Problem } from "./feeds";
+import { explain, markedAllMessage, newItemsMessage, unreadLabel, when, type Problem } from "./feeds";
 
 describe("article times", () => {
   const now = new Date(2026, 9, 23, 18, 0);
@@ -40,5 +40,13 @@ describe("mark all as read", () => {
     expect(markedAllMessage(1)).toBe("Marked 1 item as read");
     expect(markedAllMessage(23)).toBe("Marked 23 items as read");
     expect(markedAllMessage(0)).toBe("Everything here is already read.");
+  });
+});
+
+describe("new items", () => {
+  it("are announced in one quiet line, never with a number", () => {
+    expect(newItemsMessage(false)).toBe("New items · press r");
+    expect(newItemsMessage(true)).toBe("New items · tap Refresh");
+    expect(newItemsMessage(false)).not.toMatch(/[0-9!]/);
   });
 });

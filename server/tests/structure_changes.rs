@@ -84,3 +84,95 @@ async fn adding_read_state_and_stars_keeps_every_feed_article_and_sign_in() {
             .is_err()
     );
 }
+
+#[tokio::test]
+async fn adding_background_checks_keeps_every_feed_article_mark_and_star() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database as Milestone 7 left it (structure changes 1 to 3).
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(slowfeed::db::path(&data_dir))
+                .create_if_missing(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(3, &old)
+        .await
+        .unwrap();
+    for feed in 1..=20 {
+        sqlx::query(
+            "INSERT INTO feeds (id, url, url_key, title, etag, last_modified, added_at, fetched_at)
+             VALUES (?, ?, ?, ?, '\"abc\"', 'Wed, 21 Oct 2026 07:28:00 GMT', 1, 2)",
+        )
+        .bind(feed)
+        .bind(format!("https://blog-{feed}.example/feed"))
+        .bind(format!("blog-{feed}.example/feed"))
+        .bind(format!("Blog {feed}"))
+        .execute(&old)
+        .await
+        .unwrap();
+        for number in 0..50 {
+            sqlx::query(
+                "INSERT INTO articles (feed_id, fingerprint, title, content, received_at, sort_at,
+                     read, starred)
+                 VALUES (?, ?, ?, '<p>Words.</p>', 2, ?, ?, ?)",
+            )
+            .bind(feed)
+            .bind(format!("id:{number}"))
+            .bind(format!("Article {number}"))
+            .bind(number)
+            .bind(number % 2)
+            .bind(i64::from(number % 10 == 0))
+            .execute(&old)
+            .await
+            .unwrap();
+        }
+    }
+    sqlx::query("INSERT INTO settings (name, value) VALUES ('sort', 'oldest')")
+        .execute(&old)
+        .await
+        .unwrap();
+    old.close().await;
+
+    let db = slowfeed::db::open(&data_dir).await.unwrap();
+    let count = |sql: &'static str| sqlx::query_scalar::<_, i64>(sql).fetch_one(&db);
+    assert_eq!(count("SELECT COUNT(*) FROM feeds").await.unwrap(), 20);
+    assert_eq!(count("SELECT COUNT(*) FROM articles").await.unwrap(), 1000);
+    assert_eq!(
+        count("SELECT COUNT(*) FROM articles WHERE read = 1")
+            .await
+            .unwrap(),
+        500
+    );
+    assert_eq!(
+        count("SELECT COUNT(*) FROM articles WHERE starred = 1")
+            .await
+            .unwrap(),
+        100
+    );
+    assert_eq!(
+        count("SELECT COUNT(*) FROM settings WHERE value = 'oldest'")
+            .await
+            .unwrap(),
+        1
+    );
+    // What the publishers said last time is kept, so the first background
+    // check can already ask "anything new?".
+    assert_eq!(
+        count("SELECT COUNT(*) FROM feeds WHERE etag = '\"abc\"' AND last_modified IS NOT NULL")
+            .await
+            .unwrap(),
+        20
+    );
+    // Every feed is due for its first check, and none counts as failing.
+    assert_eq!(
+        count("SELECT COUNT(*) FROM feeds WHERE next_check_at = 0 AND failures = 0 AND failing_since IS NULL")
+            .await
+            .unwrap(),
+        20
+    );
+}
