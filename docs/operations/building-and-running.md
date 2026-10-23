@@ -24,14 +24,29 @@ The result is one file: `server/target/release/slowfeed`.
 server/target/release/slowfeed
 ```
 
-It prints `slowfeed is running at http://127.0.0.1:8080`. Open that address
-in a browser.
+It prints `slowfeed: version … is running at http://127.0.0.1:8080`. Open
+that address in a browser. The database is created in a `data` folder where
+you started it.
 
-| Setting | Meaning | Default |
-|---|---|---|
-| `SLOWFEED_LISTEN` | The address and port to listen on. `0.0.0.0:8080` accepts connections from other computers. | `127.0.0.1:8080` (this computer only) |
+To be able to sign in, give it a password first:
 
-The full list of settings will live in `settings.md` from Milestone 2.
+```sh
+server/target/release/slowfeed set-password      # prints a line starting $argon2id$
+SLOWFEED_PASSWORD_HASH='<that line>' server/target/release/slowfeed
+```
+
+(Single quotes matter: the line contains `$` signs.) Every setting is listed
+in [settings.md](settings.md).
+
+## Run the container image
+
+```sh
+docker build --build-arg SLOWFEED_VERSION=local -t slowfeed .
+docker run --rm -p 10000:10000 -v slowfeed-data:/data slowfeed
+```
+
+Then open `http://127.0.0.1:10000`. This is exactly what Render runs
+(docs/decisions/0010-container-image.md).
 
 ## Working on the frontend
 

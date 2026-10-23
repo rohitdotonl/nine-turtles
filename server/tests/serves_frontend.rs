@@ -1,13 +1,11 @@
 //! The program hands the browser the frontend that's packed inside it.
 
+mod common;
+
 use reqwest::StatusCode;
 
-/// Starts slowfeed on a free port on this computer and returns its address.
 async fn start() -> String {
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
-    let address = listener.local_addr().unwrap();
-    tokio::spawn(async move { axum::serve(listener, slowfeed::app()).await.unwrap() });
-    format!("http://{address}")
+    common::start(common::config()).await
 }
 
 #[tokio::test]

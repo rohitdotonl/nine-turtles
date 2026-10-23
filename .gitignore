@@ -8,3 +8,5 @@
 /web/test-results/
 /web/playwright-report/
 /web/screenshots/
+/web/test-data/
+/server/data/

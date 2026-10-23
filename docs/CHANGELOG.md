@@ -4,6 +4,20 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 23 October 2026: Live on Render, with sign-in (Milestone 2)
+
+- slowfeed now has a password. A new browser sees only the password field;
+  each device stays signed in for a year; Sign out ends that device only.
+  After five wrong passwords, slowfeed makes you wait before trying again.
+- You set the password with `slowfeed set-password` in Render's Shell tab.
+  slowfeed only ever stores the scrambled form.
+- Merging a pull request now puts it live by itself: GitHub builds slowfeed
+  into a ready-to-run package and tells Render to run it.
+- A public status page, and a key-protected diagnostics page for the daily
+  health check an agent runs.
+- New guides: setting up Render (`docs/operations/render-setup.md`), every
+  setting (`settings.md`) and the daily check (`daily-check.md`).
+
 ## 22 October 2026: Skeleton and automatic checks (Milestone 1)
 
 - slowfeed exists as a real program: for now, one quiet page with the

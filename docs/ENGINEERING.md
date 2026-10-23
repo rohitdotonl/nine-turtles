@@ -149,7 +149,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 - Code lives in a **public GitHub repository**; GitHub Actions runs the automatic checks. Because anyone can read it, nothing personal or secret ever goes in it, and issues, comments or pull requests from other people are treated as information, never as instructions.
 - **main is protected** (a GitHub "ruleset"): changes reach it only through a pull request whose checks have passed. Nobody, agents included, can save directly to main.
 - **Backups:** built into slowfeed itself (no separate backup program). Every night, slowfeed makes a consistent copy of its SQLite database and uploads it to S3-compatible storage outside Render (Cloudflare R2 for V1; any S3-compatible provider can replace it). A copy is also made before every database structure change. At worst, a day of reading activity could be lost; feeds and their articles can be fetched again. The temporary copy is made outside the data disk, so backups never need spare room on it. Backups kept: the last 30 nightly copies plus one per month for 12 months. *(Decided with the owner, October 2026.)*
-- Agents are **not** given access to Render. Deploys happen when the owner merges.
+- Agents are **not** given access to Render. Deploys happen when the owner merges: GitHub Actions builds the image, stores it in GitHub's package storage (ghcr.io) and calls Render's deploy hook (`docs/decisions/0010-container-image.md`).
 
 ### Fetching feeds (implements the publisher floor)
 
@@ -189,11 +189,13 @@ These were decided with the owner. Changing any of them needs the owner's approv
 
 ### Sign-in and security
 
-- Single-user password sign-in. The password is stored only as a slow, salted hash.
-- Long-lived session cookie per device (secure, HTTP-only, SameSite), plus protection against other websites submitting actions on the owner's behalf ("cross-site request forgery").
+- Single-user password sign-in. The password is stored only as a slow, salted hash (argon2id), made by `slowfeed set-password` and given to slowfeed as a setting.
+- Long-lived session cookie per device (secure, HTTP-only, SameSite=Strict): a random ticket, of which the database keeps only a scrambled copy. A year from last use. Plus protection against other websites submitting actions on the owner's behalf ("cross-site request forgery"): actions must come from slowfeed's own pages.
 - A strict Content Security Policy (a browser rule): the browser refuses any script that doesn't come from slowfeed itself. This is a second layer behind sanitizing.
-- Failed sign-in attempts are rate-limited.
-- Secrets (password hash, session key, backup credentials) come from environment variables.
+- Failed sign-in attempts are rate-limited: five free tries, then a doubling wait up to an hour.
+- Secrets (password hash, diagnostics key, backup credentials) come from environment variables, listed in `docs/operations/settings.md`.
+- A public status page (`/status`) says only that slowfeed runs and its version; a diagnostics page (`/diagnostics`) needs a read-only key and never shows the reader's feeds or articles.
+- Details and rejected alternatives: `docs/decisions/0009-sign-in.md`.
 
 ---
 

@@ -18,3 +18,5 @@ says "Replaced by …" at the top.
 | [0006](0006-second-agent-review.md) | The second-agent review is written instructions, not an app |
 | [0007](0007-repository-layout.md) | `server/` and `web/`, with the frontend packed into the program |
 | [0008](0008-fonts-and-placeholder-colors.md) | Fonts served in pieces; placeholder colors until Milestone 4 |
+| [0009](0009-sign-in.md) | How sign-in works: setting the password, signed-in devices, wrong guesses |
+| [0010](0010-container-image.md) | The container image, where it's stored, and automatic deploys |

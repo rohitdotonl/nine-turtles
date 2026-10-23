@@ -1,13 +1,13 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
-import { SCREENS, THEMES, openScreen } from "./screens";
+import { SCREENS, THEMES, appReady, openScreen } from "./screens";
 
 // The first design floor: every screen, in every theme, passes the automatic
 // WCAG checks (including color contrast) at desktop and phone width.
 for (const screen of SCREENS) {
   for (const theme of THEMES) {
     test(`${screen.name} in ${theme} passes the accessibility checks`, async ({ page }) => {
-      await openScreen(page, screen.path, theme);
+      await openScreen(page, screen, theme);
 
       const results = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"])
@@ -24,6 +24,7 @@ for (const colorScheme of ["light", "dark"] as const) {
   test(`following the device's ${colorScheme} setting passes the accessibility checks`, async ({ page }) => {
     await page.emulateMedia({ colorScheme });
     await page.goto("/");
+    await appReady(page);
     const background = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
     expect(background).toBe(colorScheme === "dark" ? "rgb(28, 27, 25)" : "rgb(248, 246, 241)");
 
@@ -40,6 +41,7 @@ test("the wordmark is set in Literata, served by slowfeed", async ({ page }) => 
     if (request.resourceType() === "font") fontRequests.push(new URL(request.url()).origin);
   });
   await page.goto("/");
+  await appReady(page);
   await page.evaluate(() => document.fonts.ready);
 
   const wordmark = page.getByRole("heading", { level: 1 });

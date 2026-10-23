@@ -16,18 +16,23 @@ The script stops at the first failure and says which step failed.
 | Download size budget | More than 150 KB (compressed) of app code and styles, or more than 400 KB of fonts | `scripts/check-size.mjs` |
 | Rust: formatting | Code not in the standard Rust layout. Fix with `cargo fmt` in `server/` | rustfmt |
 | Rust: lint | Likely mistakes ("clippy"); every warning counts as a failure | clippy |
-| Rust: tests | Broken server behavior, including the Hindi search test | `server/tests/` |
+| Rust: tests | Broken server behavior: sign-in, the wait after wrong passwords, signing out, the browser security rules, the status and diagnostics pages, and the Hindi search test | `server/src/` and `server/tests/` |
 | Build the program | The release program doesn't build | cargo |
-| Accessibility, contrast and screenshots | Any WCAG A/AA problem (including color contrast) on any screen, in any chosen theme and when following the device's light or dark setting, at desktop or phone width; the theme or the wordmark's Literata font not applying, or a font coming from anywhere but slowfeed. Also photographs every screen | `web/tests/` (Playwright with axe) |
+| Accessibility, contrast and screenshots | Any WCAG A/AA problem (including color contrast) on any screen, in any chosen theme and when following the device's light or dark setting, at desktop or phone width; the theme or the wordmark's Literata font not applying, or a font coming from anywhere but slowfeed; sign-in not working with the keyboard alone; the browser's security rules blocking anything. Also photographs every screen | `web/tests/` (Playwright with axe) |
 
 ## Adding a screen
 
 Add it to `SCREENS` in `web/tests/screens.ts`. It's then automatically
 checked for accessibility in all three themes and photographed for the pull
-request.
+request. A screen that needs signing in sets `signedIn: true`; the tests sign
+in through the sign-in page with a made-up password (`web/playwright.config.ts`).
 
 ## Outside the script
 
+- **Container image:** `.github/workflows/image.yml` builds the image on every
+  pull request and checks it starts and answers `/status`. On main it also
+  stores it and deploys it (decision 0010). It needs Docker, so it isn't in
+  `scripts/check.sh`; run `docker build .` to try it yourself.
 - **Screenshots on the pull request:** posted by GitHub Actions after the
   checks (decision 0005).
 - **Weekly security report:** `.github/workflows/security.yml` runs

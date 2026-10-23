@@ -142,8 +142,9 @@ automatically checked before it's allowed into main. In slowfeed, GitHub
 Actions does the CI.
 
 **CD** ("continuous deployment") means that once a change is in main, it's put
-live automatically. In slowfeed, Render does the CD: it watches main, and
-when it changes, Render builds the new version and replaces the running one.
+live automatically. In slowfeed, GitHub Actions does the CD: when main
+changes, it builds the new version, stores it in GitHub's package storage, and
+tells Render (through a private "deploy hook" address) to switch to it.
 
 ### The second-agent review
 
@@ -175,8 +176,8 @@ access to Render, so they can't deploy. Instead:
 5. You try the change on the live app.
 
 So pressing Merge *is* deploying. Nothing reaches the live app without you.
-(Render's automatic deploy from main is something you'll switch on once,
-following the guide in Milestone 2.)
+(You connect GitHub to Render once, following `docs/operations/render-setup.md`.
+It usually takes up to 15 minutes from Merge to live.)
 
 ## 7. How to merge a pull request
 

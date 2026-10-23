@@ -17,7 +17,7 @@ on the live app; anything found then gets a quick follow-up fix.
 |---|---|---|
 | 0 | Planning documents, README, licence (MIT), change history | ✅ |
 | 1 | Skeleton and automatic checks | ✅ |
-| 2 | Live on Render, with sign-in | ⬜ |
+| 2 | Live on Render, with sign-in | 🔨 |
 | 3 | Backups and recovery | ⬜ |
 | 4 | Look and feel foundations | ⬜ |
 | 5 | Add a feed and see its items | ⬜ |
@@ -74,10 +74,9 @@ you know they bite.
 - The daily automatic check: its instructions written in `docs/operations/daily-check.md`
   (so any agent can follow them), then scheduled. You allow the agents' environment
   to reach your slowfeed address and add the diagnostics key to its settings.
-- First step for you: open Render and confirm the **Shell** tab exists for a
-  Starter web service (it decides how you set your password).
 - A step-by-step guide for you to set up Render (the agent has no access to
-  it), including how to set your password (the method is still open).
+  it), including setting your password with `slowfeed set-password` in
+  Render's Shell tab (decided October 2026): `docs/operations/render-setup.md`.
 
 **You can try:** open the address on your computer and phone, sign in, stay
 signed in, sign out. A private window sees only the password field.

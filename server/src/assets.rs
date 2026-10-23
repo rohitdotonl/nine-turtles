@@ -22,7 +22,7 @@ const FOREVER: &str = "public, max-age=31536000, immutable";
 /// each visit, so a new release is picked up the next time slowfeed is opened.
 const CHECK_EACH_TIME: &str = "no-cache";
 
-pub fn routes() -> Router {
+pub fn routes<S: Clone + Send + Sync + 'static>() -> Router<S> {
     Router::new().fallback(serve)
 }
 

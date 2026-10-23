@@ -1,0 +1,76 @@
+# Builds slowfeed's container image (see the Dockerfile).
+# - On each pull request: builds it, to prove the image still builds.
+# - When a pull request is merged into main: builds it, stores it in GitHub's
+#   package storage (ghcr.io) and tells Render to run the new version.
+# Only plain `docker` and `curl` commands, so no outside building blocks.
+# How the owner sets this up once: docs/operations/render-setup.md.
+
+name: Container image
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: image-${{ github.ref }}
+  # Never stop a deploy halfway; a newer merge simply waits its turn.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  image:
+    name: Build (and on main, deploy) the container image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Build the image
+        run: |
+          version="$(date -u +%Y-%m-%d)-${GITHUB_SHA::7}"
+          image="ghcr.io/${GITHUB_REPOSITORY,,}"
+          echo "IMAGE=$image" >> "$GITHUB_ENV"
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          docker build --build-arg SLOWFEED_VERSION="$version" \
+            --tag "$image:$version" --tag "$image:latest" .
+
+      - name: Check the image starts and answers
+        run: |
+          docker run --detach --name slowfeed --publish 10000:10000 "$IMAGE:$VERSION"
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:10000/status; then exit 0; fi
+            sleep 1
+          done
+          docker logs slowfeed
+          exit 1
+
+      - name: Store the image in GitHub's package storage
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "$GH_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          docker push "$IMAGE:$VERSION"
+          docker push "$IMAGE:latest"
+
+      - name: Tell Render to run the new version
+        if: github.event_name == 'push'
+        env:
+          # Set once by the owner in GitHub → Settings → Secrets and variables
+          # → Actions. It's a private address, so it's never written here.
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
+            echo "::notice::RENDER_DEPLOY_HOOK_URL isn't set yet, so Render wasn't told. See docs/operations/render-setup.md."
+            exit 0
+          fi
+          image_url="$(jq --raw-output --null-input --arg image "$IMAGE:$VERSION" '$image | @uri')"
+          curl --fail --silent --show-error --request POST \
+            "$RENDER_DEPLOY_HOOK_URL&imgURL=$image_url" > /dev/null
+          echo "Render is now deploying $IMAGE:$VERSION"

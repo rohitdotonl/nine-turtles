@@ -9,7 +9,7 @@ Each feature has two parts:
 - **How to check it:** steps you can follow yourself in the app.
 
 The owner's answers to the planning questions (`docs/planning/questions.md`)
-are included. The one still open is marked **(still open: sign-in)**.
+are included.
 
 A few words used throughout:
 - **Feed:** the file a website publishes listing its latest writing (RSS, Atom or JSON Feed).
@@ -24,9 +24,11 @@ A few words used throughout:
 **What it does**
 - slowfeed has a public web address, so it asks for a password. There is one password and no username.
 - Each device stays signed in for a long time, so you rarely type it.
-- Repeated wrong passwords are slowed down, so nobody can guess by trying thousands.
-- Sign out is in Settings.
-- The password itself is never stored, only a scrambled version that can't be turned back into it (a "hash"). How you set the password: **(still open: sign-in)**.
+- Each device stays signed in for a year after it was last used. Signing out ends that device only; other devices stay signed in.
+- Repeated wrong passwords are slowed down, so nobody can guess by trying thousands: after five wrong tries in a row, slowfeed asks you to wait a minute, and each further wrong try doubles the wait, up to an hour. The right password resets it.
+- Messages are plain: "That isn't the password." or "Too many wrong tries. Try again in 2 minutes."
+- Sign out is in Settings. (Until the Settings screen arrives in Milestone 4, the signed-in screen shows Status, with the version in use, and Sign out.)
+- The password itself is never stored, only a scrambled version that can't be turned back into it (a "hash"). You set it by typing `slowfeed set-password` in Render's Shell tab and pasting the scrambled line it prints into Render's settings (`docs/operations/render-setup.md`). Until then, nobody can sign in.
 
 **How to check it**
 1. Open the app's address in a private browser window. You see only a password field, nothing about your feeds.

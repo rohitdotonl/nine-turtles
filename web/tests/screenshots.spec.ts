@@ -7,7 +7,7 @@ import { SCREENS, THEMES, openScreen } from "./screens";
 for (const screen of SCREENS) {
   for (const theme of THEMES) {
     test(`photograph ${screen.name} in ${theme}`, async ({ page }, testInfo) => {
-      await openScreen(page, screen.path, theme);
+      await openScreen(page, screen, theme);
       await page.screenshot({
         path: `screenshots/${screen.name}-${theme}-${testInfo.project.name}.png`,
         fullPage: true,
