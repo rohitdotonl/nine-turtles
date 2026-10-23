@@ -2,6 +2,8 @@
 
 *23 October 2026, after Milestone 4. Chosen by the owner.*
 
+*Point 2 partly replaced by 0021: documents-only changes and tiny fixes now get no review.*
+
 **Decision.** Four changes, all to make sessions cheaper without lowering
 the bar:
 

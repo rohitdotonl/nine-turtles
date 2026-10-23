@@ -172,12 +172,13 @@ export async function openReadingRoom(page: Page): Promise<void> {
 export async function signIn(page: Page): Promise<void> {
   await page.getByLabel("Password").fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.getByRole("button", { name: "Sidebar" })).toBeVisible();
+  await expect(page.locator("#sidebar")).toBeAttached();
 }
 
 /** Waits until slowfeed has decided which screen to show. */
 export async function appReady(page: Page): Promise<void> {
-  await expect(page.getByLabel("Password").or(page.getByRole("button", { name: "Sidebar" }))).toBeVisible();
+  // Signed in, the sidebar is there on every width (a phone may show another screen first).
+  await expect(page.getByLabel("Password").or(page.locator("#sidebar"))).toBeAttached();
 }
 
 /** Chooses a theme the way Settings saves it, before the page loads. */

@@ -28,6 +28,9 @@ export default defineConfig({
   use: {
     baseURL: `http://127.0.0.1:${PORT}`,
     launchOptions: { executablePath },
+    // slowfeed's service worker (public/sw.js) is off in tests, so they can
+    // stand in for the server's answers; tests/phone.spec.ts switches it on.
+    serviceWorkers: "block",
   },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } } },

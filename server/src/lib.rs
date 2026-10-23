@@ -31,9 +31,11 @@ use std::sync::{
 };
 
 use axum::Router;
+use axum::http::{HeaderName, HeaderValue};
 use sqlx::SqlitePool;
 use tokio::sync::Mutex;
 use tower_http::compression::CompressionLayer;
+use tower_http::set_header::SetResponseHeaderLayer;
 
 use crate::config::{Config, PasswordSetting};
 
@@ -105,8 +107,18 @@ pub fn router(state: AppState) -> Router {
         .merge(status::routes())
         .merge(assets::routes())
         .with_state(state);
-    security::apply(router).layer(CompressionLayer::new())
+    security::apply(router)
+        // Every answer says which version sent it, so a tab left open across
+        // an update can tell (the reader is asked to reload; SPEC section 18).
+        .layer(SetResponseHeaderLayer::overriding(
+            HeaderName::from_static(VERSION_HEADER),
+            HeaderValue::from_static(VERSION),
+        ))
+        .layer(CompressionLayer::new())
 }
+
+/// The name of the header that carries `VERSION` on every answer.
+pub const VERSION_HEADER: &str = "x-slowfeed-version";
 
 /// Seconds since 1970 (UTC), the way slowfeed stores times.
 pub fn now() -> i64 {

@@ -2,6 +2,7 @@
 // sections 3, 5 to 9, 15, 16 and 18), and the words and times the screens
 // show for them.
 import type { View } from "./router";
+import { api } from "./updates.svelte";
 
 export type Feed = {
   id: number;
@@ -162,7 +163,7 @@ function saved(): Promise<unknown> {
 
 function send(path: string, body: unknown): Promise<void> {
   const sent = writes.then(async () => {
-    const response = await fetch(path, {
+    const response = await api(path, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
@@ -252,7 +253,7 @@ export function prefetch(id: number): void {
 export async function addFeed(address: string): Promise<AddResult> {
   let response: Response;
   try {
-    response = await fetch("/api/feeds", {
+    response = await api("/api/feeds", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ address }),
@@ -290,7 +291,7 @@ async function change(path: string, body: unknown): Promise<{ refusal?: Refusal;
   await saved();
   let response: Response;
   try {
-    response = await fetch(path, {
+    response = await api(path, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
@@ -357,7 +358,7 @@ export type ImportSummary = { added: number; already: number; foldersAdded: numb
 export async function importOpml(file: File): Promise<ImportSummary | string> {
   let response: Response;
   try {
-    response = await fetch("/api/opml", {
+    response = await api("/api/opml", {
       method: "POST",
       headers: { "content-type": "text/x-opml" },
       body: await file.text(),
@@ -435,7 +436,7 @@ export function when(at: number, now: Date = new Date()): string {
 }
 
 async function getJson(path: string): Promise<unknown> {
-  const response = await fetch(path, { cache: "no-store" });
+  const response = await api(path, { cache: "no-store" });
   if (!response.ok) throw new Error(`slowfeed answered ${response.status}`);
   return response.json();
 }

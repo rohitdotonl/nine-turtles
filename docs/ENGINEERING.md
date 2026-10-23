@@ -33,7 +33,7 @@ The owner is a tech-oriented person, not a developer. They direct the work; agen
 2. The agent asks the owner when the documents don't settle something or another rule says to ask. For example: a real choice, a new library, a feature or behavior not yet in `docs/SPEC.md`, a change to `DESIGN.md` or to what a check enforces, anything that could lose data, or anything it's unsure of. It keeps working on the parts the question doesn't touch.
 3. The agent works on a separate **branch** (a copy of the code) and opens a **pull request** on GitHub with a plain-language summary.
 4. Automatic checks run on the pull request.
-5. A second agent, one that didn't write the change, reviews every pull request against `DESIGN.md`, this document and `docs/SPEC.md`, and posts what it found on the pull request. The building agent fixes each finding or explains why not. Small, low-risk changes get a lighter review (decision 0015).
+5. A second agent, one that didn't write the change, reviews each pull request against `DESIGN.md`, this document and `docs/SPEC.md`, and posts what it found on the pull request. The building agent fixes each finding or explains why not. Small, low-risk changes get a lighter review (decision 0015); documents-only changes and tiny fixes outside the full-review areas (the design, spec, rules, library list, checks, screens, data, fetching, sign-in and security) get none (decision 0021).
 6. The change is merged, and only then does it reach the live app. Either the owner presses **Merge**, or an agent merges after giving the owner a short, beginner-friendly brief of what's about to be merged and getting the owner's yes to it (AGENTS.md → "How a change happens", decision 0009).
 
 ---
@@ -142,7 +142,9 @@ These were decided with the owner. Changing any of them needs the owner's approv
 | Per-device reader settings | The browser's storage (`localStorage`) |
 | Installable on phones | Web app manifest and service worker (PWA) |
 
-**New versions on devices:** the service worker downloads a new version quietly in the background and uses it the next time the app is opened or reloaded. It never swaps the app while it's open. In V1, a tab left open across an update that sends a request the new version doesn't understand is told plainly to reload; keeping such a tab working without a reload is V2.
+**New versions on devices:** opening or reloading slowfeed always asks the server for the page first, so it starts the newest version; nothing swaps the app while it's open. The service worker (`web/public/sw.js`) keeps a copy of the page and of the app's code (`/assets/`) so the app opens without a connection; it never keeps API answers. Every answer from the server carries an `x-slowfeed-version` header. When it differs from the version the tab started with, Settings offers "A new version is ready · Reload"; if that newer server also refuses a request it doesn't understand (400, 404, 405, 415 or 422), the list's reserved line says "slowfeed was updated. Reload to continue." Keeping such a tab working without a reload is V2. See decision 0022.
+
+**Phone steps:** on a phone, each move between Feeds, a list and an article is an entry in the browser's history (its state says which screen), so the system back gesture and the labeled back arrow do the same thing (`web/src/lib/steps.ts`).
 
 **Packaging:** the built frontend is embedded into the Rust program, so deploying means one program file. GitHub Actions builds it once into a standard container image (a ready-to-run bundle any host accepts), and Render runs that image, so what was tested is exactly what goes live and Render never has to compile Rust.
 
@@ -223,7 +225,7 @@ Wherever a principle can be checked by a computer, it is. These run on every pul
 
 | Principle | Check |
 |---|---|
-| The computer checks the work | Rust: format, lint and tests. Frontend: type check and tests. Every pull request also gets a second-agent review. |
+| The computer checks the work | Rust: format, lint and tests. Frontend: type check and tests. Every pull request except documents-only changes and tiny fixes also gets a second-agent review. |
 | Owner can see the change | Screenshots of every screen in all three themes, at desktop and phone width, attached to each pull request |
 | Libraries stay safe | A weekly report of known security problems in our libraries. It only reports; nothing is updated automatically. |
 | First floor (accessibility) | Automated accessibility and contrast tests on every screen, in all three themes |

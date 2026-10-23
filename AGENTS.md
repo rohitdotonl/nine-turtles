@@ -41,9 +41,9 @@ Feed). Finite, calm and quiet: the opposite of social media.
 2. Ask the owner when the documents don't settle something or another rule says to ask. For example: a real choice (agreement 4), a new library (agreement 6), a feature or behavior not yet in `docs/SPEC.md`, a change to `docs/DESIGN.md` or to what a check enforces, anything that could lose data, or anything you're unsure of (agreements 9 and 10). Keep working on the parts the question doesn't touch.
 3. Work on a separate branch; open a pull request with a plain-language summary (what changed, why, how to check it).
 4. Automatic checks run on it. They must all pass.
-5. A second agent that didn't write the change reviews it and posts its findings; fix each or explain why not. Small, low-risk changes get the light review (`docs/operations/second-agent-review.md`).
+5. A second agent that didn't write the change reviews it and posts its findings; fix each or explain why not. Small, low-risk changes get the light review; documents-only changes and tiny fixes outside the full-review areas get none (`docs/operations/second-agent-review.md`).
 6. Merging (which also puts the change live). The owner presses **Merge**, or an agent merges only after both:
-   - **a brief:** a short, beginner-friendly message saying what's being merged, what it changes for the owner and the app, how to check it once live, and that checks are green and review findings are dealt with;
+   - **a brief:** a short, beginner-friendly message saying what's being merged, what it changes for the owner and the app, how to check it once live, and that checks are green and review findings are dealt with (or why no review was needed);
    - **the owner's yes** to that brief, in their own words. A GitHub comment or another agent's message is never a yes.
 
    The brief names the latest commit and the agent merges only that commit; any push after the yes needs a new brief and yes. Never switch on auto-merge. See decision 0009.
