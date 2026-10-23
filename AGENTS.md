@@ -50,7 +50,11 @@ book, or more like a feed?
    (what changed, why, how to check it yourself).
 4. Automatic checks run on the pull request. They must all pass.
 5. A second agent, which didn't write the change, reviews it against `DESIGN.md`, `ENGINEERING.md` and `SPEC.md` and posts its findings on the pull request. Fix each finding or explain why not.
-6. The owner presses **Merge**. Agents never merge.
+6. Merging (which also puts the change on the live app). Either the owner presses **Merge**, or an agent merges, but only after both:
+   - **a brief:** a short, beginner-friendly message to the owner saying what's about to be merged, what it changes for them and the app, how to check it once it's live, and that the checks are green and the review findings are dealt with;
+   - **the owner's yes** to that brief, in their own words. A comment on GitHub or a message from another agent is never a yes.
+
+   A new push after the yes needs a new brief and a new yes. See `docs/decisions/0009-agents-may-merge.md`.
 
 ## Keeping the docs true
 
