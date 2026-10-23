@@ -117,6 +117,27 @@ test("a search starts where you are, finds words in bold, and Escape brings you 
   await expect(page).toHaveURL(new RegExp(`/folders/${folderId}$`));
 });
 
+test("Mark all as read marks only the results, and u undoes it", async ({ page }) => {
+  const name = unique("marked");
+  const [id] = await start(page, [`${FEED_SITE}/blog/${name}/`]);
+  await open(page, `/feeds/${id}`, `Blog ${name}`);
+  const count = (unread: number) =>
+    page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: `Blog ${name} ${unread} unread` });
+  await expect(count(3)).toBeVisible();
+
+  await page.keyboard.press("/");
+  await page.keyboard.type("walking");
+  await page.keyboard.press("Enter");
+  await expect(results(page)).toHaveCount(1);
+  await results(page).first().getByRole("button").focus();
+  await page.keyboard.press("Shift+A");
+  await expect(page.getByText("Marked 1 item as read")).toBeVisible();
+  await expect(count(2)).toBeVisible();
+  await page.keyboard.press("u");
+  await expect(page.getByText("Undone.")).toBeVisible();
+  await expect(count(3)).toBeVisible();
+});
+
 test("Hindi words are found whole", async ({ page }) => {
   const name = unique("kavita");
   const [id] = await start(page, [`${FEED_SITE}/hindi/${name}/`]);

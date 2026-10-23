@@ -71,6 +71,25 @@ describe("typed filters", () => {
     expect(takeFilters({ ...all, words: "feed:कविता" }, library, true).query.scope).toEqual({ kind: "feed", id: 3 });
   });
 
+  it("wait for a quoted name's closing quote", () => {
+    let query: Query = all;
+    for (const typed of ['feed:"Garden ', 'feed:"Garden Notes', 'feed:"Garden Notes" ']) {
+      const result = takeFilters({ ...query, words: typed }, library, false);
+      query = result.query;
+      if (typed.endsWith('" ')) {
+        expect(query.scope).toEqual({ kind: "feed", id: 1 });
+        expect(query.words).toBe("");
+      } else {
+        expect(result.problem).toBeUndefined();
+        expect(query.scope).toEqual({ kind: "all" });
+        expect(query.words).toBe(typed);
+        // Nothing half typed is searched as words.
+        expect(searchParams(query)).toEqual({});
+      }
+    }
+    expect(suggestions('feed:"Garden No', library).map((each) => each.label)).toEqual(["feed:Garden Notes"]);
+  });
+
   it("that can't be applied stay as typed, with a plain reason", () => {
     const unclear = takeFilters({ ...all, words: "feed:gard" }, library, true);
     expect(unclear.query.words).toBe("feed:gard");

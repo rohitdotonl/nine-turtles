@@ -107,11 +107,7 @@ function startOf(date: string, later = 0): number {
 export function searchParams(query: Query): Record<string, string> {
   const params: Record<string, string> = {};
   // A filter still being typed (or one that couldn't be applied) isn't searched as words.
-  const words = query.words
-    .split(/\s+/)
-    .filter((word) => !/^(is|feed|folder|after|before):/i.test(word))
-    .join(" ")
-    .trim();
+  const words = withoutFilters(query.words);
   if (words) params.q = words;
   const scope = query.scope;
   if (scope.kind === "feed") params.feed = String(scope.id);
@@ -124,6 +120,14 @@ export function searchParams(query: Query): Record<string, string> {
 }
 
 const KEYS = ["is", "feed", "folder", "after", "before"] as const;
+
+/** A filter as typed: `key:value`, or `key:"a name with spaces"`, its closing quote perhaps not typed yet. */
+const FILTER = /(?:^|\s)(?:is|feed|folder|after|before):(?:"[^"]*"?|\S*)/gi;
+
+/** The words without any filter, whole or half typed. */
+function withoutFilters(words: string): string {
+  return words.replace(FILTER, " ").replace(/\s+/g, " ").trim();
+}
 type Key = (typeof KEYS)[number];
 
 /** The best match for a typed name: the same name, else the only one starting with it, else the only one containing it. */
@@ -177,7 +181,9 @@ export function takeFilters(
   const pattern = /(\S*"[^"]*"\S*|\S+)(\s*)/g;
   for (const [, token = "", space = ""] of query.words.matchAll(pattern)) {
     const filter = token.match(/^(is|feed|folder|after|before):(.+)$/i);
-    if (filter && (space !== "" || finished)) {
+    // A name whose closing quote isn't typed yet isn't finished, whatever follows.
+    const open = (token.match(/"/g) ?? []).length % 2 === 1;
+    if (filter && (finished || (space !== "" && !open))) {
       const result = apply(next, (filter[1] ?? "").toLowerCase() as Key, filter[2] ?? "", library);
       if (typeof result === "string") {
         problem = result;
@@ -196,8 +202,10 @@ export function takeFilters(
 /** One suggestion under the field: a filter's start to type on, or a whole filter. */
 export type Suggestion = { label: string; text: string } | { label: string; query: (query: Query) => Query };
 
-/** The word being typed: whatever follows the last space. */
+/** The word being typed: whatever follows the last space, or a filter whose quoted name is still open. */
 function lastWord(words: string): string {
+  const quoted = words.match(/(?:^|\s)((?:is|feed|folder|after|before):"[^"]*)$/i);
+  if (quoted?.[1]) return quoted[1];
   if (/\s$/.test(words)) return "";
   return words.split(/\s+/).pop() ?? "";
 }
