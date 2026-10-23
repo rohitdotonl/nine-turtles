@@ -28,13 +28,16 @@ itself, so small, low-risk changes get a **light review** instead
 (decision 0015), and the smallest get **no review** (decision 0021).
 
 - **Full review** whenever the change touches any of these: `docs/DESIGN.md`,
-  `docs/SPEC.md`, `docs/ENGINEERING.md`, `AGENTS.md`, this file, the checks
+  `docs/SPEC.md`, `docs/ENGINEERING.md`, `AGENTS.md`, this file, `docs/libraries.md` (the
+  library check reads it), the checks
   (`scripts/`, `.github/`), a screen, stored data, fetching feeds, sign-in or
   security, or more than about 50 lines of code. Also whenever you're unsure.
-- **No review** for changes outside that list that are only other
-  documents (the changelog, the plan's status, the owner guide, concepts,
-  decision notes, operations notes, questions), or a tiny fix of about 10
-  lines of code or fewer. The automatic checks still run and must pass.
+- **No review** for changes that touch nothing in that list and are
+  either only other documents (the changelog, the plan's status, the owner
+  guide, concepts, decision notes, operations notes, questions), or a tiny
+  fix of about 10 lines of code or fewer together with its updates to those
+  other documents. A tiny fix inside any full-review area still gets the
+  full review. The automatic checks still run and must pass.
 - **Light review** for everything else: code changes outside that list
   bigger than a tiny fix. Use the light prompt below.
 

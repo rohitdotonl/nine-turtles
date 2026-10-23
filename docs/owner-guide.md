@@ -163,9 +163,9 @@ explains why not. You see both in the pull request.
 It costs a little more time and usage per change, and it catches the kind of
 mistake the automatic checks can't, such as a feature that works but doesn't
 match the design. Small, low-risk code changes (never the design, the spec, the rules, the
-checks, screens, data, fetching or sign-in) get a lighter, cheaper review
+library list, the checks, screens, data, fetching, sign-in or security) get a lighter, cheaper review
 that reads only `AGENTS.md` and the change. Changes to other documents only,
-and tiny fixes of about 10 lines, get no review at all: the automatic checks
+and tiny fixes of about 10 lines outside those areas, get no review at all: the automatic checks
 still run. The summary says which review a pull request got.
 
 ## 6. "Merging a pull request deploys it"
