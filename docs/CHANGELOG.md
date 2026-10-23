@@ -4,6 +4,11 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 23 October 2026: A steadier toolbar on phones
+
+- On a phone, the toolbar under an article keeps its five icons in one
+  straight line, even when "Open original" needs two lines.
+
 ## 23 October 2026: A tidier shortcut list
 
 - The `?` list of keyboard shortcuts shows each press as its own key, so

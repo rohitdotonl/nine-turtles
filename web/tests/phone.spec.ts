@@ -91,6 +91,20 @@ test.describe("on a phone", () => {
     const box = await toolbar(page).boundingBox();
     const height = page.viewportSize()?.height ?? 0;
     expect(Math.round((box?.y ?? 0) + (box?.height ?? 0))).toBe(height);
+    // The icons sit in one line, even when "Open original" wraps onto two lines, as it does at this width.
+    const openerLines = await toolbar(page)
+      .getByRole("link", { name: "Open original" })
+      .evaluate((link) => {
+        const words = document.createRange();
+        words.selectNodeContents(link.lastChild!);
+        return new Set([...words.getClientRects()].map((line) => Math.round(line.top))).size;
+      });
+    expect(openerLines).toBe(2);
+    const tops = await toolbar(page).locator(":scope > * > svg").evaluateAll((icons) =>
+      icons.filter((icon) => getComputedStyle(icon).visibility !== "hidden").map((icon) => Math.round(icon.getBoundingClientRect().top)),
+    );
+    expect(tops.length).toBeGreaterThanOrEqual(4);
+    expect(new Set(tops).size).toBe(1);
     await expect(toolbar(page).getByRole("link", { name: "Open original" })).toHaveAttribute(
       "href",
       "https://reading-room.example/slow-letter",
