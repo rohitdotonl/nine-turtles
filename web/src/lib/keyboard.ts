@@ -7,6 +7,7 @@ export type Action =
   | { kind: "toggle-sidebar" }
   | { kind: "escape" }
   | { kind: "add-feed" }
+  | { kind: "search" }
   | { kind: "go"; view: View }
   | { kind: "move"; step: 1 | -1 }
   | { kind: "open" }
@@ -90,6 +91,8 @@ export function createKeyReader() {
         return { kind: "toggle-sidebar" };
       case "a":
         return { kind: "add-feed" };
+      case "/":
+        return { kind: "search" };
       default:
         return undefined;
     }
@@ -122,7 +125,7 @@ export const SHORTCUTS: { keys: string[]; action: string; ready: boolean }[] = [
   { keys: ["Shift+A"], action: "Mark all as read", ready: true },
   { keys: ["u"], action: "Undo", ready: true },
   { keys: ["r"], action: "Show new items", ready: true },
-  { keys: ["/"], action: "Search", ready: false },
+  { keys: ["/"], action: "Search", ready: true },
   { keys: ["a"], action: "Add feed", ready: true },
   { keys: ["g then u", "g then s", "g then a"], action: "Go to Unread / Starred / All", ready: true },
   { keys: ["["], action: "Show / hide sidebar", ready: true },

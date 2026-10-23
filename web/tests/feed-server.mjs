@@ -18,6 +18,7 @@
 //                      so they never meet each other's feeds
 //   /grow/NAME         the blog called NAME publishes one more article, so a
 //                      test can watch it arrive in the background
+//   /hindi/NAME/       like /blog/NAME/, for a blog written in Hindi
 
 import { createServer } from "node:http";
 
@@ -99,6 +100,14 @@ const RIVER = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="240" 
 <path d="M0 130 C200 90 360 170 640 120" stroke="#2f4a7a" stroke-width="6" fill="none"/>
 <path d="M0 180 C180 140 380 220 640 170" stroke="#2f4a7a" stroke-width="6" fill="none"/></svg>`;
 
+// A made-up blog in Hindi, to show search finds Hindi words whole.
+const kavita = (title, link) => `<?xml version="1.0"?><rss version="2.0"><channel><title>${title}</title>
+<link>${link}</link><language>hi</language>
+<item><title>पुस्तकालय की एक शाम</title><guid>${link}library</guid><pubDate>${new Date(NEWEST).toUTCString()}</pubDate>
+<description>&lt;p&gt;शहर के पुराने पुस्तकालय में नई किताबें आई हैं।&lt;/p&gt;</description></item>
+<item><title>बारिश</title><guid>${link}rain</guid><pubDate>${new Date(NEWEST - DAY).toUTCString()}</pubDate>
+<description>&lt;p&gt;आज मौसम बहुत सुहावना है।&lt;/p&gt;</description></item></channel></rss>`;
+
 const visits = new Map();
 // How many articles each /blog/NAME/ has published since it began with three.
 const grown = new Map();
@@ -136,6 +145,13 @@ createServer((request, response) => {
   if (grow) {
     grown.set(grow[1], (grown.get(grow[1]) ?? 0) + 1);
     return send("text/plain", "One more article.");
+  }
+
+  const hindi = path.match(/^\/hindi\/([a-z0-9-]+)\/(feed\.xml)?$/);
+  if (hindi) {
+    const name = hindi[1];
+    if (hindi[2]) return xml(kavita(`Kavita ${name}`, `https://${name}.example/`));
+    return html(page(`Kavita ${name}`, [[`Kavita ${name}`, `/hindi/${name}/feed.xml`]]));
   }
 
   const blog = path.match(/^\/blog\/([a-z0-9-]+)\/(feed\.xml|comments\.xml)?$/);

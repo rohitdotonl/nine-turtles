@@ -105,6 +105,29 @@ export const SCREENS: Screen[] = [
       await expect(page.getByRole("heading", { level: 2, name: "Edit feed" })).toBeVisible();
     },
   },
+  {
+    name: "search",
+    path: "/all",
+    signedIn: true,
+    base: FEEDS_APP,
+    open: async (page) => {
+      await follow(page, `${FEED_SITE}/garden/`);
+      await page.reload();
+      await appReady(page);
+      await expect(page.locator("#search-field")).toBeAttached();
+      await page.keyboard.press("/");
+      await expect(page.locator("#search-field")).toBeFocused();
+      await page.keyboard.type("reading is:");
+      await expect(page.locator("#list-heading")).toHaveText("Search results");
+      // A filter suggested as it's typed becomes a chip; the options panel shows it too.
+      await expect(page.getByRole("option", { name: "is:unread" })).toBeVisible();
+      await page.keyboard.type("unread ");
+      await expect(page.getByRole("button", { name: "Remove is:unread" })).toBeVisible();
+      await page.getByRole("button", { name: "Search options" }).click();
+      await expect(page.getByRole("checkbox", { name: "Unread only" })).toBeChecked();
+      await expect(page.getByRole("region", { name: "Search results" }).locator("strong").first()).toBeVisible();
+    },
+  },
   { name: "settings", path: "/settings", signedIn: true },
   {
     name: "shortcuts",

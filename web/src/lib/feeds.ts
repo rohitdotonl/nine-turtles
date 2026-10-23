@@ -47,8 +47,11 @@ export type FullArticle = Article & {
  */
 export type Page = { articles: Article[]; next: string | null; latest: number };
 
-/** Which articles a list shows: one of the views, or one feed's or folder's (all of them). */
-export type Source = { view: View } | { feed: number } | { folder: number };
+/**
+ * Which articles a list shows: one of the views, one feed's or folder's (all
+ * of them), or a search's results (`search.ts` → `searchParams`).
+ */
+export type Source = { view: View } | { feed: number } | { folder: number } | { search: Record<string, string> };
 
 /** The reader's sort order, shared across their devices (SPEC section 18). */
 export type Order = "newest" | "oldest";
@@ -107,7 +110,8 @@ function fold(text: string): string {
 
 function sourceQuery(source: Source): URLSearchParams {
   const query = new URLSearchParams();
-  if ("feed" in source) query.set("feed", String(source.feed));
+  if ("search" in source) for (const [name, value] of Object.entries(source.search)) query.set(name, value);
+  else if ("feed" in source) query.set("feed", String(source.feed));
   else if ("folder" in source) query.set("folder", String(source.folder));
   else query.set("view", source.view);
   return query;
@@ -118,7 +122,7 @@ export async function listArticles(source: Source, order: Order, after: string |
   query.set("order", order);
   if (after !== null) query.set("after", after);
   await saved();
-  const body = await getJson(`/api/articles?${query}`);
+  const body = await getJson(`/api/${"search" in source ? "search" : "articles"}?${query}`);
   if (!isRecord(body) || !Array.isArray(body.articles)) throw new Error("slowfeed sent an unexpected answer");
   return {
     articles: body.articles.filter(isRecord).map(toArticle),
@@ -132,6 +136,8 @@ export async function listArticles(source: Source, order: Order, after: string |
  * was loaded (`latest` from its first page). Never how many (SPEC section 13).
  */
 export async function newItemsWaiting(source: Source, latest: number): Promise<boolean> {
+  // Search results are what was asked for, when it was asked; r searches again.
+  if ("search" in source) return false;
   const query = sourceQuery(source);
   query.set("since", String(latest));
   const body = await getJson(`/api/articles/new?${query}`);

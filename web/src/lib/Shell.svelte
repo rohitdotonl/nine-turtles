@@ -1,7 +1,8 @@
 <!--
-  The signed-in app (SPEC sections 2 to 9, 15, 16, 18 and 19): the sidebar
+  The signed-in app (SPEC sections 2 to 9, 14 to 16, 18 and 19): the sidebar
   with its search, the folders and feeds and their unread counts, the item
-  list and the reading area, side by side as the window's width allows, with
+  list with the search field above it (its results take the list's place
+  until Escape), and the reading area, side by side as the window's width allows, with
   adding a feed, editing feeds and folders, Settings and the `?` shortcut
   list. An article shown in the reading area counts as read. Nothing in it
   moves unless the reader moves it.
@@ -15,6 +16,7 @@
   import EditFolder from "./EditFolder.svelte";
   import ItemList from "./ItemList.svelte";
   import Settings from "./Settings.svelte";
+  import SearchBar from "./SearchBar.svelte";
   import SidebarFeeds from "./SidebarFeeds.svelte";
   import {
     createFolder,
@@ -36,6 +38,7 @@
   import { panesFor, widthFor, MEDIUM_REM, WIDE_REM, type SidebarChoice, type Width } from "./layout";
   import { TEXT_SIZES, apply, load, save } from "./preferences";
   import { VIEWS, VIEW_NAMES, nameFor, parse, pathFor, titleFor, type Route } from "./router";
+  import { emptyQuery, isSearching, scopeFor, searchParams, searchedTerms, type Query } from "./search";
 
   let { version, onSignedOut }: { version: string; onSignedOut: () => void } = $props();
 
@@ -63,6 +66,14 @@
   let selected: Article | undefined = $state();
   /** On a phone-narrow window, the opened article takes the list's place. */
   let reading = $state(false);
+  /** What the search field holds: chips and words (SPEC section 14). */
+  let query: Query = $state(emptyQuery(start));
+  /** The search whose results the list shows, or none: the place's own list. */
+  let shown: Query | undefined = $state();
+  let searchBar: SearchBar | undefined = $state();
+  /** Where the keyboard's place was before `/`, to go back to on Escape. */
+  let beforeSearch: Element | null = null;
+  let searchTimer: ReturnType<typeof setTimeout> | undefined;
 
   let panes = $derived(panesFor(width, sidebarChoice, reading));
 
@@ -77,12 +88,16 @@
 
   /** Which articles the list shows here. */
   let source: Source = $derived(
-    route.kind === "feed"
+    shown
+      ? { search: searchParams(shown) }
+      : route.kind === "feed"
       ? { feed: route.id }
       : route.kind === "folder"
         ? { folder: route.id }
         : { view: route.kind === "view" ? route.view : "unread" },
   );
+  /** The list's identity: a new one is loaded when it changes. */
+  let listKey = $derived(`${pathFor(route)} ${sort} ${shown ? JSON.stringify(searchParams(shown)) : ""}`);
 
   let currentFeed = $derived.by(() => {
     const place = route;
@@ -199,6 +214,7 @@
     const back = () => {
       route = parse(location.pathname);
       if (isList(route)) lastPlace = route;
+      resetSearch();
       selected = undefined;
       reading = false;
       if (width === "narrow") sidebarChoice = "hidden";
@@ -223,6 +239,9 @@
           break;
         case "add-feed":
           go({ kind: "add-feed" });
+          break;
+        case "search":
+          startSearch();
           break;
         case "escape":
           escape();
@@ -292,6 +311,7 @@
     reading = false;
     notice = withNotice;
     route = next;
+    resetSearch();
     if (isList(next)) lastPlace = next;
     // A feed or folder added elsewhere (another tab, another device) isn't in the list yet.
     if (next.kind === "feed" && !feeds?.some((feed) => feed.id === next.id)) loadFeeds();
@@ -429,10 +449,49 @@
     return "No articles yet.";
   }
 
+  /** Search starts afresh, limited to where you are. */
+  function resetSearch() {
+    clearTimeout(searchTimer);
+    query = emptyQuery(route);
+    shown = undefined;
+  }
+
+  /** `/`: into the search field, from wherever you are; Escape comes back here. */
+  function startSearch() {
+    if (!isList(route)) go(lastPlace);
+    else beforeSearch = document.activeElement;
+    if (width === "narrow") {
+      sidebarChoice = "hidden";
+      reading = false;
+    }
+    queueMicrotask(() => searchBar?.focus());
+  }
+
+  /** The field changed: search now, or a moment after typing stops. */
+  function searchChanged(next: Query, now: boolean) {
+    query = next;
+    clearTimeout(searchTimer);
+    const run = () => (shown = isSearching(query) ? $state.snapshot(query) : undefined);
+    if (now) run();
+    else searchTimer = setTimeout(run, 300);
+  }
+
+  /** Escape: search closes, the place's own list returns, and the keyboard goes back where it was. */
+  function closeSearch() {
+    resetSearch();
+    const back = beforeSearch;
+    beforeSearch = null;
+    queueMicrotask(() => {
+      if (back instanceof HTMLElement && back.isConnected && back !== document.body) back.focus();
+      else listHeading?.focus();
+    });
+  }
+
   function escape() {
     if (route.kind === "settings" || route.kind === "add-feed") go(lastPlace);
     else if (route.kind === "edit-feed" || route.kind === "edit-folder") edited(false);
     else if (reading || (selected && inArticle())) backToList();
+    else if (shown || isSearching(query) || document.activeElement?.closest("search")) closeSearch();
     else if (width === "narrow" && !panes.sidebar) {
       sidebarChoice = "shown";
       queueMicrotask(() => wordmark?.focus());
@@ -598,15 +657,22 @@
           class={["flex-col bg-list pt-16", panes.article ? "w-80 shrink-0 xl:w-96" : "flex-1", panes.list && "flex"]}
         >
           <div class="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
+            {#if feeds && feeds.length > 0 && !missing}
+              <SearchBar bind:this={searchBar} {query} {feeds} {folders} here={scopeFor(route)} onChange={searchChanged} />
+            {/if}
             <div class="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
               <h2 id="list-heading" tabindex="-1" bind:this={listHeading} class="min-w-0 text-large font-semibold break-words">
                 {missing
                   ? route.kind === "folder" || route.kind === "edit-folder"
                     ? "Folder not found"
                     : "Feed not found"
-                  : nameFor(route, placeName)}
+                  : shown
+                    ? "Search results"
+                    : nameFor(route, placeName)}
               </h2>
-              {#if currentFeed}
+              {#if shown}
+                <!-- Nothing beside the heading while searching. -->
+              {:else if currentFeed}
                 <a
                   href={pathFor({ kind: "edit-feed", id: currentFeed.id })}
                   onclick={(event) => follow(event, { kind: "edit-feed", id: currentFeed!.id })}
@@ -634,14 +700,15 @@
               </p>
             {:else if feeds !== undefined && sort !== undefined}
               <!-- Refresh and "Mark all as read", the reserved lines for "New items · press r" and "Marked … · Undo", then the list. -->
-              {#key `${pathFor(route)} ${sort}`}
+              {#key listKey}
                 <ItemList
                   bind:this={itemList}
                   bind:selected
                   {source}
                   order={sort}
                   {notice}
-                  empty={emptyText(route)}
+                  empty={shown ? "Nothing found." : emptyText(route)}
+                  bold={shown ? searchedTerms(shown.words) : []}
                   onChoose={chose}
                   onUnreadChange={unreadChanged}
                   onRefresh={loadFeeds}
