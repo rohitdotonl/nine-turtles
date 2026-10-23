@@ -40,6 +40,7 @@
     type Order,
     type Source,
   } from "./feeds";
+  import { STRANDED_MESSAGE, updates } from "./updates.svelte";
 
   let {
     source,
@@ -50,6 +51,7 @@
     onChoose,
     onUnreadChange,
     onRefresh,
+    refreshInTopBar = false,
   }: {
     source: Source;
     order: Order;
@@ -63,6 +65,8 @@
     onUnreadChange: (feedId: number, change: number) => void;
     /** The reader asked for new items; the sidebar's counts load again too. */
     onRefresh: () => void;
+    /** On a phone, Refresh sits in the top bar instead (SPEC section 13), so there's only ever one. */
+    refreshInTopBar?: boolean;
   } = $props();
 
   /** How often the list asks whether new items are waiting. */
@@ -191,6 +195,12 @@
     if (index < 0 || index >= articles.length) return false;
     select(index);
     return true;
+  }
+
+  /** Whether `move(step)` has an article to move to; on a phone, the article's Previous and Next say so. */
+  export function canMove(step: 1 | -1): boolean {
+    const index = selectedIndex === -1 ? 0 : selectedIndex + step;
+    return index >= 0 && index < articles.length;
   }
 
   /** Moves the keyboard's place to the selected article, scrolled into view if needed. */
@@ -351,9 +361,11 @@
   load(null);
 </script>
 
-<div class="mt-2 flex flex-wrap gap-2">
+<div class="mt-2 flex min-h-11 flex-wrap gap-2">
   <!-- First, so it never moves when "Mark all as read" comes and goes. -->
-  <button type="button" aria-disabled={busy} onclick={refresh} class="min-h-11 rounded border border-ink px-4">Refresh</button>
+  {#if !refreshInTopBar}
+    <button type="button" aria-disabled={busy} onclick={refresh} class="min-h-11 rounded border border-ink px-4">Refresh</button>
+  {/if}
   {#if articles.length > 0}
     <button type="button" bind:this={markAllButton} onclick={markAllRead} class="min-h-11 rounded border border-ink px-4">
       Mark all as read
@@ -362,7 +374,13 @@
 </div>
 <!-- The reserved lines: always this tall, so nothing below moves when they fill. -->
 <p class="mt-2 flex min-h-6 items-center text-small">
-  <span role="status">{newWaiting ? newItemsMessage(touch) : ""}</span>
+  <span role="status">{updates.stranded ? STRANDED_MESSAGE : newWaiting ? newItemsMessage(touch) : ""}</span>
+  {#if updates.stranded}
+    <!-- The touch target reaches past the line, so the line keeps its height. -->
+    <button type="button" onclick={() => location.reload()} class="-my-3 ml-2 min-w-11 py-3 underline underline-offset-4"
+      >Reload</button
+    >
+  {/if}
 </p>
 <p class="flex min-h-11 flex-wrap items-center gap-x-1 text-small">
   <span role="status">{line}</span>

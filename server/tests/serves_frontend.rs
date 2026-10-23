@@ -55,3 +55,28 @@ async fn missing_files_are_not_found() {
 
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
 }
+
+#[tokio::test]
+async fn every_answer_says_which_version_sent_it() {
+    // A tab left open across an update compares this with its own version.
+    let base = common::start(common::config()).await;
+    for path in ["/", "/status", "/api/session", "/api/feeds"] {
+        let response = reqwest::get(format!("{base}{path}")).await.unwrap();
+        assert_eq!(
+            response.headers()[slowfeed::VERSION_HEADER],
+            slowfeed::VERSION,
+            "{path}"
+        );
+    }
+}
+
+#[tokio::test]
+async fn an_unknown_api_address_is_not_found_not_the_app() {
+    // An older tab asking for something a newer slowfeed dropped is told so,
+    // and is then asked to reload (SPEC section 18).
+    let base = start().await;
+    let response = reqwest::get(format!("{base}/api/no-such-thing"))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+}

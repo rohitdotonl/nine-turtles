@@ -230,7 +230,7 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 **What it does**
 - The list on screen changes only when you ask: press `r` or the Refresh button.
 - When new items are waiting, one quiet line appears at the top of the list: **"New items · press r"** (on touch screens: **"New items · tap Refresh"**). It shows no number. Its space is always reserved, so nothing shifts when it appears. The list asks the server about once a minute, and only about its own articles (none ever arrive in Starred).
-- A labeled **Refresh** button sits at the top of every list, first in its row. On phones it moves into the top bar when that bar arrives (Milestone 13), so there's only ever one.
+- A labeled **Refresh** button sits at the top of every list, first in its row. On phones it sits in the top bar instead, so there's only ever one.
 - Because fetching already happened in the background, pressing `r` is instant. It shows the list from the top again, with the new items, and updates the sidebar's unread numbers. Those numbers also wait for `r`, so nothing in the sidebar changes under you either.
 - Opening or reloading the app always shows the latest state.
 - No pull-to-refresh on phones; there's a labeled Refresh button instead.
@@ -317,7 +317,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 - **Reading:** newest or oldest first. (Inbox or river mode in V2.)
 - **Your data:** OPML import/export, export of starred articles.
 - **Sign out.** (Keeping articles and Feed health come in V2.)
-- **Status:** which version of slowfeed you're using. When a newer version has been downloaded, it says "A new version is ready" with a **Reload** button. Otherwise new versions are used automatically the next time you open or reload the app, never while you're reading. If a tab left open across an update can't carry on, it says so plainly in the reserved line at the top of the list (where "New items" appears): "slowfeed was updated. Reload to continue." (Milestone 13.)
+- **Status:** which version of slowfeed you're using. When a newer version is live (slowfeed notices from the server's answers), it says "A new version is ready" with a **Reload** button. Otherwise new versions are used automatically the next time you open or reload the app, never while you're reading. If a tab left open across an update can't carry on, it says so plainly in the reserved line at the top of the list (where "New items" appears): "slowfeed was updated. Reload to continue.", with a **Reload** button.
 - Fonts are served by slowfeed itself; nothing is loaded from font services. Other scripts such as Hindi use the fonts already on your device.
 - **Shared across your devices:** sort order (and reading mode, in V2). **Per device:** theme, font, text size and line width (a phone and a laptop often want different sizes). `+`/`-` change the same text-size setting.
 
@@ -364,18 +364,24 @@ OPML is the standard file format feed readers use to move subscription lists bet
 
 **What it does**
 - One column you move through: **Feeds → Items → Article**. The feeds list is the home screen; no hamburger menu.
-- Top bar: a back arrow labeled with where it goes (e.g. "‹ Tech") and the screen title. A Refresh button on list screens; search and search-options icons on the feeds and items screens.
-- The system back gesture and back button work.
+- Top bar: a back arrow labeled with where it goes (e.g. "‹ Tech") and the screen title. A Refresh button on list screens; search and search-options icons on the feeds and items screens (with search, Milestone 10).
+  - The feeds screen: the "slowfeed" wordmark, **Refresh** (which updates the unread numbers) and **Settings**. No sidebar toggle and no "Press ? for shortcuts" hint.
+  - A list: "‹ Feeds", **Refresh**, and the list's name with its Edit button. The top bar never scrolls.
+  - An article: "‹ " and the list's name, and **Mark unread**.
+  - Add a feed: "‹ Feeds".
+- The system back gesture and back button go back one step, the same as the back arrow. Opening slowfeed's front page on a phone shows the feeds; an address that names a list opens that list, and its back arrow still leads to the feeds.
 - "Settings" sits at the top of the feeds screen.
 - No custom swipes on list items.
 - Article toolbar at the bottom, within thumb reach: previous · next · star · share · open original.
 - Every tap target is at least 44 pixels.
-- Can be added to the home screen on iPhone and Android; it then opens full-screen with its own icon.
+- Can be added to the home screen on iPhone and Android; it then opens full-screen with its own icon: a lowercase "s" in the reading serif, dark on off-white.
+- Without a connection, the app still opens and says plainly that slowfeed can't be reached. It keeps a copy of the app itself, never of your articles.
 
 **How to check it**
 1. On your phone, open the app: you see your feeds. Tap a folder, a feed, an article; the back arrow says where it goes each time.
 2. Swipe back from the screen edge: you go back one step.
-3. Use "Add to Home Screen". Open it from the icon: no browser bars.
+3. In an article, press Next and Previous at the bottom: they move through the list. On the first article, Previous is greyed and does nothing.
+4. Use "Add to Home Screen". Open it from the icon: no browser bars.
 
 ## 21. Sharing
 
