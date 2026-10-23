@@ -33,7 +33,7 @@ The owner is a tech-oriented person, not a developer. They direct the work; agen
 2. The agent asks the owner when the documents don't settle something or another rule says to ask. For example: a real choice, a new library, a feature or behavior not yet in `docs/SPEC.md`, a change to `DESIGN.md` or to what a check enforces, anything that could lose data, or anything it's unsure of. It keeps working on the parts the question doesn't touch.
 3. The agent works on a separate **branch** (a copy of the code) and opens a **pull request** on GitHub with a plain-language summary.
 4. Automatic checks run on the pull request.
-5. A second agent, one that didn't write the change, reviews every pull request against `DESIGN.md`, this document and `docs/SPEC.md`, and posts what it found on the pull request. The building agent fixes each finding or explains why not.
+5. A second agent, one that didn't write the change, reviews every pull request against `DESIGN.md`, this document and `docs/SPEC.md`, and posts what it found on the pull request. The building agent fixes each finding or explains why not. Small, low-risk changes get a lighter review (decision 0015).
 6. The change is merged, and only then does it reach the live app. Either the owner presses **Merge**, or an agent merges after giving the owner a short, beginner-friendly brief of what's about to be merged and getting the owner's yes to it (AGENTS.md → "How a change happens", decision 0009).
 
 ---

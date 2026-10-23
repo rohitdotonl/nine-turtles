@@ -4,6 +4,14 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 23 October 2026: Spending fewer tokens
+
+- One milestone per thread: once a milestone is merged, the next starts
+  fresh.
+- Small, low-risk changes get a lighter second-agent review.
+- AGENTS.md and DESIGN.md say the same things in fewer words. No rule
+  changed.
+
 ## 23 October 2026: Agents start building straight away
 
 - When you ask for the next milestone, agents now start from the plan and
