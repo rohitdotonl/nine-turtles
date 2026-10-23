@@ -11,9 +11,9 @@ pub const FILE_NAME: &str = "slowfeed.sqlite";
 
 /// Opens (or creates) the database and brings its structure up to date.
 ///
-/// Milestone 2's only structure change creates the empty sessions table, so
-/// there is nothing to back up yet. From Milestone 3, a backup is taken
-/// before every structure change (the engineering floor).
+/// V1 has no backups (the owner's decision, docs/decisions/0012-v1-for-one-reader.md),
+/// so a structure change that could lose data is raised with the owner first.
+/// Backups before every structure change come in V2.
 pub async fn open(data_dir: &Path) -> Result<SqlitePool, String> {
     std::fs::create_dir_all(data_dir).map_err(|error| {
         format!(

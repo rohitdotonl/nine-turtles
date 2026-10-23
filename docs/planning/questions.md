@@ -1,6 +1,6 @@
 # Questions and conflicts for the owner
 
-*Updated 23 October 2026 (sign-in decided). Decisions have been
+*Updated 23 October 2026 (V1 trimmed for one reader). Decisions have been
 written into `DESIGN.md`, `ENGINEERING.md`, `SPEC.md`, `PLAN.md` and
 `libraries.md`; this file keeps a short record, plus what's still open.*
 
@@ -15,8 +15,9 @@ Nothing at the moment.
 | # | Question | Decision |
 |---|---|---|
 | Q1 | Password scrambling | argon2 (argon2id variant). |
+| Q30 | What V1 includes | V1 is for you alone. Moved to V2: backups and moving hosts, river mode, WebSub, the feed health page, the yearly clean-up, the feeds guide page, and keeping an old tab working across an update. Decided 23 October 2026 (`docs/decisions/0012-v1-for-one-reader.md`). |
 | Q6 | How the password is set | `slowfeed set-password` in Render's Shell tab; you paste the scrambled line into Render's settings. Chosen 23 October 2026 (Milestone 2). |
-| Q2 | Backups | Built into slowfeed, nightly, to Cloudflare R2 (S3-compatible). A copy is also made before every database structure change. |
+| Q2 | Backups | **None in V1** (23 October 2026: V1 is for you alone; your OPML file and the starred export are the safety net). Planned for V2: built into slowfeed, nightly, to Cloudflare R2, plus a copy before every database structure change. |
 | Q3 | Supporting libraries for Milestone 1 | Approved. All approved libraries are listed in `docs/libraries.md`. |
 | Q4 | How the library check knows you approved | The approved list in `docs/libraries.md`. The check fails if the code uses anything not on it. |
 | Q5 | How you try milestones | Screenshots and recordings in each pull request, then the live app after merging. |
@@ -24,7 +25,7 @@ Nothing at the moment.
 | Q8 | Settings and Sign out | "Settings" beside the wordmark at the top of the sidebar; Sign out inside Settings. |
 | Q9 | Visible controls | "Mark all as read" button; Undo line in the reserved spot; "Mark unread" in the article top bar. |
 | Q10 | What Undo undoes | The last action only: mark all as read, mark unread, star/unstar, unsubscribe, delete folder. |
-| Q11 | River mode | Sidebar shows Starred · All; `g u` does nothing; no "Mark all as read"; opens on All. |
+| Q11 | River mode (V2) | Sidebar shows Starred · All; `g u` does nothing; no "Mark all as read"; opens on All. |
 | Q12 | Reading in the Unread view | Items stay in place until `r` or leaving the view. |
 | Q13 | List length | 50 items; the button label follows the sort order. |
 | Q14 | "New items" on phones | "New items · tap Refresh". |
@@ -34,12 +35,12 @@ Nothing at the moment.
 | Q18 | Same article in two feeds | Shows in both. |
 | Q19 | Settings across devices | Reading settings shared; appearance per device. |
 | Q20 | Dead feeds | 7 days "not found" or 3 weeks of any failure; still checked daily. |
-| Q21 | Deleting old articles safely | Clean-up only runs after a successful nightly backup. |
+| Q21 | Deleting old articles safely (V2) | Clean-up only runs after a successful nightly backup. |
 | Q22 | Old unread articles | Any unstarred article older than a year is removed, read or not. (DESIGN.md updated.) |
 | Q23 | Starred export | JSON Feed file. |
 | Q24 | Size budget | 150 KB of app code and styles, 400 KB of fonts. |
 | Q25 | Type scale and greys | You choose at Milestone 4 from 2–3 options shown as screenshots. |
-| Q26 | Feeds guide page | Agent drafts it (under 300 words); you approve the wording. |
+| Q26 | Feeds guide page (V2) | Agent drafts it (under 300 words); you approve the wording. |
 
 ### Decided in the plan review (22 October 2026)
 
@@ -51,7 +52,7 @@ Nothing at the moment.
 | Building | GitHub Actions builds a container image; Render runs it. |
 | Unsubscribing | Starred articles are kept. |
 | Security | Content Security Policy and cross-site request protection. Weekly library security report (reports only). |
-| Backups kept | 30 nightly plus 12 monthly. The temporary copy is made outside the data disk. |
+| Backups kept (V2) | 30 nightly plus 12 monthly. The temporary copy is made outside the data disk. |
 | Testing | Realistic large test database for speed; keyboard-only tests per feature; 5-minute owner checklist per screen milestone; screenshots on every pull request. |
 | Second-agent review | Standard on every pull request. |
 | Times | Shown in the device's time zone. |

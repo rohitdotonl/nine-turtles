@@ -205,5 +205,6 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Cloudflare R2
 - Object storage
 - Restore and recovery
+- Disk snapshots
 - WebSub (hubs, leases and signatures)
 - Data retention and clean-up

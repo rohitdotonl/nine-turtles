@@ -12,7 +12,9 @@ the owner's yes to its brief (decision 0009).
 
 Two environment variables in the agent's environment (never in the
 repository): `SLOWFEED_ADDRESS` (for example `https://slowfeed-xxxx.onrender.com`)
-and `SLOWFEED_DIAGNOSTICS_KEY`. Network access to that address. Read access
+and `SLOWFEED_DIAGNOSTICS_KEY`. If the address ends with `/`, drop it first
+(`A="${SLOWFEED_ADDRESS%/}"` and use `$A` below): `//status` reaches the app's
+front page instead of the status page. Network access to that address. Read access
 to this repository, and permission to open issues and pull requests in it.
 
 If a variable is missing or the address can't be reached because the
@@ -22,13 +24,14 @@ environment blocks it, report that to the owner in the agent's own channel
 ## Steps
 
 1. **Is it running?**
-   `curl -sS --max-time 60 "$SLOWFEED_ADDRESS/status"`
-   Expect `slowfeed is running` and a `version` line. Render's Starter plan
+   `curl -sS --max-time 60 "$A/status"`
+   Expect `slowfeed is running` and a `version` line (a web page instead means the
+   address has a trailing `/`; see above). Render's Starter plan
    doesn't sleep, so a slow or failed answer is a real problem. Try once more
    after two minutes before reporting.
 
 2. **Read the diagnostics.**
-   `curl -sS --max-time 60 -H "Authorization: Bearer $SLOWFEED_DIAGNOSTICS_KEY" "$SLOWFEED_ADDRESS/diagnostics"`
+   `curl -sS --max-time 60 -H "Authorization: Bearer $SLOWFEED_DIAGNOSTICS_KEY" "$A/diagnostics"`
    Never put the key in the address, an issue, a log or a pull request.
 
 3. **Look for these problems:**
@@ -67,5 +70,12 @@ environment blocks it, report that to the owner in the agent's own channel
 Any scheduler that can start an agent once a day with this file as its
 instructions works (AGENTS.md: no lock-in). Current setup: a scheduled Claude
 Code routine, created once the owner has finished step 5 of
-[render-setup.md](render-setup.md), running once a day in the owner's morning. Its whole prompt is: "Follow docs/operations/daily-check.md in
-rohitdotonl/slowfeed."
+[render-setup.md](render-setup.md), running once a day in the owner's morning. It runs at 08:39 India time, each run in a fresh session (set up 23 October 2026). Its whole prompt is: "Follow docs/operations/daily-check.md in
+rohitdotonl/slowfeed. It uses the SLOWFEED_ADDRESS and SLOWFEED_DIAGNOSTICS_KEY
+environment variables (remove any trailing slash from SLOWFEED_ADDRESS before
+adding /status or /diagnostics). Never print, post or commit the diagnostics
+key. If everything is fine, do nothing and say so in one line."
+
+**Coming with feed fetching (Milestone 8):** V1 has no feed health page
+(moved to V2), so the diagnostics page will count failing feeds (never naming
+them) and this check will report "Some feeds keep failing".

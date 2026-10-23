@@ -13,4 +13,4 @@ plain steps, no assumed knowledge of a particular tool.
 | [render-setup.md](render-setup.md) | The owner's one-time guide to putting slowfeed on Render and setting the password |
 | [daily-check.md](daily-check.md) | The daily health check an agent runs on the live app |
 
-Coming in Milestone 3: `backups.md` and `moving-hosts.md`.
+Coming in V2, with backups: `backups.md` and `moving-hosts.md` (V1 has no backups; see `docs/decisions/0012-v1-for-one-reader.md`).
