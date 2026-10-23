@@ -4,11 +4,11 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
-
 ## 23 October 2026: A steadier keyboard test for Import OPML
 
 - A browser test that sometimes failed at random (the keyboard walk ending
   at Import OPML) now waits properly. Nothing in the app changed.
+
 ## 23 October 2026: Fewer reviews for small changes
 
 - Changes to documents only, and tiny fixes, no longer wait for a second
