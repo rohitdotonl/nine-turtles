@@ -1,5 +1,6 @@
-//! Adding a feed and listing its articles (SPEC sections 3 and 6), tested
-//! against a real running slowfeed and a made-up publisher's website.
+//! Adding a feed, listing its articles and reading one (SPEC sections 3, 6
+//! and 7), tested against a real running slowfeed and a made-up publisher's
+//! website.
 
 mod common;
 
@@ -29,6 +30,7 @@ async fn publisher() -> (String, Arc<Mutex<Vec<String>>>) {
         )
         .route("/feed.xml", get(|| async { xml(rss("Quiet Notes", 3)) }))
         .route("/long.xml", get(|| async { xml(rss("Long Feed", 120)) }))
+        .route("/full.xml", get(|| async { xml(FULL.to_owned()) }))
         .route(
             "/two/",
             get(|| async {
@@ -117,6 +119,20 @@ fn date(number: u32) -> String {
     }
     unreachable!("dates past May aren't needed")
 }
+
+/// A feed in Hindi with one full article (with a tracking image) and one
+/// that gives only a summary.
+const FULL: &str = r#"<?xml version="1.0"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel>
+<title>Full Notes</title><link>https://full.example/</link><language>hi</language>
+<item><title>Whole</title><link>https://full.example/whole</link><guid>whole</guid>
+<pubDate>02 Jan 2026 12:00:00 GMT</pubDate><author>a@full.example (Asha)</author>
+<description>Short version.</description>
+<content:encoded><![CDATA[<h2>Heading</h2><p>Words <a href="/more">more</a><img src="https://pixel.example/o.gif" width="1" height="1"></p><img src="/photo.jpg" alt="Photo"><script>alert(1)</script>]]></content:encoded>
+</item>
+<item><title>Teaser</title><link>https://full.example/teaser</link><guid>teaser</guid>
+<pubDate>01 Jan 2026 12:00:00 GMT</pubDate><description>Only the start&lt;b&gt;.&lt;/b&gt;</description></item>
+</channel></rss>"#;
 
 async fn atom() -> impl IntoResponse {
     (
@@ -345,6 +361,50 @@ async fn the_list_shows_fifty_at_a_time_and_has_an_end() {
 }
 
 #[tokio::test]
+async fn an_article_opens_with_its_cleaned_content_language_and_credit() {
+    let (site, _) = publisher().await;
+    let reader = Reader::new().await;
+    reader.add(&format!("{site}/full.xml")).await;
+    let list = reader.get("/api/articles").await;
+    let id = |index: usize| list["articles"][index]["id"].as_i64().unwrap();
+
+    let whole = &reader.get(&format!("/api/articles/{}", id(0))).await["article"];
+    assert_eq!(whole["title"], "Whole");
+    assert_eq!(whole["feed_title"], "Full Notes");
+    assert_eq!(whole["site_url"], "https://full.example/");
+    assert_eq!(whole["link"], "https://full.example/whole");
+    assert_eq!(whole["language"], "hi");
+    assert_eq!(whole["author"], "Asha");
+    let content = whole["content"].as_str().unwrap();
+    assert!(content.contains("<h2>Heading</h2>"), "{content}");
+    assert!(
+        content.contains(r#"src="https://full.example/photo.jpg""#),
+        "{content}"
+    );
+    assert!(
+        content.contains(r#"href="https://full.example/more""#),
+        "{content}"
+    );
+    for gone in ["pixel.example", "script", "alert"] {
+        assert!(!content.contains(gone), "{gone}: {content}");
+    }
+
+    // A summary-only article has no content, only its summary.
+    let teaser = &reader.get(&format!("/api/articles/{}", id(1))).await["article"];
+    assert_eq!(teaser["content"], Value::Null);
+    assert_eq!(teaser["summary"], "Only the start<b>.</b>");
+
+    // An article that doesn't exist is simply not found.
+    let response = Client::new()
+        .get(format!("{}/api/articles/999999", reader.base))
+        .header("cookie", &reader.cookie)
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+}
+
+#[tokio::test]
 async fn private_addresses_are_refused_on_the_live_app() {
     let (site, visitors) = publisher().await;
     let mut config = common::config();
@@ -370,7 +430,7 @@ async fn private_addresses_are_refused_on_the_live_app() {
 #[tokio::test]
 async fn without_signing_in_feeds_stay_private() {
     let base = common::start(common::config()).await;
-    for path in ["/api/feeds", "/api/articles"] {
+    for path in ["/api/feeds", "/api/articles", "/api/articles/1"] {
         let response = reqwest::get(format!("{base}{path}")).await.unwrap();
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED, "{path}");
     }

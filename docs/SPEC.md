@@ -130,9 +130,13 @@ A few words used throughout:
 - Links inside articles are underlined in the normal text color, never blue.
 - If the feed only has a summary, slowfeed shows the summary. It never fetches the rest from the website. **"Open original"** takes you there.
 - "Open original" is always present, always in the same place. **Share** sits next to it (section 21).
-- A labeled **Mark unread** button sits in the article's top bar.
-- The source is always credited and linked.
-- Images load from the publisher's site. Invisible 1×1 "tracking pixels" are removed.
+- A labeled **Mark unread** button sits in the article's top bar (it arrives with read state, Milestone 7).
+- The source is always credited and linked: the feed's name (linking to the publisher's website), the author if the feed names one, and the time.
+- Choosing an article in the list (a click, `j` / `k`, or the arrow keys while in the list) shows it in the reading area. `Enter` or `o` opens it to read: the keyboard's place moves into the article, and `j` / `k` then move from article to article; Escape goes back to the list. On a phone-narrow window the article takes the list's place, with a back button named after the list. `j` never loads older items on its own: at the end of the list it stops.
+- `v` opens the original in a new tab. `+` / `-` change the text size (the same setting as in Settings).
+- Links inside articles open in a new tab (links to a place inside the article, like footnotes, stay in it).
+- Footnote links move to the note inside the article (and back), without leaving slowfeed.
+- Images load from the publisher's site. Invisible 1×1 "tracking pixels" are removed (any image sized 0 or 1 pixel), so they're never loaded.
 - Anything unsafe in the feed's content (scripts, embedded frames, code hidden in styles) is removed before display.
 - The next article is loaded in advance so moving to it with `j` is instant.
 
@@ -141,6 +145,7 @@ A few words used throughout:
 2. Open one from a summary-only feed: you see the summary and "Open original", which opens the publisher's page in a new tab.
 3. Check that links in the text are underlined and not blue.
 4. Press `j` repeatedly: each article appears with no visible wait.
+5. Press `Enter`, read, press Escape: you're back on the same row in the list. Press `+` and `-`: the text grows and shrinks.
 
 ## 8. Read state, marking unread, "mark all as read", undo
 

@@ -7,7 +7,11 @@ export type Action =
   | { kind: "toggle-sidebar" }
   | { kind: "escape" }
   | { kind: "add-feed" }
-  | { kind: "go"; view: View };
+  | { kind: "go"; view: View }
+  | { kind: "move"; step: 1 | -1 }
+  | { kind: "open" }
+  | { kind: "open-original" }
+  | { kind: "text-size"; step: 1 | -1 };
 
 export type KeyPress = {
   key: string;
@@ -46,6 +50,22 @@ export function createKeyReader() {
     pendingGoSince = undefined;
 
     switch (press.key) {
+      case "j":
+        return { kind: "move", step: 1 };
+      case "k":
+        return { kind: "move", step: -1 };
+      case "Enter":
+        // On a button or a link, Enter does what that button or link does.
+        return isControl(press.target) ? undefined : { kind: "open" };
+      case "o":
+        return { kind: "open" };
+      case "v":
+        return { kind: "open-original" };
+      case "+":
+      case "=": // the same key as +, without Shift
+        return { kind: "text-size", step: 1 };
+      case "-":
+        return { kind: "text-size", step: -1 };
       case "g":
         pendingGoSince = now;
         return undefined;
@@ -61,6 +81,11 @@ export function createKeyReader() {
   };
 }
 
+function isControl(target: EventTarget | null): boolean {
+  if (typeof HTMLElement === "undefined" || !(target instanceof HTMLElement)) return false;
+  return target.closest("a[href], button, input, select, textarea, summary, [contenteditable]") !== null;
+}
+
 function isTyping(target: EventTarget | null): boolean {
   if (typeof HTMLElement === "undefined" || !(target instanceof HTMLElement)) return false;
   if (target.isContentEditable) return true;
@@ -73,10 +98,10 @@ function isTyping(target: EventTarget | null): boolean {
 
 /** Every shortcut in DESIGN.md, for the `?` cheat sheet. `ready` marks what works today. */
 export const SHORTCUTS: { keys: string[]; action: string; ready: boolean }[] = [
-  { keys: ["j", "k"], action: "Next / previous item", ready: false },
+  { keys: ["j", "k"], action: "Next / previous item", ready: true },
   { keys: ["Shift+J", "Shift+K"], action: "Next / previous feed", ready: false },
-  { keys: ["Enter", "o"], action: "Open item", ready: false },
-  { keys: ["v"], action: "Open original", ready: false },
+  { keys: ["Enter", "o"], action: "Open item", ready: true },
+  { keys: ["v"], action: "Open original", ready: true },
   { keys: ["s"], action: "Star / unstar", ready: false },
   { keys: ["m"], action: "Mark current item unread", ready: false },
   { keys: ["Shift+A"], action: "Mark all as read", ready: false },
@@ -86,7 +111,7 @@ export const SHORTCUTS: { keys: string[]; action: string; ready: boolean }[] = [
   { keys: ["a"], action: "Add feed", ready: true },
   { keys: ["g then u", "g then s", "g then a"], action: "Go to Unread / Starred / All", ready: true },
   { keys: ["["], action: "Show / hide sidebar", ready: true },
-  { keys: ["+", "-"], action: "Text size while reading", ready: false },
+  { keys: ["+", "-"], action: "Text size while reading", ready: true },
   { keys: ["Esc"], action: "Back / close", ready: true },
   { keys: ["?"], action: "This list of shortcuts", ready: true },
 ];

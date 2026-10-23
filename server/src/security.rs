@@ -13,9 +13,11 @@ use tower_http::set_header::SetResponseHeaderLayer;
 
 /// The browser refuses any script, style, font or connection that doesn't
 /// come from slowfeed itself, and no other site may show slowfeed in a frame.
-/// Images from feeds will need a wider `img-src` at Milestone 6.
+/// Images are the one exception: an article's images load from the
+/// publisher's own site (DESIGN.md → "Article view"), so any web address may
+/// serve an image. An image can't run code.
 pub const CONTENT_SECURITY_POLICY: &str = "default-src 'self'; script-src 'self'; \
-    style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; \
+    style-src 'self'; img-src 'self' data: https: http:; font-src 'self'; connect-src 'self'; \
     object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'";
 
 pub fn apply<S: Clone + Send + Sync + 'static>(router: Router<S>) -> Router<S> {

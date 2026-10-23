@@ -46,6 +46,18 @@ describe("keyboard shortcuts", () => {
     expect(read(press("u"), 20)).toBeUndefined();
   });
 
+  it("moves with j and k, opens with Enter or o, the original with v, and sizes text with + and -", () => {
+    const read = createKeyReader();
+    expect(read(press("j"), 0)).toEqual({ kind: "move", step: 1 });
+    expect(read(press("k"), 0)).toEqual({ kind: "move", step: -1 });
+    expect(read(press("Enter"), 0)).toEqual({ kind: "open" });
+    expect(read(press("o"), 0)).toEqual({ kind: "open" });
+    expect(read(press("v"), 0)).toEqual({ kind: "open-original" });
+    expect(read(press("+"), 0)).toEqual({ kind: "text-size", step: 1 });
+    expect(read(press("="), 0)).toEqual({ kind: "text-size", step: 1 });
+    expect(read(press("-"), 0)).toEqual({ kind: "text-size", step: -1 });
+  });
+
   it("leaves the browser's own shortcuts alone", () => {
     const read = createKeyReader();
     expect(read(press("[", { metaKey: true }), 0)).toBeUndefined();
@@ -55,9 +67,13 @@ describe("keyboard shortcuts", () => {
   it("lists every shortcut in DESIGN.md in the cheat sheet", () => {
     expect(SHORTCUTS).toHaveLength(16);
     expect(SHORTCUTS.filter((shortcut) => shortcut.ready).map((shortcut) => shortcut.keys[0])).toEqual([
+      "j",
+      "Enter",
+      "v",
       "a",
       "g then u",
       "[",
+      "+",
       "Esc",
       "?",
     ]);

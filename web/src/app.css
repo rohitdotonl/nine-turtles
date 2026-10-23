@@ -95,7 +95,7 @@
 
 /*
   The reader controls in Settings (SPEC section 18) set these three on <html>.
-  Article text uses them from Milestone 6; Settings shows a sample now.
+  Article text and Settings' sample use them.
 */
 :root {
   --reading-font: var(--font-serif);
@@ -121,8 +121,14 @@ body {
 
 /* Windows high contrast and similar: let the system draw clear edges. */
 @media (forced-colors: active) {
-  [aria-current="page"] {
+  [aria-current="page"],
+  [aria-current="true"] {
     outline: 2px solid CanvasText;
+  }
+
+  /* The bar marks only the selected article; on the others it would be drawn too. */
+  .item-row:not([aria-current]) {
+    border-left-color: Canvas;
   }
 }
 
@@ -136,4 +142,143 @@ body {
 /* Radio buttons and checkboxes in the text color, never the browser's blue. */
 input {
   accent-color: var(--ink);
+}
+
+/*
+  An article (SPEC section 7): the publisher's text, restyled the same way
+  for every feed, in the reader's font, size and line width. Sizes inside are
+  relative to the reader's text size, so + and - scale everything together.
+  Links are underlined in the text color, never blue. Images never overflow.
+*/
+.article {
+  max-width: var(--reading-measure);
+  font-family: var(--reading-font);
+  font-size: var(--reading-size);
+  line-height: 1.65;
+}
+
+/* The source line keeps the interface's small size, whatever the text size. */
+.article > p:first-child {
+  font-family: var(--font-sans);
+  font-size: var(--text-small);
+}
+
+.article-title {
+  margin-top: 0.5rem;
+  font-size: 1.5em;
+  line-height: 1.25;
+  font-weight: 700;
+  overflow-wrap: break-word;
+}
+
+.article-text {
+  margin-top: 1.5em;
+  overflow-wrap: break-word;
+}
+
+.article-text :where(p, ul, ol, dl, blockquote, pre, table, figure, hr) {
+  margin-block: 1em;
+}
+
+.article-text :where(h1, h2, h3, h4, h5, h6) {
+  margin-top: 1.6em;
+  margin-bottom: 0.5em;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.article-text :where(h1, h2) {
+  font-size: 1.3em;
+}
+
+.article-text h3 {
+  font-size: 1.15em;
+}
+
+.article-text :where(h4, h5, h6) {
+  font-size: 1em;
+}
+
+.article-text a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.article-text :where(ul, ol) {
+  padding-left: 1.5em;
+}
+
+.article-text ul {
+  list-style: disc;
+}
+
+.article-text ol {
+  list-style: decimal;
+}
+
+.article-text li + li {
+  margin-top: 0.25em;
+}
+
+.article-text blockquote {
+  padding-left: 1em;
+  border-left: 3px solid var(--muted);
+  font-style: italic;
+}
+
+.article-text :where(code, kbd, samp, pre) {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+}
+
+.article-text pre {
+  padding: 1em;
+  overflow-x: auto;
+  background-color: var(--list);
+  line-height: 1.5;
+}
+
+.article-text :where(img, video) {
+  max-width: 100%;
+  height: auto;
+}
+
+.article-text figcaption {
+  margin-top: 0.5em;
+  font-size: 0.85em;
+}
+
+.article-text table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.9em;
+}
+
+.article-text :where(th, td) {
+  padding: 0.25em 0.75em;
+  border-bottom: 1px solid var(--muted);
+  text-align: left;
+  vertical-align: top;
+}
+
+.article-text hr {
+  border: 0;
+  border-top: 1px solid var(--muted);
+}
+
+.article-text :where(sup, sub) {
+  font-size: 0.75em;
+  line-height: 0;
+}
+
+.article-text strong,
+.article-text b {
+  font-weight: 700;
+}
+
+.article-text :where(em, i) {
+  font-style: italic;
 }

@@ -3,7 +3,10 @@
 //!
 //! Article content is cleaned here, before it's ever stored, so nothing
 //! unsafe from a feed can reach the screen later (the engineering floor).
-//! Milestone 6 adds the rest of the reading clean-up (tracking images).
+//! Invisible 1×1 tracking images are taken out at the same time (DESIGN.md →
+//! "Article view").
+
+use std::borrow::Cow;
 
 use blake2::{Blake2s256, Digest};
 use reqwest::Url;
@@ -96,8 +99,7 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
                     .authors
                     .first()
                     .and_then(|person| person.name.as_deref())
-                    .map(|name| name.trim().to_owned())
-                    .filter(|name| !name.is_empty()),
+                    .and_then(author_name),
                 content,
                 summary,
                 language: entry.language.or_else(|| feed.language.clone()),
@@ -162,6 +164,23 @@ pub fn normalize(url: &Url) -> String {
     text.trim_end_matches('/').to_owned()
 }
 
+/// The author's name as people write it. RSS often gives
+/// `someone@example.com (Name)`; only the name is kept, never the address.
+fn author_name(text: &str) -> Option<String> {
+    let text = text.trim();
+    // Only the `address (Name)` form: "Jane Doe (Editor)" stays as written.
+    let name = match text.rsplit_once('(') {
+        Some((before, inside))
+            if inside.ends_with(')') && (before.trim().is_empty() || before.contains('@')) =>
+        {
+            inside.trim_end_matches(')')
+        }
+        _ => text,
+    };
+    let name = name.trim();
+    (!name.is_empty() && !name.contains('@')).then(|| name.to_owned())
+}
+
 /// A title or name as plain words: tags removed, `&amp;` and friends turned
 /// back into characters, runs of spaces made single.
 fn plain_text(text: &feed_rs::model::Text) -> String {
@@ -177,15 +196,81 @@ fn plain_text(text: &feed_rs::model::Text) -> String {
 }
 
 /// Content made safe to show: no scripts, styles, frames or event handlers;
-/// links open safely; relative addresses made whole. Plain text is escaped.
+/// no tracking images; links open safely, in a new tab, without telling the
+/// site where the reader came from; relative addresses made whole. Plain
+/// text is escaped. Footnotes keep working inside slowfeed: the article's
+/// own anchors (`id`, `#note-1`) are kept, renamed with `article-` in front
+/// so they can never clash with slowfeed's own page.
 fn clean(body: &str, content_type: &str, base: &Url) -> String {
     if !content_type.contains("html") {
         return ammonia::clean_text(body);
     }
+    // Tracking images go first, so the safety cleaning always has the last word.
+    let body = without_tracking_images(body);
     ammonia::Builder::default()
-        .url_relative(ammonia::UrlRelative::RewriteWithBase(base.clone()))
-        .clean(body)
+        .url_relative(ammonia::UrlRelative::Custom(Box::new(Whole(base.clone()))))
+        .add_generic_attributes(["id"])
+        .id_prefix(Some(ANCHOR_PREFIX))
+        .set_tag_attribute_value("a", "target", "_blank")
+        .clean(&body)
         .to_string()
+}
+
+/// Makes an article's relative addresses whole, using its own address;
+/// `#anchor` links stay inside the article, renamed like the anchors.
+struct Whole(Url);
+
+impl<'a> ammonia::UrlRelativeEvaluate<'a> for Whole {
+    fn evaluate<'url>(&self, url: &'url str) -> Option<Cow<'url, str>> {
+        if let Some(anchor) = url.strip_prefix('#') {
+            return Some(Cow::Owned(format!("#{ANCHOR_PREFIX}{anchor}")));
+        }
+        self.0.join(url).ok().map(|url| Cow::Owned(url.into()))
+    }
+}
+
+/// Put in front of every anchor in an article. The screen scrolls to these
+/// itself rather than opening a new tab (ArticleView.svelte).
+const ANCHOR_PREFIX: &str = "article-";
+
+/// The same HTML without invisible tracking images: images whose width or
+/// height is set to 0 or 1 pixel, and neither bigger. They show nothing and
+/// only tell someone that the article was opened. Anything else is left
+/// exactly as it was.
+pub fn without_tracking_images(html: &str) -> String {
+    if !html.contains("<img") && !html.contains("<IMG") {
+        return html.to_owned();
+    }
+    let mut document = scraper::Html::parse_fragment(html);
+    let images = scraper::Selector::parse("img").expect("a fixed, valid selector");
+    let pixels: Vec<_> = document
+        .select(&images)
+        .filter(|image| {
+            // A size that isn't plain pixels (`100%`, `auto`) counts as bigger.
+            let sizes: Vec<Option<u32>> = ["width", "height"]
+                .iter()
+                .filter_map(|name| image.value().attr(name))
+                .map(pixels)
+                .collect();
+            !sizes.is_empty() && sizes.iter().all(|size| size.is_some_and(|size| size <= 1))
+        })
+        .map(|image| image.id())
+        .collect();
+    if pixels.is_empty() {
+        return html.to_owned();
+    }
+    for id in pixels {
+        if let Some(mut node) = document.tree.get_mut(id) {
+            node.detach();
+        }
+    }
+    document.root_element().inner_html()
+}
+
+/// A size written as `1`, `1px` or ` 1 `, in whole pixels.
+fn pixels(text: &str) -> Option<u32> {
+    let text = text.trim();
+    text.strip_suffix("px").unwrap_or(text).trim().parse().ok()
 }
 
 #[cfg(test)]
@@ -246,6 +331,84 @@ mod tests {
             "{summary}"
         );
         assert!(summary.contains("noopener"), "{summary}");
+        assert!(summary.contains(r#"target="_blank""#), "{summary}");
+    }
+
+    #[test]
+    fn authors_are_names_never_email_addresses() {
+        assert_eq!(
+            author_name("a@b.example (Asha Rao)").as_deref(),
+            Some("Asha Rao")
+        );
+        assert_eq!(author_name("(Asha Rao)").as_deref(), Some("Asha Rao"));
+        assert_eq!(author_name(" Asha Rao ").as_deref(), Some("Asha Rao"));
+        assert_eq!(
+            author_name("Jane Doe (Editor)").as_deref(),
+            Some("Jane Doe (Editor)")
+        );
+        assert_eq!(author_name("a@b.example"), None);
+        assert_eq!(author_name("  "), None);
+    }
+
+    #[test]
+    fn footnotes_keep_working_inside_the_article() {
+        let rss = br##"<?xml version="1.0"?>
+<rss version="2.0"><channel><title>T</title><link>https://example.com/</link>
+<item><title>First</title><link>https://example.com/first</link>
+<description><![CDATA[<p>Words<sup><a href="#fn1" id="ref1">1</a></sup></p><p id="fn1">The note. <a href="#ref1">Back</a></p>]]></description>
+</item></channel></rss>"##;
+        let feed = parse(rss, &url("https://example.com/feed.xml")).unwrap();
+        let summary = feed.articles[0].summary.as_deref().unwrap();
+        for kept in [
+            r##"href="#article-fn1""##,
+            r#"id="article-fn1""#,
+            r##"href="#article-ref1""##,
+            r#"id="article-ref1""#,
+        ] {
+            assert!(summary.contains(kept), "{kept}: {summary}");
+        }
+    }
+
+    #[test]
+    fn tracking_images_are_removed_and_real_images_kept() {
+        let html = r#"<p>Hello</p><img src="https://t.example/open.gif" width="1" height="1">
+<img src="https://t.example/b.gif" WIDTH="0" height="0px" alt=""><img src="https://t.example/c.gif" height="1">
+<figure><img src="https://example.com/photo.jpg" width="800" height="600" alt="A river"></figure>
+<img src="https://example.com/wide-rule.png" width="600" height="1"><img src="https://example.com/plain.png">
+<img src="https://example.com/full-rule.png" width="100%" height="1">"#;
+        let cleaned = without_tracking_images(html);
+        for pixel in ["open.gif", "b.gif", "c.gif"] {
+            assert!(!cleaned.contains(pixel), "{cleaned}");
+        }
+        for kept in [
+            "<p>Hello</p>",
+            "photo.jpg",
+            "A river",
+            "wide-rule.png",
+            "plain.png",
+            "<figure>",
+        ] {
+            assert!(cleaned.contains(kept), "{kept}: {cleaned}");
+        }
+        // Without tracking images, nothing changes at all.
+        let plain = "<p>Just <b>words</b>, and <img src=\"a.png\" width=\"40\"></p>";
+        assert_eq!(without_tracking_images(plain), plain);
+    }
+
+    #[test]
+    fn a_feeds_tracking_image_never_reaches_the_database() {
+        let rss = br#"<?xml version="1.0"?>
+<rss version="2.0"><channel><title>T</title><link>https://example.com/</link>
+<item><title>First</title><link>/first</link>
+<description><![CDATA[<p>Words<img src="https://pixel.example/p.gif?id=7" width="1" height="1" /></p><img src="/photo.jpg" alt="Photo">]]></description>
+</item></channel></rss>"#;
+        let feed = parse(rss, &url("https://example.com/feed.xml")).unwrap();
+        let summary = feed.articles[0].summary.as_deref().unwrap();
+        assert!(!summary.contains("pixel.example"), "{summary}");
+        assert!(
+            summary.contains(r#"src="https://example.com/photo.jpg""#),
+            "{summary}"
+        );
     }
 
     #[test]

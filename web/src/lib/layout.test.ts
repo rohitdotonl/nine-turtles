@@ -21,5 +21,6 @@ describe("layout", () => {
   it("shows one area at a time on a phone-narrow window, starting with the sidebar", () => {
     expect(panesFor("narrow", "auto")).toEqual({ sidebar: true, list: false, article: false });
     expect(panesFor("narrow", "hidden")).toEqual({ sidebar: false, list: true, article: false });
+    expect(panesFor("narrow", "hidden", true)).toEqual({ sidebar: false, list: false, article: true });
   });
 });

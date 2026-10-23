@@ -182,7 +182,7 @@ test("with only the keyboard: Show older items, and the keyboard's place stays i
   await expect(rows).toHaveCount(60);
   // The button is gone (the list has ended); the keyboard's place moved to
   // the first article that just arrived, not to the top of the page.
-  await expect(rows.nth(50)).toBeFocused();
+  await expect(rows.nth(50).getByRole("button")).toBeFocused();
 });
 
 test("an address for a feed you don't follow says so", async ({ page }) => {

@@ -4,6 +4,19 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 23 October 2026: Reading articles (Milestone 6)
+
+- Click an article, or press `j` and `k`, and it appears in the reading
+  area: the publisher's own text, in your reading font and size, with
+  headings, quotes, code, tables and images in place.
+- Invisible tracking images are removed, so they never load.
+- A summary-only feed shows its summary and points you to the original;
+  slowfeed never fetches the rest.
+- "Open original" (or `v`) and "Copy link" always sit above the article.
+  `Enter` opens an article to read, Escape goes back, `+` and `-` change
+  the text size.
+- The next article is loaded in advance, so `j` never makes you wait.
+
 ## 23 October 2026: Add a feed and see its articles (Milestone 5)
 
 - Paste a blog's address (or its feed's) and slowfeed finds its feed and
