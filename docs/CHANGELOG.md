@@ -4,6 +4,20 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 23 October 2026: Add a feed and see its articles (Milestone 5)
+
+- Paste a blog's address (or its feed's) and slowfeed finds its feed and
+  lists its articles, newest first, 50 at a time with "Show older items".
+- "+ Add feed" sits at the bottom of the sidebar; `a` does the same. Your
+  feeds are listed in the sidebar, alphabetically, each with its own page.
+- A site with several feeds lets you choose; a page with none, or a feed
+  you already follow, gets a plain sentence instead of an error.
+- slowfeed only visits public websites, introduces itself, and gives up on
+  slow or huge files. Article text is cleaned of anything unsafe before
+  it's saved (you'll read it from Milestone 6).
+- A speed test now runs on a made-up library of 500 feeds and a year of
+  articles, so the app stays fast as yours grows.
+
 ## 23 October 2026: Look and feel (Milestone 4)
 
 - The placeholder page is gone. After signing in you see the real, empty

@@ -20,6 +20,9 @@ pub struct Config {
     pub password: PasswordSetting,
     /// The read-only key for the diagnostics page. Without it the page is off.
     pub diagnostics_key: Option<String>,
+    /// Lets slowfeed fetch feeds from this computer and private networks.
+    /// Only the browser tests set it, to serve made-up feeds; never on Render.
+    pub local_feeds_allowed: bool,
 }
 
 /// The scrambled password (`SLOWFEED_PASSWORD_HASH`), made by
@@ -72,6 +75,8 @@ impl Config {
                 .into(),
             password: PasswordSetting::from_value(var("SLOWFEED_PASSWORD_HASH")),
             diagnostics_key: var("SLOWFEED_DIAGNOSTICS_KEY").map(|key| key.trim().to_owned()),
+            local_feeds_allowed: var("SLOWFEED_ALLOW_LOCAL_FEEDS")
+                .is_some_and(|value| value.trim() == "yes"),
         })
     }
 }

@@ -1,23 +1,30 @@
 <!--
-  The signed-in app (SPEC sections 4, 5, 18 and 19): the sidebar, the item
-  list and the reading area, side by side as the window's width allows, with
-  Settings and the `?` shortcut list. Nothing in it moves unless the reader
-  moves it.
+  The signed-in app (SPEC sections 2 to 6, 18 and 19): the sidebar with the
+  feeds, the item list and the reading area, side by side as the window's
+  width allows, with adding a feed, Settings and the `?` shortcut list.
+  Nothing in it moves unless the reader moves it.
 -->
 <script lang="ts">
   import { onMount } from "svelte";
+  import AddFeed from "./AddFeed.svelte";
   import CheatSheet from "./CheatSheet.svelte";
+  import ItemList from "./ItemList.svelte";
   import Settings from "./Settings.svelte";
+  import { listFeeds, type Feed } from "./feeds";
   import { createKeyReader } from "./keyboard";
   import { panesFor, widthFor, MEDIUM_REM, WIDE_REM, type SidebarChoice, type Width } from "./layout";
   import { apply, load, save } from "./preferences";
-  import { VIEWS, VIEW_NAMES, parse, pathFor, titleFor, type Route, type View } from "./router";
+  import { VIEWS, VIEW_NAMES, nameFor, parse, pathFor, titleFor, type Route } from "./router";
 
   let { version, onSignedOut }: { version: string; onSignedOut: () => void } = $props();
 
   const start = parse(location.pathname);
   let route: Route = $state(start);
-  let lastView: View = $state(start.kind === "view" ? start.view : "unread");
+  /** Where Escape and "Close settings" go back to: the last list you were on. */
+  let lastPlace: Route = $state(isList(start) ? start : { kind: "view", view: "unread" });
+  /** The feeds you follow, alphabetically; unknown until the server answers. */
+  let feeds: Feed[] | undefined = $state();
+  let feedsProblem = $state(false);
   let preferences = $state(load());
   let width: Width = $state(currentWidth());
   // On a phone-narrow window the sidebar is the home screen, but an address
@@ -30,13 +37,28 @@
   let wordmark: HTMLHeadingElement | undefined = $state();
   let listHeading: HTMLHeadingElement | undefined = $state();
   let settingsHeading: HTMLHeadingElement | undefined = $state();
+  let addField: HTMLInputElement | undefined = $state();
   let sidebar: HTMLElement | undefined = $state();
 
-  const EMPTY: Record<View, string> = {
-    unread: "Nothing to read yet.",
-    starred: "No starred articles yet.",
-    all: "No articles yet.",
-  };
+  let currentFeed = $derived.by(() => {
+    const place = route;
+    return place.kind === "feed" ? feeds?.find((feed) => feed.id === place.id) : undefined;
+  });
+  /** No feeds yet: Unread and All show the add field instead (SPEC section 2). */
+  let firstVisit = $derived(feeds !== undefined && feeds.length === 0);
+
+  function isList(place: Route): boolean {
+    return place.kind === "view" || place.kind === "feed";
+  }
+
+  async function loadFeeds() {
+    try {
+      feeds = await listFeeds();
+      feedsProblem = false;
+    } catch {
+      feedsProblem = true;
+    }
+  }
 
   $effect(() => {
     apply(preferences);
@@ -44,7 +66,7 @@
   });
 
   $effect(() => {
-    document.title = titleFor(route);
+    document.title = titleFor(route, currentFeed?.title);
   });
 
   function currentWidth(): Width {
@@ -66,7 +88,7 @@
         sidebarChoice = "auto";
         // If the sidebar just hid with the keyboard's place in it, don't lose that place.
         queueMicrotask(() => {
-          if (focusWasInside && !panes.sidebar) (route.kind === "settings" ? settingsHeading : listHeading)?.focus();
+          if (focusWasInside && !panes.sidebar) placeFocus(route)?.focus();
         });
       }
     };
@@ -74,7 +96,7 @@
 
     const back = () => {
       route = parse(location.pathname);
-      if (route.kind === "view") lastView = route.view;
+      if (isList(route)) lastPlace = route;
       if (width === "narrow") sidebarChoice = "hidden";
     };
     addEventListener("popstate", back);
@@ -95,6 +117,9 @@
         case "go":
           go({ kind: "view", view: action.view });
           break;
+        case "add-feed":
+          go({ kind: "add-feed" });
+          break;
         case "escape":
           escape();
           break;
@@ -104,7 +129,8 @@
 
     // After signing in, the password field is gone. Move the keyboard's place
     // (and a screen reader) to the top of the new screen.
-    (panes.sidebar ? wordmark : route.kind === "settings" ? settingsHeading : listHeading)?.focus();
+    (panes.sidebar ? wordmark : placeFocus(route))?.focus();
+    loadFeeds();
 
     return () => {
       queries.forEach((query) => query.removeEventListener("change", resized));
@@ -113,15 +139,27 @@
     };
   });
 
+  /** Where the keyboard's place goes on arriving somewhere: its heading, or the add field. */
+  function placeFocus(place: Route): HTMLElement | undefined {
+    if (place.kind === "settings") return settingsHeading;
+    if (place.kind === "add-feed") return addField;
+    return listHeading;
+  }
+
   /** Goes to a place, and moves the keyboard's place to its heading. */
   function go(next: Route) {
     if (pathFor(next) !== location.pathname) history.pushState(null, "", pathFor(next));
     route = next;
-    if (next.kind === "view") lastView = next.view;
+    if (isList(next)) lastPlace = next;
     // On a phone-narrow window the sidebar is the home screen; choosing a
     // place shows it instead.
     if (width === "narrow") sidebarChoice = "hidden";
-    queueMicrotask(() => (next.kind === "settings" ? settingsHeading : listHeading)?.focus());
+    queueMicrotask(() => placeFocus(next)?.focus());
+  }
+
+  async function added(feed: Feed) {
+    await loadFeeds();
+    go({ kind: "feed", id: feed.id });
   }
 
   function follow(event: MouseEvent, next: Route) {
@@ -136,12 +174,12 @@
     const focusWasInside = sidebar?.contains(document.activeElement) ?? false;
     sidebarChoice = hiding ? "hidden" : "shown";
     if (hiding && focusWasInside) {
-      queueMicrotask(() => (route.kind === "settings" ? settingsHeading : listHeading)?.focus());
+      queueMicrotask(() => placeFocus(route)?.focus());
     }
   }
 
   function escape() {
-    if (route.kind === "settings") go({ kind: "view", view: lastView });
+    if (route.kind === "settings" || route.kind === "add-feed") go(lastPlace);
     else if (width === "narrow" && !panes.sidebar) {
       sidebarChoice = "shown";
       queueMicrotask(() => wordmark?.focus());
@@ -217,7 +255,39 @@
           </li>
         {/each}
       </ul>
+      {#if feeds && feeds.length > 0}
+        <h2 class="sr-only">Feeds</h2>
+        <ul class="mt-4">
+          {#each feeds as feed (feed.id)}
+            {@const current = route.kind === "feed" && route.id === feed.id}
+            <li>
+              <a
+                href={pathFor({ kind: "feed", id: feed.id })}
+                aria-current={current ? "page" : undefined}
+                onclick={(event) => follow(event, { kind: "feed", id: feed.id })}
+                class={[
+                  "flex min-h-11 items-center border-l-4 px-4 py-2 break-words",
+                  current ? "border-accent bg-tint-sidebar" : "border-transparent",
+                ]}>{feed.title}</a
+              >
+            </li>
+          {/each}
+        </ul>
+      {/if}
+      {#if feedsProblem}
+        <p class="px-4 pt-4 text-small">Your feeds couldn't be loaded. Reload the page to try again.</p>
+      {/if}
     </div>
+    <!-- Always at the very bottom, outside the scrolling list, so it never moves. -->
+    <a
+      href="/add-feed"
+      aria-current={route.kind === "add-feed" ? "page" : undefined}
+      onclick={(event) => follow(event, { kind: "add-feed" })}
+      class={[
+        "flex min-h-11 shrink-0 items-center border-l-4 px-4 py-2",
+        route.kind === "add-feed" ? "border-accent bg-tint-sidebar" : "border-transparent",
+      ]}>+ Add feed</a
+    >
   </nav>
 
   {#if panes.list}
@@ -228,20 +298,42 @@
           bind:heading={settingsHeading}
           {version}
           {onSignedOut}
-          onClose={() => go({ kind: "view", view: lastView })}
+          onClose={() => go(lastPlace)}
         />
+      {:else if route.kind === "add-feed"}
+        <section aria-labelledby="list-heading" class="flex flex-1 flex-col bg-paper pt-16">
+          <div class="min-h-0 flex-1 overflow-y-auto px-6 pb-10 md:px-10">
+            <h2 id="list-heading" tabindex="-1" bind:this={listHeading} class="text-xlarge font-semibold">Add a feed</h2>
+            <p class="mt-2 mb-6 max-w-xl">
+              Paste the address of a website you like, or of its feed. slowfeed finds the feed and lists its articles.
+            </p>
+            <AddFeed bind:field={addField} feeds={feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} />
+          </div>
+        </section>
       {:else}
         <section
           aria-labelledby="list-heading"
           class={["flex flex-col bg-list pt-16", panes.article ? "w-80 shrink-0 xl:w-96" : "flex-1"]}
         >
           <div class="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
-            <h2 id="list-heading" tabindex="-1" bind:this={listHeading} class="text-large font-semibold">
-              {VIEW_NAMES[route.view]}
+            <h2 id="list-heading" tabindex="-1" bind:this={listHeading} class="text-large font-semibold break-words">
+              {nameFor(route, currentFeed?.title)}
             </h2>
             <!-- Reserved for "New items · press r" (Milestone 8), so nothing shifts when it appears. -->
             <p class="min-h-8 text-small"></p>
-            <p>{EMPTY[route.view]}</p>
+            {#if route.kind === "view" && route.view === "starred"}
+              <p>No starred articles yet.</p>
+            {:else if firstVisit}
+              <p class="mb-6">Nothing to read yet. Add a website you like to begin.</p>
+              <AddFeed bind:field={addField} feeds={[]} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} />
+            {:else if feeds !== undefined}
+              {#key pathFor(route)}
+                <ItemList
+                  feedId={route.kind === "feed" ? route.id : null}
+                  empty={route.kind === "feed" ? "This feed has no articles yet." : "No articles yet."}
+                />
+              {/key}
+            {/if}
           </div>
         </section>
         {#if panes.article}

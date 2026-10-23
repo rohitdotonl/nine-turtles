@@ -13,8 +13,8 @@ use std::{
 
 use axum::{
     Json, Router,
-    extract::State,
-    http::{HeaderMap, HeaderValue, StatusCode, header},
+    extract::{FromRequestParts, State},
+    http::{HeaderMap, HeaderValue, StatusCode, header, request::Parts},
     response::{IntoResponse, Response},
     routing::{get, post},
 };
@@ -44,6 +44,31 @@ pub fn routes() -> Router<AppState> {
         .route("/api/session", get(session))
         .route("/api/sign-in", post(sign_in))
         .route("/api/sign-out", post(sign_out))
+}
+
+/// Proof that a request comes from a signed-in device. A handler that takes
+/// it never runs for anyone else: they get 401 "not signed in".
+pub struct SignedIn;
+
+impl FromRequestParts<AppState> for SignedIn {
+    type Rejection = Response;
+
+    async fn from_request_parts(parts: &mut Parts, state: &AppState) -> Result<Self, Response> {
+        let Some(token) = cookie_token(&parts.headers) else {
+            return Err(StatusCode::UNAUTHORIZED.into_response());
+        };
+        let found: Result<Option<i64>, sqlx::Error> =
+            sqlx::query_scalar("SELECT id FROM sessions WHERE token_hash = ? AND expires_at > ?")
+                .bind(&scramble(&token)[..])
+                .bind(now())
+                .fetch_optional(&state.db)
+                .await;
+        match found {
+            Ok(Some(_)) => Ok(Self),
+            Ok(None) => Err(StatusCode::UNAUTHORIZED.into_response()),
+            Err(error) => Err(database_problem("checking a sign-in", &error)),
+        }
+    }
 }
 
 /// Counts wrong passwords in a row and decides how long to wait.
@@ -253,7 +278,7 @@ fn wait_response(wait: Duration) -> Response {
         .into_response()
 }
 
-fn database_problem(doing: &str, error: &sqlx::Error) -> Response {
+pub fn database_problem(doing: &str, error: &sqlx::Error) -> Response {
     log::problem(&format!("database error while {doing}: {error}"));
     StatusCode::INTERNAL_SERVER_ERROR.into_response()
 }

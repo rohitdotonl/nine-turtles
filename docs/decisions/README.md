@@ -23,3 +23,4 @@ says "Replaced by …" at the top.
 | [0011](0011-container-image.md) | The container image, where it's stored, and automatic deploys |
 | [0012](0012-v1-for-one-reader.md) | V1 is for one reader: no backups, and six features moved to V2 |
 | [0013](0013-look-and-feel.md) | Look and feel: colors, fonts, type scale, reader settings per device, addresses |
+| [0014](0014-adding-feeds.md) | Adding feeds: autodiscovery on the pasted page, private addresses refused, cleaning before storing, list order and speed test |

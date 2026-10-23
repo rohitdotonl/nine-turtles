@@ -6,6 +6,7 @@ export type Action =
   | { kind: "cheat-sheet" }
   | { kind: "toggle-sidebar" }
   | { kind: "escape" }
+  | { kind: "add-feed" }
   | { kind: "go"; view: View };
 
 export type KeyPress = {
@@ -52,6 +53,8 @@ export function createKeyReader() {
         return { kind: "cheat-sheet" };
       case "[":
         return { kind: "toggle-sidebar" };
+      case "a":
+        return { kind: "add-feed" };
       default:
         return undefined;
     }
@@ -80,7 +83,7 @@ export const SHORTCUTS: { keys: string[]; action: string; ready: boolean }[] = [
   { keys: ["u"], action: "Undo", ready: false },
   { keys: ["r"], action: "Show new items", ready: false },
   { keys: ["/"], action: "Search", ready: false },
-  { keys: ["a"], action: "Add feed", ready: false },
+  { keys: ["a"], action: "Add feed", ready: true },
   { keys: ["g then u", "g then s", "g then a"], action: "Go to Unread / Starred / All", ready: true },
   { keys: ["["], action: "Show / hide sidebar", ready: true },
   { keys: ["+", "-"], action: "Text size while reading", ready: false },

@@ -19,6 +19,7 @@ pub fn config() -> Config {
         data_dir: fresh_data_dir(),
         password: PasswordSetting::Set(slowfeed::password::hash(PASSWORD).unwrap()),
         diagnostics_key: Some(DIAGNOSTICS_KEY.to_owned()),
+        local_feeds_allowed: true,
     }
 }
 
@@ -40,4 +41,18 @@ fn fresh_data_dir() -> PathBuf {
     ));
     let _ = std::fs::remove_dir_all(&dir);
     dir
+}
+
+/// Signs in and returns the cookie a browser would send back.
+pub async fn signed_in(base: &str) -> String {
+    let response = reqwest::Client::new()
+        .post(format!("{base}/api/sign-in"))
+        .header("content-type", "application/json")
+        .header("sec-fetch-site", "same-origin")
+        .body(format!(r#"{{"password":"{PASSWORD}"}}"#))
+        .send()
+        .await
+        .unwrap();
+    let set_cookie = response.headers()["set-cookie"].to_str().unwrap();
+    set_cookie.split(';').next().unwrap().to_owned()
 }
