@@ -32,8 +32,10 @@ but warns they may not restore a database cleanly, so they're a last resort.
 So the owner changed the floor's wording for V1 (a change, not an
 exception, since floors have none): nothing deletes without undo; any change
 that could lose data (such as a structure change that drops or rewrites data)
-is raised with the owner first; and unsubscribing hides a feed instead of
-deleting its articles, because undo only reaches back one action.
+is raised with the owner first. Asked directly, the owner chose that
+unsubscribing still deletes the feed's unstarred articles and read history
+(stars are kept), knowing undo only reaches back one action, so after the
+next action they're gone for good.
 
 Taking WebSub out touches the publisher floor's "fetch politely" line, but
 politeness is still met: each feed is checked on its own rhythm with

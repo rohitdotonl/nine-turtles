@@ -46,7 +46,7 @@ Same structure as `DESIGN.md`: a floor that nothing can trade away, then ranked 
 
 - Every change to the database's structure is tested on a copy before it runs for real, and **in V2** is backed up first.
 - Nothing deletes data without undo, and **in V2** without a backup taken first.
-- **In V1, which has no backups:** any change that could lose the reader's data (a structure change that drops or rewrites data, for example) is raised with the owner first, and unsubscribing hides a feed rather than deleting its articles.
+- **In V1, which has no backups:** any change that could lose the reader's data (a structure change that drops or rewrites data, for example) is raised with the owner first. Unsubscribing deletes the feed's unstarred articles and read history, recoverable only by the immediate undo; the owner accepted this knowingly (23 October 2026).
 - Article content from feeds is always sanitized before display.
 - Passwords and secrets never appear in the code or in GitHub.
 
@@ -181,7 +181,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 
 ### Data
 
-- **V1 has no automatic clean-up:** every article is kept. Unsubscribing hides the feed and keeps its articles and read history, so subscribing again brings them back (see the floor). The yearly clean-up below is planned for V2, together with backups.
+- **V1 has no automatic clean-up:** every article is kept. Unsubscribing deletes the feed's unstarred articles and read history (starred ones are kept); only the immediate undo brings them back, which the owner accepted (see the floor). The yearly clean-up below is planned for V2, together with backups.
 - Unstarred articles older than one year, read or not, are deleted. Starred articles are kept forever.
 - An article's age counts from when slowfeed **first received it**, not its published date, so old posts from a newly added blog aren't deleted the next night.
 - slowfeed remembers the fingerprint of each deleted article (a short line of text, using a few megabytes at most), so an article still listed in its feed isn't fetched again as new. These records are removed when the feed is unsubscribed.

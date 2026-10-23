@@ -385,7 +385,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 ## 23. Your data: keeping and exporting
 
 **What it does**
-- In V1, every article is kept; nothing is removed automatically. Unsubscribing hides the feed but keeps its articles and read history, so subscribing again brings them back.
+- In V1, nothing is removed automatically. Unsubscribing removes that feed's articles and read history (starred articles stay in Starred). Undo brings them back only straight away; after your next action they're gone for good.
 - Export of starred articles as a JSON Feed file (a standard, open format other feed tools can read).
 - **No backups in V1** (the owner's decision, 23 October 2026). V1 is for the owner alone. Your safety net is your own OPML file (your feeds and folders) and the starred export (your stars). Which articles you've read isn't saved anywhere else. As a last resort, Render keeps its own daily copies of the disk for at least a week, though Render warns they may not bring a database back cleanly.
 
