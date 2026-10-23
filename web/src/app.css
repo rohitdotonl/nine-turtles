@@ -119,6 +119,118 @@ body {
   outline-offset: 2px;
 }
 
+/*
+  A heading that receives the keyboard's place when a screen opens (so screen
+  readers start there) isn't something to press, so it draws no outline.
+  Everything that can be pressed or typed in still shows the outline above.
+*/
+:is(h1, h2, h3)[tabindex="-1"]:focus {
+  outline: none;
+}
+
+/*
+  Rows that fill a scrolling area edge to edge draw the outline just inside
+  themselves, so the area's edges never cut it off.
+*/
+.item-row:focus-visible,
+.side-row:focus-visible {
+  outline-offset: -3px;
+}
+
+/* A row under the pointer deepens a little; the selected row keeps its own tint. */
+.item-row:hover:not([aria-current]),
+.side-row:hover:not([aria-current]) {
+  background-color: var(--hover);
+}
+
+/* Selected text, the caret and numbers in columns follow the theme too. */
+::selection {
+  background-color: color-mix(in srgb, var(--ink) 18%, transparent);
+}
+
+input,
+textarea {
+  caret-color: var(--ink);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+  Controls, in four kinds, so every screen uses the same few (DESIGN.md →
+  "Visual language"). None of them is ink blue, and none moves: a pointer
+  over one only deepens its tone a little.
+
+  - .btn: an everyday button, edged in the muted grey.
+  - .btn-primary: the one main action of a form (Sign in, Add feed, Save),
+    filled with the text color.
+  - .btn-quiet: an action in a toolbar, with an icon beside its word and no
+    edge until the pointer is over it.
+  - .field: a text box, a date or a list to choose from.
+*/
+@layer components {
+  .btn,
+  .btn-primary,
+  .btn-quiet {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding-inline: 1rem;
+    border: 1px solid var(--muted);
+    border-radius: 0.375rem;
+    white-space: nowrap;
+    touch-action: manipulation;
+    cursor: pointer;
+  }
+
+  .btn:hover,
+  .btn-quiet:hover {
+    background-color: var(--hover);
+  }
+
+  .btn-primary {
+    border-color: var(--ink);
+    background-color: var(--ink);
+    color: var(--paper);
+    font-weight: 600;
+  }
+
+  .btn-primary:hover {
+    background-color: color-mix(in srgb, var(--ink) 86%, var(--paper));
+  }
+
+  .btn-quiet {
+    padding-inline: 0.75rem;
+    border-color: transparent;
+  }
+
+  .btn-quiet > svg {
+    flex-shrink: 0;
+  }
+
+  .field {
+    min-height: 2.75rem;
+    padding-inline: 0.75rem;
+    border: 1px solid var(--muted);
+    border-radius: 0.375rem;
+    background-color: var(--paper);
+    color: var(--ink);
+  }
+
+  .field::placeholder {
+    color: var(--muted);
+  }
+}
+
+:root {
+  /* The tone under a pointer: the text color, very faint, so it suits every area. */
+  --hover: color-mix(in srgb, var(--ink) 7%, transparent);
+}
+
 /* Windows high contrast and similar: let the system draw clear edges. */
 @media (forced-colors: active) {
   [aria-current="page"],

@@ -40,9 +40,9 @@
       autofocus
       bind:value={password}
       aria-describedby="sign-in-message"
-      class="min-h-11 rounded border border-ink bg-paper px-3 text-ink"
+      class="field"
     />
-    <button type="submit" disabled={busy} class="min-h-11 rounded border border-ink px-4">Sign in</button>
+    <button type="submit" disabled={busy} class="btn-primary">Sign in</button>
     <p id="sign-in-message" role="status" class="min-h-12">{message}</p>
   </form>
 </main>

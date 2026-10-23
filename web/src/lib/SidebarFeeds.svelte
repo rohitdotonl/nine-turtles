@@ -72,7 +72,7 @@
       aria-current={isHere(place) ? "page" : undefined}
       onclick={(event) => follow(event, place)}
       class={[
-        "flex min-h-11 items-center gap-3 border-l-4 py-2 pr-4",
+        "side-row flex min-h-11 items-center gap-3 border-l-4 py-2 pr-4",
         indent ? "pl-11" : "pl-4",
         isHere(place) ? "border-accent bg-tint-sidebar" : "border-transparent",
       ]}><span class="min-w-0 flex-1 break-words">{feed.title}</span>{@render count(feed.unread)}</a

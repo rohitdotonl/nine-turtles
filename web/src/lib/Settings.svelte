@@ -77,7 +77,7 @@
   <div class="min-h-0 flex-1 overflow-y-auto px-6 pb-10 md:px-10">
     <div class="flex max-w-2xl flex-wrap items-center justify-between gap-4">
       <h2 id="settings-heading" tabindex="-1" bind:this={heading} class="text-xlarge font-semibold">Settings</h2>
-      <button type="button" onclick={onClose} class="min-h-11 rounded border border-ink px-4">Close settings</button>
+      <button type="button" onclick={onClose} class="btn">Close settings</button>
     </div>
 
     <div class="mt-8 flex max-w-2xl flex-col gap-10">
@@ -181,7 +181,7 @@
           Your starred articles can be saved as a JSON Feed file, a standard format other feed readers can open. It
           keeps each article's text, its original link and the feed it came from.
         </p>
-        <a href="/api/starred/export" download class="flex min-h-11 items-center self-start rounded border border-ink px-4">
+        <a href="/api/starred/export" download class="btn self-start">
           Export starred articles
         </a>
       </section>
@@ -193,14 +193,14 @@
           <!-- Never swapped while you read: the new version starts when you reload, or next time you open slowfeed. -->
           <p class="flex flex-wrap items-center gap-x-4 gap-y-2">
             A new version is ready.
-            <button type="button" onclick={() => location.reload()} class="min-h-11 rounded border border-ink px-4">Reload</button>
+            <button type="button" onclick={() => location.reload()} class="btn">Reload</button>
           </p>
         {/if}
       </section>
 
       <section aria-labelledby="account-heading" class="flex flex-col items-start gap-2">
         <h3 id="account-heading" class="text-large font-semibold">Signing in</h3>
-        <button type="button" onclick={leave} class="min-h-11 rounded border border-ink px-4">Sign out</button>
+        <button type="button" onclick={leave} class="btn">Sign out</button>
         <p role="status">{message}</p>
       </section>
     </div>

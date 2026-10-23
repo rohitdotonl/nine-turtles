@@ -148,6 +148,22 @@ test.describe("on a wide window", () => {
     expect(page.context().pages()).toHaveLength(1);
   });
 
+  test("the controls stay calm: a one-line search box, and no outline on an opened article's title", async ({ page }) => {
+    await openRoom(page);
+    // The scope chip sits in the search box without making it taller (decision 0025).
+    await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toBeVisible();
+    const box = (await page.locator(".search-box").boundingBox())!;
+    expect(box.height).toBeLessThanOrEqual(48);
+    // Opening an article gives its title the keyboard's place for screen
+    // readers, without drawing the outline; the selected row keeps a whole one.
+    await page.keyboard.press("j");
+    await expect(row(page, "The pleasure of a slow letter")).toHaveCSS("outline-style", "solid");
+    await expect(row(page, "The pleasure of a slow letter")).toHaveCSS("outline-offset", "-3px");
+    await page.keyboard.press("o");
+    await expect(title(page, "The pleasure of a slow letter")).toBeFocused();
+    await expect(title(page, "The pleasure of a slow letter")).toHaveCSS("outline-style", "none");
+  });
+
   test("in high-contrast mode, only the selected article is marked", async ({ page }) => {
     await page.emulateMedia({ forcedColors: "active" });
     await openRoom(page);

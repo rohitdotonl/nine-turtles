@@ -52,11 +52,11 @@
     <form onsubmit={save} class="mt-6 flex max-w-xl flex-col gap-6">
       <label class="flex flex-col gap-2">
         <span class="font-semibold">Name</span>
-        <input bind:value={name} type="text" autocomplete="off" class="min-h-11 rounded border border-ink bg-paper px-3" />
+        <input bind:value={name} type="text" autocomplete="off" class="field" />
       </label>
       <div class="flex flex-wrap gap-2">
-        <button type="submit" aria-disabled={busy} class="min-h-11 rounded border border-ink px-4 font-semibold">Save</button>
-        <button type="button" onclick={onCancel} class="min-h-11 rounded border border-ink px-4">Cancel</button>
+        <button type="submit" aria-disabled={busy} class="btn-primary">Save</button>
+        <button type="button" onclick={onCancel} class="btn">Cancel</button>
       </div>
       <p role="status">{message}</p>
     </form>
@@ -64,7 +64,7 @@
     <section aria-labelledby="delete-heading" class="mt-10 flex max-w-xl flex-col items-start gap-2">
       <h3 id="delete-heading" class="text-large font-semibold">Delete folder</h3>
       <p>Its feeds stay; they just leave this folder. You can undo it straight afterwards.</p>
-      <button type="button" aria-disabled={busy} onclick={remove} class="min-h-11 rounded border border-ink px-4">
+      <button type="button" aria-disabled={busy} onclick={remove} class="btn">
         Delete {folder.name}
       </button>
     </section>

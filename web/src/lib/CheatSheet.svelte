@@ -33,7 +33,7 @@
 >
   <div class="flex items-center justify-between gap-4">
     <h2 id="shortcuts-heading" class="text-xlarge font-semibold">Keyboard shortcuts</h2>
-    <button type="button" onclick={() => (open = false)} class="min-h-11 rounded border border-ink px-4">Close</button>
+    <button type="button" onclick={() => (open = false)} class="btn">Close</button>
   </div>
   <p class="mt-2 text-small text-muted">
     Tab, Enter and Escape always work too. Shortcuts don't fire while you're typing in a field.

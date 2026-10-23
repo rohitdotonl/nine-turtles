@@ -33,10 +33,10 @@
 <div class="flex flex-col items-start gap-2">
   <div class="flex flex-wrap gap-2">
     <!-- The file picker itself is hidden; this button opens it. -->
-    <button type="button" aria-disabled={busy} onclick={() => !busy && picker?.click()} class="min-h-11 rounded border border-ink px-4">
+    <button type="button" aria-disabled={busy} onclick={() => !busy && picker?.click()} class="btn">
       Import OPML
     </button>
-    <a href="/api/opml" download class="flex min-h-11 items-center rounded border border-ink px-4">Export OPML</a>
+    <a href="/api/opml" download class="btn">Export OPML</a>
   </div>
   <input
     bind:this={picker}

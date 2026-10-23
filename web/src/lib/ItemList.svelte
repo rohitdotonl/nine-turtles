@@ -25,6 +25,7 @@
   server fetched them already.
 -->
 <script lang="ts">
+  import Icon from "./Icon.svelte";
   import { onMount, tick, untrack } from "svelte";
   import {
     listArticles,
@@ -377,14 +378,14 @@
   load(null);
 </script>
 
-<div class="mt-2 flex min-h-11 flex-wrap gap-2">
+<div class="mt-2 -ml-3 flex min-h-11 flex-wrap gap-1">
   <!-- First, so it never moves when "Mark all as read" comes and goes. -->
   {#if !refreshInTopBar}
-    <button type="button" aria-disabled={busy} onclick={refresh} class="min-h-11 rounded border border-ink px-4">Refresh</button>
+    <button type="button" aria-disabled={busy} onclick={refresh} class="btn-quiet"><Icon name="refresh" />Refresh</button>
   {/if}
   {#if articles.length > 0}
-    <button type="button" bind:this={markAllButton} onclick={markAllRead} class="min-h-11 rounded border border-ink px-4">
-      Mark all as read
+    <button type="button" bind:this={markAllButton} onclick={markAllRead} class="btn-quiet">
+      <Icon name="check" />Mark all as read
     </button>
   {/if}
 </div>
@@ -398,12 +399,12 @@
     >
   {/if}
 </p>
-<p class="flex min-h-11 flex-wrap items-center gap-x-1 text-small">
+<p class="flex min-h-6 flex-wrap items-center gap-x-1 text-small">
   <span role="status">{line}</span>
   <span aria-live="polite" class="sr-only">{spoken}</span>
   {#if undoLast}
     <span aria-hidden="true">·</span>
-    <button type="button" onclick={undoByButton} class="min-h-11 min-w-11 px-2 underline underline-offset-4">Undo</button>
+    <button type="button" onclick={undoByButton} class="-my-3.5 min-w-11 px-2 py-3.5 underline underline-offset-4">Undo</button>
   {/if}
 </p>
 
@@ -427,7 +428,7 @@
           }}
           onkeydown={arrows}
           class={[
-            "item-row block w-full border-l-4 py-3 pr-6 pl-5 text-left",
+            "item-row block w-full cursor-pointer border-l-4 py-3 pr-6 pl-5 text-left",
             current ? "border-accent bg-tint-list" : "border-transparent",
           ]}
         >
@@ -450,7 +451,7 @@
     {/each}
   </ul>
   {#if next !== null}
-    <button type="button" aria-disabled={busy} onclick={() => load(next)} class="mt-4 min-h-11 rounded border border-ink px-4">
+    <button type="button" aria-disabled={busy} onclick={() => load(next)} class="btn mt-6">
       {order === "oldest" ? "Show newer items" : "Show older items"}
     </button>
   {/if}
