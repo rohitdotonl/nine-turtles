@@ -1,2 +1,10 @@
 # The owner's subscription list is private and must never be committed.
 *.opml
+
+# Build output and installed libraries (recreated by scripts/check.sh).
+/server/target/
+/web/node_modules/
+/web/dist/
+/web/test-results/
+/web/playwright-report/
+/web/screenshots/

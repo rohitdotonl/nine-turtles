@@ -71,5 +71,8 @@ These never become part of slowfeed itself.
 ## Expected later (not yet approved)
 
 Each will be proposed in its milestone's plan:
+- **Milestone 2 (live, with sign-in):** `tracing-subscriber`, the companion
+  to `tracing` that actually prints the logs. Until then, the program prints
+  its one startup line directly.
 - **Milestone 3 (backups):** a way to upload to S3-compatible storage.
 - **Later milestones:** handling dates and web addresses, checking WebSub signatures, limiting repeated sign-in attempts.
