@@ -27,7 +27,7 @@
 </script>
 
 <main class="flex min-h-screen flex-col items-center justify-center gap-8 px-6">
-  <h1 class="font-serif text-5xl">slowfeed</h1>
+  <h1 class="font-serif text-display">slowfeed</h1>
   <form class="flex w-full max-w-xs flex-col gap-3" onsubmit={submit}>
     <label for="password">Password</label>
     <!-- svelte-ignore a11y_autofocus: the only thing to do on this page. -->

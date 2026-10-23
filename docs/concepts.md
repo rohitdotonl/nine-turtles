@@ -109,6 +109,10 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Service worker
 - Web fonts
 - Themes (light, dark, system)
+- Browser storage (`localStorage`)
+- Routing (addresses inside a single-page app) and browser history
+- Font subsets and `unicode-range`
+- Modal dialog
 
 ## Data and the database
 
@@ -197,6 +201,10 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Responsive design (desktop and phone widths)
 - Reduced motion and other system settings
 - Design tokens (colors, fonts, spacing)
+- Type scale
+- Breakpoints (where the layout changes with width)
+- Landmarks (named regions for screen readers)
+- Focus outline (`:focus-visible`)
 
 ## Planned for V2
 

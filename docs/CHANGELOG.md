@@ -4,6 +4,19 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 23 October 2026: Look and feel (Milestone 4)
+
+- The placeholder page is gone. After signing in you see the real, empty
+  app: a sidebar with Unread, Starred and All, an item list and a reading
+  area, each told apart by tone. Ink blue marks where you are.
+- Three areas on a wide window, two on a medium one, one on a phone. Hide
+  and show the sidebar with its button or `[`.
+- Settings: theme, reading font, text size and line width, remembered on
+  each device, plus the version and Sign out.
+- Keyboard: `?` lists every shortcut, `g` then `u`/`s`/`a` jumps between
+  views, Escape goes back, and a clear outline shows where you are.
+- All four fonts are in, served by slowfeed itself. The greys are warm.
+
 ## 23 October 2026: A list of concepts to learn
 
 - New page, `docs/concepts.md`: the names of the ideas, tools and terms

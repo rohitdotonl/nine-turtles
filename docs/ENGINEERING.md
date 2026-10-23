@@ -138,6 +138,8 @@ These were decided with the owner. Changing any of them needs the owner's approv
 | Build tool | Vite |
 | Styling | Tailwind CSS |
 | Keyboard shortcuts | Small custom handler |
+| Addresses (`/unread`, `/settings`…) | The browser's own history, no library |
+| Per-device reader settings | The browser's storage (`localStorage`) |
 | Installable on phones | Web app manifest and service worker (PWA) |
 
 **New versions on devices:** the service worker downloads a new version quietly in the background and uses it the next time the app is opened or reloaded. It never swaps the app while it's open. In V1, a tab left open across an update that sends a request the new version doesn't understand is told plainly to reload; keeping such a tab working without a reload is V2.
