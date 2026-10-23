@@ -4,6 +4,14 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 23 October 2026: Merges reach the live app again
+
+- Since Milestone 2, every merge built correctly but never told Render to
+  update, most likely because the saved deploy address had a stray space or
+  line break in it.
+  slowfeed's deploy step now tidies the address, and says plainly when
+  it's wrong.
+
 ## 23 October 2026: Reading articles (Milestone 6)
 
 - Click an article, or press `j` and `k`, and it appears in the reading

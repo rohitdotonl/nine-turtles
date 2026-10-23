@@ -106,6 +106,12 @@ Then tell an agent it's done; it schedules the check described in
 
 ## If something goes wrong
 
+- **A merge didn't reach the live app** (Settings → Status shows an older
+  version): on GitHub, **Actions** → **Container image** → the latest run.
+  If "Tell Render to run the new version" failed, copy the deploy hook again
+  (step 3) and replace the secret. Slowfeed already ignores stray spaces,
+  line breaks and quotes in it. Meanwhile, Render → **Manual Deploy** →
+  **Deploy latest reference** puts the newest merged version live.
 - **The deploy fails, or the page never says Live:** Render → **Logs**.
   Copy the last lines (they never contain your password) and give them to an
   agent.
