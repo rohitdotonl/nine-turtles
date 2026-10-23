@@ -18,3 +18,4 @@ says "Replaced by …" at the top.
 | [0006](0006-second-agent-review.md) | The second-agent review is written instructions, not an app |
 | [0007](0007-repository-layout.md) | `server/` and `web/`, with the frontend packed into the program |
 | [0008](0008-fonts-and-placeholder-colors.md) | Fonts served in pieces; placeholder colors until Milestone 4 |
+| [0009](0009-agents-may-merge.md) | Agents may merge after a brief and the owner's yes |
