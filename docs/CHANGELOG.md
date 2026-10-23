@@ -18,6 +18,13 @@ not how it was done.
 - New guides: setting up Render (`docs/operations/render-setup.md`), every
   setting (`settings.md`) and the daily check (`daily-check.md`).
 
+## 23 October 2026: Agents may merge, after a brief and your yes
+
+- You no longer have to press Merge yourself. When a change is ready, the
+  agent sends you a short, plain-language brief of what's about to go live,
+  and merges only once you say yes. You can still press Merge whenever you
+  like.
+
 ## 22 October 2026: Skeleton and automatic checks (Milestone 1)
 
 - slowfeed exists as a real program: for now, one quiet page with the

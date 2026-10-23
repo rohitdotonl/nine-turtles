@@ -2,7 +2,8 @@
 
 Once a day, an agent looks at the live slowfeed and reports problems to the
 owner as a GitHub issue. These are the agent's instructions; any agent or
-person can follow them. The owner still merges any fix.
+person can follow them. A fix is merged by the owner, or by an agent after
+the owner's yes to its brief (decision 0009).
 
 **Calm by design:** if everything is fine, the check does nothing. No
 "all good" issues, no messages.

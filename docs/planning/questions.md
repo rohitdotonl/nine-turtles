@@ -59,7 +59,7 @@ Nothing at the moment.
 | Repository (Q27) | Stays public. |
 | New app versions (Q29) | Downloaded quietly; used the next time you open or reload slowfeed. Nothing changes while you read. Settings → Status shows "A new version is ready" with a Reload button. |
 | Deleted articles | Remembered by fingerprint (confirmed). |
-| Watching the live app (Q28) | Fully automatic: public status page, diagnostics page behind a read-only key, a scheduled agent check once a day that opens an issue (and a fix when clear). The owner still merges. Kept agent-neutral: the check's instructions live in the repository (`docs/operations/daily-check.md`) so any agent can follow them. |
+| Watching the live app (Q28) | Fully automatic: public status page, diagnostics page behind a read-only key, a scheduled agent check once a day that opens an issue (and a fix when clear). Nothing merges without the owner (they press Merge, or say yes to an agent's brief). Kept agent-neutral: the check's instructions live in the repository (`docs/operations/daily-check.md`) so any agent can follow them. |
 | Pace | One session per milestone. No large multi-agent workflows. |
 
 ### Note on Q15 (working agreement 10: a principle is bent)

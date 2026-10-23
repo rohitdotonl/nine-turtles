@@ -1,4 +1,4 @@
-# 0010: The container image and automatic deploys
+# 0011: The container image and automatic deploys
 
 *October 2026, Milestone 2.*
 

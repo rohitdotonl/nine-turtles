@@ -96,7 +96,9 @@ You switch this on once, at Milestone 1, following
 
 **Who creates pull requests?** The agents do. You don't need to create one.
 Your part is to read the summary, look at the screenshots, ask questions,
-and then merge (or not).
+and then merge (or not). You can press Merge yourself, or let the agent do it:
+before merging, it sends you a short, plain-language brief of what's about to
+go live, and it merges only once you say yes.
 
 ## 5. Tests, checks, CI and CD
 
@@ -162,22 +164,24 @@ It costs a little more time and usage per change, and it catches the kind of
 mistake the automatic checks can't, such as a feature that works but doesn't
 match the design.
 
-## 6. "The owner deploys by merging a pull request"
+## 6. "Merging a pull request deploys it"
 
 **Deploying** means putting a new version on the live app. Agents have no
 access to Render, so they can't deploy. Instead:
 
 1. An agent opens a pull request.
 2. GitHub Actions runs the checks.
-3. You review and press **Merge**.
+3. You review it. Then either you press **Merge**, or the agent sends you a
+   short brief of what's about to be merged and merges once you say yes.
 4. The change is now in main. GitHub Actions packs the finished program into
    a "container image" (a standard, ready-to-run bundle), and Render switches
    to it. The app may be unavailable for a minute while it switches.
 5. You try the change on the live app.
 
-So pressing Merge *is* deploying. Nothing reaches the live app without you.
+So merging *is* deploying. Nothing reaches the live app without you: either
+you press Merge, or you say yes to the agent's brief.
 (You connect GitHub to Render once, following `docs/operations/render-setup.md`.
-It usually takes up to 15 minutes from Merge to live.)
+It usually takes up to 15 minutes from merging to live.)
 
 ## 7. How to merge a pull request
 
@@ -192,6 +196,13 @@ On the GitHub website (or the GitHub phone app):
    conversation with the agent) and wait for an update.
 5. Happy? Press **Merge pull request**, then **Confirm merge**.
 6. GitHub may offer **Delete branch**. That's safe: the branch's work is now in main.
+
+**Or let the agent merge.** When a pull request is ready, the agent can send
+you a brief instead: what's about to be merged, what it changes for you, how
+to check it once it's live, and confirmation that the checks are green. Reply
+"yes" (or ask questions first) and the agent merges. It never merges without
+your yes in your conversation with it, and if anything changes after you said
+yes, it asks again.
 
 **If a merged change turns out to be bad:** the merged pull request has a
 **Revert** button. It creates a new pull request that undoes the change;

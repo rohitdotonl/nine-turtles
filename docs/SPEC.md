@@ -25,7 +25,7 @@ A few words used throughout:
 - slowfeed has a public web address, so it asks for a password. There is one password and no username.
 - Each device stays signed in for a long time, so you rarely type it.
 - Each device stays signed in for a year after it was last used. Signing out ends that device only; other devices stay signed in.
-- Repeated wrong passwords are slowed down, so nobody can guess by trying thousands: after five wrong tries in a row, slowfeed asks you to wait a minute, and each further wrong try doubles the wait, up to an hour. The right password resets it.
+- Repeated wrong passwords are slowed down, so nobody can guess by trying thousands: after five wrong tries in a row, slowfeed asks you to wait a minute, and each further wrong try doubles the wait, up to an hour. The right password resets it, and so does an hour without wrong tries. Wrong tries count for the whole app, wherever they come from, so a stranger guessing can make you wait on a new device (devices already signed in are unaffected). Restarting slowfeed on Render clears the wait (`docs/operations/render-setup.md`).
 - Messages are plain: "That isn't the password." or "Too many wrong tries. Try again in 2 minutes."
 - Sign out is in Settings. (Until the Settings screen arrives in Milestone 4, the signed-in screen shows Status, with the version in use, and Sign out.)
 - The password itself is never stored, only a scrambled version that can't be turned back into it (a "hash"). You set it by typing `slowfeed set-password` in Render's Shell tab and pasting the scrambled line it prints into Render's settings (`docs/operations/render-setup.md`). Until then, nobody can sign in.

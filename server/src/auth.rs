@@ -4,7 +4,7 @@
 //! read. The database keeps only a scrambled copy of it (BLAKE2s), so a
 //! stolen copy of the database can't be used to sign in. Wrong passwords are
 //! slowed down for everyone at once: there's only one password, so guesses
-//! from many places count together. See docs/decisions/0009-sign-in.md.
+//! from many places count together. See docs/decisions/0010-sign-in.md.
 
 use std::{
     fmt::Write as _,
@@ -35,6 +35,9 @@ const RENEW_AFTER: i64 = 24 * 60 * 60;
 const FREE_TRIES: u32 = 5;
 const FIRST_WAIT: Duration = Duration::from_secs(60);
 const LONGEST_WAIT: Duration = Duration::from_secs(60 * 60);
+/// After this long with no wrong password (counted from the end of any
+/// wait), earlier wrong tries are forgotten and the five free tries return.
+const FORGET_AFTER: Duration = Duration::from_secs(60 * 60);
 
 pub fn routes() -> Router<AppState> {
     Router::new()
@@ -47,6 +50,7 @@ pub fn routes() -> Router<AppState> {
 #[derive(Debug, Default)]
 pub struct Limiter {
     wrong_in_a_row: u32,
+    last_wrong: Option<Instant>,
     locked_until: Option<Instant>,
 }
 
@@ -61,6 +65,11 @@ impl Limiter {
     /// After the free tries, each wrong password doubles the wait: one
     /// minute, two, four… up to an hour.
     pub fn wrong(&mut self, now: Instant) {
+        let quiet_since = self.last_wrong.max(self.locked_until);
+        if quiet_since.is_some_and(|since| now.saturating_duration_since(since) >= FORGET_AFTER) {
+            *self = Self::default();
+        }
+        self.last_wrong = Some(now);
         self.wrong_in_a_row = self.wrong_in_a_row.saturating_add(1);
         if self.wrong_in_a_row >= FREE_TRIES {
             let doublings = (self.wrong_in_a_row - FREE_TRIES).min(10);
@@ -147,7 +156,9 @@ async fn sign_in(State(state): State<AppState>, Json(form): Json<SignIn>) -> Res
             .wrong_passwords
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         if let Some(wait) = limiter.wait(Instant::now()) {
-            log::problem(&format!(
+            // Counted on the diagnostics page, not kept as a "problem", so
+            // a patient guesser can't push real problems out of view.
+            log::info(&format!(
                 "several wrong passwords in a row; sign-in paused for {} seconds",
                 wait.as_secs()
             ));
@@ -314,6 +325,31 @@ mod tests {
         limiter.right();
         limiter.wrong(start);
         assert_eq!(limiter.wait(start), None);
+    }
+
+    #[test]
+    fn an_hour_without_wrong_passwords_brings_back_the_free_tries() {
+        let start = Instant::now();
+        let mut limiter = Limiter::default();
+        for _ in 0..4 {
+            limiter.wrong(start);
+        }
+        // Long after those four, one typo doesn't make the owner wait.
+        let later = start + Duration::from_secs(61 * 60);
+        limiter.wrong(later);
+        assert_eq!(limiter.wait(later), None);
+
+        // After a wait, the quiet hour counts from when the wait ended.
+        for _ in 0..4 {
+            limiter.wrong(later);
+        }
+        assert_eq!(limiter.wait(later), Some(Duration::from_secs(60)));
+        let just_before = later + Duration::from_secs(60 + 59 * 60);
+        limiter.wrong(just_before);
+        assert!(limiter.wait(just_before).is_some());
+        let quiet = just_before + Duration::from_secs(2 * 60 + 60 * 60);
+        limiter.wrong(quiet);
+        assert_eq!(limiter.wait(quiet), None);
     }
 
     #[test]

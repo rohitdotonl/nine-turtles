@@ -31,7 +31,7 @@ in through the sign-in page with a made-up password (`web/playwright.config.ts`)
 
 - **Container image:** `.github/workflows/image.yml` builds the image on every
   pull request and checks it starts and answers `/status`. On main it also
-  stores it and deploys it (decision 0010). It needs Docker, so it isn't in
+  stores it and deploys it (decision 0011). It needs Docker, so it isn't in
   `scripts/check.sh`; run `docker build .` to try it yourself.
 - **Screenshots on the pull request:** posted by GitHub Actions after the
   checks (decision 0005).

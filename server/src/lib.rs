@@ -25,8 +25,8 @@ use crate::config::{Config, PasswordSetting};
 /// Which build this is. The container image sets `SLOWFEED_VERSION` to the
 /// date and commit it was built from; a build on a computer says "-dev".
 pub const VERSION: &str = match option_env!("SLOWFEED_VERSION") {
-    Some(version) => version,
-    None => concat!(env!("CARGO_PKG_VERSION"), "-dev"),
+    Some(version) if !version.is_empty() => version,
+    _ => concat!(env!("CARGO_PKG_VERSION"), "-dev"),
 };
 
 /// What every request handler can reach. Cheap to copy: the parts are shared.

@@ -1,7 +1,7 @@
 # Builds slowfeed into a container image: a standard ready-to-run bundle that
 # any host accepts. GitHub Actions builds it (.github/workflows/image.yml) and
 # Render runs it, so what was tested is exactly what goes live.
-# See docs/decisions/0010-container-image.md.
+# See docs/decisions/0011-container-image.md.
 
 # 1. The frontend, built by Vite into web/dist.
 FROM node:24-trixie-slim AS web
@@ -18,7 +18,8 @@ COPY rust-toolchain.toml ./
 COPY server/ server/
 COPY --from=web /src/web/dist web/dist
 # Shown in Settings → Status and on the status page: the build date and commit.
-ARG SLOWFEED_VERSION
+# A build by hand without --build-arg says "local-build".
+ARG SLOWFEED_VERSION=local-build
 ENV SLOWFEED_VERSION=${SLOWFEED_VERSION}
 RUN cd server && cargo build --locked --release
 

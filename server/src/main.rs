@@ -11,9 +11,21 @@ async fn main() {
     match arguments.iter().map(String::as_str).collect::<Vec<_>>()[..] {
         [] => serve().await,
         ["set-password"] => {
-            if let Err(message) = slowfeed::password::set_password_command() {
-                eprintln!("slowfeed: {message}");
-                std::process::exit(1);
+            let command = tokio::task::spawn_blocking(slowfeed::password::set_password_command);
+            tokio::select! {
+                finished = command => {
+                    if let Ok(Err(message)) | Err(message) = finished.map_err(|error| error.to_string()) {
+                        eprintln!("slowfeed: {message}");
+                        std::process::exit(1);
+                    }
+                }
+                _ = tokio::signal::ctrl_c() => {
+                    // Typing may be hidden at this moment; show it again.
+                    slowfeed::password::show_typing();
+                    eprintln!();
+                    eprintln!("slowfeed: cancelled; nothing was changed");
+                    std::process::exit(130);
+                }
             }
         }
         ["help" | "--help" | "-h"] => println!("{USAGE}"),

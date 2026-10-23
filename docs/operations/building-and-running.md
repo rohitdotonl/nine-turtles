@@ -46,7 +46,7 @@ docker run --rm -p 10000:10000 -v slowfeed-data:/data slowfeed
 ```
 
 Then open `http://127.0.0.1:10000`. This is exactly what Render runs
-(docs/decisions/0010-container-image.md).
+(docs/decisions/0011-container-image.md).
 
 ## Working on the frontend
 

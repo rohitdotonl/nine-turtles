@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { TEST_PASSWORD } from "../playwright.config";
 import { appReady, signIn } from "./screens";
 
 // SPEC section 1, "How to check it", done by a browser. Everything here uses
@@ -29,8 +30,12 @@ test("a wrong password says so calmly and keeps you out", async ({ page }) => {
 test("sign in with the keyboard, stay signed in, sign out", async ({ page }) => {
   await page.goto("/");
   await appReady(page);
-  await signIn(page);
+  // The password field already has the keyboard's place.
+  await page.keyboard.type(TEST_PASSWORD);
+  await page.keyboard.press("Enter");
   await expect(page.getByText(/^Version /)).toBeVisible();
+  // The keyboard's place moves to the new screen's heading.
+  await expect(page.getByRole("heading", { level: 1, name: "slowfeed" })).toBeFocused();
 
   // Still signed in after closing and reopening (a reload, here).
   await page.reload();

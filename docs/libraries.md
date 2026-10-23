@@ -76,6 +76,6 @@ Each will be proposed in its milestone's plan:
 - **When logs get busier (feed fetching, Milestone 8):** `tracing-subscriber`,
   the companion to `tracing` that actually prints the logs. Until then,
   slowfeed's small `log` module prints plain lines itself, so neither is used
-  yet (docs/decisions/0009-sign-in.md).
+  yet (docs/decisions/0010-sign-in.md).
 - **Milestone 3 (backups):** a way to upload to S3-compatible storage.
 - **Later milestones:** handling dates and web addresses, checking WebSub signatures. (Limiting repeated sign-in attempts needed no library.)

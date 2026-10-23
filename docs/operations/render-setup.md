@@ -66,6 +66,7 @@ usually within 15 minutes of pressing Merge.
 2. Type `slowfeed set-password` and press Enter.
 3. Type your password (at least 12 characters) and press Enter. **Nothing
    appears while you type**: that's on purpose. Type it again when asked.
+   (To give up halfway, press Ctrl+C: nothing is changed.)
 4. slowfeed prints one long line starting with `$argon2id$`. That's the
    scrambled form, not your password. Select the whole line and copy it.
 5. **Environment** (left menu) → **Add Environment Variable**:
@@ -108,6 +109,10 @@ Then tell an agent it's done; it schedules the check described in
 - **The deploy fails, or the page never says Live:** Render → **Logs**.
   Copy the last lines (they never contain your password) and give them to an
   agent.
+- **slowfeed keeps asking you to wait, and you're sure of your password:**
+  someone may be guessing. Render → your service → **Manual Deploy** →
+  **Restart service** clears the wait. Devices already signed in aren't
+  affected.
 - **The sign-in page says the password setting isn't valid:** the line was
   cut short when pasting. Redo step 4.
 - **A bad update reached the live app:** press **Revert** on the merged pull

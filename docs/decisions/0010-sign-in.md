@@ -1,4 +1,4 @@
-# 0009: How sign-in works
+# 0010: How sign-in works
 
 *October 2026, Milestone 2. Password method and libraries approved by the owner.*
 
@@ -23,10 +23,15 @@ secret to manage, and can't be ended one device at a time).
 **Wrong passwords.** Counted for the whole app, not per device or network
 address: there's only one password, so guesses from everywhere count
 together. Five free tries, then waits of 1, 2, 4… minutes, at most an hour; a
-right password resets the count. Tries are checked one at a time so parallel
-guesses can't slip past. The cost: a guesser can make a *new* device wait;
-devices already signed in are unaffected. Kept in memory, so a restart
-resets it, which is fine at these numbers.
+right password resets the count, and so does an hour with no wrong tries
+(counted from the end of any wait), so old guesses don't cost the owner their
+free tries. Tries are checked one at a time so parallel guesses can't slip
+past. The cost: a guesser can make a *new* device wait, and one who keeps
+guessing about once an hour can keep that up; devices already signed in are
+unaffected. The count is kept in memory, so restarting slowfeed clears it,
+and the owner's guide says so. Wrong tries are counted on the diagnostics
+page but not kept as "problems", so they can't push real problems out of the
+last 20.
 
 **Other sites.** Every action (anything but reading) must come from
 slowfeed's own pages: the browser's `Sec-Fetch-Site` or `Origin` header is

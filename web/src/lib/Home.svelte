@@ -8,6 +8,13 @@
   let { version, onSignedOut }: { version: string; onSignedOut: () => void } = $props();
 
   let message = $state("");
+  let heading: HTMLHeadingElement | undefined = $state();
+
+  // After signing in, the password field is gone. Move the keyboard's place
+  // (and a screen reader) to the top of the new screen, not the page's start.
+  $effect(() => {
+    heading?.focus();
+  });
 
   async function leave() {
     try {
@@ -20,7 +27,7 @@
 </script>
 
 <main class="flex min-h-screen flex-col items-center justify-center gap-6 px-6">
-  <h1 class="font-serif text-5xl">slowfeed</h1>
+  <h1 class="font-serif text-5xl" tabindex="-1" bind:this={heading}>slowfeed</h1>
   <p class="text-muted">Nothing here yet.</p>
   <section aria-labelledby="status-heading" class="flex flex-col items-center gap-2">
     <h2 id="status-heading" class="font-semibold">Status</h2>

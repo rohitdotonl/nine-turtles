@@ -1,6 +1,6 @@
 //! The password: scrambling it with argon2 (argon2id), checking it, and the
 //! `slowfeed set-password` command the owner runs in Render's Shell tab.
-//! See docs/decisions/0009-sign-in.md.
+//! See docs/decisions/0010-sign-in.md.
 
 use std::io::{BufRead, Write};
 
@@ -87,10 +87,17 @@ fn ask(prompt: &str) -> Result<String, String> {
     Ok(line.trim_end_matches(['\r', '\n']).to_owned())
 }
 
+/// Turns typing display back on, for when `set-password` is cancelled with
+/// Ctrl+C while it's hidden.
+pub fn show_typing() {
+    stty("echo");
+}
+
 fn stty(setting: &str) -> bool {
     std::process::Command::new("stty")
         .arg(setting)
         .stdin(std::process::Stdio::inherit())
+        .stderr(std::process::Stdio::null())
         .status()
         .is_ok_and(|status| status.success())
 }
