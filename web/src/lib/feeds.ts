@@ -1,5 +1,5 @@
-// Talking to the server about feeds and their articles (SPEC sections 3, 5
-// and 6), and the words and times the screens show for them.
+// Talking to the server about feeds and their articles (SPEC sections 3, 5,
+// 6 and 7), and the words and times the screens show for them.
 
 export type Feed = { id: number; title: string; siteUrl: string | null };
 
@@ -11,6 +11,16 @@ export type Article = {
   link: string | null;
   /** Seconds since 1970 (UTC). */
   at: number;
+};
+
+/** One article as the reading area shows it. `content` and `summary` are already cleaned by slowfeed. */
+export type FullArticle = Article & {
+  siteUrl: string | null;
+  author: string | null;
+  content: string | null;
+  summary: string | null;
+  /** The article's language (or its feed's), or null if neither says. */
+  language: string | null;
 };
 
 /** One page of the item list. `older` is where the next page starts, or null at the end. */
@@ -49,16 +59,46 @@ export async function listArticles(feedId: number | null, before: string | null)
   const body = await getJson(`/api/articles${text ? `?${text}` : ""}`);
   if (!isRecord(body) || !Array.isArray(body.articles)) throw new Error("slowfeed sent an unexpected answer");
   return {
-    articles: body.articles.filter(isRecord).map((article) => ({
-      id: Number(article.id),
-      feedId: Number(article.feed_id),
-      feedTitle: String(article.feed_title ?? ""),
-      title: String(article.title ?? ""),
-      link: typeof article.link === "string" ? article.link : null,
-      at: Number(article.at),
-    })),
+    articles: body.articles.filter(isRecord).map(toArticle),
     older: typeof body.older === "string" ? body.older : null,
   };
+}
+
+// Articles already fetched, so moving back and forth with j and k never
+// waits. Kept small: only the last few are needed.
+const loaded = new Map<number, FullArticle>();
+const loading = new Map<number, Promise<FullArticle>>();
+const KEEP = 20;
+
+/** The article, if it's already here, without waiting. */
+export function articleNow(id: number): FullArticle | undefined {
+  return loaded.get(id);
+}
+
+/** The article, from the ones already here or from the server. */
+export function readArticle(id: number): Promise<FullArticle> {
+  const here = loaded.get(id);
+  if (here) return Promise.resolve(here);
+  const pending = loading.get(id);
+  if (pending) return pending;
+  const request = getJson(`/api/articles/${id}`)
+    .then((body) => {
+      if (!isRecord(body) || !isRecord(body.article)) throw new Error("slowfeed sent an unexpected answer");
+      const article = toFullArticle(body.article);
+      loaded.set(id, article);
+      if (loaded.size > KEEP) loaded.delete(loaded.keys().next().value as number);
+      return article;
+    })
+    .finally(() => loading.delete(id));
+  loading.set(id, request);
+  return request;
+}
+
+/** Fetches an article in advance, so it shows at once when asked for. */
+export function prefetch(id: number): void {
+  readArticle(id).catch(() => {
+    // Nothing to do: it's fetched again when actually opened.
+  });
 }
 
 /** Follows a feed from a feed's or a website's address. */
@@ -131,11 +171,37 @@ async function getJson(path: string): Promise<unknown> {
   return response.json();
 }
 
+function toArticle(article: Record<string, unknown>): Article {
+  return {
+    id: Number(article.id),
+    feedId: Number(article.feed_id),
+    feedTitle: String(article.feed_title ?? ""),
+    title: String(article.title ?? ""),
+    link: text(article.link),
+    at: Number(article.at),
+  };
+}
+
+function toFullArticle(article: Record<string, unknown>): FullArticle {
+  return {
+    ...toArticle(article),
+    siteUrl: text(article.site_url),
+    author: text(article.author),
+    content: text(article.content),
+    summary: text(article.summary),
+    language: text(article.language),
+  };
+}
+
+function text(value: unknown): string | null {
+  return typeof value === "string" ? value : null;
+}
+
 function toFeed(feed: Record<string, unknown>): Feed {
   return {
     id: Number(feed.id),
     title: String(feed.title ?? ""),
-    siteUrl: typeof feed.site_url === "string" ? feed.site_url : null,
+    siteUrl: text(feed.site_url),
   };
 }
 

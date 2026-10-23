@@ -181,8 +181,10 @@ These were decided with the owner. Changing any of them needs the owner's approv
 
 - ammonia with a strict allowlist: no scripts, no styles that can run code, no event handlers, no iframes. (V2 will allow YouTube's player only.)
 - Cleaned **before storing** (from Milestone 5), so the database never holds unsafe content; relative links are made whole using the article's address. Titles and names are stored as plain text, and the screen shows them as text, never as HTML.
-- Remove invisible 1×1 tracking images.
-- Links get `rel="noopener noreferrer"`.
+- Remove invisible 1×1 tracking images: any image whose width or height is 0 or 1 pixel and neither is bigger, removed before the safety cleaning so ammonia always has the last word. Articles stored before Milestone 6 lose them when shown.
+- Links get `rel="noopener noreferrer"` and open in a new tab.
+- Images are the one thing the browser may load from any address (the Content Security Policy's `img-src`), because articles show the publisher's own images. Scripts, styles, fonts and connections stay slowfeed-only. The page's "no-referrer" rule means publishers aren't told an image was viewed in slowfeed.
+- Authors are kept as names only: RSS's `address (Name)` form keeps just the name.
 
 ### Data
 

@@ -119,6 +119,8 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Routing (addresses inside a single-page app) and browser history
 - Font subsets and `unicode-range`
 - Modal dialog
+- Prefetching (loading the next thing in advance)
+- Clipboard and the system share sheet
 
 ## Data and the database
 

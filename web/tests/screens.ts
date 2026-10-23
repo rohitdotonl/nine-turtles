@@ -42,6 +42,18 @@ export const SCREENS: Screen[] = [
       await expect(page.getByText("This site offers more than one feed. Choose one:")).toBeVisible();
     },
   },
+  {
+    name: "article",
+    path: "/all",
+    signedIn: true,
+    base: FEEDS_APP,
+    open: async (page) => {
+      await openReadingRoom(page);
+      await page.keyboard.press("o");
+      await expect(page.getByRole("heading", { level: 2, name: "The pleasure of a slow letter" })).toBeFocused();
+      await expect(page.getByRole("img", { name: "A river drawn as three blue lines" })).toBeVisible();
+    },
+  },
   { name: "settings", path: "/settings", signedIn: true },
   {
     name: "shortcuts",
@@ -67,9 +79,19 @@ const BACKGROUNDS: Record<Theme, string> = {
  * Follows a feed through slowfeed's own API, with the page's sign-in, so a
  * screen can start with feeds. Following one twice is fine.
  */
-export async function follow(page: Page, address: string): Promise<void> {
+export async function follow(page: Page, address: string): Promise<number> {
   const response = await page.request.post(new URL("/api/feeds", page.url()).href, { data: { address } });
   expect([201, 409]).toContain(response.status());
+  const body = await response.json();
+  return Number(body.feed?.id ?? body.feed_id);
+}
+
+/** Follows Reading Room and opens its list, with nothing selected yet. */
+export async function openReadingRoom(page: Page): Promise<void> {
+  const id = await follow(page, `${FEED_SITE}/reading/`);
+  await page.goto(new URL(`/feeds/${id}`, page.url()).href);
+  await appReady(page);
+  await expect(page.getByRole("button", { name: /The pleasure of a slow letter/ })).toBeVisible();
 }
 
 /** Signs in through the sign-in page, the way the reader does. */

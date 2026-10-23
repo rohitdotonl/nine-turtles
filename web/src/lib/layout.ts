@@ -22,9 +22,10 @@ export type Panes = { sidebar: boolean; list: boolean; article: boolean };
 /**
  * Wide: all three. Medium: two, the list and article, or the sidebar and list
  * when the sidebar is shown. Narrow (phones, Milestone 13): one at a time, and
- * the sidebar is the home screen. Settings fills the list and article areas.
+ * the sidebar is the home screen; an opened article (`reading`) takes the
+ * list's place. Settings fills the list and article areas.
  */
-export function panesFor(width: Width, sidebar: SidebarChoice): Panes {
+export function panesFor(width: Width, sidebar: SidebarChoice, reading = false): Panes {
   const sidebarShown = sidebar === "auto" ? width !== "medium" : sidebar === "shown";
   switch (width) {
     case "wide":
@@ -32,6 +33,6 @@ export function panesFor(width: Width, sidebar: SidebarChoice): Panes {
     case "medium":
       return { sidebar: sidebarShown, list: true, article: !sidebarShown };
     case "narrow":
-      return { sidebar: sidebarShown, list: !sidebarShown, article: false };
+      return { sidebar: sidebarShown, list: !sidebarShown && !reading, article: !sidebarShown && reading };
   }
 }

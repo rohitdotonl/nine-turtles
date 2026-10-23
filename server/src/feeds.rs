@@ -1,5 +1,5 @@
-//! Adding a feed, and listing feeds and their articles (SPEC sections 3, 5
-//! and 6).
+//! Adding a feed, listing feeds and their articles, and reading one article
+//! (SPEC sections 3, 5, 6 and 7).
 //!
 //! Adding: the reader pastes a feed's address or a website's. slowfeed
 //! fetches it once; if it's a web page, it looks in it for the feeds the site
@@ -9,7 +9,7 @@
 
 use axum::{
     Json, Router,
-    extract::{Query, State},
+    extract::{Path, Query, State},
     http::StatusCode,
     response::{IntoResponse, Response},
     routing::get,
@@ -33,6 +33,7 @@ pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/api/feeds", get(list_feeds).post(add_feed))
         .route("/api/articles", get(list_articles))
+        .route("/api/articles/{id}", get(read_article))
 }
 
 #[derive(Serialize, sqlx::FromRow)]
@@ -367,9 +368,83 @@ pub async fn page(
     Ok((rows, older))
 }
 
+/// One article, everything the reading area shows (SPEC section 7).
+#[derive(Serialize, sqlx::FromRow)]
+pub struct FullArticle {
+    pub id: i64,
+    pub feed_id: i64,
+    pub feed_title: String,
+    /// The publisher's website, so the source is credited with a link.
+    pub site_url: Option<String>,
+    pub title: String,
+    /// The original article: "Open original" and Copy link go here.
+    pub link: Option<String>,
+    pub author: Option<String>,
+    /// The article's text, already cleaned (feed.rs). Null when the feed
+    /// gives only a summary.
+    pub content: Option<String>,
+    pub summary: Option<String>,
+    /// The article's language, or its feed's; null if neither says.
+    pub language: Option<String>,
+    /// Seconds since 1970 (UTC), as in the list.
+    pub at: i64,
+}
+
+async fn read_article(_: SignedIn, State(state): State<AppState>, Path(id): Path<i64>) -> Response {
+    let article: Result<Option<FullArticle>, sqlx::Error> = sqlx::query_as(
+        "SELECT articles.id, articles.feed_id, feeds.title AS feed_title, feeds.site_url,
+                articles.title, articles.link, articles.author, articles.content,
+                articles.summary, COALESCE(articles.language, feeds.language) AS language,
+                articles.sort_at AS at
+         FROM articles JOIN feeds ON feeds.id = articles.feed_id
+         WHERE articles.id = ?",
+    )
+    .bind(id)
+    .fetch_optional(&state.db)
+    .await;
+    match article {
+        Ok(Some(mut article)) => {
+            // Articles stored before tracking images were removed on arrival
+            // (Milestone 5) lose them here instead.
+            article.content = article
+                .content
+                .map(|html| feed::without_tracking_images(&html));
+            article.summary = article
+                .summary
+                .map(|html| feed::without_tracking_images(&html));
+            article.language = article.language.filter(|tag| is_language_tag(tag));
+            Json(json!({ "article": article })).into_response()
+        }
+        Ok(None) => StatusCode::NOT_FOUND.into_response(),
+        Err(error) => database_problem("reading an article", &error),
+    }
+}
+
+/// A language as feeds write it (`en`, `en-GB`, `hi`), so screen readers can
+/// use it. Anything else is left out rather than guessed.
+fn is_language_tag(tag: &str) -> bool {
+    let mut parts = tag.split('-');
+    let first = parts.next().unwrap_or("");
+    (2..=8).contains(&first.len())
+        && first.chars().all(|c| c.is_ascii_alphabetic())
+        && parts.all(|part| {
+            (1..=8).contains(&part.len()) && part.chars().all(|c| c.is_ascii_alphanumeric())
+        })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn only_real_language_tags_mark_an_article() {
+        for good in ["en", "en-GB", "hi", "zh-Hant-TW", "pt-br"] {
+            assert!(is_language_tag(good), "{good}");
+        }
+        for bad in ["", "e", "en_GB", "english language", "en-", "<b>"] {
+            assert!(!is_language_tag(bad), "{bad}");
+        }
+    }
 
     #[test]
     fn typed_addresses_become_web_addresses() {

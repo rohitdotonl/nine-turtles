@@ -1,5 +1,5 @@
 <!--
-  The signed-in app (SPEC sections 2 to 6, 18 and 19): the sidebar with the
+  The signed-in app (SPEC sections 2 to 7, 18 and 19): the sidebar with the
   feeds, the item list and the reading area, side by side as the window's
   width allows, with adding a feed, Settings and the `?` shortcut list.
   Nothing in it moves unless the reader moves it.
@@ -7,13 +7,14 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import AddFeed from "./AddFeed.svelte";
+  import ArticleView from "./ArticleView.svelte";
   import CheatSheet from "./CheatSheet.svelte";
   import ItemList from "./ItemList.svelte";
   import Settings from "./Settings.svelte";
-  import { listFeeds, type Feed } from "./feeds";
+  import { listFeeds, type Article, type Feed } from "./feeds";
   import { createKeyReader } from "./keyboard";
   import { panesFor, widthFor, MEDIUM_REM, WIDE_REM, type SidebarChoice, type Width } from "./layout";
-  import { apply, load, save } from "./preferences";
+  import { TEXT_SIZES, apply, load, save } from "./preferences";
   import { VIEWS, VIEW_NAMES, nameFor, parse, pathFor, titleFor, type Route } from "./router";
 
   let { version, onSignedOut }: { version: string; onSignedOut: () => void } = $props();
@@ -31,14 +32,20 @@
   // that names a place opens that place.
   let sidebarChoice: SidebarChoice = $state(currentWidth() === "narrow" && location.pathname !== "/" ? "hidden" : "auto");
   let cheatSheetOpen = $state(false);
+  /** The article chosen in the list, shown in the reading area. */
+  let selected: Article | undefined = $state();
+  /** On a phone-narrow window, the opened article takes the list's place. */
+  let reading = $state(false);
 
-  let panes = $derived(panesFor(width, sidebarChoice));
+  let panes = $derived(panesFor(width, sidebarChoice, reading));
 
   let wordmark: HTMLHeadingElement | undefined = $state();
   let listHeading: HTMLHeadingElement | undefined = $state();
   let settingsHeading: HTMLHeadingElement | undefined = $state();
   let addField: HTMLInputElement | undefined = $state();
   let sidebar: HTMLElement | undefined = $state();
+  let articleHeading: HTMLHeadingElement | undefined = $state();
+  let itemList: ItemList | undefined = $state();
 
   let currentFeed = $derived.by(() => {
     const place = route;
@@ -97,6 +104,8 @@
     const back = () => {
       route = parse(location.pathname);
       if (isList(route)) lastPlace = route;
+      selected = undefined;
+      reading = false;
       if (width === "narrow") sidebarChoice = "hidden";
     };
     addEventListener("popstate", back);
@@ -122,6 +131,21 @@
           break;
         case "escape":
           escape();
+          break;
+        case "move":
+          move(action.step);
+          break;
+        case "open":
+          open();
+          break;
+        case "open-original":
+          if (selected?.link && panes.article) window.open(selected.link, "_blank", "noopener,noreferrer");
+          break;
+        case "text-size":
+          if (selected && panes.article) {
+            const size = preferences.textSize + action.step;
+            if (size >= 0 && size < TEXT_SIZES.length) preferences.textSize = size;
+          }
           break;
       }
     };
@@ -149,6 +173,8 @@
   /** Goes to a place, and moves the keyboard's place to its heading. */
   function go(next: Route) {
     if (pathFor(next) !== location.pathname) history.pushState(null, "", pathFor(next));
+    if (pathFor(next) !== pathFor(route)) selected = undefined;
+    reading = false;
     route = next;
     if (isList(next)) lastPlace = next;
     // A feed added elsewhere (another tab, another device) isn't in the list yet.
@@ -180,8 +206,52 @@
     }
   }
 
+  /** Is the keyboard's place in the reading area? */
+  function inArticle(): boolean {
+    return articleHeading?.closest("section")?.contains(document.activeElement) ?? false;
+  }
+
+  /**
+   * j and k: the next or previous article. The keyboard's place follows: to
+   * the new article if you were reading, otherwise to its row in the list.
+   */
+  function move(step: 1 | -1) {
+    if (!itemList || (!panes.list && !reading)) return;
+    const wasReading = reading || inArticle();
+    if (!itemList.move(step)) return;
+    showArticleArea();
+    if (wasReading) queueMicrotask(() => articleHeading?.focus());
+    else itemList.focusSelected();
+  }
+
+  /** Enter and o: open the selected article (the first, if none is selected yet) to read. */
+  function open() {
+    if (!itemList || (!panes.list && !reading)) return;
+    if (!selected && !itemList.move(1)) return;
+    if (width === "narrow") reading = true;
+    showArticleArea();
+    queueMicrotask(() => articleHeading?.focus());
+  }
+
+  /** Choosing an article shows it, so on a medium window the sidebar makes way. */
+  function showArticleArea() {
+    if (width === "medium" && panes.sidebar) sidebarChoice = "hidden";
+  }
+
+  function chose(byKeyboard: boolean) {
+    if (width === "narrow" || byKeyboard) open();
+    else showArticleArea();
+  }
+
+  /** Back from the article to its row in the list. */
+  function backToList() {
+    reading = false;
+    itemList?.focusSelected();
+  }
+
   function escape() {
     if (route.kind === "settings" || route.kind === "add-feed") go(lastPlace);
+    else if (reading || (selected && inArticle())) backToList();
     else if (width === "narrow" && !panes.sidebar) {
       sidebarChoice = "shown";
       queueMicrotask(() => wordmark?.focus());
@@ -292,7 +362,7 @@
     >
   </nav>
 
-  {#if panes.list}
+  {#if panes.list || panes.article}
     <div class="flex min-w-0 flex-1">
       {#if route.kind === "settings"}
         <Settings
@@ -315,7 +385,8 @@
       {:else}
         <section
           aria-labelledby="list-heading"
-          class={["flex flex-col bg-list pt-16", panes.article ? "w-80 shrink-0 xl:w-96" : "flex-1"]}
+          hidden={!panes.list}
+          class={["flex-col bg-list pt-16", panes.article ? "w-80 shrink-0 xl:w-96" : "flex-1", panes.list && "flex"]}
         >
           <div class="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
             <h2 id="list-heading" tabindex="-1" bind:this={listHeading} class="text-large font-semibold break-words">
@@ -335,19 +406,30 @@
             {:else if feeds !== undefined}
               {#key pathFor(route)}
                 <ItemList
+                  bind:this={itemList}
+                  bind:selected
                   feedId={route.kind === "feed" ? route.id : null}
                   empty={route.kind === "feed" ? "This feed has no articles yet." : "No articles yet."}
+                  onChoose={chose}
                 />
               {/key}
             {/if}
           </div>
         </section>
         {#if panes.article}
-          <section aria-label="Article" class="flex min-w-0 flex-1 flex-col bg-paper pt-16">
-            <div class="min-h-0 flex-1 overflow-y-auto px-10 pb-6">
-              <p class="text-muted">No article open.</p>
-            </div>
-          </section>
+          {#if selected}
+            <ArticleView
+              article={selected}
+              bind:heading={articleHeading}
+              back={width === "narrow" ? { name: nameFor(route, currentFeed?.title), go: backToList } : undefined}
+            />
+          {:else}
+            <section aria-label="Article" class="flex min-w-0 flex-1 flex-col bg-paper pt-16">
+              <div class="min-h-0 flex-1 overflow-y-auto px-10 pb-6">
+                <p class="text-muted">No article open.</p>
+              </div>
+            </section>
+          {/if}
         {/if}
       {/if}
     </div>

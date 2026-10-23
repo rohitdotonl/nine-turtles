@@ -26,8 +26,8 @@ same so older documents still point to the right place.
 | 2 | Live on Render, with sign-in | ✅ |
 | 3 | Backups and recovery | ⏭ |
 | 4 | Look and feel foundations | ✅ |
-| 5 | Add a feed and see its items | 🔨 |
-| 6 | Reading articles | ⬜ |
+| 5 | Add a feed and see its items | ✅ |
+| 6 | Reading articles | 🔨 |
 | 7 | Read, unread, star and undo | ⬜ |
 | 8 | Polite background fetching and Refresh | ⬜ |
 | 9 | Folders, feed editing and OPML import/export | ⬜ |

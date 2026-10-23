@@ -7,6 +7,11 @@
 //   /garden/           Garden Letters' home page, naming /garden.xml
 //   /two/              a page naming two feeds, so the reader chooses
 //   /plain/            a page naming no feed
+//   /reading/          Reading Room's home page, naming /reading.xml: one
+//                      full article (headings, a quote, code, a table, an
+//                      image and a tracking image), one summary only
+//   /visits            how often each address here was asked for, so tests
+//                      can prove the tracking image is never loaded
 //   /blog/NAME/        a home page for a blog called NAME, naming its feed
 //                      (and its comments feed too, if NAME starts with
 //                      "two-"); tests that add a feed use their own NAME,
@@ -51,8 +56,49 @@ const atom = `<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><ti
 <entry><title>A reply about letters</title><id>urn:quiet-notes:c1</id><updated>2026-10-19T08:00:00Z</updated>
 <link href="https://quiet-notes.example/comments/1"/></entry></feed>`;
 
+const ROOM = "https://reading-room.example/";
+const WHOLE = `<p>Most of what I read now arrives slowly, and I like it that way.
+A <a href="/letters">letter</a> can wait a week; a good essay can wait a year.</p>
+<img src="http://127.0.0.1:${port}/reading/pixel.gif" width="1" height="1" alt="">
+<h2>What a slow reader keeps</h2>
+<p>Three things, mostly: a notebook, a pencil and an afternoon with nothing in it.</p>
+<blockquote><p>Reading is a conversation that never interrupts.</p></blockquote>
+<figure><img src="http://127.0.0.1:${port}/reading/river.svg" width="640" height="240" alt="A river drawn as three blue lines">
+<figcaption>The river near the allotment, drawn from memory.</figcaption></figure>
+<h3>A small table of habits</h3>
+<table><thead><tr><th>Habit</th><th>How often</th></tr></thead>
+<tbody><tr><td>Letters</td><td>Weekly</td></tr><tr><td>Long essays</td><td>Monthly</td></tr></tbody></table>
+<p>And the one line of code I still remember: <code>print("hello")</code>.<sup><a href="#note-1">1</a></sup></p>
+<pre><code>for book in shelf:
+    read(book, slowly=True)</code></pre>
+<p id="note-1">1. Written in Python, a long time ago.</p>`;
+
+const reading = `<?xml version="1.0"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel>
+<title>Reading Room</title><link>${ROOM}</link><language>en-GB</language>
+<item><title>The pleasure of a slow letter</title><link>${ROOM}slow-letter</link><guid>${ROOM}slow-letter</guid>
+<pubDate>${new Date(NEWEST).toUTCString()}</pubDate><author>a@reading-room.example (Asha Rao)</author>
+<description>A short version.</description>
+<content:encoded><![CDATA[${WHOLE}]]></content:encoded></item>
+<item><title>Only the first page</title><link>${ROOM}first-page</link><guid>${ROOM}first-page</guid>
+<pubDate>${new Date(NEWEST - DAY).toUTCString()}</pubDate>
+<description>&lt;p&gt;This feed shares just the opening paragraph of each article.&lt;/p&gt;</description></item>
+<item><title>A third, shorter note</title><link>${ROOM}third</link><guid>${ROOM}third</guid>
+<pubDate>${new Date(NEWEST - 2 * DAY).toUTCString()}</pubDate>
+<description>&lt;p&gt;Three is a good number of articles.&lt;/p&gt;</description></item>
+</channel></rss>`;
+
+const RIVER = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="240" viewBox="0 0 640 240">
+<rect width="640" height="240" fill="#dfe6ee"/>
+<path d="M0 80 C160 40 320 120 640 70" stroke="#2f4a7a" stroke-width="6" fill="none"/>
+<path d="M0 130 C200 90 360 170 640 120" stroke="#2f4a7a" stroke-width="6" fill="none"/>
+<path d="M0 180 C180 140 380 220 640 170" stroke="#2f4a7a" stroke-width="6" fill="none"/></svg>`;
+
+const visits = new Map();
+
 createServer((request, response) => {
   const path = new URL(request.url ?? "/", "http://localhost").pathname;
+  visits.set(path, (visits.get(path) ?? 0) + 1);
   const send = (type, body) => {
     response.writeHead(200, { "content-type": type });
     response.end(body);
@@ -73,6 +119,11 @@ createServer((request, response) => {
     );
   if (path === "/comments.atom") return send("application/atom+xml", atom);
   if (path === "/plain/") return html(page("Just a page", []));
+  if (path === "/reading/") return html(page("Reading Room", [["Reading Room", "/reading.xml"]]));
+  if (path === "/reading.xml") return xml(reading);
+  if (path === "/reading/river.svg") return send("image/svg+xml", RIVER);
+  if (path === "/reading/pixel.gif") return send("image/gif", "GIF89a");
+  if (path === "/visits") return send("application/json", JSON.stringify(Object.fromEntries(visits)));
 
   const blog = path.match(/^\/blog\/([a-z0-9-]+)\/(feed\.xml|comments\.xml)?$/);
   if (blog) {
