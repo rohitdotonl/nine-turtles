@@ -120,6 +120,16 @@ test("? opens the shortcut list, Escape closes it and returns the keyboard's pla
   expect(await page.evaluate(() => document.activeElement?.textContent?.trim())).toBe(before);
 });
 
+test("the shortcut list fits a small phone without scrolling sideways", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await openApp(page);
+  await page.keyboard.press("?");
+  const dialog = page.getByRole("dialog", { name: "Keyboard shortcuts" });
+  await expect(dialog).toBeVisible();
+  const { scroll, client } = await dialog.evaluate((element) => ({ scroll: element.scrollWidth, client: element.clientWidth }));
+  expect(scroll).toBeLessThanOrEqual(client);
+});
+
 test("shortcuts don't fire while typing in a field", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await openApp(page);

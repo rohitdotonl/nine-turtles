@@ -29,7 +29,7 @@
   bind:this={dialog}
   aria-labelledby="shortcuts-heading"
   onclose={() => (open = false)}
-  class="m-auto max-h-[90dvh] w-[min(40rem,calc(100vw-2rem))] overflow-y-auto rounded border border-muted bg-paper p-6 text-ink"
+  class="m-auto max-h-[90dvh] w-[min(40rem,calc(100vw-2rem))] overflow-y-auto rounded border border-muted bg-paper p-4 text-ink sm:p-6"
 >
   <div class="flex items-center justify-between gap-4">
     <h2 id="shortcuts-heading" class="text-xlarge font-semibold">Keyboard shortcuts</h2>
@@ -42,19 +42,24 @@
   <table class="mt-6 w-full text-left">
     <thead>
       <tr class="text-small text-muted">
-        <!-- As narrow as its keys, so each key sits close to what it does. -->
-        <th scope="col" class="w-px pb-2 font-normal">Keys</th>
+        <!-- As narrow as its keys on a wider screen, so each key sits close to what it does; a fixed share on a small phone. -->
+        <th scope="col" class="w-[7.5rem] pb-2 font-normal sm:w-px">Keys</th>
         <th scope="col" class="pb-2 font-normal">What it does</th>
       </tr>
     </thead>
     <tbody>
       {#each SHORTCUTS as shortcut (shortcut.action)}
         <tr>
-          <td class="py-1.5 pr-6 align-top whitespace-nowrap">
-            <!-- "g then u" is two presses: a cap for each key, with "then" between them. -->
-            {#each shortcut.keys as key, index (key)}{#if index > 0}<span class="text-muted">{" / "}</span>{/if}{#each key.split(" then ") as press, step (step)}{#if step > 0}<span
-                    class="text-small text-muted">{" then "}</span
-                  >{/if}<kbd class="key">{press}</kbd>{/each}{/each}
+          <td class="py-1.5 pr-3 align-top sm:pr-6 sm:whitespace-nowrap">
+            <!--
+              "g then u" is two presses: a cap for each key, with "then" between them.
+              Each shortcut stays whole; on a narrow phone the alternatives wrap at the slashes.
+            -->
+            {#each shortcut.keys as key, index (key)}{#if index > 0}{" "}{/if}<span class="whitespace-nowrap"
+                >{#if index > 0}<span class="text-muted">{"/ "}</span>{/if}{#each key.split(" then ") as press, step (step)}{#if step > 0}<span
+                      class="text-small text-muted">{" then "}</span
+                    >{/if}<kbd class="key">{press}</kbd>{/each}</span
+              >{/each}
           </td>
           <td class="py-1.5 align-top">
             {shortcut.action}{#if !shortcut.ready}<span class="text-small text-muted">{" · coming later"}</span>{/if}
@@ -70,7 +75,8 @@
     <tbody>
       {#each FILTERS as [filter, meaning] (filter)}
         <tr>
-          <td class="w-px py-1.5 pr-6 align-top whitespace-nowrap"><code class="font-mono">{filter}</code></td>
+          <!-- Narrower gap on a small phone, so "before:YYYY-MM-DD" and its meaning fit side by side. -->
+          <td class="w-px py-1.5 pr-3 align-top whitespace-nowrap sm:pr-6"><code class="font-mono text-small">{filter}</code></td>
           <td class="py-1.5 align-top">{meaning}</td>
         </tr>
       {/each}
