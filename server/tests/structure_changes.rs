@@ -268,3 +268,89 @@ async fn adding_folders_keeps_every_feed_followed_with_its_articles_marks_and_sc
         10
     );
 }
+
+#[tokio::test]
+async fn adding_search_keeps_everything_and_indexes_every_earlier_article() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database as Milestone 9 left it (structure changes 1 to 5).
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(slowfeed::db::path(&data_dir))
+                .create_if_missing(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(5, &old)
+        .await
+        .unwrap();
+    sqlx::query("INSERT INTO folders (id, name) VALUES (1, 'Gardens')")
+        .execute(&old)
+        .await
+        .unwrap();
+    for feed in 1..=20 {
+        sqlx::query("INSERT INTO feeds (id, url, url_key, title, added_at) VALUES (?, ?, ?, ?, 1)")
+            .bind(feed)
+            .bind(format!("https://blog-{feed}.example/feed"))
+            .bind(format!("blog-{feed}.example/feed"))
+            .bind(format!("Blog {feed}"))
+            .execute(&old)
+            .await
+            .unwrap();
+        sqlx::query("INSERT INTO feed_folders (folder_id, feed_id) VALUES (1, ?)")
+            .bind(feed)
+            .execute(&old)
+            .await
+            .unwrap();
+        for number in 0..50 {
+            sqlx::query(
+                "INSERT INTO articles (feed_id, fingerprint, title, content, received_at, sort_at,
+                     read, starred)
+                 VALUES (?, ?, ?, '<p>Words about <em>compost</em>.</p>', 2, ?, ?, ?)",
+            )
+            .bind(feed)
+            .bind(format!("id:{number}"))
+            .bind(format!("Article {number}"))
+            .bind(number)
+            .bind(number % 2)
+            .bind(i64::from(number % 10 == 0))
+            .execute(&old)
+            .await
+            .unwrap();
+        }
+    }
+    old.close().await;
+
+    let db = slowfeed::db::open(&data_dir).await.unwrap();
+    let count = |sql: &'static str| sqlx::query_scalar::<_, i64>(sql).fetch_one(&db);
+    assert_eq!(count("SELECT COUNT(*) FROM feeds").await.unwrap(), 20);
+    assert_eq!(
+        count("SELECT COUNT(*) FROM feed_folders").await.unwrap(),
+        20
+    );
+    assert_eq!(count("SELECT COUNT(*) FROM articles").await.unwrap(), 1000);
+    assert_eq!(
+        count("SELECT COUNT(*) FROM articles WHERE read = 1")
+            .await
+            .unwrap(),
+        500
+    );
+    assert_eq!(
+        count("SELECT COUNT(*) FROM articles WHERE starred = 1")
+            .await
+            .unwrap(),
+        100
+    );
+    // Starting up adds every earlier article to the search index, once.
+    assert_eq!(slowfeed::search::index_missing(&db).await.unwrap(), 1000);
+    assert_eq!(slowfeed::search::index_missing(&db).await.unwrap(), 0);
+    assert_eq!(
+        count("SELECT COUNT(*) FROM articles_search WHERE articles_search MATCH 'compost'")
+            .await
+            .unwrap(),
+        1000
+    );
+}

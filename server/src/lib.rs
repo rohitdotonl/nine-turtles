@@ -100,6 +100,7 @@ pub fn router(state: AppState) -> Router {
         .merge(folders::routes())
         .merge(subscriptions::routes())
         .merge(marks::routes())
+        .merge(search::routes())
         .merge(settings::routes())
         .merge(status::routes())
         .merge(assets::routes())

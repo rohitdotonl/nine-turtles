@@ -25,7 +25,7 @@ use crate::{
     checking, discover, feed,
     fetch::{self, FetchError, Fetched},
     folders::{self, FOLDERS, Folder, MEMBERSHIPS},
-    now,
+    now, search,
 };
 
 /// How many articles the list shows before "Show older items" (SPEC section 6).
@@ -332,7 +332,7 @@ pub async fn store_articles(
         let sort_at = article
             .published_at
             .map_or(received_at, |published| published.min(received_at));
-        sqlx::query(
+        let stored: Option<i64> = sqlx::query_scalar(
             "INSERT INTO articles (id, feed_id, fingerprint, title, link, author, content,
                  summary, language, published_at, received_at, sort_at)
              VALUES (1 + MAX(COALESCE((SELECT MAX(id) FROM articles), 0),
@@ -347,7 +347,8 @@ pub async fn store_articles(
                  OR articles.author IS NOT excluded.author
                  OR articles.content IS NOT excluded.content
                  OR articles.summary IS NOT excluded.summary
-                 OR articles.language IS NOT excluded.language",
+                 OR articles.language IS NOT excluded.language
+             RETURNING id",
         )
         .bind(feed_id)
         .bind(&article.fingerprint)
@@ -360,8 +361,19 @@ pub async fn store_articles(
         .bind(article.published_at)
         .bind(received_at)
         .bind(sort_at)
-        .execute(&mut *connection)
+        .fetch_optional(&mut *connection)
         .await?;
+        // New, or edited since: the search index gets its words.
+        if let Some(id) = stored {
+            search::index(
+                connection,
+                id,
+                &article.title,
+                article.content.as_deref(),
+                article.summary.as_deref(),
+            )
+            .await?;
+        }
     }
     Ok(())
 }
