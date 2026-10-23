@@ -214,18 +214,39 @@ pub async fn clear_unsubscribed(db: &sqlx::SqlitePool, before: i64) -> Result<us
     .bind(before)
     .fetch_all(db)
     .await?;
+    let mut cleared = 0;
     for &id in &waiting {
         let mut transaction = db.begin_with("BEGIN IMMEDIATE").await?;
-        clear(&mut transaction, id).await?;
+        cleared += usize::from(clear(&mut transaction, id).await?);
         transaction.commit().await?;
     }
-    Ok(waiting.len())
+    Ok(cleared)
 }
 
 /// Removes an unsubscribed feed's unstarred articles (with their read
 /// history) and its folders. Its line goes too, unless starred articles
-/// still need its name.
-pub async fn clear(connection: &mut SqliteConnection, id: i64) -> Result<(), sqlx::Error> {
+/// still need its name. Does nothing (and answers false) if the feed is
+/// followed again or already cleared: Undo may have come first.
+pub async fn clear(connection: &mut SqliteConnection, id: i64) -> Result<bool, sqlx::Error> {
+    let claimed = sqlx::query(
+        "UPDATE feeds SET cleared = 1 WHERE id = ? AND unsubscribed_at IS NOT NULL AND cleared = 0",
+    )
+    .bind(id)
+    .execute(&mut *connection)
+    .await?;
+    if claimed.rows_affected() == 0 {
+        return Ok(false);
+    }
+    // Remember the highest article number ever given, so numbers freed
+    // here are never given again (see `feeds::store_articles`).
+    sqlx::query(
+        "INSERT INTO settings (name, value)
+         VALUES ('articles_high_water', CAST(COALESCE((SELECT MAX(id) FROM articles), 0) AS TEXT))
+         ON CONFLICT (name) DO UPDATE SET value = CAST(
+             MAX(CAST(value AS INTEGER), CAST(excluded.value AS INTEGER)) AS TEXT)",
+    )
+    .execute(&mut *connection)
+    .await?;
     sqlx::query("DELETE FROM articles WHERE feed_id = ? AND starred = 0")
         .bind(id)
         .execute(&mut *connection)
@@ -234,20 +255,14 @@ pub async fn clear(connection: &mut SqliteConnection, id: i64) -> Result<(), sql
         .bind(id)
         .execute(&mut *connection)
         .await?;
-    let removed = sqlx::query(
+    sqlx::query(
         "DELETE FROM feeds WHERE id = ? AND NOT EXISTS (SELECT 1 FROM articles WHERE feed_id = ?)",
     )
     .bind(id)
     .bind(id)
     .execute(&mut *connection)
     .await?;
-    if removed.rows_affected() == 0 {
-        sqlx::query("UPDATE feeds SET cleared = 1 WHERE id = ?")
-            .bind(id)
-            .execute(&mut *connection)
-            .await?;
-    }
-    Ok(())
+    Ok(true)
 }
 
 #[derive(Deserialize)]

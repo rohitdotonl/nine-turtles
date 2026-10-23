@@ -310,7 +310,9 @@ pub async fn make_room(
     Ok(())
 }
 
-/// Stores new articles. One already stored
+/// Stores new articles, numbered above every article ever stored, even ones
+/// since removed by unsubscribing, so "anything newer than article N?"
+/// never misses one and a number never means two articles. One already stored
 /// (same fingerprint, same feed) that the publisher has since edited gets
 /// the new words quietly: it keeps its place in the list, its read mark and
 /// its star (SPEC section 11).
@@ -331,9 +333,12 @@ pub async fn store_articles(
             .published_at
             .map_or(received_at, |published| published.min(received_at));
         sqlx::query(
-            "INSERT INTO articles (feed_id, fingerprint, title, link, author, content, summary,
-                 language, published_at, received_at, sort_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            "INSERT INTO articles (id, feed_id, fingerprint, title, link, author, content,
+                 summary, language, published_at, received_at, sort_at)
+             VALUES (1 + MAX(COALESCE((SELECT MAX(id) FROM articles), 0),
+                     COALESCE((SELECT CAST(value AS INTEGER) FROM settings
+                               WHERE name = 'articles_high_water'), 0)),
+                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON CONFLICT (feed_id, fingerprint) DO UPDATE SET
                  title = excluded.title, link = excluded.link, author = excluded.author,
                  content = excluded.content, summary = excluded.summary,

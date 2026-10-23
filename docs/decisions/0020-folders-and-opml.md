@@ -26,6 +26,24 @@ too. Rejected: deleting at once and sending everything back on Undo (a big
 feed's articles are megabytes); a separate "trash" table (more structure
 for the same result).
 
+Clearing first marks the feed `cleared` in the same step that checks it's
+still unsubscribed, so an Undo that arrives a moment earlier always wins.
+An article unstarred after its feed was cleared is in no list any more but
+stays in the file; the V2 yearly clean-up will remove it, like any old
+unstarred article.
+
+**Article numbers are never reused.** The list asks "anything numbered above
+the newest I loaded?" (decision 0019), and the screen keeps recent articles
+by number. Before this milestone nothing was ever deleted, so numbers only
+grew. Clearing a feed can delete the newest articles, and SQLite would then
+hand their numbers out again. So clearing remembers the highest number
+given (`articles_high_water` in `settings`), and new articles are numbered
+above it. Rejected: rebuilding the `articles` table with SQLite's
+AUTOINCREMENT, which rewrites every stored article (the owner would have to
+agree first, with no backups in V1). Feed and folder numbers can still be
+reused; the only effect is that a new folder may start open in the
+sidebar.
+
 **Following a feed again starts it afresh.** Adding or importing a feed
 that was unsubscribed reuses its line, so starred articles rejoin it and
 nothing is duplicated; everything else arrives new and unread.
@@ -41,7 +59,9 @@ screen.
 
 **The sidebar.** Folders are listed A to Z with a button that shows or
 hides their feeds (closed by default, remembered per device), then feeds in
-no folder. The search field filters both by name, ignoring capitals and
+no folder. The button is a small triangle without a word: like close and
+back, the open/closed triangle is a universal sign (DESIGN.md → "Words
+beside icons"), and screen readers hear "Feeds in Tech, collapsed". The search field filters both by name, ignoring capitals and
 accents, into one flat list; Escape empties it.
 
 **OPML import writes down, then fetches in the background.** Importing
