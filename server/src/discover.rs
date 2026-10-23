@@ -16,11 +16,12 @@ pub struct Found {
     pub url: Url,
 }
 
+/// Plain `application/json` isn't here on purpose: WordPress names its own
+/// data that way on every page, and it isn't a feed.
 const FEED_TYPES: &[(&str, &str)] = &[
     ("application/rss+xml", "RSS feed"),
     ("application/atom+xml", "Atom feed"),
     ("application/feed+json", "JSON Feed"),
-    ("application/json", "JSON Feed"),
 ];
 
 /// The feeds a web page names, in the page's own order, without repeats.
@@ -93,6 +94,7 @@ mod tests {
             <link rel="alternate" type="application/feed+json" title="  JSON
                 version " href="feed.json">
             <link rel="alternate" hreflang="fr" href="/fr/">
+            <link rel="alternate" type="application/json" href="/wp-json/wp/v2/pages/2">
             <link rel="alternate" type="application/rss+xml" href="javascript:alert(1)">
         </head><body></body></html>"#;
         let found = feeds_in(page, &Url::parse("https://example.com/blog/").unwrap());

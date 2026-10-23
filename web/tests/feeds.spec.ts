@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
-import { appReady, follow, signIn } from "./screens";
+import { appReady, follow, signIn, tabTo } from "./screens";
 
 // SPEC sections 2, 3 and 6, "How to check it", done by a browser. Tests that
 // add feeds use the slowfeed that may read the made-up publisher
@@ -124,4 +124,69 @@ test("the list shows 50 articles, then Show older items adds more below", async 
   await expect(rows.last()).toContainText("(1)");
   // The list has an end.
   await expect(list.getByRole("button", { name: "Show older items" })).toHaveCount(0);
+});
+
+// The keyboard floor: everything above also works with the keyboard alone.
+
+test("with only the keyboard: choose one of several feeds, then go back to it from the sidebar", async ({ page }) => {
+  await openApp(page, "/all");
+  const name = newBlog("two");
+  await page.keyboard.press("a");
+  await page.keyboard.type(`${FEED_SITE}/blog/${name}/`);
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("status")).toHaveText("This site offers more than one feed. Choose one:");
+
+  const comments = page.getByRole("button", { name: /^Comments/ });
+  await tabTo(page, comments);
+  await page.keyboard.press("Enter");
+  const heading = page.getByRole("heading", { level: 2, name: `Blog ${name}: comments` });
+  await expect(heading).toBeFocused();
+
+  // Into the sidebar and back to the same feed after visiting All.
+  await page.keyboard.press("g");
+  await page.keyboard.press("a");
+  await expect(page).toHaveURL(/\/all$/);
+  const link = sidebar(page).getByRole("link", { name: `Blog ${name}: comments` });
+  await tabTo(page, link, 400);
+  await page.keyboard.press("Enter");
+  await expect(heading).toBeFocused();
+});
+
+test("with only the keyboard: 'Go to' a feed you already follow", async ({ page }) => {
+  await openApp(page, "/all");
+  const name = newBlog();
+  await follow(page, `${FEED_SITE}/blog/${name}/`);
+  await page.keyboard.press("a");
+  await page.keyboard.type(`${FEED_SITE}/blog/${name}/feed.xml`);
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("status")).toHaveText("You already follow this feed.");
+  await tabTo(page, page.getByRole("link", { name: /^Go to / }));
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeFocused();
+});
+
+test("with only the keyboard: Show older items, and the keyboard's place stays in the list at the end", async ({ page }) => {
+  await openApp(page, "/all");
+  await follow(page, `${FEED_SITE}/`);
+  await page.reload();
+  await appReady(page);
+  const feed = sidebar(page).getByRole("link", { name: "Quiet Notes", exact: true });
+  await tabTo(page, feed, 400);
+  await page.keyboard.press("Enter");
+
+  const list = page.getByRole("region", { name: "Quiet Notes" });
+  const rows = list.getByRole("listitem");
+  await expect(rows).toHaveCount(50);
+  await tabTo(page, list.getByRole("button", { name: "Show older items" }), 400);
+  await page.keyboard.press("Enter");
+  await expect(rows).toHaveCount(60);
+  // The button is gone (the list has ended); the keyboard's place moved to
+  // the first article that just arrived, not to the top of the page.
+  await expect(rows.nth(50)).toBeFocused();
+});
+
+test("an address for a feed you don't follow says so", async ({ page }) => {
+  await openApp(page, "/feeds/999999");
+  await expect(page.getByRole("heading", { level: 2, name: "Feed not found" })).toBeVisible();
+  await expect(page.getByText("You don't follow this feed.")).toBeVisible();
 });

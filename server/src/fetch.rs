@@ -69,7 +69,9 @@ pub enum FetchError {
 
 /// Builds the one downloader slowfeed uses. `local_allowed` lets the tests
 /// serve made-up feeds from this computer; it's never set on the live app.
-pub fn client(local_allowed: bool) -> Client {
+/// If it can't be built, slowfeed doesn't start: a plain downloader without
+/// the limits and the private-address check must never stand in for it.
+pub fn client(local_allowed: bool) -> Result<Client, String> {
     let mut headers = HeaderMap::new();
     headers.insert(header::ACCEPT, HeaderValue::from_static(ACCEPT));
     let builder = Client::builder()
@@ -83,7 +85,9 @@ pub fn client(local_allowed: bool) -> Client {
     } else {
         builder.dns_resolver(PublicOnly)
     };
-    builder.build().unwrap_or_else(|_| Client::new())
+    builder
+        .build()
+        .map_err(|error| format!("can't set up the downloader for feeds: {error}"))
 }
 
 /// Downloads one address, following up to five redirects.
@@ -274,6 +278,23 @@ fn is_public_v6(ip: Ipv6Addr) -> bool {
         || (first & 0xffc0) == 0xfe80
         // Documentation examples (2001:db8::/32).
         || (first == 0x2001 && ip.segments()[1] == 0x0db8))
+        && embedded_v4(ip).is_none_or(is_public_v4)
+}
+
+/// The IPv4 address hidden inside an IPv6 one by the two ways of carrying
+/// one over the other (NAT64, 64:ff9b::/96, and 6to4, 2002::/16), so a
+/// private address can't slip through in disguise.
+fn embedded_v4(ip: Ipv6Addr) -> Option<Ipv4Addr> {
+    let segments = ip.segments();
+    let pair = |high: u16, low: u16| {
+        let [a, b] = high.to_be_bytes();
+        let [c, d] = low.to_be_bytes();
+        Ipv4Addr::new(a, b, c, d)
+    };
+    if segments[..6] == [0x64, 0xff9b, 0, 0, 0, 0] {
+        return Some(pair(segments[6], segments[7]));
+    }
+    (segments[0] == 0x2002).then(|| pair(segments[1], segments[2]))
 }
 
 #[cfg(test)]
@@ -295,12 +316,29 @@ mod tests {
             "fe80::1",
             "::ffff:127.0.0.1",
             "::ffff:10.0.0.1",
+            "64:ff9b::7f00:1",
+            "64:ff9b::a9fe:a9fe",
+            "2002:c0a8:101::1",
         ] {
             assert!(!is_public(address.parse().unwrap()), "{address}");
         }
-        for address in ["93.184.215.14", "1.1.1.1", "2606:4700::1111"] {
+        for address in [
+            "93.184.215.14",
+            "1.1.1.1",
+            "2606:4700::1111",
+            "64:ff9b::101:101",
+        ] {
             assert!(is_public(address.parse().unwrap()), "{address}");
         }
+    }
+
+    #[tokio::test]
+    async fn a_name_that_leads_to_this_computer_is_refused() {
+        // The same check runs on every redirect, since each one is looked up
+        // through this resolver again.
+        let name: Name = "localhost".parse().unwrap();
+        let refused = PublicOnly.resolve(name).await.err().unwrap();
+        assert!(refused.to_string().contains(REFUSED));
     }
 
     #[test]

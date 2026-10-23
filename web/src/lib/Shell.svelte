@@ -151,6 +151,8 @@
     if (pathFor(next) !== location.pathname) history.pushState(null, "", pathFor(next));
     route = next;
     if (isList(next)) lastPlace = next;
+    // A feed added elsewhere (another tab, another device) isn't in the list yet.
+    if (next.kind === "feed" && !feeds?.some((feed) => feed.id === next.id)) loadFeeds();
     // On a phone-narrow window the sidebar is the home screen; choosing a
     // place shows it instead.
     if (width === "narrow") sidebarChoice = "hidden";
@@ -317,12 +319,16 @@
         >
           <div class="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
             <h2 id="list-heading" tabindex="-1" bind:this={listHeading} class="text-large font-semibold break-words">
-              {nameFor(route, currentFeed?.title)}
+              {route.kind === "feed" && feeds !== undefined && !currentFeed
+                ? "Feed not found"
+                : nameFor(route, currentFeed?.title)}
             </h2>
             <!-- Reserved for "New items · press r" (Milestone 8), so nothing shifts when it appears. -->
             <p class="min-h-8 text-small"></p>
             {#if route.kind === "view" && route.view === "starred"}
               <p>No starred articles yet.</p>
+            {:else if route.kind === "feed" && feeds !== undefined && !currentFeed}
+              <p>You don't follow this feed. It may have been an old address.</p>
             {:else if firstVisit}
               <p class="mb-6">Nothing to read yet. Add a website you like to begin.</p>
               <AddFeed bind:field={addField} feeds={[]} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} />

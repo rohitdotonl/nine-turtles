@@ -64,7 +64,7 @@ pub async fn app(config: Config) -> Result<Router, String> {
 
     let state = AppState {
         db: db::open(&config.data_dir).await?,
-        http: fetch::client(config.local_feeds_allowed),
+        http: fetch::client(config.local_feeds_allowed)?,
         config: Arc::new(config),
         limiter: Arc::default(),
         wrong_passwords: Arc::default(),

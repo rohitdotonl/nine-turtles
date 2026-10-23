@@ -43,7 +43,7 @@ A few words used throughout:
 - (V2 adds "New to feeds? Here's how they work", a short guide page for newcomers.)
 
 **How to check it**
-1. On a fresh installation, sign in. You see the field and the Import OPML link, and nothing else competing for attention.
+1. On a fresh installation, sign in. You see the field (and, from Milestone 9, the Import OPML link), and nothing else competing for attention.
 
 ## 3. Adding a feed
 
@@ -55,7 +55,7 @@ A few words used throughout:
 - If it doesn't work, a plain sentence says why, never an error code: "This site doesn't seem to offer a feed.", "That site didn't answer. Try again later.", "Nothing was found at that address.", "That doesn't look like a web address.", "slowfeed can't visit that address." (an address inside a private network or on slowfeed's own computer), or "That file is too big to be a feed."
 - Adding a feed you already follow says "You already follow this feed." with a link to it, instead of making a copy. The same address written differently (`http` or `https`, a trailing `/` or `#part`) counts as the same feed.
 - The new feed appears in the sidebar and opens, its articles straight away, all unread (including older posts the feed still lists). It's fetched once on adding; new articles arriving on their own come with Milestone 8.
-- Each feed has its own address (`/feeds/3`), so reloading keeps your place.
+- Each feed has its own address (`/feeds/3`), so reloading keeps your place. An address for a feed you don't follow says so plainly ("Feed not found").
 
 **How to check it**
 1. Press `a` (or click "+ Add feed"), paste a blog's home page address (not its feed), press Enter. The blog appears in the sidebar with its articles.

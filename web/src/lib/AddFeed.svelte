@@ -29,17 +29,23 @@
 
   let alreadyTitle = $derived(feeds.find((feed) => feed.id === alreadyId)?.title);
 
-  async function add(text: string) {
+  // The choices stay on screen while one is being added, so the button just
+  // pressed (and the keyboard's place on it) never vanishes, and a choice
+  // that fails can be swapped for another. Buttons say they're busy with
+  // `aria-disabled` rather than `disabled`, which would drop the keyboard's
+  // place too.
+  async function add(text: string, fromChoices = false) {
     if (busy) return;
     busy = true;
     message = "";
-    choices = [];
+    if (!fromChoices) choices = [];
     alreadyId = undefined;
     const result = await addFeed(text);
     busy = false;
     switch (result.kind) {
       case "added":
         address = "";
+        choices = [];
         onAdded(result.feed);
         break;
       case "choose":
@@ -79,7 +85,7 @@
       aria-describedby="feed-address-status"
       class="min-h-11 min-w-0 flex-1 rounded border border-ink bg-paper px-3 placeholder:text-muted"
     />
-    <button type="submit" disabled={busy} class="min-h-11 rounded border border-ink px-4">Add feed</button>
+    <button type="submit" aria-disabled={busy} class="min-h-11 rounded border border-ink px-4">Add feed</button>
   </div>
   <!-- Screen readers hear each new line here without moving the keyboard's place. -->
   <p id="feed-address-status" role="status" class="min-h-6">
@@ -93,8 +99,8 @@
       <li>
         <button
           type="button"
-          disabled={busy}
-          onclick={() => add(choice.url)}
+          aria-disabled={busy}
+          onclick={() => add(choice.url, true)}
           class="flex min-h-11 w-full flex-col items-start rounded border border-ink px-4 py-2 text-left"
         >
           <span>{choice.title}</span>

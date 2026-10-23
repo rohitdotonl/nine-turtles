@@ -14,10 +14,13 @@
   let loaded = $state(false);
   let busy = $state(false);
   let problem = $state("");
+  let rows: HTMLLIElement[] = $state([]);
 
   async function load(before: string | null) {
+    if (busy) return;
     busy = true;
     problem = "";
+    const firstNew = articles.length;
     try {
       const page = await listArticles(feedId, before);
       articles = before === null ? page.articles : [...articles, ...page.articles];
@@ -27,6 +30,9 @@
       problem = "The articles couldn't be loaded. Try again in a moment.";
     }
     busy = false;
+    // At the very end the button goes away. Rather than lose the keyboard's
+    // place with it, move it to the first article just added.
+    if (before !== null && older === null) queueMicrotask(() => rows[firstNew]?.focus());
   }
 
   load(null);
@@ -36,8 +42,8 @@
   <p>{empty}</p>
 {:else if articles.length > 0}
   <ul class="-mx-6">
-    {#each articles as article (article.id)}
-      <li class="px-6 py-3">
+    {#each articles as article, index (article.id)}
+      <li class="px-6 py-3" tabindex="-1" bind:this={rows[index]}>
         <p>{article.title || "Untitled"}</p>
         <p class="text-small text-muted">
           {article.feedTitle} ·
@@ -47,7 +53,7 @@
     {/each}
   </ul>
   {#if older !== null}
-    <button type="button" disabled={busy} onclick={() => load(older)} class="mt-4 min-h-11 rounded border border-ink px-4">
+    <button type="button" aria-disabled={busy} onclick={() => load(older)} class="mt-4 min-h-11 rounded border border-ink px-4">
       Show older items
     </button>
   {/if}
