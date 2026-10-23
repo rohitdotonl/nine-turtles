@@ -66,11 +66,27 @@ jobs:
           # → Actions. It's a private address, so it's never written here.
           RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: |
-          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
+          # A pasted secret often carries a stray space, line break or
+          # quotes, which made curl refuse it ("Malformed input to a URL
+          # function"), so every deploy since Milestone 2 failed. Take them out.
+          hook="$(printf '%s' "$RENDER_DEPLOY_HOOK_URL" | tr -d '[:space:]"'"'")"
+          if [ -z "$hook" ]; then
             echo "::notice::RENDER_DEPLOY_HOOK_URL isn't set yet, so Render wasn't told. See docs/operations/render-setup.md."
             exit 0
           fi
+          # Never print the hook itself (it's a password); only what's wrong with it.
+          case "$hook" in
+            https://api.render.com/deploy/*) ;;
+            *)
+              echo "::error::RENDER_DEPLOY_HOOK_URL doesn't start with https://api.render.com/deploy/. Copy it again from Render → Settings → Deploy Hook (docs/operations/render-setup.md, step 3)."
+              exit 1
+              ;;
+          esac
+          case "$hook" in
+            *\?*) joiner="&" ;;
+            *) joiner="?" ;;
+          esac
           image_url="$(jq --raw-output --null-input --arg image "$IMAGE:$VERSION" '$image | @uri')"
           curl --fail --silent --show-error --request POST \
-            "$RENDER_DEPLOY_HOOK_URL&imgURL=$image_url" > /dev/null
+            "$hook${joiner}imgURL=$image_url" > /dev/null
           echo "Render is now deploying $IMAGE:$VERSION"
