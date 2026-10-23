@@ -163,7 +163,7 @@ It costs a little more time and usage per change, and it catches the kind of
 mistake the automatic checks can't, such as a feature that works but doesn't
 match the design.
 
-## 6. "The owner deploys by merging a pull request"
+## 6. "Merging a pull request deploys it"
 
 **Deploying** means putting a new version on the live app. Agents have no
 access to Render, so they can't deploy. Instead:
