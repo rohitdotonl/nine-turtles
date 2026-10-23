@@ -11,12 +11,15 @@ the bar:
    most.
 2. **A light second-agent review for small, low-risk changes**
    (`docs/operations/second-agent-review.md`). The light reviewer reads
-   `AGENTS.md` and the change, not every rule document. Code that runs in the
-   app, screens, stored data, sign-in, `DESIGN.md`, `SPEC.md` and the floors
-   still get the full review.
+   `AGENTS.md` and the change, not every rule document. `DESIGN.md`,
+   `SPEC.md`, `ENGINEERING.md`, `AGENTS.md`, the checks, screens, stored data,
+   fetching, sign-in, security and larger code changes always get the full
+   review, and the light reviewer switches to a full one if the change
+   doesn't qualify.
 3. **A shorter AGENTS.md** (read at the start of every session), with the
    same rules in fewer words. Library names moved out: `docs/libraries.md`
-   has them.
+   has them. Two habits were added to "Keeping sessions small": keep command
+   output short, and look at screenshots only when a screen changed.
 4. **A tighter DESIGN.md** (read in full before any work on screens), with
    the same rules in fewer words. No rule, value or heading changed.
 

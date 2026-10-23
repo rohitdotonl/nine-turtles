@@ -10,7 +10,8 @@ not how it was done.
   fresh.
 - Small, low-risk changes get a lighter second-agent review.
 - AGENTS.md and DESIGN.md say the same things in fewer words. No rule
-  changed.
+  changed; agents gained two habits: short command output, and screenshots
+  only when a screen changed.
 
 ## 23 October 2026: Agents start building straight away
 

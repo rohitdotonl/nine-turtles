@@ -2,7 +2,7 @@
 
 > **slowfeed is a quiet place to read the web: it shows you what's there, gets out of the way, and lets you finish.**
 
-*Last updated: 23 October 2026 (tightened, no rule changed; Milestone 4 defined the type scale, spacing, area tones and greys). This document takes precedence over every other project document.*
+*Last updated: 23 October 2026 (tightened to fewer words, no rule changed; Milestone 4 defined the type scale, spacing, area tones and greys). This document takes precedence over every other project document.*
 
 ## Mission
 
@@ -30,13 +30,13 @@ Help people leave social media and return to reading the open web. Social media 
 
 Every decision in Part 2 traces back to these. Reason from them rather than debating new questions from scratch.
 
-**Two floors** and **seven ranked principles.** Floors are never traded away. Between ranked principles, **the higher one wins**.
+**Two floors** and **seven ranked principles.** Floors are not ranked: nothing can trade them away. Between ranked principles, **the higher one wins**.
 
 ### The first floor: everyone can read here
 
 No amount of calm or minimalism justifies text some people can't read.
 
-- **Contrast:** WCAG AA everywhere, AAA for article text, including muted text (read items, counts, source names).
+- **Contrast:** WCAG AA minimum everywhere; aim for AAA in article text. This includes muted text (read items, counts, source names).
 - **Never color alone:** every state also has a non-color signal (a bar, a weight, a word).
 - **Fully keyboard-operable:** standard Tab / Enter / Escape with a visible focus ring are the floor; vim keys are a power feature on top.
 - **Screen readers:** panes are landmarks; the selected item and state changes ("marked as read") are announced; each article carries its language.
@@ -78,7 +78,7 @@ Anyone understands any screen within a second: what it's for, where they are, wh
 The experience is slow; the software never is.
 - Every action feels instant (under ~100 ms). No spinners for what the app already has; prefetch the next article so `j` is instant.
 - Act immediately, confirm silently; sync happens behind the scenes.
-- No transitions: views switch instantly.
+- No transitions: views switch instantly. Animation makes an interface *feel* slower.
 - **Test:** does the user ever wait for the interface rather than for themselves?
 
 #### 5. Nothing moves unless you move it
@@ -107,13 +107,13 @@ The 500-feed user gets everything; the 30-feed user never sees the machinery.
    3. Does it pull people back or keep them longer than they wanted? → no.
    4. Is it clear at a glance? If not, can it be hidden for power users?
    5. Is it instant?
-   6. Does it move anything the user didn't ask to change? → redesign until it doesn't.
+   6. Does it move or rearrange anything the user didn't ask to change? → redesign until it doesn't.
    7. Will it still feel right in ten years?
 3. **Scope is checked too.** A feature that would make slowfeed one of the things under "slowfeed is not" is out, however good.
 
 **Worked example: AI summaries.** They compete with reading (1), but a power user (6) might want them to triage 500 feeds. Result: never in the reading pane; possibly an opt-in, hidden triage tool in the list. The philosophy answered *where*, not yes or no.
 
-**Worked example: fetch the full article when a feed has only a summary.** It would help reading (1) but breaks the publisher floor, and floors outrank principles. No: show the summary and "Open original."
+**Worked example: fetch the full article when a feed has only a summary.** It would help reading (1) but breaks the publisher floor. Floors aren't ranked against principles, so the answer is no: show the summary and "Open original."
 
 ### Exceptions log
 
@@ -158,7 +158,7 @@ The philosophy applied. The principle is noted where it isn't obvious.
 
 | Role | Off-white | Sepia | Dark |
 |---|---|---|---|
-| Background (reading area) | `#F8F6F1` | `#F3E9D2` | `#1C1B19` |
+| Background (reading area; starting value) | `#F8F6F1` | `#F3E9D2` | `#1C1B19` |
 | Accent: ink blue ("where you are") | `#2F4A7A` | `#2F4A7A` | `#8FA9D6` |
 | Accent contrast against background (approx.) | 8.2 : 1 | 7.3 : 1 | 7.3 : 1 |
 | List area (one step deeper) | `#F2EFE8` | `#EDE2C8` | `#211F1D` |
@@ -186,7 +186,7 @@ Three: **off-white** (default light), **sepia**, **dark**. Follow the system lig
 
 - All fonts are free and served by slowfeed itself (no third-party font services).
 - **Other scripts** (e.g. Hindi in Devanagari) use the fonts already on the device; no extra downloads.
-- **Five fixed sizes:** small 14px (source names, times, hints) · base 16px (interface) · large 20px (area headings) · extra large 24px (sidebar wordmark, screen titles) · display 48px (sign-in wordmark). Article text is set by the reader: six steps, 16 to 28px, 20px by default.
+- **A short, fixed type scale of five sizes:** small 14px (source names, times, hints) · base 16px (interface) · large 20px (area headings) · extra large 24px (sidebar wordmark, screen titles) · display 48px (sign-in wordmark). Article text is set by the reader: six steps, 16 to 28px, 20px by default.
 - **Spacing** in steps of 4px, mostly 8, 16, 24, 40 and 64px.
 - **Weights:** regular and bold for reading; regular and semibold (600) for the interface.
 - Article lines of roughly 65–75 characters, with generous leading.
@@ -219,7 +219,7 @@ Fixed order, top to bottom: **Unread · Starred · All**, then **folders** A–Z
 - **The list has an end:** a fixed number of items, then a **"Show older items"** button. Nothing loads unless asked.
 - Matched search terms are **bold**, never highlighted in color.
 
-#### Item states (tone and weight, never color alone)
+#### Item states (distinguished by tone and weight, never color alone)
 
 | State | Treatment |
 |---|---|

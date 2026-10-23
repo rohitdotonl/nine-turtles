@@ -162,8 +162,9 @@ explains why not. You see both in the pull request.
 
 It costs a little more time and usage per change, and it catches the kind of
 mistake the automatic checks can't, such as a feature that works but doesn't
-match the design. Small, low-risk changes (documents, tooling, tiny fixes
-that change no screen or data) get a lighter, cheaper review that reads only
+match the design. Small, low-risk changes (most documents and tiny code
+fixes; never the design, the spec, the rules, the checks, screens, data,
+fetching or sign-in) get a lighter, cheaper review that reads only
 `AGENTS.md` and the change; the summary says which review a pull request got.
 
 ## 6. "Merging a pull request deploys it"
