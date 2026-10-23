@@ -10,6 +10,18 @@ not how it was done.
   agent's review. Features, screens, your data, fetching, sign-in and the
   rules still get one. The automatic checks run on everything as before.
 
+## 23 October 2026: slowfeed on your phone (Milestone 13)
+
+- On a phone, slowfeed is one screen at a time: Feeds → a list → an
+  article. Each has a back arrow that says where it goes, and the phone's
+  own back gesture does the same.
+- Refresh sits in the top bar. While reading, Previous, Next, Star, Share
+  and Open original sit at the bottom, within thumb reach.
+- Add it to your home screen: it opens full-screen with its own icon, and
+  without a connection it opens and says slowfeed can't be reached.
+- After an update, Settings says "A new version is ready" with Reload, and
+  a tab that can't carry on says "slowfeed was updated. Reload to continue."
+
 ## 23 October 2026: Folders, editing feeds and OPML (Milestone 9)
 
 - Folders: put a feed in one or more from its new "Edit feed" button, where

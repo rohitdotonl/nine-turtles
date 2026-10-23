@@ -10,6 +10,7 @@
   import type { Order } from "./feeds";
   import { LINE_WIDTHS, READING_FONTS, TEXT_SIZES, type Preferences } from "./preferences";
   import { signOut } from "./session";
+  import { updates } from "./updates.svelte";
 
   let {
     preferences = $bindable(),
@@ -180,6 +181,13 @@
       <section aria-labelledby="status-heading" class="flex flex-col gap-2">
         <h3 id="status-heading" class="text-large font-semibold">Status</h3>
         <p>Version {version}</p>
+        {#if updates.ready}
+          <!-- Never swapped while you read: the new version starts when you reload, or next time you open slowfeed. -->
+          <p class="flex flex-wrap items-center gap-x-4 gap-y-2">
+            A new version is ready.
+            <button type="button" onclick={() => location.reload()} class="min-h-11 rounded border border-ink px-4">Reload</button>
+          </p>
+        {/if}
       </section>
 
       <section aria-labelledby="account-heading" class="flex flex-col items-start gap-2">
