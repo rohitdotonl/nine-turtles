@@ -1,1 +1,0 @@
-cargo:rustc-env=MIME_TYPES_GENERATED_PATH=/home/user/slowfeed/server/target-r2/release/build/mime_guess-14177d034ca9dcfc/out/mime_types_generated.rs

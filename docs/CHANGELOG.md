@@ -4,6 +4,15 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 23 October 2026: Removing build leftovers added by mistake
+
+- The previous change accidentally included a folder of temporary build
+  files (`server/target-r2`, about 800 MB, made by the agent while
+  testing). They held nothing secret, only compiled copies of slowfeed's
+  own public code, but they don't belong in the repository. This removes
+  them and tells git and the image build to ignore any such folder from now
+  on. The app itself was not affected.
+
 ## 23 October 2026: Calmer buttons and a tidier search box
 
 - Buttons no longer sit in heavy black boxes. Toolbar actions (Refresh,

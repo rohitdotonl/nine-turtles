@@ -1,6 +1,7 @@
 # Only the source goes into the image build; everything here is rebuilt there.
 .git
 server/target
+server/target-*
 server/data
 web/node_modules
 web/dist
