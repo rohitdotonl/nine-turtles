@@ -143,6 +143,32 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
 
   await page.getByLabel("Sepia").check();
   await expect(page.locator("body")).toHaveCSS("background-color", "rgb(243, 233, 210)");
+  // The phone's bar above the page follows the chosen theme too, and
+  // "Match this device" gives back index.html's light and dark colors.
+  const bars = page.locator('meta[name="theme-color"]');
+  await expect(bars).toHaveCount(2);
+  await expect(bars.nth(0)).toHaveAttribute("content", "#F3E9D2");
+  await expect(bars.nth(1)).toHaveAttribute("content", "#F3E9D2");
+  await page.getByLabel("Match this device").check();
+  await expect(bars.nth(0)).toHaveAttribute("content", "#F8F6F1");
+  await expect(bars.nth(1)).toHaveAttribute("content", "#1C1B19");
+  await page.getByLabel("Sepia").check();
+  await expect(bars.nth(0)).toHaveAttribute("content", "#F3E9D2");
+  // The chosen tile is filled and its word semibold, so it shows without color.
+  await expect(page.locator("label.choice").filter({ hasText: "Sepia" })).toHaveCSS("font-weight", "600");
+  await expect(page.locator("label.choice").filter({ hasText: "Dark" })).toHaveCSS("font-weight", "400");
+  // Arrow keys move between choices, as with any radio buttons.
+  await page.getByLabel("Sepia").focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByLabel("Dark")).toBeChecked();
+  await page.keyboard.press("ArrowLeft");
+  await expect(page.getByLabel("Sepia")).toBeChecked();
+  // In high-contrast mode the chosen tile takes the system's highlight, so it still stands out.
+  await page.emulateMedia({ forcedColors: "active" });
+  const tileColor = (name: string) =>
+    page.locator("label.choice").filter({ hasText: name }).evaluate((element) => getComputedStyle(element).backgroundColor);
+  expect(await tileColor("Sepia")).not.toBe(await tileColor("Dark"));
+  await page.emulateMedia({ forcedColors: "none" });
 
   const sample = page.locator(".reading-sample");
   await expect(sample).toHaveCSS("font-family", /^Literata/);

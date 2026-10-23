@@ -52,3 +52,20 @@ to go next.
 
 **Revisit if:** a screen needs a fifth kind of control, or the owner finds
 the toolbar actions too quiet to notice (give them the muted edge of `.btn`).
+
+## Second pass (same day)
+
+- **Settings choices as tiles** (`.choice` in `Settings.svelte`): each radio
+  button is stretched invisibly over its labeled tile, so a click or tap
+  anywhere picks it and the keyboard and screen readers treat it as a radio
+  button. The chosen tile is filled with the text color and semibold. Theme
+  tiles show a disc of each theme's background (hard-coded, from DESIGN.md);
+  "Match this device" is half off-white, half dark.
+- **Key caps** (`.key` in `app.css`): keys in the shortcuts list and the
+  "Press ? for shortcuts" hint sit on the faint `--tone`. They use the
+  interface font, so a hint shown on every screen never loads the code font.
+- **The empty reading area** centres "No article open." in the reading
+  serif, with a hint to press `j` where there's a keyboard.
+- **Sign-in** has one quiet line under the wordmark: "A quiet place to read."
+- **The browser's bar color** (`theme-color`) follows the chosen theme;
+  "Match this device" restores the light and dark values in `index.html`.

@@ -4,6 +4,17 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 23 October 2026: Settings as tiles, and quieter empty pages
+
+- Settings' choices (sort order, theme, font, text size, line width) are
+  tiles you click or tap; the chosen one is filled in. Theme tiles show a
+  little disc of each color, and each font's name is written in that font.
+- Keys look like small keys, in the shortcuts list and in "Press ? for
+  shortcuts".
+- With no article open, the reading area says so quietly in its middle.
+- The sign-in page has one line under the name: "A quiet place to read."
+- On a phone, the bar above the page takes your chosen theme's color.
+
 ## 23 October 2026: Removing build leftovers added by mistake
 
 - The previous change accidentally included a folder of temporary build
@@ -21,8 +32,9 @@ not how it was done.
   Save) is filled in; text boxes have a softer edge.
 - The search field stays one line tall when it shows where you're
   searching (`in: Tech`); long names are shortened with "…".
-- The keyboard outline no longer appears around a screen's title, and is
-  drawn whole around a selected row instead of as two lines.
+- When a screen opens, its title shows the keyboard's place as a short bar
+  beside it instead of a box around it; a selected row gets a whole outline
+  instead of two stray lines.
 - Rows and buttons deepen a little under the mouse pointer.
 
 ## 23 October 2026: The final V1 pass (Milestone 14)

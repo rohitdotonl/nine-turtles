@@ -9,7 +9,7 @@
 <script lang="ts">
   import ImportOpml from "./ImportOpml.svelte";
   import type { Order } from "./feeds";
-  import { LINE_WIDTHS, READING_FONTS, TEXT_SIZES, type Preferences } from "./preferences";
+  import { BAR_COLORS, LINE_WIDTHS, READING_FONTS, TEXT_SIZES, type Preferences } from "./preferences";
   import { signOut } from "./session";
   import { updates } from "./updates.svelte";
 
@@ -40,11 +40,14 @@
   } = $props();
 
   const THEME_CHOICES = [
-    { value: "system", label: "Match this device (off-white or dark)" },
+    { value: "system", label: "Match this device" },
     { value: "off-white", label: "Off-white" },
     { value: "sepia", label: "Sepia" },
     { value: "dark", label: "Dark" },
   ] as const;
+
+  // A small disc of each theme's reading background (DESIGN.md → "Color"); "Match this device" is half of each.
+  const SWATCHES: Record<(typeof THEME_CHOICES)[number]["value"], string> = { system: BAR_COLORS["off-white"], ...BAR_COLORS };
 
   const SORT_CHOICES = [
     { value: "newest", label: "Newest first" },
@@ -88,9 +91,10 @@
         </div>
 
         <fieldset>
-          <legend class="font-semibold">Sort order</legend>
+          <legend class="mb-2 font-semibold">Sort order</legend>
+          <div class="choices">
           {#each SORT_CHOICES as choice (choice.value)}
-            <label class="flex min-h-11 items-center gap-3">
+            <label class="choice">
               <input
                 type="radio"
                 name="sort"
@@ -102,6 +106,7 @@
               {choice.label}
             </label>
           {/each}
+          </div>
           <p role="status" class="text-small">{sortMessage}</p>
         </fieldset>
       </section>
@@ -113,30 +118,39 @@
         </div>
 
         <fieldset>
-          <legend class="font-semibold">Theme</legend>
+          <legend class="mb-2 font-semibold">Theme</legend>
+          <div class="choices">
           {#each THEME_CHOICES as choice (choice.value)}
-            <label class="flex min-h-11 items-center gap-3">
+            <label class="choice">
               <input type="radio" name="theme" value={choice.value} bind:group={preferences.theme} />
+              <span aria-hidden="true" class="swatch" style:background-color={SWATCHES[choice.value]}
+                >{#if choice.value === "system"}<span class="swatch-half" style:background-color={BAR_COLORS.dark}></span>{/if}</span
+              >
               {choice.label}
             </label>
           {/each}
+          </div>
+          <p class="mt-2 text-small text-muted">Match this device uses off-white or dark, following its light or dark setting.</p>
         </fieldset>
 
         <fieldset>
-          <legend class="font-semibold">Reading font</legend>
+          <legend class="mb-2 font-semibold">Reading font</legend>
+          <div class="choices">
           {#each Object.entries(READING_FONTS) as [value, font] (value)}
-            <label class="flex min-h-11 items-center gap-3">
+            <!-- Each name is set in its own font, so the choice shows itself. -->
+            <label class="choice" style:font-family={font.family}>
               <input type="radio" name="reading-font" {value} bind:group={preferences.readingFont} />
               {font.label}
             </label>
           {/each}
+          </div>
         </fieldset>
 
         <fieldset>
-          <legend class="font-semibold">Text size</legend>
-          <div class="flex flex-wrap gap-x-6">
+          <legend class="mb-2 font-semibold">Text size</legend>
+          <div class="choices">
             {#each TEXT_SIZES as size, index (size.label)}
-              <label class="flex min-h-11 items-center gap-3">
+              <label class="choice">
                 <input type="radio" name="text-size" value={index} bind:group={preferences.textSize} />
                 {size.label}
               </label>
@@ -145,10 +159,10 @@
         </fieldset>
 
         <fieldset>
-          <legend class="font-semibold">Line width</legend>
-          <div class="flex flex-wrap gap-x-6">
+          <legend class="mb-2 font-semibold">Line width</legend>
+          <div class="choices">
             {#each Object.entries(LINE_WIDTHS) as [value, width] (value)}
-              <label class="flex min-h-11 items-center gap-3">
+              <label class="choice">
                 <input type="radio" name="line-width" {value} bind:group={preferences.lineWidth} />
                 {width.label}
               </label>
@@ -208,6 +222,82 @@
 </section>
 
 <style>
+  /*
+    A choice among a few (SPEC section 18): each one a labeled tile. The radio
+    button itself covers the whole tile, invisible, so a tap anywhere picks it
+    and screen readers and keys work as with any radio button. The chosen tile
+    is filled with the text color and its word is semibold, so it shows
+    without color too. Never ink blue.
+  */
+  .choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .choice {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding-inline: 1rem;
+    border: 1px solid var(--muted);
+    border-radius: 0.375rem;
+    cursor: pointer;
+  }
+  @media (hover: hover) {
+    .choice:hover {
+      background-color: var(--hover);
+    }
+  }
+  .choice input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .choice:has(input:checked) {
+    border-color: var(--ink);
+    background-color: var(--ink);
+    color: var(--paper);
+    font-weight: 600;
+  }
+  .choice:has(input:focus-visible) {
+    outline: 3px solid var(--ink);
+    outline-offset: 2px;
+  }
+  /* High-contrast mode replaces the fill, so the chosen tile takes the system's own highlight colors. */
+  @media (forced-colors: active) {
+    .choice:has(input:checked) {
+      forced-color-adjust: none;
+      border-color: Highlight;
+      background-color: Highlight;
+      color: HighlightText;
+    }
+    .choice:has(input:focus-visible) {
+      outline-color: CanvasText;
+    }
+  }
+  .choice:has(input:disabled) {
+    cursor: default;
+    color: var(--muted);
+  }
+  .swatch {
+    position: relative;
+    overflow: hidden;
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    border: 1px solid var(--muted);
+    border-radius: 9999px;
+  }
+  .swatch-half {
+    position: absolute;
+    inset: 0 0 0 50%;
+  }
   .reading-sample {
     font-family: var(--reading-font);
     font-size: var(--reading-size);

@@ -76,7 +76,20 @@ export function apply(preferences: Preferences, root: HTMLElement = document.doc
   root.style.setProperty("--reading-font", READING_FONTS[preferences.readingFont].family);
   root.style.setProperty("--reading-size", `${TEXT_SIZES[preferences.textSize]?.rem ?? 1.25}rem`);
   root.style.setProperty("--reading-measure", `${LINE_WIDTHS[preferences.lineWidth].ch}ch`);
+  // The phone's own bar above the page takes the chosen theme's background too
+  // (index.html sets the light and dark ones for "Match this device").
+  for (const meta of root.ownerDocument?.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]') ?? []) {
+    meta.dataset.device ??= meta.content;
+    meta.content = preferences.theme === "system" ? meta.dataset.device : BAR_COLORS[preferences.theme];
+  }
 }
+
+/**
+ * Each theme's reading background (DESIGN.md → "Color"), for the browser's
+ * bar and Settings' theme discs. contrast.test.ts checks they match app.css
+ * and index.html.
+ */
+export const BAR_COLORS = { "off-white": "#F8F6F1", sepia: "#F3E9D2", dark: "#1C1B19" } as const;
 
 function safeStorage(): Storage | undefined {
   try {
