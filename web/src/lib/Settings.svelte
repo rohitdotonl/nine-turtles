@@ -3,7 +3,8 @@
   sidebar stays, so the reader never loses their place. "Close settings" or
   Escape goes back. Reading (the sort order) is shared across the reader's
   devices; the reader controls belong to this device. Your data imports and
-  exports the reader's feeds and folders as an OPML file.
+  exports the reader's feeds and folders as an OPML file, and exports their
+  starred articles as a JSON Feed file.
 -->
 <script lang="ts">
   import ImportOpml from "./ImportOpml.svelte";
@@ -176,6 +177,13 @@
           </p>
         </div>
         <ImportOpml {onImported} />
+        <p class="max-w-xl">
+          Your starred articles can be saved as a JSON Feed file, a standard format other feed readers can open. It
+          keeps each article's text, its original link and the feed it came from.
+        </p>
+        <a href="/api/starred/export" download class="flex min-h-11 items-center self-start rounded border border-ink px-4">
+          Export starred articles
+        </a>
       </section>
 
       <section aria-labelledby="status-heading" class="flex flex-col gap-2">

@@ -53,6 +53,8 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("j");
     await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, unread/);
     await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 2 unread`);
+    // A screen reader hears it, though the line above the list stays quiet.
+    await expect(page.locator('[aria-live="polite"]', { hasText: "Marked as read" })).toBeAttached();
     const title = row(page, blog, NEWEST).locator("span").first();
     await expect(title).toHaveCSS("font-weight", "400");
     await expect(row(page, blog, MIDDLE).locator("span").first()).toHaveCSS("font-weight", "600");

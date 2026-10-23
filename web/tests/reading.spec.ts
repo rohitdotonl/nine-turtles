@@ -75,6 +75,22 @@ test.describe("on a wide window", () => {
     await expect(title(page, "The pleasure of a slow letter")).toBeVisible({ timeout: 100 });
   });
 
+  test("a screen reader finds the three panes as named regions, and headings to jump between", async ({ page }) => {
+    await openRoom(page);
+    await page.keyboard.press("j");
+    await expect(title(page, "The pleasure of a slow letter")).toBeVisible();
+
+    await expect(page.getByRole("main")).toHaveCount(1);
+    await expect(page.getByRole("navigation", { name: "Sidebar" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Reading Room" })).toBeVisible();
+    await expect(article(page)).toBeVisible();
+    // One page title, then a heading for the list and one for the article.
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("slowfeed");
+    await expect(page.getByRole("heading", { level: 2, name: "Reading Room" })).toBeVisible();
+    // The selected row says it's the current one.
+    await expect(page.locator('[aria-current="true"]')).toHaveCount(1);
+  });
+
   test("Enter opens the article to read; Escape goes back to the list", async ({ page }) => {
     await openRoom(page);
     // Keyboard only: Tab reaches the first article; Enter opens it.

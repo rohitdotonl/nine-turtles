@@ -202,6 +202,13 @@ test("import an OPML file from Settings: a plain summary, folders in the sidebar
   const text = await exported.text();
   expect(text).toContain(`<outline text="${folder}"`);
   expect(text).toContain(`xmlUrl="${FEED_SITE}/blog/${one}/feed.xml"`);
+
+  // Starred articles download as a JSON Feed file.
+  const starredLink = page.getByRole("link", { name: "Export starred articles" });
+  await expect(starredLink).toHaveAttribute("download", "");
+  const starred = await page.request.get(new URL((await starredLink.getAttribute("href")) ?? "", FEEDS_APP).href);
+  expect(starred.headers()["content-disposition"]).toContain("attachment");
+  expect((await starred.json()).version).toBe("https://jsonfeed.org/version/1.1");
 });
 
 test("with only the keyboard: Edit feed, a new folder, opening it, Edit folder, Unsubscribe and Import OPML", async ({ page }) => {

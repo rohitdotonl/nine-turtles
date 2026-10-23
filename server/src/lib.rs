@@ -22,6 +22,7 @@ pub mod password;
 pub mod search;
 pub mod security;
 pub mod settings;
+pub mod starred;
 pub mod status;
 pub mod subscriptions;
 
@@ -104,6 +105,7 @@ pub fn router(state: AppState) -> Router {
         .merge(marks::routes())
         .merge(search::routes())
         .merge(settings::routes())
+        .merge(starred::routes())
         .merge(status::routes())
         .merge(assets::routes())
         .with_state(state);

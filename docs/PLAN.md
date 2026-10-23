@@ -35,7 +35,7 @@ same so older documents still point to the right place.
 | 11 | Feed health page | ⏭ |
 | 12 | WebSub | ⏭ |
 | 13 | Phones and installing the app | ✅ |
-| 14 | Keeping things tidy, and the finishing pass | ⬜ |
+| 14 | Keeping things tidy, and the finishing pass | ✅ |
 
 ---
 

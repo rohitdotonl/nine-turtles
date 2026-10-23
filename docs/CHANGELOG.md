@@ -4,6 +4,16 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 23 October 2026: The final V1 pass (Milestone 14)
+
+- Settings → Your data has **Export starred articles**: a JSON Feed file
+  (a standard format other feed readers open) with every starred article,
+  its text, its original link and the feed it came from. With your OPML
+  file, it's your safety net.
+- Screen readers now hear "Marked as read" when you open an article.
+- A speed check for the export, and a test that a screen reader finds the
+  three panes and the headings. V1 is complete.
+
 ## 23 October 2026: Search (Milestone 10)
 
 - Press `/` (or use the field above the list) to search every article's
