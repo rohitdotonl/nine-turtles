@@ -1,5 +1,7 @@
 # 0008: Fonts served in pieces; placeholder colors until Milestone 4
 
+*The colors part is replaced by [0013](0013-look-and-feel.md), which also covers the other fonts.*
+
 *October 2026, Milestone 1. Font choice approved by the owner.*
 
 **Fonts.** Literata (regular weight) is served by slowfeed itself from

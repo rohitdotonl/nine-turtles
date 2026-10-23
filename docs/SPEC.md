@@ -27,7 +27,7 @@ A few words used throughout:
 - Each device stays signed in for a year after it was last used. Signing out ends that device only; other devices stay signed in.
 - Repeated wrong passwords are slowed down, so nobody can guess by trying thousands: after five wrong tries in a row, slowfeed asks you to wait a minute, and each further wrong try doubles the wait, up to an hour. The right password resets it, and so does an hour without wrong tries. Wrong tries count for the whole app, wherever they come from, so a stranger guessing can make you wait on a new device (devices already signed in are unaffected). Restarting slowfeed on Render clears the wait (`docs/operations/render-setup.md`).
 - Messages are plain: "That isn't the password." or "Too many wrong tries. Try again in 2 minutes."
-- Sign out is in Settings. (Until the Settings screen arrives in Milestone 4, the signed-in screen shows Status, with the version in use, and Sign out.)
+- Sign out is in Settings.
 - The password itself is never stored, only a scrambled version that can't be turned back into it (a "hash"). You set it by typing `slowfeed set-password` in Render's Shell tab and pasting the scrambled line it prints into Render's settings (`docs/operations/render-setup.md`). Until then, nobody can sign in.
 
 **How to check it**
@@ -63,8 +63,10 @@ A few words used throughout:
 
 **What it does**
 - Three panes on a wide screen: **feeds | items | article**. Two panes on a medium screen. One column on a phone (section 20).
-- No layout options to choose: the layout simply adapts to the window width.
-- The sidebar can be hidden and shown with a toggle that never moves, or the `[` key.
+- No layout options to choose: the layout simply adapts to the window width. Wide means 1200 pixels or more at normal size, medium 768 or more. On a medium screen the list and article show, and showing the sidebar puts it in the article's place. On a phone-narrow screen one area shows at a time, starting with the sidebar; choosing a place in it shows that place, and Escape goes back.
+- Zooming in or a larger system text size counts as a narrower window, so the layout steps down instead of anything overlapping.
+- The sidebar can be hidden and shown with a toggle labeled "Sidebar" in the top-left corner, which never moves, or the `[` key.
+- Unread, Starred, All and Settings each have their own web address (`/unread`, `/starred`, `/all`, `/settings`), so reloading keeps your place and the browser's Back button works. The front page opens Unread.
 - Regions are told apart by background tone and space, never by lines, shadows or gradients.
 - Nothing animates. Views switch instantly.
 
@@ -82,6 +84,7 @@ A few words used throughout:
   3. **Feeds not in any folder**, alphabetically
   4. **"+ Add feed"**
 - You can't reorder things by hand; order is always alphabetical.
+- At the bottom of the sidebar, on screens with a keyboard: "Press ? for shortcuts", which also opens the list when clicked.
 - At the top of the sidebar: the "slowfeed" wordmark with a labeled **Settings** link beside it, and below them a **search field to find a feed or folder by name**, always shown.
 - Folders appear once at least one exists.
 - **Unread counts:** small, muted grey numbers, right-aligned, next to each feed and folder. No count on "Unread", "Starred" or "All", and never a total. Above 999 shows "999+". Never colored, never a badge.
@@ -293,8 +296,10 @@ OPML is the standard file format feed readers use to move subscription lists bet
 ## 18. Settings and appearance
 
 **What it does**
-- **Reader controls:** reading font (Literata or Atkinson Hyperlegible), text size, line width, theme.
-- **Themes:** follow the system's light/dark setting by default, or choose off-white, sepia or dark.
+- Settings opens in place of the list and reading area; the sidebar stays. **Close settings** or Escape goes back to where you were.
+- **Reader controls:** reading font (Literata or Atkinson Hyperlegible), text size (six steps from Smaller to Largest, Medium by default), line width (Narrow, Medium or Wide: about 62, 68 or 75 characters), theme. A sample paragraph shows how articles will look, and changes apply at once.
+- **Themes:** "Match this device" by default (off-white or dark, following the system's light/dark setting), or choose off-white, sepia or dark.
+- Sections appear once they have something to do: Reading (sort order) with Milestone 7, Your data with Milestone 9.
 - **Reading:** newest or oldest first. (Inbox or river mode in V2.)
 - **Your data:** OPML import/export, export of starred articles.
 - **Sign out.** (Keeping articles and Feed health come in V2.)
@@ -332,7 +337,8 @@ OPML is the standard file format feed readers use to move subscription lists bet
   | `?` | Shortcut cheat sheet |
 
 - A permanent, quiet hint says "Press ? for shortcuts" (on screens with a keyboard).
-- The `?` cheat sheet also documents the search filters.
+- The `?` cheat sheet also documents the search filters. Until a shortcut's feature exists, the cheat sheet marks it "coming later", and the key does nothing.
+- The keyboard's place is shown by a thick outline in the text color (never ink blue, which only marks your place in slowfeed).
 - Shortcuts don't fire while you're typing in a field.
 
 **How to check it**

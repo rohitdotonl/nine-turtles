@@ -11,5 +11,7 @@ export default defineConfig({
   },
   test: {
     include: ["src/**/*.test.ts"],
+    // Lets tests read app.css as text (the contrast test); nothing is styled.
+    css: true,
   },
 });

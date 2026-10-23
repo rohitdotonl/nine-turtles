@@ -1,12 +1,24 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import { TEST_PASSWORD } from "../playwright.config";
 import { THEMES, type Theme } from "../src/lib/themes";
 
 // Every screen of slowfeed. Each new screen is added here, so it is
 // automatically checked for accessibility and photographed for the owner.
-export const SCREENS: { name: string; path: string; signedIn: boolean }[] = [
+export type Screen = { name: string; path: string; signedIn: boolean; open?: (page: Page) => Promise<void> };
+
+export const SCREENS: Screen[] = [
   { name: "sign-in", path: "/", signedIn: false },
-  { name: "home", path: "/", signedIn: true },
+  { name: "unread", path: "/unread", signedIn: true },
+  { name: "settings", path: "/settings", signedIn: true },
+  {
+    name: "shortcuts",
+    path: "/unread",
+    signedIn: true,
+    open: async (page) => {
+      await page.keyboard.press("?");
+      await expect(page.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeVisible();
+    },
+  },
 ];
 
 export { THEMES };
@@ -22,29 +34,38 @@ const BACKGROUNDS: Record<Theme, string> = {
 export async function signIn(page: Page): Promise<void> {
   await page.getByLabel("Password").fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sidebar" })).toBeVisible();
 }
 
 /** Waits until slowfeed has decided which screen to show. */
 export async function appReady(page: Page): Promise<void> {
-  await expect(page.getByRole("heading", { level: 1, name: "slowfeed" })).toBeVisible();
+  await expect(page.getByLabel("Password").or(page.getByRole("button", { name: "Sidebar" }))).toBeVisible();
 }
 
-export async function openScreen(
-  page: Page,
-  screen: { path: string; signedIn: boolean },
-  theme: Theme,
-): Promise<void> {
+/** Chooses a theme the way Settings saves it, before the page loads. */
+export async function chooseTheme(page: Page, theme: Theme): Promise<void> {
+  await page.addInitScript((chosen) => {
+    localStorage.setItem("slowfeed.preferences", JSON.stringify({ theme: chosen }));
+  }, theme);
+}
+
+export async function openScreen(page: Page, screen: Screen, theme: Theme): Promise<void> {
+  await chooseTheme(page, theme);
   await page.goto(screen.path);
   await appReady(page);
   if (screen.signedIn) await signIn(page);
-  // Until the Settings screen exists (Milestone 4), the theme is chosen the way
-  // Settings will: by setting <html data-theme="…">.
-  await page.evaluate((chosen) => {
-    document.documentElement.dataset.theme = chosen;
-  }, theme);
+  await screen.open?.(page);
   await page.evaluate(() => document.fonts.ready);
   await expect
     .poll(() => page.evaluate(() => getComputedStyle(document.body).backgroundColor))
     .toBe(BACKGROUNDS[theme]);
+}
+
+/** Presses Tab until the keyboard's place reaches the element: the keyboard floor. */
+export async function tabTo(page: Page, target: Locator, limit = 50): Promise<void> {
+  for (let i = 0; i < limit; i++) {
+    if (await target.evaluate((element) => element === document.activeElement)) return;
+    await page.keyboard.press("Tab");
+  }
+  throw new Error("Tab never reached the element");
 }

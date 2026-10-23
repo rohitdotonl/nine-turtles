@@ -11,14 +11,14 @@ The script stops at the first failure and says which step failed.
 | Libraries are on the approved list | A library in `server/Cargo.toml` (in any of the ways Rust allows listing one) or `web/package.json` that isn't approved in `docs/libraries.md`; a GitHub Actions building block that isn't GitHub's own or isn't pinned | `scripts/check-libraries.mjs` |
 | Frontend: build | Frontend code that doesn't build | Vite |
 | Frontend: type check | Mistakes in TypeScript and Svelte code | `svelte-check` |
-| Frontend: tests | Broken frontend logic | `web/src/**/*.test.ts` (Vitest) |
+| Frontend: tests | Broken frontend logic (layout, keys, addresses, reader settings); any theme color pair below the contrast floor, read straight from `app.css` | `web/src/**/*.test.ts` (Vitest) |
 | No motion | Any animation or transition in the built styles; Svelte's or the browser's animation tools in the code; smooth scrolling | `scripts/check-motion.mjs` |
 | Download size budget | More than 150 KB (compressed) of app code and styles, or more than 400 KB of fonts | `scripts/check-size.mjs` |
 | Rust: formatting | Code not in the standard Rust layout. Fix with `cargo fmt` in `server/` | rustfmt |
 | Rust: lint | Likely mistakes ("clippy"); every warning counts as a failure | clippy |
 | Rust: tests | Broken server behavior: sign-in, the wait after wrong passwords, signing out, the browser security rules, the status and diagnostics pages, and the Hindi search test | `server/src/` and `server/tests/` |
 | Build the program | The release program doesn't build | cargo |
-| Accessibility, contrast and screenshots | Any WCAG A/AA problem (including color contrast) on any screen, in any chosen theme and when following the device's light or dark setting, at desktop or phone width; the theme or the wordmark's Literata font not applying, or a font coming from anywhere but slowfeed; sign-in not working with the keyboard alone; the browser's security rules blocking anything. Also photographs every screen | `web/tests/` (Playwright with axe) |
+| Accessibility, contrast and screenshots | Any WCAG A/AA problem (including color contrast) on any screen, in any chosen theme and when following the device's light or dark setting, at desktop or phone width; the theme or the wordmark's Literata font not applying, or a font coming from anywhere but slowfeed; sign-in, the layout, the sidebar toggle, the `?` list, the `g` keys or Settings not working with the keyboard alone, or anything overlapping at 200% zoom; the browser's security rules blocking anything. Also photographs every screen | `web/tests/` (Playwright with axe) |
 
 ## Adding a screen
 

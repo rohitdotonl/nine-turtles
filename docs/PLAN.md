@@ -25,7 +25,7 @@ same so older documents still point to the right place.
 | 1 | Skeleton and automatic checks | ✅ |
 | 2 | Live on Render, with sign-in | ✅ |
 | 3 | Backups and recovery | ⏭ |
-| 4 | Look and feel foundations | ⬜ |
+| 4 | Look and feel foundations | 🔨 |
 | 5 | Add a feed and see its items | ⬜ |
 | 6 | Reading articles | ⬜ |
 | 7 | Read, unread, star and undo | ⬜ |

@@ -2,7 +2,7 @@
 
 > **slowfeed is a quiet place to read the web: it shows you what's there, gets out of the way, and lets you finish.**
 
-*Last updated: 23 October 2026 (V1 trimmed for a single reader: see the V2 parking lot). This document takes precedence over every other project document when they conflict.*
+*Last updated: 23 October 2026 (Milestone 4: type scale, spacing, area tones and greys defined). This document takes precedence over every other project document when they conflict.*
 
 ## Mission
 
@@ -165,10 +165,16 @@ These are the first applications of the philosophy. The principle behind each is
 | Background (starting value) | `#F8F6F1` | `#F3E9D2` | `#1C1B19` |
 | Accent: ink blue ("where you are") | `#2F4A7A` | `#2F4A7A` | `#8FA9D6` |
 | Accent contrast against background (approx.) | 8.2 : 1 | 7.3 : 1 | 7.3 : 1 |
+| List area (one step deeper) | `#F2EFE8` | `#EDE2C8` | `#211F1D` |
+| Sidebar (two steps deeper) | `#EBE7DE` | `#E6D9BC` | `#272522` |
+| Text | `#1F1E1C` | `#2A241B` | `#E8E4DC` |
+| Muted grey, warm (chosen October 2026) | `#61564A` | `#5C4F3F` | `#B3A690` |
 
 - All three accent pairs pass AAA (7 : 1). Re-check if any value changes.
 - **Links in articles** are underlined in the normal text color, **never blue**, so they never compete with the accent.
-- **Muted greys** (read items, counts, source names) are chosen during build and must pass the first floor on all three themes, verified by automatic checks.
+- **Areas by tone:** the reading area uses the theme's background; the list and the sidebar are one and two steps deeper.
+- **Muted greys** (read items, counts, source names) are warm, with a hint of brown, like ink on paper (the owner's choice, Milestone 4). They pass AA (at least 4.5 : 1) on every area and on the selected-row tint, in all three themes, verified by automatic checks.
+- **The keyboard's focus outline** is a thick line in the text color, never ink blue.
 - **Status colors** (errors, warnings on the feed health page, V2) use muted tones that don't drift toward blue, and always come with words.
 
 #### Themes
@@ -186,7 +192,9 @@ These are the first applications of the philosophy. The principle behind each is
 
 - All fonts are free to use and served by slowfeed itself (no requests to third-party font services).
 - **Other scripts** (for example, Hindi in Devanagari): fall back to the fonts already on the reader's device. No extra downloads.
-- A short, fixed type scale (4–5 sizes). *(To be defined.)*
+- **A short, fixed type scale, five sizes** (defined in Milestone 4): small 14px (source names, times, hints) · base 16px (the interface) · large 20px (area headings) · extra large 24px (the wordmark in the sidebar, screen titles) · display 48px (the wordmark on the sign-in page). Article text has its own size, set by the reader (six steps, 16 to 28px, 20px by default).
+- **Spacing** uses steps of 4px, mostly 8, 16, 24, 40 and 64px.
+- **Weights:** regular and bold for reading; regular and semibold (600) for the interface. Emphasis comes from these and size, never from color.
 - Article line length of roughly 65–75 characters, with generous leading.
 
 #### Languages
@@ -376,8 +384,7 @@ Vim-style keys are first-class. A permanent, unobtrusive hint says "Press ? for 
 
 ## Still to define
 
-- Type scale and spacing system
-- Muted greys, and status colors for the feed health page in V2 (verified against the first floor)
+- Status colors for the feed health page in V2 (verified against the first floor)
 - Domain, app store, and trademark checks for "slowfeed" (not blocking V1)
 
 ## V2 parking lot
