@@ -7,7 +7,8 @@ not how it was done.
 ## 23 October 2026: Merges reach the live app again
 
 - Since Milestone 2, every merge built correctly but never told Render to
-  update, because the saved deploy address had a stray character in it.
+  update, most likely because the saved deploy address had a stray space or
+  line break in it.
   slowfeed's deploy step now tidies the address, and says plainly when
   it's wrong.
 

@@ -70,6 +70,9 @@ jobs:
           # quotes, which made curl refuse it ("Malformed input to a URL
           # function"), so every deploy since Milestone 2 failed. Take them out.
           hook="$(printf '%s' "$RENDER_DEPLOY_HOOK_URL" | tr -d '[:space:]"'"'")"
+          # Cleaned, it no longer matches the saved secret, so GitHub wouldn't
+          # hide it in this public log on its own. Ask it to.
+          if [ -n "$hook" ]; then echo "::add-mask::$hook"; fi
           if [ -z "$hook" ]; then
             echo "::notice::RENDER_DEPLOY_HOOK_URL isn't set yet, so Render wasn't told. See docs/operations/render-setup.md."
             exit 0
@@ -83,10 +86,13 @@ jobs:
               ;;
           esac
           case "$hook" in
-            *\?*) joiner="&" ;;
-            *) joiner="?" ;;
+            *\?key=?*) ;;
+            *)
+              echo "::error::RENDER_DEPLOY_HOOK_URL is missing its ?key=… part. Copy the whole address again from Render → Settings → Deploy Hook (docs/operations/render-setup.md, step 3)."
+              exit 1
+              ;;
           esac
           image_url="$(jq --raw-output --null-input --arg image "$IMAGE:$VERSION" '$image | @uri')"
           curl --fail --silent --show-error --request POST \
-            "$hook${joiner}imgURL=$image_url" > /dev/null
+            "$hook&imgURL=$image_url" > /dev/null
           echo "Render is now deploying $IMAGE:$VERSION"
