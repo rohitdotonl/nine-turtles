@@ -219,7 +219,12 @@
   .scroll-gutter {
     scrollbar-gutter: stable;
   }
-  /* The phone's bottom toolbar: five equal places, each at least 44px tall. A place that can't act loses its icon, so it shows without color too. */
+  /*
+    The phone's bottom toolbar: five equal places, each at least 44px tall. A
+    place that can't act loses its icon, so it shows without color too. Icons
+    and words start from the top, so the icons stay in one line even when
+    "Open original" takes two lines on a narrow phone.
+  */
   .toolbar > :global(*) {
     display: flex;
     flex: 1 1 0;
@@ -227,9 +232,9 @@
     min-height: 3.5rem;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 0.125rem;
-    padding: 0.25rem;
+    padding: 0.5rem 0.25rem 0.375rem;
     font-size: var(--text-small);
     line-height: 1.2;
     text-align: center;

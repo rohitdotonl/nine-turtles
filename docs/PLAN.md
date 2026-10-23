@@ -227,6 +227,7 @@ each with screenshots:
 - ✅ Back arrows as icons, and the article centred on wide windows.
 - ✅ A tidier shortcut list, tick boxes the same size everywhere, and
   "Edit feed" lined up under a long name.
+- ✅ The phone's article toolbar keeps its icons in one line.
 
 ---
 
