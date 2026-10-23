@@ -71,6 +71,7 @@ every document the change affects:
 | Tools, hosting, workflow, or how changes reach the live app | `docs/owner-guide.md` |
 | Settings, backups, deploys, moving hosts, the daily check | `docs/operations/` |
 | An open question, or the owner's answer to one | `docs/planning/questions.md` |
+| A concept, tool or term not yet in `docs/concepts.md` | `docs/concepts.md`: add its name (no explanation) under the right group |
 | Anything, once merged | `docs/CHANGELOG.md`: one short plain-language entry at the top |
 | Project facts, rules or the map below | This file |
 
@@ -83,7 +84,8 @@ none needed it. The second-agent review checks this too.
   for the heading, e.g. SPEC section 14 for search, rather than the whole file).
 - Don't read `docs/owner-guide.md`, `docs/CHANGELOG.md`, `README.md` or
   `docs/planning/tech-check-2026-10.md` unless you're updating them. To add a
-  changelog entry, read only its top.
+  changelog entry, read only its top. To add a concept, search
+  `docs/concepts.md` for its name and its group's heading.
 - One milestone per session. Hand over through the documents, not memory.
 - Send wide searches and research to a helper agent so only its conclusion
   enters the session.

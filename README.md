@@ -23,6 +23,7 @@ In development. V1 is being built in small milestones; see
 - [`docs/SPEC.md`](docs/SPEC.md): what V1 does, feature by feature
 - [`docs/ENGINEERING.md`](docs/ENGINEERING.md): engineering principles and technical choices
 - [`docs/owner-guide.md`](docs/owner-guide.md): a plain-language guide to how it's built
+- [`docs/concepts.md`](docs/concepts.md): the concepts slowfeed is built with, as a list to learn from
 - [`AGENTS.md`](AGENTS.md): instructions for the AI agents that build slowfeed
 - [`docs/CHANGELOG.md`](docs/CHANGELOG.md): what's changed, in plain language
 
