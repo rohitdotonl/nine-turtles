@@ -31,6 +31,9 @@ async fn serve(uri: Uri) -> Response {
 
     match Frontend::get(path) {
         Some(file) if !path.is_empty() => file_response(path, file),
+        // An API address slowfeed doesn't have (perhaps one an older tab
+        // still uses after an update) is "not found", never the app's page.
+        _ if path == "api" || path.starts_with("api/") => StatusCode::NOT_FOUND.into_response(),
         // A file-like address that doesn't exist is a real "not found".
         None if path
             .rsplit('/')

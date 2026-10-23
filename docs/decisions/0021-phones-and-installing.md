@@ -31,7 +31,15 @@ behind for a day and needs more machinery for no gain to one reader.
 answer. The first one a tab sees is its own version. A different one means a
 newer slowfeed is live (Settings: "A new version is ready · Reload"); a
 different one on a "didn't understand" refusal (400, 404, 405, 415, 422)
-means this tab can't carry on, and the list's reserved line says so.
+means this tab can't carry on, and the list's reserved line says so. So that
+a dropped read address counts too, an unknown `/api/` address is now "not
+found" rather than the app's page. The service worker leaves every `/api/`
+address alone, so a download such as the OPML export is never swapped for
+the kept page.
+
+**Back from pages, too.** Close settings, Escape on Settings or Add a feed,
+and Cancel or Save on the edit pages go back one step on a phone, like the
+back arrow, so the system back gesture never reopens them.
 
 **The icon.** A lowercase "s" in Literata, text color on off-white: the
 wordmark's first letter, no logo shape (DESIGN.md → "Name and signature").

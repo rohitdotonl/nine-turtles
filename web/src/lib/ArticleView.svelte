@@ -194,11 +194,11 @@
     <!-- Within thumb reach. Each button has its word under its icon; one that can't act says so. -->
     <div role="group" aria-label="Article actions" class="toolbar flex shrink-0 bg-list px-1">
       <button type="button" aria-disabled={!phone.hasPrevious} onclick={() => phone.hasPrevious && phone.onPrevious()} class:text-muted={!phone.hasPrevious}>
-        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12.5 4 6.5 10l6 6" /></svg>
+        <svg aria-hidden="true" class:invisible={!phone.hasPrevious} width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12.5 4 6.5 10l6 6" /></svg>
         Previous
       </button>
       <button type="button" aria-disabled={!phone.hasNext} onclick={() => phone.hasNext && phone.onNext()} class:text-muted={!phone.hasNext}>
-        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m7.5 4 6 6-6 6" /></svg>
+        <svg aria-hidden="true" class:invisible={!phone.hasNext} width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m7.5 4 6 6-6 6" /></svg>
         Next
       </button>
       <button type="button" aria-pressed={article.starred} onclick={onStar}>
@@ -218,16 +218,17 @@
           >
           Open original
         </a>
+      {:else}
+        <!-- No link to share or open: the places stay, so nothing moves between articles. -->
+        <button type="button" aria-disabled="true" class="text-muted"><span class="h-5" aria-hidden="true"></span>Share</button>
+        <button type="button" aria-disabled="true" class="text-muted"><span class="h-5" aria-hidden="true"></span>Open original</button>
       {/if}
     </div>
   {/if}
 </section>
 
 <style>
-  /* The phone's bottom toolbar: five equal places, each at least 44px tall, clear of the home indicator. */
-  .toolbar {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
+  /* The phone's bottom toolbar: five equal places, each at least 44px tall. A place that can't act loses its icon, so it shows without color too. */
   .toolbar > :global(*) {
     display: flex;
     flex: 1 1 0;

@@ -360,7 +360,9 @@
   /** Back from an edit page, saved or not, to the feed or folder. */
   async function edited(saved: boolean) {
     if (saved) await loadFeeds();
-    if (route.kind === "edit-feed") go({ kind: "feed", id: route.id });
+    // On a phone the edit page is a step on from its list: go back that step.
+    if (phone && stepOf(history.state)?.back === "list") history.back();
+    else if (route.kind === "edit-feed") go({ kind: "feed", id: route.id });
     else if (route.kind === "edit-folder") go({ kind: "folder", id: route.id });
   }
 
@@ -412,7 +414,18 @@
     go(next);
   }
 
+  /** Close settings, and Escape on Settings or Add a feed: on a phone, back one step to the feeds. */
+  function closePage() {
+    if (phone) stepBack("home");
+    else go(lastPlace);
+  }
+
   function toggleSidebar() {
+    // On a phone the feeds are the home screen, one step back.
+    if (phone) {
+      if (!panes.sidebar) stepBack("home");
+      return;
+    }
     const hiding = panes.sidebar;
     const focusWasInside = sidebar?.contains(document.activeElement) ?? false;
     sidebarChoice = hiding ? "hidden" : "shown";
@@ -481,7 +494,7 @@
   }
 
   function escape() {
-    if (route.kind === "settings" || route.kind === "add-feed") go(lastPlace);
+    if (route.kind === "settings" || route.kind === "add-feed") closePage();
     else if (route.kind === "edit-feed" || route.kind === "edit-folder") edited(false);
     else if (reading || (selected && inArticle())) backToList();
     else if (phone && !panes.sidebar) stepBack("home");
@@ -635,7 +648,7 @@
           bind:dataHeading
           {version}
           {onSignedOut}
-          onClose={() => go(lastPlace)}
+          onClose={closePage}
           onImported={loadFeeds}
         />
       {:else if route.kind === "edit-feed" && currentFeed}

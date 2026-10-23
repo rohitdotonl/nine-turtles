@@ -69,3 +69,14 @@ async fn every_answer_says_which_version_sent_it() {
         );
     }
 }
+
+#[tokio::test]
+async fn an_unknown_api_address_is_not_found_not_the_app() {
+    // An older tab asking for something a newer slowfeed dropped is told so,
+    // and is then asked to reload (SPEC section 18).
+    let base = start().await;
+    let response = reqwest::get(format!("{base}/api/no-such-thing"))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+}

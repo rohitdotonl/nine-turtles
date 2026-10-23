@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
-import { appReady, follow, signIn } from "./screens";
+import { appReady, follow, signIn, tabTo } from "./screens";
 
 // SPEC section 20 (phones and installing the app), and the "slowfeed was
 // updated" line of section 18, "How to check it", done by a browser.
@@ -107,6 +107,51 @@ test.describe("on a phone", () => {
     await expect(toolbar(page).getByRole("button", { name: "Star" })).toHaveAttribute("aria-pressed", "true");
     await toolbar(page).getByRole("button", { name: "Star" }).click();
     await expect(toolbar(page).getByRole("button", { name: "Star" })).toHaveAttribute("aria-pressed", "false");
+  });
+
+  test("with only a keyboard: Tab and Enter move on, Escape goes back one step", async ({ page }) => {
+    await openHome(page);
+    // Other tests add feeds and folders here, so find it by name first.
+    await tabTo(page, sidebar(page).getByRole("searchbox"));
+    await page.keyboard.type("Reading Room");
+    await tabTo(page, sidebar(page).getByRole("link", { name: /^Reading Room/ }));
+    await page.keyboard.press("Enter");
+    await expect(list(page).getByRole("heading", { level: 2, name: "Reading Room" })).toBeFocused();
+
+    await tabTo(page, row(page, "The pleasure of a slow letter"));
+    await page.keyboard.press("Enter");
+    await expect(title(page, "The pleasure of a slow letter")).toBeFocused();
+    await tabTo(page, toolbar(page).getByRole("button", { name: "Next" }));
+    await page.keyboard.press("Enter");
+    await expect(title(page, "Only the first page")).toBeFocused();
+
+    await page.keyboard.press("Escape");
+    await expect(row(page, "Only the first page")).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("heading", { level: 1, name: "slowfeed" })).toBeFocused();
+
+    // Settings is one step on from the feeds; Escape and Close settings go back to them.
+    await tabTo(page, sidebar(page).getByRole("link", { name: "Settings" }));
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("heading", { level: 2, name: "Settings" })).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(sidebar(page)).toBeVisible();
+    await sidebar(page).getByRole("link", { name: "Settings" }).click();
+    await page.getByRole("button", { name: "Close settings" }).click();
+    await expect(sidebar(page)).toBeVisible();
+    // Back from the feeds leaves Settings behind: it doesn't reopen.
+    await page.goBack();
+    await expect(page.getByRole("heading", { level: 2, name: "Settings" })).toBeHidden();
+  });
+
+  test("Cancel on Edit feed goes back to the list, and back again doesn't reopen it", async ({ page }) => {
+    await openHome(page);
+    await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
+    await list(page).getByRole("link", { name: "Edit feed" }).click();
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await expect(list(page).getByRole("heading", { level: 2, name: "Reading Room" })).toBeVisible();
+    await page.goBack();
+    await expect(sidebar(page)).toBeVisible();
   });
 
   test("every tap target is at least 44 pixels tall", async ({ page }) => {

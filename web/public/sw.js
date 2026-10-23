@@ -30,6 +30,8 @@ self.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
+  // Downloads such as the OPML export are /api/ addresses: never the kept page.
+  if (url.pathname.startsWith("/api/")) return;
   if (request.mode === "navigate") event.respondWith(openApp(request));
   else if (url.pathname.startsWith("/assets/")) event.respondWith(appFile(request));
 });
