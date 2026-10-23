@@ -4,6 +4,12 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 23 October 2026: A list of concepts to learn
+
+- New page, `docs/concepts.md`: the names of the ideas, tools and terms
+  slowfeed is built with, grouped by area, for you to learn one at a time.
+- Agents now add any new concept to it in the same change that brings it in.
+
 ## 23 October 2026: Live on Render, with sign-in (Milestone 2)
 
 - slowfeed now has a password. A new browser sees only the password field;

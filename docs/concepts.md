@@ -1,0 +1,209 @@
+# Concepts
+
+A list of the ideas, tools and terms slowfeed is built with, for the owner
+to learn one at a time. Names only, no explanations, grouped by area.
+Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
+
+## Working with Claude and agents
+
+- Agent
+- Claude Code
+- Project, thread and session
+- Coordinator
+- Subagent (helper agent)
+- Prompt
+- Context window
+- `AGENTS.md` and `CLAUDE.md`
+- Second-agent review
+- Brief
+
+## Code and version control
+
+- Source code
+- Repository (repo)
+- Public and private repositories
+- Git
+- Commit
+- Branch
+- main (the default branch)
+- Merge
+- Merge conflict
+- Pull request (PR)
+- Code review
+- Diff
+- GitHub
+- Issue
+- Ruleset (protected branch)
+- `.gitignore`
+- Open-source licence (MIT)
+
+## The web, in general
+
+- Client and server
+- Browser
+- HTTP and HTTPS
+- Request and response
+- URL (web address)
+- Domain and subdomain
+- Port
+- Status codes (200, 301, 308, 404, 410, 429)
+- Redirect
+- Headers
+- Cookie
+- HTML
+- CSS
+- JavaScript
+- JSON
+- API
+- Frontend and backend
+
+## Feeds and the open web
+
+- Web feed
+- RSS
+- Atom
+- JSON Feed
+- OPML
+- Feed autodiscovery
+- Polling
+- Conditional requests (ETag, Last-Modified)
+- User-Agent
+- Rate limiting and `Retry-After`
+- Exponential backoff
+- Timeout
+- Scraping (and why slowfeed never does it)
+- Deduplication and fingerprints
+- URL normalization
+- Tracking pixels and tracking parameters
+
+## The backend (server side)
+
+- Rust
+- Compiler
+- Cargo
+- Crate (a Rust library)
+- Async programming and runtime (tokio)
+- Web server and routes (axum)
+- HTTP client (reqwest)
+- Parsing (feed-rs)
+- Serialization (serde)
+- Logging (tracing)
+- Error handling
+- Command-line program and subcommands (`slowfeed set-password`)
+- Embedding files in a program (rust-embed)
+- Toolchain (`rust-toolchain.toml`)
+
+## The frontend (what the browser shows)
+
+- TypeScript
+- Type checking
+- Svelte
+- Component
+- Single-page app (SPA)
+- Vite (build tool)
+- Bundle and bundle size
+- Tailwind CSS
+- Node.js and npm
+- Progressive web app (PWA)
+- Web app manifest
+- Service worker
+- Web fonts
+- Themes (light, dark, system)
+
+## Data and the database
+
+- Database
+- SQLite
+- Table, row and column
+- SQL
+- Query
+- Primary key and unique constraint
+- Migration
+- Full-text search (FTS5)
+- Tokenizer
+- Unicode and combining marks
+- Timestamps and UTC
+- Data export
+
+## Security and sign-in
+
+- Authentication (sign-in)
+- Password hashing (argon2id)
+- Salt
+- Hash function (BLAKE2)
+- Random numbers and tokens
+- Session and session cookie
+- Secure, HTTP-only and SameSite cookies
+- Cross-site request forgery (CSRF)
+- Cross-site scripting (XSS)
+- Sanitizing HTML (ammonia) and allowlists
+- Content Security Policy (CSP)
+- Security headers
+- Secrets
+- Environment variables
+- Vulnerabilities and security audits (cargo-audit, npm audit)
+
+## Libraries
+
+- Library (dependency)
+- Direct and indirect dependencies
+- Package manager
+- Lock file (`Cargo.lock`, `package-lock.json`)
+- Version numbers (semantic versioning)
+- Pinning versions
+
+## Checks and testing
+
+- Automated test
+- Unit test
+- Integration test
+- End-to-end test (Playwright)
+- Test fixture
+- Formatter
+- Linter
+- Continuous integration (CI)
+- GitHub Actions and workflows
+- Check script (`scripts/check.sh`)
+- Screenshots in pull requests
+- Accessibility testing (axe)
+- Performance budget
+
+## Building, hosting and deploying
+
+- Build
+- Release build
+- Container and container image
+- Docker and the `Dockerfile`
+- Container registry (GitHub's ghcr.io)
+- Hosting
+- Render
+- Instance
+- Persistent disk
+- Deploy and deploy hook
+- Downtime
+- Status page and health check
+- Diagnostics
+- Shell (terminal)
+- Vendor lock-in
+
+## Design and accessibility
+
+- Accessibility (a11y)
+- WCAG and contrast ratios (AA, AAA)
+- Screen reader
+- Keyboard navigation and focus
+- Keyboard shortcuts
+- Touch targets
+- Responsive design (desktop and phone widths)
+- Reduced motion and other system settings
+- Design tokens (colors, fonts, spacing)
+
+## Planned for V2
+
+- Backups
+- S3 and S3-compatible storage
+- Cloudflare R2
+- Object storage
+- Restore and recovery
+- WebSub (hubs, leases and signatures)
+- Data retention and clean-up
