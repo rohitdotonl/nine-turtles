@@ -1,7 +1,8 @@
 //! slowfeed: a quiet, single-user reader for writing on the open web.
 //!
-//! So far: sign-in, the database file, the status pages, and adding feeds
-//! and listing their articles. The frontend is packed into this program
+//! So far: sign-in, the database file, the status pages, adding feeds,
+//! listing and reading their articles, marking them read and starring them,
+//! and the shared settings. The frontend is packed into this program
 //! (see `assets`).
 
 pub mod assets;
@@ -13,9 +14,11 @@ pub mod feed;
 pub mod feeds;
 pub mod fetch;
 pub mod log;
+pub mod marks;
 pub mod password;
 pub mod search;
 pub mod security;
+pub mod settings;
 pub mod status;
 
 use std::sync::{Arc, atomic::AtomicU64};
@@ -74,6 +77,8 @@ pub async fn app(config: Config) -> Result<Router, String> {
     let router = Router::new()
         .merge(auth::routes())
         .merge(feeds::routes())
+        .merge(marks::routes())
+        .merge(settings::routes())
         .merge(status::routes())
         .merge(assets::routes())
         .with_state(state);

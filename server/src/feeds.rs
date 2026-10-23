@@ -1,5 +1,6 @@
 //! Adding a feed, listing feeds and their articles, and reading one article
-//! (SPEC sections 3, 5, 6 and 7).
+//! (SPEC sections 3, 5, 6 and 7). Marking articles read or starred is in
+//! `marks`.
 //!
 //! Adding: the reader pastes a feed's address or a website's. slowfeed
 //! fetches it once; if it's a web page, it looks in it for the feeds the site
@@ -41,14 +42,19 @@ struct FeedRow {
     id: i64,
     title: String,
     site_url: Option<String>,
+    /// How many of its articles are unread, for the sidebar's muted count.
+    unread: i64,
 }
 
-/// Every followed feed, alphabetically (SPEC section 5).
+/// Each feed's unread count, counted from the `articles_unread_by_feed`
+/// index alone (tests/speed.rs checks this).
+pub const FEEDS: &str = "SELECT id, title, site_url,
+        (SELECT COUNT(*) FROM articles WHERE articles.feed_id = feeds.id AND articles.read = 0) AS unread
+     FROM feeds ORDER BY title COLLATE NOCASE, id";
+
+/// Every followed feed, alphabetically, with its unread count (SPEC section 5).
 async fn list_feeds(_: SignedIn, State(state): State<AppState>) -> Response {
-    let feeds: Result<Vec<FeedRow>, sqlx::Error> =
-        sqlx::query_as("SELECT id, title, site_url FROM feeds ORDER BY title COLLATE NOCASE, id")
-            .fetch_all(&state.db)
-            .await;
+    let feeds: Result<Vec<FeedRow>, sqlx::Error> = sqlx::query_as(FEEDS).fetch_all(&state.db).await;
     match feeds {
         Ok(feeds) => Json(json!({ "feeds": feeds })).into_response(),
         Err(error) => database_problem("listing feeds", &error),
@@ -231,12 +237,17 @@ async fn follow(
     };
 
     store_articles(&mut transaction, feed_id, &parsed.articles, now).await?;
+    let unread = sqlx::query_scalar("SELECT COUNT(*) FROM articles WHERE feed_id = ?")
+        .bind(feed_id)
+        .fetch_one(&mut *transaction)
+        .await?;
     transaction.commit().await?;
 
     Ok(FeedRow {
         id: feed_id,
         title: parsed.title,
         site_url: parsed.site_url,
+        unread,
     })
 }
 
@@ -275,12 +286,45 @@ pub async fn store_articles(
     Ok(())
 }
 
+/// Which articles a list shows (SPEC sections 4 and 6).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum List {
+    All,
+    Unread,
+    Starred,
+    /// One feed's articles, read or not.
+    Feed(i64),
+}
+
+/// The list's order: the reader's "Sort" setting (SPEC section 18).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Order {
+    #[default]
+    Newest,
+    Oldest,
+}
+
+#[derive(Clone, Copy, Default, Deserialize)]
+#[serde(rename_all = "lowercase")]
+enum View {
+    #[default]
+    All,
+    Unread,
+    Starred,
+}
+
 #[derive(Deserialize)]
 struct ArticlesQuery {
-    /// Only this feed's articles; all feeds when absent.
+    /// Only this feed's articles (all of them); otherwise `view` decides.
     feed: Option<i64>,
-    /// Where the previous page ended, as `time:id`, for "Show older items".
-    before: Option<String>,
+    #[serde(default)]
+    view: View,
+    #[serde(default)]
+    order: Order,
+    /// Where the previous page ended, as `time:id`, for "Show older items"
+    /// (or "Show newer items" when the list is oldest first).
+    after: Option<String>,
 }
 
 #[derive(Serialize, sqlx::FromRow)]
@@ -292,24 +336,32 @@ pub struct ArticleRow {
     pub link: Option<String>,
     /// Seconds since 1970 (UTC); the screen shows it in the device's time zone.
     pub at: i64,
+    pub read: bool,
+    pub starred: bool,
 }
 
-/// One page of the item list, newest first. `older` says where the next page
-/// starts, or is null at the very end.
+/// One page of the item list. `next` says where the next page starts, or is
+/// null at the very end.
 async fn list_articles(
     _: SignedIn,
     State(state): State<AppState>,
     Query(query): Query<ArticlesQuery>,
 ) -> Response {
-    let before = match query.before.as_deref().map(parse_cursor) {
+    let after = match query.after.as_deref().map(parse_cursor) {
         None => None,
         Some(Some(cursor)) => Some(cursor),
         Some(None) => return StatusCode::BAD_REQUEST.into_response(),
     };
-    match page(&state.db, query.feed, before).await {
-        Ok((articles, older)) => {
-            let older = older.map(|(at, id)| format!("{at}:{id}"));
-            Json(json!({ "articles": articles, "older": older })).into_response()
+    let list = match (query.feed, query.view) {
+        (Some(feed), _) => List::Feed(feed),
+        (None, View::All) => List::All,
+        (None, View::Unread) => List::Unread,
+        (None, View::Starred) => List::Starred,
+    };
+    match page(&state.db, list, query.order, after).await {
+        Ok((articles, next)) => {
+            let next = next.map(|(at, id)| format!("{at}:{id}"));
+            Json(json!({ "articles": articles, "next": next })).into_response()
         }
         Err(error) => database_problem("listing articles", &error),
     }
@@ -320,52 +372,79 @@ fn parse_cursor(text: &str) -> Option<(i64, i64)> {
     Some((at.parse().ok()?, id.parse().ok()?))
 }
 
-/// The two item-list questions, one per index, so the database always picks
-/// the right one. `CROSS JOIN` tells SQLite to walk the articles in list
-/// order and look up each one's feed, rather than sorting afterwards
-/// (tests/speed.rs checks this).
-macro_rules! newest_articles {
-    ($filter:literal) => {
+/// The item-list questions, one per list and order, each matching one index
+/// so the database always picks the right one: `articles_newest`,
+/// `articles_newest_by_feed`, `articles_unread` and `articles_starred`, read
+/// backwards for oldest first. `CROSS JOIN` tells SQLite to walk the
+/// articles in list order and look up each one's feed, rather than sorting
+/// afterwards (tests/speed.rs checks this).
+macro_rules! list_query {
+    ($filter:literal, $past:literal, $order:literal) => {
         concat!(
             "SELECT articles.id, articles.feed_id, feeds.title AS feed_title,
-                    articles.title, articles.link, articles.sort_at AS at
+                    articles.title, articles.link, articles.sort_at AS at,
+                    articles.read, articles.starred
              FROM articles CROSS JOIN feeds ON feeds.id = articles.feed_id
              WHERE ",
             $filter,
-            " (articles.sort_at, articles.id) < (?, ?)
-             ORDER BY articles.sort_at DESC, articles.id DESC
-             LIMIT ?"
+            " (articles.sort_at, articles.id) ",
+            $past,
+            " (?, ?)
+             ORDER BY articles.sort_at ",
+            $order,
+            ", articles.id ",
+            $order,
+            " LIMIT ?"
         )
     };
 }
-pub const ALL_FEEDS: &str = newest_articles!("");
-pub const ONE_FEED: &str = newest_articles!("articles.feed_id = ? AND");
 
-/// The newest articles older than `before`, using the list's indexes. One
-/// extra row is asked for, to know whether an older page exists.
+/// The question for a list in an order. A feed's question takes the feed's
+/// ID first; every question then takes the cursor (time, id) and the limit.
+pub const fn list_sql(list: List, order: Order) -> &'static str {
+    match (list, order) {
+        (List::All, Order::Newest) => list_query!("", "<", "DESC"),
+        (List::All, Order::Oldest) => list_query!("", ">", "ASC"),
+        (List::Unread, Order::Newest) => list_query!("articles.read = 0 AND", "<", "DESC"),
+        (List::Unread, Order::Oldest) => list_query!("articles.read = 0 AND", ">", "ASC"),
+        (List::Starred, Order::Newest) => list_query!("articles.starred = 1 AND", "<", "DESC"),
+        (List::Starred, Order::Oldest) => list_query!("articles.starred = 1 AND", ">", "ASC"),
+        (List::Feed(_), Order::Newest) => list_query!("articles.feed_id = ? AND", "<", "DESC"),
+        (List::Feed(_), Order::Oldest) => list_query!("articles.feed_id = ? AND", ">", "ASC"),
+    }
+}
+
+/// One page of a list, starting after `after` (from the start when absent),
+/// using the list's index. One extra row is asked for, to know whether
+/// another page exists.
 pub async fn page(
     db: &sqlx::SqlitePool,
-    feed: Option<i64>,
-    before: Option<(i64, i64)>,
+    list: List,
+    order: Order,
+    after: Option<(i64, i64)>,
 ) -> Result<(Vec<ArticleRow>, Option<(i64, i64)>), sqlx::Error> {
-    let (before_at, before_id) = before.unwrap_or((i64::MAX, i64::MAX));
-    let mut query = sqlx::query_as(if feed.is_some() { ONE_FEED } else { ALL_FEEDS });
-    if let Some(feed) = feed {
+    let start = match order {
+        Order::Newest => (i64::MAX, i64::MAX),
+        Order::Oldest => (i64::MIN, i64::MIN),
+    };
+    let (after_at, after_id) = after.unwrap_or(start);
+    let mut query = sqlx::query_as(list_sql(list, order));
+    if let List::Feed(feed) = list {
         query = query.bind(feed);
     }
     let mut rows: Vec<ArticleRow> = query
-        .bind(before_at)
-        .bind(before_id)
+        .bind(after_at)
+        .bind(after_id)
         .bind(PAGE_SIZE + 1)
         .fetch_all(db)
         .await?;
-    let older = if rows.len() > usize::try_from(PAGE_SIZE).unwrap_or(usize::MAX) {
+    let next = if rows.len() > usize::try_from(PAGE_SIZE).unwrap_or(usize::MAX) {
         rows.pop();
         rows.last().map(|last| (last.at, last.id))
     } else {
         None
     };
-    Ok((rows, older))
+    Ok((rows, next))
 }
 
 /// One article, everything the reading area shows (SPEC section 7).
@@ -388,6 +467,8 @@ pub struct FullArticle {
     pub language: Option<String>,
     /// Seconds since 1970 (UTC), as in the list.
     pub at: i64,
+    pub read: bool,
+    pub starred: bool,
 }
 
 async fn read_article(_: SignedIn, State(state): State<AppState>, Path(id): Path<i64>) -> Response {
@@ -395,7 +476,7 @@ async fn read_article(_: SignedIn, State(state): State<AppState>, Path(id): Path
         "SELECT articles.id, articles.feed_id, feeds.title AS feed_title, feeds.site_url,
                 articles.title, articles.link, articles.author, articles.content,
                 articles.summary, COALESCE(articles.language, feeds.language) AS language,
-                articles.sort_at AS at
+                articles.sort_at AS at, articles.read, articles.starred
          FROM articles JOIN feeds ON feeds.id = articles.feed_id
          WHERE articles.id = ?",
     )

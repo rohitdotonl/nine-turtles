@@ -1,7 +1,14 @@
 // Talking to the server about feeds and their articles (SPEC sections 3, 5,
-// 6 and 7), and the words and times the screens show for them.
+// 6, 7, 8, 9 and 18), and the words and times the screens show for them.
+import type { View } from "./router";
 
-export type Feed = { id: number; title: string; siteUrl: string | null };
+export type Feed = {
+  id: number;
+  title: string;
+  siteUrl: string | null;
+  /** How many of its articles are unread. */
+  unread: number;
+};
 
 export type Article = {
   id: number;
@@ -11,6 +18,8 @@ export type Article = {
   link: string | null;
   /** Seconds since 1970 (UTC). */
   at: number;
+  read: boolean;
+  starred: boolean;
 };
 
 /** One article as the reading area shows it. `content` and `summary` are already cleaned by slowfeed. */
@@ -23,8 +32,14 @@ export type FullArticle = Article & {
   language: string | null;
 };
 
-/** One page of the item list. `older` is where the next page starts, or null at the end. */
-export type Page = { articles: Article[]; older: string | null };
+/** One page of the item list. `next` is where the next page starts, or null at the end. */
+export type Page = { articles: Article[]; next: string | null };
+
+/** Which articles a list shows: one of the views, or one feed's (all of them). */
+export type Source = { view: View } | { feed: number };
+
+/** The reader's sort order, shared across their devices (SPEC section 18). */
+export type Order = "newest" | "oldest";
 
 export type Choice = { title: string; url: string };
 
@@ -46,22 +61,87 @@ export type Problem =
 const PROBLEMS: Problem[] = ["not-an-address", "not-allowed", "unreachable", "not-found", "too-big", "no-feed"];
 
 export async function listFeeds(): Promise<Feed[]> {
+  await saved();
   const body = await getJson("/api/feeds");
   const feeds = isRecord(body) && Array.isArray(body.feeds) ? body.feeds : [];
   return feeds.filter(isRecord).map(toFeed);
 }
 
-export async function listArticles(feedId: number | null, before: string | null): Promise<Page> {
+export async function listArticles(source: Source, order: Order, after: string | null): Promise<Page> {
   const query = new URLSearchParams();
-  if (feedId !== null) query.set("feed", String(feedId));
-  if (before !== null) query.set("before", before);
-  const text = query.toString();
-  const body = await getJson(`/api/articles${text ? `?${text}` : ""}`);
+  if ("feed" in source) query.set("feed", String(source.feed));
+  else query.set("view", source.view);
+  query.set("order", order);
+  if (after !== null) query.set("after", after);
+  await saved();
+  const body = await getJson(`/api/articles?${query}`);
   if (!isRecord(body) || !Array.isArray(body.articles)) throw new Error("slowfeed sent an unexpected answer");
   return {
     articles: body.articles.filter(isRecord).map(toArticle),
-    older: typeof body.older === "string" ? body.older : null,
+    next: typeof body.next === "string" ? body.next : null,
   };
+}
+
+// Marks are sent one after another, in the order they were made, so an undo
+// can never overtake the mark it undoes. Lists and counts wait for them, so
+// a list opened next already shows them; articles themselves never wait, so
+// a slow save can't hold up reading.
+let writes: Promise<unknown> = Promise.resolve();
+
+/** Waits until every mark sent so far has been saved (or has failed). */
+function saved(): Promise<unknown> {
+  return writes;
+}
+
+function send(path: string, body: unknown): Promise<void> {
+  const sent = writes.then(async () => {
+    const response = await fetch(path, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+      // A save that hangs counts as failed, so it can't hold up the lists.
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (!response.ok) throw new Error(`slowfeed answered ${response.status}`);
+  });
+  writes = sent.catch(() => undefined);
+  return sent;
+}
+
+/** Marks articles read or unread. The screen has already changed; this tells the server. */
+export function markRead(ids: number[], read: boolean): Promise<void> {
+  return send("/api/articles/read", { ids, read });
+}
+
+/** Stars or unstars articles. The screen has already changed; this tells the server. */
+export function markStarred(ids: number[], starred: boolean): Promise<void> {
+  return send("/api/articles/starred", { ids, starred });
+}
+
+/** The sort order; newest first if the server can't say. */
+export async function loadSort(): Promise<Order> {
+  try {
+    const body = await getJson("/api/settings");
+    return isRecord(body) && body.sort === "oldest" ? "oldest" : "newest";
+  } catch {
+    return "newest";
+  }
+}
+
+export function saveSort(sort: Order): Promise<void> {
+  return send("/api/settings", { sort });
+}
+
+/** What the line above the list says after "Mark all as read". */
+export function markedAllMessage(count: number): string {
+  if (count === 0) return "Everything here is already read.";
+  return `Marked ${count} ${count === 1 ? "item" : "items"} as read`;
+}
+
+/** A feed's unread count as the sidebar shows it: nothing for none, "999+" above 999. */
+export function unreadLabel(count: number): string {
+  if (count <= 0) return "";
+  return count > 999 ? "999+" : String(count);
 }
 
 // Articles already fetched, so moving back and forth with j and k never
@@ -179,6 +259,8 @@ function toArticle(article: Record<string, unknown>): Article {
     title: String(article.title ?? ""),
     link: text(article.link),
     at: Number(article.at),
+    read: article.read === true,
+    starred: article.starred === true,
   };
 }
 
@@ -202,6 +284,7 @@ function toFeed(feed: Record<string, unknown>): Feed {
     id: Number(feed.id),
     title: String(feed.title ?? ""),
     siteUrl: text(feed.site_url),
+    unread: Number(feed.unread ?? 0),
   };
 }
 

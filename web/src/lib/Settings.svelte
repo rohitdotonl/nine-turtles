@@ -1,21 +1,29 @@
 <!--
   Settings (SPEC section 18). It fills the list and reading areas while the
   sidebar stays, so the reader never loses their place. "Close settings" or
-  Escape goes back. Sections for sort order and the reader's data arrive with
-  the milestones that give them something to do.
+  Escape goes back. Reading (the sort order) is shared across the reader's
+  devices; the reader controls belong to this device. The reader's data
+  section arrives with the milestone that gives it something to do.
 -->
 <script lang="ts">
+  import type { Order } from "./feeds";
   import { LINE_WIDTHS, READING_FONTS, TEXT_SIZES, type Preferences } from "./preferences";
   import { signOut } from "./session";
 
   let {
     preferences = $bindable(),
+    sort,
+    onSort,
     heading = $bindable(),
     version,
     onSignedOut,
     onClose,
   }: {
     preferences: Preferences;
+    /** Newest or oldest first; unknown until the server answers. */
+    sort: Order | undefined;
+    /** Saves a new sort order; fails if it couldn't be saved. */
+    onSort: (sort: Order) => Promise<void>;
     heading?: HTMLHeadingElement;
     version: string;
     onSignedOut: () => void;
@@ -29,7 +37,22 @@
     { value: "dark", label: "Dark" },
   ] as const;
 
+  const SORT_CHOICES = [
+    { value: "newest", label: "Newest first" },
+    { value: "oldest", label: "Oldest first" },
+  ] as const;
+
   let message = $state("");
+  let sortMessage = $state("");
+
+  async function chooseSort(next: Order) {
+    sortMessage = "";
+    try {
+      await onSort(next);
+    } catch {
+      sortMessage = "The sort order couldn't be saved. Try again in a moment.";
+    }
+  }
 
   async function leave() {
     try {
@@ -49,6 +72,31 @@
     </div>
 
     <div class="mt-8 flex max-w-2xl flex-col gap-10">
+      <section aria-labelledby="reading-heading" class="flex flex-col gap-6">
+        <div>
+          <h3 id="reading-heading" class="text-large font-semibold">Reading</h3>
+          <p class="text-small text-muted">This applies on all your devices.</p>
+        </div>
+
+        <fieldset>
+          <legend class="font-semibold">Sort order</legend>
+          {#each SORT_CHOICES as choice (choice.value)}
+            <label class="flex min-h-11 items-center gap-3">
+              <input
+                type="radio"
+                name="sort"
+                value={choice.value}
+                checked={sort === choice.value}
+                disabled={sort === undefined}
+                onchange={() => chooseSort(choice.value)}
+              />
+              {choice.label}
+            </label>
+          {/each}
+          <p role="status" class="text-small">{sortMessage}</p>
+        </fieldset>
+      </section>
+
       <section aria-labelledby="reader-heading" class="flex flex-col gap-6">
         <div>
           <h3 id="reader-heading" class="text-large font-semibold">Reader</h3>

@@ -39,11 +39,12 @@ describe("keyboard shortcuts", () => {
 
   it("forgets a g after a pause, or when another key follows", () => {
     const read = createKeyReader();
+    // u on its own is Undo, not Go to Unread.
     read(press("g"), 0);
-    expect(read(press("u"), SEQUENCE_MS + 1)).toBeUndefined();
+    expect(read(press("u"), SEQUENCE_MS + 1)).toEqual({ kind: "undo" });
     read(press("g"), 0);
     expect(read(press("x"), 10)).toBeUndefined();
-    expect(read(press("u"), 20)).toBeUndefined();
+    expect(read(press("u"), 20)).toEqual({ kind: "undo" });
   });
 
   it("moves with j and k, opens with Enter or o, the original with v, and sizes text with + and -", () => {
@@ -58,6 +59,14 @@ describe("keyboard shortcuts", () => {
     expect(read(press("-"), 0)).toEqual({ kind: "text-size", step: -1 });
   });
 
+  it("stars with s, marks unread with m, marks all as read with Shift+A and undoes with u", () => {
+    const read = createKeyReader();
+    expect(read(press("s"), 0)).toEqual({ kind: "star" });
+    expect(read(press("m"), 0)).toEqual({ kind: "mark-unread" });
+    expect(read(press("A"), 0)).toEqual({ kind: "mark-all-read" });
+    expect(read(press("u"), 0)).toEqual({ kind: "undo" });
+  });
+
   it("leaves the browser's own shortcuts alone", () => {
     const read = createKeyReader();
     expect(read(press("[", { metaKey: true }), 0)).toBeUndefined();
@@ -70,6 +79,10 @@ describe("keyboard shortcuts", () => {
       "j",
       "Enter",
       "v",
+      "s",
+      "m",
+      "Shift+A",
+      "u",
       "a",
       "g then u",
       "[",

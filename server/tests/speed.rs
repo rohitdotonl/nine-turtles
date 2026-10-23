@@ -7,10 +7,10 @@ mod common;
 
 use std::time::{Duration, Instant};
 
-use slowfeed::feeds::{ALL_FEEDS, ONE_FEED, page};
+use slowfeed::feeds::{FEEDS, List, Order, list_sql, page};
 use sqlx::SqlitePool;
 
-const FEEDS: i64 = 500;
+const FEEDS_COUNT: i64 = 500;
 /// About one article every other day per feed, for a year.
 const ARTICLES_PER_FEED: i64 = 200;
 const YEAR: i64 = 365 * 24 * 60 * 60;
@@ -25,7 +25,7 @@ async fn big_library() -> SqlitePool {
         .await
         .unwrap();
     let mut transaction = db.begin().await.unwrap();
-    for feed in 1..=FEEDS {
+    for feed in 1..=FEEDS_COUNT {
         sqlx::query("INSERT INTO feeds (id, url, url_key, title, added_at) VALUES (?, ?, ?, ?, ?)")
             .bind(feed)
             .bind(format!("https://blog-{feed}.example/feed"))
@@ -36,7 +36,7 @@ async fn big_library() -> SqlitePool {
             .await
             .unwrap();
     }
-    for feed in 1..=FEEDS {
+    for feed in 1..=FEEDS_COUNT {
         for number in 0..ARTICLES_PER_FEED {
             // Spread over the year, never two feeds in step.
             let at = NOW - (number * YEAR / ARTICLES_PER_FEED) - feed * 97;
@@ -82,47 +82,102 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
         .fetch_one(&db)
         .await
         .unwrap();
-    assert_eq!(total, FEEDS * ARTICLES_PER_FEED);
+    assert_eq!(total, FEEDS_COUNT * ARTICLES_PER_FEED);
 
-    // The list's questions always use an index, never a full read of every
-    // article or a sort done on the spot.
-    for (sql, binds) in [
-        (ALL_FEEDS, vec![i64::MAX, i64::MAX, 51]),
-        (ONE_FEED, vec![250, i64::MAX, i64::MAX, 51]),
-    ] {
-        let plan = plan(&db, sql, &binds).await;
-        assert!(
-            plan.contains("USING INDEX articles_newest")
-                || plan.contains("USING COVERING INDEX articles_newest"),
-            "{plan}"
-        );
-        assert!(!plan.contains("TEMP B-TREE"), "{plan}");
-    }
-
-    // First page, a page deep in the past, and one feed's page.
-    let first = Instant::now();
-    let (articles, older) = page(&db, None, None).await.unwrap();
-    let first = first.elapsed();
-    assert_eq!(articles.len(), 50);
-
-    let deep = Instant::now();
-    let (deep_articles, _) = page(&db, None, Some((NOW - YEAR / 2, i64::MAX)))
+    // A reader who keeps up: everything older than a month is read, and one
+    // article in fifty is starred.
+    sqlx::query("UPDATE articles SET read = 1 WHERE sort_at < ?")
+        .bind(NOW - YEAR / 12)
+        .execute(&db)
         .await
         .unwrap();
-    let deep = deep.elapsed();
-    assert_eq!(deep_articles.len(), 50);
-    assert!(older.is_some());
+    sqlx::query("UPDATE articles SET starred = 1 WHERE id % 50 = 0")
+        .execute(&db)
+        .await
+        .unwrap();
+    sqlx::query("ANALYZE").execute(&db).await.unwrap();
 
-    let one = Instant::now();
-    let (one_feed, _) = page(&db, Some(250), None).await.unwrap();
-    let one = one.elapsed();
-    assert!(one_feed.iter().all(|article| article.feed_id == 250));
-
-    for (what, took) in [
-        ("first page", first),
-        ("deep page", deep),
-        ("one feed", one),
+    // Every list, in both orders, always uses its index, never a full read
+    // of every article or a sort done on the spot.
+    for (list, index) in [
+        (List::All, "articles_newest"),
+        (List::Unread, "articles_unread"),
+        (List::Starred, "articles_starred"),
+        (List::Feed(250), "articles_newest_by_feed"),
     ] {
+        for order in [Order::Newest, Order::Oldest] {
+            let mut binds = if list == List::Feed(250) {
+                vec![250]
+            } else {
+                vec![]
+            };
+            binds.extend([i64::MAX, i64::MAX, 51]);
+            let plan = plan(&db, list_sql(list, order), &binds).await;
+            assert!(
+                plan.contains(&format!("INDEX {index} ")),
+                "{list:?} {order:?}: {plan}"
+            );
+            assert!(!plan.contains("TEMP B-TREE"), "{list:?} {order:?}: {plan}");
+        }
+    }
+    // The sidebar's unread counts come from their own small index.
+    let counts = plan(&db, FEEDS, &[]).await;
+    assert!(counts.contains("INDEX articles_unread_by_feed"), "{counts}");
+
+    let mut timings = Vec::new();
+    let mut time = async |what: &'static str, list: List, order: Order, after| {
+        let started = Instant::now();
+        let (articles, next) = page(&db, list, order, after).await.unwrap();
+        timings.push((what, started.elapsed()));
+        (articles, next)
+    };
+
+    // First page, a page deep in the past, one feed, Unread, Starred, and
+    // oldest first.
+    let (articles, next) = time("first page", List::All, Order::Newest, None).await;
+    assert_eq!(articles.len(), 50);
+    assert!(next.is_some());
+    let (deep, _) = time(
+        "deep page",
+        List::All,
+        Order::Newest,
+        Some((NOW - YEAR / 2, i64::MAX)),
+    )
+    .await;
+    assert_eq!(deep.len(), 50);
+    let (one_feed, _) = time("one feed", List::Feed(250), Order::Newest, None).await;
+    assert!(one_feed.iter().all(|article| article.feed_id == 250));
+    let (unread, _) = time("unread", List::Unread, Order::Newest, None).await;
+    assert_eq!(unread.len(), 50);
+    assert!(unread.iter().all(|article| !article.read));
+    let (starred, _) = time("starred", List::Starred, Order::Newest, None).await;
+    assert_eq!(starred.len(), 50);
+    assert!(starred.iter().all(|article| article.starred));
+    let (oldest_unread, _) = time("oldest unread", List::Unread, Order::Oldest, None).await;
+    assert!(
+        oldest_unread
+            .windows(2)
+            .all(|pair| pair[0].at <= pair[1].at)
+    );
+
+    // The sidebar's counts, for a reader who keeps up and for one who has
+    // read nothing at all (every article counted).
+    for (what, read_before) in [
+        ("counts", NOW - YEAR / 12),
+        ("counts, nothing read", i64::MIN),
+    ] {
+        sqlx::query("UPDATE articles SET read = (sort_at < ?)")
+            .bind(read_before)
+            .execute(&db)
+            .await
+            .unwrap();
+        let started = Instant::now();
+        let rows = sqlx::query(FEEDS).fetch_all(&db).await.unwrap();
+        timings.push((what, started.elapsed()));
+        assert_eq!(rows.len(), 500);
+    }
+
+    for (what, took) in timings {
         assert!(took < FAST_ENOUGH, "{what} took {took:?}");
     }
 }

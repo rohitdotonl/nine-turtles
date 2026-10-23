@@ -54,6 +54,23 @@ export const SCREENS: Screen[] = [
       await expect(page.getByRole("img", { name: "A river drawn as three blue lines" })).toBeVisible();
     },
   },
+  {
+    // Read, unread, selected and starred rows together, and the line with Undo.
+    name: "marks",
+    path: "/all",
+    signedIn: true,
+    base: FEEDS_APP,
+    open: async (page) => {
+      const id = await follow(page, `${FEED_SITE}/blog/screen-marks-${Date.now()}/`);
+      await page.goto(new URL(`/feeds/${id}`, page.url()).href);
+      await appReady(page);
+      await expect(page.getByRole("button", { name: /A year of reading slowly/ })).toBeVisible();
+      await page.keyboard.press("j");
+      await page.keyboard.press("s");
+      await page.keyboard.press("j");
+      await expect(page.getByRole("button", { name: "Undo" })).toBeVisible();
+    },
+  },
   { name: "settings", path: "/settings", signedIn: true },
   {
     name: "shortcuts",

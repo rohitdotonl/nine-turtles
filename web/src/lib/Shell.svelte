@@ -1,17 +1,18 @@
 <!--
-  The signed-in app (SPEC sections 2 to 7, 18 and 19): the sidebar with the
-  feeds, the item list and the reading area, side by side as the window's
-  width allows, with adding a feed, Settings and the `?` shortcut list.
+  The signed-in app (SPEC sections 2 to 9, 18 and 19): the sidebar with the
+  feeds and their unread counts, the item list and the reading area, side by
+  side as the window's width allows, with adding a feed, Settings and the
+  `?` shortcut list. An article shown in the reading area counts as read.
   Nothing in it moves unless the reader moves it.
 -->
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, untrack } from "svelte";
   import AddFeed from "./AddFeed.svelte";
   import ArticleView from "./ArticleView.svelte";
   import CheatSheet from "./CheatSheet.svelte";
   import ItemList from "./ItemList.svelte";
   import Settings from "./Settings.svelte";
-  import { listFeeds, type Article, type Feed } from "./feeds";
+  import { listFeeds, loadSort, saveSort, unreadLabel, type Article, type Feed, type Order, type Source } from "./feeds";
   import { createKeyReader } from "./keyboard";
   import { panesFor, widthFor, MEDIUM_REM, WIDE_REM, type SidebarChoice, type Width } from "./layout";
   import { TEXT_SIZES, apply, load, save } from "./preferences";
@@ -26,6 +27,8 @@
   /** The feeds you follow, alphabetically; unknown until the server answers. */
   let feeds: Feed[] | undefined = $state();
   let feedsProblem = $state(false);
+  /** The reader's sort order, shared across their devices; unknown until the server answers. */
+  let sort: Order | undefined = $state();
   let preferences = $state(load());
   let width: Width = $state(currentWidth());
   // On a phone-narrow window the sidebar is the home screen, but an address
@@ -46,6 +49,9 @@
   let sidebar: HTMLElement | undefined = $state();
   let articleHeading: HTMLHeadingElement | undefined = $state();
   let itemList: ItemList | undefined = $state();
+
+  /** Which articles the list shows here. */
+  let source: Source = $derived(route.kind === "feed" ? { feed: route.id } : { view: route.kind === "view" ? route.view : "unread" });
 
   let currentFeed = $derived.by(() => {
     const place = route;
@@ -75,6 +81,36 @@
   $effect(() => {
     document.title = titleFor(route, currentFeed?.title);
   });
+
+  // An article counts as read as soon as the reading area shows it (SPEC
+  // section 8). Only a newly shown article is marked, so `m` on the one
+  // already showing keeps it unread until you move away and back.
+  let lastShown: number | undefined;
+  $effect(() => {
+    const showing = panes.article ? selected : undefined;
+    const id = showing?.id;
+    untrack(() => {
+      if (id === lastShown) return;
+      lastShown = id;
+      if (showing) itemList?.shown(showing);
+    });
+  });
+
+  function unreadChanged(feedId: number, change: number) {
+    const feed = feeds?.find((each) => each.id === feedId);
+    if (feed) feed.unread = Math.max(0, feed.unread + change);
+  }
+
+  async function changeSort(next: Order) {
+    const before = sort;
+    sort = next;
+    try {
+      await saveSort(next);
+    } catch {
+      sort = before;
+      throw new Error("not saved");
+    }
+  }
 
   function currentWidth(): Width {
     if (matchMedia(`(min-width: ${WIDE_REM}rem)`).matches) return "wide";
@@ -141,6 +177,18 @@
         case "open-original":
           if (selected?.link && panes.article) window.open(selected.link, "_blank", "noopener,noreferrer");
           break;
+        case "star":
+          if (selected && isList(route)) itemList?.toggleStar();
+          break;
+        case "mark-unread":
+          if (selected && isList(route)) itemList?.markUnread();
+          break;
+        case "mark-all-read":
+          if (isList(route) && (panes.list || reading)) itemList?.markAllRead();
+          break;
+        case "undo":
+          if (isList(route)) itemList?.undo();
+          break;
         case "text-size":
           if (selected && panes.article) {
             const size = preferences.textSize + action.step;
@@ -155,6 +203,7 @@
     // (and a screen reader) to the top of the new screen.
     (panes.sidebar ? wordmark : placeFocus(route))?.focus();
     loadFeeds();
+    loadSort().then((order) => (sort = order));
 
     return () => {
       queries.forEach((query) => query.removeEventListener("change", resized));
@@ -249,6 +298,14 @@
     itemList?.focusSelected();
   }
 
+  /** What an empty list says, plainly. */
+  function emptyText(place: Route): string {
+    if (place.kind === "feed") return "This feed has no articles yet.";
+    if (place.kind === "view" && place.view === "unread") return "Nothing unread.";
+    if (place.kind === "view" && place.view === "starred") return "No starred articles yet.";
+    return "No articles yet.";
+  }
+
   function escape() {
     if (route.kind === "settings" || route.kind === "add-feed") go(lastPlace);
     else if (reading || (selected && inArticle())) backToList();
@@ -338,9 +395,13 @@
                 aria-current={current ? "page" : undefined}
                 onclick={(event) => follow(event, { kind: "feed", id: feed.id })}
                 class={[
-                  "flex min-h-11 items-center border-l-4 px-4 py-2 break-words",
+                  "flex min-h-11 items-center gap-3 border-l-4 px-4 py-2",
                   current ? "border-accent bg-tint-sidebar" : "border-transparent",
-                ]}>{feed.title}</a
+                ]}
+                ><span class="min-w-0 flex-1 break-words">{feed.title}</span>{#if unreadLabel(feed.unread)}<span
+                    class="shrink-0 text-small text-muted tabular-nums"
+                    >{unreadLabel(feed.unread)}<span class="sr-only"> unread</span></span
+                  >{/if}</a
               >
             </li>
           {/each}
@@ -367,6 +428,8 @@
       {#if route.kind === "settings"}
         <Settings
           bind:preferences
+          {sort}
+          onSort={changeSort}
           bind:heading={settingsHeading}
           {version}
           {onSignedOut}
@@ -394,23 +457,22 @@
                 ? "Feed not found"
                 : nameFor(route, currentFeed?.title)}
             </h2>
-            <!-- Reserved for "New items · press r" (Milestone 8), so nothing shifts when it appears. -->
-            <p class="min-h-8 text-small"></p>
-            {#if route.kind === "view" && route.view === "starred"}
-              <p>No starred articles yet.</p>
-            {:else if route.kind === "feed" && feeds !== undefined && !currentFeed}
-              <p>You don't follow this feed. It may have been an old address.</p>
-            {:else if firstVisit}
-              <p class="mb-6">Nothing to read yet. Add a website you like to begin.</p>
+            {#if route.kind === "feed" && feeds !== undefined && !currentFeed}
+              <p class="mt-4">You don't follow this feed. It may have been an old address.</p>
+            {:else if firstVisit && !(route.kind === "view" && route.view === "starred")}
+              <p class="mt-4 mb-6">Nothing to read yet. Add a website you like to begin.</p>
               <AddFeed bind:field={addField} feeds={[]} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} />
-            {:else if feeds !== undefined}
-              {#key pathFor(route)}
+            {:else if feeds !== undefined && sort !== undefined}
+              <!-- "Mark all as read", the reserved line for "Marked … · Undo" (and "New items · press r", Milestone 8), then the list. -->
+              {#key `${pathFor(route)} ${sort}`}
                 <ItemList
                   bind:this={itemList}
                   bind:selected
-                  feedId={route.kind === "feed" ? route.id : null}
-                  empty={route.kind === "feed" ? "This feed has no articles yet." : "No articles yet."}
+                  {source}
+                  order={sort}
+                  empty={emptyText(route)}
                   onChoose={chose}
+                  onUnreadChange={unreadChanged}
                 />
               {/key}
             {/if}
@@ -421,6 +483,8 @@
             <ArticleView
               article={selected}
               bind:heading={articleHeading}
+              onStar={() => itemList?.toggleStar()}
+              onMarkUnread={() => itemList?.markUnread()}
               back={width === "narrow" ? { name: nameFor(route, currentFeed?.title), go: backToList } : undefined}
             />
           {:else}

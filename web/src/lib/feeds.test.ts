@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { explain, when, type Problem } from "./feeds";
+import { explain, markedAllMessage, unreadLabel, when, type Problem } from "./feeds";
 
 describe("article times", () => {
   const now = new Date(2026, 9, 23, 18, 0);
@@ -22,5 +22,23 @@ describe("the add field's messages", () => {
       expect(message.endsWith(".")).toBe(true);
     }
     expect(explain("no-feed")).toBe("This site doesn't seem to offer a feed.");
+  });
+});
+
+describe("unread counts", () => {
+  it("show nothing for none, the number up to 999, and 999+ above", () => {
+    expect(unreadLabel(0)).toBe("");
+    expect(unreadLabel(1)).toBe("1");
+    expect(unreadLabel(999)).toBe("999");
+    expect(unreadLabel(1000)).toBe("999+");
+    expect(unreadLabel(25000)).toBe("999+");
+  });
+});
+
+describe("mark all as read", () => {
+  it("says how many items it marked, in plain words", () => {
+    expect(markedAllMessage(1)).toBe("Marked 1 item as read");
+    expect(markedAllMessage(23)).toBe("Marked 23 items as read");
+    expect(markedAllMessage(0)).toBe("Everything here is already read.");
   });
 });

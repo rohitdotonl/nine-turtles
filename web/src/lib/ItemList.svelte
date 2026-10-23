@@ -1,44 +1,75 @@
 <!--
-  The item list (SPEC section 6): each article's title, with its source and
-  time in quiet small text below. No images, no site icons. It shows 50 and
-  then ends; "Show older items" adds the next 50 below, and nothing above
-  moves. Choosing an article (a click, Enter, or j and k) selects it and the
-  reading area shows it (SPEC section 7); the next one is fetched in advance.
+  The item list (SPEC sections 6, 8 and 9): each article's title, with its
+  source and time in quiet small text below. No images, no site icons.
+  Unread titles are full strength and semibold, read ones muted and regular,
+  starred ones carry a small star: each state shows without color too.
+
+  It shows 50 and then ends; "Show older items" adds the next 50 below, and
+  nothing above moves. Choosing an article (a click, Enter, or j and k)
+  selects it and the reading area shows it (SPEC section 7); the next one is
+  fetched in advance.
+
+  Above the list: "Mark all as read", which marks only the articles listed
+  here, and the reserved line where "Marked 23 items as read · Undo" appears
+  (and "New items · press r" in Milestone 8), so nothing shifts. Every mark
+  shows at once and is saved behind; if saving fails, the line says so and
+  the mark is taken back (SPEC section 25). Articles read in the Unread view
+  stay where they are, greyed, until you leave it.
 -->
 <script lang="ts">
-  import { listArticles, prefetch, when, type Article } from "./feeds";
+  import {
+    listArticles,
+    markedAllMessage,
+    markRead,
+    markStarred,
+    prefetch,
+    when,
+    type Article,
+    type Order,
+    type Source,
+  } from "./feeds";
 
   let {
-    feedId,
+    source,
+    order,
     empty,
     selected = $bindable(),
     onChoose,
+    onUnreadChange,
   }: {
-    feedId: number | null;
+    source: Source;
+    order: Order;
     empty: string;
     selected: Article | undefined;
     /** A row was clicked or Enter was pressed on it. `byKeyboard` tells which. */
     onChoose: (byKeyboard: boolean) => void;
+    /** A feed's unread count went up or down by `change`, for the sidebar. */
+    onUnreadChange: (feedId: number, change: number) => void;
   } = $props();
 
   let articles: Article[] = $state([]);
-  let older: string | null = $state(null);
+  let next: string | null = $state(null);
   let loaded = $state(false);
   let busy = $state(false);
   let problem = $state("");
   let rows: HTMLButtonElement[] = $state([]);
+  let markAllButton: HTMLButtonElement | undefined = $state();
+
+  /** The reserved line above the list, and what Undo would do, if anything. */
+  let line = $state("");
+  let undoLast: (() => void) | undefined = $state();
 
   let selectedIndex = $derived(selected ? articles.findIndex((article) => article.id === selected?.id) : -1);
 
-  async function load(before: string | null) {
+  async function load(after: string | null) {
     if (busy) return;
     busy = true;
     problem = "";
     const firstNew = articles.length;
     try {
-      const page = await listArticles(feedId, before);
-      articles = before === null ? page.articles : [...articles, ...page.articles];
-      older = page.older;
+      const page = await listArticles(source, order, after);
+      articles = after === null ? page.articles : [...articles, ...page.articles];
+      next = page.next;
       loaded = true;
     } catch {
       problem = "The articles couldn't be loaded. Try again in a moment.";
@@ -46,7 +77,7 @@
     busy = false;
     // At the very end the button goes away. Rather than lose the keyboard's
     // place with it, move it to the first article just added.
-    if (before !== null && older === null) queueMicrotask(() => rows[firstNew]?.focus());
+    if (after !== null && next === null) queueMicrotask(() => rows[firstNew]?.focus());
   }
 
   function select(index: number) {
@@ -54,8 +85,8 @@
     if (!article) return;
     selected = article;
     prefetch(article.id);
-    const next = articles[index + 1];
-    if (next) prefetch(next.id);
+    const following = articles[index + 1];
+    if (following) prefetch(following.id);
   }
 
   /**
@@ -75,6 +106,149 @@
     queueMicrotask(() => rows[selectedIndex]?.focus());
   }
 
+  // What the server last confirmed for each mark, and the newest save sent
+  // for it. When a save fails, the mark goes back to what the server has,
+  // but only if no later save for the same mark is still on its way: that
+  // one decides. So a failure never takes back a later action.
+  const confirmed = new Map<string, boolean>();
+  const newest = new Map<string, number>();
+  let saves = 0;
+
+  /** Remembers a mark as the server has it, the first time it's seen. */
+  function known(key: string, value: boolean) {
+    if (!confirmed.has(key)) confirmed.set(key, value);
+  }
+
+  /**
+   * Saves one mark for some articles. `put` sets it on the screen (and keeps
+   * the sidebar's counts in step). If saving fails, each article whose mark
+   * no later save will settle goes back to what the server has, and the
+   * line says `failed`.
+   */
+  function save(
+    field: "read" | "starred",
+    changed: Article[],
+    value: boolean,
+    send: (ids: number[], value: boolean) => Promise<void>,
+    put: (article: Article, value: boolean) => void,
+    failed: string,
+  ) {
+    const token = ++saves;
+    for (const article of changed) {
+      const key = `${field}:${article.id}`;
+      known(key, article[field]);
+      newest.set(key, token);
+      put(article, value);
+    }
+    send(
+      changed.map((article) => article.id),
+      value,
+    ).then(
+      () => {
+        for (const article of changed) confirmed.set(`${field}:${article.id}`, value);
+      },
+      () => {
+        let takenBack = false;
+        for (const article of changed) {
+          const key = `${field}:${article.id}`;
+          if (newest.get(key) !== token) continue;
+          const server = confirmed.get(key) ?? !value;
+          if (article[field] !== server) {
+            put(article, server);
+            takenBack = true;
+          }
+        }
+        if (takenBack) say(failed);
+      },
+    );
+  }
+
+  /** Sets read or unread on the screen at once, then saves. */
+  function setRead(changing: Article[], read: boolean, failed = "That couldn't be saved, so it was taken back.") {
+    const changed = changing.filter((article) => article.read !== read);
+    if (changed.length === 0) return;
+    save("read", changed, read, markRead, putRead, failed);
+  }
+
+  function putRead(article: Article, read: boolean) {
+    if (article.read === read) return;
+    article.read = read;
+    onUnreadChange(article.feedId, read ? -1 : 1);
+  }
+
+  function setStarred(article: Article, starred: boolean) {
+    save(
+      "starred",
+      [article],
+      starred,
+      markStarred,
+      (each, value) => (each.starred = value),
+      starred ? "The star couldn't be saved." : "The star couldn't be removed.",
+    );
+  }
+
+  /** The line says something that has nothing to undo. */
+  function say(message: string) {
+    line = message;
+    undoLast = undefined;
+  }
+
+  /** An undoable action happened: the line says what, and Undo reverses it. */
+  function did(message: string, reverse: () => void) {
+    line = message;
+    undoLast = reverse;
+  }
+
+  /** The reading area showed this article: it counts as read (not an undoable action). */
+  export function shown(article: Article) {
+    setRead([article], true, "An article couldn't be marked as read. It's still unread.");
+  }
+
+  /** `m` and "Mark unread": the selected article is unread again. */
+  export function markUnread() {
+    const article = selected;
+    if (!article || !article.read) return;
+    setRead([article], false);
+    did("Marked as unread", () => setRead([article], true));
+  }
+
+  /** `s` and the star control: stars or unstars the selected article. */
+  export function toggleStar() {
+    const article = selected;
+    if (!article) return;
+    const starred = !article.starred;
+    setStarred(article, starred);
+    did(starred ? "Starred" : "Unstarred", () => setStarred(article, !starred));
+  }
+
+  /** `Shift+A` and "Mark all as read": only the articles listed here, never ones not shown yet. */
+  export function markAllRead() {
+    const unread = articles.filter((article) => !article.read);
+    if (unread.length === 0) {
+      say(markedAllMessage(0));
+      return;
+    }
+    setRead(unread, true);
+    did(markedAllMessage(unread.length), () => setRead(unread, false));
+  }
+
+  /** `u` and Undo: reverses the last undoable action, once. */
+  export function undo(): boolean {
+    const reverse = undoLast;
+    if (!reverse) return false;
+    reverse();
+    line = "Undone.";
+    undoLast = undefined;
+    return true;
+  }
+
+  function undoByButton() {
+    undo();
+    // The button is gone; keep the keyboard's place nearby.
+    if (selectedIndex !== -1) focusSelected();
+    else markAllButton?.focus();
+  }
+
   function arrows(event: KeyboardEvent) {
     // The arrow keys work like j and k while the keyboard is in the list.
     if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
@@ -84,6 +258,20 @@
 
   load(null);
 </script>
+
+{#if articles.length > 0}
+  <button type="button" bind:this={markAllButton} onclick={markAllRead} class="mt-2 min-h-11 rounded border border-ink px-4">
+    Mark all as read
+  </button>
+{/if}
+<!-- The reserved line: always this tall, so nothing below moves when it fills. -->
+<p class="flex min-h-11 flex-wrap items-center gap-x-1 text-small">
+  <span role="status">{line}</span>
+  {#if undoLast}
+    <span aria-hidden="true">·</span>
+    <button type="button" onclick={undoByButton} class="min-h-11 min-w-11 px-2 underline underline-offset-4">Undo</button>
+  {/if}
+</p>
 
 {#if loaded && articles.length === 0}
   <p>{empty}</p>
@@ -109,8 +297,15 @@
             current ? "border-accent bg-tint-list" : "border-transparent",
           ]}
         >
-          <span class="block">{article.title || "Untitled"}</span>
+          <span class={["block", article.read ? "text-muted" : "font-semibold"]}
+            >{article.title || "Untitled"}{#if !article.read}<span class="sr-only">, unread</span>{/if}</span
+          >
           <span class="block text-small text-muted">
+            {#if article.starred}
+              <svg aria-hidden="true" class="star" width="12" height="12" viewBox="0 0 12 12">
+                <path d="M6 0.8l1.55 3.3 3.6.42-2.66 2.47.7 3.56L6 8.8 2.81 10.55l.7-3.56L.85 4.52l3.6-.42z" fill="currentColor" />
+              </svg><span class="sr-only">Starred, </span>
+            {/if}
             {article.feedTitle} ·
             <time datetime={new Date(article.at * 1000).toISOString()}>{when(article.at)}</time>
           </span>
@@ -118,12 +313,20 @@
       </li>
     {/each}
   </ul>
-  {#if older !== null}
-    <button type="button" aria-disabled={busy} onclick={() => load(older)} class="mt-4 min-h-11 rounded border border-ink px-4">
-      Show older items
+  {#if next !== null}
+    <button type="button" aria-disabled={busy} onclick={() => load(next)} class="mt-4 min-h-11 rounded border border-ink px-4">
+      {order === "oldest" ? "Show newer items" : "Show older items"}
     </button>
   {/if}
 {/if}
 {#if problem}
   <p role="status" class="mt-4">{problem}</p>
 {/if}
+
+<style>
+  .star {
+    display: inline;
+    vertical-align: -1px;
+    margin-right: 0.25rem;
+  }
+</style>

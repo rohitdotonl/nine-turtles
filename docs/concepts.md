@@ -120,6 +120,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Font subsets and `unicode-range`
 - Modal dialog
 - Prefetching (loading the next thing in advance)
+- Optimistic update (the screen changes first, saving follows)
 - Clipboard and the system share sheet
 
 ## Data and the database
@@ -131,6 +132,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Query
 - Primary key and unique constraint
 - Index and query plan
+- Partial index
 - Transaction
 - Pagination (cursor, "keyset")
 - Migration

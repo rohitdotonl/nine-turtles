@@ -110,7 +110,7 @@ test("the list shows 50 articles, then Show older items adds more below", async 
   await follow(page, `${FEED_SITE}/`);
   await page.reload();
   await appReady(page);
-  await sidebar(page).getByRole("link", { name: "Quiet Notes", exact: true }).click();
+  await sidebar(page).getByRole("link", { name: /^Quiet Notes( \d+ unread)?$/ }).click();
 
   const list = page.getByRole("region", { name: "Quiet Notes" });
   const rows = list.getByRole("listitem");
@@ -170,7 +170,7 @@ test("with only the keyboard: Show older items, and the keyboard's place stays i
   await follow(page, `${FEED_SITE}/`);
   await page.reload();
   await appReady(page);
-  const feed = sidebar(page).getByRole("link", { name: "Quiet Notes", exact: true });
+  const feed = sidebar(page).getByRole("link", { name: /^Quiet Notes( \d+ unread)?$/ });
   await tabTo(page, feed, 400);
   await page.keyboard.press("Enter");
 
