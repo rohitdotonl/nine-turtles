@@ -12,8 +12,9 @@ goes in an extension named `_slowfeed` (the format asks extensions to start
 with an underscore): the feed's name, its address and the publisher's site.
 That keeps the credit with the article (the publisher floor) and lets a
 later slowfeed, or any tool, put stars back where they came from. The
-item's ID is its original link, or else the feed's address with the feed's
-own ID for the article, so it's unique across feeds. Rejected: OPML (it
+item's ID is the feed's address with the feed's own ID for the article, so
+it's unique across feeds even when the same post arrives through two feeds
+(the link alone isn't); the link goes in `url`. Rejected: OPML (it
 carries feeds, not articles), and a slowfeed-only format (the export is
 for leaving, so it must be one other tools read).
 

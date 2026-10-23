@@ -15,6 +15,23 @@ test.skip(({ isMobile }) => isMobile, "the wide layout shows the sidebar beside 
 // action can be undone), so the tests that unsubscribe run one at a time.
 test.describe.configure({ mode: "serial" });
 
+/**
+ * Does `act` make slowfeed open the device's file chooser? It counts the
+ * hidden file field being clicked, which is all slowfeed itself does. The
+ * test browser's own "file chooser" event isn't used: under load, Chromium
+ * sometimes doesn't show the chooser even though the field was clicked.
+ */
+async function opensFilePicker(page: Page, act: () => Promise<void>): Promise<void> {
+  await page.locator('input[type="file"]').evaluate((input) => {
+    input.addEventListener("click", (event) => {
+      event.preventDefault();
+      input.dataset.opened = "yes";
+    }, { once: true });
+  });
+  await act();
+  await expect(page.locator('input[type="file"]')).toHaveAttribute("data-opened", "yes");
+}
+
 /** A name no other test uses. */
 function unique(prefix: string): string {
   return `${prefix}-${test.info().workerIndex}-${Date.now()}`;
@@ -182,9 +199,7 @@ test("import an OPML file from Settings: a plain summary, folders in the sidebar
   await expect(page.getByRole("heading", { level: 3, name: "Your data" })).toBeVisible();
   // The button opens the device's file chooser; the file is then handed
   // over the way a chosen file is.
-  const chooser = page.waitForEvent("filechooser");
-  await page.getByRole("button", { name: "Import OPML" }).click();
-  await chooser;
+  await opensFilePicker(page, () => page.getByRole("button", { name: "Import OPML" }).click());
   await page.locator('input[type="file"]').evaluate((input: HTMLInputElement, text) => {
     const chosen = new DataTransfer();
     chosen.items.add(new File([text], "made-up.opml", { type: "text/x-opml" }));
@@ -211,7 +226,7 @@ test("import an OPML file from Settings: a plain summary, folders in the sidebar
   expect((await starred.json()).version).toBe("https://jsonfeed.org/version/1.1");
 });
 
-test("with only the keyboard: Edit feed, a new folder, opening it, Edit folder, Unsubscribe and Import OPML", async ({ page }) => {
+test("with only the keyboard: Edit feed, a new folder, opening it, Edit folder, Unsubscribe, Import OPML and the starred export", async ({ page }) => {
   const blog = unique("keys");
   const folder = unique("Keyboard");
   await openBlogs(page, [blog]);
@@ -266,7 +281,11 @@ test("with only the keyboard: Edit feed, a new folder, opening it, Edit folder, 
   await page.goto(new URL("/settings", FEEDS_APP).href);
   await appReady(page);
   await tabTo(page, page.getByRole("button", { name: "Import OPML" }), 200);
-  const chooser = page.waitForEvent("filechooser");
+  await opensFilePicker(page, () => page.keyboard.press("Enter"));
+
+  // So does Export starred articles: Enter downloads the file.
+  await tabTo(page, page.getByRole("link", { name: "Export starred articles" }));
+  const download = page.waitForEvent("download");
   await page.keyboard.press("Enter");
-  await chooser;
+  expect((await download).suggestedFilename()).toBe("slowfeed-starred.json");
 });

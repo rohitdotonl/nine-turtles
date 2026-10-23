@@ -315,6 +315,8 @@
   export function shown(article: Article) {
     if (article.read) return;
     setRead([article], true, "An article couldn't be marked as read. It's still unread.");
+    // Said at once, like everything on screen (SPEC section 25); if saving
+    // fails, the line above the list says so and it's unread again.
     // Emptied first, so the same words are announced again for the next article.
     spoken = "";
     tick().then(() => (spoken = "Marked as read"));

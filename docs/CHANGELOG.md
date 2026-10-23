@@ -12,7 +12,8 @@ not how it was done.
   file, it's your safety net.
 - Screen readers now hear "Marked as read" when you open an article.
 - A speed check for the export, and a test that a screen reader finds the
-  three panes and the headings. V1 is complete.
+  three panes and the headings. V1 is built; what's left is your own
+  final run through SPEC's "How to check it" steps, with a screen reader.
 
 ## 23 October 2026: Search (Milestone 10)
 

@@ -279,6 +279,7 @@ async fn the_starred_export_is_a_json_feed_of_every_starred_article() {
     assert_eq!(titles, ["Post 117", "Post 60", "Post 10"]);
     let item = &file["items"][0];
     assert_eq!(item["date_published"], "2026-04-28T12:00:00Z");
+    assert!(item["id"].as_str().unwrap().contains("#id:post-117"));
     assert_eq!(item["_slowfeed"]["feed_title"], "Quiet Notes");
     assert_eq!(item["_slowfeed"]["home_page_url"], "https://quiet.example/");
 

@@ -85,12 +85,10 @@ pub fn write(starred: &[Starred]) -> Value {
 
 fn item(article: &Starred) -> Value {
     let mut item = Map::new();
-    // An ID unique across feeds: the original link, or else the feed's own
-    // ID for the article together with the feed's address.
-    let id = article
-        .link
-        .clone()
-        .unwrap_or_else(|| format!("{}#{}", article.feed_url, article.fingerprint));
+    // An ID unique across feeds: the feed's address with the feed's own ID
+    // for the article. Not the link alone: the same post can come through
+    // two feeds, and each starred copy must stay its own item.
+    let id = format!("{}#{}", article.feed_url, article.fingerprint);
     item.insert("id".into(), id.into());
     if let Some(link) = &article.link {
         item.insert("url".into(), link.clone().into());
