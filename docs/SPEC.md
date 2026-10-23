@@ -158,7 +158,7 @@ A few words used throughout:
 - Undo reverses **the last action only**, of these: mark all as read, mark unread, star/unstar, unsubscribe, delete folder.
 - Read state is recorded in both reading modes, so switching modes never loses it.
 - Each feed's unread number in the sidebar changes at the same moment.
-- If a mark can't be saved (the connection dropped, say), it's taken back and the reserved line says so plainly, such as "The star couldn't be saved."
+- If a mark can't be saved (the connection dropped, say), it's taken back and the reserved line says so plainly, such as "The star couldn't be saved." That message takes the Undo's place. A failure never takes back a later action on the same article.
 
 **How to check it**
 1. Click an unread item: it turns grey and the feed's unread number drops by one.

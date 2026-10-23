@@ -171,6 +171,32 @@ test.describe("on a wide window", () => {
   });
 });
 
+test.describe("when saving fails", () => {
+  test.skip(({ isMobile }) => isMobile, "the same on every width");
+
+  test("an article that couldn't be marked read stays unread, and a later m isn't taken back", async ({ page }) => {
+    const blog = await openBlog(page);
+    let failing = true;
+    await page.route("**/api/articles/read", (route) => (failing ? route.fulfill({ status: 500 }) : route.fallback()));
+    await page.keyboard.press("j");
+    await expect(line(page)).toHaveText("An article couldn't be marked as read. It's still unread.");
+    await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
+    await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 3 unread`);
+
+    // Shown again with saving back: read. Then m, and that save fails: back to read, as the server has it.
+    failing = false;
+    await page.keyboard.press("j");
+    await page.keyboard.press("k");
+    await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, unread/);
+    await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 1 unread`);
+    failing = true;
+    await page.keyboard.press("m");
+    await expect(line(page)).toHaveText("That couldn't be saved, so it was taken back.");
+    await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, unread/);
+    await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 1 unread`);
+  });
+});
+
 test("on a phone, the article's Star and Mark unread buttons work", async ({ page, isMobile }) => {
   test.skip(!isMobile, "the phone layout only");
   const blog = await openBlog(page, 412);
@@ -190,8 +216,13 @@ test("Settings: the sort order is saved for every device", async ({ page, isMobi
   await appReady(page);
   await signIn(page);
   const reading = page.getByRole("region", { name: "Reading" });
-  await expect(reading.getByRole("radio", { name: "Newest first" })).toBeChecked();
-  await reading.getByRole("radio", { name: "Oldest first" }).check();
+  const newest = reading.getByRole("radio", { name: "Newest first" });
+  await expect(newest).toBeChecked();
+  // With only the keyboard: Tab to the choice, an arrow key changes it.
+  await tabTo(page, newest);
+  await page.keyboard.press("ArrowDown");
+  await expect(reading.getByRole("radio", { name: "Oldest first" })).toBeChecked();
+  await expect(reading.getByRole("radio", { name: "Oldest first" })).toBeFocused();
   await page.reload();
   await appReady(page);
   await expect(reading.getByRole("radio", { name: "Oldest first" })).toBeChecked();

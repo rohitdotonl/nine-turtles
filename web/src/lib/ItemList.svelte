@@ -106,35 +106,85 @@
     queueMicrotask(() => rows[selectedIndex]?.focus());
   }
 
+  // What the server last confirmed for each mark, and the newest save sent
+  // for it. When a save fails, the mark goes back to what the server has,
+  // but only if no later save for the same mark is still on its way: that
+  // one decides. So a failure never takes back a later action.
+  const confirmed = new Map<string, boolean>();
+  const newest = new Map<string, number>();
+  let saves = 0;
+
+  /** Remembers a mark as the server has it, the first time it's seen. */
+  function known(key: string, value: boolean) {
+    if (!confirmed.has(key)) confirmed.set(key, value);
+  }
+
   /**
-   * Sets read or unread on the screen at once, keeps the sidebar's counts
-   * in step, then saves. If saving fails, the screen goes back and says so.
+   * Saves one mark for some articles. `put` sets it on the screen (and keeps
+   * the sidebar's counts in step). If saving fails, each article whose mark
+   * no later save will settle goes back to what the server has, and the
+   * line says `failed`.
    */
-  function setRead(changing: Article[], read: boolean) {
+  function save(
+    field: "read" | "starred",
+    changed: Article[],
+    value: boolean,
+    send: (ids: number[], value: boolean) => Promise<void>,
+    put: (article: Article, value: boolean) => void,
+    failed: string,
+  ) {
+    const token = ++saves;
+    for (const article of changed) {
+      const key = `${field}:${article.id}`;
+      known(key, article[field]);
+      newest.set(key, token);
+      put(article, value);
+    }
+    send(
+      changed.map((article) => article.id),
+      value,
+    ).then(
+      () => {
+        for (const article of changed) confirmed.set(`${field}:${article.id}`, value);
+      },
+      () => {
+        let takenBack = false;
+        for (const article of changed) {
+          const key = `${field}:${article.id}`;
+          if (newest.get(key) !== token) continue;
+          const server = confirmed.get(key) ?? !value;
+          if (article[field] !== server) {
+            put(article, server);
+            takenBack = true;
+          }
+        }
+        if (takenBack) say(failed);
+      },
+    );
+  }
+
+  /** Sets read or unread on the screen at once, then saves. */
+  function setRead(changing: Article[], read: boolean, failed = "That couldn't be saved, so it was taken back.") {
     const changed = changing.filter((article) => article.read !== read);
     if (changed.length === 0) return;
-    for (const article of changed) {
-      article.read = read;
-      onUnreadChange(article.feedId, read ? -1 : 1);
-    }
-    markRead(
-      changed.map((article) => article.id),
-      read,
-    ).catch(() => {
-      for (const article of changed) {
-        article.read = !read;
-        onUnreadChange(article.feedId, read ? 1 : -1);
-      }
-      say("That couldn't be saved. Try again.");
-    });
+    save("read", changed, read, markRead, putRead, failed);
+  }
+
+  function putRead(article: Article, read: boolean) {
+    if (article.read === read) return;
+    article.read = read;
+    onUnreadChange(article.feedId, read ? -1 : 1);
   }
 
   function setStarred(article: Article, starred: boolean) {
-    article.starred = starred;
-    markStarred([article.id], starred).catch(() => {
-      article.starred = !starred;
-      say(starred ? "The star couldn't be saved." : "The star couldn't be removed.");
-    });
+    save(
+      "starred",
+      [article],
+      starred,
+      markStarred,
+      (each, value) => (each.starred = value),
+      starred ? "The star couldn't be saved." : "The star couldn't be removed.",
+    );
   }
 
   /** The line says something that has nothing to undo. */
@@ -151,7 +201,7 @@
 
   /** The reading area showed this article: it counts as read (not an undoable action). */
   export function shown(article: Article) {
-    setRead([article], true);
+    setRead([article], true, "An article couldn't be marked as read. It's still unread.");
   }
 
   /** `m` and "Mark unread": the selected article is unread again. */
@@ -219,7 +269,7 @@
   <span role="status">{line}</span>
   {#if undoLast}
     <span aria-hidden="true">·</span>
-    <button type="button" onclick={undoByButton} class="min-h-11 px-1 underline underline-offset-4">Undo</button>
+    <button type="button" onclick={undoByButton} class="min-h-11 min-w-11 px-2 underline underline-offset-4">Undo</button>
   {/if}
 </p>
 

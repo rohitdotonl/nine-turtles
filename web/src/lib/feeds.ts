@@ -61,6 +61,7 @@ export type Problem =
 const PROBLEMS: Problem[] = ["not-an-address", "not-allowed", "unreachable", "not-found", "too-big", "no-feed"];
 
 export async function listFeeds(): Promise<Feed[]> {
+  await saved();
   const body = await getJson("/api/feeds");
   const feeds = isRecord(body) && Array.isArray(body.feeds) ? body.feeds : [];
   return feeds.filter(isRecord).map(toFeed);
@@ -72,6 +73,7 @@ export async function listArticles(source: Source, order: Order, after: string |
   else query.set("view", source.view);
   query.set("order", order);
   if (after !== null) query.set("after", after);
+  await saved();
   const body = await getJson(`/api/articles?${query}`);
   if (!isRecord(body) || !Array.isArray(body.articles)) throw new Error("slowfeed sent an unexpected answer");
   return {
@@ -81,9 +83,15 @@ export async function listArticles(source: Source, order: Order, after: string |
 }
 
 // Marks are sent one after another, in the order they were made, so an undo
-// can never overtake the mark it undoes. Anything read from the server waits
-// for them, so a list opened next already shows them.
+// can never overtake the mark it undoes. Lists and counts wait for them, so
+// a list opened next already shows them; articles themselves never wait, so
+// a slow save can't hold up reading.
 let writes: Promise<unknown> = Promise.resolve();
+
+/** Waits until every mark sent so far has been saved (or has failed). */
+function saved(): Promise<unknown> {
+  return writes;
+}
 
 function send(path: string, body: unknown): Promise<void> {
   const sent = writes.then(async () => {
@@ -91,6 +99,8 @@ function send(path: string, body: unknown): Promise<void> {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
+      // A save that hangs counts as failed, so it can't hold up the lists.
+      signal: AbortSignal.timeout(15_000),
     });
     if (!response.ok) throw new Error(`slowfeed answered ${response.status}`);
   });
@@ -236,7 +246,6 @@ export function when(at: number, now: Date = new Date()): string {
 }
 
 async function getJson(path: string): Promise<unknown> {
-  await writes;
   const response = await fetch(path, { cache: "no-store" });
   if (!response.ok) throw new Error(`slowfeed answered ${response.status}`);
   return response.json();

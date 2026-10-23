@@ -17,8 +17,12 @@ Oldest first reads the same indexes backwards.
 
 **The screen changes first, the server follows.** Marks show at once and
 are sent behind, one at a time in order, so an undo can never overtake the
-mark it undoes; any list fetched next waits for them. If a mark can't be
-saved, the screen takes it back and says so in the reserved line.
+mark it undoes. Lists and unread counts fetched next wait for them; an
+article's text never does, so a slow save can't hold up reading, and a
+save that takes over 15 seconds counts as failed. If a mark can't be
+saved, it goes back to what the server last confirmed, unless a later
+save for the same mark is still on its way (that one decides), and the
+reserved line says so.
 
 **Marks name exact articles.** `POST /api/articles/read` and
 `/api/articles/starred` take a list of article IDs (at most 10,000).
