@@ -11,14 +11,20 @@ you've merged the previous one and said go.
 short screen recordings where useful). After you merge, you try it for real
 on the live app; anything found then gets a quick follow-up fix.
 
-**Status key:** ⬜ not started · 🔨 in progress · ✅ merged
+**Status key:** ⬜ not started · 🔨 in progress · ✅ merged · ⏭ moved to V2
+
+**V1 is for the owner alone** (decided 23 October 2026). Backups, river mode,
+WebSub, the feed health page, the yearly clean-up, the feeds guide page and
+keeping old tabs working across updates moved to V2
+(`docs/decisions/0012-v1-for-one-reader.md`). Milestone numbers stay the
+same so older documents still point to the right place.
 
 | # | Milestone | Status |
 |---|---|---|
 | 0 | Planning documents, README, licence (MIT), change history | ✅ |
 | 1 | Skeleton and automatic checks | ✅ |
-| 2 | Live on Render, with sign-in | 🔨 |
-| 3 | Backups and recovery | ⬜ |
+| 2 | Live on Render, with sign-in | ✅ |
+| 3 | Backups and recovery | ⏭ |
 | 4 | Look and feel foundations | ⬜ |
 | 5 | Add a feed and see its items | ⬜ |
 | 6 | Reading articles | ⬜ |
@@ -26,8 +32,8 @@ on the live app; anything found then gets a quick follow-up fix.
 | 8 | Polite background fetching and Refresh | ⬜ |
 | 9 | Folders, feed editing and OPML import/export | ⬜ |
 | 10 | Search | ⬜ |
-| 11 | Feed health page | ⬜ |
-| 12 | WebSub | ⬜ |
+| 11 | Feed health page | ⏭ |
+| 12 | WebSub | ⏭ |
 | 13 | Phones and installing the app | ⬜ |
 | 14 | Keeping things tidy, and the finishing pass | ⬜ |
 
@@ -81,7 +87,9 @@ you know they bite.
 **You can try:** open the address on your computer and phone, sign in, stay
 signed in, sign out. A private window sees only the password field.
 
-## 3. Backups and recovery
+## 3. Backups and recovery ⏭ moved to V2
+
+*V1 has no backups (the owner's decision, 23 October 2026). Kept here as the V2 starting point.*
 
 **Goal:** before any of your data exists, prove it can be recovered.
 
@@ -110,7 +118,7 @@ move around with only the keyboard.
 
 ## 5. Add a feed and see its items
 
-- Empty state with the paste field and the feeds guide page.
+- Empty state with the paste field and "Import OPML" (the feeds guide page is V2).
 - "+ Add feed" and `a`, with autodiscovery from a website address.
 - Fetching a feed once on adding it; storing articles without duplicates.
 - Item list: title, source and time, newest first, "Show older items".
@@ -132,7 +140,7 @@ move around with only the keyboard.
 - Read when shown, `m` to mark unread, mark all as read (on-screen items only), undo.
 - Star and the Starred view; Unread and All views.
 - Unread counts (muted, per feed and folder, "999+").
-- Inbox and river modes; sort order setting.
+- Inbox mode (river mode is V2); sort order setting.
 
 **You can try:** the checks in SPEC sections 8, 9 and 10.
 
@@ -142,6 +150,9 @@ move around with only the keyboard.
   Last-Modified, `Retry-After`, time and size limits, permanent redirects,
   backoff for failing feeds.
 - "New items · press r", `r` and the Refresh button; fresh on arrival.
+- Failing feeds visible without the feed health page (V2): the diagnostics page
+  counts them (never naming them) and the daily check reports "Some feeds keep
+  failing", with tests.
 
 **You can try:** leave it for a day; new articles have arrived on their own,
 and the screen never changed under you.
@@ -153,7 +164,7 @@ and the screen never changed under you.
 - OPML import and export.
 - **This is where you provide your OPML file.** It's used on your live app
   (or locally) only, never committed; `.gitignore` already blocks `*.opml`.
-- Measure how big your database will be with your real feeds, to check the 1 GB disk is enough.
+- Measure how big your database will be with your real feeds, to check the 1 GB disk is enough. V1 keeps every article (the yearly clean-up is V2), so this also tells us how many years the disk lasts.
 
 **You can try:** import your OPML file and see your folders and feeds; export it and compare.
 
@@ -164,13 +175,15 @@ and the screen never changed under you.
 
 **You can try:** the checks in SPEC section 14.
 
-## 11. Feed health page
+## 11. Feed health page ⏭ moved to V2
+
+In V1, the daily check reports failing feeds instead (from Milestone 8).
 
 - Problems in plain words, sorted worst first, with Retry · Find new address · Unsubscribe.
 
 **You can try:** look at your real feeds' health after a few days of fetching.
 
-## 12. WebSub
+## 12. WebSub ⏭ moved to V2
 
 - Subscribe to hubs, verify, check signatures, renew, reduced backup polling.
 
@@ -181,13 +194,14 @@ and the screen never changed under you.
 - Single-column drill-down, labeled back arrow, bottom article toolbar,
   system share sheet, Refresh button, 44px targets.
 - Web app manifest and service worker so it installs to the home screen.
+- A tab left open across an update that can't carry on says, in the list's
+  reserved line, "slowfeed was updated. Reload to continue.", with tests.
 
 **You can try:** read on your phone; add it to the home screen.
 
 ## 14. Keeping things tidy, and the finishing pass
 
-- Removing unstarred articles a year after they arrived, only after a successful nightly backup, and never letting them come back as new.
-- Export of starred articles.
+- Export of starred articles. (Removing year-old articles moved to V2, with backups.)
 - A full accessibility pass with a screen reader, and a speed pass.
 - Docs brought fully up to date.
 

@@ -25,7 +25,7 @@ skips this step with a notice.
 
 **No lock-in.** Any host that runs container images can run the same image
 with the same settings (docs/operations/settings.md). Moving is written up in
-Milestone 3 (`docs/operations/moving-hosts.md`).
+Milestone 3 (`docs/operations/moving-hosts.md`; now V2, see 0012).
 
 **Revisit if:** Render's deploy hooks change, or the image grows past a few
 hundred MB.

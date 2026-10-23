@@ -2,7 +2,7 @@
 
 > **slowfeed is a quiet place to read the web: it shows you what's there, gets out of the way, and lets you finish.**
 
-*Last updated: 22 October 2026. This document takes precedence over every other project document when they conflict.*
+*Last updated: 23 October 2026 (V1 trimmed for a single reader: see the V2 parking lot). This document takes precedence over every other project document when they conflict.*
 
 ## Mission
 
@@ -23,7 +23,7 @@ Social media is designed to be **infinite, urgent, and attention-grabbing**. slo
 - **A podcast player.** Audio in feeds appears as a link to the original. (YouTube videos will play through YouTube's own player in V2.)
 - **A newsletter inbox.** No email address that turns newsletters into feeds.
 - **A web scraper.** It shows what publishers put in their feeds. See the second floor.
-- **A permanent archive.** Unstarred articles are kept for one year.
+- **A permanent archive.** Unstarred articles are kept for one year. (In V1, nothing is removed yet; the yearly clean-up comes in V2.)
 - **A multi-user service.** Not in V1. (This one is "not yet," not "never.")
 
 ---
@@ -53,7 +53,7 @@ Publishers are the reason there is anything to read. slowfeed never trades their
 
 - **Show what the publisher chose to put in the feed.** Never scrape the full article from their site. If a feed only offers a summary, slowfeed shows the summary and "Open original."
 - **Always credit the source** and link to the original article.
-- **Fetch politely:** on each feed's own rhythm, with ETag / Last-Modified, and through WebSub when the publisher offers it.
+- **Fetch politely:** on each feed's own rhythm, with ETag / Last-Modified. (WebSub, where the publisher offers it, comes in V2.)
 - **Shared links always go to the publisher,** never to slowfeed.
 - **Embedded media plays through the publisher's own player** (for example, YouTube's player in V2), so views stay theirs.
 
@@ -68,7 +68,7 @@ The article is the product. Everything else is a way to get to it.
 
 #### 2. Calm over engagement
 slowfeed never tries to bring you back or keep you longer. It succeeds when you've read what you wanted and closed it.
-- *Explains:* no notifications, river mode, no count on "new items," no pull-to-refresh, the view waiting for you, the "Show older items" button instead of infinite scroll.
+- *Explains:* no notifications, river mode (V2), no count on "new items," no pull-to-refresh, the view waiting for you, the "Show older items" button instead of infinite scroll.
 - **Test:** Would a social media company want this feature? If yes, be suspicious.
 
 #### 3. Clear at a glance
@@ -91,7 +91,7 @@ Layout, positions, and content stay put. Change happens only as a result of the 
 
 #### 6. Power is hidden, never missing
 The 500-feed user gets everything they need; the 30-feed user never sees the machinery.
-- *Explains:* vim keys, search filter syntax, multi-folder feeds, the search options panel, the feed health page in settings, progressive disclosure in the sidebar.
+- *Explains:* vim keys, search filter syntax, multi-folder feeds, the search options panel, the feed health page in settings (V2), progressive disclosure in the sidebar.
 - **Test:** Does a beginner have to see this to use the app? If not, hide it until it's needed.
 
 #### 7. Respect: for the reader and for time
@@ -103,7 +103,7 @@ The 500-feed user gets everything they need; the 30-feed user never sees the mac
 
 ### Rules about the rules
 
-1. **Exceptions are written down.** When we break a principle, we record where, why, and under what limits. See the Exceptions log below. Floors have no exceptions.
+1. **Exceptions are written down.** When we break a principle, we record where, why, and under what limits. See the Exceptions log below. Floors have no exceptions: they can't be bent case by case. Only the owner can change a floor's wording, deliberately, through a note in `docs/decisions/`.
 2. **New features go through the floors and principles in order** and stop at the first "no":
    1. Does it break a floor (accessibility or publisher)? → no.
    2. Does it hurt reading? → no.
@@ -169,7 +169,7 @@ These are the first applications of the philosophy. The principle behind each is
 - All three accent pairs pass AAA (7 : 1). Re-check if any value changes.
 - **Links in articles** are underlined in the normal text color, **never blue**, so they never compete with the accent.
 - **Muted greys** (read items, counts, source names) are chosen during build and must pass the first floor on all three themes, verified by automatic checks.
-- **Status colors** (errors, warnings on the feed health page) use muted tones that don't drift toward blue, and always come with words.
+- **Status colors** (errors, warnings on the feed health page, V2) use muted tones that don't drift toward blue, and always come with words.
 
 #### Themes
 - Follow the system light/dark setting by default, with a manual override in settings.
@@ -212,7 +212,7 @@ Fixed order, top to bottom:
 - Progressive disclosure: folders appear once at least one exists. The sidebar search (find a feed by name) is always shown; see the Exceptions log.
 - **Folders:** one concept in the interface. A feed can belong to more than one folder (tags underneath, folders on screen).
 - **Unread counts:** see the Exceptions log.
-- Broken feeds appear normally; they simply show nothing new until fixed. Problems are explained on the feed health page.
+- Broken feeds appear normally; they simply show nothing new until fixed. In V1, problems are reported by the daily check; the feed health page comes in V2.
 
 ### Item list
 
@@ -230,7 +230,7 @@ Fixed order, top to bottom:
 | Selected (cursor) | Ink blue left bar + faint ink blue tint |
 | Starred | A small star mark |
 
-In river mode, unread and read states don't exist on screen; only the cursor and star remain.
+In river mode (V2), unread and read states don't exist on screen; only the cursor and star remain.
 
 ### Article view
 
@@ -243,6 +243,8 @@ In river mode, unread and read states don't exist on screen; only the cursor and
 
 ### Reading modes
 
+*V1 has inbox mode only. River mode comes in V2 (decided with the owner, 23 October 2026). The table describes both, for when it arrives.*
+
 | | Inbox (default) | River |
 |---|---|---|
 | Idea | Things to get through | Things flowing past; dip in when you like |
@@ -250,7 +252,7 @@ In river mode, unread and read states don't exist on screen; only the cursor and
 | Read/unread styling | Yes | No |
 | Unread counts | Yes (muted) | No |
 
-- Global setting in V1.
+- A global setting when river mode arrives in V2.
 - **Read state is tracked quietly in both modes,** so switching modes never loses history.
 
 ### Read state and bulk actions
@@ -288,7 +290,7 @@ In river mode, unread and read states don't exist on screen; only the cursor and
 ### Refresh
 
 - **The server fetches in the background, on each feed's own rhythm.** Frequent publishers are checked often; dormant blogs rarely. Use ETag / Last-Modified.
-- **WebSub is supported in V1:** when a publisher offers it, slowfeed receives their updates as they publish. Regular checking continues, less often, as a backup.
+- **WebSub comes in V2:** when a publisher offers it, slowfeed will receive their updates as they publish, with regular checking continuing less often alongside.
 - **The view waits for you.** It updates only when you press `r` or the Refresh button. Because fetching already happened, this is instant.
 - **Fresh on arrival:** opening or reloading the app shows the latest state.
 - **One quiet line, no number:** when new items are waiting, a single line appears in a reserved spot at the top of the list: "New items · press `r`." Its space is reserved, so nothing shifts when it appears.
@@ -299,10 +301,10 @@ In river mode, unread and read states don't exist on screen; only the cursor and
 Shown until the first feed is added:
 
 > **[ Paste a website or feed URL ]**
-> New to feeds? Here's how they work · Import OPML
+> Import OPML
 
 - Accepts a **website** URL, not just a feed URL; slowfeed finds the feed (autodiscovery).
-- "Here's how they work" links to a short guide page.
+- The "New to feeds? Here's how they work" guide page comes in V2.
 
 ### Adding feeds
 
@@ -357,13 +359,13 @@ Vim-style keys are first-class. A permanent, unobtrusive hint says "Press ? for 
 ### Settings
 
 - **Reader controls:** reading font (Literata default, or Atkinson Hyperlegible), text size, line width, theme (system / off-white / sepia / dark).
-- **Reading:** inbox or river mode; sort order (newest first default).
-- **Feed health page:**
+- **Reading:** sort order (newest first default). Inbox or river mode in V2.
+- **Feed health page (V2):**
   - Sorted by severity: dead feeds first, then intermittent errors.
   - Problems described in plain words ("Hasn't worked for 3 weeks — the site may have moved"), not HTTP codes.
   - Actions per feed: **Retry · Find new address · Unsubscribe.** "Find new address" reruns autodiscovery.
 - **Your data:** OPML import and export; export of starred articles.
-- **Keeping articles:** unstarred articles, read or not, are removed after one year. Starred articles are kept forever.
+- **Keeping articles (V2):** unstarred articles, read or not, are removed after one year. Starred articles are kept forever. In V1, all articles are kept.
 
 ### Voice
 
@@ -375,7 +377,7 @@ Vim-style keys are first-class. A permanent, unobtrusive hint says "Press ? for 
 ## Still to define
 
 - Type scale and spacing system
-- Muted greys and status colors for the feed health page (verified against the first floor)
+- Muted greys, and status colors for the feed health page in V2 (verified against the first floor)
 - Domain, app store, and trademark checks for "slowfeed" (not blocking V1)
 
 ## V2 parking lot
@@ -387,3 +389,13 @@ Vim-style keys are first-class. A permanent, unobtrusive hint says "Press ? for 
 - **Chinese and Japanese search.**
 - **Multiple users.**
 - **Own domain name.**
+
+Moved here from V1 on 23 October 2026, because V1 is for the owner alone (`docs/decisions/0012-v1-for-one-reader.md`):
+
+- **Backups and recovery:** nightly copies outside the host, and a copy before every database structure change.
+- **River mode** (V1 has inbox mode only).
+- **WebSub:** instant updates from publishers who offer it.
+- **Feed health page** in Settings.
+- **The yearly clean-up** of unstarred articles.
+- **The "New to feeds?" guide page.**
+- **A tab left open across an update keeps working** without a reload.

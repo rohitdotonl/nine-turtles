@@ -21,3 +21,4 @@ says "Replaced by …" at the top.
 | [0009](0009-agents-may-merge.md) | Agents may merge after a brief and the owner's yes |
 | [0010](0010-sign-in.md) | How sign-in works: setting the password, signed-in devices, wrong guesses |
 | [0011](0011-container-image.md) | The container image, where it's stored, and automatic deploys |
+| [0012](0012-v1-for-one-reader.md) | V1 is for one reader: no backups, and six features moved to V2 |
