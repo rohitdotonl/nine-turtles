@@ -9,7 +9,7 @@
 <script lang="ts">
   import ImportOpml from "./ImportOpml.svelte";
   import type { Order } from "./feeds";
-  import { LINE_WIDTHS, READING_FONTS, TEXT_SIZES, type Preferences } from "./preferences";
+  import { BAR_COLORS, LINE_WIDTHS, READING_FONTS, TEXT_SIZES, type Preferences } from "./preferences";
   import { signOut } from "./session";
   import { updates } from "./updates.svelte";
 
@@ -47,12 +47,7 @@
   ] as const;
 
   // A small disc of each theme's reading background (DESIGN.md → "Color"); "Match this device" is half of each.
-  const SWATCHES: Record<(typeof THEME_CHOICES)[number]["value"], string> = {
-    system: "#f8f6f1",
-    "off-white": "#f8f6f1",
-    sepia: "#f3e9d2",
-    dark: "#1c1b19",
-  };
+  const SWATCHES: Record<(typeof THEME_CHOICES)[number]["value"], string> = { system: BAR_COLORS["off-white"], ...BAR_COLORS };
 
   const SORT_CHOICES = [
     { value: "newest", label: "Newest first" },
@@ -129,7 +124,7 @@
             <label class="choice">
               <input type="radio" name="theme" value={choice.value} bind:group={preferences.theme} />
               <span aria-hidden="true" class="swatch" style:background-color={SWATCHES[choice.value]}
-                >{#if choice.value === "system"}<span class="swatch-half"></span>{/if}</span
+                >{#if choice.value === "system"}<span class="swatch-half" style:background-color={BAR_COLORS.dark}></span>{/if}</span
               >
               {choice.label}
             </label>
@@ -250,8 +245,10 @@
     border-radius: 0.375rem;
     cursor: pointer;
   }
-  .choice:hover {
-    background-color: var(--hover);
+  @media (hover: hover) {
+    .choice:hover {
+      background-color: var(--hover);
+    }
   }
   .choice input {
     position: absolute;
@@ -272,25 +269,34 @@
     outline: 3px solid var(--ink);
     outline-offset: 2px;
   }
+  /* High-contrast mode replaces the fill, so the chosen tile takes the system's own highlight colors. */
+  @media (forced-colors: active) {
+    .choice:has(input:checked) {
+      forced-color-adjust: none;
+      border-color: Highlight;
+      background-color: Highlight;
+      color: HighlightText;
+    }
+    .choice:has(input:focus-visible) {
+      outline-color: CanvasText;
+    }
+  }
   .choice:has(input:disabled) {
     cursor: default;
     color: var(--muted);
   }
   .swatch {
+    position: relative;
+    overflow: hidden;
     width: 1rem;
     height: 1rem;
     flex-shrink: 0;
     border: 1px solid var(--muted);
     border-radius: 9999px;
   }
-  .swatch {
-    position: relative;
-    overflow: hidden;
-  }
   .swatch-half {
     position: absolute;
     inset: 0 0 0 50%;
-    background-color: #1c1b19;
   }
   .reading-sample {
     font-family: var(--reading-font);

@@ -84,8 +84,12 @@ export function apply(preferences: Preferences, root: HTMLElement = document.doc
   }
 }
 
-/** Each theme's reading background (DESIGN.md → "Color"), for the browser's bar. */
-const BAR_COLORS = { "off-white": "#F8F6F1", sepia: "#F3E9D2", dark: "#1C1B19" } as const;
+/**
+ * Each theme's reading background (DESIGN.md → "Color"), for the browser's
+ * bar and Settings' theme discs. contrast.test.ts checks they match app.css
+ * and index.html.
+ */
+export const BAR_COLORS = { "off-white": "#F8F6F1", sepia: "#F3E9D2", dark: "#1C1B19" } as const;
 
 function safeStorage(): Storage | undefined {
   try {

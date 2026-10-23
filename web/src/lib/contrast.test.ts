@@ -3,6 +3,8 @@
 // row's tint, say) are covered too. The browser tests check what's on screen.
 import { describe, expect, it } from "vitest";
 import css from "../app.css?raw";
+import html from "../../index.html?raw";
+import { BAR_COLORS } from "./preferences";
 
 /** The color settings of one theme's block in app.css. */
 function theme(selector: string): Record<string, string> {
@@ -96,4 +98,13 @@ describe.each(Object.entries(THEMES))("the %s theme's pointer and chip tones", (
 
 it("the device's dark setting uses exactly the dark theme's colors", () => {
   expect(THEMES["device dark"]).toEqual(THEMES.dark);
+});
+
+it("the browser bar and Settings' theme discs use each theme's own background", () => {
+  for (const [name, color] of Object.entries(BAR_COLORS)) {
+    expect(color.toLowerCase(), name).toBe(THEMES[name as keyof typeof THEMES].paper);
+  }
+  // index.html's light and dark bars, for "Match this device".
+  expect(html).toContain(`content="${BAR_COLORS["off-white"]}" media="(prefers-color-scheme: light)"`);
+  expect(html).toContain(`content="${BAR_COLORS.dark}" media="(prefers-color-scheme: dark)"`);
 });
