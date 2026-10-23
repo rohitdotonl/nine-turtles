@@ -142,7 +142,9 @@ These were decided with the owner. Changing any of them needs the owner's approv
 | Per-device reader settings | The browser's storage (`localStorage`) |
 | Installable on phones | Web app manifest and service worker (PWA) |
 
-**New versions on devices:** the service worker downloads a new version quietly in the background and uses it the next time the app is opened or reloaded. It never swaps the app while it's open. In V1, a tab left open across an update that sends a request the new version doesn't understand is told plainly to reload; keeping such a tab working without a reload is V2.
+**New versions on devices:** opening or reloading slowfeed always asks the server for the page first, so it starts the newest version; nothing swaps the app while it's open. The service worker (`web/public/sw.js`) keeps a copy of the page and of the app's code (`/assets/`) so the app opens without a connection; it never keeps API answers. Every answer from the server carries an `x-slowfeed-version` header. When it differs from the version the tab started with, Settings offers "A new version is ready · Reload"; if that newer server also refuses a request it doesn't understand (400, 404, 405, 415 or 422), the list's reserved line says "slowfeed was updated. Reload to continue." Keeping such a tab working without a reload is V2. See decision 0021.
+
+**Phone steps:** on a phone, each move between Feeds, a list and an article is an entry in the browser's history (its state says which screen), so the system back gesture and the labeled back arrow do the same thing (`web/src/lib/steps.ts`).
 
 **Packaging:** the built frontend is embedded into the Rust program, so deploying means one program file. GitHub Actions builds it once into a standard container image (a ready-to-run bundle any host accepts), and Render runs that image, so what was tested is exactly what goes live and Render never has to compile Rust.
 
