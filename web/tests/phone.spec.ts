@@ -37,19 +37,19 @@ test.describe("on a phone", () => {
     await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
     await expect(sidebar(page)).toBeHidden();
     await expect(list(page).getByRole("heading", { level: 2, name: "Reading Room" })).toBeVisible();
-    await expect(list(page).getByRole("button", { name: "‹ Feeds" })).toBeVisible();
+    await expect(list(page).getByRole("button", { name: "Back to Feeds" })).toBeVisible();
     // Refresh is in the top bar, so there's only ever one.
     await expect(page.getByRole("button", { name: "Refresh", exact: true })).toHaveCount(1);
 
     await row(page, "The pleasure of a slow letter").click();
     await expect(title(page, "The pleasure of a slow letter")).toBeFocused();
     await expect(list(page)).toBeHidden();
-    await expect(article(page).getByRole("button", { name: "‹ Reading Room" })).toBeVisible();
+    await expect(article(page).getByRole("button", { name: "Back to Reading Room" })).toBeVisible();
 
     // The back arrows go back one step each time.
-    await article(page).getByRole("button", { name: "‹ Reading Room" }).click();
+    await article(page).getByRole("button", { name: "Back to Reading Room" }).click();
     await expect(row(page, "The pleasure of a slow letter")).toBeFocused();
-    await list(page).getByRole("button", { name: "‹ Feeds" }).click();
+    await list(page).getByRole("button", { name: "Back to Feeds" }).click();
     await expect(sidebar(page)).toBeVisible();
     await expect(page.getByRole("heading", { level: 1, name: "slowfeed" })).toBeFocused();
   });
@@ -76,7 +76,7 @@ test.describe("on a phone", () => {
     const link = sidebar(page).getByRole("link", { name: /^Reading Room/ });
     await page.goto(new URL((await link.getAttribute("href")) ?? "/", FEEDS_APP).href);
     await appReady(page);
-    await list(page).getByRole("button", { name: "‹ Feeds" }).click();
+    await list(page).getByRole("button", { name: "Back to Feeds" }).click();
     await expect(sidebar(page)).toBeVisible();
   });
 

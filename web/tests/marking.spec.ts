@@ -211,7 +211,7 @@ test("on a phone, the article's Star and Mark unread buttons work", async ({ pag
   await row(page, blog, NEWEST).click();
   await article(page).getByRole("button", { name: "Star" }).click();
   await article(page).getByRole("button", { name: "Mark unread" }).click();
-  await article(page).getByRole("button", { name: `‹ Blog ${blog}` }).click();
+  await article(page).getByRole("button", { name: `Back to Blog ${blog}` }).click();
   await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
   await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/Starred, /);
 });

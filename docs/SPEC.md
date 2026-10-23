@@ -139,6 +139,7 @@ A few words used throughout:
 - `v` opens the original in a new tab. `+` / `-` change the text size (the same setting as in Settings).
 - Links inside articles open in a new tab (links to a place inside the article, like footnotes, stay in it).
 - Footnote links move to the note inside the article (and back), without leaving slowfeed.
+- On a wide window the article sits in the middle of the reading area, like a page in a book, with its actions lined up above its text.
 - With no article chosen, the reading area waits quietly: "No article open." in the middle of the page, and on screens with a keyboard "Choose one from the list, or press j." below it.
 - Images load from the publisher's site. Invisible 1×1 "tracking pixels" are removed (any image sized 0 or 1 pixel), so they're never loaded.
 - Anything unsafe in the feed's content (scripts, embedded frames, code hidden in styles) is removed before display.
@@ -368,7 +369,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 
 **What it does**
 - One column you move through: **Feeds → Items → Article**. The feeds list is the home screen; no hamburger menu.
-- Top bar: a back arrow labeled with where it goes (e.g. "‹ Tech") and the screen title. A Refresh button on list screens; search and search-options icons on the feeds and items screens (with search, Milestone 10).
+- Top bar: a back arrow labeled with where it goes (e.g. "‹ Tech", drawn as a small arrow icon; screen readers hear "Back to Tech") and the screen title. A Refresh button on list screens; search and search-options icons on the feeds and items screens (with search, Milestone 10).
   - The feeds screen: the "slowfeed" wordmark, **Refresh** (which updates the unread numbers) and **Settings**. No sidebar toggle and no "Press ? for shortcuts" hint.
   - A list: "‹ Feeds", **Refresh**, and the list's name with its Edit button. The top bar never scrolls.
   - An article: "‹ " and the list's name, and **Mark unread**.

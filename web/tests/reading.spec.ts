@@ -173,6 +173,18 @@ test.describe("on a wide window", () => {
     expect(await heading.evaluate((element) => getComputedStyle(element, "::before").width)).toBe("3px");
   });
 
+  test("on a wide window the article sits in the middle, with its actions lined up above it", async ({ page }) => {
+    await openRoom(page, 1920);
+    await page.keyboard.press("j");
+    const pane = (await article(page).boundingBox())!;
+    const text = (await article(page).locator("article").boundingBox())!;
+    // Centred: as much room on its left as on its right (within a pixel or two).
+    expect(Math.abs(text.x - pane.x - (pane.x + pane.width - text.x - text.width))).toBeLessThan(4);
+    // The first action's icon starts just left of the text, as the toolbar's optical edge.
+    const first = (await article(page).getByRole("link", { name: "Open original" }).first().boundingBox())!;
+    expect(Math.abs(first.x + 12 - text.x)).toBeLessThan(2);
+  });
+
   test("in high-contrast mode, only the selected article is marked", async ({ page }) => {
     await page.emulateMedia({ forcedColors: "active" });
     await openRoom(page);
@@ -220,7 +232,7 @@ test("on a phone, an article fills the screen and the back button returns to the
   await expect(title(page, "The pleasure of a slow letter")).toBeFocused();
   await expect(page.getByRole("region", { name: "Reading Room" })).toBeHidden();
 
-  await article(page).getByRole("button", { name: "‹ Reading Room" }).click();
+  await article(page).getByRole("button", { name: "Back to Reading Room" }).click();
   await expect(row(page, "The pleasure of a slow letter")).toBeFocused();
   await expect(article(page)).toBeHidden();
 });

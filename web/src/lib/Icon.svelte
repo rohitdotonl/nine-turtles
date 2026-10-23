@@ -4,7 +4,7 @@
   word, so screen readers skip them.
 -->
 <script lang="ts" module>
-  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "search" | "sliders" | "star";
+  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "back" | "search" | "sliders" | "star";
 </script>
 
 <script lang="ts">
@@ -47,6 +47,8 @@
     <circle cx="10" cy="10" r="2.25" fill="currentColor" />
   {:else if name === "close"}
     <path d="m5 5 10 10M15 5 5 15" />
+  {:else if name === "back"}
+    <path d="M12.5 4 6.5 10l6 6" />
   {:else if name === "search"}
     <circle cx="8.5" cy="8.5" r="5.75" />
     <path d="m12.75 12.75 4.5 4.5" />

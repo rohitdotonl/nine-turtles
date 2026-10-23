@@ -69,3 +69,14 @@ the toolbar actions too quiet to notice (give them the muted edge of `.btn`).
 - **Sign-in** has one quiet line under the wordmark: "A quiet place to read."
 - **The browser's bar color** (`theme-color`) follows the chosen theme;
   "Match this device" restores the light and dark values in `index.html`.
+
+## Third pass (same day)
+
+- **Back arrows** on phones are the set's arrow icon beside the
+  destination's name, instead of a "‹" character. Their accessible name is
+  "Back to …" (it contains the visible word, so voice control still works),
+  because screen readers read "‹" as a quotation mark.
+- **The article is centred** in the reading area on wide windows. Its
+  toolbar uses `.article-column` (in `app.css`): the same width as the
+  article, measured in the reading font so the edges line up, nudged 12px
+  left so the first icon's edge rather than its padding meets the text.
