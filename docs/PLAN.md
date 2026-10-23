@@ -222,6 +222,8 @@ each with screenshots:
 
 - ✅ Calmer controls: four kinds of button and field, one icon set, a
   one-line search box (decision 0025).
+- ✅ Settings choices as tiles, key caps, a quiet empty reading area, a line
+  under the sign-in wordmark, the browser bar in the chosen theme.
 
 ---
 

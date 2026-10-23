@@ -49,12 +49,12 @@
     <tbody>
       {#each SHORTCUTS as shortcut (shortcut.action)}
         <tr>
-          <td class="py-1 pr-6 align-top whitespace-nowrap">
+          <td class="py-1.5 pr-6 align-top whitespace-nowrap">
             {#each shortcut.keys as key, index (key)}{#if index > 0}<span class="text-muted">{" / "}</span>{/if}<kbd
-                class="font-mono">{key}</kbd
+                class="key">{key}</kbd
               >{/each}
           </td>
-          <td class="py-1 align-top">
+          <td class="py-1.5 align-top">
             {shortcut.action}{#if !shortcut.ready}<span class="text-small text-muted">{" · coming later"}</span>{/if}
           </td>
         </tr>
@@ -68,7 +68,7 @@
     <tbody>
       {#each FILTERS as [filter, meaning] (filter)}
         <tr>
-          <td class="py-1 pr-6 align-top whitespace-nowrap"><code class="font-mono">{filter}</code></td>
+          <td class="py-1.5 pr-6 align-top whitespace-nowrap"><code class="font-mono">{filter}</code></td>
           <td class="py-1 align-top">{meaning}</td>
         </tr>
       {/each}

@@ -621,7 +621,7 @@
     onclick={() => (cheatSheetOpen = true)}
     class={["keyboard-hint fixed top-3 right-4 min-h-11 px-2 text-small text-muted", phone && "hidden"]}
   >
-    Press ? for shortcuts
+    Press <kbd class="key">?</kbd> for shortcuts
   </button>
 
   <nav
@@ -833,10 +833,10 @@
                 : undefined}
             />
           {:else}
-            <section aria-label="Article" class="flex min-w-0 flex-1 flex-col bg-paper pt-16">
-              <div class="min-h-0 flex-1 overflow-y-auto px-10 pb-6">
-                <p class="text-muted">No article open.</p>
-              </div>
+            <!-- Waiting quietly in the middle of the page, like a blank page in a book. -->
+            <section aria-label="Article" class="flex min-w-0 flex-1 flex-col items-center justify-center bg-paper px-10 pb-16 text-center">
+              <p class="font-serif text-large">No article open.</p>
+              <p class="keyboard-hint mt-2 text-small text-muted">Choose one from the list, or press <kbd class="key">j</kbd>.</p>
             </section>
           {/if}
         {/if}

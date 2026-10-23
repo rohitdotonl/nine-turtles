@@ -26,6 +26,7 @@ A few words used throughout:
 - Each device stays signed in for a long time, so you rarely type it.
 - Each device stays signed in for a year after it was last used. Signing out ends that device only; other devices stay signed in.
 - Repeated wrong passwords are slowed down, so nobody can guess by trying thousands: after five wrong tries in a row, slowfeed asks you to wait a minute, and each further wrong try doubles the wait, up to an hour. The right password resets it, and so does an hour without wrong tries. Wrong tries count for the whole app, wherever they come from, so a stranger guessing can make you wait on a new device (devices already signed in are unaffected). Restarting slowfeed on Render clears the wait (`docs/operations/render-setup.md`).
+- The page shows the wordmark, one quiet line under it ("A quiet place to read."), the password field and **Sign in**.
 - Messages are plain: "That isn't the password." or "Too many wrong tries. Try again in 2 minutes."
 - Sign out is in Settings.
 - The password itself is never stored, only a scrambled version that can't be turned back into it (a "hash"). You set it by typing `slowfeed set-password` in Render's Shell tab and pasting the scrambled line it prints into Render's settings (`docs/operations/render-setup.md`). Until then, nobody can sign in.
@@ -138,6 +139,7 @@ A few words used throughout:
 - `v` opens the original in a new tab. `+` / `-` change the text size (the same setting as in Settings).
 - Links inside articles open in a new tab (links to a place inside the article, like footnotes, stay in it).
 - Footnote links move to the note inside the article (and back), without leaving slowfeed.
+- With no article chosen, the reading area waits quietly: "No article open." in the middle of the page, and on screens with a keyboard "Choose one from the list, or press j." below it.
 - Images load from the publisher's site. Invisible 1×1 "tracking pixels" are removed (any image sized 0 or 1 pixel), so they're never loaded.
 - Anything unsafe in the feed's content (scripts, embedded frames, code hidden in styles) is removed before display.
 - The next article is loaded in advance so moving to it with `j` is instant.
@@ -313,7 +315,8 @@ OPML is the standard file format feed readers use to move subscription lists bet
 **What it does**
 - Settings opens in place of the list and reading area; the sidebar stays. **Close settings** or Escape goes back to where you were.
 - **Reader controls:** reading font (Literata or Atkinson Hyperlegible), text size (six steps from Smaller to Largest, Medium by default), line width (Narrow, Medium or Wide: about 62, 68 or 75 characters), theme. A sample paragraph shows how articles will look, and changes apply at once.
-- **Themes:** "Match this device" by default (off-white or dark, following the system's light/dark setting), or choose off-white, sepia or dark.
+- **Themes:** "Match this device" by default (off-white or dark, following the system's light/dark setting), or choose off-white, sepia or dark. The phone's own bar above the page takes the chosen theme's color too.
+- Each choice is a labeled tile, chosen with a click, a tap or the arrow keys (they're radio buttons underneath). The chosen tile is filled in and its word is semibold, so it shows without color. Theme tiles show a small disc of each theme's background; each reading font's name is written in that font.
 - Sections appear once they have something to do: Reading (sort order) since Milestone 7, Your data with Milestone 9.
 - **Reading:** newest or oldest first. (Inbox or river mode in V2.)
 - **Your data:** OPML import/export, export of starred articles.

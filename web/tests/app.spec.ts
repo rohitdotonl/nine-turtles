@@ -143,6 +143,19 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
 
   await page.getByLabel("Sepia").check();
   await expect(page.locator("body")).toHaveCSS("background-color", "rgb(243, 233, 210)");
+  // The phone's bar above the page follows the chosen theme too.
+  for (const meta of await page.locator('meta[name="theme-color"]').all()) {
+    await expect(meta).toHaveAttribute("content", "#F3E9D2");
+  }
+  // The chosen tile is filled and its word semibold, so it shows without color.
+  await expect(page.locator("label.choice").filter({ hasText: "Sepia" })).toHaveCSS("font-weight", "600");
+  await expect(page.locator("label.choice").filter({ hasText: "Dark" })).toHaveCSS("font-weight", "400");
+  // Arrow keys move between choices, as with any radio buttons.
+  await page.getByLabel("Sepia").focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByLabel("Dark")).toBeChecked();
+  await page.keyboard.press("ArrowLeft");
+  await expect(page.getByLabel("Sepia")).toBeChecked();
 
   const sample = page.locator(".reading-sample");
   await expect(sample).toHaveCSS("font-family", /^Literata/);
