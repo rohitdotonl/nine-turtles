@@ -176,10 +176,18 @@ test.describe("on a wide window", () => {
   test("on a wide window the article sits in the middle, with its actions lined up above it", async ({ page }) => {
     await openRoom(page, 1920);
     await page.keyboard.press("j");
-    const pane = (await article(page).boundingBox())!;
     const text = (await article(page).locator("article").boundingBox())!;
-    // Centred: as much room on its left as on its right (within a pixel or two).
-    expect(Math.abs(text.x - pane.x - (pane.x + pane.width - text.x - text.width))).toBeLessThan(4);
+    // Centred in its scrolling area (the space left beside any scrollbar):
+    // as much room on its left as on its right, within a pixel or two.
+    const room = await article(page)
+      .locator("article")
+      .evaluate((element) => {
+        const area = element.parentElement!;
+        const box = area.getBoundingClientRect();
+        const own = element.getBoundingClientRect();
+        return { left: own.left - box.left, right: box.left + area.clientWidth - own.right };
+      });
+    expect(Math.abs(room.left - room.right)).toBeLessThan(4);
     // The first action's icon starts just left of the text, as the toolbar's optical edge.
     const first = (await article(page).getByRole("link", { name: "Open original" }).first().boundingBox())!;
     expect(Math.abs(first.x + 12 - text.x)).toBeLessThan(2);

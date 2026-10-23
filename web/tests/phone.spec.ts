@@ -154,6 +154,21 @@ test.describe("on a phone", () => {
     await expect(sidebar(page)).toBeVisible();
   });
 
+  test("a long feed name wraps in the back arrow instead of running off the screen", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 640 });
+    await openHome(page);
+    const name = `averyveryverylongfeednamewithoutanyspaces-${Date.now()}`;
+    const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
+    await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
+    await appReady(page);
+    await page.getByRole("button", { name: /A year of reading slowly/ }).click();
+    const back = article(page).getByRole("button", { name: `Back to Blog ${name}` });
+    await expect(back).toBeVisible();
+    const box = (await back.boundingBox())!;
+    expect(box.x + box.width).toBeLessThanOrEqual(320);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  });
+
   test("every tap target is at least 44 pixels tall", async ({ page }) => {
     await openHome(page);
     const tooSmall = () =>

@@ -119,7 +119,7 @@
   <!-- Never scrolls, so these are always in the same place. -->
   {#if phone}
     <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 pb-2">
-      <button type="button" onclick={phone.onBack} aria-label="Back to {phone.back}" class="btn-quiet min-w-0 justify-start gap-1 px-2 text-left whitespace-normal"
+      <button type="button" onclick={phone.onBack} aria-label="Back to {phone.back}" class="btn-quiet min-w-0 shrink justify-start gap-1 px-2 text-left whitespace-normal"
         ><Icon name="back" size={20} /><span class="min-w-0 break-words">{phone.back}</span></button
       >
       <button type="button" onclick={onMarkUnread} class="btn-quiet -mr-3"><Icon name="unread" />Mark unread</button>
@@ -127,7 +127,7 @@
     </div>
   {:else}
   <!-- In the same centred column as the article, so the actions sit right above its text. -->
-  <div class="px-6 pb-4 md:px-10"><div class="article-column relative -left-3 flex flex-wrap items-center gap-x-1 gap-y-2">
+  <div class="scroll-gutter overflow-y-hidden px-6 pb-4 md:px-10"><div class="article-column relative -left-3 flex flex-wrap items-center gap-x-1 gap-y-2">
     {#if article.link}
       <a href={article.link} target="_blank" rel="noopener noreferrer" class="btn-quiet"><Icon name="open" />Open original</a>
       <button type="button" onclick={share} class="btn-quiet">
@@ -145,7 +145,7 @@
   </div></div>
   {/if}
 
-  <div bind:this={scroller} class="min-h-0 flex-1 overflow-y-auto px-6 pb-16 md:px-10">
+  <div bind:this={scroller} class="scroll-gutter min-h-0 flex-1 overflow-y-auto px-6 pb-16 md:px-10">
     <article lang={full?.language ?? undefined} class="article">
       <p class="text-small text-muted" lang="en">
         {#if full?.siteUrl}
@@ -215,6 +215,10 @@
 </section>
 
 <style>
+  /* The toolbar and the article both keep room for a scrollbar, so their centres match. */
+  .scroll-gutter {
+    scrollbar-gutter: stable;
+  }
   /* The phone's bottom toolbar: five equal places, each at least 44px tall. A place that can't act loses its icon, so it shows without color too. */
   .toolbar > :global(*) {
     display: flex;

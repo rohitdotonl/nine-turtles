@@ -324,21 +324,13 @@ input {
 }
 
 /*
-  An article (SPEC section 7): the publisher's text, restyled the same way
-  for every feed, in the reader's font, size and line width. Sizes inside are
-  relative to the reader's text size, so + and - scale everything together.
-  Links are underlined in the text color, never blue. Images never overflow.
-*/
-/*
   On a wide window the article sits in the middle of the reading area, like a
   page in a book, rather than against its left edge. .article-column gives
   the toolbar above it the same width (measured in the reading font, so the
-  edges line up), then sets its own words back in the interface font.
+  edges line up), then sets its own words back in the interface font. Both
+  areas keep room for a scrollbar (scrollbar-gutter in ArticleView.svelte),
+  so the two stay lined up where scrollbars are always shown.
 */
-.article {
-  margin-inline: auto;
-}
-
 /* In the components layer, so a small-text utility inside still wins. */
 @layer components {
   .article-column {
@@ -354,8 +346,15 @@ input {
   }
 }
 
+/*
+  An article (SPEC section 7): the publisher's text, restyled the same way
+  for every feed, in the reader's font, size and line width. Sizes inside are
+  relative to the reader's text size, so + and - scale everything together.
+  Links are underlined in the text color, never blue. Images never overflow.
+*/
 .article {
   max-width: var(--reading-measure);
+  margin-inline: auto;
   font-family: var(--reading-font);
   font-size: var(--reading-size);
   line-height: 1.65;
