@@ -185,8 +185,8 @@ test.describe("on a wide window", () => {
     const remove = (await page.getByRole("button", { name: "Remove in: Reading Room" }).boundingBox())!;
     expect(Math.min(remove.width, remove.height)).toBeGreaterThanOrEqual(44);
     // Before anything is selected, Tab reaches the first row and draws the
-    // keyboard's outline inside it, and the selected row keeps it beside its
-    // ink blue bar and tint.
+    // keyboard's outline inside it. The selected row keeps the same outline,
+    // with its ink blue bar outside it, flush against the pane's edge.
     const first = row(page, "The pleasure of a slow letter");
     await tabTo(page, first);
     await expect(first).toHaveCSS("outline-style", "solid");
@@ -196,7 +196,13 @@ test.describe("on a wide window", () => {
     await expect(selected).toBeFocused();
     expect(await selected.evaluate((element) => getComputedStyle(element, "::before").backgroundColor)).toBe("rgb(47, 74, 122)");
     await expect(selected).toHaveCSS("outline-style", "solid");
-    await expect(selected).toHaveCSS("outline-width", "1px");
+    await expect(selected).toHaveCSS("outline-width", "2px");
+    // The bar sits flush against the list's edge, outside the row's fill.
+    const flush = await selected.evaluate((element) => {
+      const scroller = element.closest(".scroller")!.getBoundingClientRect().left;
+      return element.getBoundingClientRect().left + parseFloat(getComputedStyle(element, "::before").left) - scroller;
+    });
+    expect(Math.abs(flush)).toBeLessThan(1);
     // Opening an article gives its title the keyboard's place for screen
     // readers, with a quiet outline so a keyboard user can see it too.
     await page.keyboard.press("o");

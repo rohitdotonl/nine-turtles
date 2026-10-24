@@ -242,7 +242,7 @@ Fixed order, top to bottom: **Unread · Starred · All**, then **folders** A–Z
 |---|---|
 | Unread | Full-contrast, semibold title and a small dot in the margin before it |
 | Read | Second ink, regular-weight title |
-| Selected (cursor) | A rounded faint tint with a short ink blue pill at its left edge, the same shape in the sidebar and the list; title in full ink; a hairline focus outline when using the keyboard |
+| Selected (cursor) | A rounded faint tint, and a short ink blue bar flush against the pane's own left edge, the same in the sidebar and the list; title in full ink. The keyboard's outline sits inside the fill, with the bar outside it |
 | Starred | A small star mark |
 
 In river mode (V2) only the cursor and star show.
