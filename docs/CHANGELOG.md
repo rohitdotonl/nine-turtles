@@ -4,6 +4,19 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 24 October 2026: Toward Apple Books, batch 3
+
+- The article's bars are solid in the page's color, so text no longer shows
+  faintly through them; a thin line appears under the top bar only once
+  you scroll, and the phone's bottom bar has a thin line along its top. No
+  odd-colored strip beside the scrollbar.
+- A summary-only article ends with a small centred note under the closing
+  line, linking the full article. Titles use the text's full width, and
+  paragraphs no longer leave visibly short lines.
+- Search results show the title, then the matching text (up to two lines),
+  then the source and time.
+- With no article open, the reading area shows just "No article open."
+
 ## 24 October 2026: Toward Apple Books
 
 - An **Aa** button on every article opens a small reading panel, as in

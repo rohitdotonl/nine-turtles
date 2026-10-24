@@ -273,6 +273,10 @@ each with screenshots:
   A/A text size; sheets that grow with their content, the destructive action
   at the bottom left; thin fields with red errors; search options as a
   checkmark menu; a calmer first visit (decision 0039).
+- ✅ Toward Apple Books, batch 3: solid article bars with a line only once
+  scrolled and an edge on the phone's toolbar, no scrollbar strip, the
+  summary note as end matter, titles at full measure, search results as
+  title, text, meta, and a silent empty reading pane (decision 0040).
 
 ---
 

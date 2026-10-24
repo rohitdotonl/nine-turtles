@@ -6,16 +6,17 @@
   to screen readers: Open original at the left, always in the same place;
   Aa (the reading panel), Star and More (…) at the right. More holds Copy
   link (Share on phones) and Mark unread (SPEC sections 7, 8, 9 and 21). The
-  bar is the page's color, slightly see-through and blurred, so the text
-  fades under it as it scrolls (solid when the system asks for less
-  transparency). The source is always credited and linked. A feed that gives
-  only a summary shows the summary, ending with a line that links the whole
-  article on the publisher's site; slowfeed never fetches the rest.
+  bar is solid, in the page's own color, above the scrolling text, with a
+  hairline under it only once the text has scrolled (decision 0040). The
+  source is always credited and linked. A feed that gives only a summary
+  shows the summary, then a small centred note under the closing rule that
+  links the whole article on the publisher's site; slowfeed never fetches
+  the rest.
 
   On a phone (SPEC section 20) the article is a screen of its own: the top
   bar has the back button, labeled with the list's name, and Open original;
   Previous, Next, Aa, Star and More sit as icons in a toolbar at the bottom,
-  within thumb reach.
+  within thumb reach, above a hairline.
 -->
 <script lang="ts">
   import { edge } from "./edge";
@@ -177,43 +178,44 @@
 
 <section aria-label="Article" class="flex min-w-0 flex-1 flex-col bg-paper">
   <!--
-    The article scrolls under its top bar: the bar sits at the top of the
-    scrolling area (sticky), across the whole pane, so its icons are anchored
-    to the pane's edges rather than the text column, and the text fades
-    under it. A faint line shows under the bar once the text has scrolled.
+    The top bar is solid, in the page's own color, across the whole pane
+    (scrollbar included), so its icons are anchored to the pane's edges
+    rather than the text column, and no text shows through it. The text
+    scrolls below it; a faint line shows between them only once the text
+    has scrolled (the scroller's own top edge, as in the list).
   -->
-  <div use:edge bind:this={scroller} class="reading-scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto px-6 pb-[30vh] md:px-10">
-    {#if phone}
-      <!-- The back button, labeled with the list's name, on the left; the way to the publisher on the right. -->
-      <div class="reading-bar sticky top-0 z-10 -mx-6 flex min-h-13 items-center gap-2 px-1 py-1 md:-mx-10">
-        <button type="button" onclick={phone.onBack} aria-label="Back to {phone.back}" title="Back to {phone.back}" class="btn-quiet min-w-0 shrink gap-0.5 pr-2 pl-1"
-          ><Icon name="back" size={22} /><span class="truncate">{phone.back}</span></button
-        >
-        <p role="status" class="line-clamp-2 min-w-0 flex-1 text-center text-small empty:sr-only">{copied}</p>
-        {#if article.link}
-          <span class="ml-auto">{@render original(22)}</span>
-        {/if}
+  {#if phone}
+    <!-- The back button, labeled with the list's name, on the left; the way to the publisher on the right. -->
+    <div class="reading-bar relative z-10 flex min-h-13 shrink-0 items-center gap-2 px-1 py-1">
+      <button type="button" onclick={phone.onBack} aria-label="Back to {phone.back}" title="Back to {phone.back}" class="btn-quiet min-w-0 shrink gap-0.5 pr-2 pl-1"
+        ><Icon name="back" size={22} /><span class="truncate">{phone.back}</span></button
+      >
+      <p role="status" class="line-clamp-2 min-w-0 flex-1 text-center text-small empty:sr-only">{copied}</p>
+      {#if article.link}
+        <span class="ml-auto">{@render original(22)}</span>
+      {/if}
+    </div>
+  {:else}
+    <!-- Quiet icons, each named in its tooltip with its key: the way to the publisher at the left, the reader's own tools at the right. -->
+    <div class="reading-bar relative z-10 flex min-h-13 shrink-0 items-center gap-2 px-2 py-1">
+      {#if article.link}
+        {@render original(20)}
+      {:else}
+        <p class="px-2 text-small text-muted">This article has no link to its original.</p>
+      {/if}
+      <p role="status" class="line-clamp-2 min-w-0 flex-1 text-center text-small empty:sr-only">{copied}</p>
+      <div class="ml-auto flex items-center">
+        {@render aa(20, "btn-quiet btn-icon")}
+        <!-- A toggle keeps one name for screen readers ("Star", pressed or not); the filled star shows its state. -->
+        <button type="button" aria-label="Star" aria-pressed={article.starred} title={article.starred ? "Starred (s)" : "Star (s)"} onclick={onStar} class={["btn-quiet btn-icon", article.starred && "text-ink"]}>
+          {@render starIcon(20)}
+        </button>
+        <MoreMenu id="article-menu" label="More actions" groups={more} />
       </div>
-    {:else}
-      <!-- Quiet icons, each named in its tooltip with its key: the way to the publisher at the left, the reader's own tools at the right. -->
-      <div class="reading-bar sticky top-0 z-10 -mx-6 flex min-h-13 items-center gap-2 px-2 py-1 md:-mx-10">
-        {#if article.link}
-          {@render original(20)}
-        {:else}
-          <p class="px-2 text-small text-muted">This article has no link to its original.</p>
-        {/if}
-        <p role="status" class="line-clamp-2 min-w-0 flex-1 text-center text-small empty:sr-only">{copied}</p>
-        <div class="ml-auto flex items-center">
-          {@render aa(20, "btn-quiet btn-icon")}
-          <!-- A toggle keeps one name for screen readers ("Star", pressed or not); the filled star shows its state. -->
-          <button type="button" aria-label="Star" aria-pressed={article.starred} title={article.starred ? "Starred (s)" : "Star (s)"} onclick={onStar} class={["btn-quiet btn-icon", article.starred && "text-ink"]}>
-            {@render starIcon(20)}
-          </button>
-          <MoreMenu id="article-menu" label="More actions" groups={more} />
-        </div>
-      </div>
-    {/if}
+    </div>
+  {/if}
 
+  <div use:edge bind:this={scroller} class="reading-scroller scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto bg-paper px-6 pb-[30vh] md:px-10">
     <article lang={full?.language ?? undefined} class="article pt-3">
       <h2 tabindex="-1" bind:this={heading} class="article-title">{article.title || "Untitled"}</h2>
       <!-- Under the title, as in a book or a magazine: who wrote it, where, and when. The publisher's name leads, in full ink. -->
@@ -235,12 +237,12 @@
           <hr aria-hidden="true" class="article-end" />
         {:else if full.summary}
           <div class="article-text" dir="auto">{@html full.summary}</div>
-          <!-- The article's own last paragraph, in the book's voice: where the rest of it is, crediting the publisher. -->
+          <hr aria-hidden="true" class="article-end" />
+          <!-- End matter, under the closing rule as in a book: where the rest of it is, crediting the publisher. -->
           <p class="article-note" lang="en">
             This feed shares only a summary.{#if article.link}{" "}<a href={article.link} target="_blank" rel="noopener noreferrer">Read the full article on {article.feedTitle}<span aria-hidden="true">&nbsp;›</span></a
               >{/if}
           </p>
-          <hr aria-hidden="true" class="article-end" />
         {:else}
           <p class="mt-6" lang="en">This article has no text in its feed. Open original to read it on the publisher's site.</p>
         {/if}
@@ -252,7 +254,8 @@
 
   {#if phone}
     <!--
-      Within thumb reach: quiet icons, each named for screen readers. One that
+      Within thumb reach: quiet icons, each named for screen readers, above a
+      hairline so the text ends at an edge rather than being sliced. One that
       can't act loses its icon, so it shows without color, and keeps its place.
     -->
     <div role="group" aria-label="Article actions" class="toolbar relative z-10 flex shrink-0 bg-paper px-1 pb-[env(safe-area-inset-bottom)]">
@@ -277,47 +280,40 @@
 </section>
 
 <style>
-  /* Room for a scrollbar is kept, so the article's centre doesn't shift between pages that scroll and those that don't. */
+  /*
+    Room for a scrollbar is kept, so the article's centre doesn't shift between
+    pages that scroll and those that don't. The track is see-through, so the
+    gutter is the page's own color in every theme, and the thumb a faint tone
+    of the text (decision 0040).
+  */
   .scroll-gutter {
     scrollbar-gutter: stable;
+    scrollbar-color: color-mix(in srgb, var(--ink) 25%, transparent) transparent;
   }
-  /* A footnote or heading the keyboard moves to stops below the top bar, not under it. */
+  /* A footnote or heading the keyboard moves to stops a little below the top bar. */
   .reading-scroller {
-    scroll-padding-top: 3.75rem;
+    scroll-padding-top: 1rem;
   }
   /*
-    The top bar (DESIGN.md → Exceptions log, decision 0038): the page's own
-    color at 85%, blurred, so the text fades under it rather than being cut
-    off; a faint line under it only once the text has scrolled. Solid where
-    the system asks for less transparency, and in high-contrast modes.
+    The top bar (decision 0040): solid, in the page's own color, never
+    see-through or blurred. Its hairline is the scroller's top edge
+    (app.css → .scroller), shown only once the text has scrolled.
   */
   .reading-bar {
-    border-bottom: 1px solid transparent;
-    background-color: color-mix(in srgb, var(--paper) 85%, transparent);
-    -webkit-backdrop-filter: blur(12px) saturate(1.2);
-    backdrop-filter: blur(12px) saturate(1.2);
-  }
-  .reading-scroller:global([data-scrolled]) > .reading-bar {
-    border-bottom-color: color-mix(in srgb, var(--ink) 12%, transparent);
-  }
-  @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
-    .reading-bar {
-      background-color: var(--paper);
-      -webkit-backdrop-filter: none;
-      backdrop-filter: none;
-    }
+    background-color: var(--paper);
   }
   @media (forced-colors: active) {
     .reading-bar {
       background-color: Canvas;
-      -webkit-backdrop-filter: none;
-      backdrop-filter: none;
     }
   }
   /*
     The phone's bottom toolbar: five equal places of quiet icons, each at
     least 44px square, in the second ink (a starred star in full ink).
   */
+  .toolbar {
+    border-top: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  }
   .toolbar > :global(*) {
     display: flex;
     flex: 1 1 0;
