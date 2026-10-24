@@ -201,7 +201,7 @@ Three: **off-white** (default light), **sepia**, **dark**. Follow the system lig
   - heading 24px, in the reading serif (the wordmark, the list's title);
   - extra large 28px (a screen's own title);
   - display 48px (sign-in wordmark).
-- Article text is set by the reader: six steps, 16 to 28px, 20px by default. The article's title is 1.8 times the text size, its headings 1.2 and 1.08 times, so the title is always clearly the largest thing on screen.
+- Article text is set by the reader: six steps, 16 to 28px, 20px by default (a tenth smaller on a phone). The article's title is about 1.55 times the text size, its headings 1.2 and 1.08 times, so the title is always clearly the largest thing on screen.
 - **Spacing** in steps of 4px, mostly 8, 16, 24, 40 and 64px.
 - **Weights:** regular and semibold (600) for both reading and the interface: Literata's semibold for titles, headings and bold words in articles (Atkinson Hyperlegible keeps its bold). Nothing heavier, so a calm page never shouts. Semibold marks unread titles, where you are, and the one main action in a toolbar.
 - **Three inks:** text (titles, where you are), a second ink (read titles, sidebar names, quieter actions) and muted grey (meta).

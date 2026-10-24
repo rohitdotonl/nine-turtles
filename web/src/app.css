@@ -142,6 +142,11 @@ body {
   outline-offset: -1px;
 }
 
+/* A refused field already has a firm edge, so its focus line stands clear of it. */
+.field[aria-invalid="true"]:focus-visible {
+  outline-offset: 2px;
+}
+
 /*
   A heading that receives the keyboard's place when a screen opens (so screen
   readers start reading there) shows a quiet outline when you got there by
@@ -257,7 +262,7 @@ textarea {
 
   - .btn: an everyday button, edged in the muted grey.
   - .btn-primary: the one main action of a form (Sign in, Add feed, Save),
-    filled with the text color.
+    filled with a deep tone of the text color.
   - .btn-quiet: an action in a toolbar, with an icon beside its word and no
     edge until the pointer is over it.
   - .field: a text box, a date or a list to choose from.

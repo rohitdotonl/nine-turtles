@@ -479,4 +479,10 @@
     border-radius: 0.5rem;
     background-color: var(--paper);
   }
+  /* On a phone articles read a tenth smaller; so does the sample. */
+  @media (max-width: 40rem) {
+    .reading-sample {
+      font-size: calc(var(--reading-size) * 0.9);
+    }
+  }
 </style>
