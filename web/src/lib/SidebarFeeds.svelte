@@ -73,9 +73,9 @@
       onclick={(event) => follow(event, place)}
       title={feed.title}
       class={[
-        "side-row flex min-h-11 pointer-fine:min-h-10 items-center gap-3 border-l-[3px] pr-5 text-ui",
-        indent ? "pl-[37px]" : "pl-[17px]",
-        isHere(place) ? "border-accent bg-tint-sidebar font-semibold text-ink" : "border-transparent text-ink-2",
+        "place mx-1.5 flex min-h-11 pointer-fine:min-h-9 items-center gap-3 pr-3.5 text-ui",
+        indent ? "pl-[34px]" : "pl-[14px]",
+        isHere(place) ? "font-semibold text-ink" : "text-ink-2",
       ]}><span class="min-w-0 flex-1 truncate">{feed.title}</span>{@render count(feed.unread)}</a
     >
   </li>
@@ -88,7 +88,7 @@
     aria-current={isHere(place) ? "page" : undefined}
     onclick={(event) => follow(event, place)}
     title={folder.name}
-    class={["flex min-h-11 pointer-fine:min-h-10 min-w-0 flex-1 items-center gap-3 pr-5 text-ui", padded && "pl-[17px]", isHere(place) ? "font-semibold text-ink" : "text-ink-2"]}
+    class={["flex min-h-11 pointer-fine:min-h-9 min-w-0 flex-1 items-center gap-3 rounded-lg pr-3.5 text-ui", padded && "pl-[14px]", isHere(place) ? "font-semibold text-ink" : "text-ink-2"]}
     ><span class="min-w-0 flex-1 truncate">{folder.name}</span>{@render count(
       folderUnread(folder, feeds),
     )}</a
@@ -103,7 +103,7 @@
     <ul class="mt-4">
       {#each found.folders as folder (folder.id)}
         {@const here = isHere({ kind: "folder", id: folder.id })}
-        <li class={["flex border-l-[3px]", here ? "border-accent bg-tint-sidebar" : "border-transparent"]}>
+        <li class="place mx-1.5 flex" data-here={here || undefined}>
           {@render folderLink(folder, true)}
         </li>
       {/each}
@@ -121,7 +121,7 @@
         {@const inside = feeds.filter((feed) => feed.folders.includes(folder.id))}
         {@const shown = open.includes(folder.id)}
         <li>
-          <div class={["flex border-l-[3px]", here ? "border-accent bg-tint-sidebar" : "border-transparent"]}>
+          <div class="place mx-1.5 flex" data-here={here || undefined}>
             {@render folderLink(folder, true)}
             <button
               type="button"
@@ -129,7 +129,7 @@
               aria-controls={`folder-${folder.id}`}
               aria-label={`Feeds in ${folder.name}`}
               onclick={() => toggle(folder.id)}
-              class="-ml-3 flex min-h-11 pointer-fine:min-h-10 w-11 shrink-0 items-center justify-center text-muted"
+              class="-ml-3 flex min-h-11 pointer-fine:min-h-9 w-11 shrink-0 items-center justify-center text-muted"
             >
               <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 {#if shown}
@@ -145,7 +145,7 @@
               {#each inside as feed (feed.id)}
                 {@render feedRow(feed, true)}
               {:else}
-                <li class="py-2 pr-5 pl-[37px] text-meta text-muted">No feeds in this folder.</li>
+                <li class="py-2 pr-5 pl-10 text-meta text-muted">No feeds in this folder.</li>
               {/each}
             </ul>
           {/if}

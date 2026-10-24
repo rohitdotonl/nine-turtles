@@ -234,6 +234,8 @@ each with screenshots:
 - ✅ Taste first: icons where they're expected (close, settings, the
   article's actions), Settings as grouped cards with theme pictures, a
   grouped shortcut list, and a clearer search box (decision 0027).
+- ✅ One rounded "where you are" shape, an unread dot, a floating note for
+  Undo and new items, and matching page titles (decision 0028).
 
 ---
 

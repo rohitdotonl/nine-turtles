@@ -4,6 +4,18 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 24 October 2026: Calmer lists and matching pages
+
+- "Where you are" looks the same in the sidebar and the list: a soft rounded
+  tint with a short blue mark at its left.
+- Unread articles have a small dot before their title.
+- Undo and "New items" appear in a small note at the bottom of the list,
+  instead of an empty line kept free at the top.
+- A faint line appears under a pane's top line once you scroll.
+- Settings, Add a feed, Edit feed and Edit folder share the same top line:
+  a serif title and an X to close.
+- In one feed's own list, rows no longer repeat the feed's name.
+
 ## 24 October 2026: Icons where you'd expect them, and a tidier Settings
 
 - Settings is a cog and the shortcut list a keyboard icon at the foot of the

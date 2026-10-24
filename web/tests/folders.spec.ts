@@ -104,6 +104,10 @@ test("rename a folder; delete it, its feeds stay, and Undo brings it back", asyn
   // Escape goes back unchanged.
   await page.keyboard.press("Escape");
   await expect(page.getByRole("heading", { level: 2, name: folder })).toBeFocused();
+  // So does the X at the top.
+  await page.getByRole("link", { name: "Edit folder" }).click();
+  await page.getByRole("button", { name: "Close without saving" }).click();
+  await expect(page.getByRole("heading", { level: 2, name: folder })).toBeFocused();
 
   await page.getByRole("link", { name: "Edit folder" }).click();
   await page.getByLabel("Name").fill(`Aa-${folder}`);

@@ -55,16 +55,26 @@ test.describe("on a wide window", () => {
     await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 2 unread`);
     // A screen reader hears it, though the line above the list stays quiet.
     await expect(page.locator('[aria-live="polite"]', { hasText: "Marked as read" })).toBeAttached();
-    const title = row(page, blog, NEWEST).locator("span").first();
+    const title = row(page, blog, NEWEST).locator("span:not([aria-hidden])").first();
     await expect(title).toHaveCSS("font-weight", "400");
-    await expect(row(page, blog, MIDDLE).locator("span").first()).toHaveCSS("font-weight", "600");
+    await expect(row(page, blog, MIDDLE).locator("span:not([aria-hidden])").first()).toHaveCSS("font-weight", "600");
 
-    // m: unread again, and the line above the list offers Undo.
+    // Unread titles also carry a small dot; read ones don't.
+    await expect(row(page, blog, NEWEST).locator(".unread-dot")).toHaveCount(0);
+    await expect(row(page, blog, MIDDLE).locator(".unread-dot")).toBeVisible();
+    // In one feed's own list, rows don't repeat the feed's name on screen.
+    await expect(row(page, blog, MIDDLE).getByText(`Blog ${blog} ·`, { exact: true })).toHaveClass(/sr-only/);
+
+    // m: unread again, and a note floating at the bottom of the list offers Undo; the list doesn't move.
+    const before = (await row(page, blog, NEWEST).boundingBox())!.y;
     await page.keyboard.press("m");
     await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
     await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 3 unread`);
     await expect(line(page)).toHaveText("Marked as unread");
     await expect(page.getByRole("button", { name: "Undo" })).toBeVisible();
+    expect((await row(page, blog, NEWEST).boundingBox())!.y).toBe(before);
+    const undo = (await page.getByRole("button", { name: "Undo" }).boundingBox())!;
+    expect(undo.y).toBeGreaterThan((await row(page, blog, NEWEST).boundingBox())!.y);
 
     // u: read again. Undo works once.
     await page.keyboard.press("u");

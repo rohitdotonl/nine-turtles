@@ -152,6 +152,7 @@ The philosophy applied. The principle is noted where it isn't obvious.
 - **Type does the hierarchy:** size and weight, never color or badges.
 - **One accent, one meaning:** ink blue means "where you are," and nothing else uses it.
 - **Icons where the convention is an icon** (close, back, search, settings, the sidebar toggle, and the article's copy link, star and mark unread), each named in its tooltip with its key and to screen readers. **Words** for the way to the publisher ("Open original"), Add feed, and the main action of a form.
+- **Pages that open in place of the list** (Settings, Add a feed, Edit feed, Edit folder) share one top line that never scrolls: the title in the serif, like the list's, and an X that closes the page (Escape does too).
 - **No motion.** Views switch instantly.
 
 #### Color
@@ -170,7 +171,7 @@ The philosophy applied. The principle is noted where it isn't obvious.
 - All accent pairs pass AAA (7 : 1); re-check if a value changes.
 - **Links in articles** are underlined in the text color, **never blue**.
 - **Muted greys** (read items, counts, source names) are warm, like ink on paper, and pass AA (4.5 : 1) on every area and on the selected-row tint in all themes, verified by automatic checks.
-- **The keyboard focus outline** is a 2px line in the text color, never ink blue. Rows draw it just inside themselves (beside the selected row's bar); a title the keyboard is moved to gets it too, a little away from the words. It shows only when you're using the keyboard.
+- **The keyboard focus outline** is a 2px line in the text color, never ink blue. Rows draw it just inside their rounded shape; a title the keyboard is moved to gets it too, a little away from the words. It shows only when you're using the keyboard.
 - **Status colors** (errors, warnings; V2 feed health page) are muted, never drift toward blue, and always come with words.
 
 #### Themes
@@ -226,7 +227,7 @@ Fixed order, top to bottom: **Unread · Starred · All**, then **folders** A–Z
 
 ### Item list
 
-- **No images, no favicons.** Each row: the **title**, with **source name and time** in quiet small text below.
+- **No images, no favicons.** Each row: the **title**, with **source name and time** in quiet small text below. In one feed's own list the name is left out (the title above already says it); screen readers still hear it.
 - **Sort:** newest first by default; changeable in settings.
 - **The list has an end:** a fixed number of items, then a **"Show older items"** button. Nothing loads unless asked.
 - Matched search terms are **underlined** in the text color, never highlighted in color.
@@ -235,9 +236,9 @@ Fixed order, top to bottom: **Unread · Starred · All**, then **folders** A–Z
 
 | State | Treatment |
 |---|---|
-| Unread | Full-contrast, semibold title |
+| Unread | Full-contrast, semibold title and a small dot in the margin before it |
 | Read | Second ink, regular-weight title |
-| Selected (cursor) | Ink blue left bar + faint tint, title in full ink; a hairline focus outline beside the bar when using the keyboard |
+| Selected (cursor) | A rounded faint tint with a short ink blue pill at its left edge, the same shape in the sidebar and the list; title in full ink; a hairline focus outline when using the keyboard |
 | Starred | A small star mark |
 
 In river mode (V2) only the cursor and star show.
@@ -276,7 +277,7 @@ In river mode (V2) only the cursor and star show.
 
 ### Search
 
-- **`/`** focuses the field. A faint **search icon** starts it and the **tuning (sliders) button** sits inside it at its right end; its tooltip says "Search options." The reserved line says how many results were found.
+- **`/`** focuses the field. A faint **search icon** starts it and the **tuning (sliders) button** sits inside it at its right end; its tooltip says "Search options." A quiet line above the results says how many were found.
 - **Scope defaults to where you are,** shown as a removable chip in the field, e.g. `[ in: Tech × ]`. Remove it to search everything.
 - **The chip shows the scope; the tuning panel edits it;** they stay in sync. The panel offers scope (current location · all feeds · a folder · a feed), unread only, starred only, and a date range.
 - **Always full text:** titles and bodies together, title matches ranked higher. No toggle.
@@ -289,7 +290,7 @@ In river mode (V2) only the cursor and star show.
 - **The server fetches in the background, on each feed's own rhythm** (frequent publishers often, dormant blogs rarely), with ETag / Last-Modified. In V2, WebSub delivers updates from publishers who offer it, with less frequent checking alongside.
 - **The view waits for you:** it updates only on `r` or the Refresh button, instantly, since fetching already happened.
 - **Fresh on arrival:** opening or reloading the app shows the latest state.
-- **One quiet line, no number:** when new items wait, "New items · press `r`." appears in a reserved spot at the top of the list, so nothing shifts.
+- **One quiet line, no number:** when new items wait, "New items · press `r`." floats as a small note at the bottom of the list, so nothing shifts. Undo and "slowfeed was updated" use the same note.
 - **No pull-to-refresh;** on mobile a labeled Refresh button sits in the top bar.
 
 ### Empty state

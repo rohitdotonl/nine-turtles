@@ -4,17 +4,22 @@
   screen. Cancel or Escape goes back to the folder unchanged.
 -->
 <script lang="ts">
+  import PageHead from "./PageHead.svelte";
+  import { edge } from "./edge";
   import { refused, renameFolder, type Folder } from "./feeds";
 
   let {
     folder,
     heading = $bindable(),
+    besideToggle = false,
     onSaved,
     onCancel,
     onDelete,
   }: {
     folder: Folder;
     heading?: HTMLHeadingElement;
+    /** The sidebar is hidden, so the top line starts clear of its toggle. */
+    besideToggle?: boolean;
     onSaved: () => void;
     onCancel: () => void;
     onDelete: () => Promise<string | undefined>;
@@ -46,9 +51,9 @@
   }
 </script>
 
-<section aria-labelledby="list-heading" class="flex flex-1 flex-col bg-paper pt-16">
-  <div class="relative min-h-0 flex-1 overflow-y-auto px-6 pb-10 md:px-10">
-    <h2 id="list-heading" tabindex="-1" bind:this={heading} class="text-xlarge font-semibold">Edit folder</h2>
+<section aria-labelledby="list-heading" class="flex flex-1 flex-col bg-paper pt-3">
+  <PageHead title="Edit folder" bind:heading onClose={onCancel} closeLabel="Close without saving" {besideToggle} />
+  <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-6 pt-3 pb-10 md:px-10">
     <form onsubmit={save} class="mt-6 flex max-w-xl flex-col gap-6">
       <label class="flex flex-col gap-2">
         <span class="font-semibold">Name</span>

@@ -104,7 +104,7 @@ A few words used throughout:
 ## 6. Item list
 
 **What it does**
-- Each row shows the article **title**, and below it the **source name and time** in quiet small text. No images, no site icons.
+- Each row shows the article **title**, and below it the **source name and time** in quiet small text (just the time in one feed's own list, whose title already names it). Unread articles have a small dot before the title. No images, no site icons.
 - Dates and times are shown in your device's time zone, in words that never change while you look: "14:05" for today, "23 Oct" for this year, "23 Oct 2025" before that. The time is when the publisher says they published it, or when slowfeed received it if they don't say (and never later than that, so a wrong date can't pin an article to the top).
 - Newest first by default; oldest first can be chosen in Settings.
 - Unread, Starred and All list articles from every feed. A feed's own list shows all its articles, read and unread.
@@ -157,11 +157,11 @@ A few words used throughout:
 - An item counts as read as soon as it's shown in the reading pane, by click or by `j`/`k`.
 - `m` marks the current item unread again. The **Mark unread** button in the article's top bar does the same (an icon on desktop, labeled on phones).
 - **Mark all as read** (`Shift+A`, or a labeled button in the list header, shown when the list has items): happens instantly, no "are you sure?". It affects **only the items shown on screen right now** (every item listed, including pages added with "Show older items"). Items that arrived in the background but aren't displayed yet are never touched.
-- **Undo** (`u`, or a visible **Undo**): after an undoable action, a line such as "Marked 23 items as read · Undo" appears in the reserved lines at the top of the list (just below "New items", so nothing shifts) and stays until your next undoable action or until you leave the list. Pressing `r` doesn't clear it. After an undo it says "Undone."; there's no undoing an undo. Moving through articles doesn't clear it.
+- **Undo** (`u`, or a visible **Undo**): after an undoable action, a note such as "Marked 23 items as read" with an **Undo** button floats at the bottom of the list (nothing in the list moves). It stays until your next undoable action or until you leave the list. Pressing `r` doesn't clear it. After an undo it says "Undone."; there's no undoing an undo. Moving through articles doesn't clear it.
 - Undo reverses **the last action only**, of these: mark all as read, mark unread, star/unstar, unsubscribe, delete folder.
 - Read state is recorded in both reading modes, so switching modes never loses it.
 - Each feed's unread number in the sidebar changes at the same moment.
-- If a mark can't be saved (the connection dropped, say), it's taken back and the reserved line says so plainly, such as "The star couldn't be saved." That message takes the Undo's place. A failure never takes back a later action on the same article.
+- If a mark can't be saved (the connection dropped, say), it's taken back and the note at the bottom of the list says so plainly, such as "The star couldn't be saved." That message takes the Undo's place. A failure never takes back a later action on the same article.
 
 **How to check it**
 1. Click an unread item: it turns grey and the feed's unread number drops by one.
@@ -231,14 +231,14 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 
 **What it does**
 - The list on screen changes only when you ask: press `r` or the Refresh button.
-- When new items are waiting, one quiet line appears at the top of the list: **"New items · press r"** (on touch screens: **"New items · tap Refresh"**). It shows no number. Its space is always reserved, so nothing shifts when it appears. The list asks the server about once a minute, and only about its own articles (none ever arrive in Starred).
+- When new items are waiting, a quiet note floats at the bottom of the list: **"New items · press r"** (on touch screens: **"New items · tap Refresh"**). It shows no number. It floats over the list, so nothing shifts when it appears. The list asks the server about once a minute, and only about its own articles (none ever arrive in Starred).
 - A labeled **Refresh** button sits at the top of every list, first in its row. On phones it sits in the top bar instead, so there's only ever one.
 - Because fetching already happened in the background, pressing `r` is instant. It shows the list from the top again, with the new items, and updates the sidebar's unread numbers. Those numbers also wait for `r`, so nothing in the sidebar changes under you either.
 - Opening or reloading the app always shows the latest state.
 - No pull-to-refresh on phones; there's a labeled Refresh button instead.
 
 **How to check it**
-1. Leave the app open. When the "New items" line appears, check the list hasn't moved.
+1. Leave the app open. When the "New items" note appears at the bottom, check the list hasn't moved.
 2. Press `r`: new items appear at once, with no spinner.
 3. Close and reopen the app: you see everything new without pressing anything.
 
@@ -251,7 +251,7 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 - **Search options** panel: scope (here · all feeds · a folder · a feed), unread only, starred only, date range. The panel and the chips always match.
 - Titles and article text are always searched together; title matches come first.
 - Power-user filters can be typed: `is:unread`, `is:starred`, `feed:name`, `folder:name`, `after:YYYY-MM-DD`, `before:YYYY-MM-DD`. They're suggested as you type (↓ and ↑ choose, Enter takes one) and turn into chips once followed by a space or Enter. A name with spaces goes in quotes (`feed:"Garden Notes"`), or type part of it. `after:` and `before:` don't include the day itself. A filter that can't be understood stays as typed, with a plain line saying why. Backspace at the start of the field removes the last chip.
-- Results look and behave like the normal item list, including "mark all as read". The reserved line above them says how many were found ("16 results", or "50+ results" while more can load). Refresh is hidden while searching: there's nothing new to fetch for a search.
+- Results look and behave like the normal item list, including "mark all as read". A quiet line above them says how many were found ("16 results", or "50+ results" while more can load). Refresh is hidden while searching: there's nothing new to fetch for a search.
 - Matching words are **underlined** in the text's own color, never highlighted in color (bold couldn't be seen in an unread title, which is already semibold).
 - Works for English, other Latin-alphabet languages, and Hindi.
 - Tab moves from the field into the options panel; Escape closes search and returns you to where you were.
@@ -268,7 +268,7 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 
 **What it does**
 - Folders are the only grouping. A feed can be in more than one folder.
-- You can rename a feed, choose its folders, and unsubscribe, from an **Edit feed** button in the item list's header when you're viewing one feed. It opens its own page (`/feeds/3/edit`) with the name, folders as checkboxes, "New folder" (made when you save, with the feed in it), Save, Cancel, and Unsubscribe. Escape or Cancel goes back unchanged.
+- You can rename a feed, choose its folders, and unsubscribe, from an **Edit feed** button in the item list's header when you're viewing one feed. It opens its own page (`/feeds/3/edit`) with the name, folders as checkboxes, "New folder" (made when you save, with the feed in it), Save, Cancel, and Unsubscribe. Escape, Cancel or the X at the top goes back unchanged.
 - Viewing a folder, an **Edit folder** button opens a page (`/folders/2/edit`) to rename or delete it.
 - You can create (from "Edit feed"), rename and delete folders. Two folders can't share a name. Deleting a folder never deletes its feeds.
 - Unsubscribing and deleting a folder happen at once and take you to Unread, where the line says "Unsubscribed from …" or "Deleted the folder …" with Undo (or `u`), until your next action.
@@ -322,7 +322,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 - **Reading:** newest or oldest first. (Inbox or river mode in V2.)
 - **Your data:** OPML import/export, export of starred articles.
 - **Sign out** (at the end, beside the version). (Keeping articles and Feed health come in V2.)
-- **Status:** which version of slowfeed you're using. When a newer version is live (slowfeed notices from the server's answers), it says "A new version is ready" with a **Reload** button. Otherwise new versions are used automatically the next time you open or reload the app, never while you're reading. If a tab left open across an update can't carry on, it says so plainly in the reserved line at the top of the list (where "New items" appears): "slowfeed was updated. Reload to continue.", with a **Reload** button.
+- **Status:** which version of slowfeed you're using. When a newer version is live (slowfeed notices from the server's answers), it says "A new version is ready" with a **Reload** button. Otherwise new versions are used automatically the next time you open or reload the app, never while you're reading. If a tab left open across an update can't carry on, it says so plainly in the note at the bottom of the list (where "New items" appears): "slowfeed was updated. Reload to continue.", with a **Reload** button.
 - Fonts are served by slowfeed itself; nothing is loaded from font services. Other scripts such as Hindi use the fonts already on your device.
 - **Shared across your devices:** sort order (and reading mode, in V2). **Per device:** theme, font, text size and line width (a phone and a laptop often want different sizes). `+`/`-` change the same text-size setting.
 

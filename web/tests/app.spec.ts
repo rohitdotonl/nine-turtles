@@ -62,7 +62,8 @@ test("the sidebar lists Unread, Starred and All, with ink blue marking where you
   await expect(unread).toHaveAttribute("aria-current", "page");
   const accent = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--accent").trim());
   expect(accent).toBe("#2f4a7a");
-  await expect(unread).toHaveCSS("border-left-color", "rgb(47, 74, 122)");
+  // A short ink blue pill at the left of its fill.
+  expect(await unread.evaluate((element) => getComputedStyle(element, "::before").backgroundColor)).toBe("rgb(47, 74, 122)");
 
   await sidebar(page).getByRole("link", { name: "Starred" }).click();
   await expect(page).toHaveURL(/\/starred$/);

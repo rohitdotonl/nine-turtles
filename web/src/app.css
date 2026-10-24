@@ -153,50 +153,67 @@ body {
 }
 
 /*
-  Rows that fill a scrolling area edge to edge draw the outline just inside
-  themselves, so the area's edges never cut it off.
+  "Where you are", one style everywhere (the sidebar and the article list):
+  a soft rounded fill a little in from the edges, with a short ink blue
+  pill at its left. The pill is a shape, so it shows without color. Rows
+  under the pointer get half the fill and no pill.
 */
-.item-row:focus-visible,
-.side-row:focus-visible {
-  outline: none;
-  box-shadow:
-    inset 0 2px 0 var(--ink),
-    inset -2px 0 0 var(--ink),
-    inset 0 -2px 0 var(--ink);
+.place {
+  position: relative;
+  border-radius: 0.5rem;
+}
+.place:is([aria-current], [data-here]) {
+  background-color: var(--place-tint, var(--color-tint-sidebar));
+}
+.place:is([aria-current], [data-here])::before {
+  content: "";
+  position: absolute;
+  top: 0.625rem;
+  bottom: 0.625rem;
+  left: 0.1875rem;
+  width: 3px;
+  border-radius: 9999px;
+  background-color: var(--accent);
+}
+.item-row {
+  --place-tint: var(--color-tint-list);
 }
 
-/*
-  The left side is the row's own 3px bar (ink blue when it's where you are),
-  so the outline never covers it. A row with no bar gets the fourth side too.
-*/
-.item-row:focus-visible:not([aria-current]),
-.side-row:focus-visible:not([aria-current]) {
-  box-shadow:
-    inset 0 2px 0 var(--ink),
-    inset -2px 0 0 var(--ink),
-    inset 0 -2px 0 var(--ink),
-    inset 2px 0 0 var(--ink);
+/* The keyboard's place: a 2px outline just inside the row, following its corners. */
+.place:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
 }
-
 /*
   The selected article row is also where the keyboard is (j, k and the arrows
-  move both). Its outline is a hairline rather than a heavy box, so the place
-  stays visible beside the ink blue bar and the row stays calm.
+  move both), so its outline is a quieter hairline beside the pill.
 */
 .item-row[aria-current]:focus-visible {
-  --edge: color-mix(in srgb, var(--ink) 55%, transparent);
-  box-shadow:
-    inset 0 1px 0 var(--edge),
-    inset -1px 0 0 var(--edge),
-    inset 0 -1px 0 var(--edge);
+  outline: 1px solid color-mix(in srgb, var(--ink) 55%, transparent);
+  outline-offset: -1px;
 }
 
 /* Only where there's a real pointer: on a touch screen a tint would stay after the tap. */
 @media (hover: hover) {
-  /* A row under the pointer deepens a little; the selected row keeps its own tint. */
-  .item-row:hover:not([aria-current]),
-  .side-row:hover:not([aria-current]) {
+  .place:hover:not([aria-current], [data-here]) {
     background-color: var(--hover);
+  }
+}
+
+/* Unread: a small dot in the text color, hanging just left of the title. */
+.unread-dot {
+  position: absolute;
+  top: 1.1875rem;
+  left: 0.5rem;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background-color: var(--ink);
+}
+@media (forced-colors: active) {
+  .unread-dot {
+    forced-color-adjust: none;
+    background-color: CanvasText;
   }
 }
 
@@ -337,16 +354,15 @@ textarea {
     outline: 2px solid CanvasText;
   }
 
-  /* Shadows aren't drawn here, so the keyboard's place is a plain outline. */
-  .item-row:focus-visible,
-  .side-row:focus-visible {
+  .place:focus-visible {
     outline: 3px solid CanvasText;
     outline-offset: -3px;
   }
 
-  /* The bar marks only the selected article; on the others it would be drawn too. */
-  .item-row:not([aria-current]) {
-    border-left-color: Canvas;
+  /* The pill takes the system's highlight, so "where you are" still stands out. */
+  .place:is([aria-current], [data-here])::before {
+    forced-color-adjust: none;
+    background-color: Highlight;
   }
 }
 
@@ -530,4 +546,17 @@ input {
 
 .article-text :where(em, i) {
   font-style: italic;
+}
+
+/* The note at the bottom of the list floats, so it alone has a shadow. */
+.toast {
+  box-shadow: 0 10px 28px -10px rgb(0 0 0 / 0.3);
+}
+
+/* A scrolling area under a fixed top line: a hairline appears once its content has scrolled under that line (edge.ts). */
+.scroller {
+  border-top: 1px solid transparent;
+}
+.scroller[data-scrolled] {
+  border-top-color: color-mix(in srgb, var(--ink) 12%, transparent);
 }
