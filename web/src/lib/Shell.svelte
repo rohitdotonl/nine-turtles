@@ -114,6 +114,14 @@
           : lastPlace,
   );
   let sheetHeading: HTMLHeadingElement | undefined = $state();
+  /** What had the keyboard when a sheet opened, to give it back when the sheet closes. */
+  let sheetOpener: Element | null = null;
+  /** The sheet was opened with a step in the browser's history, so closing it is a step back. */
+  let sheetPushed = false;
+
+  function isSheet(place: Route): boolean {
+    return !phone && (place.kind === "add-feed" || place.kind === "edit-feed" || place.kind === "edit-folder");
+  }
 
   /** Which articles the list shows here. */
   let source: Source = $derived(
@@ -138,6 +146,10 @@
       ? folders.find((folder) => folder.id === place.id)
       : undefined;
   });
+  /** A sheet is actually showing (an edit address for a feed or folder you don't have shows none). */
+  let sheetShown = $derived(
+    sheet && (route.kind === "add-feed" || (route.kind === "edit-feed" ? currentFeed !== undefined : currentFolder !== undefined)),
+  );
   /** The feed's or folder's name, for the heading and the tab's title. */
   let placeName = $derived(currentFeed?.title ?? currentFolder?.name);
   /** A feed or folder address that names none you have. */
@@ -253,12 +265,15 @@
     const back = () => {
       const next = parse(location.pathname);
       const moved = !keepsArticle(route, next);
+      const [opening, closing] = [isSheet(next) && !isSheet(route), isSheet(route) && !isSheet(next)];
+      if (opening) [sheetOpener, sheetPushed] = [document.activeElement, false];
       route = next;
       if (isList(route)) lastPlace = route;
       if (moved) {
         selected = undefined;
         resetSearch();
       }
+      if (closing && giveBack()) return;
       arrive(stepOf(history.state)?.screen ?? (isList(route) ? "list" : "page"));
     };
     addEventListener("popstate", back);
@@ -266,7 +281,7 @@
     const readKey = createKeyReader();
     const pressed = (event: KeyboardEvent) => {
       // A sheet keeps the keyboard to itself; its Escape is the dialog's own.
-      if (event.defaultPrevented || cheatSheetOpen || sheet) return;
+      if (event.defaultPrevented || cheatSheetOpen || sheetShown) return;
       const action = readKey(event, event.timeStamp);
       if (!action) return;
       event.preventDefault();
@@ -341,7 +356,7 @@
     // Edit pages bind their heading to `listHeading` too.
     if (place.kind === "settings") return settingsHeading;
     if (place.kind === "add-feed") return addField;
-    if (sheet) return sheetHeading;
+    if (sheetShown) return sheetHeading;
     return listHeading;
   }
 
@@ -391,17 +406,38 @@
     return (over(to) && !over(from)) || (over(from) && pathFor(to) === pathFor(under));
   }
 
+  /** After a sheet closes: the keyboard goes back to what opened it, if that's still there. */
+  function giveBack(): boolean {
+    const opener = sheetOpener;
+    sheetOpener = null;
+    if (!(opener instanceof HTMLElement) || !opener.isConnected || opener === document.body) return false;
+    queueMicrotask(() => opener.focus());
+    return true;
+  }
+
+  /** Closes a sheet: a step back if it opened with one, so Back doesn't reopen it. */
+  function closeSheet() {
+    if (sheetPushed && stepOf(history.state)?.back === "list") history.back();
+    else go(under);
+  }
+
   function go(next: Route, withNotice?: Notice) {
     const from = screenNow();
     const to: Screen = isList(next) ? "list" : "page";
+    const [opening, closing] = [isSheet(next) && !isSheet(route), isSheet(route) && !isSheet(next)];
+    let pushed = false;
     if (pathFor(next) !== location.pathname || from !== to) {
       history.pushState({ screen: to, back: from }, "", pathFor(next));
+      pushed = true;
     }
+    if (opening) [sheetOpener, sheetPushed] = [document.activeElement, pushed];
+    // Opening a sheet over a place, or closing it back there, keeps that place as it was: its article and its search.
+    const sameScreen = keepsArticle(route, next) && pathFor(route) !== pathFor(next);
     if (!keepsArticle(route, next)) selected = undefined;
     reading = false;
     notice = withNotice;
     route = next;
-    resetSearch();
+    if (!sameScreen) resetSearch();
     if (isList(next)) lastPlace = next;
     // A feed or folder added elsewhere (another tab, another device) isn't in the list yet.
     if (next.kind === "feed" && !feeds?.some((feed) => feed.id === next.id)) loadFeeds();
@@ -409,6 +445,8 @@
     // On a phone-narrow window the sidebar is the home screen; choosing a
     // place shows it instead.
     if (width === "narrow") sidebarChoice = "hidden";
+    if (closing && sameScreen && giveBack()) return;
+    sheetOpener = closing ? null : sheetOpener;
     queueMicrotask(() => placeFocus(next)?.focus());
   }
 
@@ -428,6 +466,7 @@
     if (saved) await loadFeeds();
     // On a phone the edit page is a step on from its list: go back that step.
     if (phone && stepOf(history.state)?.back === "list") history.back();
+    else if (sheetShown) closeSheet();
     else if (route.kind === "edit-feed") go({ kind: "feed", id: route.id });
     else if (route.kind === "edit-folder") go({ kind: "folder", id: route.id });
   }
@@ -483,6 +522,7 @@
   /** Close settings, and Escape on Settings or Add a feed: on a phone, back one step to the feeds. */
   function closePage() {
     if (phone) stepBack("home");
+    else if (sheetShown) closeSheet();
     else go(lastPlace);
   }
 

@@ -125,11 +125,16 @@ test("a search starts where you are, underlines the words it found, and Escape b
   await page.getByRole("checkbox", { name: "Unread", exact: true }).press("Space");
   await expect(page.getByRole("button", { name: "Remove is:unread" })).toBeVisible();
 
-  // 5 is the Hindi test below. 6. Escape: back exactly where you were, the search gone.
+  // 5 is the Hindi test below. 6. Escape closes the options, then a second Escape: back exactly where you were, the search gone.
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#search-options")).toBeHidden();
   await page.keyboard.press("Escape");
   await expect(heading(page)).toHaveText(folder);
   await expect(heading(page)).toBeFocused();
   await expect(field(page)).toHaveValue("");
+  // At rest the field just says "Search"; back in it, the search starts in the folder again.
+  await expect(field(page)).toHaveAttribute("placeholder", "Search");
+  await field(page).focus();
   await expect(page.getByRole("button", { name: `Remove in: ${folder}` })).toBeVisible();
   await expect(page.getByRole("button", { name: "Remove is:starred" })).toHaveCount(0);
   await expect(page).toHaveURL(new RegExp(`/folders/${folderId}$`));
@@ -186,4 +191,31 @@ test("with many filters the search box wraps, and no chip slides under the optio
     const box = (await chip.locator("..").boundingBox())!;
     expect(box.x + box.width).toBeLessThanOrEqual(options.x + 1);
   }
+});
+
+test("the search options float over the list; Escape closes them first, then the search", async ({ page }) => {
+  const blog = unique("options");
+  const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
+  await open(page, `/feeds/${id}`, `Blog ${blog}`);
+  await field(page).focus();
+  const button = page.getByRole("button", { name: "Search options" });
+  await button.click();
+  const options = page.locator("#search-options");
+  await expect(options).toBeVisible();
+  // Past month counts back thirty days; "after" is strictly after.
+  await page.getByRole("radio", { name: "Past month" }).check();
+  const day = new Date();
+  day.setDate(day.getDate() - 30);
+  const iso = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
+  await expect(page.getByRole("button", { name: `Remove after:${iso}` })).toBeVisible();
+  // The first Escape closes only the options, back to their button; the search stays.
+  await page.keyboard.press("Escape");
+  await expect(options).toBeHidden();
+  await expect(button).toBeFocused();
+  await expect(page.getByRole("button", { name: `Remove after:${iso}` })).toBeVisible();
+  // Leaving the search with the keyboard closes them too.
+  await button.click();
+  await expect(options).toBeVisible();
+  await heading(page).focus();
+  await expect(options).toBeHidden();
 });

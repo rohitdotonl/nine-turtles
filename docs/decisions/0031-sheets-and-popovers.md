@@ -19,21 +19,23 @@ in the dark theme the chosen setting looked pressed in.
   faint warm dim, with the list and article still behind it. It's a native
   modal dialog, so the keyboard stays inside; Escape, Cancel or a press on
   the dim closes it. There's no X. The address still changes (`/add-feed`,
-  `/feeds/3/edit`), so Back and reload work as before. The article you were
-  reading stays open behind it. On a phone they stay screens of their own.
+  `/feeds/3/edit`), so reload works; closing it is a step back, so Back
+  doesn't reopen it. The article and the search you were in stay as they
+  were behind it, and the keyboard goes back to what opened it. On a phone they stay screens of their own.
 - **Add feed in the sidebar is an action**, so it no longer takes the
   "where you are" bar.
 - **Search options are a popover** under their button, floating over the
   list: Search in (a list), Show only (Unread, Starred) and Published (Any
   time, Past week, Past month, Custom). Only Custom shows date boxes. A
-  press outside closes it.
+  press outside, Escape (back to its button) or the keyboard leaving the
+  search closes it.
 - **The list's title is one line**, ending in "…" with the whole name as its
   tooltip. The search box's placeholder is just "Search".
 - **Segmented choices** moved from Settings into the shared styles. In the
   dark theme the chosen tile is lighter than its track.
 - **On a phone:** four theme pictures in one row, the two reading fonts side
-  by side, segmented choices at full width, and a faint line above the
-  article toolbar, which clears the home indicator.
+  by side, segmented choices at full width, and the article toolbar clears
+  the home indicator.
 
 **Considered and kept.** The critic suggested one Folder list instead of
 tick boxes. A feed can be in more than one folder (SPEC section 15), so the

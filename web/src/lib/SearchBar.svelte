@@ -44,6 +44,7 @@
 
   let field: HTMLInputElement | undefined = $state();
   let panel: HTMLDivElement | undefined = $state();
+  let optionsButton: HTMLButtonElement | undefined = $state();
   let panelOpen = $state(false);
   let problem = $state("");
   let active = $state(-1);
@@ -177,6 +178,10 @@
 
   /** Custom was chosen, so its dates show even before one is picked. */
   let customChosen = $state(false);
+  // Once the options close with no dates set, Custom no longer holds.
+  $effect(() => {
+    if (!panelOpen && !query.after && !query.before) customChosen = false;
+  });
   let whenNow: When = $derived.by(() => {
     if (customChosen) return "custom";
     if (!query.after && !query.before) return "any";
@@ -208,7 +213,19 @@
   class="relative mb-2"
   onfocusin={() => (inside = true)}
   onfocusout={(event) => {
-    if (!pressing && !event.currentTarget.contains(event.relatedTarget as Node | null)) inside = false;
+    if (pressing || event.currentTarget.contains(event.relatedTarget as Node | null)) return;
+    inside = false;
+    // The keyboard left the search: its options close behind it, so they never cover where it went.
+    if (event.relatedTarget) panelOpen = false;
+  }}
+  onkeydown={(event) => {
+    // Escape closes the options first, back to their button; the next Escape closes the search.
+    if (event.key === "Escape" && panelOpen) {
+      event.preventDefault();
+      event.stopPropagation();
+      panelOpen = false;
+      optionsButton?.focus();
+    }
   }}
   bind:this={searchElement}
   onpointerdown={() => (pressing = true)}
@@ -216,7 +233,7 @@
   <!-- The whole box acts as the field: a click anywhere in it (not on a chip's or the options button) puts you in the field. -->
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
   <div
-    class="search-box flex min-h-11 min-w-0 cursor-text items-center gap-1 rounded-lg border border-muted bg-paper pl-3"
+    class="search-box relative flex min-h-11 min-w-0 cursor-text items-center gap-1 rounded-lg border border-muted bg-paper pl-3"
     onclick={(event) => {
       if (event.target === event.currentTarget) field?.focus();
     }}
@@ -259,6 +276,7 @@
     <!-- Inside the box, at its end: it belongs to this search, and isn't mistaken for a second field. -->
     <button
       type="button"
+      bind:this={optionsButton}
       aria-expanded={panelOpen}
       aria-controls="search-options"
       aria-label="Search options"
@@ -269,6 +287,97 @@
       <!-- Open, the icon sits on a small rounded tone, like a pressed toolbar button. -->
       <span class={["flex size-8 items-center justify-center rounded-md", panelOpen && "bg-[var(--tone)]"]}><Icon name="sliders" size={18} /></span>
     </button>
+    <!--
+      A popover under the options button: it floats over the list rather than
+      pushing it down. Its name is a label rather than a heading of its own.
+    -->
+    <div
+      id="search-options"
+      role="group"
+      aria-labelledby="search-options-name"
+      bind:this={panel}
+      hidden={!panelOpen}
+      class="search-options absolute top-full right-0 z-20 mt-1 cursor-auto w-[min(20rem,100%)] rounded-xl border border-ink/10 bg-paper p-4"
+    >
+      <p id="search-options-name" class="sr-only">Search options</p>
+      <div class="flex flex-col gap-4">
+        <label class="flex flex-col gap-1.5">
+          <span class="text-small text-ink-2">Search in</span>
+          <span class="relative block">
+          <select
+            value={scopeValue(query.scope)}
+            onchange={(event) => onChange({ ...query, scope: scopeFrom(event.currentTarget.value) }, true)}
+            class="field w-full appearance-none pr-9 text-ui pointer-fine:min-h-9"
+          >
+            <option value="all">All feeds{hereMark({ kind: "all" })}</option>
+            <option value="view:unread">Unread{hereMark({ kind: "view", view: "unread" })}</option>
+            <option value="view:starred">Starred{hereMark({ kind: "view", view: "starred" })}</option>
+            {#if folders.length > 0}
+              <optgroup label="Folders">
+                {#each folders as folder (folder.id)}
+                  <option value="folder:{folder.id}">{folder.name}{hereMark({ kind: "folder", id: folder.id })}</option>
+                {/each}
+              </optgroup>
+            {/if}
+            <optgroup label="Feeds">
+              {#each feeds as feed (feed.id)}
+                <option value="feed:{feed.id}">{feed.title}{hereMark({ kind: "feed", id: feed.id })}</option>
+              {/each}
+            </optgroup>
+          </select>
+          <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-ink-2"><Icon name="chevron-down" size={16} /></span>
+          </span>
+        </label>
+        <fieldset class="flex flex-col gap-1.5">
+          <legend class="mb-1.5 text-small text-ink-2">Show only</legend>
+          <div class="choices grid grid-cols-2">
+            <label class="choice justify-center">
+              <input type="checkbox" checked={query.unread} onchange={(event) => onChange({ ...query, unread: event.currentTarget.checked }, true)} />
+              Unread
+            </label>
+            <label class="choice justify-center">
+              <input type="checkbox" checked={query.starred} onchange={(event) => onChange({ ...query, starred: event.currentTarget.checked }, true)} />
+              Starred
+            </label>
+          </div>
+        </fieldset>
+        <fieldset class="flex flex-col gap-1.5">
+          <legend class="mb-1.5 text-small text-ink-2">Published</legend>
+          <div class="choices grid grid-cols-2">
+            {#each WHENS as when (when.value)}
+              <label class="choice justify-center">
+                <input type="radio" name="search-when" value={when.value} checked={whenNow === when.value} onchange={() => chooseWhen(when.value)} />
+                {when.label}
+              </label>
+            {/each}
+          </div>
+          {#if whenNow === "custom"}
+            <div class="mt-1.5 grid grid-cols-2 gap-3">
+              <label class="flex min-w-0 flex-col gap-1.5">
+                <span class="text-small text-ink-2">After</span>
+                <input
+                  type="date"
+                  value={query.after}
+                  aria-label="Published after"
+                  onchange={(event) => onChange({ ...query, after: event.currentTarget.value }, true)}
+                  class="field w-full min-w-0 text-ui pointer-fine:min-h-9"
+                />
+              </label>
+              <label class="flex min-w-0 flex-col gap-1.5">
+                <span class="text-small text-ink-2">Before</span>
+                <input
+                  type="date"
+                  value={query.before}
+                  aria-label="Published before"
+                  onchange={(event) => onChange({ ...query, before: event.currentTarget.value }, true)}
+                  class="field w-full min-w-0 text-ui pointer-fine:min-h-9"
+                />
+              </label>
+            </div>
+          {/if}
+        </fieldset>
+      </div>
+    </div>
   </div>
 
   <ul id="search-suggestions" role="listbox" aria-label="Suggestions" hidden={offered.length === 0} class="mt-1 rounded-md border border-muted bg-paper py-1">
@@ -291,97 +400,6 @@
 
   <p id="search-problem" role="status" class="mt-1 text-small empty:sr-only">{problem}</p>
 
-  <!--
-    A popover under the options button: it floats over the list rather than
-    pushing it down. Its name is a label rather than a heading of its own.
-  -->
-  <div
-    id="search-options"
-    role="group"
-    aria-labelledby="search-options-name"
-    bind:this={panel}
-    hidden={!panelOpen}
-    class="search-options absolute top-12 right-0 z-20 w-[min(20rem,100%)] rounded-xl border border-ink/10 bg-paper p-4"
-  >
-    <p id="search-options-name" class="sr-only">Search options</p>
-    <div class="flex flex-col gap-4">
-      <label class="flex flex-col gap-1.5">
-        <span class="text-small text-ink-2">Search in</span>
-        <span class="relative block">
-        <select
-          value={scopeValue(query.scope)}
-          onchange={(event) => onChange({ ...query, scope: scopeFrom(event.currentTarget.value) }, true)}
-          class="field w-full appearance-none pr-9 text-ui pointer-fine:min-h-9"
-        >
-          <option value="all">Everywhere{hereMark({ kind: "all" })}</option>
-          <option value="view:unread">Unread{hereMark({ kind: "view", view: "unread" })}</option>
-          <option value="view:starred">Starred{hereMark({ kind: "view", view: "starred" })}</option>
-          {#if folders.length > 0}
-            <optgroup label="Folders">
-              {#each folders as folder (folder.id)}
-                <option value="folder:{folder.id}">{folder.name}{hereMark({ kind: "folder", id: folder.id })}</option>
-              {/each}
-            </optgroup>
-          {/if}
-          <optgroup label="Feeds">
-            {#each feeds as feed (feed.id)}
-              <option value="feed:{feed.id}">{feed.title}{hereMark({ kind: "feed", id: feed.id })}</option>
-            {/each}
-          </optgroup>
-        </select>
-        <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-ink-2"><Icon name="chevron-down" size={16} /></span>
-        </span>
-      </label>
-      <fieldset class="flex flex-col gap-1.5">
-        <legend class="mb-1.5 text-small text-ink-2">Show only</legend>
-        <div class="choices grid grid-cols-2">
-          <label class="choice justify-center">
-            <input type="checkbox" checked={query.unread} onchange={(event) => onChange({ ...query, unread: event.currentTarget.checked }, true)} />
-            Unread
-          </label>
-          <label class="choice justify-center">
-            <input type="checkbox" checked={query.starred} onchange={(event) => onChange({ ...query, starred: event.currentTarget.checked }, true)} />
-            Starred
-          </label>
-        </div>
-      </fieldset>
-      <fieldset class="flex flex-col gap-1.5">
-        <legend class="mb-1.5 text-small text-ink-2">Published</legend>
-        <div class="choices grid grid-cols-2">
-          {#each WHENS as when (when.value)}
-            <label class="choice justify-center">
-              <input type="radio" name="search-when" value={when.value} checked={whenNow === when.value} onchange={() => chooseWhen(when.value)} />
-              {when.label}
-            </label>
-          {/each}
-        </div>
-        {#if whenNow === "custom"}
-          <div class="mt-1.5 grid grid-cols-2 gap-3">
-            <label class="flex min-w-0 flex-col gap-1.5">
-              <span class="text-small text-ink-2">After</span>
-              <input
-                type="date"
-                value={query.after}
-                aria-label="Published after"
-                onchange={(event) => onChange({ ...query, after: event.currentTarget.value }, true)}
-                class="field w-full min-w-0 text-ui pointer-fine:min-h-9"
-              />
-            </label>
-            <label class="flex min-w-0 flex-col gap-1.5">
-              <span class="text-small text-ink-2">Before</span>
-              <input
-                type="date"
-                value={query.before}
-                aria-label="Published before"
-                onchange={(event) => onChange({ ...query, before: event.currentTarget.value }, true)}
-                class="field w-full min-w-0 text-ui pointer-fine:min-h-9"
-              />
-            </label>
-          </div>
-        {/if}
-      </fieldset>
-    </div>
-  </div>
 </search>
 
 <style>
@@ -389,11 +407,11 @@
     box-shadow: 0 16px 40px -12px rgb(0 0 0 / 0.25);
   }
   /* The keyboard's place, drawn around the whole box (chips included) when its field has it. */
-  .search-box:has(input:focus-visible) {
+  .search-box:has(#search-field:focus-visible) {
     outline: 2px solid var(--ink);
     outline-offset: -1px;
   }
-  .search-box input:focus-visible {
+  #search-field:focus-visible {
     outline: none;
   }
 </style>

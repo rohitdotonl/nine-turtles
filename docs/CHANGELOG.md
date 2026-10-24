@@ -15,7 +15,8 @@ not how it was done.
 - A long feed name stays on one line at the top of the list, ending in
   "…", so the search box never jumps. The search box just says "Search".
 - On a phone, the four theme pictures sit in one row, the reading fonts sit
-  side by side, and the article's bottom bar has a faint line above it.
+  side by side, and the article's bottom bar keeps clear of the home
+  indicator.
 - In the dark theme, a chosen setting is now lighter than its track, so it
   looks chosen rather than pressed in.
 

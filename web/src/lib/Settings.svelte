@@ -307,12 +307,7 @@
     }
   }
 
-  /*
-    The choices sit on a faint track; the chosen one is raised onto the
-    page's own tone with a fine edge and semibold words, so it shows without
-    color, and nothing on the screen is a heavy black slab.
-  */
-  /* On a narrow screen the choices fill the width in even columns instead of wrapping ragged. */
+  /* The choices themselves are app.css's segmented control. On a narrow screen the choices fill the width in even columns instead of wrapping ragged. */
   @media (width < 40rem) {
     .choices {
       display: grid;
