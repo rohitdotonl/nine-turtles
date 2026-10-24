@@ -179,7 +179,7 @@ The philosophy applied. The principle is noted where it isn't obvious.
 - All accent pairs pass AAA (7 : 1); re-check if a value changes.
 - **Links in articles** are underlined in the text color, **never blue**.
 - **Muted greys** (read items, counts, source names) are warm, like ink on paper, and pass AA (4.5 : 1) on every area and on the selected-row tint in all themes, verified by automatic checks.
-- **The keyboard focus outline** is a 2px line in the text color, never the accent. On rows it is the text color softened (65%, still at least 3 : 1, checked automatically), drawn just inside their rounded shape; on the selected row it replaces the fill, so the row carries two marks, never three (the outline and the accent bar); a title the keyboard is moved to gets it too, a little away from the words. It shows only when you're using the keyboard.
+- **The keyboard focus outline** is a 2px line in the text color, never the accent. On rows it is the text color softened (65%, still at least 3 : 1, checked automatically), drawn just outside their rounded fill, the way a Mac draws a focus ring; the fill always stays, and the accent bar steps aside while the outline shows, so a row carries two marks, never three; a title the keyboard is moved to gets it too, a little away from the words. It shows only when you're using the keyboard.
 - **Status colors** (errors, warnings; V2 feed health page) are muted, never drift toward blue, and always come with words.
 
 The themes added on 24 October 2026 to try out (decision 0032), same roles in the same order (background, accent (every accent passes AAA, 7 : 1, on its background), list, sidebar, text, second ink, muted grey):
@@ -251,7 +251,7 @@ Fixed order, top to bottom: **Unread · Starred · All**, then **folders** A–Z
 - **No images, no favicons.** Each row: the **title**, with **source name and time** in quiet small text below. In one feed's own list the name is left out (the title above already says it); screen readers still hear it.
 - **Sort:** newest first by default; changeable in settings or the list's More menu.
 - **Beside the title:** quiet icons for Edit (a feed's or folder's own list), Refresh and **More** (…), a small menu with Mark all as read and the sort order. No row of words between the search field and the list.
-- **The list has an end:** a fixed number of items, then a **"Show older items"** button. Nothing loads unless asked. When there's nothing older, a short hairline and "That's everything." in muted grey close the list.
+- **The list has an end:** a fixed number of items, then a **"Show older items"** button. Nothing loads unless asked. When there's nothing more to show, a short hairline and "That's everything." in muted grey close the list.
 - Matched search terms are **underlined** in the text color, never highlighted in color.
 
 #### Item states (distinguished by tone and weight, never color alone)

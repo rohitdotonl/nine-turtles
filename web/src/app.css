@@ -356,17 +356,24 @@ body {
 }
 
 /*
-  The keyboard's place: a 2px outline in the text color drawn just outside
-  the row, around its fill, the way a Mac draws a focus ring. The fill
-  always stays. While the outline shows, the bar steps aside, so the two
-  never stack into a striped edge.
+  The keyboard's place: a 2px outline in a softened text color drawn just
+  outside the row, around its fill, the way a Mac draws a focus ring
+  (contrast.test.ts keeps it at 3 : 1 or more). The fill always stays.
+  While the outline shows, the bar steps aside, so the two never stack into
+  a striped edge. A folder's row holds its link and its arrow; the link
+  takes the keyboard, so the row shows it.
 */
-.place:focus-visible {
-  outline: 2px solid var(--ink);
+.place:focus-visible,
+.place:has(> a:focus-visible) {
+  outline: 2px solid var(--place-focus);
   outline-offset: 1px;
 }
-.place:focus-visible::before {
+.place:focus-visible::before,
+.place:has(> a:focus-visible)::before {
   display: none;
+}
+.place:has(> a:focus-visible) > a:focus-visible {
+  outline: none;
 }
 
 /* Only where there's a real pointer: on a touch screen a tint would stay after the tap. */
@@ -617,6 +624,8 @@ textarea {
   */
   --hover: color-mix(in srgb, var(--ink) 5%, transparent);
   --tone: color-mix(in srgb, var(--ink) 7%, transparent);
+  /* The keyboard's outline on rows: the text color, softened. */
+  --place-focus: color-mix(in srgb, var(--ink) 65%, transparent);
 }
 
 /* Windows high contrast and similar: let the system draw clear edges. */
@@ -627,6 +636,7 @@ textarea {
   }
 
   .place:focus-visible,
+  .place:has(> a:focus-visible),
   .item-row[aria-current]:focus-visible {
     outline: 3px solid CanvasText;
     outline-offset: -3px;

@@ -20,13 +20,16 @@ Add a feed had no Cancel, and the Undo note sat mid-pane under short lists.
 - **Tints:** off-white's are warm (`#E4DED2` list, `#DBD4C6` sidebar).
 - **Fields:** both search fields are a faint tone, no edge, a search icon,
   44px tall and the same text size.
-- **Edges:** both pane headers are 64px; the sidebar's counts share one
+- **Edges:** the list's and the article's top lines are both 64px, and
+  both search fields start on one line; the sidebar's counts share one
   column with the folders' (the feeds leave room for the folder arrows);
   Settings headings sit flush with their cards; the article toolbar keeps
   4px above its buttons so their outlines are never clipped.
 - **Sheets:** anchored 12% down the window instead of centred, every sheet
   has Cancel, and Unsubscribe or Delete is an ordinary button under the line
   that says what it does.
+- **Messages:** Add a feed's message is the same small size as sign-in's,
+  and Edit feed's labels are all semibold.
 - **The note** (Undo, new items) sits at the foot of the list pane however
   short the list.
 - **The list's end:** a short hairline and "That's everything." when there's

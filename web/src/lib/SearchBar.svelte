@@ -233,7 +233,7 @@
   <!-- The whole box acts as the field: a click anywhere in it (not on a chip's or the options button) puts you in the field. -->
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
   <div
-    class="search-box relative flex min-h-11 min-w-0 cursor-text items-center gap-1 rounded-lg bg-[var(--tone)] pl-3"
+    class="search-box relative flex min-h-11 min-w-0 cursor-text items-center gap-1 rounded-lg border border-transparent bg-[var(--tone)] pl-3"
     onclick={(event) => {
       if (event.target === event.currentTarget) field?.focus();
     }}

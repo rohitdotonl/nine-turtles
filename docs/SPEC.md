@@ -109,14 +109,14 @@ A few words used throughout:
 - Newest first by default; oldest first can be chosen in Settings or in the list's More menu.
 - Beside the list's title sit quiet icons, each with its name as a tooltip and for screen readers: **Edit feed** or **Edit folder** (in a feed's or folder's own list), **Refresh** (section 13) and **More** (…). More opens a small menu with **Mark all as read** (section 8; its key, `Shift+A`, is shown beside it) and the **sort order** (Newest first or Oldest first, the current one ticked and semibold). A click, Enter or the down arrow opens it on its first item; the arrow keys, Home and End move through it; Escape closes it and puts the keyboard back on More; Tab or a press outside closes it too.
 - Unread, Starred and All list articles from every feed. A feed's own list shows all its articles, read and unread.
-- The list has an end: it shows 50 items, then a **"Show older items"** button ("Show newer items" when sorting oldest first). Nothing more loads unless you press it. When there's nothing older, a short hairline and "That's everything." close the list.
+- The list has an end: it shows 50 items, then a **"Show older items"** button ("Show newer items" when sorting oldest first). Nothing more loads unless you press it. When there's nothing more to show, a short hairline and "That's everything." close the list.
 - Row states, each recognizable without color:
 
   | State | Looks like |
   |---|---|
   | Unread | Full-strength, semibold title |
   | Read | A softer second ink, regular-weight title (the title stays full-strength while it's the selected row) |
-  | Selected | A faint tint and a short bar in the theme's accent against the list's left edge; when you're using the keyboard, the outline takes the tint's place |
+  | Selected | A faint tint and a short bar in the theme's accent against the list's left edge; when you're using the keyboard, an outline around the tint instead of the bar |
   | Starred | A small star mark |
 
 - Items you read in the Unread view stay where they are (greyed) until you press `r` or leave the view, so nothing jumps under your cursor.
@@ -361,7 +361,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 
 - A keyboard icon at the foot of the sidebar opens the shortcut list (its tooltip says "Keyboard shortcuts (?)"); when the sidebar is hidden, a quiet hint "Press ? for shortcuts" sits at the bottom of the list instead (on screens with a keyboard).
 - The `?` cheat sheet groups the shortcuts (Moving around, Reading, Your articles, Everywhere) in two columns, what each does on the left and its keys on the right, and also documents the search filters. It has an X to close it (or Escape). Until a shortcut's feature exists, it isn't listed, and the key does nothing.
-- The keyboard's place is shown by a 2px outline in the text color (never the accent, which only marks your place in slowfeed). Rows draw it just inside themselves, in a slightly softened text color; on the selected row it replaces the tint, and the accent bar stays outside it, at the pane's edge. A title that receives the place when a screen opens (so screen readers start there) gets the same outline when you got there by keyboard, and nothing after a click.
+- The keyboard's place is shown by a 2px outline in the text color (never the accent, which only marks your place in slowfeed). Rows draw it just outside their fill, in a slightly softened text color; the selected row keeps its tint, and its accent bar steps aside while the outline shows. A title that receives the place when a screen opens (so screen readers start there) gets the same outline when you got there by keyboard, and nothing after a click.
 - Shortcuts don't fire while you're typing in a field.
 
 **How to check it**
