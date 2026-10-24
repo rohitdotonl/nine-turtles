@@ -450,7 +450,7 @@
     {/each}
   </ul>
   {#if next !== null}
-    <button type="button" aria-disabled={busy} onclick={() => load(next)} class="btn mt-6">
+    <button type="button" aria-disabled={busy} onclick={() => load(next)} class="btn mt-6 self-start">
       {order === "oldest" ? "Show newer items" : "Show older items"}
     </button>
   {:else if articles.length > 0}

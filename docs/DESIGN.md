@@ -249,7 +249,7 @@ Fixed order, top to bottom: **Unread · Starred · All**, then **folders** A–Z
 
 - **No images, no favicons.** Each row: the **title**, with **source name and time** in quiet small text below. In one feed's own list the name is left out (the title above already says it); screen readers still hear it.
 - **Sort:** newest first by default; changeable in settings.
-- **The list has an end:** a fixed number of items, then a **"Show older items"** button. Nothing loads unless asked. When there's nothing older, a short hairline and "That's everything." in muted grey close the list.
+- **The list has an end:** a fixed number of items, then a **"Show older items"** button. Nothing loads unless asked. When there's nothing more to show, a short hairline and "That's everything." in muted grey close the list.
 - Matched search terms are **underlined** in the text color, never highlighted in color.
 
 #### Item states (distinguished by tone and weight, never color alone)

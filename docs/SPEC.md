@@ -108,7 +108,7 @@ A few words used throughout:
 - Dates and times are shown in your device's time zone, in words that never change while you look: "14:05" for today, "23 Oct" for this year, "23 Oct 2025" before that. The time is when the publisher says they published it, or when slowfeed received it if they don't say (and never later than that, so a wrong date can't pin an article to the top).
 - Newest first by default; oldest first can be chosen in Settings.
 - Unread, Starred and All list articles from every feed. A feed's own list shows all its articles, read and unread.
-- The list has an end: it shows 50 items, then a **"Show older items"** button ("Show newer items" when sorting oldest first). Nothing more loads unless you press it. When there's nothing older, a short hairline and "That's everything." close the list.
+- The list has an end: it shows 50 items, then a **"Show older items"** button ("Show newer items" when sorting oldest first). Nothing more loads unless you press it. When there's nothing more to show, a short hairline and "That's everything." close the list.
 - Row states, each recognizable without color:
 
   | State | Looks like |

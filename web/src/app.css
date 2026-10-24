@@ -331,6 +331,17 @@ body {
 .place:is([aria-current], [data-here]):focus-visible {
   background-color: transparent;
 }
+/* A folder's row holds its link and its arrow; the link takes the keyboard, so the row shows it. */
+.place:has(> a:focus-visible) {
+  outline: 2px solid var(--place-focus);
+  outline-offset: -2px;
+}
+.place:has(> a:focus-visible) > a:focus-visible {
+  outline: none;
+}
+.place:is([aria-current], [data-here]):has(> a:focus-visible) {
+  background-color: transparent;
+}
 
 /* Only where there's a real pointer: on a touch screen a tint would stay after the tap. */
 @media (hover: hover) {
@@ -592,6 +603,7 @@ textarea {
   }
 
   .place:focus-visible,
+  .place:has(> a:focus-visible),
   .item-row[aria-current]:focus-visible {
     outline: 3px solid CanvasText;
     outline-offset: -3px;
