@@ -65,7 +65,7 @@ test("[ hides and shows the sidebar, and the toggle never moves", async ({ page 
   expect(await toggle(page).boundingBox()).toEqual(before);
 });
 
-test("the sidebar lists Unread, Starred and All, with the accent marking where you are", async ({ page }) => {
+test("the sidebar lists Unread, Starred and All, with a grey pill marking where you are", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await openApp(page);
   const links = sidebar(page).getByRole("list").getByRole("link");
@@ -76,18 +76,14 @@ test("the sidebar lists Unread, Starred and All, with the accent marking where y
   const accent = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--accent").trim());
   expect(accent).toBe("#2c4f8c");
   // One pill, as in the list: a neutral grey, the text color at 8% over the sidebar
-  // (--tint-sidebar), 8px corners, 8px in from the pane's edge, and beside it a
-  // 4px bar in the accent, 2px from the pane's edge (decision 0057).
+  // (--tint-sidebar), 8px corners, 8px in from the pane's edge, with no color and
+  // no bar (decision 0057).
   await expect(unread).toHaveCSS("background-color", "rgb(221, 221, 223)");
-  const bar = await unread.evaluate((element) => {
-    const style = getComputedStyle(element, "::before");
-    return [style.width, style.left, style.backgroundColor];
-  });
-  expect(bar).toEqual(["4px", "-6px", "rgb(44, 79, 140)"]);
+  expect(await unread.evaluate((element) => getComputedStyle(element, "::before").content)).toBe("none");
   await expect(unread).toHaveCSS("border-top-left-radius", "8px");
-  // As in a Mac source list, the place you're in has its icon in the accent, beside the pill and the semibold name (decision 0043).
-  await expect(unread.locator("svg")).toHaveCSS("color", "rgb(44, 79, 140)");
-  await expect(sidebar(page).getByRole("link", { name: "Starred" }).locator("svg")).not.toHaveCSS("color", "rgb(44, 79, 140)");
+  // The place you're in has its icon in full ink, beside the pill and the semibold name; never the accent (decision 0057).
+  await expect(unread.locator("svg")).toHaveCSS("color", "rgb(20, 20, 20)");
+  await expect(sidebar(page).getByRole("link", { name: "Starred" }).locator("svg")).not.toHaveCSS("color", "rgb(20, 20, 20)");
   const inset = await unread.evaluate((element) => element.getBoundingClientRect().left - element.closest("nav")!.getBoundingClientRect().left);
   expect(Math.abs(inset - 8)).toBeLessThan(1);
   // The wordmark is a name, never a Tab stop (decision 0041).

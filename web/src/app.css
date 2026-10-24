@@ -65,8 +65,7 @@
 
   --tint-list and --tint-sidebar are the selection pill's fill: a neutral
   grey, the text color mixed into the list or sidebar (8% by day, 12% by
-  night), so the accent bar beside it is the one touch of color (decision
-  0057). --star is the gold of a starred article's filled star.
+  night), with no color (decision 0057). --star is the gold of a starred article's filled star.
   contrast.test.ts recomputes each and checks every text color on it.
 
   --surface-raised is what floats over the page: the sheets, the shortcut
@@ -277,13 +276,11 @@ body {
 }
 
 /*
-  "Where you are", one recipe everywhere (the sidebar and the article list),
-  as GitHub marks the page you're on (decision 0057): a neutral grey pill
-  with 8px corners, set 8px in from the pane's edges (the rows' mx-2), and
-  beside it, 2px from the pane's edge, a short bar in the accent, 4px wide with
-  round ends. The title stays in full ink. The pill and the bar are shapes,
-  with full ink (list) or semibold (sidebar) beside them, so it never rests
-  on color alone.
+  "Where you are", one recipe everywhere (the sidebar and the article list):
+  a neutral grey pill with 8px corners, set 8px in from the pane's edges
+  (the rows' mx-2), and no color (decision 0057). The title stays in full
+  ink. The filled shape is the sign, with full ink (list) or semibold
+  (sidebar) beside it.
 */
 .place {
   position: relative;
@@ -291,24 +288,6 @@ body {
 }
 .place:is([aria-current], [data-here]) {
   background-color: var(--place-tint, var(--color-tint-sidebar));
-}
-.place:is([aria-current], [data-here])::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: calc(2px - var(--pill-inset, 0.5rem));
-  width: 4px;
-  height: 1.5rem;
-  max-height: calc(100% - 0.5rem);
-  translate: 0 -50%;
-  border-radius: 9999px;
-  background-color: var(--accent);
-}
-@media (forced-colors: active) {
-  .place:is([aria-current], [data-here])::before {
-    forced-color-adjust: none;
-    background-color: Highlight;
-  }
 }
 /*
   Touch screens get the phone's own reading sizes for the interface (17px
