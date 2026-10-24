@@ -147,7 +147,7 @@ test("a site with several feeds offers a choice", async ({ page }) => {
   await expect(page.locator("#feed-address-status")).toHaveText("This site offers more than one feed. Choose one:");
   // A choice of one: radio buttons, the first chosen, each row ending in a round mark that shows
   // the choice by its dot, never by a tint alone (decision 0048).
-  const choices = page.getByRole("radiogroup", { name: "This site offers more than one feed. Choose one:" });
+  const choices = page.getByRole("radiogroup", { name: "Feeds on this site" });
   const [first, comments] = [choices.getByRole("radio").first(), choices.getByRole("radio", { name: /^Comments/ })];
   await expect(first).toBeChecked();
   await expect(comments).not.toBeChecked();

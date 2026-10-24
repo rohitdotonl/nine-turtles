@@ -4,7 +4,7 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
-## 24 October 2026: A quieter article title
+## 24 October 2026: A quieter article title, one-line rows, one close rule
 
 - Opening an article with the keyboard no longer draws a box round its
   title. Screen readers still start reading there, and the next Tab lands
@@ -13,9 +13,6 @@ not how it was done.
   and its letters are set slightly less tight.
 - On a phone, the first article's toolbar no longer has a gap at the left:
   Previous stays in its place, faded, and does nothing.
-
-## 24 October 2026: One-line rows, plain search chips, one welcome
-
 - In the article list, the line under each title (source, time, star) is
   always one line: a long source name ends in "…", and the date and star
   never wrap onto a line of their own. Its numbers no longer look spaced out.
@@ -27,9 +24,6 @@ not how it was done.
   the same phone margin as every other screen. On a first visit the welcome
   is all centred, fills the room beside the sidebar (no empty list beside
   it), and stays still when the Add a feed sheet opens over it (decision 0047).
-
-## 24 October 2026: One sheet, one close rule, a choice you can see
-
 - When a site offers several feeds, Add a feed now shows them as a list
   with a round mark on each, filled with a dot on the chosen one, and Add
   feed adds that one. Before, which one was meant showed only as a faint

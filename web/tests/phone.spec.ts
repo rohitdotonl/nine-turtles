@@ -321,7 +321,7 @@ test.describe("on a phone", () => {
     await page.goto(new URL("/all", FEEDS_APP).href);
     await appReady(page);
     const all = page.getByRole("region", { name: "All" });
-    const mine = all.getByRole("button", { name: new RegExp(`A year of reading slowly.*Blog ${name}`) });
+    const mine = all.getByRole("button", { name: new RegExp(`On keeping a commonplace book.*Blog ${name}`) });
     // Star it, so the row's meta line carries the star too.
     await mine.click();
     await toolbar(page).getByRole("button", { name: "Star" }).click();

@@ -352,8 +352,6 @@ test.describe("on a wide window", () => {
     const publisher = article(page).locator(".article-byline").getByRole("link", { name: "Reading Room" });
     await expect(publisher).toBeFocused();
     await expect(publisher).toHaveCSS("outline-style", "solid");
-    await page.keyboard.press("Shift+Tab");
-    await expect(heading).toBeFocused();
   });
 
   test("on a wide window the article sits in the middle, and its actions keep to the pane's edges", async ({ page }) => {

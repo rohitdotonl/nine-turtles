@@ -57,6 +57,9 @@ against the code before changing it:
   field, with the field's 8px corners. The room for a message moves below
   the button, as in the welcome (0045): a message moves only the button. On
   a phone the column runs between the same 20px margins as every screen.
+  A placeholder disappears once you type; that's accepted here because each
+  of these screens has one field under a heading that says what it's for.
+  Forms with several fields keep their visible labels.
 - **The welcome: one alignment, still under the sheet.** Its field's name is
   its placeholder (the label stays for screen readers), and "Import an OPML
   file…" is centred under the field rather than lined up with its left edge

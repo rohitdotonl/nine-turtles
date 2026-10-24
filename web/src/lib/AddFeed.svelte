@@ -54,11 +54,10 @@
 
   let alreadyTitle = $derived(feeds.find((feed) => feed.id === alreadyId)?.title);
 
-  // The choices stay on screen while one is being added, so the button just
-  // pressed (and the keyboard's place on it) never vanishes, and a choice
-  // that fails can be swapped for another. Buttons say they're busy with
-  // `aria-disabled` rather than `disabled`, which would drop the keyboard's
-  // place too.
+  // The choices stay on screen while the chosen one is being added, so a
+  // choice that fails can be swapped for another. Add feed says it's busy
+  // with `aria-disabled` rather than `disabled`, which would drop the
+  // keyboard's place on it.
   async function add(text: string, fromChoices = false) {
     if (busy) return;
     busy = true;
@@ -168,7 +167,7 @@
         decision 0045). Real radio buttons lie under the rows: the arrow keys
         move the choice, and Add feed adds it (decision 0048).
       -->
-      <div role="radiogroup" aria-labelledby="feed-address-status" class="inset-group mb-2 self-stretch text-left">
+      <div role="radiogroup" aria-label="Feeds on this site" aria-describedby="feed-address-status" class="inset-group mb-2 self-stretch text-left">
         {#each choices as choice (choice.url)}
           <label class="inset-row check-row flex-nowrap">
             <input type="radio" name="feed-choice" value={choice.url} bind:group={chosen} />
