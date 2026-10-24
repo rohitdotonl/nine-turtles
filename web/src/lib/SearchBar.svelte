@@ -525,10 +525,6 @@
     outline-offset: -2px;
   }
 
-  /* The options float on the raised surface where a theme has one, else the page's own. */
-  .search-options {
-    background-color: var(--surface-raised, var(--paper));
-  }
   /* A chip is 24px tall inside the field, whatever its height; its Remove button is still a full 44px to press. */
   .chip {
     min-height: 1.5rem;

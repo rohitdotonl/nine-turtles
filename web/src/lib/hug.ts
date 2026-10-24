@@ -31,54 +31,89 @@ export function fittingCount(total: number, widthOf: (n: number) => number, elli
   return low;
 }
 
-const fits = new Map<Element, () => void>();
-let observer: ResizeObserver | undefined;
-let canvas: HTMLCanvasElement | undefined;
+type Fit = { node: HTMLElement; clear: () => void; measure: () => number | undefined };
 
+const fits = new Map<Element, Fit>();
+let observer: ResizeObserver | undefined;
+let fontsHooked = false;
+const ellipsisCache = new Map<string, number>();
+
+// The "…" as CSS draws it: measured on a span with the name's own font, spacing and features.
 function ellipsisWidth(node: HTMLElement): number {
-  canvas ??= document.createElement("canvas");
-  const context = canvas.getContext("2d");
-  if (!context) return 0;
   const style = getComputedStyle(node);
-  context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
-  return context.measureText("…").width;
+  const key = `${style.font}|${style.letterSpacing}|${style.fontFeatureSettings}`;
+  const cached = ellipsisCache.get(key);
+  if (cached !== undefined) return cached;
+  const probe = document.createElement("span");
+  probe.textContent = "…";
+  probe.setAttribute("aria-hidden", "true");
+  probe.style.cssText = "position:absolute;visibility:hidden;white-space:pre;";
+  probe.style.font = style.font;
+  probe.style.letterSpacing = style.letterSpacing;
+  probe.style.fontFeatureSettings = style.fontFeatureSettings;
+  node.parentElement?.appendChild(probe);
+  const width = probe.getBoundingClientRect().width;
+  probe.remove();
+  ellipsisCache.set(key, width);
+  return width;
+}
+
+// Fits rows in phases (clear every box, then measure every one, then set every one),
+// so a list of hundreds of rows lays out a couple of times, not once per row.
+function fitAll(list: Fit[]) {
+  for (const f of list) f.clear();
+  const widths = list.map((f) => f.measure());
+  list.forEach((f, i) => {
+    const width = widths[i];
+    if (width !== undefined) f.node.style.maxWidth = `${width}px`;
+  });
 }
 
 export function hugEllipsis(node: HTMLElement, _text?: string) {
   // The line the name sits in: its width doesn't depend on the name's, so watching it never loops.
-  const line = node.closest(".row-meta") ?? node.parentElement ?? node;
+  const line = node.closest(".row-meta");
+  if (!line) return {};
 
-  const fit = () => {
-    node.style.maxWidth = "";
-    const text = node.firstChild;
-    // Hidden (one feed's list) or not cut short: nothing to do.
-    if (!(text instanceof Text) || node.clientWidth <= 1 || node.scrollWidth <= node.clientWidth) return;
-    const range = document.createRange();
-    const widthOf = (n: number) => {
-      if (n === 0) return 0;
-      range.setStart(text, 0);
-      range.setEnd(text, n);
-      return range.getBoundingClientRect().width;
-    };
-    const ellipsis = ellipsisWidth(node);
-    const count = fittingCount(text.length, widthOf, ellipsis, node.clientWidth);
-    node.style.maxWidth = `${Math.ceil(widthOf(count) + ellipsis)}px`;
+  const fit: Fit = {
+    node,
+    clear: () => {
+      node.style.maxWidth = "";
+    },
+    measure: () => {
+      const text = node.firstChild;
+      // Hidden (one feed's list) or not cut short: nothing to do.
+      if (!(text instanceof Text) || node.clientWidth <= 1 || node.scrollWidth <= node.clientWidth) return undefined;
+      const range = document.createRange();
+      const widthOf = (n: number) => {
+        if (n === 0) return 0;
+        range.setStart(text, 0);
+        range.setEnd(text, n);
+        return range.getBoundingClientRect().width;
+      };
+      const ellipsis = ellipsisWidth(node);
+      const count = fittingCount(text.length, widthOf, ellipsis, node.clientWidth);
+      return Math.ceil(widthOf(count) + ellipsis);
+    },
   };
 
   if (typeof ResizeObserver !== "undefined" && typeof document.createRange === "function") {
     observer ??= new ResizeObserver((entries) => {
-      for (const entry of entries) fits.get(entry.target)?.();
+      fitAll(entries.map((entry) => fits.get(entry.target)).filter((f): f is Fit => f !== undefined));
     });
+    if (!fontsHooked && document.fonts) {
+      fontsHooked = true;
+      void document.fonts.ready.then(() => {
+        ellipsisCache.clear();
+        fitAll([...fits.values()]);
+      });
+    }
     fits.set(line, fit);
     observer.observe(line);
-    void document.fonts?.ready.then(() => {
-      if (fits.get(line) === fit) fit();
-    });
   }
 
   return {
     update() {
-      if (fits.get(line) === fit) fit();
+      if (fits.get(line) === fit) fitAll([fit]);
     },
     destroy() {
       if (fits.get(line) === fit) {

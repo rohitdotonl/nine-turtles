@@ -56,7 +56,7 @@ headings ("Unread" over "A quiet place to read.").
   ink, 20px under the field.
 - **Shortcuts.** The note about Tab, Enter and Escape is a footer across
   both columns, 24px under them. Key caps have a 1px rim and a 2px lower lip
-  in a soft mix of the text color, 22px tall with 12px medium letters;
+  in a soft mix of the text color, 22px tall with 12px regular letters;
   "then" is 12px muted.
 - **One heading on a phone's empty state.** With no feeds yet, the list's
   "Unread" title steps aside on a phone (screen readers still hear it as the
