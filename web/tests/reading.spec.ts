@@ -406,7 +406,7 @@ test.describe("on a wide window", () => {
     await openRoom(page);
     await row(page, "Only the first page").click();
     const note = article(page).locator(".article-note");
-    await expect(note).toContainText("This feed shares only a summary.");
+    await expect(note).toContainText("This feed shares only a summary. Read the full article on");
     expect(await note.evaluate((element) => getComputedStyle(element).fontFamily)).toContain("Literata");
     await expect(note).toHaveCSS("font-style", "italic");
     await expect(note).toHaveCSS("text-align", "start");

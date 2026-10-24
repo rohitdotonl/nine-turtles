@@ -237,8 +237,7 @@
           <div class="article-text" dir="auto">{@html full.summary}</div>
           <!-- The article's own last paragraph, in the book's voice: where the rest of it is, crediting the publisher. -->
           <p class="article-note" lang="en">
-            This feed shares only a summary.{#if article.link}
-              <a href={article.link} target="_blank" rel="noopener noreferrer">Read the full article on {article.feedTitle}<span aria-hidden="true">&nbsp;›</span></a
+            This feed shares only a summary.{#if article.link}{" "}<a href={article.link} target="_blank" rel="noopener noreferrer">Read the full article on {article.feedTitle}<span aria-hidden="true">&nbsp;›</span></a
               >{/if}
           </p>
           <hr aria-hidden="true" class="article-end" />
