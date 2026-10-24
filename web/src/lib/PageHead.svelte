@@ -15,6 +15,7 @@
     onClose,
     closeLabel,
     besideToggle = false,
+    column = "max-w-2xl",
   }: {
     title: string;
     id?: string;
@@ -25,11 +26,13 @@
     closeLabel?: string;
     /** The sidebar is hidden, so the line starts clear of its toggle. */
     besideToggle?: boolean;
+    /** The page's column width, so the title lines up with it. */
+    column?: string;
   } = $props();
 </script>
 
 <div class={["pr-6 md:pr-10", besideToggle ? "pl-16" : "pl-6 md:pl-10"]}>
-  <div class="mx-auto flex min-h-11 max-w-2xl items-center justify-between gap-4">
+  <div class={["mx-auto flex min-h-11 items-center justify-between gap-4", column]}>
     <h2 {id} tabindex="-1" bind:this={heading} class="min-w-0 font-serif text-heading font-semibold tracking-[-0.01em] break-words">{title}</h2>
     {#if onClose}
       <button type="button" onclick={onClose} aria-label={closeLabel ?? "Close"} title="Close (Esc)" class="btn-quiet btn-icon -mr-2.5"><Icon name="close" size={20} /></button>

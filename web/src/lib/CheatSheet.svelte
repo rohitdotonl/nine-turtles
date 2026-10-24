@@ -10,6 +10,14 @@
   let { open = $bindable() }: { open: boolean } = $props();
 
   let dialog: HTMLDialogElement | undefined = $state();
+  let heading: HTMLHeadingElement | undefined = $state();
+  let list: HTMLDivElement | undefined = $state();
+  /** More of the list lies below what's shown: its foot fades, so it never looks cut off mid-row. */
+  let more = $state(false);
+
+  function measure() {
+    if (list) more = list.scrollTop + list.clientHeight < list.scrollHeight - 1;
+  }
 
   const FILTERS = [
     ["is:unread", "Unread items only"],
@@ -21,7 +29,12 @@
   ];
 
   $effect(() => {
-    if (open && !dialog?.open) dialog?.showModal();
+    if (open && !dialog?.open) {
+      dialog?.showModal();
+      // The keyboard starts on the title, so the X isn't ringed the moment the list opens.
+      heading?.focus();
+      measure();
+    }
     if (!open && dialog?.open) dialog.close();
   });
 </script>
@@ -31,20 +44,30 @@
   keys on the right, in four small groups, two columns side by side on a
   wide screen. The title and its close button stay put while the list scrolls.
 -->
+<svelte:window onresize={measure} />
+
 <dialog
   bind:this={dialog}
   aria-labelledby="shortcuts-heading"
   onclose={() => (open = false)}
-  class="m-auto max-h-[min(44rem,90dvh)] w-[min(52rem,calc(100vw-2rem))] overflow-hidden floating p-0 text-ink"
+  class="floating dimmed m-auto max-h-[min(44rem,90dvh)] w-[min(52rem,calc(100vw-2rem))] overflow-hidden p-0 text-ink"
 >
   <div class="flex max-h-[min(44rem,90dvh)] flex-col">
     <div class="flex min-h-16 shrink-0 items-center justify-between gap-4 border-b border-ink/10 pr-4 pl-6">
-      <h2 id="shortcuts-heading" class="text-ui font-semibold">Keyboard shortcuts</h2>
+      <h2 id="shortcuts-heading" tabindex="-1" bind:this={heading} class="text-ui font-semibold">Keyboard shortcuts</h2>
       <button type="button" onclick={() => (open = false)} aria-label="Close" title="Close (Esc)" class="btn-quiet btn-icon"><Icon name="close" size={18} /></button>
     </div>
     <!-- A Tab stop of its own, so the list can be scrolled with the keyboard (axe: scrollable-region-focusable). -->
     <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-    <div tabindex="0" role="region" aria-label="Shortcuts" class="min-h-0 overflow-y-auto px-6 pt-5 pb-6">
+    <div
+      tabindex="0"
+      role="region"
+      aria-label="Shortcuts"
+      bind:this={list}
+      onscroll={measure}
+      data-more={more ? "" : undefined}
+      class="shortcut-list min-h-0 overflow-y-auto px-6 pt-5 pb-6"
+    >
       <div class="grid gap-x-10 gap-y-7 md:grid-cols-2">
         {#each SHORTCUT_GROUPS as group, index (group)}
           <section aria-labelledby={`keys-${index}`}>
@@ -93,7 +116,8 @@
 </dialog>
 
 <style>
-  dialog::backdrop {
-    background: rgb(0 0 0 / 0.45);
+  /* While more lies below, the last 32px fade out, so the list never looks clipped mid-row; at the end it stops on its last line, unfaded. */
+  .shortcut-list[data-more] {
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 2rem), transparent);
   }
 </style>

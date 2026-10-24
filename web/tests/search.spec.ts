@@ -109,9 +109,15 @@ test("a search starts where you are, underlines the words it found, and Escape b
   await expect(page.getByRole("checkbox", { name: "Starred", exact: true })).toBeChecked();
   // It floats over the list instead of pushing it down.
   await expect(page.locator("#search-options")).toHaveCSS("position", "absolute");
+  // A menu of checkmark rows: the list search started from, All feeds, and the feed now
+  // searched (chosen above with feed:), which holds; Tab from the field lands on it.
   await field(page).focus();
   await page.keyboard.press("Tab");
-  await expect(page.getByRole("combobox", { name: "Search in" })).toBeFocused();
+  await expect(page.getByRole("radio", { name: `Blog ${loose}` })).toBeFocused();
+  await expect(page.getByRole("radio", { name: `Blog ${loose}` })).toBeChecked();
+  await expect(page.getByRole("radio", { name: `${folder} This list` })).not.toBeChecked();
+  await expect(page.getByRole("radio", { name: "All feeds" })).not.toBeChecked();
+  await expect(page.getByRole("combobox", { name: "Search in another feed or folder" })).toBeVisible();
   // Presets count back from today; Custom shows the two dates.
   await page.getByRole("radio", { name: "Past week" }).check();
   await expect(page.getByRole("button", { name: /^Remove after:/ })).toBeVisible();

@@ -88,6 +88,7 @@
     --tint-sidebar: #3a352f;
     --raised: #3a3631;
     --sheet-edge: 22%;
+    --scrim: rgb(0 0 0 / 0.45);
   }
 }
 
@@ -106,6 +107,7 @@
   /* A chosen tile rises: lighter than its track in the dark, as paper is in the light. */
   --raised: #3a3631;
   --sheet-edge: 22%;
+  --scrim: rgb(0 0 0 / 0.45);
 }
 
 :root[data-theme="sepia"] {
@@ -197,6 +199,7 @@
   --tint-sidebar: #32322f;
   --raised: #3a3a37;
   --sheet-edge: 22%;
+  --scrim: rgb(0 0 0 / 0.45);
 }
 
 /* Night: a warm brown-black and amber. */
@@ -214,6 +217,7 @@
   --tint-sidebar: #372f25;
   --raised: #3d352a;
   --sheet-edge: 22%;
+  --scrim: rgb(0 0 0 / 0.45);
 }
 
 /* Midnight: deep navy and a sky blue. */
@@ -231,6 +235,7 @@
   --tint-sidebar: #2a3347;
   --raised: #323c52;
   --sheet-edge: 22%;
+  --scrim: rgb(0 0 0 / 0.45);
 }
 
 /* Black: true black for OLED screens, and a soft blue. */
@@ -248,6 +253,7 @@
   --tint-sidebar: #282828;
   --raised: #2e2e2e;
   --sheet-edge: 22%;
+  --scrim: rgb(0 0 0 / 0.45);
 }
 
 /*
@@ -293,7 +299,7 @@ body {
   outline-offset: -1px;
 }
 
-/* A refused field already has a firm edge, so its focus line stands clear of it. */
+/* A refused field keeps its red edge in view: the focus line stands clear of it. */
 .field[aria-invalid="true"]:focus-visible {
   outline-offset: 2px;
 }
@@ -481,8 +487,10 @@ textarea {
 
   /*
     The one row of actions at the foot of a sheet (and of its page on a
-    phone): Cancel, then the main action at the right end, as in a Mac sheet.
-    A message, if any, sits at its left.
+    phone), in a Mac sheet's order: a destructive action, if there is one, at
+    the far left (.btn-danger), then Cancel, then the main action at the
+    right end. On a narrow screen the destructive action takes a row of its
+    own above the other two.
   */
   .sheet-actions {
     display: flex;
@@ -494,27 +502,26 @@ textarea {
   .sheet-actions > :is(.btn, .btn-primary) {
     min-width: 6rem;
   }
+  .sheet-actions > .btn-danger {
+    margin-right: auto;
+  }
+  @media (width < 30rem) {
+    .sheet-actions > .btn-danger {
+      flex-basis: 100%;
+    }
+  }
 
   /*
-    A destructive action (Unsubscribe, Delete folder), apart below a hairline:
-    first the line saying what it does, then the action as words in a muted
-    red. The words say what it does, so red is never the only sign.
+    A destructive action (Unsubscribe, Delete folder): words in a muted red,
+    no edge. The words say what it does, so red is never the only sign, and
+    Undo follows straight afterwards.
   */
-  .sheet-danger {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.25rem;
-    margin-inline: -1.5rem;
-    padding: 1rem 1.5rem 0;
-    border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
-  }
   .btn-danger {
     display: inline-flex;
     max-width: 100%;
     align-items: center;
     min-height: 2.75rem;
-    margin-inline: -0.5rem;
+    margin-left: -0.5rem;
     padding-inline: 0.5rem;
     border-radius: 0.375rem;
     color: var(--danger);
@@ -522,6 +529,102 @@ textarea {
     text-align: left;
     touch-action: manipulation;
     cursor: pointer;
+  }
+
+  /*
+    A grouped inset list, as in Apple Books' and the system's settings: a
+    rounded block one tone off the page, no edge, its rows parted by hairlines
+    inset from the left. A small header sits above a group (.inset-head) and
+    an explaining line below it (.inset-foot). Settings and Edit feed's
+    folders use it.
+  */
+  .inset-group {
+    overflow: hidden;
+    border-radius: 0.625rem;
+    background-color: var(--list);
+  }
+  .inset-row {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    min-width: 0;
+    min-height: 2.75rem;
+    margin: 0;
+    padding: 0.375rem 1rem;
+    border: 0;
+    color: var(--ink);
+    font-size: var(--text-ui);
+  }
+  .inset-row + .inset-row::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 1rem;
+    border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  }
+  .inset-head {
+    margin: 0 0 0.375rem 1rem;
+    color: var(--muted);
+    font-size: var(--text-meta);
+    font-weight: 600;
+  }
+  .inset-foot {
+    margin: 0.375rem 1rem 0;
+    color: var(--muted);
+    font-size: var(--text-meta);
+    line-height: 1.4;
+  }
+  /* A row that is itself a button or link (Import OPML, Sign out): the whole row presses. */
+  .inset-action {
+    width: 100%;
+    justify-content: flex-start;
+    text-align: left;
+    cursor: pointer;
+  }
+  @media (hover: hover) {
+    .inset-action:hover {
+      background-color: var(--hover);
+    }
+  }
+  .inset-action:focus-visible {
+    outline-offset: -2px;
+  }
+
+  /*
+    A checklist row (Edit feed's folders): the name on the left, a checkmark
+    on the right when it's ticked. The real tick box lies under the whole
+    row, so keyboards and screen readers get the usual control.
+  */
+  .check-row {
+    cursor: pointer;
+  }
+  .check-row > input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .check-row > .check-mark {
+    visibility: hidden;
+  }
+  .check-row:has(> input:checked) > .check-mark {
+    visibility: visible;
+  }
+  .check-row:has(> input:focus-visible) {
+    outline: 2px solid var(--ink);
+    outline-offset: -2px;
+  }
+  @media (hover: hover) {
+    .check-row:hover {
+      background-color: var(--hover);
+    }
   }
   @media (hover: hover) {
     .btn-danger:hover {
@@ -672,19 +775,23 @@ textarea {
     flex-shrink: 0;
   }
 
+  /*
+    A field: a 1px edge in a soft mix of the text color (still 3 : 1 against
+    what's around it, so its shape is clear; contrast.test.ts checks), over a
+    faint fill, as Apple's fields are drawn.
+  */
   .field {
     min-height: 2.75rem;
     padding-inline: 0.75rem;
-    border: 1px solid var(--muted);
-    border-radius: 0.375rem;
-    background-color: var(--paper);
+    border: 1px solid var(--field-edge);
+    border-radius: 0.5rem;
+    background-color: var(--field);
     color: var(--ink);
   }
 
-  /* A field whose value was refused: a firmer edge, beside the message's mark. */
+  /* A field whose value was refused: its edge turns the muted red, beside the message's icon and words. */
   .field[aria-invalid="true"] {
-    border-color: var(--ink);
-    box-shadow: inset 0 0 0 1px var(--ink);
+    border-color: var(--danger);
   }
 
   .field::placeholder {
@@ -708,6 +815,9 @@ textarea {
   --tone: color-mix(in srgb, var(--ink) 7%, transparent);
   /* The keyboard's outline on rows: the text color, softened. */
   --place-focus: color-mix(in srgb, var(--ink) 65%, transparent);
+  /* A field's edge and fill (.field). */
+  --field-edge: color-mix(in srgb, var(--ink) 55%, transparent);
+  --field: color-mix(in srgb, var(--ink) 3%, var(--paper));
 }
 
 /* Windows high contrast and similar: let the system draw clear edges. */
@@ -935,6 +1045,15 @@ input {
 /* The note at the bottom of the list floats, so it alone has a shadow. */
 .toast {
   box-shadow: 0 10px 28px -10px rgb(0 0 0 / 0.3);
+}
+
+/*
+  The dim behind a sheet or the shortcut list (DESIGN.md → Exceptions log):
+  a light veil, so the page behind stays warm and readable; deeper in the
+  dark themes, which set --scrim.
+*/
+dialog.dimmed::backdrop {
+  background: var(--scrim, rgb(0 0 0 / 0.18));
 }
 
 /* A scrolling area under a fixed top line: a hairline appears once its content has scrolled under that line (edge.ts). */

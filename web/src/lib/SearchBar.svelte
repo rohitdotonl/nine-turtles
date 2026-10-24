@@ -17,6 +17,7 @@
   import {
     chipsFor,
     replaceLastWord,
+    scopeName,
     suggestions as suggestionsFor,
     takeFilters,
     withoutChip,
@@ -137,8 +138,8 @@
       offering = false;
       onChange(result.query, true);
     } else if (event.key === "Tab" && !event.shiftKey && panelOpen) {
-      // Tab moves from the field into the options panel.
-      const first = panel?.querySelector<HTMLElement>("select, input");
+      // Tab moves from the field into the options, onto the place being searched.
+      const first = panel?.querySelector<HTMLElement>('input[name="search-in"]:checked') ?? panel?.querySelector<HTMLElement>("input, select");
       if (first) {
         event.preventDefault();
         first.focus();
@@ -165,8 +166,11 @@
     return { kind: "all" };
   }
 
-  function hereMark(scope: Scope): string {
-    return scopeValue(scope) === scopeValue(here) ? " (this list)" : "";
+  let hereValue = $derived(scopeValue(here));
+  let scopeNow = $derived(scopeValue(query.scope));
+
+  function chooseScope(scope: Scope) {
+    onChange({ ...query, scope }, true);
   }
 
   /** "Published": presets count back from today; Custom shows two dates. */
@@ -309,8 +313,12 @@
       <span class={["flex size-8 items-center justify-center rounded-md", panelOpen && "bg-[var(--tone)]"]}><Icon name="sliders" size={18} /></span>
     </button>
     <!--
-      A popover under the options button: it floats over the list rather than
-      pushing it down. Its name is a label rather than a heading of its own.
+      A popover under the options button, drawn as a menu (decision 0039): three
+      sections of rows, a checkmark at the start of each one that holds, as a
+      Mac menu shows its choices. Each row is a real radio button or tick box
+      under the whole row, so keyboards and screen readers get the usual
+      control. It floats over the list rather than pushing it down. Its name
+      is a label rather than a heading of its own.
     -->
     <div
       id="search-options"
@@ -318,86 +326,114 @@
       aria-labelledby="search-options-name"
       bind:this={panel}
       hidden={!panelOpen}
-      class="floating absolute top-full right-0 z-20 mt-1 cursor-auto w-[min(20rem,100%)] p-4"
+      class="floating absolute top-full right-0 z-20 mt-1 w-[min(17rem,100%)] min-w-60 cursor-auto p-1.5 text-ui"
     >
       <p id="search-options-name" class="sr-only">Search options</p>
-      <div class="flex flex-col gap-4">
-        <label class="flex flex-col gap-1.5">
-          <span class="text-small text-ink-2">Search in</span>
-          <span class="relative block">
+      <fieldset class="min-w-0">
+        <legend class="menu-head">Search in</legend>
+        {#if hereValue !== "all"}
+          <label class="menu-row">
+            <input type="radio" name="search-in" checked={scopeNow === hereValue} onchange={() => chooseScope(here)} />
+            <span class="menu-check"><Icon name="check" size={16} /></span>
+            <span class="min-w-0 flex-1 truncate">{scopeName(here, library)}</span>
+            <span class="shrink-0 text-meta text-muted">This list</span>
+          </label>
+        {/if}
+        <label class="menu-row">
+          <input type="radio" name="search-in" checked={scopeNow === "all"} onchange={() => chooseScope({ kind: "all" })} />
+          <span class="menu-check"><Icon name="check" size={16} /></span>
+          <span class="min-w-0 flex-1 truncate">All feeds</span>
+        </label>
+        {#if scopeNow !== "all" && scopeNow !== hereValue}
+          <!-- Somewhere else, chosen below or typed as feed: or folder:. -->
+          <label class="menu-row">
+            <input type="radio" name="search-in" checked onchange={() => {}} />
+            <span class="menu-check"><Icon name="check" size={16} /></span>
+            <span class="min-w-0 flex-1 truncate">{scopeName(query.scope, library)}</span>
+          </label>
+        {/if}
+        <!-- Any other feed or folder: the device's own list, in a row like the others. -->
+        <span class="menu-row">
+          <span class="menu-check"></span>
+          <span class="min-w-0 flex-1 truncate text-ink-2">Another feed or folder…</span>
+          <span class="shrink-0 text-ink-2"><Icon name="chevron-down" size={16} /></span>
           <select
-            value={scopeValue(query.scope)}
-            onchange={(event) => onChange({ ...query, scope: scopeFrom(event.currentTarget.value) }, true)}
-            class="field w-full appearance-none pr-9 text-ui pointer-fine:min-h-9"
+            aria-label="Search in another feed or folder"
+            value=""
+            onchange={(event) => {
+              const value = event.currentTarget.value;
+              if (value) chooseScope(scopeFrom(value));
+              event.currentTarget.value = "";
+            }}
+            class="menu-select"
           >
-            <option value="all">All feeds{hereMark({ kind: "all" })}</option>
-            <option value="view:unread">Unread{hereMark({ kind: "view", view: "unread" })}</option>
-            <option value="view:starred">Starred{hereMark({ kind: "view", view: "starred" })}</option>
+            <option value="" disabled>Another feed or folder…</option>
+            <option value="view:unread">Unread</option>
+            <option value="view:starred">Starred</option>
             {#if folders.length > 0}
               <optgroup label="Folders">
                 {#each folders as folder (folder.id)}
-                  <option value="folder:{folder.id}">{folder.name}{hereMark({ kind: "folder", id: folder.id })}</option>
+                  <option value="folder:{folder.id}">{folder.name}</option>
                 {/each}
               </optgroup>
             {/if}
             <optgroup label="Feeds">
               {#each feeds as feed (feed.id)}
-                <option value="feed:{feed.id}">{feed.title}{hereMark({ kind: "feed", id: feed.id })}</option>
+                <option value="feed:{feed.id}">{feed.title}</option>
               {/each}
             </optgroup>
           </select>
-          <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-ink-2"><Icon name="chevron-down" size={16} /></span>
-          </span>
+        </span>
+      </fieldset>
+      <div role="separator" class="mx-2 my-1.5 h-px bg-ink/10"></div>
+      <fieldset class="min-w-0">
+        <legend class="menu-head">Show only</legend>
+        <label class="menu-row">
+          <input type="checkbox" checked={query.unread} onchange={(event) => onChange({ ...query, unread: event.currentTarget.checked }, true)} />
+          <span class="menu-check"><Icon name="check" size={16} /></span>
+          <span class="flex-1">Unread</span>
         </label>
-        <fieldset class="flex flex-col gap-1.5">
-          <legend class="mb-1.5 text-small text-ink-2">Show only</legend>
-          <div class="choices grid grid-cols-2">
-            <label class="choice justify-center">
-              <input type="checkbox" checked={query.unread} onchange={(event) => onChange({ ...query, unread: event.currentTarget.checked }, true)} />
-              Unread
+        <label class="menu-row">
+          <input type="checkbox" checked={query.starred} onchange={(event) => onChange({ ...query, starred: event.currentTarget.checked }, true)} />
+          <span class="menu-check"><Icon name="check" size={16} /></span>
+          <span class="flex-1">Starred</span>
+        </label>
+      </fieldset>
+      <div role="separator" class="mx-2 my-1.5 h-px bg-ink/10"></div>
+      <fieldset class="min-w-0">
+        <legend class="menu-head">Published</legend>
+        {#each WHENS as when (when.value)}
+          <label class="menu-row">
+            <input type="radio" name="search-when" value={when.value} checked={whenNow === when.value} onchange={() => chooseWhen(when.value)} />
+            <span class="menu-check"><Icon name="check" size={16} /></span>
+            <span class="flex-1">{when.label}</span>
+          </label>
+        {/each}
+        {#if whenNow === "custom"}
+          <div class="grid grid-cols-2 gap-2 px-2 pt-1 pb-1.5">
+            <label class="flex min-w-0 flex-col gap-1">
+              <span class="text-meta text-muted">After</span>
+              <input
+                type="date"
+                value={query.after}
+                aria-label="Published after"
+                onchange={(event) => onChange({ ...query, after: event.currentTarget.value }, true)}
+                class="field w-full min-w-0 px-2 text-small pointer-fine:min-h-9"
+              />
             </label>
-            <label class="choice justify-center">
-              <input type="checkbox" checked={query.starred} onchange={(event) => onChange({ ...query, starred: event.currentTarget.checked }, true)} />
-              Starred
+            <label class="flex min-w-0 flex-col gap-1">
+              <span class="text-meta text-muted">Before</span>
+              <input
+                type="date"
+                value={query.before}
+                aria-label="Published before"
+                onchange={(event) => onChange({ ...query, before: event.currentTarget.value }, true)}
+                class="field w-full min-w-0 px-2 text-small pointer-fine:min-h-9"
+              />
             </label>
           </div>
-        </fieldset>
-        <fieldset class="flex flex-col gap-1.5">
-          <legend class="mb-1.5 text-small text-ink-2">Published</legend>
-          <div class="choices grid grid-cols-2">
-            {#each WHENS as when (when.value)}
-              <label class="choice justify-center">
-                <input type="radio" name="search-when" value={when.value} checked={whenNow === when.value} onchange={() => chooseWhen(when.value)} />
-                {when.label}
-              </label>
-            {/each}
-          </div>
-          {#if whenNow === "custom"}
-            <div class="mt-1.5 grid grid-cols-2 gap-3">
-              <label class="flex min-w-0 flex-col gap-1.5">
-                <span class="text-small text-ink-2">After</span>
-                <input
-                  type="date"
-                  value={query.after}
-                  aria-label="Published after"
-                  onchange={(event) => onChange({ ...query, after: event.currentTarget.value }, true)}
-                  class="field w-full min-w-0 text-ui pointer-fine:min-h-9"
-                />
-              </label>
-              <label class="flex min-w-0 flex-col gap-1.5">
-                <span class="text-small text-ink-2">Before</span>
-                <input
-                  type="date"
-                  value={query.before}
-                  aria-label="Published before"
-                  onchange={(event) => onChange({ ...query, before: event.currentTarget.value }, true)}
-                  class="field w-full min-w-0 text-ui pointer-fine:min-h-9"
-                />
-              </label>
-            </div>
-          {/if}
-        </fieldset>
-      </div>
+        {/if}
+      </fieldset>
     </div>
   </div>
 
@@ -424,6 +460,63 @@
 </search>
 
 <style>
+  /* The options as a menu: small section names, then rows with a checkmark at the start of each one that holds. */
+  .menu-head {
+    padding: 0.375rem 0.75rem 0.25rem;
+    color: var(--muted);
+    font-size: var(--text-meta);
+    font-weight: 600;
+  }
+  .menu-row {
+    position: relative;
+    display: flex;
+    min-height: 2.75rem;
+    align-items: center;
+    gap: 0.5rem;
+    padding-inline: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  @media (pointer: fine) {
+    .menu-row {
+      min-height: 2.25rem;
+    }
+  }
+  @media (hover: hover) {
+    .menu-row:hover {
+      background-color: var(--hover);
+    }
+  }
+  .menu-row > input,
+  .menu-select {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .menu-check {
+    display: flex;
+    width: 1.25rem;
+    flex-shrink: 0;
+    justify-content: center;
+    visibility: hidden;
+  }
+  /* What holds: a checkmark, and semibold words, so it never shows by color alone. */
+  .menu-row:has(> input:checked) {
+    font-weight: 600;
+  }
+  .menu-row:has(> input:checked) > .menu-check {
+    visibility: visible;
+  }
+  .menu-row:has(> :is(input, select):focus-visible) {
+    outline: 2px solid var(--ink);
+    outline-offset: -2px;
+  }
+
   /* The keyboard's place, drawn around the whole box (chips included) when its field has it. */
   .search-box:has(#search-field:focus-visible) {
     outline: 2px solid var(--ink);

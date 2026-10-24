@@ -674,10 +674,11 @@
 {#snippet welcome()}
   <!--
     The welcome, before the first feed (SPEC section 2): a title in the reading serif, one
-    sentence, a wide field with Add feed, and importing a list of feeds as a quiet second way in.
+    sentence, a wide field with Add feed, and importing a list of feeds as a quiet second way in,
+    all in one centred 420px column, like Apple Books' empty library: one message, one action.
     With the Add a feed sheet open over it, the sheet has the only field.
   -->
-  <div class="flex w-full max-w-[28rem] flex-col gap-6">
+  <div class="flex w-full max-w-[26.25rem] flex-col gap-6">
     <div class="text-center">
       <h2 id="welcome-heading" class="font-serif text-xlarge font-semibold tracking-[-0.01em]">A quiet place to read.</h2>
       <p class="mt-3 text-ink-2">Follow the websites you like, and read what they publish here, at your own pace.</p>
@@ -685,8 +686,8 @@
     {#if !(sheet && route.kind === "add-feed")}
       <AddFeed bind:field={addField} feeds={[]} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} />
     {/if}
-    <p class="-mt-4 text-center text-small text-muted">
-      or <a href="/settings" onclick={goImport} class="inline-flex min-h-11 items-center text-ink-2 underline underline-offset-4">import an OPML file</a>
+    <p class="-mt-5 text-center">
+      <a href="/settings" onclick={goImport} class="btn-quiet btn-small">Import an OPML file…</a>
     </p>
   </div>
 {/snippet}
@@ -972,8 +973,8 @@
             {:else if missing}
               <p class="mt-4">You don't follow this feed. It may have been an old address.</p>
             {:else if welcoming && panes.article}
-              <!-- The welcome has the reading area; the list just says there's nothing yet. -->
-              <p class="mt-4 text-ui text-muted">Nothing here yet.</p>
+              <!-- The welcome has the reading area; the list just says, quietly and in its middle, that there's nothing yet. -->
+              <p class="m-auto pb-[12vh] text-ui text-muted">Nothing here yet.</p>
             {:else if welcoming}
               <!-- No reading area beside the list (a phone, or a medium window with the sidebar shown): the welcome is here. -->
               <div class="mt-8 flex justify-center">{@render welcome()}</div>
@@ -1033,8 +1034,8 @@
             -->
             <section aria-label="Article" class="flex min-w-0 flex-1 flex-col items-center justify-center bg-paper px-6 pb-[12vh] text-center md:px-10">
               <div>
-                <p class="font-serif text-large text-ink-2">No article open.</p>
-                <p class="mt-2 min-h-[1lh] text-small text-muted">
+                <p class="font-serif text-[1.0625rem] text-ink-2">No article open.</p>
+                <p class="mt-2 min-h-[1lh] text-meta text-muted">
                   {#if listCount > 0 && !missing}Choose one from the list<span class="keyboard-hint">, or press <kbd class="key">j</kbd></span>.{/if}
                 </p>
               </div>

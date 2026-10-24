@@ -6,11 +6,15 @@
 
   Every sheet has the same build (DESIGN.md → "Visual language"): a title in
   the interface font (the serif names places; a sheet is a task), the form,
-  one row of actions at its foot (Cancel, then the main action at the right
-  end; `.sheet-actions`), and, when there is one, a destructive action apart
-  below a hairline (`.sheet-danger`). There's no X: Cancel (or Escape) is
-  the way out. Its corners, edge and shadow are the search options' too
-  (`.floating`).
+  and one row of actions at its foot in a Mac sheet's order (`.sheet-actions`):
+  a destructive action, if there is one, at the far left in red words, then
+  Cancel, then the main action at the right end. There's no X: Cancel (or
+  Escape) is the way out. Its corners, edge and shadow are the search
+  options' too (`.floating`).
+
+  It opens a little above the middle of the window, where the eye rests, and
+  its height follows what's in it. Its top then stays put: a message
+  appearing in it grows it downwards, so nothing you are looking at moves.
 -->
 <script lang="ts">
   import type { Snippet } from "svelte";
@@ -31,10 +35,19 @@
   } = $props();
 
   let dialog: HTMLDialogElement | undefined = $state();
+  /** How far down the window the card's top sits, set as it opens (and when the window is resized). */
+  let top: number | undefined = $state();
+
+  /** A little above the middle (two fifths of the space left over above it), never closer than 16px to the top. */
+  function place() {
+    if (!dialog) return;
+    top = Math.max(16, Math.round((innerHeight - dialog.offsetHeight) * 0.4));
+  }
 
   $effect(() => {
     if (dialog && !dialog.open) {
       dialog.showModal();
+      place();
       (initial?.() ?? heading)?.focus();
     }
   });
@@ -57,13 +70,17 @@
   }
 </script>
 
+<svelte:window onresize={place} />
+
 <dialog
   bind:this={dialog}
   aria-labelledby="sheet-heading"
   oncancel={cancel}
   onpointerdown={(event) => (pressedOutside = event.target === dialog)}
   onclick={outside}
-  class="floating mx-auto mt-[12dvh] max-h-[min(40rem,84dvh)] w-[min(32rem,calc(100vw-2rem))] overflow-y-auto p-0 text-ink"
+  class="floating dimmed mx-auto mb-auto w-[min(32rem,calc(100vw-2rem))] overflow-y-auto p-0 text-ink"
+  style:margin-top={top === undefined ? undefined : `${top}px`}
+  style:max-height={top === undefined ? undefined : `calc(100dvh - ${top}px - 1rem)`}
 >
   <div class="flex flex-col gap-5 p-6">
     <h2 id="sheet-heading" tabindex="-1" bind:this={heading} class="text-large font-semibold tracking-[-0.015em] break-words">
@@ -72,10 +89,3 @@
     {@render children()}
   </div>
 </dialog>
-
-<style>
-  /* Anchored a fixed way down rather than centred, so it doesn't move when a message appears in it. */
-  dialog::backdrop {
-    background: rgb(28 24 20 / 0.28);
-  }
-</style>

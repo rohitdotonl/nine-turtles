@@ -20,6 +20,15 @@ not how it was done.
 - Search results show a line of text around what matched, and an × clears
   the field.
 - A first visit is welcomed in the reading area, not squeezed into the list.
+- Settings looks like Apple Books' settings: one centred column of grouped
+  lists, each row its name on the left and its control on the right. Themes
+  are "Aa" tiles in their own colors (all eleven kept), ticked when chosen;
+  text size is a small A and a large A. Import and export are plain rows.
+- Sheets open a little above the middle and grow with what's in them, over a
+  lighter dim. Unsubscribe and Delete sit at the bottom left in red, Cancel
+  and Save at the right. Fields have a thin edge; problems are red words with
+  a warning mark. Search options are a menu with checkmarks, and the
+  shortcut list fades at its foot instead of looking cut off.
 
 ## 24 October 2026: Calmer selection, one search style, tidier edges
 

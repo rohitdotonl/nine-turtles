@@ -35,7 +35,7 @@ test.describe("on a wide window", () => {
     expect(empty.y).toBeGreaterThan(pane.y + pane.height / 4);
     // A calm line in the reading serif, and a quiet hint, since the list has articles to open.
     expect(await article(page).getByText("No article open.").evaluate((e) => getComputedStyle(e).fontFamily)).toContain("Literata");
-    await expect(article(page).getByText("No article open.")).toHaveCSS("font-size", "20px");
+    await expect(article(page).getByText("No article open.")).toHaveCSS("font-size", "17px");
     await expect(article(page)).toContainText("Choose one from the list, or press j.");
 
     await page.keyboard.press("j");
@@ -399,7 +399,7 @@ test.describe("on a wide window", () => {
     await expect.poll(size).toBe("18px");
 
     await page.getByRole("link", { name: "Settings" }).click();
-    await expect(page.getByRole("radio", { name: "Small", exact: true })).toBeChecked();
+    await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("status")).toHaveText("Small");
   });
 });
 

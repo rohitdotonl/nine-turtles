@@ -227,6 +227,8 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Icon set
 - Popover and menu button (`aria-haspopup`)
 - Bottom sheet
+- Grouped inset list
+- Stepper (a smaller / larger pair)
 
 ## Planned for V2
 
