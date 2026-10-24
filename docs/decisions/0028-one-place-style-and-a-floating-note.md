@@ -1,5 +1,7 @@
 # 0028: One "where you are" shape, an unread dot, and a floating note
 
+*Refined by decision 0030: the bar now sits flush against the pane's edge.*
+
 *24 October 2026. From the outside critic's second pass
 (`ui-polish/critic-round4.md` in the project files), under the owner's
 "taste first" direction (decision 0027).*

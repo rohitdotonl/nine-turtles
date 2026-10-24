@@ -88,7 +88,7 @@
     aria-current={isHere(place) ? "page" : undefined}
     onclick={(event) => follow(event, place)}
     title={folder.name}
-    class={["flex min-h-11 pointer-fine:min-h-9 min-w-0 flex-1 items-center gap-3 rounded-lg pr-3.5 text-ui", padded && "pl-[14px]", isHere(place) ? "font-semibold text-ink" : "text-ink-2"]}
+    class={["flex min-h-11 pointer-fine:min-h-9 min-w-0 flex-1 items-center gap-3 rounded-md pr-3.5 text-ui", padded && "pl-[14px]", isHere(place) ? "font-semibold text-ink" : "text-ink-2"]}
     ><span class="min-w-0 flex-1 truncate">{folder.name}</span>{@render count(
       folderUnread(folder, feeds),
     )}</a

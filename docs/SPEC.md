@@ -115,7 +115,7 @@ A few words used throughout:
   |---|---|
   | Unread | Full-strength, semibold title |
   | Read | A softer second ink, regular-weight title (the title stays full-strength while it's the selected row) |
-  | Selected | A faint tint and a short ink blue bar against the list's left edge; when the keyboard is on it, the bar runs the row's full height |
+  | Selected | A faint tint and a short ink blue bar against the list's left edge; when you're using the keyboard, the usual outline inside the tint |
   | Starred | A small star mark |
 
 - Items you read in the Unread view stay where they are (greyed) until you press `r` or leave the view, so nothing jumps under your cursor.
@@ -358,7 +358,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 
 - A keyboard icon at the foot of the sidebar opens the shortcut list (its tooltip says "Keyboard shortcuts (?)"); when the sidebar is hidden, a quiet hint "Press ? for shortcuts" sits at the bottom of the list instead (on screens with a keyboard).
 - The `?` cheat sheet groups the shortcuts (Moving around, Reading, Your articles, Everywhere) in two columns, what each does on the left and its keys on the right, and also documents the search filters. It has an X to close it (or Escape). Until a shortcut's feature exists, it isn't listed, and the key does nothing.
-- The keyboard's place is shown by a 2px outline in the text color (never ink blue, which only marks your place in slowfeed). Rows draw it just inside themselves, beside the selected row's ink blue bar. A title that receives the place when a screen opens (so screen readers start there) gets the same outline when you got there by keyboard, and nothing after a click.
+- The keyboard's place is shown by a 2px outline in the text color (never ink blue, which only marks your place in slowfeed). Rows draw it just inside themselves; the selected row's ink blue bar stays outside it, at the pane's edge. A title that receives the place when a screen opens (so screen readers start there) gets the same outline when you got there by keyboard, and nothing after a click.
 - Shortcuts don't fire while you're typing in a field.
 
 **How to check it**

@@ -8,8 +8,9 @@ not how it was done.
 
 - The selected article and the selected sidebar place now look the same: a
   soft fill and a short ink blue bar right at the pane's left edge.
-- The selected article no longer has a thin box drawn round it when you
-  use the keyboard. Instead its bar grows to the full height of the row.
+- The thin grey box round the selected article is gone. When you use the
+  keyboard, it gets the same clear outline as everything else, and the blue
+  bar stays outside it.
 
 ## 24 October 2026: Lighter, calmer type
 

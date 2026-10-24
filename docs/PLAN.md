@@ -246,7 +246,7 @@ each with screenshots:
   single-line focus on fields, and phone text that keeps about 40
   characters a line.
 - ✅ "Where you are" as a fill and a bar flush with the pane's edge, the
-  same in both panes, and no ring around the selected article (decision
+  same in both panes, and one focus outline for every row (decision
   0030).
 
 ---
