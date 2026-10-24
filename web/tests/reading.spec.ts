@@ -129,7 +129,13 @@ test.describe("on a wide window", () => {
     await expect(title(page, "Only the first page")).toBeVisible();
 
     const original = article(page).getByRole("link", { name: "Open original" }).first();
-    // The everyday actions are icons, each named in its tooltip with its key.
+    // The actions are quiet icons, each named in its tooltip with its key; the way to the publisher comes first.
+    const order = await article(page)
+      .locator(".article-column")
+      .locator("a[aria-label], button[aria-label]")
+      .evaluateAll((controls) => controls.map((control) => control.getAttribute("aria-label")));
+    expect(order).toEqual(["Open original", "Reading appearance", "Copy link", "Star", "Mark unread"]);
+    expect((await original.innerText()).trim()).toBe("");
     await expect(article(page).getByRole("button", { name: "Star" })).toHaveAttribute("title", "Star (s)");
     await expect(article(page).getByRole("button", { name: "Mark unread" })).toHaveAttribute("title", "Mark unread (m)");
     await expect(original).toHaveAttribute("title", "Open original (v)");
@@ -149,6 +155,75 @@ test.describe("on a wide window", () => {
     await article(page).getByRole("button", { name: "Copy link" }).click();
     await expect(article(page).getByRole("status")).toHaveText("Link copied.");
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("https://reading-room.example/slow-letter");
+  });
+
+  test("the Aa panel changes text size, theme, font and line width at once; Escape closes it", async ({ page }) => {
+    await openRoom(page);
+    await page.keyboard.press("j");
+    const aa = article(page).getByRole("button", { name: "Reading appearance" });
+    await expect(aa).toHaveAttribute("aria-haspopup", "dialog");
+    await expect(aa).toHaveAttribute("aria-expanded", "false");
+    await aa.click();
+    const panel = page.getByRole("dialog", { name: "Reading appearance" });
+    await expect(panel).toBeVisible();
+    await expect(aa).toHaveAttribute("aria-expanded", "true");
+    // A popover under its button, lined up with its right edge.
+    const button = (await aa.boundingBox())!;
+    const box = (await panel.boundingBox())!;
+    expect(box.y).toBeGreaterThanOrEqual(button.y + button.height);
+    expect(Math.abs(box.x + box.width - (button.x + button.width))).toBeLessThan(2);
+    // The keyboard starts on its first control.
+    await expect(panel.getByRole("button", { name: "Smaller text" })).toBeFocused();
+
+    // Text size: the same steps as + and -, applied at once.
+    const root = page.locator("html");
+    const size = () => root.evaluate((html) => html.style.getPropertyValue("--reading-size"));
+    const before = await size();
+    await panel.getByRole("button", { name: "Larger text" }).click();
+    await expect(panel.getByRole("status")).toHaveText("Large");
+    expect(await size()).not.toBe(before);
+    await panel.getByRole("button", { name: "Smaller text" }).click();
+    await expect.poll(size).toBe(before);
+
+    // Every theme and Automatic, each as "Aa" on its own page; the chosen one applies at once.
+    await expect(panel.getByRole("group", { name: "Theme" }).getByRole("radio")).toHaveCount(12);
+    await expect(panel.getByRole("radio", { name: "Automatic" })).toBeChecked();
+    await panel.getByRole("radio", { name: "Sepia" }).check();
+    await expect(root).toHaveAttribute("data-theme", "sepia");
+    // Fonts are named in their own face; line width has three steps.
+    await panel.getByRole("radio", { name: "Atkinson Hyperlegible" }).check();
+    await expect.poll(() => root.evaluate((html) => html.style.getPropertyValue("--reading-font"))).toContain("Atkinson");
+    const measure = () => root.evaluate((html) => html.style.getPropertyValue("--reading-measure"));
+    const medium = await measure();
+    await panel.getByRole("radio", { name: "Wide" }).check();
+    await expect.poll(measure).not.toBe(medium);
+
+    // The keyboard's outline is in the text color, never the accent.
+    await panel.getByRole("radio", { name: "Sepia" }).focus();
+    await page.keyboard.press("ArrowRight");
+    await page.keyboard.press("ArrowLeft");
+    await expect(panel.getByRole("radio", { name: "Sepia" })).toBeChecked();
+    const [outline, ink] = await panel
+      .getByRole("radio", { name: "Sepia" })
+      .evaluate((input) => [getComputedStyle(input.closest("label")!).outlineColor, getComputedStyle(document.body).color]);
+    expect(outline).toBe(ink);
+
+    // Escape closes only the panel and gives the keyboard back to the Aa button; the article stays.
+    await page.keyboard.press("Escape");
+    await expect(panel).toHaveCount(0);
+    await expect(aa).toBeFocused();
+    await expect(aa).toHaveAttribute("aria-expanded", "false");
+    await expect(title(page, "The pleasure of a slow letter")).toBeVisible();
+
+    // A press outside closes it too, and Settings shows the same choices.
+    await aa.click();
+    await expect(panel).toBeVisible();
+    await title(page, "The pleasure of a slow letter").click({ position: { x: 4, y: 4 } });
+    await expect(panel).toHaveCount(0);
+    await page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: "Settings" }).click();
+    await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "Sepia" })).toBeChecked();
+    await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "Wide" })).toBeChecked();
+    await expect(page.getByText("The Aa button above an article changes these too")).toBeVisible();
   });
 
   test("a footnote link stays inside the article", async ({ page }) => {
@@ -228,7 +303,7 @@ test.describe("on a wide window", () => {
     expect(Math.abs(room.left - room.right)).toBeLessThan(4);
     // The first action's icon starts at the text's left edge.
     const first = (await article(page).getByRole("link", { name: "Open original" }).first().boundingBox())!;
-    expect(Math.abs(first.x + 10 - text.x)).toBeLessThan(2);
+    expect(Math.abs(first.x + 12 - text.x)).toBeLessThan(2);
   });
 
   test("in high-contrast mode, only the selected article is marked", async ({ page }) => {

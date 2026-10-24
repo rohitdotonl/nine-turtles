@@ -118,6 +118,8 @@
 
       <section aria-labelledby="reader-heading">
         {@render groupHead("reader-heading", "Look and feel", "These apply to this device only.")}
+        <!-- The same preferences as the Aa panel above an article (decision 0034). -->
+        <p class="-mt-1 mb-3 text-small text-muted">The Aa button above an article changes these too, while you read.</p>
         <div class="group-card">
           <fieldset class="setting">
             <legend class="setting-name">Theme</legend>

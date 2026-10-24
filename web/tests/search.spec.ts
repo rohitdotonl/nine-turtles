@@ -62,7 +62,7 @@ test("a search starts where you are, underlines the words it found, and Escape b
   await expect(found).toHaveCSS("text-decoration-line", "underline");
   const [wordColor, titleColor] = await Promise.all([found.evaluate((e) => getComputedStyle(e).color), found.evaluate((e) => getComputedStyle(e.parentElement!).color)]);
   expect(wordColor).toBe(titleColor);
-  // The end of the "Mark all as read" line says how many; there's nothing new to fetch, so Refresh steps aside.
+  // A quiet line above the results says how many; there's nothing new to fetch, so Refresh steps aside.
   await expect(page.getByRole("status").filter({ hasText: /^1 result$/ })).toBeVisible();
   await expect(page.getByRole("region", { name: "Search results" }).getByRole("button", { name: "Refresh" })).toHaveCount(0);
 

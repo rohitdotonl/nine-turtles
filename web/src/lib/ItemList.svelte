@@ -9,8 +9,9 @@
   selects it and the reading area shows it (SPEC section 7); the next one is
   fetched in advance.
 
-  Above the list: Refresh and "Mark all as read", which marks only the
-  articles listed here. "New items · press r" and "Marked 23 items as read"
+  Refresh and "Mark all as read" (which marks only the articles listed here)
+  sit beside the list's title, in Shell; search results say how many above
+  the list. "New items · press r" and "Marked 23 items as read"
   with Undo appear in a note floating at the bottom of the list, so nothing
   shifts. Every mark
   shows at once and is saved behind; if saving fails, the line says so and
@@ -55,7 +56,6 @@
     onChoose,
     onUnreadChange,
     onRefresh,
-    refreshInTopBar = false,
     results = false,
     oneFeed = false,
   }: {
@@ -73,8 +73,6 @@
     onUnreadChange: (feedId: number, change: number) => void;
     /** The reader asked for new items; the sidebar's counts load again too. */
     onRefresh: () => void;
-    /** On a phone, Refresh sits in the top bar instead (SPEC section 13), so there's only ever one. */
-    refreshInTopBar?: boolean;
     /** These are search results: say how many, and there's nothing new to fetch. */
     results?: boolean;
     /** Every article here is from one feed (its own list), so the rows don't repeat its name. */
@@ -90,7 +88,6 @@
   let busy = $state(false);
   let problem = $state("");
   let rows: HTMLButtonElement[] = $state([]);
-  let markAllButton: HTMLButtonElement | undefined = $state();
   /** The newest article's number when the list was loaded, and whether anything has arrived since. */
   let latest = 0;
   let newWaiting = $state(false);
@@ -370,9 +367,9 @@
 
   function undoByButton() {
     undo();
-    // The button is gone; keep the keyboard's place nearby.
+    // The button is gone; keep the keyboard's place nearby: the chosen article, or the first.
     if (selectedIndex !== -1) focusSelected();
-    else markAllButton?.focus();
+    else rows[0]?.focus();
   }
 
   function arrows(event: KeyboardEvent) {
@@ -391,21 +388,10 @@
   load(null);
 </script>
 
-<div class="-ml-3 flex min-h-11 flex-wrap items-center gap-x-1">
-  <!-- First, so it never moves when "Mark all as read" comes and goes. -->
-  {#if !refreshInTopBar && !results}
-    <button type="button" aria-disabled={busy} onclick={refresh} class="btn-quiet btn-small"><Icon name="refresh" size={16} />Refresh</button>
-  {/if}
-  {#if articles.length > 0}
-    <button type="button" bind:this={markAllButton} onclick={markAllRead} class="btn-quiet btn-small">
-      <Icon name="check" size={16} />Mark all as read
-    </button>
-  {/if}
-  {#if results}
-    <!-- How many were found, at the end of the same line. Present from the start and filled once they load, so screen readers hear it. -->
-    <p role="status" class="ml-auto pr-0.5 text-meta text-muted empty:sr-only">{loaded ? resultCount(articles.length, next !== null) : ""}</p>
-  {/if}
-</div>
+{#if results}
+  <!-- How many were found, quietly above the results. Present from the start and filled once they load, so screen readers hear it. -->
+  <p role="status" class="pt-1 pb-2 text-meta text-muted empty:sr-only">{loaded ? resultCount(articles.length, next !== null) : ""}</p>
+{/if}
 
 {#if loaded && articles.length === 0}
   <p>{empty}</p>

@@ -17,6 +17,7 @@
   import EditFeed from "./EditFeed.svelte";
   import EditFolder from "./EditFolder.svelte";
   import ItemList from "./ItemList.svelte";
+  import MoreMenu from "./MoreMenu.svelte";
   import PageHead from "./PageHead.svelte";
   import Sheet from "./Sheet.svelte";
   import Settings from "./Settings.svelte";
@@ -233,6 +234,16 @@
     } catch {
       sort = before;
       throw new Error("not saved");
+    }
+  }
+
+  /** The sort order, chosen from the list's More menu: the same setting as in Settings › Reading. */
+  async function sortFromMenu(next: Order) {
+    if (next === sort) return;
+    try {
+      await changeSort(next);
+    } catch {
+      itemList?.say("The sort order couldn't be saved. Try again in a moment.");
     }
   }
 
@@ -656,6 +667,10 @@
 
 {#snippet listHead()}
             <!-- One line, so the search box below never moves: a long name ends in "…", its whole name is its tooltip and is read in full by screen readers. -->
+            <!--
+              Beside the title, quiet icons: Edit (a feed's or folder's own list), Refresh, and More,
+              a small menu with "Mark all as read" and the sort order (SPEC section 6).
+            -->
             <div class="flex min-h-11 items-center gap-4">
               <h2
                 id="list-heading"
@@ -666,25 +681,48 @@
               >
                 {headingText}
               </h2>
-              {#if shown}
-                <!-- Nothing beside the heading while searching. -->
-              {:else if currentFeed}
-                <a
-                  href={pathFor({ kind: "edit-feed", id: currentFeed.id })}
-                  onclick={(event) => follow(event, { kind: "edit-feed", id: currentFeed!.id })}
-                  aria-label="Edit feed"
-                  title="Edit feed"
-                  class="btn-quiet btn-icon -mr-2.5 shrink-0"><Icon name="edit" size={18} /></a
-                >
-              {:else if currentFolder}
-                <a
-                  href={pathFor({ kind: "edit-folder", id: currentFolder.id })}
-                  onclick={(event) => follow(event, { kind: "edit-folder", id: currentFolder!.id })}
-                  aria-label="Edit folder"
-                  title="Edit folder"
-                  class="btn-quiet btn-icon -mr-2.5 shrink-0"><Icon name="edit" size={18} /></a
-                >
-              {/if}
+              <div class="-mr-3 flex shrink-0 items-center empty:hidden">
+                {#if shown}
+                  <!-- Nothing to edit while searching. -->
+                {:else if currentFeed}
+                  <a
+                    href={pathFor({ kind: "edit-feed", id: currentFeed.id })}
+                    onclick={(event) => follow(event, { kind: "edit-feed", id: currentFeed!.id })}
+                    aria-label="Edit feed"
+                    title="Edit feed"
+                    class="btn-quiet btn-icon"><Icon name="edit" size={18} /></a
+                  >
+                {:else if currentFolder}
+                  <a
+                    href={pathFor({ kind: "edit-folder", id: currentFolder.id })}
+                    onclick={(event) => follow(event, { kind: "edit-folder", id: currentFolder!.id })}
+                    aria-label="Edit folder"
+                    title="Edit folder"
+                    class="btn-quiet btn-icon"><Icon name="edit" size={18} /></a
+                  >
+                {/if}
+                {#if itemList && !missing}
+                  <!-- Search results have nothing new to fetch, so Refresh steps aside while searching. -->
+                  {#if !shown}
+                    <button type="button" onclick={() => itemList?.refresh()} aria-label="Refresh" title={phone ? "Refresh" : "Refresh (r)"} class="btn-quiet btn-icon"
+                      ><Icon name="refresh" size={18} /></button
+                    >
+                  {/if}
+                  <MoreMenu
+                    id="list-menu"
+                    groups={[
+                      { items: [{ label: "Mark all as read", shortcut: phone ? undefined : "Shift+A", onSelect: () => itemList?.markAllRead() }] },
+                      {
+                        label: "Sort order",
+                        items: [
+                          { label: "Newest first", checked: sort === "newest", onSelect: () => sortFromMenu("newest") },
+                          { label: "Oldest first", checked: sort === "oldest", onSelect: () => sortFromMenu("oldest") },
+                        ],
+                      },
+                    ]}
+                  />
+                {/if}
+              </div>
             </div>
 {/snippet}
 
@@ -877,17 +915,12 @@
           ]}
         >
           {#if phone}
-            <!-- The phone's top bar (SPEC section 20): back to the feeds, Refresh, and the screen's title. It never scrolls. -->
+            <!-- The phone's top bar (SPEC section 20): back to the feeds, then the screen's title with Refresh and More beside it. It never scrolls. -->
             <div class="px-6 pb-2">
-              <div class="-ml-2 flex items-center justify-between gap-4 pb-2">
+              <div class="-ml-2 flex items-center gap-4 pb-2">
                 <button type="button" onclick={() => stepBack("home")} aria-label="Back to Feeds" class="btn-quiet gap-1 px-2"
                 ><Icon name="back" size={20} />Feeds</button
               >
-                {#if itemList && !missing && !shown}
-                  <button type="button" onclick={() => itemList?.refresh()} class="btn-quiet -mr-3"
-                    ><Icon name="refresh" />Refresh</button
-                  >
-                {/if}
               </div>
               {@render listHead()}
             </div>
@@ -919,7 +952,7 @@
                 >
               </p>
             {:else if feeds !== undefined && sort !== undefined}
-              <!-- Refresh and "Mark all as read", then the list, with "New items · press r" and Undo in a note floating at its foot. -->
+              <!-- The list, with "New items · press r" and Undo in a note floating at its foot (Refresh and More sit beside the title). -->
               {#key listKey}
                 <ItemList
                   bind:this={itemList}
@@ -932,7 +965,6 @@
                   onChoose={chose}
                   onUnreadChange={unreadChanged}
                   onRefresh={loadFeeds}
-                  refreshInTopBar={phone}
                   results={shown !== undefined}
                   oneFeed={under.kind === "feed" && !shown}
                 />
@@ -948,6 +980,7 @@
             <ArticleView
               article={selected}
               bind:heading={articleHeading}
+              bind:preferences
               onStar={() => itemList?.toggleStar()}
               onMarkUnread={() => itemList?.markUnread()}
               phone={phone

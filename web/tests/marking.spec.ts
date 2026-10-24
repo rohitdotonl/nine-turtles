@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
-import { appReady, follow, signIn, tabTo } from "./screens";
+import { appReady, follow, markAllFromMenu, signIn, tabTo } from "./screens";
 
 // SPEC sections 8, 9, 18 (sort order) and 25 (a failed save), "How to check
 // it", done by a browser. Each test follows a made-up blog of its own
@@ -111,25 +111,67 @@ test.describe("on a wide window", () => {
     await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 3 unread`);
   });
 
-  test("with only the keyboard: Mark all as read and Undo are buttons too", async ({ page }) => {
+  test("with only the keyboard: the More menu's Mark all as read, and Undo, work too", async ({ page }) => {
     const blog = await openBlog(page);
-    const markAll = page.getByRole("button", { name: "Mark all as read" });
-    await tabTo(page, markAll);
+    // More (…) beside the list's title says it opens a menu; Enter opens it on its first item.
+    const more = page.getByRole("button", { name: "More", exact: true });
+    await expect(more).toHaveAttribute("aria-haspopup", "menu");
+    await tabTo(page, more);
+    await page.keyboard.press("Enter");
+    await expect(more).toHaveAttribute("aria-expanded", "true");
+    const markAll = page.getByRole("menuitem", { name: "Mark all as read" });
+    await expect(markAll).toBeFocused();
+    await expect(markAll).toHaveAttribute("aria-keyshortcuts", "Shift+A");
     await page.keyboard.press("Enter");
     await expect(line(page)).toHaveText("Marked 3 items as read");
+    // The menu closes, and the keyboard goes back to its button.
+    await expect(page.getByRole("menu")).toHaveCount(0);
+    await expect(more).toBeFocused();
 
     const undo = page.getByRole("button", { name: "Undo" });
     await tabTo(page, undo);
     await page.keyboard.press("Enter");
     await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 3 unread`);
-    // The Undo button is gone; the keyboard's place stays nearby, not lost.
-    await expect(markAll).toBeFocused();
+    // The Undo button is gone; the keyboard's place stays nearby, on an article, not lost.
+    await expect(page.locator(".item-row:focus")).toHaveCount(1);
+  });
+
+  test("the More menu: arrow keys move through it, Escape closes it and goes back to its button", async ({ page }) => {
+    await openBlog(page);
+    const more = page.getByRole("button", { name: "More", exact: true });
+    await more.focus();
+    await page.keyboard.press("ArrowDown");
+    const menu = page.getByRole("menu", { name: "More" });
+    await expect(menu).toBeVisible();
+    await expect(menu.getByRole("menuitem", { name: "Mark all as read" })).toBeFocused();
+    // The sort order is a one-of-two choice, ticked where it is now.
+    await expect(menu.getByRole("menuitemradio", { name: "Newest first" })).toHaveAttribute("aria-checked", "true");
+    await expect(menu.getByRole("menuitemradio", { name: "Oldest first" })).toHaveAttribute("aria-checked", "false");
+    await page.keyboard.press("ArrowDown");
+    await expect(menu.getByRole("menuitemradio", { name: "Newest first" })).toBeFocused();
+    await page.keyboard.press("End");
+    await expect(menu.getByRole("menuitemradio", { name: "Oldest first" })).toBeFocused();
+    await page.keyboard.press("ArrowDown");
+    await expect(menu.getByRole("menuitem", { name: "Mark all as read" })).toBeFocused();
+
+    // Escape closes only the menu: the list stays, and the keyboard is back on More.
+    await page.keyboard.press("Escape");
+    await expect(menu).toHaveCount(0);
+    await expect(more).toBeFocused();
+    await expect(more).toHaveAttribute("aria-expanded", "false");
+    await expect(page.locator(".item-row")).toHaveCount(3);
+
+    // A press outside closes it too.
+    await more.click();
+    await expect(menu).toBeVisible();
+    await page.getByRole("heading", { level: 2 }).first().click();
+    await expect(menu).toHaveCount(0);
   });
 
   test("on a phone, Undo is a full 44px tap that never reaches into the first article", async ({ page, isMobile }) => {
     test.skip(!isMobile, "The 44px floor is for touch screens.");
     await openBlog(page);
-    await page.getByRole("button", { name: "Mark all as read" }).click();
+    await markAllFromMenu(page);
     const undo = page.getByRole("button", { name: "Undo" });
     await expect(undo).toBeVisible();
     const tap = (await undo.boundingBox())!;
@@ -257,6 +299,22 @@ test("Settings: the sort order is saved for every device", async ({ page, isMobi
   await expect(reading.getByRole("radio", { name: "Oldest first" })).toBeChecked();
   await expect(reading.getByRole("radio", { name: "Oldest first" })).toBeFocused();
   await page.reload();
+  await appReady(page);
+  await expect(reading.getByRole("radio", { name: "Oldest first" })).toBeChecked();
+  await reading.getByRole("radio", { name: "Newest first" }).check();
+  await expect(reading.getByRole("radio", { name: "Newest first" })).toBeChecked();
+
+  // The list's More menu sets the same sort order (Starred has a list even with no feeds).
+  await page.goto("/starred");
+  await appReady(page);
+  const more = page.getByRole("button", { name: "More", exact: true });
+  await more.click();
+  await expect(page.getByRole("menuitemradio", { name: "Newest first" })).toHaveAttribute("aria-checked", "true");
+  await page.getByRole("menuitemradio", { name: "Oldest first" }).click();
+  await more.click();
+  await expect(page.getByRole("menuitemradio", { name: "Oldest first" })).toHaveAttribute("aria-checked", "true");
+  await page.keyboard.press("Escape");
+  await page.goto("/settings");
   await appReady(page);
   await expect(reading.getByRole("radio", { name: "Oldest first" })).toBeChecked();
   await reading.getByRole("radio", { name: "Newest first" }).check();

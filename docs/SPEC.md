@@ -106,7 +106,8 @@ A few words used throughout:
 **What it does**
 - Each row shows the article **title**, and below it the **source name and time** in quiet small text (just the time in one feed's own list, whose title already names it). Unread articles have a small dot before the title. No images, no site icons.
 - Dates and times are shown in your device's time zone, in words that never change while you look: "14:05" for today, "23 Oct" for this year, "23 Oct 2025" before that. The time is when the publisher says they published it, or when slowfeed received it if they don't say (and never later than that, so a wrong date can't pin an article to the top).
-- Newest first by default; oldest first can be chosen in Settings.
+- Newest first by default; oldest first can be chosen in Settings or in the list's More menu.
+- Beside the list's title sit quiet icons, each with its name as a tooltip and for screen readers: **Edit feed** or **Edit folder** (in a feed's or folder's own list), **Refresh** (section 13) and **More** (…). More opens a small menu with **Mark all as read** (section 8; its key, `Shift+A`, is shown beside it) and the **sort order** (Newest first or Oldest first, the current one ticked and semibold). A click, Enter or the down arrow opens it on its first item; the arrow keys, Home and End move through it; Escape closes it and puts the keyboard back on More; Tab or a press outside closes it too.
 - Unread, Starred and All list articles from every feed. A feed's own list shows all its articles, read and unread.
 - The list has an end: it shows 50 items, then a **"Show older items"** button ("Show newer items" when sorting oldest first). Nothing more loads unless you press it. When there's nothing older, a short hairline and "That's everything." close the list.
 - Row states, each recognizable without color:
@@ -132,7 +133,8 @@ A few words used throughout:
 - Reading font is Literata by default (Atkinson Hyperlegible as an alternative). Lines are about 65–75 characters long.
 - Links inside articles are underlined in the normal text color, never blue.
 - If the feed only has a summary, slowfeed shows the summary. It never fetches the rest from the website. **"Open original"** takes you there.
-- "Open original" is always present, always in the same place, in words at the left of the article's top line. On the right, as icons with tooltips naming them and their keys: **Copy link** (or Share, section 21), **Star** (an outline star, filled once starred) and **Mark unread** (a ring with a dot, like the Unread view's icon). The feed's name in the line under the title links to the publisher's site.
+- The article's top line is a quiet row of icons, each named for screen readers and in its tooltip with its key. **Open original** (an arrow out of a box, tooltip "Open original (v)") is always present, always in the same place, at the left. On the right: **Aa** (the reading panel, below), **Copy link** (or Share, section 21), **Star** (an outline star, filled once starred) and **Mark unread** (a ring with a dot, like the Unread view's icon). The feed's name in the line under the title links to the publisher's site.
+- **The Aa panel** ("Reading appearance"), as in Apple Books: a small panel under the Aa button (on a phone, a sheet along the bottom of the screen, with a Close button). From the top: text size as a small A and a large A (the same six steps as `+` and `-`, the current step's name beside it); the themes, each a round-cornered tile showing "Aa" in the reading font on that theme's own page color in its own ink, with its name underneath (Automatic is half light, half dark), the chosen one ringed and its name semibold; the reading font, each name written in its own face; and the line width (Narrow, Medium, Wide). Every change applies at once to the article behind it and is the same preference as in Settings › Look and feel (section 18). It isn't modal: the article stays usable. The keyboard starts on its first control; the choices are real buttons and radio buttons; Escape closes it and puts the keyboard back on Aa; a press outside it, or Tab leaving it, closes it too.
 - The source is always credited and linked, in a line under the title as in a book or magazine: the feed's name (linking to the publisher's website), the author if the feed names one, and the time.
 - Once loaded, an article ends rather than stops: a short centred line after its last paragraph, with room below so the last lines can be read at eye level. A summary-only article's note ("This feed shares only a summary…") sits under that line.
 - Choosing an article in the list (a click, `j` / `k`, or the arrow keys while in the list) shows it in the reading area. `Enter` or `o` opens it to read: the keyboard's place moves into the article, and `j` / `k` then move from article to article; Escape goes back to the list. On a phone-narrow window the article takes the list's place, with a back button named after the list. `j` never loads older items on its own: at the end of the list it stops.
@@ -151,13 +153,14 @@ A few words used throughout:
 3. Check that links in the text are underlined and not blue.
 4. Press `j` repeatedly: each article appears with no visible wait.
 5. Press `Enter`, read, press Escape: you're back on the same row in the list. Press `+` and `-`: the text grows and shrinks.
+6. Press Aa above an article: the panel opens under it. Press the large A, choose Sepia and Atkinson Hyperlegible: the article changes at once. Press Escape: the panel closes and the keyboard is back on Aa. Settings › Look and feel shows the same choices.
 
 ## 8. Read state, marking unread, "mark all as read", undo
 
 **What it does**
 - An item counts as read as soon as it's shown in the reading pane, by click or by `j`/`k`.
-- `m` marks the current item unread again. The **Mark unread** button in the article's top bar does the same (an icon on desktop, labeled on phones).
-- **Mark all as read** (`Shift+A`, or a labeled button in the list header, shown when the list has items): happens instantly, no "are you sure?". It affects **only the items shown on screen right now** (every item listed, including pages added with "Show older items"). Items that arrived in the background but aren't displayed yet are never touched.
+- `m` marks the current item unread again. The **Mark unread** button in the article's toolbar does the same (an icon, at the top on desktop and in the bottom bar on phones).
+- **Mark all as read** (`Shift+A`, or **Mark all as read** in the More (…) menu beside the list's title, section 6): happens instantly, no "are you sure?". It affects **only the items shown on screen right now** (every item listed, including pages added with "Show older items"). Items that arrived in the background but aren't displayed yet are never touched.
 - **Undo** (`u`, or a visible **Undo**): after an undoable action, a note such as "Marked 23 items as read" with an **Undo** button floats at the bottom of the list (nothing in the list moves). It stays until your next undoable action or until you leave the list. Pressing `r` doesn't clear it. After an undo it says "Undone."; there's no undoing an undo. Moving through articles doesn't clear it.
 - Undo reverses **the last action only**, of these: mark all as read, mark unread, star/unstar, unsubscribe, delete folder.
 - Read state is recorded in both reading modes, so switching modes never loses it.
@@ -173,7 +176,7 @@ A few words used throughout:
 ## 9. Star
 
 **What it does**
-- One concept: **Star**. `s` (or the **Star** button in the article's top bar) stars or unstars the current item. It can be undone like the other marks (section 8).
+- One concept: **Star**. `s` (or the **Star** button in the article's toolbar) stars or unstars the current item. It can be undone like the other marks (section 8).
 - Starred items appear in the **Starred** view and are kept forever.
 
 **How to check it**
@@ -233,10 +236,10 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 **What it does**
 - The list on screen changes only when you ask: press `r` or the Refresh button.
 - When new items are waiting, a quiet note floats at the bottom of the list: **"New items · press r"** (on touch screens: **"New items · tap Refresh"**). It shows no number. It floats over the list, so nothing shifts when it appears. The list asks the server about once a minute, and only about its own articles (none ever arrive in Starred).
-- A labeled **Refresh** button sits at the top of every list, first in its row. On phones it sits in the top bar instead, so there's only ever one.
+- A **Refresh** button (a circling arrow, named "Refresh", its tooltip "Refresh (r)") sits beside every list's title, on phones too, so there's only ever one.
 - Because fetching already happened in the background, pressing `r` is instant. It shows the list from the top again, with the new items, and updates the sidebar's unread numbers. Those numbers also wait for `r`, so nothing in the sidebar changes under you either.
 - Opening or reloading the app always shows the latest state.
-- No pull-to-refresh on phones; there's a labeled Refresh button instead.
+- No pull-to-refresh on phones; there's the Refresh button beside the list's title instead.
 
 **How to check it**
 1. Leave the app open. When the "New items" note appears at the bottom, check the list hasn't moved.
@@ -252,7 +255,7 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 - **Search options** opens a small popover under its button, floating over the list rather than pushing it down: **Search in** (all feeds, Unread, Starred, a folder or a feed; where you are says "(this list)"), **Show only** Unread and Starred, and **Published**: Any time, Past week, Past month or Custom, which shows two dates. Escape closes it and returns to its button (a second Escape closes the search); so does a press outside it, or the keyboard moving out of the search. The panel and the chips always match. The search box stays one line for the usual one or two chips: they shrink and end in "…", with their whole text in a tooltip. With three or more it wraps, so every chip stays readable.
 - Titles and article text are always searched together; title matches come first.
 - Power-user filters can be typed: `is:unread`, `is:starred`, `feed:name`, `folder:name`, `after:YYYY-MM-DD`, `before:YYYY-MM-DD`. They're suggested as you type (↓ and ↑ choose, Enter takes one) and turn into chips once followed by a space or Enter. A name with spaces goes in quotes (`feed:"Garden Notes"`), or type part of it. `after:` and `before:` don't include the day itself. A filter that can't be understood stays as typed, with a plain line saying why. Backspace at the start of the field removes the last chip.
-- Results look and behave like the normal item list, including "mark all as read". The end of that line says how many were found ("16 results", or "50+ results" while more can load). Refresh is hidden while searching: there's nothing new to fetch for a search.
+- Results look and behave like the normal item list, including "Mark all as read" in the More menu. A quiet line above the results says how many were found ("16 results", or "50+ results" while more can load). Refresh is hidden while searching: there's nothing new to fetch for a search.
 - Matching words are **underlined** in the text's own color, never highlighted in color (bold couldn't be seen in an unread title, which is already semibold).
 - Works for English, other Latin-alphabet languages, and Hindi.
 - Tab moves from the field into the options panel; Escape closes search and returns you to where you were.
@@ -316,7 +319,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 **What it does**
 - Settings opens in place of the list and reading area; the sidebar stays. Its X (named "Close settings") or Escape goes back to where you were.
 - Laid out like a system settings window: each group (Reading, Look and feel, Your data) is a card with a small heading above it, one setting per row, rows parted by hairlines; on a wide screen a setting's name sits on the left and its choices on the right. The version and **Sign out** sit quietly at the end.
-- **Look and feel** (this device only): reading font (Literata or Atkinson Hyperlegible), text size (six steps from Smaller to Largest, Medium by default), line width (Narrow, Medium or Wide: about 65, 71 or 78 characters in Literata; Atkinson Hyperlegible's narrower letters fit more), theme. A sample paragraph shows how articles will look, and changes apply at once.
+- **Look and feel** (this device only): reading font (Literata or Atkinson Hyperlegible), text size (six steps from Smaller to Largest, Medium by default), line width (Narrow, Medium or Wide: about 65, 71 or 78 characters in Literata; Atkinson Hyperlegible's narrower letters fit more), theme. A sample paragraph shows how articles will look, and changes apply at once. The same preferences are in the Aa panel above every article (section 7), and a line under the group's heading says so.
 - **Themes:** "Automatic" by default (off-white or dark, following the system's light/dark setting), or choose any of eleven: off-white, sepia, porcelain, linen, mist and sage (light), or dark, graphite, night, midnight and black (dark). Each has its own "where you are" accent. The phone's own bar above the page takes the chosen theme's color too.
 - Each setting is a row of choices on a faint track (a "segmented control"), chosen with a click, a tap or the arrow keys (they're radio buttons underneath). The chosen one is raised onto the page's own color (in dark themes, a tone lighter than its track) with a fine edge, and its word is semibold, so it shows without color. On a phone the choices fill the width in even columns. The theme is chosen from small pictures of the app in each theme (Automatic shows half light, half dark), in rows of four even on a phone, the chosen one ringed and its name semibold; each reading font's name is written in that font.
 - Sections appear once they have something to do: Reading (sort order) since Milestone 7, Your data with Milestone 9.
@@ -370,15 +373,15 @@ OPML is the standard file format feed readers use to move subscription lists bet
 
 **What it does**
 - One column you move through: **Feeds → Items → Article**. The feeds list is the home screen; no hamburger menu.
-- Top bar: a back arrow labeled with where it goes (e.g. "‹ Tech", drawn as a small arrow icon; screen readers hear "Back to Tech") and the screen title. A Refresh button on list screens; search and search-options icons on the feeds and items screens (with search, Milestone 10).
+- Top bar: a back arrow labeled with where it goes (e.g. "‹ Tech", drawn as a small arrow icon; screen readers hear "Back to Tech") and the screen title (on an article, the arrow alone). Refresh and More beside a list's title; search and search-options icons on the feeds and items screens (with search, Milestone 10).
   - The feeds screen: the "slowfeed" wordmark and **Refresh** (which updates the unread numbers); **Add feed** and **Settings** sit together at the bottom, as on a computer. No sidebar toggle and no "Press ? for shortcuts" hint.
-  - A list: "‹ Feeds", **Refresh**, and the list's name with its Edit button. The top bar never scrolls.
-  - An article: "‹ " and the list's name, and **Mark unread**.
+  - A list: "‹ Feeds", then the list's name with its quiet icons beside it: Edit, **Refresh** and **More** (section 6). The top bar never scrolls.
+  - An article: quiet icons only, each named for screen readers: a back arrow (it hears "Back to Tech") and **Open original** at the right.
   - Add a feed: "‹ Feeds".
 - The system back gesture and back button go back one step, the same as the back arrow. Opening slowfeed's front page on a phone shows the feeds; an address that names a list opens that list, and its back arrow still leads to the feeds.
 - "Settings" sits at the bottom of the feeds screen, beside "Add feed".
 - No custom swipes on list items.
-- Article toolbar at the bottom, within thumb reach and clear of the phone's home indicator: previous · next · star · share · open original (its word is "Original", so every word fits on one line; screen readers hear "Open original"). Article text reads a little smaller than on a wide screen, so a line keeps about 40 characters.
+- Article toolbar at the bottom, within thumb reach and clear of the phone's home indicator: quiet icons without words, each a 44px tap with its name for screen readers: previous · next · Aa · star · mark unread · share. Aa opens the reading panel (section 7) as a sheet along the bottom of the screen. Article text reads a little smaller than on a wide screen, so a line keeps about 40 characters.
 - Every tap target is at least 44 pixels.
 - Can be added to the home screen on iPhone and Android; it then opens full-screen with its own icon: a lowercase "s" in the reading serif, dark on off-white.
 - Without a connection, the app still opens and says plainly that slowfeed can't be reached. It keeps a copy of the app itself, never of your articles.
@@ -386,13 +389,13 @@ OPML is the standard file format feed readers use to move subscription lists bet
 **How to check it**
 1. On your phone, open the app: you see your feeds. Tap a folder, a feed, an article; the back arrow says where it goes each time.
 2. Swipe back from the screen edge: you go back one step.
-3. In an article, press Next and Previous at the bottom: they move through the list. On the first article, Previous is greyed and does nothing.
+3. In an article, press Next and Previous at the bottom: they move through the list. On the first article, Previous shows no arrow and does nothing.
 4. Use "Add to Home Screen". Open it from the icon: no browser bars.
 
 ## 21. Sharing
 
 **What it does**
-- Only in the article view, next to "Open original".
+- Only in the article view, among its icons (beside Aa and Star on a computer, in the bottom bar on a phone).
 - On phones: the system share sheet. On desktop: **Copy link**.
 - Always shares the publisher's original link, never a slowfeed link.
 - No buttons for specific platforms.

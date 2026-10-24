@@ -43,3 +43,4 @@ says "Replaced by …" at the top.
 | [0031](0031-sheets-and-popovers.md) | Short tasks (add or edit a feed, edit a folder) as sheets over the list; search options as a popover with date presets |
 | [0032](0032-more-themes.md) | Eight more themes to try (four light, four dark), each with its own "where you are" accent; the owner prunes later |
 | [0033](0033-one-mark-per-row.md) | The keyboard's outline replaces the selected row's fill; one search field style; sheets anchored, each with Cancel; "That's everything." ends a list |
+| [0034](0034-aa-panel-and-quiet-toolbars.md) | An "Aa" reading panel beside the text (size, theme, font, width); quiet icon toolbars on the article; Refresh and a More menu beside the list title |
