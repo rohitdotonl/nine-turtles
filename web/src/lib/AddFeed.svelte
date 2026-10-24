@@ -112,9 +112,20 @@
   </div>
   <!--
     Screen readers hear each new line here without moving the keyboard's place.
-    It keeps room for two lines, so a message arriving moves nothing below it.
+    A problem is in red words after an icon. In a sheet the line takes room
+    only once there's something to say, and the sheet grows down by it (its
+    top stays put). In the welcome, centred on the page, it keeps room for two
+    lines, so a message arriving moves nothing above it.
   -->
-  <p id="feed-address-status" role="status" class="flex min-h-[2lh] items-start gap-1.5 text-small">
+  <p
+    id="feed-address-status"
+    role="status"
+    class={[
+      "flex items-start gap-1.5 text-small",
+      problem && !busy && "text-danger",
+      onCancel ? !busy && !message && "sr-only" : "min-h-[2lh]",
+    ]}
+  >
     {#if busy}Looking for a feed…{:else}{#if problem}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{/if}{message}{/if}
   </p>
 

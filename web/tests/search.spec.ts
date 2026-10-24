@@ -34,7 +34,7 @@ async function open(page: Page, path: string, name: string) {
   await expect(field(page)).toBeVisible();
 }
 
-test("a search starts where you are, underlines the words it found, and Escape brings you back", async ({ page }) => {
+test("a search starts where you are, marks the words it found, and Escape brings you back", async ({ page }) => {
   const [filed, loose] = [unique("filed"), unique("loose")];
   const folder = unique("Shelf");
   const [filedId] = await start(page, [`${FEED_SITE}/blog/${filed}/`, `${FEED_SITE}/blog/${loose}/`]);
@@ -46,7 +46,8 @@ test("a search starts where you are, underlines the words it found, and Escape b
   await open(page, `/folders/${folderId}`, folder);
   await heading(page).focus();
 
-  // 1. In a folder, `/` and a word: the chip shows the folder; the word is underlined, in the text's own color.
+  // 1. In a folder, `/` and a word: the chip shows the folder; the word is marked with a faint
+  // accent tone behind it (decision 0037), in the text's own color and weight, with a fine underline so it isn't tone alone.
   await page.keyboard.press("/");
   await expect(field(page)).toBeFocused();
   await expect(page.getByRole("button", { name: `Remove in: ${folder}` })).toBeVisible();
@@ -57,11 +58,19 @@ test("a search starts where you are, underlines the words it found, and Escape b
   await expect(results(page)).toHaveCount(1);
   await expect(results(page).first()).toContainText(`Walking the long way home`);
   await expect(results(page).first()).toContainText(`Blog ${filed}`);
-  const found = results(page).first().locator(".title strong");
+  const found = results(page).first().locator(".title mark");
   await expect(found).toHaveText("Walking");
   await expect(found).toHaveCSS("text-decoration-line", "underline");
-  const [wordColor, titleColor] = await Promise.all([found.evaluate((e) => getComputedStyle(e).color), found.evaluate((e) => getComputedStyle(e.parentElement!).color)]);
+  await expect(found).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(found).toHaveCSS("border-top-left-radius", "3px");
+  const [wordColor, titleColor, wordWeight, titleWeight] = await Promise.all([
+    found.evaluate((e) => getComputedStyle(e).color),
+    found.evaluate((e) => getComputedStyle(e.parentElement!).color),
+    found.evaluate((e) => getComputedStyle(e).fontWeight),
+    found.evaluate((e) => getComputedStyle(e.parentElement!).fontWeight),
+  ]);
   expect(wordColor).toBe(titleColor);
+  expect(wordWeight).toBe(titleWeight);
   // A quiet line above the results says how many; there's nothing new to fetch, so Refresh steps aside.
   await expect(page.getByRole("status").filter({ hasText: /^1 result$/ })).toBeVisible();
   await expect(page.getByRole("region", { name: "Search results" }).getByRole("button", { name: "Refresh" })).toHaveCount(0);
@@ -109,9 +118,15 @@ test("a search starts where you are, underlines the words it found, and Escape b
   await expect(page.getByRole("checkbox", { name: "Starred", exact: true })).toBeChecked();
   // It floats over the list instead of pushing it down.
   await expect(page.locator("#search-options")).toHaveCSS("position", "absolute");
+  // A menu of checkmark rows: the list search started from, All feeds, and the feed now
+  // searched (chosen above with feed:), which holds; Tab from the field lands on it.
   await field(page).focus();
   await page.keyboard.press("Tab");
-  await expect(page.getByRole("combobox", { name: "Search in" })).toBeFocused();
+  await expect(page.getByRole("radio", { name: `Blog ${loose}` })).toBeFocused();
+  await expect(page.getByRole("radio", { name: `Blog ${loose}` })).toBeChecked();
+  await expect(page.getByRole("radio", { name: `${folder} This list` })).not.toBeChecked();
+  await expect(page.getByRole("radio", { name: "All feeds" })).not.toBeChecked();
+  await expect(page.getByRole("combobox", { name: "Search in another feed or folder" })).toBeVisible();
   // Presets count back from today; Custom shows the two dates.
   await page.getByRole("radio", { name: "Past week" }).check();
   await expect(page.getByRole("button", { name: /^Remove after:/ })).toBeVisible();
@@ -171,9 +186,9 @@ test("Hindi words are found whole", async ({ page }) => {
   await expect(results(page)).toHaveCount(1);
   await expect(results(page).first()).toContainText("पुस्तकालय की एक शाम");
   await field(page).fill("पुस्तकालय");
-  await expect(results(page).first().locator(".title strong")).toHaveText("पुस्तकालय");
+  await expect(results(page).first().locator(".title mark")).toHaveText("पुस्तकालय");
   // The word is in the text too: the excerpt shows it there, whole.
-  await expect(results(page).first().locator(".excerpt strong")).toHaveText("पुस्तकालय");
+  await expect(results(page).first().locator(".excerpt mark")).toHaveText("पुस्तकालय");
 });
 
 test("each result shows a line of its text around the match, and × clears the field", async ({ page }) => {
@@ -188,12 +203,15 @@ test("each result shows a line of its text around the match, and × clears the f
   await expect(results(page)).toHaveCount(3);
 
   // The word is only in each article's text: one quiet line shows it there,
-  // the word itself semibold and in full ink, so it shows by weight as well as tone.
+  // the word itself marked as in a title (the same faint accent tone, same weight) and in full ink.
   const excerpt = results(page).first().locator(".excerpt");
   await expect(excerpt).toHaveText("A short made-up summary for article 3.");
-  const word = excerpt.locator("strong");
+  const word = excerpt.locator("mark");
   await expect(word).toHaveText("summary");
-  await expect(word).toHaveCSS("font-weight", "600");
+  await expect(word).toHaveCSS("font-weight", "400");
+  const [wordFill, wordCorner] = await word.evaluate((e) => [getComputedStyle(e).backgroundColor, getComputedStyle(e).borderTopLeftRadius]);
+  expect(wordFill).not.toBe("rgba(0, 0, 0, 0)");
+  expect(wordCorner).toBe("3px");
   const [wordColor, lineColor, titleColor] = await Promise.all([
     word.evaluate((e) => getComputedStyle(e).color),
     excerpt.evaluate((e) => getComputedStyle(e).color),

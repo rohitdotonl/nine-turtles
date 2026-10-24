@@ -125,7 +125,7 @@ export const SCREENS: Screen[] = [
       await expect(page.getByRole("button", { name: "Remove is:unread" })).toBeVisible();
       await page.getByRole("button", { name: "Search options" }).click();
       await expect(page.getByRole("checkbox", { name: "Unread", exact: true })).toBeChecked();
-      await expect(page.getByRole("region", { name: "Search results" }).locator("strong").first()).toBeVisible();
+      await expect(page.getByRole("region", { name: "Search results" }).locator("mark").first()).toBeVisible();
     },
   },
   { name: "settings", path: "/settings", signedIn: true },

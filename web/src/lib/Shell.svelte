@@ -17,7 +17,7 @@
   import EditFeed from "./EditFeed.svelte";
   import EditFolder from "./EditFolder.svelte";
   import ItemList from "./ItemList.svelte";
-  import MoreMenu from "./MoreMenu.svelte";
+  import MoreMenu, { type MenuGroup } from "./MoreMenu.svelte";
   import PageHead from "./PageHead.svelte";
   import Sheet from "./Sheet.svelte";
   import Settings from "./Settings.svelte";
@@ -98,6 +98,9 @@
   let sidebar: HTMLElement | undefined = $state();
   let articleHeading: HTMLHeadingElement | undefined = $state();
   let itemList: ItemList | undefined = $state();
+  /** The list's pane and the sidebar button, for where the keyboard goes when the sidebar hides. */
+  let listSection: HTMLElement | undefined = $state();
+  let sidebarToggle: HTMLButtonElement | undefined = $state();
 
   /**
    * On a window wide enough for the list, adding a feed and editing a feed or
@@ -243,6 +246,37 @@
     }
   }
 
+  /**
+   * The list's More (…) menu (SPEC section 6): Mark all as read and Refresh
+   * (Refresh steps aside while searching: results have nothing new to
+   * fetch), the sort order, then Edit feed or Edit folder in a feed's or
+   * folder's own list. Choosing Edit puts the keyboard on More first, so
+   * closing the sheet gives it back there.
+   */
+  function listMenu(): MenuGroup[] {
+    const groups: MenuGroup[] = [
+      {
+        items: [
+          { label: "Mark all as read", shortcut: phone ? undefined : "Shift+A", onSelect: () => itemList?.markAllRead() },
+          ...(shown ? [] : [{ label: "Refresh", shortcut: phone ? undefined : "r", onSelect: () => itemList?.refresh() }]),
+        ],
+      },
+      {
+        label: "Sort order",
+        items: [
+          { label: "Newest first", checked: sort === "newest", onSelect: () => sortFromMenu("newest") },
+          { label: "Oldest first", checked: sort === "oldest", onSelect: () => sortFromMenu("oldest") },
+        ],
+      },
+    ];
+    if (shown) return groups;
+    const feed = currentFeed;
+    const folder = currentFolder;
+    if (feed) groups.push({ items: [{ label: "Edit feed…", onSelect: () => go({ kind: "edit-feed", id: feed.id }) }] });
+    else if (folder) groups.push({ items: [{ label: "Edit folder…", onSelect: () => go({ kind: "edit-folder", id: folder.id }) }] });
+    return groups;
+  }
+
   /** The sort order, chosen from the list's More menu: the same setting as in Settings › Reading. */
   async function sortFromMenu(next: Order) {
     if (next === sort) return;
@@ -272,7 +306,7 @@
         sidebarChoice = "auto";
         // If the sidebar just hid with the keyboard's place in it, don't lose that place.
         queueMicrotask(() => {
-          if (focusWasInside && !panes.sidebar) placeFocus(route)?.focus();
+          if (focusWasInside && !panes.sidebar) afterSidebarHid();
         });
       }
     };
@@ -553,8 +587,25 @@
     const focusWasInside = sidebar?.contains(document.activeElement) ?? false;
     sidebarChoice = hiding ? "hidden" : "shown";
     if (hiding && focusWasInside) {
-      queueMicrotask(() => placeFocus(route)?.focus());
+      queueMicrotask(afterSidebarHid);
     }
+  }
+
+  /**
+   * The sidebar hid with the keyboard's place in it. The place moves to the
+   * list itself (its selected article, or its first, the list's own Tab
+   * stop), not to the list's title, which would only show a ring around
+   * words (decision 0038). With no articles to land on, it goes to the
+   * sidebar button that was just used, which says the sidebar is hidden.
+   */
+  function afterSidebarHid() {
+    if (!isList(route) || sheetShown) {
+      placeFocus(route)?.focus();
+      return;
+    }
+    const row = listSection?.querySelector<HTMLElement>("li button[tabindex='0']");
+    if (row) row.focus();
+    else sidebarToggle?.focus();
   }
 
   /** Is the keyboard's place in the reading area? */
@@ -674,10 +725,11 @@
 {#snippet welcome()}
   <!--
     The welcome, before the first feed (SPEC section 2): a title in the reading serif, one
-    sentence, a wide field with Add feed, and importing a list of feeds as a quiet second way in.
+    sentence, a wide field with Add feed, and importing a list of feeds as a quiet second way in,
+    all in one centred 420px column, like Apple Books' empty library: one message, one action.
     With the Add a feed sheet open over it, the sheet has the only field.
   -->
-  <div class="flex w-full max-w-[28rem] flex-col gap-6">
+  <div class="flex w-full max-w-[26.25rem] flex-col gap-6">
     <div class="text-center">
       <h2 id="welcome-heading" class="font-serif text-xlarge font-semibold tracking-[-0.01em]">A quiet place to read.</h2>
       <p class="mt-3 text-ink-2">Follow the websites you like, and read what they publish here, at your own pace.</p>
@@ -685,17 +737,19 @@
     {#if !(sheet && route.kind === "add-feed")}
       <AddFeed bind:field={addField} feeds={[]} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} />
     {/if}
-    <p class="-mt-4 text-center text-small text-muted">
-      or <a href="/settings" onclick={goImport} class="inline-flex min-h-11 items-center text-ink-2 underline underline-offset-4">import an OPML file</a>
+    <p class="-mt-5 text-center">
+      <a href="/settings" onclick={goImport} class="btn-quiet btn-small">Import an OPML file…</a>
     </p>
   </div>
 {/snippet}
 
 {#snippet listHead()}
-            <!-- One line, so the search box below never moves: a long name ends in "…", its whole name is its tooltip and is read in full by screen readers. -->
             <!--
-              Beside the title, quiet icons: Edit (a feed's or folder's own list), Refresh, and More,
-              a small menu with "Mark all as read" and the sort order (SPEC section 6).
+              The list's title has the line to itself: a long name wraps to a second line, then ends
+              in "…", with its whole name as its tooltip and read in full by screen readers. Beside it,
+              one quiet More (…) button, as Apple Books has one per collection (decision 0038): Mark all
+              as read, Refresh, the sort order, and Edit feed or Edit folder in a feed's or folder's
+              own list (SPEC section 6).
             -->
             <div class="flex min-h-11 items-center gap-4">
               <h2
@@ -703,52 +757,15 @@
                 tabindex="-1"
                 bind:this={listHeading}
                 title={headingText}
-                class="min-w-0 flex-1 truncate font-serif text-heading font-semibold tracking-[-0.01em]"
+                class="line-clamp-2 min-w-0 flex-1 font-serif [overflow-wrap:anywhere] text-balance text-heading font-semibold tracking-[-0.01em]"
               >
                 {headingText}
               </h2>
-              <div class="-mr-3 flex shrink-0 items-center empty:hidden">
-                {#if shown}
-                  <!-- Nothing to edit while searching. -->
-                {:else if currentFeed}
-                  <a
-                    href={pathFor({ kind: "edit-feed", id: currentFeed.id })}
-                    onclick={(event) => follow(event, { kind: "edit-feed", id: currentFeed!.id })}
-                    aria-label="Edit feed"
-                    title="Edit feed"
-                    class="btn-quiet btn-icon"><Icon name="edit" size={18} /></a
-                  >
-                {:else if currentFolder}
-                  <a
-                    href={pathFor({ kind: "edit-folder", id: currentFolder.id })}
-                    onclick={(event) => follow(event, { kind: "edit-folder", id: currentFolder!.id })}
-                    aria-label="Edit folder"
-                    title="Edit folder"
-                    class="btn-quiet btn-icon"><Icon name="edit" size={18} /></a
-                  >
-                {/if}
-                {#if itemList && !missing}
-                  <!-- Search results have nothing new to fetch, so Refresh steps aside while searching. -->
-                  {#if !shown}
-                    <button type="button" onclick={() => itemList?.refresh()} aria-label="Refresh" title={phone ? "Refresh" : "Refresh (r)"} class="btn-quiet btn-icon"
-                      ><Icon name="refresh" size={18} /></button
-                    >
-                  {/if}
-                  <MoreMenu
-                    id="list-menu"
-                    groups={[
-                      { items: [{ label: "Mark all as read", shortcut: phone ? undefined : "Shift+A", onSelect: () => itemList?.markAllRead() }] },
-                      {
-                        label: "Sort order",
-                        items: [
-                          { label: "Newest first", checked: sort === "newest", onSelect: () => sortFromMenu("newest") },
-                          { label: "Oldest first", checked: sort === "oldest", onSelect: () => sortFromMenu("oldest") },
-                        ],
-                      },
-                    ]}
-                  />
-                {/if}
-              </div>
+              {#if itemList && !missing}
+                <div class="-mr-3 flex shrink-0 items-center">
+                  <MoreMenu id="list-menu" groups={listMenu()} />
+                </div>
+              {/if}
             </div>
 {/snippet}
 
@@ -773,6 +790,7 @@
   <div class={["fixed top-3 left-2 z-10", phone && "hidden"]}>
     <button
       type="button"
+      bind:this={sidebarToggle}
       aria-label="Sidebar"
       aria-expanded={panes.sidebar}
       aria-controls="sidebar"
@@ -828,7 +846,7 @@
               aria-current={current ? "page" : undefined}
               onclick={(event) => follow(event, { kind: "view", view })}
               class={[
-                "place mx-1.5 flex min-h-11 pointer-fine:min-h-9 items-center gap-2.5 pr-3.5 pl-[14px] text-ui",
+                "place mx-2 flex min-h-11 pointer-fine:min-h-9 items-center gap-2.5 pr-3.5 pl-3 text-ui",
                 current ? "font-semibold text-ink" : "text-ink-2",
               ]}
               ><span class={current ? "text-ink" : "text-muted"}><Icon name={VIEW_ICONS[view]} size={16} filled={view === "starred" && current} /></span
@@ -937,6 +955,7 @@
       {:else}
         <section
           aria-labelledby="list-heading"
+          bind:this={listSection}
           hidden={!panes.list}
           class={[
             "flex-col bg-list",
@@ -946,7 +965,7 @@
           ]}
         >
           {#if phone}
-            <!-- The phone's top bar (SPEC section 20): back to the feeds, then the screen's title with Refresh and More beside it. It never scrolls. -->
+            <!-- The phone's top bar (SPEC section 20): back to the feeds, then the screen's title with More beside it. It never scrolls. -->
             <div class="px-6 pb-2">
               <div class="-ml-2 flex items-center gap-4 pb-2">
                 <button type="button" onclick={() => stepBack("home")} aria-label="Back to Feeds" class="btn-quiet gap-1 px-2"
@@ -972,13 +991,13 @@
             {:else if missing}
               <p class="mt-4">You don't follow this feed. It may have been an old address.</p>
             {:else if welcoming && panes.article}
-              <!-- The welcome has the reading area; the list just says there's nothing yet. -->
-              <p class="mt-4 text-ui text-muted">Nothing here yet.</p>
+              <!-- The welcome has the reading area; the list just says, quietly and in its middle, that there's nothing yet. -->
+              <p class="m-auto pb-[12vh] text-ui text-muted">Nothing here yet.</p>
             {:else if welcoming}
               <!-- No reading area beside the list (a phone, or a medium window with the sidebar shown): the welcome is here. -->
               <div class="mt-8 flex justify-center">{@render welcome()}</div>
             {:else if feeds !== undefined && sort !== undefined}
-              <!-- The list, with "New items · press r" and Undo in a note floating at its foot (Refresh and More sit beside the title). -->
+              <!-- The list, with "New items · press r" and Undo in a note floating at its foot (More, with Refresh, sits beside the title). -->
               {#key listKey}
                 <ItemList
                   bind:this={itemList}
@@ -1033,8 +1052,8 @@
             -->
             <section aria-label="Article" class="flex min-w-0 flex-1 flex-col items-center justify-center bg-paper px-6 pb-[12vh] text-center md:px-10">
               <div>
-                <p class="font-serif text-large text-ink-2">No article open.</p>
-                <p class="mt-2 min-h-[1lh] text-small text-muted">
+                <p class="font-serif text-[1.0625rem] text-ink-2">No article open.</p>
+                <p class="mt-2 min-h-[1lh] text-meta text-muted">
                   {#if listCount > 0 && !missing}Choose one from the list<span class="keyboard-hint">, or press <kbd class="key">j</kbd></span>.{/if}
                 </p>
               </div>

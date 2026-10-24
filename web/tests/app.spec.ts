@@ -38,10 +38,20 @@ test("[ hides and shows the sidebar, and the toggle never moves", async ({ page 
   await openApp(page);
   const before = await toggle(page).boundingBox();
 
+  // The keyboard starts in the sidebar (on the wordmark). Hiding the sidebar moves it to the
+  // list itself, or with no articles to the sidebar button, never to the list's title (decision 0038).
+  await page.locator("#sidebar h1").focus();
   await page.keyboard.press("[");
   await expect(sidebar(page)).toBeHidden();
   await expect(toggle(page)).toHaveAttribute("aria-expanded", "false");
   expect(await toggle(page).boundingBox()).toEqual(before);
+  await expect(page.locator("#list-heading")).not.toBeFocused();
+  expect(
+    await page.evaluate(() => {
+      const focused = document.activeElement;
+      return focused?.getAttribute("aria-label") === "Sidebar" || focused?.closest("li") !== null;
+    }),
+  ).toBe(true);
 
   await page.keyboard.press("[");
   await expect(sidebar(page)).toBeVisible();
@@ -63,14 +73,13 @@ test("the sidebar lists Unread, Starred and All, with the accent marking where y
   await expect(unread).toHaveAttribute("aria-current", "page");
   const accent = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--accent").trim());
   expect(accent).toBe("#2f4a7a");
-  // A short accent bar at the pane's left edge.
-  expect(await unread.evaluate((element) => getComputedStyle(element, "::before").backgroundColor)).toBe("rgb(47, 74, 122)");
-  // Flush against the sidebar's own edge, as in the list.
-  const flush = await unread.evaluate((element) => {
-    const pane = element.closest("nav")!.getBoundingClientRect().left;
-    return element.getBoundingClientRect().left + parseFloat(getComputedStyle(element, "::before").left) - pane;
-  });
-  expect(Math.abs(flush)).toBeLessThan(1);
+  // One pill, as in the list: the accent mixed into the sidebar (off-white's
+  // --tint-sidebar), 8px corners, 8px in from the pane's edge, and no bar.
+  await expect(unread).toHaveCSS("background-color", "rgb(207, 206, 203)");
+  await expect(unread).toHaveCSS("border-top-left-radius", "8px");
+  expect(await unread.evaluate((element) => getComputedStyle(element, "::before").content)).toBe("none");
+  const inset = await unread.evaluate((element) => element.getBoundingClientRect().left - element.closest("nav")!.getBoundingClientRect().left);
+  expect(Math.abs(inset - 8)).toBeLessThan(1);
 
   await sidebar(page).getByRole("link", { name: "Starred" }).click();
   await expect(page).toHaveURL(/\/starred$/);
@@ -183,14 +192,22 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
   await expect(bars.nth(1)).toHaveAttribute("content", "#1A1917");
   await page.getByLabel("Sepia").check();
   await expect(bars.nth(0)).toHaveAttribute("content", "#F4EBD7");
-  // Each theme is a small picture of the app in it; the chosen one is ringed
-  // and its name semibold, so it shows without color.
-  const theme = (name: string) => page.locator("label.theme").filter({ hasText: name });
+  // Each theme is an "Aa" tile in its own paper and ink; the chosen one is
+  // ringed, carries a checkmark and has its name semibold, so it shows without color.
+  const theme = (name: string) => page.locator("label.tile").filter({ hasText: name });
   await expect(theme("Sepia")).toHaveCSS("font-weight", "600");
   await expect(theme("Dark")).toHaveCSS("font-weight", "400");
-  await expect(theme("Sepia").locator(".theme-picture")).toHaveCSS("outline-style", "solid");
-  const ring = (name: string) => theme(name).locator(".theme-picture").evaluate((element) => getComputedStyle(element).outlineColor);
+  await expect(theme("Sepia").locator(".tile-page")).toHaveCSS("outline-style", "solid");
+  await expect(theme("Sepia").locator(".tile-check")).toBeVisible();
+  await expect(theme("Dark").locator(".tile-check")).toBeHidden();
+  await expect(theme("Sepia").locator(".tile-page")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(theme("Sepia").locator(".tile-page > span").first()).toHaveCSS("background-color", "rgb(244, 235, 215)");
+  const ring = (name: string) => theme(name).locator(".tile-page").evaluate((element) => getComputedStyle(element).outlineColor);
   expect(await ring("Sepia")).not.toBe(await ring("Dark"));
+  // All eleven themes and Automatic, in tidy rows of equal tiles.
+  await expect(page.locator("label.tile")).toHaveCount(12);
+  const widths = await page.locator("label.tile .tile-page").evaluateAll((pages) => pages.map((each) => Math.round(each.getBoundingClientRect().width)));
+  expect(new Set(widths).size).toBe(1);
   // Arrow keys move between choices, as with any radio buttons.
   await page.getByLabel("Sepia").focus();
   await page.keyboard.press("ArrowRight");
@@ -201,15 +218,24 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
   await page.emulateMedia({ forcedColors: "active" });
   expect(await ring("Sepia")).not.toBe(await ring("Dark"));
   await page.emulateMedia({ forcedColors: "none" });
-  // The other settings are segmented controls: the chosen one is raised and semibold.
-  await expect(page.locator("label.choice").filter({ hasText: "Medium" }).first()).toHaveCSS("font-weight", "600");
-  await expect(page.locator("label.choice").filter({ hasText: "Largest" })).toHaveCSS("font-weight", "400");
+  // Font and line width are segmented controls: the chosen one is raised and semibold.
+  await expect(page.locator("label.choice").filter({ hasText: "Medium" })).toHaveCSS("font-weight", "600");
+  await expect(page.locator("label.choice").filter({ hasText: "Wide" })).toHaveCSS("font-weight", "400");
+  // Each row's control sits at its right end, and every control is the same width.
+  const look = page.getByRole("region", { name: "Look and feel" });
+  const controls = await look.locator(".control").evaluateAll((all) => all.map((each) => Math.round(each.getBoundingClientRect().width)));
+  expect(controls).toHaveLength(3);
+  expect(new Set(controls).size).toBe(1);
 
   const sample = page.locator(".reading-sample");
   await expect(sample).toHaveCSS("font-family", /^Literata/);
   await page.getByLabel("Atkinson Hyperlegible").check();
   await expect(sample).toHaveCSS("font-family", /^"Atkinson Hyperlegible"/);
-  await page.getByLabel("Largest").check();
+  // Text size is a small A and a large A, as in the Aa panel, with the step's name beside them.
+  const larger = look.getByRole("button", { name: "Larger text" });
+  for (let step = 0; step < 3; step++) await larger.click();
+  await expect(look.getByRole("status")).toHaveText("Largest");
+  await expect(larger).toHaveAttribute("aria-disabled", "true");
   await expect(sample).toHaveCSS("font-size", "28px");
   await page.getByLabel("Narrow").check();
 
@@ -218,7 +244,7 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
   await expect(page.locator("body")).toHaveCSS("background-color", "rgb(244, 235, 215)");
   await expect(page.getByLabel("Sepia")).toBeChecked();
   await expect(page.getByLabel("Atkinson Hyperlegible")).toBeChecked();
-  await expect(page.getByLabel("Largest")).toBeChecked();
+  await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("status")).toHaveText("Largest");
   await expect(page.getByLabel("Narrow")).toBeChecked();
 
   // Escape closes Settings and returns to where you were.
@@ -377,15 +403,30 @@ test("the sidebar ends with Add feed, then the shortcut list and Settings as ico
   await expect(toggle(page)).toHaveAttribute("title", "Show the sidebar ( [ )");
 });
 
-test("Settings → Your data: each heading sits above its text, and the buttons keep their own width", async ({ page }) => {
+test("Settings is one centred column of grouped lists; Your data and Sign out are rows of their own", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openApp(page, "/settings");
-  for (const name of ["Feeds and folders", "Starred articles"]) {
-    const heading = page.getByRole("heading", { level: 4, name });
-    const text = heading.locator("xpath=following-sibling::p[1]");
-    const [h, t] = [(await heading.boundingBox())!, (await text.boundingBox())!];
-    expect(t.y).toBeGreaterThanOrEqual(h.y + h.height - 1);
+  // Each group has a small header above it; the groups share one column, no wider than 560px.
+  const groups = page.getByRole("region", { name: "Settings" }).locator(".inset-group");
+  await expect(groups).toHaveCount(4);
+  const boxes = await groups.evaluateAll((all) => all.map((each) => each.getBoundingClientRect()).map((box) => [Math.round(box.x), Math.round(box.width)]));
+  for (const [x, width] of boxes) expect([x, width]).toEqual(boxes[0]);
+  expect(boxes[0]![1]).toBeLessThanOrEqual(560);
+  for (const name of ["Reading", "Look and feel", "Your data", "Account"]) {
+    await expect(page.getByRole("heading", { level: 3, name })).toBeVisible();
   }
-  const exportStarred = (await page.getByRole("link", { name: "Export starred articles" }).boundingBox())!;
-  expect(exportStarred.width).toBeLessThan(300);
+  // The data actions are full-width rows, at least 44px tall, in the text color (the accent means only "where you are").
+  const rows = [
+    page.getByRole("button", { name: "Import OPML" }),
+    page.getByRole("link", { name: "Export OPML" }),
+    page.getByRole("link", { name: "Export starred articles" }),
+    page.getByRole("button", { name: "Sign out" }),
+  ];
+  const ink = await page.locator("body").evaluate((body) => getComputedStyle(body).color);
+  for (const row of rows) {
+    const box = (await row.boundingBox())!;
+    expect(Math.round(box.width)).toBe(boxes[0]![1]);
+    expect(box.height).toBeGreaterThanOrEqual(44);
+    expect(await row.evaluate((element) => getComputedStyle(element).color)).toBe(ink);
+  }
 });

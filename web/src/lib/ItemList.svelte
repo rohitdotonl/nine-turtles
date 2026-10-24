@@ -94,7 +94,7 @@
   /** The newest article's number when the list was loaded, and whether anything has arrived since. */
   let latest = 0;
   let newWaiting = $state(false);
-  // Touch screens have no r key; they're told to tap Refresh (same test as the keyboard hint).
+  // Touch screens have no r key; their note has a Show button instead (same test as the keyboard hint).
   const touch = matchMedia("(hover: none) and (pointer: coarse)").matches;
 
   /** The floating note's message, and what Undo would do, if anything. */
@@ -420,15 +420,15 @@
           }}
           onkeydown={arrows}
           class={[
-            "item-row place mx-1 block w-[calc(100%-0.5rem)] cursor-pointer py-3 pr-5 pl-5 text-left",
+            "item-row place mx-2 block w-[calc(100%-1rem)] cursor-pointer pr-4 pl-4 text-left",
           ]}
         >
-          <!-- Unread: a small dot in the text color beside the title, and a semibold title, so it shows without color. -->
+          <!-- Unread: an accent dot in the gutter beside the title, and a semibold title, so it shows without color. -->
           {#if !article.read}<span aria-hidden="true" class="unread-dot"></span>{/if}
           <!-- Unread: full ink, semibold. Read: the second ink, regular. The selected row is never the quietest. -->
           <span class={["title block text-ui", !article.read ? "font-semibold text-ink" : current ? "text-ink" : "text-ink-2"]}
-            >{#each boldParts(article.title || "Untitled", bold) as part, partIndex (partIndex)}{#if part.bold}<strong
-                  class="match">{part.text}</strong
+            >{#each boldParts(article.title || "Untitled", bold) as part, partIndex (partIndex)}{#if part.bold}<mark class="match"
+                  >{part.text}</mark
                 >{:else}{part.text}{/if}{/each}{#if !article.read}<span class="sr-only">, unread</span>{/if}</span
           >
           <span class="mt-0.5 block text-meta text-muted tabular-nums">
@@ -441,12 +441,12 @@
           {#if article.excerpt && article.excerpt.length > 0}
             <!--
               A search result's line of its text around the first searched word (SPEC section 14):
-              plain text from slowfeed, shown as text. Searched words are semibold and in full ink,
-              so they show by weight as well as tone.
+              plain text from slowfeed, shown as text. Searched words are marked as in the title
+              (a faint accent tone behind them) and in full ink, so they show by tone and shape.
             -->
             <span class="excerpt mt-0.5 block truncate text-meta text-muted"
-              >{#each article.excerpt as piece, pieceIndex (pieceIndex)}{#if piece.match}<strong class="font-semibold text-ink"
-                    >{piece.text}</strong
+              >{#each article.excerpt as piece, pieceIndex (pieceIndex)}{#if piece.match}<mark class="match"
+                    >{piece.text}</mark
                   >{:else}{piece.text}{/if}{/each}</span
             >
           {/if}
@@ -460,7 +460,8 @@
     </button>
   {:else if articles.length > 0}
     <!-- A finite list says when it's finished (DESIGN.md → "The list has an end"). -->
-    <p class="mx-auto mt-6 w-full max-w-40 border-t border-ink/10 pt-4 text-center text-meta text-muted">That's everything.</p>
+    <!-- A quiet caption at the titles' left edge, with no rule above it. -->
+    <p class="mt-5 text-meta text-muted">That's everything.</p>
   {/if}
 {/if}
 {#if problem}
@@ -492,6 +493,11 @@
         <button type="button" onclick={() => location.reload()} class="ml-2 min-h-11 min-w-11 font-semibold text-ink underline underline-offset-4"
           >Reload</button
         >
+      {:else if newWaiting && touch}
+        <!-- No r key on a touch screen, and Refresh sits in the More menu: the note offers to show them. -->
+        <button type="button" onclick={() => refresh()} aria-label="Show new items" class="ml-2 min-h-11 min-w-11 font-semibold text-ink underline underline-offset-4"
+          >Show</button
+        >
       {/if}
     </p>
   </div>
@@ -499,15 +505,23 @@
 
 <style>
   /*
-    A searched word in a title: underlined in the text's own color, never
-    colored (DESIGN.md → "Item list"). Bold couldn't be seen inside an
-    unread title, which is already semibold.
+    A searched word, in a title or in the line of text under it: one style,
+    a faint tone of the accent behind it with small rounded corners, in the
+    text's own weight and color, and a fine underline so it never shows by
+    tone alone (DESIGN.md → "Item list", decision 0037).
   */
   .match {
-    font-weight: inherit;
-    text-decoration: underline;
-    text-decoration-thickness: 2px;
+    padding: 0 1px;
+    text-decoration: underline 1px color-mix(in srgb, currentColor 45%, transparent);
     text-underline-offset: 0.2em;
+    border-radius: 3px;
+    background-color: var(--mark);
+    color: inherit;
+    font-weight: inherit;
+  }
+  /* In the muted line of text, the searched words are in full ink too. */
+  .excerpt .match {
+    color: var(--ink);
   }
   .star {
     display: inline-block;

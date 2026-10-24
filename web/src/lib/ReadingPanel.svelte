@@ -12,10 +12,11 @@
   leaving it, closes it too.
 -->
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
   import Icon from "./Icon.svelte";
-  import { LINE_WIDTHS, READING_FONTS, TEXT_SIZES, type Preferences } from "./preferences";
-  import { LOOKS, THEMES } from "./themes";
+  import TextSize from "./TextSize.svelte";
+  import ThemeTiles from "./ThemeTiles.svelte";
+  import { LINE_WIDTHS, READING_FONTS, type Preferences } from "./preferences";
 
   let {
     preferences = $bindable(),
@@ -32,22 +33,9 @@
     onClose: (giveBack: boolean) => void;
   } = $props();
 
-  const THEME_CHOICES: { value: Preferences["theme"]; label: string }[] = [
-    { value: "system", label: "Automatic" },
-    ...THEMES.map((theme) => ({ value: theme, label: LOOKS[theme].label })),
-  ];
-
   let panel: HTMLDivElement | undefined = $state();
   let first: HTMLButtonElement | undefined = $state();
   let place = $state({ top: 0, right: 0 });
-
-  const smallest = $derived(preferences.textSize <= 0);
-  const largest = $derived(preferences.textSize >= TEXT_SIZES.length - 1);
-
-  function size(step: 1 | -1) {
-    const next = preferences.textSize + step;
-    if (next >= 0 && next < TEXT_SIZES.length) preferences.textSize = next;
-  }
 
   /** Under the Aa button, its right edge lined up with the button's, never past the window's edges. */
   function measure() {
@@ -58,7 +46,8 @@
 
   onMount(() => {
     measure();
-    first?.focus();
+    // Once the text size control inside has handed back its smaller A.
+    tick().then(() => first?.focus());
   });
 </script>
 
@@ -99,55 +88,14 @@
     </div>
   {/if}
 
-  <!-- Text size: the same six steps as + and -. The current step's name is said aloud when it changes. -->
+  <!-- Text size: the same six steps as + and -, and the same control as Settings. -->
   <div class="flex flex-col gap-1.5">
-    <div class="flex items-baseline justify-between">
-      <p id="aa-size-name" class="text-small text-ink-2">Text size</p>
-      <p role="status" class="text-meta text-muted">{TEXT_SIZES[preferences.textSize]?.label}</p>
-    </div>
-    <div role="group" aria-labelledby="aa-size-name" class="sizes">
-      <button
-        type="button"
-        bind:this={first}
-        aria-label="Smaller text"
-        title="Smaller text (-)"
-        aria-disabled={smallest}
-        onclick={() => size(-1)}
-        class="size"><span aria-hidden="true" class="text-[0.9375rem]">A</span></button
-      >
-      <span aria-hidden="true" class="sizes-divider"></span>
-      <button
-        type="button"
-        aria-label="Larger text"
-        title="Larger text (+)"
-        aria-disabled={largest}
-        onclick={() => size(1)}
-        class="size"><span aria-hidden="true" class="text-[1.375rem]">A</span></button
-      >
-    </div>
+    <p id="aa-size-name" class="text-small text-ink-2">Text size</p>
+    <TextSize bind:size={preferences.textSize} labelledby="aa-size-name" bind:first />
   </div>
 
-  <!-- Each theme as its own page: "Aa" in the reading font, on its own paper in its own ink. -->
-  <fieldset class="flex min-w-0 flex-col gap-1.5">
-    <legend class="mb-1.5 text-small text-ink-2">Theme</legend>
-    <div class="tiles">
-      {#each THEME_CHOICES as choice (choice.value)}
-        <label class="tile">
-          <input type="radio" name="aa-theme" value={choice.value} bind:group={preferences.theme} />
-          <span aria-hidden="true" class="tile-page">
-            {#if choice.value === "system"}
-              <!-- Automatic: half the light page, half the dark one. -->
-              <span class="half justify-end" style:background-color={LOOKS["off-white"].page} style:color={LOOKS["off-white"].ink}>A</span>
-              <span class="half justify-start" style:background-color={LOOKS.dark.page} style:color={LOOKS.dark.ink}>a</span>
-            {:else}
-              <span class="half justify-center" style:background-color={LOOKS[choice.value].page} style:color={LOOKS[choice.value].ink}>Aa</span>
-            {/if}
-          </span>
-          <span class="tile-name">{choice.label}</span>
-        </label>
-      {/each}
-    </div>
-  </fieldset>
+  <!-- Each theme as its own page, the same tiles as Settings. -->
+  <ThemeTiles bind:theme={preferences.theme} name="aa-theme" legend="Theme" legendClass="mb-1.5 text-small text-ink-2" />
 
   <fieldset class="flex min-w-0 flex-col">
     <legend class="mb-1.5 text-small text-ink-2">Font</legend>
@@ -195,41 +143,6 @@
     border-radius: 1rem 1rem 0 0;
   }
 
-  /* A small A and a large A on one track, parted by a fine line. */
-  .sizes {
-    display: flex;
-    align-items: stretch;
-    padding: 0.25rem;
-    border-radius: 0.625rem;
-    background-color: var(--tone);
-  }
-  .size {
-    display: flex;
-    flex: 1 1 0;
-    min-height: 2.75rem;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0.4375rem;
-    color: var(--ink);
-    line-height: 1;
-    cursor: pointer;
-  }
-  @media (hover: hover) {
-    .size:hover {
-      background-color: var(--hover);
-    }
-  }
-  /* At the end of the steps, the A that can't go further fades, and says so to screen readers. */
-  .size[aria-disabled="true"] {
-    color: var(--muted);
-    cursor: default;
-  }
-  .sizes-divider {
-    width: 1px;
-    margin-block: 0.5rem;
-    background-color: color-mix(in srgb, var(--ink) 18%, transparent);
-  }
-
   /* app.css's segmented control, filling the panel in even columns. */
   .fill {
     display: grid;
@@ -243,70 +156,4 @@
     text-wrap: balance;
   }
 
-  .tiles {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.75rem 0.5rem;
-  }
-  .tile {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.375rem;
-    border-radius: 0.625rem;
-    color: var(--ink-2);
-    font-size: var(--text-meta);
-    cursor: pointer;
-  }
-  .tile input {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    opacity: 0;
-    cursor: pointer;
-  }
-  .tile-page {
-    display: flex;
-    overflow: hidden;
-    width: 100%;
-    height: 3.25rem;
-    border: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
-    border-radius: 0.625rem;
-    outline: 2px solid transparent;
-    outline-offset: 2px;
-    font-family: var(--reading-font);
-    font-size: 1.375rem;
-    line-height: 1;
-  }
-  .half {
-    display: flex;
-    flex: 1 1 0;
-    align-items: center;
-  }
-  .tile-name {
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  /* The chosen theme: ringed in the text color, its name semibold (never color alone). */
-  .tile:has(input:checked) {
-    color: var(--ink);
-    font-weight: 600;
-  }
-  .tile:has(input:checked) .tile-page {
-    outline-color: var(--ink);
-  }
-  .tile:has(input:focus-visible) {
-    outline: 2px solid var(--ink);
-    outline-offset: 4px;
-  }
-  @media (forced-colors: active) {
-    .tile:has(input:checked) .tile-page {
-      outline-color: Highlight;
-    }
-  }
 </style>

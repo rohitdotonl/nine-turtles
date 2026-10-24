@@ -9,6 +9,13 @@ import { appReady, follow, signIn, tabTo } from "./screens";
 
 const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
 const line = (page: Page) => page.getByRole("status").filter({ hasText: /\S/ }).first();
+/** The list's More (…) button; Edit feed and Edit folder are in its menu (decision 0038). */
+const more = (page: Page) => page.getByRole("button", { name: "More", exact: true });
+
+async function openEdit(page: Page, name: "Edit feed" | "Edit folder") {
+  await more(page).click();
+  await page.getByRole("menuitem", { name }).click();
+}
 
 test.skip(({ isMobile }) => isMobile, "the wide layout shows the sidebar beside the list");
 // Unsubscribing ends the Undo of any earlier unsubscribe (only the last
@@ -56,19 +63,19 @@ test("a feed put in two folders appears under both, with its unread count in eac
   const [first, second] = [unique("Essays"), unique("Letters")];
   await openBlogs(page, [blog]);
 
-  await page.getByRole("link", { name: "Edit feed" }).click();
+  await openEdit(page, "Edit feed");
   await expect(page).toHaveURL(/\/feeds\/[0-9]+\/edit$/);
   await expect(page.getByRole("heading", { level: 2, name: "Edit feed" })).toBeFocused();
   // It's a sheet over the feed's list; Cancel closes it unchanged.
   await expect(page.getByRole("dialog", { name: "Edit feed" })).toBeVisible();
   await page.getByRole("button", { name: "Cancel" }).click();
-  await expect(page.getByRole("link", { name: "Edit feed" })).toBeFocused();
-  await page.getByRole("link", { name: "Edit feed" }).click();
+  await expect(more(page)).toBeFocused();
+  await openEdit(page, "Edit feed");
   await page.getByLabel("New folder").fill(first);
   await page.getByRole("button", { name: "Save" }).click();
-  await expect(page.getByRole("link", { name: "Edit feed" })).toBeFocused();
+  await expect(more(page)).toBeFocused();
 
-  await page.getByRole("link", { name: "Edit feed" }).click();
+  await openEdit(page, "Edit feed");
   await expect(page.getByRole("checkbox", { name: first })).toBeChecked();
   await page.getByRole("textbox", { name: "Name" }).fill(`Renamed ${blog}`);
   await page.getByLabel("New folder").fill(second);
@@ -104,24 +111,24 @@ test("rename a folder; delete it, its feeds stay, and Undo brings it back", asyn
   await appReady(page);
 
   await sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) }).click();
-  await page.getByRole("link", { name: "Edit folder" }).click();
+  await openEdit(page, "Edit folder");
   await expect(page.getByRole("heading", { level: 2, name: "Edit folder" })).toBeFocused();
-  // Escape goes back unchanged, the keyboard back on Edit folder.
+  // Escape goes back unchanged, the keyboard back on More, where Edit folder was chosen.
   await page.keyboard.press("Escape");
   await expect(page.getByRole("heading", { level: 2, name: folder })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Edit folder" })).toBeFocused();
+  await expect(more(page)).toBeFocused();
   // So does Cancel.
-  await page.getByRole("link", { name: "Edit folder" }).click();
+  await openEdit(page, "Edit folder");
   await page.getByRole("button", { name: "Cancel" }).click();
-  await expect(page.getByRole("link", { name: "Edit folder" })).toBeFocused();
+  await expect(more(page)).toBeFocused();
 
-  await page.getByRole("link", { name: "Edit folder" }).click();
+  await openEdit(page, "Edit folder");
   await page.getByRole("textbox", { name: "Name" }).fill(`Aa-${folder}`);
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByRole("heading", { level: 2, name: `Aa-${folder}` })).toBeVisible();
   await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Aa-${folder}`) })).toBeVisible();
 
-  await page.getByRole("link", { name: "Edit folder" }).click();
+  await openEdit(page, "Edit folder");
   await page.getByRole("button", { name: `Delete Aa-${folder}` }).click();
   await expect(page).toHaveURL(/\/unread$/);
   await expect(line(page)).toHaveText(`Deleted the folder Aa-${folder}`);
@@ -143,15 +150,20 @@ test("unsubscribe, then Undo: the feed is back with its read history; a star out
   await page.keyboard.press("j");
   await expect(sidebar(page).getByRole("link", { name: `Blog ${blog} 2 unread` })).toBeVisible();
 
-  await page.getByRole("link", { name: "Edit feed" }).click();
-  // Below Cancel and Save, apart: the action in words, in a muted red with no edge (the words say what it does).
+  await openEdit(page, "Edit feed");
+  // In the one row at the foot, as a Mac sheet has it: Unsubscribe at the far left, in a muted red
+  // with no edge (the word says what it does), then Cancel and Save at the right end.
   const sheet = page.getByRole("dialog", { name: "Edit feed" });
   const leave = sheet.getByRole("button", { name: `Unsubscribe from Blog ${blog}` });
+  await expect(leave).toHaveText("Unsubscribe");
   await expect(leave).toHaveCSS("border-top-width", "0px");
   const [red, ink] = await Promise.all([leave.evaluate((e) => getComputedStyle(e).color), sheet.evaluate((e) => getComputedStyle(e).color)]);
   expect(red).not.toBe(ink);
-  expect((await leave.boundingBox())!.y).toBeGreaterThan((await sheet.getByRole("button", { name: "Save" }).boundingBox())!.y);
-  expect((await leave.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  const [leaveBox, cancelBox, saveBox] = await Promise.all([leave.boundingBox(), sheet.getByRole("button", { name: "Cancel" }).boundingBox(), sheet.getByRole("button", { name: "Save" }).boundingBox()]);
+  expect(Math.abs(leaveBox!.y + leaveBox!.height / 2 - (saveBox!.y + saveBox!.height / 2))).toBeLessThan(2);
+  expect(leaveBox!.x + leaveBox!.width).toBeLessThan(cancelBox!.x);
+  expect(cancelBox!.x + cancelBox!.width).toBeLessThanOrEqual(saveBox!.x);
+  expect(leaveBox!.height).toBeGreaterThanOrEqual(44);
   await leave.click();
   await expect(page).toHaveURL(/\/unread$/);
   await expect(line(page)).toHaveText(`Unsubscribed from Blog ${blog}`);
@@ -168,7 +180,7 @@ test("unsubscribe, then Undo: the feed is back with its read history; a star out
   await page.keyboard.press("j");
   await page.keyboard.press("s");
   await expect(line(page)).toHaveText("Starred");
-  await page.getByRole("link", { name: "Edit feed" }).click();
+  await openEdit(page, "Edit feed");
   await page.getByRole("button", { name: `Unsubscribe from Blog ${other}` }).click();
   await expect(line(page)).toHaveText(`Unsubscribed from Blog ${other}`);
   // Other tests star articles too, so look through every page of Starred.
@@ -249,15 +261,17 @@ test("with only the keyboard: Edit feed, a new folder, opening it, Edit folder, 
   const folder = unique("Keyboard");
   await openBlogs(page, [blog]);
 
-  await tabTo(page, page.getByRole("link", { name: "Edit feed" }));
+  await tabTo(page, more(page));
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("End");
   await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { level: 2, name: "Edit feed" })).toBeFocused();
   await tabTo(page, page.getByLabel("New folder"));
   await page.keyboard.type(folder);
   await page.keyboard.press("Enter");
-  // Saved: the sheet closes and the keyboard is back on Edit feed.
+  // Saved: the sheet closes and the keyboard is back on More, where Edit feed was chosen.
   await expect(page.getByRole("dialog", { name: "Edit feed" })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Edit feed" })).toBeFocused();
+  await expect(more(page)).toBeFocused();
 
   // The folder's button shows its feeds; Space or Enter works it.
   const toggle = sidebar(page).getByRole("button", { name: `Feeds in ${folder}` });
@@ -267,19 +281,23 @@ test("with only the keyboard: Edit feed, a new folder, opening it, Edit folder, 
   await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) })).toBeVisible();
 
   // Untick the folder from Edit feed: Space on the checkbox, then Save.
-  await tabTo(page, page.getByRole("link", { name: "Edit feed" }), 200);
+  await tabTo(page, more(page), 200);
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("End");
   await page.keyboard.press("Enter");
   await tabTo(page, page.getByRole("checkbox", { name: folder }));
   await page.keyboard.press("Space");
   await expect(page.getByRole("checkbox", { name: folder })).not.toBeChecked();
   await tabTo(page, page.getByRole("button", { name: "Save" }));
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("link", { name: "Edit feed" })).toBeFocused();
+  await expect(more(page)).toBeFocused();
 
   // Edit folder, from the folder's own list.
   await tabTo(page, sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) }), 200);
   await page.keyboard.press("Enter");
-  await tabTo(page, page.getByRole("link", { name: "Edit folder" }));
+  await tabTo(page, more(page));
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("End");
   await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { level: 2, name: "Edit folder" })).toBeFocused();
   await tabTo(page, page.getByRole("button", { name: `Delete ${folder}` }));
@@ -289,7 +307,9 @@ test("with only the keyboard: Edit feed, a new folder, opening it, Edit folder, 
   // Unsubscribe, and u brings the feed back.
   await tabTo(page, sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) }), 200);
   await page.keyboard.press("Enter");
-  await tabTo(page, page.getByRole("link", { name: "Edit feed" }));
+  await tabTo(page, more(page));
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("End");
   await page.keyboard.press("Enter");
   await tabTo(page, page.getByRole("button", { name: `Unsubscribe from Blog ${blog}` }));
   await page.keyboard.press("Enter");
@@ -317,8 +337,11 @@ test("Edit feed opens over the article you were reading; closing it gives the ke
   await page.keyboard.press("j");
   const title = page.getByRole("region", { name: "Article" }).locator(".article-title");
   await expect(title).toBeVisible();
-  const edit = page.getByRole("link", { name: "Edit feed" });
+  const edit = more(page);
   await edit.focus();
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("End");
+  await expect(page.getByRole("menuitem", { name: "Edit feed" })).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("dialog", { name: "Edit feed" })).toBeVisible();
   // The article stays open behind the sheet.

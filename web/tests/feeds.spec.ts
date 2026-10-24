@@ -37,7 +37,7 @@ test("a fresh slowfeed shows the welcome in the reading area: the paste field, a
   expect(Math.abs(welcome!.x + welcome!.width / 2 - (pane!.x + pane!.width / 2))).toBeLessThan(4);
   // The field is wide enough for a real address.
   expect((await field(page).boundingBox())!.width).toBeGreaterThan(280);
-  // "or import an OPML file" leads to Settings, at Your data.
+  // "Import an OPML file…", a quiet button under the field, leads to Settings, at Your data.
   await page.getByRole("link", { name: "import an OPML file" }).click();
   await expect(page).toHaveURL(/\/settings$/);
   await expect(page.getByRole("heading", { level: 3, name: "Your data" })).toBeFocused();
