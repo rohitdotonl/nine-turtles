@@ -332,6 +332,11 @@ each with screenshots:
   size on the segmented track, helper text on the grid, a shortcut-list
   footer with edged key caps, one heading on a phone's empty state
   (decision 0052).
+- ✅ Sheets, Settings and shortcuts (seventh critique, batch 7): iOS page
+  sheets on a phone, a flat text-size capsule, the chosen theme's ring
+  clear of its tile, the sample inside its group, a softer field ring,
+  ⇧A key caps, and "Import an OPML file…" as a link on the margin
+  (decision 0055).
 
 ---
 

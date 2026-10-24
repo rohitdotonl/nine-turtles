@@ -141,9 +141,13 @@ test("? opens the shortcut list, Escape closes it and returns the keyboard's pla
   await expect(heading).toHaveCSS("outline-style", "none");
   expect(await heading.evaluate((element) => getComputedStyle(element).fontFamily)).toContain("Literata");
   await expect(dialog.getByText("Go to Starred")).toBeVisible();
-  // A two-press shortcut shows a key cap for each press, with "then" between.
+  // A two-press shortcut shows a key cap for each press, with "then" between, in capitals as a Mac prints keys (decision 0055).
   const goTo = dialog.getByRole("row", { name: /Go to Unread/ });
-  await expect(goTo.locator("kbd")).toHaveText(["g", "u"]);
+  await expect(goTo.locator("kbd")).toHaveText(["G", "U"]);
+  // Shift shows as ⇧ on the cap, and screen readers hear "Shift A".
+  const markAll = dialog.getByRole("row", { name: /Mark all as read/ });
+  await expect(markAll.locator("kbd")).toHaveText(["⇧A"]);
+  await expect(markAll).toHaveAccessibleName(/Shift A/);
   // Four named groups, each a region a screen reader can jump to.
   for (const group of ["Moving around", "Reading", "Your articles", "Everywhere"]) {
     await expect(dialog.getByRole("region", { name: group })).toBeVisible();
@@ -259,12 +263,15 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
   await expect(page.locator("body")).toHaveCSS("background-color", "rgb(242, 230, 208)");
   // Each theme is an "Aa" tile in its own paper and ink; the chosen one has two
   // marks, one ring and its name semibold, so it shows without color (decision 0045:
-  // no checkmark badge, and no inner edge on the chosen page).
+  // no checkmark badge). The ring stands 3px clear of the page, which keeps its own
+  // faint edge, so the gap shows (decision 0055).
   await expect(theme("Calm")).toHaveCSS("font-weight", "600");
   await expect(theme("Quiet")).toHaveCSS("font-weight", "400");
   await expect(theme("Calm").locator(".tile-page")).toHaveCSS("outline-style", "solid");
+  await expect(theme("Calm").locator(".tile-page")).toHaveCSS("outline-width", "2px");
+  await expect(theme("Calm").locator(".tile-page")).toHaveCSS("outline-offset", "3px");
   await expect(page.locator(".tile-check")).toHaveCount(0);
-  await expect(theme("Calm").locator(".tile-page")).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+  await expect(theme("Calm").locator(".tile-page")).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
   await expect(theme("Quiet").locator(".tile-page")).toHaveCSS("outline-style", "none");
   await expect(theme("Calm").locator(".tile-page")).toHaveCSS("background-color", "rgb(242, 230, 208)");
   // Bold's "Aa" is bold, as its article text is.
@@ -300,9 +307,9 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
   await expect(sample).toHaveCSS("font-family", /^Literata/);
   await page.getByLabel("Atkinson Hyperlegible").check();
   await expect(sample).toHaveCSS("font-family", /^"Atkinson Hyperlegible"/);
-  // Text size is a stepper, as in the Aa panel: a small A and a large A at the ends of the segmented
-  // settings' own track, each a raised cell, with the step's name between them as plain words with
-  // nothing behind them of their own (decisions 0045, 0052).
+  // Text size is a stepper, as in the Aa panel: one flat capsule, a small A and a large A at its ends
+  // and the step's name between them, parted by hairlines, nothing raised, so it never reads as a
+  // chosen segment (decision 0055).
   const larger = look.getByRole("button", { name: "Larger text" });
   const [smallerBox, nameBox, largerBox] = await Promise.all([
     look.getByRole("button", { name: "Smaller text" }).boundingBox(),
@@ -313,7 +320,9 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
   expect(nameBox!.x + nameBox!.width).toBeLessThanOrEqual(largerBox!.x);
   await expect(look.getByRole("status")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect(look.locator(".sizes")).toHaveCSS("border-radius", "10px");
-  await expect(larger).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(larger).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(larger).toHaveCSS("box-shadow", "none");
+  await expect(larger).not.toHaveCSS("border-left-width", "0px");
   expect(largerBox!.x - (smallerBox!.x + smallerBox!.width)).toBeGreaterThan(80);
   for (let step = 0; step < 3; step++) await larger.click();
   await expect(look.getByRole("status")).toHaveText("Largest");
@@ -533,6 +542,9 @@ test("Settings is one centred column of grouped lists; Your data and Sign out ar
   }
   // Import opens something, so it ends in "…"; Sign out removes nothing, so it isn't in the destructive red.
   await expect(rows[0]!).toHaveText("Import OPML…");
-  // The preview passage sits on the page under "Look and feel", not in a card inside a card.
-  expect(await page.locator(".reading-sample").evaluate((element) => element.closest(".inset-group"))).toBeNull();
+  // The preview passage is the first row of the "Look and feel" group, its words on the rows' words (decision 0055).
+  const sampleRow = page.locator(".reading-sample");
+  expect(await sampleRow.evaluate((element) => element.closest(".inset-group") !== null && element.parentElement?.firstElementChild === element)).toBe(true);
+  const [sampleText, appearanceName] = await Promise.all([sampleRow.locator("p").boundingBox(), page.getByText("Appearance", { exact: true }).boundingBox()]);
+  expect(Math.abs(sampleText!.x - appearanceName!.x)).toBeLessThan(1.5);
 });

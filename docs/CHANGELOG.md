@@ -4,7 +4,18 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
-## 24 October 2026: Calmer night pictures, one search field, one phone sheet
+## 24 October 2026: Sheets, Settings and shortcuts closer to Apple Books
+
+- On a phone, Add a feed, Edit feed and Edit folder now look like an iPhone
+  sheet: a thin dimmed strip above, rounded top corners, and their groups
+  as cards on a soft grey ground (decision 0055).
+- Text size is one flat "A | Medium | A" control, so it no longer looks like
+  two things are chosen; the chosen theme's ring now has a clear gap; the
+  sample paragraph sits inside the Look and feel group.
+- A field you're typing in has a softer ring, still easy to see in every
+  theme. Shortcuts show ⇧A and capital letters, as a Mac does.
+  "Import an OPML file…" is now an underlined link that lines up with the
+  heading.
 
 - Articles: pictures are dimmed a little in the night themes so they no
   longer glare; captions are smaller and softer; tables line up with the

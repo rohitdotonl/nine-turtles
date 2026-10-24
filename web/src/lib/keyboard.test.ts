@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SEQUENCE_MS, SHORTCUTS, createKeyReader, type KeyPress } from "./keyboard";
+import { SEQUENCE_MS, SHORTCUTS, createKeyReader, keyCap, type KeyPress } from "./keyboard";
 
 const press = (key: string, extra: Partial<KeyPress> = {}): KeyPress => ({
   key,
@@ -106,5 +106,13 @@ describe("keyboard shortcuts", () => {
       "a",
       "?",
     ]);
+  });
+
+  it("prints keys as a Mac does: capital letters, ⇧ for Shift, a true minus sign, and plain words for screen readers", () => {
+    expect(keyCap("j")).toEqual({ cap: "J" });
+    expect(keyCap("Shift+A")).toEqual({ cap: "⇧A", spoken: "Shift A" });
+    expect(keyCap("Shift+j")).toEqual({ cap: "⇧J", spoken: "Shift J" });
+    expect(keyCap("-")).toEqual({ cap: "−" });
+    for (const key of ["Enter", "Esc", "[", "/", "?", "+"]) expect(keyCap(key)).toEqual({ cap: key });
   });
 });

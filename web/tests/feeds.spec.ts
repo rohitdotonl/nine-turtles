@@ -48,11 +48,13 @@ test("a fresh slowfeed shows the welcome in the reading area: the paste field, a
   // readers), so no line sits left-aligned under the centred title.
   await expect(field(page)).toHaveAttribute("placeholder", "Paste a website or feed URL");
   await expect(reading.locator("label[for='feed-address']")).toHaveClass(/sr-only/);
-  // "Import an OPML file…", a quiet button just under the field and centred under it, leads to
-  // Settings, at Your data (decisions 0045, 0048).
+  // "Import an OPML file…", an underlined link in the text color just under the field and centred
+  // under it, 44px tall to touch, leads to Settings, at Your data (decisions 0045, 0048, 0055).
   const importLink = page.getByRole("link", { name: "import an OPML file" });
   const [fieldBox, importBox, addBox] = await Promise.all([field(page).boundingBox(), importLink.boundingBox(), reading.getByRole("button", { name: "Add feed" }).boundingBox()]);
   expect(importBox!.y - (fieldBox!.y + fieldBox!.height)).toBeLessThanOrEqual(12);
+  expect(importBox!.height).toBeGreaterThanOrEqual(44);
+  await expect(importLink).toHaveCSS("text-decoration-line", "underline");
   const rowCentre = (fieldBox!.x + addBox!.x + addBox!.width) / 2;
   expect(Math.abs(importBox!.x + importBox!.width / 2 - rowCentre)).toBeLessThan(3);
   await importLink.click();
