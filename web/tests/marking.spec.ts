@@ -203,7 +203,7 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("j");
     await page.keyboard.press("j");
     await page.keyboard.press("s");
-    await expect(row(page, blog, MIDDLE)).toHaveAccessibleName(/Starred, /);
+    await expect(row(page, blog, MIDDLE)).toHaveAccessibleName(/, Starred/);
     await expect(row(page, blog, MIDDLE).locator("svg")).toBeVisible();
     await expect(article(page).getByRole("button", { name: "Star" })).toHaveAttribute("aria-pressed", "true");
     await expect(line(page)).toHaveText("Starred");
@@ -221,7 +221,7 @@ test.describe("on a wide window", () => {
     const saved = page.waitForResponse((response) => response.url().endsWith("/api/articles/starred") && response.ok());
     await star.click();
     await expect(star).toHaveAttribute("aria-pressed", "false");
-    await expect(row(page, blog, MIDDLE)).not.toHaveAccessibleName(/Starred, /);
+    await expect(row(page, blog, MIDDLE)).not.toHaveAccessibleName(/, Starred/);
     await saved;
     await page.reload();
     await appReady(page);
@@ -235,7 +235,7 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("j");
     await page.keyboard.press("s");
     await expect(line(page)).toHaveText("The star couldn't be saved.");
-    await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/Starred, /);
+    await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, Starred/);
     await expect(page.getByRole("button", { name: "Undo" })).toHaveCount(0);
   });
 });
@@ -280,7 +280,7 @@ test("on a phone, the article's Star and Mark unread buttons work", async ({ pag
   await article(page).getByRole("button", { name: "Mark unread" }).click();
   await article(page).getByRole("button", { name: `Back to Blog ${blog}` }).click();
   await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
-  await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/Starred, /);
+  await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, Starred/);
 });
 
 test("Settings: the sort order is saved for every device", async ({ page, isMobile }) => {

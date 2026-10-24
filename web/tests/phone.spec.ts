@@ -151,7 +151,7 @@ test.describe("on a phone", () => {
       expect((await choice.boundingBox())!.height).toBeGreaterThanOrEqual(44);
     }
 
-    await panel.getByRole("radio", { name: "Night" }).check();
+    await panel.getByRole("radio", { name: "Night", exact: true }).check();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "night");
     await panel.getByRole("button", { name: "Close" }).click();
     await expect(panel).toHaveCount(0);
