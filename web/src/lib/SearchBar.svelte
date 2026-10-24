@@ -2,7 +2,7 @@
   The search field (SPEC section 14), above the item list. A search icon and
   a tuning (sliders) icon sit together. What's searched shows as chips inside
   the field: where you are to begin with (`in: Tech`), then any filter typed
-  (`is:starred`) or picked in the Search options panel. Each chip has a
+  (`is:starred`) or picked in the Search options popover. Each chip has a
   button that removes it; Backspace in an empty field removes the last one.
   The panel and the chips always match, since both show the same `query`.
 
@@ -36,7 +36,7 @@
     query: Query;
     feeds: Feed[];
     folders: Folder[];
-    /** Where search started: the panel's scope list says "(here)" beside it. */
+    /** Where search started: the panel's scope list says "(this list)" beside it. */
     here: Scope;
     /** The query changed; `now` when the search should follow at once, not after a pause in typing. */
     onChange: (query: Query, now: boolean) => void;
@@ -156,11 +156,52 @@
   }
 
   function hereMark(scope: Scope): string {
-    return scopeValue(scope) === scopeValue(here) ? " (here)" : "";
+    return scopeValue(scope) === scopeValue(here) ? " (this list)" : "";
+  }
+
+  /** "Published": presets count back from today; Custom shows two dates. */
+  const WHENS = [
+    { value: "any", label: "Any time" },
+    { value: "week", label: "Past week" },
+    { value: "month", label: "Past month" },
+    { value: "custom", label: "Custom" },
+  ] as const;
+  type When = (typeof WHENS)[number]["value"];
+
+  /** The day `days` before today, as `YYYY-MM-DD` in local time. */
+  function daysAgo(days: number): string {
+    const day = new Date();
+    day.setDate(day.getDate() - days);
+    return `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
+  }
+
+  /** Custom was chosen, so its dates show even before one is picked. */
+  let customChosen = $state(false);
+  let whenNow: When = $derived.by(() => {
+    if (customChosen) return "custom";
+    if (!query.after && !query.before) return "any";
+    if (!query.before && query.after === daysAgo(7)) return "week";
+    if (!query.before && query.after === daysAgo(30)) return "month";
+    return "custom";
+  });
+
+  function chooseWhen(when: When) {
+    customChosen = when === "custom";
+    // "After" is strictly after: after 7 days ago is the last seven days, today included.
+    if (when === "any") onChange({ ...query, after: "", before: "" }, true);
+    else if (when === "week") onChange({ ...query, after: daysAgo(7), before: "" }, true);
+    else if (when === "month") onChange({ ...query, after: daysAgo(30), before: "" }, true);
   }
 </script>
 
-<svelte:window onpointerup={pressEnded} onpointercancel={pressEnded} />
+<svelte:window
+  onpointerup={pressEnded}
+  onpointercancel={pressEnded}
+  onpointerdown={(event) => {
+    // A press anywhere outside the search closes its options, as a popover does.
+    if (panelOpen && !searchElement?.contains(event.target as Node)) panelOpen = false;
+  }}
+/>
 
 <!-- svelte-ignore a11y_no_static_element_interactions: the pointer handler only notes a press; it acts on nothing. -->
 <search
@@ -250,17 +291,20 @@
 
   <p id="search-problem" role="status" class="mt-1 text-small empty:sr-only">{problem}</p>
 
-  <!-- Above the list's heading, so its name is a label rather than a heading of its own. -->
+  <!--
+    A popover under the options button: it floats over the list rather than
+    pushing it down. Its name is a label rather than a heading of its own.
+  -->
   <div
     id="search-options"
     role="group"
     aria-labelledby="search-options-name"
     bind:this={panel}
     hidden={!panelOpen}
-    class="mt-2 rounded-lg border border-ink/10 bg-paper p-4"
+    class="search-options absolute top-12 right-0 z-20 w-[min(20rem,100%)] rounded-xl border border-ink/10 bg-paper p-4"
   >
-    <p id="search-options-name" class="text-small font-semibold">Search options</p>
-    <div class="mt-3 flex flex-col gap-3">
+    <p id="search-options-name" class="sr-only">Search options</p>
+    <div class="flex flex-col gap-4">
       <label class="flex flex-col gap-1.5">
         <span class="text-small text-ink-2">Search in</span>
         <span class="relative block">
@@ -269,7 +313,7 @@
           onchange={(event) => onChange({ ...query, scope: scopeFrom(event.currentTarget.value) }, true)}
           class="field w-full appearance-none pr-9 text-ui pointer-fine:min-h-9"
         >
-          <option value="all">All feeds{hereMark({ kind: "all" })}</option>
+          <option value="all">Everywhere{hereMark({ kind: "all" })}</option>
           <option value="view:unread">Unread{hereMark({ kind: "view", view: "unread" })}</option>
           <option value="view:starred">Starred{hereMark({ kind: "view", view: "starred" })}</option>
           {#if folders.length > 0}
@@ -288,41 +332,62 @@
         <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-ink-2"><Icon name="chevron-down" size={16} /></span>
         </span>
       </label>
-      <div class="flex flex-wrap gap-x-6">
-        <label class="flex min-h-11 items-center gap-2.5 text-small pointer-fine:min-h-9">
-          <input type="checkbox" checked={query.unread} onchange={(event) => onChange({ ...query, unread: event.currentTarget.checked }, true)} class="size-[1.125rem]" />
-          Unread only
-        </label>
-        <label class="flex min-h-11 items-center gap-2.5 text-small pointer-fine:min-h-9">
-          <input type="checkbox" checked={query.starred} onchange={(event) => onChange({ ...query, starred: event.currentTarget.checked }, true)} class="size-[1.125rem]" />
-          Starred only
-        </label>
-      </div>
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <label class="flex min-w-0 flex-col gap-1.5">
-          <span class="text-small text-ink-2">Published after</span>
-          <input
-            type="date"
-            value={query.after}
-            onchange={(event) => onChange({ ...query, after: event.currentTarget.value }, true)}
-            class="field w-full min-w-0 text-ui pointer-fine:min-h-9"
-          />
-        </label>
-        <label class="flex min-w-0 flex-col gap-1.5">
-          <span class="text-small text-ink-2">Published before</span>
-          <input
-            type="date"
-            value={query.before}
-            onchange={(event) => onChange({ ...query, before: event.currentTarget.value }, true)}
-            class="field w-full min-w-0 text-ui pointer-fine:min-h-9"
-          />
-        </label>
-      </div>
+      <fieldset class="flex flex-col gap-1.5">
+        <legend class="mb-1.5 text-small text-ink-2">Show only</legend>
+        <div class="choices">
+          <label class="choice">
+            <input type="checkbox" checked={query.unread} onchange={(event) => onChange({ ...query, unread: event.currentTarget.checked }, true)} />
+            Unread
+          </label>
+          <label class="choice">
+            <input type="checkbox" checked={query.starred} onchange={(event) => onChange({ ...query, starred: event.currentTarget.checked }, true)} />
+            Starred
+          </label>
+        </div>
+      </fieldset>
+      <fieldset class="flex flex-col gap-1.5">
+        <legend class="mb-1.5 text-small text-ink-2">Published</legend>
+        <div class="choices">
+          {#each WHENS as when (when.value)}
+            <label class="choice">
+              <input type="radio" name="search-when" value={when.value} checked={whenNow === when.value} onchange={() => chooseWhen(when.value)} />
+              {when.label}
+            </label>
+          {/each}
+        </div>
+        {#if whenNow === "custom"}
+          <div class="mt-1.5 grid grid-cols-2 gap-3">
+            <label class="flex min-w-0 flex-col gap-1.5">
+              <span class="text-small text-ink-2">After</span>
+              <input
+                type="date"
+                value={query.after}
+                aria-label="Published after"
+                onchange={(event) => onChange({ ...query, after: event.currentTarget.value }, true)}
+                class="field w-full min-w-0 text-ui pointer-fine:min-h-9"
+              />
+            </label>
+            <label class="flex min-w-0 flex-col gap-1.5">
+              <span class="text-small text-ink-2">Before</span>
+              <input
+                type="date"
+                value={query.before}
+                aria-label="Published before"
+                onchange={(event) => onChange({ ...query, before: event.currentTarget.value }, true)}
+                class="field w-full min-w-0 text-ui pointer-fine:min-h-9"
+              />
+            </label>
+          </div>
+        {/if}
+      </fieldset>
     </div>
   </div>
 </search>
 
 <style>
+  .search-options {
+    box-shadow: 0 16px 40px -12px rgb(0 0 0 / 0.25);
+  }
   /* The keyboard's place, drawn around the whole box (chips included) when its field has it. */
   .search-box:has(input:focus-visible) {
     outline: 2px solid var(--ink);

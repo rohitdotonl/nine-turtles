@@ -106,14 +106,23 @@ test("a search starts where you are, underlines the words it found, and Escape b
   await page.getByRole("button", { name: "Search options" }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("button", { name: "Search options" })).toHaveAttribute("aria-expanded", "true");
-  await expect(page.getByRole("checkbox", { name: "Starred only" })).toBeChecked();
+  await expect(page.getByRole("checkbox", { name: "Starred", exact: true })).toBeChecked();
+  // It floats over the list instead of pushing it down.
+  await expect(page.locator("#search-options")).toHaveCSS("position", "absolute");
   await field(page).focus();
   await page.keyboard.press("Tab");
   await expect(page.getByRole("combobox", { name: "Search in" })).toBeFocused();
+  // Presets count back from today; Custom shows the two dates.
+  await page.getByRole("radio", { name: "Past week" }).check();
+  await expect(page.getByRole("button", { name: /^Remove after:/ })).toBeVisible();
+  await page.getByRole("radio", { name: "Any time" }).check();
+  await expect(page.getByRole("button", { name: /^Remove after:/ })).toHaveCount(0);
+  await expect(page.getByLabel("Published after")).toHaveCount(0);
+  await page.getByRole("radio", { name: "Custom" }).check();
   await page.getByLabel("Published after").fill("2030-01-01");
   await expect(page.getByRole("button", { name: "Remove after:2030-01-01" })).toBeVisible();
   await expect(page.getByText("Nothing found.")).toBeVisible();
-  await page.getByRole("checkbox", { name: "Unread only" }).press("Space");
+  await page.getByRole("checkbox", { name: "Unread", exact: true }).press("Space");
   await expect(page.getByRole("button", { name: "Remove is:unread" })).toBeVisible();
 
   // 5 is the Hindi test below. 6. Escape: back exactly where you were, the search gone.

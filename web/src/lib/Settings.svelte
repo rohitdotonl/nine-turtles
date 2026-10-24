@@ -312,14 +312,6 @@
     page's own tone with a fine edge and semibold words, so it shows without
     color, and nothing on the screen is a heavy black slab.
   */
-  .choices {
-    display: inline-flex;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-    padding: 0.25rem;
-    border-radius: 0.625rem;
-    background-color: var(--tone);
-  }
   /* On a narrow screen the choices fill the width in even columns instead of wrapping ragged. */
   @media (width < 40rem) {
     .choices {
@@ -329,64 +321,6 @@
     .choice {
       justify-content: center;
     }
-  }
-  .choice {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    min-height: 2.75rem;
-    padding-inline: 0.875rem;
-    border: 1px solid transparent;
-    border-radius: 0.4375rem;
-    color: var(--ink-2);
-    font-size: var(--text-small);
-    cursor: pointer;
-  }
-  @media (pointer: fine) {
-    .choice {
-      min-height: 2.5rem;
-    }
-  }
-  @media (hover: hover) {
-    .choice:hover {
-      background-color: var(--hover);
-    }
-  }
-  .choice input {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    opacity: 0;
-    cursor: pointer;
-  }
-  .choice:has(input:checked) {
-    border-color: color-mix(in srgb, var(--ink) 30%, transparent);
-    background-color: var(--paper);
-    color: var(--ink);
-    font-weight: 600;
-  }
-  .choice:has(input:focus-visible) {
-    outline: 2px solid var(--ink);
-    outline-offset: 2px;
-  }
-  /* High-contrast mode replaces the fill, so the chosen tile takes the system's own highlight colors. */
-  @media (forced-colors: active) {
-    .choice:has(input:checked) {
-      forced-color-adjust: none;
-      border-color: Highlight;
-      background-color: Highlight;
-      color: HighlightText;
-    }
-    .choice:has(input:focus-visible) {
-      outline-color: CanvasText;
-    }
-  }
-  .choice:has(input:disabled) {
-    cursor: default;
-    color: var(--muted);
   }
   .themes {
     display: grid;
