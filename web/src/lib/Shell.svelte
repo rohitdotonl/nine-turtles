@@ -594,6 +594,8 @@
   The whole app is the page's main content; the sidebar and areas inside are its named parts.
   It is exactly the window's height and never lets anything out: only the areas inside scroll,
   each on its own, so the page itself never moves (a hidden screen-reader line once stretched it).
+  So every scrolling area here and in the screens it shows is `relative`: it holds its own hidden
+  lines. A new scrolling area needs the same, and any new bar must sit inside an area, not beside it.
 -->
 <main class="relative flex h-dvh overflow-hidden">
   {#if !panes.sidebar}
