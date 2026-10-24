@@ -102,9 +102,10 @@
     <path d="M10 13.4v.1" />
   {:else if name === "aa"}
     <!-- The reading panel: a large A and a small a, like a book app's type button. -->
-    <path d="M2.5 16 7 4l4.5 12M4.2 11.75h5.6" />
-    <circle cx="14.75" cy="13.5" r="2.5" />
-    <path d="M17.25 10.5V16" />
+    <!-- A clear gap between the two letters, and the small a's stem no taller than its bowl, so it reads as "a", not "d". -->
+    <path d="M1.75 16 6 4l4.25 12M3.35 12h5.3" />
+    <circle cx="14.5" cy="13.5" r="2.5" />
+    <path d="M17 11v5" />
   {:else if name === "more"}
     <!-- More: three dots in a row. -->
     <circle cx="4.5" cy="10" r="1.25" fill="currentColor" stroke="none" />
