@@ -378,7 +378,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 - The system back gesture and back button go back one step, the same as the back arrow. Opening slowfeed's front page on a phone shows the feeds; an address that names a list opens that list, and its back arrow still leads to the feeds.
 - "Settings" sits at the bottom of the feeds screen, beside "Add feed".
 - No custom swipes on list items.
-- Article toolbar at the bottom, within thumb reach: previous · next · star · share · open original.
+- Article toolbar at the bottom, within thumb reach: previous · next · star · share · open original (its word is "Original", so every word fits on one line; screen readers hear "Open original"). Article text reads a little smaller than on a wide screen, so a line keeps about 40 characters.
 - Every tap target is at least 44 pixels.
 - Can be added to the home screen on iPhone and Android; it then opens full-screen with its own icon: a lowercase "s" in the reading serif, dark on off-white.
 - Without a connection, the app still opens and says plainly that slowfeed can't be reached. It keeps a copy of the app itself, never of your articles.

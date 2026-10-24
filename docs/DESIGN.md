@@ -203,7 +203,7 @@ Three: **off-white** (default light), **sepia**, **dark**. Follow the system lig
   - display 48px (sign-in wordmark).
 - Article text is set by the reader: six steps, 16 to 28px, 20px by default. The article's title is 1.8 times the text size, its headings 1.2 and 1.08 times, so the title is always clearly the largest thing on screen.
 - **Spacing** in steps of 4px, mostly 8, 16, 24, 40 and 64px.
-- **Weights:** regular and bold for reading; regular and semibold (600) for the interface. Semibold marks unread titles, where you are, and the one main action in a toolbar.
+- **Weights:** regular and semibold (600) for both reading and the interface: Literata's semibold for titles, headings and bold words in articles (Atkinson Hyperlegible keeps its bold). Nothing heavier, so a calm page never shouts. Semibold marks unread titles, where you are, and the one main action in a toolbar.
 - **Three inks:** text (titles, where you are), a second ink (read titles, sidebar names, quieter actions) and muted grey (meta).
 - Article lines of roughly 65–75 characters, with generous leading.
 
@@ -255,6 +255,8 @@ In river mode (V2) only the cursor and star show.
 - **"Open original"** is always present, always in the same place, with **Share** beside it.
 - **Title, then byline:** the title first, then who, where and when in a quiet line under it.
 - **An ending:** a short centred line after the last paragraph, and room below it.
+- **Title size:** about one and a half times the text size, semibold. On a phone the same text-size step reads a little smaller, so a line keeps about 40 characters.
+- **The phone's bottom bar** says "Original" (its full name, "Open original", for screen readers) so every word fits on one line.
 - Prefetch the next article for instant `j`.
 
 ### Reading modes

@@ -215,14 +215,15 @@
           <Icon name={sharing ? "share" : "link"} size={20} />
           {sharing ? "Share" : "Copy link"}
         </button>
-        <a href={article.link} target="_blank" rel="noopener noreferrer">
+        <!-- "Original" fits on one line beside the others; its full name is still "Open original". -->
+        <a href={article.link} target="_blank" rel="noopener noreferrer" aria-label="Open original">
           <Icon name="open" size={20} />
-          Open original
+          Original
         </a>
       {:else}
         <!-- No link to share or open: the places stay, so nothing moves between articles. -->
         <button type="button" aria-disabled="true" class="text-muted"><span class="h-5" aria-hidden="true"></span>Share</button>
-        <button type="button" aria-disabled="true" class="text-muted"><span class="h-5" aria-hidden="true"></span>Open original</button>
+        <button type="button" aria-disabled="true" aria-label="Open original" class="text-muted"><span class="h-5" aria-hidden="true"></span>Original</button>
       {/if}
     </div>
   {/if}
@@ -236,8 +237,8 @@
   /*
     The phone's bottom toolbar: five equal places, each at least 44px tall. A
     place that can't act loses its icon, so it shows without color too. Icons
-    and words start from the top, so the icons stay in one line even when
-    "Open original" takes two lines on a narrow phone.
+    and words start from the top, so the icons stay in one line even if a
+    word takes two lines on a very narrow phone.
   */
   .toolbar > :global(*) {
     display: flex;

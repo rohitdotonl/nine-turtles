@@ -242,6 +242,9 @@ each with screenshots:
 - ✅ Clearer sign-in and add-feed problems, a quieter search box at rest,
   Edit feed as an icon, pages centred, and warmer, better separated dark
   panes.
+- ✅ Lighter weights: Literata semibold for titles, a softer main button,
+  single-line focus on fields, and phone text that keeps about 40
+  characters a line.
 
 ---
 

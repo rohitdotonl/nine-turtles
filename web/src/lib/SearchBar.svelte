@@ -326,7 +326,7 @@
   /* The keyboard's place, drawn around the whole box (chips included) when its field has it. */
   .search-box:has(input:focus-visible) {
     outline: 2px solid var(--ink);
-    outline-offset: 2px;
+    outline-offset: -1px;
   }
   .search-box input:focus-visible {
     outline: none;

@@ -4,6 +4,16 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 24 October 2026: Lighter, calmer type
+
+- Titles and headings use Literata's semibold instead of its bold, at a
+  slightly smaller size, so the page reads like a book rather than a
+  headline. Fonts stay the same size to download.
+- The main button of a form is a step softer than black.
+- A focused field shows one clean line instead of a ring around its edge.
+- On a phone, article text is a little smaller, so lines hold about 40
+  characters, and the bottom bar says "Original" so every word fits.
+
 ## 24 October 2026: Clearer problems, quieter search, centred pages
 
 - A wrong password or an address without a feed now shows its message right
