@@ -3,8 +3,9 @@
   feed gives it, cleaned by slowfeed and restyled in the reader's font, size
   and line width. A quiet bar of icons sits at the top of the pane, anchored
   to its edges (decision 0038), each named in its tooltip (with its key) and
-  to screen readers: Open original at the left, always in the same place;
-  Aa (the reading panel), Star and More (…) at the right. More holds Copy
+  to screen readers, together at the right as Apple Books keeps its reading
+  toolbar (decision 0050): Open original, Aa (the reading panel), Star and
+  More (…). More holds Copy
   link (Share on phones) and Mark unread (SPEC sections 7, 8, 9 and 21). The
   bar is solid, in the page's own color, above the scrolling text, with a
   hairline under it only once the text has scrolled (decision 0040). The
@@ -196,15 +197,19 @@
       {/if}
     </div>
   {:else}
-    <!-- Quiet icons, each named in its tooltip with its key: the way to the publisher at the left, the reader's own tools at the right. -->
+    <!--
+      Quiet icons, each named in its tooltip with its key, in one cluster at the right, 4px apart: the way to the
+      publisher, then the reader's own tools. The left stays empty, like Apple Books' reading toolbar (decision 0050).
+    -->
     <div class="reading-bar pane-bar relative z-10 gap-2 px-2">
-      {#if article.link}
-        {@render original(20)}
-      {:else}
+      {#if !article.link}
         <p class="px-2 text-small text-muted">This article has no link to its original.</p>
       {/if}
       <p role="status" class="line-clamp-2 min-w-0 flex-1 text-center text-small empty:sr-only">{copied}</p>
-      <div class="ml-auto flex items-center">
+      <div class="ml-auto flex items-center gap-1">
+        {#if article.link}
+          {@render original(20)}
+        {/if}
         {@render aa(20, "btn-quiet btn-icon")}
         <!-- A toggle keeps one name for screen readers ("Star", pressed or not); the filled star shows its state. -->
         <button type="button" aria-label="Star" aria-pressed={article.starred} title={article.starred ? "Starred (s)" : "Star (s)"} onclick={onStar} class={["btn-quiet btn-icon", article.starred && "text-ink"]}>

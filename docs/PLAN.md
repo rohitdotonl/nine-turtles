@@ -318,6 +318,9 @@ each with screenshots:
   list full-screen on a phone and fitting a computer window, 20px under
   every top line, the Settings preview on the phone's margin, and the
   phone's unread dot clear of the row ring (decision 0049).
+- ✅ Article view (sixth critique, batch 6): pictures dimmed at night,
+  smaller captions at 7 : 1, tables flush with the text, Open original in
+  the right-hand toolbar cluster, a 14px byline (decision 0050).
 - ✅ One search field, a warmer selection (sixth critique, batch 6): the
   list's search and the sidebar's find field as one slim capsule, the day
   selection pill made from its own pane, row rings only for the keyboard,

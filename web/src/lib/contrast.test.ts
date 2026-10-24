@@ -68,6 +68,10 @@ describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
     expect(levels[0]! > levels[1]! && levels[1]! > levels[2]!).toBe(true);
   });
 
+  it("has the second text color at AAA (7 : 1) on the reading area, so an article's captions read like its text (decision 0050)", () => {
+    expect(contrast(colors["ink-2"]!, colors.paper!)).toBeGreaterThanOrEqual(7);
+  });
+
   it("has the destructive red (Unsubscribe, Delete) at AA on the sheet and the page", () => {
     expect(contrast(colors.danger!, colors.paper!)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(colors.danger!, colors.list!)).toBeGreaterThanOrEqual(4.5);

@@ -4,8 +4,12 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
-## Batch 6
+## 24 October 2026: Calmer night pictures, one search field, one phone sheet
 
+- Articles: pictures are dimmed a little in the night themes so they no
+  longer glare; captions are smaller and softer; tables line up with the
+  text; Open original now sits with Aa, Star and More at the top right; the
+  line naming the publisher is slightly larger (decision 0050).
 - The list's search and the sidebar's "Find a feed or folder" are now the
   same slim, faintly filled field: shorter with a mouse, a full finger's
   height on a phone (decision 0051).

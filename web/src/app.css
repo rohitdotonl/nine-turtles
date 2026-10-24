@@ -1250,14 +1250,15 @@ input {
 }
 
 /*
-  The source line: quiet, at the interface's meta size whatever the text
-  size, in the second ink, with the publisher's name leading in full ink
-  and semibold (the interface fonts ship only regular and semibold).
+  The source line: quiet, at 14px whatever the text size, in the second
+  ink, with the publisher's name leading in full ink and semibold (the
+  interface fonts ship only regular and semibold), so it holds its own
+  under the title (decision 0050).
 */
 .article-byline {
   margin-top: 0;
   font-family: var(--font-sans);
-  font-size: var(--text-meta);
+  font-size: var(--text-small);
   line-height: 1.45;
   letter-spacing: 0.01em;
   color: var(--ink-2);
@@ -1438,9 +1439,31 @@ input {
   height: auto;
 }
 
+/*
+  At night a picture is dimmed a little, as Apple Books does, so a pale
+  illustration doesn't glare on the dark page; never inverted. A linked
+  picture shows at full brightness under the pointer or the keyboard
+  (decision 0050).
+*/
+:root[data-mode="dark"] .article-text :where(img, svg):not(:where(a:hover, a:focus-visible) *) {
+  filter: brightness(0.82);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode]) .article-text :where(img, svg):not(:where(a:hover, a:focus-visible) *) {
+    filter: brightness(0.82);
+  }
+}
+
+/*
+  A caption is smaller than the text and in the second ink, 8px under its
+  picture. The second ink keeps 7 : 1 on the page in every theme
+  (contrast.test.ts), so a caption stays at AAA like the text (decision 0050).
+*/
 .article-text figcaption {
-  margin-top: 0.5em;
-  font-size: 0.85em;
+  margin-top: 8px;
+  font-size: 0.875em;
+  line-height: 1.45;
+  color: var(--ink-2);
 }
 
 .article-text table {
@@ -1451,11 +1474,24 @@ input {
   font-size: 0.9em;
 }
 
+/*
+  A table starts flush with the text's left edge, its header semibold over a
+  fine rule and its rows over fainter ones, never a heavy line (decision 0050).
+*/
 .article-text :where(th, td) {
   padding: 0.25em 0.75em;
-  border-bottom: 1px solid var(--muted);
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
   text-align: left;
   vertical-align: top;
+}
+
+.article-text :where(th, td):first-child {
+  padding-left: 0;
+}
+
+.article-text th {
+  font-weight: min(900, calc(var(--reading-weight, 400) + 200));
+  border-bottom-color: color-mix(in srgb, var(--ink) 30%, transparent);
 }
 
 .article-text hr {
