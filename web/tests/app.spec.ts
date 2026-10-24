@@ -52,7 +52,7 @@ test("[ hides and shows the sidebar, and the toggle never moves", async ({ page 
   expect(await toggle(page).boundingBox()).toEqual(before);
 });
 
-test("the sidebar lists Unread, Starred and All, with ink blue marking where you are", async ({ page }) => {
+test("the sidebar lists Unread, Starred and All, with the accent marking where you are", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await openApp(page);
   const links = sidebar(page).getByRole("list").getByRole("link");
@@ -62,7 +62,7 @@ test("the sidebar lists Unread, Starred and All, with ink blue marking where you
   await expect(unread).toHaveAttribute("aria-current", "page");
   const accent = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--accent").trim());
   expect(accent).toBe("#2f4a7a");
-  // A short ink blue bar at the pane's left edge.
+  // A short accent bar at the pane's left edge.
   expect(await unread.evaluate((element) => getComputedStyle(element, "::before").backgroundColor)).toBe("rgb(47, 74, 122)");
   // Flush against the sidebar's own edge, as in the list.
   const flush = await unread.evaluate((element) => {
@@ -193,7 +193,7 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
   // Arrow keys move between choices, as with any radio buttons.
   await page.getByLabel("Sepia").focus();
   await page.keyboard.press("ArrowRight");
-  await expect(page.getByLabel("Dark")).toBeChecked();
+  await expect(page.getByLabel("Porcelain")).toBeChecked();
   await page.keyboard.press("ArrowLeft");
   await expect(page.getByLabel("Sepia")).toBeChecked();
   // In high-contrast mode the chosen picture is ringed in the system's highlight, so it still stands out.

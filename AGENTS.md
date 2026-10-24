@@ -94,7 +94,7 @@ years › written for the next agent.
 
 - **Never commit the owner's OPML file.** `*.opml` is ignored; test fixtures use made-up feeds.
 - No notifications, badges, gamification, infinite scroll, animations or transitions. Ever.
-- Ink blue means "where you are" and nothing else.
+- The accent (ink blue in the first themes) means "where you are" and nothing else.
 - Never fetch an article's web page. Autodiscovery fetches only the page the owner pastes, only when they add a feed or ask "Find new address" (`docs/decisions/0016-adding-feeds.md`).
 - A feature isn't done until it has tests and the checks pass.
 - Significant decisions get a short note in `docs/decisions/`.

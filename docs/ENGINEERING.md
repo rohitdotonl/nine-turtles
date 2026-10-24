@@ -226,9 +226,9 @@ Wherever a principle can be checked by a computer, it is. These run on every pul
 | Principle | Check |
 |---|---|
 | The computer checks the work | Rust: format, lint and tests. Frontend: type check and tests. Every pull request except documents-only changes and tiny fixes also gets a second-agent review. |
-| Owner can see the change | Screenshots of every screen in all three themes, at desktop and phone width, attached to each pull request |
+| Owner can see the change | Screenshots of every screen in off-white, sepia and dark (the other themes on the list and article screens), at desktop and phone width, attached to each pull request |
 | Libraries stay safe | A weekly report of known security problems in our libraries. It only reports; nothing is updated automatically. |
-| First floor (accessibility) | Automated accessibility and contrast tests on every screen, in all three themes |
+| First floor (accessibility) | Automated accessibility and contrast tests on every screen, in every theme |
 | No motion (DESIGN.md) | Fails if animations or transitions appear in the styles |
 | Fast by design | Fails if the frontend download grows past its size budget |
 | Never add a library without asking | Fails if the code uses a library that isn't on the approved list in `docs/libraries.md`. Agents add to that list only after the owner has said yes. |

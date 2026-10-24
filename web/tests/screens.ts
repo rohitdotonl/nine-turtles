@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP, TEST_PASSWORD } from "../playwright.config";
-import { THEMES, type Theme } from "../src/lib/themes";
+import { LOOKS, THEMES, type Theme } from "../src/lib/themes";
 
 // Every screen of slowfeed. Each new screen is added here, so it is
 // automatically checked for accessibility and photographed for the owner.
@@ -142,12 +142,11 @@ export const SCREENS: Screen[] = [
 
 export { THEMES };
 
-// Background colors from DESIGN.md → "Color", used to prove the theme took effect.
-const BACKGROUNDS: Record<Theme, string> = {
-  "off-white": "rgb(248, 246, 241)",
-  sepia: "rgb(244, 235, 215)",
-  dark: "rgb(26, 25, 23)",
-};
+// Each theme's reading background (themes.ts, checked against app.css), used to prove the theme took effect.
+function background(theme: Theme): string {
+  const hex = LOOKS[theme].page;
+  return `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(", ")})`;
+}
 
 /**
  * Follows a feed through slowfeed's own API, with the page's sign-in, so a
@@ -197,7 +196,7 @@ export async function openScreen(page: Page, screen: Screen, theme: Theme): Prom
   await page.evaluate(() => document.fonts.ready);
   await expect
     .poll(() => page.evaluate(() => getComputedStyle(document.body).backgroundColor))
-    .toBe(BACKGROUNDS[theme]);
+    .toBe(background(theme));
 }
 
 /** Presses Tab until the keyboard's place reaches the element: the keyboard floor. */

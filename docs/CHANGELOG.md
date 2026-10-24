@@ -4,6 +4,15 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 24 October 2026: Eight more themes
+
+- Settings now offers eleven themes. New light ones: Porcelain (pure white),
+  Linen (warm cream, green accent), Mist (cool grey-blue) and Sage (soft
+  green). New dark ones: Graphite (neutral), Night (warm, amber accent),
+  Midnight (deep blue) and Black (true black, kind to OLED phones).
+- Each has its own "where you are" color, and every one passes the same
+  contrast checks as the first three. Remove any you don't like later.
+
 ## 24 October 2026: Sheets, a search popover and a tidier phone
 
 - Adding a feed, and editing a feed or a folder, now open as a small card

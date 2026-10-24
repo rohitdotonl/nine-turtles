@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import css from "../app.css?raw";
 import html from "../../index.html?raw";
 import { BAR_COLORS } from "./preferences";
+import { LOOKS, THEMES as THEME_NAMES } from "./themes";
 
 /** The color settings of one theme's block in app.css. */
 function theme(selector: string): Record<string, string> {
@@ -26,10 +27,8 @@ function contrast(a: string, b: string): number {
   return (light! + 0.05) / (dark! + 0.05);
 }
 
-const THEMES = {
-  "off-white": theme(':root[data-theme="off-white"]'),
-  sepia: theme(':root[data-theme="sepia"]'),
-  dark: theme(':root[data-theme="dark"]'),
+const THEMES: Record<string, Record<string, string>> = {
+  ...Object.fromEntries(THEME_NAMES.map((name) => [name, theme(`:root[data-theme="${name}"]`)])),
   "device dark": theme(":root:not([data-theme])"),
 };
 const BACKGROUNDS = ["paper", "list", "sidebar", "tint-list", "tint-sidebar"];
@@ -61,7 +60,11 @@ describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
     expect(levels[0]! > levels[1]! && levels[1]! > levels[2]!).toBe(true);
   });
 
-  it("has the ink blue mark clearly visible (3 : 1) wherever it's drawn", () => {
+  it("has the accent at AAA (7 : 1) on the reading area", () => {
+    expect(contrast(colors.accent!, colors.paper!)).toBeGreaterThanOrEqual(7);
+  });
+
+  it("has the accent mark clearly visible (3 : 1) wherever it's drawn", () => {
     for (const background of BACKGROUNDS) {
       expect(contrast(colors.accent!, colors[background]!), background).toBeGreaterThanOrEqual(3);
     }
@@ -109,9 +112,16 @@ it("the device's dark setting uses exactly the dark theme's colors", () => {
   expect(THEMES["device dark"]).toEqual(THEMES.dark);
 });
 
+it("each theme's picture in Settings uses its own page, sidebar and text colors", () => {
+  for (const name of THEME_NAMES) {
+    const colors = THEMES[name]!;
+    expect([LOOKS[name].page, LOOKS[name].side, LOOKS[name].ink], name).toEqual([colors.paper, colors.sidebar, colors.ink]);
+  }
+});
+
 it("the browser bar and Settings' theme discs use each theme's own background", () => {
   for (const [name, color] of Object.entries(BAR_COLORS)) {
-    expect(color.toLowerCase(), name).toBe(THEMES[name as keyof typeof THEMES].paper);
+    expect(color.toLowerCase(), name).toBe(THEMES[name]!.paper);
   }
   // index.html's light and dark bars, for "Automatic".
   expect(html).toContain(`content="${BAR_COLORS["off-white"]}" media="(prefers-color-scheme: light)"`);

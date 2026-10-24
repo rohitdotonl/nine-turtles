@@ -148,14 +148,14 @@ The philosophy applied. The principle is noted where it isn't obvious.
 
 - **Name:** slowfeed (domain, app store and trademark checks are under "Still to define").
 - **Wordmark:** "slowfeed" in lowercase, in the reading serif. No logo shape, no mascot.
-- **Signature:** the ink blue "where you are" accent and the calm itself.
+- **Signature:** the "where you are" accent (ink blue in the first three themes) and the calm itself.
 
 ### Visual language
 
 #### Rules
 - **Regions are separated by tone, not lines:** background tone and whitespace; no borders, shadows, blur or gradients (small exceptions for things floating over the page or scrolling under a top line, in the Exceptions log).
 - **Type does the hierarchy:** size and weight, never color or badges (the unread dot is the one mark, in the Exceptions log).
-- **One accent, one meaning:** ink blue means "where you are," and nothing else uses it.
+- **One accent, one meaning:** each theme has one accent (ink blue in off-white, sepia and dark; its own hue in the others), it means "where you are," and nothing else uses it.
 - **Icons where the convention is an icon** (close, back, search, settings, the sidebar toggle, edit feed or folder, and the article's copy link, star and mark unread), each named in its tooltip with its key and to screen readers. **Words** for the way to the publisher ("Open original"), Add feed, and the main action of a form.
 - **Settings opens in place of the list,** with one top line that never scrolls: the title in the serif, like the list's, and an X that closes it (Escape does too).
 - **Short tasks open as a sheet** over the place you were (Add a feed, Edit feed, Edit folder): a small card, its title in the serif, the panes still in view behind it under a faint dim. Cancel, Escape or a press on the dim closes it; there's no X. On a phone these are screens of their own, with the top line and X.
@@ -177,11 +177,24 @@ The philosophy applied. The principle is noted where it isn't obvious.
 - All accent pairs pass AAA (7 : 1); re-check if a value changes.
 - **Links in articles** are underlined in the text color, **never blue**.
 - **Muted greys** (read items, counts, source names) are warm, like ink on paper, and pass AA (4.5 : 1) on every area and on the selected-row tint in all themes, verified by automatic checks.
-- **The keyboard focus outline** is a 2px line in the text color, never ink blue. Rows draw it just inside their rounded shape; a title the keyboard is moved to gets it too, a little away from the words. It shows only when you're using the keyboard.
+- **The keyboard focus outline** is a 2px line in the text color, never the accent. Rows draw it just inside their rounded shape; a title the keyboard is moved to gets it too, a little away from the words. It shows only when you're using the keyboard.
 - **Status colors** (errors, warnings; V2 feed health page) are muted, never drift toward blue, and always come with words.
 
+The themes added on 24 October 2026 to try out (decision 0032), same roles in the same order (background, accent (every accent passes AAA, 7 : 1, on its background), list, sidebar, text, second ink, muted grey):
+
+| Theme | Background | Accent | List | Sidebar | Text | Second ink | Muted |
+|---|---|---|---|---|---|---|---|
+| Porcelain | `#FFFFFF` | `#2D53AA` | `#F6F6F3` | `#EEEEEA` | `#1C1C1A` | `#44443F` | `#5E5E57` |
+| Linen | `#FBF8F1` | `#345D43` | `#F2EDE1` | `#E8E1D0` | `#22201B` | `#4A443A` | `#5B5346` |
+| Mist | `#F6F8FA` | `#28577E` | `#EDF1F4` | `#E3E9EE` | `#1B2027` | `#3F4955` | `#535F6C` |
+| Sage | `#F5F7F1` | `#355C32` | `#ECF0E5` | `#E1E7D8` | `#1D221B` | `#424A3E` | `#535C4E` |
+| Graphite | `#141414` | `#9FB6E6` | `#1B1B1A` | `#232321` | `#ECEBE6` | `#C9C7C0` | `#A4A29A` |
+| Night | `#16130F` | `#D9A85C` | `#1D1914` | `#25201A` | `#EFE6D5` | `#D1C5B0` | `#B3A48B` |
+| Midnight | `#0F1420` | `#8FB3FF` | `#151B29` | `#1C2333` | `#E5E9F2` | `#C2C9D8` | `#9EA8BC` |
+| Black | `#000000` | `#8FB0E8` | `#0D0D0D` | `#161616` | `#E8E8E8` | `#C4C4C4` | `#A0A0A0` |
+
 #### Themes
-Three: **off-white** (default light), **sepia**, **dark**. Follow the system light/dark setting by default, with a manual override in settings.
+Eleven, for now: **off-white** (default light), **sepia** and **dark** (default dark) from the start, plus **porcelain, linen, mist, sage** (light) and **graphite, night, midnight, black** (dark), added for the owner to try and prune later (decision 0032). Follow the system light/dark setting by default (off-white or dark), with a manual override in settings. Every theme meets the same contrast floors, checked automatically.
 
 #### Typography
 
@@ -244,7 +257,7 @@ Fixed order, top to bottom: **Unread · Starred · All**, then **folders** A–Z
 |---|---|
 | Unread | Full-contrast, semibold title and a small dot in the margin before it |
 | Read | Second ink, regular-weight title |
-| Selected (cursor) | A rounded faint tint, and a short ink blue bar flush against the pane's own left edge, the same in the sidebar and the list; title in full ink. The keyboard's outline sits inside the fill, with the bar outside it |
+| Selected (cursor) | A rounded faint tint, and a short bar in the theme's accent flush against the pane's own left edge, the same in the sidebar and the list; title in full ink. The keyboard's outline sits inside the fill, with the bar outside it |
 | Starred | A small star mark |
 
 In river mode (V2) only the cursor and star show.
@@ -362,8 +375,8 @@ Vim-style keys are first-class. A keyboard icon at the foot of the sidebar opens
 
 ### Settings
 
-- Settings shares the top line with the other screens. Each setting is a segmented control: a faint track, the chosen choice raised onto the page color (a lighter tone in the dark theme) with a fine edge and semibold words. The search options use the same control.
-- **Look and feel** (per device): reading font (Literata default, or Atkinson Hyperlegible), text size, line width, theme (system / off-white / sepia / dark).
+- Settings shares the top line with the other screens. Each setting is a segmented control: a faint track, the chosen choice raised onto the page color (a lighter tone in dark themes) with a fine edge and semibold words. The search options use the same control.
+- **Look and feel** (per device): reading font (Literata default, or Atkinson Hyperlegible), text size, line width, theme (Automatic, or any of the eleven).
 - **Reading:** sort order (newest first by default); inbox or river in V2.
 - **Feed health page (V2):** dead feeds first, then intermittent errors; problems in plain words ("Hasn't worked for 3 weeks — the site may have moved"), not HTTP codes; per feed **Retry · Find new address · Unsubscribe**, where "Find new address" reruns autodiscovery.
 - **Your data:** OPML import and export; export of starred articles.

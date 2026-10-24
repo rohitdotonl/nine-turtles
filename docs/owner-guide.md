@@ -119,7 +119,7 @@ the tests, plus:
 - search finds Hindi words whole.
 
 **Screenshots.** Each pull request gets a comment called "Screenshots"
-showing every screen in all three themes, at desktop and phone width. It's
+showing every screen in the first three themes (and the main screens in the others), at desktop and phone width. It's
 updated each time the agent pushes a change. It's the quickest way to see
 what a change looks like without trying it.
 

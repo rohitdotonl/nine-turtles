@@ -251,6 +251,8 @@ each with screenshots:
 - ✅ Add a feed, Edit feed and Edit folder as sheets over the list, search
   options as a popover with date presets, one-line list titles, and tidier
   phone settings and article toolbar (decision 0031).
+- ✅ Eight more themes to try, four light and four dark, each with its own
+  "where you are" accent (decision 0032).
 
 ---
 

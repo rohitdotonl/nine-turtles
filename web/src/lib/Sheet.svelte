@@ -56,7 +56,7 @@
   oncancel={cancel}
   onpointerdown={(event) => (pressedOutside = event.target === dialog)}
   onclick={outside}
-  class="sheet m-auto max-h-[min(40rem,90dvh)] w-[min(30rem,calc(100vw-2rem))] overflow-y-auto rounded-xl border border-ink/10 bg-paper p-0 text-ink"
+  class="sheet m-auto max-h-[min(40rem,90dvh)] w-[min(30rem,calc(100vw-2rem))] overflow-y-auto rounded-xl sheet-edge border bg-paper p-0 text-ink"
 >
   <div class="flex flex-col gap-5 p-6">
     <h2 id="sheet-heading" tabindex="-1" bind:this={heading} class="font-serif text-heading font-semibold tracking-[-0.01em] break-words">
