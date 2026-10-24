@@ -58,6 +58,7 @@
     onRefresh,
     results = false,
     oneFeed = false,
+    count = $bindable(0),
   }: {
     source: Source;
     order: Order;
@@ -77,6 +78,8 @@
     results?: boolean;
     /** Every article here is from one feed (its own list), so the rows don't repeat its name. */
     oneFeed?: boolean;
+    /** How many articles are listed, for the empty reading area's hint. */
+    count?: number;
   } = $props();
 
   /** How often the list asks whether new items are waiting. */
@@ -109,6 +112,10 @@
         });
       };
     }
+  });
+
+  $effect(() => {
+    count = articles.length;
   });
 
   let selectedIndex = $derived(selected ? articles.findIndex((article) => article.id === selected?.id) : -1);
@@ -431,6 +438,18 @@
 <span class="star"><Icon name="star" size={13} filled /></span><span class="sr-only">, Starred</span>
             {/if}
           </span>
+          {#if article.excerpt && article.excerpt.length > 0}
+            <!--
+              A search result's line of its text around the first searched word (SPEC section 14):
+              plain text from slowfeed, shown as text. Searched words are semibold and in full ink,
+              so they show by weight as well as tone.
+            -->
+            <span class="excerpt mt-0.5 block truncate text-meta text-muted"
+              >{#each article.excerpt as piece, pieceIndex (pieceIndex)}{#if piece.match}<strong class="font-semibold text-ink"
+                    >{piece.text}</strong
+                  >{:else}{piece.text}{/if}{/each}</span
+            >
+          {/if}
         </button>
       </li>
     {/each}

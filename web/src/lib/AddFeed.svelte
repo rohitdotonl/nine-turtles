@@ -1,9 +1,13 @@
 <!--
-  The add-a-feed field (SPEC sections 2 and 3): the empty state on a fresh
-  slowfeed, and the "+ Add feed" screen. It takes a feed's address or a
+  The add-a-feed field (SPEC sections 2 and 3): the welcome on a fresh
+  slowfeed, and the "+ Add feed" sheet. It takes a feed's address or a
   website's; slowfeed finds the feed. Several feeds become a choice; problems
   are said in plain words. While slowfeed looks, a line of text says so: no
   spinner.
+
+  In a sheet (or its page on a phone) the field takes the full width and
+  "Add feed" sits in the foot row beside Cancel. In the welcome, with no
+  Cancel, "Add feed" sits beside the field.
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
@@ -14,12 +18,15 @@
     feeds,
     onAdded,
     onOpen,
+    onCancel,
   }: {
     field?: HTMLInputElement;
     /** The feeds already followed, to name one that's added twice. */
     feeds: Feed[];
     onAdded: (feed: Feed) => void;
     onOpen: (feedId: number) => void;
+    /** In a sheet or its page: Cancel, beside Add feed in one row at the foot. */
+    onCancel?: () => void;
   } = $props();
 
   let address = $state("");
@@ -82,9 +89,9 @@
   }
 </script>
 
-<form onsubmit={submit} class="flex max-w-xl flex-col gap-2">
-  <label for="feed-address">Paste a website or feed URL</label>
-  <div class="flex flex-wrap gap-2">
+<form onsubmit={submit} class="flex flex-col gap-2">
+  <label for="feed-address" class="text-small text-ink-2">Paste a website or feed URL</label>
+  <div class="flex gap-2">
     <input
       id="feed-address"
       bind:this={field}
@@ -99,42 +106,55 @@
       aria-invalid={badAddress ? "true" : undefined}
       class="field min-w-0 flex-1"
     />
-    <button type="submit" aria-disabled={busy} class="btn-primary">Add feed</button>
+    {#if !onCancel}
+      <button type="submit" aria-disabled={busy} class="btn-primary">Add feed</button>
+    {/if}
   </div>
-  <!-- Screen readers hear each new line here without moving the keyboard's place. -->
-  <p id="feed-address-status" role="status" class="flex min-h-6 items-start gap-1.5 text-small">
+  <!--
+    Screen readers hear each new line here without moving the keyboard's place.
+    It keeps room for two lines, so a message arriving moves nothing below it.
+  -->
+  <p id="feed-address-status" role="status" class="flex min-h-[2lh] items-start gap-1.5 text-small">
     {#if busy}Looking for a feed…{:else}{#if problem}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{/if}{message}{/if}
   </p>
+
+  {#if choices.length > 0}
+    <ul class="mb-2 flex flex-col gap-2">
+      {#each choices as choice (choice.url)}
+        <li>
+          <button
+            type="button"
+            aria-disabled={busy}
+            onclick={() => add(choice.url, true)}
+            class="flex min-h-11 w-full cursor-pointer flex-col items-start rounded-md border border-muted px-4 py-2 text-left hover:bg-[var(--hover)]"
+          >
+            <span>{choice.title}</span>
+            <span class="text-small break-all text-muted">{choice.url}</span>
+          </button>
+        </li>
+      {/each}
+    </ul>
+  {/if}
+
+  {#if alreadyId !== undefined}
+    <p class="-mt-1 mb-2">
+      <a
+        href={`/feeds/${alreadyId}`}
+        onclick={(event) => {
+          if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+          event.preventDefault();
+          if (alreadyId !== undefined) onOpen(alreadyId);
+        }}
+        class="inline-flex min-h-11 items-center underline underline-offset-4">Go to {alreadyTitle ?? "this feed"}</a
+      >
+    </p>
+  {/if}
+
+  {#if onCancel}
+    <!-- The sheet's one row of actions: Cancel, then Add feed at the right end. -->
+    <div class="sheet-actions">
+      <button type="button" onclick={onCancel} class="btn">Cancel</button>
+      <button type="submit" aria-disabled={busy} class="btn-primary">Add feed</button>
+    </div>
+  {/if}
 </form>
-
-{#if choices.length > 0}
-  <ul class="mt-2 flex max-w-xl flex-col gap-2">
-    {#each choices as choice (choice.url)}
-      <li>
-        <button
-          type="button"
-          aria-disabled={busy}
-          onclick={() => add(choice.url, true)}
-          class="flex min-h-11 w-full cursor-pointer flex-col items-start rounded-md border border-muted px-4 py-2 text-left hover:bg-[var(--hover)]"
-        >
-          <span>{choice.title}</span>
-          <span class="text-small break-all text-muted">{choice.url}</span>
-        </button>
-      </li>
-    {/each}
-  </ul>
-{/if}
-
-{#if alreadyId !== undefined}
-  <p class="mt-2">
-    <a
-      href={`/feeds/${alreadyId}`}
-      onclick={(event) => {
-        if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
-        event.preventDefault();
-        if (alreadyId !== undefined) onOpen(alreadyId);
-      }}
-      class="inline-flex min-h-11 items-center underline underline-offset-4">Go to {alreadyTitle ?? "this feed"}</a
-    >
-  </p>
-{/if}

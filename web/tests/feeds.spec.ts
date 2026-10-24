@@ -21,18 +21,39 @@ function newBlog(prefix = "blog"): string {
   return `${prefix}-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
 }
 
-test("a fresh slowfeed shows only the paste field, and Import OPML", async ({ page }) => {
+test("a fresh slowfeed shows the welcome in the reading area: the paste field, and importing OPML", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/unread");
   await appReady(page);
   await signIn(page);
-  await expect(field(page)).toBeVisible();
-  await expect(page.getByText("Nothing to read yet. Add a website you like to begin.")).toBeVisible();
-  // "Import OPML" leads to Settings, at Your data.
-  await page.getByRole("link", { name: "Import OPML" }).click();
+  // The welcome is in the reading area, centred; the list only says there's nothing yet.
+  const reading = page.getByRole("region", { name: "A quiet place to read." });
+  await expect(reading.getByRole("heading", { level: 2, name: "A quiet place to read." })).toBeVisible();
+  await expect(reading.getByLabel("Paste a website or feed URL")).toBeVisible();
+  await expect(reading.getByRole("button", { name: "Add feed" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Unread" }).getByText("Nothing here yet.")).toBeVisible();
+  await expect(page.getByText("No article open.")).toHaveCount(0);
+  const [welcome, pane] = await Promise.all([reading.locator("#welcome-heading").boundingBox(), reading.boundingBox()]);
+  expect(Math.abs(welcome!.x + welcome!.width / 2 - (pane!.x + pane!.width / 2))).toBeLessThan(4);
+  // The field is wide enough for a real address.
+  expect((await field(page).boundingBox())!.width).toBeGreaterThan(280);
+  // "or import an OPML file" leads to Settings, at Your data.
+  await page.getByRole("link", { name: "import an OPML file" }).click();
   await expect(page).toHaveURL(/\/settings$/);
   await expect(page.getByRole("heading", { level: 3, name: "Your data" })).toBeFocused();
   await expect(sidebar(page).getByRole("link", { name: "Add feed" })).toBeVisible();
+});
+
+test("on a phone-narrow window, a fresh slowfeed shows the welcome in the list's place", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto("/unread");
+  await appReady(page);
+  await signIn(page);
+  const list = page.getByRole("region", { name: "Unread" });
+  await expect(list.getByRole("heading", { level: 2, name: "A quiet place to read." })).toBeVisible();
+  await expect(list.getByLabel("Paste a website or feed URL")).toBeVisible();
+  await expect(list.getByRole("link", { name: "import an OPML file" })).toBeVisible();
+  await expect(page.getByText("Nothing here yet.")).toHaveCount(0);
 });
 
 test("a, a website's address and Enter add its feed, and its articles appear", async ({ page }) => {

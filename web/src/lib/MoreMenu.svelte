@@ -126,7 +126,7 @@
       tabindex="-1"
       bind:this={menu}
       onkeydown={onMenuKey}
-      class="floating-menu absolute top-full right-0 z-30 mt-1 w-max max-w-[min(18rem,calc(100vw-2rem))] min-w-56 rounded-xl border border-ink/10 bg-paper p-1.5 text-left font-sans"
+      class="absolute top-full right-0 z-30 mt-1 w-max max-w-[min(18rem,calc(100vw-2rem))] min-w-56 floating p-1.5 text-left font-sans"
     >
       {#each groups as group, index (index)}
         {#if index > 0}
@@ -163,10 +163,6 @@
 </div>
 
 <style>
-  /* It floats over the list, so it carries the same soft shadow as the search options (DESIGN.md → Exceptions log). */
-  .floating-menu {
-    box-shadow: 0 16px 40px -12px rgb(0 0 0 / 0.25);
-  }
   .menu-item {
     display: flex;
     width: 100%;

@@ -90,44 +90,41 @@
   Stops following this feed and removes its articles. Starred articles stay in Starred. You can undo it straight afterwards.
 {/snippet}
 
+{#snippet form()}
+  <form onsubmit={save} class="flex flex-col gap-5">
+    {@render fields()}
+    <!-- One row at the foot: a message at its left, then Cancel and Save at the right end. -->
+    <div class="sheet-actions">
+      <p role="status" class="mr-auto">{message}</p>
+      <button type="button" onclick={onCancel} class="btn">Cancel</button>
+      <button type="submit" aria-disabled={busy} class="btn-primary">Save</button>
+    </div>
+  </form>
+{/snippet}
+
+{#snippet unsubscribe(page: boolean)}
+  <!-- Apart, below a hairline: what it does, then the action in words, in a muted red. -->
+  <div class={["sheet-danger", page && "mx-0 mt-6 px-0 pt-6"]}>
+    <p class="text-small text-muted">{@render unsubscribeHelp()}</p>
+    <button type="button" aria-disabled={busy} onclick={leave} class="btn-danger"
+      ><span class="truncate">Unsubscribe from {feed.title}</span></button
+    >
+  </div>
+{/snippet}
+
 {#if sheet}
   <Sheet title="Edit feed" bind:heading onClose={onCancel}>
-    <form onsubmit={save} class="flex flex-col gap-5">
-      {@render fields()}
-      <div class="flex flex-wrap items-center gap-2">
-        <p role="status" class="mr-auto">{message}</p>
-        <button type="button" onclick={onCancel} class="btn">Cancel</button>
-        <button type="submit" aria-disabled={busy} class="btn-primary">Save</button>
-      </div>
-    </form>
-    <!-- Unsubscribe sits apart, below a hairline: what it does, then the button. -->
-    <div class="-mx-6 flex flex-col items-start gap-3 border-t border-ink/10 px-6 pt-4">
-      <p class="text-small text-muted">{@render unsubscribeHelp()}</p>
-      <button type="button" aria-disabled={busy} onclick={leave} class="btn max-w-full"><span class="truncate">Unsubscribe from {feed.title}</span></button>
-    </div>
+    {@render form()}
+    {@render unsubscribe(false)}
   </Sheet>
 {:else}
 <section aria-labelledby="list-heading" class="flex flex-1 flex-col bg-paper pt-3">
   <PageHead title="Edit feed" bind:heading onClose={onCancel} closeLabel="Close without saving" {besideToggle} />
   <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-6 pt-3 pb-10 md:px-10">
-    <div class="mx-auto max-w-2xl">
-      <form onsubmit={save} class="mt-6 flex max-w-xl flex-col gap-6">
-        {@render fields()}
-
-        <div class="flex flex-wrap gap-2">
-          <button type="submit" aria-disabled={busy} class="btn-primary">Save</button>
-          <button type="button" onclick={onCancel} class="btn">Cancel</button>
-        </div>
-        <p role="status">{message}</p>
-      </form>
-
-      <section aria-labelledby="unsubscribe-heading" class="mt-10 flex max-w-xl flex-col items-start gap-2 border-t border-ink/10 pt-8">
-        <h3 id="unsubscribe-heading" class="text-large font-semibold">Unsubscribe</h3>
-        <p>{@render unsubscribeHelp()}</p>
-        <button type="button" aria-disabled={busy} onclick={leave} class="btn">
-          Unsubscribe from {feed.title}
-        </button>
-      </section>
+    <!-- The sheet's build, as a page: the form and its row of actions, then Unsubscribe apart. -->
+    <div class="mx-auto mt-6 flex max-w-xl flex-col">
+      {@render form()}
+      {@render unsubscribe(true)}
     </div>
   </div>
 </section>

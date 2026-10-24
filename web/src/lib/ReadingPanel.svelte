@@ -88,7 +88,7 @@
     // The keyboard moved on to something outside: the panel closes behind it, so it never covers where it went.
     if (next && !panel?.contains(next) && !anchor?.contains(next)) onClose(false);
   }}
-  class={["reading-panel z-40 flex flex-col gap-4 overflow-y-auto border border-ink/10 bg-paper font-sans", phone ? "phone" : "popover"]}
+  class={["reading-panel floating z-40 flex flex-col gap-4 overflow-y-auto font-sans", phone ? "phone" : "popover"]}
   style:top={phone ? undefined : `${place.top}px`}
   style:right={phone ? undefined : `${place.right}px`}
 >
@@ -177,16 +177,13 @@
 
 <style>
   .reading-panel {
+    /* One of the things that float (app.css → .floating): its corners, edge and shadow. */
     position: fixed;
-    /* It floats over the page, so it has the one soft shadow such things get (DESIGN.md → Exceptions log). */
-    box-shadow: 0 16px 40px -12px rgb(0 0 0 / 0.28);
-    border-color: color-mix(in oklab, var(--ink) var(--sheet-edge, 12%), transparent);
   }
   .popover {
     width: min(22rem, calc(100vw - 2rem));
     max-height: calc(100dvh - 6rem);
     padding: 1rem;
-    border-radius: 0.875rem;
   }
   /* On a phone: a sheet along the bottom, the width of the screen, clear of the home bar. */
   .phone {

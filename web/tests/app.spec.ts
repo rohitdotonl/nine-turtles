@@ -291,15 +291,29 @@ test("nothing scrolls underneath the Sidebar button or the shortcut hint", async
   await expect(scroller).not.toHaveAttribute("data-scrolled");
 });
 
-test("Add a feed opens as a sheet over the list you were on: a serif title, and Escape or a press outside closes it", async ({ page, isMobile }) => {
+test("Add a feed opens as a sheet over the list you were on: a sans title, one row of actions, and Escape or a press outside closes it", async ({ page, isMobile }) => {
   test.skip(isMobile, "on a phone, Add a feed is a screen of its own");
   await openApp(page);
   await page.keyboard.press("a");
   const sheet = page.getByRole("dialog", { name: "Add a feed" });
   await expect(sheet).toBeVisible();
   await expect(sheet.getByLabel("Paste a website or feed URL")).toBeFocused();
+  // The serif names places; a sheet is a task, titled in the interface font at 20px.
   const heading = sheet.getByRole("heading", { level: 2, name: "Add a feed" });
-  expect(await heading.evaluate((element) => getComputedStyle(element).fontFamily)).toContain("Literata");
+  expect(await heading.evaluate((element) => getComputedStyle(element).fontFamily)).not.toContain("Literata");
+  await expect(heading).toHaveCSS("font-size", "20px");
+  // The field takes the full width; Cancel, then Add feed at the right end, in one row at the foot.
+  const [field, cancel, add, card] = await Promise.all([
+    sheet.getByLabel("Paste a website or feed URL").boundingBox(),
+    sheet.getByRole("button", { name: "Cancel" }).boundingBox(),
+    sheet.getByRole("button", { name: "Add feed" }).boundingBox(),
+    sheet.boundingBox(),
+  ]);
+  expect(field!.width).toBeGreaterThan(card!.width - 2 * 24 - 4);
+  expect(Math.abs(cancel!.y - add!.y)).toBeLessThan(2);
+  expect(cancel!.x + cancel!.width).toBeLessThanOrEqual(add!.x);
+  expect(add!.y).toBeGreaterThan(field!.y + field!.height);
+  expect(Math.abs(card!.x + card!.width - 24 - (add!.x + add!.width))).toBeLessThan(2);
   // The list stays in view behind it, and nothing behind it answers the keyboard.
   await expect(page.locator("#list-heading")).toBeVisible();
   // No X: Escape is the way out, and so is a press on the dimmed page.

@@ -161,6 +161,10 @@
   );
   /** No feeds yet: Unread and All show the add field instead (SPEC section 2). */
   let firstVisit = $derived(feeds !== undefined && feeds.length === 0);
+  /** How many articles the list shows, so the empty reading area offers j only when there's one to open. */
+  let listCount = $state(0);
+  /** The line above the add field, in the sheet and on the phone's page. */
+  const ADD_INTRO = "slowfeed finds the feed on any website you like, and lists its articles.";
   let headingText = $derived(
     missing
       ? under.kind === "folder" || under.kind === "edit-folder"
@@ -665,6 +669,26 @@
   </button>
 {/snippet}
 
+{#snippet welcome()}
+  <!--
+    The welcome, before the first feed (SPEC section 2): a title in the reading serif, one
+    sentence, a wide field with Add feed, and importing a list of feeds as a quiet second way in.
+    With the Add a feed sheet open over it, the sheet has the only field.
+  -->
+  <div class="flex w-full max-w-[28rem] flex-col gap-6">
+    <div class="text-center">
+      <h2 id="welcome-heading" class="font-serif text-xlarge font-semibold tracking-[-0.01em]">A quiet place to read.</h2>
+      <p class="mt-3 text-ink-2">Follow the websites you like, and read what they publish here, at your own pace.</p>
+    </div>
+    {#if !(sheet && route.kind === "add-feed")}
+      <AddFeed bind:field={addField} feeds={[]} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} />
+    {/if}
+    <p class="-mt-4 text-center text-small text-muted">
+      or <a href="/settings" onclick={goImport} class="inline-flex min-h-11 items-center text-ink-2 underline underline-offset-4">import an OPML file</a>
+    </p>
+  </div>
+{/snippet}
+
 {#snippet listHead()}
             <!-- One line, so the search box below never moves: a long name ends in "…", its whole name is its tooltip and is read in full by screen readers. -->
             <!--
@@ -895,11 +919,16 @@
           {/if}
           <PageHead title="Add a feed" bind:heading={listHeading} onClose={phone ? undefined : closePage} besideToggle={!phone && !panes.sidebar} />
           <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-6 pt-3 pb-10 md:px-10">
-            <div class="mx-auto max-w-2xl">
-              <p class="mb-6 max-w-xl">
-                Paste the address of a website you like, or of its feed. slowfeed finds the feed and lists its articles.
-              </p>
-              <AddFeed bind:field={addField} feeds={feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} />
+            <!-- The sheet's build, as a page: a line on what to paste, the field, then Cancel and Add feed in one row. -->
+            <div class="mx-auto mt-6 flex max-w-xl flex-col gap-5">
+              <p>{ADD_INTRO}</p>
+              <AddFeed
+                bind:field={addField}
+                feeds={feeds ?? []}
+                onAdded={added}
+                onOpen={(id) => go({ kind: "feed", id })}
+                onCancel={phone ? () => stepBack("home") : closePage}
+              />
             </div>
           </div>
         </section>
@@ -940,17 +969,12 @@
               <p class="mt-4">There's no folder here. It may have been deleted or renamed.</p>
             {:else if missing}
               <p class="mt-4">You don't follow this feed. It may have been an old address.</p>
-            {:else if firstVisit && !(under.kind === "view" && under.view === "starred")}
-              <p class="mt-4 mb-6">Nothing to read yet. Add a website you like to begin.</p>
-              <!-- With the Add a feed sheet open over it, the sheet has the only field. -->
-              {#if !(sheet && route.kind === "add-feed")}
-                <AddFeed bind:field={addField} feeds={[]} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} />
-              {/if}
-              <p class="mt-4">
-                <a href="/settings" onclick={goImport} class="inline-flex min-h-11 items-center underline underline-offset-4"
-                  >Import OPML</a
-                >
-              </p>
+            {:else if firstVisit && panes.article}
+              <!-- The welcome has the reading area; the list just says there's nothing yet. -->
+              <p class="mt-4 text-ui text-muted">Nothing here yet.</p>
+            {:else if firstVisit}
+              <!-- No reading area beside the list (a phone, or a medium window with the sidebar shown): the welcome is here. -->
+              <div class="mt-8 flex justify-center">{@render welcome()}</div>
             {:else if feeds !== undefined && sort !== undefined}
               <!-- The list, with "New items · press r" and Undo in a note floating at its foot (Refresh and More sit beside the title). -->
               {#key listKey}
@@ -967,6 +991,7 @@
                   onRefresh={loadFeeds}
                   results={shown !== undefined}
                   oneFeed={under.kind === "feed" && !shown}
+                  bind:count={listCount}
                 />
               {/key}
             {/if}
@@ -994,12 +1019,22 @@
                   }
                 : undefined}
             />
+          {:else if firstVisit && !missing}
+            <!-- No feeds yet: the welcome has the reading area, where a new reader's eyes go (SPEC section 2). -->
+            <section aria-labelledby="welcome-heading" class="flex min-w-0 flex-1 flex-col items-center justify-center bg-paper px-6 pb-[12vh] md:px-10">
+              {@render welcome()}
+            </section>
           {:else}
-            <!-- Waiting quietly in the middle of the page, a little above centre, like a blank page in a book. -->
+            <!--
+              Waiting quietly in the middle of the page, a little above centre, like a blank page in a book.
+              The hint shows only when the list has something to open; its line is kept either way, so nothing moves.
+            -->
             <section aria-label="Article" class="flex min-w-0 flex-1 flex-col items-center justify-center bg-paper px-6 pb-[12vh] text-center md:px-10">
               <div>
-                <p class="text-ui text-ink-2">No article open.</p>
-                <p class="keyboard-hint mt-1 text-small text-muted">Choose one from the list, or press <kbd class="key">j</kbd>.</p>
+                <p class="font-serif text-large text-ink-2">No article open.</p>
+                <p class="mt-2 min-h-[1lh] text-small text-muted">
+                  {#if listCount > 0 && !missing}Choose one from the list<span class="keyboard-hint">, or press <kbd class="key">j</kbd></span>.{/if}
+                </p>
               </div>
             </section>
           {/if}
@@ -1013,11 +1048,8 @@
 
 {#if sheet && route.kind === "add-feed"}
   <Sheet title="Add a feed" bind:heading={sheetHeading} onClose={closePage} initial={() => addField}>
-    <p>Paste the address of a website you like, or of its feed. slowfeed finds the feed and lists its articles.</p>
-    <AddFeed bind:field={addField} feeds={feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} />
-    <div class="flex justify-end">
-      <button type="button" onclick={closePage} class="btn">Cancel</button>
-    </div>
+    <p>{ADD_INTRO}</p>
+    <AddFeed bind:field={addField} feeds={feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} onCancel={closePage} />
   </Sheet>
 {:else if sheet && route.kind === "edit-feed" && currentFeed}
   {#key currentFeed.id}

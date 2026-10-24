@@ -35,7 +35,7 @@
   bind:this={dialog}
   aria-labelledby="shortcuts-heading"
   onclose={() => (open = false)}
-  class="m-auto max-h-[min(44rem,90dvh)] w-[min(52rem,calc(100vw-2rem))] overflow-hidden rounded-xl sheet-edge border bg-paper p-0 text-ink shadow-[0_24px_64px_-16px_rgb(0_0_0/0.35)]"
+  class="m-auto max-h-[min(44rem,90dvh)] w-[min(52rem,calc(100vw-2rem))] overflow-hidden floating p-0 text-ink"
 >
   <div class="flex max-h-[min(44rem,90dvh)] flex-col">
     <div class="flex min-h-16 shrink-0 items-center justify-between gap-4 border-b border-ink/10 pr-4 pl-6">

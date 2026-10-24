@@ -29,7 +29,16 @@ export type Article = {
   at: number;
   read: boolean;
   starred: boolean;
+  /**
+   * A search result's line of its text around the first searched word, in
+   * plain-text pieces, the searched words marked (SPEC section 14). Absent
+   * outside search, and when the words were only in the title.
+   */
+  excerpt?: ExcerptPiece[];
 };
+
+/** A piece of a search result's excerpt: plain text, never HTML. */
+export type ExcerptPiece = { text: string; match: boolean };
 
 /** One article as the reading area shows it. `content` and `summary` are already cleaned by slowfeed. */
 export type FullArticle = Article & {
@@ -451,7 +460,13 @@ function toArticle(article: Record<string, unknown>): Article {
     at: Number(article.at),
     read: article.read === true,
     starred: article.starred === true,
+    ...(Array.isArray(article.excerpt) ? { excerpt: toExcerpt(article.excerpt) } : {}),
   };
+}
+
+/** Only well-formed pieces, each kept as text. */
+export function toExcerpt(pieces: unknown[]): ExcerptPiece[] {
+  return pieces.filter(isRecord).map((piece) => ({ text: String(piece.text ?? ""), match: piece.match === true }));
 }
 
 function toFullArticle(article: Record<string, unknown>): FullArticle {

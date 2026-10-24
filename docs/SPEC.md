@@ -40,17 +40,18 @@ A few words used throughout:
 ## 2. First visit (empty state)
 
 **What it does**
-- Until you add your first feed, Unread and All show one field: **"Paste a website or feed URL"**, and below it: **"Import OPML"**, which goes to the import described in section 16 (Settings → Your data).
+- Until you add your first feed, the reading area shows a welcome, centred like a page: **"A quiet place to read."** in the reading serif, one sentence ("Follow the websites you like, and read what they publish here, at your own pace."), a wide field labelled **"Paste a website or feed URL"** with **Add feed** beside it, and under it a quiet link, **"or import an OPML file"**, which goes to the import described in section 16 (Settings → Your data). The list beside it says only "Nothing here yet." Where there's no reading area beside the list (a phone, or a medium window with the sidebar shown), the welcome sits in the list's place instead.
 - (V2 adds "New to feeds? Here's how they work", a short guide page for newcomers.)
 
 **How to check it**
-1. On a fresh installation, sign in. You see the field and the Import OPML link, and nothing else competing for attention.
+1. On a fresh installation, sign in. The reading area shows the welcome, centred, with the field, Add feed and "or import an OPML file"; the list says "Nothing here yet." Nothing tells you to press `j`.
+2. On a phone, the welcome fills the list's screen.
 
 ## 3. Adding a feed
 
 **What it does**
 - **Add feed** (a plus icon and its words) sits at the very bottom of the sidebar, always in the same place, with two icon buttons beside it: the shortcut list (a keyboard) and **Settings** (a cog), each with its name as a tooltip. The `a` key does the same as Add feed.
-- Add feed opens a sheet over the list you were on (`/add-feed`): a small card with the same field as the first visit, the list and article still in view behind it, dimmed. Escape, or a press on the dimmed page, closes it. Add feed is an action, not a place, so it never shows the "where you are" bar. On a phone it's a screen of its own.
+- Add feed opens a sheet over the list you were on (`/add-feed`): a small card titled "Add a feed", a line saying slowfeed finds the feed on any website, the same field as the first visit at the card's full width, and at the foot one row: **Cancel**, then **Add feed** at the right end. Messages appear under the field in a space kept for two lines, so nothing below them moves. The list and article stay in view behind it, dimmed. Cancel, Escape, or a press on the dimmed page, closes it. Add feed is an action, not a place, so it never shows the "where you are" bar. On a phone it's a screen of its own.
 - You can paste either a feed address or an ordinary website address; leaving off `https://` is fine. For a website, slowfeed looks at exactly the page you pasted to find its feed ("autodiscovery"), once, because you asked. If the page names several feeds, you see their names and choose one.
 - While slowfeed looks, the field says "Looking for a feed…" in plain text. No spinner.
 - If it doesn't work, a plain sentence says why, never an error code: "This site doesn't seem to offer a feed. Try the feed's own address, or the site's home page.", "That site didn't answer. Try again later.", "Nothing was found at that address.", "That doesn't look like a web address.", "slowfeed can't visit that address." (an address inside a private network or on slowfeed's own computer), or "That file is too big to be a feed." The message sits under the field after a small warning mark; when the address itself is the problem, the field is marked too.
@@ -142,7 +143,7 @@ A few words used throughout:
 - Links inside articles open in a new tab (links to a place inside the article, like footnotes, stay in it).
 - Footnote links move to the note inside the article (and back), without leaving slowfeed.
 - On a wide window the article sits in the middle of the reading area, like a page in a book, with its actions lined up above its text.
-- With no article chosen, the reading area waits quietly: "No article open." in the middle of the page, and on screens with a keyboard "Choose one from the list, or press j." below it.
+- With no article chosen, the reading area waits quietly: "No article open." in the reading serif at 20px, a little above the middle of the page, and under it a muted hint, "Choose one from the list, or press j." (on touch screens just "Choose one from the list."). The hint shows only when the list has something to open; its line is kept either way, so nothing moves.
 - Images load from the publisher's site. Invisible 1×1 "tracking pixels" are removed (any image sized 0 or 1 pixel), so they're never loaded.
 - Anything unsafe in the feed's content (scripts, embedded frames, code hidden in styles) is removed before display.
 - The next article is loaded in advance so moving to it with `j` is instant.
@@ -257,11 +258,13 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 - Power-user filters can be typed: `is:unread`, `is:starred`, `feed:name`, `folder:name`, `after:YYYY-MM-DD`, `before:YYYY-MM-DD`. They're suggested as you type (↓ and ↑ choose, Enter takes one) and turn into chips once followed by a space or Enter. A name with spaces goes in quotes (`feed:"Garden Notes"`), or type part of it. `after:` and `before:` don't include the day itself. A filter that can't be understood stays as typed, with a plain line saying why. Backspace at the start of the field removes the last chip.
 - Results look and behave like the normal item list, including "Mark all as read" in the More menu. A quiet line above the results says how many were found ("16 results", or "50+ results" while more can load). Refresh is hidden while searching: there's nothing new to fetch for a search.
 - Matching words are **underlined** in the text's own color, never highlighted in color (bold couldn't be seen in an unread title, which is already semibold).
+- Under each result whose text (not only its title) holds a searched word, one muted line shows that text around the first match: a few words before it, then on to about 90 characters, cut only between words, with "…" where text was left out, and ending in "…" if the list is too narrow for the whole line. The searched words in it are semibold and in full ink, so they stand out by weight as well as tone. The line is plain text: nothing from the feed's HTML comes through.
+- Once the field has words in it, a **×** at its end ("Clear search", a 44px target) empties the field, keeping any chips, and leaves the keyboard in it.
 - Works for English, other Latin-alphabet languages, and Hindi.
 - Tab moves from the field into the options panel; Escape closes search and returns you to where you were.
 
 **How to check it**
-1. In a folder, press `/`, type a word you remember from an article. The chip shows the folder; results appear with the word underlined.
+1. In a folder, press `/`, type a word you remember from an article. The chip shows the folder; results appear with the word underlined, and a result whose text holds the word shows a line of that text with the word in bold. Press × to empty the field.
 2. Remove the chip: results now come from all feeds.
 3. Type `is:starred`: it becomes a chip, and only starred items are listed.
 4. Open the options, choose Past week: a matching `after:` chip appears in the field.
@@ -272,8 +275,8 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 
 **What it does**
 - Folders are the only grouping. A feed can be in more than one folder.
-- You can rename a feed, choose its folders, and unsubscribe, from an **Edit feed** button (a pencil icon, named in its tooltip) in the item list's header when you're viewing one feed. It opens as a sheet over the feed's list (`/feeds/3/edit`) with the name, folders as checkboxes, "New folder" (made when you save, with the feed in it), Cancel and Save, and below a faint line, Unsubscribe with what it does said under it. Escape, Cancel or a press on the dimmed page goes back unchanged. On a phone it's a screen of its own, with an X at the top.
-- Viewing a folder, an **Edit folder** button opens a sheet in the same way (`/folders/2/edit`) to rename or delete it.
+- You can rename a feed, choose its folders, and unsubscribe, from an **Edit feed** button (a pencil icon, named in its tooltip) in the item list's header when you're viewing one feed. It opens as a sheet over the feed's list (`/feeds/3/edit`) with the name, folders as checkboxes, "New folder" (made when you save, with the feed in it), and at the foot one row: **Cancel**, then **Save** at the right end. Below a faint line comes a sentence on what unsubscribing does, then **Unsubscribe from …** as words in a muted red (no edge; the words say what it does, so red is never the only sign). Escape, Cancel or a press on the dimmed page goes back unchanged. On a phone it's a screen of its own, with an X at the top, built the same way.
+- Viewing a folder, an **Edit folder** button opens a sheet in the same way (`/folders/2/edit`) to rename or delete it, built the same way: Name, then Cancel and Save, then below a faint line, a sentence and **Delete …** in muted red.
 - You can create (from "Edit feed"), rename and delete folders. Two folders can't share a name. Deleting a folder never deletes its feeds.
 - Unsubscribing and deleting a folder happen at once and take you to Unread, where the line says "Unsubscribed from …" or "Deleted the folder …" with Undo (or `u`), until your next action.
 - Unsubscribing from a feed keeps its starred articles in Starred. Undo brings the feed back whole, read history and folders included; after your next action (or ten minutes) its other articles are gone for good. Following it again later starts it afresh, all unread.
