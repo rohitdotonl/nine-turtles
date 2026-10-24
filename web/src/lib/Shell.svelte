@@ -729,7 +729,7 @@
   >
     <div class="relative min-h-0 flex-1 overflow-y-auto pb-4">
       <div class={["flex min-h-11 items-center gap-4 pr-4 pb-3", phone ? "pl-5" : "pl-14"]}>
-        <h1 class="mr-auto font-serif text-heading tracking-[-0.01em]" tabindex="-1" bind:this={wordmark}>slowfeed</h1>
+        <h1 class={["mr-auto font-serif tracking-[-0.01em]", phone ? "text-xlarge" : "text-large text-ink-2"]} tabindex="-1" bind:this={wordmark}>slowfeed</h1>
         {#if phone}
           <!-- The feeds screen's top bar (SPEC section 20): its unread numbers wait for this, as they wait for r. -->
           <button type="button" onclick={loadFeeds} class="btn-quiet btn-small -mr-2"><Icon name="refresh" size={16} />Refresh</button>

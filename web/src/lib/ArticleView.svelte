@@ -161,7 +161,7 @@
       <!-- Under the title, as in a book or a magazine: who wrote it, where, and when. -->
       <p class="article-byline text-ink-2" lang="en">
         {#if full?.siteUrl}
-          <a href={full.siteUrl} target="_blank" rel="noopener noreferrer" class="font-semibold text-ink hover:underline hover:underline-offset-4"
+          <a href={full.siteUrl} target="_blank" rel="noopener noreferrer" class="font-medium text-ink hover:underline hover:underline-offset-4"
             >{article.feedTitle}</a
           >
         {:else}

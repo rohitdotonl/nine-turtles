@@ -410,7 +410,7 @@
 {#if loaded && articles.length === 0}
   <p>{empty}</p>
 {:else if articles.length > 0}
-  <ul class="-mx-6">
+  <ul class="item-list -mx-6">
     {#each articles as article, index (article.id)}
       {@const current = index === selectedIndex}
       <li>
@@ -439,11 +439,11 @@
                 >{:else}{part.text}{/if}{/each}{#if !article.read}<span class="sr-only">, unread</span>{/if}</span
           >
           <span class="mt-0.5 block text-meta text-muted tabular-nums">
-            {#if article.starred}
-<span class="star"><Icon name="star" size={13} filled /></span><span class="sr-only">Starred, </span>
-            {/if}
             <span class={oneFeed ? "sr-only" : undefined}>{article.feedTitle} ·</span>
             <time datetime={new Date(article.at * 1000).toISOString()}>{when(article.at)}</time>
+            {#if article.starred}
+<span class="star"><Icon name="star" size={13} filled /></span><span class="sr-only">, Starred</span>
+            {/if}
           </span>
         </button>
       </li>
@@ -507,6 +507,6 @@
   .star {
     display: inline-block;
     vertical-align: -2px;
-    margin-right: 0.25rem;
+    margin-left: 0.25rem;
   }
 </style>
