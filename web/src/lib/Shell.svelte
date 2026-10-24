@@ -92,6 +92,8 @@
   let panes = $derived(panesFor(width, sidebarChoice, reading, listHidden));
   /** A phone-narrow window: one screen at a time, with a top bar and, while reading, a bottom toolbar. */
   let phone = $derived(width === "narrow");
+  /** On a computer with the sidebar and the list both hidden, their two buttons become one, which brings both back. */
+  let bothHidden = $derived(!phone && !panes.sidebar && !panes.list && isList(route) && !welcoming);
 
   let wordmark: HTMLHeadingElement | undefined = $state();
   let listHeading: HTMLHeadingElement | undefined = $state();
@@ -861,11 +863,11 @@
     <button
       type="button"
       bind:this={sidebarToggle}
-      aria-label="Sidebar"
+      aria-label={bothHidden ? "Sidebar and article list" : "Sidebar"}
       aria-expanded={panes.sidebar}
-      aria-controls="sidebar"
-      title={panes.sidebar ? "Hide the sidebar ( [ )" : "Show the sidebar ( [ )"}
-      onclick={toggleSidebar}
+      aria-controls={bothHidden ? "sidebar list-pane" : "sidebar"}
+      title={bothHidden ? "Show the sidebar and the article list ( \\ )" : panes.sidebar ? "Hide the sidebar ( [ )" : "Show the sidebar ( [ )"}
+      onclick={bothHidden ? toggleBoth : toggleSidebar}
       class="bar-button flex size-11 items-center justify-center rounded-md text-ink-2"
     >
       <Icon name="sidebar" size={20} />
@@ -1041,7 +1043,7 @@
           </div>
         </section>
       {:else}
-        {#if !phone && !welcoming}
+        {#if !phone && !welcoming && !bothHidden}
           <!--
             The article list's button, on a computer: at the right end of the list's own top line, as the
             sidebar's sits on its own; with the list hidden it waits at the start of the article's top
@@ -1154,7 +1156,7 @@
           {#if selected}
             <ArticleView
               article={selected}
-              toggles={phone || panes.list ? 0 : panes.sidebar ? 1 : 2}
+              toggles={phone || panes.list ? 0 : 1}
               bind:heading={articleHeading}
               bind:preferences
               onStar={() => itemList?.toggleStar()}
