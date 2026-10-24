@@ -96,8 +96,13 @@
   }
 </script>
 
+<!--
+  In the welcome everything is centred, under a centred title (decision 0047):
+  the field's name is said to screen readers and shown as its placeholder, so
+  no line of it sits left-aligned. In a sheet its name stands above it.
+-->
 <form onsubmit={submit} class="flex flex-col gap-2">
-  <label for="feed-address" class="text-small text-ink-2">Paste a website or feed URL</label>
+  <label for="feed-address" class={onCancel ? "text-small text-ink-2" : "sr-only"}>Paste a website or feed URL</label>
   <div class="flex gap-2">
     <input
       id="feed-address"
@@ -108,13 +113,14 @@
       autocomplete="off"
       autocapitalize="none"
       spellcheck="false"
-      placeholder="example.com"
+      placeholder={onCancel ? "example.com" : "Paste a website or feed URL"}
       aria-describedby="feed-address-status"
       aria-invalid={badAddress ? "true" : undefined}
       class="field min-w-0 flex-1"
     />
     {#if !onCancel}
-      <button type="submit" aria-disabled={busy} class="btn-primary">Add feed</button>
+      <!-- Beside the field, its corners match the field's. -->
+      <button type="submit" aria-disabled={busy} class="btn-primary rounded-lg">Add feed</button>
     {/if}
   </div>
   <!--
@@ -125,7 +131,7 @@
     a message, when there is one, takes its place there and moves it down
     within that room (decision 0045).
   -->
-  <div class={onCancel ? "contents" : "flex min-h-[5.8rem] flex-col"}>
+  <div class={onCancel ? "contents" : "flex min-h-[5.8rem] flex-col items-center text-center"}>
     <!--
       Screen readers hear each new line here without moving the keyboard's place.
       A problem is in red words after an icon. In a sheet the line takes room
@@ -145,7 +151,7 @@
     </p>
 
     {#if choices.length > 0}
-      <ul class="mb-2 flex flex-col gap-2">
+      <ul class="mb-2 flex flex-col gap-2 self-stretch text-left">
         {#each choices as choice (choice.url)}
           <li>
             <button

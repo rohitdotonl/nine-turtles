@@ -37,18 +37,50 @@ test("a fresh slowfeed shows the welcome in the reading area: the paste field, a
   await expect(page.getByText("No article open.")).toHaveCount(0);
   const [welcome, pane] = await Promise.all([reading.locator("#welcome-heading").boundingBox(), reading.boundingBox()]);
   expect(Math.abs(welcome!.x + welcome!.width / 2 - (pane!.x + pane!.width / 2))).toBeLessThan(4);
+  // One empty state, not an empty column beside it (decision 0047): the list pane steps aside and
+  // the welcome takes everything beside the sidebar.
+  await expect(page.getByRole("region", { name: "Unread" })).toHaveCount(0);
+  const sidebarBox = (await sidebar(page).boundingBox())!;
+  expect(Math.abs(pane!.x - (sidebarBox.x + sidebarBox.width))).toBeLessThan(2);
   // The field is wide enough for a real address.
   expect((await field(page).boundingBox())!.width).toBeGreaterThan(280);
-  // "Import an OPML file…", a quiet button just under the field and lined up with it (its words
-  // start where the field does), leads to Settings, at Your data (decision 0045).
+  // One alignment (decision 0047): the field's name is its placeholder (and its label for screen
+  // readers), so no line sits left-aligned under the centred title.
+  await expect(field(page)).toHaveAttribute("placeholder", "Paste a website or feed URL");
+  await expect(reading.locator("label[for='feed-address']")).toHaveClass(/sr-only/);
+  // "Import an OPML file…", a quiet button just under the field and centred under it, leads to
+  // Settings, at Your data (decisions 0045, 0047).
   const importLink = page.getByRole("link", { name: "import an OPML file" });
-  const [fieldBox, importBox] = await Promise.all([field(page).boundingBox(), importLink.boundingBox()]);
+  const [fieldBox, importBox, addBox] = await Promise.all([field(page).boundingBox(), importLink.boundingBox(), reading.getByRole("button", { name: "Add feed" }).boundingBox()]);
   expect(importBox!.y - (fieldBox!.y + fieldBox!.height)).toBeLessThanOrEqual(12);
-  expect(Math.abs(importBox!.x + 10 - fieldBox!.x)).toBeLessThan(3);
+  const rowCentre = (fieldBox!.x + addBox!.x + addBox!.width) / 2;
+  expect(Math.abs(importBox!.x + importBox!.width / 2 - rowCentre)).toBeLessThan(3);
   await importLink.click();
   await expect(page).toHaveURL(/\/settings$/);
   await expect(page.getByRole("heading", { level: 3, name: "Your data" })).toBeFocused();
   await expect(sidebar(page).getByRole("link", { name: "Add feed" })).toBeVisible();
+});
+
+test("the welcome stays still under the Add a feed sheet", async ({ page, isMobile }) => {
+  test.skip(isMobile, "on a phone, Add a feed is a screen of its own");
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/unread");
+  await appReady(page);
+  await signIn(page);
+  const reading = page.getByRole("region", { name: "A quiet place to read." });
+  const shape = () => Promise.all([page.locator("#welcome-heading").boundingBox(), page.getByText("Import an OPML file…").first().boundingBox()]);
+  const before = await shape();
+  // Nothing behind the sheet moves as it opens or closes (decision 0047): the welcome keeps its shape under the dim.
+  await page.keyboard.press("a");
+  const sheet = page.getByRole("dialog", { name: "Add a feed" });
+  await expect(sheet.getByLabel("Paste a website or feed URL")).toBeFocused();
+  expect(await shape()).toEqual(before);
+  // The page has one field of that name: the sheet's.
+  await expect(page.getByLabel("Paste a website or feed URL")).toHaveCount(1);
+  await page.keyboard.press("Escape");
+  await expect(sheet).toHaveCount(0);
+  await expect(reading.getByLabel("Paste a website or feed URL")).toBeVisible();
+  expect(await shape()).toEqual(before);
 });
 
 test("on a phone-narrow window, a fresh slowfeed shows the welcome in the list's place", async ({ page }) => {

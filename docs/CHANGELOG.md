@@ -14,6 +14,20 @@ not how it was done.
 - On a phone, the first article's toolbar no longer has a gap at the left:
   Previous stays in its place, faded, and does nothing.
 
+## 24 October 2026: One-line rows, plain search chips, one welcome
+
+- In the article list, the line under each title (source, time, star) is
+  always one line: a long source name ends in "…", and the date and star
+  never wrap onto a line of their own. Its numbers no longer look spaced out.
+- Search chips say "Unread", "Starred" or "After 1 Oct 2026", as the
+  options menu does; the last "Search in" row reads "Other feed or
+  folder ›". The Undo note sits in its own band at the foot of the list, so
+  it never covers a row.
+- Sign-in is one centred column with the button just under the field, at
+  the same phone margin as every other screen. On a first visit the welcome
+  is all centred, fills the room beside the sidebar (no empty list beside
+  it), and stays still when the Add a feed sheet opens over it (decision 0047).
+
 ## 24 October 2026: One top line, one left edge, steady phone screens
 
 - On a computer, the three panes' top lines are now the same height, so

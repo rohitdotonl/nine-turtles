@@ -26,7 +26,22 @@ export type Query = {
   before: string;
 };
 
-export type Chip = { key: "scope" | "unread" | "starred" | "after" | "before"; label: string };
+/**
+ * A chip in the field: `label` in plain words, as the Search options menu
+ * names the same filter ("Unread", "After 1 Oct 2026"); `typed`, for a
+ * filter, is how it's written in the field (`is:unread`), kept for its
+ * tooltip and for screen readers (decision 0047).
+ */
+export type Chip = { key: "scope" | "unread" | "starred" | "after" | "before"; label: string; typed?: string };
+
+const CHIP_DAY = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" });
+
+/** A `YYYY-MM-DD` day in words, "1 Oct 2026", or the text as it is if it isn't one. */
+export function dayInWords(date: string): string {
+  if (!isDate(date)) return date;
+  const [year = 0, month = 1, day = 1] = date.split("-").map(Number);
+  return CHIP_DAY.format(new Date(year, month - 1, day));
+}
 
 /** A search starts out limited to where you are (DESIGN.md → "Search"). */
 export function scopeFor(route: Route): Scope {
@@ -62,10 +77,10 @@ export function scopeName(scope: Scope, library: Library): string {
 export function chipsFor(query: Query, library: Library): Chip[] {
   const chips: Chip[] = [];
   if (query.scope.kind !== "all") chips.push({ key: "scope", label: `in: ${scopeName(query.scope, library)}` });
-  if (query.unread) chips.push({ key: "unread", label: "is:unread" });
-  if (query.starred) chips.push({ key: "starred", label: "is:starred" });
-  if (query.after) chips.push({ key: "after", label: `after:${query.after}` });
-  if (query.before) chips.push({ key: "before", label: `before:${query.before}` });
+  if (query.unread) chips.push({ key: "unread", label: "Unread", typed: "is:unread" });
+  if (query.starred) chips.push({ key: "starred", label: "Starred", typed: "is:starred" });
+  if (query.after) chips.push({ key: "after", label: `After ${dayInWords(query.after)}`, typed: `after:${query.after}` });
+  if (query.before) chips.push({ key: "before", label: `Before ${dayInWords(query.before)}`, typed: `before:${query.before}` });
   return chips;
 }
 

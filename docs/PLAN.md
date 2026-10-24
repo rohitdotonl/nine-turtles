@@ -304,6 +304,11 @@ each with screenshots:
 - ✅ A quiet article title (fifth critique): no ring on the title when an
   article opens, a clear pause before the byline with looser tracking, and
   a phone toolbar with no gap on the first article (decision 0046).
+- ✅ One-line rows, plain chips, one empty state (fifth critique): a list
+  row's meta on one line in proportional figures, search chips in the menu's
+  words, a submenu row for another feed or folder, the note in a band the
+  rows end above, a centred sign-in at the phone margin, and a centred,
+  still welcome that takes the list's room on a first visit (decision 0047).
 
 ---
 

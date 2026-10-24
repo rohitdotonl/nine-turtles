@@ -330,6 +330,16 @@ test.describe("on a wide window", () => {
     await expect(note).toBeVisible();
     const [noteBox, paneBox] = [(await note.boundingBox())!, (await selected.evaluate((element) => element.closest(".scroller")!.getBoundingClientRect().toJSON()))];
     expect(paneBox.bottom - (noteBox.y + noteBox.height)).toBeLessThan(48);
+    // It sits in a band of the list's own tone across the pane, which the rows end above, so it
+    // never lies over the rows you're acting on (decision 0047).
+    const band = note.locator("xpath=..");
+    const [bandFill, paneFill] = await Promise.all([
+      band.evaluate((element) => getComputedStyle(element).backgroundColor),
+      selected.evaluate((element) => getComputedStyle(element.closest(".list-pane")!).backgroundColor),
+    ]);
+    expect(bandFill).toBe(paneFill);
+    const bandBox = (await band.boundingBox())!;
+    expect(bandBox.width).toBeGreaterThan(paneBox.width - 16);
     await page.keyboard.press("u");
     // Opening an article gives its title the keyboard's place for screen
     // readers, but no ring: a title can't be pressed (decision 0046). The
