@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
 import { appReady, follow, signIn, tabTo } from "./screens";
 
-// SPEC section 20 (phones and installing the app), and the "slowfeed was
+// SPEC section 20 (phones and installing the app), and the "nine turtles was
 // updated" line of section 18, "How to check it", done by a browser.
 
 const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
@@ -82,7 +82,7 @@ test.describe("on a phone", () => {
     await expect(row(page, "The pleasure of a slow letter")).toBeFocused();
     await list(page).getByRole("button", { name: "Back to Feeds" }).click();
     await expect(sidebar(page)).toBeVisible();
-    await expect(page.getByRole("heading", { level: 1, name: "slowfeed" })).toBeFocused();
+    await expect(page.getByRole("heading", { level: 1, name: "nine turtles" })).toBeFocused();
   });
 
   test("the system back gesture goes back one step, and forward again", async ({ page }) => {
@@ -240,7 +240,7 @@ test.describe("on a phone", () => {
     await page.keyboard.press("Escape");
     await expect(row(page, "Only the first page")).toBeFocused();
     await page.keyboard.press("Escape");
-    await expect(page.getByRole("heading", { level: 1, name: "slowfeed" })).toBeFocused();
+    await expect(page.getByRole("heading", { level: 1, name: "nine turtles" })).toBeFocused();
 
     // Settings is one step on from the feeds; Escape and Close settings go back to them.
     await tabTo(page, sidebar(page).getByRole("link", { name: "Settings" }));
@@ -491,14 +491,14 @@ test.describe("on a phone", () => {
   });
 });
 
-test.describe("adding slowfeed to the home screen", () => {
+test.describe("adding nine turtles to the home screen", () => {
   test.use({ serviceWorkers: "allow" });
 
   test("the app describes itself for the home screen, with its own icon, and opens full-screen", async ({ page }) => {
     const response = await page.request.get("/manifest.webmanifest");
     expect(response.ok()).toBe(true);
     const manifest = await response.json();
-    expect(manifest).toMatchObject({ name: "slowfeed", start_url: "/", display: "standalone" });
+    expect(manifest).toMatchObject({ name: "nine turtles", start_url: "/", display: "standalone" });
     for (const icon of manifest.icons as { src: string }[]) {
       const image = await page.request.get(icon.src);
       expect(image.headers()["content-type"]).toBe("image/png");
@@ -513,7 +513,7 @@ test.describe("adding slowfeed to the home screen", () => {
     expect(registered).toMatch(/\/sw\.js$/);
   });
 
-  test("without a connection, the kept copy opens and says slowfeed can't be reached", async ({ page, context }) => {
+  test("without a connection, the kept copy opens and says nine turtles can't be reached", async ({ page, context }) => {
     await page.goto("/");
     await appReady(page);
     await page.evaluate(async () => {
@@ -524,7 +524,7 @@ test.describe("adding slowfeed to the home screen", () => {
     await appReady(page);
     await context.setOffline(true);
     await page.reload();
-    await expect(page.getByText("slowfeed can't be reached right now. Reload the page to try again.")).toBeVisible();
+    await expect(page.getByText("nine turtles can't be reached right now. Reload the page to try again.")).toBeVisible();
     await context.setOffline(false);
   });
 });
@@ -539,13 +539,13 @@ test("a tab left open across an update is told to reload, and Settings offers th
   await page.reload();
   await appReady(page);
 
-  // A newer slowfeed that doesn't understand this tab's way of starring.
+  // A newer nine turtles that doesn't understand this tab's way of starring.
   await page.route("**/api/articles/starred", (route) =>
     route.fulfill({ status: 400, headers: { "x-slowfeed-version": "a-newer-version" }, body: "" }),
   );
   await page.getByRole("button", { name: /The pleasure of a slow letter/ }).click();
   await page.getByRole("region", { name: "Article" }).getByRole("button", { name: "Star" }).click();
-  await expect(page.getByText("slowfeed was updated. Reload to continue.")).toBeVisible();
+  await expect(page.getByText("nine turtles was updated. Reload to continue.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Reload", exact: true })).toBeVisible();
 
   await page.getByRole("link", { name: "Settings" }).click();

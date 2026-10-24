@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { verdict } from "./updates.svelte";
 
-describe("telling a tab that slowfeed was updated", () => {
+describe("telling a tab that nine turtles was updated", () => {
   it("says nothing while the versions match, or before the tab knows its own", () => {
     expect(verdict("2026-10-23-a", "2026-10-23-a", 200)).toBe("same");
     expect(verdict(undefined, "2026-10-23-a", 400)).toBe("same");

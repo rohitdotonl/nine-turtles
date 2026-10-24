@@ -3,7 +3,7 @@ import { FEED_SITE, FEEDS_APP } from "../playwright.config";
 import { appReady, follow, signIn, tabTo } from "./screens";
 
 // SPEC sections 2, 3 and 6, "How to check it", done by a browser. Tests that
-// add feeds use the slowfeed that may read the made-up publisher
+// add feeds use the nine turtles that may read the made-up publisher
 // (playwright.config.ts), each with a blog of its own.
 
 const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
@@ -21,7 +21,7 @@ function newBlog(prefix = "blog"): string {
   return `${prefix}-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
 }
 
-test("a fresh slowfeed shows the welcome in the reading area: the paste field, and importing OPML", async ({ page }) => {
+test("a fresh nine turtles shows the welcome in the reading area: the paste field, and importing OPML", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/unread");
   await appReady(page);
@@ -85,7 +85,7 @@ test("the welcome stays still under the Add a feed sheet", async ({ page, isMobi
   expect(await shape()).toEqual(before);
 });
 
-test("on a phone-narrow window, a fresh slowfeed shows the welcome in the list's place", async ({ page }) => {
+test("on a phone-narrow window, a fresh nine turtles shows the welcome in the list's place", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 });
   await page.goto("/unread");
   await appReady(page);
@@ -109,7 +109,7 @@ test("a, a website's address and Enter add its feed, and its articles appear", a
 
   await expect(page).toHaveURL(/\/feeds\/[0-9]+$/);
   await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeFocused();
-  await expect(page).toHaveTitle(`Blog ${name} · slowfeed`);
+  await expect(page).toHaveTitle(`Blog ${name} · nine turtles`);
   const link = sidebar(page).getByRole("link", { name: `Blog ${name}` });
   await expect(link).toHaveAttribute("aria-current", "page");
 

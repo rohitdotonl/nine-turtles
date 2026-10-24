@@ -1,17 +1,17 @@
-// slowfeed's service worker (SPEC section 20, ENGINEERING.md → "Installable
-// on phones"). With the web app manifest, it lets slowfeed be added to the
+// nine turtles' service worker (SPEC section 20, ENGINEERING.md → "Installable
+// on phones"). With the web app manifest, it lets nine turtles be added to the
 // home screen. It keeps a copy of the app itself, never of your articles:
 //
-// - Opening slowfeed always asks the server first, so you get the newest
+// - Opening nine turtles always asks the server first, so you get the newest
 //   version. Without a connection, the kept copy opens instead and says
-//   plainly that slowfeed can't be reached.
+//   plainly that nine turtles can't be reached.
 // - The app's code and styles (in /assets/, whose names change with every
 //   version) are kept and used from the copy. Copies no version uses any
-//   more are removed when slowfeed is next opened.
+//   more are removed when nine turtles is next opened.
 // - Everything else, including all of /api/, goes straight to the server.
 //
 // Nothing here swaps the app while it's open: a new version starts the next
-// time slowfeed is opened or reloaded.
+// time nine turtles is opened or reloaded.
 
 const KEPT = "slowfeed-app-1";
 

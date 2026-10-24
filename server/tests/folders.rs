@@ -1,5 +1,5 @@
 //! Folders, editing feeds, unsubscribing with undo, and OPML import and
-//! export (SPEC sections 15 and 16), tested against a real running slowfeed
+//! export (SPEC sections 15 and 16), tested against a real running nine turtles
 //! and a made-up publisher with three small blogs.
 
 mod common;
@@ -539,7 +539,7 @@ async fn importing_opml_follows_each_feed_once_in_all_its_folders() {
             line("Gamma", None),
         ]
     );
-    // And it reads back into a fresh slowfeed the same.
+    // And it reads back into a fresh nine turtles the same.
     let fresh = Reader::new().await;
     let (_, answer) = fresh.send("/api/opml", "text/x-opml", exported).await;
     assert_eq!(answer["summary"]["added"], 3);

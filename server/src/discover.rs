@@ -2,7 +2,7 @@
 //! (SPEC section 3). Websites name their feeds in hidden lines such as
 //! `<link rel="alternate" type="application/rss+xml" href="/feed">`.
 //!
-//! slowfeed reads only the one page the reader pasted, and only when they
+//! nine turtles reads only the one page the reader pasted, and only when they
 //! add a feed (docs/decisions/0016-adding-feeds.md). It never guesses other
 //! addresses on the site.
 

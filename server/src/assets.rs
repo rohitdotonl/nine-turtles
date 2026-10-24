@@ -19,7 +19,7 @@ struct Frontend;
 /// changes, so browsers may keep them forever.
 const FOREVER: &str = "public, max-age=31536000, immutable";
 /// Everything else (the page itself, fonts) is checked for a new version on
-/// each visit, so a new release is picked up the next time slowfeed is opened.
+/// each visit, so a new release is picked up the next time nine turtles is opened.
 const CHECK_EACH_TIME: &str = "no-cache";
 
 pub fn routes<S: Clone + Send + Sync + 'static>() -> Router<S> {
@@ -31,7 +31,7 @@ async fn serve(uri: Uri) -> Response {
 
     match Frontend::get(path) {
         Some(file) if !path.is_empty() => file_response(path, file),
-        // An API address slowfeed doesn't have (perhaps one an older tab
+        // An API address nine turtles doesn't have (perhaps one an older tab
         // still uses after an update) is "not found", never the app's page.
         _ if path == "api" || path.starts_with("api/") => StatusCode::NOT_FOUND.into_response(),
         // A file-like address that doesn't exist is a real "not found".
@@ -47,7 +47,7 @@ async fn serve(uri: Uri) -> Response {
             Some(file) => file_response("index.html", file),
             None => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                "slowfeed was built without its frontend. Run scripts/check.sh.",
+                "nine turtles was built without its frontend. Run scripts/check.sh.",
             )
                 .into_response(),
         },

@@ -1,4 +1,4 @@
-// slowfeed's places and their web addresses, so a reload keeps you where you
+// nine turtles' places and their web addresses, so a reload keeps you where you
 // were and the browser's Back button works. No library: the browser's own
 // history does the work.
 
@@ -72,5 +72,5 @@ export function nameFor(route: Route, placeName?: string): string {
 
 /** The browser tab's title, which screen readers also announce. */
 export function titleFor(route: Route, placeName?: string): string {
-  return `${nameFor(route, placeName)} · slowfeed`;
+  return `${nameFor(route, placeName)} · nine turtles`;
 }

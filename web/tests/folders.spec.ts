@@ -5,7 +5,7 @@ import { appReady, follow, signIn, tabTo } from "./screens";
 // SPEC sections 5 (sidebar search), 15 (folders and managing feeds) and 16
 // (OPML import and export), "How to check it", done by a browser. Each test
 // uses blogs and folder names of its own, since every test shares the one
-// slowfeed that has feeds.
+// nine turtles that has feeds.
 
 const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
 const line = (page: Page) => page.getByRole("status").filter({ hasText: /\S/ }).first();
@@ -23,8 +23,8 @@ test.skip(({ isMobile }) => isMobile, "the wide layout shows the sidebar beside 
 test.describe.configure({ mode: "serial" });
 
 /**
- * Does `act` make slowfeed open the device's file chooser? It counts the
- * hidden file field being clicked, which is all slowfeed itself does. The
+ * Does `act` make nine turtles open the device's file chooser? It counts the
+ * hidden file field being clicked, which is all nine turtles itself does. The
  * test browser's own "file chooser" event isn't used: under load, Chromium
  * sometimes doesn't show the chooser even though the field was clicked.
  */
@@ -365,7 +365,7 @@ test("with only the keyboard: Edit feed, a new folder, opening it, Edit folder, 
   await tabTo(page, page.getByRole("link", { name: "Export starred articles" }));
   const download = page.waitForEvent("download");
   await page.keyboard.press("Enter");
-  expect((await download).suggestedFilename()).toBe("slowfeed-starred.json");
+  expect((await download).suggestedFilename()).toBe("nine-turtles-starred.json");
 });
 
 test("Edit feed opens over the article you were reading; closing it gives the keyboard back, and Back doesn't reopen it", async ({ page }) => {

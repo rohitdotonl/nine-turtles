@@ -1,5 +1,5 @@
 <!--
-  slowfeed's few icons, drawn on one 20px grid with the same 1.5px line, so
+  nine turtles' few icons, drawn on one 20px grid with the same 1.5px line, so
   they look like one set. Screen readers skip them: the word beside an icon,
   or the label of an icon-only button, says what it does.
 -->

@@ -29,13 +29,13 @@ describe("addresses", () => {
   it("turns a place back into its address and title", () => {
     expect(pathFor({ kind: "view", view: "starred" })).toBe("/starred");
     expect(pathFor({ kind: "settings" })).toBe("/settings");
-    expect(titleFor({ kind: "view", view: "all" })).toBe("All · slowfeed");
-    expect(titleFor({ kind: "settings" })).toBe("Settings · slowfeed");
+    expect(titleFor({ kind: "view", view: "all" })).toBe("All · nine turtles");
+    expect(titleFor({ kind: "settings" })).toBe("Settings · nine turtles");
     expect(pathFor({ kind: "feed", id: 3 })).toBe("/feeds/3");
-    expect(titleFor({ kind: "feed", id: 3 }, "Quiet Notes")).toBe("Quiet Notes · slowfeed");
-    expect(titleFor({ kind: "add-feed" })).toBe("Add a feed · slowfeed");
+    expect(titleFor({ kind: "feed", id: 3 }, "Quiet Notes")).toBe("Quiet Notes · nine turtles");
+    expect(titleFor({ kind: "add-feed" })).toBe("Add a feed · nine turtles");
     expect(pathFor({ kind: "edit-folder", id: 4 })).toBe("/folders/4/edit");
-    expect(titleFor({ kind: "folder", id: 4 }, "Tech")).toBe("Tech · slowfeed");
-    expect(titleFor({ kind: "edit-feed", id: 3 })).toBe("Edit feed · slowfeed");
+    expect(titleFor({ kind: "folder", id: 4 }, "Tech")).toBe("Tech · nine turtles");
+    expect(titleFor({ kind: "edit-feed", id: 3 })).toBe("Edit feed · nine turtles");
   });
 });

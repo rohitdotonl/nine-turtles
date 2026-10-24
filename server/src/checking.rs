@@ -9,10 +9,10 @@
 //!   most 20, four at a time, so checks are spread out and never all at once.
 //!   Each wait is nudged by up to a tenth at random, so feeds added together
 //!   drift apart.
-//! - Each check says what slowfeed already has (`fetch::check`), so an
+//! - Each check says what nine turtles already has (`fetch::check`), so an
 //!   unchanged feed costs the publisher a few bytes.
 //! - A failing feed waits twice as long after each failure in a row, up to a
-//!   day, and never holds up another feed. A publisher who asks slowfeed to
+//!   day, and never holds up another feed. A publisher who asks nine turtles to
 //!   slow down gets at least the wait they asked for.
 //! - Only the feed file is fetched, never an article's page.
 //!
@@ -42,7 +42,7 @@ pub const SHORTEST_WAIT: i64 = 30 * MINUTE;
 pub const LONGEST_WAIT: i64 = DAY;
 /// For a feed that gives no dates: a few times a day.
 pub const UNKNOWN_RHYTHM: i64 = 4 * HOUR;
-/// The longest "slow down" slowfeed obeys, so a mistaken answer can't
+/// The longest "slow down" nine turtles obeys, so a mistaken answer can't
 /// silence a feed for good.
 pub const LONGEST_SLOW_DOWN: i64 = 7 * DAY;
 /// "Not found" this long, or failing this long, and a feed counts as dead
@@ -61,7 +61,7 @@ const AT_ONCE: usize = 4;
 pub const DUE: &str = "SELECT id FROM feeds WHERE next_check_at <= ? AND unsubscribed_at IS NULL
      ORDER BY next_check_at, id LIMIT ?";
 
-/// Runs for as long as slowfeed does: a round, a pause, another round.
+/// Runs for as long as nine turtles does: a round, a pause, another round.
 pub async fn run(state: AppState) {
     // The browser tests check every feed every few seconds, so rounds come quicker.
     let pause = if state.config.test_check_seconds.is_some() {

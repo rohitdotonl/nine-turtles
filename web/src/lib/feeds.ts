@@ -40,7 +40,7 @@ export type Article = {
 /** A piece of a search result's excerpt: plain text, never HTML. */
 export type ExcerptPiece = { text: string; match: boolean };
 
-/** One article as the reading area shows it. `content` and `summary` are already cleaned by slowfeed. */
+/** One article as the reading area shows it. `content` and `summary` are already cleaned by nine turtles. */
 export type FullArticle = Article & {
   siteUrl: string | null;
   author: string | null;
@@ -133,7 +133,7 @@ export async function listArticles(source: Source, order: Order, after: string |
   if (after !== null) query.set("after", after);
   await saved();
   const body = await getJson(`/api/${"search" in source ? "search" : "articles"}?${query}`);
-  if (!isRecord(body) || !Array.isArray(body.articles)) throw new Error("slowfeed sent an unexpected answer");
+  if (!isRecord(body) || !Array.isArray(body.articles)) throw new Error("nine turtles sent an unexpected answer");
   return {
     articles: body.articles.filter(isRecord).map(toArticle),
     next: typeof body.next === "string" ? body.next : null,
@@ -179,7 +179,7 @@ function send(path: string, body: unknown): Promise<void> {
       // A save that hangs counts as failed, so it can't hold up the lists.
       signal: AbortSignal.timeout(15_000),
     });
-    if (!response.ok) throw new Error(`slowfeed answered ${response.status}`);
+    if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
   });
   writes = sent.catch(() => undefined);
   return sent;
@@ -249,7 +249,7 @@ export function readArticle(id: number): Promise<FullArticle> {
   if (pending) return pending;
   const request = getJson(`/api/articles/${id}`)
     .then((body) => {
-      if (!isRecord(body) || !isRecord(body.article)) throw new Error("slowfeed sent an unexpected answer");
+      if (!isRecord(body) || !isRecord(body.article)) throw new Error("nine turtles sent an unexpected answer");
       const article = toFullArticle(body.article);
       loaded.set(id, article);
       if (loaded.size > KEEP) loaded.delete(loaded.keys().next().value as number);
@@ -395,7 +395,7 @@ export async function importOpml(file: File): Promise<ImportSummary | string> {
     };
   }
   if (isRecord(body) && body.error === "not-opml") return "That file doesn't look like an OPML file.";
-  if (response.status === 413) return "That file lists more feeds than slowfeed can take at once.";
+  if (response.status === 413) return "That file lists more feeds than nine turtles can take at once.";
   return "The file couldn't be imported. Try again in a moment.";
 }
 
@@ -422,7 +422,7 @@ export function explain(reason: Problem): string {
     case "not-an-address":
       return "That doesn't look like a web address.";
     case "not-allowed":
-      return "slowfeed can't visit that address.";
+      return "nine turtles can't visit that address.";
     case "unreachable":
       return "That site didn't answer. Try again later.";
     case "not-found":
@@ -432,7 +432,7 @@ export function explain(reason: Problem): string {
     case "no-feed":
       return "This site doesn't seem to offer a feed. Try the feed's own address, or the site's home page.";
     case "trouble":
-      return "slowfeed couldn't add that just now. Try again in a moment.";
+      return "nine turtles couldn't add that just now. Try again in a moment.";
   }
 }
 
@@ -455,7 +455,7 @@ export function when(at: number, now: Date = new Date()): string {
 
 async function getJson(path: string): Promise<unknown> {
   const response = await api(path, { cache: "no-store" });
-  if (!response.ok) throw new Error(`slowfeed answered ${response.status}`);
+  if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
   return response.json();
 }
 

@@ -1,5 +1,5 @@
 //! Read, unread, star and the sort order (SPEC sections 8, 9 and 18), tested
-//! against a real running slowfeed and a made-up publisher.
+//! against a real running nine turtles and a made-up publisher.
 
 mod common;
 

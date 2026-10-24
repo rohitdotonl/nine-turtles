@@ -1,30 +1,30 @@
-# Setting up slowfeed on Render (for the owner)
+# Setting up nine turtles on Render (for the owner)
 
 A one-time setup, about 30 minutes. Agents have no access to Render, so these
 steps are yours. Each step says what you'll see. If something looks
 different, stop and ask an agent; Render's screens change from time to time.
 
 **Before you start:** the Milestone 2 pull request must be merged. Merging
-makes GitHub build slowfeed's container image (the ready-to-run package)
+makes GitHub build nine turtles' container image (the ready-to-run package)
 and store it. Check it worked: in the repository, the **Actions** tab shows
 "Container image" with a green ✓.
 
 ## 1. Make the package public (GitHub, 2 minutes)
 
-Render downloads slowfeed's package from GitHub. GitHub stores new packages
+Render downloads nine turtles' package from GitHub. GitHub stores new packages
 privately at first; making it public lets Render download it without a
 password. The code is already public, so nothing new is revealed. The package
 never contains your password or any settings.
 
 1. On GitHub, open your profile (your picture, top right) → **Your profile**
-   → the **Packages** tab → **slowfeed**.
+   → the **Packages** tab → **nine turtles**.
 2. **Package settings** (right side) → at the bottom, **Change visibility** →
    **Public** → type `slowfeed` to confirm.
 
 ## 2. Create the web service (Render, 10 minutes)
 
 1. In Render, **+ New** → **Web Service**.
-2. Choose **Existing Image** (not "Git Provider": slowfeed is built by
+2. Choose **Existing Image** (not "Git Provider": nine turtles is built by
    GitHub, so Render only runs it).
 3. **Image URL:** `ghcr.io/rohitdotonl/slowfeed:latest` → **Connect**.
 4. **Name:** `slowfeed`. It becomes part of your address
@@ -43,8 +43,8 @@ never contains your password or any settings.
    `slowfeed: version … is running` and the page says **Live**.
 
 **Check it:** open your address (shown at the top, `https://slowfeed-….onrender.com`).
-You see the slowfeed sign-in page. Signing in won't work yet: that's step 4.
-Adding `/status` to the address shows "slowfeed is running".
+You see the nine turtles sign-in page. Signing in won't work yet: that's step 4.
+Adding `/status` to the address shows "nine turtles is running".
 
 ## 3. Let merges update the app on their own (5 minutes)
 
@@ -62,17 +62,17 @@ usually within 15 minutes of pressing Merge.
 ## 4. Set your password (Render's Shell tab, 5 minutes)
 
 1. Your service → **Shell** (left menu). A black box opens, connected to the
-   running slowfeed.
+   running nine turtles.
 2. Type `slowfeed set-password` and press Enter.
 3. Type your password (at least 12 characters) and press Enter. **Nothing
    appears while you type**: that's on purpose. Type it again when asked.
    (To give up halfway, press Ctrl+C: nothing is changed.)
-4. slowfeed prints one long line starting with `$argon2id$`. That's the
+4. nine turtles prints one long line starting with `$argon2id$`. That's the
    scrambled form, not your password. Select the whole line and copy it.
 5. **Environment** (left menu) → **Add Environment Variable**:
    - **Key:** `SLOWFEED_PASSWORD_HASH`
    - **Value:** paste the line.
-   - **Save Changes.** Render restarts slowfeed (about a minute).
+   - **Save Changes.** Render restarts nine turtles (about a minute).
 
 **Check it (SPEC section 1):**
 1. Open your address in a private window: only the password field.
@@ -92,11 +92,11 @@ your go-ahead first.
 
 ## 5. Switch on the daily check (5 minutes)
 
-So an agent can look at slowfeed's health once a day, the agents'
+So an agent can look at nine turtles' health once a day, the agents'
 environment needs two settings. The current setup is Claude's cloud
 environment (settings for the environment this project's agents use):
 
-1. Allow its network to reach your slowfeed address (`slowfeed-….onrender.com`).
+1. Allow its network to reach your nine turtles address (`slowfeed-….onrender.com`).
 2. Add two environment variables: `SLOWFEED_ADDRESS` (your full address,
    starting `https://`) and `SLOWFEED_DIAGNOSTICS_KEY` (copy the value from
    Render → Environment).
@@ -115,7 +115,7 @@ Then tell an agent it's done; it schedules the check described in
 - **The deploy fails, or the page never says Live:** Render → **Logs**.
   Copy the last lines (they never contain your password) and give them to an
   agent.
-- **slowfeed keeps asking you to wait, and you're sure of your password:**
+- **nine turtles keeps asking you to wait, and you're sure of your password:**
   someone may be guessing. Render → your service → **Manual Deploy** →
   **Restart service** clears the wait. Devices already signed in aren't
   affected.

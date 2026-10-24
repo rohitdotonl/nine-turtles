@@ -1,5 +1,5 @@
 //! Checking feeds in the background, politely (SPEC sections 11 and 13),
-//! tested against a real slowfeed and a made-up publisher whose feeds change
+//! tested against a real nine turtles and a made-up publisher whose feeds change
 //! when a test says so. Each test runs background checking itself, at times
 //! of its choosing, so nothing waits for a real clock.
 
@@ -271,7 +271,7 @@ async fn an_unchanged_feed_is_asked_politely_and_costs_almost_nothing() {
     let requests = reader.requests();
     let check = &requests[asked_before];
     assert_eq!(check.path, "/grow.xml");
-    assert!(check.agent.starts_with("slowfeed/"), "{}", check.agent);
+    assert!(check.agent.starts_with("nine-turtles/"), "{}", check.agent);
     // "This is what I have": the publisher answers "nothing new" in a few bytes.
     assert_eq!(check.if_none_match.as_deref(), Some("\"v3-false\""));
     assert_eq!(check.if_modified_since.as_deref(), Some(LAST_MODIFIED));

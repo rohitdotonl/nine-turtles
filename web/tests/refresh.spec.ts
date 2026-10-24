@@ -4,7 +4,7 @@ import { appReady, follow, signIn } from "./screens";
 
 // SPEC section 13 (Refresh: the view waits for you) and section 8, check 4
 // (mark all as read never touches items that arrived in the background),
-// done by a browser. The test slowfeed checks every feed every two seconds,
+// done by a browser. The test nine turtles checks every feed every two seconds,
 // and the browser's clock is moved on so the list's once-a-minute question
 // comes quickly. Each test follows a made-up blog of its own.
 

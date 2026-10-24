@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { startingStep, stepOf } from "./steps";
 
 describe("phone steps in the browser's history", () => {
-  it("reads only steps slowfeed made", () => {
+  it("reads only steps nine turtles made", () => {
     expect(stepOf(null)).toBeUndefined();
     expect(stepOf({ screen: "elsewhere" })).toBeUndefined();
     expect(stepOf({ screen: "list", back: "home" })).toEqual({ screen: "list", back: "home" });

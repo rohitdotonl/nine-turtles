@@ -443,7 +443,7 @@
             <!--
               A search result's text around the first searched word (SPEC section 14), right under
               the title and before the meta line, as Apple Books orders a result: plain text from
-              slowfeed, shown as text, up to two lines. Searched words are marked as in the title
+              nine turtles, shown as text, up to two lines. Searched words are marked as in the title
               (a faint accent tone behind them, and an underline) and in full ink, so they show by
               tone and shape.
             -->
@@ -482,7 +482,7 @@
   <p role="status" class="mt-4">{problem}</p>
 {/if}
 <!--
-  What was just done (with Undo), "New items · press r", or that slowfeed was
+  What was just done (with Undo), "New items · press r", or that nine turtles was
   updated: a small note at the foot of the list pane, so nothing in the list
   moves when it appears. It sits in a band of the list's own tone that the
   rows end above, so it never lies over the rows you're acting on

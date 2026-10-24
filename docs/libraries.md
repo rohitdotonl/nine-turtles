@@ -1,7 +1,7 @@
 # Approved libraries
 
 A **library** (also called a **dependency**) is ready-made code written and
-published by someone else, which slowfeed uses instead of writing that part
+published by someone else, which nine turtles uses instead of writing that part
 itself. This is the complete list of libraries the owner has approved.
 
 **The rule:** the code may only use libraries on this list. The automatic
@@ -24,7 +24,7 @@ whatever the lock files say.*
 
 ## Backend (Rust)
 
-| Library | Version | What it does for slowfeed | Status |
+| Library | Version | What it does for nine turtles | Status |
 |---|---|---|---|
 | axum | 0.8 | The web server: answers requests from the browser | Approved |
 | tokio | 1.x | Lets the server do many things at once (fetching hundreds of feeds while serving you) | Approved |
@@ -41,13 +41,13 @@ whatever the lock files say.*
 | tower-http | 0.7 | Standard web-server extras: compression, security headers | Approved |
 | thiserror | 2.x | Clear error messages inside the code | Approved |
 | getrandom | 0.4 | Asks the computer for unguessable random numbers, for each signed-in device's ticket. Comes with argon2 already | Approved (October 2026, Milestone 2) |
-| blake2 | 0.11 | A fast scrambler: slowfeed stores only a scrambled copy of each device's ticket. Comes with argon2 already | Approved (October 2026, Milestone 2) |
+| blake2 | 0.11 | A fast scrambler: nine turtles stores only a scrambled copy of each device's ticket. Comes with argon2 already | Approved (October 2026, Milestone 2) |
 
 SQLite itself (and its FTS5 search) comes bundled with sqlx.
 
 ## Frontend (TypeScript)
 
-| Library | Version | What it does for slowfeed | Status |
+| Library | Version | What it does for nine turtles | Status |
 |---|---|---|---|
 | svelte | 5.x | Builds the screens | Approved |
 | vite | 8.x | Turns the frontend code into small files a browser can load | Approved |
@@ -62,7 +62,7 @@ SQLite itself (and its FTS5 search) comes bundled with sqlx.
 
 ## Tools used only by the automatic checks
 
-These never become part of slowfeed itself.
+These never become part of nine turtles itself.
 
 | Tool | What it does | Status |
 |---|---|---|
@@ -75,7 +75,7 @@ These never become part of slowfeed itself.
 Each will be proposed in its milestone's plan:
 - **When logs get busier (feed fetching, Milestone 8):** `tracing-subscriber`,
   the companion to `tracing` that actually prints the logs. Until then,
-  slowfeed's small `log` module prints plain lines itself, so neither is used
+  nine turtles' small `log` module prints plain lines itself, so neither is used
   yet (docs/decisions/0010-sign-in.md).
 - **V2 (backups):** a way to upload to S3-compatible storage (`object_store` was the suggestion).
 - **Later milestones:** handling dates and web addresses; in V2, checking WebSub signatures. (Limiting repeated sign-in attempts needed no library.)

@@ -1,7 +1,7 @@
 // The reader controls in Settings (SPEC section 18). They belong to this
 // device, not to the reader's account: a phone and a laptop often want
 // different sizes. So they're kept in the browser's own storage, and nothing
-// is lost if that storage is unavailable: slowfeed simply uses the defaults.
+// is lost if that storage is unavailable: nine turtles simply uses the defaults.
 import { LOOKS, OLD_THEMES, THEMES, isAppearance, isTheme, resolveMode, type Appearance, type Mode, type Theme } from "./themes";
 
 export type ReadingFont = "literata" | "atkinson";
@@ -34,17 +34,16 @@ export const LINE_WIDTHS: Record<LineWidth, { label: string; ch: number }> = {
   wide: { label: "Wide", ch: 63 },
 };
 
-/** `bold`: the article text's weight in the Bold theme, from the weights slowfeed ships for that font. */
-export const READING_FONTS: Record<ReadingFont, { label: string; family: string; bold: number }> = {
-  literata: { label: "Literata", family: "var(--font-serif)", bold: 600 },
-  atkinson: { label: "Atkinson Hyperlegible", family: '"Atkinson Hyperlegible", var(--font-sans)', bold: 700 },
+export const READING_FONTS: Record<ReadingFont, { label: string; family: string }> = {
+  literata: { label: "Literata", family: "var(--font-serif)" },
+  atkinson: { label: "Atkinson Hyperlegible", family: '"Atkinson Hyperlegible", var(--font-sans)' },
 };
 
 export const DEFAULTS: Preferences = { theme: "original", appearance: "auto", readingFont: "literata", textSize: 2, lineWidth: "medium" };
 
 const KEY = "slowfeed.preferences";
 
-/** Reads the saved preferences, keeping only values slowfeed understands. */
+/** Reads the saved preferences, keeping only values nine turtles understands. */
 export function load(storage: Pick<Storage, "getItem"> | undefined = safeStorage()): Preferences {
   let saved: unknown;
   try {
@@ -53,7 +52,7 @@ export function load(storage: Pick<Storage, "getItem"> | undefined = safeStorage
     saved = null;
   }
   const s = typeof saved === "object" && saved !== null ? (saved as Record<string, unknown>) : {};
-  // A theme saved before decision 0046 becomes its nearest new theme and Appearance.
+  // A theme saved by an earlier version becomes Original, keeping its Appearance (decision 0056).
   const old = typeof s.theme === "string" && Object.hasOwn(OLD_THEMES, s.theme) ? OLD_THEMES[s.theme] : undefined;
   return {
     theme: isTheme(s.theme) ? s.theme : (old?.theme ?? DEFAULTS.theme),
@@ -95,7 +94,6 @@ export function apply(preferences: Preferences, root: HTMLElement = document.doc
   root.dataset.mode = mode;
   const font = READING_FONTS[preferences.readingFont];
   root.style.setProperty("--reading-font", font.family);
-  root.style.setProperty("--reading-weight", String(preferences.theme === "bold" ? font.bold : 400));
   root.style.setProperty("--reading-size", `${TEXT_SIZES[preferences.textSize]?.rem ?? 1.25}rem`);
   root.style.setProperty("--reading-measure", `${LINE_WIDTHS[preferences.lineWidth].ch}ch`);
   // The phone's own bar above the page takes the showing version's background
@@ -106,7 +104,7 @@ export function apply(preferences: Preferences, root: HTMLElement = document.doc
 }
 
 /**
- * Each theme's reading background by day and by night (DESIGN.md → "Color"),
+ * The theme's reading background by day and by night (DESIGN.md → "Color"),
  * for the browser's bar. contrast.test.ts checks they match app.css and
  * index.html.
  */

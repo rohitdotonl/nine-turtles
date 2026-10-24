@@ -1,13 +1,13 @@
 //! Downloading from publishers' websites, politely and safely (DESIGN.md →
 //! "The second floor", ENGINEERING.md → "Fetching feeds").
 //!
-//! - slowfeed says who it is, asks for compressed files, gives up after a
+//! - nine turtles says who it is, asks for compressed files, gives up after a
 //!   time limit and refuses anything bigger than a size limit.
-//! - Redirects are followed by hand, so slowfeed knows whether a feed has
+//! - Redirects are followed by hand, so nine turtles knows whether a feed has
 //!   moved for good (301, 308) and can remember its new address.
 //! - Only addresses on the public internet are visited. A pasted address that
 //!   points inside the host's private network, or at this computer, is refused,
-//!   so nobody can use slowfeed to look at things that should be unreachable.
+//!   so nobody can use nine turtles to look at things that should be unreachable.
 //!   The check happens after the name is looked up, so a public-looking name
 //!   that leads somewhere private is refused too.
 //! - When checking a feed again, it says what it already has (ETag and
@@ -26,16 +26,16 @@ use reqwest::{
     redirect,
 };
 
-/// How slowfeed introduces itself to every website.
+/// How nine turtles introduces itself to every website.
 pub const USER_AGENT: &str = concat!(
-    "slowfeed/",
+    "nine-turtles/",
     env!("CARGO_PKG_VERSION"),
     " (+https://github.com/rohitdotonl/slowfeed)"
 );
-/// The longest slowfeed waits for one download, start to finish.
+/// The longest nine turtles waits for one download, start to finish.
 const TIME_LIMIT: Duration = Duration::from_secs(20);
 const CONNECT_LIMIT: Duration = Duration::from_secs(10);
-/// The biggest file slowfeed accepts. Real feeds and home pages are far
+/// The biggest file nine turtles accepts. Real feeds and home pages are far
 /// smaller; this only stops a broken or hostile site from filling the disk.
 pub const SIZE_LIMIT: usize = 5 * 1024 * 1024;
 /// Redirects followed before giving up.
@@ -58,14 +58,14 @@ pub struct Fetched {
     pub last_modified: Option<String>,
 }
 
-/// What slowfeed already has of a feed, from the publisher's last answer.
+/// What nine turtles already has of a feed, from the publisher's last answer.
 #[derive(Debug, Default)]
 pub struct Known<'a> {
     pub etag: Option<&'a str>,
     pub last_modified: Option<&'a str>,
 }
 
-/// A check of a feed slowfeed already has.
+/// A check of a feed nine turtles already has.
 #[derive(Debug)]
 pub enum Answer {
     Changed(Fetched),
@@ -77,7 +77,7 @@ pub enum Answer {
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum FetchError {
-    /// The address points somewhere slowfeed never visits (a private network,
+    /// The address points somewhere nine turtles never visits (a private network,
     /// this computer, or not a web address at all).
     NotAllowed,
     /// No answer, a broken connection, too slow, or too many redirects.
@@ -85,14 +85,14 @@ pub enum FetchError {
     /// The site answered with an error, such as 404 "not found".
     Status(u16),
     TooBig,
-    /// The publisher asked slowfeed to slow down (429, or 503 with a time):
+    /// The publisher asked nine turtles to slow down (429, or 503 with a time):
     /// wait this many seconds, if they said.
     SlowDown(Option<i64>),
 }
 
-/// Builds the one downloader slowfeed uses. `local_allowed` lets the tests
+/// Builds the one downloader nine turtles uses. `local_allowed` lets the tests
 /// serve made-up feeds from this computer; it's never set on the live app.
-/// If it can't be built, slowfeed doesn't start: a plain downloader without
+/// If it can't be built, nine turtles doesn't start: a plain downloader without
 /// the limits and the private-address check must never stand in for it.
 pub fn client(local_allowed: bool) -> Result<Client, String> {
     let mut headers = HeaderMap::new();
@@ -122,7 +122,7 @@ pub async fn get(client: &Client, url: &Url, local_allowed: bool) -> Result<Fetc
     }
 }
 
-/// Downloads a feed again, telling the publisher what slowfeed already has,
+/// Downloads a feed again, telling the publisher what nine turtles already has,
 /// so an unchanged feed can answer "nothing new" in a few bytes.
 pub async fn check(
     client: &Client,
@@ -307,7 +307,7 @@ struct PublicOnly;
 
 /// The message the lookup gives when every address was private, so `get`
 /// can tell "not allowed" apart from "no answer".
-const REFUSED: &str = "slowfeed doesn't visit private addresses";
+const REFUSED: &str = "nine turtles doesn't visit private addresses";
 
 impl Resolve for PublicOnly {
     fn resolve(&self, name: Name) -> Resolving {

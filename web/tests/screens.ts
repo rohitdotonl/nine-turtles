@@ -2,10 +2,10 @@ import { expect, type Locator, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP, TEST_PASSWORD } from "../playwright.config";
 import { LOOKS, THEMES as THEME_NAMES, type Mode, type Theme } from "../src/lib/themes";
 
-// Every screen of slowfeed. Each new screen is added here, so it is
+// Every screen of nine turtles. Each new screen is added here, so it is
 // automatically checked for accessibility and photographed for the owner.
-// `base` picks the slowfeed that has feeds (playwright.config.ts); without
-// it, the screen is seen on a slowfeed with none.
+// `base` picks the nine turtles that has feeds (playwright.config.ts); without
+// it, the screen is seen on a nine turtles with none.
 export type Screen = {
   name: string;
   path: string;
@@ -159,7 +159,7 @@ function background(variant: Variant): string {
 }
 
 /**
- * Follows a feed through slowfeed's own API, with the page's sign-in, so a
+ * Follows a feed through nine turtles' own API, with the page's sign-in, so a
  * screen can start with feeds. Following one twice is fine.
  */
 export async function follow(page: Page, address: string): Promise<number> {
@@ -184,7 +184,7 @@ export async function signIn(page: Page): Promise<void> {
   await expect(page.locator("#sidebar")).toBeAttached();
 }
 
-/** Waits until slowfeed has decided which screen to show. */
+/** Waits until nine turtles has decided which screen to show. */
 export async function appReady(page: Page): Promise<void> {
   // Signed in, the sidebar is there on every width (a phone may show another screen first).
   await expect(page.getByLabel("Password").or(page.locator("#sidebar"))).toBeAttached();

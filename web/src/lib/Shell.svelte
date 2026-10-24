@@ -180,7 +180,7 @@
   /** The list's "28 results" while it shows search results, so the search options can repeat it where they'd cover it. */
   let listFound = $state("");
   /** The line above the add field, in the sheet and on the phone's page. */
-  const ADD_INTRO = "slowfeed finds the feed on any website you like, and lists its articles.";
+  const ADD_INTRO = "nine turtles finds the feed on any website you like, and lists its articles.";
   let headingText = $derived(
     missing
       ? under.kind === "folder" || under.kind === "edit-folder"
@@ -218,7 +218,7 @@
   }
 
   $effect(() => {
-    // device.dark: "Match device" follows the device's own switch while slowfeed is open.
+    // device.dark: "Match device" follows the device's own switch while nine turtles is open.
     apply(preferences, document.documentElement, device.dark);
     save(preferences);
   });
@@ -818,7 +818,7 @@
 <main class="relative flex h-dvh overflow-hidden">
   {#if !panes.sidebar}
     <!-- The wordmark is the page's main heading; with the sidebar hidden, screen readers still find it. -->
-    <h1 class="sr-only">slowfeed</h1>
+    <h1 class="sr-only">nine turtles</h1>
   {/if}
   <!--
     On a phone there's no sidebar toggle: the feeds list is the home screen, reached with the back arrow.
@@ -855,7 +855,7 @@
     -->
     <div class={["pane-bar gap-4 pr-4", phone ? "pl-5" : "pl-14"]}>
         <!-- A name, not a control: never a Tab stop; the keyboard lands here only when the screen opens (decision 0041). -->
-        <h1 class={["wordmark mr-auto font-serif tracking-[-0.01em]", phone ? "text-xlarge" : "text-large text-ink-2"]} tabindex="-1" bind:this={wordmark}>slowfeed</h1>
+        <h1 class={["wordmark mr-auto font-serif tracking-[-0.01em]", phone ? "text-xlarge" : "text-large text-ink-2"]} tabindex="-1" bind:this={wordmark}>nine turtles</h1>
         {#if phone}
           <!--
             The feeds screen's top bar (SPEC section 20): its unread numbers wait for this, as they wait for r.

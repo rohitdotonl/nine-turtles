@@ -19,18 +19,18 @@ pub fn routes() -> Router<AppState> {
         .route("/diagnostics", get(diagnostics))
 }
 
-/// Public: says only that slowfeed is running, and which version. Render
+/// Public: says only that nine turtles is running, and which version. Render
 /// checks it to know the app started properly.
 async fn status() -> Response {
     (
         [(header::CACHE_CONTROL, "no-store")],
-        format!("slowfeed is running\nversion {}\n", crate::VERSION),
+        format!("nine turtles is running\nversion {}\n", crate::VERSION),
     )
         .into_response()
 }
 
 /// Needs the read-only key in an `Authorization: Bearer <key>` header (never
-/// in the address, where it would end up in logs). Shows how slowfeed is
+/// in the address, where it would end up in logs). Shows how nine turtles is
 /// doing, never anything the reader has read or subscribed to.
 async fn diagnostics(State(state): State<AppState>, headers: HeaderMap) -> Response {
     let Some(key) = &state.config.diagnostics_key else {

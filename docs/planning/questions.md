@@ -17,7 +17,7 @@ Nothing at the moment.
 | Q1 | Password scrambling | argon2 (argon2id variant). |
 | Q30 | What V1 includes | V1 is for you alone. Moved to V2: backups and moving hosts, river mode, WebSub, the feed health page, the yearly clean-up, the feeds guide page, and keeping an old tab working across an update. Decided 23 October 2026 (`docs/decisions/0012-v1-for-one-reader.md`). |
 | Q6 | How the password is set | `slowfeed set-password` in Render's Shell tab; you paste the scrambled line into Render's settings. Chosen 23 October 2026 (Milestone 2). |
-| Q2 | Backups | **None in V1** (23 October 2026: V1 is for you alone; your OPML file and the starred export are the safety net). Planned for V2: built into slowfeed, nightly, to Cloudflare R2, plus a copy before every database structure change. |
+| Q2 | Backups | **None in V1** (23 October 2026: V1 is for you alone; your OPML file and the starred export are the safety net). Planned for V2: built into nine turtles, nightly, to Cloudflare R2, plus a copy before every database structure change. |
 | Q3 | Supporting libraries for Milestone 1 | Approved. All approved libraries are listed in `docs/libraries.md`. |
 | Q4 | How the library check knows you approved | The approved list in `docs/libraries.md`. The check fails if the code uses anything not on it. |
 | Q5 | How you try milestones | Screenshots and recordings in each pull request, then the live app after merging. |
@@ -47,7 +47,7 @@ Nothing at the moment.
 | Topic | Decision |
 |---|---|
 | New feeds | Everything arrives unread, including older posts the feed still lists. |
-| Year-old articles | Age counts from when slowfeed received the article. Deleted articles are remembered by fingerprint (a few megabytes at most) so they don't come back as new. |
+| Year-old articles | Age counts from when nine turtles received the article. Deleted articles are remembered by fingerprint (a few megabytes at most) so they don't come back as new. |
 | Protecting main | A GitHub ruleset, free for public repositories. Set up at Milestone 1. |
 | Building | GitHub Actions builds a container image; Render runs it. |
 | Unsubscribing | Starred articles are kept. |
@@ -58,7 +58,7 @@ Nothing at the moment.
 | Times | Shown in the device's time zone. |
 | Phone milestone order | Unchanged. |
 | Repository (Q27) | Stays public. |
-| New app versions (Q29) | Downloaded quietly; used the next time you open or reload slowfeed. Nothing changes while you read. Settings → Status shows "A new version is ready" with a Reload button. |
+| New app versions (Q29) | Downloaded quietly; used the next time you open or reload nine turtles. Nothing changes while you read. Settings → Status shows "A new version is ready" with a Reload button. |
 | Deleted articles | Remembered by fingerprint (confirmed). |
 | Watching the live app (Q28) | Fully automatic: public status page, diagnostics page behind a read-only key, a scheduled agent check once a day that opens an issue (and a fix when clear). Nothing merges without the owner (they press Merge, or say yes to an agent's brief). Kept agent-neutral: the check's instructions live in the repository (`docs/operations/daily-check.md`) so any agent can follow them. |
 | Pace | One session per milestone. No large multi-agent workflows. |

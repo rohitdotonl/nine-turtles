@@ -18,13 +18,13 @@ The script stops at the first failure and says which step failed.
 | Rust: lint | Likely mistakes ("clippy"); every warning counts as a failure | clippy |
 | Rust: tests | Broken server behavior: sign-in, the wait after wrong passwords, signing out, the browser security rules, the status and diagnostics pages, the Hindi search test; adding feeds (autodiscovery, duplicates, plain reasons for problems, private addresses refused, unsafe content cleaned) against a made-up publisher; read, unread, star, "mark all as read" touching only the articles named, and the shared sort order; each **database structure change tried on a filled copy** first (`structure_changes.rs`); and the **speed tests**, on a made-up library of 500 feeds and a year of articles (100,000), which fail if any list (All, Unread, Starred, one feed, newest or oldest first) or the unread counts take 100 ms or more, or stop using their index | `server/src/` and `server/tests/` (`speed.rs`) |
 | Build the program | The release program doesn't build | cargo |
-| Accessibility, contrast and screenshots | Any WCAG A/AA problem (including color contrast) on any screen, in any chosen theme and when following the device's light or dark setting, at desktop or phone width; the theme or the wordmark's Literata font not applying, or a font coming from anywhere but slowfeed; sign-in, the layout, the sidebar toggle, the `?` list, the `g` keys or Settings not working with the keyboard alone, or anything overlapping at 200% zoom; the browser's security rules blocking anything. Also photographs every screen | `web/tests/` (Playwright with axe) |
+| Accessibility, contrast and screenshots | Any WCAG A/AA problem (including color contrast) on any screen, in any chosen theme and when following the device's light or dark setting, at desktop or phone width; the theme or the wordmark's Literata font not applying, or a font coming from anywhere but nine turtles; sign-in, the layout, the sidebar toggle, the `?` list, the `g` keys or Settings not working with the keyboard alone, or anything overlapping at 200% zoom; the browser's security rules blocking anything. Also photographs every screen | `web/tests/` (Playwright with axe) |
 
-## The browser tests' two slowfeeds
+## The browser tests' two copies of nine turtles
 
-`web/playwright.config.ts` starts two copies of slowfeed and a made-up
+`web/playwright.config.ts` starts two copies of nine turtles and a made-up
 publisher (`web/tests/feed-server.mjs`, invented blogs only). The first
-slowfeed stays empty, for the first-visit screens; the second may read the
+nine turtles stays empty, for the first-visit screens; the second may read the
 made-up publisher and is where tests add feeds. Each test that adds a feed
 uses a blog name of its own, so tests never meet each other's feeds.
 

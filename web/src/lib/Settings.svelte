@@ -16,9 +16,7 @@
   import ImportOpml from "./ImportOpml.svelte";
   import PageHead from "./PageHead.svelte";
   import TextSize from "./TextSize.svelte";
-  import ThemeTiles from "./ThemeTiles.svelte";
-  import { device } from "./appearance.svelte";
-  import { APPEARANCES, resolveMode } from "./themes";
+  import { APPEARANCES } from "./themes";
   import type { Order } from "./feeds";
   import { LINE_WIDTHS, READING_FONTS, type Preferences } from "./preferences";
   import { signOut } from "./session";
@@ -129,7 +127,7 @@
               there, and then it lets you go.
             </p>
           </figure>
-          <!-- Day, night or as the device is set; the tiles below draw each theme in the version showing (decision 0046). -->
+          <!-- Day, night or as the device is set: one theme, Original, in its day or night version (decision 0056). -->
           <fieldset class="inset-row">
             <legend class="row-name">Appearance</legend>
             <div class="choices control" style="--columns: 3">
@@ -142,15 +140,6 @@
             </div>
           </fieldset>
 
-          <div class="inset-row block py-4">
-            <ThemeTiles
-              bind:theme={preferences.theme}
-              mode={resolveMode(preferences.appearance, device.dark)}
-              name="theme"
-              legend="Theme"
-              legendClass="mb-3"
-            />
-          </div>
 
           <fieldset class="inset-row">
             <legend class="row-name">Reading font</legend>
@@ -188,7 +177,7 @@
         </div>
         <!-- The same preferences as the Aa panel above an article (decision 0034). -->
         <p class="inset-foot">
-          These apply to this device only. Match device switches between each theme's day and night versions as the
+          These apply to this device only. Match device switches between the day and night versions as the
           device does. The Aa button above an article changes these too, while you read.
         </p>
       </section>
@@ -217,7 +206,7 @@
         <h3 id="account-heading" class="inset-head">Account</h3>
         <div class="inset-group">
           {#if updates.ready}
-            <!-- Never swapped while you read: the new version starts when you reload, or next time you open slowfeed. -->
+            <!-- Never swapped while you read: the new version starts when you reload, or next time you open nine turtles. -->
             <div class="inset-row">
               <p>A new version is ready.</p>
               <button type="button" onclick={() => location.reload()} class="btn btn-small">Reload</button>
@@ -225,7 +214,7 @@
           {/if}
           <!--
             In the text color, not the destructive red: signing out removes
-            nothing, and red in slowfeed means something goes (decision 0042).
+            nothing, and red in nine turtles means something goes (decision 0042).
             Its trailing door says it acts, as the rows above do.
           -->
           <button type="button" onclick={leave} class="inset-row inset-action"
@@ -275,7 +264,7 @@
     padding: 1rem;
     font-family: var(--reading-font);
     font-size: var(--reading-size);
-    font-weight: var(--reading-weight, 400);
+    font-weight: 400;
     line-height: 1.6;
   }
   .reading-sample p {

@@ -110,7 +110,7 @@ test.describe("on a wide window", () => {
     await expect(page.getByRole("region", { name: "Reading Room" })).toBeVisible();
     await expect(article(page)).toBeVisible();
     // One page title, then a heading for the list and one for the article.
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("slowfeed");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("nine turtles");
     await expect(page.getByRole("heading", { level: 2, name: "Reading Room" })).toBeVisible();
     // The selected row says it's the current one.
     await expect(page.locator('[aria-current="true"]')).toHaveCount(1);
@@ -174,7 +174,7 @@ test.describe("on a wide window", () => {
     await tab.close();
   });
 
-  test("Copy link copies the publisher's address, not slowfeed's", async ({ page, context }) => {
+  test("Copy link copies the publisher's address, not nine turtles'", async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: FEEDS_APP });
     await openRoom(page);
     await page.keyboard.press("j");
@@ -184,7 +184,7 @@ test.describe("on a wide window", () => {
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("https://reading-room.example/slow-letter");
   });
 
-  test("the Aa panel changes text size, theme, font and line width at once; Escape closes it", async ({ page }) => {
+  test("the Aa panel changes text size, appearance, font and line width at once; Escape closes it", async ({ page }) => {
     await openRoom(page);
     await page.keyboard.press("j");
     const aa = article(page).getByRole("button", { name: "Reading appearance" });
@@ -212,23 +212,19 @@ test.describe("on a wide window", () => {
     await panel.getByRole("button", { name: "Smaller text" }).click();
     await expect.poll(size).toBe(before);
 
-    // Appearance, then the six themes, each as "Aa" on its own page; the chosen one applies at once.
+    // Appearance: day, night or as the device is set, applied at once. No theme tiles (decision 0056).
     await expect(panel.getByRole("group", { name: "Appearance" }).getByRole("radio")).toHaveCount(3);
     await expect(panel.getByRole("radio", { name: "Match device" })).toBeChecked();
-    await expect(panel.getByRole("group", { name: "Theme" }).getByRole("radio")).toHaveCount(6);
-    await expect(panel.getByRole("radio", { name: "Original" })).toBeChecked();
-    await panel.getByRole("radio", { name: "Calm" }).check();
-    await expect(root).toHaveAttribute("data-theme", "calm");
+    await expect(panel.getByRole("group", { name: "Theme" })).toHaveCount(0);
+    await panel.getByRole("radio", { name: "Light", exact: true }).check();
+    await expect(root).toHaveAttribute("data-theme", "original");
     await expect(root).toHaveAttribute("data-mode", "light");
     await panel.getByRole("radio", { name: "Dark", exact: true }).check();
     await expect(root).toHaveAttribute("data-mode", "dark");
     await panel.getByRole("radio", { name: "Match device" }).check();
-    // Bold sets the article text heavier: Literata's 600 (Atkinson's 700 below).
+    // The article text is regular; a publisher's bold words are semibold.
     const text = article(page).locator(".article-text").first();
     await expect(text).toHaveCSS("font-weight", "400");
-    await panel.getByRole("radio", { name: "Bold" }).check();
-    await expect(text).toHaveCSS("font-weight", "600");
-    // A publisher's bold words stay a step heavier: Literata's 800 (decision 0046).
     const strongWeight = () =>
       text.evaluate((el) => {
         const strong = el.appendChild(document.createElement("strong"));
@@ -236,12 +232,10 @@ test.describe("on a wide window", () => {
         strong.remove();
         return weight;
       });
-    await expect.poll(strongWeight).toBe("800");
+    await expect.poll(strongWeight).toBe("600");
     // Fonts are named in their own face; line width has three steps.
     await panel.getByRole("radio", { name: "Atkinson Hyperlegible" }).check();
     await expect.poll(() => root.evaluate((html) => html.style.getPropertyValue("--reading-font"))).toContain("Atkinson");
-    await expect(text).toHaveCSS("font-weight", "700");
-    await panel.getByRole("radio", { name: "Calm" }).check();
     await expect(text).toHaveCSS("font-weight", "400");
     const measure = () => root.evaluate((html) => html.style.getPropertyValue("--reading-measure"));
     const medium = await measure();
@@ -249,12 +243,12 @@ test.describe("on a wide window", () => {
     await expect.poll(measure).not.toBe(medium);
 
     // The keyboard's outline is in the text color, never the accent.
-    await panel.getByRole("radio", { name: "Calm" }).focus();
+    await panel.getByRole("radio", { name: "Light", exact: true }).focus();
     await page.keyboard.press("ArrowRight");
     await page.keyboard.press("ArrowLeft");
-    await expect(panel.getByRole("radio", { name: "Calm" })).toBeChecked();
+    await expect(panel.getByRole("radio", { name: "Light", exact: true })).toBeChecked();
     const [outline, ink] = await panel
-      .getByRole("radio", { name: "Calm" })
+      .getByRole("radio", { name: "Light", exact: true })
       .evaluate((input) => [getComputedStyle(input.closest("label")!).outlineColor, getComputedStyle(document.body).color]);
     expect(outline).toBe(ink);
 

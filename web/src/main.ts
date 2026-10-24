@@ -16,12 +16,12 @@ mount(App, { target });
 addEventListener("keydown", () => (document.documentElement.dataset.keyboard = ""), true);
 addEventListener("pointerdown", () => delete document.documentElement.dataset.keyboard, true);
 
-// Lets slowfeed be added to the home screen and open without a connection
+// Lets nine turtles be added to the home screen and open without a connection
 // (public/sw.js). It keeps only the app itself, never your articles.
 if ("serviceWorker" in navigator) {
   addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js").catch(() => {
-      // Without it slowfeed works the same; it just can't open offline.
+      // Without it nine turtles works the same; it just can't open offline.
     });
   });
 }

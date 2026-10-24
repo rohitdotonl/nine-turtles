@@ -56,7 +56,7 @@ pub struct AppState {
     pub http: reqwest::Client,
     pub limiter: Arc<Mutex<auth::Limiter>>,
     pub wrong_passwords: Arc<AtomicU64>,
-    /// Seconds since 1970 (UTC) when this run of slowfeed started.
+    /// Seconds since 1970 (UTC) when this run of nine turtles started.
     pub started_at: i64,
     /// When background checking last finished a round; 0 before the first.
     pub last_round: Arc<AtomicI64>,
@@ -122,7 +122,7 @@ pub fn router(state: AppState) -> Router {
 /// The name of the header that carries `VERSION` on every answer.
 pub const VERSION_HEADER: &str = "x-slowfeed-version";
 
-/// Seconds since 1970 (UTC), the way slowfeed stores times.
+/// Seconds since 1970 (UTC), the way nine turtles stores times.
 pub fn now() -> i64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)

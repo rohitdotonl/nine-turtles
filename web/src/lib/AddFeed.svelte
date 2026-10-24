@@ -1,10 +1,10 @@
 <!--
   The add-a-feed field (SPEC sections 2 and 3): the welcome on a fresh
-  slowfeed, and the "+ Add feed" sheet. It takes a feed's address or a
-  website's; slowfeed finds the feed. Several feeds become a choice of one,
+  nine turtles, and the "+ Add feed" sheet. It takes a feed's address or a
+  website's; nine turtles finds the feed. Several feeds become a choice of one,
   drawn as a list with a round mark on each, the first one chosen, which
   Add feed then adds (decision 0049); problems
-  are said in plain words. While slowfeed looks, a line of text says so: no
+  are said in plain words. While nine turtles looks, a line of text says so: no
   spinner.
 
   In a sheet the field takes the full width and "Add feed" sits in the foot
@@ -51,7 +51,7 @@
   let message = $state("");
   /** The message is a problem, not a next step. */
   let problem = $state(false);
-  /** The problem is the address itself (not the site or slowfeed being unreachable), so the field is marked. */
+  /** The problem is the address itself (not the site or nine turtles being unreachable), so the field is marked. */
   let badAddress = $state(false);
   let choices: Choice[] = $state([]);
   /** The feed chosen among several, by its address: the first one offered, until another is picked. */

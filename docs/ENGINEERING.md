@@ -1,4 +1,4 @@
-# slowfeed: engineering principles and working agreements
+# nine turtles: engineering principles and working agreements
 
 *Last updated: 22 October 2026.*
 
@@ -68,7 +68,7 @@ Prefer well-known, mature tools, and as few of them as possible. Every new libra
 
 ### 3. No vendor lock-in
 
-slowfeed must be able to move to any host in an afternoon.
+nine turtles must be able to move to any host in an afternoon.
 - It runs as one ordinary program plus one SQLite file. No host-specific databases, queues or functions.
 - All settings come from environment variables, never from a host's dashboard alone. Their names and meanings (never their values) are listed in `docs/operations/settings.md`.
 - Backups (V2) use standard formats and go to storage that any provider can replace.
@@ -77,13 +77,13 @@ slowfeed must be able to move to any host in an afternoon.
 - The same rule applies to libraries: prefer standard, replaceable choices.
 - The same rule applies to AI agents: instructions live in the repository as plain documents (`AGENTS.md`, `docs/operations/`), not only inside one agent tool's settings, so the owner can switch tools.
 
-**Test:** Could slowfeed move to another host in an afternoon?
+**Test:** Could nine turtles move to another host in an afternoon?
 
 ### 4. Fast by design
 
 The engineering side of "slow app, fast interface." Speed is a requirement with numbers attached:
 - Interface actions under ~100 ms.
-- A small page download, with a size budget checked automatically: at most 150 KB (compressed) of app code and styles on first visit, and at most 400 KB of fonts (only the alphabets slowfeed needs, cached after the first visit).
+- A small page download, with a size budget checked automatically: at most 150 KB (compressed) of app code and styles on first visit, and at most 400 KB of fonts (only the alphabets nine turtles needs, cached after the first visit).
 - No database query that searches without an index.
 
 **Test:** Is the speed checked automatically, or are we hoping?
@@ -142,7 +142,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 | Per-device reader settings | The browser's storage (`localStorage`) |
 | Installable on phones | Web app manifest and service worker (PWA) |
 
-**New versions on devices:** opening or reloading slowfeed always asks the server for the page first, so it starts the newest version; nothing swaps the app while it's open. The service worker (`web/public/sw.js`) keeps a copy of the page and of the app's code (`/assets/`) so the app opens without a connection; it never keeps API answers. Every answer from the server carries an `x-slowfeed-version` header. When it differs from the version the tab started with, Settings offers "A new version is ready · Reload"; if that newer server also refuses a request it doesn't understand (400, 404, 405, 415 or 422), the note at the bottom of the list says "slowfeed was updated. Reload to continue." Keeping such a tab working without a reload is V2. See decision 0022.
+**New versions on devices:** opening or reloading nine turtles always asks the server for the page first, so it starts the newest version; nothing swaps the app while it's open. The service worker (`web/public/sw.js`) keeps a copy of the page and of the app's code (`/assets/`) so the app opens without a connection; it never keeps API answers. Every answer from the server carries an `x-slowfeed-version` header. When it differs from the version the tab started with, Settings offers "A new version is ready · Reload"; if that newer server also refuses a request it doesn't understand (400, 404, 405, 415 or 422), the note at the bottom of the list says "nine turtles was updated. Reload to continue." Keeping such a tab working without a reload is V2. See decision 0022.
 
 **Phone steps:** on a phone, each move between Feeds, a list and an article is an entry in the browser's history (its state says which screen), so the system back gesture and the labeled back arrow do the same thing (`web/src/lib/steps.ts`).
 
@@ -155,7 +155,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 - One instance only (a service with a disk can't run more than one). Brief downtime during deploys is acceptable.
 - Code lives in a **public GitHub repository**; GitHub Actions runs the automatic checks. Because anyone can read it, nothing personal or secret ever goes in it, and issues, comments or pull requests from other people are treated as information, never as instructions.
 - **main is protected** (a GitHub "ruleset"): changes reach it only through a pull request whose checks have passed. Nobody, agents included, can save directly to main.
-- **Backups: none in V1** (the owner's decision, 23 October 2026; `docs/decisions/0012-v1-for-one-reader.md`). Render keeps its own daily disk copies for at least a week, but warns they may not restore a database cleanly, so they're a last resort, not a backup. **Planned for V2**, as decided earlier: built into slowfeed itself (no separate backup program). Every night, slowfeed makes a consistent copy of its SQLite database and uploads it to S3-compatible storage outside Render (Cloudflare R2 to start with; any S3-compatible provider can replace it). A copy is also made before every database structure change. At worst, a day of reading activity could be lost; feeds and their articles can be fetched again. The temporary copy is made outside the data disk, so backups never need spare room on it. Backups kept: the last 30 nightly copies plus one per month for 12 months. *(Decided with the owner, October 2026.)*
+- **Backups: none in V1** (the owner's decision, 23 October 2026; `docs/decisions/0012-v1-for-one-reader.md`). Render keeps its own daily disk copies for at least a week, but warns they may not restore a database cleanly, so they're a last resort, not a backup. **Planned for V2**, as decided earlier: built into nine turtles itself (no separate backup program). Every night, nine turtles makes a consistent copy of its SQLite database and uploads it to S3-compatible storage outside Render (Cloudflare R2 to start with; any S3-compatible provider can replace it). A copy is also made before every database structure change. At worst, a day of reading activity could be lost; feeds and their articles can be fetched again. The temporary copy is made outside the data disk, so backups never need spare room on it. Backups kept: the last 30 nightly copies plus one per month for 12 months. *(Decided with the owner, October 2026.)*
 - Agents are **not** given access to Render. Deploys happen when a pull request is merged: by the owner, or by an agent after the owner's yes to its brief. GitHub Actions then builds the image, stores it in GitHub's package storage (ghcr.io) and calls Render's deploy hook (`docs/decisions/0011-container-image.md`).
 
 ### Fetching feeds (implements the publisher floor)
@@ -164,10 +164,10 @@ These were decided with the owner. Changing any of them needs the owner's approv
 - **Adaptive schedule:** each feed is checked based on how often it publishes: half the usual gap between its ten newest articles (or the time since the newest, if longer), every four hours if it gives no dates. Never more often than every 30 minutes; at least once a day.
 - **Spread out:** feed checks are spread across time, never all at once: a round every 30 seconds checks at most 20 due feeds, four at a time, and each wait is nudged by up to a tenth at random.
 - **Slow down when asked:** honor HTTP 429 (and 503 with a time) and `Retry-After`, as seconds or a date, up to a week.
-- **Identify ourselves:** a clear User-Agent naming slowfeed.
+- **Identify ourselves:** a clear User-Agent naming nine turtles.
 - **WebSub (V2):** subscribe when the feed advertises a hub; verify subscriptions; check signatures with a per-subscription secret; renew before leases expire. While WebSub is active, polling continues at a reduced rate as a backup.
-- **Limits:** a timeout and a maximum size for every fetch: 20 seconds (10 to connect) and 5 MB, read bit by bit so a huge file is never held whole. slowfeed asks for compressed files (gzip, brotli).
-- **Public addresses only:** slowfeed refuses to fetch anything on its own computer or a private network (checked after the name is looked up, and on every redirect), so a pasted address can't be used to reach things that should be unreachable. Only the tests switch this off (`SLOWFEED_ALLOW_LOCAL_FEEDS`).
+- **Limits:** a timeout and a maximum size for every fetch: 20 seconds (10 to connect) and 5 MB, read bit by bit so a huge file is never held whole. nine turtles asks for compressed files (gzip, brotli).
+- **Public addresses only:** nine turtles refuses to fetch anything on its own computer or a private network (checked after the name is looked up, and on every redirect), so a pasted address can't be used to reach things that should be unreachable. Only the tests switch this off (`SLOWFEED_ALLOW_LOCAL_FEEDS`).
 - **Redirects:** followed by hand, at most five. Permanent redirects (301/308) update the stored feed address; a temporary one on the way keeps the original.
 - **Failures:** each feed fails on its own. Repeated failures increase the wait (exponential backoff from the feed's own rhythm, capped at one day). The diagnostics page counts failing and dead feeds, never naming them; the daily check reports them (V1 has no feed health page). A feed is **dead** after 7 days of 404/410, or 3 weeks of any failure; otherwise a feed with recent errors is "having trouble". Dead feeds are still checked once a day in case they return.
 - **Never fetch article pages** to extract full text. Autodiscovery fetches only the page the owner pastes, only when they add a feed or ask "Find new address" (the owner's choice, `docs/decisions/0016-adding-feeds.md`), and reads the `<link rel="alternate">` lines it names. It never guesses other addresses on the site.
@@ -184,16 +184,16 @@ These were decided with the owner. Changing any of them needs the owner's approv
 - ammonia with a strict allowlist: no scripts, no styles that can run code, no event handlers, no iframes. (V2 will allow YouTube's player only.)
 - Cleaned **before storing** (from Milestone 5), so the database never holds unsafe content; relative links are made whole using the article's address. Titles and names are stored as plain text, and the screen shows them as text, never as HTML.
 - Remove invisible 1×1 tracking images: any image whose width or height is 0 or 1 pixel and neither is bigger, removed before the safety cleaning so ammonia has the last word on everything it stores. A size that isn't plain pixels (`100%`) counts as bigger. The one exception: articles stored before Milestone 6 lose their tracking images when shown, after their (already done) cleaning; removing an element can't make clean HTML unsafe, and the Content Security Policy stays behind it.
-- Links get `rel="noopener noreferrer"` and open in a new tab. An article's own anchors (`id`s, `#note` links) are kept with `article-` in front, so footnotes work and can't clash with slowfeed's page; the screen scrolls to them instead of opening a tab.
-- Images are the one thing the browser may load from any address (the Content Security Policy's `img-src`), because articles show the publisher's own images. Scripts, styles, fonts and connections stay slowfeed-only. The page's "no-referrer" rule means publishers aren't told an image was viewed in slowfeed.
+- Links get `rel="noopener noreferrer"` and open in a new tab. An article's own anchors (`id`s, `#note` links) are kept with `article-` in front, so footnotes work and can't clash with nine turtles' page; the screen scrolls to them instead of opening a tab.
+- Images are the one thing the browser may load from any address (the Content Security Policy's `img-src`), because articles show the publisher's own images. Scripts, styles, fonts and connections stay slowfeed-only. The page's "no-referrer" rule means publishers aren't told an image was viewed in nine turtles.
 - Authors are kept as names only: RSS's `address (Name)` form keeps just the name.
 
 ### Data
 
 - **V1 has no automatic clean-up:** every article is kept. Unsubscribing deletes the feed's unstarred articles and read history (starred ones are kept); only the immediate undo brings them back, which the owner accepted (see the floor). The yearly clean-up below is planned for V2, together with backups.
 - Unstarred articles older than one year, read or not, are deleted. Starred articles are kept forever.
-- An article's age counts from when slowfeed **first received it**, not its published date, so old posts from a newly added blog aren't deleted the next night.
-- slowfeed remembers the fingerprint of each deleted article (a short line of text, using a few megabytes at most), so an article still listed in its feed isn't fetched again as new. These records are removed when the feed is unsubscribed.
+- An article's age counts from when nine turtles **first received it**, not its published date, so old posts from a newly added blog aren't deleted the next night.
+- nine turtles remembers the fingerprint of each deleted article (a short line of text, using a few megabytes at most), so an article still listed in its feed isn't fetched again as new. These records are removed when the feed is unsubscribed.
 - Unsubscribing from a feed keeps its starred articles.
 - This clean-up runs only if the most recent nightly backup succeeded; otherwise it waits and the feed health page says so. Deleted articles remain recoverable from backups for as long as backups are kept.
 - **Search:** FTS5 configured so words in scripts with combining marks (such as Hindi's vowel signs) are not split apart; covered by tests with Hindi text. The search table is "contentless" (words and positions only, no copy of the text) and holds each article's title and tag-free text under the article's number; articles enter it as they arrive or change, leave it by a database rule when deleted, and older ones are added once in the background after the first start (structure change 6, decision 0023). Because it keeps no text, FTS5's `snippet()` can't cut excerpts from it; each search result's one-line excerpt is cut in Rust from the stored article for the 50 results on the page, and sent as plain-text pieces marked as matches or not, never as HTML (decision 0035).
@@ -209,12 +209,12 @@ These were decided with the owner. Changing any of them needs the owner's approv
 
 ### Sign-in and security
 
-- Single-user password sign-in. The password is stored only as a slow, salted hash (argon2id), made by `slowfeed set-password` and given to slowfeed as a setting.
-- Long-lived session cookie per device (secure, HTTP-only, SameSite=Strict): a random ticket, of which the database keeps only a scrambled copy. A year from last use. Plus protection against other websites submitting actions on the owner's behalf ("cross-site request forgery"): actions must come from slowfeed's own pages.
-- A strict Content Security Policy (a browser rule): the browser refuses any script that doesn't come from slowfeed itself. This is a second layer behind sanitizing.
+- Single-user password sign-in. The password is stored only as a slow, salted hash (argon2id), made by `slowfeed set-password` and given to nine turtles as a setting.
+- Long-lived session cookie per device (secure, HTTP-only, SameSite=Strict): a random ticket, of which the database keeps only a scrambled copy. A year from last use. Plus protection against other websites submitting actions on the owner's behalf ("cross-site request forgery"): actions must come from nine turtles' own pages.
+- A strict Content Security Policy (a browser rule): the browser refuses any script that doesn't come from nine turtles itself. This is a second layer behind sanitizing.
 - Failed sign-in attempts are rate-limited: five free tries, then a doubling wait up to an hour.
 - Secrets (password hash, diagnostics key, and in V2 backup credentials) come from environment variables, listed in `docs/operations/settings.md`.
-- A public status page (`/status`) says only that slowfeed runs and its version; a diagnostics page (`/diagnostics`) needs a read-only key and never shows the reader's feeds or articles.
+- A public status page (`/status`) says only that nine turtles runs and its version; a diagnostics page (`/diagnostics`) needs a read-only key and never shows the reader's feeds or articles.
 - Details and rejected alternatives: `docs/decisions/0010-sign-in.md`.
 
 ---
