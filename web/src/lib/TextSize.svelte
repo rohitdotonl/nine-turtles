@@ -58,9 +58,10 @@
 <style>
   /* The minus and plus beside each A: smaller and quieter than the A. */
   .sign {
-    margin-left: 0.125rem;
-    font-size: 0.8125rem;
-    color: var(--muted);
+    margin-left: 0.1875rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--ink-2);
   }
   /* The segmented settings' own track (app.css → .choices): 4px round, a faint tone, 10px corners. */
   .sizes {
