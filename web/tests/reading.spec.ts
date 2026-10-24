@@ -186,7 +186,7 @@ test.describe("on a wide window", () => {
     expect(Math.min(remove.width, remove.height)).toBeGreaterThanOrEqual(44);
     // Before anything is selected, Tab reaches the first row and draws the
     // keyboard's outline inside it. The selected row keeps the same outline,
-    // with its ink blue bar outside it, flush against the pane's edge.
+    // with its accent bar outside it, flush against the pane's edge.
     const first = row(page, "The pleasure of a slow letter");
     await tabTo(page, first);
     await expect(first).toHaveCSS("outline-style", "solid");

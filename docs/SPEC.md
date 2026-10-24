@@ -93,7 +93,7 @@ A few words used throughout:
 - Folders appear once at least one exists. Each has a small button beside it that shows or hides the feeds in it, indented beneath; folders start closed, and this device remembers which you opened. Choosing a folder's name lists the articles of all its feeds (`/folders/2`).
 - The search field filters the sidebar as you type: the folders and feeds whose name contains what you typed (capitals and accents don't matter), in one list. Escape empties it.
 - **Unread counts:** small, muted grey numbers, right-aligned, next to each feed and folder (a folder's is its feeds' added up). No count on "Unread", "Starred" or "All", and never a total. Above 999 shows "999+". Never colored, never a badge.
-- Your current place is marked with the ink blue accent.
+- Your current place is marked with the theme's accent.
 - A broken feed looks like any other feed; it just doesn't get new items. In V1 the daily check tells you when feeds are failing; the feed health page (section 17) comes in V2.
 
 **How to check it**
@@ -115,7 +115,7 @@ A few words used throughout:
   |---|---|
   | Unread | Full-strength, semibold title |
   | Read | A softer second ink, regular-weight title (the title stays full-strength while it's the selected row) |
-  | Selected | A faint tint and a short ink blue bar against the list's left edge; when you're using the keyboard, the usual outline inside the tint |
+  | Selected | A faint tint and a short bar in the theme's accent against the list's left edge; when you're using the keyboard, the usual outline inside the tint |
   | Starred | A small star mark |
 
 - Items you read in the Unread view stay where they are (greyed) until you press `r` or leave the view, so nothing jumps under your cursor.
@@ -318,7 +318,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 - Laid out like a system settings window: each group (Reading, Look and feel, Your data) is a card with a small heading above it, one setting per row, rows parted by hairlines; on a wide screen a setting's name sits on the left and its choices on the right. The version and **Sign out** sit quietly at the end.
 - **Look and feel** (this device only): reading font (Literata or Atkinson Hyperlegible), text size (six steps from Smaller to Largest, Medium by default), line width (Narrow, Medium or Wide: about 65, 71 or 78 characters in Literata; Atkinson Hyperlegible's narrower letters fit more), theme. A sample paragraph shows how articles will look, and changes apply at once.
 - **Themes:** "Automatic" by default (off-white or dark, following the system's light/dark setting), or choose any of eleven: off-white, sepia, porcelain, linen, mist and sage (light), or dark, graphite, night, midnight and black (dark). Each has its own "where you are" accent. The phone's own bar above the page takes the chosen theme's color too.
-- Each setting is a row of choices on a faint track (a "segmented control"), chosen with a click, a tap or the arrow keys (they're radio buttons underneath). The chosen one is raised onto the page's own color (in the dark theme, a tone lighter than its track) with a fine edge, and its word is semibold, so it shows without color. On a phone the choices fill the width in even columns. The theme is chosen from small pictures of the app in each theme (Automatic shows half light, half dark), in rows of four even on a phone, the chosen one ringed and its name semibold; each reading font's name is written in that font.
+- Each setting is a row of choices on a faint track (a "segmented control"), chosen with a click, a tap or the arrow keys (they're radio buttons underneath). The chosen one is raised onto the page's own color (in dark themes, a tone lighter than its track) with a fine edge, and its word is semibold, so it shows without color. On a phone the choices fill the width in even columns. The theme is chosen from small pictures of the app in each theme (Automatic shows half light, half dark), in rows of four even on a phone, the chosen one ringed and its name semibold; each reading font's name is written in that font.
 - Sections appear once they have something to do: Reading (sort order) since Milestone 7, Your data with Milestone 9.
 - **Reading:** newest or oldest first. (Inbox or river mode in V2.)
 - **Your data:** OPML import/export, export of starred articles.
@@ -358,7 +358,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 
 - A keyboard icon at the foot of the sidebar opens the shortcut list (its tooltip says "Keyboard shortcuts (?)"); when the sidebar is hidden, a quiet hint "Press ? for shortcuts" sits at the bottom of the list instead (on screens with a keyboard).
 - The `?` cheat sheet groups the shortcuts (Moving around, Reading, Your articles, Everywhere) in two columns, what each does on the left and its keys on the right, and also documents the search filters. It has an X to close it (or Escape). Until a shortcut's feature exists, it isn't listed, and the key does nothing.
-- The keyboard's place is shown by a 2px outline in the text color (never ink blue, which only marks your place in slowfeed). Rows draw it just inside themselves; the selected row's ink blue bar stays outside it, at the pane's edge. A title that receives the place when a screen opens (so screen readers start there) gets the same outline when you got there by keyboard, and nothing after a click.
+- The keyboard's place is shown by a 2px outline in the text color (never the accent, which only marks your place in slowfeed). Rows draw it just inside themselves; the selected row's accent bar stays outside it, at the pane's edge. A title that receives the place when a screen opens (so screen readers start there) gets the same outline when you got there by keyboard, and nothing after a click.
 - Shortcuts don't fire while you're typing in a field.
 
 **How to check it**

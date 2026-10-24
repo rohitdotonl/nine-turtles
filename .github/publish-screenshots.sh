@@ -49,7 +49,7 @@ base="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${branch}/${folder}
   echo "$marker"
   echo "### Screenshots"
   echo
-  echo "Every screen in every theme, as of commit $short_sha."
+  echo "Every screen in off-white, sepia and dark (the other themes on the list, article, Settings and Edit feed screens), as of commit $short_sha."
   echo
   echo "| Screen and theme | Desktop | Phone |"
   echo "|---|---|---|"

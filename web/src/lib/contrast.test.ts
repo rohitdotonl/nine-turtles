@@ -60,7 +60,11 @@ describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
     expect(levels[0]! > levels[1]! && levels[1]! > levels[2]!).toBe(true);
   });
 
-  it("has the ink blue mark clearly visible (3 : 1) wherever it's drawn", () => {
+  it("has the accent at AAA (7 : 1) on the reading area", () => {
+    expect(contrast(colors.accent!, colors.paper!)).toBeGreaterThanOrEqual(7);
+  });
+
+  it("has the accent mark clearly visible (3 : 1) wherever it's drawn", () => {
     for (const background of BACKGROUNDS) {
       expect(contrast(colors.accent!, colors[background]!), background).toBeGreaterThanOrEqual(3);
     }

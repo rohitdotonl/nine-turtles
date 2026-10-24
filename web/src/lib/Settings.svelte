@@ -319,7 +319,7 @@
     gap: 0.75rem;
   }
   @media (width < 40rem) {
-    /* All four in one row, as a phone's own theme pickers show them. */
+    /* Four to a row, as a phone's own theme pickers show them. */
     .themes {
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 0.5rem;

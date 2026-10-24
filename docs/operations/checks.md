@@ -31,7 +31,7 @@ uses a blog name of its own, so tests never meet each other's feeds.
 ## Adding a screen
 
 Add it to `SCREENS` in `web/tests/screens.ts`. It's then automatically
-checked for accessibility in all three themes and photographed for the pull
+checked for accessibility in every theme and photographed for the pull
 request. A screen that needs feeds sets `base: FEEDS_APP`. A screen that needs signing in sets `signedIn: true`; the tests sign
 in through the sign-in page with a made-up password (`web/playwright.config.ts`).
 
