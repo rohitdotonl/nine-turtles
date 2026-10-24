@@ -118,30 +118,38 @@
 <section aria-label="Article" class={["flex min-w-0 flex-1 flex-col bg-paper", phone ? "pt-2" : "pt-3"]}>
   <!-- Never scrolls, so these are always in the same place. -->
   {#if phone}
-    <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 pb-2">
+    <div class="relative flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 pb-2">
       <button type="button" onclick={phone.onBack} aria-label="Back to {phone.back}" class="btn-quiet min-w-0 shrink justify-start gap-1 px-2 text-left whitespace-normal"
         ><Icon name="back" size={20} /><span class="min-w-0 break-words">{phone.back}</span></button
       >
-      <button type="button" onclick={onMarkUnread} class="btn-quiet -mr-3"><Icon name="unread" />Mark unread</button>
-      <p role="status" class="w-full px-2 text-small empty:hidden">{copied}</p>
+      <button type="button" onclick={onMarkUnread} class="btn-quiet -mr-3"><Icon name="dot" />Mark unread</button>
+      <p role="status" class="w-full px-2 text-small empty:sr-only">{copied}</p>
     </div>
   {:else}
   <!-- In the same centred column as the article, so the actions sit right above its text. -->
-  <div class="scroll-gutter overflow-y-hidden px-6 pb-2 md:px-10"><div class="article-column relative -left-2.5 flex min-h-11 flex-wrap items-center gap-x-1 gap-y-2">
+  <!--
+    The way to the publisher in words, on the left; the everyday actions as
+    icons on the right, each named in its tooltip with its key.
+  -->
+  <div class="scroll-gutter overflow-y-hidden px-6 pb-2 md:px-10"><div class="article-column relative flex min-h-11 flex-wrap items-center justify-between gap-x-1 gap-y-2">
     {#if article.link}
-      <a href={article.link} target="_blank" rel="noopener noreferrer" class="btn-quiet btn-small font-semibold text-ink"><Icon name="open" size={16} />Open original</a>
-      <button type="button" onclick={share} class="btn-quiet btn-small">
-        <Icon name={sharing ? "share" : "link"} size={16} />{sharing ? "Share" : "Copy link"}
-      </button>
+      <a href={article.link} target="_blank" rel="noopener noreferrer" class="btn-quiet btn-small -ml-2.5 font-semibold text-ink" title="Open original (v)"><Icon name="open" size={16} />Open original</a>
     {:else}
-      <p class="px-3 text-small text-muted">This article has no link to its original.</p>
+      <p class="text-small text-muted">This article has no link to its original.</p>
     {/if}
-    <button type="button" aria-pressed={article.starred} onclick={onStar} class="btn-quiet btn-small">
-      {@render starIcon(16)}
-      Star
-    </button>
-    <button type="button" onclick={onMarkUnread} class="btn-quiet btn-small"><Icon name="unread" size={16} />Mark unread</button>
-    <p role="status" class="px-3 text-small">{copied}</p>
+    <div class="-mr-2.5 flex items-center">
+      {#if article.link}
+        <button type="button" onclick={share} aria-label={sharing ? "Share" : "Copy link"} title={sharing ? "Share" : "Copy link"} class="btn-quiet btn-icon">
+          <Icon name={sharing ? "share" : "link"} size={18} />
+        </button>
+      {/if}
+      <!-- A toggle keeps one name for screen readers ("Star", pressed or not); the filled star shows its state. -->
+      <button type="button" aria-label="Star" aria-pressed={article.starred} title={article.starred ? "Starred (s)" : "Star (s)"} onclick={onStar} class={["btn-quiet btn-icon", article.starred && "text-ink"]}>
+        {@render starIcon(18)}
+      </button>
+      <button type="button" onclick={onMarkUnread} aria-label="Mark unread" title="Mark unread (m)" class="btn-quiet btn-icon"><Icon name="dot" size={18} /></button>
+    </div>
+    <p role="status" class="w-full text-small empty:sr-only">{copied}</p>
   </div></div>
   {/if}
 
@@ -149,7 +157,7 @@
     <article lang={full?.language ?? undefined} class="article">
       <p class="text-small text-muted" lang="en">
         {#if full?.siteUrl}
-          <a href={full.siteUrl} target="_blank" rel="noopener noreferrer" class="underline underline-offset-4"
+          <a href={full.siteUrl} target="_blank" rel="noopener noreferrer" class="font-semibold text-ink-2 hover:underline hover:underline-offset-4"
             >{article.feedTitle}</a
           >
         {:else}

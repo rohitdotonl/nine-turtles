@@ -231,6 +231,9 @@ each with screenshots:
 - ✅ A real hierarchy: a type scale, three ink levels, unread in semibold
   and read in a softer ink, one shared top line for every pane, and calmer
   sidebar, list and article tops (decision 0026).
+- ✅ Taste first: icons where they're expected (close, settings, the
+  article's actions), Settings as grouped cards with theme pictures, a
+  grouped shortcut list, and a clearer search box (decision 0027).
 
 ---
 

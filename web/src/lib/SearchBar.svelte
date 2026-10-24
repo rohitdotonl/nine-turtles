@@ -137,21 +137,21 @@
   }
 </script>
 
-<search class="mb-2">
-  <div class="flex items-start gap-2">
-    <!-- The whole box acts as the field: a click anywhere in it (not on a chip's button) puts you in the field. -->
-    <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-    <div
-      class="search-box flex min-h-11 min-w-0 flex-1 cursor-text flex-wrap items-center gap-1 rounded-md border border-muted bg-paper pl-3"
-      onclick={(event) => {
-        if (event.target === event.currentTarget) field?.focus();
-      }}
-    >
-      <Icon name="search" />
+<search class="relative mb-2">
+  <!-- The whole box acts as the field: a click anywhere in it (not on a chip's or the options button) puts you in the field. -->
+  <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+  <div
+    class="search-box flex min-h-11 min-w-0 cursor-text items-center gap-1 rounded-lg border border-muted bg-paper pl-3"
+    onclick={(event) => {
+      if (event.target === event.currentTarget) field?.focus();
+    }}
+  >
+    <span class="shrink-0 text-muted"><Icon name="search" size={16} /></span>
+    <div class="flex min-w-0 flex-1 flex-wrap items-center gap-1">
       {#each chips as chip (chip.key)}
-        <span class="my-1.5 flex max-w-[calc(100%-8rem)] min-w-0 items-center rounded bg-[var(--tone)] pl-2 text-small">
+        <span class="my-1.5 flex max-w-full min-w-0 items-center rounded bg-[var(--tone)] pl-2 text-small">
           <span class="min-w-0 truncate" title={chip.label}>{chip.label}</span>
-          <button type="button" aria-label="Remove {chip.label}" onclick={() => remove(chip)} class="-my-2 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center">
+          <button type="button" aria-label="Remove {chip.label}" onclick={() => remove(chip)} class="-my-2 -mr-2 -ml-1 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center">
             <Icon name="close" size={14} />
           </button>
         </span>
@@ -174,9 +174,10 @@
         placeholder={chips.length > 0 ? "" : "Search"}
         autocomplete="off"
         spellcheck="false"
-        class="-my-px min-h-11 min-w-20 flex-1 basis-20 bg-transparent px-2 placeholder:text-muted"
+        class="-my-px min-h-11 min-w-16 flex-1 basis-16 bg-transparent px-1 placeholder:text-muted"
       />
     </div>
+    <!-- Inside the box, at its end: it belongs to this search, and isn't mistaken for a second field. -->
     <button
       type="button"
       aria-expanded={panelOpen}
@@ -184,9 +185,9 @@
       aria-label="Search options"
       title="Search options"
       onclick={() => (panelOpen = !panelOpen)}
-      class={["btn min-w-11 px-0", panelOpen && "bg-[var(--tone)]"]}
+      class={["flex size-11 shrink-0 cursor-pointer items-center justify-center self-start rounded-r-lg text-ink-2", panelOpen && "bg-[var(--tone)] text-ink"]}
     >
-      <Icon name="sliders" size={20} />
+      <Icon name="sliders" size={18} />
     </button>
   </div>
 
@@ -208,7 +209,7 @@
     {/each}
   </ul>
 
-  <p id="search-problem" role="status" class="text-small">{problem}</p>
+  <p id="search-problem" role="status" class="mt-1 text-small empty:sr-only">{problem}</p>
 
   <!-- Above the list's heading, so its name is a label rather than a heading of its own. -->
   <div
@@ -217,16 +218,16 @@
     aria-labelledby="search-options-name"
     bind:this={panel}
     hidden={!panelOpen}
-    class="mt-2 rounded-md bg-sidebar p-4"
+    class="mt-2 rounded-lg bg-paper p-4"
   >
-    <p id="search-options-name" class="font-semibold">Search options</p>
-    <div class="mt-3 flex flex-col gap-3">
-      <label class="flex flex-col gap-1">
-        <span>Search in</span>
+    <p id="search-options-name" class="text-small font-semibold">Search options</p>
+    <div class="mt-3 flex flex-col gap-4">
+      <label class="flex flex-col gap-1.5">
+        <span class="text-small text-ink-2">Search in</span>
         <select
           value={scopeValue(query.scope)}
           onchange={(event) => onChange({ ...query, scope: scopeFrom(event.currentTarget.value) }, true)}
-          class="field"
+          class="field w-full"
         >
           <option value="all">All feeds{hereMark({ kind: "all" })}</option>
           <option value="view:unread">Unread{hereMark({ kind: "view", view: "unread" })}</option>
@@ -245,31 +246,33 @@
           </optgroup>
         </select>
       </label>
-      <label class="flex min-h-11 items-center gap-3">
-        <input type="checkbox" checked={query.unread} onchange={(event) => onChange({ ...query, unread: event.currentTarget.checked }, true)} class="size-5" />
-        Unread only
-      </label>
-      <label class="flex min-h-11 items-center gap-3">
-        <input type="checkbox" checked={query.starred} onchange={(event) => onChange({ ...query, starred: event.currentTarget.checked }, true)} class="size-5" />
-        Starred only
-      </label>
-      <div class="flex flex-wrap gap-4">
-        <label class="flex flex-col gap-1">
-          <span>Published after</span>
+      <div class="flex flex-wrap gap-x-6">
+        <label class="flex min-h-11 items-center gap-2.5 text-small">
+          <input type="checkbox" checked={query.unread} onchange={(event) => onChange({ ...query, unread: event.currentTarget.checked }, true)} class="size-[1.125rem]" />
+          Unread only
+        </label>
+        <label class="flex min-h-11 items-center gap-2.5 text-small">
+          <input type="checkbox" checked={query.starred} onchange={(event) => onChange({ ...query, starred: event.currentTarget.checked }, true)} class="size-[1.125rem]" />
+          Starred only
+        </label>
+      </div>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <label class="flex min-w-0 flex-col gap-1.5">
+          <span class="text-small text-ink-2">Published after</span>
           <input
             type="date"
             value={query.after}
             onchange={(event) => onChange({ ...query, after: event.currentTarget.value }, true)}
-            class="field"
+            class="field w-full min-w-0"
           />
         </label>
-        <label class="flex flex-col gap-1">
-          <span>Published before</span>
+        <label class="flex min-w-0 flex-col gap-1.5">
+          <span class="text-small text-ink-2">Published before</span>
           <input
             type="date"
             value={query.before}
             onchange={(event) => onChange({ ...query, before: event.currentTarget.value }, true)}
-            class="field"
+            class="field w-full min-w-0"
           />
         </label>
       </div>
@@ -280,7 +283,7 @@
 <style>
   /* The keyboard's place, drawn around the whole box (chips included) when its field has it. */
   .search-box:has(input:focus-visible) {
-    outline: 3px solid var(--ink);
+    outline: 2px solid var(--ink);
     outline-offset: 2px;
   }
   .search-box input:focus-visible {

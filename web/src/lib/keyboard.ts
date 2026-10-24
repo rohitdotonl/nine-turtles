@@ -114,22 +114,27 @@ function isTyping(target: EventTarget | null): boolean {
   return false;
 }
 
-/** Every shortcut in DESIGN.md, for the `?` cheat sheet. `ready` marks what works today. */
-export const SHORTCUTS: { keys: string[]; action: string; ready: boolean }[] = [
-  { keys: ["j", "k"], action: "Next / previous item", ready: true },
-  { keys: ["Shift+J", "Shift+K"], action: "Next / previous feed", ready: false },
-  { keys: ["Enter", "o"], action: "Open item", ready: true },
-  { keys: ["v"], action: "Open original", ready: true },
-  { keys: ["s"], action: "Star / unstar", ready: true },
-  { keys: ["m"], action: "Mark current item unread", ready: true },
-  { keys: ["Shift+A"], action: "Mark all as read", ready: true },
-  { keys: ["u"], action: "Undo", ready: true },
-  { keys: ["r"], action: "Show new items", ready: true },
-  { keys: ["/"], action: "Search", ready: true },
-  { keys: ["a"], action: "Add feed", ready: true },
-  { keys: ["g then u", "g then s", "g then a"], action: "Go to Unread / Starred / All", ready: true },
-  { keys: ["["], action: "Show / hide sidebar", ready: true },
-  { keys: ["+", "-"], action: "Text size while reading", ready: true },
-  { keys: ["Esc"], action: "Back / close", ready: true },
-  { keys: ["?"], action: "This list of shortcuts", ready: true },
+/** The cheat sheet's groups, in order. */
+export const SHORTCUT_GROUPS = ["Moving around", "Reading", "Your articles", "Everywhere"] as const;
+
+/** Every shortcut in DESIGN.md, for the `?` cheat sheet. `ready` marks what works today; the sheet lists only those. */
+export const SHORTCUTS: { keys: string[]; action: string; ready: boolean; group: (typeof SHORTCUT_GROUPS)[number] }[] = [
+  { keys: ["j", "k"], action: "Next / previous item", ready: true, group: "Moving around" },
+  { keys: ["Shift+J", "Shift+K"], action: "Next / previous feed", ready: false, group: "Moving around" },
+  { keys: ["g then u"], action: "Go to Unread", ready: true, group: "Moving around" },
+  { keys: ["g then s"], action: "Go to Starred", ready: true, group: "Moving around" },
+  { keys: ["g then a"], action: "Go to All", ready: true, group: "Moving around" },
+  { keys: ["["], action: "Show / hide sidebar", ready: true, group: "Moving around" },
+  { keys: ["Esc"], action: "Back / close", ready: true, group: "Moving around" },
+  { keys: ["Enter", "o"], action: "Open item", ready: true, group: "Reading" },
+  { keys: ["v"], action: "Open original", ready: true, group: "Reading" },
+  { keys: ["+", "-"], action: "Text size while reading", ready: true, group: "Reading" },
+  { keys: ["s"], action: "Star / unstar", ready: true, group: "Your articles" },
+  { keys: ["m"], action: "Mark current item unread", ready: true, group: "Your articles" },
+  { keys: ["Shift+A"], action: "Mark all as read", ready: true, group: "Your articles" },
+  { keys: ["u"], action: "Undo", ready: true, group: "Your articles" },
+  { keys: ["r"], action: "Show new items", ready: true, group: "Your articles" },
+  { keys: ["/"], action: "Search", ready: true, group: "Everywhere" },
+  { keys: ["a"], action: "Add feed", ready: true, group: "Everywhere" },
+  { keys: ["?"], action: "This list of shortcuts", ready: true, group: "Everywhere" },
 ];

@@ -151,7 +151,7 @@ The philosophy applied. The principle is noted where it isn't obvious.
 - **Regions are separated by tone, not lines:** background tone and whitespace; no borders, shadows, blur or gradients.
 - **Type does the hierarchy:** size and weight, never color or badges.
 - **One accent, one meaning:** ink blue means "where you are," and nothing else uses it.
-- **Words beside icons;** an icon alone only when universal (close, back, search, the sidebar toggle).
+- **Icons where the convention is an icon** (close, back, search, settings, the sidebar toggle, and the article's copy link, star and mark unread), each named in its tooltip with its key and to screen readers. **Words** for the way to the publisher ("Open original"), Add feed, and the main action of a form.
 - **No motion.** Views switch instantly.
 
 #### Color
@@ -216,7 +216,7 @@ Three: **off-white** (default light), **sepia**, **dark**. Follow the system lig
 
 ### Sidebar
 
-Fixed order, top to bottom: **Unread · Starred · All**, then **folders** A–Z, then **feeds not in a folder** A–Z, then **Add feed** and **Settings** side by side at the bottom, with the shortcut hint under them.
+Fixed order, top to bottom: **Unread · Starred · All**, then **folders** A–Z, then **feeds not in a folder** A–Z, then at the foot **Add feed** in words, with the shortcut list (keyboard icon) and **Settings** (cog icon) beside it.
 
 - No manual ordering.
 - Folders appear once one exists. Sidebar search is always shown (Exceptions log).
@@ -276,7 +276,7 @@ In river mode (V2) only the cursor and star show.
 
 ### Search
 
-- **`/`** focuses the field. A **search icon** and a **tuning (sliders) icon** sit together; the tuning icon's tooltip says "Search options."
+- **`/`** focuses the field. A faint **search icon** starts it and the **tuning (sliders) button** sits inside it at its right end; its tooltip says "Search options." The reserved line says how many results were found.
 - **Scope defaults to where you are,** shown as a removable chip in the field, e.g. `[ in: Tech × ]`. Remove it to search everything.
 - **The chip shows the scope; the tuning panel edits it;** they stay in sync. The panel offers scope (current location · all feeds · a folder · a feed), unread only, starred only, and a date range.
 - **Always full text:** titles and bodies together, title matches ranked higher. No toggle.
@@ -323,7 +323,7 @@ Until the first feed is added:
 
 ### Keyboard
 
-Vim-style keys are first-class. A permanent, unobtrusive hint says "Press ? for shortcuts," at the bottom of the sidebar (or of the list when the sidebar is hidden).
+Vim-style keys are first-class. A keyboard icon at the foot of the sidebar opens the shortcut list; when the sidebar is hidden, an unobtrusive "Press ? for shortcuts" sits at the bottom of the list.
 
 | Key | Action |
 |---|---|
@@ -351,7 +351,8 @@ Vim-style keys are first-class. A permanent, unobtrusive hint says "Press ? for 
 
 ### Settings
 
-- **Reader controls:** reading font (Literata default, or Atkinson Hyperlegible), text size, line width, theme (system / off-white / sepia / dark).
+- Settings shares the top line with the other screens. Each setting is a segmented control: a faint track, the chosen choice raised onto the page color with a fine edge and semibold words.
+- **Look and feel** (per device): reading font (Literata default, or Atkinson Hyperlegible), text size, line width, theme (system / off-white / sepia / dark).
 - **Reading:** sort order (newest first by default); inbox or river in V2.
 - **Feed health page (V2):** dead feeds first, then intermittent errors; problems in plain words ("Hasn't worked for 3 weeks — the site may have moved"), not HTTP codes; per feed **Retry · Find new address · Unsubscribe**, where "Find new address" reruns autodiscovery.
 - **Your data:** OPML import and export; export of starred articles.

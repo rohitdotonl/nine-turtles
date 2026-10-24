@@ -4,6 +4,19 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 24 October 2026: Icons where you'd expect them, and a tidier Settings
+
+- Settings is a cog and the shortcut list a keyboard icon at the foot of the
+  sidebar; the shortcut list and Settings close with an X.
+- Settings is laid out like a system settings window: grouped cards, one
+  setting per row, themes shown as small pictures of the app.
+- The article's copy link, star and mark unread are icons on the right of its
+  top line; "Open original" stays in words on the left. The sidebar's views
+  have small icons too.
+- The shortcut list is grouped into four short sections in two columns.
+- Search says how many results it found, its options button sits inside the
+  box, and Refresh hides while searching.
+
 ## 24 October 2026: A clearer, calmer look
 
 - Each kind of text now has its own size, weight and ink, so the list's

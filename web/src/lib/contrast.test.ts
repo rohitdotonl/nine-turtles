@@ -113,7 +113,7 @@ it("the browser bar and Settings' theme discs use each theme's own background", 
   for (const [name, color] of Object.entries(BAR_COLORS)) {
     expect(color.toLowerCase(), name).toBe(THEMES[name as keyof typeof THEMES].paper);
   }
-  // index.html's light and dark bars, for "Match this device".
+  // index.html's light and dark bars, for "Automatic".
   expect(html).toContain(`content="${BAR_COLORS["off-white"]}" media="(prefers-color-scheme: light)"`);
   expect(html).toContain(`content="${BAR_COLORS.dark}" media="(prefers-color-scheme: dark)"`);
 });

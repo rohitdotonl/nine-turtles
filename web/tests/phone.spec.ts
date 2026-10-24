@@ -173,6 +173,13 @@ test.describe("on a phone", () => {
     await openHome(page);
     const name = `averyveryverylongfeednamewithoutanyspaces-${Date.now()}`;
     const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
+    // On the feeds screen the long name is cut short; nothing runs off the side, and Settings stays reachable.
+    await page.goto(new URL("/", FEEDS_APP).href);
+    await appReady(page);
+    await expect(sidebar(page)).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+    const settings = (await sidebar(page).getByRole("link", { name: "Settings" }).boundingBox())!;
+    expect(settings.x + settings.width).toBeLessThanOrEqual(320);
     await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
     await appReady(page);
     await page.getByRole("button", { name: /A year of reading slowly/ }).click();

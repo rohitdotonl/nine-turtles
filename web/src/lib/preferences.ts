@@ -78,7 +78,7 @@ export function apply(preferences: Preferences, root: HTMLElement = document.doc
   root.style.setProperty("--reading-size", `${TEXT_SIZES[preferences.textSize]?.rem ?? 1.25}rem`);
   root.style.setProperty("--reading-measure", `${LINE_WIDTHS[preferences.lineWidth].ch}ch`);
   // The phone's own bar above the page takes the chosen theme's background too
-  // (index.html sets the light and dark ones for "Match this device").
+  // (index.html sets the light and dark ones for "Automatic").
   for (const meta of root.ownerDocument?.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]') ?? []) {
     meta.dataset.device ??= meta.content;
     meta.content = preferences.theme === "system" ? meta.dataset.device : BAR_COLORS[preferences.theme];
