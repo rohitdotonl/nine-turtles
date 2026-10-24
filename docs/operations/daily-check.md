@@ -74,7 +74,7 @@ Any scheduler that can start an agent once a day with this file as its
 instructions works (AGENTS.md: no lock-in). Current setup: a scheduled Claude
 Code routine, created once the owner has finished step 5 of
 [render-setup.md](render-setup.md), running once a day in the owner's morning. It runs at 08:39 India time, each run in a fresh session (set up 23 October 2026). Its whole prompt is: "Follow docs/operations/daily-check.md in
-rohitdotonl/slowfeed. It uses the SLOWFEED_ADDRESS and SLOWFEED_DIAGNOSTICS_KEY
+rohitdotonl/nine-turtles. It uses the SLOWFEED_ADDRESS and SLOWFEED_DIAGNOSTICS_KEY
 environment variables (remove any trailing slash from SLOWFEED_ADDRESS before
 adding /status or /diagnostics). Never print, post or commit the diagnostics
 key. If everything is fine, do nothing and say so in one line."

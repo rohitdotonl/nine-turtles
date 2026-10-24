@@ -1,5 +1,5 @@
 //! The password: scrambling it with argon2 (argon2id), checking it, and the
-//! `slowfeed set-password` command the owner runs in Render's Shell tab.
+//! `nine-turtles set-password` command the owner runs in Render's Shell tab.
 //! See docs/decisions/0010-sign-in.md.
 
 use std::io::{BufRead, Write};
@@ -15,7 +15,7 @@ pub const MINIMUM_LENGTH: usize = 12;
 /// server do a lot of work by sending an enormous "password".
 pub const MAXIMUM_LENGTH: usize = 1024;
 
-/// Scrambles a password into the line stored in `SLOWFEED_PASSWORD_HASH`.
+/// Scrambles a password into the line stored in `NINE_TURTLES_PASSWORD_HASH`.
 /// Each call uses a fresh random salt, so the same password gives a
 /// different line every time.
 pub fn hash(password: &str) -> Result<String, String> {
@@ -37,7 +37,7 @@ pub fn matches(password: &str, stored: &str) -> bool {
     })
 }
 
-/// `slowfeed set-password`: asks for the password twice and prints the
+/// `nine-turtles set-password`: asks for the password twice and prints the
 /// scrambled line to paste into the host's settings. The readable password
 /// is never written anywhere.
 pub fn set_password_command() -> Result<(), String> {
@@ -61,7 +61,7 @@ pub fn set_password_command() -> Result<(), String> {
 
     let line = hash(&first)?;
     eprintln!();
-    eprintln!("Copy the whole line below into the SLOWFEED_PASSWORD_HASH setting,");
+    eprintln!("Copy the whole line below into the NINE_TURTLES_PASSWORD_HASH setting,");
     eprintln!("save, and let nine turtles restart. It's the scrambled form, not your password.");
     eprintln!();
     println!("{line}");

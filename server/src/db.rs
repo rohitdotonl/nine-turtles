@@ -7,7 +7,9 @@ use sqlx::{
     sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions},
 };
 
-pub const FILE_NAME: &str = "slowfeed.sqlite";
+pub const FILE_NAME: &str = "nine-turtles.sqlite";
+/// The database's name before the rename; `open` renames an old one in place.
+const OLD_FILE_NAME: &str = "slowfeed.sqlite";
 
 /// Opens (or creates) the database and brings its structure up to date.
 ///
@@ -21,6 +23,7 @@ pub async fn open(data_dir: &Path) -> Result<SqlitePool, String> {
             data_dir.display()
         )
     })?;
+    rename_old_database(data_dir)?;
 
     let options = SqliteConnectOptions::new()
         .filename(path(data_dir))
@@ -39,6 +42,30 @@ pub async fn open(data_dir: &Path) -> Result<SqlitePool, String> {
     Ok(pool)
 }
 
+/// Moves a database made before the rename (and its `-wal` and `-shm` files)
+/// to the new name, once, so nothing is lost. Nothing happens if there's no
+/// old one, or a new one already exists.
+fn rename_old_database(data_dir: &Path) -> Result<(), String> {
+    let old = data_dir.join(OLD_FILE_NAME);
+    if !old.exists() || path(data_dir).exists() {
+        return Ok(());
+    }
+    for suffix in ["", "-wal", "-shm"] {
+        let from = data_dir.join(format!("{OLD_FILE_NAME}{suffix}"));
+        if from.exists() {
+            let to = data_dir.join(format!("{FILE_NAME}{suffix}"));
+            std::fs::rename(&from, &to).map_err(|error| {
+                format!(
+                    "can't rename {} to {}: {error}",
+                    from.display(),
+                    to.display()
+                )
+            })?;
+        }
+    }
+    Ok(())
+}
+
 pub fn path(data_dir: &Path) -> PathBuf {
     data_dir.join(FILE_NAME)
 }
@@ -54,4 +81,45 @@ pub fn size_in_bytes(data_dir: &Path) -> u64 {
         .filter_map(|file| std::fs::metadata(file).ok())
         .map(|metadata| metadata.len())
         .sum()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn a_database_from_before_the_rename_is_kept() {
+        let dir = std::env::temp_dir().join(format!("nine-turtles-rename-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        // A database made under the old name, with one feed in it.
+        let old = SqlitePoolOptions::new()
+            .connect_with(
+                SqliteConnectOptions::new()
+                    .filename(dir.join(OLD_FILE_NAME))
+                    .create_if_missing(true),
+            )
+            .await
+            .unwrap();
+        sqlx::query("CREATE TABLE kept (word TEXT)")
+            .execute(&old)
+            .await
+            .unwrap();
+        sqlx::query("INSERT INTO kept VALUES ('turtle')")
+            .execute(&old)
+            .await
+            .unwrap();
+        old.close().await;
+
+        let pool = open(&dir).await.unwrap();
+        let word: String = sqlx::query_scalar("SELECT word FROM kept")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+        assert_eq!(word, "turtle");
+        assert!(dir.join(FILE_NAME).exists());
+        assert!(!dir.join(OLD_FILE_NAME).exists());
+        pool.close().await;
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 }

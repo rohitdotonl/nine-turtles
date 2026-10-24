@@ -1,7 +1,7 @@
 //! SQLite's FTS5 search engine is built in, and finds Hindi words whole.
 //! The real search table arrives in Milestone 10 and uses the same setting.
 
-use slowfeed::search::FTS5_TOKENIZER;
+use nine_turtles::search::FTS5_TOKENIZER;
 use sqlx::{AssertSqlSafe, Connection, SqliteConnection};
 
 async fn database_with(tokenizer: &str) -> SqliteConnection {

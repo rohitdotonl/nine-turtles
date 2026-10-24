@@ -539,7 +539,7 @@ test("a tab left open across an update is told to reload, and Settings offers th
 
   // A newer nine turtles that doesn't understand this tab's way of starring.
   await page.route("**/api/articles/starred", (route) =>
-    route.fulfill({ status: 400, headers: { "x-slowfeed-version": "a-newer-version" }, body: "" }),
+    route.fulfill({ status: 400, headers: { "x-nine-turtles-version": "a-newer-version" }, body: "" }),
   );
   await page.getByRole("button", { name: /The pleasure of a slow letter/ }).click();
   await page.getByRole("region", { name: "Article" }).getByRole("button", { name: "Star" }).click();

@@ -7,7 +7,7 @@ use std::{
     sync::atomic::{AtomicU32, Ordering},
 };
 
-use slowfeed::config::{Config, PasswordSetting};
+use nine_turtles::config::{Config, PasswordSetting};
 
 pub const PASSWORD: &str = "a quiet place to read";
 pub const DIAGNOSTICS_KEY: &str = "test-diagnostics-key";
@@ -17,7 +17,7 @@ pub fn config() -> Config {
     Config {
         listen: "127.0.0.1:0".parse().unwrap(),
         data_dir: fresh_data_dir(),
-        password: PasswordSetting::Set(slowfeed::password::hash(PASSWORD).unwrap()),
+        password: PasswordSetting::Set(nine_turtles::password::hash(PASSWORD).unwrap()),
         diagnostics_key: Some(DIAGNOSTICS_KEY.to_owned()),
         local_feeds_allowed: true,
         test_check_seconds: None,
@@ -31,9 +31,9 @@ pub async fn start(config: Config) -> String {
 
 /// Like `start`, and also hands back nine turtles' insides, so a test can run
 /// background checking itself, at a time of its choosing.
-pub async fn start_with_state(config: Config) -> (String, slowfeed::AppState) {
-    let state = slowfeed::state(config).await.unwrap();
-    let app = slowfeed::router(state.clone());
+pub async fn start_with_state(config: Config) -> (String, nine_turtles::AppState) {
+    let state = nine_turtles::state(config).await.unwrap();
+    let app = nine_turtles::router(state.clone());
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let address = listener.local_addr().unwrap();
     tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
@@ -43,7 +43,7 @@ pub async fn start_with_state(config: Config) -> (String, slowfeed::AppState) {
 fn fresh_data_dir() -> PathBuf {
     static NEXT: AtomicU32 = AtomicU32::new(0);
     let dir = std::env::temp_dir().join(format!(
-        "slowfeed-test-{}-{}",
+        "nine-turtles-test-{}-{}",
         std::process::id(),
         NEXT.fetch_add(1, Ordering::Relaxed)
     ));

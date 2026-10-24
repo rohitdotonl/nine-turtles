@@ -86,7 +86,7 @@ export const SCREENS: Screen[] = [
       const listed = await (await page.request.get(new URL("/api/feeds", page.url()).href)).json();
       const folder = listed.folders.find((each: { name: string }) => each.name === "Outdoors").id;
       // Opened in the sidebar, as if its button had been pressed.
-      await page.evaluate((open) => localStorage.setItem("slowfeed.open-folders", JSON.stringify([open])), folder);
+      await page.evaluate((open) => localStorage.setItem("nine-turtles.open-folders", JSON.stringify([open])), folder);
       await page.goto(new URL(`/folders/${folder}`, page.url()).href);
       await appReady(page);
       await expect(page.getByRole("heading", { level: 2, name: "Outdoors" })).toBeVisible();
@@ -194,7 +194,7 @@ export async function appReady(page: Page): Promise<void> {
 export async function chooseTheme(page: Page, variant: Variant): Promise<void> {
   const [theme, appearance] = parts(variant);
   await page.addInitScript((chosen) => {
-    localStorage.setItem("slowfeed.preferences", JSON.stringify(chosen));
+    localStorage.setItem("nine-turtles.preferences", JSON.stringify(chosen));
   }, { theme, appearance });
 }
 

@@ -198,7 +198,7 @@ fn plain_text(text: &feed_rs::model::Text) -> String {
 /// Content made safe to show: no scripts, styles, frames or event handlers;
 /// no tracking images; links open safely, in a new tab, without telling the
 /// site where the reader came from; relative addresses made whole. Plain
-/// text is escaped. Footnotes keep working inside slowfeed: the article's
+/// text is escaped. Footnotes keep working inside nine turtles: the article's
 /// own anchors (`id`, `#note-1`) are kept, renamed with `article-` in front
 /// so they can never clash with nine turtles' own page.
 fn clean(body: &str, content_type: &str, base: &Url) -> String {

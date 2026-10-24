@@ -13,12 +13,12 @@ use axum::{
     http::{HeaderMap, StatusCode, Uri, header},
     response::{IntoResponse, Redirect, Response},
 };
-use reqwest::Client;
-use serde_json::{Value, json};
-use slowfeed::{
+use nine_turtles::{
     AppState,
     checking::{self, DAY, HOUR, MINUTE, SHORTEST_WAIT},
 };
+use reqwest::Client;
+use serde_json::{Value, json};
 
 /// What the made-up publisher serves, and every request it was sent.
 #[derive(Default)]
@@ -51,7 +51,7 @@ const LAST_MODIFIED: &str = "Wed, 21 Oct 2026 07:28:00 GMT";
 
 async fn publisher() -> (String, Shared) {
     let site: Shared = Arc::new(Mutex::new(Site {
-        started: slowfeed::now(),
+        started: nine_turtles::now(),
         articles: 3,
         ..Site::default()
     }));
@@ -266,7 +266,7 @@ async fn an_unchanged_feed_is_asked_politely_and_costs_almost_nothing() {
     let feed = reader.follow("/grow.xml").await;
     let asked_before = reader.requests().len();
 
-    let later = slowfeed::now() + DAY;
+    let later = nine_turtles::now() + DAY;
     assert_eq!(reader.round(later).await, 1);
     let requests = reader.requests();
     let check = &requests[asked_before];
@@ -302,7 +302,7 @@ async fn new_articles_arrive_on_their_own_and_the_list_waits_to_be_asked() {
     assert_eq!(waiting("view=unread".into()).await, false);
 
     reader.change(|site| site.articles = 5);
-    reader.round(slowfeed::now() + DAY).await;
+    reader.round(nine_turtles::now() + DAY).await;
 
     // The list on screen can say "New items", without a number.
     assert_eq!(waiting("view=unread".into()).await, true);
@@ -336,7 +336,7 @@ async fn each_feed_is_checked_on_its_own_rhythm_never_more_than_every_half_hour(
     let reader = Reader::new().await;
     let hourly = reader.follow("/grow.xml").await;
     let daily = reader.follow("/daily.xml").await;
-    let added = slowfeed::now();
+    let added = nine_turtles::now();
 
     // An article every hour: every 30 minutes. Every day: about twice a day.
     assert_eq!(
@@ -370,7 +370,7 @@ async fn checks_are_spread_out_never_all_at_once() {
     for number in 0..25 {
         reader.follow(&format!("/many/{number}.xml")).await;
     }
-    let later = slowfeed::now() + DAY;
+    let later = nine_turtles::now() + DAY;
     // At most 20 feeds in a round; the rest wait for the next one.
     assert_eq!(reader.round(later).await, 20);
     assert_eq!(reader.round(later).await, 5);
@@ -391,7 +391,7 @@ async fn a_publisher_who_asks_to_slow_down_gets_the_wait_they_asked_for() {
     let reader = Reader::new().await;
     let feed = reader.follow("/flaky.xml").await;
 
-    let first = slowfeed::now() + DAY;
+    let first = nine_turtles::now() + DAY;
     reader.change(|site| {
         site.trouble = Some((StatusCode::TOO_MANY_REQUESTS, Some((3 * DAY).to_string())));
     });
@@ -424,7 +424,7 @@ async fn a_failing_feed_is_tried_less_and_less_and_never_holds_up_the_others() {
     reader.change(|site| site.trouble = Some((StatusCode::INTERNAL_SERVER_ERROR, None)));
 
     // Each failure in a row doubles the wait (from the feed's 30 minutes), up to a day.
-    let mut at = slowfeed::now() + DAY;
+    let mut at = nine_turtles::now() + DAY;
     let mut waits = Vec::new();
     for _ in 0..7 {
         reader.round(at).await;
@@ -439,7 +439,7 @@ async fn a_failing_feed_is_tried_less_and_less_and_never_holds_up_the_others() {
     assert_eq!(reader.feed_column(flaky, "failures").await, Some(7));
     // The working feed was checked all along.
     assert_eq!(reader.feed_column(working, "failures").await, Some(0));
-    assert!(reader.feed_column(working, "fetched_at").await.unwrap() > slowfeed::now());
+    assert!(reader.feed_column(working, "fetched_at").await.unwrap() > nine_turtles::now());
 
     // It's counted, never named: three days of failing is "keeps failing".
     let started = reader.feed_column(flaky, "failing_since").await.unwrap();
@@ -472,7 +472,7 @@ async fn a_feed_not_found_for_a_week_counts_as_dead_and_is_still_checked_daily()
     let reader = Reader::new().await;
     let feed = reader.follow("/flaky.xml").await;
     reader.change(|site| site.trouble = Some((StatusCode::NOT_FOUND, None)));
-    let mut at = slowfeed::now() + DAY;
+    let mut at = nine_turtles::now() + DAY;
     let first = at;
     while at < first + 8 * DAY {
         reader.round(at).await;
@@ -509,7 +509,7 @@ async fn a_feed_that_moved_for_good_is_remembered_at_its_new_address() {
     let reader = Reader::new().await;
     let feed = reader.follow("/moving.xml").await;
     reader.change(|site| site.moved = true);
-    let at = slowfeed::now() + DAY;
+    let at = nine_turtles::now() + DAY;
     reader.round(at).await;
     let url: String = sqlx::query_scalar("SELECT url FROM feeds WHERE id = ?")
         .bind(feed)
@@ -542,7 +542,7 @@ async fn an_edited_article_gets_the_new_words_quietly_and_stays_read() {
     assert_eq!(status, StatusCode::OK);
 
     reader.change(|site| site.edited = true);
-    reader.round(slowfeed::now() + DAY).await;
+    reader.round(nine_turtles::now() + DAY).await;
 
     let after = reader.get(&format!("/api/articles?feed={feed}")).await;
     assert_eq!(after["articles"][0]["id"], newest);

@@ -8,7 +8,7 @@ tell the owner which ones and how.
 
 A quiet, single-user reader for writing on the open web (RSS, Atom, JSON
 Feed). Finite, calm and quiet: the opposite of social media.
-Its name is **nine turtles**, always lowercase (renamed from slowfeed in October 2026, decision 0056). Behind the scenes the old name stays: the program `slowfeed`, its `SLOWFEED_*` settings, the database file, saved preferences, the repository and the Render service, so nothing breaks or signs the owner out.
+Its name is **nine turtles**, always lowercase (renamed from slowfeed in October 2026, decisions 0056 and 0058). The program is `nine-turtles`, its settings `NINE_TURTLES_*`, the database `nine-turtles.sqlite` and the repository `rohitdotonl/nine-turtles`. For a while the old names still work: `SLOWFEED_*` settings, the `slowfeed` command, the old database file (renamed on start), the old sign-in cookie and saved preferences. The Render service and its address (slowfeed.onrender.com) and disk (`slowfeed-data`) keep the old name.
 **Tiebreaker:** does this make nine turtles feel more like a book, or more like a feed?
 
 ## Project facts

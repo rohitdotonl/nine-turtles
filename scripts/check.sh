@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Runs every automatic check slowfeed has. GitHub Actions only calls this
+# Runs every automatic check nine turtles has. GitHub Actions only calls this
 # script, so any other CI service, an agent or a person runs exactly the same
 # checks. What each check means: docs/operations/checks.md.
 #
 # Needs: Rust (the version in rust-toolchain.toml), Node 22.12 or newer, and
 # Chromium for Playwright (`npx playwright install chromium` in web/, or point
-# SLOWFEED_CHROMIUM at a Chromium you already have).
+# NINE_TURTLES_CHROMIUM at a Chromium you already have).
 
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -42,7 +42,7 @@ step "Rust: lint (clippy)"
 step "Rust: tests (including Hindi search)"
 (cd server && cargo test --locked)
 
-step "Build the slowfeed program"
+step "Build the nine turtles program"
 (cd server && cargo build --locked --release)
 
 step "Accessibility, contrast and screenshots, in a real browser"

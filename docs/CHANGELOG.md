@@ -4,6 +4,26 @@ A plain-language history of nine turtles (called slowfeed until 24 October 2026)
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 24 October 2026: The name nine turtles everywhere
+
+- Behind the scenes the old name slowfeed is gone too: the GitHub project,
+  the package Render runs, the program and its settings, the database file.
+  You stay signed in and keep your settings; the old setting names on Render
+  still work until you rename them (decision 0058).
+- Render's web address and disk keep the old name, because Render can't
+  rename them.
+
+## 24 October 2026: Panes you can hide and resize, clearer list titles
+
+- The sidebar's button sits at the right end of the sidebar's top line, and
+  the article list has its own at the right end of its top line. `]` hides the
+  list, `\` hides both; with both hidden, one button brings both back.
+- Drag the line between panes to make them wider or narrower; double-click to
+  reset.
+- The sidebar is more compact with a mouse, list titles are larger and the
+  line under them quieter, the text size buttons read A− and A+, and a sort
+  icon sits beside Sort order.
+
 ## 24 October 2026: nine turtles, with one theme
 
 - The app is now called **nine turtles**: on the sign-in page, in the

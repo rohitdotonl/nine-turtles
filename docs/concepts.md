@@ -95,7 +95,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Serialization (serde)
 - Logging (tracing)
 - Error handling
-- Command-line program and subcommands (`slowfeed set-password`)
+- Command-line program and subcommands (`nine-turtles set-password`)
 - Embedding files in a program (rust-embed)
 - Toolchain (`rust-toolchain.toml`)
 

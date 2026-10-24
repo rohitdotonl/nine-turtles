@@ -1,4 +1,4 @@
-//! slowfeed: a quiet, single-user reader for writing on the open web.
+//! nine turtles: a quiet, single-user reader for writing on the open web.
 //!
 //! So far: sign-in, the database file, the status pages, adding feeds,
 //! listing and reading their articles, marking them read and starring them,
@@ -40,9 +40,9 @@ use tower_http::set_header::SetResponseHeaderLayer;
 
 use crate::config::{Config, PasswordSetting};
 
-/// Which build this is. The container image sets `SLOWFEED_VERSION` to the
+/// Which build this is. The container image sets `NINE_TURTLES_VERSION` to the
 /// date and commit it was built from; a build on a computer says "-dev".
-pub const VERSION: &str = match option_env!("SLOWFEED_VERSION") {
+pub const VERSION: &str = match option_env!("NINE_TURTLES_VERSION") {
     Some(version) if !version.is_empty() => version,
     _ => concat!(env!("CARGO_PKG_VERSION"), "-dev"),
 };
@@ -74,11 +74,11 @@ pub async fn state(config: Config) -> Result<AppState, String> {
     match &config.password {
         PasswordSetting::Set(_) => {}
         PasswordSetting::Missing => log::problem(
-            "no password is set yet (SLOWFEED_PASSWORD_HASH), so nobody can sign in; \
+            "no password is set yet (NINE_TURTLES_PASSWORD_HASH), so nobody can sign in; \
              see docs/operations/render-setup.md",
         ),
         PasswordSetting::Invalid => log::problem(
-            "SLOWFEED_PASSWORD_HASH isn't a line made by `slowfeed set-password`, so nobody \
+            "NINE_TURTLES_PASSWORD_HASH isn't a line made by `nine-turtles set-password`, so nobody \
              can sign in; run it again and paste the whole line",
         ),
     }
@@ -116,11 +116,18 @@ pub fn router(state: AppState) -> Router {
             HeaderName::from_static(VERSION_HEADER),
             HeaderValue::from_static(VERSION),
         ))
+        // The header's name before the rename, for a tab opened before it.
+        .layer(SetResponseHeaderLayer::overriding(
+            HeaderName::from_static(OLD_VERSION_HEADER),
+            HeaderValue::from_static(VERSION),
+        ))
         .layer(CompressionLayer::new())
 }
 
 /// The name of the header that carries `VERSION` on every answer.
-pub const VERSION_HEADER: &str = "x-slowfeed-version";
+pub const VERSION_HEADER: &str = "x-nine-turtles-version";
+/// Its name before the rename.
+pub const OLD_VERSION_HEADER: &str = "x-slowfeed-version";
 
 /// Seconds since 1970 (UTC), the way nine turtles stores times.
 pub fn now() -> i64 {

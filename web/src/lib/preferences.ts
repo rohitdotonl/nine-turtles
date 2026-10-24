@@ -41,13 +41,15 @@ export const READING_FONTS: Record<ReadingFont, { label: string; family: string 
 
 export const DEFAULTS: Preferences = { theme: "original", appearance: "auto", readingFont: "literata", textSize: 2, lineWidth: "medium" };
 
-const KEY = "slowfeed.preferences";
+const KEY = "nine-turtles.preferences";
+/** Where they were saved before the rename; read when there's nothing under the new name. */
+const OLD_KEY = "slowfeed.preferences";
 
 /** Reads the saved preferences, keeping only values nine turtles understands. */
 export function load(storage: Pick<Storage, "getItem"> | undefined = safeStorage()): Preferences {
   let saved: unknown;
   try {
-    saved = JSON.parse(storage?.getItem(KEY) ?? "null");
+    saved = JSON.parse(storage?.getItem(KEY) ?? storage?.getItem(OLD_KEY) ?? "null");
   } catch {
     saved = null;
   }

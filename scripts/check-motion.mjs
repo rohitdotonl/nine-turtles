@@ -48,7 +48,7 @@ for (const file of files(join(root, "web/src"), [".svelte", ".ts", ".js", ".css"
 }
 
 if (problems.length > 0) {
-  console.error("No-motion check failed. slowfeed never animates:\n" + problems.map((p) => `  - ${p}`).join("\n"));
+  console.error("No-motion check failed. nine turtles never animates:\n" + problems.map((p) => `  - ${p}`).join("\n"));
   process.exit(1);
 }
 console.log("No-motion check passed.");

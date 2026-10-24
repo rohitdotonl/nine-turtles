@@ -1,11 +1,11 @@
 //! Signing in and out, staying signed in, and the wait after wrong passwords
-//! (SPEC section 1), tested against a real running slowfeed.
+//! (SPEC section 1), tested against a real running nine turtles.
 
 mod common;
 
 use common::{DIAGNOSTICS_KEY, PASSWORD};
+use nine_turtles::config::PasswordSetting;
 use reqwest::{Client, Response, StatusCode};
-use slowfeed::config::PasswordSetting;
 
 async fn sign_in(base: &str, password: &str) -> Response {
     Client::new()
@@ -52,7 +52,7 @@ async fn the_right_password_signs_this_device_in_for_a_year() {
     let cookie = cookie_from(&response);
     let answer = session(&base, Some(&cookie)).await;
     assert!(answer.contains(r#""signed_in":true"#), "{answer}");
-    assert!(answer.contains(slowfeed::VERSION));
+    assert!(answer.contains(nine_turtles::VERSION));
 }
 
 #[tokio::test]
@@ -60,7 +60,7 @@ async fn without_signing_in_nothing_is_revealed() {
     let base = common::start(common::config()).await;
     assert_eq!(session(&base, None).await, r#"{"signed_in":false}"#);
 
-    let made_up = format!("slowfeed_session={}", "0".repeat(64));
+    let made_up = format!("nine_turtles_session={}", "0".repeat(64));
     assert_eq!(
         session(&base, Some(&made_up)).await,
         r#"{"signed_in":false}"#
@@ -185,7 +185,7 @@ async fn every_page_carries_the_browser_security_rules() {
         let headers = response.headers();
         assert_eq!(
             headers["content-security-policy"],
-            slowfeed::security::CONTENT_SECURITY_POLICY,
+            nine_turtles::security::CONTENT_SECURITY_POLICY,
             "{path}"
         );
         assert_eq!(headers["x-content-type-options"], "nosniff", "{path}");
@@ -201,7 +201,10 @@ async fn the_status_page_is_public_and_says_only_that_nine_turtles_runs() {
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.text().await.unwrap(),
-        format!("nine turtles is running\nversion {}\n", slowfeed::VERSION)
+        format!(
+            "nine turtles is running\nversion {}\n",
+            nine_turtles::VERSION
+        )
     );
 }
 

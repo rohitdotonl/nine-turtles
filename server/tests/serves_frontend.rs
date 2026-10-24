@@ -36,7 +36,7 @@ async fn other_screens_also_get_the_app() {
 }
 
 #[tokio::test]
-async fn fonts_are_served_by_slowfeed_itself() {
+async fn fonts_are_served_by_nine_turtles_itself() {
     let base = start().await;
     let response = reqwest::get(format!("{base}/fonts/literata-400-latin.woff2"))
         .await
@@ -63,8 +63,8 @@ async fn every_answer_says_which_version_sent_it() {
     for path in ["/", "/status", "/api/session", "/api/feeds"] {
         let response = reqwest::get(format!("{base}{path}")).await.unwrap();
         assert_eq!(
-            response.headers()[slowfeed::VERSION_HEADER],
-            slowfeed::VERSION,
+            response.headers()[nine_turtles::VERSION_HEADER],
+            nine_turtles::VERSION,
             "{path}"
         );
     }

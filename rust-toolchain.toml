@@ -1,4 +1,4 @@
-# The exact Rust version slowfeed is built with. Changing it is a deliberate
+# The exact Rust version nine turtles is built with. Changing it is a deliberate
 # update (see docs/decisions/0002-pinned-tool-versions.md).
 [toolchain]
 channel = "1.99.1"
