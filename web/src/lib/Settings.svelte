@@ -119,7 +119,7 @@
             its words start on the rows' words, 16px in, and a hairline parts it
             from Appearance below (decision 0055). A row, never a card inside a card.
           -->
-          <figure class="inset-row reading-sample">
+          <figure class="inset-row reading-sample" style:--sample-share={`${(LINE_WIDTHS[preferences.lineWidth].ch / LINE_WIDTHS.wide.ch) * 100}%`}>
             <figcaption class="sr-only">Preview</figcaption>
             <p>
               Most writing on the open web was never meant to be skimmed. It was written slowly, by someone who
@@ -267,8 +267,13 @@
     font-weight: 400;
     line-height: 1.6;
   }
+  /*
+    The sample's row is narrower than any line width, so the true measure would never show here.
+    Its lines take the same share of the row as the chosen width is of Wide, so Narrow, Medium and
+    Wide visibly differ.
+  */
   .reading-sample p {
-    max-width: var(--reading-measure);
+    max-width: min(var(--reading-measure), var(--sample-share, 100%));
   }
   /* On a phone articles read a tenth smaller; so does the sample. */
   @media (max-width: 40rem) {
