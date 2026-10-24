@@ -69,13 +69,21 @@ test("new items wait for r, and mark all as read never touches them", async ({ p
   await expect(sidebar.getByRole("link", { name: `Blog ${blog} 4 unread` })).toBeVisible();
 });
 
-test("on a phone, the line says to tap Refresh, and the Refresh button shows new items", async ({ page, isMobile }) => {
+test("on a phone, the note offers Show, which shows new items; Refresh in the More menu does too", async ({ page, isMobile }) => {
   test.skip(!isMobile, "the phone layout only");
   const blog = await openBlog(page);
 
-  await publishAndWait(page, blog, "New items · tap Refresh");
+  await publishAndWait(page, blog, "New items");
   await expect(row(page, NEW_ARTICLE)).toHaveCount(0);
-  await page.getByRole("button", { name: "Refresh", exact: true }).click();
+  const show = page.getByRole("button", { name: "Show new items" });
+  await expect(show).toHaveText("Show");
+  expect((await show.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  await show.click();
+  await expect(row(page, NEW_ARTICLE)).toBeVisible();
+  await expect(show).toHaveCount(0);
+  // Refresh is in the list's More (…) menu, the same as r.
+  await page.getByRole("button", { name: "More", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Refresh" }).click();
   await expect(row(page, NEW_ARTICLE)).toBeVisible();
 });
 

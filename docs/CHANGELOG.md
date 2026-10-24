@@ -20,6 +20,13 @@ not how it was done.
 - Search results show a line of text around what matched, and an × clears
   the field.
 - A first visit is welcomed in the reading area, not squeezed into the list.
+- Fewer, steadier toolbars: the article's icons keep to the pane's edges
+  (Open original; Aa, Star and a More menu with Copy link and Mark unread),
+  the list's title has its line to itself with Edit and Refresh in its More
+  menu, and text fades under a see-through top bar. On a phone the back
+  button names the list and the bottom bar has five icons. The article's
+  title, headings and byline are set more like a book, and a summary-only
+  article ends with a line linking the full article on the publisher's site.
 
 ## 24 October 2026: Calmer selection, one search style, tidier edges
 

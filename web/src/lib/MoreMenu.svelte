@@ -1,7 +1,8 @@
 <!--
-  A small menu behind a "More" (…) button (SPEC section 6): the list's
-  less frequent actions, kept out of sight until asked for (DESIGN.md →
-  "Power is hidden, never missing").
+  A small menu behind a "More" (…) button (SPEC sections 6 and 7): the
+  list's less frequent actions (Mark all as read, Refresh, the sort order,
+  Edit), and the article's (Copy link or Share, Mark unread), kept out of
+  sight until asked for (DESIGN.md → "Power is hidden, never missing").
 
   The button says it opens a menu (`aria-haspopup`); the menu is a short list
   of buttons. Opening it puts the keyboard on the first item; the arrow keys,
@@ -25,7 +26,21 @@
   import { tick } from "svelte";
   import Icon from "./Icon.svelte";
 
-  let { id, label = "More", groups }: { id: string; label?: string; groups: MenuGroup[] } = $props();
+  let {
+    id,
+    label = "More",
+    groups,
+    size = 20,
+    up = false,
+  }: {
+    id: string;
+    label?: string;
+    groups: MenuGroup[];
+    /** The icon's size: 22 in the phone's bottom bar. */
+    size?: number;
+    /** Opens upwards, from a bar at the bottom of the screen. */
+    up?: boolean;
+  } = $props();
 
   let open = $state(false);
   let wrap: HTMLDivElement | undefined = $state();
@@ -115,7 +130,7 @@
     class={["btn-quiet btn-icon", open && "text-ink"]}
   >
     <!-- Open, the icon sits on a small rounded tone, like a pressed toolbar button. -->
-    <span class={["flex size-8 items-center justify-center rounded-md", open && "bg-[var(--tone)]"]}><Icon name="more" size={20} /></span>
+    <span class={["flex size-8 items-center justify-center rounded-md", open && "bg-[var(--tone)]"]}><Icon name="more" {size} /></span>
   </button>
   {#if open}
     <!-- svelte-ignore a11y_interactive_supports_focus: the items inside take the keyboard, not the menu itself. -->
@@ -126,7 +141,10 @@
       tabindex="-1"
       bind:this={menu}
       onkeydown={onMenuKey}
-      class="absolute top-full right-0 z-30 mt-1 w-max max-w-[min(18rem,calc(100vw-2rem))] min-w-56 floating p-1.5 text-left font-sans"
+      class={[
+        "absolute right-0 z-30 w-max max-w-[min(18rem,calc(100vw-2rem))] min-w-56 floating p-1.5 text-left font-sans",
+        up ? "bottom-full mb-1" : "top-full mt-1",
+      ]}
     >
       {#each groups as group, index (index)}
         {#if index > 0}

@@ -83,8 +83,9 @@ test.describe("on a wide window", () => {
     await expect(line(page)).toHaveText("Undone.");
     await expect(page.getByRole("button", { name: "Undo" })).toHaveCount(0);
 
-    // The Mark unread button in the article's top bar does the same as m.
-    await article(page).getByRole("button", { name: "Mark unread" }).click();
+    // Mark unread in the article's More menu does the same as m.
+    await article(page).getByRole("button", { name: "More actions" }).click();
+    await page.getByRole("menuitem", { name: "Mark unread" }).click();
     await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
 
     // It's saved: a reload shows the same.
@@ -147,10 +148,17 @@ test.describe("on a wide window", () => {
     // The sort order is a one-of-two choice, ticked where it is now.
     await expect(menu.getByRole("menuitemradio", { name: "Newest first" })).toHaveAttribute("aria-checked", "true");
     await expect(menu.getByRole("menuitemradio", { name: "Oldest first" })).toHaveAttribute("aria-checked", "false");
+    // Then Refresh (its key shown beside it), the sort order, and Edit feed last (decision 0038).
+    await page.keyboard.press("ArrowDown");
+    await expect(menu.getByRole("menuitem", { name: "Refresh" })).toBeFocused();
+    await expect(menu.getByRole("menuitem", { name: "Refresh" })).toHaveAttribute("aria-keyshortcuts", "r");
     await page.keyboard.press("ArrowDown");
     await expect(menu.getByRole("menuitemradio", { name: "Newest first" })).toBeFocused();
     await page.keyboard.press("End");
+    await expect(menu.getByRole("menuitem", { name: "Edit feed" })).toBeFocused();
+    await page.keyboard.press("ArrowUp");
     await expect(menu.getByRole("menuitemradio", { name: "Oldest first" })).toBeFocused();
+    await page.keyboard.press("End");
     await page.keyboard.press("ArrowDown");
     await expect(menu.getByRole("menuitem", { name: "Mark all as read" })).toBeFocused();
 
@@ -272,12 +280,13 @@ test.describe("when saving fails", () => {
   });
 });
 
-test("on a phone, the article's Star and Mark unread buttons work", async ({ page, isMobile }) => {
+test("on a phone, the article's Star button and More's Mark unread work", async ({ page, isMobile }) => {
   test.skip(!isMobile, "the phone layout only");
   const blog = await openBlog(page, 412);
   await row(page, blog, NEWEST).click();
   await article(page).getByRole("button", { name: "Star" }).click();
-  await article(page).getByRole("button", { name: "Mark unread" }).click();
+  await article(page).getByRole("button", { name: "More actions" }).click();
+  await page.getByRole("menuitem", { name: "Mark unread" }).click();
   await article(page).getByRole("button", { name: `Back to Blog ${blog}` }).click();
   await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
   await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, Starred/);

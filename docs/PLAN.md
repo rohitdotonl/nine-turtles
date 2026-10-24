@@ -261,6 +261,11 @@ each with screenshots:
   hairlines, a tighter reading rhythm, an "Aa" reading panel, quiet icon
   toolbars and a More menu, sheets as one family, search excerpts and a
   welcome in the reading area (decisions 0034 to 0036).
+- ✅ Toolbars and chrome: the article's tools anchored to the pane's edges
+  with a More menu, one More menu per list (Edit and Refresh inside), a
+  see-through top bar, a labelled back button and a five-icon bottom bar on
+  phones, and book-like title, headings, byline and summary note (decision
+  0038).
 
 ---
 

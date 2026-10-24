@@ -744,33 +744,13 @@ input {
 }
 
 /*
-  On a wide window the article sits in the middle of the reading area, like a
-  page in a book, rather than against its left edge. .article-column gives
-  the toolbar above it the same width (measured in the reading font, so the
-  edges line up), then sets its own words back in the interface font. Both
-  areas keep room for a scrollbar (scrollbar-gutter in ArticleView.svelte),
-  so the two stay lined up where scrollbars are always shown.
-*/
-/* In the components layer, so a small-text utility inside still wins. */
-@layer components {
-  .article-column {
-    max-width: var(--reading-measure);
-    margin-inline: auto;
-    font-family: var(--reading-font);
-    font-size: var(--reading-size);
-  }
-
-  .article-column > * {
-    font-family: var(--font-sans);
-    font-size: var(--text-base);
-  }
-}
-
-/*
   An article (SPEC section 7): the publisher's text, restyled the same way
-  for every feed, in the reader's font, size and line width. Sizes inside are
-  relative to the reader's text size, so + and - scale everything together.
-  Links are underlined in the text color, never blue. Images never overflow.
+  for every feed, in the reader's font, size and line width. On a wide
+  window it sits in the middle of the reading area, like a page in a book,
+  while the bar above it keeps to the pane's edges (decision 0038). Sizes
+  inside are relative to the reader's text size, so + and - scale
+  everything together. Links are underlined in the text color, never blue.
+  Images never overflow.
 */
 .article {
   max-width: var(--reading-measure);
@@ -780,22 +760,55 @@ input {
   line-height: 1.55;
 }
 
-/* The source line keeps the interface's size, whatever the text size. */
+/*
+  The source line: quiet, at the interface's meta size whatever the text
+  size, in the second ink, with the publisher's name leading in full ink
+  and semibold (the interface fonts ship only regular and semibold).
+*/
 .article-byline {
-  margin-top: 0.875rem;
+  margin-top: 0.75rem;
   font-family: var(--font-sans);
-  font-size: var(--text-small);
+  font-size: var(--text-meta);
   line-height: 1.45;
+  letter-spacing: 0.01em;
+  color: var(--ink-2);
+  text-wrap: balance;
 }
 
-/* The one large thing on the screen: clearly above the article's own headings. */
-.article-title {
-  font-size: 1.55em;
-  line-height: 1.15;
+.article-byline .publisher {
+  color: var(--ink);
   font-weight: 600;
-  letter-spacing: -0.02em;
+}
+
+/*
+  The one large thing on the screen, about 32px at the default text size:
+  set tight and balanced, clearly above the article's own headings.
+*/
+.article-title {
+  font-size: 1.6em;
+  line-height: 1.12;
+  font-weight: 600;
+  letter-spacing: -0.012em;
   text-wrap: balance;
   overflow-wrap: break-word;
+}
+
+/*
+  A summary-only article's last paragraph: in the book's own voice (the
+  reading font, italic, the second ink), saying where the rest of it is and
+  linking it on the publisher's site.
+*/
+.article-note {
+  margin-top: 1.5em;
+  font-size: 0.9em;
+  font-style: italic;
+  color: var(--ink-2);
+}
+
+.article-note a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
 }
 
 /*
@@ -827,6 +840,7 @@ input {
   margin-block: 0.8em;
 }
 
+/* Headings inside an article: a step down from the title, with more room above than below, so each starts a new part. */
 .article-text :where(h1, h2, h3, h4, h5, h6) {
   margin-top: 1.8em;
   margin-bottom: 0.5em;
@@ -835,12 +849,14 @@ input {
   text-wrap: balance;
 }
 
+/* About 22px at the default text size. */
 .article-text :where(h1, h2) {
-  font-size: 1.2em;
+  margin-top: 2em;
+  font-size: 1.1em;
 }
 
 .article-text h3 {
-  font-size: 1.08em;
+  font-size: 1.05em;
 }
 
 .article-text :where(h4, h5, h6) {

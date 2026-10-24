@@ -38,10 +38,20 @@ test("[ hides and shows the sidebar, and the toggle never moves", async ({ page 
   await openApp(page);
   const before = await toggle(page).boundingBox();
 
+  // The keyboard starts in the sidebar (on the wordmark). Hiding the sidebar moves it to the
+  // list itself, or with no articles to the sidebar button, never to the list's title (decision 0038).
+  await page.locator("#sidebar h1").focus();
   await page.keyboard.press("[");
   await expect(sidebar(page)).toBeHidden();
   await expect(toggle(page)).toHaveAttribute("aria-expanded", "false");
   expect(await toggle(page).boundingBox()).toEqual(before);
+  await expect(page.locator("#list-heading")).not.toBeFocused();
+  expect(
+    await page.evaluate(() => {
+      const focused = document.activeElement;
+      return focused?.getAttribute("aria-label") === "Sidebar" || focused?.closest("li") !== null;
+    }),
+  ).toBe(true);
 
   await page.keyboard.press("[");
   await expect(sidebar(page)).toBeVisible();

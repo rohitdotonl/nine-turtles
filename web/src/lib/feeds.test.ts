@@ -77,7 +77,7 @@ describe("mark all as read", () => {
 describe("new items", () => {
   it("are announced in one quiet line, never with a number", () => {
     expect(newItemsMessage(false)).toBe("New items · press r");
-    expect(newItemsMessage(true)).toBe("New items · tap Refresh");
+    expect(newItemsMessage(true)).toBe("New items");
     expect(newItemsMessage(false)).not.toMatch(/[0-9!]/);
   });
 });
