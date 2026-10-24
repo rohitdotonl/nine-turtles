@@ -155,18 +155,18 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
   await expect(page.getByRole("heading", { level: 2, name: "Settings" })).toBeFocused();
 
   await page.getByLabel("Sepia").check();
-  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(243, 233, 210)");
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(244, 235, 215)");
   // The phone's bar above the page follows the chosen theme too, and
   // "Match this device" gives back index.html's light and dark colors.
   const bars = page.locator('meta[name="theme-color"]');
   await expect(bars).toHaveCount(2);
-  await expect(bars.nth(0)).toHaveAttribute("content", "#F3E9D2");
-  await expect(bars.nth(1)).toHaveAttribute("content", "#F3E9D2");
+  await expect(bars.nth(0)).toHaveAttribute("content", "#F4EBD7");
+  await expect(bars.nth(1)).toHaveAttribute("content", "#F4EBD7");
   await page.getByLabel("Match this device").check();
   await expect(bars.nth(0)).toHaveAttribute("content", "#F8F6F1");
-  await expect(bars.nth(1)).toHaveAttribute("content", "#1C1B19");
+  await expect(bars.nth(1)).toHaveAttribute("content", "#1A1917");
   await page.getByLabel("Sepia").check();
-  await expect(bars.nth(0)).toHaveAttribute("content", "#F3E9D2");
+  await expect(bars.nth(0)).toHaveAttribute("content", "#F4EBD7");
   // The chosen tile is filled and its word semibold, so it shows without color.
   await expect(page.locator("label.choice").filter({ hasText: "Sepia" })).toHaveCSS("font-weight", "600");
   await expect(page.locator("label.choice").filter({ hasText: "Dark" })).toHaveCSS("font-weight", "400");
@@ -193,7 +193,7 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
 
   await page.reload();
   await appReady(page);
-  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(243, 233, 210)");
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(244, 235, 215)");
   await expect(page.getByLabel("Sepia")).toBeChecked();
   await expect(page.getByLabel("Atkinson Hyperlegible")).toBeChecked();
   await expect(page.getByLabel("Largest")).toBeChecked();
@@ -209,7 +209,7 @@ test("a chosen theme stays, whatever the device's light or dark setting", async 
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/");
   await appReady(page);
-  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(243, 233, 210)");
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(244, 235, 215)");
 });
 
 test("at 200% zoom nothing overlaps and everything still works", async ({ page }) => {

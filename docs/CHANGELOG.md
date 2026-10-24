@@ -4,6 +4,18 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 24 October 2026: A clearer, calmer look
+
+- Each kind of text now has its own size, weight and ink, so the list's
+  title, article titles, sidebar names and small details are easy to tell
+  apart. The three columns have more distinct tones.
+- The selected article has a thin ink blue bar instead of a heavy black box,
+  and stays in full ink while you read it.
+- The empty band above every list is gone; the list's title, the sidebar
+  button and the article's tools share one top line that never scrolls.
+- Settings and "Press ? for shortcuts" moved to the bottom of the sidebar,
+  beside Add feed. Search matches are underlined.
+
 ## 24 October 2026: The window no longer slides away when you scroll
 
 - Scrolling a long list (or the article) used to move the whole page,

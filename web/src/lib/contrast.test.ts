@@ -10,7 +10,7 @@ import { BAR_COLORS } from "./preferences";
 function theme(selector: string): Record<string, string> {
   const start = css.indexOf(selector);
   const block = css.slice(start, css.indexOf("}", start));
-  return Object.fromEntries([...block.matchAll(/--([a-z-]+):\s*(#[0-9a-f]{6});/g)].map((m) => [m[1], m[2]]));
+  return Object.fromEntries([...block.matchAll(/--([a-z0-9-]+):\s*(#[0-9a-f]{6});/g)].map((m) => [m[1], m[2]]));
 }
 
 function luminance(hex: string): number {
@@ -36,7 +36,7 @@ const BACKGROUNDS = ["paper", "list", "sidebar", "tint-list", "tint-sidebar"];
 
 describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
   it("defines every color", () => {
-    for (const name of ["ink", "muted", "accent", ...BACKGROUNDS]) expect(colors[name], name).toMatch(/^#/);
+    for (const name of ["ink", "ink-2", "muted", "accent", ...BACKGROUNDS]) expect(colors[name], name).toMatch(/^#/);
   });
 
   it("has text at AAA (7 : 1) on the reading area, and AA or better everywhere", () => {
@@ -50,6 +50,15 @@ describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
     for (const background of BACKGROUNDS) {
       expect(contrast(colors.muted!, colors[background]!), background).toBeGreaterThanOrEqual(4.5);
     }
+  });
+
+  it("has a second text color (read titles, labels) at AA everywhere, between text and muted grey", () => {
+    for (const background of BACKGROUNDS) {
+      expect(contrast(colors["ink-2"]!, colors[background]!), background).toBeGreaterThanOrEqual(4.5);
+    }
+    // Three clear levels of ink on the reading area: text, then ink-2, then muted.
+    const levels = [colors.ink!, colors["ink-2"]!, colors.muted!].map((color) => contrast(color, colors.paper!));
+    expect(levels[0]! > levels[1]! && levels[1]! > levels[2]!).toBe(true);
   });
 
   it("has the ink blue mark clearly visible (3 : 1) wherever it's drawn", () => {

@@ -157,20 +157,24 @@ test.describe("on a wide window", () => {
     // The chip's remove button is small to look at but a full 44px to press.
     const remove = (await page.getByRole("button", { name: "Remove in: Reading Room" }).boundingBox())!;
     expect(Math.min(remove.width, remove.height)).toBeGreaterThanOrEqual(44);
-    // The selected row's keyboard outline is drawn inside it on three sides,
-    // leaving its ink blue bar uncovered on the fourth.
+    // Before anything is selected, Tab reaches the first row and draws the
+    // keyboard's outline inside it. Once j selects a row, the ink blue bar and
+    // tint show the place, with no box around it.
+    const first = row(page, "The pleasure of a slow letter");
+    await tabTo(page, first);
+    await expect(first).toHaveCSS("box-shadow", /inset/);
     await page.keyboard.press("j");
     const selected = row(page, "The pleasure of a slow letter");
     await expect(selected).toBeFocused();
     await expect(selected).toHaveCSS("border-left-color", "rgb(47, 74, 122)");
-    await expect(selected).toHaveCSS("box-shadow", /inset/);
+    await expect(selected).toHaveCSS("box-shadow", "none");
     // Opening an article gives its title the keyboard's place for screen
-    // readers: a short bar beside it instead of a box around it.
+    // readers, with nothing drawn around or beside it.
     await page.keyboard.press("o");
     const heading = title(page, "The pleasure of a slow letter");
     await expect(heading).toBeFocused();
     await expect(heading).toHaveCSS("outline-style", "none");
-    expect(await heading.evaluate((element) => getComputedStyle(element, "::before").width)).toBe("3px");
+    expect(await heading.evaluate((element) => getComputedStyle(element, "::before").content)).toBe("none");
   });
 
   test("on a wide window the article sits in the middle, with its actions lined up above it", async ({ page }) => {
@@ -188,9 +192,9 @@ test.describe("on a wide window", () => {
         return { left: own.left - box.left, right: box.left + area.clientWidth - own.right };
       });
     expect(Math.abs(room.left - room.right)).toBeLessThan(4);
-    // The first action's icon starts just left of the text, as the toolbar's optical edge.
+    // The first action's icon starts at the text's left edge.
     const first = (await article(page).getByRole("link", { name: "Open original" }).first().boundingBox())!;
-    expect(Math.abs(first.x + 12 - text.x)).toBeLessThan(2);
+    expect(Math.abs(first.x + 10 - text.x)).toBeLessThan(2);
   });
 
   test("in high-contrast mode, only the selected article is marked", async ({ page }) => {
@@ -237,7 +241,7 @@ test.describe("on a wide window", () => {
     expect(await fillsWindow()).toEqual(still);
 
     // Scroll the list with the mouse wheel, then walk far down it with j.
-    const list = page.locator("#list-heading").locator("xpath=ancestor::div[contains(@class,'overflow-y-auto')][1]");
+    const list = page.getByRole("region", { name: "Quiet Notes" }).locator(".overflow-y-auto");
     await list.hover();
     for (let i = 0; i < 15; i++) await page.mouse.wheel(0, 400);
     await expect.poll(() => list.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);

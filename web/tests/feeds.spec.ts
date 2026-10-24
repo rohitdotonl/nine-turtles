@@ -32,7 +32,7 @@ test("a fresh slowfeed shows only the paste field, and Import OPML", async ({ pa
   await page.getByRole("link", { name: "Import OPML" }).click();
   await expect(page).toHaveURL(/\/settings$/);
   await expect(page.getByRole("heading", { level: 3, name: "Your data" })).toBeFocused();
-  await expect(sidebar(page).getByRole("link", { name: "+ Add feed" })).toBeVisible();
+  await expect(sidebar(page).getByRole("link", { name: "Add feed" })).toBeVisible();
 });
 
 test("a, a website's address and Enter add its feed, and its articles appear", async ({ page }) => {
@@ -69,7 +69,7 @@ test("a feed's own address works, and adding it twice says it's already there", 
   await page.getByRole("button", { name: "Add feed" }).click();
   await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeVisible();
 
-  await sidebar(page).getByRole("link", { name: "+ Add feed" }).click();
+  await sidebar(page).getByRole("link", { name: "Add feed" }).click();
   await field(page).fill(`${FEED_SITE}/blog/${name}/`);
   await page.keyboard.press("Enter");
   await expect(page.getByRole("status")).toHaveText("You already follow this feed.");

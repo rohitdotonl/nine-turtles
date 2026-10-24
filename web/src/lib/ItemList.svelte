@@ -378,36 +378,41 @@
   load(null);
 </script>
 
-<div class="mt-2 -ml-3 flex min-h-11 flex-wrap gap-1">
+<div class="-ml-3 flex min-h-11 flex-wrap items-center gap-x-1">
   <!-- First, so it never moves when "Mark all as read" comes and goes. -->
   {#if !refreshInTopBar}
-    <button type="button" aria-disabled={busy} onclick={refresh} class="btn-quiet"><Icon name="refresh" />Refresh</button>
+    <button type="button" aria-disabled={busy} onclick={refresh} class="btn-quiet btn-small"><Icon name="refresh" size={16} />Refresh</button>
   {/if}
   {#if articles.length > 0}
-    <button type="button" bind:this={markAllButton} onclick={markAllRead} class="btn-quiet">
-      <Icon name="check" />Mark all as read
+    <button type="button" bind:this={markAllButton} onclick={markAllRead} class="btn-quiet btn-small">
+      <Icon name="check" size={16} />Mark all as read
     </button>
   {/if}
 </div>
-<!-- The reserved lines: always this tall, so nothing below moves when they fill. -->
-<p class="mt-2 flex min-h-6 items-center text-small">
-  <span role="status">{updates.stranded ? STRANDED_MESSAGE : newWaiting ? newItemsMessage(touch) : ""}</span>
-  {#if updates.stranded}
-    <!-- The touch target reaches past the line, so the line keeps its height. -->
-    <button type="button" onclick={() => location.reload()} class="-my-3 ml-2 min-w-11 py-3 underline underline-offset-4"
-      >Reload</button
-    >
-  {/if}
-</p>
-<!-- Its Undo answers a 44px tap, so space is kept below it and the first row never sits under that tap. -->
-<p class="mt-4 mb-3.5 flex min-h-6 flex-wrap items-center gap-x-1 text-small">
-  <span role="status">{line}</span>
-  <span aria-live="polite" class="sr-only">{spoken}</span>
-  {#if undoLast}
-    <span aria-hidden="true">·</span>
-    <button type="button" onclick={undoByButton} class="-my-3.5 min-w-11 px-2 py-3.5 underline underline-offset-4">Undo</button>
-  {/if}
-</p>
+<!--
+  The reserved line: always this tall, so nothing below moves when it fills.
+  What was just done (with Undo) on the left; "New items · press r" on the right.
+  Its Undo answers a 44px tap, so space is kept below it and the first row never sits under that tap.
+-->
+<div class="mb-1.5 flex min-h-6 flex-wrap items-center justify-between gap-x-4 text-meta text-muted">
+  <p class="flex flex-wrap items-center gap-x-1">
+    <span role="status">{line}</span>
+    <span aria-live="polite" class="sr-only">{spoken}</span>
+    {#if undoLast}
+      <span aria-hidden="true">·</span>
+      <button type="button" onclick={undoByButton} class="-my-3 min-w-11 px-2 py-3 font-semibold text-ink underline underline-offset-4">Undo</button>
+    {/if}
+  </p>
+  <p class="flex items-center">
+    <span role="status">{updates.stranded ? STRANDED_MESSAGE : newWaiting ? newItemsMessage(touch) : ""}</span>
+    {#if updates.stranded}
+      <!-- The touch target reaches past the line, so the line keeps its height. -->
+      <button type="button" onclick={() => location.reload()} class="-my-3 ml-2 min-w-11 py-3 font-semibold text-ink underline underline-offset-4"
+        >Reload</button
+      >
+    {/if}
+  </p>
+</div>
 
 {#if loaded && articles.length === 0}
   <p>{empty}</p>
@@ -429,16 +434,17 @@
           }}
           onkeydown={arrows}
           class={[
-            "item-row block w-full cursor-pointer border-l-4 py-3 pr-6 pl-5 text-left",
+            "item-row block w-full cursor-pointer border-l-[3px] py-3 pr-6 pl-[21px] text-left",
             current ? "border-accent bg-tint-list" : "border-transparent",
           ]}
         >
-          <span class={["block", article.read ? "text-muted" : "font-semibold"]}
+          <!-- Unread: full ink, semibold. Read: the second ink, regular. The selected row is never the quietest. -->
+          <span class={["title block text-ui", !article.read ? "font-semibold text-ink" : current ? "text-ink" : "text-ink-2"]}
             >{#each boldParts(article.title || "Untitled", bold) as part, partIndex (partIndex)}{#if part.bold}<strong
                   class="match">{part.text}</strong
                 >{:else}{part.text}{/if}{/each}{#if !article.read}<span class="sr-only">, unread</span>{/if}</span
           >
-          <span class="block text-small text-muted">
+          <span class="mt-0.5 block text-meta text-muted tabular-nums">
             {#if article.starred}
 <span class="star"><Icon name="star" size={13} filled /></span><span class="sr-only">Starred, </span>
             {/if}
@@ -461,14 +467,15 @@
 
 <style>
   /*
-    A searched word in a title: bold, never colored (DESIGN.md → "Item
-    list"). Unread titles are already semibold, and a font may have no
-    heavier weight to show, so the letters are also drawn a little thicker,
-    in the text's own color.
+    A searched word in a title: underlined in the text's own color, never
+    colored (DESIGN.md → "Item list"). Bold couldn't be seen inside an
+    unread title, which is already semibold.
   */
   .match {
-    font-weight: 800;
-    -webkit-text-stroke: 0.04em currentColor;
+    font-weight: inherit;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.2em;
   }
   .star {
     display: inline-block;

@@ -145,8 +145,8 @@ export { THEMES };
 // Background colors from DESIGN.md → "Color", used to prove the theme took effect.
 const BACKGROUNDS: Record<Theme, string> = {
   "off-white": "rgb(248, 246, 241)",
-  sepia: "rgb(243, 233, 210)",
-  dark: "rgb(28, 27, 25)",
+  sepia: "rgb(244, 235, 215)",
+  dark: "rgb(26, 25, 23)",
 };
 
 /**

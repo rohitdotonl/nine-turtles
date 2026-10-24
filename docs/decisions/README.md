@@ -35,3 +35,4 @@ says "Replaced by …" at the top.
 | [0023](0023-search.md) | Search: a contentless index of tag-free text, every typed word quoted, title matches first, filters as plain settings, speed |
 | [0024](0024-starred-export-and-final-pass.md) | Starred export as JSON Feed 1.1 with a `_slowfeed` source extension; "Marked as read" spoken to screen readers; export speed |
 | [0025](0025-controls-and-icons.md) | Four kinds of control (everyday, main, toolbar, field) and one hand-drawn icon set; headings opened by the app show a short bar, not a box; Settings choices as tiles; key caps |
+| [0026](0026-hierarchy-redesign.md) | A type scale by role, three inks, deeper area tones, one selection style, a shared top line; Settings and the shortcut hint at the bottom of the sidebar |

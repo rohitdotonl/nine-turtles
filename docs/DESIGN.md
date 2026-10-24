@@ -2,7 +2,7 @@
 
 > **slowfeed is a quiet place to read the web: it shows you what's there, gets out of the way, and lets you finish.**
 
-*Last updated: 23 October 2026 (tightened to fewer words, no rule changed; Milestone 4 defined the type scale, spacing, area tones and greys). This document takes precedence over every other project document.*
+*Last updated: 24 October 2026 (the owner approved a new look: a role-based type scale, three ink levels, deeper area tones and one selection style; decision 0026). This document takes precedence over every other project document.*
 
 ## Mission
 
@@ -151,20 +151,21 @@ The philosophy applied. The principle is noted where it isn't obvious.
 - **Regions are separated by tone, not lines:** background tone and whitespace; no borders, shadows, blur or gradients.
 - **Type does the hierarchy:** size and weight, never color or badges.
 - **One accent, one meaning:** ink blue means "where you are," and nothing else uses it.
-- **Words beside icons;** an icon alone only when universal (close, back, search).
+- **Words beside icons;** an icon alone only when universal (close, back, search, the sidebar toggle).
 - **No motion.** Views switch instantly.
 
 #### Color
 
 | Role | Off-white | Sepia | Dark |
 |---|---|---|---|
-| Background (reading area; starting value) | `#F8F6F1` | `#F3E9D2` | `#1C1B19` |
+| Background (reading area) | `#F8F6F1` | `#F4EBD7` | `#1A1917` |
 | Accent: ink blue ("where you are") | `#2F4A7A` | `#2F4A7A` | `#8FA9D6` |
 | Accent contrast against background (approx.) | 8.2 : 1 | 7.3 : 1 | 7.3 : 1 |
-| List area (one step deeper) | `#F2EFE8` | `#EDE2C8` | `#211F1D` |
-| Sidebar (two steps deeper) | `#EBE7DE` | `#E6D9BC` | `#272522` |
-| Text | `#1F1E1C` | `#2A241B` | `#E8E4DC` |
-| Muted grey, warm (owner's choice, Milestone 4) | `#61564A` | `#5C4F3F` | `#B3A690` |
+| List area (one step deeper) | `#F0ECE3` | `#ECE1C8` | `#201E1B` |
+| Sidebar (two steps deeper) | `#E7E2D7` | `#E3D5B7` | `#282521` |
+| Text | `#1F1E1C` | `#2A241B` | `#E6E1D8` |
+| Second ink: read titles, sidebar names, quieter actions | `#47423B` | `#463C2F` | `#C9C2B6` |
+| Muted grey, warm (owner's choice, Milestone 4): meta, counts, hints | `#61564A` | `#5E5141` | `#AA9E89` |
 
 - All accent pairs pass AAA (7 : 1); re-check if a value changes.
 - **Links in articles** are underlined in the text color, **never blue**.
@@ -186,9 +187,19 @@ Three: **off-white** (default light), **sepia**, **dark**. Follow the system lig
 
 - All fonts are free and served by slowfeed itself (no third-party font services).
 - **Other scripts** (e.g. Hindi in Devanagari) use the fonts already on the device; no extra downloads.
-- **A short, fixed type scale of five sizes:** small 14px (source names, times, hints) · base 16px (interface) · large 20px (area headings) · extra large 24px (sidebar wordmark, screen titles) · display 48px (sign-in wordmark). Article text is set by the reader: six steps, 16 to 28px, 20px by default.
+- **A fixed type scale by role**, so each level of importance looks different at a glance (size, weight and ink together, never color):
+  - meta 13px (times, source names, counts, hints) in muted grey;
+  - small 14px (toolbar actions, helper text, labels);
+  - interface 15px (sidebar names, list titles);
+  - base 16px (text boxes, running interface text);
+  - large 20px (section headings inside a screen);
+  - heading 24px, in the reading serif (the wordmark, the list's title);
+  - extra large 28px (a screen's own title);
+  - display 48px (sign-in wordmark).
+- Article text is set by the reader: six steps, 16 to 28px, 20px by default. The article's title is 1.8 times the text size, its headings 1.2 and 1.08 times, so the title is always clearly the largest thing on screen.
 - **Spacing** in steps of 4px, mostly 8, 16, 24, 40 and 64px.
-- **Weights:** regular and bold for reading; regular and semibold (600) for the interface.
+- **Weights:** regular and bold for reading; regular and semibold (600) for the interface. Semibold marks unread titles, where you are, and the one main action in a toolbar.
+- **Three inks:** text (titles, where you are), a second ink (read titles, sidebar names, quieter actions) and muted grey (meta).
 - Article lines of roughly 65–75 characters, with generous leading.
 
 #### Languages
@@ -199,12 +210,13 @@ Three: **off-white** (default light), **sepia**, **dark**. Follow the system lig
 ### Layout
 
 - **Three panes:** feeds | items | article (like NetNewsWire).
-- **One layout that adapts:** three panes wide, two medium, one column on phones. No user-facing layout modes.
-- **Collapsible sidebar:** a toggle in a fixed position, and the `[` key.
+- **One layout that adapts:** three panes wide (1200px and up), two medium (896px and up), one column below that, as on phones. No user-facing layout modes.
+- **Collapsible sidebar:** a small sidebar-icon toggle in a fixed position at the top-left, and the `[` key.
+- **A shared top line:** the wordmark, the list's title and the article's tools sit on one line across the panes, and never scroll.
 
 ### Sidebar
 
-Fixed order, top to bottom: **Unread · Starred · All**, then **folders** A–Z, then **feeds not in a folder** A–Z, then **"+ Add feed"** at the bottom.
+Fixed order, top to bottom: **Unread · Starred · All**, then **folders** A–Z, then **feeds not in a folder** A–Z, then **Add feed** and **Settings** side by side at the bottom, with the shortcut hint under them.
 
 - No manual ordering.
 - Folders appear once one exists. Sidebar search is always shown (Exceptions log).
@@ -217,15 +229,15 @@ Fixed order, top to bottom: **Unread · Starred · All**, then **folders** A–Z
 - **No images, no favicons.** Each row: the **title**, with **source name and time** in quiet small text below.
 - **Sort:** newest first by default; changeable in settings.
 - **The list has an end:** a fixed number of items, then a **"Show older items"** button. Nothing loads unless asked.
-- Matched search terms are **bold**, never highlighted in color.
+- Matched search terms are **underlined** in the text color, never highlighted in color.
 
 #### Item states (distinguished by tone and weight, never color alone)
 
 | State | Treatment |
 |---|---|
-| Unread | Full-contrast title |
-| Read | Muted grey title |
-| Selected (cursor) | Ink blue left bar + faint ink blue tint |
+| Unread | Full-contrast, semibold title |
+| Read | Second ink, regular-weight title |
+| Selected (cursor) | Ink blue left bar + faint tint, title in full ink; no box, as it is also the keyboard's place |
 | Starred | A small star mark |
 
 In river mode (V2) only the cursor and star show.
@@ -311,7 +323,7 @@ Until the first feed is added:
 
 ### Keyboard
 
-Vim-style keys are first-class. A permanent, unobtrusive hint says "Press ? for shortcuts."
+Vim-style keys are first-class. A permanent, unobtrusive hint says "Press ? for shortcuts," at the bottom of the sidebar (or of the list when the sidebar is hidden).
 
 | Key | Action |
 |---|---|

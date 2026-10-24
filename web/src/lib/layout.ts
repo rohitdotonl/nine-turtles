@@ -9,7 +9,7 @@ export type Width = "wide" | "medium" | "narrow";
 export type SidebarChoice = "auto" | "shown" | "hidden";
 
 export const WIDE_REM = 75; // 1200px at normal size
-export const MEDIUM_REM = 48; // 768px at normal size
+export const MEDIUM_REM = 56; // 896px at normal size
 
 export function widthFor(windowWidthRem: number): Width {
   if (windowWidthRem >= WIDE_REM) return "wide";
