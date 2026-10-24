@@ -371,6 +371,16 @@ body {
 :root[data-keyboard] dialog h2[tabindex="-1"]:focus-visible {
   outline: none;
 }
+/*
+  An opened article's title is the same: the keyboard's place moves there so
+  screen readers start reading at the title, but a ring round the largest
+  words on the page would be louder than the article, and the title can't be
+  pressed. The next Tab lands on the article's first link or control, which
+  rings as always (decision 0046).
+*/
+:root[data-keyboard] .article-title[tabindex="-1"]:focus-visible {
+  outline: none;
+}
 
 /*
   The sidebar's wordmark is a name, not a control: it's never a Tab stop
@@ -1084,7 +1094,7 @@ input {
   and semibold (the interface fonts ship only regular and semibold).
 */
 .article-byline {
-  margin-top: 0.75rem;
+  margin-top: 0;
   font-family: var(--font-sans);
   font-size: var(--text-meta);
   line-height: 1.45;
@@ -1104,12 +1114,17 @@ input {
   column as the text, and its lines are balanced, so a two-line title
   reads as two even lines rather than a long one over a stub, as Apple
   Books sets a title (decision 0044, replacing 0040's lone-word rule).
+  Tracked in only a little, so its letters never touch, with a clear pause
+  before the byline: five-eighths of the title's own size (about 20px by
+  default), so the pause keeps its proportion at every text size and on a
+  phone (decision 0046).
 */
 .article-title {
   font-size: 1.6em;
   line-height: 1.12;
   font-weight: 600;
-  letter-spacing: -0.012em;
+  letter-spacing: -0.005em;
+  margin-block-end: 0.625em;
   text-wrap: balance;
   overflow-wrap: break-word;
 }

@@ -332,11 +332,18 @@ test.describe("on a wide window", () => {
     expect(paneBox.bottom - (noteBox.y + noteBox.height)).toBeLessThan(48);
     await page.keyboard.press("u");
     // Opening an article gives its title the keyboard's place for screen
-    // readers, with a quiet outline so a keyboard user can see it too.
+    // readers, but no ring: a title can't be pressed (decision 0046). The
+    // next Tab lands on the byline's link to the publisher, which rings.
     await page.keyboard.press("o");
     const heading = title(page, "The pleasure of a slow letter");
     await expect(heading).toBeFocused();
-    await expect(heading).toHaveCSS("outline-style", "solid");
+    await expect(heading).toHaveCSS("outline-style", "none");
+    await page.keyboard.press("Tab");
+    const publisher = article(page).locator(".article-byline").getByRole("link", { name: "Reading Room" });
+    await expect(publisher).toBeFocused();
+    await expect(publisher).toHaveCSS("outline-style", "solid");
+    await page.keyboard.press("Shift+Tab");
+    await expect(heading).toBeFocused();
   });
 
   test("on a wide window the article sits in the middle, and its actions keep to the pane's edges", async ({ page }) => {
@@ -425,9 +432,12 @@ test.describe("on a wide window", () => {
     // Its lines are balanced, so a two-line title reads as two even lines (decision 0044).
     await expect(heading).toHaveCSS("text-wrap", /balance/);
     expect(parseFloat(await heading.evaluate((element) => getComputedStyle(element).lineHeight)) / 32).toBeCloseTo(1.12, 2);
+    // Tracked in only a little, with a clear 20px pause before the byline (decision 0046).
+    await expect(heading).toHaveCSS("letter-spacing", "-0.16px");
+    await expect(heading).toHaveCSS("margin-bottom", "20px");
     const byline = article(page).locator(".article-byline");
     await expect(byline).toHaveCSS("font-size", "13px");
-    await expect(byline).toHaveCSS("margin-top", "12px");
+    await expect(byline).toHaveCSS("margin-top", "0px");
     const publisher = byline.getByRole("link", { name: "Reading Room" });
     await expect(publisher).toHaveCSS("font-weight", "600");
     const [inkColor, bylineColor, publisherColor] = await Promise.all([

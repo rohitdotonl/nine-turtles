@@ -144,12 +144,16 @@ test.describe("on a phone", () => {
     ]);
     expect(barColor).toBe(paperColor);
     await expect(bar).toHaveCSS("backdrop-filter", "none");
-    // The icons sit in one line (Previous is hidden on the first article), and each place is a full 44px tap.
+    // All five icons show, in one line, even on the first article (Previous
+    // is faded there, never a hole: decision 0046), and each place is a full 44px tap.
     const tops = await toolbar(page).locator(":scope > * svg").evaluateAll((icons) =>
       icons.filter((icon) => getComputedStyle(icon).visibility !== "hidden").map((icon) => Math.round(icon.getBoundingClientRect().top + icon.getBoundingClientRect().height / 2)),
     );
-    expect(tops.length).toBeGreaterThanOrEqual(4);
+    expect(tops.length).toBeGreaterThanOrEqual(5);
     expect(new Set(tops).size).toBe(1);
+    // The five places share the bar's width evenly.
+    const widths = await toolbar(page).locator(":scope > *").evaluateAll((places) => places.map((place) => Math.round(place.getBoundingClientRect().width)));
+    expect(Math.max(...widths) - Math.min(...widths)).toBeLessThanOrEqual(1);
     for (const control of await toolbar(page).locator(":scope > *").all()) {
       const place = (await control.boundingBox())!;
       expect(Math.min(place.width, place.height)).toBeGreaterThanOrEqual(44);
@@ -162,6 +166,8 @@ test.describe("on a phone", () => {
 
     // The first article has nothing before it.
     await expect(toolbar(page).getByRole("button", { name: "Previous" })).toHaveAttribute("aria-disabled", "true");
+    await expect(toolbar(page).getByRole("button", { name: "Previous" }).locator("svg")).toHaveCSS("opacity", "0.35");
+    await expect(toolbar(page).getByRole("button", { name: "Next" }).locator("svg")).toHaveCSS("opacity", "1");
     await toolbar(page).getByRole("button", { name: "Next" }).click();
     await expect(title(page, "Only the first page")).toBeFocused();
     await toolbar(page).getByRole("button", { name: "Previous" }).click();

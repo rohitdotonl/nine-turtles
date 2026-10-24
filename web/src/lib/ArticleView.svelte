@@ -16,7 +16,7 @@
   On a phone (SPEC section 20) the article is a screen of its own: the top
   bar has the back button, labeled with the list's name, and Open original;
   Previous, Next, Aa, Star and More sit as icons in a toolbar at the bottom,
-  within thumb reach, above a hairline.
+  within thumb reach, above a hairline; one that can't act is faded in place.
 -->
 <script lang="ts">
   import { edge } from "./edge";
@@ -259,15 +259,17 @@
   {#if phone}
     <!--
       Within thumb reach: quiet icons, each named for screen readers, above a
-      hairline so the text ends at an edge rather than being sliced. One that
-      can't act loses its icon, so it shows without color, and keeps its place.
+      hairline so the text ends at an edge rather than being sliced. Previous
+      on the first article (or Next on the last) keeps its arrow and its place,
+      faded, as iOS dims a toolbar button, so the bar never shows a hole; it
+      says "dimmed" to screen readers and does nothing (decision 0046).
     -->
     <div role="group" aria-label="Article actions" class="toolbar relative z-10 flex shrink-0 bg-paper px-1 pb-[env(safe-area-inset-bottom)]">
       <button type="button" aria-label="Previous" aria-disabled={!phone.hasPrevious} onclick={() => phone.hasPrevious && phone.onPrevious()}>
-        <svg aria-hidden="true" class:invisible={!phone.hasPrevious} width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 4 6.5 10l6 6" /></svg>
+        <svg aria-hidden="true" width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 4 6.5 10l6 6" /></svg>
       </button>
       <button type="button" aria-label="Next" aria-disabled={!phone.hasNext} onclick={() => phone.hasNext && phone.onNext()}>
-        <svg aria-hidden="true" class:invisible={!phone.hasNext} width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4 6 6-6 6" /></svg>
+        <svg aria-hidden="true" width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4 6 6-6 6" /></svg>
       </button>
       {@render aa(22, "")}
       <button type="button" aria-label="Star" aria-pressed={article.starred} onclick={onStar} class:text-ink={article.starred}>
@@ -330,5 +332,18 @@
   }
   .toolbar > :global(.text-ink) {
     color: var(--ink);
+  }
+  /*
+    One that can't act right now (Previous on the first article) stays in
+    its place, its arrow faded, so the bar keeps its five even places. A
+    control that can't be used is exempt from contrast (WCAG 1.4.11), and
+    it's named and said "dimmed" to screen readers, not shown by color alone.
+  */
+  .toolbar > [aria-disabled="true"] {
+    cursor: default;
+  }
+  /* Only the arrow fades: the keyboard's outline, if it lands here, stays solid. */
+  .toolbar > [aria-disabled="true"] > svg {
+    opacity: 0.35;
   }
 </style>

@@ -301,6 +301,9 @@ each with screenshots:
   rows for Edit feed's folders, a main button that never looks switched off,
   importing just under the welcome's field, and a true minus in the shortcut
   list (decision 0045).
+- ✅ A quiet article title (fifth critique): no ring on the title when an
+  article opens, a clear pause before the byline with looser tracking, and
+  a phone toolbar with no gap on the first article (decision 0046).
 
 ---
 

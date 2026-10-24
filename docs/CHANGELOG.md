@@ -4,6 +4,16 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 24 October 2026: A quieter article title
+
+- Opening an article with the keyboard no longer draws a box round its
+  title. Screen readers still start reading there, and the next Tab lands
+  on a link or button, which shows its ring as always.
+- The title has a little more room before the line naming the publisher,
+  and its letters are set slightly less tight.
+- On a phone, the first article's toolbar no longer has a gap at the left:
+  Previous stays in its place, faded, and does nothing.
+
 ## 24 October 2026: One top line, one left edge, steady phone screens
 
 - On a computer, the three panes' top lines are now the same height, so
