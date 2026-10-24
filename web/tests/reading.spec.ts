@@ -316,10 +316,16 @@ test.describe("on a wide window", () => {
     await expect(selected).toHaveCSS("outline-style", "solid");
     await expect(selected).toHaveCSS("outline-width", "2px");
     // The selection is a pill (decision 0037): filled, 8px corners, 8px in
-    // from the list's edge, with no bar. The outline is drawn inside its edge.
+    // from the list's edge, with a 4px accent bar beside it (decision 0057).
+    // The outline is drawn inside its edge.
     await expect(selected).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
     await expect(selected).toHaveCSS("border-top-left-radius", "8px");
-    expect(await selected.evaluate((element) => getComputedStyle(element, "::before").content)).toBe("none");
+    const bar = await selected.evaluate((element) => {
+      const style = getComputedStyle(element, "::before");
+      return [style.width, style.left, style.backgroundColor];
+    });
+    expect(bar.slice(0, 2)).toEqual(["4px", "-6px"]);
+    expect(bar[2]).not.toBe("rgba(0, 0, 0, 0)");
     const inset = await selected.evaluate(
       (element) => element.getBoundingClientRect().left - element.closest(".scroller")!.getBoundingClientRect().left,
     );
