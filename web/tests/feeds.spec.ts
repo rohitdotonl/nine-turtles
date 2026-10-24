@@ -145,7 +145,19 @@ test("a site with several feeds offers a choice", async ({ page }) => {
   await field(page).fill(`${FEED_SITE}/blog/${name}/`);
   await page.keyboard.press("Enter");
   await expect(page.locator("#feed-address-status")).toHaveText("This site offers more than one feed. Choose one:");
-  await page.getByRole("button", { name: /^Comments/ }).click();
+  // A choice of one: radio buttons, the first chosen, each row ending in a round mark that shows
+  // the choice by its dot, never by a tint alone (decision 0048).
+  const choices = page.getByRole("radiogroup", { name: "This site offers more than one feed. Choose one:" });
+  const [first, comments] = [choices.getByRole("radio").first(), choices.getByRole("radio", { name: /^Comments/ })];
+  await expect(first).toBeChecked();
+  await expect(comments).not.toBeChecked();
+  const dot = (radio: typeof first) => radio.locator("xpath=..").locator(".radio-mark").evaluate((mark) => getComputedStyle(mark, "::after").backgroundColor);
+  expect(await dot(comments)).toBe("rgba(0, 0, 0, 0)");
+  expect(await dot(first)).not.toBe("rgba(0, 0, 0, 0)");
+  await comments.check();
+  await expect(first).not.toBeChecked();
+  // Add feed adds the one chosen.
+  await page.getByRole("button", { name: "Add feed", exact: true }).click();
   await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}: comments` })).toBeVisible();
 });
 
@@ -208,8 +220,12 @@ test("with only the keyboard: choose one of several feeds, then go back to it fr
   await page.keyboard.press("Enter");
   await expect(page.locator("#feed-address-status")).toHaveText("This site offers more than one feed. Choose one:");
 
-  const comments = page.getByRole("button", { name: /^Comments/ });
-  await tabTo(page, comments);
+  // Tab reaches the chosen feed (the first); an arrow key moves the choice; Add feed adds it.
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("radio").first()).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await expect(page.getByRole("radio", { name: /^Comments/ })).toBeChecked();
+  await tabTo(page, page.getByRole("button", { name: "Add feed", exact: true }));
   await page.keyboard.press("Enter");
   const heading = page.getByRole("heading", { level: 2, name: `Blog ${name}: comments` });
   await expect(heading).toBeFocused();

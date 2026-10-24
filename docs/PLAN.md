@@ -309,6 +309,11 @@ each with screenshots:
   words, a submenu row for another feed or folder, the note in a band the
   rows end above, a centred sign-in at the phone margin, and a centred,
   still welcome that takes the list's room on a first visit (decision 0047).
+- ✅ One sheet, one close rule (fifth critique, batch 5): a round mark on
+  Add a feed's choice of feeds, Cancel or an X but never both, the shortcut
+  list full-screen on a phone and fitting a computer window, 20px under
+  every top line, the Settings preview on the phone's margin, and the
+  phone's unread dot clear of the row ring (decision 0048).
 
 ---
 

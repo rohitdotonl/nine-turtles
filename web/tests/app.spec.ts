@@ -179,6 +179,34 @@ test("the shortcut list fits a small phone without scrolling sideways", async ({
   await expect(dialog).toBeVisible();
   const { scroll, client } = await dialog.evaluate((element) => ({ scroll: element.scrollWidth, client: element.clientWidth }));
   expect(scroll).toBeLessThanOrEqual(client);
+  // On a phone it's a screen of its own, as every sheet is there: nothing behind it shows past its edge (decision 0048).
+  const box = (await dialog.boundingBox())!;
+  expect(box.x).toBe(0);
+  expect(box.y).toBe(0);
+  expect(box.width).toBe(320);
+  expect(box.height).toBe(640);
+  await expect(dialog).toHaveCSS("border-top-left-radius", "0px");
+});
+
+test("on a desktop window the shortcut list fits without scrolling, at least 48px clear of the window's top and foot", async ({ page, isMobile }) => {
+  test.skip(isMobile, "on a phone it's a screen of its own");
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await openApp(page);
+  await page.keyboard.press("?");
+  const dialog = page.getByRole("dialog", { name: "Keyboard shortcuts" });
+  await expect(dialog).toBeVisible();
+  const box = (await dialog.boundingBox())!;
+  expect(box.y).toBeGreaterThanOrEqual(48);
+  expect(800 - (box.y + box.height)).toBeGreaterThanOrEqual(48);
+  // The search filters sit in the right-hand column, under Everywhere, and the whole list shows.
+  const [everywhere, filters] = [
+    (await dialog.getByRole("region", { name: "Everywhere" }).boundingBox())!,
+    (await dialog.getByRole("region", { name: "Search filters" }).boundingBox())!,
+  ];
+  expect(Math.abs(filters.x - everywhere.x)).toBeLessThan(1);
+  expect(filters.y).toBeGreaterThan(everywhere.y);
+  const list = dialog.getByRole("region", { name: "Shortcuts" });
+  expect(await list.evaluate((element) => element.scrollHeight <= element.clientHeight + 1)).toBe(true);
 });
 
 test("shortcuts don't fire while typing in a field", async ({ page }) => {

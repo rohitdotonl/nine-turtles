@@ -524,8 +524,10 @@ body {
   Unread: a drawn 8px dot in the theme's accent, centred in the row's own
   24px gutter (8px from the pill's edge, 8px clear of the title), level with
   the middle of the title's first line, so it reads as a mark in a margin,
-  not a bullet. On a phone it hangs in the 20px margin, 6px from the screen's
-  edge and 6px clear of the title. The semibold title says it too, so it
+  not a bullet. On a phone it hangs in the 20px margin, 8px from the screen's
+  edge and 4px clear of the title, so the keyboard's ring (2px inside the
+  pill, which sits 4px in) passes 2px clear of it, never touching it
+  (decision 0048). The semibold title says it too, so it
   never rests on color.
 */
 .unread-dot {
@@ -791,6 +793,49 @@ textarea {
       border-color: Highlight;
       background-color: Highlight;
       color: HighlightText;
+    }
+  }
+  /*
+    A choice of one (Add a feed's choice between the feeds a site offers):
+    the same row, ending in a round mark, as a Mac draws a radio button: an
+    empty circle, or one filled in the text color with a dot of the page in
+    it when it's chosen, so the choice shows by the dot as well as the fill,
+    never by a tint alone. Round, because only one can be chosen (decision
+    0048).
+  */
+  .check-row > .radio-mark {
+    display: flex;
+    width: 1.25rem;
+    height: 1.25rem;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid var(--muted);
+    border-radius: 9999px;
+  }
+  .check-row > .radio-mark::after {
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+  }
+  .check-row:has(> input:checked) > .radio-mark {
+    border-color: var(--ink);
+    background-color: var(--ink);
+  }
+  .check-row:has(> input:checked) > .radio-mark::after {
+    background-color: var(--paper);
+  }
+  @media (forced-colors: active) {
+    .check-row > .radio-mark {
+      forced-color-adjust: none;
+      border-color: CanvasText;
+    }
+    .check-row:has(> input:checked) > .radio-mark {
+      border-color: Highlight;
+      background-color: Highlight;
+    }
+    .check-row:has(> input:checked) > .radio-mark::after {
+      background-color: HighlightText;
     }
   }
   /*
@@ -1399,7 +1444,7 @@ dialog.dimmed::backdrop {
   --list-start: 1.25rem;
   --list-end: 1.25rem;
   --pill-inset: 0.25rem;
-  --dot-left: 2px;
+  --dot-left: 4px;
 }
 
 /* A scrolling area under a fixed top line: a hairline appears once its content has scrolled under that line (edge.ts). */
