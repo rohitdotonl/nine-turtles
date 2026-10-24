@@ -59,8 +59,9 @@ test("a feed put in two folders appears under both, with its unread count in eac
   await page.getByRole("link", { name: "Edit feed" }).click();
   await expect(page).toHaveURL(/\/feeds\/[0-9]+\/edit$/);
   await expect(page.getByRole("heading", { level: 2, name: "Edit feed" })).toBeFocused();
-  // The X at the top closes it unchanged.
-  await page.getByRole("button", { name: "Close without saving" }).click();
+  // It's a sheet over the feed's list; Cancel closes it unchanged.
+  await expect(page.getByRole("dialog", { name: "Edit feed" })).toBeVisible();
+  await page.getByRole("button", { name: "Cancel" }).click();
   await expect(page.getByRole("heading", { level: 2, name: `Blog ${blog}` })).toBeFocused();
   await page.getByRole("link", { name: "Edit feed" }).click();
   await page.getByLabel("New folder").fill(first);
@@ -69,7 +70,7 @@ test("a feed put in two folders appears under both, with its unread count in eac
 
   await page.getByRole("link", { name: "Edit feed" }).click();
   await expect(page.getByRole("checkbox", { name: first })).toBeChecked();
-  await page.getByLabel("Name").fill(`Renamed ${blog}`);
+  await page.getByRole("textbox", { name: "Name" }).fill(`Renamed ${blog}`);
   await page.getByLabel("New folder").fill(second);
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByRole("heading", { level: 2, name: `Renamed ${blog}` })).toBeVisible();
@@ -108,13 +109,13 @@ test("rename a folder; delete it, its feeds stay, and Undo brings it back", asyn
   // Escape goes back unchanged.
   await page.keyboard.press("Escape");
   await expect(page.getByRole("heading", { level: 2, name: folder })).toBeFocused();
-  // So does the X at the top.
+  // So does Cancel.
   await page.getByRole("link", { name: "Edit folder" }).click();
-  await page.getByRole("button", { name: "Close without saving" }).click();
+  await page.getByRole("button", { name: "Cancel" }).click();
   await expect(page.getByRole("heading", { level: 2, name: folder })).toBeFocused();
 
   await page.getByRole("link", { name: "Edit folder" }).click();
-  await page.getByLabel("Name").fill(`Aa-${folder}`);
+  await page.getByRole("textbox", { name: "Name" }).fill(`Aa-${folder}`);
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByRole("heading", { level: 2, name: `Aa-${folder}` })).toBeVisible();
   await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Aa-${folder}`) })).toBeVisible();

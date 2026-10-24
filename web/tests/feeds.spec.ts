@@ -72,7 +72,7 @@ test("a feed's own address works, and adding it twice says it's already there", 
   await sidebar(page).getByRole("link", { name: "Add feed" }).click();
   await field(page).fill(`${FEED_SITE}/blog/${name}/`);
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("status")).toHaveText("You already follow this feed.");
+  await expect(page.locator("#feed-address-status")).toHaveText("You already follow this feed.");
   await expect(sidebar(page).getByRole("link", { name: `Blog ${name}` })).toHaveCount(1);
 
   await page.getByRole("link", { name: `Go to Blog ${name}` }).click();
@@ -84,7 +84,7 @@ test("a site with several feeds offers a choice", async ({ page }) => {
   const name = newBlog("two");
   await field(page).fill(`${FEED_SITE}/blog/${name}/`);
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("status")).toHaveText("This site offers more than one feed. Choose one:");
+  await expect(page.locator("#feed-address-status")).toHaveText("This site offers more than one feed. Choose one:");
   await page.getByRole("button", { name: /^Comments/ }).click();
   await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}: comments` })).toBeVisible();
 });
@@ -93,13 +93,13 @@ test("a page without a feed gets a calm, plain message", async ({ page }) => {
   await openApp(page, "/add-feed");
   await field(page).fill(`${FEED_SITE}/plain/`);
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("status")).toHaveText("This site doesn't seem to offer a feed. Try the feed's own address, or the site's home page.");
+  await expect(page.locator("#feed-address-status")).toHaveText("This site doesn't seem to offer a feed. Try the feed's own address, or the site's home page.");
   // The field is marked as refused, for screen readers and by its firmer edge.
   await expect(field(page)).toHaveAttribute("aria-invalid", "true");
 
   await field(page).fill("not an address");
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("status")).toHaveText("That doesn't look like a web address.");
+  await expect(page.locator("#feed-address-status")).toHaveText("That doesn't look like a web address.");
 });
 
 test("Escape leaves Add a feed for the list you were on", async ({ page }) => {
@@ -139,7 +139,7 @@ test("with only the keyboard: choose one of several feeds, then go back to it fr
   await page.keyboard.press("a");
   await page.keyboard.type(`${FEED_SITE}/blog/${name}/`);
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("status")).toHaveText("This site offers more than one feed. Choose one:");
+  await expect(page.locator("#feed-address-status")).toHaveText("This site offers more than one feed. Choose one:");
 
   const comments = page.getByRole("button", { name: /^Comments/ });
   await tabTo(page, comments);
@@ -164,7 +164,7 @@ test("with only the keyboard: 'Go to' a feed you already follow", async ({ page 
   await page.keyboard.press("a");
   await page.keyboard.type(`${FEED_SITE}/blog/${name}/feed.xml`);
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("status")).toHaveText("You already follow this feed.");
+  await expect(page.locator("#feed-address-status")).toHaveText("You already follow this feed.");
   await tabTo(page, page.getByRole("link", { name: /^Go to / }));
   await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeFocused();
