@@ -4,6 +4,14 @@ A plain-language history of nine turtles (called slowfeed until 24 October 2026)
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 24 October 2026: Less space after an article, Show older items as a list row
+
+- After an article ends there's now a short gap and the small end mark, not
+  a third of a screen of blank space.
+- "Show older items" is the list's last row, lined up with the titles, with
+  the rows' thin line above it and its words in the accent color, instead of
+  a boxed button on the left.
+
 ## 24 October 2026: The name nine turtles everywhere
 
 - Behind the scenes the old name slowfeed is gone too: the GitHub project,

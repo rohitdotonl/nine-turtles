@@ -471,7 +471,8 @@
     {/each}
   </ul>
   {#if next !== null}
-    <button type="button" aria-disabled={busy} onclick={() => load(next)} class="btn mt-6 self-start">
+    <!-- The list's last row, not a separate box: the titles' left edge, a hairline above, words in the accent. -->
+    <button type="button" aria-disabled={busy} onclick={() => load(next)} class="list-more place cursor-pointer text-left text-ui font-semibold">
       {order === "oldest" ? "Show newer items" : "Show older items"}
     </button>
   {:else if articles.length > 0}
