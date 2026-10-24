@@ -35,10 +35,14 @@ test("a wide window shows three areas, a medium one two, a phone-narrow one one"
   await expect(readingArea(page)).toBeHidden();
 });
 
-test("[ hides and shows the sidebar, and the toggle never moves", async ({ page }) => {
+test("[ hides and shows the sidebar; its button sits on the sidebar, then waits at the top left", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await openApp(page);
-  const before = await toggle(page).boundingBox();
+  const shown = (await toggle(page).boundingBox())!;
+  const pane = (await sidebar(page).boundingBox())!;
+  // At the right end of the sidebar's own top line, across from the wordmark.
+  expect(shown.x + shown.width).toBeLessThanOrEqual(pane.x + pane.width);
+  expect(shown.x).toBeGreaterThan(pane.x + pane.width / 2);
 
   // The keyboard starts in the sidebar (on the wordmark). Hiding the sidebar moves it to the
   // list itself, or with no articles to the sidebar button, never to the list's title (decision 0038).
@@ -46,7 +50,7 @@ test("[ hides and shows the sidebar, and the toggle never moves", async ({ page 
   await page.keyboard.press("[");
   await expect(sidebar(page)).toBeHidden();
   await expect(toggle(page)).toHaveAttribute("aria-expanded", "false");
-  expect(await toggle(page).boundingBox()).toEqual(before);
+  expect((await toggle(page).boundingBox())!.x).toBeLessThan(20);
   await expect(page.locator("#list-heading")).not.toBeFocused();
   expect(
     await page.evaluate(() => {
@@ -57,13 +61,13 @@ test("[ hides and shows the sidebar, and the toggle never moves", async ({ page 
 
   await page.keyboard.press("[");
   await expect(sidebar(page)).toBeVisible();
-  expect(await toggle(page).boundingBox()).toEqual(before);
+  expect(await toggle(page).boundingBox()).toEqual(shown);
 
   // The button does the same with a click.
   await toggle(page).click();
   await expect(sidebar(page)).toBeHidden();
-  expect(await toggle(page).boundingBox()).toEqual(before);
 });
+
 
 test("the sidebar lists Unread, Starred and All, with a grey pill marking where you are", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });

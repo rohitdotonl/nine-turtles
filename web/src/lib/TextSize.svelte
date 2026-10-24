@@ -42,7 +42,7 @@
     title="Smaller text (−)"
     aria-disabled={smallest}
     onclick={() => step(-1)}
-    class="step"><span aria-hidden="true" class="text-[0.9375rem]">A</span><span aria-hidden="true" class="sign">−</span></button
+    class="step"><span aria-hidden="true" class="text-[0.9375rem]">A</span><span aria-hidden="true" class="sign" data-sign="−"></span></button
   >
   <p role="status" class="sizes-name">{TEXT_SIZES[size]?.label}</p>
   <button
@@ -51,12 +51,18 @@
     title="Larger text (+)"
     aria-disabled={largest}
     onclick={() => step(1)}
-    class="step"><span aria-hidden="true" class="text-[1.375rem]">A</span><span aria-hidden="true" class="sign">+</span></button
+    class="step"><span aria-hidden="true" class="text-[1.375rem]">A</span><span aria-hidden="true" class="sign" data-sign="+"></span></button
   >
 </div>
 
 <style>
-  /* The minus and plus beside each A: smaller and quieter than the A. */
+  /*
+    The minus and plus beside each A: smaller and quieter than the A. Drawn by CSS, so the
+    button's visible words stay its name ("Smaller text", "Larger text") for every check.
+  */
+  .sign::after {
+    content: attr(data-sign);
+  }
   .sign {
     margin-left: 0.1875rem;
     font-size: 1rem;

@@ -26,6 +26,26 @@ async function visits(page: Page, path: string): Promise<number> {
 test.describe("on a wide window", () => {
   test.skip(({ isMobile }) => isMobile, "the phone layout has its own test below");
 
+  test("] hides and shows the article list, and \\ both; with both hidden one button brings both back", async ({ page }) => {
+    await openRoom(page);
+    const list = page.locator("#list-pane");
+    const listButton = page.getByRole("button", { name: "Article list", exact: true });
+    await expect(listButton).toBeVisible();
+
+    await page.keyboard.press("]");
+    await expect(list).toBeHidden();
+    await page.keyboard.press("]");
+    await expect(list).toBeVisible();
+
+    await page.keyboard.press("\\");
+    await expect(list).toBeHidden();
+    await expect(page.getByRole("navigation", { name: "Sidebar" })).toBeHidden();
+    await expect(listButton).toHaveCount(0);
+    await page.getByRole("button", { name: "Sidebar and article list" }).click();
+    await expect(list).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Sidebar" })).toBeVisible();
+  });
+
   test("j shows an article cleaned and restyled, and j and k move through the list", async ({ page }) => {
     await openRoom(page);
     // One quiet line in the middle of the paper (decision 0053): serif, muted grey, never the
