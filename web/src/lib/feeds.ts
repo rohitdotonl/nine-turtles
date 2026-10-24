@@ -154,9 +154,9 @@ export async function newItemsWaiting(source: Source, latest: number): Promise<b
   return isRecord(body) && body.new === true;
 }
 
-/** What the line above the list says when new items are waiting: no number. */
+/** What the note at the foot of the list says when new items are waiting: no number. On a touch screen a Show button follows it. */
 export function newItemsMessage(touch: boolean): string {
-  return touch ? "New items · tap Refresh" : "New items · press r";
+  return touch ? "New items" : "New items · press r";
 }
 
 // Marks are sent one after another, in the order they were made, so an undo

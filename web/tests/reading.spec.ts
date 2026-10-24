@@ -133,16 +133,26 @@ test.describe("on a wide window", () => {
     await expect(title(page, "Only the first page")).toBeVisible();
 
     const original = article(page).getByRole("link", { name: "Open original" }).first();
-    // The actions are quiet icons, each named in its tooltip with its key; the way to the publisher comes first.
+    // The actions are quiet icons, each named in its tooltip with its key; the way to the publisher comes first,
+    // then Aa, Star and More (decision 0038).
     const order = await article(page)
-      .locator(".article-column")
+      .locator(".reading-bar")
       .locator("a[aria-label], button[aria-label]")
       .evaluateAll((controls) => controls.map((control) => control.getAttribute("aria-label")));
-    expect(order).toEqual(["Open original", "Reading appearance", "Copy link", "Star", "Mark unread"]);
+    expect(order).toEqual(["Open original", "Reading appearance", "Star", "More actions"]);
     expect((await original.innerText()).trim()).toBe("");
     await expect(article(page).getByRole("button", { name: "Star" })).toHaveAttribute("title", "Star (s)");
-    await expect(article(page).getByRole("button", { name: "Mark unread" })).toHaveAttribute("title", "Mark unread (m)");
     await expect(original).toHaveAttribute("title", "Open original (v)");
+    // More holds Copy link and Mark unread, its key shown beside it.
+    const more = article(page).getByRole("button", { name: "More actions" });
+    await expect(more).toHaveAttribute("aria-haspopup", "menu");
+    await more.click();
+    const menu = page.getByRole("menu", { name: "More actions" });
+    await expect(menu.getByRole("menuitem")).toHaveText(["Copy link", /^Mark unread/]);
+    await expect(menu.getByRole("menuitem", { name: "Mark unread" })).toHaveAttribute("aria-keyshortcuts", "m");
+    await page.keyboard.press("Escape");
+    await expect(menu).toHaveCount(0);
+    await expect(more).toBeFocused();
     await expect(original).toHaveAttribute("href", "https://reading-room.example/first-page");
     await expect(original).toHaveAttribute("target", "_blank");
 
@@ -156,7 +166,8 @@ test.describe("on a wide window", () => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: FEEDS_APP });
     await openRoom(page);
     await page.keyboard.press("j");
-    await article(page).getByRole("button", { name: "Copy link" }).click();
+    await article(page).getByRole("button", { name: "More actions" }).click();
+    await page.getByRole("menuitem", { name: "Copy link" }).click();
     await expect(article(page).getByRole("status")).toHaveText("Link copied.");
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("https://reading-room.example/slow-letter");
   });
@@ -316,8 +327,8 @@ test.describe("on a wide window", () => {
     await expect(heading).toHaveCSS("outline-style", "solid");
   });
 
-  test("on a wide window the article sits in the middle, with its actions lined up above it", async ({ page }) => {
-    await openRoom(page, 1920);
+  test("on a wide window the article sits in the middle, and its actions keep to the pane's edges", async ({ page }) => {
+    await openRoom(page, 2560);
     await page.keyboard.press("j");
     const text = (await article(page).locator("article").boundingBox())!;
     // Centred in its scrolling area (the space left beside any scrollbar):
@@ -331,9 +342,79 @@ test.describe("on a wide window", () => {
         return { left: own.left - box.left, right: box.left + area.clientWidth - own.right };
       });
     expect(Math.abs(room.left - room.right)).toBeLessThan(4);
-    // The first action's icon starts at the text's left edge.
+    // The bar is anchored to the pane, not the text column (decision 0038): Open original
+    // near its left edge, More near its right, both well outside the text, so nothing floats.
+    const pane = (await article(page).boundingBox())!;
     const first = (await article(page).getByRole("link", { name: "Open original" }).first().boundingBox())!;
-    expect(Math.abs(first.x + 12 - text.x)).toBeLessThan(2);
+    const last = (await article(page).getByRole("button", { name: "More actions" }).boundingBox())!;
+    expect(first.x - pane.x).toBeLessThan(24);
+    expect(first.x).toBeLessThan(text.x - 100);
+    expect(pane.x + pane.width - (last.x + last.width)).toBeLessThan(40);
+    expect(last.x + last.width).toBeGreaterThan(text.x + text.width + 100);
+    expect(Math.abs(first.y - last.y)).toBeLessThan(2);
+  });
+
+  test("the top bar is see-through over the text, with a line only once scrolled; solid when asked for less transparency", async ({ page }) => {
+    await openRoom(page);
+    await page.keyboard.press("j");
+    const bar = article(page).locator(".reading-bar");
+    const scroller = article(page).locator(".reading-scroller");
+    await expect(bar).toHaveCSS("position", "sticky");
+    expect(await bar.evaluate((element) => getComputedStyle(element).backgroundColor)).toMatch(/^(color\(srgb .* \/ 0\.85\)|rgba\(.*, 0\.85\))$/);
+    expect(await bar.evaluate((element) => getComputedStyle(element).backdropFilter)).toContain("blur");
+    await expect(bar).toHaveCSS("border-bottom-color", "rgba(0, 0, 0, 0)");
+    await scroller.evaluate((element) => element.scrollBy(0, 120));
+    await expect(scroller).toHaveAttribute("data-scrolled", "");
+    await expect(bar).not.toHaveCSS("border-bottom-color", "rgba(0, 0, 0, 0)");
+    // The text goes under the bar rather than stopping at a line.
+    const [barBox, titleBox] = [(await bar.boundingBox())!, (await article(page).locator(".article-title").boundingBox())!];
+    expect(titleBox.y).toBeLessThan(barBox.y + barBox.height);
+
+    // Playwright can't emulate prefers-reduced-transparency yet: check the page's styles have the solid rule.
+    const solid = await page.evaluate(() =>
+      [...document.styleSheets].some((sheet) =>
+        [...sheet.cssRules].some((rule) => rule instanceof CSSMediaRule && rule.conditionText.includes("prefers-reduced-transparency") && rule.cssText.includes("backdrop-filter: none")),
+      ),
+    );
+    expect(solid).toBe(true);
+  });
+
+  test("the title is about 32px, set tight and balanced; the byline is quiet with the publisher in full ink", async ({ page }) => {
+    await openRoom(page);
+    await page.keyboard.press("j");
+    const heading = article(page).locator(".article-title");
+    await expect(heading).toHaveCSS("font-size", "32px");
+    await expect(heading).toHaveCSS("text-wrap", /balance/);
+    expect(parseFloat(await heading.evaluate((element) => getComputedStyle(element).lineHeight)) / 32).toBeCloseTo(1.12, 2);
+    const byline = article(page).locator(".article-byline");
+    await expect(byline).toHaveCSS("font-size", "13px");
+    await expect(byline).toHaveCSS("margin-top", "12px");
+    const publisher = byline.getByRole("link", { name: "Reading Room" });
+    await expect(publisher).toHaveCSS("font-weight", "600");
+    const [inkColor, bylineColor, publisherColor] = await Promise.all([
+      page.evaluate(() => getComputedStyle(document.body).color),
+      byline.evaluate((element) => getComputedStyle(element).color),
+      publisher.evaluate((element) => getComputedStyle(element).color),
+    ]);
+    expect(publisherColor).toBe(inkColor);
+    expect(bylineColor).not.toBe(inkColor);
+    // A heading inside the article is about 22px.
+    await expect(article(page).locator(".article-text h2").first()).toHaveCSS("font-size", "22px");
+  });
+
+  test("a summary-only article ends with a last paragraph in the reading font linking the whole article", async ({ page }) => {
+    await openRoom(page);
+    await row(page, "Only the first page").click();
+    const note = article(page).locator(".article-note");
+    await expect(note).toContainText("This feed shares only a summary.");
+    expect(await note.evaluate((element) => getComputedStyle(element).fontFamily)).toContain("Literata");
+    await expect(note).toHaveCSS("font-style", "italic");
+    await expect(note).toHaveCSS("text-align", "start");
+    const link = note.getByRole("link", { name: "Read the full article on Reading Room" });
+    await expect(link).toHaveAttribute("href", "https://reading-room.example/first-page");
+    await expect(link).toHaveAttribute("target", "_blank");
+    // It is the article's last paragraph, before the short closing line.
+    expect(await note.evaluate((element) => element.nextElementSibling?.classList.contains("article-end"))).toBe(true);
   });
 
   test("in high-contrast mode, only the selected article is marked", async ({ page }) => {

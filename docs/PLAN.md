@@ -264,6 +264,11 @@ each with screenshots:
 - ✅ One selection pill for the sidebar and the list, the keyboard's ring
   inside it, an accent unread dot, one search highlight and a calmer list
   rhythm (decision 0037).
+- ✅ Toolbars and chrome: the article's tools anchored to the pane's edges
+  with a More menu, one More menu per list (Edit and Refresh inside), a
+  see-through top bar, a labelled back button and a five-icon bottom bar on
+  phones, and book-like title, headings, byline and summary note (decision
+  0038).
 
 ---
 

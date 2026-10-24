@@ -94,7 +94,7 @@
   /** The newest article's number when the list was loaded, and whether anything has arrived since. */
   let latest = 0;
   let newWaiting = $state(false);
-  // Touch screens have no r key; they're told to tap Refresh (same test as the keyboard hint).
+  // Touch screens have no r key; their note has a Show button instead (same test as the keyboard hint).
   const touch = matchMedia("(hover: none) and (pointer: coarse)").matches;
 
   /** The floating note's message, and what Undo would do, if anything. */
@@ -492,6 +492,11 @@
       {#if updates.stranded}
         <button type="button" onclick={() => location.reload()} class="ml-2 min-h-11 min-w-11 font-semibold text-ink underline underline-offset-4"
           >Reload</button
+        >
+      {:else if newWaiting && touch}
+        <!-- No r key on a touch screen, and Refresh sits in the More menu: the note offers to show them. -->
+        <button type="button" onclick={() => refresh()} aria-label="Show new items" class="ml-2 min-h-11 min-w-11 font-semibold text-ink underline underline-offset-4"
+          >Show</button
         >
       {/if}
     </p>

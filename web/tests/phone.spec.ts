@@ -38,18 +38,25 @@ test.describe("on a phone", () => {
     await expect(sidebar(page)).toBeHidden();
     await expect(list(page).getByRole("heading", { level: 2, name: "Reading Room" })).toBeVisible();
     await expect(list(page).getByRole("button", { name: "Back to Feeds" })).toBeVisible();
-    // Refresh and More are quiet icons beside the list's title, and there's only ever one Refresh.
-    await expect(page.getByRole("button", { name: "Refresh", exact: true })).toHaveCount(1);
-    await expect(list(page).getByRole("button", { name: "More", exact: true })).toBeVisible();
-    for (const control of [list(page).getByRole("button", { name: "Refresh", exact: true }), list(page).getByRole("button", { name: "More", exact: true })]) {
-      const box = (await control.boundingBox())!;
-      expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
-    }
+    // One quiet More (…) beside the list's title; Refresh and Edit feed are in its menu (decision 0038).
+    const more = list(page).getByRole("button", { name: "More", exact: true });
+    await expect(more).toBeVisible();
+    await expect(page.getByRole("button", { name: "Refresh", exact: true })).toHaveCount(0);
+    const box = (await more.boundingBox())!;
+    expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
+    await more.click();
+    await expect(page.getByRole("menuitem", { name: "Refresh" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "Edit feed" })).toBeVisible();
+    await more.click();
+    await expect(page.getByRole("menu")).toHaveCount(0);
 
     await row(page, "The pleasure of a slow letter").click();
     await expect(title(page, "The pleasure of a slow letter")).toBeFocused();
     await expect(list(page)).toBeHidden();
-    await expect(article(page).getByRole("button", { name: "Back to Reading Room" })).toBeVisible();
+    // The back button says where it goes, in words as well as for screen readers.
+    const back = article(page).getByRole("button", { name: "Back to Reading Room" });
+    await expect(back).toBeVisible();
+    await expect(back).toHaveText("Reading Room");
 
     // The back arrows go back one step each time.
     await article(page).getByRole("button", { name: "Back to Reading Room" }).click();
@@ -90,10 +97,19 @@ test.describe("on a phone", () => {
     await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
     await row(page, "The pleasure of a slow letter").click();
 
-    // Icons only, each with its name for screen readers.
-    const names = await toolbar(page).locator(":scope > *").evaluateAll((controls) => controls.map((control) => control.getAttribute("aria-label")));
-    expect(names).toEqual(["Previous", "Next", "Reading appearance", "Star", "Mark unread", expect.stringMatching(/^(Share|Copy link)$/)]);
+    // Five icons only, each with its name for screen readers; Share and Mark unread are in More.
+    const names = await toolbar(page)
+      .getByRole("button")
+      .evaluateAll((controls) => controls.map((control) => control.getAttribute("aria-label")));
+    expect(names).toEqual(["Previous", "Next", "Reading appearance", "Star", "More actions"]);
     expect((await toolbar(page).innerText()).trim()).toBe("");
+    // More opens upwards, over the article, with Share (or Copy link) and Mark unread.
+    await toolbar(page).getByRole("button", { name: "More actions" }).click();
+    const menu = page.getByRole("menu", { name: "More actions" });
+    await expect(menu.getByRole("menuitem")).toHaveText([/^(Share|Copy link)$/, "Mark unread"]);
+    expect((await menu.boundingBox())!.y + (await menu.boundingBox())!.height).toBeLessThanOrEqual((await toolbar(page).boundingBox())!.y);
+    await toolbar(page).getByRole("button", { name: "More actions" }).click();
+    await expect(menu).toHaveCount(0);
     // Within thumb reach: at the bottom of the screen.
     const box = await toolbar(page).boundingBox();
     const height = page.viewportSize()?.height ?? 0;
@@ -197,14 +213,15 @@ test.describe("on a phone", () => {
   test("Cancel on Edit feed goes back to the list, and back again doesn't reopen it", async ({ page }) => {
     await openHome(page);
     await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
-    await list(page).getByRole("link", { name: "Edit feed" }).click();
+    await list(page).getByRole("button", { name: "More", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Edit feed" }).click();
     await page.getByRole("button", { name: "Cancel" }).click();
     await expect(list(page).getByRole("heading", { level: 2, name: "Reading Room" })).toBeVisible();
     await page.goBack();
     await expect(sidebar(page)).toBeVisible();
   });
 
-  test("a long feed name stays on one line in the list's title and wraps in the back arrow, never running off the screen", async ({ page }) => {
+  test("a long feed name wraps to two lines in the list's title and is cut short in the back button, never running off the screen", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 640 });
     await openHome(page);
     const name = `averyveryverylongfeednamewithoutanyspaces-${Date.now()}`;
@@ -218,18 +235,19 @@ test.describe("on a phone", () => {
     expect(settings.x + settings.width).toBeLessThanOrEqual(320);
     await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
     await appReady(page);
-    // The list's title stays on one line and ends in "…", with the whole name as its tooltip.
+    // The list's title takes up to two lines, then ends in "…", with the whole name as its tooltip (decision 0038).
     const title = page.locator("#list-heading");
     await expect(title).toHaveAttribute("title", `Blog ${name}`);
     const lines = await title.evaluate((element) => ({
       height: element.getBoundingClientRect().height,
       line: parseFloat(getComputedStyle(element).lineHeight),
-      cut: element.scrollWidth > element.clientWidth,
-      ellipsis: getComputedStyle(element).textOverflow,
+      cut: element.scrollHeight > element.clientHeight,
+      clamp: getComputedStyle(element).webkitLineClamp,
     }));
-    expect(lines.height).toBeLessThan(lines.line * 1.5);
+    expect(lines.height).toBeGreaterThan(lines.line * 1.5);
+    expect(lines.height).toBeLessThan(lines.line * 2.5);
     expect(lines.cut).toBe(true);
-    expect(lines.ellipsis).toBe("ellipsis");
+    expect(lines.clamp).toBe("2");
     expect((await title.boundingBox())!.width).toBeLessThanOrEqual(320);
     await page.getByRole("button", { name: /A year of reading slowly/ }).click();
     const back = article(page).getByRole("button", { name: `Back to Blog ${name}` });
