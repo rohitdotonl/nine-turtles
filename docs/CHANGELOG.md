@@ -4,6 +4,17 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## Batch 6
+
+- On a phone, Add a feed, Edit feed, Edit folder, Settings and the shortcut
+  list now look and close the same way: an X at the top right, and the main
+  button full width at the bottom. Unsubscribe sits in its own box well
+  above Save, and Undo still follows it. By night, sheets, menus and the
+  note at the bottom of the list sit on a slightly lighter grey than the
+  page. Settings shows the six themes three to a row on a phone, and text
+  size looks like the other controls. The shortcut list's key caps look like
+  keys, and a fresh slowfeed on a phone shows one heading (decision 0052).
+
 ## 24 October 2026: A quieter article title, one-line rows, one close rule
 
 - Opening an article with the keyboard no longer draws a box round its

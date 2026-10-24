@@ -166,7 +166,7 @@
 
           <div class="inset-row">
             <p id="text-size-name" class="row-name">Text size</p>
-            <!-- A stepper: two round-ended As with the current step between them as plain words (decision 0045). -->
+            <!-- A stepper on the segmented settings' own track: a small A and a large A at its ends, the current step between them as plain words (decisions 0045, 0052). -->
             <div class="control">
               <TextSize bind:size={preferences.textSize} labelledby="text-size-name" />
             </div>

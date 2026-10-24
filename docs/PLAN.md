@@ -318,6 +318,12 @@ each with screenshots:
   list full-screen on a phone and fitting a computer window, 20px under
   every top line, the Settings preview on the phone's margin, and the
   phone's unread dot clear of the row ring (decision 0049).
+- ✅ One phone sheet and raised night surfaces (sixth critique, batch 6):
+  an X-only phone sheet with its main action full width at the foot,
+  lifted sheets, menus and note by night, Settings' themes 3×2 and text
+  size on the segmented track, helper text on the grid, a shortcut-list
+  footer with edged key caps, one heading on a phone's empty state
+  (decision 0052).
 
 ---
 

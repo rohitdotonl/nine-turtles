@@ -52,7 +52,7 @@
 </fieldset>
 
 <style>
-  /* As many 72px-or-wider tiles as fit, filling the row: six to a row in Settings, three or four in the Aa panel. */
+  /* As many 72px-or-wider tiles as fit, filling the row: six to a row in Settings, three in the Aa panel (on a phone, three, below). */
   .tiles {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
@@ -125,6 +125,21 @@
   @media (forced-colors: active) {
     .tile:has(input:checked) .tile-page {
       outline-color: Highlight;
+    }
+  }
+  /*
+    On a phone, three to a row in two even rows, as Apple Books on iOS shows
+    its six themes (never four and an orphaned two), each page a little
+    wider than tall (decision 0052).
+  */
+  @media (width < 40rem) {
+    .tiles {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.75rem 1rem;
+    }
+    .tile-page {
+      max-width: none;
+      aspect-ratio: 4 / 3;
     }
   }
 </style>

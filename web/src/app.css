@@ -72,6 +72,15 @@
   already light for the dark (Quiet, Paper, Calm) mix in less, and lay a
   fainter search tone (--mark) over the pill, so text keeps 7 : 1 on both.
   contrast.test.ts recomputes each and checks every text color on it.
+
+  Every theme's --surface-raised is what floats over the page: the sheets,
+  the shortcut list, the menus and popovers, and the note at the list's foot
+  (decision 0052). By day it's the page itself, as before. By night it's a
+  small lift above the page (Original's #28282a; warm in Calm and Focus,
+  tinted as each page is), as Apple Books lifts its sheets and menus with a
+  lighter grey rather than leaving them as dark as the page; with it, a 1px
+  edge of 8% white (--raised-edge) and grouped rows inside it at 4% white
+  over it (--raised-group). contrast.test.ts checks every text color on it.
 */
 
 /* Original: Apple Books' plain white page and its near-black night. */
@@ -88,6 +97,7 @@
   --accent: #2c4f8c;
   --tint-list: #dde1e9;
   --tint-sidebar: #d6dae4;
+  --surface-raised: #ffffff;
 }
 
 :root[data-theme="original"][data-mode="dark"] {
@@ -102,10 +112,12 @@
   --accent: #94b2e6;
   --tint-list: #333333;
   --tint-sidebar: #3b3b3b;
+  --surface-raised: #28282a;
+  --raised-edge: rgb(255 255 255 / 0.08);
+  --raised-group: color-mix(in srgb, #ffffff 4%, var(--surface-raised));
   --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
   --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
   --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
-  --sheet-edge: 22%;
   --scrim: rgb(0 0 0 / 0.45);
 }
 
@@ -123,10 +135,12 @@
     --accent: #94b2e6;
     --tint-list: #333333;
     --tint-sidebar: #3b3b3b;
+    --surface-raised: #28282a;
+    --raised-edge: rgb(255 255 255 / 0.08);
+    --raised-group: color-mix(in srgb, #ffffff 4%, var(--surface-raised));
     --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
     --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
     --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
-    --sheet-edge: 22%;
     --scrim: rgb(0 0 0 / 0.45);
   }
 }
@@ -144,6 +158,7 @@
   --accent: #344a74;
   --tint-list: #cacdd5;
   --tint-sidebar: #c2c5ce;
+  --surface-raised: #e8e8ea;
 }
 
 :root[data-theme="quiet"][data-mode="dark"] {
@@ -158,10 +173,12 @@
   --accent: #b0c0e0;
   --tint-list: #404042;
   --tint-sidebar: #47474a;
+  --surface-raised: #36363a;
+  --raised-edge: rgb(255 255 255 / 0.08);
+  --raised-group: color-mix(in srgb, #ffffff 4%, var(--surface-raised));
   --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
   --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
   --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
-  --sheet-edge: 22%;
   --scrim: rgb(0 0 0 / 0.45);
   --mark: color-mix(in srgb, var(--accent) 6%, transparent);
 }
@@ -179,6 +196,7 @@
   --accent: #2f4a7a;
   --tint-list: #d4d7d9;
   --tint-sidebar: #cccfd0;
+  --surface-raised: #f5f4f0;
 }
 
 :root[data-theme="paper"][data-mode="dark"] {
@@ -193,10 +211,12 @@
   --accent: #a3b6da;
   --tint-list: #3e3e3c;
   --tint-sidebar: #464542;
+  --surface-raised: #31312e;
+  --raised-edge: rgb(255 255 255 / 0.08);
+  --raised-group: color-mix(in srgb, #ffffff 4%, var(--surface-raised));
   --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
   --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
   --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
-  --sheet-edge: 22%;
   --scrim: rgb(0 0 0 / 0.45);
   --mark: color-mix(in srgb, var(--accent) 8%, transparent);
 }
@@ -214,6 +234,7 @@
   --accent: #1d3c8a;
   --tint-list: #dbdfe9;
   --tint-sidebar: #d4d8e4;
+  --surface-raised: #ffffff;
 }
 
 :root[data-theme="bold"][data-mode="dark"] {
@@ -228,10 +249,12 @@
   --accent: #a2bff2;
   --tint-list: #292929;
   --tint-sidebar: #323232;
+  --surface-raised: #1c1c1e;
+  --raised-edge: rgb(255 255 255 / 0.08);
+  --raised-group: color-mix(in srgb, #ffffff 4%, var(--surface-raised));
   --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
   --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
   --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
-  --sheet-edge: 22%;
   --scrim: rgb(0 0 0 / 0.45);
 }
 
@@ -248,6 +271,7 @@
   --accent: #733618;
   --tint-list: #dbc6ac;
   --tint-sidebar: #d2bc9e;
+  --surface-raised: #f2e6d0;
 }
 
 :root[data-theme="calm"][data-mode="dark"] {
@@ -262,10 +286,12 @@
   --accent: #e0ad6a;
   --tint-list: #423a31;
   --tint-sidebar: #4a4037;
+  --surface-raised: #342c23;
+  --raised-edge: rgb(255 255 255 / 0.08);
+  --raised-group: color-mix(in srgb, #ffffff 4%, var(--surface-raised));
   --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
   --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
   --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
-  --sheet-edge: 22%;
   --scrim: rgb(0 0 0 / 0.45);
   --mark: color-mix(in srgb, var(--accent) 8%, transparent);
 }
@@ -283,6 +309,7 @@
   --accent: #235268;
   --tint-list: #d8d9c7;
   --tint-sidebar: #d0cfba;
+  --surface-raised: #fbf6e2;
 }
 
 :root[data-theme="focus"][data-mode="dark"] {
@@ -297,10 +324,12 @@
   --accent: #d1bb72;
   --tint-list: #3a372f;
   --tint-sidebar: #413e36;
+  --surface-raised: #2b2921;
+  --raised-edge: rgb(255 255 255 / 0.08);
+  --raised-group: color-mix(in srgb, #ffffff 4%, var(--surface-raised));
   --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
   --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
   --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
-  --sheet-edge: 22%;
   --scrim: rgb(0 0 0 / 0.45);
 }
 
@@ -579,18 +608,29 @@ textarea {
   caret-color: var(--ink);
 }
 
-/* A key to press, as in the shortcuts list: a small, quiet key cap. */
+/*
+  A key to press, as in the shortcuts list: a small key cap with a visible
+  edge, as a printed key is drawn (decision 0052): a 1px rim and a 2px
+  lower lip in a soft mix of the text color, so it reads as a key, not a
+  tag. Its letter is in the text color; the edge is only its shape.
+*/
 .key {
-  display: inline-block;
-  min-width: 1.5em;
-  padding: 0.0625rem 0.375rem;
-  border-radius: 0.25rem;
-  background-color: var(--tone);
+  display: inline-flex;
+  min-width: 1.375rem;
+  height: 1.375rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.375rem;
+  border: 1px solid color-mix(in srgb, var(--ink) 22%, transparent);
+  border-bottom-width: 2px;
+  border-radius: 0.3125rem;
+  background-color: var(--raised-group, var(--paper));
   /* The interface font, so a hint on every screen doesn't load the code font. */
   font-family: var(--font-sans);
-  font-size: 0.9em;
-  line-height: 1.4;
-  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1;
+  vertical-align: middle;
 }
 
 .tabular {
@@ -616,10 +656,33 @@ textarea {
     shadow (DESIGN.md → Exceptions log). Nothing that sits in the page casts one.
   */
   .floating {
-    border: 1px solid color-mix(in oklab, var(--ink) var(--sheet-edge, 12%), transparent);
+    border: 1px solid var(--raised-edge, color-mix(in oklab, var(--ink) 12%, transparent));
     border-radius: 0.75rem;
-    background-color: var(--paper);
+    background-color: var(--surface-raised, var(--paper));
     box-shadow: 0 16px 48px -12px rgb(0 0 0 / 0.3);
+  }
+  /* A grouped list inside something floating: by night 4% white over the lifted surface, so it still reads as a group. */
+  .floating .inset-group {
+    background-color: var(--raised-group, var(--group, var(--list)));
+  }
+
+  /*
+    A phone screen's one main action (Add feed, Save on a phone; decision
+    0052): the full width at the screen's foot, 50px tall with 12px corners,
+    16px above the home bar. It stays in view while the form scrolls, on a
+    band of the page so nothing shows through it.
+  */
+  .page-action {
+    position: sticky;
+    bottom: 0;
+    margin-top: auto;
+    padding-block: 1rem calc(1rem + env(safe-area-inset-bottom));
+    background-color: var(--paper);
+  }
+  .page-action > .btn-primary {
+    width: 100%;
+    min-height: 3.125rem;
+    border-radius: 0.75rem;
   }
 
   /*
@@ -744,6 +807,17 @@ textarea {
   }
   .inset-foot {
     margin: 0.375rem 1rem 0;
+    color: var(--muted);
+    font-size: var(--text-meta);
+    line-height: 1.4;
+  }
+  /*
+    A field's helper line (Edit feed's "Optional: a new folder…"): 13px in
+    the muted grey, 6px under its field, starting on the field's own left
+    edge, the label column, never indented past it (decision 0052).
+  */
+  .field-help {
+    margin-top: 0.375rem;
     color: var(--muted);
     font-size: var(--text-meta);
     line-height: 1.4;
@@ -1385,8 +1459,10 @@ input {
   font-style: italic;
 }
 
-/* The note at the bottom of the list floats, so it alone has a shadow. */
+/* The note at the bottom of the list floats, so it alone has a shadow, on the lifted surface (decision 0052). */
 .toast {
+  border-color: var(--raised-edge, color-mix(in srgb, var(--ink) 15%, transparent));
+  background-color: var(--surface-raised, var(--paper));
   box-shadow: 0 10px 28px -10px rgb(0 0 0 / 0.3);
 }
 /*

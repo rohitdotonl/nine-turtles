@@ -5,9 +5,12 @@
   Unsubscribing happens at once, with Undo on the next screen. On a wide
   window it's a sheet over the feed's list; on a phone, a screen of its own.
 
-  One row of actions at the foot, in a Mac sheet's order: Unsubscribe in red
-  words at the far left, apart from the rest, then Cancel and Save at the
-  right end (decision 0039).
+  In the sheet, one row of actions at the foot, in a Mac sheet's order:
+  Unsubscribe in red words at the far left, apart from the rest, then Cancel
+  and Save at the right end (decision 0039). On a phone, the phone sheet's
+  one build (decision 0052): an X beside the title is the way out (no
+  Cancel), Unsubscribe is the one row of a group of its own, and Save takes
+  the full width at the screen's foot, at least 32px below it.
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
@@ -66,8 +69,21 @@
   }
 </script>
 
+{#snippet unsubscribe(look: string)}
+  <button
+    type="button"
+    aria-disabled={busy}
+    aria-describedby="unsubscribe-help"
+    title="Stops following this feed and removes its articles; starred ones stay. You can undo it straight afterwards."
+    aria-label="Unsubscribe from {feed.title}"
+    onclick={leave}
+    class={look}>Unsubscribe</button
+  >
+  <span id="unsubscribe-help" class="sr-only">Removes its articles; starred ones stay. You can undo it straight afterwards.</span>
+{/snippet}
+
 {#snippet form()}
-  <form onsubmit={save} class="flex flex-col gap-5">
+  <form onsubmit={save} class={["flex flex-col gap-5", !sheet && "flex-1"]}>
     <label class="flex flex-col gap-1.5">
       <span class="text-small text-ink-2">Name</span>
       <input bind:value={title} type="text" autocomplete="off" class="field" />
@@ -102,7 +118,8 @@
           />
         </label>
       </div>
-      <span id="new-folder-hint" class="inset-foot mt-0"
+      <!-- On the field's own left edge, 6px under it (the fieldset's gap). -->
+      <span id="new-folder-hint" class="field-help mt-0"
         >{folders.length === 0 ? "No folders yet. " : ""}Optional: a new folder is made when you save, with this feed in it.</span
       >
     </fieldset>
@@ -112,21 +129,22 @@
       {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
     </p>
 
-    <!-- One row at the foot: Unsubscribe at the far left, then Cancel and Save at the right end. -->
-    <div class="sheet-actions">
-      <button
-        type="button"
-        aria-disabled={busy}
-        aria-describedby="unsubscribe-help"
-        title="Stops following this feed and removes its articles; starred ones stay. You can undo it straight afterwards."
-        aria-label="Unsubscribe from {feed.title}"
-        onclick={leave}
-        class="btn-danger">Unsubscribe</button
-      >
-      <span id="unsubscribe-help" class="sr-only">Removes its articles; starred ones stay. You can undo it straight afterwards.</span>
-      <button type="button" onclick={onCancel} class="btn">Cancel</button>
-      <button type="submit" aria-disabled={busy} class="btn-primary">Save</button>
-    </div>
+    {#if sheet}
+      <!-- One row at the foot: Unsubscribe at the far left, then Cancel and Save at the right end. -->
+      <div class="sheet-actions">
+        {@render unsubscribe("btn-danger")}
+        <button type="button" onclick={onCancel} class="btn">Cancel</button>
+        <button type="submit" aria-disabled={busy} class="btn-primary">Save</button>
+      </div>
+    {:else}
+      <!-- On a phone: Unsubscribe as a group of its own, a red row (its word says what it does), then Save at the foot, at least 36px below it. -->
+      <div class="inset-group">
+        {@render unsubscribe("inset-row inset-action text-danger font-semibold")}
+      </div>
+      <div class="page-action">
+        <button type="submit" aria-disabled={busy} class="btn-primary">Save</button>
+      </div>
+    {/if}
   </form>
 {/snippet}
 
@@ -137,13 +155,13 @@
 {:else}
 <section aria-labelledby="list-heading" class="flex flex-1 flex-col bg-paper">
   <!--
-    No X: a sheet you commit (Save) closes with Cancel, never both (decision 0049). Its form
-    starts 20px under the top line, as Settings' first group does.
+    The phone sheet's build (decision 0052): the title with an X that goes back unchanged (as
+    Escape does), no Cancel. Its form starts 20px under the top line, as Settings' first group
+    does, and Save sits at the screen's foot.
   -->
-  <PageHead title="Edit feed" bind:heading {besideToggle} />
-  <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-10 md:px-10">
-    <!-- The sheet's build, as a page. -->
-    <div class="mx-auto flex max-w-xl flex-col">
+  <PageHead title="Edit feed" bind:heading {besideToggle} onClose={onCancel} closeLabel="Close" />
+  <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
+    <div class="mx-auto flex w-full max-w-xl flex-1 flex-col">
       {@render form()}
     </div>
   </div>

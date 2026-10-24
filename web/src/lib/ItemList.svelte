@@ -484,7 +484,7 @@
 <div class={["toast-band sticky bottom-0 z-10 mt-auto flex justify-center", !!(line || undoLast || updates.stranded || newWaiting) && "toast-band-shown"]}>
   <div
     class={[
-      "toast pointer-events-auto flex min-h-11 max-w-full flex-wrap items-center gap-x-3 rounded-lg border border-ink/15 bg-paper px-4 text-small text-ink-2",
+      "toast pointer-events-auto flex min-h-11 max-w-full flex-wrap items-center gap-x-3 rounded-lg border px-4 text-small text-ink-2",
       !(line || undoLast || updates.stranded || newWaiting) && "sr-only",
     ]}
   >
