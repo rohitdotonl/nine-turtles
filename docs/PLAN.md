@@ -335,6 +335,10 @@ each with screenshots:
 - ✅ Article view and text (seventh critique, batch 7): a quiet "No article
   open" line in the empty reading pane, smaller captions at 7 : 1, and a
   warm Paper selection pill by day (decision 0053).
+- ✅ List and sidebar finish (seventh critique, batch 7): a faint line
+  between panes on a computer, a 28px dot gutter in a phone's list, the
+  shortcuts button pressed while its list is open, and a result count the
+  search options never hide (decision 0054).
 
 ---
 

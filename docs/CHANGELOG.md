@@ -12,6 +12,17 @@ not how it was done.
   longer read like a paragraph; they stay as easy to read as the text.
 - In the Paper theme by day, the selected row is a warm grey that matches
   the page, instead of a cool slate.
+## 24 October 2026: A line between panes, a roomier phone list
+
+- On a computer, a faint line now runs where the sidebar meets the list and
+  where the list meets the article, as in Apple Books on a Mac.
+- On a phone, the unread dot sits a little in from the screen's edge, and
+  the list's titles, its heading and its search field line up 28px in.
+- The keyboard button at the sidebar's foot is filled while the shortcut
+  list is open, as the gear is while Settings is open.
+- With the search options open in a narrow list or on a phone, the number
+  of results now shows at the menu's foot instead of hiding under it
+  (decision 0054).
 
 ## 24 October 2026: Calmer night pictures, one search field, one phone sheet
 

@@ -177,6 +177,8 @@
   let welcomeHeading: HTMLHeadingElement | undefined = $state();
   /** How many articles the list shows, so the empty reading area offers j only when there's one to open. */
   let listCount = $state(0);
+  /** The list's "28 results" while it shows search results, so the search options can repeat it where they'd cover it. */
+  let listFound = $state("");
   /** The line above the add field, in the sheet and on the phone's page. */
   const ADD_INTRO = "slowfeed finds the feed on any website you like, and lists its articles.";
   let headingText = $derived(
@@ -839,7 +841,7 @@
     aria-label="Sidebar"
     bind:this={sidebar}
     hidden={!panes.sidebar}
-    class={["flex-col bg-sidebar", panes.list ? "w-64 shrink-0" : "min-w-0 flex-1", panes.sidebar && "flex"]}
+    class={["flex-col bg-sidebar", panes.list ? "w-64 shrink-0" : "min-w-0 flex-1", panes.sidebar && "flex", !phone && "pane-edge"]}
   >
     <!--
       The sidebar's top line (decision 0043): the wordmark, on the same line as the list's title and
@@ -923,8 +925,14 @@
         class="btn-quiet ml-1.5 min-w-0 flex-1 justify-start gap-2.5 pl-[14px] text-small text-ink-2"><Icon name="plus" size={16} />Add feed</a
       >
       {#if !phone}
-        <button type="button" onclick={() => (cheatSheetOpen = true)} aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)" class="btn-quiet btn-icon"
-          ><Icon name="keyboard" size={18} /></button
+        <!-- Pressed, with the gear's fill, while the shortcut list is open, so the foot shows where you are either way (decision 0054). -->
+        <button
+          type="button"
+          onclick={() => (cheatSheetOpen = true)}
+          aria-label="Keyboard shortcuts"
+          title="Keyboard shortcuts (?)"
+          aria-pressed={cheatSheetOpen}
+          class={["btn-quiet btn-icon", cheatSheetOpen && "bg-tint-sidebar text-ink"]}><Icon name="keyboard" size={18} /></button
         >
       {/if}
       <a
@@ -1002,6 +1010,8 @@
             phone && "phone",
             panes.article ? "w-80 shrink-0 xl:w-96 2xl:w-[26rem]" : "min-w-0 flex-1",
             panes.list && !welcomeWide && "flex",
+            // A 1px line where the list meets the reading pane, as where the sidebar meets the list (decision 0054).
+            !phone && panes.article && "pane-edge",
           ]}
         >
           {#if phone}
@@ -1027,7 +1037,7 @@
           <!-- A column, so the floating note can sit at the pane's foot even under a short list. -->
           <div use:edge class="scroller relative flex min-h-0 flex-1 scroll-pb-20 flex-col overflow-y-auto pt-2 pr-[var(--list-end)] pb-6 pl-[var(--list-start)]">
             {#if feeds && feeds.length > 0 && !missing}
-              <SearchBar bind:this={searchBar} {query} {feeds} {folders} here={scopeFor(under)} onChange={searchChanged} />
+              <SearchBar bind:this={searchBar} {query} {feeds} {folders} here={scopeFor(under)} found={listFound} onChange={searchChanged} />
             {/if}
             {#if missing && (under.kind === "folder" || under.kind === "edit-folder")}
               <p class="mt-4">There's no folder here. It may have been deleted or renamed.</p>
@@ -1042,7 +1052,8 @@
                 name), so one heading shows: the welcome's, 96px under the top line on the screen's
                 margin (decision 0052). A medium window keeps it centred.
               -->
-              <div class={phone ? "mt-[5.5rem] flex" : "mt-8 flex justify-center"}>{@render welcome(phone)}</div>
+              <!-- The list's 28px dot gutter (decision 0054) is for rows: the welcome steps back out to the 20px margin. -->
+              <div class={phone ? "mt-[5.5rem] ml-[calc(1.25rem-var(--list-start))] flex" : "mt-8 flex justify-center"}>{@render welcome(phone)}</div>
             {:else if feeds !== undefined && sort !== undefined}
               <!-- The list, with "New items · press r" and Undo in a note floating at its foot (More, with Refresh, sits beside the title). -->
               {#key listKey}
@@ -1060,6 +1071,7 @@
                   results={shown !== undefined}
                   oneFeed={under.kind === "feed" && !shown}
                   bind:count={listCount}
+                  bind:found={listFound}
                 />
               {/key}
             {/if}
