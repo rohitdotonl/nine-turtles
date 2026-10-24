@@ -416,18 +416,18 @@ input {
   line-height: 1.65;
 }
 
-/* The source line keeps the interface's meta size, whatever the text size. */
-.article > p:first-child {
+/* The source line keeps the interface's size, whatever the text size. */
+.article-byline {
+  margin-top: 0.875rem;
   font-family: var(--font-sans);
-  font-size: var(--text-meta);
-  line-height: 1.4;
+  font-size: var(--text-small);
+  line-height: 1.45;
 }
 
 /* The one large thing on the screen: clearly above the article's own headings. */
 .article-title {
-  margin-top: 0.75rem;
-  font-size: 1.8em;
-  line-height: 1.18;
+  font-size: 1.65em;
+  line-height: 1.2;
   font-weight: 700;
   letter-spacing: -0.015em;
   text-wrap: balance;
@@ -435,9 +435,17 @@ input {
 }
 
 .article-text {
-  margin-top: 1.4em;
+  margin-top: 1.75em;
   overflow-wrap: break-word;
   text-wrap: pretty;
+}
+
+/* The end of an article: a short, centred hairline with room after it. */
+.article-end {
+  width: 2.5rem;
+  margin: 3em auto 0;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--ink) 25%, transparent);
 }
 
 .article-text :where(p, ul, ol, dl, blockquote, pre, table, figure, hr) {

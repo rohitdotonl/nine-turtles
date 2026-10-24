@@ -401,11 +401,11 @@
       <Icon name="check" size={16} />Mark all as read
     </button>
   {/if}
+  {#if results}
+    <!-- How many were found, at the end of the same line. Present from the start and filled once they load, so screen readers hear it. -->
+    <p role="status" class="ml-auto pr-0.5 text-meta text-muted empty:sr-only">{loaded ? resultCount(articles.length, next !== null) : ""}</p>
+  {/if}
 </div>
-{#if results}
-  <!-- How many were found, above the results. Present from the start and filled once they load, so screen readers hear it. -->
-  <p role="status" class="mb-2 text-meta text-muted empty:sr-only">{loaded ? resultCount(articles.length, next !== null) : ""}</p>
-{/if}
 
 {#if loaded && articles.length === 0}
   <p>{empty}</p>

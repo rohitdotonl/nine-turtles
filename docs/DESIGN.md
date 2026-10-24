@@ -41,7 +41,7 @@ No amount of calm or minimalism justifies text some people can't read.
 - **Fully keyboard-operable:** standard Tab / Enter / Escape with a visible focus ring are the floor; vim keys are a power feature on top.
 - **Screen readers:** panes are landmarks; the selected item and state changes ("marked as read") are announced; each article carries its language.
 - **Respect system settings:** text size, reduced motion, high contrast, light/dark.
-- **Touch targets:** at least 44px on mobile, however dense the design.
+- **Touch targets:** at least 44px on mobile, however dense the design. Where the main pointer is a mouse or trackpad, sidebar rows and the search options' controls may be 36px; anything a finger is the main pointer for gets 44px.
 
 **Test:** can someone use every feature with only a keyboard, only a screen reader, or at 200% text size?
 
@@ -252,6 +252,8 @@ In river mode (V2) only the cursor and star show.
 - **Summary-only feeds** show the summary with "Open original"; never fetch the full article (second floor).
 - **Images** load normally from the publisher; invisible 1×1 tracking images are removed.
 - **"Open original"** is always present, always in the same place, with **Share** beside it.
+- **Title, then byline:** the title first, then who, where and when in a quiet line under it.
+- **An ending:** a short centred line after the last paragraph, and room below it.
 - Prefetch the next article for instant `j`.
 
 ### Reading modes
@@ -280,7 +282,7 @@ In river mode (V2) only the cursor and star show.
 
 ### Search
 
-- **`/`** focuses the field. A faint **search icon** starts it and the **tuning (sliders) button** sits inside it at its right end; its tooltip says "Search options." A quiet line above the results says how many were found.
+- **`/`** focuses the field. A faint **search icon** starts it and the **tuning (sliders) button** sits inside it at its right end; its tooltip says "Search options." The number found sits quietly at the end of the "Mark all as read" line.
 - **Scope defaults to where you are,** shown as a removable chip in the field, e.g. `[ in: Tech × ]`. Remove it to search everything.
 - **The chip shows the scope; the tuning panel edits it;** they stay in sync. The panel offers scope (current location · all feeds · a folder · a feed), unread only, starred only, and a date range.
 - **Always full text:** titles and bodies together, title matches ranked higher. No toggle.

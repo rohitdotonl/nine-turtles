@@ -29,11 +29,20 @@ test.describe("on a wide window", () => {
   test("j shows an article cleaned and restyled, and j and k move through the list", async ({ page }) => {
     await openRoom(page);
     await expect(article(page).getByText("No article open.")).toBeVisible();
+    // It waits in the middle of the reading area, not at its top.
+    const empty = (await article(page).getByText("No article open.").boundingBox())!;
+    const pane = (await article(page).boundingBox())!;
+    expect(empty.y).toBeGreaterThan(pane.y + pane.height / 4);
 
     await page.keyboard.press("j");
     await expect(row(page, "The pleasure of a slow letter")).toHaveAttribute("aria-current", "true");
     await expect(row(page, "The pleasure of a slow letter")).toBeFocused();
     await expect(title(page, "The pleasure of a slow letter")).toBeVisible();
+
+    // The title comes first, then the byline under it; the article ends with a short line.
+    const byline = (await article(page).locator(".article-byline").boundingBox())!;
+    expect(byline.y).toBeGreaterThan((await title(page, "The pleasure of a slow letter").boundingBox())!.y);
+    await expect(article(page).locator("hr.article-end")).toBeAttached();
 
     // Headings, quotes, tables, code and the publisher's image, in place.
     const text = article(page).locator(".article-text");

@@ -147,9 +147,13 @@
     }}
   >
     <span class="shrink-0 text-muted"><Icon name="search" size={16} /></span>
-    <div class="flex min-w-0 flex-1 flex-wrap items-center gap-1">
+    <!--
+      One line for the usual one or two chips: they shrink and end in "…" (their whole text is in their
+      tooltip and their Remove button's name). With more, the row wraps so every chip stays readable.
+    -->
+    <div class={["flex min-w-0 flex-1 items-center gap-1", chips.length > 2 && "flex-wrap"]}>
       {#each chips as chip (chip.key)}
-        <span class="my-1.5 flex max-w-full min-w-0 items-center rounded bg-[var(--tone)] pl-2 text-small">
+        <span class={["my-1.5 flex min-w-0 shrink items-center rounded bg-[var(--tone)] pl-2 text-small whitespace-nowrap", chips.length > 2 ? "max-w-full" : "max-w-[60%]"]}>
           <span class="min-w-0 truncate" title={chip.label}>{chip.label}</span>
           <button type="button" aria-label="Remove {chip.label}" onclick={() => remove(chip)} class="-my-2 -mr-2 -ml-1 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center">
             <Icon name="close" size={14} />
@@ -185,9 +189,10 @@
       aria-label="Search options"
       title="Search options"
       onclick={() => (panelOpen = !panelOpen)}
-      class={["flex size-11 shrink-0 cursor-pointer items-center justify-center self-start rounded-r-lg text-ink-2", panelOpen && "bg-[var(--tone)] text-ink"]}
+      class={["flex size-11 shrink-0 cursor-pointer items-center justify-center self-start", panelOpen ? "text-ink" : "text-ink-2"]}
     >
-      <Icon name="sliders" size={18} />
+      <!-- Open, the icon sits on a small rounded tone, like a pressed toolbar button. -->
+      <span class={["flex size-8 items-center justify-center rounded-md", panelOpen && "bg-[var(--tone)]"]}><Icon name="sliders" size={18} /></span>
     </button>
   </div>
 
@@ -218,16 +223,17 @@
     aria-labelledby="search-options-name"
     bind:this={panel}
     hidden={!panelOpen}
-    class="mt-2 rounded-lg bg-paper p-4"
+    class="mt-2 rounded-lg border border-ink/10 bg-paper p-4"
   >
     <p id="search-options-name" class="text-small font-semibold">Search options</p>
-    <div class="mt-3 flex flex-col gap-4">
+    <div class="mt-3 flex flex-col gap-3">
       <label class="flex flex-col gap-1.5">
         <span class="text-small text-ink-2">Search in</span>
+        <span class="relative block">
         <select
           value={scopeValue(query.scope)}
           onchange={(event) => onChange({ ...query, scope: scopeFrom(event.currentTarget.value) }, true)}
-          class="field w-full"
+          class="field w-full appearance-none pr-9 text-ui pointer-fine:min-h-9"
         >
           <option value="all">All feeds{hereMark({ kind: "all" })}</option>
           <option value="view:unread">Unread{hereMark({ kind: "view", view: "unread" })}</option>
@@ -245,13 +251,15 @@
             {/each}
           </optgroup>
         </select>
+        <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-ink-2"><Icon name="chevron-down" size={16} /></span>
+        </span>
       </label>
       <div class="flex flex-wrap gap-x-6">
-        <label class="flex min-h-11 items-center gap-2.5 text-small">
+        <label class="flex min-h-11 items-center gap-2.5 text-small pointer-fine:min-h-9">
           <input type="checkbox" checked={query.unread} onchange={(event) => onChange({ ...query, unread: event.currentTarget.checked }, true)} class="size-[1.125rem]" />
           Unread only
         </label>
-        <label class="flex min-h-11 items-center gap-2.5 text-small">
+        <label class="flex min-h-11 items-center gap-2.5 text-small pointer-fine:min-h-9">
           <input type="checkbox" checked={query.starred} onchange={(event) => onChange({ ...query, starred: event.currentTarget.checked }, true)} class="size-[1.125rem]" />
           Starred only
         </label>
@@ -263,7 +271,7 @@
             type="date"
             value={query.after}
             onchange={(event) => onChange({ ...query, after: event.currentTarget.value }, true)}
-            class="field w-full min-w-0"
+            class="field w-full min-w-0 text-ui pointer-fine:min-h-9"
           />
         </label>
         <label class="flex min-w-0 flex-col gap-1.5">
@@ -272,7 +280,7 @@
             type="date"
             value={query.before}
             onchange={(event) => onChange({ ...query, before: event.currentTarget.value }, true)}
-            class="field w-full min-w-0"
+            class="field w-full min-w-0 text-ui pointer-fine:min-h-9"
           />
         </label>
       </div>

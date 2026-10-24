@@ -4,6 +4,16 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 24 October 2026: Tidier search, and articles that end
+
+- The search box stays on one line; its options panel has smaller, matching
+  controls and a list with its own arrow.
+- The number of results sits at the end of the "Mark all as read" line.
+- "No article open." waits in the middle of the reading area.
+- An article's title comes first, with who wrote it, where and when in a
+  line under it, and a slightly lighter title size.
+- Every article ends with a short centred line and room below it.
+
 ## 24 October 2026: Calmer lists and matching pages
 
 - "Where you are" looks the same in the sidebar and the list: a soft rounded
