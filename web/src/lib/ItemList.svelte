@@ -453,6 +453,9 @@
     <button type="button" aria-disabled={busy} onclick={() => load(next)} class="btn mt-6">
       {order === "oldest" ? "Show newer items" : "Show older items"}
     </button>
+  {:else if articles.length > 0}
+    <!-- A finite list says when it's finished (DESIGN.md → "The list has an end"). -->
+    <p class="mx-auto mt-6 w-full max-w-40 border-t border-ink/10 pt-4 text-center text-meta text-muted">That's everything.</p>
   {/if}
 {/if}
 {#if problem}
@@ -464,7 +467,7 @@
   the list moves when it appears. Empty, it's hidden but stays for screen
   readers, which hear each message as it arrives.
 -->
-<div class={["pointer-events-none sticky bottom-4 z-10 flex justify-center", !!(line || undoLast || updates.stranded || newWaiting) && "mt-6"]}>
+<div class={["pointer-events-none sticky bottom-4 z-10 mt-auto flex justify-center", !!(line || undoLast || updates.stranded || newWaiting) && "pt-6"]}>
   <div
     class={[
       "toast pointer-events-auto flex min-h-11 max-w-full flex-wrap items-center gap-x-3 rounded-lg border border-ink/15 bg-paper px-4 text-small text-ink-2",

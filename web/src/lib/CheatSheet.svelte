@@ -38,7 +38,7 @@
   class="m-auto max-h-[min(44rem,90dvh)] w-[min(52rem,calc(100vw-2rem))] overflow-hidden rounded-xl sheet-edge border bg-paper p-0 text-ink shadow-[0_24px_64px_-16px_rgb(0_0_0/0.35)]"
 >
   <div class="flex max-h-[min(44rem,90dvh)] flex-col">
-    <div class="flex min-h-14 shrink-0 items-center justify-between gap-4 border-b border-ink/10 pr-2.5 pl-6">
+    <div class="flex min-h-16 shrink-0 items-center justify-between gap-4 border-b border-ink/10 pr-4 pl-6">
       <h2 id="shortcuts-heading" class="text-ui font-semibold">Keyboard shortcuts</h2>
       <button type="button" onclick={() => (open = false)} aria-label="Close" title="Close (Esc)" class="btn-quiet btn-icon"><Icon name="close" size={18} /></button>
     </div>

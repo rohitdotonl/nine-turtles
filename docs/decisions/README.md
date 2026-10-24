@@ -42,3 +42,4 @@ says "Replaced by …" at the top.
 | [0030](0030-flush-place-bar.md) | "Where you are" bar flush with the pane's edge in both panes; the selected article's focus is the usual outline, not a grey hairline |
 | [0031](0031-sheets-and-popovers.md) | Short tasks (add or edit a feed, edit a folder) as sheets over the list; search options as a popover with date presets |
 | [0032](0032-more-themes.md) | Eight more themes to try (four light, four dark), each with its own "where you are" accent; the owner prunes later |
+| [0033](0033-one-mark-per-row.md) | The keyboard's outline replaces the selected row's fill; one search field style; sheets anchored, each with Cancel; "That's everything." ends a list |

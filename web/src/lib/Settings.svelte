@@ -200,7 +200,7 @@
       </section>
 
       <section aria-labelledby="data-heading">
-        <div class="mb-3 px-1">
+        <div class="mb-3">
           <h3 id="data-heading" tabindex="-1" bind:this={dataHeading} class="text-ui font-semibold">Your data</h3>
           <p class="mt-0.5 text-small text-muted">Files you can keep, and take to another app.</p>
         </div>
@@ -229,7 +229,7 @@
       </section>
 
       <!-- A quiet footer: which version this is, and signing out. -->
-      <footer aria-label="Version and account" class="flex flex-col gap-3 px-1">
+      <footer aria-label="Version and account" class="flex flex-col gap-3">
         <div class="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
           <p class="text-small text-muted" translate="no">Version {version}</p>
           <button type="button" onclick={leave} class="btn-quiet btn-small -mr-2.5">Sign out</button>
@@ -248,7 +248,7 @@
 </section>
 
 {#snippet groupHead(id: string, name: string, note: string)}
-  <div class="mb-3 px-1">
+  <div class="mb-3">
     <h3 {id} class="text-ui font-semibold">{name}</h3>
     <p class="mt-0.5 text-small text-muted">{note}</p>
   </div>

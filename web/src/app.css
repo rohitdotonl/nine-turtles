@@ -65,8 +65,8 @@
   --ink-2: #47423b;
   --muted: #61564a;
   --accent: #2f4a7a;
-  --tint-list: #e1dfdb;
-  --tint-sidebar: #d8d6d0;
+  --tint-list: #e4ded2;
+  --tint-sidebar: #dbd4c6;
 }
 
 /* Dark follows the device setting unless a theme has been chosen. */
@@ -319,13 +319,17 @@ body {
 }
 
 /*
-  The keyboard's place: a 2px outline in the text color just inside the row,
-  following its corners, on the selected row too. The bar stays outside it,
-  at the pane's edge, so the two never stack into a striped card.
+  The keyboard's place: a 2px outline in a softened text color just inside
+  the row, following its corners (contrast.test.ts keeps it at 3 : 1 or
+  more). On the selected row it replaces the fill, so the row shows two
+  marks, never three: the outline, and the bar outside it at the pane's edge.
 */
 .place:focus-visible {
-  outline: 2px solid var(--ink);
+  outline: 2px solid var(--place-focus);
   outline-offset: -2px;
+}
+.place:is([aria-current], [data-here]):focus-visible {
+  background-color: transparent;
 }
 
 /* Only where there's a real pointer: on a touch screen a tint would stay after the tap. */
@@ -561,7 +565,7 @@ textarea {
     color: var(--muted);
   }
 
-  /* A filter rather than a search: no edge, a faint tone, so it isn't mistaken for the article search. */
+  /* The two search fields (the sidebar's and the list's): no edge, a faint tone, an icon. */
   .field-quiet {
     border-color: transparent;
     background-color: var(--tone);
@@ -576,6 +580,8 @@ textarea {
   */
   --hover: color-mix(in srgb, var(--ink) 5%, transparent);
   --tone: color-mix(in srgb, var(--ink) 7%, transparent);
+  /* The keyboard's outline on rows: the text color, softened. */
+  --place-focus: color-mix(in srgb, var(--ink) 65%, transparent);
 }
 
 /* Windows high contrast and similar: let the system draw clear edges. */

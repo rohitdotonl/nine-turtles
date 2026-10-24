@@ -79,7 +79,7 @@
       </label>
     {/each}
     <label class="mt-2 flex flex-col gap-2">
-      <span>New folder</span>
+      <span class="font-semibold">New folder</span>
       <input bind:value={newFolder} type="text" autocomplete="off" class="field" aria-describedby="new-folder-hint" />
       <span id="new-folder-hint" class="text-small text-muted">Optional. The feed goes in it when you save.</span>
     </label>
@@ -100,10 +100,10 @@
         <button type="submit" aria-disabled={busy} class="btn-primary">Save</button>
       </div>
     </form>
-    <!-- Unsubscribe sits apart, below a hairline, as a quiet button with what it does said beside it. -->
-    <div class="-mx-6 flex flex-col items-start gap-1 border-t border-ink/10 px-6 pt-4">
-      <button type="button" aria-disabled={busy} onclick={leave} class="btn-quiet -ml-3">Unsubscribe from {feed.title}</button>
+    <!-- Unsubscribe sits apart, below a hairline: what it does, then the button. -->
+    <div class="-mx-6 flex flex-col items-start gap-3 border-t border-ink/10 px-6 pt-4">
       <p class="text-small text-muted">{@render unsubscribeHelp()}</p>
+      <button type="button" aria-disabled={busy} onclick={leave} class="btn max-w-full"><span class="truncate">Unsubscribe from {feed.title}</span></button>
     </div>
   </Sheet>
 {:else}

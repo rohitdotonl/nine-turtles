@@ -69,9 +69,9 @@
         <button type="submit" aria-disabled={busy} class="btn-primary">Save</button>
       </div>
     </form>
-    <div class="-mx-6 flex flex-col items-start gap-1 border-t border-ink/10 px-6 pt-4">
-      <button type="button" aria-disabled={busy} onclick={remove} class="btn-quiet -ml-3">Delete {folder.name}</button>
+    <div class="-mx-6 flex flex-col items-start gap-3 border-t border-ink/10 px-6 pt-4">
       <p class="text-small text-muted">Its feeds stay; they just leave this folder. You can undo it straight afterwards.</p>
+      <button type="button" aria-disabled={busy} onclick={remove} class="btn max-w-full"><span class="truncate">Delete {folder.name}</span></button>
     </div>
   </Sheet>
 {:else}

@@ -102,8 +102,8 @@
     <button type="submit" aria-disabled={busy} class="btn-primary">Add feed</button>
   </div>
   <!-- Screen readers hear each new line here without moving the keyboard's place. -->
-  <p id="feed-address-status" role="status" class="flex min-h-6 items-start gap-1.5">
-    {#if busy}Looking for a feed…{:else}{#if problem}<span class="mt-0.5 shrink-0"><Icon name="alert" size={16} /></span>{/if}{message}{/if}
+  <p id="feed-address-status" role="status" class="flex min-h-6 items-start gap-1.5 text-small">
+    {#if busy}Looking for a feed…{:else}{#if problem}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{/if}{message}{/if}
   </p>
 </form>
 

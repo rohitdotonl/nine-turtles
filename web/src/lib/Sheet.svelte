@@ -56,7 +56,7 @@
   oncancel={cancel}
   onpointerdown={(event) => (pressedOutside = event.target === dialog)}
   onclick={outside}
-  class="sheet m-auto max-h-[min(40rem,90dvh)] w-[min(30rem,calc(100vw-2rem))] overflow-y-auto rounded-xl sheet-edge border bg-paper p-0 text-ink"
+  class="sheet mx-auto mt-[12vh] max-h-[min(40rem,84dvh)] w-[min(30rem,calc(100vw-2rem))] overflow-y-auto rounded-xl sheet-edge border bg-paper p-0 text-ink"
 >
   <div class="flex flex-col gap-5 p-6">
     <h2 id="sheet-heading" tabindex="-1" bind:this={heading} class="font-serif text-heading font-semibold tracking-[-0.01em] break-words">
@@ -67,6 +67,7 @@
 </dialog>
 
 <style>
+  /* Anchored a fixed way down rather than centred, so it doesn't move when a message appears in it. */
   .sheet {
     box-shadow: 0 24px 64px -16px rgb(0 0 0 / 0.3);
   }
