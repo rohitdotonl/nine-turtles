@@ -7,8 +7,9 @@
   starred articles as a JSON Feed file.
 -->
 <script lang="ts">
-  import Icon from "./Icon.svelte";
+  import { edge } from "./edge";
   import ImportOpml from "./ImportOpml.svelte";
+  import PageHead from "./PageHead.svelte";
   import type { Order } from "./feeds";
   import { LINE_WIDTHS, READING_FONTS, TEXT_SIZES, type Preferences } from "./preferences";
   import { signOut } from "./session";
@@ -85,14 +86,8 @@
 </script>
 
 <section aria-labelledby="settings-heading" class="flex flex-1 flex-col bg-paper pt-3">
-  <!-- The screen's top line, on the same line as the sidebar's wordmark; it never scrolls. -->
-  <div class={["pr-6 md:pr-10", besideToggle ? "pl-16" : "pl-6 md:pl-10"]}>
-    <div class="flex min-h-11 max-w-2xl items-center justify-between gap-4">
-      <h2 id="settings-heading" tabindex="-1" bind:this={heading} class="font-serif text-heading font-bold tracking-[-0.01em]">Settings</h2>
-      <button type="button" onclick={onClose} aria-label="Close settings" title="Close (Esc)" class="btn-quiet btn-icon -mr-2.5"><Icon name="close" size={20} /></button>
-    </div>
-  </div>
-  <div class="relative min-h-0 flex-1 overflow-y-auto px-6 pt-5 pb-16 md:px-10">
+  <PageHead title="Settings" id="settings-heading" bind:heading {onClose} closeLabel="Close settings" {besideToggle} />
+  <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-6 pt-5 pb-16 md:px-10">
     <!--
       Grouped like a system settings window: each group a card with a heading
       above it, one setting per row, rows parted by a hairline. On a wide

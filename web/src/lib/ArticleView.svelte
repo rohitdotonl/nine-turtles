@@ -13,6 +13,7 @@
   thumb reach.
 -->
 <script lang="ts">
+  import { edge } from "./edge";
   import Icon from "./Icon.svelte";
   import { articleNow, readArticle, when, type Article, type FullArticle } from "./feeds";
 
@@ -153,7 +154,7 @@
   </div></div>
   {/if}
 
-  <div bind:this={scroller} class="scroll-gutter relative min-h-0 flex-1 overflow-y-auto px-6 pb-16 md:px-10">
+  <div use:edge bind:this={scroller} class="scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto px-6 pb-16 md:px-10">
     <article lang={full?.language ?? undefined} class="article">
       <p class="text-small text-muted" lang="en">
         {#if full?.siteUrl}

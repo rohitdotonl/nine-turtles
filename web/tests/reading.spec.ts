@@ -166,12 +166,14 @@ test.describe("on a wide window", () => {
     // ink blue bar and tint.
     const first = row(page, "The pleasure of a slow letter");
     await tabTo(page, first);
-    await expect(first).toHaveCSS("box-shadow", /inset/);
+    await expect(first).toHaveCSS("outline-style", "solid");
+    await expect(first).toHaveCSS("outline-width", "2px");
     await page.keyboard.press("j");
     const selected = row(page, "The pleasure of a slow letter");
     await expect(selected).toBeFocused();
-    await expect(selected).toHaveCSS("border-left-color", "rgb(47, 74, 122)");
-    await expect(selected).toHaveCSS("box-shadow", /inset/);
+    expect(await selected.evaluate((element) => getComputedStyle(element, "::before").backgroundColor)).toBe("rgb(47, 74, 122)");
+    await expect(selected).toHaveCSS("outline-style", "solid");
+    await expect(selected).toHaveCSS("outline-width", "1px");
     // Opening an article gives its title the keyboard's place for screen
     // readers, with a quiet outline so a keyboard user can see it too.
     await page.keyboard.press("o");
@@ -208,14 +210,17 @@ test.describe("on a wide window", () => {
     const style = (name: string) =>
       row(page, name).evaluate((element) => {
         const css = getComputedStyle(element);
-        return { outline: css.outlineStyle, bar: css.borderLeftColor, page: getComputedStyle(document.body).backgroundColor };
+        return { outline: css.outlineStyle, pill: getComputedStyle(element, "::before").content };
       });
     const selected = await style("The pleasure of a slow letter");
     expect(selected.outline).toBe("solid");
-    expect(selected.bar).not.toBe(selected.page);
+    expect(selected.pill).not.toBe("none");
     const other = await style("Only the first page");
     expect(other.outline).toBe("none");
-    expect(other.bar).toBe(other.page);
+    // The keyboard on the selected row draws a thicker outline still, never a thinner one.
+    await row(page, "The pleasure of a slow letter").focus();
+    await expect(row(page, "The pleasure of a slow letter")).toHaveCSS("outline-width", "3px");
+    expect(other.pill).toBe("none");
   });
 
   test("after scrolling a long list, the panes still fill the window and only the list moves", async ({ page }) => {

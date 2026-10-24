@@ -10,8 +10,9 @@
   fetched in advance.
 
   Above the list: Refresh and "Mark all as read", which marks only the
-  articles listed here, then the reserved lines where "New items · press r"
-  and "Marked 23 items as read · Undo" appear, so nothing shifts. Every mark
+  articles listed here. "New items · press r" and "Marked 23 items as read"
+  with Undo appear in a note floating at the bottom of the list, so nothing
+  shifts. Every mark
   shows at once and is saved behind; if saving fails, the line says so and
   the mark is taken back (SPEC section 25). Articles read in the Unread view
   stay where they are, greyed, until you leave it or press r.
@@ -56,6 +57,7 @@
     onRefresh,
     refreshInTopBar = false,
     results = false,
+    oneFeed = false,
   }: {
     source: Source;
     order: Order;
@@ -75,6 +77,8 @@
     refreshInTopBar?: boolean;
     /** These are search results: say how many, and there's nothing new to fetch. */
     results?: boolean;
+    /** Every article here is from one feed (its own list), so the rows don't repeat its name. */
+    oneFeed?: boolean;
   } = $props();
 
   /** How often the list asks whether new items are waiting. */
@@ -93,7 +97,7 @@
   // Touch screens have no r key; they're told to tap Refresh (same test as the keyboard hint).
   const touch = matchMedia("(hover: none) and (pointer: coarse)").matches;
 
-  /** The reserved line above the list, and what Undo would do, if anything. */
+  /** The floating note's message, and what Undo would do, if anything. */
   let line = $state("");
   let undoLast: (() => void) | undefined = $state();
   // The notice is read once, when the list opens.
@@ -398,30 +402,10 @@
     </button>
   {/if}
 </div>
-<!--
-  The reserved line: always this tall, so nothing below moves when it fills.
-  What was just done (with Undo) on the left; "New items · press r" on the right.
-  On a touch screen the line is as tall as a 44px tap, so Undo and Reload never reach into the first row.
--->
-<div class="mb-1.5 flex min-h-6 pointer-coarse:min-h-11 flex-wrap items-center justify-between gap-x-4 text-meta text-muted">
-  <p class="flex flex-wrap items-center gap-x-1">
-    <span role="status">{line || (results && loaded ? resultCount(articles.length, next !== null) : "")}</span>
-    <span aria-live="polite" class="sr-only">{spoken}</span>
-    {#if undoLast}
-      <span aria-hidden="true">·</span>
-      <button type="button" onclick={undoByButton} class="-my-2.5 pointer-coarse:my-0 min-h-11 min-w-11 px-2 font-semibold text-ink underline underline-offset-4">Undo</button>
-    {/if}
-  </p>
-  <p class="flex items-center">
-    <span role="status">{updates.stranded ? STRANDED_MESSAGE : newWaiting ? newItemsMessage(touch) : ""}</span>
-    {#if updates.stranded}
-      <!-- With a mouse the target reaches past the line, so the line keeps its height. -->
-      <button type="button" onclick={() => location.reload()} class="-my-2.5 pointer-coarse:my-0 ml-2 min-h-11 min-w-11 font-semibold text-ink underline underline-offset-4"
-        >Reload</button
-      >
-    {/if}
-  </p>
-</div>
+{#if results}
+  <!-- How many were found, above the results. Present from the start and filled once they load, so screen readers hear it. -->
+  <p role="status" class="mb-2 text-meta text-muted empty:sr-only">{loaded ? resultCount(articles.length, next !== null) : ""}</p>
+{/if}
 
 {#if loaded && articles.length === 0}
   <p>{empty}</p>
@@ -443,10 +427,11 @@
           }}
           onkeydown={arrows}
           class={[
-            "item-row block w-full cursor-pointer border-l-[3px] py-3 pr-6 pl-[21px] text-left",
-            current ? "border-accent bg-tint-list" : "border-transparent",
+            "item-row place mx-1 block w-[calc(100%-0.5rem)] cursor-pointer py-3 pr-5 pl-5 text-left",
           ]}
         >
+          <!-- Unread: a small dot in the text color beside the title, and a semibold title, so it shows without color. -->
+          {#if !article.read}<span aria-hidden="true" class="unread-dot"></span>{/if}
           <!-- Unread: full ink, semibold. Read: the second ink, regular. The selected row is never the quietest. -->
           <span class={["title block text-ui", !article.read ? "font-semibold text-ink" : current ? "text-ink" : "text-ink-2"]}
             >{#each boldParts(article.title || "Untitled", bold) as part, partIndex (partIndex)}{#if part.bold}<strong
@@ -457,7 +442,7 @@
             {#if article.starred}
 <span class="star"><Icon name="star" size={13} filled /></span><span class="sr-only">Starred, </span>
             {/if}
-            {article.feedTitle} ·
+            <span class={oneFeed ? "sr-only" : undefined}>{article.feedTitle} ·</span>
             <time datetime={new Date(article.at * 1000).toISOString()}>{when(article.at)}</time>
           </span>
         </button>
@@ -473,6 +458,36 @@
 {#if problem}
   <p role="status" class="mt-4">{problem}</p>
 {/if}
+<!--
+  What was just done (with Undo), "New items · press r", or that slowfeed was
+  updated: a small note that floats at the bottom of the list, so nothing in
+  the list moves when it appears. Empty, it's hidden but stays for screen
+  readers, which hear each message as it arrives.
+-->
+<div class={["pointer-events-none sticky bottom-4 z-10 flex justify-center", !!(line || undoLast || updates.stranded || newWaiting) && "mt-6"]}>
+  <div
+    class={[
+      "toast pointer-events-auto flex min-h-11 max-w-full flex-wrap items-center gap-x-3 rounded-lg border border-ink/15 bg-paper px-4 text-small text-ink-2",
+      !(line || undoLast || updates.stranded || newWaiting) && "sr-only",
+    ]}
+  >
+    <p class={["flex flex-wrap items-center gap-x-2", !(line || undoLast) && "sr-only"]}>
+      <span role="status">{line}</span>
+      <span aria-live="polite" class="sr-only">{spoken}</span>
+      {#if undoLast}
+        <button type="button" onclick={undoByButton} class="-mr-2 min-h-11 min-w-11 px-2 font-semibold text-ink underline underline-offset-4">Undo</button>
+      {/if}
+    </p>
+    <p class={["flex items-center", !(updates.stranded || newWaiting) && "sr-only"]}>
+      <span role="status">{updates.stranded ? STRANDED_MESSAGE : newWaiting ? newItemsMessage(touch) : ""}</span>
+      {#if updates.stranded}
+        <button type="button" onclick={() => location.reload()} class="ml-2 min-h-11 min-w-11 font-semibold text-ink underline underline-offset-4"
+          >Reload</button
+        >
+      {/if}
+    </p>
+  </div>
+</div>
 
 <style>
   /*

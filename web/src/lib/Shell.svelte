@@ -8,6 +8,7 @@
   moves unless the reader moves it.
 -->
 <script lang="ts">
+  import { edge } from "./edge";
   import Icon from "./Icon.svelte";
   import { onMount, untrack } from "svelte";
   import AddFeed from "./AddFeed.svelte";
@@ -16,6 +17,7 @@
   import EditFeed from "./EditFeed.svelte";
   import EditFolder from "./EditFolder.svelte";
   import ItemList from "./ItemList.svelte";
+  import PageHead from "./PageHead.svelte";
   import Settings from "./Settings.svelte";
   import SearchBar from "./SearchBar.svelte";
   import SidebarFeeds from "./SidebarFeeds.svelte";
@@ -689,8 +691,8 @@
               aria-current={current ? "page" : undefined}
               onclick={(event) => follow(event, { kind: "view", view })}
               class={[
-                "side-row flex min-h-11 pointer-fine:min-h-10 items-center gap-2.5 border-l-[3px] pr-5 pl-[17px] text-ui",
-                current ? "border-accent bg-tint-sidebar font-semibold text-ink" : "border-transparent text-ink-2",
+                "place mx-1.5 flex min-h-11 pointer-fine:min-h-9 items-center gap-2.5 pr-3.5 pl-[14px] text-ui",
+                current ? "font-semibold text-ink" : "text-ink-2",
               ]}
               ><span class={current ? "text-ink" : "text-muted"}><Icon name={VIEW_ICONS[view]} size={16} filled={view === "starred" && current} /></span
               >{VIEW_NAMES[view]}</a
@@ -716,8 +718,8 @@
         aria-current={route.kind === "add-feed" ? "page" : undefined}
         onclick={(event) => follow(event, { kind: "add-feed" })}
         class={[
-          "side-row flex min-h-11 min-w-0 flex-1 items-center gap-2 border-l-[3px] pr-3 pl-[17px] text-small",
-          route.kind === "add-feed" ? "border-accent bg-tint-sidebar font-semibold text-ink" : "border-transparent text-ink-2",
+          "place ml-1.5 flex min-h-11 min-w-0 flex-1 items-center gap-2 pr-3 pl-[14px] text-small",
+          route.kind === "add-feed" ? "font-semibold text-ink" : "text-ink-2",
         ]}><Icon name="plus" size={16} />Add feed</a
       >
       {#if !phone}
@@ -757,6 +759,7 @@
             feed={currentFeed}
             {folders}
             bind:heading={listHeading}
+            besideToggle={!phone && !panes.sidebar}
             onSaved={() => edited(true)}
             onCancel={() => edited(false)}
             onUnsubscribe={() => unsubscribeFrom(currentFeed!)}
@@ -767,13 +770,14 @@
           <EditFolder
             folder={currentFolder}
             bind:heading={listHeading}
+            besideToggle={!phone && !panes.sidebar}
             onSaved={() => edited(true)}
             onCancel={() => edited(false)}
             onDelete={() => deleteThis(currentFolder!)}
           />
         {/key}
       {:else if route.kind === "add-feed"}
-        <section aria-labelledby="list-heading" class={["flex flex-1 flex-col bg-paper", phone ? "pt-2" : "pt-16"]}>
+        <section aria-labelledby="list-heading" class={["flex flex-1 flex-col bg-paper", phone ? "pt-2" : "pt-3"]}>
           {#if phone}
             <div class="flex px-4 pb-2">
               <button type="button" onclick={() => stepBack("home")} aria-label="Back to Feeds" class="btn-quiet gap-1 px-2"
@@ -781,9 +785,9 @@
               >
             </div>
           {/if}
-          <div class="relative min-h-0 flex-1 overflow-y-auto px-6 pb-10 md:px-10">
-            <h2 id="list-heading" tabindex="-1" bind:this={listHeading} class="text-xlarge font-semibold">Add a feed</h2>
-            <p class="mt-2 mb-6 max-w-xl">
+          <PageHead title="Add a feed" bind:heading={listHeading} onClose={phone ? undefined : closePage} besideToggle={!phone && !panes.sidebar} />
+          <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-6 pt-3 pb-10 md:px-10">
+            <p class="mb-6 max-w-xl">
               Paste the address of a website you like, or of its feed. slowfeed finds the feed and lists its articles.
             </p>
             <AddFeed bind:field={addField} feeds={feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} />
@@ -822,7 +826,7 @@
               {@render listHead()}
             </div>
           {/if}
-          <div class="relative min-h-0 flex-1 overflow-y-auto px-6 pt-1 pb-6">
+          <div use:edge class="scroller relative min-h-0 flex-1 scroll-pb-20 overflow-y-auto px-6 pt-1 pb-6">
             {#if feeds && feeds.length > 0 && !missing}
               <SearchBar bind:this={searchBar} {query} {feeds} {folders} here={scopeFor(route)} onChange={searchChanged} />
             {/if}
@@ -839,7 +843,7 @@
                 >
               </p>
             {:else if feeds !== undefined && sort !== undefined}
-              <!-- Refresh and "Mark all as read", the reserved lines for "New items · press r" and "Marked … · Undo", then the list. -->
+              <!-- Refresh and "Mark all as read", then the list, with "New items · press r" and Undo in a note floating at its foot. -->
               {#key listKey}
                 <ItemList
                   bind:this={itemList}
@@ -854,6 +858,7 @@
                   onRefresh={loadFeeds}
                   refreshInTopBar={phone}
                   results={shown !== undefined}
+                  oneFeed={route.kind === "feed" && !shown}
                 />
               {/key}
             {/if}

@@ -59,6 +59,10 @@ test("a feed put in two folders appears under both, with its unread count in eac
   await page.getByRole("link", { name: "Edit feed" }).click();
   await expect(page).toHaveURL(/\/feeds\/[0-9]+\/edit$/);
   await expect(page.getByRole("heading", { level: 2, name: "Edit feed" })).toBeFocused();
+  // The X at the top closes it unchanged.
+  await page.getByRole("button", { name: "Close without saving" }).click();
+  await expect(page.getByRole("heading", { level: 2, name: `Blog ${blog}` })).toBeFocused();
+  await page.getByRole("link", { name: "Edit feed" }).click();
   await page.getByLabel("New folder").fill(first);
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByRole("heading", { level: 2, name: `Blog ${blog}` })).toBeFocused();
@@ -103,6 +107,10 @@ test("rename a folder; delete it, its feeds stay, and Undo brings it back", asyn
   await expect(page.getByRole("heading", { level: 2, name: "Edit folder" })).toBeFocused();
   // Escape goes back unchanged.
   await page.keyboard.press("Escape");
+  await expect(page.getByRole("heading", { level: 2, name: folder })).toBeFocused();
+  // So does the X at the top.
+  await page.getByRole("link", { name: "Edit folder" }).click();
+  await page.getByRole("button", { name: "Close without saving" }).click();
   await expect(page.getByRole("heading", { level: 2, name: folder })).toBeFocused();
 
   await page.getByRole("link", { name: "Edit folder" }).click();
