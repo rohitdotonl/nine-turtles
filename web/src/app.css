@@ -1302,6 +1302,20 @@ input {
 .toast {
   box-shadow: 0 10px 28px -10px rgb(0 0 0 / 0.3);
 }
+/*
+  The band the note sits in (decision 0047): the list's own tone, across the
+  pane's whole width, so rows scrolling up from below end at its top edge
+  rather than running under the note. The note is centred on the pane, and
+  the band takes no room while there's nothing to say.
+*/
+.toast-band {
+  margin-inline: calc(-1 * var(--list-start, 2rem)) calc(-1 * var(--list-end, 1.5rem));
+  padding-inline: var(--list-start, 2rem) var(--list-end, 1.5rem);
+}
+.toast-band-shown {
+  padding-block: 0.75rem 1rem;
+  background-color: var(--color-list);
+}
 
 /*
   The dim behind a sheet or the shortcut list (DESIGN.md → Exceptions log):

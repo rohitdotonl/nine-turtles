@@ -15,15 +15,36 @@ test("a new browser sees only the password field", async ({ page }) => {
   await expect(page.locator("#sidebar")).toHaveCount(0);
 });
 
+test("sign-in is one centred column, at the phone's one 20px margin, the button 12px under the field", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto("/");
+  await appReady(page);
+  const field = page.getByLabel("Password");
+  const button = page.getByRole("button", { name: "Sign in" });
+  const [fieldBox, buttonBox] = [(await field.boundingBox())!, (await button.boundingBox())!];
+  // The same margin as every other phone screen (decision 0047).
+  expect(Math.abs(fieldBox.x - 20)).toBeLessThan(1);
+  expect(Math.abs(fieldBox.x + fieldBox.width - 370)).toBeLessThan(1);
+  // Nothing kept between them while there's no message; the field's name is its placeholder.
+  expect(Math.abs(buttonBox.y - (fieldBox.y + fieldBox.height) - 12)).toBeLessThan(1);
+  await expect(field).toHaveAttribute("placeholder", "Password");
+  // The button's corners match the field's.
+  await expect(button).toHaveCSS("border-top-left-radius", "8px");
+  await expect(field).toHaveCSS("border-top-left-radius", "8px");
+});
+
 test("a wrong password says so calmly and keeps you out", async ({ page }) => {
   await page.goto("/");
   await appReady(page);
+  const fieldBefore = (await page.getByLabel("Password").boundingBox())!;
 
   await page.keyboard.type("not the password");
   await page.keyboard.press("Enter");
 
   await expect(page.getByRole("status")).toHaveText("That isn't the password.");
-  // The message sits between the field and the button, and the field is marked.
+  expect((await page.getByLabel("Password").boundingBox())!.y).toBe(fieldBefore.y);
+  // The message sits between the field and the button, and the field is marked. The room for
+  // it is kept below the button, so the field and the title above it don't move (decision 0047).
   await expect(page.getByLabel("Password")).toHaveAttribute("aria-invalid", "true");
   const message = (await page.getByRole("status").boundingBox())!;
   expect(message.y).toBeLessThan((await page.getByRole("button", { name: "Sign in" }).boundingBox())!.y);

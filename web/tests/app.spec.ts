@@ -17,7 +17,9 @@ const toggle = (page: Page) => page.getByRole("button", { name: "Sidebar" });
 
 test("a wide window shows three areas, a medium one two, a phone-narrow one one", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
-  await openApp(page);
+  // Starred: with no feeds yet, Unread and All show one welcome in place of the list and the
+  // reading area together (decision 0047); Starred keeps its own list.
+  await openApp(page, "/starred");
   await expect(sidebar(page)).toBeVisible();
   await expect(list(page)).toBeVisible();
   await expect(readingArea(page)).toBeVisible();
@@ -114,7 +116,8 @@ test("g then u, s or a goes to Unread, Starred or All; reload and Back keep your
   await page.reload();
   await appReady(page);
   await expect(page).toHaveTitle("All · slowfeed");
-  await expect(page.getByRole("heading", { level: 2, name: "All" })).toBeVisible();
+  // With no feeds yet, a wide window shows the welcome in the list's room (decision 0047); the list keeps its place behind it.
+  await expect(page.locator("#list-heading")).toHaveText("All");
 
   await page.goBack();
   await expect(page).toHaveURL(/\/starred$/);
@@ -383,8 +386,8 @@ test("Add a feed opens as a sheet over the list you were on: a serif title, one 
   expect(Math.round(add!.y - (field!.y + field!.height))).toBe(20);
   expect(Math.round(add!.x - (cancel!.x + cancel!.width))).toBe(12);
   await expect(sheet.getByRole("button", { name: "Cancel" })).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
-  // The list stays in view behind it, and nothing behind it answers the keyboard.
-  await expect(page.locator("#list-heading")).toBeVisible();
+  // The page stays in view behind it (here, with no feeds yet, the welcome, which keeps its shape), and nothing behind it answers the keyboard.
+  await expect(page.locator("#welcome-heading")).toBeVisible();
   // No X: Escape is the way out, and so is a press on the dimmed page.
   await expect(sheet.getByRole("button", { name: "Close" })).toHaveCount(0);
   await page.keyboard.press("Escape");

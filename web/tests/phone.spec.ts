@@ -291,6 +291,40 @@ test.describe("on a phone", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
   });
 
+  test("a row's source, time and star stay on one line: a long source is cut short, never the date", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 640 });
+    await openHome(page);
+    const name = `averyveryverylongfeednamewithoutanyspaces-${Date.now()}`;
+    await follow(page, `${FEED_SITE}/blog/${name}/`);
+    await page.goto(new URL("/all", FEEDS_APP).href);
+    await appReady(page);
+    const all = page.getByRole("region", { name: "All" });
+    const mine = all.getByRole("button", { name: new RegExp(`A year of reading slowly.*Blog ${name}`) });
+    // Star it, so the row's meta line carries the star too.
+    await mine.click();
+    await toolbar(page).getByRole("button", { name: "Star" }).click();
+    await expect(toolbar(page).getByRole("button", { name: "Star" })).toHaveAttribute("aria-pressed", "true");
+    await article(page).getByRole("button", { name: "Back to All" }).click();
+    const meta = mine.locator(".row-meta");
+    const shape = await meta.evaluate((element) => {
+      const name = element.querySelector(".row-feed-name")!;
+      return {
+        height: element.getBoundingClientRect().height,
+        line: parseFloat(getComputedStyle(element).lineHeight),
+        cut: name.scrollWidth > name.clientWidth,
+        figures: getComputedStyle(element).fontVariantNumeric,
+      };
+    });
+    // One line (decision 0047): the source ends in "…", the date and the star keep their room.
+    expect(shape.height).toBeLessThan(shape.line * 1.5);
+    expect(shape.cut).toBe(true);
+    // Proportional figures, as in running text, not the sidebar counts' tabular ones.
+    expect(shape.figures).toBe("proportional-nums");
+    const [rowBox, dateBox, starBox] = [(await mine.boundingBox())!, (await meta.locator("time").boundingBox())!, (await meta.locator(".row-star").boundingBox())!];
+    expect(Math.abs(starBox.y + starBox.height / 2 - (dateBox.y + dateBox.height / 2))).toBeLessThan(3);
+    expect(starBox.x + starBox.width).toBeLessThanOrEqual(rowBox.x + rowBox.width);
+  });
+
   test("a folder on the feeds screen has no arrow and always lists its feeds, a step in", async ({ page }) => {
     await openHome(page);
     const name = `foldered-${Date.now()}`;
