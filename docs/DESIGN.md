@@ -123,6 +123,7 @@ The 500-feed user gets everything; the 30-feed user never sees the machinery.
 | Sidebar search always visible | 6. Power is hidden, never missing | The owner wants finding a feed by name always available | One quiet field that filters feeds and folders by name. Nothing else in the sidebar skips progressive disclosure. |
 | Unread dot (decision 0028) | Type does the hierarchy, never badges | Weight alone was hard to scan in a long list; Mail and Things mark unread with a dot | A 6px dot in the text color before an unread title. No number, never colored, list rows only. |
 | A shadow under the floating note (decision 0028) | Regions by tone, no shadows | The note floats over the list; a soft shadow shows it sits above the rows rather than among them | Only the note at the bottom of the list: one soft shadow and a faint edge. Nothing else casts a shadow. |
+| Hairlines inside a page | Regions by tone, no lines | Inside one page, a faint line parts groups that do different jobs: rows in a Settings group, and Unsubscribe or Delete folder apart from the form above them | Only within a page, never between panes; faint, in a tone of the text color. A refused field's firmer edge is a border, not a line between regions. |
 | A hairline under a scrolled top line (decision 0028) | Regions by tone, no lines | Shows that text has gone under a top line that never scrolls, so it doesn't look cut off | Only under a pane's top line, only once its content has scrolled, in a faint tone of the text color. |
 
 ### Never
@@ -154,7 +155,7 @@ The philosophy applied. The principle is noted where it isn't obvious.
 - **Regions are separated by tone, not lines:** background tone and whitespace; no borders, shadows, blur or gradients (two small exceptions for things floating over or scrolling under, in the Exceptions log).
 - **Type does the hierarchy:** size and weight, never color or badges (the unread dot is the one mark, in the Exceptions log).
 - **One accent, one meaning:** ink blue means "where you are," and nothing else uses it.
-- **Icons where the convention is an icon** (close, back, search, settings, the sidebar toggle, and the article's copy link, star and mark unread), each named in its tooltip with its key and to screen readers. **Words** for the way to the publisher ("Open original"), Add feed, and the main action of a form.
+- **Icons where the convention is an icon** (close, back, search, settings, the sidebar toggle, edit feed or folder, and the article's copy link, star and mark unread), each named in its tooltip with its key and to screen readers. **Words** for the way to the publisher ("Open original"), Add feed, and the main action of a form.
 - **Pages that open in place of the list** (Settings, Add a feed, Edit feed, Edit folder) share one top line that never scrolls: the title in the serif, like the list's, and an X that closes the page (Escape does too).
 - **No motion.** Views switch instantly.
 
@@ -165,11 +166,11 @@ The philosophy applied. The principle is noted where it isn't obvious.
 | Background (reading area) | `#F8F6F1` | `#F4EBD7` | `#1A1917` |
 | Accent: ink blue ("where you are") | `#2F4A7A` | `#2F4A7A` | `#8FA9D6` |
 | Accent contrast against background (approx.) | 8.2 : 1 | 7.3 : 1 | 7.3 : 1 |
-| List area (one step deeper) | `#F0ECE3` | `#ECE1C8` | `#201E1B` |
-| Sidebar (two steps deeper) | `#E7E2D7` | `#E3D5B7` | `#282521` |
+| List area (one step deeper) | `#F0ECE3` | `#ECE1C8` | `#221F1C` |
+| Sidebar (two steps deeper) | `#E7E2D7` | `#E3D5B7` | `#2E2A25` |
 | Text | `#1F1E1C` | `#2A241B` | `#E6E1D8` |
 | Second ink: read titles, sidebar names, quieter actions | `#47423B` | `#463C2F` | `#C9C2B6` |
-| Muted grey, warm (owner's choice, Milestone 4): meta, counts, hints | `#61564A` | `#5E5141` | `#AA9E89` |
+| Muted grey, warm (owner's choice, Milestone 4): meta, counts, hints | `#61564A` | `#5E5141` | `#AFA38E` |
 
 - All accent pairs pass AAA (7 : 1); re-check if a value changes.
 - **Links in articles** are underlined in the text color, **never blue**.
@@ -283,7 +284,7 @@ In river mode (V2) only the cursor and star show.
 ### Search
 
 - **`/`** focuses the field. A faint **search icon** starts it and the **tuning (sliders) button** sits inside it at its right end; its tooltip says "Search options." The number found sits quietly at the end of the "Mark all as read" line.
-- **Scope defaults to where you are,** shown as a removable chip in the field, e.g. `[ in: Tech × ]`. Remove it to search everything.
+- **Scope defaults to where you are,** shown as a removable chip in the field, e.g. `[ in: Tech × ]`, once you're in the search. At rest the field just says "Search Tech", since the list's title already names it. Remove the chip to search everything.
 - **The chip shows the scope; the tuning panel edits it;** they stay in sync. The panel offers scope (current location · all feeds · a folder · a feed), unread only, starred only, and a date range.
 - **Always full text:** titles and bodies together, title matches ranked higher. No toggle.
 - **Filter syntax for power users** (Gmail-style), autocompleted and in the `?` cheat sheet: `is:unread` · `is:starred` · `feed:name` · `folder:name` · `after:YYYY-MM-DD` · `before:YYYY-MM-DD`. Typed filters become chips, so the field always shows exactly what's searched; the panel is a friendlier way to write the same filters.

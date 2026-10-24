@@ -52,6 +52,29 @@
 
   let library = $derived({ feeds, folders });
   let chips = $derived(chipsFor(query, library));
+  /** The keyboard or a pointer is inside the search (a press counts, so a chip's button can't vanish under a click). */
+  let inside = $state(false);
+  let pressing = false;
+  let searchElement: HTMLElement | undefined = $state();
+
+  /**
+   * A press ended: once its click has landed (so a chip's button never
+   * vanishes under it), the search is "inside" only if the keyboard's place
+   * is still in it. Some browsers don't focus a clicked button, so this
+   * doesn't wait for a focus change.
+   */
+  function pressEnded() {
+    if (!pressing) return;
+    pressing = false;
+    setTimeout(() => (inside = searchElement?.contains(document.activeElement) ?? false));
+  }
+  /**
+   * At rest, before any search, "in: Tech" would only repeat the list's own
+   * title, so the field says "Search Tech" instead; the chip appears as soon
+   * as you're in the search.
+   */
+  let resting = $derived(!inside && !panelOpen && query.words.trim() === "" && chips.length === 1 && chips[0]?.key === "scope");
+  let shownChips = $derived(resting ? [] : chips);
   let offered: Suggestion[] = $derived(offering ? suggestionsFor(query.words, library) : []);
 
   export function focus() {
@@ -137,7 +160,18 @@
   }
 </script>
 
-<search class="relative mb-2">
+<svelte:window onpointerup={pressEnded} onpointercancel={pressEnded} />
+
+<!-- svelte-ignore a11y_no_static_element_interactions: the pointer handler only notes a press; it acts on nothing. -->
+<search
+  class="relative mb-2"
+  onfocusin={() => (inside = true)}
+  onfocusout={(event) => {
+    if (!pressing && !event.currentTarget.contains(event.relatedTarget as Node | null)) inside = false;
+  }}
+  bind:this={searchElement}
+  onpointerdown={() => (pressing = true)}
+>
   <!-- The whole box acts as the field: a click anywhere in it (not on a chip's or the options button) puts you in the field. -->
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
   <div
@@ -152,7 +186,7 @@
       tooltip and their Remove button's name). With more, the row wraps so every chip stays readable.
     -->
     <div class={["flex min-w-0 flex-1 items-center gap-1", chips.length > 2 && "flex-wrap"]}>
-      {#each chips as chip (chip.key)}
+      {#each shownChips as chip (chip.key)}
         <span class={["my-1.5 flex min-w-0 shrink items-center rounded bg-[var(--tone)] pl-2 text-small whitespace-nowrap", chips.length > 2 ? "max-w-full" : "max-w-[60%]"]}>
           <span class="min-w-0 truncate" title={chip.label}>{chip.label}</span>
           <button type="button" aria-label="Remove {chip.label}" onclick={() => remove(chip)} class="-my-2 -mr-2 -ml-1 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center">
@@ -175,7 +209,7 @@
         oninput={typed}
         onkeydown={keydown}
         onblur={() => (offering = false)}
-        placeholder={chips.length > 0 ? "" : "Search"}
+        placeholder={resting ? `Search ${chips[0]?.label.slice("in: ".length)}` : shownChips.length > 0 ? "" : "Search"}
         autocomplete="off"
         spellcheck="false"
         class="-my-px min-h-11 min-w-16 flex-1 basis-16 bg-transparent px-1 placeholder:text-muted"

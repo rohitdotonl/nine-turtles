@@ -55,7 +55,7 @@
   const PREVIEWS = {
     "off-white": { page: "#f8f6f1", side: "#e7e2d7", ink: "#1f1e1c" },
     sepia: { page: "#f4ebd7", side: "#e3d5b7", ink: "#2a241b" },
-    dark: { page: "#1a1917", side: "#282521", ink: "#e6e1d8" },
+    dark: { page: "#1a1917", side: "#2e2a25", ink: "#e6e1d8" },
   } as const;
 
   const SORT_CHOICES = [
@@ -93,7 +93,7 @@
       above it, one setting per row, rows parted by a hairline. On a wide
       screen a row's name sits on the left and its choices on the right.
     -->
-    <div class="flex max-w-2xl flex-col gap-10">
+    <div class="mx-auto flex max-w-2xl flex-col gap-10">
       <section aria-labelledby="reading-heading">
         {@render groupHead("reading-heading", "Reading", "This applies on all your devices.")}
         <div class="group-card">
