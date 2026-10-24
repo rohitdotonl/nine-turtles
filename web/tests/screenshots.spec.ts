@@ -1,18 +1,19 @@
 import { test } from "@playwright/test";
-import { FIRST_THEMES } from "../src/lib/themes";
-import { SCREENS, THEMES, openScreen } from "./screens";
+import { SCREENS, THEMES, openScreen, type Variant } from "./screens";
 
-// Photographs every screen in the first three themes (and the main ones in the rest) so the owner can see each change.
+// Photographs every screen in the default theme, Original, by day and by
+// night (and the main ones in the other themes) so the owner can see each change.
 // The pictures land in web/screenshots/ and GitHub Actions posts them on the
 // pull request (see docs/decisions/0005-screenshots.md).
-// The themes being tried out are photographed on the main screens, Settings
-// and a sheet only, to keep the pull request's pictures to a size the owner
-// can look through.
-const TRIAL_SCREENS = ["articles", "article", "settings", "edit-feed"];
+// The other themes are photographed on the main screens, Settings and a
+// sheet only, to keep the pull request's pictures to a size the owner can
+// look through.
+const EVERY_SCREEN: Variant[] = ["original-light", "original-dark"];
+const MAIN_SCREENS = ["articles", "article", "settings", "edit-feed"];
 
 for (const screen of SCREENS) {
   for (const theme of THEMES) {
-    if (!FIRST_THEMES.includes(theme) && !TRIAL_SCREENS.includes(screen.name)) continue;
+    if (!EVERY_SCREEN.includes(theme) && !MAIN_SCREENS.includes(screen.name)) continue;
     test(`photograph ${screen.name} in ${theme}`, async ({ page }, testInfo) => {
       await openScreen(page, screen, theme);
       await page.screenshot({

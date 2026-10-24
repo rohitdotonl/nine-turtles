@@ -1,7 +1,7 @@
 <!--
   The "Aa" reading panel (SPEC section 7; decision 0034): the reader's own
   controls, one press from the text, as in Apple Books. Text size (the same
-  steps as `+` and `-`), the theme, the reading font and the line width, all
+  steps as `+` and `-`), the Appearance (day, night or as the device is set), the theme, the reading font and the line width, all
   the same preferences as Settings › Look and feel, applied at once to the
   article behind it.
 
@@ -16,6 +16,8 @@
   import Icon from "./Icon.svelte";
   import TextSize from "./TextSize.svelte";
   import ThemeTiles from "./ThemeTiles.svelte";
+  import { device } from "./appearance.svelte";
+  import { APPEARANCES, resolveMode } from "./themes";
   import { LINE_WIDTHS, READING_FONTS, type Preferences } from "./preferences";
 
   let {
@@ -94,8 +96,26 @@
     <TextSize bind:size={preferences.textSize} labelledby="aa-size-name" bind:first />
   </div>
 
-  <!-- Each theme as its own page, the same tiles as Settings. -->
-  <ThemeTiles bind:theme={preferences.theme} name="aa-theme" legend="Theme" legendClass="mb-1.5 text-small text-ink-2" />
+  <!-- Day, night or as the device is set, then each theme as its own page: the same controls as Settings (decision 0046). -->
+  <fieldset class="flex min-w-0 flex-col">
+    <legend class="mb-1.5 text-small text-ink-2">Appearance</legend>
+    <div class="choices fill" style="--columns: 3">
+      {#each APPEARANCES as choice (choice.value)}
+        <label class="choice">
+          <input type="radio" name="aa-appearance" value={choice.value} bind:group={preferences.appearance} />
+          {choice.label}
+        </label>
+      {/each}
+    </div>
+  </fieldset>
+
+  <ThemeTiles
+    bind:theme={preferences.theme}
+    mode={resolveMode(preferences.appearance, device.dark)}
+    name="aa-theme"
+    legend="Theme"
+    legendClass="mb-1.5 text-small text-ink-2"
+  />
 
   <fieldset class="flex min-w-0 flex-col">
     <legend class="mb-1.5 text-small text-ink-2">Font</legend>

@@ -198,26 +198,49 @@ test.describe("on a wide window", () => {
     await panel.getByRole("button", { name: "Smaller text" }).click();
     await expect.poll(size).toBe(before);
 
-    // Every theme and Automatic, each as "Aa" on its own page; the chosen one applies at once.
-    await expect(panel.getByRole("group", { name: "Theme" }).getByRole("radio")).toHaveCount(12);
-    await expect(panel.getByRole("radio", { name: "Automatic" })).toBeChecked();
-    await panel.getByRole("radio", { name: "Sepia" }).check();
-    await expect(root).toHaveAttribute("data-theme", "sepia");
+    // Appearance, then the six themes, each as "Aa" on its own page; the chosen one applies at once.
+    await expect(panel.getByRole("group", { name: "Appearance" }).getByRole("radio")).toHaveCount(3);
+    await expect(panel.getByRole("radio", { name: "Match device" })).toBeChecked();
+    await expect(panel.getByRole("group", { name: "Theme" }).getByRole("radio")).toHaveCount(6);
+    await expect(panel.getByRole("radio", { name: "Original" })).toBeChecked();
+    await panel.getByRole("radio", { name: "Calm" }).check();
+    await expect(root).toHaveAttribute("data-theme", "calm");
+    await expect(root).toHaveAttribute("data-mode", "light");
+    await panel.getByRole("radio", { name: "Dark", exact: true }).check();
+    await expect(root).toHaveAttribute("data-mode", "dark");
+    await panel.getByRole("radio", { name: "Match device" }).check();
+    // Bold sets the article text heavier: Literata's 600 (Atkinson's 700 below).
+    const text = article(page).locator(".article-text").first();
+    await expect(text).toHaveCSS("font-weight", "400");
+    await panel.getByRole("radio", { name: "Bold" }).check();
+    await expect(text).toHaveCSS("font-weight", "600");
+    // A publisher's bold words stay a step heavier: Literata's 800 (decision 0046).
+    const strongWeight = () =>
+      text.evaluate((el) => {
+        const strong = el.appendChild(document.createElement("strong"));
+        const weight = getComputedStyle(strong).fontWeight;
+        strong.remove();
+        return weight;
+      });
+    await expect.poll(strongWeight).toBe("800");
     // Fonts are named in their own face; line width has three steps.
     await panel.getByRole("radio", { name: "Atkinson Hyperlegible" }).check();
     await expect.poll(() => root.evaluate((html) => html.style.getPropertyValue("--reading-font"))).toContain("Atkinson");
+    await expect(text).toHaveCSS("font-weight", "700");
+    await panel.getByRole("radio", { name: "Calm" }).check();
+    await expect(text).toHaveCSS("font-weight", "400");
     const measure = () => root.evaluate((html) => html.style.getPropertyValue("--reading-measure"));
     const medium = await measure();
     await panel.getByRole("radio", { name: "Wide" }).check();
     await expect.poll(measure).not.toBe(medium);
 
     // The keyboard's outline is in the text color, never the accent.
-    await panel.getByRole("radio", { name: "Sepia" }).focus();
+    await panel.getByRole("radio", { name: "Calm" }).focus();
     await page.keyboard.press("ArrowRight");
     await page.keyboard.press("ArrowLeft");
-    await expect(panel.getByRole("radio", { name: "Sepia" })).toBeChecked();
+    await expect(panel.getByRole("radio", { name: "Calm" })).toBeChecked();
     const [outline, ink] = await panel
-      .getByRole("radio", { name: "Sepia" })
+      .getByRole("radio", { name: "Calm" })
       .evaluate((input) => [getComputedStyle(input.closest("label")!).outlineColor, getComputedStyle(document.body).color]);
     expect(outline).toBe(ink);
 
@@ -234,7 +257,7 @@ test.describe("on a wide window", () => {
     await title(page, "The pleasure of a slow letter").click({ position: { x: 4, y: 4 } });
     await expect(panel).toHaveCount(0);
     await page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: "Settings" }).click();
-    await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "Sepia" })).toBeChecked();
+    await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "Calm" })).toBeChecked();
     await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "Wide" })).toBeChecked();
     await expect(page.getByText("The Aa button above an article changes these too")).toBeVisible();
   });

@@ -1,8 +1,9 @@
 <!--
-  The themes as Apple Books shows them (decision 0039): each a small page
-  with "Aa" on it, in the reading font, drawn in that theme's own paper and
-  ink, its name underneath. Automatic is half the light page, half the dark
-  one. The chosen tile has two marks, as in Apple Books: one ring in the text
+  The themes as Apple Books shows them (decisions 0039, 0046): each a small
+  page with "Aa" on it, in the reading font, drawn in that theme's own paper
+  and ink for the version showing now (day or night, from the Appearance
+  choice beside the tiles), its name underneath; Bold's "Aa" is bold, as its
+  article text is. The chosen tile has two marks, as in Apple Books: one ring in the text
   color, a little clear of the page, and its name semibold, so it never shows
   by color alone (decision 0045: no checkmark badge, no inner edge).
 
@@ -12,50 +13,46 @@
 -->
 <script lang="ts">
   import type { Preferences } from "./preferences";
-  import { LOOKS, THEMES } from "./themes";
+  import { LOOKS, THEMES, type Mode } from "./themes";
 
   let {
     theme = $bindable(),
+    mode,
     name,
     legend,
     legendClass = "",
   }: {
     theme: Preferences["theme"];
+    /** The version showing now: each tile is drawn in it. */
+    mode: Mode;
     /** The radio group's name, unique on the page. */
     name: string;
     /** The group's name ("Theme"), shown above the tiles. */
     legend: string;
     legendClass?: string;
   } = $props();
-
-  const CHOICES: { value: Preferences["theme"]; label: string }[] = [
-    { value: "system", label: "Automatic" },
-    ...THEMES.map((each) => ({ value: each, label: LOOKS[each].label })),
-  ];
 </script>
 
 <fieldset class="flex min-w-0 flex-col">
   <legend class={legendClass}>{legend}</legend>
   <div class="tiles">
-    {#each CHOICES as choice (choice.value)}
+    {#each THEMES as each (each)}
       <label class="tile">
-        <input type="radio" {name} value={choice.value} bind:group={theme} />
-        <span aria-hidden="true" class="tile-page">
-          {#if choice.value === "system"}
-            <span class="half justify-end" style:background-color={LOOKS["off-white"].page} style:color={LOOKS["off-white"].ink}>A</span>
-            <span class="half justify-start" style:background-color={LOOKS.dark.page} style:color={LOOKS.dark.ink}>a</span>
-          {:else}
-            <span class="half justify-center" style:background-color={LOOKS[choice.value].page} style:color={LOOKS[choice.value].ink}>Aa</span>
-          {/if}
-        </span>
-        <span class="tile-name">{choice.label}</span>
+        <input type="radio" {name} value={each} bind:group={theme} />
+        <span
+          aria-hidden="true"
+          class={["tile-page", each === "bold" && "bold"]}
+          style:background-color={LOOKS[each][mode].page}
+          style:color={LOOKS[each][mode].ink}>Aa</span
+        >
+        <span class="tile-name">{LOOKS[each].label}</span>
       </label>
     {/each}
   </div>
 </fieldset>
 
 <style>
-  /* As many 72px-or-wider tiles as fit, filling the row: six to a row in Settings, four in the Aa panel. */
+  /* As many 72px-or-wider tiles as fit, filling the row: six to a row in Settings, three or four in the Aa panel. */
   .tiles {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
@@ -86,6 +83,8 @@
   .tile-page {
     position: relative;
     display: flex;
+    align-items: center;
+    justify-content: center;
     overflow: hidden;
     width: 100%;
     max-width: 4.5rem;
@@ -98,10 +97,9 @@
     font-size: 1.375rem;
     line-height: 1;
   }
-  .half {
-    display: flex;
-    flex: 1 1 0;
-    align-items: center;
+  /* Bold's "Aa" (decision 0046): 700 asks for the heaviest face shipped, Literata's 600 or Atkinson's 700. */
+  .tile-page.bold {
+    font-weight: 700;
   }
   .tile-name {
     max-width: 100%;

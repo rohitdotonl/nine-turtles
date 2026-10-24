@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import css from "../app.css?raw";
 import html from "../../index.html?raw";
 import { BAR_COLORS } from "./preferences";
-import { LOOKS, THEMES as THEME_NAMES } from "./themes";
+import { LOOKS, THEMES as THEME_NAMES, type Mode } from "./themes";
 
 /** The color settings of one theme's block in app.css. */
 function theme(selector: string): Record<string, string> {
@@ -27,10 +27,18 @@ function contrast(a: string, b: string): number {
   return (light! + 0.05) / (dark! + 0.05);
 }
 
-const THEMES: Record<string, Record<string, string>> = {
-  ...Object.fromEntries(THEME_NAMES.map((name) => [name, theme(`:root[data-theme="${name}"]`)])),
-  "device dark": theme(":root:not([data-theme])"),
+// Every theme's day and night versions (decision 0046), by name ("calm dark"),
+// and the night version a dark device gets before slowfeed's script runs.
+const MODES: Mode[] = ["light", "dark"];
+const SELECTORS: Record<string, string> = {
+  ...Object.fromEntries(
+    THEME_NAMES.flatMap((name) => MODES.map((mode) => [`${name} ${mode}`, `:root[data-theme="${name}"][data-mode="${mode}"]`])),
+  ),
+  "device dark": ":root:not([data-mode])",
 };
+const THEMES: Record<string, Record<string, string>> = Object.fromEntries(
+  Object.entries(SELECTORS).map(([name, selector]) => [name, theme(selector)]),
+);
 const BACKGROUNDS = ["paper", "list", "sidebar", "tint-list", "tint-sidebar"];
 
 describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
@@ -128,11 +136,14 @@ describe.each(Object.entries(THEMES))("the %s theme's keyboard outline on rows",
 // The selection pill: in a light theme the accent mixed into the pane at 13%
 // (decision 0037); in a dark one the theme's own text color at 12%, so it
 // keeps the pane's warmth or coolness (decision 0041). The text checks above
-// cover it.
-describe.each(Object.entries(THEMES))("the %s theme's selection pill", (_name, colors) => {
+// cover it. Three night versions whose panes are already light for the dark
+// mix in less, so their text keeps 7 : 1 on the pill (decision 0046).
+const LIGHTER_PILLS: Record<string, number> = { "quiet dark": 0.09, "paper dark": 0.1, "calm dark": 0.1 };
+
+describe.each(Object.entries(THEMES))("the %s theme's selection pill", (name, colors) => {
   const dark = luminance(colors.paper!) < 0.5;
   it(dark ? "is the text color mixed into the list and the sidebar" : "is the accent mixed into the list and the sidebar", () => {
-    const [from, share] = dark ? [colors.ink!, 0.12] : [colors.accent!, 0.13];
+    const [from, share] = dark ? [colors.ink!, LIGHTER_PILLS[name] ?? 0.12] : [colors.accent!, 0.13];
     expect(colors["tint-list"]).toBe(mix(from, colors.list!, share));
     expect(colors["tint-sidebar"]).toBe(mix(from, colors.sidebar!, share));
   });
@@ -168,11 +179,22 @@ describe.each(Object.entries(THEMES))("the %s theme's selection pill", (_name, c
 });
 
 // A searched word's faint accent tone, on a row or on the selected row.
-describe.each(Object.entries(THEMES))("the %s theme's search highlight", (_name, colors) => {
-  it("keeps text at 7 : 1 and the second ink at 4.5 : 1", () => {
-    const found = css.match(/--mark: color-mix\(in srgb, var\(--accent\) (\d+)%, transparent\)/);
-    expect(found).not.toBeNull();
-    const share = Number(found![1]) / 100;
+// The search tone is the accent at 12%, set with the other faint tones; a
+// night version whose panes are light for the dark sets a fainter one in its
+// own block, so text keeps 7 : 1 on it inside the pill.
+function markShare(name: string): number {
+  const pattern = /--mark: color-mix\(in srgb, var\(--accent\) (\d+)%, transparent\);/;
+  const start = css.indexOf(SELECTORS[name]!);
+  const own = css.slice(start, css.indexOf("}", start)).match(pattern);
+  const shared = css.slice(css.indexOf("--hover: color-mix")).match(pattern);
+  expect(shared).not.toBeNull();
+  return Number((own ?? shared)![1]) / 100;
+}
+
+describe.each(Object.entries(THEMES))("the %s theme's search highlight", (name, colors) => {
+  it("keeps text at 7 : 1 and the second ink at 4.5 : 1, and stays a visible tone", () => {
+    const share = markShare(name);
+    expect(share).toBeGreaterThanOrEqual(0.06);
     for (const background of ["list", "tint-list"]) {
       const marked = mix(colors.accent!, colors[background]!, share);
       expect(contrast(colors.ink!, marked), background).toBeGreaterThanOrEqual(7);
@@ -217,7 +239,7 @@ function darkShare(selector: string, name: string): number | undefined {
   return found ? Number(found[1]) / 100 : undefined;
 }
 
-describe.each([...THEME_NAMES.map((name) => [name, `:root[data-theme="${name}"]`]), ["device dark", ":root:not([data-theme])"]])(
+describe.each(Object.entries(SELECTORS))(
   "the %s theme's grouped lists",
   (name, selector) => {
     const colors = THEMES[name]!;
@@ -250,24 +272,32 @@ describe.each([...THEME_NAMES.map((name) => [name, `:root[data-theme="${name}"]`
   },
 );
 
-it("the device's dark setting uses exactly the dark theme's colors", () => {
-  expect(THEMES["device dark"]).toEqual(THEMES.dark);
+it("covers all six themes by day and by night", () => {
+  expect(Object.keys(THEMES)).toHaveLength(THEME_NAMES.length * 2 + 1);
 });
 
-it("each theme's picture in Settings uses its own page, sidebar and text colors", () => {
+it("before slowfeed's script runs, a page is Original: by day, or by night on a dark device", () => {
+  expect(THEMES["device dark"]).toEqual(THEMES["original dark"]);
+  expect(theme(":root,")).toEqual(THEMES["original light"]);
+});
+
+it("each theme's tile in Settings uses its own page, sidebar and text colors, by day and by night", () => {
   for (const name of THEME_NAMES) {
-    const colors = THEMES[name]!;
-    expect([LOOKS[name].page, LOOKS[name].side, LOOKS[name].ink], name).toEqual([colors.paper, colors.sidebar, colors.ink]);
+    for (const mode of MODES) {
+      const colors = THEMES[`${name} ${mode}`]!;
+      const look = LOOKS[name][mode];
+      expect([look.page, look.side, look.ink], `${name} ${mode}`).toEqual([colors.paper, colors.sidebar, colors.ink]);
+    }
   }
 });
 
-it("the browser bar and Settings' theme discs use each theme's own background", () => {
-  for (const [name, color] of Object.entries(BAR_COLORS)) {
-    expect(color.toLowerCase(), name).toBe(THEMES[name]!.paper);
+it("the browser bar uses each version's own background", () => {
+  for (const [name, colors] of Object.entries(BAR_COLORS)) {
+    for (const mode of MODES) expect(colors[mode].toLowerCase(), `${name} ${mode}`).toBe(THEMES[`${name} ${mode}`]!.paper);
   }
-  // index.html's light and dark bars, for "Automatic".
-  expect(html).toContain(`content="${BAR_COLORS["off-white"]}" media="(prefers-color-scheme: light)"`);
-  expect(html).toContain(`content="${BAR_COLORS.dark}" media="(prefers-color-scheme: dark)"`);
+  // index.html's light and dark bars, before the script runs: Original's.
+  expect(html).toContain(`content="${BAR_COLORS.original.light}" media="(prefers-color-scheme: light)"`);
+  expect(html).toContain(`content="${BAR_COLORS.original.dark}" media="(prefers-color-scheme: dark)"`);
 });
 
 describe("the summary-only note's link underline", () => {

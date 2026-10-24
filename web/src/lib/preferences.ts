@@ -2,14 +2,15 @@
 // device, not to the reader's account: a phone and a laptop often want
 // different sizes. So they're kept in the browser's own storage, and nothing
 // is lost if that storage is unavailable: slowfeed simply uses the defaults.
-import { LOOKS, THEMES, isTheme, type Theme } from "./themes";
+import { LOOKS, OLD_THEMES, THEMES, isAppearance, isTheme, resolveMode, type Appearance, type Mode, type Theme } from "./themes";
 
-export type ThemeChoice = "system" | Theme;
 export type ReadingFont = "literata" | "atkinson";
 export type LineWidth = "narrow" | "medium" | "wide";
 
 export type Preferences = {
-  theme: ThemeChoice;
+  theme: Theme;
+  /** Day, night, or as the device is set (decision 0046). */
+  appearance: Appearance;
   readingFont: ReadingFont;
   /** A step in TEXT_SIZES. `+` and `-` move through the same steps (Milestone 6). */
   textSize: number;
@@ -33,12 +34,13 @@ export const LINE_WIDTHS: Record<LineWidth, { label: string; ch: number }> = {
   wide: { label: "Wide", ch: 63 },
 };
 
-export const READING_FONTS: Record<ReadingFont, { label: string; family: string }> = {
-  literata: { label: "Literata", family: "var(--font-serif)" },
-  atkinson: { label: "Atkinson Hyperlegible", family: '"Atkinson Hyperlegible", var(--font-sans)' },
+/** `bold`: the article text's weight in the Bold theme, from the weights slowfeed ships for that font. */
+export const READING_FONTS: Record<ReadingFont, { label: string; family: string; bold: number }> = {
+  literata: { label: "Literata", family: "var(--font-serif)", bold: 600 },
+  atkinson: { label: "Atkinson Hyperlegible", family: '"Atkinson Hyperlegible", var(--font-sans)', bold: 700 },
 };
 
-export const DEFAULTS: Preferences = { theme: "system", readingFont: "literata", textSize: 2, lineWidth: "medium" };
+export const DEFAULTS: Preferences = { theme: "original", appearance: "auto", readingFont: "literata", textSize: 2, lineWidth: "medium" };
 
 const KEY = "slowfeed.preferences";
 
@@ -51,8 +53,11 @@ export function load(storage: Pick<Storage, "getItem"> | undefined = safeStorage
     saved = null;
   }
   const s = typeof saved === "object" && saved !== null ? (saved as Record<string, unknown>) : {};
+  // A theme saved before decision 0046 becomes its nearest new theme and Appearance.
+  const old = typeof s.theme === "string" && Object.hasOwn(OLD_THEMES, s.theme) ? OLD_THEMES[s.theme] : undefined;
   return {
-    theme: s.theme === "system" || isTheme(s.theme) ? s.theme : DEFAULTS.theme,
+    theme: isTheme(s.theme) ? s.theme : (old?.theme ?? DEFAULTS.theme),
+    appearance: isAppearance(s.appearance) ? s.appearance : (old?.appearance ?? DEFAULTS.appearance),
     readingFont: s.readingFont === "literata" || s.readingFont === "atkinson" ? s.readingFont : DEFAULTS.readingFont,
     textSize:
       typeof s.textSize === "number" && Number.isInteger(s.textSize) && s.textSize >= 0 && s.textSize < TEXT_SIZES.length
@@ -70,27 +75,44 @@ export function save(preferences: Preferences, storage: Pick<Storage, "setItem">
   }
 }
 
-/** Puts the preferences into effect on the page (see app.css). */
-export function apply(preferences: Preferences, root: HTMLElement = document.documentElement): void {
-  if (preferences.theme === "system") delete root.dataset.theme;
-  else root.dataset.theme = preferences.theme;
-  root.style.setProperty("--reading-font", READING_FONTS[preferences.readingFont].family);
-  root.style.setProperty("--reading-size", `${TEXT_SIZES[preferences.textSize]?.rem ?? 1.25}rem`);
-  root.style.setProperty("--reading-measure", `${LINE_WIDTHS[preferences.lineWidth].ch}ch`);
-  // The phone's own bar above the page takes the chosen theme's background too
-  // (index.html sets the light and dark ones for "Automatic").
-  for (const meta of root.ownerDocument?.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]') ?? []) {
-    meta.dataset.device ??= meta.content;
-    meta.content = preferences.theme === "system" ? meta.dataset.device : BAR_COLORS[preferences.theme];
+/** Whether the device is set to dark right now; false where that can't be asked. */
+export function deviceIsDark(): boolean {
+  try {
+    return globalThis.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
+  } catch {
+    return false;
   }
 }
 
 /**
- * Each theme's reading background (DESIGN.md → "Color"), for the browser's
- * bar and Settings' theme discs. contrast.test.ts checks they match app.css
- * and index.html.
+ * Puts the preferences into effect on the page (see app.css). `deviceDark`
+ * decides the version for "Match device"; appearance.svelte.ts keeps it up
+ * to date when the device switches.
  */
-export const BAR_COLORS = Object.fromEntries(THEMES.map((theme) => [theme, LOOKS[theme].page.toUpperCase()])) as Record<Theme, string>;
+export function apply(preferences: Preferences, root: HTMLElement = document.documentElement, deviceDark = deviceIsDark()): void {
+  const mode: Mode = resolveMode(preferences.appearance, deviceDark);
+  root.dataset.theme = preferences.theme;
+  root.dataset.mode = mode;
+  const font = READING_FONTS[preferences.readingFont];
+  root.style.setProperty("--reading-font", font.family);
+  root.style.setProperty("--reading-weight", String(preferences.theme === "bold" ? font.bold : 400));
+  root.style.setProperty("--reading-size", `${TEXT_SIZES[preferences.textSize]?.rem ?? 1.25}rem`);
+  root.style.setProperty("--reading-measure", `${LINE_WIDTHS[preferences.lineWidth].ch}ch`);
+  // The phone's own bar above the page takes the showing version's background
+  // too (index.html starts with Original's, by day and by night).
+  for (const meta of root.ownerDocument?.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]') ?? []) {
+    meta.content = BAR_COLORS[preferences.theme][mode];
+  }
+}
+
+/**
+ * Each theme's reading background by day and by night (DESIGN.md → "Color"),
+ * for the browser's bar. contrast.test.ts checks they match app.css and
+ * index.html.
+ */
+export const BAR_COLORS = Object.fromEntries(
+  THEMES.map((theme) => [theme, { light: LOOKS[theme].light.page.toUpperCase(), dark: LOOKS[theme].dark.page.toUpperCase() }]),
+) as Record<Theme, Record<Mode, string>>;
 
 function safeStorage(): Storage | undefined {
   try {
