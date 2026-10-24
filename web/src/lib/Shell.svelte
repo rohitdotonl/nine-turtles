@@ -586,14 +586,14 @@
 {/snippet}
 
 {#snippet listHead()}
-            <!-- A long name wraps between words onto a second line, then ends in "…"; its whole name is its tooltip and is read in full by screen readers. -->
+            <!-- One line, so the search box below never moves: a long name ends in "…", its whole name is its tooltip and is read in full by screen readers. -->
             <div class="flex min-h-11 items-center gap-4">
               <h2
                 id="list-heading"
                 tabindex="-1"
                 bind:this={listHeading}
                 title={headingText}
-                class="line-clamp-2 min-w-0 flex-1 font-serif break-words text-heading font-semibold tracking-[-0.01em]"
+                class="min-w-0 flex-1 truncate font-serif text-heading font-semibold tracking-[-0.01em]"
               >
                 {headingText}
               </h2>
@@ -805,7 +805,7 @@
           class={[
             "flex-col bg-list",
             phone ? "pt-2" : "pt-3",
-            panes.article ? "w-80 shrink-0 xl:w-96 2xl:w-[26rem]" : "flex-1",
+            panes.article ? "w-80 shrink-0 xl:w-96 2xl:w-[26rem]" : "min-w-0 flex-1",
             panes.list && "flex",
           ]}
         >

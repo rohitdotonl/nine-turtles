@@ -209,7 +209,7 @@
         oninput={typed}
         onkeydown={keydown}
         onblur={() => (offering = false)}
-        placeholder={resting ? `Search ${chips[0]?.label.slice("in: ".length)}` : shownChips.length > 0 ? "" : "Search"}
+        placeholder={shownChips.length > 0 ? "" : "Search"}
         autocomplete="off"
         spellcheck="false"
         class="-my-px min-h-11 min-w-16 flex-1 basis-16 bg-transparent px-1 placeholder:text-muted"
