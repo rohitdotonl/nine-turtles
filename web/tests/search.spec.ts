@@ -47,7 +47,7 @@ test("a search starts where you are, marks the words it found, and Escape brings
   await heading(page).focus();
 
   // 1. In a folder, `/` and a word: the chip shows the folder; the word is marked with a faint
-  // accent tone behind it (decision 0037), in the text's own color and weight, never underlined.
+  // accent tone behind it (decision 0037), in the text's own color and weight, with a fine underline so it isn't tone alone.
   await page.keyboard.press("/");
   await expect(field(page)).toBeFocused();
   await expect(page.getByRole("button", { name: `Remove in: ${folder}` })).toBeVisible();
@@ -60,7 +60,7 @@ test("a search starts where you are, marks the words it found, and Escape brings
   await expect(results(page).first()).toContainText(`Blog ${filed}`);
   const found = results(page).first().locator(".title mark");
   await expect(found).toHaveText("Walking");
-  await expect(found).toHaveCSS("text-decoration-line", "none");
+  await expect(found).toHaveCSS("text-decoration-line", "underline");
   await expect(found).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect(found).toHaveCSS("border-top-left-radius", "3px");
   const [wordColor, titleColor, wordWeight, titleWeight] = await Promise.all([

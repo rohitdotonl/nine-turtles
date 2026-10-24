@@ -153,7 +153,8 @@ A few words used throughout:
 
 **How to check it**
 1. Open an article from a full-content blog: it reads well, with headings, quotes and images in place.
-2. Open one from a summary-only feed: you see the summary, ending with "Read the full article on …", which opens the publisher's page in a new tab.3. Check that links in the text are underlined and not blue.
+2. Open one from a summary-only feed: you see the summary, ending with "Read the full article on …", which opens the publisher's page in a new tab.
+3. Check that links in the text are underlined and not blue.
 4. Press `j` repeatedly: each article appears with no visible wait.
 5. Press `Enter`, read, press Escape: you're back on the same row in the list. Press `+` and `-`: the text grows and shrinks.
 6. Press Aa above an article: the panel opens under it. Press the large A, choose Sepia and Atkinson Hyperlegible: the article changes at once. Press Escape: the panel closes and the keyboard is back on Aa. Settings › Look and feel shows the same choices.

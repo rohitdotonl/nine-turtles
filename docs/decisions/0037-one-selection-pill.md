@@ -50,7 +50,8 @@ and E: "selection and state", plus the list's rhythm).*
   at the titles' left edge.
 - **Search matches:** one style for titles and excerpts, a `<mark>` with
   the accent at 12% behind it, 3px corners, in the text's own weight and
-  color (excerpt matches in full ink). No underline, no bold. Text keeps
+  color (excerpt matches in full ink), with a fine underline at 45% of the
+  text color so a match never shows by tone alone. No bold. Text keeps
   7 : 1 on it, even inside the pill (tested). Three typed dots in a
   publisher's text show as one "…" in an excerpt, like slowfeed's own cuts.
 

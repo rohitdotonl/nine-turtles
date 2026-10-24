@@ -507,10 +507,13 @@
   /*
     A searched word, in a title or in the line of text under it: one style,
     a faint tone of the accent behind it with small rounded corners, in the
-    text's own weight and color (DESIGN.md → "Item list", decision 0037).
+    text's own weight and color, and a fine underline so it never shows by
+    tone alone (DESIGN.md → "Item list", decision 0037).
   */
   .match {
     padding: 0 1px;
+    text-decoration: underline 1px color-mix(in srgb, currentColor 45%, transparent);
+    text-underline-offset: 0.2em;
     border-radius: 3px;
     background-color: var(--mark);
     color: inherit;

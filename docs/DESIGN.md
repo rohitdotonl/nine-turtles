@@ -266,7 +266,7 @@ Fixed order, top to bottom: **Unread · Starred · All**, then **folders** A–Z
 - **Sort:** newest first by default; changeable in settings or the list's More menu.
 - **The title has its line to itself:** a long name wraps to a second line, then ends in "…". Beside it, one quiet **More** (…), a small menu with Mark all as read, Refresh, the sort order, and Edit feed… or Edit folder… in a feed's or folder's own list (decision 0038). No row of words between the search field and the list.
 - **The list has an end:** a fixed number of items, then a **"Show older items"** button. Nothing loads unless asked. When there's nothing more to show, a quiet caption, "That's everything.", in small muted grey closes the list, lined up with the titles, with no line above it.
-- Matched search terms, in titles and excerpts alike, have one style: a faint accent tone behind them (12%), 3px corners, in the text's own weight and color (decision 0037).
+- Matched search terms, in titles and excerpts alike, have one style: a faint accent tone behind them (12%), 3px corners and a fine underline (so never tone alone), in the text's own weight and color (decision 0037).
 - **A search result shows why it matched:** when its text (not only its title) holds a searched word, one muted line under it shows that text around the first match, at most about 90 characters, cut between words. The matched words in it are marked as in titles and in full ink, as Apple Books shows matches in context. Three typed dots in the text show as one "…".
 
 #### Item states (distinguished by tone and weight, never color alone)
