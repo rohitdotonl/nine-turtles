@@ -1065,7 +1065,8 @@
               onclick={toggleList}
               class="bar-button flex size-11 items-center justify-center rounded-md text-ink-2"
             >
-              <Icon name="list-pane" size={20} />
+              <!-- The same sidebar icon as the sidebar's button, as Apple Mail uses one for each pane; where it sits says which. -->
+              <Icon name="sidebar" size={20} />
             </button>
           </div>
         {/if}

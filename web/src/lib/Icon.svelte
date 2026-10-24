@@ -4,7 +4,7 @@
   or the label of an icon-only button, says what it does.
 -->
 <script lang="ts" module>
-  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "list-pane" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out";
+  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out";
 </script>
 
 <script lang="ts">
@@ -76,10 +76,6 @@
   {:else if name === "sidebar"}
     <rect x="2.75" y="3.75" width="14.5" height="12.5" rx="1.5" />
     <path d="M7.75 3.75v12.5" />
-  {:else if name === "list-pane"}
-    <!-- The article list: a window with a wider column of rows on its left. -->
-    <rect x="2.75" y="3.75" width="14.5" height="12.5" rx="1.5" />
-    <path d="M9.75 3.75v12.5M5 7.25h2.5M5 10h2.5M5 12.75h2.5" />
   {:else if name === "star"}
     <path
       d="M10 2.5l2.4 4.9 5.35.78-3.87 3.77.91 5.33L10 14.77l-4.79 2.51.91-5.33-3.87-3.77 5.35-.78z"
