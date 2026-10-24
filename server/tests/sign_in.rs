@@ -194,14 +194,14 @@ async fn every_page_carries_the_browser_security_rules() {
 }
 
 #[tokio::test]
-async fn the_status_page_is_public_and_says_only_that_slowfeed_runs() {
+async fn the_status_page_is_public_and_says_only_that_nine_turtles_runs() {
     let base = common::start(common::config()).await;
     let response = reqwest::get(format!("{base}/status")).await.unwrap();
 
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.text().await.unwrap(),
-        format!("slowfeed is running\nversion {}\n", slowfeed::VERSION)
+        format!("nine turtles is running\nversion {}\n", slowfeed::VERSION)
     );
 }
 
