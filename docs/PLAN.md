@@ -269,6 +269,10 @@ each with screenshots:
   see-through top bar, a labelled back button and a five-icon bottom bar on
   phones, and book-like title, headings, byline and summary note (decision
   0038).
+- ✅ Settings as Apple Books' grouped lists with "Aa" theme tiles and an
+  A/A text size; sheets that grow with their content, the destructive action
+  at the bottom left; thin fields with red errors; search options as a
+  checkmark menu; a calmer first visit (decision 0039).
 
 ---
 

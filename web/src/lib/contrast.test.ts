@@ -158,6 +158,29 @@ describe.each(Object.entries(THEMES))("the %s theme's search highlight", (_name,
   });
 });
 
+describe.each(Object.entries(THEMES))("the %s theme's fields", (_name, colors) => {
+  const share = (name: string, over: string) => {
+    const found = css.match(new RegExp(`--${name}: color-mix\\(in srgb, var\\(--ink\\) (\\d+)%, ${over}\\)`));
+    expect(found, name).not.toBeNull();
+    return Number(found![1]) / 100;
+  };
+
+  it("have an edge that stands out at 3 : 1 on every area a field sits on, though softer than the text", () => {
+    const edge = share("field-edge", "transparent");
+    expect(edge).toBeLessThan(0.7);
+    for (const background of ["paper", "list", "sidebar"]) {
+      expect(contrast(mix(colors.ink!, colors[background]!, edge), colors[background]!), background).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it("keep text at 7 : 1, placeholders at 4.5 : 1 and a refused field's red edge at 3 : 1 on their faint fill", () => {
+    const fill = mix(colors.ink!, colors.paper!, share("field", "var\\(--paper\\)"));
+    expect(contrast(colors.ink!, fill)).toBeGreaterThanOrEqual(7);
+    expect(contrast(colors.muted!, fill)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(colors.danger!, colors.paper!)).toBeGreaterThanOrEqual(3);
+  });
+});
+
 it("the device's dark setting uses exactly the dark theme's colors", () => {
   expect(THEMES["device dark"]).toEqual(THEMES.dark);
 });

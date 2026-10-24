@@ -151,14 +151,19 @@ test("unsubscribe, then Undo: the feed is back with its read history; a star out
   await expect(sidebar(page).getByRole("link", { name: `Blog ${blog} 2 unread` })).toBeVisible();
 
   await openEdit(page, "Edit feed");
-  // Below Cancel and Save, apart: the action in words, in a muted red with no edge (the words say what it does).
+  // In the one row at the foot, as a Mac sheet has it: Unsubscribe at the far left, in a muted red
+  // with no edge (the word says what it does), then Cancel and Save at the right end.
   const sheet = page.getByRole("dialog", { name: "Edit feed" });
   const leave = sheet.getByRole("button", { name: `Unsubscribe from Blog ${blog}` });
+  await expect(leave).toHaveText("Unsubscribe");
   await expect(leave).toHaveCSS("border-top-width", "0px");
   const [red, ink] = await Promise.all([leave.evaluate((e) => getComputedStyle(e).color), sheet.evaluate((e) => getComputedStyle(e).color)]);
   expect(red).not.toBe(ink);
-  expect((await leave.boundingBox())!.y).toBeGreaterThan((await sheet.getByRole("button", { name: "Save" }).boundingBox())!.y);
-  expect((await leave.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  const [leaveBox, cancelBox, saveBox] = await Promise.all([leave.boundingBox(), sheet.getByRole("button", { name: "Cancel" }).boundingBox(), sheet.getByRole("button", { name: "Save" }).boundingBox()]);
+  expect(Math.abs(leaveBox!.y + leaveBox!.height / 2 - (saveBox!.y + saveBox!.height / 2))).toBeLessThan(2);
+  expect(leaveBox!.x + leaveBox!.width).toBeLessThan(cancelBox!.x);
+  expect(cancelBox!.x + cancelBox!.width).toBeLessThanOrEqual(saveBox!.x);
+  expect(leaveBox!.height).toBeGreaterThanOrEqual(44);
   await leave.click();
   await expect(page).toHaveURL(/\/unread$/);
   await expect(line(page)).toHaveText(`Unsubscribed from Blog ${blog}`);

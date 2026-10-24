@@ -31,6 +31,15 @@ not how it was done.
   button names the list and the bottom bar has five icons. The article's
   title, headings and byline are set more like a book, and a summary-only
   article ends with a line linking the full article on the publisher's site.
+- Settings looks like Apple Books' settings: one centred column of grouped
+  lists, each row its name on the left and its control on the right. Themes
+  are "Aa" tiles in their own colors (all eleven kept), ticked when chosen;
+  text size is a small A and a large A. Import and export are plain rows.
+- Sheets open a little above the middle and grow with what's in them, over a
+  lighter dim. Unsubscribe and Delete sit at the bottom left in red, Cancel
+  and Save at the right. Fields have a thin edge; problems are red words with
+  a warning mark. Search options are a menu with checkmarks, and the
+  shortcut list fades at its foot instead of looking cut off.
 
 ## 24 October 2026: Calmer selection, one search style, tidier edges
 
