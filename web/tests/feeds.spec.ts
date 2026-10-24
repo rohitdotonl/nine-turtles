@@ -26,12 +26,14 @@ test("a fresh slowfeed shows the welcome in the reading area: the paste field, a
   await page.goto("/unread");
   await appReady(page);
   await signIn(page);
-  // The welcome is in the reading area, centred; the list only says there's nothing yet.
+  // The welcome is in the reading area, centred, and owns the screen (decision 0041): the list
+  // beside it says nothing, and the sidebar has no find field while there's nothing to find.
   const reading = page.getByRole("region", { name: "A quiet place to read." });
   await expect(reading.getByRole("heading", { level: 2, name: "A quiet place to read." })).toBeVisible();
   await expect(reading.getByLabel("Paste a website or feed URL")).toBeVisible();
   await expect(reading.getByRole("button", { name: "Add feed" })).toBeVisible();
-  await expect(page.getByRole("region", { name: "Unread" }).getByText("Nothing here yet.")).toBeVisible();
+  await expect(page.getByText("Nothing here yet.")).toHaveCount(0);
+  await expect(sidebar(page).getByRole("searchbox", { name: "Find a feed or folder" })).toHaveCount(0);
   await expect(page.getByText("No article open.")).toHaveCount(0);
   const [welcome, pane] = await Promise.all([reading.locator("#welcome-heading").boundingBox(), reading.boundingBox()]);
   expect(Math.abs(welcome!.x + welcome!.width / 2 - (pane!.x + pane!.width / 2))).toBeLessThan(4);

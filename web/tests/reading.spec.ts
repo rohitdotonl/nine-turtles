@@ -298,6 +298,20 @@ test.describe("on a wide window", () => {
       (element) => element.getBoundingClientRect().left - element.closest(".scroller")!.getBoundingClientRect().left,
     );
     expect(Math.abs(inset - 8)).toBeLessThan(1);
+    // Every title starts 32px into the pane, lined up with the list's title
+    // and the search field, dot or no dot (decision 0041).
+    const titleX = (await selected.locator(".title").boundingBox())!.x;
+    const paneX = await selected.evaluate((element) => element.closest("section")!.getBoundingClientRect().left);
+    expect(Math.abs(titleX - paneX - 32)).toBeLessThan(1);
+    expect(Math.abs((await page.locator("#list-heading").boundingBox())!.x - titleX)).toBeLessThan(1);
+    expect(Math.abs((await page.locator(".search-box").boundingBox())!.x - titleX)).toBeLessThan(1);
+    // The hairlines run from the titles' edge to the pill's right edge, so a
+    // line and the selection end in the same place.
+    const hairline = await page.locator(".item-list > li + li").first().evaluate((element) => {
+      const css = getComputedStyle(element, "::before");
+      return [css.left, css.right];
+    });
+    expect(hairline).toEqual(["32px", "8px"]);
     await expect(selected).toHaveCSS("outline-offset", "-2px");
     // The pill is the accent mixed into the list: deeper than the list, never the hover's neutral tone.
     const [fill, tint] = await selected.evaluate((element) => {

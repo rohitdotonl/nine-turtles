@@ -26,6 +26,14 @@ not how it was done.
   door, not red, since it removes nothing), the text size reads A | Medium |
   A, chosen choices are raised without an edge, and dark themes' groups stand
   off the page.
+- The list and sidebar line up: the unread dot sits in its own margin,
+  every title starts under the list's title and search, the row lines end
+  with the selection, the list's title stays on one line, counts form one
+  column with folder arrows before their names, only the list's search is
+  filled at rest, there's no "Press ? for shortcuts" hint, a first visit
+  shows only the welcome, dark themes select with a warm lift instead of a
+  blue tint, and a phone's feeds screen has chevrons and no stale
+  selection (decision 0041).
 
 ## 24 October 2026: Toward Apple Books
 

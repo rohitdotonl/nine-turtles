@@ -282,6 +282,12 @@ each with screenshots:
   shortcut list that fits; Settings' sample on the page, marks on rows that
   act, A | Medium | A, edgeless raised choices and lighter dark groups
   (decision 0042).
+- ✅ List and sidebar geometry (third critique, batch 3): a gutter for the
+  unread dot with titles lined up under the list's title, hairlines that end
+  with the pill, a one-line list title, one search well at rest, counts in
+  one column with folder arrows first, no shortcut hint, the welcome alone
+  on a first visit, warm dark pills, and a phone feeds screen with chevrons
+  and no stale selection (decision 0041).
 
 ---
 

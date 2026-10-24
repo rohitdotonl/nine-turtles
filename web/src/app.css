@@ -58,9 +58,12 @@
 
 /*
   Every theme's --tint-list and --tint-sidebar are the selection pill's fill
-  (decision 0037): the theme's accent mixed into the list or sidebar, 13% in
-  the light themes and 20% in the dark ones. contrast.test.ts recomputes each
-  from the accent and checks every text color on it.
+  (decision 0037): in the light themes the theme's accent mixed into the list
+  or sidebar at 13%; in the dark ones the theme's own text color at 12%
+  (decision 0041), so the pill keeps the pane's warmth or coolness instead
+  of laying a cool blue-grey over warm brown, as Apple Books' dark selection
+  is a lift of the page, not a tint. contrast.test.ts recomputes each and
+  checks every text color on it.
 */
 
 /* Off-white: the default light theme. */
@@ -91,8 +94,8 @@
     --muted: #b9af9c;
     --danger: #e8968a;
     --accent: #8fa9d6;
-    --tint-list: #383b41;
-    --tint-sidebar: #414348;
+    --tint-list: #3a3633;
+    --tint-sidebar: #44403a;
     --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
     --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
     --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
@@ -111,8 +114,8 @@
   --muted: #b9af9c;
   --danger: #e8968a;
   --accent: #8fa9d6;
-  --tint-list: #383b41;
-  --tint-sidebar: #414348;
+  --tint-list: #3a3633;
+  --tint-sidebar: #44403a;
   /*
     A chosen segment rises: lighter than its track in the dark, as paper is in
     the light. A grouped list (--group) sits a clear step lighter than the
@@ -211,8 +214,8 @@
   --muted: #aeaca5;
   --danger: #e8968a;
   --accent: #9fb6e6;
-  --tint-list: #353a43;
-  --tint-sidebar: #3c4048;
+  --tint-list: #343432;
+  --tint-sidebar: #3b3b39;
   --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
   --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
   --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
@@ -231,8 +234,8 @@
   --muted: #b5a78e;
   --danger: #e8968a;
   --accent: #d9a85c;
-  --tint-list: #433622;
-  --tint-sidebar: #493b27;
+  --tint-list: #36322b;
+  --tint-sidebar: #3d3830;
   --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
   --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
   --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
@@ -251,8 +254,8 @@
   --muted: #a3adc0;
   --danger: #e8968a;
   --accent: #8fb3ff;
-  --tint-list: #2d3954;
-  --tint-sidebar: #33405c;
+  --tint-list: #2e3441;
+  --tint-sidebar: #343b4a;
   --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
   --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
   --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
@@ -271,8 +274,8 @@
   --muted: #a0a0a0;
   --danger: #e8968a;
   --accent: #8fb0e8;
-  --tint-list: #272e39;
-  --tint-sidebar: #2e3540;
+  --tint-list: #272727;
+  --tint-sidebar: #2f2f2f;
   --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
   --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
   --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
@@ -370,10 +373,34 @@ body {
 }
 
 /*
+  The sidebar's wordmark is a name, not a control: it's never a Tab stop
+  (tabindex -1). The keyboard lands on it only when the app opens or the
+  phone's feeds screen returns, so screen readers start at the top. Then its
+  outline stands clear of the letters with soft corners, inside its own row,
+  so it never looks clipped (decision 0041).
+*/
+:root[data-keyboard] .wordmark:focus-visible {
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/*
+  Devanagari (Hindi, Marathi, Nepali…) in a sidebar name: the device's own
+  fonts draw it a little small and low beside Latin letters, its headline
+  making it look heavier. A touch larger, so it sits level with the names
+  around it (decision 0041). No extra font is downloaded (DESIGN.md →
+  "Typography"); a matching serif needs the owner's approval first.
+*/
+.devanagari {
+  font-size: 1.0625em;
+}
+
+/*
   "Where you are", one recipe everywhere (the sidebar and the article list),
   as in Apple Books (decision 0037): a pill with 8px corners, set 8px in from
   the pane's edges (the rows' mx-2), filled with the theme's accent mixed into
-  the pane. No border, no bar, and the title stays in full ink. The filled
+  the pane in a light theme, its text color in a dark one (decision 0041).
+  No border, no bar, and the title stays in full ink. The filled
   shape is the sign, with full ink (list) or semibold (sidebar) beside it,
   so it never rests on color alone.
 */
@@ -405,9 +432,11 @@ body {
 }
 
 /*
-  Hairlines between the list's rows, inside the pill's edges: from the
-  titles' left edge to the same distance from the right, so nothing
-  overhangs the selection. None directly above or below the selected row.
+  Hairlines between the list's rows (decision 0041), as an inset list draws
+  them: from the titles' left edge (32px into the pane) to the pill's own
+  right edge (8px from the pane's), so a line and the selection end in the
+  same place and nothing overhangs either. None directly above or below
+  the selected row, or the row under the pointer.
 */
 .item-list > li + li {
   position: relative;
@@ -416,23 +445,33 @@ body {
   content: "";
   position: absolute;
   top: 0;
-  left: 1.5rem;
-  right: 1.5rem;
+  left: 2rem;
+  right: 0.5rem;
   border-top: 1px solid color-mix(in srgb, var(--ink) 9%, transparent);
 }
 .item-list > li:has(> [aria-current]) + li::before,
 .item-list > li:has(> [aria-current])::before {
   display: none;
 }
+@media (hover: hover) {
+  .item-list > li:has(> .item-row:hover) + li::before,
+  .item-list > li:has(> .item-row:hover)::before {
+    display: none;
+  }
+}
 /*
   A row in the list: the list's own pill tint; 10px above and 11px below,
   the title at 1.3 line height and the line under it 2px below, as Apple
-  Books spaces its lists.
+  Books spaces its lists. The pill is 8px in from the pane; inside it a
+  24px gutter holds the unread dot, so every title starts 32px into the
+  pane, lined up with the list's title, the search field and the caption
+  at the end, whether or not it has a dot.
 */
 .item-row {
   --place-tint: var(--color-tint-list);
   padding-top: 0.625rem;
   padding-bottom: 0.6875rem;
+  padding-left: 1.5rem;
 }
 .item-row .title {
   line-height: 1.3;
@@ -466,14 +505,15 @@ body {
 }
 
 /*
-  Unread: a drawn 8px dot in the theme's accent, centred in a 16px gutter at
-  the row's left (the pill's padding), level with the middle of the title's
-  first line. The semibold title says it too, so it never rests on color.
+  Unread: a drawn 8px dot in the theme's accent, centred in the row's own
+  24px gutter (8px from the pill's edge, 8px clear of the title), level with
+  the middle of the title's first line, so it reads as a mark in a margin,
+  not a bullet. The semibold title says it too, so it never rests on color.
 */
 .unread-dot {
   position: absolute;
   top: calc(0.625rem + var(--text-ui) * 0.65 - 4px);
-  left: 4px;
+  left: 8px;
   width: 8px;
   height: 8px;
   border-radius: 9999px;
@@ -935,6 +975,27 @@ textarea {
     border-color: transparent;
     background-color: var(--tone);
   }
+
+  /*
+    The sidebar's find field (decision 0041): no well at rest, just its icon
+    and its words, so the list's search is the one filled field on screen,
+    as Apple Books has one search. It takes the same faint tone under the
+    pointer, while it has the keyboard and while it holds words.
+  */
+  .field-find {
+    background-color: transparent;
+  }
+  .field-find:is(:focus, :not(:placeholder-shown)) {
+    background-color: var(--tone);
+  }
+  @media (hover: hover) {
+    .field-find:hover {
+      background-color: var(--hover);
+    }
+    .field-find:is(:focus, :not(:placeholder-shown)):hover {
+      background-color: var(--tone);
+    }
+  }
 }
 
 :root {
@@ -971,7 +1032,7 @@ textarea {
   }
 }
 
-/* "Press ? for shortcuts" is only for screens with a keyboard. */
+/* Hints that name a key (", or press j" in the empty reading area) are only for screens with a keyboard. */
 @media (hover: none) and (pointer: coarse) {
   .keyboard-hint {
     display: none;

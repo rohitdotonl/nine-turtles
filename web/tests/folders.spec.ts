@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
 import { appReady, follow, signIn, tabTo } from "./screens";
 
@@ -106,6 +106,14 @@ test("a feed put in two folders appears under both, with its unread count in eac
   }
   // Under both, and nowhere else.
   await expect(sidebar(page).getByRole("link", { name: `Renamed ${blog} 3 unread` })).toHaveCount(2);
+  // As in a Mac source list, a folder's arrow comes before its name, and every count ends at the
+  // same right edge, one column of numbers, folder or feed (decision 0041).
+  const folderLink = sidebar(page).getByRole("link", { name: `${first} 3 unread` });
+  const arrow = (await sidebar(page).getByRole("button", { name: `Feeds in ${first}` }).boundingBox())!;
+  expect(arrow.x + arrow.width).toBeLessThanOrEqual((await folderLink.boundingBox())!.x + 1);
+  const countEnd = (link: Locator) => link.locator(".tabular-nums").evaluate((element) => element.getBoundingClientRect().right);
+  const feedLink = sidebar(page).getByRole("link", { name: `Renamed ${blog} 3 unread` }).first();
+  expect(Math.abs((await countEnd(folderLink)) - (await countEnd(feedLink)))).toBeLessThan(1);
 
   // A folder's own list holds its feeds' articles.
   await sidebar(page).getByRole("link", { name: `${first} 3 unread` }).click();
@@ -212,7 +220,11 @@ test("the sidebar search finds feeds and folders by name, and Escape empties it"
   const blog = unique("findable");
   await openBlogs(page, [blog]);
   const search = sidebar(page).getByRole("searchbox", { name: "Find a feed or folder" });
+  // Only one filled search well on screen at rest, the list's: the sidebar's field gets its tone
+  // only while it's in use (decision 0041).
+  await expect(search).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await search.fill(blog.toUpperCase());
+  await expect(search).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) })).toBeVisible();
   await expect(sidebar(page).getByRole("link", { name: /^Quiet Notes/ })).toHaveCount(0);
 

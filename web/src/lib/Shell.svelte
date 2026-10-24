@@ -711,17 +711,6 @@
   }
 </script>
 
-{#snippet hint(padding: string)}
-  <!-- Always shown on screens with a keyboard (DESIGN.md → "Keyboard": permanent): in the sidebar, or under the list when the sidebar is hidden. -->
-  <button
-    type="button"
-    onclick={() => (cheatSheetOpen = true)}
-    class={["keyboard-hint flex min-h-9 w-full items-center gap-1 text-left text-meta text-muted", padding]}
-  >
-    Press <kbd class="key">?</kbd> for shortcuts
-  </button>
-{/snippet}
-
 {#snippet welcome()}
   <!--
     The welcome, before the first feed (SPEC section 2): a title in the reading serif, one
@@ -745,11 +734,12 @@
 
 {#snippet listHead()}
             <!--
-              The list's title has the line to itself: a long name wraps to a second line, then ends
-              in "…", with its whole name as its tooltip and read in full by screen readers. Beside it,
-              one quiet More (…) button, as Apple Books has one per collection (decision 0038): Mark all
-              as read, Refresh, the sort order, and Edit feed or Edit folder in a feed's or folder's
-              own list (SPEC section 6).
+              The list's title is one line, as Apple Books' collection titles are (decision 0041): a long
+              name ends in "…", with its whole name as its tooltip and read in full by screen readers, so
+              the search field below and More beside it never move. In a pane narrower than 340px it
+              steps down from 24px to 22px. Beside it, one quiet More (…) button, as Apple Books has one
+              per collection (decision 0038): Mark all as read, Refresh, the sort order, and Edit feed or
+              Edit folder in a feed's or folder's own list (SPEC section 6).
             -->
             <div class="flex min-h-11 items-center gap-4">
               <h2
@@ -757,7 +747,7 @@
                 tabindex="-1"
                 bind:this={listHeading}
                 title={headingText}
-                class="line-clamp-2 min-w-0 flex-1 font-serif [overflow-wrap:anywhere] text-balance text-heading font-semibold tracking-[-0.01em]"
+                class="min-w-0 flex-1 truncate font-serif text-heading leading-[1.3] font-semibold tracking-[-0.01em] @max-[340px]:text-[1.375rem]"
               >
                 {headingText}
               </h2>
@@ -810,14 +800,22 @@
     class={["flex-col bg-sidebar", phone ? "pt-2" : "pt-3", panes.list ? "w-64 shrink-0" : "min-w-0 flex-1", panes.sidebar && "flex"]}
   >
     <div class="relative min-h-0 flex-1 overflow-y-auto pb-4">
-      <div class={["flex min-h-11 items-center gap-4 pr-4 pb-3", phone ? "pl-5" : "pl-14"]}>
-        <h1 class={["mr-auto font-serif tracking-[-0.01em]", phone ? "text-xlarge" : "text-large text-ink-2"]} tabindex="-1" bind:this={wordmark}>slowfeed</h1>
+      <div class={["flex items-center gap-4 pr-4 pb-3", phone ? "min-h-12 pl-5" : "min-h-11 pl-14"]}>
+        <!-- A name, not a control: never a Tab stop; the keyboard lands here only when the screen opens (decision 0041). -->
+        <h1 class={["wordmark mr-auto font-serif tracking-[-0.01em]", phone ? "text-xlarge" : "text-large text-ink-2"]} tabindex="-1" bind:this={wordmark}>slowfeed</h1>
         {#if phone}
-          <!-- The feeds screen's top bar (SPEC section 20): its unread numbers wait for this, as they wait for r. -->
-          <button type="button" onclick={loadFeeds} class="btn-quiet btn-small -mr-2"><Icon name="refresh" size={16} />Refresh</button>
+          <!--
+            The feeds screen's top bar (SPEC section 20): its unread numbers wait for this, as they wait for r.
+            An icon alone in a 44px target, so the large wordmark has the row to itself (decision 0041).
+          -->
+          <button type="button" onclick={loadFeeds} aria-label="Refresh" title="Refresh" class="btn-quiet btn-icon -mr-2.5"><Icon name="refresh" size={20} /></button>
         {/if}
       </div>
-      <!-- Always shown (DESIGN.md → Exceptions log): finds a feed or folder by name. -->
+      <!--
+        Always shown once there's a feed (DESIGN.md → Exceptions log): finds a feed or folder by name.
+        With no feeds there's nothing to find, so the welcome has the screen to itself (decision 0041).
+      -->
+      {#if feeds === undefined || feeds.length > 0}
       <div class="relative px-4 pb-4">
         <span class="pointer-events-none absolute top-0 left-7 flex h-11 items-center text-muted"><Icon name="search" size={16} /></span>
         <label for="sidebar-search" class="sr-only">Find a feed or folder</label>
@@ -834,12 +832,14 @@
               search = "";
             }
           }}
-          class="field field-quiet w-full rounded-lg pl-9"
+          class="field field-quiet field-find w-full rounded-lg pl-9"
         />
       </div>
+      {/if}
       <ul>
         {#each VIEWS as view (view)}
-          {@const current = route.kind === "view" && route.view === view}
+          {@const current = !phone && route.kind === "view" && route.view === view}
+          <!-- On a phone the feeds screen is the root of a stack: nothing is selected there, and each row leads on with a chevron (decision 0041). -->
           <li>
             <a
               href={pathFor({ kind: "view", view })}
@@ -850,13 +850,13 @@
                 current ? "font-semibold text-ink" : "text-ink-2",
               ]}
               ><span class={current ? "text-ink" : "text-muted"}><Icon name={VIEW_ICONS[view]} size={16} filled={view === "starred" && current} /></span
-              >{VIEW_NAMES[view]}</a
+              ><span class="min-w-0 flex-1">{VIEW_NAMES[view]}</span>{#if phone}<span class="-mr-1 shrink-0 text-muted"><Icon name="chevron-right" size={16} /></span>{/if}</a
             >
           </li>
         {/each}
       </ul>
       {#if feeds}
-        <SidebarFeeds {feeds} {folders} {route} {search} {follow} />
+        <SidebarFeeds {feeds} {folders} {route} {search} {follow} {phone} />
       {/if}
       {#if feedsProblem}
         <p class="px-4 pt-4 text-small">Your feeds couldn't be loaded. Reload the page to try again.</p>
@@ -958,7 +958,8 @@
           bind:this={listSection}
           hidden={!panes.list}
           class={[
-            "flex-col bg-list",
+            // A container, so the list's title can step down a size when the pane is narrow (decision 0041).
+            "@container flex-col bg-list",
             phone ? "pt-2" : "pt-3",
             panes.article ? "w-80 shrink-0 xl:w-96 2xl:w-[26rem]" : "min-w-0 flex-1",
             panes.list && "flex",
@@ -966,8 +967,8 @@
         >
           {#if phone}
             <!-- The phone's top bar (SPEC section 20): back to the feeds, then the screen's title with More beside it. It never scrolls. -->
-            <div class="px-6 pb-2">
-              <div class="-ml-2 flex items-center gap-4 pb-2">
+            <div class="pr-6 pb-2 pl-8">
+              <div class="-ml-4 flex items-center gap-4 pb-2">
                 <button type="button" onclick={() => stepBack("home")} aria-label="Back to Feeds" class="btn-quiet gap-1 px-2"
                 ><Icon name="back" size={20} />Feeds</button
               >
@@ -976,13 +977,16 @@
             </div>
           {/if}
           {#if !phone}
-            <!-- The list's top line never scrolls; with the sidebar hidden it starts after the sidebar button. -->
-            <div class={["pr-6 pb-2", panes.sidebar ? "pl-6" : "pl-16"]}>
+            <!--
+              The list's top line never scrolls; with the sidebar hidden it starts after the sidebar button.
+              Its title starts 32px in, where the search field and every article title start (decision 0041).
+            -->
+            <div class={["pr-6 pb-2", panes.sidebar ? "pl-8" : "pl-16"]}>
               {@render listHead()}
             </div>
           {/if}
           <!-- A column, so the floating note can sit at the pane's foot even under a short list. -->
-          <div use:edge class="scroller relative flex min-h-0 flex-1 scroll-pb-20 flex-col overflow-y-auto px-6 pt-1 pb-6">
+          <div use:edge class="scroller relative flex min-h-0 flex-1 scroll-pb-20 flex-col overflow-y-auto pt-1 pr-6 pb-6 pl-8">
             {#if feeds && feeds.length > 0 && !missing}
               <SearchBar bind:this={searchBar} {query} {feeds} {folders} here={scopeFor(under)} onChange={searchChanged} />
             {/if}
@@ -991,8 +995,7 @@
             {:else if missing}
               <p class="mt-4">You don't follow this feed. It may have been an old address.</p>
             {:else if welcoming && panes.article}
-              <!-- The welcome has the reading area; the list just says, quietly and in its middle, that there's nothing yet. -->
-              <p class="m-auto pb-[12vh] text-ui text-muted">Nothing here yet.</p>
+              <!-- The welcome has the reading area and owns the screen: the list beside it stays empty, saying nothing (decision 0041). -->
             {:else if welcoming}
               <!-- No reading area beside the list (a phone, or a medium window with the sidebar shown): the welcome is here. -->
               <div class="mt-8 flex justify-center">{@render welcome()}</div>
@@ -1017,9 +1020,6 @@
               {/key}
             {/if}
           </div>
-          {#if !panes.sidebar && !phone}
-            {@render hint("px-6 pb-1")}
-          {/if}
         </section>
         {#if panes.article}
           {#if selected}

@@ -80,6 +80,8 @@ test("the sidebar lists Unread, Starred and All, with the accent marking where y
   expect(await unread.evaluate((element) => getComputedStyle(element, "::before").content)).toBe("none");
   const inset = await unread.evaluate((element) => element.getBoundingClientRect().left - element.closest("nav")!.getBoundingClientRect().left);
   expect(Math.abs(inset - 8)).toBeLessThan(1);
+  // The wordmark is a name, never a Tab stop (decision 0041).
+  await expect(sidebar(page).getByRole("heading", { level: 1, name: "slowfeed" })).toHaveAttribute("tabindex", "-1");
 
   await sidebar(page).getByRole("link", { name: "Starred" }).click();
   await expect(page).toHaveURL(/\/starred$/);
@@ -318,17 +320,16 @@ test("every font comes from slowfeed itself", async ({ page }) => {
   expect(new Set(fontOrigins)).toEqual(new Set([new URL(page.url()).origin]));
 });
 
-test("nothing scrolls underneath the Sidebar button or the shortcut hint", async ({ page }) => {
+test("nothing scrolls underneath the Sidebar button", async ({ page }) => {
   await page.setViewportSize({ width: 640, height: 400 });
   await openApp(page, "/settings");
   // Settings is longer than this window, so it scrolls, but only inside its
-  // own box, which starts below the band where the two buttons sit.
+  // own box, which starts below the band where the Sidebar button sits.
   const scroller = page.getByRole("region", { name: "Settings" }).locator(".overflow-y-auto");
   expect(await scroller.evaluate((element) => element.scrollHeight > element.clientHeight)).toBe(true);
   const scrollingTop = (await scroller.boundingBox())!.y;
-  for (const button of [toggle(page), page.getByRole("button", { name: "Press ? for shortcuts" })]) {
-    if (!(await button.isVisible())) continue; // The hint is hidden on touch-only screens.
-    const box = (await button.boundingBox())!;
+  if (await toggle(page).isVisible()) {
+    const box = (await toggle(page).boundingBox())!;
     expect(box.y + box.height).toBeLessThanOrEqual(scrollingTop);
   }
   // A faint line appears under the top line only once something has scrolled under it.
@@ -390,14 +391,18 @@ test("Add a feed opens as a sheet over the list you were on: a serif title, one 
   await expect(sidebar(page).getByRole("link", { name: "Add feed" })).not.toHaveAttribute("aria-current");
 });
 
-test("'Press ? for shortcuts' stays on screen when the sidebar is hidden", async ({ page, isMobile }) => {
-  test.skip(isMobile, "The hint is only for screens with a keyboard.");
+test("the chrome never advertises shortcuts: no hint under the list, with the sidebar shown or hidden; ? still opens them", async ({ page, isMobile }) => {
+  test.skip(isMobile, "Shortcuts are for screens with a keyboard.");
+  // Medium: the sidebar starts hidden. Wide: it shows, with its keyboard icon at its foot (decision 0041).
   await page.setViewportSize({ width: 1000, height: 800 });
   await openApp(page);
   await expect(sidebar(page)).toBeHidden();
-  const hint = page.getByRole("button", { name: "Press ? for shortcuts" });
-  await expect(hint).toBeVisible();
-  await hint.click();
+  await expect(page.getByText("Press ? for shortcuts")).toHaveCount(0);
+  await page.setViewportSize({ width: 1440, height: 800 });
+  await expect(sidebar(page)).toBeVisible();
+  await expect(page.getByText("Press ? for shortcuts")).toHaveCount(0);
+  await expect(sidebar(page).getByRole("button", { name: "Keyboard shortcuts" })).toBeVisible();
+  await page.keyboard.press("?");
   await expect(page.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeVisible();
 });
 
