@@ -585,13 +585,14 @@
 
 {#snippet listHead()}
             <!-- When a long name pushes "Edit feed" onto its own line, its icon lines up with the name above. -->
-            <!-- A long name wraps rather than being cut off, so everyone can read all of it, on any screen and at any zoom. -->
+            <!-- A long name wraps between words onto a second line, then ends in "…"; its whole name is its tooltip and is read in full by screen readers. -->
             <div class="flex min-h-11 items-center gap-4">
               <h2
                 id="list-heading"
                 tabindex="-1"
                 bind:this={listHeading}
-                class="min-w-0 flex-1 font-serif [overflow-wrap:anywhere] text-heading font-bold tracking-[-0.01em]"
+                title={headingText}
+                class="line-clamp-2 min-w-0 flex-1 font-serif break-words text-heading font-bold tracking-[-0.01em]"
               >
                 {headingText}
               </h2>
@@ -650,7 +651,7 @@
     aria-label="Sidebar"
     bind:this={sidebar}
     hidden={!panes.sidebar}
-    class={["flex-col bg-sidebar", phone ? "pt-2" : "pt-3", panes.list ? "w-64 shrink-0" : "flex-1", panes.sidebar && "flex"]}
+    class={["flex-col bg-sidebar", phone ? "pt-2" : "pt-3", panes.list ? "w-64 shrink-0" : "min-w-0 flex-1", panes.sidebar && "flex"]}
   >
     <div class="relative min-h-0 flex-1 overflow-y-auto pb-4">
       <div class={["flex min-h-11 items-center gap-4 pr-4 pb-3", phone ? "pl-5" : "pl-14"]}>
@@ -730,7 +731,7 @@
         title="Settings"
         aria-current={route.kind === "settings" ? "page" : undefined}
         onclick={(event) => follow(event, { kind: "settings" })}
-        class={["btn-quiet btn-icon", route.kind === "settings" && "bg-tint-sidebar text-ink"]}><Icon name="settings" size={18} /></a
+        class={["btn-quiet btn-icon", route.kind === "settings" && "bg-tint-sidebar text-accent"]}><Icon name="settings" size={18} /></a
       >
     </div>
   </nav>

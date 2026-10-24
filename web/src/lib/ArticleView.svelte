@@ -118,12 +118,12 @@
 <section aria-label="Article" class={["flex min-w-0 flex-1 flex-col bg-paper", phone ? "pt-2" : "pt-3"]}>
   <!-- Never scrolls, so these are always in the same place. -->
   {#if phone}
-    <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 pb-2">
+    <div class="relative flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 pb-2">
       <button type="button" onclick={phone.onBack} aria-label="Back to {phone.back}" class="btn-quiet min-w-0 shrink justify-start gap-1 px-2 text-left whitespace-normal"
         ><Icon name="back" size={20} /><span class="min-w-0 break-words">{phone.back}</span></button
       >
-      <button type="button" onclick={onMarkUnread} class="btn-quiet -mr-3"><Icon name="unread" />Mark unread</button>
-      <p role="status" class="w-full px-2 text-small empty:hidden">{copied}</p>
+      <button type="button" onclick={onMarkUnread} class="btn-quiet -mr-3"><Icon name="dot" />Mark unread</button>
+      <p role="status" class="w-full px-2 text-small empty:sr-only">{copied}</p>
     </div>
   {:else}
   <!-- In the same centred column as the article, so the actions sit right above its text. -->
@@ -147,9 +147,9 @@
       <button type="button" aria-label="Star" aria-pressed={article.starred} title={article.starred ? "Starred (s)" : "Star (s)"} onclick={onStar} class={["btn-quiet btn-icon", article.starred && "text-ink"]}>
         {@render starIcon(18)}
       </button>
-      <button type="button" onclick={onMarkUnread} aria-label="Mark unread" title="Mark unread (m)" class="btn-quiet btn-icon"><Icon name="unread" size={18} /></button>
+      <button type="button" onclick={onMarkUnread} aria-label="Mark unread" title="Mark unread (m)" class="btn-quiet btn-icon"><Icon name="dot" size={18} /></button>
     </div>
-    <p role="status" class="w-full text-small empty:hidden">{copied}</p>
+    <p role="status" class="w-full text-small empty:sr-only">{copied}</p>
   </div></div>
   {/if}
 

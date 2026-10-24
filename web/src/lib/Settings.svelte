@@ -265,13 +265,6 @@
 {/snippet}
 
 <style>
-  /*
-    A choice among a few (SPEC section 18): each one a labeled tile. The radio
-    button itself covers the whole tile, invisible, so a tap anywhere picks it
-    and screen readers and keys work as with any radio button. The chosen tile
-    is filled with the text color and its word is semibold, so it shows
-    without color too. Never ink blue.
-  */
   /* A group of settings: a card a shade off the page, rows parted by hairlines. */
   .group-card {
     border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
@@ -290,11 +283,17 @@
     border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
   }
   .setting-name {
-    float: left;
     padding: 0;
     color: var(--ink);
     font-size: var(--text-ui);
     font-weight: 600;
+  }
+  /* A legend sits in the grid only when it floats (a fieldset's legend otherwise sits on its edge). */
+  legend.setting-name {
+    float: left;
+  }
+  .setting > :is(a, button) {
+    justify-self: start;
   }
   .setting-control {
     display: flex;

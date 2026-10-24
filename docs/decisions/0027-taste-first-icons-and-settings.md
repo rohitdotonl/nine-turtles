@@ -28,6 +28,9 @@ and Superhuman. Notes on what those apps do are in the project files
 - **The shortcut list** is grouped in two columns, what each does on the
   left and its keys on the right, and lists only what works today.
 - **The sidebar's views** (Unread, Starred, All) get small icons.
+- **The list's title** wraps between words onto at most two lines, then
+  ends in "…" with the whole name as its tooltip (refining 0026, where it
+  wrapped without limit and could break inside a word).
 
 ## What stays
 

@@ -137,7 +137,7 @@
   }
 </script>
 
-<search class="mb-2">
+<search class="relative mb-2">
   <!-- The whole box acts as the field: a click anywhere in it (not on a chip's or the options button) puts you in the field. -->
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
   <div
@@ -209,7 +209,7 @@
     {/each}
   </ul>
 
-  <p id="search-problem" role="status" class="text-small empty:hidden mt-1">{problem}</p>
+  <p id="search-problem" role="status" class="mt-1 text-small empty:sr-only">{problem}</p>
 
   <!-- Above the list's heading, so its name is a label rather than a heading of its own. -->
   <div

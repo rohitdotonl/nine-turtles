@@ -108,6 +108,12 @@ test("? opens the shortcut list, Escape closes it and returns the keyboard's pla
   // A two-press shortcut shows a key cap for each press, with "then" between.
   const goTo = dialog.getByRole("row", { name: /Go to Unread/ });
   await expect(goTo.locator("kbd")).toHaveText(["g", "u"]);
+  // Four named groups, each a region a screen reader can jump to.
+  for (const group of ["Moving around", "Reading", "Your articles", "Everywhere"]) {
+    await expect(dialog.getByRole("region", { name: group })).toBeVisible();
+  }
+  // The list scrolls from the keyboard too: it's a Tab stop of its own.
+  await expect(dialog.getByRole("region", { name: "Shortcuts" })).toHaveAttribute("tabindex", "0");
   // Only what works today is listed.
   await expect(dialog.getByText("Next / previous feed")).toHaveCount(0);
   await expect(dialog.getByText("is:unread")).toBeVisible();
@@ -309,4 +315,17 @@ test("the sidebar ends with Add feed, then the shortcut list and Settings as ico
   await expect(toggle(page)).toHaveAttribute("title", "Hide the sidebar ( [ )");
   await toggle(page).click();
   await expect(toggle(page)).toHaveAttribute("title", "Show the sidebar ( [ )");
+});
+
+test("Settings → Your data: each heading sits above its text, and the buttons keep their own width", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openApp(page, "/settings");
+  for (const name of ["Feeds and folders", "Starred articles"]) {
+    const heading = page.getByRole("heading", { level: 4, name });
+    const text = heading.locator("xpath=following-sibling::p[1]");
+    const [h, t] = [(await heading.boundingBox())!, (await text.boundingBox())!];
+    expect(t.y).toBeGreaterThanOrEqual(h.y + h.height - 1);
+  }
+  const exportStarred = (await page.getByRole("link", { name: "Export starred articles" }).boundingBox())!;
+  expect(exportStarred.width).toBeLessThan(300);
 });

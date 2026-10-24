@@ -120,6 +120,10 @@ test.describe("on a wide window", () => {
     await expect(title(page, "Only the first page")).toBeVisible();
 
     const original = article(page).getByRole("link", { name: "Open original" }).first();
+    // The everyday actions are icons, each named in its tooltip with its key.
+    await expect(article(page).getByRole("button", { name: "Star" })).toHaveAttribute("title", "Star (s)");
+    await expect(article(page).getByRole("button", { name: "Mark unread" })).toHaveAttribute("title", "Mark unread (m)");
+    await expect(original).toHaveAttribute("title", "Open original (v)");
     await expect(original).toHaveAttribute("href", "https://reading-room.example/first-page");
     await expect(original).toHaveAttribute("target", "_blank");
 

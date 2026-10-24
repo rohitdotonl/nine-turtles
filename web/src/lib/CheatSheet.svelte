@@ -1,7 +1,7 @@
 <!--
   The `?` shortcut list (SPEC section 19). A native dialog: it keeps the
   keyboard inside while open, and Escape closes it. Shortcuts for features
-  that don't exist yet say so, rather than pretending to work.
+  that don't exist yet aren't listed.
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
@@ -46,9 +46,9 @@
     <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
     <div tabindex="0" role="region" aria-label="Shortcuts" class="min-h-0 overflow-y-auto px-6 pt-5 pb-6">
       <div class="grid gap-x-10 gap-y-7 md:grid-cols-2">
-        {#each SHORTCUT_GROUPS as group (group)}
-          <section aria-labelledby={`keys-${group}`}>
-            <h3 id={`keys-${group}`} class="mb-1.5 text-meta font-semibold text-muted">{group}</h3>
+        {#each SHORTCUT_GROUPS as group, index (group)}
+          <section aria-labelledby={`keys-${index}`}>
+            <h3 id={`keys-${index}`} class="mb-1.5 text-meta font-semibold text-muted">{group}</h3>
             <table class="w-full text-left text-small">
               <tbody>
                 {#each SHORTCUTS.filter((each) => each.group === group && each.ready) as shortcut (shortcut.action)}

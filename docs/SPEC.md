@@ -89,7 +89,7 @@ A few words used throughout:
   3. **Feeds not in any folder**, alphabetically
   4. **Add feed**, then the shortcut list and **Settings** as icons, in one row
 - You can't reorder things by hand; order is always alphabetical.
-- At the top of the sidebar: the "slowfeed" wordmark, and below it a quiet **field to find a feed or folder by name** (no edge, a faint tone, so it isn't mistaken for the article search), always shown. A long feed name ends in "…" on one line, so the sidebar stays tidy; its whole name shows as a tooltip, is read in full by screen readers, and is the list's title when you open it (which wraps rather than being cut off).
+- At the top of the sidebar: the "slowfeed" wordmark, and below it a quiet **field to find a feed or folder by name** (no edge, a faint tone, so it isn't mistaken for the article search), always shown. A long feed name ends in "…" on one line, so the sidebar stays tidy; its whole name shows as a tooltip, is read in full by screen readers, and is the list's title when you open it (up to two lines, then "…", with the whole name as its tooltip).
 - Folders appear once at least one exists. Each has a small button beside it that shows or hides the feeds in it, indented beneath; folders start closed, and this device remembers which you opened. Choosing a folder's name lists the articles of all its feeds (`/folders/2`).
 - The search field filters the sidebar as you type: the folders and feeds whose name contains what you typed (capitals and accents don't matter), in one list. Escape empties it.
 - **Unread counts:** small, muted grey numbers, right-aligned, next to each feed and folder (a folder's is its feeds' added up). No count on "Unread", "Starred" or "All", and never a total. Above 999 shows "999+". Never colored, never a badge.
@@ -132,8 +132,7 @@ A few words used throughout:
 - Reading font is Literata by default (Atkinson Hyperlegible as an alternative). Lines are about 65–75 characters long.
 - Links inside articles are underlined in the normal text color, never blue.
 - If the feed only has a summary, slowfeed shows the summary. It never fetches the rest from the website. **"Open original"** takes you there.
-- "Open original" is always present, always in the same place, in words at the left of the article's top line. On the right, as icons with tooltips naming them and their keys: **Copy link** (or Share, section 21), **Star** (an outline star, filled once starred) and **Mark unread** (an envelope). The feed's name in the line above the title links to the publisher's site.
-- A labeled **Mark unread** button and a **Star** button sit in the article's top bar, beside them (sections 8 and 9). The Star button shows a filled star when the article is starred and an outline when not.
+- "Open original" is always present, always in the same place, in words at the left of the article's top line. On the right, as icons with tooltips naming them and their keys: **Copy link** (or Share, section 21), **Star** (an outline star, filled once starred) and **Mark unread** (a ring with a dot, like the Unread view's icon). The feed's name in the line above the title links to the publisher's site.
 - The source is always credited and linked: the feed's name (linking to the publisher's website), the author if the feed names one, and the time.
 - Choosing an article in the list (a click, `j` / `k`, or the arrow keys while in the list) shows it in the reading area. `Enter` or `o` opens it to read: the keyboard's place moves into the article, and `j` / `k` then move from article to article; Escape goes back to the list. On a phone-narrow window the article takes the list's place, with a back button named after the list. `j` never loads older items on its own: at the end of the list it stops.
 - `v` opens the original in a new tab. `+` / `-` change the text size (the same setting as in Settings).
@@ -156,7 +155,7 @@ A few words used throughout:
 
 **What it does**
 - An item counts as read as soon as it's shown in the reading pane, by click or by `j`/`k`.
-- `m` marks the current item unread again. A labeled **Mark unread** button in the article's top bar does the same, on desktop and phones.
+- `m` marks the current item unread again. The **Mark unread** button in the article's top bar does the same (an icon on desktop, labeled on phones).
 - **Mark all as read** (`Shift+A`, or a labeled button in the list header, shown when the list has items): happens instantly, no "are you sure?". It affects **only the items shown on screen right now** (every item listed, including pages added with "Show older items"). Items that arrived in the background but aren't displayed yet are never touched.
 - **Undo** (`u`, or a visible **Undo**): after an undoable action, a line such as "Marked 23 items as read · Undo" appears in the reserved lines at the top of the list (just below "New items", so nothing shifts) and stays until your next undoable action or until you leave the list. Pressing `r` doesn't clear it. After an undo it says "Undone."; there's no undoing an undo. Moving through articles doesn't clear it.
 - Undo reverses **the last action only**, of these: mark all as read, mark unread, star/unstar, unsubscribe, delete folder.
