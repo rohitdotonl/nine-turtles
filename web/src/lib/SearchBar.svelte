@@ -147,10 +147,13 @@
     }}
   >
     <span class="shrink-0 text-muted"><Icon name="search" size={16} /></span>
-    <!-- One line, always: chips shrink and end in "…" (their whole text is in their tooltip) rather than wrapping. -->
-    <div class="flex min-w-0 flex-1 items-center gap-1">
+    <!--
+      One line for the usual one or two chips: they shrink and end in "…" (their whole text is in their
+      tooltip and their Remove button's name). With more, the row wraps so every chip stays readable.
+    -->
+    <div class={["flex min-w-0 flex-1 items-center gap-1", chips.length > 2 && "flex-wrap"]}>
       {#each chips as chip (chip.key)}
-        <span class="my-1.5 flex max-w-[60%] min-w-0 shrink items-center rounded bg-[var(--tone)] pl-2 text-small whitespace-nowrap">
+        <span class={["my-1.5 flex min-w-0 shrink items-center rounded bg-[var(--tone)] pl-2 text-small whitespace-nowrap", chips.length > 2 ? "max-w-full" : "max-w-[60%]"]}>
           <span class="min-w-0 truncate" title={chip.label}>{chip.label}</span>
           <button type="button" aria-label="Remove {chip.label}" onclick={() => remove(chip)} class="-my-2 -mr-2 -ml-1 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center">
             <Icon name="close" size={14} />

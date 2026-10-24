@@ -175,10 +175,10 @@
           <!-- Cleaned by slowfeed before it was stored (server/src/feed.rs). -->
           <div class="article-text" dir="auto">{@html full.content}</div>
           <!-- The last page: a short rule, so the article ends rather than stops. -->
-          <hr class="article-end" />
+          <hr aria-hidden="true" class="article-end" />
         {:else if full.summary}
           <div class="article-text" dir="auto">{@html full.summary}</div>
-          <hr class="article-end" />
+          <hr aria-hidden="true" class="article-end" />
           <p class="mt-6 text-center font-sans text-small text-ink-2" lang="en">
             This feed shares only a summary. The whole article is on the publisher's site{#if article.link}:
               <a href={article.link} target="_blank" rel="noopener noreferrer" class="underline underline-offset-4"

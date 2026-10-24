@@ -41,7 +41,7 @@ No amount of calm or minimalism justifies text some people can't read.
 - **Fully keyboard-operable:** standard Tab / Enter / Escape with a visible focus ring are the floor; vim keys are a power feature on top.
 - **Screen readers:** panes are landmarks; the selected item and state changes ("marked as read") are announced; each article carries its language.
 - **Respect system settings:** text size, reduced motion, high contrast, light/dark.
-- **Touch targets:** at least 44px on mobile, however dense the design.
+- **Touch targets:** at least 44px on mobile, however dense the design. Where the main pointer is a mouse or trackpad, sidebar rows and the search options' controls may be 36px; anything a finger is the main pointer for gets 44px.
 
 **Test:** can someone use every feature with only a keyboard, only a screen reader, or at 200% text size?
 

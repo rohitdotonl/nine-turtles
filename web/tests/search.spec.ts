@@ -62,7 +62,7 @@ test("a search starts where you are, underlines the words it found, and Escape b
   await expect(found).toHaveCSS("text-decoration-line", "underline");
   const [wordColor, titleColor] = await Promise.all([found.evaluate((e) => getComputedStyle(e).color), found.evaluate((e) => getComputedStyle(e.parentElement!).color)]);
   expect(wordColor).toBe(titleColor);
-  // The line above the results says how many; there's nothing new to fetch, so Refresh steps aside.
+  // The end of the "Mark all as read" line says how many; there's nothing new to fetch, so Refresh steps aside.
   await expect(page.getByRole("status").filter({ hasText: /^1 result$/ })).toBeVisible();
   await expect(page.getByRole("region", { name: "Search results" }).getByRole("button", { name: "Refresh" })).toHaveCount(0);
 
@@ -158,4 +158,23 @@ test("Hindi words are found whole", async ({ page }) => {
   await expect(results(page).first()).toContainText("पुस्तकालय की एक शाम");
   await field(page).fill("पुस्तकालय");
   await expect(results(page).first().locator("strong")).toHaveText("पुस्तकालय");
+});
+
+test("with many filters the search box wraps, and no chip slides under the options button", async ({ page }) => {
+  const blog = unique("chips");
+  const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
+  await open(page, `/feeds/${id}`, `Blog ${blog}`);
+  // With an article open, the list is at its narrowest.
+  await heading(page).focus();
+  await page.keyboard.press("j");
+  await expect(page.getByRole("region", { name: "Article" }).locator(".article-title")).toBeVisible();
+  await field(page).focus();
+  await page.keyboard.type("is:unread after:2020-01-01 before:2030-01-01 ");
+  await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(4);
+  const options = (await page.getByRole("button", { name: "Search options" }).boundingBox())!;
+  for (const chip of await page.getByRole("button", { name: /^Remove / }).all()) {
+    // The chip itself (its remove button's 44px reaches a little past it, by design).
+    const box = (await chip.locator("..").boundingBox())!;
+    expect(box.x + box.width).toBeLessThanOrEqual(options.x + 1);
+  }
 });
