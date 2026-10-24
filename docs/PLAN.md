@@ -344,6 +344,10 @@ each with screenshots:
   clear of its tile, the sample inside its group, a softer field ring,
   ⇧A key caps, and "Import an OPML file…" as a link on the margin
   (decision 0055).
+- ✅ Renamed **nine turtles**, and one theme, Original, by day and by night;
+  the Apple Books theme set removed (decision 0056).
+- ⏳ Small touches of color, as GitHub uses them: being discussed with the
+  owner.
 
 ---
 
