@@ -4,7 +4,7 @@
   or the label of an icon-only button, says what it does.
 -->
 <script lang="ts" module>
-  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert";
+  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more";
 </script>
 
 <script lang="ts">
@@ -87,5 +87,15 @@
     <circle cx="10" cy="10" r="7.25" />
     <path d="M10 6.5v4" />
     <path d="M10 13.4v.1" />
+  {:else if name === "aa"}
+    <!-- The reading panel: a large A and a small a, like a book app's type button. -->
+    <path d="M2.5 16 7 4l4.5 12M4.2 11.75h5.6" />
+    <circle cx="14.75" cy="13.5" r="2.5" />
+    <path d="M17.25 10.5V16" />
+  {:else if name === "more"}
+    <!-- More: three dots in a row. -->
+    <circle cx="4.5" cy="10" r="1.25" fill="currentColor" stroke="none" />
+    <circle cx="10" cy="10" r="1.25" fill="currentColor" stroke="none" />
+    <circle cx="15.5" cy="10" r="1.25" fill="currentColor" stroke="none" />
   {/if}
 </svg>

@@ -225,6 +225,8 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Hover state
 - Control kinds (everyday button, main button, toolbar action, field)
 - Icon set
+- Popover and menu button (`aria-haspopup`)
+- Bottom sheet
 
 ## Planned for V2
 

@@ -2,7 +2,7 @@
 
 > **slowfeed is a quiet place to read the web: it shows you what's there, gets out of the way, and lets you finish.**
 
-*Last updated: 24 October 2026 (the owner approved a new look: a role-based type scale, three ink levels, deeper area tones and one selection style; decision 0026). This document takes precedence over every other project document.*
+*Last updated: 24 October 2026 (toward Apple Books: an "Aa" reading panel beside the text and quiet icon toolbars, decision 0034; one family for sheets, search excerpts and a welcome in the reading area, decision 0035. Before that, the owner approved a new look: a role-based type scale, three ink levels, deeper area tones and one selection style, decision 0026). This document takes precedence over every other project document.*
 
 ## Mission
 
@@ -61,7 +61,7 @@ Publishers are the reason there's anything to read.
 
 #### 1. Reading comes first
 The article is the product; everything else is a way to reach it.
-- *Explains:* in-app reading, serif by default, no images in the list, curated reader controls, links that don't compete with the text.
+- *Explains:* in-app reading, serif by default, no images in the list, curated reader controls one press from the text (the Aa panel), links that don't compete with the text.
 - **Test:** does this make reading better, or compete with it?
 
 #### 2. Calm over engagement
@@ -122,8 +122,8 @@ The 500-feed user gets everything; the 30-feed user never sees the machinery.
 | Unread counts in V1 | 2. Calm over engagement | Power users with hundreds of feeds need to know what they've seen | Inbox mode only. Muted grey, right-aligned in the sidebar. Never badges or color. Per feed and folder only, no global total. Above 999 shows "999+". |
 | Sidebar search always visible | 6. Power is hidden, never missing | The owner wants finding a feed by name always available | One quiet field that filters feeds and folders by name. Nothing else in the sidebar skips progressive disclosure. |
 | Unread dot (decision 0028) | Type does the hierarchy, never badges | Weight alone was hard to scan in a long list; Mail and Things mark unread with a dot | A 6px dot in the text color before an unread title. No number, never colored, list rows only. |
-| A shadow under the floating note (decision 0028) | Regions by tone, no shadows | The note floats over the list; a soft shadow shows it sits above the rows rather than among them | Only things that float over the page: the note at the bottom of the list, a sheet, the search options popover and the shortcut list. One soft shadow and a faint edge each. Nothing that sits in the page casts a shadow. |
-| Hairlines inside a page | Regions by tone, no lines | Inside one page, a faint line parts groups that do different jobs: rows in a Settings group, and Unsubscribe or Delete folder apart from the form above them | Only within a page, never between panes; faint, in a tone of the text color. A refused field's firmer edge is a border, not a line between regions. |
+| A shadow under the floating note (decision 0028) | Regions by tone, no shadows | The note floats over the list; a soft shadow shows it sits above the rows rather than among them | Only things that float over the page: the note at the bottom of the list, a sheet, the search options popover, the Aa panel, the list's More menu and the shortcut list (decision 0034). One soft shadow and a faint edge each. Nothing that sits in the page casts a shadow. |
+| Hairlines inside a page | Regions by tone, no lines | Inside one page, a faint line parts groups that do different jobs: rows in a Settings group, articles in the middle list, and Unsubscribe or Delete folder apart from the form above them | Only within a page, never between panes; faint, in a tone of the text color. A refused field's firmer edge is a border, not a line between regions. |
 | A dim behind a sheet (decision 0031) | Regions by tone; nothing moves unless you move it | A short task (adding or editing a feed) keeps the list in view, so you don't lose your place; a faint warm dim shows the card is the thing to act on now | Only behind a sheet or the shortcut list, never animated, and it closes with Escape or a press on it. |
 | A hairline under a scrolled top line (decision 0028) | Regions by tone, no lines | Shows that text has gone under a top line that never scrolls, so it doesn't look cut off | Only under a pane's top line, only once its content has scrolled, in a faint tone of the text color. |
 
@@ -156,9 +156,17 @@ The philosophy applied. The principle is noted where it isn't obvious.
 - **Regions are separated by tone, not lines:** background tone and whitespace; no borders, shadows, blur or gradients (small exceptions for things floating over the page or scrolling under a top line, in the Exceptions log).
 - **Type does the hierarchy:** size and weight, never color or badges (the unread dot is the one mark, in the Exceptions log).
 - **One accent, one meaning:** each theme has one accent (ink blue in off-white, sepia and dark; its own hue in the others), it means "where you are," and nothing else uses it.
-- **Icons where the convention is an icon** (close, back, search, settings, the sidebar toggle, edit feed or folder, and the article's copy link, star and mark unread), each named in its tooltip with its key and to screen readers. **Words** for the way to the publisher ("Open original"), Add feed, and the main action of a form.
+- **Icons where the convention is an icon** (close, clearing the search field, back, search, settings, the sidebar toggle, edit feed or folder, the list's refresh and More (…), and every action on an article: open original, Aa, copy link, star and mark unread), each named in its tooltip with its key and to screen readers, so the tools around the text stay quiet (decision 0034). **Words** for Add feed, menu items, and the main action of a form.
 - **Settings opens in place of the list,** with one top line that never scrolls: the title in the serif, like the list's, and an X that closes it (Escape does too).
-- **Short tasks open as a sheet** over the place you were (Add a feed, Edit feed, Edit folder): a small card a fixed way down the window (so a message appearing in it never moves it), its title in the serif, the panes still in view behind it under a faint dim. Every sheet has Cancel; Cancel, Escape or a press on the dim closes it; there's no X. A destructive action (Unsubscribe, Delete) sits below a hairline as an ordinary button, under a line saying what it does. On a phone these are screens of their own, with the top line and X.
+- **Short tasks open as a sheet** over the place you were (Add a feed, Edit feed, Edit folder): a small card a fixed way down the window (so a message appearing in it never moves it), the panes still in view behind it under a faint dim. Every sheet is built the same way, like a Mac sheet in Apple Books:
+  - its title in the interface font, 20px semibold (the serif names *places*, such as a list or Settings; a sheet is a *task*);
+  - the form, its fields at the card's full width;
+  - **one row of actions at the foot: Cancel, then the main action at the right end** (a message, if any, at the row's left);
+  - a destructive action (Unsubscribe, Delete), if there is one, apart below a hairline: a line saying what it does, then the action as **words in a muted red**, with no edge. The words say what it does, so red is never the only sign.
+
+  Cancel, Escape or a press on the dim closes it; there's no X. 12px corners, 24px padding all round. On a phone these are screens of their own, with the top line and X, built the same way.
+- **One family for things that float:** a sheet, the search options popover and the shortcut list share the same 12px corners, faint edge and one soft shadow.
+- **Small menus and panels float under their button:** the list's More menu and the Aa panel, in the same family, a rounded card with one soft shadow, closed by Escape (back to the button), a press outside, or the keyboard leaving them. On a phone the Aa panel is a sheet along the bottom of the screen with a Close button.
 - **One search field style:** the sidebar's find field and the list's search share one look, a faint tone with no edge, a search icon and the same height and text size; the keyboard's outline marks the one in use.
 - **No motion.** Views switch instantly.
 
@@ -172,14 +180,15 @@ The philosophy applied. The principle is noted where it isn't obvious.
 | List area (one step deeper) | `#F0ECE3` | `#ECE1C8` | `#221F1C` |
 | Sidebar (two steps deeper) | `#E7E2D7` | `#E3D5B7` | `#2E2A25` |
 | Text | `#1F1E1C` | `#2A241B` | `#E6E1D8` |
-| Second ink: read titles, sidebar names, quieter actions | `#47423B` | `#463C2F` | `#C9C2B6` |
+| Second ink: read titles, quieter actions | `#47423B` | `#463C2F` | `#C9C2B6` |
 | Muted grey, warm (owner's choice, Milestone 4): meta, counts, hints | `#61564A` | `#5E5141` | `#AFA38E` |
 
 - All accent pairs pass AAA (7 : 1); re-check if a value changes.
 - **Links in articles** are underlined in the text color, **never blue**.
 - **Muted greys** (read items, counts, source names) are warm, like ink on paper, and pass AA (4.5 : 1) on every area and on the selected-row tint in all themes, verified by automatic checks.
-- **The keyboard focus outline** is a 2px line in the text color, never the accent. On rows it is the text color softened (65%, still at least 3 : 1, checked automatically), drawn just inside their rounded shape; on the selected row it replaces the fill, so the row carries two marks, never three (the outline and the accent bar); a title the keyboard is moved to gets it too, a little away from the words. It shows only when you're using the keyboard.
+- **The keyboard focus outline** is a 2px line in the text color, never the accent. On rows it is the text color softened (65%, still at least 3 : 1, checked automatically), drawn just outside their rounded fill, the way a Mac draws a focus ring; the fill always stays, and the accent bar steps aside while the outline shows, so a row carries two marks, never three; a title the keyboard is moved to gets it too, a little away from the words. It shows only when you're using the keyboard.
 - **Status colors** (errors, warnings; V2 feed health page) are muted, never drift toward blue, and always come with words.
+- **Destructive actions** (Unsubscribe, Delete folder) are words in a muted red, `#A3261B` in the light themes and `#E8968A` in the dark ones: at least AA (4.5 : 1) on the page and the list in every theme, checked automatically. Red means only "this removes something", and the words always say what.
 
 The themes added on 24 October 2026 to try out (decision 0032), same roles in the same order (background, accent (every accent passes AAA, 7 : 1, on its background), list, sidebar, text, second ink, muted grey):
 
@@ -203,24 +212,24 @@ Eleven, for now: **off-white** (default light), **sepia** and **dark** (default 
 |---|---|---|
 | Reading (default) | **Literata** | Made for long-form reading on screens |
 | Reading (alternate sans) | **Atkinson Hyperlegible** | Made for legibility, including low vision |
-| Interface | **Inter** | Neutral and clear at small sizes |
+| Interface | **The device's own system font** (San Francisco on Apple devices), **Inter** everywhere else | As in Apple Books: the interface feels native; Inter is the neutral, self-hosted fallback |
 | Code in articles | **JetBrains Mono** | Clear monospace |
 
 - All fonts are free and served by slowfeed itself (no third-party font services).
 - **Other scripts** (e.g. Hindi in Devanagari) use the fonts already on the device; no extra downloads.
 - **A fixed type scale by role**, so each level of importance looks different at a glance (size, weight and ink together, never color):
-  - meta 13px (times, source names, counts, hints) in muted grey;
+  - meta 13px (times, source names, counts, hints) in muted grey; 15px on a touch screen;
   - small 14px (toolbar actions, helper text, labels);
-  - interface 15px (sidebar names, list titles);
+  - interface 15px (sidebar names, list titles); 17px on a touch screen, as a phone's own apps use;
   - base 16px (text boxes, running interface text);
   - large 20px (section headings inside a screen);
-  - heading 24px, in the reading serif (the wordmark, the list's title);
+  - heading 24px, in the reading serif (the list's title); the sidebar's wordmark is 20px in the second ink on a computer and 28px on a phone's feeds screen;
   - extra large 28px (a screen's own title);
   - display 48px (sign-in wordmark).
 - Article text is set by the reader: six steps, 16 to 28px, 20px by default (a tenth smaller on a phone). The article's title is about 1.55 times the text size, its headings 1.2 and 1.08 times, so the title is always clearly the largest thing on screen.
 - **Spacing** in steps of 4px, mostly 8, 16, 24, 40 and 64px.
-- **Weights:** regular and semibold (600) for both reading and the interface: Literata's semibold for titles, headings and bold words in articles (Atkinson Hyperlegible keeps its bold). Nothing heavier, so a calm page never shouts. Semibold marks unread titles, where you are, and the one main action in a toolbar.
-- **Three inks:** text (titles, where you are), a second ink (read titles, sidebar names, quieter actions) and muted grey (meta).
+- **Weights:** regular and semibold (600) for both reading and the interface: Literata's semibold for titles, headings and bold words in articles (Atkinson Hyperlegible keeps its bold). Nothing heavier, so a calm page never shouts. Semibold marks unread titles, where you are, the one main action in a toolbar or sheet, a destructive action's words, and searched words in a result's excerpt.
+- **Three inks:** text (titles, where you are), a second ink (read titles, quieter actions); feed names in the sidebar are in full text color and muted grey (meta).
 - Article lines of roughly 65–75 characters, with generous leading.
 
 #### Languages
@@ -248,9 +257,11 @@ Fixed order, top to bottom: **Unread · Starred · All**, then **folders** A–Z
 ### Item list
 
 - **No images, no favicons.** Each row: the **title**, with **source name and time** in quiet small text below. In one feed's own list the name is left out (the title above already says it); screen readers still hear it.
-- **Sort:** newest first by default; changeable in settings.
+- **Sort:** newest first by default; changeable in settings or the list's More menu.
+- **Beside the title:** quiet icons for Edit (a feed's or folder's own list), Refresh and **More** (…), a small menu with Mark all as read and the sort order. No row of words between the search field and the list.
 - **The list has an end:** a fixed number of items, then a **"Show older items"** button. Nothing loads unless asked. When there's nothing more to show, a short hairline and "That's everything." in muted grey close the list.
 - Matched search terms are **underlined** in the text color, never highlighted in color.
+- **A search result shows why it matched:** when its text (not only its title) holds a searched word, one muted line under it shows that text around the first match, at most about 90 characters, cut between words. The matched words in it are semibold and in full ink, so they show by weight as well as tone, as Apple Books shows matches in context.
 
 #### Item states (distinguished by tone and weight, never color alone)
 
@@ -258,7 +269,7 @@ Fixed order, top to bottom: **Unread · Starred · All**, then **folders** A–Z
 |---|---|
 | Unread | Full-contrast, semibold title and a small dot in the margin before it |
 | Read | Second ink, regular-weight title |
-| Selected (cursor) | A rounded faint tint, and a short bar in the theme's accent flush against the pane's own left edge, the same in the sidebar and the list; title in full ink. The keyboard's outline sits inside the fill, with the bar outside it |
+| Selected (cursor) | A rounded faint tint, and a short bar in the theme's accent flush against the pane's own left edge, the same in the sidebar and the list; title in full ink. The keyboard's outline is a ring just outside the fill, and the bar hides while it shows |
 | Starred | A small star mark |
 
 In river mode (V2) only the cursor and star show.
@@ -268,11 +279,13 @@ In river mode (V2) only the cursor and star show.
 - **The feed's content, read in the app,** cleaned and restyled consistently: headings, quotes, code, tables, footnotes, images.
 - **Summary-only feeds** show the summary with "Open original"; never fetch the full article (second floor).
 - **Images** load normally from the publisher; invisible 1×1 tracking images are removed.
-- **"Open original"** is always present, always in the same place, with **Share** beside it.
+- **"Open original"** is always present, always in the same place: the first icon at the left of the article's top line (on a phone, at the right of the top bar), named "Open original" for screen readers and in its tooltip.
+- **Quiet tools:** the article's top line is a row of icons in the second ink, never words: Open original on the left; **Aa**, Copy link (Share on phones), Star and Mark unread on the right.
+- **The Aa panel,** like Apple Books': one press from the text, the reader's own controls. Text size as a small A and a large A (the same steps as `+` and `-`); the themes as round-cornered tiles, each "Aa" in the reading font on that theme's own page color and ink, the chosen one ringed and its name semibold; the reading font, each name in its own face; and the line width. Changes apply at once to the article behind it. The same preferences stay in Settings › Look and feel.
 - **Title, then byline:** the title first, then who, where and when in a quiet line under it.
 - **An ending:** a short centred line after the last paragraph, and room below it.
 - **Title size:** about one and a half times the text size, semibold. On a phone the same text-size step reads a little smaller, so a line keeps about 40 characters.
-- **The phone's bottom bar** says "Original" (its full name, "Open original", for screen readers) so every word fits on one line.
+- **The phone's bottom bar** is quiet icons without words, each named for screen readers (see Mobile).
 - Prefetch the next article for instant `j`.
 
 ### Reading modes
@@ -287,7 +300,7 @@ In river mode (V2) only the cursor and star show.
 
 - An item is **read when opened.** On desktop, selecting it (`j`/`k` or click) shows it in the reading pane, which counts as opened.
 - **`m`** marks the current item unread.
-- **Mark all as read:** instant, with **undo**, no confirmation dialog. It **only affects items currently shown**, never ones fetched but not yet displayed.
+- **Mark all as read** (`Shift+A`, or the list's More (…) menu beside its title): instant, with **undo**, no confirmation dialog. It **only affects items currently shown**, never ones fetched but not yet displayed.
 
 ### Star
 
@@ -301,12 +314,13 @@ In river mode (V2) only the cursor and star show.
 
 ### Search
 
-- **`/`** focuses the field. A faint **search icon** starts it and the **tuning (sliders) button** sits inside it at its right end; its tooltip says "Search options." The number found sits quietly at the end of the "Mark all as read" line.
+- **`/`** focuses the field. A faint **search icon** starts it and the **tuning (sliders) button** sits inside it at its right end; its tooltip says "Search options." The number found sits quietly in a line above the results.
 - **Scope defaults to where you are,** shown as a removable chip in the field, e.g. `[ in: Tech × ]`, once you're in the search. At rest the field just says "Search", since the list's title already names it. Remove the chip to search everything.
 - **The chip shows the scope; the tuning panel edits it;** they stay in sync. The panel offers scope (current location · all feeds · a folder · a feed), unread only, starred only, and a date range.
 - **Always full text:** titles and bodies together, title matches ranked higher. No toggle.
 - **Filter syntax for power users** (Gmail-style), autocompleted and in the `?` cheat sheet: `is:unread` · `is:starred` · `feed:name` · `folder:name` · `after:YYYY-MM-DD` · `before:YYYY-MM-DD`. Typed filters become chips, so the field always shows exactly what's searched; the panel is a friendlier way to write the same filters.
-- **Results reuse the item list:** same look and keys; "mark all as read" applies to the results.
+- **Results reuse the item list:** same look and keys; "Mark all as read" (in the More menu, or `Shift+A`) applies to the results. Each result whose text matched carries one quiet line of that text around the match (see "Item list").
+- **A × clears the field** once it has words in it: a 44px target named "Clear search". It keeps the chips.
 - Tab moves from the field into the panel; Escape closes everything and returns you to where you were.
 
 ### Refresh
@@ -315,15 +329,19 @@ In river mode (V2) only the cursor and star show.
 - **The view waits for you:** it updates only on `r` or the Refresh button, instantly, since fetching already happened.
 - **Fresh on arrival:** opening or reloading the app shows the latest state.
 - **One quiet line, no number:** when new items wait, "New items · press `r`." floats as a small note at the foot of the list pane (the same place however short the list), so nothing shifts. Undo and "slowfeed was updated" use the same note.
-- **No pull-to-refresh;** on mobile a labeled Refresh button sits in the top bar.
+- **No pull-to-refresh;** a Refresh icon sits beside every list's title, on phones too.
 
 ### Empty state
 
-Until the first feed is added:
+Until the first feed is added, the **reading area** holds a welcome, centred like a blank page in a book, because that's where a new reader's eyes go:
 
-> **[ Paste a website or feed URL ]**
-> Import OPML
+> ***A quiet place to read.*** (the reading serif, 28px)
+> One sentence on what slowfeed is for.
+> **[ Paste a website or feed URL ] [ Add feed ]** (a wide field)
+> or import an OPML file (a quiet link)
 
+- The list beside it says only "Nothing here yet." Where there's no reading area beside the list (a phone), the welcome takes the list's place.
+- **No article open:** once there are feeds, the empty reading area says "No article open." in the reading serif at 20px, with a muted hint under it, "Choose one from the list, or press j", only when the list has something to open.
 - Accepts a **website** URL too; slowfeed finds the feed (autodiscovery).
 - The "New to feeds?" guide page comes in V2.
 
@@ -340,9 +358,9 @@ Until the first feed is added:
 ### Mobile
 
 - **Single-column drill-down:** Feeds → Items → Article. The feeds list is home; no hamburger menu.
-- **Top bar:** a back arrow labeled with its destination ("‹ Tech") and the screen's title; Refresh on list screens; search and tuning icons on the feeds and items screens.
+- **Top bar:** a back arrow labeled with its destination ("‹ Tech") and the screen's title; Refresh and More beside a list's title; search and tuning icons on the feeds and items screens. On an article, quiet icons only: the back arrow (named "Back to Tech" for screen readers) and Open original.
 - **Back:** the system edge-swipe and back button. **No custom swipe gestures** on list items.
-- **Article bottom toolbar** (thumb reach): previous · next · star · share · open original.
+- **Article bottom toolbar** (thumb reach), quiet icons without words, each a 44px tap named for screen readers: previous · next · Aa · star · mark unread · share. Aa opens the reading panel as a bottom sheet.
 - Touch targets of at least 44px.
 - **Installable** to the home screen on iPhone and Android (as a web app), full-screen with its own icon.
 
@@ -377,7 +395,7 @@ Vim-style keys are first-class. A keyboard icon at the foot of the sidebar opens
 ### Settings
 
 - Settings shares the top line with the other screens. Each setting is a segmented control: a faint track, the chosen choice raised onto the page color (a lighter tone in dark themes) with a fine edge and semibold words. The search options use the same control.
-- **Look and feel** (per device): reading font (Literata default, or Atkinson Hyperlegible), text size, line width, theme (Automatic, or any of the eleven).
+- **Look and feel** (per device): reading font (Literata default, or Atkinson Hyperlegible), text size, line width, theme (Automatic, or any of the eleven). The Aa panel above an article sets the same preferences, and Settings says so in one line.
 - **Reading:** sort order (newest first by default); inbox or river in V2.
 - **Feed health page (V2):** dead feeds first, then intermittent errors; problems in plain words ("Hasn't worked for 3 weeks — the site may have moved"), not HTTP codes; per feed **Retry · Find new address · Unsubscribe**, where "Find new address" reruns autodiscovery.
 - **Your data:** OPML import and export; export of starred articles.

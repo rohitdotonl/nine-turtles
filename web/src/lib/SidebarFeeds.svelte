@@ -77,7 +77,7 @@
         // With folders above, the counts line up with theirs, in the column left of the folders' arrows.
         folders.length > 0 && !searching ? "pr-[46px] pointer-fine:pr-[38px]" : "pr-3.5",
         indent ? "pl-[34px]" : "pl-[14px]",
-        isHere(place) ? "font-semibold text-ink" : "text-ink-2",
+        isHere(place) ? "font-semibold text-ink" : "text-ink",
       ]}><span class="min-w-0 flex-1 truncate">{feed.title}</span>{@render count(feed.unread)}</a
     >
   </li>
@@ -90,7 +90,7 @@
     aria-current={isHere(place) ? "page" : undefined}
     onclick={(event) => follow(event, place)}
     title={folder.name}
-    class={["flex min-h-11 pointer-fine:min-h-9 min-w-0 flex-1 items-center gap-3 rounded-md pr-3.5 text-ui", padded && "pl-[14px]", isHere(place) ? "font-semibold text-ink" : "text-ink-2"]}
+    class={["flex min-h-11 pointer-fine:min-h-9 min-w-0 flex-1 items-center gap-3 rounded-md pr-3.5 text-ui", padded && "pl-[14px]", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
     ><span class="min-w-0 flex-1 truncate">{folder.name}</span>{@render count(
       folderUnread(folder, feeds),
     )}</a
@@ -116,8 +116,8 @@
   {/if}
 {:else}
   {#if folders.length > 0}
-    <h2 class="sr-only">Folders</h2>
-    <ul class="mt-4">
+    <h2 class="sidebar-section">Folders</h2>
+    <ul>
       {#each folders as folder (folder.id)}
         {@const here = isHere({ kind: "folder", id: folder.id })}
         {@const inside = feeds.filter((feed) => feed.folders.includes(folder.id))}
@@ -156,8 +156,8 @@
     </ul>
   {/if}
   {#if loose.length > 0}
-    <h2 class="sr-only">{folders.length > 0 ? "Feeds in no folder" : "Feeds"}</h2>
-    <ul class="mt-4">
+    <h2 class="sidebar-section">{folders.length > 0 ? "Other feeds" : "Feeds"}</h2>
+    <ul>
       {#each loose as feed (feed.id)}
         {@render feedRow(feed, false)}
       {/each}

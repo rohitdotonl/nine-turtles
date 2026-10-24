@@ -6,6 +6,7 @@ import {
   importMessage,
   markedAllMessage,
   newItemsMessage,
+  toExcerpt,
   unreadLabel,
   when,
   type Feed,
@@ -21,6 +22,25 @@ describe("article times", () => {
     expect(when(at(new Date(2026, 9, 22, 23, 59)), now)).toBe("22 Oct");
     expect(when(at(new Date(2026, 0, 1, 9, 0)), now)).toBe("1 Jan");
     expect(when(at(new Date(2025, 9, 23, 14, 5)), now)).toBe("23 Oct 2025");
+  });
+});
+
+describe("search excerpts", () => {
+  it("keep only text pieces, each a searched word or not, never HTML", () => {
+    expect(
+      toExcerpt([
+        { text: "Late ", match: false },
+        { text: "gardening", match: true },
+        { text: "<b>notes</b>", match: "yes" },
+        "stray",
+        null,
+      ]),
+    ).toEqual([
+      { text: "Late ", match: false },
+      { text: "gardening", match: true },
+      // Text stays text: Svelte shows it as written, tags and all.
+      { text: "<b>notes</b>", match: false },
+    ]);
   });
 });
 

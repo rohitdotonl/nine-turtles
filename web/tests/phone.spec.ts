@@ -38,8 +38,13 @@ test.describe("on a phone", () => {
     await expect(sidebar(page)).toBeHidden();
     await expect(list(page).getByRole("heading", { level: 2, name: "Reading Room" })).toBeVisible();
     await expect(list(page).getByRole("button", { name: "Back to Feeds" })).toBeVisible();
-    // Refresh is in the top bar, so there's only ever one.
+    // Refresh and More are quiet icons beside the list's title, and there's only ever one Refresh.
     await expect(page.getByRole("button", { name: "Refresh", exact: true })).toHaveCount(1);
+    await expect(list(page).getByRole("button", { name: "More", exact: true })).toBeVisible();
+    for (const control of [list(page).getByRole("button", { name: "Refresh", exact: true }), list(page).getByRole("button", { name: "More", exact: true })]) {
+      const box = (await control.boundingBox())!;
+      expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
+    }
 
     await row(page, "The pleasure of a slow letter").click();
     await expect(title(page, "The pleasure of a slow letter")).toBeFocused();
@@ -80,32 +85,31 @@ test.describe("on a phone", () => {
     await expect(sidebar(page)).toBeVisible();
   });
 
-  test("the article's toolbar sits at the bottom: previous, next, star, share, open original", async ({ page }) => {
+  test("the article's toolbar sits at the bottom as quiet icons; back and open original sit at the top", async ({ page }) => {
     await openHome(page);
     await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
     await row(page, "The pleasure of a slow letter").click();
 
-    const words = (await toolbar(page).locator(":scope > *").allInnerTexts()).map((text) => text.trim());
-    expect(words).toEqual(["Previous", "Next", "Star", expect.stringMatching(/^(Share|Copy link)$/), "Original"]);
+    // Icons only, each with its name for screen readers.
+    const names = await toolbar(page).locator(":scope > *").evaluateAll((controls) => controls.map((control) => control.getAttribute("aria-label")));
+    expect(names).toEqual(["Previous", "Next", "Reading appearance", "Star", "Mark unread", expect.stringMatching(/^(Share|Copy link)$/)]);
+    expect((await toolbar(page).innerText()).trim()).toBe("");
     // Within thumb reach: at the bottom of the screen.
     const box = await toolbar(page).boundingBox();
     const height = page.viewportSize()?.height ?? 0;
     expect(Math.round((box?.y ?? 0) + (box?.height ?? 0))).toBe(height);
-    // Every word fits on one line ("Original" keeps its full name for screen readers), and the icons sit in one line.
-    const openerLines = await toolbar(page)
-      .getByRole("link", { name: "Open original" })
-      .evaluate((link) => {
-        const words = document.createRange();
-        words.selectNodeContents(link.lastChild!);
-        return new Set([...words.getClientRects()].map((line) => Math.round(line.top))).size;
-      });
-    expect(openerLines).toBe(1);
-    const tops = await toolbar(page).locator(":scope > * > svg").evaluateAll((icons) =>
-      icons.filter((icon) => getComputedStyle(icon).visibility !== "hidden").map((icon) => Math.round(icon.getBoundingClientRect().top)),
+    // The icons sit in one line, and each place is a full 44px tap.
+    const tops = await toolbar(page).locator(":scope > * svg").evaluateAll((icons) =>
+      icons.filter((icon) => getComputedStyle(icon).visibility !== "hidden").map((icon) => Math.round(icon.getBoundingClientRect().top + icon.getBoundingClientRect().height / 2)),
     );
-    expect(tops.length).toBeGreaterThanOrEqual(4);
+    expect(tops.length).toBeGreaterThanOrEqual(5);
     expect(new Set(tops).size).toBe(1);
-    await expect(toolbar(page).getByRole("link", { name: "Open original" })).toHaveAttribute(
+    for (const control of await toolbar(page).locator(":scope > *").all()) {
+      const place = (await control.boundingBox())!;
+      expect(Math.min(place.width, place.height)).toBeGreaterThanOrEqual(44);
+    }
+    // The way to the publisher is at the top, beside the back arrow.
+    await expect(article(page).getByRole("link", { name: "Open original" })).toHaveAttribute(
       "href",
       "https://reading-room.example/slow-letter",
     );
@@ -121,6 +125,38 @@ test.describe("on a phone", () => {
     await expect(toolbar(page).getByRole("button", { name: "Star" })).toHaveAttribute("aria-pressed", "true");
     await toolbar(page).getByRole("button", { name: "Star" }).click();
     await expect(toolbar(page).getByRole("button", { name: "Star" })).toHaveAttribute("aria-pressed", "false");
+  });
+
+  test("Aa opens the reading panel as a sheet along the bottom; Close gives the place back to Aa", async ({ page }) => {
+    await openHome(page);
+    await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
+    await row(page, "The pleasure of a slow letter").click();
+
+    const aa = toolbar(page).getByRole("button", { name: "Reading appearance" });
+    await aa.click();
+    const panel = page.getByRole("dialog", { name: "Reading appearance" });
+    await expect(panel).toBeVisible();
+    // The width of the screen, along its bottom.
+    const box = (await panel.boundingBox())!;
+    const size = page.viewportSize()!;
+    expect(Math.round(box.x)).toBe(0);
+    expect(Math.round(box.width)).toBe(size.width);
+    expect(Math.round(box.y + box.height)).toBe(size.height);
+    // Every control is a full 44px tap.
+    for (const control of [panel.getByRole("button", { name: "Smaller text" }), panel.getByRole("button", { name: "Larger text" }), panel.getByRole("button", { name: "Close" })]) {
+      const place = (await control.boundingBox())!;
+      expect(Math.min(place.width, place.height)).toBeGreaterThanOrEqual(44);
+    }
+    for (const choice of await panel.locator("label").all()) {
+      expect((await choice.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    }
+
+    await panel.getByRole("radio", { name: "Night", exact: true }).check();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "night");
+    await panel.getByRole("button", { name: "Close" }).click();
+    await expect(panel).toHaveCount(0);
+    await expect(aa).toBeFocused();
+    await expect(title(page, "The pleasure of a slow letter")).toBeVisible();
   });
 
   test("with only a keyboard: Tab and Enter move on, Escape goes back one step", async ({ page }) => {

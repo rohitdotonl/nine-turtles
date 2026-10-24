@@ -199,6 +199,12 @@ export async function openScreen(page: Page, screen: Screen, theme: Theme): Prom
     .toBe(background(theme));
 }
 
+/** "Mark all as read" sits in the list's More (…) menu, beside the list's title. */
+export async function markAllFromMenu(page: Page): Promise<void> {
+  await page.getByRole("button", { name: "More", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Mark all as read" }).click();
+}
+
 /** Presses Tab until the keyboard's place reaches the element: the keyboard floor. */
 export async function tabTo(page: Page, target: Locator, limit = 50): Promise<void> {
   for (let i = 0; i < limit; i++) {

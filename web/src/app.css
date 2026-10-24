@@ -15,6 +15,7 @@
 
 @theme {
   --font-serif: "Literata", Georgia, serif;
+  /* Inter everywhere; Safari on Apple devices swaps in San Francisco (below the theme). */
   --font-sans: "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
@@ -49,6 +50,7 @@
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
   --color-muted: var(--muted);
+  --color-danger: var(--danger);
   --color-accent: var(--accent);
   --color-tint-list: var(--tint-list);
   --color-tint-sidebar: var(--tint-sidebar);
@@ -64,8 +66,9 @@
   --ink: #1f1e1c;
   --ink-2: #47423b;
   --muted: #61564a;
+  --danger: #a3261b;
   --accent: #2f4a7a;
-  --tint-list: #e4ded2;
+  --tint-list: #e0d9cb;
   --tint-sidebar: #dbd4c6;
 }
 
@@ -79,6 +82,7 @@
     --ink: #e6e1d8;
     --ink-2: #c9c2b6;
     --muted: #afa38e;
+    --danger: #e8968a;
     --accent: #8fa9d6;
     --tint-list: #302c27;
     --tint-sidebar: #3a352f;
@@ -95,6 +99,7 @@
   --ink: #e6e1d8;
   --ink-2: #c9c2b6;
   --muted: #afa38e;
+  --danger: #e8968a;
   --accent: #8fa9d6;
   --tint-list: #302c27;
   --tint-sidebar: #3a352f;
@@ -111,6 +116,7 @@
   --ink: #2a241b;
   --ink-2: #463c2f;
   --muted: #5e5141;
+  --danger: #a3261b;
   --accent: #2f4a7a;
   --tint-list: #ddd5c2;
   --tint-sidebar: #d5cab2;
@@ -125,6 +131,7 @@
   --ink: #1c1c1a;
   --ink-2: #44443f;
   --muted: #5e5e57;
+  --danger: #a3261b;
   --accent: #2d53aa;
   --tint-list: #e9e9e4;
   --tint-sidebar: #e1e1dc;
@@ -139,6 +146,7 @@
   --ink: #22201b;
   --ink-2: #4a443a;
   --muted: #5b5346;
+  --danger: #a3261b;
   --accent: #345d43;
   --tint-list: #e6e0d2;
   --tint-sidebar: #dcd4c1;
@@ -153,6 +161,7 @@
   --ink: #1b2027;
   --ink-2: #3f4955;
   --muted: #535f6c;
+  --danger: #a3261b;
   --accent: #28577e;
   --tint-list: #dfe5eb;
   --tint-sidebar: #d5dde4;
@@ -167,6 +176,7 @@
   --ink: #1d221b;
   --ink-2: #424a3e;
   --muted: #535c4e;
+  --danger: #a3261b;
   --accent: #355c32;
   --tint-list: #e0e5d8;
   --tint-sidebar: #d5dccb;
@@ -181,6 +191,7 @@
   --ink: #ecebe6;
   --ink-2: #c9c7c0;
   --muted: #a4a29a;
+  --danger: #e8968a;
   --accent: #9fb6e6;
   --tint-list: #2a2a28;
   --tint-sidebar: #32322f;
@@ -197,6 +208,7 @@
   --ink: #efe6d5;
   --ink-2: #d1c5b0;
   --muted: #b3a48b;
+  --danger: #e8968a;
   --accent: #d9a85c;
   --tint-list: #2e2820;
   --tint-sidebar: #372f25;
@@ -213,6 +225,7 @@
   --ink: #e5e9f2;
   --ink-2: #c2c9d8;
   --muted: #9ea8bc;
+  --danger: #e8968a;
   --accent: #8fb3ff;
   --tint-list: #232b3d;
   --tint-sidebar: #2a3347;
@@ -229,6 +242,7 @@
   --ink: #e8e8e8;
   --ink-2: #c4c4c4;
   --muted: #a0a0a0;
+  --danger: #e8968a;
   --accent: #8fb0e8;
   --tint-list: #1f1f1f;
   --tint-sidebar: #282828;
@@ -244,6 +258,18 @@
   --reading-font: var(--font-serif);
   --reading-size: 1.25rem;
   --reading-measure: 57ch;
+}
+
+/*
+  The device's own interface font, San Francisco, as Apple Books uses, but only
+  in Safari on a Mac, iPhone or iPad (only Safari knows -apple-system-body).
+  Asked for by name elsewhere, -apple-system can match some other font on
+  Linux, so other browsers keep the self-hosted Inter.
+*/
+@supports (font: -apple-system-body) {
+  :root {
+    --font-sans: -apple-system, "Inter", system-ui, sans-serif;
+  }
 }
 
 body {
@@ -296,7 +322,7 @@ body {
 */
 .place {
   position: relative;
-  border-radius: 0.375rem;
+  border-radius: 0.5rem;
 }
 .place:is([aria-current], [data-here]) {
   background-color: var(--place-tint, var(--color-tint-sidebar));
@@ -312,6 +338,42 @@ body {
   border-radius: 0 3px 3px 0;
   background-color: var(--accent);
 }
+/*
+  Touch screens get the phone's own reading sizes for the interface (17px
+  rows and titles, 15px details), as a phone's own apps use.
+*/
+@media (pointer: coarse) {
+  :root {
+    --text-ui: 1.0625rem;
+    --text-meta: 0.9375rem;
+  }
+}
+
+/* The sidebar's section names (Folders, Feeds): small, semibold, muted. */
+.sidebar-section {
+  padding: 1.25rem 1.25rem 0.375rem;
+  font-size: var(--text-meta);
+  line-height: 1.3;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* Hairlines between the list's rows, in from the left like the titles; none beside the selected row. */
+.item-list > li + li {
+  position: relative;
+}
+.item-list > li + li::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 1.5rem;
+  right: 1.25rem;
+  border-top: 1px solid color-mix(in srgb, var(--ink) 9%, transparent);
+}
+.item-list > li:has(> [aria-current]) + li::before,
+.item-list > li:has(> [aria-current])::before {
+  display: none;
+}
 .item-row {
   --place-tint: var(--color-tint-list);
   --place-inset: 0.25rem;
@@ -319,28 +381,25 @@ body {
 }
 
 /*
-  The keyboard's place: a 2px outline in a softened text color just inside
-  the row, following its corners (contrast.test.ts keeps it at 3 : 1 or
-  more). On the selected row it replaces the fill, so the row shows two
-  marks, never three: the outline, and the bar outside it at the pane's edge.
+  The keyboard's place: a 2px outline in a softened text color drawn just
+  outside the row, around its fill, the way a Mac draws a focus ring
+  (contrast.test.ts keeps it at 3 : 1 or more). The fill always stays.
+  While the outline shows, the bar steps aside, so the two never stack into
+  a striped edge. A folder's row holds its link and its arrow; the link
+  takes the keyboard, so the row shows it.
 */
-.place:focus-visible {
-  outline: 2px solid var(--place-focus);
-  outline-offset: -2px;
-}
-.place:is([aria-current], [data-here]):focus-visible {
-  background-color: transparent;
-}
-/* A folder's row holds its link and its arrow; the link takes the keyboard, so the row shows it. */
+.place:focus-visible,
 .place:has(> a:focus-visible) {
+  z-index: 1; /* so the next row's fill doesn't cover the ring */
   outline: 2px solid var(--place-focus);
-  outline-offset: -2px;
+  outline-offset: 1px;
+}
+.place:focus-visible::before,
+.place:has(> a:focus-visible)::before {
+  display: none;
 }
 .place:has(> a:focus-visible) > a:focus-visible {
   outline: none;
-}
-.place:is([aria-current], [data-here]):has(> a:focus-visible) {
-  background-color: transparent;
 }
 
 /* Only where there's a real pointer: on a touch screen a tint would stay after the tap. */
@@ -354,7 +413,7 @@ body {
 .unread-dot {
   position: absolute;
   top: 1.1875rem;
-  left: 0.5rem;
+  left: 0.375rem;
   width: 6px;
   height: 6px;
   border-radius: 9999px;
@@ -408,10 +467,66 @@ textarea {
   - .field: a text box, a date or a list to choose from.
 */
 @layer components {
-  /* The edge of a card over the page (sheets, the shortcut list). Dark themes
-     make it firmer, since a shadow can't show against a near-black page. */
-  .sheet-edge {
-    border-color: color-mix(in oklab, var(--ink) var(--sheet-edge, 12%), transparent);
+  /*
+    Anything that floats over the page (a sheet, the search options, the
+    shortcut list) is one family: the same 12px corners, faint edge and soft
+    shadow (DESIGN.md → Exceptions log). Nothing that sits in the page casts one.
+  */
+  .floating {
+    border: 1px solid color-mix(in oklab, var(--ink) var(--sheet-edge, 12%), transparent);
+    border-radius: 0.75rem;
+    background-color: var(--paper);
+    box-shadow: 0 16px 48px -12px rgb(0 0 0 / 0.3);
+  }
+
+  /*
+    The one row of actions at the foot of a sheet (and of its page on a
+    phone): Cancel, then the main action at the right end, as in a Mac sheet.
+    A message, if any, sits at its left.
+  */
+  .sheet-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+  .sheet-actions > :is(.btn, .btn-primary) {
+    min-width: 6rem;
+  }
+
+  /*
+    A destructive action (Unsubscribe, Delete folder), apart below a hairline:
+    first the line saying what it does, then the action as words in a muted
+    red. The words say what it does, so red is never the only sign.
+  */
+  .sheet-danger {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    margin-inline: -1.5rem;
+    padding: 1rem 1.5rem 0;
+    border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  }
+  .btn-danger {
+    display: inline-flex;
+    max-width: 100%;
+    align-items: center;
+    min-height: 2.75rem;
+    margin-inline: -0.5rem;
+    padding-inline: 0.5rem;
+    border-radius: 0.375rem;
+    color: var(--danger);
+    font-weight: 600;
+    text-align: left;
+    touch-action: manipulation;
+    cursor: pointer;
+  }
+  @media (hover: hover) {
+    .btn-danger:hover {
+      background-color: var(--hover);
+    }
   }
 
   /*
@@ -662,7 +777,7 @@ input {
   margin-inline: auto;
   font-family: var(--reading-font);
   font-size: var(--reading-size);
-  line-height: 1.65;
+  line-height: 1.55;
 }
 
 /* The source line keeps the interface's size, whatever the text size. */
@@ -676,9 +791,9 @@ input {
 /* The one large thing on the screen: clearly above the article's own headings. */
 .article-title {
   font-size: 1.55em;
-  line-height: 1.18;
+  line-height: 1.15;
   font-weight: 600;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.02em;
   text-wrap: balance;
   overflow-wrap: break-word;
 }
@@ -690,6 +805,7 @@ input {
 @media (max-width: 40rem) {
   .article {
     font-size: calc(var(--reading-size) * 0.9);
+    line-height: 1.5;
   }
 }
 
@@ -708,7 +824,7 @@ input {
 }
 
 .article-text :where(p, ul, ol, dl, blockquote, pre, table, figure, hr) {
-  margin-block: 1em;
+  margin-block: 0.8em;
 }
 
 .article-text :where(h1, h2, h3, h4, h5, h6) {
@@ -755,7 +871,7 @@ input {
 
 .article-text blockquote {
   padding-left: 1em;
-  border-left: 2px solid color-mix(in srgb, var(--ink) 25%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--ink) 25%, transparent);
   color: var(--ink-2);
   font-style: italic;
 }

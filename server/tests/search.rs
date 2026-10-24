@@ -183,6 +183,48 @@ async fn words_are_found_in_titles_and_text_titles_first() {
 }
 
 #[tokio::test]
+async fn results_show_where_their_text_matched() {
+    let reader = Reader::new().await;
+    let (status, body) = reader.search(&[("q", "tomatoes")]).await;
+    assert_eq!(status, StatusCode::OK, "{body}");
+    let found = body["articles"].as_array().unwrap();
+    // "Tomatoes in October" has the word only in its title: no excerpt.
+    assert_eq!(found[0]["title"], "Tomatoes in October");
+    assert_eq!(found[0]["excerpt"], Value::Null);
+    // "A quiet morning" has it in its text: a line of plain text, in pieces,
+    // with the searched word marked.
+    assert_eq!(found[1]["title"], "A quiet morning");
+    assert_eq!(
+        found[1]["excerpt"],
+        json!([
+            { "text": "The ", "match": false },
+            { "text": "tomatoes", "match": true },
+            { "text": " ripened at last.", "match": false },
+        ])
+    );
+    // Words in bold are found, and tags never come through.
+    let (_, body) = reader.search(&[("q", "garden")]).await;
+    assert_eq!(
+        body["articles"][0]["excerpt"],
+        json!([
+            { "text": "Late ", "match": false },
+            { "text": "gardening", "match": true },
+            { "text": " notes.", "match": false },
+        ])
+    );
+    // Filters alone search no words, so there's nothing to show.
+    let garden = reader.garden.to_string();
+    let (_, body) = reader.search(&[("feed", garden.as_str())]).await;
+    assert!(
+        body["articles"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|article| article["excerpt"].is_null())
+    );
+}
+
+#[tokio::test]
 async fn hindi_words_are_found_whole() {
     let reader = Reader::new().await;
     assert_eq!(reader.titles(&[("q", "किताबें")]).await, ["पुस्तकालय"]);

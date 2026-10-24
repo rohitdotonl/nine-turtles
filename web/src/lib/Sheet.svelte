@@ -2,8 +2,15 @@
   A sheet: a small card over the place you were (adding a feed, editing a feed
   or a folder), so the list and the article stay in view behind it. A native
   modal dialog, so the keyboard stays inside while it's open; Escape, or a
-  click on the dimmed page around it, closes it without saving. It has its
-  own title in the reading serif and no X: Cancel (or Escape) is the way out.
+  click on the dimmed page around it, closes it without saving.
+
+  Every sheet has the same build (DESIGN.md → "Visual language"): a title in
+  the interface font (the serif names places; a sheet is a task), the form,
+  one row of actions at its foot (Cancel, then the main action at the right
+  end; `.sheet-actions`), and, when there is one, a destructive action apart
+  below a hairline (`.sheet-danger`). There's no X: Cancel (or Escape) is
+  the way out. Its corners, edge and shadow are the search options' too
+  (`.floating`).
 -->
 <script lang="ts">
   import type { Snippet } from "svelte";
@@ -56,10 +63,10 @@
   oncancel={cancel}
   onpointerdown={(event) => (pressedOutside = event.target === dialog)}
   onclick={outside}
-  class="sheet mx-auto mt-[12dvh] max-h-[min(40rem,84dvh)] w-[min(30rem,calc(100vw-2rem))] overflow-y-auto rounded-xl sheet-edge border bg-paper p-0 text-ink"
+  class="floating mx-auto mt-[12dvh] max-h-[min(40rem,84dvh)] w-[min(32rem,calc(100vw-2rem))] overflow-y-auto p-0 text-ink"
 >
   <div class="flex flex-col gap-5 p-6">
-    <h2 id="sheet-heading" tabindex="-1" bind:this={heading} class="font-serif text-heading font-semibold tracking-[-0.01em] break-words">
+    <h2 id="sheet-heading" tabindex="-1" bind:this={heading} class="text-large font-semibold tracking-[-0.015em] break-words">
       {title}
     </h2>
     {@render children()}
@@ -68,10 +75,7 @@
 
 <style>
   /* Anchored a fixed way down rather than centred, so it doesn't move when a message appears in it. */
-  .sheet {
-    box-shadow: 0 24px 64px -16px rgb(0 0 0 / 0.3);
-  }
-  .sheet::backdrop {
+  dialog::backdrop {
     background: rgb(28 24 20 / 0.28);
   }
 </style>

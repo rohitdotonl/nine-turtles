@@ -11,6 +11,14 @@
 //! settings: the words, a feed or folder, unread only, starred only, and a
 //! date range. Results come in the item list's order, with articles whose
 //! title holds every word first.
+//!
+//! Each result carries a one-line excerpt of its text around the first
+//! searched word found there, so the reader sees why it matched. The index
+//! keeps no copy of the text (it's "contentless", to stay small), so FTS5's
+//! own `snippet()` has nothing to cut from: the excerpt is cut here, from the
+//! article's stored text, as plain words. It goes to the screen as pieces,
+//! each plain text marked as a searched word or not, so no HTML from a feed
+//! (and no marker inside the text) ever reaches it (decision 0035).
 
 use axum::{
     Json, Router,
@@ -19,7 +27,7 @@ use axum::{
     response::{IntoResponse, Response},
     routing::get,
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sqlx::{QueryBuilder, Sqlite, SqliteConnection};
 
@@ -199,6 +207,181 @@ struct Found {
     #[sqlx(flatten)]
     article: ArticleRow,
     in_title: bool,
+    content: Option<String>,
+    summary: Option<String>,
+}
+
+/// One search result: the article as the list shows it, and its excerpt.
+#[derive(Serialize)]
+pub struct Hit {
+    #[serde(flatten)]
+    pub article: ArticleRow,
+    /// Null when no searched word is in the text (only in the title), or
+    /// when nothing but filters was searched.
+    pub excerpt: Option<Vec<Piece>>,
+}
+
+/// A piece of an excerpt: plain text, and whether it's a searched word.
+#[derive(Debug, PartialEq, Eq, Serialize)]
+pub struct Piece {
+    pub text: String,
+    #[serde(rename = "match")]
+    pub matched: bool,
+}
+
+/// About how many characters an excerpt holds, and at most how many come
+/// before its first searched word, so the word shows even in a narrow list
+/// that cuts the line short.
+const EXCERPT_CHARS: usize = 90;
+const LEAD_CHARS: usize = 24;
+
+/// A character that belongs to a word, as the search index splits words:
+/// letters, numbers and the marks that join them (FTS5_TOKENIZER).
+fn is_word_char(c: char) -> bool {
+    c.is_alphanumeric()
+        || matches!(c,
+            '\u{0300}'..='\u{036F}'
+            | '\u{0483}'..='\u{0489}'
+            | '\u{0591}'..='\u{05C7}'
+            | '\u{0610}'..='\u{061A}'
+            | '\u{064B}'..='\u{065F}'
+            | '\u{0900}'..='\u{0903}'
+            | '\u{093A}'..='\u{094F}'
+            | '\u{0951}'..='\u{0957}'
+            | '\u{0962}'..='\u{0963}'
+            | '\u{0981}'..='\u{0983}'
+            | '\u{1AB0}'..='\u{1AFF}'
+            | '\u{1DC0}'..='\u{1DFF}'
+            | '\u{20D0}'..='\u{20FF}'
+            | '\u{FE20}'..='\u{FE2F}')
+}
+
+/// Where each word starts and ends in `text`, in bytes.
+fn word_spans(text: &str) -> Vec<(usize, usize)> {
+    let mut spans = Vec::new();
+    let mut start = None;
+    for (at, c) in text.char_indices() {
+        match (is_word_char(c), start) {
+            (true, None) => start = Some(at),
+            (false, Some(begun)) => {
+                spans.push((begun, at));
+                start = None;
+            }
+            _ => {}
+        }
+    }
+    if let Some(begun) = start {
+        spans.push((begun, text.len()));
+    }
+    spans
+}
+
+/// A Latin letter without its accent, as the index's `remove_diacritics`
+/// compares them ("cafe" finds "café").
+fn base_letter(c: char) -> char {
+    match c {
+        'à'..='å' | 'ā' | 'ă' | 'ą' => 'a',
+        'ç' | 'ć' | 'ĉ' | 'ċ' | 'č' => 'c',
+        'ď' | 'đ' => 'd',
+        'è'..='ë' | 'ē' | 'ĕ' | 'ė' | 'ę' | 'ě' => 'e',
+        'ĝ' | 'ğ' | 'ġ' | 'ģ' => 'g',
+        'ĥ' | 'ħ' => 'h',
+        'ì'..='ï' | 'ĩ' | 'ī' | 'ĭ' | 'į' | 'ı' => 'i',
+        'ĵ' => 'j',
+        'ķ' => 'k',
+        'ĺ' | 'ļ' | 'ľ' | 'ŀ' | 'ł' => 'l',
+        'ñ' | 'ń' | 'ņ' | 'ň' => 'n',
+        'ò'..='ö' | 'ø' | 'ō' | 'ŏ' | 'ő' => 'o',
+        'ŕ' | 'ŗ' | 'ř' => 'r',
+        'ś' | 'ŝ' | 'ş' | 'š' => 's',
+        'ţ' | 'ť' | 'ŧ' => 't',
+        'ù'..='ü' | 'ũ' | 'ū' | 'ŭ' | 'ů' | 'ű' | 'ų' => 'u',
+        'ŵ' => 'w',
+        'ý' | 'ÿ' | 'ŷ' => 'y',
+        'ź' | 'ż' | 'ž' => 'z',
+        other => other,
+    }
+}
+
+/// A word as search compares it: small letters, Latin accents set aside.
+fn fold(word: &str) -> String {
+    word.chars()
+        .flat_map(char::to_lowercase)
+        .filter(|c| !matches!(c, '\u{0300}'..='\u{036F}'))
+        .map(base_letter)
+        .collect()
+}
+
+/// The searched words, as `fold` gives them, each to be found at the start
+/// of a word in the text, as the search itself matches ("read" finds "reading").
+pub fn searched_words(typed: &str) -> Vec<String> {
+    word_spans(typed)
+        .into_iter()
+        .map(|(start, end)| fold(&typed[start..end]))
+        .filter(|word| !word.is_empty())
+        .collect()
+}
+
+/// A line of `text` around the first of the `searched` words in it: a few
+/// words before it, then on to about 90 characters, cut only between words,
+/// with "…" where text was left out. Every searched word in the line is
+/// marked. None if no searched word is in the text.
+pub fn excerpt(text: &str, searched: &[String]) -> Option<Vec<Piece>> {
+    let spans = word_spans(text);
+    let is_match = |&(start, end): &(usize, usize)| {
+        let word = fold(&text[start..end]);
+        searched.iter().any(|term| word.starts_with(term.as_str()))
+    };
+    let first = spans.iter().position(is_match)?;
+    let chars = |from: usize, to: usize| text[from..to].chars().count();
+
+    // Back a few whole words, then on to the last whole word that fits.
+    let mut from = first;
+    while from > 0 && chars(spans[from - 1].0, spans[first].0) <= LEAD_CHARS {
+        from -= 1;
+    }
+    let mut to = first;
+    while to + 1 < spans.len() && chars(spans[from].0, spans[to + 1].1) <= EXCERPT_CHARS {
+        to += 1;
+    }
+    // From the very start (or to the very end) when no word is left out,
+    // so punctuation there isn't mistaken for a cut.
+    let start = if from == 0 { 0 } else { spans[from].0 };
+    let end = if to + 1 == spans.len() {
+        text.len()
+    } else {
+        spans[to].1
+    };
+
+    let mut pieces: Vec<Piece> = Vec::new();
+    let mut add = |piece: &str, matched: bool| {
+        if piece.is_empty() {
+            return;
+        }
+        match pieces.last_mut() {
+            Some(last) if last.matched == matched => last.text.push_str(piece),
+            _ => pieces.push(Piece {
+                text: piece.to_owned(),
+                matched,
+            }),
+        }
+    };
+    if from > 0 {
+        add("…", false);
+    }
+    let mut at = start;
+    for span in &spans[from..=to] {
+        if is_match(span) {
+            add(&text[at..span.0], false);
+            add(&text[span.0..span.1], true);
+            at = span.1;
+        }
+    }
+    add(&text[at..end], false);
+    if end < text.len() {
+        add("…", false);
+    }
+    Some(pieces)
 }
 
 fn parse_cursor(text: &str) -> Option<(bool, i64, i64)> {
@@ -217,7 +400,7 @@ fn parse_cursor(text: &str) -> Option<(bool, i64, i64)> {
 pub async fn find(
     db: &sqlx::SqlitePool,
     search: &Search,
-) -> Result<Option<(Vec<ArticleRow>, Option<String>)>, sqlx::Error> {
+) -> Result<Option<(Vec<Hit>, Option<String>)>, sqlx::Error> {
     let words = fts_question(&search.q);
     if search.is_empty(words.as_deref()) {
         return Ok(Some((Vec::new(), None)));
@@ -233,7 +416,8 @@ pub async fn find(
     // outer one then fetches what the list shows for just those 51.
     let mut query: QueryBuilder<Sqlite> = QueryBuilder::new(
         "SELECT articles.id, articles.feed_id, feeds.title AS feed_title, articles.title,
-                articles.link, articles.sort_at AS at, articles.read, articles.starred, page.in_title
+                articles.link, articles.sort_at AS at, articles.read, articles.starred, page.in_title,
+                articles.content, articles.summary
          FROM (SELECT * FROM (SELECT articles.id, articles.sort_at AS at, ",
     );
     if let Some(words) = &words {
@@ -324,10 +508,28 @@ pub async fn find(
     } else {
         None
     };
-    Ok(Some((
-        found.into_iter().map(|each| each.article).collect(),
-        next,
-    )))
+    let searched = searched_words(&search.q);
+    // Reading up to fifty articles' HTML for excerpts is steady CPU work, so it
+    // runs off the threads that answer requests.
+    let results = tokio::task::spawn_blocking(move || {
+        found
+            .into_iter()
+            .map(|each| {
+                // The text searched: the content, or the summary when the feed gives only that.
+                let excerpt = match each.content.as_deref().or(each.summary.as_deref()) {
+                    Some(html) if !searched.is_empty() => excerpt(&plain_words(html), &searched),
+                    _ => None,
+                };
+                Hit {
+                    article: each.article,
+                    excerpt,
+                }
+            })
+            .collect::<Vec<_>>()
+    })
+    .await
+    .expect("excerpts never panic");
+    Ok(Some((results, next)))
 }
 
 async fn search(
@@ -374,6 +576,88 @@ mod tests {
             "One two three"
         );
         assert_eq!(plain_words("a &amp; b"), "a & b");
+    }
+
+    /// An excerpt as text, with the searched words in [brackets].
+    fn shown(text: &str, typed: &str) -> Option<String> {
+        excerpt(text, &searched_words(typed)).map(|pieces| {
+            pieces
+                .iter()
+                .map(|piece| {
+                    if piece.matched {
+                        format!("[{}]", piece.text)
+                    } else {
+                        piece.text.clone()
+                    }
+                })
+                .collect()
+        })
+    }
+
+    #[test]
+    fn excerpts_show_the_first_match_in_its_words() {
+        // Short text is shown whole, punctuation included, every match marked.
+        assert_eq!(
+            shown("The tomatoes ripened. Tomatoes again.", "tomato").as_deref(),
+            Some("The [tomatoes] ripened. [Tomatoes] again.")
+        );
+        // Words found by their start, in any case, accents set aside.
+        assert_eq!(
+            shown("Reading by the window at the Café.", "READ cafe").as_deref(),
+            Some("[Reading] by the window at the [Café].")
+        );
+        // No searched word in the text: no excerpt.
+        assert_eq!(shown("Nothing here.", "tomato"), None);
+        assert_eq!(shown("Nothing here.", "  \"\" "), None);
+        // Hindi words stay whole, and only a few come before the match.
+        assert_eq!(
+            shown("शहर के पुराने पुस्तकालय में नई किताबें आई हैं।", "किता").as_deref(),
+            Some("…पुराने पुस्तकालय में नई [किताबें] आई हैं।")
+        );
+    }
+
+    #[test]
+    fn long_text_is_cut_between_words_around_the_first_match() {
+        let text = "One two three four five six seven eight nine ten eleven twelve \
+                    thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty \
+                    garden twenty-one twenty-two twenty-three twenty-four twenty-five \
+                    twenty-six twenty-seven twenty-eight twenty-nine thirty thirty-one \
+                    thirty-two thirty-three thirty-four thirty-five garden";
+        let line = shown(text, "garden").unwrap();
+        assert_eq!(
+            line,
+            "…nineteen twenty [garden] twenty-one twenty-two twenty-three twenty-four twenty-five twenty…"
+        );
+        // Only a few words before the match, and about 90 characters in all.
+        let before = line.split('[').next().unwrap().chars().count();
+        assert!(before <= LEAD_CHARS + 2, "{before}");
+        assert!(line.chars().count() <= EXCERPT_CHARS + 4, "{line}");
+        // A match in the very first word starts the line, with nothing left out before it.
+        assert!(shown(text, "one").unwrap().starts_with("[One] two three"));
+    }
+
+    #[test]
+    fn excerpts_are_plain_text_pieces() {
+        // Tags are gone before the excerpt is cut; what's left is only text,
+        // and the screen shows it as text, never as HTML.
+        let text = plain_words("<p>Late <b>gardening</b> &lt;script&gt; notes.</p>");
+        assert_eq!(
+            excerpt(&text, &searched_words("garden")),
+            Some(vec![
+                Piece {
+                    text: "Late ".to_owned(),
+                    matched: false
+                },
+                Piece {
+                    text: "gardening".to_owned(),
+                    matched: true
+                },
+                Piece {
+                    text: " <script> notes.".to_owned(),
+                    matched: false
+                },
+            ])
+        );
     }
 
     #[test]

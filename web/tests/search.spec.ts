@@ -57,12 +57,12 @@ test("a search starts where you are, underlines the words it found, and Escape b
   await expect(results(page)).toHaveCount(1);
   await expect(results(page).first()).toContainText(`Walking the long way home`);
   await expect(results(page).first()).toContainText(`Blog ${filed}`);
-  const found = results(page).first().locator("strong");
+  const found = results(page).first().locator(".title strong");
   await expect(found).toHaveText("Walking");
   await expect(found).toHaveCSS("text-decoration-line", "underline");
   const [wordColor, titleColor] = await Promise.all([found.evaluate((e) => getComputedStyle(e).color), found.evaluate((e) => getComputedStyle(e.parentElement!).color)]);
   expect(wordColor).toBe(titleColor);
-  // The end of the "Mark all as read" line says how many; there's nothing new to fetch, so Refresh steps aside.
+  // A quiet line above the results says how many; there's nothing new to fetch, so Refresh steps aside.
   await expect(page.getByRole("status").filter({ hasText: /^1 result$/ })).toBeVisible();
   await expect(page.getByRole("region", { name: "Search results" }).getByRole("button", { name: "Refresh" })).toHaveCount(0);
 
@@ -171,7 +171,63 @@ test("Hindi words are found whole", async ({ page }) => {
   await expect(results(page)).toHaveCount(1);
   await expect(results(page).first()).toContainText("पुस्तकालय की एक शाम");
   await field(page).fill("पुस्तकालय");
-  await expect(results(page).first().locator("strong")).toHaveText("पुस्तकालय");
+  await expect(results(page).first().locator(".title strong")).toHaveText("पुस्तकालय");
+  // The word is in the text too: the excerpt shows it there, whole.
+  await expect(results(page).first().locator(".excerpt strong")).toHaveText("पुस्तकालय");
+});
+
+test("each result shows a line of its text around the match, and × clears the field", async ({ page }) => {
+  const blog = unique("excerpt");
+  const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
+  await open(page, `/feeds/${id}`, `Blog ${blog}`);
+  await page.keyboard.press("/");
+  // No × until there's something to clear.
+  await expect(page.getByRole("button", { name: "Clear search" })).toHaveCount(0);
+  await page.keyboard.type("summary");
+  await page.keyboard.press("Enter");
+  await expect(results(page)).toHaveCount(3);
+
+  // The word is only in each article's text: one quiet line shows it there,
+  // the word itself semibold and in full ink, so it shows by weight as well as tone.
+  const excerpt = results(page).first().locator(".excerpt");
+  await expect(excerpt).toHaveText("A short made-up summary for article 3.");
+  const word = excerpt.locator("strong");
+  await expect(word).toHaveText("summary");
+  await expect(word).toHaveCSS("font-weight", "600");
+  const [wordColor, lineColor, titleColor] = await Promise.all([
+    word.evaluate((e) => getComputedStyle(e).color),
+    excerpt.evaluate((e) => getComputedStyle(e).color),
+    results(page).first().locator(".title").evaluate((e) => getComputedStyle(e).color),
+  ]);
+  expect(wordColor).not.toBe(lineColor);
+  expect(wordColor).toBe(titleColor);
+  // One line, however long the text.
+  const lineHeight = parseFloat(await excerpt.evaluate((e) => getComputedStyle(e).lineHeight));
+  expect((await excerpt.boundingBox())!.height).toBeLessThanOrEqual(lineHeight + 1);
+
+  // The × in the field: a 44px target, named for screen readers; it empties the field and keeps the keyboard there.
+  const clear = page.getByRole("button", { name: "Clear search" });
+  const box = (await clear.boundingBox())!;
+  expect(box.width).toBeGreaterThanOrEqual(44);
+  expect(box.height).toBeGreaterThanOrEqual(44);
+  await clear.click();
+  await expect(field(page)).toHaveValue("");
+  await expect(field(page)).toBeFocused();
+  await expect(clear).toHaveCount(0);
+});
+
+test("with nothing found, the reading area doesn't offer j", async ({ page }) => {
+  const blog = unique("nothing");
+  const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
+  await open(page, `/feeds/${id}`, `Blog ${blog}`);
+  const reading = page.getByRole("region", { name: "Article" });
+  await expect(reading).toContainText("press j");
+  await page.keyboard.press("/");
+  await page.keyboard.type("zzyzxquux");
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("Nothing found.")).toBeVisible();
+  await expect(reading).toContainText("No article open.");
+  await expect(reading).not.toContainText("press j");
 });
 
 test("with many filters the search box wraps, and no chip slides under the options button", async ({ page }) => {

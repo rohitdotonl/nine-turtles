@@ -35,7 +35,7 @@ const BACKGROUNDS = ["paper", "list", "sidebar", "tint-list", "tint-sidebar"];
 
 describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
   it("defines every color", () => {
-    for (const name of ["ink", "ink-2", "muted", "accent", ...BACKGROUNDS]) expect(colors[name], name).toMatch(/^#/);
+    for (const name of ["ink", "ink-2", "muted", "accent", "danger", ...BACKGROUNDS]) expect(colors[name], name).toMatch(/^#/);
   });
 
   it("has text at AAA (7 : 1) on the reading area, and AA or better everywhere", () => {
@@ -58,6 +58,11 @@ describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
     // Three clear levels of ink on the reading area: text, then ink-2, then muted.
     const levels = [colors.ink!, colors["ink-2"]!, colors.muted!].map((color) => contrast(color, colors.paper!));
     expect(levels[0]! > levels[1]! && levels[1]! > levels[2]!).toBe(true);
+  });
+
+  it("has the destructive red (Unsubscribe, Delete) at AA on the sheet and the page", () => {
+    expect(contrast(colors.danger!, colors.paper!)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(colors.danger!, colors.list!)).toBeGreaterThanOrEqual(4.5);
   });
 
   it("has the accent at AAA (7 : 1) on the reading area", () => {
