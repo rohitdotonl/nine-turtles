@@ -90,8 +90,9 @@ describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
   });
 });
 
-// The faint tones under a pointer and behind a search chip are the text color
-// mixed into whatever is behind them, read from app.css (--hover, --tone).
+// The faint tones under a pointer, behind a search chip and filling the search
+// field are the text color mixed into whatever is behind them, read from
+// app.css (--hover, --tone, --search-fill).
 function mix(ink: string, background: string, share: number): string {
   const channel = (hex: string, i: number) => parseInt(hex.slice(i, i + 2), 16);
   return (
@@ -106,7 +107,7 @@ function mix(ink: string, background: string, share: number): string {
 describe.each(Object.entries(THEMES))("the %s theme's pointer and chip tones", (_name, colors) => {
   // Never drawn on the selected row's tint: the selected row isn't tinted under the pointer.
   it("keep text at 7 : 1 and muted grey at 4.5 : 1 on the three areas", () => {
-    const shares = ["hover", "tone"].map((name) => {
+    const shares = ["hover", "tone", "search-fill"].map((name) => {
       const found = css.match(new RegExp(`--${name}: color-mix\\(in srgb, var\\(--ink\\) (\\d+)%, transparent\\)`));
       expect(found, name).not.toBeNull();
       return Number(found![1]) / 100;
@@ -117,6 +118,18 @@ describe.each(Object.entries(THEMES))("the %s theme's pointer and chip tones", (
         expect(contrast(colors.ink!, toned), `${background} ${share}`).toBeGreaterThanOrEqual(7);
         expect(contrast(colors.muted!, toned), `${background} ${share}`).toBeGreaterThanOrEqual(4.5);
       }
+    }
+  });
+});
+
+describe.each(Object.entries(THEMES))("the %s theme's search field", (_name, colors) => {
+  // A chip (the place searched, a filter) is the chip tone laid over the field's fill (decision 0051).
+  it("keeps a chip's words at 4.5 : 1, where the faint tones stack", () => {
+    const share = (name: string) =>
+      Number(css.match(new RegExp(`--${name}: color-mix\\(in srgb, var\\(--ink\\) (\\d+)%, transparent\\)`))![1]) / 100;
+    const stacked = 1 - (1 - share("search-fill")) * (1 - share("tone"));
+    for (const background of ["list", "sidebar"]) {
+      expect(contrast(colors.ink!, mix(colors.ink!, colors[background]!, stacked)), background).toBeGreaterThanOrEqual(4.5);
     }
   });
 });
@@ -133,8 +146,8 @@ describe.each(Object.entries(THEMES))("the %s theme's keyboard outline on rows",
   });
 });
 
-// The selection pill: in a light theme the accent mixed into the pane at 13%
-// (decision 0037); in a dark one the theme's own text color at 12%, so it
+// The selection pill: in a light theme the accent mixed into the pane at 12%
+// (decisions 0037 and 0051); in a dark one the theme's own text color at 12%, so it
 // keeps the pane's warmth or coolness (decision 0041). The text checks above
 // cover it. Three night versions whose panes are already light for the dark
 // mix in less, so their text keeps 7 : 1 on the pill (decision 0046).
@@ -143,7 +156,7 @@ const LIGHTER_PILLS: Record<string, number> = { "quiet dark": 0.09, "paper dark"
 describe.each(Object.entries(THEMES))("the %s theme's selection pill", (name, colors) => {
   const dark = luminance(colors.paper!) < 0.5;
   it(dark ? "is the text color mixed into the list and the sidebar" : "is the accent mixed into the list and the sidebar", () => {
-    const [from, share] = dark ? [colors.ink!, LIGHTER_PILLS[name] ?? 0.12] : [colors.accent!, 0.13];
+    const [from, share] = dark ? [colors.ink!, LIGHTER_PILLS[name] ?? 0.12] : [colors.accent!, 0.12];
     expect(colors["tint-list"]).toBe(mix(from, colors.list!, share));
     expect(colors["tint-sidebar"]).toBe(mix(from, colors.sidebar!, share));
   });
@@ -165,6 +178,8 @@ describe.each(Object.entries(THEMES))("the %s theme's selection pill", (name, co
       const pill = colors[`tint-${area}`]!;
       expect(contrast(colors.ink!, pill), area).toBeGreaterThanOrEqual(7);
       expect(contrast(colors.muted!, pill), area).toBeGreaterThanOrEqual(4.5);
+      // A read title on the selected row is in full ink, but the sidebar's other names are the second ink.
+      expect(contrast(colors["ink-2"]!, pill), area).toBeGreaterThanOrEqual(4.5);
       expect(contrast(colors.accent!, pill), area).toBeGreaterThanOrEqual(3);
     }
   });

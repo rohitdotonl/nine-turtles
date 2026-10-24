@@ -65,7 +65,7 @@
 
   Every theme's --tint-list and --tint-sidebar are the selection pill's fill
   (decision 0037): in the day versions the theme's accent mixed into the list
-  or sidebar at 13%; in the night ones the theme's own text color at 12%
+  or sidebar at 12%, so each pill takes its pane's own paper (decision 0051); in the night ones the theme's own text color at 12%
   (decision 0041), so the pill keeps the pane's warmth or coolness instead
   of laying a cool blue-grey over warm brown, as Apple Books' dark selection
   is a lift of the page, not a tint. Three night versions whose panes are
@@ -86,8 +86,8 @@
   --muted: #5f5f64;
   --danger: #a3261b;
   --accent: #2c4f8c;
-  --tint-list: #dde1e9;
-  --tint-sidebar: #d6dae4;
+  --tint-list: #dfe3ea;
+  --tint-sidebar: #d8dce5;
 }
 
 :root[data-theme="original"][data-mode="dark"] {
@@ -142,8 +142,8 @@
   --muted: #525256;
   --danger: #a3261b;
   --accent: #344a74;
-  --tint-list: #cacdd5;
-  --tint-sidebar: #c2c5ce;
+  --tint-list: #cbced6;
+  --tint-sidebar: #c3c6cf;
 }
 
 :root[data-theme="quiet"][data-mode="dark"] {
@@ -177,8 +177,8 @@
   --muted: #5a5850;
   --danger: #a3261b;
   --accent: #2f4a7a;
-  --tint-list: #d4d7d9;
-  --tint-sidebar: #cccfd0;
+  --tint-list: #d6d9da;
+  --tint-sidebar: #ced1d1;
 }
 
 :root[data-theme="paper"][data-mode="dark"] {
@@ -212,8 +212,8 @@
   --muted: #4a4a4f;
   --danger: #a3261b;
   --accent: #1d3c8a;
-  --tint-list: #dbdfe9;
-  --tint-sidebar: #d4d8e4;
+  --tint-list: #dde1ea;
+  --tint-sidebar: #d6dae5;
 }
 
 :root[data-theme="bold"][data-mode="dark"] {
@@ -246,8 +246,8 @@
   --muted: #5a4b3a;
   --danger: #a3261b;
   --accent: #733618;
-  --tint-list: #dbc6ac;
-  --tint-sidebar: #d2bc9e;
+  --tint-list: #dcc8ae;
+  --tint-sidebar: #d3bea0;
 }
 
 :root[data-theme="calm"][data-mode="dark"] {
@@ -281,8 +281,8 @@
   --muted: #5a5442;
   --danger: #a3261b;
   --accent: #235268;
-  --tint-list: #d8d9c7;
-  --tint-sidebar: #d0cfba;
+  --tint-list: #dadac8;
+  --tint-sidebar: #d2d1bb;
 }
 
 :root[data-theme="focus"][data-mode="dark"] {
@@ -346,6 +346,10 @@ body {
 
 /* A field's own edge becomes its focus line: one line, never a ring around a border. */
 .field:focus-visible {
+  outline-offset: -1px;
+}
+/* The search field's ring sits on its own edge too (decision 0051). */
+.search-capsule:focus-visible {
   outline-offset: -1px;
 }
 
@@ -522,6 +526,9 @@ body {
   reaches over the hairlines or the pane's edge (contrast.test.ts keeps it at
   3 : 1 or more on every fill). The fill always stays. A folder's row holds
   its link and its arrow; the link takes the keyboard, so the row shows it.
+  Only after a key press (main.ts sets data-keyboard): a browser may count
+  the keyboard's place moving back to a row after a tap as "visible", and a
+  ring round the row you just tapped on a phone is noise (decision 0051).
 */
 .place:focus-visible,
 .place:has(> a:focus-visible) {
@@ -529,6 +536,10 @@ body {
   outline-offset: -2px;
 }
 .place:has(> a:focus-visible) > a:focus-visible {
+  outline: none;
+}
+:root:not([data-keyboard]) .place:focus-visible,
+:root:not([data-keyboard]) .place:has(> a:focus-visible) {
   outline: none;
 }
 
@@ -1065,31 +1076,24 @@ textarea {
     color: var(--muted);
   }
 
-  /* The two search fields (the sidebar's and the list's): no edge, a faint tone, an icon. */
-  .field-quiet {
-    border-color: transparent;
-    background-color: var(--tone);
-  }
-
   /*
-    The sidebar's find field (decision 0041): no well at rest, just its icon
-    and its words, so the list's search is the one filled field on screen,
-    as Apple Books has one search. It takes the same faint tone under the
-    pointer, while it has the keyboard and while it holds words.
+    The one search field (decision 0051): the list's search and the
+    sidebar's "Find a feed or folder" are the same slim capsule, as Apple
+    Books draws its search: --search-height tall (36px with a mouse on a
+    wide window, 44px on touch or a phone), 10px corners, a faint fill of
+    the text color and no edge, a 14px magnifier in the places' icon column
+    and the interface's text size (17px on touch, so a phone never zooms in).
   */
-  .field-find {
-    background-color: transparent;
+  .search-capsule {
+    min-height: var(--search-height);
+    border: 0;
+    border-radius: 10px;
+    background-color: var(--search-fill);
+    color: var(--ink);
+    font-size: var(--text-ui);
   }
-  .field-find:is(:focus, :not(:placeholder-shown)) {
-    background-color: var(--tone);
-  }
-  @media (hover: hover) {
-    .field-find:hover {
-      background-color: var(--hover);
-    }
-    .field-find:is(:focus, :not(:placeholder-shown)):hover {
-      background-color: var(--tone);
-    }
+  .search-capsule::placeholder {
+    color: var(--muted);
   }
 }
 
@@ -1101,6 +1105,10 @@ textarea {
   */
   --hover: color-mix(in srgb, var(--ink) 5%, transparent);
   --tone: color-mix(in srgb, var(--ink) 7%, transparent);
+  /* The search field's fill (.search-capsule), a step fainter than --tone, so a chip in it still shows. */
+  --search-fill: color-mix(in srgb, var(--ink) 6%, transparent);
+  /* The search field's height: 44px to touch, 36px with a mouse on a window wide enough for the list. */
+  --search-height: 2.75rem;
   /* The keyboard's outline on rows: the text color, softened. */
   --place-focus: color-mix(in srgb, var(--ink) 65%, transparent);
   /* Searched words in a result: a faint tone of the accent behind them (contrast.test.ts checks text on it). */
@@ -1108,6 +1116,12 @@ textarea {
   /* A field's edge and fill (.field). */
   --field-edge: color-mix(in srgb, var(--ink) 55%, transparent);
   --field: color-mix(in srgb, var(--ink) 3%, var(--paper));
+}
+
+@media (pointer: fine) and (min-width: 56rem) {
+  :root {
+    --search-height: 2.25rem;
+  }
 }
 
 /* Windows high contrast and similar: let the system draw clear edges. */
@@ -1124,6 +1138,11 @@ textarea {
   .item-row[aria-current]:focus-visible {
     outline: 3px solid CanvasText;
     outline-offset: -3px;
+  }
+  /* After a tap the selected row keeps its edge, though it draws no keyboard ring. */
+  :root:not([data-keyboard]) .place[aria-current]:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
   }
 }
 

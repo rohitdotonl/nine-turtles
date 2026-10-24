@@ -318,6 +318,11 @@ each with screenshots:
   list full-screen on a phone and fitting a computer window, 20px under
   every top line, the Settings preview on the phone's margin, and the
   phone's unread dot clear of the row ring (decision 0049).
+- ✅ One search field, a warmer selection (sixth critique, batch 6): the
+  list's search and the sidebar's find field as one slim capsule, the day
+  selection pill made from its own pane, row rings only for the keyboard,
+  the "·" hugging a cut-short name, and the sidebar keeping your place in
+  view (decision 0051).
 
 ---
 

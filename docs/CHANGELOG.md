@@ -4,6 +4,17 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## Batch 6
+
+- The list's search and the sidebar's "Find a feed or folder" are now the
+  same slim, faintly filled field: shorter with a mouse, a full finger's
+  height on a phone (decision 0051).
+- The selected row's tint is made from each theme's own pane, so it's a
+  touch softer, and the ring round a row shows only when you use the
+  keyboard, never after a tap on a phone.
+- A long source name's "…" now sits right before the "·", as on every other
+  row, and the sidebar scrolls to show where you are when you move.
+
 ## 24 October 2026: A quieter article title, one-line rows, one close rule
 
 - Opening an article with the keyboard no longer draws a box round its

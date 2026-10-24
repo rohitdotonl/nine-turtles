@@ -223,6 +223,19 @@
     document.title = titleFor(route, placeName);
   });
 
+  // Where you are is always in sight in the sidebar (SPEC section 5): when the
+  // place changes, its row scrolls just far enough to show, at once, never
+  // smoothly (decision 0051). Not when the feeds' counts change, so nothing
+  // moves unless you move it. The phone's feeds screen marks no place.
+  let sidebarPlace = $derived(!phone && panes.sidebar && feeds !== undefined ? pathFor(route) : "");
+  $effect(() => {
+    if (sidebarPlace === "") return;
+    untrack(() => {
+      const row = sidebar?.querySelector(".scroller [aria-current='page']");
+      row?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
+    });
+  });
+
   // An article counts as read as soon as the reading area shows it (SPEC
   // section 8). Only a newly shown article is marked, so `m` on the one
   // already showing keeps it unread until you move away and back.
@@ -849,7 +862,7 @@
       {#if feeds === undefined || feeds.length > 0}
       <!-- On the rows' grid (decision 0043): its icon in the column of the places' icons, its words where their names start. -->
       <div class="relative mx-2 pb-4">
-        <span class="pointer-events-none absolute top-0 left-3 flex h-11 items-center text-muted"><Icon name="search" size={16} /></span>
+        <span class="pointer-events-none absolute top-0 left-3 flex h-(--search-height) w-4 items-center justify-center text-muted"><Icon name="search" size={14} /></span>
         <label for="sidebar-search" class="sr-only">Find a feed or folder</label>
         <input
           id="sidebar-search"
@@ -864,7 +877,7 @@
               search = "";
             }
           }}
-          class="field field-quiet field-find w-full rounded-lg pl-[38px]"
+          class="search-capsule w-full pr-3 pl-[38px]"
         />
       </div>
       {/if}
