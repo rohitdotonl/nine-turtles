@@ -53,7 +53,7 @@ A few words used throughout:
 - Add feed opens its own screen (`/add-feed`) with the same field as the first visit. Escape goes back to the list you were on.
 - You can paste either a feed address or an ordinary website address; leaving off `https://` is fine. For a website, slowfeed looks at exactly the page you pasted to find its feed ("autodiscovery"), once, because you asked. If the page names several feeds, you see their names and choose one.
 - While slowfeed looks, the field says "Looking for a feed…" in plain text. No spinner.
-- If it doesn't work, a plain sentence says why, never an error code: "This site doesn't seem to offer a feed.", "That site didn't answer. Try again later.", "Nothing was found at that address.", "That doesn't look like a web address.", "slowfeed can't visit that address." (an address inside a private network or on slowfeed's own computer), or "That file is too big to be a feed."
+- If it doesn't work, a plain sentence says why, never an error code: "This site doesn't seem to offer a feed. Try its home page, or paste the feed's own address if you know it.", "That site didn't answer. Try again later.", "Nothing was found at that address.", "That doesn't look like a web address.", "slowfeed can't visit that address." (an address inside a private network or on slowfeed's own computer), or "That file is too big to be a feed."
 - Adding a feed you already follow says "You already follow this feed." with a link to it, instead of making a copy. The same address written differently (`http` or `https`, a trailing `/` or `#part`) counts as the same feed.
 - The new feed appears in the sidebar and opens, its articles straight away, all unread (including older posts the feed still lists). It's fetched once on adding; new articles arriving on their own come with Milestone 8.
 - Each feed has its own address (`/feeds/3`), so reloading keeps your place. An address for a feed you don't follow says so plainly ("Feed not found").
@@ -248,7 +248,7 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 **What it does**
 - `/` puts you in the search field, which sits under the list's title. A faint search icon starts the field; the "Search options" (sliders) button sits inside it at its right end.
 - Results follow a moment after you stop typing, or at once on Enter. Every word must appear; a word also finds longer words it begins ("read" finds "reading"); words in double quotes are found together.
-- The search starts out limited to where you are, shown as a removable chip inside the field, e.g. `[ in: Tech × ]`. Remove the chip to search everything.
+- The search starts out limited to where you are, shown as a removable chip inside the field, e.g. `[ in: Tech × ]`, as soon as you're in the search (the field focused, its options open, or words typed). At rest the field just says "Search Tech", since the list's title already names it. Remove the chip to search everything.
 - **Search options** panel: scope (here · all feeds · a folder · a feed), unread only, starred only, date range. The panel and the chips always match. The search box stays one line for the usual one or two chips: they shrink and end in "…", with their whole text in a tooltip. With three or more it wraps, so every chip stays readable.
 - Titles and article text are always searched together; title matches come first.
 - Power-user filters can be typed: `is:unread`, `is:starred`, `feed:name`, `folder:name`, `after:YYYY-MM-DD`, `before:YYYY-MM-DD`. They're suggested as you type (↓ and ↑ choose, Enter takes one) and turn into chips once followed by a space or Enter. A name with spaces goes in quotes (`feed:"Garden Notes"`), or type part of it. `after:` and `before:` don't include the day itself. A filter that can't be understood stays as typed, with a plain line saying why. Backspace at the start of the field removes the last chip.
@@ -269,7 +269,7 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 
 **What it does**
 - Folders are the only grouping. A feed can be in more than one folder.
-- You can rename a feed, choose its folders, and unsubscribe, from an **Edit feed** button in the item list's header when you're viewing one feed. It opens its own page (`/feeds/3/edit`) with the name, folders as checkboxes, "New folder" (made when you save, with the feed in it), Save, Cancel, and Unsubscribe. Escape, Cancel or the X at the top goes back unchanged.
+- You can rename a feed, choose its folders, and unsubscribe, from an **Edit feed** button (a pencil icon, named in its tooltip) in the item list's header when you're viewing one feed. It opens its own page (`/feeds/3/edit`) with the name, folders as checkboxes, "New folder" (made when you save, with the feed in it), Save, Cancel, and Unsubscribe. Escape, Cancel or the X at the top goes back unchanged.
 - Viewing a folder, an **Edit folder** button opens a page (`/folders/2/edit`) to rename or delete it.
 - You can create (from "Edit feed"), rename and delete folders. Two folders can't share a name. Deleting a folder never deletes its feeds.
 - Unsubscribing and deleting a folder happen at once and take you to Unread, where the line says "Unsubscribed from …" or "Deleted the folder …" with Undo (or `u`), until your next action.

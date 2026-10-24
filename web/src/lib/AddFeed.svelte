@@ -6,6 +6,7 @@
   spinner.
 -->
 <script lang="ts">
+  import Icon from "./Icon.svelte";
   import { addFeed, explain, type Choice, type Feed } from "./feeds";
 
   let {
@@ -24,6 +25,8 @@
   let address = $state("");
   let busy = $state(false);
   let message = $state("");
+  /** The message is a problem with the address, not a next step. */
+  let problem = $state(false);
   let choices: Choice[] = $state([]);
   let alreadyId: number | undefined = $state();
 
@@ -38,6 +41,7 @@
     if (busy) return;
     busy = true;
     message = "";
+    problem = false;
     if (!fromChoices) choices = [];
     alreadyId = undefined;
     const result = await addFeed(text);
@@ -58,6 +62,7 @@
         break;
       case "problem":
         message = explain(result.reason);
+        problem = true;
         break;
     }
   }
@@ -65,7 +70,10 @@
   function submit(event: SubmitEvent) {
     event.preventDefault();
     if (address.trim()) add(address);
-    else message = "Paste an address first.";
+    else {
+      message = "Paste an address first.";
+      problem = true;
+    }
   }
 </script>
 
@@ -83,13 +91,14 @@
       spellcheck="false"
       placeholder="example.com"
       aria-describedby="feed-address-status"
+      aria-invalid={problem ? "true" : undefined}
       class="field min-w-0 flex-1"
     />
     <button type="submit" aria-disabled={busy} class="btn-primary">Add feed</button>
   </div>
   <!-- Screen readers hear each new line here without moving the keyboard's place. -->
-  <p id="feed-address-status" role="status" class="min-h-6">
-    {#if busy}Looking for a feed…{:else}{message}{/if}
+  <p id="feed-address-status" role="status" class="flex min-h-6 items-start gap-1.5">
+    {#if busy}Looking for a feed…{:else}{#if problem}<span class="mt-0.5 shrink-0"><Icon name="alert" size={16} /></span>{/if}{message}{/if}
   </p>
 </form>
 

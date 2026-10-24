@@ -586,7 +586,6 @@
 {/snippet}
 
 {#snippet listHead()}
-            <!-- When a long name pushes "Edit feed" onto its own line, its icon lines up with the name above. -->
             <!-- A long name wraps between words onto a second line, then ends in "…"; its whole name is its tooltip and is read in full by screen readers. -->
             <div class="flex min-h-11 items-center gap-4">
               <h2
@@ -604,13 +603,17 @@
                 <a
                   href={pathFor({ kind: "edit-feed", id: currentFeed.id })}
                   onclick={(event) => follow(event, { kind: "edit-feed", id: currentFeed!.id })}
-                  class="btn-quiet btn-small -mr-3 shrink-0"><Icon name="edit" size={16} />Edit feed</a
+                  aria-label="Edit feed"
+                  title="Edit feed"
+                  class="btn-quiet btn-icon -mr-2.5 shrink-0"><Icon name="edit" size={18} /></a
                 >
               {:else if currentFolder}
                 <a
                   href={pathFor({ kind: "edit-folder", id: currentFolder.id })}
                   onclick={(event) => follow(event, { kind: "edit-folder", id: currentFolder!.id })}
-                  class="btn-quiet btn-small -mr-3 shrink-0"><Icon name="edit" size={16} />Edit folder</a
+                  aria-label="Edit folder"
+                  title="Edit folder"
+                  class="btn-quiet btn-icon -mr-2.5 shrink-0"><Icon name="edit" size={18} /></a
                 >
               {/if}
             </div>
@@ -787,10 +790,12 @@
           {/if}
           <PageHead title="Add a feed" bind:heading={listHeading} onClose={phone ? undefined : closePage} besideToggle={!phone && !panes.sidebar} />
           <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-6 pt-3 pb-10 md:px-10">
-            <p class="mb-6 max-w-xl">
-              Paste the address of a website you like, or of its feed. slowfeed finds the feed and lists its articles.
-            </p>
-            <AddFeed bind:field={addField} feeds={feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} />
+            <div class="mx-auto max-w-2xl">
+              <p class="mb-6 max-w-xl">
+                Paste the address of a website you like, or of its feed. slowfeed finds the feed and lists its articles.
+              </p>
+              <AddFeed bind:field={addField} feeds={feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} />
+            </div>
           </div>
         </section>
       {:else}

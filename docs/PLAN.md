@@ -239,6 +239,9 @@ each with screenshots:
 - ✅ A one-line search box with a tidier options panel, the empty reading
   area centred, the byline under the article's title, and an ending to
   every article.
+- ✅ Clearer sign-in and add-feed problems, a quieter search box at rest,
+  Edit feed as an icon, pages centred, and warmer, better separated dark
+  panes.
 
 ---
 

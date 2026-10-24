@@ -3,6 +3,7 @@
   nothing about the reader's feeds.
 -->
 <script lang="ts">
+  import Icon from "./Icon.svelte";
   import { explain, signIn } from "./session";
 
   let { onSignedIn }: { onSignedIn: () => void } = $props();
@@ -43,9 +44,13 @@
       autofocus
       bind:value={password}
       aria-describedby="sign-in-message"
+      aria-invalid={message ? "true" : undefined}
       class="field"
     />
+    <!-- Right under the field it's about, with a mark so it isn't told by place alone. -->
+    <p id="sign-in-message" role="status" class="flex min-h-6 items-start gap-1.5 text-small">
+      {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
+    </p>
     <button type="submit" disabled={busy} class="btn-primary">Sign in</button>
-    <p id="sign-in-message" role="status" class="min-h-12">{message}</p>
   </form>
 </main>

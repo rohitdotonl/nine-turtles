@@ -23,6 +23,10 @@ test("a wrong password says so calmly and keeps you out", async ({ page }) => {
   await page.keyboard.press("Enter");
 
   await expect(page.getByRole("status")).toHaveText("That isn't the password.");
+  // The message sits between the field and the button, and the field is marked.
+  await expect(page.getByLabel("Password")).toHaveAttribute("aria-invalid", "true");
+  const message = (await page.getByRole("status").boundingBox())!;
+  expect(message.y).toBeLessThan((await page.getByRole("button", { name: "Sign in" }).boundingBox())!.y);
   await expect(page.getByLabel("Password")).toHaveValue("");
   await expect(page.locator("#sidebar")).toHaveCount(0);
 });

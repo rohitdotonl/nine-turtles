@@ -4,6 +4,19 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 24 October 2026: Clearer problems, quieter search, centred pages
+
+- A wrong password or an address without a feed now shows its message right
+  under the field, with a small warning mark, and the field is marked too.
+  "No feed here" also says what to try next.
+- At rest, the search box says "Search Tech" instead of repeating the list's
+  title as a chip; the chip appears once you're in the search.
+- "Edit feed" and "Edit folder" are a pencil icon beside the list's title.
+- Settings, Add a feed, Edit feed and Edit folder sit in a column centred in
+  the page; Unsubscribe and Delete folder sit apart below a faint line.
+- Dark theme: the sidebar stands a little further apart, and the selected
+  row's tint is warm instead of blue-grey.
+
 ## 24 October 2026: Tidier search, and articles that end
 
 - The search box stays on one line; its options panel has smaller, matching

@@ -32,7 +32,7 @@ describe("the add field's messages", () => {
       expect(message).not.toMatch(/!|error|[0-9]{3}/i);
       expect(message.endsWith(".")).toBe(true);
     }
-    expect(explain("no-feed")).toBe("This site doesn't seem to offer a feed.");
+    expect(explain("no-feed")).toBe("This site doesn't seem to offer a feed. Try its home page, or paste the feed's own address if you know it.");
   });
 });
 

@@ -163,7 +163,11 @@ test.describe("on a wide window", () => {
 
   test("the controls stay calm: a one-line search box, and you can always see where the keyboard is", async ({ page }) => {
     await openRoom(page);
-    // The scope chip sits in the search box without making it taller (decision 0025).
+    // At rest, the field names where you are instead of showing a chip that repeats the title.
+    await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toHaveCount(0);
+    await expect(page.getByRole("combobox", { name: "Search", exact: true })).toHaveAttribute("placeholder", "Search Reading Room");
+    // In the search, the scope chip sits in the box without making it taller (decision 0025).
+    await page.getByRole("combobox", { name: "Search", exact: true }).focus();
     await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toBeVisible();
     const box = (await page.locator(".search-box").boundingBox())!;
     expect(box.height).toBeLessThanOrEqual(48);

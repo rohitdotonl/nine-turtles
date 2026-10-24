@@ -412,7 +412,7 @@ export function explain(reason: Problem): string {
     case "too-big":
       return "That file is too big to be a feed.";
     case "no-feed":
-      return "This site doesn't seem to offer a feed.";
+      return "This site doesn't seem to offer a feed. Try its home page, or paste the feed's own address if you know it.";
     case "trouble":
       return "slowfeed couldn't add that just now. Try again in a moment.";
   }
