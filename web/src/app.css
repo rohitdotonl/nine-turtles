@@ -1316,7 +1316,7 @@ input {
 
 .article-text strong,
 .article-text b {
-  /* Never lighter than the words around it, even in the Bold theme. */
+  /* Never lighter than the words around it. In Bold it is the same weight, as no heavier face ships (decision 0046). */
   font-weight: max(600, var(--reading-weight, 400));
 }
 

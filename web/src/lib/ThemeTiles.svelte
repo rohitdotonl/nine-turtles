@@ -97,7 +97,7 @@
     font-size: 1.375rem;
     line-height: 1;
   }
-  /* Literata's 600 or Atkinson's 700, as the Bold theme's articles (decision 0046). */
+  /* Bold's "Aa" (decision 0046): 700 asks for the heaviest face shipped, Literata's 600 or Atkinson's 700. */
   .tile-page.bold {
     font-weight: 700;
   }
