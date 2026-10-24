@@ -277,6 +277,11 @@ each with screenshots:
   scrolled and an edge on the phone's toolbar, no scrollbar strip, the
   summary note as end matter, titles at full measure, search results as
   title, text, meta, and a silent empty reading pane (decision 0040).
+- ✅ Sheets and Settings in one voice: serif sheet titles, a quiet Cancel,
+  one line on a refused field, a folder checklist that shows both states, a
+  shortcut list that fits; Settings' sample on the page, marks on rows that
+  act, A | Medium | A, edgeless raised choices and lighter dark groups
+  (decision 0042).
 
 ---
 

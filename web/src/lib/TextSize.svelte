@@ -1,7 +1,8 @@
 <!--
   Text size as Apple Books sets it: a small A and a large A on one track,
   one step each press (the same six steps as `+` and `-`), with the current
-  step's name beside them, said aloud when it changes. At either end the A
+  step's name between them on the same track (decision 0042), said aloud
+  when it changes. At either end the A
   that can't go further fades and says so to screen readers. Settings › Look
   and feel and the Aa panel above an article use the same control.
 -->
@@ -30,28 +31,27 @@
   }
 </script>
 
-<div class="flex items-center gap-3">
-  <p role="status" class="min-w-[4.5rem] text-right text-small text-ink-2">{TEXT_SIZES[size]?.label}</p>
-  <div role="group" aria-labelledby={labelledby} class="sizes">
-    <button
-      type="button"
-      bind:this={first}
-      aria-label="Smaller text"
-      title="Smaller text (-)"
-      aria-disabled={smallest}
-      onclick={() => step(-1)}
-      class="size"><span aria-hidden="true" class="text-[0.9375rem]">A</span></button
-    >
-    <span aria-hidden="true" class="sizes-divider"></span>
-    <button
-      type="button"
-      aria-label="Larger text"
-      title="Larger text (+)"
-      aria-disabled={largest}
-      onclick={() => step(1)}
-      class="size"><span aria-hidden="true" class="text-[1.375rem]">A</span></button
-    >
-  </div>
+<div role="group" aria-labelledby={labelledby} class="sizes">
+  <button
+    type="button"
+    bind:this={first}
+    aria-label="Smaller text"
+    title="Smaller text (-)"
+    aria-disabled={smallest}
+    onclick={() => step(-1)}
+    class="size"><span aria-hidden="true" class="text-[0.9375rem]">A</span></button
+  >
+  <span aria-hidden="true" class="sizes-divider"></span>
+  <p role="status" class="sizes-name">{TEXT_SIZES[size]?.label}</p>
+  <span aria-hidden="true" class="sizes-divider"></span>
+  <button
+    type="button"
+    aria-label="Larger text"
+    title="Larger text (+)"
+    aria-disabled={largest}
+    onclick={() => step(1)}
+    class="size"><span aria-hidden="true" class="text-[1.375rem]">A</span></button
+  >
 </div>
 
 <style>
@@ -89,6 +89,18 @@
   .size[aria-disabled="true"] {
     color: var(--muted);
     cursor: default;
+  }
+  /* The current step, in the middle of the track: wide enough for "Smallest" and "Largest", so the As never shift. */
+  .sizes-name {
+    display: flex;
+    flex: 0 0 auto;
+    min-width: 5.5rem;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 0.5rem;
+    color: var(--ink-2);
+    font-size: var(--text-small);
+    white-space: nowrap;
   }
   .sizes-divider {
     width: 1px;

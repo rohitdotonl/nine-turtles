@@ -93,7 +93,9 @@
     --accent: #8fa9d6;
     --tint-list: #383b41;
     --tint-sidebar: #414348;
-    --raised: #3a3631;
+    --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
+    --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+    --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
     --sheet-edge: 22%;
     --scrim: rgb(0 0 0 / 0.45);
   }
@@ -111,8 +113,15 @@
   --accent: #8fa9d6;
   --tint-list: #383b41;
   --tint-sidebar: #414348;
-  /* A chosen tile rises: lighter than its track in the dark, as paper is in the light. */
-  --raised: #3a3631;
+  /*
+    A chosen segment rises: lighter than its track in the dark, as paper is in
+    the light. A grouped list (--group) sits a clear step lighter than the
+    page, as Apple's dark settings do (decision 0042). Both are the text
+    color mixed into the page; contrast.test.ts checks text on them.
+  */
+  --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
+  --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
   --sheet-edge: 22%;
   --scrim: rgb(0 0 0 / 0.45);
 }
@@ -204,7 +213,9 @@
   --accent: #9fb6e6;
   --tint-list: #353a43;
   --tint-sidebar: #3c4048;
-  --raised: #3a3a37;
+  --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
+  --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
   --sheet-edge: 22%;
   --scrim: rgb(0 0 0 / 0.45);
 }
@@ -222,7 +233,9 @@
   --accent: #d9a85c;
   --tint-list: #433622;
   --tint-sidebar: #493b27;
-  --raised: #3d352a;
+  --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
+  --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
   --sheet-edge: 22%;
   --scrim: rgb(0 0 0 / 0.45);
 }
@@ -240,7 +253,9 @@
   --accent: #8fb3ff;
   --tint-list: #2d3954;
   --tint-sidebar: #33405c;
-  --raised: #323c52;
+  --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
+  --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
   --sheet-edge: 22%;
   --scrim: rgb(0 0 0 / 0.45);
 }
@@ -258,7 +273,9 @@
   --accent: #8fb0e8;
   --tint-list: #272e39;
   --tint-sidebar: #2e3540;
-  --raised: #2e2e2e;
+  --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
+  --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
   --sheet-edge: 22%;
   --scrim: rgb(0 0 0 / 0.45);
 }
@@ -306,9 +323,26 @@ body {
   outline-offset: -1px;
 }
 
-/* A refused field keeps its red edge in view: the focus line stands clear of it. */
+/*
+  A row of a grouped list rings just inside its edge, since the group's
+  rounded corners clip anything drawn outside it; a text box that is a row
+  ("New folder…") lets its row draw the ring (decision 0042). Outside the
+  components layer, so they win over the outline above.
+*/
+.inset-action:focus-visible {
+  outline-offset: -2px;
+}
+.inset-input:focus-visible {
+  outline: none;
+}
+
+/*
+  A refused field in use: the focus line takes its edge's place, as on any
+  field, so there's one line, never a red edge inside a dark ring (decision
+  0042). The alert icon and the red words under it still say what's wrong.
+*/
 .field[aria-invalid="true"]:focus-visible {
-  outline-offset: 2px;
+  border-color: transparent;
 }
 
 /*
@@ -324,6 +358,15 @@ body {
   outline: 2px solid var(--ink);
   outline-offset: 4px;
   border-radius: 2px;
+}
+/*
+  A sheet's or the shortcut list's title takes the keyboard's place as it
+  opens (so screen readers start there) but draws no ring: it can't be
+  pressed, and it would look like a button. The first Tab lands on a real
+  control, which rings as always (decision 0042).
+*/
+:root[data-keyboard] dialog h2[tabindex="-1"]:focus-visible {
+  outline: none;
 }
 
 /*
@@ -498,7 +541,8 @@ textarea {
 
   /*
     The one row of actions at the foot of a sheet (and of its page on a
-    phone), in a Mac sheet's order: a destructive action, if there is one, at
+    phone), 20px under what's above it and 12px between its buttons, in a
+    Mac sheet's order: a destructive action, if there is one, at
     the far left (.btn-danger), then Cancel, then the main action at the
     right end. On a narrow screen the destructive action takes a row of its
     own above the other two.
@@ -508,10 +552,37 @@ textarea {
     flex-wrap: wrap;
     align-items: center;
     justify-content: flex-end;
-    gap: 0.5rem;
+    gap: 0.75rem;
   }
   .sheet-actions > :is(.btn, .btn-primary) {
     min-width: 6rem;
+  }
+  /*
+    Cancel has no edge, only a faint tone, so the main action is the one
+    thing in the row with weight (decision 0042). Its word says what it does.
+  */
+  .sheet-actions > .btn {
+    border-color: transparent;
+    background-color: var(--tone);
+  }
+  @media (hover: hover) {
+    .sheet-actions > .btn:hover {
+      background-color: color-mix(in srgb, var(--ink) 11%, transparent);
+    }
+  }
+  @media (forced-colors: active) {
+    .sheet-actions > .btn {
+      border-color: ButtonText;
+    }
+  }
+
+  /* A sheet's title: the same serif, size and weight as every other title (the list's, Settings'). */
+  .sheet-title {
+    font-family: var(--font-serif);
+    font-size: var(--text-heading);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
   }
   .sheet-actions > .btn-danger {
     margin-right: auto;
@@ -557,7 +628,7 @@ textarea {
   .inset-group {
     overflow: hidden;
     border-radius: 0.625rem;
-    background-color: var(--list);
+    background-color: var(--group, var(--list));
   }
   .inset-row {
     position: relative;
@@ -606,8 +677,11 @@ textarea {
       background-color: var(--hover);
     }
   }
-  .inset-action:focus-visible {
-    outline-offset: -2px;
+  /* Its trailing glyph (› for a flow, a tray for a download, a door for Sign out), in the muted grey at the row's right end. */
+  .inset-action > .row-glyph {
+    flex-shrink: 0;
+    margin-left: auto;
+    color: var(--muted);
   }
 
   /*
@@ -627,11 +701,57 @@ textarea {
     opacity: 0;
     cursor: pointer;
   }
+  /*
+    Its mark: an empty ring when it's off and a filled disc with a check when
+    it's on, so even a list of one folder says which it is, by shape as well
+    as fill (decision 0042).
+  */
   .check-row > .check-mark {
-    visibility: hidden;
+    display: flex;
+    width: 1.375rem;
+    height: 1.375rem;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid var(--muted);
+    border-radius: 9999px;
+    color: transparent;
   }
   .check-row:has(> input:checked) > .check-mark {
-    visibility: visible;
+    border-color: var(--ink);
+    background-color: var(--ink);
+    color: var(--paper);
+  }
+  @media (forced-colors: active) {
+    .check-row > .check-mark {
+      forced-color-adjust: none;
+      border-color: CanvasText;
+    }
+    .check-row:has(> input:checked) > .check-mark {
+      border-color: Highlight;
+      background-color: Highlight;
+      color: HighlightText;
+    }
+  }
+  /*
+    A row that is a text box (Edit feed's "New folder…"): no edge or fill of
+    its own, its words where a row's name sits; the keyboard's outline rings
+    the whole row, just inside its edge.
+  */
+  .inset-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 2rem;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    font-size: var(--text-ui);
+  }
+  .inset-input::placeholder {
+    color: var(--muted);
+  }
+  .inset-row:has(> .inset-input:focus-visible) {
+    outline: 2px solid var(--ink);
+    outline-offset: -2px;
   }
   .check-row:has(> input:focus-visible) {
     outline: 2px solid var(--ink);
@@ -645,8 +765,8 @@ textarea {
 
   /*
     A segmented choice (Settings, the search options): a row of options on a
-    soft track; the chosen one is a raised tile with a firmer edge and
-    semibold words. Each option is a real radio button or tick box, hidden
+    soft track; the chosen one is a raised tile, a lighter fill with a small
+    shadow and no edge, and semibold words. Each option is a real radio button or tick box, hidden
     under its tile, so keyboards and screen readers get the usual control.
   */
   .choices {
@@ -699,9 +819,10 @@ textarea {
     opacity: 0;
     cursor: pointer;
   }
+  /* The chosen one: a raised fill with a small shadow under it and no edge, as Apple draws it (decision 0042), and semibold words. */
   .choice:has(input:checked) {
-    border-color: color-mix(in srgb, var(--ink) 30%, transparent);
     background-color: var(--raised, var(--paper));
+    box-shadow: var(--raised-shadow, 0 1px 2px rgb(0 0 0 / 0.12));
     color: var(--ink);
     font-weight: 600;
   }

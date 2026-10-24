@@ -16,6 +16,16 @@ not how it was done.
 - Search results show the title, then the matching text (up to two lines),
   then the source and time.
 - With no article open, the reading area shows just "No article open."
+- Sheets and Settings speak in one voice: sheet titles are in the same serif
+  as every other title, Cancel is a quiet button with room above it, and a
+  refused field shows one line, not a red edge inside a ring. Edit feed's
+  folders show an empty ring or a tick, so even one folder is clear, and
+  "New folder…" is the list's last row. The shortcut list fits a laptop
+  window and its title isn't ringed. In Settings the sample text sits on the
+  page, rows that act end in a small mark (› or a download arrow; Sign out a
+  door, not red, since it removes nothing), the text size reads A | Medium |
+  A, chosen choices are raised without an edge, and dark themes' groups stand
+  off the page.
 
 ## 24 October 2026: Toward Apple Books
 

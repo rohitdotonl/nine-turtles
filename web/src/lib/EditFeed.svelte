@@ -1,6 +1,6 @@
 <!--
   "Edit feed" (SPEC section 15): the feed's name, its folders as a
-  checklist, a new folder, and Unsubscribe. Saving changes the name and
+  checklist ending in a "New folder…" row, and Unsubscribe. Saving changes the name and
   folders together; Cancel or Escape goes back to the feed unchanged.
   Unsubscribing happens at once, with Undo on the next screen. On a wide
   window it's a sheet over the feed's list; on a phone, a screen of its own.
@@ -75,25 +75,35 @@
 
     <fieldset class="flex min-w-0 flex-col gap-1.5">
       <legend class="mb-1.5 text-small text-ink-2">Folders</legend>
-      {#if folders.length > 0}
-        <!-- A checklist, as a Mac lists choices: each folder a row, a checkmark at its end when the feed is in it. -->
-        <div class="inset-group">
-          {#each folders as folder (folder.id)}
-            <label class="inset-row check-row pointer-fine:min-h-9">
-              <input type="checkbox" value={folder.id} bind:group={chosen} />
-              <span class="min-w-0 break-words">{folder.name}</span>
-              <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={18} /></span>
-            </label>
-          {/each}
-        </div>
-      {/if}
-      <label class="mt-2 flex flex-col gap-1.5">
-        <span class="text-small text-ink-2">New folder</span>
-        <input bind:value={newFolder} type="text" autocomplete="off" class="field" aria-describedby="new-folder-hint" />
-        <span id="new-folder-hint" class="text-meta text-muted"
-          >{folders.length === 0 ? "No folders yet. " : ""}Optional. The feed goes in it when you save.</span
-        >
-      </label>
+      <!--
+        A checklist, as Apple lists choices (decision 0042): each folder a row
+        with a mark at its end, an empty ring when the feed isn't in it and a
+        filled disc with a check when it is, so even one folder reads plainly.
+        "New folder…" is the list's last row, a text box of its own.
+      -->
+      <div class="inset-group">
+        {#each folders as folder (folder.id)}
+          <label class="inset-row check-row pointer-fine:min-h-9">
+            <input type="checkbox" value={folder.id} bind:group={chosen} />
+            <span class="min-w-0 break-words">{folder.name}</span>
+            <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
+          </label>
+        {/each}
+        <label class="inset-row pointer-fine:min-h-9">
+          <span class="sr-only">New folder</span>
+          <input
+            bind:value={newFolder}
+            type="text"
+            autocomplete="off"
+            placeholder="New folder…"
+            class="inset-input"
+            aria-describedby="new-folder-hint"
+          />
+        </label>
+      </div>
+      <span id="new-folder-hint" class="inset-foot mt-0"
+        >{folders.length === 0 ? "No folders yet. " : ""}Optional: a new folder is made when you save, with this feed in it.</span
+      >
     </fieldset>
 
     <!-- A problem, in red words with an icon, only once there is one: the sheet grows by its line. -->

@@ -12,6 +12,7 @@
 -->
 <script lang="ts">
   import { edge } from "./edge";
+  import Icon from "./Icon.svelte";
   import ImportOpml from "./ImportOpml.svelte";
   import PageHead from "./PageHead.svelte";
   import TextSize from "./TextSize.svelte";
@@ -111,6 +112,19 @@
 
       <section aria-labelledby="reader-heading">
         <h3 id="reader-heading" class="inset-head">Look and feel</h3>
+        <!--
+          A short passage set as articles will be, straight under the header and
+          before the controls, as the sample sits at the top of Apple Books' Aa
+          panel: on the page itself, not a card inside a card (decision 0042).
+        -->
+        <figure class="reading-sample">
+          <figcaption class="sr-only">Preview</figcaption>
+          <p>
+            Most writing on the open web was never meant to be skimmed. It was written slowly, by someone who
+            cared, for whoever would read it to the end. A reader can be built the same way: it shows you what is
+            there, and then it lets you go.
+          </p>
+        </figure>
         <div class="inset-group">
           <div class="inset-row block py-4">
             <ThemeTiles bind:theme={preferences.theme} name="theme" legend="Theme" legendClass="mb-3" />
@@ -131,6 +145,7 @@
 
           <div class="inset-row">
             <p id="text-size-name" class="row-name">Text size</p>
+            <!-- The current step sits inside the control, between its two As (decision 0042). -->
             <div class="control">
               <TextSize bind:size={preferences.textSize} labelledby="text-size-name" />
             </div>
@@ -148,17 +163,6 @@
             </div>
           </fieldset>
 
-          <!-- A small page in the reading area's own tone, set as articles will be. -->
-          <figure class="inset-row block py-4">
-            <figcaption class="sr-only">Preview</figcaption>
-            <div class="reading-sample">
-              <p>
-                Most writing on the open web was never meant to be skimmed. It was written slowly, by someone who
-                cared, for whoever would read it to the end. A reader can be built the same way: it shows you what is
-                there, and then it lets you go.
-              </p>
-            </div>
-          </figure>
         </div>
         <!-- The same preferences as the Aa panel above an article (decision 0034). -->
         <p class="inset-foot">
@@ -171,7 +175,9 @@
         <h3 id="data-heading" tabindex="-1" bind:this={dataHeading} class="inset-head">Your data</h3>
         <div class="inset-group">
           <ImportOpml {onImported} bind:lines={importLines} />
-          <a href="/api/starred/export" download class="inset-row inset-action">Export starred articles</a>
+          <a href="/api/starred/export" download class="inset-row inset-action"
+            >Export starred articles<span class="row-glyph"><Icon name="download" size={18} /></span></a
+          >
         </div>
         <div role="status" class={["inset-foot flex flex-col gap-1 text-ink", importLines.length === 0 && "sr-only"]}>
           {#each importLines as line (line)}
@@ -195,7 +201,14 @@
               <button type="button" onclick={() => location.reload()} class="btn btn-small">Reload</button>
             </div>
           {/if}
-          <button type="button" onclick={leave} class="inset-row inset-action">Sign out</button>
+          <!--
+            In the text color, not the destructive red: signing out removes
+            nothing, and red in slowfeed means something goes (decision 0042).
+            Its trailing door says it acts, as the rows above do.
+          -->
+          <button type="button" onclick={leave} class="inset-row inset-action"
+            >Sign out<span class="row-glyph"><Icon name="sign-out" size={18} /></span></button
+          >
         </div>
         <p role="status" class={["inset-foot text-danger", !message && "sr-only"]}>{message}</p>
         <p class="inset-foot" translate="no">Version {version}</p>
@@ -233,15 +246,14 @@
       flex-basis: 100%;
     }
   }
-  /* A small page of the reading area's own tone, set as articles will be. */
+  /* A passage on the page itself, set as articles will be, its left edge on the rows' words. */
   .reading-sample {
+    max-width: calc(var(--reading-measure) + 2rem);
+    margin: 0.25rem 0 1.25rem;
+    padding-inline: 1rem;
     font-family: var(--reading-font);
     font-size: var(--reading-size);
     line-height: 1.6;
-    max-width: calc(var(--reading-measure) + 3rem);
-    padding: 1.25rem 1.5rem;
-    border-radius: 0.5rem;
-    background-color: var(--paper);
   }
   /* On a phone articles read a tenth smaller; so does the sample. */
   @media (max-width: 40rem) {

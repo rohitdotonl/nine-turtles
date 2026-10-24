@@ -115,8 +115,15 @@ test("a page without a feed gets a calm, plain message", async ({ page }) => {
   await field(page).fill(`${FEED_SITE}/plain/`);
   await page.keyboard.press("Enter");
   await expect(page.locator("#feed-address-status")).toHaveText("This site doesn't seem to offer a feed. Try the feed's own address, or the site's home page.");
-  // The field is marked as refused, for screen readers and by its firmer edge.
+  // The field is marked as refused, for screen readers and by its red edge.
   await expect(field(page)).toHaveAttribute("aria-invalid", "true");
+  // While the keyboard is in it, the focus line takes the edge's place: one line, never a red edge inside a ring (decision 0042).
+  await expect(field(page)).toBeFocused();
+  await expect(field(page)).toHaveCSS("outline-style", "solid");
+  await expect(field(page)).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+  await field(page).evaluate((element) => (element as HTMLInputElement).blur());
+  await expect(field(page)).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+  await field(page).focus();
 
   await field(page).fill("not an address");
   await page.keyboard.press("Enter");

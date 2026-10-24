@@ -66,6 +66,8 @@ test("a feed put in two folders appears under both, with its unread count in eac
   await openEdit(page, "Edit feed");
   await expect(page).toHaveURL(/\/feeds\/[0-9]+\/edit$/);
   await expect(page.getByRole("heading", { level: 2, name: "Edit feed" })).toBeFocused();
+  // Its title is the same serif as every other title (decision 0042).
+  expect(await page.getByRole("heading", { level: 2, name: "Edit feed" }).evaluate((element) => getComputedStyle(element).fontFamily)).toContain("Literata");
   // It's a sheet over the feed's list; Cancel closes it unchanged.
   await expect(page.getByRole("dialog", { name: "Edit feed" })).toBeVisible();
   await page.getByRole("button", { name: "Cancel" }).click();
@@ -77,6 +79,18 @@ test("a feed put in two folders appears under both, with its unread count in eac
 
   await openEdit(page, "Edit feed");
   await expect(page.getByRole("checkbox", { name: first })).toBeChecked();
+  // The folders are a checklist whose last row is "New folder…", one grouped list (decision 0042).
+  // Each folder's mark is a filled disc with a check when the feed is in it, an empty ring when it isn't.
+  const newFolder = page.getByLabel("New folder");
+  await expect(newFolder).toHaveAttribute("placeholder", "New folder…");
+  expect(await newFolder.evaluate((element) => element.closest(".inset-group")?.querySelectorAll(".check-row").length)).toBeGreaterThanOrEqual(1);
+  const mark = page.locator(".check-row").filter({ hasText: first }).locator(".check-mark");
+  const ink = await page.locator("body").evaluate((body) => getComputedStyle(body).color);
+  await expect(mark).toHaveCSS("background-color", ink);
+  await page.getByRole("checkbox", { name: first }).uncheck();
+  await expect(mark).toBeVisible();
+  await expect(mark).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await page.getByRole("checkbox", { name: first }).check();
   await page.getByRole("textbox", { name: "Name" }).fill(`Renamed ${blog}`);
   await page.getByLabel("New folder").fill(second);
   await page.getByRole("button", { name: "Save" }).click();
