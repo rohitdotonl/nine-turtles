@@ -17,6 +17,18 @@ not how it was done.
   every screen keeps one 20px margin, and a folder row has one chevron:
   its feeds are listed under it.
 
+## 24 October 2026: Quiet endings and blank paper in the reading pane
+
+- A summary-only article's closing note now reads "Read the full article ›"
+  (the publisher is already named under the title) and never breaks inside
+  the link, so no word is left stranded. Its underline is finer and softer.
+- Long article titles wrap into even lines instead of a long line over a
+  short one.
+- On a laptop-sized window the text has wider margins (at least 56px each
+  side).
+- With no article open, the reading pane is simply blank paper, as in
+  Apple Books. Screen readers still hear "No article open."
+
 ## 24 October 2026: Toward Apple Books, batch 3
 
 - The article's bars are solid in the page's color, so text no longer shows

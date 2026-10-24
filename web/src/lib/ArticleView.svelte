@@ -215,7 +215,7 @@
     </div>
   {/if}
 
-  <div use:edge bind:this={scroller} class="reading-scroller scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto bg-paper px-5 pb-[30vh] md:px-10">
+  <div use:edge bind:this={scroller} class="reading-scroller scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto bg-paper px-5 pb-[30vh] md:px-14">
     <article lang={full?.language ?? undefined} class="article pt-3">
       <h2 tabindex="-1" bind:this={heading} class="article-title">{article.title || "Untitled"}</h2>
       <!-- Under the title, as in a book or a magazine: who wrote it, where, and when. The publisher's name leads, in full ink. -->
@@ -238,9 +238,13 @@
         {:else if full.summary}
           <div class="article-text" dir="auto">{@html full.summary}</div>
           <hr aria-hidden="true" class="article-end" />
-          <!-- End matter, under the closing rule as in a book: where the rest of it is, crediting the publisher. -->
+          <!--
+            End matter, under the closing rule as in a book: where the rest of it is. The publisher is already
+            named in the byline, so the link says only "Read the full article ›"; screen readers hear whose site
+            it opens. Each sentence keeps to one line, so a narrow column never strands a word (decision 0044).
+          -->
           <p class="article-note" lang="en">
-            This feed shares only a summary.{#if article.link}{" "}<a href={article.link} target="_blank" rel="noopener noreferrer">Read the full article on {article.feedTitle}<span aria-hidden="true">&nbsp;›</span></a
+            <span>This feed shares only a summary.</span>{#if article.link}{" "}<a href={article.link} target="_blank" rel="noopener noreferrer">Read the full article<span class="sr-only"> on {article.feedTitle}</span><span aria-hidden="true">&nbsp;›</span></a
               >{/if}
           </p>
         {:else}

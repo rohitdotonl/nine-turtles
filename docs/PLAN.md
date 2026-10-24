@@ -293,6 +293,9 @@ each with screenshots:
   window's top, one left edge for every sidebar name, the selected place's
   icon in the accent, and on a phone one back button position, one 20px
   margin and one chevron per folder row (decision 0043).
+- ✅ Quiet endings and blank paper (fourth critique): a short end-note link
+  that never breaks, balanced titles, at least 56px beside the text on a
+  computer, and an empty reading pane with nothing drawn (decision 0044).
 
 ---
 

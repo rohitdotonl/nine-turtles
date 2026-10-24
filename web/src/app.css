@@ -1091,25 +1091,26 @@ input {
 
 /*
   The one large thing on the screen, about 32px at the default text size:
-  set tight, clearly above the article's own headings. It fills the same
-  column as the text: its lines run to the full measure, and only a lone
-  last word is avoided (decision 0040; balanced lines left it narrower than
-  the text).
+  set tight, clearly above the article's own headings. It sits in the same
+  column as the text, and its lines are balanced, so a two-line title
+  reads as two even lines rather than a long one over a stub, as Apple
+  Books sets a title (decision 0044, replacing 0040's lone-word rule).
 */
 .article-title {
   font-size: 1.6em;
   line-height: 1.12;
   font-weight: 600;
   letter-spacing: -0.012em;
-  text-wrap: pretty;
+  text-wrap: balance;
   overflow-wrap: break-word;
 }
 
 /*
   A summary-only article's end matter, under the closing rule as in a book:
   small upright interface type, centred, in the second ink, saying where the
-  rest of it is. Only the link to the publisher's site is underlined
-  (decision 0040).
+  rest of it is. Only the link to the publisher's site is underlined, with a
+  fine, quiet line; each sentence keeps to one line, so no word is left
+  stranded (decisions 0040, 0044).
 */
 .article-note {
   margin-top: 1.25rem;
@@ -1122,10 +1123,21 @@ input {
   color: var(--ink-2);
 }
 
+/* Each of the note's two sentences keeps to one line, so a narrow column breaks only between them. */
+.article-note > :where(span, a) {
+  white-space: nowrap;
+}
+
 .article-note a {
   color: inherit;
   text-decoration: underline;
-  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
+}
+
+.article-note a:hover {
+  text-decoration-color: currentColor;
 }
 
 /*
