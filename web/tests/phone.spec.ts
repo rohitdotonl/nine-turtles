@@ -114,11 +114,11 @@ test.describe("on a phone", () => {
     const box = await toolbar(page).boundingBox();
     const height = page.viewportSize()?.height ?? 0;
     expect(Math.round((box?.y ?? 0) + (box?.height ?? 0))).toBe(height);
-    // The icons sit in one line, and each place is a full 44px tap.
+    // The icons sit in one line (Previous is hidden on the first article), and each place is a full 44px tap.
     const tops = await toolbar(page).locator(":scope > * svg").evaluateAll((icons) =>
       icons.filter((icon) => getComputedStyle(icon).visibility !== "hidden").map((icon) => Math.round(icon.getBoundingClientRect().top + icon.getBoundingClientRect().height / 2)),
     );
-    expect(tops.length).toBeGreaterThanOrEqual(5);
+    expect(tops.length).toBeGreaterThanOrEqual(4);
     expect(new Set(tops).size).toBe(1);
     for (const control of await toolbar(page).locator(":scope > *").all()) {
       const place = (await control.boundingBox())!;

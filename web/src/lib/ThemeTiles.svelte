@@ -76,6 +76,7 @@
   }
   .tile input {
     position: absolute;
+    z-index: 1; /* above the picture, so a press anywhere on the tile chooses it */
     inset: 0;
     width: 100%;
     height: 100%;
@@ -92,7 +93,7 @@
     aspect-ratio: 1;
     border: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
     border-radius: 0.625rem;
-    outline: 2px solid transparent;
+    outline: none;
     outline-offset: 2px;
     font-family: var(--reading-font);
     font-size: 1.375rem;
@@ -131,7 +132,7 @@
     font-weight: 600;
   }
   .tile:has(input:checked) .tile-page {
-    outline-color: var(--ink);
+    outline: 2px solid var(--ink);
   }
   .tile:has(input:checked) .tile-check {
     display: flex;

@@ -381,15 +381,13 @@ body {
 .item-list > li:has(> [aria-current])::before {
   display: none;
 }
-.item-row {
-  --place-tint: var(--color-tint-list);
-}
-
 /*
-  A row in the list: 10px above and 11px below, the title at 1.3 line
-  height and the line under it 2px below, as Apple Books spaces its lists.
+  A row in the list: the list's own pill tint; 10px above and 11px below,
+  the title at 1.3 line height and the line under it 2px below, as Apple
+  Books spaces its lists.
 */
 .item-row {
+  --place-tint: var(--color-tint-list);
   padding-top: 0.625rem;
   padding-bottom: 0.6875rem;
 }
@@ -543,6 +541,11 @@ textarea {
     touch-action: manipulation;
     cursor: pointer;
   }
+  @media (hover: hover) {
+    .btn-danger:hover {
+      background-color: var(--hover);
+    }
+  }
 
   /*
     A grouped inset list, as in Apple Books' and the system's settings: a
@@ -636,11 +639,6 @@ textarea {
   }
   @media (hover: hover) {
     .check-row:hover {
-      background-color: var(--hover);
-    }
-  }
-  @media (hover: hover) {
-    .btn-danger:hover {
       background-color: var(--hover);
     }
   }

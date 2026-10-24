@@ -21,14 +21,14 @@ Nothing at the moment.
 | Q3 | Supporting libraries for Milestone 1 | Approved. All approved libraries are listed in `docs/libraries.md`. |
 | Q4 | How the library check knows you approved | The approved list in `docs/libraries.md`. The check fails if the code uses anything not on it. |
 | Q5 | How you try milestones | Screenshots and recordings in each pull request, then the live app after merging. |
-| Q7 | Managing feeds and folders | "Edit feed" and "Edit folder" buttons in the item list header. |
+| Q7 | Managing feeds and folders | "Edit feed…" and "Edit folder…" in the More (…) menu beside the item list's title (decision 0038). |
 | Q8 | Settings and Sign out | "Settings" beside the wordmark at the top of the sidebar; Sign out inside Settings. |
-| Q9 | Visible controls | "Mark all as read" button; Undo in a note floating at the bottom of the list; "Mark unread" in the article top bar. |
+| Q9 | Visible controls | "Mark all as read" button; Undo in a note floating at the bottom of the list; "Mark unread" in the article's More (…) menu (decision 0038). |
 | Q10 | What Undo undoes | The last action only: mark all as read, mark unread, star/unstar, unsubscribe, delete folder. |
 | Q11 | River mode (V2) | Sidebar shows Starred · All; `g u` does nothing; no "Mark all as read"; opens on All. |
 | Q12 | Reading in the Unread view | Items stay in place until `r` or leaving the view. |
 | Q13 | List length | 50 items; the button label follows the sort order. |
-| Q14 | "New items" on phones | "New items · tap Refresh". |
+| Q14 | "New items" on phones | "New items" with a Show button (decision 0038). |
 | Q15 | Folders and sidebar search | Folders appear once one exists. **Sidebar search is always shown** (your choice, recorded in DESIGN.md's Exceptions log, see below). |
 | Q16 | Article language | Item's language, then the feed's, otherwise unmarked. |
 | Q17 | Edited articles | Updated quietly; read stays read. |

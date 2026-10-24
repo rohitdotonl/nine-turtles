@@ -178,6 +178,8 @@ describe.each(Object.entries(THEMES))("the %s theme's fields", (_name, colors) =
     expect(contrast(colors.ink!, fill)).toBeGreaterThanOrEqual(7);
     expect(contrast(colors.muted!, fill)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(colors.danger!, colors.paper!)).toBeGreaterThanOrEqual(3);
+    expect(contrast(colors.danger!, fill)).toBeGreaterThanOrEqual(3);
+    expect(contrast(mix(colors.ink!, colors.paper!, share("field-edge", "transparent")), fill)).toBeGreaterThanOrEqual(3);
   });
 });
 

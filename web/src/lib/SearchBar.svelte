@@ -37,7 +37,7 @@
     query: Query;
     feeds: Feed[];
     folders: Folder[];
-    /** Where search started: the panel's scope list says "(this list)" beside it. */
+    /** Where search started: its row in the options reads "This list". */
     here: Scope;
     /** The query changed; `now` when the search should follow at once, not after a pause in typing. */
     onChange: (query: Query, now: boolean) => void;
@@ -359,11 +359,11 @@
           <span class="shrink-0 text-ink-2"><Icon name="chevron-down" size={16} /></span>
           <select
             aria-label="Search in another feed or folder"
-            value=""
+            value={scopeNow}
             onchange={(event) => {
+              // Kept on the scope being searched, so the arrow keys step on from it.
               const value = event.currentTarget.value;
               if (value) chooseScope(scopeFrom(value));
-              event.currentTarget.value = "";
             }}
             class="menu-select"
           >

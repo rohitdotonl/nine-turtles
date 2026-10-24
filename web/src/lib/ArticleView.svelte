@@ -301,7 +301,7 @@
   .reading-scroller:global([data-scrolled]) > .reading-bar {
     border-bottom-color: color-mix(in srgb, var(--ink) 12%, transparent);
   }
-  @media (prefers-reduced-transparency: reduce) {
+  @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
     .reading-bar {
       background-color: var(--paper);
       -webkit-backdrop-filter: none;
