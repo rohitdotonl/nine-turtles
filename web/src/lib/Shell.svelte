@@ -317,6 +317,7 @@
       },
       {
         label: "Sort order",
+        icon: "sort",
         items: [
           { label: "Newest first", checked: sort === "newest", onSelect: () => sortFromMenu("newest") },
           { label: "Oldest first", checked: sort === "oldest", onSelect: () => sortFromMenu("oldest") },

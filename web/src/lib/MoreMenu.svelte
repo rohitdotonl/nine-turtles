@@ -19,12 +19,12 @@
     /** The key that does the same, shown at the end of the row (e.g. "Shift+A"). */
     shortcut?: string;
   };
-  export type MenuGroup = { label?: string; items: MenuItem[] };
+  export type MenuGroup = { label?: string; icon?: IconName; items: MenuItem[] };
 </script>
 
 <script lang="ts">
   import { tick } from "svelte";
-  import Icon from "./Icon.svelte";
+  import Icon, { type IconName } from "./Icon.svelte";
   import { keyCap } from "./keyboard";
 
   let {
@@ -153,7 +153,7 @@
         {/if}
         <div role="group" aria-label={group.label}>
           {#if group.label}
-            <p aria-hidden="true" class="px-3 pt-1.5 pb-1 text-meta text-muted">{group.label}</p>
+            <p aria-hidden="true" class="flex items-center gap-1.5 px-3 pt-1.5 pb-1 text-meta text-muted">{#if group.icon}<Icon name={group.icon} size={14} />{/if}{group.label}</p>
           {/if}
           {#each group.items as item (item.label)}
             <button
