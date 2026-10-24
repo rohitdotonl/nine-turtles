@@ -151,7 +151,7 @@
           <fieldset class="setting">
             <legend class="setting-name">Reading font</legend>
             <div class="setting-control">
-              <div class="choices" style="--phone-columns: 1">
+              <div class="choices" style="--phone-columns: 2">
                 {#each Object.entries(READING_FONTS) as [value, font] (value)}
                   <!-- Each name is set in its own font, so the choice shows itself. -->
                   <label class="choice" style:font-family={font.family}>
@@ -307,86 +307,16 @@
     }
   }
 
-  /*
-    The choices sit on a faint track; the chosen one is raised onto the
-    page's own tone with a fine edge and semibold words, so it shows without
-    color, and nothing on the screen is a heavy black slab.
-  */
-  .choices {
-    display: inline-flex;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-    padding: 0.25rem;
-    border-radius: 0.625rem;
-    background-color: var(--tone);
-  }
-  /* On a narrow screen the choices fill the width in even columns instead of wrapping ragged. */
+  /* The choices themselves are app.css's segmented control. On a narrow screen the choices fill the width in even columns instead of wrapping ragged. */
   @media (width < 40rem) {
     .choices {
       display: grid;
+      width: 100%;
       grid-template-columns: repeat(var(--phone-columns), minmax(0, 1fr));
     }
     .choice {
       justify-content: center;
     }
-  }
-  .choice {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    min-height: 2.75rem;
-    padding-inline: 0.875rem;
-    border: 1px solid transparent;
-    border-radius: 0.4375rem;
-    color: var(--ink-2);
-    font-size: var(--text-small);
-    cursor: pointer;
-  }
-  @media (pointer: fine) {
-    .choice {
-      min-height: 2.5rem;
-    }
-  }
-  @media (hover: hover) {
-    .choice:hover {
-      background-color: var(--hover);
-    }
-  }
-  .choice input {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    opacity: 0;
-    cursor: pointer;
-  }
-  .choice:has(input:checked) {
-    border-color: color-mix(in srgb, var(--ink) 30%, transparent);
-    background-color: var(--paper);
-    color: var(--ink);
-    font-weight: 600;
-  }
-  .choice:has(input:focus-visible) {
-    outline: 2px solid var(--ink);
-    outline-offset: 2px;
-  }
-  /* High-contrast mode replaces the fill, so the chosen tile takes the system's own highlight colors. */
-  @media (forced-colors: active) {
-    .choice:has(input:checked) {
-      forced-color-adjust: none;
-      border-color: Highlight;
-      background-color: Highlight;
-      color: HighlightText;
-    }
-    .choice:has(input:focus-visible) {
-      outline-color: CanvasText;
-    }
-  }
-  .choice:has(input:disabled) {
-    cursor: default;
-    color: var(--muted);
   }
   .themes {
     display: grid;
@@ -394,8 +324,10 @@
     gap: 0.75rem;
   }
   @media (width < 40rem) {
+    /* All four in one row, as a phone's own theme pickers show them. */
     .themes {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.5rem;
     }
   }
   .theme {

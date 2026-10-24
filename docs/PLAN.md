@@ -248,6 +248,9 @@ each with screenshots:
 - ✅ "Where you are" as a fill and a bar flush with the pane's edge, the
   same in both panes, and one focus outline for every row (decision
   0030).
+- ✅ Add a feed, Edit feed and Edit folder as sheets over the list, search
+  options as a popover with date presets, one-line list titles, and tidier
+  phone settings and article toolbar (decision 0031).
 
 ---
 

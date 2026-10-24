@@ -18,6 +18,7 @@
   import EditFolder from "./EditFolder.svelte";
   import ItemList from "./ItemList.svelte";
   import PageHead from "./PageHead.svelte";
+  import Sheet from "./Sheet.svelte";
   import Settings from "./Settings.svelte";
   import SearchBar from "./SearchBar.svelte";
   import SidebarFeeds from "./SidebarFeeds.svelte";
@@ -97,47 +98,76 @@
   let articleHeading: HTMLHeadingElement | undefined = $state();
   let itemList: ItemList | undefined = $state();
 
+  /**
+   * On a window wide enough for the list, adding a feed and editing a feed or
+   * folder open as a sheet over the place you were, which stays in view.
+   */
+  let sheet = $derived(!phone && (route.kind === "add-feed" || route.kind === "edit-feed" || route.kind === "edit-folder"));
+  /** Where the list and article come from: under a sheet, the place it opened over. */
+  let under: Route = $derived(
+    !sheet
+      ? route
+      : route.kind === "edit-feed"
+        ? { kind: "feed", id: route.id }
+        : route.kind === "edit-folder"
+          ? { kind: "folder", id: route.id }
+          : lastPlace,
+  );
+  let sheetHeading: HTMLHeadingElement | undefined = $state();
+  /** What had the keyboard when a sheet opened, to give it back when the sheet closes. */
+  let sheetOpener: Element | null = null;
+  /** The sheet was opened with a step in the browser's history, so closing it is a step back. */
+  let sheetPushed = false;
+
+  function isSheet(place: Route): boolean {
+    return !phone && (place.kind === "add-feed" || place.kind === "edit-feed" || place.kind === "edit-folder");
+  }
+
   /** Which articles the list shows here. */
   let source: Source = $derived(
     shown
       ? { search: searchParams(shown) }
-      : route.kind === "feed"
-      ? { feed: route.id }
-      : route.kind === "folder"
-        ? { folder: route.id }
-        : { view: route.kind === "view" ? route.view : "unread" },
+      : under.kind === "feed"
+      ? { feed: under.id }
+      : under.kind === "folder"
+        ? { folder: under.id }
+        : { view: under.kind === "view" ? under.view : "unread" },
   );
   /** The list's identity: a new one is loaded when it changes. */
-  let listKey = $derived(`${pathFor(route)} ${sort} ${shown ? JSON.stringify(searchParams(shown)) : ""}`);
+  let listKey = $derived(`${pathFor(under)} ${sort} ${shown ? JSON.stringify(searchParams(shown)) : ""}`);
 
   let currentFeed = $derived.by(() => {
-    const place = route;
+    const place = under.kind === "feed" ? under : route;
     return place.kind === "feed" || place.kind === "edit-feed" ? feeds?.find((feed) => feed.id === place.id) : undefined;
   });
   let currentFolder = $derived.by(() => {
-    const place = route;
+    const place = under.kind === "folder" ? under : route;
     return place.kind === "folder" || place.kind === "edit-folder"
       ? folders.find((folder) => folder.id === place.id)
       : undefined;
   });
+  /** A sheet is actually showing (an edit address for a feed or folder you don't have shows none). */
+  let sheetShown = $derived(
+    sheet && (route.kind === "add-feed" || (route.kind === "edit-feed" ? currentFeed !== undefined : currentFolder !== undefined)),
+  );
   /** The feed's or folder's name, for the heading and the tab's title. */
   let placeName = $derived(currentFeed?.title ?? currentFolder?.name);
   /** A feed or folder address that names none you have. */
   let missing = $derived(
     feeds !== undefined &&
-      (((route.kind === "feed" || route.kind === "edit-feed") && !currentFeed) ||
-        ((route.kind === "folder" || route.kind === "edit-folder") && !currentFolder)),
+      (((under.kind === "feed" || under.kind === "edit-feed") && !currentFeed) ||
+        ((under.kind === "folder" || under.kind === "edit-folder") && !currentFolder)),
   );
   /** No feeds yet: Unread and All show the add field instead (SPEC section 2). */
   let firstVisit = $derived(feeds !== undefined && feeds.length === 0);
   let headingText = $derived(
     missing
-      ? route.kind === "folder" || route.kind === "edit-folder"
+      ? under.kind === "folder" || under.kind === "edit-folder"
         ? "Folder not found"
         : "Feed not found"
       : shown
         ? "Search results"
-        : nameFor(route, placeName),
+        : nameFor(under, placeName),
   );
 
   function isList(place: Route): boolean {
@@ -233,20 +263,25 @@
 
     // The browser's Back and Forward, and on phones the system back gesture.
     const back = () => {
-      const moved = location.pathname !== pathFor(route);
-      route = parse(location.pathname);
+      const next = parse(location.pathname);
+      const moved = !keepsArticle(route, next);
+      const [opening, closing] = [isSheet(next) && !isSheet(route), isSheet(route) && !isSheet(next)];
+      if (opening) [sheetOpener, sheetPushed] = [document.activeElement, false];
+      route = next;
       if (isList(route)) lastPlace = route;
       if (moved) {
         selected = undefined;
         resetSearch();
       }
+      if (closing && giveBack()) return;
       arrive(stepOf(history.state)?.screen ?? (isList(route) ? "list" : "page"));
     };
     addEventListener("popstate", back);
 
     const readKey = createKeyReader();
     const pressed = (event: KeyboardEvent) => {
-      if (event.defaultPrevented || cheatSheetOpen) return;
+      // A sheet keeps the keyboard to itself; its Escape is the dialog's own.
+      if (event.defaultPrevented || cheatSheetOpen || sheetShown) return;
       const action = readKey(event, event.timeStamp);
       if (!action) return;
       event.preventDefault();
@@ -321,6 +356,7 @@
     // Edit pages bind their heading to `listHeading` too.
     if (place.kind === "settings") return settingsHeading;
     if (place.kind === "add-feed") return addField;
+    if (sheetShown) return sheetHeading;
     return listHeading;
   }
 
@@ -362,17 +398,46 @@
    * Goes to a place, and moves the keyboard's place to its heading. A list
    * arrived at with a `withNotice` shows it in its line, with Undo.
    */
+  /** Opening a sheet over a place, or closing it back to that place, leaves its article open. */
+  function keepsArticle(from: Route, to: Route): boolean {
+    if (pathFor(from) === pathFor(to)) return true;
+    if (phone) return false;
+    const over = (place: Route) => place.kind === "add-feed" || place.kind === "edit-feed" || place.kind === "edit-folder";
+    return (over(to) && !over(from)) || (over(from) && pathFor(to) === pathFor(under));
+  }
+
+  /** After a sheet closes: the keyboard goes back to what opened it, if that's still there. */
+  function giveBack(): boolean {
+    const opener = sheetOpener;
+    sheetOpener = null;
+    if (!(opener instanceof HTMLElement) || !opener.isConnected || opener === document.body) return false;
+    queueMicrotask(() => opener.focus());
+    return true;
+  }
+
+  /** Closes a sheet: a step back if it opened with one, so Back doesn't reopen it. */
+  function closeSheet() {
+    if (sheetPushed && stepOf(history.state)?.back === "list") history.back();
+    else go(under);
+  }
+
   function go(next: Route, withNotice?: Notice) {
     const from = screenNow();
     const to: Screen = isList(next) ? "list" : "page";
+    const [opening, closing] = [isSheet(next) && !isSheet(route), isSheet(route) && !isSheet(next)];
+    let pushed = false;
     if (pathFor(next) !== location.pathname || from !== to) {
       history.pushState({ screen: to, back: from }, "", pathFor(next));
+      pushed = true;
     }
-    if (pathFor(next) !== pathFor(route)) selected = undefined;
+    if (opening) [sheetOpener, sheetPushed] = [document.activeElement, pushed];
+    // Opening a sheet over a place, or closing it back there, keeps that place as it was: its article and its search.
+    const sameScreen = keepsArticle(route, next) && pathFor(route) !== pathFor(next);
+    if (!keepsArticle(route, next)) selected = undefined;
     reading = false;
     notice = withNotice;
     route = next;
-    resetSearch();
+    if (!sameScreen) resetSearch();
     if (isList(next)) lastPlace = next;
     // A feed or folder added elsewhere (another tab, another device) isn't in the list yet.
     if (next.kind === "feed" && !feeds?.some((feed) => feed.id === next.id)) loadFeeds();
@@ -380,6 +445,8 @@
     // On a phone-narrow window the sidebar is the home screen; choosing a
     // place shows it instead.
     if (width === "narrow") sidebarChoice = "hidden";
+    if (closing && sameScreen && giveBack()) return;
+    sheetOpener = closing ? null : sheetOpener;
     queueMicrotask(() => placeFocus(next)?.focus());
   }
 
@@ -399,6 +466,7 @@
     if (saved) await loadFeeds();
     // On a phone the edit page is a step on from its list: go back that step.
     if (phone && stepOf(history.state)?.back === "list") history.back();
+    else if (sheetShown) closeSheet();
     else if (route.kind === "edit-feed") go({ kind: "feed", id: route.id });
     else if (route.kind === "edit-folder") go({ kind: "folder", id: route.id });
   }
@@ -454,6 +522,7 @@
   /** Close settings, and Escape on Settings or Add a feed: on a phone, back one step to the feeds. */
   function closePage() {
     if (phone) stepBack("home");
+    else if (sheetShown) closeSheet();
     else go(lastPlace);
   }
 
@@ -586,14 +655,14 @@
 {/snippet}
 
 {#snippet listHead()}
-            <!-- A long name wraps between words onto a second line, then ends in "…"; its whole name is its tooltip and is read in full by screen readers. -->
+            <!-- One line, so the search box below never moves: a long name ends in "…", its whole name is its tooltip and is read in full by screen readers. -->
             <div class="flex min-h-11 items-center gap-4">
               <h2
                 id="list-heading"
                 tabindex="-1"
                 bind:this={listHeading}
                 title={headingText}
-                class="line-clamp-2 min-w-0 flex-1 font-serif break-words text-heading font-semibold tracking-[-0.01em]"
+                class="min-w-0 flex-1 truncate font-serif text-heading font-semibold tracking-[-0.01em]"
               >
                 {headingText}
               </h2>
@@ -716,14 +785,11 @@
       a Mac app keeps its tools at the foot of the sidebar.
     -->
     <div class="flex shrink-0 items-center gap-1 border-t border-ink/10 py-1.5 pr-3">
+      <!-- An action, not a place: it never shows the "where you are" bar. -->
       <a
         href="/add-feed"
-        aria-current={route.kind === "add-feed" ? "page" : undefined}
         onclick={(event) => follow(event, { kind: "add-feed" })}
-        class={[
-          "place ml-1.5 flex min-h-11 min-w-0 flex-1 items-center gap-2 pr-3 pl-[14px] text-small",
-          route.kind === "add-feed" ? "font-semibold text-ink" : "text-ink-2",
-        ]}><Icon name="plus" size={16} />Add feed</a
+        class="btn-quiet ml-1.5 min-w-0 flex-1 justify-start gap-2 pl-[14px] text-small text-ink-2"><Icon name="plus" size={16} />Add feed</a
       >
       {#if !phone}
         <button type="button" onclick={() => (cheatSheetOpen = true)} aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)" class="btn-quiet btn-icon"
@@ -756,7 +822,7 @@
           onImported={loadFeeds}
           besideToggle={!phone && !panes.sidebar}
         />
-      {:else if route.kind === "edit-feed" && currentFeed}
+      {:else if !sheet && route.kind === "edit-feed" && currentFeed}
         {#key currentFeed.id}
           <EditFeed
             feed={currentFeed}
@@ -768,7 +834,7 @@
             onUnsubscribe={() => unsubscribeFrom(currentFeed!)}
           />
         {/key}
-      {:else if route.kind === "edit-folder" && currentFolder}
+      {:else if !sheet && route.kind === "edit-folder" && currentFolder}
         {#key currentFolder.id}
           <EditFolder
             folder={currentFolder}
@@ -779,7 +845,7 @@
             onDelete={() => deleteThis(currentFolder!)}
           />
         {/key}
-      {:else if route.kind === "add-feed"}
+      {:else if !sheet && route.kind === "add-feed"}
         <section aria-labelledby="list-heading" class={["flex flex-1 flex-col bg-paper", phone ? "pt-2" : "pt-3"]}>
           {#if phone}
             <div class="flex px-4 pb-2">
@@ -805,7 +871,7 @@
           class={[
             "flex-col bg-list",
             phone ? "pt-2" : "pt-3",
-            panes.article ? "w-80 shrink-0 xl:w-96 2xl:w-[26rem]" : "flex-1",
+            panes.article ? "w-80 shrink-0 xl:w-96 2xl:w-[26rem]" : "min-w-0 flex-1",
             panes.list && "flex",
           ]}
         >
@@ -833,15 +899,18 @@
           {/if}
           <div use:edge class="scroller relative min-h-0 flex-1 scroll-pb-20 overflow-y-auto px-6 pt-1 pb-6">
             {#if feeds && feeds.length > 0 && !missing}
-              <SearchBar bind:this={searchBar} {query} {feeds} {folders} here={scopeFor(route)} onChange={searchChanged} />
+              <SearchBar bind:this={searchBar} {query} {feeds} {folders} here={scopeFor(under)} onChange={searchChanged} />
             {/if}
-            {#if missing && (route.kind === "folder" || route.kind === "edit-folder")}
+            {#if missing && (under.kind === "folder" || under.kind === "edit-folder")}
               <p class="mt-4">There's no folder here. It may have been deleted or renamed.</p>
             {:else if missing}
               <p class="mt-4">You don't follow this feed. It may have been an old address.</p>
-            {:else if firstVisit && !(route.kind === "view" && route.view === "starred")}
+            {:else if firstVisit && !(under.kind === "view" && under.view === "starred")}
               <p class="mt-4 mb-6">Nothing to read yet. Add a website you like to begin.</p>
-              <AddFeed bind:field={addField} feeds={[]} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} />
+              <!-- With the Add a feed sheet open over it, the sheet has the only field. -->
+              {#if !(sheet && route.kind === "add-feed")}
+                <AddFeed bind:field={addField} feeds={[]} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} />
+              {/if}
               <p class="mt-4">
                 <a href="/settings" onclick={goImport} class="inline-flex min-h-11 items-center underline underline-offset-4"
                   >Import OPML</a
@@ -856,14 +925,14 @@
                   {source}
                   order={sort}
                   {notice}
-                  empty={shown ? "Nothing found." : emptyText(route)}
+                  empty={shown ? "Nothing found." : emptyText(under)}
                   bold={shown ? searchedTerms(shown.words) : []}
                   onChoose={chose}
                   onUnreadChange={unreadChanged}
                   onRefresh={loadFeeds}
                   refreshInTopBar={phone}
                   results={shown !== undefined}
-                  oneFeed={route.kind === "feed" && !shown}
+                  oneFeed={under.kind === "feed" && !shown}
                 />
               {/key}
             {/if}
@@ -906,3 +975,33 @@
 </main>
 
 <CheatSheet bind:open={cheatSheetOpen} />
+
+{#if sheet && route.kind === "add-feed"}
+  <Sheet title="Add a feed" bind:heading={sheetHeading} onClose={closePage} initial={() => addField}>
+    <p>Paste the address of a website you like, or of its feed. slowfeed finds the feed and lists its articles.</p>
+    <AddFeed bind:field={addField} feeds={feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} />
+  </Sheet>
+{:else if sheet && route.kind === "edit-feed" && currentFeed}
+  {#key currentFeed.id}
+    <EditFeed
+      sheet
+      feed={currentFeed}
+      {folders}
+      bind:heading={sheetHeading}
+      onSaved={() => edited(true)}
+      onCancel={() => edited(false)}
+      onUnsubscribe={() => unsubscribeFrom(currentFeed!)}
+    />
+  {/key}
+{:else if sheet && route.kind === "edit-folder" && currentFolder}
+  {#key currentFolder.id}
+    <EditFolder
+      sheet
+      folder={currentFolder}
+      bind:heading={sheetHeading}
+      onSaved={() => edited(true)}
+      onCancel={() => edited(false)}
+      onDelete={() => deleteThis(currentFolder!)}
+    />
+  {/key}
+{/if}

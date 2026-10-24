@@ -40,3 +40,4 @@ says "Replaced by …" at the top.
 | [0028](0028-one-place-style-and-a-floating-note.md) | One rounded "where you are" shape in the sidebar and list; an unread dot; a floating note instead of reserved lines; one top line for pages |
 | [0029](0029-literata-semibold.md) | Literata semibold (600) instead of bold for titles and headings; same download size |
 | [0030](0030-flush-place-bar.md) | "Where you are" bar flush with the pane's edge in both panes; the selected article's focus is the usual outline, not a grey hairline |
+| [0031](0031-sheets-and-popovers.md) | Short tasks (add or edit a feed, edit a folder) as sheets over the list; search options as a popover with date presets |

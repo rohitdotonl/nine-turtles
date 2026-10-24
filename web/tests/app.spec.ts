@@ -291,15 +291,27 @@ test("nothing scrolls underneath the Sidebar button or the shortcut hint", async
   await expect(scroller).not.toHaveAttribute("data-scrolled");
 });
 
-test("Add a feed has the same top line as Settings: a serif title and an X that closes it", async ({ page, isMobile }) => {
-  test.skip(isMobile, "on a phone, the Feeds button goes back instead");
+test("Add a feed opens as a sheet over the list you were on: a serif title, and Escape or a press outside closes it", async ({ page, isMobile }) => {
+  test.skip(isMobile, "on a phone, Add a feed is a screen of its own");
   await openApp(page);
   await page.keyboard.press("a");
-  const heading = page.getByRole("heading", { level: 2, name: "Add a feed" });
-  await expect(heading).toBeVisible();
+  const sheet = page.getByRole("dialog", { name: "Add a feed" });
+  await expect(sheet).toBeVisible();
+  await expect(sheet.getByLabel("Paste a website or feed URL")).toBeFocused();
+  const heading = sheet.getByRole("heading", { level: 2, name: "Add a feed" });
   expect(await heading.evaluate((element) => getComputedStyle(element).fontFamily)).toContain("Literata");
-  await page.getByRole("button", { name: "Close" }).click();
-  await expect(heading).toHaveCount(0);
+  // The list stays in view behind it, and nothing behind it answers the keyboard.
+  await expect(page.locator("#list-heading")).toBeVisible();
+  // No X: Escape is the way out, and so is a press on the dimmed page.
+  await expect(sheet.getByRole("button", { name: "Close" })).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(sheet).toHaveCount(0);
+  await page.keyboard.press("a");
+  await expect(sheet).toBeVisible();
+  await page.mouse.click(5, 400);
+  await expect(sheet).toHaveCount(0);
+  // Add feed is an action, so it never shows the "where you are" bar.
+  await expect(sidebar(page).getByRole("link", { name: "Add feed" })).not.toHaveAttribute("aria-current");
 });
 
 test("'Press ? for shortcuts' stays on screen when the sidebar is hidden", async ({ page, isMobile }) => {

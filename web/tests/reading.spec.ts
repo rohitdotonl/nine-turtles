@@ -163,9 +163,9 @@ test.describe("on a wide window", () => {
 
   test("the controls stay calm: a one-line search box, and you can always see where the keyboard is", async ({ page }) => {
     await openRoom(page);
-    // At rest, the field names where you are instead of showing a chip that repeats the title.
+    // At rest, the field just says "Search": the list's title above already names where you are.
     await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toHaveCount(0);
-    await expect(page.getByRole("combobox", { name: "Search", exact: true })).toHaveAttribute("placeholder", "Search Reading Room");
+    await expect(page.getByRole("combobox", { name: "Search", exact: true })).toHaveAttribute("placeholder", "Search");
     // In the search, the scope chip sits in the box without making it taller (decision 0025).
     await page.getByRole("combobox", { name: "Search", exact: true }).focus();
     await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toBeVisible();
@@ -175,7 +175,7 @@ test.describe("on a wide window", () => {
     // Leaving an empty search puts the field back at rest.
     await page.locator("#list-heading").focus();
     await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toHaveCount(0);
-    // A click on the words "Search Reading Room" opens the search without removing its scope.
+    // A click on the word "Search" opens the search without removing its scope.
     await page.getByRole("combobox", { name: "Search", exact: true }).click({ position: { x: 60, y: 20 } });
     await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toBeVisible();
     await expect(page.getByRole("combobox", { name: "Search", exact: true })).toBeFocused();

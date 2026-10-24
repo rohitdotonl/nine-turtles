@@ -197,7 +197,7 @@
 
   {#if phone}
     <!-- Within thumb reach. Each button has its word under its icon; one that can't act says so. -->
-    <div role="group" aria-label="Article actions" class="toolbar flex shrink-0 bg-list px-1">
+    <div role="group" aria-label="Article actions" class="toolbar flex shrink-0 bg-list px-1 pb-[env(safe-area-inset-bottom)]">
       <button type="button" aria-disabled={!phone.hasPrevious} onclick={() => phone.hasPrevious && phone.onPrevious()} class:text-muted={!phone.hasPrevious}>
         <svg aria-hidden="true" class:invisible={!phone.hasPrevious} width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12.5 4 6.5 10l6 6" /></svg>
         Previous

@@ -50,7 +50,7 @@ A few words used throughout:
 
 **What it does**
 - **Add feed** (a plus icon and its words) sits at the very bottom of the sidebar, always in the same place, with two icon buttons beside it: the shortcut list (a keyboard) and **Settings** (a cog), each with its name as a tooltip. The `a` key does the same as Add feed.
-- Add feed opens its own screen (`/add-feed`) with the same field as the first visit. Escape goes back to the list you were on.
+- Add feed opens a sheet over the list you were on (`/add-feed`): a small card with the same field as the first visit, the list and article still in view behind it, dimmed. Escape, or a press on the dimmed page, closes it. Add feed is an action, not a place, so it never shows the "where you are" bar. On a phone it's a screen of its own.
 - You can paste either a feed address or an ordinary website address; leaving off `https://` is fine. For a website, slowfeed looks at exactly the page you pasted to find its feed ("autodiscovery"), once, because you asked. If the page names several feeds, you see their names and choose one.
 - While slowfeed looks, the field says "Looking for a feed…" in plain text. No spinner.
 - If it doesn't work, a plain sentence says why, never an error code: "This site doesn't seem to offer a feed. Try the feed's own address, or the site's home page.", "That site didn't answer. Try again later.", "Nothing was found at that address.", "That doesn't look like a web address.", "slowfeed can't visit that address." (an address inside a private network or on slowfeed's own computer), or "That file is too big to be a feed." The message sits under the field after a small warning mark; when the address itself is the problem, the field is marked too.
@@ -89,7 +89,7 @@ A few words used throughout:
   3. **Feeds not in any folder**, alphabetically
   4. **Add feed**, then the shortcut list and **Settings** as icons, in one row
 - You can't reorder things by hand; order is always alphabetical.
-- At the top of the sidebar: the "slowfeed" wordmark, and below it a quiet **field to find a feed or folder by name** (no edge, a faint tone, so it isn't mistaken for the article search), always shown. A long feed name ends in "…" on one line, so the sidebar stays tidy; its whole name shows as a tooltip, is read in full by screen readers, and is the list's title when you open it (up to two lines, then "…", with the whole name as its tooltip).
+- At the top of the sidebar: the "slowfeed" wordmark, and below it a quiet **field to find a feed or folder by name** (no edge, a faint tone, so it isn't mistaken for the article search), always shown. A long feed name ends in "…" on one line, so the sidebar stays tidy; its whole name shows as a tooltip, is read in full by screen readers, and is the list's title when you open it (one line, then "…", with the whole name as its tooltip, so the search box below never moves).
 - Folders appear once at least one exists. Each has a small button beside it that shows or hides the feeds in it, indented beneath; folders start closed, and this device remembers which you opened. Choosing a folder's name lists the articles of all its feeds (`/folders/2`).
 - The search field filters the sidebar as you type: the folders and feeds whose name contains what you typed (capitals and accents don't matter), in one list. Escape empties it.
 - **Unread counts:** small, muted grey numbers, right-aligned, next to each feed and folder (a folder's is its feeds' added up). No count on "Unread", "Starred" or "All", and never a total. Above 999 shows "999+". Never colored, never a badge.
@@ -248,8 +248,8 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 **What it does**
 - `/` puts you in the search field, which sits under the list's title. A faint search icon starts the field; the "Search options" (sliders) button sits inside it at its right end.
 - Results follow a moment after you stop typing, or at once on Enter. Every word must appear; a word also finds longer words it begins ("read" finds "reading"); words in double quotes are found together.
-- The search starts out limited to where you are, shown as a removable chip inside the field, e.g. `[ in: Tech × ]`, as soon as you're in the search (the field focused, its options open, or words typed). At rest the field just says "Search Tech", since the list's title already names it. Remove the chip to search everything.
-- **Search options** panel: scope (here · all feeds · a folder · a feed), unread only, starred only, date range. The panel and the chips always match. The search box stays one line for the usual one or two chips: they shrink and end in "…", with their whole text in a tooltip. With three or more it wraps, so every chip stays readable.
+- The search starts out limited to where you are, shown as a removable chip inside the field, e.g. `[ in: Tech × ]`, as soon as you're in the search (the field focused, its options open, or words typed). At rest the field just says "Search", since the list's title already names it. Remove the chip to search everything.
+- **Search options** opens a small popover under its button, floating over the list rather than pushing it down: **Search in** (all feeds, Unread, Starred, a folder or a feed; where you are says "(this list)"), **Show only** Unread and Starred, and **Published**: Any time, Past week, Past month or Custom, which shows two dates. Escape closes it and returns to its button (a second Escape closes the search); so does a press outside it, or the keyboard moving out of the search. The panel and the chips always match. The search box stays one line for the usual one or two chips: they shrink and end in "…", with their whole text in a tooltip. With three or more it wraps, so every chip stays readable.
 - Titles and article text are always searched together; title matches come first.
 - Power-user filters can be typed: `is:unread`, `is:starred`, `feed:name`, `folder:name`, `after:YYYY-MM-DD`, `before:YYYY-MM-DD`. They're suggested as you type (↓ and ↑ choose, Enter takes one) and turn into chips once followed by a space or Enter. A name with spaces goes in quotes (`feed:"Garden Notes"`), or type part of it. `after:` and `before:` don't include the day itself. A filter that can't be understood stays as typed, with a plain line saying why. Backspace at the start of the field removes the last chip.
 - Results look and behave like the normal item list, including "mark all as read". The end of that line says how many were found ("16 results", or "50+ results" while more can load). Refresh is hidden while searching: there's nothing new to fetch for a search.
@@ -261,7 +261,7 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 1. In a folder, press `/`, type a word you remember from an article. The chip shows the folder; results appear with the word underlined.
 2. Remove the chip: results now come from all feeds.
 3. Type `is:starred`: it becomes a chip, and only starred items are listed.
-4. Open the options panel, pick a date range: a matching chip appears in the field.
+4. Open the options, choose Past week: a matching `after:` chip appears in the field.
 5. Search a Hindi word from a Hindi article: that article is found.
 6. Press Escape: you're back exactly where you were.
 
@@ -269,8 +269,8 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 
 **What it does**
 - Folders are the only grouping. A feed can be in more than one folder.
-- You can rename a feed, choose its folders, and unsubscribe, from an **Edit feed** button (a pencil icon, named in its tooltip) in the item list's header when you're viewing one feed. It opens its own page (`/feeds/3/edit`) with the name, folders as checkboxes, "New folder" (made when you save, with the feed in it), Save, Cancel, and Unsubscribe. Escape, Cancel or the X at the top goes back unchanged.
-- Viewing a folder, an **Edit folder** button opens a page (`/folders/2/edit`) to rename or delete it.
+- You can rename a feed, choose its folders, and unsubscribe, from an **Edit feed** button (a pencil icon, named in its tooltip) in the item list's header when you're viewing one feed. It opens as a sheet over the feed's list (`/feeds/3/edit`) with the name, folders as checkboxes, "New folder" (made when you save, with the feed in it), Cancel and Save, and below a faint line, Unsubscribe with what it does said under it. Escape, Cancel or a press on the dimmed page goes back unchanged. On a phone it's a screen of its own, with an X at the top.
+- Viewing a folder, an **Edit folder** button opens a sheet in the same way (`/folders/2/edit`) to rename or delete it.
 - You can create (from "Edit feed"), rename and delete folders. Two folders can't share a name. Deleting a folder never deletes its feeds.
 - Unsubscribing and deleting a folder happen at once and take you to Unread, where the line says "Unsubscribed from …" or "Deleted the folder …" with Undo (or `u`), until your next action.
 - Unsubscribing from a feed keeps its starred articles in Starred. Undo brings the feed back whole, read history and folders included; after your next action (or ten minutes) its other articles are gone for good. Following it again later starts it afresh, all unread.
@@ -318,7 +318,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 - Laid out like a system settings window: each group (Reading, Look and feel, Your data) is a card with a small heading above it, one setting per row, rows parted by hairlines; on a wide screen a setting's name sits on the left and its choices on the right. The version and **Sign out** sit quietly at the end.
 - **Look and feel** (this device only): reading font (Literata or Atkinson Hyperlegible), text size (six steps from Smaller to Largest, Medium by default), line width (Narrow, Medium or Wide: about 65, 71 or 78 characters in Literata; Atkinson Hyperlegible's narrower letters fit more), theme. A sample paragraph shows how articles will look, and changes apply at once.
 - **Themes:** "Automatic" by default (off-white or dark, following the system's light/dark setting), or choose off-white, sepia or dark. The phone's own bar above the page takes the chosen theme's color too.
-- Each setting is a row of choices on a faint track (a "segmented control"), chosen with a click, a tap or the arrow keys (they're radio buttons underneath). The chosen one is raised onto the page's own color with a fine edge, and its word is semibold, so it shows without color. On a phone the choices fill the width in even columns. The theme is chosen from small pictures of the app in each theme (Automatic shows half light, half dark), the chosen one ringed and its name semibold; each reading font's name is written in that font.
+- Each setting is a row of choices on a faint track (a "segmented control"), chosen with a click, a tap or the arrow keys (they're radio buttons underneath). The chosen one is raised onto the page's own color (in the dark theme, a tone lighter than its track) with a fine edge, and its word is semibold, so it shows without color. On a phone the choices fill the width in even columns. The theme is chosen from small pictures of the app in each theme (Automatic shows half light, half dark), all four in one row even on a phone, the chosen one ringed and its name semibold; each reading font's name is written in that font.
 - Sections appear once they have something to do: Reading (sort order) since Milestone 7, Your data with Milestone 9.
 - **Reading:** newest or oldest first. (Inbox or river mode in V2.)
 - **Your data:** OPML import/export, export of starred articles.
@@ -378,7 +378,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 - The system back gesture and back button go back one step, the same as the back arrow. Opening slowfeed's front page on a phone shows the feeds; an address that names a list opens that list, and its back arrow still leads to the feeds.
 - "Settings" sits at the bottom of the feeds screen, beside "Add feed".
 - No custom swipes on list items.
-- Article toolbar at the bottom, within thumb reach: previous · next · star · share · open original (its word is "Original", so every word fits on one line; screen readers hear "Open original"). Article text reads a little smaller than on a wide screen, so a line keeps about 40 characters.
+- Article toolbar at the bottom, within thumb reach and clear of the phone's home indicator: previous · next · star · share · open original (its word is "Original", so every word fits on one line; screen readers hear "Open original"). Article text reads a little smaller than on a wide screen, so a line keeps about 40 characters.
 - Every tap target is at least 44 pixels.
 - Can be added to the home screen on iPhone and Android; it then opens full-screen with its own icon: a lowercase "s" in the reading serif, dark on off-white.
 - Without a connection, the app still opens and says plainly that slowfeed can't be reached. It keeps a copy of the app itself, never of your articles.

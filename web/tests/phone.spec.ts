@@ -168,7 +168,7 @@ test.describe("on a phone", () => {
     await expect(sidebar(page)).toBeVisible();
   });
 
-  test("a long feed name wraps in the back arrow instead of running off the screen", async ({ page }) => {
+  test("a long feed name stays on one line in the list's title and wraps in the back arrow, never running off the screen", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 640 });
     await openHome(page);
     const name = `averyveryverylongfeednamewithoutanyspaces-${Date.now()}`;
@@ -182,6 +182,19 @@ test.describe("on a phone", () => {
     expect(settings.x + settings.width).toBeLessThanOrEqual(320);
     await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
     await appReady(page);
+    // The list's title stays on one line and ends in "…", with the whole name as its tooltip.
+    const title = page.locator("#list-heading");
+    await expect(title).toHaveAttribute("title", `Blog ${name}`);
+    const lines = await title.evaluate((element) => ({
+      height: element.getBoundingClientRect().height,
+      line: parseFloat(getComputedStyle(element).lineHeight),
+      cut: element.scrollWidth > element.clientWidth,
+      ellipsis: getComputedStyle(element).textOverflow,
+    }));
+    expect(lines.height).toBeLessThan(lines.line * 1.5);
+    expect(lines.cut).toBe(true);
+    expect(lines.ellipsis).toBe("ellipsis");
+    expect((await title.boundingBox())!.width).toBeLessThanOrEqual(320);
     await page.getByRole("button", { name: /A year of reading slowly/ }).click();
     const back = article(page).getByRole("button", { name: `Back to Blog ${name}` });
     await expect(back).toBeVisible();
