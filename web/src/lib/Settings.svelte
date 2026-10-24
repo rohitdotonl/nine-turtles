@@ -88,7 +88,7 @@
         <h3 id="reading-heading" class="inset-head">Reading</h3>
         <div class="inset-group">
           <fieldset class="inset-row">
-            <legend class="row-name">Sort order</legend>
+            <legend class="row-name"><span class="inline-flex items-center gap-2"><span class="text-muted"><Icon name="sort" size={16} /></span>Sort order</span></legend>
             <div class="choices control" style="--columns: 2">
               {#each SORT_CHOICES as choice (choice.value)}
                 <label class="choice">
