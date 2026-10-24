@@ -31,7 +31,7 @@
   } = $props();
 </script>
 
-<div class={["pane-bar pr-6 md:pr-10", besideToggle ? "pl-16" : "pl-6 md:pl-10"]}>
+<div class={["pane-bar pr-5 md:pr-10", besideToggle ? "pl-16" : "pl-5 md:pl-10"]}>
   <div class={["mx-auto flex min-h-11 w-full items-center justify-between gap-4", column]}>
     <h2 {id} tabindex="-1" bind:this={heading} class="min-w-0 font-serif text-heading font-semibold tracking-[-0.01em] break-words">{title}</h2>
     {#if onClose}

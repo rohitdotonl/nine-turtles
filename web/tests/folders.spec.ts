@@ -394,3 +394,33 @@ test("Edit feed opens over the article you were reading; closing it gives the ke
   await page.goBack();
   await expect(page.getByRole("dialog", { name: "Edit feed" })).toHaveCount(0);
 });
+
+test.describe("on a touch screen beside the list", () => {
+  test.use({ hasTouch: true });
+
+  test("a folder's arrow keeps a 44px target for a finger, reaching into the pane's margin", async ({ page }) => {
+    const blog = unique("touched");
+    const folder = unique("Drawer");
+    await openBlogs(page, [blog]);
+    await openEdit(page, "Edit feed");
+    await page.getByLabel("New folder").fill(folder);
+    await page.getByRole("button", { name: "Save" }).click();
+    const arrow = sidebar(page).getByRole("button", { name: `Feeds in ${folder}` });
+    await expect(arrow).toBeVisible();
+    expect(await page.evaluate(() => matchMedia("(pointer: coarse)").matches)).toBe(true);
+    // The arrow is drawn in the 38px icon column; its target reaches 6px further out (decision 0043).
+    const box = (await arrow.boundingBox())!;
+    const target = await arrow.evaluate((element) => {
+      const before = getComputedStyle(element, "::before");
+      return { width: parseFloat(before.width), height: parseFloat(before.height) };
+    });
+    expect(Math.max(box.width, target.width)).toBeGreaterThanOrEqual(44);
+    expect(Math.max(box.height, target.height)).toBeGreaterThanOrEqual(44);
+    // A finger landing in the margin just left of the arrow still finds it.
+    const found = await arrow.evaluate((element, x) => {
+      const box = element.getBoundingClientRect();
+      return element.contains(document.elementFromPoint(x, box.top + box.height / 2));
+    }, box.x - 4);
+    expect(found).toBe(true);
+  });
+});

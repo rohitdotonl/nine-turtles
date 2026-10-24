@@ -1118,7 +1118,7 @@ input {
   A summary-only article's end matter, under the closing rule as in a book:
   small upright interface type, centred, in the second ink, saying where the
   rest of it is. Only the link to the publisher's site is underlined, with a
-  fine, quiet line; each sentence keeps to one line, so no word is left
+  fine, quiet line; each sentence stays whole where it fits, so no word is left
   stranded (decisions 0040, 0044).
 */
 .article-note {
@@ -1132,9 +1132,16 @@ input {
   color: var(--ink-2);
 }
 
-/* Each of the note's two sentences keeps to one line, so a narrow column breaks only between them. */
+/*
+  Each of the note's two sentences is one unit, so a narrow column breaks
+  between them rather than inside one. A unit may still wrap, evenly, when
+  it is wider than the column on its own (large text on a small phone), so
+  the note never runs off the page.
+*/
 .article-note > :where(span, a) {
-  white-space: nowrap;
+  display: inline-block;
+  max-width: 100%;
+  text-wrap: balance;
 }
 
 .article-note a {
@@ -1142,7 +1149,8 @@ input {
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
-  text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
+  /* Softer than the words, but still 3 : 1 against the page: it is the only sign this is a link. */
+  text-decoration-color: color-mix(in srgb, currentColor 65%, transparent);
 }
 
 .article-note a:hover {

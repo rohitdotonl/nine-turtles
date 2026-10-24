@@ -82,7 +82,7 @@
 
 <section aria-labelledby="settings-heading" class="flex flex-1 flex-col bg-paper">
   <PageHead title="Settings" id="settings-heading" bind:heading {onClose} closeLabel="Close settings" {besideToggle} column="max-w-[35rem]" />
-  <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-6 pt-5 pb-16 md:px-10">
+  <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-16 md:px-10">
     <div class="mx-auto flex max-w-[35rem] flex-col gap-8">
       <section aria-labelledby="reading-heading">
         <h3 id="reading-heading" class="inset-head">Reading</h3>

@@ -14,14 +14,18 @@ not how it was done.
   icon lines up with the others, and a folder's feeds sit a step further
   in. The place you're in also shows its icon in the accent.
 - On a phone the back button stays in the same place on every screen,
-  every screen keeps one 20px margin, and a folder row has one chevron:
-  its feeds are listed under it.
+  every screen keeps one 20px margin (Settings, Add feed, Edit feed, Edit
+  folder and sign-in included), and a folder row has one chevron: its
+  feeds are listed under it.
 
 ## 24 October 2026: Quiet endings and blank paper in the reading pane
 
 - A summary-only article's closing note now reads "Read the full article ›"
-  (the publisher is already named under the title) and never breaks inside
-  the link, so no word is left stranded. Its underline is finer and softer.
+  (the publisher is already named under the title) and keeps the link
+  whole wherever it fits, so no word is left stranded; with very large
+  text on a small phone it wraps evenly instead of running off the screen.
+  Its underline is finer and softer, but still clear enough (3 : 1) to
+  show it's a link.
 - Long article titles wrap into even lines instead of a long line over a
   short one.
 - On a laptop-sized window the text has wider margins (at least 56px each

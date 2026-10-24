@@ -951,7 +951,7 @@
             </div>
           {/if}
           <PageHead title="Add a feed" bind:heading={listHeading} onClose={phone ? undefined : closePage} besideToggle={!phone && !panes.sidebar} />
-          <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-6 pt-3 pb-10 md:px-10">
+          <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-3 pb-10 md:px-10">
             <!-- The sheet's build, as a page: a line on what to paste, the field, then Cancel and Add feed in one row. -->
             <div class="mx-auto mt-6 flex max-w-xl flex-col gap-5">
               <p>{ADD_INTRO}</p>
@@ -1055,7 +1055,7 @@
             />
           {:else if welcoming && !missing}
             <!-- No feeds yet: the welcome has the reading area, where a new reader's eyes go (SPEC section 2). -->
-            <section aria-labelledby="welcome-heading" class="flex min-w-0 flex-1 flex-col items-center justify-center bg-paper px-6 pb-[12vh] md:px-10">
+            <section aria-labelledby="welcome-heading" class="flex min-w-0 flex-1 flex-col items-center justify-center bg-paper px-5 pb-[12vh] md:px-10">
               {@render welcome()}
             </section>
           {:else}

@@ -25,11 +25,14 @@ Books is the only standard. Replaces two parts of decision 0040: titles
   named in full ink in the byline under the title, so the link now reads
   "Read the full article ›". Screen readers still hear "Read the full
   article on {publisher}", so the credit is never lost. Each of the note's
-  two sentences keeps to one line, so a narrow column breaks between them
-  and never strands a word. The underline stays (the link is the same color
+  two sentences stays whole on a line wherever it fits, so a narrow column
+  breaks between them and never strands a word; a sentence wider than the
+  column on its own (very large text on a small phone) wraps evenly rather
+  than running off the page. The underline stays (the link is the same color
   as the words around it, so the underline is what shows it's a link), but
   it is a fine 1px line, a little below the letters and softer than the
-  text; it darkens under the pointer.
+  text (the text color at 65%, which keeps it at 3 : 1 or more against the
+  page in every theme); it darkens under the pointer.
 - **Titles are balanced.** A title's lines are evened out, so a two-line
   title reads as two similar lines ("Apple's new reading mode / is quietly
   excellent"), as Apple Books sets a title. The title still sits in the

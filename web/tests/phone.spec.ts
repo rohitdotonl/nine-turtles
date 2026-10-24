@@ -291,6 +291,107 @@ test.describe("on a phone", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
   });
 
+  test("a folder on the feeds screen has no arrow and always lists its feeds, a step in", async ({ page }) => {
+    await openHome(page);
+    const name = `foldered-${Date.now()}`;
+    const folder = `Shelf ${Date.now()}`;
+    const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
+    await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
+    await appReady(page);
+    await page.getByRole("button", { name: "More", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Edit feed" }).click();
+    await page.getByLabel("New folder").fill(folder);
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeVisible();
+
+    await page.goto(new URL("/", FEEDS_APP).href);
+    await appReady(page);
+    const folderLink = sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) });
+    await expect(folderLink).toBeVisible();
+    // One chevron per row: no show-or-hide arrow, so the folder's feeds are simply there (decision 0043).
+    await expect(sidebar(page).getByRole("button", { name: `Feeds in ${folder}` })).toHaveCount(0);
+    await expect(sidebar(page).locator("[aria-expanded]")).toHaveCount(0);
+    const feedLink = sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${name}`) });
+    await expect(feedLink).toBeVisible();
+    // Under its folder, a step further in.
+    const [folderBox, feedBox] = [(await folderLink.boundingBox())!, (await feedLink.boundingBox())!];
+    expect(feedBox.y).toBeGreaterThan(folderBox.y);
+    const start = (link: typeof folderLink) =>
+      link.evaluate((element) => {
+        const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, (node) => (node.textContent!.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP));
+        const range = document.createRange();
+        range.selectNodeContents(walker.nextNode()!);
+        return range.getBoundingClientRect().left;
+      });
+    expect(await start(feedLink)).toBeGreaterThan(await start(folderLink));
+    // Its name opens the folder's own list.
+    await folderLink.click();
+    await expect(page).toHaveURL(/\/folders\/[0-9]+$/);
+    await expect(page.getByRole("heading", { level: 2, name: folder })).toBeVisible();
+  });
+
+  test("every screen keeps one 20px margin: the list, the article, Settings and Add feed", async ({ page }) => {
+    await openHome(page);
+    /** How far a thing's first line of words starts from the screen's left edge. */
+    const textStart = (locator: ReturnType<Page["locator"]>) =>
+      locator.evaluate((element) => {
+        const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, (node) => (node.textContent!.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP));
+        const range = document.createRange();
+        range.selectNodeContents(walker.nextNode()!);
+        return range.getBoundingClientRect().left;
+      });
+    const near20 = (value: number) => expect(Math.abs(value - 20)).toBeLessThan(1.5);
+
+    // The list: its title.
+    await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
+    near20(await textStart(page.locator("#list-heading")));
+    // The article: its title and its text.
+    await row(page, "The pleasure of a slow letter").click();
+    near20(await textStart(title(page, "The pleasure of a slow letter")));
+    near20(await textStart(article(page).locator(".article-text p").first()));
+
+    // Settings: its title and what's under it.
+    await page.goto(new URL("/settings", FEEDS_APP).href);
+    await appReady(page);
+    const settings = page.getByRole("heading", { level: 2, name: "Settings" });
+    await expect(settings).toBeVisible();
+    near20(await textStart(settings));
+    near20((await page.locator(".scroller").filter({ has: page.getByText(/^Version /) }).evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      return box.left + parseFloat(getComputedStyle(element).paddingLeft);
+    })));
+
+    // Add feed: its title and the line under it.
+    await page.goto(new URL("/add-feed", FEEDS_APP).href);
+    await appReady(page);
+    const add = page.getByRole("heading", { level: 2, name: "Add a feed" });
+    await expect(add).toBeVisible();
+    near20(await textStart(add));
+    near20(await textStart(page.getByText(/finds the feed/).first()));
+  });
+
+  test("with text at twice its size on a small phone, the summary note wraps rather than running off the screen", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 640 });
+    await openHome(page);
+    await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
+    await row(page, "Only the first page").click();
+    const note = article(page).locator(".article-note");
+    await expect(note).toBeVisible();
+    // As the browser's text zoom would (WCAG's 200% resize).
+    await page.evaluate(() => (document.documentElement.style.fontSize = "200%"));
+    const fits = await note.evaluate((element) => {
+      const page = element.getBoundingClientRect();
+      return [...element.querySelectorAll(":scope > span, :scope > a")].every((part) => {
+        const box = part.getBoundingClientRect();
+        return box.left >= page.left - 1 && box.right <= page.right + 1 && part.scrollWidth <= part.clientWidth + 1;
+      });
+    });
+    expect(fits).toBe(true);
+    const scroller = article(page).locator(".reading-scroller");
+    expect(await scroller.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  });
+
   test("every tap target is at least 44 pixels tall", async ({ page }) => {
     await openHome(page);
     const tooSmall = () =>

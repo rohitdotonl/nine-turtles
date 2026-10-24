@@ -468,8 +468,10 @@ test.describe("on a wide window", () => {
     expect(await note.evaluate((element) => getComputedStyle(element).textDecorationLine)).toBe("none");
     const link = note.getByRole("link", { name: "Read the full article on Reading Room" });
     await expect(link).toHaveCSS("text-decoration-line", "underline");
-    // The publisher is named in the byline, so the link's words stay short and never break (decision 0044).
-    await expect(link).toHaveCSS("white-space", "nowrap");
+    // The publisher is named in the byline, so the link's words stay short and, where they fit, on one line (decision 0044).
+    await expect(link).toHaveCSS("display", "inline-block");
+    const lines = await link.evaluate((element) => element.getClientRects().length === 1 && element.getBoundingClientRect().height < parseFloat(getComputedStyle(element).lineHeight) * 1.5);
+    expect(lines).toBe(true);
     expect(await link.evaluate((element) => element.firstChild?.textContent)).toBe("Read the full article");
     await expect(link).toHaveAttribute("href", "https://reading-room.example/first-page");
     await expect(link).toHaveAttribute("target", "_blank");
