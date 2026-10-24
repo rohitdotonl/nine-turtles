@@ -104,6 +104,15 @@
     field?.focus();
   }
 
+  /** The × in the field: the typed words go, and the search follows at once. */
+  function clear() {
+    problem = "";
+    offering = false;
+    active = -1;
+    onChange({ ...query, words: "" }, true);
+    field?.focus();
+  }
+
   function remove(chip: Chip) {
     onChange(withoutChip(query, chip.key), true);
     field?.focus();
@@ -273,6 +282,18 @@
         class="-my-px min-h-11 min-w-16 flex-1 basis-16 bg-transparent px-1 placeholder:text-muted"
       />
     </div>
+    {#if query.words !== ""}
+      <!-- Once there's text, an × empties the field (the chips stay) and leaves the keyboard in it. -->
+      <button
+        type="button"
+        aria-label="Clear search"
+        title="Clear search"
+        onclick={clear}
+        class="flex size-11 shrink-0 cursor-pointer items-center justify-center self-start text-ink-2"
+      >
+        <Icon name="close" size={16} />
+      </button>
+    {/if}
     <!-- Inside the box, at its end: it belongs to this search, and isn't mistaken for a second field. -->
     <button
       type="button"
@@ -297,7 +318,7 @@
       aria-labelledby="search-options-name"
       bind:this={panel}
       hidden={!panelOpen}
-      class="search-options absolute top-full right-0 z-20 mt-1 cursor-auto w-[min(20rem,100%)] rounded-xl border border-ink/10 bg-paper p-4"
+      class="floating absolute top-full right-0 z-20 mt-1 cursor-auto w-[min(20rem,100%)] p-4"
     >
       <p id="search-options-name" class="sr-only">Search options</p>
       <div class="flex flex-col gap-4">
@@ -403,9 +424,6 @@
 </search>
 
 <style>
-  .search-options {
-    box-shadow: 0 16px 40px -12px rgb(0 0 0 / 0.25);
-  }
   /* The keyboard's place, drawn around the whole box (chips included) when its field has it. */
   .search-box:has(#search-field:focus-visible) {
     outline: 2px solid var(--ink);

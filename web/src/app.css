@@ -50,6 +50,7 @@
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
   --color-muted: var(--muted);
+  --color-danger: var(--danger);
   --color-accent: var(--accent);
   --color-tint-list: var(--tint-list);
   --color-tint-sidebar: var(--tint-sidebar);
@@ -65,6 +66,7 @@
   --ink: #1f1e1c;
   --ink-2: #47423b;
   --muted: #61564a;
+  --danger: #a3261b;
   --accent: #2f4a7a;
   --tint-list: #e0d9cb;
   --tint-sidebar: #dbd4c6;
@@ -80,6 +82,7 @@
     --ink: #e6e1d8;
     --ink-2: #c9c2b6;
     --muted: #afa38e;
+    --danger: #e8968a;
     --accent: #8fa9d6;
     --tint-list: #302c27;
     --tint-sidebar: #3a352f;
@@ -96,6 +99,7 @@
   --ink: #e6e1d8;
   --ink-2: #c9c2b6;
   --muted: #afa38e;
+  --danger: #e8968a;
   --accent: #8fa9d6;
   --tint-list: #302c27;
   --tint-sidebar: #3a352f;
@@ -112,6 +116,7 @@
   --ink: #2a241b;
   --ink-2: #463c2f;
   --muted: #5e5141;
+  --danger: #a3261b;
   --accent: #2f4a7a;
   --tint-list: #ddd5c2;
   --tint-sidebar: #d5cab2;
@@ -126,6 +131,7 @@
   --ink: #1c1c1a;
   --ink-2: #44443f;
   --muted: #5e5e57;
+  --danger: #a3261b;
   --accent: #2d53aa;
   --tint-list: #e9e9e4;
   --tint-sidebar: #e1e1dc;
@@ -140,6 +146,7 @@
   --ink: #22201b;
   --ink-2: #4a443a;
   --muted: #5b5346;
+  --danger: #a3261b;
   --accent: #345d43;
   --tint-list: #e6e0d2;
   --tint-sidebar: #dcd4c1;
@@ -154,6 +161,7 @@
   --ink: #1b2027;
   --ink-2: #3f4955;
   --muted: #535f6c;
+  --danger: #a3261b;
   --accent: #28577e;
   --tint-list: #dfe5eb;
   --tint-sidebar: #d5dde4;
@@ -168,6 +176,7 @@
   --ink: #1d221b;
   --ink-2: #424a3e;
   --muted: #535c4e;
+  --danger: #a3261b;
   --accent: #355c32;
   --tint-list: #e0e5d8;
   --tint-sidebar: #d5dccb;
@@ -182,6 +191,7 @@
   --ink: #ecebe6;
   --ink-2: #c9c7c0;
   --muted: #a4a29a;
+  --danger: #e8968a;
   --accent: #9fb6e6;
   --tint-list: #2a2a28;
   --tint-sidebar: #32322f;
@@ -198,6 +208,7 @@
   --ink: #efe6d5;
   --ink-2: #d1c5b0;
   --muted: #b3a48b;
+  --danger: #e8968a;
   --accent: #d9a85c;
   --tint-list: #2e2820;
   --tint-sidebar: #372f25;
@@ -214,6 +225,7 @@
   --ink: #e5e9f2;
   --ink-2: #c2c9d8;
   --muted: #9ea8bc;
+  --danger: #e8968a;
   --accent: #8fb3ff;
   --tint-list: #232b3d;
   --tint-sidebar: #2a3347;
@@ -230,6 +242,7 @@
   --ink: #e8e8e8;
   --ink-2: #c4c4c4;
   --muted: #a0a0a0;
+  --danger: #e8968a;
   --accent: #8fb0e8;
   --tint-list: #1f1f1f;
   --tint-sidebar: #282828;
@@ -438,6 +451,68 @@ textarea {
      make it firmer, since a shadow can't show against a near-black page. */
   .sheet-edge {
     border-color: color-mix(in oklab, var(--ink) var(--sheet-edge, 12%), transparent);
+  }
+
+  /*
+    Anything that floats over the page (a sheet, the search options, the
+    shortcut list) is one family: the same 12px corners, faint edge and soft
+    shadow (DESIGN.md → Exceptions log). Nothing that sits in the page casts one.
+  */
+  .floating {
+    border: 1px solid color-mix(in oklab, var(--ink) var(--sheet-edge, 12%), transparent);
+    border-radius: 0.75rem;
+    background-color: var(--paper);
+    box-shadow: 0 16px 48px -12px rgb(0 0 0 / 0.3);
+  }
+
+  /*
+    The one row of actions at the foot of a sheet (and of its page on a
+    phone): Cancel, then the main action at the right end, as in a Mac sheet.
+    A message, if any, sits at its left.
+  */
+  .sheet-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+  .sheet-actions > :is(.btn, .btn-primary) {
+    min-width: 6rem;
+  }
+
+  /*
+    A destructive action (Unsubscribe, Delete folder), apart below a hairline:
+    first the line saying what it does, then the action as words in a muted
+    red. The words say what it does, so red is never the only sign.
+  */
+  .sheet-danger {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    margin-inline: -1.5rem;
+    padding: 1rem 1.5rem 0;
+    border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  }
+  .btn-danger {
+    display: inline-flex;
+    max-width: 100%;
+    align-items: center;
+    min-height: 2.75rem;
+    margin-inline: -0.5rem;
+    padding-inline: 0.5rem;
+    border-radius: 0.375rem;
+    color: var(--danger);
+    font-weight: 600;
+    text-align: left;
+    touch-action: manipulation;
+    cursor: pointer;
+  }
+  @media (hover: hover) {
+    .btn-danger:hover {
+      background-color: var(--hover);
+    }
   }
 
   /*

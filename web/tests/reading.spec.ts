@@ -33,6 +33,10 @@ test.describe("on a wide window", () => {
     const empty = (await article(page).getByText("No article open.").boundingBox())!;
     const pane = (await article(page).boundingBox())!;
     expect(empty.y).toBeGreaterThan(pane.y + pane.height / 4);
+    // A calm line in the reading serif, and a quiet hint, since the list has articles to open.
+    expect(await article(page).getByText("No article open.").evaluate((e) => getComputedStyle(e).fontFamily)).toContain("Literata");
+    await expect(article(page).getByText("No article open.")).toHaveCSS("font-size", "20px");
+    await expect(article(page)).toContainText("Choose one from the list, or press j.");
 
     await page.keyboard.press("j");
     await expect(row(page, "The pleasure of a slow letter")).toHaveAttribute("aria-current", "true");
