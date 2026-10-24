@@ -162,8 +162,8 @@
   {/if}
 
   {#if onCancel}
-    <!-- The sheet's one row of actions: Cancel, then Add feed at the right end. -->
-    <div class="sheet-actions">
+    <!-- The sheet's one row of actions, 20px under the field (with the form's 8px gap): Cancel, then Add feed at the right end. -->
+    <div class="sheet-actions mt-3">
       <button type="button" onclick={onCancel} class="btn">Cancel</button>
       <button type="submit" aria-disabled={busy} class="btn-primary">Add feed</button>
     </div>

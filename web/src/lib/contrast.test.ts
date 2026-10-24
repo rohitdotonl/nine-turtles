@@ -183,6 +183,50 @@ describe.each(Object.entries(THEMES))("the %s theme's fields", (_name, colors) =
   });
 });
 
+// A grouped list (Settings, Edit feed's folders) and a chosen segment on it
+// (decision 0042): in a light theme the group is the list's tone and the
+// segment the page's; in a dark one each is the text color mixed into the
+// page, read from the theme's block in app.css.
+function darkShare(selector: string, name: string): number | undefined {
+  const start = css.indexOf(selector);
+  const block = css.slice(start, css.indexOf("}", start));
+  const found = block.match(new RegExp(`--${name}: color-mix\\(in srgb, var\\(--ink\\) (\\d+)%, var\\(--paper\\)\\);`));
+  return found ? Number(found[1]) / 100 : undefined;
+}
+
+describe.each([...THEME_NAMES.map((name) => [name, `:root[data-theme="${name}"]`]), ["device dark", ":root:not([data-theme])"]])(
+  "the %s theme's grouped lists",
+  (name, selector) => {
+    const colors = THEMES[name]!;
+    const dark = luminance(colors.paper!) < 0.5;
+    const groupShare = darkShare(selector, "group");
+    const raisedShare = darkShare(selector, "raised");
+    const group = dark ? mix(colors.ink!, colors.paper!, groupShare!) : colors.list!;
+    const raised = dark ? mix(colors.ink!, colors.paper!, raisedShare!) : colors.paper!;
+    const track = mix(colors.ink!, group, 0.07);
+
+    it("set a dark theme's group a clear step off the page", () => {
+      if (!dark) return expect(groupShare).toBeUndefined();
+      expect(groupShare).toBeGreaterThanOrEqual(0.06);
+      expect(contrast(group, colors.paper!)).toBeGreaterThan(contrast(colors.list!, colors.paper!));
+    });
+
+    it("keep text at 7 : 1 and the second ink, muted grey and red at 4.5 : 1 on the group and under a pointer", () => {
+      for (const background of [group, mix(colors.ink!, group, 0.05)]) {
+        expect(contrast(colors.ink!, background)).toBeGreaterThanOrEqual(7);
+        for (const color of ["ink-2", "muted", "danger"]) expect(contrast(colors[color]!, background), color).toBeGreaterThanOrEqual(4.5);
+      }
+    });
+
+    it("raise the chosen segment above its track, with its words at 4.5 : 1", () => {
+      // Lighter than its track: the page's own tone in a light theme, a lighter mix in a dark one.
+      expect(luminance(raised)).toBeGreaterThan(luminance(track));
+      expect(contrast(colors.ink!, raised)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(colors["ink-2"]!, track)).toBeGreaterThanOrEqual(4.5);
+    });
+  },
+);
+
 it("the device's dark setting uses exactly the dark theme's colors", () => {
   expect(THEMES["device dark"]).toEqual(THEMES.dark);
 });

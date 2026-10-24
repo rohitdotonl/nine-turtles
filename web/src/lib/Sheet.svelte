@@ -4,13 +4,16 @@
   modal dialog, so the keyboard stays inside while it's open; Escape, or a
   click on the dimmed page around it, closes it without saving.
 
-  Every sheet has the same build (DESIGN.md → "Visual language"): a title in
-  the interface font (the serif names places; a sheet is a task), the form,
-  and one row of actions at its foot in a Mac sheet's order (`.sheet-actions`):
-  a destructive action, if there is one, at the far left in red words, then
+  Every sheet has the same build (DESIGN.md → "Visual language"; decision
+  0042): a title in the same serif as every other title (the list's,
+  Settings', and the sheet's own page on a phone), the form, and one row of
+  actions at its foot in a Mac sheet's order (`.sheet-actions`): a
+  destructive action, if there is one, at the far left in red words, then
   Cancel, then the main action at the right end. There's no X: Cancel (or
   Escape) is the way out. Its corners, edge and shadow are the search
-  options' too (`.floating`).
+  options' too (`.floating`). The title takes the keyboard's place when the
+  sheet opens, so screen readers start there, but draws no ring: a heading
+  can't be pressed, and the first Tab lands on a control that rings.
 
   It opens a little above the middle of the window, where the eye rests, and
   its height follows what's in it. Its top then stays put: a message
@@ -83,7 +86,7 @@
   style:max-height={top === undefined ? undefined : `calc(100dvh - ${top}px - 1rem)`}
 >
   <div class="flex flex-col gap-5 p-6">
-    <h2 id="sheet-heading" tabindex="-1" bind:this={heading} class="text-large font-semibold tracking-[-0.015em] break-words">
+    <h2 id="sheet-heading" tabindex="-1" bind:this={heading} class="sheet-title break-words">
       {title}
     </h2>
     {@render children()}

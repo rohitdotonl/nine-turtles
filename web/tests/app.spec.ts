@@ -121,6 +121,11 @@ test("? opens the shortcut list, Escape closes it and returns the keyboard's pla
   await page.keyboard.press("?");
   const dialog = page.getByRole("dialog", { name: "Keyboard shortcuts" });
   await expect(dialog).toBeVisible();
+  // The keyboard starts on the title, in the same serif as every title, with no ring: it can't be pressed (decision 0042).
+  const heading = dialog.getByRole("heading", { level: 2, name: "Keyboard shortcuts" });
+  await expect(heading).toBeFocused();
+  await expect(heading).toHaveCSS("outline-style", "none");
+  expect(await heading.evaluate((element) => getComputedStyle(element).fontFamily)).toContain("Literata");
   await expect(dialog.getByText("Go to Starred")).toBeVisible();
   // A two-press shortcut shows a key cap for each press, with "then" between.
   const goTo = dialog.getByRole("row", { name: /Go to Unread/ });
@@ -129,8 +134,15 @@ test("? opens the shortcut list, Escape closes it and returns the keyboard's pla
   for (const group of ["Moving around", "Reading", "Your articles", "Everywhere"]) {
     await expect(dialog.getByRole("region", { name: group })).toBeVisible();
   }
-  // The list scrolls from the keyboard too: it's a Tab stop of its own.
-  await expect(dialog.getByRole("region", { name: "Shortcuts" })).toHaveAttribute("tabindex", "0");
+  // The list scrolls from the keyboard too: it's a Tab stop of its own, and a real one rings.
+  const list = dialog.getByRole("region", { name: "Shortcuts" });
+  await expect(list).toHaveAttribute("tabindex", "0");
+  await page.keyboard.press("Tab");
+  await expect(dialog.getByRole("button", { name: "Close" })).toBeFocused();
+  await expect(dialog.getByRole("button", { name: "Close" })).toHaveCSS("outline-style", "solid");
+  await page.keyboard.press("Tab");
+  await expect(list).toBeFocused();
+  await expect(list).toHaveCSS("outline-style", "solid");
   // Only what works today is listed.
   await expect(dialog.getByText("Next / previous feed")).toHaveCount(0);
   await expect(dialog.getByText("is:unread")).toBeVisible();
@@ -218,8 +230,10 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
   await page.emulateMedia({ forcedColors: "active" });
   expect(await ring("Sepia")).not.toBe(await ring("Dark"));
   await page.emulateMedia({ forcedColors: "none" });
-  // Font and line width are segmented controls: the chosen one is raised and semibold.
+  // Font and line width are segmented controls: the chosen one is raised (a fill and a small shadow, no edge) and semibold.
   await expect(page.locator("label.choice").filter({ hasText: "Medium" })).toHaveCSS("font-weight", "600");
+  await expect(page.locator("label.choice").filter({ hasText: "Medium" })).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+  await expect(page.locator("label.choice").filter({ hasText: "Medium" })).not.toHaveCSS("box-shadow", "none");
   await expect(page.locator("label.choice").filter({ hasText: "Wide" })).toHaveCSS("font-weight", "400");
   // Each row's control sits at its right end, and every control is the same width.
   const look = page.getByRole("region", { name: "Look and feel" });
@@ -231,8 +245,15 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
   await expect(sample).toHaveCSS("font-family", /^Literata/);
   await page.getByLabel("Atkinson Hyperlegible").check();
   await expect(sample).toHaveCSS("font-family", /^"Atkinson Hyperlegible"/);
-  // Text size is a small A and a large A, as in the Aa panel, with the step's name beside them.
+  // Text size is a small A and a large A, as in the Aa panel, with the step's name between them on the same track (decision 0042).
   const larger = look.getByRole("button", { name: "Larger text" });
+  const [smallerBox, nameBox, largerBox] = await Promise.all([
+    look.getByRole("button", { name: "Smaller text" }).boundingBox(),
+    look.getByRole("status").boundingBox(),
+    larger.boundingBox(),
+  ]);
+  expect(nameBox!.x).toBeGreaterThanOrEqual(smallerBox!.x + smallerBox!.width);
+  expect(nameBox!.x + nameBox!.width).toBeLessThanOrEqual(largerBox!.x);
   for (let step = 0; step < 3; step++) await larger.click();
   await expect(look.getByRole("status")).toHaveText("Largest");
   await expect(larger).toHaveAttribute("aria-disabled", "true");
@@ -318,17 +339,18 @@ test("nothing scrolls underneath the Sidebar button or the shortcut hint", async
   await expect(scroller).not.toHaveAttribute("data-scrolled");
 });
 
-test("Add a feed opens as a sheet over the list you were on: a sans title, one row of actions, and Escape or a press outside closes it", async ({ page, isMobile }) => {
+test("Add a feed opens as a sheet over the list you were on: a serif title, one row of actions, and Escape or a press outside closes it", async ({ page, isMobile }) => {
   test.skip(isMobile, "on a phone, Add a feed is a screen of its own");
   await openApp(page);
   await page.keyboard.press("a");
   const sheet = page.getByRole("dialog", { name: "Add a feed" });
   await expect(sheet).toBeVisible();
   await expect(sheet.getByLabel("Paste a website or feed URL")).toBeFocused();
-  // The serif names places; a sheet is a task, titled in the interface font at 20px.
+  // Every title speaks in one voice: the sheet's is the same serif, size and weight as the list's (decision 0042).
   const heading = sheet.getByRole("heading", { level: 2, name: "Add a feed" });
-  expect(await heading.evaluate((element) => getComputedStyle(element).fontFamily)).not.toContain("Literata");
-  await expect(heading).toHaveCSS("font-size", "20px");
+  expect(await heading.evaluate((element) => getComputedStyle(element).fontFamily)).toContain("Literata");
+  await expect(heading).toHaveCSS("font-size", "24px");
+  await expect(heading).toHaveCSS("font-weight", "600");
   // The field takes the full width; Cancel, then Add feed at the right end, in one row at the foot.
   const [field, cancel, add, card] = await Promise.all([
     sheet.getByLabel("Paste a website or feed URL").boundingBox(),
@@ -341,6 +363,10 @@ test("Add a feed opens as a sheet over the list you were on: a sans title, one r
   expect(cancel!.x + cancel!.width).toBeLessThanOrEqual(add!.x);
   expect(add!.y).toBeGreaterThan(field!.y + field!.height);
   expect(Math.abs(card!.x + card!.width - 24 - (add!.x + add!.width))).toBeLessThan(2);
+  // 20px of room above the row and 12px between its buttons; Cancel has no edge, so only Add feed has weight.
+  expect(Math.round(add!.y - (field!.y + field!.height))).toBe(20);
+  expect(Math.round(add!.x - (cancel!.x + cancel!.width))).toBe(12);
+  await expect(sheet.getByRole("button", { name: "Cancel" })).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
   // The list stays in view behind it, and nothing behind it answers the keyboard.
   await expect(page.locator("#list-heading")).toBeVisible();
   // No X: Escape is the way out, and so is a press on the dimmed page.
@@ -403,7 +429,7 @@ test("the sidebar ends with Add feed, then the shortcut list and Settings as ico
   await expect(toggle(page)).toHaveAttribute("title", "Show the sidebar ( [ )");
 });
 
-test("Settings is one centred column of grouped lists; Your data and Sign out are rows of their own", async ({ page }) => {
+test("Settings is one centred column of grouped lists; Your data and Sign out are rows of their own, each ending in a glyph", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openApp(page, "/settings");
   // Each group has a small header above it; the groups share one column, no wider than 560px.
@@ -428,5 +454,12 @@ test("Settings is one centred column of grouped lists; Your data and Sign out ar
     expect(Math.round(box.width)).toBe(boxes[0]![1]);
     expect(box.height).toBeGreaterThanOrEqual(44);
     expect(await row.evaluate((element) => getComputedStyle(element).color)).toBe(ink);
+    // A quiet glyph at its right end says it acts (› opens, a tray saves a file, a door signs out), never the accent (decision 0042).
+    const glyph = (await row.locator(".row-glyph").boundingBox())!;
+    expect(box.x + box.width - (glyph.x + glyph.width)).toBeLessThan(20);
   }
+  // Import opens something, so it ends in "…"; Sign out removes nothing, so it isn't in the destructive red.
+  await expect(rows[0]!).toHaveText("Import OPML…");
+  // The preview passage sits on the page under "Look and feel", not in a card inside a card.
+  expect(await page.locator(".reading-sample").evaluate((element) => element.closest(".inset-group"))).toBeNull();
 });
