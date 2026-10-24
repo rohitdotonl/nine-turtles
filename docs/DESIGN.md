@@ -237,7 +237,7 @@ Fixed order, top to bottom: **Unread · Starred · All**, then **folders** A–Z
 |---|---|
 | Unread | Full-contrast, semibold title |
 | Read | Second ink, regular-weight title |
-| Selected (cursor) | Ink blue left bar + faint tint, title in full ink; the 2px focus outline beside the bar when using the keyboard |
+| Selected (cursor) | Ink blue left bar + faint tint, title in full ink; a hairline focus outline beside the bar when using the keyboard |
 | Starred | A small star mark |
 
 In river mode (V2) only the cursor and star show.

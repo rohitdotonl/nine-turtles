@@ -89,7 +89,7 @@ A few words used throughout:
   3. **Feeds not in any folder**, alphabetically
   4. **Add feed** and **Settings**, side by side, with the "Press ? for shortcuts" hint under them
 - You can't reorder things by hand; order is always alphabetical.
-- At the top of the sidebar: the "slowfeed" wordmark, and below it a quiet **field to find a feed or folder by name** (no edge, a faint tone, so it isn't mistaken for the article search), always shown. A long feed name wraps onto a second line rather than being cut off, so it can always be read in full (the list's title wraps the same way).
+- At the top of the sidebar: the "slowfeed" wordmark, and below it a quiet **field to find a feed or folder by name** (no edge, a faint tone, so it isn't mistaken for the article search), always shown. A long feed name ends in "…" on one line, so the sidebar stays tidy; its whole name shows as a tooltip, is read in full by screen readers, and is the list's title when you open it (which wraps rather than being cut off).
 - Folders appear once at least one exists. Each has a small button beside it that shows or hides the feeds in it, indented beneath; folders start closed, and this device remembers which you opened. Choosing a folder's name lists the articles of all its feeds (`/folders/2`).
 - The search field filters the sidebar as you type: the folders and feeds whose name contains what you typed (capitals and accents don't matter), in one list. Escape empties it.
 - **Unread counts:** small, muted grey numbers, right-aligned, next to each feed and folder (a folder's is its feeds' added up). No count on "Unread", "Starred" or "All", and never a total. Above 999 shows "999+". Never colored, never a badge.
@@ -115,7 +115,7 @@ A few words used throughout:
   |---|---|
   | Unread | Full-strength, semibold title |
   | Read | A softer second ink, regular-weight title (the title stays full-strength while it's the selected row) |
-  | Selected | Ink blue bar on the left and a faint tint; when you're using the keyboard, the 2px outline beside the bar too |
+  | Selected | Ink blue bar on the left and a faint tint; when you're using the keyboard, a hairline outline beside the bar too |
   | Starred | A small star mark |
 
 - Items you read in the Unread view stay where they are (greyed) until you press `r` or leave the view, so nothing jumps under your cursor.

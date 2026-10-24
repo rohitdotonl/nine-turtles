@@ -22,12 +22,13 @@ and a 100px empty band sat above every list.
 - **Deeper area tones,** so the three panes separate at a squint.
 - **One "where you are" style:** a 3px ink blue bar and a faint tint, in the
   sidebar and the list. The keyboard's outline stays visible on every row,
-  the selected one included (a floor). Outlines are 2px, not 3px.
+  the selected one included (a floor; a hairline there, beside its bar).
+  Outlines are 2px, not 3px.
 - **Headings the app moves the keyboard to** get the same 2px outline, a
   little away from the words, only when you're using the keyboard
   (replacing 0025's short bar, which looked like a stray mark).
-- **Long names wrap** in the sidebar and the list's title instead of ending
-  in "…", so nobody needs a mouse tooltip to read them.
+- **The list's title wraps** instead of ending in "…". Sidebar names stay on
+  one line (tidier); opening one shows its whole name as that title.
 - **A shared top line** that never scrolls: the sidebar toggle (now an
   icon) and wordmark, the list's title with Edit, and the article's tools.
   Settings moved to the bottom of the sidebar beside Add feed, with the

@@ -178,6 +178,19 @@ body {
     inset 2px 0 0 var(--ink);
 }
 
+/*
+  The selected article row is also where the keyboard is (j, k and the arrows
+  move both). Its outline is a hairline rather than a heavy box, so the place
+  stays visible beside the ink blue bar and the row stays calm.
+*/
+.item-row[aria-current]:focus-visible {
+  --edge: color-mix(in srgb, var(--ink) 55%, transparent);
+  box-shadow:
+    inset 0 1px 0 var(--edge),
+    inset -1px 0 0 var(--edge),
+    inset 0 -1px 0 var(--edge);
+}
+
 /* Only where there's a real pointer: on a touch screen a tint would stay after the tap. */
 @media (hover: hover) {
   /* A row under the pointer deepens a little; the selected row keeps its own tint. */

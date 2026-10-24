@@ -165,9 +165,12 @@ test.describe("on a wide window", () => {
     // Unstar it with the Star button: it leaves Starred.
     await row(page, blog, MIDDLE).click();
     const star = article(page).getByRole("button", { name: "Star" });
+    // The star changes at once; reload only once the server has it saved.
+    const saved = page.waitForResponse((response) => response.url().endsWith("/api/articles/starred") && response.ok());
     await star.click();
     await expect(star).toHaveAttribute("aria-pressed", "false");
     await expect(row(page, blog, MIDDLE)).not.toHaveAccessibleName(/Starred, /);
+    await saved;
     await page.reload();
     await appReady(page);
     await expect(page.getByRole("heading", { level: 2, name: "Starred" })).toBeVisible();
