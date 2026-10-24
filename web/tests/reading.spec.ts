@@ -264,8 +264,8 @@ test.describe("on a wide window", () => {
     const remove = (await page.getByRole("button", { name: "Remove in: Reading Room" }).boundingBox())!;
     expect(Math.min(remove.width, remove.height)).toBeGreaterThanOrEqual(44);
     // Before anything is selected, Tab reaches the first row and draws the
-    // keyboard's outline inside it. The selected row keeps the same outline,
-    // with its accent bar outside it, flush against the pane's edge.
+    // keyboard's outline just inside its edge. The selected row keeps the
+    // same outline over its pill.
     const first = row(page, "The pleasure of a slow letter");
     await tabTo(page, first);
     await expect(first).toHaveCSS("outline-style", "solid");
@@ -273,21 +273,33 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("j");
     const selected = row(page, "The pleasure of a slow letter");
     await expect(selected).toBeFocused();
-    expect(await selected.evaluate((element) => getComputedStyle(element, "::before").backgroundColor)).toBe("rgb(47, 74, 122)");
     await expect(selected).toHaveCSS("outline-style", "solid");
     await expect(selected).toHaveCSS("outline-width", "2px");
-    // The bar sits flush against the list's edge, outside the row's fill.
-    const flush = await selected.evaluate((element) => {
-      const scroller = element.closest(".scroller")!.getBoundingClientRect().left;
-      return element.getBoundingClientRect().left + parseFloat(getComputedStyle(element, "::before").left) - scroller;
-    });
-    expect(Math.abs(flush)).toBeLessThan(1);
-    // The fill stays and the outline sits just outside it; the bar steps aside meanwhile.
+    // The selection is a pill (decision 0037): filled, 8px corners, 8px in
+    // from the list's edge, with no bar. The outline is drawn inside its edge.
     await expect(selected).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
-    await expect(selected).toHaveCSS("outline-offset", "1px");
-    expect(await selected.evaluate((element) => getComputedStyle(element, "::before").display)).toBe("none");
-    // A finished list says so.
-    await expect(page.getByText("That's everything.")).toBeVisible();
+    await expect(selected).toHaveCSS("border-top-left-radius", "8px");
+    expect(await selected.evaluate((element) => getComputedStyle(element, "::before").content)).toBe("none");
+    const inset = await selected.evaluate(
+      (element) => element.getBoundingClientRect().left - element.closest(".scroller")!.getBoundingClientRect().left,
+    );
+    expect(Math.abs(inset - 8)).toBeLessThan(1);
+    await expect(selected).toHaveCSS("outline-offset", "-2px");
+    // The pill is the accent mixed into the list: deeper than the list, never the hover's neutral tone.
+    const [fill, tint] = await selected.evaluate((element) => {
+      const probe = document.createElement("div");
+      probe.style.backgroundColor = "var(--tint-list)";
+      document.body.append(probe);
+      const color = getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      return [getComputedStyle(element).backgroundColor, color];
+    });
+    expect(fill).toBe(tint);
+    // A finished list says so, in a quiet caption at the titles' edge, with no rule.
+    const end = page.getByText("That's everything.");
+    await expect(end).toBeVisible();
+    await expect(end).toHaveCSS("border-top-style", "none");
+    await expect(end).toHaveCSS("text-align", "start");
     await expect(page.getByRole("button", { name: "Show older items" })).toHaveCount(0);
     // The note (here, Undo for a star) sits at the foot of the list pane, even under a short list.
     await page.keyboard.press("s");
@@ -332,17 +344,17 @@ test.describe("on a wide window", () => {
     const style = (name: string) =>
       row(page, name).evaluate((element) => {
         const css = getComputedStyle(element);
-        return { outline: css.outlineStyle, pill: getComputedStyle(element, "::before").content };
+        return { outline: css.outlineStyle, width: css.outlineWidth };
       });
+    // The pill's fill gives way to the system's colors, so the selected row gets an edge instead.
     const selected = await style("The pleasure of a slow letter");
     expect(selected.outline).toBe("solid");
-    expect(selected.pill).not.toBe("none");
+    expect(selected.width).toBe("2px");
     const other = await style("Only the first page");
     expect(other.outline).toBe("none");
     // The keyboard on the selected row draws a thicker outline still, never a thinner one.
     await row(page, "The pleasure of a slow letter").focus();
     await expect(row(page, "The pleasure of a slow letter")).toHaveCSS("outline-width", "3px");
-    expect(other.pill).toBe("none");
   });
 
   test("after scrolling a long list, the panes still fill the window and only the list moves", async ({ page }) => {

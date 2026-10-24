@@ -121,7 +121,7 @@ The 500-feed user gets everything; the 30-feed user never sees the machinery.
 |---|---|---|---|
 | Unread counts in V1 | 2. Calm over engagement | Power users with hundreds of feeds need to know what they've seen | Inbox mode only. Muted grey, right-aligned in the sidebar. Never badges or color. Per feed and folder only, no global total. Above 999 shows "999+". |
 | Sidebar search always visible | 6. Power is hidden, never missing | The owner wants finding a feed by name always available | One quiet field that filters feeds and folders by name. Nothing else in the sidebar skips progressive disclosure. |
-| Unread dot (decision 0028) | Type does the hierarchy, never badges | Weight alone was hard to scan in a long list; Mail and Things mark unread with a dot | A 6px dot in the text color before an unread title. No number, never colored, list rows only. |
+| Unread dot (decisions 0028, 0037) | Type does the hierarchy, never badges | Weight alone was hard to scan in a long list; Apple Books, Mail and Things mark unread with a dot | A drawn 8px dot in the theme's accent, in a 16px gutter before an unread title, which is semibold too. No number, list rows only. |
 | A shadow under the floating note (decision 0028) | Regions by tone, no shadows | The note floats over the list; a soft shadow shows it sits above the rows rather than among them | Only things that float over the page: the note at the bottom of the list, a sheet, the search options popover, the Aa panel, the list's More menu and the shortcut list (decision 0034). One soft shadow and a faint edge each. Nothing that sits in the page casts a shadow. |
 | Hairlines inside a page | Regions by tone, no lines | Inside one page, a faint line parts groups that do different jobs: rows in a Settings group, articles in the middle list, and Unsubscribe or Delete folder apart from the form above them | Only within a page, never between panes; faint, in a tone of the text color. A refused field's firmer edge is a border, not a line between regions. |
 | A dim behind a sheet (decision 0031) | Regions by tone; nothing moves unless you move it | A short task (adding or editing a feed) keeps the list in view, so you don't lose your place; a faint warm dim shows the card is the thing to act on now | Only behind a sheet or the shortcut list, never animated, and it closes with Escape or a press on it. |
@@ -148,14 +148,14 @@ The philosophy applied. The principle is noted where it isn't obvious.
 
 - **Name:** slowfeed (domain, app store and trademark checks are under "Still to define").
 - **Wordmark:** "slowfeed" in lowercase, in the reading serif. No logo shape, no mascot.
-- **Signature:** the "where you are" accent (ink blue in the first three themes) and the calm itself.
+- **Signature:** the accent (ink blue in the first three themes), quietly marking where you are, and the calm itself.
 
 ### Visual language
 
 #### Rules
 - **Regions are separated by tone, not lines:** background tone and whitespace; no borders, shadows, blur or gradients (small exceptions for things floating over the page or scrolling under a top line, in the Exceptions log).
-- **Type does the hierarchy:** size and weight, never color or badges (the unread dot is the one mark, in the Exceptions log).
-- **One accent, one meaning:** each theme has one accent (ink blue in off-white, sepia and dark; its own hue in the others), it means "where you are," and nothing else uses it.
+- **Type does the hierarchy:** size and weight, never color alone or badges (the unread dot is the one mark, in the Exceptions log).
+- **One accent, one family of meanings:** each theme has one accent (ink blue in off-white, sepia and dark; its own hue in the others). As in Apple Books it marks what's *yours to look at*: where you are (the selection pill), what's unread (the dot) and what a search found (a faint tone behind the words) (decision 0037). Nothing else uses it: never a button, a link, a focus outline or decoration.
 - **Icons where the convention is an icon** (close, clearing the search field, back, search, settings, the sidebar toggle, edit feed or folder, the list's refresh and More (…), and every action on an article: open original, Aa, copy link, star and mark unread), each named in its tooltip with its key and to screen readers, so the tools around the text stay quiet (decision 0034). **Words** for Add feed, menu items, and the main action of a form.
 - **Settings opens in place of the list,** with one top line that never scrolls: the title in the serif, like the list's, and an X that closes it (Escape does too).
 - **Short tasks open as a sheet** over the place you were (Add a feed, Edit feed, Edit folder): a small card a fixed way down the window (so a message appearing in it never moves it), the panes still in view behind it under a faint dim. Every sheet is built the same way, like a Mac sheet in Apple Books:
@@ -181,12 +181,14 @@ The philosophy applied. The principle is noted where it isn't obvious.
 | Sidebar (two steps deeper) | `#E7E2D7` | `#E3D5B7` | `#2E2A25` |
 | Text | `#1F1E1C` | `#2A241B` | `#E6E1D8` |
 | Second ink: read titles, quieter actions | `#47423B` | `#463C2F` | `#C9C2B6` |
-| Muted grey, warm (owner's choice, Milestone 4): meta, counts, hints | `#61564A` | `#5E5141` | `#AFA38E` |
+| Muted grey, warm (owner's choice, Milestone 4; nudged in decision 0037 to stay at 4.5 : 1 on the selection pill): meta, counts, hints | `#60554A` | `#5B4F3F` | `#B9AF9C` |
 
 - All accent pairs pass AAA (7 : 1); re-check if a value changes.
 - **Links in articles** are underlined in the text color, **never blue**.
-- **Muted greys** (read items, counts, source names) are warm, like ink on paper, and pass AA (4.5 : 1) on every area and on the selected-row tint in all themes, verified by automatic checks.
-- **The keyboard focus outline** is a 2px line in the text color, never the accent. On rows it is the text color softened (65%, still at least 3 : 1, checked automatically), drawn just outside their rounded fill, the way a Mac draws a focus ring; the fill always stays, and the accent bar steps aside while the outline shows, so a row carries two marks, never three; a title the keyboard is moved to gets it too, a little away from the words. It shows only when you're using the keyboard.
+- **Muted greys** (read items, counts, source names) are warm, like ink on paper, and pass AA (4.5 : 1) on every area and on the selection pill in all themes, verified by automatic checks.
+- **The selection pill** (decision 0037): the theme's accent mixed into the pane behind it, 13% in the light themes and 20% in the dark ones, so text stays at 7 : 1 and muted grey at 4.5 : 1 on it (checked automatically). A row under the pointer gets a fainter, neutral tone of the text color (5%), never the accent, always lighter than the pill.
+- **Search matches** have the accent at 12% behind them, with 3px corners, in the text's own weight; text keeps 7 : 1 on it, even inside the pill.
+- **The keyboard focus outline** is a 2px line in the text color, never the accent. On rows it is the text color softened (65%, still at least 3 : 1 on every area and on the pill, checked automatically), drawn 2px inside their rounded edge so it never reaches over the hairlines or the pane's edge; the pill's fill always stays. A title the keyboard is moved to gets it too, a little away from the words. It shows only when you're using the keyboard.
 - **Status colors** (errors, warnings; V2 feed health page) are muted, never drift toward blue, and always come with words.
 - **Destructive actions** (Unsubscribe, Delete folder) are words in a muted red, `#A3261B` in the light themes and `#E8968A` in the dark ones: at least AA (4.5 : 1) on the page and the list in every theme, checked automatically. Red means only "this removes something", and the words always say what.
 
@@ -196,11 +198,11 @@ The themes added on 24 October 2026 to try out (decision 0032), same roles in th
 |---|---|---|---|---|---|---|---|
 | Porcelain | `#FFFFFF` | `#2D53AA` | `#F6F6F3` | `#EEEEEA` | `#1C1C1A` | `#44443F` | `#5E5E57` |
 | Linen | `#FBF8F1` | `#345D43` | `#F2EDE1` | `#E8E1D0` | `#22201B` | `#4A443A` | `#5B5346` |
-| Mist | `#F6F8FA` | `#28577E` | `#EDF1F4` | `#E3E9EE` | `#1B2027` | `#3F4955` | `#535F6C` |
+| Mist | `#F6F8FA` | `#28577E` | `#EDF1F4` | `#E3E9EE` | `#1B2027` | `#3F4955` | `#515D6A` |
 | Sage | `#F5F7F1` | `#355C32` | `#ECF0E5` | `#E1E7D8` | `#1D221B` | `#424A3E` | `#535C4E` |
-| Graphite | `#141414` | `#9FB6E6` | `#1B1B1A` | `#232321` | `#ECEBE6` | `#C9C7C0` | `#A4A29A` |
-| Night | `#16130F` | `#D9A85C` | `#1D1914` | `#25201A` | `#EFE6D5` | `#D1C5B0` | `#B3A48B` |
-| Midnight | `#0F1420` | `#8FB3FF` | `#151B29` | `#1C2333` | `#E5E9F2` | `#C2C9D8` | `#9EA8BC` |
+| Graphite | `#141414` | `#9FB6E6` | `#1B1B1A` | `#232321` | `#ECEBE6` | `#C9C7C0` | `#AEACA5` |
+| Night | `#16130F` | `#D9A85C` | `#1D1914` | `#25201A` | `#EFE6D5` | `#D1C5B0` | `#B5A78E` |
+| Midnight | `#0F1420` | `#8FB3FF` | `#151B29` | `#1C2333` | `#E5E9F2` | `#C2C9D8` | `#A3ADC0` |
 | Black | `#000000` | `#8FB0E8` | `#0D0D0D` | `#161616` | `#E8E8E8` | `#C4C4C4` | `#A0A0A0` |
 
 #### Themes
@@ -228,7 +230,7 @@ Eleven, for now: **off-white** (default light), **sepia** and **dark** (default 
   - display 48px (sign-in wordmark).
 - Article text is set by the reader: six steps, 16 to 28px, 20px by default (a tenth smaller on a phone). The article's title is about 1.55 times the text size, its headings 1.2 and 1.08 times, so the title is always clearly the largest thing on screen.
 - **Spacing** in steps of 4px, mostly 8, 16, 24, 40 and 64px.
-- **Weights:** regular and semibold (600) for both reading and the interface: Literata's semibold for titles, headings and bold words in articles (Atkinson Hyperlegible keeps its bold). Nothing heavier, so a calm page never shouts. Semibold marks unread titles, where you are, the one main action in a toolbar or sheet, a destructive action's words, and searched words in a result's excerpt.
+- **Weights:** regular and semibold (600) for both reading and the interface: Literata's semibold for titles, headings and bold words in articles (Atkinson Hyperlegible keeps its bold). Nothing heavier, so a calm page never shouts. Semibold marks unread titles, where you are in the sidebar, the one main action in a toolbar or sheet, and a destructive action's words. The self-hosted Inter has only 400 and 600, so unread titles stay at 600 (decision 0037).
 - **Three inks:** text (titles, where you are), a second ink (read titles, quieter actions); feed names in the sidebar are in full text color and muted grey (meta).
 - Article lines of roughly 65–75 characters, with generous leading.
 
@@ -252,24 +254,25 @@ Fixed order, top to bottom: **Unread · Starred · All**, then **folders** A–Z
 - Folders appear once one exists. Sidebar search is always shown (Exceptions log).
 - **Folders** are one concept on screen; a feed can be in several (tags underneath).
 - **Unread counts:** see the Exceptions log.
+- **Where you are** is the same pill as in the item list (see "Item states"); the place's name is semibold. A row under the pointer gets a fainter, neutral tone.
 - Broken feeds look normal and simply show nothing new. In V1 the daily check reports problems; the feed health page comes in V2.
 
 ### Item list
 
-- **No images, no favicons.** Each row: the **title**, with **source name and time** in quiet small text below. In one feed's own list the name is left out (the title above already says it); screen readers still hear it.
+- **No images, no favicons.** Each row: the **title** (1.3 line height), with **source name and time** in quiet small text 2px below; 10px above and 11px below, as Apple Books spaces its lists. An unread row's dot sits in a 16px gutter left of the title. Faint hairlines part the rows, inside the pill's edges, and none shows directly above or below the selected row. In one feed's own list the name is left out (the title above already says it); screen readers still hear it.
 - **Sort:** newest first by default; changeable in settings or the list's More menu.
 - **Beside the title:** quiet icons for Edit (a feed's or folder's own list), Refresh and **More** (…), a small menu with Mark all as read and the sort order. No row of words between the search field and the list.
-- **The list has an end:** a fixed number of items, then a **"Show older items"** button. Nothing loads unless asked. When there's nothing more to show, a short hairline and "That's everything." in muted grey close the list.
-- Matched search terms are **underlined** in the text color, never highlighted in color.
-- **A search result shows why it matched:** when its text (not only its title) holds a searched word, one muted line under it shows that text around the first match, at most about 90 characters, cut between words. The matched words in it are semibold and in full ink, so they show by weight as well as tone, as Apple Books shows matches in context.
+- **The list has an end:** a fixed number of items, then a **"Show older items"** button. Nothing loads unless asked. When there's nothing more to show, a quiet caption, "That's everything.", in small muted grey closes the list, lined up with the titles, with no line above it.
+- Matched search terms, in titles and excerpts alike, have one style: a faint accent tone behind them (12%), 3px corners, in the text's own weight and color (decision 0037).
+- **A search result shows why it matched:** when its text (not only its title) holds a searched word, one muted line under it shows that text around the first match, at most about 90 characters, cut between words. The matched words in it are marked as in titles and in full ink, as Apple Books shows matches in context. Three typed dots in the text show as one "…".
 
 #### Item states (distinguished by tone and weight, never color alone)
 
 | State | Treatment |
 |---|---|
-| Unread | Full-contrast, semibold title and a small dot in the margin before it |
+| Unread | Full-contrast, semibold title and an 8px dot in the theme's accent in the gutter before it |
 | Read | Second ink, regular-weight title |
-| Selected (cursor) | A rounded faint tint, and a short bar in the theme's accent flush against the pane's own left edge, the same in the sidebar and the list; title in full ink. The keyboard's outline is a ring just outside the fill, and the bar hides while it shows |
+| Selected (cursor) | One pill, the same in the sidebar and the list (decision 0037): 8px in from the pane's edges, 8px corners, filled with the accent mixed into the pane; no border and no bar; title in full ink. The keyboard's outline is drawn 2px inside its edge. In high-contrast mode, an edge in the system's highlight color |
 | Starred | A small star mark |
 
 In river mode (V2) only the cursor and star show.

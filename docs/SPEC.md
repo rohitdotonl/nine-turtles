@@ -51,7 +51,7 @@ A few words used throughout:
 
 **What it does**
 - **Add feed** (a plus icon and its words) sits at the very bottom of the sidebar, always in the same place, with two icon buttons beside it: the shortcut list (a keyboard) and **Settings** (a cog), each with its name as a tooltip. The `a` key does the same as Add feed.
-- Add feed opens a sheet over the list you were on (`/add-feed`): a small card titled "Add a feed", a line saying slowfeed finds the feed on any website, the same field as the first visit at the card's full width, and at the foot one row: **Cancel**, then **Add feed** at the right end. Messages appear under the field in a space kept for two lines, so nothing below them moves. The list and article stay in view behind it, dimmed. Cancel, Escape, or a press on the dimmed page, closes it. Add feed is an action, not a place, so it never shows the "where you are" bar. On a phone it's a screen of its own.
+- Add feed opens a sheet over the list you were on (`/add-feed`): a small card titled "Add a feed", a line saying slowfeed finds the feed on any website, the same field as the first visit at the card's full width, and at the foot one row: **Cancel**, then **Add feed** at the right end. Messages appear under the field in a space kept for two lines, so nothing below them moves. The list and article stay in view behind it, dimmed. Cancel, Escape, or a press on the dimmed page, closes it. Add feed is an action, not a place, so it never shows the "where you are" pill. On a phone it's a screen of its own.
 - You can paste either a feed address or an ordinary website address; leaving off `https://` is fine. For a website, slowfeed looks at exactly the page you pasted to find its feed ("autodiscovery"), once, because you asked. If the page names several feeds, you see their names and choose one.
 - While slowfeed looks, the field says "Looking for a feed…" in plain text. No spinner.
 - If it doesn't work, a plain sentence says why, never an error code: "This site doesn't seem to offer a feed. Try the feed's own address, or the site's home page.", "That site didn't answer. Try again later.", "Nothing was found at that address.", "That doesn't look like a web address.", "slowfeed can't visit that address." (an address inside a private network or on slowfeed's own computer), or "That file is too big to be a feed." The message sits under the field after a small warning mark; when the address itself is the problem, the field is marked too.
@@ -94,7 +94,7 @@ A few words used throughout:
 - Folders appear once at least one exists. Each has a small button beside it that shows or hides the feeds in it, indented beneath; folders start closed, and this device remembers which you opened. Choosing a folder's name lists the articles of all its feeds (`/folders/2`).
 - The search field filters the sidebar as you type: the folders and feeds whose name contains what you typed (capitals and accents don't matter), in one list. Escape empties it.
 - **Unread counts:** small, muted grey numbers, right-aligned, next to each feed and folder (a folder's is its feeds' added up). No count on "Unread", "Starred" or "All", and never a total. Above 999 shows "999+". Never colored, never a badge.
-- Your current place is marked with the theme's accent.
+- Your current place is marked as in the list (section 6), as Apple Books does: a rounded pill set a little in from the sidebar's edges, filled with a soft tone of the theme's accent, its name semibold in full ink. No bar at the edge. Under the pointer a row gets a fainter, neutral tone, never the accent.
 - A broken feed looks like any other feed; it just doesn't get new items. In V1 the daily check tells you when feeds are failing; the feed health page (section 17) comes in V2.
 
 **How to check it**
@@ -105,19 +105,19 @@ A few words used throughout:
 ## 6. Item list
 
 **What it does**
-- Each row shows the article **title**, and below it the **source name and time** in quiet small text (just the time in one feed's own list, whose title already names it). Unread articles have a small dot before the title. A faint hairline parts one row from the next. No images, no site icons.
+- Each row shows the article **title**, and below it the **source name and time** in quiet small text (just the time in one feed's own list, whose title already names it). Unread articles have a small dot in the theme's accent in a narrow gutter before the title. A faint hairline parts one row from the next, inside the selection's edges, and none shows directly above or below the selected row. No images, no site icons.
 - Dates and times are shown in your device's time zone, in words that never change while you look: "14:05" for today, "23 Oct" for this year, "23 Oct 2025" before that. The time is when the publisher says they published it, or when slowfeed received it if they don't say (and never later than that, so a wrong date can't pin an article to the top).
 - Newest first by default; oldest first can be chosen in Settings or in the list's More menu.
 - Beside the list's title sit quiet icons, each with its name as a tooltip and for screen readers: **Edit feed** or **Edit folder** (in a feed's or folder's own list), **Refresh** (section 13) and **More** (…). More opens a small menu with **Mark all as read** (section 8; its key, `Shift+A`, is shown beside it) and the **sort order** (Newest first or Oldest first, the current one ticked and semibold). A click, Enter or the down arrow opens it on its first item; the arrow keys, Home and End move through it; Escape closes it and puts the keyboard back on More; Tab or a press outside closes it too.
 - Unread, Starred and All list articles from every feed. A feed's own list shows all its articles, read and unread.
-- The list has an end: it shows 50 items, then a **"Show older items"** button ("Show newer items" when sorting oldest first). Nothing more loads unless you press it. When there's nothing more to show, a short hairline and "That's everything." close the list.
+- The list has an end: it shows 50 items, then a **"Show older items"** button ("Show newer items" when sorting oldest first). Nothing more loads unless you press it. When there's nothing more to show, a quiet small caption, "That's everything.", closes the list, lined up with the titles (no line above it).
 - Row states, each recognizable without color:
 
   | State | Looks like |
   |---|---|
-  | Unread | Full-strength, semibold title |
+  | Unread | Full-strength, semibold title, and a small dot in the theme's accent before it |
   | Read | A softer second ink, regular-weight title (the title stays full-strength while it's the selected row) |
-  | Selected | A faint tint and a short bar in the theme's accent against the list's left edge; when you're using the keyboard, an outline around the tint instead of the bar |
+  | Selected | A rounded pill set a little in from the list's edges, filled with a soft tone of the theme's accent (the same as in the sidebar); the title in full ink. When you're using the keyboard, an outline is drawn just inside the pill's edge too |
   | Starred | A small star mark after the time (read out as "Starred") |
 
 - Items you read in the Unread view stay where they are (greyed) until you press `r` or leave the view, so nothing jumps under your cursor.
@@ -257,14 +257,14 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 - Titles and article text are always searched together; title matches come first.
 - Power-user filters can be typed: `is:unread`, `is:starred`, `feed:name`, `folder:name`, `after:YYYY-MM-DD`, `before:YYYY-MM-DD`. They're suggested as you type (↓ and ↑ choose, Enter takes one) and turn into chips once followed by a space or Enter. A name with spaces goes in quotes (`feed:"Garden Notes"`), or type part of it. `after:` and `before:` don't include the day itself. A filter that can't be understood stays as typed, with a plain line saying why. Backspace at the start of the field removes the last chip.
 - Results look and behave like the normal item list, including "Mark all as read" in the More menu. A quiet line above the results says how many were found ("16 results", or "50+ results" while more can load). Refresh is hidden while searching: there's nothing new to fetch for a search.
-- Matching words are **underlined** in the text's own color, never highlighted in color (bold couldn't be seen in an unread title, which is already semibold).
-- Under each result whose text (not only its title) holds a searched word, one muted line shows that text around the first match: a few words before it, then on to about 90 characters, cut only between words, with "…" where text was left out, and ending in "…" if the list is too narrow for the whole line. The searched words in it are semibold and in full ink, so they stand out by weight as well as tone. The line is plain text: nothing from the feed's HTML comes through.
+- Matching words, in a title and in the line of text under it alike, have a faint tone of the theme's accent behind them with small rounded corners, in the text's own weight (decision 0037). Screen readers hear them as highlighted.
+- Under each result whose text (not only its title) holds a searched word, one muted line shows that text around the first match: a few words before it, then on to about 90 characters, cut only between words, with "…" where text was left out, and ending in "…" if the list is too narrow for the whole line. Three typed dots in the publisher's text show as one "…" too. The searched words in it are marked as in the title, and in full ink rather than muted grey. The line is plain text: nothing from the feed's HTML comes through.
 - Once the field has words in it, a **×** at its end ("Clear search", a 44px target) empties the field, keeping any chips, and leaves the keyboard in it.
 - Works for English, other Latin-alphabet languages, and Hindi.
 - Tab moves from the field into the options panel; Escape closes search and returns you to where you were.
 
 **How to check it**
-1. In a folder, press `/`, type a word you remember from an article. The chip shows the folder; results appear with the word underlined, and a result whose text holds the word shows a line of that text with the word in bold. Press × to empty the field.
+1. In a folder, press `/`, type a word you remember from an article. The chip shows the folder; results appear with the word marked by a faint tone behind it, and a result whose text holds the word shows a line of that text with the word marked the same way. Press × to empty the field.
 2. Remove the chip: results now come from all feeds.
 3. Type `is:starred`: it becomes a chip, and only starred items are listed.
 4. Open the options, choose Past week: a matching `after:` chip appears in the field.
@@ -364,7 +364,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 
 - A keyboard icon at the foot of the sidebar opens the shortcut list (its tooltip says "Keyboard shortcuts (?)"); when the sidebar is hidden, a quiet hint "Press ? for shortcuts" sits at the bottom of the list instead (on screens with a keyboard).
 - The `?` cheat sheet groups the shortcuts (Moving around, Reading, Your articles, Everywhere) in two columns, what each does on the left and its keys on the right, and also documents the search filters. It has an X to close it (or Escape). Until a shortcut's feature exists, it isn't listed, and the key does nothing.
-- The keyboard's place is shown by a 2px outline in the text color (never the accent, which only marks your place in slowfeed). Rows draw it just outside their fill, in a slightly softened text color; the selected row keeps its tint, and its accent bar steps aside while the outline shows. A title that receives the place when a screen opens (so screen readers start there) gets the same outline when you got there by keyboard, and nothing after a click.
+- The keyboard's place is shown by a 2px outline in the text color (never the accent, which marks your place, what's unread and what a search found). Rows draw it just inside their rounded edge, in a slightly softened text color, so it never reaches over the hairlines between rows; the selected row keeps its pill. A title that receives the place when a screen opens (so screen readers start there) gets the same outline when you got there by keyboard, and nothing after a click.
 - Shortcuts don't fire while you're typing in a field.
 
 **How to check it**

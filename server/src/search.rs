@@ -324,7 +324,8 @@ pub fn searched_words(typed: &str) -> Vec<String> {
 
 /// A line of `text` around the first of the `searched` words in it: a few
 /// words before it, then on to about 90 characters, cut only between words,
-/// with "…" where text was left out. Every searched word in the line is
+/// with "…" where text was left out (three typed dots in the text become
+/// "…" too). Every searched word in the line is
 /// marked. None if no searched word is in the text.
 pub fn excerpt(text: &str, searched: &[String]) -> Option<Vec<Piece>> {
     let spans = word_spans(text);
@@ -358,10 +359,13 @@ pub fn excerpt(text: &str, searched: &[String]) -> Option<Vec<Piece>> {
         if piece.is_empty() {
             return;
         }
+        // Three typed dots in the publisher's text read as one real ellipsis,
+        // like the ones slowfeed adds where it cuts.
+        let piece = piece.replace("...", "…");
         match pieces.last_mut() {
-            Some(last) if last.matched == matched => last.text.push_str(piece),
+            Some(last) if last.matched == matched => last.text.push_str(&piece),
             _ => pieces.push(Piece {
-                text: piece.to_owned(),
+                text: piece,
                 matched,
             }),
         }
@@ -605,6 +609,11 @@ mod tests {
         assert_eq!(
             shown("Reading by the window at the Café.", "READ cafe").as_deref(),
             Some("[Reading] by the window at the [Café].")
+        );
+        // Three typed dots become one real ellipsis, as at a cut.
+        assert_eq!(
+            shown("...and then the garden waited...", "garden").as_deref(),
+            Some("…and then the [garden] waited…")
         );
         // No searched word in the text: no excerpt.
         assert_eq!(shown("Nothing here.", "tomato"), None);

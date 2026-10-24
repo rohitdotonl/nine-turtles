@@ -261,6 +261,9 @@ each with screenshots:
   hairlines, a tighter reading rhythm, an "Aa" reading panel, quiet icon
   toolbars and a More menu, sheets as one family, search excerpts and a
   welcome in the reading area (decisions 0034 to 0036).
+- ✅ One selection pill for the sidebar and the list, the keyboard's ring
+  inside it, an accent unread dot, one search highlight and a calmer list
+  rhythm (decision 0037).
 
 ---
 
