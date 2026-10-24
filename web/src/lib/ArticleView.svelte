@@ -154,11 +154,13 @@
   </div></div>
   {/if}
 
-  <div use:edge bind:this={scroller} class="scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto px-6 pb-16 md:px-10">
+  <div use:edge bind:this={scroller} class="scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto px-6 pb-[30vh] md:px-10">
     <article lang={full?.language ?? undefined} class="article">
-      <p class="text-small text-muted" lang="en">
+      <h2 tabindex="-1" bind:this={heading} class="article-title">{article.title || "Untitled"}</h2>
+      <!-- Under the title, as in a book or a magazine: who wrote it, where, and when. -->
+      <p class="article-byline text-ink-2" lang="en">
         {#if full?.siteUrl}
-          <a href={full.siteUrl} target="_blank" rel="noopener noreferrer" class="font-semibold text-ink-2 hover:underline hover:underline-offset-4"
+          <a href={full.siteUrl} target="_blank" rel="noopener noreferrer" class="font-semibold text-ink hover:underline hover:underline-offset-4"
             >{article.feedTitle}</a
           >
         {:else}
@@ -167,15 +169,17 @@
         {#if full?.author}· {full.author}{/if}
         · <time datetime={new Date(article.at * 1000).toISOString()}>{when(article.at)}</time>
       </p>
-      <h2 tabindex="-1" bind:this={heading} class="article-title">{article.title || "Untitled"}</h2>
 
       {#if full}
         {#if full.content}
           <!-- Cleaned by slowfeed before it was stored (server/src/feed.rs). -->
           <div class="article-text" dir="auto">{@html full.content}</div>
+          <!-- The last page: a short rule, so the article ends rather than stops. -->
+          <hr class="article-end" />
         {:else if full.summary}
           <div class="article-text" dir="auto">{@html full.summary}</div>
-          <p class="mt-8 text-small" lang="en">
+          <hr class="article-end" />
+          <p class="mt-6 text-center font-sans text-small text-ink-2" lang="en">
             This feed shares only a summary. The whole article is on the publisher's site{#if article.link}:
               <a href={article.link} target="_blank" rel="noopener noreferrer" class="underline underline-offset-4"
                 >Open original</a
@@ -187,6 +191,7 @@
       {:else if problem}
         <p class="mt-6" lang="en">This article couldn't be loaded. Try again in a moment.</p>
       {/if}
+
     </article>
   </div>
 

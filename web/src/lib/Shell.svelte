@@ -886,9 +886,9 @@
                 : undefined}
             />
           {:else}
-            <!-- Waiting quietly where the article's title will be, like a blank page in a book. -->
-            <section aria-label="Article" class="flex min-w-0 flex-1 flex-col bg-paper px-6 pt-3 md:px-10">
-              <div class="article-column w-full pt-[4.5rem]">
+            <!-- Waiting quietly in the middle of the page, a little above centre, like a blank page in a book. -->
+            <section aria-label="Article" class="flex min-w-0 flex-1 flex-col items-center justify-center bg-paper px-6 pb-[12vh] text-center md:px-10">
+              <div>
                 <p class="text-ui text-ink-2">No article open.</p>
                 <p class="keyboard-hint mt-1 text-small text-muted">Choose one from the list, or press <kbd class="key">j</kbd>.</p>
               </div>

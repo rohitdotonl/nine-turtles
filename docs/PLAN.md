@@ -236,6 +236,9 @@ each with screenshots:
   grouped shortcut list, and a clearer search box (decision 0027).
 - ✅ One rounded "where you are" shape, an unread dot, a floating note for
   Undo and new items, and matching page titles (decision 0028).
+- ✅ A one-line search box with a tidier options panel, the empty reading
+  area centred, the byline under the article's title, and an ending to
+  every article.
 
 ---
 

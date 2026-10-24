@@ -50,6 +50,8 @@ test("a search starts where you are, underlines the words it found, and Escape b
   await page.keyboard.press("/");
   await expect(field(page)).toBeFocused();
   await expect(page.getByRole("button", { name: `Remove in: ${folder}` })).toBeVisible();
+  // With a chip in it, the box still stays one line.
+  expect((await page.locator(".search-box").boundingBox())!.height).toBeLessThan(50);
   await page.keyboard.type("walking");
   await expect(heading(page)).toHaveText("Search results");
   await expect(results(page)).toHaveCount(1);

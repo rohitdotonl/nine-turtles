@@ -132,8 +132,9 @@ A few words used throughout:
 - Reading font is Literata by default (Atkinson Hyperlegible as an alternative). Lines are about 65–75 characters long.
 - Links inside articles are underlined in the normal text color, never blue.
 - If the feed only has a summary, slowfeed shows the summary. It never fetches the rest from the website. **"Open original"** takes you there.
-- "Open original" is always present, always in the same place, in words at the left of the article's top line. On the right, as icons with tooltips naming them and their keys: **Copy link** (or Share, section 21), **Star** (an outline star, filled once starred) and **Mark unread** (a ring with a dot, like the Unread view's icon). The feed's name in the line above the title links to the publisher's site.
-- The source is always credited and linked: the feed's name (linking to the publisher's website), the author if the feed names one, and the time.
+- "Open original" is always present, always in the same place, in words at the left of the article's top line. On the right, as icons with tooltips naming them and their keys: **Copy link** (or Share, section 21), **Star** (an outline star, filled once starred) and **Mark unread** (a ring with a dot, like the Unread view's icon). The feed's name in the line under the title links to the publisher's site.
+- The source is always credited and linked, in a line under the title as in a book or magazine: the feed's name (linking to the publisher's website), the author if the feed names one, and the time.
+- The article ends rather than stops: a short centred line after its last paragraph, with room below so the last lines can be read at eye level. A summary-only article's note ("This feed shares only a summary…") sits under that line.
 - Choosing an article in the list (a click, `j` / `k`, or the arrow keys while in the list) shows it in the reading area. `Enter` or `o` opens it to read: the keyboard's place moves into the article, and `j` / `k` then move from article to article; Escape goes back to the list. On a phone-narrow window the article takes the list's place, with a back button named after the list. `j` never loads older items on its own: at the end of the list it stops.
 - `v` opens the original in a new tab. `+` / `-` change the text size (the same setting as in Settings).
 - Links inside articles open in a new tab (links to a place inside the article, like footnotes, stay in it).
@@ -248,10 +249,10 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 - `/` puts you in the search field, which sits under the list's title. A faint search icon starts the field; the "Search options" (sliders) button sits inside it at its right end.
 - Results follow a moment after you stop typing, or at once on Enter. Every word must appear; a word also finds longer words it begins ("read" finds "reading"); words in double quotes are found together.
 - The search starts out limited to where you are, shown as a removable chip inside the field, e.g. `[ in: Tech × ]`. Remove the chip to search everything.
-- **Search options** panel: scope (here · all feeds · a folder · a feed), unread only, starred only, date range. The panel and the chips always match.
+- **Search options** panel: scope (here · all feeds · a folder · a feed), unread only, starred only, date range. The panel and the chips always match. The search box stays one line: chips shrink and end in "…", with their whole text in a tooltip.
 - Titles and article text are always searched together; title matches come first.
 - Power-user filters can be typed: `is:unread`, `is:starred`, `feed:name`, `folder:name`, `after:YYYY-MM-DD`, `before:YYYY-MM-DD`. They're suggested as you type (↓ and ↑ choose, Enter takes one) and turn into chips once followed by a space or Enter. A name with spaces goes in quotes (`feed:"Garden Notes"`), or type part of it. `after:` and `before:` don't include the day itself. A filter that can't be understood stays as typed, with a plain line saying why. Backspace at the start of the field removes the last chip.
-- Results look and behave like the normal item list, including "mark all as read". A quiet line above them says how many were found ("16 results", or "50+ results" while more can load). Refresh is hidden while searching: there's nothing new to fetch for a search.
+- Results look and behave like the normal item list, including "mark all as read". The end of that line says how many were found ("16 results", or "50+ results" while more can load). Refresh is hidden while searching: there's nothing new to fetch for a search.
 - Matching words are **underlined** in the text's own color, never highlighted in color (bold couldn't be seen in an unread title, which is already semibold).
 - Works for English, other Latin-alphabet languages, and Hindi.
 - Tab moves from the field into the options panel; Escape closes search and returns you to where you were.
