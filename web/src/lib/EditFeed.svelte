@@ -76,20 +76,21 @@
     <fieldset class="flex min-w-0 flex-col gap-1.5">
       <legend class="mb-1.5 text-small text-ink-2">Folders</legend>
       <!--
-        A checklist, as Apple lists choices (decision 0042): each folder a row
-        with a mark at its end, an empty ring when the feed isn't in it and a
-        filled disc with a check when it is, so even one folder reads plainly.
-        "New folder…" is the list's last row, a text box of its own.
+        A checklist, as Apple lists choices: each folder a 44px row ending in a
+        tick box, a rounded square, empty when the feed isn't in it and filled
+        with a check when it is (decision 0045). Square, because a feed can be
+        in several folders; a round mark would read as "pick one". "New
+        folder…" is the list's last row, a text box of its own.
       -->
       <div class="inset-group">
         {#each folders as folder (folder.id)}
-          <label class="inset-row check-row pointer-fine:min-h-9">
+          <label class="inset-row check-row">
             <input type="checkbox" value={folder.id} bind:group={chosen} />
             <span class="min-w-0 break-words">{folder.name}</span>
             <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
           </label>
         {/each}
-        <label class="inset-row pointer-fine:min-h-9">
+        <label class="inset-row">
           <span class="sr-only">New folder</span>
           <input
             bind:value={newFolder}
@@ -134,9 +135,9 @@
     {@render form()}
   </Sheet>
 {:else}
-<section aria-labelledby="list-heading" class="flex flex-1 flex-col bg-paper pt-3">
+<section aria-labelledby="list-heading" class="flex flex-1 flex-col bg-paper">
   <PageHead title="Edit feed" bind:heading onClose={onCancel} closeLabel="Close without saving" {besideToggle} />
-  <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-6 pt-3 pb-10 md:px-10">
+  <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-3 pb-10 md:px-10">
     <!-- The sheet's build, as a page. -->
     <div class="mx-auto mt-6 flex max-w-xl flex-col">
       {@render form()}

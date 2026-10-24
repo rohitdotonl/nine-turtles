@@ -149,7 +149,7 @@ describe.each(Object.entries(THEMES))("the %s theme's selection pill", (_name, c
     }
   });
 
-  it("stays at 7 : 1 for text and 4.5 : 1 for muted grey, with the unread dot at 3 : 1", () => {
+  it("stays at 7 : 1 for text and 4.5 : 1 for muted grey, with the unread dot and the sidebar's place icon (decision 0043) at 3 : 1", () => {
     for (const area of ["list", "sidebar"]) {
       const pill = colors[`tint-${area}`]!;
       expect(contrast(colors.ink!, pill), area).toBeGreaterThanOrEqual(7);
@@ -268,4 +268,23 @@ it("the browser bar and Settings' theme discs use each theme's own background", 
   // index.html's light and dark bars, for "Automatic".
   expect(html).toContain(`content="${BAR_COLORS["off-white"]}" media="(prefers-color-scheme: light)"`);
   expect(html).toContain(`content="${BAR_COLORS.dark}" media="(prefers-color-scheme: dark)"`);
+});
+
+describe("the summary-only note's link underline", () => {
+  const found = css.match(/\.article-note a \{[^}]*text-decoration-color: color-mix\(in srgb, currentColor (\d+)%, transparent\)/);
+  const share = Number(found?.[1]) / 100;
+
+  it("is set as a share of the note's own color", () => {
+    expect(found).not.toBeNull();
+    expect(share).toBeLessThan(1);
+  });
+
+  // The link is the same color as the words around it, so its underline is the only sign it's a link (decision 0044).
+  it.each(Object.entries(THEMES))("stands out at 3 : 1 on the page in the %s theme", (_name, colors) => {
+    expect(contrast(mix(colors["ink-2"]!, colors.paper!, share), colors.paper!)).toBeGreaterThanOrEqual(3);
+  });
+
+  it("covers every theme", () => {
+    expect(Object.keys(THEMES).length).toBeGreaterThanOrEqual(THEME_NAMES.length);
+  });
 });

@@ -288,6 +288,19 @@ each with screenshots:
   one column with folder arrows first, no shortcut hint, the welcome alone
   on a first visit, warm dark pills, and a phone feeds screen with chevrons
   and no stale selection (decision 0041).
+- ✅ One top line and phone edges (fourth critique): one top-line height
+  for all three panes so their lines meet, toolbar focus rings clear of the
+  window's top, one left edge for every sidebar name, the selected place's
+  icon in the accent, and on a phone one back button position, one 20px
+  margin and one chevron per folder row (decision 0043).
+- ✅ Quiet endings and blank paper (fourth critique): a short end-note link
+  that never breaks, balanced titles, at least 56px beside the text on a
+  computer, and an empty reading pane with nothing drawn (decision 0044).
+- ✅ Controls that say what they are (fourth critique): a text-size stepper
+  of two round-ended As, one ring on the chosen theme, tick boxes and 44px
+  rows for Edit feed's folders, a main button that never looks switched off,
+  importing just under the welcome's field, and a true minus in the shortcut
+  list (decision 0045).
 
 ---
 

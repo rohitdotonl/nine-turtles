@@ -31,6 +31,36 @@ test("a wrong password says so calmly and keeps you out", async ({ page }) => {
   await expect(page.locator("#sidebar")).toHaveCount(0);
 });
 
+test("while signing in, the button says it's busy and a second press sends nothing more", async ({ page }) => {
+  await page.goto("/");
+  await appReady(page);
+  // Hold the answer back, so the page stays busy for as long as the test needs.
+  let requests = 0;
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => (release = resolve));
+  await page.route("**/api/sign-in", async (route) => {
+    requests += 1;
+    await held;
+    await route.continue();
+  });
+
+  await page.keyboard.type("not the password");
+  await page.keyboard.press("Enter");
+  const button = page.getByRole("button", { name: "Sign in" });
+  // Busy is said with aria-disabled, not disabled, so the button keeps its look and the keyboard's place (decision 0045).
+  await expect(button).toHaveAttribute("aria-disabled", "true");
+  await expect(button).not.toHaveAttribute("disabled");
+  await page.keyboard.press("Enter");
+  // A press on the button itself (forced: Playwright waits for anything aria-disabled).
+  await button.click({ force: true });
+  expect(requests).toBe(1);
+
+  release();
+  await expect(page.getByRole("status")).toHaveText("That isn't the password.");
+  await expect(button).not.toHaveAttribute("aria-disabled", "true");
+  expect(requests).toBe(1);
+});
+
 test("sign in with the keyboard, stay signed in, sign out", async ({ page }) => {
   await page.goto("/");
   await appReady(page);

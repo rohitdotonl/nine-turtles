@@ -92,9 +92,9 @@
     {@render form()}
   </Sheet>
 {:else}
-<section aria-labelledby="list-heading" class="flex flex-1 flex-col bg-paper pt-3">
+<section aria-labelledby="list-heading" class="flex flex-1 flex-col bg-paper">
   <PageHead title="Edit folder" bind:heading onClose={onCancel} closeLabel="Close without saving" {besideToggle} />
-  <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-6 pt-3 pb-10 md:px-10">
+  <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-3 pb-10 md:px-10">
     <!-- The sheet's build, as a page. -->
     <div class="mx-auto mt-6 flex max-w-xl flex-col">
       {@render form()}

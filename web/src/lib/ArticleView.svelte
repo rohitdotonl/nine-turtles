@@ -186,8 +186,8 @@
   -->
   {#if phone}
     <!-- The back button, labeled with the list's name, on the left; the way to the publisher on the right. -->
-    <div class="reading-bar relative z-10 flex min-h-13 shrink-0 items-center gap-2 px-1 py-1">
-      <button type="button" onclick={phone.onBack} aria-label="Back to {phone.back}" title="Back to {phone.back}" class="btn-quiet min-w-0 shrink gap-0.5 pr-2 pl-1"
+    <div class="reading-bar pane-bar nav-bar relative z-10 gap-2">
+      <button type="button" onclick={phone.onBack} aria-label="Back to {phone.back}" title="Back to {phone.back}" class="btn-quiet nav-back min-w-0 shrink"
         ><Icon name="back" size={22} /><span class="truncate">{phone.back}</span></button
       >
       <p role="status" class="line-clamp-2 min-w-0 flex-1 text-center text-small empty:sr-only">{copied}</p>
@@ -197,7 +197,7 @@
     </div>
   {:else}
     <!-- Quiet icons, each named in its tooltip with its key: the way to the publisher at the left, the reader's own tools at the right. -->
-    <div class="reading-bar relative z-10 flex min-h-13 shrink-0 items-center gap-2 px-2 py-1">
+    <div class="reading-bar pane-bar relative z-10 gap-2 px-2">
       {#if article.link}
         {@render original(20)}
       {:else}
@@ -215,7 +215,7 @@
     </div>
   {/if}
 
-  <div use:edge bind:this={scroller} class="reading-scroller scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto bg-paper px-6 pb-[30vh] md:px-10">
+  <div use:edge bind:this={scroller} class="reading-scroller scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto bg-paper px-5 pb-[30vh] md:px-14">
     <article lang={full?.language ?? undefined} class="article pt-3">
       <h2 tabindex="-1" bind:this={heading} class="article-title">{article.title || "Untitled"}</h2>
       <!-- Under the title, as in a book or a magazine: who wrote it, where, and when. The publisher's name leads, in full ink. -->
@@ -238,9 +238,13 @@
         {:else if full.summary}
           <div class="article-text" dir="auto">{@html full.summary}</div>
           <hr aria-hidden="true" class="article-end" />
-          <!-- End matter, under the closing rule as in a book: where the rest of it is, crediting the publisher. -->
+          <!--
+            End matter, under the closing rule as in a book: where the rest of it is. The publisher is already
+            named in the byline, so the link says only "Read the full article ›"; screen readers hear whose site
+            it opens. Each sentence stays whole wherever it fits on a line, so a narrow column never strands a word (decision 0044).
+          -->
           <p class="article-note" lang="en">
-            This feed shares only a summary.{#if article.link}{" "}<a href={article.link} target="_blank" rel="noopener noreferrer">Read the full article on {article.feedTitle}<span aria-hidden="true">&nbsp;›</span></a
+            <span>This feed shares only a summary.</span>{#if article.link}{" "}<a href={article.link} target="_blank" rel="noopener noreferrer">Read the full article<span class="sr-only"> on {article.feedTitle}</span><span aria-hidden="true">&nbsp;›</span></a
               >{/if}
           </p>
         {:else}

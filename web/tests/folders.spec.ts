@@ -80,13 +80,16 @@ test("a feed put in two folders appears under both, with its unread count in eac
   await openEdit(page, "Edit feed");
   await expect(page.getByRole("checkbox", { name: first })).toBeChecked();
   // The folders are a checklist whose last row is "New folder…", one grouped list (decision 0042).
-  // Each folder's mark is a filled disc with a check when the feed is in it, an empty ring when it isn't.
+  // Each folder's mark is a tick box (a rounded square, not a ring, since several can be ticked):
+  // filled with a check when the feed is in it, empty when it isn't, and each row is 44px (decision 0045).
   const newFolder = page.getByLabel("New folder");
   await expect(newFolder).toHaveAttribute("placeholder", "New folder…");
   expect(await newFolder.evaluate((element) => element.closest(".inset-group")?.querySelectorAll(".check-row").length)).toBeGreaterThanOrEqual(1);
   const mark = page.locator(".check-row").filter({ hasText: first }).locator(".check-mark");
   const ink = await page.locator("body").evaluate((body) => getComputedStyle(body).color);
   await expect(mark).toHaveCSS("background-color", ink);
+  await expect(mark).not.toHaveCSS("border-top-left-radius", "9999px");
+  expect((await page.locator(".check-row").filter({ hasText: first }).boundingBox())!.height).toBeGreaterThanOrEqual(44);
   await page.getByRole("checkbox", { name: first }).uncheck();
   await expect(mark).toBeVisible();
   await expect(mark).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
@@ -111,6 +114,17 @@ test("a feed put in two folders appears under both, with its unread count in eac
   const folderLink = sidebar(page).getByRole("link", { name: `${first} 3 unread` });
   const arrow = (await sidebar(page).getByRole("button", { name: `Feeds in ${first}` }).boundingBox())!;
   expect(arrow.x + arrow.width).toBeLessThanOrEqual((await folderLink.boundingBox())!.x + 1);
+  // Every name starts on one left edge, Unread's, the folder's and a loose feed's alike; a folder's feeds one step in (decision 0043).
+  const nameStart = (link: Locator) =>
+    link.evaluate((element) => {
+      const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, (node) => (node.textContent!.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP));
+      const range = document.createRange();
+      range.selectNodeContents(walker.nextNode()!);
+      return range.getBoundingClientRect().left;
+    });
+  const labelEdge = await nameStart(sidebar(page).getByRole("link", { name: "Unread", exact: true }));
+  expect(Math.abs((await nameStart(folderLink)) - labelEdge)).toBeLessThan(1);
+  expect(Math.abs((await nameStart(sidebar(page).getByRole("link", { name: `Renamed ${blog} 3 unread` }).first())) - labelEdge - 18)).toBeLessThan(1);
   const countEnd = (link: Locator) => link.locator(".tabular-nums").evaluate((element) => element.getBoundingClientRect().right);
   const feedLink = sidebar(page).getByRole("link", { name: `Renamed ${blog} 3 unread` }).first();
   expect(Math.abs((await countEnd(folderLink)) - (await countEnd(feedLink)))).toBeLessThan(1);
@@ -379,4 +393,34 @@ test("Edit feed opens over the article you were reading; closing it gives the ke
   await expect(page).not.toHaveURL(/\/edit$/);
   await page.goBack();
   await expect(page.getByRole("dialog", { name: "Edit feed" })).toHaveCount(0);
+});
+
+test.describe("on a touch screen beside the list", () => {
+  test.use({ hasTouch: true });
+
+  test("a folder's arrow keeps a 44px target for a finger, reaching into the pane's margin", async ({ page }) => {
+    const blog = unique("touched");
+    const folder = unique("Drawer");
+    await openBlogs(page, [blog]);
+    await openEdit(page, "Edit feed");
+    await page.getByLabel("New folder").fill(folder);
+    await page.getByRole("button", { name: "Save" }).click();
+    const arrow = sidebar(page).getByRole("button", { name: `Feeds in ${folder}` });
+    await expect(arrow).toBeVisible();
+    expect(await page.evaluate(() => matchMedia("(pointer: coarse)").matches)).toBe(true);
+    // The arrow is drawn in the 38px icon column; its target reaches 6px further out (decision 0043).
+    const box = (await arrow.boundingBox())!;
+    const target = await arrow.evaluate((element) => {
+      const before = getComputedStyle(element, "::before");
+      return { width: parseFloat(before.width), height: parseFloat(before.height) };
+    });
+    expect(Math.max(box.width, target.width)).toBeGreaterThanOrEqual(44);
+    expect(Math.max(box.height, target.height)).toBeGreaterThanOrEqual(44);
+    // A finger landing in the margin just left of the arrow still finds it.
+    const found = await arrow.evaluate((element, x) => {
+      const box = element.getBoundingClientRect();
+      return element.contains(document.elementFromPoint(x, box.top + box.height / 2));
+    }, box.x - 4);
+    expect(found).toBe(true);
+  });
 });

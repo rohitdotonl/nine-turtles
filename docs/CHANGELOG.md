@@ -4,6 +4,49 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 24 October 2026: One top line, one left edge, steady phone screens
+
+- On a computer, the three panes' top lines are now the same height, so
+  the sidebar button, the wordmark, the list's title and the article's
+  tools sit on one line, and the faint lines under them meet. A keyboard
+  ring on a toolbar button no longer touches the top of the window.
+- In the sidebar every name starts at one left edge, the find field's
+  icon lines up with the others, and a folder's feeds sit a step further
+  in. The place you're in also shows its icon in the accent.
+- On a phone the back button stays in the same place on every screen,
+  every screen keeps one 20px margin (Settings, Add feed, Edit feed, Edit
+  folder and sign-in included), and a folder row has one chevron: its
+  feeds are listed under it.
+
+## 24 October 2026: Quiet endings and blank paper in the reading pane
+
+- A summary-only article's closing note now reads "Read the full article ›"
+  (the publisher is already named under the title) and keeps the link
+  whole wherever it fits, so no word is left stranded; with very large
+  text on a small phone it wraps evenly instead of running off the screen.
+  Its underline is finer and softer, but still clear enough (3 : 1) to
+  show it's a link.
+- Long article titles wrap into even lines instead of a long line over a
+  short one.
+- On a laptop-sized window the text has wider margins (at least 56px each
+  side).
+- With no article open, the reading pane is simply blank paper, as in
+  Apple Books. Screen readers still hear "No article open."
+
+## 24 October 2026: Controls that say what they are
+
+- Text size in Settings and the Aa panel is now a clear stepper: two round
+  buttons, a small A and a large A, with the size's name between them in
+  plain words, so it no longer looks like a switch with nothing chosen.
+- The chosen theme has one ring and a bold name, without the extra tick.
+- Edit feed's folders end in small square tick boxes (a feed can be in
+  several), and each row is as tall as the fields above it.
+- The main button (Sign in, Save, Add feed) no longer turns paler under the
+  pointer, so it never looks switched off.
+- On a first visit, "Import an OPML file…" sits right under the address
+  field, as the other way in.
+- The shortcut list shows a true minus sign for smaller text.
+
 ## 24 October 2026: Toward Apple Books, batch 3
 
 - The article's bars are solid in the page's color, so text no longer shows
