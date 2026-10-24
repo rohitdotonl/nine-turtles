@@ -77,7 +77,7 @@
 </script>
 
 <section aria-labelledby="settings-heading" class="flex flex-1 flex-col bg-paper pt-16">
-  <div class="min-h-0 flex-1 overflow-y-auto px-6 pb-10 md:px-10">
+  <div class="relative min-h-0 flex-1 overflow-y-auto px-6 pb-10 md:px-10">
     <div class="flex max-w-2xl flex-wrap items-center justify-between gap-4">
       <h2 id="settings-heading" tabindex="-1" bind:this={heading} class="text-xlarge font-semibold">Settings</h2>
       <button type="button" onclick={onClose} class="btn">Close settings</button>

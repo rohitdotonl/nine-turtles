@@ -4,6 +4,13 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 24 October 2026: The window no longer slides away when you scroll
+
+- Scrolling a long list (or the article) used to move the whole page,
+  leaving the three columns as a thin strip at the top and blank space
+  below. Now the window stays still and only the column under your
+  pointer scrolls. A browser test scrolls a 60-article list to keep it so.
+
 ## 23 October 2026: A steadier toolbar on phones
 
 - On a phone, the toolbar under an article keeps its five icons in one

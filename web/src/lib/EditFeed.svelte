@@ -52,7 +52,7 @@
 </script>
 
 <section aria-labelledby="list-heading" class="flex flex-1 flex-col bg-paper pt-16">
-  <div class="min-h-0 flex-1 overflow-y-auto px-6 pb-10 md:px-10">
+  <div class="relative min-h-0 flex-1 overflow-y-auto px-6 pb-10 md:px-10">
     <h2 id="list-heading" tabindex="-1" bind:this={heading} class="text-xlarge font-semibold">Edit feed</h2>
     <form onsubmit={save} class="mt-6 flex max-w-xl flex-col gap-6">
       <label class="flex flex-col gap-2">

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
-import { appReady, openReadingRoom, signIn, tabTo } from "./screens";
+import { appReady, follow, openReadingRoom, signIn, tabTo } from "./screens";
 
 // SPEC section 7 (and 19 and 21), "How to check it", done by a browser, on
 // the made-up Reading Room blog (tests/feed-server.mjs).
@@ -209,6 +209,46 @@ test.describe("on a wide window", () => {
     const other = await style("Only the first page");
     expect(other.outline).toBe("none");
     expect(other.bar).toBe(other.page);
+  });
+
+  test("after scrolling a long list, the panes still fill the window and only the list moves", async ({ page }) => {
+    // The owner's photo (24 October 2026): scrolling a long list moved the whole
+    // page, leaving the panes as a strip at the top and blank space below.
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(new URL("/all", FEEDS_APP).href);
+    await appReady(page);
+    await signIn(page);
+    // Quiet Notes has 60 articles: far more than one window holds.
+    const id = await follow(page, `${FEED_SITE}/`);
+    await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
+    await expect(page.getByRole("button", { name: /\(\d+\)/ }).nth(30)).toBeAttached();
+
+    const fillsWindow = () =>
+      page.evaluate(() => {
+        const main = document.querySelector("main")!.getBoundingClientRect();
+        return {
+          pageScroll: window.scrollY,
+          pageTaller: document.documentElement.scrollHeight > window.innerHeight,
+          top: main.top,
+          bottom: Math.round(main.bottom) === window.innerHeight,
+        };
+      });
+    const still = { pageScroll: 0, pageTaller: false, top: 0, bottom: true };
+    expect(await fillsWindow()).toEqual(still);
+
+    // Scroll the list with the mouse wheel, then walk far down it with j.
+    const list = page.locator("#list-heading").locator("xpath=ancestor::div[contains(@class,'overflow-y-auto')][1]");
+    await list.hover();
+    for (let i = 0; i < 15; i++) await page.mouse.wheel(0, 400);
+    await expect.poll(() => list.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+    expect(await fillsWindow()).toEqual(still);
+    for (let i = 0; i < 40; i++) await page.keyboard.press("j");
+    expect(await fillsWindow()).toEqual(still);
+
+    // And over the article, too.
+    await article(page).hover();
+    for (let i = 0; i < 15; i++) await page.mouse.wheel(0, 400);
+    expect(await fillsWindow()).toEqual(still);
   });
 
   test("+ and - change the text size while reading, and Settings remembers it", async ({ page }) => {

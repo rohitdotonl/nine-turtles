@@ -590,8 +590,12 @@
             </div>
 {/snippet}
 
-<!-- The whole app is the page's main content; the sidebar and areas inside are its named parts. -->
-<main class="flex h-dvh">
+<!--
+  The whole app is the page's main content; the sidebar and areas inside are its named parts.
+  It is exactly the window's height and never lets anything out: only the areas inside scroll,
+  each on its own, so the page itself never moves (a hidden screen-reader line once stretched it).
+-->
+<main class="relative flex h-dvh overflow-hidden">
   {#if !panes.sidebar}
     <!-- The wordmark is the page's main heading; with the sidebar hidden, screen readers still find it. -->
     <h1 class="sr-only">slowfeed</h1>
@@ -632,7 +636,7 @@
     hidden={!panes.sidebar}
     class={["flex-col bg-sidebar", phone ? "pt-2" : "pt-16", panes.list ? "w-64 shrink-0" : "flex-1", panes.sidebar && "flex"]}
   >
-    <div class="min-h-0 flex-1 overflow-y-auto pb-4">
+    <div class="relative min-h-0 flex-1 overflow-y-auto pb-4">
       <div class="flex items-baseline gap-4 px-4 pb-4">
         <h1 class="mr-auto font-serif text-xlarge" tabindex="-1" bind:this={wordmark}>slowfeed</h1>
         {#if phone}
@@ -745,7 +749,7 @@
               >
             </div>
           {/if}
-          <div class="min-h-0 flex-1 overflow-y-auto px-6 pb-10 md:px-10">
+          <div class="relative min-h-0 flex-1 overflow-y-auto px-6 pb-10 md:px-10">
             <h2 id="list-heading" tabindex="-1" bind:this={listHeading} class="text-xlarge font-semibold">Add a feed</h2>
             <p class="mt-2 mb-6 max-w-xl">
               Paste the address of a website you like, or of its feed. slowfeed finds the feed and lists its articles.
@@ -780,7 +784,7 @@
               {@render listHead()}
             </div>
           {/if}
-          <div class="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
+          <div class="relative min-h-0 flex-1 overflow-y-auto px-6 pb-6">
             {#if feeds && feeds.length > 0 && !missing}
               <SearchBar bind:this={searchBar} {query} {feeds} {folders} here={scopeFor(route)} onChange={searchChanged} />
             {/if}
