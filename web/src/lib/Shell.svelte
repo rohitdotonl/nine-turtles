@@ -177,6 +177,8 @@
   let welcomeHeading: HTMLHeadingElement | undefined = $state();
   /** How many articles the list shows, so the empty reading area offers j only when there's one to open. */
   let listCount = $state(0);
+  /** The list's "28 results" while it shows search results, so the search options can repeat it where they'd cover it. */
+  let listFound = $state("");
   /** The line above the add field, in the sheet and on the phone's page. */
   const ADD_INTRO = "slowfeed finds the feed on any website you like, and lists its articles.";
   let headingText = $derived(
@@ -749,10 +751,15 @@
       <p class="mt-3 text-ink-2">Follow the websites you like, and read what they publish here, at your own pace.</p>
     </div>
     {#if !(sheet && route.kind === "add-feed")}
-      <!-- Importing sits just under the field, centred as everything here is, as the other way in (decisions 0045, 0048). -->
+      <!--
+        Importing sits just under the field, centred as everything here is (on a phone, on the
+        screen's margin), as the other way in (decisions 0045, 0048): a link in the text color,
+        underlined as the article's note links are, with no side padding so its words line up
+        with the heading's, in a 44px-tall target (decision 0055).
+      -->
       <AddFeed bind:field={addField} feeds={[]} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} {start}>
         {#snippet alternative()}
-          <a href="/settings" onclick={goImport} class="btn-quiet btn-small">Import an OPML file…</a>
+          <a href="/settings" onclick={goImport} class="text-link">Import an OPML file…</a>
         {/snippet}
       </AddFeed>
     {:else}
@@ -767,7 +774,7 @@
           <span class="btn-primary rounded-lg">Add feed</span>
         </div>
         <div class="flex min-h-[5.8rem] flex-col items-center">
-          <span class="btn-quiet btn-small">Import an OPML file…</span>
+          <span class="text-link">Import an OPML file…</span>
         </div>
       </div>
     {/if}
@@ -839,7 +846,7 @@
     aria-label="Sidebar"
     bind:this={sidebar}
     hidden={!panes.sidebar}
-    class={["flex-col bg-sidebar", panes.list ? "w-64 shrink-0" : "min-w-0 flex-1", panes.sidebar && "flex"]}
+    class={["flex-col bg-sidebar", panes.list ? "w-64 shrink-0" : "min-w-0 flex-1", panes.sidebar && "flex", !phone && "pane-edge"]}
   >
     <!--
       The sidebar's top line (decision 0043): the wordmark, on the same line as the list's title and
@@ -923,8 +930,15 @@
         class="btn-quiet ml-1.5 min-w-0 flex-1 justify-start gap-2.5 pl-[14px] text-small text-ink-2"><Icon name="plus" size={16} />Add feed</a
       >
       {#if !phone}
-        <button type="button" onclick={() => (cheatSheetOpen = true)} aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)" class="btn-quiet btn-icon"
-          ><Icon name="keyboard" size={18} /></button
+        <!-- Filled in a neutral ink tone while the shortcut list is open (never the accent: this is a button, not a place), and it says it opens a dialog (decision 0054). -->
+        <button
+          type="button"
+          onclick={() => (cheatSheetOpen = true)}
+          aria-label="Keyboard shortcuts"
+          title="Keyboard shortcuts (?)"
+          aria-haspopup="dialog"
+          aria-expanded={cheatSheetOpen}
+          class={["btn-quiet btn-icon", cheatSheetOpen && "bg-ink/10 text-ink"]}><Icon name="keyboard" size={18} /></button
         >
       {/if}
       <a
@@ -977,17 +991,21 @@
           />
         {/key}
       {:else if !sheet && route.kind === "add-feed"}
-        <section aria-labelledby="list-heading" class="flex flex-1 flex-col bg-paper">
+        <section aria-labelledby="list-heading" class="page-sheet">
           <!--
-            Only on a phone (wider windows get the sheet). The phone sheet's one build (decision 0052):
-            the title with an X that goes back to the feeds (as Escape does), no back arrow and no Cancel.
+            Only on a phone (wider windows get the sheet). The phone sheet's one build (decisions 0052,
+            0055): an iOS page sheet, its grouped ground 10px below the dimmed screen's top with 12px
+            top corners, the title with an X that goes back to the feeds (as Escape does), no back
+            arrow and no Cancel.
           -->
-          <PageHead title="Add a feed" bind:heading={listHeading} besideToggle={!phone && !panes.sidebar} onClose={closePage} closeLabel="Close" />
-          <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
-            <!-- 20px under the top line as Settings is: a line on what to paste, the field, then Add feed the full width at the screen's foot. -->
-            <div class="mx-auto flex w-full max-w-xl flex-1 flex-col gap-5">
-              <p>{ADD_INTRO}</p>
-              <AddFeed bind:field={addField} feeds={feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} page />
+          <div class="page-sheet-card">
+            <PageHead title="Add a feed" bind:heading={listHeading} besideToggle={!phone && !panes.sidebar} onClose={closePage} closeLabel="Close" />
+            <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
+              <!-- 20px under the top line as Settings is: a line on what to paste, the field, then Add feed the full width at the screen's foot. -->
+              <div class="mx-auto flex w-full max-w-xl flex-1 flex-col gap-5">
+                <p>{ADD_INTRO}</p>
+                <AddFeed bind:field={addField} feeds={feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} page />
+              </div>
             </div>
           </div>
         </section>
@@ -1002,6 +1020,8 @@
             phone && "phone",
             panes.article ? "w-80 shrink-0 xl:w-96 2xl:w-[26rem]" : "min-w-0 flex-1",
             panes.list && !welcomeWide && "flex",
+            // A 1px line where the list meets the reading pane, as where the sidebar meets the list (decision 0054).
+            !phone && panes.article && "pane-edge",
           ]}
         >
           {#if phone}
@@ -1027,7 +1047,7 @@
           <!-- A column, so the floating note can sit at the pane's foot even under a short list. -->
           <div use:edge class="scroller relative flex min-h-0 flex-1 scroll-pb-20 flex-col overflow-y-auto pt-2 pr-[var(--list-end)] pb-6 pl-[var(--list-start)]">
             {#if feeds && feeds.length > 0 && !missing}
-              <SearchBar bind:this={searchBar} {query} {feeds} {folders} here={scopeFor(under)} onChange={searchChanged} />
+              <SearchBar bind:this={searchBar} {query} {feeds} {folders} here={scopeFor(under)} found={listFound} onChange={searchChanged} />
             {/if}
             {#if missing && (under.kind === "folder" || under.kind === "edit-folder")}
               <p class="mt-4">There's no folder here. It may have been deleted or renamed.</p>
@@ -1042,7 +1062,8 @@
                 name), so one heading shows: the welcome's, 96px under the top line on the screen's
                 margin (decision 0052). A medium window keeps it centred.
               -->
-              <div class={phone ? "mt-[5.5rem] flex" : "mt-8 flex justify-center"}>{@render welcome(phone)}</div>
+              <!-- The list's 28px dot gutter (decision 0054) is for rows: the welcome steps back out to the 20px margin. -->
+              <div class={phone ? "mt-[5.5rem] ml-[calc(1.25rem-var(--list-start))] flex" : "mt-8 flex justify-center"}>{@render welcome(phone)}</div>
             {:else if feeds !== undefined && sort !== undefined}
               <!-- The list, with "New items · press r" and Undo in a note floating at its foot (More, with Refresh, sits beside the title). -->
               {#key listKey}
@@ -1060,6 +1081,7 @@
                   results={shown !== undefined}
                   oneFeed={under.kind === "feed" && !shown}
                   bind:count={listCount}
+                  bind:found={listFound}
                 />
               {/key}
             {/if}
@@ -1091,12 +1113,12 @@
             </section>
           {:else}
             <!--
-              Blank paper, as in Apple Books: nothing to see until you choose an article (decision 0044).
-              Screen readers still hear that no article is open, and, when the list has something to
-              open, how to open one.
+              One quiet line in the middle of the paper, as a Mac app shows when nothing is chosen
+              (decision 0053): serif, muted, never the accent, no picture. Screen readers also hear,
+              when the list has something to open, how to open one.
             -->
-            <section aria-label="Article" class="min-w-0 flex-1 bg-paper">
-              <p class="sr-only">No article open.</p>
+            <section aria-label="Article" class="flex min-w-0 flex-1 flex-col items-center justify-center bg-paper px-5">
+              <p class="reading-empty">No article open</p>
               {#if listCount > 0 && !missing}
                 <p class="sr-only">Choose one from the list<span class="keyboard-hint">, or press j</span>.</p>
               {/if}

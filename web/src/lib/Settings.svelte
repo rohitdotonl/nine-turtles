@@ -114,20 +114,21 @@
 
       <section aria-labelledby="reader-heading">
         <h3 id="reader-heading" class="inset-head">Look and feel</h3>
-        <!--
-          A short passage set as articles will be, straight under the header and
-          before the controls, as the sample sits at the top of Apple Books' Aa
-          panel: on the page itself, not a card inside a card (decision 0042).
-        -->
-        <figure class="reading-sample">
-          <figcaption class="sr-only">Preview</figcaption>
-          <p>
-            Most writing on the open web was never meant to be skimmed. It was written slowly, by someone who
-            cared, for whoever would read it to the end. A reader can be built the same way: it shows you what is
-            there, and then it lets you go.
-          </p>
-        </figure>
         <div class="inset-group">
+          <!--
+            A short passage set as articles will be, the group's first row, before
+            the controls, as Apple Books keeps its sample inside the themes panel:
+            its words start on the rows' words, 16px in, and a hairline parts it
+            from Appearance below (decision 0055). A row, never a card inside a card.
+          -->
+          <figure class="inset-row reading-sample">
+            <figcaption class="sr-only">Preview</figcaption>
+            <p>
+              Most writing on the open web was never meant to be skimmed. It was written slowly, by someone who
+              cared, for whoever would read it to the end. A reader can be built the same way: it shows you what is
+              there, and then it lets you go.
+            </p>
+          </figure>
           <!-- Day, night or as the device is set; the tiles below draw each theme in the version showing (decision 0046). -->
           <fieldset class="inset-row">
             <legend class="row-name">Appearance</legend>
@@ -166,7 +167,7 @@
 
           <div class="inset-row">
             <p id="text-size-name" class="row-name">Text size</p>
-            <!-- A stepper on the segmented settings' own track: a small A and a large A at its ends, the current step between them as plain words (decisions 0045, 0052). -->
+            <!-- A flat "A | step | A" capsule: a small A and a large A at its ends, the current step between them as plain words, parted by hairlines (decisions 0045, 0055). -->
             <div class="control">
               <TextSize bind:size={preferences.textSize} labelledby="text-size-name" />
             </div>
@@ -267,25 +268,22 @@
       flex-basis: 100%;
     }
   }
-  /* A passage on the page itself, set as articles will be, its left edge on the rows' words. */
+  /* The group's first row: a passage set as articles will be, 16px in on every side, its left edge on the rows' words. */
   .reading-sample {
-    max-width: calc(var(--reading-measure) + 2rem);
-    margin: 0.25rem 0 1.25rem;
-    padding-inline: 1rem;
+    display: block;
+    margin: 0;
+    padding: 1rem;
     font-family: var(--reading-font);
     font-size: var(--reading-size);
     font-weight: var(--reading-weight, 400);
     line-height: 1.6;
   }
-  /*
-    On a phone articles read a tenth smaller; so does the sample. Its left
-    edge moves out to the groups' own edge, the screen's one 20px margin, so
-    it reads as the page's text, not as indented body text; the small
-    headers stay inset on the rows' words, as iOS sets them (decision 0049).
-  */
+  .reading-sample p {
+    max-width: var(--reading-measure);
+  }
+  /* On a phone articles read a tenth smaller; so does the sample. */
   @media (max-width: 40rem) {
     .reading-sample {
-      padding-inline: 0;
       font-size: calc(var(--reading-size) * 0.9);
     }
   }

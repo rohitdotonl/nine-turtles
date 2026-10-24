@@ -224,7 +224,7 @@ test.describe("on a phone", () => {
 
     await tabTo(page, row(page, "The pleasure of a slow letter"));
     // The row's ring, 2px inside the pill, passes clear of where an unread dot hangs: the dot
-    // sits 4px into the pill, so 2px of paper part them (decision 0049).
+    // sits 4px into the pill (which sits 6px in), so 2px of paper part them (decisions 0049, 0054).
     const ringGap = await row(page, "The pleasure of a slow letter").evaluate((element) => {
       const style = getComputedStyle(element);
       // The ring runs from the pill's edge to its offset inside it; the dot starts --dot-left in.
@@ -274,6 +274,13 @@ test.describe("on a phone", () => {
     const unsubscribe = (await page.getByRole("button", { name: /^Unsubscribe/ }).boundingBox())!;
     expect(save.width).toBeGreaterThan(page.viewportSize()!.width - 48);
     expect(save.y - (unsubscribe.y + unsubscribe.height)).toBeGreaterThanOrEqual(32);
+    // An iOS page sheet (decision 0055): 10px of the dimmed screen shows above it, its top corners are
+    // 12px, and its groups are cards in a different tone from the sheet's grouped ground.
+    const card = page.locator(".page-sheet-card");
+    expect(Math.abs((await card.boundingBox())!.y - 10)).toBeLessThan(1.5);
+    await expect(card).toHaveCSS("border-top-left-radius", "12px");
+    const tone = (locator: typeof card) => locator.evaluate((element) => getComputedStyle(element).backgroundColor);
+    expect(await tone(card.locator(".inset-group").last())).not.toBe(await tone(card));
     await page.getByRole("button", { name: "Close" }).click();
     await expect(list(page).getByRole("heading", { level: 2, name: "Reading Room" })).toBeVisible();
     await page.goBack();
@@ -393,7 +400,7 @@ test.describe("on a phone", () => {
     await expect(page.getByRole("heading", { level: 2, name: folder })).toBeVisible();
   });
 
-  test("every screen keeps one 20px margin: the list, the article, Settings and Add feed", async ({ page }) => {
+  test("every screen keeps one 20px margin (the list's 28px dot gutter aside): the article, Settings and Add feed", async ({ page }) => {
     await openHome(page);
     /** How far a thing's first line of words starts from the screen's left edge. */
     const textStart = (locator: ReturnType<Page["locator"]>) =>
@@ -403,11 +410,17 @@ test.describe("on a phone", () => {
         range.selectNodeContents(walker.nextNode()!);
         return range.getBoundingClientRect().left;
       });
-    const near20 = (value: number) => expect(Math.abs(value - 20)).toBeLessThan(1.5);
+    const near = (value: number, edge: number) => expect(Math.abs(value - edge)).toBeLessThan(1.5);
+    const near20 = (value: number) => near(value, 20);
 
-    // The list: its title.
+    // The list keeps a gutter for its unread dot, as Books and Mail do on iOS (decision 0054): its title,
+    // search field and row titles start 28px in, and an unread row's dot 10px from the screen's edge.
     await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
-    near20(await textStart(page.locator("#list-heading")));
+    near(await textStart(page.locator("#list-heading")), 28);
+    near((await list(page).locator(".search-box").boundingBox())!.x, 28);
+    near(await textStart(row(page, "The pleasure of a slow letter").locator(".title")), 28);
+    const dot = list(page).locator(".unread-dot").first();
+    if ((await dot.count()) > 0) near((await dot.boundingBox())!.x, 10);
     // The article: its title and its text.
     await row(page, "The pleasure of a slow letter").click();
     near20(await textStart(title(page, "The pleasure of a slow letter")));
@@ -423,8 +436,8 @@ test.describe("on a phone", () => {
       const box = element.getBoundingClientRect();
       return box.left + parseFloat(getComputedStyle(element).paddingLeft);
     })));
-    // The preview passage starts on the groups' own edge, not indented like body text (decision 0049).
-    near20(await textStart(page.locator(".reading-sample p")));
+    // The preview passage is the Look and feel group's first row: its words start on the rows' words, 16px in from the group's edge (decision 0055).
+    expect(Math.abs((await textStart(page.locator(".reading-sample p"))) - 36)).toBeLessThan(1.5);
     near20((await page.locator(".inset-group").first().boundingBox())!.x);
 
     // Add feed: its title and the line under it.

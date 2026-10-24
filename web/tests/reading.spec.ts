@@ -28,10 +28,24 @@ test.describe("on a wide window", () => {
 
   test("j shows an article cleaned and restyled, and j and k move through the list", async ({ page }) => {
     await openRoom(page);
-    // Blank paper, as in Apple Books (decision 0044): nothing to see, but screen readers hear that
-    // no article is open and, since the list has articles to open, how to open one.
-    await expect(article(page)).toContainText("No article open.");
-    await expect(article(page).locator(".sr-only", { hasText: "No article open." })).toHaveCSS("position", "absolute");
+    // One quiet line in the middle of the paper (decision 0053): serif, muted grey, never the
+    // accent; screen readers also hear, since the list has articles to open, how to open one.
+    const empty = article(page).locator(".reading-empty");
+    await expect(empty).toHaveText("No article open");
+    await expect(empty).toBeVisible();
+    await expect(empty).toHaveCSS("font-family", /Literata/);
+    const [color, muted] = await empty.evaluate((element) => {
+      const probe = document.createElement("div");
+      probe.style.color = "var(--muted)";
+      document.body.append(probe);
+      const value = getComputedStyle(probe).color;
+      probe.remove();
+      return [getComputedStyle(element).color, value];
+    });
+    expect(color).toBe(muted);
+    const [line, pane] = await Promise.all([empty.boundingBox(), article(page).boundingBox()]);
+    expect(Math.abs(line!.x + line!.width / 2 - (pane!.x + pane!.width / 2))).toBeLessThan(4);
+    expect(Math.abs(line!.y + line!.height / 2 - (pane!.y + pane!.height / 2))).toBeLessThan(4);
     await expect(article(page)).toContainText("Choose one from the list, or press j.");
     await expect(article(page).locator(".sr-only", { hasText: "Choose one from the list" })).toHaveCSS("position", "absolute");
     await expect(article(page).locator("kbd")).toHaveCount(0);

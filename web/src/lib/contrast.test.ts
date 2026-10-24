@@ -156,13 +156,31 @@ describe.each(Object.entries(THEMES))("the %s theme's keyboard outline on rows",
 // cover it. Three night versions whose panes are already light for the dark
 // mix in less, so their text keeps 7 : 1 on the pill (decision 0046).
 const LIGHTER_PILLS: Record<string, number> = { "quiet dark": 0.09, "paper dark": 0.1, "calm dark": 0.1 };
+// Paper by day lifts its warm pane with its own text color, as the night
+// versions do, so the pill isn't slate on warm paper (decision 0053).
+const INK_DAY_PILLS: Record<string, number> = { "paper light": 0.1 };
 
 describe.each(Object.entries(THEMES))("the %s theme's selection pill", (name, colors) => {
   const dark = luminance(colors.paper!) < 0.5;
-  it(dark ? "is the text color mixed into the list and the sidebar" : "is the accent mixed into the list and the sidebar", () => {
-    const [from, share] = dark ? [colors.ink!, LIGHTER_PILLS[name] ?? 0.12] : [colors.accent!, 0.12];
+  const inked = dark || name in INK_DAY_PILLS;
+  it(inked ? "is the text color mixed into the list and the sidebar" : "is the accent mixed into the list and the sidebar", () => {
+    const [from, share] = dark
+      ? [colors.ink!, LIGHTER_PILLS[name] ?? 0.12]
+      : inked
+        ? [colors.ink!, INK_DAY_PILLS[name]!]
+        : [colors.accent!, 0.12];
     expect(colors["tint-list"]).toBe(mix(from, colors.list!, share));
     expect(colors["tint-sidebar"]).toBe(mix(from, colors.sidebar!, share));
+  });
+
+  // By day a warm pane (red above blue: Paper, Calm, Focus) keeps a warm
+  // pill; a cool or neutral one (Original, Quiet, Bold) may take the accent's
+  // blue-grey, as Apple Books' selection does on its white and grey pages.
+  it.runIf(!dark)("keeps a warm pane's pill warm", () => {
+    const warmth = (hex: string) => parseInt(hex.slice(1, 3), 16) - parseInt(hex.slice(5, 7), 16);
+    for (const area of ["list", "sidebar"]) {
+      if (warmth(colors[area]!) > 0) expect(warmth(colors[`tint-${area}`]!), area).toBeGreaterThan(0);
+    }
   });
 
   // A dark pane's warmth is how far red sits above blue; the pill may lift
@@ -244,6 +262,34 @@ describe.each(Object.entries(THEMES))("the %s theme's fields", (_name, colors) =
     expect(contrast(colors.danger!, colors.paper!)).toBeGreaterThanOrEqual(3);
     expect(contrast(colors.danger!, fill)).toBeGreaterThanOrEqual(3);
     expect(contrast(mix(colors.ink!, colors.paper!, share("field-edge", "transparent")), fill)).toBeGreaterThanOrEqual(3);
+  });
+});
+
+// A field in use (decision 0055): its edge steps aside for a 2px ring in the
+// softened text color (--place-focus), 1px clear of the field, so the ring is
+// drawn over whatever the field sits on; a "New folder…" row rings just inside
+// its group. The ring must stay at 3 : 1 against that surface and against the
+// field's own fill beside it, in every theme, by day and by night.
+describe.each(Object.entries(SELECTORS))("the %s theme's field focus ring", (name, selector) => {
+  const colors = THEMES[name]!;
+  const dark = luminance(colors.paper!) < 0.5;
+
+  it("is the softened text color, at 3 : 1 or more against the field and every surface a field sits on", () => {
+    expect(css).toMatch(/\.field:focus-visible \{\s*outline: 2px solid var\(--place-focus\);/);
+    expect(css).toMatch(/\.inset-row:has\(> \.inset-input:focus-visible\) \{\s*outline: 2px solid var\(--place-focus\);/);
+    const ring = Number(css.match(/--place-focus: color-mix\(in srgb, var\(--ink\) (\d+)%, transparent\)/)![1]) / 100;
+    const fieldShare = Number(css.match(/--field: color-mix\(in srgb, var\(--ink\) (\d+)%, var\(--paper\)\)/)![1]) / 100;
+    const fill = mix(colors.ink!, colors.paper!, fieldShare);
+    const raised = colors["surface-raised"]!;
+    const group = dark ? mix(colors.ink!, colors.paper!, darkShare(selector, "group")!) : colors.list!;
+    const raisedGroup = dark ? mix("#ffffff", raised, 0.04) : group;
+    // The page, the panes, a sheet, a group (on the page and in a sheet), and the phone sheet's grouped ground and its cards.
+    const surfaces = { paper: colors.paper!, list: colors.list!, sidebar: colors.sidebar!, raised, group, raisedGroup };
+    for (const [surface, background] of Object.entries(surfaces)) {
+      const drawn = mix(colors.ink!, background, ring);
+      expect(contrast(drawn, background), `on ${surface}`).toBeGreaterThanOrEqual(3);
+      expect(contrast(drawn, fill), `against the field, on ${surface}`).toBeGreaterThanOrEqual(3);
+    }
   });
 });
 

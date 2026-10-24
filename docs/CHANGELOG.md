@@ -4,6 +4,34 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 24 October 2026: Closer to Apple Books, batch 7
+
+- With no article open, the reading pane now says so in one quiet grey line
+  in its middle, instead of being blank (decision 0053).
+- Picture captions are smaller and sit closer to their picture, so they no
+  longer read like a paragraph; they stay as easy to read as the text.
+- In the Paper theme by day, the selected row is a warm grey that matches
+  the page, instead of a cool slate.
+- On a computer, a faint line now runs where the sidebar meets the list and
+  where the list meets the article, as in Apple Books on a Mac.
+- On a phone, the unread dot sits a little in from the screen's edge, and
+  the list's titles, its heading and its search field line up 28px in.
+- The keyboard button at the sidebar's foot is shaded while the shortcut
+  list is open.
+- With the search options open in a narrow list or on a phone, the number
+  of results now shows at the menu's foot instead of hiding under it
+  (decision 0054).
+- On a phone, Add a feed, Edit feed and Edit folder now look like an iPhone
+  sheet: a thin dimmed strip above, rounded top corners, and their groups
+  as cards on a soft grey ground (decision 0055).
+- Text size is one flat "A | Medium | A" control, so it no longer looks like
+  two things are chosen; the chosen theme's ring now has a clear gap; the
+  sample paragraph sits inside the Look and feel group.
+- A field you're typing in has a softer ring, still easy to see in every
+  theme. Shortcuts show ⇧A and capital letters, as a Mac does.
+  "Import an OPML file…" is now an underlined link that lines up with the
+  heading.
+
 ## 24 October 2026: Calmer night pictures, one search field, one phone sheet
 
 - Articles: pictures are dimmed a little in the night themes so they no

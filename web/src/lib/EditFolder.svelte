@@ -108,16 +108,19 @@
     {@render form()}
   </Sheet>
 {:else}
-<section aria-labelledby="list-heading" class="flex flex-1 flex-col bg-paper">
+<section aria-labelledby="list-heading" class="page-sheet">
   <!--
-    The phone sheet's build (decision 0052): the title with an X that goes back unchanged (as
-    Escape does), no Cancel. Its form starts 20px under the top line, as Settings' first group
-    does, and Save sits at the screen's foot.
+    The phone sheet's build (decisions 0052, 0055): an iOS page sheet, its grouped ground 10px
+    below the dimmed screen's top with 12px top corners, the title with an X that goes back
+    unchanged (as Escape does), no Cancel. Its form starts 20px under the top line, as Settings'
+    first group does, and Save sits at the screen's foot.
   -->
-  <PageHead title="Edit folder" bind:heading {besideToggle} onClose={onCancel} closeLabel="Close" />
-  <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
-    <div class="mx-auto flex w-full max-w-xl flex-1 flex-col">
-      {@render form()}
+  <div class="page-sheet-card">
+    <PageHead title="Edit folder" bind:heading {besideToggle} onClose={onCancel} closeLabel="Close" />
+    <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
+      <div class="mx-auto flex w-full max-w-xl flex-1 flex-col">
+        {@render form()}
+      </div>
     </div>
   </div>
 </section>

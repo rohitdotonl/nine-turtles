@@ -25,6 +25,7 @@
 <script lang="ts">
   import { tick } from "svelte";
   import Icon from "./Icon.svelte";
+  import { keyCap } from "./keyboard";
 
   let {
     id,
@@ -170,7 +171,8 @@
               {/if}
               <span class="min-w-0 flex-1">{item.label}</span>
               {#if item.shortcut}
-                <kbd class="text-meta text-muted">{item.shortcut}</kbd>
+                <!-- Printed as a Mac prints it (⇧A, M); screen readers hear the key from aria-keyshortcuts instead (decision 0055). -->
+                <kbd aria-hidden="true" class="text-meta text-muted">{keyCap(item.shortcut).cap}</kbd>
               {/if}
             </button>
           {/each}
