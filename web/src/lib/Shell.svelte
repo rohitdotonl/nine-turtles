@@ -92,8 +92,6 @@
   let panes = $derived(panesFor(width, sidebarChoice, reading, listHidden));
   /** A phone-narrow window: one screen at a time, with a top bar and, while reading, a bottom toolbar. */
   let phone = $derived(width === "narrow");
-  /** On a computer with the sidebar and the list both hidden, their two buttons become one, which brings both back. */
-  let bothHidden = $derived(!phone && !panes.sidebar && !panes.list && isList(route) && !welcoming);
 
   let wordmark: HTMLHeadingElement | undefined = $state();
   let listHeading: HTMLHeadingElement | undefined = $state();
@@ -172,6 +170,8 @@
   let firstVisit = $derived(feeds !== undefined && feeds.length === 0);
   // Starred keeps its own list even with no feeds: it is where its More menu and sort live.
   let welcoming = $derived(firstVisit && !(under.kind === "view" && under.view === "starred"));
+  /** On a computer with the sidebar and the list both hidden, their two buttons become one, which brings both back. */
+  let bothHidden = $derived(!phone && !panes.sidebar && !panes.list && isList(route) && !welcoming);
   /**
    * With a reading area beside the list, the welcome takes the list's room too: one empty state,
    * not an empty column beside it, as Apple Books shows (decision 0048).
