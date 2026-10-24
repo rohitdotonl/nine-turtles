@@ -7,6 +7,9 @@
   import Icon from "./Icon.svelte";
   import { SHORTCUT_GROUPS, SHORTCUTS } from "./keyboard";
 
+  /** What a key's cap shows: a true minus sign (U+2212) for the - key; the key pressed stays the same. */
+  const keyCap = (press: string) => (press === "-" ? "−" : press);
+
   let { open = $bindable() }: { open: boolean } = $props();
 
   let dialog: HTMLDialogElement | undefined = $state();
@@ -89,12 +92,13 @@
                     <!--
                       "g then u" is two presses: a cap for each key, with "then" between them.
                       Each shortcut stays whole; on a narrow phone the alternatives wrap at the slashes.
+                      The - key's cap shows a true minus sign, as a printed key does (decision 0045).
                     -->
                     <td class="py-2 text-right align-middle whitespace-nowrap">
                       {#each shortcut.keys as key, index (key)}{#if index > 0}{" "}{/if}<span class="whitespace-nowrap"
                           >{#if index > 0}<span class="text-muted">{"/ "}</span>{/if}{#each key.split(" then ") as press, step (step)}{#if step > 0}<span
                                 class="text-meta text-muted">{" then "}</span
-                              >{/if}<kbd class="key">{press}</kbd>{/each}</span
+                              >{/if}<kbd class="key">{keyCap(press)}</kbd>{/each}</span
                         >{/each}
                     </td>
                   </tr>

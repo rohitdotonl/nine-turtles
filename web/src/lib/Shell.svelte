@@ -724,11 +724,18 @@
       <p class="mt-3 text-ink-2">Follow the websites you like, and read what they publish here, at your own pace.</p>
     </div>
     {#if !(sheet && route.kind === "add-feed")}
-      <AddFeed bind:field={addField} feeds={[]} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} />
+      <!-- Importing sits just under the field, lined up with it, as the other way in (decision 0045). -->
+      <AddFeed bind:field={addField} feeds={[]} onAdded={added} onOpen={(id) => go({ kind: "feed", id })}>
+        {#snippet alternative()}
+          <a href="/settings" onclick={goImport} class="btn-quiet btn-small -ml-2.5 self-start">Import an OPML file…</a>
+        {/snippet}
+      </AddFeed>
+    {:else}
+      <!-- With the Add a feed sheet over it, the field is the sheet's; importing stays, centred under the words. -->
+      <p class="text-center">
+        <a href="/settings" onclick={goImport} class="btn-quiet btn-small">Import an OPML file…</a>
+      </p>
     {/if}
-    <p class="-mt-5 text-center">
-      <a href="/settings" onclick={goImport} class="btn-quiet btn-small">Import an OPML file…</a>
-    </p>
   </div>
 {/snippet}
 

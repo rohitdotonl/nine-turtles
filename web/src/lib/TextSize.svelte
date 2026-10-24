@@ -1,10 +1,11 @@
 <!--
-  Text size as Apple Books sets it: a small A and a large A on one track,
-  one step each press (the same six steps as `+` and `-`), with the current
-  step's name between them on the same track (decision 0042), said aloud
-  when it changes. At either end the A
-  that can't go further fades and says so to screen readers. Settings › Look
-  and feel and the Aa panel above an article use the same control.
+  Text size as a stepper, the way Apple Books sets it (decision 0045): a
+  small A and a large A, each its own round-ended button, one step each press
+  (the same six steps as `+` and `-`). The current step's name sits between
+  them as plain words with nothing behind it, so it never reads as a third
+  choice, and it's said aloud when it changes. At either end the A that
+  can't go further fades and says so to screen readers. Settings › Look and
+  feel and the Aa panel above an article use the same control.
 -->
 <script lang="ts">
   import { TEXT_SIZES } from "./preferences";
@@ -36,75 +37,81 @@
     type="button"
     bind:this={first}
     aria-label="Smaller text"
-    title="Smaller text (-)"
+    title="Smaller text (−)"
     aria-disabled={smallest}
     onclick={() => step(-1)}
-    class="size"><span aria-hidden="true" class="text-[0.9375rem]">A</span></button
+    class="step"><span aria-hidden="true" class="text-[0.9375rem]">A</span></button
   >
-  <span aria-hidden="true" class="sizes-divider"></span>
   <p role="status" class="sizes-name">{TEXT_SIZES[size]?.label}</p>
-  <span aria-hidden="true" class="sizes-divider"></span>
   <button
     type="button"
     aria-label="Larger text"
     title="Larger text (+)"
     aria-disabled={largest}
     onclick={() => step(1)}
-    class="size"><span aria-hidden="true" class="text-[1.375rem]">A</span></button
+    class="step"><span aria-hidden="true" class="text-[1.375rem]">A</span></button
   >
 </div>
 
 <style>
+  /* No track: the two buttons at the ends, the step's name between them. */
   .sizes {
     display: flex;
     flex: 1 1 auto;
-    align-items: stretch;
-    padding: 0.25rem;
-    border-radius: 0.625rem;
-    background-color: var(--tone);
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
   }
-  .size {
+  /* Each A is a capsule of its own, in the faint tone a sheet's Cancel has. */
+  .step {
     display: flex;
-    flex: 1 1 0;
-    min-width: 2.75rem;
+    flex: 0 0 auto;
+    width: 3.5rem;
     min-height: 2.75rem;
     align-items: center;
     justify-content: center;
-    border-radius: 0.4375rem;
+    border: 1px solid transparent;
+    border-radius: 9999px;
+    background-color: var(--tone);
     color: var(--ink);
     font-family: var(--reading-font);
     line-height: 1;
+    touch-action: manipulation;
     cursor: pointer;
   }
   @media (pointer: fine) {
-    .size {
+    .step {
       min-height: 2.25rem;
     }
   }
   @media (hover: hover) {
-    .size:hover {
-      background-color: var(--hover);
+    .step:hover {
+      background-color: color-mix(in srgb, var(--ink) 11%, transparent);
+    }
+    .step[aria-disabled="true"]:hover {
+      background-color: var(--tone);
     }
   }
-  .size[aria-disabled="true"] {
+  .step[aria-disabled="true"] {
     color: var(--muted);
     cursor: default;
   }
-  /* The current step, in the middle of the track: wide enough for "Smallest" and "Largest", so the As never shift. */
+  @media (forced-colors: active) {
+    .step {
+      border-color: ButtonText;
+    }
+    .step[aria-disabled="true"] {
+      border-color: GrayText;
+      color: GrayText;
+    }
+  }
+  /* The current step: plain words in the second ink, wide enough for "Smallest" and "Largest", so the As never shift. */
   .sizes-name {
-    display: flex;
-    flex: 0 0 auto;
+    flex: 1 1 auto;
     min-width: 5.5rem;
-    align-items: center;
-    justify-content: center;
-    padding-inline: 0.5rem;
     color: var(--ink-2);
     font-size: var(--text-small);
+    text-align: center;
     white-space: nowrap;
-  }
-  .sizes-divider {
-    width: 1px;
-    margin-block: 0.5rem;
-    background-color: color-mix(in srgb, var(--ink) 18%, transparent);
   }
 </style>

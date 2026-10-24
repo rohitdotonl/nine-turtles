@@ -733,9 +733,10 @@ textarea {
   }
 
   /*
-    A checklist row (Edit feed's folders): the name on the left, a checkmark
-    on the right when it's ticked. The real tick box lies under the whole
-    row, so keyboards and screen readers get the usual control.
+    A checklist row (Edit feed's folders): the name on the left, a tick box
+    on the right. The real tick box lies under the whole row, so keyboards
+    and screen readers get the usual control. Every row is a full 44px, on
+    a computer too, the same height as the fields above it.
   */
   .check-row {
     cursor: pointer;
@@ -750,18 +751,20 @@ textarea {
     cursor: pointer;
   }
   /*
-    Its mark: an empty ring when it's off and a filled disc with a check when
-    it's on, so even a list of one folder says which it is, by shape as well
-    as fill (decision 0042).
+    Its mark is a tick box, as a Mac draws one: a rounded square, empty when
+    it's off and filled with a check when it's on. Square, not round, because
+    a feed can be in several folders and a round mark reads as "pick one"
+    (decision 0045); empty or ticked, so even a list of one folder says which
+    it is, by the check as well as the fill.
   */
   .check-row > .check-mark {
     display: flex;
-    width: 1.375rem;
-    height: 1.375rem;
+    width: 1.25rem;
+    height: 1.25rem;
     align-items: center;
     justify-content: center;
     border: 1.5px solid var(--muted);
-    border-radius: 9999px;
+    border-radius: 0.3125rem;
     color: transparent;
   }
   .check-row:has(> input:checked) > .check-mark {
@@ -918,8 +921,14 @@ textarea {
       background-color: var(--hover);
     }
 
+    /*
+      A pointer over the main action takes it a step nearer the text color,
+      never further away: a paler fill would read as switched off, as the
+      critique found on sign-in, where the pointer is still on the button
+      when a refusal arrives (decision 0045).
+    */
     .btn-primary:hover {
-      background-color: color-mix(in srgb, var(--ink) 78%, var(--paper));
+      background-color: color-mix(in srgb, var(--ink) 96%, var(--paper));
     }
   }
 

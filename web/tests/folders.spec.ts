@@ -80,13 +80,16 @@ test("a feed put in two folders appears under both, with its unread count in eac
   await openEdit(page, "Edit feed");
   await expect(page.getByRole("checkbox", { name: first })).toBeChecked();
   // The folders are a checklist whose last row is "New folder…", one grouped list (decision 0042).
-  // Each folder's mark is a filled disc with a check when the feed is in it, an empty ring when it isn't.
+  // Each folder's mark is a tick box (a rounded square, not a ring, since several can be ticked):
+  // filled with a check when the feed is in it, empty when it isn't, and each row is 44px (decision 0045).
   const newFolder = page.getByLabel("New folder");
   await expect(newFolder).toHaveAttribute("placeholder", "New folder…");
   expect(await newFolder.evaluate((element) => element.closest(".inset-group")?.querySelectorAll(".check-row").length)).toBeGreaterThanOrEqual(1);
   const mark = page.locator(".check-row").filter({ hasText: first }).locator(".check-mark");
   const ink = await page.locator("body").evaluate((body) => getComputedStyle(body).color);
   await expect(mark).toHaveCSS("background-color", ink);
+  await expect(mark).not.toHaveCSS("border-top-left-radius", "9999px");
+  expect((await page.locator(".check-row").filter({ hasText: first }).boundingBox())!.height).toBeGreaterThanOrEqual(44);
   await page.getByRole("checkbox", { name: first }).uncheck();
   await expect(mark).toBeVisible();
   await expect(mark).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");

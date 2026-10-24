@@ -58,6 +58,7 @@
     <p id="sign-in-message" role="status" class="flex min-h-6 items-start gap-1.5 text-small text-danger">
       {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
     </p>
-    <button type="submit" disabled={busy} class="btn-primary">Sign in</button>
+    <!-- Busy is said with aria-disabled, not disabled, so the button keeps its look and the keyboard's place (decision 0045). -->
+    <button type="submit" aria-disabled={busy} class="btn-primary">Sign in</button>
   </form>
 </main>

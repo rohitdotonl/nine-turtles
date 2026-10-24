@@ -2,15 +2,15 @@
   The themes as Apple Books shows them (decision 0039): each a small page
   with "Aa" on it, in the reading font, drawn in that theme's own paper and
   ink, its name underneath. Automatic is half the light page, half the dark
-  one. The chosen tile is ringed in the text color with a checkmark on its
-  corner, and its name is semibold, so it never shows by color alone.
+  one. The chosen tile has two marks, as in Apple Books: one ring in the text
+  color, a little clear of the page, and its name semibold, so it never shows
+  by color alone (decision 0045: no checkmark badge, no inner edge).
 
   Each tile is a real radio button under the whole tile, so arrow keys move
   between them and screen readers hear the theme's name. Settings › Look and
   feel and the Aa panel above an article use the same tiles.
 -->
 <script lang="ts">
-  import Icon from "./Icon.svelte";
   import type { Preferences } from "./preferences";
   import { LOOKS, THEMES } from "./themes";
 
@@ -47,7 +47,6 @@
           {:else}
             <span class="half justify-center" style:background-color={LOOKS[choice.value].page} style:color={LOOKS[choice.value].ink}>Aa</span>
           {/if}
-          <span class="tile-check"><Icon name="check" size={12} /></span>
         </span>
         <span class="tile-name">{choice.label}</span>
       </label>
@@ -104,21 +103,6 @@
     flex: 1 1 0;
     align-items: center;
   }
-  /* The checkmark on the chosen tile's corner: the page color on a disc of text color. */
-  .tile-check {
-    position: absolute;
-    right: 0.25rem;
-    bottom: 0.25rem;
-    display: none;
-    width: 1.125rem;
-    height: 1.125rem;
-    align-items: center;
-    justify-content: center;
-    border-radius: 999px;
-    background-color: var(--ink);
-    color: var(--paper);
-    box-shadow: 0 0 0 1.5px var(--paper);
-  }
   .tile-name {
     max-width: 100%;
     overflow: hidden;
@@ -126,16 +110,14 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  /* The chosen theme: ringed in the text color, a checkmark, its name semibold (never color alone). */
+  /* The chosen theme: one ring in the text color, 2px clear of the page, and its name semibold (never color alone). */
   .tile:has(input:checked) {
     color: var(--ink);
     font-weight: 600;
   }
   .tile:has(input:checked) .tile-page {
+    border-color: transparent;
     outline: 2px solid var(--ink);
-  }
-  .tile:has(input:checked) .tile-check {
-    display: flex;
   }
   /* The keyboard's place: around the whole tile and its name, a step out from the ring. */
   .tile:has(input:focus-visible) {
@@ -145,11 +127,6 @@
   @media (forced-colors: active) {
     .tile:has(input:checked) .tile-page {
       outline-color: Highlight;
-    }
-    .tile-check {
-      forced-color-adjust: none;
-      background-color: Highlight;
-      color: HighlightText;
     }
   }
 </style>

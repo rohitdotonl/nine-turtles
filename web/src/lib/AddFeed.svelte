@@ -10,6 +10,7 @@
   Cancel, "Add feed" sits beside the field.
 -->
 <script lang="ts">
+  import type { Snippet } from "svelte";
   import Icon from "./Icon.svelte";
   import { addFeed, explain, type Choice, type Feed } from "./feeds";
 
@@ -19,6 +20,7 @@
     onAdded,
     onOpen,
     onCancel,
+    alternative,
   }: {
     field?: HTMLInputElement;
     /** The feeds already followed, to name one that's added twice. */
@@ -27,6 +29,11 @@
     onOpen: (feedId: number) => void;
     /** In a sheet or its page: Cancel, beside Add feed in one row at the foot. */
     onCancel?: () => void;
+    /**
+     * In the welcome: another way in (importing an OPML file), just under the
+     * field, so it reads as an alternative to it rather than a footer.
+     */
+    alternative?: Snippet;
   } = $props();
 
   let address = $state("");
@@ -111,55 +118,66 @@
     {/if}
   </div>
   <!--
-    Screen readers hear each new line here without moving the keyboard's place.
-    A problem is in red words after an icon. In a sheet the line takes room
-    only once there's something to say, and the sheet grows down by it (its
-    top stays put). In the welcome, centred on the page, it keeps room for two
-    lines, so a message arriving moves nothing above it.
+    In the welcome, everything under the field sits in a block that keeps
+    room for a two-line message and the line after it (the page is centred,
+    so a message arriving moves nothing above it). In a sheet the block
+    isn't drawn at all, so the sheet's own spacing stands. The other way in sits just under the field, and
+    a message, when there is one, takes its place there and moves it down
+    within that room (decision 0045).
   -->
-  <p
-    id="feed-address-status"
-    role="status"
-    class={[
-      "flex items-start gap-1.5 text-small",
-      problem && !busy && "text-danger",
-      onCancel ? !busy && !message && "sr-only" : "min-h-[2lh]",
-    ]}
-  >
-    {#if busy}Looking for a feed…{:else}{#if problem}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{/if}{message}{/if}
-  </p>
-
-  {#if choices.length > 0}
-    <ul class="mb-2 flex flex-col gap-2">
-      {#each choices as choice (choice.url)}
-        <li>
-          <button
-            type="button"
-            aria-disabled={busy}
-            onclick={() => add(choice.url, true)}
-            class="flex min-h-11 w-full cursor-pointer flex-col items-start rounded-md border border-muted px-4 py-2 text-left hover:bg-[var(--hover)]"
-          >
-            <span>{choice.title}</span>
-            <span class="text-small break-all text-muted">{choice.url}</span>
-          </button>
-        </li>
-      {/each}
-    </ul>
-  {/if}
-
-  {#if alreadyId !== undefined}
-    <p class="-mt-1 mb-2">
-      <a
-        href={`/feeds/${alreadyId}`}
-        onclick={(event) => {
-          if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
-          event.preventDefault();
-          if (alreadyId !== undefined) onOpen(alreadyId);
-        }}
-        class="inline-flex min-h-11 items-center underline underline-offset-4">Go to {alreadyTitle ?? "this feed"}</a
-      >
+  <div class={onCancel ? "contents" : "flex min-h-[5.8rem] flex-col"}>
+    <!--
+      Screen readers hear each new line here without moving the keyboard's place.
+      A problem is in red words after an icon. In a sheet the line takes room
+      only once there's something to say, and the sheet grows down by it (its
+      top stays put). In the welcome the block around it keeps the room.
+    -->
+    <p
+      id="feed-address-status"
+      role="status"
+      class={[
+        "flex items-start gap-1.5 text-small",
+        problem && !busy && "text-danger",
+        onCancel ? !busy && !message && "sr-only" : (busy || message) && "pb-2",
+      ]}
+    >
+      {#if busy}Looking for a feed…{:else}{#if problem}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{/if}{message}{/if}
     </p>
-  {/if}
+
+    {#if choices.length > 0}
+      <ul class="mb-2 flex flex-col gap-2">
+        {#each choices as choice (choice.url)}
+          <li>
+            <button
+              type="button"
+              aria-disabled={busy}
+              onclick={() => add(choice.url, true)}
+              class="flex min-h-11 w-full cursor-pointer flex-col items-start rounded-md border border-muted px-4 py-2 text-left hover:bg-[var(--hover)]"
+            >
+              <span>{choice.title}</span>
+              <span class="text-small break-all text-muted">{choice.url}</span>
+            </button>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+
+    {#if alreadyId !== undefined}
+      <p class="-mt-1 mb-2">
+        <a
+          href={`/feeds/${alreadyId}`}
+          onclick={(event) => {
+            if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+            event.preventDefault();
+            if (alreadyId !== undefined) onOpen(alreadyId);
+          }}
+          class="inline-flex min-h-11 items-center underline underline-offset-4">Go to {alreadyTitle ?? "this feed"}</a
+        >
+      </p>
+    {/if}
+
+    {#if alternative}{@render alternative()}{/if}
+  </div>
 
   {#if onCancel}
     <!-- The sheet's one row of actions, 20px under the field (with the form's 8px gap): Cancel, then Add feed at the right end. -->

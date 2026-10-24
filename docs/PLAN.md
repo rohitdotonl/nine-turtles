@@ -296,6 +296,11 @@ each with screenshots:
 - ✅ Quiet endings and blank paper (fourth critique): a short end-note link
   that never breaks, balanced titles, at least 56px beside the text on a
   computer, and an empty reading pane with nothing drawn (decision 0044).
+- ✅ Controls that say what they are (fourth critique): a text-size stepper
+  of two round-ended As, one ring on the chosen theme, tick boxes and 44px
+  rows for Edit feed's folders, a main button that never looks switched off,
+  importing just under the welcome's field, and a true minus in the shortcut
+  list (decision 0045).
 
 ---
 
