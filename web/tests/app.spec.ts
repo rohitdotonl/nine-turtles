@@ -494,9 +494,17 @@ test("the sidebar ends with Add feed, then the shortcut list and Settings as ico
   expect(add.y).toBeGreaterThan(all.y);
   expect(set.y + set.height).toBeLessThanOrEqual(900);
   await expect(settings).toHaveAttribute("title", "Settings");
+  // While the shortcut list is open its button shows pressed, with the gear's fill (decision 0054).
+  // (Found by its label, not its role: the open list's dialog leaves the page behind it inert.)
+  const keysBehind = page.locator('#sidebar button[aria-label="Keyboard shortcuts"]');
+  await expect(keysBehind).toHaveAttribute("aria-pressed", "false");
+  const restingFill = await keysBehind.evaluate((element) => getComputedStyle(element).backgroundColor);
   await keys.click();
   await expect(page.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeVisible();
+  await expect(keysBehind).toHaveAttribute("aria-pressed", "true");
+  expect(await keysBehind.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe(restingFill);
   await page.getByRole("dialog").getByRole("button", { name: "Close" }).click();
+  await expect(keysBehind).toHaveAttribute("aria-pressed", "false");
   await expect(toggle(page)).toHaveAttribute("title", "Hide the sidebar ( [ )");
   await toggle(page).click();
   await expect(toggle(page)).toHaveAttribute("title", "Show the sidebar ( [ )");

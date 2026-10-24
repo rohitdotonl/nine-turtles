@@ -60,6 +60,7 @@
     results = false,
     oneFeed = false,
     count = $bindable(0),
+    found = $bindable(""),
   }: {
     source: Source;
     order: Order;
@@ -81,6 +82,8 @@
     oneFeed?: boolean;
     /** How many articles are listed, for the empty reading area's hint. */
     count?: number;
+    /** What the line above search results says ("28 results"): empty until they load, and when this isn't a search. */
+    found?: string;
   } = $props();
 
   /** How often the list asks whether new items are waiting. */
@@ -117,6 +120,10 @@
 
   $effect(() => {
     count = articles.length;
+  });
+
+  $effect(() => {
+    found = results && loaded ? resultCount(articles.length, next !== null) : "";
   });
 
   let selectedIndex = $derived(selected ? articles.findIndex((article) => article.id === selected?.id) : -1);

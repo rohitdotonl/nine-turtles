@@ -332,6 +332,10 @@ each with screenshots:
   size on the segmented track, helper text on the grid, a shortcut-list
   footer with edged key caps, one heading on a phone's empty state
   (decision 0052).
+- ✅ List and sidebar finish (seventh critique, batch 7): a faint line
+  between panes on a computer, a 28px dot gutter in a phone's list, the
+  shortcuts button pressed while its list is open, and a result count the
+  search options never hide (decision 0054).
 
 ---
 

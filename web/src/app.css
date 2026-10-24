@@ -531,8 +531,8 @@ body {
   Books spaces its lists. The pill is 8px in from the pane; inside it a
   24px gutter holds the unread dot, so every title starts 32px into the
   pane, lined up with the list's title, the search field and the caption
-  at the end, whether or not it has a dot. On a phone, titles start at the
-  screen's one 20px margin and the pill sits 4px in (.list-pane, decision 0043).
+  at the end, whether or not it has a dot. On a phone, titles start 28px in
+  and the pill sits 6px in (.list-pane, decisions 0043, 0054).
 */
 .item-row {
   --place-tint: var(--color-tint-list);
@@ -587,10 +587,10 @@ body {
   Unread: a drawn 8px dot in the theme's accent, centred in the row's own
   24px gutter (8px from the pill's edge, 8px clear of the title), level with
   the middle of the title's first line, so it reads as a mark in a margin,
-  not a bullet. On a phone it hangs in the 20px margin, 8px from the screen's
-  edge and 4px clear of the title, so the keyboard's ring (2px inside the
-  pill, which sits 4px in) passes 2px clear of it, never touching it
-  (decision 0049). The semibold title says it too, so it
+  not a bullet. On a phone it sits in the list's 28px gutter, 10px from the
+  screen's edge and 10px clear of the title, so the keyboard's ring (2px
+  inside the pill, which sits 6px in) passes 2px clear of it, never touching
+  it (decisions 0049, 0054). The semibold title says it too, so it
   never rests on color.
 */
 .unread-dot {
@@ -1595,8 +1595,11 @@ dialog.dimmed::backdrop {
   The list's edges (decision 0043): its title, search field, row titles and
   closing caption start --list-start into the pane and end --list-end before
   its far edge; the pill sits --pill-inset in. On a phone every screen keeps
-  one 20px margin, so the list's titles start at 20px too, the pill 4px in,
-  and the unread dot hangs in the margin before them.
+  one 20px margin, but a list keeps a gutter for its unread dot, as Books and
+  Mail do on iOS (decision 0054): its title, search field and row titles start
+  28px in, the pill 6px in, and the dot 10px from the screen's edge (4px into
+  the pill), so the keyboard's ring, 2px inside the pill, still passes 2px
+  clear of it (decision 0049).
 */
 .list-pane {
   --list-start: 2rem;
@@ -1605,10 +1608,21 @@ dialog.dimmed::backdrop {
   --dot-left: 8px;
 }
 .list-pane.phone {
-  --list-start: 1.25rem;
+  --list-start: 1.75rem;
   --list-end: 1.25rem;
-  --pill-inset: 0.25rem;
+  --pill-inset: 0.375rem;
   --dot-left: 4px;
+}
+
+/*
+  Where two panes meet on a computer (decision 0054): one 1px line in the
+  same faint tone of the text color as the list's hairlines, on the sidebar's
+  right edge and on the list's when the reading pane is beside it, as Apple
+  Books divides its Mac sidebar from its content. A border, not a shadow, so
+  nothing in the pane (the note's band at the list's foot) can paint over it.
+*/
+.pane-edge {
+  border-right: 1px solid color-mix(in srgb, var(--ink) 9%, transparent);
 }
 
 /* A scrolling area under a fixed top line: a hairline appears once its content has scrolled under that line (edge.ts). */

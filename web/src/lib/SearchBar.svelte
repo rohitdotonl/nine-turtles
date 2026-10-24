@@ -33,6 +33,7 @@
     feeds,
     folders,
     here,
+    found = "",
     onChange,
   }: {
     query: Query;
@@ -40,6 +41,8 @@
     folders: Folder[];
     /** Where search started: its row in the options reads "This list". */
     here: Scope;
+    /** How many the search found ("28 results"), empty until known; the options repeat it where they'd cover the list's own line. */
+    found?: string;
     /** The query changed; `now` when the search should follow at once, not after a pause in typing. */
     onChange: (query: Query, now: boolean) => void;
   } = $props();
@@ -442,6 +445,18 @@
           </div>
         {/if}
       </fieldset>
+      <!--
+        How many were found, at the menu's foot, only where the menu would cover the line above the
+        results that says it (a list narrower than 26rem: the menu is 17rem from the right, the count
+        needs about 6rem on the left), so changing a filter still shows its effect (decision 0054).
+        Screen readers already hear that line, so this copy is for the eyes only.
+      -->
+      {#if found}
+        <div aria-hidden="true" class="hidden @max-[26rem]:block">
+          <div class="mx-2 my-1.5 h-px bg-ink/10"></div>
+          <p class="px-3 pt-0.5 pb-1 text-meta text-muted">{found}</p>
+        </div>
+      {/if}
     </div>
   </div>
 
