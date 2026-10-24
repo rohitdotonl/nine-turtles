@@ -593,7 +593,7 @@
                 tabindex="-1"
                 bind:this={listHeading}
                 title={headingText}
-                class="line-clamp-2 min-w-0 flex-1 font-serif break-words text-heading font-bold tracking-[-0.01em]"
+                class="line-clamp-2 min-w-0 flex-1 font-serif break-words text-heading font-semibold tracking-[-0.01em]"
               >
                 {headingText}
               </h2>

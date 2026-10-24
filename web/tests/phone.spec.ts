@@ -86,12 +86,12 @@ test.describe("on a phone", () => {
     await row(page, "The pleasure of a slow letter").click();
 
     const words = (await toolbar(page).locator(":scope > *").allInnerTexts()).map((text) => text.trim());
-    expect(words).toEqual(["Previous", "Next", "Star", expect.stringMatching(/^(Share|Copy link)$/), "Open original"]);
+    expect(words).toEqual(["Previous", "Next", "Star", expect.stringMatching(/^(Share|Copy link)$/), "Original"]);
     // Within thumb reach: at the bottom of the screen.
     const box = await toolbar(page).boundingBox();
     const height = page.viewportSize()?.height ?? 0;
     expect(Math.round((box?.y ?? 0) + (box?.height ?? 0))).toBe(height);
-    // The icons sit in one line, even when "Open original" wraps onto two lines, as it does at this width.
+    // Every word fits on one line ("Original" keeps its full name for screen readers), and the icons sit in one line.
     const openerLines = await toolbar(page)
       .getByRole("link", { name: "Open original" })
       .evaluate((link) => {
@@ -99,7 +99,7 @@ test.describe("on a phone", () => {
         words.selectNodeContents(link.lastChild!);
         return new Set([...words.getClientRects()].map((line) => Math.round(line.top))).size;
       });
-    expect(openerLines).toBe(2);
+    expect(openerLines).toBe(1);
     const tops = await toolbar(page).locator(":scope > * > svg").evaluateAll((icons) =>
       icons.filter((icon) => getComputedStyle(icon).visibility !== "hidden").map((icon) => Math.round(icon.getBoundingClientRect().top)),
     );
