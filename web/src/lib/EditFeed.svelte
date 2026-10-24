@@ -76,20 +76,21 @@
     <fieldset class="flex min-w-0 flex-col gap-1.5">
       <legend class="mb-1.5 text-small text-ink-2">Folders</legend>
       <!--
-        A checklist, as Apple lists choices (decision 0042): each folder a row
-        with a mark at its end, an empty ring when the feed isn't in it and a
-        filled disc with a check when it is, so even one folder reads plainly.
-        "New folder…" is the list's last row, a text box of its own.
+        A checklist, as Apple lists choices: each folder a 44px row ending in a
+        tick box, a rounded square, empty when the feed isn't in it and filled
+        with a check when it is (decision 0045). Square, because a feed can be
+        in several folders; a round mark would read as "pick one". "New
+        folder…" is the list's last row, a text box of its own.
       -->
       <div class="inset-group">
         {#each folders as folder (folder.id)}
-          <label class="inset-row check-row pointer-fine:min-h-9">
+          <label class="inset-row check-row">
             <input type="checkbox" value={folder.id} bind:group={chosen} />
             <span class="min-w-0 break-words">{folder.name}</span>
             <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
           </label>
         {/each}
-        <label class="inset-row pointer-fine:min-h-9">
+        <label class="inset-row">
           <span class="sr-only">New folder</span>
           <input
             bind:value={newFolder}

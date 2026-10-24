@@ -39,8 +39,13 @@ test("a fresh slowfeed shows the welcome in the reading area: the paste field, a
   expect(Math.abs(welcome!.x + welcome!.width / 2 - (pane!.x + pane!.width / 2))).toBeLessThan(4);
   // The field is wide enough for a real address.
   expect((await field(page).boundingBox())!.width).toBeGreaterThan(280);
-  // "Import an OPML file…", a quiet button under the field, leads to Settings, at Your data.
-  await page.getByRole("link", { name: "import an OPML file" }).click();
+  // "Import an OPML file…", a quiet button just under the field and lined up with it (its words
+  // start where the field does), leads to Settings, at Your data (decision 0045).
+  const importLink = page.getByRole("link", { name: "import an OPML file" });
+  const [fieldBox, importBox] = await Promise.all([field(page).boundingBox(), importLink.boundingBox()]);
+  expect(importBox!.y - (fieldBox!.y + fieldBox!.height)).toBeLessThanOrEqual(12);
+  expect(Math.abs(importBox!.x + 10 - fieldBox!.x)).toBeLessThan(3);
+  await importLink.click();
   await expect(page).toHaveURL(/\/settings$/);
   await expect(page.getByRole("heading", { level: 3, name: "Your data" })).toBeFocused();
   await expect(sidebar(page).getByRole("link", { name: "Add feed" })).toBeVisible();

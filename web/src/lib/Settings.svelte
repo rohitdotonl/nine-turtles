@@ -145,7 +145,7 @@
 
           <div class="inset-row">
             <p id="text-size-name" class="row-name">Text size</p>
-            <!-- The current step sits inside the control, between its two As (decision 0042). -->
+            <!-- A stepper: two round-ended As with the current step between them as plain words (decision 0045). -->
             <div class="control">
               <TextSize bind:size={preferences.textSize} labelledby="text-size-name" />
             </div>

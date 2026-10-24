@@ -4,6 +4,20 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 24 October 2026: Controls that say what they are
+
+- Text size in Settings and the Aa panel is now a clear stepper: two round
+  buttons, a small A and a large A, with the size's name between them in
+  plain words, so it no longer looks like a switch with nothing chosen.
+- The chosen theme has one ring and a bold name, without the extra tick.
+- Edit feed's folders end in small square tick boxes (a feed can be in
+  several), and each row is as tall as the fields above it.
+- The main button (Sign in, Save, Add feed) no longer turns paler under the
+  pointer, so it never looks switched off.
+- On a first visit, "Import an OPML file…" sits right under the address
+  field, as the other way in.
+- The shortcut list shows a true minus sign for smaller text.
+
 ## 24 October 2026: Toward Apple Books, batch 3
 
 - The article's bars are solid in the page's color, so text no longer shows

@@ -288,6 +288,11 @@ each with screenshots:
   one column with folder arrows first, no shortcut hint, the welcome alone
   on a first visit, warm dark pills, and a phone feeds screen with chevrons
   and no stale selection (decision 0041).
+- ✅ Controls that say what they are (fourth critique): a text-size stepper
+  of two round-ended As, one ring on the chosen theme, tick boxes and 44px
+  rows for Edit feed's folders, a main button that never looks switched off,
+  importing just under the welcome's field, and a true minus in the shortcut
+  list (decision 0045).
 
 ---
 

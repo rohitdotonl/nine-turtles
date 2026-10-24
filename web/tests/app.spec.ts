@@ -212,14 +212,16 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
   await expect(bars.nth(1)).toHaveAttribute("content", "#1A1917");
   await page.getByLabel("Sepia").check();
   await expect(bars.nth(0)).toHaveAttribute("content", "#F4EBD7");
-  // Each theme is an "Aa" tile in its own paper and ink; the chosen one is
-  // ringed, carries a checkmark and has its name semibold, so it shows without color.
+  // Each theme is an "Aa" tile in its own paper and ink; the chosen one has two
+  // marks, one ring and its name semibold, so it shows without color (decision 0045:
+  // no checkmark badge, and no inner edge on the chosen page).
   const theme = (name: string) => page.locator("label.tile").filter({ hasText: name });
   await expect(theme("Sepia")).toHaveCSS("font-weight", "600");
   await expect(theme("Dark")).toHaveCSS("font-weight", "400");
   await expect(theme("Sepia").locator(".tile-page")).toHaveCSS("outline-style", "solid");
-  await expect(theme("Sepia").locator(".tile-check")).toBeVisible();
-  await expect(theme("Dark").locator(".tile-check")).toBeHidden();
+  await expect(page.locator(".tile-check")).toHaveCount(0);
+  await expect(theme("Sepia").locator(".tile-page")).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+  await expect(theme("Dark").locator(".tile-page")).toHaveCSS("outline-style", "none");
   await expect(theme("Sepia").locator(".tile-page")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect(theme("Sepia").locator(".tile-page > span").first()).toHaveCSS("background-color", "rgb(244, 235, 215)");
   const ring = (name: string) => theme(name).locator(".tile-page").evaluate((element) => getComputedStyle(element).outlineColor);
@@ -253,7 +255,8 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
   await expect(sample).toHaveCSS("font-family", /^Literata/);
   await page.getByLabel("Atkinson Hyperlegible").check();
   await expect(sample).toHaveCSS("font-family", /^"Atkinson Hyperlegible"/);
-  // Text size is a small A and a large A, as in the Aa panel, with the step's name between them on the same track (decision 0042).
+  // Text size is a stepper, as in the Aa panel: a small A and a large A, each its own round-ended
+  // button, with the step's name between them as plain words on no track (decision 0045).
   const larger = look.getByRole("button", { name: "Larger text" });
   const [smallerBox, nameBox, largerBox] = await Promise.all([
     look.getByRole("button", { name: "Smaller text" }).boundingBox(),
@@ -262,6 +265,9 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
   ]);
   expect(nameBox!.x).toBeGreaterThanOrEqual(smallerBox!.x + smallerBox!.width);
   expect(nameBox!.x + nameBox!.width).toBeLessThanOrEqual(largerBox!.x);
+  await expect(look.getByRole("status")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(larger).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  expect(largerBox!.x - (smallerBox!.x + smallerBox!.width)).toBeGreaterThan(80);
   for (let step = 0; step < 3; step++) await larger.click();
   await expect(look.getByRole("status")).toHaveText("Largest");
   await expect(larger).toHaveAttribute("aria-disabled", "true");
