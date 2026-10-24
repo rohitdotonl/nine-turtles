@@ -72,14 +72,14 @@ test("the sidebar lists Unread, Starred and All, with the accent marking where y
   const unread = sidebar(page).getByRole("link", { name: "Unread" });
   await expect(unread).toHaveAttribute("aria-current", "page");
   const accent = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--accent").trim());
-  expect(accent).toBe("#2f4a7a");
-  // One pill, as in the list: the accent mixed into the sidebar (off-white's
+  expect(accent).toBe("#2c4f8c");
+  // One pill, as in the list: the accent mixed into the sidebar (Original's
   // --tint-sidebar), 8px corners, 8px in from the pane's edge, and no bar.
-  await expect(unread).toHaveCSS("background-color", "rgb(207, 206, 203)");
+  await expect(unread).toHaveCSS("background-color", "rgb(214, 218, 228)");
   await expect(unread).toHaveCSS("border-top-left-radius", "8px");
   // As in a Mac source list, the place you're in has its icon in the accent, beside the pill and the semibold name (decision 0043).
-  await expect(unread.locator("svg")).toHaveCSS("color", "rgb(47, 74, 122)");
-  await expect(sidebar(page).getByRole("link", { name: "Starred" }).locator("svg")).not.toHaveCSS("color", "rgb(47, 74, 122)");
+  await expect(unread.locator("svg")).toHaveCSS("color", "rgb(44, 79, 140)");
+  await expect(sidebar(page).getByRole("link", { name: "Starred" }).locator("svg")).not.toHaveCSS("color", "rgb(44, 79, 140)");
   expect(await unread.evaluate((element) => getComputedStyle(element, "::before").content)).toBe("none");
   const inset = await unread.evaluate((element) => element.getBoundingClientRect().left - element.closest("nav")!.getBoundingClientRect().left);
   expect(Math.abs(inset - 8)).toBeLessThan(1);
@@ -202,46 +202,57 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
   await expect(page).toHaveURL(/\/settings$/);
   await expect(page.getByRole("heading", { level: 2, name: "Settings" })).toBeFocused();
 
-  await page.getByLabel("Sepia").check();
-  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(244, 235, 215)");
-  // The phone's bar above the page follows the chosen theme too, and
-  // "Automatic" gives back index.html's light and dark colors.
+  // Original, matching the device, until something else is chosen (decision 0046).
+  await expect(page.getByLabel("Original")).toBeChecked();
+  await expect(page.getByLabel("Match device")).toBeChecked();
+  await page.getByLabel("Calm").check();
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(242, 230, 208)");
+  // The phone's bar above the page follows the version showing too.
   const bars = page.locator('meta[name="theme-color"]');
   await expect(bars).toHaveCount(2);
-  await expect(bars.nth(0)).toHaveAttribute("content", "#F4EBD7");
-  await expect(bars.nth(1)).toHaveAttribute("content", "#F4EBD7");
-  await page.getByLabel("Automatic").check();
-  await expect(bars.nth(0)).toHaveAttribute("content", "#F8F6F1");
-  await expect(bars.nth(1)).toHaveAttribute("content", "#1A1917");
-  await page.getByLabel("Sepia").check();
-  await expect(bars.nth(0)).toHaveAttribute("content", "#F4EBD7");
+  await expect(bars.nth(0)).toHaveAttribute("content", "#F2E6D0");
+  await expect(bars.nth(1)).toHaveAttribute("content", "#F2E6D0");
+  // Appearance: Dark shows the night version, and the tiles redraw in it.
+  const theme = (name: string) => page.locator("label.tile").filter({ hasText: name });
+  await page.getByLabel("Dark", { exact: true }).check();
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(41, 35, 28)");
+  await expect(bars.nth(0)).toHaveAttribute("content", "#29231C");
+  await expect(theme("Calm").locator(".tile-page")).toHaveCSS("background-color", "rgb(41, 35, 28)");
+  // Match device follows the device, and switches with it while slowfeed is open.
+  await page.getByLabel("Match device").check();
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(242, 230, 208)");
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(41, 35, 28)");
+  await expect(bars.nth(1)).toHaveAttribute("content", "#29231C");
+  await page.emulateMedia({ colorScheme: "light" });
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(242, 230, 208)");
   // Each theme is an "Aa" tile in its own paper and ink; the chosen one has two
   // marks, one ring and its name semibold, so it shows without color (decision 0045:
   // no checkmark badge, and no inner edge on the chosen page).
-  const theme = (name: string) => page.locator("label.tile").filter({ hasText: name });
-  await expect(theme("Sepia")).toHaveCSS("font-weight", "600");
-  await expect(theme("Dark")).toHaveCSS("font-weight", "400");
-  await expect(theme("Sepia").locator(".tile-page")).toHaveCSS("outline-style", "solid");
+  await expect(theme("Calm")).toHaveCSS("font-weight", "600");
+  await expect(theme("Quiet")).toHaveCSS("font-weight", "400");
+  await expect(theme("Calm").locator(".tile-page")).toHaveCSS("outline-style", "solid");
   await expect(page.locator(".tile-check")).toHaveCount(0);
-  await expect(theme("Sepia").locator(".tile-page")).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
-  await expect(theme("Dark").locator(".tile-page")).toHaveCSS("outline-style", "none");
-  await expect(theme("Sepia").locator(".tile-page")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
-  await expect(theme("Sepia").locator(".tile-page > span").first()).toHaveCSS("background-color", "rgb(244, 235, 215)");
+  await expect(theme("Calm").locator(".tile-page")).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+  await expect(theme("Quiet").locator(".tile-page")).toHaveCSS("outline-style", "none");
+  await expect(theme("Calm").locator(".tile-page")).toHaveCSS("background-color", "rgb(242, 230, 208)");
+  // Bold's "Aa" is bold, as its article text is.
+  await expect(theme("Bold").locator(".tile-page")).toHaveCSS("font-weight", "700");
   const ring = (name: string) => theme(name).locator(".tile-page").evaluate((element) => getComputedStyle(element).outlineColor);
-  expect(await ring("Sepia")).not.toBe(await ring("Dark"));
-  // All eleven themes and Automatic, in tidy rows of equal tiles.
-  await expect(page.locator("label.tile")).toHaveCount(12);
+  expect(await ring("Calm")).not.toBe(await ring("Quiet"));
+  // The six themes, in tidy rows of equal tiles.
+  await expect(page.locator("label.tile")).toHaveCount(6);
   const widths = await page.locator("label.tile .tile-page").evaluateAll((pages) => pages.map((each) => Math.round(each.getBoundingClientRect().width)));
   expect(new Set(widths).size).toBe(1);
   // Arrow keys move between choices, as with any radio buttons.
-  await page.getByLabel("Sepia").focus();
+  await page.getByLabel("Calm").focus();
   await page.keyboard.press("ArrowRight");
-  await expect(page.getByLabel("Porcelain")).toBeChecked();
+  await expect(page.getByLabel("Focus")).toBeChecked();
   await page.keyboard.press("ArrowLeft");
-  await expect(page.getByLabel("Sepia")).toBeChecked();
+  await expect(page.getByLabel("Calm")).toBeChecked();
   // In high-contrast mode the chosen picture is ringed in the system's highlight, so it still stands out.
   await page.emulateMedia({ forcedColors: "active" });
-  expect(await ring("Sepia")).not.toBe(await ring("Dark"));
+  expect(await ring("Calm")).not.toBe(await ring("Quiet"));
   await page.emulateMedia({ forcedColors: "none" });
   // Font and line width are segmented controls: the chosen one is raised (a fill and a small shadow, no edge) and semibold.
   await expect(page.locator("label.choice").filter({ hasText: "Medium" })).toHaveCSS("font-weight", "600");
@@ -251,7 +262,7 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
   // Each row's control sits at its right end, and every control is the same width.
   const look = page.getByRole("region", { name: "Look and feel" });
   const controls = await look.locator(".control").evaluateAll((all) => all.map((each) => Math.round(each.getBoundingClientRect().width)));
-  expect(controls).toHaveLength(3);
+  expect(controls).toHaveLength(4);
   expect(new Set(controls).size).toBe(1);
 
   const sample = page.locator(".reading-sample");
@@ -279,8 +290,9 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
 
   await page.reload();
   await appReady(page);
-  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(244, 235, 215)");
-  await expect(page.getByLabel("Sepia")).toBeChecked();
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(242, 230, 208)");
+  await expect(page.getByLabel("Calm")).toBeChecked();
+  await expect(page.getByLabel("Match device")).toBeChecked();
   await expect(page.getByLabel("Atkinson Hyperlegible")).toBeChecked();
   await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("status")).toHaveText("Largest");
   await expect(page.getByLabel("Narrow")).toBeChecked();
@@ -290,12 +302,20 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
   await expect(page).toHaveURL(/\/unread$/);
 });
 
-test("a chosen theme stays, whatever the device's light or dark setting", async ({ page }) => {
-  await chooseTheme(page, "sepia");
+test("a chosen Appearance stays, whatever the device's light or dark setting", async ({ page }) => {
+  await chooseTheme(page, "calm-light");
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/");
   await appReady(page);
-  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(244, 235, 215)");
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(242, 230, 208)");
+});
+
+test("a theme saved before decision 0046 opens as its nearest new theme", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("slowfeed.preferences", JSON.stringify({ theme: "sepia" })));
+  await page.goto("/");
+  await appReady(page);
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "calm");
+  await expect(page.locator("html")).toHaveAttribute("data-mode", "light");
 });
 
 test("at 200% zoom nothing overlaps and everything still works", async ({ page }) => {

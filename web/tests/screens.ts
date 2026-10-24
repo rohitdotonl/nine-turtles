@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP, TEST_PASSWORD } from "../playwright.config";
-import { LOOKS, THEMES, type Theme } from "../src/lib/themes";
+import { LOOKS, THEMES as THEME_NAMES, type Mode, type Theme } from "../src/lib/themes";
 
 // Every screen of slowfeed. Each new screen is added here, so it is
 // automatically checked for accessibility and photographed for the owner.
@@ -140,11 +140,21 @@ export const SCREENS: Screen[] = [
   },
 ];
 
-export { THEMES };
+/** One theme's day or night version, as "calm-dark" (decision 0046). */
+export type Variant = `${Theme}-${Mode}`;
 
-// Each theme's reading background (themes.ts, checked against app.css), used to prove the theme took effect.
-function background(theme: Theme): string {
-  const hex = LOOKS[theme].page;
+/** Every theme by day and by night: twelve versions, each checked and photographed. */
+export const THEMES: Variant[] = THEME_NAMES.flatMap((theme) => (["light", "dark"] as const).map((mode) => `${theme}-${mode}` as const));
+
+function parts(variant: Variant): [Theme, Mode] {
+  const [theme, mode] = variant.split("-") as [Theme, Mode];
+  return [theme, mode];
+}
+
+// Each version's reading background (themes.ts, checked against app.css), used to prove the theme took effect.
+function background(variant: Variant): string {
+  const [theme, mode] = parts(variant);
+  const hex = LOOKS[theme][mode].page;
   return `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(", ")})`;
 }
 
@@ -180,14 +190,15 @@ export async function appReady(page: Page): Promise<void> {
   await expect(page.getByLabel("Password").or(page.locator("#sidebar"))).toBeAttached();
 }
 
-/** Chooses a theme the way Settings saves it, before the page loads. */
-export async function chooseTheme(page: Page, theme: Theme): Promise<void> {
+/** Chooses a theme and its day or night version the way Settings saves them, before the page loads. */
+export async function chooseTheme(page: Page, variant: Variant): Promise<void> {
+  const [theme, appearance] = parts(variant);
   await page.addInitScript((chosen) => {
-    localStorage.setItem("slowfeed.preferences", JSON.stringify({ theme: chosen }));
-  }, theme);
+    localStorage.setItem("slowfeed.preferences", JSON.stringify(chosen));
+  }, { theme, appearance });
 }
 
-export async function openScreen(page: Page, screen: Screen, theme: Theme): Promise<void> {
+export async function openScreen(page: Page, screen: Screen, theme: Variant): Promise<void> {
   await chooseTheme(page, theme);
   await page.goto(screen.base ? new URL(screen.path, screen.base).href : screen.path);
   await appReady(page);

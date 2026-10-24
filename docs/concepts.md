@@ -114,7 +114,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Web app manifest
 - Service worker
 - Web fonts
-- Themes (light, dark, system)
+- Themes, by day and by night, and Appearance (light, dark, match device)
 - Browser storage (`localStorage`)
 - Routing (addresses inside a single-page app) and browser history
 - Font subsets and `unicode-range`
