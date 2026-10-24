@@ -984,7 +984,7 @@
   </nav>
 
   {#if panes.list || panes.article}
-    <div class="flex min-w-0 flex-1">
+    <div class="relative flex min-w-0 flex-1">
       {#if route.kind === "settings"}
         <Settings
           bind:preferences
@@ -1041,6 +1041,34 @@
           </div>
         </section>
       {:else}
+        {#if !phone && !welcoming}
+          <!--
+            The article list's button, on a computer: at the right end of the list's own top line, as the
+            sidebar's sits on its own; with the list hidden it waits at the start of the article's top
+            line, after the sidebar's. One button that moves, so the keyboard stays on it.
+          -->
+          <div
+            class={[
+              "absolute top-1.5 z-20",
+              !panes.list
+                ? panes.sidebar ? "left-2" : "left-14"
+                : panes.article ? "left-[calc(20rem-3.25rem)] xl:left-[calc(24rem-3.25rem)] 2xl:left-[calc(26rem-3.25rem)]" : "right-2",
+            ]}
+          >
+            <button
+              type="button"
+              bind:this={listToggle}
+              aria-label="Article list"
+              aria-expanded={panes.list}
+              aria-controls="list-pane"
+              title={panes.list ? "Hide the article list ( ] )" : "Show the article list ( ] )"}
+              onclick={toggleList}
+              class="bar-button flex size-11 items-center justify-center rounded-md text-ink-2"
+            >
+              <Icon name="list-pane" size={20} />
+            </button>
+          </div>
+        {/if}
         <section
           aria-labelledby="list-heading"
           bind:this={listSection}
@@ -1072,7 +1100,7 @@
               The list's top line never scrolls; with the sidebar hidden it starts after the sidebar button.
               Its title starts 32px in, where the search field and every article title start (decision 0041).
             -->
-            <div class={["pane-bar pr-[var(--list-end)]", panes.sidebar ? "pl-[var(--list-start)]" : "pl-16"]}>
+            <div class={["pane-bar", welcoming ? "pr-[var(--list-end)]" : "pr-14", panes.sidebar ? "pl-[var(--list-start)]" : "pl-16"]}>
               {@render listHead()}
             </div>
           {/if}
@@ -1120,28 +1148,12 @@
           </div>
         </section>
         {#if panes.article}
-          <!-- The reading area, with the list's button at the start of its top line (on a computer). -->
-          <div class="relative flex min-w-0 flex-1">
-          {#if !phone}
-            <div class={["absolute top-1.5 z-20", panes.list || panes.sidebar ? "left-2" : "left-14"]}>
-              <button
-                type="button"
-                bind:this={listToggle}
-                aria-label="Article list"
-                aria-expanded={panes.list}
-                aria-controls="list-pane"
-                title={panes.list ? "Hide the article list ( ] )" : "Show the article list ( ] )"}
-                onclick={toggleList}
-                class="bar-button flex size-11 items-center justify-center rounded-md text-ink-2"
-              >
-                <Icon name="list-pane" size={20} />
-              </button>
-            </div>
-          {/if}
+          <!-- The reading area; with the list hidden, the list's button waits at the start of its top line. -->
+          <div class="flex min-w-0 flex-1">
           {#if selected}
             <ArticleView
               article={selected}
-              toggles={phone ? 0 : panes.list || panes.sidebar ? 1 : 2}
+              toggles={phone || panes.list ? 0 : panes.sidebar ? 1 : 2}
               bind:heading={articleHeading}
               bind:preferences
               onStar={() => itemList?.toggleStar()}
