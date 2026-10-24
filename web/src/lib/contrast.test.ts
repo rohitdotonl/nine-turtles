@@ -118,8 +118,42 @@ describe.each(Object.entries(THEMES))("the %s theme's keyboard outline on rows",
     const found = css.match(/--place-focus: color-mix\(in srgb, var\(--ink\) (\d+)%, transparent\)/);
     expect(found).not.toBeNull();
     const share = Number(found![1]) / 100;
-    for (const background of ["paper", "list", "sidebar"]) {
+    // Drawn just inside the row's edge, so over the selection's fill too.
+    for (const background of ["paper", "list", "sidebar", "tint-list", "tint-sidebar"]) {
       expect(contrast(mix(colors.ink!, colors[background]!, share), colors[background]!), background).toBeGreaterThanOrEqual(3);
+    }
+  });
+});
+
+// The selection pill (decision 0037): the theme's accent mixed into the pane,
+// 13% in a light theme and 20% in a dark one. The text checks above cover it.
+describe.each(Object.entries(THEMES))("the %s theme's selection pill", (_name, colors) => {
+  const dark = luminance(colors.paper!) < 0.5;
+  it("is the accent mixed into the list and the sidebar", () => {
+    const share = dark ? 0.2 : 0.13;
+    expect(colors["tint-list"]).toBe(mix(colors.accent!, colors.list!, share));
+    expect(colors["tint-sidebar"]).toBe(mix(colors.accent!, colors.sidebar!, share));
+  });
+
+  it("is clearly deeper than a row under the pointer, which stays neutral", () => {
+    const share = Number(css.match(/--hover: color-mix\(in srgb, var\(--ink\) (\d+)%, transparent\)/)![1]) / 100;
+    for (const area of ["list", "sidebar"]) {
+      const hovered = mix(colors.ink!, colors[area]!, share);
+      expect(contrast(colors[`tint-${area}`]!, colors[area]!), area).toBeGreaterThan(contrast(hovered, colors[area]!) + 0.05);
+    }
+  });
+});
+
+// A searched word's faint accent tone, on a row or on the selected row.
+describe.each(Object.entries(THEMES))("the %s theme's search highlight", (_name, colors) => {
+  it("keeps text at 7 : 1 and the second ink at 4.5 : 1", () => {
+    const found = css.match(/--mark: color-mix\(in srgb, var\(--accent\) (\d+)%, transparent\)/);
+    expect(found).not.toBeNull();
+    const share = Number(found![1]) / 100;
+    for (const background of ["list", "tint-list"]) {
+      const marked = mix(colors.accent!, colors[background]!, share);
+      expect(contrast(colors.ink!, marked), background).toBeGreaterThanOrEqual(7);
+      expect(contrast(colors["ink-2"]!, marked), background).toBeGreaterThanOrEqual(4.5);
     }
   });
 });

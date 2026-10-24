@@ -12,14 +12,18 @@ not how it was done.
   read and the sort order live in a small More (…) menu.
 - The interface uses your device's own font (San Francisco on a Mac or
   iPhone), with larger, phone-sized text on touch screens.
-- The selected row keeps its fill; the keyboard's ring sits around it.
-  Thin lines separate the list's rows, and the star follows the date.
+- Thin lines separate the list's rows, and the star follows the date.
 - Articles read a little tighter and more like a book.
 - Add a feed, Edit feed and Edit folder share one shape: Cancel and the
   main action together at the bottom, Unsubscribe and Delete in red words.
 - Search results show a line of text around what matched, and an × clears
   the field.
 - A first visit is welcomed in the reading area, not squeezed into the list.
+- Where you are looks the same in the sidebar and the list: a soft, rounded
+  pill tinted with the theme's accent, with no bar at the edge. The
+  keyboard's ring sits inside it, and unread articles get a small accent
+  dot. Searched words share one quiet highlight, and rows breathe a little
+  more evenly.
 
 ## 24 October 2026: Calmer selection, one search style, tidier edges
 

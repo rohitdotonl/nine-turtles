@@ -61,7 +61,21 @@ test.describe("on a wide window", () => {
 
     // Unread titles also carry a small dot; read ones don't.
     await expect(row(page, blog, NEWEST).locator(".unread-dot")).toHaveCount(0);
-    await expect(row(page, blog, MIDDLE).locator(".unread-dot")).toBeVisible();
+    const dot = row(page, blog, MIDDLE).locator(".unread-dot");
+    await expect(dot).toBeVisible();
+    // A drawn 8px dot in the theme's accent, in the gutter left of the title.
+    await expect(dot).toHaveCSS("width", "8px");
+    const [dotColor, accent] = await dot.evaluate((element) => {
+      const probe = document.createElement("div");
+      probe.style.backgroundColor = "var(--accent)";
+      document.body.append(probe);
+      const color = getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      return [getComputedStyle(element).backgroundColor, color];
+    });
+    expect(dotColor).toBe(accent);
+    const [dotBox, titleBox] = [(await dot.boundingBox())!, (await row(page, blog, MIDDLE).locator(".title").boundingBox())!];
+    expect(dotBox.x + dotBox.width).toBeLessThanOrEqual(titleBox.x);
     // In one feed's own list, rows don't repeat the feed's name on screen.
     await expect(row(page, blog, MIDDLE).getByText(`Blog ${blog} ·`, { exact: true })).toHaveClass(/sr-only/);
 

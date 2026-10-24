@@ -63,14 +63,13 @@ test("the sidebar lists Unread, Starred and All, with the accent marking where y
   await expect(unread).toHaveAttribute("aria-current", "page");
   const accent = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--accent").trim());
   expect(accent).toBe("#2f4a7a");
-  // A short accent bar at the pane's left edge.
-  expect(await unread.evaluate((element) => getComputedStyle(element, "::before").backgroundColor)).toBe("rgb(47, 74, 122)");
-  // Flush against the sidebar's own edge, as in the list.
-  const flush = await unread.evaluate((element) => {
-    const pane = element.closest("nav")!.getBoundingClientRect().left;
-    return element.getBoundingClientRect().left + parseFloat(getComputedStyle(element, "::before").left) - pane;
-  });
-  expect(Math.abs(flush)).toBeLessThan(1);
+  // One pill, as in the list: the accent mixed into the sidebar (off-white's
+  // --tint-sidebar), 8px corners, 8px in from the pane's edge, and no bar.
+  await expect(unread).toHaveCSS("background-color", "rgb(207, 206, 203)");
+  await expect(unread).toHaveCSS("border-top-left-radius", "8px");
+  expect(await unread.evaluate((element) => getComputedStyle(element, "::before").content)).toBe("none");
+  const inset = await unread.evaluate((element) => element.getBoundingClientRect().left - element.closest("nav")!.getBoundingClientRect().left);
+  expect(Math.abs(inset - 8)).toBeLessThan(1);
 
   await sidebar(page).getByRole("link", { name: "Starred" }).click();
   await expect(page).toHaveURL(/\/starred$/);

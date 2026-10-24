@@ -828,7 +828,7 @@
               aria-current={current ? "page" : undefined}
               onclick={(event) => follow(event, { kind: "view", view })}
               class={[
-                "place mx-1.5 flex min-h-11 pointer-fine:min-h-9 items-center gap-2.5 pr-3.5 pl-[14px] text-ui",
+                "place mx-2 flex min-h-11 pointer-fine:min-h-9 items-center gap-2.5 pr-3.5 pl-3 text-ui",
                 current ? "font-semibold text-ink" : "text-ink-2",
               ]}
               ><span class={current ? "text-ink" : "text-muted"}><Icon name={VIEW_ICONS[view]} size={16} filled={view === "starred" && current} /></span
