@@ -247,23 +247,24 @@
   <!-- The whole box acts as the field: a click anywhere in it (not on a chip's or the options button) puts you in the field. -->
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
   <div
-    class="search-box relative flex min-h-11 min-w-0 cursor-text items-center gap-1 rounded-lg border border-transparent bg-[var(--tone)] pl-3"
+    class="search-box search-capsule relative flex min-w-0 cursor-text items-center gap-1 pl-3"
     onclick={(event) => {
       if (event.target === event.currentTarget) field?.focus();
     }}
   >
-    <span class="shrink-0 text-muted"><Icon name="search" size={16} /></span>
+    <!-- The one search field's look, shared with the sidebar's find field (decision 0051). -->
+    <span class="flex w-4 shrink-0 justify-center text-muted"><Icon name="search" size={14} /></span>
     <!--
       One line for the usual one or two chips: they shrink and end in "…" (their whole text is in their
       tooltip and their Remove button's name). With more, the row wraps so every chip stays readable.
     -->
     <div class={["flex min-w-0 flex-1 items-center gap-1", chips.length > 2 && "flex-wrap"]}>
       {#each shownChips as chip (chip.key)}
-        <span class={["my-1.5 flex min-w-0 shrink items-center rounded bg-[var(--tone)] pl-2 text-small whitespace-nowrap", chips.length > 2 ? "max-w-full" : "max-w-[60%]"]}>
+        <span class={["chip my-1.5 flex min-w-0 shrink items-center rounded-md bg-[var(--tone)] pl-2 text-small whitespace-nowrap", chips.length > 2 ? "max-w-full" : "max-w-[60%]"]}>
           <!-- Plain words, as the options menu names the filter; how it's typed is its tooltip and its description (decision 0048). -->
           <span class="min-w-0 truncate" title={chip.typed ?? chip.label}>{chip.label}</span>
           {#if chip.typed}<span id="chip-typed-{chip.key}" hidden>{chip.typed}</span>{/if}
-          <button type="button" aria-label="Remove {chip.label}" aria-describedby={chip.typed ? `chip-typed-${chip.key}` : undefined} onclick={() => remove(chip)} class="-my-2 -mr-2 -ml-1 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center">
+          <button type="button" aria-label="Remove {chip.label}" aria-describedby={chip.typed ? `chip-typed-${chip.key}` : undefined} onclick={() => remove(chip)} class="-my-2.5 -mr-2 -ml-1 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center">
             <Icon name="close" size={14} />
           </button>
         </span>
@@ -286,7 +287,7 @@
         placeholder={shownChips.length > 0 ? "" : "Search"}
         autocomplete="off"
         spellcheck="false"
-        class="-my-px min-h-11 min-w-16 flex-1 basis-16 bg-transparent px-1 placeholder:text-muted"
+        class="min-h-(--search-height) min-w-16 flex-1 basis-16 bg-transparent px-1 placeholder:text-muted"
       />
     </div>
     {#if query.words !== ""}
@@ -296,7 +297,7 @@
         aria-label="Clear search"
         title="Clear search"
         onclick={clear}
-        class="flex size-11 shrink-0 cursor-pointer items-center justify-center self-start text-ink-2"
+        class="flex size-(--search-height) shrink-0 cursor-pointer items-center justify-center self-start text-ink-2"
       >
         <Icon name="close" size={16} />
       </button>
@@ -310,10 +311,10 @@
       aria-label="Search options"
       title="Search options"
       onclick={() => (panelOpen = !panelOpen)}
-      class={["flex size-11 shrink-0 cursor-pointer items-center justify-center self-start", panelOpen ? "text-ink" : "text-ink-2"]}
+      class={["flex size-(--search-height) shrink-0 cursor-pointer items-center justify-center self-start", panelOpen ? "text-ink" : "text-ink-2"]}
     >
       <!-- Open, the icon sits on a small rounded tone, like a pressed toolbar button. -->
-      <span class={["flex size-8 items-center justify-center rounded-md", panelOpen && "bg-[var(--tone)]"]}><Icon name="sliders" size={18} /></span>
+      <span class={["flex size-7 items-center justify-center rounded-md", panelOpen && "bg-[var(--tone)]"]}><Icon name="sliders" size={18} /></span>
     </button>
     <!--
       A popover under the options button, drawn as a menu (decision 0039): three
@@ -329,7 +330,7 @@
       aria-labelledby="search-options-name"
       bind:this={panel}
       hidden={!panelOpen}
-      class="floating absolute top-full right-0 z-20 mt-1 w-[min(17rem,100%)] min-w-60 cursor-auto p-1.5 text-ui"
+      class="floating search-options absolute top-full right-0 z-20 mt-1 w-[min(17rem,100%)] min-w-60 cursor-auto p-1.5 text-ui"
     >
       <p id="search-options-name" class="sr-only">Search options</p>
       <fieldset class="min-w-0">
@@ -522,6 +523,11 @@
   .menu-row:has(> :is(input, select):focus-visible) {
     outline: 2px solid var(--ink);
     outline-offset: -2px;
+  }
+
+  /* A chip is 24px tall inside the field, whatever its height; its Remove button is still a full 44px to press. */
+  .chip {
+    min-height: 1.5rem;
   }
 
   /* The keyboard's place, drawn around the whole box (chips included) when its field has it. */

@@ -75,9 +75,9 @@ test("the sidebar lists Unread, Starred and All, with the accent marking where y
   await expect(unread).toHaveAttribute("aria-current", "page");
   const accent = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--accent").trim());
   expect(accent).toBe("#2c4f8c");
-  // One pill, as in the list: the accent mixed into the sidebar (Original's
-  // --tint-sidebar), 8px corners, 8px in from the pane's edge, and no bar.
-  await expect(unread).toHaveCSS("background-color", "rgb(214, 218, 228)");
+  // One pill, as in the list: the accent at 12% over the sidebar (Original's
+  // --tint-sidebar, decision 0051), 8px corners, 8px in from the pane's edge, and no bar.
+  await expect(unread).toHaveCSS("background-color", "rgb(216, 220, 229)");
   await expect(unread).toHaveCSS("border-top-left-radius", "8px");
   // As in a Mac source list, the place you're in has its icon in the accent, beside the pill and the semibold name (decision 0043).
   await expect(unread.locator("svg")).toHaveCSS("color", "rgb(44, 79, 140)");
@@ -300,8 +300,9 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
   await expect(sample).toHaveCSS("font-family", /^Literata/);
   await page.getByLabel("Atkinson Hyperlegible").check();
   await expect(sample).toHaveCSS("font-family", /^"Atkinson Hyperlegible"/);
-  // Text size is a stepper, as in the Aa panel: a small A and a large A, each its own round-ended
-  // button, with the step's name between them as plain words on no track (decision 0045).
+  // Text size is a stepper, as in the Aa panel: a small A and a large A at the ends of the segmented
+  // settings' own track, each a raised cell, with the step's name between them as plain words with
+  // nothing behind them of their own (decisions 0045, 0052).
   const larger = look.getByRole("button", { name: "Larger text" });
   const [smallerBox, nameBox, largerBox] = await Promise.all([
     look.getByRole("button", { name: "Smaller text" }).boundingBox(),
@@ -311,6 +312,7 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
   expect(nameBox!.x).toBeGreaterThanOrEqual(smallerBox!.x + smallerBox!.width);
   expect(nameBox!.x + nameBox!.width).toBeLessThanOrEqual(largerBox!.x);
   await expect(look.getByRole("status")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(look.locator(".sizes")).toHaveCSS("border-radius", "10px");
   await expect(larger).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   expect(largerBox!.x - (smallerBox!.x + smallerBox!.width)).toBeGreaterThan(80);
   for (let step = 0; step < 3; step++) await larger.click();

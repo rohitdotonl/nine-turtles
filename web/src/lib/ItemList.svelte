@@ -43,6 +43,7 @@
     type Order,
     type Source,
   } from "./feeds";
+  import { hugEllipsis } from "./hug";
   import { boldParts } from "./search";
   import { STRANDED_MESSAGE, updates } from "./updates.svelte";
 
@@ -447,10 +448,10 @@
           {/if}
           <!--
             Always one line, as Apple Books' rows are (decision 0048): a long source name ends in "…",
-            and the time and the star never wrap below it.
+            and the time and the star never wrap below it. The "·" hugs the "…" (decision 0051).
           -->
           <span class="row-meta mt-0.5 text-meta text-muted">
-            <span class={oneFeed ? "sr-only" : "row-feed"}><span class="row-feed-name">{article.feedTitle}</span>&nbsp;·</span>
+            <span class={oneFeed ? "sr-only" : "row-feed"}><span class="row-feed-name" use:hugEllipsis={article.feedTitle}>{article.feedTitle}</span>&nbsp;·</span>
             <time datetime={new Date(article.at * 1000).toISOString()} class="row-date">{when(article.at)}</time>
             {#if article.starred}
               <span class="row-star"><Icon name="star" size={13} filled /><span class="sr-only">, Starred</span></span>
@@ -484,7 +485,7 @@
 <div class={["toast-band sticky bottom-0 z-10 mt-auto flex justify-center", !!(line || undoLast || updates.stranded || newWaiting) && "toast-band-shown"]}>
   <div
     class={[
-      "toast pointer-events-auto flex min-h-11 max-w-full flex-wrap items-center gap-x-3 rounded-lg border border-ink/15 bg-paper px-4 text-small text-ink-2",
+      "toast pointer-events-auto flex min-h-11 max-w-full flex-wrap items-center gap-x-3 rounded-lg border px-4 text-small text-ink-2",
       !(line || undoLast || updates.stranded || newWaiting) && "sr-only",
     ]}
   >
@@ -550,8 +551,10 @@
     min-width: 0;
     flex: 0 1 auto;
   }
+  /* Its box is narrowed to the letters shown and the "…" (hug.ts), so the "·" after it never drifts. */
   .row-feed-name {
     min-width: 0;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }

@@ -7,9 +7,11 @@
   are said in plain words. While slowfeed looks, a line of text says so: no
   spinner.
 
-  In a sheet (or its page on a phone) the field takes the full width and
-  "Add feed" sits in the foot row beside Cancel. In the welcome, with no
-  Cancel, "Add feed" sits beside the field.
+  In a sheet the field takes the full width and "Add feed" sits in the foot
+  row beside Cancel. On a phone's page, the phone sheet's one build (decision
+  0052): no Cancel (the X beside the title is the way out) and "Add feed"
+  the full width at the screen's foot. In the welcome, with no Cancel, "Add
+  feed" sits beside the field.
 -->
 <script lang="ts">
   import type { Snippet } from "svelte";
@@ -22,6 +24,8 @@
     onAdded,
     onOpen,
     onCancel,
+    page = false,
+    start = false,
     alternative,
   }: {
     field?: HTMLInputElement;
@@ -31,6 +35,10 @@
     onOpen: (feedId: number) => void;
     /** In a sheet or its page: Cancel, beside Add feed in one row at the foot. */
     onCancel?: () => void;
+    /** On a phone's page: no Cancel, and Add feed the full width at the screen's foot. */
+    page?: boolean;
+    /** The welcome on a phone: left-aligned on the screen's margin, not centred (decision 0052). */
+    start?: boolean;
     /**
      * In the welcome: another way in (importing an OPML file), just under the
      * field, so it reads as an alternative to it rather than a footer.
@@ -51,6 +59,11 @@
   /** The address the choices were found at: Add feed adds the chosen one while the field still holds it. */
   let choicesFor = $state("");
   let alreadyId: number | undefined = $state();
+
+  /** In a sheet or on its page: the field's name above it, and Add feed at the foot rather than beside the field. */
+  let framed = $derived(onCancel !== undefined || page);
+  /** Several feeds were found: the line above them is their label. */
+  let choosing = $derived(choices.length > 0 && !busy);
 
   let alreadyTitle = $derived(feeds.find((feed) => feed.id === alreadyId)?.title);
 
@@ -109,8 +122,8 @@
   the field's name is said to screen readers and shown as its placeholder, so
   no line of it sits left-aligned. In a sheet its name stands above it.
 -->
-<form onsubmit={submit} class="flex flex-col gap-2">
-  <label for="feed-address" class={onCancel ? "text-small text-ink-2" : "sr-only"}>Paste a website or feed URL</label>
+<form onsubmit={submit} class={["flex flex-col gap-1.5", page && "flex-1"]}>
+  <label for="feed-address" class={framed ? "text-small text-ink-2" : "sr-only"}>Paste a website or feed URL</label>
   <div class="flex gap-2">
     <input
       id="feed-address"
@@ -121,12 +134,12 @@
       autocomplete="off"
       autocapitalize="none"
       spellcheck="false"
-      placeholder={onCancel ? "example.com" : "Paste a website or feed URL"}
+      placeholder={framed ? "example.com" : "Paste a website or feed URL"}
       aria-describedby="feed-address-status"
       aria-invalid={badAddress ? "true" : undefined}
       class="field min-w-0 flex-1"
     />
-    {#if !onCancel}
+    {#if !framed}
       <!-- Beside the field, its corners match the field's. -->
       <button type="submit" aria-disabled={busy} class="btn-primary rounded-lg">Add feed</button>
     {/if}
@@ -139,12 +152,15 @@
     a message, when there is one, takes its place there and moves it down
     within that room (decision 0045).
   -->
-  <div class={onCancel ? "contents" : "flex min-h-[5.8rem] flex-col items-center text-center"}>
+  <div class={framed ? "contents" : ["flex min-h-[5.8rem] flex-col", start ? "items-start text-left" : "items-center text-center"]}>
     <!--
       Screen readers hear each new line here without moving the keyboard's place.
       A problem is in red words after an icon. In a sheet the line takes room
       only once there's something to say, and the sheet grows down by it (its
-      top stays put). In the welcome the block around it keeps the room.
+      top stays put). In the welcome the block around it keeps the room. It
+      sits 6px under the field; when it asks you to choose among several
+      feeds it is their label, set as the field's own label is, 20px under
+      the field (decision 0052).
     -->
     <p
       id="feed-address-status"
@@ -152,7 +168,8 @@
       class={[
         "flex items-start gap-1.5 text-small",
         problem && !busy && "text-danger",
-        onCancel ? !busy && !message && "sr-only" : (busy || message) && "pb-2",
+        choosing && "mt-3.5 text-ink-2",
+        framed ? !busy && !message && "sr-only" : (busy || message) && "pb-2",
       ]}
     >
       {#if busy}Looking for a feed…{:else}{#if problem}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{/if}{message}{/if}
@@ -198,9 +215,14 @@
     {#if alternative}{@render alternative()}{/if}
   </div>
 
-  {#if onCancel}
-    <!-- The sheet's one row of actions, 20px under the field (with the form's 8px gap): Cancel, then Add feed at the right end. -->
-    <div class="sheet-actions mt-3">
+  {#if page}
+    <!-- On a phone: Add feed the full width at the screen's foot; the X beside the title leaves. -->
+    <div class="page-action">
+      <button type="submit" aria-disabled={busy} class="btn-primary">Add feed</button>
+    </div>
+  {:else if onCancel}
+    <!-- The sheet's one row of actions, 20px under what's above it (with the form's 6px gap): Cancel, then Add feed at the right end. -->
+    <div class="sheet-actions mt-3.5">
       <button type="button" onclick={onCancel} class="btn">Cancel</button>
       <button type="submit" aria-disabled={busy} class="btn-primary">Add feed</button>
     </div>

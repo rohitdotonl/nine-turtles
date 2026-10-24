@@ -1,9 +1,11 @@
 <!--
-  Text size as a stepper, the way Apple Books sets it (decision 0045): a
-  small A and a large A, each its own round-ended button, one step each press
-  (the same six steps as `+` and `-`). The current step's name sits between
-  them as plain words with nothing behind it, so it never reads as a third
-  choice, and it's said aloud when it changes. At either end the A that
+  Text size as a stepper on the same track as the other segmented settings
+  (decisions 0045, 0052): a faint track with 4px round it, a small A and a
+  large A at its ends, each a raised cell like a chosen segment, with the
+  same inner corners, one step each press (the same six steps as `+` and
+  `-`). The current step's name sits between them as plain words on the
+  track with nothing behind it of its own, so it never reads as a third
+  button, and it's said aloud when it changes. At either end the A that
   can't go further fades and says so to screen readers. Settings › Look and
   feel and the Aa panel above an article use the same control.
 -->
@@ -54,15 +56,18 @@
 </div>
 
 <style>
-  /* No track: the two buttons at the ends, the step's name between them. */
+  /* The segmented settings' own track (app.css → .choices): 4px round, a faint tone, 10px corners. */
   .sizes {
     display: flex;
     flex: 1 1 auto;
     align-items: center;
     justify-content: space-between;
-    gap: 0.5rem;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border-radius: 0.625rem;
+    background-color: var(--tone);
   }
-  /* Each A is a capsule of its own, in the faint tone a sheet's Cancel has. */
+  /* Each A is a cell as a chosen segment is drawn: a raised fill, a small shadow, the segments' 7px corners. */
   .step {
     display: flex;
     flex: 0 0 auto;
@@ -71,8 +76,9 @@
     align-items: center;
     justify-content: center;
     border: 1px solid transparent;
-    border-radius: 9999px;
-    background-color: var(--tone);
+    border-radius: 0.4375rem;
+    background-color: var(--raised, var(--paper));
+    box-shadow: var(--raised-shadow, 0 1px 2px rgb(0 0 0 / 0.12));
     color: var(--ink);
     font-family: var(--reading-font);
     line-height: 1;
@@ -81,20 +87,20 @@
   }
   @media (pointer: fine) {
     .step {
-      min-height: 2.25rem;
+      min-height: 2.5rem;
     }
   }
-  @media (hover: hover) {
-    .step:hover {
-      background-color: color-mix(in srgb, var(--ink) 11%, transparent);
-    }
-    .step[aria-disabled="true"]:hover {
-      background-color: var(--tone);
-    }
-  }
+  /* At an end, the A that can't go further sinks into the track: no fill, no shadow, the muted grey. */
   .step[aria-disabled="true"] {
+    background-color: transparent;
+    box-shadow: none;
     color: var(--muted);
     cursor: default;
+  }
+  @media (hover: hover) {
+    .step:not([aria-disabled="true"]):hover {
+      background-color: color-mix(in srgb, var(--ink) 5%, var(--raised, var(--paper)));
+    }
   }
   @media (forced-colors: active) {
     .step {

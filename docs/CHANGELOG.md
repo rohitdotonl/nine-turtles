@@ -4,6 +4,29 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 24 October 2026: Calmer night pictures, one search field, one phone sheet
+
+- Articles: pictures are dimmed a little in the night themes so they no
+  longer glare; captions are smaller and softer; tables line up with the
+  text; Open original now sits with Aa, Star and More at the top right; the
+  line naming the publisher is slightly larger (decision 0050).
+- The list's search and the sidebar's "Find a feed or folder" are now the
+  same slim, faintly filled field: shorter with a mouse, a full finger's
+  height on a phone (decision 0051).
+- The selected row's tint is made from each theme's own pane, so it's a
+  touch softer, and the ring round a row shows only when you use the
+  keyboard, never after a tap on a phone.
+- A long source name's "…" now sits right before the "·", as on every other
+  row, and the sidebar scrolls to show where you are when you move.
+- On a phone, Add a feed, Edit feed, Edit folder, Settings and the shortcut
+  list now look and close the same way: an X at the top right, and the main
+  button full width at the bottom. Unsubscribe sits in its own box well
+  above Save, and Undo still follows it. By night, sheets, menus and the
+  note at the bottom of the list sit on a slightly lighter grey than the
+  page. Settings shows the six themes three to a row on a phone, and text
+  size looks like the other controls. The shortcut list's key caps look like
+  keys, and a fresh slowfeed on a phone shows one heading (decision 0052).
+
 ## 24 October 2026: A quieter article title, one-line rows, one close rule
 
 - Opening an article with the keyboard no longer draws a box round its

@@ -234,11 +234,9 @@ test("the sidebar search finds feeds and folders by name, and Escape empties it"
   const blog = unique("findable");
   await openBlogs(page, [blog]);
   const search = sidebar(page).getByRole("searchbox", { name: "Find a feed or folder" });
-  // Only one filled search well on screen at rest, the list's: the sidebar's field gets its tone
-  // only while it's in use (decision 0041).
-  await expect(search).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
-  await search.fill(blog.toUpperCase());
+  // The same faintly filled capsule as the list's search, at rest and in use (decision 0051).
   await expect(search).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await search.fill(blog.toUpperCase());
   await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) })).toBeVisible();
   await expect(sidebar(page).getByRole("link", { name: /^Quiet Notes/ })).toHaveCount(0);
 

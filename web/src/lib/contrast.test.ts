@@ -43,7 +43,7 @@ const BACKGROUNDS = ["paper", "list", "sidebar", "tint-list", "tint-sidebar"];
 
 describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
   it("defines every color", () => {
-    for (const name of ["ink", "ink-2", "muted", "accent", "danger", ...BACKGROUNDS]) expect(colors[name], name).toMatch(/^#/);
+    for (const name of ["ink", "ink-2", "muted", "accent", "danger", "surface-raised", ...BACKGROUNDS]) expect(colors[name], name).toMatch(/^#/);
   });
 
   it("has text at AAA (7 : 1) on the reading area, and AA or better everywhere", () => {
@@ -68,6 +68,10 @@ describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
     expect(levels[0]! > levels[1]! && levels[1]! > levels[2]!).toBe(true);
   });
 
+  it("has the second text color at AAA (7 : 1) on the reading area, so an article's captions read like its text (decision 0050)", () => {
+    expect(contrast(colors["ink-2"]!, colors.paper!)).toBeGreaterThanOrEqual(7);
+  });
+
   it("has the destructive red (Unsubscribe, Delete) at AA on the sheet and the page", () => {
     expect(contrast(colors.danger!, colors.paper!)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(colors.danger!, colors.list!)).toBeGreaterThanOrEqual(4.5);
@@ -90,8 +94,9 @@ describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
   });
 });
 
-// The faint tones under a pointer and behind a search chip are the text color
-// mixed into whatever is behind them, read from app.css (--hover, --tone).
+// The faint tones under a pointer, behind a search chip and filling the search
+// field are the text color mixed into whatever is behind them, read from
+// app.css (--hover, --tone, --search-fill).
 function mix(ink: string, background: string, share: number): string {
   const channel = (hex: string, i: number) => parseInt(hex.slice(i, i + 2), 16);
   return (
@@ -106,7 +111,7 @@ function mix(ink: string, background: string, share: number): string {
 describe.each(Object.entries(THEMES))("the %s theme's pointer and chip tones", (_name, colors) => {
   // Never drawn on the selected row's tint: the selected row isn't tinted under the pointer.
   it("keep text at 7 : 1 and muted grey at 4.5 : 1 on the three areas", () => {
-    const shares = ["hover", "tone"].map((name) => {
+    const shares = ["hover", "tone", "search-fill"].map((name) => {
       const found = css.match(new RegExp(`--${name}: color-mix\\(in srgb, var\\(--ink\\) (\\d+)%, transparent\\)`));
       expect(found, name).not.toBeNull();
       return Number(found![1]) / 100;
@@ -117,6 +122,18 @@ describe.each(Object.entries(THEMES))("the %s theme's pointer and chip tones", (
         expect(contrast(colors.ink!, toned), `${background} ${share}`).toBeGreaterThanOrEqual(7);
         expect(contrast(colors.muted!, toned), `${background} ${share}`).toBeGreaterThanOrEqual(4.5);
       }
+    }
+  });
+});
+
+describe.each(Object.entries(THEMES))("the %s theme's search field", (_name, colors) => {
+  // A chip (the place searched, a filter) is the chip tone laid over the field's fill (decision 0051).
+  it("keeps a chip's words at 4.5 : 1, where the faint tones stack", () => {
+    const share = (name: string) =>
+      Number(css.match(new RegExp(`--${name}: color-mix\\(in srgb, var\\(--ink\\) (\\d+)%, transparent\\)`))![1]) / 100;
+    const stacked = 1 - (1 - share("search-fill")) * (1 - share("tone"));
+    for (const background of ["list", "sidebar"]) {
+      expect(contrast(colors.ink!, mix(colors.ink!, colors[background]!, stacked)), background).toBeGreaterThanOrEqual(4.5);
     }
   });
 });
@@ -133,8 +150,8 @@ describe.each(Object.entries(THEMES))("the %s theme's keyboard outline on rows",
   });
 });
 
-// The selection pill: in a light theme the accent mixed into the pane at 13%
-// (decision 0037); in a dark one the theme's own text color at 12%, so it
+// The selection pill: in a light theme the accent mixed into the pane at 12%
+// (decisions 0037 and 0051); in a dark one the theme's own text color at 12%, so it
 // keeps the pane's warmth or coolness (decision 0041). The text checks above
 // cover it. Three night versions whose panes are already light for the dark
 // mix in less, so their text keeps 7 : 1 on the pill (decision 0046).
@@ -143,7 +160,7 @@ const LIGHTER_PILLS: Record<string, number> = { "quiet dark": 0.09, "paper dark"
 describe.each(Object.entries(THEMES))("the %s theme's selection pill", (name, colors) => {
   const dark = luminance(colors.paper!) < 0.5;
   it(dark ? "is the text color mixed into the list and the sidebar" : "is the accent mixed into the list and the sidebar", () => {
-    const [from, share] = dark ? [colors.ink!, LIGHTER_PILLS[name] ?? 0.12] : [colors.accent!, 0.13];
+    const [from, share] = dark ? [colors.ink!, LIGHTER_PILLS[name] ?? 0.12] : [colors.accent!, 0.12];
     expect(colors["tint-list"]).toBe(mix(from, colors.list!, share));
     expect(colors["tint-sidebar"]).toBe(mix(from, colors.sidebar!, share));
   });
@@ -165,6 +182,8 @@ describe.each(Object.entries(THEMES))("the %s theme's selection pill", (name, co
       const pill = colors[`tint-${area}`]!;
       expect(contrast(colors.ink!, pill), area).toBeGreaterThanOrEqual(7);
       expect(contrast(colors.muted!, pill), area).toBeGreaterThanOrEqual(4.5);
+      // A read title on the selected row is in full ink, but the sidebar's other names are the second ink.
+      expect(contrast(colors["ink-2"]!, pill), area).toBeGreaterThanOrEqual(4.5);
       expect(contrast(colors.accent!, pill), area).toBeGreaterThanOrEqual(3);
     }
   });
@@ -271,6 +290,41 @@ describe.each(Object.entries(SELECTORS))(
     });
   },
 );
+
+// What floats over the page (sheets, menus, popovers, the note at the list's
+// foot; decision 0052): by day the page itself, by night a small lift above
+// it. Text on it keeps the page's own levels, under a pointer and on a chip
+// too, and so do grouped rows inside it (4% white over it, read from app.css).
+describe.each(Object.entries(THEMES))("the %s theme's raised surface", (_name, colors) => {
+  const raised = colors["surface-raised"]!;
+  const dark = luminance(colors.paper!) < 0.5;
+
+  it(dark ? "is lifted above the page, keeping its temperature" : "is the page itself", () => {
+    expect(raised).toMatch(/^#/);
+    if (!dark) return expect(raised).toBe(colors.paper);
+    expect(luminance(raised)).toBeGreaterThan(luminance(colors.paper!));
+    // A small lift, not a grey card: still well under the text's own tone.
+    expect(contrast(raised, colors.paper!)).toBeLessThan(1.6);
+    const warmth = (hex: string) => parseInt(hex.slice(1, 3), 16) - parseInt(hex.slice(5, 7), 16);
+    if (warmth(colors.paper!) > 2) expect(warmth(raised)).toBeGreaterThan(0);
+  });
+
+  it("keeps text at 7 : 1 and the second ink, muted grey, red and accent mark at their levels, under a pointer and on a chip, and in a group inside it", () => {
+    const share = (name: string) => Number(css.match(new RegExp(`--${name}: color-mix\\(in srgb, var\\(--ink\\) (\\d+)%, transparent\\)`))![1]) / 100;
+    const groupShare = Number(css.match(/--raised-group: color-mix\(in srgb, #ffffff (\d+)%, var\(--surface-raised\)\);/)![1]) / 100;
+    const group = dark ? mix("#ffffff", raised, groupShare) : raised;
+    // The surface, a button or chip on it, a group inside it and a row of that group under a pointer.
+    // The red (Unsubscribe, Delete) sits on the surface itself (or its pointer tone), never on a chip or in a group there.
+    const hover = (base: string) => mix(colors.ink!, base, share("hover"));
+    const onSurface = [raised, hover(raised), mix(colors.ink!, raised, share("tone"))];
+    for (const background of [...onSurface, group, hover(group)]) {
+      expect(contrast(colors.ink!, background), background).toBeGreaterThanOrEqual(7);
+      for (const color of ["ink-2", "muted"]) expect(contrast(colors[color]!, background), `${color} on ${background}`).toBeGreaterThanOrEqual(4.5);
+    }
+    for (const background of [raised, hover(raised)]) expect(contrast(colors.danger!, background), `danger on ${background}`).toBeGreaterThanOrEqual(4.5);
+    for (const base of [raised, group]) expect(contrast(colors.accent!, base)).toBeGreaterThanOrEqual(3);
+  });
+});
 
 it("covers all six themes by day and by night", () => {
   expect(Object.keys(THEMES)).toHaveLength(THEME_NAMES.length * 2 + 1);

@@ -256,20 +256,25 @@ test.describe("on a phone", () => {
     await expect(page.getByRole("heading", { level: 2, name: "Settings" })).toBeHidden();
   });
 
-  test("Cancel on Edit feed goes back to the list, and back again doesn't reopen it", async ({ page }) => {
+  test("Close on Edit feed goes back to the list, and back again doesn't reopen it", async ({ page }) => {
     await openHome(page);
     await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
     await list(page).getByRole("button", { name: "More", exact: true }).click();
     await page.getByRole("menuitem", { name: "Edit feed" }).click();
-    // A sheet you commit has Cancel and no X, on a phone too (decision 0049); its first field
-    // starts 20px under the top line, as Settings' first group does.
+    // The phone sheet's one build (decision 0052): an X beside the title and no Cancel; its first
+    // field starts 20px under the top line, as Settings' first group does.
     const heading = page.getByRole("heading", { level: 2, name: "Edit feed" });
     await expect(heading).toBeVisible();
-    await expect(page.getByRole("button", { name: /^Close/ })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Cancel" })).toHaveCount(0);
     const bar = (await page.locator(".pane-bar").filter({ has: heading }).boundingBox())!;
     const name = (await page.getByText("Name", { exact: true }).boundingBox())!;
     expect(name.y - (bar.y + bar.height)).toBeLessThanOrEqual(24);
-    await page.getByRole("button", { name: "Cancel" }).click();
+    // Save takes the full width, and Unsubscribe sits in a group of its own at least 32px above it.
+    const save = (await page.getByRole("button", { name: "Save" }).boundingBox())!;
+    const unsubscribe = (await page.getByRole("button", { name: /^Unsubscribe/ }).boundingBox())!;
+    expect(save.width).toBeGreaterThan(page.viewportSize()!.width - 48);
+    expect(save.y - (unsubscribe.y + unsubscribe.height)).toBeGreaterThanOrEqual(32);
+    await page.getByRole("button", { name: "Close" }).click();
     await expect(list(page).getByRole("heading", { level: 2, name: "Reading Room" })).toBeVisible();
     await page.goBack();
     await expect(sidebar(page)).toBeVisible();
