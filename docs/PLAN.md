@@ -245,6 +245,9 @@ each with screenshots:
 - ✅ Lighter weights: Literata semibold for titles, a softer main button,
   single-line focus on fields, and phone text that keeps about 40
   characters a line.
+- ✅ "Where you are" as a fill and a bar flush with the pane's edge, the
+  same in both panes, and no ring around the selected article (decision
+  0030).
 
 ---
 

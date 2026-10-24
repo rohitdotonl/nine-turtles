@@ -4,6 +4,13 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 24 October 2026: A cleaner "where you are"
+
+- The selected article and the selected sidebar place now look the same: a
+  soft fill and a short ink blue bar right at the pane's left edge.
+- The selected article no longer has a thin box drawn round it when you
+  use the keyboard. Instead its bar grows to the full height of the row.
+
 ## 24 October 2026: Lighter, calmer type
 
 - Titles and headings use Literata's semibold instead of its bold, at a

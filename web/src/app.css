@@ -164,13 +164,14 @@ body {
 
 /*
   "Where you are", one style everywhere (the sidebar and the article list):
-  a soft rounded fill a little in from the edges, with a short ink blue
-  pill at its left. The pill is a shape, so it shows without color. Rows
-  under the pointer get half the fill and no pill.
+  a soft rounded fill a little in from the edges, and a short ink blue bar
+  flush against the pane's own left edge, rounded only on its inner side.
+  The bar is a shape, so it shows without color. Rows under the pointer get
+  half the fill and no bar.
 */
 .place {
   position: relative;
-  border-radius: 0.5rem;
+  border-radius: 0.375rem;
 }
 .place:is([aria-current], [data-here]) {
   background-color: var(--place-tint, var(--color-tint-sidebar));
@@ -178,15 +179,18 @@ body {
 .place:is([aria-current], [data-here])::before {
   content: "";
   position: absolute;
-  top: 0.625rem;
-  bottom: 0.625rem;
-  left: 0.1875rem;
+  top: var(--place-bar-inset, 0.625rem);
+  bottom: var(--place-bar-inset, 0.625rem);
+  /* The row sits --place-inset in from the pane; the bar reaches the edge. */
+  left: calc(-1 * var(--place-inset, 0.375rem));
   width: 3px;
-  border-radius: 9999px;
+  border-radius: 0 3px 3px 0;
   background-color: var(--accent);
 }
 .item-row {
   --place-tint: var(--color-tint-list);
+  --place-inset: 0.25rem;
+  --place-bar-inset: 1rem;
 }
 
 /* The keyboard's place: a 2px outline just inside the row, following its corners. */
@@ -196,11 +200,15 @@ body {
 }
 /*
   The selected article row is also where the keyboard is (j, k and the arrows
-  move both), so its outline is a quieter hairline beside the pill.
+  move both). A ring around it would turn it into a card, so instead its bar
+  grows to the row's full height: a change of shape, not of color.
 */
 .item-row[aria-current]:focus-visible {
-  outline: 1px solid color-mix(in srgb, var(--ink) 55%, transparent);
-  outline-offset: -1px;
+  outline: none;
+}
+.item-row[aria-current]:focus-visible::before {
+  top: 0;
+  bottom: 0;
 }
 
 /* Only where there's a real pointer: on a touch screen a tint would stay after the tap. */
@@ -377,7 +385,7 @@ textarea {
     outline-offset: -3px;
   }
 
-  /* The pill takes the system's highlight, so "where you are" still stands out. */
+  /* The bar takes the system's highlight, so "where you are" still stands out. */
   .place:is([aria-current], [data-here])::before {
     forced-color-adjust: none;
     background-color: Highlight;

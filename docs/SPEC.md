@@ -115,7 +115,7 @@ A few words used throughout:
   |---|---|
   | Unread | Full-strength, semibold title |
   | Read | A softer second ink, regular-weight title (the title stays full-strength while it's the selected row) |
-  | Selected | Ink blue bar on the left and a faint tint; when you're using the keyboard, a hairline outline beside the bar too |
+  | Selected | A faint tint and a short ink blue bar against the list's left edge; when the keyboard is on it, the bar runs the row's full height |
   | Starred | A small star mark |
 
 - Items you read in the Unread view stay where they are (greyed) until you press `r` or leave the view, so nothing jumps under your cursor.
