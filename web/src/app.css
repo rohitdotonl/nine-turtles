@@ -379,7 +379,7 @@ body {
   outline stands clear of the letters with soft corners, inside its own row,
   so it never looks clipped (decision 0041).
 */
-:root[data-keyboard] .wordmark:focus-visible {
+:root[data-keyboard] h1.wordmark[tabindex="-1"]:focus-visible {
   outline-offset: 3px;
   border-radius: 6px;
 }

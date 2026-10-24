@@ -885,7 +885,7 @@
         title="Settings"
         aria-current={route.kind === "settings" ? "page" : undefined}
         onclick={(event) => follow(event, { kind: "settings" })}
-        class={["btn-quiet btn-icon", route.kind === "settings" && "bg-tint-sidebar text-accent"]}><Icon name="settings" size={18} /></a
+        class={["btn-quiet btn-icon", route.kind === "settings" && "bg-tint-sidebar text-ink"]}><Icon name="settings" size={18} /></a
       >
     </div>
   </nav>

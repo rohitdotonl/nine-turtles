@@ -82,6 +82,12 @@ test("the sidebar lists Unread, Starred and All, with the accent marking where y
   expect(Math.abs(inset - 8)).toBeLessThan(1);
   // The wordmark is a name, never a Tab stop (decision 0041).
   await expect(sidebar(page).getByRole("heading", { level: 1, name: "slowfeed" })).toHaveAttribute("tabindex", "-1");
+  // When the app puts the keyboard there, its outline stands clear of the letters.
+  const wordmark = sidebar(page).getByRole("heading", { level: 1, name: "slowfeed" });
+  await page.keyboard.press("Shift");
+  await page.evaluate(() => (document.documentElement.dataset.keyboard = ""));
+  await wordmark.focus();
+  await expect(wordmark).toHaveCSS("outline-offset", "3px");
 
   await sidebar(page).getByRole("link", { name: "Starred" }).click();
   await expect(page).toHaveURL(/\/starred$/);

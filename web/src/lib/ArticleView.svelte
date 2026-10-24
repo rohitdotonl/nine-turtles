@@ -288,7 +288,8 @@
   */
   .scroll-gutter {
     scrollbar-gutter: stable;
-    scrollbar-color: color-mix(in srgb, var(--ink) 25%, transparent) transparent;
+    /* Muted grey: at least 3 : 1 against the page, as a control should be. */
+    scrollbar-color: var(--muted) transparent;
   }
   /* A footnote or heading the keyboard moves to stops a little below the top bar. */
   .reading-scroller {
