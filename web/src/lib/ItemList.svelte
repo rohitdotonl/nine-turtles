@@ -455,12 +455,12 @@
           {/if}
           <!--
             Always one line, as Apple Books' rows are (decision 0048): a long source name ends in "…",
-            and the time and the star never wrap below it. The "·" hugs the "…" (decision 0051). The date is a
-            touch smaller and a step fainter than the source, back to muted grey on the selected row (AA).
+            and the time and the star never wrap below it. The "·" hugs the "…" (decision 0051). The whole line
+            is 12px and a step fainter than muted grey, so the title leads; on the selected row it's muted grey (AA).
           -->
-          <span class="row-meta mt-0.5 text-meta text-muted">
+          <span class={["row-meta mt-1 text-[0.75rem]", current ? "text-muted" : "text-[color:var(--faint)]"]}>
             <span class={oneFeed ? "sr-only" : "row-feed"}><span class="row-feed-name" use:hugEllipsis={article.feedTitle}>{article.feedTitle}</span>&nbsp;·</span>
-            <time datetime={new Date(article.at * 1000).toISOString()} class={["row-date text-[0.92em]", current ? "text-muted" : "text-[color:var(--faint)]"]}>{when(article.at)}</time>
+            <time datetime={new Date(article.at * 1000).toISOString()} class="row-date">{when(article.at)}</time>
             {#if article.starred}
               <span class="row-star"><Icon name="star" size={13} filled /><span class="sr-only">, Starred</span></span>
             {/if}
