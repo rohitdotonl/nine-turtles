@@ -221,6 +221,15 @@ export function unreadLabel(count: number): string {
   return count > 999 ? "999+" : String(count);
 }
 
+/**
+ * Whether a name is written in Devanagari (Hindi, Marathi, Nepali…), which
+ * the sidebar sets a touch larger so it sits level with Latin names
+ * (decision 0041). The script decides, not a guess at the language.
+ */
+export function inDevanagari(name: string): boolean {
+  return /\p{Script=Devanagari}/u.test(name);
+}
+
 // Articles already fetched, so moving back and forth with j and k never
 // waits. Kept small: only the last few are needed.
 const loaded = new Map<number, FullArticle>();

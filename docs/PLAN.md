@@ -273,6 +273,12 @@ each with screenshots:
   A/A text size; sheets that grow with their content, the destructive action
   at the bottom left; thin fields with red errors; search options as a
   checkmark menu; a calmer first visit (decision 0039).
+- ✅ List and sidebar geometry (third critique, batch 3): a gutter for the
+  unread dot with titles lined up under the list's title, hairlines that end
+  with the pill, a one-line list title, one search well at rest, counts in
+  one column with folder arrows first, no shortcut hint, the welcome alone
+  on a first visit, warm dark pills, and a phone feeds screen with chevrons
+  and no stale selection (decision 0041).
 
 ---
 

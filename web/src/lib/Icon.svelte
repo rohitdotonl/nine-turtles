@@ -4,7 +4,7 @@
   or the label of an icon-only button, says what it does.
 -->
 <script lang="ts" module>
-  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more";
+  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "keyboard" | "dot" | "stack" | "chevron-down" | "chevron-right" | "alert" | "aa" | "more";
 </script>
 
 <script lang="ts">
@@ -83,6 +83,9 @@
     />
   {:else if name === "chevron-down"}
     <path d="m5.5 8 4.5 4.5L14.5 8" />
+  {:else if name === "chevron-right"}
+    <!-- A row that leads on to a screen of its own (the phone's feeds screen). -->
+    <path d="m8 5.5 4.5 4.5L8 14.5" />
   {:else if name === "alert"}
     <circle cx="10" cy="10" r="7.25" />
     <path d="M10 6.5v4" />

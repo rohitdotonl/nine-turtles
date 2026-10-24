@@ -125,14 +125,37 @@ describe.each(Object.entries(THEMES))("the %s theme's keyboard outline on rows",
   });
 });
 
-// The selection pill (decision 0037): the theme's accent mixed into the pane,
-// 13% in a light theme and 20% in a dark one. The text checks above cover it.
+// The selection pill: in a light theme the accent mixed into the pane at 13%
+// (decision 0037); in a dark one the theme's own text color at 12%, so it
+// keeps the pane's warmth or coolness (decision 0041). The text checks above
+// cover it.
 describe.each(Object.entries(THEMES))("the %s theme's selection pill", (_name, colors) => {
   const dark = luminance(colors.paper!) < 0.5;
-  it("is the accent mixed into the list and the sidebar", () => {
-    const share = dark ? 0.2 : 0.13;
-    expect(colors["tint-list"]).toBe(mix(colors.accent!, colors.list!, share));
-    expect(colors["tint-sidebar"]).toBe(mix(colors.accent!, colors.sidebar!, share));
+  it(dark ? "is the text color mixed into the list and the sidebar" : "is the accent mixed into the list and the sidebar", () => {
+    const [from, share] = dark ? [colors.ink!, 0.12] : [colors.accent!, 0.13];
+    expect(colors["tint-list"]).toBe(mix(from, colors.list!, share));
+    expect(colors["tint-sidebar"]).toBe(mix(from, colors.sidebar!, share));
+  });
+
+  // A dark pane's warmth is how far red sits above blue; the pill may lift
+  // the pane but never swing it from warm to cool or back (a blue-grey pill
+  // on warm brown read as a clash, decision 0041).
+  it.runIf(dark)("keeps the pane's temperature", () => {
+    const warmth = (hex: string) => parseInt(hex.slice(1, 3), 16) - parseInt(hex.slice(5, 7), 16);
+    for (const area of ["list", "sidebar"]) {
+      const [pane, pill] = [warmth(colors[area]!), warmth(colors[`tint-${area}`]!)];
+      if (pane === 0) expect(Math.abs(pill), area).toBeLessThanOrEqual(2);
+      else expect(Math.sign(pill), area).toBe(Math.sign(pane));
+    }
+  });
+
+  it("stays at 7 : 1 for text and 4.5 : 1 for muted grey, with the unread dot at 3 : 1", () => {
+    for (const area of ["list", "sidebar"]) {
+      const pill = colors[`tint-${area}`]!;
+      expect(contrast(colors.ink!, pill), area).toBeGreaterThanOrEqual(7);
+      expect(contrast(colors.muted!, pill), area).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(colors.accent!, pill), area).toBeGreaterThanOrEqual(3);
+    }
   });
 
   it("is clearly deeper than a row under the pointer, which stays neutral", () => {

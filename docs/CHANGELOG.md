@@ -4,6 +4,17 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 24 October 2026: Toward Apple Books, batch 3
+
+- The list and sidebar line up: the unread dot sits in its own margin,
+  every title starts under the list's title and search, the row lines end
+  with the selection, the list's title stays on one line, counts form one
+  column with folder arrows before their names, only the list's search is
+  filled at rest, there's no "Press ? for shortcuts" hint, a first visit
+  shows only the welcome, dark themes select with a warm lift instead of a
+  blue tint, and a phone's feeds screen has chevrons and no stale
+  selection (decision 0041).
+
 ## 24 October 2026: Toward Apple Books
 
 - An **Aa** button on every article opens a small reading panel, as in

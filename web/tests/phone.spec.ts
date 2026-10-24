@@ -30,9 +30,23 @@ test.describe("on a phone", () => {
     await openHome(page);
     // The feeds screen is home: Refresh at the top, Settings at the bottom, no sidebar toggle.
     await expect(sidebar(page).getByRole("link", { name: "Settings" })).toBeVisible();
-    await expect(sidebar(page).getByRole("button", { name: "Refresh" })).toBeVisible();
+    const refresh = sidebar(page).getByRole("button", { name: "Refresh" });
+    await expect(refresh).toBeVisible();
     await expect(page.getByRole("button", { name: "Sidebar" })).toHaveCount(0);
-    await expect(page.getByText("Press ? for shortcuts")).toBeHidden();
+    await expect(page.getByText("Press ? for shortcuts")).toHaveCount(0);
+    // Refresh is an icon alone in a 44px target, so the large wordmark has its row (decision 0041).
+    expect((await refresh.innerText()).trim()).toBe("");
+    const refreshBox = (await refresh.boundingBox())!;
+    expect(Math.min(refreshBox.width, refreshBox.height)).toBeGreaterThanOrEqual(44);
+    // The feeds screen is the root of a stack: nothing on it is marked as where you are, and each
+    // row leads on with a chevron at its end, after any count.
+    await expect(sidebar(page).locator("[aria-current]")).toHaveCount(0);
+    await expect(sidebar(page).locator("[data-here]")).toHaveCount(0);
+    await expect(sidebar(page).getByRole("link", { name: "Unread", exact: true }).locator("svg")).toHaveCount(2);
+    const room = sidebar(page).getByRole("link", { name: /^Reading Room/ });
+    await expect(room.locator("svg")).toHaveCount(1);
+    const [chevron, roomBox] = [(await room.locator("svg").boundingBox())!, (await room.boundingBox())!];
+    expect(roomBox.x + roomBox.width - (chevron.x + chevron.width)).toBeLessThan(24);
 
     await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
     await expect(sidebar(page)).toBeHidden();
@@ -221,7 +235,7 @@ test.describe("on a phone", () => {
     await expect(sidebar(page)).toBeVisible();
   });
 
-  test("a long feed name wraps to two lines in the list's title and is cut short in the back button, never running off the screen", async ({ page }) => {
+  test("a long feed name is cut short on one line in the list's title and in the back button, never running off the screen", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 640 });
     await openHome(page);
     const name = `averyveryverylongfeednamewithoutanyspaces-${Date.now()}`;
@@ -235,19 +249,23 @@ test.describe("on a phone", () => {
     expect(settings.x + settings.width).toBeLessThanOrEqual(320);
     await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
     await appReady(page);
-    // The list's title takes up to two lines, then ends in "…", with the whole name as its tooltip (decision 0038).
+    // The list's title is one line that ends in "…", with the whole name as its tooltip; in a pane
+    // this narrow it steps down from 24px to 22px (decision 0041).
     const title = page.locator("#list-heading");
     await expect(title).toHaveAttribute("title", `Blog ${name}`);
     const lines = await title.evaluate((element) => ({
       height: element.getBoundingClientRect().height,
       line: parseFloat(getComputedStyle(element).lineHeight),
-      cut: element.scrollHeight > element.clientHeight,
-      clamp: getComputedStyle(element).webkitLineClamp,
+      cut: element.scrollWidth > element.clientWidth,
+      overflow: getComputedStyle(element).textOverflow,
+      wrap: getComputedStyle(element).whiteSpace,
+      size: getComputedStyle(element).fontSize,
     }));
-    expect(lines.height).toBeGreaterThan(lines.line * 1.5);
-    expect(lines.height).toBeLessThan(lines.line * 2.5);
+    expect(lines.height).toBeLessThan(lines.line * 1.5);
     expect(lines.cut).toBe(true);
-    expect(lines.clamp).toBe("2");
+    expect(lines.overflow).toBe("ellipsis");
+    expect(lines.wrap).toBe("nowrap");
+    expect(lines.size).toBe("22px");
     expect((await title.boundingBox())!.width).toBeLessThanOrEqual(320);
     await page.getByRole("button", { name: /A year of reading slowly/ }).click();
     const back = article(page).getByRole("button", { name: `Back to Blog ${name}` });
