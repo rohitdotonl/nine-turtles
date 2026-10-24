@@ -214,6 +214,15 @@ test.describe("on a wide window", () => {
     await expect(text).toHaveCSS("font-weight", "400");
     await panel.getByRole("radio", { name: "Bold" }).check();
     await expect(text).toHaveCSS("font-weight", "600");
+    // A publisher's bold words stay a step heavier: Literata's 800 (decision 0046).
+    const strongWeight = () =>
+      text.evaluate((el) => {
+        const strong = el.appendChild(document.createElement("strong"));
+        const weight = getComputedStyle(strong).fontWeight;
+        strong.remove();
+        return weight;
+      });
+    await expect.poll(strongWeight).toBe("800");
     // Fonts are named in their own face; line width has three steps.
     await panel.getByRole("radio", { name: "Atkinson Hyperlegible" }).check();
     await expect.poll(() => root.evaluate((html) => html.style.getPropertyValue("--reading-font"))).toContain("Atkinson");

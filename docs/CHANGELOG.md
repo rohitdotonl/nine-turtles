@@ -12,7 +12,8 @@ not how it was done.
 - A new Appearance choice, in Settings › Look and feel and the Aa panel:
   Light, Dark or Match device (the default), which follows your device and
   switches with it while slowfeed is open.
-- Bold also makes the article text heavier, for easier reading.
+- Bold also makes the article text heavier, for easier reading, with an
+  extra-bold font so bold words and headings still stand out.
 - A theme you'd already chosen is kept as its nearest new one (sepia
   becomes Calm by day, dark becomes Calm by night, and so on).
 

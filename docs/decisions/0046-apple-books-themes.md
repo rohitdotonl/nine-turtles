@@ -23,11 +23,12 @@ evening comes, instead of swapping it for another.
 - **Bold** also sets the article text heavier: Literata's 600 or Atkinson
   Hyperlegible's 700, the weights slowfeed already ships. Only the article
   text (and Settings' sample of it), never the interface. No new fonts.
-  The trade-off: slowfeed ships nothing heavier, so in Bold a publisher's
-  bold words and small headings look the same weight as the text around
-  them (italics still show). A heavier Literata face would fix it, but a new
-  font file needs the owner's approval; until then, Bold is for comfort, and
-  the other five themes show emphasis as the publisher set it.
+  So a publisher's bold words and headings still stand out, Literata's 800
+  face is added (two small files, about 41 KB; the owner approved it on
+  24 October 2026): bold words and article headings are always one step
+  heavier than the text, 600 normally and 800 in Bold. Atkinson Hyperlegible
+  ships nothing above 700, so with that font in Bold, bold words match the
+  text around them.
 - **How it works:** `<html>` carries `data-theme` (the theme) and `data-mode`
   (light or dark, resolved from Appearance). Before the script runs there are
   neither, and the page is Original, by day or by night as the device is set.
