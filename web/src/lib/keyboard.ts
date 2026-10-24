@@ -138,3 +138,21 @@ export const SHORTCUTS: { keys: string[]; action: string; ready: boolean; group:
   { keys: ["a"], action: "Add feed", ready: true, group: "Everywhere" },
   { keys: ["?"], action: "This list of shortcuts", ready: true, group: "Everywhere" },
 ];
+
+/**
+ * What a key's cap shows, as macOS and Apple Books print keys (decision 0055):
+ * a letter in capitals, Shift as ⇧ ("Shift+A" shows ⇧A) and the - key as a
+ * true minus sign (U+2212). `spoken` is what screen readers hear instead,
+ * when the cap's symbol wouldn't read well ("Shift A"). The key pressed
+ * stays the same.
+ */
+export function keyCap(press: string): { cap: string; spoken?: string } {
+  if (press === "-") return { cap: "−" };
+  const shifted = /^Shift\+(.)$/.exec(press);
+  if (shifted) {
+    const key = shifted[1]!.toUpperCase();
+    return { cap: `⇧${key}`, spoken: `Shift ${key}` };
+  }
+  if (/^[a-z]$/.test(press)) return { cap: press.toUpperCase() };
+  return { cap: press };
+}

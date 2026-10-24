@@ -376,9 +376,17 @@ body {
   outline-offset: 2px;
 }
 
-/* A field's own edge becomes its focus line: one line, never a ring around a border. */
+/*
+  A field in use (decision 0055): its edge steps aside for one 2px ring in
+  the softened text color (--place-focus, as on the list's rows), 1px clear
+  of the field, so it is never the heaviest line on the screen, yet stays at
+  3 : 1 or more against the field and every surface a field sits on
+  (contrast.test.ts). One line, never a ring around a border; never the accent.
+*/
 .field:focus-visible {
-  outline-offset: -1px;
+  outline: 2px solid var(--place-focus);
+  outline-offset: 1px;
+  border-color: transparent;
 }
 /* The search field's ring sits on its own edge too (decision 0051). */
 .search-capsule:focus-visible {
@@ -966,8 +974,9 @@ textarea {
   .inset-input::placeholder {
     color: var(--muted);
   }
+  /* A text box that is a row rings as a field does, in the softened text color (decision 0055). */
   .inset-row:has(> .inset-input:focus-visible) {
-    outline: 2px solid var(--ink);
+    outline: 2px solid var(--place-focus);
     outline-offset: -2px;
   }
   .check-row:has(> input:focus-visible) {
@@ -1117,6 +1126,32 @@ textarea {
     padding-inline: 0.625rem;
     color: var(--ink-2);
     font-size: var(--text-small);
+  }
+
+  /*
+    A link set in running words (the welcome's "Import an OPML file…";
+    decision 0055): the text color, underlined as the article's note links
+    are (1px, 3px below the letters, the line softer than the words but still
+    3 : 1 against the page), with no side padding so its words start on the
+    margin, and 44px tall to touch.
+  */
+  .text-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    border-radius: 0.25rem;
+    color: var(--ink);
+    font-size: var(--text-small);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    text-decoration-color: color-mix(in srgb, currentColor 65%, transparent);
+    touch-action: manipulation;
+  }
+  @media (hover: hover) {
+    .text-link:hover {
+      text-decoration-color: currentColor;
+    }
   }
 
   /* An icon alone (close, the sidebar): a 44px square, its name in its label and tooltip. */
@@ -1648,4 +1683,64 @@ dialog.dimmed::backdrop {
 }
 .scroller[data-scrolled] {
   border-top-color: color-mix(in srgb, var(--ink) 12%, transparent);
+}
+
+/*
+  The phone's sheets (Add a feed, Edit feed, Edit folder; decision 0055), as
+  iOS draws a page sheet: the screen behind dimmed as a sheet's dim is, a
+  10px strip of it showing above the sheet, whose top corners are 12px. The
+  sheet is a grouped ground, its groups (the folders, Unsubscribe) cards on
+  it: by day the list's grey with cards in the page's own color, as iOS sets
+  #f2f2f7 under white; by night the page itself with cards a step lighter
+  (the group tone), as iOS lifts its dark cards. contrast.test.ts checks text
+  and the field ring on both. Its title in the top line is a step smaller,
+  so the field sits higher. Nothing moves: it simply is there, with no slide.
+*/
+:root {
+  --sheet-ground: var(--list);
+  --sheet-card: var(--paper);
+}
+:root[data-mode="dark"] {
+  --sheet-ground: var(--paper);
+  --sheet-card: var(--group);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode]) {
+    --sheet-ground: var(--paper);
+    --sheet-card: var(--group);
+  }
+}
+.page-sheet {
+  display: flex;
+  flex: 1 1 0%;
+  flex-direction: column;
+  min-width: 0;
+  background-color: var(--paper);
+  background-image: linear-gradient(var(--scrim, rgb(0 0 0 / 0.18)), var(--scrim, rgb(0 0 0 / 0.18)));
+}
+.page-sheet-card {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  margin-top: calc(env(safe-area-inset-top, 0px) + 10px);
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
+  background-color: var(--sheet-ground);
+}
+.page-sheet-card .inset-group {
+  background-color: var(--sheet-card);
+}
+.page-sheet-card .page-action {
+  background-color: var(--sheet-ground);
+}
+.page-sheet-card .pane-bar h2 {
+  font-size: var(--text-large);
+  line-height: var(--text-large--line-height);
+}
+@media (forced-colors: active) {
+  .page-sheet-card {
+    border: 1px solid CanvasText;
+    border-bottom: 0;
+  }
 }

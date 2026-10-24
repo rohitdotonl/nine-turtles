@@ -751,10 +751,15 @@
       <p class="mt-3 text-ink-2">Follow the websites you like, and read what they publish here, at your own pace.</p>
     </div>
     {#if !(sheet && route.kind === "add-feed")}
-      <!-- Importing sits just under the field, centred as everything here is, as the other way in (decisions 0045, 0048). -->
+      <!--
+        Importing sits just under the field, centred as everything here is (on a phone, on the
+        screen's margin), as the other way in (decisions 0045, 0048): a link in the text color,
+        underlined as the article's note links are, with no side padding so its words line up
+        with the heading's, in a 44px-tall target (decision 0055).
+      -->
       <AddFeed bind:field={addField} feeds={[]} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} {start}>
         {#snippet alternative()}
-          <a href="/settings" onclick={goImport} class="btn-quiet btn-small">Import an OPML file…</a>
+          <a href="/settings" onclick={goImport} class="text-link">Import an OPML file…</a>
         {/snippet}
       </AddFeed>
     {:else}
@@ -769,7 +774,7 @@
           <span class="btn-primary rounded-lg">Add feed</span>
         </div>
         <div class="flex min-h-[5.8rem] flex-col items-center">
-          <span class="btn-quiet btn-small">Import an OPML file…</span>
+          <span class="text-link">Import an OPML file…</span>
         </div>
       </div>
     {/if}
@@ -985,17 +990,21 @@
           />
         {/key}
       {:else if !sheet && route.kind === "add-feed"}
-        <section aria-labelledby="list-heading" class="flex flex-1 flex-col bg-paper">
+        <section aria-labelledby="list-heading" class="page-sheet">
           <!--
-            Only on a phone (wider windows get the sheet). The phone sheet's one build (decision 0052):
-            the title with an X that goes back to the feeds (as Escape does), no back arrow and no Cancel.
+            Only on a phone (wider windows get the sheet). The phone sheet's one build (decisions 0052,
+            0055): an iOS page sheet, its grouped ground 10px below the dimmed screen's top with 12px
+            top corners, the title with an X that goes back to the feeds (as Escape does), no back
+            arrow and no Cancel.
           -->
-          <PageHead title="Add a feed" bind:heading={listHeading} besideToggle={!phone && !panes.sidebar} onClose={closePage} closeLabel="Close" />
-          <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
-            <!-- 20px under the top line as Settings is: a line on what to paste, the field, then Add feed the full width at the screen's foot. -->
-            <div class="mx-auto flex w-full max-w-xl flex-1 flex-col gap-5">
-              <p>{ADD_INTRO}</p>
-              <AddFeed bind:field={addField} feeds={feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} page />
+          <div class="page-sheet-card">
+            <PageHead title="Add a feed" bind:heading={listHeading} besideToggle={!phone && !panes.sidebar} onClose={closePage} closeLabel="Close" />
+            <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
+              <!-- 20px under the top line as Settings is: a line on what to paste, the field, then Add feed the full width at the screen's foot. -->
+              <div class="mx-auto flex w-full max-w-xl flex-1 flex-col gap-5">
+                <p>{ADD_INTRO}</p>
+                <AddFeed bind:field={addField} feeds={feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} page />
+              </div>
             </div>
           </div>
         </section>

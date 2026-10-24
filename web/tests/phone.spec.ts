@@ -274,6 +274,13 @@ test.describe("on a phone", () => {
     const unsubscribe = (await page.getByRole("button", { name: /^Unsubscribe/ }).boundingBox())!;
     expect(save.width).toBeGreaterThan(page.viewportSize()!.width - 48);
     expect(save.y - (unsubscribe.y + unsubscribe.height)).toBeGreaterThanOrEqual(32);
+    // An iOS page sheet (decision 0055): 10px of the dimmed screen shows above it, its top corners are
+    // 12px, and its groups are cards in a different tone from the sheet's grouped ground.
+    const card = page.locator(".page-sheet-card");
+    expect(Math.round((await card.boundingBox())!.y)).toBe(10);
+    await expect(card).toHaveCSS("border-top-left-radius", "12px");
+    const tone = (locator: typeof card) => locator.evaluate((element) => getComputedStyle(element).backgroundColor);
+    expect(await tone(card.locator(".inset-group").last())).not.toBe(await tone(card));
     await page.getByRole("button", { name: "Close" }).click();
     await expect(list(page).getByRole("heading", { level: 2, name: "Reading Room" })).toBeVisible();
     await page.goBack();
@@ -429,8 +436,8 @@ test.describe("on a phone", () => {
       const box = element.getBoundingClientRect();
       return box.left + parseFloat(getComputedStyle(element).paddingLeft);
     })));
-    // The preview passage starts on the groups' own edge, not indented like body text (decision 0049).
-    near20(await textStart(page.locator(".reading-sample p")));
+    // The preview passage is the Look and feel group's first row: its words start on the rows' words, 16px in from the group's edge (decision 0055).
+    expect(Math.abs((await textStart(page.locator(".reading-sample p"))) - 36)).toBeLessThan(1.5);
     near20((await page.locator(".inset-group").first().boundingBox())!.x);
 
     // Add feed: its title and the line under it.

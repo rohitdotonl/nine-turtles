@@ -1,11 +1,11 @@
 <!--
-  Text size as a stepper on the same track as the other segmented settings
-  (decisions 0045, 0052): a faint track with 4px round it, a small A and a
-  large A at its ends, each a raised cell like a chosen segment, with the
-  same inner corners, one step each press (the same six steps as `+` and
-  `-`). The current step's name sits between them as plain words on the
-  track with nothing behind it of its own, so it never reads as a third
-  button, and it's said aloud when it changes. At either end the A that
+  Text size as a stepper, as Apple Books draws it (decision 0055): one flat
+  capsule in the segmented settings' faint track, a small A and a large A at
+  its ends, one step each press (the same six steps as `+` and `-`), and the
+  current step's name between them, each part split from the next by a
+  hairline. Nothing in it is raised, so it never reads as a choice with a
+  chosen segment. The step's name is plain words, and it's said aloud when
+  it changes. At either end the A that
   can't go further fades and says so to screen readers. Settings › Look and
   feel and the Aa panel above an article use the same control.
 -->
@@ -67,7 +67,7 @@
     border-radius: 0.625rem;
     background-color: var(--tone);
   }
-  /* Each A is a cell as a chosen segment is drawn: a raised fill, a small shadow, the segments' 7px corners. */
+  /* Each A is a flat cell of the capsule: no fill, no shadow, the segments' 7px corners for the pointer's tone. */
   .step {
     display: flex;
     flex: 0 0 auto;
@@ -77,8 +77,8 @@
     justify-content: center;
     border: 1px solid transparent;
     border-radius: 0.4375rem;
-    background-color: var(--raised, var(--paper));
-    box-shadow: var(--raised-shadow, 0 1px 2px rgb(0 0 0 / 0.12));
+    background-color: transparent;
+    box-shadow: none;
     color: var(--ink);
     font-family: var(--reading-font);
     line-height: 1;
@@ -90,16 +90,29 @@
       min-height: 2.5rem;
     }
   }
-  /* At an end, the A that can't go further sinks into the track: no fill, no shadow, the muted grey. */
+  /*
+    The hairlines between the parts, as Books splits its capsule: in a faint
+    tone of the text color, the cells' own height, so the capsule's 4px rim
+    stays clear of them.
+  */
+  .step + .sizes-name,
+  .sizes-name + .step {
+    border-left: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  }
+  .step + .sizes-name {
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* At an end, the A that can't go further fades to the muted grey (and says so to screen readers); the step's name says "Smallest" or "Largest" too. */
   .step[aria-disabled="true"] {
-    background-color: transparent;
-    box-shadow: none;
     color: var(--muted);
     cursor: default;
   }
   @media (hover: hover) {
     .step:not([aria-disabled="true"]):hover {
-      background-color: color-mix(in srgb, var(--ink) 5%, var(--raised, var(--paper)));
+      background-color: var(--hover);
     }
   }
   @media (forced-colors: active) {

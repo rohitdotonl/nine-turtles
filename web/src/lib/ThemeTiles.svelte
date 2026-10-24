@@ -3,9 +3,12 @@
   page with "Aa" on it, in the reading font, drawn in that theme's own paper
   and ink for the version showing now (day or night, from the Appearance
   choice beside the tiles), its name underneath; Bold's "Aa" is bold, as its
-  article text is. The chosen tile has two marks, as in Apple Books: one ring in the text
-  color, a little clear of the page, and its name semibold, so it never shows
-  by color alone (decision 0045: no checkmark badge, no inner edge).
+  article text is. The chosen tile has two marks, as in Apple Books: one 2px
+  ring in the text color with a clear 3px gap between it and the page, and
+  its name semibold, so it never shows by color alone (decision 0045: no
+  checkmark badge). Every page keeps its own faint 1px edge, chosen or not,
+  so the gap reads as a gap and the chosen tile never looks bigger than its
+  neighbours (decision 0055).
 
   Each tile is a real radio button under the whole tile, so arrow keys move
   between them and screen readers hear the theme's name. Settings › Look and
@@ -52,11 +55,16 @@
 </fieldset>
 
 <style>
-  /* As many 72px-or-wider tiles as fit, filling the row: six to a row in Settings, three in the Aa panel (on a phone, three, below). */
+  /*
+    As many 72px-or-wider tiles as fit, filling the row: six to a row in
+    Settings, three in the Aa panel (on a phone, three, below). 16px apart,
+    so the chosen ring (5px out from its page) and the keyboard's ring (8px
+    out from its tile) never touch a neighbour.
+  */
   .tiles {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
-    gap: 0.75rem 0.625rem;
+    gap: 1rem;
   }
   .tile {
     position: relative;
@@ -89,10 +97,10 @@
     width: 100%;
     max-width: 4.5rem;
     aspect-ratio: 1;
-    border: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
     border-radius: 0.625rem;
     outline: none;
-    outline-offset: 2px;
+    outline-offset: 3px;
     font-family: var(--reading-font);
     font-size: 1.375rem;
     line-height: 1;
@@ -108,19 +116,18 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  /* The chosen theme: one ring in the text color, 2px clear of the page, and its name semibold (never color alone). */
+  /* The chosen theme: one 2px ring in the text color, 3px clear of the page's own edge, and its name semibold (never color alone). */
   .tile:has(input:checked) {
     color: var(--ink);
     font-weight: 600;
   }
   .tile:has(input:checked) .tile-page {
-    border-color: transparent;
     outline: 2px solid var(--ink);
   }
-  /* The keyboard's place: around the whole tile and its name, a step out from the ring. */
+  /* The keyboard's place: around the whole tile and its name, clear of the chosen ring (which ends 5px out). */
   .tile:has(input:focus-visible) {
     outline: 2px solid var(--ink);
-    outline-offset: 4px;
+    outline-offset: 6px;
   }
   @media (forced-colors: active) {
     .tile:has(input:checked) .tile-page {
@@ -135,7 +142,6 @@
   @media (width < 40rem) {
     .tiles {
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 0.75rem 1rem;
     }
     .tile-page {
       max-width: none;
