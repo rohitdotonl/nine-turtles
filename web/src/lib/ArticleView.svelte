@@ -116,7 +116,7 @@
   <Icon name="star" {size} filled={article.starred} />
 {/snippet}
 
-<section aria-label="Article" class={["flex min-w-0 flex-1 flex-col bg-paper", phone ? "pt-2" : "pt-3"]}>
+<section aria-label="Article" class="flex min-w-0 flex-1 flex-col bg-paper pt-2">
   <!-- Never scrolls, so these are always in the same place. -->
   {#if phone}
     <div class="relative flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 pb-2">
@@ -132,7 +132,8 @@
     The way to the publisher in words, on the left; the everyday actions as
     icons on the right, each named in its tooltip with its key.
   -->
-  <div class="scroll-gutter overflow-y-hidden px-6 pb-2 md:px-10"><div class="article-column relative flex min-h-11 flex-wrap items-center justify-between gap-x-1 gap-y-2">
+  <!-- Its own 4px above the buttons, so their focus outlines are never clipped. -->
+  <div class="scroll-gutter overflow-y-hidden px-6 pt-1 pb-2 md:px-10"><div class="article-column relative flex min-h-11 flex-wrap items-center justify-between gap-x-1 gap-y-2">
     {#if article.link}
       <a href={article.link} target="_blank" rel="noopener noreferrer" class="btn-quiet btn-small -ml-2.5 font-semibold text-ink" title="Open original (v)"><Icon name="open" size={16} />Open original</a>
     {:else}

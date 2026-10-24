@@ -158,7 +158,8 @@ The philosophy applied. The principle is noted where it isn't obvious.
 - **One accent, one meaning:** each theme has one accent (ink blue in off-white, sepia and dark; its own hue in the others), it means "where you are," and nothing else uses it.
 - **Icons where the convention is an icon** (close, back, search, settings, the sidebar toggle, edit feed or folder, and the article's copy link, star and mark unread), each named in its tooltip with its key and to screen readers. **Words** for the way to the publisher ("Open original"), Add feed, and the main action of a form.
 - **Settings opens in place of the list,** with one top line that never scrolls: the title in the serif, like the list's, and an X that closes it (Escape does too).
-- **Short tasks open as a sheet** over the place you were (Add a feed, Edit feed, Edit folder): a small card, its title in the serif, the panes still in view behind it under a faint dim. Cancel, Escape or a press on the dim closes it; there's no X. On a phone these are screens of their own, with the top line and X.
+- **Short tasks open as a sheet** over the place you were (Add a feed, Edit feed, Edit folder): a small card a fixed way down the window (so a message appearing in it never moves it), its title in the serif, the panes still in view behind it under a faint dim. Every sheet has Cancel; Cancel, Escape or a press on the dim closes it; there's no X. A destructive action (Unsubscribe, Delete) sits below a hairline as an ordinary button, under a line saying what it does. On a phone these are screens of their own, with the top line and X.
+- **One search field style:** the sidebar's find field and the list's search share one look, a faint tone with no edge, a search icon and the same height and text size; the keyboard's outline marks the one in use.
 - **No motion.** Views switch instantly.
 
 #### Color
@@ -177,7 +178,7 @@ The philosophy applied. The principle is noted where it isn't obvious.
 - All accent pairs pass AAA (7 : 1); re-check if a value changes.
 - **Links in articles** are underlined in the text color, **never blue**.
 - **Muted greys** (read items, counts, source names) are warm, like ink on paper, and pass AA (4.5 : 1) on every area and on the selected-row tint in all themes, verified by automatic checks.
-- **The keyboard focus outline** is a 2px line in the text color, never the accent. Rows draw it just inside their rounded shape; a title the keyboard is moved to gets it too, a little away from the words. It shows only when you're using the keyboard.
+- **The keyboard focus outline** is a 2px line in the text color, never the accent. On rows it is the text color softened (65%, still at least 3 : 1, checked automatically), drawn just inside their rounded shape; on the selected row it replaces the fill, so the row carries two marks, never three (the outline and the accent bar); a title the keyboard is moved to gets it too, a little away from the words. It shows only when you're using the keyboard.
 - **Status colors** (errors, warnings; V2 feed health page) are muted, never drift toward blue, and always come with words.
 
 The themes added on 24 October 2026 to try out (decision 0032), same roles in the same order (background, accent (every accent passes AAA, 7 : 1, on its background), list, sidebar, text, second ink, muted grey):
@@ -248,7 +249,7 @@ Fixed order, top to bottom: **Unread · Starred · All**, then **folders** A–Z
 
 - **No images, no favicons.** Each row: the **title**, with **source name and time** in quiet small text below. In one feed's own list the name is left out (the title above already says it); screen readers still hear it.
 - **Sort:** newest first by default; changeable in settings.
-- **The list has an end:** a fixed number of items, then a **"Show older items"** button. Nothing loads unless asked.
+- **The list has an end:** a fixed number of items, then a **"Show older items"** button. Nothing loads unless asked. When there's nothing more to show, a short hairline and "That's everything." in muted grey close the list.
 - Matched search terms are **underlined** in the text color, never highlighted in color.
 
 #### Item states (distinguished by tone and weight, never color alone)
@@ -313,7 +314,7 @@ In river mode (V2) only the cursor and star show.
 - **The server fetches in the background, on each feed's own rhythm** (frequent publishers often, dormant blogs rarely), with ETag / Last-Modified. In V2, WebSub delivers updates from publishers who offer it, with less frequent checking alongside.
 - **The view waits for you:** it updates only on `r` or the Refresh button, instantly, since fetching already happened.
 - **Fresh on arrival:** opening or reloading the app shows the latest state.
-- **One quiet line, no number:** when new items wait, "New items · press `r`." floats as a small note at the bottom of the list, so nothing shifts. Undo and "slowfeed was updated" use the same note.
+- **One quiet line, no number:** when new items wait, "New items · press `r`." floats as a small note at the foot of the list pane (the same place however short the list), so nothing shifts. Undo and "slowfeed was updated" use the same note.
 - **No pull-to-refresh;** on mobile a labeled Refresh button sits in the top bar.
 
 ### Empty state

@@ -108,6 +108,17 @@ describe.each(Object.entries(THEMES))("the %s theme's pointer and chip tones", (
   });
 });
 
+describe.each(Object.entries(THEMES))("the %s theme's keyboard outline on rows", (_name, colors) => {
+  it("stands out at 3 : 1 or more on every area a row sits on", () => {
+    const found = css.match(/--place-focus: color-mix\(in srgb, var\(--ink\) (\d+)%, transparent\)/);
+    expect(found).not.toBeNull();
+    const share = Number(found![1]) / 100;
+    for (const background of ["paper", "list", "sidebar"]) {
+      expect(contrast(mix(colors.ink!, colors[background]!, share), colors[background]!), background).toBeGreaterThanOrEqual(3);
+    }
+  });
+});
+
 it("the device's dark setting uses exactly the dark theme's colors", () => {
   expect(THEMES["device dark"]).toEqual(THEMES.dark);
 });

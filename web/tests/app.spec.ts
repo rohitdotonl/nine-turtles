@@ -310,6 +310,15 @@ test("Add a feed opens as a sheet over the list you were on: a serif title, and 
   await expect(sheet).toBeVisible();
   await page.mouse.click(5, 400);
   await expect(sheet).toHaveCount(0);
+  // Cancel closes it too, and a message appearing in it doesn't move it.
+  await page.keyboard.press("a");
+  const top = (await sheet.boundingBox())!.y;
+  await sheet.getByLabel("Paste a website or feed URL").fill("nonsense");
+  await page.keyboard.press("Enter");
+  await expect(sheet.locator("#feed-address-status")).not.toBeEmpty();
+  expect((await sheet.boundingBox())!.y).toBe(top);
+  await sheet.getByRole("button", { name: "Cancel" }).click();
+  await expect(sheet).toHaveCount(0);
   // Add feed is an action, so it never shows the "where you are" bar.
   await expect(sidebar(page).getByRole("link", { name: "Add feed" })).not.toHaveAttribute("aria-current");
 });

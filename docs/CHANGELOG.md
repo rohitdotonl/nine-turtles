@@ -4,6 +4,19 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 24 October 2026: Calmer selection, one search style, tidier edges
+
+- The selected article no longer wears three marks at once: while you
+  move with the keyboard, a soft outline takes the place of the fill.
+- The selection in Off-white is a warm tone instead of a cool grey.
+- The sidebar's find field and the list's search box now look the same.
+- Unread counts line up in one column, header lines meet at one height,
+  and focus outlines are never cut off.
+- Add a feed has a Cancel button; sheets stay put when a message appears;
+  Unsubscribe and Delete are proper buttons under what they do.
+- The Undo note always sits at the foot of the list, and a finished list
+  ends with "That's everything."
+
 ## 24 October 2026: Eight more themes
 
 - Settings now offers eleven themes. New light ones: Porcelain (pure white),

@@ -736,7 +736,8 @@
         {/if}
       </div>
       <!-- Always shown (DESIGN.md → Exceptions log): finds a feed or folder by name. -->
-      <div class="px-4 pb-4">
+      <div class="relative px-4 pb-4">
+        <span class="pointer-events-none absolute top-0 left-7 flex h-11 items-center text-muted"><Icon name="search" size={16} /></span>
         <label for="sidebar-search" class="sr-only">Find a feed or folder</label>
         <input
           id="sidebar-search"
@@ -751,7 +752,7 @@
               search = "";
             }
           }}
-          class="field field-quiet w-full pointer-fine:min-h-10 pointer-fine:text-small"
+          class="field field-quiet w-full rounded-lg pl-9"
         />
       </div>
       <ul>
@@ -893,11 +894,12 @@
           {/if}
           {#if !phone}
             <!-- The list's top line never scrolls; with the sidebar hidden it starts after the sidebar button. -->
-            <div class={["pr-6 pb-1", panes.sidebar ? "pl-6" : "pl-16"]}>
+            <div class={["pr-6 pb-2", panes.sidebar ? "pl-6" : "pl-16"]}>
               {@render listHead()}
             </div>
           {/if}
-          <div use:edge class="scroller relative min-h-0 flex-1 scroll-pb-20 overflow-y-auto px-6 pt-1 pb-6">
+          <!-- A column, so the floating note can sit at the pane's foot even under a short list. -->
+          <div use:edge class="scroller relative flex min-h-0 flex-1 scroll-pb-20 flex-col overflow-y-auto px-6 pt-1 pb-6">
             {#if feeds && feeds.length > 0 && !missing}
               <SearchBar bind:this={searchBar} {query} {feeds} {folders} here={scopeFor(under)} onChange={searchChanged} />
             {/if}
@@ -980,6 +982,9 @@
   <Sheet title="Add a feed" bind:heading={sheetHeading} onClose={closePage} initial={() => addField}>
     <p>Paste the address of a website you like, or of its feed. slowfeed finds the feed and lists its articles.</p>
     <AddFeed bind:field={addField} feeds={feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} />
+    <div class="flex justify-end">
+      <button type="button" onclick={closePage} class="btn">Cancel</button>
+    </div>
   </Sheet>
 {:else if sheet && route.kind === "edit-feed" && currentFeed}
   {#key currentFeed.id}

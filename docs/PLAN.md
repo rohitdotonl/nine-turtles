@@ -253,6 +253,9 @@ each with screenshots:
   phone settings and article toolbar (decision 0031).
 - ✅ Eight more themes to try, four light and four dark, each with its own
   "where you are" accent (decision 0032).
+- ✅ A calmer selected row, warmer selection tints, one search field style,
+  aligned counts and header lines, steadier sheets with Cancel, and an end
+  to every list (decision 0033).
 
 ---
 

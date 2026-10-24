@@ -73,7 +73,9 @@
       onclick={(event) => follow(event, place)}
       title={feed.title}
       class={[
-        "place mx-1.5 flex min-h-11 pointer-fine:min-h-9 items-center gap-3 pr-3.5 text-ui",
+        "place mx-1.5 flex min-h-11 pointer-fine:min-h-9 items-center gap-3 text-ui",
+        // With folders above, the counts line up with theirs, in the column left of the folders' arrows.
+        folders.length > 0 && !searching ? "pr-[46px] pointer-fine:pr-[38px]" : "pr-3.5",
         indent ? "pl-[34px]" : "pl-[14px]",
         isHere(place) ? "font-semibold text-ink" : "text-ink-2",
       ]}><span class="min-w-0 flex-1 truncate">{feed.title}</span>{@render count(feed.unread)}</a
@@ -129,7 +131,7 @@
               aria-controls={`folder-${folder.id}`}
               aria-label={`Feeds in ${folder.name}`}
               onclick={() => toggle(folder.id)}
-              class="-ml-3 flex min-h-11 pointer-fine:min-h-9 w-11 shrink-0 items-center justify-center text-muted"
+              class="-ml-3 flex min-h-11 pointer-fine:min-h-9 w-11 pointer-fine:w-9 shrink-0 items-center justify-center text-muted"
             >
               <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 {#if shown}

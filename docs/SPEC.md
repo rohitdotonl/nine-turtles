@@ -89,7 +89,7 @@ A few words used throughout:
   3. **Feeds not in any folder**, alphabetically
   4. **Add feed**, then the shortcut list and **Settings** as icons, in one row
 - You can't reorder things by hand; order is always alphabetical.
-- At the top of the sidebar: the "slowfeed" wordmark, and below it a quiet **field to find a feed or folder by name** (no edge, a faint tone, so it isn't mistaken for the article search), always shown. A long feed name ends in "…" on one line, so the sidebar stays tidy; its whole name shows as a tooltip, is read in full by screen readers, and is the list's title when you open it (one line, then "…", with the whole name as its tooltip, so the search box below never moves).
+- At the top of the sidebar: the "slowfeed" wordmark, and below it a quiet **field to find a feed or folder by name** (a faint tone with a search icon, in the same style as the list's search box), always shown. A long feed name ends in "…" on one line, so the sidebar stays tidy; its whole name shows as a tooltip, is read in full by screen readers, and is the list's title when you open it (one line, then "…", with the whole name as its tooltip, so the search box below never moves).
 - Folders appear once at least one exists. Each has a small button beside it that shows or hides the feeds in it, indented beneath; folders start closed, and this device remembers which you opened. Choosing a folder's name lists the articles of all its feeds (`/folders/2`).
 - The search field filters the sidebar as you type: the folders and feeds whose name contains what you typed (capitals and accents don't matter), in one list. Escape empties it.
 - **Unread counts:** small, muted grey numbers, right-aligned, next to each feed and folder (a folder's is its feeds' added up). No count on "Unread", "Starred" or "All", and never a total. Above 999 shows "999+". Never colored, never a badge.
@@ -108,14 +108,14 @@ A few words used throughout:
 - Dates and times are shown in your device's time zone, in words that never change while you look: "14:05" for today, "23 Oct" for this year, "23 Oct 2025" before that. The time is when the publisher says they published it, or when slowfeed received it if they don't say (and never later than that, so a wrong date can't pin an article to the top).
 - Newest first by default; oldest first can be chosen in Settings.
 - Unread, Starred and All list articles from every feed. A feed's own list shows all its articles, read and unread.
-- The list has an end: it shows 50 items, then a **"Show older items"** button ("Show newer items" when sorting oldest first). Nothing more loads unless you press it.
+- The list has an end: it shows 50 items, then a **"Show older items"** button ("Show newer items" when sorting oldest first). Nothing more loads unless you press it. When there's nothing more to show, a short hairline and "That's everything." close the list.
 - Row states, each recognizable without color:
 
   | State | Looks like |
   |---|---|
   | Unread | Full-strength, semibold title |
   | Read | A softer second ink, regular-weight title (the title stays full-strength while it's the selected row) |
-  | Selected | A faint tint and a short bar in the theme's accent against the list's left edge; when you're using the keyboard, the usual outline inside the tint |
+  | Selected | A faint tint and a short bar in the theme's accent against the list's left edge; when you're using the keyboard, the outline takes the tint's place |
   | Starred | A small star mark |
 
 - Items you read in the Unread view stay where they are (greyed) until you press `r` or leave the view, so nothing jumps under your cursor.
@@ -358,7 +358,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 
 - A keyboard icon at the foot of the sidebar opens the shortcut list (its tooltip says "Keyboard shortcuts (?)"); when the sidebar is hidden, a quiet hint "Press ? for shortcuts" sits at the bottom of the list instead (on screens with a keyboard).
 - The `?` cheat sheet groups the shortcuts (Moving around, Reading, Your articles, Everywhere) in two columns, what each does on the left and its keys on the right, and also documents the search filters. It has an X to close it (or Escape). Until a shortcut's feature exists, it isn't listed, and the key does nothing.
-- The keyboard's place is shown by a 2px outline in the text color (never the accent, which only marks your place in slowfeed). Rows draw it just inside themselves; the selected row's accent bar stays outside it, at the pane's edge. A title that receives the place when a screen opens (so screen readers start there) gets the same outline when you got there by keyboard, and nothing after a click.
+- The keyboard's place is shown by a 2px outline in the text color (never the accent, which only marks your place in slowfeed). Rows draw it just inside themselves, in a slightly softened text color; on the selected row it replaces the tint, and the accent bar stays outside it, at the pane's edge. A title that receives the place when a screen opens (so screen readers start there) gets the same outline when you got there by keyboard, and nothing after a click.
 - Shortcuts don't fire while you're typing in a field.
 
 **How to check it**

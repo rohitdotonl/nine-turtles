@@ -203,6 +203,18 @@ test.describe("on a wide window", () => {
       return element.getBoundingClientRect().left + parseFloat(getComputedStyle(element, "::before").left) - scroller;
     });
     expect(Math.abs(flush)).toBeLessThan(1);
+    // Two marks, never three: while the outline shows, the selected row's fill steps aside.
+    await expect(selected).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+    // A finished list says so.
+    await expect(page.getByText("That's everything.")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Show older items" })).toHaveCount(0);
+    // The note (here, Undo for a star) sits at the foot of the list pane, even under a short list.
+    await page.keyboard.press("s");
+    const note = page.locator(".toast");
+    await expect(note).toBeVisible();
+    const [noteBox, paneBox] = [(await note.boundingBox())!, (await selected.evaluate((element) => element.closest(".scroller")!.getBoundingClientRect().toJSON()))];
+    expect(paneBox.bottom - (noteBox.y + noteBox.height)).toBeLessThan(48);
+    await page.keyboard.press("u");
     // Opening an article gives its title the keyboard's place for screen
     // readers, with a quiet outline so a keyboard user can see it too.
     await page.keyboard.press("o");
