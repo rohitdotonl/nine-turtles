@@ -1,6 +1,6 @@
 # Concepts
 
-A list of the ideas, tools and terms slowfeed is built with, for the owner
+A list of the ideas, tools and terms nine turtles is built with, for the owner
 to learn one at a time. Names only, no explanations, grouped by area.
 Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 
@@ -77,7 +77,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Rate limiting and `Retry-After`
 - Exponential backoff
 - Timeout
-- Scraping (and why slowfeed never does it)
+- Scraping (and why nine turtles never does it)
 - Deduplication and fingerprints
 - URL normalization
 - Tracking pixels and tracking parameters

@@ -1,4 +1,4 @@
-//! Reading a feed file (RSS, Atom or JSON Feed) into what slowfeed stores,
+//! Reading a feed file (RSS, Atom or JSON Feed) into what nine turtles stores,
 //! and giving each article its fingerprint (ENGINEERING.md → "Duplicates").
 //!
 //! Article content is cleaned here, before it's ever stored, so nothing
@@ -37,7 +37,7 @@ pub struct ParsedArticle {
 
 /// Reads a feed file. `None` means it isn't a feed (often a web page).
 pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
-    // An empty ID means "the feed gave none", so slowfeed's own fingerprint
+    // An empty ID means "the feed gave none", so nine turtles' own fingerprint
     // rules decide, rather than feed-rs's made-up one.
     let parser = feed_rs::parser::Builder::new()
         .base_uri(Some(feed_url.as_str()))
@@ -200,7 +200,7 @@ fn plain_text(text: &feed_rs::model::Text) -> String {
 /// site where the reader came from; relative addresses made whole. Plain
 /// text is escaped. Footnotes keep working inside slowfeed: the article's
 /// own anchors (`id`, `#note-1`) are kept, renamed with `article-` in front
-/// so they can never clash with slowfeed's own page.
+/// so they can never clash with nine turtles' own page.
 fn clean(body: &str, content_type: &str, base: &Url) -> String {
     if !content_type.contains("html") {
         return ammonia::clean_text(body);

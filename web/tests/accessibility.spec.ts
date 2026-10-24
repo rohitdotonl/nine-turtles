@@ -34,7 +34,7 @@ for (const colorScheme of ["light", "dark"] as const) {
   });
 }
 
-test("the wordmark is set in Literata, served by slowfeed", async ({ page }) => {
+test("the wordmark is set in Literata, served by nine turtles", async ({ page }) => {
   const fontRequests: string[] = [];
   page.on("request", (request) => {
     if (request.resourceType() === "font") fontRequests.push(new URL(request.url()).origin);
@@ -44,7 +44,7 @@ test("the wordmark is set in Literata, served by slowfeed", async ({ page }) => 
   await page.evaluate(() => document.fonts.ready);
 
   const wordmark = page.getByRole("heading", { level: 1 });
-  await expect(wordmark).toHaveText("slowfeed");
+  await expect(wordmark).toHaveText("nine turtles");
   // The wordmark's style asks for Literata first…
   const family = await wordmark.evaluate((element) => getComputedStyle(element).fontFamily);
   expect(family.split(",")[0]?.replaceAll('"', "").trim()).toBe("Literata");
@@ -53,6 +53,6 @@ test("the wordmark is set in Literata, served by slowfeed", async ({ page }) => 
     [...document.fonts].some((face) => face.family.replaceAll('"', "") === "Literata" && face.status === "loaded"),
   );
   expect(loaded).toBe(true);
-  // Every font came from slowfeed itself, never a third-party font service.
+  // Every font came from nine turtles itself, never a third-party font service.
   expect(new Set(fontRequests)).toEqual(new Set([new URL(page.url()).origin]));
 });

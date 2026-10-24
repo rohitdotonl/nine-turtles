@@ -32,7 +32,7 @@
 
 <main class="flex min-h-screen flex-col items-center justify-center gap-8 px-5">
   <div class="text-center">
-    <h1 class="font-serif text-display">slowfeed</h1>
+    <h1 class="font-serif text-display">nine turtles</h1>
     <p class="mt-3 font-serif text-large text-muted">A quiet place to read.</p>
   </div>
   <!--

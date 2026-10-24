@@ -1,20 +1,20 @@
-# slowfeed: UI & UX design philosophy
+# nine turtles: UI & UX design philosophy
 
-> **slowfeed is a quiet place to read the web: it shows you what's there, gets out of the way, and lets you finish.**
+> **nine turtles is a quiet place to read the web: it shows you what's there, gets out of the way, and lets you finish.**
 
-*Last updated: 24 October 2026 (a quiet "No article open" line, smaller captions and a warm Paper pill, decision 0053; iOS page sheets on a phone, a flat text-size capsule, the sample inside its group, a ring 3px clear of the chosen theme, Mac key caps and a softer field ring, decision 0055; a 1px line between panes on a computer, a 28px dot gutter in a phone's list, the shortcuts button marked while its list is open and a result count the search options never hide, decision 0054; Apple Books' six themes, each by day and by night, with an Appearance choice of Light, Dark or Match device, decision 0046; toward Apple Books, batch 4: one top line of one height across the three panes, one left edge in the sidebar with the place's icon in the accent, and one back button and one 20px margin on a phone, decision 0043; quiet endings and blank paper in the reading pane: a short end-note link that never breaks, balanced titles, 56px margins beside the text and an empty reading pane with nothing drawn, decision 0044; controls that say what they are: a text-size stepper of two round-ended As, one ring on the chosen theme, tick boxes for Edit feed's folders, a steady main button and importing just under the welcome's field, decision 0045; batch 3: solid article bars with a hairline only once scrolled, end matter under the closing rule, search results ordered title, text, meta, and a silent empty reading pane, decision 0040; the list's and sidebar's geometry, decision 0041; sheets and Settings in one voice, decision 0042; before that, an "Aa" reading panel beside the text and quiet icon toolbars, decision 0034; one family for sheets, search excerpts and a welcome in the reading area, decision 0035. Before that, the owner approved a new look: a role-based type scale, three ink levels, deeper area tones and one selection style, decision 0026). This document takes precedence over every other project document.*
+*Last updated: 24 October 2026 (a plain grey pill and green stars, decision 0057; renamed nine turtles, and one theme, Original, decision 0056; a quiet "No article open" line, smaller captions and a warm Paper pill, decision 0053; iOS page sheets on a phone, a flat text-size capsule, the sample inside its group, a ring 3px clear of the chosen theme, Mac key caps and a softer field ring, decision 0055; a 1px line between panes on a computer, a 28px dot gutter in a phone's list, the shortcuts button marked while its list is open and a result count the search options never hide, decision 0054; Apple Books' six themes, each by day and by night, with an Appearance choice of Light, Dark or Match device, decision 0046; toward Apple Books, batch 4: one top line of one height across the three panes, one left edge in the sidebar with the place's icon in the accent, and one back button and one 20px margin on a phone, decision 0043; quiet endings and blank paper in the reading pane: a short end-note link that never breaks, balanced titles, 56px margins beside the text and an empty reading pane with nothing drawn, decision 0044; controls that say what they are: a text-size stepper of two round-ended As, one ring on the chosen theme, tick boxes for Edit feed's folders, a steady main button and importing just under the welcome's field, decision 0045; batch 3: solid article bars with a hairline only once scrolled, end matter under the closing rule, search results ordered title, text, meta, and a silent empty reading pane, decision 0040; the list's and sidebar's geometry, decision 0041; sheets and Settings in one voice, decision 0042; before that, an "Aa" reading panel beside the text and quiet icon toolbars, decision 0034; one family for sheets, search excerpts and a welcome in the reading area, decision 0035. Before that, the owner approved a new look: a role-based type scale, three ink levels, deeper area tones and one selection style, decision 0026). This document takes precedence over every other project document.*
 
 ## Mission
 
-Help people leave social media and return to reading the open web. Social media is **infinite, urgent and attention-grabbing**; slowfeed is **finite, calm and quiet**.
+Help people leave social media and return to reading the open web. Social media is **infinite, urgent and attention-grabbing**; nine turtles is **finite, calm and quiet**.
 
-**Tiebreaker for every decision:** *does this make slowfeed feel more like a book, or more like a feed?*
+**Tiebreaker for every decision:** *does this make nine turtles feel more like a book, or more like a feed?*
 
-## What slowfeed is, and isn't
+## What nine turtles is, and isn't
 
-**slowfeed is** a reader for writing published through RSS, Atom and JSON Feed, for one person per installation.
+**nine turtles is** a reader for writing published through RSS, Atom and JSON Feed, for one person per installation.
 
-**slowfeed is not:**
+**nine turtles is not:**
 - **A read-later app:** it doesn't save arbitrary web pages.
 - **A discovery engine:** no recommendations, trending or "you might like." You choose your sources.
 - **A social network:** no profiles, followers, likes or comments.
@@ -41,7 +41,7 @@ No amount of calm or minimalism justifies text some people can't read.
 - **Fully keyboard-operable:** standard Tab / Enter / Escape with a visible focus ring are the floor; vim keys are a power feature on top.
 - **Screen readers:** panes are landmarks; the selected item and state changes ("marked as read") are announced; each article carries its language.
 - **Respect system settings:** text size, reduced motion, high contrast, light/dark.
-- **Touch targets:** at least 44px on mobile, however dense the design. Where the main pointer is a mouse or trackpad, sidebar rows and the search options' controls may be 36px; anything a finger is the main pointer for gets 44px.
+- **Touch targets:** at least 44px on mobile, however dense the design. Where the main pointer is a mouse or trackpad, sidebar rows may be 32px and the search options' controls 36px; anything a finger is the main pointer for gets 44px.
 
 **Test:** can someone use every feature with only a keyboard, only a screen reader, or at 200% text size?
 
@@ -52,10 +52,10 @@ Publishers are the reason there's anything to read.
 - **Show what the publisher put in the feed.** Never scrape the full article. A summary-only feed shows the summary and "Open original."
 - **Always credit the source** and link to the original.
 - **Fetch politely:** on each feed's own rhythm, with ETag / Last-Modified (WebSub in V2).
-- **Shared links go to the publisher,** never to slowfeed.
+- **Shared links go to the publisher,** never to nine turtles.
 - **Embedded media plays in the publisher's own player** (e.g. YouTube's, V2), so views stay theirs.
 
-**Test:** would a publisher be glad their feed is read in slowfeed?
+**Test:** would a publisher be glad their feed is read in nine turtles?
 
 ### The ranked principles
 
@@ -65,7 +65,7 @@ The article is the product; everything else is a way to reach it.
 - **Test:** does this make reading better, or compete with it?
 
 #### 2. Calm over engagement
-slowfeed never tries to bring you back or keep you longer. It succeeds when you've read what you wanted and closed it.
+nine turtles never tries to bring you back or keep you longer. It succeeds when you've read what you wanted and closed it.
 - *Explains:* no notifications, river mode (V2), no count of new items, no pull-to-refresh, the view waiting for you, "Show older items" instead of infinite scroll.
 - **Test:** would a social media company want this? If yes, be suspicious.
 
@@ -109,7 +109,7 @@ The 500-feed user gets everything; the 30-feed user never sees the machinery.
    5. Is it instant?
    6. Does it move or rearrange anything the user didn't ask to change? → redesign until it doesn't.
    7. Will it still feel right in ten years?
-3. **Scope is checked too.** A feature that would make slowfeed one of the things under "slowfeed is not" is out, however good.
+3. **Scope is checked too.** A feature that would make nine turtles one of the things under "nine turtles is not" is out, however good.
 
 **Worked example: AI summaries.** They compete with reading (1), but a power user (6) might want them to triage 500 feeds. Result: never in the reading pane; possibly an opt-in, hidden triage tool in the list. The philosophy answered *where*, not yes or no.
 
@@ -124,7 +124,7 @@ The 500-feed user gets everything; the 30-feed user never sees the machinery.
 | Unread dot (decisions 0028, 0037, 0041) | Type does the hierarchy, never badges | Weight alone was hard to scan in a long list; Apple Books, Mail and Things mark unread with a dot | A drawn 8px dot in the theme's accent, centred in a 24px gutter inside the row's pill, 8px clear of an unread title, which is semibold too. No number, list rows only. |
 | A shadow under the floating note (decisions 0028, 0048) | Regions by tone, no shadows | The note floats at the list's foot, in a band of the list's tone that the rows end above; a soft shadow shows it sits above the list rather than among its rows | Only things that float over the page: the note at the bottom of the list, a sheet, the search options popover, the Aa panel, the list's and the article's More menus and the shortcut list (decisions 0034, 0038). One soft shadow and a faint edge each. Nothing that sits in the page casts a shadow, except the 1px lift under a chosen segment (below). |
 | Hairlines inside a page | Regions by tone, no lines | Inside one page, a faint line parts rows that do different jobs: rows in a grouped list (Settings, Edit feed's folders) articles in the middle list, and the parts of the text-size capsule (decision 0055) | Only within a page (the line between panes is its own exception, below); faint, in a tone of the text color, inset from the left in a grouped list. A field's own edge is a border, not a line between regions. |
-| A line between panes (decision 0054) | Regions by tone, no lines | In some themes the list and the page are only a few shades apart (Quiet by night), so tone alone barely parts them; Apple Books on a Mac divides its sidebar from its content with a 1px line | Only on a computer, only where two panes meet: the sidebar's right edge, and the list's when the reading pane is beside it. 1px, in the text color at 9%, the same tone as the list's row hairlines. A phone shows one pane at a time and has none. |
+| A line between panes (decision 0054) | Regions by tone, no lines | By night the list and the page are only a few shades apart, so tone alone barely parts them; Apple Books on a Mac divides its sidebar from its content with a 1px line | Only on a computer, only where two panes meet: the sidebar's right edge, and the list's when the reading pane is beside it. 1px, in the text color at 9%, the same tone as the list's row hairlines. A phone shows one pane at a time and has none. |
 | A raised segment's small shadow (decision 0042) | Regions by tone, no shadows | A segmented control's chosen choice is a raised tile, as Apple draws it; with no edge, a 1px soft shadow under it is what lifts it off its track | Only under the chosen segment of a segmented control (Settings, the Aa panel, the search options), 1 to 2px, never animated. The semibold word still says which is chosen. |
 | A dim behind a sheet (decisions 0031, 0039) | Regions by tone; nothing moves unless you move it | A short task (adding or editing a feed) keeps the list in view, so you don't lose your place; a light dim shows the card is the thing to act on now | Only behind a sheet or the shortcut list: black at 18% in the day versions, 45% in the night ones, so the page behind stays warm and readable. Never animated; it closes with Escape or a press on it. On a phone, the same dim shows as the 10px strip above a page sheet (decision 0055). |
 | A hairline under a scrolled top line (decision 0028) | Regions by tone, no lines | Shows that text has gone under a top line that never scrolls, so it doesn't look cut off | Only under a pane's top line, only once its content has scrolled, and above the shortcut list's foot while more lies below (decision 0042), in a faint tone of the text color. |
@@ -149,16 +149,16 @@ The philosophy applied. The principle is noted where it isn't obvious.
 
 ### Name and signature
 
-- **Name:** slowfeed (domain, app store and trademark checks are under "Still to define").
-- **Wordmark:** "slowfeed" in lowercase, in the reading serif. No logo shape, no mascot.
-- **Signature:** the accent (ink blue in most themes), quietly marking where you are, and the calm itself.
+- **Name:** nine turtles (domain, app store and trademark checks are under "Still to define").
+- **Wordmark:** "nine turtles" in lowercase, in the reading serif. No logo shape, no mascot.
+- **Signature:** the accent (ink blue), quietly marking where you are, and the calm itself.
 
 ### Visual language
 
 #### Rules
 - **Regions are separated by tone, not lines:** background tone and whitespace; no borders, shadows, blur or gradients (small exceptions for things floating over the page, scrolling under a top line, the edge above the phone's article toolbar and a faint line between panes on a computer, in the Exceptions log).
 - **Type does the hierarchy:** size and weight, never color alone or badges (the unread dot is the one mark, in the Exceptions log).
-- **One accent, one family of meanings:** each theme has one accent (ink blue in Original, Quiet, Paper and Bold; its own hue in Calm and Focus). As in Apple Books it marks what's *yours to look at*: where you are (the selection pill, by day; by night, and in Paper by day, the pill is a lift of the text color, decisions 0041 and 0053; and the icon of the sidebar place you're in, decision 0043), what's unread (the dot) and what a search found (a faint tone behind the words) (decision 0037). Nothing else uses it: never a button, a link, a focus outline or decoration.
+- **One accent, one family of meanings:** the theme has one accent, ink blue, and one second color, a light green used only for a starred article's star (decision 0057). The accent marks what's *yours to look at*: what's unread (the dot) and what a search found (a faint tone behind the words) (decision 0037). Where you are is a plain grey pill with no color, its sidebar icon in ink (decision 0057). Nothing else uses it: never a button, a link, a focus outline or decoration.
 - **Icons where the convention is an icon** (close, clearing the search field, back, search, settings, the sidebar toggle, the list's More (…), and the article's open original, Aa, star and More (…)), each named in its tooltip with its key and to screen readers, so the tools around the text stay quiet (decisions 0034, 0038). **Words** for Add feed, menu items, the phone's back button (with its arrow) and the main action of a form.
 - **Fewer, steadier toolbars** (decision 0038): **one More (…) per place**, as Apple Books has one per collection, holding the less frequent actions as words (the list's Edit, Refresh, Mark all as read and sort order; the article's Copy link or Share and Mark unread, each with its key). **A bar's controls keep to its pane's edges,** their icons about 20px in (lined up with the sidebar button), one group at each end, so they never float in the middle of a wide window.
 - **Settings opens in place of the list,** with one top line that never scrolls: the title in the serif, like the list's, and an X that closes it (Escape does too). Below it, one centred column no wider than 560px of grouped lists, as in Apple Books' settings (see "Settings").
@@ -171,7 +171,7 @@ The philosophy applied. The principle is noted where it isn't obvious.
   Cancel, Escape or a press on the dim closes it; there's no X. 12px corners, 24px padding all round. A field's helper line is 13px in the muted grey, 6px under the field and on its left edge; the line asking you to choose among several feeds is set as a field's name, 20px under the field (decision 0052).
 - **One phone sheet** (decisions 0052, 0055): on a phone, Add a feed, Edit feed, Edit folder, Settings and the shortcut list are all screens of their own with one build: the serif title on the screen's 20px margin with an X (44px) at the right of the top line, and no back arrow or Cancel. Add a feed, Edit feed and Edit folder are drawn as an iOS page sheet: a 10px strip of the dimmed screen above it, 12px top corners, a grouped ground (the list's grey by day, the page by night) with each group a card on it (the page's color by day, the group tone by night), and the title a step smaller (20px) so the field sits higher; it appears at once, never sliding; the form 20px under the top line as in Settings; the main action, if there is one, the full width at the screen's foot (50px tall, 12px corners, 16px above the home bar), staying in view while the form scrolls; a destructive action (Unsubscribe, Delete) as the one red row of a group of its own, at least 32px above it, with the same tooltip, words for screen readers and Undo straight afterwards.
 - **One close rule** (decisions 0049, 0052): on a computer, a sheet you commit (it has Save or Add feed) closes with Cancel only, and a sheet you only look at (Settings, the shortcut list) with an X only. On a phone every one closes with its X only. Never both. Escape closes any of them.
-- **One family for things that float:** a sheet, the search options popover and the shortcut list share the same 12px corners, faint edge and one soft shadow. They, the menus, the Aa panel and the note at the list's foot sit on one raised surface: by day the page itself; by night a small lift above the page (Original's #28282a, warm in Calm and Focus) with a 1px edge of 8% white, as Apple Books lifts its sheets and menus, and grouped rows inside it 4% lighter again (decision 0052). Key caps in the shortcut list have a visible edge, a 1px rim and a 2px lower lip, as a printed key; the note about Tab, Enter and Escape is a footer across both columns. A popover of choices is drawn as a **menu**, not a form: small section names, then rows with a checkmark at the start of each one that holds (the search options, the list's More menu). The shortcut list is never taller than 720px and keeps at least 48px clear of the window's top and foot; its two columns are stacks of their own, the search filters under Everywhere on the right, so it fits an 800px-tall window without scrolling. On a phone it's a screen of its own, as every sheet is there (decision 0049). When it does scroll, a hairline under its title shows only once the list has moved, and one above a 16px band at its foot only while more lies below, so a row cut there reads as scrolling, never as clipping. It opens with the keyboard on its title (no ring, as in a sheet) rather than ringing its X.
+- **One family for things that float:** a sheet, the search options popover and the shortcut list share the same 12px corners, faint edge and one soft shadow. They, the menus, the Aa panel and the note at the list's foot sit on one raised surface: by day the page itself; by night a small lift above the page (#28282a) with a 1px edge of 8% white, as Apple Books lifts its sheets and menus, and grouped rows inside it 4% lighter again (decision 0052). Key caps in the shortcut list have a visible edge, a 1px rim and a 2px lower lip, as a printed key; the note about Tab, Enter and Escape is a footer across both columns. A popover of choices is drawn as a **menu**, not a form: small section names, then rows with a checkmark at the start of each one that holds (the search options, the list's More menu). The shortcut list is never taller than 720px and keeps at least 48px clear of the window's top and foot; its two columns are stacks of their own, the search filters under Everywhere on the right, so it fits an 800px-tall window without scrolling. On a phone it's a screen of its own, as every sheet is there (decision 0049). When it does scroll, a hairline under its title shows only once the list has moved, and one above a 16px band at its foot only while more lies below, so a row cut there reads as scrolling, never as clipping. It opens with the keyboard on its title (no ring, as in a sheet) rather than ringing its X.
 - **Fields:** a 1px edge in a soft mix of the text color (still 3 : 1 against what's around it, checked automatically), over a faint fill, 8px corners. In use, the edge steps aside for one 2px ring in the softened text color (65%, as on rows), 1px clear of the field, so it is never the heaviest line on the screen; it keeps at least 3 : 1 against the field and every surface a field sits on in all six themes by day and night, checked automatically (decision 0055). A refused field's edge turns the muted red, beside the message's alert icon and words in the same red: never a thicker ring, never color alone. While the keyboard is in a refused field, the outline takes the red edge's place too, so there is only ever one line (decision 0042). Room for a message is kept only where the page is centred on screen (sign-in, the welcome): below the main action, so a message arriving under the field moves only the button (decisions 0045, 0048); in a sheet the sheet grows by its line.
 - **Small menus and panels float under their button:** the list's and the article's More menus and the Aa panel, in the same family, a rounded card with one soft shadow, closed by Escape (back to the button), a press outside, or the keyboard leaving them. On a phone the Aa panel is a sheet along the bottom of the screen with a Close button, and the article's More menu opens upwards from the bottom bar.
 - **One search field:** the sidebar's find field and the list's search are one slim capsule, as Apple Books draws its search: 36px tall with a mouse on a wide window, 44px on touch or a phone, 10px corners, a faint fill of the text color (6%) and no edge, a 14px search icon in the icon column and the interface's text size; the keyboard's outline marks the one in use. A chip inside it is 24px tall with 6px corners; its Remove button is still a full 44px to press. Its options menu floats on the raised surface (decision 0051, replacing 0041's unfilled find field).
@@ -179,41 +179,41 @@ The philosophy applied. The principle is noted where it isn't obvious.
 
 #### Color
 
-Six themes, as in Apple Books, each with a day and a night version (decision 0046). The values are matched by eye to Apple Books' themes, then held to slowfeed's own floors by the automatic checks.
+One theme, Original, with a day and a night version (decision 0056, which removed decision 0046's five others). Its values were matched by eye to Apple Books' Original, then held to nine turtles' own floors by the automatic checks.
 
-| Role (day) | Original | Quiet | Paper | Bold | Calm | Focus |
-|---|---|---|---|---|---|---|
-| Background (reading area) | `#FFFFFF` | `#E8E8EA` | `#F5F4F0` | `#FFFFFF` | `#F2E6D0` | `#FBF6E2` |
-| Accent ("where you are") | `#2C4F8C` | `#344A74` | `#2F4A7A` | `#1D3C8A` | `#733618` | `#235268` |
-| Accent contrast on background (approx.) | 8.1 : 1 | 7.2 : 1 | 8.0 : 1 | 10.2 : 1 | 7.5 : 1 | 7.8 : 1 |
-| List area (one step off) | `#F7F7F7` | `#E0E0E3` | `#EDECE7` | `#F7F7F7` | `#EADCC2` | `#F3EDD5` |
-| Sidebar (two steps off) | `#EFEFF1` | `#D7D7DB` | `#E4E3DD` | `#EFEFF1` | `#E0D0B2` | `#EAE2C6` |
-| Text | `#141414` | `#2A2A2D` | `#25241F` | `#000000` | `#32271B` | `#1F1D16` |
-| Second ink: read titles, quieter actions | `#3C3C40` | `#434347` | `#47453E` | `#1F1F22` | `#4E4131` | `#433F31` |
-| Muted grey: meta, counts, hints | `#5F5F64` | `#525256` | `#5A5850` | `#4A4A4F` | `#5A4B3A` | `#5A5442` |
+| Role (day) | Original |
+|---|---|
+| Background (reading area) | `#FFFFFF` |
+| Accent ("where you are") | `#2C4F8C` |
+| Accent contrast on background (approx.) | 8.1 : 1 |
+| List area (one step off) | `#F7F7F7` |
+| Sidebar (two steps off) | `#EFEFF1` |
+| Text | `#141414` |
+| Second ink: read titles, quieter actions | `#3C3C40` |
+| Muted grey: meta, counts, hints | `#5F5F64` |
 
-| Role (night) | Original | Quiet | Paper | Bold | Calm | Focus |
-|---|---|---|---|---|---|---|
-| Background (reading area) | `#121212` | `#2C2C2E` | `#262624` | `#000000` | `#29231C` | `#1B1A15` |
-| Accent ("where you are") | `#94B2E6` | `#B0C0E0` | `#A3B6DA` | `#A2BFF2` | `#E0AD6A` | `#D1BB72` |
-| Accent contrast on background (approx.) | 8.7 : 1 | 7.6 : 1 | 7.4 : 1 | 11.3 : 1 | 7.7 : 1 | 9.2 : 1 |
-| List area (one step off) | `#1A1A1A` | `#303032` | `#2C2C2A` | `#0C0C0C` | `#2F2821` | `#22201A` |
-| Sidebar (two steps off) | `#232323` | `#38383B` | `#343431` | `#161616` | `#382F27` | `#2A2821` |
-| Text | `#E8E8E8` | `#E2E2E5` | `#E3E1D9` | `#FFFFFF` | `#EADCC5` | `#E7E1CC` |
-| Second ink: read titles, quieter actions | `#C4C4C6` | `#C3C3C7` | `#C7C5BC` | `#E2E2E2` | `#CFC0A8` | `#CAC4AE` |
-| Muted grey: meta, counts, hints | `#A4A4A8` | `#B5B5BA` | `#B4B2A8` | `#B4B4B4` | `#BCAD95` | `#B0A993` |
+| Role (night) | Original |
+|---|---|
+| Background (reading area) | `#121212` |
+| Accent ("where you are") | `#94B2E6` |
+| Accent contrast on background (approx.) | 8.7 : 1 |
+| List area (one step off) | `#1A1A1A` |
+| Sidebar (two steps off) | `#232323` |
+| Text | `#E8E8E8` |
+| Second ink: read titles, quieter actions | `#C4C4C6` |
+| Muted grey: meta, counts, hints | `#A4A4A8` |
 
 - All accent pairs pass AAA (7 : 1); re-check if a value changes.
 - **Links in articles** are underlined in the text color, **never blue**.
-- **Muted greys** (read items, counts, source names) follow their theme's paper, cool or warm, and pass AA (4.5 : 1) on every area and on the selection pill in all themes, verified by automatic checks. Eight were nudged a shade from the values matched by eye so they stay at 4.5 : 1 on the pill (decision 0046).
-- **The selection pill** (decisions 0037, 0041): in the day versions the theme's accent mixed into the pane behind it at 12%, so each pill is made from its own pane's paper (decision 0051), except Paper's, which is its own text color at 10%, so the pill stays warm on its warm paper rather than slate (decision 0053); in the night versions the theme's own text color at 12%, so the pill keeps the pane's warmth or coolness instead of laying a cool blue-grey over warm brown. Quiet, Paper and Calm by night, whose panes are already light for the dark, mix in less (9%, 10% and 10%) so their text keeps 7 : 1 on it (decision 0046). Text stays at 7 : 1, muted grey at 4.5 : 1 and the unread dot at 3 : 1 on it, and a dark pill, or a day pill on a warm pane, keeps its pane's temperature (all checked automatically). A row under the pointer gets a fainter, neutral tone of the text color (5%), never the accent, always lighter than the pill.
-- **Search matches** have the accent at 12% behind them (6% in Quiet by night, 8% in Paper and Calm by night, so text keeps 7 : 1 inside the pill), with 3px corners and a fine underline (so never tone alone), in the text's own weight; text keeps 7 : 1 on it, even inside the pill.
+- **Muted greys** (read items, counts, source names) pass AA (4.5 : 1) on every area and on the selection pill, by day and by night, verified by automatic checks.
+- **The selection pill** (decision 0057): a neutral grey, the text color mixed into the pane behind it (8% by day, 12% by night), with no color. Text stays at 7 : 1, muted grey at 4.5 : 1 and the unread dot at 3 : 1 on it, and a dark pill, or a day pill on a warm pane, keeps its pane's temperature (all checked automatically). A row under the pointer gets a fainter, neutral tone of the text color (5%), never the accent, always lighter than the pill.
+- **Search matches** have the accent at 12% behind them , with 3px corners and a fine underline (so never tone alone), in the text's own weight; text keeps 7 : 1 on it, even inside the pill.
 - **The keyboard focus outline** is a 2px line in the text color, never the accent. On rows it is the text color softened (65%, still at least 3 : 1 on every area and on the pill, checked automatically; fields use the same tone, see "Fields"), drawn 2px inside their rounded edge so it never reaches over the hairlines or the pane's edge; the pill's fill always stays. A title the keyboard is moved to gets it too, a little away from the words, except a sheet's or the shortcut list's title, which takes the place without a ring because it can't be pressed; the first Tab lands on a control that rings (decision 0042). It shows only when you're using the keyboard: never on a row after a tap or a click, even when the keyboard's place moves back to it (decision 0051).
 - **Status colors** (errors, warnings; V2 feed health page) are muted, never drift toward blue, and always come with words.
-- **Destructive actions** (Unsubscribe, Delete folder) are words in a muted red, `#A3261B` by day and `#E8968A` by night (`#EA988C` in Quiet by night, a shade lighter for its lighter grey): at least AA (4.5 : 1) on the page, the list and a grouped list in every theme, checked automatically. Red means only "this removes something", and the words always say what.
+- **Destructive actions** (Unsubscribe, Delete folder) are words in a muted red, `#A3261B` by day and `#E8968A` by night: at least AA (4.5 : 1) on the page, the list and a grouped list by day and by night, checked automatically. Red means only "this removes something", and the words always say what.
 
 #### Themes
-Six, as in Apple Books (decision 0046, replacing decision 0032's eleven): **Original** (the default: white paper by day, near-black by night), **Quiet** (soft grey, lower glare), **Paper** (a faintly warm off-white, like print), **Bold** (pure white and black at the strongest contrast, with the article text heavier: Literata's semibold or Atkinson Hyperlegible's bold; only the article text, never the interface; a publisher's bold words and headings go a step heavier still, to Literata's 800), **Calm** (sepia: cream paper, brown ink) and **Focus** (a pale yellow page). Each has a day and a night version. A separate **Appearance** choice picks between them: **Light**, **Dark** or **Match device** (the default), which follows the device's own light or dark setting, live, as it switches. Before slowfeed's script runs, a page is Original, by day or by night as the device is set. Every version meets the same contrast floors, checked automatically.
+One theme, **Original**: white paper by day, near-black by night (decision 0056). The five others from decision 0046 (Quiet, Paper, Bold, Calm, Focus) were removed at the owner's request: nine turtles has its own look rather than copying Apple Books' set. An **Appearance** choice picks the version: **Light**, **Dark** or **Match device** (the default), which follows the device's own light or dark setting, live, as it switches. Before nine turtles' script runs, a page is Original, by day or by night as the device is set. Both versions meet the same contrast floors, checked automatically.
 
 #### Typography
 
@@ -224,7 +224,7 @@ Six, as in Apple Books (decision 0046, replacing decision 0032's eleven): **Orig
 | Interface | **The device's own system font** (San Francisco on Apple devices), **Inter** everywhere else | As in Apple Books: the interface feels native; Inter is the neutral, self-hosted fallback |
 | Code in articles | **JetBrains Mono** | Clear monospace |
 
-- All fonts are free and served by slowfeed itself (no third-party font services).
+- All fonts are free and served by nine turtles itself (no third-party font services).
 - **Other scripts** (e.g. Hindi in Devanagari) use the fonts already on the device; no extra downloads.
 - **A fixed type scale by role**, so each level of importance looks different at a glance (size, weight and ink together, never color):
   - meta 13px (times, source names, counts, hints) in muted grey; 15px on a touch screen;
@@ -238,7 +238,7 @@ Six, as in Apple Books (decision 0046, replacing decision 0032's eleven): **Orig
 - Article text is set by the reader: six steps, 16 to 28px, 20px by default (a tenth smaller on a phone). The article's title is 1.6 times the text size (32px by default), with tight leading (1.12) and its letters tracked in only a little, so they never touch (decision 0047), its lines balanced so a two-line title reads as two even lines, as Apple Books sets one (decision 0044, replacing 0040's lone-word rule); its headings are 1.1 and 1.05 times (22px by default) with more room above than below, so the title is always clearly the largest thing on screen and a heading never competes with it (decision 0038).
 - **The byline is quiet:** 14px in the interface font (decision 0050) and the second ink, a clear pause under the title (five-eighths of the title's size, about 20px by default, decision 0047), with the publisher's name leading in full ink and semibold (the interface fonts ship only regular and semibold).
 - **Spacing** in steps of 4px, mostly 8, 16, 24, 40 and 64px.
-- **Weights:** regular and semibold (600) for both reading and the interface: Literata's semibold for titles, headings and bold words in articles (Atkinson Hyperlegible keeps its bold). Nothing heavier, so a calm page never shouts, except in the Bold theme, which the reader chooses: there the article text is semibold and its bold words and headings use Literata's 800 (decision 0046). Semibold marks unread titles, where you are in the sidebar, the one main action in a toolbar or sheet, and a destructive action's words. The self-hosted Inter has only 400 and 600, so unread titles stay at 600 (decision 0037).
+- **Weights:** regular and semibold (600) for both reading and the interface: Literata's semibold for titles, headings and bold words in articles (Atkinson Hyperlegible keeps its bold). Nothing heavier, so a calm page never shouts. Semibold marks unread titles, where you are in the sidebar, the one main action in a toolbar or sheet, and a destructive action's words. The self-hosted Inter has only 400 and 600, so unread titles stay at 600 (decision 0037).
 - **Three inks:** text (titles, where you are), a second ink (read titles, quieter actions); feed names in the sidebar are in full text color and muted grey (meta).
 - Article lines of roughly 65–75 characters, with generous leading.
 
@@ -266,7 +266,7 @@ Fixed order, top to bottom: **Unread · Starred · All**, then **folders** A–Z
 - Names in Devanagari are set a touch larger, so they sit level with Latin names.
 - **Folders** are one concept on screen; a feed can be in several (tags underneath).
 - **Unread counts:** see the Exceptions log.
-- **Where you are** is the same pill as in the item list (see "Item states"); the place's name is semibold, and Unread's, Starred's or All's icon turns the accent, as a Mac source list marks the selected row (decision 0043): the pill, the weight and the icon together, never color alone. A row under the pointer gets a fainter, neutral tone.
+- **Where you are** is the same pill as in the item list (see "Item states"); the place's name is semibold, and Unread's or All's icon turns full ink (Starred's turns green, filled), never the accent (decision 0057): the pill and the weight together, never color alone. A row under the pointer gets a fainter, neutral tone.
 - Broken feeds look normal and simply show nothing new. In V1 the daily check reports problems; the feed health page comes in V2.
 
 ### Item list
@@ -284,8 +284,8 @@ Fixed order, top to bottom: **Unread · Starred · All**, then **folders** A–Z
 |---|---|
 | Unread | Full-contrast, semibold title and an 8px dot in the theme's accent in the gutter before it |
 | Read | Second ink, regular-weight title |
-| Selected (cursor) | One pill, the same in the sidebar and the list (decision 0037): 8px in from the pane's edges, 8px corners, filled with the accent mixed into the pane (the text color in the night versions, decision 0041, and in Paper by day, decision 0053); no border and no bar; title in full ink. The keyboard's outline is drawn 2px inside its edge. In high-contrast mode, an edge in the system's highlight color |
-| Starred | A small star mark |
+| Selected (cursor) | One pill, the same in the sidebar and the list (decision 0037): 8px in from the pane's edges, 8px corners, filled with a neutral grey (the text color mixed into the pane, 8% by day and 12% by night) and no color (decision 0057); no border and no bar; title in full ink. The keyboard's outline is drawn 2px inside its edge. In high-contrast mode, an edge in the system's highlight color |
+| Starred | A small filled star in light green (`#2A8A43` by day, `#56D364` by night; at least 3 : 1 wherever it's drawn, checked automatically; decision 0057). The shape says it, the green makes it easy to spot |
 
 In river mode (V2) only the cursor and star show.
 
@@ -296,7 +296,7 @@ In river mode (V2) only the cursor and star show.
 - **Images** load normally from the publisher; invisible 1×1 tracking images are removed. At night they are dimmed a little, never inverted; captions are clearly smaller (13/16 of the text, 1.4 line height, 6px under the picture), in the second ink at 7 : 1; tables start flush with the text under a fine header rule (decisions 0050, 0053).
 - **"Open original"** is always present, always in the same place: the first icon in the cluster at the right of the article's top bar (on a phone, alone at the right of the top bar), named "Open original" for screen readers and in its tooltip.
 - **Quiet tools, anchored to the pane** (decision 0038): the article's top bar runs the width of the reading pane, its icons in the second ink, never words, together at the right edge, 4px apart, leaving the left empty as in Apple Books (decision 0050): Open original, **Aa**, Star and **More** (…). More holds Copy link (Share on phones) and Mark unread. The bar is solid, in the page's own color, across the whole pane (scrollbar included); the text scrolls below it, never showing through, and a faint line shows between them only once the text has scrolled (decision 0040). The scrollbar's track is see-through, so its gutter is the page's color in every theme.
-- **The Aa panel,** like Apple Books': one press from the text, the reader's own controls. Text size as a small A and a large A (the same steps as `+` and `-`); Appearance (Light, Dark, Match device) as a segmented control; the six themes as round-cornered tiles, each "Aa" in the reading font on that theme's own page color and ink in the version showing, Bold's "Aa" bold, the chosen one ringed in the text color and its name semibold (the same controls as Settings); the reading font, each name in its own face; and the line width. Changes apply at once to the article behind it. The same preferences stay in Settings › Look and feel.
+- **The Aa panel,** like Apple Books': one press from the text, the reader's own controls. Text size as a small A and a large A (the same steps as `+` and `-`); Appearance (Light, Dark, Match device) as a segmented control (the same control as Settings); the reading font, each name in its own face; and the line width. Changes apply at once to the article behind it. The same preferences stay in Settings › Look and feel.
 - **Title, then byline:** the title first, then who, where and when in a quiet line under it (see Typography). Opening an article moves the keyboard's place to its title so screen readers start there, but, as in a sheet, it draws no ring: a title can't be pressed, and the next Tab lands on a link or control, which rings as always (decision 0047).
 - **An ending:** a short centred line after the last paragraph, and room below it.
 - **Title size:** 1.6 times the text size, semibold, tight, in the text's column with its lines balanced. On a phone the same text-size step reads a little smaller, so a line keeps about 40 characters.
@@ -345,7 +345,7 @@ In river mode (V2) only the cursor and star show.
 - **The server fetches in the background, on each feed's own rhythm** (frequent publishers often, dormant blogs rarely), with ETag / Last-Modified. In V2, WebSub delivers updates from publishers who offer it, with less frequent checking alongside.
 - **The view waits for you:** it updates only on `r` or Refresh in the list's More (…) menu, instantly, since fetching already happened.
 - **Fresh on arrival:** opening or reloading the app shows the latest state.
-- **One quiet line, no number:** when new items wait, "New items · press `r`." floats as a small note at the foot of the list pane (the same place however short the list), so nothing shifts. It sits in a band of the list's own tone across the pane, which the rows end above, so the note never lies over the rows you're acting on (decision 0048); on a touch screen it says "New items" with a **Show** button. Undo and "slowfeed was updated" use the same note.
+- **One quiet line, no number:** when new items wait, "New items · press `r`." floats as a small note at the foot of the list pane (the same place however short the list), so nothing shifts. It sits in a band of the list's own tone across the pane, which the rows end above, so the note never lies over the rows you're acting on (decision 0048); on a touch screen it says "New items" with a **Show** button. Undo and "nine turtles was updated" use the same note.
 - **No pull-to-refresh;** Refresh is in every list's More menu, on phones too.
 
 ### Empty state
@@ -353,7 +353,7 @@ In river mode (V2) only the cursor and star show.
 Until the first feed is added, the **reading area** holds a welcome, centred like a blank page in a book, because that's where a new reader's eyes go; beside it, the list steps aside, so the welcome has the list's room too (decision 0048):
 
 > ***A quiet place to read.*** (the reading serif, 28px)
-> One sentence on what slowfeed is for.
+> One sentence on what nine turtles is for.
 > **[ Paste a website or feed URL ] [ Add feed ]** (a wide field, its name inside it)
 > Import an OPML file… (a quiet button)
 
@@ -361,7 +361,7 @@ Until the first feed is added, the **reading area** holds a welcome, centred lik
 - The welcome owns the screen (decisions 0041, 0048): one empty state, never an empty column beside it. Where there's a reading area beside the list, the list steps aside and the welcome takes both; the sidebar has no find field while there's nothing to find. Where there's no reading area beside the list (a phone), the welcome takes the list's place.
 - **The welcome stays still under the Add a feed sheet:** the sheet has the only field, and the welcome keeps its exact shape under the dim (decision 0048).
 - **No article open:** once there are feeds, the empty reading area shows one quiet line in its middle, "No article open", in the serif at the large size and in muted grey, as a Mac app shows when nothing is chosen: never the accent, no picture. When the list has something to open, screen readers also hear "Choose one from the list, or press j" (decisions 0040, 0053).
-- Accepts a **website** URL too; slowfeed finds the feed (autodiscovery).
+- Accepts a **website** URL too; nine turtles finds the feed (autodiscovery).
 - The "New to feeds?" guide page comes in V2.
 
 ### Adding feeds
@@ -418,7 +418,7 @@ Vim-style keys are first-class. A keyboard icon at the foot of the sidebar opens
 ### Settings
 
 - Settings shares the top line with the other screens. Below it, **grouped inset lists, as in Apple Books' settings** (decision 0039): one centred column no wider than 560px; each group a rounded block one tone off the page with no edge, a small muted header above it and its explaining line below it; each row at least 44px, its name on the left in the interface font and its control at the right end. Every control in a row is the same width, so the column reads as one. A choice among two or three is a segmented control (a faint track, the chosen choice a raised fill with a small shadow and no edge, as Apple draws it, and semibold words; in a dark theme the fill is a clear step lighter than the track) (decision 0042). Rows parted by hairlines are inset 16px from the left in every group. In a dark theme a group sits a clear step lighter than the page (the text color mixed 7% into it), so it never melts into the page. A row that acts (Import OPML…, the exports, Sign out) ends in a quiet glyph in the muted grey: › where something opens, a tray where a file is saved, a door for Sign out. Never the accent, which means only where you are; and Sign out stays in the text color, not the destructive red, because it removes nothing.
-- **Look and feel** (per device): Appearance, theme, reading font (Literata default, or Atkinson Hyperlegible), text size, line width, and a short sample set as articles will be, the group's first row before its controls, as Apple Books keeps its sample inside the themes panel: a row, never a card inside a card, its words on the rows' words with 16px round them and a hairline under it (decision 0055). **Appearance** (Light, Dark, Match device) is a segmented control in its own row above the themes (decision 0046). **Themes are "Aa" tiles,** as in Apple Books: each a small square page with "Aa" in the reading font, in that theme's own paper and ink for the version showing now (day or night), its name under it; Bold's "Aa" is bold. The chosen tile has two marks, as in Apple Books: one 2px ring in the text color with a clear 3px gap between it and the page, and its name semibold, never color alone; no checkmark badge (decision 0045). Every page keeps its own faint 1px edge, chosen or not, so the gap reads as a gap and the chosen tile is never bigger than its neighbours; the tiles sit 16px apart so neither ring crowds a neighbour (decision 0055). The six themes sit in even rows that fill the width; on a phone, three to a row in two rows, each page a little wider than tall (decision 0052). **Text size is a stepper,** as in Apple Books: one flat capsule on the same faint track as the segmented controls, a small A and a large A at its ends and the step's name between them, each part split from the next by a hairline, nothing raised (a raised cell is how a chosen segment is drawn, so two of them read as two choices chosen; decision 0055), 44px tall to touch; the same control as the Aa panel (and the same steps as `+` and `-`). The Aa panel above an article uses the same tiles and the same text size control, and the group's footnote says so.
+- **Look and feel** (per device): Appearance, reading font (Literata default, or Atkinson Hyperlegible), text size, line width, and a short sample set as articles will be, the group's first row before its controls, as Apple Books keeps its sample inside the themes panel: a row, never a card inside a card, its words on the rows' words with 16px round them and a hairline under it (decision 0055). **Appearance** (Light, Dark, Match device) is a segmented control in its own row; there are no theme tiles, as there is one theme (decision 0056). **Text size is a stepper,** as in Apple Books: one flat capsule on the same faint track as the segmented controls, a small A and a large A at its ends and the step's name between them, each part split from the next by a hairline, nothing raised (a raised cell is how a chosen segment is drawn, so two of them read as two choices chosen; decision 0055), 44px tall to touch; the same control as the Aa panel (and the same steps as `+` and `-`). The Aa panel above an article uses the same Appearance and text size controls, and the group's footnote says so.
 - **Account:** Sign out as a row of its own; the version under the group, and "A new version is ready" with Reload as a row when there is one.
 - **Reading:** sort order (newest first by default); inbox or river in V2.
 - **Feed health page (V2):** dead feeds first, then intermittent errors; problems in plain words ("Hasn't worked for 3 weeks — the site may have moved"), not HTTP codes; per feed **Retry · Find new address · Unsubscribe**, where "Find new address" reruns autodiscovery.
@@ -434,7 +434,7 @@ Plain, unhurried, never urgent: "Nothing new yet," never "You're missing out!" L
 ## Still to define
 
 - Status colors for the V2 feed health page (checked against the first floor)
-- Domain, app store and trademark checks for "slowfeed" (not blocking V1)
+- Domain, app store and trademark checks for "nine turtles" (not blocking V1)
 
 ## V2 parking lot
 

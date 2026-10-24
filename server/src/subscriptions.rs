@@ -53,7 +53,7 @@ pub struct Listed {
 }
 
 /// Reads an OPML file. Every feed it lists, in order, each with the folder
-/// it's directly under. Folders inside folders aren't a slowfeed idea, so a
+/// it's directly under. Folders inside folders aren't a nine turtles idea, so a
 /// feed belongs to the innermost one. None if it isn't an OPML file.
 pub fn read(text: &str) -> Option<Vec<Listed>> {
     let document = OPML::from_str(text.trim_start_matches('\u{feff}')).ok()?;
@@ -244,7 +244,7 @@ async fn export(_: SignedIn, State(state): State<AppState>) -> Response {
                 (header::CONTENT_TYPE, "text/x-opml; charset=utf-8"),
                 (
                     header::CONTENT_DISPOSITION,
-                    "attachment; filename=\"slowfeed-feeds.opml\"",
+                    "attachment; filename=\"nine-turtles-feeds.opml\"",
                 ),
             ],
             file,
@@ -265,7 +265,7 @@ fn write(feeds: &[Followed], folders: &[Folder], memberships: &[(i64, i64)]) -> 
     };
     let mut document = OPML {
         head: Some(opml::Head {
-            title: Some("slowfeed feeds".to_owned()),
+            title: Some("nine turtles feeds".to_owned()),
             ..opml::Head::default()
         }),
         ..OPML::default()

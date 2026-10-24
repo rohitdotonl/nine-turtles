@@ -4,11 +4,12 @@
 `docs/ENGINEERING.md`, then this file. If two documents disagree, stop and
 tell the owner which ones and how.
 
-## What slowfeed is
+## What nine turtles is
 
 A quiet, single-user reader for writing on the open web (RSS, Atom, JSON
 Feed). Finite, calm and quiet: the opposite of social media.
-**Tiebreaker:** does this make slowfeed feel more like a book, or more like a feed?
+Its name is **nine turtles**, always lowercase (renamed from slowfeed in October 2026, decision 0056). Behind the scenes the old name stays: the program `slowfeed`, its `SLOWFEED_*` settings, the database file, saved preferences, the repository and the Render service, so nothing breaks or signs the owner out.
+**Tiebreaker:** does this make nine turtles feel more like a book, or more like a feed?
 
 ## Project facts
 
@@ -94,7 +95,7 @@ years › written for the next agent.
 
 - **Never commit the owner's OPML file.** `*.opml` is ignored; test fixtures use made-up feeds.
 - No notifications, badges, gamification, infinite scroll, animations or transitions. Ever.
-- The accent (ink blue in the first themes) marks only what's yours to look at: where you are, what's unread and what a search found (decision 0037). Never a button, a link or a focus outline.
+- The accent (ink blue) marks only what's yours to look at: what's unread and what a search found (decisions 0037, 0057); where you are is a plain grey pill. Green marks only a filled star. Neither is ever a button, a link or a focus outline.
 - Never fetch an article's web page. Autodiscovery fetches only the page the owner pastes, only when they add a feed or ask "Find new address" (`docs/decisions/0016-adding-feeds.md`).
 - A feature isn't done until it has tests and the checks pass.
 - Significant decisions get a short note in `docs/decisions/`.
@@ -110,7 +111,7 @@ years › written for the next agent.
 | Backend, database, fetching, search, sign-in, security | `docs/ENGINEERING.md` Parts 2 and 3 |
 | Libraries | `docs/libraries.md` and `docs/ENGINEERING.md` → "Boring and few", then ask the owner |
 | Checks or CI | `docs/ENGINEERING.md` Part 4, then `docs/operations/checks.md` |
-| Building or running slowfeed | `docs/operations/building-and-running.md` |
+| Building or running nine turtles | `docs/operations/building-and-running.md` |
 | Reviewing a pull request | `docs/operations/second-agent-review.md` |
 | Database structure changes | `docs/ENGINEERING.md` → the floor and "Data" |
 | Hosting, deploys, backups | `docs/ENGINEERING.md` → "Hosting", and `docs/operations/` |

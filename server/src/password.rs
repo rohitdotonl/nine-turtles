@@ -41,7 +41,7 @@ pub fn matches(password: &str, stored: &str) -> bool {
 /// scrambled line to paste into the host's settings. The readable password
 /// is never written anywhere.
 pub fn set_password_command() -> Result<(), String> {
-    eprintln!("Choose slowfeed's password (at least {MINIMUM_LENGTH} characters).");
+    eprintln!("Choose nine turtles' password (at least {MINIMUM_LENGTH} characters).");
     eprintln!("What you type isn't shown.");
     let first = ask("Password: ")?;
     if first.chars().count() < MINIMUM_LENGTH {
@@ -62,7 +62,7 @@ pub fn set_password_command() -> Result<(), String> {
     let line = hash(&first)?;
     eprintln!();
     eprintln!("Copy the whole line below into the SLOWFEED_PASSWORD_HASH setting,");
-    eprintln!("save, and let slowfeed restart. It's the scrambled form, not your password.");
+    eprintln!("save, and let nine turtles restart. It's the scrambled form, not your password.");
     eprintln!();
     println!("{line}");
     Ok(())

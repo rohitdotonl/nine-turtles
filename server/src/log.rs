@@ -1,4 +1,4 @@
-//! slowfeed's log: plain lines on standard error, which every host collects
+//! nine turtles' log: plain lines on standard error, which every host collects
 //! (Render shows them in its Logs tab). Problems are also remembered, the
 //! last few, so the diagnostics page and the daily check can see them.
 

@@ -1,9 +1,9 @@
-// New versions of slowfeed (SPEC section 18, Status). Every answer from the
+// New versions of nine turtles (SPEC section 18, Status). Every answer from the
 // server says which version sent it. The first answer this tab gets is the
-// version it runs; when a later one names another, a newer slowfeed is
+// version it runs; when a later one names another, a newer nine turtles is
 // live: Settings says "A new version is ready", with Reload. Nothing is
-// swapped while you read. If the newer slowfeed refuses a request because
-// it no longer understands it, the note at the bottom of the list says "slowfeed was
+// swapped while you read. If the newer nine turtles refuses a request because
+// it no longer understands it, the note at the bottom of the list says "nine turtles was
 // updated. Reload to continue." (Keeping such a tab working without a
 // reload is V2.)
 
@@ -33,7 +33,7 @@ export function noteAnswer(response: Response) {
   if (said === "stranded") updates.stranded = true;
 }
 
-/** `fetch`, for slowfeed's own server, noting each answer's version. */
+/** `fetch`, for nine turtles' own server, noting each answer's version. */
 export async function api(input: string, init?: RequestInit): Promise<Response> {
   const response = await fetch(input, init);
   noteAnswer(response);
@@ -41,4 +41,4 @@ export async function api(input: string, init?: RequestInit): Promise<Response> 
 }
 
 /** The message for the note at the bottom of the list, once this tab can't carry on. */
-export const STRANDED_MESSAGE = "slowfeed was updated. Reload to continue.";
+export const STRANDED_MESSAGE = "nine turtles was updated. Reload to continue.";

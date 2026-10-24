@@ -1,4 +1,4 @@
-# slowfeed V1 build plan
+# nine turtles V1 build plan
 
 *Agreed with the owner. Agents build from this plan without a separate plan step (decision 0014).*
 
@@ -45,7 +45,7 @@ same so older documents still point to the right place.
 
 - The Rust server program and the Svelte frontend, wired together so the
   frontend is built into the one program file.
-- A placeholder page in the slowfeed wordmark, with "Nothing here yet."
+- A placeholder page in the nine turtles wordmark, with "Nothing here yet."
 - Automatic checks on every pull request (GitHub Actions):
   - One script that runs every check, so GitHub Actions, any other service, an agent or a person all run the same checks.
   - Rust: formatting, lint ("clippy", a tool that spots likely mistakes), tests.
@@ -70,16 +70,16 @@ you know they bite.
 
 ## 2. Live on Render, with sign-in
 
-**Goal:** slowfeed exists at its public address and only you can get in.
+**Goal:** nine turtles exists at its public address and only you can get in.
 
 - Single-user password sign-in, long-lived device sessions, slowed-down
   repeated wrong guesses (section 1 of SPEC).
 - Settings read from environment variables only, listed (names, never values) in `docs/operations/settings.md`.
-- GitHub Actions builds slowfeed into a container image; Render runs it.
+- GitHub Actions builds nine turtles into a container image; Render runs it.
 - Public status page and key-protected diagnostics page, shown to you in Settings → Status.
 - The daily automatic check: its instructions written in `docs/operations/daily-check.md`
   (so any agent can follow them), then scheduled. You allow the agents' environment
-  to reach your slowfeed address and add the diagnostics key to its settings.
+  to reach your nine turtles address and add the diagnostics key to its settings.
 - A step-by-step guide for you to set up Render (the agent has no access to
   it), including setting your password with `slowfeed set-password` in
   Render's Shell tab (decided October 2026): `docs/operations/render-setup.md`.
@@ -93,7 +93,7 @@ signed in, sign out. A private window sees only the password field.
 
 **Goal:** before any of your data exists, prove it can be recovered.
 
-- Built into slowfeed: a nightly copy of the database, uploaded to Cloudflare R2
+- Built into nine turtles: a nightly copy of the database, uploaded to Cloudflare R2
   (S3-compatible storage outside Render; you create the account, agents never see the keys).
   Needs one new library for uploading, which will be proposed for your approval.
 - The temporary copy is made outside the data disk. Keeps 30 nightly copies plus one a month for a year.
@@ -105,9 +105,9 @@ into a fresh copy and see it work.
 
 ## 4. Look and feel foundations
 
-**Goal:** the empty three-pane app, looking and behaving like slowfeed.
+**Goal:** the empty three-pane app, looking and behaving like nine turtles.
 
-- Three themes, the fonts (served by slowfeed), type scale and muted greys
+- Three themes, the fonts (served by nine turtles), type scale and muted greys
   (you choose between two or three options shown as screenshots), ink blue "where you are".
 - Three panes adapting to width, collapsible sidebar, the fixed sidebar views.
 - Keyboard groundwork: the focus outline, `?` cheat sheet, `[`, Escape, `g` keys.
@@ -195,7 +195,7 @@ In V1, the daily check reports failing feeds instead (from Milestone 8).
   system share sheet, Refresh button, 44px targets.
 - Web app manifest and service worker so it installs to the home screen.
 - A tab left open across an update that can't carry on says, in the list's
-  reserved line, "slowfeed was updated. Reload to continue.", with tests.
+  reserved line, "nine turtles was updated. Reload to continue.", with tests.
 
 **You can try:** read on your phone; add it to the home screen.
 
@@ -344,6 +344,10 @@ each with screenshots:
   clear of its tile, the sample inside its group, a softer field ring,
   ⇧A key caps, and "Import an OPML file…" as a link on the margin
   (decision 0055).
+- ✅ Renamed **nine turtles**, and one theme, Original, by day and by night;
+  the Apple Books theme set removed (decision 0056).
+- ✅ Small touches of color, tried side by side on the owner's computer: a
+  plain grey pill for where you are, and green stars (decision 0057).
 
 ---
 

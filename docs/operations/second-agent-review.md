@@ -46,7 +46,7 @@ it qualifies.
 
 ## The light reviewer's prompt
 
-> You are reviewing pull request <ADDRESS> in the slowfeed repository. You
+> You are reviewing pull request <ADDRESS> in the nine turtles repository. You
 > didn't write it. Read `AGENTS.md`, the "Which review: full, light or
 > none" section of `docs/operations/second-agent-review.md`, and the whole
 > change. If the change needs a full review by those rules, say so in your
@@ -61,7 +61,7 @@ it qualifies.
 
 ## The full reviewer's prompt
 
-> You are reviewing pull request <ADDRESS> in the slowfeed repository. You
+> You are reviewing pull request <ADDRESS> in the nine turtles repository. You
 > didn't write it. Read `AGENTS.md`, then `docs/DESIGN.md`,
 > `docs/ENGINEERING.md` and the sections of `docs/SPEC.md` the change touches.
 > Then read the whole change.

@@ -1,7 +1,7 @@
 //! Every change to the database's structure is tried on a copy of
 //! real-shaped data first (ENGINEERING.md → "The floor"). Each test here
-//! builds a database as an earlier version of slowfeed left it, fills it,
-//! then lets today's slowfeed open it, and checks nothing was lost.
+//! builds a database as an earlier version of nine turtles left it, fills it,
+//! then lets today's nine turtles open it, and checks nothing was lost.
 
 mod common;
 
@@ -57,7 +57,7 @@ async fn adding_read_state_and_stars_keeps_every_feed_article_and_sign_in() {
     }
     old.close().await;
 
-    // Today's slowfeed opens it and brings its structure up to date.
+    // Today's nine turtles opens it and brings its structure up to date.
     let db = slowfeed::db::open(&data_dir).await.unwrap();
     let count = |sql: &'static str| sqlx::query_scalar::<_, i64>(sql).fetch_one(&db);
     assert_eq!(count("SELECT COUNT(*) FROM sessions").await.unwrap(), 1);

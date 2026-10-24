@@ -62,7 +62,7 @@ async fn export(_: SignedIn, State(state): State<AppState>) -> Response {
                 (header::CONTENT_TYPE, "application/feed+json; charset=utf-8"),
                 (
                     header::CONTENT_DISPOSITION,
-                    "attachment; filename=\"slowfeed-starred.json\"",
+                    "attachment; filename=\"nine-turtles-starred.json\"",
                 ),
             ],
             write(&starred).to_string(),
@@ -77,8 +77,8 @@ pub fn write(starred: &[Starred]) -> Value {
     let items: Vec<Value> = starred.iter().map(item).collect();
     json!({
         "version": "https://jsonfeed.org/version/1.1",
-        "title": "slowfeed starred articles",
-        "description": "Articles starred in slowfeed, each with the feed it came from.",
+        "title": "nine turtles starred articles",
+        "description": "Articles starred in nine turtles, each with the feed it came from.",
         "items": items,
     })
 }

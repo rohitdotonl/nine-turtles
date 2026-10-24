@@ -1,5 +1,5 @@
 //! Adding a feed, listing its articles and reading one (SPEC sections 3, 6
-//! and 7), tested against a real running slowfeed and a made-up publisher's
+//! and 7), tested against a real running nine turtles and a made-up publisher's
 //! website.
 
 mod common;
@@ -212,10 +212,14 @@ async fn a_websites_home_page_finds_its_feed_and_the_articles_appear() {
         ["Post 3", "Post 2", "Post 1"]
     );
 
-    // slowfeed visited the home page and the feed, saying who it is.
+    // nine turtles visited the home page and the feed, saying who it is.
     let visitors = visitors.lock().unwrap();
     assert_eq!(visitors.len(), 2);
-    assert!(visitors.iter().all(|agent| agent.starts_with("slowfeed/")));
+    assert!(
+        visitors
+            .iter()
+            .all(|agent| agent.starts_with("nine-turtles/"))
+    );
 }
 
 #[tokio::test]

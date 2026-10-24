@@ -12,7 +12,7 @@ export type SignInResult =
 
 export async function currentSession(): Promise<Session> {
   const response = await api("/api/session", { cache: "no-store" });
-  if (!response.ok) throw new Error(`slowfeed answered ${response.status}`);
+  if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
   const body: unknown = await response.json();
   if (isRecord(body) && body.signed_in === true && typeof body.version === "string") {
     return { signedIn: true, version: body.version };
@@ -46,7 +46,7 @@ export async function signIn(password: string): Promise<SignInResult> {
 
 export async function signOut(): Promise<void> {
   const response = await api("/api/sign-out", { method: "POST" });
-  if (!response.ok) throw new Error(`slowfeed answered ${response.status}`);
+  if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
 }
 
 /** What the sign-in page says after a try that didn't work. Plain and calm. */
@@ -61,7 +61,7 @@ export function explain(result: Exclude<SignInResult, { ok: true }>): string {
     case "password-invalid":
       return "The password setting isn't valid. Run slowfeed set-password again and paste the whole line.";
     case "unreachable":
-      return "slowfeed can't be reached right now. Try again in a moment.";
+      return "nine turtles can't be reached right now. Try again in a moment.";
   }
 }
 

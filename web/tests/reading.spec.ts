@@ -26,6 +26,26 @@ async function visits(page: Page, path: string): Promise<number> {
 test.describe("on a wide window", () => {
   test.skip(({ isMobile }) => isMobile, "the phone layout has its own test below");
 
+  test("] hides and shows the article list, and \\ both; with both hidden one button brings both back", async ({ page }) => {
+    await openRoom(page);
+    const list = page.locator("#list-pane");
+    const listButton = page.getByRole("button", { name: "Article list", exact: true });
+    await expect(listButton).toBeVisible();
+
+    await page.keyboard.press("]");
+    await expect(list).toBeHidden();
+    await page.keyboard.press("]");
+    await expect(list).toBeVisible();
+
+    await page.keyboard.press("\\");
+    await expect(list).toBeHidden();
+    await expect(page.getByRole("navigation", { name: "Sidebar" })).toBeHidden();
+    await expect(listButton).toHaveCount(0);
+    await page.getByRole("button", { name: "Sidebar and article list" }).click();
+    await expect(list).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Sidebar" })).toBeVisible();
+  });
+
   test("j shows an article cleaned and restyled, and j and k move through the list", async ({ page }) => {
     await openRoom(page);
     // One quiet line in the middle of the paper (decision 0053): serif, muted grey, never the
@@ -110,7 +130,7 @@ test.describe("on a wide window", () => {
     await expect(page.getByRole("region", { name: "Reading Room" })).toBeVisible();
     await expect(article(page)).toBeVisible();
     // One page title, then a heading for the list and one for the article.
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("slowfeed");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("nine turtles");
     await expect(page.getByRole("heading", { level: 2, name: "Reading Room" })).toBeVisible();
     // The selected row says it's the current one.
     await expect(page.locator('[aria-current="true"]')).toHaveCount(1);
@@ -174,7 +194,7 @@ test.describe("on a wide window", () => {
     await tab.close();
   });
 
-  test("Copy link copies the publisher's address, not slowfeed's", async ({ page, context }) => {
+  test("Copy link copies the publisher's address, not nine turtles'", async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: FEEDS_APP });
     await openRoom(page);
     await page.keyboard.press("j");
@@ -184,7 +204,7 @@ test.describe("on a wide window", () => {
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("https://reading-room.example/slow-letter");
   });
 
-  test("the Aa panel changes text size, theme, font and line width at once; Escape closes it", async ({ page }) => {
+  test("the Aa panel changes text size, appearance, font and line width at once; Escape closes it", async ({ page }) => {
     await openRoom(page);
     await page.keyboard.press("j");
     const aa = article(page).getByRole("button", { name: "Reading appearance" });
@@ -212,23 +232,19 @@ test.describe("on a wide window", () => {
     await panel.getByRole("button", { name: "Smaller text" }).click();
     await expect.poll(size).toBe(before);
 
-    // Appearance, then the six themes, each as "Aa" on its own page; the chosen one applies at once.
+    // Appearance: day, night or as the device is set, applied at once. No theme tiles (decision 0056).
     await expect(panel.getByRole("group", { name: "Appearance" }).getByRole("radio")).toHaveCount(3);
     await expect(panel.getByRole("radio", { name: "Match device" })).toBeChecked();
-    await expect(panel.getByRole("group", { name: "Theme" }).getByRole("radio")).toHaveCount(6);
-    await expect(panel.getByRole("radio", { name: "Original" })).toBeChecked();
-    await panel.getByRole("radio", { name: "Calm" }).check();
-    await expect(root).toHaveAttribute("data-theme", "calm");
+    await expect(panel.getByRole("group", { name: "Theme" })).toHaveCount(0);
+    await panel.getByRole("radio", { name: "Light", exact: true }).check();
+    await expect(root).toHaveAttribute("data-theme", "original");
     await expect(root).toHaveAttribute("data-mode", "light");
     await panel.getByRole("radio", { name: "Dark", exact: true }).check();
     await expect(root).toHaveAttribute("data-mode", "dark");
     await panel.getByRole("radio", { name: "Match device" }).check();
-    // Bold sets the article text heavier: Literata's 600 (Atkinson's 700 below).
+    // The article text is regular; a publisher's bold words are semibold.
     const text = article(page).locator(".article-text").first();
     await expect(text).toHaveCSS("font-weight", "400");
-    await panel.getByRole("radio", { name: "Bold" }).check();
-    await expect(text).toHaveCSS("font-weight", "600");
-    // A publisher's bold words stay a step heavier: Literata's 800 (decision 0046).
     const strongWeight = () =>
       text.evaluate((el) => {
         const strong = el.appendChild(document.createElement("strong"));
@@ -236,12 +252,10 @@ test.describe("on a wide window", () => {
         strong.remove();
         return weight;
       });
-    await expect.poll(strongWeight).toBe("800");
+    await expect.poll(strongWeight).toBe("600");
     // Fonts are named in their own face; line width has three steps.
     await panel.getByRole("radio", { name: "Atkinson Hyperlegible" }).check();
     await expect.poll(() => root.evaluate((html) => html.style.getPropertyValue("--reading-font"))).toContain("Atkinson");
-    await expect(text).toHaveCSS("font-weight", "700");
-    await panel.getByRole("radio", { name: "Calm" }).check();
     await expect(text).toHaveCSS("font-weight", "400");
     const measure = () => root.evaluate((html) => html.style.getPropertyValue("--reading-measure"));
     const medium = await measure();
@@ -249,12 +263,12 @@ test.describe("on a wide window", () => {
     await expect.poll(measure).not.toBe(medium);
 
     // The keyboard's outline is in the text color, never the accent.
-    await panel.getByRole("radio", { name: "Calm" }).focus();
+    await panel.getByRole("radio", { name: "Light", exact: true }).focus();
     await page.keyboard.press("ArrowRight");
     await page.keyboard.press("ArrowLeft");
-    await expect(panel.getByRole("radio", { name: "Calm" })).toBeChecked();
+    await expect(panel.getByRole("radio", { name: "Light", exact: true })).toBeChecked();
     const [outline, ink] = await panel
-      .getByRole("radio", { name: "Calm" })
+      .getByRole("radio", { name: "Light", exact: true })
       .evaluate((input) => [getComputedStyle(input.closest("label")!).outlineColor, getComputedStyle(document.body).color]);
     expect(outline).toBe(ink);
 
@@ -271,7 +285,7 @@ test.describe("on a wide window", () => {
     await title(page, "The pleasure of a slow letter").click({ position: { x: 4, y: 4 } });
     await expect(panel).toHaveCount(0);
     await page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: "Settings" }).click();
-    await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "Calm" })).toBeChecked();
+    await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "Light", exact: true })).toBeChecked();
     await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "Wide" })).toBeChecked();
     await expect(page.getByText("The Aa button above an article changes these too")).toBeVisible();
   });
@@ -322,7 +336,8 @@ test.describe("on a wide window", () => {
     await expect(selected).toHaveCSS("outline-style", "solid");
     await expect(selected).toHaveCSS("outline-width", "2px");
     // The selection is a pill (decision 0037): filled, 8px corners, 8px in
-    // from the list's edge, with no bar. The outline is drawn inside its edge.
+    // from the list's edge, grey with no bar (decision 0057). The outline is
+    // drawn inside its edge.
     await expect(selected).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
     await expect(selected).toHaveCSS("border-top-left-radius", "8px");
     expect(await selected.evaluate((element) => getComputedStyle(element, "::before").content)).toBe("none");

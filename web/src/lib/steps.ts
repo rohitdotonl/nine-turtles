@@ -13,7 +13,7 @@ export type Step = { screen: Screen; back?: Screen };
 
 const SCREENS: readonly string[] = ["home", "list", "article", "page"];
 
-/** The step a history entry holds, if slowfeed made it. */
+/** The step a history entry holds, if nine turtles made it. */
 export function stepOf(state: unknown): Step | undefined {
   if (typeof state !== "object" || state === null) return undefined;
   const { screen, back } = state as Record<string, unknown>;

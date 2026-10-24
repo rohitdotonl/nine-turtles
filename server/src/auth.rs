@@ -31,7 +31,7 @@ const SESSION_LIFETIME: i64 = 365 * 24 * 60 * 60;
 /// database from being written on every page load.
 const RENEW_AFTER: i64 = 24 * 60 * 60;
 
-/// Wrong passwords allowed in a row before slowfeed makes you wait.
+/// Wrong passwords allowed in a row before nine turtles makes you wait.
 const FREE_TRIES: u32 = 5;
 const FIRST_WAIT: Duration = Duration::from_secs(60);
 const LONGEST_WAIT: Duration = Duration::from_secs(60 * 60);

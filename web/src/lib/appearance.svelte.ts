@@ -9,5 +9,5 @@ export const device = $state({ dark: deviceIsDark() });
 try {
   globalThis.matchMedia?.("(prefers-color-scheme: dark)").addEventListener("change", (event) => (device.dark = event.matches));
 } catch {
-  // No way to ask the device: slowfeed stays on the day version for "Match device".
+  // No way to ask the device: nine turtles stays on the day version for "Match device".
 }

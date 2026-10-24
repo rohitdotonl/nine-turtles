@@ -434,7 +434,8 @@
           <!-- Unread: an accent dot in the gutter beside the title, and a semibold title, so it shows without color. -->
           {#if !article.read}<span aria-hidden="true" class="unread-dot"></span>{/if}
           <!-- Unread: full ink, semibold. Read: the second ink, regular. The selected row is never the quietest. -->
-          <span class={["title block text-ui", !article.read ? "font-semibold text-ink" : current ? "text-ink" : "text-ink-2"]}
+          <!-- With a mouse, clearly larger (18px) than the interface text, so the title leads its row. -->
+          <span class={["title block text-ui pointer-fine:text-[1.125rem] pointer-fine:leading-[1.3]", !article.read ? "font-semibold text-ink" : current ? "text-ink" : "text-ink-2"]}
             >{#each boldParts(article.title || "Untitled", bold) as part, partIndex (partIndex)}{#if part.bold}<mark class="match"
                   >{part.text}</mark
                 >{:else}{part.text}{/if}{/each}{#if !article.read}<span class="sr-only">, unread</span>{/if}</span
@@ -443,7 +444,7 @@
             <!--
               A search result's text around the first searched word (SPEC section 14), right under
               the title and before the meta line, as Apple Books orders a result: plain text from
-              slowfeed, shown as text, up to two lines. Searched words are marked as in the title
+              nine turtles, shown as text, up to two lines. Searched words are marked as in the title
               (a faint accent tone behind them, and an underline) and in full ink, so they show by
               tone and shape.
             -->
@@ -455,9 +456,10 @@
           {/if}
           <!--
             Always one line, as Apple Books' rows are (decision 0048): a long source name ends in "…",
-            and the time and the star never wrap below it. The "·" hugs the "…" (decision 0051).
+            and the time and the star never wrap below it. The "·" hugs the "…" (decision 0051). The whole line
+            is 12px and a step fainter than muted grey, so the title leads; on the selected row it's muted grey (AA).
           -->
-          <span class="row-meta mt-0.5 text-meta text-muted">
+          <span class={["row-meta mt-1 text-[0.75rem]", current ? "text-muted" : "text-[color:var(--faint)]"]}>
             <span class={oneFeed ? "sr-only" : "row-feed"}><span class="row-feed-name" use:hugEllipsis={article.feedTitle}>{article.feedTitle}</span>&nbsp;·</span>
             <time datetime={new Date(article.at * 1000).toISOString()} class="row-date">{when(article.at)}</time>
             {#if article.starred}
@@ -482,7 +484,7 @@
   <p role="status" class="mt-4">{problem}</p>
 {/if}
 <!--
-  What was just done (with Undo), "New items · press r", or that slowfeed was
+  What was just done (with Undo), "New items · press r", or that nine turtles was
   updated: a small note at the foot of the list pane, so nothing in the list
   moves when it appears. It sits in a band of the list's own tone that the
   rows end above, so it never lies over the rows you're acting on
@@ -571,5 +573,7 @@
   }
   .row-star {
     display: flex;
+    /* Green, as a filled star is (decision 0057); the shape says it too. */
+    color: var(--star);
   }
 </style>

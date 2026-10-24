@@ -2,7 +2,7 @@ use slowfeed::{config::Config, log};
 
 const USAGE: &str = "\
 Usage:
-  slowfeed                 run slowfeed (settings: docs/operations/settings.md)
+  slowfeed                 run nine turtles (settings: docs/operations/settings.md)
   slowfeed set-password    choose the password; prints the line for SLOWFEED_PASSWORD_HASH";
 
 #[tokio::main]
@@ -78,7 +78,7 @@ async fn serve() {
     }
 }
 
-/// Finishes the requests in progress when the host asks slowfeed to stop.
+/// Finishes the requests in progress when the host asks nine turtles to stop.
 async fn shutdown_signal() {
     let ctrl_c = async {
         let _ = tokio::signal::ctrl_c().await;

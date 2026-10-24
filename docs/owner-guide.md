@@ -1,6 +1,6 @@
-# How slowfeed is built: a guide for the owner
+# How nine turtles is built: a guide for the owner
 
-This guide explains, in plain language, what slowfeed is made of and how a
+This guide explains, in plain language, what nine turtles is made of and how a
 change goes from an idea to the live app. Agents keep it accurate whenever
 tools, hosting or the workflow change.
 
@@ -8,7 +8,7 @@ tools, hosting or the workflow change.
 
 ## 1. The big picture
 
-slowfeed has two halves:
+nine turtles has two halves:
 
 - The **backend** runs on a server (a computer at Render that's always on).
   It fetches feeds, stores articles, handles sign-in, and answers the
@@ -17,15 +17,15 @@ slowfeed has two halves:
   article. It runs in your browser or phone.
 
 When the app is built, the frontend is packed *inside* the backend, so the
-whole of slowfeed is **one program file plus one database file**. That's what
+whole of nine turtles is **one program file plus one database file**. That's what
 makes it easy to back up and easy to move to another host.
 
 ```
  Your browser / phone                 Render (the server)
  ┌──────────────────┐   internet   ┌──────────────────────────────┐
- │  frontend        │ ◄──────────► │  slowfeed program (backend,  │
+ │  frontend        │ ◄──────────► │  nine turtles program (backend,  │
  │  (the screens)   │              │  with the frontend inside)   │
- └──────────────────┘              │  slowfeed database file      │
+ └──────────────────┘              │  nine turtles database file      │
                                    └──────────────┬───────────────┘
                                                   │ fetches feeds
                                                   ▼
@@ -66,7 +66,7 @@ The complete, approved list is in `docs/libraries.md`.
 | **Single-page app** | The whole interface loads once; after that, moving around doesn't reload the page | Switching views is instant, as DESIGN.md requires |
 | **Vite** | The build tool: turns the frontend code into small files a browser can load | The standard, fast choice for Svelte |
 | **Tailwind CSS** | A way of writing the visual styling (colors, spacing, fonts) | Keeps styling consistent and the final style file small |
-| **PWA** ("progressive web app") | A web standard that lets you add slowfeed to your phone's home screen, so it opens full-screen with its own icon | No app store needed; works on iPhone and Android |
+| **PWA** ("progressive web app") | A web standard that lets you add nine turtles to your phone's home screen, so it opens full-screen with its own icon | No app store needed; works on iPhone and Android |
 
 ## 4. Where the code lives: GitHub
 
@@ -102,7 +102,7 @@ go live, and it merges only once you say yes.
 
 ## 5. Tests, checks, CI and CD
 
-**Tests** are small programs that use slowfeed automatically and check the
+**Tests** are small programs that use nine turtles automatically and check the
 results. For example, a test might add a pretend feed and check that its
 articles appear, or search for a Hindi word and check the right article comes
 back. Once written, tests run again on every change, so if something that used
@@ -129,22 +129,22 @@ come with tests that prove it works, and every check must be green.
 
 **GitHub Actions** is GitHub's own service for running these checks. Each time
 a pull request is opened or updated, GitHub starts a fresh computer, builds
-slowfeed, runs every check, and shows the results on the pull request: a
+nine turtles, runs every check, and shows the results on the pull request: a
 green tick ✓ if everything passed, a red cross ✗ if anything failed (with
-details). Because slowfeed's repository is public, GitHub runs these checks for free.
+details). Because nine turtles' repository is public, GitHub runs these checks for free.
 The required one is called **All checks**; it runs every check in turn.
 
-Once a week, GitHub also checks the libraries slowfeed uses against public
+Once a week, GitHub also checks the libraries nine turtles uses against public
 lists of known security problems. If it finds one, it opens an issue in the
 repository. It never changes anything by itself; an agent proposes a fix and
 you approve it.
 
 **CI** ("continuous integration") is that whole practice: every change is
-automatically checked before it's allowed into main. In slowfeed, GitHub
+automatically checked before it's allowed into main. In nine turtles, GitHub
 Actions does the CI.
 
 **CD** ("continuous deployment") means that once a change is in main, it's put
-live automatically. In slowfeed, GitHub Actions does the CD: when main
+live automatically. In nine turtles, GitHub Actions does the CD: when main
 changes, it builds the new version, stores it in GitHub's package storage, and
 tells Render (through a private "deploy hook" address) to switch to it.
 
@@ -215,15 +215,15 @@ merging that puts the previous version back. Or ask an agent to do it.
 ## 8. You're never locked in
 
 "Lock-in" means being stuck with a company or tool because leaving would be
-too hard. slowfeed is built so every outside service can be swapped. Here's
+too hard. nine turtles is built so every outside service can be swapped. Here's
 each one, what ties us to it, and what leaving would take.
 
-| Service | What it does for slowfeed | What makes leaving easy | What leaving takes |
+| Service | What it does for nine turtles | What makes leaving easy | What leaving takes |
 |---|---|---|---|
-| **Render** (hosting) | Runs slowfeed | slowfeed is a standard container image plus one SQLite database file. Every setting is listed in `docs/operations/settings.md`. | In V1: start slowfeed on the new host and import your OPML file (your read history stays behind). In V2, `docs/operations/moving-hosts.md` moves everything. |
+| **Render** (hosting) | Runs nine turtles | nine turtles is a standard container image plus one SQLite database file. Every setting is listed in `docs/operations/settings.md`. | In V1: start nine turtles on the new host and import your OPML file (your read history stays behind). In V2, `docs/operations/moving-hosts.md` moves everything. |
 | **GitHub** (code, checks, issues) | Holds the code and runs the checks | The code and its full history are in "git", a standard format any code host accepts. All checks run through one script in the repository; GitHub Actions only calls it. | Copy the repository to another host and point its check service at the same script. Issues and pull request discussions stay behind on GitHub unless exported. |
-| **Claude Code** (the agents) | Builds and maintains slowfeed | All instructions are plain documents in the repository: `AGENTS.md` (a convention most coding agents read), the `docs/` folder, and the daily check's steps in `docs/operations/daily-check.md` | Start the new agent in the repository. To move the daily check, set a daily timer in the new tool that says "follow docs/operations/daily-check.md". |
-| **Libraries** | Ready-made code inside slowfeed | Standard, widely used choices, listed in `docs/libraries.md` | Replace one at a time, with your approval |
+| **Claude Code** (the agents) | Builds and maintains nine turtles | All instructions are plain documents in the repository: `AGENTS.md` (a convention most coding agents read), the `docs/` folder, and the daily check's steps in `docs/operations/daily-check.md` | Start the new agent in the repository. To move the daily check, set a daily timer in the new tool that says "follow docs/operations/daily-check.md". |
+| **Libraries** | Ready-made code inside nine turtles | Standard, widely used choices, listed in `docs/libraries.md` | Replace one at a time, with your approval |
 | **Your reading data** | Your feeds, folders and starred articles | OPML export (feeds and folders) and JSON Feed export (starred articles), both standard formats | Download both from Settings → Your data and import them into another reader |
 
 **The rule agents follow:** nothing important lives only inside one tool's
@@ -265,11 +265,11 @@ documents do. What helps most from your side:
 | Commit | One saved step of work, with a message |
 | Container image | A standard, ready-to-run bundle of the program that any host can run |
 | Compiler | The tool that turns written code into a working program, refusing code with certain mistakes |
-| Database | Where slowfeed keeps feeds, articles, read/star state and settings (one SQLite file) |
+| Database | Where nine turtles keeps feeds, articles, read/star state and settings (one SQLite file) |
 | Deploy | Put a new version on the live app |
 | Environment variable | A setting given to the app by the host (Render), e.g. the scrambled password, kept outside the code |
 | GitHub Actions | GitHub's service that runs the checks on every pull request |
-| Library / dependency | Ready-made code from others that slowfeed uses |
+| Library / dependency | Ready-made code from others that nine turtles uses |
 | Lock-in | Being stuck with a company or tool because leaving would be too hard |
 | Lint | An automatic check for likely mistakes and sloppy code |
 | Main | The official version of the code; what runs live |
@@ -278,4 +278,4 @@ documents do. What helps most from your side:
 | Pull request (PR) | A proposed change, with summary, checks and discussion |
 | Ruleset (branch protection) | A GitHub setting that only lets checked pull requests into main |
 | Repository (repo) | The project folder on GitHub, with full history |
-| Test | A small program that checks part of slowfeed works, automatically |
+| Test | A small program that checks part of nine turtles works, automatically |

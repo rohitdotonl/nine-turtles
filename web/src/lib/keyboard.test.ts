@@ -15,6 +15,8 @@ describe("keyboard shortcuts", () => {
     const read = createKeyReader();
     expect(read(press("?"), 0)).toEqual({ kind: "cheat-sheet" });
     expect(read(press("["), 0)).toEqual({ kind: "toggle-sidebar" });
+    expect(read(press("]"), 0)).toEqual({ kind: "toggle-list" });
+    expect(read(press("\\"), 0)).toEqual({ kind: "toggle-both" });
     expect(read(press("Escape"), 0)).toEqual({ kind: "escape" });
   });
 
@@ -86,13 +88,15 @@ describe("keyboard shortcuts", () => {
   });
 
   it("lists every shortcut in DESIGN.md in the cheat sheet", () => {
-    expect(SHORTCUTS).toHaveLength(18);
+    expect(SHORTCUTS).toHaveLength(20);
     expect(SHORTCUTS.filter((shortcut) => shortcut.ready).map((shortcut) => shortcut.keys[0])).toEqual([
       "j",
       "g then u",
       "g then s",
       "g then a",
       "[",
+      "]",
+      "\\",
       "Esc",
       "Enter",
       "v",

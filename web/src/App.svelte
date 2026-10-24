@@ -28,7 +28,7 @@
   <SignIn onSignedIn={check} />
 {:else if unreachable}
   <main class="flex min-h-screen flex-col items-center justify-center gap-4 px-6">
-    <h1 class="font-serif text-display">slowfeed</h1>
-    <p>slowfeed can't be reached right now. Reload the page to try again.</p>
+    <h1 class="font-serif text-display">nine turtles</h1>
+    <p>nine turtles can't be reached right now. Reload the page to try again.</p>
   </main>
 {/if}

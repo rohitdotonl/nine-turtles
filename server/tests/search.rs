@@ -1,4 +1,4 @@
-//! Search (SPEC section 14), tested against a real running slowfeed and two
+//! Search (SPEC section 14), tested against a real running nine turtles and two
 //! made-up publishers: one writing in English, one in Hindi.
 
 mod common;
@@ -427,7 +427,7 @@ async fn the_index_follows_edits_deletions_and_earlier_articles() {
         .unwrap();
     assert_eq!(left, 5);
 
-    // An article stored before search existed is added when slowfeed starts.
+    // An article stored before search existed is added when nine turtles starts.
     sqlx::query(
         "INSERT INTO articles (feed_id, fingerprint, title, content, received_at, sort_at)
          VALUES (?, 'old', 'An older post', '<p>Pumpkins.</p>', 1, 1)",

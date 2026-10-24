@@ -1,4 +1,4 @@
-# Building and running slowfeed
+# Building and running nine turtles
 
 ## What you need
 
@@ -41,7 +41,7 @@ in [settings.md](settings.md).
 ## Run the container image
 
 ```sh
-docker build --build-arg SLOWFEED_VERSION=local -t slowfeed .
+docker build --build-arg SLOWFEED_VERSION=local -t nine turtles .
 docker run --rm -p 10000:10000 -v slowfeed-data:/data slowfeed
 ```
 

@@ -1,4 +1,4 @@
-//! Starting a real slowfeed for a test, with its own empty data folder.
+//! Starting a real nine turtles for a test, with its own empty data folder.
 
 #![allow(dead_code)] // Each test file uses a different part of this.
 
@@ -24,12 +24,12 @@ pub fn config() -> Config {
     }
 }
 
-/// Starts slowfeed on a free port on this computer and returns its address.
+/// Starts nine turtles on a free port on this computer and returns its address.
 pub async fn start(config: Config) -> String {
     start_with_state(config).await.0
 }
 
-/// Like `start`, and also hands back slowfeed's insides, so a test can run
+/// Like `start`, and also hands back nine turtles' insides, so a test can run
 /// background checking itself, at a time of its choosing.
 pub async fn start_with_state(config: Config) -> (String, slowfeed::AppState) {
     let state = slowfeed::state(config).await.unwrap();

@@ -1,6 +1,6 @@
 <!--
   The reading area (SPEC section 7): the article exactly as the publisher's
-  feed gives it, cleaned by slowfeed and restyled in the reader's font, size
+  feed gives it, cleaned by nine turtles and restyled in the reader's font, size
   and line width. A quiet bar of icons sits at the top of the pane, anchored
   to its edges (decision 0038), each named in its tooltip (with its key) and
   to screen readers, together at the right as Apple Books keeps its reading
@@ -11,7 +11,7 @@
   hairline under it only once the text has scrolled (decision 0040). The
   source is always credited and linked. A feed that gives only a summary
   shows the summary, then a small centred note under the closing rule that
-  links the whole article on the publisher's site; slowfeed never fetches
+  links the whole article on the publisher's site; nine turtles never fetches
   the rest.
 
   On a phone (SPEC section 20) the article is a screen of its own: the top
@@ -32,6 +32,7 @@
     heading = $bindable(),
     preferences = $bindable(),
     phone,
+    toggles = 0,
     onStar,
     onMarkUnread,
   }: {
@@ -49,6 +50,8 @@
       hasPrevious: boolean;
       hasNext: boolean;
     };
+    /** How many pane buttons sit at the start of the top bar (on a computer), to keep clear of. */
+    toggles?: number;
     onStar: () => void;
     onMarkUnread: () => void;
   } = $props();
@@ -102,7 +105,7 @@
   });
 
   // Footnotes: a link to a place inside the article (cleaned to `#article-…`
-  // by slowfeed) scrolls there and moves the keyboard's place with it,
+  // by nine turtles) scrolls there and moves the keyboard's place with it,
   // rather than opening a new tab.
   $effect(() => {
     const area = scroller;
@@ -199,9 +202,9 @@
   {:else}
     <!--
       Quiet icons, each named in its tooltip with its key, in one cluster at the right, 4px apart: the way to the
-      publisher, then the reader's own tools. The left stays empty, like Apple Books' reading toolbar (decision 0050).
+      publisher, then the reader's own tools. The left holds only the pane buttons, like Apple Books' reading toolbar (decision 0050).
     -->
-    <div class="reading-bar pane-bar relative z-10 gap-2 px-2">
+    <div class={["reading-bar pane-bar relative z-10 gap-2 pr-2", toggles === 2 ? "pl-[6.5rem]" : toggles === 1 ? "pl-14" : "pl-2"]}>
       {#if !article.link}
         <p class="px-2 text-small text-muted">This article has no link to its original.</p>
       {/if}
@@ -212,7 +215,7 @@
         {/if}
         {@render aa(20, "btn-quiet btn-icon")}
         <!-- A toggle keeps one name for screen readers ("Star", pressed or not); the filled star shows its state. -->
-        <button type="button" aria-label="Star" aria-pressed={article.starred} title={article.starred ? "Starred (s)" : "Star (s)"} onclick={onStar} class={["btn-quiet btn-icon", article.starred && "text-ink"]}>
+        <button type="button" aria-label="Star" aria-pressed={article.starred} title={article.starred ? "Starred (s)" : "Star (s)"} onclick={onStar} class={["btn-quiet btn-icon", article.starred && "text-star"]}>
           {@render starIcon(20)}
         </button>
         <MoreMenu id="article-menu" label="More actions" groups={more} />
@@ -236,7 +239,7 @@
 
       {#if full}
         {#if full.content}
-          <!-- Cleaned by slowfeed before it was stored (server/src/feed.rs). -->
+          <!-- Cleaned by nine turtles before it was stored (server/src/feed.rs). -->
           <div class="article-text" dir="auto">{@html full.content}</div>
           <!-- The last page: a short rule, so the article ends rather than stops. -->
           <hr aria-hidden="true" class="article-end" />
@@ -277,7 +280,7 @@
         <svg aria-hidden="true" width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4 6 6-6 6" /></svg>
       </button>
       {@render aa(22, "")}
-      <button type="button" aria-label="Star" aria-pressed={article.starred} onclick={onStar} class:text-ink={article.starred}>
+      <button type="button" aria-label="Star" aria-pressed={article.starred} onclick={onStar} class:text-star={article.starred}>
         {@render starIcon(22)}
       </button>
       <!-- Share (or Copy link) and Mark unread, in a menu that opens upwards. -->

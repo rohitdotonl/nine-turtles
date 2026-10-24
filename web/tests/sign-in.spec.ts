@@ -90,7 +90,7 @@ test("sign in with the keyboard, stay signed in, sign out", async ({ page }) => 
   await page.keyboard.press("Enter");
   await expect(page.locator("#sidebar")).toBeAttached();
   // The keyboard's place moves to the new screen's heading.
-  await expect(page.getByRole("heading", { level: 1, name: "slowfeed" })).toBeFocused();
+  await expect(page.getByRole("heading", { level: 1, name: "nine turtles" })).toBeFocused();
 
   // Still signed in after closing and reopening (a reload, here).
   await page.reload();
@@ -115,7 +115,7 @@ test("sign in with the keyboard, stay signed in, sign out", async ({ page }) => 
   await expect(page.getByLabel("Password")).toBeVisible();
 });
 
-test("the browser's security rules block nothing slowfeed itself needs", async ({ page }) => {
+test("the browser's security rules block nothing nine turtles itself needs", async ({ page }) => {
   const blocked: string[] = [];
   page.on("console", (message) => {
     if (/Content Security Policy/i.test(message.text())) blocked.push(message.text());

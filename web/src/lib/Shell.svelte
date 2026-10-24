@@ -10,6 +10,7 @@
 <script lang="ts">
   import { edge } from "./edge";
   import Icon from "./Icon.svelte";
+  import PaneResizer from "./PaneResizer.svelte";
   import { onMount, untrack } from "svelte";
   import AddFeed from "./AddFeed.svelte";
   import ArticleView from "./ArticleView.svelte";
@@ -74,6 +75,8 @@
   // that names a place opens that place.
   let sidebarChoice: SidebarChoice = $state(currentWidth() === "narrow" && firstStep.screen !== "home" ? "hidden" : "auto");
   let cheatSheetOpen = $state(false);
+  /** On a computer, the reader hid the article list (] or its button) to give the article its room. */
+  let listHidden = $state(false);
   /** The article chosen in the list, shown in the reading area. */
   let selected: Article | undefined = $state();
   /** On a phone-narrow window, the opened article takes the list's place. */
@@ -87,7 +90,7 @@
   let beforeSearch: Element | null = null;
   let searchTimer: ReturnType<typeof setTimeout> | undefined;
 
-  let panes = $derived(panesFor(width, sidebarChoice, reading));
+  let panes = $derived(panesFor(width, sidebarChoice, reading, listHidden));
   /** A phone-narrow window: one screen at a time, with a top bar and, while reading, a bottom toolbar. */
   let phone = $derived(width === "narrow");
 
@@ -101,7 +104,31 @@
   let itemList: ItemList | undefined = $state();
   /** The list's pane and the sidebar button, for where the keyboard goes when the sidebar hides. */
   let listSection: HTMLElement | undefined = $state();
+  /** Widths the reader dragged the sidebar and the list to, on this device; undefined is the usual width. */
+  let sidebarWidth: number | undefined = $state(storedWidth("nine-turtles.sidebar-width"));
+  let listWidth: number | undefined = $state(storedWidth("nine-turtles.list-width"));
+  /** The window's width in pixels, so the list never leaves the article less than 400px. */
+  let windowWidth = $state(innerWidth);
+
+  function storedWidth(name: string): number | undefined {
+    try {
+      const value = Number(localStorage.getItem(name));
+      return value > 0 ? value : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  function storeWidth(name: string, value: number | undefined) {
+    try {
+      if (value === undefined) localStorage.removeItem(name);
+      else localStorage.setItem(name, String(value));
+    } catch {
+      // Private windows may refuse; the width just isn't remembered.
+    }
+  }
   let sidebarToggle: HTMLButtonElement | undefined = $state();
+  let listToggle: HTMLButtonElement | undefined = $state();
 
   /**
    * On a window wide enough for the list, adding a feed and editing a feed or
@@ -167,6 +194,8 @@
   let firstVisit = $derived(feeds !== undefined && feeds.length === 0);
   // Starred keeps its own list even with no feeds: it is where its More menu and sort live.
   let welcoming = $derived(firstVisit && !(under.kind === "view" && under.view === "starred"));
+  /** On a computer with the sidebar and the list both hidden, their two buttons become one, which brings both back. */
+  let bothHidden = $derived(!phone && !panes.sidebar && !panes.list && isList(route) && !welcoming);
   /**
    * With a reading area beside the list, the welcome takes the list's room too: one empty state,
    * not an empty column beside it, as Apple Books shows (decision 0048).
@@ -180,7 +209,7 @@
   /** The list's "28 results" while it shows search results, so the search options can repeat it where they'd cover it. */
   let listFound = $state("");
   /** The line above the add field, in the sheet and on the phone's page. */
-  const ADD_INTRO = "slowfeed finds the feed on any website you like, and lists its articles.";
+  const ADD_INTRO = "nine turtles finds the feed on any website you like, and lists its articles.";
   let headingText = $derived(
     missing
       ? under.kind === "folder" || under.kind === "edit-folder"
@@ -218,7 +247,7 @@
   }
 
   $effect(() => {
-    // device.dark: "Match device" follows the device's own switch while slowfeed is open.
+    // device.dark: "Match device" follows the device's own switch while nine turtles is open.
     apply(preferences, document.documentElement, device.dark);
     save(preferences);
   });
@@ -288,6 +317,7 @@
       },
       {
         label: "Sort order",
+        icon: "sort",
         items: [
           { label: "Newest first", checked: sort === "newest", onSelect: () => sortFromMenu("newest") },
           { label: "Oldest first", checked: sort === "oldest", onSelect: () => sortFromMenu("oldest") },
@@ -368,6 +398,12 @@
         case "toggle-sidebar":
           toggleSidebar();
           break;
+        case "toggle-list":
+          toggleList();
+          break;
+        case "toggle-both":
+          toggleBoth();
+          break;
         case "go":
           go({ kind: "view", view: action.view });
           break;
@@ -396,13 +432,13 @@
           if (selected && isList(route)) itemList?.markUnread();
           break;
         case "mark-all-read":
-          if (isList(route) && (panes.list || reading)) itemList?.markAllRead();
+          if (isList(route) && (panes.list || panes.article || reading)) itemList?.markAllRead();
           break;
         case "undo":
           if (isList(route)) itemList?.undo();
           break;
         case "refresh":
-          if (isList(route) && (panes.list || reading)) itemList?.refresh();
+          if (isList(route) && (panes.list || panes.article || reading)) itemList?.refresh();
           break;
         case "text-size":
           if (selected && panes.article) {
@@ -617,6 +653,25 @@
     }
   }
 
+  /** ] and the list's button: on a computer, hide the article list so the article has its room, or show it again. */
+  function toggleList() {
+    if (phone || !isList(route)) return;
+    const hiding = panes.list;
+    const focusWasInside = listSection?.contains(document.activeElement) ?? false;
+    listHidden = hiding;
+    if (hiding && focusWasInside) queueMicrotask(() => (selected ? articleHeading : listToggle)?.focus());
+  }
+
+  /** \: hide the sidebar and the list together, for just the article; pressed again, both come back. */
+  function toggleBoth() {
+    if (phone || !isList(route)) return;
+    const hiding = panes.sidebar || panes.list;
+    const focusWasInside = (sidebar?.contains(document.activeElement) || listSection?.contains(document.activeElement)) ?? false;
+    sidebarChoice = hiding ? "hidden" : "shown";
+    listHidden = hiding;
+    if (hiding && focusWasInside) queueMicrotask(() => (selected ? articleHeading : listToggle)?.focus());
+  }
+
   /**
    * The sidebar hid with the keyboard's place in it. The place moves to the
    * list itself (its selected article, or its first, the list's own Tab
@@ -644,8 +699,9 @@
    * the new article if you were reading, otherwise to its row in the list.
    */
   function move(step: 1 | -1) {
-    if (!itemList || (!panes.list && !reading)) return;
-    const wasReading = reading || inArticle();
+    if (!itemList || (!panes.list && !panes.article && !reading)) return;
+    // With the list hidden there's no row to go to, so the article keeps the keyboard.
+    const wasReading = reading || inArticle() || !panes.list;
     if (!itemList.move(step)) return;
     showArticleArea();
     if (wasReading) queueMicrotask(() => articleHeading?.focus());
@@ -654,7 +710,7 @@
 
   /** Enter and o: open the selected article (the first, if none is selected yet) to read. */
   function open() {
-    if (!itemList || (!panes.list && !reading)) return;
+    if (!itemList || (!panes.list && !panes.article && !reading)) return;
     if (!selected && !itemList.move(1)) return;
     if (phone && !reading) {
       // On a phone the article is a screen of its own, one step on.
@@ -681,6 +737,7 @@
       stepBack("list");
       return;
     }
+    if (!panes.list) return;
     itemList?.focusSelected();
   }
 
@@ -815,26 +872,28 @@
   So every scrolling area here and in the screens it shows is `relative`: it holds its own hidden
   lines. A new scrolling area needs the same, and any new bar must sit inside an area, not beside it.
 -->
-<main class="relative flex h-dvh overflow-hidden">
+<svelte:window bind:innerWidth={windowWidth} />
+<main class="relative flex h-dvh overflow-hidden" style:--sidebar-w={`${sidebarWidth ?? 256}px`}>
   {#if !panes.sidebar}
     <!-- The wordmark is the page's main heading; with the sidebar hidden, screen readers still find it. -->
-    <h1 class="sr-only">slowfeed</h1>
+    <h1 class="sr-only">nine turtles</h1>
   {/if}
   <!--
     On a phone there's no sidebar toggle: the feeds list is the home screen, reached with the back arrow.
-    Everywhere else it stays in this one place, at the start of the top line, whether or not the
-    sidebar shows. Each area's top line (the wordmark, the list's title, the article's tools) never
-    scrolls, so nothing passes under it.
+    Everywhere else it sits on the sidebar it controls, at the right end of its top line across from
+    the wordmark; with the sidebar hidden it waits at the start of the next area's top line. It's one
+    button that moves, so the keyboard stays on it. Each area's top line (the wordmark, the list's
+    title, the article's tools) never scrolls, so nothing passes under it.
   -->
-  <div class={["fixed top-1.5 left-2 z-10", phone && "hidden"]}>
+  <div class={["fixed top-1.5 z-10", panes.sidebar ? "left-[calc(var(--sidebar-w)-3.25rem)]" : "left-2", phone && "hidden"]}>
     <button
       type="button"
       bind:this={sidebarToggle}
-      aria-label="Sidebar"
+      aria-label={bothHidden ? "Sidebar and article list" : "Sidebar"}
       aria-expanded={panes.sidebar}
-      aria-controls="sidebar"
-      title={panes.sidebar ? "Hide the sidebar ( [ )" : "Show the sidebar ( [ )"}
-      onclick={toggleSidebar}
+      aria-controls={bothHidden ? "sidebar list-pane" : "sidebar"}
+      title={bothHidden ? "Show the sidebar and the article list ( \\ )" : panes.sidebar ? "Hide the sidebar ( [ )" : "Show the sidebar ( [ )"}
+      onclick={bothHidden ? toggleBoth : toggleSidebar}
       class="bar-button flex size-11 items-center justify-center rounded-md text-ink-2"
     >
       <Icon name="sidebar" size={20} />
@@ -846,16 +905,16 @@
     aria-label="Sidebar"
     bind:this={sidebar}
     hidden={!panes.sidebar}
-    class={["flex-col bg-sidebar", panes.list ? "w-64 shrink-0" : "min-w-0 flex-1", panes.sidebar && "flex", !phone && "pane-edge"]}
+    class={["relative flex-col bg-sidebar", panes.list || panes.article ? "w-[var(--sidebar-w)] shrink-0" : "min-w-0 flex-1", panes.sidebar && "flex", !phone && "pane-edge"]}
   >
     <!--
       The sidebar's top line (decision 0043): the wordmark, on the same line as the list's title and
       the article's tools, in a band of the shared height. It never scrolls; the places below it do,
       with a faint line under it once they have.
     -->
-    <div class={["pane-bar gap-4 pr-4", phone ? "pl-5" : "pl-14"]}>
+    <div class={["pane-bar gap-4", phone ? "pr-4 pl-5" : "pr-14 pl-5"]}>
         <!-- A name, not a control: never a Tab stop; the keyboard lands here only when the screen opens (decision 0041). -->
-        <h1 class={["wordmark mr-auto font-serif tracking-[-0.01em]", phone ? "text-xlarge" : "text-large text-ink-2"]} tabindex="-1" bind:this={wordmark}>slowfeed</h1>
+        <h1 class={["wordmark mr-auto font-serif tracking-[-0.01em]", phone ? "text-xlarge" : "text-large text-ink-2"]} tabindex="-1" bind:this={wordmark}>nine turtles</h1>
         {#if phone}
           <!--
             The feeds screen's top bar (SPEC section 20): its unread numbers wait for this, as they wait for r.
@@ -901,10 +960,10 @@
               aria-current={current ? "page" : undefined}
               onclick={(event) => follow(event, { kind: "view", view })}
               class={[
-                "place mx-2 flex min-h-11 pointer-fine:min-h-9 items-center gap-2.5 pr-3.5 pl-3 text-ui",
+                "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-2.5 pr-3.5 pl-3 text-ui pointer-fine:text-small",
                 current ? "font-semibold text-ink" : "text-ink-2",
               ]}
-              ><span class={current ? "text-accent" : "text-muted"}><Icon name={VIEW_ICONS[view]} size={16} filled={view === "starred" && current} /></span
+              ><span class={current ? (view === "starred" ? "text-star" : "text-ink") : "text-muted"}><Icon name={VIEW_ICONS[view]} size={16} filled={view === "starred" && current} /></span
               ><span class="min-w-0 flex-1">{VIEW_NAMES[view]}</span>{#if phone}<span class="-mr-1 shrink-0 text-muted"><Icon name="chevron-right" size={16} /></span>{/if}</a
             >
           </li>
@@ -950,10 +1009,20 @@
         class={["btn-quiet btn-icon", route.kind === "settings" && "bg-tint-sidebar text-ink"]}><Icon name="settings" size={18} /></a
       >
     </div>
+    {#if !phone && (panes.list || panes.article)}
+      <PaneResizer
+        label="Resize the sidebar"
+        bind:width={sidebarWidth}
+        min={200}
+        max={400}
+        pane={sidebar}
+        onDone={() => storeWidth("nine-turtles.sidebar-width", sidebarWidth)}
+      />
+    {/if}
   </nav>
 
   {#if panes.list || panes.article}
-    <div class="flex min-w-0 flex-1">
+    <div class="relative flex min-w-0 flex-1">
       {#if route.kind === "settings"}
         <Settings
           bind:preferences
@@ -1010,20 +1079,62 @@
           </div>
         </section>
       {:else}
+        {#if !phone && !welcoming && !bothHidden}
+          <!--
+            The article list's button, on a computer: at the right end of the list's own top line, as the
+            sidebar's sits on its own; with the list hidden it waits at the start of the article's top
+            line, after the sidebar's. One button that moves, so the keyboard stays on it.
+          -->
+          <div
+            class={[
+              "absolute top-1.5 z-20",
+              !panes.list
+                ? panes.sidebar ? "left-2" : "left-14"
+                : panes.article ? (listWidth ? "" : "left-[calc(20rem-3.25rem)] xl:left-[calc(24rem-3.25rem)] 2xl:left-[calc(26rem-3.25rem)]") : "right-2",
+            ]}
+            style:left={panes.list && panes.article && listWidth ? `${listWidth - 52}px` : undefined}
+          >
+            <button
+              type="button"
+              bind:this={listToggle}
+              aria-label="Article list"
+              aria-expanded={panes.list}
+              aria-controls="list-pane"
+              title={panes.list ? "Hide the article list ( ] )" : "Show the article list ( ] )"}
+              onclick={toggleList}
+              class="bar-button flex size-11 items-center justify-center rounded-md text-ink-2"
+            >
+              <!-- The same sidebar icon as the sidebar's button, as Apple Mail uses one for each pane; where it sits says which. -->
+              <Icon name="sidebar" size={20} />
+            </button>
+          </div>
+        {/if}
         <section
           aria-labelledby="list-heading"
           bind:this={listSection}
+          id="list-pane"
           hidden={!panes.list || welcomeWide}
           class={[
             // A container, so the list's title can step down a size when the pane is narrow (decision 0041).
-            "list-pane @container flex-col bg-list",
+            "list-pane relative @container flex-col bg-list",
             phone && "phone",
             panes.article ? "w-80 shrink-0 xl:w-96 2xl:w-[26rem]" : "min-w-0 flex-1",
             panes.list && !welcomeWide && "flex",
             // A 1px line where the list meets the reading pane, as where the sidebar meets the list (decision 0054).
             !phone && panes.article && "pane-edge",
           ]}
+          style:width={!phone && panes.article && listWidth ? `${listWidth}px` : undefined}
         >
+          {#if !phone && panes.article && !welcomeWide}
+            <PaneResizer
+              label="Resize the article list"
+              bind:width={listWidth}
+              min={260}
+              max={Math.max(260, Math.min(640, windowWidth - (panes.sidebar ? (sidebarWidth ?? 256) : 0) - 400))}
+              pane={listSection}
+              onDone={() => storeWidth("nine-turtles.list-width", listWidth)}
+            />
+          {/if}
           {#if phone}
             <!-- The phone's top bar (SPEC section 20): back to the feeds, then the screen's title with More beside it. It never scrolls. -->
             <div class="pane-bar nav-bar">
@@ -1040,7 +1151,7 @@
               The list's top line never scrolls; with the sidebar hidden it starts after the sidebar button.
               Its title starts 32px in, where the search field and every article title start (decision 0041).
             -->
-            <div class={["pane-bar pr-[var(--list-end)]", panes.sidebar ? "pl-[var(--list-start)]" : "pl-16"]}>
+            <div class={["pane-bar", welcoming ? "pr-[var(--list-end)]" : "pr-14", panes.sidebar ? "pl-[var(--list-start)]" : "pl-16"]}>
               {@render listHead()}
             </div>
           {/if}
@@ -1088,9 +1199,12 @@
           </div>
         </section>
         {#if panes.article}
+          <!-- The reading area; with the list hidden, the list's button waits at the start of its top line. -->
+          <div class="flex min-w-0 flex-1">
           {#if selected}
             <ArticleView
               article={selected}
+              toggles={phone || panes.list ? 0 : 1}
               bind:heading={articleHeading}
               bind:preferences
               onStar={() => itemList?.toggleStar()}
@@ -1124,6 +1238,7 @@
               {/if}
             </section>
           {/if}
+          </div>
         {/if}
       {/if}
     </div>

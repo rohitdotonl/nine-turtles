@@ -311,7 +311,7 @@ test("on a phone, the article's Star button and More's Mark unread work", async 
 
 test("Settings: the sort order is saved for every device", async ({ page, isMobile }) => {
   test.skip(isMobile, "one browser at a time changes this shared setting");
-  // The slowfeed with no feeds, so changing its sort order affects no other test's list.
+  // The nine turtles with no feeds, so changing its sort order affects no other test's list.
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/settings");
   await appReady(page);

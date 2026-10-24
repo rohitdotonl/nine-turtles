@@ -99,7 +99,7 @@
       onclick={(event) => follow(event, place)}
       title={feed.title}
       class={[
-        "place mx-2 flex min-h-11 pointer-fine:min-h-9 items-center gap-3 pr-3.5 text-ui",
+        "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-3 pr-3.5 text-ui pointer-fine:text-small",
         // Every name starts on the sidebar's one left edge; inside a folder, one step further in.
         indent ? "pl-14" : "pl-[38px]",
         isHere(place) ? "font-semibold text-ink" : "text-ink",
@@ -116,7 +116,7 @@
     aria-current={isHere(place) ? "page" : undefined}
     onclick={(event) => follow(event, place)}
     title={folder.name}
-    class={["flex min-h-11 pointer-fine:min-h-9 min-w-0 flex-1 items-center gap-3 rounded-md pr-3.5 text-ui", padded && "pl-[38px]", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
+    class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center gap-3 rounded-md pr-3.5 text-ui pointer-fine:text-small", padded && "pl-[38px]", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
     >{@render name(folder.name)}{@render count(folderUnread(folder, feeds))}{@render leadsOn()}</a
   >
 {/snippet}
@@ -156,7 +156,7 @@
               aria-controls={`folder-${folder.id}`}
               aria-label={`Feeds in ${folder.name}`}
               onclick={() => toggle(folder.id)}
-              class="disclosure relative flex min-h-11 pointer-fine:min-h-9 w-[38px] shrink-0 items-center justify-center rounded-md text-muted"
+              class="disclosure relative flex min-h-11 pointer-fine:min-h-8 w-[38px] shrink-0 items-center justify-center rounded-md text-muted"
             >
               <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 {#if shown}

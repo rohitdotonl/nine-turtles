@@ -4,7 +4,7 @@ import { appReady, follow, signIn } from "./screens";
 
 // SPEC section 14 (search), "How to check it", done by a browser, with the
 // keyboard only. Each test uses blogs and a folder of its own, since every
-// test shares the one slowfeed that has feeds.
+// test shares the one nine turtles that has feeds.
 
 test.skip(({ isMobile }) => isMobile, "the wide layout shows the list beside the sidebar");
 

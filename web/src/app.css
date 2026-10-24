@@ -52,38 +52,28 @@
   --color-muted: var(--muted);
   --color-danger: var(--danger);
   --color-accent: var(--accent);
+  --color-star: var(--star);
   --color-tint-list: var(--tint-list);
   --color-tint-sidebar: var(--tint-sidebar);
 }
 /*
-  The six themes of decision 0046, as in Apple Books: Original, Quiet, Paper,
-  Bold, Calm and Focus, each with a day and a night version. preferences.ts
-  writes the theme to <html data-theme="…"> and the resolved Appearance
-  (light or dark, following the device unless the reader chose one) to
-  data-mode. Before the script runs there are neither, so the page is
+  One theme, Original (decision 0056), with a day and a night version.
+  preferences.ts writes it to <html data-theme="…"> and the resolved
+  Appearance (light or dark, following the device unless the reader chose
+  one) to data-mode. Before the script runs there are neither, so the page is
   Original, by day or by night as the device is set.
 
-  Every theme's --tint-list and --tint-sidebar are the selection pill's fill
-  (decision 0037): in the day versions the theme's accent mixed into the list
-  or sidebar at 12%, so each pill takes its pane's own paper (decision 0051),
-  except Paper's, which is its own text color at 10%, so the pill stays in the
-  warm paper's family rather than laying slate over it (decision 0053); in
-  the night ones the theme's own text color at 12%
-  (decision 0041), so the pill keeps the pane's warmth or coolness instead
-  of laying a cool blue-grey over warm brown, as Apple Books' dark selection
-  is a lift of the page, not a tint. Three night versions whose panes are
-  already light for the dark (Quiet, Paper, Calm) mix in less, and lay a
-  fainter search tone (--mark) over the pill, so text keeps 7 : 1 on both.
+  --tint-list and --tint-sidebar are the selection pill's fill: a neutral
+  grey, the text color mixed into the list or sidebar (8% by day, 12% by
+  night), with no color (decision 0057). --star is the green of a starred article's filled star.
   contrast.test.ts recomputes each and checks every text color on it.
 
-  Every theme's --surface-raised is what floats over the page: the sheets,
-  the shortcut list, the menus and popovers, and the note at the list's foot
-  (decision 0052). By day it's the page itself, as before. By night it's a
-  small lift above the page (Original's #28282a; warm in Calm and Focus,
-  tinted as each page is), as Apple Books lifts its sheets and menus with a
-  lighter grey rather than leaving them as dark as the page; with it, a 1px
-  edge of 8% white (--raised-edge) and grouped rows inside it at 4% white
-  over it (--raised-group). contrast.test.ts checks every text color on it.
+  --surface-raised is what floats over the page: the sheets, the shortcut
+  list, the menus and popovers, and the note at the list's foot (decision
+  0052). By day it's the page itself. By night it's a small lift above the
+  page (#28282a), with a 1px edge of 8% white (--raised-edge) and grouped rows
+  inside it at 4% white over it (--raised-group). contrast.test.ts checks
+  every text color on it.
 */
 
 /* Original: Apple Books' plain white page and its near-black night. */
@@ -96,10 +86,13 @@
   --ink: #141414;
   --ink-2: #3c3c40;
   --muted: #5f5f64;
+  /* A step fainter than muted, for the list's dates: 4.9 : 1 on the list, never used on the selected row's tint. */
+  --faint: #6b6b70;
   --danger: #a3261b;
   --accent: #2c4f8c;
-  --tint-list: #dfe3ea;
-  --tint-sidebar: #d8dce5;
+  --star: #2a8a43;
+  --tint-list: #e5e5e5;
+  --tint-sidebar: #dddddf;
   --surface-raised: #ffffff;
 }
 
@@ -111,8 +104,10 @@
   --ink: #e8e8e8;
   --ink-2: #c4c4c6;
   --muted: #a4a4a8;
+  --faint: #98989c;
   --danger: #e8968a;
   --accent: #94b2e6;
+  --star: #56d364;
   --tint-list: #333333;
   --tint-sidebar: #3b3b3b;
   --surface-raised: #28282a;
@@ -124,7 +119,7 @@
   --scrim: rgb(0 0 0 / 0.45);
 }
 
-/* Before slowfeed's script has run, a dark device gets Original's night. */
+/* Before nine turtles' script has run, a dark device gets Original's night. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-mode]) {
     color-scheme: dark;
@@ -134,8 +129,10 @@
     --ink: #e8e8e8;
     --ink-2: #c4c4c6;
     --muted: #a4a4a8;
+  --faint: #98989c;
     --danger: #e8968a;
     --accent: #94b2e6;
+    --star: #56d364;
     --tint-list: #333333;
     --tint-sidebar: #3b3b3b;
     --surface-raised: #28282a;
@@ -148,204 +145,14 @@
   }
 }
 
-/* Quiet: soft grey paper, lower glare by day; a mid grey at night. */
-:root[data-theme="quiet"][data-mode="light"] {
-  color-scheme: light;
-  --paper: #e8e8ea;
-  --list: #e0e0e3;
-  --sidebar: #d7d7db;
-  --ink: #2a2a2d;
-  --ink-2: #434347;
-  --muted: #525256;
-  --danger: #a3261b;
-  --accent: #344a74;
-  --tint-list: #cbced6;
-  --tint-sidebar: #c3c6cf;
-  --surface-raised: #e8e8ea;
-}
-
-:root[data-theme="quiet"][data-mode="dark"] {
-  color-scheme: dark;
-  --paper: #2c2c2e;
-  --list: #303032;
-  --sidebar: #38383b;
-  --ink: #e2e2e5;
-  --ink-2: #c3c3c7;
-  --muted: #b5b5ba;
-  --danger: #ea988c;
-  --accent: #b0c0e0;
-  --tint-list: #404042;
-  --tint-sidebar: #47474a;
-  --surface-raised: #36363a;
-  --raised-edge: rgb(255 255 255 / 0.08);
-  --raised-group: color-mix(in srgb, #ffffff 4%, var(--surface-raised));
-  --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
-  --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
-  --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
-  --scrim: rgb(0 0 0 / 0.45);
-  --mark: color-mix(in srgb, var(--accent) 6%, transparent);
-}
-
-/* Paper: a faintly warm off-white, like a printed page; a warm charcoal at night. */
-:root[data-theme="paper"][data-mode="light"] {
-  color-scheme: light;
-  --paper: #f5f4f0;
-  --list: #edece7;
-  --sidebar: #e4e3dd;
-  --ink: #25241f;
-  --ink-2: #47453e;
-  --muted: #5a5850;
-  --danger: #a3261b;
-  --accent: #2f4a7a;
-  --tint-list: #d9d8d3;
-  --tint-sidebar: #d1d0ca;
-  --surface-raised: #f5f4f0;
-}
-
-:root[data-theme="paper"][data-mode="dark"] {
-  color-scheme: dark;
-  --paper: #262624;
-  --list: #2c2c2a;
-  --sidebar: #343431;
-  --ink: #e3e1d9;
-  --ink-2: #c7c5bc;
-  --muted: #b4b2a8;
-  --danger: #e8968a;
-  --accent: #a3b6da;
-  --tint-list: #3e3e3c;
-  --tint-sidebar: #464542;
-  --surface-raised: #31312e;
-  --raised-edge: rgb(255 255 255 / 0.08);
-  --raised-group: color-mix(in srgb, #ffffff 4%, var(--surface-raised));
-  --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
-  --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
-  --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
-  --scrim: rgb(0 0 0 / 0.45);
-  --mark: color-mix(in srgb, var(--accent) 8%, transparent);
-}
-
-/* Bold: pure white and black at the strongest contrast, and heavier article text (preferences.ts). */
-:root[data-theme="bold"][data-mode="light"] {
-  color-scheme: light;
-  --paper: #ffffff;
-  --list: #f7f7f7;
-  --sidebar: #efeff1;
-  --ink: #000000;
-  --ink-2: #1f1f22;
-  --muted: #4a4a4f;
-  --danger: #a3261b;
-  --accent: #1d3c8a;
-  --tint-list: #dde1ea;
-  --tint-sidebar: #d6dae5;
-  --surface-raised: #ffffff;
-}
-
-:root[data-theme="bold"][data-mode="dark"] {
-  color-scheme: dark;
-  --paper: #000000;
-  --list: #0c0c0c;
-  --sidebar: #161616;
-  --ink: #ffffff;
-  --ink-2: #e2e2e2;
-  --muted: #b4b4b4;
-  --danger: #e8968a;
-  --accent: #a2bff2;
-  --tint-list: #292929;
-  --tint-sidebar: #323232;
-  --surface-raised: #1c1c1e;
-  --raised-edge: rgb(255 255 255 / 0.08);
-  --raised-group: color-mix(in srgb, #ffffff 4%, var(--surface-raised));
-  --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
-  --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
-  --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
-  --scrim: rgb(0 0 0 / 0.45);
-}
-
-/* Calm: sepia, warm cream and brown ink; a deep brown at night with amber. */
-:root[data-theme="calm"][data-mode="light"] {
-  color-scheme: light;
-  --paper: #f2e6d0;
-  --list: #eadcc2;
-  --sidebar: #e0d0b2;
-  --ink: #32271b;
-  --ink-2: #4e4131;
-  --muted: #5a4b3a;
-  --danger: #a3261b;
-  --accent: #733618;
-  --tint-list: #dcc8ae;
-  --tint-sidebar: #d3bea0;
-  --surface-raised: #f2e6d0;
-}
-
-:root[data-theme="calm"][data-mode="dark"] {
-  color-scheme: dark;
-  --paper: #29231c;
-  --list: #2f2821;
-  --sidebar: #382f27;
-  --ink: #eadcc5;
-  --ink-2: #cfc0a8;
-  --muted: #bcad95;
-  --danger: #e8968a;
-  --accent: #e0ad6a;
-  --tint-list: #423a31;
-  --tint-sidebar: #4a4037;
-  --surface-raised: #342c23;
-  --raised-edge: rgb(255 255 255 / 0.08);
-  --raised-group: color-mix(in srgb, #ffffff 4%, var(--surface-raised));
-  --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
-  --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
-  --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
-  --scrim: rgb(0 0 0 / 0.45);
-  --mark: color-mix(in srgb, var(--accent) 8%, transparent);
-}
-
-/* Focus: a pale yellow page with a teal accent; a dark olive-black at night with gold. */
-:root[data-theme="focus"][data-mode="light"] {
-  color-scheme: light;
-  --paper: #fbf6e2;
-  --list: #f3edd5;
-  --sidebar: #eae2c6;
-  --ink: #1f1d16;
-  --ink-2: #433f31;
-  --muted: #5a5442;
-  --danger: #a3261b;
-  --accent: #235268;
-  --tint-list: #dadac8;
-  --tint-sidebar: #d2d1bb;
-  --surface-raised: #fbf6e2;
-}
-
-:root[data-theme="focus"][data-mode="dark"] {
-  color-scheme: dark;
-  --paper: #1b1a15;
-  --list: #22201a;
-  --sidebar: #2a2821;
-  --ink: #e7e1cc;
-  --ink-2: #cac4ae;
-  --muted: #b0a993;
-  --danger: #e8968a;
-  --accent: #d1bb72;
-  --tint-list: #3a372f;
-  --tint-sidebar: #413e36;
-  --surface-raised: #2b2921;
-  --raised-edge: rgb(255 255 255 / 0.08);
-  --raised-group: color-mix(in srgb, #ffffff 4%, var(--surface-raised));
-  --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
-  --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
-  --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
-  --scrim: rgb(0 0 0 / 0.45);
-}
-
 /*
-  The reader controls in Settings (SPEC section 18) set these four on <html>
-  (the weight is heavier only in the Bold theme).
+  The reader controls in Settings (SPEC section 18) set these three on <html>.
   Article text and Settings' sample use them.
 */
 :root {
   --reading-font: var(--font-serif);
   --reading-size: 1.25rem;
   --reading-measure: 57ch;
-  --reading-weight: 400;
 }
 
 /*
@@ -369,7 +176,7 @@ body {
 /*
   The keyboard's place (DESIGN.md → "Everyone can read here"): a solid outline
   in the text color, clearly visible on every background. Not accent, which
-  means only "where you are" in slowfeed's own places.
+  means only "where you are" in nine turtles' own places.
 */
 :focus-visible {
   outline: 2px solid var(--ink);
@@ -473,13 +280,11 @@ body {
 }
 
 /*
-  "Where you are", one recipe everywhere (the sidebar and the article list),
-  as in Apple Books (decision 0037): a pill with 8px corners, set 8px in from
-  the pane's edges (the rows' mx-2), filled with the theme's accent mixed into
-  the pane in a light theme, its text color in a dark one (decision 0041).
-  No border, no bar, and the title stays in full ink. The filled
-  shape is the sign, with full ink (list) or semibold (sidebar) beside it,
-  so it never rests on color alone.
+  "Where you are", one recipe everywhere (the sidebar and the article list):
+  a neutral grey pill with 8px corners, set 8px in from the pane's edges
+  (the rows' mx-2), and no color (decision 0057). The title stays in full
+  ink. The filled shape is the sign, with full ink (list) or semibold
+  (sidebar) beside it.
 */
 .place {
   position: relative;
@@ -1392,8 +1197,7 @@ input {
 .article-text {
   margin-top: 1.75em;
   overflow-wrap: break-word;
-  /* Heavier in the Bold theme: Literata's 600 or Atkinson's 700 (preferences.ts, decision 0046). */
-  font-weight: var(--reading-weight, 400);
+  font-weight: 400;
 }
 
 /* Only an article's last paragraph avoids a lone last word: elsewhere it left visibly short lines (decision 0040). */
@@ -1418,8 +1222,7 @@ input {
   margin-top: 1.8em;
   margin-bottom: 0.5em;
   line-height: 1.3;
-  /* 600, or Literata's 800 in the Bold theme, so headings stay a step heavier than its text (decision 0046). */
-  font-weight: min(900, calc(var(--reading-weight, 400) + 200));
+  font-weight: 600;
   text-wrap: balance;
 }
 
@@ -1548,7 +1351,7 @@ input {
 }
 
 .article-text th {
-  font-weight: min(900, calc(var(--reading-weight, 400) + 200));
+  font-weight: 600;
   border-bottom-color: color-mix(in srgb, var(--ink) 30%, transparent);
 }
 
@@ -1564,8 +1367,8 @@ input {
 
 .article-text strong,
 .article-text b {
-  /* A step heavier than the words around it: 600, or Literata's 800 in the Bold theme (decision 0046). Atkinson ships nothing above 700. */
-  font-weight: min(900, calc(var(--reading-weight, 400) + 200));
+  /* A step heavier than the words around it. */
+  font-weight: 600;
 }
 
 .article-text :where(em, i) {

@@ -1,7 +1,7 @@
 <!--
   Text size as a stepper, as Apple Books draws it (decision 0055): one flat
-  capsule in the segmented settings' faint track, a small A and a large A at
-  its ends, one step each press (the same six steps as `+` and `-`), and the
+  capsule in the segmented settings' faint track, a small A with a minus and a large A with a plus at
+  its ends (so which does what is plain), one step each press (the same six steps as `+` and `-`), and the
   current step's name between them, each part split from the next by a
   hairline. Nothing in it is raised, so it never reads as a choice with a
   chosen segment. The step's name is plain words, and it's said aloud when
@@ -42,7 +42,7 @@
     title="Smaller text (−)"
     aria-disabled={smallest}
     onclick={() => step(-1)}
-    class="step"><span aria-hidden="true" class="text-[0.9375rem]">A</span></button
+    class="step"><span aria-hidden="true" class="text-[0.9375rem]">A</span><span aria-hidden="true" class="sign" data-sign="−"></span></button
   >
   <p role="status" class="sizes-name">{TEXT_SIZES[size]?.label}</p>
   <button
@@ -51,11 +51,24 @@
     title="Larger text (+)"
     aria-disabled={largest}
     onclick={() => step(1)}
-    class="step"><span aria-hidden="true" class="text-[1.375rem]">A</span></button
+    class="step"><span aria-hidden="true" class="text-[1.375rem]">A</span><span aria-hidden="true" class="sign" data-sign="+"></span></button
   >
 </div>
 
 <style>
+  /*
+    The minus and plus beside each A: smaller and quieter than the A. Drawn by CSS, so the
+    button's visible words stay its name ("Smaller text", "Larger text") for every check.
+  */
+  .sign::after {
+    content: attr(data-sign);
+  }
+  .sign {
+    margin-left: 0.1875rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--ink-2);
+  }
   /* The segmented settings' own track (app.css → .choices): 4px round, a faint tone, 10px corners. */
   .sizes {
     display: flex;

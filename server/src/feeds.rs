@@ -2,7 +2,7 @@
 //! (SPEC sections 3, 5, 6 and 7). Marking articles read or starred is in
 //! `marks`; folders, editing feeds and unsubscribing in `folders`.
 //!
-//! Adding: the reader pastes a feed's address or a website's. slowfeed
+//! Adding: the reader pastes a feed's address or a website's. nine turtles
 //! fetches it once; if it's a web page, it looks in it for the feeds the site
 //! names (autodiscovery). One feed is followed straight away; several are
 //! offered as a choice; none gets a plain message. After that, `checking`

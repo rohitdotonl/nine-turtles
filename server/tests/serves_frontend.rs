@@ -17,7 +17,7 @@ async fn home_page_is_the_app() {
     assert_eq!(response.headers()["content-type"], "text/html");
     assert_eq!(response.headers()["cache-control"], "no-cache");
     let body = response.text().await.unwrap();
-    assert!(body.contains("<title>slowfeed</title>"));
+    assert!(body.contains("<title>nine turtles</title>"));
 }
 
 #[tokio::test]
@@ -31,7 +31,7 @@ async fn other_screens_also_get_the_app() {
             .text()
             .await
             .unwrap()
-            .contains("<title>slowfeed</title>")
+            .contains("<title>nine turtles</title>")
     );
 }
 
@@ -72,7 +72,7 @@ async fn every_answer_says_which_version_sent_it() {
 
 #[tokio::test]
 async fn an_unknown_api_address_is_not_found_not_the_app() {
-    // An older tab asking for something a newer slowfeed dropped is told so,
+    // An older tab asking for something a newer nine turtles dropped is told so,
     // and is then asked to reload (SPEC section 18).
     let base = start().await;
     let response = reqwest::get(format!("{base}/api/no-such-thing"))

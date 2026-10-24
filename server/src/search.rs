@@ -5,7 +5,7 @@
 //! each word appears, not a copy of the articles. Articles are added to it as
 //! they arrive (`feeds::store_articles` calls `index`); one deleted leaves it
 //! by itself (a rule in the database). Articles stored before search existed
-//! are added once, in the background, when slowfeed starts (`index_missing`).
+//! are added once, in the background, when nine turtles starts (`index_missing`).
 //!
 //! The screen turns what the reader typed, chips included, into a few plain
 //! settings: the words, a feed or folder, unread only, starred only, and a
@@ -360,7 +360,7 @@ pub fn excerpt(text: &str, searched: &[String]) -> Option<Vec<Piece>> {
             return;
         }
         // Three typed dots in the publisher's text read as one real ellipsis,
-        // like the ones slowfeed adds where it cuts.
+        // like the ones nine turtles adds where it cuts.
         let piece = piece.replace("...", "…");
         match pieces.last_mut() {
             Some(last) if last.matched == matched => last.text.push_str(&piece),

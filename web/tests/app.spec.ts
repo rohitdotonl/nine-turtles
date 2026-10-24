@@ -11,7 +11,7 @@ async function openApp(page: Page, path = "/unread") {
 
 const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
 const list = (page: Page) => page.getByRole("region", { name: /^(Unread|Starred|All)$/ });
-// The reading area: an article, "No article open", or the welcome on a slowfeed with no feeds.
+// The reading area: an article, "No article open", or the welcome on a nine turtles with no feeds.
 const readingArea = (page: Page) => page.getByRole("region", { name: /^(Article|A quiet place to read\.)$/ });
 const toggle = (page: Page) => page.getByRole("button", { name: "Sidebar" });
 
@@ -35,10 +35,14 @@ test("a wide window shows three areas, a medium one two, a phone-narrow one one"
   await expect(readingArea(page)).toBeHidden();
 });
 
-test("[ hides and shows the sidebar, and the toggle never moves", async ({ page }) => {
+test("[ hides and shows the sidebar; its button sits on the sidebar, then waits at the top left", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await openApp(page);
-  const before = await toggle(page).boundingBox();
+  const shown = (await toggle(page).boundingBox())!;
+  const pane = (await sidebar(page).boundingBox())!;
+  // At the right end of the sidebar's own top line, across from the wordmark.
+  expect(shown.x + shown.width).toBeLessThanOrEqual(pane.x + pane.width);
+  expect(shown.x).toBeGreaterThan(pane.x + pane.width / 2);
 
   // The keyboard starts in the sidebar (on the wordmark). Hiding the sidebar moves it to the
   // list itself, or with no articles to the sidebar button, never to the list's title (decision 0038).
@@ -46,7 +50,7 @@ test("[ hides and shows the sidebar, and the toggle never moves", async ({ page 
   await page.keyboard.press("[");
   await expect(sidebar(page)).toBeHidden();
   await expect(toggle(page)).toHaveAttribute("aria-expanded", "false");
-  expect(await toggle(page).boundingBox()).toEqual(before);
+  expect((await toggle(page).boundingBox())!.x).toBeLessThan(20);
   await expect(page.locator("#list-heading")).not.toBeFocused();
   expect(
     await page.evaluate(() => {
@@ -57,15 +61,15 @@ test("[ hides and shows the sidebar, and the toggle never moves", async ({ page 
 
   await page.keyboard.press("[");
   await expect(sidebar(page)).toBeVisible();
-  expect(await toggle(page).boundingBox()).toEqual(before);
+  expect(await toggle(page).boundingBox()).toEqual(shown);
 
   // The button does the same with a click.
   await toggle(page).click();
   await expect(sidebar(page)).toBeHidden();
-  expect(await toggle(page).boundingBox()).toEqual(before);
 });
 
-test("the sidebar lists Unread, Starred and All, with the accent marking where you are", async ({ page }) => {
+
+test("the sidebar lists Unread, Starred and All, with a grey pill marking where you are", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await openApp(page);
   const links = sidebar(page).getByRole("list").getByRole("link");
@@ -75,20 +79,21 @@ test("the sidebar lists Unread, Starred and All, with the accent marking where y
   await expect(unread).toHaveAttribute("aria-current", "page");
   const accent = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--accent").trim());
   expect(accent).toBe("#2c4f8c");
-  // One pill, as in the list: the accent at 12% over the sidebar (Original's
-  // --tint-sidebar, decision 0051), 8px corners, 8px in from the pane's edge, and no bar.
-  await expect(unread).toHaveCSS("background-color", "rgb(216, 220, 229)");
-  await expect(unread).toHaveCSS("border-top-left-radius", "8px");
-  // As in a Mac source list, the place you're in has its icon in the accent, beside the pill and the semibold name (decision 0043).
-  await expect(unread.locator("svg")).toHaveCSS("color", "rgb(44, 79, 140)");
-  await expect(sidebar(page).getByRole("link", { name: "Starred" }).locator("svg")).not.toHaveCSS("color", "rgb(44, 79, 140)");
+  // One pill, as in the list: a neutral grey, the text color at 8% over the sidebar
+  // (--tint-sidebar), 8px corners, 8px in from the pane's edge, with no color and
+  // no bar (decision 0057).
+  await expect(unread).toHaveCSS("background-color", "rgb(221, 221, 223)");
   expect(await unread.evaluate((element) => getComputedStyle(element, "::before").content)).toBe("none");
+  await expect(unread).toHaveCSS("border-top-left-radius", "8px");
+  // The place you're in has its icon in full ink, beside the pill and the semibold name; never the accent (decision 0057).
+  await expect(unread.locator("svg")).toHaveCSS("color", "rgb(20, 20, 20)");
+  await expect(sidebar(page).getByRole("link", { name: "Starred" }).locator("svg")).not.toHaveCSS("color", "rgb(20, 20, 20)");
   const inset = await unread.evaluate((element) => element.getBoundingClientRect().left - element.closest("nav")!.getBoundingClientRect().left);
   expect(Math.abs(inset - 8)).toBeLessThan(1);
   // The wordmark is a name, never a Tab stop (decision 0041).
-  await expect(sidebar(page).getByRole("heading", { level: 1, name: "slowfeed" })).toHaveAttribute("tabindex", "-1");
+  await expect(sidebar(page).getByRole("heading", { level: 1, name: "nine turtles" })).toHaveAttribute("tabindex", "-1");
   // When the app puts the keyboard there, its outline stands clear of the letters.
-  const wordmark = sidebar(page).getByRole("heading", { level: 1, name: "slowfeed" });
+  const wordmark = sidebar(page).getByRole("heading", { level: 1, name: "nine turtles" });
   await page.keyboard.press("Shift");
   await page.evaluate(() => (document.documentElement.dataset.keyboard = ""));
   await wordmark.focus();
@@ -107,7 +112,7 @@ test("g then u, s or a goes to Unread, Starred or All; reload and Back keep your
   await page.keyboard.press("s");
   await expect(page).toHaveURL(/\/starred$/);
   await expect(page.getByRole("heading", { level: 2, name: "Starred" })).toBeFocused();
-  await expect(page).toHaveTitle("Starred · slowfeed");
+  await expect(page).toHaveTitle("Starred · nine turtles");
 
   await page.keyboard.press("g");
   await page.keyboard.press("a");
@@ -115,7 +120,7 @@ test("g then u, s or a goes to Unread, Starred or All; reload and Back keep your
 
   await page.reload();
   await appReady(page);
-  await expect(page).toHaveTitle("All · slowfeed");
+  await expect(page).toHaveTitle("All · nine turtles");
   // With no feeds yet, a wide window shows the welcome in the list's room (decision 0048); the list keeps its place behind it.
   await expect(page.locator("#list-heading")).toHaveText("All");
 
@@ -229,7 +234,7 @@ test("shortcuts don't fire while typing in a field", async ({ page }) => {
   await expect(page).toHaveURL(/\/unread$/);
 });
 
-test("Settings: theme, font, size and width apply at once and are remembered on this device", async ({ page }) => {
+test("Settings: appearance, font, size and width apply at once and are remembered on this device", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await openApp(page);
   await tabTo(page, sidebar(page).getByRole("link", { name: "Settings" }));
@@ -237,61 +242,35 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
   await expect(page).toHaveURL(/\/settings$/);
   await expect(page.getByRole("heading", { level: 2, name: "Settings" })).toBeFocused();
 
-  // Original, matching the device, until something else is chosen (decision 0046).
-  await expect(page.getByLabel("Original")).toBeChecked();
+  // One theme, Original, matching the device until another Appearance is chosen (decision 0056).
+  await expect(page.locator("label.tile")).toHaveCount(0);
+  await expect(page.getByRole("group", { name: "Theme" })).toHaveCount(0);
   await expect(page.getByLabel("Match device")).toBeChecked();
-  await page.getByLabel("Calm").check();
-  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(242, 230, 208)");
+  await page.getByLabel("Light", { exact: true }).check();
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(255, 255, 255)");
   // The phone's bar above the page follows the version showing too.
   const bars = page.locator('meta[name="theme-color"]');
   await expect(bars).toHaveCount(2);
-  await expect(bars.nth(0)).toHaveAttribute("content", "#F2E6D0");
-  await expect(bars.nth(1)).toHaveAttribute("content", "#F2E6D0");
-  // Appearance: Dark shows the night version, and the tiles redraw in it.
-  const theme = (name: string) => page.locator("label.tile").filter({ hasText: name });
+  await expect(bars.nth(0)).toHaveAttribute("content", "#FFFFFF");
+  await expect(bars.nth(1)).toHaveAttribute("content", "#FFFFFF");
+  // Appearance: Dark shows the night version.
   await page.getByLabel("Dark", { exact: true }).check();
-  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(41, 35, 28)");
-  await expect(bars.nth(0)).toHaveAttribute("content", "#29231C");
-  await expect(theme("Calm").locator(".tile-page")).toHaveCSS("background-color", "rgb(41, 35, 28)");
-  // Match device follows the device, and switches with it while slowfeed is open.
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(18, 18, 18)");
+  await expect(bars.nth(0)).toHaveAttribute("content", "#121212");
+  // Match device follows the device, and switches with it while nine turtles is open.
   await page.getByLabel("Match device").check();
-  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(242, 230, 208)");
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(255, 255, 255)");
   await page.emulateMedia({ colorScheme: "dark" });
-  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(41, 35, 28)");
-  await expect(bars.nth(1)).toHaveAttribute("content", "#29231C");
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(18, 18, 18)");
+  await expect(bars.nth(1)).toHaveAttribute("content", "#121212");
   await page.emulateMedia({ colorScheme: "light" });
-  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(242, 230, 208)");
-  // Each theme is an "Aa" tile in its own paper and ink; the chosen one has two
-  // marks, one ring and its name semibold, so it shows without color (decision 0045:
-  // no checkmark badge). The ring stands 3px clear of the page, which keeps its own
-  // faint edge, so the gap shows (decision 0055).
-  await expect(theme("Calm")).toHaveCSS("font-weight", "600");
-  await expect(theme("Quiet")).toHaveCSS("font-weight", "400");
-  await expect(theme("Calm").locator(".tile-page")).toHaveCSS("outline-style", "solid");
-  await expect(theme("Calm").locator(".tile-page")).toHaveCSS("outline-width", "2px");
-  await expect(theme("Calm").locator(".tile-page")).toHaveCSS("outline-offset", "3px");
-  await expect(page.locator(".tile-check")).toHaveCount(0);
-  await expect(theme("Calm").locator(".tile-page")).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
-  await expect(theme("Quiet").locator(".tile-page")).toHaveCSS("outline-style", "none");
-  await expect(theme("Calm").locator(".tile-page")).toHaveCSS("background-color", "rgb(242, 230, 208)");
-  // Bold's "Aa" is bold, as its article text is.
-  await expect(theme("Bold").locator(".tile-page")).toHaveCSS("font-weight", "700");
-  const ring = (name: string) => theme(name).locator(".tile-page").evaluate((element) => getComputedStyle(element).outlineColor);
-  expect(await ring("Calm")).not.toBe(await ring("Quiet"));
-  // The six themes, in tidy rows of equal tiles.
-  await expect(page.locator("label.tile")).toHaveCount(6);
-  const widths = await page.locator("label.tile .tile-page").evaluateAll((pages) => pages.map((each) => Math.round(each.getBoundingClientRect().width)));
-  expect(new Set(widths).size).toBe(1);
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(255, 255, 255)");
   // Arrow keys move between choices, as with any radio buttons.
-  await page.getByLabel("Calm").focus();
+  await page.getByLabel("Light", { exact: true }).focus();
   await page.keyboard.press("ArrowRight");
-  await expect(page.getByLabel("Focus")).toBeChecked();
+  await expect(page.getByLabel("Dark", { exact: true })).toBeChecked();
   await page.keyboard.press("ArrowLeft");
-  await expect(page.getByLabel("Calm")).toBeChecked();
-  // In high-contrast mode the chosen picture is ringed in the system's highlight, so it still stands out.
-  await page.emulateMedia({ forcedColors: "active" });
-  expect(await ring("Calm")).not.toBe(await ring("Quiet"));
-  await page.emulateMedia({ forcedColors: "none" });
+  await expect(page.getByLabel("Light", { exact: true })).toBeChecked();
   // Font and line width are segmented controls: the chosen one is raised (a fill and a small shadow, no edge) and semibold.
   await expect(page.locator("label.choice").filter({ hasText: "Medium" })).toHaveCSS("font-weight", "600");
   await expect(page.locator("label.choice").filter({ hasText: "Medium" })).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
@@ -332,9 +311,8 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
 
   await page.reload();
   await appReady(page);
-  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(242, 230, 208)");
-  await expect(page.getByLabel("Calm")).toBeChecked();
-  await expect(page.getByLabel("Match device")).toBeChecked();
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  await expect(page.getByLabel("Light", { exact: true })).toBeChecked();
   await expect(page.getByLabel("Atkinson Hyperlegible")).toBeChecked();
   await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("status")).toHaveText("Largest");
   await expect(page.getByLabel("Narrow")).toBeChecked();
@@ -345,19 +323,19 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
 });
 
 test("a chosen Appearance stays, whatever the device's light or dark setting", async ({ page }) => {
-  await chooseTheme(page, "calm-light");
+  await chooseTheme(page, "original-light");
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/");
   await appReady(page);
-  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(242, 230, 208)");
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(255, 255, 255)");
 });
 
-test("a theme saved before decision 0046 opens as its nearest new theme", async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("slowfeed.preferences", JSON.stringify({ theme: "sepia" })));
+test("a removed theme opens as Original, keeping its Appearance (decision 0056)", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("slowfeed.preferences", JSON.stringify({ theme: "calm", appearance: "dark" })));
   await page.goto("/");
   await appReady(page);
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "calm");
-  await expect(page.locator("html")).toHaveAttribute("data-mode", "light");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "original");
+  await expect(page.locator("html")).toHaveAttribute("data-mode", "dark");
 });
 
 test("at 200% zoom nothing overlaps and everything still works", async ({ page }) => {
@@ -381,7 +359,7 @@ test("at 200% zoom nothing overlaps and everything still works", async ({ page }
   expect(await overflow()).toBe(false);
 });
 
-test("every font comes from slowfeed itself", async ({ page }) => {
+test("every font comes from nine turtles itself", async ({ page }) => {
   const fontOrigins: string[] = [];
   page.on("request", (request) => {
     if (request.resourceType() === "font") fontOrigins.push(new URL(request.url()).origin);

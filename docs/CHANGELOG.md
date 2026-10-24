@@ -1,8 +1,21 @@
 # What's changed
 
-A plain-language history of slowfeed, newest first. One short entry per
+A plain-language history of nine turtles (called slowfeed until 24 October 2026), newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
+
+## 24 October 2026: nine turtles, with one theme
+
+- The app is now called **nine turtles**: on the sign-in page, in the
+  sidebar, in the browser tab, on your phone's home screen and in the files
+  you export. Behind the scenes nothing you rely on changes: you stay signed
+  in, your settings stay, and Render needs no change (decision 0056).
+- There is one theme now, Original: white by day, near-black by night. The
+  Light, Dark and Match device switch stays. Quiet, Paper, Bold, Calm and
+  Focus are gone, and so are the theme tiles in Settings and the Aa panel. If
+  you had picked one of them, you get Original in the same light or dark.
+- The place you're on is marked by a plain grey background, with no blue,
+  and starred articles show a light green star (decision 0057).
 
 ## 24 October 2026: Closer to Apple Books, batch 7
 

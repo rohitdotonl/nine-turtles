@@ -2,13 +2,14 @@ import { describe, expect, it } from "vitest";
 import { APPEARANCES, LOOKS, OLD_THEMES, THEMES, isAppearance, isTheme, resolveMode } from "./themes";
 
 describe("themes", () => {
-  it("lists Apple Books' six themes from DESIGN.md, in its order", () => {
-    expect(THEMES).toEqual(["original", "quiet", "paper", "bold", "calm", "focus"]);
-    expect(THEMES.map((theme) => LOOKS[theme].label)).toEqual(["Original", "Quiet", "Paper", "Bold", "Calm", "Focus"]);
+  it("has the one theme from DESIGN.md, Original (decision 0056)", () => {
+    expect(THEMES).toEqual(["original"]);
+    expect(THEMES.map((theme) => LOOKS[theme].label)).toEqual(["Original"]);
   });
 
   it("recognises only known theme names and Appearance choices", () => {
-    expect(isTheme("calm")).toBe(true);
+    expect(isTheme("original")).toBe(true);
+    expect(isTheme("calm")).toBe(false);
     expect(isTheme("sepia")).toBe(false);
     expect(isTheme(undefined)).toBe(false);
     expect(APPEARANCES.map((choice) => choice.value)).toEqual(["light", "dark", "auto"]);
@@ -24,12 +25,12 @@ describe("themes", () => {
     expect(resolveMode("auto", false)).toBe("light");
   });
 
-  it("gives every theme from before decision 0046 a new home", () => {
+  it("gives every earlier theme a home in Original", () => {
     expect(Object.keys(OLD_THEMES).sort()).toEqual(
-      ["system", "off-white", "sepia", "porcelain", "linen", "mist", "sage", "dark", "graphite", "night", "midnight", "black"].sort(),
+      ["quiet", "paper", "bold", "calm", "focus", "system", "off-white", "sepia", "porcelain", "linen", "mist", "sage", "dark", "graphite", "night", "midnight", "black"].sort(),
     );
     for (const choice of Object.values(OLD_THEMES)) {
-      expect(isTheme(choice.theme)).toBe(true);
+      expect(choice.theme).toBe("original");
       expect(isAppearance(choice.appearance)).toBe(true);
     }
   });

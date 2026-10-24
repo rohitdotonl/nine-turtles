@@ -18,23 +18,32 @@ describe("reader preferences", () => {
   it("keeps a theme chosen before decision 0046 as its nearest new theme and Appearance", () => {
     const expected: Record<string, [string, string]> = {
       system: ["original", "auto"],
-      "off-white": ["paper", "light"],
-      sepia: ["calm", "light"],
+      "off-white": ["original", "light"],
+      sepia: ["original", "light"],
       porcelain: ["original", "light"],
-      linen: ["paper", "light"],
-      mist: ["quiet", "light"],
-      sage: ["focus", "light"],
-      dark: ["calm", "dark"],
-      graphite: ["quiet", "dark"],
-      night: ["calm", "dark"],
+      linen: ["original", "light"],
+      mist: ["original", "light"],
+      sage: ["original", "light"],
+      dark: ["original", "dark"],
+      graphite: ["original", "dark"],
+      night: ["original", "dark"],
       midnight: ["original", "dark"],
-      black: ["bold", "dark"],
+      black: ["original", "dark"],
+      quiet: ["original", "auto"],
+      paper: ["original", "auto"],
+      bold: ["original", "auto"],
+      calm: ["original", "auto"],
+      focus: ["original", "auto"],
     };
     for (const [old, [theme, appearance]] of Object.entries(expected)) {
       const storage = memory();
       storage.setItem("slowfeed.preferences", JSON.stringify({ theme: old, readingFont: "atkinson", textSize: 4, lineWidth: "wide" }));
       expect(load(storage), old).toEqual({ theme, appearance, readingFont: "atkinson", textSize: 4, lineWidth: "wide" });
     }
+    // A removed theme saved with an Appearance keeps that Appearance (decision 0056).
+    const calm = memory();
+    calm.setItem("slowfeed.preferences", JSON.stringify({ theme: "calm", appearance: "dark" }));
+    expect(load(calm)).toEqual({ ...DEFAULTS, appearance: "dark" });
     // A name that only looks like one of the old themes keeps the defaults.
     const storage = memory();
     storage.setItem("slowfeed.preferences", JSON.stringify({ theme: "constructor" }));
@@ -43,7 +52,7 @@ describe("reader preferences", () => {
 
   it("remembers what was chosen on this device", () => {
     const storage = memory();
-    const chosen: Preferences = { theme: "calm", appearance: "dark", readingFont: "atkinson", textSize: 4, lineWidth: "wide" };
+    const chosen: Preferences = { theme: "original", appearance: "dark", readingFont: "atkinson", textSize: 4, lineWidth: "wide" };
     save(chosen, storage);
     expect(load(storage)).toEqual(chosen);
   });
@@ -80,11 +89,10 @@ describe("reader preferences", () => {
     const set = new Map<string, string>();
     const root = { dataset: {} as DOMStringMap, style: { setProperty: (name: string, value: string) => set.set(name, value) } };
     const page = root as unknown as HTMLElement;
-    apply({ theme: "calm", appearance: "dark", readingFont: "atkinson", textSize: 0, lineWidth: "narrow" }, page, false);
-    expect(root.dataset.theme).toBe("calm");
+    apply({ theme: "original", appearance: "dark", readingFont: "atkinson", textSize: 0, lineWidth: "narrow" }, page, false);
+    expect(root.dataset.theme).toBe("original");
     expect(root.dataset.mode).toBe("dark");
     expect(set.get("--reading-font")).toContain("Atkinson Hyperlegible");
-    expect(set.get("--reading-weight")).toBe("400");
     expect(set.get("--reading-size")).toBe("1rem");
     expect(set.get("--reading-measure")).toBe("52ch");
 
@@ -95,15 +103,4 @@ describe("reader preferences", () => {
     expect(root.dataset.mode).toBe("light");
   });
 
-  it("sets the article text heavier in the Bold theme only: Literata's 600, Atkinson's 700", () => {
-    const set = new Map<string, string>();
-    const root = { dataset: {} as DOMStringMap, style: { setProperty: (name: string, value: string) => set.set(name, value) } };
-    const page = root as unknown as HTMLElement;
-    apply({ ...DEFAULTS, theme: "bold" }, page, false);
-    expect(set.get("--reading-weight")).toBe("600");
-    apply({ ...DEFAULTS, theme: "bold", readingFont: "atkinson" }, page, false);
-    expect(set.get("--reading-weight")).toBe("700");
-    apply({ ...DEFAULTS, theme: "paper", readingFont: "atkinson" }, page, false);
-    expect(set.get("--reading-weight")).toBe("400");
-  });
 });

@@ -1,4 +1,4 @@
-//! slowfeed's settings. They come from environment variables only (never from
+//! nine turtles' settings. They come from environment variables only (never from
 //! the code or a file in the repository), so secrets stay with the host.
 //! Every variable is listed in docs/operations/settings.md.
 
@@ -6,7 +6,7 @@ use std::{net::SocketAddr, path::PathBuf};
 
 use argon2::password_hash::phc::PasswordHash;
 
-/// Where slowfeed listens when `SLOWFEED_LISTEN` isn't set. Only this computer
+/// Where nine turtles listens when `SLOWFEED_LISTEN` isn't set. Only this computer
 /// can reach it; the container image sets the variable for hosting.
 const DEFAULT_LISTEN: &str = "127.0.0.1:8080";
 /// Where the database lives when `SLOWFEED_DATA_DIR` isn't set.
@@ -20,7 +20,7 @@ pub struct Config {
     pub password: PasswordSetting,
     /// The read-only key for the diagnostics page. Without it the page is off.
     pub diagnostics_key: Option<String>,
-    /// Lets slowfeed fetch feeds from this computer and private networks.
+    /// Lets nine turtles fetch feeds from this computer and private networks.
     /// Only the browser tests set it, to serve made-up feeds; never on Render.
     pub local_feeds_allowed: bool,
     /// Checks every feed this many seconds apart, ignoring its rhythm and

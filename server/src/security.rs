@@ -12,7 +12,7 @@ use axum::{
 use tower_http::set_header::SetResponseHeaderLayer;
 
 /// The browser refuses any script, style, font or connection that doesn't
-/// come from slowfeed itself, and no other site may show slowfeed in a frame.
+/// come from nine turtles itself, and no other site may show nine turtles in a frame.
 /// Images are the one exception: an article's images load from the
 /// publisher's own site (DESIGN.md → "Article view"), so any web address may
 /// serve an image. An image can't run code.
@@ -40,7 +40,7 @@ pub fn apply<S: Clone + Send + Sync + 'static>(router: Router<S>) -> Router<S> {
 }
 
 /// Anything that changes something (sign in, sign out, and later marking
-/// read or unsubscribing) must come from slowfeed's own pages. The cookie is
+/// read or unsubscribing) must come from nine turtles' own pages. The cookie is
 /// already `SameSite=Strict`; this is the second lock on the same door.
 async fn same_site_actions_only(request: Request, next: Next) -> Response {
     let reading = matches!(
@@ -52,7 +52,7 @@ async fn same_site_actions_only(request: Request, next: Next) -> Response {
     } else {
         (
             StatusCode::FORBIDDEN,
-            "slowfeed only accepts actions from its own pages.",
+            "nine turtles only accepts actions from its own pages.",
         )
             .into_response()
     }
