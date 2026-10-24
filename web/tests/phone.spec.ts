@@ -145,7 +145,7 @@ test.describe("on a phone", () => {
     expect(barColor).toBe(paperColor);
     await expect(bar).toHaveCSS("backdrop-filter", "none");
     // All five icons show, in one line, even on the first article (Previous
-    // is faded there, never a hole: decision 0046), and each place is a full 44px tap.
+    // is faded there, never a hole: decision 0047), and each place is a full 44px tap.
     const tops = await toolbar(page).locator(":scope > * svg").evaluateAll((icons) =>
       icons.filter((icon) => getComputedStyle(icon).visibility !== "hidden").map((icon) => Math.round(icon.getBoundingClientRect().top + icon.getBoundingClientRect().height / 2)),
     );
@@ -222,7 +222,7 @@ test.describe("on a phone", () => {
 
     await tabTo(page, row(page, "The pleasure of a slow letter"));
     // The row's ring, 2px inside the pill, passes clear of where an unread dot hangs: the dot
-    // sits 4px into the pill, so 2px of paper part them (decision 0048).
+    // sits 4px into the pill, so 2px of paper part them (decision 0049).
     const ringGap = await row(page, "The pleasure of a slow letter").evaluate((element) => {
       const style = getComputedStyle(element);
       // The ring runs from the pill's edge to its offset inside it; the dot starts --dot-left in.
@@ -259,7 +259,7 @@ test.describe("on a phone", () => {
     await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
     await list(page).getByRole("button", { name: "More", exact: true }).click();
     await page.getByRole("menuitem", { name: "Edit feed" }).click();
-    // A sheet you commit has Cancel and no X, on a phone too (decision 0048); its first field
+    // A sheet you commit has Cancel and no X, on a phone too (decision 0049); its first field
     // starts 20px under the top line, as Settings' first group does.
     const heading = page.getByRole("heading", { level: 2, name: "Edit feed" });
     await expect(heading).toBeVisible();
@@ -337,7 +337,7 @@ test.describe("on a phone", () => {
         figures: getComputedStyle(element).fontVariantNumeric,
       };
     });
-    // One line (decision 0047): the source ends in "…", the date and the star keep their room.
+    // One line (decision 0048): the source ends in "…", the date and the star keep their room.
     expect(shape.height).toBeLessThan(shape.line * 1.5);
     expect(shape.cut).toBe(true);
     // Proportional figures, as in running text, not the sidebar counts' tabular ones.
@@ -416,7 +416,7 @@ test.describe("on a phone", () => {
       const box = element.getBoundingClientRect();
       return box.left + parseFloat(getComputedStyle(element).paddingLeft);
     })));
-    // The preview passage starts on the groups' own edge, not indented like body text (decision 0048).
+    // The preview passage starts on the groups' own edge, not indented like body text (decision 0049).
     near20(await textStart(page.locator(".reading-sample p")));
     near20((await page.locator(".inset-group").first().boundingBox())!.x);
 

@@ -168,7 +168,7 @@
   let welcoming = $derived(firstVisit && !(under.kind === "view" && under.view === "starred"));
   /**
    * With a reading area beside the list, the welcome takes the list's room too: one empty state,
-   * not an empty column beside it, as Apple Books shows (decision 0047).
+   * not an empty column beside it, as Apple Books shows (decision 0048).
    */
   let welcomeWide = $derived(welcoming && panes.article && !missing);
   let welcomeHeading: HTMLHeadingElement | undefined = $state();
@@ -731,7 +731,7 @@
       <p class="mt-3 text-ink-2">Follow the websites you like, and read what they publish here, at your own pace.</p>
     </div>
     {#if !(sheet && route.kind === "add-feed")}
-      <!-- Importing sits just under the field, centred as everything here is, as the other way in (decisions 0045, 0047). -->
+      <!-- Importing sits just under the field, centred as everything here is, as the other way in (decisions 0045, 0048). -->
       <AddFeed bind:field={addField} feeds={[]} onAdded={added} onOpen={(id) => go({ kind: "feed", id })}>
         {#snippet alternative()}
           <a href="/settings" onclick={goImport} class="btn-quiet btn-small">Import an OPML file…</a>
@@ -741,7 +741,7 @@
       <!--
         With the Add a feed sheet over it, the field is the sheet's (one field of that name on the page).
         The welcome keeps its exact shape under the dim, a still picture of itself that nothing can
-        reach, so nothing behind the sheet moves as it opens or closes (decision 0047).
+        reach, so nothing behind the sheet moves as it opens or closes (decision 0048).
       -->
       <div inert aria-hidden="true" class="flex flex-col gap-2">
         <div class="flex gap-2">
@@ -967,7 +967,7 @@
               >
             </div>
           {/if}
-          <!-- Its back button leads out; Cancel is at its foot, so there's no X (decision 0048). -->
+          <!-- Its back button leads out; Cancel is at its foot, so there's no X (decision 0049). -->
           <PageHead title="Add a feed" bind:heading={listHeading} besideToggle={!phone && !panes.sidebar} />
           <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-10 md:px-10">
             <!-- The sheet's build, as a page, 20px under the top line as Settings is: a line on what to paste, the field, then Cancel and Add feed in one row. -->

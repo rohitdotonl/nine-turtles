@@ -1,4 +1,4 @@
-# 0046: A quiet article title and an even phone toolbar
+# 0047: A quiet article title and an even phone toolbar
 
 *24 October 2026. From the fifth Apple Books critique
 (`ui-polish/critic-applebooks-5.md` in the project files, items 1, 2 and 3,

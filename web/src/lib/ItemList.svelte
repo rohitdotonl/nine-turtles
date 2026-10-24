@@ -446,7 +446,7 @@
             >
           {/if}
           <!--
-            Always one line, as Apple Books' rows are (decision 0047): a long source name ends in "…",
+            Always one line, as Apple Books' rows are (decision 0048): a long source name ends in "…",
             and the time and the star never wrap below it.
           -->
           <span class="row-meta mt-0.5 text-meta text-muted">
@@ -478,7 +478,7 @@
   updated: a small note at the foot of the list pane, so nothing in the list
   moves when it appears. It sits in a band of the list's own tone that the
   rows end above, so it never lies over the rows you're acting on
-  (decision 0047). Empty, it's hidden but stays for screen readers, which
+  (decision 0048). Empty, it's hidden but stays for screen readers, which
   hear each message as it arrives.
 -->
 <div class={["toast-band sticky bottom-0 z-10 mt-auto flex justify-center", !!(line || undoLast || updates.stranded || newWaiting) && "toast-band-shown"]}>
@@ -532,7 +532,7 @@
     color: var(--ink);
   }
   /*
-    The source, time and star on one line (decision 0047): the source shrinks
+    The source, time and star on one line (decision 0048): the source shrinks
     and ends in "…"; the time and the star keep their room. Figures are
     proportional, as in running text, so the digits in a name and a date set
     as tightly as they do in the sidebar.

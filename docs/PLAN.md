@@ -303,17 +303,17 @@ each with screenshots:
   list (decision 0045).
 - ✅ A quiet article title (fifth critique): no ring on the title when an
   article opens, a clear pause before the byline with looser tracking, and
-  a phone toolbar with no gap on the first article (decision 0046).
+  a phone toolbar with no gap on the first article (decision 0047).
 - ✅ One-line rows, plain chips, one empty state (fifth critique): a list
   row's meta on one line in proportional figures, search chips in the menu's
   words, a submenu row for another feed or folder, the note in a band the
   rows end above, a centred sign-in at the phone margin, and a centred,
-  still welcome that takes the list's room on a first visit (decision 0047).
+  still welcome that takes the list's room on a first visit (decision 0048).
 - ✅ One sheet, one close rule (fifth critique, batch 5): a round mark on
   Add a feed's choice of feeds, Cancel or an X but never both, the shortcut
   list full-screen on a phone and fitting a computer window, 20px under
   every top line, the Settings preview on the phone's margin, and the
-  phone's unread dot clear of the row ring (decision 0048).
+  phone's unread dot clear of the row ring (decision 0049).
 
 ---
 

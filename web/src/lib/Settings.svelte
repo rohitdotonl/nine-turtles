@@ -259,7 +259,7 @@
     On a phone articles read a tenth smaller; so does the sample. Its left
     edge moves out to the groups' own edge, the screen's one 20px margin, so
     it reads as the page's text, not as indented body text; the small
-    headers stay inset on the rows' words, as iOS sets them (decision 0048).
+    headers stay inset on the rows' words, as iOS sets them (decision 0049).
   */
   @media (max-width: 40rem) {
     .reading-sample {

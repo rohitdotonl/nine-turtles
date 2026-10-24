@@ -331,7 +331,7 @@ test.describe("on a wide window", () => {
     const [noteBox, paneBox] = [(await note.boundingBox())!, (await selected.evaluate((element) => element.closest(".scroller")!.getBoundingClientRect().toJSON()))];
     expect(paneBox.bottom - (noteBox.y + noteBox.height)).toBeLessThan(48);
     // It sits in a band of the list's own tone across the pane, which the rows end above, so it
-    // never lies over the rows you're acting on (decision 0047).
+    // never lies over the rows you're acting on (decision 0048).
     const band = note.locator("xpath=..");
     const [bandFill, paneFill] = await Promise.all([
       band.evaluate((element) => getComputedStyle(element).backgroundColor),
@@ -342,7 +342,7 @@ test.describe("on a wide window", () => {
     expect(bandBox.width).toBeGreaterThan(paneBox.width - 16);
     await page.keyboard.press("u");
     // Opening an article gives its title the keyboard's place for screen
-    // readers, but no ring: a title can't be pressed (decision 0046). The
+    // readers, but no ring: a title can't be pressed (decision 0047). The
     // next Tab lands on the byline's link to the publisher, which rings.
     await page.keyboard.press("o");
     const heading = title(page, "The pleasure of a slow letter");
@@ -440,7 +440,7 @@ test.describe("on a wide window", () => {
     // Its lines are balanced, so a two-line title reads as two even lines (decision 0044).
     await expect(heading).toHaveCSS("text-wrap", /balance/);
     expect(parseFloat(await heading.evaluate((element) => getComputedStyle(element).lineHeight)) / 32).toBeCloseTo(1.12, 2);
-    // Tracked in only a little, with a clear 20px pause before the byline (decision 0046).
+    // Tracked in only a little, with a clear 20px pause before the byline (decision 0047).
     await expect(heading).toHaveCSS("letter-spacing", "-0.16px");
     await expect(heading).toHaveCSS("margin-bottom", "20px");
     const byline = article(page).locator(".article-byline");

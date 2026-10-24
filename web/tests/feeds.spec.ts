@@ -37,19 +37,19 @@ test("a fresh slowfeed shows the welcome in the reading area: the paste field, a
   await expect(page.getByText("No article open.")).toHaveCount(0);
   const [welcome, pane] = await Promise.all([reading.locator("#welcome-heading").boundingBox(), reading.boundingBox()]);
   expect(Math.abs(welcome!.x + welcome!.width / 2 - (pane!.x + pane!.width / 2))).toBeLessThan(4);
-  // One empty state, not an empty column beside it (decision 0047): the list pane steps aside and
+  // One empty state, not an empty column beside it (decision 0048): the list pane steps aside and
   // the welcome takes everything beside the sidebar.
   await expect(page.getByRole("region", { name: "Unread" })).toHaveCount(0);
   const sidebarBox = (await sidebar(page).boundingBox())!;
   expect(Math.abs(pane!.x - (sidebarBox.x + sidebarBox.width))).toBeLessThan(2);
   // The field is wide enough for a real address.
   expect((await field(page).boundingBox())!.width).toBeGreaterThan(280);
-  // One alignment (decision 0047): the field's name is its placeholder (and its label for screen
+  // One alignment (decision 0048): the field's name is its placeholder (and its label for screen
   // readers), so no line sits left-aligned under the centred title.
   await expect(field(page)).toHaveAttribute("placeholder", "Paste a website or feed URL");
   await expect(reading.locator("label[for='feed-address']")).toHaveClass(/sr-only/);
   // "Import an OPML file…", a quiet button just under the field and centred under it, leads to
-  // Settings, at Your data (decisions 0045, 0047).
+  // Settings, at Your data (decisions 0045, 0048).
   const importLink = page.getByRole("link", { name: "import an OPML file" });
   const [fieldBox, importBox, addBox] = await Promise.all([field(page).boundingBox(), importLink.boundingBox(), reading.getByRole("button", { name: "Add feed" }).boundingBox()]);
   expect(importBox!.y - (fieldBox!.y + fieldBox!.height)).toBeLessThanOrEqual(12);
@@ -70,7 +70,7 @@ test("the welcome stays still under the Add a feed sheet", async ({ page, isMobi
   const reading = page.getByRole("region", { name: "A quiet place to read." });
   const shape = () => Promise.all([page.locator("#welcome-heading").boundingBox(), page.getByText("Import an OPML file…").first().boundingBox()]);
   const before = await shape();
-  // Nothing behind the sheet moves as it opens or closes (decision 0047): the welcome keeps its shape under the dim.
+  // Nothing behind the sheet moves as it opens or closes (decision 0048): the welcome keeps its shape under the dim.
   await page.keyboard.press("a");
   const sheet = page.getByRole("dialog", { name: "Add a feed" });
   await expect(sheet.getByLabel("Paste a website or feed URL")).toBeFocused();
@@ -146,7 +146,7 @@ test("a site with several feeds offers a choice", async ({ page }) => {
   await page.keyboard.press("Enter");
   await expect(page.locator("#feed-address-status")).toHaveText("This site offers more than one feed. Choose one:");
   // A choice of one: radio buttons, the first chosen, each row ending in a round mark that shows
-  // the choice by its dot, never by a tint alone (decision 0048).
+  // the choice by its dot, never by a tint alone (decision 0049).
   const choices = page.getByRole("radiogroup", { name: "Feeds on this site" });
   const [first, comments] = [choices.getByRole("radio").first(), choices.getByRole("radio", { name: /^Comments/ })];
   await expect(first).toBeChecked();

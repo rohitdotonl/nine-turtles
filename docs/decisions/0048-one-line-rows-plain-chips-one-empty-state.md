@@ -1,4 +1,4 @@
-# 0047: One-line rows, plain chips, one empty state
+# 0048: One-line rows, plain chips, one empty state
 
 *24 October 2026. From the fifth Apple Books critique
 (`ui-polish/critic-applebooks-5.md` in the project files, items 4 to 8 and

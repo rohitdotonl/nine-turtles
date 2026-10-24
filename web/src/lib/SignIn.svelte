@@ -36,7 +36,7 @@
     <p class="mt-3 font-serif text-large text-muted">A quiet place to read.</p>
   </div>
   <!--
-    One centred column (decision 0047): the field and the button 12px apart,
+    One centred column (decision 0048): the field and the button 12px apart,
     the full width between the phone's 20px margins, at most 320px wide on a
     larger screen. The field's name is said to screen readers and shown as
     its placeholder, so nothing in the column is left-aligned under a centred

@@ -91,7 +91,7 @@
         Two columns on a wide screen, each its own stack, so a short group never
         leaves a hole beside a long one: moving around and your articles on the
         left; reading, everywhere and the search filters on the right, where
-        there's room (decision 0048). On a narrow screen they stack in that order.
+        there's room (decision 0049). On a narrow screen they stack in that order.
       -->
       <div class="grid gap-x-10 gap-y-7 md:grid-cols-2">
         {#each COLUMNS as column, side (side)}
@@ -149,7 +149,7 @@
 </dialog>
 
 <style>
-  /* No taller than 720px, and always at least 48px clear of the window's top and foot (decision 0048). */
+  /* No taller than 720px, and always at least 48px clear of the window's top and foot (decision 0049). */
   .shortcuts,
   .shortcuts-body {
     max-height: min(45rem, 100dvh - 6rem);
@@ -158,7 +158,7 @@
     On a phone-narrow window (the width at which the app shows one screen at
     a time, layout.ts) it's a screen of its own, as Add a feed and Edit feed
     are there: no card, no dim around it, nothing behind it showing past its
-    edge (decision 0048).
+    edge (decision 0049).
   */
   @media (width < 56rem) {
     .shortcuts {

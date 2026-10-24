@@ -376,7 +376,7 @@ body {
   screen readers start reading at the title, but a ring round the largest
   words on the page would be louder than the article, and the title can't be
   pressed. The next Tab lands on the article's first link or control, which
-  rings as always (decision 0046).
+  rings as always (decision 0047).
 */
 :root[data-keyboard] .article-title[tabindex="-1"]:focus-visible {
   outline: none;
@@ -527,7 +527,7 @@ body {
   not a bullet. On a phone it hangs in the 20px margin, 8px from the screen's
   edge and 4px clear of the title, so the keyboard's ring (2px inside the
   pill, which sits 4px in) passes 2px clear of it, never touching it
-  (decision 0048). The semibold title says it too, so it
+  (decision 0049). The semibold title says it too, so it
   never rests on color.
 */
 .unread-dot {
@@ -801,7 +801,7 @@ textarea {
     empty circle, or one filled in the text color with a dot of the page in
     it when it's chosen, so the choice shows by the dot as well as the fill,
     never by a tint alone. Round, because only one can be chosen (decision
-    0048).
+    0049).
   */
   .check-row > .radio-mark {
     display: flex;
@@ -1162,7 +1162,7 @@ input {
   Tracked in only a little, so its letters never touch, with a clear pause
   before the byline: five-eighths of the title's own size (about 20px by
   default), so the pause keeps its proportion at every text size and on a
-  phone (decision 0046).
+  phone (decision 0047).
 */
 .article-title {
   font-size: 1.6em;
@@ -1363,7 +1363,7 @@ input {
   box-shadow: 0 10px 28px -10px rgb(0 0 0 / 0.3);
 }
 /*
-  The band the note sits in (decision 0047): the list's own tone, across the
+  The band the note sits in (decision 0048): the list's own tone, across the
   pane's whole width, so rows scrolling up from below end at its top edge
   rather than running under the note. The note is centred on the pane, and
   the band takes no room while there's nothing to say.

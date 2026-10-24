@@ -94,7 +94,7 @@
 {:else}
 <section aria-labelledby="list-heading" class="flex flex-1 flex-col bg-paper">
   <!--
-    No X: a sheet you commit (Save) closes with Cancel, never both (decision 0048). Its form
+    No X: a sheet you commit (Save) closes with Cancel, never both (decision 0049). Its form
     starts 20px under the top line, as Settings' first group does.
   -->
   <PageHead title="Edit folder" bind:heading {besideToggle} />

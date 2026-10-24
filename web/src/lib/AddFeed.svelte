@@ -3,7 +3,7 @@
   slowfeed, and the "+ Add feed" sheet. It takes a feed's address or a
   website's; slowfeed finds the feed. Several feeds become a choice of one,
   drawn as a list with a round mark on each, the first one chosen, which
-  Add feed then adds (decision 0048); problems
+  Add feed then adds (decision 0049); problems
   are said in plain words. While slowfeed looks, a line of text says so: no
   spinner.
 
@@ -105,7 +105,7 @@
 </script>
 
 <!--
-  In the welcome everything is centred, under a centred title (decision 0047):
+  In the welcome everything is centred, under a centred title (decision 0048):
   the field's name is said to screen readers and shown as its placeholder, so
   no line of it sits left-aligned. In a sheet its name stands above it.
 -->
@@ -165,7 +165,7 @@
         so the chosen one shows by its mark, never by a tint alone. Round,
         because only one can be added (a square tick box says "any of these",
         decision 0045). Real radio buttons lie under the rows: the arrow keys
-        move the choice, and Add feed adds it (decision 0048).
+        move the choice, and Add feed adds it (decision 0049).
       -->
       <div role="radiogroup" aria-label="Feeds on this site" aria-describedby="feed-address-status" class="inset-group mb-2 self-stretch text-left">
         {#each choices as choice (choice.url)}

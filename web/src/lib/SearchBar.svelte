@@ -260,7 +260,7 @@
     <div class={["flex min-w-0 flex-1 items-center gap-1", chips.length > 2 && "flex-wrap"]}>
       {#each shownChips as chip (chip.key)}
         <span class={["my-1.5 flex min-w-0 shrink items-center rounded bg-[var(--tone)] pl-2 text-small whitespace-nowrap", chips.length > 2 ? "max-w-full" : "max-w-[60%]"]}>
-          <!-- Plain words, as the options menu names the filter; how it's typed is its tooltip and its description (decision 0047). -->
+          <!-- Plain words, as the options menu names the filter; how it's typed is its tooltip and its description (decision 0048). -->
           <span class="min-w-0 truncate" title={chip.typed ?? chip.label}>{chip.label}</span>
           {#if chip.typed}<span id="chip-typed-{chip.key}" hidden>{chip.typed}</span>{/if}
           <button type="button" aria-label="Remove {chip.label}" aria-describedby={chip.typed ? `chip-typed-${chip.key}` : undefined} onclick={() => remove(chip)} class="-my-2 -mr-2 -ml-1 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center">
@@ -358,7 +358,7 @@
         <!--
           Any other feed or folder: drawn as a menu's submenu row, a trailing › that leads on to a
           second list (the device's own), as a Mac menu does, rather than a drop-down among the
-          checkmarks. Short words, which wrap rather than cut off on a narrow screen (decision 0047).
+          checkmarks. Short words, which wrap rather than cut off on a narrow screen (decision 0048).
         -->
         <span class="menu-row">
           <span class="menu-check"></span>

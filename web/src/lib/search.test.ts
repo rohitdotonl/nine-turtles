@@ -64,7 +64,7 @@ describe("typed filters", () => {
     expect(query).toEqual({ ...all, words: "compost", unread: true, after: "2026-01-31", before: "2026-03-01" });
   });
 
-  it("show as chips in plain words, as the options menu names them, keeping how they're typed (decision 0047)", () => {
+  it("show as chips in plain words, as the options menu names them, keeping how they're typed (decision 0048)", () => {
     const query: Query = { ...all, unread: true, starred: true, after: "2026-10-01", before: "2026-03-01" };
     expect(chipsFor(query, library)).toEqual([
       { key: "unread", label: "Unread", typed: "is:unread" },

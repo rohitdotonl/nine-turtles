@@ -23,7 +23,7 @@ not how it was done.
 - Sign-in is one centred column with the button just under the field, at
   the same phone margin as every other screen. On a first visit the welcome
   is all centred, fills the room beside the sidebar (no empty list beside
-  it), and stays still when the Add a feed sheet opens over it (decision 0047).
+  it), and stays still when the Add a feed sheet opens over it (decision 0048).
 - When a site offers several feeds, Add a feed now shows them as a list
   with a round mark on each, filled with a dot on the chosen one, and Add
   feed adds that one. Before, which one was meant showed only as a faint

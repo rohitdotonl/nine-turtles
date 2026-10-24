@@ -262,7 +262,7 @@
       hairline so the text ends at an edge rather than being sliced. Previous
       on the first article (or Next on the last) keeps its arrow and its place,
       faded, as iOS dims a toolbar button, so the bar never shows a hole; it
-      says "dimmed" to screen readers and does nothing (decision 0046).
+      says "dimmed" to screen readers and does nothing (decision 0047).
     -->
     <div role="group" aria-label="Article actions" class="toolbar relative z-10 flex shrink-0 bg-paper px-1 pb-[env(safe-area-inset-bottom)]">
       <button type="button" aria-label="Previous" aria-disabled={!phone.hasPrevious} onclick={() => phone.hasPrevious && phone.onPrevious()}>

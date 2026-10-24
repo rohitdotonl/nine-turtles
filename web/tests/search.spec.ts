@@ -107,7 +107,7 @@ test("a search starts where you are, marks the words it found, and Escape brings
   await page.keyboard.press("Control+a");
   await page.keyboard.type("is:starred ");
   await expect(page.getByRole("button", { name: "Remove Starred", exact: true })).toBeVisible();
-  // The chip says it in plain words, as the options menu does; the typed form is its tooltip (decision 0047).
+  // The chip says it in plain words, as the options menu does; the typed form is its tooltip (decision 0048).
   await expect(page.getByTitle("is:starred", { exact: true })).toHaveText("Starred");
   await expect(field(page)).toHaveValue("");
   await expect(results(page)).toHaveCount(1);
@@ -129,7 +129,7 @@ test("a search starts where you are, marks the words it found, and Escape brings
   await expect(page.getByRole("radio", { name: `${folder} This list` })).not.toBeChecked();
   await expect(page.getByRole("radio", { name: "All feeds" })).not.toBeChecked();
   await expect(page.getByRole("combobox", { name: "Search in another feed or folder" })).toBeVisible();
-  // It's drawn as a menu's submenu row, short words and a trailing chevron, not a drop-down among the checkmarks (decision 0047).
+  // It's drawn as a menu's submenu row, short words and a trailing chevron, not a drop-down among the checkmarks (decision 0048).
   await expect(page.locator(".menu-row").filter({ has: page.getByRole("combobox", { name: "Search in another feed or folder" }) })).toContainText("Other feed or folder");
   // Presets count back from today; Custom shows the two dates.
   await page.getByRole("radio", { name: "Past week" }).check();
@@ -291,7 +291,7 @@ test("the search options float over the list; Escape closes them first, then the
   const day = new Date();
   day.setDate(day.getDate() - 30);
   const iso = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
-  // The chip says it in words ("After 24 Sept 2026"); how it's typed is its tooltip and its Remove button's description (decision 0047).
+  // The chip says it in words ("After 24 Sept 2026"); how it's typed is its tooltip and its Remove button's description (decision 0048).
   const words = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(day);
   const remove = page.getByRole("button", { name: `Remove After ${words}`, exact: true });
   await expect(remove).toBeVisible();

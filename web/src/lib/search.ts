@@ -30,7 +30,7 @@ export type Query = {
  * A chip in the field: `label` in plain words, as the Search options menu
  * names the same filter ("Unread", "After 1 Oct 2026"); `typed`, for a
  * filter, is how it's written in the field (`is:unread`), kept for its
- * tooltip and for screen readers (decision 0047).
+ * tooltip and for screen readers (decision 0048).
  */
 export type Chip = { key: "scope" | "unread" | "starred" | "after" | "before"; label: string; typed?: string };
 

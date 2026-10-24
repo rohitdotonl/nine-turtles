@@ -22,7 +22,7 @@ test("sign-in is one centred column, at the phone's one 20px margin, the button 
   const field = page.getByLabel("Password");
   const button = page.getByRole("button", { name: "Sign in" });
   const [fieldBox, buttonBox] = [(await field.boundingBox())!, (await button.boundingBox())!];
-  // The same margin as every other phone screen (decision 0047).
+  // The same margin as every other phone screen (decision 0048).
   expect(Math.abs(fieldBox.x - 20)).toBeLessThan(1);
   expect(Math.abs(fieldBox.x + fieldBox.width - 370)).toBeLessThan(1);
   // Nothing kept between them while there's no message; the field's name is its placeholder.
@@ -44,7 +44,7 @@ test("a wrong password says so calmly and keeps you out", async ({ page }) => {
   await expect(page.getByRole("status")).toHaveText("That isn't the password.");
   expect((await page.getByLabel("Password").boundingBox())!.y).toBe(fieldBefore.y);
   // The message sits between the field and the button, and the field is marked. The room for
-  // it is kept below the button, so the field and the title above it don't move (decision 0047).
+  // it is kept below the button, so the field and the title above it don't move (decision 0048).
   await expect(page.getByLabel("Password")).toHaveAttribute("aria-invalid", "true");
   const message = (await page.getByRole("status").boundingBox())!;
   expect(message.y).toBeLessThan((await page.getByRole("button", { name: "Sign in" }).boundingBox())!.y);

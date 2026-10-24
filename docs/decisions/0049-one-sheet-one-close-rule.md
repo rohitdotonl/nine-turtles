@@ -1,4 +1,4 @@
-# 0048: One sheet, one close rule, a choice you can see
+# 0049: One sheet, one close rule, a choice you can see
 
 *24 October 2026. From the fifth Apple Books critique
 (`ui-polish/critic-applebooks-5.md` in the project files, items 9 to 16; its

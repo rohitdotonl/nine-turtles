@@ -18,7 +18,7 @@ const toggle = (page: Page) => page.getByRole("button", { name: "Sidebar" });
 test("a wide window shows three areas, a medium one two, a phone-narrow one one", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   // Starred: with no feeds yet, Unread and All show one welcome in place of the list and the
-  // reading area together (decision 0047); Starred keeps its own list.
+  // reading area together (decision 0048); Starred keeps its own list.
   await openApp(page, "/starred");
   await expect(sidebar(page)).toBeVisible();
   await expect(list(page)).toBeVisible();
@@ -116,7 +116,7 @@ test("g then u, s or a goes to Unread, Starred or All; reload and Back keep your
   await page.reload();
   await appReady(page);
   await expect(page).toHaveTitle("All · slowfeed");
-  // With no feeds yet, a wide window shows the welcome in the list's room (decision 0047); the list keeps its place behind it.
+  // With no feeds yet, a wide window shows the welcome in the list's room (decision 0048); the list keeps its place behind it.
   await expect(page.locator("#list-heading")).toHaveText("All");
 
   await page.goBack();
@@ -179,7 +179,7 @@ test("the shortcut list fits a small phone without scrolling sideways", async ({
   await expect(dialog).toBeVisible();
   const { scroll, client } = await dialog.evaluate((element) => ({ scroll: element.scrollWidth, client: element.clientWidth }));
   expect(scroll).toBeLessThanOrEqual(client);
-  // On a phone it's a screen of its own, as every sheet is there: nothing behind it shows past its edge (decision 0048).
+  // On a phone it's a screen of its own, as every sheet is there: nothing behind it shows past its edge (decision 0049).
   const box = (await dialog.boundingBox())!;
   expect(box.x).toBe(0);
   expect(box.y).toBe(0);
