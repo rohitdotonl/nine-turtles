@@ -215,6 +215,14 @@ test.describe("on a phone", () => {
     await expect(list(page).getByRole("heading", { level: 2, name: "Reading Room" })).toBeFocused();
 
     await tabTo(page, row(page, "The pleasure of a slow letter"));
+    // The row's ring, 2px inside the pill, passes clear of where an unread dot hangs: the dot
+    // sits 4px into the pill, so 2px of paper part them (decision 0048).
+    const ringGap = await row(page, "The pleasure of a slow letter").evaluate((element) => {
+      const style = getComputedStyle(element);
+      // The ring runs from the pill's edge to its offset inside it; the dot starts --dot-left in.
+      return parseFloat(style.getPropertyValue("--dot-left")) + parseFloat(style.outlineOffset);
+    });
+    expect(ringGap).toBeGreaterThanOrEqual(2);
     await page.keyboard.press("Enter");
     await expect(title(page, "The pleasure of a slow letter")).toBeFocused();
     await tabTo(page, toolbar(page).getByRole("button", { name: "Next" }));
@@ -245,6 +253,14 @@ test.describe("on a phone", () => {
     await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
     await list(page).getByRole("button", { name: "More", exact: true }).click();
     await page.getByRole("menuitem", { name: "Edit feed" }).click();
+    // A sheet you commit has Cancel and no X, on a phone too (decision 0048); its first field
+    // starts 20px under the top line, as Settings' first group does.
+    const heading = page.getByRole("heading", { level: 2, name: "Edit feed" });
+    await expect(heading).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Close/ })).toHaveCount(0);
+    const bar = (await page.locator(".pane-bar").filter({ has: heading }).boundingBox())!;
+    const name = (await page.getByText("Name", { exact: true }).boundingBox())!;
+    expect(name.y - (bar.y + bar.height)).toBeLessThanOrEqual(24);
     await page.getByRole("button", { name: "Cancel" }).click();
     await expect(list(page).getByRole("heading", { level: 2, name: "Reading Room" })).toBeVisible();
     await page.goBack();
@@ -360,6 +376,9 @@ test.describe("on a phone", () => {
       const box = element.getBoundingClientRect();
       return box.left + parseFloat(getComputedStyle(element).paddingLeft);
     })));
+    // The preview passage starts on the groups' own edge, not indented like body text (decision 0048).
+    near20(await textStart(page.locator(".reading-sample p")));
+    near20((await page.locator(".inset-group").first().boundingBox())!.x);
 
     // Add feed: its title and the line under it.
     await page.goto(new URL("/add-feed", FEEDS_APP).href);

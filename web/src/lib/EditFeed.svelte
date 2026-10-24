@@ -136,10 +136,14 @@
   </Sheet>
 {:else}
 <section aria-labelledby="list-heading" class="flex flex-1 flex-col bg-paper">
-  <PageHead title="Edit feed" bind:heading onClose={onCancel} closeLabel="Close without saving" {besideToggle} />
-  <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-3 pb-10 md:px-10">
+  <!--
+    No X: a sheet you commit (Save) closes with Cancel, never both (decision 0048). Its form
+    starts 20px under the top line, as Settings' first group does.
+  -->
+  <PageHead title="Edit feed" bind:heading {besideToggle} />
+  <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-10 md:px-10">
     <!-- The sheet's build, as a page. -->
-    <div class="mx-auto mt-6 flex max-w-xl flex-col">
+    <div class="mx-auto flex max-w-xl flex-col">
       {@render form()}
     </div>
   </div>

@@ -4,6 +4,21 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 24 October 2026: One sheet, one close rule, a choice you can see
+
+- When a site offers several feeds, Add a feed now shows them as a list
+  with a round mark on each, filled with a dot on the chosen one, and Add
+  feed adds that one. Before, which one was meant showed only as a faint
+  tint.
+- Sheets close one way: those you save (Add a feed, Edit feed, Edit
+  folder) have Cancel and no X; those you only look at (Settings, the
+  shortcut list) have an X. On a phone, Edit feed and Edit folder lose
+  their X, and their form starts closer to the title.
+- The shortcut list fills the screen on a phone, and on a computer it
+  fits an ordinary window without scrolling.
+- On a phone, the Settings preview lines up with the groups under it, and
+  a list row's keyboard ring no longer touches the unread dot.
+
 ## 24 October 2026: One top line, one left edge, steady phone screens
 
 - On a computer, the three panes' top lines are now the same height, so

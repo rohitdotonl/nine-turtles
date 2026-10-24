@@ -301,6 +301,11 @@ each with screenshots:
   rows for Edit feed's folders, a main button that never looks switched off,
   importing just under the welcome's field, and a true minus in the shortcut
   list (decision 0045).
+- ✅ One sheet, one close rule (fifth critique, batch 5): a round mark on
+  Add a feed's choice of feeds, Cancel or an X but never both, the shortcut
+  list full-screen on a phone and fitting a computer window, 20px under
+  every top line, the Settings preview on the phone's margin, and the
+  phone's unread dot clear of the row ring (decision 0048).
 
 ---
 

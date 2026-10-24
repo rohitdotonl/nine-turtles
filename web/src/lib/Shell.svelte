@@ -950,10 +950,11 @@
               >
             </div>
           {/if}
-          <PageHead title="Add a feed" bind:heading={listHeading} onClose={phone ? undefined : closePage} besideToggle={!phone && !panes.sidebar} />
-          <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-3 pb-10 md:px-10">
-            <!-- The sheet's build, as a page: a line on what to paste, the field, then Cancel and Add feed in one row. -->
-            <div class="mx-auto mt-6 flex max-w-xl flex-col gap-5">
+          <!-- Its back button leads out; Cancel is at its foot, so there's no X (decision 0048). -->
+          <PageHead title="Add a feed" bind:heading={listHeading} besideToggle={!phone && !panes.sidebar} />
+          <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-10 md:px-10">
+            <!-- The sheet's build, as a page, 20px under the top line as Settings is: a line on what to paste, the field, then Cancel and Add feed in one row. -->
+            <div class="mx-auto flex max-w-xl flex-col gap-5">
               <p>{ADD_INTRO}</p>
               <AddFeed
                 bind:field={addField}
