@@ -14,6 +14,14 @@ not how it was done.
   keyboard, never after a tap on a phone.
 - A long source name's "…" now sits right before the "·", as on every other
   row, and the sidebar scrolls to show where you are when you move.
+- On a phone, Add a feed, Edit feed, Edit folder, Settings and the shortcut
+  list now look and close the same way: an X at the top right, and the main
+  button full width at the bottom. Unsubscribe sits in its own box well
+  above Save, and Undo still follows it. By night, sheets, menus and the
+  note at the bottom of the list sit on a slightly lighter grey than the
+  page. Settings shows the six themes three to a row on a phone, and text
+  size looks like the other controls. The shortcut list's key caps look like
+  keys, and a fresh slowfeed on a phone shows one heading (decision 0052).
 
 ## 24 October 2026: A quieter article title, one-line rows, one close rule
 

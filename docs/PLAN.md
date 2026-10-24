@@ -323,6 +323,12 @@ each with screenshots:
   selection pill made from its own pane, row rings only for the keyboard,
   the "·" hugging a cut-short name, and the sidebar keeping your place in
   view (decision 0051).
+- ✅ One phone sheet and raised night surfaces (sixth critique, batch 6):
+  an X-only phone sheet with its main action full width at the foot,
+  lifted sheets, menus and note by night, Settings' themes 3×2 and text
+  size on the segmented track, helper text on the grid, a shortcut-list
+  footer with edged key caps, one heading on a phone's empty state
+  (decision 0052).
 
 ---
 

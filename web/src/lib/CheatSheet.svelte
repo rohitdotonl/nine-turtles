@@ -113,7 +113,7 @@
                         <td class="py-1.5 text-right align-middle whitespace-nowrap">
                           {#each shortcut.keys as key, index (key)}{#if index > 0}{" "}{/if}<span class="whitespace-nowrap"
                               >{#if index > 0}<span class="text-muted">{"/ "}</span>{/if}{#each key.split(" then ") as press, step (step)}{#if step > 0}<span
-                                    class="text-meta text-muted">{" then "}</span
+                                    class="text-[0.75rem] text-muted">{" then "}</span
                                   >{/if}<kbd class="key">{keyCap(press)}</kbd>{/each}</span
                             >{/each}
                         </td>
@@ -123,9 +123,7 @@
                 </table>
               </section>
             {/each}
-            {#if side === 0}
-              <p class="text-meta text-muted">Tab, Enter and Escape always work too. Shortcuts don't fire while you're typing in a field.</p>
-            {:else}
+            {#if side === 1}
               <section aria-labelledby="filters-heading">
                 <h3 id="filters-heading" class="text-meta font-semibold text-muted">Search filters</h3>
                 <p class="mt-0.5 mb-1 text-small text-muted">Type these in the search field; each becomes a chip. Names with spaces go in quotes.</p>
@@ -144,6 +142,8 @@
           </div>
         {/each}
       </div>
+      <!-- A footer under both columns, the full width, so it never ends one column early or lands mid-list on a phone (decision 0052). -->
+      <p class="mt-6 text-meta text-muted">Tab, Enter and Escape always work too. Shortcuts don't fire while you're typing in a field.</p>
     </div>
   </div>
 </dialog>
@@ -170,6 +170,8 @@
       border: 0;
       border-radius: 0;
       box-shadow: none;
+      /* A screen, not something floating: the page's own color, by night too (decision 0052). */
+      background-color: var(--paper);
     }
     .shortcuts,
     .shortcuts-body {

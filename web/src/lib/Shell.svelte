@@ -172,6 +172,8 @@
    * not an empty column beside it, as Apple Books shows (decision 0048).
    */
   let welcomeWide = $derived(welcoming && panes.article && !missing);
+  /** On a phone with no feeds yet, the welcome is the screen's one visible heading; the list's title is only for screen readers. */
+  let welcomeAlone = $derived(phone && welcoming && !missing);
   let welcomeHeading: HTMLHeadingElement | undefined = $state();
   /** How many articles the list shows, so the empty reading area offers j only when there's one to open. */
   let listCount = $state(0);
@@ -429,7 +431,7 @@
     if (place.kind === "settings") return settingsHeading;
     if (place.kind === "add-feed") return addField;
     if (sheetShown) return sheetHeading;
-    if (welcomeWide) return welcomeHeading;
+    if (welcomeWide || welcomeAlone) return welcomeHeading;
     return listHeading;
   }
 
@@ -733,21 +735,22 @@
   }
 </script>
 
-{#snippet welcome()}
+{#snippet welcome(start: boolean)}
   <!--
     The welcome, before the first feed (SPEC section 2): a title in the reading serif, one
     sentence, a wide field with Add feed, and importing a list of feeds as a quiet second way in,
     all in one centred 420px column, like Apple Books' empty library: one message, one action.
+    On a phone (`start`) it's left-aligned on the screen's 20px margin instead (decision 0052).
     With the Add a feed sheet open over it, the sheet has the only field.
   -->
   <div class="flex w-full max-w-[26.25rem] flex-col gap-6">
-    <div class="text-center">
+    <div class={start ? "text-left" : "text-center"}>
       <h2 id="welcome-heading" tabindex="-1" bind:this={welcomeHeading} class="font-serif text-xlarge font-semibold tracking-[-0.01em]">A quiet place to read.</h2>
       <p class="mt-3 text-ink-2">Follow the websites you like, and read what they publish here, at your own pace.</p>
     </div>
     {#if !(sheet && route.kind === "add-feed")}
       <!-- Importing sits just under the field, centred as everything here is, as the other way in (decisions 0045, 0048). -->
-      <AddFeed bind:field={addField} feeds={[]} onAdded={added} onOpen={(id) => go({ kind: "feed", id })}>
+      <AddFeed bind:field={addField} feeds={[]} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} {start}>
         {#snippet alternative()}
           <a href="/settings" onclick={goImport} class="btn-quiet btn-small">Import an OPML file…</a>
         {/snippet}
@@ -975,26 +978,16 @@
         {/key}
       {:else if !sheet && route.kind === "add-feed"}
         <section aria-labelledby="list-heading" class="flex flex-1 flex-col bg-paper">
-          {#if phone}
-            <div class="pane-bar nav-bar">
-              <button type="button" onclick={() => stepBack("home")} aria-label="Back to Feeds" class="btn-quiet nav-back"
-                ><Icon name="back" size={22} />Feeds</button
-              >
-            </div>
-          {/if}
-          <!-- Its back button leads out; Cancel is at its foot, so there's no X (decision 0049). -->
-          <PageHead title="Add a feed" bind:heading={listHeading} besideToggle={!phone && !panes.sidebar} />
-          <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-10 md:px-10">
-            <!-- The sheet's build, as a page, 20px under the top line as Settings is: a line on what to paste, the field, then Cancel and Add feed in one row. -->
-            <div class="mx-auto flex max-w-xl flex-col gap-5">
+          <!--
+            Only on a phone (wider windows get the sheet). The phone sheet's one build (decision 0052):
+            the title with an X that goes back to the feeds (as Escape does), no back arrow and no Cancel.
+          -->
+          <PageHead title="Add a feed" bind:heading={listHeading} besideToggle={!phone && !panes.sidebar} onClose={closePage} closeLabel="Close" />
+          <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
+            <!-- 20px under the top line as Settings is: a line on what to paste, the field, then Add feed the full width at the screen's foot. -->
+            <div class="mx-auto flex w-full max-w-xl flex-1 flex-col gap-5">
               <p>{ADD_INTRO}</p>
-              <AddFeed
-                bind:field={addField}
-                feeds={feeds ?? []}
-                onAdded={added}
-                onOpen={(id) => go({ kind: "feed", id })}
-                onCancel={phone ? () => stepBack("home") : closePage}
-              />
+              <AddFeed bind:field={addField} feeds={feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} page />
             </div>
           </div>
         </section>
@@ -1018,7 +1011,7 @@
                 ><Icon name="back" size={22} />Feeds</button
               >
             </div>
-            <div class="pr-[var(--list-end)] pb-2 pl-[var(--list-start)]">
+            <div class={welcomeAlone ? "sr-only" : "pr-[var(--list-end)] pb-2 pl-[var(--list-start)]"}>
               {@render listHead()}
             </div>
           {/if}
@@ -1044,7 +1037,12 @@
               <!-- The welcome has the reading area and owns the screen: the list beside it stays empty, saying nothing (decision 0041). -->
             {:else if welcoming}
               <!-- No reading area beside the list (a phone, or a medium window with the sidebar shown): the welcome is here. -->
-              <div class="mt-8 flex justify-center">{@render welcome()}</div>
+              <!--
+                On a phone the list's title steps aside (screen readers still hear it, as the screen's
+                name), so one heading shows: the welcome's, 96px under the top line on the screen's
+                margin (decision 0052). A medium window keeps it centred.
+              -->
+              <div class={phone ? "mt-[5.5rem] flex" : "mt-8 flex justify-center"}>{@render welcome(phone)}</div>
             {:else if feeds !== undefined && sort !== undefined}
               <!-- The list, with "New items · press r" and Undo in a note floating at its foot (More, with Refresh, sits beside the title). -->
               {#key listKey}
@@ -1089,7 +1087,7 @@
           {:else if welcoming && !missing}
             <!-- No feeds yet: the welcome has the reading area, where a new reader's eyes go (SPEC section 2). -->
             <section aria-labelledby="welcome-heading" class="flex min-w-0 flex-1 flex-col items-center justify-center bg-paper px-5 pb-[12vh] md:px-10">
-              {@render welcome()}
+              {@render welcome(false)}
             </section>
           {:else}
             <!--

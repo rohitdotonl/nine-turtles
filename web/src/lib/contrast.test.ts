@@ -43,7 +43,7 @@ const BACKGROUNDS = ["paper", "list", "sidebar", "tint-list", "tint-sidebar"];
 
 describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
   it("defines every color", () => {
-    for (const name of ["ink", "ink-2", "muted", "accent", "danger", ...BACKGROUNDS]) expect(colors[name], name).toMatch(/^#/);
+    for (const name of ["ink", "ink-2", "muted", "accent", "danger", "surface-raised", ...BACKGROUNDS]) expect(colors[name], name).toMatch(/^#/);
   });
 
   it("has text at AAA (7 : 1) on the reading area, and AA or better everywhere", () => {
@@ -286,6 +286,41 @@ describe.each(Object.entries(SELECTORS))(
     });
   },
 );
+
+// What floats over the page (sheets, menus, popovers, the note at the list's
+// foot; decision 0052): by day the page itself, by night a small lift above
+// it. Text on it keeps the page's own levels, under a pointer and on a chip
+// too, and so do grouped rows inside it (4% white over it, read from app.css).
+describe.each(Object.entries(THEMES))("the %s theme's raised surface", (_name, colors) => {
+  const raised = colors["surface-raised"]!;
+  const dark = luminance(colors.paper!) < 0.5;
+
+  it(dark ? "is lifted above the page, keeping its temperature" : "is the page itself", () => {
+    expect(raised).toMatch(/^#/);
+    if (!dark) return expect(raised).toBe(colors.paper);
+    expect(luminance(raised)).toBeGreaterThan(luminance(colors.paper!));
+    // A small lift, not a grey card: still well under the text's own tone.
+    expect(contrast(raised, colors.paper!)).toBeLessThan(1.6);
+    const warmth = (hex: string) => parseInt(hex.slice(1, 3), 16) - parseInt(hex.slice(5, 7), 16);
+    if (warmth(colors.paper!) > 2) expect(warmth(raised)).toBeGreaterThan(0);
+  });
+
+  it("keeps text at 7 : 1 and the second ink, muted grey, red and accent mark at their levels, under a pointer and on a chip, and in a group inside it", () => {
+    const share = (name: string) => Number(css.match(new RegExp(`--${name}: color-mix\\(in srgb, var\\(--ink\\) (\\d+)%, transparent\\)`))![1]) / 100;
+    const groupShare = Number(css.match(/--raised-group: color-mix\(in srgb, #ffffff (\d+)%, var\(--surface-raised\)\);/)![1]) / 100;
+    const group = dark ? mix("#ffffff", raised, groupShare) : raised;
+    // The surface, a button or chip on it, a group inside it and a row of that group under a pointer.
+    // The red (Unsubscribe, Delete) sits on the surface itself (or its pointer tone), never on a chip or in a group there.
+    const hover = (base: string) => mix(colors.ink!, base, share("hover"));
+    const onSurface = [raised, hover(raised), mix(colors.ink!, raised, share("tone"))];
+    for (const background of [...onSurface, group, hover(group)]) {
+      expect(contrast(colors.ink!, background), background).toBeGreaterThanOrEqual(7);
+      for (const color of ["ink-2", "muted"]) expect(contrast(colors[color]!, background), `${color} on ${background}`).toBeGreaterThanOrEqual(4.5);
+    }
+    for (const background of [raised, hover(raised)]) expect(contrast(colors.danger!, background), `danger on ${background}`).toBeGreaterThanOrEqual(4.5);
+    for (const base of [raised, group]) expect(contrast(colors.accent!, base)).toBeGreaterThanOrEqual(3);
+  });
+});
 
 it("covers all six themes by day and by night", () => {
   expect(Object.keys(THEMES)).toHaveLength(THEME_NAMES.length * 2 + 1);
