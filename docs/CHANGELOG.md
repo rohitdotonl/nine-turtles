@@ -4,6 +4,21 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 24 October 2026: Sheets, a search popover and a tidier phone
+
+- Adding a feed, and editing a feed or a folder, now open as a small card
+  over the list you were on, so you never lose your place. Cancel, Escape
+  or a click on the dimmed page closes them.
+- Search options float in a small popover instead of pushing the list
+  down, with simple choices for dates: Any time, Past week, Past month or
+  Custom.
+- A long feed name stays on one line at the top of the list, ending in
+  "…", so the search box never jumps. The search box just says "Search".
+- On a phone, the four theme pictures sit in one row, the reading fonts sit
+  side by side, and the article's bottom bar has a faint line above it.
+- In the dark theme, a chosen setting is now lighter than its track, so it
+  looks chosen rather than pressed in.
+
 ## 24 October 2026: A cleaner "where you are"
 
 - The selected article and the selected sidebar place now look the same: a

@@ -122,8 +122,9 @@ The 500-feed user gets everything; the 30-feed user never sees the machinery.
 | Unread counts in V1 | 2. Calm over engagement | Power users with hundreds of feeds need to know what they've seen | Inbox mode only. Muted grey, right-aligned in the sidebar. Never badges or color. Per feed and folder only, no global total. Above 999 shows "999+". |
 | Sidebar search always visible | 6. Power is hidden, never missing | The owner wants finding a feed by name always available | One quiet field that filters feeds and folders by name. Nothing else in the sidebar skips progressive disclosure. |
 | Unread dot (decision 0028) | Type does the hierarchy, never badges | Weight alone was hard to scan in a long list; Mail and Things mark unread with a dot | A 6px dot in the text color before an unread title. No number, never colored, list rows only. |
-| A shadow under the floating note (decision 0028) | Regions by tone, no shadows | The note floats over the list; a soft shadow shows it sits above the rows rather than among them | Only the note at the bottom of the list: one soft shadow and a faint edge. Nothing else casts a shadow. |
+| A shadow under the floating note (decision 0028) | Regions by tone, no shadows | The note floats over the list; a soft shadow shows it sits above the rows rather than among them | Only things that float over the page: the note at the bottom of the list, a sheet, the search options popover and the shortcut list. One soft shadow and a faint edge each. Nothing that sits in the page casts a shadow. |
 | Hairlines inside a page | Regions by tone, no lines | Inside one page, a faint line parts groups that do different jobs: rows in a Settings group, and Unsubscribe or Delete folder apart from the form above them | Only within a page, never between panes; faint, in a tone of the text color. A refused field's firmer edge is a border, not a line between regions. |
+| A dim behind a sheet (decision 0031) | Regions by tone; nothing moves unless you move it | A short task (adding or editing a feed) keeps the list in view, so you don't lose your place; a faint warm dim shows the card is the thing to act on now | Only behind a sheet or the shortcut list, never animated, and it closes with Escape or a press on it. |
 | A hairline under a scrolled top line (decision 0028) | Regions by tone, no lines | Shows that text has gone under a top line that never scrolls, so it doesn't look cut off | Only under a pane's top line, only once its content has scrolled, in a faint tone of the text color. |
 
 ### Never
@@ -152,11 +153,12 @@ The philosophy applied. The principle is noted where it isn't obvious.
 ### Visual language
 
 #### Rules
-- **Regions are separated by tone, not lines:** background tone and whitespace; no borders, shadows, blur or gradients (two small exceptions for things floating over or scrolling under, in the Exceptions log).
+- **Regions are separated by tone, not lines:** background tone and whitespace; no borders, shadows, blur or gradients (small exceptions for things floating over the page or scrolling under a top line, in the Exceptions log).
 - **Type does the hierarchy:** size and weight, never color or badges (the unread dot is the one mark, in the Exceptions log).
 - **One accent, one meaning:** ink blue means "where you are," and nothing else uses it.
 - **Icons where the convention is an icon** (close, back, search, settings, the sidebar toggle, edit feed or folder, and the article's copy link, star and mark unread), each named in its tooltip with its key and to screen readers. **Words** for the way to the publisher ("Open original"), Add feed, and the main action of a form.
-- **Pages that open in place of the list** (Settings, Add a feed, Edit feed, Edit folder) share one top line that never scrolls: the title in the serif, like the list's, and an X that closes the page (Escape does too).
+- **Settings opens in place of the list,** with one top line that never scrolls: the title in the serif, like the list's, and an X that closes it (Escape does too).
+- **Short tasks open as a sheet** over the place you were (Add a feed, Edit feed, Edit folder): a small card, its title in the serif, the panes still in view behind it under a faint dim. Cancel, Escape or a press on the dim closes it; there's no X. On a phone these are screens of their own, with the top line and X.
 - **No motion.** Views switch instantly.
 
 #### Color
@@ -360,7 +362,7 @@ Vim-style keys are first-class. A keyboard icon at the foot of the sidebar opens
 
 ### Settings
 
-- Settings shares the top line with the other screens. Each setting is a segmented control: a faint track, the chosen choice raised onto the page color with a fine edge and semibold words.
+- Settings shares the top line with the other screens. Each setting is a segmented control: a faint track, the chosen choice raised onto the page color (a lighter tone in the dark theme) with a fine edge and semibold words. The search options use the same control.
 - **Look and feel** (per device): reading font (Literata default, or Atkinson Hyperlegible), text size, line width, theme (system / off-white / sepia / dark).
 - **Reading:** sort order (newest first by default); inbox or river in V2.
 - **Feed health page (V2):** dead feeds first, then intermittent errors; problems in plain words ("Hasn't worked for 3 weeks — the site may have moved"), not HTTP codes; per feed **Retry · Find new address · Unsubscribe**, where "Find new address" reruns autodiscovery.

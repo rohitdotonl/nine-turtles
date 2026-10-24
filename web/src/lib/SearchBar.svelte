@@ -334,12 +334,12 @@
       </label>
       <fieldset class="flex flex-col gap-1.5">
         <legend class="mb-1.5 text-small text-ink-2">Show only</legend>
-        <div class="choices">
-          <label class="choice">
+        <div class="choices grid grid-cols-2">
+          <label class="choice justify-center">
             <input type="checkbox" checked={query.unread} onchange={(event) => onChange({ ...query, unread: event.currentTarget.checked }, true)} />
             Unread
           </label>
-          <label class="choice">
+          <label class="choice justify-center">
             <input type="checkbox" checked={query.starred} onchange={(event) => onChange({ ...query, starred: event.currentTarget.checked }, true)} />
             Starred
           </label>
@@ -347,9 +347,9 @@
       </fieldset>
       <fieldset class="flex flex-col gap-1.5">
         <legend class="mb-1.5 text-small text-ink-2">Published</legend>
-        <div class="choices">
+        <div class="choices grid grid-cols-2">
           {#each WHENS as when (when.value)}
-            <label class="choice">
+            <label class="choice justify-center">
               <input type="radio" name="search-when" value={when.value} checked={whenNow === when.value} onchange={() => chooseWhen(when.value)} />
               {when.label}
             </label>

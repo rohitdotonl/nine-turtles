@@ -151,7 +151,7 @@
           <fieldset class="setting">
             <legend class="setting-name">Reading font</legend>
             <div class="setting-control">
-              <div class="choices" style="--phone-columns: 1">
+              <div class="choices" style="--phone-columns: 2">
                 {#each Object.entries(READING_FONTS) as [value, font] (value)}
                   <!-- Each name is set in its own font, so the choice shows itself. -->
                   <label class="choice" style:font-family={font.family}>
@@ -316,6 +316,7 @@
   @media (width < 40rem) {
     .choices {
       display: grid;
+      width: 100%;
       grid-template-columns: repeat(var(--phone-columns), minmax(0, 1fr));
     }
     .choice {
@@ -328,8 +329,10 @@
     gap: 0.75rem;
   }
   @media (width < 40rem) {
+    /* All four in one row, as a phone's own theme pickers show them. */
     .themes {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.5rem;
     }
   }
   .theme {
