@@ -217,6 +217,9 @@ test.describe("on a wide window", () => {
     expect(selected.pill).not.toBe("none");
     const other = await style("Only the first page");
     expect(other.outline).toBe("none");
+    // The keyboard on the selected row draws a thicker outline still, never a thinner one.
+    await row(page, "The pleasure of a slow letter").focus();
+    await expect(row(page, "The pleasure of a slow letter")).toHaveCSS("outline-width", "3px");
     expect(other.pill).toBe("none");
   });
 

@@ -277,6 +277,23 @@ test("nothing scrolls underneath the Sidebar button or the shortcut hint", async
     const box = (await button.boundingBox())!;
     expect(box.y + box.height).toBeLessThanOrEqual(scrollingTop);
   }
+  // A faint line appears under the top line only once something has scrolled under it.
+  await expect(scroller).not.toHaveAttribute("data-scrolled");
+  await scroller.evaluate((element) => element.scrollBy(0, 200));
+  await expect(scroller).toHaveAttribute("data-scrolled", "");
+  await scroller.evaluate((element) => element.scrollTo(0, 0));
+  await expect(scroller).not.toHaveAttribute("data-scrolled");
+});
+
+test("Add a feed has the same top line as Settings: a serif title and an X that closes it", async ({ page, isMobile }) => {
+  test.skip(isMobile, "on a phone, the Feeds button goes back instead");
+  await openApp(page);
+  await page.keyboard.press("a");
+  const heading = page.getByRole("heading", { level: 2, name: "Add a feed" });
+  await expect(heading).toBeVisible();
+  expect(await heading.evaluate((element) => getComputedStyle(element).fontFamily)).toContain("Literata");
+  await page.getByRole("button", { name: "Close" }).click();
+  await expect(heading).toHaveCount(0);
 });
 
 test("'Press ? for shortcuts' stays on screen when the sidebar is hidden", async ({ page, isMobile }) => {

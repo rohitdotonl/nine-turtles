@@ -3,7 +3,7 @@
 // version it runs; when a later one names another, a newer slowfeed is
 // live: Settings says "A new version is ready", with Reload. Nothing is
 // swapped while you read. If the newer slowfeed refuses a request because
-// it no longer understands it, the list's reserved line says "slowfeed was
+// it no longer understands it, the note at the bottom of the list says "slowfeed was
 // updated. Reload to continue." (Keeping such a tab working without a
 // reload is V2.)
 
@@ -40,5 +40,5 @@ export async function api(input: string, init?: RequestInit): Promise<Response> 
   return response;
 }
 
-/** The message for the list's reserved line, once this tab can't carry on. */
+/** The message for the note at the bottom of the list, once this tab can't carry on. */
 export const STRANDED_MESSAGE = "slowfeed was updated. Reload to continue.";

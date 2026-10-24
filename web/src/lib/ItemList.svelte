@@ -10,8 +10,9 @@
   fetched in advance.
 
   Above the list: Refresh and "Mark all as read", which marks only the
-  articles listed here, then the reserved lines where "New items · press r"
-  and "Marked 23 items as read · Undo" appear, so nothing shifts. Every mark
+  articles listed here. "New items · press r" and "Marked 23 items as read"
+  with Undo appear in a note floating at the bottom of the list, so nothing
+  shifts. Every mark
   shows at once and is saved behind; if saving fails, the line says so and
   the mark is taken back (SPEC section 25). Articles read in the Unread view
   stay where they are, greyed, until you leave it or press r.
@@ -96,7 +97,7 @@
   // Touch screens have no r key; they're told to tap Refresh (same test as the keyboard hint).
   const touch = matchMedia("(hover: none) and (pointer: coarse)").matches;
 
-  /** The reserved line above the list, and what Undo would do, if anything. */
+  /** The floating note's message, and what Undo would do, if anything. */
   let line = $state("");
   let undoLast: (() => void) | undefined = $state();
   // The notice is read once, when the list opens.
@@ -401,9 +402,9 @@
     </button>
   {/if}
 </div>
-{#if results && loaded}
-  <!-- How many were found, above the results. -->
-  <p role="status" class="mb-2 text-meta text-muted">{resultCount(articles.length, next !== null)}</p>
+{#if results}
+  <!-- How many were found, above the results. Present from the start and filled once they load, so screen readers hear it. -->
+  <p role="status" class="mb-2 text-meta text-muted empty:sr-only">{loaded ? resultCount(articles.length, next !== null) : ""}</p>
 {/if}
 
 {#if loaded && articles.length === 0}
@@ -463,7 +464,7 @@
   the list moves when it appears. Empty, it's hidden but stays for screen
   readers, which hear each message as it arrives.
 -->
-<div class="pointer-events-none sticky bottom-4 z-10 mt-6 flex justify-center">
+<div class={["pointer-events-none sticky bottom-4 z-10 flex justify-center", !!(line || undoLast || updates.stranded || newWaiting) && "mt-6"]}>
   <div
     class={[
       "toast pointer-events-auto flex min-h-11 max-w-full flex-wrap items-center gap-x-3 rounded-lg border border-ink/15 bg-paper px-4 text-small text-ink-2",

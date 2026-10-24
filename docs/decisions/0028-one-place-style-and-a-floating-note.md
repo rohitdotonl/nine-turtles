@@ -4,6 +4,12 @@
 (`ui-polish/critic-round4.md` in the project files), under the owner's
 "taste first" direction (decision 0027).*
 
+**Decided by:** the owner, who set the order "taste first, good UI and UX
+principles next, my rules last" and approved overriding the design documents
+wherever that serves it (24 October 2026). The unread dot, the note's shadow
+and the scroll hairline are recorded as exceptions in DESIGN.md's
+Exceptions log.
+
 **Why.** The critic found three things that made the app feel less finished
 than the apps it's compared with (Things, Linear, Apple Mail):
 

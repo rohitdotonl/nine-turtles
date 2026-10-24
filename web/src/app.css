@@ -354,7 +354,8 @@ textarea {
     outline: 2px solid CanvasText;
   }
 
-  .place:focus-visible {
+  .place:focus-visible,
+  .item-row[aria-current]:focus-visible {
     outline: 3px solid CanvasText;
     outline-offset: -3px;
   }

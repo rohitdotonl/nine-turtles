@@ -72,7 +72,7 @@ A few words used throughout:
 - Zooming in or a larger system text size counts as a narrower window, so the layout steps down instead of anything overlapping.
 - The sidebar can be hidden and shown with a small sidebar-shaped button in the top-left corner (screen readers hear "Sidebar"; its tooltip says "Hide the sidebar" or "Show the sidebar"), which never moves, or the `[` key. Beside it, each area's top line (the wordmark, the list's title, the article's tools) never scrolls.
 - Unread, Starred, All and Settings each have their own web address (`/unread`, `/starred`, `/all`, `/settings`), so reloading keeps your place and the browser's Back button works. The front page opens Unread.
-- Regions are told apart by background tone and space, never by lines, shadows or gradients.
+- Regions are told apart by background tone and space, never by lines, shadows or gradients. Two small exceptions: a faint line under a top line once something has scrolled under it, and a soft shadow under the note that floats at the bottom of the list (DESIGN.md → Exceptions log).
 - Nothing animates. Views switch instantly.
 
 **How to check it**

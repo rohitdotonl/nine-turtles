@@ -826,7 +826,7 @@
               {@render listHead()}
             </div>
           {/if}
-          <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-6 pt-1 pb-6">
+          <div use:edge class="scroller relative min-h-0 flex-1 scroll-pb-20 overflow-y-auto px-6 pt-1 pb-6">
             {#if feeds && feeds.length > 0 && !missing}
               <SearchBar bind:this={searchBar} {query} {feeds} {folders} here={scopeFor(route)} onChange={searchChanged} />
             {/if}
@@ -843,7 +843,7 @@
                 >
               </p>
             {:else if feeds !== undefined && sort !== undefined}
-              <!-- Refresh and "Mark all as read", the reserved lines for "New items · press r" and "Marked … · Undo", then the list. -->
+              <!-- Refresh and "Mark all as read", then the list, with "New items · press r" and Undo in a note floating at its foot. -->
               {#key listKey}
                 <ItemList
                   bind:this={itemList}

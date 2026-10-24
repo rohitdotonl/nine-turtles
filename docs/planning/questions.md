@@ -23,7 +23,7 @@ Nothing at the moment.
 | Q5 | How you try milestones | Screenshots and recordings in each pull request, then the live app after merging. |
 | Q7 | Managing feeds and folders | "Edit feed" and "Edit folder" buttons in the item list header. |
 | Q8 | Settings and Sign out | "Settings" beside the wordmark at the top of the sidebar; Sign out inside Settings. |
-| Q9 | Visible controls | "Mark all as read" button; Undo line in the reserved spot; "Mark unread" in the article top bar. |
+| Q9 | Visible controls | "Mark all as read" button; Undo in a note floating at the bottom of the list; "Mark unread" in the article top bar. |
 | Q10 | What Undo undoes | The last action only: mark all as read, mark unread, star/unstar, unsubscribe, delete folder. |
 | Q11 | River mode (V2) | Sidebar shows Starred · All; `g u` does nothing; no "Mark all as read"; opens on All. |
 | Q12 | Reading in the Unread view | Items stay in place until `r` or leaving the view. |
