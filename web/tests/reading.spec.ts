@@ -377,7 +377,7 @@ test.describe("on a wide window", () => {
     await expect(publisher).toHaveCSS("outline-style", "solid");
   });
 
-  test("on a wide window the article sits in the middle, and its actions keep to the pane's edges", async ({ page }) => {
+  test("on a wide window the article sits in the middle, and its actions sit together at the pane's right edge",async ({ page }) => {
     await openRoom(page, 2560);
     await page.keyboard.press("j");
     const text = (await article(page).locator("article").boundingBox())!;
@@ -392,13 +392,13 @@ test.describe("on a wide window", () => {
         return { left: own.left - box.left, right: box.left + area.clientWidth - own.right };
       });
     expect(Math.abs(room.left - room.right)).toBeLessThan(4);
-    // The bar is anchored to the pane, not the text column (decision 0038): Open original
-    // near its left edge, More near its right, both well outside the text, so nothing floats.
+    // The bar is anchored to the pane, not the text column (decision 0038): its tools sit together at the
+    // right, Open original first and More near the pane's edge, all outside the text (decision 0050).
     const pane = (await article(page).boundingBox())!;
     const first = (await article(page).getByRole("link", { name: "Open original" }).first().boundingBox())!;
     const last = (await article(page).getByRole("button", { name: "More actions" }).boundingBox())!;
-    expect(first.x - pane.x).toBeLessThan(24);
-    expect(first.x).toBeLessThan(text.x - 100);
+    expect(first.x).toBeGreaterThan(text.x + text.width);
+    expect(last.x - (first.x + first.width)).toBeLessThan(2 * 44 + 3 * 8 + 1);
     expect(pane.x + pane.width - (last.x + last.width)).toBeLessThan(40);
     expect(last.x + last.width).toBeGreaterThan(text.x + text.width + 100);
     expect(Math.abs(first.y - last.y)).toBeLessThan(2);
@@ -467,7 +467,7 @@ test.describe("on a wide window", () => {
     await expect(heading).toHaveCSS("letter-spacing", "-0.16px");
     await expect(heading).toHaveCSS("margin-bottom", "20px");
     const byline = article(page).locator(".article-byline");
-    await expect(byline).toHaveCSS("font-size", "13px");
+    await expect(byline).toHaveCSS("font-size", "14px");
     await expect(byline).toHaveCSS("margin-top", "0px");
     const publisher = byline.getByRole("link", { name: "Reading Room" });
     await expect(publisher).toHaveCSS("font-weight", "600");

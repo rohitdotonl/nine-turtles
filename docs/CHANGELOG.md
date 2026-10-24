@@ -4,6 +4,13 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## Batch 6
+
+- Articles: pictures are dimmed a little in the night themes so they no
+  longer glare; captions are smaller and softer; tables line up with the
+  text; Open original now sits with Aa, Star and More at the top right; the
+  line naming the publisher is slightly larger (decision 0050).
+
 ## 24 October 2026: A quieter article title, one-line rows, one close rule
 
 - Opening an article with the keyboard no longer draws a box round its
