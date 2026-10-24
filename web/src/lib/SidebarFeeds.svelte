@@ -7,9 +7,15 @@
 
   As in a Mac source list (decision 0041), a folder's show-or-hide arrow
   sits before its name, so every row's count ends at the same right edge,
-  one column of numbers. On a phone the feeds screen is the root of a
-  stack: nothing is marked as selected there, and every row ends in a
-  chevron, after its count, because it leads on to a screen of its own.
+  one column of numbers. Every name starts at one left edge, 46px into the
+  sidebar, where Unread, Starred and All start theirs; a folder's feeds
+  start one step further in (decision 0043).
+
+  On a phone the feeds screen is the root of a stack: nothing is marked as
+  selected there, and every row ends in a chevron, after its count, because
+  it leads on to a screen of its own. So a folder there has no arrow of its
+  own (one chevron per row): its feeds are always listed under it, a step
+  in, and a tap on its name opens its list (decision 0043).
 
   While the sidebar search holds text, a flat list of the folders and feeds
   whose name contains it takes their place.
@@ -94,8 +100,8 @@
       title={feed.title}
       class={[
         "place mx-2 flex min-h-11 pointer-fine:min-h-9 items-center gap-3 pr-3.5 text-ui",
-        // Inside a folder, its feeds start where the folder's name starts, after its arrow.
-        indent ? "pl-11 pointer-fine:pl-[38px]" : "pl-3",
+        // Every name starts on the sidebar's one left edge; inside a folder, one step further in.
+        indent ? "pl-14" : "pl-[38px]",
         isHere(place) ? "font-semibold text-ink" : "text-ink",
       ]}
       >{@render name(feed.title)}{@render count(feed.unread)}{@render leadsOn()}</a
@@ -110,7 +116,7 @@
     aria-current={isHere(place) ? "page" : undefined}
     onclick={(event) => follow(event, place)}
     title={folder.name}
-    class={["flex min-h-11 pointer-fine:min-h-9 min-w-0 flex-1 items-center gap-3 rounded-md pr-3.5 text-ui", padded && "pl-3", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
+    class={["flex min-h-11 pointer-fine:min-h-9 min-w-0 flex-1 items-center gap-3 rounded-md pr-3.5 text-ui", padded && "pl-[38px]", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
     >{@render name(folder.name)}{@render count(folderUnread(folder, feeds))}{@render leadsOn()}</a
   >
 {/snippet}
@@ -139,9 +145,10 @@
       {#each folders as folder (folder.id)}
         {@const here = isHere({ kind: "folder", id: folder.id })}
         {@const inside = feeds.filter((feed) => feed.folders.includes(folder.id))}
-        {@const shown = open.includes(folder.id)}
+        {@const shown = phone || open.includes(folder.id)}
         <li>
           <div class="place mx-2 flex" data-here={here || undefined}>
+            {#if !phone}
             <!-- The arrow first, as a Mac source list's disclosure, in the column where Unread, Starred and All have their icons. -->
             <button
               type="button"
@@ -149,7 +156,7 @@
               aria-controls={`folder-${folder.id}`}
               aria-label={`Feeds in ${folder.name}`}
               onclick={() => toggle(folder.id)}
-              class="flex min-h-11 pointer-fine:min-h-9 w-11 pointer-fine:w-[38px] shrink-0 items-center justify-center rounded-md text-muted"
+              class="disclosure relative flex min-h-11 pointer-fine:min-h-9 w-[38px] shrink-0 items-center justify-center rounded-md text-muted"
             >
               <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 {#if shown}
@@ -159,14 +166,15 @@
                 {/if}
               </svg>
             </button>
-            {@render folderLink(folder, false)}
+            {/if}
+            {@render folderLink(folder, phone)}
           </div>
           {#if shown}
             <ul id={`folder-${folder.id}`}>
               {#each inside as feed (feed.id)}
                 {@render feedRow(feed, true)}
               {:else}
-                <li class="py-2 pr-5 pl-[52px] text-meta text-muted pointer-fine:pl-[46px]">No feeds in this folder.</li>
+                <li class="py-2 pr-5 pl-16 text-meta text-muted">No feeds in this folder.</li>
               {/each}
             </ul>
           {/if}
@@ -183,3 +191,19 @@
     </ul>
   {/if}
 {/if}
+
+<style>
+  /*
+    The arrow is drawn in the 38px icon column so every name shares one left
+    edge; on a touch screen its target reaches 6px further out, into the
+    pane's margin, so a finger still gets 44px.
+  */
+  @media (pointer: coarse) {
+    .disclosure::before {
+      content: "";
+      position: absolute;
+      inset-block: 0;
+      inset-inline: -6px 0;
+    }
+  }
+</style>

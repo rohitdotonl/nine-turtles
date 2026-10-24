@@ -445,8 +445,8 @@ body {
   content: "";
   position: absolute;
   top: 0;
-  left: 2rem;
-  right: 0.5rem;
+  left: var(--list-start, 2rem);
+  right: var(--pill-inset, 0.5rem);
   border-top: 1px solid color-mix(in srgb, var(--ink) 9%, transparent);
 }
 .item-list > li:has(> [aria-current]) + li::before,
@@ -465,13 +465,19 @@ body {
   Books spaces its lists. The pill is 8px in from the pane; inside it a
   24px gutter holds the unread dot, so every title starts 32px into the
   pane, lined up with the list's title, the search field and the caption
-  at the end, whether or not it has a dot.
+  at the end, whether or not it has a dot. On a phone, titles start at the
+  screen's one 20px margin and the pill sits 4px in (.list-pane, decision 0043).
 */
 .item-row {
   --place-tint: var(--color-tint-list);
   padding-top: 0.625rem;
   padding-bottom: 0.6875rem;
-  padding-left: 1.5rem;
+  padding-left: calc(var(--list-start, 2rem) - var(--pill-inset, 0.5rem));
+  margin-inline: var(--pill-inset, 0.5rem);
+  width: calc(100% - 2 * var(--pill-inset, 0.5rem));
+}
+.item-list {
+  margin-inline: calc(-1 * var(--list-start, 2rem)) calc(-1 * var(--list-end, 1.5rem));
 }
 .item-row .title {
   line-height: 1.3;
@@ -508,12 +514,14 @@ body {
   Unread: a drawn 8px dot in the theme's accent, centred in the row's own
   24px gutter (8px from the pill's edge, 8px clear of the title), level with
   the middle of the title's first line, so it reads as a mark in a margin,
-  not a bullet. The semibold title says it too, so it never rests on color.
+  not a bullet. On a phone it hangs in the 20px margin, 6px from the screen's
+  edge and 6px clear of the title. The semibold title says it too, so it
+  never rests on color.
 */
 .unread-dot {
   position: absolute;
   top: calc(0.625rem + var(--text-ui) * 0.65 - 4px);
-  left: 8px;
+  left: var(--dot-left, 8px);
   width: 8px;
   height: 8px;
   border-radius: 9999px;
@@ -1273,6 +1281,67 @@ input {
 */
 dialog.dimmed::backdrop {
   background: var(--scrim, rgb(0 0 0 / 0.18));
+}
+
+/*
+  One top line across the window (decision 0043): the sidebar's wordmark, the
+  list's title and More, the article's tools, a page's title and X, and the
+  sidebar button all sit in a band of the same height, centred in it, so the
+  three panes' top lines end, and their hairlines fall, at the same height,
+  as Apple Books keeps every toolbar item on one line. A 44px button in it
+  has 6px clear above and below. It's a minimum, so text set larger by the
+  reader can still grow it.
+*/
+:root {
+  --bar-h: 3.5rem;
+}
+.pane-bar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  min-height: var(--bar-h);
+}
+/*
+  A button in a top line rings just inside its own edge, with soft corners,
+  so the ring never reaches the window's top or the line's edge.
+*/
+.pane-bar :is(a, button):focus-visible,
+.bar-button:focus-visible {
+  outline-offset: -2px;
+  border-radius: 10px;
+}
+
+/*
+  The phone's back button (decision 0043): the same place and size on every
+  screen, its arrow 8px from the screen's edge, as iOS keeps its back button
+  still while the screens change.
+*/
+.nav-bar {
+  padding-inline: 0.25rem;
+}
+.nav-back {
+  gap: 0.125rem;
+  padding-inline: 0.25rem 0.5rem;
+}
+
+/*
+  The list's edges (decision 0043): its title, search field, row titles and
+  closing caption start --list-start into the pane and end --list-end before
+  its far edge; the pill sits --pill-inset in. On a phone every screen keeps
+  one 20px margin, so the list's titles start at 20px too, the pill 4px in,
+  and the unread dot hangs in the margin before them.
+*/
+.list-pane {
+  --list-start: 2rem;
+  --list-end: 1.5rem;
+  --pill-inset: 0.5rem;
+  --dot-left: 8px;
+}
+.list-pane.phone {
+  --list-start: 1.25rem;
+  --list-end: 1.25rem;
+  --pill-inset: 0.25rem;
+  --dot-left: 2px;
 }
 
 /* A scrolling area under a fixed top line: a hairline appears once its content has scrolled under that line (edge.ts). */

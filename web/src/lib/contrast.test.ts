@@ -149,7 +149,7 @@ describe.each(Object.entries(THEMES))("the %s theme's selection pill", (_name, c
     }
   });
 
-  it("stays at 7 : 1 for text and 4.5 : 1 for muted grey, with the unread dot at 3 : 1", () => {
+  it("stays at 7 : 1 for text and 4.5 : 1 for muted grey, with the unread dot and the sidebar's place icon (decision 0043) at 3 : 1", () => {
     for (const area of ["list", "sidebar"]) {
       const pill = colors[`tint-${area}`]!;
       expect(contrast(colors.ink!, pill), area).toBeGreaterThanOrEqual(7);

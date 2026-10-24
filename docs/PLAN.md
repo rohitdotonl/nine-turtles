@@ -288,6 +288,11 @@ each with screenshots:
   one column with folder arrows first, no shortcut hint, the welcome alone
   on a first visit, warm dark pills, and a phone feeds screen with chevrons
   and no stale selection (decision 0041).
+- ✅ One top line and phone edges (fourth critique): one top-line height
+  for all three panes so their lines meet, toolbar focus rings clear of the
+  window's top, one left edge for every sidebar name, the selected place's
+  icon in the accent, and on a phone one back button position, one 20px
+  margin and one chevron per folder row (decision 0043).
 
 ---
 

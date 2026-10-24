@@ -52,6 +52,7 @@ test.describe("on a phone", () => {
     await expect(sidebar(page)).toBeHidden();
     await expect(list(page).getByRole("heading", { level: 2, name: "Reading Room" })).toBeVisible();
     await expect(list(page).getByRole("button", { name: "Back to Feeds" })).toBeVisible();
+    const listBack = (await list(page).getByRole("button", { name: "Back to Feeds" }).locator("svg").boundingBox())!;
     // One quiet More (…) beside the list's title; Refresh and Edit feed are in its menu (decision 0038).
     const more = list(page).getByRole("button", { name: "More", exact: true });
     await expect(more).toBeVisible();
@@ -71,6 +72,10 @@ test.describe("on a phone", () => {
     const back = article(page).getByRole("button", { name: "Back to Reading Room" });
     await expect(back).toBeVisible();
     await expect(back).toHaveText("Reading Room");
+    // The back button stays in one place from screen to screen, as on iOS (decision 0043).
+    const articleBack = (await back.locator("svg").boundingBox())!;
+    expect(Math.abs(articleBack.x - listBack.x)).toBeLessThan(1);
+    expect(Math.abs(articleBack.y + articleBack.height / 2 - (listBack.y + listBack.height / 2))).toBeLessThan(1);
 
     // The back arrows go back one step each time.
     await article(page).getByRole("button", { name: "Back to Reading Room" }).click();
