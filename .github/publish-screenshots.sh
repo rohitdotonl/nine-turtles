@@ -16,7 +16,7 @@ source_dir=$(realpath "$1")
 branch=pr-screenshots
 short_sha=${HEAD_SHA:0:7}
 folder="pr-$PR_NUMBER/$short_sha"
-marker="<!-- slowfeed-screenshots -->"
+marker="<!-- nine-turtles-screenshots -->"
 
 shopt -s nullglob
 pictures=("$source_dir"/*.png)
@@ -34,12 +34,12 @@ if git -C "$store" fetch --quiet --depth 1 origin "$branch"; then
   git -C "$store" checkout --quiet FETCH_HEAD
 fi
 git -C "$store" checkout --quiet --orphan "fresh-$PR_NUMBER"
-printf '# Screenshots\n\nPictures posted on pull requests by the checks. Not part of slowfeed.\n' > "$store/README.md"
+printf '# Screenshots\n\nPictures posted on pull requests by the checks. Not part of nine turtles.\n' > "$store/README.md"
 rm -rf "${store:?}/pr-$PR_NUMBER"
 mkdir -p "$store/$folder"
 cp "${pictures[@]}" "$store/$folder/"
 git -C "$store" add -A
-git -C "$store" -c user.name="slowfeed checks" -c user.email="checks@users.noreply.github.com" \
+git -C "$store" -c user.name="nine turtles checks" -c user.email="checks@users.noreply.github.com" \
   commit --quiet -m "Latest screenshots of each pull request"
 git -C "$store" push --quiet --force origin "HEAD:refs/heads/$branch"
 

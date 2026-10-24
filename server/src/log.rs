@@ -19,13 +19,13 @@ pub struct Problem {
 }
 
 pub fn info(message: &str) {
-    eprintln!("slowfeed: {message}");
+    eprintln!("nine-turtles: {message}");
 }
 
 /// Something went wrong that the owner or the daily check should know about.
 /// Never pass anything secret or personal (passwords, keys, article text).
 pub fn problem(message: &str) {
-    eprintln!("slowfeed: problem: {message}");
+    eprintln!("nine-turtles: problem: {message}");
     let mut problems = PROBLEMS
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner());

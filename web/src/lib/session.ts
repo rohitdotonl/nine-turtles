@@ -59,7 +59,7 @@ export function explain(result: Exclude<SignInResult, { ok: true }>): string {
     case "password-missing":
       return "No password has been set yet. The setup guide explains how to set one.";
     case "password-invalid":
-      return "The password setting isn't valid. Run slowfeed set-password again and paste the whole line.";
+      return "The password setting isn't valid. Run nine-turtles set-password again and paste the whole line.";
     case "unreachable":
       return "nine turtles can't be reached right now. Try again in a moment.";
   }

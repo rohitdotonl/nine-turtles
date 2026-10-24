@@ -74,7 +74,7 @@ async fn publishers() -> (String, String) {
 struct Reader {
     base: String,
     cookie: String,
-    state: slowfeed::AppState,
+    state: nine_turtles::AppState,
     garden: i64,
     kavita: i64,
 }
@@ -329,8 +329,8 @@ async fn results_come_fifty_at_a_time() {
     let reader = Reader::new().await;
     // 120 more articles mentioning tomatoes, 60 of them in the title.
     let mut connection = reader.state.db.acquire().await.unwrap();
-    let articles: Vec<slowfeed::feed::ParsedArticle> = (0..120)
-        .map(|number| slowfeed::feed::ParsedArticle {
+    let articles: Vec<nine_turtles::feed::ParsedArticle> = (0..120)
+        .map(|number| nine_turtles::feed::ParsedArticle {
             fingerprint: format!("extra-{number}"),
             title: if number % 2 == 0 {
                 format!("Tomatoes {number}")
@@ -345,7 +345,7 @@ async fn results_come_fifty_at_a_time() {
             published_at: Some(day(10) + number),
         })
         .collect();
-    slowfeed::feeds::store_articles(&mut connection, reader.garden, &articles, day(20))
+    nine_turtles::feeds::store_articles(&mut connection, reader.garden, &articles, day(20))
         .await
         .unwrap();
     drop(connection);
@@ -397,7 +397,7 @@ async fn the_index_follows_edits_deletions_and_earlier_articles() {
     let db = &reader.state.db;
 
     // A publisher's edit replaces the article's words.
-    let edited = slowfeed::feed::ParsedArticle {
+    let edited = nine_turtles::feed::ParsedArticle {
         fingerprint: "id:g4".to_owned(),
         title: "Café visits".to_owned(),
         link: None,
@@ -408,7 +408,7 @@ async fn the_index_follows_edits_deletions_and_earlier_articles() {
         published_at: Some(day(9)),
     };
     let mut connection = db.acquire().await.unwrap();
-    slowfeed::feeds::store_articles(&mut connection, reader.garden, &[edited], day(20))
+    nine_turtles::feeds::store_articles(&mut connection, reader.garden, &[edited], day(20))
         .await
         .unwrap();
     drop(connection);
@@ -437,9 +437,9 @@ async fn the_index_follows_edits_deletions_and_earlier_articles() {
     .await
     .unwrap();
     assert!(reader.titles(&[("q", "pumpkins")]).await.is_empty());
-    assert_eq!(slowfeed::search::index_missing(db).await.unwrap(), 1);
+    assert_eq!(nine_turtles::search::index_missing(db).await.unwrap(), 1);
     assert_eq!(reader.titles(&[("q", "pumpkins")]).await, ["An older post"]);
-    assert_eq!(slowfeed::search::index_missing(db).await.unwrap(), 0);
+    assert_eq!(nine_turtles::search::index_missing(db).await.unwrap(), 0);
 }
 
 #[tokio::test]
@@ -479,7 +479,7 @@ async fn search_needs_signing_in() {
 
 #[tokio::test]
 async fn the_search_table_uses_the_tested_word_splitting() {
-    let db = slowfeed::db::open(&common::config().data_dir)
+    let db = nine_turtles::db::open(&common::config().data_dir)
         .await
         .unwrap();
     let sql: String =
@@ -490,7 +490,7 @@ async fn the_search_table_uses_the_tested_word_splitting() {
     assert!(
         sql.contains(&format!(
             "tokenize = \"{}\"",
-            slowfeed::search::FTS5_TOKENIZER
+            nine_turtles::search::FTS5_TOKENIZER
         )),
         "{sql}"
     );

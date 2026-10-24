@@ -44,9 +44,15 @@ describe("reader preferences", () => {
     const calm = memory();
     calm.setItem("slowfeed.preferences", JSON.stringify({ theme: "calm", appearance: "dark" }));
     expect(load(calm)).toEqual({ ...DEFAULTS, appearance: "dark" });
+    // Saved before the rename (as slowfeed): still read; once saved under the new name, that wins.
+    const renamed = memory();
+    renamed.setItem("slowfeed.preferences", JSON.stringify({ textSize: 4 }));
+    expect(load(renamed).textSize).toBe(4);
+    renamed.setItem("nine-turtles.preferences", JSON.stringify({ textSize: 1 }));
+    expect(load(renamed).textSize).toBe(1);
     // A name that only looks like one of the old themes keeps the defaults.
     const storage = memory();
-    storage.setItem("slowfeed.preferences", JSON.stringify({ theme: "constructor" }));
+    storage.setItem("nine-turtles.preferences", JSON.stringify({ theme: "constructor" }));
     expect(load(storage)).toEqual(DEFAULTS);
   });
 
@@ -59,11 +65,11 @@ describe("reader preferences", () => {
 
   it("ignores anything it doesn't understand, keeping the defaults", () => {
     const storage = memory();
-    storage.setItem("slowfeed.preferences", JSON.stringify({ theme: "blue", appearance: "dusk", textSize: 99, lineWidth: "huge" }));
+    storage.setItem("nine-turtles.preferences", JSON.stringify({ theme: "blue", appearance: "dusk", textSize: 99, lineWidth: "huge" }));
     expect(load(storage)).toEqual(DEFAULTS);
-    storage.setItem("slowfeed.preferences", JSON.stringify({ lineWidth: "constructor", readingFont: "toString" }));
+    storage.setItem("nine-turtles.preferences", JSON.stringify({ lineWidth: "constructor", readingFont: "toString" }));
     expect(load(storage)).toEqual(DEFAULTS);
-    storage.setItem("slowfeed.preferences", "not json");
+    storage.setItem("nine-turtles.preferences", "not json");
     expect(load(storage)).toEqual(DEFAULTS);
   });
 

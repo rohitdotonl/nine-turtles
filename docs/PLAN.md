@@ -81,7 +81,7 @@ you know they bite.
   (so any agent can follow them), then scheduled. You allow the agents' environment
   to reach your nine turtles address and add the diagnostics key to its settings.
 - A step-by-step guide for you to set up Render (the agent has no access to
-  it), including setting your password with `slowfeed set-password` in
+  it), including setting your password with `nine-turtles set-password` in
   Render's Shell tab (decided October 2026): `docs/operations/render-setup.md`.
 
 **You can try:** open the address on your computer and phone, sign in, stay

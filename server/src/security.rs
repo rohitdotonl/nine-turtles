@@ -93,14 +93,14 @@ mod tests {
     }
 
     #[test]
-    fn slowfeeds_own_pages_are_trusted() {
+    fn nine_turtles_own_pages_are_trusted() {
         assert!(from_this_site(&headers(&[(
             "sec-fetch-site",
             "same-origin"
         )])));
         assert!(from_this_site(&headers(&[
-            ("origin", "https://slowfeed.example"),
-            ("host", "slowfeed.example"),
+            ("origin", "https://nine-turtles.example"),
+            ("host", "nine-turtles.example"),
         ])));
     }
 
@@ -116,11 +116,11 @@ mod tests {
         )])));
         assert!(!from_this_site(&headers(&[
             ("origin", "https://evil.example"),
-            ("host", "slowfeed.example"),
+            ("host", "nine-turtles.example"),
         ])));
         assert!(!from_this_site(&headers(&[
             ("origin", "null"),
-            ("host", "slowfeed.example"),
+            ("host", "nine-turtles.example"),
         ])));
     }
 }

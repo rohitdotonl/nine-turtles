@@ -142,7 +142,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 | Per-device reader settings | The browser's storage (`localStorage`) |
 | Installable on phones | Web app manifest and service worker (PWA) |
 
-**New versions on devices:** opening or reloading nine turtles always asks the server for the page first, so it starts the newest version; nothing swaps the app while it's open. The service worker (`web/public/sw.js`) keeps a copy of the page and of the app's code (`/assets/`) so the app opens without a connection; it never keeps API answers. Every answer from the server carries an `x-slowfeed-version` header. When it differs from the version the tab started with, Settings offers "A new version is ready · Reload"; if that newer server also refuses a request it doesn't understand (400, 404, 405, 415 or 422), the note at the bottom of the list says "nine turtles was updated. Reload to continue." Keeping such a tab working without a reload is V2. See decision 0022.
+**New versions on devices:** opening or reloading nine turtles always asks the server for the page first, so it starts the newest version; nothing swaps the app while it's open. The service worker (`web/public/sw.js`) keeps a copy of the page and of the app's code (`/assets/`) so the app opens without a connection; it never keeps API answers. Every answer from the server carries an `x-nine-turtles-version` header (and, for tabs opened before the rename, `x-slowfeed-version`). When it differs from the version the tab started with, Settings offers "A new version is ready · Reload"; if that newer server also refuses a request it doesn't understand (400, 404, 405, 415 or 422), the note at the bottom of the list says "nine turtles was updated. Reload to continue." Keeping such a tab working without a reload is V2. See decision 0022.
 
 **Phone steps:** on a phone, each move between Feeds, a list and an article is an entry in the browser's history (its state says which screen), so the system back gesture and the labeled back arrow do the same thing (`web/src/lib/steps.ts`).
 
@@ -167,7 +167,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 - **Identify ourselves:** a clear User-Agent naming nine turtles.
 - **WebSub (V2):** subscribe when the feed advertises a hub; verify subscriptions; check signatures with a per-subscription secret; renew before leases expire. While WebSub is active, polling continues at a reduced rate as a backup.
 - **Limits:** a timeout and a maximum size for every fetch: 20 seconds (10 to connect) and 5 MB, read bit by bit so a huge file is never held whole. nine turtles asks for compressed files (gzip, brotli).
-- **Public addresses only:** nine turtles refuses to fetch anything on its own computer or a private network (checked after the name is looked up, and on every redirect), so a pasted address can't be used to reach things that should be unreachable. Only the tests switch this off (`SLOWFEED_ALLOW_LOCAL_FEEDS`).
+- **Public addresses only:** nine turtles refuses to fetch anything on its own computer or a private network (checked after the name is looked up, and on every redirect), so a pasted address can't be used to reach things that should be unreachable. Only the tests switch this off (`NINE_TURTLES_ALLOW_LOCAL_FEEDS`).
 - **Redirects:** followed by hand, at most five. Permanent redirects (301/308) update the stored feed address; a temporary one on the way keeps the original.
 - **Failures:** each feed fails on its own. Repeated failures increase the wait (exponential backoff from the feed's own rhythm, capped at one day). The diagnostics page counts failing and dead feeds, never naming them; the daily check reports them (V1 has no feed health page). A feed is **dead** after 7 days of 404/410, or 3 weeks of any failure; otherwise a feed with recent errors is "having trouble". Dead feeds are still checked once a day in case they return.
 - **Never fetch article pages** to extract full text. Autodiscovery fetches only the page the owner pastes, only when they add a feed or ask "Find new address" (the owner's choice, `docs/decisions/0016-adding-feeds.md`), and reads the `<link rel="alternate">` lines it names. It never guesses other addresses on the site.
@@ -185,7 +185,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 - Cleaned **before storing** (from Milestone 5), so the database never holds unsafe content; relative links are made whole using the article's address. Titles and names are stored as plain text, and the screen shows them as text, never as HTML.
 - Remove invisible 1×1 tracking images: any image whose width or height is 0 or 1 pixel and neither is bigger, removed before the safety cleaning so ammonia has the last word on everything it stores. A size that isn't plain pixels (`100%`) counts as bigger. The one exception: articles stored before Milestone 6 lose their tracking images when shown, after their (already done) cleaning; removing an element can't make clean HTML unsafe, and the Content Security Policy stays behind it.
 - Links get `rel="noopener noreferrer"` and open in a new tab. An article's own anchors (`id`s, `#note` links) are kept with `article-` in front, so footnotes work and can't clash with nine turtles' page; the screen scrolls to them instead of opening a tab.
-- Images are the one thing the browser may load from any address (the Content Security Policy's `img-src`), because articles show the publisher's own images. Scripts, styles, fonts and connections stay slowfeed-only. The page's "no-referrer" rule means publishers aren't told an image was viewed in nine turtles.
+- Images are the one thing the browser may load from any address (the Content Security Policy's `img-src`), because articles show the publisher's own images. Scripts, styles, fonts and connections stay nine-turtles-only. The page's "no-referrer" rule means publishers aren't told an image was viewed in nine turtles.
 - Authors are kept as names only: RSS's `address (Name)` form keeps just the name.
 
 ### Data
@@ -205,11 +205,11 @@ These were decided with the owner. Changing any of them needs the owner's approv
 - **Edited articles:** when a publisher edits an article already stored, its title, link, author, text and language are updated; its place in the list, read mark and star are kept (decision 0019).
 - **Background checks** keep each feed's schedule and failure history in a few columns on `feeds` (structure change 4). The screen learns about new articles by asking, once a minute, whether any article numbered above the newest it loaded belongs to its list (decision 0019).
 - **Settings shared across devices** (so far the sort order) live in a small `settings` table; per-device reader controls stay in the browser.
-- **Exports:** OPML for feeds and folders; starred articles as a JSON Feed 1.1 file, each item carrying the feed it came from in a `_slowfeed` extension (decision 0024).
+- **Exports:** OPML for feeds and folders; starred articles as a JSON Feed 1.1 file, each item carrying the feed it came from in a `_nine_turtles` extension (`_slowfeed` before the rename) (decision 0024).
 
 ### Sign-in and security
 
-- Single-user password sign-in. The password is stored only as a slow, salted hash (argon2id), made by `slowfeed set-password` and given to nine turtles as a setting.
+- Single-user password sign-in. The password is stored only as a slow, salted hash (argon2id), made by `nine-turtles set-password` and given to nine turtles as a setting.
 - Long-lived session cookie per device (secure, HTTP-only, SameSite=Strict): a random ticket, of which the database keeps only a scrambled copy. A year from last use. Plus protection against other websites submitting actions on the owner's behalf ("cross-site request forgery"): actions must come from nine turtles' own pages.
 - A strict Content Security Policy (a browser rule): the browser refuses any script that doesn't come from nine turtles itself. This is a second layer behind sanitizing.
 - Failed sign-in attempts are rate-limited: five free tries, then a doubling wait up to an hour.

@@ -7,7 +7,7 @@
 // updated. Reload to continue." (Keeping such a tab working without a
 // reload is V2.)
 
-export const VERSION_HEADER = "x-slowfeed-version";
+export const VERSION_HEADER = "x-nine-turtles-version";
 
 /** Statuses meaning "I don't understand that request", rather than an answer the screens explain. */
 const NOT_UNDERSTOOD = new Set([400, 404, 405, 415, 422]);

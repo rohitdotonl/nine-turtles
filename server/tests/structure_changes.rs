@@ -16,7 +16,7 @@ async fn adding_read_state_and_stars_keeps_every_feed_article_and_sign_in() {
     let old = SqlitePoolOptions::new()
         .connect_with(
             SqliteConnectOptions::new()
-                .filename(slowfeed::db::path(&data_dir))
+                .filename(nine_turtles::db::path(&data_dir))
                 .create_if_missing(true),
         )
         .await
@@ -58,7 +58,7 @@ async fn adding_read_state_and_stars_keeps_every_feed_article_and_sign_in() {
     old.close().await;
 
     // Today's nine turtles opens it and brings its structure up to date.
-    let db = slowfeed::db::open(&data_dir).await.unwrap();
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
     let count = |sql: &'static str| sqlx::query_scalar::<_, i64>(sql).fetch_one(&db);
     assert_eq!(count("SELECT COUNT(*) FROM sessions").await.unwrap(), 1);
     assert_eq!(count("SELECT COUNT(*) FROM feeds").await.unwrap(), 20);
@@ -94,7 +94,7 @@ async fn adding_background_checks_keeps_every_feed_article_mark_and_star() {
     let old = SqlitePoolOptions::new()
         .connect_with(
             SqliteConnectOptions::new()
-                .filename(slowfeed::db::path(&data_dir))
+                .filename(nine_turtles::db::path(&data_dir))
                 .create_if_missing(true),
         )
         .await
@@ -138,7 +138,7 @@ async fn adding_background_checks_keeps_every_feed_article_mark_and_star() {
         .unwrap();
     old.close().await;
 
-    let db = slowfeed::db::open(&data_dir).await.unwrap();
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
     let count = |sql: &'static str| sqlx::query_scalar::<_, i64>(sql).fetch_one(&db);
     assert_eq!(count("SELECT COUNT(*) FROM feeds").await.unwrap(), 20);
     assert_eq!(count("SELECT COUNT(*) FROM articles").await.unwrap(), 1000);
@@ -186,7 +186,7 @@ async fn adding_folders_keeps_every_feed_followed_with_its_articles_marks_and_sc
     let old = SqlitePoolOptions::new()
         .connect_with(
             SqliteConnectOptions::new()
-                .filename(slowfeed::db::path(&data_dir))
+                .filename(nine_turtles::db::path(&data_dir))
                 .create_if_missing(true),
         )
         .await
@@ -230,7 +230,7 @@ async fn adding_folders_keeps_every_feed_followed_with_its_articles_marks_and_sc
     }
     old.close().await;
 
-    let db = slowfeed::db::open(&data_dir).await.unwrap();
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
     let count = |sql: &'static str| sqlx::query_scalar::<_, i64>(sql).fetch_one(&db);
     // Every feed is still followed, cleared of nothing, in no folder.
     assert_eq!(
@@ -278,7 +278,7 @@ async fn adding_search_keeps_everything_and_indexes_every_earlier_article() {
     let old = SqlitePoolOptions::new()
         .connect_with(
             SqliteConnectOptions::new()
-                .filename(slowfeed::db::path(&data_dir))
+                .filename(nine_turtles::db::path(&data_dir))
                 .create_if_missing(true),
         )
         .await
@@ -324,7 +324,7 @@ async fn adding_search_keeps_everything_and_indexes_every_earlier_article() {
     }
     old.close().await;
 
-    let db = slowfeed::db::open(&data_dir).await.unwrap();
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
     let count = |sql: &'static str| sqlx::query_scalar::<_, i64>(sql).fetch_one(&db);
     assert_eq!(count("SELECT COUNT(*) FROM feeds").await.unwrap(), 20);
     assert_eq!(
@@ -345,8 +345,11 @@ async fn adding_search_keeps_everything_and_indexes_every_earlier_article() {
         100
     );
     // Starting up adds every earlier article to the search index, once.
-    assert_eq!(slowfeed::search::index_missing(&db).await.unwrap(), 1000);
-    assert_eq!(slowfeed::search::index_missing(&db).await.unwrap(), 0);
+    assert_eq!(
+        nine_turtles::search::index_missing(&db).await.unwrap(),
+        1000
+    );
+    assert_eq!(nine_turtles::search::index_missing(&db).await.unwrap(), 0);
     assert_eq!(
         count("SELECT COUNT(*) FROM articles_search WHERE articles_search MATCH 'compost'")
             .await

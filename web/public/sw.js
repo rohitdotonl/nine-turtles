@@ -13,7 +13,7 @@
 // Nothing here swaps the app while it's open: a new version starts the next
 // time nine turtles is opened or reloaded.
 
-const KEPT = "slowfeed-app-1";
+const KEPT = "nine-turtles-app-1";
 
 self.addEventListener("install", () => self.skipWaiting());
 

@@ -19,28 +19,28 @@ never contains your password or any settings.
 1. On GitHub, open your profile (your picture, top right) → **Your profile**
    → the **Packages** tab → **nine turtles**.
 2. **Package settings** (right side) → at the bottom, **Change visibility** →
-   **Public** → type `slowfeed` to confirm.
+   **Public** → type `nine-turtles` to confirm.
 
 ## 2. Create the web service (Render, 10 minutes)
 
 1. In Render, **+ New** → **Web Service**.
 2. Choose **Existing Image** (not "Git Provider": nine turtles is built by
    GitHub, so Render only runs it).
-3. **Image URL:** `ghcr.io/rohitdotonl/slowfeed:latest` → **Connect**.
-4. **Name:** `slowfeed`. It becomes part of your address
+3. **Image URL:** `ghcr.io/rohitdotonl/nine-turtles:latest` → **Connect**.
+4. **Name:** `nine-turtles`. It becomes part of your address
    (`slowfeed-xxxx.onrender.com`).
 5. **Region:** the one closest to where you usually read. It can't be changed later without moving.
 6. **Instance type:** **Starter** ($7/month, 512 MB). The free type can't
    have a disk or the Shell tab.
 7. **Environment variables** → **Add Environment Variable**:
-   - `SLOWFEED_DIAGNOSTICS_KEY`: click **Generate** for the value.
+   - `NINE_TURTLES_DIAGNOSTICS_KEY`: click **Generate** for the value.
    - Leave the password for step 4.
 8. Open **Advanced**:
    - **Disk** → **Add Disk**. Name `slowfeed-data`, **Mount Path** `/data`,
      **Size** `1` GB. This is where your database lives; it survives updates.
    - **Health Check Path:** `/status`.
 9. **Deploy Web Service.** After a minute or two the log ends with
-   `slowfeed: version … is running` and the page says **Live**.
+   `nine-turtles: version … is running` and the page says **Live**.
 
 **Check it:** open your address (shown at the top, `https://slowfeed-….onrender.com`).
 You see the nine turtles sign-in page. Signing in won't work yet: that's step 4.
@@ -63,14 +63,14 @@ usually within 15 minutes of pressing Merge.
 
 1. Your service → **Shell** (left menu). A black box opens, connected to the
    running nine turtles.
-2. Type `slowfeed set-password` and press Enter.
+2. Type `nine-turtles set-password` and press Enter.
 3. Type your password (at least 12 characters) and press Enter. **Nothing
    appears while you type**: that's on purpose. Type it again when asked.
    (To give up halfway, press Ctrl+C: nothing is changed.)
 4. nine turtles prints one long line starting with `$argon2id$`. That's the
    scrambled form, not your password. Select the whole line and copy it.
 5. **Environment** (left menu) → **Add Environment Variable**:
-   - **Key:** `SLOWFEED_PASSWORD_HASH`
+   - **Key:** `NINE_TURTLES_PASSWORD_HASH`
    - **Value:** paste the line.
    - **Save Changes.** Render restarts nine turtles (about a minute).
 
@@ -98,7 +98,7 @@ environment (settings for the environment this project's agents use):
 
 1. Allow its network to reach your nine turtles address (`slowfeed-….onrender.com`).
 2. Add two environment variables: `SLOWFEED_ADDRESS` (your full address,
-   starting `https://`) and `SLOWFEED_DIAGNOSTICS_KEY` (copy the value from
+   starting `https://`) and `NINE_TURTLES_DIAGNOSTICS_KEY` (copy the value from
    Render → Environment).
 
 Then tell an agent it's done; it schedules the check described in
@@ -109,7 +109,7 @@ Then tell an agent it's done; it schedules the check described in
 - **A merge didn't reach the live app** (Settings → Status shows an older
   version): on GitHub, **Actions** → **Container image** → the latest run.
   If "Tell Render to run the new version" failed, copy the deploy hook again
-  (step 3) and replace the secret. Slowfeed already ignores stray spaces,
+  (step 3) and replace the secret. nine turtles already ignores stray spaces,
   line breaks and quotes in it. Meanwhile, Render → **Manual Deploy** →
   **Deploy latest reference** puts the newest merged version live.
 - **The deploy fails, or the page never says Live:** Render → **Logs**.

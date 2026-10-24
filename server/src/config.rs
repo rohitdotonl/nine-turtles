@@ -6,10 +6,10 @@ use std::{net::SocketAddr, path::PathBuf};
 
 use argon2::password_hash::phc::PasswordHash;
 
-/// Where nine turtles listens when `SLOWFEED_LISTEN` isn't set. Only this computer
+/// Where nine turtles listens when `NINE_TURTLES_LISTEN` isn't set. Only this computer
 /// can reach it; the container image sets the variable for hosting.
 const DEFAULT_LISTEN: &str = "127.0.0.1:8080";
-/// Where the database lives when `SLOWFEED_DATA_DIR` isn't set.
+/// Where the database lives when `NINE_TURTLES_DATA_DIR` isn't set.
 const DEFAULT_DATA_DIR: &str = "data";
 
 #[derive(Clone, Debug)]
@@ -30,12 +30,12 @@ pub struct Config {
     pub test_check_seconds: Option<i64>,
 }
 
-/// The scrambled password (`SLOWFEED_PASSWORD_HASH`), made by
-/// `slowfeed set-password`. Until it's set, every sign-in is refused.
+/// The scrambled password (`NINE_TURTLES_PASSWORD_HASH`), made by
+/// `nine-turtles set-password`. Until it's set, every sign-in is refused.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum PasswordSetting {
     Missing,
-    /// Set, but not something `slowfeed set-password` made (a copy-paste slip).
+    /// Set, but not something `nine-turtles set-password` made (a copy-paste slip).
     Invalid,
     Set(String),
 }
@@ -62,20 +62,25 @@ impl PasswordSetting {
 
 impl Config {
     pub fn from_env() -> Result<Self, String> {
+        // Each setting is read by its name, or by the name it had before the
+        // rename (SLOWFEED_…), so a host that still uses the old names keeps working.
         let var = |name: &str| {
-            std::env::var(name)
-                .ok()
-                .filter(|value| !value.trim().is_empty())
+            let read = |name: &str| {
+                std::env::var(name)
+                    .ok()
+                    .filter(|value| !value.trim().is_empty())
+            };
+            read(name).or_else(|| read(&name.replacen("NINE_TURTLES_", "SLOWFEED_", 1)))
         };
 
-        let listen_text = var("SLOWFEED_LISTEN").unwrap_or_else(|| DEFAULT_LISTEN.to_owned());
+        let listen_text = var("NINE_TURTLES_LISTEN").unwrap_or_else(|| DEFAULT_LISTEN.to_owned());
         let listen = listen_text.parse().map_err(|_| {
-            format!("SLOWFEED_LISTEN must look like 127.0.0.1:8080, got {listen_text:?}")
+            format!("NINE_TURTLES_LISTEN must look like 127.0.0.1:8080, got {listen_text:?}")
         })?;
 
         let local_feeds_allowed =
-            var("SLOWFEED_ALLOW_LOCAL_FEEDS").is_some_and(|value| value.trim() == "yes");
-        let test_check_seconds = var("SLOWFEED_TEST_CHECK_SECONDS")
+            var("NINE_TURTLES_ALLOW_LOCAL_FEEDS").is_some_and(|value| value.trim() == "yes");
+        let test_check_seconds = var("NINE_TURTLES_TEST_CHECK_SECONDS")
             .filter(|_| local_feeds_allowed)
             .map(|value| {
                 value
@@ -85,7 +90,7 @@ impl Config {
                     .filter(|seconds| *seconds > 0)
                     .ok_or_else(|| {
                         format!(
-                            "SLOWFEED_TEST_CHECK_SECONDS must be a number of seconds, got {value:?}"
+                            "NINE_TURTLES_TEST_CHECK_SECONDS must be a number of seconds, got {value:?}"
                         )
                     })
             })
@@ -93,11 +98,11 @@ impl Config {
 
         Ok(Self {
             listen,
-            data_dir: var("SLOWFEED_DATA_DIR")
+            data_dir: var("NINE_TURTLES_DATA_DIR")
                 .unwrap_or_else(|| DEFAULT_DATA_DIR.to_owned())
                 .into(),
-            password: PasswordSetting::from_value(var("SLOWFEED_PASSWORD_HASH")),
-            diagnostics_key: var("SLOWFEED_DIAGNOSTICS_KEY").map(|key| key.trim().to_owned()),
+            password: PasswordSetting::from_value(var("NINE_TURTLES_PASSWORD_HASH")),
+            diagnostics_key: var("NINE_TURTLES_DIAGNOSTICS_KEY").map(|key| key.trim().to_owned()),
             local_feeds_allowed,
             test_check_seconds,
         })

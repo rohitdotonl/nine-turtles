@@ -11,9 +11,9 @@ use axum::{
     response::{IntoResponse, Response},
     routing::get,
 };
+use nine_turtles::{AppState, checking, folders};
 use reqwest::{Client, StatusCode};
 use serde_json::{Value, json};
-use slowfeed::{AppState, checking, folders};
 
 /// Three made-up blogs, `/alpha.xml`, `/beta.xml` and `/gamma.xml`, each
 /// with three posts. Answers the publisher's address.
@@ -401,7 +401,10 @@ async fn unsubscribing_hides_a_feed_undo_brings_it_back_and_stars_are_kept() {
     let export = reader.get("/api/starred/export").await;
     assert_eq!(export["items"].as_array().unwrap().len(), 1);
     assert_eq!(export["items"][0]["title"], "Alpha blog post 3");
-    assert_eq!(export["items"][0]["_slowfeed"]["feed_title"], "Alpha blog");
+    assert_eq!(
+        export["items"][0]["_nine_turtles"]["feed_title"],
+        "Alpha blog"
+    );
     let left: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM articles WHERE feed_id = ?")
         .bind(alpha)
         .fetch_one(&reader.state.db)
@@ -491,7 +494,7 @@ async fn importing_opml_follows_each_feed_once_in_all_its_folders() {
     );
 
     // Background checking fetches them, a few at a time.
-    let now = slowfeed::now();
+    let now = nine_turtles::now();
     checking::round(&reader.state, now).await.unwrap();
     assert_eq!(
         reader.sidebar().await.0,
@@ -524,7 +527,7 @@ async fn importing_opml_follows_each_feed_once_in_all_its_folders() {
             .starts_with("attachment")
     );
     let exported = response.text().await.unwrap();
-    let listed: Vec<_> = slowfeed::subscriptions::read(&exported)
+    let listed: Vec<_> = nine_turtles::subscriptions::read(&exported)
         .unwrap()
         .into_iter()
         .map(|entry| (entry.name.unwrap(), entry.folder))
@@ -569,7 +572,7 @@ async fn background_rounds_clear_an_unsubscribed_feed_only_after_ten_minutes_and
     reader
         .post(&format!("/api/feeds/{alpha}/unsubscribe"), json!({}))
         .await;
-    let now = slowfeed::now();
+    let now = nine_turtles::now();
 
     // Nine minutes later: still there, so Undo would still work.
     checking::round(&reader.state, now + 9 * 60).await.unwrap();

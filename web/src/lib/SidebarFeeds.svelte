@@ -43,13 +43,15 @@
     phone?: boolean;
   } = $props();
 
-  const OPEN_KEY = "slowfeed.open-folders";
+  const OPEN_KEY = "nine-turtles.open-folders";
+  /** Where they were saved before the rename; read when there's nothing under the new name. */
+  const OLD_OPEN_KEY = "slowfeed.open-folders";
 
   let open: number[] = $state(loadOpen());
 
   function loadOpen(): number[] {
     try {
-      const saved: unknown = JSON.parse(localStorage.getItem(OPEN_KEY) ?? "[]");
+      const saved: unknown = JSON.parse(localStorage.getItem(OPEN_KEY) ?? localStorage.getItem(OLD_OPEN_KEY) ?? "[]");
       return Array.isArray(saved) ? saved.filter((id) => typeof id === "number") : [];
     } catch {
       return [];

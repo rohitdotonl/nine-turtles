@@ -122,14 +122,14 @@ fn item(article: &Starred) -> Value {
     let mut source = Map::new();
     source.insert(
         "about".into(),
-        "https://github.com/rohitdotonl/slowfeed".into(),
+        "https://github.com/rohitdotonl/nine-turtles".into(),
     );
     source.insert("feed_title".into(), article.feed_title.clone().into());
     source.insert("feed_url".into(), article.feed_url.clone().into());
     if let Some(site) = &article.site_url {
         source.insert("home_page_url".into(), site.clone().into());
     }
-    item.insert("_slowfeed".into(), Value::Object(source));
+    item.insert("_nine_turtles".into(), Value::Object(source));
     Value::Object(item)
 }
 
@@ -197,7 +197,10 @@ mod tests {
         assert_eq!(item["date_published"], "1970-01-01T00:00:00Z");
         assert_eq!(item["authors"][0]["name"], "A. Writer");
         assert_eq!(item["language"], "hi");
-        assert_eq!(item["_slowfeed"]["feed_title"], "Quiet Notes");
-        assert_eq!(item["_slowfeed"]["home_page_url"], "https://quiet.example/");
+        assert_eq!(item["_nine_turtles"]["feed_title"], "Quiet Notes");
+        assert_eq!(
+            item["_nine_turtles"]["home_page_url"],
+            "https://quiet.example/"
+        );
     }
 }

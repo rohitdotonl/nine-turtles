@@ -45,7 +45,7 @@ async fn publisher() -> (String, Arc<Mutex<Vec<String>>>) {
         .route("/moved.xml", get(|| async { Redirect::permanent("/comments.atom") }))
         .route(
             "/huge.xml",
-            get(|| async { xml("x".repeat(slowfeed::fetch::SIZE_LIMIT + 1)) }),
+            get(|| async { xml("x".repeat(nine_turtles::fetch::SIZE_LIMIT + 1)) }),
         )
         .fallback(|| async { StatusCode::NOT_FOUND })
         .layer(axum::middleware::from_fn_with_state(visitors.clone(), remember_visitor));

@@ -48,7 +48,7 @@ jobs:
         run: |
           title="Weekly security report: libraries need attention"
           {
-            echo "The weekly check found known security problems in libraries slowfeed uses."
+            echo "The weekly check found known security problems in libraries nine turtles uses."
             echo "Nothing has been changed. An agent should propose a fix for the owner to approve."
             echo
             cat report.md

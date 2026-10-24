@@ -1,9 +1,9 @@
-use slowfeed::{config::Config, log};
+use nine_turtles::{config::Config, log};
 
 const USAGE: &str = "\
 Usage:
-  slowfeed                 run nine turtles (settings: docs/operations/settings.md)
-  slowfeed set-password    choose the password; prints the line for SLOWFEED_PASSWORD_HASH";
+  nine-turtles                run nine turtles (settings: docs/operations/settings.md)
+  nine-turtles set-password   choose the password; prints the line for NINE_TURTLES_PASSWORD_HASH";
 
 #[tokio::main]
 async fn main() {
@@ -11,19 +11,19 @@ async fn main() {
     match arguments.iter().map(String::as_str).collect::<Vec<_>>()[..] {
         [] => serve().await,
         ["set-password"] => {
-            let command = tokio::task::spawn_blocking(slowfeed::password::set_password_command);
+            let command = tokio::task::spawn_blocking(nine_turtles::password::set_password_command);
             tokio::select! {
                 finished = command => {
                     if let Ok(Err(message)) | Err(message) = finished.map_err(|error| error.to_string()) {
-                        eprintln!("slowfeed: {message}");
+                        eprintln!("nine-turtles: {message}");
                         std::process::exit(1);
                     }
                 }
                 _ = tokio::signal::ctrl_c() => {
                     // Typing may be hidden at this moment; show it again.
-                    slowfeed::password::show_typing();
+                    nine_turtles::password::show_typing();
                     eprintln!();
-                    eprintln!("slowfeed: cancelled; nothing was changed");
+                    eprintln!("nine-turtles: cancelled; nothing was changed");
                     std::process::exit(130);
                 }
             }
@@ -40,22 +40,22 @@ async fn serve() {
     let config = match Config::from_env() {
         Ok(config) => config,
         Err(message) => {
-            eprintln!("slowfeed: {message}");
+            eprintln!("nine-turtles: {message}");
             std::process::exit(2);
         }
     };
     let address = config.listen;
 
-    let state = match slowfeed::state(config).await {
+    let state = match nine_turtles::state(config).await {
         Ok(state) => state,
         Err(message) => {
             log::problem(&message);
             std::process::exit(1);
         }
     };
-    tokio::spawn(slowfeed::checking::run(state.clone()));
-    tokio::spawn(slowfeed::search::catch_up(state.db.clone()));
-    let app = slowfeed::router(state);
+    tokio::spawn(nine_turtles::checking::run(state.clone()));
+    tokio::spawn(nine_turtles::search::catch_up(state.db.clone()));
+    let app = nine_turtles::router(state);
     let listener = match tokio::net::TcpListener::bind(address).await {
         Ok(listener) => listener,
         Err(error) => {
@@ -66,7 +66,7 @@ async fn serve() {
 
     log::info(&format!(
         "version {} is running at http://{address}",
-        slowfeed::VERSION
+        nine_turtles::VERSION
     ));
 
     if let Err(error) = axum::serve(listener, app)

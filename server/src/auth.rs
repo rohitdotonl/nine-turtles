@@ -24,7 +24,9 @@ use serde_json::json;
 
 use crate::{AppState, config::PasswordSetting, log, now};
 
-const COOKIE: &str = "slowfeed_session";
+const COOKIE: &str = "nine_turtles_session";
+/// The cookie's name before the rename: still accepted, so nobody is signed out by it.
+const OLD_COOKIE: &str = "slowfeed_session";
 /// A device stays signed in for a year after it was last used.
 const SESSION_LIFETIME: i64 = 365 * 24 * 60 * 60;
 /// How often a device's year is renewed. Daily is plenty, and keeps the
@@ -249,7 +251,7 @@ async fn sign_out(State(state): State<AppState>, headers: HeaderMap) -> Response
         [(
             header::SET_COOKIE,
             HeaderValue::from_static(
-                "slowfeed_session=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict",
+                "nine_turtles_session=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict",
             ),
         )],
     )
@@ -297,7 +299,7 @@ fn cookie_token(headers: &HeaderMap) -> Option<String> {
         .filter_map(|value| value.to_str().ok())
         .flat_map(|value| value.split(';'))
         .filter_map(|pair| pair.trim().split_once('='))
-        .find(|(name, _)| *name == COOKIE)
+        .find(|(name, _)| *name == COOKIE || *name == OLD_COOKIE)
         .map(|(_, value)| value.to_owned())
         .filter(|value| value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_hexdigit()))
 }
@@ -390,13 +392,13 @@ mod tests {
         let mut headers = HeaderMap::new();
         headers.insert(
             header::COOKIE,
-            HeaderValue::from_str(&format!("theme=dark; slowfeed_session={token}")).unwrap(),
+            HeaderValue::from_str(&format!("theme=dark; nine_turtles_session={token}")).unwrap(),
         );
         assert_eq!(cookie_token(&headers), Some(token));
 
         headers.insert(
             header::COOKIE,
-            HeaderValue::from_static("slowfeed_session=short"),
+            HeaderValue::from_static("nine_turtles_session=short"),
         );
         assert_eq!(cookie_token(&headers), None);
     }

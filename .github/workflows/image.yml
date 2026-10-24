@@ -1,4 +1,4 @@
-# Builds slowfeed's container image (see the Dockerfile).
+# Builds nine turtles' container image (see the Dockerfile).
 # - On each pull request: builds it, to prove the image still builds.
 # - When a pull request is merged into main: builds it, stores it in GitHub's
 #   package storage (ghcr.io) and tells Render to run the new version.
@@ -37,17 +37,17 @@ jobs:
           image="ghcr.io/${GITHUB_REPOSITORY,,}"
           echo "IMAGE=$image" >> "$GITHUB_ENV"
           echo "VERSION=$version" >> "$GITHUB_ENV"
-          docker build --build-arg SLOWFEED_VERSION="$version" \
+          docker build --build-arg NINE_TURTLES_VERSION="$version" \
             --tag "$image:$version" --tag "$image:latest" .
 
       - name: Check the image starts and answers
         run: |
-          docker run --detach --name slowfeed --publish 10000:10000 "$IMAGE:$VERSION"
+          docker run --detach --name nine-turtles --publish 10000:10000 "$IMAGE:$VERSION"
           for attempt in $(seq 1 30); do
             if curl --fail --silent http://127.0.0.1:10000/status; then exit 0; fi
             sleep 1
           done
-          docker logs slowfeed
+          docker logs nine-turtles
           exit 1
 
       - name: Store the image in GitHub's package storage

@@ -7,7 +7,7 @@ mod common;
 
 use std::time::{Duration, Instant};
 
-use slowfeed::{
+use nine_turtles::{
     checking::DUE,
     feeds::{FEEDS, LATEST, List, Order, list_sql, new_sql, page},
     search::{Search, find},
@@ -26,7 +26,7 @@ const FAST_ENOUGH: Duration = Duration::from_millis(100);
 
 /// Builds the made-up library in a fresh database file.
 async fn big_library() -> SqlitePool {
-    let db = slowfeed::db::open(&common::config().data_dir)
+    let db = nine_turtles::db::open(&common::config().data_dir)
         .await
         .unwrap();
     let mut transaction = db.begin().await.unwrap();
@@ -297,7 +297,7 @@ async fn search_is_fast_with_500_feeds_and_a_year_of_articles() {
         .await
         .unwrap();
     let started = Instant::now();
-    let indexed = slowfeed::search::index_missing(&db).await.unwrap();
+    let indexed = nine_turtles::search::index_missing(&db).await.unwrap();
     let catching_up = started.elapsed();
     assert_eq!(
         indexed,

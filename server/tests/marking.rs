@@ -280,8 +280,11 @@ async fn the_starred_export_is_a_json_feed_of_every_starred_article() {
     let item = &file["items"][0];
     assert_eq!(item["date_published"], "2026-04-28T12:00:00Z");
     assert!(item["id"].as_str().unwrap().contains("#id:post-117"));
-    assert_eq!(item["_slowfeed"]["feed_title"], "Quiet Notes");
-    assert_eq!(item["_slowfeed"]["home_page_url"], "https://quiet.example/");
+    assert_eq!(item["_nine_turtles"]["feed_title"], "Quiet Notes");
+    assert_eq!(
+        item["_nine_turtles"]["home_page_url"],
+        "https://quiet.example/"
+    );
 
     // Not signed in: nothing.
     let response = Client::new()
@@ -346,7 +349,7 @@ async fn the_sort_order_is_saved_for_every_device() {
 }
 
 #[tokio::test]
-async fn marks_need_sign_in_come_only_from_slowfeed_and_have_a_limit() {
+async fn marks_need_sign_in_come_only_from_nine_turtles_and_have_a_limit() {
     let reader = Reader::new().await;
     let id = reader.list("view=all").await[0].1;
     let mark = json!({ "ids": [id], "read": true }).to_string();
