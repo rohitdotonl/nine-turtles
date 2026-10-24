@@ -4,7 +4,7 @@
   or the label of an icon-only button, says what it does.
 -->
 <script lang="ts" module>
-  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more";
+  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out";
 </script>
 
 <script lang="ts">
@@ -83,6 +83,19 @@
     />
   {:else if name === "chevron-down"}
     <path d="m5.5 8 4.5 4.5L14.5 8" />
+  {:else if name === "chevron-right"}
+    <!-- A row that leads on to something (a file chooser, a flow): ›. -->
+    <path d="m8 5.5 4.5 4.5L8 14.5" />
+  {:else if name === "download"}
+    <!-- A row that saves a file: an arrow down onto a tray. -->
+    <path d="M10 3.25v9.5" />
+    <path d="m6.25 9 3.75 3.75L13.75 9" />
+    <path d="M3.75 13.5v1.75a1 1 0 0 0 1 1h10.5a1 1 0 0 0 1-1V13.5" />
+  {:else if name === "sign-out"}
+    <!-- Leaving: an arrow out through an open door. -->
+    <path d="M8.25 3.75h-3.5a1 1 0 0 0-1 1v10.5a1 1 0 0 0 1 1h3.5" />
+    <path d="M8.5 10h8.25" />
+    <path d="m13.5 6.75 3.25 3.25-3.25 3.25" />
   {:else if name === "alert"}
     <circle cx="10" cy="10" r="7.25" />
     <path d="M10 6.5v4" />

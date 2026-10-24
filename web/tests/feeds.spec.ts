@@ -26,12 +26,14 @@ test("a fresh slowfeed shows the welcome in the reading area: the paste field, a
   await page.goto("/unread");
   await appReady(page);
   await signIn(page);
-  // The welcome is in the reading area, centred; the list only says there's nothing yet.
+  // The welcome is in the reading area, centred, and owns the screen (decision 0041): the list
+  // beside it says nothing, and the sidebar has no find field while there's nothing to find.
   const reading = page.getByRole("region", { name: "A quiet place to read." });
   await expect(reading.getByRole("heading", { level: 2, name: "A quiet place to read." })).toBeVisible();
   await expect(reading.getByLabel("Paste a website or feed URL")).toBeVisible();
   await expect(reading.getByRole("button", { name: "Add feed" })).toBeVisible();
-  await expect(page.getByRole("region", { name: "Unread" }).getByText("Nothing here yet.")).toBeVisible();
+  await expect(page.getByText("Nothing here yet.")).toHaveCount(0);
+  await expect(sidebar(page).getByRole("searchbox", { name: "Find a feed or folder" })).toHaveCount(0);
   await expect(page.getByText("No article open.")).toHaveCount(0);
   const [welcome, pane] = await Promise.all([reading.locator("#welcome-heading").boundingBox(), reading.boundingBox()]);
   expect(Math.abs(welcome!.x + welcome!.width / 2 - (pane!.x + pane!.width / 2))).toBeLessThan(4);
@@ -115,8 +117,15 @@ test("a page without a feed gets a calm, plain message", async ({ page }) => {
   await field(page).fill(`${FEED_SITE}/plain/`);
   await page.keyboard.press("Enter");
   await expect(page.locator("#feed-address-status")).toHaveText("This site doesn't seem to offer a feed. Try the feed's own address, or the site's home page.");
-  // The field is marked as refused, for screen readers and by its firmer edge.
+  // The field is marked as refused, for screen readers and by its red edge.
   await expect(field(page)).toHaveAttribute("aria-invalid", "true");
+  // While the keyboard is in it, the focus line takes the edge's place: one line, never a red edge inside a ring (decision 0042).
+  await expect(field(page)).toBeFocused();
+  await expect(field(page)).toHaveCSS("outline-style", "solid");
+  await expect(field(page)).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+  await field(page).evaluate((element) => (element as HTMLInputElement).blur());
+  await expect(field(page)).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+  await field(page).focus();
 
   await field(page).fill("not an address");
   await page.keyboard.press("Enter");

@@ -58,9 +58,12 @@
 
 /*
   Every theme's --tint-list and --tint-sidebar are the selection pill's fill
-  (decision 0037): the theme's accent mixed into the list or sidebar, 13% in
-  the light themes and 20% in the dark ones. contrast.test.ts recomputes each
-  from the accent and checks every text color on it.
+  (decision 0037): in the light themes the theme's accent mixed into the list
+  or sidebar at 13%; in the dark ones the theme's own text color at 12%
+  (decision 0041), so the pill keeps the pane's warmth or coolness instead
+  of laying a cool blue-grey over warm brown, as Apple Books' dark selection
+  is a lift of the page, not a tint. contrast.test.ts recomputes each and
+  checks every text color on it.
 */
 
 /* Off-white: the default light theme. */
@@ -91,9 +94,11 @@
     --muted: #b9af9c;
     --danger: #e8968a;
     --accent: #8fa9d6;
-    --tint-list: #383b41;
-    --tint-sidebar: #414348;
-    --raised: #3a3631;
+    --tint-list: #3a3633;
+    --tint-sidebar: #44403a;
+    --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
+    --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+    --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
     --sheet-edge: 22%;
     --scrim: rgb(0 0 0 / 0.45);
   }
@@ -109,10 +114,17 @@
   --muted: #b9af9c;
   --danger: #e8968a;
   --accent: #8fa9d6;
-  --tint-list: #383b41;
-  --tint-sidebar: #414348;
-  /* A chosen tile rises: lighter than its track in the dark, as paper is in the light. */
-  --raised: #3a3631;
+  --tint-list: #3a3633;
+  --tint-sidebar: #44403a;
+  /*
+    A chosen segment rises: lighter than its track in the dark, as paper is in
+    the light. A grouped list (--group) sits a clear step lighter than the
+    page, as Apple's dark settings do (decision 0042). Both are the text
+    color mixed into the page; contrast.test.ts checks text on them.
+  */
+  --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
+  --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
   --sheet-edge: 22%;
   --scrim: rgb(0 0 0 / 0.45);
 }
@@ -202,9 +214,11 @@
   --muted: #aeaca5;
   --danger: #e8968a;
   --accent: #9fb6e6;
-  --tint-list: #353a43;
-  --tint-sidebar: #3c4048;
-  --raised: #3a3a37;
+  --tint-list: #343432;
+  --tint-sidebar: #3b3b39;
+  --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
+  --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
   --sheet-edge: 22%;
   --scrim: rgb(0 0 0 / 0.45);
 }
@@ -220,9 +234,11 @@
   --muted: #b5a78e;
   --danger: #e8968a;
   --accent: #d9a85c;
-  --tint-list: #433622;
-  --tint-sidebar: #493b27;
-  --raised: #3d352a;
+  --tint-list: #36322b;
+  --tint-sidebar: #3d3830;
+  --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
+  --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
   --sheet-edge: 22%;
   --scrim: rgb(0 0 0 / 0.45);
 }
@@ -238,9 +254,11 @@
   --muted: #a3adc0;
   --danger: #e8968a;
   --accent: #8fb3ff;
-  --tint-list: #2d3954;
-  --tint-sidebar: #33405c;
-  --raised: #323c52;
+  --tint-list: #2e3441;
+  --tint-sidebar: #343b4a;
+  --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
+  --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
   --sheet-edge: 22%;
   --scrim: rgb(0 0 0 / 0.45);
 }
@@ -256,9 +274,11 @@
   --muted: #a0a0a0;
   --danger: #e8968a;
   --accent: #8fb0e8;
-  --tint-list: #272e39;
-  --tint-sidebar: #2e3540;
-  --raised: #2e2e2e;
+  --tint-list: #272727;
+  --tint-sidebar: #2f2f2f;
+  --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
+  --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
   --sheet-edge: 22%;
   --scrim: rgb(0 0 0 / 0.45);
 }
@@ -306,9 +326,26 @@ body {
   outline-offset: -1px;
 }
 
-/* A refused field keeps its red edge in view: the focus line stands clear of it. */
+/*
+  A row of a grouped list rings just inside its edge, since the group's
+  rounded corners clip anything drawn outside it; a text box that is a row
+  ("New folder…") lets its row draw the ring (decision 0042). Outside the
+  components layer, so they win over the outline above.
+*/
+.inset-action:focus-visible {
+  outline-offset: -2px;
+}
+.inset-input:focus-visible {
+  outline: none;
+}
+
+/*
+  A refused field in use: the focus line takes its edge's place, as on any
+  field, so there's one line, never a red edge inside a dark ring (decision
+  0042). The alert icon and the red words under it still say what's wrong.
+*/
 .field[aria-invalid="true"]:focus-visible {
-  outline-offset: 2px;
+  border-color: transparent;
 }
 
 /*
@@ -325,12 +362,45 @@ body {
   outline-offset: 4px;
   border-radius: 2px;
 }
+/*
+  A sheet's or the shortcut list's title takes the keyboard's place as it
+  opens (so screen readers start there) but draws no ring: it can't be
+  pressed, and it would look like a button. The first Tab lands on a real
+  control, which rings as always (decision 0042).
+*/
+:root[data-keyboard] dialog h2[tabindex="-1"]:focus-visible {
+  outline: none;
+}
+
+/*
+  The sidebar's wordmark is a name, not a control: it's never a Tab stop
+  (tabindex -1). The keyboard lands on it only when the app opens or the
+  phone's feeds screen returns, so screen readers start at the top. Then its
+  outline stands clear of the letters with soft corners, inside its own row,
+  so it never looks clipped (decision 0041).
+*/
+:root[data-keyboard] h1.wordmark[tabindex="-1"]:focus-visible {
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/*
+  Devanagari (Hindi, Marathi, Nepali…) in a sidebar name: the device's own
+  fonts draw it a little small and low beside Latin letters, its headline
+  making it look heavier. A touch larger, so it sits level with the names
+  around it (decision 0041). No extra font is downloaded (DESIGN.md →
+  "Typography"); a matching serif needs the owner's approval first.
+*/
+.devanagari {
+  font-size: 1.0625em;
+}
 
 /*
   "Where you are", one recipe everywhere (the sidebar and the article list),
   as in Apple Books (decision 0037): a pill with 8px corners, set 8px in from
   the pane's edges (the rows' mx-2), filled with the theme's accent mixed into
-  the pane. No border, no bar, and the title stays in full ink. The filled
+  the pane in a light theme, its text color in a dark one (decision 0041).
+  No border, no bar, and the title stays in full ink. The filled
   shape is the sign, with full ink (list) or semibold (sidebar) beside it,
   so it never rests on color alone.
 */
@@ -362,9 +432,11 @@ body {
 }
 
 /*
-  Hairlines between the list's rows, inside the pill's edges: from the
-  titles' left edge to the same distance from the right, so nothing
-  overhangs the selection. None directly above or below the selected row.
+  Hairlines between the list's rows (decision 0041), as an inset list draws
+  them: from the titles' left edge (32px into the pane) to the pill's own
+  right edge (8px from the pane's), so a line and the selection end in the
+  same place and nothing overhangs either. None directly above or below
+  the selected row, or the row under the pointer.
 */
 .item-list > li + li {
   position: relative;
@@ -373,23 +445,33 @@ body {
   content: "";
   position: absolute;
   top: 0;
-  left: 1.5rem;
-  right: 1.5rem;
+  left: 2rem;
+  right: 0.5rem;
   border-top: 1px solid color-mix(in srgb, var(--ink) 9%, transparent);
 }
 .item-list > li:has(> [aria-current]) + li::before,
 .item-list > li:has(> [aria-current])::before {
   display: none;
 }
+@media (hover: hover) {
+  .item-list > li:has(> .item-row:hover) + li::before,
+  .item-list > li:has(> .item-row:hover)::before {
+    display: none;
+  }
+}
 /*
   A row in the list: the list's own pill tint; 10px above and 11px below,
   the title at 1.3 line height and the line under it 2px below, as Apple
-  Books spaces its lists.
+  Books spaces its lists. The pill is 8px in from the pane; inside it a
+  24px gutter holds the unread dot, so every title starts 32px into the
+  pane, lined up with the list's title, the search field and the caption
+  at the end, whether or not it has a dot.
 */
 .item-row {
   --place-tint: var(--color-tint-list);
   padding-top: 0.625rem;
   padding-bottom: 0.6875rem;
+  padding-left: 1.5rem;
 }
 .item-row .title {
   line-height: 1.3;
@@ -423,14 +505,15 @@ body {
 }
 
 /*
-  Unread: a drawn 8px dot in the theme's accent, centred in a 16px gutter at
-  the row's left (the pill's padding), level with the middle of the title's
-  first line. The semibold title says it too, so it never rests on color.
+  Unread: a drawn 8px dot in the theme's accent, centred in the row's own
+  24px gutter (8px from the pill's edge, 8px clear of the title), level with
+  the middle of the title's first line, so it reads as a mark in a margin,
+  not a bullet. The semibold title says it too, so it never rests on color.
 */
 .unread-dot {
   position: absolute;
   top: calc(0.625rem + var(--text-ui) * 0.65 - 4px);
-  left: 4px;
+  left: 8px;
   width: 8px;
   height: 8px;
   border-radius: 9999px;
@@ -498,7 +581,8 @@ textarea {
 
   /*
     The one row of actions at the foot of a sheet (and of its page on a
-    phone), in a Mac sheet's order: a destructive action, if there is one, at
+    phone), 20px under what's above it and 12px between its buttons, in a
+    Mac sheet's order: a destructive action, if there is one, at
     the far left (.btn-danger), then Cancel, then the main action at the
     right end. On a narrow screen the destructive action takes a row of its
     own above the other two.
@@ -508,10 +592,37 @@ textarea {
     flex-wrap: wrap;
     align-items: center;
     justify-content: flex-end;
-    gap: 0.5rem;
+    gap: 0.75rem;
   }
   .sheet-actions > :is(.btn, .btn-primary) {
     min-width: 6rem;
+  }
+  /*
+    Cancel has no edge, only a faint tone, so the main action is the one
+    thing in the row with weight (decision 0042). Its word says what it does.
+  */
+  .sheet-actions > .btn {
+    border-color: transparent;
+    background-color: var(--tone);
+  }
+  @media (hover: hover) {
+    .sheet-actions > .btn:hover {
+      background-color: color-mix(in srgb, var(--ink) 11%, transparent);
+    }
+  }
+  @media (forced-colors: active) {
+    .sheet-actions > .btn {
+      border-color: ButtonText;
+    }
+  }
+
+  /* A sheet's title: the same serif, size and weight as every other title (the list's, Settings'). */
+  .sheet-title {
+    font-family: var(--font-serif);
+    font-size: var(--text-heading);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
   }
   .sheet-actions > .btn-danger {
     margin-right: auto;
@@ -557,7 +668,7 @@ textarea {
   .inset-group {
     overflow: hidden;
     border-radius: 0.625rem;
-    background-color: var(--list);
+    background-color: var(--group, var(--list));
   }
   .inset-row {
     position: relative;
@@ -606,8 +717,11 @@ textarea {
       background-color: var(--hover);
     }
   }
-  .inset-action:focus-visible {
-    outline-offset: -2px;
+  /* Its trailing glyph (› for a flow, a tray for a download, a door for Sign out), in the muted grey at the row's right end. */
+  .inset-action > .row-glyph {
+    flex-shrink: 0;
+    margin-left: auto;
+    color: var(--muted);
   }
 
   /*
@@ -627,11 +741,57 @@ textarea {
     opacity: 0;
     cursor: pointer;
   }
+  /*
+    Its mark: an empty ring when it's off and a filled disc with a check when
+    it's on, so even a list of one folder says which it is, by shape as well
+    as fill (decision 0042).
+  */
   .check-row > .check-mark {
-    visibility: hidden;
+    display: flex;
+    width: 1.375rem;
+    height: 1.375rem;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid var(--muted);
+    border-radius: 9999px;
+    color: transparent;
   }
   .check-row:has(> input:checked) > .check-mark {
-    visibility: visible;
+    border-color: var(--ink);
+    background-color: var(--ink);
+    color: var(--paper);
+  }
+  @media (forced-colors: active) {
+    .check-row > .check-mark {
+      forced-color-adjust: none;
+      border-color: CanvasText;
+    }
+    .check-row:has(> input:checked) > .check-mark {
+      border-color: Highlight;
+      background-color: Highlight;
+      color: HighlightText;
+    }
+  }
+  /*
+    A row that is a text box (Edit feed's "New folder…"): no edge or fill of
+    its own, its words where a row's name sits; the keyboard's outline rings
+    the whole row, just inside its edge.
+  */
+  .inset-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 2rem;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    font-size: var(--text-ui);
+  }
+  .inset-input::placeholder {
+    color: var(--muted);
+  }
+  .inset-row:has(> .inset-input:focus-visible) {
+    outline: 2px solid var(--ink);
+    outline-offset: -2px;
   }
   .check-row:has(> input:focus-visible) {
     outline: 2px solid var(--ink);
@@ -645,8 +805,8 @@ textarea {
 
   /*
     A segmented choice (Settings, the search options): a row of options on a
-    soft track; the chosen one is a raised tile with a firmer edge and
-    semibold words. Each option is a real radio button or tick box, hidden
+    soft track; the chosen one is a raised tile, a lighter fill with a small
+    shadow and no edge, and semibold words. Each option is a real radio button or tick box, hidden
     under its tile, so keyboards and screen readers get the usual control.
   */
   .choices {
@@ -699,9 +859,10 @@ textarea {
     opacity: 0;
     cursor: pointer;
   }
+  /* The chosen one: a raised fill with a small shadow under it and no edge, as Apple draws it (decision 0042), and semibold words. */
   .choice:has(input:checked) {
-    border-color: color-mix(in srgb, var(--ink) 30%, transparent);
     background-color: var(--raised, var(--paper));
+    box-shadow: var(--raised-shadow, 0 1px 2px rgb(0 0 0 / 0.12));
     color: var(--ink);
     font-weight: 600;
   }
@@ -814,6 +975,27 @@ textarea {
     border-color: transparent;
     background-color: var(--tone);
   }
+
+  /*
+    The sidebar's find field (decision 0041): no well at rest, just its icon
+    and its words, so the list's search is the one filled field on screen,
+    as Apple Books has one search. It takes the same faint tone under the
+    pointer, while it has the keyboard and while it holds words.
+  */
+  .field-find {
+    background-color: transparent;
+  }
+  .field-find:is(:focus, :not(:placeholder-shown)) {
+    background-color: var(--tone);
+  }
+  @media (hover: hover) {
+    .field-find:hover {
+      background-color: var(--hover);
+    }
+    .field-find:is(:focus, :not(:placeholder-shown)):hover {
+      background-color: var(--tone);
+    }
+  }
 }
 
 :root {
@@ -850,7 +1032,7 @@ textarea {
   }
 }
 
-/* "Press ? for shortcuts" is only for screens with a keyboard. */
+/* Hints that name a key (", or press j" in the empty reading area) are only for screens with a keyboard. */
 @media (hover: none) and (pointer: coarse) {
   .keyboard-hint {
     display: none;
@@ -901,26 +1083,34 @@ input {
 
 /*
   The one large thing on the screen, about 32px at the default text size:
-  set tight and balanced, clearly above the article's own headings.
+  set tight, clearly above the article's own headings. It fills the same
+  column as the text: its lines run to the full measure, and only a lone
+  last word is avoided (decision 0040; balanced lines left it narrower than
+  the text).
 */
 .article-title {
   font-size: 1.6em;
   line-height: 1.12;
   font-weight: 600;
   letter-spacing: -0.012em;
-  text-wrap: balance;
+  text-wrap: pretty;
   overflow-wrap: break-word;
 }
 
 /*
-  A summary-only article's last paragraph: in the book's own voice (the
-  reading font, italic, the second ink), saying where the rest of it is and
-  linking it on the publisher's site.
+  A summary-only article's end matter, under the closing rule as in a book:
+  small upright interface type, centred, in the second ink, saying where the
+  rest of it is. Only the link to the publisher's site is underlined
+  (decision 0040).
 */
 .article-note {
-  margin-top: 1.5em;
-  font-size: 0.9em;
-  font-style: italic;
+  margin-top: 1.25rem;
+  font-family: var(--font-sans);
+  font-size: var(--text-small);
+  line-height: 1.5;
+  font-style: normal;
+  text-align: center;
+  text-wrap: balance;
   color: var(--ink-2);
 }
 
@@ -944,6 +1134,10 @@ input {
 .article-text {
   margin-top: 1.75em;
   overflow-wrap: break-word;
+}
+
+/* Only an article's last paragraph avoids a lone last word: elsewhere it left visibly short lines (decision 0040). */
+.article-text > p:last-child {
   text-wrap: pretty;
 }
 

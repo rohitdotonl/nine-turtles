@@ -33,10 +33,13 @@ test.describe("on a wide window", () => {
     const empty = (await article(page).getByText("No article open.").boundingBox())!;
     const pane = (await article(page).boundingBox())!;
     expect(empty.y).toBeGreaterThan(pane.y + pane.height / 4);
-    // A calm line in the reading serif, and a quiet hint, since the list has articles to open.
+    // One calm line in the reading serif and nothing else to see, as in Apple Books (decision 0040);
+    // the hint, since the list has articles to open, is there for screen readers only.
     expect(await article(page).getByText("No article open.").evaluate((e) => getComputedStyle(e).fontFamily)).toContain("Literata");
     await expect(article(page).getByText("No article open.")).toHaveCSS("font-size", "17px");
     await expect(article(page)).toContainText("Choose one from the list, or press j.");
+    await expect(article(page).locator(".sr-only", { hasText: "Choose one from the list" })).toHaveCSS("position", "absolute");
+    await expect(article(page).locator("kbd")).toHaveCount(0);
 
     await page.keyboard.press("j");
     await expect(row(page, "The pleasure of a slow letter")).toHaveAttribute("aria-current", "true");
@@ -295,6 +298,20 @@ test.describe("on a wide window", () => {
       (element) => element.getBoundingClientRect().left - element.closest(".scroller")!.getBoundingClientRect().left,
     );
     expect(Math.abs(inset - 8)).toBeLessThan(1);
+    // Every title starts 32px into the pane, lined up with the list's title
+    // and the search field, dot or no dot (decision 0041).
+    const titleX = (await selected.locator(".title").boundingBox())!.x;
+    const paneX = await selected.evaluate((element) => element.closest("section")!.getBoundingClientRect().left);
+    expect(Math.abs(titleX - paneX - 32)).toBeLessThan(1);
+    expect(Math.abs((await page.locator("#list-heading").boundingBox())!.x - titleX)).toBeLessThan(1);
+    expect(Math.abs((await page.locator(".search-box").boundingBox())!.x - titleX)).toBeLessThan(1);
+    // The hairlines run from the titles' edge to the pill's right edge, so a
+    // line and the selection end in the same place.
+    const hairline = await page.locator(".item-list > li + li").first().evaluate((element) => {
+      const css = getComputedStyle(element, "::before");
+      return [css.left, css.right];
+    });
+    expect(hairline).toEqual(["32px", "8px"]);
     await expect(selected).toHaveCSS("outline-offset", "-2px");
     // The pill is the accent mixed into the list: deeper than the list, never the hover's neutral tone.
     const [fill, tint] = await selected.evaluate((element) => {
@@ -354,29 +371,31 @@ test.describe("on a wide window", () => {
     expect(Math.abs(first.y - last.y)).toBeLessThan(2);
   });
 
-  test("the top bar is see-through over the text, with a line only once scrolled; solid when asked for less transparency", async ({ page }) => {
+  test("the top bar is solid in the page's color, with a line under it only once the text has scrolled", async ({ page }) => {
     await openRoom(page);
     await page.keyboard.press("j");
     const bar = article(page).locator(".reading-bar");
     const scroller = article(page).locator(".reading-scroller");
-    await expect(bar).toHaveCSS("position", "sticky");
-    expect(await bar.evaluate((element) => getComputedStyle(element).backgroundColor)).toMatch(/^(color\(srgb .* \/ 0\.85\)|rgba\(.*, 0\.85\))$/);
-    expect(await bar.evaluate((element) => getComputedStyle(element).backdropFilter)).toContain("blur");
-    await expect(bar).toHaveCSS("border-bottom-color", "rgba(0, 0, 0, 0)");
+    // Solid, never see-through or blurred, so no text shows through it (decision 0040).
+    const [barColor, paperColor, blur] = await Promise.all([
+      bar.evaluate((element) => getComputedStyle(element).backgroundColor),
+      article(page).evaluate((element) => getComputedStyle(element).backgroundColor),
+      bar.evaluate((element) => getComputedStyle(element).backdropFilter),
+    ]);
+    expect(barColor).toBe(paperColor);
+    expect(barColor).not.toMatch(/0\.\d+\)$/);
+    expect(blur).toBe("none");
+    // The text scrolls below the bar, not under it; the bar spans the whole pane, scrollbar included.
+    const [barBox, scrollerBox, paneBox] = [(await bar.boundingBox())!, (await scroller.boundingBox())!, (await article(page).boundingBox())!];
+    expect(scrollerBox.y).toBeGreaterThanOrEqual(barBox.y + barBox.height - 1);
+    expect(Math.abs(barBox.x + barBox.width - (paneBox.x + paneBox.width))).toBeLessThan(1);
+    // The hairline between them shows only once the text has scrolled.
+    await expect(scroller).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
     await scroller.evaluate((element) => element.scrollBy(0, 120));
     await expect(scroller).toHaveAttribute("data-scrolled", "");
-    await expect(bar).not.toHaveCSS("border-bottom-color", "rgba(0, 0, 0, 0)");
-    // The text goes under the bar rather than stopping at a line.
-    const [barBox, titleBox] = [(await bar.boundingBox())!, (await article(page).locator(".article-title").boundingBox())!];
-    expect(titleBox.y).toBeLessThan(barBox.y + barBox.height);
-
-    // Playwright can't emulate prefers-reduced-transparency yet: check the page's styles have the solid rule.
-    const solid = await page.evaluate(() =>
-      [...document.styleSheets].some((sheet) =>
-        [...sheet.cssRules].some((rule) => rule instanceof CSSMediaRule && rule.conditionText.includes("prefers-reduced-transparency") && rule.cssText.includes("backdrop-filter: none")),
-      ),
-    );
-    expect(solid).toBe(true);
+    await expect(scroller).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+    // The scrollbar's track is see-through, so its gutter is the page's own color in every theme.
+    expect(await scroller.evaluate((element) => getComputedStyle(element).scrollbarColor)).toMatch(/ transparent$|rgba\(0, 0, 0, 0\)$/);
   });
 
   test("the title is about 32px, set tight and balanced; the byline is quiet with the publisher in full ink", async ({ page }) => {
@@ -384,7 +403,8 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("j");
     const heading = article(page).locator(".article-title");
     await expect(heading).toHaveCSS("font-size", "32px");
-    await expect(heading).toHaveCSS("text-wrap", /balance/);
+    // Its lines fill the text's measure, avoiding only a lone last word (decision 0040).
+    await expect(heading).toHaveCSS("text-wrap", /pretty/);
     expect(parseFloat(await heading.evaluate((element) => getComputedStyle(element).lineHeight)) / 32).toBeCloseTo(1.12, 2);
     const byline = article(page).locator(".article-byline");
     await expect(byline).toHaveCSS("font-size", "13px");
@@ -402,19 +422,25 @@ test.describe("on a wide window", () => {
     await expect(article(page).locator(".article-text h2").first()).toHaveCSS("font-size", "22px");
   });
 
-  test("a summary-only article ends with a last paragraph in the reading font linking the whole article", async ({ page }) => {
+  test("a summary-only article ends with a small centred note under the closing rule, linking the whole article", async ({ page }) => {
     await openRoom(page);
     await row(page, "Only the first page").click();
     const note = article(page).locator(".article-note");
     await expect(note).toContainText("This feed shares only a summary. Read the full article on");
-    expect(await note.evaluate((element) => getComputedStyle(element).fontFamily)).toContain("Literata");
-    await expect(note).toHaveCSS("font-style", "italic");
-    await expect(note).toHaveCSS("text-align", "start");
+    // End matter, as in a book: small upright interface type, centred (decision 0040).
+    expect(await note.evaluate((element) => getComputedStyle(element).fontFamily)).not.toContain("Literata");
+    await expect(note).toHaveCSS("font-style", "normal");
+    await expect(note).toHaveCSS("text-align", "center");
+    await expect(note).toHaveCSS("font-size", "14px");
+    // Only the link is underlined.
+    expect(await note.evaluate((element) => getComputedStyle(element).textDecorationLine)).toBe("none");
     const link = note.getByRole("link", { name: "Read the full article on Reading Room" });
+    await expect(link).toHaveCSS("text-decoration-line", "underline");
     await expect(link).toHaveAttribute("href", "https://reading-room.example/first-page");
     await expect(link).toHaveAttribute("target", "_blank");
-    // It is the article's last paragraph, before the short closing line.
-    expect(await note.evaluate((element) => element.nextElementSibling?.classList.contains("article-end"))).toBe(true);
+    // It comes after the short closing line, and is the last thing in the article.
+    expect(await note.evaluate((element) => element.previousElementSibling?.classList.contains("article-end"))).toBe(true);
+    expect(await note.evaluate((element) => element.nextElementSibling)).toBeNull();
   });
 
   test("in high-contrast mode, only the selected article is marked", async ({ page }) => {

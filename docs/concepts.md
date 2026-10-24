@@ -122,6 +122,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Prefetching (loading the next thing in advance)
 - Optimistic update (the screen changes first, saving follows)
 - Clipboard and the system share sheet
+- Container query (styling by a pane's width, not the window's)
 
 ## Data and the database
 
@@ -227,7 +228,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Icon set
 - Popover and menu button (`aria-haspopup`)
 - Bottom sheet
-- Translucent bar (backdrop blur, `prefers-reduced-transparency`)
+- Translucent bar (withdrawn by decision 0040)
 - Grouped inset list
 - Stepper (a smaller / larger pair)
 

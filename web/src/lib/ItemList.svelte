@@ -403,7 +403,7 @@
 {#if loaded && articles.length === 0}
   <p>{empty}</p>
 {:else if articles.length > 0}
-  <ul class="item-list -mx-6">
+  <ul class="item-list -mr-6 -ml-8">
     {#each articles as article, index (article.id)}
       {@const current = index === selectedIndex}
       <li>
@@ -420,7 +420,7 @@
           }}
           onkeydown={arrows}
           class={[
-            "item-row place mx-2 block w-[calc(100%-1rem)] cursor-pointer pr-4 pl-4 text-left",
+            "item-row place mx-2 block w-[calc(100%-1rem)] cursor-pointer pr-4 text-left",
           ]}
         >
           <!-- Unread: an accent dot in the gutter beside the title, and a semibold title, so it shows without color. -->
@@ -431,6 +431,20 @@
                   >{part.text}</mark
                 >{:else}{part.text}{/if}{/each}{#if !article.read}<span class="sr-only">, unread</span>{/if}</span
           >
+          {#if article.excerpt && article.excerpt.length > 0}
+            <!--
+              A search result's text around the first searched word (SPEC section 14), right under
+              the title and before the meta line, as Apple Books orders a result: plain text from
+              slowfeed, shown as text, up to two lines. Searched words are marked as in the title
+              (a faint accent tone behind them, and an underline) and in full ink, so they show by
+              tone and shape.
+            -->
+            <span class="excerpt mt-0.5 line-clamp-2 text-meta text-muted"
+              >{#each article.excerpt as piece, pieceIndex (pieceIndex)}{#if piece.match}<mark class="match"
+                    >{piece.text}</mark
+                  >{:else}{piece.text}{/if}{/each}</span
+            >
+          {/if}
           <span class="mt-0.5 block text-meta text-muted tabular-nums">
             <span class={oneFeed ? "sr-only" : undefined}>{article.feedTitle} ·</span>
             <time datetime={new Date(article.at * 1000).toISOString()}>{when(article.at)}</time>
@@ -438,18 +452,6 @@
 <span class="star"><Icon name="star" size={13} filled /></span><span class="sr-only">, Starred</span>
             {/if}
           </span>
-          {#if article.excerpt && article.excerpt.length > 0}
-            <!--
-              A search result's line of its text around the first searched word (SPEC section 14):
-              plain text from slowfeed, shown as text. Searched words are marked as in the title
-              (a faint accent tone behind them) and in full ink, so they show by tone and shape.
-            -->
-            <span class="excerpt mt-0.5 block truncate text-meta text-muted"
-              >{#each article.excerpt as piece, pieceIndex (pieceIndex)}{#if piece.match}<mark class="match"
-                    >{piece.text}</mark
-                  >{:else}{piece.text}{/if}{/each}</span
-            >
-          {/if}
         </button>
       </li>
     {/each}

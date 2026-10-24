@@ -273,6 +273,21 @@ each with screenshots:
   A/A text size; sheets that grow with their content, the destructive action
   at the bottom left; thin fields with red errors; search options as a
   checkmark menu; a calmer first visit (decision 0039).
+- ✅ Toward Apple Books, batch 3: solid article bars with a line only once
+  scrolled and an edge on the phone's toolbar, no scrollbar strip, the
+  summary note as end matter, titles at full measure, search results as
+  title, text, meta, and a silent empty reading pane (decision 0040).
+- ✅ Sheets and Settings in one voice: serif sheet titles, a quiet Cancel,
+  one line on a refused field, a folder checklist that shows both states, a
+  shortcut list that fits; Settings' sample on the page, marks on rows that
+  act, A | Medium | A, edgeless raised choices and lighter dark groups
+  (decision 0042).
+- ✅ List and sidebar geometry (third critique, batch 3): a gutter for the
+  unread dot with titles lined up under the list's title, hairlines that end
+  with the pill, a one-line list title, one search well at rest, counts in
+  one column with folder arrows first, no shortcut hint, the welcome alone
+  on a first visit, warm dark pills, and a phone feeds screen with chevrons
+  and no stale selection (decision 0041).
 
 ---
 

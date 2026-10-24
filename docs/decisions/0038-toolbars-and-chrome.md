@@ -6,6 +6,11 @@ and H), under the owner's goal that Apple Books is the only standard, with
 their approval to change DESIGN.md and SPEC.md in everything except the
 three-pane structure.*
 
+*Superseded in part by decision 0040: the see-through, blurred top bar was
+withdrawn (scrolled text ghosted through it), and the article's bars are now
+solid in the page's color. The summary note moved under the closing rule as
+small centred end matter, and the title no longer balances its lines.*
+
 **Why.** The article's tools were lined up with the text column rather than
 the pane, so on a very wide screen they floated in the middle of the page,
 and five icons sat in a loose row (one, Mark unread, an opaque ring). The

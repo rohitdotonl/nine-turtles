@@ -125,14 +125,37 @@ describe.each(Object.entries(THEMES))("the %s theme's keyboard outline on rows",
   });
 });
 
-// The selection pill (decision 0037): the theme's accent mixed into the pane,
-// 13% in a light theme and 20% in a dark one. The text checks above cover it.
+// The selection pill: in a light theme the accent mixed into the pane at 13%
+// (decision 0037); in a dark one the theme's own text color at 12%, so it
+// keeps the pane's warmth or coolness (decision 0041). The text checks above
+// cover it.
 describe.each(Object.entries(THEMES))("the %s theme's selection pill", (_name, colors) => {
   const dark = luminance(colors.paper!) < 0.5;
-  it("is the accent mixed into the list and the sidebar", () => {
-    const share = dark ? 0.2 : 0.13;
-    expect(colors["tint-list"]).toBe(mix(colors.accent!, colors.list!, share));
-    expect(colors["tint-sidebar"]).toBe(mix(colors.accent!, colors.sidebar!, share));
+  it(dark ? "is the text color mixed into the list and the sidebar" : "is the accent mixed into the list and the sidebar", () => {
+    const [from, share] = dark ? [colors.ink!, 0.12] : [colors.accent!, 0.13];
+    expect(colors["tint-list"]).toBe(mix(from, colors.list!, share));
+    expect(colors["tint-sidebar"]).toBe(mix(from, colors.sidebar!, share));
+  });
+
+  // A dark pane's warmth is how far red sits above blue; the pill may lift
+  // the pane but never swing it from warm to cool or back (a blue-grey pill
+  // on warm brown read as a clash, decision 0041).
+  it.runIf(dark)("keeps the pane's temperature", () => {
+    const warmth = (hex: string) => parseInt(hex.slice(1, 3), 16) - parseInt(hex.slice(5, 7), 16);
+    for (const area of ["list", "sidebar"]) {
+      const [pane, pill] = [warmth(colors[area]!), warmth(colors[`tint-${area}`]!)];
+      if (pane === 0) expect(Math.abs(pill), area).toBeLessThanOrEqual(2);
+      else expect(Math.sign(pill), area).toBe(Math.sign(pane));
+    }
+  });
+
+  it("stays at 7 : 1 for text and 4.5 : 1 for muted grey, with the unread dot at 3 : 1", () => {
+    for (const area of ["list", "sidebar"]) {
+      const pill = colors[`tint-${area}`]!;
+      expect(contrast(colors.ink!, pill), area).toBeGreaterThanOrEqual(7);
+      expect(contrast(colors.muted!, pill), area).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(colors.accent!, pill), area).toBeGreaterThanOrEqual(3);
+    }
   });
 
   it("is clearly deeper than a row under the pointer, which stays neutral", () => {
@@ -182,6 +205,50 @@ describe.each(Object.entries(THEMES))("the %s theme's fields", (_name, colors) =
     expect(contrast(mix(colors.ink!, colors.paper!, share("field-edge", "transparent")), fill)).toBeGreaterThanOrEqual(3);
   });
 });
+
+// A grouped list (Settings, Edit feed's folders) and a chosen segment on it
+// (decision 0042): in a light theme the group is the list's tone and the
+// segment the page's; in a dark one each is the text color mixed into the
+// page, read from the theme's block in app.css.
+function darkShare(selector: string, name: string): number | undefined {
+  const start = css.indexOf(selector);
+  const block = css.slice(start, css.indexOf("}", start));
+  const found = block.match(new RegExp(`--${name}: color-mix\\(in srgb, var\\(--ink\\) (\\d+)%, var\\(--paper\\)\\);`));
+  return found ? Number(found[1]) / 100 : undefined;
+}
+
+describe.each([...THEME_NAMES.map((name) => [name, `:root[data-theme="${name}"]`]), ["device dark", ":root:not([data-theme])"]])(
+  "the %s theme's grouped lists",
+  (name, selector) => {
+    const colors = THEMES[name]!;
+    const dark = luminance(colors.paper!) < 0.5;
+    const groupShare = darkShare(selector, "group");
+    const raisedShare = darkShare(selector, "raised");
+    const group = dark ? mix(colors.ink!, colors.paper!, groupShare!) : colors.list!;
+    const raised = dark ? mix(colors.ink!, colors.paper!, raisedShare!) : colors.paper!;
+    const track = mix(colors.ink!, group, 0.07);
+
+    it("set a dark theme's group a clear step off the page", () => {
+      if (!dark) return expect(groupShare).toBeUndefined();
+      expect(groupShare).toBeGreaterThanOrEqual(0.06);
+      expect(contrast(group, colors.paper!)).toBeGreaterThan(contrast(colors.list!, colors.paper!));
+    });
+
+    it("keep text at 7 : 1 and the second ink, muted grey and red at 4.5 : 1 on the group and under a pointer", () => {
+      for (const background of [group, mix(colors.ink!, group, 0.05)]) {
+        expect(contrast(colors.ink!, background)).toBeGreaterThanOrEqual(7);
+        for (const color of ["ink-2", "muted", "danger"]) expect(contrast(colors[color]!, background), color).toBeGreaterThanOrEqual(4.5);
+      }
+    });
+
+    it("raise the chosen segment above its track, with its words at 4.5 : 1", () => {
+      // Lighter than its track: the page's own tone in a light theme, a lighter mix in a dark one.
+      expect(luminance(raised)).toBeGreaterThan(luminance(track));
+      expect(contrast(colors.ink!, raised)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(colors["ink-2"]!, track)).toBeGreaterThanOrEqual(4.5);
+    });
+  },
+);
 
 it("the device's dark setting uses exactly the dark theme's colors", () => {
   expect(THEMES["device dark"]).toEqual(THEMES.dark);

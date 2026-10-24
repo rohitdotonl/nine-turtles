@@ -75,7 +75,10 @@ test.describe("on a wide window", () => {
     });
     expect(dotColor).toBe(accent);
     const [dotBox, titleBox] = [(await dot.boundingBox())!, (await row(page, blog, MIDDLE).locator(".title").boundingBox())!];
-    expect(dotBox.x + dotBox.width).toBeLessThanOrEqual(titleBox.x);
+    // Its own gutter, not a bullet: 8px clear of the title, and the title
+    // starts where a read row's does (decision 0041).
+    expect(titleBox.x - (dotBox.x + dotBox.width)).toBeGreaterThanOrEqual(7.5);
+    expect(Math.abs((await row(page, blog, NEWEST).locator(".title").boundingBox())!.x - titleBox.x)).toBeLessThan(1);
     // In one feed's own list, rows don't repeat the feed's name on screen.
     await expect(row(page, blog, MIDDLE).getByText(`Blog ${blog} ·`, { exact: true })).toHaveClass(/sr-only/);
 

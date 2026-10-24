@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
 import { appReady, follow, signIn, tabTo } from "./screens";
 
@@ -66,6 +66,8 @@ test("a feed put in two folders appears under both, with its unread count in eac
   await openEdit(page, "Edit feed");
   await expect(page).toHaveURL(/\/feeds\/[0-9]+\/edit$/);
   await expect(page.getByRole("heading", { level: 2, name: "Edit feed" })).toBeFocused();
+  // Its title is the same serif as every other title (decision 0042).
+  expect(await page.getByRole("heading", { level: 2, name: "Edit feed" }).evaluate((element) => getComputedStyle(element).fontFamily)).toContain("Literata");
   // It's a sheet over the feed's list; Cancel closes it unchanged.
   await expect(page.getByRole("dialog", { name: "Edit feed" })).toBeVisible();
   await page.getByRole("button", { name: "Cancel" }).click();
@@ -77,6 +79,18 @@ test("a feed put in two folders appears under both, with its unread count in eac
 
   await openEdit(page, "Edit feed");
   await expect(page.getByRole("checkbox", { name: first })).toBeChecked();
+  // The folders are a checklist whose last row is "New folder…", one grouped list (decision 0042).
+  // Each folder's mark is a filled disc with a check when the feed is in it, an empty ring when it isn't.
+  const newFolder = page.getByLabel("New folder");
+  await expect(newFolder).toHaveAttribute("placeholder", "New folder…");
+  expect(await newFolder.evaluate((element) => element.closest(".inset-group")?.querySelectorAll(".check-row").length)).toBeGreaterThanOrEqual(1);
+  const mark = page.locator(".check-row").filter({ hasText: first }).locator(".check-mark");
+  const ink = await page.locator("body").evaluate((body) => getComputedStyle(body).color);
+  await expect(mark).toHaveCSS("background-color", ink);
+  await page.getByRole("checkbox", { name: first }).uncheck();
+  await expect(mark).toBeVisible();
+  await expect(mark).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await page.getByRole("checkbox", { name: first }).check();
   await page.getByRole("textbox", { name: "Name" }).fill(`Renamed ${blog}`);
   await page.getByLabel("New folder").fill(second);
   await page.getByRole("button", { name: "Save" }).click();
@@ -92,6 +106,14 @@ test("a feed put in two folders appears under both, with its unread count in eac
   }
   // Under both, and nowhere else.
   await expect(sidebar(page).getByRole("link", { name: `Renamed ${blog} 3 unread` })).toHaveCount(2);
+  // As in a Mac source list, a folder's arrow comes before its name, and every count ends at the
+  // same right edge, one column of numbers, folder or feed (decision 0041).
+  const folderLink = sidebar(page).getByRole("link", { name: `${first} 3 unread` });
+  const arrow = (await sidebar(page).getByRole("button", { name: `Feeds in ${first}` }).boundingBox())!;
+  expect(arrow.x + arrow.width).toBeLessThanOrEqual((await folderLink.boundingBox())!.x + 1);
+  const countEnd = (link: Locator) => link.locator(".tabular-nums").evaluate((element) => element.getBoundingClientRect().right);
+  const feedLink = sidebar(page).getByRole("link", { name: `Renamed ${blog} 3 unread` }).first();
+  expect(Math.abs((await countEnd(folderLink)) - (await countEnd(feedLink)))).toBeLessThan(1);
 
   // A folder's own list holds its feeds' articles.
   await sidebar(page).getByRole("link", { name: `${first} 3 unread` }).click();
@@ -198,7 +220,11 @@ test("the sidebar search finds feeds and folders by name, and Escape empties it"
   const blog = unique("findable");
   await openBlogs(page, [blog]);
   const search = sidebar(page).getByRole("searchbox", { name: "Find a feed or folder" });
+  // Only one filled search well on screen at rest, the list's: the sidebar's field gets its tone
+  // only while it's in use (decision 0041).
+  await expect(search).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await search.fill(blog.toUpperCase());
+  await expect(search).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) })).toBeVisible();
   await expect(sidebar(page).getByRole("link", { name: /^Quiet Notes/ })).toHaveCount(0);
 

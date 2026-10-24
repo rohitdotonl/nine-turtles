@@ -4,6 +4,7 @@ import {
   findByName,
   folderUnread,
   importMessage,
+  inDevanagari,
   markedAllMessage,
   newItemsMessage,
   toExcerpt,
@@ -63,6 +64,15 @@ describe("unread counts", () => {
     expect(unreadLabel(999)).toBe("999");
     expect(unreadLabel(1000)).toBe("999+");
     expect(unreadLabel(25000)).toBe("999+");
+  });
+});
+
+describe("names in Devanagari", () => {
+  it("are told apart by their script, whatever the language", () => {
+    expect(inDevanagari("धीमी पढ़ाई")).toBe(true);
+    expect(inDevanagari("Notes · मराठी")).toBe(true);
+    expect(inDevanagari("The Marginalian")).toBe(false);
+    expect(inDevanagari("Café ünïcode")).toBe(false);
   });
 });
 

@@ -4,6 +4,37 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 24 October 2026: Toward Apple Books, batch 3
+
+- The article's bars are solid in the page's color, so text no longer shows
+  faintly through them; a thin line appears under the top bar only once
+  you scroll, and the phone's bottom bar has a thin line along its top. No
+  odd-colored strip beside the scrollbar.
+- A summary-only article ends with a small centred note under the closing
+  line, linking the full article. Titles use the text's full width, and
+  paragraphs no longer leave visibly short lines.
+- Search results show the title, then the matching text (up to two lines),
+  then the source and time.
+- With no article open, the reading area shows just "No article open."
+- Sheets and Settings speak in one voice: sheet titles are in the same serif
+  as every other title, Cancel is a quiet button with room above it, and a
+  refused field shows one line, not a red edge inside a ring. Edit feed's
+  folders show an empty ring or a tick, so even one folder is clear, and
+  "New folder…" is the list's last row. The shortcut list fits a laptop
+  window and its title isn't ringed. In Settings the sample text sits on the
+  page, rows that act end in a small mark (› or a download arrow; Sign out a
+  door, not red, since it removes nothing), the text size reads A | Medium |
+  A, chosen choices are raised without an edge, and dark themes' groups stand
+  off the page.
+- The list and sidebar line up: the unread dot sits in its own margin,
+  every title starts under the list's title and search, the row lines end
+  with the selection, the list's title stays on one line, counts form one
+  column with folder arrows before their names, only the list's search is
+  filled at rest, there's no "Press ? for shortcuts" hint, a first visit
+  shows only the welcome, dark themes select with a warm lift instead of a
+  blue tint, and a phone's feeds screen has chevrons and no stale
+  selection (decision 0041).
+
 ## 24 October 2026: Toward Apple Books
 
 - An **Aa** button on every article opens a small reading panel, as in

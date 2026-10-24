@@ -5,11 +5,18 @@
   feed in two folders is listed under both. Which folders are open is
   remembered on this device.
 
+  As in a Mac source list (decision 0041), a folder's show-or-hide arrow
+  sits before its name, so every row's count ends at the same right edge,
+  one column of numbers. On a phone the feeds screen is the root of a
+  stack: nothing is marked as selected there, and every row ends in a
+  chevron, after its count, because it leads on to a screen of its own.
+
   While the sidebar search holds text, a flat list of the folders and feeds
   whose name contains it takes their place.
 -->
 <script lang="ts">
-  import { findByName, folderUnread, unreadLabel, type Feed, type Folder } from "./feeds";
+  import Icon from "./Icon.svelte";
+  import { findByName, folderUnread, inDevanagari, unreadLabel, type Feed, type Folder } from "./feeds";
   import { pathFor, type Route } from "./router";
 
   let {
@@ -18,6 +25,7 @@
     route,
     search,
     follow,
+    phone = false,
   }: {
     feeds: Feed[];
     folders: Folder[];
@@ -25,6 +33,8 @@
     /** What's typed in the sidebar search. */
     search: string;
     follow: (event: MouseEvent, next: Route) => void;
+    /** The phone's feeds screen: no selection, and a chevron on every row. */
+    phone?: boolean;
   } = $props();
 
   const OPEN_KEY = "slowfeed.open-folders";
@@ -54,14 +64,24 @@
   let loose = $derived(feeds.filter((feed) => feed.folders.length === 0));
 
   function isHere(place: Route): boolean {
-    return pathFor(place) === pathFor(route);
+    // The phone's feeds screen shows no selection: you're at the root, not in a place.
+    return !phone && pathFor(place) === pathFor(route);
   }
 </script>
 
 {#snippet count(unread: number)}
-  {#if unreadLabel(unread)}<span class="shrink-0 text-meta text-muted tabular-nums"
+  {#if unreadLabel(unread)}<span class="min-w-[2ch] shrink-0 text-right text-meta text-muted tabular-nums"
       >{unreadLabel(unread)}<span class="sr-only"> unread</span></span
     >{/if}
+{/snippet}
+
+{#snippet name(text: string)}
+  <!-- Devanagari a touch larger, so it sits level with Latin names (decision 0041). -->
+  <span class={["min-w-0 flex-1 truncate", inDevanagari(text) && "devanagari"]}>{text}</span>
+{/snippet}
+
+{#snippet leadsOn()}
+  {#if phone}<span class="-mr-1 shrink-0 text-muted"><Icon name="chevron-right" size={16} /></span>{/if}
 {/snippet}
 
 {#snippet feedRow(feed: Feed, indent: boolean)}
@@ -73,12 +93,12 @@
       onclick={(event) => follow(event, place)}
       title={feed.title}
       class={[
-        "place mx-2 flex min-h-11 pointer-fine:min-h-9 items-center gap-3 text-ui",
-        // With folders above, the counts line up with theirs, in the column left of the folders' arrows.
-        folders.length > 0 && !searching ? "pr-[46px] pointer-fine:pr-[38px]" : "pr-3.5",
-        indent ? "pl-8" : "pl-3",
+        "place mx-2 flex min-h-11 pointer-fine:min-h-9 items-center gap-3 pr-3.5 text-ui",
+        // Inside a folder, its feeds start where the folder's name starts, after its arrow.
+        indent ? "pl-11 pointer-fine:pl-[38px]" : "pl-3",
         isHere(place) ? "font-semibold text-ink" : "text-ink",
-      ]}><span class="min-w-0 flex-1 truncate">{feed.title}</span>{@render count(feed.unread)}</a
+      ]}
+      >{@render name(feed.title)}{@render count(feed.unread)}{@render leadsOn()}</a
     >
   </li>
 {/snippet}
@@ -91,9 +111,7 @@
     onclick={(event) => follow(event, place)}
     title={folder.name}
     class={["flex min-h-11 pointer-fine:min-h-9 min-w-0 flex-1 items-center gap-3 rounded-md pr-3.5 text-ui", padded && "pl-3", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
-    ><span class="min-w-0 flex-1 truncate">{folder.name}</span>{@render count(
-      folderUnread(folder, feeds),
-    )}</a
+    >{@render name(folder.name)}{@render count(folderUnread(folder, feeds))}{@render leadsOn()}</a
   >
 {/snippet}
 
@@ -124,14 +142,14 @@
         {@const shown = open.includes(folder.id)}
         <li>
           <div class="place mx-2 flex" data-here={here || undefined}>
-            {@render folderLink(folder, true)}
+            <!-- The arrow first, as a Mac source list's disclosure, in the column where Unread, Starred and All have their icons. -->
             <button
               type="button"
               aria-expanded={shown}
               aria-controls={`folder-${folder.id}`}
               aria-label={`Feeds in ${folder.name}`}
               onclick={() => toggle(folder.id)}
-              class="-ml-3 flex min-h-11 pointer-fine:min-h-9 w-11 pointer-fine:w-9 shrink-0 items-center justify-center text-muted"
+              class="flex min-h-11 pointer-fine:min-h-9 w-11 pointer-fine:w-[38px] shrink-0 items-center justify-center rounded-md text-muted"
             >
               <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 {#if shown}
@@ -141,13 +159,14 @@
                 {/if}
               </svg>
             </button>
+            {@render folderLink(folder, false)}
           </div>
           {#if shown}
             <ul id={`folder-${folder.id}`}>
               {#each inside as feed (feed.id)}
                 {@render feedRow(feed, true)}
               {:else}
-                <li class="py-2 pr-5 pl-10 text-meta text-muted">No feeds in this folder.</li>
+                <li class="py-2 pr-5 pl-[52px] text-meta text-muted pointer-fine:pl-[46px]">No feeds in this folder.</li>
               {/each}
             </ul>
           {/if}
