@@ -288,6 +288,9 @@ each with screenshots:
   one column with folder arrows first, no shortcut hint, the welcome alone
   on a first visit, warm dark pills, and a phone feeds screen with chevrons
   and no stale selection (decision 0041).
+- ✅ Quiet endings and blank paper (fourth critique): a short end-note link
+  that never breaks, balanced titles, at least 56px beside the text on a
+  computer, and an empty reading pane with nothing drawn (decision 0044).
 
 ---
 

@@ -1047,12 +1047,12 @@
             </section>
           {:else}
             <!--
-              Waiting quietly in the middle of the page, a little above centre, like a blank page in a book:
-              one calm line and nothing else, as in Apple Books (decision 0040). The hint of what to do is
-              for screen readers only, and only when the list has something to open.
+              Blank paper, as in Apple Books: nothing to see until you choose an article (decision 0044).
+              Screen readers still hear that no article is open, and, when the list has something to
+              open, how to open one.
             -->
-            <section aria-label="Article" class="flex min-w-0 flex-1 flex-col items-center justify-center bg-paper px-6 pb-[12vh] text-center md:px-10">
-              <p class="font-serif text-[1.0625rem] text-ink-2">No article open.</p>
+            <section aria-label="Article" class="min-w-0 flex-1 bg-paper">
+              <p class="sr-only">No article open.</p>
               {#if listCount > 0 && !missing}
                 <p class="sr-only">Choose one from the list<span class="keyboard-hint">, or press j</span>.</p>
               {/if}

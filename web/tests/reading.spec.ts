@@ -28,15 +28,10 @@ test.describe("on a wide window", () => {
 
   test("j shows an article cleaned and restyled, and j and k move through the list", async ({ page }) => {
     await openRoom(page);
-    await expect(article(page).getByText("No article open.")).toBeVisible();
-    // It waits in the middle of the reading area, not at its top.
-    const empty = (await article(page).getByText("No article open.").boundingBox())!;
-    const pane = (await article(page).boundingBox())!;
-    expect(empty.y).toBeGreaterThan(pane.y + pane.height / 4);
-    // One calm line in the reading serif and nothing else to see, as in Apple Books (decision 0040);
-    // the hint, since the list has articles to open, is there for screen readers only.
-    expect(await article(page).getByText("No article open.").evaluate((e) => getComputedStyle(e).fontFamily)).toContain("Literata");
-    await expect(article(page).getByText("No article open.")).toHaveCSS("font-size", "17px");
+    // Blank paper, as in Apple Books (decision 0044): nothing to see, but screen readers hear that
+    // no article is open and, since the list has articles to open, how to open one.
+    await expect(article(page)).toContainText("No article open.");
+    await expect(article(page).locator(".sr-only", { hasText: "No article open." })).toHaveCSS("position", "absolute");
     await expect(article(page)).toContainText("Choose one from the list, or press j.");
     await expect(article(page).locator(".sr-only", { hasText: "Choose one from the list" })).toHaveCSS("position", "absolute");
     await expect(article(page).locator("kbd")).toHaveCount(0);
@@ -403,8 +398,8 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("j");
     const heading = article(page).locator(".article-title");
     await expect(heading).toHaveCSS("font-size", "32px");
-    // Its lines fill the text's measure, avoiding only a lone last word (decision 0040).
-    await expect(heading).toHaveCSS("text-wrap", /pretty/);
+    // Its lines are balanced, so a two-line title reads as two even lines (decision 0044).
+    await expect(heading).toHaveCSS("text-wrap", /balance/);
     expect(parseFloat(await heading.evaluate((element) => getComputedStyle(element).lineHeight)) / 32).toBeCloseTo(1.12, 2);
     const byline = article(page).locator(".article-byline");
     await expect(byline).toHaveCSS("font-size", "13px");
@@ -422,11 +417,24 @@ test.describe("on a wide window", () => {
     await expect(article(page).locator(".article-text h2").first()).toHaveCSS("font-size", "22px");
   });
 
+  test("on a 1280px window the text keeps at least 56px of paper on each side", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await openRoom(page);
+    await page.keyboard.press("j");
+    // The measure gives way before the margins do, as in Apple Books (decision 0044).
+    const [text, scroller] = await Promise.all([
+      article(page).locator(".article").boundingBox(),
+      article(page).locator(".reading-scroller").boundingBox(),
+    ]);
+    expect(text!.x - scroller!.x).toBeGreaterThanOrEqual(56);
+    expect(scroller!.x + scroller!.width - (text!.x + text!.width)).toBeGreaterThanOrEqual(56);
+  });
+
   test("a summary-only article ends with a small centred note under the closing rule, linking the whole article", async ({ page }) => {
     await openRoom(page);
     await row(page, "Only the first page").click();
     const note = article(page).locator(".article-note");
-    await expect(note).toContainText("This feed shares only a summary. Read the full article on");
+    await expect(note).toContainText("This feed shares only a summary. Read the full article");
     // End matter, as in a book: small upright interface type, centred (decision 0040).
     expect(await note.evaluate((element) => getComputedStyle(element).fontFamily)).not.toContain("Literata");
     await expect(note).toHaveCSS("font-style", "normal");
@@ -436,6 +444,9 @@ test.describe("on a wide window", () => {
     expect(await note.evaluate((element) => getComputedStyle(element).textDecorationLine)).toBe("none");
     const link = note.getByRole("link", { name: "Read the full article on Reading Room" });
     await expect(link).toHaveCSS("text-decoration-line", "underline");
+    // The publisher is named in the byline, so the link's words stay short and never break (decision 0044).
+    await expect(link).toHaveCSS("white-space", "nowrap");
+    expect(await link.evaluate((element) => element.firstChild?.textContent)).toBe("Read the full article");
     await expect(link).toHaveAttribute("href", "https://reading-room.example/first-page");
     await expect(link).toHaveAttribute("target", "_blank");
     // It comes after the short closing line, and is the last thing in the article.

@@ -2,7 +2,7 @@
 
 > **slowfeed is a quiet place to read the web: it shows you what's there, gets out of the way, and lets you finish.**
 
-*Last updated: 24 October 2026 (toward Apple Books, batch 3: solid article bars with a hairline only once scrolled, end matter under the closing rule, search results ordered title, text, meta, and a silent empty reading pane, decision 0040; the list's and sidebar's geometry, decision 0041; sheets and Settings in one voice, decision 0042; before that, an "Aa" reading panel beside the text and quiet icon toolbars, decision 0034; one family for sheets, search excerpts and a welcome in the reading area, decision 0035. Before that, the owner approved a new look: a role-based type scale, three ink levels, deeper area tones and one selection style, decision 0026). This document takes precedence over every other project document.*
+*Last updated: 24 October 2026 (quiet endings and blank paper in the reading pane: a short end-note link that never breaks, balanced titles, 56px margins beside the text and an empty reading pane with nothing drawn, decision 0044; toward Apple Books, batch 3: solid article bars with a hairline only once scrolled, end matter under the closing rule, search results ordered title, text, meta, and a silent empty reading pane, decision 0040; the list's and sidebar's geometry, decision 0041; sheets and Settings in one voice, decision 0042; before that, an "Aa" reading panel beside the text and quiet icon toolbars, decision 0034; one family for sheets, search excerpts and a welcome in the reading area, decision 0035. Before that, the owner approved a new look: a role-based type scale, three ink levels, deeper area tones and one selection style, decision 0026). This document takes precedence over every other project document.*
 
 ## Mission
 
@@ -232,7 +232,7 @@ Eleven, for now: **off-white** (default light), **sepia** and **dark** (default 
   - heading 24px, in the reading serif (the list's title, one line that ends in "…", 22px in a list pane narrower than 340px); the sidebar's wordmark is 20px in the second ink on a computer and 28px on a phone's feeds screen;
   - extra large 28px (a screen's own title);
   - display 48px (sign-in wordmark).
-- Article text is set by the reader: six steps, 16 to 28px, 20px by default (a tenth smaller on a phone). The article's title is 1.6 times the text size (32px by default), with tight leading (1.12), its lines running to the text's full measure with only a lone last word avoided (decision 0040); its headings are 1.1 and 1.05 times (22px by default) with more room above than below, so the title is always clearly the largest thing on screen and a heading never competes with it (decision 0038).
+- Article text is set by the reader: six steps, 16 to 28px, 20px by default (a tenth smaller on a phone). The article's title is 1.6 times the text size (32px by default), with tight leading (1.12), its lines balanced so a two-line title reads as two even lines, as Apple Books sets one (decision 0044, replacing 0040's lone-word rule); its headings are 1.1 and 1.05 times (22px by default) with more room above than below, so the title is always clearly the largest thing on screen and a heading never competes with it (decision 0038).
 - **The byline is quiet:** 13px in the interface font and the second ink, 12px under the title, with the publisher's name leading in full ink and semibold (the interface fonts ship only regular and semibold).
 - **Spacing** in steps of 4px, mostly 8, 16, 24, 40 and 64px.
 - **Weights:** regular and semibold (600) for both reading and the interface: Literata's semibold for titles, headings and bold words in articles (Atkinson Hyperlegible keeps its bold). Nothing heavier, so a calm page never shouts. Semibold marks unread titles, where you are in the sidebar, the one main action in a toolbar or sheet, and a destructive action's words. The self-hosted Inter has only 400 and 600, so unread titles stay at 600 (decision 0037).
@@ -288,15 +288,16 @@ In river mode (V2) only the cursor and star show.
 ### Article view
 
 - **The feed's content, read in the app,** cleaned and restyled consistently: headings, quotes, code, tables, footnotes, images.
-- **Summary-only feeds** show the summary; never fetch the full article (second floor). Under the closing rule, as a book sets its end matter, a small note in upright interface type (14px), centred, in the second ink, says "This feed shares only a summary. Read the full article on {publisher} ›"; only the link is underlined (decision 0040).
+- **Summary-only feeds** show the summary; never fetch the full article (second floor). Under the closing rule, as a book sets its end matter, a small note in upright interface type (14px), centred, in the second ink, says "This feed shares only a summary. Read the full article ›"; only the link is underlined, with a fine, soft line. The publisher is already named in the byline, so the link stays short (screen readers hear "Read the full article on {publisher}"), and each sentence keeps to one line, so the note breaks only between them and never strands a word (decisions 0040, 0044).
 - **Images** load normally from the publisher; invisible 1×1 tracking images are removed.
 - **"Open original"** is always present, always in the same place: the icon at the left edge of the article's top bar (on a phone, at the right of the top bar), named "Open original" for screen readers and in its tooltip.
 - **Quiet tools, anchored to the pane** (decision 0038): the article's top bar runs the width of the reading pane, its icons in the second ink, never words: Open original at the left edge; **Aa**, Star and **More** (…) at the right edge. More holds Copy link (Share on phones) and Mark unread. The bar is solid, in the page's own color, across the whole pane (scrollbar included); the text scrolls below it, never showing through, and a faint line shows between them only once the text has scrolled (decision 0040). The scrollbar's track is see-through, so its gutter is the page's color in every theme.
 - **The Aa panel,** like Apple Books': one press from the text, the reader's own controls. Text size as a small A and a large A (the same steps as `+` and `-`); the themes as round-cornered tiles, each "Aa" in the reading font on that theme's own page color and ink, the chosen one ringed with a checkmark on its corner and its name semibold (the same tiles as Settings); the reading font, each name in its own face; and the line width. Changes apply at once to the article behind it. The same preferences stay in Settings › Look and feel.
 - **Title, then byline:** the title first, then who, where and when in a quiet line under it (see Typography).
 - **An ending:** a short centred line after the last paragraph, and room below it.
-- **Title size:** 1.6 times the text size, semibold, tight, filling the text's measure. On a phone the same text-size step reads a little smaller, so a line keeps about 40 characters.
+- **Title size:** 1.6 times the text size, semibold, tight, in the text's column with its lines balanced. On a phone the same text-size step reads a little smaller, so a line keeps about 40 characters.
 - **The phone's bottom bar** is quiet icons without words, each named for screen readers, solid with a hairline along its top (see Mobile).
+- **Paper beside the text:** on a computer at least 56px on each side, as Apple Books keeps on a Mac; in a narrow pane the line gets shorter rather than the margins thinner (decision 0044). Phones keep 24px.
 - **Body text wraps normally;** only a paragraph that ends the article avoids a lone last word, so no line is pulled visibly short (decision 0040).
 - Prefetch the next article for instant `j`.
 
@@ -354,7 +355,7 @@ Until the first feed is added, the **reading area** holds a welcome, centred lik
 
 - One centred column, 420px wide, like Apple Books' empty library: one message, one action. "Import an OPML file…" is a quiet button just under the field.
 - The welcome owns the screen (decision 0041): the list beside it says nothing, and the sidebar has no find field while there's nothing to find. Where there's no reading area beside the list (a phone), the welcome takes the list's place.
-- **No article open:** once there are feeds, the empty reading area says only "No article open." in the reading serif at 17px in the second ink, like a blank page in Apple Books. The hint "Choose one from the list, or press j" is for screen readers only, when the list has something to open (decision 0040).
+- **No article open:** once there are feeds, the empty reading area is blank paper, as in Apple Books: nothing is drawn. Screen readers hear "No article open." and, when the list has something to open, "Choose one from the list, or press j" (decisions 0040, 0044).
 - Accepts a **website** URL too; slowfeed finds the feed (autodiscovery).
 - The "New to feeds?" guide page comes in V2.
 
