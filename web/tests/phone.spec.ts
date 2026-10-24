@@ -114,6 +114,17 @@ test.describe("on a phone", () => {
     const box = await toolbar(page).boundingBox();
     const height = page.viewportSize()?.height ?? 0;
     expect(Math.round((box?.y ?? 0) + (box?.height ?? 0))).toBe(height);
+    // Solid bars with an edge, so the text ends at a line rather than showing through or being sliced (decision 0040):
+    // a hairline along the toolbar's top, and the top bar in the page's own color, never blurred.
+    await expect(toolbar(page)).toHaveCSS("border-top-style", "solid");
+    await expect(toolbar(page)).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+    const bar = article(page).locator(".reading-bar");
+    const [barColor, paperColor] = await Promise.all([
+      bar.evaluate((element) => getComputedStyle(element).backgroundColor),
+      article(page).evaluate((element) => getComputedStyle(element).backgroundColor),
+    ]);
+    expect(barColor).toBe(paperColor);
+    await expect(bar).toHaveCSS("backdrop-filter", "none");
     // The icons sit in one line (Previous is hidden on the first article), and each place is a full 44px tap.
     const tops = await toolbar(page).locator(":scope > * svg").evaluateAll((icons) =>
       icons.filter((icon) => getComputedStyle(icon).visibility !== "hidden").map((icon) => Math.round(icon.getBoundingClientRect().top + icon.getBoundingClientRect().height / 2)),

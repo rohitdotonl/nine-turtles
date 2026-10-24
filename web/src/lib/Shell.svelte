@@ -1047,16 +1047,15 @@
             </section>
           {:else}
             <!--
-              Waiting quietly in the middle of the page, a little above centre, like a blank page in a book.
-              The hint shows only when the list has something to open; its line is kept either way, so nothing moves.
+              Waiting quietly in the middle of the page, a little above centre, like a blank page in a book:
+              one calm line and nothing else, as in Apple Books (decision 0040). The hint of what to do is
+              for screen readers only, and only when the list has something to open.
             -->
             <section aria-label="Article" class="flex min-w-0 flex-1 flex-col items-center justify-center bg-paper px-6 pb-[12vh] text-center md:px-10">
-              <div>
-                <p class="font-serif text-[1.0625rem] text-ink-2">No article open.</p>
-                <p class="mt-2 min-h-[1lh] text-meta text-muted">
-                  {#if listCount > 0 && !missing}Choose one from the list<span class="keyboard-hint">, or press <kbd class="key">j</kbd></span>.{/if}
-                </p>
-              </div>
+              <p class="font-serif text-[1.0625rem] text-ink-2">No article open.</p>
+              {#if listCount > 0 && !missing}
+                <p class="sr-only">Choose one from the list<span class="keyboard-hint">, or press j</span>.</p>
+              {/if}
             </section>
           {/if}
         {/if}

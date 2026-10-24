@@ -191,7 +191,7 @@ test("Hindi words are found whole", async ({ page }) => {
   await expect(results(page).first().locator(".excerpt mark")).toHaveText("पुस्तकालय");
 });
 
-test("each result shows a line of its text around the match, and × clears the field", async ({ page }) => {
+test("each result shows its text around the match under the title, and × clears the field", async ({ page }) => {
   const blog = unique("excerpt");
   const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
   await open(page, `/feeds/${id}`, `Blog ${blog}`);
@@ -202,7 +202,7 @@ test("each result shows a line of its text around the match, and × clears the f
   await page.keyboard.press("Enter");
   await expect(results(page)).toHaveCount(3);
 
-  // The word is only in each article's text: one quiet line shows it there,
+  // The word is only in each article's text: up to two quiet lines show it there, right under the title,
   // the word itself marked as in a title (the same faint accent tone, same weight) and in full ink.
   const excerpt = results(page).first().locator(".excerpt");
   await expect(excerpt).toHaveText("A short made-up summary for article 3.");
@@ -219,9 +219,15 @@ test("each result shows a line of its text around the match, and × clears the f
   ]);
   expect(wordColor).not.toBe(lineColor);
   expect(wordColor).toBe(titleColor);
-  // One line, however long the text.
+  // At most two lines, however long the text.
   const lineHeight = parseFloat(await excerpt.evaluate((e) => getComputedStyle(e).lineHeight));
-  expect((await excerpt.boundingBox())!.height).toBeLessThanOrEqual(lineHeight + 1);
+  expect((await excerpt.boundingBox())!.height).toBeLessThanOrEqual(2 * lineHeight + 1);
+  expect(await excerpt.evaluate((e) => getComputedStyle(e).getPropertyValue("-webkit-line-clamp"))).toBe("2");
+  // As Apple Books orders a result: the title, then the text, then the meta line (decision 0040).
+  const order = await results(page)
+    .first()
+    .evaluate((element) => [...element.querySelector("button")!.children].map((child) => (child.classList.contains("title") ? "title" : child.classList.contains("excerpt") ? "excerpt" : child.querySelector("time") ? "meta" : "")).filter(Boolean));
+  expect(order).toEqual(["title", "excerpt", "meta"]);
 
   // The × in the field: a 44px target, named for screen readers; it empties the field and keeps the keyboard there.
   const clear = page.getByRole("button", { name: "Clear search" });
