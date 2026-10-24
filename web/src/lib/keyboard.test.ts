@@ -86,11 +86,17 @@ describe("keyboard shortcuts", () => {
   });
 
   it("lists every shortcut in DESIGN.md in the cheat sheet", () => {
-    expect(SHORTCUTS).toHaveLength(16);
+    expect(SHORTCUTS).toHaveLength(18);
     expect(SHORTCUTS.filter((shortcut) => shortcut.ready).map((shortcut) => shortcut.keys[0])).toEqual([
       "j",
+      "g then u",
+      "g then s",
+      "g then a",
+      "[",
+      "Esc",
       "Enter",
       "v",
+      "+",
       "s",
       "m",
       "Shift+A",
@@ -98,10 +104,6 @@ describe("keyboard shortcuts", () => {
       "r",
       "/",
       "a",
-      "g then u",
-      "[",
-      "+",
-      "Esc",
       "?",
     ]);
   });

@@ -55,6 +55,7 @@
     onUnreadChange,
     onRefresh,
     refreshInTopBar = false,
+    results = false,
   }: {
     source: Source;
     order: Order;
@@ -72,6 +73,8 @@
     onRefresh: () => void;
     /** On a phone, Refresh sits in the top bar instead (SPEC section 13), so there's only ever one. */
     refreshInTopBar?: boolean;
+    /** These are search results: say how many, and there's nothing new to fetch. */
+    results?: boolean;
   } = $props();
 
   /** How often the list asks whether new items are waiting. */
@@ -375,12 +378,18 @@
     if (move(event.key === "ArrowDown" ? 1 : -1)) focusSelected();
   }
 
+  /** "1 result", "12 results", or "50+ results" while older ones wait behind "Show older items". */
+  function resultCount(count: number, more: boolean): string {
+    if (count === 0) return "";
+    return `${count}${more ? "+" : ""} ${count === 1 && !more ? "result" : "results"}`;
+  }
+
   load(null);
 </script>
 
 <div class="-ml-3 flex min-h-11 flex-wrap items-center gap-x-1">
   <!-- First, so it never moves when "Mark all as read" comes and goes. -->
-  {#if !refreshInTopBar}
+  {#if !refreshInTopBar && !results}
     <button type="button" aria-disabled={busy} onclick={refresh} class="btn-quiet btn-small"><Icon name="refresh" size={16} />Refresh</button>
   {/if}
   {#if articles.length > 0}
@@ -396,7 +405,7 @@
 -->
 <div class="mb-1.5 flex min-h-6 pointer-coarse:min-h-11 flex-wrap items-center justify-between gap-x-4 text-meta text-muted">
   <p class="flex flex-wrap items-center gap-x-1">
-    <span role="status">{line}</span>
+    <span role="status">{line || (results && loaded ? resultCount(articles.length, next !== null) : "")}</span>
     <span aria-live="polite" class="sr-only">{spoken}</span>
     {#if undoLast}
       <span aria-hidden="true">·</span>

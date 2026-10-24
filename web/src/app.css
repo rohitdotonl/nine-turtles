@@ -289,6 +289,13 @@ textarea {
     font-size: var(--text-small);
   }
 
+  /* An icon alone (close, the sidebar): a 44px square, its name in its label and tooltip. */
+  .btn-icon {
+    padding-inline: 0;
+    width: 2.75rem;
+    color: var(--ink-2);
+  }
+
   .btn-quiet > svg {
     flex-shrink: 0;
   }

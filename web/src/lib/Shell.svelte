@@ -44,6 +44,9 @@
 
   let { version, onSignedOut }: { version: string; onSignedOut: () => void } = $props();
 
+  /** A small sign beside each view's name in the sidebar. */
+  const VIEW_ICONS = { unread: "dot", starred: "star", all: "stack" } as const;
+
   const start = parse(location.pathname);
   let route: Route = $state(start);
   /** Where Escape and "Close settings" go back to: the last list you were on. */
@@ -685,9 +688,10 @@
               aria-current={current ? "page" : undefined}
               onclick={(event) => follow(event, { kind: "view", view })}
               class={[
-                "side-row flex min-h-11 pointer-fine:min-h-10 items-center border-l-[3px] pr-5 pl-[17px] text-ui",
+                "side-row flex min-h-11 pointer-fine:min-h-10 items-center gap-2.5 border-l-[3px] pr-5 pl-[17px] text-ui",
                 current ? "border-accent bg-tint-sidebar font-semibold text-ink" : "border-transparent text-ink-2",
               ]}
+              ><span class={current ? "text-ink" : "text-muted"}><Icon name={VIEW_ICONS[view]} size={16} filled={view === "starred" && current} /></span
               >{VIEW_NAMES[view]}</a
             >
           </li>
@@ -700,31 +704,34 @@
         <p class="px-4 pt-4 text-small">Your feeds couldn't be loaded. Reload the page to try again.</p>
       {/if}
     </div>
-    <!-- Always at the very bottom, outside the scrolling list, so it never moves. -->
-    <div class="shrink-0 pt-2 pb-2">
-      <div class="flex items-center">
-        <a
-          href="/add-feed"
-          aria-current={route.kind === "add-feed" ? "page" : undefined}
-          onclick={(event) => follow(event, { kind: "add-feed" })}
-          class={[
-            "side-row flex min-h-11 flex-1 items-center gap-2 border-l-[3px] pr-3 pl-[17px] text-small",
-            route.kind === "add-feed" ? "border-accent bg-tint-sidebar font-semibold text-ink" : "border-transparent text-ink-2",
-          ]}><Icon name="plus" size={16} />Add feed</a
-        >
-        <a
-          href="/settings"
-          aria-current={route.kind === "settings" ? "page" : undefined}
-          onclick={(event) => follow(event, { kind: "settings" })}
-          class={[
-            "side-row flex min-h-11 items-center gap-2 border-l-[3px] pr-5 pl-3 text-small",
-            route.kind === "settings" ? "border-accent bg-tint-sidebar font-semibold text-ink" : "border-transparent text-ink-2",
-          ]}><Icon name="settings" size={16} />Settings</a
-        >
-      </div>
+    <!--
+      Always at the very bottom, outside the scrolling list, so it never moves:
+      Add feed in words, then the shortcut list and Settings as icons, the way
+      a Mac app keeps its tools at the foot of the sidebar.
+    -->
+    <div class="flex shrink-0 items-center gap-1 border-t border-ink/10 py-1.5 pr-3">
+      <a
+        href="/add-feed"
+        aria-current={route.kind === "add-feed" ? "page" : undefined}
+        onclick={(event) => follow(event, { kind: "add-feed" })}
+        class={[
+          "side-row flex min-h-11 min-w-0 flex-1 items-center gap-2 border-l-[3px] pr-3 pl-[17px] text-small",
+          route.kind === "add-feed" ? "border-accent bg-tint-sidebar font-semibold text-ink" : "border-transparent text-ink-2",
+        ]}><Icon name="plus" size={16} />Add feed</a
+      >
       {#if !phone}
-        {@render hint("pl-5")}
+        <button type="button" onclick={() => (cheatSheetOpen = true)} aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)" class="btn-quiet btn-icon"
+          ><Icon name="keyboard" size={18} /></button
+        >
       {/if}
+      <a
+        href="/settings"
+        aria-label="Settings"
+        title="Settings"
+        aria-current={route.kind === "settings" ? "page" : undefined}
+        onclick={(event) => follow(event, { kind: "settings" })}
+        class={["btn-quiet btn-icon", route.kind === "settings" && "bg-tint-sidebar text-ink"]}><Icon name="settings" size={18} /></a
+      >
     </div>
   </nav>
 
@@ -741,6 +748,7 @@
           {onSignedOut}
           onClose={closePage}
           onImported={loadFeeds}
+          besideToggle={!phone && !panes.sidebar}
         />
       {:else if route.kind === "edit-feed" && currentFeed}
         {#key currentFeed.id}
@@ -798,7 +806,7 @@
                 <button type="button" onclick={() => stepBack("home")} aria-label="Back to Feeds" class="btn-quiet gap-1 px-2"
                 ><Icon name="back" size={20} />Feeds</button
               >
-                {#if itemList && !missing}
+                {#if itemList && !missing && !shown}
                   <button type="button" onclick={() => itemList?.refresh()} class="btn-quiet -mr-3"
                     ><Icon name="refresh" />Refresh</button
                   >
@@ -844,6 +852,7 @@
                   onUnreadChange={unreadChanged}
                   onRefresh={loadFeeds}
                   refreshInTopBar={phone}
+                  results={shown !== undefined}
                 />
               {/key}
             {/if}

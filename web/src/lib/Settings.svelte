@@ -7,9 +7,10 @@
   starred articles as a JSON Feed file.
 -->
 <script lang="ts">
+  import Icon from "./Icon.svelte";
   import ImportOpml from "./ImportOpml.svelte";
   import type { Order } from "./feeds";
-  import { BAR_COLORS, LINE_WIDTHS, READING_FONTS, TEXT_SIZES, type Preferences } from "./preferences";
+  import { LINE_WIDTHS, READING_FONTS, TEXT_SIZES, type Preferences } from "./preferences";
   import { signOut } from "./session";
   import { updates } from "./updates.svelte";
 
@@ -23,6 +24,7 @@
     onSignedOut,
     onClose,
     onImported,
+    besideToggle = false,
   }: {
     preferences: Preferences;
     /** Newest or oldest first; unknown until the server answers. */
@@ -37,17 +39,23 @@
     onClose: () => void;
     /** Feeds were imported: the sidebar loads them. */
     onImported: () => void;
+    /** The sidebar is hidden, so the top line starts clear of its toggle. */
+    besideToggle?: boolean;
   } = $props();
 
   const THEME_CHOICES = [
-    { value: "system", label: "Match this device" },
+    { value: "system", label: "Automatic" },
     { value: "off-white", label: "Off-white" },
     { value: "sepia", label: "Sepia" },
     { value: "dark", label: "Dark" },
   ] as const;
 
-  // A small disc of each theme's reading background (DESIGN.md → "Color"); "Match this device" is half of each.
-  const SWATCHES: Record<(typeof THEME_CHOICES)[number]["value"], string> = { system: BAR_COLORS["off-white"], ...BAR_COLORS };
+  /** Each theme's page, sidebar and text, for its little picture (app.css holds the real ones). */
+  const PREVIEWS = {
+    "off-white": { page: "#f8f6f1", side: "#e7e2d7", ink: "#1f1e1c" },
+    sepia: { page: "#f4ebd7", side: "#e3d5b7", ink: "#2a241b" },
+    dark: { page: "#1a1917", side: "#282521", ink: "#e6e1d8" },
+  } as const;
 
   const SORT_CHOICES = [
     { value: "newest", label: "Newest first" },
@@ -76,150 +84,185 @@
   }
 </script>
 
-<section aria-labelledby="settings-heading" class="flex flex-1 flex-col bg-paper pt-16">
-  <div class="relative min-h-0 flex-1 overflow-y-auto px-6 pb-10 md:px-10">
-    <div class="flex max-w-2xl flex-wrap items-center justify-between gap-4">
-      <h2 id="settings-heading" tabindex="-1" bind:this={heading} class="text-xlarge font-semibold">Settings</h2>
-      <button type="button" onclick={onClose} class="btn">Close settings</button>
+<section aria-labelledby="settings-heading" class="flex flex-1 flex-col bg-paper pt-3">
+  <!-- The screen's top line, on the same line as the sidebar's wordmark; it never scrolls. -->
+  <div class={["pr-6 md:pr-10", besideToggle ? "pl-16" : "pl-6 md:pl-10"]}>
+    <div class="flex min-h-11 max-w-2xl items-center justify-between gap-4">
+      <h2 id="settings-heading" tabindex="-1" bind:this={heading} class="font-serif text-heading font-bold tracking-[-0.01em]">Settings</h2>
+      <button type="button" onclick={onClose} aria-label="Close settings" title="Close (Esc)" class="btn-quiet btn-icon -mr-2.5"><Icon name="close" size={20} /></button>
     </div>
-
-    <div class="mt-8 flex max-w-2xl flex-col gap-10">
-      <section aria-labelledby="reading-heading" class="flex flex-col gap-6">
-        <div>
-          <h3 id="reading-heading" class="text-large font-semibold">Reading</h3>
-          <p class="text-small text-muted">This applies on all your devices.</p>
+  </div>
+  <div class="relative min-h-0 flex-1 overflow-y-auto px-6 pt-5 pb-16 md:px-10">
+    <!--
+      Grouped like a system settings window: each group a card with a heading
+      above it, one setting per row, rows parted by a hairline. On a wide
+      screen a row's name sits on the left and its choices on the right.
+    -->
+    <div class="flex max-w-2xl flex-col gap-10">
+      <section aria-labelledby="reading-heading">
+        {@render groupHead("reading-heading", "Reading", "This applies on all your devices.")}
+        <div class="group-card">
+          <fieldset class="setting">
+            <legend class="setting-name">Sort order</legend>
+            <div class="setting-control">
+              <div class="choices" style="--phone-columns: 2">
+                {#each SORT_CHOICES as choice (choice.value)}
+                  <label class="choice">
+                    <input
+                      type="radio"
+                      name="sort"
+                      value={choice.value}
+                      checked={sort === choice.value}
+                      disabled={sort === undefined}
+                      onchange={() => chooseSort(choice.value)}
+                    />
+                    {choice.label}
+                  </label>
+                {/each}
+              </div>
+              <p role="status" class="text-small">{sortMessage}</p>
+            </div>
+          </fieldset>
         </div>
-
-        <fieldset>
-          <legend class="mb-2 font-semibold">Sort order</legend>
-          <div class="choices">
-          {#each SORT_CHOICES as choice (choice.value)}
-            <label class="choice">
-              <input
-                type="radio"
-                name="sort"
-                value={choice.value}
-                checked={sort === choice.value}
-                disabled={sort === undefined}
-                onchange={() => chooseSort(choice.value)}
-              />
-              {choice.label}
-            </label>
-          {/each}
-          </div>
-          <p role="status" class="text-small">{sortMessage}</p>
-        </fieldset>
       </section>
 
-      <section aria-labelledby="reader-heading" class="flex flex-col gap-6">
-        <div>
-          <h3 id="reader-heading" class="text-large font-semibold">Reader</h3>
-          <p class="text-small text-muted">These apply to this device only.</p>
+      <section aria-labelledby="reader-heading">
+        {@render groupHead("reader-heading", "Look and feel", "These apply to this device only.")}
+        <div class="group-card">
+          <fieldset class="setting">
+            <legend class="setting-name">Theme</legend>
+            <div class="setting-control">
+              <!-- A small picture of the app in each theme, its name underneath; the chosen one is ringed and its name semibold. -->
+              <div class="themes">
+                {#each THEME_CHOICES as choice (choice.value)}
+                  <label class="theme">
+                    <input type="radio" name="theme" value={choice.value} bind:group={preferences.theme} />
+                    <span aria-hidden="true" class="theme-picture">
+                      {#each choice.value === "system" ? (["off-white", "dark"] as const) : [choice.value] as look (look)}
+                        <span class="theme-page" style:background-color={PREVIEWS[look].page} style:color={PREVIEWS[look].ink}>
+                          <span class="theme-side" style:background-color={PREVIEWS[look].side}></span>
+                          <span class="theme-lines"><span></span><span></span><span></span></span>
+                        </span>
+                      {/each}
+                    </span>
+                    <span class="theme-name">{choice.label}</span>
+                  </label>
+                {/each}
+              </div>
+              <p class="text-small text-muted">Automatic is off-white or dark, following this device's light or dark setting.</p>
+            </div>
+          </fieldset>
+
+          <fieldset class="setting">
+            <legend class="setting-name">Reading font</legend>
+            <div class="setting-control">
+              <div class="choices" style="--phone-columns: 1">
+                {#each Object.entries(READING_FONTS) as [value, font] (value)}
+                  <!-- Each name is set in its own font, so the choice shows itself. -->
+                  <label class="choice" style:font-family={font.family}>
+                    <input type="radio" name="reading-font" {value} bind:group={preferences.readingFont} />
+                    {font.label}
+                  </label>
+                {/each}
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="setting">
+            <legend class="setting-name">Text size</legend>
+            <div class="setting-control">
+              <div class="choices" style="--phone-columns: 3">
+                {#each TEXT_SIZES as size, index (size.label)}
+                  <label class="choice">
+                    <input type="radio" name="text-size" value={index} bind:group={preferences.textSize} />
+                    {size.label}
+                  </label>
+                {/each}
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="setting">
+            <legend class="setting-name">Line width</legend>
+            <div class="setting-control">
+              <div class="choices" style="--phone-columns: 3">
+                {#each Object.entries(LINE_WIDTHS) as [value, width] (value)}
+                  <label class="choice">
+                    <input type="radio" name="line-width" {value} bind:group={preferences.lineWidth} />
+                    {width.label}
+                  </label>
+                {/each}
+              </div>
+            </div>
+          </fieldset>
+
+          <figure class="setting setting-wide">
+            <figcaption class="setting-name">Preview</figcaption>
+            <div class="reading-sample">
+              <p>
+                Most writing on the open web was never meant to be skimmed. It was written slowly, by someone who
+                cared, for whoever would read it to the end. A reader can be built the same way: it shows you what is
+                there, and then it lets you go.
+              </p>
+            </div>
+          </figure>
         </div>
-
-        <fieldset>
-          <legend class="mb-2 font-semibold">Theme</legend>
-          <div class="choices">
-          {#each THEME_CHOICES as choice (choice.value)}
-            <label class="choice">
-              <input type="radio" name="theme" value={choice.value} bind:group={preferences.theme} />
-              <span aria-hidden="true" class="swatch" style:background-color={SWATCHES[choice.value]}
-                >{#if choice.value === "system"}<span class="swatch-half" style:background-color={BAR_COLORS.dark}></span>{/if}</span
-              >
-              {choice.label}
-            </label>
-          {/each}
-          </div>
-          <p class="mt-2 text-small text-muted">Match this device uses off-white or dark, following its light or dark setting.</p>
-        </fieldset>
-
-        <fieldset>
-          <legend class="mb-2 font-semibold">Reading font</legend>
-          <div class="choices">
-          {#each Object.entries(READING_FONTS) as [value, font] (value)}
-            <!-- Each name is set in its own font, so the choice shows itself. -->
-            <label class="choice" style:font-family={font.family}>
-              <input type="radio" name="reading-font" {value} bind:group={preferences.readingFont} />
-              {font.label}
-            </label>
-          {/each}
-          </div>
-        </fieldset>
-
-        <fieldset>
-          <legend class="mb-2 font-semibold">Text size</legend>
-          <div class="choices">
-            {#each TEXT_SIZES as size, index (size.label)}
-              <label class="choice">
-                <input type="radio" name="text-size" value={index} bind:group={preferences.textSize} />
-                {size.label}
-              </label>
-            {/each}
-          </div>
-        </fieldset>
-
-        <fieldset>
-          <legend class="mb-2 font-semibold">Line width</legend>
-          <div class="choices">
-            {#each Object.entries(LINE_WIDTHS) as [value, width] (value)}
-              <label class="choice">
-                <input type="radio" name="line-width" {value} bind:group={preferences.lineWidth} />
-                {width.label}
-              </label>
-            {/each}
-          </div>
-        </fieldset>
-
-        <figure class="flex flex-col gap-2">
-          <figcaption class="text-small text-muted">How articles will look</figcaption>
-          <div class="reading-sample">
-            <p>
-              Most writing on the open web was never meant to be skimmed. It was written slowly, by someone who
-              cared, for whoever would read it to the end. A reader can be built the same way: it shows you what is
-              there, and then it lets you go.
-            </p>
-          </div>
-        </figure>
       </section>
 
-      <section aria-labelledby="data-heading" class="flex flex-col gap-4">
-        <div>
-          <h3 id="data-heading" tabindex="-1" bind:this={dataHeading} class="text-large font-semibold">Your data</h3>
-          <p class="max-w-xl">
-            OPML is the file feed readers use to move your feeds and folders between apps. Import one to bring your
-            feeds here; export one now and then, and keep it somewhere safe.
-          </p>
+      <section aria-labelledby="data-heading">
+        <div class="mb-3 px-1">
+          <h3 id="data-heading" tabindex="-1" bind:this={dataHeading} class="text-ui font-semibold">Your data</h3>
+          <p class="mt-0.5 text-small text-muted">Files you can keep, and take to another app.</p>
         </div>
-        <ImportOpml {onImported} />
-        <p class="max-w-xl">
-          Your starred articles can be saved as a JSON Feed file, a standard format other feed readers can open. It
-          keeps each article's text, its original link and the feed it came from.
-        </p>
-        <a href="/api/starred/export" download class="btn self-start">
-          Export starred articles
-        </a>
+        <div class="group-card">
+          <div class="setting setting-wide">
+            <div>
+              <h4 class="setting-name">Feeds and folders</h4>
+              <p class="mt-1 max-w-xl text-small text-ink-2">
+                OPML is the file feed readers use to move your feeds and folders between apps. Import one to bring your
+                feeds here; export one now and then, and keep it somewhere safe.
+              </p>
+            </div>
+            <ImportOpml {onImported} />
+          </div>
+          <div class="setting setting-wide">
+            <div>
+              <h4 class="setting-name">Starred articles</h4>
+              <p class="mt-1 max-w-xl text-small text-ink-2">
+                Saved as a JSON Feed file, a standard format other feed readers can open, with each article's text, its
+                original link and the feed it came from.
+              </p>
+            </div>
+            <a href="/api/starred/export" download class="btn self-start">Export starred articles</a>
+          </div>
+        </div>
       </section>
 
-      <section aria-labelledby="status-heading" class="flex flex-col gap-2">
-        <h3 id="status-heading" class="text-large font-semibold">Status</h3>
-        <p>Version {version}</p>
+      <!-- A quiet footer: which version this is, and signing out. -->
+      <footer aria-label="Version and account" class="flex flex-col gap-3 px-1">
+        <div class="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+          <p class="text-small text-muted" translate="no">Version {version}</p>
+          <button type="button" onclick={leave} class="btn-quiet btn-small -mr-2.5">Sign out</button>
+        </div>
         {#if updates.ready}
           <!-- Never swapped while you read: the new version starts when you reload, or next time you open slowfeed. -->
-          <p class="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <p class="flex flex-wrap items-center gap-x-4 gap-y-2 text-ui">
             A new version is ready.
             <button type="button" onclick={() => location.reload()} class="btn">Reload</button>
           </p>
         {/if}
-      </section>
-
-      <section aria-labelledby="account-heading" class="flex flex-col items-start gap-2">
-        <h3 id="account-heading" class="text-large font-semibold">Signing in</h3>
-        <button type="button" onclick={leave} class="btn">Sign out</button>
-        <p role="status">{message}</p>
-      </section>
+        <p role="status" class="text-small">{message}</p>
+      </footer>
     </div>
   </div>
 </section>
+
+{#snippet groupHead(id: string, name: string, note: string)}
+  <div class="mb-3 px-1">
+    <h3 {id} class="text-ui font-semibold">{name}</h3>
+    <p class="mt-0.5 text-small text-muted">{note}</p>
+  </div>
+{/snippet}
 
 <style>
   /*
@@ -229,10 +272,69 @@
     is filled with the text color and its word is semibold, so it shows
     without color too. Never ink blue.
   */
-  .choices {
+  /* A group of settings: a card a shade off the page, rows parted by hairlines. */
+  .group-card {
+    border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+    border-radius: 0.75rem;
+    background-color: var(--list);
+  }
+  .setting {
+    display: grid;
+    gap: 0.75rem;
+    min-width: 0;
+    margin: 0;
+    padding: 1.125rem 1.25rem;
+    border: 0;
+  }
+  .setting + .setting {
+    border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  }
+  .setting-name {
+    float: left;
+    padding: 0;
+    color: var(--ink);
+    font-size: var(--text-ui);
+    font-weight: 600;
+  }
+  .setting-control {
     display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.625rem;
+  }
+  /* On a wide screen the name sits on the left and the choices on the right. */
+  @media (width >= 48rem) {
+    .setting:not(.setting-wide) {
+      grid-template-columns: 8.5rem minmax(0, 1fr);
+      align-items: start;
+    }
+    .setting:not(.setting-wide) > .setting-name {
+      padding-top: 0.875rem;
+    }
+  }
+
+  /*
+    The choices sit on a faint track; the chosen one is raised onto the
+    page's own tone with a fine edge and semibold words, so it shows without
+    color, and nothing on the screen is a heavy black slab.
+  */
+  .choices {
+    display: inline-flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border-radius: 0.625rem;
+    background-color: var(--tone);
+  }
+  /* On a narrow screen the choices fill the width in even columns instead of wrapping ragged. */
+  @media (width < 40rem) {
+    .choices {
+      display: grid;
+      grid-template-columns: repeat(var(--phone-columns), minmax(0, 1fr));
+    }
+    .choice {
+      justify-content: center;
+    }
   }
   .choice {
     position: relative;
@@ -240,10 +342,17 @@
     align-items: center;
     gap: 0.5rem;
     min-height: 2.75rem;
-    padding-inline: 1rem;
-    border: 1px solid var(--muted);
-    border-radius: 0.375rem;
+    padding-inline: 0.875rem;
+    border: 1px solid transparent;
+    border-radius: 0.4375rem;
+    color: var(--ink-2);
+    font-size: var(--text-small);
     cursor: pointer;
+  }
+  @media (pointer: fine) {
+    .choice {
+      min-height: 2.5rem;
+    }
   }
   @media (hover: hover) {
     .choice:hover {
@@ -260,13 +369,13 @@
     cursor: pointer;
   }
   .choice:has(input:checked) {
-    border-color: var(--ink);
-    background-color: var(--ink);
-    color: var(--paper);
+    border-color: color-mix(in srgb, var(--ink) 30%, transparent);
+    background-color: var(--paper);
+    color: var(--ink);
     font-weight: 600;
   }
   .choice:has(input:focus-visible) {
-    outline: 3px solid var(--ink);
+    outline: 2px solid var(--ink);
     outline-offset: 2px;
   }
   /* High-contrast mode replaces the fill, so the chosen tile takes the system's own highlight colors. */
@@ -285,23 +394,95 @@
     cursor: default;
     color: var(--muted);
   }
-  .swatch {
+  .themes {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 6.5rem));
+    gap: 0.75rem;
+  }
+  @media (width < 40rem) {
+    .themes {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .theme {
     position: relative;
-    overflow: hidden;
-    width: 1rem;
-    height: 1rem;
-    flex-shrink: 0;
-    border: 1px solid var(--muted);
-    border-radius: 9999px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    color: var(--ink-2);
+    font-size: var(--text-small);
+    cursor: pointer;
   }
-  .swatch-half {
+  .theme input {
     position: absolute;
-    inset: 0 0 0 50%;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
   }
+  .theme-picture {
+    display: flex;
+    overflow: hidden;
+    aspect-ratio: 3 / 2;
+    border: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+    border-radius: 0.5rem;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
+  .theme-page {
+    display: flex;
+    flex: 1;
+  }
+  .theme-side {
+    width: 28%;
+  }
+  .theme-lines {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.5rem;
+  }
+  .theme-lines > span {
+    height: 0.1875rem;
+    border-radius: 1px;
+    background-color: currentColor;
+    opacity: 0.55;
+  }
+  .theme-lines > span:first-child {
+    width: 70%;
+    opacity: 0.9;
+  }
+  .theme-lines > span:last-child {
+    width: 50%;
+  }
+  .theme:has(input:checked) {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .theme:has(input:checked) .theme-picture {
+    outline-color: var(--ink);
+  }
+  .theme:has(input:focus-visible) {
+    outline: 2px solid var(--ink);
+    outline-offset: 4px;
+    border-radius: 0.5rem;
+  }
+  @media (forced-colors: active) {
+    .theme:has(input:checked) .theme-picture {
+      outline-color: Highlight;
+    }
+  }
+  /* A small page of the reading area's own tone, set as articles will be. */
   .reading-sample {
     font-family: var(--reading-font);
     font-size: var(--reading-size);
     line-height: 1.6;
-    max-width: var(--reading-measure);
+    max-width: calc(var(--reading-measure) + 3rem);
+    padding: 1.25rem 1.5rem;
+    border-radius: 0.5rem;
+    background-color: var(--paper);
   }
 </style>

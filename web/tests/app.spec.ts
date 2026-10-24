@@ -104,10 +104,12 @@ test("? opens the shortcut list, Escape closes it and returns the keyboard's pla
   await page.keyboard.press("?");
   const dialog = page.getByRole("dialog", { name: "Keyboard shortcuts" });
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByText("Go to Unread / Starred / All")).toBeVisible();
+  await expect(dialog.getByText("Go to Starred")).toBeVisible();
   // A two-press shortcut shows a key cap for each press, with "then" between.
   const goTo = dialog.getByRole("row", { name: /Go to Unread/ });
-  await expect(goTo.locator("kbd")).toHaveText(["g", "u", "g", "s", "g", "a"]);
+  await expect(goTo.locator("kbd")).toHaveText(["g", "u"]);
+  // Only what works today is listed.
+  await expect(dialog.getByText("Next / previous feed")).toHaveCount(0);
   await expect(dialog.getByText("is:unread")).toBeVisible();
 
   // Shortcuts don't fire behind the open list.
@@ -157,31 +159,37 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
   await page.getByLabel("Sepia").check();
   await expect(page.locator("body")).toHaveCSS("background-color", "rgb(244, 235, 215)");
   // The phone's bar above the page follows the chosen theme too, and
-  // "Match this device" gives back index.html's light and dark colors.
+  // "Automatic" gives back index.html's light and dark colors.
   const bars = page.locator('meta[name="theme-color"]');
   await expect(bars).toHaveCount(2);
   await expect(bars.nth(0)).toHaveAttribute("content", "#F4EBD7");
   await expect(bars.nth(1)).toHaveAttribute("content", "#F4EBD7");
-  await page.getByLabel("Match this device").check();
+  await page.getByLabel("Automatic").check();
   await expect(bars.nth(0)).toHaveAttribute("content", "#F8F6F1");
   await expect(bars.nth(1)).toHaveAttribute("content", "#1A1917");
   await page.getByLabel("Sepia").check();
   await expect(bars.nth(0)).toHaveAttribute("content", "#F4EBD7");
-  // The chosen tile is filled and its word semibold, so it shows without color.
-  await expect(page.locator("label.choice").filter({ hasText: "Sepia" })).toHaveCSS("font-weight", "600");
-  await expect(page.locator("label.choice").filter({ hasText: "Dark" })).toHaveCSS("font-weight", "400");
+  // Each theme is a small picture of the app in it; the chosen one is ringed
+  // and its name semibold, so it shows without color.
+  const theme = (name: string) => page.locator("label.theme").filter({ hasText: name });
+  await expect(theme("Sepia")).toHaveCSS("font-weight", "600");
+  await expect(theme("Dark")).toHaveCSS("font-weight", "400");
+  await expect(theme("Sepia").locator(".theme-picture")).toHaveCSS("outline-style", "solid");
+  const ring = (name: string) => theme(name).locator(".theme-picture").evaluate((element) => getComputedStyle(element).outlineColor);
+  expect(await ring("Sepia")).not.toBe(await ring("Dark"));
   // Arrow keys move between choices, as with any radio buttons.
   await page.getByLabel("Sepia").focus();
   await page.keyboard.press("ArrowRight");
   await expect(page.getByLabel("Dark")).toBeChecked();
   await page.keyboard.press("ArrowLeft");
   await expect(page.getByLabel("Sepia")).toBeChecked();
-  // In high-contrast mode the chosen tile takes the system's highlight, so it still stands out.
+  // In high-contrast mode the chosen picture is ringed in the system's highlight, so it still stands out.
   await page.emulateMedia({ forcedColors: "active" });
-  const tileColor = (name: string) =>
-    page.locator("label.choice").filter({ hasText: name }).evaluate((element) => getComputedStyle(element).backgroundColor);
-  expect(await tileColor("Sepia")).not.toBe(await tileColor("Dark"));
+  expect(await ring("Sepia")).not.toBe(await ring("Dark"));
   await page.emulateMedia({ forcedColors: "none" });
+  // The other settings are segmented controls: the chosen one is raised and semibold.
+  await expect(page.locator("label.choice").filter({ hasText: "Medium" }).first()).toHaveCSS("font-weight", "600");
+  await expect(page.locator("label.choice").filter({ hasText: "Largest" })).toHaveCSS("font-weight", "400");
 
   const sample = page.locator(".reading-sample");
   await expect(sample).toHaveCSS("font-family", /^Literata/);
@@ -254,7 +262,7 @@ test("nothing scrolls underneath the Sidebar button or the shortcut hint", async
   await openApp(page, "/settings");
   // Settings is longer than this window, so it scrolls, but only inside its
   // own box, which starts below the band where the two buttons sit.
-  const scroller = page.getByRole("region", { name: "Settings" }).locator("> div");
+  const scroller = page.getByRole("region", { name: "Settings" }).locator(".overflow-y-auto");
   expect(await scroller.evaluate((element) => element.scrollHeight > element.clientHeight)).toBe(true);
   const scrollingTop = (await scroller.boundingBox())!.y;
   for (const button of [toggle(page), page.getByRole("button", { name: "Press ? for shortcuts" })]) {
@@ -275,24 +283,29 @@ test("'Press ? for shortcuts' stays on screen when the sidebar is hidden", async
   await expect(page.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeVisible();
 });
 
-test("the sidebar ends with Add feed and Settings side by side, the shortcut hint under them; its toggle says what it does", async ({ page, isMobile }) => {
+test("the sidebar ends with Add feed, then the shortcut list and Settings as icons; its toggle says what it does", async ({ page, isMobile }) => {
   test.skip(isMobile, "The phone has its own screens and no sidebar toggle.");
   await page.setViewportSize({ width: 1440, height: 900 });
   await openApp(page);
-  const addFeed = sidebar(page).getByRole("link", { name: "Add feed" });
-  const settings = sidebar(page).getByRole("link", { name: "Settings" });
-  const hint = sidebar(page).getByRole("button", { name: "Press ? for shortcuts" });
   const box = async (locator: Locator) => (await locator.boundingBox())!;
-  const add = await box(addFeed);
-  const set = await box(settings);
-  const tip = await box(hint);
+  const add = await box(sidebar(page).getByRole("link", { name: "Add feed" }));
+  const keys = sidebar(page).getByRole("button", { name: "Keyboard shortcuts" });
+  const settings = sidebar(page).getByRole("link", { name: "Settings" });
   const all = await box(sidebar(page).getByRole("link", { name: "All" }));
-  // Side by side, at the bottom of the window, below everything else in the sidebar.
-  expect(Math.abs(add.y - set.y)).toBeLessThan(2);
-  expect(set.x).toBeGreaterThan(add.x + add.width - 1);
+  // One row at the foot of the window, below everything else in the sidebar.
+  const [k, set] = [await box(keys), await box(settings)];
+  for (const each of [k, set]) {
+    expect(Math.abs(each.y + each.height / 2 - (add.y + add.height / 2))).toBeLessThan(2);
+    expect(Math.min(each.width, each.height)).toBeGreaterThanOrEqual(44);
+  }
+  expect(add.x + add.width).toBeLessThanOrEqual(k.x + 1);
+  expect(k.x + k.width).toBeLessThanOrEqual(set.x + 1);
   expect(add.y).toBeGreaterThan(all.y);
-  expect(tip.y).toBeGreaterThanOrEqual(add.y + add.height - 1);
-  expect(tip.y + tip.height).toBeLessThanOrEqual(900);
+  expect(set.y + set.height).toBeLessThanOrEqual(900);
+  await expect(settings).toHaveAttribute("title", "Settings");
+  await keys.click();
+  await expect(page.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeVisible();
+  await page.getByRole("dialog").getByRole("button", { name: "Close" }).click();
   await expect(toggle(page)).toHaveAttribute("title", "Hide the sidebar ( [ )");
   await toggle(page).click();
   await expect(toggle(page)).toHaveAttribute("title", "Show the sidebar ( [ )");

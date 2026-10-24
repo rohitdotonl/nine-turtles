@@ -4,7 +4,8 @@
   that don't exist yet say so, rather than pretending to work.
 -->
 <script lang="ts">
-  import { SHORTCUTS } from "./keyboard";
+  import Icon from "./Icon.svelte";
+  import { SHORTCUT_GROUPS, SHORTCUTS } from "./keyboard";
 
   let { open = $bindable() }: { open: boolean } = $props();
 
@@ -25,63 +26,70 @@
   });
 </script>
 
+<!--
+  Laid out like a reference card: what each shortcut does on the left, its
+  keys on the right, in four small groups, two columns side by side on a
+  wide screen. The title and its close button stay put while the list scrolls.
+-->
 <dialog
   bind:this={dialog}
   aria-labelledby="shortcuts-heading"
   onclose={() => (open = false)}
-  class="m-auto max-h-[90dvh] w-[min(40rem,calc(100vw-2rem))] overflow-y-auto rounded border border-muted bg-paper p-4 text-ink sm:p-6"
+  class="m-auto max-h-[min(44rem,90dvh)] w-[min(52rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-ink/15 bg-paper p-0 text-ink shadow-[0_24px_64px_-16px_rgb(0_0_0/0.35)]"
 >
-  <div class="flex items-center justify-between gap-4">
-    <h2 id="shortcuts-heading" class="text-xlarge font-semibold">Keyboard shortcuts</h2>
-    <button type="button" onclick={() => (open = false)} class="btn">Close</button>
+  <div class="flex max-h-[min(44rem,90dvh)] flex-col">
+    <div class="flex min-h-14 shrink-0 items-center justify-between gap-4 border-b border-ink/10 pr-2.5 pl-6">
+      <h2 id="shortcuts-heading" class="text-ui font-semibold">Keyboard shortcuts</h2>
+      <button type="button" onclick={() => (open = false)} aria-label="Close" title="Close (Esc)" class="btn-quiet btn-icon"><Icon name="close" size={18} /></button>
+    </div>
+    <!-- A Tab stop of its own, so the list can be scrolled with the keyboard (axe: scrollable-region-focusable). -->
+    <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+    <div tabindex="0" role="region" aria-label="Shortcuts" class="min-h-0 overflow-y-auto px-6 pt-5 pb-6">
+      <div class="grid gap-x-10 gap-y-7 md:grid-cols-2">
+        {#each SHORTCUT_GROUPS as group (group)}
+          <section aria-labelledby={`keys-${group}`}>
+            <h3 id={`keys-${group}`} class="mb-1.5 text-meta font-semibold text-muted">{group}</h3>
+            <table class="w-full text-left text-small">
+              <tbody>
+                {#each SHORTCUTS.filter((each) => each.group === group && each.ready) as shortcut (shortcut.action)}
+                  <tr class="border-b border-ink/[0.07] last:border-0">
+                    <td class="py-2 pr-4 align-middle">{shortcut.action}</td>
+                    <!--
+                      "g then u" is two presses: a cap for each key, with "then" between them.
+                      Each shortcut stays whole; on a narrow phone the alternatives wrap at the slashes.
+                    -->
+                    <td class="py-2 text-right align-middle whitespace-nowrap">
+                      {#each shortcut.keys as key, index (key)}{#if index > 0}{" "}{/if}<span class="whitespace-nowrap"
+                          >{#if index > 0}<span class="text-muted">{"/ "}</span>{/if}{#each key.split(" then ") as press, step (step)}{#if step > 0}<span
+                                class="text-meta text-muted">{" then "}</span
+                              >{/if}<kbd class="key">{press}</kbd>{/each}</span
+                        >{/each}
+                    </td>
+                  </tr>
+                {/each}
+              </tbody>
+            </table>
+          </section>
+        {/each}
+      </div>
+
+      <section aria-labelledby="filters-heading" class="mt-8">
+        <h3 id="filters-heading" class="text-meta font-semibold text-muted">Search filters</h3>
+        <p class="mt-0.5 mb-1.5 text-small text-muted">Type these in the search field; each becomes a chip. Names with spaces go in quotes.</p>
+        <table class="w-full text-left text-small">
+          <tbody>
+            {#each FILTERS as [filter, meaning] (filter)}
+              <tr class="border-b border-ink/[0.07] last:border-0">
+                <td class="w-px py-2 pr-4 whitespace-nowrap sm:pr-8"><code class="font-mono text-meta">{filter}</code></td>
+                <td class="py-2">{meaning}</td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </section>
+      <p class="mt-6 text-meta text-muted">Tab, Enter and Escape always work too. Shortcuts don't fire while you're typing in a field.</p>
+    </div>
   </div>
-  <p class="mt-2 text-small text-muted">
-    Tab, Enter and Escape always work too. Shortcuts don't fire while you're typing in a field.
-  </p>
-
-  <table class="mt-6 w-full text-left">
-    <thead>
-      <tr class="text-small text-muted">
-        <!-- As narrow as its keys on a wider screen, so each key sits close to what it does; a fixed share on a small phone. -->
-        <th scope="col" class="w-[7.5rem] pb-2 font-normal sm:w-px">Keys</th>
-        <th scope="col" class="pb-2 font-normal">What it does</th>
-      </tr>
-    </thead>
-    <tbody>
-      {#each SHORTCUTS as shortcut (shortcut.action)}
-        <tr>
-          <td class="py-1.5 pr-3 align-top sm:pr-6 sm:whitespace-nowrap">
-            <!--
-              "g then u" is two presses: a cap for each key, with "then" between them.
-              Each shortcut stays whole; on a narrow phone the alternatives wrap at the slashes.
-            -->
-            {#each shortcut.keys as key, index (key)}{#if index > 0}{" "}{/if}<span class="whitespace-nowrap"
-                >{#if index > 0}<span class="text-muted">{"/ "}</span>{/if}{#each key.split(" then ") as press, step (step)}{#if step > 0}<span
-                      class="text-small text-muted">{" then "}</span
-                    >{/if}<kbd class="key">{press}</kbd>{/each}</span
-              >{/each}
-          </td>
-          <td class="py-1.5 align-top">
-            {shortcut.action}{#if !shortcut.ready}<span class="text-small text-muted">{" · coming later"}</span>{/if}
-          </td>
-        </tr>
-      {/each}
-    </tbody>
-  </table>
-
-  <h3 class="mt-8 text-large font-semibold">Search filters</h3>
-  <p class="text-small text-muted">Type these in the search field; each becomes a chip. Names with spaces go in quotes.</p>
-  <table class="mt-2 w-full text-left">
-    <tbody>
-      {#each FILTERS as [filter, meaning] (filter)}
-        <tr>
-          <!-- Narrower gap on a small phone, so "before:YYYY-MM-DD" and its meaning fit side by side. -->
-          <td class="w-px py-1.5 pr-3 align-top whitespace-nowrap sm:pr-6"><code class="font-mono text-small">{filter}</code></td>
-          <td class="py-1.5 align-top">{meaning}</td>
-        </tr>
-      {/each}
-    </tbody>
-  </table>
 </dialog>
 
 <style>

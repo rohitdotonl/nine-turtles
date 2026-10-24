@@ -1,10 +1,10 @@
 <!--
   slowfeed's few icons, drawn on one 20px grid with the same 1.5px line, so
-  they look like one set (DESIGN.md → "Words beside icons"). Always beside a
-  word, so screen readers skip them.
+  they look like one set. Screen readers skip them: the word beside an icon,
+  or the label of an icon-only button, says what it does.
 -->
 <script lang="ts" module>
-  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar";
+  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "keyboard" | "dot" | "stack";
 </script>
 
 <script lang="ts">
@@ -59,8 +59,20 @@
   {:else if name === "plus"}
     <path d="M10 4v12M4 10h12" />
   {:else if name === "settings"}
-    <circle cx="10" cy="10" r="2.5" />
-    <path d="M10 2.75v2M10 15.25v2M17.25 10h-2M4.75 10h-2M15.13 4.87l-1.42 1.42M6.29 13.71l-1.42 1.42M15.13 15.13l-1.42-1.42M6.29 6.29 4.87 4.87" />
+    <!-- A cog: eight teeth round a hole. -->
+    <path d="M8.65 4.46 L8.89 2.68 A7.4 7.4 0 0 1 11.11 2.68 L11.35 4.46 A5.7 5.7 0 0 1 12.96 5.13 L14.39 4.04 A7.4 7.4 0 0 1 15.96 5.61 L14.87 7.04 A5.7 5.7 0 0 1 15.54 8.65 L17.32 8.89 A7.4 7.4 0 0 1 17.32 11.11 L15.54 11.35 A5.7 5.7 0 0 1 14.87 12.96 L15.96 14.39 A7.4 7.4 0 0 1 14.39 15.96 L12.96 14.87 A5.7 5.7 0 0 1 11.35 15.54 L11.11 17.32 A7.4 7.4 0 0 1 8.89 17.32 L8.65 15.54 A5.7 5.7 0 0 1 7.04 14.87 L5.61 15.96 A7.4 7.4 0 0 1 4.04 14.39 L5.13 12.96 A5.7 5.7 0 0 1 4.46 11.35 L2.68 11.11 A7.4 7.4 0 0 1 2.68 8.89 L4.46 8.65 A5.7 5.7 0 0 1 5.13 7.04 L4.04 5.61 A7.4 7.4 0 0 1 5.61 4.04 L7.04 5.13 A5.7 5.7 0 0 1 8.65 4.46Z" />
+    <circle cx="10" cy="10" r="2.25" />
+  {:else if name === "dot"}
+    <!-- Unread: a ring with a filled centre. -->
+    <circle cx="10" cy="10" r="6.75" />
+    <circle cx="10" cy="10" r="2.25" fill="currentColor" stroke="none" />
+  {:else if name === "stack"}
+    <!-- All: a short stack of pages. -->
+    <rect x="3.25" y="7.25" width="13.5" height="9.5" rx="1.5" />
+    <path d="M5.25 4.75h9.5M7.25 2.5h5.5" />
+  {:else if name === "keyboard"}
+    <rect x="2.25" y="5.25" width="15.5" height="10" rx="1.75" />
+    <path d="M5.5 8.5h.01M8.5 8.5h.01M11.5 8.5h.01M14.5 8.5h.01M7 12h6" />
   {:else if name === "sidebar"}
     <rect x="2.75" y="3.75" width="14.5" height="12.5" rx="1.5" />
     <path d="M7.75 3.75v12.5" />
