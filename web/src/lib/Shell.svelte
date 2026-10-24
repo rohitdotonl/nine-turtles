@@ -582,14 +582,13 @@
 
 {#snippet listHead()}
             <!-- When a long name pushes "Edit feed" onto its own line, its icon lines up with the name above. -->
-            <!-- One line, the same height in every view, so the list below never jumps: a long name ends in "…" (its whole name is its tooltip). -->
+            <!-- A long name wraps rather than being cut off, so everyone can read all of it, on any screen and at any zoom. -->
             <div class="flex min-h-11 items-center gap-4">
               <h2
                 id="list-heading"
                 tabindex="-1"
                 bind:this={listHeading}
-                title={headingText}
-                class="min-w-0 flex-1 truncate font-serif text-heading font-bold tracking-[-0.01em]"
+                class="min-w-0 flex-1 font-serif [overflow-wrap:anywhere] text-heading font-bold tracking-[-0.01em]"
               >
                 {headingText}
               </h2>

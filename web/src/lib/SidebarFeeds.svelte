@@ -73,10 +73,10 @@
       onclick={(event) => follow(event, place)}
       title={feed.title}
       class={[
-        "side-row flex min-h-11 pointer-fine:min-h-10 items-center gap-3 border-l-[3px] pr-5 text-ui",
+        "side-row flex min-h-11 pointer-fine:min-h-10 items-center gap-3 border-l-[3px] py-2 pr-5 text-ui",
         indent ? "pl-[37px]" : "pl-[17px]",
         isHere(place) ? "border-accent bg-tint-sidebar font-semibold text-ink" : "border-transparent text-ink-2",
-      ]}><span class="min-w-0 flex-1 truncate">{feed.title}</span>{@render count(feed.unread)}</a
+      ]}><span class="min-w-0 flex-1 [overflow-wrap:anywhere]">{feed.title}</span>{@render count(feed.unread)}</a
     >
   </li>
 {/snippet}
@@ -88,8 +88,8 @@
     aria-current={isHere(place) ? "page" : undefined}
     onclick={(event) => follow(event, place)}
     title={folder.name}
-    class={["flex min-h-11 pointer-fine:min-h-10 min-w-0 flex-1 items-center gap-3 pr-5 text-ui", padded && "pl-[17px]", isHere(place) ? "font-semibold text-ink" : "text-ink-2"]}
-    ><span class="min-w-0 flex-1 truncate">{folder.name}</span>{@render count(
+    class={["flex min-h-11 pointer-fine:min-h-10 min-w-0 flex-1 items-center gap-3 py-2 pr-5 text-ui", padded && "pl-[17px]", isHere(place) ? "font-semibold text-ink" : "text-ink-2"]}
+    ><span class="min-w-0 flex-1 [overflow-wrap:anywhere]">{folder.name}</span>{@render count(
       folderUnread(folder, feeds),
     )}</a
   >

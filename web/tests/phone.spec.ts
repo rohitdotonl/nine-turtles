@@ -28,7 +28,7 @@ test.describe("on a phone", () => {
 
   test("Feeds → Items → Article, each with a back arrow saying where it goes", async ({ page }) => {
     await openHome(page);
-    // The feeds screen is home: Settings at the top, Refresh beside it, no sidebar toggle.
+    // The feeds screen is home: Refresh at the top, Settings at the bottom, no sidebar toggle.
     await expect(sidebar(page).getByRole("link", { name: "Settings" })).toBeVisible();
     await expect(sidebar(page).getByRole("button", { name: "Refresh" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Sidebar" })).toHaveCount(0);

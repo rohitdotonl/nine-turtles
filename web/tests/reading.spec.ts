@@ -148,7 +148,7 @@ test.describe("on a wide window", () => {
     expect(page.context().pages()).toHaveLength(1);
   });
 
-  test("the controls stay calm: a one-line search box, and the keyboard's place shown without boxing a title", async ({ page }) => {
+  test("the controls stay calm: a one-line search box, and you can always see where the keyboard is", async ({ page }) => {
     await openRoom(page);
     // The scope chip sits in the search box without making it taller (decision 0025).
     await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toBeVisible();
@@ -158,8 +158,8 @@ test.describe("on a wide window", () => {
     const remove = (await page.getByRole("button", { name: "Remove in: Reading Room" }).boundingBox())!;
     expect(Math.min(remove.width, remove.height)).toBeGreaterThanOrEqual(44);
     // Before anything is selected, Tab reaches the first row and draws the
-    // keyboard's outline inside it. Once j selects a row, the ink blue bar and
-    // tint show the place, with no box around it.
+    // keyboard's outline inside it, and the selected row keeps it beside its
+    // ink blue bar and tint.
     const first = row(page, "The pleasure of a slow letter");
     await tabTo(page, first);
     await expect(first).toHaveCSS("box-shadow", /inset/);
@@ -167,14 +167,13 @@ test.describe("on a wide window", () => {
     const selected = row(page, "The pleasure of a slow letter");
     await expect(selected).toBeFocused();
     await expect(selected).toHaveCSS("border-left-color", "rgb(47, 74, 122)");
-    await expect(selected).toHaveCSS("box-shadow", "none");
+    await expect(selected).toHaveCSS("box-shadow", /inset/);
     // Opening an article gives its title the keyboard's place for screen
-    // readers, with nothing drawn around or beside it.
+    // readers, with a quiet outline so a keyboard user can see it too.
     await page.keyboard.press("o");
     const heading = title(page, "The pleasure of a slow letter");
     await expect(heading).toBeFocused();
-    await expect(heading).toHaveCSS("outline-style", "none");
-    expect(await heading.evaluate((element) => getComputedStyle(element, "::before").content)).toBe("none");
+    await expect(heading).toHaveCSS("outline-style", "solid");
   });
 
   test("on a wide window the article sits in the middle, with its actions lined up above it", async ({ page }) => {

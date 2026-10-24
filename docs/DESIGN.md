@@ -170,7 +170,7 @@ The philosophy applied. The principle is noted where it isn't obvious.
 - All accent pairs pass AAA (7 : 1); re-check if a value changes.
 - **Links in articles** are underlined in the text color, **never blue**.
 - **Muted greys** (read items, counts, source names) are warm, like ink on paper, and pass AA (4.5 : 1) on every area and on the selected-row tint in all themes, verified by automatic checks.
-- **The keyboard focus outline** is a thick line in the text color, never ink blue.
+- **The keyboard focus outline** is a 2px line in the text color, never ink blue. Rows draw it just inside themselves (beside the selected row's bar); a title the keyboard is moved to gets it too, a little away from the words. It shows only when you're using the keyboard.
 - **Status colors** (errors, warnings; V2 feed health page) are muted, never drift toward blue, and always come with words.
 
 #### Themes
@@ -237,7 +237,7 @@ Fixed order, top to bottom: **Unread · Starred · All**, then **folders** A–Z
 |---|---|
 | Unread | Full-contrast, semibold title |
 | Read | Second ink, regular-weight title |
-| Selected (cursor) | Ink blue left bar + faint tint, title in full ink; no box, as it is also the keyboard's place |
+| Selected (cursor) | Ink blue left bar + faint tint, title in full ink; the 2px focus outline beside the bar when using the keyboard |
 | Starred | A small star mark |
 
 In river mode (V2) only the cursor and star show.

@@ -116,6 +116,18 @@ test.describe("on a wide window", () => {
     await expect(markAll).toBeFocused();
   });
 
+  test("on a phone, Undo is a full 44px tap that never reaches into the first article", async ({ page, isMobile }) => {
+    test.skip(!isMobile, "The 44px floor is for touch screens.");
+    await openBlog(page);
+    await page.getByRole("button", { name: "Mark all as read" }).click();
+    const undo = page.getByRole("button", { name: "Undo" });
+    await expect(undo).toBeVisible();
+    const tap = (await undo.boundingBox())!;
+    const first = (await page.locator(".item-row").first().boundingBox())!;
+    expect(Math.min(tap.width, tap.height)).toBeGreaterThanOrEqual(44);
+    expect(tap.y + tap.height).toBeLessThanOrEqual(first.y);
+  });
+
   test("in the Unread view, a read article stays (greyed) until you leave", async ({ page }) => {
     const blog = await openBlog(page);
     await page.keyboard.press("g");

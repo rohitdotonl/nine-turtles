@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { appReady, chooseTheme, signIn, tabTo } from "./screens";
 
 // SPEC sections 4, 5, 18 and 19, "How to check it", done by a browser.
@@ -273,4 +273,27 @@ test("'Press ? for shortcuts' stays on screen when the sidebar is hidden", async
   await expect(hint).toBeVisible();
   await hint.click();
   await expect(page.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeVisible();
+});
+
+test("the sidebar ends with Add feed and Settings side by side, the shortcut hint under them; its toggle says what it does", async ({ page, isMobile }) => {
+  test.skip(isMobile, "The phone has its own screens and no sidebar toggle.");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openApp(page);
+  const addFeed = sidebar(page).getByRole("link", { name: "Add feed" });
+  const settings = sidebar(page).getByRole("link", { name: "Settings" });
+  const hint = sidebar(page).getByRole("button", { name: "Press ? for shortcuts" });
+  const box = async (locator: Locator) => (await locator.boundingBox())!;
+  const add = await box(addFeed);
+  const set = await box(settings);
+  const tip = await box(hint);
+  const all = await box(sidebar(page).getByRole("link", { name: "All" }));
+  // Side by side, at the bottom of the window, below everything else in the sidebar.
+  expect(Math.abs(add.y - set.y)).toBeLessThan(2);
+  expect(set.x).toBeGreaterThan(add.x + add.width - 1);
+  expect(add.y).toBeGreaterThan(all.y);
+  expect(tip.y).toBeGreaterThanOrEqual(add.y + add.height - 1);
+  expect(tip.y + tip.height).toBeLessThanOrEqual(900);
+  await expect(toggle(page)).toHaveAttribute("title", "Hide the sidebar ( [ )");
+  await toggle(page).click();
+  await expect(toggle(page)).toHaveAttribute("title", "Show the sidebar ( [ )");
 });

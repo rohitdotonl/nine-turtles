@@ -139,12 +139,17 @@ body {
 
 /*
   A heading that receives the keyboard's place when a screen opens (so screen
-  readers start reading there) isn't something to press, and the next Tab
-  goes on from it, so it draws nothing (SPEC section 19): a mark beside every
-  title only looked like a stray bar.
+  readers start reading there) shows a quiet outline when you got there by
+  keyboard, so you can always see where the focus is (SPEC section 19), and
+  nothing after a click.
 */
 :is(h1, h2, h3)[tabindex="-1"]:focus {
   outline: none;
+}
+:is(h1, h2, h3)[tabindex="-1"]:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+  border-radius: 2px;
 }
 
 /*
@@ -171,16 +176,6 @@ body {
     inset -2px 0 0 var(--ink),
     inset 0 -2px 0 var(--ink),
     inset 2px 0 0 var(--ink);
-}
-
-/*
-  In the article list the keyboard's place and the selected article are the
-  same row (j, k and the arrows move both), and the ink blue bar and tint
-  already show it, so no box is drawn around it. A row reached by Tab before
-  anything is selected still gets the outline above.
-*/
-.item-row[aria-current]:focus-visible {
-  box-shadow: none;
 }
 
 /* Only where there's a real pointer: on a touch screen a tint would stay after the tap. */

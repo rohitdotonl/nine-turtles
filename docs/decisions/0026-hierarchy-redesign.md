@@ -21,19 +21,23 @@ and a 100px empty band sat above every list.
   sits between the other two).
 - **Deeper area tones,** so the three panes separate at a squint.
 - **One "where you are" style:** a 3px ink blue bar and a faint tint, in the
-  sidebar and the list. A selected list row is also the keyboard's place, so
-  it no longer draws a box; a row reached by Tab before anything is selected
-  still gets the outline. Outlines are 2px, not 3px.
-- **Headings focused by the app draw nothing** (replacing 0025's short bar,
-  which looked like a stray mark).
+  sidebar and the list. The keyboard's outline stays visible on every row,
+  the selected one included (a floor). Outlines are 2px, not 3px.
+- **Headings the app moves the keyboard to** get the same 2px outline, a
+  little away from the words, only when you're using the keyboard
+  (replacing 0025's short bar, which looked like a stray mark).
+- **Long names wrap** in the sidebar and the list's title instead of ending
+  in "…", so nobody needs a mouse tooltip to read them.
 - **A shared top line** that never scrolls: the sidebar toggle (now an
   icon) and wordmark, the list's title with Edit, and the article's tools.
   Settings moved to the bottom of the sidebar beside Add feed, with the
   shortcut hint under them (or under the list when the sidebar is hidden).
+  DESIGN.md's "never rearrange what people have learned" gave way here: the
+  owner approved moving Settings and the hint (24 October 2026).
 - **Search matches are underlined,** not bold.
 - **Two panes from 896px,** one column below (was 768px).
-- **Article lines** default to about 67 characters (57ch; a "ch" is wider
-  than an average letter).
+- **Article lines** default to about 71 characters in Literata (57ch; a "ch"
+  is wider than an average letter); Narrow and Wide hold about 65 and 78.
 
 **Not done.** A medium (500) interface weight would add about 60 KB of fonts
 and break the 400 KB budget; regular and semibold carry the levels instead.

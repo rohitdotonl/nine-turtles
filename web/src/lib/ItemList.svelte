@@ -392,22 +392,22 @@
 <!--
   The reserved line: always this tall, so nothing below moves when it fills.
   What was just done (with Undo) on the left; "New items · press r" on the right.
-  Its Undo answers a 44px tap, so space is kept below it and the first row never sits under that tap.
+  On a touch screen the line is as tall as a 44px tap, so Undo and Reload never reach into the first row.
 -->
-<div class="mb-1.5 flex min-h-6 flex-wrap items-center justify-between gap-x-4 text-meta text-muted">
+<div class="mb-1.5 flex min-h-6 pointer-coarse:min-h-11 flex-wrap items-center justify-between gap-x-4 text-meta text-muted">
   <p class="flex flex-wrap items-center gap-x-1">
     <span role="status">{line}</span>
     <span aria-live="polite" class="sr-only">{spoken}</span>
     {#if undoLast}
       <span aria-hidden="true">·</span>
-      <button type="button" onclick={undoByButton} class="-my-3 min-w-11 px-2 py-3 font-semibold text-ink underline underline-offset-4">Undo</button>
+      <button type="button" onclick={undoByButton} class="-my-2.5 pointer-coarse:my-0 min-h-11 min-w-11 px-2 font-semibold text-ink underline underline-offset-4">Undo</button>
     {/if}
   </p>
   <p class="flex items-center">
     <span role="status">{updates.stranded ? STRANDED_MESSAGE : newWaiting ? newItemsMessage(touch) : ""}</span>
     {#if updates.stranded}
-      <!-- The touch target reaches past the line, so the line keeps its height. -->
-      <button type="button" onclick={() => location.reload()} class="-my-3 ml-2 min-w-11 py-3 font-semibold text-ink underline underline-offset-4"
+      <!-- With a mouse the target reaches past the line, so the line keeps its height. -->
+      <button type="button" onclick={() => location.reload()} class="-my-2.5 pointer-coarse:my-0 ml-2 min-h-11 min-w-11 font-semibold text-ink underline underline-offset-4"
         >Reload</button
       >
     {/if}
