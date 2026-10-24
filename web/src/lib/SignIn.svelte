@@ -10,6 +10,8 @@
 
   let password = $state("");
   let message = $state("");
+  /** The password itself was refused, so the field is marked; other problems aren't the field's. */
+  let refused = $state(false);
   let busy = $state(false);
 
   async function submit(event: SubmitEvent) {
@@ -22,6 +24,7 @@
       onSignedIn();
     } else {
       message = explain(result);
+      refused = result.reason === "wrong-password";
       password = "";
     }
   }
@@ -44,7 +47,7 @@
       autofocus
       bind:value={password}
       aria-describedby="sign-in-message"
-      aria-invalid={message ? "true" : undefined}
+      aria-invalid={refused ? "true" : undefined}
       class="field"
     />
     <!-- Right under the field it's about, with a mark so it isn't told by place alone. -->

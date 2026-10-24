@@ -25,8 +25,10 @@
   let address = $state("");
   let busy = $state(false);
   let message = $state("");
-  /** The message is a problem with the address, not a next step. */
+  /** The message is a problem, not a next step. */
   let problem = $state(false);
+  /** The problem is the address itself (not the site or slowfeed being unreachable), so the field is marked. */
+  let badAddress = $state(false);
   let choices: Choice[] = $state([]);
   let alreadyId: number | undefined = $state();
 
@@ -42,6 +44,7 @@
     busy = true;
     message = "";
     problem = false;
+    badAddress = false;
     if (!fromChoices) choices = [];
     alreadyId = undefined;
     const result = await addFeed(text);
@@ -63,6 +66,7 @@
       case "problem":
         message = explain(result.reason);
         problem = true;
+        badAddress = result.reason !== "unreachable" && result.reason !== "trouble";
         break;
     }
   }
@@ -73,6 +77,7 @@
     else {
       message = "Paste an address first.";
       problem = true;
+      badAddress = true;
     }
   }
 </script>
@@ -91,7 +96,7 @@
       spellcheck="false"
       placeholder="example.com"
       aria-describedby="feed-address-status"
-      aria-invalid={problem ? "true" : undefined}
+      aria-invalid={badAddress ? "true" : undefined}
       class="field min-w-0 flex-1"
     />
     <button type="submit" aria-disabled={busy} class="btn-primary">Add feed</button>

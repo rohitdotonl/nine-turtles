@@ -55,6 +55,19 @@
   /** The keyboard or a pointer is inside the search (a press counts, so a chip's button can't vanish under a click). */
   let inside = $state(false);
   let pressing = false;
+  let searchElement: HTMLElement | undefined = $state();
+
+  /**
+   * A press ended: once its click has landed (so a chip's button never
+   * vanishes under it), the search is "inside" only if the keyboard's place
+   * is still in it. Some browsers don't focus a clicked button, so this
+   * doesn't wait for a focus change.
+   */
+  function pressEnded() {
+    if (!pressing) return;
+    pressing = false;
+    setTimeout(() => (inside = searchElement?.contains(document.activeElement) ?? false));
+  }
   /**
    * At rest, before any search, "in: Tech" would only repeat the list's own
    * title, so the field says "Search Tech" instead; the chip appears as soon
@@ -147,19 +160,17 @@
   }
 </script>
 
-<!-- svelte-ignore a11y_no_static_element_interactions: the pointer handlers only note a press; they act on nothing. -->
+<svelte:window onpointerup={pressEnded} onpointercancel={pressEnded} />
+
+<!-- svelte-ignore a11y_no_static_element_interactions: the pointer handler only notes a press; it acts on nothing. -->
 <search
   class="relative mb-2"
   onfocusin={() => (inside = true)}
   onfocusout={(event) => {
     if (!pressing && !event.currentTarget.contains(event.relatedTarget as Node | null)) inside = false;
   }}
-  onpointerdown={() => {
-    pressing = true;
-    inside = true;
-  }}
-  onpointerup={() => (pressing = false)}
-  onpointercancel={() => (pressing = false)}
+  bind:this={searchElement}
+  onpointerdown={() => (pressing = true)}
 >
   <!-- The whole box acts as the field: a click anywhere in it (not on a chip's or the options button) puts you in the field. -->
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->

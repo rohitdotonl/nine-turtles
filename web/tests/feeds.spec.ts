@@ -93,7 +93,7 @@ test("a page without a feed gets a calm, plain message", async ({ page }) => {
   await openApp(page, "/add-feed");
   await field(page).fill(`${FEED_SITE}/plain/`);
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("status")).toHaveText("This site doesn't seem to offer a feed. Try its home page, or paste the feed's own address if you know it.");
+  await expect(page.getByRole("status")).toHaveText("This site doesn't seem to offer a feed. Try the feed's own address, or the site's home page.");
   // The field is marked as refused, for screen readers and by its firmer edge.
   await expect(field(page)).toHaveAttribute("aria-invalid", "true");
 
