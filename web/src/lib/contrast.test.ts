@@ -87,7 +87,7 @@ describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
     }
   });
 
-  it("has the starred gold clearly visible (3 : 1) wherever a star is drawn (decision 0057)", () => {
+  it("has the starred green clearly visible (3 : 1) wherever a star is drawn (decision 0057)", () => {
     expect(colors.star, "every version names its star color").toBeDefined();
     for (const background of [...BACKGROUNDS, "surface-raised"]) {
       if (colors[background]?.startsWith("#")) expect(contrast(colors.star!, colors[background]!), background).toBeGreaterThanOrEqual(3);

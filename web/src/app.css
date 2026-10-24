@@ -65,7 +65,7 @@
 
   --tint-list and --tint-sidebar are the selection pill's fill: a neutral
   grey, the text color mixed into the list or sidebar (8% by day, 12% by
-  night), with no color (decision 0057). --star is the gold of a starred article's filled star.
+  night), with no color (decision 0057). --star is the green of a starred article's filled star.
   contrast.test.ts recomputes each and checks every text color on it.
 
   --surface-raised is what floats over the page: the sheets, the shortcut
@@ -88,7 +88,7 @@
   --muted: #5f5f64;
   --danger: #a3261b;
   --accent: #2c4f8c;
-  --star: #9a6700;
+  --star: #2a8a43;
   --tint-list: #e5e5e5;
   --tint-sidebar: #dddddf;
   --surface-raised: #ffffff;
@@ -104,7 +104,7 @@
   --muted: #a4a4a8;
   --danger: #e8968a;
   --accent: #94b2e6;
-  --star: #d29922;
+  --star: #56d364;
   --tint-list: #333333;
   --tint-sidebar: #3b3b3b;
   --surface-raised: #28282a;
@@ -128,7 +128,7 @@
     --muted: #a4a4a8;
     --danger: #e8968a;
     --accent: #94b2e6;
-    --star: #d29922;
+    --star: #56d364;
     --tint-list: #333333;
     --tint-sidebar: #3b3b3b;
     --surface-raised: #28282a;
