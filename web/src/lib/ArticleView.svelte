@@ -223,7 +223,7 @@
     </div>
   {/if}
 
-  <div use:edge bind:this={scroller} class="reading-scroller scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto bg-paper px-5 pb-[30vh] md:px-14">
+  <div use:edge bind:this={scroller} class="reading-scroller scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto bg-paper px-5 pb-8 md:px-14">
     <article lang={full?.language ?? undefined} class="article pt-3">
       <h2 tabindex="-1" bind:this={heading} class="article-title">{article.title || "Untitled"}</h2>
       <!-- Under the title, as in a book or a magazine: who wrote it, where, and when. The publisher's name leads, in full ink. -->

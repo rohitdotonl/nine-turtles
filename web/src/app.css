@@ -366,6 +366,38 @@ body {
 }
 
 /*
+  "Show older items": the list's last row rather than a boxed button. It
+  lines up with the titles, has the rows' hairline above it and their pill
+  under the pointer, and its words are in the accent, as a list's
+  "Show more" row is, so it reads as part of the list and as something to
+  press. At least 44px tall to touch.
+*/
+.list-more {
+  position: relative;
+  display: block;
+  min-height: 2.75rem;
+  margin-inline: calc(var(--pill-inset, 0.5rem) - var(--list-start, 2rem)) calc(var(--pill-inset, 0.5rem) - var(--list-end, 1.5rem));
+  width: calc(100% + var(--list-start, 2rem) + var(--list-end, 1.5rem) - 2 * var(--pill-inset, 0.5rem));
+  padding-block: 0.6875rem;
+  padding-left: calc(var(--list-start, 2rem) - var(--pill-inset, 0.5rem));
+  color: var(--accent);
+  line-height: 1.3;
+}
+.list-more::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: calc(var(--list-start, 2rem) - var(--pill-inset, 0.5rem));
+  right: 0;
+  border-top: 1px solid color-mix(in srgb, var(--ink) 9%, transparent);
+}
+@media (hover: hover) {
+  .list-more:hover::before {
+    display: none;
+  }
+}
+
+/*
   The keyboard's place, only when you're using the keyboard: a 2px outline in
   a softened text color drawn just inside the row's rounded edge, so it never
   reaches over the hairlines or the pane's edge (contrast.test.ts keeps it at
@@ -1208,7 +1240,7 @@ input {
 /* The end of an article: a short, centred hairline with room after it. */
 .article-end {
   width: 2.5rem;
-  margin: 3em auto 0;
+  margin: 1.5em auto 0;
   border: 0;
   border-top: 1px solid color-mix(in srgb, var(--ink) 25%, transparent);
 }
