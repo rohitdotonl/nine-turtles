@@ -434,7 +434,8 @@
           <!-- Unread: an accent dot in the gutter beside the title, and a semibold title, so it shows without color. -->
           {#if !article.read}<span aria-hidden="true" class="unread-dot"></span>{/if}
           <!-- Unread: full ink, semibold. Read: the second ink, regular. The selected row is never the quietest. -->
-          <span class={["title block text-ui", !article.read ? "font-semibold text-ink" : current ? "text-ink" : "text-ink-2"]}
+          <!-- With a mouse, a step larger (16px) than the interface text, so the title leads its row. -->
+          <span class={["title block text-ui pointer-fine:text-[1rem] pointer-fine:leading-[1.35]", !article.read ? "font-semibold text-ink" : current ? "text-ink" : "text-ink-2"]}
             >{#each boldParts(article.title || "Untitled", bold) as part, partIndex (partIndex)}{#if part.bold}<mark class="match"
                   >{part.text}</mark
                 >{:else}{part.text}{/if}{/each}{#if !article.read}<span class="sr-only">, unread</span>{/if}</span
