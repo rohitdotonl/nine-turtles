@@ -10,6 +10,7 @@
 <script lang="ts">
   import { edge } from "./edge";
   import Icon from "./Icon.svelte";
+  import PaneResizer from "./PaneResizer.svelte";
   import { onMount, untrack } from "svelte";
   import AddFeed from "./AddFeed.svelte";
   import ArticleView from "./ArticleView.svelte";
@@ -103,6 +104,29 @@
   let itemList: ItemList | undefined = $state();
   /** The list's pane and the sidebar button, for where the keyboard goes when the sidebar hides. */
   let listSection: HTMLElement | undefined = $state();
+  /** Widths the reader dragged the sidebar and the list to, on this device; undefined is the usual width. */
+  let sidebarWidth: number | undefined = $state(storedWidth("nine-turtles.sidebar-width"));
+  let listWidth: number | undefined = $state(storedWidth("nine-turtles.list-width"));
+  /** The window's width in pixels, so the list never leaves the article less than 400px. */
+  let windowWidth = $state(innerWidth);
+
+  function storedWidth(name: string): number | undefined {
+    try {
+      const value = Number(localStorage.getItem(name));
+      return value > 0 ? value : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  function storeWidth(name: string, value: number | undefined) {
+    try {
+      if (value === undefined) localStorage.removeItem(name);
+      else localStorage.setItem(name, String(value));
+    } catch {
+      // Private windows may refuse; the width just isn't remembered.
+    }
+  }
   let sidebarToggle: HTMLButtonElement | undefined = $state();
   let listToggle: HTMLButtonElement | undefined = $state();
 
@@ -847,7 +871,8 @@
   So every scrolling area here and in the screens it shows is `relative`: it holds its own hidden
   lines. A new scrolling area needs the same, and any new bar must sit inside an area, not beside it.
 -->
-<main class="relative flex h-dvh overflow-hidden">
+<svelte:window bind:innerWidth={windowWidth} />
+<main class="relative flex h-dvh overflow-hidden" style:--sidebar-w={`${sidebarWidth ?? 256}px`}>
   {#if !panes.sidebar}
     <!-- The wordmark is the page's main heading; with the sidebar hidden, screen readers still find it. -->
     <h1 class="sr-only">nine turtles</h1>
@@ -859,7 +884,7 @@
     button that moves, so the keyboard stays on it. Each area's top line (the wordmark, the list's
     title, the article's tools) never scrolls, so nothing passes under it.
   -->
-  <div class={["fixed top-1.5 z-10", panes.sidebar ? "left-[calc(16rem-3.25rem)]" : "left-2", phone && "hidden"]}>
+  <div class={["fixed top-1.5 z-10", panes.sidebar ? "left-[calc(var(--sidebar-w)-3.25rem)]" : "left-2", phone && "hidden"]}>
     <button
       type="button"
       bind:this={sidebarToggle}
@@ -879,7 +904,7 @@
     aria-label="Sidebar"
     bind:this={sidebar}
     hidden={!panes.sidebar}
-    class={["flex-col bg-sidebar", panes.list || panes.article ? "w-64 shrink-0" : "min-w-0 flex-1", panes.sidebar && "flex", !phone && "pane-edge"]}
+    class={["relative flex-col bg-sidebar", panes.list || panes.article ? "w-[var(--sidebar-w)] shrink-0" : "min-w-0 flex-1", panes.sidebar && "flex", !phone && "pane-edge"]}
   >
     <!--
       The sidebar's top line (decision 0043): the wordmark, on the same line as the list's title and
@@ -983,6 +1008,16 @@
         class={["btn-quiet btn-icon", route.kind === "settings" && "bg-tint-sidebar text-ink"]}><Icon name="settings" size={18} /></a
       >
     </div>
+    {#if !phone && (panes.list || panes.article)}
+      <PaneResizer
+        label="Resize the sidebar"
+        bind:width={sidebarWidth}
+        min={200}
+        max={400}
+        pane={sidebar}
+        onDone={() => storeWidth("nine-turtles.sidebar-width", sidebarWidth)}
+      />
+    {/if}
   </nav>
 
   {#if panes.list || panes.article}
@@ -1054,8 +1089,9 @@
               "absolute top-1.5 z-20",
               !panes.list
                 ? panes.sidebar ? "left-2" : "left-14"
-                : panes.article ? "left-[calc(20rem-3.25rem)] xl:left-[calc(24rem-3.25rem)] 2xl:left-[calc(26rem-3.25rem)]" : "right-2",
+                : panes.article ? (listWidth ? "" : "left-[calc(20rem-3.25rem)] xl:left-[calc(24rem-3.25rem)] 2xl:left-[calc(26rem-3.25rem)]") : "right-2",
             ]}
+            style:left={panes.list && panes.article && listWidth ? `${listWidth - 52}px` : undefined}
           >
             <button
               type="button"
@@ -1079,14 +1115,25 @@
           hidden={!panes.list || welcomeWide}
           class={[
             // A container, so the list's title can step down a size when the pane is narrow (decision 0041).
-            "list-pane @container flex-col bg-list",
+            "list-pane relative @container flex-col bg-list",
             phone && "phone",
             panes.article ? "w-80 shrink-0 xl:w-96 2xl:w-[26rem]" : "min-w-0 flex-1",
             panes.list && !welcomeWide && "flex",
             // A 1px line where the list meets the reading pane, as where the sidebar meets the list (decision 0054).
             !phone && panes.article && "pane-edge",
           ]}
+          style:width={!phone && panes.article && listWidth ? `${listWidth}px` : undefined}
         >
+          {#if !phone && panes.article && !welcomeWide}
+            <PaneResizer
+              label="Resize the article list"
+              bind:width={listWidth}
+              min={260}
+              max={Math.max(260, Math.min(640, windowWidth - (panes.sidebar ? (sidebarWidth ?? 256) : 0) - 400))}
+              pane={listSection}
+              onDone={() => storeWidth("nine-turtles.list-width", listWidth)}
+            />
+          {/if}
           {#if phone}
             <!-- The phone's top bar (SPEC section 20): back to the feeds, then the screen's title with More beside it. It never scrolls. -->
             <div class="pane-bar nav-bar">
