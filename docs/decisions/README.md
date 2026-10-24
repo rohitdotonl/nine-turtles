@@ -38,3 +38,4 @@ says "Replaced by …" at the top.
 | [0026](0026-hierarchy-redesign.md) | A type scale by role, three inks, deeper area tones, one selection style, a shared top line; Settings and the shortcut hint at the bottom of the sidebar |
 | [0027](0027-taste-first-icons-and-settings.md) | Taste first; icons where the convention is an icon (close, settings, the article's actions); Settings as grouped cards with theme pictures; a grouped shortcut list |
 | [0028](0028-one-place-style-and-a-floating-note.md) | One rounded "where you are" shape in the sidebar and list; an unread dot; a floating note instead of reserved lines; one top line for pages |
+| [0029](0029-literata-semibold.md) | Literata semibold (600) instead of bold for titles and headings; same download size |
