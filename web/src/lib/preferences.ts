@@ -2,7 +2,7 @@
 // device, not to the reader's account: a phone and a laptop often want
 // different sizes. So they're kept in the browser's own storage, and nothing
 // is lost if that storage is unavailable: slowfeed simply uses the defaults.
-import { isTheme, type Theme } from "./themes";
+import { LOOKS, THEMES, isTheme, type Theme } from "./themes";
 
 export type ThemeChoice = "system" | Theme;
 export type ReadingFont = "literata" | "atkinson";
@@ -90,7 +90,7 @@ export function apply(preferences: Preferences, root: HTMLElement = document.doc
  * bar and Settings' theme discs. contrast.test.ts checks they match app.css
  * and index.html.
  */
-export const BAR_COLORS = { "off-white": "#F8F6F1", sepia: "#F4EBD7", dark: "#1A1917" } as const;
+export const BAR_COLORS = Object.fromEntries(THEMES.map((theme) => [theme, LOOKS[theme].page.toUpperCase()])) as Record<Theme, string>;
 
 function safeStorage(): Storage | undefined {
   try {

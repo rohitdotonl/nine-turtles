@@ -193,7 +193,7 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
   // Arrow keys move between choices, as with any radio buttons.
   await page.getByLabel("Sepia").focus();
   await page.keyboard.press("ArrowRight");
-  await expect(page.getByLabel("Dark")).toBeChecked();
+  await expect(page.getByLabel("Porcelain")).toBeChecked();
   await page.keyboard.press("ArrowLeft");
   await expect(page.getByLabel("Sepia")).toBeChecked();
   // In high-contrast mode the chosen picture is ringed in the system's highlight, so it still stands out.

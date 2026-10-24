@@ -14,6 +14,7 @@
   import { LINE_WIDTHS, READING_FONTS, TEXT_SIZES, type Preferences } from "./preferences";
   import { signOut } from "./session";
   import { updates } from "./updates.svelte";
+  import { LOOKS, THEMES } from "./themes";
 
   let {
     preferences = $bindable(),
@@ -44,19 +45,13 @@
     besideToggle?: boolean;
   } = $props();
 
-  const THEME_CHOICES = [
+  const THEME_CHOICES: { value: Preferences["theme"]; label: string }[] = [
     { value: "system", label: "Automatic" },
-    { value: "off-white", label: "Off-white" },
-    { value: "sepia", label: "Sepia" },
-    { value: "dark", label: "Dark" },
-  ] as const;
+    ...THEMES.map((theme) => ({ value: theme, label: LOOKS[theme].label })),
+  ];
 
   /** Each theme's page, sidebar and text, for its little picture (app.css holds the real ones). */
-  const PREVIEWS = {
-    "off-white": { page: "#f8f6f1", side: "#e7e2d7", ink: "#1f1e1c" },
-    sepia: { page: "#f4ebd7", side: "#e3d5b7", ink: "#2a241b" },
-    dark: { page: "#1a1917", side: "#2e2a25", ink: "#e6e1d8" },
-  } as const;
+  const PREVIEWS = LOOKS;
 
   const SORT_CHOICES = [
     { value: "newest", label: "Newest first" },

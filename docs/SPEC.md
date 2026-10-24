@@ -317,8 +317,8 @@ OPML is the standard file format feed readers use to move subscription lists bet
 - Settings opens in place of the list and reading area; the sidebar stays. Its X (named "Close settings") or Escape goes back to where you were.
 - Laid out like a system settings window: each group (Reading, Look and feel, Your data) is a card with a small heading above it, one setting per row, rows parted by hairlines; on a wide screen a setting's name sits on the left and its choices on the right. The version and **Sign out** sit quietly at the end.
 - **Look and feel** (this device only): reading font (Literata or Atkinson Hyperlegible), text size (six steps from Smaller to Largest, Medium by default), line width (Narrow, Medium or Wide: about 65, 71 or 78 characters in Literata; Atkinson Hyperlegible's narrower letters fit more), theme. A sample paragraph shows how articles will look, and changes apply at once.
-- **Themes:** "Automatic" by default (off-white or dark, following the system's light/dark setting), or choose off-white, sepia or dark. The phone's own bar above the page takes the chosen theme's color too.
-- Each setting is a row of choices on a faint track (a "segmented control"), chosen with a click, a tap or the arrow keys (they're radio buttons underneath). The chosen one is raised onto the page's own color (in the dark theme, a tone lighter than its track) with a fine edge, and its word is semibold, so it shows without color. On a phone the choices fill the width in even columns. The theme is chosen from small pictures of the app in each theme (Automatic shows half light, half dark), all four in one row even on a phone, the chosen one ringed and its name semibold; each reading font's name is written in that font.
+- **Themes:** "Automatic" by default (off-white or dark, following the system's light/dark setting), or choose any of eleven: off-white, sepia, porcelain, linen, mist and sage (light), or dark, graphite, night, midnight and black (dark). Each has its own "where you are" accent. The phone's own bar above the page takes the chosen theme's color too.
+- Each setting is a row of choices on a faint track (a "segmented control"), chosen with a click, a tap or the arrow keys (they're radio buttons underneath). The chosen one is raised onto the page's own color (in the dark theme, a tone lighter than its track) with a fine edge, and its word is semibold, so it shows without color. On a phone the choices fill the width in even columns. The theme is chosen from small pictures of the app in each theme (Automatic shows half light, half dark), in rows of four even on a phone, the chosen one ringed and its name semibold; each reading font's name is written in that font.
 - Sections appear once they have something to do: Reading (sort order) since Milestone 7, Your data with Milestone 9.
 - **Reading:** newest or oldest first. (Inbox or river mode in V2.)
 - **Your data:** OPML import/export, export of starred articles.
@@ -404,7 +404,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 ## 22. Everyone can read here (accessibility)
 
 **What it does**
-- Contrast meets WCAG AA everywhere (an international accessibility standard) and AAA for article text, in all three themes, including grey text.
+- Contrast meets WCAG AA everywhere (an international accessibility standard) and AAA for article text, in every theme, including grey text.
 - Nothing relies on color alone.
 - Screen readers find the three panes as named regions, hear which item is selected, and hear changes such as "marked as read" (said when an article is opened, though nothing about it is written on screen). Each article is marked with its language so it's pronounced correctly: the item's language if given, otherwise the feed's; if neither says, it's left unmarked rather than guessed.
 - Follows the system's text size, reduced motion, high contrast and light/dark settings.
