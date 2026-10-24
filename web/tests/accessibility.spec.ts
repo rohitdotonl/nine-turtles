@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { SCREENS, THEMES, appReady, openScreen } from "./screens";
 
-// The first design floor: every screen, in every theme, passes the automatic
+// The first design floor: every screen, in every theme by day and by night, passes the automatic
 // WCAG checks (including color contrast) at desktop and phone width.
 for (const screen of SCREENS) {
   for (const theme of THEMES) {
@@ -18,15 +18,14 @@ for (const screen of SCREENS) {
   }
 }
 
-// The default: no theme chosen, so the device's light/dark setting decides.
-// These colors are written separately in app.css, so they're checked too.
+// The default: nothing chosen, so Original, by day or by night as the device is set.
 for (const colorScheme of ["light", "dark"] as const) {
   test(`following the device's ${colorScheme} setting passes the accessibility checks`, async ({ page }) => {
     await page.emulateMedia({ colorScheme });
     await page.goto("/");
     await appReady(page);
     const background = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-    expect(background).toBe(colorScheme === "dark" ? "rgb(26, 25, 23)" : "rgb(248, 246, 241)");
+    expect(background).toBe(colorScheme === "dark" ? "rgb(18, 18, 18)" : "rgb(255, 255, 255)");
 
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"])

@@ -301,6 +301,10 @@ each with screenshots:
   rows for Edit feed's folders, a main button that never looks switched off,
   importing just under the welcome's field, and a true minus in the shortcut
   list (decision 0045).
+- ✅ Apple Books' themes: six themes (Original, Quiet, Paper, Bold, Calm,
+  Focus), each by day and by night, an Appearance choice of Light, Dark or
+  Match device, heavier article text in Bold, and old choices carried over
+  (decision 0046, replacing the eleven of decision 0032).
 
 ---
 

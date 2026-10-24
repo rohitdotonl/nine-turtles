@@ -1,5 +1,8 @@
 # 0032: Eight more themes, to try and prune
 
+*Superseded by decision 0046: six themes as in Apple Books, each by day and
+by night.*
+
 *24 October 2026. The owner asked for "abundant options" ("Create multiple.
 I'll get themes removed later") and said themes can change completely.*
 

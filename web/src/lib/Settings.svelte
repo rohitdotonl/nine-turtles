@@ -17,6 +17,8 @@
   import PageHead from "./PageHead.svelte";
   import TextSize from "./TextSize.svelte";
   import ThemeTiles from "./ThemeTiles.svelte";
+  import { device } from "./appearance.svelte";
+  import { APPEARANCES, resolveMode } from "./themes";
   import type { Order } from "./feeds";
   import { LINE_WIDTHS, READING_FONTS, type Preferences } from "./preferences";
   import { signOut } from "./session";
@@ -126,8 +128,27 @@
           </p>
         </figure>
         <div class="inset-group">
+          <!-- Day, night or as the device is set; the tiles below draw each theme in the version showing (decision 0046). -->
+          <fieldset class="inset-row">
+            <legend class="row-name">Appearance</legend>
+            <div class="choices control" style="--columns: 3">
+              {#each APPEARANCES as choice (choice.value)}
+                <label class="choice">
+                  <input type="radio" name="appearance" value={choice.value} bind:group={preferences.appearance} />
+                  {choice.label}
+                </label>
+              {/each}
+            </div>
+          </fieldset>
+
           <div class="inset-row block py-4">
-            <ThemeTiles bind:theme={preferences.theme} name="theme" legend="Theme" legendClass="mb-3" />
+            <ThemeTiles
+              bind:theme={preferences.theme}
+              mode={resolveMode(preferences.appearance, device.dark)}
+              name="theme"
+              legend="Theme"
+              legendClass="mb-3"
+            />
           </div>
 
           <fieldset class="inset-row">
@@ -166,8 +187,8 @@
         </div>
         <!-- The same preferences as the Aa panel above an article (decision 0034). -->
         <p class="inset-foot">
-          These apply to this device only. Automatic is off-white or dark, following the device's own setting. The Aa
-          button above an article changes these too, while you read.
+          These apply to this device only. Match device switches between each theme's day and night versions as the
+          device does. The Aa button above an article changes these too, while you read.
         </p>
       </section>
 
@@ -253,6 +274,7 @@
     padding-inline: 1rem;
     font-family: var(--reading-font);
     font-size: var(--reading-size);
+    font-weight: var(--reading-weight, 400);
     line-height: 1.6;
   }
   /* On a phone articles read a tenth smaller; so does the sample. */

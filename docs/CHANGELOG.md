@@ -4,6 +4,18 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 24 October 2026: Apple Books' six themes, by day and by night
+
+- The eleven trial themes are replaced by Apple Books' six: Original (the
+  new default), Quiet, Paper, Bold, Calm and Focus. Each has a day and a
+  night version.
+- A new Appearance choice, in Settings › Look and feel and the Aa panel:
+  Light, Dark or Match device (the default), which follows your device and
+  switches with it while slowfeed is open.
+- Bold also makes the article text heavier, for easier reading.
+- A theme you'd already chosen is kept as its nearest new one (sepia
+  becomes Calm by day, dark becomes Calm by night, and so on).
+
 ## 24 October 2026: One top line, one left edge, steady phone screens
 
 - On a computer, the three panes' top lines are now the same height, so

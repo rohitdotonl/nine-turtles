@@ -197,8 +197,10 @@ test.describe("on a phone", () => {
       expect((await choice.boundingBox())!.height).toBeGreaterThanOrEqual(44);
     }
 
-    await panel.getByRole("radio", { name: "Night", exact: true }).check();
-    await expect(page.locator("html")).toHaveAttribute("data-theme", "night");
+    await panel.getByRole("radio", { name: "Focus", exact: true }).check();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "focus");
+    await panel.getByRole("radio", { name: "Dark", exact: true }).check();
+    await expect(page.locator("html")).toHaveAttribute("data-mode", "dark");
     await panel.getByRole("button", { name: "Close" }).click();
     await expect(panel).toHaveCount(0);
     await expect(aa).toBeFocused();

@@ -42,6 +42,7 @@
   import { createKeyReader } from "./keyboard";
   import { panesFor, widthFor, MEDIUM_REM, WIDE_REM, type SidebarChoice, type Width } from "./layout";
   import { TEXT_SIZES, apply, load, save } from "./preferences";
+  import { device } from "./appearance.svelte";
   import { VIEWS, VIEW_NAMES, nameFor, parse, pathFor, titleFor, type Route } from "./router";
   import { emptyQuery, isSearching, scopeFor, searchParams, searchedTerms, type Query } from "./search";
   import { startingStep, stepOf, type Screen } from "./steps";
@@ -207,7 +208,8 @@
   }
 
   $effect(() => {
-    apply(preferences);
+    // device.dark: "Match device" follows the device's own switch while slowfeed is open.
+    apply(preferences, document.documentElement, device.dark);
     save(preferences);
   });
 
