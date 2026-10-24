@@ -1091,12 +1091,12 @@
             </section>
           {:else}
             <!--
-              Blank paper, as in Apple Books: nothing to see until you choose an article (decision 0044).
-              Screen readers still hear that no article is open, and, when the list has something to
-              open, how to open one.
+              One quiet line in the middle of the paper, as a Mac app shows when nothing is chosen
+              (decision 0053): serif, muted, never the accent, no picture. Screen readers also hear,
+              when the list has something to open, how to open one.
             -->
-            <section aria-label="Article" class="min-w-0 flex-1 bg-paper">
-              <p class="sr-only">No article open.</p>
+            <section aria-label="Article" class="flex min-w-0 flex-1 flex-col items-center justify-center bg-paper px-5">
+              <p class="reading-empty">No article open</p>
               {#if listCount > 0 && !missing}
                 <p class="sr-only">Choose one from the list<span class="keyboard-hint">, or press j</span>.</p>
               {/if}

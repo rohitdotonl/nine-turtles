@@ -4,6 +4,15 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 24 October 2026: A quiet empty pane, smaller captions, a warm Paper pill
+
+- With no article open, the reading pane now says so in one quiet grey line
+  in its middle, instead of being blank (decision 0053).
+- Picture captions are smaller and sit closer to their picture, so they no
+  longer read like a paragraph; they stay as easy to read as the text.
+- In the Paper theme by day, the selected row is a warm grey that matches
+  the page, instead of a cool slate.
+
 ## 24 October 2026: Calmer night pictures, one search field, one phone sheet
 
 - Articles: pictures are dimmed a little in the night themes so they no

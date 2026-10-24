@@ -11,7 +11,7 @@ async function openApp(page: Page, path = "/unread") {
 
 const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
 const list = (page: Page) => page.getByRole("region", { name: /^(Unread|Starred|All)$/ });
-// The reading area: an article, "No article open.", or the welcome on a slowfeed with no feeds.
+// The reading area: an article, "No article open", or the welcome on a slowfeed with no feeds.
 const readingArea = (page: Page) => page.getByRole("region", { name: /^(Article|A quiet place to read\.)$/ });
 const toggle = (page: Page) => page.getByRole("button", { name: "Sidebar" });
 

@@ -34,7 +34,7 @@ test("a fresh slowfeed shows the welcome in the reading area: the paste field, a
   await expect(reading.getByRole("button", { name: "Add feed" })).toBeVisible();
   await expect(page.getByText("Nothing here yet.")).toHaveCount(0);
   await expect(sidebar(page).getByRole("searchbox", { name: "Find a feed or folder" })).toHaveCount(0);
-  await expect(page.getByText("No article open.")).toHaveCount(0);
+  await expect(page.getByText("No article open")).toHaveCount(0);
   const [welcome, pane] = await Promise.all([reading.locator("#welcome-heading").boundingBox(), reading.boundingBox()]);
   expect(Math.abs(welcome!.x + welcome!.width / 2 - (pane!.x + pane!.width / 2))).toBeLessThan(4);
   // One empty state, not an empty column beside it (decision 0048): the list pane steps aside and

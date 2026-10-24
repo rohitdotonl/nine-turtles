@@ -332,6 +332,9 @@ each with screenshots:
   size on the segmented track, helper text on the grid, a shortcut-list
   footer with edged key caps, one heading on a phone's empty state
   (decision 0052).
+- ✅ Article view and text (seventh critique, batch 7): a quiet "No article
+  open" line in the empty reading pane, smaller captions at 7 : 1, and a
+  warm Paper selection pill by day (decision 0053).
 
 ---
 

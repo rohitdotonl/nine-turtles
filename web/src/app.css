@@ -65,7 +65,10 @@
 
   Every theme's --tint-list and --tint-sidebar are the selection pill's fill
   (decision 0037): in the day versions the theme's accent mixed into the list
-  or sidebar at 12%, so each pill takes its pane's own paper (decision 0051); in the night ones the theme's own text color at 12%
+  or sidebar at 12%, so each pill takes its pane's own paper (decision 0051),
+  except Paper's, which is its own text color at 10%, so the pill stays in the
+  warm paper's family rather than laying slate over it (decision 0053); in
+  the night ones the theme's own text color at 12%
   (decision 0041), so the pill keeps the pane's warmth or coolness instead
   of laying a cool blue-grey over warm brown, as Apple Books' dark selection
   is a lift of the page, not a tint. Three night versions whose panes are
@@ -194,8 +197,8 @@
   --muted: #5a5850;
   --danger: #a3261b;
   --accent: #2f4a7a;
-  --tint-list: #d6d9da;
-  --tint-sidebar: #ced1d1;
+  --tint-list: #d9d8d3;
+  --tint-sidebar: #d1d0ca;
   --surface-raised: #f5f4f0;
 }
 
@@ -1461,15 +1464,29 @@ input {
 }
 
 /*
-  A caption is smaller than the text and in the second ink, 8px under its
-  picture. The second ink keeps 7 : 1 on the page in every theme
+  A caption is clearly smaller than the text (13/16 of it, as Apple Books sets
+  captions apart from paragraphs) and in the second ink, 6px under its picture
+  (decision 0053). The second ink keeps 7 : 1 on the page in every theme
   (contrast.test.ts), so a caption stays at AAA like the text (decision 0050).
 */
 .article-text figcaption {
-  margin-top: 8px;
-  font-size: 0.875em;
-  line-height: 1.45;
+  margin-top: 6px;
+  font-size: 0.8125em;
+  line-height: 1.4;
   color: var(--ink-2);
+}
+
+/*
+  The empty reading area's one quiet line (decision 0053): the serif, a little
+  larger than the list, in muted grey, which keeps 4.5 : 1 on the page in every
+  theme. Never the accent, and no picture.
+*/
+.reading-empty {
+  font-family: var(--font-serif);
+  font-size: var(--text-large);
+  line-height: var(--text-large--line-height);
+  color: var(--muted);
+  text-align: center;
 }
 
 .article-text table {
