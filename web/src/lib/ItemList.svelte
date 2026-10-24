@@ -571,5 +571,7 @@
   }
   .row-star {
     display: flex;
+    /* Gold, as a filled star is (decision 0057); the shape says it too. */
+    color: var(--star);
   }
 </style>

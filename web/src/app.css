@@ -52,6 +52,7 @@
   --color-muted: var(--muted);
   --color-danger: var(--danger);
   --color-accent: var(--accent);
+  --color-star: var(--star);
   --color-tint-list: var(--tint-list);
   --color-tint-sidebar: var(--tint-sidebar);
 }
@@ -62,10 +63,10 @@
   one) to data-mode. Before the script runs there are neither, so the page is
   Original, by day or by night as the device is set.
 
-  --tint-list and --tint-sidebar are the selection pill's fill (decision
-  0037): by day the accent mixed into the list or sidebar at 12%, so the pill
-  takes its pane's own paper (decision 0051); by night the text color at 12%
-  (decision 0041), a lift of the page rather than a tint.
+  --tint-list and --tint-sidebar are the selection pill's fill: a neutral
+  grey, the text color mixed into the list or sidebar (8% by day, 12% by
+  night), so the accent bar beside it is the one touch of color (decision
+  0057). --star is the gold of a starred article's filled star.
   contrast.test.ts recomputes each and checks every text color on it.
 
   --surface-raised is what floats over the page: the sheets, the shortcut
@@ -88,8 +89,9 @@
   --muted: #5f5f64;
   --danger: #a3261b;
   --accent: #2c4f8c;
-  --tint-list: #dfe3ea;
-  --tint-sidebar: #d8dce5;
+  --star: #9a6700;
+  --tint-list: #e5e5e5;
+  --tint-sidebar: #dddddf;
   --surface-raised: #ffffff;
 }
 
@@ -103,6 +105,7 @@
   --muted: #a4a4a8;
   --danger: #e8968a;
   --accent: #94b2e6;
+  --star: #d29922;
   --tint-list: #333333;
   --tint-sidebar: #3b3b3b;
   --surface-raised: #28282a;
@@ -126,6 +129,7 @@
     --muted: #a4a4a8;
     --danger: #e8968a;
     --accent: #94b2e6;
+    --star: #d29922;
     --tint-list: #333333;
     --tint-sidebar: #3b3b3b;
     --surface-raised: #28282a;
@@ -274,12 +278,12 @@ body {
 
 /*
   "Where you are", one recipe everywhere (the sidebar and the article list),
-  as in Apple Books (decision 0037): a pill with 8px corners, set 8px in from
-  the pane's edges (the rows' mx-2), filled with the theme's accent mixed into
-  the pane in a light theme, its text color in a dark one (decision 0041).
-  No border, no bar, and the title stays in full ink. The filled
-  shape is the sign, with full ink (list) or semibold (sidebar) beside it,
-  so it never rests on color alone.
+  as GitHub marks the page you're on (decision 0057): a neutral grey pill
+  with 8px corners, set 8px in from the pane's edges (the rows' mx-2), and
+  beside it, 2px from the pane's edge, a short bar in the accent, 4px wide with
+  round ends. The title stays in full ink. The pill and the bar are shapes,
+  with full ink (list) or semibold (sidebar) beside them, so it never rests
+  on color alone.
 */
 .place {
   position: relative;
@@ -287,6 +291,24 @@ body {
 }
 .place:is([aria-current], [data-here]) {
   background-color: var(--place-tint, var(--color-tint-sidebar));
+}
+.place:is([aria-current], [data-here])::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: calc(2px - var(--pill-inset, 0.5rem));
+  width: 4px;
+  height: 1.5rem;
+  max-height: calc(100% - 0.5rem);
+  translate: 0 -50%;
+  border-radius: 9999px;
+  background-color: var(--accent);
+}
+@media (forced-colors: active) {
+  .place:is([aria-current], [data-here])::before {
+    forced-color-adjust: none;
+    background-color: Highlight;
+  }
 }
 /*
   Touch screens get the phone's own reading sizes for the interface (17px

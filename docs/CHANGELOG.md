@@ -14,6 +14,9 @@ not how it was done.
   Light, Dark and Match device switch stays. Quiet, Paper, Bold, Calm and
   Focus are gone, and so are the theme tiles in Settings and the Aa panel. If
   you had picked one of them, you get Original in the same light or dark.
+- Small touches of color, as on GitHub: the place you're on has a grey
+  background with a short blue bar beside it, and starred articles show a
+  gold star (decision 0057).
 
 ## 24 October 2026: Closer to Apple Books, batch 7
 

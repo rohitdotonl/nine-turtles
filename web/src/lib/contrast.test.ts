@@ -87,6 +87,13 @@ describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
     }
   });
 
+  it("has the starred gold clearly visible (3 : 1) wherever a star is drawn (decision 0057)", () => {
+    expect(colors.star, "every version names its star color").toBeDefined();
+    for (const background of [...BACKGROUNDS, "surface-raised"]) {
+      if (colors[background]?.startsWith("#")) expect(contrast(colors.star!, colors[background]!), background).toBeGreaterThanOrEqual(3);
+    }
+  });
+
   it("tells the three areas apart by tone, deeper from reading area to sidebar", () => {
     const order = [colors.paper!, colors.list!, colors.sidebar!].map(luminance);
     const lightTheme = order[0]! > 0.5;
@@ -150,15 +157,14 @@ describe.each(Object.entries(THEMES))("the %s theme's keyboard outline on rows",
   });
 });
 
-// The selection pill: in a light theme the accent mixed into the pane at 12%
-// (decisions 0037 and 0051); in a dark one the theme's own text color at 12%, so it
-// keeps the pane's warmth or coolness (decision 0041). The text checks above
-// cover it.
+// The selection pill: a neutral grey, the theme's own text color mixed into the
+// pane at 8% by day and 12% by night, so the accent bar beside it is the one
+// touch of color (decision 0057). The text checks above cover it.
 
 describe.each(Object.entries(THEMES))("the %s theme's selection pill", (name, colors) => {
   const dark = luminance(colors.paper!) < 0.5;
-  it(dark ? "is the text color mixed into the list and the sidebar" : "is the accent mixed into the list and the sidebar", () => {
-    const [from, share] = dark ? [colors.ink!, 0.12] : [colors.accent!, 0.12];
+  it("is the text color mixed into the list and the sidebar", () => {
+    const [from, share] = [colors.ink!, dark ? 0.12 : 0.08];
     expect(colors["tint-list"]).toBe(mix(from, colors.list!, share));
     expect(colors["tint-sidebar"]).toBe(mix(from, colors.sidebar!, share));
   });

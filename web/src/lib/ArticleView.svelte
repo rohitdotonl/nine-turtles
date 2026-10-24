@@ -212,7 +212,7 @@
         {/if}
         {@render aa(20, "btn-quiet btn-icon")}
         <!-- A toggle keeps one name for screen readers ("Star", pressed or not); the filled star shows its state. -->
-        <button type="button" aria-label="Star" aria-pressed={article.starred} title={article.starred ? "Starred (s)" : "Star (s)"} onclick={onStar} class={["btn-quiet btn-icon", article.starred && "text-ink"]}>
+        <button type="button" aria-label="Star" aria-pressed={article.starred} title={article.starred ? "Starred (s)" : "Star (s)"} onclick={onStar} class={["btn-quiet btn-icon", article.starred && "text-star"]}>
           {@render starIcon(20)}
         </button>
         <MoreMenu id="article-menu" label="More actions" groups={more} />
@@ -277,7 +277,7 @@
         <svg aria-hidden="true" width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4 6 6-6 6" /></svg>
       </button>
       {@render aa(22, "")}
-      <button type="button" aria-label="Star" aria-pressed={article.starred} onclick={onStar} class:text-ink={article.starred}>
+      <button type="button" aria-label="Star" aria-pressed={article.starred} onclick={onStar} class:text-star={article.starred}>
         {@render starIcon(22)}
       </button>
       <!-- Share (or Copy link) and Mark unread, in a menu that opens upwards. -->

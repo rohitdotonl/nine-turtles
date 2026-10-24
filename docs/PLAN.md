@@ -346,8 +346,8 @@ each with screenshots:
   (decision 0055).
 - ✅ Renamed **nine turtles**, and one theme, Original, by day and by night;
   the Apple Books theme set removed (decision 0056).
-- ⏳ Small touches of color, as GitHub uses them: being discussed with the
-  owner.
+- ✅ Small touches of color, as GitHub uses them: a blue bar beside a grey
+  pill for where you are, and gold stars (decision 0057).
 
 ---
 
