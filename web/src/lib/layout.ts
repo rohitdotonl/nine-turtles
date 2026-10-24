@@ -25,12 +25,14 @@ export type Panes = { sidebar: boolean; list: boolean; article: boolean };
  * the sidebar is the home screen; an opened article (`reading`) takes the
  * list's place. Settings fills the list and article areas.
  */
-export function panesFor(width: Width, sidebar: SidebarChoice, reading = false): Panes {
+export function panesFor(width: Width, sidebar: SidebarChoice, reading = false, listHidden = false): Panes {
   const sidebarShown = sidebar === "auto" ? width !== "medium" : sidebar === "shown";
   switch (width) {
     case "wide":
-      return { sidebar: sidebarShown, list: true, article: true };
+      return { sidebar: sidebarShown, list: !listHidden, article: true };
     case "medium":
+      // With the list hidden, the article takes its place (beside the sidebar, if it shows).
+      if (listHidden) return { sidebar: sidebarShown, list: false, article: true };
       return { sidebar: sidebarShown, list: true, article: !sidebarShown };
     case "narrow":
       return { sidebar: sidebarShown, list: !sidebarShown && !reading, article: !sidebarShown && reading };

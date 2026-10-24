@@ -5,6 +5,8 @@ import type { View } from "./router";
 export type Action =
   | { kind: "cheat-sheet" }
   | { kind: "toggle-sidebar" }
+  | { kind: "toggle-list" }
+  | { kind: "toggle-both" }
   | { kind: "escape" }
   | { kind: "add-feed" }
   | { kind: "search" }
@@ -89,6 +91,10 @@ export function createKeyReader() {
         return { kind: "cheat-sheet" };
       case "[":
         return { kind: "toggle-sidebar" };
+      case "]":
+        return { kind: "toggle-list" };
+      case "\\":
+        return { kind: "toggle-both" };
       case "a":
         return { kind: "add-feed" };
       case "/":
@@ -125,6 +131,8 @@ export const SHORTCUTS: { keys: string[]; action: string; ready: boolean; group:
   { keys: ["g then s"], action: "Go to Starred", ready: true, group: "Moving around" },
   { keys: ["g then a"], action: "Go to All", ready: true, group: "Moving around" },
   { keys: ["["], action: "Show / hide sidebar", ready: true, group: "Moving around" },
+  { keys: ["]"], action: "Show / hide article list", ready: true, group: "Moving around" },
+  { keys: ["\\"], action: "Show / hide both", ready: true, group: "Moving around" },
   { keys: ["Esc"], action: "Back / close", ready: true, group: "Moving around" },
   { keys: ["Enter", "o"], action: "Open item", ready: true, group: "Reading" },
   { keys: ["v"], action: "Open original", ready: true, group: "Reading" },

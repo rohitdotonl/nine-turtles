@@ -74,6 +74,8 @@
   // that names a place opens that place.
   let sidebarChoice: SidebarChoice = $state(currentWidth() === "narrow" && firstStep.screen !== "home" ? "hidden" : "auto");
   let cheatSheetOpen = $state(false);
+  /** On a computer, the reader hid the article list (] or its button) to give the article its room. */
+  let listHidden = $state(false);
   /** The article chosen in the list, shown in the reading area. */
   let selected: Article | undefined = $state();
   /** On a phone-narrow window, the opened article takes the list's place. */
@@ -87,7 +89,7 @@
   let beforeSearch: Element | null = null;
   let searchTimer: ReturnType<typeof setTimeout> | undefined;
 
-  let panes = $derived(panesFor(width, sidebarChoice, reading));
+  let panes = $derived(panesFor(width, sidebarChoice, reading, listHidden));
   /** A phone-narrow window: one screen at a time, with a top bar and, while reading, a bottom toolbar. */
   let phone = $derived(width === "narrow");
 
@@ -102,6 +104,7 @@
   /** The list's pane and the sidebar button, for where the keyboard goes when the sidebar hides. */
   let listSection: HTMLElement | undefined = $state();
   let sidebarToggle: HTMLButtonElement | undefined = $state();
+  let listToggle: HTMLButtonElement | undefined = $state();
 
   /**
    * On a window wide enough for the list, adding a feed and editing a feed or
@@ -368,6 +371,12 @@
         case "toggle-sidebar":
           toggleSidebar();
           break;
+        case "toggle-list":
+          toggleList();
+          break;
+        case "toggle-both":
+          toggleBoth();
+          break;
         case "go":
           go({ kind: "view", view: action.view });
           break;
@@ -396,13 +405,13 @@
           if (selected && isList(route)) itemList?.markUnread();
           break;
         case "mark-all-read":
-          if (isList(route) && (panes.list || reading)) itemList?.markAllRead();
+          if (isList(route) && (panes.list || panes.article || reading)) itemList?.markAllRead();
           break;
         case "undo":
           if (isList(route)) itemList?.undo();
           break;
         case "refresh":
-          if (isList(route) && (panes.list || reading)) itemList?.refresh();
+          if (isList(route) && (panes.list || panes.article || reading)) itemList?.refresh();
           break;
         case "text-size":
           if (selected && panes.article) {
@@ -617,6 +626,25 @@
     }
   }
 
+  /** ] and the list's button: on a computer, hide the article list so the article has its room, or show it again. */
+  function toggleList() {
+    if (phone || !isList(route)) return;
+    const hiding = panes.list;
+    const focusWasInside = listSection?.contains(document.activeElement) ?? false;
+    listHidden = hiding;
+    if (hiding && focusWasInside) queueMicrotask(() => (selected ? articleHeading : listToggle)?.focus());
+  }
+
+  /** \: hide the sidebar and the list together, for just the article; pressed again, both come back. */
+  function toggleBoth() {
+    if (phone || !isList(route)) return;
+    const hiding = panes.sidebar || panes.list;
+    const focusWasInside = (sidebar?.contains(document.activeElement) || listSection?.contains(document.activeElement)) ?? false;
+    sidebarChoice = hiding ? "hidden" : "shown";
+    listHidden = hiding;
+    if (hiding && focusWasInside) queueMicrotask(() => (selected ? articleHeading : listToggle)?.focus());
+  }
+
   /**
    * The sidebar hid with the keyboard's place in it. The place moves to the
    * list itself (its selected article, or its first, the list's own Tab
@@ -644,8 +672,9 @@
    * the new article if you were reading, otherwise to its row in the list.
    */
   function move(step: 1 | -1) {
-    if (!itemList || (!panes.list && !reading)) return;
-    const wasReading = reading || inArticle();
+    if (!itemList || (!panes.list && !panes.article && !reading)) return;
+    // With the list hidden there's no row to go to, so the article keeps the keyboard.
+    const wasReading = reading || inArticle() || !panes.list;
     if (!itemList.move(step)) return;
     showArticleArea();
     if (wasReading) queueMicrotask(() => articleHeading?.focus());
@@ -654,7 +683,7 @@
 
   /** Enter and o: open the selected article (the first, if none is selected yet) to read. */
   function open() {
-    if (!itemList || (!panes.list && !reading)) return;
+    if (!itemList || (!panes.list && !panes.article && !reading)) return;
     if (!selected && !itemList.move(1)) return;
     if (phone && !reading) {
       // On a phone the article is a screen of its own, one step on.
@@ -681,6 +710,7 @@
       stepBack("list");
       return;
     }
+    if (!panes.list) return;
     itemList?.focusSelected();
   }
 
@@ -822,11 +852,12 @@
   {/if}
   <!--
     On a phone there's no sidebar toggle: the feeds list is the home screen, reached with the back arrow.
-    Everywhere else it stays in this one place, at the start of the top line, whether or not the
-    sidebar shows. Each area's top line (the wordmark, the list's title, the article's tools) never
-    scrolls, so nothing passes under it.
+    Everywhere else it sits on the sidebar it controls, at the right end of its top line across from
+    the wordmark; with the sidebar hidden it waits at the start of the next area's top line. It's one
+    button that moves, so the keyboard stays on it. Each area's top line (the wordmark, the list's
+    title, the article's tools) never scrolls, so nothing passes under it.
   -->
-  <div class={["fixed top-1.5 left-2 z-10", phone && "hidden"]}>
+  <div class={["fixed top-1.5 z-10", panes.sidebar ? "left-[calc(16rem-3.25rem)]" : "left-2", phone && "hidden"]}>
     <button
       type="button"
       bind:this={sidebarToggle}
@@ -846,14 +877,14 @@
     aria-label="Sidebar"
     bind:this={sidebar}
     hidden={!panes.sidebar}
-    class={["flex-col bg-sidebar", panes.list ? "w-64 shrink-0" : "min-w-0 flex-1", panes.sidebar && "flex", !phone && "pane-edge"]}
+    class={["flex-col bg-sidebar", panes.list || panes.article ? "w-64 shrink-0" : "min-w-0 flex-1", panes.sidebar && "flex", !phone && "pane-edge"]}
   >
     <!--
       The sidebar's top line (decision 0043): the wordmark, on the same line as the list's title and
       the article's tools, in a band of the shared height. It never scrolls; the places below it do,
       with a faint line under it once they have.
     -->
-    <div class={["pane-bar gap-4 pr-4", phone ? "pl-5" : "pl-14"]}>
+    <div class={["pane-bar gap-4", phone ? "pr-4 pl-5" : "pr-14 pl-5"]}>
         <!-- A name, not a control: never a Tab stop; the keyboard lands here only when the screen opens (decision 0041). -->
         <h1 class={["wordmark mr-auto font-serif tracking-[-0.01em]", phone ? "text-xlarge" : "text-large text-ink-2"]} tabindex="-1" bind:this={wordmark}>nine turtles</h1>
         {#if phone}
@@ -1013,6 +1044,7 @@
         <section
           aria-labelledby="list-heading"
           bind:this={listSection}
+          id="list-pane"
           hidden={!panes.list || welcomeWide}
           class={[
             // A container, so the list's title can step down a size when the pane is narrow (decision 0041).
@@ -1088,9 +1120,28 @@
           </div>
         </section>
         {#if panes.article}
+          <!-- The reading area, with the list's button at the start of its top line (on a computer). -->
+          <div class="relative flex min-w-0 flex-1">
+          {#if !phone}
+            <div class={["absolute top-1.5 z-20", panes.list || panes.sidebar ? "left-2" : "left-14"]}>
+              <button
+                type="button"
+                bind:this={listToggle}
+                aria-label="Article list"
+                aria-expanded={panes.list}
+                aria-controls="list-pane"
+                title={panes.list ? "Hide the article list ( ] )" : "Show the article list ( ] )"}
+                onclick={toggleList}
+                class="bar-button flex size-11 items-center justify-center rounded-md text-ink-2"
+              >
+                <Icon name="list-pane" size={20} />
+              </button>
+            </div>
+          {/if}
           {#if selected}
             <ArticleView
               article={selected}
+              toggles={phone ? 0 : panes.list || panes.sidebar ? 1 : 2}
               bind:heading={articleHeading}
               bind:preferences
               onStar={() => itemList?.toggleStar()}
@@ -1124,6 +1175,7 @@
               {/if}
             </section>
           {/if}
+          </div>
         {/if}
       {/if}
     </div>

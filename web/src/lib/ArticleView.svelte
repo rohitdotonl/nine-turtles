@@ -32,6 +32,7 @@
     heading = $bindable(),
     preferences = $bindable(),
     phone,
+    toggles = 0,
     onStar,
     onMarkUnread,
   }: {
@@ -49,6 +50,8 @@
       hasPrevious: boolean;
       hasNext: boolean;
     };
+    /** How many pane buttons sit at the start of the top bar (on a computer), to keep clear of. */
+    toggles?: number;
     onStar: () => void;
     onMarkUnread: () => void;
   } = $props();
@@ -199,9 +202,9 @@
   {:else}
     <!--
       Quiet icons, each named in its tooltip with its key, in one cluster at the right, 4px apart: the way to the
-      publisher, then the reader's own tools. The left stays empty, like Apple Books' reading toolbar (decision 0050).
+      publisher, then the reader's own tools. The left holds only the pane buttons, like Apple Books' reading toolbar (decision 0050).
     -->
-    <div class="reading-bar pane-bar relative z-10 gap-2 px-2">
+    <div class={["reading-bar pane-bar relative z-10 gap-2 pr-2", toggles === 2 ? "pl-[6.5rem]" : toggles === 1 ? "pl-14" : "pl-2"]}>
       {#if !article.link}
         <p class="px-2 text-small text-muted">This article has no link to its original.</p>
       {/if}
