@@ -509,20 +509,26 @@ pub async fn find(
         None
     };
     let searched = searched_words(&search.q);
-    let results = found
-        .into_iter()
-        .map(|each| {
-            // The text searched: the content, or the summary when the feed gives only that.
-            let excerpt = match each.content.as_deref().or(each.summary.as_deref()) {
-                Some(html) if !searched.is_empty() => excerpt(&plain_words(html), &searched),
-                _ => None,
-            };
-            Hit {
-                article: each.article,
-                excerpt,
-            }
-        })
-        .collect();
+    // Reading up to fifty articles' HTML for excerpts is steady CPU work, so it
+    // runs off the threads that answer requests.
+    let results = tokio::task::spawn_blocking(move || {
+        found
+            .into_iter()
+            .map(|each| {
+                // The text searched: the content, or the summary when the feed gives only that.
+                let excerpt = match each.content.as_deref().or(each.summary.as_deref()) {
+                    Some(html) if !searched.is_empty() => excerpt(&plain_words(html), &searched),
+                    _ => None,
+                };
+                Hit {
+                    article: each.article,
+                    excerpt,
+                }
+            })
+            .collect::<Vec<_>>()
+    })
+    .await
+    .expect("excerpts never panic");
     Ok(Some((results, next)))
 }
 

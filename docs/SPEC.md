@@ -90,7 +90,7 @@ A few words used throughout:
   3. **Feeds not in any folder**, alphabetically
   4. **Add feed**, then the shortcut list and **Settings** as icons, in one row
 - You can't reorder things by hand; order is always alphabetical.
-- At the top of the sidebar: the "slowfeed" wordmark, and below it a quiet **field to find a feed or folder by name** (a faint tone with a search icon, in the same style as the list's search box), always shown. A long feed name ends in "…" on one line, so the sidebar stays tidy; its whole name shows as a tooltip, is read in full by screen readers, and is the list's title when you open it (one line, then "…", with the whole name as its tooltip, so the search box below never moves).
+- At the top of the sidebar: the "slowfeed" wordmark, and below it a quiet **field to find a feed or folder by name** (a faint tone with a search icon, in the same style as the list's search box), always shown. Folders and feeds sit under small muted section names ("Folders", then "Other feeds", or just "Feeds" without folders), and every feed name is in full ink. A long feed name ends in "…" on one line, so the sidebar stays tidy; its whole name shows as a tooltip, is read in full by screen readers, and is the list's title when you open it (one line, then "…", with the whole name as its tooltip, so the search box below never moves).
 - Folders appear once at least one exists. Each has a small button beside it that shows or hides the feeds in it, indented beneath; folders start closed, and this device remembers which you opened. Choosing a folder's name lists the articles of all its feeds (`/folders/2`).
 - The search field filters the sidebar as you type: the folders and feeds whose name contains what you typed (capitals and accents don't matter), in one list. Escape empties it.
 - **Unread counts:** small, muted grey numbers, right-aligned, next to each feed and folder (a folder's is its feeds' added up). No count on "Unread", "Starred" or "All", and never a total. Above 999 shows "999+". Never colored, never a badge.
@@ -105,7 +105,7 @@ A few words used throughout:
 ## 6. Item list
 
 **What it does**
-- Each row shows the article **title**, and below it the **source name and time** in quiet small text (just the time in one feed's own list, whose title already names it). Unread articles have a small dot before the title. No images, no site icons.
+- Each row shows the article **title**, and below it the **source name and time** in quiet small text (just the time in one feed's own list, whose title already names it). Unread articles have a small dot before the title. A faint hairline parts one row from the next. No images, no site icons.
 - Dates and times are shown in your device's time zone, in words that never change while you look: "14:05" for today, "23 Oct" for this year, "23 Oct 2025" before that. The time is when the publisher says they published it, or when slowfeed received it if they don't say (and never later than that, so a wrong date can't pin an article to the top).
 - Newest first by default; oldest first can be chosen in Settings or in the list's More menu.
 - Beside the list's title sit quiet icons, each with its name as a tooltip and for screen readers: **Edit feed** or **Edit folder** (in a feed's or folder's own list), **Refresh** (section 13) and **More** (…). More opens a small menu with **Mark all as read** (section 8; its key, `Shift+A`, is shown beside it) and the **sort order** (Newest first or Oldest first, the current one ticked and semibold). A click, Enter or the down arrow opens it on its first item; the arrow keys, Home and End move through it; Escape closes it and puts the keyboard back on More; Tab or a press outside closes it too.
@@ -118,7 +118,7 @@ A few words used throughout:
   | Unread | Full-strength, semibold title |
   | Read | A softer second ink, regular-weight title (the title stays full-strength while it's the selected row) |
   | Selected | A faint tint and a short bar in the theme's accent against the list's left edge; when you're using the keyboard, an outline around the tint instead of the bar |
-  | Starred | A small star mark |
+  | Starred | A small star mark after the time (read out as "Starred") |
 
 - Items you read in the Unread view stay where they are (greyed) until you press `r` or leave the view, so nothing jumps under your cursor.
 

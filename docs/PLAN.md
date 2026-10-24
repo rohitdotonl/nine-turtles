@@ -256,6 +256,11 @@ each with screenshots:
 - ✅ A calmer selected row, warmer selection tints, one search field style,
   aligned counts and header lines, steadier sheets with Cancel, and an end
   to every list (decision 0033).
+- ✅ Toward Apple Books (the owner's one reference from 24 October 2026):
+  the system interface font, a selection that keeps its fill, list
+  hairlines, a tighter reading rhythm, an "Aa" reading panel, quiet icon
+  toolbars and a More menu, sheets as one family, search excerpts and a
+  welcome in the reading area (decisions 0034 to 0036).
 
 ---
 

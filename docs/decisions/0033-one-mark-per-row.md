@@ -1,5 +1,7 @@
 # 0033: One mark per row, one field style, steadier sheets
 
+_The selection part is refined by [0036](0036-apple-books-type-and-selection.md): the fill stays, with the keyboard's ring outside it._
+
 *24 October 2026. From the outside critic's round 6 (`ui-polish/critic-round6.md`
 in the project files, majors 1 to 5 and 8, minors 1, 2 and 5), under the
 owner's "taste first" direction and their choice of bigger batches.*

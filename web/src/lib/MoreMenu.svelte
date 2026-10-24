@@ -107,7 +107,7 @@
     bind:this={button}
     aria-haspopup="menu"
     aria-expanded={open}
-    aria-controls={id}
+    aria-controls={open ? id : undefined}
     aria-label={label}
     title={label}
     onclick={() => (open ? close(false) : show())}

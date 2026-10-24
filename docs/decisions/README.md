@@ -42,6 +42,7 @@ says "Replaced by …" at the top.
 | [0030](0030-flush-place-bar.md) | "Where you are" bar flush with the pane's edge in both panes; the selected article's focus is the usual outline, not a grey hairline |
 | [0031](0031-sheets-and-popovers.md) | Short tasks (add or edit a feed, edit a folder) as sheets over the list; search options as a popover with date presets |
 | [0032](0032-more-themes.md) | Eight more themes to try (four light, four dark), each with its own "where you are" accent; the owner prunes later |
-| [0033](0033-one-mark-per-row.md) | The keyboard's outline replaces the selected row's fill; one search field style; sheets anchored, each with Cancel; "That's everything." ends a list |
+| [0033](0033-one-mark-per-row.md) | The keyboard's outline replaces the selected row's fill; one search field style; sheets anchored, each with Cancel; "That's everything." ends a list (selection refined by 0036) |
 | [0034](0034-aa-panel-and-quiet-toolbars.md) | An "Aa" reading panel beside the text (size, theme, font, width); quiet icon toolbars on the article; Refresh and a More menu beside the list title |
 | [0035](0035-sheets-search-and-welcome.md) | One family for sheets (sans title, Cancel then the main action in one foot row, destructive actions as muted-red words) and things that float; search excerpts cut on the server as plain-text pieces; a × in the search field; the welcome in the reading area |
+| [0036](0036-apple-books-type-and-selection.md) | Toward Apple Books: the system interface font, phone-sized text on touch screens, a selection that keeps its fill with the focus ring outside, hairlines between list rows, a tighter reading rhythm |

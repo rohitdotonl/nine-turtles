@@ -161,6 +161,8 @@
   );
   /** No feeds yet: Unread and All show the add field instead (SPEC section 2). */
   let firstVisit = $derived(feeds !== undefined && feeds.length === 0);
+  // Starred keeps its own list even with no feeds: it is where its More menu and sort live.
+  let welcoming = $derived(firstVisit && !(under.kind === "view" && under.view === "starred"));
   /** How many articles the list shows, so the empty reading area offers j only when there's one to open. */
   let listCount = $state(0);
   /** The line above the add field, in the sheet and on the phone's page. */
@@ -969,10 +971,10 @@
               <p class="mt-4">There's no folder here. It may have been deleted or renamed.</p>
             {:else if missing}
               <p class="mt-4">You don't follow this feed. It may have been an old address.</p>
-            {:else if firstVisit && panes.article}
+            {:else if welcoming && panes.article}
               <!-- The welcome has the reading area; the list just says there's nothing yet. -->
               <p class="mt-4 text-ui text-muted">Nothing here yet.</p>
-            {:else if firstVisit}
+            {:else if welcoming}
               <!-- No reading area beside the list (a phone, or a medium window with the sidebar shown): the welcome is here. -->
               <div class="mt-8 flex justify-center">{@render welcome()}</div>
             {:else if feeds !== undefined && sort !== undefined}
@@ -1019,9 +1021,9 @@
                   }
                 : undefined}
             />
-          {:else if firstVisit && !missing}
+          {:else if welcoming && !missing}
             <!-- No feeds yet: the welcome has the reading area, where a new reader's eyes go (SPEC section 2). -->
-            <section aria-labelledby="welcome-heading" class="flex min-w-0 flex-1 flex-col items-center justify-center bg-paper px-6 pb-[12vh] md:px-10">
+            <section aria-label="Article" class="flex min-w-0 flex-1 flex-col items-center justify-center bg-paper px-6 pb-[12vh] md:px-10">
               {@render welcome()}
             </section>
           {:else}

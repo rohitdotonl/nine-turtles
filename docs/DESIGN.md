@@ -123,7 +123,7 @@ The 500-feed user gets everything; the 30-feed user never sees the machinery.
 | Sidebar search always visible | 6. Power is hidden, never missing | The owner wants finding a feed by name always available | One quiet field that filters feeds and folders by name. Nothing else in the sidebar skips progressive disclosure. |
 | Unread dot (decision 0028) | Type does the hierarchy, never badges | Weight alone was hard to scan in a long list; Mail and Things mark unread with a dot | A 6px dot in the text color before an unread title. No number, never colored, list rows only. |
 | A shadow under the floating note (decision 0028) | Regions by tone, no shadows | The note floats over the list; a soft shadow shows it sits above the rows rather than among them | Only things that float over the page: the note at the bottom of the list, a sheet, the search options popover, the Aa panel, the list's More menu and the shortcut list (decision 0034). One soft shadow and a faint edge each. Nothing that sits in the page casts a shadow. |
-| Hairlines inside a page | Regions by tone, no lines | Inside one page, a faint line parts groups that do different jobs: rows in a Settings group, and Unsubscribe or Delete folder apart from the form above them | Only within a page, never between panes; faint, in a tone of the text color. A refused field's firmer edge is a border, not a line between regions. |
+| Hairlines inside a page | Regions by tone, no lines | Inside one page, a faint line parts groups that do different jobs: rows in a Settings group, articles in the middle list, and Unsubscribe or Delete folder apart from the form above them | Only within a page, never between panes; faint, in a tone of the text color. A refused field's firmer edge is a border, not a line between regions. |
 | A dim behind a sheet (decision 0031) | Regions by tone; nothing moves unless you move it | A short task (adding or editing a feed) keeps the list in view, so you don't lose your place; a faint warm dim shows the card is the thing to act on now | Only behind a sheet or the shortcut list, never animated, and it closes with Escape or a press on it. |
 | A hairline under a scrolled top line (decision 0028) | Regions by tone, no lines | Shows that text has gone under a top line that never scrolls, so it doesn't look cut off | Only under a pane's top line, only once its content has scrolled, in a faint tone of the text color. |
 
@@ -180,7 +180,7 @@ The philosophy applied. The principle is noted where it isn't obvious.
 | List area (one step deeper) | `#F0ECE3` | `#ECE1C8` | `#221F1C` |
 | Sidebar (two steps deeper) | `#E7E2D7` | `#E3D5B7` | `#2E2A25` |
 | Text | `#1F1E1C` | `#2A241B` | `#E6E1D8` |
-| Second ink: read titles, sidebar names, quieter actions | `#47423B` | `#463C2F` | `#C9C2B6` |
+| Second ink: read titles, quieter actions | `#47423B` | `#463C2F` | `#C9C2B6` |
 | Muted grey, warm (owner's choice, Milestone 4): meta, counts, hints | `#61564A` | `#5E5141` | `#AFA38E` |
 
 - All accent pairs pass AAA (7 : 1); re-check if a value changes.
@@ -212,24 +212,24 @@ Eleven, for now: **off-white** (default light), **sepia** and **dark** (default 
 |---|---|---|
 | Reading (default) | **Literata** | Made for long-form reading on screens |
 | Reading (alternate sans) | **Atkinson Hyperlegible** | Made for legibility, including low vision |
-| Interface | **Inter** | Neutral and clear at small sizes |
+| Interface | **The device's own system font** (San Francisco on Apple devices), **Inter** everywhere else | As in Apple Books: the interface feels native; Inter is the neutral, self-hosted fallback |
 | Code in articles | **JetBrains Mono** | Clear monospace |
 
 - All fonts are free and served by slowfeed itself (no third-party font services).
 - **Other scripts** (e.g. Hindi in Devanagari) use the fonts already on the device; no extra downloads.
 - **A fixed type scale by role**, so each level of importance looks different at a glance (size, weight and ink together, never color):
-  - meta 13px (times, source names, counts, hints) in muted grey;
+  - meta 13px (times, source names, counts, hints) in muted grey; 15px on a touch screen;
   - small 14px (toolbar actions, helper text, labels);
-  - interface 15px (sidebar names, list titles);
+  - interface 15px (sidebar names, list titles); 17px on a touch screen, as a phone's own apps use;
   - base 16px (text boxes, running interface text);
   - large 20px (section headings inside a screen);
-  - heading 24px, in the reading serif (the wordmark, the list's title);
+  - heading 24px, in the reading serif (the list's title); the sidebar's wordmark is 20px in the second ink on a computer and 28px on a phone's feeds screen;
   - extra large 28px (a screen's own title);
   - display 48px (sign-in wordmark).
 - Article text is set by the reader: six steps, 16 to 28px, 20px by default (a tenth smaller on a phone). The article's title is about 1.55 times the text size, its headings 1.2 and 1.08 times, so the title is always clearly the largest thing on screen.
 - **Spacing** in steps of 4px, mostly 8, 16, 24, 40 and 64px.
 - **Weights:** regular and semibold (600) for both reading and the interface: Literata's semibold for titles, headings and bold words in articles (Atkinson Hyperlegible keeps its bold). Nothing heavier, so a calm page never shouts. Semibold marks unread titles, where you are, the one main action in a toolbar or sheet, a destructive action's words, and searched words in a result's excerpt.
-- **Three inks:** text (titles, where you are), a second ink (read titles, sidebar names, quieter actions) and muted grey (meta).
+- **Three inks:** text (titles, where you are), a second ink (read titles, quieter actions); feed names in the sidebar are in full text color and muted grey (meta).
 - Article lines of roughly 65–75 characters, with generous leading.
 
 #### Languages
@@ -269,7 +269,7 @@ Fixed order, top to bottom: **Unread · Starred · All**, then **folders** A–Z
 |---|---|
 | Unread | Full-contrast, semibold title and a small dot in the margin before it |
 | Read | Second ink, regular-weight title |
-| Selected (cursor) | A rounded faint tint, and a short bar in the theme's accent flush against the pane's own left edge, the same in the sidebar and the list; title in full ink. The keyboard's outline sits inside the fill, with the bar outside it |
+| Selected (cursor) | A rounded faint tint, and a short bar in the theme's accent flush against the pane's own left edge, the same in the sidebar and the list; title in full ink. The keyboard's outline is a ring just outside the fill, and the bar hides while it shows |
 | Starred | A small star mark |
 
 In river mode (V2) only the cursor and star show.

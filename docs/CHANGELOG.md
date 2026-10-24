@@ -4,6 +4,23 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 24 October 2026: Toward Apple Books
+
+- An **Aa** button on every article opens a small reading panel, as in
+  Apple Books: text size, theme, font and line width, all applied at once.
+- The article's tools and the list's Refresh are quiet icons; Mark all as
+  read and the sort order live in a small More (…) menu.
+- The interface uses your device's own font (San Francisco on a Mac or
+  iPhone), with larger, phone-sized text on touch screens.
+- The selected row keeps its fill; the keyboard's ring sits around it.
+  Thin lines separate the list's rows, and the star follows the date.
+- Articles read a little tighter and more like a book.
+- Add a feed, Edit feed and Edit folder share one shape: Cancel and the
+  main action together at the bottom, Unsubscribe and Delete in red words.
+- Search results show a line of text around what matched, and an × clears
+  the field.
+- A first visit is welcomed in the reading area, not squeezed into the list.
+
 ## 24 October 2026: Calmer selection, one search style, tidier edges
 
 - The selected article no longer wears three marks at once: while you
