@@ -125,6 +125,15 @@
   );
   /** No feeds yet: Unread and All show the add field instead (SPEC section 2). */
   let firstVisit = $derived(feeds !== undefined && feeds.length === 0);
+  let headingText = $derived(
+    missing
+      ? route.kind === "folder" || route.kind === "edit-folder"
+        ? "Folder not found"
+        : "Feed not found"
+      : shown
+        ? "Search results"
+        : nameFor(route, placeName),
+  );
 
   function isList(place: Route): boolean {
     return place.kind === "view" || place.kind === "feed" || place.kind === "folder";
@@ -560,17 +569,28 @@
   }
 </script>
 
+{#snippet hint(padding: string)}
+  <!-- Always shown on screens with a keyboard (DESIGN.md → "Keyboard": permanent): in the sidebar, or under the list when the sidebar is hidden. -->
+  <button
+    type="button"
+    onclick={() => (cheatSheetOpen = true)}
+    class={["keyboard-hint flex min-h-9 w-full items-center gap-1 text-left text-meta text-muted", padding]}
+  >
+    Press <kbd class="key">?</kbd> for shortcuts
+  </button>
+{/snippet}
+
 {#snippet listHead()}
             <!-- When a long name pushes "Edit feed" onto its own line, its icon lines up with the name above. -->
-            <div class="flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
-              <h2 id="list-heading" tabindex="-1" bind:this={listHeading} class="min-w-0 text-large font-semibold break-words">
-                {missing
-                  ? route.kind === "folder" || route.kind === "edit-folder"
-                    ? "Folder not found"
-                    : "Feed not found"
-                  : shown
-                    ? "Search results"
-                    : nameFor(route, placeName)}
+            <!-- A long name wraps rather than being cut off, so everyone can read all of it, on any screen and at any zoom. -->
+            <div class="flex min-h-11 items-center gap-4">
+              <h2
+                id="list-heading"
+                tabindex="-1"
+                bind:this={listHeading}
+                class="min-w-0 flex-1 font-serif [overflow-wrap:anywhere] text-heading font-bold tracking-[-0.01em]"
+              >
+                {headingText}
               </h2>
               {#if shown}
                 <!-- Nothing beside the heading while searching. -->
@@ -578,13 +598,13 @@
                 <a
                   href={pathFor({ kind: "edit-feed", id: currentFeed.id })}
                   onclick={(event) => follow(event, { kind: "edit-feed", id: currentFeed!.id })}
-                  class="btn-quiet -mx-3"><Icon name="edit" />Edit feed</a
+                  class="btn-quiet btn-small -mr-3 shrink-0"><Icon name="edit" size={16} />Edit feed</a
                 >
               {:else if currentFolder}
                 <a
                   href={pathFor({ kind: "edit-folder", id: currentFolder.id })}
                   onclick={(event) => follow(event, { kind: "edit-folder", id: currentFolder!.id })}
-                  class="btn-quiet -mx-3"><Icon name="edit" />Edit folder</a
+                  class="btn-quiet btn-small -mr-3 shrink-0"><Icon name="edit" size={16} />Edit folder</a
                 >
               {/if}
             </div>
@@ -602,58 +622,40 @@
     <!-- The wordmark is the page's main heading; with the sidebar hidden, screen readers still find it. -->
     <h1 class="sr-only">slowfeed</h1>
   {/if}
-  <!-- On a phone there's no sidebar toggle: the feeds list is the home screen, reached with the back arrow. -->
-  <div class={["fixed top-3 left-3", phone && "hidden"]}>
+  <!--
+    On a phone there's no sidebar toggle: the feeds list is the home screen, reached with the back arrow.
+    Everywhere else it stays in this one place, at the start of the top line, whether or not the
+    sidebar shows. Each area's top line (the wordmark, the list's title, the article's tools) never
+    scrolls, so nothing passes under it.
+  -->
+  <div class={["fixed top-3 left-2 z-10", phone && "hidden"]}>
     <button
       type="button"
+      aria-label="Sidebar"
       aria-expanded={panes.sidebar}
       aria-controls="sidebar"
+      title={panes.sidebar ? "Hide the sidebar ( [ )" : "Show the sidebar ( [ )"}
       onclick={toggleSidebar}
-      class="flex min-h-11 items-center gap-2 rounded px-3 text-base"
+      class="flex size-11 items-center justify-center rounded-md text-ink-2"
     >
-      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
-        <rect x="2.75" y="3.75" width="14.5" height="12.5" rx="1.5" />
-        <line x1="7.75" y1="3.75" x2="7.75" y2="16.25" />
-      </svg>
-      Sidebar
+      <Icon name="sidebar" size={20} />
     </button>
   </div>
-  <!--
-    The top 4rem of every area is a band that never scrolls, so these two
-    fixed buttons never sit over text. The hint is always shown on screens
-    with a keyboard (DESIGN.md → "Keyboard": permanent).
-  -->
-  <button
-    type="button"
-    onclick={() => (cheatSheetOpen = true)}
-    class={["keyboard-hint fixed top-3 right-4 min-h-11 px-2 text-small text-muted", phone && "hidden"]}
-  >
-    Press <kbd class="key">?</kbd> for shortcuts
-  </button>
 
   <nav
     id="sidebar"
     aria-label="Sidebar"
     bind:this={sidebar}
     hidden={!panes.sidebar}
-    class={["flex-col bg-sidebar", phone ? "pt-2" : "pt-16", panes.list ? "w-64 shrink-0" : "flex-1", panes.sidebar && "flex"]}
+    class={["flex-col bg-sidebar", phone ? "pt-2" : "pt-3", panes.list ? "w-64 shrink-0" : "flex-1", panes.sidebar && "flex"]}
   >
     <div class="relative min-h-0 flex-1 overflow-y-auto pb-4">
-      <div class="flex items-baseline gap-4 px-4 pb-4">
-        <h1 class="mr-auto font-serif text-xlarge" tabindex="-1" bind:this={wordmark}>slowfeed</h1>
+      <div class={["flex min-h-11 items-center gap-4 pr-4 pb-3", phone ? "pl-5" : "pl-14"]}>
+        <h1 class="mr-auto font-serif text-heading tracking-[-0.01em]" tabindex="-1" bind:this={wordmark}>slowfeed</h1>
         {#if phone}
           <!-- The feeds screen's top bar (SPEC section 20): its unread numbers wait for this, as they wait for r. -->
-          <button type="button" onclick={loadFeeds} class="btn-quiet"><Icon name="refresh" />Refresh</button>
+          <button type="button" onclick={loadFeeds} class="btn-quiet btn-small -mr-2"><Icon name="refresh" size={16} />Refresh</button>
         {/if}
-        <a
-          href="/settings"
-          aria-current={route.kind === "settings" ? "page" : undefined}
-          onclick={(event) => follow(event, { kind: "settings" })}
-          class={[
-            "flex min-h-11 items-center border-b-4 px-1",
-            route.kind === "settings" ? "border-accent" : "border-transparent underline underline-offset-4",
-          ]}>Settings</a
-        >
       </div>
       <!-- Always shown (DESIGN.md → Exceptions log): finds a feed or folder by name. -->
       <div class="px-4 pb-4">
@@ -671,7 +673,7 @@
               search = "";
             }
           }}
-          class="field w-full"
+          class="field field-quiet w-full pointer-fine:min-h-10 pointer-fine:text-small"
         />
       </div>
       <ul>
@@ -682,7 +684,10 @@
               href={pathFor({ kind: "view", view })}
               aria-current={current ? "page" : undefined}
               onclick={(event) => follow(event, { kind: "view", view })}
-              class={["side-row flex min-h-11 items-center border-l-4 px-4", current ? "border-accent bg-tint-sidebar" : "border-transparent"]}
+              class={[
+                "side-row flex min-h-11 pointer-fine:min-h-10 items-center border-l-[3px] pr-5 pl-[17px] text-ui",
+                current ? "border-accent bg-tint-sidebar font-semibold text-ink" : "border-transparent text-ink-2",
+              ]}
               >{VIEW_NAMES[view]}</a
             >
           </li>
@@ -696,15 +701,31 @@
       {/if}
     </div>
     <!-- Always at the very bottom, outside the scrolling list, so it never moves. -->
-    <a
-      href="/add-feed"
-      aria-current={route.kind === "add-feed" ? "page" : undefined}
-      onclick={(event) => follow(event, { kind: "add-feed" })}
-      class={[
-        "side-row flex min-h-11 shrink-0 items-center gap-2 border-l-4 px-4 py-2",
-        route.kind === "add-feed" ? "border-accent bg-tint-sidebar" : "border-transparent",
-      ]}>+ Add feed</a
-    >
+    <div class="shrink-0 pt-2 pb-2">
+      <div class="flex items-center">
+        <a
+          href="/add-feed"
+          aria-current={route.kind === "add-feed" ? "page" : undefined}
+          onclick={(event) => follow(event, { kind: "add-feed" })}
+          class={[
+            "side-row flex min-h-11 flex-1 items-center gap-2 border-l-[3px] pr-3 pl-[17px] text-small",
+            route.kind === "add-feed" ? "border-accent bg-tint-sidebar font-semibold text-ink" : "border-transparent text-ink-2",
+          ]}><Icon name="plus" size={16} />Add feed</a
+        >
+        <a
+          href="/settings"
+          aria-current={route.kind === "settings" ? "page" : undefined}
+          onclick={(event) => follow(event, { kind: "settings" })}
+          class={[
+            "side-row flex min-h-11 items-center gap-2 border-l-[3px] pr-5 pl-3 text-small",
+            route.kind === "settings" ? "border-accent bg-tint-sidebar font-semibold text-ink" : "border-transparent text-ink-2",
+          ]}><Icon name="settings" size={16} />Settings</a
+        >
+      </div>
+      {#if !phone}
+        {@render hint("pl-5")}
+      {/if}
+    </div>
   </nav>
 
   {#if panes.list || panes.article}
@@ -765,8 +786,8 @@
           hidden={!panes.list}
           class={[
             "flex-col bg-list",
-            phone ? "pt-2" : "pt-16",
-            panes.article ? "w-80 shrink-0 xl:w-96" : "flex-1",
+            phone ? "pt-2" : "pt-3",
+            panes.article ? "w-80 shrink-0 xl:w-96 2xl:w-[26rem]" : "flex-1",
             panes.list && "flex",
           ]}
         >
@@ -786,12 +807,15 @@
               {@render listHead()}
             </div>
           {/if}
-          <div class="relative min-h-0 flex-1 overflow-y-auto px-6 pb-6">
+          {#if !phone}
+            <!-- The list's top line never scrolls; with the sidebar hidden it starts after the sidebar button. -->
+            <div class={["pr-6 pb-1", panes.sidebar ? "pl-6" : "pl-16"]}>
+              {@render listHead()}
+            </div>
+          {/if}
+          <div class="relative min-h-0 flex-1 overflow-y-auto px-6 pt-1 pb-6">
             {#if feeds && feeds.length > 0 && !missing}
               <SearchBar bind:this={searchBar} {query} {feeds} {folders} here={scopeFor(route)} onChange={searchChanged} />
-            {/if}
-            {#if !phone}
-              {@render listHead()}
             {/if}
             {#if missing && (route.kind === "folder" || route.kind === "edit-folder")}
               <p class="mt-4">There's no folder here. It may have been deleted or renamed.</p>
@@ -824,6 +848,9 @@
               {/key}
             {/if}
           </div>
+          {#if !panes.sidebar && !phone}
+            {@render hint("px-6 pb-1")}
+          {/if}
         </section>
         {#if panes.article}
           {#if selected}
@@ -844,10 +871,12 @@
                 : undefined}
             />
           {:else}
-            <!-- Waiting quietly in the middle of the page, like a blank page in a book. -->
-            <section aria-label="Article" class="flex min-w-0 flex-1 flex-col items-center justify-center bg-paper px-10 pb-16 text-center">
-              <p class="font-serif text-large">No article open.</p>
-              <p class="keyboard-hint mt-2 text-small text-muted">Choose one from the list, or press <kbd class="key">j</kbd>.</p>
+            <!-- Waiting quietly where the article's title will be, like a blank page in a book. -->
+            <section aria-label="Article" class="flex min-w-0 flex-1 flex-col bg-paper px-6 pt-3 md:px-10">
+              <div class="article-column w-full pt-[4.5rem]">
+                <p class="text-ui text-ink-2">No article open.</p>
+                <p class="keyboard-hint mt-1 text-small text-muted">Choose one from the list, or press <kbd class="key">j</kbd>.</p>
+              </div>
             </section>
           {/if}
         {/if}

@@ -228,6 +228,9 @@ each with screenshots:
 - ✅ A tidier shortcut list, tick boxes the same size everywhere, and
   "Edit feed" lined up under a long name.
 - ✅ The phone's article toolbar keeps its icons in one line.
+- ✅ A real hierarchy: a type scale, three ink levels, unread in semibold
+  and read in a softer ink, one shared top line for every pane, and calmer
+  sidebar, list and article tops (decision 0026).
 
 ---
 

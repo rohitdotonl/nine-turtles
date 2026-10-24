@@ -34,7 +34,7 @@ async function open(page: Page, path: string, name: string) {
   await expect(field(page)).toBeVisible();
 }
 
-test("a search starts where you are, finds words in bold, and Escape brings you back", async ({ page }) => {
+test("a search starts where you are, underlines the words it found, and Escape brings you back", async ({ page }) => {
   const [filed, loose] = [unique("filed"), unique("loose")];
   const folder = unique("Shelf");
   const [filedId] = await start(page, [`${FEED_SITE}/blog/${filed}/`, `${FEED_SITE}/blog/${loose}/`]);
@@ -46,7 +46,7 @@ test("a search starts where you are, finds words in bold, and Escape brings you 
   await open(page, `/folders/${folderId}`, folder);
   await heading(page).focus();
 
-  // 1. In a folder, `/` and a word: the chip shows the folder; the word is bold.
+  // 1. In a folder, `/` and a word: the chip shows the folder; the word is underlined, in the text's own color.
   await page.keyboard.press("/");
   await expect(field(page)).toBeFocused();
   await expect(page.getByRole("button", { name: `Remove in: ${folder}` })).toBeVisible();
@@ -55,7 +55,11 @@ test("a search starts where you are, finds words in bold, and Escape brings you 
   await expect(results(page)).toHaveCount(1);
   await expect(results(page).first()).toContainText(`Walking the long way home`);
   await expect(results(page).first()).toContainText(`Blog ${filed}`);
-  await expect(results(page).first().locator("strong")).toHaveText("Walking");
+  const found = results(page).first().locator("strong");
+  await expect(found).toHaveText("Walking");
+  await expect(found).toHaveCSS("text-decoration-line", "underline");
+  const [wordColor, titleColor] = await Promise.all([found.evaluate((e) => getComputedStyle(e).color), found.evaluate((e) => getComputedStyle(e.parentElement!).color)]);
+  expect(wordColor).toBe(titleColor);
 
   // 2. Without the chip (Backspace at the start of the field removes it), results come from every feed.
   await page.keyboard.press("Home");

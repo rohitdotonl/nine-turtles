@@ -4,7 +4,7 @@
   word, so screen readers skip them.
 -->
 <script lang="ts" module>
-  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "back" | "search" | "sliders" | "star";
+  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar";
 </script>
 
 <script lang="ts">
@@ -43,8 +43,8 @@
     <path d="M6.5 6.25 10 2.75l3.5 3.5" />
     <path d="M6.25 9H5a1 1 0 0 0-1 1v6.25a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V10a1 1 0 0 0-1-1h-1.25" />
   {:else if name === "unread"}
-    <circle cx="10" cy="10" r="6.25" />
-    <circle cx="10" cy="10" r="2.25" fill="currentColor" />
+    <rect x="3" y="4.75" width="14" height="10.5" rx="1.25" />
+    <path d="m3.5 5.5 6.5 5 6.5-5" />
   {:else if name === "close"}
     <path d="m5 5 10 10M15 5 5 15" />
   {:else if name === "back"}
@@ -56,6 +56,14 @@
     <path d="M3 6h2M9 6h8M3 14h8M15 14h2" />
     <circle cx="7" cy="6" r="2" />
     <circle cx="13" cy="14" r="2" />
+  {:else if name === "plus"}
+    <path d="M10 4v12M4 10h12" />
+  {:else if name === "settings"}
+    <circle cx="10" cy="10" r="2.5" />
+    <path d="M10 2.75v2M10 15.25v2M17.25 10h-2M4.75 10h-2M15.13 4.87l-1.42 1.42M6.29 13.71l-1.42 1.42M15.13 15.13l-1.42-1.42M6.29 6.29 4.87 4.87" />
+  {:else if name === "sidebar"}
+    <rect x="2.75" y="3.75" width="14.5" height="12.5" rx="1.5" />
+    <path d="M7.75 3.75v12.5" />
   {:else if name === "star"}
     <path
       d="M10 2.5l2.4 4.9 5.35.78-3.87 3.77.91 5.33L10 14.77l-4.79 2.51.91-5.33-3.87-3.77 5.35-.78z"

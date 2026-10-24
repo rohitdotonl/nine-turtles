@@ -25,11 +25,12 @@ export const TEXT_SIZES = [
   { label: "Largest", rem: 1.75 },
 ] as const;
 
-// DESIGN.md: an article line of roughly 65–75 characters.
+// DESIGN.md: an article line of roughly 65–75 characters. A "ch" is the
+// width of a zero, wider than an average letter, so 57ch holds about 67.
 export const LINE_WIDTHS: Record<LineWidth, { label: string; ch: number }> = {
-  narrow: { label: "Narrow", ch: 62 },
-  medium: { label: "Medium", ch: 68 },
-  wide: { label: "Wide", ch: 75 },
+  narrow: { label: "Narrow", ch: 52 },
+  medium: { label: "Medium", ch: 57 },
+  wide: { label: "Wide", ch: 63 },
 };
 
 export const READING_FONTS: Record<ReadingFont, { label: string; family: string }> = {
@@ -89,7 +90,7 @@ export function apply(preferences: Preferences, root: HTMLElement = document.doc
  * bar and Settings' theme discs. contrast.test.ts checks they match app.css
  * and index.html.
  */
-export const BAR_COLORS = { "off-white": "#F8F6F1", sepia: "#F3E9D2", dark: "#1C1B19" } as const;
+export const BAR_COLORS = { "off-white": "#F8F6F1", sepia: "#F4EBD7", dark: "#1A1917" } as const;
 
 function safeStorage(): Storage | undefined {
   try {

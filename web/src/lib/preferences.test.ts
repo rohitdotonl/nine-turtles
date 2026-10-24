@@ -57,7 +57,7 @@ describe("reader preferences", () => {
     expect(root.dataset.theme).toBe("dark");
     expect(set.get("--reading-font")).toContain("Atkinson Hyperlegible");
     expect(set.get("--reading-size")).toBe("1rem");
-    expect(set.get("--reading-measure")).toBe("62ch");
+    expect(set.get("--reading-measure")).toBe("52ch");
 
     // Following the device removes the chosen theme.
     apply(DEFAULTS, root as unknown as HTMLElement);

@@ -19,14 +19,27 @@
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
   --text-*: initial;
+  /* Meta: times, source names, counts, hints. */
+  --text-meta: 0.8125rem;
+  --text-meta--line-height: 1.4;
+  /* Small: toolbar actions, helper text, labels. */
   --text-small: 0.875rem;
-  --text-small--line-height: 1.4;
+  --text-small--line-height: 1.45;
+  /* Interface: sidebar rows and list titles. */
+  --text-ui: 0.9375rem;
+  --text-ui--line-height: 1.4;
+  /* Base: text boxes and running interface text. */
   --text-base: 1rem;
   --text-base--line-height: 1.5;
+  /* Large: section headings inside a screen. */
   --text-large: 1.25rem;
-  --text-large--line-height: 1.4;
-  --text-xlarge: 1.5rem;
-  --text-xlarge--line-height: 1.3;
+  --text-large--line-height: 1.35;
+  /* Heading: the list's title and the wordmark, in the reading serif. */
+  --text-heading: 1.5rem;
+  --text-heading--line-height: 1.2;
+  /* Extra large: a screen's own title (Settings, Add a feed). */
+  --text-xlarge: 1.75rem;
+  --text-xlarge--line-height: 1.2;
   --text-display: 3rem;
   --text-display--line-height: 1.1;
 
@@ -34,6 +47,7 @@
   --color-list: var(--list);
   --color-sidebar: var(--sidebar);
   --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
   --color-tint-list: var(--tint-list);
@@ -45,52 +59,56 @@
 :root[data-theme="off-white"] {
   color-scheme: light;
   --paper: #f8f6f1;
-  --list: #f2efe8;
-  --sidebar: #ebe7de;
+  --list: #f0ece3;
+  --sidebar: #e7e2d7;
   --ink: #1f1e1c;
+  --ink-2: #47423b;
   --muted: #61564a;
   --accent: #2f4a7a;
-  --tint-list: #e4e3e0;
-  --tint-sidebar: #dedcd7;
+  --tint-list: #e1dfdb;
+  --tint-sidebar: #d8d6d0;
 }
 
 /* Dark follows the device setting unless a theme has been chosen. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
     color-scheme: dark;
-    --paper: #1c1b19;
-    --list: #211f1d;
-    --sidebar: #272522;
-    --ink: #e8e4dc;
-    --muted: #b3a690;
+    --paper: #1a1917;
+    --list: #201e1b;
+    --sidebar: #282521;
+    --ink: #e6e1d8;
+    --ink-2: #c9c2b6;
+    --muted: #aa9e89;
     --accent: #8fa9d6;
-    --tint-list: #2c2d30;
-    --tint-sidebar: #313234;
+    --tint-list: #2d2f31;
+    --tint-sidebar: #343537;
   }
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --paper: #1c1b19;
-  --list: #211f1d;
-  --sidebar: #272522;
-  --ink: #e8e4dc;
-  --muted: #b3a690;
+  --paper: #1a1917;
+  --list: #201e1b;
+  --sidebar: #282521;
+  --ink: #e6e1d8;
+  --ink-2: #c9c2b6;
+  --muted: #aa9e89;
   --accent: #8fa9d6;
-  --tint-list: #2c2d30;
-  --tint-sidebar: #313234;
+  --tint-list: #2d2f31;
+  --tint-sidebar: #343537;
 }
 
 :root[data-theme="sepia"] {
   color-scheme: light;
-  --paper: #f3e9d2;
-  --list: #ede2c8;
-  --sidebar: #e6d9bc;
+  --paper: #f4ebd7;
+  --list: #ece1c8;
+  --sidebar: #e3d5b7;
   --ink: #2a241b;
-  --muted: #5c4f3f;
+  --ink-2: #463c2f;
+  --muted: #5e5141;
   --accent: #2f4a7a;
-  --tint-list: #e0d7c3;
-  --tint-sidebar: #d9cfb7;
+  --tint-list: #ddd5c2;
+  --tint-sidebar: #d5cab2;
 }
 
 /*
@@ -100,7 +118,7 @@
 :root {
   --reading-font: var(--font-serif);
   --reading-size: 1.25rem;
-  --reading-measure: 68ch;
+  --reading-measure: 57ch;
 }
 
 body {
@@ -115,32 +133,23 @@ body {
   means only "where you are" in slowfeed's own places.
 */
 :focus-visible {
-  outline: 3px solid var(--ink);
+  outline: 2px solid var(--ink);
   outline-offset: 2px;
 }
 
 /*
   A heading that receives the keyboard's place when a screen opens (so screen
-  readers start there) isn't something to press, so instead of a box it shows
-  a short bar in the text color just left of its first line: the place is
-  still visible (SPEC section 19), without boxing the title.
+  readers start reading there) shows a quiet outline when you got there by
+  keyboard, so you can always see where the focus is (SPEC section 19), and
+  nothing on first load or after a click (main.ts notes which you're using).
 */
-:is(h1, h2, h3)[tabindex="-1"] {
-  position: relative;
-}
-
 :is(h1, h2, h3)[tabindex="-1"]:focus {
   outline: none;
 }
-
-:is(h1, h2, h3)[tabindex="-1"]:focus-visible::before {
-  content: "";
-  position: absolute;
-  top: 0.1em;
-  bottom: 0.1em;
-  left: -0.75rem;
-  width: 3px;
-  background-color: var(--ink);
+:root[data-keyboard] :is(h1, h2, h3)[tabindex="-1"]:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+  border-radius: 2px;
 }
 
 /*
@@ -151,22 +160,35 @@ body {
 .side-row:focus-visible {
   outline: none;
   box-shadow:
-    inset 0 3px 0 var(--ink),
-    inset -3px 0 0 var(--ink),
-    inset 0 -3px 0 var(--ink);
+    inset 0 2px 0 var(--ink),
+    inset -2px 0 0 var(--ink),
+    inset 0 -2px 0 var(--ink);
 }
 
 /*
-  The left side is the row's own 4px bar (ink blue when it's where you are),
+  The left side is the row's own 3px bar (ink blue when it's where you are),
   so the outline never covers it. A row with no bar gets the fourth side too.
 */
 .item-row:focus-visible:not([aria-current]),
 .side-row:focus-visible:not([aria-current]) {
   box-shadow:
-    inset 0 3px 0 var(--ink),
-    inset -3px 0 0 var(--ink),
-    inset 0 -3px 0 var(--ink),
-    inset 3px 0 0 var(--ink);
+    inset 0 2px 0 var(--ink),
+    inset -2px 0 0 var(--ink),
+    inset 0 -2px 0 var(--ink),
+    inset 2px 0 0 var(--ink);
+}
+
+/*
+  The selected article row is also where the keyboard is (j, k and the arrows
+  move both). Its outline is a hairline rather than a heavy box, so the place
+  stays visible beside the ink blue bar and the row stays calm.
+*/
+.item-row[aria-current]:focus-visible {
+  --edge: color-mix(in srgb, var(--ink) 55%, transparent);
+  box-shadow:
+    inset 0 1px 0 var(--edge),
+    inset -1px 0 0 var(--edge),
+    inset 0 -1px 0 var(--edge);
 }
 
 /* Only where there's a real pointer: on a touch screen a tint would stay after the tap. */
@@ -259,6 +281,14 @@ textarea {
     border-color: transparent;
   }
 
+  /* A smaller, second-level action (Refresh, Mark all as read, the article's tools): still a 44px target. */
+  .btn-small {
+    gap: 0.375rem;
+    padding-inline: 0.625rem;
+    color: var(--ink-2);
+    font-size: var(--text-small);
+  }
+
   .btn-quiet > svg {
     flex-shrink: 0;
   }
@@ -275,6 +305,12 @@ textarea {
   .field::placeholder {
     color: var(--muted);
   }
+
+  /* A filter rather than a search: no edge, a faint tone, so it isn't mistaken for the article search. */
+  .field-quiet {
+    border-color: transparent;
+    background-color: var(--tone);
+  }
 }
 
 :root {
@@ -283,8 +319,8 @@ textarea {
     blue: under a pointer, and behind a search chip. contrast.test.ts checks
     text on both.
   */
-  --hover: color-mix(in srgb, var(--ink) 7%, transparent);
-  --tone: color-mix(in srgb, var(--ink) 9%, transparent);
+  --hover: color-mix(in srgb, var(--ink) 5%, transparent);
+  --tone: color-mix(in srgb, var(--ink) 7%, transparent);
 }
 
 /* Windows high contrast and similar: let the system draw clear edges. */
@@ -299,10 +335,6 @@ textarea {
   .side-row:focus-visible {
     outline: 3px solid CanvasText;
     outline-offset: -3px;
-  }
-
-  :is(h1, h2, h3)[tabindex="-1"]:focus-visible::before {
-    background-color: CanvasText;
   }
 
   /* The bar marks only the selected article; on the others it would be drawn too. */
@@ -360,23 +392,28 @@ input {
   line-height: 1.65;
 }
 
-/* The source line keeps the interface's small size, whatever the text size. */
+/* The source line keeps the interface's meta size, whatever the text size. */
 .article > p:first-child {
   font-family: var(--font-sans);
-  font-size: var(--text-small);
+  font-size: var(--text-meta);
+  line-height: 1.4;
 }
 
+/* The one large thing on the screen: clearly above the article's own headings. */
 .article-title {
-  margin-top: 0.5rem;
-  font-size: 1.5em;
-  line-height: 1.25;
+  margin-top: 0.75rem;
+  font-size: 1.8em;
+  line-height: 1.18;
   font-weight: 700;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
   overflow-wrap: break-word;
 }
 
 .article-text {
-  margin-top: 1.5em;
+  margin-top: 1.4em;
   overflow-wrap: break-word;
+  text-wrap: pretty;
 }
 
 .article-text :where(p, ul, ol, dl, blockquote, pre, table, figure, hr) {
@@ -384,18 +421,19 @@ input {
 }
 
 .article-text :where(h1, h2, h3, h4, h5, h6) {
-  margin-top: 1.6em;
+  margin-top: 1.8em;
   margin-bottom: 0.5em;
   line-height: 1.3;
   font-weight: 700;
+  text-wrap: balance;
 }
 
 .article-text :where(h1, h2) {
-  font-size: 1.3em;
+  font-size: 1.2em;
 }
 
 .article-text h3 {
-  font-size: 1.15em;
+  font-size: 1.08em;
 }
 
 .article-text :where(h4, h5, h6) {
@@ -426,7 +464,8 @@ input {
 
 .article-text blockquote {
   padding-left: 1em;
-  border-left: 3px solid var(--muted);
+  border-left: 2px solid color-mix(in srgb, var(--ink) 25%, transparent);
+  color: var(--ink-2);
   font-style: italic;
 }
 

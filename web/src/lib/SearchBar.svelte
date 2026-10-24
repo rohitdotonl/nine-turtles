@@ -137,7 +137,7 @@
   }
 </script>
 
-<search class="mb-4">
+<search class="mb-2">
   <div class="flex items-start gap-2">
     <!-- The whole box acts as the field: a click anywhere in it (not on a chip's button) puts you in the field. -->
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->

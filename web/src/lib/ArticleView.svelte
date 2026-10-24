@@ -115,7 +115,7 @@
   <Icon name="star" {size} filled={article.starred} />
 {/snippet}
 
-<section aria-label="Article" class={["flex min-w-0 flex-1 flex-col bg-paper", phone ? "pt-2" : "pt-16"]}>
+<section aria-label="Article" class={["flex min-w-0 flex-1 flex-col bg-paper", phone ? "pt-2" : "pt-3"]}>
   <!-- Never scrolls, so these are always in the same place. -->
   {#if phone}
     <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 pb-2">
@@ -127,20 +127,20 @@
     </div>
   {:else}
   <!-- In the same centred column as the article, so the actions sit right above its text. -->
-  <div class="scroll-gutter overflow-y-hidden px-6 pb-4 md:px-10"><div class="article-column relative -left-3 flex flex-wrap items-center gap-x-1 gap-y-2">
+  <div class="scroll-gutter overflow-y-hidden px-6 pb-2 md:px-10"><div class="article-column relative -left-2.5 flex min-h-11 flex-wrap items-center gap-x-1 gap-y-2">
     {#if article.link}
-      <a href={article.link} target="_blank" rel="noopener noreferrer" class="btn-quiet"><Icon name="open" />Open original</a>
-      <button type="button" onclick={share} class="btn-quiet">
-        <Icon name={sharing ? "share" : "link"} />{sharing ? "Share" : "Copy link"}
+      <a href={article.link} target="_blank" rel="noopener noreferrer" class="btn-quiet btn-small font-semibold text-ink"><Icon name="open" size={16} />Open original</a>
+      <button type="button" onclick={share} class="btn-quiet btn-small">
+        <Icon name={sharing ? "share" : "link"} size={16} />{sharing ? "Share" : "Copy link"}
       </button>
     {:else}
       <p class="px-3 text-small text-muted">This article has no link to its original.</p>
     {/if}
-    <button type="button" aria-pressed={article.starred} onclick={onStar} class="btn-quiet">
-      {@render starIcon(18)}
+    <button type="button" aria-pressed={article.starred} onclick={onStar} class="btn-quiet btn-small">
+      {@render starIcon(16)}
       Star
     </button>
-    <button type="button" onclick={onMarkUnread} class="btn-quiet"><Icon name="unread" />Mark unread</button>
+    <button type="button" onclick={onMarkUnread} class="btn-quiet btn-small"><Icon name="unread" size={16} />Mark unread</button>
     <p role="status" class="px-3 text-small">{copied}</p>
   </div></div>
   {/if}

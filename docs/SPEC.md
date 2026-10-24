@@ -49,8 +49,8 @@ A few words used throughout:
 ## 3. Adding a feed
 
 **What it does**
-- "+ Add feed" sits at the very bottom of the sidebar, always in the same place. The `a` key does the same.
-- "+ Add feed" opens its own screen (`/add-feed`) with the same field as the first visit. Escape goes back to the list you were on.
+- **Add feed** (a plus icon and its words) sits at the very bottom of the sidebar, always in the same place, with **Settings** beside it. The `a` key does the same.
+- Add feed opens its own screen (`/add-feed`) with the same field as the first visit. Escape goes back to the list you were on.
 - You can paste either a feed address or an ordinary website address; leaving off `https://` is fine. For a website, slowfeed looks at exactly the page you pasted to find its feed ("autodiscovery"), once, because you asked. If the page names several feeds, you see their names and choose one.
 - While slowfeed looks, the field says "Looking for a feed…" in plain text. No spinner.
 - If it doesn't work, a plain sentence says why, never an error code: "This site doesn't seem to offer a feed.", "That site didn't answer. Try again later.", "Nothing was found at that address.", "That doesn't look like a web address.", "slowfeed can't visit that address." (an address inside a private network or on slowfeed's own computer), or "That file is too big to be a feed."
@@ -59,7 +59,7 @@ A few words used throughout:
 - Each feed has its own address (`/feeds/3`), so reloading keeps your place. An address for a feed you don't follow says so plainly ("Feed not found").
 
 **How to check it**
-1. Press `a` (or click "+ Add feed"), paste a blog's home page address (not its feed), press Enter. The blog appears in the sidebar with its articles.
+1. Press `a` (or click Add feed), paste a blog's home page address (not its feed), press Enter. The blog appears in the sidebar with its articles.
 2. Paste a direct feed address. Same result.
 3. Paste an address of a page with no feed. You get a calm, plain message, not an error code.
 4. Add the same feed twice. slowfeed tells you it's already there instead of creating a duplicate.
@@ -68,9 +68,9 @@ A few words used throughout:
 
 **What it does**
 - Three panes on a wide screen: **feeds | items | article**. Two panes on a medium screen. One column on a phone (section 20).
-- No layout options to choose: the layout simply adapts to the window width. Wide means 1200 pixels or more at normal size, medium 768 or more. On a medium screen the list and article show, and showing the sidebar puts it in the article's place. On a phone-narrow screen one area shows at a time, starting with the sidebar; choosing a place in it shows that place, and Escape goes back.
+- No layout options to choose: the layout simply adapts to the window width. Wide means 1200 pixels or more at normal size, medium 896 or more; below that, one area shows at a time, as on a phone. On a medium screen the list and article show, and showing the sidebar puts it in the article's place. On a phone-narrow screen one area shows at a time, starting with the sidebar; choosing a place in it shows that place, and Escape goes back.
 - Zooming in or a larger system text size counts as a narrower window, so the layout steps down instead of anything overlapping.
-- The sidebar can be hidden and shown with a toggle labeled "Sidebar" in the top-left corner, which never moves, or the `[` key.
+- The sidebar can be hidden and shown with a small sidebar-shaped button in the top-left corner (screen readers hear "Sidebar"; its tooltip says "Hide the sidebar" or "Show the sidebar"), which never moves, or the `[` key. Beside it, each area's top line (the wordmark, the list's title, the article's tools) never scrolls.
 - Unread, Starred, All and Settings each have their own web address (`/unread`, `/starred`, `/all`, `/settings`), so reloading keeps your place and the browser's Back button works. The front page opens Unread.
 - Regions are told apart by background tone and space, never by lines, shadows or gradients.
 - Nothing animates. Views switch instantly.
@@ -87,9 +87,9 @@ A few words used throughout:
   1. **Unread · Starred · All**
   2. **Folders**, alphabetically
   3. **Feeds not in any folder**, alphabetically
-  4. **"+ Add feed"**
+  4. **Add feed** and **Settings**, side by side, with the "Press ? for shortcuts" hint under them
 - You can't reorder things by hand; order is always alphabetical.
-- At the top of the sidebar: the "slowfeed" wordmark with a labeled **Settings** link beside it, and below them a **search field to find a feed or folder by name**, always shown.
+- At the top of the sidebar: the "slowfeed" wordmark, and below it a quiet **field to find a feed or folder by name** (no edge, a faint tone, so it isn't mistaken for the article search), always shown. A long feed name ends in "…" on one line, so the sidebar stays tidy; its whole name shows as a tooltip, is read in full by screen readers, and is the list's title when you open it (which wraps rather than being cut off).
 - Folders appear once at least one exists. Each has a small button beside it that shows or hides the feeds in it, indented beneath; folders start closed, and this device remembers which you opened. Choosing a folder's name lists the articles of all its feeds (`/folders/2`).
 - The search field filters the sidebar as you type: the folders and feeds whose name contains what you typed (capitals and accents don't matter), in one list. Escape empties it.
 - **Unread counts:** small, muted grey numbers, right-aligned, next to each feed and folder (a folder's is its feeds' added up). No count on "Unread", "Starred" or "All", and never a total. Above 999 shows "999+". Never colored, never a badge.
@@ -114,15 +114,15 @@ A few words used throughout:
   | State | Looks like |
   |---|---|
   | Unread | Full-strength, semibold title |
-  | Read | Muted grey, regular-weight title |
-  | Selected | Ink blue bar on the left and a faint ink blue tint |
+  | Read | A softer second ink, regular-weight title (the title stays full-strength while it's the selected row) |
+  | Selected | Ink blue bar on the left and a faint tint; when you're using the keyboard, a hairline outline beside the bar too |
   | Starred | A small star mark |
 
 - Items you read in the Unread view stay where they are (greyed) until you press `r` or leave the view, so nothing jumps under your cursor.
 
 **How to check it**
 1. Open a feed with many articles. Scroll to the bottom: there's a "Show older items" button and no endless loading. Press it: more appear below, and nothing above moves.
-2. Open an article and move on: its title turns grey, and it doesn't vanish from the list.
+2. Open an article and move on: its title turns softer and regular weight, and it doesn't vanish from the list.
 3. Turn your screen to greyscale (system accessibility setting). You can still tell unread, read, selected and starred apart.
 
 ## 7. Reading an article
@@ -253,12 +253,12 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 - Titles and article text are always searched together; title matches come first.
 - Power-user filters can be typed: `is:unread`, `is:starred`, `feed:name`, `folder:name`, `after:YYYY-MM-DD`, `before:YYYY-MM-DD`. They're suggested as you type (↓ and ↑ choose, Enter takes one) and turn into chips once followed by a space or Enter. A name with spaces goes in quotes (`feed:"Garden Notes"`), or type part of it. `after:` and `before:` don't include the day itself. A filter that can't be understood stays as typed, with a plain line saying why. Backspace at the start of the field removes the last chip.
 - Results look and behave like the normal item list, including "mark all as read".
-- Matching words are shown in **bold**, never highlighted in color.
+- Matching words are **underlined** in the text's own color, never highlighted in color (bold couldn't be seen in an unread title, which is already semibold).
 - Works for English, other Latin-alphabet languages, and Hindi.
 - Tab moves from the field into the options panel; Escape closes search and returns you to where you were.
 
 **How to check it**
-1. In a folder, press `/`, type a word you remember from an article. The chip shows the folder; results appear with the word in bold.
+1. In a folder, press `/`, type a word you remember from an article. The chip shows the folder; results appear with the word underlined.
 2. Remove the chip: results now come from all feeds.
 3. Type `is:starred`: it becomes a chip, and only starred items are listed.
 4. Open the options panel, pick a date range: a matching chip appears in the field.
@@ -315,7 +315,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 
 **What it does**
 - Settings opens in place of the list and reading area; the sidebar stays. **Close settings** or Escape goes back to where you were.
-- **Reader controls:** reading font (Literata or Atkinson Hyperlegible), text size (six steps from Smaller to Largest, Medium by default), line width (Narrow, Medium or Wide: about 62, 68 or 75 characters), theme. A sample paragraph shows how articles will look, and changes apply at once.
+- **Reader controls:** reading font (Literata or Atkinson Hyperlegible), text size (six steps from Smaller to Largest, Medium by default), line width (Narrow, Medium or Wide: about 65, 71 or 78 characters in Literata; Atkinson Hyperlegible's narrower letters fit more), theme. A sample paragraph shows how articles will look, and changes apply at once.
 - **Themes:** "Match this device" by default (off-white or dark, following the system's light/dark setting), or choose off-white, sepia or dark. The phone's own bar above the page takes the chosen theme's color too.
 - Each choice is a labeled tile, chosen with a click, a tap or the arrow keys (they're radio buttons underneath). The chosen tile is filled in and its word is semibold, so it shows without color. Theme tiles show a small disc of each theme's background; each reading font's name is written in that font.
 - Sections appear once they have something to do: Reading (sort order) since Milestone 7, Your data with Milestone 9.
@@ -355,9 +355,9 @@ OPML is the standard file format feed readers use to move subscription lists bet
   | `Esc` | Back / close |
   | `?` | Shortcut cheat sheet |
 
-- A permanent, quiet hint says "Press ? for shortcuts" (on screens with a keyboard), in the top-right corner of the window, whether or not the sidebar shows. Clicking it opens the list too.
+- A permanent, quiet hint says "Press ? for shortcuts" (on screens with a keyboard), at the bottom of the sidebar, or at the bottom of the list when the sidebar is hidden. Clicking it opens the list too.
 - The `?` cheat sheet also documents the search filters. Until a shortcut's feature exists, the cheat sheet marks it "coming later", and the key does nothing.
-- The keyboard's place is shown by a thick outline in the text color (never ink blue, which only marks your place in slowfeed).
+- The keyboard's place is shown by a 2px outline in the text color (never ink blue, which only marks your place in slowfeed). Rows draw it just inside themselves, beside the selected row's ink blue bar. A title that receives the place when a screen opens (so screen readers start there) gets the same outline when you got there by keyboard, and nothing after a click.
 - Shortcuts don't fire while you're typing in a field.
 
 **How to check it**
@@ -370,12 +370,12 @@ OPML is the standard file format feed readers use to move subscription lists bet
 **What it does**
 - One column you move through: **Feeds → Items → Article**. The feeds list is the home screen; no hamburger menu.
 - Top bar: a back arrow labeled with where it goes (e.g. "‹ Tech", drawn as a small arrow icon; screen readers hear "Back to Tech") and the screen title. A Refresh button on list screens; search and search-options icons on the feeds and items screens (with search, Milestone 10).
-  - The feeds screen: the "slowfeed" wordmark, **Refresh** (which updates the unread numbers) and **Settings**. No sidebar toggle and no "Press ? for shortcuts" hint.
+  - The feeds screen: the "slowfeed" wordmark and **Refresh** (which updates the unread numbers); **Add feed** and **Settings** sit together at the bottom, as on a computer. No sidebar toggle and no "Press ? for shortcuts" hint.
   - A list: "‹ Feeds", **Refresh**, and the list's name with its Edit button. The top bar never scrolls.
   - An article: "‹ " and the list's name, and **Mark unread**.
   - Add a feed: "‹ Feeds".
 - The system back gesture and back button go back one step, the same as the back arrow. Opening slowfeed's front page on a phone shows the feeds; an address that names a list opens that list, and its back arrow still leads to the feeds.
-- "Settings" sits at the top of the feeds screen.
+- "Settings" sits at the bottom of the feeds screen, beside "Add feed".
 - No custom swipes on list items.
 - Article toolbar at the bottom, within thumb reach: previous · next · star · share · open original.
 - Every tap target is at least 44 pixels.

@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { appReady, chooseTheme, signIn, tabTo } from "./screens";
 
 // SPEC sections 4, 5, 18 and 19, "How to check it", done by a browser.
@@ -155,18 +155,18 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
   await expect(page.getByRole("heading", { level: 2, name: "Settings" })).toBeFocused();
 
   await page.getByLabel("Sepia").check();
-  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(243, 233, 210)");
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(244, 235, 215)");
   // The phone's bar above the page follows the chosen theme too, and
   // "Match this device" gives back index.html's light and dark colors.
   const bars = page.locator('meta[name="theme-color"]');
   await expect(bars).toHaveCount(2);
-  await expect(bars.nth(0)).toHaveAttribute("content", "#F3E9D2");
-  await expect(bars.nth(1)).toHaveAttribute("content", "#F3E9D2");
+  await expect(bars.nth(0)).toHaveAttribute("content", "#F4EBD7");
+  await expect(bars.nth(1)).toHaveAttribute("content", "#F4EBD7");
   await page.getByLabel("Match this device").check();
   await expect(bars.nth(0)).toHaveAttribute("content", "#F8F6F1");
-  await expect(bars.nth(1)).toHaveAttribute("content", "#1C1B19");
+  await expect(bars.nth(1)).toHaveAttribute("content", "#1A1917");
   await page.getByLabel("Sepia").check();
-  await expect(bars.nth(0)).toHaveAttribute("content", "#F3E9D2");
+  await expect(bars.nth(0)).toHaveAttribute("content", "#F4EBD7");
   // The chosen tile is filled and its word semibold, so it shows without color.
   await expect(page.locator("label.choice").filter({ hasText: "Sepia" })).toHaveCSS("font-weight", "600");
   await expect(page.locator("label.choice").filter({ hasText: "Dark" })).toHaveCSS("font-weight", "400");
@@ -193,7 +193,7 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
 
   await page.reload();
   await appReady(page);
-  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(243, 233, 210)");
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(244, 235, 215)");
   await expect(page.getByLabel("Sepia")).toBeChecked();
   await expect(page.getByLabel("Atkinson Hyperlegible")).toBeChecked();
   await expect(page.getByLabel("Largest")).toBeChecked();
@@ -209,7 +209,7 @@ test("a chosen theme stays, whatever the device's light or dark setting", async 
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/");
   await appReady(page);
-  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(243, 233, 210)");
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(244, 235, 215)");
 });
 
 test("at 200% zoom nothing overlaps and everything still works", async ({ page }) => {
@@ -273,4 +273,27 @@ test("'Press ? for shortcuts' stays on screen when the sidebar is hidden", async
   await expect(hint).toBeVisible();
   await hint.click();
   await expect(page.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeVisible();
+});
+
+test("the sidebar ends with Add feed and Settings side by side, the shortcut hint under them; its toggle says what it does", async ({ page, isMobile }) => {
+  test.skip(isMobile, "The phone has its own screens and no sidebar toggle.");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openApp(page);
+  const addFeed = sidebar(page).getByRole("link", { name: "Add feed" });
+  const settings = sidebar(page).getByRole("link", { name: "Settings" });
+  const hint = sidebar(page).getByRole("button", { name: "Press ? for shortcuts" });
+  const box = async (locator: Locator) => (await locator.boundingBox())!;
+  const add = await box(addFeed);
+  const set = await box(settings);
+  const tip = await box(hint);
+  const all = await box(sidebar(page).getByRole("link", { name: "All" }));
+  // Side by side, at the bottom of the window, below everything else in the sidebar.
+  expect(Math.abs(add.y - set.y)).toBeLessThan(2);
+  expect(set.x).toBeGreaterThan(add.x + add.width - 1);
+  expect(add.y).toBeGreaterThan(all.y);
+  expect(tip.y).toBeGreaterThanOrEqual(add.y + add.height - 1);
+  expect(tip.y + tip.height).toBeLessThanOrEqual(900);
+  await expect(toggle(page)).toHaveAttribute("title", "Hide the sidebar ( [ )");
+  await toggle(page).click();
+  await expect(toggle(page)).toHaveAttribute("title", "Show the sidebar ( [ )");
 });

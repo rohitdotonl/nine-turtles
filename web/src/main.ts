@@ -10,6 +10,12 @@ if (!target) throw new Error("slowfeed: the #app element is missing from index.h
 apply(load());
 mount(App, { target });
 
+// Whether the reader is using the keyboard right now, so a title the app
+// moves the keyboard to is outlined after a key press but not on first load
+// or after a click (app.css).
+addEventListener("keydown", () => (document.documentElement.dataset.keyboard = ""), true);
+addEventListener("pointerdown", () => delete document.documentElement.dataset.keyboard, true);
+
 // Lets slowfeed be added to the home screen and open without a connection
 // (public/sw.js). It keeps only the app itself, never your articles.
 if ("serviceWorker" in navigator) {
