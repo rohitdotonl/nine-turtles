@@ -4,7 +4,7 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
-## 24 October 2026: A quiet empty pane, smaller captions, a warm Paper pill
+## 24 October 2026: Closer to Apple Books, batch 7
 
 - With no article open, the reading pane now says so in one quiet grey line
   in its middle, instead of being blank (decision 0053).
@@ -12,20 +12,15 @@ not how it was done.
   longer read like a paragraph; they stay as easy to read as the text.
 - In the Paper theme by day, the selected row is a warm grey that matches
   the page, instead of a cool slate.
-## 24 October 2026: A line between panes, a roomier phone list
-
 - On a computer, a faint line now runs where the sidebar meets the list and
   where the list meets the article, as in Apple Books on a Mac.
 - On a phone, the unread dot sits a little in from the screen's edge, and
   the list's titles, its heading and its search field line up 28px in.
-- The keyboard button at the sidebar's foot is filled while the shortcut
-  list is open, as the gear is while Settings is open.
+- The keyboard button at the sidebar's foot is shaded while the shortcut
+  list is open.
 - With the search options open in a narrow list or on a phone, the number
   of results now shows at the menu's foot instead of hiding under it
   (decision 0054).
-
-## 24 October 2026: Sheets, Settings and shortcuts closer to Apple Books
-
 - On a phone, Add a feed, Edit feed and Edit folder now look like an iPhone
   sheet: a thin dimmed strip above, rounded top corners, and their groups
   as cards on a soft grey ground (decision 0055).

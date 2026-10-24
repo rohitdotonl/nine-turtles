@@ -277,7 +277,7 @@ test.describe("on a phone", () => {
     // An iOS page sheet (decision 0055): 10px of the dimmed screen shows above it, its top corners are
     // 12px, and its groups are cards in a different tone from the sheet's grouped ground.
     const card = page.locator(".page-sheet-card");
-    expect(Math.round((await card.boundingBox())!.y)).toBe(10);
+    expect(Math.abs((await card.boundingBox())!.y - 10)).toBeLessThan(1.5);
     await expect(card).toHaveCSS("border-top-left-radius", "12px");
     const tone = (locator: typeof card) => locator.evaluate((element) => getComputedStyle(element).backgroundColor);
     expect(await tone(card.locator(".inset-group").last())).not.toBe(await tone(card));

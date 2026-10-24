@@ -337,7 +337,7 @@ each with screenshots:
   warm Paper selection pill by day (decision 0053).
 - ✅ List and sidebar finish (seventh critique, batch 7): a faint line
   between panes on a computer, a 28px dot gutter in a phone's list, the
-  shortcuts button pressed while its list is open, and a result count the
+  shortcuts button marked while its list is open, and a result count the
   search options never hide (decision 0054).
 - ✅ Sheets, Settings and shortcuts (seventh critique, batch 7): iOS page
   sheets on a phone, a flat text-size capsule, the chosen theme's ring

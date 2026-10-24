@@ -3,7 +3,7 @@
 *24 October 2026. From the seventh Apple Books critique
 (`ui-polish/critic-applebooks-7.md` in the project files, section 2(b), gaps
 4 to 7). Apple Books is the only design reference. Changes part of 0043 (the
-phone's one 20px margin, for a list's rows) and the "Hairlines inside a page"
+phone's one 20px margin, for a list's rows), part of 0049 (the phone dot, 10px in instead of 8px) and the "Hairlines inside a page"
 limit in DESIGN.md's Exceptions log ("never between panes").*
 
 **Why.** The critic found four small gaps in the list and sidebar:
@@ -34,10 +34,14 @@ limit in DESIGN.md's Exceptions log ("never between panes").*
   (0049). Every other phone screen keeps the one 20px margin (0043), and so
   does the welcome that sits in the list's place before the first feed. The
   back button doesn't move.
-- **The shortcuts button shows pressed.** While the shortcut list is open,
-  its keyboard button at the sidebar's foot has the same fill as the gear
-  while Settings is open, and says it is pressed to screen readers
-  (`aria-pressed`), so the fill is never the only sign.
+- **The shortcuts button shows the list is open.** While the shortcut list
+  is open, its keyboard button at the sidebar's foot sits on a faint ink
+  tile (10% of the text color). Not the gear's accent fill: the gear marks
+  a place (Settings), and the accent never marks a button (decision 0037).
+  Screen readers hear that the button opens a dialog and whether it is open
+  (`aria-haspopup`, `aria-expanded`), so the fill is never the only sign.
+  The review dropped `aria-pressed`: it's for toggles, and this button
+  opens a dialog.
 - **The count is never hidden.** Where the search options menu would cover
   the line above the results (a list narrower than 26rem: the menu is 17rem
   wide from the field's right end, and the count needs about 6rem on the

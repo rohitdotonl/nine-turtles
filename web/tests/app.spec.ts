@@ -322,7 +322,7 @@ test("Settings: theme, font, size and width apply at once and are remembered on 
   await expect(look.locator(".sizes")).toHaveCSS("border-radius", "10px");
   await expect(larger).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect(larger).toHaveCSS("box-shadow", "none");
-  await expect(larger).not.toHaveCSS("border-left-width", "0px");
+  await expect(larger).not.toHaveCSS("border-left-color", "rgba(0, 0, 0, 0)");
   expect(largerBox!.x - (smallerBox!.x + smallerBox!.width)).toBeGreaterThan(80);
   for (let step = 0; step < 3; step++) await larger.click();
   await expect(look.getByRole("status")).toHaveText("Largest");
@@ -483,6 +483,14 @@ test("the chrome never advertises shortcuts: no hint under the list, with the si
   await expect(page.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeVisible();
 });
 
+test("on a computer a 1px line parts the sidebar, the list and the reading pane (decision 0054)", async ({ page, isMobile }) => {
+  test.skip(isMobile, "A phone shows one pane at a time, with no line.");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openApp(page);
+  await expect(page.locator("#sidebar")).toHaveCSS("border-right-width", "1px");
+  await expect(page.locator(".list-pane")).toHaveCSS("border-right-width", "1px");
+});
+
 test("the sidebar ends with Add feed, then the shortcut list and Settings as icons; its toggle says what it does", async ({ page, isMobile }) => {
   test.skip(isMobile, "The phone has its own screens and no sidebar toggle.");
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -503,17 +511,18 @@ test("the sidebar ends with Add feed, then the shortcut list and Settings as ico
   expect(add.y).toBeGreaterThan(all.y);
   expect(set.y + set.height).toBeLessThanOrEqual(900);
   await expect(settings).toHaveAttribute("title", "Settings");
-  // While the shortcut list is open its button shows pressed, with the gear's fill (decision 0054).
+  // While the shortcut list is open its button is filled and says its dialog is open (decision 0054).
   // (Found by its label, not its role: the open list's dialog leaves the page behind it inert.)
   const keysBehind = page.locator('#sidebar button[aria-label="Keyboard shortcuts"]');
-  await expect(keysBehind).toHaveAttribute("aria-pressed", "false");
+  await expect(keysBehind).toHaveAttribute("aria-haspopup", "dialog");
+  await expect(keysBehind).toHaveAttribute("aria-expanded", "false");
   const restingFill = await keysBehind.evaluate((element) => getComputedStyle(element).backgroundColor);
   await keys.click();
   await expect(page.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeVisible();
-  await expect(keysBehind).toHaveAttribute("aria-pressed", "true");
+  await expect(keysBehind).toHaveAttribute("aria-expanded", "true");
   expect(await keysBehind.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe(restingFill);
   await page.getByRole("dialog").getByRole("button", { name: "Close" }).click();
-  await expect(keysBehind).toHaveAttribute("aria-pressed", "false");
+  await expect(keysBehind).toHaveAttribute("aria-expanded", "false");
   await expect(toggle(page)).toHaveAttribute("title", "Hide the sidebar ( [ )");
   await toggle(page).click();
   await expect(toggle(page)).toHaveAttribute("title", "Show the sidebar ( [ )");

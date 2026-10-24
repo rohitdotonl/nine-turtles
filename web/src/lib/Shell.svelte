@@ -930,14 +930,15 @@
         class="btn-quiet ml-1.5 min-w-0 flex-1 justify-start gap-2.5 pl-[14px] text-small text-ink-2"><Icon name="plus" size={16} />Add feed</a
       >
       {#if !phone}
-        <!-- Pressed, with the gear's fill, while the shortcut list is open, so the foot shows where you are either way (decision 0054). -->
+        <!-- Filled in a neutral ink tone while the shortcut list is open (never the accent: this is a button, not a place), and it says it opens a dialog (decision 0054). -->
         <button
           type="button"
           onclick={() => (cheatSheetOpen = true)}
           aria-label="Keyboard shortcuts"
           title="Keyboard shortcuts (?)"
-          aria-pressed={cheatSheetOpen}
-          class={["btn-quiet btn-icon", cheatSheetOpen && "bg-tint-sidebar text-ink"]}><Icon name="keyboard" size={18} /></button
+          aria-haspopup="dialog"
+          aria-expanded={cheatSheetOpen}
+          class={["btn-quiet btn-icon", cheatSheetOpen && "bg-ink/10 text-ink"]}><Icon name="keyboard" size={18} /></button
         >
       {/if}
       <a
