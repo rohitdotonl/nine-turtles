@@ -144,12 +144,16 @@ test.describe("on a phone", () => {
     ]);
     expect(barColor).toBe(paperColor);
     await expect(bar).toHaveCSS("backdrop-filter", "none");
-    // The icons sit in one line (Previous is hidden on the first article), and each place is a full 44px tap.
+    // All five icons show, in one line, even on the first article (Previous
+    // is faded there, never a hole: decision 0047), and each place is a full 44px tap.
     const tops = await toolbar(page).locator(":scope > * svg").evaluateAll((icons) =>
       icons.filter((icon) => getComputedStyle(icon).visibility !== "hidden").map((icon) => Math.round(icon.getBoundingClientRect().top + icon.getBoundingClientRect().height / 2)),
     );
-    expect(tops.length).toBeGreaterThanOrEqual(4);
+    expect(tops.length).toBeGreaterThanOrEqual(5);
     expect(new Set(tops).size).toBe(1);
+    // The five places share the bar's width evenly.
+    const widths = await toolbar(page).locator(":scope > *").evaluateAll((places) => places.map((place) => Math.round(place.getBoundingClientRect().width)));
+    expect(Math.max(...widths) - Math.min(...widths)).toBeLessThanOrEqual(1);
     for (const control of await toolbar(page).locator(":scope > *").all()) {
       const place = (await control.boundingBox())!;
       expect(Math.min(place.width, place.height)).toBeGreaterThanOrEqual(44);
@@ -162,6 +166,8 @@ test.describe("on a phone", () => {
 
     // The first article has nothing before it.
     await expect(toolbar(page).getByRole("button", { name: "Previous" })).toHaveAttribute("aria-disabled", "true");
+    await expect(toolbar(page).getByRole("button", { name: "Previous" }).locator("svg")).toHaveCSS("opacity", "0.35");
+    await expect(toolbar(page).getByRole("button", { name: "Next" }).locator("svg")).toHaveCSS("opacity", "1");
     await toolbar(page).getByRole("button", { name: "Next" }).click();
     await expect(title(page, "Only the first page")).toBeFocused();
     await toolbar(page).getByRole("button", { name: "Previous" }).click();
@@ -217,6 +223,14 @@ test.describe("on a phone", () => {
     await expect(list(page).getByRole("heading", { level: 2, name: "Reading Room" })).toBeFocused();
 
     await tabTo(page, row(page, "The pleasure of a slow letter"));
+    // The row's ring, 2px inside the pill, passes clear of where an unread dot hangs: the dot
+    // sits 4px into the pill, so 2px of paper part them (decision 0049).
+    const ringGap = await row(page, "The pleasure of a slow letter").evaluate((element) => {
+      const style = getComputedStyle(element);
+      // The ring runs from the pill's edge to its offset inside it; the dot starts --dot-left in.
+      return parseFloat(style.getPropertyValue("--dot-left")) + parseFloat(style.outlineOffset);
+    });
+    expect(ringGap).toBeGreaterThanOrEqual(2);
     await page.keyboard.press("Enter");
     await expect(title(page, "The pleasure of a slow letter")).toBeFocused();
     await tabTo(page, toolbar(page).getByRole("button", { name: "Next" }));
@@ -247,6 +261,14 @@ test.describe("on a phone", () => {
     await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
     await list(page).getByRole("button", { name: "More", exact: true }).click();
     await page.getByRole("menuitem", { name: "Edit feed" }).click();
+    // A sheet you commit has Cancel and no X, on a phone too (decision 0049); its first field
+    // starts 20px under the top line, as Settings' first group does.
+    const heading = page.getByRole("heading", { level: 2, name: "Edit feed" });
+    await expect(heading).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Close/ })).toHaveCount(0);
+    const bar = (await page.locator(".pane-bar").filter({ has: heading }).boundingBox())!;
+    const name = (await page.getByText("Name", { exact: true }).boundingBox())!;
+    expect(name.y - (bar.y + bar.height)).toBeLessThanOrEqual(24);
     await page.getByRole("button", { name: "Cancel" }).click();
     await expect(list(page).getByRole("heading", { level: 2, name: "Reading Room" })).toBeVisible();
     await page.goBack();
@@ -291,6 +313,40 @@ test.describe("on a phone", () => {
     const box = (await back.boundingBox())!;
     expect(box.x + box.width).toBeLessThanOrEqual(320);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  });
+
+  test("a row's source, time and star stay on one line: a long source is cut short, never the date", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 640 });
+    await openHome(page);
+    const name = `averyveryverylongfeednamewithoutanyspaces-${Date.now()}`;
+    await follow(page, `${FEED_SITE}/blog/${name}/`);
+    await page.goto(new URL("/all", FEEDS_APP).href);
+    await appReady(page);
+    const all = page.getByRole("region", { name: "All" });
+    const mine = all.getByRole("button", { name: new RegExp(`On keeping a commonplace book.*Blog ${name}`) });
+    // Star it, so the row's meta line carries the star too.
+    await mine.click();
+    await toolbar(page).getByRole("button", { name: "Star" }).click();
+    await expect(toolbar(page).getByRole("button", { name: "Star" })).toHaveAttribute("aria-pressed", "true");
+    await article(page).getByRole("button", { name: "Back to All" }).click();
+    const meta = mine.locator(".row-meta");
+    const shape = await meta.evaluate((element) => {
+      const name = element.querySelector(".row-feed-name")!;
+      return {
+        height: element.getBoundingClientRect().height,
+        line: parseFloat(getComputedStyle(element).lineHeight),
+        cut: name.scrollWidth > name.clientWidth,
+        figures: getComputedStyle(element).fontVariantNumeric,
+      };
+    });
+    // One line (decision 0048): the source ends in "…", the date and the star keep their room.
+    expect(shape.height).toBeLessThan(shape.line * 1.5);
+    expect(shape.cut).toBe(true);
+    // Proportional figures, as in running text, not the sidebar counts' tabular ones.
+    expect(shape.figures).toBe("proportional-nums");
+    const [rowBox, dateBox, starBox] = [(await mine.boundingBox())!, (await meta.locator("time").boundingBox())!, (await meta.locator(".row-star").boundingBox())!];
+    expect(Math.abs(starBox.y + starBox.height / 2 - (dateBox.y + dateBox.height / 2))).toBeLessThan(3);
+    expect(starBox.x + starBox.width).toBeLessThanOrEqual(rowBox.x + rowBox.width);
   });
 
   test("a folder on the feeds screen has no arrow and always lists its feeds, a step in", async ({ page }) => {
@@ -362,6 +418,9 @@ test.describe("on a phone", () => {
       const box = element.getBoundingClientRect();
       return box.left + parseFloat(getComputedStyle(element).paddingLeft);
     })));
+    // The preview passage starts on the groups' own edge, not indented like body text (decision 0049).
+    near20(await textStart(page.locator(".reading-sample p")));
+    near20((await page.locator(".inset-group").first().boundingBox())!.x);
 
     // Add feed: its title and the line under it.
     await page.goto(new URL("/add-feed", FEEDS_APP).href);

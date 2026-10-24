@@ -394,6 +394,16 @@ body {
 :root[data-keyboard] dialog h2[tabindex="-1"]:focus-visible {
   outline: none;
 }
+/*
+  An opened article's title is the same: the keyboard's place moves there so
+  screen readers start reading at the title, but a ring round the largest
+  words on the page would be louder than the article, and the title can't be
+  pressed. The next Tab lands on the article's first link or control, which
+  rings as always (decision 0047).
+*/
+:root[data-keyboard] .article-title[tabindex="-1"]:focus-visible {
+  outline: none;
+}
 
 /*
   The sidebar's wordmark is a name, not a control: it's never a Tab stop
@@ -537,8 +547,10 @@ body {
   Unread: a drawn 8px dot in the theme's accent, centred in the row's own
   24px gutter (8px from the pill's edge, 8px clear of the title), level with
   the middle of the title's first line, so it reads as a mark in a margin,
-  not a bullet. On a phone it hangs in the 20px margin, 6px from the screen's
-  edge and 6px clear of the title. The semibold title says it too, so it
+  not a bullet. On a phone it hangs in the 20px margin, 8px from the screen's
+  edge and 4px clear of the title, so the keyboard's ring (2px inside the
+  pill, which sits 4px in) passes 2px clear of it, never touching it
+  (decision 0049). The semibold title says it too, so it
   never rests on color.
 */
 .unread-dot {
@@ -804,6 +816,49 @@ textarea {
       border-color: Highlight;
       background-color: Highlight;
       color: HighlightText;
+    }
+  }
+  /*
+    A choice of one (Add a feed's choice between the feeds a site offers):
+    the same row, ending in a round mark, as a Mac draws a radio button: an
+    empty circle, or one filled in the text color with a dot of the page in
+    it when it's chosen, so the choice shows by the dot as well as the fill,
+    never by a tint alone. Round, because only one can be chosen (decision
+    0049).
+  */
+  .check-row > .radio-mark {
+    display: flex;
+    width: 1.25rem;
+    height: 1.25rem;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid var(--muted);
+    border-radius: 9999px;
+  }
+  .check-row > .radio-mark::after {
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+  }
+  .check-row:has(> input:checked) > .radio-mark {
+    border-color: var(--ink);
+    background-color: var(--ink);
+  }
+  .check-row:has(> input:checked) > .radio-mark::after {
+    background-color: var(--paper);
+  }
+  @media (forced-colors: active) {
+    .check-row > .radio-mark {
+      forced-color-adjust: none;
+      border-color: CanvasText;
+    }
+    .check-row:has(> input:checked) > .radio-mark {
+      border-color: Highlight;
+      background-color: Highlight;
+    }
+    .check-row:has(> input:checked) > .radio-mark::after {
+      background-color: HighlightText;
     }
   }
   /*
@@ -1107,7 +1162,7 @@ input {
   and semibold (the interface fonts ship only regular and semibold).
 */
 .article-byline {
-  margin-top: 0.75rem;
+  margin-top: 0;
   font-family: var(--font-sans);
   font-size: var(--text-meta);
   line-height: 1.45;
@@ -1127,12 +1182,17 @@ input {
   column as the text, and its lines are balanced, so a two-line title
   reads as two even lines rather than a long one over a stub, as Apple
   Books sets a title (decision 0044, replacing 0040's lone-word rule).
+  Tracked in only a little, so its letters never touch, with a clear pause
+  before the byline: five-eighths of the title's own size (about 20px by
+  default), so the pause keeps its proportion at every text size and on a
+  phone (decision 0047).
 */
 .article-title {
   font-size: 1.6em;
   line-height: 1.12;
   font-weight: 600;
-  letter-spacing: -0.012em;
+  letter-spacing: -0.005em;
+  margin-block-end: 0.625em;
   text-wrap: balance;
   overflow-wrap: break-word;
 }
@@ -1329,6 +1389,20 @@ input {
 .toast {
   box-shadow: 0 10px 28px -10px rgb(0 0 0 / 0.3);
 }
+/*
+  The band the note sits in (decision 0048): the list's own tone, across the
+  pane's whole width, so rows scrolling up from below end at its top edge
+  rather than running under the note. The note is centred on the pane, and
+  the band takes no room while there's nothing to say.
+*/
+.toast-band {
+  margin-inline: calc(-1 * var(--list-start, 2rem)) calc(-1 * var(--list-end, 1.5rem));
+  padding-inline: var(--list-start, 2rem) var(--list-end, 1.5rem);
+}
+.toast-band-shown {
+  padding-block: 0.75rem 1rem;
+  background-color: var(--color-list);
+}
 
 /*
   The dim behind a sheet or the shortcut list (DESIGN.md → Exceptions log):
@@ -1397,7 +1471,7 @@ dialog.dimmed::backdrop {
   --list-start: 1.25rem;
   --list-end: 1.25rem;
   --pill-inset: 0.25rem;
-  --dot-left: 2px;
+  --dot-left: 4px;
 }
 
 /* A scrolling area under a fixed top line: a hairline appears once its content has scrolled under that line (edge.ts). */

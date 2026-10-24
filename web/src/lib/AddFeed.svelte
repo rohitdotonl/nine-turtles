@@ -1,7 +1,9 @@
 <!--
   The add-a-feed field (SPEC sections 2 and 3): the welcome on a fresh
   slowfeed, and the "+ Add feed" sheet. It takes a feed's address or a
-  website's; slowfeed finds the feed. Several feeds become a choice; problems
+  website's; slowfeed finds the feed. Several feeds become a choice of one,
+  drawn as a list with a round mark on each, the first one chosen, which
+  Add feed then adds (decision 0049); problems
   are said in plain words. While slowfeed looks, a line of text says so: no
   spinner.
 
@@ -44,15 +46,18 @@
   /** The problem is the address itself (not the site or slowfeed being unreachable), so the field is marked. */
   let badAddress = $state(false);
   let choices: Choice[] = $state([]);
+  /** The feed chosen among several, by its address: the first one offered, until another is picked. */
+  let chosen = $state("");
+  /** The address the choices were found at: Add feed adds the chosen one while the field still holds it. */
+  let choicesFor = $state("");
   let alreadyId: number | undefined = $state();
 
   let alreadyTitle = $derived(feeds.find((feed) => feed.id === alreadyId)?.title);
 
-  // The choices stay on screen while one is being added, so the button just
-  // pressed (and the keyboard's place on it) never vanishes, and a choice
-  // that fails can be swapped for another. Buttons say they're busy with
-  // `aria-disabled` rather than `disabled`, which would drop the keyboard's
-  // place too.
+  // The choices stay on screen while the chosen one is being added, so a
+  // choice that fails can be swapped for another. Add feed says it's busy
+  // with `aria-disabled` rather than `disabled`, which would drop the
+  // keyboard's place on it.
   async function add(text: string, fromChoices = false) {
     if (busy) return;
     busy = true;
@@ -71,6 +76,8 @@
         break;
       case "choose":
         choices = result.choices;
+        chosen = result.choices[0]?.url ?? "";
+        choicesFor = text;
         message = "This site offers more than one feed. Choose one:";
         break;
       case "already":
@@ -87,7 +94,8 @@
 
   function submit(event: SubmitEvent) {
     event.preventDefault();
-    if (address.trim()) add(address);
+    if (choices.length > 0 && address === choicesFor && chosen) add(chosen, true);
+    else if (address.trim()) add(address);
     else {
       message = "Paste an address first.";
       problem = true;
@@ -96,8 +104,13 @@
   }
 </script>
 
+<!--
+  In the welcome everything is centred, under a centred title (decision 0048):
+  the field's name is said to screen readers and shown as its placeholder, so
+  no line of it sits left-aligned. In a sheet its name stands above it.
+-->
 <form onsubmit={submit} class="flex flex-col gap-2">
-  <label for="feed-address" class="text-small text-ink-2">Paste a website or feed URL</label>
+  <label for="feed-address" class={onCancel ? "text-small text-ink-2" : "sr-only"}>Paste a website or feed URL</label>
   <div class="flex gap-2">
     <input
       id="feed-address"
@@ -108,13 +121,14 @@
       autocomplete="off"
       autocapitalize="none"
       spellcheck="false"
-      placeholder="example.com"
+      placeholder={onCancel ? "example.com" : "Paste a website or feed URL"}
       aria-describedby="feed-address-status"
       aria-invalid={badAddress ? "true" : undefined}
       class="field min-w-0 flex-1"
     />
     {#if !onCancel}
-      <button type="submit" aria-disabled={busy} class="btn-primary">Add feed</button>
+      <!-- Beside the field, its corners match the field's. -->
+      <button type="submit" aria-disabled={busy} class="btn-primary rounded-lg">Add feed</button>
     {/if}
   </div>
   <!--
@@ -125,7 +139,7 @@
     a message, when there is one, takes its place there and moves it down
     within that room (decision 0045).
   -->
-  <div class={onCancel ? "contents" : "flex min-h-[5.8rem] flex-col"}>
+  <div class={onCancel ? "contents" : "flex min-h-[5.8rem] flex-col items-center text-center"}>
     <!--
       Screen readers hear each new line here without moving the keyboard's place.
       A problem is in red words after an icon. In a sheet the line takes room
@@ -145,21 +159,26 @@
     </p>
 
     {#if choices.length > 0}
-      <ul class="mb-2 flex flex-col gap-2">
+      <!--
+        A choice of one, as a Mac or iOS list draws it: each feed a row with its
+        name and address, ending in a round mark, empty or filled with a dot,
+        so the chosen one shows by its mark, never by a tint alone. Round,
+        because only one can be added (a square tick box says "any of these",
+        decision 0045). Real radio buttons lie under the rows: the arrow keys
+        move the choice, and Add feed adds it (decision 0049).
+      -->
+      <div role="radiogroup" aria-label="Feeds on this site" aria-describedby="feed-address-status" class="inset-group mb-2 self-stretch text-left">
         {#each choices as choice (choice.url)}
-          <li>
-            <button
-              type="button"
-              aria-disabled={busy}
-              onclick={() => add(choice.url, true)}
-              class="flex min-h-11 w-full cursor-pointer flex-col items-start rounded-md border border-muted px-4 py-2 text-left hover:bg-[var(--hover)]"
-            >
-              <span>{choice.title}</span>
+          <label class="inset-row check-row flex-nowrap">
+            <input type="radio" name="feed-choice" value={choice.url} bind:group={chosen} />
+            <span class="flex min-w-0 flex-col py-1">
+              <span class="break-words">{choice.title}</span>
               <span class="text-small break-all text-muted">{choice.url}</span>
-            </button>
-          </li>
+            </span>
+            <span aria-hidden="true" class="radio-mark shrink-0"></span>
+          </label>
         {/each}
-      </ul>
+      </div>
     {/if}
 
     {#if alreadyId !== undefined}

@@ -17,7 +17,9 @@ const toggle = (page: Page) => page.getByRole("button", { name: "Sidebar" });
 
 test("a wide window shows three areas, a medium one two, a phone-narrow one one", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
-  await openApp(page);
+  // Starred: with no feeds yet, Unread and All show one welcome in place of the list and the
+  // reading area together (decision 0048); Starred keeps its own list.
+  await openApp(page, "/starred");
   await expect(sidebar(page)).toBeVisible();
   await expect(list(page)).toBeVisible();
   await expect(readingArea(page)).toBeVisible();
@@ -114,7 +116,8 @@ test("g then u, s or a goes to Unread, Starred or All; reload and Back keep your
   await page.reload();
   await appReady(page);
   await expect(page).toHaveTitle("All · slowfeed");
-  await expect(page.getByRole("heading", { level: 2, name: "All" })).toBeVisible();
+  // With no feeds yet, a wide window shows the welcome in the list's room (decision 0048); the list keeps its place behind it.
+  await expect(page.locator("#list-heading")).toHaveText("All");
 
   await page.goBack();
   await expect(page).toHaveURL(/\/starred$/);
@@ -176,6 +179,34 @@ test("the shortcut list fits a small phone without scrolling sideways", async ({
   await expect(dialog).toBeVisible();
   const { scroll, client } = await dialog.evaluate((element) => ({ scroll: element.scrollWidth, client: element.clientWidth }));
   expect(scroll).toBeLessThanOrEqual(client);
+  // On a phone it's a screen of its own, as every sheet is there: nothing behind it shows past its edge (decision 0049).
+  const box = (await dialog.boundingBox())!;
+  expect(box.x).toBe(0);
+  expect(box.y).toBe(0);
+  expect(box.width).toBe(320);
+  expect(box.height).toBe(640);
+  await expect(dialog).toHaveCSS("border-top-left-radius", "0px");
+});
+
+test("on a desktop window the shortcut list fits without scrolling, at least 48px clear of the window's top and foot", async ({ page, isMobile }) => {
+  test.skip(isMobile, "on a phone it's a screen of its own");
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await openApp(page);
+  await page.keyboard.press("?");
+  const dialog = page.getByRole("dialog", { name: "Keyboard shortcuts" });
+  await expect(dialog).toBeVisible();
+  const box = (await dialog.boundingBox())!;
+  expect(box.y).toBeGreaterThanOrEqual(48);
+  expect(800 - (box.y + box.height)).toBeGreaterThanOrEqual(48);
+  // The search filters sit in the right-hand column, under Everywhere, and the whole list shows.
+  const [everywhere, filters] = [
+    (await dialog.getByRole("region", { name: "Everywhere" }).boundingBox())!,
+    (await dialog.getByRole("region", { name: "Search filters" }).boundingBox())!,
+  ];
+  expect(Math.abs(filters.x - everywhere.x)).toBeLessThan(1);
+  expect(filters.y).toBeGreaterThan(everywhere.y);
+  const list = dialog.getByRole("region", { name: "Shortcuts" });
+  expect(await list.evaluate((element) => element.scrollHeight <= element.clientHeight + 1)).toBe(true);
 });
 
 test("shortcuts don't fire while typing in a field", async ({ page }) => {
@@ -185,7 +216,7 @@ test("shortcuts don't fire while typing in a field", async ({ page }) => {
   await page.evaluate(() => {
     const field = document.createElement("input");
     field.setAttribute("aria-label", "Test field");
-    document.querySelector("section")?.append(field);
+    document.querySelector("main")?.append(field);
   });
   await page.getByLabel("Test field").focus();
   await page.keyboard.type("[?gs");
@@ -403,8 +434,8 @@ test("Add a feed opens as a sheet over the list you were on: a serif title, one 
   expect(Math.round(add!.y - (field!.y + field!.height))).toBe(20);
   expect(Math.round(add!.x - (cancel!.x + cancel!.width))).toBe(12);
   await expect(sheet.getByRole("button", { name: "Cancel" })).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
-  // The list stays in view behind it, and nothing behind it answers the keyboard.
-  await expect(page.locator("#list-heading")).toBeVisible();
+  // The page stays in view behind it (here, with no feeds yet, the welcome, which keeps its shape), and nothing behind it answers the keyboard.
+  await expect(page.locator("#welcome-heading")).toBeVisible();
   // No X: Escape is the way out, and so is a press on the dimmed page.
   await expect(sheet.getByRole("button", { name: "Close" })).toHaveCount(0);
   await page.keyboard.press("Escape");

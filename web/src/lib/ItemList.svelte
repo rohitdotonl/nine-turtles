@@ -445,11 +445,15 @@
                   >{:else}{piece.text}{/if}{/each}</span
             >
           {/if}
-          <span class="mt-0.5 block text-meta text-muted tabular-nums">
-            <span class={oneFeed ? "sr-only" : undefined}>{article.feedTitle} ·</span>
-            <time datetime={new Date(article.at * 1000).toISOString()}>{when(article.at)}</time>
+          <!--
+            Always one line, as Apple Books' rows are (decision 0048): a long source name ends in "…",
+            and the time and the star never wrap below it.
+          -->
+          <span class="row-meta mt-0.5 text-meta text-muted">
+            <span class={oneFeed ? "sr-only" : "row-feed"}><span class="row-feed-name">{article.feedTitle}</span>&nbsp;·</span>
+            <time datetime={new Date(article.at * 1000).toISOString()} class="row-date">{when(article.at)}</time>
             {#if article.starred}
-<span class="star"><Icon name="star" size={13} filled /></span><span class="sr-only">, Starred</span>
+              <span class="row-star"><Icon name="star" size={13} filled /><span class="sr-only">, Starred</span></span>
             {/if}
           </span>
         </button>
@@ -471,11 +475,13 @@
 {/if}
 <!--
   What was just done (with Undo), "New items · press r", or that slowfeed was
-  updated: a small note that floats at the bottom of the list, so nothing in
-  the list moves when it appears. Empty, it's hidden but stays for screen
-  readers, which hear each message as it arrives.
+  updated: a small note at the foot of the list pane, so nothing in the list
+  moves when it appears. It sits in a band of the list's own tone that the
+  rows end above, so it never lies over the rows you're acting on
+  (decision 0048). Empty, it's hidden but stays for screen readers, which
+  hear each message as it arrives.
 -->
-<div class={["pointer-events-none sticky bottom-4 z-10 mt-auto flex justify-center", !!(line || undoLast || updates.stranded || newWaiting) && "pt-6"]}>
+<div class={["toast-band sticky bottom-0 z-10 mt-auto flex justify-center", !!(line || undoLast || updates.stranded || newWaiting) && "toast-band-shown"]}>
   <div
     class={[
       "toast pointer-events-auto flex min-h-11 max-w-full flex-wrap items-center gap-x-3 rounded-lg border border-ink/15 bg-paper px-4 text-small text-ink-2",
@@ -525,9 +531,35 @@
   .excerpt .match {
     color: var(--ink);
   }
-  .star {
-    display: inline-block;
-    vertical-align: -2px;
-    margin-left: 0.25rem;
+  /*
+    The source, time and star on one line (decision 0048): the source shrinks
+    and ends in "…"; the time and the star keep their room. Figures are
+    proportional, as in running text, so the digits in a name and a date set
+    as tightly as they do in the sidebar.
+  */
+  .row-meta {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.35em;
+    white-space: nowrap;
+    font-variant-numeric: proportional-nums;
+  }
+  .row-feed {
+    display: flex;
+    min-width: 0;
+    flex: 0 1 auto;
+  }
+  .row-feed-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .row-date,
+  .row-star {
+    flex: none;
+  }
+  .row-star {
+    display: flex;
   }
 </style>

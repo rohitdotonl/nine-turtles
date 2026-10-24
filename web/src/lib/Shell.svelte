@@ -167,6 +167,12 @@
   let firstVisit = $derived(feeds !== undefined && feeds.length === 0);
   // Starred keeps its own list even with no feeds: it is where its More menu and sort live.
   let welcoming = $derived(firstVisit && !(under.kind === "view" && under.view === "starred"));
+  /**
+   * With a reading area beside the list, the welcome takes the list's room too: one empty state,
+   * not an empty column beside it, as Apple Books shows (decision 0048).
+   */
+  let welcomeWide = $derived(welcoming && panes.article && !missing);
+  let welcomeHeading: HTMLHeadingElement | undefined = $state();
   /** How many articles the list shows, so the empty reading area offers j only when there's one to open. */
   let listCount = $state(0);
   /** The line above the add field, in the sheet and on the phone's page. */
@@ -410,6 +416,7 @@
     if (place.kind === "settings") return settingsHeading;
     if (place.kind === "add-feed") return addField;
     if (sheetShown) return sheetHeading;
+    if (welcomeWide) return welcomeHeading;
     return listHeading;
   }
 
@@ -722,21 +729,31 @@
   -->
   <div class="flex w-full max-w-[26.25rem] flex-col gap-6">
     <div class="text-center">
-      <h2 id="welcome-heading" class="font-serif text-xlarge font-semibold tracking-[-0.01em]">A quiet place to read.</h2>
+      <h2 id="welcome-heading" tabindex="-1" bind:this={welcomeHeading} class="font-serif text-xlarge font-semibold tracking-[-0.01em]">A quiet place to read.</h2>
       <p class="mt-3 text-ink-2">Follow the websites you like, and read what they publish here, at your own pace.</p>
     </div>
     {#if !(sheet && route.kind === "add-feed")}
-      <!-- Importing sits just under the field, lined up with it, as the other way in (decision 0045). -->
+      <!-- Importing sits just under the field, centred as everything here is, as the other way in (decisions 0045, 0048). -->
       <AddFeed bind:field={addField} feeds={[]} onAdded={added} onOpen={(id) => go({ kind: "feed", id })}>
         {#snippet alternative()}
-          <a href="/settings" onclick={goImport} class="btn-quiet btn-small -ml-2.5 self-start">Import an OPML file…</a>
+          <a href="/settings" onclick={goImport} class="btn-quiet btn-small">Import an OPML file…</a>
         {/snippet}
       </AddFeed>
     {:else}
-      <!-- With the Add a feed sheet over it, the field is the sheet's; importing stays, centred under the words. -->
-      <p class="text-center">
-        <a href="/settings" onclick={goImport} class="btn-quiet btn-small">Import an OPML file…</a>
-      </p>
+      <!--
+        With the Add a feed sheet over it, the field is the sheet's (one field of that name on the page).
+        The welcome keeps its exact shape under the dim, a still picture of itself that nothing can
+        reach, so nothing behind the sheet moves as it opens or closes (decision 0048).
+      -->
+      <div inert aria-hidden="true" class="flex flex-col gap-2">
+        <div class="flex gap-2">
+          <span class="field flex min-w-0 flex-1 items-center overflow-hidden whitespace-nowrap text-muted">Paste a website or feed URL</span>
+          <span class="btn-primary rounded-lg">Add feed</span>
+        </div>
+        <div class="flex min-h-[5.8rem] flex-col items-center">
+          <span class="btn-quiet btn-small">Import an OPML file…</span>
+        </div>
+      </div>
     {/if}
   </div>
 {/snippet}
@@ -952,10 +969,11 @@
               >
             </div>
           {/if}
-          <PageHead title="Add a feed" bind:heading={listHeading} onClose={phone ? undefined : closePage} besideToggle={!phone && !panes.sidebar} />
-          <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-3 pb-10 md:px-10">
-            <!-- The sheet's build, as a page: a line on what to paste, the field, then Cancel and Add feed in one row. -->
-            <div class="mx-auto mt-6 flex max-w-xl flex-col gap-5">
+          <!-- Its back button leads out; Cancel is at its foot, so there's no X (decision 0049). -->
+          <PageHead title="Add a feed" bind:heading={listHeading} besideToggle={!phone && !panes.sidebar} />
+          <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-10 md:px-10">
+            <!-- The sheet's build, as a page, 20px under the top line as Settings is: a line on what to paste, the field, then Cancel and Add feed in one row. -->
+            <div class="mx-auto flex max-w-xl flex-col gap-5">
               <p>{ADD_INTRO}</p>
               <AddFeed
                 bind:field={addField}
@@ -971,13 +989,13 @@
         <section
           aria-labelledby="list-heading"
           bind:this={listSection}
-          hidden={!panes.list}
+          hidden={!panes.list || welcomeWide}
           class={[
             // A container, so the list's title can step down a size when the pane is narrow (decision 0041).
             "list-pane @container flex-col bg-list",
             phone && "phone",
             panes.article ? "w-80 shrink-0 xl:w-96 2xl:w-[26rem]" : "min-w-0 flex-1",
-            panes.list && "flex",
+            panes.list && !welcomeWide && "flex",
           ]}
         >
           {#if phone}

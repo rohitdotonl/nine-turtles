@@ -56,12 +56,22 @@ describe("typed filters", () => {
     const done = takeFilters({ ...all, words: "slow is:starred reading" }, library, false);
     expect(done.query.starred).toBe(true);
     expect(done.query.words).toBe("slow reading");
-    expect(chipsFor(done.query, library)).toEqual([{ key: "starred", label: "is:starred" }]);
+    expect(chipsFor(done.query, library)).toEqual([{ key: "starred", label: "Starred", typed: "is:starred" }]);
   });
 
   it("are all taken on Enter", () => {
     const { query } = takeFilters({ ...all, words: "compost is:unread after:2026-01-31 before:2026-03-01" }, library, true);
     expect(query).toEqual({ ...all, words: "compost", unread: true, after: "2026-01-31", before: "2026-03-01" });
+  });
+
+  it("show as chips in plain words, as the options menu names them, keeping how they're typed (decision 0048)", () => {
+    const query: Query = { ...all, unread: true, starred: true, after: "2026-10-01", before: "2026-03-01" };
+    expect(chipsFor(query, library)).toEqual([
+      { key: "unread", label: "Unread", typed: "is:unread" },
+      { key: "starred", label: "Starred", typed: "is:starred" },
+      { key: "after", label: "After 1 Oct 2026", typed: "after:2026-10-01" },
+      { key: "before", label: "Before 1 Mar 2026", typed: "before:2026-03-01" },
+    ]);
   });
 
   it("find feeds and folders by name, in quotes when it has spaces", () => {

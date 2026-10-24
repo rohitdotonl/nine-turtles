@@ -106,7 +106,9 @@ test("a search starts where you are, marks the words it found, and Escape brings
   await page.keyboard.press("End");
   await page.keyboard.press("Control+a");
   await page.keyboard.type("is:starred ");
-  await expect(page.getByRole("button", { name: "Remove is:starred" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Remove Starred", exact: true })).toBeVisible();
+  // The chip says it in plain words, as the options menu does; the typed form is its tooltip (decision 0048).
+  await expect(page.getByTitle("is:starred", { exact: true })).toHaveText("Starred");
   await expect(field(page)).toHaveValue("");
   await expect(results(page)).toHaveCount(1);
   await expect(results(page).first()).toContainText("Walking the long way home");
@@ -127,18 +129,20 @@ test("a search starts where you are, marks the words it found, and Escape brings
   await expect(page.getByRole("radio", { name: `${folder} This list` })).not.toBeChecked();
   await expect(page.getByRole("radio", { name: "All feeds" })).not.toBeChecked();
   await expect(page.getByRole("combobox", { name: "Search in another feed or folder" })).toBeVisible();
+  // It's drawn as a menu's submenu row, short words and a trailing chevron, not a drop-down among the checkmarks (decision 0048).
+  await expect(page.locator(".menu-row").filter({ has: page.getByRole("combobox", { name: "Search in another feed or folder" }) })).toContainText("Other feed or folder");
   // Presets count back from today; Custom shows the two dates.
   await page.getByRole("radio", { name: "Past week" }).check();
-  await expect(page.getByRole("button", { name: /^Remove after:/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Remove After / })).toBeVisible();
   await page.getByRole("radio", { name: "Any time" }).check();
-  await expect(page.getByRole("button", { name: /^Remove after:/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^Remove After / })).toHaveCount(0);
   await expect(page.getByLabel("Published after")).toHaveCount(0);
   await page.getByRole("radio", { name: "Custom" }).check();
   await page.getByLabel("Published after").fill("2030-01-01");
-  await expect(page.getByRole("button", { name: "Remove after:2030-01-01" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Remove After 1 Jan 2030", exact: true })).toBeVisible();
   await expect(page.getByText("Nothing found.")).toBeVisible();
   await page.getByRole("checkbox", { name: "Unread", exact: true }).press("Space");
-  await expect(page.getByRole("button", { name: "Remove is:unread" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Remove Unread", exact: true })).toBeVisible();
 
   // 5 is the Hindi test below. 6. Escape closes the options, then a second Escape: back exactly where you were, the search gone.
   await page.keyboard.press("Escape");
@@ -151,7 +155,7 @@ test("a search starts where you are, marks the words it found, and Escape brings
   await expect(field(page)).toHaveAttribute("placeholder", "Search");
   await field(page).focus();
   await expect(page.getByRole("button", { name: `Remove in: ${folder}` })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Remove is:starred" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Remove Starred", exact: true })).toHaveCount(0);
   await expect(page).toHaveURL(new RegExp(`/folders/${folderId}$`));
 });
 
@@ -287,12 +291,17 @@ test("the search options float over the list; Escape closes them first, then the
   const day = new Date();
   day.setDate(day.getDate() - 30);
   const iso = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
-  await expect(page.getByRole("button", { name: `Remove after:${iso}` })).toBeVisible();
+  // The chip says it in words ("After 24 Sept 2026"); how it's typed is its tooltip and its Remove button's description (decision 0048).
+  const words = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(day);
+  const remove = page.getByRole("button", { name: `Remove After ${words}`, exact: true });
+  await expect(remove).toBeVisible();
+  await expect(remove).toHaveAccessibleDescription(`after:${iso}`);
+  await expect(page.getByTitle(`after:${iso}`, { exact: true })).toHaveText(`After ${words}`);
   // The first Escape closes only the options, back to their button; the search stays.
   await page.keyboard.press("Escape");
   await expect(options).toBeHidden();
   await expect(button).toBeFocused();
-  await expect(page.getByRole("button", { name: `Remove after:${iso}` })).toBeVisible();
+  await expect(remove).toBeVisible();
   // Leaving the search with the keyboard closes them too.
   await button.click();
   await expect(options).toBeVisible();

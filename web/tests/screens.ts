@@ -122,7 +122,7 @@ export const SCREENS: Screen[] = [
       // A filter suggested as it's typed becomes a chip; the options panel shows it too.
       await expect(page.getByRole("option", { name: "is:unread" })).toBeVisible();
       await page.keyboard.type("unread ");
-      await expect(page.getByRole("button", { name: "Remove is:unread" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Remove Unread", exact: true })).toBeVisible();
       await page.getByRole("button", { name: "Search options" }).click();
       await expect(page.getByRole("checkbox", { name: "Unread", exact: true })).toBeChecked();
       await expect(page.getByRole("region", { name: "Search results" }).locator("mark").first()).toBeVisible();
