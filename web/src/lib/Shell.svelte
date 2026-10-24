@@ -1023,7 +1023,7 @@
             />
           {:else if welcoming && !missing}
             <!-- No feeds yet: the welcome has the reading area, where a new reader's eyes go (SPEC section 2). -->
-            <section aria-label="Article" class="flex min-w-0 flex-1 flex-col items-center justify-center bg-paper px-6 pb-[12vh] md:px-10">
+            <section aria-labelledby="welcome-heading" class="flex min-w-0 flex-1 flex-col items-center justify-center bg-paper px-6 pb-[12vh] md:px-10">
               {@render welcome()}
             </section>
           {:else}

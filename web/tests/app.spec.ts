@@ -11,7 +11,8 @@ async function openApp(page: Page, path = "/unread") {
 
 const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
 const list = (page: Page) => page.getByRole("region", { name: /^(Unread|Starred|All)$/ });
-const article = (page: Page) => page.getByRole("region", { name: "Article" });
+// The reading area: an article, "No article open.", or the welcome on a slowfeed with no feeds.
+const readingArea = (page: Page) => page.getByRole("region", { name: /^(Article|A quiet place to read\.)$/ });
 const toggle = (page: Page) => page.getByRole("button", { name: "Sidebar" });
 
 test("a wide window shows three areas, a medium one two, a phone-narrow one one", async ({ page }) => {
@@ -19,17 +20,17 @@ test("a wide window shows three areas, a medium one two, a phone-narrow one one"
   await openApp(page);
   await expect(sidebar(page)).toBeVisible();
   await expect(list(page)).toBeVisible();
-  await expect(article(page)).toBeVisible();
+  await expect(readingArea(page)).toBeVisible();
 
   await page.setViewportSize({ width: 1000, height: 800 });
   await expect(sidebar(page)).toBeHidden();
   await expect(list(page)).toBeVisible();
-  await expect(article(page)).toBeVisible();
+  await expect(readingArea(page)).toBeVisible();
 
   await page.setViewportSize({ width: 400, height: 800 });
   await expect(sidebar(page)).toBeVisible();
   await expect(list(page)).toBeHidden();
-  await expect(article(page)).toBeHidden();
+  await expect(readingArea(page)).toBeHidden();
 });
 
 test("[ hides and shows the sidebar, and the toggle never moves", async ({ page }) => {
