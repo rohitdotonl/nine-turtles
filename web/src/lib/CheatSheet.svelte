@@ -93,9 +93,9 @@
         left; reading, everywhere and the search filters on the right, where
         there's room (decision 0049). On a narrow screen they stack in that order.
       -->
-      <div class="grid gap-x-10 gap-y-7 md:grid-cols-2">
+      <div class="grid gap-x-10 gap-y-6 md:grid-cols-2">
         {#each COLUMNS as column, side (side)}
-          <div class="flex min-w-0 flex-col gap-7">
+          <div class="flex min-w-0 flex-col gap-6">
             {#each column as group (group)}
               {@const index = SHORTCUT_GROUPS.indexOf(group)}
               <section aria-labelledby={`keys-${index}`}>
@@ -143,7 +143,7 @@
         {/each}
       </div>
       <!-- A footer under both columns, the full width, so it never ends one column early or lands mid-list on a phone (decision 0052). -->
-      <p class="mt-6 text-meta text-muted">Tab, Enter and Escape always work too. Shortcuts don't fire while you're typing in a field.</p>
+      <p class="mt-4 text-meta text-muted">Tab, Enter and Escape always work too. Shortcuts don't fire while you're typing in a field.</p>
     </div>
   </div>
 </dialog>

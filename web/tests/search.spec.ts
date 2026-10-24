@@ -195,7 +195,7 @@ test("Hindi words are found whole", async ({ page }) => {
   await expect(results(page).first().locator(".excerpt mark")).toHaveText("पुस्तकालय");
 });
 
-test("each result shows its text around the match under the title, and × clears the field", async ({ page }) => {
+test("each result shows its text around the match under the title, and × clears the field", async ({ page, isMobile }) => {
   const blog = unique("excerpt");
   const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
   await open(page, `/feeds/${id}`, `Blog ${blog}`);
@@ -233,11 +233,13 @@ test("each result shows its text around the match under the title, and × clears
     .evaluate((element) => [...element.querySelector("button")!.children].map((child) => (child.classList.contains("title") ? "title" : child.classList.contains("excerpt") ? "excerpt" : child.querySelector("time") ? "meta" : "")).filter(Boolean));
   expect(order).toEqual(["title", "excerpt", "meta"]);
 
-  // The × in the field: a 44px target, named for screen readers; it empties the field and keeps the keyboard there.
+  // The × in the field: the field's height square (44px on a phone, 36px with a mouse, decision 0051),
+  // named for screen readers; it empties the field and keeps the keyboard there.
   const clear = page.getByRole("button", { name: "Clear search" });
   const box = (await clear.boundingBox())!;
-  expect(box.width).toBeGreaterThanOrEqual(44);
-  expect(box.height).toBeGreaterThanOrEqual(44);
+  const least = isMobile ? 44 : 36;
+  expect(box.width).toBeGreaterThanOrEqual(least);
+  expect(box.height).toBeGreaterThanOrEqual(least);
   await clear.click();
   await expect(field(page)).toHaveValue("");
   await expect(field(page)).toBeFocused();

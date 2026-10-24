@@ -55,7 +55,7 @@ headings ("Unread" over "A quiet place to read.").
   more than one feed. Choose one:" is set as a field's name, in the second
   ink, 20px under the field.
 - **Shortcuts.** The note about Tab, Enter and Escape is a footer across
-  both columns, 24px under them. Key caps have a 1px rim and a 2px lower lip
+  both columns, 16px under them (the groups 24px apart, so the whole list still fits a laptop screen without scrolling). Key caps have a 1px rim and a 2px lower lip
   in a soft mix of the text color, 22px tall with 12px regular letters;
   "then" is 12px muted.
 - **One heading on a phone's empty state.** With no feeds yet, the list's
