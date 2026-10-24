@@ -371,6 +371,30 @@ test.describe("on a wide window", () => {
     expect(Math.abs(first.y - last.y)).toBeLessThan(2);
   });
 
+  test("the three panes share one top line, and a toolbar's focus ring stays clear of the window's top", async ({ page }) => {
+    await openRoom(page);
+    await page.keyboard.press("j");
+    // One band for every pane's top line (decision 0043): the sidebar's, the list's and the article's end at the same height.
+    const bottoms = await page.locator("#sidebar .pane-bar, .list-pane > .pane-bar, .reading-bar").evaluateAll((bars) =>
+      bars.map((bar) => Math.round(bar.getBoundingClientRect().bottom)),
+    );
+    expect(bottoms).toHaveLength(3);
+    expect(new Set(bottoms).size).toBe(1);
+    // Their controls sit on one line: the sidebar button, the list's More and the article's Aa.
+    const middle = async (selector: string) => {
+      const box = (await page.locator(selector).first().boundingBox())!;
+      return box.y + box.height / 2;
+    };
+    const line = await middle("button[aria-label='Sidebar']");
+    expect(Math.abs((await middle(".list-pane > .pane-bar button")) - line)).toBeLessThan(1);
+    expect(Math.abs((await middle(".reading-bar button[aria-label='Reading appearance']")) - line)).toBeLessThan(1);
+    // A toolbar button's ring is drawn inside its own edge, so it never touches the window's top.
+    const aa = article(page).getByRole("button", { name: "Reading appearance" });
+    await tabTo(page, aa);
+    await expect(aa).toHaveCSS("outline-offset", "-2px");
+    expect((await aa.boundingBox())!.y).toBeGreaterThanOrEqual(6);
+  });
+
   test("the top bar is solid in the page's color, with a line under it only once the text has scrolled", async ({ page }) => {
     await openRoom(page);
     await page.keyboard.press("j");

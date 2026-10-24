@@ -403,7 +403,7 @@
 {#if loaded && articles.length === 0}
   <p>{empty}</p>
 {:else if articles.length > 0}
-  <ul class="item-list -mr-6 -ml-8">
+  <ul class="item-list">
     {#each articles as article, index (article.id)}
       {@const current = index === selectedIndex}
       <li>
@@ -420,7 +420,7 @@
           }}
           onkeydown={arrows}
           class={[
-            "item-row place mx-2 block w-[calc(100%-1rem)] cursor-pointer pr-4 text-left",
+            "item-row place block cursor-pointer pr-4 text-left",
           ]}
         >
           <!-- Unread: an accent dot in the gutter beside the title, and a semibold title, so it shows without color. -->

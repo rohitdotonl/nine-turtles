@@ -4,6 +4,19 @@ A plain-language history of slowfeed, newest first. One short entry per
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 24 October 2026: One top line, one left edge, steady phone screens
+
+- On a computer, the three panes' top lines are now the same height, so
+  the sidebar button, the wordmark, the list's title and the article's
+  tools sit on one line, and the faint lines under them meet. A keyboard
+  ring on a toolbar button no longer touches the top of the window.
+- In the sidebar every name starts at one left edge, the find field's
+  icon lines up with the others, and a folder's feeds sit a step further
+  in. The place you're in also shows its icon in the accent.
+- On a phone the back button stays in the same place on every screen,
+  every screen keeps one 20px margin, and a folder row has one chevron:
+  its feeds are listed under it.
+
 ## 24 October 2026: Toward Apple Books, batch 3
 
 - The article's bars are solid in the page's color, so text no longer shows

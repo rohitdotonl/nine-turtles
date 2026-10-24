@@ -77,6 +77,9 @@ test("the sidebar lists Unread, Starred and All, with the accent marking where y
   // --tint-sidebar), 8px corners, 8px in from the pane's edge, and no bar.
   await expect(unread).toHaveCSS("background-color", "rgb(207, 206, 203)");
   await expect(unread).toHaveCSS("border-top-left-radius", "8px");
+  // As in a Mac source list, the place you're in has its icon in the accent, beside the pill and the semibold name (decision 0043).
+  await expect(unread.locator("svg")).toHaveCSS("color", "rgb(47, 74, 122)");
+  await expect(sidebar(page).getByRole("link", { name: "Starred" }).locator("svg")).not.toHaveCSS("color", "rgb(47, 74, 122)");
   expect(await unread.evaluate((element) => getComputedStyle(element, "::before").content)).toBe("none");
   const inset = await unread.evaluate((element) => element.getBoundingClientRect().left - element.closest("nav")!.getBoundingClientRect().left);
   expect(Math.abs(inset - 8)).toBeLessThan(1);

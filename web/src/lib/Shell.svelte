@@ -741,7 +741,7 @@
               per collection (decision 0038): Mark all as read, Refresh, the sort order, and Edit feed or
               Edit folder in a feed's or folder's own list (SPEC section 6).
             -->
-            <div class="flex min-h-11 items-center gap-4">
+            <div class="flex min-h-11 min-w-0 flex-1 items-center gap-4">
               <h2
                 id="list-heading"
                 tabindex="-1"
@@ -777,7 +777,7 @@
     sidebar shows. Each area's top line (the wordmark, the list's title, the article's tools) never
     scrolls, so nothing passes under it.
   -->
-  <div class={["fixed top-3 left-2 z-10", phone && "hidden"]}>
+  <div class={["fixed top-1.5 left-2 z-10", phone && "hidden"]}>
     <button
       type="button"
       bind:this={sidebarToggle}
@@ -786,7 +786,7 @@
       aria-controls="sidebar"
       title={panes.sidebar ? "Hide the sidebar ( [ )" : "Show the sidebar ( [ )"}
       onclick={toggleSidebar}
-      class="flex size-11 items-center justify-center rounded-md text-ink-2"
+      class="bar-button flex size-11 items-center justify-center rounded-md text-ink-2"
     >
       <Icon name="sidebar" size={20} />
     </button>
@@ -797,10 +797,14 @@
     aria-label="Sidebar"
     bind:this={sidebar}
     hidden={!panes.sidebar}
-    class={["flex-col bg-sidebar", phone ? "pt-2" : "pt-3", panes.list ? "w-64 shrink-0" : "min-w-0 flex-1", panes.sidebar && "flex"]}
+    class={["flex-col bg-sidebar", panes.list ? "w-64 shrink-0" : "min-w-0 flex-1", panes.sidebar && "flex"]}
   >
-    <div class="relative min-h-0 flex-1 overflow-y-auto pb-4">
-      <div class={["flex items-center gap-4 pr-4 pb-3", phone ? "min-h-12 pl-5" : "min-h-11 pl-14"]}>
+    <!--
+      The sidebar's top line (decision 0043): the wordmark, on the same line as the list's title and
+      the article's tools, in a band of the shared height. It never scrolls; the places below it do,
+      with a faint line under it once they have.
+    -->
+    <div class={["pane-bar gap-4 pr-4", phone ? "pl-5" : "pl-14"]}>
         <!-- A name, not a control: never a Tab stop; the keyboard lands here only when the screen opens (decision 0041). -->
         <h1 class={["wordmark mr-auto font-serif tracking-[-0.01em]", phone ? "text-xlarge" : "text-large text-ink-2"]} tabindex="-1" bind:this={wordmark}>slowfeed</h1>
         {#if phone}
@@ -810,14 +814,16 @@
           -->
           <button type="button" onclick={loadFeeds} aria-label="Refresh" title="Refresh" class="btn-quiet btn-icon -mr-2.5"><Icon name="refresh" size={20} /></button>
         {/if}
-      </div>
+    </div>
+    <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto pt-1 pb-4">
       <!--
         Always shown once there's a feed (DESIGN.md → Exceptions log): finds a feed or folder by name.
         With no feeds there's nothing to find, so the welcome has the screen to itself (decision 0041).
       -->
       {#if feeds === undefined || feeds.length > 0}
-      <div class="relative px-4 pb-4">
-        <span class="pointer-events-none absolute top-0 left-7 flex h-11 items-center text-muted"><Icon name="search" size={16} /></span>
+      <!-- On the rows' grid (decision 0043): its icon in the column of the places' icons, its words where their names start. -->
+      <div class="relative mx-2 pb-4">
+        <span class="pointer-events-none absolute top-0 left-3 flex h-11 items-center text-muted"><Icon name="search" size={16} /></span>
         <label for="sidebar-search" class="sr-only">Find a feed or folder</label>
         <input
           id="sidebar-search"
@@ -832,7 +838,7 @@
               search = "";
             }
           }}
-          class="field field-quiet field-find w-full rounded-lg pl-9"
+          class="field field-quiet field-find w-full rounded-lg pl-[38px]"
         />
       </div>
       {/if}
@@ -849,7 +855,7 @@
                 "place mx-2 flex min-h-11 pointer-fine:min-h-9 items-center gap-2.5 pr-3.5 pl-3 text-ui",
                 current ? "font-semibold text-ink" : "text-ink-2",
               ]}
-              ><span class={current ? "text-ink" : "text-muted"}><Icon name={VIEW_ICONS[view]} size={16} filled={view === "starred" && current} /></span
+              ><span class={current ? "text-accent" : "text-muted"}><Icon name={VIEW_ICONS[view]} size={16} filled={view === "starred" && current} /></span
               ><span class="min-w-0 flex-1">{VIEW_NAMES[view]}</span>{#if phone}<span class="-mr-1 shrink-0 text-muted"><Icon name="chevron-right" size={16} /></span>{/if}</a
             >
           </li>
@@ -872,7 +878,7 @@
       <a
         href="/add-feed"
         onclick={(event) => follow(event, { kind: "add-feed" })}
-        class="btn-quiet ml-1.5 min-w-0 flex-1 justify-start gap-2 pl-[14px] text-small text-ink-2"><Icon name="plus" size={16} />Add feed</a
+        class="btn-quiet ml-1.5 min-w-0 flex-1 justify-start gap-2.5 pl-[14px] text-small text-ink-2"><Icon name="plus" size={16} />Add feed</a
       >
       {#if !phone}
         <button type="button" onclick={() => (cheatSheetOpen = true)} aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)" class="btn-quiet btn-icon"
@@ -929,11 +935,11 @@
           />
         {/key}
       {:else if !sheet && route.kind === "add-feed"}
-        <section aria-labelledby="list-heading" class={["flex flex-1 flex-col bg-paper", phone ? "pt-2" : "pt-3"]}>
+        <section aria-labelledby="list-heading" class="flex flex-1 flex-col bg-paper">
           {#if phone}
-            <div class="flex px-4 pb-2">
-              <button type="button" onclick={() => stepBack("home")} aria-label="Back to Feeds" class="btn-quiet gap-1 px-2"
-                ><Icon name="back" size={20} />Feeds</button
+            <div class="pane-bar nav-bar">
+              <button type="button" onclick={() => stepBack("home")} aria-label="Back to Feeds" class="btn-quiet nav-back"
+                ><Icon name="back" size={22} />Feeds</button
               >
             </div>
           {/if}
@@ -959,20 +965,20 @@
           hidden={!panes.list}
           class={[
             // A container, so the list's title can step down a size when the pane is narrow (decision 0041).
-            "@container flex-col bg-list",
-            phone ? "pt-2" : "pt-3",
+            "list-pane @container flex-col bg-list",
+            phone && "phone",
             panes.article ? "w-80 shrink-0 xl:w-96 2xl:w-[26rem]" : "min-w-0 flex-1",
             panes.list && "flex",
           ]}
         >
           {#if phone}
             <!-- The phone's top bar (SPEC section 20): back to the feeds, then the screen's title with More beside it. It never scrolls. -->
-            <div class="pr-6 pb-2 pl-8">
-              <div class="-ml-4 flex items-center gap-4 pb-2">
-                <button type="button" onclick={() => stepBack("home")} aria-label="Back to Feeds" class="btn-quiet gap-1 px-2"
-                ><Icon name="back" size={20} />Feeds</button
+            <div class="pane-bar nav-bar">
+              <button type="button" onclick={() => stepBack("home")} aria-label="Back to Feeds" class="btn-quiet nav-back"
+                ><Icon name="back" size={22} />Feeds</button
               >
-              </div>
+            </div>
+            <div class="pr-[var(--list-end)] pb-2 pl-[var(--list-start)]">
               {@render listHead()}
             </div>
           {/if}
@@ -981,12 +987,12 @@
               The list's top line never scrolls; with the sidebar hidden it starts after the sidebar button.
               Its title starts 32px in, where the search field and every article title start (decision 0041).
             -->
-            <div class={["pr-6 pb-2", panes.sidebar ? "pl-8" : "pl-16"]}>
+            <div class={["pane-bar pr-[var(--list-end)]", panes.sidebar ? "pl-[var(--list-start)]" : "pl-16"]}>
               {@render listHead()}
             </div>
           {/if}
           <!-- A column, so the floating note can sit at the pane's foot even under a short list. -->
-          <div use:edge class="scroller relative flex min-h-0 flex-1 scroll-pb-20 flex-col overflow-y-auto pt-1 pr-6 pb-6 pl-8">
+          <div use:edge class="scroller relative flex min-h-0 flex-1 scroll-pb-20 flex-col overflow-y-auto pt-2 pr-[var(--list-end)] pb-6 pl-[var(--list-start)]">
             {#if feeds && feeds.length > 0 && !missing}
               <SearchBar bind:this={searchBar} {query} {feeds} {folders} here={scopeFor(under)} onChange={searchChanged} />
             {/if}
