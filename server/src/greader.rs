@@ -748,8 +748,8 @@ async fn edit_tag(_: App, State(state): State<AppState>, params: Params) -> Resp
         return StatusCode::PAYLOAD_TOO_LARGE.into_response();
     }
     let mut changes: Vec<(&'static str, bool)> = Vec::new();
-    const READ_SQL: &str =
-        "UPDATE articles SET read = ? WHERE id IN (SELECT value FROM json_each(?))";
+    // Marked unread, a muted article is unmuted too, as on nine turtles' own screen.
+    const READ_SQL: &str = "UPDATE articles SET read = ?1, muted = muted * ?1 WHERE id IN (SELECT value FROM json_each(?2))";
     const STAR_SQL: &str =
         "UPDATE articles SET starred = ? WHERE id IN (SELECT value FROM json_each(?))";
     for (tags, adding) in [(params.all("a"), true), (params.all("r"), false)] {

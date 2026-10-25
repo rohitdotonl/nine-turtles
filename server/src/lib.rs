@@ -5,7 +5,7 @@
 //! the shared settings, checking feeds in the background (`checking`),
 //! folders and unsubscribing (`folders`), OPML files (`subscriptions`),
 //! instant updates from WebSub hubs (`websub`), and syncing with other feed
-//! readers (`apps`, `greader`).
+//! readers (`apps`, `greader`), and the reader's rules and mutes (`rules`).
 //! The frontend is packed into this program (see `assets`).
 
 pub mod apps;
@@ -24,6 +24,7 @@ pub mod health;
 pub mod log;
 pub mod marks;
 pub mod password;
+pub mod rules;
 pub mod search;
 pub mod security;
 pub mod settings;
@@ -112,6 +113,7 @@ pub fn router(state: AppState) -> Router {
         .merge(health::routes())
         .merge(subscriptions::routes())
         .merge(marks::routes())
+        .merge(rules::routes())
         .merge(search::routes())
         .merge(settings::routes())
         .merge(starred::routes())

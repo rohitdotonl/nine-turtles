@@ -24,7 +24,7 @@ use sqlx::SqliteConnection;
 use crate::{
     AppState,
     auth::{SignedIn, database_problem},
-    now,
+    now, rules,
 };
 
 /// How long Undo can bring an unsubscribed feed back, in seconds. The screen
@@ -255,6 +255,8 @@ pub async fn clear(connection: &mut SqliteConnection, id: i64) -> Result<bool, s
         .bind(id)
         .execute(&mut *connection)
         .await?;
+    // Rules for it stay, paused and saying so (SPEC section 27).
+    rules::place_gone(connection, Some(id), None).await?;
     // Its hub's deliveries now find no address and are refused; the hub
     // stops when its lease ends.
     sqlx::query("DELETE FROM websub WHERE feed_id = ?")
@@ -365,10 +367,18 @@ async fn delete_folder(
     State(state): State<AppState>,
     Path(id): Path<i64>,
 ) -> Response {
-    let deleted = sqlx::query("DELETE FROM folders WHERE id = ?")
-        .bind(id)
-        .execute(&state.db)
-        .await;
+    let deleted: Result<sqlx::sqlite::SqliteQueryResult, sqlx::Error> = async {
+        let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
+        let deleted = sqlx::query("DELETE FROM folders WHERE id = ?")
+            .bind(id)
+            .execute(&mut *transaction)
+            .await?;
+        // Rules for it stay, paused and saying so (SPEC section 27).
+        rules::place_gone(&mut transaction, None, Some(id)).await?;
+        transaction.commit().await?;
+        Ok(deleted)
+    }
+    .await;
     match deleted {
         Ok(deleted) if deleted.rows_affected() == 0 => StatusCode::NOT_FOUND.into_response(),
         Ok(_) => StatusCode::NO_CONTENT.into_response(),

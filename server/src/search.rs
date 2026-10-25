@@ -420,7 +420,7 @@ pub async fn find(
     // outer one then fetches what the list shows for just those 51.
     let mut query: QueryBuilder<Sqlite> = QueryBuilder::new(
         "SELECT articles.id, articles.feed_id, feeds.title AS feed_title, articles.title,
-                articles.link, articles.sort_at AS at, articles.read, articles.starred, page.in_title,
+                articles.link, articles.sort_at AS at, articles.read, articles.starred, articles.muted, page.in_title,
                 articles.content, articles.summary
          FROM (SELECT * FROM (SELECT articles.id, articles.sort_at AS at, ",
     );
