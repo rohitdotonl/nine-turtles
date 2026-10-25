@@ -173,7 +173,7 @@ test("? opens the shortcut list, Escape closes it and returns the keyboard's pla
   await expect(dialog.getByText("Next / previous feed")).toHaveCount(0);
   await expect(dialog.getByText("is:unread")).toBeVisible();
 
-  // Shortcuts don't fire behind the open list: a key typed there finds itself in the list instead (decision 0061).
+  // Shortcuts don't fire behind the open list: a key typed there finds itself in the list instead (decision 0062).
   await page.keyboard.press("[");
   if (sidebarShown) await expect(sidebar(page)).toBeVisible();
   else await expect(sidebar(page)).toBeHidden();
@@ -202,7 +202,7 @@ test("the shortcut list fits a small phone without scrolling sideways", async ({
   expect(box.width).toBe(320);
   expect(box.height).toBe(640);
   await expect(dialog).toHaveCSS("border-top-left-radius", "0px");
-  // The find field takes a line of its own under the title and the X, the screen's full width less its margins (decision 0061).
+  // The find field takes a line of its own under the title and the X, the screen's full width less its margins (decision 0062).
   const [heading, field, close] = await Promise.all([
     dialog.getByRole("heading", { name: "Keyboard shortcuts" }).boundingBox(),
     dialog.getByRole("searchbox", { name: "Find a shortcut" }).boundingBox(),
@@ -477,7 +477,7 @@ test("the chrome never advertises shortcuts: no hint under the list, with the si
   await expect(page.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeVisible();
 });
 
-test("the shortcut list finds a shortcut by its words or its key, and a letter typed anywhere in it starts the find (decision 0061)", async ({ page, isMobile }) => {
+test("the shortcut list finds a shortcut by its words or its key, and a letter typed anywhere in it starts the find (decision 0062)", async ({ page, isMobile }) => {
   test.skip(isMobile, "Shortcuts are for screens with a keyboard.");
   await page.setViewportSize({ width: 1280, height: 800 });
   await openApp(page);
@@ -537,7 +537,7 @@ test("the sidebar ends with Add feed, then Shortcuts in words and Settings as an
     expect(Math.min(each.width, each.height)).toBeGreaterThanOrEqual(44);
   }
   expect(add.x + add.width).toBeLessThanOrEqual(k.x + 1);
-  // Shortcuts says what it is in words, and Add feed's words still show whole (decision 0061).
+  // Shortcuts says what it is in words, and Add feed's words still show whole (decision 0062).
   await expect(keys).toContainText("Shortcuts");
   for (const each of [sidebar(page).getByRole("link", { name: "Add feed" }), keys]) {
     expect(await each.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);

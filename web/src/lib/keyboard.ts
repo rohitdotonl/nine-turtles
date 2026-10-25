@@ -1,4 +1,4 @@
-// The keyboard shortcuts (DESIGN.md → "Keyboard", SPEC section 19). This file
+// The keyboard shortcuts (SPEC.md section 19). This file
 // only decides what a key press means; the screens carry it out.
 import type { View } from "./router";
 
@@ -121,7 +121,7 @@ function isTyping(target: EventTarget | null): boolean {
 }
 
 /**
- * The cheat sheet's groups, by what you're doing at the time (decision 0061):
+ * The cheat sheet's groups, by what you're doing at the time (decision 0062):
  * reading comes first, as it's what nine turtles is for.
  */
 export const SHORTCUT_GROUPS = ["Reading", "Getting around", "Tidying up", "Anywhere"] as const;

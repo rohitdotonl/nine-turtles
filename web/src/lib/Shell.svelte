@@ -128,7 +128,7 @@
   }
 
   /**
-   * The one-time tip in the empty reading area (decision 0061): shown until
+   * The one-time tip in the empty reading area (decision 0062): shown until
    * you first open an article, by any means, or the shortcut list, then
    * never again on this device.
    */
@@ -1025,7 +1025,7 @@
     <!--
       Always at the very bottom, outside the scrolling list, so it never moves:
       Add feed in words, then Shortcuts in words too (so it says what it is;
-      decision 0061), then Settings as an icon, the way a Mac app keeps its
+      decision 0062), then Settings as an icon, the way a Mac app keeps its
       tools at the foot of the sidebar. In a sidebar narrowed below 15rem,
       where the two words can't both fit, Shortcuts becomes its keyboard icon.
     -->
@@ -1289,7 +1289,7 @@
                   {:else}
                     <!--
                       Once, on a screen with a keyboard: the two keys worth knowing first, quietly, under the
-                      line (decision 0061). Touch screens hear and see only "Choose one from the list."
+                      line (decision 0062). Touch screens hear and see only "Choose one from the list."
                     -->
                     <p class="shortcut-tip keyboard-hint absolute top-full left-1/2 w-[min(28rem,80vw)] -translate-x-1/2">
                       Press <kbd class="key">J</kbd> to open the first article, or <kbd class="key">?</kbd> for every shortcut.

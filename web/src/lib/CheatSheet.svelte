@@ -38,7 +38,7 @@
     ["Tidying up", "Anywhere"],
   ];
 
-  /** What's typed in the find field: the list shows only the shortcuts that fit it (decision 0061). */
+  /** What's typed in the find field: the list shows only the shortcuts that fit it (decision 0062). */
   let find = $state("");
   let field: HTMLInputElement | undefined = $state();
   const wanted = $derived(find.trim().toLowerCase());
@@ -103,7 +103,7 @@
   <div class="shortcuts-body flex flex-col pb-4">
     <!--
       The title, a find field and the close button in one line on a wide screen; on a narrow one
-      the field takes a line of its own under them (decision 0061).
+      the field takes a line of its own under them (decision 0062).
     -->
     <div class={["shortcuts-head grid shrink-0 items-center gap-x-4 border-b pr-4 pl-6", scrolled ? "border-ink/10" : "border-transparent"]}>
       <h2 id="shortcuts-heading" tabindex="-1" bind:this={heading} class="sheet-title [grid-area:title]">Keyboard shortcuts</h2>

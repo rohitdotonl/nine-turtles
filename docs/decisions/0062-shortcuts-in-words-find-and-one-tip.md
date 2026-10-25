@@ -1,4 +1,4 @@
-# 0061: Shortcuts in words, a list you can search, and one welcome tip
+# 0062: Shortcuts in words, a list you can search, and one welcome tip
 
 *25 October 2026. The owner asked for these after a fresh-eyes review: "A
 label, not just an icon", grouping, a welcome tip and searching the list.

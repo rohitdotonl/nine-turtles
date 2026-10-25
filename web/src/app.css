@@ -512,7 +512,7 @@ textarea {
   /*
     Anything that floats over the page (a sheet, the search options, the
     shortcut list) is one family: the same 12px corners, faint edge and soft
-    shadow (DESIGN.md → Exceptions log). Nothing that sits in the page casts one.
+    shadow (DESIGN.md → Visual language). Nothing that sits in the page casts one.
   */
   .floating {
     border: 1px solid var(--raised-edge, color-mix(in oklab, var(--ink) 12%, transparent));
@@ -1366,7 +1366,7 @@ input {
 }
 
 /*
-  The one-time tip under it (decision 0061): small interface type in the
+  The one-time tip under it (decision 0062): small interface type in the
   same muted grey, 12px below, with the keys as key caps. Never the accent.
   It hangs below the line, so the line stays in the pane's middle.
 */
@@ -1447,7 +1447,7 @@ input {
 }
 
 /*
-  The dim behind a sheet or the shortcut list (DESIGN.md → Exceptions log):
+  The dim behind a sheet or the shortcut list (DESIGN.md → Visual language):
   a light veil, so the page behind stays warm and readable; deeper in the
   dark themes, which set --scrim.
 */

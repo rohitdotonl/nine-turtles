@@ -66,7 +66,7 @@ test.describe("on a wide window", () => {
     const [line, pane] = await Promise.all([empty.boundingBox(), article(page).boundingBox()]);
     expect(Math.abs(line!.x + line!.width / 2 - (pane!.x + pane!.width / 2))).toBeLessThan(4);
     expect(Math.abs(line!.y + line!.height / 2 - (pane!.y + pane!.height / 2))).toBeLessThan(4);
-    // The first time, a quiet tip under it names the two keys worth knowing first (decision 0061),
+    // The first time, a quiet tip under it names the two keys worth knowing first (decision 0062),
     // small, in the same muted grey, its keys as key caps.
     const tip = article(page).locator(".shortcut-tip");
     await expect(tip).toBeVisible();
@@ -649,7 +649,7 @@ test("on a phone, an article fills the screen and the back button returns to the
   await expect(article(page)).toBeHidden();
 });
 
-test("the shortcut tip shows only until an article is first opened, then never again on this device (decision 0061)", async ({ page, isMobile }) => {
+test("the shortcut tip shows only until an article is first opened, then never again on this device (decision 0062)", async ({ page, isMobile }) => {
   test.skip(isMobile, "the tip names keys, so it's for screens with a keyboard");
   await openRoom(page);
   const tip = article(page).locator(".shortcut-tip");
