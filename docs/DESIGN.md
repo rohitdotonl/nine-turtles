@@ -18,7 +18,7 @@ Help people leave social media and return to reading the open web. Social media 
 - **A read-later app:** it doesn't save arbitrary web pages.
 - **A discovery engine:** no recommendations, trending or "you might like." You choose your sources.
 - **A social network:** no profiles, followers, likes or comments.
-- **A podcast player:** audio appears as a link to the original. (YouTube plays in YouTube's own player in V2.)
+- **A podcast player:** audio appears as a link to the original. (YouTube videos play in YouTube's own player, since 25 October 2026.)
 - **A newsletter inbox:** no email address that turns newsletters into feeds.
 - **A web scraper:** it shows what publishers put in their feeds (second floor).
 - **A permanent archive:** unstarred articles are kept for one year (the clean-up comes in V2; V1 keeps everything).
@@ -59,9 +59,9 @@ Publishers are the reason there's anything to read.
 
 - **Show what the publisher put in the feed.** Never scrape the full article. A summary-only feed shows the summary and "Open original."
 - **Always credit the source** and link to the original.
-- **Fetch politely:** on each feed's own rhythm, with ETag / Last-Modified (WebSub in V2).
+- **Fetch politely:** on each feed's own rhythm, with ETag / Last-Modified (and WebSub, since 25 October 2026).
 - **Shared links go to the publisher,** never to nine turtles.
-- **Embedded media plays in the publisher's own player** (e.g. YouTube's, V2), so views stay theirs.
+- **Embedded media plays in the publisher's own player** (e.g. YouTube's), so views stay theirs.
 
 **Test:** would a publisher be glad their feed is read in nine turtles?
 
@@ -74,7 +74,7 @@ The article is the product; everything else is a way to reach it.
 
 #### 2. Calm over engagement
 nine turtles never tries to bring you back or keep you longer. It succeeds when you've read what you wanted and closed it.
-- *Explains:* no notifications, river mode (V2), no count of new items, no pull-to-refresh, the view waiting for you, "Show older items" instead of infinite scroll.
+- *Explains:* no notifications, river mode, no count of new items, no pull-to-refresh, the view waiting for you, "Show older items" instead of infinite scroll.
 - **Test:** would a social media company want this? If yes, be suspicious.
 
 #### 3. Clear at a glance
@@ -96,7 +96,7 @@ Layout, positions and content change only through the user's action.
 
 #### 6. Power is hidden, never missing
 The 500-feed user gets everything; the 30-feed user never sees the machinery.
-- *Explains:* vim keys, search filter syntax, multi-folder feeds, the search options panel, the feed health page (V2), progressive disclosure in the sidebar.
+- *Explains:* vim keys, search filter syntax, multi-folder feeds, the search options panel, the feed health page, progressive disclosure in the sidebar.
 - **Test:** does a beginner have to see this? If not, hide it until needed.
 
 #### 7. Respect: for the reader and for time
