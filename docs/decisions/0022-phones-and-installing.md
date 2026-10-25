@@ -41,6 +41,6 @@ the kept page.
 and Cancel or Save on the edit pages go back one step on a phone, like the
 back arrow, so the system back gesture never reopens them.
 
-**The icon.** A lowercase "s" in Literata, text color on off-white: the
+**The icon.** (Replaced by the turtle logo, decision 0067.) A lowercase "s" in Literata, text color on off-white: the
 wordmark's first letter, no logo shape (DESIGN.md → "Name and signature").
 Easy to change: three PNG files in `web/public/icons/`.

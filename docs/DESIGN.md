@@ -2,7 +2,7 @@
 
 > **nine turtles is a quiet place to read the web: it shows you what's there, gets out of the way, and lets you finish.**
 
-*Last updated: 25 October 2026 (a second theme, Plain, with blue article links, and System serif, decision 0063; Apple Books as the design reference, decision 0059). Each change is recorded in `docs/decisions/`.*
+*Last updated: 25 October 2026 (a logo of nine turtles, decision 0067; a second theme, Plain, with blue article links, and System serif, decision 0063; Apple Books as the design reference, decision 0059). Each change is recorded in `docs/decisions/`.*
 
 ## Mission
 
@@ -153,7 +153,8 @@ The philosophy applied. The principle is noted where it isn't obvious.
 ### Name and signature
 
 - **Name:** nine turtles, at nineturtles.app (decision 0066; app store and trademark checks are under "Still to define").
-- **Wordmark:** "nine turtles" in lowercase, in the reading serif. No logo shape, no mascot.
+- **Wordmark:** "nine turtles" in lowercase, in the reading serif.
+- **Logo** (decision 0067): nine small turtles seen from the side, a half-circle shell and a round head each, in three rows of three, the middle row a little to the right so the rows never read as a menu's stripes. One ink, no color: the text color on the page (dark on white, light on near-black). It is the app icon and the browser-tab icon (the app's and the website's); inside the app the wordmark stays words. Its drawings are in `docs/logo/`.
 - **Signature:** the accent (ink blue), quietly marking where you are, and the calm itself.
 
 ### Visual language
