@@ -234,6 +234,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Object storage
 - Restore and recovery
 - Request signing (AWS Signature Version 4)
+- Merchant of record (Dodo Payments)
 
 ## Design and accessibility
 

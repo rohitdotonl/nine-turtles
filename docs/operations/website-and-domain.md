@@ -131,13 +131,14 @@ from hello@ too, that needs an email service, which is still to be chosen
 
 Every page is a plain text file in `website/src/`: the home page
 (`index.md`), the tour, "New to feeds?", questions (`faq.md`), about,
-contact, accessibility, privacy and terms, and the blog's posts in
+contact, accessibility, privacy, terms, pricing and refunds, and the blog's posts in
 `website/src/blog/`, one file each. The contact address, the app's address
 and the code's address are written once, in `website/src/_data/site.json`.
 The pictures of the app in `website/src/images/` were taken from the app's
 own screenshot set, which follows only made-up blogs; take new ones when
-the app's look changes. The privacy policy and terms are drafts until the
-open question in `docs/planning/questions.md` is settled.
+the app's look changes. The privacy policy, terms, pricing and refunds pages are drafts until the
+open question in `docs/planning/questions.md` is settled; Dodo Payments
+checks all of them, with contact, before approving payments (decision 0086).
 
 ## How changes go live
 

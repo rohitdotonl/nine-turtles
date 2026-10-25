@@ -4,7 +4,7 @@ title: Terms of use
 description: The rules for using nine turtles, written in plain words.
 permalink: /terms/
 updated: 2026-10-25
-draft: These terms will be finished, and checked by someone qualified, before anyone can sign up or pay for nine turtles. Prices, payments and the law that applies are "to be decided" until the payment company and the business details are settled.
+draft: These terms will be finished, and checked by someone qualified, before anyone can sign up or pay for nine turtles. Prices and the law that applies are "to be decided" until the prices and the business details are settled.
 ---
 
 <p class="lede">
@@ -55,9 +55,14 @@ it. How we look after it is in the [privacy policy](/privacy/).
 
 ## Paying
 
-Prices, trials, renewals, refunds and cancelling will be written here
-before payments open (to be decided). You'll always be able to cancel
-yourself, without having to ask.
+Prices are on the [pricing](/pricing/) page (to be decided). Payments are
+handled by Dodo Payments, which sells nine turtles on our behalf as its
+merchant of record: it takes the payment, handles sales tax and sends your
+receipt, and its own [buyer terms](https://dodopayments.com/legal/buyer-terms)
+also apply to the payment. Plans renew automatically until you cancel.
+You'll always be able to cancel yourself, without having to ask; how
+cancelling and refunds work is on the [refunds and cancelling](/refunds/)
+page.
 
 ## If things go wrong
 
