@@ -13,8 +13,8 @@ code=true
 if [ "$1" = pull_request ]; then
   # On a pull request the checkout is GitHub's trial merge, so its first
   # parent is main and the difference is the pull request.
-  git diff --name-only HEAD^1 HEAD >&2
-  others=$(git diff --name-only HEAD^1 HEAD \
+  git diff --no-renames --name-only HEAD^1 HEAD >&2
+  others=$(git diff --no-renames --name-only HEAD^1 HEAD \
     | awk '$0 == "docs/libraries.md" || !/^(docs\/.*|[^\/]*)\.md$/')
   if [ -z "$others" ]; then
     code=false

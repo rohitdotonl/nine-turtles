@@ -25,7 +25,7 @@ In development. V1 is being built in small milestones; see
 - [`docs/owner-guide.md`](docs/owner-guide.md): a plain-language guide to how it's built
 - [`docs/concepts.md`](docs/concepts.md): the concepts nine turtles is built with, as a list to learn from
 - [`AGENTS.md`](AGENTS.md): instructions for the AI agents that build nine turtles
-- [`docs/CHANGELOG.md`](docs/CHANGELOG.md): what's changed, in plain language
+- [`docs/CHANGELOG.md`](docs/CHANGELOG.md): what's changed, in plain language (the newest entries may still be waiting in [`docs/changes/`](docs/changes/))
 
 ## Licence
 

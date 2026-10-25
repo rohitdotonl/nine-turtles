@@ -11,7 +11,8 @@ The script stops at the first failure and says which step failed.
 On GitHub the script runs in four parts at once, each on its own computer
 (decision 0064): `scripts/check.sh frontend` (the first six steps below),
 `scripts/check.sh rust` (formatting, lint, tests), and `scripts/check.sh
-browser` twice, each half of the browser tests (`NINE_TURTLES_SHARD=1/2` and
+browser` (builds the frontend and the release program, then runs the browser
+tests) twice, each with half of the browser tests (`NINE_TURTLES_SHARD=1/2` and
 `2/2`). The required **All checks** waits for all four and passes only if
 every one passed. Each part is still a plain script anyone can run; no
 arguments runs everything in order, as before.

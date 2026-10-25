@@ -28,6 +28,7 @@ build_frontend() {
 
   step "Frontend: build"
   (cd web && npm run build)
+  frontend_built=yes
 }
 
 frontend() {
@@ -64,8 +65,10 @@ rust() {
 }
 
 browser() {
-  # The release program packs web/dist inside it, so build the frontend first.
-  if [ ! -f web/dist/index.html ]; then build_frontend; fi
+  # The release program packs web/dist inside it, so build the frontend first,
+  # fresh, or the browser tests could pass against an old one. (Running
+  # everything, the frontend part has just built it.)
+  if [ "${frontend_built:-}" != yes ]; then build_frontend; fi
 
   step "Build the nine turtles program"
   (cd server && cargo build --locked --release)

@@ -79,7 +79,6 @@ jobs:
           key: rust-test-${{ runner.os }}-${{ hashFiles('rust-toolchain.toml', 'server/Cargo.lock') }}
           restore-keys: |
             rust-test-${{ runner.os }}-
-            rust-${{ runner.os }}-
 
       - name: Run the Rust checks
         run: scripts/check.sh rust
@@ -114,7 +113,6 @@ jobs:
           key: rust-release-${{ runner.os }}-${{ hashFiles('rust-toolchain.toml', 'server/Cargo.lock') }}
           restore-keys: |
             rust-release-${{ runner.os }}-
-            rust-${{ runner.os }}-
 
       - name: Install the browser used by the tests
         working-directory: web
