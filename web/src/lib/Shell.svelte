@@ -5,7 +5,8 @@
   until Escape), and the reading area, side by side as the window's width allows, with
   adding a feed, editing feeds and folders, Settings and the `?` shortcut
   list. An article shown in the reading area counts as read. Nothing in it
-  moves unless the reader moves it.
+  moves unless the reader moves it. In river mode (SPEC section 10) there's
+  no Unread view, no counts and no "Mark all as read"; it opens on All.
 -->
 <script lang="ts">
   import { edge } from "./edge";
@@ -28,10 +29,13 @@
   import {
     createFolder,
     deleteFolder,
+    homeView,
+    lastMode,
     listFeeds,
-    loadSort,
+    loadSettings,
     refused,
     resubscribe,
+    saveMode,
     saveSort,
     unsubscribe,
     type Article,
@@ -39,6 +43,7 @@
     type Folder,
     type Notice,
     type Order,
+    type ReadingMode,
     type Source,
   } from "./feeds";
   import { createKeyReader } from "./keyboard";
@@ -54,10 +59,35 @@
   /** A small sign beside each view's name in the sidebar. */
   const VIEW_ICONS = { unread: "dot", starred: "star", all: "stack" } as const;
 
-  const start = parse(location.pathname);
+  /** Inbox or river, shared across the reader's devices; this device's last word until the server answers. */
+  let mode: ReadingMode = $state(lastMode());
+  let river = $derived(mode === "river");
+  /** Where the app opens: Unread in inbox mode, All in river mode. */
+  let home: Route = $derived({ kind: "view", view: homeView(mode) });
+  const asked = parse(location.pathname);
+  /** The address was "/", Unread or unknown: the app's home, which depends on the mode. */
+  const openedHome = asked.kind === "view" && asked.view === "unread";
+  const start = homeFor(asked, untrack(() => mode));
   let route: Route = $state(start);
   /** Where Escape and "Close settings" go back to: the last list you were on. */
-  let lastPlace: Route = $state(isList(start) ? start : { kind: "view", view: "unread" });
+  let lastPlace: Route = $state(isList(start) ? start : { kind: "view", view: homeView(untrack(() => mode)) });
+
+  /** River mode has no Unread view: its address (and "/") leads to All. */
+  function homeFor(place: Route, current: ReadingMode): Route {
+    return current === "river" && place.kind === "view" && place.view === "unread" ? { kind: "view", view: "all" } : place;
+  }
+
+  // Switching to river mode (here, or on another device before this one
+  // heard) while on Unread moves you to All, in place: no new history step.
+  $effect(() => {
+    const next = homeFor(route, mode);
+    if (next === route) return;
+    untrack(() => {
+      route = next;
+      if (isList(lastPlace)) lastPlace = homeFor(lastPlace, mode);
+      history.replaceState(history.state, "", pathFor(next));
+    });
+  });
   /** The feeds you follow and your folders, alphabetically; unknown until the server answers. */
   let feeds: Feed[] | undefined = $state();
   let folders: Folder[] = $state([]);
@@ -199,7 +229,7 @@
       ? { feed: under.id }
       : under.kind === "folder"
         ? { folder: under.id }
-        : { view: under.kind === "view" ? under.view : "unread" },
+        : { view: under.kind === "view" ? under.view : homeView(mode) },
   );
   /** The list's identity: a new one is loaded when it changes. */
   let listKey = $derived(`${pathFor(under)} ${sort} ${shown ? JSON.stringify(searchParams(shown)) : ""}`);
@@ -325,6 +355,17 @@
     if (feed) feed.unread = Math.max(0, feed.unread + change);
   }
 
+  async function changeMode(next: ReadingMode) {
+    const before = mode;
+    mode = next;
+    try {
+      await saveMode(next);
+    } catch {
+      mode = before;
+      throw new Error("not saved");
+    }
+  }
+
   async function changeSort(next: Order) {
     const before = sort;
     sort = next;
@@ -347,7 +388,9 @@
     const groups: MenuGroup[] = [
       {
         items: [
-          { label: "Mark all as read", shortcut: phone ? undefined : "Shift+A", onSelect: () => itemList?.markAllRead() },
+          ...(river
+            ? []
+            : [{ label: "Mark all as read", shortcut: phone ? undefined : "Shift+A", onSelect: () => itemList?.markAllRead() }]),
           ...(shown ? [] : [{ label: "Refresh", shortcut: phone ? undefined : "r", onSelect: () => itemList?.refresh() }]),
         ],
       },
@@ -385,7 +428,7 @@
   }
 
   onMount(() => {
-    // "/" and unknown addresses open Unread; the address bar says so.
+    // "/" and unknown addresses open Unread (All in river mode); the address bar says so.
     history.replaceState(firstStep, "", pathFor(route));
 
     const queries = [WIDE_REM, MEDIUM_REM].map((rem) => matchMedia(`(min-width: ${rem}rem)`));
@@ -442,7 +485,8 @@
           toggleBoth();
           break;
         case "go":
-          go({ kind: "view", view: action.view });
+          // g u does nothing in river mode: there's no Unread view.
+          if (!(river && action.view === "unread")) go({ kind: "view", view: action.view });
           break;
         case "search":
           startSearch();
@@ -469,7 +513,7 @@
           if (selected && isList(route)) itemList?.markUnread();
           break;
         case "mark-all-read":
-          if (isList(route) && (panes.list || panes.article || reading)) itemList?.markAllRead();
+          if (!river && isList(route) && (panes.list || panes.article || reading)) itemList?.markAllRead();
           break;
         case "undo":
           if (isList(route)) itemList?.undo();
@@ -491,7 +535,17 @@
     // (and a screen reader) to the top of the new screen.
     (panes.sidebar ? wordmark : placeFocus(route))?.focus();
     loadFeeds();
-    loadSort().then((order) => (sort = order));
+    loadSettings().then((settings) => {
+      mode = settings.mode;
+      sort = settings.sort;
+      // This device last saw river mode, but it's inbox now (changed on
+      // another device): an untouched home opens on Unread after all.
+      if (openedHome && pathFor(route) === pathFor(start) && mode === "inbox" && !(route.kind === "view" && route.view === "unread")) {
+        route = { kind: "view", view: "unread" };
+        lastPlace = route;
+        history.replaceState(history.state, "", pathFor(route));
+      }
+    });
 
     return () => {
       queries.forEach((query) => query.removeEventListener("change", resized));
@@ -623,13 +677,13 @@
     else if (route.kind === "edit-folder") go({ kind: "folder", id: route.id });
   }
 
-  /** Unsubscribes, then shows Unread with "Unsubscribed from … · Undo". */
+  /** Unsubscribes, then shows Unread (All in river mode) with "Unsubscribed from … · Undo". */
   async function unsubscribeFrom(feed: Feed): Promise<string | undefined> {
     const refusal = await unsubscribe(feed.id);
     if (refusal) return refused(refusal, "feed");
     await loadFeeds();
     go(
-      { kind: "view", view: "unread" },
+      home,
       {
         message: `Unsubscribed from ${feed.title}`,
         undo: async () => {
@@ -643,14 +697,14 @@
     return undefined;
   }
 
-  /** Deletes a folder (never its feeds), then shows Unread with "Deleted … · Undo". */
+  /** Deletes a folder (never its feeds), then shows Unread (All in river mode) with "Deleted … · Undo". */
   async function deleteThis(folder: Folder): Promise<string | undefined> {
     const inside = (feeds ?? []).filter((feed) => feed.folders.includes(folder.id)).map((feed) => feed.id);
     const refusal = await deleteFolder(folder.id);
     if (refusal) return refused(refusal, "folder");
     await loadFeeds();
     go(
-      { kind: "view", view: "unread" },
+      home,
       {
         message: `Deleted the folder ${folder.name}`,
         undo: async () => {
@@ -1016,7 +1070,7 @@
       </div>
       {/if}
       <ul>
-        {#each VIEWS as view (view)}
+        {#each VIEWS.filter((view) => !(river && view === "unread")) as view (view)}
           {@const current = !phone && route.kind === "view" && route.view === view}
           <!-- On a phone the feeds screen is the root of a stack: nothing is selected there, and each row leads on with a chevron (decision 0041). -->
           <li>
@@ -1035,7 +1089,7 @@
         {/each}
       </ul>
       {#if feeds}
-        <SidebarFeeds {feeds} {folders} {route} {search} {follow} {phone} />
+        <SidebarFeeds {feeds} {folders} {route} {search} {follow} {phone} {river} />
       {/if}
       {#if feedsProblem}
         <p class="px-4 pt-4 text-small">Your feeds couldn't be loaded. Reload the page to try again.</p>
@@ -1096,6 +1150,8 @@
           bind:preferences
           {sort}
           onSort={changeSort}
+          {mode}
+          onMode={changeMode}
           bind:heading={settingsHeading}
           bind:dataHeading
           {version}
@@ -1229,7 +1285,7 @@
           <!-- A column, so the floating note can sit at the pane's foot even under a short list. -->
           <div use:edge class="scroller relative flex min-h-0 flex-1 scroll-pb-20 flex-col overflow-y-auto pt-2 pr-[var(--list-end)] pb-6 pl-[var(--list-start)]">
             {#if feeds && feeds.length > 0 && !missing && (!phone || phoneSearch || shown || isSearching(query))}
-              <SearchBar bind:this={searchBar} {query} {feeds} {folders} here={scopeFor(under)} found={listFound} onChange={searchChanged} />
+              <SearchBar bind:this={searchBar} {query} {feeds} {folders} here={scopeFor(under)} found={listFound} {river} onChange={searchChanged} />
             {/if}
             {#if missing && (under.kind === "folder" || under.kind === "edit-folder")}
               <p class="mt-4">There's no folder here. It may have been deleted or renamed.</p>
@@ -1262,6 +1318,7 @@
                   onRefresh={loadFeeds}
                   results={shown !== undefined}
                   oneFeed={under.kind === "feed" && !shown}
+                  {river}
                   bind:count={listCount}
                   bind:found={listFound}
                 />
@@ -1329,7 +1386,7 @@
   {/if}
 </main>
 
-<CheatSheet bind:open={cheatSheetOpen} />
+<CheatSheet bind:open={cheatSheetOpen} {river} />
 
 {#if sheet && route.kind === "add-feed"}
   <Sheet title="Add a feed" bind:heading={sheetHeading} onClose={closePage} initial={() => addField}>

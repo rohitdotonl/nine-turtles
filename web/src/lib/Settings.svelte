@@ -5,7 +5,7 @@
   control on the right, every control the same width (decision 0039). It
   fills the list and reading areas while the sidebar stays, so the reader
   never loses their place. "Close settings" or
-  Escape goes back. Reading (the sort order) is shared across the reader's
+  Escape goes back. Reading (the reading mode and the sort order) is shared across the reader's
   devices; the reader controls belong to this device. Your data imports and
   exports the reader's feeds and folders as an OPML file, and exports their
   starred articles as a JSON Feed file.
@@ -17,7 +17,7 @@
   import PageHead from "./PageHead.svelte";
   import TextSize from "./TextSize.svelte";
   import { APPEARANCES, LOOKS, THEMES } from "./themes";
-  import type { Order } from "./feeds";
+  import type { Order, ReadingMode } from "./feeds";
   import { LINE_WIDTHS, READING_FONTS, type Preferences } from "./preferences";
   import { signOut } from "./session";
   import { updates } from "./updates.svelte";
@@ -26,6 +26,8 @@
     preferences = $bindable(),
     sort,
     onSort,
+    mode,
+    onMode,
     heading = $bindable(),
     dataHeading = $bindable(),
     version,
@@ -40,6 +42,10 @@
     sort: Order | undefined;
     /** Saves a new sort order; fails if it couldn't be saved. */
     onSort: (sort: Order) => Promise<void>;
+    /** Inbox or river (SPEC section 10). */
+    mode: ReadingMode;
+    /** Saves a new reading mode; fails if it couldn't be saved. */
+    onMode: (mode: ReadingMode) => Promise<void>;
     heading?: HTMLHeadingElement;
     /** "Your data", where the empty state's "Import OPML" leads. */
     dataHeading?: HTMLHeadingElement;
@@ -59,10 +65,24 @@
     { value: "oldest", label: "Oldest first" },
   ] as const;
 
+  const MODE_CHOICES = [
+    { value: "inbox", label: "Inbox" },
+    { value: "river", label: "River" },
+  ] as const;
+
   let message = $state("");
   let sortMessage = $state("");
   /** What the last OPML import did, in plain words. */
   let importLines: string[] = $state([]);
+
+  async function chooseMode(next: ReadingMode) {
+    sortMessage = "";
+    try {
+      await onMode(next);
+    } catch {
+      sortMessage = "The reading mode couldn't be saved. Try again in a moment.";
+    }
+  }
 
   async function chooseSort(next: Order) {
     sortMessage = "";
@@ -90,6 +110,25 @@
       <section aria-labelledby="reading-heading">
         <h3 id="reading-heading" class="inset-head">Reading</h3>
         <div class="inset-group">
+          <!-- All's own sign, on purpose: river mode is everything, flowing past, and opens on All. -->
+          <fieldset class="inset-row">
+            <legend class="row-name"><span class="inline-flex items-center gap-2"><span class="text-muted"><Icon name="stack" size={16} /></span>Reading mode</span></legend>
+            <div class="choices control" style="--columns: 2">
+              {#each MODE_CHOICES as choice (choice.value)}
+                <label class="choice">
+                  <input
+                    type="radio"
+                    name="mode"
+                    value={choice.value}
+                    checked={mode === choice.value}
+                    disabled={sort === undefined}
+                    onchange={() => chooseMode(choice.value)}
+                  />
+                  {choice.label}
+                </label>
+              {/each}
+            </div>
+          </fieldset>
           <fieldset class="inset-row">
             <legend class="row-name"><span class="inline-flex items-center gap-2"><span class="text-muted"><Icon name="sort" size={16} /></span>Sort order</span></legend>
             <div class="choices control" style="--columns: 2">
@@ -109,7 +148,10 @@
             </div>
           </fieldset>
         </div>
-        <p class="inset-foot">This applies on all your devices.</p>
+        <p class="inset-foot">
+          Inbox keeps an Unread list and counts what's waiting. River lets everything flow past: no Unread, no counts. These
+          apply on all your devices.
+        </p>
         <p role="status" class={["inset-foot text-danger", !sortMessage && "sr-only"]}>{sortMessage}</p>
       </section>
 

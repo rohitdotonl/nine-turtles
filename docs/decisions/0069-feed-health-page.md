@@ -1,4 +1,4 @@
-# 0068: The feed health page
+# 0069: The feed health page
 
 *25 October 2026. Built in V2 from SPEC section 17, at the owner's request.*
 

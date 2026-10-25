@@ -316,7 +316,7 @@ async fn the_sort_order_is_saved_for_every_device() {
     let reader = Reader::new().await;
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "newest" })
+        json!({ "sort": "newest", "mode": "inbox" })
     );
 
     let (status, _) = reader
@@ -325,7 +325,7 @@ async fn the_sort_order_is_saved_for_every_device() {
     assert_eq!(status, StatusCode::OK);
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "oldest" })
+        json!({ "sort": "oldest", "mode": "inbox" })
     );
 
     // Another device, signed in separately, sees the same.
@@ -336,7 +336,7 @@ async fn the_sort_order_is_saved_for_every_device() {
         .await
         .unwrap();
     let other: Value = serde_json::from_str(&other.text().await.unwrap()).unwrap();
-    assert_eq!(other, json!({ "sort": "oldest" }));
+    assert_eq!(other, json!({ "sort": "oldest", "mode": "inbox" }));
 
     let (status, _) = reader
         .post("/api/settings", json!({ "sort": "sideways" }))
@@ -344,7 +344,56 @@ async fn the_sort_order_is_saved_for_every_device() {
     assert!(status.is_client_error());
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "oldest" })
+        json!({ "sort": "oldest", "mode": "inbox" })
+    );
+}
+
+#[tokio::test]
+async fn the_reading_mode_is_saved_on_its_own_and_keeps_read_state() {
+    let reader = Reader::new().await;
+    let id = reader.list("view=all").await[0].1;
+
+    let (status, body) = reader
+        .post("/api/settings", json!({ "mode": "river" }))
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body, json!({ "sort": "newest", "mode": "river" }));
+
+    // Changing the sort order alone (as a tab from before river mode would)
+    // leaves the mode as it was.
+    reader
+        .post("/api/settings", json!({ "sort": "oldest" }))
+        .await;
+    assert_eq!(
+        reader.get("/api/settings").await,
+        json!({ "sort": "oldest", "mode": "river" })
+    );
+
+    // Read state is still recorded quietly in river mode, and shows again
+    // back in inbox mode.
+    let (status, _) = reader
+        .post("/api/articles/read", json!({ "ids": [id], "read": true }))
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    let (status, _) = reader
+        .post("/api/settings", json!({ "mode": "inbox" }))
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    assert!(
+        !reader
+            .list("view=unread")
+            .await
+            .iter()
+            .any(|article| article.1 == id)
+    );
+
+    let (status, _) = reader
+        .post("/api/settings", json!({ "mode": "sideways" }))
+        .await;
+    assert!(status.is_client_error());
+    assert_eq!(
+        reader.get("/api/settings").await,
+        json!({ "sort": "oldest", "mode": "inbox" })
     );
 }
 

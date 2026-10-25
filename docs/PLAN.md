@@ -140,7 +140,7 @@ move around with only the keyboard.
 - Read when shown, `m` to mark unread, mark all as read (on-screen items only), undo.
 - Star and the Starred view; Unread and All views.
 - Unread counts (muted, per feed and folder, "999+").
-- Inbox mode (river mode is V2); sort order setting.
+- Inbox mode (river mode is V2, built 25 October 2026); sort order setting.
 
 **You can try:** the checks in SPEC sections 8, 9 and 10.
 
@@ -180,7 +180,7 @@ and the screen never changed under you.
 In V1, the daily check reported failing feeds instead (from Milestone 8).
 
 - Problems in plain words, sorted worst first, with Retry · Find new address · Unsubscribe.
-- In Settings › Feeds (SPEC section 17, decision 0068).
+- In Settings › Feeds (SPEC section 17, decision 0069).
 
 **You can try:** look at your real feeds' health after a few days of fetching.
 

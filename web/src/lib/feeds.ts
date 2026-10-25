@@ -66,6 +66,18 @@ export type Source = { view: View } | { feed: number } | { folder: number } | { 
 /** The reader's sort order, shared across their devices (SPEC section 18). */
 export type Order = "newest" | "oldest";
 
+/**
+ * Inbox (things to get through: the Unread view, read styling and counts) or
+ * river (things flowing past: none of those). Shared across the reader's
+ * devices (SPEC section 10). Read state is recorded in both.
+ */
+export type ReadingMode = "inbox" | "river";
+
+/** Where the app opens, and where "/" leads: Unread in inbox mode, All in river mode. */
+export function homeView(mode: ReadingMode): "unread" | "all" {
+  return mode === "river" ? "all" : "unread";
+}
+
 export type Choice = { title: string; url: string };
 
 export type AddResult =
@@ -195,18 +207,53 @@ export function markStarred(ids: number[], starred: boolean): Promise<void> {
   return send("/api/articles/starred", { ids, starred });
 }
 
-/** The sort order; newest first if the server can't say. */
-export async function loadSort(): Promise<Order> {
+/**
+ * The settings shared across the reader's devices: the sort order and the
+ * reading mode. Newest first if the server can't say, and the mode this
+ * device last saw (inbox if none).
+ */
+export async function loadSettings(): Promise<{ sort: Order; mode: ReadingMode }> {
   try {
     const body = await getJson("/api/settings");
-    return isRecord(body) && body.sort === "oldest" ? "oldest" : "newest";
+    const sort = isRecord(body) && body.sort === "oldest" ? "oldest" : "newest";
+    const mode = isRecord(body) && body.mode === "river" ? "river" : "inbox";
+    rememberMode(mode);
+    return { sort, mode };
   } catch {
-    return "newest";
+    return { sort: "newest", mode: lastMode() };
   }
 }
 
 export function saveSort(sort: Order): Promise<void> {
   return send("/api/settings", { sort });
+}
+
+export async function saveMode(mode: ReadingMode): Promise<void> {
+  await send("/api/settings", { mode });
+  rememberMode(mode);
+}
+
+const MODE_KEY = "nine-turtles.mode";
+
+/**
+ * The reading mode this device last saw, so the app opens in it before the
+ * server answers instead of showing Unread for a moment. The server's answer
+ * decides.
+ */
+export function lastMode(): ReadingMode {
+  try {
+    return globalThis.localStorage?.getItem(MODE_KEY) === "river" ? "river" : "inbox";
+  } catch {
+    return "inbox";
+  }
+}
+
+function rememberMode(mode: ReadingMode) {
+  try {
+    globalThis.localStorage?.setItem(MODE_KEY, mode);
+  } catch {
+    // Private windows may refuse; the server still has it.
+  }
 }
 
 /** What the line above the list says after "Mark all as read". */
