@@ -11,7 +11,7 @@ the owner's yes to its brief (decision 0009).
 ## What the check needs
 
 Two environment variables in the agent's environment (never in the
-repository): `SLOWFEED_ADDRESS` (for example `https://slowfeed-xxxx.onrender.com`)
+repository): `SLOWFEED_ADDRESS` (`https://app.nineturtles.app`; Render's own `https://slowfeed.onrender.com` works too)
 and `SLOWFEED_DIAGNOSTICS_KEY`. If the address ends with `/`, drop it first
 (`A="${SLOWFEED_ADDRESS%/}"` and use `$A` below): `//status` reaches the app's
 front page instead of the status page. Network access to that address. Read access

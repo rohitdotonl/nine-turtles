@@ -8,6 +8,10 @@ nine turtles has two addresses (decision 0066):
 - **app.nineturtles.app**: the app itself, still running on Render. The old
   address, slowfeed.onrender.com, keeps working too.
 
+**Done on 25 October 2026:** the owner followed every step below, so the
+website is at nineturtles.app and the app at app.nineturtles.app. The steps
+stay here as the record of how it's set up, and for moving again.
+
 Each one-time step below is yours, because agents never get access to Render
 or to Cloudflare. It takes about 30 minutes, plus waiting for names to be
 looked up correctly everywhere (usually minutes, at most a day).

@@ -351,9 +351,9 @@ each with screenshots:
 
 ## A website and a domain
 
-- 🔨 A website at nineturtles.app, built with Eleventy from `website/` in
-  this repository and hosted on GitHub Pages; the app moves to
-  app.nineturtles.app once the owner sets up the domain
+- ✅ A website at nineturtles.app, built with Eleventy from `website/` in
+  this repository and hosted on GitHub Pages, and the app moved to
+  app.nineturtles.app; the owner finished the domain move on 25 October 2026
   (`docs/operations/website-and-domain.md`, decision 0066). The pages start
   as a short introduction; what else the website says is the owner's to
   decide.
