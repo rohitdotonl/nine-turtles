@@ -87,7 +87,7 @@ describe("keyboard shortcuts", () => {
     expect(read(press("?", { ctrlKey: true }), 0)).toBeUndefined();
   });
 
-  it("lists every shortcut in DESIGN.md in the cheat sheet", () => {
+  it("lists every shortcut in SPEC.md in the cheat sheet", () => {
     expect(SHORTCUTS).toHaveLength(20);
     expect(SHORTCUTS.filter((shortcut) => shortcut.ready).map((shortcut) => shortcut.keys[0])).toEqual([
       "j",
