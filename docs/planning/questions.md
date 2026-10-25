@@ -6,7 +6,14 @@ written into `DESIGN.md`, `ENGINEERING.md`, `SPEC.md`, `PLAN.md` and
 
 ## Still open
 
-Nothing at the moment.
+- **Finishing the website's privacy policy and terms** (25 October 2026).
+  They're on nineturtles.app as drafts, marked "to be decided" where they
+  wait on: the payment company (a merchant of record such as Paddle or
+  Lemon Squeezy, or Stripe), the email service for sign-in and receipts,
+  where Render keeps the data, the business details and the law that
+  applies, the minimum age, and how long backups keep deleted data. Before
+  anyone can sign up, someone qualified should read both. Not blocking
+  anything today.
 
 ---
 

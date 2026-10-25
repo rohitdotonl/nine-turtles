@@ -1,0 +1,11 @@
+---
+layout: base.njk
+---
+{% if draft %}
+<aside class="draft" aria-label="Draft">
+  <p><strong>Draft.</strong> {{ draft }}</p>
+</aside>
+{% endif %}
+<h1>{{ title }}</h1>
+{% if updated %}<p class="byline">Last updated <time datetime="{{ updated | isoDate }}">{{ updated | readableDate }}</time></p>{% endif %}
+{{ content | safe }}
