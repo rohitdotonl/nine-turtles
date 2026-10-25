@@ -168,6 +168,8 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Random numbers and tokens
 - Session and session cookie
 - App password
+- Invite link and sign-up switch
+- Rate limiting per account
 - Secure, HTTP-only and SameSite cookies
 - Cross-site request forgery (CSRF)
 - Cross-site scripting (XSS)

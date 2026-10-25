@@ -5,11 +5,14 @@ import { appReady, signIn, tabTo } from "./screens";
 // SPEC section 1, "How to check it", done by a browser. Everything here uses
 // the keyboard only (the keyboard floor), except signIn, which other tests share.
 
-test("a new browser sees only the password field", async ({ page }) => {
+test("a new browser sees only the email and password fields", async ({ page }) => {
   await page.goto("/");
   await appReady(page);
 
-  await expect(page.getByLabel("Password")).toBeFocused();
+  // The email first, as password managers expect; the owner may leave it empty (decision 0087).
+  await expect(page.getByLabel("Email")).toBeFocused();
+  await expect(page.getByLabel("Email")).toHaveAttribute("autocomplete", "username");
+  await expect(page.getByLabel("Password")).toHaveAttribute("autocomplete", "current-password");
   await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
   await expect(page.getByText("Nothing here yet.")).toHaveCount(0);
   await expect(page.locator("#sidebar")).toHaveCount(0);
@@ -19,7 +22,12 @@ test("sign-in is one centred column, at the phone's one 20px margin, the button 
   await page.setViewportSize({ width: 390, height: 800 });
   await page.goto("/");
   await appReady(page);
+  const email = (await page.getByLabel("Email").boundingBox())!;
   const field = page.getByLabel("Password");
+  // The two fields 12px apart, the email above, at the same margins.
+  expect(Math.abs((await field.boundingBox())!.y - (email.y + email.height) - 12)).toBeLessThan(1);
+  expect(Math.abs(email.x - 20)).toBeLessThan(1);
+  await expect(page.getByLabel("Email")).toHaveAttribute("placeholder", "Email");
   const button = page.getByRole("button", { name: "Sign in" });
   const [fieldBox, buttonBox] = [(await field.boundingBox())!, (await button.boundingBox())!];
   // The same margin as every other phone screen (decision 0048).
@@ -58,6 +66,8 @@ test("a wrong password says so calmly and keeps you out", async ({ page }) => {
   await appReady(page);
   const fieldBefore = (await page.getByLabel("Password").boundingBox())!;
 
+  // The email left empty: the owner's password-only sign-in.
+  await page.keyboard.press("Tab");
   await page.keyboard.type("not the password");
   await page.keyboard.press("Enter");
 
@@ -85,6 +95,7 @@ test("while signing in, the button says it's busy and a second press sends nothi
     await route.continue();
   });
 
+  await page.keyboard.press("Tab");
   await page.keyboard.type("not the password");
   await page.keyboard.press("Enter");
   const button = page.getByRole("button", { name: "Sign in" });
@@ -105,7 +116,8 @@ test("while signing in, the button says it's busy and a second press sends nothi
 test("sign in with the keyboard, stay signed in, sign out", async ({ page }) => {
   await page.goto("/");
   await appReady(page);
-  // The password field already has the keyboard's place.
+  // The email field has the keyboard's place; the owner leaves it empty and Tabs on to the password.
+  await page.keyboard.press("Tab");
   await page.keyboard.type(TEST_PASSWORD);
   await page.keyboard.press("Enter");
   await expect(page.locator("#sidebar")).toBeAttached();
@@ -133,6 +145,20 @@ test("sign in with the keyboard, stay signed in, sign out", async ({ page }) => 
   await page.reload();
   await appReady(page);
   await expect(page.getByLabel("Password")).toBeVisible();
+});
+
+test("with an email, a wrong password never says whether the email has an account", async ({ page }) => {
+  await page.goto("/");
+  await appReady(page);
+  await page.keyboard.type("nobody-here@example.com");
+  await page.keyboard.press("Tab");
+  await page.keyboard.type("not the password");
+  await page.keyboard.press("Enter");
+
+  await expect(page.getByRole("status")).toHaveText("That email and password don't match.");
+  await expect(page.getByLabel("Email")).toHaveAttribute("aria-invalid", "true");
+  await expect(page.getByLabel("Password")).toHaveAttribute("aria-invalid", "true");
+  await expect(page.locator("#sidebar")).toHaveCount(0);
 });
 
 test("the browser's security rules block nothing nine turtles itself needs", async ({ page }) => {

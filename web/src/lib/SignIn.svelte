@@ -1,6 +1,8 @@
 <!--
-  The sign-in page (SPEC section 1): the wordmark and a password field,
-  nothing about the reader's feeds.
+  The sign-in page (SPEC section 1): the wordmark, an email field and a
+  password field, nothing about the reader's feeds. The owner may leave the
+  email empty and sign in with the password alone, as before there were
+  readers (decision 0087).
 -->
 <script lang="ts">
   import Logo from "./Logo.svelte";
@@ -9,6 +11,7 @@
 
   let { onSignedIn }: { onSignedIn: () => void } = $props();
 
+  let email = $state("");
   let password = $state("");
   let message = $state("");
   /** The password itself was refused, so the field is marked; other problems aren't the field's. */
@@ -19,12 +22,12 @@
     event.preventDefault();
     if (busy || password === "") return;
     busy = true;
-    const result = await signIn(password);
+    const result = await signIn(email, password);
     busy = false;
     if (result.ok) {
       onSignedIn();
     } else {
-      message = explain(result);
+      message = explain(result, email.trim() !== "");
       refused = result.reason === "wrong-password";
       password = "";
     }
@@ -40,13 +43,29 @@
   <!--
     One centred column (decision 0048): the field and the button 12px apart,
     the full width between the phone's 20px margins, at most 320px wide on a
-    larger screen. The field's name is said to screen readers and shown as
+    larger screen. Each field's name is said to screen readers and shown as
     its placeholder, so nothing in the column is left-aligned under a centred
-    title.
+    title. The email comes first, as password managers expect.
   -->
   <form class="flex w-full flex-col gap-3 sm:max-w-xs" onsubmit={submit}>
+    <label for="email" class="sr-only">Email</label>
+    <!-- svelte-ignore a11y_autofocus: the first thing to do on this page. -->
+    <input
+      id="email"
+      name="email"
+      type="text"
+      inputmode="email"
+      autocomplete="username"
+      autocapitalize="none"
+      spellcheck="false"
+      placeholder="Email"
+      autofocus
+      bind:value={email}
+      aria-describedby="sign-in-message"
+      aria-invalid={refused && email.trim() !== "" ? "true" : undefined}
+      class="field"
+    />
     <label for="password" class="sr-only">Password</label>
-    <!-- svelte-ignore a11y_autofocus: the only thing to do on this page. -->
     <input
       id="password"
       name="password"
@@ -54,7 +73,6 @@
       autocomplete="current-password"
       placeholder="Password"
       required
-      autofocus
       bind:value={password}
       aria-describedby="sign-in-message"
       aria-invalid={refused ? "true" : undefined}

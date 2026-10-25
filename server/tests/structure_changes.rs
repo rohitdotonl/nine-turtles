@@ -1194,3 +1194,56 @@ async fn giving_each_reader_their_own_feeds_and_marks_keeps_every_one_as_the_own
             .unwrap();
     assert_eq!(unsubscribed, None);
 }
+
+#[tokio::test]
+async fn adding_emails_keeps_every_reader_and_device_and_gives_nobody_a_password() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just after readers (structure change 11): the owner and
+    // one other reader, each with a signed-in device.
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(11, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO people (id, created_at) VALUES (2, 5)",
+        "INSERT INTO sessions (person_id, token_hash, created_at, last_used_at, expires_at)
+         VALUES (1, x'00112233', 1, 1, 9999999999), (2, x'44556677', 1, 1, 9999999999)",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let people: Vec<(i64, bool, Option<String>, Option<String>)> =
+        sqlx::query_as("SELECT id, owner, email, password_hash FROM people ORDER BY id")
+            .fetch_all(&db)
+            .await
+            .unwrap();
+    assert_eq!(people, [(1, true, None, None), (2, false, None, None)]);
+    let devices: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM sessions")
+        .fetch_one(&db)
+        .await
+        .unwrap();
+    assert_eq!(devices, 2);
+
+    // Two readers can't share an email, whatever its capital letters.
+    sqlx::query("UPDATE people SET email = 'Rohit@Example.com' WHERE id = 1")
+        .execute(&db)
+        .await
+        .unwrap();
+    let clash = sqlx::query("UPDATE people SET email = 'rohit@example.com' WHERE id = 2")
+        .execute(&db)
+        .await;
+    assert!(clash.is_err());
+}

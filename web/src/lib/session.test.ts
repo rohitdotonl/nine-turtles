@@ -21,4 +21,9 @@ describe("the sign-in page's messages", () => {
     expect(messages[1]).toBe("Too many wrong tries. Try again in 2 minutes.");
     for (const message of messages) expect(message).not.toContain("!");
   });
+
+  it("never say whether an email has an account", () => {
+    expect(explain({ ok: false, reason: "wrong-password" })).toBe("That isn't the password.");
+    expect(explain({ ok: false, reason: "wrong-password" }, true)).toBe("That email and password don't match.");
+  });
 });
