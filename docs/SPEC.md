@@ -464,13 +464,14 @@ OPML is the standard file format feed readers use to move subscription lists bet
 **What it does**
 - In V1, nothing is removed automatically. Unsubscribing removes that feed's articles and read history (starred articles stay in Starred). Undo brings them back only straight away; after your next action they're gone for good.
 - Export of starred articles as a JSON Feed file (a standard, open format other feed tools can read), from Settings → Your data → **Export starred articles**. It holds every starred article, newest first, with its text, original link and the feed it came from, including starred articles of feeds you've since unsubscribed from.
-- **No backups in V1** (the owner's decision, 23 October 2026). V1 is for the owner alone. Your safety net is your own OPML file (your feeds and folders) and the starred export (your stars). Which articles you've read isn't saved anywhere else. As a last resort, Render keeps its own daily copies of the disk for at least a week, though Render warns they may not bring a database back cleanly.
+- **Backups** (decision 0076): every night, nine turtles stores a complete copy of everything (feeds, folders, articles, read marks, stars, settings) in storage outside Render, and another just before any update changes the database's structure. It keeps the last 30 nights, one copy a month for a year, and the last 10 taken before an update. At worst a day of reading activity is lost. Bringing a copy back, or moving to another host, is a written, tested procedure (`docs/operations/backups.md`, `docs/operations/moving-hosts.md`). Backups happen quietly in the background; the app never shows or asks anything about them. Your OPML file and the starred export remain your own safety net too.
 
-**Moved to V2:** nightly backups outside Render with a copy before every database structure change; a written, tested guide to moving hosts; and removing unstarred articles a year after nine turtles received them (only after a successful backup, and never letting them come back as new).
+**Moved to V2:** removing unstarred articles a year after nine turtles received them (only after a successful backup, and never letting them come back as new).
 
 **How to check it**
 1. Export your starred articles and open the file: they're all there.
 2. Export your OPML file now and then, and keep it somewhere safe.
+3. In the backup storage (Cloudflare R2), `nightly/` holds a copy from last night.
 
 ## 24. Languages
 

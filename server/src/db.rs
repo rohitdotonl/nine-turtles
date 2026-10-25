@@ -24,7 +24,7 @@ pub async fn open(data_dir: &Path) -> Result<SqlitePool, String> {
 /// Opens (or creates) the database and brings its structure up to date. If
 /// the structure is about to change and backup storage is set, a copy is
 /// stored first; if that copy fails, nothing changes and nine turtles stops
-/// with the reason (ENGINEERING.md → the floor, decision 0074).
+/// with the reason (ENGINEERING.md → the floor, decision 0076).
 pub async fn open_with_backup(
     data_dir: &Path,
     storage: Option<&Storage>,

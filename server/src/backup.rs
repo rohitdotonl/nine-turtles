@@ -1,4 +1,4 @@
-//! Backups (SPEC section 19, decision 0074): every night, a consistent copy
+//! Backups (SPEC section 23, decision 0076): every night, a consistent copy
 //! of the database goes to S3-compatible storage outside the host (`storage`),
 //! and another just before each change to the database's structure. Kept:
 //! the last 30 nightly copies, one a month for a year, and the last 10 taken

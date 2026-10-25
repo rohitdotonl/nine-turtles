@@ -1,4 +1,4 @@
-//! Backups (SPEC section 19): a nightly copy goes to S3-compatible storage,
+//! Backups (SPEC section 23): a nightly copy goes to S3-compatible storage,
 //! old copies are deleted by the keeping rules, a copy is stored before every
 //! structure change, and a stored copy brings everything back on a fresh disk.
 //! The storage here is a small stand-in for S3 running inside the test; that

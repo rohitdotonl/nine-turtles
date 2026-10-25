@@ -5,7 +5,7 @@
 //! the account's key the standard way ("Signature Version 4"), using the
 //! hmac and sha2 libraries nine turtles already has, so no storage company's
 //! own library is needed and the service can be swapped through settings
-//! alone (decision 0074).
+//! alone (decision 0076).
 
 use std::{fmt, path::Path, time::Duration};
 
