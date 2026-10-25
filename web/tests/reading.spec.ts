@@ -236,10 +236,26 @@ test.describe("on a wide window", () => {
     await panel.getByRole("button", { name: "Smaller text" }).click();
     await expect.poll(size).toBe(before);
 
-    // Appearance: day, night or as the device is set, applied at once. No theme tiles (decision 0056).
+    // Appearance: day, night or as the device is set, applied at once (decision 0056).
     await expect(panel.getByRole("group", { name: "Appearance" }).getByRole("radio")).toHaveCount(3);
     await expect(panel.getByRole("radio", { name: "Match device" })).toBeChecked();
-    await expect(panel.getByRole("group", { name: "Theme" })).toHaveCount(0);
+    // Theme: Original or Plain, whose article links are the browser's blue (decision 0063).
+    const themes = panel.getByRole("group", { name: "Theme" });
+    await expect(themes.getByRole("radio")).toHaveCount(2);
+    await expect(themes.getByRole("radio", { name: "Original" })).toBeChecked();
+    const link = article(page).locator(".article-text a").first();
+    const textColor = await article(page).locator(".article-text").first().evaluate((el) => getComputedStyle(el).color);
+    await expect(link).toHaveCSS("color", textColor);
+    await themes.getByRole("radio", { name: "Plain" }).check();
+    await expect(root).toHaveAttribute("data-theme", "plain");
+    await expect(link).toHaveCSS("color", "rgb(0, 0, 238)");
+    await expect(link).toHaveCSS("text-decoration-line", "underline");
+    // With the keyboard, as any radio buttons: the arrow key goes back to Original.
+    await themes.getByRole("radio", { name: "Plain" }).focus();
+    await page.keyboard.press("ArrowLeft");
+    await expect(themes.getByRole("radio", { name: "Original" })).toBeChecked();
+    await expect(root).toHaveAttribute("data-theme", "original");
+    await expect(link).toHaveCSS("color", textColor);
     await panel.getByRole("radio", { name: "Light", exact: true }).check();
     await expect(root).toHaveAttribute("data-theme", "original");
     await expect(root).toHaveAttribute("data-mode", "light");
@@ -260,6 +276,10 @@ test.describe("on a wide window", () => {
     // Fonts are named in their own face; line width has three steps.
     await panel.getByRole("radio", { name: "Atkinson Hyperlegible" }).check();
     await expect.poll(() => root.evaluate((html) => html.style.getPropertyValue("--reading-font"))).toContain("Atkinson");
+    // rohit.onl's font: the device's own serif (decision 0063).
+    await panel.getByRole("radio", { name: "System serif" }).check();
+    await expect.poll(() => root.evaluate((html) => html.style.getPropertyValue("--reading-font"))).toContain("ui-serif");
+    await panel.getByRole("radio", { name: "Atkinson Hyperlegible" }).check();
     await expect(text).toHaveCSS("font-weight", "400");
     const measure = () => root.evaluate((html) => html.style.getPropertyValue("--reading-measure"));
     const medium = await measure();

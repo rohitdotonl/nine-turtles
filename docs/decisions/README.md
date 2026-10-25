@@ -44,3 +44,4 @@ repository's history.
 | [0060](0060-bookmark-and-phone-search-button.md) | A bookmark in every article (your place kept per device, by paragraph, forgotten at the top or the end) and, on a phone, the list's search field behind a Search button beside More |
 | [0061](0061-redesign-notes-folded.md) | The redesign notes 0025–0055 folded into one summary, their files deleted (full text in the history) |
 | [0062](0062-shortcuts-in-words-find-and-one-tip.md) | Shortcuts in words at the sidebar's foot; the shortcut list grouped by what you're doing, with a find field; one welcome tip, once, under "No article open" (changes 0041's no-hint rule) |
+| [0063](0063-plain-theme-system-serif.md) | A second theme, Plain (rohit.onl's bare look: black on white, blue underlined article links, the accent in the text color), and System serif, the device's own serif, as a reading font (adds to 0056) |
