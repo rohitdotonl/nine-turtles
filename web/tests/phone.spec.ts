@@ -595,7 +595,7 @@ test("a tab left open across an update is told to reload, switches on the next m
   await expect(page.getByText("nine turtles was updated. Reload to continue.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Reload", exact: true })).toBeVisible();
 
-  // Going to another place opens the new version there, and the note is gone (decision 0075).
+  // Going to another place opens the new version there, and the note is gone (decision 0076).
   await page.evaluate(() => Object.assign(window, { oldPage: true }));
   await page.getByRole("link", { name: "Settings" }).click();
   await expect(page).toHaveURL(/\/settings$/);

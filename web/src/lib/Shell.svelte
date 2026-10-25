@@ -644,7 +644,7 @@
 
   function go(next: Route, withNotice?: Notice) {
     // A newer nine turtles is live: going somewhere else redraws the screen
-    // anyway, so arrive there in the new version (decision 0075).
+    // anyway, so arrive there in the new version (decision 0076).
     if (!keepsArticle(route, next) && switchesOnMove(updates.ready, marksUnsaved(), !!withNotice)) {
       switchTo(pathFor(next));
       return;

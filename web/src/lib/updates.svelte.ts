@@ -5,7 +5,7 @@
 // swapped while you read: the tab switches to the new version by itself the
 // next time you go to another place, which redraws the screen anyway, and
 // only once every mark has been saved and no Undo is on offer (decision
-// 0075). If the newer nine turtles refuses a request because it no longer
+// 0076). If the newer nine turtles refuses a request because it no longer
 // understands it, the note at the bottom of the list says "nine turtles was
 // updated. Reload to continue."
 //
