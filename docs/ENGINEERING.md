@@ -185,7 +185,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 - **OPML import** writes the feeds and folders down in one transaction and fetches nothing; background checking fetches the new feeds in its usual rounds.
 - **Edited articles:** when a publisher edits an article already stored, its title, link, author, text and language are updated; its place in the list, read mark and star are kept (decision 0019).
 - **Background checks** keep each feed's schedule and failure history in a few columns on `feeds` (structure change 4). The screen learns about new articles by asking, once a minute, whether any article numbered above the newest it loaded belongs to its list (decision 0019).
-- **Settings shared across devices** (the sort order and the reading mode, decision 0067) live in a small `settings` table, one row per setting; a save names only the settings it changes; per-device reader controls stay in the browser.
+- **Settings shared across devices** (the sort order and the reading mode, decision 0068) live in a small `settings` table, one row per setting; a save names only the settings it changes; per-device reader controls stay in the browser.
 - **Exports:** OPML for feeds and folders; starred articles as a JSON Feed 1.1 file, each item carrying the feed it came from in a `_nine_turtles` extension (`_slowfeed` before the rename) (decision 0024).
 
 ### Sign-in and security

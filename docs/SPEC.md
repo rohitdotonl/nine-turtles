@@ -198,7 +198,7 @@ A few words used throughout:
 
 ## 10. Reading modes: inbox and river
 
-*V1 had inbox mode only. River mode arrived in V2 (25 October 2026, decision 0067).*
+*V1 had inbox mode only. River mode arrived in V2 (25 October 2026, decision 0068).*
 
 **What it does**
 - A single setting for the whole app.
