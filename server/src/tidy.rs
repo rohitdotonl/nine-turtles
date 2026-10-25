@@ -56,12 +56,16 @@ const LISTED: &str = "SELECT id, title, added_at,
 
 /// Every followed feed, A to Z, with when it last posted and its folders,
 /// and every folder.
-async fn list(_: SignedIn, State(state): State<AppState>) -> Response {
+async fn list(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
     let listed: Result<(Vec<Listed>, Vec<Folder>), sqlx::Error> = async {
         let mut transaction = state.db.begin().await?;
         let mut feeds: Vec<Listed> = sqlx::query_as(LISTED).fetch_all(&mut *transaction).await?;
-        let folders: Vec<Folder> = sqlx::query_as(FOLDERS).fetch_all(&mut *transaction).await?;
+        let folders: Vec<Folder> = sqlx::query_as(FOLDERS)
+            .bind(person)
+            .fetch_all(&mut *transaction)
+            .await?;
         let memberships: Vec<(i64, i64)> = sqlx::query_as(MEMBERSHIPS)
+            .bind(person)
             .fetch_all(&mut *transaction)
             .await?;
         transaction.commit().await?;
@@ -167,7 +171,7 @@ struct Move {
 /// every other folder it was in. Answers the folder, and whether it was
 /// made just now, so Undo can remove it again.
 async fn move_feeds(
-    _: SignedIn,
+    SignedIn(person): SignedIn,
     State(state): State<AppState>,
     Json(form): Json<Move>,
 ) -> Response {
@@ -185,14 +189,16 @@ async fn move_feeds(
         let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
         let (folder, created) = match (&new_folder, form.folder) {
             (Some(name), _) => {
-                let (id, created) = folders::folder_named(&mut transaction, name).await?;
+                let (id, created) = folders::folder_named(&mut transaction, person, name).await?;
                 (Some(id), created)
             }
             (None, Some(id)) => {
-                let found: Option<i64> = sqlx::query_scalar("SELECT id FROM folders WHERE id = ?")
-                    .bind(id)
-                    .fetch_optional(&mut *transaction)
-                    .await?;
+                let found: Option<i64> =
+                    sqlx::query_scalar("SELECT id FROM folders WHERE id = ? AND person_id = ?")
+                        .bind(id)
+                        .bind(person)
+                        .fetch_optional(&mut *transaction)
+                        .await?;
                 if found.is_none() {
                     return Ok(None);
                 }
@@ -203,9 +209,11 @@ async fn move_feeds(
         sqlx::query(
             "DELETE FROM feed_folders WHERE feed_id IN (
                  SELECT feeds.id FROM feeds
-                 WHERE feeds.id IN (SELECT value FROM json_each(?)) AND feeds.unsubscribed_at IS NULL)",
+                 WHERE feeds.id IN (SELECT value FROM json_each(?)) AND feeds.unsubscribed_at IS NULL)
+             AND folder_id IN (SELECT id FROM folders WHERE person_id = ?)",
         )
         .bind(&list)
+        .bind(person)
         .execute(&mut *transaction)
         .await?;
         if let Some(folder) = folder {
@@ -246,7 +254,7 @@ struct Restore {
 /// Undo for moving: each feed goes back to exactly the folders it was in.
 /// Folders deleted since are skipped.
 async fn restore(
-    _: SignedIn,
+    SignedIn(person): SignedIn,
     State(state): State<AppState>,
     Json(form): Json<Restore>,
 ) -> Response {
@@ -256,16 +264,21 @@ async fn restore(
     let restored: Result<(), sqlx::Error> = async {
         let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
         for feed in &form.feeds {
-            sqlx::query("DELETE FROM feed_folders WHERE feed_id = ?")
-                .bind(feed.id)
-                .execute(&mut *transaction)
-                .await?;
+            sqlx::query(
+                "DELETE FROM feed_folders WHERE feed_id = ?
+                 AND folder_id IN (SELECT id FROM folders WHERE person_id = ?)",
+            )
+            .bind(feed.id)
+            .bind(person)
+            .execute(&mut *transaction)
+            .await?;
             sqlx::query(
                 "INSERT OR IGNORE INTO feed_folders (folder_id, feed_id)
                  SELECT folders.id, feeds.id FROM folders, feeds
-                 WHERE folders.id IN (SELECT value FROM json_each(?))
+                 WHERE folders.person_id = ? AND folders.id IN (SELECT value FROM json_each(?))
                    AND feeds.id = ? AND feeds.unsubscribed_at IS NULL",
             )
+            .bind(person)
             .bind(serde_json::to_string(&feed.folders).unwrap_or_else(|_| "[]".to_owned()))
             .bind(feed.id)
             .execute(&mut *transaction)

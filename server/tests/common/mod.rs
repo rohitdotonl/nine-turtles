@@ -67,3 +67,19 @@ pub async fn signed_in(base: &str) -> String {
     let set_cookie = response.headers()["set-cookie"].to_str().unwrap();
     set_cookie.split(';').next().unwrap().to_owned()
 }
+
+/// Makes another reader (number 2 onward), as signing up will, and signs a
+/// device in for them. Answers their number and the cookie their browser
+/// would send back.
+pub async fn another_reader(state: &nine_turtles::AppState) -> (i64, String) {
+    let person: i64 =
+        sqlx::query_scalar("INSERT INTO people (created_at) VALUES (unixepoch()) RETURNING id")
+            .fetch_one(&state.db)
+            .await
+            .unwrap();
+    let token = nine_turtles::auth::remember_device(&state.db, person)
+        .await
+        .unwrap()
+        .unwrap();
+    (person, format!("nine_turtles_session={token}"))
+}

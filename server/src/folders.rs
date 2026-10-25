@@ -52,13 +52,16 @@ pub struct Folder {
     pub name: String,
 }
 
-/// Every folder, alphabetically (SPEC section 5).
-pub const FOLDERS: &str = "SELECT id, name FROM folders ORDER BY name COLLATE NOCASE, id";
+/// A reader's folders, alphabetically (SPEC section 5). Takes the reader.
+pub const FOLDERS: &str =
+    "SELECT id, name FROM folders WHERE person_id = ? ORDER BY name COLLATE NOCASE, id";
 
-/// Which followed feed is in which folder, for the sidebar.
+/// Which followed feed is in which of a reader's folders, for the sidebar.
+/// Takes the reader.
 pub const MEMBERSHIPS: &str = "SELECT feed_folders.feed_id, feed_folders.folder_id
      FROM feed_folders JOIN feeds ON feeds.id = feed_folders.feed_id
-     WHERE feeds.unsubscribed_at IS NULL";
+         JOIN folders ON folders.id = feed_folders.folder_id
+     WHERE feeds.unsubscribed_at IS NULL AND folders.person_id = ?";
 
 /// A name as the reader typed it, with spaces at either end removed and runs
 /// of spaces made one. None if nothing is left, or it's too long.
@@ -68,22 +71,27 @@ pub fn clean_name(name: &str) -> Option<String> {
     (1..=LONGEST_NAME).contains(&length).then_some(name)
 }
 
-/// The folder with this name (whatever its capital letters), created if
-/// there's none yet. Answers its number, and whether it was created.
+/// The reader's folder with this name (whatever its capital letters),
+/// created if they have none yet. Answers its number, and whether it was
+/// created.
 pub async fn folder_named(
     connection: &mut SqliteConnection,
+    person: i64,
     name: &str,
 ) -> Result<(i64, bool), sqlx::Error> {
     let created: Option<i64> = sqlx::query_scalar(
-        "INSERT INTO folders (name) VALUES (?) ON CONFLICT (name) DO NOTHING RETURNING id",
+        "INSERT INTO folders (person_id, name) VALUES (?, ?)
+         ON CONFLICT (person_id, name) DO NOTHING RETURNING id",
     )
+    .bind(person)
     .bind(name)
     .fetch_optional(&mut *connection)
     .await?;
     if let Some(id) = created {
         return Ok((id, true));
     }
-    let id = sqlx::query_scalar("SELECT id FROM folders WHERE name = ?")
+    let id = sqlx::query_scalar("SELECT id FROM folders WHERE person_id = ? AND name = ?")
+        .bind(person)
         .bind(name)
         .fetch_one(&mut *connection)
         .await?;
@@ -141,7 +149,7 @@ impl Check {
 
 /// "Edit feed": its name, folders and settings, saved together or not at all.
 async fn edit_feed(
-    _: SignedIn,
+    SignedIn(person): SignedIn,
     State(state): State<AppState>,
     Path(id): Path<i64>,
     Json(form): Json<EditFeed>,
@@ -185,20 +193,27 @@ async fn edit_feed(
             .execute(&mut *transaction)
             .await?;
         }
-        sqlx::query("DELETE FROM feed_folders WHERE feed_id = ?")
-            .bind(id)
-            .execute(&mut *transaction)
-            .await?;
-        let mut folders = form.folders.clone();
-        if let Some(name) = &new_folder {
-            folders.push(folder_named(&mut transaction, name).await?.0);
-        }
-        // Folders that no longer exist (deleted in another tab) are skipped.
         sqlx::query(
-            "INSERT OR IGNORE INTO feed_folders (folder_id, feed_id)
-             SELECT folders.id, ? FROM folders WHERE folders.id IN (SELECT value FROM json_each(?))",
+            "DELETE FROM feed_folders WHERE feed_id = ?
+             AND folder_id IN (SELECT id FROM folders WHERE person_id = ?)",
         )
         .bind(id)
+        .bind(person)
+        .execute(&mut *transaction)
+        .await?;
+        let mut folders = form.folders.clone();
+        if let Some(name) = &new_folder {
+            folders.push(folder_named(&mut transaction, person, name).await?.0);
+        }
+        // Folders that no longer exist (deleted in another tab), or that
+        // aren't the reader's, are skipped.
+        sqlx::query(
+            "INSERT OR IGNORE INTO feed_folders (folder_id, feed_id)
+             SELECT folders.id, ? FROM folders
+             WHERE folders.person_id = ? AND folders.id IN (SELECT value FROM json_each(?))",
+        )
+        .bind(id)
+        .bind(person)
         .bind(serde_json::to_string(&folders).unwrap_or_else(|_| "[]".to_owned()))
         .execute(&mut *transaction)
         .await?;
@@ -335,7 +350,7 @@ struct NewFolder {
 }
 
 async fn create_folder(
-    _: SignedIn,
+    SignedIn(person): SignedIn,
     State(state): State<AppState>,
     Json(form): Json<NewFolder>,
 ) -> Response {
@@ -344,7 +359,7 @@ async fn create_folder(
     };
     let created: Result<Result<i64, i64>, sqlx::Error> = async {
         let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
-        let (id, new) = folder_named(&mut transaction, &name).await?;
+        let (id, new) = folder_named(&mut transaction, person, &name).await?;
         if !new {
             return Ok(Err(id));
         }
@@ -357,7 +372,7 @@ async fn create_folder(
         .bind(serde_json::to_string(&form.feeds).unwrap_or_else(|_| "[]".to_owned()))
         .execute(&mut *transaction)
         .await?;
-        rules::back_in_folder(&mut transaction, id, &form.rules).await?;
+        rules::back_in_folder(&mut transaction, person, id, &form.rules).await?;
         transaction.commit().await?;
         Ok(Ok(id))
     }
@@ -379,7 +394,7 @@ struct RenameFolder {
 }
 
 async fn rename_folder(
-    _: SignedIn,
+    SignedIn(person): SignedIn,
     State(state): State<AppState>,
     Path(id): Path<i64>,
     Json(form): Json<RenameFolder>,
@@ -388,7 +403,8 @@ async fn rename_folder(
         return problem(StatusCode::BAD_REQUEST, "no-name");
     };
     let other: Result<Option<i64>, sqlx::Error> =
-        sqlx::query_scalar("SELECT id FROM folders WHERE name = ? AND id != ?")
+        sqlx::query_scalar("SELECT id FROM folders WHERE person_id = ? AND name = ? AND id != ?")
+            .bind(person)
             .bind(&name)
             .bind(id)
             .fetch_optional(&state.db)
@@ -398,9 +414,10 @@ async fn rename_folder(
         Ok(None) => {}
         Err(error) => return database_problem("renaming a folder", &error),
     }
-    let renamed = sqlx::query("UPDATE folders SET name = ? WHERE id = ?")
+    let renamed = sqlx::query("UPDATE folders SET name = ? WHERE id = ? AND person_id = ?")
         .bind(&name)
         .bind(id)
+        .bind(person)
         .execute(&state.db)
         .await;
     match renamed {
@@ -417,14 +434,15 @@ async fn rename_folder(
 /// Deletes a folder. Its feeds stay; they just leave it. The screen keeps
 /// the folder's name and feeds, so Undo can create it again.
 async fn delete_folder(
-    _: SignedIn,
+    SignedIn(person): SignedIn,
     State(state): State<AppState>,
     Path(id): Path<i64>,
 ) -> Response {
     let deleted: Result<Option<Vec<i64>>, sqlx::Error> = async {
         let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
-        let deleted = sqlx::query("DELETE FROM folders WHERE id = ?")
+        let deleted = sqlx::query("DELETE FROM folders WHERE id = ? AND person_id = ?")
             .bind(id)
+            .bind(person)
             .execute(&mut *transaction)
             .await?;
         if deleted.rows_affected() == 0 {

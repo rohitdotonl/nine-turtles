@@ -5,6 +5,9 @@
 //! stolen copy of the database can't be used to sign in. Wrong passwords are
 //! slowed down for everyone at once: there's only one password, so guesses
 //! from many places count together. See docs/decisions/0010-sign-in.md.
+//!
+//! Each signed-in device belongs to one reader (decision 0086). For now the
+//! only way in is the owner's password, so every new device is the owner's.
 
 use std::{
     fmt::Write as _,
@@ -21,8 +24,13 @@ use axum::{
 use blake2::{Blake2s256, Digest};
 use serde::Deserialize;
 use serde_json::json;
+use sqlx::SqlitePool;
 
 use crate::{AppState, config::PasswordSetting, log, now};
+
+/// The owner's number in `people`: the one reader who signs in with the
+/// password set as NINE_TURTLES_PASSWORD_HASH.
+pub const OWNER: i64 = 1;
 
 const COOKIE: &str = "nine_turtles_session";
 /// The cookie's name before the rename: still accepted, so nobody is signed out by it.
@@ -48,9 +56,12 @@ pub fn routes() -> Router<AppState> {
         .route("/api/sign-out", post(sign_out))
 }
 
-/// Proof that a request comes from a signed-in device. A handler that takes
-/// it never runs for anyone else: they get 401 "not signed in".
-pub struct SignedIn;
+/// Proof that a request comes from a signed-in device, and whose it is: the
+/// reader's number in `people`. A handler that takes it never runs for anyone
+/// else: they get 401 "not signed in". Everything a handler reads or changes
+/// for the reader is limited to this number (decision 0086).
+#[derive(Clone, Copy, Debug)]
+pub struct SignedIn(pub i64);
 
 impl FromRequestParts<AppState> for SignedIn {
     type Rejection = Response;
@@ -59,14 +70,15 @@ impl FromRequestParts<AppState> for SignedIn {
         let Some(token) = cookie_token(&parts.headers) else {
             return Err(StatusCode::UNAUTHORIZED.into_response());
         };
-        let found: Result<Option<i64>, sqlx::Error> =
-            sqlx::query_scalar("SELECT id FROM sessions WHERE token_hash = ? AND expires_at > ?")
-                .bind(&scramble(&token)[..])
-                .bind(now())
-                .fetch_optional(&state.db)
-                .await;
+        let found: Result<Option<i64>, sqlx::Error> = sqlx::query_scalar(
+            "SELECT person_id FROM sessions WHERE token_hash = ? AND expires_at > ?",
+        )
+        .bind(&scramble(&token)[..])
+        .bind(now())
+        .fetch_optional(&state.db)
+        .await;
         match found {
-            Ok(Some(_)) => Ok(Self),
+            Ok(Some(person)) => Ok(Self(person)),
             Ok(None) => Err(StatusCode::UNAUTHORIZED.into_response()),
             Err(error) => Err(database_problem("checking a sign-in", &error)),
         }
@@ -200,39 +212,45 @@ async fn sign_in(State(state): State<AppState>, Json(form): Json<SignIn>) -> Res
     limiter.right();
     drop(limiter);
 
-    let token = match new_token() {
-        Ok(token) => token,
-        Err(error) => {
-            log::problem(&format!("couldn't make a sign-in ticket: {error}"));
-            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
-        }
-    };
-    let now = now();
-    // Tidy away devices whose year ran out, then remember this one.
-    let stored = async {
-        sqlx::query("DELETE FROM sessions WHERE expires_at <= ?")
-            .bind(now)
-            .execute(&state.db)
-            .await?;
-        sqlx::query(
-            "INSERT INTO sessions (token_hash, created_at, last_used_at, expires_at) VALUES (?, ?, ?, ?)",
-        )
-        .bind(&scramble(&token)[..])
-        .bind(now)
-        .bind(now)
-        .bind(now + SESSION_LIFETIME)
-        .execute(&state.db)
-        .await
-    }
-    .await;
-    match stored {
-        Ok(_) => (
+    match remember_device(&state.db, OWNER).await {
+        Ok(Some(token)) => (
             StatusCode::NO_CONTENT,
             [(header::SET_COOKIE, session_cookie(&token))],
         )
             .into_response(),
+        Ok(None) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
         Err(error) => database_problem("saving a sign-in", &error),
     }
+}
+
+/// Signs a new device in for reader `person`: answers the ticket for its
+/// cookie, or `None` if no random ticket could be made (said in the log).
+/// Devices whose year ran out are tidied away first.
+pub async fn remember_device(db: &SqlitePool, person: i64) -> Result<Option<String>, sqlx::Error> {
+    let token = match new_token() {
+        Ok(token) => token,
+        Err(error) => {
+            log::problem(&format!("couldn't make a sign-in ticket: {error}"));
+            return Ok(None);
+        }
+    };
+    let now = now();
+    sqlx::query("DELETE FROM sessions WHERE expires_at <= ?")
+        .bind(now)
+        .execute(db)
+        .await?;
+    sqlx::query(
+        "INSERT INTO sessions (person_id, token_hash, created_at, last_used_at, expires_at)
+         VALUES (?, ?, ?, ?, ?)",
+    )
+    .bind(person)
+    .bind(&scramble(&token)[..])
+    .bind(now)
+    .bind(now)
+    .bind(now + SESSION_LIFETIME)
+    .execute(db)
+    .await?;
+    Ok(Some(token))
 }
 
 /// Signs out this device only. Other devices stay signed in.

@@ -170,10 +170,11 @@ fn percent_decode(text: &str) -> String {
     String::from_utf8_lossy(&out).into_owned()
 }
 
-/// Proof that a request comes from an app holding the app password. Apps
-/// get Google's plain "Unauthorized" otherwise, which they understand as
-/// "sign in again".
-struct App;
+/// Proof that a request comes from an app holding a reader's app password,
+/// and whose it is (their number in `people`). Apps get Google's plain
+/// "Unauthorized" otherwise, which they understand as "sign in again".
+#[derive(Clone, Copy)]
+struct App(i64);
 
 impl FromRequestParts<AppState> for App {
     type Rejection = Response;
@@ -183,8 +184,8 @@ impl FromRequestParts<AppState> for App {
             return Err(unauthorized());
         };
         match apps::matches(state, &password).await {
-            Ok(true) => Ok(Self),
-            Ok(false) => Err(unauthorized()),
+            Ok(Some(person)) => Ok(Self(person)),
+            Ok(None) => Err(unauthorized()),
             Err(error) => Err(database_problem("checking an app password", &error)),
         }
     }
@@ -208,11 +209,11 @@ fn text(body: impl Into<String>) -> Response {
 async fn client_login(State(state): State<AppState>, params: Params) -> Response {
     let password = params.first("Passwd").unwrap_or_default();
     match apps::matches(&state, password).await {
-        Ok(true) => {
+        Ok(Some(_)) => {
             let token = apps::normalize(password);
             text(format!("SID={token}\nLSID=null\nAuth={token}\n"))
         }
-        Ok(false) => {
+        Ok(None) => {
             // The app password can't be guessed (119 bits), so there's no
             // wait as there is for the sign-in page, which would let a
             // stranger lock the owner out. It's counted on the diagnostics
@@ -250,7 +251,7 @@ type FeedLine = (i64, String, String, Option<String>);
 type UnreadLine = (i64, i64, i64);
 
 /// Every followed feed, with its folders as Google's "labels".
-async fn subscriptions(_: App, State(state): State<AppState>) -> Response {
+async fn subscriptions(App(person): App, State(state): State<AppState>) -> Response {
     let listed: Result<(Vec<FeedLine>, Labels), sqlx::Error> = async {
         let feeds = sqlx::query_as(
             "SELECT id, title, url, site_url FROM feeds WHERE unsubscribed_at IS NULL
@@ -258,7 +259,7 @@ async fn subscriptions(_: App, State(state): State<AppState>) -> Response {
         )
         .fetch_all(&state.db)
         .await?;
-        Ok((feeds, labels(&state.db).await?))
+        Ok((feeds, labels(&state.db, person).await?))
     }
     .await;
     let (feeds, labels) = match listed {
@@ -288,11 +289,13 @@ async fn subscriptions(_: App, State(state): State<AppState>) -> Response {
 }
 
 /// Starred, and every folder.
-async fn tags(_: App, State(state): State<AppState>) -> Response {
-    let folders: Result<Vec<String>, sqlx::Error> =
-        sqlx::query_scalar("SELECT name FROM folders ORDER BY name COLLATE NOCASE")
-            .fetch_all(&state.db)
-            .await;
+async fn tags(App(person): App, State(state): State<AppState>) -> Response {
+    let folders: Result<Vec<String>, sqlx::Error> = sqlx::query_scalar(
+        "SELECT name FROM folders WHERE person_id = ? ORDER BY name COLLATE NOCASE",
+    )
+    .bind(person)
+    .fetch_all(&state.db)
+    .await;
     match folders {
         Ok(folders) => {
             let mut tags = vec![json!({ "id": STARRED })];
@@ -308,7 +311,7 @@ async fn tags(_: App, State(state): State<AppState>) -> Response {
 }
 
 /// Unread articles per followed feed, per folder and in all.
-async fn unread_counts(_: App, State(state): State<AppState>) -> Response {
+async fn unread_counts(App(person): App, State(state): State<AppState>) -> Response {
     let counted: Result<(Vec<UnreadLine>, Labels), sqlx::Error> = async {
         let counts = sqlx::query_as(
             "SELECT articles.feed_id, COUNT(*), MAX(articles.received_at)
@@ -318,7 +321,7 @@ async fn unread_counts(_: App, State(state): State<AppState>) -> Response {
         )
         .fetch_all(&state.db)
         .await?;
-        Ok((counts, labels(&state.db).await?))
+        Ok((counts, labels(&state.db, person).await?))
     }
     .await;
     let (counts, labels) = match counted {
@@ -362,12 +365,14 @@ async fn unread_counts(_: App, State(state): State<AppState>) -> Response {
 /// Folder names per feed.
 type Labels = HashMap<i64, Vec<String>>;
 
-async fn labels(db: &sqlx::SqlitePool) -> Result<Labels, sqlx::Error> {
+async fn labels(db: &sqlx::SqlitePool, person: i64) -> Result<Labels, sqlx::Error> {
     let pairs: Vec<(i64, String)> = sqlx::query_as(
         "SELECT feed_folders.feed_id, folders.name
          FROM feed_folders JOIN folders ON folders.id = feed_folders.folder_id
+         WHERE folders.person_id = ?
          ORDER BY folders.name COLLATE NOCASE",
     )
+    .bind(person)
     .fetch_all(db)
     .await?;
     let mut labels = Labels::new();
@@ -409,8 +414,8 @@ impl Stream {
         }
     }
 
-    /// Adds this list's condition, after a `WHERE` or `AND`.
-    fn condition(&self, query: &mut QueryBuilder<Sqlite>) {
+    /// Adds this list's condition for reader `person`, after a `WHERE` or `AND`.
+    fn condition(&self, query: &mut QueryBuilder<Sqlite>, person: i64) {
         match self {
             Self::ReadingList => {
                 query.push("feeds.unsubscribed_at IS NULL");
@@ -431,8 +436,10 @@ impl Stream {
                     .push(
                         "feeds.unsubscribed_at IS NULL AND articles.feed_id IN
                          (SELECT feed_id FROM feed_folders JOIN folders ON folders.id = feed_folders.folder_id
-                          WHERE folders.name = ",
+                          WHERE folders.person_id = ",
                     )
+                    .push_bind(person)
+                    .push(" AND folders.name = ")
                     .push_bind(name.clone())
                     .push(")");
             }
@@ -492,13 +499,13 @@ impl Asked {
         }
     }
 
-    /// The query for this page of articles, with one extra row to know
-    /// whether another page follows.
-    fn query(&self, columns: &str) -> QueryBuilder<Sqlite> {
+    /// The query for this page of reader `person`'s articles, with one extra
+    /// row to know whether another page follows.
+    fn query(&self, columns: &str, person: i64) -> QueryBuilder<Sqlite> {
         let mut query = QueryBuilder::new(format!(
             "SELECT {columns} FROM articles JOIN feeds ON feeds.id = articles.feed_id WHERE "
         ));
-        self.stream.condition(&mut query);
+        self.stream.condition(&mut query, person);
         for (states, value) in [(&self.exclude, 0), (&self.include, 1)] {
             for state in states {
                 match state {
@@ -558,10 +565,13 @@ fn seconds(mut at: i64) -> i64 {
 
 /// The article numbers in a list, without their text: what apps ask first,
 /// to learn what's unread and starred.
-async fn item_ids(_: App, State(state): State<AppState>, params: Params) -> Response {
+async fn item_ids(App(person): App, State(state): State<AppState>, params: Params) -> Response {
     let asked = Asked::from(&params, None, MOST_AT_ONCE);
     let found: Result<Vec<(i64, i64, i64, i64)>, sqlx::Error> = asked
-        .query("articles.id, articles.feed_id, articles.received_at, articles.sort_at")
+        .query(
+            "articles.id, articles.feed_id, articles.received_at, articles.sort_at",
+            person,
+        )
         .build_query_as()
         .fetch_all(&state.db)
         .await;
@@ -604,16 +614,21 @@ async fn stream_contents(app: App, State(state): State<AppState>, params: Params
     contents_of(app, &state, &params, None).await
 }
 
-async fn contents_of(_: App, state: &AppState, params: &Params, stream: Option<&str>) -> Response {
+async fn contents_of(
+    App(person): App,
+    state: &AppState,
+    params: &Params,
+    stream: Option<&str>,
+) -> Response {
     let asked = Asked::from(params, stream, MOST_CONTENTS);
     let id = mine(stream.or_else(|| params.first("s")).unwrap_or(READING_LIST));
     let found: Result<(Vec<Article>, Labels), sqlx::Error> = async {
         let articles = asked
-            .query(article_columns!())
+            .query(article_columns!(), person)
             .build_query_as()
             .fetch_all(&state.db)
             .await?;
-        Ok((articles, labels(&state.db).await?))
+        Ok((articles, labels(&state.db, person).await?))
     }
     .await;
     let (mut articles, labels) = match found {
@@ -635,7 +650,11 @@ async fn contents_of(_: App, state: &AppState, params: &Params, stream: Option<&
 }
 
 /// Named articles with their text: `i` once per article.
-async fn item_contents(_: App, State(state): State<AppState>, params: Params) -> Response {
+async fn item_contents(
+    App(person): App,
+    State(state): State<AppState>,
+    params: Params,
+) -> Response {
     let ids: Vec<i64> = params.all("i").filter_map(item_number).collect();
     if ids.len() > MOST_AT_ONCE {
         return StatusCode::PAYLOAD_TOO_LARGE.into_response();
@@ -651,7 +670,7 @@ async fn item_contents(_: App, State(state): State<AppState>, params: Params) ->
         .bind(serde_json::to_string(&ids).unwrap_or_else(|_| "[]".to_owned()))
         .fetch_all(&state.db)
         .await?;
-        Ok((articles, labels(&state.db).await?))
+        Ok((articles, labels(&state.db, person).await?))
     }
     .await;
     match found {
@@ -785,14 +804,18 @@ async fn edit_tag(_: App, State(state): State<AppState>, params: Params) -> Resp
 /// Marks a list read, but only articles that had arrived by `ts`, the moment
 /// the app last looked: as with nine turtles' own "Mark all as read",
 /// articles that arrived since are never touched.
-async fn mark_all_as_read(_: App, State(state): State<AppState>, params: Params) -> Response {
+async fn mark_all_as_read(
+    App(person): App,
+    State(state): State<AppState>,
+    params: Params,
+) -> Response {
     let stream = Stream::parse(params.first("s").unwrap_or(READING_LIST));
     let until = params.number("ts").map_or_else(now, seconds);
     let mut query = QueryBuilder::<Sqlite>::new(
         "UPDATE articles SET read = 1 WHERE read = 0 AND id IN
          (SELECT articles.id FROM articles JOIN feeds ON feeds.id = articles.feed_id WHERE ",
     );
-    stream.condition(&mut query);
+    stream.condition(&mut query, person);
     query
         .push(" AND articles.received_at <= ")
         .push_bind(until)
@@ -807,7 +830,11 @@ async fn mark_all_as_read(_: App, State(state): State<AppState>, params: Params)
 /// (`subscribe`, `unsubscribe` or `edit`), `s` names the feed (`feed/12`,
 /// or `feed/` and its address to follow it), `t` is a new name, `a` a folder
 /// to put it in and `r` one to take it out of.
-async fn edit_subscription(_: App, State(state): State<AppState>, params: Params) -> Response {
+async fn edit_subscription(
+    App(person): App,
+    State(state): State<AppState>,
+    params: Params,
+) -> Response {
     let action = params.first("ac").unwrap_or("edit");
     let feeds: Vec<&str> = params.all("s").collect();
     if feeds.is_empty() {
@@ -826,10 +853,10 @@ async fn edit_subscription(_: App, State(state): State<AppState>, params: Params
         let done = match action {
             "unsubscribe" => unfollow(&state, id).await,
             "subscribe" => match bring_back(&state, id).await {
-                Ok(()) => file(&state, id, &params).await,
+                Ok(()) => file(&state, person, id, &params).await,
                 Err(error) => Err(error),
             },
-            _ => file(&state, id, &params).await,
+            _ => file(&state, person, id, &params).await,
         };
         if let Err(error) = done {
             return database_problem("changing a feed for an app", &error);
@@ -897,7 +924,7 @@ async fn bring_back(state: &AppState, id: i64) -> Result<(), sqlx::Error> {
 /// folder named for the first time. Names are cleaned as nine turtles' own
 /// fields clean them; a name that's empty or too long is ignored. `t` is
 /// the new name, `a` folders to put it in and `r` folders to take it out of.
-async fn file(state: &AppState, id: i64, params: &Params) -> Result<(), sqlx::Error> {
+async fn file(state: &AppState, person: i64, id: i64, params: &Params) -> Result<(), sqlx::Error> {
     let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
     let followed: Option<i64> =
         sqlx::query_scalar("SELECT id FROM feeds WHERE id = ? AND unsubscribed_at IS NULL")
@@ -915,7 +942,7 @@ async fn file(state: &AppState, id: i64, params: &Params) -> Result<(), sqlx::Er
             .await?;
     }
     for name in params.all("a").filter_map(folder_name) {
-        let (folder, _) = folders::folder_named(&mut transaction, &name).await?;
+        let (folder, _) = folders::folder_named(&mut transaction, person, &name).await?;
         sqlx::query("INSERT OR IGNORE INTO feed_folders (folder_id, feed_id) VALUES (?, ?)")
             .bind(folder)
             .bind(id)
@@ -925,9 +952,10 @@ async fn file(state: &AppState, id: i64, params: &Params) -> Result<(), sqlx::Er
     for name in params.all("r").filter_map(folder_name) {
         sqlx::query(
             "DELETE FROM feed_folders WHERE feed_id = ?
-             AND folder_id IN (SELECT id FROM folders WHERE name = ?)",
+             AND folder_id IN (SELECT id FROM folders WHERE person_id = ? AND name = ?)",
         )
         .bind(id)
+        .bind(person)
         .bind(name)
         .execute(&mut *transaction)
         .await?;
@@ -942,7 +970,11 @@ fn folder_name(label: &str) -> Option<String> {
 }
 
 /// Renames a folder: `s` (or `t`) the folder, `dest` its new name.
-async fn rename_folder(_: App, State(state): State<AppState>, params: Params) -> Response {
+async fn rename_folder(
+    App(person): App,
+    State(state): State<AppState>,
+    params: Params,
+) -> Response {
     let (Some(old), Some(new)) = (
         params
             .first("s")
@@ -953,12 +985,12 @@ async fn rename_folder(_: App, State(state): State<AppState>, params: Params) ->
         return (StatusCode::BAD_REQUEST, "Name a folder and its new name.").into_response();
     };
     let renamed = sqlx::query(
-        "UPDATE folders SET name = ? WHERE name = ?
-         AND NOT EXISTS (SELECT 1 FROM folders AS other WHERE other.name = ? AND other.name != ?)",
+        "UPDATE folders SET name = ?1 WHERE person_id = ?2 AND name = ?3
+         AND NOT EXISTS (SELECT 1 FROM folders AS other
+                         WHERE other.person_id = ?2 AND other.name = ?1 AND other.name != ?3)",
     )
     .bind(&new)
-    .bind(&old)
-    .bind(&new)
+    .bind(person)
     .bind(&old)
     .execute(&state.db)
     .await;
@@ -975,7 +1007,11 @@ async fn rename_folder(_: App, State(state): State<AppState>, params: Params) ->
 
 /// Deletes a folder: `s` (or `t`) names it. Its feeds stay followed, as
 /// when a folder is deleted in nine turtles.
-async fn delete_folder(_: App, State(state): State<AppState>, params: Params) -> Response {
+async fn delete_folder(
+    App(person): App,
+    State(state): State<AppState>,
+    params: Params,
+) -> Response {
     let Some(name) = params
         .first("s")
         .or_else(|| params.first("t"))
@@ -983,7 +1019,8 @@ async fn delete_folder(_: App, State(state): State<AppState>, params: Params) ->
     else {
         return (StatusCode::BAD_REQUEST, "Name a folder.").into_response();
     };
-    match sqlx::query("DELETE FROM folders WHERE name = ?")
+    match sqlx::query("DELETE FROM folders WHERE person_id = ? AND name = ?")
+        .bind(person)
         .bind(name)
         .execute(&state.db)
         .await

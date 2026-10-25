@@ -403,6 +403,7 @@ fn parse_cursor(text: &str) -> Option<(bool, i64, i64)> {
 /// One page of results, and where the next starts (null at the end).
 pub async fn find(
     db: &sqlx::SqlitePool,
+    person: i64,
     search: &Search,
 ) -> Result<Option<(Vec<Hit>, Option<String>)>, sqlx::Error> {
     let words = fts_question(&search.q);
@@ -447,9 +448,14 @@ pub async fn find(
         query.push(" AND articles.feed_id = ");
         query.push_bind(feed);
     } else if let Some(folder) = search.folder {
-        query.push(" AND articles.feed_id IN (SELECT feed_id FROM feed_folders WHERE folder_id = ");
+        query.push(
+            " AND articles.feed_id IN (SELECT feed_id FROM feed_folders
+              WHERE folder_id = (SELECT id FROM folders WHERE id = ",
+        );
         query.push_bind(folder);
-        query.push(")");
+        query.push(" AND person_id = ");
+        query.push_bind(person);
+        query.push("))");
     }
     if search.unread {
         // A feed that flows past is never in Unread (SPEC section 10).
@@ -538,11 +544,11 @@ pub async fn find(
 }
 
 async fn search(
-    _: SignedIn,
+    SignedIn(person): SignedIn,
     State(state): State<AppState>,
     Query(search): Query<Search>,
 ) -> Response {
-    match find(&state.db, &search).await {
+    match find(&state.db, person, &search).await {
         Ok(Some((articles, next))) => {
             Json(json!({ "articles": articles, "next": next })).into_response()
         }

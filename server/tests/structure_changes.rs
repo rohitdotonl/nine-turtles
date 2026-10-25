@@ -155,7 +155,7 @@ async fn adding_background_checks_keeps_every_feed_article_mark_and_star() {
         100
     );
     assert_eq!(
-        count("SELECT COUNT(*) FROM settings WHERE value = 'oldest'")
+        count("SELECT COUNT(*) FROM person_settings WHERE person_id = 1 AND name = 'sort' AND value = 'oldest'")
             .await
             .unwrap(),
         1
@@ -667,4 +667,228 @@ async fn adding_rules_keeps_every_article_mark_and_star_and_mutes_nothing() {
         0
     );
     assert_eq!(count("SELECT COUNT(*) FROM rules").await.unwrap(), 0);
+}
+
+#[tokio::test]
+async fn giving_things_an_owner_makes_everything_the_owners_and_loses_nothing() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just before readers (structure changes up to 10), with a
+    // signed-in device, settings, an app password, folders with feeds in
+    // them, saved searches and rules.
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(10, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO sessions (token_hash, created_at, last_used_at, expires_at)
+         VALUES (x'00112233', 1, 1, 9999999999), (x'44556677', 1, 1, 9999999999)",
+        "INSERT INTO settings (name, value) VALUES ('sort', 'oldest'), ('mode', 'river'),
+             ('app_password', 'abc123'), ('app_password_made_at', '1790000000'),
+             ('articles_high_water', '4000')",
+        "INSERT INTO folders (id, name) VALUES (1, 'Gardens'), (2, 'Essays'), (3, 'Empty')",
+        "INSERT INTO saved_searches (id, name, query, created_at)
+         VALUES (1, 'Tomatoes', '{\"q\":\"tomatoes\"}', 5), (2, 'Essays', '{}', 6)",
+        "INSERT INTO rules (id, words, author, feed_id, folder_id, place_gone, action, paused,
+             created_at)
+         VALUES (1, 'sponsored', '', NULL, NULL, 0, 'mute', 0, 7),
+                (2, '', 'Ann', 3, NULL, 0, 'star', 1, 8),
+                (3, 'news', '', NULL, 1, 0, 'read', 0, 9),
+                (4, 'gone', '', NULL, NULL, 1, 'mute', 0, 10)",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    for feed in 1..=10 {
+        sqlx::query("INSERT INTO feeds (id, url, url_key, title, added_at) VALUES (?, ?, ?, ?, 1)")
+            .bind(feed)
+            .bind(format!("https://blog-{feed}.example/feed"))
+            .bind(format!("blog-{feed}.example/feed"))
+            .bind(format!("Blog {feed}"))
+            .execute(&old)
+            .await
+            .unwrap();
+        // Every feed in Gardens, every other one in Essays too.
+        for folder in [1, 2]
+            .into_iter()
+            .filter(|folder| *folder == 1 || feed % 2 == 0)
+        {
+            sqlx::query("INSERT INTO feed_folders (folder_id, feed_id) VALUES (?, ?)")
+                .bind(folder)
+                .bind(feed)
+                .execute(&old)
+                .await
+                .unwrap();
+        }
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let count = |sql: &'static str| sqlx::query_scalar::<_, i64>(sql).fetch_one(&db);
+    // One reader, the owner.
+    assert_eq!(
+        count("SELECT COUNT(*) FROM people WHERE id = 1 AND owner = 1")
+            .await
+            .unwrap(),
+        1
+    );
+    assert_eq!(count("SELECT COUNT(*) FROM people").await.unwrap(), 1);
+    // Both devices stay signed in, as the owner's.
+    assert_eq!(
+        count("SELECT COUNT(*) FROM sessions WHERE person_id = 1")
+            .await
+            .unwrap(),
+        2
+    );
+    // The settings and the app password are the owner's; nine turtles' own
+    // highest article number stays where it was.
+    let settings: Vec<(i64, String, String)> =
+        sqlx::query_as("SELECT person_id, name, value FROM person_settings ORDER BY name")
+            .fetch_all(&db)
+            .await
+            .unwrap();
+    assert_eq!(
+        settings,
+        [
+            (1, "mode".to_owned(), "river".to_owned()),
+            (1, "sort".to_owned(), "oldest".to_owned())
+        ]
+    );
+    let app: (i64, String, i64) =
+        sqlx::query_as("SELECT person_id, password_hash, made_at FROM app_passwords")
+            .fetch_one(&db)
+            .await
+            .unwrap();
+    assert_eq!(app, (1, "abc123".to_owned(), 1_790_000_000));
+    let left: Vec<(String, String)> = sqlx::query_as("SELECT name, value FROM settings")
+        .fetch_all(&db)
+        .await
+        .unwrap();
+    assert_eq!(
+        left,
+        [("articles_high_water".to_owned(), "4000".to_owned())]
+    );
+    // Every folder, with every feed still in it, keeps its number.
+    let folders: Vec<(i64, i64, String)> =
+        sqlx::query_as("SELECT id, person_id, name FROM folders ORDER BY id")
+            .fetch_all(&db)
+            .await
+            .unwrap();
+    assert_eq!(
+        folders,
+        [
+            (1, 1, "Gardens".to_owned()),
+            (2, 1, "Essays".to_owned()),
+            (3, 1, "Empty".to_owned())
+        ]
+    );
+    assert_eq!(
+        count("SELECT COUNT(*) FROM feed_folders WHERE folder_id = 1")
+            .await
+            .unwrap(),
+        10
+    );
+    assert_eq!(
+        count("SELECT COUNT(*) FROM feed_folders WHERE folder_id = 2")
+            .await
+            .unwrap(),
+        5
+    );
+    // Saved searches and rules are the owner's, exactly as they were.
+    let searches: Vec<(i64, i64, String, String, i64)> = sqlx::query_as(
+        "SELECT id, person_id, name, query, created_at FROM saved_searches ORDER BY id",
+    )
+    .fetch_all(&db)
+    .await
+    .unwrap();
+    assert_eq!(
+        searches,
+        [
+            (
+                1,
+                1,
+                "Tomatoes".to_owned(),
+                r#"{"q":"tomatoes"}"#.to_owned(),
+                5
+            ),
+            (2, 1, "Essays".to_owned(), "{}".to_owned(), 6)
+        ]
+    );
+    type RuleRow = (
+        i64,
+        i64,
+        String,
+        String,
+        Option<i64>,
+        Option<i64>,
+        i64,
+        String,
+        i64,
+        i64,
+    );
+    let rules: Vec<RuleRow> = sqlx::query_as(
+        "SELECT id, person_id, words, author, feed_id, folder_id, place_gone, action, paused,
+             created_at FROM rules ORDER BY id",
+    )
+    .fetch_all(&db)
+    .await
+    .unwrap();
+    let rule = |id, words: &str, author: &str, feed, folder, gone, action: &str, paused, at| {
+        (
+            id,
+            1,
+            words.to_owned(),
+            author.to_owned(),
+            feed,
+            folder,
+            gone,
+            action.to_owned(),
+            paused,
+            at,
+        )
+    };
+    assert_eq!(
+        rules,
+        [
+            rule(1, "sponsored", "", None, None, 0, "mute", 0, 7),
+            rule(2, "", "Ann", Some(3), None, 0, "star", 1, 8),
+            rule(3, "news", "", None, Some(1), 0, "read", 0, 9),
+            rule(4, "gone", "", None, None, 1, "mute", 0, 10),
+        ]
+    );
+
+    // Names are unique for each reader now, not across readers.
+    sqlx::query("INSERT INTO people (id, created_at) VALUES (2, 1)")
+        .execute(&db)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO folders (person_id, name) VALUES (2, 'gardens')",
+        "INSERT INTO saved_searches (person_id, name, query, created_at)
+         VALUES (2, 'tomatoes', '{}', 1)",
+    ] {
+        sqlx::query(sql).execute(&db).await.unwrap();
+    }
+    for sql in [
+        "INSERT INTO folders (person_id, name) VALUES (1, 'GARDENS')",
+        "INSERT INTO saved_searches (person_id, name, query, created_at)
+         VALUES (1, 'TOMATOES', '{}', 1)",
+    ] {
+        assert!(sqlx::query(sql).execute(&db).await.is_err(), "{sql}");
+    }
+    // Every table's rules still hold: SQLite finds nothing out of place.
+    let problems: Vec<(String,)> = sqlx::query_as("PRAGMA foreign_key_check")
+        .fetch_all(&db)
+        .await
+        .unwrap();
+    assert!(problems.is_empty(), "{problems:?}");
 }

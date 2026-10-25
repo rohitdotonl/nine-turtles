@@ -1,4 +1,4 @@
-//! The reader's settings shared across their devices (SPEC section 18): the
+//! Each reader's settings shared across their devices (SPEC section 18): the
 //! sort order and the reading mode, inbox or river (SPEC section 10). Reader
 //! controls such as the theme belong to each device and stay in its browser.
 
@@ -46,11 +46,14 @@ struct Change {
     mode: Option<Mode>,
 }
 
-async fn load(db: &SqlitePool) -> Result<Settings, sqlx::Error> {
-    let rows: Vec<(String, String)> =
-        sqlx::query_as("SELECT name, value FROM settings WHERE name IN ('sort', 'mode')")
-            .fetch_all(db)
-            .await?;
+async fn load(db: &SqlitePool, person: i64) -> Result<Settings, sqlx::Error> {
+    let rows: Vec<(String, String)> = sqlx::query_as(
+        "SELECT name, value FROM person_settings
+         WHERE person_id = ? AND name IN ('sort', 'mode')",
+    )
+    .bind(person)
+    .fetch_all(db)
+    .await?;
     let value = |name: &str| {
         rows.iter()
             .find(|(each, _)| each == name)
@@ -68,15 +71,15 @@ async fn load(db: &SqlitePool) -> Result<Settings, sqlx::Error> {
     Ok(Settings { sort, mode })
 }
 
-async fn read(_: SignedIn, State(state): State<AppState>) -> Response {
-    match load(&state.db).await {
+async fn read(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
+    match load(&state.db, person).await {
         Ok(settings) => Json(settings).into_response(),
         Err(error) => database_problem("reading settings", &error),
     }
 }
 
 async fn change(
-    _: SignedIn,
+    SignedIn(person): SignedIn,
     State(state): State<AppState>,
     Json(change): Json<Change>,
 ) -> Response {
@@ -93,9 +96,10 @@ async fn change(
         for (name, value) in [("sort", sort), ("mode", mode)] {
             if let Some(value) = value {
                 sqlx::query(
-                    "INSERT INTO settings (name, value) VALUES (?, ?)
-                     ON CONFLICT (name) DO UPDATE SET value = excluded.value",
+                    "INSERT INTO person_settings (person_id, name, value) VALUES (?, ?, ?)
+                     ON CONFLICT (person_id, name) DO UPDATE SET value = excluded.value",
                 )
+                .bind(person)
                 .bind(name)
                 .bind(value)
                 .execute(&mut *transaction)
@@ -103,7 +107,7 @@ async fn change(
             }
         }
         transaction.commit().await?;
-        load(&state.db).await
+        load(&state.db, person).await
     }
     .await;
     match saved {

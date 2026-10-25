@@ -1,4 +1,4 @@
-//! Saved searches (SPEC section 14): a search the reader named, listed in
+//! Saved searches (SPEC section 14), each reader's own: a search the reader named, listed in
 //! the sidebar under "Saved searches", alphabetically, and run again when
 //! opened. Renaming one, changing what it searches, and deleting it (with
 //! Undo, which the screen does by saving it again).
@@ -61,11 +61,13 @@ impl Form {
     }
 }
 
-/// Every saved search, alphabetically (SPEC section 5).
-async fn list(_: SignedIn, State(state): State<AppState>) -> Response {
+/// The reader's saved searches, alphabetically (SPEC section 5).
+async fn list(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
     let rows: Result<Vec<(i64, String, String)>, sqlx::Error> = sqlx::query_as(
-        "SELECT id, name, query FROM saved_searches ORDER BY name COLLATE NOCASE, id",
+        "SELECT id, name, query FROM saved_searches WHERE person_id = ?
+         ORDER BY name COLLATE NOCASE, id",
     )
+    .bind(person)
     .fetch_all(&state.db)
     .await;
     match rows {
@@ -84,14 +86,20 @@ async fn list(_: SignedIn, State(state): State<AppState>) -> Response {
     }
 }
 
-async fn create(_: SignedIn, State(state): State<AppState>, Json(form): Json<Form>) -> Response {
+async fn create(
+    SignedIn(person): SignedIn,
+    State(state): State<AppState>,
+    Json(form): Json<Form>,
+) -> Response {
     let (name, query) = match form.checked() {
         Ok(checked) => checked,
         Err(refusal) => return problem(StatusCode::BAD_REQUEST, refusal),
     };
     let created: Result<i64, sqlx::Error> = sqlx::query_scalar(
-        "INSERT INTO saved_searches (name, query, created_at) VALUES (?, ?, ?) RETURNING id",
+        "INSERT INTO saved_searches (person_id, name, query, created_at) VALUES (?, ?, ?, ?)
+         RETURNING id",
     )
+    .bind(person)
     .bind(&name)
     .bind(&query)
     .bind(now())
@@ -112,7 +120,7 @@ async fn create(_: SignedIn, State(state): State<AppState>, Json(form): Json<For
 
 /// A new name, and what it searches, saved together.
 async fn change(
-    _: SignedIn,
+    SignedIn(person): SignedIn,
     State(state): State<AppState>,
     Path(id): Path<i64>,
     Json(form): Json<Form>,
@@ -121,12 +129,14 @@ async fn change(
         Ok(checked) => checked,
         Err(refusal) => return problem(StatusCode::BAD_REQUEST, refusal),
     };
-    let changed = sqlx::query("UPDATE saved_searches SET name = ?, query = ? WHERE id = ?")
-        .bind(&name)
-        .bind(&query)
-        .bind(id)
-        .execute(&state.db)
-        .await;
+    let changed =
+        sqlx::query("UPDATE saved_searches SET name = ?, query = ? WHERE id = ? AND person_id = ?")
+            .bind(&name)
+            .bind(&query)
+            .bind(id)
+            .bind(person)
+            .execute(&state.db)
+            .await;
     match changed {
         Ok(changed) if changed.rows_affected() == 0 => StatusCode::NOT_FOUND.into_response(),
         Ok(_) => StatusCode::NO_CONTENT.into_response(),
@@ -139,9 +149,14 @@ async fn change(
 
 /// Deletes a saved search. Only the search goes: no article is touched. The
 /// screen keeps its name and query, so Undo can save it again.
-async fn delete(_: SignedIn, State(state): State<AppState>, Path(id): Path<i64>) -> Response {
-    let deleted = sqlx::query("DELETE FROM saved_searches WHERE id = ?")
+async fn delete(
+    SignedIn(person): SignedIn,
+    State(state): State<AppState>,
+    Path(id): Path<i64>,
+) -> Response {
+    let deleted = sqlx::query("DELETE FROM saved_searches WHERE id = ? AND person_id = ?")
         .bind(id)
+        .bind(person)
         .execute(&state.db)
         .await;
     match deleted {
