@@ -120,32 +120,50 @@ function isTyping(target: EventTarget | null): boolean {
   return false;
 }
 
-/** The cheat sheet's groups, in order. */
-export const SHORTCUT_GROUPS = ["Moving around", "Reading", "Your articles", "Everywhere"] as const;
+/**
+ * The cheat sheet's groups, by what you're doing at the time (decision 0062):
+ * reading comes first, as it's what nine turtles is for.
+ */
+export const SHORTCUT_GROUPS = ["Reading", "Getting around", "Tidying up", "Anywhere"] as const;
 
 /** Every shortcut in DESIGN.md, for the `?` cheat sheet. `ready` marks what works today; the sheet lists only those. */
 export const SHORTCUTS: { keys: string[]; action: string; ready: boolean; group: (typeof SHORTCUT_GROUPS)[number] }[] = [
-  { keys: ["j", "k"], action: "Next / previous item", ready: true, group: "Moving around" },
-  { keys: ["Shift+J", "Shift+K"], action: "Next / previous feed", ready: false, group: "Moving around" },
-  { keys: ["g then u"], action: "Go to Unread", ready: true, group: "Moving around" },
-  { keys: ["g then s"], action: "Go to Starred", ready: true, group: "Moving around" },
-  { keys: ["g then a"], action: "Go to All", ready: true, group: "Moving around" },
-  { keys: ["["], action: "Show / hide sidebar", ready: true, group: "Moving around" },
-  { keys: ["]"], action: "Show / hide article list", ready: true, group: "Moving around" },
-  { keys: ["\\"], action: "Show / hide both", ready: true, group: "Moving around" },
-  { keys: ["Esc"], action: "Back / close", ready: true, group: "Moving around" },
-  { keys: ["Enter", "o"], action: "Open item", ready: true, group: "Reading" },
+  { keys: ["j", "k"], action: "Next / previous article", ready: true, group: "Reading" },
+  { keys: ["Enter", "o"], action: "Open article", ready: true, group: "Reading" },
   { keys: ["v"], action: "Open original", ready: true, group: "Reading" },
-  { keys: ["+", "-"], action: "Text size while reading", ready: true, group: "Reading" },
-  { keys: ["s"], action: "Star / unstar", ready: true, group: "Your articles" },
-  { keys: ["m"], action: "Mark current item unread", ready: true, group: "Your articles" },
-  { keys: ["Shift+A"], action: "Mark all as read", ready: true, group: "Your articles" },
-  { keys: ["u"], action: "Undo", ready: true, group: "Your articles" },
-  { keys: ["r"], action: "Show new items", ready: true, group: "Your articles" },
-  { keys: ["/"], action: "Search", ready: true, group: "Everywhere" },
-  { keys: ["a"], action: "Add feed", ready: true, group: "Everywhere" },
-  { keys: ["?"], action: "This list of shortcuts", ready: true, group: "Everywhere" },
+  { keys: ["+", "-"], action: "Text size", ready: true, group: "Reading" },
+  { keys: ["s"], action: "Star / unstar", ready: true, group: "Reading" },
+  { keys: ["Esc"], action: "Back / close", ready: true, group: "Reading" },
+  { keys: ["g then u"], action: "Go to Unread", ready: true, group: "Getting around" },
+  { keys: ["g then s"], action: "Go to Starred", ready: true, group: "Getting around" },
+  { keys: ["g then a"], action: "Go to All", ready: true, group: "Getting around" },
+  { keys: ["Shift+J", "Shift+K"], action: "Next / previous feed", ready: false, group: "Getting around" },
+  { keys: ["/"], action: "Search", ready: true, group: "Getting around" },
+  { keys: ["["], action: "Show / hide sidebar", ready: true, group: "Getting around" },
+  { keys: ["]"], action: "Show / hide article list", ready: true, group: "Getting around" },
+  { keys: ["\\"], action: "Show / hide both", ready: true, group: "Getting around" },
+  { keys: ["m"], action: "Mark unread", ready: true, group: "Tidying up" },
+  { keys: ["Shift+A"], action: "Mark all as read", ready: true, group: "Tidying up" },
+  { keys: ["u"], action: "Undo", ready: true, group: "Tidying up" },
+  { keys: ["r"], action: "Show new items", ready: true, group: "Tidying up" },
+  { keys: ["a"], action: "Add feed", ready: true, group: "Anywhere" },
+  { keys: ["?"], action: "This list of shortcuts", ready: true, group: "Anywhere" },
 ];
+
+/**
+ * Whether a shortcut fits what was typed in the list's find field: its
+ * words contain it ("star"), or one of its keys is it ("s", "g u", "shift a").
+ */
+export function shortcutMatches(shortcut: { keys: string[]; action: string }, typed: string): boolean {
+  const wanted = typed.trim().toLowerCase().replace(/\s+/g, " ");
+  if (wanted === "") return true;
+  if (shortcut.action.toLowerCase().includes(wanted)) return true;
+  return shortcut.keys.some((key) => {
+    const spelled = key.toLowerCase();
+    const forms = [spelled, spelled.replace(" then ", " "), spelled.replace("shift+", "shift "), spelled.replace("shift+", "⇧")];
+    return forms.includes(wanted);
+  });
+}
 
 /**
  * What a key's cap shows, as macOS and Apple Books print keys (decision 0055):

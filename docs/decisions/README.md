@@ -43,3 +43,4 @@ repository's history.
 | [0059](0059-apple-books-reference.md) | Apple Books is the design reference, written into DESIGN.md: floors first, then Apple Books; principles brought up to date; each screen described once, in SPEC.md |
 | [0060](0060-bookmark-and-phone-search-button.md) | A bookmark in every article (your place kept per device, by paragraph, forgotten at the top or the end) and, on a phone, the list's search field behind a Search button beside More |
 | [0061](0061-redesign-notes-folded.md) | The redesign notes 0025–0055 folded into one summary, their files deleted (full text in the history) |
+| [0062](0062-shortcuts-in-words-find-and-one-tip.md) | Shortcuts in words at the sidebar's foot; the shortcut list grouped by what you're doing, with a find field; one welcome tip, once, under "No article open" (changes 0041's no-hint rule) |
