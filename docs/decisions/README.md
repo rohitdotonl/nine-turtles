@@ -51,4 +51,5 @@ repository's history.
 | [0067](0067-turtle-logo.md) | A logo of nine turtles seen from the side, in one ink, for the app icon and the browser tab; the wordmark stays words (revisits 0022) |
 | [0068](0068-river-mode.md) | River mode: a reading mode with no Unread view, counts or read styling |
 | [0069](0069-websub.md) | WebSub: subscribe to a feed's hub at `NINE_TURTLES_PUBLIC_URL`/websub/{token}, a secret per feed, signed deliveries only (hmac, sha1, sha2), 10-day leases renewed a day early, backup checks at most twice a day |
-| [0070](0070-feed-health-page.md) | The feed health page: in Settings › Feeds, listed after two failures in a row, no status colors, Retry respects "slow down", Find new address moves a feed keeping everything |
+| [0070](0070-other-apps.md) | Reeder, NetNewsWire and other feed readers sync through the Google Reader API at `/api/greader`, signing in with an app password made in Settings (never the owner's own); apps may follow, unfollow and file feeds, with unfollowing hidden first |
+| [0071](0071-feed-health-page.md) | The feed health page: in Settings › Feeds, listed after two failures in a row, no status colors, Retry respects "slow down", Find new address moves a feed keeping everything |

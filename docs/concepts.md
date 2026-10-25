@@ -86,6 +86,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Deduplication and fingerprints
 - URL normalization
 - Tracking pixels and tracking parameters
+- Sync service and the Google Reader API
 
 ## The backend (server side)
 
@@ -159,6 +160,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Hash function (BLAKE2)
 - Random numbers and tokens
 - Session and session cookie
+- App password
 - Secure, HTTP-only and SameSite cookies
 - Cross-site request forgery (CSRF)
 - Cross-site scripting (XSS)

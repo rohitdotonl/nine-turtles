@@ -316,7 +316,7 @@ fn new_token() -> Result<String, getrandom::Error> {
         }))
 }
 
-fn scramble(token: &str) -> [u8; 32] {
+pub(crate) fn scramble(token: &str) -> [u8; 32] {
     Blake2s256::digest(token.as_bytes()).into()
 }
 

@@ -180,7 +180,7 @@ and the screen never changed under you.
 In V1, the daily check reported failing feeds instead (from Milestone 8).
 
 - Problems in plain words, sorted worst first, with Retry · Find new address · Unsubscribe.
-- In Settings › Feeds (SPEC section 17, decision 0070).
+- In Settings › Feeds (SPEC section 17, decision 0071).
 
 **You can try:** look at your real feeds' health after a few days of fetching.
 
@@ -365,6 +365,12 @@ each with screenshots:
 - ✅ A YouTube video plays in YouTube's own privacy-enhanced player, above
   its description, only once you press Play; a YouTube player inside a blog
   post becomes a link to the video (decision 0068).
+
+## Syncing with other apps
+
+- 🔨 Reeder, NetNewsWire and other feed readers sync with nine turtles
+  through the Google Reader API, with an app password made in Settings
+  (SPEC section 26, decision 0070).
 
 ---
 
