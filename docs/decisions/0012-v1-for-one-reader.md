@@ -2,6 +2,10 @@
 
 *23 October 2026, before Milestone 3. Decided by the owner.*
 
+**Update, 25 October 2026:** the "no backups" part is replaced by decision
+0076: nine turtles now backs itself up every night and before every
+structure change. The rest of this note is kept as it was.
+
 **What.** V1 is used only by the owner, so it leaves out what one reader
 can do without. Moved to V2:
 
