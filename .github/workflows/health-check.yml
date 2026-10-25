@@ -1,6 +1,6 @@
 # Checks every 15 minutes that the live nine turtles answers its status page.
 # When it doesn't (after 5 tries, a minute apart), this run fails and GitHub
-# emails the owner. No outside monitoring service (decision 0074).
+# emails the owner. No outside monitoring service (decision 0075).
 # What to do when the email comes: docs/operations/health-check.md.
 
 name: Health check

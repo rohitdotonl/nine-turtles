@@ -3,17 +3,17 @@
 # if it doesn't say "nine turtles is running". GitHub Actions runs this every
 # 15 minutes (.github/workflows/health-check.yml) and emails the owner when it
 # fails; any other scheduler, or a person, can run it the same way.
-# What it's for: docs/operations/health-check.md (decision 0074).
+# What it's for: docs/operations/health-check.md (decision 0075).
 #
 #   scripts/health-check.sh [address]
 #
-# The address defaults to NINE_TURTLES_ADDRESS, then https://app.nineturtles.app.
+# The address defaults to https://app.nineturtles.app.
 # A deploy restarts the app for a minute or two, so it tries 5 times, a minute
 # apart, before saying it's down.
 
 set -uo pipefail
 
-address="${1:-${NINE_TURTLES_ADDRESS:-https://app.nineturtles.app}}"
+address="${1:-https://app.nineturtles.app}"
 address="${address%/}" # "//status" would reach the front page instead
 tries="${HEALTH_CHECK_TRIES:-5}"
 wait_seconds="${HEALTH_CHECK_WAIT:-60}"

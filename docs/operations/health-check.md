@@ -1,5 +1,8 @@
 # The health check
 
+Not to be confused with Render's own "Health Check Path" (`render-setup.md`),
+which Render uses only to know a new version started.
+
 Every 15 minutes, GitHub asks the live nine turtles' status page
 (`https://app.nineturtles.app/status`) whether it's running. If it doesn't
 answer "nine turtles is running", GitHub tries again a minute later, five
@@ -7,7 +10,7 @@ times in all, so a deploy's minute of restarting never counts. If it still
 doesn't answer, the run fails and **GitHub emails the owner**.
 
 No outside monitoring service: it's a scheduled GitHub Actions job,
-free because the repository is public (decision 0074).
+free because the repository is public (decision 0075).
 
 **Calm by design:** while everything is fine, nothing happens and nothing
 is sent.
@@ -25,9 +28,11 @@ It looks only at the public status page: no key, no password, nothing secret.
 
 ## The email, and making sure it reaches the owner
 
-GitHub emails about a failed scheduled run to the person who last changed
-the schedule in `health-check.yml`, which is whoever merged that change (the
-owner). To check it's switched on: on GitHub, your picture (top right) →
+GitHub emails about a failed scheduled run to the GitHub account that last
+changed the schedule in `health-check.yml`: whoever merged that change. Agents
+here merge with the owner's own GitHub account, so that's the owner; if a
+different account ever merges a change to the schedule, the emails go to it
+instead, so test once after any such change. To check it's switched on: on GitHub, your picture (top right) →
 **Settings** → **Notifications** → **System** → **Actions**: "Email" ticked,
 and "Only notify for failed workflows" ticked.
 

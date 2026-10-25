@@ -81,7 +81,7 @@ in through the sign-in page with a made-up password (`web/playwright.config.ts`)
 - **Health check:** `.github/workflows/health-check.yml` runs
   `scripts/health-check.sh` every 15 minutes against the live app. If it
   isn't answering after 5 tries a minute apart, the run fails and GitHub
-  emails the owner (decision 0074, `health-check.md`).
+  emails the owner (decision 0075, `health-check.md`).
 - **Second-agent review:** see [second-agent-review.md](second-agent-review.md).
 
 ## When a check fails

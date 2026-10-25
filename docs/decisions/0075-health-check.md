@@ -1,7 +1,7 @@
-# 0074: An automatic health check, run by GitHub
+# 0075: An automatic health check, run by GitHub
 
-*25 October 2026. Milestone 2 of the plan for up to 200 readers, at the
-owner's request.*
+*25 October 2026. At the owner's request, the second step of making nine
+turtles ready for 100 to 200 readers (agreed with the owner that day).*
 
 **Decision.** A scheduled GitHub Actions job
 (`.github/workflows/health-check.yml`) runs `scripts/health-check.sh` every

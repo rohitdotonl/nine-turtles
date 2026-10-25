@@ -1,4 +1,4 @@
-// Tests scripts/health-check.sh (decision 0074) against a pretend nine turtles
+// Tests scripts/health-check.sh (decision 0075) against a pretend nine turtles
 // on this computer: it must pass when the status page says "nine turtles is
 // running", and fail when the page says something else or nothing answers.
 
