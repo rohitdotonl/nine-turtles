@@ -40,5 +40,7 @@ changed since you last used an emailed link, the setting wins again.
 - Removing `NINE_TURTLES_PASSWORD_HASH`, or pasting something that isn't a
   line from `nine-turtles set-password`: nothing changes, so a slip never
   locks you out.
+- Pasting back the same line that was in Render before: it has to be a
+  newly made line, so make a new one in step 1.
 - Readers other than you: this is only for the owner. A reader who forgets
   their password uses Forgot your password?, which needs email.
