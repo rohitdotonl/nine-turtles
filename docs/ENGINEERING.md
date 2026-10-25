@@ -25,7 +25,7 @@ Same structure as `DESIGN.md`: a floor that nothing can trade away, then ranked 
 ### The floor: never lose the reader's data, never put the reader at risk
 
 - Every change to the database's structure is tested on a copy before it runs for real, and is backed up first: nine turtles stores a copy before changing its structure, and doesn't change it if that copy fails (decision 0076).
-- Nothing deletes data without undo, and without a backup taken first. Unsubscribing deletes the feed's unstarred articles and read history; the immediate undo brings them back, and after that the nightly backups still hold them for 30 days (the owner accepted this, 23 October 2026).
+- Nothing deletes data without undo. Backups are taken nightly and before every structure change, not before each deletion: unsubscribing deletes the feed's unstarred articles and read history, which the immediate undo brings back; after that, what was there at the last nightly copy can still be restored from the backups (nightly copies for 30 days, monthly ones for a year). Anything added since the last copy isn't in them. The owner accepted this (23 October 2026; the backups arrived 25 October, decision 0076).
 - Any change that could lose the reader's data (a structure change that drops or rewrites data, for example) is still raised with the owner first.
 - Article content from feeds is always sanitized before display.
 - Passwords and secrets never appear in the code or in GitHub.
@@ -173,7 +173,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 
 ### Data
 
-- **V1 has no automatic clean-up:** every article is kept. Unsubscribing deletes the feed's unstarred articles and read history (starred ones are kept); only the immediate undo brings them back, which the owner accepted (see the floor). The yearly clean-up below is planned for V2; it can be built now that backups exist.
+- **No automatic clean-up yet:** every article is kept. Unsubscribing deletes the feed's unstarred articles and read history (starred ones are kept); the immediate undo brings them back, and after that only a restore from a backup does (see the floor). The yearly clean-up below is planned for V2; it can be built now that backups exist.
 - Unstarred articles older than one year, read or not, are deleted. Starred articles are kept forever.
 - An article's age counts from when nine turtles **first received it**, not its published date, so old posts from a newly added blog aren't deleted the next night.
 - nine turtles remembers the fingerprint of each deleted article (a short line of text, using a few megabytes at most), so an article still listed in its feed isn't fetched again as new. These records are removed when the feed is unsubscribed.

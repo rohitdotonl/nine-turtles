@@ -123,8 +123,8 @@ pub async fn nightly(db: &SqlitePool, storage: &Storage, at: i64) -> Result<Stri
     }
     drop(copy);
 
-    prune(storage, NIGHTLY, NIGHTLY_KEPT).await?;
-    prune(storage, MONTHLY, MONTHLY_KEPT).await?;
+    prune(storage, NIGHTLY, NIGHTLY_KEPT).await;
+    prune(storage, MONTHLY, MONTHLY_KEPT).await;
     Ok(name)
 }
 
@@ -143,30 +143,44 @@ pub async fn before_structure_change(
     );
     storage.put(&name, copy.path()).await?;
     drop(copy);
-    prune(storage, BEFORE_CHANGE, BEFORE_CHANGE_KEPT).await?;
+    prune(storage, BEFORE_CHANGE, BEFORE_CHANGE_KEPT).await;
     Ok(name)
 }
 
 /// Deletes all but the newest `keep` copies under `prefix`. Names start
-/// with the date, so name order is age order.
-async fn prune(storage: &Storage, prefix: &str, keep: usize) -> Result<(), String> {
-    let stored = storage.list(prefix).await?;
-    let extra = stored.len().saturating_sub(keep);
-    for old in &stored[..extra] {
-        storage.delete(&old.name).await?;
+/// with the date, so name order is age order. The new copy is already
+/// stored, so a failure here is only reported: it never fails the backup,
+/// and the next copy tries again.
+async fn prune(storage: &Storage, prefix: &str, keep: usize) {
+    let result = async {
+        let stored = storage.list(prefix).await?;
+        let extra = stored.len().saturating_sub(keep);
+        for old in &stored[..extra] {
+            storage.delete(&old.name).await?;
+        }
+        Ok::<_, String>(())
     }
-    Ok(())
+    .await;
+    if let Err(error) = result {
+        log::problem(&format!(
+            "the backup is stored, but older copies couldn't be deleted: {error}"
+        ));
+    }
 }
 
 /// Brings back a stored copy when nine turtles starts on a disk with no
 /// database yet (a new host, or a database moved aside on purpose). Never
-/// replaces a database that's there.
+/// replaces a database that holds anything. An empty database file, with no
+/// structure at all, counts as none: a running nine turtles can leave one
+/// behind when its database is moved aside (docs/operations/backups.md).
 pub async fn restore_if_empty(
     data_dir: &Path,
     storage: Option<&Storage>,
     name: &str,
 ) -> Result<(), String> {
-    if db::exists(data_dir) {
+    if db::exists(data_dir)
+        && !(db::has_only_new_name(data_dir) && is_empty(&db::path(data_dir)).await)
+    {
         log::problem(
             "NINE_TURTLES_RESTORE_FROM is set, but a database is already here, so nothing \
              was restored; remove the setting (docs/operations/backups.md)",
@@ -191,6 +205,19 @@ pub async fn restore_if_empty(
     let result = async {
         storage.get(name, &arriving).await?;
         check(&arriving).await?;
+        // Any empty database and its logs go first: SQLite would apply a
+        // leftover log (`-wal`) to the restored copy.
+        for suffix in ["", "-wal", "-shm"] {
+            let leftover = PathBuf::from(format!("{}{suffix}", db::path(data_dir).display()));
+            if leftover.exists() {
+                std::fs::remove_file(&leftover).map_err(|error| {
+                    format!(
+                        "can't clear {} for the restore: {error}",
+                        leftover.display()
+                    )
+                })?;
+            }
+        }
         std::fs::rename(&arriving, db::path(data_dir))
             .map_err(|error| format!("can't put the restored database in place: {error}"))
     }
@@ -240,6 +267,25 @@ pub async fn snapshot(db: &SqlitePool) -> Result<Snapshot, String> {
         .map_err(|error| format!("couldn't copy the database: {error}"))?;
     check(snapshot.path()).await?;
     Ok(snapshot)
+}
+
+/// Whether the database file at `path` has no structure at all (or doesn't
+/// exist): nothing in it to keep.
+async fn is_empty(path: &Path) -> bool {
+    if !path.exists() {
+        return true;
+    }
+    let Ok(mut connection) =
+        SqliteConnection::connect_with(&SqliteConnectOptions::new().filename(path).read_only(true))
+            .await
+    else {
+        return false;
+    };
+    let tables: Result<i64, _> = sqlx::query_scalar("SELECT count(*) FROM sqlite_schema")
+        .fetch_one(&mut connection)
+        .await;
+    let _ = connection.close().await;
+    matches!(tables, Ok(0))
 }
 
 /// Opens a copy on its own and checks that SQLite finds it whole and that

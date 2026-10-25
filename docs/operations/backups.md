@@ -107,7 +107,8 @@ If backups aren't set up, nine turtles still runs, and says
 ## Bringing a copy back
 
 nine turtles restores a copy when it starts on a disk **with no database**.
-It never overwrites a database that's there. You choose the copy with one
+It never overwrites a database that holds anything (an empty file with no
+tables at all counts as no database). You choose the copy with one
 setting, `NINE_TURTLES_RESTORE_FROM`, set to the copy's name, such as
 `nightly/2026-10-25.sqlite`.
 
@@ -137,7 +138,9 @@ agent first if you can; the steps:
 
 3. Render → **Environment** → add `NINE_TURTLES_RESTORE_FROM` with the copy's
    name → **Save Changes**. Render restarts nine turtles; it finds no
-   database, restores the copy, and starts.
+   database, restores the copy, and starts. (The running nine turtles may
+   have made a new, empty database file in the meantime; an empty one with
+   nothing in it counts as no database, so the restore still happens.)
 4. Check Render's **Logs** for `restored the database from nightly/2026-10-24.sqlite`,
    and sign in.
 5. Remove `NINE_TURTLES_RESTORE_FROM` from Environment and save.

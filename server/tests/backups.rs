@@ -26,6 +26,10 @@ use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 
 type Objects = Arc<Mutex<BTreeMap<String, Vec<u8>>>>;
 
+/// The name a stand-in storage refuses to delete anything under, for the
+/// test of a failed clean-up.
+const UNDELETABLE: &str = "monthly/";
+
 /// 25 October 2026, 04:00 UTC.
 const NIGHT: i64 = 1_792_900_800;
 const DAY: i64 = 86_400;
@@ -129,7 +133,9 @@ async fn remove(
     headers: HeaderMap,
     Path(name): Path<String>,
 ) -> StatusCode {
-    if !signed(&headers) {
+    if !signed(&headers)
+        || (name.starts_with(UNDELETABLE) && objects.lock().unwrap().contains_key("refuse-deletes"))
+    {
         return StatusCode::FORBIDDEN;
     }
     objects.lock().unwrap().remove(&name);
@@ -334,4 +340,77 @@ async fn an_up_to_date_database_is_opened_without_a_copy() {
     state.db.close().await;
     nine_turtles::state(config).await.unwrap();
     assert!(names(&objects, "").is_empty());
+}
+
+#[tokio::test]
+async fn old_copies_that_cannot_be_deleted_never_fail_the_backup() {
+    let (settings, objects) = fake_storage().await;
+    let mut config = common::config();
+    config.backup = Some(settings);
+    let state = nine_turtles::state(config).await.unwrap();
+    let storage = state.storage.clone().unwrap();
+    for month in 0..13 {
+        backup::nightly(&state.db, &storage, NIGHT - (13 - month) * 31 * DAY)
+            .await
+            .unwrap();
+    }
+    objects
+        .lock()
+        .unwrap()
+        .insert("refuse-deletes".into(), Vec::new());
+    // A fourteenth month: the copy is stored, the oldest month can't go.
+    let name = backup::nightly(&state.db, &storage, NIGHT).await.unwrap();
+    assert!(names(&objects, "").contains(&name));
+    assert_eq!(names(&objects, "monthly/").len(), backup::MONTHLY_KEPT + 1);
+}
+
+#[tokio::test]
+async fn an_empty_database_left_behind_is_replaced_by_the_restore() {
+    let (settings, _objects) = fake_storage().await;
+    let mut config = common::config();
+    config.backup = Some(settings.clone());
+    let state = nine_turtles::state(config).await.unwrap();
+    sqlx::query("INSERT INTO feeds (url, url_key, title, added_at) VALUES ('https://a.example/feed', 'a.example/feed', 'Back again', 1)")
+        .execute(&state.db)
+        .await
+        .unwrap();
+    let storage = state.storage.clone().unwrap();
+    let name = backup::nightly(&state.db, &storage, NIGHT).await.unwrap();
+
+    // A running nine turtles reconnected after its database was moved aside,
+    // leaving an empty file with nothing in it.
+    let mut fresh = common::config();
+    std::fs::create_dir_all(&fresh.data_dir).unwrap();
+    let empty = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&fresh.data_dir))
+                .create_if_missing(true),
+        )
+        .await
+        .unwrap();
+    empty.close().await;
+    fresh.backup = Some(settings);
+    fresh.restore_from = Some(name);
+    let restored = nine_turtles::state(fresh).await.unwrap();
+    let title: String = sqlx::query_scalar("SELECT title FROM feeds")
+        .fetch_one(&restored.db)
+        .await
+        .unwrap();
+    assert_eq!(title, "Back again");
+}
+
+#[tokio::test]
+async fn a_restore_that_fails_leaves_no_database_behind() {
+    let (settings, _objects) = fake_storage().await;
+    let mut config = common::config();
+    config.backup = Some(settings);
+    config.restore_from = Some("nightly/1999-01-01.sqlite".into());
+    let data_dir = config.data_dir.clone();
+    let Err(error) = nine_turtles::state(config).await else {
+        panic!("a missing copy was restored");
+    };
+    assert!(error.contains("nightly/1999-01-01.sqlite"), "{error}");
+    assert!(!nine_turtles::db::exists(&data_dir));
+    assert_eq!(std::fs::read_dir(&data_dir).unwrap().count(), 0);
 }

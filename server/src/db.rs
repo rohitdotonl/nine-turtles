@@ -99,6 +99,12 @@ pub fn exists(data_dir: &Path) -> bool {
     path(data_dir).exists() || data_dir.join(OLD_FILE_NAME).exists()
 }
 
+/// Whether the only database here is under today's name (none from before
+/// the rename).
+pub fn has_only_new_name(data_dir: &Path) -> bool {
+    path(data_dir).exists() && !data_dir.join(OLD_FILE_NAME).exists()
+}
+
 /// Moves a database made before the rename (and its `-wal` and `-shm` files)
 /// to the new name, once, so nothing is lost. Nothing happens if there's no
 /// old one, or a new one already exists.

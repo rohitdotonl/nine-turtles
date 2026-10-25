@@ -172,7 +172,14 @@ fn backup_settings(
     let endpoint_text = endpoint.unwrap_or_default();
     let endpoint = reqwest::Url::parse(&endpoint_text)
         .ok()
-        .filter(|url| matches!(url.scheme(), "http" | "https") && url.has_host())
+        .filter(|url| {
+            // Plain http only to this computer (MinIO for testing): the
+            // database must never cross the internet unencrypted.
+            url.scheme() == "https"
+                || (url.scheme() == "http"
+                    && matches!(url.host_str(), Some("localhost" | "127.0.0.1" | "[::1]")))
+        })
+        .filter(|url| url.has_host())
         .ok_or_else(|| {
             format!(
                 "NINE_TURTLES_BACKUP_ENDPOINT must look like \
@@ -214,5 +221,40 @@ mod tests {
             PasswordSetting::from_value(Some("my password".into())),
             PasswordSetting::Invalid
         );
+    }
+
+    #[test]
+    fn backup_settings_are_all_or_nothing_and_never_plain_http_to_the_internet() {
+        use super::backup_settings;
+        let with = |pairs: &'static [(&'static str, &'static str)]| {
+            move |name: &str| {
+                pairs
+                    .iter()
+                    .find(|(key, _)| *key == name)
+                    .map(|(_, value)| (*value).to_owned())
+            }
+        };
+        assert_eq!(backup_settings(&with(&[])).unwrap(), None);
+
+        let error = backup_settings(&with(&[("NINE_TURTLES_BACKUP_BUCKET", "b")])).unwrap_err();
+        assert!(error.contains("NINE_TURTLES_BACKUP_SECRET"), "{error}");
+        assert!(!error.contains("NINE_TURTLES_BACKUP_BUCKET,"), "{error}");
+
+        let all = |endpoint: &'static str| -> &'static [(&'static str, &'static str)] {
+            Box::leak(Box::new([
+                ("NINE_TURTLES_BACKUP_ENDPOINT", endpoint),
+                ("NINE_TURTLES_BACKUP_BUCKET", "nine-turtles-backups"),
+                ("NINE_TURTLES_BACKUP_KEY_ID", "id"),
+                ("NINE_TURTLES_BACKUP_SECRET", "secret"),
+            ]))
+        };
+        let settings = backup_settings(&with(all("https://abc.r2.cloudflarestorage.com")))
+            .unwrap()
+            .unwrap();
+        assert_eq!(settings.region, "auto");
+        assert_eq!(settings.bucket, "nine-turtles-backups");
+        assert!(backup_settings(&with(all("http://localhost:9000"))).is_ok());
+        assert!(backup_settings(&with(all("http://abc.r2.cloudflarestorage.com"))).is_err());
+        assert!(backup_settings(&with(all("not an address"))).is_err());
     }
 }

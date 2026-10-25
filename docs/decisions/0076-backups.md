@@ -17,7 +17,13 @@ decision 0012.*
 - **Kept:** 30 nightly, 12 monthly, 10 before-change copies. Older ones are
   deleted after each successful copy.
 - **Restoring:** `NINE_TURTLES_RESTORE_FROM=<name>` brings a copy back when
-  nine turtles starts with no database. It never overwrites one.
+  nine turtles starts with no database (an empty file with no tables counts
+  as none; a running nine turtles can leave one behind when its database is
+  moved aside). It never overwrites one that holds anything.
+- **Deleting old copies** that fails is reported, never counted as a failed
+  backup: the new copy is already stored.
+- **Plain `http://`** storage addresses are refused except to this computer
+  (`localhost`), so the database never crosses the internet unencrypted.
 - **Where:** any S3-compatible storage, through five settings
   (`NINE_TURTLES_BACKUP_ENDPOINT`, `_BUCKET`, `_REGION`, `_KEY_ID`, `_SECRET`).
   Cloudflare R2 to start with.
@@ -48,5 +54,9 @@ it).
 
 **What it changes.** The floor's V1 wording from 0012 ends: data is backed up
 before every structure change, and backups are kept outside the host. The
+floor's older line "nothing deletes without a backup taken first" now reads
+as: deletions are covered by the nightly copies (what existed at the last
+copy), not by a copy before each deletion; unsubscribing stays as the owner
+accepted it. The
 yearly clean-up (SPEC section 23) can now be built, since it waits for a
 successful nightly backup.

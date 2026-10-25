@@ -462,7 +462,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 ## 23. Your data: keeping and exporting
 
 **What it does**
-- In V1, nothing is removed automatically. Unsubscribing removes that feed's articles and read history (starred articles stay in Starred). Undo brings them back only straight away; after your next action they're gone for good.
+- In V1, nothing is removed automatically. Unsubscribing removes that feed's articles and read history (starred articles stay in Starred). Undo brings them back only straight away; after your next action they're gone from the app, though the backups still hold them as they were at the last nightly copy.
 - Export of starred articles as a JSON Feed file (a standard, open format other feed tools can read), from Settings → Your data → **Export starred articles**. It holds every starred article, newest first, with its text, original link and the feed it came from, including starred articles of feeds you've since unsubscribed from.
 - **Backups** (decision 0076): every night, nine turtles stores a complete copy of everything (feeds, folders, articles, read marks, stars, settings) in storage outside Render, and another just before any update changes the database's structure. It keeps the last 30 nights, one copy a month for a year, and the last 10 taken before an update. At worst a day of reading activity is lost. Bringing a copy back, or moving to another host, is a written, tested procedure (`docs/operations/backups.md`, `docs/operations/moving-hosts.md`). Backups happen quietly in the background; the app never shows or asks anything about them. Your OPML file and the starred export remain your own safety net too.
 

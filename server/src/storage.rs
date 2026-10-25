@@ -167,6 +167,25 @@ impl Storage {
         query: &[(&str, String)],
         payload_hash: &str,
     ) -> reqwest::RequestBuilder {
+        let (url, amz_date, authorization) =
+            self.signed(&method, name, query, payload_hash, crate::now());
+        self.http
+            .request(method, url)
+            .header("x-amz-content-sha256", payload_hash)
+            .header("x-amz-date", amz_date)
+            .header(reqwest::header::AUTHORIZATION, authorization)
+    }
+
+    /// The address, the `x-amz-date` and the `Authorization` header for a
+    /// request made at `at` (seconds since 1970).
+    fn signed(
+        &self,
+        method: &Method,
+        name: &str,
+        query: &[(&str, String)],
+        payload_hash: &str,
+        at: i64,
+    ) -> (Url, String, String) {
         let mut path = self
             .settings
             .endpoint
@@ -198,7 +217,7 @@ impl Storage {
             (Some(host), None) => host.to_owned(),
             (None, _) => String::new(),
         };
-        let amz_date = amz_date(crate::now());
+        let amz_date = amz_date(at);
         let headers = [
             ("host", host.as_str()),
             ("x-amz-content-sha256", payload_hash),
@@ -213,11 +232,7 @@ impl Storage {
             payload_hash,
             &amz_date,
         );
-        self.http
-            .request(method, url)
-            .header("x-amz-content-sha256", payload_hash)
-            .header("x-amz-date", amz_date)
-            .header(reqwest::header::AUTHORIZATION, authorization)
+        (url, amz_date, authorization)
     }
 }
 
@@ -419,6 +434,44 @@ mod tests {
             "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20130524/us-east-1/s3/aws4_request, \
              SignedHeaders=host;range;x-amz-content-sha256;x-amz-date, \
              Signature=f0e8bdb87c964420e857bd35b5d6ed310bd44f0170aba48dd91039c6036bdb41"
+        );
+    }
+
+    /// A listing request with a continuation token, signed as Amazon's own
+    /// library (botocore 1.x) signs the same request: checks the address,
+    /// the sorted and encoded query, and the header list.
+    #[test]
+    fn signs_a_listing_exactly_like_amazons_library() {
+        let storage = Storage::new(Settings {
+            endpoint: Url::parse("https://abc.r2.cloudflarestorage.com").unwrap(),
+            bucket: "nine-turtles-backups".into(),
+            region: "auto".into(),
+            key_id: "test-key-id".into(),
+            secret: "test-secret".into(),
+        })
+        .unwrap();
+        let (url, amz_date, authorization) = storage.signed(
+            &Method::GET,
+            "",
+            &[
+                ("list-type", "2".to_owned()),
+                ("prefix", "nightly/".to_owned()),
+                ("continuation-token", "abc==".to_owned()),
+            ],
+            EMPTY_HASH,
+            1_792_900_800,
+        );
+        assert_eq!(
+            url.as_str(),
+            "https://abc.r2.cloudflarestorage.com/nine-turtles-backups\
+             ?continuation-token=abc%3D%3D&list-type=2&prefix=nightly%2F"
+        );
+        assert_eq!(amz_date, "20261025T040000Z");
+        assert_eq!(
+            authorization,
+            "AWS4-HMAC-SHA256 Credential=test-key-id/20261025/auto/s3/aws4_request, \
+             SignedHeaders=host;x-amz-content-sha256;x-amz-date, \
+             Signature=890e7dc3f4874ff1d653e3ac975d37d033081f94716adef32bbb7d08bd8cb828"
         );
     }
 
