@@ -419,37 +419,50 @@ pub async fn find(
     // The inner question picks the page by number, time and title match
     // only, so a word found in thousands of articles sorts small rows; the
     // outer one then fetches what the list shows for just those 51.
+    // Only the reader's own entries are searched, with their marks.
     let mut query: QueryBuilder<Sqlite> = QueryBuilder::new(
-        "SELECT articles.id, articles.feed_id, feeds.title AS feed_title, articles.title,
-                articles.link, articles.sort_at AS at, articles.read, articles.starred, articles.muted, page.in_title,
-                articles.content, articles.summary
-         FROM (SELECT * FROM (SELECT articles.id, articles.sort_at AS at, ",
+        "SELECT entries.article_id AS id, entries.feed_id, subscriptions.title AS feed_title,
+                articles.title, articles.link, entries.sort_at AS at, entries.read,
+                entries.starred, entries.muted, page.in_title, articles.content, articles.summary
+         FROM (SELECT * FROM (SELECT entries.article_id AS id, entries.sort_at AS at, ",
     );
     if let Some(words) = &words {
         // Every word in the title. FTS5's `{title}:` looks in that column only.
-        query
-            .push("articles.id IN (SELECT rowid FROM articles_search WHERE articles_search MATCH ");
+        query.push(
+            "entries.article_id IN (SELECT rowid FROM articles_search WHERE articles_search MATCH ",
+        );
         query.push_bind(format!("{{title}} : ({words})"));
-        query.push(") AS in_title FROM articles_search CROSS JOIN articles ON articles.id = articles_search.rowid ");
+        query.push(
+            ") AS in_title FROM articles_search CROSS JOIN entries
+                 ON entries.person_id = ",
+        );
+        query.push_bind(person);
+        query.push(" AND entries.article_id = articles_search.rowid ");
     } else {
-        query.push("0 AS in_title FROM articles ");
+        query.push("0 AS in_title FROM entries ");
     }
     // An unsubscribed feed's articles are left out, except starred ones,
-    // which are kept (SPEC section 15).
+    // which are kept (SPEC section 15). The reader's few unsubscribed feeds
+    // are listed once, rather than each match looking up its subscription.
+    query.push("WHERE entries.person_id = ");
+    query.push_bind(person);
     query.push(
-        "JOIN feeds ON feeds.id = articles.feed_id
-         WHERE (feeds.unsubscribed_at IS NULL OR articles.starred = 1)",
+        " AND (entries.starred = 1 OR entries.feed_id NOT IN
+             (SELECT feed_id FROM subscriptions
+              WHERE person_id = ",
     );
+    query.push_bind(person);
+    query.push(" AND unsubscribed_at IS NOT NULL))");
     if let Some(words) = &words {
         query.push(" AND articles_search MATCH ");
         query.push_bind(words.clone());
     }
     if let Some(feed) = search.feed {
-        query.push(" AND articles.feed_id = ");
+        query.push(" AND entries.feed_id = ");
         query.push_bind(feed);
     } else if let Some(folder) = search.folder {
         query.push(
-            " AND articles.feed_id IN (SELECT feed_id FROM feed_folders
+            " AND entries.feed_id IN (SELECT feed_id FROM feed_folders
               WHERE folder_id = (SELECT id FROM folders WHERE id = ",
         );
         query.push_bind(folder);
@@ -459,17 +472,22 @@ pub async fn find(
     }
     if search.unread {
         // A feed that flows past is never in Unread (SPEC section 10).
-        query.push(" AND articles.read = 0 AND feeds.river = 0");
+        query.push(
+            " AND entries.read = 0 AND entries.feed_id NOT IN
+                 (SELECT feed_id FROM subscriptions WHERE river = 1 AND person_id = ",
+        );
+        query.push_bind(person);
+        query.push(")");
     }
     if search.starred {
-        query.push(" AND articles.starred = 1");
+        query.push(" AND entries.starred = 1");
     }
     if let Some(since) = search.since {
-        query.push(" AND articles.sort_at >= ");
+        query.push(" AND entries.sort_at >= ");
         query.push_bind(since);
     }
     if let Some(until) = search.until {
-        query.push(" AND articles.sort_at < ");
+        query.push(" AND entries.sort_at < ");
         query.push_bind(until);
     }
     query.push(")");
@@ -494,9 +512,13 @@ pub async fn find(
     query.push(&order);
     query.push(" LIMIT ");
     query.push_bind(PAGE_SIZE + 1);
+    query.push(") AS page CROSS JOIN entries ON entries.person_id = ");
+    query.push_bind(person);
     query.push(
-        ") AS page CROSS JOIN articles ON articles.id = page.id
-         CROSS JOIN feeds ON feeds.id = articles.feed_id",
+        " AND entries.article_id = page.id
+         CROSS JOIN articles ON articles.id = page.id
+         CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
+             AND subscriptions.feed_id = entries.feed_id",
     );
     query.push(
         order

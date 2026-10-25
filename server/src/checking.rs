@@ -84,7 +84,7 @@ pub async fn run(state: AppState) {
 /// many were checked. First, feeds unsubscribed long enough ago that Undo
 /// is no longer offered are cleared for good (`folders::clear_unsubscribed`).
 pub async fn round(state: &AppState, now: i64) -> Result<usize, sqlx::Error> {
-    folders::clear_unsubscribed(&state.db, now - folders::UNDO_FOR).await?;
+    folders::clear_unsubscribed(&state.db, None, now - folders::UNDO_FOR).await?;
     websub::renew(state, now).await?;
     let due: Vec<i64> = sqlx::query_scalar(DUE)
         .bind(now)

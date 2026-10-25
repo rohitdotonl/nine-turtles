@@ -20,6 +20,7 @@ use serde_json::json;
 use crate::{
     AppState,
     auth::{SignedIn, database_problem},
+    feeds::follow_again,
     folders::{self, FOLDERS, Folder, MEMBERSHIPS, clean_name},
     now,
 };
@@ -48,18 +49,25 @@ struct Listed {
     folders: Vec<i64>,
 }
 
-/// Each feed's newest article, found from the `articles_newest_by_feed`
-/// index alone.
-const LISTED: &str = "SELECT id, title, added_at,
-        (SELECT MAX(sort_at) FROM articles WHERE articles.feed_id = feeds.id) AS last_posted
-     FROM feeds WHERE unsubscribed_at IS NULL ORDER BY title COLLATE NOCASE, id";
+/// Each feed the reader follows, by their name for it, with when they
+/// followed it and its newest article, found from the
+/// `articles_newest_by_feed` index alone. Takes the reader.
+const LISTED: &str = "SELECT subscriptions.feed_id AS id, subscriptions.title,
+        subscriptions.added_at,
+        (SELECT MAX(sort_at) FROM articles WHERE articles.feed_id = subscriptions.feed_id)
+            AS last_posted
+     FROM subscriptions WHERE person_id = ? AND unsubscribed_at IS NULL
+     ORDER BY title COLLATE NOCASE, feed_id";
 
 /// Every followed feed, A to Z, with when it last posted and its folders,
 /// and every folder.
 async fn list(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
     let listed: Result<(Vec<Listed>, Vec<Folder>), sqlx::Error> = async {
         let mut transaction = state.db.begin().await?;
-        let mut feeds: Vec<Listed> = sqlx::query_as(LISTED).fetch_all(&mut *transaction).await?;
+        let mut feeds: Vec<Listed> = sqlx::query_as(LISTED)
+            .bind(person)
+            .fetch_all(&mut *transaction)
+            .await?;
         let folders: Vec<Folder> = sqlx::query_as(FOLDERS)
             .bind(person)
             .fetch_all(&mut *transaction)
@@ -102,24 +110,19 @@ fn as_list(feeds: &[i64]) -> Option<String> {
 /// Unsubscribes from every chosen feed at once. Feeds unsubscribed before
 /// are cleared for good first, since Undo only reverses the last action.
 async fn unsubscribe(
-    _: SignedIn,
+    SignedIn(person): SignedIn,
     State(state): State<AppState>,
     Json(form): Json<Chosen>,
 ) -> Response {
-    let Some(list) = as_list(&form.feeds) else {
+    if as_list(&form.feeds).is_none() {
         return problem(StatusCode::BAD_REQUEST, "none-chosen");
-    };
+    }
     let done: Result<u64, sqlx::Error> = async {
-        folders::clear_unsubscribed(&state.db, i64::MAX).await?;
-        let hidden = sqlx::query(
-            "UPDATE feeds SET unsubscribed_at = ?
-             WHERE id IN (SELECT value FROM json_each(?)) AND unsubscribed_at IS NULL",
-        )
-        .bind(now())
-        .bind(list)
-        .execute(&state.db)
-        .await?;
-        Ok(hidden.rows_affected())
+        folders::clear_unsubscribed(&state.db, Some(person), i64::MAX).await?;
+        let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
+        let hidden = folders::hide(&mut transaction, person, &form.feeds, now()).await?;
+        transaction.commit().await?;
+        Ok(hidden)
     }
     .await;
     match done {
@@ -132,25 +135,27 @@ async fn unsubscribe(
 /// Undo for unsubscribing from several feeds: every one still waiting comes
 /// back as it was. Too late once they've been cleared.
 async fn resubscribe(
-    _: SignedIn,
+    SignedIn(person): SignedIn,
     State(state): State<AppState>,
     Json(form): Json<Chosen>,
 ) -> Response {
-    let Some(list) = as_list(&form.feeds) else {
+    if as_list(&form.feeds).is_none() {
         return problem(StatusCode::BAD_REQUEST, "none-chosen");
-    };
-    let back = sqlx::query(
-        "UPDATE feeds SET unsubscribed_at = NULL, next_check_at = ?
-         WHERE id IN (SELECT value FROM json_each(?))
-           AND unsubscribed_at IS NOT NULL AND cleared = 0",
-    )
-    .bind(now())
-    .bind(list)
-    .execute(&state.db)
+    }
+    let back: Result<u64, sqlx::Error> = async {
+        let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
+        let now = now();
+        let mut back = 0;
+        for &feed in &form.feeds {
+            back += u64::from(follow_again(&mut transaction, person, feed, now).await?);
+        }
+        transaction.commit().await?;
+        Ok(back)
+    }
     .await;
     match back {
-        Ok(back) if back.rows_affected() == 0 => problem(StatusCode::CONFLICT, "too-late"),
-        Ok(back) => Json(json!({ "resubscribed": back.rows_affected() })).into_response(),
+        Ok(0) => problem(StatusCode::CONFLICT, "too-late"),
+        Ok(back) => Json(json!({ "resubscribed": back })).into_response(),
         Err(error) => database_problem("undoing unsubscribing from several feeds", &error),
     }
 }
@@ -208,9 +213,10 @@ async fn move_feeds(
         };
         sqlx::query(
             "DELETE FROM feed_folders WHERE feed_id IN (
-                 SELECT feeds.id FROM feeds
-                 WHERE feeds.id IN (SELECT value FROM json_each(?)) AND feeds.unsubscribed_at IS NULL)
-             AND folder_id IN (SELECT id FROM folders WHERE person_id = ?)",
+                 SELECT feed_id FROM subscriptions
+                 WHERE person_id = ?2 AND feed_id IN (SELECT value FROM json_each(?1))
+                     AND unsubscribed_at IS NULL)
+             AND folder_id IN (SELECT id FROM folders WHERE person_id = ?2)",
         )
         .bind(&list)
         .bind(person)
@@ -219,10 +225,12 @@ async fn move_feeds(
         if let Some(folder) = folder {
             sqlx::query(
                 "INSERT OR IGNORE INTO feed_folders (folder_id, feed_id)
-                 SELECT ?, feeds.id FROM feeds
-                 WHERE feeds.id IN (SELECT value FROM json_each(?)) AND feeds.unsubscribed_at IS NULL",
+                 SELECT ?, feed_id FROM subscriptions
+                 WHERE person_id = ? AND feed_id IN (SELECT value FROM json_each(?))
+                     AND unsubscribed_at IS NULL",
             )
             .bind(folder)
+            .bind(person)
             .bind(&list)
             .execute(&mut *transaction)
             .await?;
@@ -274,9 +282,10 @@ async fn restore(
             .await?;
             sqlx::query(
                 "INSERT OR IGNORE INTO feed_folders (folder_id, feed_id)
-                 SELECT folders.id, feeds.id FROM folders, feeds
-                 WHERE folders.person_id = ? AND folders.id IN (SELECT value FROM json_each(?))
-                   AND feeds.id = ? AND feeds.unsubscribed_at IS NULL",
+                 SELECT folders.id, subscriptions.feed_id FROM folders, subscriptions
+                 WHERE folders.person_id = ?1 AND folders.id IN (SELECT value FROM json_each(?2))
+                   AND subscriptions.person_id = ?1 AND subscriptions.feed_id = ?3
+                   AND subscriptions.unsubscribed_at IS NULL",
             )
             .bind(person)
             .bind(serde_json::to_string(&feed.folders).unwrap_or_else(|_| "[]".to_owned()))

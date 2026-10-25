@@ -415,7 +415,14 @@ async fn the_index_follows_edits_deletions_and_earlier_articles() {
     assert!(reader.titles(&[("q", "window")]).await.is_empty());
     assert_eq!(reader.titles(&[("q", "door")]).await, ["Café visits"]);
 
-    // A deleted article leaves the index.
+    // A deleted article leaves the index. (Nobody may still have it: its
+    // entries go first, as clearing a feed does.)
+    sqlx::query(
+        "DELETE FROM entries WHERE article_id IN (SELECT id FROM articles WHERE title = 'Compost')",
+    )
+    .execute(db)
+    .await
+    .unwrap();
     sqlx::query("DELETE FROM articles WHERE title = 'Compost'")
         .execute(db)
         .await
@@ -433,6 +440,13 @@ async fn the_index_follows_edits_deletions_and_earlier_articles() {
          VALUES (?, 'old', 'An older post', '<p>Pumpkins.</p>', 1, 1)",
     )
     .bind(reader.garden)
+    .execute(db)
+    .await
+    .unwrap();
+    sqlx::query(
+        "INSERT INTO entries (person_id, article_id, feed_id, sort_at)
+         SELECT 1, id, feed_id, sort_at FROM articles WHERE fingerprint = 'old'",
+    )
     .execute(db)
     .await
     .unwrap();

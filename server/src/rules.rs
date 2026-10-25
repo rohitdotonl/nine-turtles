@@ -10,6 +10,9 @@
 //! `apply_to_new`). A new rule can also be applied, once, to the unread
 //! articles that already match; the screen asks first and offers Undo.
 //!
+//! Each rule is a reader's, and changes only that reader's marks (their
+//! entries); another reader of the same feed sees the article as before.
+//!
 //! A muted article is kept and counts as read, so it waits in no list and
 //! other feed readers see it as read too. Only the Muted page, search and
 //! (if it's starred) Starred show it; unmuting it (or marking it unread) brings it back, unread.
@@ -30,7 +33,7 @@ use sqlx::SqliteConnection;
 use crate::{
     AppState,
     auth::{SignedIn, database_problem},
-    feeds::ArticleRow,
+    feeds::{ArticleRow, follows},
     now, search,
 };
 
@@ -80,17 +83,21 @@ impl Action {
         }
     }
 
-    /// Changes the named articles, all in one step.
+    /// Changes the named articles' marks for one reader, all in one step.
+    /// Takes the reader, then the articles.
     const fn sql(self) -> &'static str {
         match self {
             Self::Mute => {
-                "UPDATE articles SET muted = 1, read = 1 WHERE id IN (SELECT value FROM json_each(?))"
+                "UPDATE entries SET muted = 1, read = 1
+                 WHERE person_id = ? AND article_id IN (SELECT value FROM json_each(?))"
             }
             Self::Star => {
-                "UPDATE articles SET starred = 1 WHERE id IN (SELECT value FROM json_each(?))"
+                "UPDATE entries SET starred = 1
+                 WHERE person_id = ? AND article_id IN (SELECT value FROM json_each(?))"
             }
             Self::Read => {
-                "UPDATE articles SET read = 1 WHERE id IN (SELECT value FROM json_each(?))"
+                "UPDATE entries SET read = 1
+                 WHERE person_id = ? AND article_id IN (SELECT value FROM json_each(?))"
             }
         }
     }
@@ -276,16 +283,22 @@ type ArticleLine = (
 );
 
 /// Does each reader's rules' work on one feed's articles numbered above
-/// `after`: the ones that just arrived. Each reader's rules run in the order
-/// they were made; an article can be both starred and muted.
+/// `after`: the ones that just arrived. Only readers who have them (whose
+/// subscription isn't cleared) are asked. Each reader's rules run in the
+/// order they were made, on that reader's marks; an article can be both
+/// starred and muted.
 pub async fn apply_to_new(
     connection: &mut SqliteConnection,
     feed_id: i64,
     after: i64,
 ) -> Result<(), sqlx::Error> {
     let people: Vec<i64> = sqlx::query_scalar(
-        "SELECT DISTINCT person_id FROM rules WHERE paused = 0 AND place_gone = 0 ORDER BY person_id",
+        "SELECT DISTINCT rules.person_id FROM rules JOIN subscriptions
+             ON subscriptions.person_id = rules.person_id AND subscriptions.feed_id = ?
+         WHERE rules.paused = 0 AND rules.place_gone = 0 AND subscriptions.cleared = 0
+         ORDER BY rules.person_id",
     )
+    .bind(feed_id)
     .fetch_all(&mut *connection)
     .await?;
     let mut candidates = None;
@@ -311,14 +324,46 @@ pub async fn apply_to_new(
             candidates = Some(self::candidates(lines));
         }
         let candidates = candidates.as_deref().unwrap_or_default();
-        act_on_each(connection, &covering, candidates).await?;
+        act_on_each(connection, person, &covering, candidates).await?;
     }
     Ok(())
+}
+
+/// Does one reader's rules' work on these articles of one feed: the ones
+/// new to them because they just followed a feed others already had.
+pub async fn apply_to(
+    connection: &mut SqliteConnection,
+    person: i64,
+    feed_id: i64,
+    ids: &[i64],
+) -> Result<(), sqlx::Error> {
+    if ids.is_empty() {
+        return Ok(());
+    }
+    let all = rules(connection, person).await?;
+    let folders = folders_of(connection, person, feed_id).await?;
+    let covering: Vec<&Rule> = all
+        .iter()
+        .filter(|rule| rule.covers(feed_id, &folders))
+        .collect();
+    if covering.is_empty() {
+        return Ok(());
+    }
+    let lines: Vec<ArticleLine> = sqlx::query_as(
+        "SELECT id, feed_id, title, author, content, summary FROM articles
+         WHERE feed_id = ? AND id IN (SELECT value FROM json_each(?))",
+    )
+    .bind(feed_id)
+    .bind(serde_json::to_string(ids).unwrap_or_else(|_| "[]".to_owned()))
+    .fetch_all(&mut *connection)
+    .await?;
+    act_on_each(connection, person, &covering, &candidates(lines)).await
 }
 
 /// Does each of one reader's rules' work on the articles that match it.
 async fn act_on_each(
     connection: &mut SqliteConnection,
+    person: i64,
     covering: &[&Rule],
     candidates: &[Candidate],
 ) -> Result<(), sqlx::Error> {
@@ -328,7 +373,7 @@ async fn act_on_each(
             .filter(|article| rule.matches(article))
             .map(|article| article.id)
             .collect();
-        act(connection, rule.action, &ids).await?;
+        act(connection, person, rule.action, &ids).await?;
     }
     Ok(())
 }
@@ -351,6 +396,7 @@ fn candidates(lines: Vec<ArticleLine>) -> Vec<Candidate> {
 
 async fn act(
     connection: &mut SqliteConnection,
+    person: i64,
     action: Action,
     ids: &[i64],
 ) -> Result<(), sqlx::Error> {
@@ -358,6 +404,7 @@ async fn act(
         return Ok(());
     }
     sqlx::query(action.sql())
+        .bind(person)
         .bind(serde_json::to_string(ids).unwrap_or_else(|_| "[]".to_owned()))
         .execute(connection)
         .await?;
@@ -368,9 +415,10 @@ async fn act(
 /// all-feeds rule never holds every article's text in memory at once.
 const MATCH_BATCH: i64 = 500;
 
-/// The unread articles of followed feeds a rule would change now: for a
-/// star rule, only those not starred yet. It only reads, a batch at a time,
-/// so callers run it outside a write, never holding up background checks.
+/// The unread articles of feeds its reader follows that a rule would change
+/// now: for a star rule, only those not starred yet. It only reads, a batch
+/// at a time, so callers run it outside a write, never holding up
+/// background checks.
 async fn matching_now(db: &sqlx::SqlitePool, rule: &Rule) -> Result<Vec<i64>, sqlx::Error> {
     let mut found = Vec::new();
     if rule.place_gone {
@@ -381,14 +429,17 @@ async fn matching_now(db: &sqlx::SqlitePool, rule: &Rule) -> Result<Vec<i64>, sq
         let lines: Vec<ArticleLine> = sqlx::query_as(
             "SELECT articles.id, articles.feed_id, articles.title, articles.author,
                     articles.content, articles.summary
-             FROM articles JOIN feeds ON feeds.id = articles.feed_id
-             WHERE articles.read = 0 AND feeds.unsubscribed_at IS NULL AND articles.id > ?4
-                 AND (?1 = 0 OR articles.starred = 0)
-                 AND (?2 IS NULL OR articles.feed_id = ?2)
-                 AND (?3 IS NULL OR articles.feed_id IN
+             FROM entries CROSS JOIN articles ON articles.id = entries.article_id
+                 JOIN subscriptions ON subscriptions.person_id = entries.person_id
+                     AND subscriptions.feed_id = entries.feed_id
+             WHERE entries.person_id = ?6 AND entries.read = 0
+                 AND subscriptions.unsubscribed_at IS NULL AND entries.article_id > ?4
+                 AND (?1 = 0 OR entries.starred = 0)
+                 AND (?2 IS NULL OR entries.feed_id = ?2)
+                 AND (?3 IS NULL OR entries.feed_id IN
                       (SELECT feed_id FROM feed_folders WHERE folder_id =
                            (SELECT id FROM folders WHERE id = ?3 AND person_id = ?6)))
-             ORDER BY articles.id LIMIT ?5",
+             ORDER BY entries.article_id LIMIT ?5",
         )
         .bind(rule.action == Action::Star)
         .bind(rule.feed_id)
@@ -416,7 +467,8 @@ async fn list_rules(SignedIn(person): SignedIn, State(state): State<AppState>) -
     let listed: Result<(Vec<Rule>, i64), sqlx::Error> = async {
         let mut connection = state.db.acquire().await?;
         let all = rules(&mut connection, person).await?;
-        let muted = sqlx::query_scalar("SELECT COUNT(*) FROM articles WHERE muted = 1")
+        let muted = sqlx::query_scalar(MUTED_COUNT)
+            .bind(person)
             .fetch_one(&mut *connection)
             .await?;
         Ok((all, muted))
@@ -470,15 +522,10 @@ async fn checked(
     if form.feed_id.is_some() && form.folder_id.is_some() {
         return Ok(Err("no-place"));
     }
-    if let Some(feed) = form.feed_id {
-        let found: Option<i64> =
-            sqlx::query_scalar("SELECT id FROM feeds WHERE id = ? AND unsubscribed_at IS NULL")
-                .bind(feed)
-                .fetch_optional(&mut *connection)
-                .await?;
-        if found.is_none() {
-            return Ok(Err("no-place"));
-        }
+    if let Some(feed) = form.feed_id
+        && !follows(connection, person, feed).await?
+    {
+        return Ok(Err("no-place"));
     }
     if let Some(folder) = form.folder_id {
         let found: Option<i64> =
@@ -651,12 +698,14 @@ async fn apply_rule(
         let ids = matching_now(&state.db, &rule).await?;
         let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
         let ids: Vec<i64> = sqlx::query_scalar(
-            "SELECT id FROM articles WHERE id IN (SELECT value FROM json_each(?)) AND read = 0",
+            "SELECT article_id FROM entries
+             WHERE person_id = ? AND article_id IN (SELECT value FROM json_each(?)) AND read = 0",
         )
+        .bind(person)
         .bind(serde_json::to_string(&ids).unwrap_or_else(|_| "[]".to_owned()))
         .fetch_all(&mut *transaction)
         .await?;
-        act(&mut transaction, rule.action, &ids).await?;
+        act(&mut transaction, person, rule.action, &ids).await?;
         transaction.commit().await?;
         Ok(Some((rule.action, ids)))
     }
@@ -668,21 +717,28 @@ async fn apply_rule(
     }
 }
 
-/// The Muted page: the newest muted articles, and how many there are.
-async fn list_muted(_: SignedIn, State(state): State<AppState>) -> Response {
+/// How many articles the reader has muted, from the `entries_muted` index.
+const MUTED_COUNT: &str = "SELECT COUNT(*) FROM entries WHERE person_id = ? AND muted = 1";
+
+/// The Muted page: the reader's newest muted articles, and how many there are.
+async fn list_muted(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
     let listed: Result<(Vec<ArticleRow>, i64), sqlx::Error> = async {
         let articles = sqlx::query_as(
-            "SELECT articles.id, articles.feed_id, feeds.title AS feed_title,
-                    articles.title, articles.link, articles.sort_at AS at,
-                    articles.read, articles.starred, articles.muted
-             FROM articles CROSS JOIN feeds ON feeds.id = articles.feed_id
-             WHERE articles.muted = 1
-             ORDER BY articles.sort_at DESC, articles.id DESC LIMIT ?",
+            "SELECT entries.article_id AS id, entries.feed_id, subscriptions.title AS feed_title,
+                    articles.title, articles.link, entries.sort_at AS at,
+                    entries.read, entries.starred, entries.muted
+             FROM entries CROSS JOIN articles ON articles.id = entries.article_id
+                 CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
+                     AND subscriptions.feed_id = entries.feed_id
+             WHERE entries.person_id = ? AND entries.muted = 1
+             ORDER BY entries.sort_at DESC, entries.article_id DESC LIMIT ?",
         )
+        .bind(person)
         .bind(MUTED_SHOWN)
         .fetch_all(&state.db)
         .await?;
-        let count = sqlx::query_scalar("SELECT COUNT(*) FROM articles WHERE muted = 1")
+        let count = sqlx::query_scalar(MUTED_COUNT)
+            .bind(person)
             .fetch_one(&state.db)
             .await?;
         Ok((articles, count))
@@ -713,6 +769,24 @@ pub async fn place_gone(
     .bind(folder_id)
     .fetch_all(connection)
     .await
+}
+
+/// A reader's feed is cleared: their rules for it stay, matching nothing,
+/// as `place_gone` says. Other readers' rules for the same feed carry on.
+pub async fn place_gone_for(
+    connection: &mut SqliteConnection,
+    person: i64,
+    feed_id: i64,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "UPDATE rules SET place_gone = 1, feed_id = NULL, folder_id = NULL
+         WHERE person_id = ? AND feed_id = ?",
+    )
+    .bind(person)
+    .bind(feed_id)
+    .execute(connection)
+    .await?;
+    Ok(())
 }
 
 /// Undo for deleting a folder: the reader's rules it had go back to the

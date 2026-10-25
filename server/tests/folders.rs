@@ -384,7 +384,7 @@ async fn unsubscribing_hides_a_feed_undo_brings_it_back_and_stars_are_kept() {
     reader
         .post(&format!("/api/feeds/{alpha}/unsubscribe"), json!({}))
         .await;
-    let cleared = folders::clear_unsubscribed(&reader.state.db, i64::MAX)
+    let cleared = folders::clear_unsubscribed(&reader.state.db, None, i64::MAX)
         .await
         .unwrap();
     assert_eq!(cleared, 1);
@@ -590,7 +590,7 @@ async fn background_rounds_clear_an_unsubscribed_feed_only_after_ten_minutes_and
         .post(&format!("/api/feeds/{beta}/resubscribe"), json!({}))
         .await;
     let mut transaction = reader.state.db.begin().await.unwrap();
-    assert!(!folders::clear(&mut transaction, beta).await.unwrap());
+    assert!(!folders::clear(&mut transaction, 1, beta).await.unwrap());
     transaction.commit().await.unwrap();
     assert_eq!(reader.titles(&format!("feed={beta}")).await.len(), 3);
 }
@@ -607,7 +607,7 @@ async fn article_numbers_freed_by_unsubscribing_are_never_given_again() {
     reader
         .post(&format!("/api/feeds/{beta}/unsubscribe"), json!({}))
         .await;
-    folders::clear_unsubscribed(&reader.state.db, i64::MAX)
+    folders::clear_unsubscribed(&reader.state.db, None, i64::MAX)
         .await
         .unwrap();
     // A list loaded now remembers `latest` from before; Gamma's articles

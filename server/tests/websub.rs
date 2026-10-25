@@ -487,7 +487,7 @@ async fn unsubscribing_from_a_feed_with_a_hub_clears_it_as_usual() {
         .await
         .unwrap();
     assert!(gone.status().is_success(), "{}", gone.status());
-    let cleared = nine_turtles::folders::clear_unsubscribed(&state.db, i64::MAX)
+    let cleared = nine_turtles::folders::clear_unsubscribed(&state.db, None, i64::MAX)
         .await
         .unwrap();
     assert_eq!(cleared, 1);

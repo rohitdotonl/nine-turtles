@@ -6,6 +6,10 @@
 //! screen, so articles that arrived in the background are never touched
 //! (ENGINEERING.md → "Data"). Undo is the screen sending the opposite mark
 //! for the same articles.
+//!
+//! Marks are each reader's own (their entries, decision 0086): marking an
+//! article changes nothing for another reader of the same feed, and an
+//! article the reader doesn't have is skipped.
 
 use axum::{
     Json, Router,
@@ -45,29 +49,31 @@ struct Starred {
     starred: bool,
 }
 
-async fn mark_read(_: SignedIn, State(state): State<AppState>, Json(form): Json<Read>) -> Response {
-    mark(
-        &state,
-        // Marking a muted article unread unmutes it, so it waits in Unread again.
-        "UPDATE articles SET read = ?1, muted = muted * ?1 WHERE id IN (SELECT value FROM json_each(?2))",
-        &form.ids,
-        form.read,
-    )
-    .await
+/// Marking a muted article unread unmutes it, so it waits in Unread again.
+/// Takes the mark, the articles and the reader, as every mark here does.
+pub const READ_SQL: &str = "UPDATE entries SET read = ?1, muted = muted * ?1
+     WHERE person_id = ?3 AND article_id IN (SELECT value FROM json_each(?2))";
+
+pub const STAR_SQL: &str = "UPDATE entries SET starred = ?1
+     WHERE person_id = ?3 AND article_id IN (SELECT value FROM json_each(?2))";
+
+const MUTE_SQL: &str = "UPDATE entries SET muted = ?1, read = ?1
+     WHERE person_id = ?3 AND article_id IN (SELECT value FROM json_each(?2))";
+
+async fn mark_read(
+    SignedIn(person): SignedIn,
+    State(state): State<AppState>,
+    Json(form): Json<Read>,
+) -> Response {
+    mark(&state, person, READ_SQL, &form.ids, form.read).await
 }
 
 async fn mark_starred(
-    _: SignedIn,
+    SignedIn(person): SignedIn,
     State(state): State<AppState>,
     Json(form): Json<Starred>,
 ) -> Response {
-    mark(
-        &state,
-        "UPDATE articles SET starred = ? WHERE id IN (SELECT value FROM json_each(?))",
-        &form.ids,
-        form.starred,
-    )
-    .await
+    mark(&state, person, STAR_SQL, &form.ids, form.starred).await
 }
 
 #[derive(Deserialize)]
@@ -80,22 +86,23 @@ struct Muted {
 /// as read while muted and come back unread: muting is undone by unmuting,
 /// and unmuting (from the Muted page) by muting again.
 async fn mark_muted(
-    _: SignedIn,
+    SignedIn(person): SignedIn,
     State(state): State<AppState>,
     Json(form): Json<Muted>,
 ) -> Response {
-    mark(
-        &state,
-        "UPDATE articles SET muted = ?1, read = ?1 WHERE id IN (SELECT value FROM json_each(?2))",
-        &form.ids,
-        form.muted,
-    )
-    .await
+    mark(&state, person, MUTE_SQL, &form.ids, form.muted).await
 }
 
-/// Sets one mark on the named articles, all in one step. Articles that no
-/// longer exist are skipped. Answers how many articles it found.
-async fn mark(state: &AppState, sql: &'static str, ids: &[i64], value: bool) -> Response {
+/// Sets one of the reader's marks on the named articles, all in one step.
+/// Articles they don't have (gone, or of a feed they never followed) are
+/// skipped. Answers how many it found.
+async fn mark(
+    state: &AppState,
+    person: i64,
+    sql: &'static str,
+    ids: &[i64],
+    value: bool,
+) -> Response {
     if ids.len() > MOST_AT_ONCE {
         return StatusCode::PAYLOAD_TOO_LARGE.into_response();
     }
@@ -103,6 +110,7 @@ async fn mark(state: &AppState, sql: &'static str, ids: &[i64], value: bool) -> 
     match sqlx::query(sql)
         .bind(value)
         .bind(ids)
+        .bind(person)
         .execute(&state.db)
         .await
     {

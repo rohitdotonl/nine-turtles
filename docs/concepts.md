@@ -157,6 +157,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Data export
 - Rules and mutes (filters the reader writes)
 - Readers (accounts) and the `people` table
+- Subscriptions and entries (each reader's feeds and marks)
 
 ## Security and sign-in
 

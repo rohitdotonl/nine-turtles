@@ -15,7 +15,10 @@
 //!   asked, and lists the feeds that page names (decision 0016). It never
 //!   guesses other addresses.
 //! - **Use this address** moves the feed to an address the reader chose:
-//!   it keeps its name, folders, articles, read marks and stars.
+//!   it keeps its name, folders, articles, read marks and stars. A feed
+//!   other readers follow too isn't moved under them: the reader follows
+//!   the new address instead, with their name, settings, folders and rules,
+//!   and leaves the old one as unsubscribing does (their stars stay).
 //! - **Unsubscribe** is the usual one, with Undo (`folders`).
 //!
 //! The screen turns the short problem word into plain sentences; no error
@@ -37,9 +40,9 @@ use crate::{
     auth::{SignedIn, database_problem},
     checking::{self, DEAD_WHEN_FAILING, DEAD_WHEN_MISSING},
     discover, feed,
-    feeds::{make_room, store_articles},
-    fetch::{self, FetchError},
-    now,
+    feeds::{Followed, follow_in, make_room, offer_hub, refresh_shared, store_articles},
+    fetch::{self, FetchError, Fetched},
+    folders, now,
 };
 
 /// Failed checks in a row before a feed is listed.
@@ -114,24 +117,33 @@ pub fn judge(
     }
 }
 
-/// The followed feeds, as the page shows them, then `$rest`.
+/// The feeds a reader follows, by their name for each, as the page shows
+/// them, then `$rest`. Takes the reader first.
 macro_rules! entries {
     ($rest:literal) => {
         concat!(
-            "SELECT id, title, url, site_url, problem, failing_since, missing_since,
-                 fetched_at, next_check_at, failures
-             FROM feeds WHERE unsubscribed_at IS NULL ",
+            "SELECT feeds.id, subscriptions.title, feeds.url, feeds.site_url, feeds.problem,
+                 feeds.failing_since, feeds.missing_since, feeds.fetched_at,
+                 feeds.next_check_at, feeds.failures
+             FROM subscriptions JOIN feeds ON feeds.id = subscriptions.feed_id
+             WHERE subscriptions.person_id = ? AND subscriptions.unsubscribed_at IS NULL ",
             $rest
         )
     };
 }
 
-/// The followed feeds that aren't working: dead ones first, then the
-/// longest failing, then by name.
-pub async fn listed(db: &sqlx::SqlitePool, now: i64) -> Result<Vec<Entry>, sqlx::Error> {
+/// The feeds the reader follows that aren't working: dead ones first, then
+/// the longest failing, then by name.
+pub async fn listed(
+    db: &sqlx::SqlitePool,
+    person: i64,
+    now: i64,
+) -> Result<Vec<Entry>, sqlx::Error> {
     let mut entries: Vec<Entry> = sqlx::query_as(entries!(
-        "AND failures >= ? ORDER BY failing_since, title COLLATE NOCASE, id"
+        "AND feeds.failures >= ?
+         ORDER BY feeds.failing_since, subscriptions.title COLLATE NOCASE, feeds.id"
     ))
+    .bind(person)
     .bind(LISTED_AFTER)
     .fetch_all(db)
     .await?
@@ -143,16 +155,22 @@ pub async fn listed(db: &sqlx::SqlitePool, now: i64) -> Result<Vec<Entry>, sqlx:
     Ok(entries)
 }
 
-async fn entry(db: &sqlx::SqlitePool, id: i64, now: i64) -> Result<Option<Entry>, sqlx::Error> {
-    let entry: Option<Entry> = sqlx::query_as(entries!("AND id = ?"))
+async fn entry(
+    db: &sqlx::SqlitePool,
+    person: i64,
+    id: i64,
+    now: i64,
+) -> Result<Option<Entry>, sqlx::Error> {
+    let entry: Option<Entry> = sqlx::query_as(entries!("AND feeds.id = ?"))
+        .bind(person)
         .bind(id)
         .fetch_optional(db)
         .await?;
     Ok(entry.map(|entry| entry.judged(now)))
 }
 
-async fn list(_: SignedIn, State(state): State<AppState>) -> Response {
-    match listed(&state.db, now()).await {
+async fn list(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
+    match listed(&state.db, person, now()).await {
         Ok(feeds) => Json(json!({ "feeds": feeds })).into_response(),
         Err(error) => database_problem("listing the feeds that aren't working", &error),
     }
@@ -163,9 +181,13 @@ fn refused(status: StatusCode, error: &str) -> Response {
 }
 
 /// Retry: checks the feed now and answers how it's doing afterwards.
-async fn retry(_: SignedIn, State(state): State<AppState>, Path(id): Path<i64>) -> Response {
+async fn retry(
+    SignedIn(person): SignedIn,
+    State(state): State<AppState>,
+    Path(id): Path<i64>,
+) -> Response {
     let now = now();
-    let before = match entry(&state.db, id, now).await {
+    let before = match entry(&state.db, person, id, now).await {
         Ok(Some(before)) => before,
         Ok(None) => return StatusCode::NOT_FOUND.into_response(),
         Err(error) => return database_problem("retrying a feed", &error),
@@ -180,7 +202,7 @@ async fn retry(_: SignedIn, State(state): State<AppState>, Path(id): Path<i64>) 
     }
     let after = async {
         checking::check(&state, id, now).await?;
-        entry(&state.db, id, now).await
+        entry(&state.db, person, id, now).await
     }
     .await;
     match after {
@@ -217,9 +239,13 @@ fn fetch_refusal(error: &FetchError) -> Response {
 }
 
 /// Find new address: the feeds the site's home page names, other than the
-/// one that isn't working and any already followed.
-async fn find(_: SignedIn, State(state): State<AppState>, Path(id): Path<i64>) -> Response {
-    let feed = match entry(&state.db, id, now()).await {
+/// one that isn't working and any the reader already follows.
+async fn find(
+    SignedIn(person): SignedIn,
+    State(state): State<AppState>,
+    Path(id): Path<i64>,
+) -> Response {
+    let feed = match entry(&state.db, person, id, now()).await {
         Ok(Some(feed)) => feed,
         Ok(None) => return StatusCode::NOT_FOUND.into_response(),
         Err(error) => return database_problem("finding a feed's new address", &error),
@@ -243,9 +269,12 @@ async fn find(_: SignedIn, State(state): State<AppState>, Path(id): Path<i64>) -
     let mut choices = Vec::new();
     for found in found {
         let followed: Result<Option<i64>, sqlx::Error> = sqlx::query_scalar(
-            "SELECT id FROM feeds WHERE url_key = ? AND unsubscribed_at IS NULL",
+            "SELECT feeds.id FROM feeds JOIN subscriptions ON subscriptions.feed_id = feeds.id
+             WHERE feeds.url_key = ? AND subscriptions.person_id = ?
+                 AND subscriptions.unsubscribed_at IS NULL",
         )
         .bind(feed::normalize(&found.url))
+        .bind(person)
         .fetch_optional(&state.db)
         .await;
         match followed {
@@ -267,9 +296,11 @@ struct NewAddress {
 
 /// Use this address: fetches the feed there and, if it is one, moves the
 /// feed to it, storing what's new. Its name, folders, articles, read marks
-/// and stars stay.
+/// and stars stay. The shared feed's address changes only when the reader
+/// is its only follower; otherwise they follow the new address instead
+/// (`follow_elsewhere`).
 async fn move_to(
-    _: SignedIn,
+    SignedIn(person): SignedIn,
     State(state): State<AppState>,
     Path(id): Path<i64>,
     Json(form): Json<NewAddress>,
@@ -288,25 +319,18 @@ async fn move_to(
         return refused(StatusCode::UNPROCESSABLE_ENTITY, "no-feed");
     };
     let now = now();
-    let moved: Result<Result<(), Response>, sqlx::Error> = async {
+    let moved: Result<Result<i64, Response>, sqlx::Error> = async {
         let lasting = &fetched.lasting_url;
         let key = feed::normalize(lasting);
         let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
-        let followed: Option<i64> =
-            sqlx::query_scalar("SELECT id FROM feeds WHERE id = ? AND unsubscribed_at IS NULL")
-                .bind(id)
-                .fetch_optional(&mut *transaction)
-                .await?;
-        if followed.is_none() {
+        if !crate::feeds::follows(&mut transaction, person, id).await? {
             return Ok(Err(StatusCode::NOT_FOUND.into_response()));
         }
-        // A feed unsubscribed from at that address, still waiting for Undo,
-        // is cleared first, as adding it would.
-        make_room(&mut transaction, &key).await?;
-        // Another feed at that address: one followed, or one unsubscribed
-        // from earlier whose line stays for its starred articles. Merging
-        // two feeds is never done quietly, so either is refused, in words
-        // that say which.
+        // A feed the reader unsubscribed from at that address, still
+        // waiting for Undo, is cleared first, as adding it would.
+        make_room(&mut transaction, person, &key).await?;
+        // Another feed at that address: one someone follows (`true`), or one
+        // unsubscribed from earlier whose line stays for starred articles.
         let taken: Option<bool> = sqlx::query_scalar(
             "SELECT unsubscribed_at IS NULL FROM feeds WHERE url_key = ? AND id != ?",
         )
@@ -314,10 +338,33 @@ async fn move_to(
         .bind(id)
         .fetch_optional(&mut *transaction)
         .await?;
-        match taken {
-            Some(true) => return Ok(Err(refused(StatusCode::CONFLICT, "already"))),
-            Some(false) => return Ok(Err(refused(StatusCode::CONFLICT, "kept-stars"))),
-            None => {}
+        // Others following the feed (or waiting to Undo) keep its address.
+        let others: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM subscriptions WHERE feed_id = ? AND person_id != ? AND cleared = 0",
+        )
+        .bind(id)
+        .bind(person)
+        .fetch_one(&mut *transaction)
+        .await?;
+        if others > 0 || taken == Some(true) {
+            let moved =
+                follow_elsewhere(&mut transaction, &state, person, id, &fetched, &parsed, now)
+                    .await?;
+            return Ok(match moved {
+                Ok((new, fresh)) => {
+                    transaction.commit().await?;
+                    if fresh {
+                        offer_hub(&state, new, parsed.hub.clone(), now);
+                    }
+                    Ok(new)
+                }
+                Err(refusal) => Err(refusal),
+            });
+        }
+        // Merging two feeds is never done quietly, so an address whose line
+        // stays for starred articles is refused, in words that say so.
+        if taken == Some(false) {
+            return Ok(Err(refused(StatusCode::CONFLICT, "kept-stars")));
         }
         let every = checking::rhythm(&parsed, now);
         sqlx::query(
@@ -341,11 +388,11 @@ async fn move_to(
         .await?;
         store_articles(&mut transaction, id, &parsed.articles, now).await?;
         transaction.commit().await?;
-        Ok(Ok(()))
+        Ok(Ok(id))
     }
     .await;
     match moved {
-        Ok(Ok(())) => match entry(&state.db, id, now).await {
+        Ok(Ok(id)) => match entry(&state.db, person, id, now).await {
             Ok(Some(after)) => Json(json!({ "feed": after })).into_response(),
             Ok(None) => StatusCode::NOT_FOUND.into_response(),
             Err(error) => database_problem("moving a feed to a new address", &error),
@@ -353,6 +400,86 @@ async fn move_to(
         Ok(Err(refusal)) => refusal,
         Err(error) => database_problem("moving a feed to a new address", &error),
     }
+}
+
+/// Use this address, for a feed others follow too: the reader follows the
+/// feed at the new address (stored once, like any other), under their name
+/// for the old one and with its settings, folders, rules and saved
+/// searches, and leaves the old one as unsubscribing does, so their
+/// starred articles of it stay. Answers the feed they follow now, and
+/// whether it was stored from this fetch (so its hub is asked).
+async fn follow_elsewhere(
+    transaction: &mut sqlx::SqliteConnection,
+    state: &AppState,
+    person: i64,
+    old: i64,
+    fetched: &Fetched,
+    parsed: &feed::ParsedFeed,
+    now: i64,
+) -> Result<Result<(i64, bool), Response>, sqlx::Error> {
+    let (title, river, check_at_most, open_on_site): (String, bool, i64, bool) = sqlx::query_as(
+        "SELECT title, river, check_at_most, open_on_site FROM subscriptions
+             WHERE person_id = ? AND feed_id = ?",
+    )
+    .bind(person)
+    .bind(old)
+    .fetch_one(&mut *transaction)
+    .await?;
+    let (new, fresh) = match follow_in(
+        &mut *transaction,
+        state,
+        person,
+        fetched,
+        parsed,
+        &title,
+        now,
+    )
+    .await?
+    {
+        Followed::New { feed_id, fresh } => (feed_id, fresh),
+        Followed::Already(_) => return Ok(Err(refused(StatusCode::CONFLICT, "already"))),
+    };
+    sqlx::query(
+        "UPDATE subscriptions SET river = ?, check_at_most = ?, open_on_site = ?
+         WHERE person_id = ? AND feed_id = ?",
+    )
+    .bind(river)
+    .bind(check_at_most)
+    .bind(open_on_site)
+    .bind(person)
+    .bind(new)
+    .execute(&mut *transaction)
+    .await?;
+    refresh_shared(&mut *transaction, new).await?;
+    sqlx::query(
+        "INSERT OR IGNORE INTO feed_folders (folder_id, feed_id)
+         SELECT feed_folders.folder_id, ?1 FROM feed_folders
+         JOIN folders ON folders.id = feed_folders.folder_id
+         WHERE feed_folders.feed_id = ?2 AND folders.person_id = ?3",
+    )
+    .bind(new)
+    .bind(old)
+    .bind(person)
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query("UPDATE rules SET feed_id = ? WHERE person_id = ? AND feed_id = ?")
+        .bind(new)
+        .bind(person)
+        .bind(old)
+        .execute(&mut *transaction)
+        .await?;
+    sqlx::query(
+        "UPDATE saved_searches SET query = json_set(query, '$.scope.id', ?1)
+         WHERE person_id = ?2 AND json_extract(query, '$.scope.kind') = 'feed'
+             AND json_extract(query, '$.scope.id') = ?3",
+    )
+    .bind(new)
+    .bind(person)
+    .bind(old)
+    .execute(&mut *transaction)
+    .await?;
+    folders::hide(&mut *transaction, person, &[old], now).await?;
+    Ok(Ok((new, fresh)))
 }
 
 #[cfg(test)]
