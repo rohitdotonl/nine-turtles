@@ -74,7 +74,7 @@ The article is the product; everything else is a way to reach it.
 
 #### 2. Calm over engagement
 nine turtles never tries to bring you back or keep you longer. It succeeds when you've read what you wanted and closed it.
-- *Explains:* no notifications, river mode, no count of new items, no pull-to-refresh, the view waiting for you, "Show older items" instead of infinite scroll.
+- *Explains:* no notifications, river mode, no count of new items, no pull-to-refresh, the view waiting for you, a list that ends with "You're all caught up." (older items load as you reach the bottom, decision 0075, but only from what you follow).
 - **Test:** would a social media company want this? If yes, be suspicious.
 
 #### 3. Clear at a glance
@@ -91,7 +91,7 @@ The experience is slow; the software never is.
 
 #### 5. Nothing moves unless you move it
 Layout, positions and content change only through the user's action.
-- *Explains:* the fixed three-pane layout, manual refresh, "+ Add feed" always in one place, "mark all as read" only affecting what you've seen, older items loading only when asked, no rearranging what the reader has learned once the look settles (the Apple Books redesign of October 2026 was the deliberate exception, decision 0059).
+- *Explains:* the fixed three-pane layout, manual refresh, "+ Add feed" always in one place, "mark all as read" only affecting what you've seen, older items loading only when you scroll to the bottom (decision 0075), no rearranging what the reader has learned once the look settles (the Apple Books redesign of October 2026 was the deliberate exception, decision 0059).
 - **Test:** could this surprise someone who looked away for a second?
 
 #### 6. Power is hidden, never missing
@@ -137,7 +137,7 @@ The 500-feed user gets everything; the 30-feed user never sees the machinery.
 
 - Notifications of any kind
 - Badges, streaks, reading stats or any gamification (no reading-time estimates, no "year in reading")
-- Infinite scroll or algorithmic ranking ("for you")
+- Algorithmic ranking ("for you"), or filling a list with anything you didn't subscribe to, so it never ends. (Older items loading as you reach the bottom of a list is allowed, decision 0075: the list still ends.)
 - In-app likes, comments or social features
 - Branded share buttons for specific platforms
 - Full-article scraping from publishers' websites
