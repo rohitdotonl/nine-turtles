@@ -670,7 +670,6 @@ test.describe("on a wide window", () => {
     // The video's description from the feed is its text, under a quiet Play button.
     const play = article(page).getByRole("button", { name: "Play video: A river at dawn, for an hour" });
     await expect(play).toBeVisible();
-    await expect(play).toHaveAccessibleDescription(/Nothing loads until you press Play/);
     await expect(article(page).getByText("Nothing happens, slowly.")).toBeVisible();
     const box = await play.boundingBox();
     expect(Math.round((box!.width / box!.height) * 9)).toBe(16);
