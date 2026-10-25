@@ -1,6 +1,6 @@
 <!--
   A YouTube video, in YouTube's own player (the publisher floor; SPEC section
-  7, decision 0068). Until Play is pressed it is only a quiet box in the
+  7, decision 0071). Until Play is pressed it is only a quiet box in the
   page's tone: nothing loads from YouTube, so YouTube learns nothing about an
   article you only glanced at. Pressing Play swaps the box for YouTube's
   privacy-enhanced player, in the same place and size (nothing else moves),
