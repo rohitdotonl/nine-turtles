@@ -122,6 +122,34 @@ pub async fn get(client: &Client, url: &Url, local_allowed: bool) -> Result<Fetc
     }
 }
 
+/// Sends a filled-in form (`form`, already encoded) to a WebSub hub and
+/// returns its answer's status. The same rules as a download: public
+/// addresses only, the time limit, and no redirects followed.
+pub async fn post_form(
+    client: &Client,
+    url: &Url,
+    local_allowed: bool,
+    form: String,
+) -> Result<u16, FetchError> {
+    if !allowed(url, local_allowed) {
+        return Err(FetchError::NotAllowed);
+    }
+    let response = client
+        .post(url.clone())
+        .header(header::CONTENT_TYPE, "application/x-www-form-urlencoded")
+        .body(form)
+        .send()
+        .await
+        .map_err(|error| {
+            if is_refused_address(&error) {
+                FetchError::NotAllowed
+            } else {
+                FetchError::Unreachable
+            }
+        })?;
+    Ok(response.status().as_u16())
+}
+
 /// Downloads a feed again, telling the publisher what nine turtles already has,
 /// so an unchanged feed can answer "nothing new" in a few bytes.
 pub async fn check(

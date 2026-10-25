@@ -10,6 +10,9 @@
 //   /reading/          Reading Room's home page, naming /reading.xml: one
 //                      full article (headings, a quote, code, a table, an
 //                      image and a tracking image), one summary only
+//   /videos/           Slow Films' home page, naming /videos.xml: a made-up
+//                      YouTube channel's feed (Atom with media details),
+//                      one video with a description and one without
 //   /visits            how often each address here was asked for, so tests
 //                      can prove the tracking image is never loaded
 //   /blog/NAME/        a home page for a blog called NAME, naming its feed
@@ -87,6 +90,21 @@ A <a href="/letters">letter</a> can wait a week; a good essay can wait a year.</
 <pre><code>for book in shelf:
     read(book, slowly=True)</code></pre>
 <p id="note-1">1. Written in Python, a long time ago.</p>`;
+
+// Shaped like a YouTube channel's feed; the channel and its videos are made up.
+const videos = `<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns:media="http://search.yahoo.com/mrss/" xmlns="http://www.w3.org/2005/Atom">
+<title>Slow Films</title><link rel="alternate" href="https://www.youtube.com/channel/UCslowfilms0000000000000"/>
+<entry><id>yt:video:AAAAAAAAAAA</id><yt:videoId>AAAAAAAAAAA</yt:videoId><title>A river at dawn, for an hour</title>
+<link rel="alternate" href="https://www.youtube.com/watch?v=AAAAAAAAAAA"/><published>${new Date(NEWEST).toISOString()}</published>
+<media:group><media:content url="https://www.youtube.com/v/AAAAAAAAAAA?version=3" type="application/x-shockwave-flash" width="640" height="390"/><media:title>A river at dawn, for an hour</media:title>
+<media:description>Nothing happens, slowly.
+
+Filmed on one still morning.</media:description></media:group></entry>
+<entry><id>yt:video:BBBBBBBBBBB</id><yt:videoId>BBBBBBBBBBB</yt:videoId><title>Rain on a tin roof</title>
+<link rel="alternate" href="https://www.youtube.com/watch?v=BBBBBBBBBBB"/><published>${new Date(NEWEST - DAY).toISOString()}</published>
+<media:group><media:content url="https://www.youtube.com/v/BBBBBBBBBBB?version=3" type="application/x-shockwave-flash" width="640" height="390"/><media:title>Rain on a tin roof</media:title></media:group></entry>
+</feed>`;
 
 const reading = `<?xml version="1.0"?>
 <rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel>
@@ -275,6 +293,8 @@ createServer((request, response) => {
   if (path === "/reading.xml") return xml(reading);
   if (path === "/reading/river.svg") return send("image/svg+xml", RIVER);
   if (path === "/reading/pixel.gif") return send("image/gif", "GIF89a");
+  if (path === "/videos/") return html(page("Slow Films", [["Slow Films", "/videos.xml", "application/atom+xml"]]));
+  if (path === "/videos.xml") return send("application/atom+xml", videos);
   if (path === "/visits") return send("application/json", JSON.stringify(Object.fromEntries(visits)));
 
   const shelved = path.match(/^\/shelf\/([a-z-]+)\/(?:([a-z0-9-]+)\/)?(feed\.xml)?$/);

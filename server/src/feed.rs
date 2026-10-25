@@ -4,7 +4,9 @@
 //! Article content is cleaned here, before it's ever stored, so nothing
 //! unsafe from a feed can reach the screen later (the engineering floor).
 //! Invisible 1×1 tracking images are taken out at the same time (DESIGN.md →
-//! "Article view").
+//! "Article view"). A YouTube video's own description becomes its text, and a
+//! YouTube player embedded in an article becomes a link to the video (SPEC
+//! section 7, decision 0068).
 
 use std::borrow::Cow;
 
@@ -19,6 +21,16 @@ pub struct ParsedFeed {
     pub site_url: Option<String>,
     pub language: Option<String>,
     pub articles: Vec<ParsedArticle>,
+    /// The publisher's WebSub hub, if the feed names one (SPEC section 12).
+    pub hub: Option<Hub>,
+}
+
+/// Where a feed's WebSub hub is, and the address the publisher announces
+/// the feed under there (its `rel="self"` link, or where it was fetched).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Hub {
+    pub hub: Url,
+    pub topic: Url,
 }
 
 #[derive(Debug)]
@@ -52,6 +64,17 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
         .and_then(|link| feed_url.join(&link.href).ok())
         .filter(|url| matches!(url.scheme(), "http" | "https"))
         .map(String::from);
+    let web_link = |rel: &str| {
+        feed.links
+            .iter()
+            .find(|link| link.rel.as_deref() == Some(rel))
+            .and_then(|link| feed_url.join(link.href.trim()).ok())
+            .filter(|url| matches!(url.scheme(), "http" | "https"))
+    };
+    let hub = web_link("hub").map(|hub| Hub {
+        hub,
+        topic: web_link("self").unwrap_or_else(|| feed_url.clone()),
+    });
     let title = feed
         .title
         .as_ref()
@@ -85,6 +108,17 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
                     let body = content.body.as_deref()?;
                     Some(clean(body, content.content_type.as_ref(), base))
                 })
+                .filter(|html| !html.trim().is_empty())
+                .or_else(|| {
+                    // A YouTube channel's feed carries each video's description
+                    // in its media details, not as content: that is its text.
+                    link.as_ref().and_then(youtube_video)?;
+                    let description = entry
+                        .media
+                        .iter()
+                        .find_map(|media| media.description.as_ref())?;
+                    Some(clean(&paragraphs(&description.content), "text/html", base))
+                })
                 .filter(|html| !html.trim().is_empty());
             let summary = entry
                 .summary
@@ -113,6 +147,7 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
         site_url,
         language: feed.language,
         articles,
+        hub,
     })
 }
 
@@ -205,8 +240,9 @@ fn clean(body: &str, content_type: &str, base: &Url) -> String {
     if !content_type.contains("html") {
         return ammonia::clean_text(body);
     }
-    // Tracking images go first, so the safety cleaning always has the last word.
-    let body = without_tracking_images(body);
+    // Tracking images and YouTube players go first, so the safety cleaning
+    // always has the last word.
+    let body = without_youtube_players(&without_tracking_images(body));
     ammonia::Builder::default()
         .url_relative(ammonia::UrlRelative::Custom(Box::new(Whole(base.clone()))))
         .add_generic_attributes(["id"])
@@ -214,6 +250,137 @@ fn clean(body: &str, content_type: &str, base: &Url) -> String {
         .set_tag_attribute_value("a", "target", "_blank")
         .clean(&body)
         .to_string()
+}
+
+/// The video a YouTube address shows, as its 11-character ID: a watch page
+/// (`youtube.com/watch?v=…`), a short link (`youtu.be/…`), a Short, a live
+/// video or an embedded player. Anything else is `None`.
+pub fn youtube_video(url: &Url) -> Option<String> {
+    let host = url
+        .host_str()?
+        .trim_start_matches("www.")
+        .trim_start_matches("m.");
+    let mut path = url.path_segments()?;
+    let id = match (host, path.next()?) {
+        ("youtu.be", id) => id.to_owned(),
+        ("youtube.com", "watch") => url
+            .query_pairs()
+            .find(|(name, _)| name == "v")
+            .map(|(_, id)| id.into_owned())?,
+        ("youtube.com" | "youtube-nocookie.com", "shorts" | "live" | "embed" | "v") => {
+            path.next()?.to_owned()
+        }
+        _ => return None,
+    };
+    // An embedded playlist (`embed/videoseries?list=…`) isn't one video.
+    let valid = matches!(url.scheme(), "http" | "https")
+        && id != "videoseries"
+        && id.len() == 11
+        && id
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-' || byte == b'_');
+    valid.then_some(id)
+}
+
+/// Stands in for a YouTube player embedded in an article while the article
+/// is rewritten: a character no article uses, the video's ID, the same
+/// character again. `with_video_links` then puts a link to the video there.
+const VIDEO_MARK: char = '\u{E000}';
+
+/// The same HTML with each embedded YouTube player swapped for a mark (see
+/// `VIDEO_MARK`), so the reader still finds the video: the safety cleaning
+/// removes every frame, and would otherwise leave nothing in its place. The
+/// links go in before the safety cleaning, which checks them like any other.
+fn without_youtube_players(html: &str) -> String {
+    if !html.contains("<iframe") && !html.contains("<IFRAME") {
+        return html.to_owned();
+    }
+    let mut document = scraper::Html::parse_fragment(html);
+    let frames = scraper::Selector::parse("iframe").expect("a fixed, valid selector");
+    let players: Vec<_> = document
+        .select(&frames)
+        .filter_map(|frame| {
+            let source = frame.value().attr("src")?;
+            // An address starting `//` takes the article's own scheme.
+            let source = source
+                .strip_prefix("//")
+                .map_or(source.to_owned(), |rest| format!("https://{rest}"));
+            Some((frame.id(), youtube_video(&Url::parse(&source).ok()?)?))
+        })
+        .collect();
+    if players.is_empty() {
+        return html.to_owned();
+    }
+    for (id, video) in players {
+        if let Some(mut node) = document.tree.get_mut(id) {
+            node.insert_after(scraper::Node::Text(scraper::node::Text {
+                text: format!("{VIDEO_MARK}{video}{VIDEO_MARK}").into(),
+            }));
+            node.detach();
+        }
+    }
+    with_video_links(&document.root_element().inner_html())
+}
+
+/// Puts a link to the video where each mark is; only a valid video ID
+/// becomes one. A mark a feed wrote itself can at most make a link like
+/// it could have written anyway, and the safety cleaning comes after.
+fn with_video_links(html: &str) -> String {
+    if !html.contains(VIDEO_MARK) {
+        return html.to_owned();
+    }
+    let mut parts = html.split(VIDEO_MARK);
+    let mut out = parts.next().unwrap_or_default().to_owned();
+    let mut rest: Vec<&str> = parts.collect();
+    rest.reverse();
+    while let Some(part) = rest.pop() {
+        let watch = Url::parse(&format!("https://www.youtube.com/watch?v={part}")).ok();
+        let closed = !rest.is_empty();
+        match watch.as_ref().and_then(youtube_video) {
+            Some(video) if closed && video == part => {
+                out.push_str(&format!(
+                    r#"<a href="https://www.youtube.com/watch?v={video}" target="_blank" rel="noopener noreferrer">Watch the video on YouTube</a>"#
+                ));
+                out.push_str(rest.pop().unwrap_or_default());
+            }
+            _ => out.push_str(part),
+        }
+    }
+    out
+}
+
+/// Plain text with line breaks (a video's description) as HTML paragraphs,
+/// its web addresses as links. The result still goes through the safety
+/// cleaning.
+fn paragraphs(text: &str) -> String {
+    let escape = |text: &str| {
+        text.replace('&', "&amp;")
+            .replace('<', "&lt;")
+            .replace('>', "&gt;")
+            .replace('"', "&quot;")
+    };
+    let line = |line: &str| {
+        line.split(' ')
+            .map(|word| match Url::parse(word) {
+                Ok(url) if matches!(url.scheme(), "http" | "https") => {
+                    format!(r#"<a href="{0}">{0}</a>"#, escape(word))
+                }
+                _ => escape(word),
+            })
+            .collect::<Vec<_>>()
+            .join(" ")
+    };
+    text.replace("\r\n", "\n")
+        .split("\n\n")
+        .map(str::trim)
+        .filter(|paragraph| !paragraph.is_empty())
+        .map(|paragraph| {
+            format!(
+                "<p>{}</p>",
+                paragraph.lines().map(line).collect::<Vec<_>>().join("<br>")
+            )
+        })
+        .collect()
 }
 
 /// Makes an article's relative addresses whole, using its own address;
@@ -279,6 +446,47 @@ mod tests {
 
     fn url(text: &str) -> Url {
         Url::parse(text).unwrap()
+    }
+
+    #[test]
+    fn a_feeds_websub_hub_and_its_own_address_are_found() {
+        let rss = br#"<?xml version="1.0"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>A</title>
+<link>https://example.com/</link>
+<atom:link rel="hub" href="https://hub.example/" />
+<atom:link rel="self" href="https://example.com/feed.xml" type="application/rss+xml" />
+</channel></rss>"#;
+        let parsed = parse(rss, &url("https://example.com/feed")).unwrap();
+        assert_eq!(
+            parsed.hub,
+            Some(Hub {
+                hub: url("https://hub.example/"),
+                topic: url("https://example.com/feed.xml"),
+            })
+        );
+        // No self link: the address it was fetched from.
+        let atom = br#"<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom">
+<title>B</title><id>b</id><updated>2026-10-01T00:00:00Z</updated>
+<link rel="hub" href="/hub" /></feed>"#;
+        let parsed = parse(atom, &url("https://example.com/atom.xml")).unwrap();
+        assert_eq!(
+            parsed.hub,
+            Some(Hub {
+                hub: url("https://example.com/hub"),
+                topic: url("https://example.com/atom.xml"),
+            })
+        );
+        // No hub, or one that isn't a web address: none.
+        let plain =
+            br#"<?xml version="1.0"?><rss version="2.0"><channel><title>C</title></channel></rss>"#;
+        assert_eq!(
+            parse(plain, &url("https://example.com/c")).unwrap().hub,
+            None
+        );
+        let odd = br#"<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom">
+<title>D</title><id>d</id><updated>2026-10-01T00:00:00Z</updated>
+<link rel="hub" href="mailto:hub@example.com" /></feed>"#;
+        assert_eq!(parse(odd, &url("https://example.com/d")).unwrap().hub, None);
     }
 
     #[test]
@@ -409,6 +617,118 @@ mod tests {
             summary.contains(r#"src="https://example.com/photo.jpg""#),
             "{summary}"
         );
+    }
+
+    #[test]
+    fn youtube_addresses_name_their_video() {
+        for address in [
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "https://youtube.com/watch?feature=share&v=dQw4w9WgXcQ",
+            "https://m.youtube.com/watch?v=dQw4w9WgXcQ",
+            "https://youtu.be/dQw4w9WgXcQ?t=42",
+            "https://www.youtube.com/shorts/dQw4w9WgXcQ",
+            "https://www.youtube.com/live/dQw4w9WgXcQ",
+            "https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0",
+            "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
+        ] {
+            assert_eq!(
+                youtube_video(&url(address)).as_deref(),
+                Some("dQw4w9WgXcQ"),
+                "{address}"
+            );
+        }
+        for address in [
+            "https://www.youtube.com/",
+            "https://www.youtube.com/@channel",
+            "https://www.youtube.com/watch?v=short",
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ%22onload",
+            "https://example.com/watch?v=dQw4w9WgXcQ",
+            "https://youtu.be.example.com/dQw4w9WgXcQ",
+            "https://www.youtube.com/embed/videoseries?list=PL1",
+            "javascript://youtu.be/dQw4w9WgXcQ",
+        ] {
+            assert_eq!(youtube_video(&url(address)), None, "{address}");
+        }
+    }
+
+    #[test]
+    fn a_youtube_videos_description_is_its_text() {
+        let atom = br#"<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns:media="http://search.yahoo.com/mrss/" xmlns="http://www.w3.org/2005/Atom">
+ <title>A Channel</title>
+ <link rel="alternate" href="https://www.youtube.com/channel/UC123"/>
+ <entry>
+  <id>yt:video:dQw4w9WgXcQ</id>
+  <yt:videoId>dQw4w9WgXcQ</yt:videoId>
+  <title>A video</title>
+  <link rel="alternate" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"/>
+  <published>2026-10-01T10:00:00+00:00</published>
+  <media:group>
+   <media:title>A video</media:title>
+   <media:content url="https://www.youtube.com/v/dQw4w9WgXcQ?version=3" type="application/x-shockwave-flash" width="640" height="390"/>
+   <media:description>First line &lt;b&gt;not bold&lt;/b&gt;
+More at https://example.com/notes
+
+Second paragraph</media:description>
+  </media:group>
+ </entry>
+</feed>"#;
+        let feed = parse(
+            atom,
+            &url("https://www.youtube.com/feeds/videos.xml?channel_id=UC123"),
+        )
+        .unwrap();
+        let content = feed.articles[0].content.as_deref().unwrap();
+        assert!(content.starts_with("<p>First line &lt;b&gt;not bold&lt;/b&gt;<br>More at <a href=\"https://example.com/notes\""), "{content}");
+        assert!(content.contains("noopener"), "{content}");
+        assert!(content.ends_with("<p>Second paragraph</p>"), "{content}");
+    }
+
+    #[test]
+    fn a_media_description_is_text_only_for_a_youtube_video() {
+        let rss = br#"<?xml version="1.0"?>
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><title>Photos</title>
+<item><title>A photo</title><link>https://example.com/photo</link>
+<media:content url="https://example.com/a.jpg" medium="image"><media:description>A caption</media:description></media:content>
+</item></channel></rss>"#;
+        let feed = parse(rss, &url("https://example.com/feed.xml")).unwrap();
+        assert_eq!(feed.articles[0].content, None);
+    }
+
+    #[test]
+    fn an_embedded_youtube_player_becomes_a_link_to_the_video() {
+        let html = clean(
+            "<p>Watch this:</p><iframe src=\"//www.youtube.com/embed/dQw4w9WgXcQ\" onload=\"x()\"></iframe>\
+             <iframe src=\"https://evil.example/embed/dQw4w9WgXcQ\"></iframe>\
+             <iframe src=\"https://www.youtube.com/embed/videoseries?list=PL1\"></iframe>",
+            "html",
+            &url("https://example.com/post"),
+        );
+        assert_eq!(
+            html,
+            "<p>Watch this:</p><a href=\"https://www.youtube.com/watch?v=dQw4w9WgXcQ\" target=\"_blank\" rel=\"noopener noreferrer\">Watch the video on YouTube</a>\
+             "
+        );
+    }
+
+    #[test]
+    fn a_feed_writing_the_video_mark_itself_never_gets_past_the_safety_cleaning() {
+        // As a character and as an entity, in text and in an attribute, beside a real player.
+        let html = clean(
+            "<iframe src=\"https://youtu.be/dQw4w9WgXcQ\"></iframe>\
+             <img alt=\"A &#xE000;dQw4w9WgXcQ&#xE000; picture\" src=\"a.png\">\
+             <p title=\"\u{E000}dQw4w9WgXcQ\u{E000}\">x</p>",
+            "html",
+            &url("https://example.com/post"),
+        );
+        // Whatever the marks became, the result is exactly what the safety cleaning makes of it.
+        let again = ammonia::Builder::default()
+            .add_generic_attributes(["id"])
+            .set_tag_attribute_value("a", "target", "_blank")
+            .clean(&html)
+            .to_string();
+        assert_eq!(html, again);
+        assert!(!html.contains("alt=\"A <a"), "{html}");
     }
 
     #[test]

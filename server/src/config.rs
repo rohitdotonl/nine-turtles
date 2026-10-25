@@ -28,6 +28,10 @@ pub struct Config {
     /// Only honored together with `local_feeds_allowed`, so it can never
     /// make the live app impolite to real publishers.
     pub test_check_seconds: Option<i64>,
+    /// The address the world reaches nine turtles at, such as
+    /// `https://app.nineturtles.app`. WebSub hubs deliver new articles there;
+    /// without it, nine turtles doesn't sign up with hubs (SPEC section 12).
+    pub public_url: Option<reqwest::Url>,
 }
 
 /// The scrambled password (`NINE_TURTLES_PASSWORD_HASH`), made by
@@ -96,6 +100,19 @@ impl Config {
             })
             .transpose()?;
 
+        let public_url = var("NINE_TURTLES_PUBLIC_URL")
+            .map(|value| {
+                reqwest::Url::parse(value.trim())
+                    .ok()
+                    .filter(|url| matches!(url.scheme(), "http" | "https") && url.has_host())
+                    .ok_or_else(|| {
+                        format!(
+                            "NINE_TURTLES_PUBLIC_URL must look like https://app.nineturtles.app, got {value:?}"
+                        )
+                    })
+            })
+            .transpose()?;
+
         Ok(Self {
             listen,
             data_dir: var("NINE_TURTLES_DATA_DIR")
@@ -105,6 +122,7 @@ impl Config {
             diagnostics_key: var("NINE_TURTLES_DIAGNOSTICS_KEY").map(|key| key.trim().to_owned()),
             local_feeds_allowed,
             test_check_seconds,
+            public_url,
         })
     }
 }

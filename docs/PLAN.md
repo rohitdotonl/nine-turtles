@@ -32,8 +32,8 @@ same so older documents still point to the right place.
 | 8 | Polite background fetching and Refresh | ✅ |
 | 9 | Folders, feed editing and OPML import/export | ✅ |
 | 10 | Search | ✅ |
-| 11 | Feed health page | ✅ (V2) |
-| 12 | WebSub | ⏭ |
+| 11 | Feed health page | ✅ (V2, 25 October 2026) |
+| 12 | WebSub | ✅ (V2, 25 October 2026) |
 | 13 | Phones and installing the app | ✅ |
 | 14 | Keeping things tidy, and the finishing pass | ✅ |
 
@@ -180,13 +180,14 @@ and the screen never changed under you.
 In V1, the daily check reported failing feeds instead (from Milestone 8).
 
 - Problems in plain words, sorted worst first, with Retry · Find new address · Unsubscribe.
-- In Settings › Feeds (SPEC section 17, decision 0069).
+- In Settings › Feeds (SPEC section 17, decision 0070).
 
 **You can try:** look at your real feeds' health after a few days of fetching.
 
-## 12. WebSub ⏭ moved to V2
+## 12. WebSub ✅ (V2, built 25 October 2026)
 
-- Subscribe to hubs, verify, check signatures, renew, reduced backup polling.
+- Subscribe to hubs, verify, check signatures, renew, reduced backup polling
+  (decision 0069).
 
 **You can try:** follow a WebSub blog and see new posts arrive within minutes.
 
@@ -358,6 +359,12 @@ each with screenshots:
   (`docs/operations/website-and-domain.md`, decision 0066). The pages start
   as a short introduction; what else the website says is the owner's to
   decide.
+
+## V2: YouTube videos
+
+- ✅ A YouTube video plays in YouTube's own privacy-enhanced player, above
+  its description, only once you press Play; a YouTube player inside a blog
+  post becomes a link to the video (decision 0068).
 
 ---
 
