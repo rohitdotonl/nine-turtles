@@ -3,7 +3,7 @@
   other feed readers that speak the Google Reader API can show the reader's
   feeds and keep read and starred in step. They sign in with an app
   password, never the reader's own: made here, shown once, and turned off
-  here (decision 0068). While the password shows, it and the server address
+  here (decision 0069). While the password shows, it and the server address
   each have a Copy button.
 -->
 <script lang="ts">

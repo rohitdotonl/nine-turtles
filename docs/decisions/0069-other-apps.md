@@ -1,4 +1,4 @@
-# 0068: Other apps sync through the Google Reader API, with an app password
+# 0069: Other apps sync through the Google Reader API, with an app password
 
 *25 October 2026. Asked for by the owner ("working with other apps").*
 

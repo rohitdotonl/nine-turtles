@@ -5,7 +5,7 @@
 //!
 //! Apps sign in with the app password (`apps`), never the reader's own.
 //! They can read everything, change read and starred marks, follow and
-//! unfollow feeds, rename them and sort them into folders (decision 0068).
+//! unfollow feeds, rename them and sort them into folders (decision 0069).
 //! Unfollowing from an app hides the feed first, as nine turtles does, and
 //! following it again from an app in the next ten minutes brings it back
 //! with its articles and read marks. The API answers at `/api/greader` and, for apps

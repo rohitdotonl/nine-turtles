@@ -483,7 +483,7 @@ Covered by sections 14 and 22.
 
 ## 26. Other apps: syncing with Reeder and NetNewsWire
 
-*Added 25 October 2026 at the owner's request (decision 0068).*
+*Added 25 October 2026 at the owner's request (decision 0069).*
 
 **What it does**
 - Other feed readers, such as Reeder and NetNewsWire, can use nine turtles as their sync service, through the "Google Reader API" that FreshRSS and Miniflux also offer. In the app, the owner adds a **FreshRSS** (or **Google Reader API**) account, with the server address shown in Settings (`https://app.nineturtles.app/api/greader`) and the app password; any username works. `/api/greader.php` answers too, for apps that expect FreshRSS's address.

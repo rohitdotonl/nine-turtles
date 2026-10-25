@@ -362,7 +362,7 @@ each with screenshots:
 
 - 🔨 Reeder, NetNewsWire and other feed readers sync with nine turtles
   through the Google Reader API, with an app password made in Settings
-  (SPEC section 26, decision 0068).
+  (SPEC section 26, decision 0069).
 
 ---
 
