@@ -580,7 +580,7 @@ A rule says "when a new article **matches this**, **do that**", in plain fields,
 **How emails arrive:** Cloudflare Email Routing receives mail for `in.nineturtles.app` and a small forwarder (`cloudflare/newsletter-worker/`) posts each email to nine turtles' `/newsletters/incoming` with a shared secret. Without `NINE_TURTLES_NEWSLETTER_SECRET` that address doesn't exist. Emails over 10 MB are refused. Setup: `docs/operations/newsletters.md`.
 
 **How to check it (part one)**
-1. With the setup done, send an email to `test@in.nineturtles.app`. It comes back to the inbox set as `FORWARD_TO`, and Render's log says it was read and not kept yet.
+1. With the setup done, send an email to `test@in.nineturtles.app`. Render's log says it was read and not kept yet (it also comes back to the inbox set as `FORWARD_TO`, but that happens for any email nine turtles didn't keep, so the log line is the check).
 2. The diagnostics page says `"newsletters": {"on": true}`.
 
 ---

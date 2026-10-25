@@ -84,16 +84,17 @@ two each reader gets their own name, and nine turtles works out whose it is.
 ## 6. Check it works
 
 1. Send an ordinary email to `test@in.nineturtles.app` from your own
-   address.
-2. Within a minute it should come back to you through `FORWARD_TO` (that's
-   part one working: nine turtles read it and said "not kept yet").
-3. To see what nine turtles did: Cloudflare → the Worker → **Logs**, or ask
-   an agent to look at the diagnostics page: `"newsletters": {"on": true}`.
-   Render's **Logs** show a line like `a newsletter email from "Your Name"
-   was read; not kept yet`.
-
-If the email bounces instead, the secret probably differs between Render
-and Cloudflare: set both again (step 1, then step 3).
+   address. Within a minute it comes back to you through `FORWARD_TO`.
+   That only shows the mailbox and forwarder work: the forwarder passes on
+   *every* email nine turtles didn't keep, whatever the reason.
+2. The real check is Render → the slowfeed service → **Logs**. Look for a
+   line like `a newsletter email from "Your Name" was read; not kept yet`.
+   That's part one working.
+3. If the log says `an email was posted to /newsletters/incoming without
+   the right secret` instead, the secret differs between Render and
+   Cloudflare: set both again (step 1, then step 3). If there's no line at
+   all, the forwarder couldn't reach nine turtles: check `NINE_TURTLES_URL`
+   (Cloudflare → the Worker → **Logs** shows what happened).
 
 ## Switching it off
 

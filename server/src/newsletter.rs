@@ -154,7 +154,9 @@ pub fn parse(raw: &[u8]) -> Option<Newsletter> {
             let id = list_id.as_deref()?;
             let name = words(id.split('<').next()?);
             let name = name.trim_matches(['"', '\'']).trim();
-            (!name.is_empty()).then(|| name.to_owned())
+            // The header is read as written: a name still in its encoded
+            // form (`=?UTF-8?B?…?=`) would show as gibberish, so it's skipped.
+            (!name.is_empty() && !name.contains("=?")).then(|| name.to_owned())
         })
         .unwrap_or_else(|| {
             let domain = address
@@ -277,21 +279,17 @@ const DROPPED: &[&str] = &[
 /// Tags with no closing tag.
 const VOID: &[&str] = &["area", "br", "col", "hr", "img", "source", "track", "wbr"];
 
-/// Tags that are only boxes around other things: left out when empty.
+/// Tags that are only boxes around other things: left out when empty. A
+/// kept table's rows and cells aren't among them: an empty cell holds its
+/// place, so the cells after it stay under their headings.
 const BOXES: &[&str] = &[
     "div",
     "p",
     "span",
     "center",
     "font",
-    "td",
-    "th",
     "a",
     "table",
-    "tbody",
-    "thead",
-    "tfoot",
-    "tr",
     "section",
     "article",
     "header",
@@ -824,6 +822,33 @@ mod tests {
         assert_eq!(email.sender.key, "from:news@mail.example.com");
         assert_eq!(email.article.title, "No subject");
         assert_eq!(content(&email), "<p>Hello</p>");
+    }
+
+    #[test]
+    fn empty_cells_keep_a_data_tables_columns_in_place() {
+        let html = content(&email(
+            "<table><tr><th></th><th>Mon</th><th>Tue</th></tr>\
+             <tr><th>Walk</th><td>&nbsp;</td><td>Weir</td></tr></table>",
+        ))
+        .to_owned();
+        assert!(
+            html.contains("<tr><th></th><th>Mon</th><th>Tue</th></tr>"),
+            "{html}"
+        );
+        assert!(
+            html.contains("<tr><th>Walk</th><td>&nbsp;</td><td>Weir</td></tr>"),
+            "{html}"
+        );
+    }
+
+    #[test]
+    fn an_encoded_list_name_isnt_shown_as_gibberish() {
+        let raw = "From: news@mail.example.com\r\nList-Id: =?UTF-8?B?TW9ybmluZw==?= <notes.example.com>\r\n\
+                   Subject: Hi\r\n\r\nHello\r\n";
+        assert_eq!(
+            parse(raw.as_bytes()).unwrap().sender.title,
+            "mail.example.com"
+        );
     }
 
     #[test]

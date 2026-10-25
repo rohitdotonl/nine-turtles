@@ -4,6 +4,9 @@
 name = "nine-turtles-newsletters"
 main = "worker.js"
 compatibility_date = "2026-10-01"
+# Keep the settings added in the dashboard (FORWARD_TO) when deploying with
+# wrangler; without this, a deploy would quietly remove them.
+keep_vars = true
 
 [vars]
 NINE_TURTLES_URL = "https://app.nineturtles.app"

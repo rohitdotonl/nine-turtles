@@ -44,6 +44,14 @@ turtles shows only what the email holds, credits the sender and links its
 web version when it names one. It never fetches the web version or
 anything else.
 
+**Never shared between readers.** Unlike a web feed (decision 0086), a
+newsletter feed and its articles always belong to the one reader whose
+address received them. Each reader's copy of an email is personal: its
+unsubscribe link carries their token, its footer often shows their address,
+its "View in browser" link is often theirs alone. So in part two the feed's
+key is scoped to the reader (or their address), never just `list:…` or
+`from:…`, and two readers on the same list get two separate feeds.
+
 **In parts, because many readers is still being built** (decision 0086):
 
 - **Part one (this change):** the Worker, reading and cleaning emails (with
@@ -55,3 +63,8 @@ anything else.
   (with a Copy and a New address button in Settings), storing emails as
   articles under a feed per sender, limits per reader (emails per day, size)
   and the disk space they take.
+- **A question to settle before part two shows emails:** mail services often
+  put a personal tracking code in the address of every picture, not only in
+  1-pixel ones, so loading a newsletter's pictures can tell the sender it was
+  opened. Options include showing pictures only on request for newsletters,
+  or leaving them as today's articles do. Raise it with the owner.
