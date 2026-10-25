@@ -102,10 +102,12 @@ test.describe("on a wide window", () => {
 
     // Mark unread in the article's More menu does the same as m.
     await article(page).getByRole("button", { name: "More actions" }).click();
+    const savedUnread = page.waitForResponse((response) => response.url().endsWith("/api/articles/read") && response.ok());
     await page.getByRole("menuitem", { name: "Mark unread" }).click();
     await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
 
-    // It's saved: a reload shows the same.
+    // It's saved: once the server has it, a reload shows the same.
+    await savedUnread;
     await page.reload();
     await appReady(page);
     await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
@@ -272,7 +274,10 @@ test.describe("when saving fails", () => {
     const blog = await openBlog(page);
     let failing = true;
     await page.route("**/api/articles/read", (route) => (failing ? route.fulfill({ status: 500 }) : route.fallback()));
+    // Opening the article can take a moment on a busy computer; the failed save comes after it.
+    const refused = page.waitForResponse((response) => response.url().endsWith("/api/articles/read"));
     await page.keyboard.press("j");
+    await refused;
     await expect(line(page)).toHaveText("An article couldn't be marked as read. It's still unread.");
     await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
     await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 3 unread`);

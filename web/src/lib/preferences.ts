@@ -4,7 +4,7 @@
 // is lost if that storage is unavailable: nine turtles simply uses the defaults.
 import { LOOKS, OLD_THEMES, THEMES, isAppearance, isTheme, resolveMode, type Appearance, type Mode, type Theme } from "./themes";
 
-export type ReadingFont = "literata" | "atkinson";
+export type ReadingFont = "literata" | "atkinson" | "system-serif";
 export type LineWidth = "narrow" | "medium" | "wide";
 
 export type Preferences = {
@@ -34,10 +34,18 @@ export const LINE_WIDTHS: Record<LineWidth, { label: string; ch: number }> = {
   wide: { label: "Wide", ch: 63 },
 };
 
-export const READING_FONTS: Record<ReadingFont, { label: string; family: string }> = {
+/** `rest` is the end of a long name, said to screen readers but not shown, so three choices fit one row. */
+export const READING_FONTS: Record<ReadingFont, { label: string; rest?: string; family: string }> = {
   literata: { label: "Literata", family: "var(--font-serif)" },
-  atkinson: { label: "Atkinson Hyperlegible", family: '"Atkinson Hyperlegible", var(--font-sans)' },
+  atkinson: { label: "Atkinson", rest: " Hyperlegible", family: '"Atkinson Hyperlegible", var(--font-sans)' },
+  // rohit.onl's font (decision 0063): the device's own serif, New York on Apple
+  // devices and Georgia on most others. Nothing to download.
+  "system-serif": { label: "System serif", family: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif' },
 };
+
+function isReadingFont(value: unknown): value is ReadingFont {
+  return typeof value === "string" && Object.hasOwn(READING_FONTS, value);
+}
 
 export const DEFAULTS: Preferences = { theme: "original", appearance: "auto", readingFont: "literata", textSize: 2, lineWidth: "medium" };
 
@@ -59,7 +67,7 @@ export function load(storage: Pick<Storage, "getItem"> | undefined = safeStorage
   return {
     theme: isTheme(s.theme) ? s.theme : (old?.theme ?? DEFAULTS.theme),
     appearance: isAppearance(s.appearance) ? s.appearance : (old?.appearance ?? DEFAULTS.appearance),
-    readingFont: s.readingFont === "literata" || s.readingFont === "atkinson" ? s.readingFont : DEFAULTS.readingFont,
+    readingFont: isReadingFont(s.readingFont) ? s.readingFont : DEFAULTS.readingFont,
     textSize:
       typeof s.textSize === "number" && Number.isInteger(s.textSize) && s.textSize >= 0 && s.textSize < TEXT_SIZES.length
         ? s.textSize
