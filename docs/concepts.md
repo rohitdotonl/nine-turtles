@@ -220,6 +220,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Deploy and deploy hook
 - Downtime
 - Status page and health check
+- Scheduled job (cron)
 - Diagnostics
 - Shell (terminal)
 - Vendor lock-in

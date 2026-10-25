@@ -115,7 +115,7 @@ A few words used throughout:
 - Newest first by default; oldest first can be chosen in Settings or in the list's More menu.
 - The list's title is one line: a long name ends in "…" (its whole name is its tooltip and is read in full by screen readers), so the search field under it never moves; in a narrow list it is set a size smaller (22px rather than 24px). Beside it sits one quiet icon, **More** (…), named for screen readers and in its tooltip, as Apple Books has one per collection. It opens a small menu with **Mark all as read** (section 8; its key, `Shift+A`, shown beside it), **Refresh** (section 13; its key, `r`; not while searching), the **sort order** (Newest first or Oldest first, the current one ticked and semibold), and, in a feed's or folder's own list, **Edit feed…** or **Edit folder…** (section 15). A click, Enter or the down arrow opens it on its first item; the arrow keys, Home and End move through it; Escape closes it and puts the keyboard back on More; Tab or a press outside closes it too. Closing a sheet opened from it puts the keyboard back on More.
 - Unread, Starred and All list articles from every feed. A feed's own list shows all its articles, read and unread.
-- The list has an end: it shows 50 items, then a **"Show older items"** button ("Show newer items" when sorting oldest first). Nothing more loads unless you press it. When there's nothing more to show, a quiet small caption, "That's everything.", closes the list, lined up with the titles (no line above it).
+- The list has an end: it shows 50 items, and when you reach the bottom the next 50 load below by themselves, with a small grey centred "Loading…" while they arrive; nothing above moves (decision 0075). For the keyboard and screen readers there's a **"Show older items"** button ("Show newer items" when sorting oldest first), hidden until Tab reaches it, then a small grey outlined pill centred under the list, never in the accent. If loading fails, the button shows for everyone, to try again. When there's nothing more to show, a quiet small caption, "You're all caught up.", closes the list, centred under it (no line above it).
 - Row states, each recognizable without color:
 
   | State | Looks like |
@@ -128,7 +128,7 @@ A few words used throughout:
 - Items you read in the Unread view stay where they are (greyed) until you press `r` or leave the view, so nothing jumps under your cursor.
 
 **How to check it**
-1. Open a feed with many articles. Scroll to the bottom: there's a "Show older items" button and no endless loading. Press it: more appear below, and nothing above moves.
+1. Open a feed with many articles. Scroll to the bottom: "Loading…" shows briefly and more appear below, and nothing above moves. Keep going until the list ends with "You're all caught up."
 2. Open an article and move on: its title turns softer and regular weight, and it doesn't vanish from the list.
 3. Turn your screen to greyscale (system accessibility setting). You can still tell unread, read, selected and starred apart.
 
@@ -145,7 +145,7 @@ A few words used throughout:
 - The title is set large (about 32px at the default text size, 1.6 times the text), tight, its lines balanced so a long title wraps into even lines rather than a long line over a short one; headings inside the article are a clear step smaller (about 22px) with more room above them than below.
 - The source is always credited and linked, in a quiet line about 20px under the title as in a book or magazine (the pause grows and shrinks with the text size) (14px, the second ink): the feed's name in full ink and semibold (linking to the publisher's website), the author if the feed names one, and the time.
 - Once loaded, an article ends rather than stops: a short centred line after its last paragraph (for a summary-only article, after the "Read the full article" paragraph), with room below so the last lines can be read at eye level.
-- Choosing an article in the list (a click, `j` / `k`, or the arrow keys while in the list) shows it in the reading area. `Enter` or `o` opens it to read: the keyboard's place moves into the article, and `j` / `k` then move from article to article; Escape goes back to the list. On a phone-narrow window the article takes the list's place, with a back button showing the list's name. `j` never loads older items on its own: at the end of the list it stops.
+- Choosing an article in the list (a click, `j` / `k`, or the arrow keys while in the list) shows it in the reading area. `Enter` or `o` opens it to read: the keyboard's place moves into the article, and `j` / `k` then move from article to article; Escape goes back to the list. On a phone-narrow window the article takes the list's place, with a back button showing the list's name. `j` stops at the last item listed; older items load when the bottom of the list comes into view, as with scrolling.
 - `v` opens the original in a new tab. `+` / `-` change the text size (the same setting as in Settings).
 - Links inside articles open in a new tab (links to a place inside the article, like footnotes, stay in it).
 - Footnote links move to the note inside the article (and back), without leaving nine turtles.
@@ -175,7 +175,7 @@ A few words used throughout:
 **What it does**
 - An item counts as read as soon as it's shown in the reading pane, by click or by `j`/`k`.
 - `m` marks the current item unread again. **Mark unread** in the article's More (…) menu does the same (in the top bar on desktop, in the bottom bar on phones).
-- **Mark all as read** (`Shift+A`, or **Mark all as read** in the More (…) menu beside the list's title, section 6): happens instantly, no "are you sure?". It affects **only the items shown on screen right now** (every item listed, including pages added with "Show older items"). Items that arrived in the background but aren't displayed yet are never touched.
+- **Mark all as read** (`Shift+A`, or **Mark all as read** in the More (…) menu beside the list's title, section 6): happens instantly, no "are you sure?". It affects **only the items shown on screen right now** (every item listed, including older ones loaded as you scrolled). Items that arrived in the background but aren't displayed yet are never touched.
 - **Undo** (`u`, or a visible **Undo**): after an undoable action, a note such as "Marked 23 items as read" with an **Undo** button floats at the bottom of the list (nothing in the list moves), in a band of the list's own tone that the rows end above, so it never covers them (decision 0048). It stays until your next undoable action or until you leave the list. Pressing `r` doesn't clear it. After an undo it says "Undone."; there's no undoing an undo. Moving through articles doesn't clear it.
 - Undo reverses **the last action only**, of these: mark all as read, mark unread, star/unstar, unsubscribe, delete folder.
 - Read state is recorded in both reading modes, so switching modes never loses it.
@@ -303,7 +303,7 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 - Unsubscribing and deleting a folder happen at once and take you to Unread, where the line says "Unsubscribed from …" or "Deleted the folder …" with Undo (or `u`), until your next action.
 - Unsubscribing from a feed keeps its starred articles in Starred. Undo brings the feed back whole, read history and folders included; after your next action (or ten minutes) its other articles are gone for good. Following it again later starts it afresh, all unread.
 
-- **Your feeds** (tidying many feeds at once; decision 0075): in Settings, under **Feeds**, a **Your feeds** row (ending in ›) opens a page of its own at `/settings/feeds`, built like the feed health page: the same top line with an X ("Close your feeds", or Escape) back to Settings, and one centred column.
+- **Your feeds** (tidying many feeds at once; decision 0080): in Settings, under **Feeds**, a **Your feeds** row (ending in ›) opens a page of its own at `/settings/feeds`, built like the feed health page: the same top line with an X ("Close your feeds", or Escape) back to Settings, and one centred column.
   - It lists every feed A to Z in one grouped list, each on two lines: its name, then, in the muted grey, when it last posted ("Last posted today", "Last posted on 3 Oct 2025", or "Nothing posted yet") and the folders it's in. The group's small heading counts them ("42 feeds"). Out of Edit, a row opens that feed's list.
   - **Show**, a segmented choice above the list: **All feeds**, **Quiet for 6 months** or **Quiet for a year**. A quiet feed is one with nothing published for that long (counted from when you added it, if it has never posted). The feed health page lists broken feeds; this lists working feeds that have gone silent, so you can let them go. With none, it says "Every feed has posted within the last 6 months" (or year).
   - **Edit**, as in Apple Books, at the right of the list's heading: each row gets a tick box (the same rounded square as Edit feed's folders), and **Choose all** / **Choose none** appears beside it; Edit becomes **Done**. A bar stays at the page's foot while the list scrolls, solid in the page's color with a hairline above: how many are chosen, **Unsubscribe** in the destructive red words, and **Move to…**.
@@ -529,4 +529,4 @@ From DESIGN.md: public reading list page, per-feed reading modes, passkey sign-i
 
 Moved to V2 on 23 October 2026: backups and moving hosts, river mode (built 25 October 2026), WebSub (built 25 October 2026), the feed health page (built 25 October 2026), the yearly clean-up, the feeds guide page, and keeping a tab that was left open across an update working without a reload.
 
-Never: notifications, badges, streaks, reading stats, infinite scroll, algorithmic ranking, likes or comments, platform share buttons, scraping full articles, decorative effects or animation.
+Never: notifications, badges, streaks, reading stats, endless feeds padded with things you didn't follow, algorithmic ranking, likes or comments, platform share buttons, scraping full articles, decorative effects or animation.

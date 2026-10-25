@@ -1,4 +1,4 @@
-# 0075: Tidying many feeds at once
+# 0080: Tidying many feeds at once
 
 *25 October 2026. Built in V2 at the owner's request ("Tidying many feeds
 at once": an Edit mode to move or unsubscribe from several feeds with one
