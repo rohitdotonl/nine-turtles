@@ -21,6 +21,7 @@ pub fn config() -> Config {
         diagnostics_key: Some(DIAGNOSTICS_KEY.to_owned()),
         local_feeds_allowed: true,
         test_check_seconds: None,
+        public_url: None,
     }
 }
 

@@ -3,8 +3,9 @@
 //! So far: sign-in, the database file, the status pages, adding feeds,
 //! listing and reading their articles, marking them read and starring them,
 //! the shared settings, checking feeds in the background (`checking`),
-//! folders and unsubscribing (`folders`), OPML files (`subscriptions`), and
-//! syncing with other feed readers (`apps`, `greader`).
+//! folders and unsubscribing (`folders`), OPML files (`subscriptions`),
+//! instant updates from WebSub hubs (`websub`), and syncing with other feed
+//! readers (`apps`, `greader`).
 //! The frontend is packed into this program (see `assets`).
 
 pub mod apps;
@@ -28,6 +29,7 @@ pub mod settings;
 pub mod starred;
 pub mod status;
 pub mod subscriptions;
+pub mod websub;
 
 use std::sync::{
     Arc,
@@ -112,6 +114,7 @@ pub fn router(state: AppState) -> Router {
         .merge(settings::routes())
         .merge(starred::routes())
         .merge(status::routes())
+        .merge(websub::routes())
         .merge(assets::routes())
         .with_state(state);
     security::apply(router)

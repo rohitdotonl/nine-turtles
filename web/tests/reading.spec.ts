@@ -651,6 +651,57 @@ test.describe("on a wide window", () => {
     await page.getByRole("link", { name: "Settings" }).click();
     await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("status")).toHaveText("Small");
   });
+
+  test("a YouTube video plays in YouTube's own player, and nothing loads from YouTube until Play is pressed", async ({ page }) => {
+    // Stand in for YouTube's player, so the test never leaves this computer.
+    const asked: string[] = [];
+    await page.route(/youtube/, (route) => {
+      asked.push(route.request().url());
+      return route.fulfill({ contentType: "text/html", body: "<p>YouTube's player</p>" });
+    });
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(new URL("/all", FEEDS_APP).href);
+    await appReady(page);
+    await signIn(page);
+    const id = await follow(page, `${FEED_SITE}/videos/`);
+    await page.goto(new URL(`/feeds/${id}`, page.url()).href);
+    await row(page, "A river at dawn").click();
+
+    // The video's description from the feed is its text, under a quiet Play button.
+    const play = article(page).getByRole("button", { name: "Play video: A river at dawn, for an hour" });
+    await expect(play).toBeVisible();
+    await expect(play).toHaveAccessibleDescription(/Nothing loads until you press Play/);
+    await expect(article(page).getByText("Nothing happens, slowly.")).toBeVisible();
+    const box = await play.boundingBox();
+    expect(Math.round((box!.width / box!.height) * 9)).toBe(16);
+    expect(asked).toEqual([]);
+
+    // Pressed, YouTube's privacy-enhanced player takes the button's place and the keyboard.
+    await play.press("Enter");
+    const player = article(page).locator("iframe");
+    await expect(player).toHaveAttribute("src", "https://www.youtube-nocookie.com/embed/AAAAAAAAAAA?autoplay=1&rel=0");
+    await expect(player).toHaveAttribute("title", "YouTube video: A river at dawn, for an hour");
+    await expect(player).toBeFocused();
+    // Sandboxed, and told only nine turtles' address, never the article's.
+    await expect(player).toHaveAttribute("referrerpolicy", "strict-origin");
+    await expect(player).toHaveAttribute("sandbox", "allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox");
+    await expect(page.frameLocator("iframe").getByText("YouTube's player")).toBeVisible();
+    expect(asked).toEqual(["https://www.youtube-nocookie.com/embed/AAAAAAAAAAA?autoplay=1&rel=0"]);
+    expect(Math.round((await player.boundingBox())!.height)).toBe(Math.round(box!.height));
+
+    // A video with no description is just the video, never "no text in its feed".
+    await row(page, "Rain on a tin roof").click();
+    const rain = article(page).getByRole("button", { name: "Play video: Rain on a tin roof" });
+    await expect(rain).toBeVisible();
+    await expect(article(page).locator("iframe")).toHaveCount(0);
+    await expect(article(page).getByText("no text in its feed")).toHaveCount(0);
+
+    // Space plays it too. (Tab out of the player is the browser's own frame
+    // handling, which differs between runs, so it isn't asserted here.)
+    await rain.focus();
+    await page.keyboard.press(" ");
+    await expect(article(page).locator("iframe")).toBeFocused();
+  });
 });
 
 test("on a phone, an article fills the screen and the back button returns to the list", async ({ page, isMobile }) => {

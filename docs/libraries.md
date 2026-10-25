@@ -33,7 +33,7 @@ whatever the lock files say.*
 | ammonia | 4.2 | Cleans article content so nothing unsafe reaches the screen | Approved |
 | sqlx | 0.9 | Talks to the SQLite database, and updates its structure safely ("migrations") | Approved |
 | opml | 1.1 | Reads and writes OPML subscription files | Approved (checked at Milestone 9: not updated since 2024, but small and enough for OPML 1.0 to 2.0) |
-| scraper | 0.29 | Finds a site's feed in the page you paste (autodiscovery), finds tracking images to remove, and takes the tags out of article text for the search index | Approved |
+| scraper | 0.29 | Finds a site's feed in the page you paste (autodiscovery), finds tracking images to remove and YouTube players to turn into links, and takes the tags out of article text for the search index | Approved |
 | argon2 | 0.6 | Scrambles the password so it's never stored readable | Approved |
 | tracing | 0.1 | Writes the app's logs | Approved |
 | serde, serde_json | 1.0 | Converts data to and from standard formats; used by almost every Rust project | Approved |
@@ -41,6 +41,7 @@ whatever the lock files say.*
 | tower-http | 0.7 | Standard web-server extras: compression, security headers | Approved |
 | thiserror | 2.x | Clear error messages inside the code | Approved |
 | getrandom | 0.4 | Asks the computer for unguessable random numbers, for each signed-in device's ticket. Comes with argon2 already | Approved (October 2026, Milestone 2) |
+| hmac, sha1, sha2 | 0.13, 0.11, 0.11 | Check that WebSub deliveries really come from the publisher's hub (their signature). Already came with other libraries | Approved (the owner's yes on 25 October 2026, decision 0069) |
 | blake2 | 0.11 | A fast scrambler: nine turtles stores only a scrambled copy of each device's ticket. Comes with argon2 already | Approved (October 2026, Milestone 2) |
 
 SQLite itself (and its FTS5 search) comes bundled with sqlx.
@@ -86,4 +87,4 @@ Each will be proposed in its milestone's plan:
   nine turtles' small `log` module prints plain lines itself, so neither is used
   yet (docs/decisions/0010-sign-in.md).
 - **V2 (backups):** a way to upload to S3-compatible storage (`object_store` was the suggestion).
-- **Later milestones:** handling dates and web addresses; in V2, checking WebSub signatures. (Limiting repeated sign-in attempts needed no library.)
+- **Later milestones:** handling dates and web addresses. (WebSub signatures: hmac, sha1 and sha2, approved above. Limiting repeated sign-in attempts needed no library.)

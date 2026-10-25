@@ -49,4 +49,6 @@ repository's history.
 | [0065](0065-faster-checks.md) | The checks run in parts side by side (frontend, Rust, browser tests in two halves) behind one **All checks**; documents-only pull requests skip them; changelog entries go in `docs/changes/`, one file each (revisits 0001) |
 | [0066](0066-website-and-domain.md) | A website at nineturtles.app (Eleventy, GitHub Pages), the app at app.nineturtles.app, in one repository; website-only changes skip the app's checks and deploy |
 | [0067](0067-turtle-logo.md) | A logo of nine turtles seen from the side, in one ink, for the app icon and the browser tab; the wordmark stays words (revisits 0022) |
-| [0069](0069-other-apps.md) | Reeder, NetNewsWire and other feed readers sync through the Google Reader API at `/api/greader`, signing in with an app password made in Settings (never the owner's own); apps may follow, unfollow and file feeds, with unfollowing hidden first |
+| [0068](0068-river-mode.md) | River mode: a reading mode with no Unread view, counts or read styling |
+| [0069](0069-websub.md) | WebSub: subscribe to a feed's hub at `NINE_TURTLES_PUBLIC_URL`/websub/{token}, a secret per feed, signed deliveries only (hmac, sha1, sha2), 10-day leases renewed a day early, backup checks at most twice a day |
+| [0070](0070-other-apps.md) | Reeder, NetNewsWire and other feed readers sync through the Google Reader API at `/api/greader`, signing in with an app password made in Settings (never the owner's own); apps may follow, unfollow and file feeds, with unfollowing hidden first |

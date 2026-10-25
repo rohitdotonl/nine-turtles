@@ -25,7 +25,7 @@ use crate::{
     checking, discover, feed,
     fetch::{self, FetchError, Fetched},
     folders::{self, FOLDERS, Folder, MEMBERSHIPS},
-    now, search,
+    log, now, search, websub,
 };
 
 /// How many articles the list shows before "Show older items" (SPEC section 6).
@@ -278,6 +278,7 @@ async fn follow(
     let key = feed::normalize(url);
     let now = now();
     let every = checking::rhythm(&parsed, now);
+    let hub = parsed.hub.clone();
     let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
     make_room(&mut transaction, &key).await?;
 
@@ -324,6 +325,15 @@ async fn follow(
         .fetch_one(&mut *transaction)
         .await?;
     transaction.commit().await?;
+    // Signing up with the feed's hub, if it has one, needn't hold up adding it.
+    let background = state.clone();
+    tokio::spawn(async move {
+        if let Err(error) = websub::offered(&background, feed_id, hub.as_ref(), now).await {
+            log::problem(&format!(
+                "database error while signing up with a hub: {error}"
+            ));
+        }
+    });
 
     Ok(FeedRow {
         id: feed_id,

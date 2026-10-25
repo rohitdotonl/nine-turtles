@@ -5,7 +5,7 @@
 //! password that nine turtles makes in Settings, shows once and can turn
 //! off at any time. It's 24 random letters and digits, so, like a signed-in
 //! device's ticket, the database keeps only a scrambled copy (BLAKE2s), and
-//! making a new one signs every app out. See docs/decisions/0069-other-apps.md.
+//! making a new one signs every app out. See docs/decisions/0070-other-apps.md.
 
 use axum::{
     Json, Router,
