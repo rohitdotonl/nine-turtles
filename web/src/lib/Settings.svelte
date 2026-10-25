@@ -32,6 +32,7 @@
     onSignedOut,
     onClose,
     onImported,
+    onFeedHealth,
     besideToggle = false,
   }: {
     preferences: Preferences;
@@ -47,6 +48,8 @@
     onClose: () => void;
     /** Feeds were imported: the sidebar loads them. */
     onImported: () => void;
+    /** Opens the feed health page. */
+    onFeedHealth: (event: MouseEvent) => void;
     /** The sidebar is hidden, so the top line starts clear of its toggle. */
     besideToggle?: boolean;
   } = $props();
@@ -212,6 +215,16 @@
           keep it somewhere safe. Starred articles are saved as a JSON Feed file, which other feed readers can open,
           with each article's text, its original link and the feed it came from.
         </p>
+      </section>
+
+      <section aria-labelledby="feeds-heading">
+        <h3 id="feeds-heading" class="inset-head">Feeds</h3>
+        <div class="inset-group">
+          <a href="/settings/feed-health" onclick={onFeedHealth} class="inset-row inset-action"
+            >Feed health<span class="row-glyph"><Icon name="chevron-right" size={18} /></span></a
+          >
+        </div>
+        <p class="inset-foot">Feeds that have stopped working, what went wrong, and what you can do about it.</p>
       </section>
 
       <section aria-labelledby="account-heading">

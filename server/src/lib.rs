@@ -16,6 +16,7 @@ pub mod feed;
 pub mod feeds;
 pub mod fetch;
 pub mod folders;
+pub mod health;
 pub mod log;
 pub mod marks;
 pub mod password;
@@ -101,6 +102,7 @@ pub fn router(state: AppState) -> Router {
         .merge(auth::routes())
         .merge(feeds::routes())
         .merge(folders::routes())
+        .merge(health::routes())
         .merge(subscriptions::routes())
         .merge(marks::routes())
         .merge(search::routes())

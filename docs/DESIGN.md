@@ -2,7 +2,7 @@
 
 > **nine turtles is a quiet place to read the web: it shows you what's there, gets out of the way, and lets you finish.**
 
-*Last updated: 25 October 2026 (a logo of nine turtles, decision 0067; a second theme, Plain, with blue article links, and System serif, decision 0063; Apple Books as the design reference, decision 0059). Each change is recorded in `docs/decisions/`.*
+*Last updated: 25 October 2026 (a logo of nine turtles, decision 0068; a second theme, Plain, with blue article links, and System serif, decision 0063; Apple Books as the design reference, decision 0059). Each change is recorded in `docs/decisions/`.*
 
 ## Mission
 
@@ -154,7 +154,7 @@ The philosophy applied. The principle is noted where it isn't obvious.
 
 - **Name:** nine turtles, at nineturtles.app (decision 0066; app store and trademark checks are under "Still to define").
 - **Wordmark:** "nine turtles" in lowercase, in the reading serif.
-- **Logo** (decision 0067): nine small turtles seen from the side, a half-circle shell and a round head each, in three rows of three, the middle row a little to the right so the rows never read as a menu's stripes. One ink, no color: the text color on the page (dark on white, light on near-black). It is the app icon and the browser-tab icon (the app's and the website's); inside the app the wordmark stays words. Its drawings are in `docs/logo/`.
+- **Logo** (decision 0068): nine small turtles seen from the side, a half-circle shell and a round head each, in three rows of three, the middle row a little to the right so the rows never read as a menu's stripes. One ink, no color: the text color on the page (dark on white, light on near-black). It is the app icon and the browser-tab icon (the app's and the website's); inside the app the wordmark stays words. Its drawings are in `docs/logo/`.
 - **Signature:** the accent (ink blue), quietly marking where you are, and the calm itself.
 
 ### Visual language
@@ -219,7 +219,7 @@ Two themes, each with a day and a night version: Original (decision 0056, which 
 - **The selection pill** (decision 0057): a neutral grey, the text color mixed into the pane behind it (8% by day, 12% by night), with no color. Text stays at 7 : 1, muted grey at 4.5 : 1 and the unread dot at 3 : 1 on it, and a dark pill, or a day pill on a warm pane, keeps its pane's temperature (all checked automatically). A row under the pointer gets a fainter, neutral tone of the text color (5%), never the accent, always lighter than the pill.
 - **Search matches** have the accent at 12% behind them , with 3px corners and a fine underline (so never tone alone), in the text's own weight; text keeps 7 : 1 on it, even inside the pill.
 - **The keyboard focus outline** is a 2px line in the text color, never the accent. On rows it is the text color softened (65%, still at least 3 : 1 on every area and on the pill, checked automatically; fields use the same tone, see "Fields"), drawn 2px inside their rounded edge so it never reaches over the hairlines or the pane's edge; the pill's fill always stays. A title the keyboard is moved to gets it too, a little away from the words, except a sheet's or the shortcut list's title, which takes the place without a ring because it can't be pressed; the first Tab lands on a control that rings (decision 0042). It shows only when you're using the keyboard: never on a row after a tap or a click, even when the keyboard's place moves back to it (decision 0051).
-- **Status colors** (errors, warnings; V2 feed health page) are muted, never drift toward blue, and always come with words.
+- **Status colors** (errors, warnings) are muted, never drift toward blue, and always come with words. The feed health page needs none: its groups' names ("Not working", "Having trouble") say how bad things are (decision 0068).
 - **Destructive actions** (Unsubscribe, Delete folder) are words in a muted red, `#A3261B` by day and `#E8968A` by night: at least AA (4.5 : 1) on the page, the list and a grouped list by day and by night, checked automatically. Red means only "this removes something", and the words always say what.
 
 #### Themes
@@ -270,7 +270,6 @@ Plain, unhurried, never urgent: "Nothing new yet," never "You're missing out!" L
 
 ## Still to define
 
-- Status colors for the V2 feed health page (checked against the first floor)
 - App store and trademark checks for "nine turtles" (not blocking V1). The domain is nineturtles.app (decision 0066).
 
 ## V2 parking lot
@@ -288,7 +287,7 @@ Moved from V1 on 23 October 2026, because V1 is for the owner alone (decision 00
 - **Backups and recovery:** nightly copies outside the host, and one before every database structure change.
 - **River mode.**
 - **WebSub.**
-- **Feed health page.**
+- **Feed health page.** Built 25 October 2026 (decision 0068).
 - **The yearly clean-up** of unstarred articles.
 - **The "New to feeds?" guide page.**
 - **A tab left open across an update keeps working** without a reload.

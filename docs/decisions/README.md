@@ -49,3 +49,4 @@ repository's history.
 | [0065](0065-faster-checks.md) | The checks run in parts side by side (frontend, Rust, browser tests in two halves) behind one **All checks**; documents-only pull requests skip them; changelog entries go in `docs/changes/`, one file each (revisits 0001) |
 | [0066](0066-website-and-domain.md) | A website at nineturtles.app (Eleventy, GitHub Pages), the app at app.nineturtles.app, in one repository; website-only changes skip the app's checks and deploy |
 | [0067](0067-turtle-logo.md) | A logo of nine turtles seen from the side, in one ink, for the app icon and the browser tab; the wordmark stays words (revisits 0022) |
+| [0068](0068-feed-health-page.md) | The feed health page: in Settings › Feeds, listed after two failures in a row, no status colors, Retry respects "slow down", Find new address moves a feed keeping everything |

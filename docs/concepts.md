@@ -80,6 +80,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - User-Agent
 - Rate limiting and `Retry-After`
 - Exponential backoff
+- Dead feeds and feed health
 - Timeout
 - Scraping (and why nine turtles never does it)
 - Deduplication and fingerprints

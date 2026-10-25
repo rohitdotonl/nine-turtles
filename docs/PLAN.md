@@ -32,7 +32,7 @@ same so older documents still point to the right place.
 | 8 | Polite background fetching and Refresh | ✅ |
 | 9 | Folders, feed editing and OPML import/export | ✅ |
 | 10 | Search | ✅ |
-| 11 | Feed health page | ⏭ |
+| 11 | Feed health page | ✅ (V2) |
 | 12 | WebSub | ⏭ |
 | 13 | Phones and installing the app | ✅ |
 | 14 | Keeping things tidy, and the finishing pass | ✅ |
@@ -150,7 +150,7 @@ move around with only the keyboard.
   Last-Modified, `Retry-After`, time and size limits, permanent redirects,
   backoff for failing feeds.
 - "New items · press r", `r` and the Refresh button; fresh on arrival.
-- Failing feeds visible without the feed health page (V2): the diagnostics page
+- Failing feeds visible without the feed health page (built in V2): the diagnostics page
   counts them (never naming them) and the daily check reports "Some feeds keep
   failing", with tests.
 
@@ -175,11 +175,12 @@ and the screen never changed under you.
 
 **You can try:** the checks in SPEC section 14.
 
-## 11. Feed health page ⏭ moved to V2
+## 11. Feed health page ✅ built in V2 (25 October 2026)
 
-In V1, the daily check reports failing feeds instead (from Milestone 8).
+In V1, the daily check reported failing feeds instead (from Milestone 8).
 
 - Problems in plain words, sorted worst first, with Retry · Find new address · Unsubscribe.
+- In Settings › Feeds (SPEC section 17, decision 0068).
 
 **You can try:** look at your real feeds' health after a few days of fetching.
 
