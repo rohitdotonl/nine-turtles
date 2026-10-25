@@ -15,6 +15,7 @@ export type Route =
   | { kind: "edit-search"; id: number }
   | { kind: "save-search" }
   | { kind: "add-feed" }
+  | { kind: "new-to-feeds" }
   | { kind: "settings" }
   | { kind: "feed-health" }
   | { kind: "your-feeds" };
@@ -28,6 +29,7 @@ export function parse(path: string): Route {
   if (name === "settings/feed-health") return { kind: "feed-health" };
   if (name === "settings/feeds") return { kind: "your-feeds" };
   if (name === "add-feed") return { kind: "add-feed" };
+  if (name === "new-to-feeds") return { kind: "new-to-feeds" };
   if (name === "searches/new") return { kind: "save-search" };
   const saved = name.match(/^searches\/([1-9][0-9]{0,15})(\/edit)?$/);
   if (saved) return saved[2] ? { kind: "edit-search", id: Number(saved[1]) } : { kind: "search", id: Number(saved[1]) };
@@ -51,6 +53,8 @@ export function pathFor(route: Route): string {
       return "/settings/feeds";
     case "add-feed":
       return "/add-feed";
+    case "new-to-feeds":
+      return "/new-to-feeds";
     case "feed":
       return `/feeds/${route.id}`;
     case "folder":
@@ -81,6 +85,8 @@ export function nameFor(route: Route, placeName?: string): string {
       return "Your feeds";
     case "add-feed":
       return "Add a feed";
+    case "new-to-feeds":
+      return "New to feeds?";
     case "feed":
       return placeName || "Feed";
     case "folder":

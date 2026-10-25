@@ -2,7 +2,7 @@
 
 > **nine turtles is a quiet place to read the web: it shows you what's there, gets out of the way, and lets you finish.**
 
-*Last updated: 25 October 2026 (a logo of nine turtles, decision 0067; a second theme, Plain, with blue article links, and System serif, decision 0063; Apple Books as the design reference, decision 0059). Each change is recorded in `docs/decisions/`.*
+*Last updated: 25 October 2026 (starter feeds in the first-visit welcome, decision 0079; a logo of nine turtles, decision 0067; a second theme, Plain, with blue article links, and System serif, decision 0063; Apple Books as the design reference, decision 0059). Each change is recorded in `docs/decisions/`.*
 
 ## Mission
 
@@ -16,7 +16,7 @@ Help people leave social media and return to reading the open web. Social media 
 
 **nine turtles is not:**
 - **A read-later app:** it doesn't save arbitrary web pages.
-- **A discovery engine:** no recommendations, trending or "you might like." You choose your sources.
+- **A discovery engine:** no recommendations, trending or "you might like." You choose your sources. (One exception, approved by the owner for going multi-user: the first-visit welcome's "New to feeds?" offers a short, fixed list of five starter feeds, the same for everyone, none ticked, gone once you follow anything; decision 0079.)
 - **A social network:** no profiles, followers, likes or comments.
 - **A podcast player:** audio appears as a link to the original. (YouTube videos play in YouTube's own player, since 25 October 2026.)
 - **A newsletter inbox:** no email address that turns newsletters into feeds.
@@ -131,6 +131,7 @@ The 500-feed user gets everything; the 30-feed user never sees the machinery.
 | Unread counts in V1 | 2. Calm over engagement | Power users with hundreds of feeds need to know what they've seen | Inbox mode only. Muted grey, right-aligned in the sidebar. Never badges or color. Per feed and folder only, no global total. Above 999 shows "999+". |
 | Sidebar search always visible | 6. Power is hidden, never missing | The owner wants finding a feed by name always available | One quiet field that filters feeds and folders by name, shown once there's a feed to find. The same slim, faintly filled capsule as the list's search (decision 0051). Nothing else in the sidebar skips progressive disclosure. |
 | Unread dot (decisions 0028, 0037, 0041) | Type does the hierarchy, never badges | Weight alone was hard to scan in a long list; Apple Books, Mail and Things mark unread with a dot | A drawn 8px dot in the theme's accent, centred in a 24px gutter inside the row's pill, 8px clear of an unread title, which is semibold too. No number, list rows only. |
+| Starter feeds in the welcome (decision 0079) | "Not a discovery engine" | Someone new to feeds needs a first step before they know what to paste | Only behind "New to feeds? Start here" in the first-visit welcome. Five fixed feeds, the same for every reader, never ranked or personalised, none ticked; each added through the ordinary add path. Gone once anything is followed. |
 | Blue links in Plain (decision 0063) | 1. Reading comes first: links that don't compete with the text | The owner asked for his site rohit.onl's bare, plain-HTML look, whose one color is the browser's blue for links | Only the Plain theme, only links inside articles: `#0000EE` (visited `#551A8B`) by day, `#9E9EFF` (visited `#D0ADF0`) by night, always underlined, at 7 : 1 like the text. Plain's accent is its text color, so blue means only a link. Original's links stay in the text color. |
 
 ### Never
@@ -291,5 +292,5 @@ Moved from V1 on 23 October 2026, because V1 is for the owner alone (decision 00
 - **WebSub.** Built 25 October 2026 (decision 0069).
 - **Feed health page.** Built 25 October 2026 (decision 0071).
 - **The yearly clean-up** of unstarred articles.
-- **The "New to feeds?" guide page.**
+- **The "New to feeds?" guide page.** Done 25 October 2026: a guide on the website, and a "New to feeds?" sheet in the welcome (decision 0079).
 - **A tab left open across an update keeps working** without a reload.

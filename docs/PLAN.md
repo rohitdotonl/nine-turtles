@@ -383,7 +383,7 @@ each with screenshots:
 | Saved searches in the sidebar | ✅ 25 October 2026 | SPEC sections 5 and 14, decision 0081 |
 | Backups and moving hosts | ✅ 25 October 2026 (switched on once you add the storage settings) | Milestone 3 above, `docs/operations/backups.md`, `docs/operations/moving-hosts.md`, decision 0076 |
 | The yearly clean-up of unstarred articles | ⬜ | SPEC section 23 (after backups) |
-| The "New to feeds?" guide page | ⬜ | SPEC section 2 (the app's own page; the website's page of the same name, nineturtles.app/new-to-feeds/, is separate and doesn't count) |
+| The "New to feeds?" guide page | ✅ 25 October 2026 | SPEC section 2, decision 0079 (in the app, a "New to feeds?" sheet in the first-visit welcome; it links to the website's guide at nineturtles.app/new-to-feeds/) |
 | A tab left open across an update keeps working | ⬜ | `docs/ENGINEERING.md` (decision 0022) |
 
 ## V2: YouTube videos
