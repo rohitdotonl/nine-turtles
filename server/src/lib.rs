@@ -68,7 +68,15 @@ pub struct AppState {
     pub db: SqlitePool,
     /// The one downloader for publishers' websites (see `fetch`).
     pub http: reqwest::Client,
+    /// Wrong passwords for each account. Held only to check and record a
+    /// try, never while a password is checked.
     pub limiter: Arc<Mutex<auth::Limiters>>,
+    /// How many passwords may be checked at once (each check takes about
+    /// 19 MB), with a place kept for the owner's.
+    pub password_checks: Arc<auth::PasswordChecks>,
+    /// Sign-up tries in the last hour. Held while a new reader's password is
+    /// scrambled, so sign-ups go one at a time.
+    pub sign_ups: Arc<Mutex<people::SignUpTries>>,
     pub wrong_passwords: Arc<AtomicU64>,
     /// Seconds since 1970 (UTC) when this run of nine turtles started.
     pub started_at: i64,
@@ -116,6 +124,8 @@ pub async fn state(config: Config) -> Result<AppState, String> {
         http: fetch::client(config.local_feeds_allowed)?,
         config: Arc::new(config),
         limiter: Arc::default(),
+        password_checks: Arc::default(),
+        sign_ups: Arc::default(),
         wrong_passwords: Arc::default(),
         started_at: now(),
         last_round: Arc::default(),

@@ -13,9 +13,16 @@
 //! - **Open**: anyone can. Not yet: it waits for confirmation emails, so
 //!   the server refuses it whatever it's sent.
 //!
-//! However sign-up is set, at most `SIGN_UPS_PER_HOUR` new accounts are made
-//! in any hour, for the whole app: behind the host's proxy nine turtles
-//! can't reliably tell one place from another.
+//! However sign-up is set, at most `SIGN_UPS_PER_HOUR` sign-up tries are
+//! taken in any hour, for the whole app, counting tries with an email that's
+//! already taken as well as new accounts: behind the host's proxy nine
+//! turtles can't reliably tell one place from another. Sign-ups go one at a
+//! time, because scrambling each password takes about 19 MB of memory.
+
+use std::{
+    collections::VecDeque,
+    time::{Duration, Instant},
+};
 
 use axum::{
     Json, Router,
@@ -249,11 +256,20 @@ async fn sign_up(State(state): State<AppState>, Json(form): Json<SignUp>) -> Res
     if form.password.len() > crate::password::MAXIMUM_LENGTH {
         return refused(StatusCode::BAD_REQUEST, "password-long");
     }
+    // One sign-up at a time: each scramble takes about 19 MB of memory, so
+    // many at once could use up the server's. Held until this one is
+    // decided, so the hour's count below can't be raced past either.
+    let mut tries = state.sign_ups.lock().await;
     let hour_ago = now() - 60 * 60;
     match recent_sign_ups(&state.db, hour_ago).await {
         Ok(count) if count >= SIGN_UPS_PER_HOUR => return too_many(),
         Ok(_) => {}
         Err(error) => return database_problem("counting sign-ups", &error),
+    }
+    // Every try that gets this far counts, even one whose email turns out
+    // to be taken, so nobody can make the server scramble endlessly.
+    if !tries.try_one(Instant::now()) {
+        return too_many();
     }
 
     let password = form.password;
@@ -292,6 +308,7 @@ async fn sign_up(State(state): State<AppState>, Json(form): Json<SignUp>) -> Res
         Err(error) if is_taken(&error) => return refused(StatusCode::CONFLICT, "already"),
         Err(error) => return database_problem("making an account", &error),
     };
+    drop(tries);
 
     match remember_device(&state.db, person).await {
         Ok(Some(token)) => (
@@ -303,6 +320,36 @@ async fn sign_up(State(state): State<AppState>, Json(form): Json<SignUp>) -> Res
         Err(error) => database_problem("signing in a new reader", &error),
     }
 }
+
+/// The sign-up tries of the last hour that got as far as scrambling a
+/// password, made or not, kept in memory. With the accounts made in the
+/// last hour (in the database, so a restart doesn't forget them), it keeps
+/// sign-up to `SIGN_UPS_PER_HOUR` in any hour.
+#[derive(Debug, Default)]
+pub struct SignUpTries {
+    recent: VecDeque<Instant>,
+}
+
+impl SignUpTries {
+    /// Counts a try at `now`, or answers false (and counts nothing) if the
+    /// hour's tries are used up.
+    pub fn try_one(&mut self, now: Instant) -> bool {
+        while self
+            .recent
+            .front()
+            .is_some_and(|tried| now.saturating_duration_since(*tried) >= HOUR)
+        {
+            self.recent.pop_front();
+        }
+        if self.recent.len() >= SIGN_UPS_PER_HOUR as usize {
+            return false;
+        }
+        self.recent.push_back(now);
+        true
+    }
+}
+
+const HOUR: Duration = Duration::from_secs(60 * 60);
 
 /// Sign-up as stored: the mode ("closed" unless set), and the invite link's
 /// scrambled ticket and when it was made, if there is one.

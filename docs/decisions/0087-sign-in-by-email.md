@@ -20,19 +20,41 @@ decides who may make an account.
   unknown email get the same answer. An unknown email is checked against a
   scramble nobody chose a password for, so it takes about as long.
 - **The wait after wrong tries is per account**: each email (in small
-  letters) and the owner's password-only sign-in count separately. A
-  stranger guessing one email makes only that email wait. At most 4,096
-  accounts' counts are kept, so made-up emails can't fill the memory; when
-  full, quiet accounts are forgotten first and a waiting one only if all
-  are waiting. Tries are decided one at a time, as before, so pushing a
-  waiting account out takes thousands of slow checks.
+  letters) counts separately, and the owner is one account, whether they
+  try the password alone or their email, so a guesser gets five free tries
+  at the owner's password, not ten. (So a stranger who guesses at the
+  owner's email also makes the password alone wait, as guessing the
+  password alone always did.) A stranger guessing one email makes only
+  that email wait. At most 4,096 accounts' counts are kept, so made-up
+  emails can't fill the memory; when full, quiet accounts are forgotten
+  first and a waiting one only if all are waiting.
+- **Checking a password never holds anyone else up.** The count is checked
+  and recorded under a short lock, never held during the password check
+  itself. Each try counts as wrong from the start and is forgotten if it
+  turns out right, so tries sent together can't race past the five free
+  ones; once an account has to wait, its tries are refused at once, with
+  no check.
+- **Only a few password checks at once.** Each argon2 check takes about
+  19 MB, so a flood of tries could use up the server's memory. Two checks
+  at a time are allowed for everyone but the owner, and one for the owner
+  in a line of their own: guesses at made-up emails (up to five each,
+  without end of emails) queue only behind each other. The owner's line
+  stays short, because their one account allows only five wrong tries. An
+  unknown email waits in the same line as a real reader's email and is
+  checked the same way, so the time still doesn't tell which exists. While
+  such a flood lasts, other readers' sign-ins slow down; the owner's
+  don't.
 
 **Signing up**
 
 - **One switch for the whole app**, in Settings › Sign-up, for the owner
   only: **Closed** (the default), **Invite link**, or **Open**.
 - **Invite link.** The owner makes a link with a long random ticket (32
-  bytes, as a device's sign-in ticket), shown once. Only a BLAKE2s scramble
+  bytes, as a device's sign-in ticket), shown once. The ticket is in the
+  address's fragment (`/sign-up#invite=…`), which browsers never send, so
+  it never reaches the server's or the host's request logs. The sign-up
+  page reads it, takes it out of the address bar at once (so it isn't left
+  in the browser's history) and sends it in the body of the sign-up. Only a BLAKE2s scramble
   of it is kept, so a copy of the database can't be used to sign up. One
   link works for several people (testers) until the owner makes a new one or
   closes sign-up; closing forgets it for good.
@@ -42,11 +64,24 @@ decides who may make an account.
 - **Open** is shown but switched off, and the server refuses it whatever
   it's sent, until confirmation emails exist (a later change, with sending
   email). Without them, anyone could take someone else's address.
-- **At most 20 new accounts in any hour, for the whole app.** nine turtles
+- **At most 20 sign-up tries in any hour, for the whole app.** nine turtles
   sits behind Render's proxy, so it can't reliably tell one place from
-  another; a single app-wide cap is boring and can't be dodged. It's counted
-  from when accounts were made, so it survives a restart, and checked again
-  in the same database step that makes the account.
+  another; a single app-wide cap is boring and can't be dodged. Every try
+  that gets as far as scrambling a password counts, even one whose email
+  turns out to be taken (its answer stays the same), so nobody can make
+  the server scramble endlessly. Those tries are kept in memory; the
+  accounts made in the hour are also counted from the database, so a
+  restart doesn't reopen the hour, and checked again in the same database
+  step that makes the account.
+- **Sign-ups go one at a time.** Each scramble takes about 19 MB of
+  memory, so a lock (held while the password is scrambled and the account
+  made) keeps many sign-ups at once from using up the server's memory.
+- **The owner should save their email before sending invites.** The owner
+  starts with no email, so someone with an invite link could sign up with
+  the owner's address first, and the owner couldn't then save it (removing
+  a reader is "not yet"). Nothing is exposed and the password alone still
+  works, so it's only a nuisance: SPEC says to save it first, and Settings
+  says so beside the invite link while the owner has no email.
 - New readers' passwords need at least 12 characters, the same as the
   owner's own (`nine-turtles set-password`). Their email needs one
   @ with something either side, no spaces, at most 254 characters. An email

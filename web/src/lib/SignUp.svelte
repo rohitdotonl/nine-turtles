@@ -1,10 +1,12 @@
 <!--
   The sign-up page (SPEC section 1, decision 0087), reached from the owner's
-  invite link (/sign-up?invite=…): built as the sign-in page is, one centred
-  column of an email field, a password field and Sign up. Without a ticket in
-  the address, or once the server says sign-up isn't open, it says so calmly
-  and offers Sign in instead. On success the device is signed in and the
-  reader arrives in nine turtles.
+  invite link (/sign-up#invite=…): built as the sign-in page is, one centred
+  column of an email field, a password field and Sign up. The ticket is read
+  from after the # (which no server ever sees), then taken out of the address
+  bar at once, so it isn't left in the browser's history; it travels to the
+  server only inside the sign-up itself. Without a ticket, or once the server
+  says sign-up isn't open, it says so calmly and offers Sign in instead. On
+  success the device is signed in and the reader arrives in nine turtles.
 -->
 <script lang="ts">
   import Logo from "./Logo.svelte";
@@ -13,7 +15,8 @@
 
   let { onSignedIn }: { onSignedIn: () => void } = $props();
 
-  const invite = inviteFrom(location.search);
+  const invite = inviteFrom(location.hash);
+  if (location.hash) history.replaceState(history.state, "", location.pathname);
   let email = $state("");
   let password = $state("");
   let message = $state("");

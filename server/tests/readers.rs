@@ -421,6 +421,174 @@ async fn no_more_than_twenty_accounts_are_made_in_an_hour() {
     );
 }
 
+#[tokio::test]
+async fn tries_with_a_taken_email_count_towards_the_hours_twenty() {
+    let (base, state) = common::start_with_state(common::config()).await;
+    let owner = common::signed_in(&base).await;
+    let ticket = invite(&base, &owner).await;
+    assert_eq!(
+        sign_up(&base, "mira@example.com", READER_PASSWORD, &ticket)
+            .await
+            .status(),
+        StatusCode::NO_CONTENT
+    );
+    // Eighteen more tries this hour (one account is made already).
+    {
+        let mut tries = state.sign_ups.lock().await;
+        for _ in 0..nine_turtles::people::SIGN_UPS_PER_HOUR - 2 {
+            assert!(tries.try_one(std::time::Instant::now()));
+        }
+    }
+
+    // The twentieth: a taken email, with the same answer as always.
+    let taken = sign_up(&base, "Mira@example.com", READER_PASSWORD, &ticket).await;
+    assert_eq!(taken.status(), StatusCode::CONFLICT);
+    assert_eq!(taken.text().await.unwrap(), r#"{"error":"already"}"#);
+
+    // It counted, so the hour is used up, for taken and new emails alike.
+    for email in ["mira@example.com", "new@example.com"] {
+        let capped = sign_up(&base, email, READER_PASSWORD, &ticket).await;
+        assert_eq!(capped.status(), StatusCode::TOO_MANY_REQUESTS, "{email}");
+        assert_eq!(capped.text().await.unwrap(), r#"{"error":"too-many"}"#);
+    }
+}
+
+#[tokio::test]
+async fn sign_ups_sent_together_go_one_at_a_time_and_stop_at_twenty() {
+    let (base, state) = common::start_with_state(common::config()).await;
+    let owner = common::signed_in(&base).await;
+    let ticket = invite(&base, &owner).await;
+    {
+        let mut tries = state.sign_ups.lock().await;
+        for _ in 0..nine_turtles::people::SIGN_UPS_PER_HOUR - 2 {
+            assert!(tries.try_one(std::time::Instant::now()));
+        }
+    }
+
+    let mut together = tokio::task::JoinSet::new();
+    for number in 0..5 {
+        let (base, ticket) = (base.clone(), ticket.clone());
+        together.spawn(async move {
+            sign_up(
+                &base,
+                &format!("{number}@example.com"),
+                READER_PASSWORD,
+                &ticket,
+            )
+            .await
+            .status()
+        });
+    }
+    let answers = together.join_all().await;
+    let made = answers
+        .iter()
+        .filter(|status| **status == StatusCode::NO_CONTENT)
+        .count();
+    assert_eq!(made, 2, "{answers:?}");
+    assert!(
+        answers
+            .iter()
+            .all(|status| [StatusCode::NO_CONTENT, StatusCode::TOO_MANY_REQUESTS].contains(status))
+    );
+}
+
+#[tokio::test]
+async fn the_owners_email_and_the_password_alone_share_one_count() {
+    let base = common::start(common::config()).await;
+    let owner = common::signed_in(&base).await;
+    post(
+        &base,
+        "/api/people/me/email",
+        Some(&owner),
+        json!({ "email": "rohit@example.com" }),
+    )
+    .await;
+
+    for _ in 0..3 {
+        assert_eq!(
+            sign_in(&base, "Rohit@example.com", "guess").await.status(),
+            StatusCode::UNAUTHORIZED
+        );
+    }
+    assert_eq!(
+        sign_in(&base, "", "guess").await.status(),
+        StatusCode::UNAUTHORIZED
+    );
+    // The fifth wrong try in all, whichever way: both ways now wait.
+    assert_eq!(
+        sign_in(&base, "", "guess").await.status(),
+        StatusCode::TOO_MANY_REQUESTS
+    );
+    for email in ["rohit@example.com", ""] {
+        assert_eq!(
+            sign_in(&base, email, PASSWORD).await.status(),
+            StatusCode::TOO_MANY_REQUESTS,
+            "{email}"
+        );
+    }
+}
+
+#[tokio::test]
+async fn guesses_sent_together_cant_race_past_the_five_free_tries() {
+    let (base, state) = common::start_with_state(common::config()).await;
+    let mut together = tokio::task::JoinSet::new();
+    for _ in 0..10 {
+        let base = base.clone();
+        together.spawn(async move { sign_in(&base, "nobody@example.com", "guess").await.status() });
+    }
+    let answers = together.join_all().await;
+    assert!(
+        answers.iter().all(
+            |status| [StatusCode::UNAUTHORIZED, StatusCode::TOO_MANY_REQUESTS].contains(status)
+        ),
+        "{answers:?}"
+    );
+    assert!(answers.contains(&StatusCode::TOO_MANY_REQUESTS));
+    // Only the five free tries were checked; the rest were refused at once.
+    let checked = state
+        .wrong_passwords
+        .load(std::sync::atomic::Ordering::Relaxed);
+    assert_eq!(checked, 5, "{answers:?}");
+}
+
+#[tokio::test]
+async fn guesses_at_other_emails_never_hold_up_the_owners_sign_in() {
+    let (base, state) = common::start_with_state(common::config()).await;
+    let owner = common::signed_in(&base).await;
+    post(
+        &base,
+        "/api/people/me/email",
+        Some(&owner),
+        json!({ "email": "rohit@example.com" }),
+    )
+    .await;
+
+    // Every place for other emails' checks is taken, as in a flood of guesses.
+    let flood = state
+        .password_checks
+        .others
+        .acquire_many(nine_turtles::auth::OTHERS_CHECKS_AT_ONCE as u32)
+        .await
+        .unwrap();
+    let guess = tokio::spawn({
+        let base = base.clone();
+        async move { sign_in(&base, "nobody@example.com", "guess").await.status() }
+    });
+
+    // A guess is waiting its turn, yet the owner signs in both ways at once.
+    let quickly = std::time::Duration::from_secs(30);
+    for email in ["", "Rohit@Example.com"] {
+        let signed_in = tokio::time::timeout(quickly, sign_in(&base, email, PASSWORD))
+            .await
+            .expect("the owner's sign-in waited behind the guesses");
+        assert_eq!(signed_in.status(), StatusCode::NO_CONTENT, "{email}");
+    }
+    assert!(!guess.is_finished());
+
+    drop(flood);
+    assert_eq!(guess.await.unwrap(), StatusCode::UNAUTHORIZED);
+}
+
 async fn json_of(response: Response) -> Value {
     response.text().await.unwrap().parse().unwrap()
 }

@@ -4,8 +4,9 @@
 //! read. The database keeps only a scrambled copy of it (BLAKE2s), so a
 //! stolen copy of the database can't be used to sign in. Wrong passwords are
 //! slowed down for each account on its own, wherever the guesses come from:
-//! each email address, and the owner's password-only sign-in. See
-//! docs/decisions/0010-sign-in.md and 0087-sign-in-by-email.md.
+//! each email address, and the owner (the password alone or their email,
+//! counted together). See docs/decisions/0010-sign-in.md and
+//! 0087-sign-in-by-email.md.
 //!
 //! Each signed-in device belongs to one reader (decision 0086). A reader
 //! signs in with their email address and password; the password alone, with
@@ -18,6 +19,8 @@ use std::{
     sync::OnceLock,
     time::{Duration, Instant},
 };
+
+use tokio::sync::Semaphore;
 
 use axum::{
     Json, Router,
@@ -146,19 +149,58 @@ impl Limiter {
 /// Whose wrong tries a sign-in counts towards.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Account {
-    /// The owner's sign-in with the password alone, as before email addresses.
-    PasswordOnly,
-    /// An email address, in small letters, whether or not anyone has it.
+    /// The owner, whether they sign in with the password alone (as before
+    /// email addresses) or with their email: one account, one count.
+    Owner,
+    /// Any other email address, in small letters, whether or not anyone has it.
     Email(String),
 }
 
 impl Account {
-    /// The account a sign-in names: its email address (in small letters, as
-    /// the database compares them), or the password-only sign-in if none.
+    /// The account a sign-in names before anything is looked up: its email
+    /// address (in small letters, as the database compares them), or the
+    /// owner's password-only sign-in if none. `sign_in` counts the owner's
+    /// email as `Owner` once it has found whose it is.
     pub fn named(email: Option<&str>) -> Self {
         match email.map(str::trim).filter(|email| !email.is_empty()) {
             Some(email) => Self::Email(email.to_ascii_lowercase()),
-            None => Self::PasswordOnly,
+            None => Self::Owner,
+        }
+    }
+}
+
+/// How many password checks (argon2, about 19 MB each) may run at once, so
+/// a flood of sign-in tries can't use up the server's memory. The owner has
+/// a place of their own: guesses at other emails queue only behind each
+/// other, never in front of the owner. The owner's own queue stays short,
+/// because their account allows only five wrong tries before every further
+/// try is refused at once, with no check.
+#[derive(Debug)]
+pub struct PasswordChecks {
+    /// The owner's checks, one at a time.
+    pub owner: Semaphore,
+    /// Everyone else's, and every email nobody has.
+    pub others: Semaphore,
+}
+
+/// Password checks at once for everyone but the owner.
+pub const OTHERS_CHECKS_AT_ONCE: usize = 2;
+
+impl Default for PasswordChecks {
+    fn default() -> Self {
+        Self {
+            owner: Semaphore::new(1),
+            others: Semaphore::new(OTHERS_CHECKS_AT_ONCE),
+        }
+    }
+}
+
+impl PasswordChecks {
+    /// Where a check of `account`'s password waits its turn.
+    fn line_for(&self, account: &Account) -> &Semaphore {
+        match account {
+            Account::Owner => &self.owner,
+            Account::Email(_) => &self.others,
         }
     }
 }
@@ -285,7 +327,7 @@ async fn sign_in(State(state): State<AppState>, Json(form): Json<SignIn>) -> Res
         _ => None,
     };
     let account = Account::named(form.email.as_deref());
-    if account == Account::PasswordOnly && owners_line.is_none() {
+    if account == Account::Owner && owners_line.is_none() {
         return (
             StatusCode::SERVICE_UNAVAILABLE,
             Json(json!({ "error": format!("password-{}", state.config.password.describe()) })),
@@ -293,45 +335,62 @@ async fn sign_in(State(state): State<AppState>, Json(form): Json<SignIn>) -> Res
             .into_response();
     }
 
-    // Held until this try is decided, so tries can't race past the limit.
-    let mut limiters = state.limiter.lock().await;
-    if let Some(wait) = limiters.wait(&account, Instant::now()) {
-        return wait_response(wait);
-    }
-
     // Whose sign-in this would be, and the scrambled line to check against.
-    let (person, stored) = match &account {
-        Account::PasswordOnly => (Some(OWNER), owners_line),
+    // Looked up before the count is checked, so the owner's email counts
+    // towards the owner's one account.
+    let (account, person, stored) = match account {
+        Account::Owner => (Account::Owner, Some(OWNER), owners_line),
         Account::Email(email) => {
             let found: Result<Option<(i64, bool, Option<String>)>, sqlx::Error> = sqlx::query_as(
                 "SELECT id, owner, password_hash FROM people WHERE email = ? COLLATE NOCASE",
             )
-            .bind(email)
+            .bind(&email)
             .fetch_optional(&state.db)
             .await;
             match found {
                 // The owner uses NINE_TURTLES_PASSWORD_HASH unless they
                 // have a password of their own.
-                Ok(Some((person, owner, own_line))) => {
-                    (Some(person), own_line.or(owners_line.filter(|_| owner)))
+                Ok(Some((person, true, own_line))) => {
+                    (Account::Owner, Some(person), own_line.or(owners_line))
                 }
-                Ok(None) => (None, None),
+                Ok(Some((person, false, own_line))) => {
+                    (Account::Email(email), Some(person), own_line)
+                }
+                Ok(None) => (Account::Email(email), None, None),
                 Err(error) => return database_problem("finding a reader", &error),
             }
         }
     };
-    let someones = stored.is_some();
 
-    let password = form.password;
-    let matched = tokio::task::spawn_blocking(move || {
-        let stored = stored.unwrap_or_else(|| nobodys_password().to_owned());
-        crate::password::matches(&password, &stored)
-    })
-    .await
-    .unwrap_or(false);
-
-    let Some(person) = person.filter(|_| someones && matched) else {
+    // The lock is held only to check and record the count, never during the
+    // password check, so one account's guesses never hold up anyone else.
+    // The try counts as wrong from the start (and is forgotten if it turns
+    // out right), so tries sent together can't race past the limit.
+    {
+        let mut limiters = state.limiter.lock().await;
+        if let Some(wait) = limiters.wait(&account, Instant::now()) {
+            return wait_response(wait);
+        }
         limiters.wrong(account.clone(), Instant::now());
+    }
+
+    let someones = stored.is_some();
+    let matched = {
+        // Only closed if the app is stopping.
+        let Ok(_turn) = state.password_checks.line_for(&account).acquire().await else {
+            return StatusCode::SERVICE_UNAVAILABLE.into_response();
+        };
+        let password = form.password;
+        tokio::task::spawn_blocking(move || {
+            let stored = stored.unwrap_or_else(|| nobodys_password().to_owned());
+            crate::password::matches(&password, &stored)
+        })
+        .await
+        .unwrap_or(false)
+    };
+
+    let mut limiters = state.limiter.lock().await;
+    let Some(person) = person.filter(|_| someones && matched) else {
         state
             .wrong_passwords
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -494,8 +553,8 @@ mod tests {
             limiters.wrong(stranger.clone(), start);
         }
         assert!(limiters.wait(&stranger, start).is_some());
-        assert_eq!(limiters.wait(&Account::PasswordOnly, start), None);
-        assert_eq!(Account::named(Some("  ")), Account::PasswordOnly);
+        assert_eq!(limiters.wait(&Account::Owner, start), None);
+        assert_eq!(Account::named(Some("  ")), Account::Owner);
 
         limiters.right(&stranger);
         assert_eq!(limiters.wait(&stranger, start), None);
@@ -507,14 +566,14 @@ mod tests {
         let start = Instant::now();
         let mut limiters = Limiters::default();
         for _ in 0..5 {
-            limiters.wrong(Account::PasswordOnly, start);
+            limiters.wrong(Account::Owner, start);
         }
         for number in 0..MOST_ACCOUNTS_REMEMBERED + 100 {
             limiters.wrong(Account::Email(format!("{number}@example.com")), start);
         }
         assert_eq!(limiters.remembered(), MOST_ACCOUNTS_REMEMBERED);
         // The one account that has to wait is never the one forgotten.
-        assert!(limiters.wait(&Account::PasswordOnly, start).is_some());
+        assert!(limiters.wait(&Account::Owner, start).is_some());
 
         // An hour later, everything quiet is forgotten to make room.
         let later = start + FORGET_AFTER + LONGEST_WAIT;

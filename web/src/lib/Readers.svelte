@@ -5,7 +5,8 @@
   and when they joined, never what they read. Sign-up: Closed (the default),
   Invite link, or Open, which is shown but can't be chosen until nine turtles
   can send confirmation emails. An invite link is made here, shown once with
-  a Copy button, and replaced by making a new one.
+  a Copy button, and replaced by making a new one. Until the owner has saved
+  their own email, a line under Sign-up says to save it before sending a link.
 -->
 <script lang="ts">
   import { tick } from "svelte";
@@ -43,13 +44,26 @@
     { value: "open", label: "Open" },
   ] as const;
 
+  /**
+   * The email the owner has saved, as the server last said: null for none,
+   * undefined until the readers list has come. The `email` from signing in
+   * can be out of date, once the owner has saved a new one.
+   */
+  let savedEmail: string | null | undefined = $state();
+
   $effect(() => {
     ownEmail = email ?? "";
   });
 
   function loadPeople() {
     listPeople().then(
-      (found) => (people = found),
+      (found) => {
+        people = found;
+        const own = found.find((person) => person.owner)?.email ?? null;
+        // The saved email fills the box, unless the owner has typed in it meanwhile.
+        if (ownEmail.trim() === (savedEmail ?? email ?? "")) ownEmail = own ?? "";
+        savedEmail = own;
+      },
       () => (emailMessage = "Couldn't load the readers. Try again in a moment."),
     );
   }
@@ -78,6 +92,8 @@
     busy = false;
     if (result === "ok") {
       emailMessage = `Saved. You can sign in with ${next} and your password; the password alone still works.`;
+      savedEmail = next;
+      ownEmail = next;
       loadPeople();
     } else {
       emailRefused = result !== "unreachable";
@@ -223,10 +239,16 @@
       >
     {/if}
   </div>
+  {#if mode === "invite" && savedEmail === null}
+    <p class="inset-foot text-ink">
+      Save your own email under Readers before you send an invite link, so nobody who has the link can sign up with it
+      first.
+    </p>
+  {/if}
   <p role="status" class={["inset-foot text-ink", !signUpMessage && "sr-only"]}>{signUpMessage}</p>
   <p class="inset-foot">
     Closed: nobody can make an account. Invite link: anyone you send the link to can, until you make a new link or close
-    sign-up; the link is shown only once. At most 20 accounts are made in any hour.
+    sign-up; the link is shown only once. At most 20 sign-ups are tried in any hour.
   </p>
   <p id="open-note" class="inset-foot">Open, for anyone, becomes possible once nine turtles can send confirmation emails.</p>
 </section>

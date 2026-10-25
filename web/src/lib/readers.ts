@@ -57,14 +57,18 @@ export async function makeInvite(): Promise<string> {
   throw new Error("nine turtles sent no invite");
 }
 
-/** The link to send: this site's own address, its sign-up page and the ticket. */
+/**
+ * The link to send: this site's own address, its sign-up page and the
+ * ticket. The ticket goes after # (the address's fragment), which browsers
+ * never send to any server, so it never ends up in a log.
+ */
 export function inviteLink(origin: string, ticket: string): string {
-  return `${origin.replace(/\/+$/, "")}/sign-up?invite=${encodeURIComponent(ticket)}`;
+  return `${origin.replace(/\/+$/, "")}/sign-up#invite=${encodeURIComponent(ticket)}`;
 }
 
-/** The ticket in a sign-up page's address, or "" if there's none. */
-export function inviteFrom(search: string): string {
-  return new URLSearchParams(search).get("invite")?.trim() ?? "";
+/** The ticket in a sign-up page's fragment (`location.hash`), or "" if there's none. */
+export function inviteFrom(hash: string): string {
+  return new URLSearchParams(hash.replace(/^#/, "")).get("invite")?.trim() ?? "";
 }
 
 export type EmailResult = "ok" | "email" | "already" | "unreachable";

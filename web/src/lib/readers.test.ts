@@ -3,13 +3,20 @@ import { explainSignUp, inviteFrom, inviteLink, plausibleEmail, type SignUpResul
 
 describe("invite links", () => {
   it("are this site's sign-up page with the ticket", () => {
-    expect(inviteLink("https://app.nineturtles.app", "ab12")).toBe("https://app.nineturtles.app/sign-up?invite=ab12");
-    expect(inviteLink("http://127.0.0.1:8080/", "ab12")).toBe("http://127.0.0.1:8080/sign-up?invite=ab12");
+    expect(inviteLink("https://app.nineturtles.app", "ab12")).toBe("https://app.nineturtles.app/sign-up#invite=ab12");
+    expect(inviteLink("http://127.0.0.1:8080/", "ab12")).toBe("http://127.0.0.1:8080/sign-up#invite=ab12");
+  });
+
+  it("keep their ticket after #, which never reaches a server", () => {
+    const link = new URL(inviteLink("https://app.nineturtles.app", "ab12"));
+    expect(link.search).toBe("");
+    expect(link.hash).toBe("#invite=ab12");
   });
 
   it("give their ticket back to the sign-up page", () => {
-    expect(inviteFrom("?invite=ab12")).toBe("ab12");
-    expect(inviteFrom("?other=1")).toBe("");
+    expect(inviteFrom("#invite=ab12")).toBe("ab12");
+    expect(inviteFrom("invite=ab12")).toBe("ab12");
+    expect(inviteFrom("#other=1")).toBe("");
     expect(inviteFrom("")).toBe("");
   });
 });
