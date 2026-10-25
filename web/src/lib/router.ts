@@ -11,6 +11,9 @@ export type Route =
   | { kind: "folder"; id: number }
   | { kind: "edit-feed"; id: number }
   | { kind: "edit-folder"; id: number }
+  | { kind: "search"; id: number }
+  | { kind: "edit-search"; id: number }
+  | { kind: "save-search" }
   | { kind: "add-feed" }
   | { kind: "settings" }
   | { kind: "feed-health" }
@@ -25,6 +28,9 @@ export function parse(path: string): Route {
   if (name === "settings/feed-health") return { kind: "feed-health" };
   if (name === "settings/feeds") return { kind: "your-feeds" };
   if (name === "add-feed") return { kind: "add-feed" };
+  if (name === "searches/new") return { kind: "save-search" };
+  const saved = name.match(/^searches\/([1-9][0-9]{0,15})(\/edit)?$/);
+  if (saved) return saved[2] ? { kind: "edit-search", id: Number(saved[1]) } : { kind: "search", id: Number(saved[1]) };
   const place = name.match(/^(feeds|folders)\/([1-9][0-9]{0,15})(\/edit)?$/);
   if (place) {
     const id = Number(place[2]);
@@ -53,12 +59,18 @@ export function pathFor(route: Route): string {
       return `/feeds/${route.id}/edit`;
     case "edit-folder":
       return `/folders/${route.id}/edit`;
+    case "search":
+      return `/searches/${route.id}`;
+    case "edit-search":
+      return `/searches/${route.id}/edit`;
+    case "save-search":
+      return "/searches/new";
     case "view":
       return `/${route.view}`;
   }
 }
 
-/** A place's name, as its heading shows it. A feed's or folder's name comes from it. */
+/** A place's name, as its heading shows it. A feed's, folder's or saved search's name comes from it. */
 export function nameFor(route: Route, placeName?: string): string {
   switch (route.kind) {
     case "settings":
@@ -77,6 +89,12 @@ export function nameFor(route: Route, placeName?: string): string {
       return "Edit feed";
     case "edit-folder":
       return "Edit folder";
+    case "search":
+      return placeName || "Saved search";
+    case "edit-search":
+      return "Edit saved search";
+    case "save-search":
+      return "Save search";
     case "view":
       return VIEW_NAMES[route.view];
   }
