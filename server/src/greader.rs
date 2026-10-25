@@ -68,7 +68,7 @@ macro_rules! article_columns {
 macro_rules! from_entries {
     () => {
         " FROM entries CROSS JOIN articles ON articles.id = entries.article_id
-             CROSS JOIN feeds ON feeds.id = articles.feed_id
+             CROSS JOIN feeds ON feeds.id = entries.feed_id
              CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
                  AND subscriptions.feed_id = entries.feed_id
          WHERE entries.person_id = "

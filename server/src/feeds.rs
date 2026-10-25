@@ -1036,7 +1036,7 @@ async fn read_article(
                 articles.summary, COALESCE(articles.language, feeds.language) AS language,
                 entries.sort_at AS at, entries.read, entries.starred
          FROM entries JOIN articles ON articles.id = entries.article_id
-             JOIN feeds ON feeds.id = articles.feed_id
+             JOIN feeds ON feeds.id = entries.feed_id
              JOIN subscriptions ON subscriptions.person_id = entries.person_id
                  AND subscriptions.feed_id = entries.feed_id
          WHERE entries.person_id = ? AND entries.article_id = ?",
