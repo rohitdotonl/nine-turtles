@@ -119,8 +119,12 @@ impl Reader {
             .unwrap()
             .iter()
             .map(|feed| {
-                let mut inside: Vec<String> =
-                    feed["folders"].as_array().unwrap().iter().map(name).collect();
+                let mut inside: Vec<String> = feed["folders"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(name)
+                    .collect();
                 inside.sort();
                 (feed["title"].as_str().unwrap().to_owned(), inside)
             })
@@ -163,7 +167,10 @@ async fn several_feeds_move_to_one_folder_and_undo_puts_them_back() {
     let beta = reader.follow("beta-2026").await;
     let gamma = reader.follow("gamma-2026").await;
     let (_, made) = reader
-        .post("/api/folders", json!({ "name": "News", "feeds": [alpha, gamma] }))
+        .post(
+            "/api/folders",
+            json!({ "name": "News", "feeds": [alpha, gamma] }),
+        )
         .await;
     let news = made["folder"]["id"].as_i64().unwrap();
     let (_, made) = reader
@@ -233,7 +240,10 @@ async fn several_feeds_are_unsubscribed_at_once_and_one_undo_brings_them_all_bac
     let beta = reader.follow("beta-2020").await;
     reader.follow("gamma-2026").await;
     reader
-        .post("/api/folders", json!({ "name": "Old", "feeds": [alpha, beta] }))
+        .post(
+            "/api/folders",
+            json!({ "name": "Old", "feeds": [alpha, beta] }),
+        )
         .await;
     // Read Alpha's post, to see its read history survive.
     let alpha_post: i64 = sqlx::query_scalar("SELECT id FROM articles WHERE feed_id = ?")
@@ -242,7 +252,10 @@ async fn several_feeds_are_unsubscribed_at_once_and_one_undo_brings_them_all_bac
         .await
         .unwrap();
     reader
-        .post("/api/articles/read", json!({ "ids": [alpha_post], "read": true }))
+        .post(
+            "/api/articles/read",
+            json!({ "ids": [alpha_post], "read": true }),
+        )
         .await;
 
     let (status, answer) = reader
@@ -259,7 +272,11 @@ async fn several_feeds_are_unsubscribed_at_once_and_one_undo_brings_them_all_bac
     assert_eq!(answer["resubscribed"], 2);
     assert_eq!(
         reader.feeds().await,
-        [row("alpha", &["Old"]), row("beta", &["Old"]), row("gamma", &[])]
+        [
+            row("alpha", &["Old"]),
+            row("beta", &["Old"]),
+            row("gamma", &[])
+        ]
     );
     let read: i64 = sqlx::query_scalar("SELECT read FROM articles WHERE id = ?")
         .bind(alpha_post)

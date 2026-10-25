@@ -301,12 +301,22 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 - Unsubscribing and deleting a folder happen at once and take you to Unread, where the line says "Unsubscribed from …" or "Deleted the folder …" with Undo (or `u`), until your next action.
 - Unsubscribing from a feed keeps its starred articles in Starred. Undo brings the feed back whole, read history and folders included; after your next action (or ten minutes) its other articles are gone for good. Following it again later starts it afresh, all unread.
 
+- **Your feeds** (tidying many feeds at once; decision 0075): in Settings, under **Feeds**, a **Your feeds** row (ending in ›) opens a page of its own at `/settings/feeds`, built like the feed health page: the same top line with an X ("Close your feeds", or Escape) back to Settings, and one centred column.
+  - It lists every feed A to Z in one grouped list, each on two lines: its name, then, in the muted grey, when it last posted ("Last posted today", "Last posted on 3 Oct 2025", or "Nothing posted yet") and the folders it's in. The group's small heading counts them ("42 feeds"). Out of Edit, a row opens that feed's list.
+  - **Show**, a segmented choice above the list: **All feeds**, **Quiet for 6 months** or **Quiet for a year**. A quiet feed is one with nothing published for that long (counted from when you added it, if it has never posted). The feed health page lists broken feeds; this lists working feeds that have gone silent, so you can let them go. With none, it says "Every feed has posted within the last 6 months" (or year).
+  - **Edit**, as in Apple Books, at the right of the list's heading: each row gets a tick box (the same rounded square as Edit feed's folders), and **Choose all** / **Choose none** appears beside it; Edit becomes **Done**. A bar stays at the page's foot while the list scrolls, solid in the page's color with a hairline above: how many are chosen, **Unsubscribe** in the destructive red words, and **Move to…**.
+  - **Move to…** opens a sheet ("Move 3 feeds") with a choice of one, as a grouped list with a round mark at each row's end: **No folder**, each folder, and **New folder** (with a text box for its name). Each feed leaves the folders it was in and goes to the one chosen. Cancel or Escape closes only the sheet.
+  - Moving and unsubscribing happen at once. A line above the list says what was done ("Moved 3 feeds to Later.", "Unsubscribed from 3 feeds.", naming the feed when there's one) with **Undo**, which the keyboard moves to, until your next action there. Undo puts every feed back where it was in one go (a folder made just for the move goes too) or brings every feed back whole, as unsubscribing from one feed does. Edit ends after each action.
+
 **How to check it**
 1. Put a feed in two folders. It appears under both, and its unread count is right in each.
 2. Rename a folder: it moves to its new alphabetical position.
 3. Delete a folder: its feeds remain (under other folders or the "no folder" group).
 4. Unsubscribe from a feed, then undo: it's back with its read history.
 5. Star an article, then unsubscribe from its feed: the article is still in Starred.
+6. Open Settings › Your feeds, press Edit, tick two feeds and Move to… a new folder: both are in it, and nowhere else. Press Undo: they're back where they were, and the new folder is gone.
+7. Tick two feeds and press Unsubscribe, then Undo: both are back, with their read history.
+8. Choose "Quiet for 6 months": only feeds with nothing new for six months are listed.
 
 ## 16. OPML import and export
 
