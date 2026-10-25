@@ -133,7 +133,7 @@ test("the welcome's New to feeds? opens a sheet that explains feeds and offers a
   await sheet.getByRole("checkbox", { name: /The Marginalian/ }).check();
   await sheet.getByRole("checkbox", { name: /kottke\.org/ }).check();
   await addChosen.click();
-  await expect(sheet.getByRole("status")).toHaveText("Those sites didn't answer. Try again later.");
+  await expect(sheet.getByRole("status")).toHaveText("Those feeds couldn't be added just now. Try again later.");
   expect(asked).toEqual(["https://www.themarginalian.org/feed/", "https://feeds.kottke.org/main"]);
   await expect(sheet.getByRole("checkbox", { name: /kottke\.org/ })).toBeChecked();
   // Escape closes it, back to the welcome, with the keyboard back on the link that opened it.
@@ -141,6 +141,48 @@ test("the welcome's New to feeds? opens a sheet that explains feeds and offers a
   await expect(page).toHaveURL(/\/unread$/);
   await expect(sheet).toHaveCount(0);
   await expect(reading.getByRole("link", { name: "New to feeds? Start here" })).toBeFocused();
+});
+
+test("New to feeds? works with the keyboard alone, and the starters chosen are added and open Unread", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/unread");
+  await appReady(page);
+  await signIn(page);
+  // nine turtles is made to accept the starters and then list them, so this fresh nine turtles stays empty.
+  const followed: { id: number; title: string; site_url: null; unread: number; folders: number[] }[] = [];
+  await page.route("**/api/feeds", async (route) => {
+    if (route.request().method() === "POST") {
+      const id = 9000 + followed.length;
+      const feed = { id, title: `Starter ${id}`, site_url: null, unread: 0, folders: [] };
+      followed.push(feed);
+      return route.fulfill({ status: 201, json: { feed } });
+    }
+    if (followed.length === 0) return route.fallback();
+    return route.fulfill({ json: { feeds: followed, folders: [] } });
+  });
+  const link = page.getByRole("link", { name: "New to feeds? Start here" });
+  await tabTo(page, link);
+  await page.keyboard.press("Enter");
+  const sheet = page.getByRole("dialog", { name: "New to feeds?" });
+  await expect(sheet.getByRole("heading", { name: "New to feeds?" })).toBeFocused();
+  const first = sheet.getByRole("checkbox", { name: /The Marginalian/ });
+  await tabTo(page, first);
+  await page.keyboard.press("Space");
+  await expect(first).toBeChecked();
+  const nasa = sheet.getByRole("checkbox", { name: /NASA Image of the Day/ });
+  await tabTo(page, nasa);
+  await page.keyboard.press("Space");
+  await tabTo(page, sheet.getByRole("button", { name: "Add chosen feeds" }));
+  await page.keyboard.press("Enter");
+  // Two added: Unread opens, with both in the sidebar.
+  await expect(page).toHaveURL(/\/unread$/);
+  await expect(sheet).toHaveCount(0);
+  await expect(sidebar(page).getByRole("link", { name: /Starter 9000/ })).toBeVisible();
+  await expect(sidebar(page).getByRole("link", { name: /Starter 9001/ })).toBeVisible();
+  // Once anything is followed, the sheet's address opens the home view instead (decision 0079).
+  await page.goBack();
+  await expect(page).toHaveURL(/\/unread$/);
+  await expect(page.getByRole("dialog", { name: "New to feeds?" })).toHaveCount(0);
 });
 
 test("on a phone, New to feeds? is a page sheet with its X and the main action at the foot", async ({ page }) => {

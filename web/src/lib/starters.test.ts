@@ -42,8 +42,8 @@ describe("the New to feeds? starters", () => {
   });
 
   it("say plainly what couldn't be added", () => {
-    expect(startProblem([first])).toBe("The Marginalian didn't answer. Try again later, or choose another.");
-    expect(startProblem(STARTERS.slice(0, 2))).toBe("Those sites didn't answer. Try again later.");
+    expect(startProblem([first])).toBe("The Marginalian couldn't be added just now. Try again later, or choose another.");
+    expect(startProblem(STARTERS.slice(0, 2))).toBe("Those feeds couldn't be added just now. Try again later.");
     expect(partlyAdded([first])).toBe("Couldn't add The Marginalian. Try again later from Add feed.");
     expect(partlyAdded(STARTERS.slice(0, 3))).toBe(
       "Couldn't add The Marginalian, The Public Domain Review and kottke.org. Try again later from Add feed.",

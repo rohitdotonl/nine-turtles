@@ -281,6 +281,19 @@
   /** On a phone with no feeds yet, the welcome is the screen's one visible heading; the list's title is only for screen readers. */
   let welcomeAlone = $derived(phone && welcoming && !missing);
   let welcomeHeading: HTMLHeadingElement | undefined = $state();
+  /**
+   * "New to feeds?" belongs to the first visit only (decision 0079): once anything is followed, its
+   * address (Back after adding starters, a bookmark) quietly becomes the home view instead.
+   */
+  $effect(() => {
+    if (route.kind !== "new-to-feeds" || firstVisit || feeds === undefined) return;
+    untrack(() => {
+      history.replaceState({ screen: "list" }, "", pathFor(home));
+      route = home;
+      lastPlace = home;
+      queueMicrotask(() => placeFocus(home)?.focus());
+    });
+  });
   /** How many articles the list shows, so the empty reading area offers j only when there's one to open. */
   let listCount = $state(0);
   /** The list's "28 results" while it shows search results, so the search options can repeat it where they'd cover it. */
@@ -1215,7 +1228,7 @@
             onDelete={() => deleteThis(currentFolder!)}
           />
         {/key}
-      {:else if !sheet && route.kind === "new-to-feeds"}
+      {:else if !sheet && route.kind === "new-to-feeds" && firstVisit}
         <section aria-labelledby="list-heading" class="page-sheet">
           <!-- Only on a phone: the phone sheet's one build, as Add a feed's (decisions 0052, 0055). -->
           <div class="page-sheet-card">
@@ -1434,7 +1447,7 @@
     <p>{ADD_INTRO}</p>
     <AddFeed bind:field={addField} feeds={feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} onCancel={closePage} />
   </Sheet>
-{:else if sheet && route.kind === "new-to-feeds"}
+{:else if sheet && route.kind === "new-to-feeds" && firstVisit}
   <Sheet title="New to feeds?" bind:heading={sheetHeading} onClose={closePage}>
     <StarterFeeds onAdded={startersAdded} onCancel={closePage} />
   </Sheet>

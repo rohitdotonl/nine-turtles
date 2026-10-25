@@ -56,8 +56,8 @@ export async function addStarters(
 export function startProblem(failed: readonly Starter[]): string {
   const [only] = failed;
   return failed.length === 1 && only
-    ? `${only.name} didn't answer. Try again later, or choose another.`
-    : "Those sites didn't answer. Try again later.";
+    ? `${only.name} couldn't be added just now. Try again later, or choose another.`
+    : "Those feeds couldn't be added just now. Try again later.";
 }
 
 /** The note the list shows on arriving, when some starters were added and some weren't. */
