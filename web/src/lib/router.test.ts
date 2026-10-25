@@ -15,6 +15,10 @@ describe("addresses", () => {
     expect(parse("/folders/4")).toEqual({ kind: "folder", id: 4 });
     expect(parse("/feeds/12/edit")).toEqual({ kind: "edit-feed", id: 12 });
     expect(parse("/folders/4/edit/")).toEqual({ kind: "edit-folder", id: 4 });
+    expect(parse("/searches/7")).toEqual({ kind: "search", id: 7 });
+    expect(parse("/searches/7/edit")).toEqual({ kind: "edit-search", id: 7 });
+    expect(parse("/searches/new")).toEqual({ kind: "save-search" });
+    expect(parse("/searches/0")).toEqual({ kind: "view", view: "unread" });
   });
 
   it("only reads well-formed feed addresses", () => {
@@ -43,6 +47,11 @@ describe("addresses", () => {
     expect(titleFor({ kind: "add-feed" })).toBe("Add a feed · nine turtles");
     expect(titleFor({ kind: "new-to-feeds" })).toBe("New to feeds? · nine turtles");
     expect(pathFor({ kind: "edit-folder", id: 4 })).toBe("/folders/4/edit");
+    expect(pathFor({ kind: "search", id: 7 })).toBe("/searches/7");
+    expect(pathFor({ kind: "edit-search", id: 7 })).toBe("/searches/7/edit");
+    expect(pathFor({ kind: "save-search" })).toBe("/searches/new");
+    expect(titleFor({ kind: "search", id: 7 }, "Climate")).toBe("Climate · nine turtles");
+    expect(titleFor({ kind: "save-search" })).toBe("Save search · nine turtles");
     expect(titleFor({ kind: "folder", id: 4 }, "Tech")).toBe("Tech · nine turtles");
     expect(titleFor({ kind: "edit-feed", id: 3 })).toBe("Edit feed · nine turtles");
   });

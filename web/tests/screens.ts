@@ -125,6 +125,26 @@ export const SCREENS: Screen[] = [
       await expect(page.getByRole("region", { name: "Search results" }).locator("mark").first()).toBeVisible();
     },
   },
+  {
+    // A saved search (decision 0081): its sheet open over its own results, its row in the sidebar.
+    name: "saved-search",
+    path: "/all",
+    signedIn: true,
+    library: true,
+    open: async (page) => {
+      const api = (path: string) => new URL(path, page.url()).href;
+      // One saved search shared by every run of this screen: saved once, found again after that.
+      await page.request.post(api("/api/saved-searches"), {
+        data: { name: "Reading", query: { words: "reading", scope: { kind: "all" }, unread: true, starred: false, after: "", before: "" } },
+      });
+      const listed = await (await page.request.get(api("/api/saved-searches"))).json();
+      const id = listed.searches.find((each: { name: string }) => each.name === "Reading").id;
+      await page.goto(api(`/searches/${id}/edit`));
+      await appReady(page);
+      await expect(page.getByRole("heading", { level: 2, name: "Edit saved search" })).toBeVisible();
+      await expect(page.getByRole("textbox", { name: "Name" })).toHaveValue("Reading");
+    },
+  },
   { name: "settings", path: "/settings", signedIn: true, library: true },
   { name: "your-feeds", path: "/settings/feeds", signedIn: true, library: true },
   {
