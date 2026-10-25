@@ -116,6 +116,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Node.js and npm
 - Progressive web app (PWA)
 - Web app manifest
+- Maskable icon
 - Service worker
 - Web fonts
 - Themes, by day and by night, and Appearance (light, dark, match device)
