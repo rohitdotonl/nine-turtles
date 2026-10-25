@@ -234,6 +234,7 @@ async fn diagnostics_need_the_key() {
         r#""database_bytes":"#,
         r#""uptime_seconds":"#,
         r#""recent_problems":"#,
+        r#""backups":{"latest_nightly":null,"on":false}"#,
     ] {
         assert!(body.contains(field), "{body} lacks {field}");
     }

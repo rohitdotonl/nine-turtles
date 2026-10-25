@@ -4,13 +4,14 @@
 //! listing and reading their articles, marking them read and starring them,
 //! the shared settings, checking feeds in the background (`checking`),
 //! folders and unsubscribing (`folders`), OPML files (`subscriptions`),
-//! instant updates from WebSub hubs (`websub`), and syncing with other feed
-//! readers (`apps`, `greader`).
+//! instant updates from WebSub hubs (`websub`), syncing with other feed
+//! readers (`apps`, `greader`), and backups (`backup`, `storage`).
 //! The frontend is packed into this program (see `assets`).
 
 pub mod apps;
 pub mod assets;
 pub mod auth;
+pub mod backup;
 pub mod checking;
 pub mod config;
 pub mod db;
@@ -29,6 +30,7 @@ pub mod security;
 pub mod settings;
 pub mod starred;
 pub mod status;
+pub mod storage;
 pub mod subscriptions;
 pub mod websub;
 
@@ -66,6 +68,10 @@ pub struct AppState {
     pub started_at: i64,
     /// When background checking last finished a round; 0 before the first.
     pub last_round: Arc<AtomicI64>,
+    /// Where backups go; `None` when the backup settings aren't set.
+    pub storage: Option<storage::Storage>,
+    /// The name of the newest nightly backup known to be stored.
+    pub latest_backup: Arc<std::sync::Mutex<Option<String>>>,
 }
 
 /// Opens the database and builds the whole web application. Tests call it
@@ -74,8 +80,9 @@ pub async fn app(config: Config) -> Result<Router, String> {
     Ok(router(state(config).await?))
 }
 
-/// Opens the database and gets everything ready. `main` then starts
-/// background checking (`checking::run`) and serves the `router`.
+/// Opens the database (restoring it from a backup first if asked) and gets
+/// everything ready. `main` then starts background checking (`checking::run`)
+/// and nightly backups (`backup::run`), and serves the `router`.
 pub async fn state(config: Config) -> Result<AppState, String> {
     match &config.password {
         PasswordSetting::Set(_) => {}
@@ -89,14 +96,25 @@ pub async fn state(config: Config) -> Result<AppState, String> {
         ),
     }
 
+    let storage = config
+        .backup
+        .clone()
+        .map(storage::Storage::new)
+        .transpose()?;
+    if let Some(name) = &config.restore_from {
+        backup::restore_if_empty(&config.data_dir, storage.as_ref(), name).await?;
+    }
+
     let state = AppState {
-        db: db::open(&config.data_dir).await?,
+        db: db::open_with_backup(&config.data_dir, storage.as_ref()).await?,
         http: fetch::client(config.local_feeds_allowed)?,
         config: Arc::new(config),
         limiter: Arc::default(),
         wrong_passwords: Arc::default(),
         started_at: now(),
         last_round: Arc::default(),
+        storage,
+        latest_backup: Arc::default(),
     };
     Ok(state)
 }
