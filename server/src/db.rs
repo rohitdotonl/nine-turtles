@@ -2,8 +2,11 @@
 
 use std::path::{Path, PathBuf};
 
+use crate::{backup, log, now, storage::Storage};
+
 use sqlx::{
     SqlitePool,
+    migrate::Migrator,
     sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions},
 };
 
@@ -11,12 +14,21 @@ pub const FILE_NAME: &str = "nine-turtles.sqlite";
 /// The database's name before the rename; `open` renames an old one in place.
 const OLD_FILE_NAME: &str = "slowfeed.sqlite";
 
-/// Opens (or creates) the database and brings its structure up to date.
-///
-/// V1 has no backups (the owner's decision, docs/decisions/0012-v1-for-one-reader.md),
-/// so a structure change that could lose data is raised with the owner first.
-/// Backups before every structure change come in V2.
+/// Opens (or creates) the database and brings its structure up to date,
+/// without a backup first. Tests use it; nine turtles itself uses
+/// `open_with_backup`.
 pub async fn open(data_dir: &Path) -> Result<SqlitePool, String> {
+    open_with_backup(data_dir, None).await
+}
+
+/// Opens (or creates) the database and brings its structure up to date. If
+/// the structure is about to change and backup storage is set, a copy is
+/// stored first; if that copy fails, nothing changes and nine turtles stops
+/// with the reason (ENGINEERING.md → the floor, decision 0076).
+pub async fn open_with_backup(
+    data_dir: &Path,
+    storage: Option<&Storage>,
+) -> Result<SqlitePool, String> {
     std::fs::create_dir_all(data_dir).map_err(|error| {
         format!(
             "can't create the data folder {}: {error}",
@@ -35,11 +47,62 @@ pub async fn open(data_dir: &Path) -> Result<SqlitePool, String> {
         .await
         .map_err(|error| format!("can't open the database: {error}"))?;
 
-    sqlx::migrate!("./migrations")
+    let migrator = sqlx::migrate!("./migrations");
+    if let Some(next_change) = next_change(&pool, &migrator).await {
+        match storage {
+            Some(storage) => {
+                let name = backup::before_structure_change(&pool, storage, now(), next_change)
+                    .await
+                    .map_err(|error| {
+                        format!(
+                            "the database's structure needs changing, but the backup before \
+                             it failed, so nothing was changed: {error}"
+                        )
+                    })?;
+                log::info(&format!(
+                    "backed up the database as {name} before changing its structure"
+                ));
+            }
+            None => log::problem(
+                "changing the database's structure without a backup first: \
+                 the NINE_TURTLES_BACKUP_* settings aren't set",
+            ),
+        }
+    }
+    migrator
         .run(&pool)
         .await
         .map_err(|error| format!("can't update the database's structure: {error}"))?;
     Ok(pool)
+}
+
+/// The number of the first structure change this database hasn't had yet,
+/// or `None` if it's up to date or brand new (nothing in it to back up).
+async fn next_change(pool: &SqlitePool, migrator: &Migrator) -> Option<i64> {
+    let done: Vec<i64> =
+        sqlx::query_scalar("SELECT version FROM _sqlx_migrations WHERE success = 1")
+            .fetch_all(pool)
+            .await
+            .ok()?;
+    if done.is_empty() {
+        return None;
+    }
+    migrator
+        .iter()
+        .filter(|change| !change.migration_type.is_down_migration())
+        .map(|change| change.version)
+        .find(|version| !done.contains(version))
+}
+
+/// Whether a database is here already (under its name, or its old one).
+pub fn exists(data_dir: &Path) -> bool {
+    path(data_dir).exists() || data_dir.join(OLD_FILE_NAME).exists()
+}
+
+/// Whether the only database here is under today's name (none from before
+/// the rename).
+pub fn has_only_new_name(data_dir: &Path) -> bool {
+    path(data_dir).exists() && !data_dir.join(OLD_FILE_NAME).exists()
 }
 
 /// Moves a database made before the rename (and its `-wal` and `-shm` files)

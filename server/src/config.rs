@@ -32,6 +32,11 @@ pub struct Config {
     /// `https://app.nineturtles.app`. WebSub hubs deliver new articles there;
     /// without it, nine turtles doesn't sign up with hubs (SPEC section 12).
     pub public_url: Option<reqwest::Url>,
+    /// Where backups go (`NINE_TURTLES_BACKUP_*`). Without it, no backups.
+    pub backup: Option<crate::storage::Settings>,
+    /// A stored backup to bring back when there's no database yet, such as
+    /// `nightly/2026-10-25.sqlite` (`NINE_TURTLES_RESTORE_FROM`).
+    pub restore_from: Option<String>,
 }
 
 /// The scrambled password (`NINE_TURTLES_PASSWORD_HASH`), made by
@@ -113,6 +118,9 @@ impl Config {
             })
             .transpose()?;
 
+        let backup = backup_settings(&var)?;
+        let restore_from = var("NINE_TURTLES_RESTORE_FROM").map(|name| name.trim().to_owned());
+
         Ok(Self {
             listen,
             data_dir: var("NINE_TURTLES_DATA_DIR")
@@ -123,8 +131,70 @@ impl Config {
             local_feeds_allowed,
             test_check_seconds,
             public_url,
+            backup,
+            restore_from,
         })
     }
+}
+
+/// The backup storage settings: all four of endpoint, bucket, key id and
+/// secret, or none (backups off). Some but not all is a slip worth stopping for.
+fn backup_settings(
+    var: &dyn Fn(&str) -> Option<String>,
+) -> Result<Option<crate::storage::Settings>, String> {
+    let names = [
+        "NINE_TURTLES_BACKUP_ENDPOINT",
+        "NINE_TURTLES_BACKUP_BUCKET",
+        "NINE_TURTLES_BACKUP_KEY_ID",
+        "NINE_TURTLES_BACKUP_SECRET",
+    ];
+    let values: Vec<Option<String>> = names
+        .iter()
+        .map(|name| var(name).map(|value| value.trim().to_owned()))
+        .collect();
+    if values.iter().all(Option::is_none) {
+        return Ok(None);
+    }
+    let missing: Vec<&str> = names
+        .iter()
+        .zip(&values)
+        .filter(|(_, value)| value.is_none())
+        .map(|(name, _)| *name)
+        .collect();
+    if !missing.is_empty() {
+        return Err(format!(
+            "backups need all four backup settings; missing: {}",
+            missing.join(", ")
+        ));
+    }
+    let [endpoint, bucket, key_id, secret] =
+        <[Option<String>; 4]>::try_from(values).map_err(|_| "four settings".to_owned())?;
+    let endpoint_text = endpoint.unwrap_or_default();
+    let endpoint = reqwest::Url::parse(&endpoint_text)
+        .ok()
+        .filter(|url| {
+            // Plain http only to this computer (MinIO for testing): the
+            // database must never cross the internet unencrypted.
+            url.scheme() == "https"
+                || (url.scheme() == "http"
+                    && matches!(url.host_str(), Some("localhost" | "127.0.0.1" | "[::1]")))
+        })
+        .filter(|url| url.has_host())
+        .ok_or_else(|| {
+            format!(
+                "NINE_TURTLES_BACKUP_ENDPOINT must look like \
+                 https://<account>.r2.cloudflarestorage.com, got {endpoint_text:?}"
+            )
+        })?;
+    Ok(Some(crate::storage::Settings {
+        endpoint,
+        bucket: bucket.unwrap_or_default(),
+        region: var("NINE_TURTLES_BACKUP_REGION")
+            .map(|value| value.trim().to_owned())
+            .unwrap_or_else(|| "auto".to_owned()),
+        key_id: key_id.unwrap_or_default(),
+        secret: secret.unwrap_or_default(),
+    }))
 }
 
 #[cfg(test)]
@@ -151,5 +221,40 @@ mod tests {
             PasswordSetting::from_value(Some("my password".into())),
             PasswordSetting::Invalid
         );
+    }
+
+    #[test]
+    fn backup_settings_are_all_or_nothing_and_never_plain_http_to_the_internet() {
+        use super::backup_settings;
+        let with = |pairs: &'static [(&'static str, &'static str)]| {
+            move |name: &str| {
+                pairs
+                    .iter()
+                    .find(|(key, _)| *key == name)
+                    .map(|(_, value)| (*value).to_owned())
+            }
+        };
+        assert_eq!(backup_settings(&with(&[])).unwrap(), None);
+
+        let error = backup_settings(&with(&[("NINE_TURTLES_BACKUP_BUCKET", "b")])).unwrap_err();
+        assert!(error.contains("NINE_TURTLES_BACKUP_SECRET"), "{error}");
+        assert!(!error.contains("NINE_TURTLES_BACKUP_BUCKET,"), "{error}");
+
+        let all = |endpoint: &'static str| -> &'static [(&'static str, &'static str)] {
+            Box::leak(Box::new([
+                ("NINE_TURTLES_BACKUP_ENDPOINT", endpoint),
+                ("NINE_TURTLES_BACKUP_BUCKET", "nine-turtles-backups"),
+                ("NINE_TURTLES_BACKUP_KEY_ID", "id"),
+                ("NINE_TURTLES_BACKUP_SECRET", "secret"),
+            ]))
+        };
+        let settings = backup_settings(&with(all("https://abc.r2.cloudflarestorage.com")))
+            .unwrap()
+            .unwrap();
+        assert_eq!(settings.region, "auto");
+        assert_eq!(settings.bucket, "nine-turtles-backups");
+        assert!(backup_settings(&with(all("http://localhost:9000"))).is_ok());
+        assert!(backup_settings(&with(all("http://abc.r2.cloudflarestorage.com"))).is_err());
+        assert!(backup_settings(&with(all("not an address"))).is_err());
     }
 }
