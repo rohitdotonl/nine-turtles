@@ -103,6 +103,42 @@ These are GitHub Pages' published addresses, nothing private.
    button) and https://app.nineturtles.app (the app).
 3. Tell the agent it's done.
 
+## 5. The contact address, hello@nineturtles.app (Cloudflare, 5 minutes)
+
+The website's Contact, Privacy, Terms and Accessibility pages give
+**hello@nineturtles.app** as the way to reach you (your choice, 25 October
+2026). Cloudflare can forward it to your own inbox for free, so your own
+address stays private:
+
+1. In Cloudflare, open **nineturtles.app** → **Email** → **Email Routing**
+   and press **Get started** (or **Enable Email Routing**).
+2. Under **Destination addresses**, add your own email address. Cloudflare
+   sends it a message: press the link in it to confirm.
+3. Under **Routing rules** → **Custom addresses**, press **Create
+   address**: custom address `hello`, action **Send to an email**,
+   destination your own address. Save.
+4. Cloudflare offers to add the records email needs (MX and TXT). Press
+   **Add records and enable**. They're the only new records, and they
+   don't touch the website's or the app's.
+5. Send a message to hello@nineturtles.app from another address: it
+   arrives in your inbox.
+
+Replies you write go out from your own address. If you'd like them to come
+from hello@ too, that needs an email service, which is still to be chosen
+(`docs/planning/questions.md`).
+
+## What the website says, and where
+
+Every page is a plain text file in `website/src/`: the home page
+(`index.md`), the tour, "New to feeds?", questions (`faq.md`), about,
+contact, accessibility, privacy and terms, and the blog's posts in
+`website/src/blog/`, one file each. The contact address, the app's address
+and the code's address are written once, in `website/src/_data/site.json`.
+The pictures of the app in `website/src/images/` were taken from the app's
+own screenshot set, which follows only made-up blogs; take new ones when
+the app's look changes. The privacy policy and terms are drafts until the
+open question in `docs/planning/questions.md` is settled.
+
 ## How changes go live
 
 - **The website:** an agent changes the pages in `website/`, the checks

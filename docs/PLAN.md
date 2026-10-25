@@ -359,9 +359,13 @@ each with screenshots:
 - ✅ A website at nineturtles.app, built with Eleventy from `website/` in
   this repository and hosted on GitHub Pages, and the app moved to
   app.nineturtles.app; the owner finished the domain move on 25 October 2026
-  (`docs/operations/website-and-domain.md`, decision 0066). The pages start
-  as a short introduction; what else the website says is the owner's to
-  decide.
+  (`docs/operations/website-and-domain.md`, decision 0066).
+- ✅ The website built out (25 October 2026, the pages the owner agreed):
+  the home page with pictures of the app, a tour, "New to feeds?",
+  questions, about, a blog with its own Atom feed, contact
+  (hello@nineturtles.app), accessibility, and a privacy policy and terms
+  marked as drafts until a payment company and an email service are chosen
+  (`docs/planning/questions.md`). No pricing page until prices are decided.
 
 ## V2 so far
 
