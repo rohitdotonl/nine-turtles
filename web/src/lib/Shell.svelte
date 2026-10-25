@@ -805,7 +805,7 @@
     if (route.kind === "settings" || route.kind === "add-feed") closePage();
     else if (route.kind === "edit-feed" || route.kind === "edit-folder") edited(false);
     else if (reading || (selected && inArticle())) backToList();
-    else if (shown || isSearching(query) || document.activeElement?.closest("search")) closeSearch();
+    else if (shown || isSearching(query) || phoneSearch || document.activeElement?.closest("search")) closeSearch();
     else if (phone && !panes.sidebar) stepBack("home");
   }
 </script>

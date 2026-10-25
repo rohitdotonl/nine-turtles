@@ -97,6 +97,7 @@
   // place, never does. It is written down a moment after scrolling stops,
   // and at once when another article opens.
   let moved = false;
+  const SCROLL_KEYS = new Set([" ", "ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End"]);
   let latest: { id: number; place: Place | undefined } | undefined;
   let writing: ReturnType<typeof setTimeout> | undefined;
 
@@ -116,7 +117,7 @@
 
   $effect(() => writePlace);
 
-  // A wheel, a touch or a press (the scroll bar too), and any key (below): the reader is moving through the article themselves.
+  // A wheel, a touch or a press (the scroll bar too), and a key that scrolls (below): the reader is moving through the article themselves.
   $effect(() => {
     const area = scroller;
     if (!area) return;
@@ -243,8 +244,8 @@
   >
 {/snippet}
 
-<!-- Any key: the reader may be moving through the article (Space, the arrows, Page Down). -->
-<svelte:window onkeydown={() => (moved = true)} />
+<!-- A key that scrolls: the reader is moving through the article themselves. -->
+<svelte:window onkeydown={(event) => SCROLL_KEYS.has(event.key) && (moved = true)} />
 
 <section aria-label="Article" class="flex min-w-0 flex-1 flex-col bg-paper">
   <!--
