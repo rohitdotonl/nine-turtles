@@ -32,14 +32,15 @@ Nothing jumps the queue because it's loud.
 
 nine turtles isn't social. Nobody sees what you read, and there's no
 number anywhere to make you feel behind. Sharing an article shares the
-publisher's own link, never ours, through your device's usual share sheet.
+publisher's own link, never ours: Copy link on a computer, your phone's
+usual share sheet on a phone.
 
 ## No badges and no stats
 
 No streaks, no "articles read this week", no year in review. Reading
 isn't a score. The one number we keep is the count of unread articles
 beside each feed, in a muted grey, because people with hundreds of feeds
-asked for it. If you'd rather not see even that, **river mode** takes it
+need to know what they've seen. If you'd rather not see even that, **river mode** takes it
 away, along with the unread list, and lets everything simply flow past.
 
 ## No motion

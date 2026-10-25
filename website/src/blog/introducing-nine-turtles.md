@@ -45,7 +45,7 @@ it are a written philosophy, a long list of automatic checks that every
 change must pass (contrast, keyboard use, screen readers), and code that's
 public for anyone to read.
 
-Today, the only way to use it is to run your own copy. We're working on a
-version you can simply sign up for. Until then, [the tour](/tour/) shows
+Today, the only way to use it is to run your own copy. A version you
+can simply sign up for is planned. Until then, [the tour](/tour/) shows
 what it does, and [this blog](/blog/) will say when that changes. It has a
 feed, naturally.

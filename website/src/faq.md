@@ -16,7 +16,7 @@ permalink: /faq/
 Yes, by running your own copy: nine turtles is open source and runs as one
 program and one database file on a small server. The instructions are in
 [its repository]({{ site.source }}/blob/main/docs/operations/building-and-running.md). A version you can simply sign up for,
-without running anything yourself, is being built.
+without running anything yourself, is planned.
 
 ## What will it cost?
 

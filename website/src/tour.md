@@ -20,8 +20,9 @@ title, as in a magazine.
 
 - **Your page, your way.** Choose the text size (six steps), the font
   (Literata, Atkinson Hyperlegible, made for low vision, or your device's
-  own serif) and the line width. The **Aa** button above every article
-  holds them, one press from the text.
+  own serif) and the line width. The **Aa** button beside every article
+  (in the bar above it on a computer, below it on a phone) holds them,
+  one press from the text.
 - **Two themes, by day and by night.** Original, white paper with ink-blue
   marks for what's unread, or Plain, black on white with links in the
   browser's own blue. Each follows your device's light or dark setting, or
@@ -70,8 +71,8 @@ nine turtles checks each feed on its own rhythm: often for sites that
 publish a lot, rarely for quiet ones, never more than every 30 minutes. It
 tells each site what it already has, so an unchanged feed costs them almost
 nothing, and when a site asks it to slow down, it does. Sites that announce
-new posts instantly (through a standard called WebSub) are heard straight
-away.
+new posts the moment they publish (through a standard called WebSub) are
+heard within minutes.
 
 When a feed stops working, it doesn't nag you. A **Feed health** page in
 Settings lists the ones that are having trouble, says what's wrong in plain

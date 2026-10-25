@@ -41,7 +41,7 @@ nineturtles.app, and this website went up.
 
 ## What's next
 
-The biggest piece of work is still ahead: making nine turtles something
-you can simply sign up for, safely, with your reading kept entirely
+The biggest piece of work is still ahead, and still being planned:
+making nine turtles something you can simply sign up for, safely, with your reading kept entirely
 separate from everyone else's. That's a careful job, and it'll be done
 carefully. This blog will follow along.

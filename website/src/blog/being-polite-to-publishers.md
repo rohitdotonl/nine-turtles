@@ -34,7 +34,9 @@ nine turtles updates its address.
 
 Some sites announce new posts the moment they're published, through an
 open standard called WebSub. For those, nine turtles doesn't need to keep
-asking: it's told, once, when there's something new.
+asking: it's told when there's something new, and the article arrives
+within minutes. (This needs a copy of nine turtles that the wider web can
+reach, like the one at app.nineturtles.app.)
 
 ## Saying who it is
 
