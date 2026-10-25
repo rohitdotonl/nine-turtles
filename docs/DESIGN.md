@@ -179,7 +179,7 @@ The philosophy applied. The principle is noted where it isn't obvious.
 
 #### Color
 
-One theme, Original, with a day and a night version (decision 0056, which removed decision 0046's five others). Its values were matched by eye to Apple Books' Original, then held to nine turtles' own floors by the automatic checks.
+Two themes, each with a day and a night version: Original (decision 0056, which removed decision 0046's five others) and Plain (decision 0059). Original's values were matched by eye to Apple Books' Original, then held to nine turtles' own floors by the automatic checks; its values are below. Plain is the owner's own site's bare, plain-HTML look: black on white (`#000000` on `#FFFFFF`), areas a few shades off white, its accent the text color, and links in articles the browser's blue `#0000EE` (visited `#551A8B`); by night white on `#121212`, links `#9E9EFF` (visited `#D0ADF0`).
 
 | Role (day) | Original |
 |---|---|
@@ -204,7 +204,7 @@ One theme, Original, with a day and a night version (decision 0056, which remove
 | Muted grey: meta, counts, hints | `#A4A4A8` |
 
 - All accent pairs pass AAA (7 : 1); re-check if a value changes.
-- **Links in articles** are underlined in the text color, **never blue**.
+- **Links in articles** are underlined in the text color, **never blue**, except in Plain, whose links are the browser's own blue and purple, underlined, at 7 : 1 (decision 0059).
 - **Muted greys** (read items, counts, source names) pass AA (4.5 : 1) on every area and on the selection pill, by day and by night, verified by automatic checks.
 - **The selection pill** (decision 0057): a neutral grey, the text color mixed into the pane behind it (8% by day, 12% by night), with no color. Text stays at 7 : 1, muted grey at 4.5 : 1 and the unread dot at 3 : 1 on it, and a dark pill, or a day pill on a warm pane, keeps its pane's temperature (all checked automatically). A row under the pointer gets a fainter, neutral tone of the text color (5%), never the accent, always lighter than the pill.
 - **Search matches** have the accent at 12% behind them , with 3px corners and a fine underline (so never tone alone), in the text's own weight; text keeps 7 : 1 on it, even inside the pill.
@@ -213,7 +213,7 @@ One theme, Original, with a day and a night version (decision 0056, which remove
 - **Destructive actions** (Unsubscribe, Delete folder) are words in a muted red, `#A3261B` by day and `#E8968A` by night: at least AA (4.5 : 1) on the page, the list and a grouped list by day and by night, checked automatically. Red means only "this removes something", and the words always say what.
 
 #### Themes
-One theme, **Original**: white paper by day, near-black by night (decision 0056). The five others from decision 0046 (Quiet, Paper, Bold, Calm, Focus) were removed at the owner's request: nine turtles has its own look rather than copying Apple Books' set. An **Appearance** choice picks the version: **Light**, **Dark** or **Match device** (the default), which follows the device's own light or dark setting, live, as it switches. Before nine turtles' script runs, a page is Original, by day or by night as the device is set. Both versions meet the same contrast floors, checked automatically.
+Two themes. **Original**: white paper by day, near-black by night (decision 0056). **Plain**: the owner's site rohit.onl's bare, plain-HTML look, black on white with blue underlined links (decision 0059). The five others from decision 0046 (Quiet, Paper, Bold, Calm, Focus) were removed at the owner's request: nine turtles has its own look rather than copying Apple Books' set. An **Appearance** choice picks the version: **Light**, **Dark** or **Match device** (the default), which follows the device's own light or dark setting, live, as it switches. Before nine turtles' script runs, a page is Original, by day or by night as the device is set. Both versions meet the same contrast floors, checked automatically.
 
 #### Typography
 
@@ -221,10 +221,11 @@ One theme, **Original**: white paper by day, near-black by night (decision 0056)
 |---|---|---|
 | Reading (default) | **Literata** | Made for long-form reading on screens |
 | Reading (alternate sans) | **Atkinson Hyperlegible** | Made for legibility, including low vision |
+| Reading (alternate serif) | **System serif**: the device's own (New York on Apple devices, Georgia on most others) | The owner's site rohit.onl's font (decision 0059); nothing to download |
 | Interface | **The device's own system font** (San Francisco on Apple devices), **Inter** everywhere else | As in Apple Books: the interface feels native; Inter is the neutral, self-hosted fallback |
 | Code in articles | **JetBrains Mono** | Clear monospace |
 
-- All fonts are free and served by nine turtles itself (no third-party font services).
+- All fonts are free and served by nine turtles itself (no third-party font services); System serif is already on the device.
 - **Other scripts** (e.g. Hindi in Devanagari) use the fonts already on the device; no extra downloads.
 - **A fixed type scale by role**, so each level of importance looks different at a glance (size, weight and ink together, never color):
   - meta 13px (times, source names, counts, hints) in muted grey; 15px on a touch screen;

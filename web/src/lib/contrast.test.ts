@@ -413,3 +413,19 @@ describe("the summary-only note's link underline", () => {
     expect(Object.keys(THEMES).length).toBeGreaterThanOrEqual(THEME_NAMES.length);
   });
 });
+
+// Plain's links are the browser's own blue, purple once visited (decision 0059): article text, so AAA.
+describe.each(["plain light", "plain dark"])("the %s theme's article links", (name) => {
+  const colors = THEMES[name]!;
+
+  it("are at AAA (7 : 1) on the reading area, visited or not", () => {
+    expect(colors.link, "link").toMatch(/^#/);
+    expect(colors["link-visited"], "link-visited").toMatch(/^#/);
+    expect(contrast(colors.link!, colors.paper!)).toBeGreaterThanOrEqual(7);
+    expect(contrast(colors["link-visited"]!, colors.paper!)).toBeGreaterThanOrEqual(7);
+  });
+
+  it("never share the accent's color, so blue means only a link", () => {
+    expect(colors.accent).not.toBe(colors.link);
+  });
+});

@@ -4,6 +4,17 @@ A plain-language history of nine turtles (called slowfeed until 24 October 2026)
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 25 October 2026: A Plain theme and System serif, from rohit.onl
+
+- A second theme, **Plain**, in Settings and the Aa panel: your site's bare,
+  plain-HTML look. Black on white, and article links in the old web's blue
+  (purple once visited), underlined. By night, white on near-black.
+- A third reading font, **System serif**: the same font as rohit.onl, your
+  device's own serif (New York on your Mac and iPhone). Atkinson Hyperlegible
+  now shows as "Atkinson" so the three fit on one row.
+- Two browser checks that sometimes failed on a busy computer now wait for
+  the save they check, so the checks on main are green again.
+
 ## 24 October 2026: Less space after an article, Show older items as a list row
 
 - After an article ends there's now a short gap and the small end mark, not

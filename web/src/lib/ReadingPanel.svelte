@@ -15,7 +15,7 @@
   import { onMount, tick } from "svelte";
   import Icon from "./Icon.svelte";
   import TextSize from "./TextSize.svelte";
-  import { APPEARANCES } from "./themes";
+  import { APPEARANCES, LOOKS, THEMES } from "./themes";
   import { LINE_WIDTHS, READING_FONTS, type Preferences } from "./preferences";
 
   let {
@@ -107,15 +107,26 @@
     </div>
   </fieldset>
 
+  <fieldset class="flex min-w-0 flex-col">
+    <legend class="mb-1.5 text-small text-ink-2">Theme</legend>
+    <div class="choices fill" style="--columns: 2">
+      {#each THEMES as theme (theme)}
+        <label class="choice">
+          <input type="radio" name="aa-theme" value={theme} bind:group={preferences.theme} />
+          {LOOKS[theme].label}
+        </label>
+      {/each}
+    </div>
+  </fieldset>
 
   <fieldset class="flex min-w-0 flex-col">
     <legend class="mb-1.5 text-small text-ink-2">Font</legend>
-    <div class="choices fill" style="--columns: 2">
+    <div class="choices fill" style="--columns: 3">
       {#each Object.entries(READING_FONTS) as [value, font] (value)}
         <!-- Each name is set in its own font, so the choice shows itself. -->
         <label class="choice" style:font-family={font.family}>
           <input type="radio" name="aa-font" {value} bind:group={preferences.readingFont} />
-          {font.label}
+          {font.label}{#if font.rest}<span class="sr-only">{font.rest}</span>{/if}
         </label>
       {/each}
     </div>

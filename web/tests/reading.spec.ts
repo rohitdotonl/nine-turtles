@@ -232,10 +232,16 @@ test.describe("on a wide window", () => {
     await panel.getByRole("button", { name: "Smaller text" }).click();
     await expect.poll(size).toBe(before);
 
-    // Appearance: day, night or as the device is set, applied at once. No theme tiles (decision 0056).
+    // Appearance: day, night or as the device is set, applied at once (decision 0056).
     await expect(panel.getByRole("group", { name: "Appearance" }).getByRole("radio")).toHaveCount(3);
     await expect(panel.getByRole("radio", { name: "Match device" })).toBeChecked();
-    await expect(panel.getByRole("group", { name: "Theme" })).toHaveCount(0);
+    // Theme: Original or Plain, whose article links are the browser's blue (decision 0059).
+    const themes = panel.getByRole("group", { name: "Theme" });
+    await expect(themes.getByRole("radio")).toHaveCount(2);
+    await expect(themes.getByRole("radio", { name: "Original" })).toBeChecked();
+    await themes.getByRole("radio", { name: "Plain" }).check();
+    await expect(root).toHaveAttribute("data-theme", "plain");
+    await themes.getByRole("radio", { name: "Original" }).check();
     await panel.getByRole("radio", { name: "Light", exact: true }).check();
     await expect(root).toHaveAttribute("data-theme", "original");
     await expect(root).toHaveAttribute("data-mode", "light");
@@ -256,6 +262,10 @@ test.describe("on a wide window", () => {
     // Fonts are named in their own face; line width has three steps.
     await panel.getByRole("radio", { name: "Atkinson Hyperlegible" }).check();
     await expect.poll(() => root.evaluate((html) => html.style.getPropertyValue("--reading-font"))).toContain("Atkinson");
+    // rohit.onl's font: the device's own serif (decision 0059).
+    await panel.getByRole("radio", { name: "System serif" }).check();
+    await expect.poll(() => root.evaluate((html) => html.style.getPropertyValue("--reading-font"))).toContain("ui-serif");
+    await panel.getByRole("radio", { name: "Atkinson Hyperlegible" }).check();
     await expect(text).toHaveCSS("font-weight", "400");
     const measure = () => root.evaluate((html) => html.style.getPropertyValue("--reading-measure"));
     const medium = await measure();

@@ -16,7 +16,7 @@
   import ImportOpml from "./ImportOpml.svelte";
   import PageHead from "./PageHead.svelte";
   import TextSize from "./TextSize.svelte";
-  import { APPEARANCES } from "./themes";
+  import { APPEARANCES, LOOKS, THEMES } from "./themes";
   import type { Order } from "./feeds";
   import { LINE_WIDTHS, READING_FONTS, type Preferences } from "./preferences";
   import { signOut } from "./session";
@@ -127,7 +127,7 @@
               there, and then it lets you go.
             </p>
           </figure>
-          <!-- Day, night or as the device is set: one theme, Original, in its day or night version (decision 0056). -->
+          <!-- Day, night or as the device is set: the theme's day or night version (decision 0056). -->
           <fieldset class="inset-row">
             <legend class="row-name">Appearance</legend>
             <div class="choices control" style="--columns: 3">
@@ -140,15 +140,27 @@
             </div>
           </fieldset>
 
+          <!-- Original, or Plain: rohit.onl's bare look (decision 0059). -->
+          <fieldset class="inset-row">
+            <legend class="row-name">Theme</legend>
+            <div class="choices control" style="--columns: 2">
+              {#each THEMES as theme (theme)}
+                <label class="choice">
+                  <input type="radio" name="theme" value={theme} bind:group={preferences.theme} />
+                  {LOOKS[theme].label}
+                </label>
+              {/each}
+            </div>
+          </fieldset>
 
           <fieldset class="inset-row">
             <legend class="row-name">Reading font</legend>
-            <div class="choices control" style="--columns: 2">
+            <div class="choices control" style="--columns: 3">
               {#each Object.entries(READING_FONTS) as [value, font] (value)}
                 <!-- Each name is set in its own font, so the choice shows itself. -->
                 <label class="choice" style:font-family={font.family}>
                   <input type="radio" name="reading-font" {value} bind:group={preferences.readingFont} />
-                  {font.label}
+                  {font.label}{#if font.rest}<span class="sr-only">{font.rest}</span>{/if}
                 </label>
               {/each}
             </div>

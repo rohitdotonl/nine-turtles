@@ -61,6 +61,10 @@ describe("reader preferences", () => {
     const chosen: Preferences = { theme: "original", appearance: "dark", readingFont: "atkinson", textSize: 4, lineWidth: "wide" };
     save(chosen, storage);
     expect(load(storage)).toEqual(chosen);
+    // Plain and the device's own serif, rohit.onl's look and font (decision 0059).
+    const plain: Preferences = { theme: "plain", appearance: "light", readingFont: "system-serif", textSize: 2, lineWidth: "medium" };
+    save(plain, storage);
+    expect(load(storage)).toEqual(plain);
   });
 
   it("ignores anything it doesn't understand, keeping the defaults", () => {

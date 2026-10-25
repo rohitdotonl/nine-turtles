@@ -242,9 +242,10 @@ test("Settings: appearance, font, size and width apply at once and are remembere
   await expect(page).toHaveURL(/\/settings$/);
   await expect(page.getByRole("heading", { level: 2, name: "Settings" })).toBeFocused();
 
-  // One theme, Original, matching the device until another Appearance is chosen (decision 0056).
+  // Original, matching the device until another Appearance is chosen (decision 0056); Plain is the other theme (decision 0059).
   await expect(page.locator("label.tile")).toHaveCount(0);
-  await expect(page.getByRole("group", { name: "Theme" })).toHaveCount(0);
+  await expect(page.getByRole("group", { name: "Theme" }).getByRole("radio")).toHaveCount(2);
+  await expect(page.getByRole("radio", { name: "Original" })).toBeChecked();
   await expect(page.getByLabel("Match device")).toBeChecked();
   await page.getByLabel("Light", { exact: true }).check();
   await expect(page.locator("body")).toHaveCSS("background-color", "rgb(255, 255, 255)");
@@ -279,13 +280,22 @@ test("Settings: appearance, font, size and width apply at once and are remembere
   // Each row's control sits at its right end, and every control is the same width.
   const look = page.getByRole("region", { name: "Look and feel" });
   const controls = await look.locator(".control").evaluateAll((all) => all.map((each) => Math.round(each.getBoundingClientRect().width)));
-  expect(controls).toHaveLength(4);
+  expect(controls).toHaveLength(5);
   expect(new Set(controls).size).toBe(1);
 
   const sample = page.locator(".reading-sample");
   await expect(sample).toHaveCSS("font-family", /^Literata/);
+  // rohit.onl's font, the device's own serif (decision 0059).
+  await page.getByLabel("System serif").check();
+  await expect(sample).toHaveCSS("font-family", /^ui-serif/);
   await page.getByLabel("Atkinson Hyperlegible").check();
   await expect(sample).toHaveCSS("font-family", /^"Atkinson Hyperlegible"/);
+  // Plain: rohit.onl's bare look, black on white by day, and back to Original (decision 0059).
+  await page.getByRole("radio", { name: "Plain" }).check();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "plain");
+  await expect(page.locator("body")).toHaveCSS("color", "rgb(0, 0, 0)");
+  await page.getByRole("radio", { name: "Original" }).check();
+  await expect(page.locator("body")).toHaveCSS("color", "rgb(20, 20, 20)");
   // Text size is a stepper, as in the Aa panel: one flat capsule, a small A and a large A at its ends
   // and the step's name between them, parted by hairlines, nothing raised, so it never reads as a
   // chosen segment (decision 0055).

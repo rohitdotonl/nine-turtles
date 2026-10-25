@@ -119,6 +119,58 @@
   --scrim: rgb(0 0 0 / 0.45);
 }
 
+/*
+  Plain (decision 0059): rohit.onl's bare, plain-HTML look. Black words on
+  white, every area all but white, and the one color the early web had: links
+  in articles in the browser's own blue, purple once visited, always
+  underlined. Its accent (the unread dot, search matches) is the text color,
+  so blue still means only "a link". By night: the colors a browser gives a
+  plain page in dark mode.
+*/
+:root[data-theme="plain"][data-mode="light"] {
+  color-scheme: light;
+  --paper: #ffffff;
+  --list: #fbfbfb;
+  --sidebar: #f5f5f5;
+  --ink: #000000;
+  --ink-2: #333333;
+  --muted: #595959;
+  --faint: #666666;
+  --danger: #a3261b;
+  --accent: #000000;
+  --star: #2a8a43;
+  --tint-list: #e7e7e7;
+  --tint-sidebar: #e1e1e1;
+  --surface-raised: #ffffff;
+  --link: #0000ee;
+  --link-visited: #551a8b;
+}
+
+:root[data-theme="plain"][data-mode="dark"] {
+  color-scheme: dark;
+  --paper: #121212;
+  --list: #161616;
+  --sidebar: #1c1c1c;
+  --ink: #ffffff;
+  --ink-2: #cccccc;
+  --muted: #a6a6a6;
+  --faint: #999999;
+  --danger: #e8968a;
+  --accent: #ffffff;
+  --star: #56d364;
+  --tint-list: #323232;
+  --tint-sidebar: #373737;
+  --surface-raised: #262626;
+  --link: #9e9eff;
+  --link-visited: #d0adf0;
+  --raised-edge: rgb(255 255 255 / 0.08);
+  --raised-group: color-mix(in srgb, #ffffff 4%, var(--surface-raised));
+  --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
+  --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
+  --scrim: rgb(0 0 0 / 0.45);
+}
+
 /* Before nine turtles' script has run, a dark device gets Original's night. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-mode]) {
@@ -1272,10 +1324,15 @@ input {
   font-size: 1em;
 }
 
+/* In the text color, except in Plain, whose links are the browser's own blue and purple (decision 0059). */
 .article-text a {
-  color: inherit;
+  color: var(--link, currentColor);
   text-decoration: underline;
   text-underline-offset: 0.2em;
+}
+
+.article-text a:visited {
+  color: var(--link-visited, var(--link, currentColor));
 }
 
 .article-text :where(ul, ol) {

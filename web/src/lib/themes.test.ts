@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { APPEARANCES, LOOKS, OLD_THEMES, THEMES, isAppearance, isTheme, resolveMode } from "./themes";
 
 describe("themes", () => {
-  it("has the one theme from DESIGN.md, Original (decision 0056)", () => {
-    expect(THEMES).toEqual(["original"]);
-    expect(THEMES.map((theme) => LOOKS[theme].label)).toEqual(["Original"]);
+  it("has the themes from DESIGN.md: Original (decision 0056) and Plain (decision 0059)", () => {
+    expect(THEMES).toEqual(["original", "plain"]);
+    expect(THEMES.map((theme) => LOOKS[theme].label)).toEqual(["Original", "Plain"]);
   });
 
   it("recognises only known theme names and Appearance choices", () => {
