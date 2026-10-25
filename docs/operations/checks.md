@@ -36,6 +36,7 @@ by the next merge, whatever it changes.
 | Frontend: tests | Broken frontend logic (layout, keys, addresses, reader settings); any theme color pair below the contrast floor, read straight from `app.css` | `web/src/**/*.test.ts` (Vitest) |
 | No motion | Any animation or transition in the built styles or the website's; Svelte's or the browser's animation tools in the code; smooth scrolling | `scripts/check-motion.mjs` |
 | Download size budget | More than 150 KB (compressed) of app code and styles, or more than 400 KB of fonts | `scripts/check-size.mjs` |
+| Health check script | The health check (`health-check.md`) passing when nine turtles is down, or failing when it's running | `scripts/check-health-check.mjs` |
 | Rust: formatting | Code not in the standard Rust layout. Fix with `cargo fmt` in `server/` | rustfmt |
 | Rust: lint | Likely mistakes ("clippy"); every warning counts as a failure | clippy |
 | Rust: tests | Broken server behavior: sign-in, the wait after wrong passwords, signing out, the browser security rules, the status and diagnostics pages, the Hindi search test; adding feeds (autodiscovery, duplicates, plain reasons for problems, private addresses refused, unsafe content cleaned) against a made-up publisher; read, unread, star, "mark all as read" touching only the articles named, and the shared sort order; syncing with other apps through the Google Reader API: the app password's rules, read and starred both ways, following, unfollowing and folders (`other_apps.rs`); each **database structure change tried on a filled copy** first (`structure_changes.rs`); and the **speed tests**, on a made-up library of 500 feeds and a year of articles (100,000), which fail if any list (All, Unread, Starred, one feed, newest or oldest first) or the unread counts take 100 ms or more, or stop using their index | `server/src/` and `server/tests/` (`speed.rs`) |
@@ -77,6 +78,10 @@ in through the sign-in page with a made-up password (`web/playwright.config.ts`)
   it opens (or adds to) an issue titled "Weekly security report: libraries
   need attention". It never changes anything. An agent proposes a fix; the
   owner approves it.
+- **Health check:** `.github/workflows/health-check.yml` runs
+  `scripts/health-check.sh` every 15 minutes against the live app. If it
+  isn't answering after 5 tries a minute apart, the run fails and GitHub
+  emails the owner (decision 0075, `health-check.md`).
 - **Second-agent review:** see [second-agent-review.md](second-agent-review.md).
 
 ## When a check fails

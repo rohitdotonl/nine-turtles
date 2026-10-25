@@ -8,6 +8,10 @@ the owner's yes to its brief (decision 0009).
 **Calm by design:** if everything is fine, the check does nothing. No
 "all good" issues, no messages.
 
+Between daily checks, the health check ([health-check.md](health-check.md))
+looks every 15 minutes that nine turtles answers, and GitHub emails the owner
+if it doesn't.
+
 ## What the check needs
 
 Two environment variables in the agent's environment (never in the
