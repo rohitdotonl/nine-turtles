@@ -19,7 +19,8 @@ export type Route =
   | { kind: "settings" }
   | { kind: "feed-health" }
   | { kind: "your-feeds" }
-  | { kind: "muted" };
+  | { kind: "muted" }
+  | { kind: "readers" };
 
 export const VIEW_NAMES: Record<View, string> = { unread: "Unread", starred: "Starred", all: "All" };
 
@@ -30,6 +31,7 @@ export function parse(path: string): Route {
   if (name === "settings/feed-health") return { kind: "feed-health" };
   if (name === "settings/feeds") return { kind: "your-feeds" };
   if (name === "settings/muted") return { kind: "muted" };
+  if (name === "settings/readers") return { kind: "readers" };
   if (name === "add-feed") return { kind: "add-feed" };
   if (name === "new-to-feeds") return { kind: "new-to-feeds" };
   if (name === "searches/new") return { kind: "save-search" };
@@ -55,6 +57,8 @@ export function pathFor(route: Route): string {
       return "/settings/feeds";
     case "muted":
       return "/settings/muted";
+    case "readers":
+      return "/settings/readers";
     case "add-feed":
       return "/add-feed";
     case "new-to-feeds":
@@ -89,6 +93,8 @@ export function nameFor(route: Route, placeName?: string): string {
       return "Your feeds";
     case "muted":
       return "Muted articles";
+    case "readers":
+      return "Readers";
     case "add-feed":
       return "Add a feed";
     case "new-to-feeds":

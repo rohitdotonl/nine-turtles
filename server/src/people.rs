@@ -83,7 +83,7 @@ pub(crate) async fn is_owner(db: &SqlitePool, person: i64) -> Result<bool, sqlx:
 }
 
 /// Runs `then` only for the owner; anyone else gets 403.
-async fn owner_only<F>(state: &AppState, person: i64, then: F) -> Response
+pub(crate) async fn owner_only<F>(state: &AppState, person: i64, then: F) -> Response
 where
     F: Future<Output = Response>,
 {

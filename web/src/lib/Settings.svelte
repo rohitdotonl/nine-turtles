@@ -54,6 +54,7 @@
     onFeedHealth,
     onYourFeeds,
     onMuted,
+    onReaders,
     feeds,
     folders,
     phone = false,
@@ -89,6 +90,8 @@
     onYourFeeds: (event: MouseEvent) => void;
     /** Opens the Muted articles page. */
     onMuted: (event: MouseEvent) => void;
+    /** Opens the owner's Readers page. */
+    onReaders: (event: MouseEvent) => void;
     feeds: Feed[];
     folders: Folder[];
     /** On a phone the rule editor is the phone sheet, in place of Settings. */
@@ -428,7 +431,7 @@
       <OtherApps />
 
       {#if owner}
-        <Readers {email} />
+        <Readers {email} {onReaders} />
       {/if}
 
       <section aria-labelledby="account-heading">

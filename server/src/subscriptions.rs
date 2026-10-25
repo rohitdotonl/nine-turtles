@@ -26,7 +26,7 @@ use serde::Serialize;
 use serde_json::json;
 
 use crate::{
-    AppState,
+    AppState, admin,
     auth::{SignedIn, database_problem},
     feed,
     feeds::{make_room, subscribe},
@@ -110,21 +110,46 @@ async fn import(
         return StatusCode::PAYLOAD_TOO_LARGE.into_response();
     }
     match follow_all(&state.db, person, &listed, now()).await {
-        Ok(summary) => Json(json!({ "summary": summary })).into_response(),
+        Ok(Imported::Done(summary)) => Json(json!({ "summary": summary })).into_response(),
+        Ok(Imported::TooMany { following, adding }) => (
+            StatusCode::CONFLICT,
+            Json(json!({
+                "error": "too-many",
+                "following": following,
+                "adding": adding,
+                "most": admin::MOST_FEEDS,
+            })),
+        )
+            .into_response(),
         Err(error) => database_problem("importing an OPML file", &error),
     }
 }
 
-/// Follows every feed listed for reader `person`, all at once or not at all.
+/// What `follow_all` did.
+#[derive(Debug)]
+pub enum Imported {
+    Done(Summary),
+    /// Nothing was imported: the reader, who follows `following` feeds,
+    /// would have followed `adding` more, past `admin::MOST_FEEDS`.
+    TooMany {
+        following: i64,
+        adding: usize,
+    },
+}
+
+/// Follows every feed listed for reader `person`, all at once or not at
+/// all: nothing, if it would take them past the most feeds one reader can
+/// follow.
 pub async fn follow_all(
     db: &sqlx::SqlitePool,
     person: i64,
     listed: &[Listed],
     now: i64,
-) -> Result<Summary, sqlx::Error> {
+) -> Result<Imported, sqlx::Error> {
     let mut summary = Summary::default();
     let mut seen: HashMap<String, i64> = HashMap::new();
     let mut transaction = db.begin_with("BEGIN IMMEDIATE").await?;
+    let before = admin::following(&mut transaction, person).await?;
     for entry in listed {
         let Some(url) = web_address(&entry.address) else {
             summary
@@ -159,8 +184,15 @@ pub async fn follow_all(
                 .await?;
         }
     }
+    if summary.added > 0 && admin::following(&mut transaction, person).await? > admin::MOST_FEEDS {
+        transaction.rollback().await?;
+        return Ok(Imported::TooMany {
+            following: before,
+            adding: summary.added,
+        });
+    }
     transaction.commit().await?;
-    Ok(summary)
+    Ok(Imported::Done(summary))
 }
 
 /// Follows one feed from the file for reader `person`, unless they follow

@@ -13,6 +13,7 @@
 //! The frontend is packed into this program (see `assets`).
 
 pub mod accounts;
+pub mod admin;
 pub mod apps;
 pub mod assets;
 pub mod auth;
@@ -166,6 +167,7 @@ pub fn router(state: AppState) -> Router {
     let router = Router::new()
         .merge(auth::routes())
         .merge(accounts::routes())
+        .merge(admin::routes())
         .merge(apps::routes())
         .merge(greader::routes())
         .merge(feeds::routes())

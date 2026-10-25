@@ -20,7 +20,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 use crate::{
-    AppState,
+    AppState, admin,
     auth::{SignedIn, database_problem},
     checking, discover, feed,
     fetch::{self, FetchError, Fetched},
@@ -123,6 +123,8 @@ pub enum NotAdded {
     TooBig,
     NoFeed,
     Already(i64),
+    /// The reader follows as many feeds as one reader can (`admin::MOST_FEEDS`).
+    TooMany,
     Database,
 }
 
@@ -135,6 +137,7 @@ impl IntoResponse for NotAdded {
             Self::NotFound => (StatusCode::BAD_GATEWAY, "not-found"),
             Self::TooBig => (StatusCode::BAD_GATEWAY, "too-big"),
             Self::NoFeed => (StatusCode::UNPROCESSABLE_ENTITY, "no-feed"),
+            Self::TooMany => (StatusCode::CONFLICT, "too-many"),
             Self::Already(id) => {
                 return (
                     StatusCode::CONFLICT,
@@ -196,6 +199,11 @@ enum Added {
 async fn add(state: &AppState, person: i64, address: &str) -> Result<Added, NotAdded> {
     let url = parse_address(address).ok_or(NotAdded::NotAnAddress)?;
     already_followed(state, person, &url).await?;
+    // Asked before anything is fetched, so no publisher is bothered for
+    // nothing; asked again as the feed is followed.
+    if !admin::room_for_one_more(&mut *state.db.acquire().await?, person).await? {
+        return Err(NotAdded::TooMany);
+    }
     let local = state.config.local_feeds_allowed;
     let fetched = fetch::get(&state.http, &url, local).await?;
 
@@ -446,6 +454,9 @@ async fn follow(
     let now = now();
     let hub = parsed.hub.clone();
     let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
+    if !admin::room_for_one_more(&mut transaction, person).await? {
+        return Err(NotAdded::TooMany);
+    }
     let (feed_id, fresh) = match follow_in(
         &mut transaction,
         state,

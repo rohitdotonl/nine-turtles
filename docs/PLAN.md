@@ -404,6 +404,7 @@ feed is still fetched and stored once; everything personal gets an owner.
 | Part two: each reader's own feeds, marks, stars, search and sync (structure change 12) | ✅ 25 October 2026 |
 | Part three: signing in by email, and the sign-up switch with invite links (structure change 13, decision 0087) | ✅ 25 October 2026 |
 | Part four: account emails over SMTP (confirming Open sign-ups, a new password, changing email) and deleting an account (structure change 14, decision 0088) | ✅ 25 October 2026 |
+| Milestone 5: the owner's Readers page, at most 1,000 feeds per reader, and feeds nobody opens checked once a day (no structure change, decision 0089) | 🔨 Pull request open |
 
 ## V2: YouTube videos
 
