@@ -41,6 +41,7 @@ whatever the lock files say.*
 | tower-http | 0.7 | Standard web-server extras: compression, security headers | Approved |
 | thiserror | 2.x | Clear error messages inside the code | Approved |
 | getrandom | 0.4 | Asks the computer for unguessable random numbers, for each signed-in device's ticket. Comes with argon2 already | Approved (October 2026, Milestone 2) |
+| hmac, sha1, sha2 | 0.13, 0.11, 0.11 | Check that WebSub deliveries really come from the publisher's hub (their signature). Already came with other libraries | Approved (the owner's yes on 25 October 2026, decision 0067) |
 | blake2 | 0.11 | A fast scrambler: nine turtles stores only a scrambled copy of each device's ticket. Comes with argon2 already | Approved (October 2026, Milestone 2) |
 
 SQLite itself (and its FTS5 search) comes bundled with sqlx.
@@ -86,4 +87,4 @@ Each will be proposed in its milestone's plan:
   nine turtles' small `log` module prints plain lines itself, so neither is used
   yet (docs/decisions/0010-sign-in.md).
 - **V2 (backups):** a way to upload to S3-compatible storage (`object_store` was the suggestion).
-- **Later milestones:** handling dates and web addresses; in V2, checking WebSub signatures. (Limiting repeated sign-in attempts needed no library.)
+- **Later milestones:** handling dates and web addresses. (WebSub signatures: hmac, sha1 and sha2, approved above. Limiting repeated sign-in attempts needed no library.)

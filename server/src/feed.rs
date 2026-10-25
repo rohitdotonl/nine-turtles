@@ -19,6 +19,16 @@ pub struct ParsedFeed {
     pub site_url: Option<String>,
     pub language: Option<String>,
     pub articles: Vec<ParsedArticle>,
+    /// The publisher's WebSub hub, if the feed names one (SPEC section 12).
+    pub hub: Option<Hub>,
+}
+
+/// Where a feed's WebSub hub is, and the address the publisher announces
+/// the feed under there (its `rel="self"` link, or where it was fetched).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Hub {
+    pub hub: Url,
+    pub topic: Url,
 }
 
 #[derive(Debug)]
@@ -52,6 +62,17 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
         .and_then(|link| feed_url.join(&link.href).ok())
         .filter(|url| matches!(url.scheme(), "http" | "https"))
         .map(String::from);
+    let web_link = |rel: &str| {
+        feed.links
+            .iter()
+            .find(|link| link.rel.as_deref() == Some(rel))
+            .and_then(|link| feed_url.join(link.href.trim()).ok())
+            .filter(|url| matches!(url.scheme(), "http" | "https"))
+    };
+    let hub = web_link("hub").map(|hub| Hub {
+        hub,
+        topic: web_link("self").unwrap_or_else(|| feed_url.clone()),
+    });
     let title = feed
         .title
         .as_ref()
@@ -113,6 +134,7 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
         site_url,
         language: feed.language,
         articles,
+        hub,
     })
 }
 
@@ -279,6 +301,47 @@ mod tests {
 
     fn url(text: &str) -> Url {
         Url::parse(text).unwrap()
+    }
+
+    #[test]
+    fn a_feeds_websub_hub_and_its_own_address_are_found() {
+        let rss = br#"<?xml version="1.0"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>A</title>
+<link>https://example.com/</link>
+<atom:link rel="hub" href="https://hub.example/" />
+<atom:link rel="self" href="https://example.com/feed.xml" type="application/rss+xml" />
+</channel></rss>"#;
+        let parsed = parse(rss, &url("https://example.com/feed")).unwrap();
+        assert_eq!(
+            parsed.hub,
+            Some(Hub {
+                hub: url("https://hub.example/"),
+                topic: url("https://example.com/feed.xml"),
+            })
+        );
+        // No self link: the address it was fetched from.
+        let atom = br#"<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom">
+<title>B</title><id>b</id><updated>2026-10-01T00:00:00Z</updated>
+<link rel="hub" href="/hub" /></feed>"#;
+        let parsed = parse(atom, &url("https://example.com/atom.xml")).unwrap();
+        assert_eq!(
+            parsed.hub,
+            Some(Hub {
+                hub: url("https://example.com/hub"),
+                topic: url("https://example.com/atom.xml"),
+            })
+        );
+        // No hub, or one that isn't a web address: none.
+        let plain =
+            br#"<?xml version="1.0"?><rss version="2.0"><channel><title>C</title></channel></rss>"#;
+        assert_eq!(
+            parse(plain, &url("https://example.com/c")).unwrap().hub,
+            None
+        );
+        let odd = br#"<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom">
+<title>D</title><id>d</id><updated>2026-10-01T00:00:00Z</updated>
+<link rel="hub" href="mailto:hub@example.com" /></feed>"#;
+        assert_eq!(parse(odd, &url("https://example.com/d")).unwrap().hub, None);
     }
 
     #[test]

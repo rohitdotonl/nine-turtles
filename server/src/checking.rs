@@ -30,7 +30,7 @@ use crate::{
     feed::{self, ParsedFeed},
     feeds::store_articles,
     fetch::{self, Answer, FetchError, Fetched, Known},
-    folders, log, now,
+    folders, log, now, websub,
 };
 
 pub const MINUTE: i64 = 60;
@@ -85,6 +85,7 @@ pub async fn run(state: AppState) {
 /// is no longer offered are cleared for good (`folders::clear_unsubscribed`).
 pub async fn round(state: &AppState, now: i64) -> Result<usize, sqlx::Error> {
     folders::clear_unsubscribed(&state.db, now - folders::UNDO_FOR).await?;
+    websub::renew(state, now).await?;
     let due: Vec<i64> = sqlx::query_scalar(DUE)
         .bind(now)
         .bind(PER_ROUND)
@@ -160,7 +161,8 @@ pub async fn check(state: &AppState, feed_id: i64, now: i64) -> Result<(), sqlx:
                     Some((&fetched, &parsed)),
                     now,
                 )
-                .await
+                .await?;
+                websub::offered(state, feed_id, parsed.hub.as_ref(), now).await
             }
             None => failed(state, feed_id, &feed, Failure::NotAFeed, now).await,
         },
@@ -210,6 +212,14 @@ async fn worked(
             feed.last_modified.clone(),
         ),
     };
+    // While a hub delivers new articles, this check is only the backup:
+    // at most twice a day (decision 0067).
+    let mut next = wait(state, every);
+    if state.config.test_check_seconds.is_none()
+        && websub::delivering(&state.db, feed_id, now).await?
+    {
+        next = next.max(websub::BACKUP_WAIT);
+    }
     sqlx::query(
         "UPDATE feeds SET etag = ?, last_modified = ?, fetched_at = ?, check_every = ?,
              next_check_at = ?, failures = 0, failing_since = NULL, missing_since = NULL,
@@ -220,7 +230,7 @@ async fn worked(
     .bind(last_modified)
     .bind(now)
     .bind(every)
-    .bind(now + wait(state, every))
+    .bind(now + next)
     .bind(feed_id)
     .execute(&mut *transaction)
     .await?;

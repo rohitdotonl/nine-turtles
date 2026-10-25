@@ -33,7 +33,7 @@ same so older documents still point to the right place.
 | 9 | Folders, feed editing and OPML import/export | ✅ |
 | 10 | Search | ✅ |
 | 11 | Feed health page | ⏭ |
-| 12 | WebSub | ⏭ |
+| 12 | WebSub | ✅ (V2, 25 October 2026) |
 | 13 | Phones and installing the app | ✅ |
 | 14 | Keeping things tidy, and the finishing pass | ✅ |
 
@@ -183,9 +183,10 @@ In V1, the daily check reports failing feeds instead (from Milestone 8).
 
 **You can try:** look at your real feeds' health after a few days of fetching.
 
-## 12. WebSub ⏭ moved to V2
+## 12. WebSub ✅ (V2, built 25 October 2026)
 
-- Subscribe to hubs, verify, check signatures, renew, reduced backup polling.
+- Subscribe to hubs, verify, check signatures, renew, reduced backup polling
+  (decision 0067).
 
 **You can try:** follow a WebSub blog and see new posts arrive within minutes.
 
