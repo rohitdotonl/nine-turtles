@@ -13,11 +13,14 @@ use tower_http::set_header::SetResponseHeaderLayer;
 
 /// The browser refuses any script, style, font or connection that doesn't
 /// come from nine turtles itself, and no other site may show nine turtles in a frame.
-/// Images are the one exception: an article's images load from the
+/// Images are an exception: an article's images load from the
 /// publisher's own site (SPEC.md section 7), so any web address may
-/// serve an image. An image can't run code.
+/// serve an image. An image can't run code. The one frame allowed is
+/// YouTube's own player, in its privacy-enhanced form, which an article about
+/// a YouTube video loads only when the reader presses Play (decision 0068).
 pub const CONTENT_SECURITY_POLICY: &str = "default-src 'self'; script-src 'self'; \
     style-src 'self'; img-src 'self' data: https: http:; font-src 'self'; connect-src 'self'; \
+    frame-src https://www.youtube-nocookie.com; \
     object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'";
 
 pub fn apply<S: Clone + Send + Sync + 'static>(router: Router<S>) -> Router<S> {

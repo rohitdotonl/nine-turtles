@@ -154,7 +154,8 @@ A few words used throughout:
 - With no article chosen, the reading area shows one quiet line in its middle, "Time to read something beautiful." (decision 0064; it replaced "No article open"), in the serif and in muted grey (never the accent, no picture). When the list has something to open, screen readers also hear "Choose one from the list, or press j." (on touch screens just "Choose one from the list.").
 - Images load from the publisher's site. Invisible 1×1 "tracking pixels" are removed (any image sized 0 or 1 pixel), so they're never loaded.
 - In a night theme, pictures are dimmed a little (never inverted) so a pale one doesn't glare on the dark page; a linked picture shows at full brightness under the pointer or the keyboard. A caption is clearly smaller than the text (13/16 of its size, with a 1.4 line height), 6px under its picture, in the second ink, which keeps 7 : 1 on the page in every theme. A table starts flush with the text's left edge, its header semibold over a fine rule and its rows over fainter ones (decisions 0050, 0053).
-- Anything unsafe in the feed's content (scripts, embedded frames, code hidden in styles) is removed before display.
+- Anything unsafe in the feed's content (scripts, embedded frames, code hidden in styles) is removed before display. A YouTube player embedded in an article leaves a link in its place, "Watch the video on YouTube".
+- **YouTube videos play in YouTube's own player** (decision 0068). An article whose link is a YouTube video (from a channel's feed) shows, under the byline, a quiet box the shape of the video (16 : 9) in a faint tone of the text, with a round Play mark and "Play video", and under it, in small second-ink type, "Plays in YouTube's own player. Nothing loads until you press Play." Until it's pressed nothing is loaded from YouTube. Pressing it (a click, or Enter or Space) puts YouTube's privacy-enhanced player in the box's place, at the same size, playing; the keyboard moves into the player, and Tab leaves it. Screen readers hear "Play video: {title}" and, once it plays, "YouTube video: {title}". The video's description from the feed is its text; a video with none is just the video, ending with the closing rule.
 - The next article is loaded in advance so moving to it with `j` is instant.
 - **Your place is kept, like a bookmark** (decision 0060). Leave a long article part of the way through and it opens where you stopped next time, even after closing nine turtles. Only your own scrolling moves the place; it is forgotten once you reach the end (a finished article opens at its top again) or scroll back to the top. It's kept by paragraph rather than by pixels, so it holds when pictures load late or the text size changes, and it jumps there at once, never gliding. Each device keeps its own places (in the browser's storage, for the 200 most recent articles); nothing goes to the server.
 
@@ -167,6 +168,7 @@ A few words used throughout:
 6. Press Aa above an article: the panel opens under it. Press the large A, choose Dark, and Atkinson Hyperlegible: the article changes at once. Choose Plain under Theme: the page turns black on white and the article's links blue. There are no theme tiles. Press Escape: the panel closes and the keyboard is back on Aa. Settings › Look and feel shows the same choices.
 7. Make the window very wide: Open original, Aa, Star and More stay together at the reading pane's right edge. Scroll an article: the text fades under the top bar.
 8. Scroll halfway down a long article, open another, then come back (or reload the page): it opens where you stopped. Read it to the end, open another and come back: it opens at its top.
+9. Follow a YouTube channel (paste its page address, e.g. youtube.com/@name, into Add a feed) and open a video: a grey box with Play shows above the description. Press it: the video plays in YouTube's own player, in the same place. Open the next video: it waits for Play again.
 
 ## 8. Read state, marking unread, "mark all as read", undo
 
@@ -486,7 +488,7 @@ Covered by sections 14 and 22.
 
 ## Not in V1
 
-From DESIGN.md: YouTube player, public reading list page, per-feed reading modes, passkey sign-in, Chinese and Japanese search, multiple users. (The own domain name was chosen on 25 October 2026: nineturtles.app, with the app at app.nineturtles.app; decision 0066.)
+From DESIGN.md: public reading list page, per-feed reading modes, passkey sign-in, Chinese and Japanese search, multiple users. (The own domain name was chosen on 25 October 2026: nineturtles.app, with the app at app.nineturtles.app; decision 0066. YouTube videos play in YouTube's own player since 25 October 2026; decision 0068.)
 
 Moved to V2 on 23 October 2026: backups and moving hosts, river mode (built 25 October 2026), WebSub (built 25 October 2026), the feed health page, the yearly clean-up, the feeds guide page, and keeping a tab that was left open across an update working without a reload.
 
