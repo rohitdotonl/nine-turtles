@@ -286,7 +286,7 @@ Plain, unhurried, never urgent: "Nothing new yet," never "You're missing out!" L
 Moved from V1 on 23 October 2026, because V1 is for the owner alone (decision 0012):
 
 - **Backups and recovery:** nightly copies outside the host, and one before every database structure change.
-- **River mode.**
+- **River mode.** Built 25 October 2026 (SPEC section 10).
 - **WebSub.**
 - **Feed health page.**
 - **The yearly clean-up** of unstarred articles.
