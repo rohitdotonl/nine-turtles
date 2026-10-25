@@ -1,7 +1,8 @@
 # Runs every automatic check on each pull request and on main.
 # All the real work is in scripts/check.sh, so the same checks run anywhere
 # (docs/decisions/0001-one-check-script.md). This file only prepares the
-# computer and posts the screenshots.
+# computers, runs the script's parts side by side (decision 0064) and posts
+# the screenshots.
 
 name: Checks
 
@@ -18,10 +19,47 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  checks:
-    name: All checks
+  # Pull requests that change only documents skip the slow checks: nothing
+  # they change can break the program or its tests (decision 0064).
+  changes:
+    name: What changed
     runs-on: ubuntu-24.04
-    timeout-minutes: 40
+    timeout-minutes: 5
+    outputs:
+      code: ${{ steps.look.outputs.code }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+
+      - name: Look for anything besides documents
+        id: look
+        run: .github/code-changed.sh "${{ github.event_name }}" >> "$GITHUB_OUTPUT"
+
+  frontend:
+    name: Frontend checks
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Run the frontend checks
+        run: scripts/check.sh frontend
+
+  rust:
+    name: Rust checks
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -38,8 +76,45 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             server/target
-          key: rust-${{ runner.os }}-${{ hashFiles('rust-toolchain.toml', 'server/Cargo.lock') }}
-          restore-keys: rust-${{ runner.os }}-
+          key: rust-test-${{ runner.os }}-${{ hashFiles('rust-toolchain.toml', 'server/Cargo.lock') }}
+          restore-keys: |
+            rust-test-${{ runner.os }}-
+            rust-${{ runner.os }}-
+
+      - name: Run the Rust checks
+        run: scripts/check.sh rust
+
+  browser:
+    name: Browser tests (part ${{ matrix.shard }} of 2)
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      # Let both halves finish, so one failure shows every failing test.
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Remember compiled Rust libraries between runs
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            server/target
+          key: rust-release-${{ runner.os }}-${{ hashFiles('rust-toolchain.toml', 'server/Cargo.lock') }}
+          restore-keys: |
+            rust-release-${{ runner.os }}-
+            rust-${{ runner.os }}-
 
       - name: Install the browser used by the tests
         working-directory: web
@@ -47,25 +122,54 @@ jobs:
           npm ci --no-audit --no-fund
           npx playwright install --with-deps chromium
 
-      - name: Run every check
-        run: scripts/check.sh
+      - name: Run the browser tests
+        env:
+          NINE_TURTLES_SHARD: ${{ matrix.shard }}/2
+        run: scripts/check.sh browser
 
       - name: Keep the screenshots for the pull request
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: screenshots
+          name: screenshots-${{ matrix.shard }}
           path: web/screenshots/
           if-no-files-found: ignore
           retention-days: 14
 
+  # The one check main requires. It passes only when every part above passed,
+  # or was skipped because only documents changed.
+  checks:
+    name: All checks
+    needs: [changes, frontend, rust, browser]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Every part passed
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+          CODE: ${{ needs.changes.outputs.code }}
+        run: |
+          echo "Results: $RESULTS"
+          for result in $RESULTS; do
+            case "$result" in
+              success) ;;
+              skipped) if [ "$CODE" != false ]; then exit 1; fi ;;
+              *) exit 1 ;;
+            esac
+          done
+
   screenshots:
     name: Post screenshots
-    needs: checks
-    # Screenshots are the last step of the checks, so they exist only when
-    # every check passed. Only for pull requests from this repository: others
+    needs: [changes, checks]
+    # Screenshots are taken by the browser tests, and posted only when every
+    # check passed. Only for pull requests from this repository: others
     # can't be given permission to write, and their content is never trusted.
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    if: >-
+      github.event_name == 'pull_request'
+      && github.event.pull_request.head.repo.full_name == github.repository
+      && needs.checks.result == 'success'
+      && needs.changes.outputs.code == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -80,7 +184,8 @@ jobs:
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: screenshots
+          pattern: screenshots-*
+          merge-multiple: true
           path: screenshots
 
       - name: Publish the screenshots and comment on the pull request

@@ -60,4 +60,7 @@ the server is tested with the built program.
 scripts/check.sh
 ```
 
+Or one part at a time: `scripts/check.sh frontend`, `scripts/check.sh rust`
+or `scripts/check.sh browser`.
+
 See [checks.md](checks.md).

@@ -201,7 +201,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 
 ## Part 4: Automatic checks
 
-Wherever a principle can be checked by a computer, it is. These run on every pull request, all through `scripts/check.sh` (what each step does: `docs/operations/checks.md`):
+Wherever a principle can be checked by a computer, it is. These run on every pull request, all through `scripts/check.sh`, in parts side by side (decision 0064; what each step does: `docs/operations/checks.md`). A pull request that changes only documents skips all but the quick ones:
 
 | Principle | Check |
 |---|---|

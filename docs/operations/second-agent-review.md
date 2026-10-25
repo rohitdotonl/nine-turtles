@@ -33,7 +33,7 @@ itself, so small, low-risk changes get a **light review** instead
   (`scripts/`, `.github/`), a screen, stored data, fetching feeds, sign-in or
   security, or more than about 50 lines of code. Also whenever you're unsure.
 - **No review** for changes that touch nothing in that list and are
-  either only other documents (the changelog, the plan's status, the owner
+  either only other documents (the changelog and change notes, the plan's status, the owner
   guide, concepts, decision notes, operations notes, questions), or a tiny
   fix of about 10 lines of code or fewer together with its updates to those
   other documents. A tiny fix inside any full-review area still gets the
