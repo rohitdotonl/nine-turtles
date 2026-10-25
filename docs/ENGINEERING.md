@@ -162,12 +162,12 @@ These were decided with the owner. Changing any of them needs the owner's approv
 
 ### Sanitizing article content
 
-- ammonia with a strict allowlist: no scripts, no styles that can run code, no event handlers, no iframes. A YouTube player embedded in an article becomes a link to the video instead (decision 0071).
+- ammonia with a strict allowlist: no scripts, no styles that can run code, no event handlers, no iframes. A YouTube player embedded in an article becomes a link to the video instead (decision 0072).
 - Cleaned **before storing** (from Milestone 5), so the database never holds unsafe content; relative links are made whole using the article's address. Titles and names are stored as plain text, and the screen shows them as text, never as HTML.
 - Remove invisible 1×1 tracking images: any image whose width or height is 0 or 1 pixel and neither is bigger, removed before the safety cleaning so ammonia has the last word on everything it stores. A size that isn't plain pixels (`100%`) counts as bigger. The one exception: articles stored before Milestone 6 lose their tracking images when shown, after their (already done) cleaning; removing an element can't make clean HTML unsafe, and the Content Security Policy stays behind it.
 - Links get `rel="noopener noreferrer"` and open in a new tab. An article's own anchors (`id`s, `#note` links) are kept with `article-` in front, so footnotes work and can't clash with nine turtles' page; the screen scrolls to them instead of opening a tab.
 - Images are the one thing the browser may load from any address (the Content Security Policy's `img-src`), because articles show the publisher's own images. Scripts, styles, fonts and connections stay nine-turtles-only. The page's "no-referrer" rule means publishers aren't told an image was viewed in nine turtles.
-- The one frame the browser may load is YouTube's privacy-enhanced player (`frame-src https://www.youtube-nocookie.com`), built by nine turtles itself, never from stored content, and only once the reader presses Play on a YouTube video. It is sandboxed and is told nine turtles' address (`strict-origin`), which YouTube's player needs to play (decision 0071).
+- The one frame the browser may load is YouTube's privacy-enhanced player (`frame-src https://www.youtube-nocookie.com`), built by nine turtles itself, never from stored content, and only once the reader presses Play on a YouTube video. It is sandboxed and is told nine turtles' address (`strict-origin`), which YouTube's player needs to play (decision 0072).
 - Authors are kept as names only: RSS's `address (Name)` form keeps just the name.
 
 ### Data

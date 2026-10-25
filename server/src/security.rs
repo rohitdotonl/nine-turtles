@@ -17,7 +17,7 @@ use tower_http::set_header::SetResponseHeaderLayer;
 /// publisher's own site (SPEC.md section 7), so any web address may
 /// serve an image. An image can't run code. The one frame allowed is
 /// YouTube's own player, in its privacy-enhanced form, which an article about
-/// a YouTube video loads only when the reader presses Play (decision 0071).
+/// a YouTube video loads only when the reader presses Play (decision 0072).
 pub const CONTENT_SECURITY_POLICY: &str = "default-src 'self'; script-src 'self'; \
     style-src 'self'; img-src 'self' data: https: http:; font-src 'self'; connect-src 'self'; \
     frame-src https://www.youtube-nocookie.com; \

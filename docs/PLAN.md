@@ -370,7 +370,7 @@ each with screenshots:
 |---|---|---|
 | River mode | ✅ 25 October 2026 | SPEC section 10, decision 0068 |
 | WebSub (new posts within minutes) | ✅ 25 October 2026 | Milestone 12, SPEC section 12, decision 0069 |
-| YouTube videos in YouTube's own player | ✅ 25 October 2026 | SPEC section 7, decision 0071 |
+| YouTube videos in YouTube's own player | ✅ 25 October 2026 | SPEC section 7, decision 0072 |
 | Syncing with Reeder, NetNewsWire and other apps | ✅ 25 October 2026 | SPEC section 26, decision 0070 |
 | Feed health page | 🔨 being built | Milestone 11, SPEC section 17 |
 | Backups and moving hosts | ⬜ | Milestone 3 above, `docs/ENGINEERING.md` → "Hosting" |
@@ -382,7 +382,7 @@ each with screenshots:
 
 - ✅ A YouTube video plays in YouTube's own privacy-enhanced player, above
   its description, only once you press Play; a YouTube player inside a blog
-  post becomes a link to the video (decision 0071).
+  post becomes a link to the video (decision 0072).
 
 ## V2: Syncing with other apps
 

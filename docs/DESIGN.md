@@ -275,7 +275,7 @@ Plain, unhurried, never urgent: "Nothing new yet," never "You're missing out!" L
 
 ## V2 parking lot
 
-- **YouTube videos** in YouTube's own player. Done 25 October 2026: a quiet Play box, nothing loaded until it's pressed (decision 0071, `docs/SPEC.md` section 7).
+- **YouTube videos** in YouTube's own player. Done 25 October 2026: a quiet Play box, nothing loaded until it's pressed (decision 0072, `docs/SPEC.md` section 7).
 - **Public reading list page:** an optional public list of some of your feeds (a modern blogroll) with one-click subscribe. No likes, no comments.
 - **Per-feed modes:** inbox or river for each feed.
 - **Passkey sign-in.**

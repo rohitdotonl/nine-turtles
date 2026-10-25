@@ -6,7 +6,7 @@
 //! Invisible 1×1 tracking images are taken out at the same time (DESIGN.md →
 //! "Article view"). A YouTube video's own description becomes its text, and a
 //! YouTube player embedded in an article becomes a link to the video (SPEC
-//! section 7, decision 0071).
+//! section 7, decision 0072).
 
 use std::borrow::Cow;
 
