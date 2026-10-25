@@ -433,6 +433,90 @@ async fn adding_websub_keeps_every_feed_article_and_schedule() {
 }
 
 #[tokio::test]
+async fn adding_saved_searches_keeps_every_feed_folder_article_and_mark() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database as WebSub left it (structure changes 1 to 7).
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(7, &old)
+        .await
+        .unwrap();
+    sqlx::query("INSERT INTO folders (id, name) VALUES (1, 'Tech'), (2, 'Essays')")
+        .execute(&old)
+        .await
+        .unwrap();
+    for feed in 1..=10 {
+        sqlx::query("INSERT INTO feeds (id, url, url_key, title, added_at) VALUES (?, ?, ?, ?, 1)")
+            .bind(feed)
+            .bind(format!("https://blog-{feed}.example/feed"))
+            .bind(format!("blog-{feed}.example/feed"))
+            .bind(format!("Blog {feed}"))
+            .execute(&old)
+            .await
+            .unwrap();
+        sqlx::query("INSERT INTO feed_folders (folder_id, feed_id) VALUES (?, ?)")
+            .bind(1 + feed % 2)
+            .bind(feed)
+            .execute(&old)
+            .await
+            .unwrap();
+        for number in 0..20 {
+            sqlx::query(
+                "INSERT INTO articles (feed_id, fingerprint, title, received_at, sort_at, read,
+                     starred)
+                 VALUES (?, ?, ?, 2, ?, ?, ?)",
+            )
+            .bind(feed)
+            .bind(format!("id:{number}"))
+            .bind(format!("Article {number}"))
+            .bind(number)
+            .bind(number % 2)
+            .bind(i64::from(number % 5 == 0))
+            .execute(&old)
+            .await
+            .unwrap();
+        }
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let count = |sql: &'static str| sqlx::query_scalar::<_, i64>(sql).fetch_one(&db);
+    assert_eq!(count("SELECT COUNT(*) FROM feeds").await.unwrap(), 10);
+    assert_eq!(count("SELECT COUNT(*) FROM folders").await.unwrap(), 2);
+    assert_eq!(
+        count("SELECT COUNT(*) FROM feed_folders").await.unwrap(),
+        10
+    );
+    assert_eq!(count("SELECT COUNT(*) FROM articles").await.unwrap(), 200);
+    assert_eq!(
+        count("SELECT COUNT(*) FROM articles WHERE read = 1")
+            .await
+            .unwrap(),
+        100
+    );
+    assert_eq!(
+        count("SELECT COUNT(*) FROM articles WHERE starred = 1")
+            .await
+            .unwrap(),
+        40
+    );
+    // No search is saved until the reader saves one.
+    assert_eq!(
+        count("SELECT COUNT(*) FROM saved_searches").await.unwrap(),
+        0
+    );
+}
+
+#[tokio::test]
 async fn adding_feed_settings_keeps_every_feed_as_it_was() {
     let data_dir = common::config().data_dir;
     std::fs::create_dir_all(&data_dir).unwrap();
