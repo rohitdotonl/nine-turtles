@@ -70,7 +70,7 @@ The engineering side of "slow app, fast interface." Speed is a requirement with 
 
 ### 5. Fail small, fail visibly
 
-One broken feed never affects others. One failed step never crashes the app. When something fails, the owner can see it in the daily check or in the logs (and on the feed health page, in V2), in plain words; the reader is never shown a technical error.
+One broken feed never affects others. One failed step never crashes the app. When something fails, the owner can see it in the daily check or in the logs (and on the feed health page), in plain words; the reader is never shown a technical error.
 
 **Test:** What's the smallest thing this failure can take down?
 
@@ -150,7 +150,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 - **Limits:** a timeout and a maximum size for every fetch: 20 seconds (10 to connect) and 5 MB, read bit by bit so a huge file is never held whole. nine turtles asks for compressed files (gzip, brotli).
 - **Public addresses only:** nine turtles refuses to fetch anything on its own computer or a private network (checked after the name is looked up, and on every redirect), so a pasted address can't be used to reach things that should be unreachable. Only the tests switch this off (`NINE_TURTLES_ALLOW_LOCAL_FEEDS`).
 - **Redirects:** followed by hand, at most five. Permanent redirects (301/308) update the stored feed address; a temporary one on the way keeps the original.
-- **Failures:** each feed fails on its own. Repeated failures increase the wait (exponential backoff from the feed's own rhythm, capped at one day). The diagnostics page counts failing and dead feeds, never naming them; the daily check reports them (V1 has no feed health page). A feed is **dead** after 7 days of 404/410, or 3 weeks of any failure; otherwise a feed with recent errors is "having trouble". Dead feeds are still checked once a day in case they return.
+- **Failures:** each feed fails on its own. Repeated failures increase the wait (exponential backoff from the feed's own rhythm, capped at one day). The diagnostics page counts failing and dead feeds, never naming them; the daily check reports them, and the feed health page (`server/src/health.rs`) names them to the signed-in owner, listing a feed once two checks in a row have failed. A feed is **dead** after 7 days of 404/410, or 3 weeks of any failure; otherwise a feed with recent errors is "having trouble". Dead feeds are still checked once a day in case they return.
 - **Never fetch article pages** to extract full text. Autodiscovery fetches only the page the owner pastes, only when they add a feed or ask "Find new address" (the owner's choice, `docs/decisions/0016-adding-feeds.md`), and reads the `<link rel="alternate">` lines it names. It never guesses other addresses on the site.
 
 ### Duplicates

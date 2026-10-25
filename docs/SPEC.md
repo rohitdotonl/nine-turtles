@@ -100,7 +100,7 @@ A few words used throughout:
 - **Unread counts:** small, muted grey numbers next to each feed and folder (a folder's is its feeds' added up), right-aligned at the row's end, so every count, folder or feed, sits in one column. No count on "Unread", "Starred" or "All", and never a total. Above 999 shows "999+". Never colored, never a badge.
 - Your current place is marked as in the list (section 6), a rounded pill of soft neutral grey set a little in from the sidebar's edges, with no color (decision 0057), its name semibold in full ink, and, for Unread and All, its icon in full ink (Starred's star fills in green). When your place changes, its row scrolls into view in the sidebar if it was out of sight, at once and only as far as needed, never smoothly; it doesn't move when counts change. On a phone's feeds screen nothing is marked: it's where you start, not a place you're in. Under the pointer a row gets a fainter, neutral tone, never the accent.
 - While Settings is open, its button at the foot of the sidebar shows as your place, with the same pill, and screen readers hear it as the current page. The shortcut list's button, while its list is open, sits on a faint ink tile instead (section 19). The fill is never the only sign (decision 0054).
-- A broken feed looks like any other feed; it just doesn't get new items. In V1 the daily check tells you when feeds are failing; the feed health page (section 17) comes in V2.
+- A broken feed looks like any other feed in the sidebar; it just doesn't get new items. The feed health page (section 17, in Settings › Feeds) lists the feeds that aren't working, and the daily check mentions them too.
 
 **How to check it**
 1. Add feeds whose names start with different letters. They're in alphabetical order, under the fixed views.
@@ -234,7 +234,7 @@ A few words used throughout:
 **How to check it**
 Most of this is checked by the automatic tests rather than by eye. You can see it working:
 1. Leave the app closed for a day, then open it: the feeds you follow have new articles that arrived on their own.
-2. When a feed keeps failing for three days or more, the daily check mentions it ("Some feeds keep failing"), without naming it (the feed health page comes in V2).
+2. When a feed keeps failing for three days or more, the daily check mentions it ("Some feeds keep failing"), without naming it; the feed health page (section 17) names it.
 
 ## 12. WebSub (instant updates from publishers who offer it)
 
@@ -323,25 +323,31 @@ OPML is the standard file format feed readers use to move subscription lists bet
 
 ## 17. Feed health page
 
-*Moved to V2 (23 October 2026): V1 is for the owner alone. Kept here so V2 starts from it. See `docs/decisions/0012-v1-for-one-reader.md`.*
+*Built in V2 (25 October 2026, decision 0071).*
 
 **What it does**
-- In Settings. Lists only feeds with problems, worst first: dead feeds, then feeds "having trouble".
-- A feed is **dead** after 7 days of "not found", or 3 weeks of any failure. Dead feeds are still checked once a day in case they come back.
-- Problems are described in plain words, e.g. "Hasn't worked for 3 weeks — the site may have moved". No error codes.
-- Actions for each feed: **Retry · Find new address · Unsubscribe**. "Find new address" looks for the feed again on the site's home page.
-- Status colors are muted, never blue-ish, and always accompanied by words.
+- In Settings, under **Feeds**: a **Feed health** row (ending in ›) opens it in place of Settings, at `/settings/feed-health`, with the same top line and centred column. Its X ("Close feed health") or Escape goes back to Settings.
+- Lists only feeds with problems, worst first, in two grouped lists under words: **Not working** (dead feeds), then **Having trouble**; within each, the longest failing first. A feed is listed once two checks in a row have failed: one failure is usually a blip the next check clears.
+- A feed is **dead** after 7 days of "not found", or 3 weeks of any failure. Dead feeds are still checked once a day in case they come back, and the page says so.
+- Each feed shows its name, then what's wrong in plain words, leading with how long: "**Not found for 8 days.** The site says the feed isn't there any more. It may have moved." or "**Hasn't worked for 3 weeks.** The site didn't answer. It may be down for a while, or gone." Then, quieter, when it last worked. No error codes, ever.
+- Actions for each feed: **Retry · Find new address · Unsubscribe** (Unsubscribe in the destructive red words, with Undo straight afterwards, in its place).
+  - **Retry** checks the feed straight away and says how it went ("It works again." or "Tried again just now: it still isn't working."). If the site asked nine turtles to slow down, Retry waits as asked and says until when (the publisher floor).
+  - **Find new address** visits the feed's site once, because you asked: the home page the feed names, or else its address's own home page, and lists the feeds that page names (never guessing other addresses, decision 0016), leaving out the broken one and any you already follow. You choose one (a round mark, as in Add a feed) and press **Use this address**: the feed moves there and keeps its name, folders, articles, read marks and stars. An address you already follow, or one kept for the stars of a feed you unsubscribed from, is refused with a plain sentence saying why; feeds are never merged quietly.
+- Nothing moves while you look: a feed that works again stays where it is, saying so, until you open the page again.
+- No status colors: the group's name says how bad it is, in words (decision 0071).
+- When nothing is wrong, the page says "All feeds are working."
 
 **How to check it**
-1. Add a feed address that doesn't exist (we'll provide a test one). After a while, it's listed with a plain explanation.
+1. Add a feed whose site later moves it (the browser tests use a made-up one). After two failed checks, it's listed under "Having trouble" with a plain explanation.
 2. Press Retry: it's checked again immediately and the result is shown.
-3. When everything works, the page says something calm like "All feeds are working."
+3. Press Find new address, choose the feed the site now names, and press Use this address: it works again, with its articles and stars.
+4. When everything works, the page says "All feeds are working."
 
 ## 18. Settings and appearance
 
 **What it does**
 - Settings opens in place of the list and reading area; the sidebar stays. Its X (named "Close settings") or Escape goes back to where you were.
-- Laid out as Apple Books' settings are: one centred column, no wider than 560px, of grouped lists (Reading, Look and feel, Your data, Other apps, Account). Each group is a rounded block a tone off the page (by night a clear step lighter than the page, the text color mixed 7% into it, so it never melts into it), with a small muted header above it and a line explaining it below; its rows are at least 44px tall, parted by hairlines inset from the left, each with its name on the left and its control at the right end, every control the same width. On a phone a control sits under its name, the width of the row.
+- Laid out as Apple Books' settings are: one centred column, no wider than 560px, of grouped lists (Reading, Look and feel, Your data, Feeds, Other apps, Account). Each group is a rounded block a tone off the page (by night a clear step lighter than the page, the text color mixed 7% into it, so it never melts into it), with a small muted header above it and a line explaining it below; its rows are at least 44px tall, parted by hairlines inset from the left, each with its name on the left and its control at the right end, every control the same width. On a phone a control sits under its name, the width of the row.
 - **Look and feel** (this device only): Appearance, theme (Original or Plain), reading font (Literata, Atkinson Hyperlegible, shown as "Atkinson", or System serif), text size (six steps from Smaller to Largest, Medium by default), line width (Narrow, Medium or Wide: about 65, 71 or 78 characters in Literata; Atkinson Hyperlegible's narrower letters fit more). A sample paragraph, the group's first row before its controls (inside the group, its words on the rows' words, a hairline under it), shows how articles will look, and changes apply at once (decision 0055). The same preferences are in the Aa panel above every article (section 7), and the line under the group says so.
 - **Theme:** Original (the default): white paper by day, near-black by night, with an ink-blue accent for unread dots and search matches, and green for starred stars (decisions 0056, 0057). Or Plain: the owner's site rohit.onl's bare look, black on white (white on near-black by night), the unread dot and search matches in the text color, and links in articles in the browser's blue, purple once visited, underlined (decision 0063). Chosen in Settings and the Aa panel. The phone's own bar above the page takes the showing version's color too.
 - **Appearance:** Light, Dark or Match device (the default). Light and Dark always show the day or night version; Match device follows the device's own light or dark setting, and switches with it while nine turtles is open. A theme chosen in an earlier version becomes Original; its Appearance is kept, and a dark theme from before decision 0046 opens by night (decision 0056).
@@ -350,8 +356,9 @@ OPML is the standard file format feed readers use to move subscription lists bet
 - Sections appear once they have something to do: Reading (sort order) since Milestone 7 (and the reading mode since 25 October 2026), Your data with Milestone 9.
 - **Reading:** the reading mode, inbox or river (section 10), then newest or oldest first.
 - **Your data:** three rows that act: **Import OPML…** (opens the file chooser; it ends in ›), **Export OPML** and **Export starred articles** (each downloads a file; each ends in a download mark), in the text color. What the files are is said under the group; what an import did appears there too.
+- **Feeds:** **Feed health ›** opens the feed health page (section 17).
 - **Other apps:** the app password other feed readers sync with (section 26).
-- **Account:** **Sign out** as a row of its own, ending in a small door mark, in the text color (not red: signing out removes nothing), and the version under the group. (Keeping articles and Feed health come in V2.)
+- **Account:** **Sign out** as a row of its own, ending in a small door mark, in the text color (not red: signing out removes nothing), and the version under the group. (Keeping articles comes in V2.)
 - **Status:** which version of nine turtles you're using. When a newer version is live (nine turtles notices from the server's answers), it says "A new version is ready" with a **Reload** button. Otherwise new versions are used automatically the next time you open or reload the app, never while you're reading. If a tab left open across an update can't carry on, it says so plainly in the note at the bottom of the list (where "New items" appears): "nine turtles was updated. Reload to continue.", with a **Reload** button.
 - Fonts are served by nine turtles itself; nothing is loaded from font services. Other scripts such as Hindi use the fonts already on your device.
 - **Shared across your devices:** reading mode and sort order. **Per device:** Appearance, font, text size and line width (a phone and a laptop often want different sizes). `+`/`-` change the same text-size setting.
@@ -508,6 +515,6 @@ Covered by sections 14 and 22.
 
 From DESIGN.md: public reading list page, per-feed reading modes, passkey sign-in, Chinese and Japanese search, multiple users. (The own domain name was chosen on 25 October 2026: nineturtles.app, with the app at app.nineturtles.app; decision 0066. YouTube videos play in YouTube's own player since 25 October 2026; decision 0068.)
 
-Moved to V2 on 23 October 2026: backups and moving hosts, river mode (built 25 October 2026), WebSub (built 25 October 2026), the feed health page, the yearly clean-up, the feeds guide page, and keeping a tab that was left open across an update working without a reload.
+Moved to V2 on 23 October 2026: backups and moving hosts, river mode (built 25 October 2026), WebSub (built 25 October 2026), the feed health page (built 25 October 2026), the yearly clean-up, the feeds guide page, and keeping a tab that was left open across an update working without a reload.
 
 Never: notifications, badges, streaks, reading stats, infinite scroll, algorithmic ranking, likes or comments, platform share buttons, scraping full articles, decorative effects or animation.

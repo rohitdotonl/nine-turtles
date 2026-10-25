@@ -21,6 +21,10 @@
 //                      so they never meet each other's feeds
 //   /grow/NAME         the blog called NAME publishes one more article, so a
 //                      test can watch it arrive in the background
+//   /move/NAME         the blog called NAME moves its feed: feed.xml answers
+//                      "not found", and its home page names new.xml instead.
+//                      A blog whose NAME starts with "moving-" names its home
+//                      page here, so Find new address can visit it
 //   /hindi/NAME/       like /blog/NAME/, for a blog written in Hindi
 //   /shelf/BLOG/       the screenshots' library: a handful of made-up blogs
 //                      with real-looking titles, authors and dates (SHELF
@@ -259,6 +263,8 @@ function shelf(name, base) {
 const visits = new Map();
 // How many articles each /blog/NAME/ has published since it began with three.
 const grown = new Map();
+// The blogs that moved their feed to new.xml.
+const moved = new Set();
 
 createServer((request, response) => {
   const path = new URL(request.url ?? "/", "http://localhost").pathname;
@@ -305,6 +311,12 @@ createServer((request, response) => {
     return send("text/plain", "One more article.");
   }
 
+  const move = path.match(/^\/move\/([a-z0-9-]+)$/);
+  if (move) {
+    moved.add(move[1]);
+    return send("text/plain", "Moved.");
+  }
+
   const hindi = path.match(/^\/hindi\/([a-z0-9-]+)\/(feed\.xml)?$/);
   if (hindi) {
     const name = hindi[1];
@@ -312,12 +324,20 @@ createServer((request, response) => {
     return html(page(`Kavita ${name}`, [[`Kavita ${name}`, `/hindi/${name}/feed.xml`]]));
   }
 
-  const blog = path.match(/^\/blog\/([a-z0-9-]+)\/(feed\.xml|comments\.xml)?$/);
+  const blog = path.match(/^\/blog\/([a-z0-9-]+)\/(feed\.xml|new\.xml|comments\.xml)?$/);
   if (blog) {
     const name = blog[1];
-    if (blog[2] === "feed.xml") return xml(rss(`Blog ${name}`, `https://${name}.example/`, 3 + (grown.get(name) ?? 0), 3));
+    const home = name.startsWith("moving-") ? `http://${request.headers.host}/blog/${name}/` : `https://${name}.example/`;
+    const file = moved.has(name) ? "new.xml" : "feed.xml";
+    if (blog[2] === "feed.xml" || blog[2] === "new.xml") {
+      if (blog[2] !== file) {
+        response.writeHead(404, { "content-type": "text/plain" });
+        return response.end("Not found");
+      }
+      return xml(rss(`Blog ${name}`, home, 3 + (grown.get(name) ?? 0), 3));
+    }
     if (blog[2] === "comments.xml") return xml(rss(`Blog ${name}: comments`, `https://${name}.example/comments/`, 1));
-    const feeds = [[`Blog ${name}`, `/blog/${name}/feed.xml`]];
+    const feeds = [[`Blog ${name}`, `/blog/${name}/${file}`]];
     if (name.startsWith("two-")) feeds.push([`Comments`, `/blog/${name}/comments.xml`]);
     return html(page(`Blog ${name}`, feeds));
   }
