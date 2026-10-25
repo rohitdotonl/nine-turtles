@@ -21,7 +21,8 @@ export function youtubeVideo(address: string | null | undefined): string | undef
   if (host === "youtu.be") id = first;
   else if (host === "youtube.com" && first === "watch") id = url.searchParams.get("v");
   else if ((host === "youtube.com" || host === "youtube-nocookie.com") && ["shorts", "live", "embed", "v"].includes(first ?? "")) id = second;
-  return id && /^[A-Za-z0-9_-]{11}$/.test(id) ? id : undefined;
+  // An embedded playlist (`embed/videoseries?list=…`) isn't one video.
+  return id && id !== "videoseries" && /^[A-Za-z0-9_-]{11}$/.test(id) ? id : undefined;
 }
 
 /**

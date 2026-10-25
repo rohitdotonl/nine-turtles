@@ -219,17 +219,15 @@ fn clean(body: &str, content_type: &str, base: &Url) -> String {
         return ammonia::clean_text(body);
     }
     // Tracking images and YouTube players go first, so the safety cleaning
-    // always has the last word. Marks only nine turtles writes (below).
-    let body = body.replace(VIDEO_MARK, "");
-    let body = without_youtube_players(&without_tracking_images(&body));
-    let cleaned = ammonia::Builder::default()
+    // always has the last word.
+    let body = without_youtube_players(&without_tracking_images(body));
+    ammonia::Builder::default()
         .url_relative(ammonia::UrlRelative::Custom(Box::new(Whole(base.clone()))))
         .add_generic_attributes(["id"])
         .id_prefix(Some(ANCHOR_PREFIX))
         .set_tag_attribute_value("a", "target", "_blank")
         .clean(&body)
-        .to_string();
-    with_video_links(&cleaned)
+        .to_string()
 }
 
 /// The video a YouTube address shows, as its 11-character ID: a watch page
@@ -252,21 +250,25 @@ pub fn youtube_video(url: &Url) -> Option<String> {
         }
         _ => return None,
     };
-    let valid = id.len() == 11
+    // An embedded playlist (`embed/videoseries?list=…`) isn't one video.
+    let valid = matches!(url.scheme(), "http" | "https")
+        && id != "videoseries"
+        && id.len() == 11
         && id
             .bytes()
             .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-' || byte == b'_');
     valid.then_some(id)
 }
 
-/// Stands in for a YouTube player embedded in an article until the safety
-/// cleaning is done: a character no article uses, the video's ID, the same
+/// Stands in for a YouTube player embedded in an article while the article
+/// is rewritten: a character no article uses, the video's ID, the same
 /// character again. `with_video_links` then puts a link to the video there.
 const VIDEO_MARK: char = '\u{E000}';
 
 /// The same HTML with each embedded YouTube player swapped for a mark (see
 /// `VIDEO_MARK`), so the reader still finds the video: the safety cleaning
-/// removes every frame, and would otherwise leave nothing in its place.
+/// removes every frame, and would otherwise leave nothing in its place. The
+/// links go in before the safety cleaning, which checks them like any other.
 fn without_youtube_players(html: &str) -> String {
     if !html.contains("<iframe") && !html.contains("<IFRAME") {
         return html.to_owned();
@@ -295,12 +297,12 @@ fn without_youtube_players(html: &str) -> String {
             node.detach();
         }
     }
-    document.root_element().inner_html()
+    with_video_links(&document.root_element().inner_html())
 }
 
-/// Puts a link to the video where each mark is. Any mark a feed wrote itself
-/// was taken out before, so each one left is in plain text, where a link can
-/// go; only a valid video ID becomes one.
+/// Puts a link to the video where each mark is; only a valid video ID
+/// becomes one. A mark a feed wrote itself can at most make a link like
+/// it could have written anyway, and the safety cleaning comes after.
 fn with_video_links(html: &str) -> String {
     if !html.contains(VIDEO_MARK) {
         return html.to_owned();
@@ -562,6 +564,7 @@ mod tests {
             "https://m.youtube.com/watch?v=dQw4w9WgXcQ",
             "https://youtu.be/dQw4w9WgXcQ?t=42",
             "https://www.youtube.com/shorts/dQw4w9WgXcQ",
+            "https://www.youtube.com/live/dQw4w9WgXcQ",
             "https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0",
             "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
         ] {
@@ -578,6 +581,8 @@ mod tests {
             "https://www.youtube.com/watch?v=dQw4w9WgXcQ%22onload",
             "https://example.com/watch?v=dQw4w9WgXcQ",
             "https://youtu.be.example.com/dQw4w9WgXcQ",
+            "https://www.youtube.com/embed/videoseries?list=PL1",
+            "javascript://youtu.be/dQw4w9WgXcQ",
         ] {
             assert_eq!(youtube_video(&url(address)), None, "{address}");
         }
@@ -632,15 +637,35 @@ Second paragraph</media:description>
         let html = clean(
             "<p>Watch this:</p><iframe src=\"//www.youtube.com/embed/dQw4w9WgXcQ\" onload=\"x()\"></iframe>\
              <iframe src=\"https://evil.example/embed/dQw4w9WgXcQ\"></iframe>\
-             <p title=\"\u{E000}dQw4w9WgXcQ\u{E000}\">\u{E000}abc\u{E000}</p>",
+             <iframe src=\"https://www.youtube.com/embed/videoseries?list=PL1\"></iframe>",
             "html",
             &url("https://example.com/post"),
         );
         assert_eq!(
             html,
             "<p>Watch this:</p><a href=\"https://www.youtube.com/watch?v=dQw4w9WgXcQ\" target=\"_blank\" rel=\"noopener noreferrer\">Watch the video on YouTube</a>\
-             <p title=\"dQw4w9WgXcQ\">abc</p>"
+             "
         );
+    }
+
+    #[test]
+    fn a_feed_writing_the_video_mark_itself_never_gets_past_the_safety_cleaning() {
+        // As a character and as an entity, in text and in an attribute, beside a real player.
+        let html = clean(
+            "<iframe src=\"https://youtu.be/dQw4w9WgXcQ\"></iframe>\
+             <img alt=\"A &#xE000;dQw4w9WgXcQ&#xE000; picture\" src=\"a.png\">\
+             <p title=\"\u{E000}dQw4w9WgXcQ\u{E000}\">x</p>",
+            "html",
+            &url("https://example.com/post"),
+        );
+        // Whatever the marks became, the result is exactly what the safety cleaning makes of it.
+        let again = ammonia::Builder::default()
+            .add_generic_attributes(["id"])
+            .set_tag_attribute_value("a", "target", "_blank")
+            .clean(&html)
+            .to_string();
+        assert_eq!(html, again);
+        assert!(!html.contains("alt=\"A <a"), "{html}");
     }
 
     #[test]

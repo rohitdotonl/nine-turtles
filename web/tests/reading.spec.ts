@@ -682,15 +682,26 @@ test.describe("on a wide window", () => {
     await expect(player).toHaveAttribute("src", "https://www.youtube-nocookie.com/embed/AAAAAAAAAAA?autoplay=1&rel=0");
     await expect(player).toHaveAttribute("title", "YouTube video: A river at dawn, for an hour");
     await expect(player).toBeFocused();
+    // Sandboxed, and told only nine turtles' address, never the article's.
+    await expect(player).toHaveAttribute("referrerpolicy", "strict-origin");
+    await expect(player).toHaveAttribute("sandbox", "allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox");
     await expect(page.frameLocator("iframe").getByText("YouTube's player")).toBeVisible();
     expect(asked).toEqual(["https://www.youtube-nocookie.com/embed/AAAAAAAAAAA?autoplay=1&rel=0"]);
     expect(Math.round((await player.boundingBox())!.height)).toBe(Math.round(box!.height));
 
     // A video with no description is just the video, never "no text in its feed".
     await row(page, "Rain on a tin roof").click();
-    await expect(article(page).getByRole("button", { name: "Play video: Rain on a tin roof" })).toBeVisible();
+    const rain = article(page).getByRole("button", { name: "Play video: Rain on a tin roof" });
+    await expect(rain).toBeVisible();
     await expect(article(page).locator("iframe")).toHaveCount(0);
     await expect(article(page).getByText("no text in its feed")).toHaveCount(0);
+
+    // Space plays it too, and Tab leaves the player for the rest of the page.
+    await rain.focus();
+    await page.keyboard.press(" ");
+    await expect(article(page).locator("iframe")).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expect(article(page).locator("iframe")).not.toBeFocused();
   });
 });
 

@@ -32,7 +32,9 @@ publisher's own player, so views stay theirs").
   `strict-origin`: YouTube learns the app's address, never which article.
 - **A YouTube player embedded inside a blog post** is still removed by the
   safety cleaning (frames are never stored), but now leaves a link in its
-  place, "Watch the video on YouTube", instead of vanishing.
+  place, "Watch the video on YouTube", instead of vanishing. The link is
+  put in before the safety cleaning, which checks it like any other (an
+  embedded playlist isn't one video and gets no link).
 - **The video is found from the article's link** (`watch?v=`, `youtu.be/`,
   Shorts, live videos and embed addresses), the same rules on the server
   (`server/src/feed.rs`) and the screen (`web/src/lib/youtube.ts`), each
@@ -44,3 +46,7 @@ load YouTube with every article opened, autoplay settings and all, and
 widen what stored content may hold. A thumbnail picture on the Play box:
 rejected for now, since even a picture would tell YouTube the article was
 opened.
+
+**Left for the owner.** DESIGN.md Part 1 still says YouTube plays "in V2"
+in two places ("nine turtles is not" and the publisher floor); Part 1
+changes only with the owner's yes, so the wording waits for them.

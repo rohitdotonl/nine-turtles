@@ -10,6 +10,7 @@ describe("which articles are YouTube videos", () => {
       "https://youtu.be/dQw4w9WgXcQ?t=42",
       "https://www.youtube.com/shorts/dQw4w9WgXcQ",
       "https://www.youtube.com/live/dQw4w9WgXcQ",
+      "https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0",
       "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
     ]) {
       expect(youtubeVideo(address), address).toBe("dQw4w9WgXcQ");
@@ -28,6 +29,7 @@ describe("which articles are YouTube videos", () => {
       "https://example.com/watch?v=dQw4w9WgXcQ",
       "https://youtu.be.example.com/dQw4w9WgXcQ",
       "javascript://youtu.be/dQw4w9WgXcQ",
+      "https://www.youtube.com/embed/videoseries?list=PL1",
     ]) {
       expect(youtubeVideo(address), String(address)).toBeUndefined();
     }
