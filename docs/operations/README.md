@@ -15,4 +15,5 @@ plain steps, no assumed knowledge of a particular tool.
 | [daily-check.md](daily-check.md) | The daily check an agent runs on the live app (deeper, once a day) |
 | [website-and-domain.md](website-and-domain.md) | The website at nineturtles.app, the app at app.nineturtles.app, and the owner's one-time setup |
 
-Coming in V2, with backups: `backups.md` and `moving-hosts.md` (V1 has no backups; see `docs/decisions/0012-v1-for-one-reader.md`).
+- `backups.md`: nightly backups, switching them on, checking them and restoring a copy (decision 0076).
+- `moving-hosts.md`: moving nine turtles to another host with everything kept.

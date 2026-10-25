@@ -1,4 +1,4 @@
-# 0076: Settings for each feed
+# 0082: Settings for each feed
 
 *October 2026.*
 

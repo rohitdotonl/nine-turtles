@@ -27,7 +27,7 @@ end, "V2 so far", shows which V2 parts are live.
 | 0 | Planning documents, README, licence (MIT), change history | ✅ |
 | 1 | Skeleton and automatic checks | ✅ |
 | 2 | Live on Render, with sign-in | ✅ |
-| 3 | Backups and recovery | ⏭ |
+| 3 | Backups and recovery | ✅ (V2, 25 October 2026) |
 | 4 | Look and feel foundations | ✅ |
 | 5 | Add a feed and see its items | ✅ |
 | 6 | Reading articles | ✅ |
@@ -90,15 +90,15 @@ you know they bite.
 **You can try:** open the address on your computer and phone, sign in, stay
 signed in, sign out. A private window sees only the password field.
 
-## 3. Backups and recovery ⏭ moved to V2
+## 3. Backups and recovery ✅ (V2, 25 October 2026)
 
-*V1 has no backups (the owner's decision, 23 October 2026). Kept here as the V2 starting point.*
+*V1 had no backups (decision 0012). Built in V2 as planned here, with one change: no new library; nine turtles speaks S3 itself (decision 0076).*
 
 **Goal:** before any of your data exists, prove it can be recovered.
 
 - Built into nine turtles: a nightly copy of the database, uploaded to Cloudflare R2
   (S3-compatible storage outside Render; you create the account, agents never see the keys).
-  Needs one new library for uploading, which will be proposed for your approval.
+  No new library: the upload code is written with libraries nine turtles already has (decision 0076).
 - The temporary copy is made outside the data disk. Keeps 30 nightly copies plus one a month for a year.
 - An automatic copy before every database structure change.
 - `docs/operations/backups.md` and `docs/operations/moving-hosts.md`, tested.
@@ -374,7 +374,7 @@ each with screenshots:
 | V2 part | Status | Where it's described |
 |---|---|---|
 | River mode | ✅ 25 October 2026 | SPEC section 10, decision 0068 |
-| Settings for each feed (reading mode, how often it's checked, open on the website) | ✅ 25 October 2026 | SPEC sections 10, 11 and 15, decision 0076 |
+| Settings for each feed (reading mode, how often it's checked, open on the website) | ✅ 25 October 2026 | SPEC sections 10, 11 and 15, decision 0082 |
 | WebSub (new posts within minutes) | ✅ 25 October 2026 | Milestone 12, SPEC section 12, decision 0069 |
 | YouTube videos in YouTube's own player | ✅ 25 October 2026 | SPEC section 7, decision 0072 |
 | Syncing with Reeder, NetNewsWire and other apps | ✅ 25 October 2026 | SPEC section 26, decision 0070 |
@@ -382,7 +382,7 @@ each with screenshots:
 | Health check every 15 minutes, with an email | ✅ 25 October 2026 | `docs/operations/health-check.md`, decision 0075 |
 | Tidying many feeds at once (Your feeds: Edit, Move to…, quiet feeds) | ✅ 25 October 2026 | SPEC section 15, decision 0080 |
 | Saved searches in the sidebar | ✅ 25 October 2026 | SPEC sections 5 and 14, decision 0081 |
-| Backups and moving hosts | ⬜ | Milestone 3 above, `docs/ENGINEERING.md` → "Hosting" |
+| Backups and moving hosts | ✅ 25 October 2026 (switched on once you add the storage settings) | Milestone 3 above, `docs/operations/backups.md`, `docs/operations/moving-hosts.md`, decision 0076 |
 | The yearly clean-up of unstarred articles | ⬜ | SPEC section 23 (after backups) |
 | The "New to feeds?" guide page | ⬜ | SPEC section 2 (the app's own page; the website's page of the same name, nineturtles.app/new-to-feeds/, is separate and doesn't count) |
 | A tab left open across an update keeps working | ⬜ | `docs/ENGINEERING.md` (decision 0022) |

@@ -1,4 +1,4 @@
--- Settings for each feed, in Edit feed (SPEC section 15, decision 0076).
+-- Settings for each feed, in Edit feed (SPEC section 15, decision 0082).
 -- This change only adds columns, each with the value that keeps the feed
 -- working exactly as before: nothing already stored is touched.
 -- Waits are seconds.

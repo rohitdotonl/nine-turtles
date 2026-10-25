@@ -226,6 +226,12 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Diagnostics
 - Shell (terminal)
 - Vendor lock-in
+- Backups
+- S3 and S3-compatible storage
+- Cloudflare R2
+- Object storage
+- Restore and recovery
+- Request signing (AWS Signature Version 4)
 
 ## Design and accessibility
 
@@ -254,11 +260,6 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 
 ## Planned for V2
 
-- Backups
-- S3 and S3-compatible storage
-- Cloudflare R2
-- Object storage
-- Restore and recovery
 - Disk snapshots
 - WebSub (hubs, leases and signatures)
 - Data retention and clean-up
