@@ -358,6 +358,12 @@ each with screenshots:
   as a short introduction; what else the website says is the owner's to
   decide.
 
+## Syncing with other apps
+
+- 🔨 Reeder, NetNewsWire and other feed readers sync with nine turtles
+  through the Google Reader API, with an app password made in Settings
+  (SPEC section 26, decision 0068).
+
 ---
 
 Responsive layout, accessibility and speed aren't left to the end: each

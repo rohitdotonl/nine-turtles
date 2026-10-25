@@ -8,12 +8,14 @@
   Escape goes back. Reading (the sort order) is shared across the reader's
   devices; the reader controls belong to this device. Your data imports and
   exports the reader's feeds and folders as an OPML file, and exports their
-  starred articles as a JSON Feed file.
+  starred articles as a JSON Feed file. Other apps makes the app password
+  other feed readers sync with (OtherApps).
 -->
 <script lang="ts">
   import { edge } from "./edge";
   import Icon from "./Icon.svelte";
   import ImportOpml from "./ImportOpml.svelte";
+  import OtherApps from "./OtherApps.svelte";
   import PageHead from "./PageHead.svelte";
   import TextSize from "./TextSize.svelte";
   import { APPEARANCES, LOOKS, THEMES } from "./themes";
@@ -213,6 +215,8 @@
           with each article's text, its original link and the feed it came from.
         </p>
       </section>
+
+      <OtherApps />
 
       <section aria-labelledby="account-heading">
         <h3 id="account-heading" class="inset-head">Account</h3>

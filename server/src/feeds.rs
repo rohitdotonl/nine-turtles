@@ -93,7 +93,7 @@ struct AddFeed {
 
 /// Why adding didn't work, in words the screen turns into a calm sentence.
 #[derive(Debug, PartialEq, Eq)]
-enum NotAdded {
+pub enum NotAdded {
     NotAnAddress,
     NotAllowed,
     Unreachable,
@@ -194,6 +194,50 @@ async fn add(state: &AppState, address: &str) -> Result<Added, NotAdded> {
         }
         _ => Ok(Added::Choices(found)),
     }
+}
+
+/// Following a feed from another app (`greader`, SPEC section 26): as the
+/// Add field does, except that a page naming several feeds follows the
+/// first, a feed already followed is simply answered, and a feed unfollowed
+/// in the last few minutes (not yet cleared) comes back as it was, with its
+/// articles, read marks and folders, as Undo would bring it back.
+pub async fn add_for_app(state: &AppState, address: &str) -> Result<i64, NotAdded> {
+    let url = parse_address(address).ok_or(NotAdded::NotAnAddress)?;
+    if let Some(id) = bring_back(state, &url).await? {
+        return Ok(id);
+    }
+    let address = match add(state, url.as_str()).await {
+        Ok(Added::Feed(feed)) => return Ok(feed.id),
+        Err(NotAdded::Already(id)) => return Ok(id),
+        Err(not_added) => return Err(not_added),
+        Ok(Added::Choices(choices)) => match choices.into_iter().next() {
+            Some(first) => first.url,
+            None => return Err(NotAdded::NoFeed),
+        },
+    };
+    if let Some(id) = bring_back(state, &address).await? {
+        return Ok(id);
+    }
+    match add(state, address.as_str()).await {
+        Ok(Added::Feed(feed)) => Ok(feed.id),
+        Err(NotAdded::Already(id)) => Ok(id),
+        Ok(Added::Choices(_)) => Err(NotAdded::NoFeed),
+        Err(not_added) => Err(not_added),
+    }
+}
+
+/// Follows again a feed at this address that was unfollowed but not yet
+/// cleared, as Undo does.
+async fn bring_back(state: &AppState, url: &Url) -> Result<Option<i64>, sqlx::Error> {
+    sqlx::query_scalar(
+        "UPDATE feeds SET unsubscribed_at = NULL, next_check_at = ?
+         WHERE url_key = ? AND unsubscribed_at IS NOT NULL AND cleared = 0
+         RETURNING id",
+    )
+    .bind(now())
+    .bind(feed::normalize(url))
+    .fetch_optional(&state.db)
+    .await
 }
 
 /// What the reader typed, as a web address. `example.com` means

@@ -3,9 +3,11 @@
 //! So far: sign-in, the database file, the status pages, adding feeds,
 //! listing and reading their articles, marking them read and starring them,
 //! the shared settings, checking feeds in the background (`checking`),
-//! folders and unsubscribing (`folders`), and OPML files (`subscriptions`).
+//! folders and unsubscribing (`folders`), OPML files (`subscriptions`), and
+//! syncing with other feed readers (`apps`, `greader`).
 //! The frontend is packed into this program (see `assets`).
 
+pub mod apps;
 pub mod assets;
 pub mod auth;
 pub mod checking;
@@ -16,6 +18,7 @@ pub mod feed;
 pub mod feeds;
 pub mod fetch;
 pub mod folders;
+pub mod greader;
 pub mod log;
 pub mod marks;
 pub mod password;
@@ -99,6 +102,8 @@ pub async fn state(config: Config) -> Result<AppState, String> {
 pub fn router(state: AppState) -> Router {
     let router = Router::new()
         .merge(auth::routes())
+        .merge(apps::routes())
+        .merge(greader::routes())
         .merge(feeds::routes())
         .merge(folders::routes())
         .merge(subscriptions::routes())

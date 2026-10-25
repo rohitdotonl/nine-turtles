@@ -333,7 +333,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 
 **What it does**
 - Settings opens in place of the list and reading area; the sidebar stays. Its X (named "Close settings") or Escape goes back to where you were.
-- Laid out as Apple Books' settings are: one centred column, no wider than 560px, of grouped lists (Reading, Look and feel, Your data, Account). Each group is a rounded block a tone off the page (by night a clear step lighter than the page, the text color mixed 7% into it, so it never melts into it), with a small muted header above it and a line explaining it below; its rows are at least 44px tall, parted by hairlines inset from the left, each with its name on the left and its control at the right end, every control the same width. On a phone a control sits under its name, the width of the row.
+- Laid out as Apple Books' settings are: one centred column, no wider than 560px, of grouped lists (Reading, Look and feel, Your data, Other apps, Account). Each group is a rounded block a tone off the page (by night a clear step lighter than the page, the text color mixed 7% into it, so it never melts into it), with a small muted header above it and a line explaining it below; its rows are at least 44px tall, parted by hairlines inset from the left, each with its name on the left and its control at the right end, every control the same width. On a phone a control sits under its name, the width of the row.
 - **Look and feel** (this device only): Appearance, theme (Original or Plain), reading font (Literata, Atkinson Hyperlegible, shown as "Atkinson", or System serif), text size (six steps from Smaller to Largest, Medium by default), line width (Narrow, Medium or Wide: about 65, 71 or 78 characters in Literata; Atkinson Hyperlegible's narrower letters fit more). A sample paragraph, the group's first row before its controls (inside the group, its words on the rows' words, a hairline under it), shows how articles will look, and changes apply at once (decision 0055). The same preferences are in the Aa panel above every article (section 7), and the line under the group says so.
 - **Theme:** Original (the default): white paper by day, near-black by night, with an ink-blue accent for unread dots and search matches, and green for starred stars (decisions 0056, 0057). Or Plain: the owner's site rohit.onl's bare look, black on white (white on near-black by night), the unread dot and search matches in the text color, and links in articles in the browser's blue, purple once visited, underlined (decision 0063). Chosen in Settings and the Aa panel. The phone's own bar above the page takes the showing version's color too.
 - **Appearance:** Light, Dark or Match device (the default). Light and Dark always show the day or night version; Match device follows the device's own light or dark setting, and switches with it while nine turtles is open. A theme chosen in an earlier version becomes Original; its Appearance is kept, and a dark theme from before decision 0046 opens by night (decision 0056).
@@ -342,6 +342,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 - Sections appear once they have something to do: Reading (sort order) since Milestone 7, Your data with Milestone 9.
 - **Reading:** newest or oldest first. (Inbox or river mode in V2.)
 - **Your data:** three rows that act: **Import OPML…** (opens the file chooser; it ends in ›), **Export OPML** and **Export starred articles** (each downloads a file; each ends in a download mark), in the text color. What the files are is said under the group; what an import did appears there too.
+- **Other apps:** the app password other feed readers sync with (section 26).
 - **Account:** **Sign out** as a row of its own, ending in a small door mark, in the text color (not red: signing out removes nothing), and the version under the group. (Keeping articles and Feed health come in V2.)
 - **Status:** which version of nine turtles you're using. When a newer version is live (nine turtles notices from the server's answers), it says "A new version is ready" with a **Reload** button. Otherwise new versions are used automatically the next time you open or reload the app, never while you're reading. If a tab left open across an update can't carry on, it says so plainly in the note at the bottom of the list (where "New items" appears): "nine turtles was updated. Reload to continue.", with a **Reload** button.
 - Fonts are served by nine turtles itself; nothing is loaded from font services. Other scripts such as Hindi use the fonts already on your device.
@@ -475,6 +476,23 @@ Covered by sections 14 and 22.
 **How to check it**
 1. Use the app for a few minutes: you never wait for it.
 2. On a slow phone connection, star an article: the star appears immediately. If saving fails, you're told plainly and the star is taken back, rather than silently lost.
+
+## 26. Other apps: syncing with Reeder and NetNewsWire
+
+*Added 25 October 2026 at the owner's request (decision 0068).*
+
+**What it does**
+- Other feed readers, such as Reeder and NetNewsWire, can use nine turtles as their sync service, through the "Google Reader API" that FreshRSS and Miniflux also offer. In the app, the owner adds a **FreshRSS** (or **Google Reader API**) account, with the server address shown in Settings (`https://app.nineturtles.app/api/greader`) and the app password; any username works. `/api/greader.php` answers too, for apps that expect FreshRSS's address.
+- **What syncs, both ways:** feeds, folders and articles (with the text the feed carried, the link to the original and the feed's name); read and unread; starred. The app can also follow and unfollow feeds, rename them, put them in folders and take them out, and rename or delete folders (deleting a folder never unfollows its feeds).
+- **Unfollowing from an app** works as it does here: the feed is hidden at once and its unstarred articles are cleared ten minutes later. Following the same feed again from an app within those ten minutes brings it back as it was, with its articles, read marks and folders. Unlike unfollowing in nine turtles, unfollowing a second feed from an app doesn't cut the first one's ten minutes short.
+- **"Mark all as read" from an app** marks only articles that had arrived when the app last looked, never ones that arrived since, as nine turtles' own does.
+- **Settings › Other apps:** **Make an app password** (ending in +) makes a 24-letter password in groups of four (`abcd-efgh-…`; no 0, 1, i, l or o) and shows it with the server address, each with a **Copy** button. The password is shown only this once; nine turtles keeps only a scrambled copy. Then **Make a new app password** (which signs out any app using the old one) and **Turn off other apps** (which signs every app out; feeds and articles are unchanged). The line under the group says what it's for and how to use it.
+- The app password opens only the sync API, never nine turtles' own pages, and the owner's own password never works in an app.
+
+**How to check it**
+1. In Settings › Other apps, press **Make an app password**: the address and password appear, each with Copy.
+2. In NetNewsWire (Mac or iPhone), add a FreshRSS account with that address and password: your feeds and folders appear. Star an article there; refresh nine turtles: it's starred here too. Mark one read here; refresh NetNewsWire: it's read there.
+3. Press **Turn off other apps**: NetNewsWire can no longer sync and asks you to sign in again.
 
 ---
 

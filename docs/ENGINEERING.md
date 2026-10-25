@@ -195,6 +195,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 - A strict Content Security Policy (a browser rule): the browser refuses any script that doesn't come from nine turtles itself. This is a second layer behind sanitizing.
 - Failed sign-in attempts are rate-limited: five free tries, then a doubling wait up to an hour.
 - Secrets (password hash, diagnostics key, and in V2 backup credentials) come from environment variables, listed in `docs/operations/settings.md`.
+- **Other apps** (Reeder, NetNewsWire) sync through the Google Reader API at `/api/greader` with an **app password**, never the owner's own: 24 random letters and digits (about 119 bits) made in Settings by a signed-in page, shown once, kept only as a BLAKE2s scramble in the `settings` table (it can't be guessed, so a fast scramble is enough, as for session tickets), sent by apps in an `Authorization` header that no other website can add. Wrong app passwords aren't slowed down, so a stranger can't lock the owner out, but are counted on the diagnostics page. Making a new one or turning it off signs every app out. Details: `docs/decisions/0068-other-apps.md`.
 - A public status page (`/status`) says only that nine turtles runs and its version; a diagnostics page (`/diagnostics`) needs a read-only key and never shows the reader's feeds or articles.
 - Details and rejected alternatives: `docs/decisions/0010-sign-in.md`.
 
