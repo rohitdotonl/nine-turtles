@@ -84,7 +84,9 @@ usually within 15 minutes of pressing Merge.
 5. Do the same on your phone.
 
 **To change your password later:** repeat step 4 and replace the old value.
-Devices already signed in stay signed in.
+Devices already signed in stay signed in. (If you'd set a password with an
+emailed link, the new value replaces that one and signs every device out:
+your way back in without email, [owner-password.md](owner-password.md).)
 
 **If the Shell tab is missing:** stop and tell an agent. The fallback (your
 readable password in Render's settings) changes a written rule, so it needs

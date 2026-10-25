@@ -337,6 +337,16 @@ async fn forgot_your_password_always_answers_the_same() {
     let email = "noor@example.com";
     let laptop = confirmed_reader(&base, &outbox, email).await;
     let before = emails_to(&outbox, email).len();
+    let reader: i64 = sqlx::query_scalar("SELECT id FROM people WHERE email = ?")
+        .bind(email)
+        .fetch_one(&state.db)
+        .await
+        .unwrap();
+    sqlx::query("INSERT INTO app_passwords (person_id, password_hash, made_at) VALUES (?, 'x', 0)")
+        .bind(reader)
+        .execute(&state.db)
+        .await
+        .unwrap();
 
     let forgot = |address: &'static str| {
         let base = base.clone();
@@ -393,8 +403,16 @@ async fn forgot_your_password_always_answers_the_same() {
     assert_eq!(reset.status(), StatusCode::OK);
     let phone = cookie_from(&reset);
     assert_eq!(session(&base, Some(&phone)).await["signed_in"], true);
-    // The other device is signed out; the old password no longer works.
+    // The other device is signed out, the app password (for other feed
+    // reader apps) is turned off, and the old password no longer works.
     assert_eq!(session(&base, Some(&laptop)).await["signed_in"], false);
+    let app_passwords: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM app_passwords WHERE person_id = ?")
+            .bind(reader)
+            .fetch_one(&state.db)
+            .await
+            .unwrap();
+    assert_eq!(app_passwords, 0);
     assert_eq!(
         sign_in(&base, email, READER_PASSWORD).await.status(),
         StatusCode::UNAUTHORIZED
@@ -557,7 +575,7 @@ async fn the_owner_can_set_a_new_password_by_email_too() {
         &base,
         "/api/people/me/email",
         Some(&owner),
-        json!({ "email": "owner@example.com" }),
+        json!({ "email": "owner@example.com", "password": common::PASSWORD }),
     )
     .await;
     assert!(saved.status().is_success());
@@ -596,6 +614,17 @@ async fn the_owner_can_set_a_new_password_by_email_too() {
     );
 }
 
+/// How many lines of reader `person` `table` holds.
+async fn lines_of(db: &sqlx::SqlitePool, table: &str, person: i64) -> i64 {
+    sqlx::query_scalar(sqlx::AssertSqlSafe(format!(
+        "SELECT COUNT(*) FROM \"{table}\" WHERE person_id = ?"
+    )))
+    .bind(person)
+    .fetch_one(db)
+    .await
+    .unwrap()
+}
+
 /// Every table with a `person_id` column, from the database itself.
 async fn tables_with_a_reader(db: &sqlx::SqlitePool) -> Vec<String> {
     sqlx::query_scalar(
@@ -620,7 +649,17 @@ async fn deleting_an_account_leaves_nothing_of_theirs() {
         .await
         .unwrap();
 
-    // Something of theirs in every table that can hold it.
+    // Once confirmed, the password scramble waiting with the sign-up link is blanked.
+    let waiting: Vec<String> = sqlx::query_scalar(
+        "SELECT password_hash FROM email_links WHERE purpose = 'sign-up' AND email = ?",
+    )
+    .bind(email)
+    .fetch_all(&state.db)
+    .await
+    .unwrap();
+    assert_eq!(waiting, [""]);
+
+    // Something of theirs, and of the owner's, in every table that can hold it.
     for (statement, what) in [
         (
             "INSERT INTO folders (person_id, name) VALUES (?, 'Essays')",
@@ -639,15 +678,17 @@ async fn deleting_an_account_leaves_nothing_of_theirs() {
             "a setting",
         ),
         (
-            "INSERT INTO app_passwords (person_id, password_hash, made_at) VALUES (?, 'x', 0)",
+            "INSERT INTO app_passwords (person_id, password_hash, made_at) VALUES (?1, 'x' || ?1, 0)",
             "an app password",
         ),
     ] {
-        sqlx::query(statement)
-            .bind(person)
-            .execute(&state.db)
-            .await
-            .unwrap_or_else(|error| panic!("couldn't add {what}: {error}"));
+        for whose in [person, 1] {
+            sqlx::query(statement)
+                .bind(whose)
+                .execute(&state.db)
+                .await
+                .unwrap_or_else(|error| panic!("couldn't add {what}: {error}"));
+        }
     }
     post(
         &base,
@@ -713,6 +754,12 @@ async fn deleting_an_account_leaves_nothing_of_theirs() {
         );
     }
 
+    // How many lines the owner has in each, to check none of theirs go.
+    let mut owners_before = Vec::new();
+    for table in &tables {
+        owners_before.push(lines_of(&state.db, table, 1).await);
+    }
+
     // The owner's own account can't be deleted.
     let refused = post(&base, "/api/people/me/delete", Some(&owner), json!({})).await;
     assert_eq!(refused.status(), StatusCode::FORBIDDEN);
@@ -727,16 +774,29 @@ async fn deleting_an_account_leaves_nothing_of_theirs() {
     );
     assert_eq!(session(&base, Some(&cookie)).await["signed_in"], false);
 
-    for table in &tables {
-        let left: i64 = sqlx::query_scalar(sqlx::AssertSqlSafe(format!(
-            "SELECT COUNT(*) FROM \"{table}\" WHERE person_id = ?"
-        )))
-        .bind(person)
-        .fetch_one(&state.db)
-        .await
-        .unwrap();
-        assert_eq!(left, 0, "{table} still holds the deleted reader's lines");
+    for (table, owners) in tables.iter().zip(owners_before) {
+        assert_eq!(
+            lines_of(&state.db, table, person).await,
+            0,
+            "{table} still holds the deleted reader's lines"
+        );
+        let still = lines_of(&state.db, table, 1).await;
+        // The owner's entry in the feed only the reader followed was never
+        // there; every other line of the owner's stays.
+        assert_eq!(still, owners, "{table} lost some of the owner's lines");
     }
+    // Their Open sign-up's links had no reader number, but held their email
+    // (and, until confirmed, a password scramble): gone too.
+    let links: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM email_links WHERE email = ? COLLATE NOCASE")
+            .bind(email)
+            .fetch_one(&state.db)
+            .await
+            .unwrap();
+    assert_eq!(
+        links, 0,
+        "email_links still holds the deleted reader's email"
+    );
     let gone: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM people WHERE id = ?")
         .bind(person)
         .fetch_one(&state.db)
@@ -936,4 +996,336 @@ async fn confirming_a_sign_up_goes_one_at_a_time_within_the_hours_count() {
     assert!(still_waiting(&confirmed).await);
     drop(one_at_a_time);
     assert_eq!(confirmed.await.unwrap(), StatusCode::OK);
+}
+
+#[tokio::test]
+async fn an_open_sign_up_with_a_taken_email_takes_as_long() {
+    let (base, _, outbox, _) = open_app().await;
+    confirmed_reader(&base, &outbox, "here@example.com").await;
+    let timed = |email: &'static str| {
+        let base = base.clone();
+        async move {
+            let started = std::time::Instant::now();
+            let response = post(
+                &base,
+                "/api/sign-up",
+                None,
+                json!({ "email": email, "password": READER_PASSWORD, "invite": "" }),
+            )
+            .await;
+            let took = started.elapsed();
+            (response.status(), response.text().await.unwrap(), took)
+        }
+    };
+    let (free_status, _, free_took) = timed("new@example.com").await;
+    let (taken_status, taken_body, taken_took) = timed("HERE@example.com").await;
+    assert_eq!(free_status, StatusCode::ACCEPTED);
+    assert_eq!(taken_status, StatusCode::ACCEPTED);
+    assert!(taken_body.contains("confirm"), "{taken_body}");
+    // Both scramble the password; without it, the taken one would answer
+    // in a few milliseconds.
+    assert!(
+        taken_took * 3 >= free_took,
+        "a taken email answered in {taken_took:?}, a free one in {free_took:?}"
+    );
+}
+
+#[tokio::test]
+async fn an_address_with_a_name_in_it_is_refused() {
+    let (base, _, outbox, _) = open_app().await;
+    confirmed_reader(&base, &outbox, "victim@example.com").await;
+    for path in ["/api/password/forgot", "/api/sign-up"] {
+        let response = post(
+            &base,
+            path,
+            None,
+            json!({
+                "email": "evil<victim@example.com>",
+                "password": READER_PASSWORD,
+                "invite": "",
+            }),
+        )
+        .await;
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST, "{path}");
+        assert_eq!(error_of(response).await, "email", "{path}");
+    }
+    assert_eq!(emails_to(&outbox, "victim@example.com").len(), 1);
+}
+
+#[tokio::test]
+async fn requests_sent_together_cant_pass_three_emails_an_hour() {
+    let (base, _, outbox, _) = open_app().await;
+    let email = "rush@example.com";
+    let cookie = confirmed_reader(&base, &outbox, email).await;
+    // "Forgot your password?" ten times at once: the confirmation was one,
+    // so two more, never more.
+    let mut forgots = Vec::new();
+    for _ in 0..10 {
+        let base = base.clone();
+        forgots.push(tokio::spawn(async move {
+            post(
+                &base,
+                "/api/password/forgot",
+                None,
+                json!({ "email": email }),
+            )
+            .await
+            .status()
+        }));
+    }
+    for forgot in forgots {
+        assert_eq!(forgot.await.unwrap(), StatusCode::ACCEPTED);
+    }
+    assert_eq!(emails_to(&outbox, email).len(), 3);
+
+    // Five changes of email at once, each to a new address: three go out,
+    // and the rest are told there have been enough.
+    let mut changes = Vec::new();
+    for number in 0..5 {
+        let base = base.clone();
+        let cookie = cookie.clone();
+        changes.push(tokio::spawn(async move {
+            post(
+                &base,
+                "/api/people/me/email/change",
+                Some(&cookie),
+                json!({
+                    "email": format!("rush{number}@elsewhere.example"),
+                    "password": READER_PASSWORD,
+                }),
+            )
+            .await
+            .status()
+        }));
+    }
+    let mut answers = Vec::new();
+    for change in changes {
+        answers.push(change.await.unwrap());
+    }
+    let sent = answers
+        .iter()
+        .filter(|status| **status == StatusCode::ACCEPTED)
+        .count();
+    let too_many = answers
+        .iter()
+        .filter(|status| **status == StatusCode::TOO_MANY_REQUESTS)
+        .count();
+    assert_eq!((sent, too_many), (3, 2), "{answers:?}");
+    let links = (0..5)
+        .map(|number| emails_to(&outbox, &format!("rush{number}@elsewhere.example")).len())
+        .sum::<usize>();
+    assert_eq!(links, 3);
+}
+
+#[tokio::test]
+async fn changing_to_a_taken_address_counts_as_any_change() {
+    let (base, _, outbox, _) = open_app().await;
+    let cookie = confirmed_reader(&base, &outbox, "asks@example.com").await;
+    confirmed_reader(&base, &outbox, "taken@example.com").await;
+    let other = confirmed_reader(&base, &outbox, "other@example.com").await;
+    let change = |cookie: String, email: &'static str| {
+        let base = base.clone();
+        async move {
+            post(
+                &base,
+                "/api/people/me/email/change",
+                Some(&cookie),
+                json!({ "email": email, "password": READER_PASSWORD }),
+            )
+            .await
+            .status()
+        }
+    };
+    // Four tries at a taken address answer exactly as four at a free one.
+    let mut taken = Vec::new();
+    let mut free = Vec::new();
+    for _ in 0..4 {
+        taken.push(change(cookie.clone(), "taken@example.com").await);
+        free.push(change(other.clone(), "free@example.com").await);
+    }
+    assert_eq!(taken, free);
+    assert_eq!(
+        taken,
+        [
+            StatusCode::ACCEPTED,
+            StatusCode::ACCEPTED,
+            StatusCode::ACCEPTED,
+            StatusCode::TOO_MANY_REQUESTS
+        ]
+    );
+    // The taken address got nothing, and its own emails aren't used up:
+    // its reader can still ask for a new password.
+    assert_eq!(emails_to(&outbox, "taken@example.com").len(), 1);
+    post(
+        &base,
+        "/api/password/forgot",
+        None,
+        json!({ "email": "taken@example.com" }),
+    )
+    .await;
+    assert_eq!(emails_to(&outbox, "taken@example.com").len(), 2);
+}
+
+#[tokio::test]
+async fn the_owners_email_needs_their_password() {
+    let (base, state, _) = start_with_mail(common::config()).await;
+    let owner = signed_in(&base).await;
+    let save = |password: &'static str| {
+        post(
+            &base,
+            "/api/people/me/email",
+            Some(&owner),
+            json!({ "email": "taker@example.com", "password": password }),
+        )
+    };
+    let missing = post(
+        &base,
+        "/api/people/me/email",
+        Some(&owner),
+        json!({ "email": "taker@example.com" }),
+    )
+    .await;
+    assert_eq!(missing.status(), StatusCode::UNAUTHORIZED);
+    assert_eq!(error_of(missing).await, "wrong-password");
+    for _ in 0..3 {
+        let wrong = save("not the owner's password").await;
+        assert_eq!(wrong.status(), StatusCode::UNAUTHORIZED);
+    }
+    let email: Option<String> = sqlx::query_scalar("SELECT email FROM people WHERE id = 1")
+        .fetch_one(&state.db)
+        .await
+        .unwrap();
+    assert_eq!(email, None);
+    // The fifth wrong try starts the wait, for the password alone too.
+    assert_eq!(
+        save("not the owner's password").await.status(),
+        StatusCode::TOO_MANY_REQUESTS
+    );
+    assert_eq!(save(PASSWORD).await.status(), StatusCode::TOO_MANY_REQUESTS);
+    let alone = post(&base, "/api/sign-in", None, json!({ "password": PASSWORD })).await;
+    assert_eq!(alone.status(), StatusCode::TOO_MANY_REQUESTS);
+}
+
+#[tokio::test]
+async fn a_new_password_setting_wins_over_one_set_by_email() {
+    let first = common::config();
+    let data_dir = first.data_dir.clone();
+    let first_setting = first.password.clone();
+    let (base, _, outbox) = start_with_mail(first).await;
+    let owner = signed_in(&base).await;
+    post(
+        &base,
+        "/api/people/me/email",
+        Some(&owner),
+        json!({ "email": "owner@example.com", "password": PASSWORD }),
+    )
+    .await;
+    post(
+        &base,
+        "/api/password/forgot",
+        None,
+        json!({ "email": "owner@example.com" }),
+    )
+    .await;
+    let (_, ticket) = newest_link(&outbox, "owner@example.com");
+    let reset = post(
+        &base,
+        "/api/password/reset",
+        None,
+        json!({ "ticket": ticket, "password": NEW_PASSWORD }),
+    )
+    .await;
+    assert_eq!(reset.status(), StatusCode::OK);
+    let device = cookie_from(&reset);
+
+    let alone = |base: String, password: &'static str| async move {
+        post(&base, "/api/sign-in", None, json!({ "password": password }))
+            .await
+            .status()
+    };
+
+    // Started again with the same setting: the password set by email stays.
+    let mut same = common::config();
+    same.data_dir = data_dir.clone();
+    same.password = first_setting.clone();
+    let (base, _) = start_with_state(same).await;
+    assert_eq!(
+        alone(base.clone(), NEW_PASSWORD).await,
+        StatusCode::NO_CONTENT
+    );
+    assert_eq!(session(&base, Some(&device)).await["signed_in"], true);
+
+    // Started with no setting at all: nothing changes, so a slip on the
+    // host never locks the owner out.
+    let mut none = common::config();
+    none.data_dir = data_dir.clone();
+    none.password = nine_turtles::config::PasswordSetting::Missing;
+    let (base, _) = start_with_state(none).await;
+    assert_eq!(
+        alone(base.clone(), NEW_PASSWORD).await,
+        StatusCode::SERVICE_UNAVAILABLE
+    );
+    assert_eq!(
+        sign_in(&base, "owner@example.com", NEW_PASSWORD)
+            .await
+            .status(),
+        StatusCode::NO_CONTENT
+    );
+
+    // A new NINE_TURTLES_PASSWORD_HASH wins: the owner's way back that
+    // needs no email. The password set by email stops working, and every
+    // device signed in as the owner is signed out.
+    const ANOTHER: &str = "the owner's way back in";
+    let mut changed = common::config();
+    changed.data_dir = data_dir.clone();
+    changed.password =
+        nine_turtles::config::PasswordSetting::Set(nine_turtles::password::hash(ANOTHER).unwrap());
+    let (base, state) = start_with_state(changed.clone()).await;
+    assert_eq!(session(&base, Some(&device)).await["signed_in"], false);
+    assert_eq!(
+        alone(base.clone(), NEW_PASSWORD).await,
+        StatusCode::UNAUTHORIZED
+    );
+    assert_eq!(alone(base.clone(), ANOTHER).await, StatusCode::NO_CONTENT);
+    assert_eq!(
+        sign_in(&base, "owner@example.com", ANOTHER).await.status(),
+        StatusCode::NO_CONTENT
+    );
+    let own: Option<String> = sqlx::query_scalar("SELECT password_hash FROM people WHERE id = 1")
+        .fetch_one(&state.db)
+        .await
+        .unwrap();
+    assert_eq!(own, None);
+
+    // And once the setting is in force again, starting again changes nothing more.
+    let (base, _) = start_with_state(changed).await;
+    assert_eq!(alone(base, ANOTHER).await, StatusCode::NO_CONTENT);
+}
+
+#[tokio::test]
+async fn emailed_links_past_their_time_are_tidied_by_background_checking() {
+    let (base, state, outbox, _) = open_app().await;
+    post(
+        &base,
+        "/api/sign-up",
+        None,
+        json!({ "email": "later@example.com", "password": READER_PASSWORD, "invite": "" }),
+    )
+    .await;
+    assert_eq!(emails_to(&outbox, "later@example.com").len(), 1);
+    let count = || async {
+        sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM email_links")
+            .fetch_one(&state.db)
+            .await
+            .unwrap()
+    };
+    assert_eq!(count().await, 1);
+    nine_turtles::checking::round(&state, nine_turtles::now())
+        .await
+        .unwrap();
+    assert_eq!(count().await, 1);
+    nine_turtles::checking::round(&state, nine_turtles::now() + 25 * 60 * 60)
+        .await
+        .unwrap();
+    assert_eq!(count().await, 0);
 }

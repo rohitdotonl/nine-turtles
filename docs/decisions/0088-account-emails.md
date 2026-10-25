@@ -16,10 +16,11 @@ be Open. A reader can also delete their own account.
   no lock-in. The how-to is `docs/operations/email.md`.
 - **Five settings:** `NINE_TURTLES_SMTP_HOST`, `_PORT` (587 unless set),
   `_USERNAME`, `_PASSWORD` and `_FROM`. All four of host, username,
-  password and sender, or none: some but not all stops nine turtles with a
-  message naming the missing ones. The links start with
+  password and sender, or none: some but not all (the port alone too) stops
+  nine turtles with a message naming the missing ones. The links start with
   `NINE_TURTLES_PUBLIC_URL`, never with an address taken from a request, so
-  nobody can make a link point elsewhere.
+  nobody can make a link point elsewhere; the email settings without it stop
+  nine turtles too. The settings' debugging print hides the SMTP password.
 - **Encrypted:** port 587 upgrades the connection with STARTTLS before the
   password is sent, and gives up if the service can't; port 465 is
   encrypted from the start. Unencrypted only to a mail server on the same
@@ -30,7 +31,14 @@ be Open. A reader can also delete their own account.
 - **The emails are short plain text**, with no images, no tracking and no
   link but the one the reader asked for. They go out behind the answer, so
   how long a request takes never tells a stranger whether one was sent. A
-  failure is written to the log, never the address. (Brevo's own link and
+  failure is written to the log in nine turtles' own words, never the mail
+  server's (which often repeat the address), and never the address.
+- **Only a bare address** is accepted: no name before it, no `<` `>`,
+  quotes, commas, semicolons, colons, brackets, backslashes, spaces or
+  control characters, and lettre's own reading of it must be exactly what
+  was typed. Otherwise `evil<victim@example.com>` would reach
+  victim@example.com while counting as a different address (found in
+  review). (Brevo's own link and
   open tracking must stay off: `docs/operations/email.md`.)
 - **Tests** keep the emails in memory instead of sending them
   (`email::Mailer::outbox`); the browser tests use a made-up mail server on
@@ -57,7 +65,13 @@ be Open. A reader can also delete their own account.
   good, in the same lines, so made-up tickets cost the server nothing.
 - **At most three emails go to one address in any hour**, whatever they're
   for, so nine turtles can't be used to fill someone's inbox. Past that,
-  the answer is the same and nothing is sent.
+  the answer is the same and nothing is sent. The count and the new link
+  are saved in one step (`BEGIN IMMEDIATE`, SQLite's one writer at a time),
+  so requests sent together can't race past three (found in review).
+- **Tidying:** links past their time are deleted with every new link and
+  every round of background checking, so on a quiet nine turtles too an
+  email doesn't stay past its link's day. Once an Open sign-up is
+  confirmed, the password scrambles waiting with its links are blanked.
 - **The confirmation page asks for one press** (Confirm email) rather than
   confirming as it opens: some mail programs open links to check them, and
   would otherwise use the link up before the reader sees it.
@@ -68,7 +82,9 @@ be Open. A reader can also delete their own account.
 - Signing up while Open makes no account yet: the email and the scrambled
   password wait with the link, and the account is made when it's followed.
   The answer is the same whether or not the address already has an account,
-  so nobody learns who is here.
+  and so is the time it takes: the password is scrambled either way (about
+  19 MB of memory and a noticeable fraction of a second), one sign-up at a
+  time as before (found in review), so nobody learns who is here.
 - Signing in before confirming: the right password hears "Your email isn't
   confirmed yet", and the link is sent again (within the address's three an
   hour); a wrong password hears only "don't match", as always.
@@ -86,13 +102,27 @@ be Open. A reader can also delete their own account.
 **A new password ("Forgot your password?")**
 
 - On the sign-in page, while email can be sent. Always the same answer,
-  whether or not the address has an account.
+  whether or not the address has an account, after the same database work.
 - The new password needs at least 12 characters, as at sign-up. Setting it
-  signs out every device signed in as that reader, signs this one in, and
-  stops any other password link for them.
+  signs out every device signed in as that reader, signs this one in,
+  stops any other password link for them, and turns off their app password
+  (other feed reader apps): someone resetting because they fear a break-in
+  expects everything to stop.
 - The owner can use it too, once they have an email. Their new password then
   replaces `NINE_TURTLES_PASSWORD_HASH` for signing in, with or without the
-  email: the setting is no longer used for them.
+  email, **for as long as that setting stays as it was**.
+- **The owner's way back that needs no email** (found in review: once the
+  owner had used a link, a broken email service and a forgotten password
+  would otherwise leave only editing the database). The reset saves a
+  BLAKE2s fingerprint of the `NINE_TURTLES_PASSWORD_HASH` in force
+  (`settings.owner_password_from`; never the line itself). On every start,
+  if the setting is a real line whose fingerprint differs, the owner's own
+  password is cleared and every device signed in as the owner signed out:
+  the new setting is their password again. A missing or invalid setting
+  changes nothing, so a slip on the host never locks the owner out. Steps:
+  `docs/operations/owner-password.md`. Rejected: a command to run on the
+  server (the owner can't run one on Render), and clearing it whenever the
+  setting is present (every restart would undo the reset).
 
 **Changing email** (Settings › Account, any reader)
 
@@ -102,9 +132,18 @@ be Open. A reader can also delete their own account.
 - A link goes to the new address; nothing changes until it's followed. Then
   the old address gets a short note saying so.
 - An address another reader already has gets nothing, and the answer is the
-  same, so no reader learns who else is here.
+  same, so no reader learns who else is here. The try still counts towards
+  the reader's three changes in an hour, saved as a spent line that's never
+  emailed (`emailed = 0`) and never counts towards that address's own
+  emails, so the "too many" answer can't tell either, and the other reader's
+  password emails aren't used up (found in review). An address past its
+  hour's emails is answered the same way.
 - The owner keeps their own direct "Your email" box in Settings › Readers
-  (decision 0087), which works without email.
+  (decision 0087), which works without email. **It asks for the owner's
+  current password** (checked as their password-only sign-in, with the same
+  waits): that address receives the owner's password links, so a device
+  left signed in as the owner must not be able to change it (found in
+  review).
 
 **Deleting an account** (Settings › Account, any reader but the owner)
 
@@ -123,7 +162,13 @@ be Open. A reader can also delete their own account.
   `person_id` column from the database itself and fails if one isn't
   named, or still holds the reader's lines afterwards (structure change 12's
   `subscriptions` and `entries` are named).
+- Every emailed link to the reader's address goes too: an Open sign-up's
+  links have no reader number, but hold the email (found in review). The
+  test also checks that none of the owner's lines go.
 - The owner's account can't be deleted: nine turtles needs its owner.
+- **No password is asked for**, though changing email asks for one: the
+  owner chose "ask once". A device left signed in can delete that reader's
+  account; that's accepted, deliberately (raised in review, kept).
 
 **Rejected.** An email service's own web interface (an "API") instead of
 SMTP: one provider's way of working, where SMTP is the same everywhere. A

@@ -132,7 +132,7 @@ async fn a_stranger_guessing_one_email_never_locks_the_owner_out() {
             &base,
             "/api/people/me/email",
             Some(&owner),
-            json!({ "email": "rohit@example.com" })
+            json!({ "email": "rohit@example.com", "password": common::PASSWORD })
         )
         .await
         .status(),
@@ -351,7 +351,7 @@ async fn an_email_already_used_is_refused_and_so_are_poor_details() {
         &base,
         "/api/people/me/email",
         Some(&owner),
-        json!({ "email": "rohit@example.com" }),
+        json!({ "email": "rohit@example.com", "password": common::PASSWORD }),
     )
     .await;
     assert_eq!(
@@ -371,7 +371,7 @@ async fn an_email_already_used_is_refused_and_so_are_poor_details() {
         &base,
         "/api/people/me/email",
         Some(&owner),
-        json!({ "email": "Mira@example.com" }),
+        json!({ "email": "Mira@example.com", "password": common::PASSWORD }),
     )
     .await;
     assert_eq!(taken.status(), StatusCode::CONFLICT);
@@ -500,7 +500,7 @@ async fn the_owners_email_cant_be_told_apart_while_the_password_alone_waits() {
         &base,
         "/api/people/me/email",
         Some(&owner),
-        json!({ "email": "rohit@example.com" }),
+        json!({ "email": "rohit@example.com", "password": common::PASSWORD }),
     )
     .await;
     let ticket = invite(&base, &owner).await;
@@ -603,7 +603,7 @@ async fn guesses_at_other_emails_never_hold_up_the_owners_sign_in() {
         &base,
         "/api/people/me/email",
         Some(&owner),
-        json!({ "email": "rohit@example.com" }),
+        json!({ "email": "rohit@example.com", "password": common::PASSWORD }),
     )
     .await;
 

@@ -57,7 +57,8 @@ add:
 
 Press **Save Changes**. Render restarts nine turtles (about a minute).
 `NINE_TURTLES_PUBLIC_URL` must be set too (the container image sets it), as
-every link starts with it.
+every link starts with it: with the email settings but without it, nine
+turtles doesn't start, and the log says so.
 
 ## 4. Check it works
 
@@ -70,8 +71,17 @@ every link starts with it.
 3. In Settings › Sign-up, **Open** can now be chosen.
 
 If no email arrives, look in Render's **Logs** for "couldn't send": the line
-says what went wrong (a mistyped key, for example). If only some settings
-are set, nine turtles doesn't start, and the log names the missing ones.
+says roughly what went wrong ("the mail server refused it", "couldn't be
+reached or signed in to": a mistyped key, for example), never the address it
+was going to. If only some settings are set (the port alone counts), nine
+turtles doesn't start, and the log names the missing ones.
+
+## If email stops working and you've forgotten your password
+
+Once you've set a new password with an emailed link, that password is the
+one that works, not the one in Render. If email later breaks and you forget
+it, you don't need email to get back in: see
+[owner-password.md](owner-password.md).
 
 ## Moving to another email service
 

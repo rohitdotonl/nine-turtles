@@ -74,23 +74,36 @@ export function inviteFrom(hash: string): string {
   return new URLSearchParams(hash.replace(/^#/, "")).get("invite")?.trim() ?? "";
 }
 
-export type EmailResult = "ok" | "email" | "already" | "unreachable";
+export type EmailResult =
+  | { ok: true }
+  | { ok: false; reason: "email" | "already" | "wrong-password" | "unreachable" }
+  | { ok: false; reason: "wait"; waitSeconds: number };
 
-/** The owner's own email, to sign in with. */
-export async function setOwnEmail(email: string): Promise<EmailResult> {
+/**
+ * The owner's own email, to sign in with and to get "Forgot your password?"
+ * links at. Their current password goes with it (decision 0088), so a
+ * device left signed in can't send those links somewhere else.
+ */
+export async function setOwnEmail(email: string, password: string): Promise<EmailResult> {
   let response: Response;
   try {
     response = await api("/api/people/me/email", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, password }),
     });
   } catch {
-    return "unreachable";
+    return { ok: false, reason: "unreachable" };
   }
-  if (response.ok) return "ok";
-  const error = await errorOf(response);
-  return error === "email" || error === "already" ? error : "unreachable";
+  if (response.ok) return { ok: true };
+  const body: unknown = await response.json().catch(() => null);
+  const error = isRecord(body) ? body.error : undefined;
+  if (error === "wait" && isRecord(body) && typeof body.wait_seconds === "number") {
+    return { ok: false, reason: "wait", waitSeconds: body.wait_seconds };
+  }
+  return error === "email" || error === "already" || error === "wrong-password"
+    ? { ok: false, reason: error }
+    : { ok: false, reason: "unreachable" };
 }
 
 /** `confirm`: sign-up is Open, so a link went to this address (the account is made when it's followed). */
@@ -146,9 +159,21 @@ export function explainSignUp(result: Exclude<SignUpResult, { ok: true }>): stri
 }
 
 /** One @ with something on each side, no spaces, at most 254 characters (as the server checks). */
+/**
+ * A bare address, as the server checks it: one @ with something on each
+ * side, at most 254 characters, and nothing that could put a name before it
+ * (no spaces, control characters, `<` `>`, quotes, commas, semicolons,
+ * colons, brackets or backslashes).
+ */
 export function plausibleEmail(text: string): boolean {
   const parts = text.split("@");
-  return text.length <= 254 && parts.length === 2 && parts[0] !== "" && parts[1] !== "" && !/[\s\p{Cc}]/u.test(text);
+  return (
+    text.length <= 254 &&
+    parts.length === 2 &&
+    parts[0] !== "" &&
+    parts[1] !== "" &&
+    !/[\s\p{Cc}<>",;:()[\]\\]/u.test(text)
+  );
 }
 
 export async function errorOf(response: Response): Promise<unknown> {

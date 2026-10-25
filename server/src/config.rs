@@ -125,6 +125,12 @@ impl Config {
         let backup = backup_settings(&var)?;
         let restore_from = var("NINE_TURTLES_RESTORE_FROM").map(|name| name.trim().to_owned());
         let smtp = smtp_settings(&var)?;
+        if smtp.is_some() && public_url.is_none() {
+            return Err("the email settings (NINE_TURTLES_SMTP_*) are set but \
+                 NINE_TURTLES_PUBLIC_URL isn't: every link in an email starts with that address, \
+                 so set it too (docs/operations/email.md)"
+                .to_owned());
+        }
 
         Ok(Self {
             listen,
@@ -204,7 +210,9 @@ fn backup_settings(
 }
 
 /// The email settings: host, username, password and sender, or none (no
-/// email). Some but not all is a slip worth stopping for. The port is 587
+/// email). Some but not all (the port alone too) is a slip worth stopping
+/// for, as are these without NINE_TURTLES_PUBLIC_URL (checked in
+/// `Config::from_env`). The port is 587
 /// (STARTTLS) unless set; 465 means encrypted from the start.
 fn smtp_settings(
     var: &dyn Fn(&str) -> Option<String>,
@@ -219,7 +227,8 @@ fn smtp_settings(
         .iter()
         .map(|name| var(name).map(|value| value.trim().to_owned()))
         .collect();
-    if values.iter().all(Option::is_none) {
+    // The port alone counts as some: it's a slip too.
+    if values.iter().all(Option::is_none) && var("NINE_TURTLES_SMTP_PORT").is_none() {
         return Ok(None);
     }
     let missing: Vec<&str> = names
@@ -338,6 +347,10 @@ mod tests {
         .unwrap_err();
         assert!(error.contains("NINE_TURTLES_SMTP_FROM"), "{error}");
         assert!(!error.contains("NINE_TURTLES_SMTP_HOST"), "{error}");
+        // The port alone is a slip too, and names all four missing.
+        let error = smtp_settings(&with(vec![("NINE_TURTLES_SMTP_PORT", "465")])).unwrap_err();
+        assert!(error.contains("NINE_TURTLES_SMTP_HOST"), "{error}");
+        assert!(error.contains("NINE_TURTLES_SMTP_FROM"), "{error}");
 
         let all = vec![
             ("NINE_TURTLES_SMTP_HOST", "smtp-relay.brevo.com"),

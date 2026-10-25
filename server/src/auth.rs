@@ -522,6 +522,111 @@ pub(crate) async fn check_password(
     Some(matched)
 }
 
+/// Asks for `account`'s password before a change that could hand the
+/// account to someone else (a new email: decision 0088), checked as
+/// sign-in checks it: a password too long to match refused at once, the
+/// same count of wrong tries (`count_try`), and the same bounded line
+/// (`check_password`), against `stored` or, with none, a line nobody chose.
+/// Answers the refusal to send back if the password isn't the one, or none.
+pub(crate) async fn ask_password(
+    state: &AppState,
+    account: &Account,
+    password: String,
+    stored: Option<String>,
+) -> Option<Response> {
+    let wrong = || {
+        (
+            StatusCode::UNAUTHORIZED,
+            Json(json!({ "error": "wrong-password" })),
+        )
+            .into_response()
+    };
+    if password.len() > crate::password::MAXIMUM_LENGTH {
+        return Some(wrong());
+    }
+    if let Some(wait) = count_try(state, account).await {
+        return Some(wait_response(wait));
+    }
+    let someones = stored.is_some();
+    let Some(matched) = check_password(state, account, password, stored).await else {
+        return Some(StatusCode::SERVICE_UNAVAILABLE.into_response());
+    };
+    let mut limiters = state.limiter.lock().await;
+    if !(someones && matched) {
+        if let Some(wait) = limiters.wait(account, Instant::now()) {
+            return Some(wait_response(wait));
+        }
+        return Some(wrong());
+    }
+    limiters.right(account);
+    None
+}
+
+/// Where `settings` keeps a fingerprint (BLAKE2s) of the
+/// NINE_TURTLES_PASSWORD_HASH in force when the owner last set a password
+/// of their own with an emailed link.
+pub const OWNER_PASSWORD_FROM: &str = "owner_password_from";
+
+/// The fingerprint of NINE_TURTLES_PASSWORD_HASH kept in
+/// `OWNER_PASSWORD_FROM`: never the line itself.
+pub(crate) fn setting_fingerprint(setting: &PasswordSetting) -> String {
+    match setting {
+        PasswordSetting::Set(line) => crate::people::hex(&scramble(line)),
+        PasswordSetting::Missing | PasswordSetting::Invalid => "none".to_owned(),
+    }
+}
+
+/// The owner's way back that needs no email (decision 0088): a password the
+/// owner set with an emailed link replaces NINE_TURTLES_PASSWORD_HASH only
+/// while that setting stays the one in force when they set it. Once the
+/// owner (on the host) puts a new line in NINE_TURTLES_PASSWORD_HASH, it
+/// wins again: on start, their own password is forgotten and every device
+/// signed in as them is signed out, as a new password does. A setting
+/// that's missing or not a real line changes nothing, so nobody is locked
+/// out by a slip. Answers whether the owner's own password was forgotten.
+pub async fn owner_password_follows_setting(
+    db: &SqlitePool,
+    setting: &PasswordSetting,
+) -> Result<bool, sqlx::Error> {
+    if !matches!(setting, PasswordSetting::Set(_)) {
+        return Ok(false);
+    }
+    let mut transaction = db.begin_with("BEGIN IMMEDIATE").await?;
+    let own: Option<Option<String>> =
+        sqlx::query_scalar("SELECT password_hash FROM people WHERE id = ?")
+            .bind(OWNER)
+            .fetch_optional(&mut *transaction)
+            .await?;
+    if own.flatten().is_none() {
+        return Ok(false);
+    }
+    let from: Option<String> = sqlx::query_scalar("SELECT value FROM settings WHERE name = ?")
+        .bind(OWNER_PASSWORD_FROM)
+        .fetch_optional(&mut *transaction)
+        .await?;
+    if from.as_deref() == Some(setting_fingerprint(setting).as_str()) {
+        return Ok(false);
+    }
+    sqlx::query("UPDATE people SET password_hash = NULL WHERE id = ?")
+        .bind(OWNER)
+        .execute(&mut *transaction)
+        .await?;
+    sqlx::query("DELETE FROM settings WHERE name = ?")
+        .bind(OWNER_PASSWORD_FROM)
+        .execute(&mut *transaction)
+        .await?;
+    sqlx::query("DELETE FROM sessions WHERE person_id = ?")
+        .bind(OWNER)
+        .execute(&mut *transaction)
+        .await?;
+    transaction.commit().await?;
+    log::info(
+        "NINE_TURTLES_PASSWORD_HASH has changed, so it's the owner's password again; \
+         the one set by email is forgotten and the owner's devices are signed out",
+    );
+    Ok(true)
+}
+
 /// The scrambled password waiting with the newest unused, unexpired link
 /// that would make an account for `email` (Open sign-up, decision 0088).
 async fn waiting_sign_up(db: &SqlitePool, email: &str) -> Result<Option<String>, sqlx::Error> {

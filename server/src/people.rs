@@ -44,7 +44,11 @@ use sqlx::SqlitePool;
 
 use crate::{
     AppState,
-    auth::{SignedIn, database_problem, new_token, remember_device, scramble, session_cookie},
+    auth::{
+        Account, SignedIn, ask_password, database_problem, new_token, remember_device, scramble,
+        session_cookie,
+    },
+    config::PasswordSetting,
     log, now,
 };
 
@@ -133,7 +137,8 @@ pub const PER_READER_TABLES: &[(&str, &str)] = &[
 /// happens. First each feed they follow is let go as unsubscribing lets it
 /// go (`folders::clear`), their stars included, so a feed nobody else
 /// follows stops being checked and its articles nobody has go too; then
-/// every table in `PER_READER_TABLES` is emptied of their lines.
+/// every table in `PER_READER_TABLES` is emptied of their lines, and every
+/// emailed link to their address (an Open sign-up's has no reader number).
 pub async fn delete(db: &SqlitePool, person: i64) -> Result<(), sqlx::Error> {
     let mut transaction = db.begin_with("BEGIN IMMEDIATE").await?;
     let owner: Option<bool> = sqlx::query_scalar("SELECT owner FROM people WHERE id = ?")
@@ -143,6 +148,16 @@ pub async fn delete(db: &SqlitePool, person: i64) -> Result<(), sqlx::Error> {
     if owner != Some(false) {
         return Ok(());
     }
+    // An Open sign-up's links have no reader number yet, but hold their
+    // email (and, until confirmed, a password scramble): they go too, as
+    // does any other link to their address.
+    sqlx::query(
+        "DELETE FROM email_links
+         WHERE email = (SELECT email FROM people WHERE id = ?) COLLATE NOCASE",
+    )
+    .bind(person)
+    .execute(&mut *transaction)
+    .await?;
     sqlx::query("UPDATE entries SET starred = 0 WHERE person_id = ?")
         .bind(person)
         .execute(&mut *transaction)
@@ -203,10 +218,15 @@ async fn list(SignedIn(person): SignedIn, State(state): State<AppState>) -> Resp
 #[derive(Deserialize)]
 struct Email {
     email: String,
+    #[serde(default)]
+    password: String,
 }
 
-/// The owner's own email, to sign in with (their password stays the one in
-/// NINE_TURTLES_PASSWORD_HASH).
+/// The owner's own email, to sign in with and to get "Forgot your
+/// password?" links at. Their current password is asked for (decision
+/// 0088), checked as their password-only sign-in checks it (the same count
+/// of wrong tries and the same line), so a device left signed in as the
+/// owner can't send the owner's password links somewhere else.
 async fn set_email(
     SignedIn(person): SignedIn,
     State(state): State<AppState>,
@@ -216,6 +236,22 @@ async fn set_email(
         let email = form.email.trim();
         if !plausible_email(email) {
             return refused(StatusCode::BAD_REQUEST, "email");
+        }
+        let own: Result<Option<Option<String>>, sqlx::Error> =
+            sqlx::query_scalar("SELECT password_hash FROM people WHERE id = ?")
+                .bind(person)
+                .fetch_optional(&state.db)
+                .await;
+        let stored = match own {
+            Ok(own) => own.flatten().or(match &state.config.password {
+                PasswordSetting::Set(line) => Some(line.clone()),
+                _ => None,
+            }),
+            Err(error) => return database_problem("finding the owner", &error),
+        };
+        let password = form.password.clone();
+        if let Some(refusal) = ask_password(&state, &Account::Owner, password, stored).await {
+            return refusal;
         }
         let saved = sqlx::query("UPDATE people SET email = ? WHERE id = ?")
             .bind(email)
@@ -475,16 +511,8 @@ async fn sign_up_by_email(
         Err(error) => return database_problem("counting sign-ups", &error),
     }
     let checked = (StatusCode::ACCEPTED, Json(json!({ "confirm": email }))).into_response();
-    let taken: Result<bool, sqlx::Error> =
-        sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM people WHERE email = ? COLLATE NOCASE)")
-            .bind(email)
-            .fetch_one(&state.db)
-            .await;
-    match taken {
-        Ok(true) => return checked,
-        Ok(false) => {}
-        Err(error) => return database_problem("making an account", &error),
-    }
+    // The password is scrambled whether or not the address is taken (still
+    // one sign-up at a time), so the time taken doesn't tell either.
     let line = match tokio::task::spawn_blocking(move || crate::password::hash(&password)).await {
         Ok(Ok(line)) => line,
         Ok(Err(error)) => {
@@ -498,9 +526,19 @@ async fn sign_up_by_email(
             return StatusCode::INTERNAL_SERVER_ERROR.into_response();
         }
     };
-    match crate::accounts::send_sign_up_link(state, email, &line).await {
-        Ok(_) => checked,
-        Err(error) => database_problem("making a sign-up link", &error),
+    let taken: Result<bool, sqlx::Error> =
+        sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM people WHERE email = ? COLLATE NOCASE)")
+            .bind(email)
+            .fetch_one(&state.db)
+            .await;
+    match taken {
+        // The scramble is dropped: nothing waits for an address that has an account.
+        Ok(true) => checked,
+        Ok(false) => match crate::accounts::send_sign_up_link(state, email, &line).await {
+            Ok(_) => checked,
+            Err(error) => database_problem("making a sign-up link", &error),
+        },
+        Err(error) => database_problem("making an account", &error),
     }
 }
 
@@ -565,8 +603,14 @@ pub(crate) async fn recent_sign_ups(db: &SqlitePool, since: i64) -> Result<i64, 
         .await
 }
 
-/// One @ with something on each side, no spaces, at most 254 characters.
-/// Whether it really reaches someone is for the confirmation email.
+/// A bare address: one @ with something on each side, at most 254
+/// characters, and nothing that could make it more than an address (no
+/// name before it, no `<` `>`, quotes, commas, semicolons, colons,
+/// brackets, backslashes, spaces or control characters), so
+/// `mira <someone@example.com>` can't stand in
+/// for `someone@example.com` and dodge the hour's count for it. It must also
+/// be an address email can go to (`email::address`). Whether it really
+/// reaches someone is for the confirmation email.
 pub fn plausible_email(email: &str) -> bool {
     let mut parts = email.split('@');
     let (Some(name), Some(place), None) = (parts.next(), parts.next(), parts.next()) else {
@@ -575,9 +619,15 @@ pub fn plausible_email(email: &str) -> bool {
     email.len() <= EMAIL_MAXIMUM
         && !name.is_empty()
         && !place.is_empty()
-        && !email
-            .chars()
-            .any(|character| character.is_whitespace() || character.is_control())
+        && !email.chars().any(|character| {
+            character.is_whitespace()
+                || character.is_control()
+                || matches!(
+                    character,
+                    '<' | '>' | '"' | ',' | ';' | ':' | '(' | ')' | '[' | ']' | '\\'
+                )
+        })
+        && crate::email::address(email).is_some()
 }
 
 pub(crate) fn is_taken(error: &sqlx::Error) -> bool {
@@ -607,7 +657,7 @@ mod tests {
     use super::plausible_email;
 
     #[test]
-    fn plausible_emails_have_one_at_with_text_each_side_and_no_spaces() {
+    fn plausible_emails_are_bare_addresses_with_one_at_and_no_spaces() {
         for good in ["rohit@example.com", "a@b", "first.last+feeds@example.co.in"] {
             assert!(plausible_email(good), "{good}");
         }
@@ -619,6 +669,16 @@ mod tests {
             "ro hit@example.com",
             "a@b@c",
             "tab\t@example.com",
+            // A name before the address, or anything that could make one.
+            "evil<victim@example.com>",
+            "<victim@example.com>",
+            "victim@example.com>",
+            "\"evil\"@example.com",
+            "a,victim@example.com",
+            "a;victim@example.com",
+            "evil(victim)@example.com",
+            "victim@[127.0.0.1]",
+            "line\nbreak@example.com",
         ] {
             assert!(!plausible_email(bad), "{bad}");
         }

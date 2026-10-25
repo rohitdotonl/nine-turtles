@@ -114,9 +114,22 @@ test("the owner sets their email and signs in with it", async ({ page, browser }
   await expect(page.getByText("That doesn't look like an email address.")).toBeVisible();
   await expect(field).toHaveAttribute("aria-invalid", "true");
 
+  // Saving it asks for the owner's password, so a device left signed in
+  // can't send the owner's password links somewhere else.
+  const password = page.getByLabel("Your password");
   await field.fill("owner@example.com");
   await page.getByRole("button", { name: "Save your email" }).click();
+  await expect(page.getByText("Type your password too, to save your email.")).toBeVisible();
+  await expect(password).toHaveAttribute("aria-invalid", "true");
+  await password.fill("not the owner's password");
+  await password.press("Enter");
+  await expect(page.getByText("That isn't your password.")).toBeVisible();
+  await expect(password).toHaveValue("");
+
+  await password.fill(TEST_PASSWORD);
+  await page.getByRole("button", { name: "Save your email" }).click();
   await expect(page.getByText(/^Saved\. You can sign in with owner@example\.com/)).toBeVisible();
+  await expect(password).toHaveValue("");
   await expect(saveFirst).toHaveCount(0);
 
   // Closing Settings and opening it again shows the email just saved.

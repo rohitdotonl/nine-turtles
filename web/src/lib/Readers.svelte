@@ -1,7 +1,8 @@
 <!--
   Readers and Sign-up (SPEC section 18, decision 0087), two groups of
   Settings that only the owner sees. Readers: the owner's own email (to sign
-  in with, beside the password alone) and everyone with an account, by email
+  in with, beside the password alone, and for "Forgot your password?"
+  links; saving it asks for their password, decision 0088) and everyone with an account, by email
   and when they joined, never what they read. Sign-up: Closed (the default),
   Invite link, or Open, which can be chosen only while nine turtles can send
   the emails that confirm an address (decision 0088). An invite link is made
@@ -12,6 +13,7 @@
 <script lang="ts">
   import { tick } from "svelte";
   import Icon from "./Icon.svelte";
+  import { duration } from "./session";
   import {
     inviteLink,
     listPeople,
@@ -27,6 +29,9 @@
   let { email = null }: { email?: string | null } = $props();
 
   let ownEmail = $state("");
+  /** The owner's current password, asked for to save their email (decision 0088). */
+  let ownPassword = $state("");
+  let refusedField: "email" | "password" | undefined = $state();
   let people: Person[] = $state([]);
   let emailMessage = $state("");
   let emailRefused = $state(false);
@@ -86,27 +91,54 @@
     if (busy) return;
     const next = ownEmail.trim();
     emailRefused = false;
+    refusedField = undefined;
     if (!plausibleEmail(next)) {
       emailRefused = true;
+      refusedField = "email";
       emailMessage = "That doesn't look like an email address.";
       return;
     }
+    if (ownPassword === "") {
+      emailRefused = true;
+      refusedField = "password";
+      emailMessage = "Type your password too, to save your email.";
+      return;
+    }
     busy = true;
-    const result = await setOwnEmail(next);
+    const result = await setOwnEmail(next, ownPassword);
     busy = false;
-    if (result === "ok") {
+    if (result.ok) {
       emailMessage = `Saved. You can sign in with ${next} and your password; the password alone still works.`;
       savedEmail = next;
       ownEmail = next;
+      ownPassword = "";
       loadPeople();
-    } else {
-      emailRefused = result !== "unreachable";
-      emailMessage =
-        result === "already"
-          ? "Another reader has that email."
-          : result === "email"
-            ? "That doesn't look like an email address."
-            : "Couldn't save your email. Try again in a moment.";
+      return;
+    }
+    emailRefused = result.reason !== "unreachable";
+    refusedField =
+      result.reason === "email" || result.reason === "already"
+        ? "email"
+        : result.reason === "wrong-password" || result.reason === "wait"
+          ? "password"
+          : undefined;
+    if (result.reason === "wrong-password") ownPassword = "";
+    switch (result.reason) {
+      case "already":
+        emailMessage = "Another reader has that email.";
+        break;
+      case "email":
+        emailMessage = "That doesn't look like an email address.";
+        break;
+      case "wrong-password":
+        emailMessage = "That isn't your password.";
+        break;
+      case "wait":
+        emailMessage = `Too many wrong tries. Try again in ${duration(result.waitSeconds)}.`;
+        break;
+      case "unreachable":
+        emailMessage = "Couldn't save your email. Try again in a moment.";
+        break;
     }
   }
 
@@ -171,10 +203,13 @@
 <section aria-labelledby="readers-heading">
   <h3 id="readers-heading" class="inset-head">Readers</h3>
   <div class="inset-group">
-    <form class="inset-row" onsubmit={saveEmail}>
+    <!-- The email and password rows belong to this form by their form attribute, so each stays a row of the group. -->
+    <form id="own-email-form" class="hidden" onsubmit={saveEmail}></form>
+    <div class="inset-row">
       <label for="own-email" class="sr-only">Your email</label>
       <input
         id="own-email"
+        form="own-email-form"
         type="text"
         inputmode="email"
         autocomplete="email"
@@ -183,11 +218,27 @@
         placeholder="Your email"
         bind:value={ownEmail}
         aria-describedby="readers-message"
-        aria-invalid={emailRefused ? "true" : undefined}
+        aria-invalid={refusedField === "email" ? "true" : undefined}
         class="inset-input"
       />
-      <button type="submit" aria-disabled={busy} class="btn btn-small">Save<span class="sr-only"> your email</span></button>
-    </form>
+    </div>
+    <div class="inset-row">
+      <label for="own-email-password" class="sr-only">Your password</label>
+      <input
+        id="own-email-password"
+        form="own-email-form"
+        type="password"
+        autocomplete="current-password"
+        placeholder="Your password"
+        bind:value={ownPassword}
+        aria-describedby="readers-message"
+        aria-invalid={refusedField === "password" ? "true" : undefined}
+        class="inset-input"
+      />
+      <button type="submit" form="own-email-form" aria-disabled={busy} class="btn btn-small"
+        >Save<span class="sr-only"> your email</span></button
+      >
+    </div>
     {#each people as person (person.id)}
       <div class="inset-row">
         <p class="min-w-0">
@@ -203,7 +254,8 @@
   </p>
   <p class="inset-foot">
     Everyone with an account here, and when they joined. Nobody sees what anyone else reads. With your email you can sign
-    in by email and your password; the password alone still works.
+    in by email and your password (the password alone still works), and get a link if you forget it. Saving it asks for
+    your password.
   </p>
 </section>
 

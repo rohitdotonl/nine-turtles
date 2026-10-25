@@ -30,8 +30,8 @@ use sqlx::SqlitePool;
 use crate::{
     AppState,
     auth::{
-        Account, OWNER, SignedIn, check_password, count_try, database_problem, new_token,
-        remember_device, scramble, session_cookie, wait_response,
+        Account, OWNER, OWNER_PASSWORD_FROM, SignedIn, ask_password, database_problem, new_token,
+        remember_device, scramble, session_cookie, setting_fingerprint,
     },
     config::PasswordSetting,
     email::SIGN_OFF,
@@ -73,47 +73,108 @@ impl Purpose {
     }
 }
 
-/// How many links went to `email` (however it's capitalised) in the last hour.
-pub(crate) async fn sent_recently(db: &SqlitePool, email: &str) -> Result<i64, sqlx::Error> {
+/// How many emails went to `email` (however it's capitalised) in the last
+/// hour. Read inside the transaction that saves a link, so requests sent
+/// together can't race past the hour's share.
+async fn emails_to_address(
+    transaction: &mut sqlx::SqliteConnection,
+    email: &str,
+    hour_ago: i64,
+) -> Result<i64, sqlx::Error> {
     sqlx::query_scalar(
-        "SELECT COUNT(*) FROM email_links WHERE email = ? COLLATE NOCASE AND created_at > ?",
+        "SELECT COUNT(*) FROM email_links
+         WHERE email = ? COLLATE NOCASE AND emailed = 1 AND created_at > ?",
     )
     .bind(email)
-    .bind(now() - 60 * 60)
-    .fetch_one(db)
+    .bind(hour_ago)
+    .fetch_one(&mut *transaction)
     .await
 }
 
-/// Makes a new link and answers its ticket, or `None` if no random ticket
-/// could be made (said in the log). Links past their time are tidied away
-/// first; every link lives at least an hour, as long as the counts look back.
+/// How many times reader `person` asked to change their email in the last
+/// hour, whether or not an email went.
+async fn changes_tried(
+    transaction: &mut sqlx::SqliteConnection,
+    person: Option<i64>,
+    hour_ago: i64,
+) -> Result<i64, sqlx::Error> {
+    sqlx::query_scalar(
+        "SELECT COUNT(*) FROM email_links
+         WHERE person_id = ? AND purpose = 'change' AND created_at > ?",
+    )
+    .bind(person)
+    .bind(hour_ago)
+    .fetch_one(&mut *transaction)
+    .await
+}
+
+/// What `make_link` made.
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) enum Made {
+    /// A link to email, with its ticket.
+    Link(String),
+    /// Nothing to send: the address had its hour's share of emails, or the
+    /// try was only counted (`email_to` false).
+    Nothing,
+    /// The reader has asked to change their email too often this hour.
+    TooMany,
+    /// No random ticket could be made (said in the log).
+    NoTicket,
+}
+
+/// Saves a new link, counted and saved in one step behind SQLite's one
+/// writer at a time (`BEGIN IMMEDIATE`), so requests sent together can't
+/// race past the hour's share: at most `EMAILS_PER_ADDRESS_PER_HOUR`
+/// emails to one address, and as many tries to change one reader's email.
+///
+/// For a changed email, every try is counted towards the reader's share,
+/// whether or not it's emailed: one that isn't (`email_to` false, for an
+/// address another reader has, or one past its hour's emails) is kept spent
+/// at once and never counts towards the address's emails. So the answer
+/// never tells whether an address is taken. Links past their time are
+/// tidied away first; every link lives at least an hour, as long as the
+/// counts look back.
 pub(crate) async fn make_link(
     db: &SqlitePool,
     purpose: Purpose,
     person: Option<i64>,
     email: &str,
     password_hash: Option<&str>,
-) -> Result<Option<String>, sqlx::Error> {
+    email_to: bool,
+) -> Result<Made, sqlx::Error> {
     let ticket = match new_token() {
         Ok(ticket) => ticket,
         Err(error) => {
             log::problem(&format!("couldn't make an email link: {error}"));
-            return Ok(None);
+            return Ok(Made::NoTicket);
         }
     };
     let now = now();
+    let hour_ago = now - 60 * 60;
     let lifetime = match purpose {
         Purpose::Reset => RESET_LIFETIME,
         Purpose::SignUp | Purpose::Change => CONFIRM_LIFETIME,
     };
-    sqlx::query("DELETE FROM email_links WHERE expires_at <= ?")
-        .bind(now)
-        .execute(db)
-        .await?;
+    let mut transaction = db.begin_with("BEGIN IMMEDIATE").await?;
+    tidy_links_in(&mut transaction, now).await?;
+    if purpose == Purpose::Change
+        && changes_tried(&mut transaction, person, hour_ago).await? >= EMAILS_PER_ADDRESS_PER_HOUR
+    {
+        transaction.commit().await?;
+        return Ok(Made::TooMany);
+    }
+    let emailed = emails_to_address(&mut transaction, email, hour_ago).await?
+        < EMAILS_PER_ADDRESS_PER_HOUR
+        && email_to;
+    if !emailed && purpose != Purpose::Change {
+        transaction.commit().await?;
+        return Ok(Made::Nothing);
+    }
     sqlx::query(
         "INSERT INTO email_links
-             (purpose, person_id, email, password_hash, token_hash, created_at, expires_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)",
+             (purpose, person_id, email, password_hash, token_hash, created_at, expires_at,
+              used, emailed)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(purpose.stored())
     .bind(person)
@@ -122,9 +183,58 @@ pub(crate) async fn make_link(
     .bind(&scramble(&ticket)[..])
     .bind(now)
     .bind(now + lifetime)
-    .execute(db)
+    .bind(!emailed)
+    .bind(emailed)
+    .execute(&mut *transaction)
     .await?;
-    Ok(Some(ticket))
+    transaction.commit().await?;
+    Ok(if emailed {
+        Made::Link(ticket)
+    } else {
+        Made::Nothing
+    })
+}
+
+/// The same work as `make_link`, for an address with no account ("Forgot
+/// your password?"), so the time taken doesn't tell: the tidy, the count,
+/// and a write that saves nothing.
+async fn make_no_link(db: &SqlitePool, email: &str) -> Result<(), sqlx::Error> {
+    let now = now();
+    let mut transaction = db.begin_with("BEGIN IMMEDIATE").await?;
+    tidy_links_in(&mut transaction, now).await?;
+    emails_to_address(&mut transaction, email, now - 60 * 60).await?;
+    sqlx::query(
+        "INSERT INTO email_links
+             (purpose, person_id, email, password_hash, token_hash, created_at, expires_at)
+         SELECT 'reset', 0, ?, NULL, ?, ?, ? WHERE 0",
+    )
+    .bind(email)
+    .bind(&scramble(email)[..])
+    .bind(now)
+    .bind(now + RESET_LIFETIME)
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await
+}
+
+/// Deletes links past their time (each lives at least the hour the counts
+/// look back). Run with every new link and every round of background
+/// checking (`checking::round`), so on a quiet nine turtles too a used
+/// sign-up's email doesn't stay past its day.
+pub async fn tidy_links(db: &SqlitePool, now: i64) -> Result<(), sqlx::Error> {
+    let mut connection = db.acquire().await?;
+    tidy_links_in(&mut connection, now).await
+}
+
+async fn tidy_links_in(
+    connection: &mut sqlx::SqliteConnection,
+    now: i64,
+) -> Result<(), sqlx::Error> {
+    sqlx::query("DELETE FROM email_links WHERE expires_at <= ?")
+        .bind(now)
+        .execute(&mut *connection)
+        .await
+        .map(|_| ())
 }
 
 /// Sends the email that confirms a new account (sign-up while Open, or a
@@ -138,11 +248,15 @@ pub(crate) async fn send_sign_up_link(
     let Some(mailer) = &state.mailer else {
         return Ok(false);
     };
-    if sent_recently(&state.db, email).await? >= EMAILS_PER_ADDRESS_PER_HOUR {
-        return Ok(false);
-    }
-    let Some(ticket) =
-        make_link(&state.db, Purpose::SignUp, None, email, Some(password_hash)).await?
+    let Made::Link(ticket) = make_link(
+        &state.db,
+        Purpose::SignUp,
+        None,
+        email,
+        Some(password_hash),
+        true,
+    )
+    .await?
     else {
         return Ok(false);
     };
@@ -189,17 +303,27 @@ async fn forgot(State(state): State<AppState>, Json(form): Json<Forgot>) -> Resp
             .await;
     let (person, address) = match found {
         Ok(Some(found)) => found,
-        Ok(None) => return asked(),
+        // The same database work as for an address that has an account.
+        Ok(None) => {
+            return match make_no_link(&state.db, email).await {
+                Ok(()) => asked(),
+                Err(error) => database_problem("making a password link", &error),
+            };
+        }
         Err(error) => return database_problem("finding a reader", &error),
     };
-    match sent_recently(&state.db, &address).await {
-        Ok(count) if count >= EMAILS_PER_ADDRESS_PER_HOUR => return asked(),
-        Ok(_) => {}
-        Err(error) => return database_problem("counting emails", &error),
-    }
-    let ticket = match make_link(&state.db, Purpose::Reset, Some(person), &address, None).await {
-        Ok(Some(ticket)) => ticket,
-        Ok(None) => return asked(),
+    let made = make_link(
+        &state.db,
+        Purpose::Reset,
+        Some(person),
+        &address,
+        None,
+        true,
+    )
+    .await;
+    let ticket = match made {
+        Ok(Made::Link(ticket)) => ticket,
+        Ok(Made::Nothing | Made::TooMany | Made::NoTicket) => return asked(),
         Err(error) => return database_problem("making a password link", &error),
     };
     let link = mailer.link("/reset-password", &ticket);
@@ -229,7 +353,8 @@ struct Reset {
 }
 
 /// Sets a new password from a password link: once, within the hour. Every
-/// device signed in as that reader is signed out, and this one signed in.
+/// device signed in as that reader is signed out (and this one signed in),
+/// and their app password stops working.
 async fn reset(State(state): State<AppState>, Json(form): Json<Reset>) -> Response {
     if let Some(problem) = password_problem(&form.password) {
         return problem;
@@ -296,8 +421,9 @@ async fn reset(State(state): State<AppState>, Json(form): Json<Reset>) -> Respon
                 .fetch_optional(&mut *transaction)
                 .await?
                 .flatten();
-        // Any other password link for them stops working, and every device
-        // signed in as them is signed out.
+        // Any other password link for them stops working, every device
+        // signed in as them is signed out, and their app password (for
+        // other feed reader apps) stops working too.
         sqlx::query("UPDATE email_links SET used = 1 WHERE person_id = ? AND purpose = 'reset'")
             .bind(person)
             .execute(&mut *transaction)
@@ -306,6 +432,22 @@ async fn reset(State(state): State<AppState>, Json(form): Json<Reset>) -> Respon
             .bind(person)
             .execute(&mut *transaction)
             .await?;
+        sqlx::query("DELETE FROM app_passwords WHERE person_id = ?")
+            .bind(person)
+            .execute(&mut *transaction)
+            .await?;
+        // The owner's own password lasts only while NINE_TURTLES_PASSWORD_HASH
+        // stays as it is now (`auth::owner_password_follows_setting`).
+        if person == OWNER {
+            sqlx::query(
+                "INSERT INTO settings (name, value) VALUES (?, ?)
+                 ON CONFLICT (name) DO UPDATE SET value = excluded.value",
+            )
+            .bind(OWNER_PASSWORD_FROM)
+            .bind(setting_fingerprint(&state.config.password))
+            .execute(&mut *transaction)
+            .await?;
+        }
         transaction.commit().await?;
         Ok(Some((person, email)))
     }
@@ -432,9 +574,13 @@ async fn confirm(State(state): State<AppState>, Json(form): Json<Confirm>) -> Re
             }
             Err(error) => return database_problem("making an account", &error),
         };
-        // Every other link waiting to make this account stops working.
+        // Every other link waiting to make this account stops working, and
+        // the password scrambles waiting with them are blanked: the account
+        // has its own now. The emptied lines stay only for the hour's
+        // counts, until they expire (`tidy_links`).
         let spent = sqlx::query(
-            "UPDATE email_links SET used = 1 WHERE purpose = 'sign-up' AND email = ? COLLATE NOCASE",
+            "UPDATE email_links SET used = 1, password_hash = ''
+             WHERE purpose = 'sign-up' AND email = ? COLLATE NOCASE",
         )
         .bind(&email)
         .execute(&mut *transaction)
@@ -542,8 +688,7 @@ async fn change_email(
     }
 
     // The password, checked as a sign-in by email checks it: the same count
-    // of wrong tries (under the reader's email, the owner's too), recorded
-    // before the check so tries sent together can't race past it, and the
+    // of wrong tries (under the reader's email, the owner's too) and the
     // same bounded line for the check itself.
     let account = match current.as_deref() {
         Some(current) => Account::named(Some(current)),
@@ -555,63 +700,38 @@ async fn change_email(
         PasswordSetting::Set(line) if owner => Some(line.clone()),
         _ => None,
     });
-    // A password this long can never match: refused at once, as at sign-in.
-    if form.password.len() > crate::password::MAXIMUM_LENGTH {
-        return refused(StatusCode::UNAUTHORIZED, "wrong-password");
+    if let Some(refusal) = ask_password(&state, &account, form.password, stored).await {
+        return refusal;
     }
-    if let Some(wait) = count_try(&state, &account).await {
-        return wait_response(wait);
-    }
-    let someones = stored.is_some();
-    let Some(matched) = check_password(&state, &account, form.password, stored).await else {
-        return StatusCode::SERVICE_UNAVAILABLE.into_response();
-    };
-    if !(someones && matched) {
-        if let Some(wait) = state
-            .limiter
-            .lock()
-            .await
-            .wait(&account, std::time::Instant::now())
-        {
-            return wait_response(wait);
-        }
-        return refused(StatusCode::UNAUTHORIZED, "wrong-password");
-    }
-    state.limiter.lock().await.right(&account);
 
-    let recent: Result<i64, sqlx::Error> = sqlx::query_scalar(
-        "SELECT COUNT(*) FROM email_links WHERE person_id = ? AND purpose = 'change' AND created_at > ?",
-    )
-    .bind(person)
-    .bind(now() - 60 * 60)
-    .fetch_one(&state.db)
-    .await;
-    match recent {
-        Ok(count) if count >= EMAILS_PER_ADDRESS_PER_HOUR => return too_many(),
-        Ok(_) => {}
-        Err(error) => return database_problem("counting emails", &error),
-    }
-    match sent_recently(&state.db, &email).await {
-        Ok(count) if count >= EMAILS_PER_ADDRESS_PER_HOUR => return too_many(),
-        Ok(_) => {}
-        Err(error) => return database_problem("counting emails", &error),
-    }
     let sent = (StatusCode::ACCEPTED, Json(json!({ "sent_to": email }))).into_response();
-    // An address another reader has gets nothing, and the answer is the
-    // same, so no reader learns who else is here.
+    // An address another reader has gets nothing, but the try counts
+    // towards the reader's hour all the same, with the same database work
+    // and the same answer, so no reader learns who else is here. An address
+    // that's had its hour's emails gets nothing either, answered the same.
     let taken: Result<bool, sqlx::Error> =
         sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM people WHERE email = ? COLLATE NOCASE)")
             .bind(&email)
             .fetch_one(&state.db)
             .await;
-    match taken {
-        Ok(true) => return sent,
-        Ok(false) => {}
+    let taken = match taken {
+        Ok(taken) => taken,
         Err(error) => return database_problem("finding a reader", &error),
-    }
-    let ticket = match make_link(&state.db, Purpose::Change, Some(person), &email, None).await {
-        Ok(Some(ticket)) => ticket,
-        Ok(None) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+    };
+    let made = make_link(
+        &state.db,
+        Purpose::Change,
+        Some(person),
+        &email,
+        None,
+        !taken,
+    )
+    .await;
+    let ticket = match made {
+        Ok(Made::Link(ticket)) => ticket,
+        Ok(Made::Nothing) => return sent,
+        Ok(Made::TooMany) => return too_many(),
+        Ok(Made::NoTicket) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
         Err(error) => return database_problem("making an email link", &error),
     };
     let link = mailer.link("/confirm-email", &ticket);

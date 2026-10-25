@@ -21,7 +21,7 @@ use std::{
 };
 
 use lettre::{
-    AsyncSmtpTransport, AsyncTransport, Message, Tokio1Executor,
+    Address, AsyncSmtpTransport, AsyncTransport, Message, Tokio1Executor,
     message::{Mailbox, header::ContentType},
     transport::smtp::authentication::Credentials,
 };
@@ -32,7 +32,7 @@ use crate::log;
 const SEND_TIME_LIMIT: Duration = Duration::from_secs(20);
 
 /// The SMTP settings (`NINE_TURTLES_SMTP_*`, read in `config`).
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Settings {
     pub host: String,
     pub port: u16,
@@ -40,6 +40,28 @@ pub struct Settings {
     pub password: String,
     /// Who emails come from, such as `nine turtles <hello@nineturtles.app>`.
     pub from: String,
+}
+
+/// Never shows the SMTP password, even in a debugging print of the settings.
+impl std::fmt::Debug for Settings {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("Settings")
+            .field("host", &self.host)
+            .field("port", &self.port)
+            .field("username", &self.username)
+            .field("password", &"(hidden)")
+            .field("from", &self.from)
+            .finish()
+    }
+}
+
+/// `text` as an address email can go to, if it's one and nothing more
+/// (no name before it): what's parsed must be exactly what was typed.
+pub fn address(text: &str) -> Option<Address> {
+    text.parse::<Address>()
+        .ok()
+        .filter(|address| AsRef::<str>::as_ref(address) == text)
 }
 
 /// Whether a host is this computer. Only there may email go unencrypted
@@ -157,7 +179,11 @@ impl Mailer {
                 tokio::spawn(async move {
                     match transport.send(message).await {
                         Ok(_) => log::info(&format!("sent {what}")),
-                        Err(error) => log::problem(&format!("couldn't send {what}: {error}")),
+                        // Never the mail server's own words: they often
+                        // repeat the address ("550 <x@y>: rejected").
+                        Err(error) => {
+                            log::problem(&format!("couldn't send {what}: {}", why_not_sent(&error)))
+                        }
                     }
                 });
             }
@@ -165,9 +191,11 @@ impl Mailer {
     }
 
     fn message(&self, to: &str, subject: &str, body: String) -> Result<Message, String> {
-        let to: Mailbox = to
-            .parse()
-            .map_err(|_| "the address isn't one email can go to".to_owned())?;
+        // A bare address only, never a name with one inside it.
+        let to = Mailbox::new(
+            None,
+            address(to).ok_or_else(|| "the address isn't one email can go to".to_owned())?,
+        );
         Message::builder()
             .from(self.from.clone())
             .to(to)
@@ -175,6 +203,19 @@ impl Mailer {
             .header(ContentType::TEXT_PLAIN)
             .body(body)
             .map_err(|error| error.to_string())
+    }
+}
+
+/// Why an email wasn't sent, in words that never include the address.
+fn why_not_sent(error: &lettre::transport::smtp::Error) -> &'static str {
+    if error.is_timeout() {
+        "the mail server took too long"
+    } else if error.is_permanent() {
+        "the mail server refused it"
+    } else if error.is_transient() {
+        "the mail server asked to try later"
+    } else {
+        "the mail server couldn't be reached or signed in to"
     }
 }
 
@@ -212,10 +253,43 @@ mod tests {
     }
 
     #[test]
+    fn the_settings_never_show_the_smtp_password() {
+        let settings = Settings {
+            host: "smtp-relay.brevo.com".to_owned(),
+            port: 587,
+            username: "login@example.com".to_owned(),
+            password: "the-smtp-key".to_owned(),
+            from: "hello@nineturtles.app".to_owned(),
+        };
+        let shown = format!("{settings:?}");
+        assert!(!shown.contains("the-smtp-key"), "{shown}");
+        assert!(shown.contains("smtp-relay.brevo.com"), "{shown}");
+    }
+
+    #[test]
+    fn only_a_bare_address_is_one_email_goes_to() {
+        assert!(address("mira@example.com").is_some());
+        for named in [
+            "evil<victim@example.com>",
+            "evil <victim@example.com>",
+            "<victim@example.com>",
+            " mira@example.com",
+        ] {
+            assert!(address(named).is_none(), "{named}");
+        }
+    }
+
+    #[test]
     fn the_outbox_keeps_what_would_have_been_sent() {
         let (mailer, outbox) = Mailer::outbox(reqwest::Url::parse("http://x.test").unwrap());
         mailer.send_later("mira@example.com", "Hello", "Body".to_owned(), "a test");
         mailer.send_later("not an address", "Hello", "Body".to_owned(), "a test");
+        mailer.send_later(
+            "evil<mira@example.com>",
+            "Hello",
+            "Body".to_owned(),
+            "a test",
+        );
         let sent = outbox.lock().unwrap();
         assert_eq!(sent.len(), 1);
         assert_eq!(sent[0].to, "mira@example.com");

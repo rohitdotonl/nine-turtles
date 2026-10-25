@@ -4,9 +4,11 @@
 -- Each link carries a long random ticket (32 bytes, as a device's sign-in
 -- ticket); only its BLAKE2s scramble is kept here, so a copy of the
 -- database can't be used to follow one. A link works once, until it
--- expires (a day, or an hour for a new password). Used and expired lines
--- are kept until they expire, so the emails an address was sent in the
--- last hour can be counted. Nothing already stored changes.
+-- expires (a day, or an hour for a new password). Used lines are kept
+-- until they expire, so the emails an address was sent in the last hour
+-- can be counted; expired lines are deleted every round of background
+-- checking. A confirmed sign-up's waiting password scramble is blanked at
+-- once. Nothing already stored changes.
 CREATE TABLE email_links (
     id INTEGER PRIMARY KEY,
     -- 'sign-up': confirms an account made while sign-up is Open. The
@@ -25,8 +27,14 @@ CREATE TABLE email_links (
     created_at INTEGER NOT NULL,
     expires_at INTEGER NOT NULL,
     used INTEGER NOT NULL DEFAULT 0 CHECK (used IN (0, 1)),
+    -- 0 only for a 'change' try to an address another reader has: nothing
+    -- is emailed and it's spent at once, but it counts towards the reader's
+    -- changes in the hour, so the answer never tells the address is taken.
+    -- Only emailed lines count towards an address's emails in the hour.
+    emailed INTEGER NOT NULL DEFAULT 1 CHECK (emailed IN (0, 1)),
     CHECK ((purpose = 'sign-up') = (person_id IS NULL)),
-    CHECK ((purpose = 'sign-up') = (password_hash IS NOT NULL))
+    CHECK ((purpose = 'sign-up') = (password_hash IS NOT NULL)),
+    CHECK (emailed = 1 OR (purpose = 'change' AND used = 1))
 ) STRICT;
 
 -- How many emails went to one address, or for one purpose, in the last hour.

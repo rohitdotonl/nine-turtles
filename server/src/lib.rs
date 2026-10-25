@@ -128,12 +128,13 @@ pub async fn state(config: Config) -> Result<AppState, String> {
 
     let mailer = match (&config.smtp, &config.public_url) {
         (Some(smtp), Some(base)) => Some(email::Mailer::smtp(smtp, base.clone())?),
+        // Also refused when the settings are read (`Config::from_env`).
         (Some(_), None) => {
-            log::problem(
-                "the email settings are set but NINE_TURTLES_PUBLIC_URL isn't, so no email is \
-                 sent: every link in one starts with that address",
+            return Err(
+                "the email settings are set but NINE_TURTLES_PUBLIC_URL isn't: every link in an \
+                 email starts with that address, so set it too (docs/operations/email.md)"
+                    .to_owned(),
             );
-            None
         }
         (None, _) => None,
     };
@@ -152,6 +153,11 @@ pub async fn state(config: Config) -> Result<AppState, String> {
         latest_backup: Arc::default(),
         mailer,
     };
+    // A new NINE_TURTLES_PASSWORD_HASH wins over a password the owner set
+    // by email (decision 0088): their way back that needs no email.
+    auth::owner_password_follows_setting(&state.db, &state.config.password)
+        .await
+        .map_err(|error| format!("couldn't check the owner's password: {error}"))?;
     Ok(state)
 }
 

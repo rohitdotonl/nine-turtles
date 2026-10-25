@@ -17,4 +17,5 @@ plain steps, no assumed knowledge of a particular tool.
 
 - `backups.md`: nightly backups, switching them on, checking them and restoring a copy (decision 0076).
 - `email.md`: switching on email (Brevo, or any SMTP service), for confirmation and password links (decision 0088).
+- `owner-password.md`: getting back in as the owner without email, by putting a new password in Render (decision 0088).
 - `moving-hosts.md`: moving nine turtles to another host with everything kept.
