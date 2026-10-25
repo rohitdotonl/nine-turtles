@@ -2,14 +2,15 @@
   nine turtles' logo (DESIGN.md → "Name and signature", decision 0067): nine
   small turtles seen from the side, the middle row a little to the right, in
   the color of the text around it. It sits beside the name, which says it in
-  words, so screen readers skip it. The drawings are in docs/logo/.
+  words, so screen readers skip it. The same drawing is in docs/logo/ and in
+  the website's top bar (website/src/_includes/base.njk): change all three together.
 -->
 <script lang="ts">
   let { width }: { width: number } = $props();
 </script>
 
 <svg
-  class="flex-none"
+  class="logo flex-none"
   viewBox="9 17 82 66"
   width={width}
   height={Math.round((width * 66) / 82)}

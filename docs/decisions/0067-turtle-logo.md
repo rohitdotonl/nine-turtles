@@ -28,3 +28,5 @@ and installing (`apple-touch-icon.png` 180px, `icon-192.png`,
 smaller, so a phone that crops icons to a circle keeps them whole).
 
 **Easy to change:** redraw the SVGs and export the PNGs at those sizes.
+The drawing is also inline in `web/src/lib/Logo.svelte` (the app) and
+`website/src/_includes/base.njk` (the website): change all three together.
