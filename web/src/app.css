@@ -418,35 +418,30 @@ body {
 }
 
 /*
-  "Show older items": the list's last row rather than a boxed button. It
-  lines up with the titles, has the rows' hairline above it and their pill
-  under the pointer, and its words are in the accent, as a list's
-  "Show more" row is, so it reads as part of the list and as something to
-  press. At least 44px tall to touch.
+  "Show older items": a small, quiet button centred under the list, in muted
+  grey with a soft hairline pill around it, so it's plainly something to
+  press without shouting. Never in the accent: the accent marks only what's
+  unread or found, never a button (decisions 0037, 0057). 44px tall to
+  touch. When the list has ended, "You're all caught up." takes its place.
 */
 .list-more {
-  position: relative;
   display: block;
   min-height: 2.75rem;
-  margin-inline: calc(var(--pill-inset, 0.5rem) - var(--list-start, 2rem)) calc(var(--pill-inset, 0.5rem) - var(--list-end, 1.5rem));
-  width: calc(100% + var(--list-start, 2rem) + var(--list-end, 1.5rem) - 2 * var(--pill-inset, 0.5rem));
-  padding-block: 0.6875rem;
-  padding-left: calc(var(--list-start, 2rem) - var(--pill-inset, 0.5rem));
-  color: var(--accent);
-  line-height: 1.3;
-}
-.list-more::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: calc(var(--list-start, 2rem) - var(--pill-inset, 0.5rem));
-  right: 0;
-  border-top: 1px solid color-mix(in srgb, var(--ink) 9%, transparent);
+  margin: 1rem auto 0.5rem;
+  padding: 0 1.125rem;
+  border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
 }
 @media (hover: hover) {
-  .list-more:hover::before {
-    display: none;
+  .list-more:hover {
+    color: var(--ink);
+    background-color: color-mix(in srgb, var(--ink) 5%, transparent);
   }
+}
+.list-more[aria-disabled="true"] {
+  cursor: default;
 }
 
 /*

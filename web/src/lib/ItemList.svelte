@@ -5,8 +5,8 @@
   starred ones carry a small star: each state shows without color too. In
   river mode (SPEC section 10) every title looks the same, read or not.
 
-  It shows 50 and then ends; "Show older items" adds the next 50 below, and
-  nothing above moves. Choosing an article (a click, Enter, or j and k)
+  It shows 50 and then ends; a quiet "Show older items" button adds the next
+  50 below, and nothing above moves. At the very end, "You're all caught up." Choosing an article (a click, Enter, or j and k)
   selects it and the reading area shows it (SPEC section 7); the next one is
   fetched in advance.
 
@@ -475,14 +475,13 @@
     {/each}
   </ul>
   {#if next !== null}
-    <!-- The list's last row, not a separate box: the titles' left edge, a hairline above, words in the accent. -->
-    <button type="button" aria-disabled={busy} onclick={() => load(next)} class="list-more place cursor-pointer text-left text-ui font-semibold">
-      {order === "oldest" ? "Show newer items" : "Show older items"}
+    <!-- A small grey pill centred under the list; while the next 50 load it says so, quietly. -->
+    <button type="button" aria-disabled={busy} onclick={() => load(next)} class="list-more cursor-pointer text-meta">
+      {busy ? "Loading…" : order === "oldest" ? "Show newer items" : "Show older items"}
     </button>
   {:else if articles.length > 0}
-    <!-- A finite list says when it's finished (SPEC.md section 6). -->
-    <!-- A quiet caption at the titles' left edge, with no rule above it. -->
-    <p class="mt-5 text-meta text-muted">That's everything.</p>
+    <!-- A finite list says when it's finished (SPEC.md section 6): a quiet caption centred under the last row. -->
+    <p class="mt-5 text-center text-meta text-muted">You're all caught up.</p>
   {/if}
 {/if}
 {#if problem}

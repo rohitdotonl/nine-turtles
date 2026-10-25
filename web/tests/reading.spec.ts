@@ -394,11 +394,11 @@ test.describe("on a wide window", () => {
       return [getComputedStyle(element).backgroundColor, color];
     });
     expect(fill).toBe(tint);
-    // A finished list says so, in a quiet caption at the titles' edge, with no rule.
-    const end = page.getByText("That's everything.");
+    // A finished list says so, in a quiet caption centred under it, with no rule.
+    const end = page.getByText("You're all caught up.");
     await expect(end).toBeVisible();
     await expect(end).toHaveCSS("border-top-width", "0px");
-    await expect(end).toHaveCSS("text-align", "start");
+    await expect(end).toHaveCSS("text-align", "center");
     await expect(page.getByRole("button", { name: "Show older items" })).toHaveCount(0);
     // The note (here, Undo for a star) sits at the foot of the list pane, even under a short list.
     await page.keyboard.press("s");
