@@ -19,6 +19,8 @@
 
   While the sidebar search holds text, a flat list of the folders and feeds
   whose name contains it takes their place.
+
+  In river mode (SPEC section 10) there are no counts.
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
@@ -32,6 +34,7 @@
     search,
     follow,
     phone = false,
+    river = false,
   }: {
     feeds: Feed[];
     folders: Folder[];
@@ -41,6 +44,8 @@
     follow: (event: MouseEvent, next: Route) => void;
     /** The phone's feeds screen: no selection, and a chevron on every row. */
     phone?: boolean;
+    /** River mode: no unread counts. */
+    river?: boolean;
   } = $props();
 
   const OPEN_KEY = "nine-turtles.open-folders";
@@ -78,7 +83,7 @@
 </script>
 
 {#snippet count(unread: number)}
-  {#if unreadLabel(unread)}<span class="min-w-[2ch] shrink-0 text-right text-meta text-muted tabular-nums"
+  {#if !river && unreadLabel(unread)}<span class="min-w-[2ch] shrink-0 text-right text-meta text-muted tabular-nums"
       >{unreadLabel(unread)}<span class="sr-only"> unread</span></span
     >{/if}
 {/snippet}

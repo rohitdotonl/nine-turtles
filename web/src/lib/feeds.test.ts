@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  homeView,
   explain,
   findByName,
   folderUnread,
@@ -133,5 +134,12 @@ describe("the OPML import summary", () => {
       "1 feed was already here, so it wasn't added again.",
     ]);
     expect(importMessage({ added: 0, already: 0, foldersAdded: 0, unreadable: [] })).toEqual(["No new feeds were added."]);
+  });
+});
+
+describe("reading modes", () => {
+  it("opens on Unread in inbox mode and on All in river mode", () => {
+    expect(homeView("inbox")).toBe("unread");
+    expect(homeView("river")).toBe("all");
   });
 });

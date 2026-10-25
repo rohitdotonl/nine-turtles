@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SEQUENCE_MS, SHORTCUTS, createKeyReader, keyCap, shortcutMatches, type KeyPress } from "./keyboard";
+import { SEQUENCE_MS, SHORTCUTS, createKeyReader, keyCap, shortcutMatches, shortcutsFor, type KeyPress } from "./keyboard";
 
 const press = (key: string, extra: Partial<KeyPress> = {}): KeyPress => ({
   key,
@@ -143,5 +143,18 @@ describe("finding a shortcut (decision 0062)", () => {
 
   it("shows everything when nothing is typed", () => {
     expect(shortcutMatches(star, "  ")).toBe(true);
+  });
+});
+
+describe("the cheat sheet in river mode", () => {
+  it("leaves out Go to Unread and Mark all as read, and keeps the rest", () => {
+    const inbox = shortcutsFor(false).map((each) => each.action);
+    const river = shortcutsFor(true).map((each) => each.action);
+    expect(inbox).toContain("Go to Unread");
+    expect(inbox).toContain("Mark all as read");
+    expect(river).not.toContain("Go to Unread");
+    expect(river).not.toContain("Mark all as read");
+    expect(river).toContain("Mark unread");
+    expect(river.length).toBe(inbox.length - 2);
   });
 });

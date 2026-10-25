@@ -34,6 +34,7 @@
     folders,
     here,
     found = "",
+    river = false,
     onChange,
   }: {
     query: Query;
@@ -43,6 +44,8 @@
     here: Scope;
     /** How many the search found ("28 results"), empty until known; the options repeat it where they'd cover the list's own line. */
     found?: string;
+    /** River mode: there's no Unread view to search in (the Unread filter stays). */
+    river?: boolean;
     /** The query changed; `now` when the search should follow at once, not after a pause in typing. */
     onChange: (query: Query, now: boolean) => void;
   } = $props();
@@ -379,7 +382,7 @@
             class="menu-select"
           >
             <option value="" disabled>Other feed or folder</option>
-            <option value="view:unread">Unread</option>
+            {#if !river}<option value="view:unread">Unread</option>{/if}
             <option value="view:starred">Starred</option>
             {#if folders.length > 0}
               <optgroup label="Folders">

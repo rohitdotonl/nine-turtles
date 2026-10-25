@@ -150,6 +150,14 @@ export const SHORTCUTS: { keys: string[]; action: string; ready: boolean; group:
   { keys: ["?"], action: "This list of shortcuts", ready: true, group: "Anywhere" },
 ];
 
+/** What river mode has no use for (SPEC section 10): there's no Unread view, and nothing to mark all as read. */
+const NOT_IN_RIVER = ["g then u", "Shift+A"];
+
+/** The shortcuts the cheat sheet lists: those that work today, in this reading mode. */
+export function shortcutsFor(river: boolean): typeof SHORTCUTS {
+  return SHORTCUTS.filter((each) => each.ready && !(river && each.keys.some((key) => NOT_IN_RIVER.includes(key))));
+}
+
 /**
  * Whether a shortcut fits what was typed in the list's find field: its
  * words contain it ("star"), or one of its keys is it ("s", "g u", "shift a").
