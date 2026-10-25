@@ -303,14 +303,21 @@ async fn move_to(
         // A feed unsubscribed from at that address, still waiting for Undo,
         // is cleared first, as adding it would.
         make_room(&mut transaction, &key).await?;
-        let taken: Option<i64> =
-            sqlx::query_scalar("SELECT id FROM feeds WHERE url_key = ? AND id != ?")
-                .bind(&key)
-                .bind(id)
-                .fetch_optional(&mut *transaction)
-                .await?;
-        if taken.is_some() {
-            return Ok(Err(refused(StatusCode::CONFLICT, "already")));
+        // Another feed at that address: one followed, or one unsubscribed
+        // from earlier whose line stays for its starred articles. Merging
+        // two feeds is never done quietly, so either is refused, in words
+        // that say which.
+        let taken: Option<bool> = sqlx::query_scalar(
+            "SELECT unsubscribed_at IS NULL FROM feeds WHERE url_key = ? AND id != ?",
+        )
+        .bind(&key)
+        .bind(id)
+        .fetch_optional(&mut *transaction)
+        .await?;
+        match taken {
+            Some(true) => return Ok(Err(refused(StatusCode::CONFLICT, "already"))),
+            Some(false) => return Ok(Err(refused(StatusCode::CONFLICT, "kept-stars"))),
+            None => {}
         }
         let every = checking::rhythm(&parsed, now);
         sqlx::query(

@@ -1,7 +1,7 @@
 # nine turtles' logo
 
 Nine small turtles seen from the side, in three rows of three, the middle
-row a little to the right (decision 0068). One ink: the text color.
+row a little to the right (decision 0067). One ink: the text color.
 
 - `nine-turtles-mark.svg`: the turtles alone, on nothing, in dark ink.
 - `nine-turtles-icon-light.svg`: the app icon by day, dark on white.

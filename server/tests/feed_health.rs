@@ -264,7 +264,7 @@ async fn find_new_address_offers_the_sites_feeds_and_moving_keeps_everything() {
     let (status, _) = reader
         .post(
             &format!("/api/feeds/{old}"),
-            json!({ "title": "My blog", "folders": [] }),
+            json!({ "title": "My blog", "folders": [], "new_folder": "Reading" }),
         )
         .await;
     assert_eq!(status, StatusCode::NO_CONTENT);
@@ -274,6 +274,14 @@ async fn find_new_address_offers_the_sites_feeds_and_moving_keeps_everything() {
         .post(
             "/api/articles/read",
             json!({ "ids": [first], "read": true }),
+        )
+        .await;
+    assert!(status.is_success(), "{status}");
+    let second = articles["articles"][1]["id"].as_i64().unwrap();
+    let (status, _) = reader
+        .post(
+            "/api/articles/starred",
+            json!({ "ids": [second], "starred": true }),
         )
         .await;
     assert!(status.is_success(), "{status}");
@@ -315,6 +323,22 @@ async fn find_new_address_offers_the_sites_feeds_and_moving_keeps_everything() {
         .map(|article| article["read"].as_bool().unwrap())
         .collect();
     assert_eq!(read, [true]);
+    let starred: Vec<i64> = reader.get("/api/articles?view=starred").await["articles"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|article| article["id"].as_i64().unwrap())
+        .collect();
+    assert_eq!(starred, [second]);
+    let library = reader.get("/api/feeds").await;
+    let moved_feed = library["feeds"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|feed| feed["id"] == old)
+        .unwrap()
+        .clone();
+    assert_eq!(moved_feed["folders"].as_array().unwrap().len(), 1);
     assert!(reader.listed().await.is_empty());
 
     // An address that's already followed, or that isn't a feed, is refused.
@@ -358,4 +382,41 @@ async fn retry_waits_when_the_publisher_asked_to_slow_down() {
     assert!(answer["until"].as_i64().unwrap() >= now + HOUR);
     // The publisher wasn't asked again.
     assert_eq!(reader.published.lock().unwrap().asked.len(), asked);
+}
+
+#[tokio::test]
+async fn an_address_kept_for_its_stars_is_refused_rather_than_merged() {
+    let reader = Reader::new().await;
+    let old = reader.follow("/old.xml").await;
+    // Followed once, a star kept, then unsubscribed from and cleared for good.
+    let earlier = reader.follow("/other.xml").await;
+    let articles = reader.get(&format!("/api/articles?feed={earlier}")).await;
+    let star = articles["articles"][0]["id"].as_i64().unwrap();
+    reader
+        .post(
+            "/api/articles/starred",
+            json!({ "ids": [star], "starred": true }),
+        )
+        .await;
+    let (status, _) = reader
+        .post(&format!("/api/feeds/{earlier}/unsubscribe"), json!({}))
+        .await;
+    assert!(status.is_success(), "{status}");
+    nine_turtles::folders::clear_unsubscribed(&reader.state.db, nine_turtles::now() + 1)
+        .await
+        .unwrap();
+
+    let (status, refused) = reader
+        .post(
+            &format!("/api/health/{old}/address"),
+            json!({ "url": format!("{}/other.xml", reader.site) }),
+        )
+        .await;
+    assert_eq!(
+        (status, refused["error"].as_str()),
+        (StatusCode::CONFLICT, Some("kept-stars"))
+    );
+    // The star is still there.
+    let starred = reader.get("/api/articles?view=starred").await;
+    assert_eq!(starred["articles"][0]["id"], star);
 }

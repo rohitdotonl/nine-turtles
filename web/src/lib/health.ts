@@ -24,7 +24,7 @@ export type Sick = {
 /** Why an action on the page didn't work. */
 export type HealthRefusal =
   | { error: "asked-to-wait"; until: number }
-  | { error: "already" | "no-feed" | "not-found" | "unreachable" | "not-allowed" | "too-big" | "gone" | "trouble" };
+  | { error: "already" | "kept-stars" | "no-feed" | "not-found" | "unreachable" | "not-allowed" | "too-big" | "gone" | "trouble" };
 
 export async function listSick(): Promise<Sick[]> {
   const response = await api("/api/health", { cache: "no-store" });
@@ -81,7 +81,7 @@ async function post(path: string, body: unknown): Promise<Answer> {
     };
   }
   if (answer.error === "asked-to-wait" && typeof answer.until === "number") return { error: "asked-to-wait", until: answer.until };
-  const known = ["already", "no-feed", "not-found", "unreachable", "not-allowed", "too-big"] as const;
+  const known = ["already", "kept-stars", "no-feed", "not-found", "unreachable", "not-allowed", "too-big"] as const;
   const error = known.find((word) => word === answer.error);
   return { error: error ?? "trouble" };
 }
@@ -159,6 +159,8 @@ export function refusalMessage(refusal: HealthRefusal, doing: "retry" | "find" |
       return `The site asked nine turtles to wait until ${when(refusal.until)}, so it hasn't been asked again yet.`;
     case "already":
       return "You already follow that feed.";
+    case "kept-stars":
+      return "You followed the feed at that address before, and its starred articles are kept under it. Add it again with Add feed instead, then unsubscribe from this one.";
     case "no-feed":
       return doing === "find"
         ? "The site doesn't name another feed. You could try again another day, or unsubscribe."

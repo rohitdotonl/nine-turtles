@@ -28,7 +28,13 @@ the screen (`web/src/lib/health.ts`) turns it into sentences.
   home page. It lists the feeds that page names, leaving out the broken one
   and any already followed. **Use this address** moves the feed, keeping its
   name, folders, articles, read marks and stars; an address already followed
-  is refused rather than merged.
+  is refused rather than merged, and so is one that belonged to a feed
+  unsubscribed from earlier whose line stays for its starred articles
+  (the page says to add it again with Add feed instead).
+- **The keyboard never loses its place.** When an action replaces the
+  button it was on, the keyboard moves to what took its place: the chosen
+  feed after Find new address, Find new address after Cancel, Undo after
+  Unsubscribe, Unsubscribe after Undo, Retry after a move.
 - **Nothing moves while you look.** A feed that works again after Retry
   stays in its place, saying so, until the page is opened again. Unsubscribe
   happens in place too, with Undo on the same row.

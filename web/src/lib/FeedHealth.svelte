@@ -9,6 +9,7 @@
   With nothing to list, it says so calmly.
 -->
 <script lang="ts">
+  import { tick } from "svelte";
   import { edge } from "./edge";
   import PageHead from "./PageHead.svelte";
   import { refused, resubscribe, unsubscribe, type Choice } from "./feeds";
@@ -61,6 +62,16 @@
       .catch(() => (failed = true));
   });
 
+  /**
+   * An action replaced the button the keyboard was on: its place moves to
+   * what took the button's place (`what`, a `data-focus` name in the feed's
+   * row), so it never falls back to the top of the page.
+   */
+  async function focusIn(row: Row, what: string) {
+    await tick();
+    document.querySelector<HTMLElement>(`#health-feed-${row.feed.id} [data-focus="${what}"]`)?.focus();
+  }
+
   let groups = $derived([
     { id: "dead", name: "Not working", rows: (rows ?? []).filter((row) => row.feed.state === "dead") },
     { id: "trouble", name: "Having trouble", rows: (rows ?? []).filter((row) => row.feed.state !== "dead") },
@@ -80,6 +91,7 @@
     // A feed that turned dead while failing stays in its group until the page is opened again.
     row.feed = { ...answer, state: answer.state === "working" ? "working" : row.feed.state };
     row.message = answer.state === "working" ? "It works again. Its new articles are in your lists." : "Tried again just now: it still isn't working.";
+    if (answer.state === "working") onFeedsChanged();
   }
 
   async function find(row: Row) {
@@ -95,6 +107,13 @@
     row.choices = answer;
     row.chosen = answer[0]?.url ?? "";
     row.message = answer.length === 1 ? "The site names this feed:" : "The site names these feeds. Choose one:";
+    await focusIn(row, "chosen");
+  }
+
+  async function cancelChoice(row: Row) {
+    row.choices = [];
+    row.message = "";
+    await focusIn(row, "find");
   }
 
   async function use(row: Row) {
@@ -111,6 +130,7 @@
     row.choices = [];
     row.message = "It now reads from its new address and works again. Its articles, stars and folders stayed.";
     onFeedsChanged();
+    await focusIn(row, "retry");
   }
 
   async function leave(row: Row) {
@@ -125,6 +145,7 @@
     row.choices = [];
     row.message = `Unsubscribed from ${row.feed.title}.`;
     onFeedsChanged();
+    await focusIn(row, "undo");
   }
 
   async function undo(row: Row) {
@@ -138,6 +159,7 @@
     row.unsubscribed = false;
     row.message = "";
     onFeedsChanged();
+    await focusIn(row, "unsubscribe");
   }
 </script>
 
@@ -160,7 +182,7 @@
               <h3 id={`health-${group.id}`} class="inset-head">{group.name}</h3>
               <ul class="inset-group">
                 {#each group.rows as row (row.feed.id)}
-                  <li class="inset-row feed-row">
+                  <li id={`health-feed-${row.feed.id}`} class="inset-row feed-row">
                     <h4 class="w-full min-w-0 font-semibold break-words">{row.feed.title}</h4>
                     {#if !row.unsubscribed}
                       <p class="w-full text-ink-2">
@@ -176,7 +198,7 @@
                       <div role="radiogroup" aria-label={`Feeds on ${row.feed.title}'s site`} class="choices inset-group w-full">
                         {#each row.choices as choice (choice.url)}
                           <label class="inset-row check-row flex-nowrap">
-                            <input type="radio" name={`new-address-${row.feed.id}`} value={choice.url} bind:group={row.chosen} />
+                            <input type="radio" name={`new-address-${row.feed.id}`} value={choice.url} bind:group={row.chosen} data-focus={choice.url === row.chosen ? "chosen" : undefined} />
                             <span class="flex min-w-0 flex-col py-1">
                               <span class="break-words">{choice.title}</span>
                               <span class="text-small break-all text-muted">{choice.url}</span>
@@ -186,23 +208,24 @@
                         {/each}
                       </div>
                       <div class="actions">
-                        <button type="button" class="btn btn-small" onclick={() => ((row.choices = []), (row.message = ""))}>Cancel</button>
+                        <button type="button" class="btn btn-small" onclick={() => cancelChoice(row)}>Cancel</button>
                         <button type="button" class="btn-primary" aria-disabled={row.busy} onclick={() => use(row)}>Use this address</button>
                       </div>
                     {:else if row.unsubscribed}
                       <div class="actions">
-                        <button type="button" class="btn btn-small" aria-disabled={row.busy} onclick={() => !row.busy && undo(row)}>Undo</button>
+                        <button type="button" class="btn btn-small" data-focus="undo" aria-label={`Undo unsubscribing from ${row.feed.title}`} aria-disabled={row.busy} onclick={() => !row.busy && undo(row)}>Undo</button>
                       </div>
                     {:else}
                       <div class="actions">
-                        <button type="button" class="btn btn-small" aria-disabled={row.busy} aria-label={`Retry ${row.feed.title}`} onclick={() => !row.busy && tryAgain(row)}>Retry</button>
-                        <button type="button" class="btn btn-small" aria-disabled={row.busy} aria-label={`Find new address for ${row.feed.title}`} onclick={() => !row.busy && find(row)}>Find new address</button>
+                        <button type="button" class="btn btn-small" data-focus="retry" aria-disabled={row.busy} aria-label={`Retry ${row.feed.title}`} onclick={() => !row.busy && tryAgain(row)}>Retry</button>
+                        <button type="button" class="btn btn-small" data-focus="find" aria-disabled={row.busy} aria-label={`Find new address for ${row.feed.title}`} onclick={() => !row.busy && find(row)}>Find new address</button>
                         <button
                           type="button"
                           class="btn-danger text-small"
                           title="Stops following this feed and removes its articles; starred ones stay. You can undo it straight afterwards."
                           aria-label={`Unsubscribe from ${row.feed.title}`}
                           aria-describedby="health-unsubscribe-help"
+                          data-focus="unsubscribe"
                           aria-disabled={row.busy}
                           onclick={() => !row.busy && leave(row)}>Unsubscribe</button
                         >
