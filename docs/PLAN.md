@@ -359,9 +359,13 @@ each with screenshots:
 - ✅ A website at nineturtles.app, built with Eleventy from `website/` in
   this repository and hosted on GitHub Pages, and the app moved to
   app.nineturtles.app; the owner finished the domain move on 25 October 2026
-  (`docs/operations/website-and-domain.md`, decision 0066). The pages start
-  as a short introduction; what else the website says is the owner's to
-  decide.
+  (`docs/operations/website-and-domain.md`, decision 0066).
+- ✅ The website built out (25 October 2026, the pages the owner agreed):
+  the home page with pictures of the app, a tour, "New to feeds?",
+  questions, about, a blog with its own Atom feed, contact
+  (hello@nineturtles.app), accessibility, and a privacy policy and terms
+  marked as drafts until a payment company and an email service are chosen
+  (`docs/planning/questions.md`). No pricing page until prices are decided.
 
 ## V2 so far
 
@@ -377,7 +381,7 @@ each with screenshots:
 | Health check every 15 minutes, with an email | ✅ 25 October 2026 | `docs/operations/health-check.md`, decision 0075 |
 | Backups and moving hosts | ⬜ | Milestone 3 above, `docs/ENGINEERING.md` → "Hosting" |
 | The yearly clean-up of unstarred articles | ⬜ | SPEC section 23 (after backups) |
-| The "New to feeds?" guide page | ⬜ | SPEC section 2 |
+| The "New to feeds?" guide page | ⬜ | SPEC section 2 (the app's own page; the website's page of the same name, nineturtles.app/new-to-feeds/, is separate and doesn't count) |
 | A tab left open across an update keeps working | ⬜ | `docs/ENGINEERING.md` (decision 0022) |
 
 ## V2: YouTube videos

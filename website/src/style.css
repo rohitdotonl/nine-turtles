@@ -36,6 +36,9 @@
   --ink-2: #3c3c40;
   --muted: #5f5f64;
   --line: #dddddf;
+  --tone: #f7f7f7;
+  --tone-2: #efeff1;
+  --pill: #ececec;
   --serif: "Literata", Georgia, serif;
   --sans: "Inter", system-ui, sans-serif;
 }
@@ -47,6 +50,9 @@
     --ink-2: #c4c4c6;
     --muted: #a4a4a8;
     --line: #3b3b3b;
+    --tone: #1a1a1a;
+    --tone-2: #232323;
+    --pill: #2c2c2c;
   }
 }
 
@@ -54,15 +60,33 @@
   box-sizing: border-box;
 }
 
+html {
+  background: var(--paper);
+}
+
 body {
-  margin: 0 auto;
-  max-width: 40rem;
-  padding: 0 20px;
+  margin: 0;
   background: var(--paper);
   color: var(--ink);
   font-family: var(--serif);
   font-size: 1.1875rem;
   line-height: 1.6;
+}
+
+/* One centred column for reading, about 65 to 70 characters wide, as a
+   book's page. Pictures may step out of it to the width of the top bar. */
+main,
+.bar,
+footer {
+  margin: 0 auto;
+  padding: 0 20px;
+}
+main {
+  max-width: calc(40rem + 40px);
+}
+.bar,
+footer {
+  max-width: calc(60rem + 40px);
 }
 
 a {
@@ -84,20 +108,27 @@ a:focus-visible {
 .skip:focus {
   left: 20px;
   top: 12px;
+  z-index: 1;
   background: var(--paper);
   padding: 8px 12px;
 }
 
-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 72px;
+/* The top bar: the name, the website's places, and Open the app. */
+.top {
+  border-bottom: 1px solid var(--line);
   font-family: var(--sans);
   font-size: 0.9375rem;
 }
 
-header a {
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 24px;
+  min-height: 72px;
+}
+
+.bar a {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
@@ -115,6 +146,37 @@ header a {
   flex: none;
 }
 
+.top nav {
+  margin-right: auto;
+}
+
+.top nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.top nav li + li {
+  margin-top: 0;
+}
+
+.top nav a {
+  padding: 0 12px;
+  border-radius: 8px;
+  color: var(--ink-2);
+}
+
+/* Where you are: a plain grey pill, as in the app's sidebar, with the words
+   in semibold so it never rests on color alone. */
+.top nav a[aria-current] {
+  background: var(--pill);
+  color: var(--ink);
+  font-weight: 600;
+}
+
 .open {
   padding: 0 16px;
   border: 1px solid var(--muted);
@@ -122,28 +184,52 @@ header a {
   font-weight: 600;
 }
 
+/* On a phone the places take a row of their own under the name. */
+@media (max-width: 760px) {
+  .bar {
+    padding-top: 12px;
+    padding-bottom: 8px;
+  }
+  .wordmark {
+    margin-right: auto;
+  }
+  .top nav {
+    order: 3;
+    flex-basis: 100%;
+    margin: 4px -12px 0;
+  }
+}
+
 h1,
-h2 {
+h2,
+h3 {
   font-weight: 600;
   line-height: 1.2;
   text-wrap: balance;
 }
 
 h1 {
-  margin: 3rem 0 1.5rem;
-  font-size: 2.25rem;
+  margin: 3.5rem 0 1.5rem;
+  font-size: 2.5rem;
+  letter-spacing: -0.01em;
 }
 
 h2 {
-  margin: 2.5rem 0 1rem;
+  margin: 3rem 0 1rem;
   font-size: 1.5rem;
+}
+
+h3 {
+  margin: 2rem 0 0.5rem;
+  font-size: 1.1875rem;
 }
 
 p {
   text-wrap: pretty;
 }
 
-ul {
+ul,
+ol {
   padding-left: 1.25em;
 }
 
@@ -151,11 +237,291 @@ li + li {
   margin-top: 0.5em;
 }
 
+strong {
+  font-weight: 600;
+}
+
+hr {
+  margin: 3rem 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+
+code {
+  font-size: 0.9em;
+}
+
+/* The first paragraph of a page, a step larger, in the second ink. */
+.lede {
+  color: var(--ink-2);
+  font-size: 1.3125rem;
+  line-height: 1.55;
+}
+
+.byline,
+.kicker {
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 0.875rem;
+}
+.kicker {
+  margin: 3.5rem 0 -0.75rem;
+}
+.kicker a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+h1 + .byline {
+  margin-top: -0.75rem;
+}
+
+/* The home page's opening. */
+.hero h1 {
+  margin-top: 4.5rem;
+  font-size: 3rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+  margin: 2rem 0;
+  font-family: var(--sans);
+  font-size: 1rem;
+}
+.actions a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+/* The one main action, a steady fill in the text color, as in the app. */
+.actions .main {
+  padding: 0 20px;
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* A picture of the app, wider than the text where there's room. */
+.shot {
+  margin: 2.5rem auto;
+  width: min(60rem, 100vw - 40px);
+  margin-left: calc(50% - min(30rem, 50vw - 20px));
+}
+.shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.shot figcaption {
+  margin-top: 12px;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 0.875rem;
+  text-align: center;
+}
+/* The day picture by day, the night picture by night. */
+.shot .night,
+.shot-pair .night {
+  display: none;
+}
+@media (prefers-color-scheme: dark) {
+  .shot .day,
+  .shot-pair .day {
+    display: none;
+  }
+  .shot .night,
+  .shot-pair .night {
+    display: block;
+  }
+}
+
+/* Two phone pictures side by side. */
+.phones {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin: 2.5rem 0;
+}
+.phones img {
+  display: block;
+  width: min(100%, 260px);
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+}
+.phones figure {
+  margin: 0;
+  flex: 0 1 260px;
+}
+
+/* Groups of short points: one column on a phone, two where there's room,
+   each on a tone a step off the page, as the app's grouped lists. */
+.points {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 16px;
+  margin: 1.5rem 0 2.5rem;
+  padding: 0;
+  list-style: none;
+}
+.points li {
+  margin: 0;
+  padding: 20px 24px;
+  border-radius: 12px;
+  background: var(--tone);
+}
+.points h3 {
+  margin: 0 0 0.375rem;
+  font-size: 1.0625rem;
+}
+.points p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+/* What nine turtles never does: a plain list, set apart by a rule. */
+.never {
+  margin: 1.5rem 0;
+  padding: 4px 24px;
+  border-left: 2px solid var(--line);
+}
+
+/* A question and its answer. */
+.faq h2 {
+  margin-top: 2.5rem;
+  font-size: 1.25rem;
+}
+
+/* The blog's list of posts. */
+.posts {
+  margin: 2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.posts li {
+  margin: 0;
+  padding: 1.5rem 0;
+  border-top: 1px solid var(--line);
+}
+.posts h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.375rem;
+}
+.posts .byline {
+  margin: 0 0 0.5rem;
+}
+.posts p:last-child {
+  margin: 0;
+  color: var(--ink-2);
+}
+
+.after-post {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+  color: var(--ink-2);
+  font-size: 1rem;
+}
+
+/* A draft's note at the top of the page: words first, never color alone. */
+.draft {
+  margin: 2.5rem 0 -1rem;
+  padding: 16px 20px;
+  border: 1px solid var(--muted);
+  border-radius: 12px;
+  background: var(--tone);
+  font-family: var(--sans);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+.draft p {
+  margin: 0;
+}
+
+/* A short table, for the privacy policy's list of companies. */
+table {
+  width: 100%;
+  margin: 1.5rem 0;
+  border-collapse: collapse;
+  font-size: 1rem;
+}
+th,
+td {
+  padding: 10px 12px 10px 0;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  font-family: var(--sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
 footer {
-  margin-top: 4rem;
-  padding: 1.5rem 0 3rem;
+  margin-top: 5rem;
+  padding-top: 2rem;
+  padding-bottom: 3rem;
   border-top: 1px solid var(--line);
   color: var(--muted);
   font-family: var(--sans);
   font-size: 0.875rem;
+}
+
+footer .columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 16px 24px;
+}
+
+footer h2 {
+  margin: 0 0 4px;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 0.875rem;
+}
+
+footer ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+footer li + li {
+  margin-top: 0;
+}
+
+footer nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--ink-2);
+}
+
+.colophon {
+  margin: 2rem 0 0;
+}
+
+/* Smaller headings on a phone, so a title fits in two or three lines. */
+@media (max-width: 760px) {
+  h1 {
+    margin-top: 2.5rem;
+    font-size: 2.125rem;
+  }
+  .hero h1 {
+    margin-top: 3rem;
+    font-size: 2.5rem;
+  }
+  .kicker {
+    margin-top: 2.5rem;
+  }
 }
