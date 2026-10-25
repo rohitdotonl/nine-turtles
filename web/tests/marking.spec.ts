@@ -312,6 +312,53 @@ test.describe("when saving fails", () => {
     await expect(page.getByText("That couldn't be saved, so it was taken back.")).toHaveCount(0);
   });
 
+  test("with only the keyboard: Try again saves a star that couldn't be saved", async ({ page }) => {
+    const blog = await openBlog(page);
+    let failing = true;
+    await page.route("**/api/articles/starred", (route) => (failing ? route.fulfill({ status: 500 }) : route.fallback()));
+    await page.keyboard.press("j");
+    await page.keyboard.press("s");
+    await expect(line(page)).toHaveText("The star couldn't be saved.");
+    failing = false;
+    const again = page.getByRole("button", { name: "Try again" });
+    await tabTo(page, again);
+    await page.keyboard.press("Enter");
+    await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, Starred/);
+    await expect(again).toHaveCount(0);
+    // The button is gone; the keyboard's place stays nearby, on an article, not lost.
+    await expect(page.locator(".item-row:focus")).toHaveCount(1);
+  });
+
+  test("a failure that arrives after a newer action keeps that action's Undo", async ({ page }) => {
+    const blog = await openBlog(page);
+    // The first two saves wait until released: the first then fails, the second goes through.
+    const releases: (() => void)[] = [];
+    const held = [0, 1].map(() => new Promise<void>((resolve) => releases.push(resolve)));
+    let saves = 0;
+    await page.route("**/api/articles/read", async (route) => {
+      const which = saves++;
+      if (which > 1) return route.fallback();
+      await held[which];
+      return which === 0 ? route.fulfill({ status: 500 }) : route.fallback();
+    });
+    await page.keyboard.press("j");
+    await page.keyboard.press("Shift+A");
+    await expect(line(page)).toHaveText("Marked 2 items as read");
+
+    // The first fails: taken back and said, with Try again, and Mark all as read's Undo stays.
+    releases[0]?.();
+    await expect(line(page)).toHaveText("An article couldn't be marked as read. It's still unread.");
+    await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
+    await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Undo" })).toBeVisible();
+
+    // Mark all as read is saved: the connection is back, so the line returns to it, Undo included.
+    releases[1]?.();
+    await expect(line(page)).toHaveText("Marked 2 items as read");
+    await expect(page.getByRole("button", { name: "Try again" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Undo" })).toBeVisible();
+  });
+
   test("a mark made while nine turtles restarts is saved once it's back, with nothing said", async ({ page }) => {
     const blog = await openBlog(page);
     // A new version going live: the host answers "unavailable" for a moment.

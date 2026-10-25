@@ -188,7 +188,7 @@ A few words used throughout:
 2. Press `m`: it's unread again and the number goes back up.
 3. Press `Shift+A` in a feed: everything shown turns grey at once. Press `u`: they're unread again.
 4. Wait until "New items · press r" appears, then mark all as read *without* pressing `r`. Press `r`: the new items are still unread.
-5. Turn the Wi-Fi off, open an unread article, and turn it back on within half a minute: the article stays read and nothing is said. Leave it off longer: "An article couldn't be marked as read. It's still unread." appears with Try again; once the Wi-Fi is back, opening the next article clears it.
+5. Turn the Wi-Fi off, open an unread article, and turn it back on within half a minute: the article stays read and nothing is said. Leave it off longer: "An article couldn't be marked as read. It's still unread." appears with Try again; once the Wi-Fi is back, opening another unread article (or pressing Try again) clears it.
 
 ## 9. Star
 
