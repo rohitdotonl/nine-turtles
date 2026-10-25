@@ -151,6 +151,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Unicode and combining marks
 - Timestamps and UTC
 - Data export
+- Rules and mutes (filters the reader writes)
 
 ## Security and sign-in
 

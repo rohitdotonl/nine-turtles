@@ -374,6 +374,7 @@ each with screenshots:
 | YouTube videos in YouTube's own player | ✅ 25 October 2026 | SPEC section 7, decision 0072 |
 | Syncing with Reeder, NetNewsWire and other apps | ✅ 25 October 2026 | SPEC section 26, decision 0070 |
 | Feed health page | ✅ 25 October 2026 | Milestone 11, SPEC section 17, decision 0071 |
+| Rules and mutes | ✅ 25 October 2026 | SPEC section 27, decision 0077 |
 | Backups and moving hosts | ⬜ | Milestone 3 above, `docs/ENGINEERING.md` → "Hosting" |
 | The yearly clean-up of unstarred articles | ⬜ | SPEC section 23 (after backups) |
 | The "New to feeds?" guide page | ⬜ | SPEC section 2 |
