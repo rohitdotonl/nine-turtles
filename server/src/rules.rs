@@ -427,7 +427,7 @@ async fn matching_now(db: &sqlx::SqlitePool, rule: &Rule) -> Result<Vec<i64>, sq
     let mut after = 0;
     loop {
         let lines: Vec<ArticleLine> = sqlx::query_as(
-            "SELECT articles.id, articles.feed_id, articles.title, articles.author,
+            "SELECT articles.id, entries.feed_id, articles.title, articles.author,
                     articles.content, articles.summary
              FROM entries CROSS JOIN articles ON articles.id = entries.article_id
                  JOIN subscriptions ON subscriptions.person_id = entries.person_id

@@ -347,15 +347,18 @@ pub async fn clear(
     if claimed.rows_affected() == 0 {
         return Ok(false);
     }
-    // Remember the highest article number ever given, so numbers freed
-    // here are never given again (see `feeds::store_articles`).
-    sqlx::query(
-        "INSERT INTO settings (name, value)
-         VALUES ('articles_high_water', CAST(COALESCE((SELECT MAX(id) FROM articles), 0) AS TEXT))
-         ON CONFLICT (name) DO UPDATE SET value = CAST(
-             MAX(CAST(value AS INTEGER), CAST(excluded.value AS INTEGER)) AS TEXT)",
+    // Entries carried over to a new address (`health::follow_elsewhere`)
+    // hold articles stored under the old feed: once they go, that feed may
+    // need letting go too.
+    let elsewhere: Vec<i64> = sqlx::query_scalar(
+        "SELECT DISTINCT articles.feed_id FROM entries
+             JOIN articles ON articles.id = entries.article_id
+         WHERE entries.person_id = ?1 AND entries.feed_id = ?2 AND entries.starred = 0
+             AND articles.feed_id != ?2",
     )
-    .execute(&mut *connection)
+    .bind(person)
+    .bind(id)
+    .fetch_all(&mut *connection)
     .await?;
     sqlx::query("DELETE FROM entries WHERE person_id = ? AND feed_id = ? AND starred = 0")
         .bind(person)
@@ -381,6 +384,19 @@ pub async fn clear(
     .bind(id)
     .execute(&mut *connection)
     .await?;
+    let_go(connection, id).await?;
+    for other in elsewhere {
+        let_go(connection, other).await?;
+    }
+    Ok(true)
+}
+
+/// Once nobody follows a feed or waits to, its articles nobody has go, its
+/// hub subscription goes, and the feed's line goes if no article is left.
+/// An article any reader still has an entry for (a star, or one carried
+/// over to a new address) always stays, and so does its feed's line.
+/// Leaves a feed someone follows as it is.
+pub async fn let_go(connection: &mut SqliteConnection, id: i64) -> Result<(), sqlx::Error> {
     let someone: Option<i64> = sqlx::query_scalar(
         "SELECT person_id FROM subscriptions WHERE feed_id = ? AND cleared = 0 LIMIT 1",
     )
@@ -388,8 +404,19 @@ pub async fn clear(
     .fetch_optional(&mut *connection)
     .await?;
     if someone.is_none() {
+        // Remember the highest article number ever given, so numbers freed
+        // here are never given again (see `feeds::store_articles`).
+        sqlx::query(
+            "INSERT INTO settings (name, value)
+             VALUES ('articles_high_water',
+                     CAST(COALESCE((SELECT MAX(id) FROM articles), 0) AS TEXT))
+             ON CONFLICT (name) DO UPDATE SET value = CAST(
+                 MAX(CAST(value AS INTEGER), CAST(excluded.value AS INTEGER)) AS TEXT)",
+        )
+        .execute(&mut *connection)
+        .await?;
         // Nobody follows it, or waits to: only articles someone still has
-        // (starred ones) stay.
+        // (starred ones, or ones carried over to a new address) stay.
         sqlx::query(
             "DELETE FROM articles WHERE feed_id = ?
              AND NOT EXISTS (SELECT 1 FROM entries WHERE entries.article_id = articles.id)",
@@ -412,8 +439,7 @@ pub async fn clear(
         .execute(&mut *connection)
         .await?;
     }
-    refresh_shared(connection, id).await?;
-    Ok(true)
+    refresh_shared(connection, id).await
 }
 
 #[derive(Deserialize)]

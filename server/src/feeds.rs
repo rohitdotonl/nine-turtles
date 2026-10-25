@@ -1031,7 +1031,7 @@ async fn read_article(
     Path(id): Path<i64>,
 ) -> Response {
     let article: Result<Option<FullArticle>, sqlx::Error> = sqlx::query_as(
-        "SELECT articles.id, articles.feed_id, subscriptions.title AS feed_title, feeds.site_url,
+        "SELECT articles.id, entries.feed_id, subscriptions.title AS feed_title, feeds.site_url,
                 articles.title, articles.link, articles.author, articles.content,
                 articles.summary, COALESCE(articles.language, feeds.language) AS language,
                 entries.sort_at AS at, entries.read, entries.starred

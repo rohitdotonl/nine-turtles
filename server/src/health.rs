@@ -17,8 +17,9 @@
 //! - **Use this address** moves the feed to an address the reader chose:
 //!   it keeps its name, folders, articles, read marks and stars. A feed
 //!   other readers follow too isn't moved under them: the reader follows
-//!   the new address instead, with their name, settings, folders and rules,
-//!   and leaves the old one as unsubscribing does (their stars stay).
+//!   the new address instead, with their name, settings, folders, rules and
+//!   saved searches, and every article they had and every mark comes along
+//!   (`follow_elsewhere`): nothing of theirs is cleared later.
 //! - **Unsubscribe** is the usual one, with Undo (`folders`).
 //!
 //! The screen turns the short problem word into plain sentences; no error
@@ -405,9 +406,11 @@ async fn move_to(
 /// Use this address, for a feed others follow too: the reader follows the
 /// feed at the new address (stored once, like any other), under their name
 /// for the old one and with its settings, folders, rules and saved
-/// searches, and leaves the old one as unsubscribing does, so their
-/// starred articles of it stay. Answers the feed they follow now, and
-/// whether it was stored from this fetch (so its hub is asked).
+/// searches. Every article they had and every mark comes along, as moving
+/// in place keeps them (`carry_entries_over`), and their old subscription
+/// goes outright: nothing is left to clear later, so nothing of theirs is
+/// lost. Answers the feed they follow now, and whether it was stored from
+/// this fetch (so its hub is asked).
 async fn follow_elsewhere(
     transaction: &mut sqlx::SqliteConnection,
     state: &AppState,
@@ -478,8 +481,105 @@ async fn follow_elsewhere(
     .bind(old)
     .execute(&mut *transaction)
     .await?;
-    folders::hide(&mut *transaction, person, &[old], now).await?;
+    carry_entries_over(&mut *transaction, person, old, new).await?;
+    sqlx::query(
+        "DELETE FROM feed_folders WHERE feed_id = ?
+         AND folder_id IN (SELECT id FROM folders WHERE person_id = ?)",
+    )
+    .bind(old)
+    .bind(person)
+    .execute(&mut *transaction)
+    .await?;
+    // No entry points at it any more (the foreign key would refuse
+    // otherwise), so the line can go.
+    sqlx::query("DELETE FROM subscriptions WHERE person_id = ? AND feed_id = ?")
+        .bind(person)
+        .bind(old)
+        .execute(&mut *transaction)
+        .await?;
+    // What the old feed's followers share is worked out again. If nobody
+    // else follows it, its articles nobody has any more go; ones the reader
+    // still has (carried over) stay, and so does the old feed's line under
+    // them.
+    folders::let_go(&mut *transaction, old).await?;
     Ok(Ok((new, fresh)))
+}
+
+/// Brings one reader's entries for the old feed over to the new one, every
+/// mark kept. An old article the new address also lists (the same
+/// fingerprint, which prefers the feed's own ID, else the same link) is the
+/// same post: its read, star and mute go onto the reader's entry for the
+/// new copy, and the old entry goes. Every other old article stays theirs,
+/// in the new feed's list, with its marks: the entry now names the new
+/// feed, while the article stays stored under the old one, which keeps it
+/// while any entry has it (`folders::let_go`).
+async fn carry_entries_over(
+    connection: &mut sqlx::SqliteConnection,
+    person: i64,
+    old: i64,
+    new: i64,
+) -> Result<(), sqlx::Error> {
+    // The new copy of each old article, if there is one: the same
+    // fingerprint first, else the same link (the lowest number if several).
+    let pairs: Vec<(i64, Option<i64>)> = sqlx::query_as(
+        "SELECT entries.article_id,
+                COALESCE(
+                    (SELECT twin.id FROM articles AS twin
+                     WHERE twin.feed_id = ?3 AND twin.fingerprint = articles.fingerprint),
+                    (SELECT MIN(twin.id) FROM articles AS twin
+                     WHERE twin.feed_id = ?3 AND articles.link IS NOT NULL
+                         AND twin.link = articles.link))
+         FROM entries CROSS JOIN articles ON articles.id = entries.article_id
+         WHERE entries.person_id = ?1 AND entries.feed_id = ?2
+         ORDER BY entries.article_id",
+    )
+    .bind(person)
+    .bind(old)
+    .bind(new)
+    .fetch_all(&mut *connection)
+    .await?;
+    let mut taken = std::collections::HashSet::new();
+    for (article, copy) in pairs {
+        // Each new copy takes one old article's marks; any other old
+        // article that looks the same simply stays, as its own.
+        let merged = match copy {
+            Some(copy) if copy != article && taken.insert(copy) => {
+                sqlx::query(
+                    "UPDATE entries SET
+                         read = old.read, muted = old.muted,
+                         starred = MAX(entries.starred, old.starred)
+                     FROM (SELECT read, starred, muted FROM entries
+                           WHERE person_id = ?1 AND article_id = ?2) AS old
+                     WHERE entries.person_id = ?1 AND entries.article_id = ?3
+                         AND entries.feed_id = ?4",
+                )
+                .bind(person)
+                .bind(article)
+                .bind(copy)
+                .bind(new)
+                .execute(&mut *connection)
+                .await?
+                .rows_affected()
+                    > 0
+            }
+            _ => false,
+        };
+        if merged {
+            sqlx::query("DELETE FROM entries WHERE person_id = ? AND article_id = ?")
+                .bind(person)
+                .bind(article)
+                .execute(&mut *connection)
+                .await?;
+        } else {
+            sqlx::query("UPDATE entries SET feed_id = ? WHERE person_id = ? AND article_id = ?")
+                .bind(new)
+                .bind(person)
+                .bind(article)
+                .execute(&mut *connection)
+                .await?;
+        }
+    }
+    Ok(())
 }
 
 #[cfg(test)]

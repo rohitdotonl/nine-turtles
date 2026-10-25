@@ -74,6 +74,10 @@ DROP INDEX articles_unread;
 DROP INDEX articles_starred;
 DROP INDEX articles_unread_by_feed;
 DROP INDEX articles_muted;
+-- The lists now read the entries' own indexes, so the articles' newest-first
+-- one is no longer used. (`articles_newest_by_feed` stays: Tidy finds each
+-- feed's newest article with it.)
+DROP INDEX articles_newest;
 ALTER TABLE articles DROP COLUMN read;
 ALTER TABLE articles DROP COLUMN starred;
 ALTER TABLE articles DROP COLUMN muted;

@@ -1406,9 +1406,103 @@ async fn a_second_reader_imports_opml_without_a_second_copy_of_a_shared_feed() {
     );
 }
 
+/// An older post the publisher no longer lists, stored for a feed as if it
+/// had been listed before, with an unread entry for each of its followers.
+/// Answers its number.
+async fn an_older_post(state: &nine_turtles::AppState, feed: i64) -> i64 {
+    let id: i64 = sqlx::query_scalar(
+        "INSERT INTO articles (id, feed_id, fingerprint, title, received_at, sort_at)
+         VALUES ((SELECT MAX(id) + 1 FROM articles), ?, 'id:post-0', 'Post 0 about tomatoes',
+                 1, 1)
+         RETURNING id",
+    )
+    .bind(feed)
+    .fetch_one(&state.db)
+    .await
+    .unwrap();
+    sqlx::query(
+        "INSERT INTO entries (person_id, article_id, feed_id, sort_at)
+         SELECT person_id, ?, feed_id, 1 FROM subscriptions WHERE feed_id = ?",
+    )
+    .bind(id)
+    .bind(feed)
+    .execute(&state.db)
+    .await
+    .unwrap();
+    id
+}
+
+/// Marks articles for a reader through the screen's own requests.
+async fn mark(reader: &Reader, what: &str, ids: &[i64]) {
+    let mut body = json!({ "ids": ids });
+    body[what] = json!(true);
+    let (status, answer) = reader.post(&format!("/api/articles/{what}"), body).await;
+    assert_eq!(status, StatusCode::OK, "{answer}");
+}
+
+/// Every article in a list, as (title, read, starred), newest first.
+async fn marks_by_title(reader: &Reader, list: &str) -> Vec<(String, bool, bool)> {
+    reader.get(&format!("/api/articles?{list}")).await["articles"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|article| {
+            (
+                article["title"].as_str().unwrap().to_owned(),
+                article["read"].as_bool().unwrap(),
+                article["starred"].as_bool().unwrap(),
+            )
+        })
+        .collect()
+}
+
 #[tokio::test]
 async fn a_new_address_for_a_shared_feed_moves_only_the_reader_who_chose_it() {
     let (owner, other, state, feed, _) = two_followers().await;
+    let older = an_older_post(&state, feed).await;
+    let posts = other.ids(&format!("feed={feed}")).await;
+    let (third, second, first) = (posts[0], posts[1], posts[2]);
+    assert_eq!(posts[3], older);
+
+    // The other reader has read the third post and the older one (no longer
+    // listed at either address), starred the second and muted the first; the
+    // owner starred the first.
+    mark(&other, "read", &[third, older]).await;
+    mark(&other, "starred", &[second]).await;
+    mark(&other, "muted", &[first]).await;
+    mark(&owner, "starred", &[first]).await;
+    // They set the feed up their way: a name, a folder, settings, a rule
+    // and a saved search for it.
+    let (status, made) = other
+        .post("/api/folders", json!({ "name": "Garden" }))
+        .await;
+    assert_eq!(status, StatusCode::CREATED);
+    let folder = made["folder"]["id"].as_i64().unwrap();
+    let (status, _) = other
+        .post(
+            &format!("/api/feeds/{feed}"),
+            json!({ "title": "Their garden", "folders": [folder], "river": true,
+                    "check": "daily", "open_on_site": true }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    let (status, made) = other
+        .post(
+            "/api/rules",
+            json!({ "words": "potatoes", "feed_id": feed, "action": "mute" }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK, "{made}");
+    let (status, _) = other
+        .post(
+            "/api/saved-searches",
+            json!({ "name": "Garden tomatoes",
+                    "query": { "words": "tomatoes", "scope": { "kind": "feed", "id": feed } } }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::CREATED);
+    let owners_before = owner.marks(&format!("feed={feed}")).await;
+
     let old_address = address_of(&state, feed).await;
     let new_address = old_address.replace("/feed.xml", "/moved.xml");
     let (status, moved) = other
@@ -1425,6 +1519,169 @@ async fn a_new_address_for_a_shared_feed_moves_only_the_reader_who_chose_it() {
     assert_eq!(owner.get("/api/feeds").await["feeds"][0]["id"], feed);
     let theirs = other.get("/api/feeds").await["feeds"].clone();
     assert_eq!(theirs.as_array().unwrap().len(), 1);
-    assert_eq!(theirs[0]["id"], new_feed);
-    assert_eq!(theirs[0]["title"], "Garden notes");
+    let theirs = &theirs[0];
+    assert_eq!(theirs["id"], new_feed);
+    // Their name, settings and folder came along.
+    assert_eq!(theirs["title"], "Their garden");
+    assert_eq!(theirs["river"], true);
+    assert_eq!(theirs["check_at_most"], 86_400);
+    assert_eq!(theirs["open_on_site"], true);
+    assert_eq!(theirs["folders"], json!([folder]));
+    let listed = other.get(&format!("/api/articles?folder={folder}")).await;
+    assert_eq!(listed["articles"].as_array().unwrap().len(), 3);
+    // So did their rule and saved search.
+    assert_eq!(
+        other.get("/api/rules").await["rules"][0]["feed_id"],
+        new_feed
+    );
+    assert_eq!(
+        other.get("/api/saved-searches").await["searches"][0]["query"]["scope"]["id"],
+        new_feed
+    );
+
+    // Every article they had is in the new feed's list with its marks: the
+    // three posts the new address lists too (its copies, with the old marks)
+    // and the older post only the old address had.
+    let expected = [
+        ("Post 3 about tomatoes", true, false),
+        ("Post 2 about tomatoes", false, true),
+        ("Post 0 about tomatoes", true, false),
+    ]
+    .map(|(title, read, starred)| (title.to_owned(), read, starred))
+    .to_vec();
+    let list = format!("feed={new_feed}");
+    assert_eq!(marks_by_title(&other, &list).await, expected);
+    let muted = other.get("/api/muted").await;
+    assert_eq!(muted["count"], 1);
+    assert_eq!(muted["articles"][0]["title"], "Post 1 about tomatoes");
+    assert_eq!(muted["articles"][0]["feed_id"], new_feed);
+    // The older post opens, under the feed they follow now.
+    let opened = other.get(&format!("/api/articles/{older}")).await;
+    assert_eq!(opened["article"]["feed_id"], new_feed);
+    assert_eq!(opened["article"]["feed_title"], "Their garden");
+    assert_eq!(opened["article"]["read"], true);
+    // Nothing of theirs waits to be cleared, so the tidy-up, however late,
+    // takes nothing.
+    nine_turtles::folders::clear_unsubscribed(&state.db, None, i64::MAX)
+        .await
+        .unwrap();
+    assert_eq!(marks_by_title(&other, &list).await, expected);
+    assert_eq!(other.get("/api/muted").await["count"], 1);
+    assert_eq!(
+        count(
+            &state,
+            "SELECT COUNT(*) FROM subscriptions WHERE person_id = 2"
+        )
+        .await,
+        1
+    );
+
+    // The owner is untouched: the same four articles, the same marks.
+    assert_eq!(owner.marks(&format!("feed={feed}")).await, owners_before);
+    assert_eq!(owners_before.len(), 4);
+    assert_eq!(
+        owner.get("/api/feeds").await["feeds"][0]["title"],
+        "Garden notes"
+    );
+    assert_eq!(owner.get("/api/muted").await["count"], 0);
+    // The older post is stored once, still under the old feed, for both.
+    assert_eq!(
+        count(
+            &state,
+            &format!("SELECT COUNT(*) FROM entries WHERE article_id = {older}")
+        )
+        .await,
+        2
+    );
+}
+
+#[tokio::test]
+async fn moving_to_an_address_someone_else_follows_keeps_everything_and_lets_go_of_the_rest() {
+    // The owner follows the blog at its old address, alone; the other
+    // reader follows it at the new one.
+    let (base, state) = common::start_with_state(common::config()).await;
+    let owner = Reader {
+        cookie: common::signed_in(&base).await,
+        base: base.clone(),
+    };
+    let (_, cookie) = common::another_reader(&state).await;
+    let other = Reader { base, cookie };
+    let address = publisher().await;
+    let new_address = address.replace("/feed.xml", "/moved.xml");
+    let feed = owner.follow(&address).await;
+    let new_feed = other.follow(&new_address).await;
+    let older = an_older_post(&state, feed).await;
+    let posts = owner.ids(&format!("feed={feed}")).await;
+    mark(&owner, "starred", &[posts[0], older]).await;
+    mark(&owner, "read", &[posts[1]]).await;
+    let theirs_before = other.marks(&format!("feed={new_feed}")).await;
+
+    let (status, moved) = owner
+        .post(
+            &format!("/api/health/{feed}/address"),
+            json!({ "url": new_address }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK, "{moved}");
+    assert_eq!(moved["feed"]["id"], new_feed);
+    let expected = [
+        ("Post 3 about tomatoes", false, true),
+        ("Post 2 about tomatoes", true, false),
+        ("Post 1 about tomatoes", false, false),
+        ("Post 0 about tomatoes", false, true),
+    ]
+    .map(|(title, read, starred)| (title.to_owned(), read, starred))
+    .to_vec();
+    let list = format!("feed={new_feed}");
+    assert_eq!(marks_by_title(&owner, &list).await, expected);
+    // Nobody follows the old address now: its copies of the three posts
+    // went (everyone's are the new address's), but the older post stays,
+    // and so does the old feed's line under it, no longer checked.
+    let articles_of_old = format!("SELECT COUNT(*) FROM articles WHERE feed_id = {feed}");
+    assert_eq!(count(&state, &articles_of_old).await, 1);
+    assert_eq!(
+        count(
+            &state,
+            &format!(
+                "SELECT COUNT(*) FROM feeds WHERE id = {feed} AND unsubscribed_at IS NOT NULL"
+            )
+        )
+        .await,
+        1
+    );
+    nine_turtles::folders::clear_unsubscribed(&state.db, None, i64::MAX)
+        .await
+        .unwrap();
+    assert_eq!(marks_by_title(&owner, &list).await, expected);
+    // The other reader's feed is just as it was.
+    assert_eq!(other.marks(&list).await, theirs_before);
+
+    // If the owner later unsubscribes from the new address, the usual
+    // tidy-up takes their unstarred articles, and the older post too once
+    // it's no longer starred; the other reader keeps all of theirs.
+    let (status, _) = owner
+        .post(
+            "/api/articles/starred",
+            json!({ "ids": [older], "starred": false }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    let (status, _) = owner
+        .post(&format!("/api/feeds/{new_feed}/unsubscribe"), json!({}))
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    nine_turtles::folders::clear_unsubscribed(&state.db, None, i64::MAX)
+        .await
+        .unwrap();
+    assert_eq!(count(&state, &articles_of_old).await, 0);
+    assert_eq!(
+        count(
+            &state,
+            &format!("SELECT COUNT(*) FROM feeds WHERE id = {feed}")
+        )
+        .await,
+        0
+    );
+    assert_eq!(owner.ids("view=starred").await.len(), 1);
+    assert_eq!(other.marks(&list).await, theirs_before);
 }

@@ -56,7 +56,7 @@ const LARGEST_BODY: usize = 1024 * 1024;
 /// feed and their marks.
 macro_rules! article_columns {
     () => {
-        "articles.id, articles.feed_id, subscriptions.title AS feed_title,
+        "articles.id, entries.feed_id, subscriptions.title AS feed_title,
          feeds.site_url, articles.title, articles.link, articles.author, articles.content,
          articles.summary, articles.published_at, articles.received_at, entries.sort_at,
          entries.read, entries.starred"
@@ -592,7 +592,7 @@ async fn item_ids(App(person): App, State(state): State<AppState>, params: Param
     let asked = Asked::from(&params, None, MOST_AT_ONCE);
     let found: Result<Vec<(i64, i64, i64, i64)>, sqlx::Error> = asked
         .query(
-            "articles.id, articles.feed_id, articles.received_at, articles.sort_at",
+            "articles.id, entries.feed_id, articles.received_at, articles.sort_at",
             person,
         )
         .build_query_as()

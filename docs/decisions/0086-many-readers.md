@@ -77,7 +77,21 @@ for each reader:
 - **Use this address** (feed health) changes the shared address only when
   the reader is the feed's only follower; otherwise they follow the new
   address instead, with their name, settings, folders, rules and saved
-  searches, and leave the old one as unsubscribing does.
+  searches, and keep every article and mark, as moving in place always
+  did. Leaving the old one as unsubscribing does was rejected: ten minutes
+  later it would clear their unstarred articles and read history, with no
+  Undo. Instead, in one transaction, an old article the new address also
+  lists (same fingerprint, else same link) gives its read, star and mute
+  to the reader's entry for the new copy; every other old entry is
+  re-pointed to the new subscription (`entries.feed_id`), so it stays in
+  that feed's list while the article stays stored under the old feed; then
+  the reader's old subscription goes outright, leaving nothing to clear.
+  Lists, search, rules, marks and Tidy already go by `entries.feed_id`;
+  the reader view, the starred export and the sync-app answers now name
+  the entry's feed too. An article stays while any entry has it (the
+  database refuses otherwise), so the old feed's line stays under it; when
+  the reader's carried-over entries are later cleared, the old feed is let
+  go like any other nobody follows (`folders::let_go`).
 - Gaps closed: reading an article, an app's "items by number" and every
   mark now need the reader to have that article; "anything new?" for All
   leaves out unsubscribed feeds; following again from an OPML file resets

@@ -51,7 +51,7 @@ pub const EXPORT: &str =
                 articles.published_at, subscriptions.title AS feed_title,
                 feeds.url AS feed_url, feeds.site_url
          FROM entries CROSS JOIN articles ON articles.id = entries.article_id
-             CROSS JOIN feeds ON feeds.id = articles.feed_id
+             CROSS JOIN feeds ON feeds.id = entries.feed_id
              CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
                  AND subscriptions.feed_id = entries.feed_id
          WHERE entries.person_id = ? AND entries.starred = 1
