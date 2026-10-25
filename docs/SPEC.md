@@ -214,10 +214,12 @@ A few words used throughout:
 - The Unread address (and `/`) leads to All in river mode, without a step in the browser's history. Switching to river mode while on Unread moves you to All the same way.
 - The `?` list leaves out "Go to Unread" and "Mark all as read" in river mode, and search can't be limited to Unread (there's no Unread view), though its "Show only: Unread" filter stays. "Mark unread" (and `m`) stay: read state is still recorded, and shows again back in inbox mode.
 - Chosen in Settings › Reading, as **Reading mode: Inbox · River**. Each device remembers the mode it last saw, so it opens in it before the server answers; the server's answer decides.
+- **One feed in river mode** (since 25 October 2026, decision 0082): in Edit feed (section 15), a feed's own **Reading mode: Inbox · River**. A river feed flows past while the app is in inbox mode: its articles never appear in Unread, it has no count (and adds nothing to its folders' counts), and its rows look as in river mode, wherever they're listed. Its own list, All, its folders and search still show everything, except a search for unread articles only. When the whole app is in river mode, every feed flows past whatever its own setting says.
 
 **How to check it**
 1. In Settings, switch to river mode. The Unread view, the counts and the grey "read" titles all disappear.
 2. Read a few articles, switch back to inbox. The ones you read are shown as read.
+3. In inbox mode, open a busy feed's Edit feed and choose River: its count goes, its articles leave Unread, and its list shows every title alike.
 
 ## 11. Background fetching (being polite to publishers)
 
@@ -231,6 +233,7 @@ A few words used throughout:
 - If a feed has moved permanently, nine turtles updates its stored address.
 - A failing feed is retried less and less often (twice as long after each failure, up to once a day) and never affects other feeds. A feed that keeps failing still looks normal in the sidebar; it simply shows nothing new.
 - It never visits article pages.
+- **A feed can be checked less often** (decision 0082): Edit feed's **Check for new articles: Automatic · Hourly · Daily**. Automatic is the rhythm above; Hourly and Daily check that feed no more often than once an hour or once a day, for feeds that post a lot. Choosing a longer wait applies at once. WebSub announcements still arrive as they come.
 - If a publisher edits an article you've already seen, the text is updated quietly and it stays read.
 - The same article published in two different feeds appears in both.
 
@@ -301,7 +304,9 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 
 **What it does**
 - Folders are the only grouping. A feed can be in more than one folder.
-- You can rename a feed, choose its folders, and unsubscribe, from **Edit feed…** in the More (…) menu beside the item list's title when you're viewing one feed. It opens as a sheet over the feed's list (`/feeds/3/edit`) with the name, the folders as a checklist (a grouped list of 44px rows; each folder ends in a tick box, a rounded square, filled with a check when the feed is in it and empty when it isn't, square rather than round because a feed can be in several folders), whose last row is "New folder…", a text box (made when you save, with the feed in it), and at the foot one row in a Mac sheet's order: **Unsubscribe** at the far left as words in a muted red (no edge; the word says what it does, so red is never the only sign; its tooltip, and screen readers, say it removes the feed's articles, keeps the starred ones, and can be undone straight afterwards), then **Cancel** (a faint tone, no edge) and **Save** at the right end. A problem saving appears above that row in red words after a warning mark. Escape, Cancel or a press on the dimmed page goes back unchanged. On a phone it's the same iOS page sheet as Add a feed (and Edit folder; decision 0055), with the folders and Unsubscribe as cards on its grouped ground: an X beside the title (it and Escape go back unchanged), no Cancel, **Unsubscribe** as the one red row of a group of its own, and **Save** the full width at the screen's foot, at least 32px below it (decision 0052). The folders' helper line ("Optional: a new folder…") is 13px in the muted grey, 6px under the list, on its left edge.
+- You can rename a feed, choose its folders, set its own settings and unsubscribe, from **Edit feed…** in the More (…) menu beside the item list's title when you're viewing one feed. It opens as a sheet over the feed's list (`/feeds/3/edit`) with the name, the folders as a checklist (a grouped list of 44px rows; each folder ends in a tick box, a rounded square, filled with a check when the feed is in it and empty when it isn't, square rather than round because a feed can be in several folders), whose last row is "New folder…", a text box (made when you save, with the feed in it), and at the foot one row in a Mac sheet's order: **Unsubscribe** at the far left as words in a muted red (no edge; the word says what it does, so red is never the only sign; its tooltip, and screen readers, say it removes the feed's articles, keeps the starred ones, and can be undone straight afterwards), then **Cancel** (a faint tone, no edge) and **Save** at the right end. A problem saving appears above that row in red words after a warning mark. Escape, Cancel or a press on the dimmed page goes back unchanged. On a phone it's the same iOS page sheet as Add a feed (and Edit folder; decision 0055), with the folders and Unsubscribe as cards on its grouped ground: an X beside the title (it and Escape go back unchanged), no Cancel, **Unsubscribe** as the one red row of a group of its own, and **Save** the full width at the screen's foot, at least 32px below it (decision 0052). The folders' helper line ("Optional: a new folder…") is 13px in the muted grey, 6px under the list, on its left edge.
+- **Each feed's own settings** (decision 0082), in Edit feed under the folders, as a grouped list named "Settings", built as Settings' rows (each name on the left, a segmented choice at the right end, under the name on a narrow screen): **Reading mode: Inbox · River** (section 10), **Check for new articles: Automatic · Hourly · Daily** (section 11), and **Open articles on the website**, a tick box row. One helper line under the group says what they do. Each starts as every feed behaves (Inbox, Automatic, unticked), and Save keeps them with the name and folders. Following a feed again after unsubscribing starts them afresh.
+- **Open articles on the website**, for feeds that share only a summary: opening one of its articles (`Enter` or `o`, or a tap on a phone) opens the publisher's page in a new tab instead, and the article counts as read. Choosing it in the list (a click, `j` / `k`) still shows its summary beside the list, so moving through the list never opens tabs. Nothing is fetched from the website by nine turtles.
 - Viewing a folder, **Edit folder…** in the same menu opens a sheet in the same way (`/folders/2/edit`) to rename or delete it, built the same way: Name, then one row with **Delete** in muted red at the far left (its tooltip says the feeds stay) and Cancel and Save at the right end. On a phone, the same build as Edit feed's: an X, Delete as a red row of its own, Save at the foot.
 - You can create (from "Edit feed"), rename and delete folders. Two folders can't share a name. Deleting a folder never deletes its feeds.
 - Unsubscribing and deleting a folder happen at once and take you to Unread, where the line says "Unsubscribed from …" or "Deleted the folder …" with Undo (or `u`), until your next action.
@@ -323,6 +328,7 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 6. Open Settings › Your feeds, press Edit, tick two feeds and Move to… a new folder: both are in it, and nowhere else. Press Undo: they're back where they were, and the new folder is gone.
 7. Tick two feeds and press Unsubscribe, then Undo: both are back, with their read history.
 8. Choose "Quiet for 6 months": only feeds with nothing new for six months are listed.
+9. In Edit feed, tick "Open articles on the website" and Save. Choose one of its articles and press Enter: the publisher's page opens in a new tab.
 
 ## 16. OPML import and export
 
@@ -530,8 +536,8 @@ Covered by sections 14 and 22.
 
 ## Not in V1
 
-From DESIGN.md: public reading list page, per-feed reading modes, passkey sign-in, Chinese and Japanese search, multiple users. (The own domain name was chosen on 25 October 2026: nineturtles.app, with the app at app.nineturtles.app; decision 0066. YouTube videos play in YouTube's own player since 25 October 2026; decision 0072.)
+From DESIGN.md: public reading list page, passkey sign-in, Chinese and Japanese search, multiple users. (The own domain name was chosen on 25 October 2026: nineturtles.app, with the app at app.nineturtles.app; decision 0066. YouTube videos play in YouTube's own player since 25 October 2026; decision 0072.)
 
-Moved to V2 on 23 October 2026: backups and moving hosts, river mode (built 25 October 2026), WebSub (built 25 October 2026), the feed health page (built 25 October 2026), the yearly clean-up, the feeds guide page, and keeping a tab that was left open across an update working without a reload.
+Moved to V2 on 23 October 2026: backups and moving hosts, river mode (built 25 October 2026; per-feed reading modes too, decision 0082), WebSub (built 25 October 2026), the feed health page (built 25 October 2026), the yearly clean-up, the feeds guide page, and keeping a tab that was left open across an update working without a reload.
 
 Never: notifications, badges, streaks, reading stats, endless feeds padded with things you didn't follow, algorithmic ranking, likes or comments, platform share buttons, scraping full articles, decorative effects or animation.

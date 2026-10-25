@@ -98,6 +98,8 @@
   });
   /** The feeds you follow and your folders, alphabetically; unknown until the server answers. */
   let feeds: Feed[] | undefined = $state();
+  /** Feeds set to flow past in Edit feed: no count, and their rows look as in river mode (SPEC section 15). */
+  let flowing = $derived(new Set((feeds ?? []).filter((feed) => feed.river).map((feed) => feed.id)));
   let folders: Folder[] = $state([]);
   /** The reader's saved searches, alphabetically (SPEC section 14); `searchesLoaded` once the server answered. */
   let searches: SavedSearch[] = $state([]);
@@ -418,7 +420,8 @@
   function unreadChanged(feedId: number, change: number) {
     countChanges++;
     const feed = feeds?.find((each) => each.id === feedId);
-    if (feed) feed.unread = Math.max(0, feed.unread + change);
+    // A feed that flows past counts nothing.
+    if (feed && !feed.river) feed.unread = Math.max(0, feed.unread + change);
   }
 
   async function changeMode(next: ReadingMode) {
@@ -963,10 +966,21 @@
     else itemList.focusSelected();
   }
 
-  /** Enter and o: open the selected article (the first, if none is selected yet) to read. */
+  /**
+   * Enter and o: open the selected article (the first, if none is selected
+   * yet) to read. An article from a feed set to open on the website opens
+   * the publisher's page in a new tab instead, and counts as read (SPEC
+   * section 15); on a computer its summary stays beside the list.
+   */
   function open() {
     if (!itemList || (!panes.list && !panes.article && !reading)) return;
     if (!selected && !itemList.move(1)) return;
+    const article = selected;
+    if (article?.link && !reading && !inArticle() && feeds?.find((feed) => feed.id === article.feedId)?.openOnSite) {
+      window.open(article.link, "_blank", "noopener,noreferrer");
+      itemList.shown(article);
+      return;
+    }
     if (phone && !reading) {
       // On a phone the article is a screen of its own, one step on.
       history.pushState({ screen: "article", back: "list" }, "", location.pathname);
@@ -1337,6 +1351,7 @@
             {folders}
             bind:heading={listHeading}
             besideToggle={!phone && !panes.sidebar}
+            {river}
             onSaved={() => edited(true)}
             onCancel={() => edited(false)}
             onUnsubscribe={() => unsubscribeFrom(currentFeed!)}
@@ -1524,6 +1539,7 @@
                   results={shown !== undefined}
                   oneFeed={under.kind === "feed" && !shown}
                   {river}
+                  {flowing}
                   bind:count={listCount}
                   bind:found={listFound}
                 />
@@ -1609,6 +1625,7 @@
       feed={currentFeed}
       {folders}
       bind:heading={sheetHeading}
+      {river}
       onSaved={() => edited(true)}
       onCancel={() => edited(false)}
       onUnsubscribe={() => unsubscribeFrom(currentFeed!)}

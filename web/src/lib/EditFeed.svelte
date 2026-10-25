@@ -1,7 +1,8 @@
 <!--
   "Edit feed" (SPEC section 15): the feed's name, its folders as a
-  checklist ending in a "New folder…" row, and Unsubscribe. Saving changes the name and
-  folders together; Cancel or Escape goes back to the feed unchanged.
+  checklist ending in a "New folder…" row, its own settings (reading mode,
+  how often it's checked, opening on the website), and Unsubscribe. Saving
+  changes them all together; Cancel or Escape goes back to the feed unchanged.
   Unsubscribing happens at once, with Undo on the next screen. On a wide
   window it's a sheet over the feed's list; on a phone, a screen of its own.
 
@@ -17,7 +18,7 @@
   import PageHead from "./PageHead.svelte";
   import Sheet from "./Sheet.svelte";
   import { edge } from "./edge";
-  import { editFeed, refused, type Feed, type Folder } from "./feeds";
+  import { editFeed, refused, type Check, type Feed, type Folder } from "./feeds";
 
   let {
     feed,
@@ -25,6 +26,7 @@
     heading = $bindable(),
     besideToggle = false,
     sheet = false,
+    river = false,
     onSaved,
     onCancel,
     onUnsubscribe,
@@ -36,6 +38,8 @@
     besideToggle?: boolean;
     /** Shown as a sheet over the list, not as a page. */
     sheet?: boolean;
+    /** The whole app is in river mode, so every feed flows past whatever this one says. */
+    river?: boolean;
     onSaved: () => void;
     onCancel: () => void;
     onUnsubscribe: () => Promise<string | undefined>;
@@ -45,6 +49,9 @@
   let title = $state((() => feed.title)());
   let chosen: number[] = $state((() => [...feed.folders])());
   let newFolder = $state("");
+  let flows = $state((() => feed.river)());
+  let check: Check = $state((() => feed.check)());
+  let openOnSite = $state((() => feed.openOnSite)());
   let busy = $state(false);
   let message = $state("");
 
@@ -53,11 +60,21 @@
     if (busy) return;
     busy = true;
     message = "";
-    const refusal = await editFeed(feed.id, title, chosen, newFolder);
+    const refusal = await editFeed(feed.id, title, chosen, newFolder, { river: flows, check, openOnSite });
     busy = false;
     if (refusal) message = refused(refusal, "feed");
     else onSaved();
   }
+
+  const MODE_CHOICES = [
+    { value: false, label: "Inbox" },
+    { value: true, label: "River" },
+  ];
+  const CHECK_CHOICES: { value: Check; label: string }[] = [
+    { value: "automatic", label: "Automatic" },
+    { value: "hourly", label: "Hourly" },
+    { value: "daily", label: "Daily" },
+  ];
 
   async function leave() {
     if (busy) return;
@@ -124,6 +141,50 @@
       >
     </fieldset>
 
+    <!--
+      The feed's own settings, a grouped list as in Settings: each row's name on its left and a
+      segmented choice at its right end (under the name when narrow), then a tick box row. Every
+      setting starts as every feed behaves, so only the feeds that need it change.
+    -->
+    <div class="flex min-w-0 flex-col gap-1.5">
+      <span class="text-small text-ink-2" id="feed-settings-name">Settings</span>
+      <div class="inset-group" role="group" aria-labelledby="feed-settings-name" aria-describedby="feed-settings-help">
+        <fieldset class="inset-row">
+          <legend class="row-name">Reading mode</legend>
+          <div class="choices control" style="--columns: 2">
+            {#each MODE_CHOICES as choice (choice.label)}
+              <label class="choice">
+                <input type="radio" name="feed-mode" value={choice.value} bind:group={flows} />
+                {choice.label}
+              </label>
+            {/each}
+          </div>
+        </fieldset>
+        <fieldset class="inset-row">
+          <legend class="row-name">Check for new articles</legend>
+          <div class="choices control" style="--columns: 3">
+            {#each CHECK_CHOICES as choice (choice.value)}
+              <label class="choice">
+                <input type="radio" name="feed-check" value={choice.value} bind:group={check} />
+                {choice.label}
+              </label>
+            {/each}
+          </div>
+        </fieldset>
+        <label class="inset-row check-row">
+          <input type="checkbox" bind:checked={openOnSite} />
+          <span class="min-w-0 break-words">Open articles on the website</span>
+          <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
+        </label>
+      </div>
+      <span id="feed-settings-help" class="field-help mt-0"
+        >{river
+          ? "The whole app is in river mode for now (Settings › Reading)."
+          : "River: its articles skip Unread and show no count."}
+        Hourly or Daily: checked no more often than that. Website: opening an article goes to the publisher's page.</span
+      >
+    </div>
+
     <!-- A problem, in red words with an icon, only once there is one: the sheet grows by its line. -->
     <p role="status" class={["flex items-start gap-1.5 text-small text-danger", !message && "sr-only"]}>
       {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
@@ -171,3 +232,33 @@
   </div>
 </section>
 {/if}
+
+<style>
+  /* The same rows as Settings.svelte's (keep the two alike): a row's name on its left; a fieldset's legend floats so it sits in the row like any other child. */
+  .row-name {
+    float: left;
+    padding: 0;
+    color: var(--ink);
+    font-size: var(--text-ui);
+  }
+  /* The choice at the row's right end, as wide as it needs; under the name once the row is too narrow. */
+  .control {
+    flex: 0 1 15rem;
+    min-width: 0;
+  }
+  .choices.control {
+    display: grid;
+    grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+  }
+  .choices.control :global(.choice) {
+    justify-content: center;
+    padding-inline: 0.5rem;
+    text-align: center;
+    line-height: 1.2;
+  }
+  @media (width < 40rem) {
+    .control {
+      flex-basis: 100%;
+    }
+  }
+</style>
