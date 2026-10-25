@@ -365,6 +365,12 @@ each with screenshots:
   its description, only once you press Play; a YouTube player inside a blog
   post becomes a link to the video (decision 0068).
 
+## Syncing with other apps
+
+- 🔨 Reeder, NetNewsWire and other feed readers sync with nine turtles
+  through the Google Reader API, with an app password made in Settings
+  (SPEC section 26, decision 0070).
+
 ---
 
 Responsive layout, accessibility and speed aren't left to the end: each
