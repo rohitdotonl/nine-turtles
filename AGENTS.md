@@ -83,7 +83,7 @@ summary (or say why none needed it):
 
 - **Everyone can read here:** WCAG AA contrast everywhere (AAA for article text), never color alone, fully keyboard-operable with visible focus, screen-reader friendly, respects system settings, 44px touch targets.
 - **Respect the publisher:** show only what the feed contains (never scrape), always credit and link the original, fetch politely, share the publisher's link, play media in the publisher's player.
-- **Never lose the reader's data or put them at risk:** always sanitize feed content, no secrets in code or GitHub, nothing deletes without undo, back up before any database structure change (nine turtles does this itself, decision 0076), and any change that could lose data is raised with the owner first. Unsubscribing deletes a feed's unstarred articles with only the immediate undo (and the nightly backups); the owner accepted that.
+- **Never lose the reader's data or put them at risk:** always sanitize feed content, no secrets in code or GitHub, nothing deletes without undo, back up before any database structure change (nine turtles does this itself, decision 0076), and any change that could lose data is raised with the owner first. Unsubscribing deletes a feed's unstarred articles with only the immediate undo (and the nightly backups); the owner accepted that. Deleting one's own account has no undo at all, after one "Are you sure?" and an offer of the reader's downloads (decision 0088); the owner chose that too.
 
 Ranked principles below the floors (higher wins). Design: reading first ›
 calm over engagement › clear at a glance › slow app, fast interface ›

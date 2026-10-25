@@ -377,10 +377,11 @@ test("with only the keyboard: Tab reaches Show older items, and the keyboard's p
   const rows = list.getByRole("listitem");
   await expect(rows).toHaveCount(50);
   // Tab reaches the button under the list. Having the keyboard's place brings
-  // the bottom into view, so the rest load by themselves (decision 0074).
+  // the bottom into view, so the rest load by themselves (decision 0074). They
+  // can arrive, and the button go, before the next look: stop Tabbing then too.
   for (let i = 0; i < 400; i++) {
     const on = await page.evaluate(() => document.activeElement?.textContent?.trim() ?? "");
-    if (on === "Show older items") break;
+    if (on === "Show older items" || (await rows.count()) > 50) break;
     await page.keyboard.press("Tab");
   }
   await expect(rows).toHaveCount(60);

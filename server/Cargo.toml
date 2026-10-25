@@ -29,6 +29,7 @@ feed-rs = "3.0"
 scraper = "0.29"
 opml = "1.1"
 ammonia = "4.2"
+lettre = { version = "0.11.23", default-features = false, features = ["smtp-transport", "builder", "tokio1-rustls", "rustls-platform-verifier", "aws-lc-rs"] }
 
 [lints.rust]
 unsafe_code = "forbid"

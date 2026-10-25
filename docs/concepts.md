@@ -169,6 +169,8 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Session and session cookie
 - App password
 - Invite link and sign-up switch
+- SMTP and STARTTLS (sending email)
+- Email confirmation link
 - Rate limiting per account
 - Secure, HTTP-only and SameSite cookies
 - Cross-site request forgery (CSRF)

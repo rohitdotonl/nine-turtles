@@ -26,7 +26,19 @@ describe("email addresses", () => {
     for (const good of ["rohit@example.com", "a@b", "first.last+feeds@example.co.in"]) {
       expect(plausibleEmail(good), good).toBe(true);
     }
-    for (const bad of ["", "rohit", "@example.com", "rohit@", "ro hit@example.com", "a@b@c", `${"a".repeat(250)}@example.com`]) {
+    for (const bad of [
+      "",
+      "rohit",
+      "@example.com",
+      "rohit@",
+      "ro hit@example.com",
+      "a@b@c",
+      `${"a".repeat(250)}@example.com`,
+      "evil<victim@example.com>",
+      '"evil"@example.com',
+      "a,victim@example.com",
+      "victim@[127.0.0.1]",
+    ]) {
       expect(plausibleEmail(bad), bad).toBe(false);
     }
   });

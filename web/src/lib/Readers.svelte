@@ -1,16 +1,19 @@
 <!--
   Readers and Sign-up (SPEC section 18, decision 0087), two groups of
   Settings that only the owner sees. Readers: the owner's own email (to sign
-  in with, beside the password alone) and everyone with an account, by email
+  in with, beside the password alone, and for "Forgot your password?"
+  links; saving it asks for their password, decision 0088) and everyone with an account, by email
   and when they joined, never what they read. Sign-up: Closed (the default),
-  Invite link, or Open, which is shown but can't be chosen until nine turtles
-  can send confirmation emails. An invite link is made here, shown once with
-  a Copy button, and replaced by making a new one. Until the owner has saved
-  their own email, a line under Sign-up says to save it before sending a link.
+  Invite link, or Open, which can be chosen only while nine turtles can send
+  the emails that confirm an address (decision 0088). An invite link is made
+  here, shown once with a Copy button, and replaced by making a new one. Until
+  the owner has saved their own email, a line under Sign-up says to save it
+  before sending a link.
 -->
 <script lang="ts">
   import { tick } from "svelte";
   import Icon from "./Icon.svelte";
+  import { duration } from "./session";
   import {
     inviteLink,
     listPeople,
@@ -26,12 +29,17 @@
   let { email = null }: { email?: string | null } = $props();
 
   let ownEmail = $state("");
+  /** The owner's current password, asked for to save their email (decision 0088). */
+  let ownPassword = $state("");
+  let refusedField: "email" | "password" | undefined = $state();
   let people: Person[] = $state([]);
   let emailMessage = $state("");
   let emailRefused = $state(false);
   /** Unknown until the server answers. */
   let mode: SignUpMode | undefined = $state();
   let inviteMadeAt: number | null = $state(null);
+  /** nine turtles can send email, so Open may be chosen. */
+  let openAvailable = $state(false);
   /** The new invite link, shown only until Settings closes. */
   let link = $state("");
   let signUpMessage = $state("");
@@ -73,6 +81,7 @@
     (settings) => {
       mode = settings.mode;
       inviteMadeAt = settings.inviteMadeAt;
+      openAvailable = settings.openAvailable;
     },
     () => (signUpMessage = "Couldn't check how sign-up is set. Try again in a moment."),
   );
@@ -82,27 +91,54 @@
     if (busy) return;
     const next = ownEmail.trim();
     emailRefused = false;
+    refusedField = undefined;
     if (!plausibleEmail(next)) {
       emailRefused = true;
+      refusedField = "email";
       emailMessage = "That doesn't look like an email address.";
       return;
     }
+    if (ownPassword === "") {
+      emailRefused = true;
+      refusedField = "password";
+      emailMessage = "Type your password too, to save your email.";
+      return;
+    }
     busy = true;
-    const result = await setOwnEmail(next);
+    const result = await setOwnEmail(next, ownPassword);
     busy = false;
-    if (result === "ok") {
+    if (result.ok) {
       emailMessage = `Saved. You can sign in with ${next} and your password; the password alone still works.`;
       savedEmail = next;
       ownEmail = next;
+      ownPassword = "";
       loadPeople();
-    } else {
-      emailRefused = result !== "unreachable";
-      emailMessage =
-        result === "already"
-          ? "Another reader has that email."
-          : result === "email"
-            ? "That doesn't look like an email address."
-            : "Couldn't save your email. Try again in a moment.";
+      return;
+    }
+    emailRefused = result.reason !== "unreachable";
+    refusedField =
+      result.reason === "email" || result.reason === "already"
+        ? "email"
+        : result.reason === "wrong-password" || result.reason === "wait"
+          ? "password"
+          : undefined;
+    if (result.reason === "wrong-password") ownPassword = "";
+    switch (result.reason) {
+      case "already":
+        emailMessage = "Another reader has that email.";
+        break;
+      case "email":
+        emailMessage = "That doesn't look like an email address.";
+        break;
+      case "wrong-password":
+        emailMessage = "That isn't your password.";
+        break;
+      case "wait":
+        emailMessage = `Too many wrong tries. Try again in ${duration(result.waitSeconds)}.`;
+        break;
+      case "unreachable":
+        emailMessage = "Couldn't save your email. Try again in a moment.";
+        break;
     }
   }
 
@@ -118,6 +154,8 @@
         link = "";
         inviteMadeAt = null;
         signUpMessage = "Sign-up is closed. Any invite link no longer works.";
+      } else if (next === "open") {
+        signUpMessage = "Sign-up is open. Anyone can make an account by confirming their email.";
       } else {
         signUpMessage = inviteMadeAt === null ? "Make an invite link to send to someone." : "";
       }
@@ -165,10 +203,13 @@
 <section aria-labelledby="readers-heading">
   <h3 id="readers-heading" class="inset-head">Readers</h3>
   <div class="inset-group">
-    <form class="inset-row" onsubmit={saveEmail}>
+    <!-- The email and password rows belong to this form by their form attribute, so each stays a row of the group. -->
+    <form id="own-email-form" class="hidden" onsubmit={saveEmail}></form>
+    <div class="inset-row">
       <label for="own-email" class="sr-only">Your email</label>
       <input
         id="own-email"
+        form="own-email-form"
         type="text"
         inputmode="email"
         autocomplete="email"
@@ -177,11 +218,27 @@
         placeholder="Your email"
         bind:value={ownEmail}
         aria-describedby="readers-message"
-        aria-invalid={emailRefused ? "true" : undefined}
+        aria-invalid={refusedField === "email" ? "true" : undefined}
         class="inset-input"
       />
-      <button type="submit" aria-disabled={busy} class="btn btn-small">Save<span class="sr-only"> your email</span></button>
-    </form>
+    </div>
+    <div class="inset-row">
+      <label for="own-email-password" class="sr-only">Your password</label>
+      <input
+        id="own-email-password"
+        form="own-email-form"
+        type="password"
+        autocomplete="current-password"
+        placeholder="Your password"
+        bind:value={ownPassword}
+        aria-describedby="readers-message"
+        aria-invalid={refusedField === "password" ? "true" : undefined}
+        class="inset-input"
+      />
+      <button type="submit" form="own-email-form" aria-disabled={busy} class="btn btn-small"
+        >Save<span class="sr-only"> your email</span></button
+      >
+    </div>
     {#each people as person (person.id)}
       <div class="inset-row">
         <p class="min-w-0">
@@ -197,7 +254,8 @@
   </p>
   <p class="inset-foot">
     Everyone with an account here, and when they joined. Nobody sees what anyone else reads. With your email you can sign
-    in by email and your password; the password alone still works.
+    in by email and your password (the password alone still works), and get a link if you forget it. Saving it asks for
+    your password.
   </p>
 </section>
 
@@ -214,9 +272,9 @@
               name="sign-up"
               value={choice.value}
               checked={mode === choice.value}
-              disabled={mode === undefined || choice.value === "open"}
+              disabled={mode === undefined || (choice.value === "open" && !openAvailable)}
               aria-describedby={choice.value === "open" ? "open-note" : undefined}
-              onchange={() => choice.value !== "open" && choose(choice.value)}
+              onchange={() => choose(choice.value)}
             />
             {choice.label}
           </label>
@@ -250,7 +308,16 @@
     Closed: nobody can make an account. Invite link: anyone you send the link to can, until you make a new link or close
     sign-up; the link is shown only once. At most 20 sign-ups are tried in any hour.
   </p>
-  <p id="open-note" class="inset-foot">Open, for anyone, becomes possible once nine turtles can send confirmation emails.</p>
+  {#if openAvailable}
+    <p id="open-note" class="inset-foot">
+      Open: anyone can, once they open the link emailed to them. Who has joined is in Readers above.
+    </p>
+  {:else}
+    <p id="open-note" class="inset-foot">
+      Open, for anyone, becomes possible once nine turtles can send confirmation emails (the email settings in
+      docs/operations/email.md).
+    </p>
+  {/if}
 </section>
 
 <style>

@@ -7,9 +7,12 @@
 //! (`tidy`), saved searches (`saved_searches`), OPML files (`subscriptions`),
 //! instant updates from WebSub hubs (`websub`), syncing with other feed
 //! readers (`apps`, `greader`), backups (`backup`, `storage`), and the
-//! reader's rules and mutes (`rules`), and the readers and sign-up (`people`).
+//! reader's rules and mutes (`rules`), the readers and sign-up (`people`),
+//! and what email makes possible (`email`, `accounts`): confirming an
+//! address, a new password, a changed email, and deleting an account.
 //! The frontend is packed into this program (see `assets`).
 
+pub mod accounts;
 pub mod apps;
 pub mod assets;
 pub mod auth;
@@ -18,6 +21,7 @@ pub mod checking;
 pub mod config;
 pub mod db;
 pub mod discover;
+pub mod email;
 pub mod feed;
 pub mod feeds;
 pub mod fetch;
@@ -86,6 +90,9 @@ pub struct AppState {
     pub storage: Option<storage::Storage>,
     /// The name of the newest nightly backup known to be stored.
     pub latest_backup: Arc<std::sync::Mutex<Option<String>>>,
+    /// Sends email; `None` when the email settings (or the public address
+    /// every link starts with) aren't set, and then nothing is sent.
+    pub mailer: Option<email::Mailer>,
 }
 
 /// Opens the database and builds the whole web application. Tests call it
@@ -119,6 +126,19 @@ pub async fn state(config: Config) -> Result<AppState, String> {
         backup::restore_if_empty(&config.data_dir, storage.as_ref(), name).await?;
     }
 
+    let mailer = match (&config.smtp, &config.public_url) {
+        (Some(smtp), Some(base)) => Some(email::Mailer::smtp(smtp, base.clone())?),
+        // Also refused when the settings are read (`Config::from_env`).
+        (Some(_), None) => {
+            return Err(
+                "the email settings are set but NINE_TURTLES_PUBLIC_URL isn't: every link in an \
+                 email starts with that address, so set it too (docs/operations/email.md)"
+                    .to_owned(),
+            );
+        }
+        (None, _) => None,
+    };
+
     let state = AppState {
         db: db::open_with_backup(&config.data_dir, storage.as_ref()).await?,
         http: fetch::client(config.local_feeds_allowed)?,
@@ -131,7 +151,13 @@ pub async fn state(config: Config) -> Result<AppState, String> {
         last_round: Arc::default(),
         storage,
         latest_backup: Arc::default(),
+        mailer,
     };
+    // A new NINE_TURTLES_PASSWORD_HASH wins over a password the owner set
+    // by email (decision 0088): their way back that needs no email.
+    auth::owner_password_follows_setting(&state.db, &state.config.password)
+        .await
+        .map_err(|error| format!("couldn't check the owner's password: {error}"))?;
     Ok(state)
 }
 
@@ -139,6 +165,7 @@ pub async fn state(config: Config) -> Result<AppState, String> {
 pub fn router(state: AppState) -> Router {
     let router = Router::new()
         .merge(auth::routes())
+        .merge(accounts::routes())
         .merge(apps::routes())
         .merge(greader::routes())
         .merge(feeds::routes())

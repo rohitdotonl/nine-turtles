@@ -58,13 +58,13 @@ async fn the_right_password_signs_this_device_in_for_a_year() {
 #[tokio::test]
 async fn without_signing_in_nothing_is_revealed() {
     let base = common::start(common::config()).await;
-    assert_eq!(session(&base, None).await, r#"{"signed_in":false}"#);
+    // Only what the sign-in page needs: whether to offer "Forgot your
+    // password?" and "Sign up" (decision 0088).
+    const SIGNED_OUT: &str = r#"{"email_sending":false,"sign_up_open":false,"signed_in":false}"#;
+    assert_eq!(session(&base, None).await, SIGNED_OUT);
 
     let made_up = format!("nine_turtles_session={}", "0".repeat(64));
-    assert_eq!(
-        session(&base, Some(&made_up)).await,
-        r#"{"signed_in":false}"#
-    );
+    assert_eq!(session(&base, Some(&made_up)).await, SIGNED_OUT);
 }
 
 #[tokio::test]

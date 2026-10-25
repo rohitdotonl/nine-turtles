@@ -37,6 +37,10 @@ pub struct Config {
     /// A stored backup to bring back when there's no database yet, such as
     /// `nightly/2026-10-25.sqlite` (`NINE_TURTLES_RESTORE_FROM`).
     pub restore_from: Option<String>,
+    /// How emails are sent (`NINE_TURTLES_SMTP_*`, decision 0088). Without
+    /// it, nothing is sent: no confirmation or password emails, and Open
+    /// sign-up stays refused.
+    pub smtp: Option<crate::email::Settings>,
 }
 
 /// The scrambled password (`NINE_TURTLES_PASSWORD_HASH`), made by
@@ -120,6 +124,13 @@ impl Config {
 
         let backup = backup_settings(&var)?;
         let restore_from = var("NINE_TURTLES_RESTORE_FROM").map(|name| name.trim().to_owned());
+        let smtp = smtp_settings(&var)?;
+        if smtp.is_some() && public_url.is_none() {
+            return Err("the email settings (NINE_TURTLES_SMTP_*) are set but \
+                 NINE_TURTLES_PUBLIC_URL isn't: every link in an email starts with that address, \
+                 so set it too (docs/operations/email.md)"
+                .to_owned());
+        }
 
         Ok(Self {
             listen,
@@ -133,6 +144,7 @@ impl Config {
             public_url,
             backup,
             restore_from,
+            smtp,
         })
     }
 }
@@ -197,6 +209,64 @@ fn backup_settings(
     }))
 }
 
+/// The email settings: host, username, password and sender, or none (no
+/// email). Some but not all (the port alone too) is a slip worth stopping
+/// for, as are these without NINE_TURTLES_PUBLIC_URL (checked in
+/// `Config::from_env`). The port is 587
+/// (STARTTLS) unless set; 465 means encrypted from the start.
+fn smtp_settings(
+    var: &dyn Fn(&str) -> Option<String>,
+) -> Result<Option<crate::email::Settings>, String> {
+    let names = [
+        "NINE_TURTLES_SMTP_HOST",
+        "NINE_TURTLES_SMTP_USERNAME",
+        "NINE_TURTLES_SMTP_PASSWORD",
+        "NINE_TURTLES_SMTP_FROM",
+    ];
+    let values: Vec<Option<String>> = names
+        .iter()
+        .map(|name| var(name).map(|value| value.trim().to_owned()))
+        .collect();
+    // The port alone counts as some: it's a slip too.
+    if values.iter().all(Option::is_none) && var("NINE_TURTLES_SMTP_PORT").is_none() {
+        return Ok(None);
+    }
+    let missing: Vec<&str> = names
+        .iter()
+        .zip(&values)
+        .filter(|(_, value)| value.is_none())
+        .map(|(name, _)| *name)
+        .collect();
+    if !missing.is_empty() {
+        return Err(format!(
+            "sending email needs all of host, username, password and sender; missing: {}",
+            missing.join(", ")
+        ));
+    }
+    let [host, username, password, from] =
+        <[Option<String>; 4]>::try_from(values).map_err(|_| "four settings".to_owned())?;
+    let port = match var("NINE_TURTLES_SMTP_PORT") {
+        None => 587,
+        Some(text) => text
+            .trim()
+            .parse::<u16>()
+            .ok()
+            .filter(|port| *port > 0)
+            .ok_or_else(|| {
+                format!("NINE_TURTLES_SMTP_PORT must be a number such as 587, got {text:?}")
+            })?,
+    };
+    let from = from.unwrap_or_default();
+    crate::email::parse_from(&from)?;
+    Ok(Some(crate::email::Settings {
+        host: host.unwrap_or_default(),
+        port,
+        username: username.unwrap_or_default(),
+        password: password.unwrap_or_default(),
+        from,
+    }))
+}
+
 #[cfg(test)]
 mod tests {
     use super::PasswordSetting;
@@ -256,5 +326,51 @@ mod tests {
         assert!(backup_settings(&with(all("http://localhost:9000"))).is_ok());
         assert!(backup_settings(&with(all("http://abc.r2.cloudflarestorage.com"))).is_err());
         assert!(backup_settings(&with(all("not an address"))).is_err());
+    }
+
+    #[test]
+    fn email_settings_are_all_or_nothing_and_the_port_is_587_unless_set() {
+        use super::smtp_settings;
+        let with = |pairs: Vec<(&'static str, &'static str)>| {
+            move |name: &str| {
+                pairs
+                    .iter()
+                    .find(|(key, _)| *key == name)
+                    .map(|(_, value)| (*value).to_owned())
+            }
+        };
+        assert_eq!(smtp_settings(&with(vec![])).unwrap(), None);
+        let error = smtp_settings(&with(vec![(
+            "NINE_TURTLES_SMTP_HOST",
+            "smtp-relay.brevo.com",
+        )]))
+        .unwrap_err();
+        assert!(error.contains("NINE_TURTLES_SMTP_FROM"), "{error}");
+        assert!(!error.contains("NINE_TURTLES_SMTP_HOST"), "{error}");
+        // The port alone is a slip too, and names all four missing.
+        let error = smtp_settings(&with(vec![("NINE_TURTLES_SMTP_PORT", "465")])).unwrap_err();
+        assert!(error.contains("NINE_TURTLES_SMTP_HOST"), "{error}");
+        assert!(error.contains("NINE_TURTLES_SMTP_FROM"), "{error}");
+
+        let all = vec![
+            ("NINE_TURTLES_SMTP_HOST", "smtp-relay.brevo.com"),
+            ("NINE_TURTLES_SMTP_USERNAME", "login@example.com"),
+            ("NINE_TURTLES_SMTP_PASSWORD", "key"),
+            (
+                "NINE_TURTLES_SMTP_FROM",
+                "nine turtles <hello@nineturtles.app>",
+            ),
+        ];
+        let settings = smtp_settings(&with(all.clone())).unwrap().unwrap();
+        assert_eq!(settings.port, 587);
+        let mut on_465 = all.clone();
+        on_465.push(("NINE_TURTLES_SMTP_PORT", "465"));
+        assert_eq!(smtp_settings(&with(on_465)).unwrap().unwrap().port, 465);
+        let mut bad_port = all.clone();
+        bad_port.push(("NINE_TURTLES_SMTP_PORT", "smtp"));
+        assert!(smtp_settings(&with(bad_port)).is_err());
+        let mut bad_from = all;
+        bad_from[3] = ("NINE_TURTLES_SMTP_FROM", "nine turtles");
+        assert!(smtp_settings(&with(bad_from)).is_err());
     }
 }

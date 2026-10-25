@@ -12,10 +12,15 @@
   opens the rule editor over Settings (SPEC section 27). Other apps makes the
   app password other feed readers sync with (OtherApps). Readers, for the
   owner only, lists who has an account, sets the owner's email and the
-  sign-up switch (Readers, decision 0087).
+  sign-up switch (Readers, decision 0087). Account shows the reader's email,
+  with Change… while nine turtles can send email, Sign out, and for every
+  reader but the owner Delete account… (ChangeEmail, DeleteAccount,
+  decision 0088).
 -->
 <script lang="ts">
   import { edge } from "./edge";
+  import ChangeEmail from "./ChangeEmail.svelte";
+  import DeleteAccount from "./DeleteAccount.svelte";
   import Icon from "./Icon.svelte";
   import ImportOpml from "./ImportOpml.svelte";
   import OtherApps from "./OtherApps.svelte";
@@ -42,6 +47,7 @@
     version,
     owner = false,
     email = null,
+    emailSending = false,
     onSignedOut,
     onClose,
     onImported,
@@ -71,6 +77,8 @@
     owner?: boolean;
     /** The email this reader signs in with, if any. */
     email?: string | null;
+    /** nine turtles can send email, so the email can be changed here. */
+    emailSending?: boolean;
     onSignedOut: () => void;
     onClose: () => void;
     /** Feeds were imported: the sidebar loads them. */
@@ -151,6 +159,20 @@
     });
   }
 
+  /** Change email or Delete account, while open: a sheet over Settings, or on a phone a screen in its place. */
+  let task: "email" | "delete" | undefined = $state();
+  let taskHeading: HTMLHeadingElement | undefined = $state();
+  let changeButton: HTMLButtonElement | undefined = $state();
+  let deleteButton: HTMLButtonElement | undefined = $state();
+  /** What Change email did, said under Account. */
+  let accountNote = $state("");
+
+  function closeTask() {
+    const from = task === "email" ? changeButton : deleteButton;
+    task = undefined;
+    queueMicrotask(() => from?.focus());
+  }
+
   let message = $state("");
   let sortMessage = $state("");
   /** What the last OPML import did, in plain words. */
@@ -207,7 +229,21 @@
     />
   {/key}
 {/if}
-{#if !(editing && phone)}
+{#if task === "email"}
+  <ChangeEmail
+    sheet={!phone}
+    {besideToggle}
+    bind:heading={taskHeading}
+    onCancel={closeTask}
+    onSent={(note) => {
+      accountNote = note;
+      closeTask();
+    }}
+  />
+{:else if task === "delete"}
+  <DeleteAccount sheet={!phone} {besideToggle} bind:heading={taskHeading} onCancel={closeTask} onDeleted={onSignedOut} />
+{/if}
+{#if !(editing && phone) && !(task && phone)}
 <section aria-labelledby="settings-heading" class="flex flex-1 flex-col bg-paper">
   <PageHead title="Settings" id="settings-heading" bind:heading {onClose} closeLabel="Close settings" {besideToggle} column="max-w-[35rem]" />
   <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-16 md:px-10">
@@ -405,6 +441,15 @@
               <button type="button" onclick={() => location.reload()} class="btn btn-small">Reload</button>
             </div>
           {/if}
+          <!-- The email this reader signs in with; changing it sends a link to the new one (decision 0088). -->
+          <div class="inset-row">
+            <p class="min-w-0">Email<br /><span class="value text-muted">{email ?? "No email yet"}</span></p>
+            {#if emailSending && email}
+              <button bind:this={changeButton} type="button" onclick={() => (task = "email")} class="btn btn-small"
+                >Change…<span class="sr-only"> email</span></button
+              >
+            {/if}
+          </div>
           <!--
             In the text color, not the destructive red: signing out removes
             nothing, and red in nine turtles means something goes (decision 0042).
@@ -413,8 +458,18 @@
           <button type="button" onclick={leave} class="inset-row inset-action"
             >Sign out<span class="row-glyph"><Icon name="sign-out" size={18} /></span></button
           >
+          {#if !owner}
+            <!-- Red words: this removes something. What it removes is said in the sheet it opens, before anything goes. -->
+            <button bind:this={deleteButton} type="button" onclick={() => (task = "delete")} class="inset-row inset-action text-danger font-semibold"
+              >Delete account…</button
+            >
+          {/if}
         </div>
+        <p role="status" class={["inset-foot text-ink", !accountNote && "sr-only"]}>{accountNote}</p>
         <p role="status" class={["inset-foot text-danger", !message && "sr-only"]}>{message}</p>
+        {#if email && !emailSending}
+          <p class="inset-foot">Changing your email needs nine turtles to send email; whoever runs it can set that up.</p>
+        {/if}
         <p class="inset-foot" translate="no">Version {version}</p>
       </section>
     </div>
@@ -468,6 +523,10 @@
   */
   .reading-sample p {
     max-width: min(var(--reading-measure), var(--sample-share, 100%));
+  }
+  .value {
+    font-size: var(--text-meta);
+    overflow-wrap: anywhere;
   }
   /* On a phone articles read a tenth smaller; so does the sample. */
   @media (max-width: 40rem) {

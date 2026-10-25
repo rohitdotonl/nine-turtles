@@ -67,6 +67,7 @@
     version,
     owner = false,
     email = null,
+    emailSending = false,
     onSignedOut,
   }: {
     version: string;
@@ -74,6 +75,8 @@
     owner?: boolean;
     /** The email this reader signs in with, if any. */
     email?: string | null;
+    /** nine turtles can send email, so the email can be changed in Settings (decision 0088). */
+    emailSending?: boolean;
     onSignedOut: () => void;
   } = $props();
 
@@ -1426,6 +1429,7 @@
           {version}
           {owner}
           {email}
+          {emailSending}
           {onSignedOut}
           onClose={closePage}
           onImported={loadFeeds}

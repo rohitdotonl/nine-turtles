@@ -380,7 +380,7 @@ export async function signIn(page: Page): Promise<void> {
 /** Waits until nine turtles has decided which screen to show. */
 export async function appReady(page: Page): Promise<void> {
   // Signed in, the sidebar is there on every width (a phone may show another screen first).
-  await expect(page.getByLabel("Password").or(page.locator("#sidebar"))).toBeAttached();
+  await expect(page.getByLabel("Password", { exact: true }).or(page.locator("#sidebar"))).toBeAttached();
 }
 
 /** Chooses a theme and its day or night version the way Settings saves them, before the page loads. */

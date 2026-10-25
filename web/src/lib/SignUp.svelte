@@ -7,23 +7,35 @@
   server only inside the sign-up itself. Without a ticket, or once the server
   says sign-up isn't open, it says so calmly and offers Sign in instead. On
   success the device is signed in and the reader arrives in nine turtles.
+  While sign-up is Open (decision 0088) the page works without a ticket too:
+  signing up then sends a link to the email, and the page says to open it;
+  the account is made when it's followed.
 -->
 <script lang="ts">
   import Logo from "./Logo.svelte";
   import Icon from "./Icon.svelte";
   import { PASSWORD_MINIMUM, explainSignUp, inviteFrom, signUp } from "./readers";
 
-  let { onSignedIn }: { onSignedIn: () => void } = $props();
+  let {
+    onSignedIn,
+    open = false,
+  }: {
+    onSignedIn: () => void;
+    /** Sign-up is Open: anyone may sign up, by confirming their email. */
+    open?: boolean;
+  } = $props();
 
   const invite = inviteFrom(location.hash);
   if (location.hash) history.replaceState(history.state, "", location.pathname);
+  /** Where the link to finish signing up went, once it's on its way. */
+  let sentTo = $state("");
   let email = $state("");
   let password = $state("");
   let message = $state("");
   /** Which field the message is about, so it alone is marked. */
   let refusedField: "email" | "password" | undefined = $state();
   /** Sign-up isn't open (no ticket, an old one, or closed): the form goes, the message stays. */
-  let closed = $state(invite === "");
+  let closed = $state((() => invite === "" && !open)());
   let busy = $state(false);
   /** The email already has an account: Sign in is offered under the form. */
   let already = $state(false);
@@ -34,6 +46,10 @@
     busy = true;
     const result = await signUp(email.trim(), password, invite);
     busy = false;
+    if (result.ok && result.confirm) {
+      sentTo = result.confirm;
+      return;
+    }
     if (result.ok) {
       // The app lives at the site's root; the ticket leaves the address bar.
       history.replaceState(null, "", "/");
@@ -64,7 +80,15 @@
     <h1 class="font-serif text-display">nine turtles</h1>
     <p class="mt-3 font-serif text-large text-muted">A quiet place to read.</p>
   </div>
-  {#if closed}
+  {#if sentTo}
+    <div class="flex w-full flex-col items-center gap-3 text-center sm:max-w-xs">
+      <p role="status">
+        A link to finish signing up is on its way to <span class="font-semibold">{sentTo}</span>. Open it within 24
+        hours; your account is made then.
+      </p>
+      <a href="/" onclick={signIn} class="btn rounded-lg">Sign in</a>
+    </div>
+  {:else if closed}
     <div class="flex w-full flex-col items-center gap-3 text-center sm:max-w-xs">
       <p role="status">{message || "Sign-up isn't open. Ask whoever runs this nine turtles for an invite link."}</p>
       <a href="/" onclick={signIn} class="btn rounded-lg">Sign in</a>
