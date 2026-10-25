@@ -155,7 +155,7 @@ async fn delete(_: SignedIn, State(state): State<AppState>, Path(id): Path<i64>)
 /// look in number 0, which is nothing, so they find nothing rather than
 /// searching everything. Feeds and folders are numbered without
 /// AUTOINCREMENT, so SQLite may give the same number to a new one, which
-/// they'd otherwise quietly start searching (decision 0076).
+/// they'd otherwise quietly start searching (decision 0081).
 pub async fn forget<'c>(
     executor: impl sqlx::SqliteExecutor<'c>,
     kind: &str,

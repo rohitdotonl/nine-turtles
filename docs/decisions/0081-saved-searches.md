@@ -1,4 +1,4 @@
-# 0076: Saved searches in the sidebar
+# 0081: Saved searches in the sidebar
 
 *25 October 2026. Built in V2 at the owner's request (planning thread of 25 October 2026).*
 

@@ -95,7 +95,7 @@ years › written for the next agent.
 ## Hard rules worth repeating
 
 - **Never commit the owner's OPML file.** `*.opml` is ignored; test fixtures use made-up feeds.
-- No notifications, badges, gamification, infinite scroll, animations or transitions. Ever.
+- No notifications, badges, gamification, animations or transitions. Ever. Lists end: older items load as you reach the bottom (decision 0074), but nothing pads a list.
 - The accent (ink blue in Original, the text color in Plain) marks only what's yours to look at: what's unread and what a search found (decisions 0037, 0057); where you are is a plain grey pill. Green marks only a filled star. Neither is ever a button, a link or a focus outline.
 - Never fetch an article's web page. Autodiscovery fetches only the page the owner pastes, only when they add a feed or ask "Find new address" (`docs/decisions/0016-adding-feeds.md`).
 - A feature isn't done until it has tests and the checks pass.

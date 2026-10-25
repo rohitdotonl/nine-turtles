@@ -49,6 +49,9 @@ frontend() {
 
   step "Download size budget"
   node scripts/check-size.mjs
+
+  step "Health check script"
+  node scripts/check-health-check.mjs
 }
 
 rust() {

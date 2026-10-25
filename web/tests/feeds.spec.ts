@@ -191,7 +191,7 @@ test("Escape leaves Add a feed for the list you were on", async ({ page }) => {
   await expect(page).toHaveURL(/\/all$/);
 });
 
-test("the list shows 50 articles, then Show older items adds more below", async ({ page }) => {
+test("the list shows 50 articles, then reaching the bottom loads more below", async ({ page }) => {
   await openApp(page, "/all");
   await follow(page, `${FEED_SITE}/`);
   await page.reload();
@@ -204,12 +204,15 @@ test("the list shows 50 articles, then Show older items adds more below", async 
   // Where the first row sits inside the list, whatever the scrolling.
   const firstTop = () => rows.first().evaluate((row) => (row as HTMLElement).offsetTop);
   const firstBefore = await firstTop();
-  await list.getByRole("button", { name: "Show older items" }).click();
+  // Nothing loads until the bottom of the list comes into view.
+  await expect(rows).toHaveCount(50);
+  await list.locator(".list-bottom").scrollIntoViewIfNeeded();
   await expect(rows).toHaveCount(60);
   expect(await firstTop()).toBe(firstBefore);
   await expect(rows.last()).toContainText("(1)");
   // The list has an end.
   await expect(list.getByRole("button", { name: "Show older items" })).toHaveCount(0);
+  await expect(list.getByText("You're all caught up.")).toBeVisible();
 });
 
 // The keyboard floor: everything above also works with the keyboard alone.
@@ -255,7 +258,7 @@ test("with only the keyboard: 'Go to' a feed you already follow", async ({ page 
   await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeFocused();
 });
 
-test("with only the keyboard: Show older items, and the keyboard's place stays in the list at the end", async ({ page }) => {
+test("with only the keyboard: Tab reaches Show older items, and the keyboard's place stays in the list at the end", async ({ page }) => {
   await openApp(page, "/all");
   await follow(page, `${FEED_SITE}/`);
   await page.reload();
@@ -267,8 +270,13 @@ test("with only the keyboard: Show older items, and the keyboard's place stays i
   const list = page.getByRole("region", { name: "Quiet Notes" });
   const rows = list.getByRole("listitem");
   await expect(rows).toHaveCount(50);
-  await tabTo(page, list.getByRole("button", { name: "Show older items" }), 400);
-  await page.keyboard.press("Enter");
+  // Tab reaches the button under the list. Having the keyboard's place brings
+  // the bottom into view, so the rest load by themselves (decision 0074).
+  for (let i = 0; i < 400; i++) {
+    const on = await page.evaluate(() => document.activeElement?.textContent?.trim() ?? "");
+    if (on === "Show older items") break;
+    await page.keyboard.press("Tab");
+  }
   await expect(rows).toHaveCount(60);
   // The button is gone (the list has ended); the keyboard's place moved to
   // the first article that just arrived, not to the top of the page.

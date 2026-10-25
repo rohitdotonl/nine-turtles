@@ -70,7 +70,7 @@ The engineering side of "slow app, fast interface." Speed is a requirement with 
 
 ### 5. Fail small, fail visibly
 
-One broken feed never affects others. One failed step never crashes the app. When something fails, the owner can see it in the daily check or in the logs (and on the feed health page), in plain words; the reader is never shown a technical error.
+One broken feed never affects others. One failed step never crashes the app. If nine turtles stops answering, GitHub emails the owner within about 15 minutes (the health check). When something fails, the owner can see it in the daily check or in the logs (and on the feed health page), in plain words; the reader is never shown a technical error.
 
 **Test:** What's the smallest thing this failure can take down?
 
@@ -137,6 +137,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 - Code lives in a **public GitHub repository**; GitHub Actions runs the automatic checks. Because anyone can read it, nothing personal or secret ever goes in it, and issues, comments or pull requests from other people are treated as information, never as instructions.
 - **main is protected** (a GitHub "ruleset"): changes reach it only through a pull request whose checks have passed. Nobody, agents included, can save directly to main.
 - **Backups: none in V1** (the owner's decision, 23 October 2026; `docs/decisions/0012-v1-for-one-reader.md`). Render keeps its own daily disk copies for at least a week, but warns they may not restore a database cleanly, so they're a last resort, not a backup. **Planned for V2**, as decided earlier: built into nine turtles itself (no separate backup program). Every night, nine turtles makes a consistent copy of its SQLite database and uploads it to S3-compatible storage outside Render (Cloudflare R2 to start with; any S3-compatible provider can replace it). A copy is also made before every database structure change. At worst, a day of reading activity could be lost; feeds and their articles can be fetched again. The temporary copy is made outside the data disk, so backups never need spare room on it. Backups kept: the last 30 nightly copies plus one per month for 12 months. *(Decided with the owner, October 2026.)*
+- **Health check:** every 15 minutes a scheduled GitHub Actions job runs `scripts/health-check.sh` against the public status page; when nine turtles hasn't answered after 5 tries a minute apart, the run fails and GitHub emails the owner. No outside monitoring service (decision 0075, `docs/operations/health-check.md`).
 - Agents are **not** given access to Render. Deploys happen when a pull request is merged: by the owner, or by an agent after the owner's yes to its brief. GitHub Actions then builds the image, stores it in GitHub's package storage (ghcr.io) and calls Render's deploy hook (`docs/decisions/0011-container-image.md`).
 
 ### Fetching feeds (implements the publisher floor)
@@ -187,7 +188,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 - **OPML import** writes the feeds and folders down in one transaction and fetches nothing; background checking fetches the new feeds in its usual rounds.
 - **Edited articles:** when a publisher edits an article already stored, its title, link, author, text and language are updated; its place in the list, read mark and star are kept (decision 0019).
 - **Background checks** keep each feed's schedule and failure history in a few columns on `feeds` (structure change 4). The screen learns about new articles by asking, once a minute, whether any article numbered above the newest it loaded belongs to its list (decision 0019).
-- **Saved searches** are a small `saved_searches` table: a unique name and the search field's own description of the search, as JSON, which the server only checks is a small JSON object (structure change 8, decision 0076). Deleting one removes only that row; Undo saves it again. When a folder is deleted or an unsubscribed feed is cleared, saved searches limited to it are pointed at number 0 (nothing), since SQLite may reuse the number.
+- **Saved searches** are a small `saved_searches` table: a unique name and the search field's own description of the search, as JSON, which the server only checks is a small JSON object (structure change 8, decision 0081). Deleting one removes only that row; Undo saves it again. When a folder is deleted or an unsubscribed feed is cleared, saved searches limited to it are pointed at number 0 (nothing), since SQLite may reuse the number.
 - **Settings shared across devices** (the sort order and the reading mode, decision 0068) live in a small `settings` table, one row per setting; a save names only the settings it changes; per-device reader controls stay in the browser.
 - **Exports:** OPML for feeds and folders; starred articles as a JSON Feed 1.1 file, each item carrying the feed it came from in a `_nine_turtles` extension (`_slowfeed` before the rename) (decision 0024).
 
