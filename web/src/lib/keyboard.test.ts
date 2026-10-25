@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SEQUENCE_MS, SHORTCUTS, createKeyReader, keyCap, type KeyPress } from "./keyboard";
+import { SEQUENCE_MS, SHORTCUTS, createKeyReader, keyCap, shortcutMatches, type KeyPress } from "./keyboard";
 
 const press = (key: string, extra: Partial<KeyPress> = {}): KeyPress => ({
   key,
@@ -91,22 +91,22 @@ describe("keyboard shortcuts", () => {
     expect(SHORTCUTS).toHaveLength(20);
     expect(SHORTCUTS.filter((shortcut) => shortcut.ready).map((shortcut) => shortcut.keys[0])).toEqual([
       "j",
-      "g then u",
-      "g then s",
-      "g then a",
-      "[",
-      "]",
-      "\\",
-      "Esc",
       "Enter",
       "v",
       "+",
       "s",
+      "Esc",
+      "g then u",
+      "g then s",
+      "g then a",
+      "/",
+      "[",
+      "]",
+      "\\",
       "m",
       "Shift+A",
       "u",
       "r",
-      "/",
       "a",
       "?",
     ]);
@@ -118,5 +118,30 @@ describe("keyboard shortcuts", () => {
     expect(keyCap("Shift+j")).toEqual({ cap: "⇧J", spoken: "Shift J" });
     expect(keyCap("-")).toEqual({ cap: "−" });
     for (const key of ["Enter", "Esc", "[", "/", "?", "+"]) expect(keyCap(key)).toEqual({ cap: key });
+  });
+});
+
+describe("finding a shortcut (decision 0061)", () => {
+  const star = { keys: ["s"], action: "Star / unstar" };
+  const go = { keys: ["g then u"], action: "Go to Unread" };
+  const all = { keys: ["Shift+A"], action: "Mark all as read" };
+
+  it("finds by words, whatever their case", () => {
+    expect(shortcutMatches(star, "STAR")).toBe(true);
+    expect(shortcutMatches(go, "unread")).toBe(true);
+    expect(shortcutMatches(star, "unread")).toBe(false);
+  });
+
+  it("finds by key, as printed or with the presses spaced", () => {
+    expect(shortcutMatches(star, "s")).toBe(true);
+    expect(shortcutMatches(go, "g u")).toBe(true);
+    expect(shortcutMatches(go, "g then u")).toBe(true);
+    expect(shortcutMatches(all, "shift a")).toBe(true);
+    expect(shortcutMatches(all, "⇧a")).toBe(true);
+    expect(shortcutMatches(go, "s")).toBe(false);
+  });
+
+  it("shows everything when nothing is typed", () => {
+    expect(shortcutMatches(star, "  ")).toBe(true);
   });
 });

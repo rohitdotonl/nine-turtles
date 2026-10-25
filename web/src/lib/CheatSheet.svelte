@@ -5,7 +5,7 @@
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
-  import { SHORTCUT_GROUPS, SHORTCUTS, keyCap } from "./keyboard";
+  import { SHORTCUT_GROUPS, SHORTCUTS, keyCap, shortcutMatches } from "./keyboard";
 
   let { open = $bindable() }: { open: boolean } = $props();
 
@@ -23,7 +23,7 @@
     more = list.scrollTop + list.clientHeight < list.scrollHeight - 1;
   }
 
-  const FILTERS = [
+  const FILTERS: [string, string][] = [
     ["is:unread", "Unread items only"],
     ["is:starred", "Starred items only"],
     ["feed:name", "One feed"],
@@ -34,9 +34,28 @@
 
   /** The groups in each of the two columns; the search filters close the second. */
   const COLUMNS: (typeof SHORTCUT_GROUPS)[number][][] = [
-    ["Moving around", "Your articles"],
-    ["Reading", "Everywhere"],
+    ["Reading", "Getting around"],
+    ["Tidying up", "Anywhere"],
   ];
+
+  /** What's typed in the find field: the list shows only the shortcuts that fit it (decision 0061). */
+  let find = $state("");
+  let field: HTMLInputElement | undefined = $state();
+  const wanted = $derived(find.trim().toLowerCase());
+  const shown = $derived(SHORTCUTS.filter((each) => each.ready && shortcutMatches(each, find)));
+  const filtersShown = $derived(FILTERS.filter(([filter, meaning]) => wanted === "" || filter.includes(wanted) || meaning.toLowerCase().includes(wanted)));
+  const nothing = $derived(shown.length === 0 && filtersShown.length === 0);
+  $effect(() => {
+    void find;
+    measure();
+  });
+
+  /** A letter typed while the list is open, outside the field, starts a find: no need to Tab there first. */
+  function typed(event: KeyboardEvent) {
+    // Space stays with the button or list it's pressed on.
+    if (event.target === field || event.key.length !== 1 || event.key === " " || event.ctrlKey || event.metaKey || event.altKey) return;
+    field?.focus();
+  }
 
   $effect(() => {
     if (open && !dialog?.open) {
@@ -48,6 +67,7 @@
       measure();
     }
     if (!open && dialog?.open) dialog.close();
+    if (!open) find = "";
   });
 </script>
 
@@ -66,14 +86,42 @@
   bind:this={dialog}
   aria-labelledby="shortcuts-heading"
   onclose={() => (open = false)}
+  onkeydown={typed}
   class="shortcuts floating dimmed m-auto w-[min(52rem,calc(100vw-2rem))] overflow-hidden p-0 text-ink"
 >
   <!-- A 16px band of paper under the list, so a row cut by its foot sits above a hairline, never against the card's edge. -->
   <div class="shortcuts-body flex flex-col pb-4">
-    <div class={["shortcuts-head flex min-h-16 shrink-0 items-center justify-between gap-4 border-b pr-4 pl-6", scrolled ? "border-ink/10" : "border-transparent"]}>
-      <h2 id="shortcuts-heading" tabindex="-1" bind:this={heading} class="sheet-title">Keyboard shortcuts</h2>
-      <button type="button" onclick={() => (open = false)} aria-label="Close" title="Close (Esc)" class="btn-quiet btn-icon"><Icon name="close" size={18} /></button>
+    <!--
+      The title, a find field and the close button in one line on a wide screen; on a narrow one
+      the field takes a line of its own under them (decision 0061).
+    -->
+    <div class={["shortcuts-head grid shrink-0 items-center gap-x-4 border-b pr-4 pl-6", scrolled ? "border-ink/10" : "border-transparent"]}>
+      <h2 id="shortcuts-heading" tabindex="-1" bind:this={heading} class="sheet-title [grid-area:title]">Keyboard shortcuts</h2>
+      <div class="relative [grid-area:find]">
+        <span class="pointer-events-none absolute top-0 left-3 flex h-(--search-height) w-4 items-center justify-center text-muted"><Icon name="search" size={14} /></span>
+        <label for="shortcut-find" class="sr-only">Find a shortcut</label>
+        <input
+          id="shortcut-find"
+          type="search"
+          bind:this={field}
+          bind:value={find}
+          placeholder="Find a shortcut"
+          autocomplete="off"
+          spellcheck="false"
+          aria-describedby="shortcut-count"
+          onkeydown={(event) => {
+            // Escape empties the field first; pressed again, it closes the list.
+            if (event.key === "Escape" && find !== "") {
+              event.preventDefault();
+              find = "";
+            }
+          }}
+          class="search-capsule w-full pr-3 pl-[38px]"
+        />
+      </div>
+      <button type="button" onclick={() => (open = false)} aria-label="Close" title="Close (Esc)" class="btn-quiet btn-icon [grid-area:close]"><Icon name="close" size={18} /></button>
     </div>
+    <p id="shortcut-count" role="status" class="sr-only">{wanted === "" ? "" : nothing ? "No shortcut matches." : `${shown.length + filtersShown.length} found.`}</p>
     <!-- A Tab stop of its own, so the list can be scrolled with the keyboard (axe: scrollable-region-focusable). -->
     <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
     <div
@@ -90,16 +138,19 @@
         left; reading, everywhere and the search filters on the right, where
         there's room (decision 0049). On a narrow screen they stack in that order.
       -->
+      {#if nothing}
+        <p class="py-6 text-center text-small text-muted">No shortcut matches “{find.trim()}”.</p>
+      {/if}
       <div class="grid gap-x-10 gap-y-6 md:grid-cols-2">
         {#each COLUMNS as column, side (side)}
           <div class="flex min-w-0 flex-col gap-6">
-            {#each column as group (group)}
+            {#each column.filter((each) => shown.some((shortcut) => shortcut.group === each)) as group (group)}
               {@const index = SHORTCUT_GROUPS.indexOf(group)}
               <section aria-labelledby={`keys-${index}`}>
                 <h3 id={`keys-${index}`} class="mb-1 text-meta font-semibold text-muted">{group}</h3>
                 <table class="w-full text-left text-small">
                   <tbody>
-                    {#each SHORTCUTS.filter((each) => each.group === group && each.ready) as shortcut (shortcut.action)}
+                    {#each shown.filter((each) => each.group === group) as shortcut (shortcut.action)}
                       <tr class="border-b border-ink/[0.07] last:border-0">
                         <td class="py-1.5 pr-4 align-middle">{shortcut.action}</td>
                         <!--
@@ -123,13 +174,13 @@
                 </table>
               </section>
             {/each}
-            {#if side === 1}
+            {#if side === 1 && filtersShown.length > 0}
               <section aria-labelledby="filters-heading">
                 <h3 id="filters-heading" class="text-meta font-semibold text-muted">Search filters</h3>
                 <p class="mt-0.5 mb-1 text-small text-muted">Type these in the search field; each becomes a chip. Names with spaces go in quotes.</p>
                 <table class="w-full text-left text-small">
                   <tbody>
-                    {#each FILTERS as [filter, meaning] (filter)}
+                    {#each filtersShown as [filter, meaning] (filter)}
                       <tr class="border-b border-ink/[0.07] last:border-0">
                         <td class="w-px py-1.5 pr-4 whitespace-nowrap sm:pr-8"><code class="font-mono text-meta">{filter}</code></td>
                         <td class="py-1.5">{meaning}</td>
@@ -182,13 +233,27 @@
     }
     /* The phone's one top line and one 20px margin, the X where every phone screen has it. */
     .shortcuts-head {
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas:
+        "title close"
+        "find find";
       min-height: var(--bar-h);
       padding-inline: 1.25rem 0.625rem;
+      padding-bottom: 0.5rem;
+    }
+    .shortcuts-head > :nth-child(2) {
+      margin-right: 0.625rem;
     }
     .shortcuts-list {
       flex: 1 1 auto;
       padding-inline: 1.25rem;
     }
+  }
+  .shortcuts-head {
+    grid-template-columns: auto minmax(0, 15rem) auto;
+    grid-template-areas: "title find close";
+    justify-content: space-between;
+    min-height: 4rem;
   }
   /* The list's own Tab stop rings just inside its edge, so the card's edge never clips the outline. */
   .shortcut-region:focus-visible {

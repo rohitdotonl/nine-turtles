@@ -1107,6 +1107,12 @@ textarea {
     display: none;
   }
 }
+/* What a touch screen says instead of a key hint. */
+@media not ((hover: none) and (pointer: coarse)) {
+  .touch-only {
+    display: none;
+  }
+}
 
 /* Radio buttons and checkboxes in the text color, never the browser's blue. */
 input {
@@ -1355,6 +1361,18 @@ input {
   font-family: var(--font-serif);
   font-size: var(--text-large);
   line-height: var(--text-large--line-height);
+  color: var(--muted);
+  text-align: center;
+}
+
+/*
+  The one-time tip under it (decision 0061): small interface type in the
+  same muted grey, 12px below, with the keys as key caps. Never the accent.
+  It hangs below the line, so the line stays in the pane's middle.
+*/
+.shortcut-tip {
+  margin-top: 0.75rem;
+  font-size: var(--text-small);
   color: var(--muted);
   text-align: center;
 }

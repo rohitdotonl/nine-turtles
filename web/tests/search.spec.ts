@@ -251,13 +251,13 @@ test("with nothing found, the reading area doesn't offer j", async ({ page }) =>
   const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
   await open(page, `/feeds/${id}`, `Blog ${blog}`);
   const reading = page.getByRole("region", { name: "Article" });
-  await expect(reading).toContainText("press j");
+  await expect(reading).toContainText(/press j/i);
   await page.keyboard.press("/");
   await page.keyboard.type("zzyzxquux");
   await page.keyboard.press("Enter");
   await expect(page.getByText("Nothing found.")).toBeVisible();
   await expect(reading).toContainText("No article open");
-  await expect(reading).not.toContainText("press j");
+  await expect(reading).not.toContainText(/press j/i);
 });
 
 test("with many filters the search box wraps, and no chip slides under the options button", async ({ page }) => {

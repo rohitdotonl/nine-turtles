@@ -69,3 +69,4 @@ says "Replaced by …" at the top.
 | [0057](0057-grey-pill-green-star.md) | Where you are: a plain neutral grey pill, its sidebar icon in ink; a light green for filled stars, the one second color (changes 0037, 0041 and 0043) |
 | [0058](0058-renamed-everywhere.md) | nine turtles everywhere: repository, image, program, `NINE_TURTLES_*` settings, database file, cookie and saved preferences, with the old names still read for now; Render's address and disk keep slowfeed (changes 0056) |
 | [0060](0060-bookmark-and-phone-search-button.md) | A bookmark in every article (your place kept per device, by paragraph, forgotten at the top or the end) and, on a phone, the list's search field behind a Search button beside More |
+| [0061](0061-shortcuts-in-words-find-and-one-tip.md) | Shortcuts in words at the sidebar's foot; the shortcut list grouped by what you're doing, with a find field; one welcome tip, once, under "No article open" (changes 0041's no-hint rule) |

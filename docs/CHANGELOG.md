@@ -4,6 +4,17 @@ A plain-language history of nine turtles (called slowfeed until 24 October 2026)
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 25 October 2026: Shortcuts that are easier to find
+
+- The bottom of the sidebar now says **Shortcuts** in words, not just a
+  keyboard picture.
+- The shortcut list is grouped by what you're doing (Reading, Getting
+  around, Tidying up, Anywhere) and has a search box: press `?` and type
+  "star" to find how to star.
+- The first time you see "No article open", a quiet line under it says
+  "Press J to open the first article, or ? for every shortcut." Once you
+  open an article it never shows again.
+
 ## 25 October 2026: A bookmark in every article, search tucked away on a phone
 
 - Leave a long article halfway and it now opens where you stopped, even
