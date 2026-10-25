@@ -154,7 +154,7 @@ The philosophy applied. The principle is noted where it isn't obvious.
 
 - **Name:** nine turtles, at nineturtles.app (decision 0066; app store and trademark checks are under "Still to define").
 - **Wordmark:** "nine turtles" in lowercase, in the reading serif.
-- **Logo** (decision 0067): nine small turtles seen from the side, a half-circle shell and a round head each, in three rows of three, the middle row a little to the right so the rows never read as a menu's stripes. One ink, no color: the text color on the page (dark on white, light on near-black). It is the app icon and the browser-tab icon (the app's and the website's), and it stands before the wordmark wherever the wordmark is shown, in the wordmark's own ink: in the sidebar's top line (30px wide on a computer, 40px on a phone's feeds screen), above the name on the sign-in page (72px), and in the website's top bar (44px). Screen readers skip it, since the name says it in words. Its drawings are in `docs/logo/`.
+- **Logo** (decision 0067): nine small turtles seen from the side, a half-circle shell and a round head each, in three rows of three, the middle row a little to the right so the rows never read as a menu's stripes. One ink, no color: the text color on the page (dark on white, light on near-black). It is the app icon and, as a single turtle, the browser-tab icon (the app's and the website's), and it stands before the wordmark wherever the wordmark is shown, in the wordmark's own ink. Beside the name it is sized to the name: a touch taller than the letters (1.15 times the name's size), with the name in semibold so it holds its own beside the solid turtles (decision 0073): in the sidebar's top line (23px tall on a computer, 32px on a phone's feeds screen), in the website's top bar (28px), and above the name on the sign-in page (57px tall). Its frame leaves a little room on every side, so no turtle is ever cut off. In a browser tab, where nine turtles would blur into stripes, the icon is a single turtle; the home-screen icons keep the nine, with room around them. Screen readers skip it, since the name says it in words. Its drawings are in `docs/logo/`.
 - **Signature:** the accent (ink blue), quietly marking where you are, and the calm itself.
 
 ### Visual language
@@ -276,7 +276,7 @@ Plain, unhurried, never urgent: "Nothing new yet," never "You're missing out!" L
 
 - **YouTube videos** in YouTube's own player. Done 25 October 2026: a quiet Play box, nothing loaded until it's pressed (decision 0072, `docs/SPEC.md` section 7).
 - **Public reading list page:** an optional public list of some of your feeds (a modern blogroll) with one-click subscribe. No likes, no comments.
-- **Per-feed modes:** inbox or river for each feed. Built 25 October 2026, in Edit feed (decision 0073, `docs/SPEC.md` sections 10 and 15).
+- **Per-feed modes:** inbox or river for each feed. Built 25 October 2026, in Edit feed (decision 0074, `docs/SPEC.md` sections 10 and 15).
 - **Passkey sign-in.**
 - **Chinese and Japanese search.**
 - **Multiple users.**

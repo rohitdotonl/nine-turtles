@@ -543,7 +543,7 @@ test.describe("adding nine turtles to the home screen", () => {
       expect(image.headers()["content-type"]).toBe("image/png");
     }
     expect((await page.request.get("/icons/apple-touch-icon.png")).ok()).toBe(true);
-    // The browser tab's icon: the turtles, drawn so they follow light and dark.
+    // The browser tab's icon: a single turtle (decision 0073), drawn so it follows light and dark.
     const tabIcon = await page.request.get("/icons/icon.svg");
     expect(tabIcon.headers()["content-type"]).toContain("image/svg+xml");
     expect(await tabIcon.text()).toContain("prefers-color-scheme:dark");
@@ -552,6 +552,9 @@ test.describe("adding nine turtles to the home screen", () => {
     await appReady(page);
     await expect(page.locator('link[rel="manifest"]')).toHaveAttribute("href", "/manifest.webmanifest");
     await expect(page.locator('link[rel="icon"][type="image/svg+xml"]')).toHaveAttribute("href", "/icons/icon.svg");
+    // Its PNG copy, for browsers that don't use the SVG.
+    await expect(page.locator('link[rel="icon"][type="image/png"]')).toHaveAttribute("href", "/icons/icon-32.png");
+    expect((await page.request.get("/icons/icon-32.png")).ok()).toBe(true);
     // The service worker that lets it be installed, and open without a connection.
     const registered = await page.evaluate(async () => (await navigator.serviceWorker.ready).active?.scriptURL);
     expect(registered).toMatch(/\/sw\.js$/);

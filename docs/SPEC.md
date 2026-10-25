@@ -180,13 +180,15 @@ A few words used throughout:
 - Undo reverses **the last action only**, of these: mark all as read, mark unread, star/unstar, unsubscribe, delete folder.
 - Read state is recorded in both reading modes, so switching modes never loses it.
 - Each feed's unread number in the sidebar changes at the same moment.
-- If a mark can't be saved (the connection dropped, say), it's taken back and the note at the bottom of the list says so plainly, such as "The star couldn't be saved." That message takes the Undo's place. A failure never takes back a later action on the same article.
+- If nine turtles can't be reached when a mark is made (the connection dropped, or a new version is going live and the server is restarting), it quietly tries again for about a minute, so a short gap loses nothing and says nothing.
+- If a mark still can't be saved, it's taken back and the note at the bottom of the list says so plainly, such as "The star couldn't be saved.", with a **Try again** button in the Undo's place. The message goes as soon as a later mark is saved (the connection is back), or when you press Try again. A failure never takes back a later action on the same article.
 
 **How to check it**
 1. Click an unread item: it turns grey and the feed's unread number drops by one.
 2. Press `m`: it's unread again and the number goes back up.
 3. Press `Shift+A` in a feed: everything shown turns grey at once. Press `u`: they're unread again.
 4. Wait until "New items · press r" appears, then mark all as read *without* pressing `r`. Press `r`: the new items are still unread.
+5. Turn the Wi-Fi off, open an unread article, and turn it back on within half a minute: the article stays read and nothing is said. Leave it off longer: "An article couldn't be marked as read. It's still unread." appears with Try again; once the Wi-Fi is back, opening another unread article (or pressing Try again) clears it.
 
 ## 9. Star
 
@@ -211,7 +213,7 @@ A few words used throughout:
 - The Unread address (and `/`) leads to All in river mode, without a step in the browser's history. Switching to river mode while on Unread moves you to All the same way.
 - The `?` list leaves out "Go to Unread" and "Mark all as read" in river mode, and search can't be limited to Unread (there's no Unread view), though its "Show only: Unread" filter stays. "Mark unread" (and `m`) stay: read state is still recorded, and shows again back in inbox mode.
 - Chosen in Settings › Reading, as **Reading mode: Inbox · River**. Each device remembers the mode it last saw, so it opens in it before the server answers; the server's answer decides.
-- **One feed in river mode** (since 25 October 2026, decision 0073): in Edit feed (section 15), a feed's own **Reading mode: Inbox · River**. A river feed flows past while the app is in inbox mode: its articles never appear in Unread, it has no count (and adds nothing to its folders' counts), and its rows look as in river mode, wherever they're listed. Its own list, All, its folders and search still show everything. When the whole app is in river mode, every feed flows past whatever its own setting says.
+- **One feed in river mode** (since 25 October 2026, decision 0074): in Edit feed (section 15), a feed's own **Reading mode: Inbox · River**. A river feed flows past while the app is in inbox mode: its articles never appear in Unread, it has no count (and adds nothing to its folders' counts), and its rows look as in river mode, wherever they're listed. Its own list, All, its folders and search still show everything, except a search for unread articles only. When the whole app is in river mode, every feed flows past whatever its own setting says.
 
 **How to check it**
 1. In Settings, switch to river mode. The Unread view, the counts and the grey "read" titles all disappear.
@@ -230,7 +232,7 @@ A few words used throughout:
 - If a feed has moved permanently, nine turtles updates its stored address.
 - A failing feed is retried less and less often (twice as long after each failure, up to once a day) and never affects other feeds. A feed that keeps failing still looks normal in the sidebar; it simply shows nothing new.
 - It never visits article pages.
-- **A feed can be checked less often** (decision 0073): Edit feed's **Check for new articles: Automatic · Hourly · Daily**. Automatic is the rhythm above; Hourly and Daily check that feed no more often than once an hour or once a day, for feeds that post a lot. Choosing a longer wait applies at once. WebSub announcements still arrive as they come.
+- **A feed can be checked less often** (decision 0074): Edit feed's **Check for new articles: Automatic · Hourly · Daily**. Automatic is the rhythm above; Hourly and Daily check that feed no more often than once an hour or once a day, for feeds that post a lot. Choosing a longer wait applies at once. WebSub announcements still arrive as they come.
 - If a publisher edits an article you've already seen, the text is updated quietly and it stays read.
 - The same article published in two different feeds appears in both.
 
@@ -299,7 +301,7 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 **What it does**
 - Folders are the only grouping. A feed can be in more than one folder.
 - You can rename a feed, choose its folders, set its own settings and unsubscribe, from **Edit feed…** in the More (…) menu beside the item list's title when you're viewing one feed. It opens as a sheet over the feed's list (`/feeds/3/edit`) with the name, the folders as a checklist (a grouped list of 44px rows; each folder ends in a tick box, a rounded square, filled with a check when the feed is in it and empty when it isn't, square rather than round because a feed can be in several folders), whose last row is "New folder…", a text box (made when you save, with the feed in it), and at the foot one row in a Mac sheet's order: **Unsubscribe** at the far left as words in a muted red (no edge; the word says what it does, so red is never the only sign; its tooltip, and screen readers, say it removes the feed's articles, keeps the starred ones, and can be undone straight afterwards), then **Cancel** (a faint tone, no edge) and **Save** at the right end. A problem saving appears above that row in red words after a warning mark. Escape, Cancel or a press on the dimmed page goes back unchanged. On a phone it's the same iOS page sheet as Add a feed (and Edit folder; decision 0055), with the folders and Unsubscribe as cards on its grouped ground: an X beside the title (it and Escape go back unchanged), no Cancel, **Unsubscribe** as the one red row of a group of its own, and **Save** the full width at the screen's foot, at least 32px below it (decision 0052). The folders' helper line ("Optional: a new folder…") is 13px in the muted grey, 6px under the list, on its left edge.
-- **Each feed's own settings** (decision 0073), in Edit feed under the folders, as a grouped list named "Settings", built as Settings' rows (each name on the left, a segmented choice at the right end, under the name on a narrow screen): **Reading mode: Inbox · River** (section 10), **Check for new articles: Automatic · Hourly · Daily** (section 11), and **Open articles on the website**, a tick box row. One helper line under the group says what they do. Each starts as every feed behaves (Inbox, Automatic, unticked), and Save keeps them with the name and folders. Following a feed again after unsubscribing starts them afresh.
+- **Each feed's own settings** (decision 0074), in Edit feed under the folders, as a grouped list named "Settings", built as Settings' rows (each name on the left, a segmented choice at the right end, under the name on a narrow screen): **Reading mode: Inbox · River** (section 10), **Check for new articles: Automatic · Hourly · Daily** (section 11), and **Open articles on the website**, a tick box row. One helper line under the group says what they do. Each starts as every feed behaves (Inbox, Automatic, unticked), and Save keeps them with the name and folders. Following a feed again after unsubscribing starts them afresh.
 - **Open articles on the website**, for feeds that share only a summary: opening one of its articles (`Enter` or `o`, or a tap on a phone) opens the publisher's page in a new tab instead, and the article counts as read. Choosing it in the list (a click, `j` / `k`) still shows its summary beside the list, so moving through the list never opens tabs. Nothing is fetched from the website by nine turtles.
 - Viewing a folder, **Edit folder…** in the same menu opens a sheet in the same way (`/folders/2/edit`) to rename or delete it, built the same way: Name, then one row with **Delete** in muted red at the far left (its tooltip says the feeds stay) and Cancel and Save at the right end. On a phone, the same build as Edit feed's: an X, Delete as a red row of its own, Save at the foot.
 - You can create (from "Edit feed"), rename and delete folders. Two folders can't share a name. Deleting a folder never deletes its feeds.
@@ -521,6 +523,6 @@ Covered by sections 14 and 22.
 
 From DESIGN.md: public reading list page, passkey sign-in, Chinese and Japanese search, multiple users. (The own domain name was chosen on 25 October 2026: nineturtles.app, with the app at app.nineturtles.app; decision 0066. YouTube videos play in YouTube's own player since 25 October 2026; decision 0072.)
 
-Moved to V2 on 23 October 2026: backups and moving hosts, river mode (built 25 October 2026; per-feed reading modes too, decision 0073), WebSub (built 25 October 2026), the feed health page (built 25 October 2026), the yearly clean-up, the feeds guide page, and keeping a tab that was left open across an update working without a reload.
+Moved to V2 on 23 October 2026: backups and moving hosts, river mode (built 25 October 2026; per-feed reading modes too, decision 0074), WebSub (built 25 October 2026), the feed health page (built 25 October 2026), the yearly clean-up, the feeds guide page, and keeping a tab that was left open across an update working without a reload.
 
 Never: notifications, badges, streaks, reading stats, infinite scroll, algorithmic ranking, likes or comments, platform share buttons, scraping full articles, decorative effects or animation.

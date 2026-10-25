@@ -300,7 +300,7 @@
 </section>
 
 <style>
-  /* A row's name, on its left. A fieldset's legend floats so it sits in the row like any other child. */
+  /* A row's name, on its left. EditFeed.svelte's settings rows copy these; keep the two alike. A fieldset's legend floats so it sits in the row like any other child. */
   .row-name {
     float: left;
     padding: 0;

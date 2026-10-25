@@ -112,11 +112,16 @@
   /** The floating note's message, and what Undo would do, if anything. */
   let line = $state("");
   let undoLast: (() => void) | undefined = $state();
+  /** What the line said for the last undoable action, and how many there have been. */
+  let undoMessage = "";
+  let actions = 0;
+  /** After a mark couldn't be saved: what Try again sends again. */
+  let retryLast: (() => void) | undefined = $state();
   // The notice is read once, when the list opens.
   untrack(() => {
     if (!notice) return;
     const { message, undo } = notice;
-    line = message;
+    line = undoMessage = message;
     if (undo) {
       undoLast = () => {
         undo().then((problem) => {
@@ -257,7 +262,12 @@
    * Saves one mark for some articles. `put` sets it on the screen (and keeps
    * the sidebar's counts in step). If saving fails, each article whose mark
    * no later save will settle goes back to what the server has, and the
-   * line says `failed`.
+   * line says `failed`, with Try again. (Saving has already been retried
+   * quietly for about a minute by then.) Once a later save goes through, the
+   * connection is back and that message has done its job: it goes. A failure
+   * that arrives after a newer undoable action leaves that action's Undo in
+   * place beside Try again, and the line goes back to it once the failure is
+   * dealt with.
    */
   function save(
     field: "read" | "starred",
@@ -268,6 +278,7 @@
     failed: string,
   ) {
     const token = ++saves;
+    const action = actions;
     for (const article of changed) {
       const key = `${field}:${article.id}`;
       known(key, article[field]);
@@ -280,19 +291,30 @@
     ).then(
       () => {
         for (const article of changed) confirmed.set(`${field}:${article.id}`, value);
+        if (retryLast) settled();
       },
       () => {
-        let takenBack = false;
+        const takenBack: Article[] = [];
         for (const article of changed) {
           const key = `${field}:${article.id}`;
           if (newest.get(key) !== token) continue;
           const server = confirmed.get(key) ?? !value;
           if (article[field] !== server) {
             put(article, server);
-            takenBack = true;
+            takenBack.push(article);
           }
         }
-        if (takenBack) say(failed);
+        if (takenBack.length === 0) return;
+        const retry = () => {
+          // Only those still as the server has them: anything changed since is left alone.
+          const again = takenBack.filter((article) => article[field] !== value);
+          if (again.length > 0) save(field, again, value, send, put, failed);
+        };
+        if (actions === action) say(failed, retry);
+        else {
+          line = failed;
+          retryLast = retry;
+        }
       },
     );
   }
@@ -321,16 +343,29 @@
     );
   }
 
-  /** The line says something that has nothing to undo. */
-  export function say(message: string) {
+  /** The line says something that has nothing to undo; after a failed save, Try again sends it again. */
+  export function say(message: string, retry?: () => void) {
     line = message;
     undoLast = undefined;
+    retryLast = retry;
   }
 
-  /** An undoable action happened: the line says what, and Undo reverses it. */
+  /**
+   * An undoable action happened: the line says what, and Undo reverses it.
+   * Called before the action's own marks are saved, so their saves belong
+   * to it (see `save`).
+   */
   function did(message: string, reverse: () => void) {
-    line = message;
+    line = undoMessage = message;
     undoLast = reverse;
+    retryLast = undefined;
+    actions++;
+  }
+
+  /** A failed save is dealt with: its message goes, back to the last action's Undo if it's still there. */
+  function settled() {
+    line = undoLast ? undoMessage : "";
+    retryLast = undefined;
   }
 
   /**
@@ -354,8 +389,8 @@
   export function markUnread() {
     const article = selected;
     if (!article || !article.read) return;
-    setRead([article], false);
     did("Marked as unread", () => setRead([article], true));
+    setRead([article], false);
   }
 
   /** `s` and the star control: stars or unstars the selected article. */
@@ -363,8 +398,8 @@
     const article = selected;
     if (!article) return;
     const starred = !article.starred;
-    setStarred(article, starred);
     did(starred ? "Starred" : "Unstarred", () => setStarred(article, !starred));
+    setStarred(article, starred);
   }
 
   /** `Shift+A` and "Mark all as read": only the articles listed here, never ones not shown yet. */
@@ -374,8 +409,8 @@
       say(markedAllMessage(0));
       return;
     }
-    setRead(unread, true);
     did(markedAllMessage(unread.length), () => setRead(unread, false));
+    setRead(unread, true);
   }
 
   /** `u` and Undo: reverses the last undoable action, once. */
@@ -383,9 +418,17 @@
     const reverse = undoLast;
     if (!reverse) return false;
     reverse();
-    line = "Undone.";
-    undoLast = undefined;
+    say("Undone.");
     return true;
+  }
+
+  function retryByButton() {
+    const retry = retryLast;
+    settled();
+    retry?.();
+    // The button is gone; keep the keyboard's place nearby, as Undo does.
+    if (selectedIndex !== -1) focusSelected();
+    else rows[0]?.focus();
   }
 
   function undoByButton() {
@@ -511,6 +554,9 @@
     <p class={["flex flex-wrap items-center gap-x-2", !(line || undoLast) && "sr-only"]}>
       <span role="status">{line}</span>
       <span aria-live="polite" class="sr-only">{spoken}</span>
+      {#if retryLast}
+        <button type="button" onclick={retryByButton} class="-mr-2 min-h-11 min-w-11 px-2 font-semibold text-ink underline underline-offset-4">Try again</button>
+      {/if}
       {#if undoLast}
         <button type="button" onclick={undoByButton} class="-mr-2 min-h-11 min-w-11 px-2 font-semibold text-ink underline underline-offset-4">Undo</button>
       {/if}

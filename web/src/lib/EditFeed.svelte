@@ -148,7 +148,7 @@
     -->
     <div class="flex min-w-0 flex-col gap-1.5">
       <span class="text-small text-ink-2" id="feed-settings-name">Settings</span>
-      <div class="inset-group" role="group" aria-labelledby="feed-settings-name">
+      <div class="inset-group" role="group" aria-labelledby="feed-settings-name" aria-describedby="feed-settings-help">
         <fieldset class="inset-row">
           <legend class="row-name">Reading mode</legend>
           <div class="choices control" style="--columns: 2">
@@ -172,7 +172,7 @@
           </div>
         </fieldset>
         <label class="inset-row check-row">
-          <input type="checkbox" bind:checked={openOnSite} aria-describedby="feed-settings-help" />
+          <input type="checkbox" bind:checked={openOnSite} />
           <span class="min-w-0 break-words">Open articles on the website</span>
           <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
         </label>
@@ -234,7 +234,7 @@
 {/if}
 
 <style>
-  /* As in Settings: a row's name on its left; a fieldset's legend floats so it sits in the row like any other child. */
+  /* The same rows as Settings.svelte's (keep the two alike): a row's name on its left; a fieldset's legend floats so it sits in the row like any other child. */
   .row-name {
     float: left;
     padding: 0;

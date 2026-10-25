@@ -1,4 +1,4 @@
-# 0073: Settings for each feed
+# 0074: Settings for each feed
 
 *October 2026.*
 

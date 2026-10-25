@@ -683,6 +683,19 @@ async fn each_feed_keeps_its_own_reading_mode_check_and_website_settings() {
     );
     assert_eq!(reader.titles(&format!("feed={alpha}")).await.len(), 3);
     assert_eq!(reader.titles("view=all").await.len(), 6);
+    // Searching only unread articles leaves it out too.
+    let found = reader.get("/api/search?unread=true").await;
+    let found: Vec<&str> = found["articles"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|article| article["title"].as_str().unwrap())
+        .collect();
+    assert_eq!(found.len(), 3, "{found:?}");
+    assert!(
+        found.iter().all(|title| title.starts_with("Beta")),
+        "{found:?}"
+    );
     // Its articles arriving don't count as new for Unread, only for All.
     for (view, new) in [("unread", false), ("all", true)] {
         let path = format!("/api/articles/new?view={view}&since={latest_beta}");

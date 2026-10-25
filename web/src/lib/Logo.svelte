@@ -6,14 +6,16 @@
   the website's top bar (website/src/_includes/base.njk): change all three together.
 -->
 <script lang="ts">
-  let { width }: { width: number } = $props();
+  // Sized by height, a touch taller than the name's letters beside it
+  // (DESIGN.md → "Name and signature").
+  let { height }: { height: number } = $props();
 </script>
 
 <svg
   class="logo flex-none"
-  viewBox="9 17 82 66"
-  width={width}
-  height={Math.round((width * 66) / 82)}
+  viewBox="7 16 86 68"
+  width={Math.round((height * 86) / 68)}
+  height={height}
   aria-hidden="true"
   focusable="false"
 >

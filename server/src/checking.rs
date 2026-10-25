@@ -218,14 +218,20 @@ async fn worked(
     };
     // While a hub delivers new articles, this check is only the backup:
     // at most twice a day (decision 0069).
-    let mut next = wait(state, every);
+    // "Check at most hourly" or "daily", chosen in Edit feed, is the
+    // shortest rhythm, nudged only upwards so it's never sooner. A day is
+    // also the longest wait, so a daily feed waits exactly a day: daily
+    // feeds still drift apart, since each was last checked at its own time.
+    let mut next = if state.config.test_check_seconds.is_some() {
+        wait(state, every)
+    } else {
+        wait(state, every.max(feed.check_at_most)).max(feed.check_at_most)
+    };
     if state.config.test_check_seconds.is_none()
         && websub::delivering(&state.db, feed_id, now).await?
     {
         next = next.max(websub::BACKUP_WAIT);
     }
-    // "Check at most hourly" or "daily", chosen in Edit feed.
-    next = next.max(feed.check_at_most);
     sqlx::query(
         "UPDATE feeds SET etag = ?, last_modified = ?, fetched_at = ?, check_every = ?,
              next_check_at = ?, failures = 0, failing_since = NULL, missing_since = NULL,
