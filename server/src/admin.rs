@@ -5,8 +5,9 @@
 //!   turtles is doing (readers, feeds, articles, the database's size,
 //!   sign-ups waiting for their email, backups, email, problems logged) and
 //!   one line for each reader: their email, when they joined, how many feeds
-//!   they follow, how many of those keep failing, and the day they were last
-//!   here. Never which feeds, and nothing about what anyone reads.
+//!   they follow and how many of those keep failing. Never which feeds,
+//!   nothing about what anyone reads, and not when anyone was last here (the
+//!   owner hasn't decided whether to show that yet; decision 0089).
 //! - **At most `MOST_FEEDS` feeds per reader**, the owner too. Adding one
 //!   more, from the Add field, the welcome, another app or an OPML file, is
 //!   refused; Undo for unsubscribing always works.
@@ -111,8 +112,9 @@ pub async fn following(
 /// Reader `person` is here (signed in, a device of theirs opened nine
 /// turtles, or another app synced), noted at most once a day. If they were
 /// away, the feeds they follow that are working are due at once, unless a
-/// follower asked for fewer checks (Edit feed) or the feed was checked in
-/// the last 30 minutes: the background checks then take them a few at a
+/// follower asked for fewer checks (Edit feed), the feed was checked in the
+/// last 30 minutes, or a WebSub hub delivers its new articles (its checks are
+/// only the twice-a-day backup, decision 0069): the background checks then take them a few at a
 /// time, as always.
 pub async fn here(db: &SqlitePool, person: i64, now: i64) -> Result<(), sqlx::Error> {
     let noted: Option<String> = sqlx::query_scalar(
@@ -137,6 +139,7 @@ pub async fn here(db: &SqlitePool, person: i64, now: i64) -> Result<(), sqlx::Er
             "UPDATE feeds SET next_check_at = MIN(next_check_at,
                  MAX(COALESCE(fetched_at, 0) + MAX(check_at_most, ?2), ?3))
              WHERE next_check_at > ?3 AND failures = 0 AND unsubscribed_at IS NULL
+                 AND id NOT IN (SELECT feed_id FROM websub WHERE active_until > ?3)
                  AND id IN (SELECT feed_id FROM subscriptions
                             WHERE person_id = ?1 AND unsubscribed_at IS NULL)",
         )
@@ -178,24 +181,19 @@ pub struct Reader {
     pub feeds: i64,
     /// How many of those have failed for three days or more.
     pub feeds_failing: i64,
-    /// When they were last here, to the day.
-    pub last_here: i64,
 }
 
 /// Everyone with an account, the owner first, then the newest.
 pub async fn readers(db: &SqlitePool, now: i64) -> Result<Vec<Reader>, sqlx::Error> {
-    sqlx::query_as(concat!(
+    sqlx::query_as(
         "SELECT people.id, people.email, people.owner, people.created_at,
              (SELECT COUNT(*) FROM subscriptions
               WHERE person_id = people.id AND unsubscribed_at IS NULL) AS feeds,
              (SELECT COUNT(*) FROM subscriptions JOIN feeds ON feeds.id = subscriptions.feed_id
               WHERE subscriptions.person_id = people.id AND subscriptions.unsubscribed_at IS NULL
-                  AND feeds.failing_since <= ?) AS feeds_failing,
-             ",
-        last_here!("people.id"),
-        " AS last_here
-         FROM people ORDER BY people.owner DESC, people.created_at DESC, people.id DESC"
-    ))
+                  AND feeds.failing_since <= ?) AS feeds_failing
+         FROM people ORDER BY people.owner DESC, people.created_at DESC, people.id DESC",
+    )
     .bind(now - KEEPS_FAILING)
     .fetch_all(db)
     .await

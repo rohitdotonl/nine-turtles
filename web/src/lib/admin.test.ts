@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { backupDay, count, lastHere, plural, size, toOverview } from "./admin";
+import { backupDay, count, plural, size, toOverview } from "./admin";
 
 describe("the owner's Readers page", () => {
   it("reads the server's answer, and anything missing as nothing", () => {
@@ -10,14 +10,14 @@ describe("the owner's Readers page", () => {
       email_sending: false,
       problems: [{ at: 5, message: "something" }],
       readers: [
-        { id: 1, email: null, owner: true, created_at: 10, feeds: 30, feeds_failing: 1, last_here: 20 },
-        { id: 2, email: "a@example.com", owner: false, created_at: 11, feeds: 10, feeds_failing: 0, last_here: 21 },
+        { id: 1, email: null, owner: true, created_at: 10, feeds: 30, feeds_failing: 1 },
+        { id: 2, email: "a@example.com", owner: false, created_at: 11, feeds: 10, feeds_failing: 0 },
       ],
       most_feeds: 1000,
       away_after_days: 30,
     });
     expect(overview.totals.feedsResting).toBe(3);
-    expect(overview.readers[0]).toEqual({ id: 1, email: null, owner: true, createdAt: 10, feeds: 30, feedsFailing: 1, lastHere: 20 });
+    expect(overview.readers[0]).toEqual({ id: 1, email: null, owner: true, createdAt: 10, feeds: 30, feedsFailing: 1 });
     expect(overview.latestBackup).toBe("nightly/2026-10-25.sqlite");
     expect(overview.problems).toEqual([{ at: 5, message: "something" }]);
 
@@ -37,15 +37,6 @@ describe("the owner's Readers page", () => {
     expect(size(312_400_000)).toBe("312 MB");
     expect(size(1_240_000_000)).toBe("1.2 GB");
     expect(size(0)).toBe("1 KB");
-  });
-
-  it("says when a reader was last here, to the day", () => {
-    const now = new Date(2026, 9, 25, 15, 0).getTime() / 1000;
-    const daysAgo = (days: number) => new Date(2026, 9, 25 - days, 10, 0).getTime() / 1000;
-    expect(lastHere(daysAgo(0), now, 30)).toBe("Here today");
-    expect(lastHere(daysAgo(1), now, 30)).toBe("Here yesterday");
-    expect(lastHere(daysAgo(3), now, 30)).toBe("Last here 3 days ago");
-    expect(lastHere(daysAgo(40), now, 30)).toBe("Away for 40 days");
   });
 
   it("reads the day of the newest backup from its name", () => {

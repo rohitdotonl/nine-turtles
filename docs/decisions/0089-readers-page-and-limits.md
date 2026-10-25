@@ -16,13 +16,16 @@ open to change.*
   database's size, sign-ups waiting for their email, backups, email), what
   needs a look in plain sentences (backups off, email off, feeds failing for
   days), the problems logged since the last start, and one row per reader:
-  email, joined, how many feeds they follow, how many of those keep failing,
-  and the day they were last here. It only lists; it changes nothing.
+  email, joined, how many feeds they follow and how many of those keep
+  failing. It only lists; it changes nothing.
 - **Never what anyone reads.** Counts of feeds, never which feeds; nothing
-  about articles, marks, searches or rules. "Last here" is shown to the day,
-  because it's what decides whether a reader's feeds rest (below) and it
-  tells the owner whether a tester has tried nine turtles yet. If the owner
-  would rather not see it, it can go without changing the limits.
+  about articles, marks, searches or rules. **Not "last here" either, for
+  now:** nine turtles knows the day each reader was last here (it decides
+  whether their feeds rest, below), and showing it would tell the owner
+  whether a tester has tried nine turtles yet. But it's new information
+  about other readers' activity, which decision 0087 didn't cover and
+  readers aren't told about, so it waits for the owner's yes
+  (`docs/planning/questions.md`); if yes, Settings will tell readers too.
 - **At most 1,000 feeds per reader, the owner included.** It's well above
   what anyone reads (the owner follows about 200), and it keeps one account
   from making nine turtles fetch thousands of feeds for everyone. Following a
@@ -36,7 +39,8 @@ open to change.*
   (up to every 30 minutes). When one of them comes back, their working feeds
   are checked straight away, 20 every 30 seconds as always, so the publisher
   is never asked twice within 30 minutes or sooner than a follower's Hourly
-  or Daily allows. Kinder to publishers, and to Render's one small server,
+  or Daily allows. Failing feeds keep their longer wait, and feeds a WebSub
+  hub delivers keep their twice-a-day backup check. Kinder to publishers, and to Render's one small server,
   as readers come and go.
 - **No new database structure.** "Last here" is worked out from what's
   already stored (when the account was made, when each device was last

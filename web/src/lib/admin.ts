@@ -1,7 +1,7 @@
 // The owner's Readers page (SPEC section 18, decision 0089): how this nine
 // turtles is doing, in counts, and one line for each reader: their email,
-// when they joined, how many feeds they follow (never which) and the day
-// they were last here. Nothing about what anyone reads.
+// when they joined and how many feeds they follow (never which). Nothing
+// about what anyone reads.
 
 import { api } from "./updates.svelte";
 
@@ -13,8 +13,6 @@ export type Reader = {
   feeds: number;
   /** Of their feeds, how many have failed for three days or more. */
   feedsFailing: number;
-  /** When they were last here, to the day. */
-  lastHere: number;
 };
 
 export type Overview = {
@@ -59,7 +57,6 @@ export function toOverview(body: unknown): Overview {
       createdAt: number(reader.created_at),
       feeds: number(reader.feeds),
       feedsFailing: number(reader.feeds_failing),
-      lastHere: number(reader.last_here),
     })),
     totals: {
       readers: number(totals.readers),
@@ -105,28 +102,6 @@ const DATE = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", y
 /** "25 October 2026", in this device's time zone. */
 export function date(seconds: number): string {
   return DATE.format(new Date(seconds * 1000));
-}
-
-/** Whole days between two times, counted by this device's calendar. */
-function daysBetween(earlier: number, later: number): number {
-  const day = (seconds: number) => {
-    const at = new Date(seconds * 1000);
-    return Date.UTC(at.getFullYear(), at.getMonth(), at.getDate()) / 86_400_000;
-  };
-  return Math.max(0, Math.round(day(later) - day(earlier)));
-}
-
-/**
- * When a reader was last here, to the day: "Here today", "Here yesterday",
- * "Last here 3 days ago", and once they're away (their feeds checked once
- * a day) "Away for 40 days".
- */
-export function lastHere(at: number, now: number, awayAfterDays: number): string {
-  const days = daysBetween(at, now);
-  if (days === 0) return "Here today";
-  if (days === 1) return "Here yesterday";
-  if (now - at >= awayAfterDays * 86_400) return `Away for ${days} days`;
-  return `Last here ${days} days ago`;
 }
 
 /** The nightly copy's day, from its name: "nightly/2026-10-25.sqlite" is "25 October 2026". */

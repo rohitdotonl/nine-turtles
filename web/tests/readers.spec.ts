@@ -64,15 +64,17 @@ test("an invite link lets someone sign up, and closing sign-up stops it", async 
   await expect(joining.getByText(/^Version /)).toBeVisible();
   await expect(joining.getByRole("heading", { name: "Readers", exact: true })).toHaveCount(0);
 
-  // The owner sees them on the Readers page, by email, with how many feeds
-  // and when they were last here (decision 0089), and goes back with Escape.
+  // The owner opens the Readers page from the keyboard and sees them, by
+  // email, with how many feeds (decision 0089), and goes back with Escape.
   await page.reload();
   await appReady(page);
-  await readers.getByRole("link", { name: /^All readers/ }).click();
+  await readers.getByRole("link", { name: /^All readers/ }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { name: "Readers", level: 2 })).toBeFocused();
   await expect(page).toHaveURL(/\/settings\/readers$/);
   const everyone = page.getByRole("region", { name: /^\d+ readers$/ });
   await expect(everyone.getByText("(you)")).toBeVisible();
-  await expect(everyone.getByRole("listitem").filter({ hasText: email })).toContainText(/Joined .* · 0 feeds · Here today/);
+  await expect(everyone.getByRole("listitem").filter({ hasText: email })).toContainText(/Joined .* · 0 feeds$/);
   await expect(page.getByRole("region", { name: "This nine turtles" }).getByText("Readers", { exact: true })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(/\/settings$/);

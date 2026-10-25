@@ -4,13 +4,13 @@
   feeds, articles, the database's size, backups, email); then what needs a
   look, in plain words, and the problems noted since nine turtles last
   started; then everyone with an account, newest first after the owner,
-  each with when they joined, how many feeds they follow (never which) and
-  the day they were last here. Nothing about what anyone reads.
+  each with when they joined and how many feeds they follow (never which).
+  Nothing about what anyone reads.
 -->
 <script lang="ts">
   import { edge } from "./edge";
   import PageHead from "./PageHead.svelte";
-  import { backupDay, count, date, lastHere, loadOverview, plural, size, type Overview } from "./admin";
+  import { backupDay, count, date, loadOverview, plural, size, type Overview } from "./admin";
 
   let {
     heading = $bindable(),
@@ -24,14 +24,10 @@
 
   let overview: Overview | undefined = $state();
   let failed = $state(false);
-  let now = $state(Date.now() / 1000);
 
   $effect(() => {
     loadOverview()
-      .then((found) => {
-        now = Date.now() / 1000;
-        overview = found;
-      })
+      .then((found) => (overview = found))
       .catch(() => (failed = true));
   });
 
@@ -61,7 +57,9 @@
 
 <section aria-labelledby="readers-page-heading" class="flex flex-1 flex-col bg-paper">
   <PageHead title="Readers" id="readers-page-heading" bind:heading {onClose} closeLabel="Close readers" {besideToggle} column="max-w-[35rem]" />
-  <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-16 md:px-10">
+  <!-- A Tab stop of its own, so the page scrolls with the keyboard though it has nothing to press (axe: scrollable-region-focusable). -->
+  <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+  <div use:edge tabindex="0" role="region" aria-label="All readers" class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-16 md:px-10">
     <div class="mx-auto flex max-w-[35rem] flex-col gap-8">
       {#if failed}
         <p role="status" class="text-ink-2">The readers couldn't be loaded. Only the owner can see them; if that's you, try again in a moment.</p>
@@ -125,7 +123,7 @@
                 <span class="flex min-w-0 flex-col">
                   <span class="value">{reader.email ?? "No email yet"}{#if reader.owner}<span class="text-muted"> (you)</span>{/if}</span>
                   <span class="text-meta text-muted"
-                    >Joined {date(reader.createdAt)} · {plural(reader.feeds, "feed", "feeds")} · {lastHere(reader.lastHere, now, overview.awayAfterDays)}</span
+                    >Joined {date(reader.createdAt)} · {plural(reader.feeds, "feed", "feeds")}</span
                   >
                   {#if reader.feeds >= overview.mostFeeds}
                     <span class="text-meta text-ink-2">Follows as many feeds as one reader can.</span>
@@ -138,8 +136,8 @@
             {/each}
           </ul>
           <p class="inset-foot">
-            Everyone with an account here. You see how many feeds each follows and the day they were last here, never which
-            feeds or what anyone reads.
+            Everyone with an account here. You see how many feeds each follows, never which feeds or what anyone
+            reads.
           </p>
         </section>
       {/if}

@@ -281,14 +281,13 @@ export const SCREENS: Screen[] = [
     open: async (page) => {
       const day = 24 * 60 * 60;
       const now = Math.floor(Date.now() / 1000);
-      const reader = (id: number, email: string | null, joined: number, feeds: number, failing: number, here: number) => ({
+      const reader = (id: number, email: string | null, joined: number, feeds: number, failing: number) => ({
         id,
         email,
         owner: id === 1,
         created_at: now - joined * day,
         feeds,
         feeds_failing: failing,
-        last_here: now - here * day,
       });
       await page.route("**/api/admin", (route) =>
         route.fulfill({
@@ -299,9 +298,9 @@ export const SCREENS: Screen[] = [
             email_sending: true,
             problems: [],
             readers: [
-              reader(1, "owner@example.com", 300, 142, 2, 0),
-              reader(3, "sam@example.com", 2, 18, 0, 1),
-              reader(2, "ada@example.com", 90, 61, 0, 41),
+              reader(1, "owner@example.com", 300, 142, 2),
+              reader(3, "sam@example.com", 2, 18, 0),
+              reader(2, "ada@example.com", 90, 61, 0),
             ],
             most_feeds: 1000,
             away_after_days: 30,

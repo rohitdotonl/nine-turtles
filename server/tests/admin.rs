@@ -157,7 +157,8 @@ async fn only_the_owner_sees_the_readers_page_and_never_which_feeds() {
     assert_eq!(readers[1]["id"], reader);
     assert_eq!(readers[1]["feeds"], 3);
     assert_eq!(readers[1]["feeds_failing"], 0);
-    assert!(readers[1]["last_here"].as_i64().unwrap() > nine_turtles::now() - 60);
+    // Not when anyone was last here, until the owner decides (decision 0089).
+    assert!(readers[1].get("last_here").is_none());
     // How many, never which.
     let text = page.to_string();
     assert!(!text.contains("blog-0"), "{text}");
@@ -311,4 +312,114 @@ async fn being_here_is_noted_once_a_day() {
     .await
     .unwrap();
     assert_eq!(noted, now.to_string());
+}
+
+/// Reader `person` follows four made-up feeds by OPML (nothing is fetched),
+/// each last fetched two hours ago and next due in a day: a working one, a
+/// failing one, one a follower set to Daily, and one a WebSub hub delivers.
+/// Answers their numbers in that order.
+async fn resting_feeds(base: &str, cookie: &str, state: &AppState) -> [i64; 4] {
+    let (status, _) = send(base, cookie, "/api/opml", "text/x-opml", opml(0, 4)).await;
+    assert_eq!(status, StatusCode::OK);
+    let now = nine_turtles::now();
+    let ids: Vec<i64> = sqlx::query_scalar("SELECT id FROM feeds ORDER BY id")
+        .fetch_all(&state.db)
+        .await
+        .unwrap();
+    sqlx::query("UPDATE feeds SET fetched_at = ?, next_check_at = ?")
+        .bind(now - 2 * HOUR)
+        .bind(now + DAY)
+        .execute(&state.db)
+        .await
+        .unwrap();
+    for (query, id) in [
+        (
+            "UPDATE feeds SET failures = 3, failing_since = unixepoch() WHERE id = ?",
+            ids[1],
+        ),
+        (
+            "UPDATE feeds SET check_at_most = 86400 WHERE id = ?",
+            ids[2],
+        ),
+        (
+            "INSERT INTO websub (feed_id, hub, topic, token, secret, asked_at, active_until)
+             VALUES (?, 'https://hub.example/', 'https://blog.example/feed', 'token', 'secret',
+                     unixepoch(), unixepoch() + 86400)",
+            ids[3],
+        ),
+    ] {
+        sqlx::query(query)
+            .bind(id)
+            .execute(&state.db)
+            .await
+            .unwrap();
+    }
+    [ids[0], ids[1], ids[2], ids[3]]
+}
+
+/// After a reader came back: only the working feed is due now, the Daily
+/// one a day after its last fetch, and the failing and hub-delivered ones
+/// keep their wait.
+async fn only_the_working_feed_is_due(state: &AppState, feeds: [i64; 4]) {
+    let now = nine_turtles::now();
+    let [working, failing, daily, hub] = feeds;
+    assert!(due_in(state, working, now).await <= 0);
+    assert!(due_in(state, failing, now).await > DAY - 60);
+    let daily_in = due_in(state, daily, now).await;
+    assert!(
+        (DAY - 2 * HOUR - 60..=DAY - 2 * HOUR + 60).contains(&daily_in),
+        "{daily_in}"
+    );
+    assert!(due_in(state, hub, now).await > DAY - 60);
+}
+
+#[tokio::test]
+async fn opening_nine_turtles_again_after_a_month_brings_the_feeds_back() {
+    let (base, state) = common::start_with_state(common::config()).await;
+    let (reader, cookie) = common::another_reader(&state).await;
+    let feeds = resting_feeds(&base, &cookie, &state).await;
+    last_seen(&state, reader, 40 * DAY).await;
+    // The device opens nine turtles: its sign-in is renewed, and noted.
+    let (status, _) = fetch(&base, &cookie, "/api/session").await;
+    assert_eq!(status, StatusCode::OK);
+    only_the_working_feed_is_due(&state, feeds).await;
+}
+
+#[tokio::test]
+async fn signing_in_again_after_a_month_brings_the_feeds_back() {
+    let (base, state) = common::start_with_state(common::config()).await;
+    let (reader, cookie) = common::another_reader(&state).await;
+    let feeds = resting_feeds(&base, &cookie, &state).await;
+    last_seen(&state, reader, 40 * DAY).await;
+    // A new device signs in (as signing in, signing up and a new password do).
+    nine_turtles::auth::remember_device(&state.db, reader)
+        .await
+        .unwrap();
+    only_the_working_feed_is_due(&state, feeds).await;
+}
+
+#[tokio::test]
+async fn syncing_from_another_app_after_a_month_brings_the_feeds_back() {
+    let (base, state) = common::start_with_state(common::config()).await;
+    let (reader, cookie) = common::another_reader(&state).await;
+    let feeds = resting_feeds(&base, &cookie, &state).await;
+    let (status, made) = send(
+        &base,
+        &cookie,
+        "/api/apps/password",
+        "application/json",
+        "{}".into(),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    let password = made["password"].as_str().unwrap().to_owned();
+    last_seen(&state, reader, 40 * DAY).await;
+    let response = Client::new()
+        .get(format!("{base}/api/greader/reader/api/0/user-info"))
+        .header("authorization", format!("GoogleLogin auth={password}"))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    only_the_working_feed_is_due(&state, feeds).await;
 }
