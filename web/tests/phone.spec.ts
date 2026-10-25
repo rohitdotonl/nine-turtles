@@ -173,10 +173,14 @@ test.describe("on a phone", () => {
     await toolbar(page).getByRole("button", { name: "Previous" }).click();
     await expect(title(page, "The pleasure of a slow letter")).toBeFocused();
 
-    await toolbar(page).getByRole("button", { name: "Star" }).click();
-    await expect(toolbar(page).getByRole("button", { name: "Star" })).toHaveAttribute("aria-pressed", "true");
-    await toolbar(page).getByRole("button", { name: "Star" }).click();
-    await expect(toolbar(page).getByRole("button", { name: "Star" })).toHaveAttribute("aria-pressed", "false");
+    // Star flips and flips back. Another test may have starred this article already, so start from what it shows.
+    const star = toolbar(page).getByRole("button", { name: "Star" });
+    const before = await star.getAttribute("aria-pressed");
+    const after = before === "true" ? "false" : "true";
+    await star.click();
+    await expect(star).toHaveAttribute("aria-pressed", after);
+    await star.click();
+    await expect(star).toHaveAttribute("aria-pressed", before ?? "false");
   });
 
   test("Aa opens the reading panel as a sheet along the bottom; Close gives the place back to Aa", async ({ page }) => {
