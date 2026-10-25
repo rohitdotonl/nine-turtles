@@ -278,18 +278,19 @@ async fn several_feeds_are_unsubscribed_at_once_and_one_undo_brings_them_all_bac
             row("gamma", &[])
         ]
     );
-    let read: i64 = sqlx::query_scalar("SELECT read FROM articles WHERE id = ?")
-        .bind(alpha_post)
-        .fetch_one(&reader.state.db)
-        .await
-        .unwrap();
+    let read: i64 =
+        sqlx::query_scalar("SELECT read FROM entries WHERE person_id = 1 AND article_id = ?")
+            .bind(alpha_post)
+            .fetch_one(&reader.state.db)
+            .await
+            .unwrap();
     assert_eq!(read, 1);
 
     // Once cleared for good, it's too late.
     reader
         .post("/api/tidy/unsubscribe", json!({ "feeds": [alpha, beta] }))
         .await;
-    nine_turtles::folders::clear_unsubscribed(&reader.state.db, i64::MAX)
+    nine_turtles::folders::clear_unsubscribed(&reader.state.db, None, i64::MAX)
         .await
         .unwrap();
     let (status, answer) = reader
@@ -318,7 +319,7 @@ async fn starred_articles_outlive_unsubscribing_from_several_feeds() {
     reader
         .post("/api/tidy/unsubscribe", json!({ "feeds": [alpha, beta] }))
         .await;
-    nine_turtles::folders::clear_unsubscribed(&reader.state.db, i64::MAX)
+    nine_turtles::folders::clear_unsubscribed(&reader.state.db, None, i64::MAX)
         .await
         .unwrap();
     let left: Vec<(i64, i64)> = sqlx::query_as("SELECT id, feed_id FROM articles ORDER BY id")

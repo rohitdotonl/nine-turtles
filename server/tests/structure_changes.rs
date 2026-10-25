@@ -71,14 +71,14 @@ async fn adding_read_state_and_stars_keeps_every_feed_article_and_sign_in() {
     );
     // Every article stored before starts unread and not starred.
     assert_eq!(
-        count("SELECT COUNT(*) FROM articles WHERE read = 0 AND starred = 0")
+        count("SELECT COUNT(*) FROM entries WHERE person_id = 1 AND read = 0 AND starred = 0")
             .await
             .unwrap(),
         1000
     );
     // Only the two values a mark can have are accepted.
     assert!(
-        sqlx::query("UPDATE articles SET read = 2 WHERE id = 1")
+        sqlx::query("UPDATE entries SET read = 2 WHERE article_id = 1")
             .execute(&db)
             .await
             .is_err()
@@ -143,13 +143,13 @@ async fn adding_background_checks_keeps_every_feed_article_mark_and_star() {
     assert_eq!(count("SELECT COUNT(*) FROM feeds").await.unwrap(), 20);
     assert_eq!(count("SELECT COUNT(*) FROM articles").await.unwrap(), 1000);
     assert_eq!(
-        count("SELECT COUNT(*) FROM articles WHERE read = 1")
+        count("SELECT COUNT(*) FROM entries WHERE person_id = 1 AND read = 1")
             .await
             .unwrap(),
         500
     );
     assert_eq!(
-        count("SELECT COUNT(*) FROM articles WHERE starred = 1")
+        count("SELECT COUNT(*) FROM entries WHERE person_id = 1 AND starred = 1")
             .await
             .unwrap(),
         100
@@ -234,7 +234,7 @@ async fn adding_folders_keeps_every_feed_followed_with_its_articles_marks_and_sc
     let count = |sql: &'static str| sqlx::query_scalar::<_, i64>(sql).fetch_one(&db);
     // Every feed is still followed, cleared of nothing, in no folder.
     assert_eq!(
-        count("SELECT COUNT(*) FROM feeds WHERE unsubscribed_at IS NULL AND cleared = 0")
+        count("SELECT COUNT(*) FROM subscriptions WHERE person_id = 1 AND unsubscribed_at IS NULL AND cleared = 0")
             .await
             .unwrap(),
         20
@@ -243,13 +243,13 @@ async fn adding_folders_keeps_every_feed_followed_with_its_articles_marks_and_sc
     assert_eq!(count("SELECT COUNT(*) FROM feed_folders").await.unwrap(), 0);
     assert_eq!(count("SELECT COUNT(*) FROM articles").await.unwrap(), 1000);
     assert_eq!(
-        count("SELECT COUNT(*) FROM articles WHERE read = 1")
+        count("SELECT COUNT(*) FROM entries WHERE person_id = 1 AND read = 1")
             .await
             .unwrap(),
         500
     );
     assert_eq!(
-        count("SELECT COUNT(*) FROM articles WHERE starred = 1")
+        count("SELECT COUNT(*) FROM entries WHERE person_id = 1 AND starred = 1")
             .await
             .unwrap(),
         100
@@ -333,13 +333,13 @@ async fn adding_search_keeps_everything_and_indexes_every_earlier_article() {
     );
     assert_eq!(count("SELECT COUNT(*) FROM articles").await.unwrap(), 1000);
     assert_eq!(
-        count("SELECT COUNT(*) FROM articles WHERE read = 1")
+        count("SELECT COUNT(*) FROM entries WHERE person_id = 1 AND read = 1")
             .await
             .unwrap(),
         500
     );
     assert_eq!(
-        count("SELECT COUNT(*) FROM articles WHERE starred = 1")
+        count("SELECT COUNT(*) FROM entries WHERE person_id = 1 AND starred = 1")
             .await
             .unwrap(),
         100
@@ -413,13 +413,13 @@ async fn adding_websub_keeps_every_feed_article_and_schedule() {
     assert_eq!(count("SELECT COUNT(*) FROM feeds").await.unwrap(), 10);
     assert_eq!(count("SELECT COUNT(*) FROM articles").await.unwrap(), 200);
     assert_eq!(
-        count("SELECT COUNT(*) FROM articles WHERE read = 1")
+        count("SELECT COUNT(*) FROM entries WHERE person_id = 1 AND read = 1")
             .await
             .unwrap(),
         100
     );
     assert_eq!(
-        count("SELECT COUNT(*) FROM articles WHERE starred = 1")
+        count("SELECT COUNT(*) FROM entries WHERE person_id = 1 AND starred = 1")
             .await
             .unwrap(),
         40
@@ -498,13 +498,13 @@ async fn adding_saved_searches_keeps_every_feed_folder_article_and_mark() {
     );
     assert_eq!(count("SELECT COUNT(*) FROM articles").await.unwrap(), 200);
     assert_eq!(
-        count("SELECT COUNT(*) FROM articles WHERE read = 1")
+        count("SELECT COUNT(*) FROM entries WHERE person_id = 1 AND read = 1")
             .await
             .unwrap(),
         100
     );
     assert_eq!(
-        count("SELECT COUNT(*) FROM articles WHERE starred = 1")
+        count("SELECT COUNT(*) FROM entries WHERE person_id = 1 AND starred = 1")
             .await
             .unwrap(),
         40
@@ -571,13 +571,13 @@ async fn adding_feed_settings_keeps_every_feed_as_it_was() {
     assert_eq!(count("SELECT COUNT(*) FROM feeds").await.unwrap(), 10);
     assert_eq!(count("SELECT COUNT(*) FROM articles").await.unwrap(), 200);
     assert_eq!(
-        count("SELECT COUNT(*) FROM articles WHERE read = 1")
+        count("SELECT COUNT(*) FROM entries WHERE person_id = 1 AND read = 1")
             .await
             .unwrap(),
         100
     );
     assert_eq!(
-        count("SELECT COUNT(*) FROM articles WHERE starred = 1")
+        count("SELECT COUNT(*) FROM entries WHERE person_id = 1 AND starred = 1")
             .await
             .unwrap(),
         40
@@ -589,7 +589,7 @@ async fn adding_feed_settings_keeps_every_feed_as_it_was() {
     // Every feed behaves as before: inbox, its own rhythm, read in nine turtles.
     assert_eq!(
         count(
-            "SELECT COUNT(*) FROM feeds WHERE river = 0 AND check_at_most = 0 AND open_on_site = 0"
+            "SELECT COUNT(*) FROM subscriptions WHERE river = 0 AND check_at_most = 0 AND open_on_site = 0"
         )
         .await
         .unwrap(),
@@ -648,20 +648,20 @@ async fn adding_rules_keeps_every_article_mark_and_star_and_mutes_nothing() {
     assert_eq!(count("SELECT COUNT(*) FROM feeds").await.unwrap(), 10);
     assert_eq!(count("SELECT COUNT(*) FROM articles").await.unwrap(), 200);
     assert_eq!(
-        count("SELECT COUNT(*) FROM articles WHERE read = 1")
+        count("SELECT COUNT(*) FROM entries WHERE person_id = 1 AND read = 1")
             .await
             .unwrap(),
         100
     );
     assert_eq!(
-        count("SELECT COUNT(*) FROM articles WHERE starred = 1")
+        count("SELECT COUNT(*) FROM entries WHERE person_id = 1 AND starred = 1")
             .await
             .unwrap(),
         40
     );
     // Nothing is muted, and there are no rules, until the reader makes one.
     assert_eq!(
-        count("SELECT COUNT(*) FROM articles WHERE muted = 1")
+        count("SELECT COUNT(*) FROM entries WHERE person_id = 1 AND muted = 1")
             .await
             .unwrap(),
         0
@@ -891,4 +891,306 @@ async fn giving_things_an_owner_makes_everything_the_owners_and_loses_nothing() 
         .await
         .unwrap();
     assert!(problems.is_empty(), "{problems:?}");
+}
+
+/// One article's marks as structure change 12 must keep them: its number,
+/// feed, place in the list, and read, starred and muted marks.
+type Marks = (i64, i64, i64, bool, bool, bool);
+
+#[tokio::test]
+async fn giving_each_reader_their_own_feeds_and_marks_keeps_every_one_as_the_owners() {
+    let config = common::config();
+    let data_dir = config.data_dir.clone();
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just before part two (structure changes up to 11):
+    // feeds with a rename and their own settings, one in folders, one just
+    // unsubscribed from (Undo still possible), one cleared but kept for its
+    // two starred articles, one with nothing yet; read, starred and muted
+    // articles; a hub; a rule and a saved search for a feed.
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(11, &old)
+        .await
+        .unwrap();
+    let now = nine_turtles::now();
+    for (id, title, unsubscribed_at, cleared, river, check_at_most, open_on_site) in [
+        (1, "My renamed blog", None, 0, 1, 3600, 1),
+        (2, "Blog 2", None, 0, 0, 0, 0),
+        (3, "Blog 3", None, 0, 0, 86_400, 0),
+        (4, "Just left", Some(now - 60), 0, 0, 0, 1),
+        (5, "Cleared, stars kept", Some(now - 86_400), 1, 0, 0, 0),
+        (6, "Nothing yet", None, 0, 0, 0, 0),
+    ] {
+        sqlx::query(
+            "INSERT INTO feeds (id, url, url_key, title, added_at, fetched_at, next_check_at,
+                 check_every, unsubscribed_at, cleared, river, check_at_most, open_on_site)
+             VALUES (?, ?, ?, ?, ?, 5, 99, 3600, ?, ?, ?, ?, ?)",
+        )
+        .bind(id)
+        .bind(format!("https://blog-{id}.example/feed"))
+        .bind(format!("blog-{id}.example/feed"))
+        .bind(title)
+        .bind(id * 10)
+        .bind(unsubscribed_at)
+        .bind(cleared)
+        .bind(river)
+        .bind(check_at_most)
+        .bind(open_on_site)
+        .execute(&old)
+        .await
+        .unwrap();
+    }
+    for feed in 1..=5 {
+        for number in 0..30 {
+            if feed == 5 && number >= 2 {
+                break;
+            }
+            let muted = feed != 5 && number % 7 == 0;
+            sqlx::query(
+                "INSERT INTO articles (feed_id, fingerprint, title, received_at, sort_at, read,
+                     starred, muted)
+                 VALUES (?, ?, ?, 2, ?, ?, ?, ?)",
+            )
+            .bind(feed)
+            .bind(format!("id:{number}"))
+            .bind(format!("Article {number}"))
+            .bind(1_000 * feed + number)
+            .bind(muted || number % 2 == 1)
+            .bind(feed == 5 || number % 10 == 0)
+            .bind(muted)
+            .execute(&old)
+            .await
+            .unwrap();
+        }
+    }
+    for sql in [
+        "INSERT INTO folders (id, person_id, name) VALUES (1, 1, 'Gardens')",
+        "INSERT INTO feed_folders (folder_id, feed_id) VALUES (1, 3), (1, 4)",
+        "INSERT INTO websub (feed_id, hub, topic, token, secret, asked_at)
+         VALUES (2, 'https://hub.example/', 'https://blog-2.example/feed', 'tok', 'sec', 1)",
+        "INSERT INTO rules (person_id, words, feed_id, action, created_at)
+         VALUES (1, 'sponsored', 1, 'mute', 1)",
+        "INSERT INTO saved_searches (person_id, name, query, created_at)
+         VALUES (1, 'In blog 3', '{\"scope\":{\"kind\":\"feed\",\"id\":3}}', 1)",
+        "INSERT INTO settings (name, value) VALUES ('articles_high_water', '500')",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    let before: Vec<Marks> = sqlx::query_as(
+        "SELECT id, feed_id, sort_at, read, starred, muted FROM articles ORDER BY id",
+    )
+    .fetch_all(&old)
+    .await
+    .unwrap();
+    assert_eq!(before.len(), 4 * 30 + 2);
+    old.close().await;
+
+    // Today's nine turtles opens it.
+    let (base, state) = common::start_with_state(config).await;
+    let db = &state.db;
+    let count = |sql: &'static str| sqlx::query_scalar::<_, i64>(sql).fetch_one(db);
+
+    // Every article is still there, once, and is the owner's with exactly
+    // the marks it had.
+    assert_eq!(count("SELECT COUNT(*) FROM articles").await.unwrap(), 122);
+    let after: Vec<Marks> = sqlx::query_as(
+        "SELECT article_id, feed_id, sort_at, read, starred, muted FROM entries
+         WHERE person_id = 1 ORDER BY article_id",
+    )
+    .fetch_all(db)
+    .await
+    .unwrap();
+    assert_eq!(after, before);
+    assert_eq!(count("SELECT COUNT(*) FROM entries").await.unwrap(), 122);
+
+    // Every feed line is the owner's subscription, with its name, settings
+    // and unsubscribing exactly as they were.
+    type Subscription = (i64, String, i64, Option<i64>, bool, bool, i64, bool);
+    let subscriptions: Vec<Subscription> = sqlx::query_as(
+        "SELECT feed_id, title, added_at, unsubscribed_at, cleared, river, check_at_most,
+             open_on_site
+         FROM subscriptions WHERE person_id = 1 ORDER BY feed_id",
+    )
+    .fetch_all(db)
+    .await
+    .unwrap();
+    assert_eq!(
+        subscriptions,
+        [
+            (
+                1,
+                "My renamed blog".into(),
+                10,
+                None,
+                false,
+                true,
+                3600,
+                true
+            ),
+            (2, "Blog 2".into(), 20, None, false, false, 0, false),
+            (3, "Blog 3".into(), 30, None, false, false, 86_400, false),
+            (
+                4,
+                "Just left".into(),
+                40,
+                Some(now - 60),
+                false,
+                false,
+                0,
+                true
+            ),
+            (
+                5,
+                "Cleared, stars kept".into(),
+                50,
+                Some(now - 86_400),
+                true,
+                false,
+                0,
+                false
+            ),
+            (6, "Nothing yet".into(), 60, None, false, false, 0, false),
+        ]
+    );
+    // What background checking reads stays as it was.
+    let shared: Vec<(i64, Option<i64>, i64, i64, i64)> = sqlx::query_as(
+        "SELECT id, unsubscribed_at, check_at_most, next_check_at, check_every FROM feeds
+         ORDER BY id",
+    )
+    .fetch_all(db)
+    .await
+    .unwrap();
+    assert_eq!(
+        shared,
+        [
+            (1, None, 3600, 99, 3600),
+            (2, None, 0, 99, 3600),
+            (3, None, 86_400, 99, 3600),
+            (4, Some(now - 60), 0, 99, 3600),
+            (5, Some(now - 86_400), 0, 99, 3600),
+            (6, None, 0, 99, 3600),
+        ]
+    );
+    for (sql, expected) in [
+        ("SELECT COUNT(*) FROM feed_folders", 2),
+        ("SELECT COUNT(*) FROM websub", 1),
+        ("SELECT COUNT(*) FROM rules WHERE feed_id = 1", 1),
+        ("SELECT COUNT(*) FROM saved_searches", 1),
+    ] {
+        assert_eq!(
+            sqlx::query_scalar::<_, i64>(sql)
+                .fetch_one(db)
+                .await
+                .unwrap(),
+            expected,
+            "{sql}"
+        );
+    }
+    let high_water: String =
+        sqlx::query_scalar("SELECT value FROM settings WHERE name = 'articles_high_water'")
+            .fetch_one(db)
+            .await
+            .unwrap();
+    assert_eq!(high_water, "500");
+
+    // The old shared marks and per-reader feed columns are gone, with
+    // their indexes.
+    let columns = |table: &'static str| {
+        sqlx::query_scalar::<_, String>("SELECT name FROM pragma_table_info(?)")
+            .bind(table)
+            .fetch_all(db)
+    };
+    let article_columns = columns("articles").await.unwrap();
+    for gone in ["read", "starred", "muted"] {
+        assert!(
+            !article_columns.iter().any(|column| column == gone),
+            "{gone}"
+        );
+    }
+    let feed_columns = columns("feeds").await.unwrap();
+    for gone in ["cleared", "river", "open_on_site"] {
+        assert!(!feed_columns.iter().any(|column| column == gone), "{gone}");
+    }
+    assert!(feed_columns.iter().any(|column| column == "title"));
+    assert_eq!(
+        count(
+            "SELECT COUNT(*) FROM sqlite_schema WHERE type = 'index' AND name IN
+             ('articles_unread', 'articles_starred', 'articles_unread_by_feed', 'articles_muted')"
+        )
+        .await
+        .unwrap(),
+        0
+    );
+    let problems: Vec<(String,)> = sqlx::query_as("PRAGMA foreign_key_check")
+        .fetch_all(db)
+        .await
+        .unwrap();
+    assert!(problems.is_empty(), "{problems:?}");
+    // Only the two values a mark can have are accepted.
+    assert!(
+        sqlx::query("UPDATE entries SET read = 2 WHERE article_id = 1")
+            .execute(db)
+            .await
+            .is_err()
+    );
+
+    // The owner sees everything as before: the renamed feed, the cleared
+    // feed's stars, and Undo for the feed unsubscribed from just before.
+    let cookie = common::signed_in(&base).await;
+    let client = reqwest::Client::new();
+    let get = |path: &'static str| {
+        let request = client
+            .get(format!("{base}{path}"))
+            .header("cookie", &cookie);
+        async move {
+            let response = request.send().await.unwrap();
+            assert_eq!(response.status(), reqwest::StatusCode::OK, "{path}");
+            serde_json::from_str::<serde_json::Value>(&response.text().await.unwrap()).unwrap()
+        }
+    };
+    let feeds = get("/api/feeds").await["feeds"].clone();
+    let names: Vec<&str> = feeds
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|feed| feed["title"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        names,
+        ["Blog 2", "Blog 3", "My renamed blog", "Nothing yet"]
+    );
+    assert_eq!(feeds[2]["river"], true);
+    assert_eq!(feeds[2]["unread"], 0);
+    assert_eq!(feeds[0]["unread"], 15 - 3);
+    let starred = get("/api/articles?view=starred").await["articles"].clone();
+    assert_eq!(starred.as_array().unwrap().len(), 2 + 4 * 3);
+    assert_eq!(starred[0]["feed_title"], "Cleared, stars kept");
+    let undone = client
+        .post(format!("{base}/api/feeds/4/resubscribe"))
+        .header("cookie", &cookie)
+        .header("sec-fetch-site", "same-origin")
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(undone.status(), reqwest::StatusCode::NO_CONTENT);
+    let feeds = get("/api/feeds").await["feeds"].clone();
+    assert_eq!(feeds.as_array().unwrap().len(), 5);
+    assert_eq!(feeds[2]["title"], "Just left");
+    assert_eq!(feeds[2]["folders"], serde_json::json!([1]));
+    assert_eq!(feeds[2]["open_on_site"], true);
+    let unsubscribed: Option<i64> =
+        sqlx::query_scalar("SELECT unsubscribed_at FROM feeds WHERE id = 4")
+            .fetch_one(db)
+            .await
+            .unwrap();
+    assert_eq!(unsubscribed, None);
 }

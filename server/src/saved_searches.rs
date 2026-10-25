@@ -166,20 +166,24 @@ async fn delete(
     }
 }
 
-/// A feed or folder is gone for good: saved searches limited to it now
+/// A feed or folder is gone for good from a reader's things: their saved
+/// searches limited to it now
 /// look in number 0, which is nothing, so they find nothing rather than
 /// searching everything. Feeds and folders are numbered without
 /// AUTOINCREMENT, so SQLite may give the same number to a new one, which
 /// they'd otherwise quietly start searching (decision 0081).
 pub async fn forget<'c>(
     executor: impl sqlx::SqliteExecutor<'c>,
+    person: i64,
     kind: &str,
     id: i64,
 ) -> Result<(), sqlx::Error> {
     sqlx::query(
         "UPDATE saved_searches SET query = json_set(query, '$.scope.id', 0)
-         WHERE json_extract(query, '$.scope.kind') = ? AND json_extract(query, '$.scope.id') = ?",
+         WHERE person_id = ? AND json_extract(query, '$.scope.kind') = ?
+             AND json_extract(query, '$.scope.id') = ?",
     )
+    .bind(person)
     .bind(kind)
     .bind(id)
     .execute(executor)

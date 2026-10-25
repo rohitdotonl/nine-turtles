@@ -18,6 +18,9 @@ use sqlx::SqlitePool;
 const FEEDS_COUNT: i64 = 500;
 /// The reader whose library it is: the owner, number 1.
 const READER: i64 = 1;
+/// A second reader on the same nine turtles, following every fiftieth feed
+/// (ten, feed 250 among them), so every list must keep to its own reader.
+const OTHER: i64 = 2;
 /// About one article every other day per feed, for a year.
 const ARTICLES_PER_FEED: i64 = 200;
 const YEAR: i64 = 365 * 24 * 60 * 60;
@@ -63,12 +66,34 @@ async fn big_library() -> SqlitePool {
             .unwrap();
         }
     }
+    // The owner follows every feed and has every article; the second
+    // reader follows ten, with some read and some starred.
+    for sql in [
+        "INSERT INTO subscriptions (person_id, feed_id, title, added_at)
+         SELECT 1, id, title, added_at FROM feeds",
+        "INSERT INTO entries (person_id, article_id, feed_id, sort_at)
+         SELECT 1, id, feed_id, sort_at FROM articles",
+        "INSERT INTO people (id, created_at) VALUES (2, 0)",
+        "INSERT INTO subscriptions (person_id, feed_id, title, added_at)
+         SELECT 2, id, 'Their ' || title, added_at FROM feeds WHERE id % 50 = 0",
+        "INSERT INTO entries (person_id, article_id, feed_id, sort_at, read, starred)
+         SELECT 2, id, feed_id, sort_at, id % 3 = 0, id % 7 = 0 FROM articles
+         WHERE feed_id % 50 = 0",
+    ] {
+        sqlx::query(sql).execute(&mut *transaction).await.unwrap();
+    }
     // Folders, as if an OPML file was imported: every tenth feed in "Big",
-    // feed 250 alone in "Small", the rest in "Other".
-    for (folder, name) in [(1, "Big"), (2, "Small"), (3, "Other")] {
+    // feed 250 alone in "Small", the rest in "Other". The second reader
+    // has feed 250 in a folder of their own.
+    for (folder, person, name) in [
+        (1, READER, "Big"),
+        (2, READER, "Small"),
+        (3, READER, "Other"),
+        (4, OTHER, "Theirs"),
+    ] {
         sqlx::query("INSERT INTO folders (id, person_id, name) VALUES (?, ?, ?)")
             .bind(folder)
-            .bind(READER)
+            .bind(person)
             .bind(name)
             .execute(&mut *transaction)
             .await
@@ -87,6 +112,10 @@ async fn big_library() -> SqlitePool {
             .await
             .unwrap();
     }
+    sqlx::query("INSERT INTO feed_folders (folder_id, feed_id) VALUES (4, 250)")
+        .execute(&mut *transaction)
+        .await
+        .unwrap();
     transaction.commit().await.unwrap();
     sqlx::query("ANALYZE").execute(&db).await.unwrap();
     db
@@ -117,31 +146,33 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
 
     // A reader who keeps up: everything older than a month is read, and one
     // article in fifty is starred.
-    sqlx::query("UPDATE articles SET read = 1 WHERE sort_at < ?")
+    sqlx::query("UPDATE entries SET read = 1 WHERE person_id = ? AND sort_at < ?")
+        .bind(READER)
         .bind(NOW - YEAR / 12)
         .execute(&db)
         .await
         .unwrap();
-    sqlx::query("UPDATE articles SET starred = 1 WHERE id % 50 = 0")
+    sqlx::query("UPDATE entries SET starred = 1 WHERE person_id = ? AND article_id % 50 = 0")
+        .bind(READER)
         .execute(&db)
         .await
         .unwrap();
     sqlx::query("ANALYZE").execute(&db).await.unwrap();
 
-    // Every list, in both orders, always uses its index, never a full read
-    // of every article or a sort done on the spot.
+    // Every list, in both orders, always uses its index of the reader's
+    // entries, never a full read of every entry or a sort done on the spot.
     for (list, index) in [
-        (List::All, "articles_newest"),
-        (List::Unread, "articles_unread"),
-        (List::Starred, "articles_starred"),
-        (List::Feed(250), "articles_newest_by_feed"),
-        (List::Folder(1), "articles_newest"),
+        (List::All, "entries_newest"),
+        (List::Unread, "entries_unread"),
+        (List::Starred, "entries_starred"),
+        (List::Feed(250), "entries_newest_by_feed"),
+        (List::Folder(1), "entries_newest"),
     ] {
         for order in [Order::Newest, Order::Oldest] {
             let mut binds = match list {
-                List::Feed(id) => vec![id],
-                List::Folder(id) => vec![id, READER],
-                _ => vec![],
+                List::Feed(id) => vec![READER, id],
+                List::Folder(id) => vec![READER, id, READER],
+                _ => vec![READER],
             };
             binds.extend([i64::MAX, i64::MAX, 51]);
             let plan = plan(&db, list_sql(list, order), &binds).await;
@@ -153,8 +184,8 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
         }
     }
     // The sidebar's unread counts come from their own small index.
-    let counts = plan(&db, FEEDS, &[]).await;
-    assert!(counts.contains("INDEX articles_unread_by_feed"), "{counts}");
+    let counts = plan(&db, FEEDS, &[READER]).await;
+    assert!(counts.contains("INDEX entries_unread_by_feed"), "{counts}");
 
     let mut timings = Vec::new();
     let mut time = async |what: &'static str, list: List, order: Order, after| {
@@ -206,6 +237,46 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
             .windows(2)
             .all(|pair| pair[0].at <= pair[1].at)
     );
+    // Every one of the owner's lists shows their own names for the feeds,
+    // never the second reader's.
+    assert!(
+        articles
+            .iter()
+            .chain(&one_feed)
+            .all(|article| article.feed_title.starts_with("Blog "))
+    );
+
+    // The second reader's lists hold only their ten feeds, with their marks.
+    let started = Instant::now();
+    let (theirs, _) = page(&db, OTHER, List::All, Order::Newest, None)
+        .await
+        .unwrap();
+    timings.push(("the other reader's first page", started.elapsed()));
+    assert_eq!(theirs.len(), 50);
+    assert!(theirs.iter().all(|article| article.feed_id % 50 == 0));
+    assert!(
+        theirs
+            .iter()
+            .all(|article| article.feed_title.starts_with("Their ")
+                && article.read == (article.id % 3 == 0))
+    );
+    let (their_starred, _) = page(&db, OTHER, List::Starred, Order::Newest, None)
+        .await
+        .unwrap();
+    assert!(their_starred.iter().all(|article| article.id % 7 == 0));
+    let (their_folder, _) = page(&db, OTHER, List::Folder(4), Order::Newest, None)
+        .await
+        .unwrap();
+    assert!(their_folder.iter().all(|article| article.feed_id == 250));
+    // Nor can either reader see the other's folder.
+    let (not_mine, _) = page(&db, OTHER, List::Folder(1), Order::Newest, None)
+        .await
+        .unwrap();
+    assert!(not_mine.is_empty());
+    let (not_theirs, _) = page(&db, READER, List::Folder(4), Order::Newest, None)
+        .await
+        .unwrap();
+    assert!(not_theirs.is_empty());
 
     // The sidebar's counts, for a reader who keeps up and for one who has
     // read nothing at all (every article counted).
@@ -213,16 +284,23 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
         ("counts", NOW - YEAR / 12),
         ("counts, nothing read", i64::MIN),
     ] {
-        sqlx::query("UPDATE articles SET read = (sort_at < ?)")
+        sqlx::query("UPDATE entries SET read = (sort_at < ?) WHERE person_id = ?")
             .bind(read_before)
+            .bind(READER)
             .execute(&db)
             .await
             .unwrap();
         let started = Instant::now();
-        let rows = sqlx::query(FEEDS).fetch_all(&db).await.unwrap();
+        let rows = sqlx::query(FEEDS)
+            .bind(READER)
+            .fetch_all(&db)
+            .await
+            .unwrap();
         timings.push((what, started.elapsed()));
         assert_eq!(rows.len(), 500);
     }
+    let theirs = sqlx::query(FEEDS).bind(OTHER).fetch_all(&db).await.unwrap();
+    assert_eq!(theirs.len(), 10);
 
     // "New items · press r": each list asks only about articles that arrived
     // since it was loaded, by number, never reading the whole year.
@@ -230,17 +308,19 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
     for list in [List::All, List::Unread, List::Feed(250), List::Folder(1)] {
         let sql = new_sql(list).unwrap();
         let binds = match list {
-            List::Feed(id) => vec![since - 1000, id],
-            List::Folder(id) => vec![since - 1000, id, READER],
-            _ => vec![since - 1000],
+            List::Feed(id) => vec![READER, since - 1000, id],
+            List::Folder(id) => vec![READER, since - 1000, id, READER],
+            _ => vec![READER, since - 1000],
         };
         let plan = plan(&db, sql, &binds).await;
         assert!(
-            plan.contains("INTEGER PRIMARY KEY (rowid>?)"),
+            plan.contains("PRIMARY KEY (person_id=? AND article_id>?)"),
             "{list:?}: {plan}"
         );
         let started = Instant::now();
-        let mut question = sqlx::query_scalar::<_, bool>(sql).bind(since - 1000);
+        let mut question = sqlx::query_scalar::<_, bool>(sql)
+            .bind(READER)
+            .bind(since - 1000);
         if let List::Feed(id) | List::Folder(id) = list {
             question = question.bind(id);
         }
@@ -264,11 +344,15 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
     // The starred export walks only the starred articles, from their own
     // index, already in order. It's a download, not something the screen
     // waits on, so it has a second, for 2,000 starred articles.
-    let export = plan(&db, EXPORT, &[]).await;
-    assert!(export.contains("INDEX articles_starred"), "{export}");
+    let export = plan(&db, EXPORT, &[READER]).await;
+    assert!(export.contains("INDEX entries_starred"), "{export}");
     assert!(!export.contains("TEMP B-TREE"), "{export}");
     let started = Instant::now();
-    let starred: Vec<Starred> = sqlx::query_as(EXPORT).fetch_all(&db).await.unwrap();
+    let starred: Vec<Starred> = sqlx::query_as(EXPORT)
+        .bind(READER)
+        .fetch_all(&db)
+        .await
+        .unwrap();
     let file = write(&starred).to_string();
     let took = started.elapsed();
     assert_eq!(starred.len(), 2_000);
@@ -300,7 +384,8 @@ async fn search_is_fast_with_500_feeds_and_a_year_of_articles() {
         .execute(&db)
         .await
         .unwrap();
-    sqlx::query("UPDATE articles SET starred = 1 WHERE id % 50 = 0")
+    sqlx::query("UPDATE entries SET starred = 1 WHERE person_id = ? AND article_id % 50 = 0")
+        .bind(READER)
         .execute(&db)
         .await
         .unwrap();

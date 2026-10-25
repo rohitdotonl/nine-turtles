@@ -2,13 +2,16 @@
 //! choosing its folders, creating, renaming and deleting folders, and
 //! unsubscribing, with undo.
 //!
-//! Unsubscribing hides the feed at once and stops its background checks,
-//! but keeps everything for a few minutes, so Undo can bring it back whole,
-//! read history included. After that (or as soon as the reader unsubscribes
-//! from another feed, since Undo only ever reverses the last action) the
-//! feed's unstarred articles and folders are removed for good. Its starred
-//! articles stay in Starred, so the feed's line stays too, hidden, for its
-//! name (ENGINEERING.md → "Data").
+//! Unsubscribing hides the feed from that reader at once (its background
+//! checks stop once nobody follows it), but keeps everything for a few
+//! minutes, so Undo can bring it back whole, read history included. After
+//! that (or as soon as the reader unsubscribes from another feed, since Undo
+//! only ever reverses the last action) the reader's unstarred entries and
+//! folder pairs for it are removed for good. Their starred articles stay in
+//! Starred, so their subscription's line stays too, hidden, for its name.
+//! Other readers who follow the feed keep it exactly as it was; when nobody
+//! follows it any more, its articles nobody starred go too
+//! (ENGINEERING.md → "Data").
 
 use axum::{
     Json, Router,
@@ -25,6 +28,7 @@ use crate::{
     AppState,
     auth::{SignedIn, database_problem},
     checking::{DAY, HOUR},
+    feeds::{follow_again, follows, refresh_shared},
     now, rules,
 };
 
@@ -56,12 +60,13 @@ pub struct Folder {
 pub const FOLDERS: &str =
     "SELECT id, name FROM folders WHERE person_id = ? ORDER BY name COLLATE NOCASE, id";
 
-/// Which followed feed is in which of a reader's folders, for the sidebar.
-/// Takes the reader.
+/// Which feed the reader follows is in which of their folders, for the
+/// sidebar. Takes the reader.
 pub const MEMBERSHIPS: &str = "SELECT feed_folders.feed_id, feed_folders.folder_id
-     FROM feed_folders JOIN feeds ON feeds.id = feed_folders.feed_id
-         JOIN folders ON folders.id = feed_folders.folder_id
-     WHERE feeds.unsubscribed_at IS NULL AND folders.person_id = ?";
+     FROM feed_folders JOIN folders ON folders.id = feed_folders.folder_id
+         JOIN subscriptions ON subscriptions.person_id = folders.person_id
+             AND subscriptions.feed_id = feed_folders.feed_id
+     WHERE folders.person_id = ? AND subscriptions.unsubscribed_at IS NULL";
 
 /// A name as the reader typed it, with spaces at either end removed and runs
 /// of spaces made one. None if nothing is left, or it's too long.
@@ -96,16 +101,6 @@ pub async fn folder_named(
         .fetch_one(&mut *connection)
         .await?;
     Ok((id, false))
-}
-
-/// Is this feed followed (not unsubscribed)?
-async fn followed(connection: &mut SqliteConnection, id: i64) -> Result<bool, sqlx::Error> {
-    let found: Option<i64> =
-        sqlx::query_scalar("SELECT id FROM feeds WHERE id = ? AND unsubscribed_at IS NULL")
-            .bind(id)
-            .fetch_optional(connection)
-            .await?;
-    Ok(found.is_some())
 }
 
 #[derive(Deserialize)]
@@ -166,29 +161,33 @@ async fn edit_feed(
     };
     let saved: Result<Option<()>, sqlx::Error> = async {
         let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
-        if !followed(&mut transaction, id).await? {
+        if !follows(&mut transaction, person, id).await? {
             return Ok(None);
         }
         sqlx::query(
-            "UPDATE feeds SET title = ?, river = COALESCE(?, river),
-                 open_on_site = COALESCE(?, open_on_site)
-             WHERE id = ?",
+            "UPDATE subscriptions SET title = ?, river = COALESCE(?, river),
+                 open_on_site = COALESCE(?, open_on_site),
+                 check_at_most = COALESCE(?, check_at_most)
+             WHERE person_id = ? AND feed_id = ?",
         )
         .bind(&title)
         .bind(form.river)
         .bind(form.open_on_site)
+        .bind(form.check.map(Check::at_most))
+        .bind(person)
         .bind(id)
         .execute(&mut *transaction)
         .await?;
-        if let Some(check) = form.check {
-            // A longer wait applies at once: the next check moves to no
-            // sooner than that long after the last one.
+        if form.check.is_some() {
+            // The feed is checked as often as its most eager follower
+            // allows. A longer wait applies at once: the next check moves
+            // to no sooner than that long after the last one.
+            refresh_shared(&mut transaction, id).await?;
             sqlx::query(
-                "UPDATE feeds SET check_at_most = ?1,
-                     next_check_at = MAX(next_check_at, COALESCE(fetched_at, 0) + ?1)
-                 WHERE id = ?2",
+                "UPDATE feeds SET
+                     next_check_at = MAX(next_check_at, COALESCE(fetched_at, 0) + check_at_most)
+                 WHERE id = ?",
             )
-            .bind(check.at_most())
             .bind(id)
             .execute(&mut *transaction)
             .await?;
@@ -228,20 +227,20 @@ async fn edit_feed(
     }
 }
 
-/// Unsubscribes: the feed is hidden and no longer checked, straight away.
-/// Any feed unsubscribed before is cleared for good first, since Undo only
-/// reverses the last action.
-async fn unsubscribe(_: SignedIn, State(state): State<AppState>, Path(id): Path<i64>) -> Response {
+/// Unsubscribes: the feed is hidden straight away, and no longer checked if
+/// nobody else follows it. Any feed the reader unsubscribed from before is
+/// cleared for good first, since Undo only reverses the last action.
+async fn unsubscribe(
+    SignedIn(person): SignedIn,
+    State(state): State<AppState>,
+    Path(id): Path<i64>,
+) -> Response {
     let done: Result<u64, sqlx::Error> = async {
-        clear_unsubscribed(&state.db, i64::MAX).await?;
-        let hidden = sqlx::query(
-            "UPDATE feeds SET unsubscribed_at = ? WHERE id = ? AND unsubscribed_at IS NULL",
-        )
-        .bind(now())
-        .bind(id)
-        .execute(&state.db)
-        .await?;
-        Ok(hidden.rows_affected())
+        clear_unsubscribed(&state.db, Some(person), i64::MAX).await?;
+        let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
+        let hidden = hide(&mut transaction, person, &[id], now()).await?;
+        transaction.commit().await?;
+        Ok(hidden)
     }
     .await;
     match done {
@@ -251,91 +250,196 @@ async fn unsubscribe(_: SignedIn, State(state): State<AppState>, Path(id): Path<
     }
 }
 
+/// Hides these feeds from the reader, as unsubscribed at `now`, and stops
+/// checking any that nobody else follows. Answers how many they followed.
+pub async fn hide(
+    connection: &mut SqliteConnection,
+    person: i64,
+    feeds: &[i64],
+    now: i64,
+) -> Result<u64, sqlx::Error> {
+    let hidden: Vec<i64> = sqlx::query_scalar(
+        "UPDATE subscriptions SET unsubscribed_at = ?
+         WHERE person_id = ? AND feed_id IN (SELECT value FROM json_each(?))
+             AND unsubscribed_at IS NULL
+         RETURNING feed_id",
+    )
+    .bind(now)
+    .bind(person)
+    .bind(serde_json::to_string(feeds).unwrap_or_else(|_| "[]".to_owned()))
+    .fetch_all(&mut *connection)
+    .await?;
+    for &feed in &hidden {
+        refresh_shared(connection, feed).await?;
+    }
+    Ok(hidden.len() as u64)
+}
+
 /// Undo for unsubscribing: the feed comes back as it was, and is checked
 /// again soon. Too late once it has been cleared.
-async fn resubscribe(_: SignedIn, State(state): State<AppState>, Path(id): Path<i64>) -> Response {
-    let back = sqlx::query(
-        "UPDATE feeds SET unsubscribed_at = NULL, next_check_at = ?
-         WHERE id = ? AND unsubscribed_at IS NOT NULL AND cleared = 0",
-    )
-    .bind(now())
-    .bind(id)
-    .execute(&state.db)
+async fn resubscribe(
+    SignedIn(person): SignedIn,
+    State(state): State<AppState>,
+    Path(id): Path<i64>,
+) -> Response {
+    let back: Result<bool, sqlx::Error> = async {
+        let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
+        let back = follow_again(&mut transaction, person, id, now()).await?;
+        transaction.commit().await?;
+        Ok(back)
+    }
     .await;
     match back {
-        Ok(back) if back.rows_affected() == 0 => problem(StatusCode::CONFLICT, "too-late"),
-        Ok(_) => StatusCode::NO_CONTENT.into_response(),
+        Ok(false) => problem(StatusCode::CONFLICT, "too-late"),
+        Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Err(error) => database_problem("undoing an unsubscribe", &error),
     }
 }
 
-/// Clears, for good, every feed unsubscribed at or before `before` that
-/// isn't cleared yet. Answers how many.
-pub async fn clear_unsubscribed(db: &sqlx::SqlitePool, before: i64) -> Result<usize, sqlx::Error> {
-    let waiting: Vec<i64> = sqlx::query_scalar(
-        "SELECT id FROM feeds WHERE unsubscribed_at <= ? AND cleared = 0 ORDER BY id",
+/// Clears, for good, every subscription unsubscribed at or before `before`
+/// that isn't cleared yet: one reader's, or (`None`) everyone's. Answers
+/// how many.
+pub async fn clear_unsubscribed(
+    db: &sqlx::SqlitePool,
+    person: Option<i64>,
+    before: i64,
+) -> Result<usize, sqlx::Error> {
+    let waiting: Vec<(i64, i64)> = sqlx::query_as(
+        "SELECT person_id, feed_id FROM subscriptions
+         WHERE unsubscribed_at <= ? AND cleared = 0 AND (?2 IS NULL OR person_id = ?2)
+         ORDER BY person_id, feed_id",
     )
     .bind(before)
+    .bind(person)
     .fetch_all(db)
     .await?;
     let mut cleared = 0;
-    for &id in &waiting {
+    for &(person, id) in &waiting {
         let mut transaction = db.begin_with("BEGIN IMMEDIATE").await?;
-        cleared += usize::from(clear(&mut transaction, id).await?);
+        cleared += usize::from(clear(&mut transaction, person, id).await?);
         transaction.commit().await?;
     }
     Ok(cleared)
 }
 
-/// Removes an unsubscribed feed's unstarred articles (with their read
-/// history) and its folders. Its line goes too, unless starred articles
-/// still need its name. Does nothing (and answers false) if the feed is
-/// followed again or already cleared: Undo may have come first.
-pub async fn clear(connection: &mut SqliteConnection, id: i64) -> Result<bool, sqlx::Error> {
+/// Removes, for one reader, a feed they unsubscribed from: their unstarred
+/// entries (their read history), their folder pairs for it, and their
+/// rules' and saved searches' hold on it. Their subscription's line goes
+/// too, unless their starred articles still need its name. Other readers'
+/// things are untouched. Once nobody follows or waits on the feed, its
+/// articles nobody has go, its hub subscription goes, and the feed's line
+/// goes if no article is left. Does nothing (and answers false) if the
+/// reader follows it again or it's already cleared: Undo may have come
+/// first.
+pub async fn clear(
+    connection: &mut SqliteConnection,
+    person: i64,
+    id: i64,
+) -> Result<bool, sqlx::Error> {
     let claimed = sqlx::query(
-        "UPDATE feeds SET cleared = 1 WHERE id = ? AND unsubscribed_at IS NOT NULL AND cleared = 0",
+        "UPDATE subscriptions SET cleared = 1
+         WHERE person_id = ? AND feed_id = ? AND unsubscribed_at IS NOT NULL AND cleared = 0",
     )
+    .bind(person)
     .bind(id)
     .execute(&mut *connection)
     .await?;
     if claimed.rows_affected() == 0 {
         return Ok(false);
     }
-    // Remember the highest article number ever given, so numbers freed
-    // here are never given again (see `feeds::store_articles`).
-    sqlx::query(
-        "INSERT INTO settings (name, value)
-         VALUES ('articles_high_water', CAST(COALESCE((SELECT MAX(id) FROM articles), 0) AS TEXT))
-         ON CONFLICT (name) DO UPDATE SET value = CAST(
-             MAX(CAST(value AS INTEGER), CAST(excluded.value AS INTEGER)) AS TEXT)",
+    // Entries carried over to a new address (`health::follow_elsewhere`)
+    // hold articles stored under the old feed: once they go, that feed may
+    // need letting go too.
+    let elsewhere: Vec<i64> = sqlx::query_scalar(
+        "SELECT DISTINCT articles.feed_id FROM entries
+             JOIN articles ON articles.id = entries.article_id
+         WHERE entries.person_id = ?1 AND entries.feed_id = ?2 AND entries.starred = 0
+             AND articles.feed_id != ?2",
     )
-    .execute(&mut *connection)
+    .bind(person)
+    .bind(id)
+    .fetch_all(&mut *connection)
     .await?;
-    sqlx::query("DELETE FROM articles WHERE feed_id = ? AND starred = 0")
-        .bind(id)
-        .execute(&mut *connection)
-        .await?;
-    sqlx::query("DELETE FROM feed_folders WHERE feed_id = ?")
-        .bind(id)
-        .execute(&mut *connection)
-        .await?;
-    // Rules for it stay, paused and saying so (SPEC section 27).
-    rules::place_gone(connection, Some(id), None).await?;
-    // Its hub's deliveries now find no address and are refused; the hub
-    // stops when its lease ends.
-    sqlx::query("DELETE FROM websub WHERE feed_id = ?")
+    sqlx::query("DELETE FROM entries WHERE person_id = ? AND feed_id = ? AND starred = 0")
+        .bind(person)
         .bind(id)
         .execute(&mut *connection)
         .await?;
     sqlx::query(
-        "DELETE FROM feeds WHERE id = ? AND NOT EXISTS (SELECT 1 FROM articles WHERE feed_id = ?)",
+        "DELETE FROM feed_folders WHERE feed_id = ?
+         AND folder_id IN (SELECT id FROM folders WHERE person_id = ?)",
     )
     .bind(id)
+    .bind(person)
+    .execute(&mut *connection)
+    .await?;
+    // Their rules for it stay, paused and saying so (SPEC section 27).
+    rules::place_gone_for(connection, person, id).await?;
+    crate::saved_searches::forget(&mut *connection, person, "feed", id).await?;
+    sqlx::query(
+        "DELETE FROM subscriptions WHERE person_id = ?1 AND feed_id = ?2
+         AND NOT EXISTS (SELECT 1 FROM entries WHERE person_id = ?1 AND feed_id = ?2)",
+    )
+    .bind(person)
     .bind(id)
     .execute(&mut *connection)
     .await?;
-    crate::saved_searches::forget(&mut *connection, "feed", id).await?;
+    let_go(connection, id).await?;
+    for other in elsewhere {
+        let_go(connection, other).await?;
+    }
     Ok(true)
+}
+
+/// Once nobody follows a feed or waits to, its articles nobody has go, its
+/// hub subscription goes, and the feed's line goes if no article is left.
+/// An article any reader still has an entry for (a star, or one carried
+/// over to a new address) always stays, and so does its feed's line.
+/// Leaves a feed someone follows as it is.
+pub async fn let_go(connection: &mut SqliteConnection, id: i64) -> Result<(), sqlx::Error> {
+    let someone: Option<i64> = sqlx::query_scalar(
+        "SELECT person_id FROM subscriptions WHERE feed_id = ? AND cleared = 0 LIMIT 1",
+    )
+    .bind(id)
+    .fetch_optional(&mut *connection)
+    .await?;
+    if someone.is_none() {
+        // Remember the highest article number ever given, so numbers freed
+        // here are never given again (see `feeds::store_articles`).
+        sqlx::query(
+            "INSERT INTO settings (name, value)
+             VALUES ('articles_high_water',
+                     CAST(COALESCE((SELECT MAX(id) FROM articles), 0) AS TEXT))
+             ON CONFLICT (name) DO UPDATE SET value = CAST(
+                 MAX(CAST(value AS INTEGER), CAST(excluded.value AS INTEGER)) AS TEXT)",
+        )
+        .execute(&mut *connection)
+        .await?;
+        // Nobody follows it, or waits to: only articles someone still has
+        // (starred ones, or ones carried over to a new address) stay.
+        sqlx::query(
+            "DELETE FROM articles WHERE feed_id = ?
+             AND NOT EXISTS (SELECT 1 FROM entries WHERE entries.article_id = articles.id)",
+        )
+        .bind(id)
+        .execute(&mut *connection)
+        .await?;
+        // Its hub's deliveries now find no address and are refused; the hub
+        // stops when its lease ends.
+        sqlx::query("DELETE FROM websub WHERE feed_id = ?")
+            .bind(id)
+            .execute(&mut *connection)
+            .await?;
+        sqlx::query(
+            "DELETE FROM feeds WHERE id = ?1
+             AND NOT EXISTS (SELECT 1 FROM articles WHERE feed_id = ?1)
+             AND NOT EXISTS (SELECT 1 FROM subscriptions WHERE feed_id = ?1)",
+        )
+        .bind(id)
+        .execute(&mut *connection)
+        .await?;
+    }
+    refresh_shared(connection, id).await
 }
 
 #[derive(Deserialize)]
@@ -365,10 +469,12 @@ async fn create_folder(
         }
         sqlx::query(
             "INSERT OR IGNORE INTO feed_folders (folder_id, feed_id)
-             SELECT ?, feeds.id FROM feeds
-             WHERE feeds.id IN (SELECT value FROM json_each(?)) AND feeds.unsubscribed_at IS NULL",
+             SELECT ?, feed_id FROM subscriptions
+             WHERE person_id = ? AND feed_id IN (SELECT value FROM json_each(?))
+                 AND unsubscribed_at IS NULL",
         )
         .bind(id)
+        .bind(person)
         .bind(serde_json::to_string(&form.feeds).unwrap_or_else(|_| "[]".to_owned()))
         .execute(&mut *transaction)
         .await?;
@@ -448,7 +554,7 @@ async fn delete_folder(
         if deleted.rows_affected() == 0 {
             return Ok(None);
         }
-        crate::saved_searches::forget(&mut *transaction, "folder", id).await?;
+        crate::saved_searches::forget(&mut *transaction, person, "folder", id).await?;
         // Rules for it stay, paused and saying so (SPEC section 27); the
         // screen keeps their numbers, so Undo can hand them back.
         let rules = rules::place_gone(&mut transaction, None, Some(id)).await?;

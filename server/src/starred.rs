@@ -42,20 +42,26 @@ pub struct Starred {
     pub site_url: Option<String>,
 }
 
-/// Every starred article, newest first, from its own index.
+/// Every article the reader starred, newest first, from the
+/// `entries_starred` index, with their name for its feed. Takes the reader.
 pub const EXPORT: &str =
     "SELECT articles.fingerprint, articles.title, articles.link, articles.author,
                 articles.content, articles.summary,
                 COALESCE(articles.language, feeds.language) AS language,
-                articles.published_at, feeds.title AS feed_title, feeds.url AS feed_url,
-                feeds.site_url
-         FROM articles JOIN feeds ON feeds.id = articles.feed_id
-         WHERE articles.starred = 1
-         ORDER BY articles.sort_at DESC, articles.id DESC";
+                articles.published_at, subscriptions.title AS feed_title,
+                feeds.url AS feed_url, feeds.site_url
+         FROM entries CROSS JOIN articles ON articles.id = entries.article_id
+             CROSS JOIN feeds ON feeds.id = entries.feed_id
+             CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
+                 AND subscriptions.feed_id = entries.feed_id
+         WHERE entries.person_id = ? AND entries.starred = 1
+         ORDER BY entries.sort_at DESC, entries.article_id DESC";
 
-async fn export(_: SignedIn, State(state): State<AppState>) -> Response {
-    let starred: Result<Vec<Starred>, sqlx::Error> =
-        sqlx::query_as(EXPORT).fetch_all(&state.db).await;
+async fn export(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
+    let starred: Result<Vec<Starred>, sqlx::Error> = sqlx::query_as(EXPORT)
+        .bind(person)
+        .fetch_all(&state.db)
+        .await;
     match starred {
         Ok(starred) => (
             [

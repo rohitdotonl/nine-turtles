@@ -30,7 +30,11 @@ use serde_json::{Value, json};
 use sqlx::{QueryBuilder, Sqlite};
 
 use crate::{
-    AppState, apps, auth::database_problem, feeds, folders, log, marks::MOST_AT_ONCE, now,
+    AppState, apps,
+    auth::database_problem,
+    feeds, folders, log,
+    marks::{MOST_AT_ONCE, READ_SQL, STAR_SQL},
+    now,
 };
 
 const READING_LIST: &str = "user/-/state/com.google/reading-list";
@@ -48,13 +52,26 @@ const MOST_CONTENTS: usize = 1_000;
 /// isn't a sync app.
 const LARGEST_BODY: usize = 1024 * 1024;
 
-/// The columns an `Article` is read from.
+/// The columns an `Article` is read from, with the reader's name for its
+/// feed and their marks.
 macro_rules! article_columns {
     () => {
-        "articles.id, articles.feed_id, feeds.title AS feed_title,
+        "articles.id, entries.feed_id, subscriptions.title AS feed_title,
          feeds.site_url, articles.title, articles.link, articles.author, articles.content,
-         articles.summary, articles.published_at, articles.received_at, articles.sort_at,
-         articles.read, articles.starred"
+         articles.summary, articles.published_at, articles.received_at, entries.sort_at,
+         entries.read, entries.starred"
+    };
+}
+
+/// Where an app's articles come from: the reader's own entries, each with
+/// its article, feed and the reader's subscription. Followed by the reader.
+macro_rules! from_entries {
+    () => {
+        " FROM entries CROSS JOIN articles ON articles.id = entries.article_id
+             CROSS JOIN feeds ON feeds.id = entries.feed_id
+             CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
+                 AND subscriptions.feed_id = entries.feed_id
+         WHERE entries.person_id = "
     };
 }
 
@@ -235,11 +252,11 @@ async fn token(_: App) -> Response {
     text("ninturtlesnotneeded\n")
 }
 
-async fn user_info(_: App) -> Response {
+async fn user_info(App(person): App) -> Response {
     Json(json!({
-        "userId": "1",
+        "userId": person.to_string(),
         "userName": "nine turtles",
-        "userProfileId": "1",
+        "userProfileId": person.to_string(),
         "userEmail": "",
     }))
     .into_response()
@@ -250,13 +267,16 @@ type FeedLine = (i64, String, String, Option<String>);
 /// A feed's number, its unread articles and when the newest arrived.
 type UnreadLine = (i64, i64, i64);
 
-/// Every followed feed, with its folders as Google's "labels".
+/// Every feed the reader follows, with its folders as Google's "labels".
 async fn subscriptions(App(person): App, State(state): State<AppState>) -> Response {
     let listed: Result<(Vec<FeedLine>, Labels), sqlx::Error> = async {
         let feeds = sqlx::query_as(
-            "SELECT id, title, url, site_url FROM feeds WHERE unsubscribed_at IS NULL
-             ORDER BY title COLLATE NOCASE, id",
+            "SELECT feeds.id, subscriptions.title, feeds.url, feeds.site_url
+             FROM subscriptions JOIN feeds ON feeds.id = subscriptions.feed_id
+             WHERE subscriptions.person_id = ? AND subscriptions.unsubscribed_at IS NULL
+             ORDER BY subscriptions.title COLLATE NOCASE, feeds.id",
         )
+        .bind(person)
         .fetch_all(&state.db)
         .await?;
         Ok((feeds, labels(&state.db, person).await?))
@@ -314,11 +334,15 @@ async fn tags(App(person): App, State(state): State<AppState>) -> Response {
 async fn unread_counts(App(person): App, State(state): State<AppState>) -> Response {
     let counted: Result<(Vec<UnreadLine>, Labels), sqlx::Error> = async {
         let counts = sqlx::query_as(
-            "SELECT articles.feed_id, COUNT(*), MAX(articles.received_at)
-             FROM articles JOIN feeds ON feeds.id = articles.feed_id
-             WHERE articles.read = 0 AND feeds.unsubscribed_at IS NULL
-             GROUP BY articles.feed_id",
+            "SELECT entries.feed_id, COUNT(*), MAX(articles.received_at)
+             FROM entries CROSS JOIN articles ON articles.id = entries.article_id
+                 JOIN subscriptions ON subscriptions.person_id = entries.person_id
+                     AND subscriptions.feed_id = entries.feed_id
+             WHERE entries.person_id = ? AND entries.read = 0
+                 AND subscriptions.unsubscribed_at IS NULL
+             GROUP BY entries.feed_id",
         )
+        .bind(person)
         .fetch_all(&state.db)
         .await?;
         Ok((counts, labels(&state.db, person).await?))
@@ -418,23 +442,23 @@ impl Stream {
     fn condition(&self, query: &mut QueryBuilder<Sqlite>, person: i64) {
         match self {
             Self::ReadingList => {
-                query.push("feeds.unsubscribed_at IS NULL");
+                query.push("subscriptions.unsubscribed_at IS NULL");
             }
             Self::Starred => {
-                query.push("articles.starred = 1");
+                query.push("entries.starred = 1");
             }
             Self::Read => {
-                query.push("articles.read = 1 AND feeds.unsubscribed_at IS NULL");
+                query.push("entries.read = 1 AND subscriptions.unsubscribed_at IS NULL");
             }
             Self::Feed(id) => {
                 query
-                    .push("feeds.unsubscribed_at IS NULL AND articles.feed_id = ")
+                    .push("subscriptions.unsubscribed_at IS NULL AND entries.feed_id = ")
                     .push_bind(*id);
             }
             Self::Folder(name) => {
                 query
                     .push(
-                        "feeds.unsubscribed_at IS NULL AND articles.feed_id IN
+                        "subscriptions.unsubscribed_at IS NULL AND entries.feed_id IN
                          (SELECT feed_id FROM feed_folders JOIN folders ON folders.id = feed_folders.folder_id
                           WHERE folders.person_id = ",
                     )
@@ -451,7 +475,7 @@ impl Stream {
 }
 
 /// Google's IDs name the user (`user/1234/state/…`); `-` means "me", and
-/// there is only one reader here, so any user is read as `-`.
+/// an app speaks only for the reader whose app password it holds, so any user is read as `-`.
 fn mine(id: &str) -> String {
     match id
         .strip_prefix("user/")
@@ -502,18 +526,17 @@ impl Asked {
     /// The query for this page of reader `person`'s articles, with one extra
     /// row to know whether another page follows.
     fn query(&self, columns: &str, person: i64) -> QueryBuilder<Sqlite> {
-        let mut query = QueryBuilder::new(format!(
-            "SELECT {columns} FROM articles JOIN feeds ON feeds.id = articles.feed_id WHERE "
-        ));
+        let mut query = QueryBuilder::new(format!("SELECT {columns}{}", from_entries!()));
+        query.push_bind(person).push(" AND ");
         self.stream.condition(&mut query, person);
         for (states, value) in [(&self.exclude, 0), (&self.include, 1)] {
             for state in states {
                 match state {
                     Stream::Read => {
-                        query.push(format!(" AND articles.read = {value}"));
+                        query.push(format!(" AND entries.read = {value}"));
                     }
                     Stream::Starred => {
-                        query.push(format!(" AND articles.starred = {value}"));
+                        query.push(format!(" AND entries.starred = {value}"));
                     }
                     _ => {}
                 }
@@ -528,9 +551,9 @@ impl Asked {
         if let Some((at, id)) = self.after {
             query
                 .push(if self.oldest_first {
-                    " AND (articles.sort_at, articles.id) > ("
+                    " AND (entries.sort_at, entries.article_id) > ("
                 } else {
-                    " AND (articles.sort_at, articles.id) < ("
+                    " AND (entries.sort_at, entries.article_id) < ("
                 })
                 .push_bind(at)
                 .push(", ")
@@ -538,9 +561,9 @@ impl Asked {
                 .push(")");
         }
         query.push(if self.oldest_first {
-            " ORDER BY articles.sort_at ASC, articles.id ASC LIMIT "
+            " ORDER BY entries.sort_at ASC, entries.article_id ASC LIMIT "
         } else {
-            " ORDER BY articles.sort_at DESC, articles.id DESC LIMIT "
+            " ORDER BY entries.sort_at DESC, entries.article_id DESC LIMIT "
         });
         query.push_bind(i64::try_from(self.count).unwrap_or(i64::MAX) + 1);
         query
@@ -569,7 +592,7 @@ async fn item_ids(App(person): App, State(state): State<AppState>, params: Param
     let asked = Asked::from(&params, None, MOST_AT_ONCE);
     let found: Result<Vec<(i64, i64, i64, i64)>, sqlx::Error> = asked
         .query(
-            "articles.id, articles.feed_id, articles.received_at, articles.sort_at",
+            "articles.id, entries.feed_id, articles.received_at, articles.sort_at",
             person,
         )
         .build_query_as()
@@ -649,7 +672,8 @@ async fn contents_of(
     Json(answer).into_response()
 }
 
-/// Named articles with their text: `i` once per article.
+/// Named articles with their text: `i` once per article. Only the reader's
+/// own: any other number is left out, as if it didn't exist.
 async fn item_contents(
     App(person): App,
     State(state): State<AppState>,
@@ -663,10 +687,11 @@ async fn item_contents(
         let articles = sqlx::query_as(concat!(
             "SELECT ",
             article_columns!(),
-            " FROM articles JOIN feeds ON feeds.id = articles.feed_id
-             WHERE articles.id IN (SELECT value FROM json_each(?))
-             ORDER BY articles.sort_at DESC, articles.id DESC"
+            from_entries!(),
+            "? AND entries.article_id IN (SELECT value FROM json_each(?))
+             ORDER BY entries.sort_at DESC, entries.article_id DESC"
         ))
+        .bind(person)
         .bind(serde_json::to_string(&ids).unwrap_or_else(|_| "[]".to_owned()))
         .fetch_all(&state.db)
         .await?;
@@ -760,17 +785,15 @@ impl Article {
 }
 
 /// Marks articles read or unread, starred or not: `i` once per article, `a`
-/// for marks to add and `r` for marks to take off.
-async fn edit_tag(_: App, State(state): State<AppState>, params: Params) -> Response {
+/// for marks to add and `r` for marks to take off. Only the reader's own
+/// marks change, as on nine turtles' own screen (`marks`).
+async fn edit_tag(App(person): App, State(state): State<AppState>, params: Params) -> Response {
     let ids: Vec<i64> = params.all("i").filter_map(item_number).collect();
     if ids.len() > MOST_AT_ONCE {
         return StatusCode::PAYLOAD_TOO_LARGE.into_response();
     }
-    let mut changes: Vec<(&'static str, bool)> = Vec::new();
     // Marked unread, a muted article is unmuted too, as on nine turtles' own screen.
-    const READ_SQL: &str = "UPDATE articles SET read = ?1, muted = muted * ?1 WHERE id IN (SELECT value FROM json_each(?2))";
-    const STAR_SQL: &str =
-        "UPDATE articles SET starred = ? WHERE id IN (SELECT value FROM json_each(?))";
+    let mut changes: Vec<(&'static str, bool)> = Vec::new();
     for (tags, adding) in [(params.all("a"), true), (params.all("r"), false)] {
         for tag in tags {
             match mine(tag).as_str() {
@@ -789,6 +812,7 @@ async fn edit_tag(_: App, State(state): State<AppState>, params: Params) -> Resp
             sqlx::query(sql)
                 .bind(value)
                 .bind(&ids)
+                .bind(person)
                 .execute(&mut *transaction)
                 .await?;
         }
@@ -811,10 +835,12 @@ async fn mark_all_as_read(
 ) -> Response {
     let stream = Stream::parse(params.first("s").unwrap_or(READING_LIST));
     let until = params.number("ts").map_or_else(now, seconds);
-    let mut query = QueryBuilder::<Sqlite>::new(
-        "UPDATE articles SET read = 1 WHERE read = 0 AND id IN
-         (SELECT articles.id FROM articles JOIN feeds ON feeds.id = articles.feed_id WHERE ",
-    );
+    let mut query = QueryBuilder::<Sqlite>::new("UPDATE entries SET read = 1 WHERE person_id = ");
+    query.push_bind(person).push(concat!(
+        " AND read = 0 AND article_id IN (SELECT entries.article_id",
+        from_entries!()
+    ));
+    query.push_bind(person).push(" AND ");
     stream.condition(&mut query, person);
     query
         .push(" AND articles.received_at <= ")
@@ -844,15 +870,15 @@ async fn edit_subscription(
         let feed = feed.strip_prefix("feed/").unwrap_or(feed);
         let id = match (action, feed.parse::<i64>()) {
             (_, Ok(id)) => id,
-            ("subscribe", Err(_)) => match feeds::add_for_app(&state, feed).await {
+            ("subscribe", Err(_)) => match feeds::add_for_app(&state, person, feed).await {
                 Ok(id) => id,
                 Err(not_added) => return not_added.into_response(),
             },
             (_, Err(_)) => return StatusCode::NOT_FOUND.into_response(),
         };
         let done = match action {
-            "unsubscribe" => unfollow(&state, id).await,
-            "subscribe" => match bring_back(&state, id).await {
+            "unsubscribe" => unfollow(&state, person, id).await,
+            "subscribe" => match bring_back(&state, person, id).await {
                 Ok(()) => file(&state, person, id, &params).await,
                 Err(error) => Err(error),
             },
@@ -866,15 +892,16 @@ async fn edit_subscription(
 }
 
 /// Follows a feed by its address, or a page's first feed: `quickadd`.
-async fn quick_add(_: App, State(state): State<AppState>, params: Params) -> Response {
+async fn quick_add(App(person): App, State(state): State<AppState>, params: Params) -> Response {
     let address = params.first("quickadd").unwrap_or_default();
     let address = address.strip_prefix("feed/").unwrap_or(address);
-    let id = match feeds::add_for_app(&state, address).await {
+    let id = match feeds::add_for_app(&state, person, address).await {
         Ok(id) => id,
         Err(not_added) => return not_added.into_response(),
     };
     let title: Result<String, sqlx::Error> =
-        sqlx::query_scalar("SELECT title FROM feeds WHERE id = ?")
+        sqlx::query_scalar("SELECT title FROM subscriptions WHERE person_id = ? AND feed_id = ?")
+            .bind(person)
             .bind(id)
             .fetch_one(&state.db)
             .await;
@@ -890,34 +917,26 @@ async fn quick_add(_: App, State(state): State<AppState>, params: Params) -> Res
     }
 }
 
-/// Unfollows the way nine turtles does: the feed is hidden and no longer
-/// checked straight away, and cleared for good ten minutes later by
-/// background checking. Unlike unfollowing on nine turtles' own page, an
-/// earlier unfollowed feed isn't cleared early, so each keeps its ten
-/// minutes in which following it again brings it back (unless the reader
-/// unsubscribes on nine turtles' page meanwhile, which clears every feed
-/// waiting, since its Undo covers only the last action).
-async fn unfollow(state: &AppState, id: i64) -> Result<(), sqlx::Error> {
-    sqlx::query("UPDATE feeds SET unsubscribed_at = ? WHERE id = ? AND unsubscribed_at IS NULL")
-        .bind(now())
-        .bind(id)
-        .execute(&state.db)
-        .await?;
-    Ok(())
+/// Unfollows the way nine turtles does: the feed is hidden straight away
+/// (and no longer checked, if nobody else follows it), and cleared for good
+/// ten minutes later by background checking. Unlike unfollowing on nine
+/// turtles' own page, an earlier unfollowed feed isn't cleared early, so
+/// each keeps its ten minutes in which following it again brings it back
+/// (unless the reader unsubscribes on nine turtles' page meanwhile, which
+/// clears every feed of theirs waiting, since its Undo covers only the last
+/// action).
+async fn unfollow(state: &AppState, person: i64, id: i64) -> Result<(), sqlx::Error> {
+    let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
+    folders::hide(&mut transaction, person, &[id], now()).await?;
+    transaction.commit().await
 }
 
-/// Follows again, by its number, a feed unfollowed but not yet cleared, as
-/// Undo does.
-async fn bring_back(state: &AppState, id: i64) -> Result<(), sqlx::Error> {
-    sqlx::query(
-        "UPDATE feeds SET unsubscribed_at = NULL, next_check_at = ?
-         WHERE id = ? AND unsubscribed_at IS NOT NULL AND cleared = 0",
-    )
-    .bind(now())
-    .bind(id)
-    .execute(&state.db)
-    .await?;
-    Ok(())
+/// Follows again, by its number, a feed the reader unfollowed but that
+/// isn't cleared yet, as Undo does.
+async fn bring_back(state: &AppState, person: i64, id: i64) -> Result<(), sqlx::Error> {
+    let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
+    feeds::follow_again(&mut transaction, person, id, now()).await?;
+    transaction.commit().await
 }
 
 /// Renames a followed feed and moves it in or out of folders, creating a
@@ -926,17 +945,13 @@ async fn bring_back(state: &AppState, id: i64) -> Result<(), sqlx::Error> {
 /// the new name, `a` folders to put it in and `r` folders to take it out of.
 async fn file(state: &AppState, person: i64, id: i64, params: &Params) -> Result<(), sqlx::Error> {
     let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
-    let followed: Option<i64> =
-        sqlx::query_scalar("SELECT id FROM feeds WHERE id = ? AND unsubscribed_at IS NULL")
-            .bind(id)
-            .fetch_optional(&mut *transaction)
-            .await?;
-    if followed.is_none() {
+    if !feeds::follows(&mut transaction, person, id).await? {
         return Ok(());
     }
     if let Some(title) = params.first("t").and_then(folders::clean_name) {
-        sqlx::query("UPDATE feeds SET title = ? WHERE id = ?")
+        sqlx::query("UPDATE subscriptions SET title = ? WHERE person_id = ? AND feed_id = ?")
             .bind(title)
+            .bind(person)
             .bind(id)
             .execute(&mut *transaction)
             .await?;
@@ -1030,7 +1045,7 @@ async fn delete_folder(
                 .fetch_optional(&mut *transaction)
                 .await?;
         if let Some(id) = id {
-            crate::saved_searches::forget(&mut *transaction, "folder", id).await?;
+            crate::saved_searches::forget(&mut *transaction, person, "folder", id).await?;
             crate::rules::place_gone(&mut transaction, None, Some(id)).await?;
         }
         transaction.commit().await

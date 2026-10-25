@@ -6,8 +6,10 @@
 //! articles arrive over the next few minutes, a few feeds at a time
 //! (`checking`), never all at once. A feed listed several times becomes one
 //! feed in several folders, and feeds already followed aren't duplicated
-//! (they join the file's folders). Exporting writes each feed under every
-//! folder it's in.
+//! (they join the file's folders). A feed another reader already follows
+//! isn't stored twice: the reader gets their own subscription to it, its
+//! articles so far counted as read. Exporting writes each feed the reader
+//! follows under every folder of theirs it's in.
 
 use std::collections::HashMap;
 
@@ -27,7 +29,7 @@ use crate::{
     AppState,
     auth::{SignedIn, database_problem},
     feed,
-    feeds::make_room,
+    feeds::{make_room, subscribe},
     folders::{self, FOLDERS, Folder, MEMBERSHIPS, clean_name},
     now,
 };
@@ -134,7 +136,16 @@ pub async fn follow_all(
         let id = if let Some(&id) = seen.get(&key) {
             id
         } else {
-            let id = follow_one(&mut transaction, entry, &url, &key, now, &mut summary).await?;
+            let id = follow_one(
+                &mut transaction,
+                person,
+                entry,
+                &url,
+                &key,
+                now,
+                &mut summary,
+            )
+            .await?;
             seen.insert(key, id);
             id
         };
@@ -152,17 +163,31 @@ pub async fn follow_all(
     Ok(summary)
 }
 
-/// Follows one feed from the file, unless it's followed already. Answers
-/// its number either way.
+/// Follows one feed from the file for reader `person`, unless they follow
+/// it already. Answers its number either way.
 async fn follow_one(
     connection: &mut sqlx::SqliteConnection,
+    person: i64,
     entry: &Listed,
     url: &Url,
     key: &str,
     now: i64,
     summary: &mut Summary,
 ) -> Result<i64, sqlx::Error> {
-    make_room(connection, key).await?;
+    make_room(connection, person, key).await?;
+    let followed: Option<i64> = sqlx::query_scalar(
+        "SELECT feeds.id FROM feeds JOIN subscriptions ON subscriptions.feed_id = feeds.id
+         WHERE feeds.url_key = ? AND subscriptions.person_id = ?
+             AND subscriptions.unsubscribed_at IS NULL",
+    )
+    .bind(key)
+    .bind(person)
+    .fetch_optional(&mut *connection)
+    .await?;
+    if let Some(id) = followed {
+        summary.already += 1;
+        return Ok(id);
+    }
     let title = entry
         .name
         .clone()
@@ -173,37 +198,49 @@ async fn follow_one(
         .as_deref()
         .and_then(web_address)
         .map(String::from);
-    // New (or followed again after unsubscribing): due for its first check
-    // straight away.
-    let added: Option<i64> = sqlx::query_scalar(
+    // New (or one nobody follows any more, started afresh): due for its
+    // first check straight away. One others follow is left as it is.
+    let fresh: Option<i64> = sqlx::query_scalar(
         "INSERT INTO feeds (url, url_key, title, site_url, added_at, next_check_at)
          VALUES (?, ?, ?, ?, ?, ?)
          ON CONFLICT (url_key) DO UPDATE SET
              url = excluded.url, title = excluded.title, site_url = excluded.site_url,
              language = NULL, etag = NULL, last_modified = NULL, added_at = excluded.added_at,
              fetched_at = NULL, next_check_at = excluded.next_check_at, failures = 0,
-             failing_since = NULL, missing_since = NULL, problem = NULL,
-             unsubscribed_at = NULL, cleared = 0
+             failing_since = NULL, missing_since = NULL, problem = NULL
          WHERE feeds.unsubscribed_at IS NOT NULL
          RETURNING id",
     )
     .bind(url.as_str())
     .bind(key)
-    .bind(title)
+    .bind(&title)
     .bind(site)
     .bind(now)
     .bind(now)
     .fetch_optional(&mut *connection)
     .await?;
-    if let Some(id) = added {
-        summary.added += 1;
-        return Ok(id);
-    }
-    summary.already += 1;
-    sqlx::query_scalar("SELECT id FROM feeds WHERE url_key = ?")
-        .bind(key)
-        .fetch_one(&mut *connection)
-        .await
+    let id = match fresh {
+        Some(id) => id,
+        None => {
+            sqlx::query_scalar("SELECT id FROM feeds WHERE url_key = ?")
+                .bind(key)
+                .fetch_one(&mut *connection)
+                .await?
+        }
+    };
+    subscribe(connection, person, id, &title, now).await?;
+    // Nothing is fetched here, so what's already stored counts as read;
+    // what arrives from the next check is new.
+    sqlx::query(
+        "INSERT OR IGNORE INTO entries (person_id, article_id, feed_id, sort_at, read)
+         SELECT ?, id, feed_id, sort_at, 1 FROM articles WHERE feed_id = ?",
+    )
+    .bind(person)
+    .bind(id)
+    .execute(&mut *connection)
+    .await?;
+    summary.added += 1;
+    Ok(id)
 }
 
 /// An `http` or `https` address, or None.
@@ -226,9 +263,12 @@ async fn export(SignedIn(person): SignedIn, State(state): State<AppState>) -> Re
     let gathered: Result<_, sqlx::Error> = async {
         let mut transaction = state.db.begin().await?;
         let feeds: Vec<Followed> = sqlx::query_as(
-            "SELECT id, title, url, site_url FROM feeds WHERE unsubscribed_at IS NULL
-             ORDER BY title COLLATE NOCASE, id",
+            "SELECT feeds.id, subscriptions.title, feeds.url, feeds.site_url
+             FROM subscriptions JOIN feeds ON feeds.id = subscriptions.feed_id
+             WHERE subscriptions.person_id = ? AND subscriptions.unsubscribed_at IS NULL
+             ORDER BY subscriptions.title COLLATE NOCASE, feeds.id",
         )
+        .bind(person)
         .fetch_all(&mut *transaction)
         .await?;
         let folders: Vec<Folder> = sqlx::query_as(FOLDERS)

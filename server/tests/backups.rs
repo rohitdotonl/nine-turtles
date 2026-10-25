@@ -477,3 +477,95 @@ async fn the_change_to_many_readers_is_backed_up_and_its_copy_restores_whole() {
     .unwrap();
     assert_eq!(sort, "oldest");
 }
+
+/// Structure change 12 (each reader's own feeds and marks, decision 0086)
+/// is backed up first, and that copy restored on a fresh disk is changed
+/// again the same way, with every mark, name and setting kept: the
+/// rehearsal for the live app.
+#[tokio::test]
+async fn the_change_to_each_readers_own_marks_is_backed_up_and_its_copy_restores_whole() {
+    let (settings, objects) = fake_storage().await;
+    let mut config = common::config();
+    config.backup = Some(settings.clone());
+    std::fs::create_dir_all(&config.data_dir).unwrap();
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&config.data_dir))
+                .create_if_missing(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(11, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO feeds (id, url, url_key, title, added_at, river, open_on_site, check_at_most)
+         VALUES (1, 'https://a.example/feed', 'a.example/feed', 'Renamed', 1, 1, 1, 3600),
+                (2, 'https://b.example/feed', 'b.example/feed', 'Kept', 2, 0, 0, 0)",
+        "UPDATE feeds SET unsubscribed_at = unixepoch() - 60 WHERE id = 2",
+        "INSERT INTO articles (feed_id, fingerprint, title, received_at, sort_at, read, starred,
+             muted)
+         VALUES (1, 'a', 'Read', 1, 1, 1, 0, 0), (1, 'b', 'Starred', 1, 2, 0, 1, 0),
+                (1, 'c', 'Muted', 1, 3, 1, 0, 1), (2, 'd', 'Waiting', 1, 4, 0, 1, 0)",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    old.close().await;
+
+    let changed = nine_turtles::state(config).await.unwrap();
+    let stored = names(&objects, "before-change/");
+    assert_eq!(stored.len(), 1);
+    assert!(
+        stored[0].ends_with("-before-change-12.sqlite"),
+        "{stored:?}"
+    );
+    let marks = "SELECT entries.person_id, articles.title, entries.read, entries.starred,
+                     entries.muted, subscriptions.title, subscriptions.river,
+                     subscriptions.open_on_site, subscriptions.check_at_most,
+                     subscriptions.unsubscribed_at IS NOT NULL
+                 FROM entries JOIN articles ON articles.id = entries.article_id
+                 JOIN subscriptions ON subscriptions.person_id = entries.person_id
+                     AND subscriptions.feed_id = entries.feed_id
+                 ORDER BY articles.id";
+    type Line = (i64, String, bool, bool, bool, String, bool, bool, i64, bool);
+    let live: Vec<Line> = sqlx::query_as(marks).fetch_all(&changed.db).await.unwrap();
+
+    // A new host restores that copy; nine turtles changes it as it starts.
+    let mut fresh = common::config();
+    fresh.backup = Some(settings);
+    fresh.restore_from = Some(stored[0].clone());
+    let restored = nine_turtles::state(fresh).await.unwrap();
+    let again: Vec<Line> = sqlx::query_as(marks).fetch_all(&restored.db).await.unwrap();
+    assert_eq!(again, live);
+    let line = |title: &str, read, starred, muted, feed: &str, river, open, every, left| {
+        (
+            1,
+            title.to_owned(),
+            read,
+            starred,
+            muted,
+            feed.to_owned(),
+            river,
+            open,
+            every,
+            left,
+        )
+    };
+    assert_eq!(
+        again,
+        [
+            line(
+                "Read", true, false, false, "Renamed", true, true, 3600, false
+            ),
+            line(
+                "Starred", false, true, false, "Renamed", true, true, 3600, false
+            ),
+            line(
+                "Muted", true, false, true, "Renamed", true, true, 3600, false
+            ),
+            line("Waiting", false, true, false, "Kept", false, false, 0, true),
+        ]
+    );
+}

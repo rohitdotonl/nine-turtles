@@ -38,12 +38,64 @@ Everything already stored becomes reader 1's, and devices stay signed in.
 Tables whose rules change are copied into a table of the new shape, so
 nothing is lost. Nothing on screen changes.
 
-**Part two: structure change 12 (next).** What's still shared moves to tables
-for each reader: following a feed, each feed's settings (river, open on
-site, check at most), the reader's own name for a feed, and the read,
-starred and muted marks. Unsubscribing then removes only that reader's
-marks; an article is deleted only when nobody follows its feed and nobody
-has starred it.
+**Part two: structure change 12.** What was still shared moves to tables
+for each reader:
+
+- **`subscriptions`**: one line per reader and feed they follow, with their
+  name for it (`feeds.title` keeps the publisher's), when they followed it,
+  when they unsubscribed (for Undo), whether it's cleared, and the feed's
+  settings (river, check at most, open on site), now each reader's own.
+- **`entries`**: one line per article a reader has, with their read,
+  starred and muted marks and a copy of its feed and place in the list, so
+  every list reads one index of that reader's lines, in order, as before
+  (`tests/speed.rs`, now with a second reader in the library).
+- Everything already stored became reader 1's: every feed line a
+  subscription with its name, settings and unsubscribing as they were (a
+  feed unsubscribed just before the change can still be undone), every
+  article an entry with its marks. Then the old columns went
+  (`articles.read`, `starred`, `muted` and their indexes; `feeds.cleared`,
+  `river`, `open_on_site`). `feeds.unsubscribed_at` and
+  `feeds.check_at_most` stay, worked out from the subscriptions whenever
+  one changes (`feeds::refresh_shared`): null while anyone follows the
+  feed, and the shortest wait any follower allows, so background checks
+  and WebSub read them as before.
+- **Following a feed someone already follows** stores no second copy: the
+  reader gets a subscription and an entry for each stored article (the
+  ones the publisher still lists unread, older ones read). From an OPML
+  file, which fetches nothing, the stored ones arrive read.
+- **New articles** get an entry for every reader whose subscription isn't
+  cleared; each reader's rules then act on their own entries only.
+- **Unsubscribing** hides only that reader's subscription; checks stop when
+  nobody follows the feed. Clearing (ten minutes later, or at their next
+  unsubscribe) removes that reader's unstarred entries, their folder pairs
+  for it, their rules' and saved searches' hold on it, and their line if
+  no starred entry needs its name. When nobody follows or waits on a feed
+  any more, its articles nobody has go, then its hub subscription, then
+  the feed's line once no article is left. A database rule refuses to
+  delete an article someone still has, or a subscription that still has
+  entries.
+- **Use this address** (feed health) changes the shared address only when
+  the reader is the feed's only follower; otherwise they follow the new
+  address instead, with their name, settings, folders, rules and saved
+  searches, and keep every article and mark, as moving in place always
+  did. Leaving the old one as unsubscribing does was rejected: ten minutes
+  later it would clear their unstarred articles and read history, with no
+  Undo. Instead, in one transaction, an old article the new address also
+  lists (same fingerprint, else same link) gives its read, star and mute
+  to the reader's entry for the new copy; every other old entry is
+  re-pointed to the new subscription (`entries.feed_id`), so it stays in
+  that feed's list while the article stays stored under the old feed; then
+  the reader's old subscription goes outright, leaving nothing to clear.
+  Lists, search, rules, marks and Tidy already go by `entries.feed_id`;
+  the reader view, the starred export and the sync-app answers now name
+  the entry's feed too. An article stays while any entry has it (the
+  database refuses otherwise), so the old feed's line stays under it; when
+  the reader's carried-over entries are later cleared, the old feed is let
+  go like any other nobody follows (`folders::let_go`).
+- Gaps closed: reading an article, an app's "items by number" and every
+  mark now need the reader to have that article; "anything new?" for All
+  leaves out unsubscribed feeds; following again from an OPML file resets
+  the feed's own settings; apps are told the reader's own number.
 
 **Part three (later).** Signing in by email, and making a second account to
 try it.
