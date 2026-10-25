@@ -9,15 +9,15 @@ nine turtles has two addresses (decision 0066):
   address, slowfeed.onrender.com, keeps working too.
 
 Each one-time step below is yours, because agents never get access to Render
-or to where you buy the domain. It takes about 30 minutes, plus waiting for
-the domain to be looked up correctly everywhere (usually minutes, at most a
-day).
+or to Cloudflare. It takes about 20 minutes, plus waiting for the domain to
+be looked up correctly everywhere (usually minutes, at most a day).
 
-## 1. Buy the domain (10 minutes)
+## 1. The domain (done)
 
-Buy **nineturtles.app** from any domain seller ("registrar"), for example
-Cloudflare, Porkbun or Namecheap. Domains ending in `.app` only work over
-HTTPS (the padlock), which both GitHub Pages and Render set up for you.
+You bought **nineturtles.app** on **Cloudflare** (October 2026), so
+Cloudflare is where its DNS records live. Domains ending in `.app` only
+work over HTTPS (the padlock), which both GitHub Pages and Render set up
+for you.
 
 ## 2. Switch on GitHub Pages (5 minutes)
 
@@ -35,13 +35,30 @@ Recommended, so no one else can ever use your domain on GitHub: on GitHub,
 your picture → **Settings** → **Pages** → **Add a domain**, type
 `nineturtles.app`, and add the one `TXT` record it shows you in step 3.
 
-## 3. Point the names at the hosts (10 minutes)
+## 3. Point the names at the hosts (Cloudflare, 10 minutes)
 
-In your domain seller's **DNS** settings (the address book that turns
-names into computers), add these records. If your seller is Cloudflare, set
-each one to **DNS only** (the grey cloud), not "Proxied".
+The DNS records are the domain's address book: they turn a name into the
+computer that answers it. The domain already points somewhere (a parked
+page, or something you set up earlier), so first clear the way, then add
+the new records.
 
-| Type | Name | Value | For |
+1. In Cloudflare, open **nineturtles.app** → **DNS** → **Records**.
+2. **If any record for `nineturtles.app`, `www` or `app` shows "Read only"**
+   or says it's managed by Workers or Pages, it belongs to a Cloudflare
+   project. Open **Workers & Pages** → that project → **Custom domains**
+   (or **Settings → Domains & Routes**) and remove `nineturtles.app`,
+   `www.nineturtles.app` or `app.nineturtles.app` there. The record goes
+   with it.
+3. **Delete every other record named `nineturtles.app`, `www` or `app`**
+   (types A, AAAA or CNAME): each name must lead to only one place. Keep
+   records of other types (MX and TXT are for email and proofs of
+   ownership) and records for other names.
+4. **Add the records below** with **Add record**. For each one, switch
+   **Proxy status** off so it shows **DNS only** (a grey cloud), not
+   "Proxied" (an orange one). Proxied would put Cloudflare in between, and
+   GitHub and Render then can't set up their padlocks.
+
+| Type | Name | Value (Cloudflare calls it IPv4 address, IPv6 address or Target) | For |
 |---|---|---|---|
 | A | `@` (the domain itself) | `185.199.108.153` | the website |
 | A | `@` | `185.199.109.153` | the website |
@@ -56,6 +73,9 @@ each one to **DNS only** (the grey cloud), not "Proxied".
 
 These values are GitHub's and Render's published addresses, nothing private.
 If Render shows a different value for `app` in step 4, use Render's.
+
+Leave Cloudflare's other settings (SSL/TLS, Always Use HTTPS) as they are:
+with every record on DNS only, they don't touch these addresses.
 
 ## 4. Give the app its new address (Render, 5 minutes)
 
