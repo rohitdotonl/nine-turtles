@@ -1,5 +1,5 @@
 -- WebSub: instant updates from publishers whose feed names a hub (SPEC
--- section 12, decision 0068). This change only adds a table; nothing
+-- section 12, decision 0069). This change only adds a table; nothing
 -- already stored is touched. Times are seconds since 1970 (UTC).
 
 -- One line per followed feed that offers a hub: what nine turtles asked

@@ -1,4 +1,4 @@
-# 0068: WebSub, instant updates from publishers who offer them
+# 0069: WebSub, instant updates from publishers who offer them
 
 *25 October 2026. Asked for by the owner (V2, Milestone 12; SPEC section 12).*
 

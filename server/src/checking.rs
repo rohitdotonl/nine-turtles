@@ -213,7 +213,7 @@ async fn worked(
         ),
     };
     // While a hub delivers new articles, this check is only the backup:
-    // at most twice a day (decision 0068).
+    // at most twice a day (decision 0069).
     let mut next = wait(state, every);
     if state.config.test_check_seconds.is_none()
         && websub::delivering(&state.db, feed_id, now).await?

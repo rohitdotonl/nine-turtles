@@ -198,13 +198,17 @@ A few words used throughout:
 
 ## 10. Reading modes: inbox and river
 
-*V1 has inbox mode only: an Unread view, read/unread styling and unread counts, with the app opening on Unread. River mode is moved to V2 (23 October 2026); the description below is kept for then.*
+*V1 had inbox mode only. River mode arrived in V2 (25 October 2026, decision 0068).*
 
 **What it does**
 - A single setting for the whole app.
 - **Inbox (default):** things to get through. Unread view, read/unread styling and unread counts are all present.
 - **River:** things flowing past. No Unread view, no read/unread styling, no counts. Read state is still recorded quietly.
-- In river mode the sidebar shows **Starred · All** only, `g u` does nothing, and "Mark all as read" is hidden. The app opens on **All** in river mode and on **Unread** in inbox mode.
+- In river mode the sidebar shows **Starred · All** only, `g u` does nothing, and "Mark all as read" (in the More menu, and `Shift+A`) is hidden. The app opens on **All** in river mode and on **Unread** in inbox mode.
+- In river mode every title in the list looks the same: full ink, regular weight, with no unread dot, and screen readers don't hear "unread". The feeds and folders show no numbers.
+- The Unread address (and `/`) leads to All in river mode, without a step in the browser's history. Switching to river mode while on Unread moves you to All the same way.
+- The `?` list leaves out "Go to Unread" and "Mark all as read" in river mode, and search can't be limited to Unread (there's no Unread view), though its "Show only: Unread" filter stays. "Mark unread" (and `m`) stay: read state is still recorded, and shows again back in inbox mode.
+- Chosen in Settings › Reading, as **Reading mode: Inbox · River**. Each device remembers the mode it last saw, so it opens in it before the server answers; the server's answer decides.
 
 **How to check it**
 1. In Settings, switch to river mode. The Unread view, the counts and the grey "read" titles all disappear.
@@ -232,7 +236,7 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 
 ## 12. WebSub (instant updates from publishers who offer it)
 
-*Built in V2 (25 October 2026, decision 0068).*
+*Built in V2 (25 October 2026, decision 0069).*
 
 **What it does**
 - Some publishers announce new articles the moment they publish, through a service called a "hub" (the standard is called WebSub). When a feed names a hub, nine turtles signs up with it, and the hub sends each new article to nine turtles as it's published.
@@ -341,13 +345,13 @@ OPML is the standard file format feed readers use to move subscription lists bet
 - **Appearance:** Light, Dark or Match device (the default). Light and Dark always show the day or night version; Match device follows the device's own light or dark setting, and switches with it while nine turtles is open. A theme chosen in an earlier version becomes Original; its Appearance is kept, and a dark theme from before decision 0046 opens by night (decision 0056).
 - Sort order, Appearance, reading font and line width are rows of choices on a faint track (a "segmented control"), chosen with a click, a tap or the arrow keys (they're radio buttons underneath). The chosen one is raised: the page's own color (in dark themes, a clear step lighter than its track) with a small shadow under it and no edge, and its word is semibold, so it shows without color. Each reading font's name is written in that font.
 - **Text size** is a stepper, as in Apple Books: one flat capsule on the same faint track as the segmented controls, a small A with a minus and a large A with a plus at its ends and the step's name between them, each part split from the next by a hairline and nothing raised, so it never reads as a choice with something chosen (decision 0055); one step each press, the name said aloud when it changes; at either end the A that can't go further fades to the muted grey. 44px tall to touch. It's the same control as in the Aa panel.
-- Sections appear once they have something to do: Reading (sort order) since Milestone 7, Your data with Milestone 9.
-- **Reading:** newest or oldest first. (Inbox or river mode in V2.)
+- Sections appear once they have something to do: Reading (sort order) since Milestone 7 (and the reading mode since 25 October 2026), Your data with Milestone 9.
+- **Reading:** the reading mode, inbox or river (section 10), then newest or oldest first.
 - **Your data:** three rows that act: **Import OPML…** (opens the file chooser; it ends in ›), **Export OPML** and **Export starred articles** (each downloads a file; each ends in a download mark), in the text color. What the files are is said under the group; what an import did appears there too.
 - **Account:** **Sign out** as a row of its own, ending in a small door mark, in the text color (not red: signing out removes nothing), and the version under the group. (Keeping articles and Feed health come in V2.)
 - **Status:** which version of nine turtles you're using. When a newer version is live (nine turtles notices from the server's answers), it says "A new version is ready" with a **Reload** button. Otherwise new versions are used automatically the next time you open or reload the app, never while you're reading. If a tab left open across an update can't carry on, it says so plainly in the note at the bottom of the list (where "New items" appears): "nine turtles was updated. Reload to continue.", with a **Reload** button.
 - Fonts are served by nine turtles itself; nothing is loaded from font services. Other scripts such as Hindi use the fonts already on your device.
-- **Shared across your devices:** sort order (and reading mode, in V2). **Per device:** Appearance, font, text size and line width (a phone and a laptop often want different sizes). `+`/`-` change the same text-size setting.
+- **Shared across your devices:** reading mode and sort order. **Per device:** Appearance, font, text size and line width (a phone and a laptop often want different sizes). `+`/`-` change the same text-size setting.
 
 **How to check it**
 1. Switch your computer to dark mode: nine turtles follows, at once, in the night version. Choose Appearance Light in Settings: it stays light regardless of the system.
@@ -484,6 +488,6 @@ Covered by sections 14 and 22.
 
 From DESIGN.md: YouTube player, public reading list page, per-feed reading modes, passkey sign-in, Chinese and Japanese search, multiple users. (The own domain name was chosen on 25 October 2026: nineturtles.app, with the app at app.nineturtles.app; decision 0066.)
 
-Moved to V2 on 23 October 2026: backups and moving hosts, river mode, WebSub (built 25 October 2026), the feed health page, the yearly clean-up, the feeds guide page, and keeping a tab that was left open across an update working without a reload.
+Moved to V2 on 23 October 2026: backups and moving hosts, river mode (built 25 October 2026), WebSub (built 25 October 2026), the feed health page, the yearly clean-up, the feeds guide page, and keeping a tab that was left open across an update working without a reload.
 
 Never: notifications, badges, streaks, reading stats, infinite scroll, algorithmic ranking, likes or comments, platform share buttons, scraping full articles, decorative effects or animation.

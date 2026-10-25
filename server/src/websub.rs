@@ -1,5 +1,5 @@
 //! WebSub: instant updates from publishers who offer them (SPEC section 12,
-//! ENGINEERING.md → "Fetching feeds", decision 0068).
+//! ENGINEERING.md → "Fetching feeds", decision 0069).
 //!
 //! Some feeds name a "hub", a service that announces new articles the moment
 //! they're published. nine turtles signs up with it, and the hub then sends
