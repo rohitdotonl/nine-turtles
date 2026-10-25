@@ -284,12 +284,7 @@ async fn star_and_read_rules_and_an_author_and_a_place() {
 async fn a_new_rule_can_be_applied_to_what_already_matches_and_undone() {
     let reader = Reader::new().await;
     reader.write("1", "Crypto news", "A", "Words.");
-    reader.write(
-        "2",
-        "Weekly notes",
-        "A",
-        "Mostly about crypto.",
-    );
+    reader.write("2", "Weekly notes", "A", "Mostly about crypto.");
     reader.write("3", "Gardening", "A", "Soil.");
     let blog = reader.follow("blog.xml").await;
 
