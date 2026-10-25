@@ -5,7 +5,7 @@
 **Decision.** Edit feed gains three settings for one feed, chosen by the
 owner on 25 October 2026: its reading mode (Inbox or River), how often it's
 checked (Automatic, at most Hourly, at most Daily) and "Open articles on the
-website". They are three columns on `feeds` (structure change 8), each
+website". They are three columns on `feeds` (structure change 9), each
 defaulting to how every feed already behaved, so nothing changes until the
 owner changes it.
 

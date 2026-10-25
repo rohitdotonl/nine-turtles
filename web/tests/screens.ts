@@ -125,6 +125,18 @@ export const SCREENS: Screen[] = [
     },
   },
   { name: "settings", path: "/settings", signedIn: true, library: true },
+  { name: "your-feeds", path: "/settings/feeds", signedIn: true, library: true },
+  {
+    name: "your-feeds-editing",
+    path: "/settings/feeds",
+    signedIn: true,
+    library: true,
+    open: async (page) => {
+      await page.getByRole("button", { name: "Edit" }).click();
+      await page.getByRole("checkbox").first().check();
+      await expect(page.getByText("1 chosen")).toBeVisible();
+    },
+  },
   {
     name: "feed-health-all-working",
     path: "/settings/feed-health",

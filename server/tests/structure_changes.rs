@@ -437,7 +437,7 @@ async fn adding_feed_settings_keeps_every_feed_as_it_was() {
     let data_dir = common::config().data_dir;
     std::fs::create_dir_all(&data_dir).unwrap();
 
-    // The database as WebSub left it (structure changes 1 to 7).
+    // The database just before feed settings (structure changes up to 8).
     let old = SqlitePoolOptions::new()
         .connect_with(
             SqliteConnectOptions::new()
@@ -447,7 +447,7 @@ async fn adding_feed_settings_keeps_every_feed_as_it_was() {
         .await
         .unwrap();
     sqlx::migrate!("./migrations")
-        .run_to(7, &old)
+        .run_to(8, &old)
         .await
         .unwrap();
     for feed in 1..=10 {
