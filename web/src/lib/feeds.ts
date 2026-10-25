@@ -182,8 +182,34 @@ function saved(): Promise<unknown> {
   return writes;
 }
 
+/**
+ * How long to wait before each new try when nine turtles can't be reached:
+ * about a minute in all, longer than the server takes to restart when a new
+ * version goes live, so a mark made in that moment is saved, not lost.
+ */
+export const RETRY_AFTER = [1_000, 2_000, 4_000, 8_000, 15_000, 30_000];
+
+/**
+ * Answers meaning "nine turtles is out of reach for a moment" (a restart, or
+ * the host's front door between it and you), worth trying again. Any other
+ * answer is final.
+ */
+const OUT_OF_REACH = new Set([502, 503, 504]);
+
+/** The server answered, but not with yes. */
+export class Refused extends Error {
+  constructor(readonly status: number) {
+    super(`nine turtles answered ${status}`);
+  }
+}
+
+/** Whether a failed save is worth trying again: the connection, a timeout or a restart, never a refusal. */
+export function worthRetrying(problem: unknown): boolean {
+  return !(problem instanceof Refused) || OUT_OF_REACH.has(problem.status);
+}
+
 function send(path: string, body: unknown): Promise<void> {
-  const sent = writes.then(async () => {
+  const once = async () => {
     const response = await api(path, {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -191,7 +217,18 @@ function send(path: string, body: unknown): Promise<void> {
       // A save that hangs counts as failed, so it can't hold up the lists.
       signal: AbortSignal.timeout(15_000),
     });
-    if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
+    if (!response.ok) throw new Refused(response.status);
+  };
+  const sent = writes.then(async () => {
+    for (const wait of RETRY_AFTER) {
+      try {
+        return await once();
+      } catch (problem) {
+        if (!worthRetrying(problem)) throw problem;
+        await new Promise((resolve) => setTimeout(resolve, wait));
+      }
+    }
+    return once();
   });
   writes = sent.catch(() => undefined);
   return sent;

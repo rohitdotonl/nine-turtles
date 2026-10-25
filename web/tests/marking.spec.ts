@@ -279,10 +279,11 @@ test.describe("when saving fails", () => {
     await page.keyboard.press("j");
     await refused;
     await expect(line(page)).toHaveText("An article couldn't be marked as read. It's still unread.");
+    await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
     await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
     await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 3 unread`);
 
-    // Shown again with saving back: read. Then m, and that save fails: back to read, as the server has it.
+    // Shown again with saving back: read, and the message has gone, its job done. Then m, and that save fails: back to read, as the server has it.
     let saved = 0;
     page.on("response", (response) => {
       if (response.url().endsWith("/api/articles/read") && response.ok()) saved++;
@@ -292,6 +293,8 @@ test.describe("when saving fails", () => {
     await page.keyboard.press("k");
     await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, unread/);
     await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 1 unread`);
+    await expect(page.getByText("An article couldn't be marked as read. It's still unread.")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Try again" })).toHaveCount(0);
     // Both saves (j and k) must reach the server before saving fails again.
     await expect.poll(() => saved).toBe(2);
     failing = true;
@@ -299,6 +302,27 @@ test.describe("when saving fails", () => {
     await expect(line(page)).toHaveText("That couldn't be saved, so it was taken back.");
     await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, unread/);
     await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 1 unread`);
+
+    // Try again, with saving back: unread after all, and the line is quiet.
+    failing = false;
+    await page.getByRole("button", { name: "Try again" }).click();
+    await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
+    await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 2 unread`);
+    await expect(page.getByRole("button", { name: "Try again" })).toHaveCount(0);
+    await expect(page.getByText("That couldn't be saved, so it was taken back.")).toHaveCount(0);
+  });
+
+  test("a mark made while nine turtles restarts is saved once it's back, with nothing said", async ({ page }) => {
+    const blog = await openBlog(page);
+    // A new version going live: the host answers "unavailable" for a moment.
+    let refusals = 2;
+    await page.route("**/api/articles/read", (route) => (refusals-- > 0 ? route.fulfill({ status: 503 }) : route.fallback()));
+    const saved = page.waitForResponse((response) => response.url().endsWith("/api/articles/read") && response.ok());
+    await page.keyboard.press("j");
+    await saved;
+    await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, unread/);
+    await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 2 unread`);
+    await expect(page.getByText("couldn't be marked as read")).toHaveCount(0);
   });
 });
 

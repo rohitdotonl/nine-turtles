@@ -180,13 +180,15 @@ A few words used throughout:
 - Undo reverses **the last action only**, of these: mark all as read, mark unread, star/unstar, unsubscribe, delete folder.
 - Read state is recorded in both reading modes, so switching modes never loses it.
 - Each feed's unread number in the sidebar changes at the same moment.
-- If a mark can't be saved (the connection dropped, say), it's taken back and the note at the bottom of the list says so plainly, such as "The star couldn't be saved." That message takes the Undo's place. A failure never takes back a later action on the same article.
+- If nine turtles can't be reached when a mark is made (the connection dropped, or a new version is going live and the server is restarting), it quietly tries again for about a minute, so a short gap loses nothing and says nothing.
+- If a mark still can't be saved, it's taken back and the note at the bottom of the list says so plainly, such as "The star couldn't be saved.", with a **Try again** button in the Undo's place. The message goes as soon as a later mark is saved (the connection is back), or when you press Try again. A failure never takes back a later action on the same article.
 
 **How to check it**
 1. Click an unread item: it turns grey and the feed's unread number drops by one.
 2. Press `m`: it's unread again and the number goes back up.
 3. Press `Shift+A` in a feed: everything shown turns grey at once. Press `u`: they're unread again.
 4. Wait until "New items · press r" appears, then mark all as read *without* pressing `r`. Press `r`: the new items are still unread.
+5. Turn the Wi-Fi off, open an unread article, and turn it back on within half a minute: the article stays read and nothing is said. Leave it off longer: "An article couldn't be marked as read. It's still unread." appears with Try again; once the Wi-Fi is back, opening the next article clears it.
 
 ## 9. Star
 
