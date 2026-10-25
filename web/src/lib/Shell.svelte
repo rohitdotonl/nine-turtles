@@ -27,6 +27,8 @@
   import FeedHealth from "./FeedHealth.svelte";
   import SearchBar from "./SearchBar.svelte";
   import SidebarFeeds from "./SidebarFeeds.svelte";
+  import StarterFeeds from "./StarterFeeds.svelte";
+  import { partlyAdded, type Starter } from "./starters";
   import {
     createFolder,
     deleteFolder,
@@ -201,7 +203,7 @@
    * On a window wide enough for the list, adding a feed and editing a feed or
    * folder open as a sheet over the place you were, which stays in view.
    */
-  let sheet = $derived(!phone && (route.kind === "add-feed" || route.kind === "edit-feed" || route.kind === "edit-folder"));
+  let sheet = $derived(!phone && isSheetPlace(route));
   /** Where the list and article come from: under a sheet, the place it opened over. */
   let under: Route = $derived(
     !sheet
@@ -219,7 +221,12 @@
   let sheetPushed = false;
 
   function isSheet(place: Route): boolean {
-    return !phone && (place.kind === "add-feed" || place.kind === "edit-feed" || place.kind === "edit-folder");
+    return !phone && isSheetPlace(place);
+  }
+
+  /** The places that open as a sheet on a computer (a page of their own on a phone). */
+  function isSheetPlace(place: Route): boolean {
+    return place.kind === "add-feed" || place.kind === "new-to-feeds" || place.kind === "edit-feed" || place.kind === "edit-folder";
   }
 
   /** Which articles the list shows here. */
@@ -247,7 +254,10 @@
   });
   /** A sheet is actually showing (an edit address for a feed or folder you don't have shows none). */
   let sheetShown = $derived(
-    sheet && (route.kind === "add-feed" || (route.kind === "edit-feed" ? currentFeed !== undefined : currentFolder !== undefined)),
+    sheet &&
+      (route.kind === "add-feed" ||
+        route.kind === "new-to-feeds" ||
+        (route.kind === "edit-feed" ? currentFeed !== undefined : currentFolder !== undefined)),
   );
   /** The feed's or folder's name, for the heading and the tab's title. */
   let placeName = $derived(currentFeed?.title ?? currentFolder?.name);
@@ -561,6 +571,7 @@
     if (place.kind === "settings") return settingsHeading;
     if (place.kind === "feed-health") return healthHeading;
     if (place.kind === "add-feed") return addField;
+    if (place.kind === "new-to-feeds") return phone ? listHeading : sheetHeading;
     if (sheetShown) return sheetHeading;
     if (welcomeWide || welcomeAlone) return welcomeHeading;
     return listHeading;
@@ -608,7 +619,7 @@
   function keepsArticle(from: Route, to: Route): boolean {
     if (pathFor(from) === pathFor(to)) return true;
     if (phone) return false;
-    const over = (place: Route) => place.kind === "add-feed" || place.kind === "edit-feed" || place.kind === "edit-folder";
+    const over = isSheetPlace;
     return (over(to) && !over(from)) || (over(from) && pathFor(to) === pathFor(under));
   }
 
@@ -660,6 +671,19 @@
   async function added(feed: Feed) {
     await loadFeeds();
     go({ kind: "feed", id: feed.id });
+  }
+
+  /**
+   * Starters chosen in the welcome's "New to feeds?" (decision 0079): one opens as a feed added by
+   * hand does; several open the home view, where they're all together. Any that couldn't be added
+   * are named in the list's note.
+   */
+  async function startersAdded(feeds: Feed[], failed: Starter[]) {
+    await loadFeeds();
+    const note = failed.length > 0 ? { message: partlyAdded(failed) } : undefined;
+    const [only] = feeds;
+    if (feeds.length === 1 && only) go({ kind: "feed", id: only.id }, note);
+    else go(home, note);
   }
 
   /** The empty state's "Import OPML": Settings, at Your data. */
@@ -739,7 +763,9 @@
 
   /** Close settings, and Escape on Settings or Add a feed: on a phone, back one step to the feeds. */
   function closePage() {
-    if (phone) stepBack("home");
+    // "New to feeds?" opens from the welcome on the list's screen: on a phone its X goes back there.
+    if (phone && route.kind === "new-to-feeds" && stepOf(history.state)?.back === "list") history.back();
+    else if (phone) stepBack("home");
     else if (sheetShown) closeSheet();
     else go(lastPlace);
   }
@@ -900,7 +926,7 @@
 
   function escape() {
     if (route.kind === "feed-health") closeHealth();
-    else if (route.kind === "settings" || route.kind === "add-feed") closePage();
+    else if (route.kind === "settings" || route.kind === "add-feed" || route.kind === "new-to-feeds") closePage();
     else if (route.kind === "edit-feed" || route.kind === "edit-folder") edited(false);
     else if (reading || (selected && inArticle())) backToList();
     else if (shown || isSearching(query) || phoneSearch || document.activeElement?.closest("search")) closeSearch();
@@ -920,6 +946,8 @@
     <div class={start ? "text-left" : "text-center"}>
       <h2 id="welcome-heading" tabindex="-1" bind:this={welcomeHeading} class="font-serif text-xlarge font-semibold tracking-[-0.01em]">A quiet place to read.</h2>
       <p class="mt-3 text-ink-2">Follow the websites you like, and read what they publish here, at your own pace.</p>
+      <!-- For someone who has never used feeds: what they are, and a few to start with, in a sheet (decision 0079). -->
+      <a href="/new-to-feeds" onclick={(event) => follow(event, { kind: "new-to-feeds" })} class="text-link mt-1">New to feeds? Start here</a>
     </div>
     {#if !(sheet && route.kind === "add-feed")}
       <!--
@@ -1187,6 +1215,18 @@
             onDelete={() => deleteThis(currentFolder!)}
           />
         {/key}
+      {:else if !sheet && route.kind === "new-to-feeds"}
+        <section aria-labelledby="list-heading" class="page-sheet">
+          <!-- Only on a phone: the phone sheet's one build, as Add a feed's (decisions 0052, 0055). -->
+          <div class="page-sheet-card">
+            <PageHead title="New to feeds?" bind:heading={listHeading} besideToggle={false} onClose={closePage} closeLabel="Close" />
+            <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
+              <div class="mx-auto flex w-full max-w-xl flex-1 flex-col">
+                <StarterFeeds onAdded={startersAdded} page />
+              </div>
+            </div>
+          </div>
+        </section>
       {:else if !sheet && route.kind === "add-feed"}
         <section aria-labelledby="list-heading" class="page-sheet">
           <!--
@@ -1393,6 +1433,10 @@
   <Sheet title="Add a feed" bind:heading={sheetHeading} onClose={closePage} initial={() => addField}>
     <p>{ADD_INTRO}</p>
     <AddFeed bind:field={addField} feeds={feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} onCancel={closePage} />
+  </Sheet>
+{:else if sheet && route.kind === "new-to-feeds"}
+  <Sheet title="New to feeds?" bind:heading={sheetHeading} onClose={closePage}>
+    <StarterFeeds onAdded={startersAdded} onCancel={closePage} />
   </Sheet>
 {:else if sheet && route.kind === "edit-feed" && currentFeed}
   {#key currentFeed.id}

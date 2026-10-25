@@ -19,6 +19,7 @@ export const SCREENS: Screen[] = [
   { name: "sign-in", path: "/", signedIn: false },
   { name: "first-visit", path: "/unread", signedIn: true },
   { name: "add-feed", path: "/add-feed", signedIn: true },
+  { name: "new-to-feeds", path: "/new-to-feeds", signedIn: true },
   {
     name: "articles",
     path: "/all",

@@ -9,6 +9,7 @@ describe("addresses", () => {
     expect(parse("/settings")).toEqual({ kind: "settings" });
     expect(parse("/settings/feed-health")).toEqual({ kind: "feed-health" });
     expect(parse("/add-feed")).toEqual({ kind: "add-feed" });
+    expect(parse("/new-to-feeds")).toEqual({ kind: "new-to-feeds" });
     expect(parse("/feeds/12")).toEqual({ kind: "feed", id: 12 });
     expect(parse("/folders/4")).toEqual({ kind: "folder", id: 4 });
     expect(parse("/feeds/12/edit")).toEqual({ kind: "edit-feed", id: 12 });
@@ -37,6 +38,7 @@ describe("addresses", () => {
     expect(pathFor({ kind: "feed", id: 3 })).toBe("/feeds/3");
     expect(titleFor({ kind: "feed", id: 3 }, "Quiet Notes")).toBe("Quiet Notes · nine turtles");
     expect(titleFor({ kind: "add-feed" })).toBe("Add a feed · nine turtles");
+    expect(titleFor({ kind: "new-to-feeds" })).toBe("New to feeds? · nine turtles");
     expect(pathFor({ kind: "edit-folder", id: 4 })).toBe("/folders/4/edit");
     expect(titleFor({ kind: "folder", id: 4 }, "Tech")).toBe("Tech · nine turtles");
     expect(titleFor({ kind: "edit-feed", id: 3 })).toBe("Edit feed · nine turtles");

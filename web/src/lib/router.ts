@@ -12,6 +12,7 @@ export type Route =
   | { kind: "edit-feed"; id: number }
   | { kind: "edit-folder"; id: number }
   | { kind: "add-feed" }
+  | { kind: "new-to-feeds" }
   | { kind: "settings" }
   | { kind: "feed-health" };
 
@@ -23,6 +24,7 @@ export function parse(path: string): Route {
   if (name === "settings") return { kind: "settings" };
   if (name === "settings/feed-health") return { kind: "feed-health" };
   if (name === "add-feed") return { kind: "add-feed" };
+  if (name === "new-to-feeds") return { kind: "new-to-feeds" };
   const place = name.match(/^(feeds|folders)\/([1-9][0-9]{0,15})(\/edit)?$/);
   if (place) {
     const id = Number(place[2]);
@@ -41,6 +43,8 @@ export function pathFor(route: Route): string {
       return "/settings/feed-health";
     case "add-feed":
       return "/add-feed";
+    case "new-to-feeds":
+      return "/new-to-feeds";
     case "feed":
       return `/feeds/${route.id}`;
     case "folder":
@@ -63,6 +67,8 @@ export function nameFor(route: Route, placeName?: string): string {
       return "Feed health";
     case "add-feed":
       return "Add a feed";
+    case "new-to-feeds":
+      return "New to feeds?";
     case "feed":
       return placeName || "Feed";
     case "folder":

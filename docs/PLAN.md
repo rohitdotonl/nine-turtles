@@ -376,7 +376,7 @@ each with screenshots:
 | Feed health page | ✅ 25 October 2026 | Milestone 11, SPEC section 17, decision 0071 |
 | Backups and moving hosts | ⬜ | Milestone 3 above, `docs/ENGINEERING.md` → "Hosting" |
 | The yearly clean-up of unstarred articles | ⬜ | SPEC section 23 (after backups) |
-| The "New to feeds?" guide page | ⬜ | SPEC section 2 |
+| The "New to feeds?" guide page | ✅ 25 October 2026 | SPEC section 2, decision 0079 |
 | A tab left open across an update keeps working | ⬜ | `docs/ENGINEERING.md` (decision 0022) |
 
 ## V2: YouTube videos
