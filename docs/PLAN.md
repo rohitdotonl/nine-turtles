@@ -186,7 +186,7 @@ In V1, the daily check reports failing feeds instead (from Milestone 8).
 ## 12. WebSub ✅ (V2, built 25 October 2026)
 
 - Subscribe to hubs, verify, check signatures, renew, reduced backup polling
-  (decision 0067).
+  (decision 0068).
 
 **You can try:** follow a WebSub blog and see new posts arrive within minutes.
 

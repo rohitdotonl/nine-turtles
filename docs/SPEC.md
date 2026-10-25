@@ -232,13 +232,13 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 
 ## 12. WebSub (instant updates from publishers who offer it)
 
-*Built in V2 (25 October 2026, decision 0067).*
+*Built in V2 (25 October 2026, decision 0068).*
 
 **What it does**
 - Some publishers announce new articles the moment they publish, through a service called a "hub" (the standard is called WebSub). When a feed names a hub, nine turtles signs up with it, and the hub sends each new article to nine turtles as it's published.
 - Nothing on screen changes: new articles wait for the reader as always ("New items · press r", section 13). They simply arrive sooner.
 - nine turtles checks that announcements are genuine: each feed's subscription has its own secret, and an announcement without the right signature is ignored.
-- Subscriptions are renewed a day before they expire. A hub that never confirms is asked again once a week.
+- Subscriptions are renewed a day before they expire (halfway through a short one). A hub that never confirms is asked again once a week.
 - Regular checking continues as a backup, at most twice a day while the hub delivers.
 - It only works where hubs can reach nine turtles: the live app, at `https://app.nineturtles.app` (the setting `NINE_TURTLES_PUBLIC_URL`). A copy running on a computer without it checks feeds as before.
 
@@ -409,7 +409,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 - No custom swipes on list items.
 - Article toolbar at the bottom, within thumb reach and clear of the phone's home indicator, solid in the page's color with a faint line along its top so the text ends at an edge: five quiet icons without words, each a 44px tap with its name for screen readers: previous · next · Aa · star · More (…). The five always share the bar evenly: on the first article Previous (and on the last, Next) keeps its arrow in its place, faded, and does nothing; screen readers hear it as dimmed (decision 0047). More opens upwards with Share (or Copy link) and Mark unread. Aa opens the reading panel (section 7) as a sheet along the bottom of the screen. Article text reads a little smaller than on a wide screen, so a line keeps about 40 characters.
 - Every tap target is at least 44 pixels.
-- Can be added to the home screen on iPhone and Android; it then opens full-screen with its own icon: a lowercase "n" in the reading serif, dark on white.
+- Can be added to the home screen on iPhone and Android; it then opens full-screen with its own icon: nine small turtles seen from the side, three rows of three with the middle row a little to the right, dark on white (decision 0067). The same turtles mark the browser tab, on white by day and on near-black by night.
 - Without a connection, the app still opens and says plainly that nine turtles can't be reached. It keeps a copy of the app itself, never of your articles.
 
 **How to check it**

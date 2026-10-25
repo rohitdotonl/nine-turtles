@@ -1,4 +1,4 @@
-# 0067: WebSub, instant updates from publishers who offer them
+# 0068: WebSub, instant updates from publishers who offer them
 
 *25 October 2026. Asked for by the owner (V2, Milestone 12; SPEC section 12).*
 
@@ -25,10 +25,14 @@ so new articles arrive within minutes instead of at the next check.
 - **Fat and thin pings:** a delivery holding articles stores them at once
   (as a check would). One that doesn't (some hubs only say "it changed")
   makes the feed due, costing the publisher one ordinary check, never
-  sooner than 30 minutes after the last one.
+  sooner than 30 minutes after the last one, and not at all while the feed
+  is failing or the publisher asked nine turtles to slow down (their wait
+  wins).
 - **Leases:** nine turtles asks for 10 days and believes between an hour and
   30 days. It renews a day before the end, at most once a day, five per
-  round. A hub that never confirms, or let a lease run out, is asked again
+  round, in the background so a slow hub never delays feed checks. A lease
+  of two days or less is renewed in its second half instead, at most once
+  per half, so a one-day lease doesn't lapse. A hub that never confirms, or let a lease run out, is asked again
   once a week.
 - **Backup polling:** while a lease is active, the regular check waits at
   least 12 hours (its own rhythm if that's longer, up to a day).

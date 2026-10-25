@@ -41,7 +41,7 @@ whatever the lock files say.*
 | tower-http | 0.7 | Standard web-server extras: compression, security headers | Approved |
 | thiserror | 2.x | Clear error messages inside the code | Approved |
 | getrandom | 0.4 | Asks the computer for unguessable random numbers, for each signed-in device's ticket. Comes with argon2 already | Approved (October 2026, Milestone 2) |
-| hmac, sha1, sha2 | 0.13, 0.11, 0.11 | Check that WebSub deliveries really come from the publisher's hub (their signature). Already came with other libraries | Approved (the owner's yes on 25 October 2026, decision 0067) |
+| hmac, sha1, sha2 | 0.13, 0.11, 0.11 | Check that WebSub deliveries really come from the publisher's hub (their signature). Already came with other libraries | Approved (the owner's yes on 25 October 2026, decision 0068) |
 | blake2 | 0.11 | A fast scrambler: nine turtles stores only a scrambled copy of each device's ticket. Comes with argon2 already | Approved (October 2026, Milestone 2) |
 
 SQLite itself (and its FTS5 search) comes bundled with sqlx.

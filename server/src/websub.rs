@@ -1,5 +1,5 @@
 //! WebSub: instant updates from publishers who offer them (SPEC section 12,
-//! ENGINEERING.md → "Fetching feeds", decision 0067).
+//! ENGINEERING.md → "Fetching feeds", decision 0068).
 //!
 //! Some feeds name a "hub", a service that announces new articles the moment
 //! they're published. nine turtles signs up with it, and the hub then sends
@@ -15,8 +15,8 @@
 //!   a correct signature is ignored (`deliver`). A delivery holding articles
 //!   stores them at once; one that only says "something changed" makes the
 //!   feed due for a check in the next round.
-//! - **Renewing:** a day before the lease ends, nine turtles asks again
-//!   (`renew`). A hub that never confirms is asked again only once a week.
+//! - **Renewing:** a day before the lease ends (halfway through a lease of
+//!   two days or less), nine turtles asks again (`renew`). A hub that never confirms is asked again only once a week.
 //! - **Backup:** while a hub delivers, regular checking continues, less often
 //!   (at most twice a day; `checking::worked`), in case a delivery is lost.
 //!
@@ -133,12 +133,12 @@ pub async fn offered(
         return Ok(());
     };
     sqlx::query(
-        "INSERT INTO websub (feed_id, hub, topic, token, secret, asked_at, active_until)
-         SELECT ?, ?, ?, ?, ?, ?, NULL WHERE EXISTS
+        "INSERT INTO websub (feed_id, hub, topic, token, secret, asked_at)
+         SELECT ?, ?, ?, ?, ?, ? WHERE EXISTS
              (SELECT 1 FROM feeds WHERE id = ? AND unsubscribed_at IS NULL)
          ON CONFLICT (feed_id) DO UPDATE SET hub = excluded.hub, topic = excluded.topic,
              token = excluded.token, secret = excluded.secret, asked_at = excluded.asked_at,
-             active_until = NULL",
+             active_until = NULL, lease = NULL",
     )
     .bind(feed_id)
     .bind(hub.hub.as_str())
@@ -157,8 +157,10 @@ pub async fn offered(
 }
 
 /// Asks again the hubs whose lease ends within a day (once a day at most),
-/// and those that never confirmed or have stopped (once a week). A few per
-/// round, so they're spread out. Runs at the start of each round.
+/// and those that never confirmed or have stopped (once a week). A short
+/// lease is renewed in its second half instead, at most once per half, so
+/// even an hour's lease never lapses. A few per round, so they're spread
+/// out, and in the background, so a slow hub never holds up feed checks.
 pub async fn renew(state: &AppState, now: i64) -> Result<(), sqlx::Error> {
     let Some(public_url) = &state.config.public_url else {
         return Ok(());
@@ -166,13 +168,18 @@ pub async fn renew(state: &AppState, now: i64) -> Result<(), sqlx::Error> {
     let due: Vec<Subscription> = sqlx::query_as(
         "SELECT websub.* FROM websub JOIN feeds ON feeds.id = websub.feed_id
          WHERE feeds.unsubscribed_at IS NULL AND (
-             (active_until > ? AND active_until <= ? AND asked_at <= ?)
+             (active_until > ? AND active_until - ? <= MIN(?, COALESCE(lease, ?) / 2)
+                 AND asked_at <= ? - MIN(?, COALESCE(lease, ?) / 2))
              OR ((active_until IS NULL OR active_until <= ?) AND asked_at <= ?))
          ORDER BY asked_at LIMIT ?",
     )
     .bind(now)
-    .bind(now + RENEW_BEFORE)
-    .bind(now - DAY)
+    .bind(now)
+    .bind(RENEW_BEFORE)
+    .bind(LEASE)
+    .bind(now)
+    .bind(DAY)
+    .bind(LEASE)
     .bind(now)
     .bind(now - ASK_AGAIN_AFTER)
     .bind(RENEWALS_PER_ROUND)
@@ -190,16 +197,19 @@ pub async fn renew(state: &AppState, now: i64) -> Result<(), sqlx::Error> {
         ) else {
             continue;
         };
-        ask(
-            state,
-            subscription.feed_id,
-            &hub,
-            &topic,
-            &subscription.token,
-            &subscription.secret,
-            public_url,
-        )
-        .await;
+        let (state, public_url) = (state.clone(), public_url.clone());
+        tokio::spawn(async move {
+            ask(
+                &state,
+                subscription.feed_id,
+                &hub,
+                &topic,
+                &subscription.token,
+                &subscription.secret,
+                &public_url,
+            )
+            .await;
+        });
     }
     Ok(())
 }
@@ -288,11 +298,13 @@ async fn verify(
                 .and_then(|seconds| seconds.trim().parse::<i64>().ok())
                 .unwrap_or(LEASE)
                 .clamp(SHORTEST_LEASE, LONGEST_LEASE);
-            let saved = sqlx::query("UPDATE websub SET active_until = ? WHERE feed_id = ?")
-                .bind(now + lease)
-                .bind(subscription.feed_id)
-                .execute(&state.db)
-                .await;
+            let saved =
+                sqlx::query("UPDATE websub SET active_until = ?, lease = ? WHERE feed_id = ?")
+                    .bind(now + lease)
+                    .bind(lease)
+                    .bind(subscription.feed_id)
+                    .execute(&state.db)
+                    .await;
             if let Err(error) = saved {
                 return database_problem(&error);
             }
@@ -358,7 +370,7 @@ async fn deliver(
 /// Stores the delivered articles. A delivery that isn't a feed (some hubs
 /// only say "it changed") makes the feed due for a check in the next round
 /// (or 30 minutes after its last one), which costs the publisher one
-/// ordinary check.
+/// ordinary check. A failing feed keeps its longer wait.
 async fn store_delivery(
     state: &AppState,
     subscription: &Subscription,
@@ -371,10 +383,11 @@ async fn store_delivery(
     let Some(parsed) = parsed.filter(|parsed| !parsed.articles.is_empty()) else {
         // Never sooner than 30 minutes after the last check, however often
         // a hub says so: the publisher is still asked politely.
+        // A feed that is failing, or was told to slow down, keeps its wait.
         sqlx::query(
             "UPDATE feeds SET next_check_at =
                  MIN(next_check_at, MAX(?, COALESCE(fetched_at, 0) + ?))
-             WHERE id = ? AND unsubscribed_at IS NULL",
+             WHERE id = ? AND unsubscribed_at IS NULL AND failures = 0",
         )
         .bind(now)
         .bind(SHORTEST_WAIT)

@@ -34,7 +34,7 @@ COPY --from=server /src/server/target/release/nine-turtles /usr/local/bin/nine-t
 # The old name still works in Render's Shell tab (`slowfeed set-password`).
 RUN ln -s nine-turtles /usr/local/bin/slowfeed
 # Render sends visitors to port 10000; the database lives on the disk at /data.
-# WebSub hubs deliver new articles to the public address (decision 0067).
+# WebSub hubs deliver new articles to the public address (decision 0068).
 ENV NINE_TURTLES_LISTEN=0.0.0.0:10000 \
     NINE_TURTLES_DATA_DIR=/data \
     NINE_TURTLES_PUBLIC_URL=https://app.nineturtles.app

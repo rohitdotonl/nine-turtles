@@ -19,6 +19,7 @@ use hmac::{Hmac, KeyInit, Mac};
 use nine_turtles::{
     AppState,
     checking::{self, HOUR},
+    feed::Hub,
     websub::{self, LEASE},
 };
 use reqwest::{Client, Url};
@@ -306,4 +307,207 @@ async fn without_a_public_address_nine_turtles_never_signs_up() {
         .await
         .unwrap();
     assert_eq!(lines, 0);
+}
+
+/// Adds the made-up publisher's feed to a nine turtles that tells hubs a
+/// public address, and returns the feed's number once its hub was asked.
+async fn following_with_a_hub() -> (String, AppState, Shared, i64) {
+    let (site_base, site) = publisher().await;
+    let mut config = common::config();
+    config.public_url = Some(Url::parse("https://nine-turtles.example").unwrap());
+    let (base, state) = common::start_with_state(config).await;
+    let cookie = common::signed_in(&base).await;
+    let added = Client::new()
+        .post(format!("{base}/api/feeds"))
+        .header("cookie", &cookie)
+        .header("sec-fetch-site", "same-origin")
+        .header("content-type", "application/json")
+        .body(json!({ "address": format!("{site_base}/feed.xml") }).to_string())
+        .send()
+        .await
+        .unwrap()
+        .text()
+        .await
+        .unwrap();
+    let added: serde_json::Value = serde_json::from_str(&added).unwrap();
+    asked(&site, 1).await;
+    (base, state, site, added["feed"]["id"].as_i64().unwrap())
+}
+
+fn callback_of(base: &str, form: &HashMap<String, String>) -> String {
+    let path = form["hub.callback"]
+        .strip_prefix("https://nine-turtles.example")
+        .unwrap();
+    format!("{base}{path}")
+}
+
+async fn verify(callback: &str, mode: &str, topic: &str, lease: &str) -> StatusCode {
+    let mut url = Url::parse(callback).unwrap();
+    url.query_pairs_mut().extend_pairs([
+        ("hub.mode", mode),
+        ("hub.topic", topic),
+        ("hub.challenge", "word"),
+        ("hub.lease_seconds", lease),
+    ]);
+    Client::new().get(url).send().await.unwrap().status()
+}
+
+async fn number(state: &AppState, sql: &'static str, feed_id: i64) -> Option<i64> {
+    sqlx::query_scalar(sql)
+        .bind(feed_id)
+        .fetch_one(&state.db)
+        .await
+        .unwrap()
+}
+
+#[tokio::test]
+async fn a_ping_never_overrides_a_publishers_request_to_slow_down() {
+    let (base, state, site, feed_id) = following_with_a_hub().await;
+    let form = asked(&site, 1).await.remove(0);
+    let callback = callback_of(&base, &form);
+    let now = nine_turtles::now();
+    // The publisher said "slow down": the next check is in two days.
+    sqlx::query(
+        "UPDATE feeds SET failures = 1, problem = 'slow-down', next_check_at = ?,
+             fetched_at = ? WHERE id = ?",
+    )
+    .bind(now + 2 * checking::DAY)
+    .bind(now - checking::DAY)
+    .bind(feed_id)
+    .execute(&state.db)
+    .await
+    .unwrap();
+    let answer = Client::new()
+        .post(&callback)
+        .header("x-hub-signature", signature(&form["hub.secret"], ""))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(answer.status(), StatusCode::ACCEPTED);
+    let due = number(
+        &state,
+        "SELECT next_check_at FROM feeds WHERE id = ?",
+        feed_id,
+    )
+    .await;
+    assert_eq!(due, Some(now + 2 * checking::DAY));
+}
+
+#[tokio::test]
+async fn hubs_that_refuse_change_or_disappear_are_handled() {
+    let (base, state, site, feed_id) = following_with_a_hub().await;
+    let first = asked(&site, 1).await.remove(0);
+    let topic = first["hub.topic"].clone();
+    let callback = callback_of(&base, &first);
+    let active = "SELECT active_until FROM websub WHERE feed_id = ?";
+    let lease = "SELECT lease FROM websub WHERE feed_id = ?";
+
+    // Leases are believed between an hour and 30 days.
+    assert_eq!(
+        verify(&callback, "subscribe", &topic, "5").await,
+        StatusCode::OK
+    );
+    assert_eq!(number(&state, lease, feed_id).await, Some(HOUR));
+    let years = (400 * checking::DAY).to_string();
+    assert_eq!(
+        verify(&callback, "subscribe", &topic, &years).await,
+        StatusCode::OK
+    );
+    assert_eq!(
+        number(&state, lease, feed_id).await,
+        Some(30 * checking::DAY)
+    );
+    // nine turtles never agrees to stop while it follows the feed.
+    assert_eq!(
+        verify(&callback, "unsubscribe", &topic, "").await,
+        StatusCode::NOT_FOUND
+    );
+
+    // The hub says no: back to ordinary checks, and asked again only after a week.
+    assert_eq!(
+        verify(&callback, "denied", &topic, "").await,
+        StatusCode::OK
+    );
+    assert_eq!(number(&state, active, feed_id).await, None);
+    let now = nine_turtles::now();
+    assert!(!websub::delivering(&state.db, feed_id, now).await.unwrap());
+    websub::renew(&state, now + checking::DAY).await.unwrap();
+    tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    assert_eq!(site.lock().unwrap().asked.len(), 1);
+    websub::renew(&state, now + websub::ASK_AGAIN_AFTER + 60)
+        .await
+        .unwrap();
+    let again = asked(&site, 2).await.remove(1);
+    assert_eq!(again["hub.callback"], first["hub.callback"]);
+
+    // The feed names another hub: a fresh address and secret; the old
+    // address is no longer recognized.
+    let site_base = site.lock().unwrap().base.clone();
+    let moved = Hub {
+        hub: Url::parse(&format!("{site_base}/hub?new")).unwrap(),
+        topic: Url::parse(&topic).unwrap(),
+    };
+    websub::offered(&state, feed_id, Some(&moved), now)
+        .await
+        .unwrap();
+    let third = asked(&site, 3).await.remove(2);
+    assert_ne!(third["hub.callback"], first["hub.callback"]);
+    assert_ne!(third["hub.secret"], first["hub.secret"]);
+    assert_eq!(
+        verify(&callback, "subscribe", &topic, "86400").await,
+        StatusCode::NOT_FOUND
+    );
+    // Offered the same hub again: nothing new is asked.
+    websub::offered(&state, feed_id, Some(&moved), now)
+        .await
+        .unwrap();
+    assert_eq!(site.lock().unwrap().asked.len(), 3);
+
+    // The feed stops naming a hub: the subscription is forgotten.
+    websub::offered(&state, feed_id, None, now).await.unwrap();
+    let lines = number(
+        &state,
+        "SELECT COUNT(*) FROM websub WHERE feed_id = ?",
+        feed_id,
+    )
+    .await;
+    assert_eq!(lines, Some(0));
+}
+
+#[tokio::test]
+async fn unsubscribing_from_a_feed_with_a_hub_clears_it_as_usual() {
+    let (base, state, site, feed_id) = following_with_a_hub().await;
+    let form = asked(&site, 1).await.remove(0);
+    let cookie = common::signed_in(&base).await;
+    let gone = Client::new()
+        .post(format!("{base}/api/feeds/{feed_id}/unsubscribe"))
+        .header("cookie", &cookie)
+        .header("sec-fetch-site", "same-origin")
+        .send()
+        .await
+        .unwrap();
+    assert!(gone.status().is_success(), "{}", gone.status());
+    let cleared = nine_turtles::folders::clear_unsubscribed(&state.db, i64::MAX)
+        .await
+        .unwrap();
+    assert_eq!(cleared, 1);
+    let feeds = number(&state, "SELECT COUNT(*) FROM feeds WHERE id = ?", feed_id).await;
+    assert_eq!(feeds, Some(0));
+    let lines = number(
+        &state,
+        "SELECT COUNT(*) FROM websub WHERE feed_id = ?",
+        feed_id,
+    )
+    .await;
+    assert_eq!(lines, Some(0));
+    assert_eq!(
+        verify(
+            &callback_of(&base, &form),
+            "subscribe",
+            &form["hub.topic"],
+            "86400"
+        )
+        .await,
+        StatusCode::NOT_FOUND
+    );
 }
