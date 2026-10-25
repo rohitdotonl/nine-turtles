@@ -1,4 +1,4 @@
-// The keyboard shortcuts (DESIGN.md → "Keyboard", SPEC section 19). This file
+// The keyboard shortcuts (SPEC.md section 19). This file
 // only decides what a key press means; the screens carry it out.
 import type { View } from "./router";
 

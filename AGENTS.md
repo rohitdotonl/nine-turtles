@@ -10,6 +10,7 @@ A quiet, single-user reader for writing on the open web (RSS, Atom, JSON
 Feed). Finite, calm and quiet: the opposite of social media.
 Its name is **nine turtles**, always lowercase (renamed from slowfeed in October 2026, decisions 0056 and 0058). The program is `nine-turtles`, its settings `NINE_TURTLES_*`, the database `nine-turtles.sqlite` and the repository `rohitdotonl/nine-turtles`. For a while the old names still work: `SLOWFEED_*` settings, the `slowfeed` command, the old database file (renamed on start), the old sign-in cookie and saved preferences. The Render service and its address (slowfeed.onrender.com) and disk (`slowfeed-data`) keep the old name.
 **Tiebreaker:** does this make nine turtles feel more like a book, or more like a feed?
+**Design reference:** Apple Books on the Mac and iPhone, and no other app. The floors come first, then Apple Books, then the rest of `docs/DESIGN.md` (DESIGN.md → "Design reference", decision 0059).
 
 ## Project facts
 
@@ -39,7 +40,7 @@ Its name is **nine turtles**, always lowercase (renamed from slowfeed in October
 ### How a change happens
 
 1. When the owner asks for a milestone or a change, start from `docs/PLAN.md` and `docs/SPEC.md` straight away. Don't write a plan for the owner to approve.
-2. Ask the owner when the documents don't settle something or another rule says to ask. For example: a real choice (agreement 4), a new library (agreement 6), a feature or behavior not yet in `docs/SPEC.md`, a change to `docs/DESIGN.md` or to what a check enforces, anything that could lose data, or anything you're unsure of (agreements 9 and 10). Keep working on the parts the question doesn't touch.
+2. Ask the owner when the documents don't settle something or another rule says to ask. For example: a real choice (agreement 4), a new library (agreement 6), a feature or behavior not yet in `docs/SPEC.md`, a change to `docs/DESIGN.md` Part 1 (mission, floors, principles, "Never") or to what a check enforces, anything that could lose data, or anything you're unsure of (agreements 9 and 10). Keep working on the parts the question doesn't touch.
 3. Work on a separate branch; open a pull request with a plain-language summary (what changed, why, how to check it).
 4. Automatic checks run on it. They must all pass.
 5. A second agent that didn't write the change reviews it and posts its findings; fix each or explain why not. Small, low-risk changes get the light review; documents-only changes and tiny fixes outside the full-review areas get none (`docs/operations/second-agent-review.md`).
@@ -57,7 +58,7 @@ summary (or say why none needed it):
 
 | If the change affects… | Update |
 |---|---|
-| What the reader sees or how a feature behaves | `docs/SPEC.md` (`docs/DESIGN.md` only with the owner's approval) |
+| What the reader sees or how a feature behaves | `docs/SPEC.md`; `docs/DESIGN.md` Part 2 when the look changes (Part 1 only with the owner's approval) |
 | A technical rule or choice | `docs/ENGINEERING.md` + a short note in `docs/decisions/` |
 | Libraries | `docs/libraries.md` |
 | Milestone progress | `docs/PLAN.md` |

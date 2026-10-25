@@ -43,7 +43,7 @@ export function dayInWords(date: string): string {
   return CHIP_DAY.format(new Date(year, month - 1, day));
 }
 
-/** A search starts out limited to where you are (DESIGN.md → "Search"). */
+/** A search starts out limited to where you are (SPEC.md section 14). */
 export function scopeFor(route: Route): Scope {
   if (route.kind === "feed") return { kind: "feed", id: route.id };
   if (route.kind === "folder") return { kind: "folder", id: route.id };
