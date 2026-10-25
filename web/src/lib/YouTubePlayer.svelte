@@ -37,7 +37,7 @@
       sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox"
     ></iframe>
   {:else}
-    <button type="button" class="video-play" aria-label="Play video: {title}" aria-describedby="video-note" onclick={() => (playing = true)}>
+    <button type="button" class="video-play" aria-label="Play video: {title}" onclick={() => (playing = true)}>
       <span class="video-mark" aria-hidden="true">
         <svg width="22" height="22" viewBox="0 0 20 20"><path d="M7 4.8v10.4a.6.6 0 0 0 .9.5l8.2-5.2a.6.6 0 0 0 0-1L7.9 4.3a.6.6 0 0 0-.9.5z" fill="currentColor" /></svg>
       </span>
@@ -45,9 +45,6 @@
     </button>
   {/if}
 </div>
-<p id="video-note" class="video-note" lang="en">
-  {playing ? "Playing in YouTube's own player." : "Plays in YouTube's own player. Nothing loads until you press Play."}
-</p>
 
 <style>
   .video {
@@ -95,14 +92,6 @@
   /* The triangle looks centred a little right of the middle, as a play mark does. */
   .video-mark svg {
     margin-left: 3px;
-  }
-  .video-note {
-    margin-top: 0.5rem;
-    font-family: var(--font-sans);
-    font-size: var(--text-small);
-    line-height: 1.4;
-    text-wrap: pretty;
-    color: var(--ink-2);
   }
   @media (forced-colors: active) {
     .video-play {
