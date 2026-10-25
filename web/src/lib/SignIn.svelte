@@ -3,6 +3,7 @@
   nothing about the reader's feeds.
 -->
 <script lang="ts">
+  import Logo from "./Logo.svelte";
   import Icon from "./Icon.svelte";
   import { explain, signIn } from "./session";
 
@@ -31,7 +32,8 @@
 </script>
 
 <main class="flex min-h-screen flex-col items-center justify-center gap-8 px-5">
-  <div class="text-center">
+  <div class="flex flex-col items-center text-center">
+    <div class="mb-5"><Logo width={72} /></div>
     <h1 class="font-serif text-display">nine turtles</h1>
     <p class="mt-3 font-serif text-large text-muted">A quiet place to read.</p>
   </div>

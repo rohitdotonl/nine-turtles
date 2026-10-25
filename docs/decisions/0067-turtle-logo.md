@@ -7,8 +7,10 @@ side (a half-circle shell and a round head each), in three rows of three,
 the middle row a little to the right. It is drawn in one ink, the text
 color: dark on white, light on near-black. It is the app icon on a phone's
 home screen and the icon in the browser tab, for the app and the website
-(which copies the app's icons, decision 0066). Inside the app, the wordmark
-stays words. This replaces the "no logo shape" line of "Name and signature"
+(which copies the app's icons, decision 0066). The owner then asked to see it
+beside the name too, because a phone's browser shows no tab icon. The logo also stands before the
+wordmark: in the app's sidebar, on the sign-in page and in the website's
+top bar. This replaces the "no logo shape" line of "Name and signature"
 in DESIGN.md and the lowercase letter icon of decision 0022.
 
 **Why.** The owner asked for a minimal logo, chose "nine dots, but
@@ -26,3 +28,5 @@ and installing (`apple-touch-icon.png` 180px, `icon-192.png`,
 smaller, so a phone that crops icons to a circle keeps them whole).
 
 **Easy to change:** redraw the SVGs and export the PNGs at those sizes.
+The drawing is also inline in `web/src/lib/Logo.svelte` (the app) and
+`website/src/_includes/base.njk` (the website): change all three together.
