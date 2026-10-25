@@ -286,7 +286,7 @@
         <h3 id="account-heading" class="inset-head">Account</h3>
         <div class="inset-group">
           {#if updates.ready}
-            <!-- Never swapped while you read: the new version starts when you reload, or next time you open nine turtles. -->
+            <!-- Never swapped while you read: the new version starts when you reload, go to another place, or next time you open nine turtles. -->
             <div class="inset-row">
               <p>A new version is ready.</p>
               <button type="button" onclick={() => location.reload()} class="btn btn-small">Reload</button>

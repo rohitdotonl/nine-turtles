@@ -578,7 +578,7 @@ test.describe("adding nine turtles to the home screen", () => {
   });
 });
 
-test("a tab left open across an update is told to reload, and Settings offers the new version", async ({ page, isMobile }) => {
+test("a tab left open across an update is told to reload, switches on the next move, and Settings offers the new version", async ({ page, isMobile }) => {
   test.skip(isMobile, "the same on every width");
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto(new URL("/all", FEEDS_APP).href);
@@ -597,7 +597,19 @@ test("a tab left open across an update is told to reload, and Settings offers th
   await expect(page.getByText("nine turtles was updated. Reload to continue.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Reload", exact: true })).toBeVisible();
 
+  // Going to another place opens the new version there, and the note is gone (decision 0085).
+  await page.evaluate(() => Object.assign(window, { oldPage: true }));
   await page.getByRole("link", { name: "Settings" }).click();
+  await expect(page).toHaveURL(/\/settings$/);
+  await expect.poll(() => page.evaluate(() => "oldPage" in window)).toBe(false);
+  await expect(page.getByText("nine turtles was updated. Reload to continue.")).toHaveCount(0);
+
+  // Already in Settings when another version goes live: it offers Reload once the tab comes back into view.
+  await page.route("**/api/session", async (route) => {
+    const response = await route.fetch();
+    await route.fulfill({ response, headers: { ...response.headers(), "x-nine-turtles-version": "a-newer-version" } });
+  });
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
   await expect(page.getByText("A new version is ready.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Reload", exact: true })).toBeVisible();
 });

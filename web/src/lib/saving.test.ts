@@ -24,6 +24,18 @@ describe("saving a mark while nine turtles is out of reach", () => {
     vi.unstubAllGlobals();
   });
 
+  it("knows marks are unsaved until each is saved or has failed", async () => {
+    server([503, 200]);
+    const { markRead, marksUnsaved } = await load();
+    expect(marksUnsaved()).toBe(false);
+    const saving = markRead([1], true);
+    expect(marksUnsaved()).toBe(true);
+    await vi.advanceTimersByTimeAsync(1_000);
+    await saving;
+    await vi.advanceTimersByTimeAsync(0);
+    expect(marksUnsaved()).toBe(false);
+  });
+
   it("tries again until it's back, then counts as saved", async () => {
     const fetch = server([503, "offline", 200]);
     const { markRead } = await load();

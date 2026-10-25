@@ -65,7 +65,7 @@ written into `DESIGN.md`, `ENGINEERING.md`, `SPEC.md`, `PLAN.md` and
 | Times | Shown in the device's time zone. |
 | Phone milestone order | Unchanged. |
 | Repository (Q27) | Stays public. |
-| New app versions (Q29) | Downloaded quietly; used the next time you open or reload nine turtles. Nothing changes while you read. Settings → Status shows "A new version is ready" with a Reload button. |
+| New app versions (Q29) | Downloaded quietly; used the next time you open or reload nine turtles, or go to another place in a tab left open (decision 0085). Nothing changes while you read. Settings → Status shows "A new version is ready" with a Reload button. |
 | Deleted articles | Remembered by fingerprint (confirmed). |
 | Watching the live app (Q28) | Fully automatic: public status page, diagnostics page behind a read-only key, a scheduled agent check once a day that opens an issue (and a fix when clear). Nothing merges without the owner (they press Merge, or say yes to an agent's brief). Kept agent-neutral: the check's instructions live in the repository (`docs/operations/daily-check.md`) so any agent can follow them. |
 | Pace | One session per milestone. No large multi-agent workflows. |
