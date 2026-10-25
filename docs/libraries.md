@@ -43,6 +43,7 @@ whatever the lock files say.*
 | getrandom | 0.4 | Asks the computer for unguessable random numbers, for each signed-in device's ticket. Comes with argon2 already | Approved (October 2026, Milestone 2) |
 | hmac, sha1, sha2 | 0.13, 0.11, 0.11 | Check that WebSub deliveries really come from the publisher's hub (their signature), and sign each request to the backup storage (decision 0076). Already came with other libraries | Approved (the owner's yes on 25 October 2026, decision 0069) |
 | blake2 | 0.11 | A fast scrambler: nine turtles stores only a scrambled copy of each device's ticket. Comes with argon2 already | Approved (October 2026, Milestone 2) |
+| lettre | 0.11 | Sends nine turtles' few emails (confirming an address, a new password, a changed address) over plain SMTP, so any email service works (decision 0088). Only its SMTP sending and message-writing parts, encrypted with the rustls that reqwest already uses | Approved (the owner's yes on 25 October 2026, decision 0088) |
 
 SQLite itself (and its FTS5 search) comes bundled with sqlx.
 

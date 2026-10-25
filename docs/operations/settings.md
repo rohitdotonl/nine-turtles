@@ -22,6 +22,11 @@ Changes**. Render restarts nine turtles with the new value (about a minute).
 | `NINE_TURTLES_BACKUP_SECRET` | The storage key's secret (Secret Access Key). Secret. | Yes, for backups | As above. |
 | `NINE_TURTLES_BACKUP_REGION` | The storage's region name. `auto` for Cloudflare R2. | No | `auto`. |
 | `NINE_TURTLES_RESTORE_FROM` | The name of a stored backup to bring back, such as `nightly/2026-10-25.sqlite`. Used only when nine turtles starts with **no database** (a new host, or one moved aside); it never overwrites one. Remove it once restored ([backups.md](backups.md)). | Only when restoring | Nothing is restored. |
+| `NINE_TURTLES_SMTP_HOST` | The email service's SMTP server, such as `smtp-relay.brevo.com` ([email.md](email.md), decision 0088). Not secret. | Yes, for email | No email is sent: no confirmation or password links, no "Forgot your password?", and sign-up can't be Open. Set all four of host, username, password and sender, or none: some but not all stops nine turtles with a message naming the missing ones. Links in emails start with `NINE_TURTLES_PUBLIC_URL`; without it, nothing is sent (said in the log). |
+| `NINE_TURTLES_SMTP_PORT` | The SMTP port. `587` upgrades to encryption (STARTTLS) before the password is sent; `465` is encrypted from the start. | No | `587`. |
+| `NINE_TURTLES_SMTP_USERNAME` | The SMTP login (Brevo: the address ending in `@smtp-brevo.com`). Not secret, but private. | Yes, for email | As for the host. |
+| `NINE_TURTLES_SMTP_PASSWORD` | The SMTP key or password (Brevo: the SMTP key). Secret. | Yes, for email | As for the host. |
+| `NINE_TURTLES_SMTP_FROM` | Who emails come from: an address, with or without a name, such as `nine turtles <hello@nineturtles.app>`. | Yes, for email | As for the host. Something that isn't an address stops nine turtles with a message. |
 | `NINE_TURTLES_LISTEN` | The address and port nine turtles listens on. | Set by the container image to `0.0.0.0:10000`, the port Render expects | `127.0.0.1:8080` (this computer only). |
 
 ## Built in, not settings

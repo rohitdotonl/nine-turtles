@@ -1,0 +1,80 @@
+# Sending email
+
+nine turtles sends a few short emails (decision 0088): the link that confirms
+a new reader's address, the link for a new password, and the link that
+confirms a changed address. Without email, none of these work, and sign-up
+can't be **Open**. This page sets it up with **Brevo**. Any other email
+service that offers "SMTP" works the same way: only the five settings change.
+
+You'll need: your Brevo account, Cloudflare (where nineturtles.app's
+addresses are kept), and Render. About 20 minutes, plus up to a day for
+Brevo to see the new DNS records.
+
+## 1. Get Brevo's SMTP details
+
+1. Sign in to Brevo.
+2. Open the menu under your name (top right) → **SMTP & API**.
+3. Choose the **SMTP** tab. It shows:
+   - **SMTP server:** `smtp-relay.brevo.com`
+   - **Port:** `587`
+   - **Login:** an address that ends in `@smtp-brevo.com`
+4. Press **Generate a new SMTP key**, name it `nine turtles`, and copy the
+   key it shows. It's shown once: keep it until step 3. It's a secret, like
+   a password: never put it in GitHub or a chat.
+
+## 2. Let Brevo send as nineturtles.app
+
+So emails come from `hello@nineturtles.app` and aren't treated as spam:
+
+1. In Brevo, open **Senders, Domains & Dedicated IPs** → **Domains** →
+   **Add a domain**, and type `nineturtles.app`.
+2. Brevo lists a few **DNS records** (lines to add to the domain's address
+   book): usually a code to prove it's yours, DKIM and DMARC. Keep the page
+   open.
+3. In Cloudflare, open **nineturtles.app** → **DNS** → **Records**. For each
+   line Brevo lists, press **Add record** and copy its **Type**, **Name** and
+   **Value** exactly. Leave the cloud grey (**DNS only**).
+4. Back in Brevo, press **Verify** (or **Authenticate this email domain**).
+   If it isn't green yet, try again later: Cloudflare's records can take a
+   while to be seen.
+5. In **Senders**, add `hello@nineturtles.app` as a sender, with the name
+   `nine turtles`.
+6. nine turtles' emails never track anyone. If Brevo's transactional
+   settings offer link or open tracking, switch them off.
+
+## 3. Give nine turtles the five settings
+
+In Render, open the nine turtles service → **Environment** → **Edit**, and
+add:
+
+| Name | Value |
+|---|---|
+| `NINE_TURTLES_SMTP_HOST` | `smtp-relay.brevo.com` |
+| `NINE_TURTLES_SMTP_PORT` | `587` |
+| `NINE_TURTLES_SMTP_USERNAME` | the **Login** from step 1 |
+| `NINE_TURTLES_SMTP_PASSWORD` | the **SMTP key** from step 1 |
+| `NINE_TURTLES_SMTP_FROM` | `nine turtles <hello@nineturtles.app>` |
+
+Press **Save Changes**. Render restarts nine turtles (about a minute).
+`NINE_TURTLES_PUBLIC_URL` must be set too (the container image sets it), as
+every link starts with it.
+
+## 4. Check it works
+
+1. Open nine turtles in a private window. The sign-in page now shows
+   **Forgot your password?**.
+2. Press it, type your own email (the one in Settings › Readers) and press
+   **Send link**. An email "A new password for nine turtles" arrives in a
+   minute or two. You don't have to use the link: your password stays as it
+   is until you do.
+3. In Settings › Sign-up, **Open** can now be chosen.
+
+If no email arrives, look in Render's **Logs** for "couldn't send": the line
+says what went wrong (a mistyped key, for example). If only some settings
+are set, nine turtles doesn't start, and the log names the missing ones.
+
+## Moving to another email service
+
+Get that service's SMTP server, port, login and key, change the four
+settings in Render, and authenticate the domain there instead. Nothing else
+changes.

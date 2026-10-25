@@ -16,4 +16,5 @@ plain steps, no assumed knowledge of a particular tool.
 | [website-and-domain.md](website-and-domain.md) | The website at nineturtles.app, the app at app.nineturtles.app, and the owner's one-time setup |
 
 - `backups.md`: nightly backups, switching them on, checking them and restoring a copy (decision 0076).
+- `email.md`: switching on email (Brevo, or any SMTP service), for confirmation and password links (decision 0088).
 - `moving-hosts.md`: moving nine turtles to another host with everything kept.

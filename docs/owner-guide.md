@@ -249,6 +249,7 @@ each one, what ties us to it, and what leaving would take.
 | **GitHub Pages** (the website) | Hosts nineturtles.app | The website is plain files built from `website/` | Build it anywhere (`npm run build` in `website/`), upload the `_site` folder to another host, and point the domain's records there (`docs/operations/website-and-domain.md`) |
 | **Libraries** | Ready-made code inside nine turtles | Standard, widely used choices, listed in `docs/libraries.md` | Replace one at a time, with your approval |
 | **Cloudflare R2** (backups) | Stores the nightly copies of the database | Any S3-compatible storage works; nine turtles speaks S3 itself, and the copies are ordinary SQLite files | Make a bucket at another provider (Backblaze B2, for example) and change five settings (`docs/operations/backups.md`) |
+| **Brevo** (email) | Sends nine turtles' few emails: confirming a new reader's address, a new password, a changed email (decision 0088) | nine turtles speaks plain SMTP, which every email service offers | Get another service's SMTP details and change the five `NINE_TURTLES_SMTP_*` settings (`docs/operations/email.md`) |
 | **Your reading data** | Your feeds, folders and starred articles | OPML export (feeds and folders) and JSON Feed export (starred articles), both standard formats | Download both from Settings → Your data and import them into another reader |
 
 **The rule agents follow:** nothing important lives only inside one tool's

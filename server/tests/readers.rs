@@ -324,7 +324,7 @@ async fn open_sign_up_is_refused_until_confirmation_emails_work() {
     assert_eq!(switched.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         switched.text().await.unwrap(),
-        r#"{"error":"open-not-yet"}"#
+        r#"{"error":"open-needs-email"}"#
     );
 
     // Even if the stored setting somehow said "open", nobody joins by it.

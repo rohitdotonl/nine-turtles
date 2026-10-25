@@ -198,7 +198,7 @@ impl Default for PasswordChecks {
 
 impl PasswordChecks {
     /// Where a check of `account`'s password waits its turn.
-    fn line_for(&self, account: &Account) -> &Semaphore {
+    pub(crate) fn line_for(&self, account: &Account) -> &Semaphore {
         match account {
             Account::Owner => &self.owner,
             Account::Email(_) => &self.others,
@@ -265,7 +265,7 @@ fn nobodys_password() -> &'static str {
 /// Whether this device is signed in, and (if so) the version for Status.
 async fn session(State(state): State<AppState>, headers: HeaderMap) -> Response {
     let Some(token) = cookie_token(&headers) else {
-        return signed_out();
+        return signed_out(&state).await;
     };
     let hash = scramble(&token);
     let now = now();
@@ -281,17 +281,19 @@ async fn session(State(state): State<AppState>, headers: HeaderMap) -> Response 
     .await;
     let (last_used, owner, email) = match found {
         Ok(Some(found)) => found,
-        Ok(None) => return signed_out(),
+        Ok(None) => return signed_out(&state).await,
         Err(error) => return database_problem("checking a sign-in", &error),
     };
 
-    // Whether this is the owner (who alone sees Settings › Readers), and
-    // the email they sign in with, if they have one.
+    // Whether this is the owner (who alone sees Settings › Readers), the
+    // email they sign in with, if they have one, and whether nine turtles can
+    // send email (to change that email, decision 0088).
     let body = Json(json!({
         "signed_in": true,
         "version": crate::VERSION,
         "owner": owner,
         "email": email,
+        "email_sending": state.mailer.is_some(),
     }));
     if now - last_used < RENEW_AFTER {
         return body.into_response();
@@ -351,9 +353,24 @@ async fn sign_in(State(state): State<AppState>, Json(form): Json<SignIn>) -> Res
     // A sign-in by email is counted under that email and checked on the
     // shared line whoever has it, the owner too, so neither the answer nor
     // the time taken tells a stranger which email is the owner's. (The
-    // owner then has two separate sets of five tries: decision 0087.)
+    // owner then has two separate sets of five tries: decision 0087.) An
+    // email with no account may be one signed up for while Open and not yet
+    // confirmed: its line is the one waiting with the link (decision 0088).
+    let mut waiting = false;
     let (account, person, stored) = match account {
-        Account::Owner => (Account::Owner, Some(OWNER), owners_line),
+        // Once the owner has a password of their own (set by a password
+        // link, decision 0088), it replaces NINE_TURTLES_PASSWORD_HASH here too.
+        Account::Owner => {
+            let own: Result<Option<Option<String>>, sqlx::Error> =
+                sqlx::query_scalar("SELECT password_hash FROM people WHERE id = ?")
+                    .bind(OWNER)
+                    .fetch_optional(&state.db)
+                    .await;
+            match own {
+                Ok(own) => (Account::Owner, Some(OWNER), own.flatten().or(owners_line)),
+                Err(error) => return database_problem("finding the owner", &error),
+            }
+        }
         Account::Email(email) => {
             let found: Result<Option<(i64, bool, Option<String>)>, sqlx::Error> = sqlx::query_as(
                 "SELECT id, owner, password_hash FROM people WHERE email = ? COLLATE NOCASE",
@@ -372,7 +389,13 @@ async fn sign_in(State(state): State<AppState>, Json(form): Json<SignIn>) -> Res
                     };
                     (Account::Email(email), Some(person), stored)
                 }
-                Ok(None) => (Account::Email(email), None, None),
+                Ok(None) => match waiting_sign_up(&state.db, &email).await {
+                    Ok(line) => {
+                        waiting = line.is_some();
+                        (Account::Email(email), None, line)
+                    }
+                    Err(error) => return database_problem("finding a sign-up", &error),
+                },
                 Err(error) => return database_problem("finding a reader", &error),
             }
         }
@@ -391,6 +414,7 @@ async fn sign_in(State(state): State<AppState>, Json(form): Json<SignIn>) -> Res
     }
 
     let someones = stored.is_some();
+    let line = stored.clone();
     let matched = {
         // Only closed if the app is stopping.
         let Ok(_turn) = state.password_checks.line_for(&account).acquire().await else {
@@ -398,14 +422,33 @@ async fn sign_in(State(state): State<AppState>, Json(form): Json<SignIn>) -> Res
         };
         let password = form.password;
         tokio::task::spawn_blocking(move || {
-            let stored = stored.unwrap_or_else(|| nobodys_password().to_owned());
+            let stored = line.unwrap_or_else(|| nobodys_password().to_owned());
             crate::password::matches(&password, &stored)
         })
         .await
         .unwrap_or(false)
     };
 
+    // The right password for an account not yet confirmed: said calmly, and
+    // the link sent again (within the address's hourly share). Only someone
+    // who knows the password learns the account is waiting.
     let mut limiters = state.limiter.lock().await;
+    if waiting && matched {
+        limiters.right(&account);
+        drop(limiters);
+        let Account::Email(email) = &account else {
+            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+        };
+        let sent = crate::accounts::send_sign_up_link(&state, email, &stored.unwrap_or_default())
+            .await
+            .unwrap_or(false);
+        return (
+            StatusCode::FORBIDDEN,
+            Json(json!({ "error": "unconfirmed", "sent": sent })),
+        )
+            .into_response();
+    }
+
     let Some(person) = person.filter(|_| someones && matched) else {
         state
             .wrong_passwords
@@ -438,6 +481,60 @@ async fn sign_in(State(state): State<AppState>, Json(form): Json<SignIn>) -> Res
         Ok(None) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
         Err(error) => database_problem("saving a sign-in", &error),
     }
+}
+
+/// Sign-in's count, for the other places a password is checked
+/// (`accounts.rs`): checks the count for `account` and, unless it has to
+/// wait, records this try as wrong before any password is checked (forgotten with
+/// `Limiters::right` if it turns out right), so tries sent together can't
+/// race past the limit. The lock is held only for this. Answers how long to
+/// wait, if this try has to.
+pub(crate) async fn count_try(state: &AppState, account: &Account) -> Option<Duration> {
+    let mut limiters = state.limiter.lock().await;
+    if let Some(wait) = limiters.wait(account, Instant::now()) {
+        return Some(wait);
+    }
+    limiters.wrong(account.clone(), Instant::now());
+    None
+}
+
+/// Checks `password` against `stored` (or, with none, a line nobody chose,
+/// so it takes as long), waiting its turn in `account`'s line of the
+/// bounded password checks. `None` only if the app is stopping.
+pub(crate) async fn check_password(
+    state: &AppState,
+    account: &Account,
+    password: String,
+    stored: Option<String>,
+) -> Option<bool> {
+    let _turn = state
+        .password_checks
+        .line_for(account)
+        .acquire()
+        .await
+        .ok()?;
+    let matched = tokio::task::spawn_blocking(move || {
+        let stored = stored.unwrap_or_else(|| nobodys_password().to_owned());
+        crate::password::matches(&password, &stored)
+    })
+    .await
+    .unwrap_or(false);
+    Some(matched)
+}
+
+/// The scrambled password waiting with the newest unused, unexpired link
+/// that would make an account for `email` (Open sign-up, decision 0088).
+async fn waiting_sign_up(db: &SqlitePool, email: &str) -> Result<Option<String>, sqlx::Error> {
+    sqlx::query_scalar(
+        "SELECT password_hash FROM email_links
+         WHERE purpose = 'sign-up' AND email = ? COLLATE NOCASE AND used = 0 AND expires_at > ?
+         ORDER BY created_at DESC, id DESC LIMIT 1",
+    )
+    .bind(email)
+    .bind(now())
+    .fetch_optional(db)
+    .await
+    .map(Option::flatten)
 }
 
 /// Signs a new device in for reader `person`: answers the ticket for its
@@ -500,11 +597,19 @@ pub async fn signed_in_devices(state: &AppState) -> Result<i64, sqlx::Error> {
         .await
 }
 
-fn signed_out() -> Response {
-    Json(json!({ "signed_in": false })).into_response()
+/// Not signed in: and whether the sign-in page may offer "Forgot your
+/// password?" (nine turtles can send email) and "Sign up" (sign-up is Open).
+async fn signed_out(state: &AppState) -> Response {
+    let open = crate::people::open_for_anyone(state).await.unwrap_or(false);
+    Json(json!({
+        "signed_in": false,
+        "email_sending": state.mailer.is_some(),
+        "sign_up_open": open,
+    }))
+    .into_response()
 }
 
-fn wait_response(wait: Duration) -> Response {
+pub(crate) fn wait_response(wait: Duration) -> Response {
     // Rounded up, so "try again in a minute" never comes a second early.
     let seconds = (wait.as_secs() + u64::from(wait.subsec_nanos() > 0)).max(1);
     (

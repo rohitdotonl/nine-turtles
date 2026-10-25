@@ -1,16 +1,18 @@
 // The readers of this nine turtles, and how new ones join (SPEC sections 1
 // and 18, decision 0087). The owner sees everyone's email and when they
 // joined (never what they read), sets their own email, and chooses whether
-// anyone may sign up: Closed, or with an invite link. Open waits for
-// confirmation emails. The sign-up page itself uses `signUp`.
+// anyone may sign up: Closed, with an invite link, or Open, which needs
+// nine turtles to send confirmation emails (decision 0088). The sign-up page
+// itself uses `signUp`.
 
 import { api } from "./updates.svelte";
 
 export type Person = { id: number; email: string | null; owner: boolean; createdAt: number };
 
-export type SignUpMode = "closed" | "invite";
+export type SignUpMode = "closed" | "invite" | "open";
 
-export type SignUpSettings = { mode: SignUpMode; inviteMadeAt: number | null };
+/** `openAvailable`: nine turtles can send email, so Open may be chosen. */
+export type SignUpSettings = { mode: SignUpMode; inviteMadeAt: number | null; openAvailable: boolean };
 
 /** The shortest password a new reader may choose. */
 export const PASSWORD_MINIMUM = 12;
@@ -33,12 +35,13 @@ export async function signUpSettings(): Promise<SignUpSettings> {
   if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
   const body: unknown = await response.json();
   return {
-    mode: isRecord(body) && body.sign_up === "invite" ? "invite" : "closed",
+    mode: isRecord(body) && (body.sign_up === "invite" || body.sign_up === "open") ? body.sign_up : "closed",
     inviteMadeAt: isRecord(body) && typeof body.invite_made_at === "number" ? body.invite_made_at : null,
+    openAvailable: isRecord(body) && body.open_available === true,
   };
 }
 
-/** Closed (which also forgets the invite link) or Invite link. */
+/** Closed (which also forgets the invite link), Invite link, or Open (only while email can be sent). */
 export async function switchSignUp(mode: SignUpMode): Promise<void> {
   const response = await api("/api/sign-up/switch", {
     method: "POST",
@@ -90,8 +93,9 @@ export async function setOwnEmail(email: string): Promise<EmailResult> {
   return error === "email" || error === "already" ? error : "unreachable";
 }
 
+/** `confirm`: sign-up is Open, so a link went to this address (the account is made when it's followed). */
 export type SignUpResult =
-  | { ok: true }
+  | { ok: true; confirm?: string }
   | { ok: false; reason: "closed" | "email" | "password-short" | "password-long" | "already" | "too-many" | "unreachable" };
 
 export async function signUp(email: string, password: string, invite: string): Promise<SignUpResult> {
@@ -105,6 +109,7 @@ export async function signUp(email: string, password: string, invite: string): P
   } catch {
     return { ok: false, reason: "unreachable" };
   }
+  if (response.status === 202) return { ok: true, confirm: email };
   if (response.ok) return { ok: true };
   const error = await errorOf(response);
   switch (error) {
@@ -146,11 +151,11 @@ export function plausibleEmail(text: string): boolean {
   return text.length <= 254 && parts.length === 2 && parts[0] !== "" && parts[1] !== "" && !/[\s\p{Cc}]/u.test(text);
 }
 
-async function errorOf(response: Response): Promise<unknown> {
+export async function errorOf(response: Response): Promise<unknown> {
   const body: unknown = await response.json().catch(() => null);
   return isRecord(body) ? body.error : undefined;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }

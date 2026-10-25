@@ -3,10 +3,11 @@
   Settings that only the owner sees. Readers: the owner's own email (to sign
   in with, beside the password alone) and everyone with an account, by email
   and when they joined, never what they read. Sign-up: Closed (the default),
-  Invite link, or Open, which is shown but can't be chosen until nine turtles
-  can send confirmation emails. An invite link is made here, shown once with
-  a Copy button, and replaced by making a new one. Until the owner has saved
-  their own email, a line under Sign-up says to save it before sending a link.
+  Invite link, or Open, which can be chosen only while nine turtles can send
+  the emails that confirm an address (decision 0088). An invite link is made
+  here, shown once with a Copy button, and replaced by making a new one. Until
+  the owner has saved their own email, a line under Sign-up says to save it
+  before sending a link.
 -->
 <script lang="ts">
   import { tick } from "svelte";
@@ -32,6 +33,8 @@
   /** Unknown until the server answers. */
   let mode: SignUpMode | undefined = $state();
   let inviteMadeAt: number | null = $state(null);
+  /** nine turtles can send email, so Open may be chosen. */
+  let openAvailable = $state(false);
   /** The new invite link, shown only until Settings closes. */
   let link = $state("");
   let signUpMessage = $state("");
@@ -73,6 +76,7 @@
     (settings) => {
       mode = settings.mode;
       inviteMadeAt = settings.inviteMadeAt;
+      openAvailable = settings.openAvailable;
     },
     () => (signUpMessage = "Couldn't check how sign-up is set. Try again in a moment."),
   );
@@ -118,6 +122,8 @@
         link = "";
         inviteMadeAt = null;
         signUpMessage = "Sign-up is closed. Any invite link no longer works.";
+      } else if (next === "open") {
+        signUpMessage = "Sign-up is open. Anyone can make an account by confirming their email.";
       } else {
         signUpMessage = inviteMadeAt === null ? "Make an invite link to send to someone." : "";
       }
@@ -214,9 +220,9 @@
               name="sign-up"
               value={choice.value}
               checked={mode === choice.value}
-              disabled={mode === undefined || choice.value === "open"}
+              disabled={mode === undefined || (choice.value === "open" && !openAvailable)}
               aria-describedby={choice.value === "open" ? "open-note" : undefined}
-              onchange={() => choice.value !== "open" && choose(choice.value)}
+              onchange={() => choose(choice.value)}
             />
             {choice.label}
           </label>
@@ -250,7 +256,16 @@
     Closed: nobody can make an account. Invite link: anyone you send the link to can, until you make a new link or close
     sign-up; the link is shown only once. At most 20 sign-ups are tried in any hour.
   </p>
-  <p id="open-note" class="inset-foot">Open, for anyone, becomes possible once nine turtles can send confirmation emails.</p>
+  {#if openAvailable}
+    <p id="open-note" class="inset-foot">
+      Open: anyone can, once they open the link emailed to them. Who has joined is in Readers above.
+    </p>
+  {:else}
+    <p id="open-note" class="inset-foot">
+      Open, for anyone, becomes possible once nine turtles can send confirmation emails (the email settings in
+      docs/operations/email.md).
+    </p>
+  {/if}
 </section>
 
 <style>
