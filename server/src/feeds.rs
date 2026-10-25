@@ -25,7 +25,7 @@ use crate::{
     checking, discover, feed,
     fetch::{self, FetchError, Fetched},
     folders::{self, FOLDERS, Folder, MEMBERSHIPS},
-    log, now, search, websub,
+    log, now, rules, search, websub,
 };
 
 /// How many articles the list shows before "Show older items" (SPEC section 6).
@@ -383,7 +383,8 @@ pub async fn make_room(
 /// never misses one and a number never means two articles. One already stored
 /// (same fingerprint, same feed) that the publisher has since edited gets
 /// the new words quietly: it keeps its place in the list, its read mark and
-/// its star (SPEC section 11).
+/// its star (SPEC section 11). The reader's rules then act on the new ones
+/// (SPEC section 27).
 pub async fn store_articles(
     connection: &mut sqlx::SqliteConnection,
     feed_id: i64,
@@ -393,6 +394,10 @@ pub async fn store_articles(
     // An article a feed lists twice counts once, as it's first listed, so
     // a check never flips it back and forth between the two.
     let mut seen = std::collections::HashSet::new();
+    // Every new article is numbered above this; an edited one keeps its number.
+    let before: i64 = sqlx::query_scalar(LATEST)
+        .fetch_one(&mut *connection)
+        .await?;
     for article in articles {
         if !seen.insert(article.fingerprint.as_str()) {
             continue;
@@ -443,7 +448,7 @@ pub async fn store_articles(
             .await?;
         }
     }
-    Ok(())
+    rules::apply_to_new(connection, feed_id, before).await
 }
 
 /// Which articles a list shows (SPEC sections 4 and 6).
@@ -515,6 +520,9 @@ pub struct ArticleRow {
     pub at: i64,
     pub read: bool,
     pub starred: bool,
+    /// A rule (or the reader) muted it: only search, the Muted page and
+    /// Starred show it.
+    pub muted: bool,
 }
 
 /// One page of the item list. `next` says where the next page starts, or is
@@ -557,16 +565,16 @@ pub const LATEST: &str = "SELECT COALESCE(MAX(id), 0) FROM articles";
 /// `+` keeps SQLite from reading the whole feed through its index instead).
 pub const fn new_sql(list: List) -> Option<&'static str> {
     match list {
-        List::All => Some("SELECT EXISTS (SELECT 1 FROM articles WHERE id > ?)"),
+        List::All => Some("SELECT EXISTS (SELECT 1 FROM articles WHERE id > ? AND +muted = 0)"),
         List::Unread => Some(
             "SELECT EXISTS (SELECT 1 FROM articles WHERE id > ? AND +read = 0
                  AND +feed_id NOT IN (SELECT id FROM feeds WHERE river = 1))",
         ),
-        List::Feed(_) => {
-            Some("SELECT EXISTS (SELECT 1 FROM articles WHERE id > ? AND +feed_id = ?)")
-        }
+        List::Feed(_) => Some(
+            "SELECT EXISTS (SELECT 1 FROM articles WHERE id > ? AND +muted = 0 AND +feed_id = ?)",
+        ),
         List::Folder(_) => Some(
-            "SELECT EXISTS (SELECT 1 FROM articles WHERE id > ?
+            "SELECT EXISTS (SELECT 1 FROM articles WHERE id > ? AND +muted = 0
                  AND +feed_id IN (SELECT feed_id FROM feed_folders WHERE folder_id = ?))",
         ),
         // Nothing arrives starred.
@@ -622,13 +630,14 @@ fn parse_cursor(text: &str) -> Option<(i64, i64)> {
 ///
 /// Unread and All leave out feeds the reader has unsubscribed from; Starred
 /// keeps their starred articles (SPEC section 15). Unread also leaves out
-/// feeds that flow past (`river`, set in Edit feed).
+/// feeds that flow past (`river`, set in Edit feed). Only Starred shows muted
+/// articles (muted ones are read, so never in Unread; SPEC section 27).
 macro_rules! list_query {
     ($filter:literal, $past:literal, $order:literal) => {
         concat!(
             "SELECT articles.id, articles.feed_id, feeds.title AS feed_title,
                     articles.title, articles.link, articles.sort_at AS at,
-                    articles.read, articles.starred
+                    articles.read, articles.starred, articles.muted
              FROM articles CROSS JOIN feeds ON feeds.id = articles.feed_id
              WHERE ",
             $filter,
@@ -648,8 +657,16 @@ macro_rules! list_query {
 /// its ID first; every question then takes the cursor (time, id) and the limit.
 pub const fn list_sql(list: List, order: Order) -> &'static str {
     match (list, order) {
-        (List::All, Order::Newest) => list_query!("feeds.unsubscribed_at IS NULL AND", "<", "DESC"),
-        (List::All, Order::Oldest) => list_query!("feeds.unsubscribed_at IS NULL AND", ">", "ASC"),
+        (List::All, Order::Newest) => list_query!(
+            "articles.muted = 0 AND feeds.unsubscribed_at IS NULL AND",
+            "<",
+            "DESC"
+        ),
+        (List::All, Order::Oldest) => list_query!(
+            "articles.muted = 0 AND feeds.unsubscribed_at IS NULL AND",
+            ">",
+            "ASC"
+        ),
         (List::Unread, Order::Newest) => list_query!(
             "articles.read = 0 AND feeds.unsubscribed_at IS NULL AND feeds.river = 0 AND",
             "<",
@@ -662,17 +679,25 @@ pub const fn list_sql(list: List, order: Order) -> &'static str {
         ),
         (List::Starred, Order::Newest) => list_query!("articles.starred = 1 AND", "<", "DESC"),
         (List::Starred, Order::Oldest) => list_query!("articles.starred = 1 AND", ">", "ASC"),
-        (List::Feed(_), Order::Newest) => list_query!("articles.feed_id = ? AND", "<", "DESC"),
-        (List::Feed(_), Order::Oldest) => list_query!("articles.feed_id = ? AND", ">", "ASC"),
+        (List::Feed(_), Order::Newest) => list_query!(
+            "articles.feed_id = ? AND articles.muted = 0 AND",
+            "<",
+            "DESC"
+        ),
+        (List::Feed(_), Order::Oldest) => list_query!(
+            "articles.feed_id = ? AND articles.muted = 0 AND",
+            ">",
+            "ASC"
+        ),
         (List::Folder(_), Order::Newest) => list_query!(
             "+articles.feed_id IN (SELECT feed_id FROM feed_folders WHERE folder_id = ?)
-                 AND feeds.unsubscribed_at IS NULL AND",
+                 AND articles.muted = 0 AND feeds.unsubscribed_at IS NULL AND",
             "<",
             "DESC"
         ),
         (List::Folder(_), Order::Oldest) => list_query!(
             "+articles.feed_id IN (SELECT feed_id FROM feed_folders WHERE folder_id = ?)
-                 AND feeds.unsubscribed_at IS NULL AND",
+                 AND articles.muted = 0 AND feeds.unsubscribed_at IS NULL AND",
             ">",
             "ASC"
         ),

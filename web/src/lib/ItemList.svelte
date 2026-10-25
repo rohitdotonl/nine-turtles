@@ -544,6 +544,10 @@
           <span class={["row-meta mt-1 text-[0.75rem]", current ? "text-muted" : "text-[color:var(--faint)]"]}>
             <span class={oneFeed ? "sr-only" : "row-feed"}><span class="row-feed-name" use:hugEllipsis={article.feedTitle}>{article.feedTitle}</span>&nbsp;·</span>
             <time datetime={new Date(article.at * 1000).toISOString()} class="row-date">{when(article.at)}</time>
+            {#if article.muted}
+              <!-- Only search (and Starred) list a muted article; the word says why it waits in no other list (SPEC section 27). -->
+              <span class="row-muted">· Muted</span>
+            {/if}
             {#if article.starred}
               <span class="row-star"><Icon name="star" size={13} filled /><span class="sr-only">, Starred</span></span>
             {/if}
@@ -666,6 +670,7 @@
     text-overflow: ellipsis;
   }
   .row-date,
+  .row-muted,
   .row-star {
     flex: none;
   }

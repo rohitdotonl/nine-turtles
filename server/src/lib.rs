@@ -6,7 +6,8 @@
 //! folders and unsubscribing (`folders`), tidying many feeds at once
 //! (`tidy`), saved searches (`saved_searches`), OPML files (`subscriptions`),
 //! instant updates from WebSub hubs (`websub`), syncing with other feed
-//! readers (`apps`, `greader`), and backups (`backup`, `storage`).
+//! readers (`apps`, `greader`), backups (`backup`, `storage`), and the
+//! reader's rules and mutes (`rules`).
 //! The frontend is packed into this program (see `assets`).
 
 pub mod apps;
@@ -26,6 +27,7 @@ pub mod health;
 pub mod log;
 pub mod marks;
 pub mod password;
+pub mod rules;
 pub mod saved_searches;
 pub mod search;
 pub mod security;
@@ -134,6 +136,7 @@ pub fn router(state: AppState) -> Router {
         .merge(subscriptions::routes())
         .merge(tidy::routes())
         .merge(marks::routes())
+        .merge(rules::routes())
         .merge(search::routes())
         .merge(saved_searches::routes())
         .merge(settings::routes())

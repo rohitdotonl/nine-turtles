@@ -25,7 +25,7 @@ use crate::{
     AppState,
     auth::{SignedIn, database_problem},
     checking::{DAY, HOUR},
-    now,
+    now, rules,
 };
 
 /// How long Undo can bring an unsubscribed feed back, in seconds. The screen
@@ -304,6 +304,8 @@ pub async fn clear(connection: &mut SqliteConnection, id: i64) -> Result<bool, s
         .bind(id)
         .execute(&mut *connection)
         .await?;
+    // Rules for it stay, paused and saying so (SPEC section 27).
+    rules::place_gone(connection, Some(id), None).await?;
     // Its hub's deliveries now find no address and are refused; the hub
     // stops when its lease ends.
     sqlx::query("DELETE FROM websub WHERE feed_id = ?")
@@ -327,6 +329,9 @@ struct NewFolder {
     /// Feeds to put in it straight away (Undo for deleting a folder).
     #[serde(default)]
     feeds: Vec<i64>,
+    /// Rules that were in it, to hand back (Undo for deleting a folder).
+    #[serde(default)]
+    rules: Vec<i64>,
 }
 
 async fn create_folder(
@@ -352,6 +357,7 @@ async fn create_folder(
         .bind(serde_json::to_string(&form.feeds).unwrap_or_else(|_| "[]".to_owned()))
         .execute(&mut *transaction)
         .await?;
+        rules::back_in_folder(&mut transaction, id, &form.rules).await?;
         transaction.commit().await?;
         Ok(Ok(id))
     }
@@ -415,21 +421,27 @@ async fn delete_folder(
     State(state): State<AppState>,
     Path(id): Path<i64>,
 ) -> Response {
-    let deleted: Result<u64, sqlx::Error> = async {
+    let deleted: Result<Option<Vec<i64>>, sqlx::Error> = async {
         let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
         let deleted = sqlx::query("DELETE FROM folders WHERE id = ?")
             .bind(id)
             .execute(&mut *transaction)
-            .await?
-            .rows_affected();
+            .await?;
+        if deleted.rows_affected() == 0 {
+            return Ok(None);
+        }
         crate::saved_searches::forget(&mut *transaction, "folder", id).await?;
+        // Rules for it stay, paused and saying so (SPEC section 27); the
+        // screen keeps their numbers, so Undo can hand them back.
+        let rules = rules::place_gone(&mut transaction, None, Some(id)).await?;
         transaction.commit().await?;
-        Ok(deleted)
+        Ok(Some(rules))
     }
     .await;
     match deleted {
-        Ok(0) => StatusCode::NOT_FOUND.into_response(),
-        Ok(_) => StatusCode::NO_CONTENT.into_response(),
+        Ok(None) => StatusCode::NOT_FOUND.into_response(),
+        Ok(Some(rules)) if rules.is_empty() => StatusCode::NO_CONTENT.into_response(),
+        Ok(Some(rules)) => Json(json!({ "rules": rules })).into_response(),
         Err(error) => database_problem("deleting a folder", &error),
     }
 }

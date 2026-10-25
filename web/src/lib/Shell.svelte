@@ -27,6 +27,7 @@
   import Settings from "./Settings.svelte";
   import FeedHealth from "./FeedHealth.svelte";
   import YourFeeds from "./YourFeeds.svelte";
+  import Muted from "./Muted.svelte";
   import SearchBar from "./SearchBar.svelte";
   import SidebarFeeds from "./SidebarFeeds.svelte";
   import StarterFeeds from "./StarterFeeds.svelte";
@@ -157,7 +158,10 @@
   let settingsHeading: HTMLHeadingElement | undefined = $state();
   let healthHeading: HTMLHeadingElement | undefined = $state();
   let yourFeedsHeading: HTMLHeadingElement | undefined = $state();
-  /** Feed health or Your feeds was opened from Settings, so closing it is a step back in history. */
+  /** Feed health, Your feeds or Muted articles was opened from Settings, so closing it is a step back in history. */
+  let mutedHeading: HTMLHeadingElement | undefined = $state();
+  /** "Add a rule for this feed…" in Edit feed: Settings opens with a new rule for it. */
+  let ruleForFeed: number | undefined = $state();
   let cameFromSettings = false;
   let dataHeading: HTMLHeadingElement | undefined = $state();
   let addField: HTMLInputElement | undefined = $state();
@@ -572,8 +576,9 @@
 
     const readKey = createKeyReader();
     const pressed = (event: KeyboardEvent) => {
-      // A sheet keeps the keyboard to itself; its Escape is the dialog's own.
-      if (event.defaultPrevented || cheatSheetOpen || sheetShown) return;
+      // A sheet keeps the keyboard to itself; its Escape is the dialog's own
+      // (Settings' rule editor is a sheet of Settings' own, so it's asked of the page).
+      if (event.defaultPrevented || cheatSheetOpen || sheetShown || document.querySelector("dialog:modal")) return;
       const action = readKey(event, event.timeStamp);
       if (!action) return;
       event.preventDefault();
@@ -668,6 +673,7 @@
     if (place.kind === "settings") return settingsHeading;
     if (place.kind === "feed-health") return healthHeading;
     if (place.kind === "your-feeds") return yourFeedsHeading;
+    if (place.kind === "muted") return mutedHeading;
     if (place.kind === "add-feed") return addField;
     if (place.kind === "new-to-feeds") return phone ? listHeading : sheetHeading;
     // "Save search" starts in its name field, which the sheet gives the keyboard itself.
@@ -792,7 +798,7 @@
       return;
     }
     const from = screenNow();
-    cameFromSettings = route.kind === "settings" && (next.kind === "feed-health" || next.kind === "your-feeds");
+    cameFromSettings = route.kind === "settings" && (next.kind === "feed-health" || next.kind === "your-feeds" || next.kind === "muted");
     const to: Screen = isList(next) ? "list" : "page";
     const [opening, closing] = [isSheet(next) && !isSheet(route), isSheet(route) && !isSheet(next)];
     let pushed = false;
@@ -915,7 +921,7 @@
   /** Deletes a folder (never its feeds), then shows Unread (All in river mode) with "Deleted … · Undo". */
   async function deleteThis(folder: Folder): Promise<string | undefined> {
     const inside = (feeds ?? []).filter((feed) => feed.folders.includes(folder.id)).map((feed) => feed.id);
-    const refusal = await deleteFolder(folder.id);
+    const { refusal, rules } = await deleteFolder(folder.id);
     if (refusal) return refused(refusal, "folder");
     await loadFeeds();
     go(
@@ -923,7 +929,7 @@
       {
         message: `Deleted the folder ${folder.name}`,
         undo: async () => {
-          const problem = await createFolder(folder.name, inside);
+          const problem = await createFolder(folder.name, inside, rules);
           if (problem) return refused(problem, "folder");
           await loadFeeds();
           return undefined;
@@ -948,6 +954,17 @@
   /** Settings › Your feeds. */
   function goYourFeeds(event: MouseEvent) {
     follow(event, { kind: "your-feeds" });
+  }
+
+  /** Settings › Rules › Muted articles. */
+  function goMuted(event: MouseEvent) {
+    follow(event, { kind: "muted" });
+  }
+
+  /** Edit feed's "Add a rule for this feed…": to Settings, where the new rule's sheet opens for the feed. */
+  function addRuleFor(feed: Feed) {
+    ruleForFeed = feed.id;
+    go({ kind: "settings" });
   }
 
   /** Close feed health, or Escape there: back to Settings, a step back in history when it came from there. */
@@ -1134,7 +1151,7 @@
   }
 
   function escape() {
-    if (route.kind === "feed-health" || route.kind === "your-feeds") closeHealth();
+    if (route.kind === "feed-health" || route.kind === "your-feeds" || route.kind === "muted") closeHealth();
     else if (route.kind === "settings" || route.kind === "add-feed" || route.kind === "new-to-feeds") closePage();
     else if (route.kind === "edit-feed" || route.kind === "edit-folder") edited(false);
     else if (route.kind === "save-search" || route.kind === "edit-search") searchSaved();
@@ -1366,9 +1383,9 @@
         href="/settings"
         aria-label="Settings"
         title="Settings"
-        aria-current={route.kind === "settings" || route.kind === "feed-health" || route.kind === "your-feeds" ? "page" : undefined}
+        aria-current={route.kind === "settings" || route.kind === "feed-health" || route.kind === "your-feeds" || route.kind === "muted" ? "page" : undefined}
         onclick={(event) => follow(event, { kind: "settings" })}
-        class={["btn-quiet btn-icon @max-[15rem]:-mr-1.5", (route.kind === "settings" || route.kind === "feed-health" || route.kind === "your-feeds") && "bg-tint-sidebar text-ink"]}><Icon name="settings" size={18} /></a
+        class={["btn-quiet btn-icon @max-[15rem]:-mr-1.5", (route.kind === "settings" || route.kind === "feed-health" || route.kind === "your-feeds" || route.kind === "muted") && "bg-tint-sidebar text-ink"]}><Icon name="settings" size={18} /></a
       >
     </div>
     {#if !phone && (panes.list || panes.article)}
@@ -1400,6 +1417,11 @@
           onImported={loadFeeds}
           onFeedHealth={goHealth}
           onYourFeeds={goYourFeeds}
+          onMuted={goMuted}
+          feeds={feeds ?? []}
+          {folders}
+          {phone}
+          bind:ruleForFeed
           besideToggle={!phone && !panes.sidebar}
         />
       {:else if route.kind === "feed-health"}
@@ -1412,6 +1434,8 @@
           onFeedsChanged={loadFeeds}
           besideToggle={!phone && !panes.sidebar}
         />
+      {:else if route.kind === "muted"}
+        <Muted bind:heading={mutedHeading} onClose={closeHealth} onChanged={loadFeeds} besideToggle={!phone && !panes.sidebar} />
       {:else if !sheet && route.kind === "edit-feed" && currentFeed}
         {#key currentFeed.id}
           <EditFeed
@@ -1423,6 +1447,7 @@
             onSaved={() => edited(true)}
             onCancel={() => edited(false)}
             onUnsubscribe={() => unsubscribeFrom(currentFeed!)}
+            onAddRule={() => addRuleFor(currentFeed!)}
           />
         {/key}
       {:else if !sheet && route.kind === "edit-folder" && currentFolder}
@@ -1697,6 +1722,7 @@
       onSaved={() => edited(true)}
       onCancel={() => edited(false)}
       onUnsubscribe={() => unsubscribeFrom(currentFeed!)}
+      onAddRule={() => addRuleFor(currentFeed!)}
     />
   {/key}
 {:else if sheet && route.kind === "save-search" && toSave}

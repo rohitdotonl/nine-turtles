@@ -596,3 +596,75 @@ async fn adding_feed_settings_keeps_every_feed_as_it_was() {
         10
     );
 }
+
+#[tokio::test]
+async fn adding_rules_keeps_every_article_mark_and_star_and_mutes_nothing() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just before rules (structure changes up to 9).
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(9, &old)
+        .await
+        .unwrap();
+    for feed in 1..=10 {
+        sqlx::query("INSERT INTO feeds (id, url, url_key, title, added_at) VALUES (?, ?, ?, ?, 1)")
+            .bind(feed)
+            .bind(format!("https://blog-{feed}.example/feed"))
+            .bind(format!("blog-{feed}.example/feed"))
+            .bind(format!("Blog {feed}"))
+            .execute(&old)
+            .await
+            .unwrap();
+        for number in 0..20 {
+            sqlx::query(
+                "INSERT INTO articles (feed_id, fingerprint, title, received_at, sort_at, read,
+                     starred)
+                 VALUES (?, ?, ?, 2, ?, ?, ?)",
+            )
+            .bind(feed)
+            .bind(format!("id:{number}"))
+            .bind(format!("Sponsored article {number}"))
+            .bind(number)
+            .bind(number % 2)
+            .bind(i64::from(number % 5 == 0))
+            .execute(&old)
+            .await
+            .unwrap();
+        }
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let count = |sql: &'static str| sqlx::query_scalar::<_, i64>(sql).fetch_one(&db);
+    assert_eq!(count("SELECT COUNT(*) FROM feeds").await.unwrap(), 10);
+    assert_eq!(count("SELECT COUNT(*) FROM articles").await.unwrap(), 200);
+    assert_eq!(
+        count("SELECT COUNT(*) FROM articles WHERE read = 1")
+            .await
+            .unwrap(),
+        100
+    );
+    assert_eq!(
+        count("SELECT COUNT(*) FROM articles WHERE starred = 1")
+            .await
+            .unwrap(),
+        40
+    );
+    // Nothing is muted, and there are no rules, until the reader makes one.
+    assert_eq!(
+        count("SELECT COUNT(*) FROM articles WHERE muted = 1")
+            .await
+            .unwrap(),
+        0
+    );
+    assert_eq!(count("SELECT COUNT(*) FROM rules").await.unwrap(), 0);
+}

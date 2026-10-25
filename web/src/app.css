@@ -861,6 +861,74 @@ textarea {
     }
   }
   /*
+    A switch (Settings › Rules: a rule on or paused), as Apple draws one: a
+    capsule track with a round knob. On, the track is filled in the text
+    color and the knob sits at the right; off, the track is empty with a
+    muted edge and the knob at the left, so the knob's side says which as
+    well as the fill, never color alone. Never animated. Its label is 44px
+    square to press.
+  */
+  .switch-target {
+    display: inline-flex;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .switch {
+    appearance: none;
+    position: relative;
+    width: 2.375rem;
+    height: 1.375rem;
+    margin: 0;
+    border: 1.5px solid var(--muted);
+    border-radius: 9999px;
+    background-color: transparent;
+    cursor: pointer;
+  }
+  .switch::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0.1875rem;
+    width: 0.875rem;
+    height: 0.875rem;
+    border-radius: 9999px;
+    background-color: var(--muted);
+    translate: 0 -50%;
+  }
+  .switch:checked {
+    border-color: var(--ink);
+    background-color: var(--ink);
+  }
+  .switch:checked::after {
+    left: auto;
+    right: 0.1875rem;
+    background-color: var(--paper);
+  }
+  .switch:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+  @media (forced-colors: active) {
+    .switch {
+      forced-color-adjust: none;
+      border-color: CanvasText;
+    }
+    .switch::after {
+      background-color: CanvasText;
+    }
+    .switch:checked {
+      border-color: Highlight;
+      background-color: Highlight;
+    }
+    .switch:checked::after {
+      background-color: HighlightText;
+    }
+  }
+
+  /*
     A row that is a text box (Edit feed's "New folder…"): no edge or fill of
     its own, its words where a row's name sits; the keyboard's outline rings
     the whole row, just inside its edge.
