@@ -37,7 +37,7 @@ pub async fn run(db: &SqlitePool, at: i64) -> Result<Removed, sqlx::Error> {
     let before = at - KEPT_FOR;
     let mut removed = Removed::default();
     loop {
-        let mut transaction = db.begin().await?;
+        let mut transaction = db.begin_with("BEGIN IMMEDIATE").await?;
         let entries = sqlx::query(
             "DELETE FROM entries WHERE (person_id, article_id) IN (
                  SELECT entries.person_id, entries.article_id
@@ -57,7 +57,7 @@ pub async fn run(db: &SqlitePool, at: i64) -> Result<Removed, sqlx::Error> {
         }
     }
     loop {
-        let mut transaction = db.begin().await?;
+        let mut transaction = db.begin_with("BEGIN IMMEDIATE").await?;
         let old: Vec<(i64, i64)> = sqlx::query_as(
             "SELECT id, feed_id FROM articles
              WHERE received_at < ?
@@ -85,9 +85,19 @@ pub async fn run(db: &SqlitePool, at: i64) -> Result<Removed, sqlx::Error> {
                 .execute(&mut *transaction)
                 .await?;
         }
-        // A feed nobody follows any more whose last article just went goes
-        // too, as unsubscribing would have done.
-        let mut feeds: Vec<i64> = old.iter().map(|(_, feed)| *feed).collect();
+        // A reader who unsubscribed kept the feed's line only for their
+        // starred articles; once none is left it goes, as `folders::clear`
+        // would have done. Then a feed nobody follows any more whose last
+        // article just went goes too, as unsubscribing would have done.
+        let gone: Vec<i64> = sqlx::query_scalar(
+            "DELETE FROM subscriptions WHERE cleared = 1
+             AND NOT EXISTS (SELECT 1 FROM entries WHERE entries.person_id = subscriptions.person_id
+                             AND entries.feed_id = subscriptions.feed_id)
+             RETURNING feed_id",
+        )
+        .fetch_all(&mut *transaction)
+        .await?;
+        let mut feeds: Vec<i64> = old.iter().map(|(_, feed)| *feed).chain(gone).collect();
         feeds.sort_unstable();
         feeds.dedup();
         for feed in feeds {

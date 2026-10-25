@@ -121,7 +121,10 @@ async fn store(
         .iter()
         .map(|byte| format!("{byte:02x}"))
         .collect();
-    if !signed(&headers) || headers["x-amz-content-sha256"] != hash.as_str() {
+    if !signed(&headers)
+        || headers["x-amz-content-sha256"] != hash.as_str()
+        || objects.lock().unwrap().contains_key("refuse-uploads")
+    {
         return StatusCode::FORBIDDEN;
     }
     objects.lock().unwrap().insert(name, body.to_vec());
@@ -568,4 +571,54 @@ async fn the_change_to_each_readers_own_marks_is_backed_up_and_its_copy_restores
             line("Waiting", false, true, false, "Kept", false, false, 0, true),
         ]
     );
+}
+
+#[tokio::test]
+async fn old_articles_are_removed_only_once_the_nights_copy_is_stored() {
+    let (settings, objects) = fake_storage().await;
+    let mut config = common::config();
+    config.backup = Some(settings);
+    let state = nine_turtles::state(config).await.unwrap();
+    let storage = state.storage.clone().unwrap();
+    for sql in [
+        "INSERT INTO feeds (id, url, url_key, title, added_at) VALUES (1, 'u', 'u', 'Garden', 1)",
+        "INSERT INTO subscriptions (person_id, feed_id, title, added_at) VALUES (1, 1, 'Garden', 1)",
+    ] {
+        sqlx::query(sql).execute(&state.db).await.unwrap();
+    }
+    let old = nine_turtles::feed::ParsedArticle {
+        fingerprint: "old".to_owned(),
+        title: "An old post".to_owned(),
+        link: None,
+        author: None,
+        content: None,
+        summary: None,
+        language: None,
+        published_at: None,
+    };
+    let mut transaction = state.db.begin().await.unwrap();
+    nine_turtles::feeds::store_articles(&mut transaction, 1, &[old], NIGHT - 400 * DAY)
+        .await
+        .unwrap();
+    transaction.commit().await.unwrap();
+    let articles = || async {
+        sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM articles")
+            .fetch_one(&state.db)
+            .await
+            .unwrap()
+    };
+
+    // Tonight's copy can't be stored: nothing is removed.
+    objects
+        .lock()
+        .unwrap()
+        .insert("refuse-uploads".into(), Vec::new());
+    assert!(backup::tonight(&state.db, &storage, NIGHT).await.is_err());
+    assert_eq!(articles().await, 1);
+
+    // Stored: the old article goes, and it's in the copy.
+    objects.lock().unwrap().remove("refuse-uploads");
+    let name = backup::tonight(&state.db, &storage, NIGHT).await.unwrap();
+    assert_eq!(articles().await, 0);
+    assert!(names(&objects, "").contains(&name));
 }

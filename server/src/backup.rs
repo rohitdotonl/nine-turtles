@@ -68,13 +68,9 @@ pub async fn run(state: AppState) {
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .clone();
         if nightly_due(latest.as_deref(), at) {
-            match nightly(&state.db, &storage, at).await {
+            match tonight(&state.db, &storage, at).await {
                 Ok(name) => {
-                    log::info(&format!("backed up the database as {name}"));
                     remember(&state, &name);
-                    // Only now, with tonight's copy safely stored, are
-                    // old articles removed (decision 0089).
-                    cleanup::after_backup(&state.db, at).await;
                 }
                 Err(error) => log::problem(&format!(
                     "tonight's backup failed; trying again in an hour: {error}"
@@ -128,6 +124,15 @@ pub async fn nightly(db: &SqlitePool, storage: &Storage, at: i64) -> Result<Stri
 
     prune(storage, NIGHTLY, NIGHTLY_KEPT).await;
     prune(storage, MONTHLY, MONTHLY_KEPT).await;
+    Ok(name)
+}
+
+/// Tonight's work: the nightly copy, then, only once it's safely stored,
+/// the yearly clean-up (decision 0089). A failed copy removes nothing.
+pub async fn tonight(db: &SqlitePool, storage: &Storage, at: i64) -> Result<String, String> {
+    let name = nightly(db, storage, at).await?;
+    log::info(&format!("backed up the database as {name}"));
+    cleanup::after_backup(db, at).await;
     Ok(name)
 }
 

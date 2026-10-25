@@ -218,3 +218,68 @@ async fn letting_go_of_a_feed_forgets_its_removed_articles() {
     );
     assert_eq!(count(&state, "SELECT COUNT(*) FROM feeds").await, 0);
 }
+
+#[tokio::test]
+async fn muted_articles_go_like_any_other() {
+    let (_, state) = common::start_with_state(common::config()).await;
+    let garden = feed(&state, "garden", &[1]).await;
+    receive(&state, garden, &["muted"], 400).await;
+    mark(&state, 1, "muted", "read").await;
+    sqlx::query("UPDATE entries SET muted = 1")
+        .execute(&state.db)
+        .await
+        .unwrap();
+    cleanup::run(&state.db, NOW).await.unwrap();
+    assert!(articles(&state).await.is_empty());
+}
+
+#[tokio::test]
+async fn a_feed_kept_only_for_stars_goes_once_its_last_old_article_does() {
+    let (_, state) = common::start_with_state(common::config()).await;
+    let garden = feed(&state, "garden", &[1]).await;
+    receive(&state, garden, &["kept"], 400).await;
+    // Unsubscribed and cleared, its line kept for the star; later unstarred.
+    sqlx::query("UPDATE subscriptions SET unsubscribed_at = 1, cleared = 1")
+        .execute(&state.db)
+        .await
+        .unwrap();
+    cleanup::run(&state.db, NOW).await.unwrap();
+    assert!(articles(&state).await.is_empty());
+    assert_eq!(count(&state, "SELECT COUNT(*) FROM subscriptions").await, 0);
+    assert_eq!(count(&state, "SELECT COUNT(*) FROM feeds").await, 0);
+    assert_eq!(
+        count(&state, "SELECT COUNT(*) FROM forgotten_articles").await,
+        0
+    );
+}
+
+#[tokio::test]
+async fn a_new_follower_of_a_shared_feed_gets_what_is_still_kept() {
+    let (_, state) = common::start_with_state(common::config()).await;
+    let garden = feed(&state, "garden", &[1]).await;
+    receive(&state, garden, &["removed"], 400).await;
+    receive(&state, garden, &["kept"], 10).await;
+    cleanup::run(&state.db, NOW).await.unwrap();
+
+    // Another reader follows it; the publisher still lists both posts.
+    let (other, _) = common::another_reader(&state).await;
+    sqlx::query(
+        "INSERT INTO subscriptions (person_id, feed_id, title, added_at) VALUES (?, ?, 'garden', 0)",
+    )
+    .bind(other)
+    .bind(garden)
+    .execute(&state.db)
+    .await
+    .unwrap();
+    sqlx::query(
+        "INSERT INTO entries (person_id, article_id, feed_id, sort_at)
+         SELECT ?, id, feed_id, sort_at FROM articles",
+    )
+    .bind(other)
+    .execute(&state.db)
+    .await
+    .unwrap();
+    receive(&state, garden, &["removed", "kept"], 0).await;
+    assert_eq!(entries(&state, other).await, ["kept"]);
+    assert_eq!(entries(&state, 1).await, ["kept"]);
+}

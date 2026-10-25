@@ -16,11 +16,18 @@ turtles removes what's more than a year old (SPEC section 23):
   when nobody follows it any more.
 - **Counted from arrival.** The year counts from when nine turtles first
   received the article, not its published date, so a blog added today keeps
-  its old posts for a year.
+  its old posts for a year. A feed other readers already follow was received
+  when they added it: a new follower gets the articles still kept, not ones
+  already removed (the records are the feed's, stored once like its
+  articles).
 - **Only after a backup.** It runs only just after a nightly copy was
   stored, so whatever it removes is in that copy, and in that month's copy
   for a year. While backups fail, or aren't set up, nothing is removed.
 - **A little at a time:** 500 at once, each in a short transaction.
+
+**A third exception to "nothing deletes without undo"**, recorded in the
+floor's wording in AGENTS.md and ENGINEERING.md, as the plan for many readers
+agreed (the owner approved changing the rules to match it, 25 October 2026).
 
 **Switched on, not a dry run.** Articles are counted from when nine turtles
 received them, and nine turtles has only been fetching since October 2026,
