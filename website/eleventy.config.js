@@ -13,7 +13,7 @@ export default function (eleventyConfig) {
     "../web/public/fonts/OFL-Literata.txt": "fonts/OFL-Literata.txt",
     "../web/public/fonts/OFL-Inter.txt": "fonts/OFL-Inter.txt",
     "../web/public/icons/icon.svg": "icons/icon.svg",
-    "../web/public/icons/icon-192.png": "icons/icon-192.png",
+    "../web/public/icons/icon-32.png": "icons/icon-32.png",
     "../web/public/icons/apple-touch-icon.png": "icons/apple-touch-icon.png",
   });
 

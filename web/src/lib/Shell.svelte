@@ -1034,7 +1034,7 @@
     -->
     <div class={["pane-bar gap-4", phone ? "pr-4 pl-5" : "pr-14 pl-5"]}>
         <!-- A name, not a control: never a Tab stop; the keyboard lands here only when the screen opens (decision 0041). -->
-        <h1 class={["wordmark mr-auto flex items-center gap-2.5 font-serif tracking-[-0.01em]", phone ? "text-xlarge" : "text-large text-ink-2"]} tabindex="-1" bind:this={wordmark}><Logo width={phone ? 40 : 30} />nine turtles</h1>
+        <h1 class={["wordmark mr-auto flex items-center gap-2.5 font-serif font-semibold tracking-[-0.01em]", phone ? "text-xlarge" : "text-large text-ink-2"]} tabindex="-1" bind:this={wordmark}><Logo height={phone ? 32 : 23} />nine turtles</h1>
         {#if phone}
           <!--
             The feeds screen's top bar (SPEC section 20): its unread numbers wait for this, as they wait for r.
