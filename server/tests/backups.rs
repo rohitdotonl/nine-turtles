@@ -414,3 +414,66 @@ async fn a_restore_that_fails_leaves_no_database_behind() {
     assert!(!nine_turtles::db::exists(&data_dir));
     assert_eq!(std::fs::read_dir(&data_dir).unwrap().count(), 0);
 }
+
+/// The change that gave everything an owner (structure change 11) is backed
+/// up first, and that copy restored on a fresh disk is changed again the
+/// same way, with nothing lost: the rehearsal for the live app.
+#[tokio::test]
+async fn the_change_to_many_readers_is_backed_up_and_its_copy_restores_whole() {
+    let (settings, objects) = fake_storage().await;
+    let mut config = common::config();
+    config.backup = Some(settings.clone());
+    std::fs::create_dir_all(&config.data_dir).unwrap();
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&config.data_dir))
+                .create_if_missing(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(10, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO feeds (id, url, url_key, title, added_at)
+         VALUES (1, 'https://a.example/feed', 'a.example/feed', 'Kept', 1)",
+        "INSERT INTO folders (id, name) VALUES (1, 'Gardens')",
+        "INSERT INTO feed_folders (folder_id, feed_id) VALUES (1, 1)",
+        "INSERT INTO settings (name, value) VALUES ('sort', 'oldest')",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    old.close().await;
+
+    let changed = nine_turtles::state(config).await.unwrap();
+    let stored = names(&objects, "before-change/");
+    assert_eq!(stored.len(), 1);
+    assert!(
+        stored[0].ends_with("-before-change-11.sqlite"),
+        "{stored:?}"
+    );
+    let folder = "SELECT folders.person_id, folders.name FROM folders
+                  JOIN feed_folders ON feed_folders.folder_id = folders.id";
+    let live: (i64, String) = sqlx::query_as(folder).fetch_one(&changed.db).await.unwrap();
+
+    // A new host restores that copy; nine turtles changes it as it starts.
+    let mut fresh = common::config();
+    fresh.backup = Some(settings);
+    fresh.restore_from = Some(stored[0].clone());
+    let restored = nine_turtles::state(fresh).await.unwrap();
+    let again: (i64, String) = sqlx::query_as(folder)
+        .fetch_one(&restored.db)
+        .await
+        .unwrap();
+    assert_eq!(again, live);
+    assert_eq!(again, (1, "Gardens".to_owned()));
+    let sort: String = sqlx::query_scalar(
+        "SELECT value FROM person_settings WHERE person_id = 1 AND name = 'sort'",
+    )
+    .fetch_one(&restored.db)
+    .await
+    .unwrap();
+    assert_eq!(sort, "oldest");
+}

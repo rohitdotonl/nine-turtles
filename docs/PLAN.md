@@ -388,6 +388,18 @@ each with screenshots:
 | The "New to feeds?" guide page | ✅ 25 October 2026 | SPEC section 2, decision 0079 (in the app, a "New to feeds?" sheet in the first-visit welcome; it links to the website's guide at nineturtles.app/new-to-feeds/) |
 | A tab left open across an update keeps working | ✅ 25 October 2026 | SPEC section 18, decisions 0022 and 0085 |
 
+## V2: Many readers in one app
+
+Milestone 3 of the plan for 100 to 200 readers
+(https://claude.ai/artifact/V3GhrBxfXDG1TjPMsXQFPk), decision 0086. Each
+feed is still fetched and stored once; everything personal gets an owner.
+
+| Part | Status |
+|---|---|
+| Part one: an owner on settings, folders, saved searches, rules, signed-in devices and app passwords (structure change 11) | 🔨 in progress |
+| Part two: each reader's own feeds, marks, stars, search and sync (structure change 12) | ⬜ |
+| Part three: signing in by email, and a second account to try | ⬜ |
+
 ## V2: YouTube videos
 
 - ✅ A YouTube video plays in YouTube's own privacy-enhanced player, above
