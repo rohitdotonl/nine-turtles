@@ -86,6 +86,12 @@ test("with the keyboard alone: Edit, choose, Move to… and Escape closes only t
   await tabTo(page, page.getByRole("checkbox", { name: new RegExp(first) }));
   await page.keyboard.press("Space");
   await expect(page.getByText("1 chosen")).toBeVisible();
+  // Choose all ticks every listed feed; Choose none clears them.
+  await page.getByRole("button", { name: "Choose all" }).click();
+  await expect(page.getByText(/^([2-9]|\d\d+) chosen$/)).toBeVisible();
+  await page.getByRole("button", { name: "Choose none" }).click();
+  await expect(page.getByText("Choose feeds")).toBeVisible();
+  await page.getByRole("checkbox", { name: new RegExp(first) }).check();
   await tabTo(page, page.getByRole("button", { name: "Move to…" }));
   await page.keyboard.press("Enter");
   await expect(page.getByRole("dialog", { name: "Move 1 feed" })).toBeVisible();

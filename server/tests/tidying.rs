@@ -298,3 +298,51 @@ async fn several_feeds_are_unsubscribed_at_once_and_one_undo_brings_them_all_bac
     assert_eq!(status, StatusCode::CONFLICT);
     assert_eq!(answer["error"], "too-late");
 }
+
+#[tokio::test]
+async fn starred_articles_outlive_unsubscribing_from_several_feeds() {
+    let reader = Reader::new().await;
+    let alpha = reader.follow("alpha-2020").await;
+    let beta = reader.follow("beta-2020").await;
+    let post: i64 = sqlx::query_scalar("SELECT id FROM articles WHERE feed_id = ?")
+        .bind(alpha)
+        .fetch_one(&reader.state.db)
+        .await
+        .unwrap();
+    reader
+        .post(
+            "/api/articles/starred",
+            json!({ "ids": [post], "starred": true }),
+        )
+        .await;
+    reader
+        .post("/api/tidy/unsubscribe", json!({ "feeds": [alpha, beta] }))
+        .await;
+    nine_turtles::folders::clear_unsubscribed(&reader.state.db, i64::MAX)
+        .await
+        .unwrap();
+    let left: Vec<(i64, i64)> = sqlx::query_as("SELECT id, feed_id FROM articles ORDER BY id")
+        .fetch_all(&reader.state.db)
+        .await
+        .unwrap();
+    assert_eq!(left, [(post, alpha)]);
+}
+
+#[tokio::test]
+async fn moving_to_a_folder_named_like_one_that_exists_uses_it() {
+    let reader = Reader::new().await;
+    let alpha = reader.follow("alpha-2026").await;
+    let (_, made) = reader
+        .post("/api/folders", json!({ "name": "News", "feeds": [] }))
+        .await;
+    let (_, moved) = reader
+        .post(
+            "/api/tidy/move",
+            json!({ "feeds": [alpha], "new_folder": "news" }),
+        )
+        .await;
+    // Not made just now, so Undo leaves it be.
+    assert_eq!(moved["folder"], made["folder"]["id"]);
+    assert_eq!(moved["created"], false);
+    assert_eq!(reader.feeds().await, [row("alpha", &["News"])]);
+}

@@ -87,13 +87,20 @@
     load();
   });
 
+  /** Undo lasts until your next action here. */
+  function endUndo() {
+    [message, undo] = ["", undefined];
+  }
+
   function toggleEditing() {
     editing = !editing;
     chosen = [];
+    endUndo();
   }
 
   function chooseAll() {
     chosen = allChosen ? [] : listed.map((feed) => feed.id);
+    endUndo();
   }
 
   /** The chosen feeds that are still listed (a filter may have hidden some). */
@@ -208,7 +215,7 @@
           <div class="choices self-start" style="--phone-columns: 3">
             {#each SHOWING as choice (choice.value)}
               <label class="choice">
-                <input type="radio" name="showing" value={choice.value} bind:group={showing} onchange={() => (chosen = [])} />
+                <input type="radio" name="showing" value={choice.value} bind:group={showing} onchange={() => ((chosen = []), endUndo())} />
                 {choice.label}
               </label>
             {/each}
@@ -235,7 +242,7 @@
                 <button type="button" class="btn btn-small" onclick={chooseAll}>{allChosen ? "Choose none" : "Choose all"}</button>
               {/if}
               {#if listed.length > 0}
-                <button type="button" bind:this={editButton} class="btn btn-small" aria-pressed={editing} onclick={toggleEditing}
+                <button type="button" bind:this={editButton} class="btn btn-small" onclick={toggleEditing}
                   >{editing ? "Done" : "Edit"}</button
                 >
               {/if}
