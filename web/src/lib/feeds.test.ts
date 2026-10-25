@@ -13,6 +13,8 @@ import {
   when,
   type Feed,
   type Problem,
+  Refused,
+  worthRetrying,
 } from "./feeds";
 
 describe("article times", () => {
@@ -141,5 +143,14 @@ describe("reading modes", () => {
   it("opens on Unread in inbox mode and on All in river mode", () => {
     expect(homeView("inbox")).toBe("unread");
     expect(homeView("river")).toBe("all");
+  });
+});
+
+describe("saving a mark again", () => {
+  it("tries again when nine turtles can't be reached or is restarting, never when it refused", () => {
+    expect(worthRetrying(new TypeError("Failed to fetch"))).toBe(true);
+    expect(worthRetrying(new DOMException("timed out", "TimeoutError"))).toBe(true);
+    for (const status of [502, 503, 504]) expect(worthRetrying(new Refused(status))).toBe(true);
+    for (const status of [400, 401, 404, 413, 500]) expect(worthRetrying(new Refused(status))).toBe(false);
   });
 });

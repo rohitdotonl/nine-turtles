@@ -1,4 +1,4 @@
-# 0073: Saved searches in the sidebar
+# 0076: Saved searches in the sidebar
 
 *25 October 2026. Built in V2 at the owner's request (planning thread of 25 October 2026).*
 
@@ -30,6 +30,18 @@ no new kind of search.
 - **What's kept:** the search field's own description (words, where it
   searches, Unread, Starred and dates), as JSON in one small new table
   (`saved_searches`, structure change 8). A date from "Past week" is kept as
-  the date it was, as its chip shows it. A saved search scoped to a feed or
-  folder that's since gone finds nothing rather than quietly searching
-  everything.
+  the date it was, as its chip shows it.
+- **A feed or folder that's gone:** feeds and folders are numbered without
+  AUTOINCREMENT, so SQLite can give a new folder the number of a deleted
+  one. So when a folder is deleted, or an unsubscribed feed is cleared for
+  good, the saved searches limited to it are made to look in number 0,
+  which is nothing (`saved_searches::forget`). They then find nothing,
+  rather than quietly searching a new folder, or everything. Undo for
+  deleting a folder makes a new folder, so such a search needs its chip
+  set again.
+- **Not in the sidebar's find field.** That field finds feeds and folders
+  only; DESIGN.md's Exceptions log describes it that way, and changing it
+  is the owner's call.
+- **If the saved searches can't be loaded,** a saved search's address says
+  so ("couldn't be loaded"), never "not found", so a network problem never
+  looks like a deletion.

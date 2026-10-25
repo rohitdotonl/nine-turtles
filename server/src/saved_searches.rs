@@ -151,6 +151,27 @@ async fn delete(_: SignedIn, State(state): State<AppState>, Path(id): Path<i64>)
     }
 }
 
+/// A feed or folder is gone for good: saved searches limited to it now
+/// look in number 0, which is nothing, so they find nothing rather than
+/// searching everything. Feeds and folders are numbered without
+/// AUTOINCREMENT, so SQLite may give the same number to a new one, which
+/// they'd otherwise quietly start searching (decision 0076).
+pub async fn forget<'c>(
+    executor: impl sqlx::SqliteExecutor<'c>,
+    kind: &str,
+    id: i64,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "UPDATE saved_searches SET query = json_set(query, '$.scope.id', 0)
+         WHERE json_extract(query, '$.scope.kind') = ? AND json_extract(query, '$.scope.id') = ?",
+    )
+    .bind(kind)
+    .bind(id)
+    .execute(executor)
+    .await?;
+    Ok(())
+}
+
 fn problem(status: StatusCode, error: &str) -> Response {
     (status, Json(json!({ "error": error }))).into_response()
 }

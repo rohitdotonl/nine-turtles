@@ -183,3 +183,34 @@ async fn saved_searches_need_signing_in() {
         .unwrap();
     assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
 }
+
+#[tokio::test]
+async fn a_search_in_a_deleted_folder_never_moves_to_a_new_folder_with_its_number() {
+    let reader = Reader::new().await;
+    let (_, made) = reader
+        .post("/api/folders", json!({ "name": "Old", "feeds": [] }))
+        .await;
+    let folder = made["folder"]["id"].as_i64().unwrap();
+    let query = json!({ "words": "rain", "scope": { "kind": "folder", "id": folder } });
+    reader
+        .post(
+            "/api/saved-searches",
+            json!({ "name": "In old", "query": query }),
+        )
+        .await;
+    let (status, _) = reader
+        .post(&format!("/api/folders/{folder}/delete"), json!({}))
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    // SQLite may give a new folder the same number; the saved search now looks in none.
+    let (_, made) = reader
+        .post("/api/folders", json!({ "name": "New", "feeds": [] }))
+        .await;
+    assert_eq!(made["folder"]["id"].as_i64().unwrap(), folder);
+    let saved = &reader.searches().await[0];
+    assert_eq!(
+        saved["query"]["scope"],
+        json!({ "kind": "folder", "id": 0 })
+    );
+    assert_eq!(saved["query"]["words"], "rain");
+}

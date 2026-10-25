@@ -99,6 +99,8 @@
   /** The reader's saved searches, alphabetically (SPEC section 14); `searchesLoaded` once the server answered. */
   let searches: SavedSearch[] = $state([]);
   let searchesLoaded = $state(false);
+  /** The saved searches couldn't be loaded, so a saved search's address can't be told from a deleted one. */
+  let searchesFailed = $state(false);
   /** What "Save search" or "Edit saved search" will save: the search showing when it was opened. */
   let toSave: Query | undefined = $state();
   /** What's typed in the sidebar search. */
@@ -285,7 +287,7 @@
     feeds !== undefined &&
       (((under.kind === "feed" || under.kind === "edit-feed") && !currentFeed) ||
         ((under.kind === "folder" || under.kind === "edit-folder") && !currentFolder) ||
-        ((under.kind === "search" || under.kind === "edit-search") && searchesLoaded && !currentSearch)),
+        ((under.kind === "search" || under.kind === "edit-search") && searchesLoaded && !searchesFailed && !currentSearch)),
   );
   /** No feeds yet: Unread and All show the add field instead (SPEC section 2). */
   let firstVisit = $derived(feeds !== undefined && feeds.length === 0);
@@ -348,13 +350,14 @@
   async function loadSearches() {
     try {
       searches = await listSaved();
-      searchesLoaded = true;
+      searchesFailed = false;
     } catch {
-      // The sidebar shows no saved searches until the next try; a saved search's own address says it isn't found.
-      searchesLoaded = true;
+      // The sidebar shows no saved searches until the next try; a saved search's own address says so plainly.
+      searchesFailed = true;
     }
-    // A saved search opened from its address runs once it's known.
-    if (route.kind === "search" && !shown && currentSearch) resetSearch();
+    searchesLoaded = true;
+    // A saved search opened from its address (or its Edit address) runs once it's known.
+    if (under.kind === "search" && !shown && currentSearch) resetSearch();
   }
 
   $effect(() => {
@@ -448,9 +451,10 @@
         ],
       },
     ];
-    if (shown) {
+    // On a saved search, even with everything taken out of its field, it can still be edited or deleted.
+    const search = under.kind === "search" ? currentSearch : undefined;
+    if (shown || search) {
       // A search can be saved, to come back to from the sidebar; a saved one renamed, changed or deleted.
-      const search = under.kind === "search" ? currentSearch : undefined;
       groups.push({
         items: [
           search
@@ -469,8 +473,7 @@
 
   /** Opens "Save search" or "Edit saved search" with the search showing now. */
   function openSaving(next: Route) {
-    if (!shown) return;
-    toSave = $state.snapshot(shown);
+    toSave = $state.snapshot(shown ?? query);
     go(next);
   }
 
@@ -772,6 +775,7 @@
     const refusal = await deleteSaved(saved.id);
     if (refusal) return refusedSaving(refusal);
     searches = searches.filter((each) => each.id !== saved.id);
+    toSave = undefined;
     go(home, {
       message: `Deleted the saved search ${saved.name}`,
       undo: async () => {
@@ -965,7 +969,8 @@
   function resetSearch() {
     clearTimeout(searchTimer);
     phoneSearch = false;
-    const place = route;
+    // `under`: the saved search under its Edit sheet runs too.
+    const place = under;
     const saved = place.kind === "search" ? searches.find((search) => search.id === place.id) : undefined;
     query = saved ? $state.snapshot(saved.query) : emptyQuery(route);
     shown = saved && isSearching(saved.query) ? $state.snapshot(saved.query) : undefined;
@@ -1144,7 +1149,7 @@
     -->
     <div class={["pane-bar gap-4", phone ? "pr-4 pl-5" : "pr-14 pl-5"]}>
         <!-- A name, not a control: never a Tab stop; the keyboard lands here only when the screen opens (decision 0041). -->
-        <h1 class={["wordmark mr-auto flex items-center gap-2.5 font-serif tracking-[-0.01em]", phone ? "text-xlarge" : "text-large text-ink-2"]} tabindex="-1" bind:this={wordmark}><Logo width={phone ? 40 : 30} />nine turtles</h1>
+        <h1 class={["wordmark mr-auto flex items-center gap-2.5 font-serif font-semibold tracking-[-0.01em]", phone ? "text-xlarge" : "text-large text-ink-2"]} tabindex="-1" bind:this={wordmark}><Logo height={phone ? 32 : 23} />nine turtles</h1>
         {#if phone}
           <!--
             The feeds screen's top bar (SPEC section 20): its unread numbers wait for this, as they wait for r.
@@ -1422,6 +1427,8 @@
             {/if}
             {#if missing && (under.kind === "folder" || under.kind === "edit-folder")}
               <p class="mt-4">There's no folder here. It may have been deleted or renamed.</p>
+            {:else if under.kind === "search" && searchesFailed && !currentSearch}
+              <p class="mt-4">Your saved searches couldn't be loaded. Reload the page to try again.</p>
             {:else if missing && (under.kind === "search" || under.kind === "edit-search")}
               <p class="mt-4">There's no saved search here. It may have been deleted.</p>
             {:else if missing}

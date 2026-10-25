@@ -20,8 +20,9 @@
   own (one chevron per row): its feeds are always listed under it, a step
   in, and a tap on its name opens its list (decision 0043).
 
-  While the sidebar search holds text, a flat list of the saved searches,
-  folders and feeds whose name contains it takes their place.
+  While the sidebar search holds text, a flat list of the folders and feeds
+  whose name contains it takes their place (saved searches aren't in it:
+  the find field is for feeds and folders, DESIGN.md → Exceptions log).
 
   In river mode (SPEC section 10) there are no counts.
 -->
@@ -30,7 +31,6 @@
   import { findByName, folderUnread, inDevanagari, unreadLabel, type Feed, type Folder } from "./feeds";
   import { pathFor, type Route } from "./router";
   import type { SavedSearch } from "./saved";
-  import { fold } from "./search";
 
   let {
     feeds,
@@ -82,7 +82,6 @@
 
   let searching = $derived(search.trim() !== "");
   let found = $derived(findByName({ feeds, folders }, search));
-  let foundSearches = $derived(searches.filter((saved) => fold(saved.name).includes(fold(search.trim()))));
   let loose = $derived(feeds.filter((feed) => feed.folders.length === 0));
 
   function isHere(place: Route): boolean {
@@ -157,13 +156,10 @@
 
 {#if searching}
   <h2 class="sr-only">Found by name</h2>
-  {#if found.folders.length === 0 && found.feeds.length === 0 && foundSearches.length === 0}
+  {#if found.folders.length === 0 && found.feeds.length === 0}
     <p class="px-4 pt-4 text-small">No feed or folder has that in its name.</p>
   {:else}
     <ul class="mt-4">
-      {#each foundSearches as saved (saved.id)}
-        {@render searchRow(saved)}
-      {/each}
       {#each found.folders as folder (folder.id)}
         {@const here = isHere({ kind: "folder", id: folder.id })}
         <li class="place mx-2 flex" data-here={here || undefined}>

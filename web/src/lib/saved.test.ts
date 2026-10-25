@@ -21,6 +21,7 @@ describe("saved searches", () => {
       before: "",
     });
     // Anything odd is simply not a filter: never an error.
+    expect(toQuery({ scope: { kind: "folder", id: 0 } }).scope).toEqual({ kind: "folder", id: 0 });
     expect(toQuery({ words: 4, scope: { kind: "folder", id: -1 }, unread: "yes", after: "yesterday" })).toEqual({
       words: "",
       scope: { kind: "all" },
