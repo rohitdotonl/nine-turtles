@@ -152,7 +152,7 @@ The philosophy applied. The principle is noted where it isn't obvious.
 
 ### Name and signature
 
-- **Name:** nine turtles (domain, app store and trademark checks are under "Still to define").
+- **Name:** nine turtles, at nineturtles.app (decision 0066; app store and trademark checks are under "Still to define").
 - **Wordmark:** "nine turtles" in lowercase, in the reading serif. No logo shape, no mascot.
 - **Signature:** the accent (ink blue), quietly marking where you are, and the calm itself.
 
@@ -270,7 +270,7 @@ Plain, unhurried, never urgent: "Nothing new yet," never "You're missing out!" L
 ## Still to define
 
 - Status colors for the V2 feed health page (checked against the first floor)
-- Domain, app store and trademark checks for "nine turtles" (not blocking V1)
+- App store and trademark checks for "nine turtles" (not blocking V1). The domain is nineturtles.app (decision 0066).
 
 ## V2 parking lot
 
@@ -280,7 +280,7 @@ Plain, unhurried, never urgent: "Nothing new yet," never "You're missing out!" L
 - **Passkey sign-in.**
 - **Chinese and Japanese search.**
 - **Multiple users.**
-- **Own domain name.**
+- **Own domain name.** Chosen on 25 October 2026: nineturtles.app for the website, app.nineturtles.app for the app (decision 0066).
 
 Moved from V1 on 23 October 2026, because V1 is for the owner alone (decision 0012):
 

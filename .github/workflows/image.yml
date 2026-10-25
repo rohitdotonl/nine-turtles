@@ -33,13 +33,14 @@ jobs:
         with:
           fetch-depth: 2
 
-      # A pull request that changes only documents can't change the image.
-      - name: Look for anything besides documents
+      # A pull request that changes only documents or the website (decision
+      # 0066) can't change the image. On main it's always built and deployed.
+      - name: Look for anything besides documents and the website
         id: look
         run: .github/code-changed.sh "${{ github.event_name }}" >> "$GITHUB_OUTPUT"
 
       - name: Build the image
-        if: steps.look.outputs.code == 'true'
+        if: steps.look.outputs.app == 'true'
         run: |
           version="$(date -u +%Y-%m-%d)-${GITHUB_SHA::7}"
           image="ghcr.io/${GITHUB_REPOSITORY,,}"
@@ -49,7 +50,7 @@ jobs:
             --tag "$image:$version" --tag "$image:latest" .
 
       - name: Check the image starts and answers
-        if: steps.look.outputs.code == 'true'
+        if: steps.look.outputs.app == 'true'
         run: |
           docker run --detach --name nine-turtles --publish 10000:10000 "$IMAGE:$VERSION"
           for attempt in $(seq 1 30); do

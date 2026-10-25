@@ -349,6 +349,15 @@ each with screenshots:
 - ✅ Small touches of color, tried side by side on the owner's computer: a
   plain grey pill for where you are, and green stars (decision 0057).
 
+## A website and a domain
+
+- 🔨 A website at nineturtles.app, built with Eleventy from `website/` in
+  this repository and hosted on GitHub Pages; the app moves to
+  app.nineturtles.app once the owner sets up the domain
+  (`docs/operations/website-and-domain.md`, decision 0066). The pages start
+  as a short introduction; what else the website says is the owner's to
+  decide.
+
 ---
 
 Responsive layout, accessibility and speed aren't left to the end: each

@@ -51,12 +51,15 @@ for (const { name } of rustLibraries) {
   }
 }
 
-// 3. Frontend: every library named in web/package.json.
-const pkg = JSON.parse(read("web/package.json"));
-for (const field of ["dependencies", "devDependencies", "optionalDependencies", "peerDependencies"]) {
-  for (const name of Object.keys(pkg[field] ?? {})) {
-    if (!approved.has(name)) {
-      problems.push(`web/package.json uses "${name}", which isn't approved in docs/libraries.md`);
+// 3. Frontend and website: every library named in web/package.json and
+//    website/package.json.
+for (const file of ["web/package.json", "website/package.json"]) {
+  const pkg = JSON.parse(read(file));
+  for (const field of ["dependencies", "devDependencies", "optionalDependencies", "peerDependencies"]) {
+    for (const name of Object.keys(pkg[field] ?? {})) {
+      if (!approved.has(name)) {
+        problems.push(`${file} uses "${name}", which isn't approved in docs/libraries.md`);
+      }
     }
   }
 }

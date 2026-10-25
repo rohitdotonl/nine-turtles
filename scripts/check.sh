@@ -8,6 +8,7 @@
 #   scripts/check.sh frontend   libraries, frontend build, types, tests, motion, size
 #   scripts/check.sh rust       Rust formatting, lint and tests
 #   scripts/check.sh browser    the release program, then the browser tests
+#   scripts/check.sh website    the website at nineturtles.app (decision 0066)
 # NINE_TURTLES_SHARD=1/2 runs only the first half of the browser tests.
 #
 # Needs: Rust (the version in rust-toolchain.toml), Node 22.12 or newer, and
@@ -20,7 +21,7 @@ cd "$(dirname "$0")/.."
 step() { printf '\n==> %s\n' "$1"; }
 
 parts=("$@")
-if [ ${#parts[@]} -eq 0 ]; then parts=(frontend rust browser); fi
+if [ ${#parts[@]} -eq 0 ]; then parts=(frontend rust browser website); fi
 
 build_frontend() {
   step "Frontend: install the exact library versions in the lock file"
@@ -81,11 +82,32 @@ browser() {
   fi
 }
 
+website() {
+  # Also here, so a change to only the website still runs them.
+  step "Libraries are on the approved list"
+  node scripts/check-libraries.mjs
+
+  step "No motion on the website"
+  node scripts/check-motion.mjs website
+
+  step "Website: install the exact library versions in the lock file"
+  (cd website && npm ci --no-audit --no-fund)
+
+  step "Website: build"
+  (cd website && npm run build)
+
+  # The browser check borrows Playwright and axe from the frontend.
+  if [ ! -d web/node_modules ]; then (cd web && npm ci --no-audit --no-fund); fi
+
+  step "Website: accessibility and contrast, in a real browser"
+  node scripts/check-website.mjs
+}
+
 for part in "${parts[@]}"; do
   case "$part" in
-    frontend | rust | browser) "$part" ;;
+    frontend | rust | browser | website) "$part" ;;
     *)
-      echo "Unknown part \"$part\". Use frontend, rust or browser (or nothing, for all)." >&2
+      echo "Unknown part \"$part\". Use frontend, rust, browser or website (or nothing, for all)." >&2
       exit 2
       ;;
   esac

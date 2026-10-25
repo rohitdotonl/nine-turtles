@@ -60,6 +60,14 @@ SQLite itself (and its FTS5 search) comes bundled with sqlx.
 | @playwright/test | 1.x | Runs the app in a real browser for tests | Approved |
 | @axe-core/playwright | 4.x | Automatic accessibility and contrast checks | Approved |
 
+## Website (nineturtles.app)
+
+Used only to build the website, never part of the app (decision 0066).
+
+| Library | Version | What it does for nine turtles | Status |
+|---|---|---|---|
+| @11ty/eleventy | 3.x | Turns the website's pages, written in Markdown, into plain web pages any host can serve | Approved (October 2026, the owner's yes on 25 October) |
+
 ## Tools used only by the automatic checks
 
 These never become part of nine turtles itself.
