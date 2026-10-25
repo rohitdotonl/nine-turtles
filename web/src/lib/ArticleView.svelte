@@ -239,7 +239,7 @@
 {/snippet}
 
 {#snippet original(size: number)}
-  <a href={article.link} target="_blank" rel="noopener noreferrer" aria-label="Open original" title={phone ? "Open original" : "Open original (v)"} class="btn-quiet btn-icon"
+  <a href={article.link} target="_blank" rel="noopener noreferrer" aria-label="Open original" title={phone ? "Open original" : "Open original (V)"} class="btn-quiet btn-icon"
     ><Icon name="open" {size} /></a
   >
 {/snippet}
@@ -282,7 +282,7 @@
         {/if}
         {@render aa(20, "btn-quiet btn-icon")}
         <!-- A toggle keeps one name for screen readers ("Star", pressed or not); the filled star shows its state. -->
-        <button type="button" aria-label="Star" aria-pressed={article.starred} title={article.starred ? "Starred (s)" : "Star (s)"} onclick={onStar} class={["btn-quiet btn-icon", article.starred && "text-star"]}>
+        <button type="button" aria-label="Star" aria-pressed={article.starred} title={article.starred ? "Starred (S)" : "Star (S)"} onclick={onStar} class={["btn-quiet btn-icon", article.starred && "text-star"]}>
           {@render starIcon(20)}
         </button>
         <MoreMenu id="article-menu" label="More actions" groups={more} />

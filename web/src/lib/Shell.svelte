@@ -1024,10 +1024,10 @@
     </div>
     <!--
       Always at the very bottom, outside the scrolling list, so it never moves:
-      Add feed in words, then Shortcuts in words too (so it says what it is;
-      decision 0062), then Settings as an icon, the way a Mac app keeps its
-      tools at the foot of the sidebar. In a sidebar narrowed below 15rem,
-      where the two words can't both fit, Shortcuts becomes its keyboard icon.
+      Add feed and Keys (the shortcut list), each an icon and a word, so they
+      read as two buttons, not one phrase (decisions 0062, 0064), then
+      Settings as an icon, the way a Mac app keeps its tools at the foot of
+      the sidebar. In a sidebar narrowed below 15rem, Keys keeps only its icon.
     -->
     <div class="@container flex shrink-0 items-center gap-1 border-t border-ink/10 py-1.5 pr-3">
       <!-- An action, not a place: it never shows the "where you are" bar. -->
@@ -1041,12 +1041,12 @@
         <button
           type="button"
           onclick={() => (cheatSheetOpen = true)}
-          aria-label="Keyboard shortcuts"
+          aria-label="Keys (keyboard shortcuts)"
           title="Keyboard shortcuts (?)"
           aria-haspopup="dialog"
           aria-expanded={cheatSheetOpen}
-          class={["btn-quiet px-2 text-small text-ink-2 @max-[15rem]:w-11 @max-[15rem]:px-0", cheatSheetOpen && "bg-ink/10 text-ink"]}
-          ><span class="hidden @max-[15rem]:contents"><Icon name="keyboard" size={18} /></span><span class="@max-[15rem]:hidden">Shortcuts</span></button
+          class={["btn-quiet gap-2 px-2.5 text-small text-ink-2 @max-[15rem]:w-11 @max-[15rem]:px-0", cheatSheetOpen && "bg-ink/10 text-ink"]}
+          ><Icon name="keyboard" size={16} /><span class="@max-[15rem]:hidden">Keys</span></button
         >
       {/if}
       <a
@@ -1282,7 +1282,7 @@
             -->
             <section aria-label="Article" class="flex min-w-0 flex-1 flex-col items-center justify-center bg-paper px-5">
               <div class="relative">
-                <p class="reading-empty">No article open</p>
+                <p class="reading-empty">Time to read something beautiful.</p>
                 {#if listCount > 0 && !missing}
                   {#if tipSeen}
                     <p class="sr-only">Choose one from the list<span class="keyboard-hint">, or press j</span>.</p>
