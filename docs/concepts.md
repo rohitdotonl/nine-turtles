@@ -186,6 +186,8 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Continuous integration (CI)
 - GitHub Actions and workflows
 - Check script (`scripts/check.sh`)
+- Running checks side by side (parallel jobs, sharding)
+- Change notes (`docs/changes/`)
 - Screenshots in pull requests
 - Accessibility testing (axe)
 - Performance budget

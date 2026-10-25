@@ -66,14 +66,14 @@ summary (or say why none needed it):
 | Settings, backups, deploys, moving hosts, the daily check | `docs/operations/` |
 | An open question, or the owner's answer | `docs/planning/questions.md` |
 | A new concept, tool or term | `docs/concepts.md`: its name only, under the right group |
-| Anything, once merged | `docs/CHANGELOG.md`: one short entry at the top |
+| Anything, once merged | A new file in `docs/changes/` (never edit `docs/CHANGELOG.md` directly; see the folder's README) |
 | Project facts, rules or the map | This file |
 
 ## Keeping sessions small
 
 - **One milestone per thread.** When its pull request is merged, the thread is done; the next milestone starts in a fresh thread. Hand over through the documents, not memory.
 - Read only what the map says, and only the sections you need (search for the heading).
-- Don't read `docs/owner-guide.md`, `docs/CHANGELOG.md`, `README.md` or `docs/planning/tech-check-2026-10.md` unless updating them; for the changelog read only its top, for concepts search by name.
+- Don't read `docs/owner-guide.md`, `docs/CHANGELOG.md`, `README.md` or `docs/planning/tech-check-2026-10.md` unless updating them; for the changelog read only `docs/changes/README.md`, for concepts search by name.
 - Keep command output short: show failures, not pages of passes. CI runs the full set.
 - Look at screenshots only when a screen changed, one or two at a time.
 - Send wide searches to a helper agent so only its conclusion enters the session.

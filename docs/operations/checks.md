@@ -6,6 +6,23 @@ run from one script, `scripts/check.sh`, on GitHub Actions or anywhere else
 
 The script stops at the first failure and says which step failed.
 
+## Side by side, and skipped for documents
+
+On GitHub the script runs in four parts at once, each on its own computer
+(decision 0065): `scripts/check.sh frontend` (the first six steps below),
+`scripts/check.sh rust` (formatting, lint, tests), and `scripts/check.sh
+browser` (builds the frontend and the release program, then runs the browser
+tests) twice, each with half of the browser tests (`NINE_TURTLES_SHARD=1/2` and
+`2/2`). The required **All checks** waits for all four and passes only if
+every one passed. Each part is still a plain script anyone can run; no
+arguments runs everything in order, as before.
+
+A pull request that changes only documents (`*.md` files in `docs/` or at
+the top of the repository) skips the four parts and the image build:
+nothing in them can break the program, its tests or the image.
+`docs/libraries.md` is the exception, because the library check reads it.
+`.github/code-changed.sh` decides. Pushes to main always run everything.
+
 | Step | What it catches | Where it lives |
 |---|---|---|
 | Libraries are on the approved list | A library in `server/Cargo.toml` (in any of the ways Rust allows listing one) or `web/package.json` that isn't approved in `docs/libraries.md`; a GitHub Actions building block that isn't GitHub's own or isn't pinned | `scripts/check-libraries.mjs` |
@@ -40,9 +57,11 @@ in through the sign-in page with a made-up password (`web/playwright.config.ts`)
 - **Container image:** `.github/workflows/image.yml` builds the image on every
   pull request and checks it starts and answers `/status`. On main it also
   stores it and deploys it (decision 0011). It needs Docker, so it isn't in
-  `scripts/check.sh`; run `docker build .` to try it yourself.
+  `scripts/check.sh`; run `docker build .` to try it yourself. Skipped on
+  pull requests that change only documents.
 - **Screenshots on the pull request:** posted by GitHub Actions after the
-  checks (decision 0005).
+  checks (decision 0005). Each half of the browser tests keeps its own
+  pictures; the posting step puts them together.
 - **Weekly security report:** `.github/workflows/security.yml` runs
   `cargo audit` and `npm audit` every Monday. If either finds a known problem,
   it opens (or adds to) an issue titled "Weekly security report: libraries

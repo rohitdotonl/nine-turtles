@@ -132,7 +132,11 @@ a pull request is opened or updated, GitHub starts a fresh computer, builds
 nine turtles, runs every check, and shows the results on the pull request: a
 green tick ✓ if everything passed, a red cross ✗ if anything failed (with
 details). Because nine turtles' repository is public, GitHub runs these checks for free.
-The required one is called **All checks**; it runs every check in turn.
+The required one is called **All checks**. The checks run in parts on several
+computers at once (frontend, Rust, and the browser tests in two halves), and
+**All checks** turns green only when every part has passed, so a typical pull
+request is ready in about three minutes. A pull request that changes only
+documents skips the slow parts and is ready in under a minute (decision 0065).
 
 Once a week, GitHub also checks the libraries nine turtles uses against public
 lists of known security problems. If it finds one, it opens an issue in the
