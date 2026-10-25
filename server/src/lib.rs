@@ -18,6 +18,7 @@ pub mod assets;
 pub mod auth;
 pub mod backup;
 pub mod checking;
+pub mod cleanup;
 pub mod config;
 pub mod db;
 pub mod discover;

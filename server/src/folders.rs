@@ -404,17 +404,7 @@ pub async fn let_go(connection: &mut SqliteConnection, id: i64) -> Result<(), sq
     .fetch_optional(&mut *connection)
     .await?;
     if someone.is_none() {
-        // Remember the highest article number ever given, so numbers freed
-        // here are never given again (see `feeds::store_articles`).
-        sqlx::query(
-            "INSERT INTO settings (name, value)
-             VALUES ('articles_high_water',
-                     CAST(COALESCE((SELECT MAX(id) FROM articles), 0) AS TEXT))
-             ON CONFLICT (name) DO UPDATE SET value = CAST(
-                 MAX(CAST(value AS INTEGER), CAST(excluded.value AS INTEGER)) AS TEXT)",
-        )
-        .execute(&mut *connection)
-        .await?;
+        remember_high_water(connection).await?;
         // Nobody follows it, or waits to: only articles someone still has
         // (starred ones, or ones carried over to a new address) stay.
         sqlx::query(
@@ -430,6 +420,12 @@ pub async fn let_go(connection: &mut SqliteConnection, id: i64) -> Result<(), sq
             .bind(id)
             .execute(&mut *connection)
             .await?;
+        // The yearly clean-up's record of its removed articles goes too: if
+        // someone follows the feed again, it starts afresh (decision 0089).
+        sqlx::query("DELETE FROM forgotten_articles WHERE feed_id = ?")
+            .bind(id)
+            .execute(&mut *connection)
+            .await?;
         sqlx::query(
             "DELETE FROM feeds WHERE id = ?1
              AND NOT EXISTS (SELECT 1 FROM articles WHERE feed_id = ?1)
@@ -440,6 +436,21 @@ pub async fn let_go(connection: &mut SqliteConnection, id: i64) -> Result<(), sq
         .await?;
     }
     refresh_shared(connection, id).await
+}
+
+/// Remembers the highest article number ever given, so numbers freed by
+/// removing articles are never given again (see `feeds::store_articles`).
+pub async fn remember_high_water(connection: &mut SqliteConnection) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "INSERT INTO settings (name, value)
+         VALUES ('articles_high_water',
+                 CAST(COALESCE((SELECT MAX(id) FROM articles), 0) AS TEXT))
+         ON CONFLICT (name) DO UPDATE SET value = CAST(
+             MAX(CAST(value AS INTEGER), CAST(excluded.value AS INTEGER)) AS TEXT)",
+    )
+    .execute(&mut *connection)
+    .await?;
+    Ok(())
 }
 
 #[derive(Deserialize)]

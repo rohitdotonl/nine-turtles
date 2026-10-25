@@ -521,16 +521,16 @@ OPML is the standard file format feed readers use to move subscription lists bet
 ## 23. Your data: keeping and exporting
 
 **What it does**
-- In V1, nothing is removed automatically. Unsubscribing removes that feed's articles and your read history for it (your starred articles stay in Starred); another reader following the same feed keeps it as it was. Undo brings them back only straight away; after your next action they're gone from the app, though the backups still hold them as they were at the last nightly copy.
+- **The yearly clean-up** (decision 0089): an article you haven't starred is removed a year after nine turtles first received it, read or not. Starred articles stay forever. The year counts from when nine turtles received the article, not when it was published, so old posts from a blog you just added stay a year too. (If other readers already follow that blog, nine turtles received its posts when they did: you get those it still keeps, not ones it has already removed.) Another reader's star keeps an article for them, not for you. A removed article never comes back as new, even while its feed still lists it. The clean-up runs each night just after the backup is safely stored, never without one, so anything it removes is in that night's copy (kept up to a year). It happens quietly; the app shows nothing about it.
+- Unsubscribing removes that feed's articles and your read history for it (your starred articles stay in Starred); another reader following the same feed keeps it as it was. Undo brings them back only straight away; after your next action they're gone from the app, though the backups still hold them as they were at the last nightly copy.
 - Export of starred articles as a JSON Feed file (a standard, open format other feed tools can read), from Settings → Your data → **Export starred articles**. It holds every starred article, newest first, with its text, original link and the feed it came from, including starred articles of feeds you've since unsubscribed from.
 - **Backups** (decision 0076): every night, nine turtles stores a complete copy of everything (feeds, folders, articles, read marks, stars, settings) in storage outside Render, and another just before any update changes the database's structure. It keeps the last 30 nights, one copy a month for a year, and the last 10 taken before an update. At worst a day of reading activity is lost. Bringing a copy back, or moving to another host, is a written, tested procedure (`docs/operations/backups.md`, `docs/operations/moving-hosts.md`). Backups happen quietly in the background; the app never shows or asks anything about them. Your OPML file and the starred export remain your own safety net too.
-
-**Moved to V2:** removing unstarred articles a year after nine turtles received them (only after a successful backup, and never letting them come back as new).
 
 **How to check it**
 1. Export your starred articles and open the file: they're all there.
 2. Export your OPML file now and then, and keep it somewhere safe.
 3. In the backup storage (Cloudflare R2), `nightly/` holds a copy from last night.
+4. A year after you start, articles you never starred from before then are gone, and your starred ones are all still in Starred.
 
 ## 24. Languages
 
@@ -602,6 +602,6 @@ A rule says "when a new article **matches this**, **do that**", in plain fields,
 
 From DESIGN.md: public reading list page, passkey sign-in, Chinese and Japanese search, multiple users. (The own domain name was chosen on 25 October 2026: nineturtles.app, with the app at app.nineturtles.app; decision 0066. YouTube videos play in YouTube's own player since 25 October 2026; decision 0072.)
 
-Moved to V2 on 23 October 2026: backups and moving hosts, river mode (built 25 October 2026; per-feed reading modes too, decision 0082), WebSub (built 25 October 2026), the feed health page (built 25 October 2026), the yearly clean-up, the feeds guide page, and keeping a tab that was left open across an update working without a reload (built 25 October 2026, decision 0085).
+Moved to V2 on 23 October 2026: backups and moving hosts, river mode (built 25 October 2026; per-feed reading modes too, decision 0082), WebSub (built 25 October 2026), the feed health page (built 25 October 2026), the yearly clean-up (built 25 October 2026, decision 0089), the feeds guide page, and keeping a tab that was left open across an update working without a reload (built 25 October 2026, decision 0085).
 
 Never: notifications, badges, streaks, reading stats, endless feeds padded with things you didn't follow, algorithmic ranking, likes or comments, platform share buttons, scraping full articles, decorative effects or animation.

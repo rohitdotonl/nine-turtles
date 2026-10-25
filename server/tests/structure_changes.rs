@@ -1247,3 +1247,49 @@ async fn adding_emails_keeps_every_reader_and_device_and_gives_nobody_a_password
         .await;
     assert!(clash.is_err());
 }
+
+#[tokio::test]
+async fn adding_the_clean_ups_record_keeps_every_feed_article_and_mark() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just after account emails (structure change 14): one
+    // feed the owner follows, with a starred article and a read one.
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(14, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO feeds (id, url, url_key, title, added_at) VALUES (1, 'u', 'u', 'Garden', 1)",
+        "INSERT INTO subscriptions (person_id, feed_id, title, added_at) VALUES (1, 1, 'Garden', 1)",
+        "INSERT INTO articles (id, feed_id, fingerprint, title, received_at, sort_at)
+         VALUES (1, 1, 'a', 'A', 1, 1), (2, 1, 'b', 'B', 2, 2)",
+        "INSERT INTO entries (person_id, article_id, feed_id, sort_at, read, starred)
+         VALUES (1, 1, 1, 1, 0, 1), (1, 2, 1, 2, 1, 0)",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let entries: Vec<(i64, bool, bool)> =
+        sqlx::query_as("SELECT article_id, read, starred FROM entries ORDER BY article_id")
+            .fetch_all(&db)
+            .await
+            .unwrap();
+    assert_eq!(entries, [(1, false, true), (2, true, false)]);
+    let forgotten: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM forgotten_articles")
+        .fetch_one(&db)
+        .await
+        .unwrap();
+    assert_eq!(forgotten, 0);
+}

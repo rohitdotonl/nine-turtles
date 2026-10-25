@@ -36,6 +36,8 @@ own computer, and many more. Switching is a matter of changing five settings.
 | `monthly/2026-10.sqlite` | The first copy of that month | 12 |
 | `before-change/2026-10-25T141725Z-before-change-8.sqlite` | The copy taken just before structure change 8 | 10 |
 
+Just after each nightly copy is stored, the yearly clean-up removes articles nobody starred that arrived over a year ago (decision 0089). It never runs without a stored copy, so a removed article is always in last night's copy, and in that month's copy for a year. While backups are off or failing, nothing is removed.
+
 ## Switching it on (the owner does this; agents never see the keys)
 
 About 15 minutes. You'll create a storage "bucket" (a named folder in the
