@@ -188,6 +188,9 @@ test("a reader changes their email by a link to the new one, then deletes their 
 
   const { link } = await newestMail(next, "Confirm your new email for nine turtles");
   await page.goto(link);
+  // The page appears only once nine turtles has answered who is signed in, so
+  // wait for its button to take the keyboard before pressing Enter.
+  await expect(page.getByRole("button", { name: "Confirm email" })).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("status")).toContainText(`Your email is now ${next}.`);
   const told = await newestMail(old, "Your nine turtles email was changed");

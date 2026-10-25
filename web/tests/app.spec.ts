@@ -591,7 +591,11 @@ test("in a sidebar narrowed below 15rem, Keys keeps only its icon and stays a fu
 test("Other apps: an app password is made, shown once with the server address, and turned off", async ({ page }) => {
   await openApp(page, "/settings");
   // With the keyboard alone: the pressed row is replaced, so the keyboard moves to the new password's Copy.
-  await page.getByRole("button", { name: "Make an app password" }).focus();
+  // Until the server says whether other apps are on, the row is unavailable
+  // (aria-disabled) and a press does nothing; a keyboard user hears that too.
+  const makeFirst = page.getByRole("button", { name: "Make an app password" });
+  await expect(makeFirst).toHaveAttribute("aria-disabled", "false");
+  await makeFirst.focus();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("button", { name: "Copy app password" })).toBeFocused();
   const status = page.getByRole("status").filter({ hasText: "app password is ready" });
