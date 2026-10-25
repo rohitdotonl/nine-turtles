@@ -50,8 +50,18 @@
     measure();
   });
 
-  /** A letter typed while the list is open, outside the field, starts a find: no need to Tab there first. */
+  /**
+   * Escape empties the find field first, wherever the keyboard is in the list, and puts the keyboard
+   * back in the field; pressed again, it closes the list. A letter typed while the list is open, outside
+   * the field, starts a find: no need to Tab there first.
+   */
   function typed(event: KeyboardEvent) {
+    if (event.key === "Escape" && find !== "") {
+      event.preventDefault();
+      find = "";
+      field?.focus();
+      return;
+    }
     // Space stays with the button or list it's pressed on.
     if (event.target === field || event.key.length !== 1 || event.key === " " || event.ctrlKey || event.metaKey || event.altKey) return;
     field?.focus();
@@ -109,13 +119,6 @@
           autocomplete="off"
           spellcheck="false"
           aria-describedby="shortcut-count"
-          onkeydown={(event) => {
-            // Escape empties the field first; pressed again, it closes the list.
-            if (event.key === "Escape" && find !== "") {
-              event.preventDefault();
-              find = "";
-            }
-          }}
           class="search-capsule w-full pr-3 pl-[38px]"
         />
       </div>
@@ -134,8 +137,8 @@
     >
       <!--
         Two columns on a wide screen, each its own stack, so a short group never
-        leaves a hole beside a long one: moving around and your articles on the
-        left; reading, everywhere and the search filters on the right, where
+        leaves a hole beside a long one: reading and getting around on the
+        left; tidying up, anywhere and the search filters on the right, where
         there's room (decision 0049). On a narrow screen they stack in that order.
       -->
       {#if nothing}
@@ -249,11 +252,14 @@
       padding-inline: 1.25rem;
     }
   }
-  .shortcuts-head {
-    grid-template-columns: auto minmax(0, 15rem) auto;
-    grid-template-areas: "title find close";
-    justify-content: space-between;
-    min-height: 4rem;
+  /* On a wide window the title, the find field and the X share one line. */
+  @media (width >= 56rem) {
+    .shortcuts-head {
+      grid-template-columns: auto minmax(0, 15rem) auto;
+      grid-template-areas: "title find close";
+      justify-content: space-between;
+      min-height: 4rem;
+    }
   }
   /* The list's own Tab stop rings just inside its edge, so the card's edge never clips the outline. */
   .shortcut-region:focus-visible {

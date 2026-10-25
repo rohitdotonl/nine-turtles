@@ -202,6 +202,15 @@ test("the shortcut list fits a small phone without scrolling sideways", async ({
   expect(box.width).toBe(320);
   expect(box.height).toBe(640);
   await expect(dialog).toHaveCSS("border-top-left-radius", "0px");
+  // The find field takes a line of its own under the title and the X, the screen's full width less its margins (decision 0061).
+  const [heading, field, close] = await Promise.all([
+    dialog.getByRole("heading", { name: "Keyboard shortcuts" }).boundingBox(),
+    dialog.getByRole("searchbox", { name: "Find a shortcut" }).boundingBox(),
+    dialog.getByRole("button", { name: "Close" }).boundingBox(),
+  ]);
+  expect(field!.y).toBeGreaterThanOrEqual(heading!.y + heading!.height);
+  expect(field!.y).toBeGreaterThanOrEqual(close!.y + close!.height - 1);
+  expect(field!.width).toBeGreaterThan(260);
 });
 
 test("on a desktop window the shortcut list fits without scrolling, at least 48px clear of the window's top and foot", async ({ page, isMobile }) => {
@@ -490,7 +499,13 @@ test("the shortcut list finds a shortcut by its words or its key, and a letter t
   await field.fill("zebra");
   await expect(dialog.getByText("No shortcut matches “zebra”.")).toBeVisible();
   await expect(dialog.getByRole("row")).toHaveCount(0);
-  // Escape empties the field first, then closes the list; opened again, it starts whole.
+  // Escape empties the field first, even with the keyboard elsewhere in the list, then closes the list; opened again, it starts whole.
+  await field.fill("star");
+  await dialog.getByRole("button", { name: "Close" }).focus();
+  await page.keyboard.press("Escape");
+  await expect(field).toBeFocused();
+  await expect(field).toHaveValue("");
+  await field.fill("zebra");
   await page.keyboard.press("Escape");
   await expect(field).toHaveValue("");
   await expect(dialog.getByRole("region", { name: "Tidying up" })).toBeVisible();
