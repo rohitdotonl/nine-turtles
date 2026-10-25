@@ -4,6 +4,16 @@ A plain-language history of nine turtles (called slowfeed until 24 October 2026)
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 25 October 2026: The documents follow Apple Books, and are shorter
+
+- DESIGN.md now says plainly that Apple Books is the one design reference,
+  after the floors, and a few principles that the redesign had outgrown
+  were brought up to date (decision 0059).
+- Each screen is described once, in SPEC.md, so DESIGN.md is about half as
+  long. ENGINEERING.md no longer repeats AGENTS.md's working agreements.
+- The 31 step-by-step redesign decision notes were folded into one summary
+  (decision 0061). Nothing changes in the app.
+
 ## 25 October 2026: A bookmark in every article, search tucked away on a phone
 
 - Leave a long article halfway and it now opens where you stopped, even
