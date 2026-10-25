@@ -271,7 +271,9 @@ test.describe("on a phone", () => {
     const bar = (await page.locator(".pane-bar").filter({ has: heading }).boundingBox())!;
     const name = (await page.getByText("Name", { exact: true }).boundingBox())!;
     expect(name.y - (bar.y + bar.height)).toBeLessThanOrEqual(24);
-    // Save takes the full width, and Unsubscribe sits in a group of its own at least 32px above it.
+    // Save takes the full width, and Unsubscribe sits in a group of its own at least 32px above it
+    // once the form is scrolled to its end (the feed's settings make it taller than a phone).
+    await page.locator(".page-sheet .scroller").evaluate((element) => (element.scrollTop = element.scrollHeight));
     const save = (await page.getByRole("button", { name: "Save" }).boundingBox())!;
     const unsubscribe = (await page.getByRole("button", { name: /^Unsubscribe/ }).boundingBox())!;
     expect(save.width).toBeGreaterThan(page.viewportSize()!.width - 48);

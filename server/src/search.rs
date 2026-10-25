@@ -452,7 +452,8 @@ pub async fn find(
         query.push(")");
     }
     if search.unread {
-        query.push(" AND articles.read = 0");
+        // A feed that flows past is never in Unread (SPEC section 10).
+        query.push(" AND articles.read = 0 AND feeds.river = 0");
     }
     if search.starred {
         query.push(" AND articles.starred = 1");

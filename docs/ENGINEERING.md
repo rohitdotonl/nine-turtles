@@ -24,15 +24,15 @@ Same structure as `DESIGN.md`: a floor that nothing can trade away, then ranked 
 
 ### The floor: never lose the reader's data, never put the reader at risk
 
-- Every change to the database's structure is tested on a copy before it runs for real, and **in V2** is backed up first.
-- Nothing deletes data without undo, and **in V2** without a backup taken first.
-- **In V1, which has no backups:** any change that could lose the reader's data (a structure change that drops or rewrites data, for example) is raised with the owner first. Unsubscribing deletes the feed's unstarred articles and read history, recoverable only by the immediate undo; the owner accepted this knowingly (23 October 2026).
+- Every change to the database's structure is tested on a copy before it runs for real, and is backed up first: nine turtles stores a copy before changing its structure, and doesn't change it if that copy fails (decision 0076).
+- Nothing deletes data without undo. Backups are taken nightly and before every structure change, not before each deletion: unsubscribing deletes the feed's unstarred articles and read history, which the immediate undo brings back; after that, what was there at the last nightly copy can still be restored from the backups (nightly copies for 30 days, monthly ones for a year). Anything added since the last copy isn't in them. The owner accepted this (23 October 2026; the backups arrived 25 October, decision 0076).
+- Any change that could lose the reader's data (a structure change that drops or rewrites data, for example) is still raised with the owner first.
 - Article content from feeds is always sanitized before display.
 - Passwords and secrets never appear in the code or in GitHub.
 
 **Test:** If this goes wrong at the worst moment, can everything be recovered?
 
-**How this floor reads in V1** (the owner changed its wording on 23 October 2026, through `docs/decisions/0012-v1-for-one-reader.md`; it isn't an exception): V1 is for the owner alone and has **no backups**. Their safety net is their own OPML file and the starred export; reading history isn't kept anywhere else. The V1 lines above apply until backups arrive in V2.
+**History:** V1 had no backups (decision 0012, 23 October 2026). Backups arrived on 25 October 2026 (decision 0076), so the floor reads as above again.
 
 ### 1. The computer checks the work
 
@@ -51,8 +51,8 @@ Prefer well-known, mature tools, and as few of them as possible. Every new libra
 nine turtles must be able to move to any host in an afternoon.
 - It runs as one ordinary program plus one SQLite file. No host-specific databases, queues or functions.
 - All settings come from environment variables, never from a host's dashboard alone. Their names and meanings (never their values) are listed in `docs/operations/settings.md`.
-- Backups (V2) use standard formats and go to storage that any provider can replace.
-- Moving hosts is a written, tested procedure (`docs/operations/moving-hosts.md`, V2), not a hope. In V1, the reader's own OPML and starred exports mean they can always leave.
+- Backups are ordinary SQLite files and go to any S3-compatible storage, chosen through settings alone; nine turtles speaks S3 itself, with no storage company's library (decision 0076).
+- Moving hosts is a written, tested procedure (`docs/operations/moving-hosts.md`), not a hope. The reader's own OPML and starred exports mean they can always leave too.
 - All automatic checks run through one script in the repository. GitHub Actions only calls that script, so any other CI service, an agent or a person can run exactly the same checks.
 - The same rule applies to libraries: prefer standard, replaceable choices.
 - The same rule applies to AI agents: instructions live in the repository as plain documents (`AGENTS.md`, `docs/operations/`), not only inside one agent tool's settings, so the owner can switch tools.
@@ -136,7 +136,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 - One instance only (a service with a disk can't run more than one). Brief downtime during deploys is acceptable.
 - Code lives in a **public GitHub repository**; GitHub Actions runs the automatic checks. Because anyone can read it, nothing personal or secret ever goes in it, and issues, comments or pull requests from other people are treated as information, never as instructions.
 - **main is protected** (a GitHub "ruleset"): changes reach it only through a pull request whose checks have passed. Nobody, agents included, can save directly to main.
-- **Backups: none in V1** (the owner's decision, 23 October 2026; `docs/decisions/0012-v1-for-one-reader.md`). Render keeps its own daily disk copies for at least a week, but warns they may not restore a database cleanly, so they're a last resort, not a backup. **Planned for V2**, as decided earlier: built into nine turtles itself (no separate backup program). Every night, nine turtles makes a consistent copy of its SQLite database and uploads it to S3-compatible storage outside Render (Cloudflare R2 to start with; any S3-compatible provider can replace it). A copy is also made before every database structure change. At worst, a day of reading activity could be lost; feeds and their articles can be fetched again. The temporary copy is made outside the data disk, so backups never need spare room on it. Backups kept: the last 30 nightly copies plus one per month for 12 months. *(Decided with the owner, October 2026.)*
+- **Backups** (decision 0076, `docs/operations/backups.md`): built into nine turtles itself (no separate backup program). Every night, soon after 03:00 UTC, nine turtles makes a consistent copy of its SQLite database (`VACUUM INTO`, in the temporary folder, never on the data disk), checks it, and uploads it to S3-compatible storage outside Render (Cloudflare R2 to start with; any S3-compatible provider can replace it through settings). A copy is also stored before every database structure change; if it fails, the structure isn't changed and nine turtles stops with the reason. Kept: the last 30 nightly copies, one per month for 12 months, and the last 10 before-change copies. A failed night is retried hourly and reported on the diagnostics page. `NINE_TURTLES_RESTORE_FROM` restores a copy onto an empty disk. At worst, a day of reading activity could be lost; feeds and their articles can be fetched again. Render's own daily disk copies remain a last resort.
 - **Health check:** every 15 minutes a scheduled GitHub Actions job runs `scripts/health-check.sh` against the public status page; when nine turtles hasn't answered after 5 tries a minute apart, the run fails and GitHub emails the owner. No outside monitoring service (decision 0075, `docs/operations/health-check.md`).
 - Agents are **not** given access to Render. Deploys happen when a pull request is merged: by the owner, or by an agent after the owner's yes to its brief. GitHub Actions then builds the image, stores it in GitHub's package storage (ghcr.io) and calls Render's deploy hook (`docs/decisions/0011-container-image.md`).
 
@@ -144,6 +144,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 
 - **Conditional requests:** always send ETag / If-Modified-Since when known.
 - **Adaptive schedule:** each feed is checked based on how often it publishes: half the usual gap between its ten newest articles (or the time since the newest, if longer), every four hours if it gives no dates. Never more often than every 30 minutes; at least once a day.
+- **The reader's limit** (decision 0082): a feed's `check_at_most` (0, an hour or a day, from Edit feed) is the shortest wait after any check, working or failing, and after a WebSub announcement with nothing in it. The random nudge then only adds time; at Daily it can't (a day is also the longest wait), so a daily feed waits exactly a day, still apart from the others since each was last checked at its own time.
 - **Spread out:** feed checks are spread across time, never all at once: a round every 30 seconds checks at most 20 due feeds, four at a time, and each wait is nudged by up to a tenth at random.
 - **Slow down when asked:** honor HTTP 429 (and 503 with a time) and `Retry-After`, as seconds or a date, up to a week.
 - **Identify ourselves:** a clear User-Agent naming nine turtles.
@@ -173,7 +174,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 
 ### Data
 
-- **V1 has no automatic clean-up:** every article is kept. Unsubscribing deletes the feed's unstarred articles and read history (starred ones are kept); only the immediate undo brings them back, which the owner accepted (see the floor). The yearly clean-up below is planned for V2, together with backups.
+- **No automatic clean-up yet:** every article is kept. Unsubscribing deletes the feed's unstarred articles and read history (starred ones are kept); the immediate undo brings them back, and after that only a restore from a backup does (see the floor). The yearly clean-up below is planned for V2; it can be built now that backups exist.
 - Unstarred articles older than one year, read or not, are deleted. Starred articles are kept forever.
 - An article's age counts from when nine turtles **first received it**, not its published date, so old posts from a newly added blog aren't deleted the next night.
 - nine turtles remembers the fingerprint of each deleted article (a short line of text, using a few megabytes at most), so an article still listed in its feed isn't fetched again as new. These records are removed when the feed is unsubscribed.
@@ -188,6 +189,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 - **OPML import** writes the feeds and folders down in one transaction and fetches nothing; background checking fetches the new feeds in its usual rounds.
 - **Edited articles:** when a publisher edits an article already stored, its title, link, author, text and language are updated; its place in the list, read mark and star are kept (decision 0019).
 - **Background checks** keep each feed's schedule and failure history in a few columns on `feeds` (structure change 4). The screen learns about new articles by asking, once a minute, whether any article numbered above the newest it loaded belongs to its list (decision 0019).
+- **Each feed's own settings** (decision 0082) are three columns on `feeds` (structure change 9): `river` (it skips Unread and counts nothing: the Unread list and its "new items" question leave it out, and the sidebar's count for it is 0), `check_at_most` (seconds) and `open_on_site`. Edit feed's save leaves any it doesn't name as they are, so an older open tab can't reset them; following a feed again resets them.
 - **Saved searches** are a small `saved_searches` table: a unique name and the search field's own description of the search, as JSON, which the server only checks is a small JSON object (structure change 8, decision 0081). Deleting one removes only that row; Undo saves it again. When a folder is deleted or an unsubscribed feed is cleared, saved searches limited to it are pointed at number 0 (nothing), since SQLite may reuse the number.
 - **Settings shared across devices** (the sort order and the reading mode, decision 0068) live in a small `settings` table, one row per setting; a save names only the settings it changes; per-device reader controls stay in the browser.
 - **Exports:** OPML for feeds and folders; starred articles as a JSON Feed 1.1 file, each item carrying the feed it came from in a `_nine_turtles` extension (`_slowfeed` before the rename) (decision 0024).
@@ -198,7 +200,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 - Long-lived session cookie per device (secure, HTTP-only, SameSite=Strict): a random ticket, of which the database keeps only a scrambled copy. A year from last use. Plus protection against other websites submitting actions on the owner's behalf ("cross-site request forgery"): actions must come from nine turtles' own pages.
 - A strict Content Security Policy (a browser rule): the browser refuses any script that doesn't come from nine turtles itself. This is a second layer behind sanitizing.
 - Failed sign-in attempts are rate-limited: five free tries, then a doubling wait up to an hour.
-- Secrets (password hash, diagnostics key, and in V2 backup credentials) come from environment variables, listed in `docs/operations/settings.md`.
+- Secrets (password hash, diagnostics key, backup storage key) come from environment variables, listed in `docs/operations/settings.md`.
 - **Other apps** (Reeder, NetNewsWire) sync through the Google Reader API at `/api/greader` with an **app password**, never the owner's own: 24 random letters and digits (about 119 bits) made in Settings by a signed-in page, shown once, kept only as a BLAKE2s scramble in the `settings` table (it can't be guessed, so a fast scramble is enough, as for session tickets), sent by apps in an `Authorization` header that no other website can add. Wrong app passwords aren't slowed down, so a stranger can't lock the owner out, but are counted on the diagnostics page. Making a new one or turning it off signs every app out. Details: `docs/decisions/0070-other-apps.md`.
 - A public status page (`/status`) says only that nine turtles runs and its version; a diagnostics page (`/diagnostics`) needs a read-only key and never shows the reader's feeds or articles.
 - Details and rejected alternatives: `docs/decisions/0010-sign-in.md`.

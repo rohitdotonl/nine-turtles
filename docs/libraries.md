@@ -28,7 +28,7 @@ whatever the lock files say.*
 |---|---|---|---|
 | axum | 0.8 | The web server: answers requests from the browser | Approved |
 | tokio | 1.x | Lets the server do many things at once (fetching hundreds of feeds while serving you) | Approved |
-| reqwest | 0.13 | Downloads feeds from publishers' websites | Approved |
+| reqwest | 0.13 | Downloads feeds from publishers' websites, and uploads backups to the backup storage (its `stream` feature sends a big file without holding it in memory) | Approved |
 | feed-rs | 3.0 | Reads RSS, Atom and JSON Feed files | Approved |
 | ammonia | 4.2 | Cleans article content so nothing unsafe reaches the screen | Approved |
 | sqlx | 0.9 | Talks to the SQLite database, and updates its structure safely ("migrations") | Approved |
@@ -41,7 +41,7 @@ whatever the lock files say.*
 | tower-http | 0.7 | Standard web-server extras: compression, security headers | Approved |
 | thiserror | 2.x | Clear error messages inside the code | Approved |
 | getrandom | 0.4 | Asks the computer for unguessable random numbers, for each signed-in device's ticket. Comes with argon2 already | Approved (October 2026, Milestone 2) |
-| hmac, sha1, sha2 | 0.13, 0.11, 0.11 | Check that WebSub deliveries really come from the publisher's hub (their signature). Already came with other libraries | Approved (the owner's yes on 25 October 2026, decision 0069) |
+| hmac, sha1, sha2 | 0.13, 0.11, 0.11 | Check that WebSub deliveries really come from the publisher's hub (their signature), and sign each request to the backup storage (decision 0076). Already came with other libraries | Approved (the owner's yes on 25 October 2026, decision 0069) |
 | blake2 | 0.11 | A fast scrambler: nine turtles stores only a scrambled copy of each device's ticket. Comes with argon2 already | Approved (October 2026, Milestone 2) |
 
 SQLite itself (and its FTS5 search) comes bundled with sqlx.

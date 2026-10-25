@@ -22,6 +22,8 @@ pub fn config() -> Config {
         local_feeds_allowed: true,
         test_check_seconds: None,
         public_url: None,
+        backup: None,
+        restore_from: None,
     }
 }
 

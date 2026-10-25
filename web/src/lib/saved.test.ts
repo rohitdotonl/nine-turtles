@@ -3,7 +3,7 @@ import { describe as describeQuery, sameQuery, suggestedName, toQuery } from "./
 import type { Query } from "./search";
 
 const library = {
-  feeds: [{ id: 3, title: "Garden Notes", siteUrl: null, unread: 0, folders: [2] }],
+  feeds: [{ id: 3, title: "Garden Notes", siteUrl: null, unread: 0, folders: [2], river: false, check: "automatic" as const, openOnSite: false }],
   folders: [{ id: 2, name: "Tech" }],
 };
 

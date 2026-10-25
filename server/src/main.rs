@@ -55,6 +55,7 @@ async fn serve() {
     };
     tokio::spawn(nine_turtles::checking::run(state.clone()));
     tokio::spawn(nine_turtles::search::catch_up(state.db.clone()));
+    tokio::spawn(nine_turtles::backup::run(state.clone()));
     let app = nine_turtles::router(state);
     let listener = match tokio::net::TcpListener::bind(address).await {
         Ok(listener) => listener,
