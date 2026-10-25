@@ -57,7 +57,7 @@
   --color-tint-sidebar: var(--tint-sidebar);
 }
 /*
-  Two themes, Original (decision 0056) and Plain (decision 0062), each with
+  Two themes, Original (decision 0056) and Plain (decision 0063), each with
   a day and a night version. preferences.ts writes the theme to <html data-theme="…"> and the resolved
   Appearance (light or dark, following the device unless the reader chose
   one) to data-mode. Before the script runs there are neither, so the page is
@@ -120,7 +120,7 @@
 }
 
 /*
-  Plain (decision 0062): rohit.onl's bare, plain-HTML look. Black words on
+  Plain (decision 0063): rohit.onl's bare, plain-HTML look. Black words on
   white, every area all but white, and the one color the early web had: links
   in articles in the browser's own blue, purple once visited, always
   underlined. Its accent (the unread dot, search matches) is the text color,
@@ -1159,6 +1159,12 @@ textarea {
     display: none;
   }
 }
+/* What a touch screen says instead of a key hint. */
+@media not ((hover: none) and (pointer: coarse)) {
+  .touch-only {
+    display: none;
+  }
+}
 
 /* Radio buttons and checkboxes in the text color, never the browser's blue. */
 input {
@@ -1324,7 +1330,7 @@ input {
   font-size: 1em;
 }
 
-/* In the text color, except in Plain, whose links are the browser's own blue and purple (decision 0062). */
+/* In the text color, except in Plain, whose links are the browser's own blue and purple (decision 0063). */
 .article-text a {
   color: var(--link, currentColor);
   text-decoration: underline;
@@ -1412,6 +1418,18 @@ input {
   font-family: var(--font-serif);
   font-size: var(--text-large);
   line-height: var(--text-large--line-height);
+  color: var(--muted);
+  text-align: center;
+}
+
+/*
+  The one-time tip under it (decision 0062): small interface type in the
+  same muted grey, 12px below, with the keys as key caps. Never the accent.
+  It hangs below the line, so the line stays in the pane's middle.
+*/
+.shortcut-tip {
+  margin-top: 0.75rem;
+  font-size: var(--text-small);
   color: var(--muted);
   text-align: center;
 }

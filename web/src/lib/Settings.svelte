@@ -140,7 +140,7 @@
             </div>
           </fieldset>
 
-          <!-- Original, or Plain: rohit.onl's bare look (decision 0062). -->
+          <!-- Original, or Plain: rohit.onl's bare look (decision 0063). -->
           <fieldset class="inset-row">
             <legend class="row-name">Theme</legend>
             <div class="choices control" style="--columns: 2">

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { APPEARANCES, LOOKS, OLD_THEMES, THEMES, isAppearance, isTheme, resolveMode } from "./themes";
 
 describe("themes", () => {
-  it("has the themes from DESIGN.md: Original (decision 0056) and Plain (decision 0062)", () => {
+  it("has the themes from DESIGN.md: Original (decision 0056) and Plain (decision 0063)", () => {
     expect(THEMES).toEqual(["original", "plain"]);
     expect(THEMES.map((theme) => LOOKS[theme].label)).toEqual(["Original", "Plain"]);
   });

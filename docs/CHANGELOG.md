@@ -15,6 +15,17 @@ not how it was done.
 - Two browser checks that sometimes failed on a busy computer now wait for
   the save they check, so the checks on main are green again.
 
+## 25 October 2026: Shortcuts that are easier to find
+
+- The bottom of the sidebar now says **Shortcuts** in words, not just a
+  keyboard picture.
+- The shortcut list is grouped by what you're doing (Reading, Getting
+  around, Tidying up, Anywhere) and has a search box: press `?` and type
+  "star" to find how to star.
+- The first time you see "No article open", a quiet line under it says
+  "Press J to open the first article, or ? for every shortcut." Once you
+  open an article it never shows again.
+
 ## 25 October 2026: Pull request pictures look like the app in use
 
 - The screenshots on each pull request now show a small made-up library of

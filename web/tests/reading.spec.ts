@@ -66,9 +66,13 @@ test.describe("on a wide window", () => {
     const [line, pane] = await Promise.all([empty.boundingBox(), article(page).boundingBox()]);
     expect(Math.abs(line!.x + line!.width / 2 - (pane!.x + pane!.width / 2))).toBeLessThan(4);
     expect(Math.abs(line!.y + line!.height / 2 - (pane!.y + pane!.height / 2))).toBeLessThan(4);
-    await expect(article(page)).toContainText("Choose one from the list, or press j.");
-    await expect(article(page).locator(".sr-only", { hasText: "Choose one from the list" })).toHaveCSS("position", "absolute");
-    await expect(article(page).locator("kbd")).toHaveCount(0);
+    // The first time, a quiet tip under it names the two keys worth knowing first (decision 0062),
+    // small, in the same muted grey, its keys as key caps.
+    const tip = article(page).locator(".shortcut-tip");
+    await expect(tip).toBeVisible();
+    await expect(tip).toContainText("to open the first article, or");
+    await expect(tip.locator("kbd")).toHaveText(["J", "?"]);
+    expect(await tip.evaluate((element) => getComputedStyle(element).color)).toBe(muted);
 
     await page.keyboard.press("j");
     await expect(row(page, "The pleasure of a slow letter")).toHaveAttribute("aria-current", "true");
@@ -235,7 +239,7 @@ test.describe("on a wide window", () => {
     // Appearance: day, night or as the device is set, applied at once (decision 0056).
     await expect(panel.getByRole("group", { name: "Appearance" }).getByRole("radio")).toHaveCount(3);
     await expect(panel.getByRole("radio", { name: "Match device" })).toBeChecked();
-    // Theme: Original or Plain, whose article links are the browser's blue (decision 0062).
+    // Theme: Original or Plain, whose article links are the browser's blue (decision 0063).
     const themes = panel.getByRole("group", { name: "Theme" });
     await expect(themes.getByRole("radio")).toHaveCount(2);
     await expect(themes.getByRole("radio", { name: "Original" })).toBeChecked();
@@ -272,7 +276,7 @@ test.describe("on a wide window", () => {
     // Fonts are named in their own face; line width has three steps.
     await panel.getByRole("radio", { name: "Atkinson Hyperlegible" }).check();
     await expect.poll(() => root.evaluate((html) => html.style.getPropertyValue("--reading-font"))).toContain("Atkinson");
-    // rohit.onl's font: the device's own serif (decision 0062).
+    // rohit.onl's font: the device's own serif (decision 0063).
     await panel.getByRole("radio", { name: "System serif" }).check();
     await expect.poll(() => root.evaluate((html) => html.style.getPropertyValue("--reading-font"))).toContain("ui-serif");
     await panel.getByRole("radio", { name: "Atkinson Hyperlegible" }).check();
@@ -663,6 +667,23 @@ test("on a phone, an article fills the screen and the back button returns to the
   await article(page).getByRole("button", { name: "Back to Reading Room" }).click();
   await expect(row(page, "The pleasure of a slow letter")).toBeFocused();
   await expect(article(page)).toBeHidden();
+});
+
+test("the shortcut tip shows only until an article is first opened, then never again on this device (decision 0062)", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the tip names keys, so it's for screens with a keyboard");
+  await openRoom(page);
+  const tip = article(page).locator(".shortcut-tip");
+  await expect(tip).toBeVisible();
+  // Opened with a click, not a key: the tip has done its job either way.
+  await row(page, "Only the first page").click();
+  await expect(title(page, "Only the first page")).toBeVisible();
+  await page.reload();
+  await appReady(page);
+  await expect(article(page).locator(".reading-empty")).toHaveText("No article open");
+  await expect(tip).toHaveCount(0);
+  await expect(article(page)).toContainText("Choose one from the list, or press j.");
+  await expect(article(page).locator(".sr-only", { hasText: "Choose one from the list" })).toHaveCSS("position", "absolute");
+  await expect(article(page).locator("kbd")).toHaveCount(0);
 });
 
 test.describe("your place in an article (decision 0060)", () => {

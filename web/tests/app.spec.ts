@@ -154,12 +154,15 @@ test("? opens the shortcut list, Escape closes it and returns the keyboard's pla
   await expect(markAll.locator("kbd")).toHaveText(["⇧A"]);
   await expect(markAll).toHaveAccessibleName(/Shift A/);
   // Four named groups, each a region a screen reader can jump to.
-  for (const group of ["Moving around", "Reading", "Your articles", "Everywhere"]) {
+  for (const group of ["Reading", "Getting around", "Tidying up", "Anywhere"]) {
     await expect(dialog.getByRole("region", { name: group })).toBeVisible();
   }
   // The list scrolls from the keyboard too: it's a Tab stop of its own, and a real one rings.
   const list = dialog.getByRole("region", { name: "Shortcuts" });
   await expect(list).toHaveAttribute("tabindex", "0");
+  // Tab goes on to the find field, then Close, then the list.
+  await page.keyboard.press("Tab");
+  await expect(dialog.getByRole("searchbox", { name: "Find a shortcut" })).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(dialog.getByRole("button", { name: "Close" })).toBeFocused();
   await expect(dialog.getByRole("button", { name: "Close" })).toHaveCSS("outline-style", "solid");
@@ -170,11 +173,15 @@ test("? opens the shortcut list, Escape closes it and returns the keyboard's pla
   await expect(dialog.getByText("Next / previous feed")).toHaveCount(0);
   await expect(dialog.getByText("is:unread")).toBeVisible();
 
-  // Shortcuts don't fire behind the open list.
+  // Shortcuts don't fire behind the open list: a key typed there finds itself in the list instead (decision 0062).
   await page.keyboard.press("[");
   if (sidebarShown) await expect(sidebar(page)).toBeVisible();
   else await expect(sidebar(page)).toBeHidden();
+  await expect(dialog.getByRole("searchbox", { name: "Find a shortcut" })).toHaveValue("[");
+  await expect(dialog.getByRole("row")).toHaveText([/Show \/ hide sidebar/]);
 
+  // Escape empties the find field first, then closes the list.
+  await page.keyboard.press("Escape");
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
   expect(await page.evaluate(() => document.activeElement?.textContent?.trim())).toBe(before);
@@ -195,6 +202,15 @@ test("the shortcut list fits a small phone without scrolling sideways", async ({
   expect(box.width).toBe(320);
   expect(box.height).toBe(640);
   await expect(dialog).toHaveCSS("border-top-left-radius", "0px");
+  // The find field takes a line of its own under the title and the X, the screen's full width less its margins (decision 0062).
+  const [heading, field, close] = await Promise.all([
+    dialog.getByRole("heading", { name: "Keyboard shortcuts" }).boundingBox(),
+    dialog.getByRole("searchbox", { name: "Find a shortcut" }).boundingBox(),
+    dialog.getByRole("button", { name: "Close" }).boundingBox(),
+  ]);
+  expect(field!.y).toBeGreaterThanOrEqual(heading!.y + heading!.height);
+  expect(field!.y).toBeGreaterThanOrEqual(close!.y + close!.height - 1);
+  expect(field!.width).toBeGreaterThan(260);
 });
 
 test("on a desktop window the shortcut list fits without scrolling, at least 48px clear of the window's top and foot", async ({ page, isMobile }) => {
@@ -207,9 +223,9 @@ test("on a desktop window the shortcut list fits without scrolling, at least 48p
   const box = (await dialog.boundingBox())!;
   expect(box.y).toBeGreaterThanOrEqual(48);
   expect(800 - (box.y + box.height)).toBeGreaterThanOrEqual(48);
-  // The search filters sit in the right-hand column, under Everywhere, and the whole list shows.
+  // The search filters sit in the right-hand column, under Anywhere, and the whole list shows.
   const [everywhere, filters] = [
-    (await dialog.getByRole("region", { name: "Everywhere" }).boundingBox())!,
+    (await dialog.getByRole("region", { name: "Anywhere" }).boundingBox())!,
     (await dialog.getByRole("region", { name: "Search filters" }).boundingBox())!,
   ];
   expect(Math.abs(filters.x - everywhere.x)).toBeLessThan(1);
@@ -242,7 +258,7 @@ test("Settings: appearance, font, size and width apply at once and are remembere
   await expect(page).toHaveURL(/\/settings$/);
   await expect(page.getByRole("heading", { level: 2, name: "Settings" })).toBeFocused();
 
-  // Original, matching the device until another Appearance is chosen (decision 0056); Plain is the other theme (decision 0062).
+  // Original, matching the device until another Appearance is chosen (decision 0056); Plain is the other theme (decision 0063).
   await expect(page.locator("label.tile")).toHaveCount(0);
   await expect(page.getByRole("group", { name: "Theme" }).getByRole("radio")).toHaveCount(2);
   await expect(page.getByRole("radio", { name: "Original" })).toBeChecked();
@@ -285,12 +301,12 @@ test("Settings: appearance, font, size and width apply at once and are remembere
 
   const sample = page.locator(".reading-sample");
   await expect(sample).toHaveCSS("font-family", /^Literata/);
-  // rohit.onl's font, the device's own serif (decision 0062).
+  // rohit.onl's font, the device's own serif (decision 0063).
   await page.getByLabel("System serif").check();
   await expect(sample).toHaveCSS("font-family", /^ui-serif/);
   await page.getByLabel("Atkinson Hyperlegible").check();
   await expect(sample).toHaveCSS("font-family", /^"Atkinson Hyperlegible"/);
-  // Plain: rohit.onl's bare look, black on white by day, and back to Original (decision 0062).
+  // Plain: rohit.onl's bare look, black on white by day, and back to Original (decision 0063).
   await page.getByRole("radio", { name: "Plain" }).check();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "plain");
   await expect(page.locator("body")).toHaveCSS("color", "rgb(0, 0, 0)");
@@ -471,6 +487,42 @@ test("the chrome never advertises shortcuts: no hint under the list, with the si
   await expect(page.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeVisible();
 });
 
+test("the shortcut list finds a shortcut by its words or its key, and a letter typed anywhere in it starts the find (decision 0062)", async ({ page, isMobile }) => {
+  test.skip(isMobile, "Shortcuts are for screens with a keyboard.");
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await openApp(page);
+  await page.keyboard.press("?");
+  const dialog = page.getByRole("dialog", { name: "Keyboard shortcuts" });
+  const field = dialog.getByRole("searchbox", { name: "Find a shortcut" });
+  await expect(field).toBeVisible();
+  // The keyboard starts on the title; typing a letter takes it to the field, letter and all.
+  await page.keyboard.type("star");
+  await expect(field).toBeFocused();
+  await expect(field).toHaveValue("star");
+  await expect(dialog.getByRole("row")).toHaveText([/Star \/ unstar/, /Go to Starred/, /is:starred/]);
+  await expect(dialog.getByRole("region", { name: "Tidying up" })).toHaveCount(0);
+  // By its key, as printed or with a space between two presses.
+  await field.fill("g u");
+  await expect(dialog.getByRole("row")).toHaveText([/Go to Unread/]);
+  await field.fill("shift a");
+  await expect(dialog.getByRole("row")).toHaveText([/Mark all as read/]);
+  await field.fill("zebra");
+  await expect(dialog.getByText("No shortcut matches “zebra”.")).toBeVisible();
+  await expect(dialog.getByRole("row")).toHaveCount(0);
+  // Escape empties the field first, even with the keyboard elsewhere in the list, then closes the list; opened again, it starts whole.
+  await field.fill("star");
+  await dialog.getByRole("button", { name: "Close" }).focus();
+  await page.keyboard.press("Escape");
+  await expect(field).toBeFocused();
+  await expect(field).toHaveValue("");
+  await field.fill("zebra");
+  await page.keyboard.press("Escape");
+  await expect(field).toHaveValue("");
+  await expect(dialog.getByRole("region", { name: "Tidying up" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+});
+
 test("on a computer a 1px line parts the sidebar, the list and the reading pane (decision 0054)", async ({ page, isMobile }) => {
   test.skip(isMobile, "A phone shows one pane at a time, with no line.");
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -479,7 +531,7 @@ test("on a computer a 1px line parts the sidebar, the list and the reading pane 
   await expect(page.locator(".list-pane")).toHaveCSS("border-right-width", "1px");
 });
 
-test("the sidebar ends with Add feed, then the shortcut list and Settings as icons; its toggle says what it does", async ({ page, isMobile }) => {
+test("the sidebar ends with Add feed, then Shortcuts in words and Settings as an icon; its toggle says what it does", async ({ page, isMobile }) => {
   test.skip(isMobile, "The phone has its own screens and no sidebar toggle.");
   await page.setViewportSize({ width: 1440, height: 900 });
   await openApp(page);
@@ -495,6 +547,11 @@ test("the sidebar ends with Add feed, then the shortcut list and Settings as ico
     expect(Math.min(each.width, each.height)).toBeGreaterThanOrEqual(44);
   }
   expect(add.x + add.width).toBeLessThanOrEqual(k.x + 1);
+  // Shortcuts says what it is in words, and Add feed's words still show whole (decision 0062).
+  await expect(keys).toContainText("Shortcuts");
+  for (const each of [sidebar(page).getByRole("link", { name: "Add feed" }), keys]) {
+    expect(await each.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+  }
   expect(k.x + k.width).toBeLessThanOrEqual(set.x + 1);
   expect(add.y).toBeGreaterThan(all.y);
   expect(set.y + set.height).toBeLessThanOrEqual(900);

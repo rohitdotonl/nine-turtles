@@ -414,7 +414,7 @@ describe("the summary-only note's link underline", () => {
   });
 });
 
-// Plain's links are the browser's own blue, purple once visited (decision 0062): article text, so AAA.
+// Plain's links are the browser's own blue, purple once visited (decision 0063): article text, so AAA.
 describe.each(["plain light", "plain dark"])("the %s theme's article links", (name) => {
   const colors = THEMES[name]!;
 

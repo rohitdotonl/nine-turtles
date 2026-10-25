@@ -2,7 +2,7 @@
 
 > **nine turtles is a quiet place to read the web: it shows you what's there, gets out of the way, and lets you finish.**
 
-*Last updated: 25 October 2026 (a second theme, Plain, with blue article links, and System serif, decision 0062; Apple Books as the design reference, decision 0059). Each change is recorded in `docs/decisions/`.*
+*Last updated: 25 October 2026 (a second theme, Plain, with blue article links, and System serif, decision 0063; Apple Books as the design reference, decision 0059). Each change is recorded in `docs/decisions/`.*
 
 ## Mission
 
@@ -131,7 +131,7 @@ The 500-feed user gets everything; the 30-feed user never sees the machinery.
 | Unread counts in V1 | 2. Calm over engagement | Power users with hundreds of feeds need to know what they've seen | Inbox mode only. Muted grey, right-aligned in the sidebar. Never badges or color. Per feed and folder only, no global total. Above 999 shows "999+". |
 | Sidebar search always visible | 6. Power is hidden, never missing | The owner wants finding a feed by name always available | One quiet field that filters feeds and folders by name, shown once there's a feed to find. The same slim, faintly filled capsule as the list's search (decision 0051). Nothing else in the sidebar skips progressive disclosure. |
 | Unread dot (decisions 0028, 0037, 0041) | Type does the hierarchy, never badges | Weight alone was hard to scan in a long list; Apple Books, Mail and Things mark unread with a dot | A drawn 8px dot in the theme's accent, centred in a 24px gutter inside the row's pill, 8px clear of an unread title, which is semibold too. No number, list rows only. |
-| Blue links in Plain (decision 0062) | 1. Reading comes first: links that don't compete with the text | The owner asked for his site rohit.onl's bare, plain-HTML look, whose one color is the browser's blue for links | Only the Plain theme, only links inside articles: `#0000EE` (visited `#551A8B`) by day, `#9E9EFF` (visited `#D0ADF0`) by night, always underlined, at 7 : 1 like the text. Plain's accent is its text color, so blue means only a link. Original's links stay in the text color. |
+| Blue links in Plain (decision 0063) | 1. Reading comes first: links that don't compete with the text | The owner asked for his site rohit.onl's bare, plain-HTML look, whose one color is the browser's blue for links | Only the Plain theme, only links inside articles: `#0000EE` (visited `#551A8B`) by day, `#9E9EFF` (visited `#D0ADF0`) by night, always underlined, at 7 : 1 like the text. Plain's accent is its text color, so blue means only a link. Original's links stay in the text color. |
 
 ### Never
 
@@ -167,7 +167,7 @@ The philosophy applied. The principle is noted where it isn't obvious.
   - **A soft shadow under things that float:** the note at the bottom of the list, a sheet, the search options popover, the Aa panel, the More menus and the shortcut list, one soft shadow and a faint edge each (decisions 0028, 0048). Nothing that sits in the page casts a shadow, except the 1 to 2px lift under a segmented control's chosen segment (decision 0042), never animated.
   - **A dim behind a sheet** (decisions 0031, 0039): only behind a sheet or the shortcut list, black at 18% by day and 45% by night, never animated; it closes with Escape or a press on it. On a phone it shows as the 10px strip above a page sheet (decision 0055).
 - **Type does the hierarchy:** size and weight, never color alone or badges (the unread dot is the one mark, in the Exceptions log).
-- **One accent, one family of meanings:** a theme has one accent (ink blue in Original; the text color in Plain, decision 0062) and one second color, a light green used only for a starred article's star (decision 0057). The accent marks what's *yours to look at*: what's unread (the dot) and what a search found (a faint tone behind the words) (decision 0037). Where you are is a plain grey pill with no color, its sidebar icon in ink (decision 0057). Nothing else uses it: never a button, a link, a focus outline or decoration.
+- **One accent, one family of meanings:** a theme has one accent (ink blue in Original; the text color in Plain, decision 0063) and one second color, a light green used only for a starred article's star (decision 0057). The accent marks what's *yours to look at*: what's unread (the dot) and what a search found (a faint tone behind the words) (decision 0037). Where you are is a plain grey pill with no color, its sidebar icon in ink (decision 0057). Nothing else uses it: never a button, a link, a focus outline or decoration.
 - **Icons where the convention is an icon** (close, clearing the search field, back, search, settings, the sidebar toggle, the list's More (…), and the article's open original, Aa, star and More (…)), each named in its tooltip with its key and to screen readers, so the tools around the text stay quiet (decisions 0034, 0038). **Words** for Add feed, menu items, the phone's back button (with its arrow) and the main action of a form.
 - **Fewer, steadier toolbars** (decision 0038): **one More (…) per place**, as Apple Books has one per collection, holding the less frequent actions as words (the list's Edit, Refresh, Mark all as read and sort order; the article's Copy link or Share and Mark unread, each with its key). **A bar's controls keep to its pane's edges,** their icons about 20px in (lined up with the sidebar button), one group at each end, so they never float in the middle of a wide window.
 - **Settings opens in place of the list,** with one top line that never scrolls: the title in the serif, like the list's, and an X that closes it (Escape does too). Below it, one centred column no wider than 560px of grouped lists, as in Apple Books' settings (`docs/SPEC.md` section 18).
@@ -188,7 +188,7 @@ The philosophy applied. The principle is noted where it isn't obvious.
 
 #### Color
 
-Two themes, each with a day and a night version: Original (decision 0056, which removed decision 0046's five others) and Plain (decision 0062). Original's values were matched by eye to Apple Books' Original, then held to nine turtles' own floors by the automatic checks; its values are below. Plain is the owner's own site's bare, plain-HTML look: black on white (`#000000` on `#FFFFFF`), areas a few shades off white, its accent the text color, and links in articles the browser's blue `#0000EE` (visited `#551A8B`); by night white on `#121212`, links `#9E9EFF` (visited `#D0ADF0`).
+Two themes, each with a day and a night version: Original (decision 0056, which removed decision 0046's five others) and Plain (decision 0063). Original's values were matched by eye to Apple Books' Original, then held to nine turtles' own floors by the automatic checks; its values are below. Plain is the owner's own site's bare, plain-HTML look: black on white (`#000000` on `#FFFFFF`), areas a few shades off white, its accent the text color, and links in articles the browser's blue `#0000EE` (visited `#551A8B`); by night white on `#121212`, links `#9E9EFF` (visited `#D0ADF0`).
 
 | Role (day) | Original |
 |---|---|
@@ -213,7 +213,7 @@ Two themes, each with a day and a night version: Original (decision 0056, which 
 | Muted grey: meta, counts, hints | `#A4A4A8` |
 
 - All accent pairs pass AAA (7 : 1); re-check if a value changes.
-- **Links in articles** are underlined in the text color, **never blue**, except in Plain, whose links are the browser's own blue and purple, underlined, at 7 : 1 (decision 0062).
+- **Links in articles** are underlined in the text color, **never blue**, except in Plain, whose links are the browser's own blue and purple, underlined, at 7 : 1 (decision 0063).
 - **Muted greys** (read items, counts, source names) pass AA (4.5 : 1) on every area and on the selection pill, by day and by night, verified by automatic checks.
 - **The selection pill** (decision 0057): a neutral grey, the text color mixed into the pane behind it (8% by day, 12% by night), with no color. Text stays at 7 : 1, muted grey at 4.5 : 1 and the unread dot at 3 : 1 on it, and a dark pill, or a day pill on a warm pane, keeps its pane's temperature (all checked automatically). A row under the pointer gets a fainter, neutral tone of the text color (5%), never the accent, always lighter than the pill.
 - **Search matches** have the accent at 12% behind them , with 3px corners and a fine underline (so never tone alone), in the text's own weight; text keeps 7 : 1 on it, even inside the pill.
@@ -222,7 +222,7 @@ Two themes, each with a day and a night version: Original (decision 0056, which 
 - **Destructive actions** (Unsubscribe, Delete folder) are words in a muted red, `#A3261B` by day and `#E8968A` by night: at least AA (4.5 : 1) on the page, the list and a grouped list by day and by night, checked automatically. Red means only "this removes something", and the words always say what.
 
 #### Themes
-Two themes. **Original**: white paper by day, near-black by night (decision 0056). **Plain**: the owner's site rohit.onl's bare, plain-HTML look, black on white with blue underlined links (decision 0062). The five others from decision 0046 (Quiet, Paper, Bold, Calm, Focus) were removed at the owner's request: nine turtles has its own look rather than copying Apple Books' set. An **Appearance** choice picks the version: **Light**, **Dark** or **Match device** (the default), which follows the device's own light or dark setting, live, as it switches. Before nine turtles' script runs, a page is Original, by day or by night as the device is set. Both versions meet the same contrast floors, checked automatically.
+Two themes. **Original**: white paper by day, near-black by night (decision 0056). **Plain**: the owner's site rohit.onl's bare, plain-HTML look, black on white with blue underlined links (decision 0063). The five others from decision 0046 (Quiet, Paper, Bold, Calm, Focus) were removed at the owner's request: nine turtles has its own look rather than copying Apple Books' set. An **Appearance** choice picks the version: **Light**, **Dark** or **Match device** (the default), which follows the device's own light or dark setting, live, as it switches. Before nine turtles' script runs, a page is Original, by day or by night as the device is set. Both versions meet the same contrast floors, checked automatically.
 
 #### Typography
 
@@ -230,7 +230,7 @@ Two themes. **Original**: white paper by day, near-black by night (decision 0056
 |---|---|---|
 | Reading (default) | **Literata** | Made for long-form reading on screens |
 | Reading (alternate sans) | **Atkinson Hyperlegible** | Made for legibility, including low vision |
-| Reading (alternate serif) | **System serif**: the device's own (New York on Apple devices, Georgia on most others) | The owner's site rohit.onl's font (decision 0062); nothing to download |
+| Reading (alternate serif) | **System serif**: the device's own (New York on Apple devices, Georgia on most others) | The owner's site rohit.onl's font (decision 0063); nothing to download |
 | Interface | **The device's own system font** (San Francisco on Apple devices), **Inter** everywhere else | As in Apple Books: the interface feels native; Inter is the neutral, self-hosted fallback |
 | Code in articles | **JetBrains Mono** | Clear monospace |
 

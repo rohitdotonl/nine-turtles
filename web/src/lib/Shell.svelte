@@ -127,6 +127,30 @@
     }
   }
 
+  /**
+   * The one-time tip in the empty reading area (decision 0062): shown until
+   * you first open an article, by any means, or the shortcut list, then
+   * never again on this device.
+   */
+  const TIP_KEY = "nine-turtles.shortcut-tip-seen";
+  let tipSeen = $state(readTipSeen());
+  function readTipSeen(): boolean {
+    try {
+      return localStorage.getItem(TIP_KEY) !== null;
+    } catch {
+      return false;
+    }
+  }
+  $effect(() => {
+    if (tipSeen || (!selected && !cheatSheetOpen)) return;
+    tipSeen = true;
+    try {
+      localStorage.setItem(TIP_KEY, "yes");
+    } catch {
+      // Private windows may refuse; the tip shows again next visit until an article is opened.
+    }
+  });
+
   function storeWidth(name: string, value: number | undefined) {
     try {
       if (value === undefined) localStorage.removeItem(name);
@@ -1000,10 +1024,12 @@
     </div>
     <!--
       Always at the very bottom, outside the scrolling list, so it never moves:
-      Add feed in words, then the shortcut list and Settings as icons, the way
-      a Mac app keeps its tools at the foot of the sidebar.
+      Add feed in words, then Shortcuts in words too (so it says what it is;
+      decision 0062), then Settings as an icon, the way a Mac app keeps its
+      tools at the foot of the sidebar. In a sidebar narrowed below 15rem,
+      where the two words can't both fit, Shortcuts becomes its keyboard icon.
     -->
-    <div class="flex shrink-0 items-center gap-1 border-t border-ink/10 py-1.5 pr-3">
+    <div class="@container flex shrink-0 items-center gap-1 border-t border-ink/10 py-1.5 pr-3">
       <!-- An action, not a place: it never shows the "where you are" bar. -->
       <a
         href="/add-feed"
@@ -1019,7 +1045,8 @@
           title="Keyboard shortcuts (?)"
           aria-haspopup="dialog"
           aria-expanded={cheatSheetOpen}
-          class={["btn-quiet btn-icon", cheatSheetOpen && "bg-ink/10 text-ink"]}><Icon name="keyboard" size={18} /></button
+          class={["btn-quiet px-2 text-small text-ink-2 @max-[15rem]:w-11 @max-[15rem]:px-0", cheatSheetOpen && "bg-ink/10 text-ink"]}
+          ><span class="hidden @max-[15rem]:contents"><Icon name="keyboard" size={18} /></span><span class="@max-[15rem]:hidden">Shortcuts</span></button
         >
       {/if}
       <a
@@ -1254,10 +1281,23 @@
               when the list has something to open, how to open one.
             -->
             <section aria-label="Article" class="flex min-w-0 flex-1 flex-col items-center justify-center bg-paper px-5">
-              <p class="reading-empty">No article open</p>
-              {#if listCount > 0 && !missing}
-                <p class="sr-only">Choose one from the list<span class="keyboard-hint">, or press j</span>.</p>
-              {/if}
+              <div class="relative">
+                <p class="reading-empty">No article open</p>
+                {#if listCount > 0 && !missing}
+                  {#if tipSeen}
+                    <p class="sr-only">Choose one from the list<span class="keyboard-hint">, or press j</span>.</p>
+                  {:else}
+                    <!--
+                      Once, on a screen with a keyboard: the two keys worth knowing first, quietly, under the
+                      line (decision 0062). Touch screens hear and see only "Choose one from the list."
+                    -->
+                    <p class="shortcut-tip keyboard-hint absolute top-full left-1/2 w-[min(28rem,80vw)] -translate-x-1/2">
+                      Press <kbd class="key">J</kbd> to open the first article, or <kbd class="key">?</kbd> for every shortcut.
+                    </p>
+                    <p class="sr-only touch-only">Choose one from the list.</p>
+                  {/if}
+                {/if}
+              </div>
             </section>
           {/if}
           </div>
