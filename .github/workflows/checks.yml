@@ -36,7 +36,7 @@ jobs:
 
       - name: Look for anything besides documents
         id: look
-        run: .github/code-changed.sh "${{ github.event_name }}" "${{ github.event.before }}" >> "$GITHUB_OUTPUT"
+        run: .github/code-changed.sh "${{ github.event_name }}" >> "$GITHUB_OUTPUT"
 
   frontend:
     name: Frontend checks

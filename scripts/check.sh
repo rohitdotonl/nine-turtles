@@ -83,6 +83,13 @@ browser() {
 }
 
 website() {
+  # Also here, so a change to only the website still runs them.
+  step "Libraries are on the approved list"
+  node scripts/check-libraries.mjs
+
+  step "No motion on the website"
+  node scripts/check-motion.mjs website
+
   step "Website: install the exact library versions in the lock file"
   (cd website && npm ci --no-audit --no-fund)
 

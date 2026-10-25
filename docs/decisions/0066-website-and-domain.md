@@ -21,10 +21,12 @@ anything besides documents changed (`code`), and is anything besides
 documents and the website changed (`app`). A change to only the website
 runs the website's checks (`scripts/check.sh website`: build, then axe in
 a real browser, by day and night, on a computer and a phone) and skips the
-app's checks and image. The same rule now applies to merges into main
-(comparing with the commit before the push), so a merge that changes only
-the website or documents doesn't rebuild or redeploy the app. The library
-check and the no-motion check read the website too.
+app's checks and image on the pull request. Merges into main still run
+everything and redeploy the app, whatever they change: comparing a merge
+with the one before it would leave the app out of date whenever a deploy
+had failed or a waiting one was cancelled (found in review). The library
+check and the no-motion check read the website too, and run in the
+website's part as well, so a website-only change can't skip them.
 
 **Why.** One repository keeps one set of documents, rules and checks, and
 agents see the whole project at once. The site is separate from the app at

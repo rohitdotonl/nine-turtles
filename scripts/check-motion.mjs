@@ -30,9 +30,14 @@ const cssRules = [
   [/(?<![\w-])(-webkit-)?(animation|transition)(-[a-z-]+)?\s*:/g, "an animation or transition"],
   [/scroll-behavior\s*:\s*smooth/g, "smooth scrolling"],
 ];
-for (const file of files(join(root, "web/dist"), [".css", ".html"])) scan(file, cssRules);
-// The website's styles and pages (decision 0066).
+// `node scripts/check-motion.mjs website` checks only the website, for the
+// website's own part of scripts/check.sh (decision 0066).
+const websiteOnly = process.argv[2] === "website";
+
+// The website's styles and pages.
 for (const file of files(join(root, "website/src"), [".css", ".html", ".njk", ".md"])) scan(file, cssRules);
+
+if (!websiteOnly) for (const file of files(join(root, "web/dist"), [".css", ".html"])) scan(file, cssRules);
 
 // The source: Svelte's animation helpers and the browser's animation API.
 const sourceRules = [
@@ -42,7 +47,7 @@ const sourceRules = [
   [/behavior:\s*["']smooth["']/g, "smooth scrolling"],
   [/\b(animate|transition)-[a-z0-9-[\]]+/g, "a Tailwind animation or transition class"],
 ];
-for (const file of files(join(root, "web/src"), [".svelte", ".ts", ".js", ".css", ".html"])) {
+for (const file of websiteOnly ? [] : files(join(root, "web/src"), [".svelte", ".ts", ".js", ".css", ".html"])) {
   if (file.endsWith(".test.ts")) continue;
   scan(file, sourceRules);
   // Also name the source file a built style came from, so it's easy to find.

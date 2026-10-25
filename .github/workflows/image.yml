@@ -33,11 +33,11 @@ jobs:
         with:
           fetch-depth: 2
 
-      # A change to only documents or the website (decision 0066) can't
-      # change the image, so it isn't built, stored or deployed.
+      # A pull request that changes only documents or the website (decision
+      # 0066) can't change the image. On main it's always built and deployed.
       - name: Look for anything besides documents and the website
         id: look
-        run: .github/code-changed.sh "${{ github.event_name }}" "${{ github.event.before }}" >> "$GITHUB_OUTPUT"
+        run: .github/code-changed.sh "${{ github.event_name }}" >> "$GITHUB_OUTPUT"
 
       - name: Build the image
         if: steps.look.outputs.app == 'true'
@@ -61,7 +61,7 @@ jobs:
           exit 1
 
       - name: Store the image in GitHub's package storage
-        if: github.event_name == 'push' && steps.look.outputs.app == 'true'
+        if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -70,7 +70,7 @@ jobs:
           docker push "$IMAGE:latest"
 
       - name: Tell Render to run the new version
-        if: github.event_name == 'push' && steps.look.outputs.app == 'true'
+        if: github.event_name == 'push'
         env:
           # Set once by the owner in GitHub → Settings → Secrets and variables
           # → Actions. It's a private address, so it's never written here.

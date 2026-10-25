@@ -24,9 +24,9 @@ nothing in them can break the program, its tests or the image.
 `docs/libraries.md` is the exception, because the library check reads it.
 One that changes only the website (`website/`) and documents runs just the
 website part, and skips the app's parts and the image build (decision 0066).
-`.github/code-changed.sh` decides, for pull requests and for merges into
-main alike: a merge that changes only documents or the website doesn't
-rebuild or redeploy the app.
+`.github/code-changed.sh` decides. Pushes to main always run everything and
+always deploy the app, so a deploy that failed or was cancelled is put right
+by the next merge, whatever it changes.
 
 | Step | What it catches | Where it lives |
 |---|---|---|
@@ -42,7 +42,7 @@ rebuild or redeploy the app.
 | Build the program | The release program doesn't build | cargo |
 | Accessibility, contrast and screenshots | Any WCAG A/AA problem (including color contrast) on any screen, in any chosen theme and when following the device's light or dark setting, at desktop or phone width; the theme or the wordmark's Literata font not applying, or a font coming from anywhere but nine turtles; sign-in, the layout, the sidebar toggle, the `?` list, the `g` keys or Settings not working with the keyboard alone, or anything overlapping at 200% zoom; the browser's security rules blocking anything. Also photographs every screen | `web/tests/` (Playwright with axe) |
 | Website: build | The website's pages don't build | Eleventy (`website/`) |
-| Website: accessibility and contrast | Any WCAG A/AA problem (including color contrast) on any page of the website, by day and by night, at computer and phone widths | `scripts/check-website.mjs` (Playwright and axe, borrowed from `web/`) |
+| Website: accessibility and contrast | Any WCAG A/AA problem (including color contrast) on any page of the website, by day and by night, at computer and phone widths; the first Tab not showing "Skip to the text", or a link without a visible focus outline. (The website's part also runs the library check and the no-motion check for the website, so a website-only change can't skip them.) | `scripts/check-website.mjs` (Playwright and axe, borrowed from `web/`) |
 
 ## The browser tests' two copies of nine turtles
 

@@ -202,8 +202,8 @@ you press Merge, or you say yes to the agent's brief.
 It usually takes up to 15 minutes from merging to live.)
 
 The website works the same way: merging a change to `website/` publishes it
-to GitHub Pages within a few minutes. A merge that changes only the website
-or the documents doesn't touch the app at all, so the app doesn't restart.
+to GitHub Pages within a few minutes. Every merge still redeploys the app
+too (a minute's pause, as always), so the live app never falls behind.
 
 ## 7. How to merge a pull request
 

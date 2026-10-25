@@ -23,10 +23,13 @@ HTTPS (the padlock), which both GitHub Pages and Render set up for you.
 
 1. On GitHub, open the repository → **Settings** → **Pages**.
 2. Under **Build and deployment**, set **Source** to **GitHub Actions**.
-3. Open **Actions** → **Website** → **Run workflow** → **Run workflow**. In a
-   minute or two the website is live at GitHub's own address for it.
-4. Back in **Settings** → **Pages**, type `nineturtles.app` under **Custom
-   domain** and press **Save**.
+3. Under **Custom domain**, type `nineturtles.app` and press **Save**.
+   (GitHub says the domain isn't set up yet until step 3 below is done.)
+4. Open **Actions** → **Website** → **Run workflow** → **Run workflow**.
+   Until you do this, the "Website" run from the merge shows a red cross;
+   that's expected, and this run replaces it.
+   At GitHub's own address (`rohitdotonl.github.io/…`) the page looks
+   unstyled; at nineturtles.app it looks right.
 
 Recommended, so no one else can ever use your domain on GitHub: on GitHub,
 your picture → **Settings** → **Pages** → **Add a domain**, type
@@ -79,10 +82,9 @@ If Render shows a different value for `app` in step 4, use Render's.
 - **The website:** an agent changes the pages in `website/`, the checks
   build it and check it in a real browser, and when the pull request is
   merged, GitHub Actions publishes it to GitHub Pages
-  (`.github/workflows/website.yml`). The app is not redeployed.
-- **The app:** exactly as before: merging deploys it to Render. A merge that
-  changes only the website or documents doesn't redeploy the app, so the
-  status page's version stays the same.
+  (`.github/workflows/website.yml`).
+- **The app:** exactly as before: every merge deploys it to Render, even one
+  that changes only the website, so the live app never falls behind.
 
 ## Moving the website elsewhere
 

@@ -1,8 +1,10 @@
 // Checks the built website (website/_site) in a real browser, as the app's
 // browser tests check the app: every page, by day and by night, on a
 // computer and a phone, has no accessibility or contrast problems that the
-// automatic checker can find (WCAG AA). Borrows Playwright and axe from web/,
-// so the website needs no testing libraries of its own (decision 0066).
+// automatic checker can find (WCAG AA), and works with the keyboard alone:
+// a skip link first, and a visible outline on every link. Borrows
+// Playwright and axe from web/, so the website needs no testing libraries of
+// its own (decision 0066).
 //
 // Needs: `npm ci` and `npx playwright install chromium` in web/, and the
 // website built (`npm run build` in website/). scripts/check.sh does both.
@@ -61,6 +63,28 @@ try {
         const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"]).analyze();
         for (const violation of results.violations) {
           problems.push(`${path} (${colorScheme}, ${device}): ${violation.help} (${violation.nodes.length} place(s))`);
+        }
+        // With the keyboard alone: the first Tab shows "Skip to the text" on
+        // screen, and every link after it shows a visible focus outline.
+        await page.keyboard.press("Tab");
+        const first = await page.evaluate(() => {
+          const element = document.activeElement;
+          const box = element.getBoundingClientRect();
+          return { text: element.textContent.trim(), onScreen: box.left >= 0 && box.top >= 0 && box.width > 0 };
+        });
+        if (first.text !== "Skip to the text" || !first.onScreen) {
+          problems.push(`${path} (${colorScheme}, ${device}): the first Tab doesn't show "Skip to the text"`);
+        }
+        const links = await page.locator("a").count();
+        for (let index = 1; index < links; index++) {
+          await page.keyboard.press("Tab");
+          const ring = await page.evaluate(() => {
+            const style = getComputedStyle(document.activeElement);
+            return { tag: document.activeElement.tagName, outline: style.outlineStyle, width: parseFloat(style.outlineWidth) };
+          });
+          if (ring.tag !== "A" || ring.outline === "none" || ring.width < 2) {
+            problems.push(`${path} (${colorScheme}, ${device}): link ${index + 1} has no visible focus outline from the keyboard`);
+          }
         }
       }
       await context.close();
