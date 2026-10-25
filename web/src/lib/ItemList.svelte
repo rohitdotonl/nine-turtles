@@ -212,7 +212,7 @@
   /**
    * Selects the next (1) or previous (-1) article; the first if none is
    * selected yet. Returns false at either end of the list: it never loads
-   * more on its own (DESIGN.md → "The list has an end").
+   * more on its own (SPEC.md section 6).
    */
   export function move(step: 1 | -1): boolean {
     const index = selectedIndex === -1 ? 0 : selectedIndex + step;
@@ -476,7 +476,7 @@
       {order === "oldest" ? "Show newer items" : "Show older items"}
     </button>
   {:else if articles.length > 0}
-    <!-- A finite list says when it's finished (DESIGN.md → "The list has an end"). -->
+    <!-- A finite list says when it's finished (SPEC.md section 6). -->
     <!-- A quiet caption at the titles' left edge, with no rule above it. -->
     <p class="mt-5 text-meta text-muted">That's everything.</p>
   {/if}
@@ -527,7 +527,7 @@
     A searched word, in a title or in the line of text under it: one style,
     a faint tone of the accent behind it with small rounded corners, in the
     text's own weight and color, and a fine underline so it never shows by
-    tone alone (DESIGN.md → "Item list", decision 0037).
+    tone alone (SPEC.md section 6, decision 0037).
   */
   .match {
     padding: 0 1px;

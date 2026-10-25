@@ -57,7 +57,7 @@
   --color-tint-sidebar: var(--tint-sidebar);
 }
 /*
-  Two themes, Original (decision 0056) and Plain (decision 0059), each with
+  Two themes, Original (decision 0056) and Plain (decision 0062), each with
   a day and a night version. preferences.ts writes the theme to <html data-theme="…"> and the resolved
   Appearance (light or dark, following the device unless the reader chose
   one) to data-mode. Before the script runs there are neither, so the page is
@@ -120,7 +120,7 @@
 }
 
 /*
-  Plain (decision 0059): rohit.onl's bare, plain-HTML look. Black words on
+  Plain (decision 0062): rohit.onl's bare, plain-HTML look. Black words on
   white, every area all but white, and the one color the early web had: links
   in articles in the browser's own blue, purple once visited, always
   underlined. Its accent (the unread dot, search matches) is the text color,
@@ -564,7 +564,7 @@ textarea {
   /*
     Anything that floats over the page (a sheet, the search options, the
     shortcut list) is one family: the same 12px corners, faint edge and soft
-    shadow (DESIGN.md → Exceptions log). Nothing that sits in the page casts one.
+    shadow (DESIGN.md → Visual language). Nothing that sits in the page casts one.
   */
   .floating {
     border: 1px solid var(--raised-edge, color-mix(in oklab, var(--ink) 12%, transparent));
@@ -1324,7 +1324,7 @@ input {
   font-size: 1em;
 }
 
-/* In the text color, except in Plain, whose links are the browser's own blue and purple (decision 0059). */
+/* In the text color, except in Plain, whose links are the browser's own blue and purple (decision 0062). */
 .article-text a {
   color: var(--link, currentColor);
   text-decoration: underline;
@@ -1486,7 +1486,7 @@ input {
 }
 
 /*
-  The dim behind a sheet or the shortcut list (DESIGN.md → Exceptions log):
+  The dim behind a sheet or the shortcut list (DESIGN.md → Visual language):
   a light veil, so the page behind stays warm and readable; deeper in the
   dark themes, which set --scrim.
 */

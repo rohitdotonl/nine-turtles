@@ -1,5 +1,5 @@
 // The themes from DESIGN.md → "Themes": Original (decision 0056) and Plain
-// (decision 0059), each with a day ("light") and a night ("dark") version. It is written to
+// (decision 0062), each with a day ("light") and a night ("dark") version. It is written to
 // <html data-theme="…"> and the version in use to data-mode (see
 // preferences.ts; app.css holds both versions' colors).
 export const THEMES = ["original", "plain"] as const;

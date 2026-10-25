@@ -1,0 +1,50 @@
+# 0061: The redesign notes folded into one
+
+*25 October 2026. The owner's request: fewer Markdown files, deleting
+rather than archiving.*
+
+**Why.** Decisions 0025 to 0055 recorded the UI redesign step by step, and
+many replaced parts of earlier ones. How the app looks now is in
+`DESIGN.md` and `SPEC.md`; the step-by-step notes were rarely read and cost
+tokens whenever an agent searched the folder.
+
+**What changed.** Their files were deleted. The one-line summary of each is
+below, so a mention such as "decision 0041" in the documents or the code
+still leads somewhere. The full text of each is in the repository's history
+(`git log --all -- docs/decisions/0041*` finds it). The rule in
+`README.md` changed to match: a replaced note may be folded into a summary
+like this one.
+
+| # | Decision |
+|---|---|
+| 0025 | Four kinds of control (everyday, main, toolbar, field) and one hand-drawn icon set; headings opened by the app show a short bar, not a box; Settings choices as tiles; key caps |
+| 0026 | A type scale by role, three inks, deeper area tones, one selection style, a shared top line; Settings and the shortcut hint at the bottom of the sidebar |
+| 0027 | Taste first; icons where the convention is an icon (close, settings, the article's actions); Settings as grouped cards with theme pictures; a grouped shortcut list |
+| 0028 | One rounded "where you are" shape in the sidebar and list; an unread dot; a floating note instead of reserved lines; one top line for pages |
+| 0029 | Literata semibold (600) instead of bold for titles and headings; same download size |
+| 0030 | "Where you are" bar flush with the pane's edge in both panes; the selected article's focus is the usual outline, not a grey hairline |
+| 0031 | Short tasks (add or edit a feed, edit a folder) as sheets over the list; search options as a popover with date presets |
+| 0032 | Eight more themes to try (four light, four dark), each with its own "where you are" accent; the owner prunes later (superseded by 0046) |
+| 0033 | The keyboard's outline replaces the selected row's fill; one search field style; sheets anchored, each with Cancel; "That's everything." ends a list (selection refined by 0036) |
+| 0034 | An "Aa" reading panel beside the text (size, theme, font, width); quiet icon toolbars on the article; Refresh and a More menu beside the list title |
+| 0035 | One family for sheets (sans title, Cancel then the main action in one foot row, destructive actions as muted-red words) and things that float; search excerpts cut on the server as plain-text pieces; a × in the search field; the welcome in the reading area |
+| 0036 | Toward Apple Books: the system interface font, phone-sized text on touch screens, a selection that keeps its fill with the focus ring outside, hairlines between list rows, a tighter reading rhythm (selection refined by 0037) |
+| 0037 | One selection pill in the sidebar and the list (accent mixed into the pane, no bar), the focus ring drawn inside it, an 8px accent unread dot, one search highlight, a calmer list rhythm |
+| 0038 | Toolbars anchored to the pane edges; one More (…) per list (Edit and Refresh inside) and per article (Copy link and Mark unread inside); translucent top bars (withdrawn by 0040); a labelled back button and five-icon bottom bar on phones; quieter byline, tighter title, the summary note as the last paragraph |
+| 0039 | Settings as Apple Books' grouped inset lists with "Aa" theme tiles and an A/A text size; sheets placed above the middle and grown by content, a lighter dim, the destructive action at the row's far left; 1px fields with red errors; search options as a checkmark menu; a fading shortcut list; a calmer first visit (supersedes parts of 0027, 0031, 0035) |
+| 0040 | Solid article bars (no see-through, supersedes that part of 0038) with a hairline only once scrolled; a hairline above the phone's toolbar; no scrollbar gutter strip; the summary note as small centred end matter; titles filling the measure; search results as title, text, meta; a silent empty reading pane |
+| 0041 | A 24px gutter for the unread dot with every title 32px in; hairlines that end with the pill; a one-line list title stepping to 22px in a narrow pane (reverses 0038's two lines); one search well at rest; counts in one column with folder arrows first; no shortcut hint; the welcome alone on a first visit; dark pills from ink; no selection and chevrons on the phone's feeds screen |
+| 0042 | Sheets and Settings in one voice: serif sheet titles with no ring on a non-operable heading, 20px before a borderless Cancel, one line on a refused field, a folder checklist that shows both states, a shortcut list that fits; Settings with the sample on the page, glyphs on action rows (Sign out stays ink), A \| Medium \| A, edgeless raised segments and lighter dark groups (supersedes parts of 0035 and 0039) |
+| 0043 | One top-line height (`--bar-h`, 56px) for every pane so their lines and hairlines meet; toolbar focus rings drawn inside the button; one left edge for every sidebar name, a folder's feeds a step in; the selected sidebar place's icon in the accent; on a phone one back-button position, one 20px margin with the dot in it, and folders without an arrow |
+| 0044 | Quiet endings and blank paper in the reading pane: a short end-note link that never breaks (the publisher named in the byline), balanced titles (replaces 0040's lone-word rule), at least 56px beside the text on a computer, an empty reading pane with nothing drawn (replaces 0040's visible line) |
+| 0045 | Controls that say what they are: a text-size stepper (two round-ended As, the step's name between them on no track), one ring on the chosen theme tile (no badge), square tick boxes and 44px rows for Edit feed's folders, a main button that darkens rather than pales under the pointer, "Import an OPML file…" just under the welcome's field, a true minus on the shortcut list (supersedes parts of 0039 and 0042) |
+| 0046 | Apple Books' six themes (Original, Quiet, Paper, Bold, Calm, Focus), each by day and by night, with an Appearance choice of Light, Dark or Match device; Bold sets article text heavier; old choices carried over (supersedes 0032) |
+| 0047 | A quiet article title and an even phone toolbar: no ring on the title the keyboard is moved to as an article opens (real controls keep theirs), a 20px pause before the byline with looser tracking (loosens 0038's), and a faded Previous in its place instead of a gap on the first article |
+| 0048 | One-line rows, plain chips, one empty state: a list row's meta on one line in proportional figures, search chips in the menu's words ("Unread"), "Other feed or folder ›" as a submenu row, the note in a band the rows end above, sign-in as one centred column at the phone margin, a centred welcome that stays still under the sheet and takes the list's room on a first visit (changes parts of 0028, 0039, 0041 and 0045) |
+| 0049 | One sheet, one close rule: a round radio mark on Add a feed's choice of feeds, with Add feed adding the chosen one; Cancel only on sheets you commit, an X only on sheets you look at (the phone's Edit feed and Edit folder lose their X); the shortcut list full-screen on a phone and, on a computer, no taller than 720px and 48px clear of the window with the filters under Everywhere; 20px under every top line; the Settings preview on the phone's margin; the phone's unread dot clear of the row ring |
+| 0050 | Calmer pictures at night, quieter captions and tables, one toolbar cluster: night themes dim article pictures to 82% (never inverted), captions at seven-eighths size in the second ink (checked at 7 : 1), tables flush with the text under a fine header rule, Open original joins Aa, Star and More at the right of the top bar, and a 14px byline (changes parts of 0038 and 0047) |
+| 0051 | One search field, a selection from its own pane, rings only for the keyboard: the list's search and the sidebar's find field as one 36/44px capsule with a 6% fill; the day selection pill as the accent at 12% over its pane; row rings only after a key press; the "·" hugging a cut-short name's "…"; the sidebar scrolling your place into view (replaces part of 0041) |
+| 0052 | One phone sheet and raised night surfaces: on a phone every sheet has an X and no back arrow or Cancel, the main action full width at the foot and Unsubscribe in a group of its own; a lifted `--surface-raised` by night for sheets, menus and the note; Settings' themes 3×2 on a phone and text size on the segmented track; helper text on the field's edge; a shortcut-list footer and edged key caps; one heading on a phone's empty state (changes parts of 0045 and 0049) |
+| 0053 | A quiet line in the empty pane, smaller captions, a warm Paper pill: "No article open" centred in the empty reading pane in the muted serif (replaces 0044's blank paper), captions at 13/16 size, 1.4 line height and 6px under the picture (still 7 : 1), and Paper's day selection pill as its own text color at 10% so it stays warm (changes parts of 0044, 0050 and 0051) |
+| 0054 | A line between panes, a dot gutter on the phone, a pressed shortcuts button, a count the menu never hides: a 1px line (the row hairlines' 9% tone) where the sidebar meets the list and the list meets the reading pane on a computer; a phone list's titles 28px in with the dot 10px in; the keyboard button on a faint ink tile, saying its dialog is open, while the shortcut list is open; the result count repeated at the search options' foot where the menu would cover it (changes parts of 0043, 0049 and the Exceptions log) |
+| 0055 | iOS page sheets on a phone for Add a feed, Edit feed and Edit folder (a 10px dimmed strip, 12px top corners, cards on a grouped ground); text size as one flat capsule with hairlines; the chosen theme's ring 3px clear of a tile that keeps its edge; Settings' sample as the Look and feel group's first row; a softer 65% field ring checked at 3 : 1 in every theme; ⇧A and capital key caps; "Import an OPML file…" as an underlined link on the margin (changes parts of 0045, 0049 and 0052) |

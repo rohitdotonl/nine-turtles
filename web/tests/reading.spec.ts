@@ -235,7 +235,7 @@ test.describe("on a wide window", () => {
     // Appearance: day, night or as the device is set, applied at once (decision 0056).
     await expect(panel.getByRole("group", { name: "Appearance" }).getByRole("radio")).toHaveCount(3);
     await expect(panel.getByRole("radio", { name: "Match device" })).toBeChecked();
-    // Theme: Original or Plain, whose article links are the browser's blue (decision 0059).
+    // Theme: Original or Plain, whose article links are the browser's blue (decision 0062).
     const themes = panel.getByRole("group", { name: "Theme" });
     await expect(themes.getByRole("radio")).toHaveCount(2);
     await expect(themes.getByRole("radio", { name: "Original" })).toBeChecked();
@@ -272,7 +272,7 @@ test.describe("on a wide window", () => {
     // Fonts are named in their own face; line width has three steps.
     await panel.getByRole("radio", { name: "Atkinson Hyperlegible" }).check();
     await expect.poll(() => root.evaluate((html) => html.style.getPropertyValue("--reading-font"))).toContain("Atkinson");
-    // rohit.onl's font: the device's own serif (decision 0059).
+    // rohit.onl's font: the device's own serif (decision 0062).
     await panel.getByRole("radio", { name: "System serif" }).check();
     await expect.poll(() => root.evaluate((html) => html.style.getPropertyValue("--reading-font"))).toContain("ui-serif");
     await panel.getByRole("radio", { name: "Atkinson Hyperlegible" }).check();
@@ -663,4 +663,55 @@ test("on a phone, an article fills the screen and the back button returns to the
   await article(page).getByRole("button", { name: "Back to Reading Room" }).click();
   await expect(row(page, "The pleasure of a slow letter")).toBeFocused();
   await expect(article(page)).toBeHidden();
+});
+
+test.describe("your place in an article (decision 0060)", () => {
+  test.skip(({ isMobile }) => isMobile, "the same reading area on a phone; the computer's is enough");
+
+  const scroller = (page: Page) => article(page).locator(".reading-scroller");
+  const top = (page: Page) => scroller(page).evaluate((element) => element.scrollTop);
+
+  test("an article you stopped part of the way through opens where you were, even after a reload; one you finished opens at its top", async ({ page }) => {
+    // A short window, so the Reading Room's long article runs to several screens.
+    await openRoom(page);
+    await page.setViewportSize({ width: 1280, height: 400 });
+    await row(page, "The pleasure of a slow letter").click();
+    await expect(title(page, "The pleasure of a slow letter")).toBeVisible();
+    await expect(article(page).locator("table")).toBeAttached();
+    expect(await top(page)).toBe(0);
+
+    await scroller(page).hover();
+    await page.mouse.wheel(0, 300);
+    await expect.poll(() => top(page)).toBeGreaterThan(250);
+    // Written down a moment after scrolling stops.
+    await page.waitForTimeout(600);
+    const stopped = await top(page);
+
+    await row(page, "Only the first page").click();
+    await expect(title(page, "Only the first page")).toBeVisible();
+    expect(await top(page)).toBe(0);
+    await row(page, "The pleasure of a slow letter").click();
+    await expect(title(page, "The pleasure of a slow letter")).toBeVisible();
+    await expect.poll(() => top(page)).toBeGreaterThan(stopped - 8);
+    expect(await top(page)).toBeLessThan(stopped + 8);
+
+    await page.reload();
+    await appReady(page);
+    await row(page, "The pleasure of a slow letter").click();
+    await expect.poll(() => top(page)).toBeGreaterThan(stopped - 8);
+    expect(await top(page)).toBeLessThan(stopped + 8);
+
+    // Read to the end: next time it starts again at its top, as a finished book does.
+    await scroller(page).hover();
+    await page.mouse.wheel(0, 5000);
+    await expect.poll(() => scroller(page).evaluate((element) => element.scrollHeight - element.clientHeight - element.scrollTop)).toBeLessThan(2);
+    await page.waitForTimeout(600);
+    await row(page, "Only the first page").click();
+    await expect(title(page, "Only the first page")).toBeVisible();
+    await row(page, "The pleasure of a slow letter").click();
+    await expect(title(page, "The pleasure of a slow letter")).toBeVisible();
+    await expect(article(page).locator("table")).toBeAttached();
+    await page.waitForTimeout(200);
+    expect(await top(page)).toBe(0);
+  });
 });

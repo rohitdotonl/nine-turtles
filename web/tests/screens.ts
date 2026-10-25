@@ -114,7 +114,8 @@ export const SCREENS: Screen[] = [
       await follow(page, `${FEED_SITE}/garden/`);
       await page.reload();
       await appReady(page);
-      await expect(page.locator("#search-field")).toBeAttached();
+      // On a phone the field waits behind the Search button beside More until asked for (decision 0060).
+      await expect(page.getByRole("region", { name: "All" }).getByRole("listitem").first()).toBeVisible();
       await page.keyboard.press("/");
       await expect(page.locator("#search-field")).toBeFocused();
       await page.keyboard.type("reading is:");

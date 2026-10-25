@@ -242,7 +242,7 @@ test("Settings: appearance, font, size and width apply at once and are remembere
   await expect(page).toHaveURL(/\/settings$/);
   await expect(page.getByRole("heading", { level: 2, name: "Settings" })).toBeFocused();
 
-  // Original, matching the device until another Appearance is chosen (decision 0056); Plain is the other theme (decision 0059).
+  // Original, matching the device until another Appearance is chosen (decision 0056); Plain is the other theme (decision 0062).
   await expect(page.locator("label.tile")).toHaveCount(0);
   await expect(page.getByRole("group", { name: "Theme" }).getByRole("radio")).toHaveCount(2);
   await expect(page.getByRole("radio", { name: "Original" })).toBeChecked();
@@ -285,12 +285,12 @@ test("Settings: appearance, font, size and width apply at once and are remembere
 
   const sample = page.locator(".reading-sample");
   await expect(sample).toHaveCSS("font-family", /^Literata/);
-  // rohit.onl's font, the device's own serif (decision 0059).
+  // rohit.onl's font, the device's own serif (decision 0062).
   await page.getByLabel("System serif").check();
   await expect(sample).toHaveCSS("font-family", /^ui-serif/);
   await page.getByLabel("Atkinson Hyperlegible").check();
   await expect(sample).toHaveCSS("font-family", /^"Atkinson Hyperlegible"/);
-  // Plain: rohit.onl's bare look, black on white by day, and back to Original (decision 0059).
+  // Plain: rohit.onl's bare look, black on white by day, and back to Original (decision 0062).
   await page.getByRole("radio", { name: "Plain" }).check();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "plain");
   await expect(page.locator("body")).toHaveCSS("color", "rgb(0, 0, 0)");

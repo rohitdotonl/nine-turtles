@@ -38,7 +38,7 @@ export const LINE_WIDTHS: Record<LineWidth, { label: string; ch: number }> = {
 export const READING_FONTS: Record<ReadingFont, { label: string; rest?: string; family: string }> = {
   literata: { label: "Literata", family: "var(--font-serif)" },
   atkinson: { label: "Atkinson", rest: " Hyperlegible", family: '"Atkinson Hyperlegible", var(--font-sans)' },
-  // rohit.onl's font (decision 0059): the device's own serif, New York on Apple
+  // rohit.onl's font (decision 0062): the device's own serif, New York on Apple
   // devices and Georgia on most others. Nothing to download.
   "system-serif": { label: "System serif", family: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif' },
 };
