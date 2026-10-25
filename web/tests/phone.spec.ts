@@ -543,6 +543,10 @@ test.describe("adding nine turtles to the home screen", () => {
       expect(image.headers()["content-type"]).toBe("image/png");
     }
     expect((await page.request.get("/icons/apple-touch-icon.png")).ok()).toBe(true);
+    // The browser tab's icon: the turtles, drawn so they follow light and dark.
+    const tabIcon = await page.request.get("/icons/icon.svg");
+    expect(tabIcon.headers()["content-type"]).toContain("image/svg+xml");
+    expect(await tabIcon.text()).toContain("prefers-color-scheme:dark");
 
     await page.goto("/");
     await appReady(page);

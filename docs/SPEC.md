@@ -407,7 +407,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 - No custom swipes on list items.
 - Article toolbar at the bottom, within thumb reach and clear of the phone's home indicator, solid in the page's color with a faint line along its top so the text ends at an edge: five quiet icons without words, each a 44px tap with its name for screen readers: previous · next · Aa · star · More (…). The five always share the bar evenly: on the first article Previous (and on the last, Next) keeps its arrow in its place, faded, and does nothing; screen readers hear it as dimmed (decision 0047). More opens upwards with Share (or Copy link) and Mark unread. Aa opens the reading panel (section 7) as a sheet along the bottom of the screen. Article text reads a little smaller than on a wide screen, so a line keeps about 40 characters.
 - Every tap target is at least 44 pixels.
-- Can be added to the home screen on iPhone and Android; it then opens full-screen with its own icon: a lowercase "n" in the reading serif, dark on white.
+- Can be added to the home screen on iPhone and Android; it then opens full-screen with its own icon: nine small turtles seen from the side, three rows of three with the middle row a little to the right, dark on white (decision 0066). The same turtles mark the browser tab, on white by day and on near-black by night.
 - Without a connection, the app still opens and says plainly that nine turtles can't be reached. It keeps a copy of the app itself, never of your articles.
 
 **How to check it**
