@@ -6,7 +6,14 @@ written into `DESIGN.md`, `ENGINEERING.md`, `SPEC.md`, `PLAN.md` and
 
 ## Still open
 
-Nothing at the moment.
+- **Finishing the website's privacy policy and terms** (25 October 2026).
+  They're on nineturtles.app as drafts, marked "to be decided" where they
+  wait on: the payment company (a merchant of record such as Paddle or
+  Lemon Squeezy, or Stripe), the email service for sign-in and receipts,
+  where Render keeps the data, the business details and the law that
+  applies, the minimum age, and how long backups keep deleted data. Before
+  anyone can sign up, someone qualified should read both. Not blocking
+  anything today.
 
 ---
 
@@ -58,7 +65,7 @@ Nothing at the moment.
 | Times | Shown in the device's time zone. |
 | Phone milestone order | Unchanged. |
 | Repository (Q27) | Stays public. |
-| New app versions (Q29) | Downloaded quietly; used the next time you open or reload nine turtles, or go to another place in a tab left open (decision 0076). Nothing changes while you read. Settings → Status shows "A new version is ready" with a Reload button. |
+| New app versions (Q29) | Downloaded quietly; used the next time you open or reload nine turtles, or go to another place in a tab left open (decision 0085). Nothing changes while you read. Settings → Status shows "A new version is ready" with a Reload button. |
 | Deleted articles | Remembered by fingerprint (confirmed). |
 | Watching the live app (Q28) | Fully automatic: public status page, diagnostics page behind a read-only key, a scheduled agent check once a day that opens an issue (and a fix when clear). Nothing merges without the owner (they press Merge, or say yes to an agent's brief). Kept agent-neutral: the check's instructions live in the repository (`docs/operations/daily-check.md`) so any agent can follow them. |
 | Pace | One session per milestone. No large multi-agent workflows. |

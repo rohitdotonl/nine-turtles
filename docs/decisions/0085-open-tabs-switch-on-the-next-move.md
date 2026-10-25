@@ -1,4 +1,4 @@
-# 0076: An open tab switches to a new version on the next move
+# 0085: An open tab switches to a new version on the next move
 
 *25 October 2026. Part of making nine turtles ready for more readers (the SaaS plan): a tab left open while a new version goes live should keep working, without stale-page errors.*
 

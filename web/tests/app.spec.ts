@@ -625,6 +625,7 @@ test("Settings is one centred column of grouped lists; Your data, Feed health an
     page.getByRole("button", { name: "Import OPML" }),
     page.getByRole("link", { name: "Export OPML" }),
     page.getByRole("link", { name: "Export starred articles" }),
+    page.getByRole("link", { name: "Your feeds" }),
     page.getByRole("link", { name: "Feed health" }),
     page.getByRole("button", { name: "Make an app password" }),
     page.getByRole("button", { name: "Sign out" }),
