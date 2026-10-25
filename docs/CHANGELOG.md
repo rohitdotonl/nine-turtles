@@ -11,7 +11,8 @@ not how it was done.
 - Button tooltips now show their key as a capital letter, "Star (S)",
   matching how the shortcut list and menus draw keys.
 - At the foot of the sidebar, Shortcuts is now "Keys" with a keyboard icon,
-  so it no longer reads as one phrase with Add feed.
+  so it no longer reads as one phrase with Add feed. In the narrowest sidebar,
+  "Add feed" is no longer cut off.
 
 ## 25 October 2026: A Plain theme and System serif, from rohit.onl
 

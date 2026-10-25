@@ -23,3 +23,8 @@ two looks for one thing.
   next begins. "Keys" is short enough to fit beside Add feed at the
   narrowest default sidebar; screen readers hear "Keys (keyboard
   shortcuts)", and its tooltip still says "Keyboard shortcuts (?)".
+- In the narrowest sidebar (200px), "Add feed" used to be clipped: the row
+  was a few pixels too short for it beside two 44px buttons. Below 15rem
+  the row now tightens its padding and lets the cog sit a little nearer the
+  edge, so "Add feed" shows whole and every button stays 44px. A test
+  checks it.

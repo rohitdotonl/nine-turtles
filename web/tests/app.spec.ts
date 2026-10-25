@@ -574,6 +574,20 @@ test("the sidebar ends with Add feed, then Keys (icon and word) and Settings as 
   await expect(toggle(page)).toHaveAttribute("title", "Show the sidebar ( [ )");
 });
 
+test("in a sidebar narrowed below 15rem, Keys keeps only its icon and stays a full-size button", async ({ page, isMobile }) => {
+  test.skip(isMobile, "The phone has no sidebar to narrow.");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.addInitScript(() => localStorage.setItem("nine-turtles.sidebar-width", "200"));
+  await openApp(page);
+  const keys = sidebar(page).getByRole("button", { name: "Keys (keyboard shortcuts)" });
+  await expect(keys.locator("svg")).toBeVisible();
+  await expect(keys.getByText("Keys")).toBeHidden();
+  const box = (await keys.boundingBox())!;
+  expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
+  const add = sidebar(page).getByRole("link", { name: "Add feed" });
+  expect(await add.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+});
+
 test("Settings is one centred column of grouped lists; Your data and Sign out are rows of their own, each ending in a glyph", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openApp(page, "/settings");
