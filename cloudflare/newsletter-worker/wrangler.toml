@@ -1,0 +1,12 @@
+# The Worker's settings, for anyone using Cloudflare's `wrangler` tool. Pasting
+# worker.js into Cloudflare's dashboard works just as well
+# (docs/operations/newsletters.md).
+name = "nine-turtles-newsletters"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+NINE_TURTLES_URL = "https://app.nineturtles.app"
+# NINE_TURTLES_SECRET is a secret: set it in the dashboard, or with
+# `wrangler secret put NINE_TURTLES_SECRET`. Never write it here.
+# FORWARD_TO is optional; set it in the dashboard too.

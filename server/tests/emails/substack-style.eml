@@ -1,0 +1,64 @@
+Return-Path: <bounce-abc@mg.slowgarden.example.com>
+Received: from mg.slowgarden.example.com by mx.cloudflare.example; Sun, 25 Oct 2026 07:00:03 +0000
+From: "The slow garden" <slowgarden@substack.example.com>
+To: reader-7k2x@in.nineturtles.app
+Subject: Why I stopped
+ mowing the lawn
+Date: Sun, 25 Oct 2026 07:00:00 +0000
+Message-ID: <20261025070000.abc123@mg.slowgarden.example.com>
+List-Id: The slow garden <slowgarden.substack.example.com>
+List-Unsubscribe: <mailto:unsubscribe@slowgarden.example.com?subject=stop>, <https://slowgarden.example.com/action/disable_email?token=xyz>
+List-Unsubscribe-Post: List-Unsubscribe=One-Click
+List-Archive: <https://slowgarden.example.com/archive>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="b1"
+
+--b1
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+View in browser: https://slowgarden.example.com/p/why-i-stopped-mowing
+
+Why I stopped mowing the lawn
+
+Last spring I left one corner alone.
+
+--b1
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html><html><head><meta charset=3D"utf-8"><title>The slow garden</=
+title>
+<style>.post { max-width: 550px } @media (max-width: 600px) { td { padding:=
+ 0 } }</style></head>
+<body style=3D"margin:0">
+<div class=3D"preview" style=3D"display:none;font-size:1px;max-height:0;ove=
+rflow:hidden;mso-hide:all">Why I stopped mowing the lawn &#8204;&nbsp;&#820=
+4;&nbsp;&#8204;&nbsp;</div>
+<table role=3D"presentation" width=3D"100%" cellpadding=3D"0" cellspacing=
+=3D"0" border=3D"0"><tr><td align=3D"center">
+<table class=3D"post" width=3D"550" cellpadding=3D"0" cellspacing=3D"0"><tr=
+><td>
+<p style=3D"font-size:12px"><a href=3D"https://slowgarden.example.com/p/why=
+-i-stopped-mowing?utm_source=3Demail&amp;utm_medium=3Dnewsletter&amp;r=3Dab=
+c">View in browser</a></p>
+</td></tr><tr><td>
+<h1 style=3D"font-family:Georgia">Why I stopped mowing the lawn</h1>
+<p>Last spring I left one corner of the garden alone. By July it was full o=
+f <em>clover</em>, bees and a family of hedgehogs.</p>
+<p><img src=3D"https://cdn.slowgarden.example.com/images/meadow.jpg" alt=3D=
+"A small meadow" width=3D"550" height=3D"300" style=3D"width:100%;height:au=
+to"></p>
+<p>Here is what I learned, and what <a href=3D"https://example.org/wildflow=
+ers?utm_campaign=3Dpost&amp;id=3D7">the seed people</a> told me.</p>
+</td></tr><tr><td>&nbsp;</td></tr><tr><td style=3D"font-size:12px;color:#99=
+9">
+<p>You're getting this because you subscribed to The slow garden. <a href=
+=3D"https://slowgarden.example.com/action/disable_email?token=3Dxyz">Unsubs=
+cribe</a></p>
+</td></tr></table>
+</td></tr></table>
+<img src=3D"https://email.mg.slowgarden.example.com/o/eJx1jM0" width=3D"1" =
+height=3D"1" alt=3D"" border=3D"0">
+</body></html>
+--b1--

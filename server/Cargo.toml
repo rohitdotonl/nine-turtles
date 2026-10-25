@@ -29,6 +29,9 @@ feed-rs = "3.0"
 scraper = "0.29"
 opml = "1.1"
 ammonia = "4.2"
+# Reading newsletter emails (decision 0087). "full_encoding" reads Chinese and
+# Japanese emails too, with encoding_rs, which reqwest already brings.
+mail-parser = { version = "1.0.0", features = ["full_encoding"] }
 
 [lints.rust]
 unsafe_code = "forbid"

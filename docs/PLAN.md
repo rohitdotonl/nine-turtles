@@ -404,6 +404,16 @@ feed is still fetched and stored once; everything personal gets an owner.
 | Part two: each reader's own feeds, marks, stars, search and sync (structure change 12) | 🔨 in progress (built, waiting for review) |
 | Part three: signing in by email, and a second account to try | ⬜ |
 
+## V2: Newsletters as feeds
+
+Milestone 10 of the plan for 100 to 200 readers, decision 0087, SPEC
+section 28.
+
+| Part | Status |
+|---|---|
+| Part one: reading and cleaning emails, the receiving address (off by default, keeps nothing yet), the Cloudflare forwarder and its setup steps | ✅ 25 October 2026 (setup: `docs/operations/newsletters.md`) |
+| Part two: each reader's own address, emails kept as articles under a feed per sender, limits per reader (after many readers part three) | ⬜ |
+
 ## V2: YouTube videos
 
 - ✅ A YouTube video plays in YouTube's own privacy-enhanced player, above

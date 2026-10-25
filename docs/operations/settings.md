@@ -22,6 +22,7 @@ Changes**. Render restarts nine turtles with the new value (about a minute).
 | `NINE_TURTLES_BACKUP_SECRET` | The storage key's secret (Secret Access Key). Secret. | Yes, for backups | As above. |
 | `NINE_TURTLES_BACKUP_REGION` | The storage's region name. `auto` for Cloudflare R2. | No | `auto`. |
 | `NINE_TURTLES_RESTORE_FROM` | The name of a stored backup to bring back, such as `nightly/2026-10-25.sqlite`. Used only when nine turtles starts with **no database** (a new host, or one moved aside); it never overwrites one. Remove it once restored ([backups.md](backups.md)). | Only when restoring | Nothing is restored. |
+| `NINE_TURTLES_NEWSLETTER_SECRET` | The shared secret the newsletter forwarder at Cloudflare posts emails with ([newsletters.md](newsletters.md)). At least 32 characters; Render's **Generate** button makes one. The same value goes in the forwarder's `NINE_TURTLES_SECRET`. Secret. | Only for newsletters | Newsletters are off: `/newsletters/incoming` answers "not found". Shorter than 32 characters stops nine turtles with a message saying so. |
 | `NINE_TURTLES_LISTEN` | The address and port nine turtles listens on. | Set by the container image to `0.0.0.0:10000`, the port Render expects | `127.0.0.1:8080` (this computer only). |
 
 ## Built in, not settings

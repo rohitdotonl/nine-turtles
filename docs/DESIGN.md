@@ -2,7 +2,7 @@
 
 > **nine turtles is a quiet place to read the web: it shows you what's there, gets out of the way, and lets you finish.**
 
-*Last updated: 25 October 2026 (starter feeds in the first-visit welcome, decision 0079; a logo of nine turtles, decision 0067; a second theme, Plain, with blue article links, and System serif, decision 0063; Apple Books as the design reference, decision 0059). Each change is recorded in `docs/decisions/`.*
+*Last updated: 25 October 2026 (newsletters as feeds, decision 0087; starter feeds in the first-visit welcome, decision 0079; a logo of nine turtles, decision 0067; a second theme, Plain, with blue article links, and System serif, decision 0063; Apple Books as the design reference, decision 0059). Each change is recorded in `docs/decisions/`.*
 
 ## Mission
 
@@ -19,7 +19,7 @@ Help people leave social media and return to reading the open web. Social media 
 - **A discovery engine:** no recommendations, trending or "you might like." You choose your sources. (One exception, approved by the owner for going multi-user: the first-visit welcome's "New to feeds?" offers a short, fixed list of five starter feeds, the same for everyone, none ticked, gone once you follow anything; decision 0079.)
 - **A social network:** no profiles, followers, likes or comments.
 - **A podcast player:** audio appears as a link to the original. (YouTube videos play in YouTube's own player, since 25 October 2026.)
-- **A newsletter inbox:** no email address that turns newsletters into feeds.
+- **An email app:** it never sends email or sees your inbox. (Newsletters can arrive as feeds through a private address of their own, approved by the owner for going multi-user; decision 0087.)
 - **A web scraper:** it shows what publishers put in their feeds (second floor).
 - **A permanent archive:** unstarred articles are kept for one year (the clean-up comes in V2; V1 keeps everything).
 - **A shared space:** readers on one nine turtles never see each other's feeds, marks, searches or reading (decision 0086).
@@ -57,7 +57,7 @@ No amount of calm or minimalism justifies text some people can't read.
 
 Publishers are the reason there's anything to read.
 
-- **Show what the publisher put in the feed.** Never scrape the full article. A summary-only feed shows the summary and "Open original."
+- **Show what the publisher put in the feed.** Never scrape the full article. A summary-only feed shows the summary and "Open original." A newsletter shows only what its email holds; its web version is never fetched (decision 0087).
 - **Always credit the source** and link to the original.
 - **Fetch politely:** on each feed's own rhythm, with ETag / Last-Modified (and WebSub, since 25 October 2026).
 - **Shared links go to the publisher,** never to nine turtles.

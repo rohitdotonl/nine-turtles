@@ -24,6 +24,7 @@ pub fn config() -> Config {
         public_url: None,
         backup: None,
         restore_from: None,
+        newsletter_secret: None,
     }
 }
 

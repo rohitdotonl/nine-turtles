@@ -37,6 +37,9 @@ pub struct Config {
     /// A stored backup to bring back when there's no database yet, such as
     /// `nightly/2026-10-25.sqlite` (`NINE_TURTLES_RESTORE_FROM`).
     pub restore_from: Option<String>,
+    /// The shared secret mail services post newsletter emails with
+    /// (`NINE_TURTLES_NEWSLETTER_SECRET`). Without it, newsletters are off.
+    pub newsletter_secret: Option<String>,
 }
 
 /// The scrambled password (`NINE_TURTLES_PASSWORD_HASH`), made by
@@ -121,6 +124,8 @@ impl Config {
         let backup = backup_settings(&var)?;
         let restore_from = var("NINE_TURTLES_RESTORE_FROM").map(|name| name.trim().to_owned());
 
+        let newsletter_secret = newsletter_secret(var("NINE_TURTLES_NEWSLETTER_SECRET"))?;
+
         Ok(Self {
             listen,
             data_dir: var("NINE_TURTLES_DATA_DIR")
@@ -133,8 +138,24 @@ impl Config {
             public_url,
             backup,
             restore_from,
+            newsletter_secret,
         })
     }
+}
+
+/// The newsletter secret, if set: long enough that nobody can guess it.
+fn newsletter_secret(value: Option<String>) -> Result<Option<String>, String> {
+    let Some(secret) = value.map(|secret| secret.trim().to_owned()) else {
+        return Ok(None);
+    };
+    if secret.chars().count() < crate::newsletters::SHORTEST_SECRET {
+        return Err(format!(
+            "NINE_TURTLES_NEWSLETTER_SECRET must be at least {} characters long, so nobody can \
+             guess it; Render's Generate button makes one",
+            crate::newsletters::SHORTEST_SECRET
+        ));
+    }
+    Ok(Some(secret))
 }
 
 /// The backup storage settings: all four of endpoint, bucket, key id and
@@ -220,6 +241,18 @@ mod tests {
         assert_eq!(
             PasswordSetting::from_value(Some("my password".into())),
             PasswordSetting::Invalid
+        );
+    }
+
+    #[test]
+    fn a_newsletter_secret_must_be_long() {
+        use super::newsletter_secret;
+        assert_eq!(newsletter_secret(None).unwrap(), None);
+        assert!(newsletter_secret(Some("short".into())).is_err());
+        let long = "x".repeat(40);
+        assert_eq!(
+            newsletter_secret(Some(format!(" {long}\n"))).unwrap(),
+            Some(long)
         );
     }
 

@@ -91,6 +91,11 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - URL normalization
 - Tracking pixels and tracking parameters
 - Sync service and the Google Reader API
+- Newsletters as feeds
+- Raw email (RFC 5322 and MIME)
+- Mailing list headers (`List-Id`, `List-Unsubscribe`)
+- Character sets (encodings)
+- Layout tables and preview text (in emails)
 
 ## The backend (server side)
 
@@ -237,6 +242,9 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Restore and recovery
 - Request signing (AWS Signature Version 4)
 - Merchant of record (Dodo Payments)
+- Cloudflare Email Routing and catch-all address
+- Cloudflare Worker
+- Shared secret (bearer token)
 
 ## Design and accessibility
 
