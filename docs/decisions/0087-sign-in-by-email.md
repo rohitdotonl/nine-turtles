@@ -20,12 +20,15 @@ decides who may make an account.
   unknown email get the same answer. An unknown email is checked against a
   scramble nobody chose a password for, so it takes about as long.
 - **The wait after wrong tries is per account**: each email (in small
-  letters) counts separately, and the owner is one account, whether they
-  try the password alone or their email, so a guesser gets five free tries
-  at the owner's password, not ten. (So a stranger who guesses at the
-  owner's email also makes the password alone wait, as guessing the
-  password alone always did.) A stranger guessing one email makes only
-  that email wait. At most 4,096 accounts' counts are kept, so made-up
+  letters) counts separately, the owner's email too, and the owner's
+  password-only sign-in has a count of its own. A stranger guessing one
+  email makes only that email wait. So the owner has two separate sets of
+  five free tries (the password alone, and their email), and a guesser
+  gets ten tries at the owner's one password before waiting, not five.
+  That's accepted: counting the owner's email with the password alone
+  would let a stranger find out which email is the owner's (use up the
+  password-only tries, then try emails: only the owner's would say
+  "wait"), and the waits still double up to an hour. At most 4,096 accounts' counts are kept, so made-up
   emails can't fill the memory; when full, quiet accounts are forgotten
   first and a waiting one only if all are waiting.
 - **Checking a password never holds anyone else up.** The count is checked
@@ -36,14 +39,19 @@ decides who may make an account.
   no check.
 - **Only a few password checks at once.** Each argon2 check takes about
   19 MB, so a flood of tries could use up the server's memory. Two checks
-  at a time are allowed for everyone but the owner, and one for the owner
-  in a line of their own: guesses at made-up emails (up to five each,
-  without end of emails) queue only behind each other. The owner's line
-  stays short, because their one account allows only five wrong tries. An
-  unknown email waits in the same line as a real reader's email and is
-  checked the same way, so the time still doesn't tell which exists. While
-  such a flood lasts, other readers' sign-ins slow down; the owner's
-  don't.
+  at a time are allowed for every sign-in by email, and one for the
+  owner's password-only sign-in in a line of its own: guesses at made-up
+  emails (up to five each, without end of emails) queue only behind each
+  other. The owner's line stays short, because the password alone allows
+  only five wrong tries. Every email, the owner's, another reader's or
+  one nobody has, waits in the same shared line and is checked the same
+  way, so the time doesn't tell which exists or which is the owner's.
+  While such a flood lasts, sign-ins by email slow down (the owner's
+  email too); the password alone doesn't.
+- **A password over 1,024 bytes is refused at once** with the same answer
+  as a wrong password, before it's counted or waits for a check. It could
+  never match, and the answer is the same whatever the email, so it tells
+  nothing; it just keeps long request bodies from waiting in the queue.
 
 **Signing up**
 

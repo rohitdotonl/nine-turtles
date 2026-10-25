@@ -493,7 +493,7 @@ async fn sign_ups_sent_together_go_one_at_a_time_and_stop_at_twenty() {
 }
 
 #[tokio::test]
-async fn the_owners_email_and_the_password_alone_share_one_count() {
+async fn the_owners_email_cant_be_told_apart_while_the_password_alone_waits() {
     let base = common::start(common::config()).await;
     let owner = common::signed_in(&base).await;
     post(
@@ -503,29 +503,73 @@ async fn the_owners_email_and_the_password_alone_share_one_count() {
         json!({ "email": "rohit@example.com" }),
     )
     .await;
+    let ticket = invite(&base, &owner).await;
+    assert_eq!(
+        sign_up(&base, "mira@example.com", READER_PASSWORD, &ticket)
+            .await
+            .status(),
+        StatusCode::NO_CONTENT
+    );
 
-    for _ in 0..3 {
+    // A stranger uses up the password-only sign-in's five free tries...
+    for _ in 0..4 {
         assert_eq!(
-            sign_in(&base, "Rohit@example.com", "guess").await.status(),
+            sign_in(&base, "", "guess").await.status(),
             StatusCode::UNAUTHORIZED
         );
     }
     assert_eq!(
         sign_in(&base, "", "guess").await.status(),
-        StatusCode::UNAUTHORIZED
-    );
-    // The fifth wrong try in all, whichever way: both ways now wait.
-    assert_eq!(
-        sign_in(&base, "", "guess").await.status(),
         StatusCode::TOO_MANY_REQUESTS
     );
-    for email in ["rohit@example.com", ""] {
-        assert_eq!(
-            sign_in(&base, email, PASSWORD).await.status(),
-            StatusCode::TOO_MANY_REQUESTS,
-            "{email}"
-        );
+
+    // ...then tries emails: the owner's answers just as the others do.
+    let mut answers = Vec::new();
+    for email in [
+        "Rohit@example.com",
+        "mira@example.com",
+        "nobody@example.com",
+    ] {
+        let answer = sign_in(&base, email, "guess").await;
+        answers.push((answer.status(), answer.text().await.unwrap()));
     }
+    assert_eq!(answers[0].0, StatusCode::UNAUTHORIZED, "{answers:?}");
+    assert!(
+        answers.iter().all(|answer| *answer == answers[0]),
+        "{answers:?}"
+    );
+
+    // The owner's email has a count of its own, so it still signs in.
+    assert_eq!(
+        sign_in(&base, "rohit@example.com", PASSWORD).await.status(),
+        StatusCode::NO_CONTENT
+    );
+}
+
+#[tokio::test]
+async fn a_password_too_long_to_be_right_is_refused_at_once() {
+    let (base, state) = common::start_with_state(common::config()).await;
+    let long = "x".repeat(nine_turtles::password::MAXIMUM_LENGTH + 1);
+    let wrong = sign_in(&base, "", "guess").await;
+    let wrong = (wrong.status(), wrong.text().await.unwrap());
+    let checked_before = state
+        .wrong_passwords
+        .load(std::sync::atomic::Ordering::Relaxed);
+    for email in ["", "nobody@example.com"] {
+        for _ in 0..10 {
+            let answer = sign_in(&base, email, &long).await;
+            assert_eq!((answer.status(), answer.text().await.unwrap()), wrong);
+        }
+    }
+    // Never checked or counted: the password alone still has its tries.
+    let checked = state
+        .wrong_passwords
+        .load(std::sync::atomic::Ordering::Relaxed);
+    assert_eq!(checked, checked_before);
+    assert_eq!(
+        sign_in(&base, "", PASSWORD).await.status(),
+        StatusCode::NO_CONTENT
+    );
 }
 
 #[tokio::test]
@@ -575,18 +619,26 @@ async fn guesses_at_other_emails_never_hold_up_the_owners_sign_in() {
         async move { sign_in(&base, "nobody@example.com", "guess").await.status() }
     });
 
-    // A guess is waiting its turn, yet the owner signs in both ways at once.
+    // A guess is waiting its turn, yet the password alone signs in at once.
     let quickly = std::time::Duration::from_secs(30);
-    for email in ["", "Rohit@Example.com"] {
-        let signed_in = tokio::time::timeout(quickly, sign_in(&base, email, PASSWORD))
-            .await
-            .expect("the owner's sign-in waited behind the guesses");
-        assert_eq!(signed_in.status(), StatusCode::NO_CONTENT, "{email}");
-    }
+    let signed_in = tokio::time::timeout(quickly, sign_in(&base, "", PASSWORD))
+        .await
+        .expect("the owner's sign-in waited behind the guesses");
+    assert_eq!(signed_in.status(), StatusCode::NO_CONTENT);
     assert!(!guess.is_finished());
+
+    // The owner's email waits in the same line as every other email, so its
+    // timing can't give it away.
+    let by_email = tokio::spawn({
+        let base = base.clone();
+        async move { sign_in(&base, "Rohit@Example.com", PASSWORD).await.status() }
+    });
+    tokio::time::sleep(std::time::Duration::from_millis(300)).await;
+    assert!(!by_email.is_finished());
 
     drop(flood);
     assert_eq!(guess.await.unwrap(), StatusCode::UNAUTHORIZED);
+    assert_eq!(by_email.await.unwrap(), StatusCode::NO_CONTENT);
 }
 
 async fn json_of(response: Response) -> Value {

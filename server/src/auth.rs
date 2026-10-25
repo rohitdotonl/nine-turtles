@@ -149,18 +149,17 @@ impl Limiter {
 /// Whose wrong tries a sign-in counts towards.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Account {
-    /// The owner, whether they sign in with the password alone (as before
-    /// email addresses) or with their email: one account, one count.
+    /// The owner's password-only sign-in (as before email addresses).
     Owner,
-    /// Any other email address, in small letters, whether or not anyone has it.
+    /// An email address, in small letters, whether or not anyone has it,
+    /// the owner's own email too (so it can't be told apart from others).
     Email(String),
 }
 
 impl Account {
     /// The account a sign-in names before anything is looked up: its email
     /// address (in small letters, as the database compares them), or the
-    /// owner's password-only sign-in if none. `sign_in` counts the owner's
-    /// email as `Owner` once it has found whose it is.
+    /// owner's password-only sign-in if none.
     pub fn named(email: Option<&str>) -> Self {
         match email.map(str::trim).filter(|email| !email.is_empty()) {
             Some(email) => Self::Email(email.to_ascii_lowercase()),
@@ -170,16 +169,18 @@ impl Account {
 }
 
 /// How many password checks (argon2, about 19 MB each) may run at once, so
-/// a flood of sign-in tries can't use up the server's memory. The owner has
-/// a place of their own: guesses at other emails queue only behind each
-/// other, never in front of the owner. The owner's own queue stays short,
-/// because their account allows only five wrong tries before every further
-/// try is refused at once, with no check.
+/// a flood of sign-in tries can't use up the server's memory. The owner's
+/// password-only sign-in has a place of its own: guesses at emails queue
+/// only behind each other, never in front of it. Its queue stays short,
+/// because it allows only five wrong tries before every further try is
+/// refused at once, with no check. A sign-in with the owner's email waits
+/// on the shared line like any other email, so its timing gives nothing
+/// away.
 #[derive(Debug)]
 pub struct PasswordChecks {
-    /// The owner's checks, one at a time.
+    /// The owner's password-only checks, one at a time.
     pub owner: Semaphore,
-    /// Everyone else's, and every email nobody has.
+    /// Every sign-in by email, the owner's email and emails nobody has too.
     pub others: Semaphore,
 }
 
@@ -335,9 +336,22 @@ async fn sign_in(State(state): State<AppState>, Json(form): Json<SignIn>) -> Res
             .into_response();
     }
 
+    // A password this long can never match, so it's refused at once, before
+    // it's counted or waits for a check, with the same answer as any wrong
+    // password (whatever the email, so it tells nothing).
+    if form.password.len() > crate::password::MAXIMUM_LENGTH {
+        return (
+            StatusCode::UNAUTHORIZED,
+            Json(json!({ "error": "wrong-password" })),
+        )
+            .into_response();
+    }
+
     // Whose sign-in this would be, and the scrambled line to check against.
-    // Looked up before the count is checked, so the owner's email counts
-    // towards the owner's one account.
+    // A sign-in by email is counted under that email and checked on the
+    // shared line whoever has it, the owner too, so neither the answer nor
+    // the time taken tells a stranger which email is the owner's. (The
+    // owner then has two separate sets of five tries: decision 0087.)
     let (account, person, stored) = match account {
         Account::Owner => (Account::Owner, Some(OWNER), owners_line),
         Account::Email(email) => {
@@ -350,11 +364,13 @@ async fn sign_in(State(state): State<AppState>, Json(form): Json<SignIn>) -> Res
             match found {
                 // The owner uses NINE_TURTLES_PASSWORD_HASH unless they
                 // have a password of their own.
-                Ok(Some((person, true, own_line))) => {
-                    (Account::Owner, Some(person), own_line.or(owners_line))
-                }
-                Ok(Some((person, false, own_line))) => {
-                    (Account::Email(email), Some(person), own_line)
+                Ok(Some((person, owner, own_line))) => {
+                    let stored = if owner {
+                        own_line.or(owners_line)
+                    } else {
+                        own_line
+                    };
+                    (Account::Email(email), Some(person), stored)
                 }
                 Ok(None) => (Account::Email(email), None, None),
                 Err(error) => return database_problem("finding a reader", &error),
