@@ -25,6 +25,7 @@
   import Sheet from "./Sheet.svelte";
   import Settings from "./Settings.svelte";
   import FeedHealth from "./FeedHealth.svelte";
+  import YourFeeds from "./YourFeeds.svelte";
   import SearchBar from "./SearchBar.svelte";
   import SidebarFeeds from "./SidebarFeeds.svelte";
   import StarterFeeds from "./StarterFeeds.svelte";
@@ -140,7 +141,8 @@
   let listHeading: HTMLHeadingElement | undefined = $state();
   let settingsHeading: HTMLHeadingElement | undefined = $state();
   let healthHeading: HTMLHeadingElement | undefined = $state();
-  /** Feed health was opened from Settings, so closing it is a step back in history. */
+  let yourFeedsHeading: HTMLHeadingElement | undefined = $state();
+  /** Feed health or Your feeds was opened from Settings, so closing it is a step back in history. */
   let cameFromSettings = false;
   let dataHeading: HTMLHeadingElement | undefined = $state();
   let addField: HTMLInputElement | undefined = $state();
@@ -583,6 +585,7 @@
     // Edit pages bind their heading to `listHeading` too.
     if (place.kind === "settings") return settingsHeading;
     if (place.kind === "feed-health") return healthHeading;
+    if (place.kind === "your-feeds") return yourFeedsHeading;
     if (place.kind === "add-feed") return addField;
     if (place.kind === "new-to-feeds") return phone ? listHeading : sheetHeading;
     if (sheetShown) return sheetHeading;
@@ -653,7 +656,7 @@
 
   function go(next: Route, withNotice?: Notice) {
     const from = screenNow();
-    cameFromSettings = route.kind === "settings" && next.kind === "feed-health";
+    cameFromSettings = route.kind === "settings" && (next.kind === "feed-health" || next.kind === "your-feeds");
     const to: Screen = isList(next) ? "list" : "page";
     const [opening, closing] = [isSheet(next) && !isSheet(route), isSheet(route) && !isSheet(next)];
     let pushed = false;
@@ -766,6 +769,11 @@
   /** Settings › Feed health. */
   function goHealth(event: MouseEvent) {
     follow(event, { kind: "feed-health" });
+  }
+
+  /** Settings › Your feeds. */
+  function goYourFeeds(event: MouseEvent) {
+    follow(event, { kind: "your-feeds" });
   }
 
   /** Close feed health, or Escape there: back to Settings, a step back in history when it came from there. */
@@ -938,7 +946,7 @@
   }
 
   function escape() {
-    if (route.kind === "feed-health") closeHealth();
+    if (route.kind === "feed-health" || route.kind === "your-feeds") closeHealth();
     else if (route.kind === "settings" || route.kind === "add-feed" || route.kind === "new-to-feeds") closePage();
     else if (route.kind === "edit-feed" || route.kind === "edit-folder") edited(false);
     else if (reading || (selected && inArticle())) backToList();
@@ -1168,9 +1176,9 @@
         href="/settings"
         aria-label="Settings"
         title="Settings"
-        aria-current={route.kind === "settings" || route.kind === "feed-health" ? "page" : undefined}
+        aria-current={route.kind === "settings" || route.kind === "feed-health" || route.kind === "your-feeds" ? "page" : undefined}
         onclick={(event) => follow(event, { kind: "settings" })}
-        class={["btn-quiet btn-icon @max-[15rem]:-mr-1.5", (route.kind === "settings" || route.kind === "feed-health") && "bg-tint-sidebar text-ink"]}><Icon name="settings" size={18} /></a
+        class={["btn-quiet btn-icon @max-[15rem]:-mr-1.5", (route.kind === "settings" || route.kind === "feed-health" || route.kind === "your-feeds") && "bg-tint-sidebar text-ink"]}><Icon name="settings" size={18} /></a
       >
     </div>
     {#if !phone && (panes.list || panes.article)}
@@ -1201,10 +1209,19 @@
           onClose={closePage}
           onImported={loadFeeds}
           onFeedHealth={goHealth}
+          onYourFeeds={goYourFeeds}
           besideToggle={!phone && !panes.sidebar}
         />
       {:else if route.kind === "feed-health"}
         <FeedHealth bind:heading={healthHeading} onClose={closeHealth} onFeedsChanged={loadFeeds} besideToggle={!phone && !panes.sidebar} />
+      {:else if route.kind === "your-feeds"}
+        <YourFeeds
+          bind:heading={yourFeedsHeading}
+          onClose={closeHealth}
+          onOpenFeed={(event, id) => follow(event, { kind: "feed", id })}
+          onFeedsChanged={loadFeeds}
+          besideToggle={!phone && !panes.sidebar}
+        />
       {:else if !sheet && route.kind === "edit-feed" && currentFeed}
         {#key currentFeed.id}
           <EditFeed

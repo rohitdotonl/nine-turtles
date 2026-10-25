@@ -14,7 +14,8 @@ export type Route =
   | { kind: "add-feed" }
   | { kind: "new-to-feeds" }
   | { kind: "settings" }
-  | { kind: "feed-health" };
+  | { kind: "feed-health" }
+  | { kind: "your-feeds" };
 
 export const VIEW_NAMES: Record<View, string> = { unread: "Unread", starred: "Starred", all: "All" };
 
@@ -23,6 +24,7 @@ export function parse(path: string): Route {
   const name = path.replace(/^\/+|\/+$/g, "");
   if (name === "settings") return { kind: "settings" };
   if (name === "settings/feed-health") return { kind: "feed-health" };
+  if (name === "settings/feeds") return { kind: "your-feeds" };
   if (name === "add-feed") return { kind: "add-feed" };
   if (name === "new-to-feeds") return { kind: "new-to-feeds" };
   const place = name.match(/^(feeds|folders)\/([1-9][0-9]{0,15})(\/edit)?$/);
@@ -41,6 +43,8 @@ export function pathFor(route: Route): string {
       return "/settings";
     case "feed-health":
       return "/settings/feed-health";
+    case "your-feeds":
+      return "/settings/feeds";
     case "add-feed":
       return "/add-feed";
     case "new-to-feeds":
@@ -65,6 +69,8 @@ export function nameFor(route: Route, placeName?: string): string {
       return "Settings";
     case "feed-health":
       return "Feed health";
+    case "your-feeds":
+      return "Your feeds";
     case "add-feed":
       return "Add a feed";
     case "new-to-feeds":
