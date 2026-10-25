@@ -26,6 +26,7 @@
   import ReadingPanel from "./ReadingPanel.svelte";
   import type { Preferences } from "./preferences";
   import { articleNow, readArticle, when, type Article, type FullArticle } from "./feeds";
+  import { goTo, keepPlace, placeIn, placeOf, type Place } from "./places";
 
   let {
     article,
@@ -61,6 +62,8 @@
   let problem = $state(false);
   let copied = $state("");
   let scroller: HTMLDivElement | undefined = $state();
+  /** The article's own text, whose blocks mark your place in it. */
+  let text: HTMLDivElement | undefined = $state();
   /** The Aa reading panel, and its button (there's one, on the top bar or the phone's bottom bar). */
   let panelOpen = $state(false);
   let aaButton: HTMLButtonElement | undefined = $state();
@@ -89,11 +92,49 @@
     },
   ]);
 
+  // Your place, like a bookmark (decision 0060). Only the reader's own
+  // scrolling moves it: opening an article, or putting it back at its
+  // place, never does. It is written down a moment after scrolling stops,
+  // and at once when another article opens.
+  let moved = false;
+  let latest: { id: number; place: Place | undefined } | undefined;
+  let writing: ReturnType<typeof setTimeout> | undefined;
+
+  function writePlace() {
+    clearTimeout(writing);
+    writing = undefined;
+    if (latest) keepPlace(latest.id, latest.place);
+    latest = undefined;
+  }
+
+  function scrolled() {
+    if (!moved || !scroller || !text) return;
+    latest = { id: article.id, place: placeIn(scroller, text) };
+    clearTimeout(writing);
+    writing = setTimeout(writePlace, 400);
+  }
+
+  $effect(() => writePlace);
+
+  // A wheel, a touch or a press (the scroll bar too), and any key (below): the reader is moving through the article themselves.
+  $effect(() => {
+    const area = scroller;
+    if (!area) return;
+    const mine = () => (moved = true);
+    const kinds = ["wheel", "touchstart", "pointerdown"] as const;
+    for (const kind of kinds) area.addEventListener(kind, mine, { passive: true });
+    return () => {
+      for (const kind of kinds) area.removeEventListener(kind, mine);
+    };
+  });
+
   $effect(() => {
     const id = article.id;
+    writePlace();
+    moved = false;
     problem = false;
     copied = "";
-    // A new article starts at its top.
+    // A new article starts at its top, unless you stopped part of the way through it (below).
     if (scroller) scroller.scrollTop = 0;
     if (articleNow(id)) return;
     readArticle(id).then(
@@ -102,6 +143,28 @@
         if (article.id === id) problem = true;
       },
     );
+  });
+
+  // Opening an article you stopped part of the way through puts you back
+  // where you were, at once. Pictures that load late push the text down, so
+  // the place is kept steady for a few seconds, until you scroll yourself.
+  $effect(() => {
+    const area = scroller;
+    const body = text;
+    const id = article.id;
+    if (!area || !body) return;
+    const place = placeOf(id);
+    if (!place) return;
+    goTo(area, body, place);
+    const steady = new ResizeObserver(() => {
+      if (!moved) goTo(area, body, place);
+    });
+    steady.observe(body);
+    const done = setTimeout(() => steady.disconnect(), 5000);
+    return () => {
+      steady.disconnect();
+      clearTimeout(done);
+    };
   });
 
   // Footnotes: a link to a place inside the article (cleaned to `#article-…`
@@ -180,6 +243,9 @@
   >
 {/snippet}
 
+<!-- Any key: the reader may be moving through the article (Space, the arrows, Page Down). -->
+<svelte:window onkeydown={() => (moved = true)} />
+
 <section aria-label="Article" class="flex min-w-0 flex-1 flex-col bg-paper">
   <!--
     The top bar is solid, in the page's own color, across the whole pane
@@ -223,7 +289,11 @@
     </div>
   {/if}
 
-  <div use:edge bind:this={scroller} class="reading-scroller scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto bg-paper px-5 pb-8 md:px-14">
+  <div
+    use:edge
+    bind:this={scroller}
+    onscroll={scrolled}
+    class="reading-scroller scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto bg-paper px-5 pb-8 md:px-14">
     <article lang={full?.language ?? undefined} class="article pt-3">
       <h2 tabindex="-1" bind:this={heading} class="article-title">{article.title || "Untitled"}</h2>
       <!-- Under the title, as in a book or a magazine: who wrote it, where, and when. The publisher's name leads, in full ink. -->
@@ -240,11 +310,11 @@
       {#if full}
         {#if full.content}
           <!-- Cleaned by nine turtles before it was stored (server/src/feed.rs). -->
-          <div class="article-text" dir="auto">{@html full.content}</div>
+          <div bind:this={text} class="article-text" dir="auto">{@html full.content}</div>
           <!-- The last page: a short rule, so the article ends rather than stops. -->
           <hr aria-hidden="true" class="article-end" />
         {:else if full.summary}
-          <div class="article-text" dir="auto">{@html full.summary}</div>
+          <div bind:this={text} class="article-text" dir="auto">{@html full.summary}</div>
           <hr aria-hidden="true" class="article-end" />
           <!--
             End matter, under the closing rule as in a book: where the rest of it is. The publisher is already

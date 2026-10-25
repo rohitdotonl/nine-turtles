@@ -4,6 +4,15 @@ A plain-language history of nine turtles (called slowfeed until 24 October 2026)
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 25 October 2026: A bookmark in every article, search tucked away on a phone
+
+- Leave a long article halfway and it now opens where you stopped, even
+  after closing the app. Finish it and it starts at the top again. Each
+  device remembers its own places.
+- On a phone, the search box under a list's title is now a magnifier
+  button beside the More (…) button, so one more article fits on the
+  screen. Tap it to search.
+
 ## 24 October 2026: Less space after an article, Show older items as a list row
 
 - After an article ends there's now a short gap and the small end mark, not

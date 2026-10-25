@@ -415,6 +415,7 @@ test.describe("on a phone", () => {
     // search field and row titles start 28px in, and an unread row's dot 10px from the screen's edge.
     await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
     near(await textStart(page.locator("#list-heading")), 28);
+    await page.getByRole("button", { name: "Search", exact: true }).click();
     near((await list(page).locator(".search-box").boundingBox())!.x, 28);
     near(await textStart(row(page, "The pleasure of a slow letter").locator(".title")), 28);
     const dot = list(page).locator(".unread-dot").first();
@@ -445,6 +446,42 @@ test.describe("on a phone", () => {
     await expect(add).toBeVisible();
     near20(await textStart(add));
     near20(await textStart(page.getByText(/finds the feed/).first()));
+  });
+
+  test("the search field waits behind a Search button beside More, so the list starts under its title (decision 0060)", async ({ page }) => {
+    await openHome(page);
+    await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
+    const search = page.getByRole("button", { name: "Search", exact: true });
+    const field = page.locator("#search-field");
+    await expect(search).toBeVisible();
+    await expect(field).toHaveCount(0);
+    // The first row sits close under the title: no field between them.
+    const heading = (await page.locator("#list-heading").boundingBox())!;
+    const first = (await row(page, "The pleasure of a slow letter").boundingBox())!;
+    expect(first.y - (heading.y + heading.height)).toBeLessThan(40);
+    // The button sits in the title's line, just before More, and is a full tap.
+    const more = (await list(page).getByRole("button", { name: "More" }).boundingBox())!;
+    const button = (await search.boundingBox())!;
+    expect(button.x).toBeLessThan(more.x);
+    expect(Math.abs(button.y + button.height / 2 - (more.y + more.height / 2))).toBeLessThan(2);
+    expect(button.height).toBeGreaterThanOrEqual(44);
+
+    // A tap shows the field, ready to type in.
+    await expect(search).toHaveAttribute("aria-expanded", "false");
+    await search.click();
+    await expect(field).toBeFocused();
+    await expect(search).toHaveAttribute("aria-expanded", "true");
+    await page.keyboard.type("slow");
+    await expect(page.locator("#list-heading")).toHaveText("Search results");
+    // It never goes away on its own, so nothing moves under a finger: emptied, it stays.
+    await field.fill("");
+    await expect(page.locator("#list-heading")).toHaveText("Reading Room");
+    await page.locator("#list-heading").focus();
+    await expect(field).toBeVisible();
+    // The button again, with nothing searched, puts it away.
+    await search.click();
+    await expect(field).toHaveCount(0);
+    await expect(search).toHaveAttribute("aria-expanded", "false");
   });
 
   test("with text at twice its size on a small phone, the summary note wraps rather than running off the screen", async ({ page }) => {
