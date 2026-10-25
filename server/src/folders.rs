@@ -24,6 +24,7 @@ use sqlx::SqliteConnection;
 use crate::{
     AppState,
     auth::{SignedIn, database_problem},
+    checking::{DAY, HOUR},
     now, rules,
 };
 
@@ -107,9 +108,38 @@ struct EditFeed {
     /// A folder to create (or find by name) and put the feed in too.
     #[serde(default)]
     new_folder: Option<String>,
+    /// Its settings (SPEC section 15). Each is left as it is when absent, so
+    /// a tab opened before they existed can't reset them.
+    #[serde(default)]
+    river: Option<bool>,
+    #[serde(default)]
+    check: Option<Check>,
+    #[serde(default)]
+    open_on_site: Option<bool>,
 }
 
-/// "Edit feed": its name and its folders, saved together or not at all.
+/// How often the reader allows a feed to be checked in the background.
+#[derive(Clone, Copy, Deserialize)]
+#[serde(rename_all = "lowercase")]
+enum Check {
+    /// On its own rhythm, as every feed is by default.
+    Automatic,
+    Hourly,
+    Daily,
+}
+
+impl Check {
+    /// The shortest wait between checks, in seconds (0: none of its own).
+    const fn at_most(self) -> i64 {
+        match self {
+            Self::Automatic => 0,
+            Self::Hourly => HOUR,
+            Self::Daily => DAY,
+        }
+    }
+}
+
+/// "Edit feed": its name, folders and settings, saved together or not at all.
 async fn edit_feed(
     _: SignedIn,
     State(state): State<AppState>,
@@ -131,11 +161,30 @@ async fn edit_feed(
         if !followed(&mut transaction, id).await? {
             return Ok(None);
         }
-        sqlx::query("UPDATE feeds SET title = ? WHERE id = ?")
-            .bind(&title)
+        sqlx::query(
+            "UPDATE feeds SET title = ?, river = COALESCE(?, river),
+                 open_on_site = COALESCE(?, open_on_site)
+             WHERE id = ?",
+        )
+        .bind(&title)
+        .bind(form.river)
+        .bind(form.open_on_site)
+        .bind(id)
+        .execute(&mut *transaction)
+        .await?;
+        if let Some(check) = form.check {
+            // A longer wait applies at once: the next check moves to no
+            // sooner than that long after the last one.
+            sqlx::query(
+                "UPDATE feeds SET check_at_most = ?1,
+                     next_check_at = MAX(next_check_at, COALESCE(fetched_at, 0) + ?1)
+                 WHERE id = ?2",
+            )
+            .bind(check.at_most())
             .bind(id)
             .execute(&mut *transaction)
             .await?;
+        }
         sqlx::query("DELETE FROM feed_folders WHERE feed_id = ?")
             .bind(id)
             .execute(&mut *transaction)
@@ -270,6 +319,7 @@ pub async fn clear(connection: &mut SqliteConnection, id: i64) -> Result<bool, s
     .bind(id)
     .execute(&mut *connection)
     .await?;
+    crate::saved_searches::forget(&mut *connection, "feed", id).await?;
     Ok(true)
 }
 
@@ -380,6 +430,7 @@ async fn delete_folder(
         if deleted.rows_affected() == 0 {
             return Ok(None);
         }
+        crate::saved_searches::forget(&mut *transaction, "folder", id).await?;
         // Rules for it stay, paused and saying so (SPEC section 27); the
         // screen keeps their numbers, so Undo can hand them back.
         let rules = rules::place_gone(&mut transaction, None, Some(id)).await?;

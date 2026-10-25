@@ -2,7 +2,8 @@
 // browser tests check the app: every page, by day and by night, on a
 // computer and a phone, has no accessibility or contrast problems that the
 // automatic checker can find (WCAG AA), and works with the keyboard alone:
-// a skip link first, and a visible outline on every link. Borrows
+// a skip link first, and a visible outline on every link. Every link and
+// picture within the website leads to a real file. Borrows
 // Playwright and axe from web/, so the website needs no testing libraries of
 // its own (decision 0066).
 //
@@ -26,13 +27,17 @@ const types = {
   ".css": "text/css",
   ".woff2": "font/woff2",
   ".png": "image/png",
+  ".webp": "image/webp",
+  ".svg": "image/svg+xml",
+  ".xml": "application/atom+xml; charset=utf-8",
   ".txt": "text/plain; charset=utf-8",
 };
 
-// Every page the website has.
+// Every page the website has, and the page shown for an address it doesn't.
 const pages = readdirSync(site, { recursive: true })
   .filter((file) => file.endsWith("index.html"))
-  .map((file) => "/" + file.replace(/index\.html$/, "").split("\\").join("/"));
+  .map((file) => "/" + file.replace(/index\.html$/, "").split("\\").join("/"))
+  .concat("/404.html");
 
 // A tiny web server for the built files, as a host would serve them.
 const server = createServer((request, response) => {
@@ -63,6 +68,16 @@ try {
         const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"]).analyze();
         for (const violation of results.violations) {
           problems.push(`${path} (${colorScheme}, ${device}): ${violation.help} (${violation.nodes.length} place(s))`);
+        }
+        // Every link and picture within the website leads somewhere real.
+        if (colorScheme === "light" && device === "computer") {
+          const targets = await page.evaluate(() =>
+            [...document.querySelectorAll("a[href^='/'], img[src^='/'], link[href^='/']")].map((el) => el.getAttribute("href") ?? el.getAttribute("src")),
+          );
+          for (const target of new Set(targets)) {
+            const reply = await page.request.get(base + target.split("#")[0]);
+            if (!reply.ok()) problems.push(`${path}: the link or picture ${target} leads nowhere (${reply.status()})`);
+          }
         }
         // With the keyboard alone: the first Tab shows "Skip to the text" on
         // screen, and every link after it shows a visible focus outline.

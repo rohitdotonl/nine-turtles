@@ -70,6 +70,11 @@ async fn diagnostics(State(state): State<AppState>, headers: HeaderMap) -> Respo
         }
     };
     let last_round = state.last_round.load(std::sync::atomic::Ordering::Relaxed);
+    let latest_backup = state
+        .latest_backup
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+        .clone();
     (
         [(header::CACHE_CONTROL, "no-store")],
         Json(json!({
@@ -84,6 +89,12 @@ async fn diagnostics(State(state): State<AppState>, headers: HeaderMap) -> Respo
             // Counts only, never which feeds (the reader's subscriptions are theirs).
             "feeds": feeds,
             "background_checks_last_round_at": (last_round > 0).then_some(last_round),
+            // Whether backups are on, and the newest nightly copy, such as
+            // "nightly/2026-10-25.sqlite" (null until the first is stored).
+            "backups": {
+                "on": state.storage.is_some(),
+                "latest_nightly": latest_backup,
+            },
         })),
     )
         .into_response()

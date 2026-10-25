@@ -3,10 +3,14 @@
   source and time in quiet small text below. No images, no site icons.
   Unread titles are full strength and semibold, read ones muted and regular,
   starred ones carry a small star: each state shows without color too. In
-  river mode (SPEC section 10) every title looks the same, read or not.
+  river mode (SPEC section 10) every title looks the same, read or not, and
+  so does every title from a feed set to flow past in Edit feed.
 
-  It shows 50 and then ends; "Show older items" adds the next 50 below, and
-  nothing above moves. Choosing an article (a click, Enter, or j and k)
+  It shows 50; when you reach the bottom, the next 50 load below by
+  themselves, with a small grey "Loading…", and nothing above moves
+  (decision 0074). For the keyboard and screen readers, a "Show older items"
+  button sits there too, hidden until it has the keyboard's place. At the
+  very end, "You're all caught up." Choosing an article (a click, Enter, or j and k)
   selects it and the reading area shows it (SPEC section 7); the next one is
   fetched in advance.
 
@@ -61,6 +65,7 @@
     results = false,
     oneFeed = false,
     river = false,
+    flowing = new Set(),
     count = $bindable(0),
     found = $bindable(""),
   }: {
@@ -84,6 +89,8 @@
     oneFeed?: boolean;
     /** River mode (SPEC section 10): every row looks the same, read or not; read state is still recorded. */
     river?: boolean;
+    /** Feeds set to flow past in Edit feed (SPEC section 15): their rows look as in river mode. */
+    flowing?: Set<number>;
     /** How many articles are listed, for the empty reading area's hint. */
     count?: number;
     /** What the line above search results says ("28 results"): empty until they load, and when this isn't a search. */
@@ -99,6 +106,11 @@
   let busy = $state(false);
   let problem = $state("");
   let rows: HTMLButtonElement[] = $state([]);
+  /** The "Show older items" button, and the empty line under the list that loads more when it comes into view. */
+  let moreButton: HTMLButtonElement | undefined = $state();
+  let bottom: HTMLElement | undefined = $state();
+  let bottomInView = false;
+  let loadingMore = $state(false);
   /** The newest article's number when the list was loaded, and whether anything has arrived since. */
   let latest = 0;
   let newWaiting = $state(false);
@@ -142,20 +154,42 @@
     busy = true;
     problem = "";
     const firstNew = articles.length;
+    const buttonHadFocus = moreButton !== undefined && document.activeElement === moreButton;
+    let ok = false;
+    loadingMore = after !== null;
     try {
       const page = await listArticles(source, order, after);
       articles = after === null ? page.articles : [...articles, ...page.articles];
       next = page.next;
       if (after === null) latest = page.latest;
       loaded = true;
+      ok = true;
     } catch {
       problem = "The articles couldn't be loaded. Try again in a moment.";
     }
     busy = false;
-    // At the very end the button goes away. Rather than lose the keyboard's
-    // place with it, move it to the first article just added.
-    if (after !== null && next === null) queueMicrotask(() => rows[firstNew]?.focus());
+    loadingMore = false;
+    // At the very end the button goes away. If it had the keyboard's place,
+    // rather than lose it, move it to the first article just added.
+    if (after !== null && next === null && buttonHadFocus) queueMicrotask(() => rows[firstNew]?.focus());
+    // A page short enough that the bottom is still in view loads the next one too.
+    if (ok && next !== null) {
+      await tick();
+      if (bottomInView) load(next);
+    }
   }
+
+  // Older items load by themselves once the bottom of the list comes into
+  // view (decision 0074). Not after a failure: then the button shows, to try again.
+  $effect(() => {
+    if (!bottom) return;
+    const watching = new IntersectionObserver((entries) => {
+      bottomInView = entries.some((entry) => entry.isIntersecting);
+      if (bottomInView && next !== null && !problem) load(next);
+    });
+    watching.observe(bottom);
+    return () => watching.disconnect();
+  });
 
   /**
    * `r` and Refresh: loads the list again from the top, with what arrived in
@@ -441,7 +475,7 @@
     if (move(event.key === "ArrowDown" ? 1 : -1)) focusSelected();
   }
 
-  /** "1 result", "12 results", or "50+ results" while older ones wait behind "Show older items". */
+  /** "1 result", "12 results", or "50+ results" while older ones are still to load. */
   function resultCount(count: number, more: boolean): string {
     if (count === 0) return "";
     return `${count}${more ? "+" : ""} ${count === 1 && !more ? "result" : "results"}`;
@@ -461,6 +495,7 @@
   <ul class="item-list">
     {#each articles as article, index (article.id)}
       {@const current = index === selectedIndex}
+      {@const flows = river || flowing.has(article.feedId)}
       <li>
         <!-- Only one row is a Tab stop (the selected one, or the first); the others are reached with j, k or the arrows. -->
         <button
@@ -479,13 +514,13 @@
           ]}
         >
           <!-- Unread: an accent dot in the gutter beside the title, and a semibold title, so it shows without color. -->
-          {#if !article.read && !river}<span aria-hidden="true" class="unread-dot"></span>{/if}
+          {#if !article.read && !flows}<span aria-hidden="true" class="unread-dot"></span>{/if}
           <!-- Unread: full ink, semibold. Read: the second ink, regular. The selected row is never the quietest. In river mode every title is full ink, regular. -->
           <!-- With a mouse, clearly larger (18px) than the interface text, so the title leads its row. -->
-          <span class={["title block text-ui pointer-fine:text-[1.125rem] pointer-fine:leading-[1.3]", river ? "text-ink" : !article.read ? "font-semibold text-ink" : current ? "text-ink" : "text-ink-2"]}
+          <span class={["title block text-ui pointer-fine:text-[1.125rem] pointer-fine:leading-[1.3]", flows ? "text-ink" : !article.read ? "font-semibold text-ink" : current ? "text-ink" : "text-ink-2"]}
             >{#each boldParts(article.title || "Untitled", bold) as part, partIndex (partIndex)}{#if part.bold}<mark class="match"
                   >{part.text}</mark
-                >{:else}{part.text}{/if}{/each}{#if !article.read && !river}<span class="sr-only">, unread</span>{/if}</span
+                >{:else}{part.text}{/if}{/each}{#if !article.read && !flows}<span class="sr-only">, unread</span>{/if}</span
           >
           {#if article.excerpt && article.excerpt.length > 0}
             <!--
@@ -522,14 +557,26 @@
     {/each}
   </ul>
   {#if next !== null}
-    <!-- The list's last row, not a separate box: the titles' left edge, a hairline above, words in the accent. -->
-    <button type="button" aria-disabled={busy} onclick={() => load(next)} class="list-more place cursor-pointer text-left text-ui font-semibold">
-      {order === "oldest" ? "Show newer items" : "Show older items"}
-    </button>
+    <!--
+      Reaching this line loads the next 50 by themselves; while they load it says so, in small grey
+      centred text. The button is there for the keyboard and screen readers: hidden until it has the
+      keyboard's place, then a small grey pill. After a failure it shows, to try again.
+    -->
+    <div bind:this={bottom} class="list-bottom">
+      <p role="status" class="text-center text-meta text-muted">{loadingMore ? "Loading…" : ""}</p>
+      <button
+        type="button"
+        bind:this={moreButton}
+        aria-disabled={busy}
+        onclick={() => load(next)}
+        class={["list-more cursor-pointer text-meta", !problem && "list-more-hidden"]}
+      >
+        {order === "oldest" ? "Show newer items" : "Show older items"}
+      </button>
+    </div>
   {:else if articles.length > 0}
-    <!-- A finite list says when it's finished (SPEC.md section 6). -->
-    <!-- A quiet caption at the titles' left edge, with no rule above it. -->
-    <p class="mt-5 text-meta text-muted">That's everything.</p>
+    <!-- A finite list says when it's finished (SPEC.md section 6): a quiet caption centred under the last row. -->
+    <p class="mt-5 text-center text-meta text-muted">You're all caught up.</p>
   {/if}
 {/if}
 {#if problem}

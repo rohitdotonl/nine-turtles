@@ -49,7 +49,9 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Domain and subdomain
 - Port
 - IP address and DNS (looking up a name)
-- DNS records (A, AAAA, CNAME, TXT)
+- DNS records (A, AAAA, CNAME, TXT, MX)
+- Email forwarding (Cloudflare Email Routing)
+- Open Graph (the preview a link shows when shared)
 - Domain registrar
 - Website and web app
 - Private networks and `localhost`
@@ -73,6 +75,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Atom
 - JSON Feed
 - OPML
+- Starter feeds
 - Feed autodiscovery
 - HTML parsing (scraper)
 - Polling
@@ -81,6 +84,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Rate limiting and `Retry-After`
 - Exponential backoff
 - Dead feeds and feed health
+- Quiet feeds
 - Timeout
 - Scraping (and why nine turtles never does it)
 - Deduplication and fingerprints
@@ -220,9 +224,16 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Deploy and deploy hook
 - Downtime
 - Status page and health check
+- Scheduled job (cron)
 - Diagnostics
 - Shell (terminal)
 - Vendor lock-in
+- Backups
+- S3 and S3-compatible storage
+- Cloudflare R2
+- Object storage
+- Restore and recovery
+- Request signing (AWS Signature Version 4)
 
 ## Design and accessibility
 
@@ -251,11 +262,6 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 
 ## Planned for V2
 
-- Backups
-- S3 and S3-compatible storage
-- Cloudflare R2
-- Object storage
-- Restore and recovery
 - Disk snapshots
 - WebSub (hubs, leases and signatures)
 - Data retention and clean-up

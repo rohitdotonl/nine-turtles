@@ -6,28 +6,74 @@
     <title>{% if title %}{{ title }} · {% endif %}{{ site.name }}</title>
     <meta name="description" content="{{ description }}" />
     <link rel="canonical" href="{{ site.url }}{{ page.url }}" />
+    <meta property="og:site_name" content="{{ site.name }}" />
+    <meta property="og:title" content="{{ title or site.name }}" />
+    <meta property="og:description" content="{{ description }}" />
+    <meta property="og:url" content="{{ site.url }}{{ page.url }}" />
+    <meta property="og:type" content="{% if layout == "post.njk" %}article{% else %}website{% endif %}" />
+    <meta property="og:image" content="{{ site.url }}/images/preview.jpg" />
+    <link rel="alternate" type="application/atom+xml" title="The nine turtles blog" href="/blog/feed.xml" />
     <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
     <link rel="icon" href="/icons/icon-32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)" />
     <link rel="preload" href="/fonts/literata-400-latin.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/style.css?v={{ stylesVersion }}" />
   </head>
   <body>
     <a class="skip" href="#main">Skip to the text</a>
-    <header>
+    <header class="top">
+      <div class="bar">
       <!-- The logo, the nine turtles (decision 0067), in the text color. The same drawing is in docs/logo/ and web/src/lib/Logo.svelte: change all three together. -->
       <a class="wordmark" href="/"><svg class="logo" viewBox="7 16 86 68" width="35" height="28" aria-hidden="true" focusable="false"><g fill="currentColor"><g transform="translate(18.50 22.70) scale(1.15)"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></g><g transform="translate(46.10 22.70) scale(1.15)"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></g><g transform="translate(73.70 22.70) scale(1.15)"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></g><g transform="translate(24.50 50.30) scale(1.15)"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></g><g transform="translate(52.10 50.30) scale(1.15)"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></g><g transform="translate(79.70 50.30) scale(1.15)"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></g><g transform="translate(18.50 77.90) scale(1.15)"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></g><g transform="translate(46.10 77.90) scale(1.15)"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></g><g transform="translate(73.70 77.90) scale(1.15)"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></g></g></svg>{{ site.name }}</a>
+      {%- set nav = [["/tour/", "Tour"], ["/new-to-feeds/", "New to feeds?"], ["/blog/", "Blog"], ["/about/", "About"]] %}
+      <nav aria-label="The website">
+        <ul>
+          {%- for item in nav %}
+          <li><a href="{{ item[0] }}"{% if page.url == item[0] or (item[0] == "/blog/" and layout == "post.njk") %} aria-current="{% if page.url == item[0] %}page{% else %}true{% endif %}"{% endif %}>{{ item[1] }}</a></li>
+          {%- endfor %}
+        </ul>
+      </nav>
       <a class="open" href="{{ site.app }}">Open the app</a>
+      </div>
     </header>
-    <main id="main">
+    <main id="main"{% if wide %} class="wide-page"{% endif %}>
       {{ content | safe }}
     </main>
     <footer>
-      <p>
-        {{ site.name }} is open source:
-        <a href="{{ site.source }}">read the code on GitHub</a>.
+      <div class="columns">
+        <nav aria-labelledby="foot-reader">
+          <h2 id="foot-reader">The reader</h2>
+          <ul>
+            <li><a href="/tour/">A tour</a></li>
+            <li><a href="/new-to-feeds/">New to feeds?</a></li>
+            <li><a href="/faq/">Questions</a></li>
+            <li><a href="{{ site.app }}">Open the app</a></li>
+          </ul>
+        </nav>
+        <nav aria-labelledby="foot-us">
+          <h2 id="foot-us">nine turtles</h2>
+          <ul>
+            <li><a href="/about/">About</a></li>
+            <li><a href="/blog/">Blog</a></li>
+            <li><a href="/contact/">Contact</a></li>
+            <li><a href="{{ site.source }}">Source code</a></li>
+          </ul>
+        </nav>
+        <nav aria-labelledby="foot-legal">
+          <h2 id="foot-legal">The small print</h2>
+          <ul>
+            <li><a href="/privacy/">Privacy</a></li>
+            <li><a href="/terms/">Terms</a></li>
+            <li><a href="/accessibility/">Accessibility</a></li>
+            <li><a href="/blog/feed.xml">The blog's feed</a></li>
+          </ul>
+        </nav>
+      </div>
+      <p class="colophon">
+        {{ site.name }} is open source, under the MIT licence. No cookies, no
+        tracking, no analytics on this website.
       </p>
     </footer>
   </body>

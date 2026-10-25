@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  checkFrom,
   homeView,
   explain,
   findByName,
@@ -102,6 +103,9 @@ describe("folders and the sidebar search", () => {
     siteUrl: null,
     unread,
     folders,
+    river: false,
+    check: "automatic",
+    openOnSite: false,
   });
   const feeds = [feed(1, "Café notes", 3, [1, 2]), feed(2, "Garden Letters", 5, [1]), feed(3, "Quiet Notes", 7, [])];
   const folders = [
@@ -143,6 +147,14 @@ describe("reading modes", () => {
   it("opens on Unread in inbox mode and on All in river mode", () => {
     expect(homeView("inbox")).toBe("unread");
     expect(homeView("river")).toBe("all");
+  });
+});
+
+describe("each feed's own settings", () => {
+  it("reads how often a feed may be checked from the server's shortest wait", () => {
+    expect(checkFrom(0)).toBe("automatic");
+    expect(checkFrom(60 * 60)).toBe("hourly");
+    expect(checkFrom(24 * 60 * 60)).toBe("daily");
   });
 });
 

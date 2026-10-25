@@ -6,7 +6,14 @@ written into `DESIGN.md`, `ENGINEERING.md`, `SPEC.md`, `PLAN.md` and
 
 ## Still open
 
-Nothing at the moment.
+- **Finishing the website's privacy policy and terms** (25 October 2026).
+  They're on nineturtles.app as drafts, marked "to be decided" where they
+  wait on: the payment company (a merchant of record such as Paddle or
+  Lemon Squeezy, or Stripe), the email service for sign-in and receipts,
+  where Render keeps the data, the business details and the law that
+  applies, the minimum age, and how long backups keep deleted data. Before
+  anyone can sign up, someone qualified should read both. Not blocking
+  anything today.
 
 ---
 
@@ -17,7 +24,7 @@ Nothing at the moment.
 | Q1 | Password scrambling | argon2 (argon2id variant). |
 | Q30 | What V1 includes | V1 is for you alone. Moved to V2: backups and moving hosts, river mode, WebSub, the feed health page, the yearly clean-up, the feeds guide page, and keeping an old tab working across an update. Decided 23 October 2026 (`docs/decisions/0012-v1-for-one-reader.md`). |
 | Q6 | How the password is set | `slowfeed set-password` in Render's Shell tab; you paste the scrambled line into Render's settings. Chosen 23 October 2026 (Milestone 2). |
-| Q2 | Backups | **None in V1** (23 October 2026: V1 is for you alone; your OPML file and the starred export are the safety net). Planned for V2: built into nine turtles, nightly, to Cloudflare R2, plus a copy before every database structure change. |
+| Q2 | Backups | Nightly to S3-compatible storage (Cloudflare R2 first), plus a copy before every structure change; no new library (the owner's choice, 25 October 2026; decision 0076). |
 | Q3 | Supporting libraries for Milestone 1 | Approved. All approved libraries are listed in `docs/libraries.md`. |
 | Q4 | How the library check knows you approved | The approved list in `docs/libraries.md`. The check fails if the code uses anything not on it. |
 | Q5 | How you try milestones | Screenshots and recordings in each pull request, then the live app after merging. |
@@ -52,13 +59,13 @@ Nothing at the moment.
 | Building | GitHub Actions builds a container image; Render runs it. |
 | Unsubscribing | Starred articles are kept. |
 | Security | Content Security Policy and cross-site request protection. Weekly library security report (reports only). |
-| Backups kept (V2) | 30 nightly plus 12 monthly. The temporary copy is made outside the data disk. |
+| Backups kept | 30 nightly plus 12 monthly. The temporary copy is made outside the data disk. |
 | Testing | Realistic large test database for speed; keyboard-only tests per feature; 5-minute owner checklist per screen milestone; screenshots on every pull request. |
 | Second-agent review | Standard on every pull request, except documents-only changes and tiny fixes (decision 0021, 23 October 2026). |
 | Times | Shown in the device's time zone. |
 | Phone milestone order | Unchanged. |
 | Repository (Q27) | Stays public. |
-| New app versions (Q29) | Downloaded quietly; used the next time you open or reload nine turtles. Nothing changes while you read. Settings → Status shows "A new version is ready" with a Reload button. |
+| New app versions (Q29) | Downloaded quietly; used the next time you open or reload nine turtles, or go to another place in a tab left open (decision 0085). Nothing changes while you read. Settings → Status shows "A new version is ready" with a Reload button. |
 | Deleted articles | Remembered by fingerprint (confirmed). |
 | Watching the live app (Q28) | Fully automatic: public status page, diagnostics page behind a read-only key, a scheduled agent check once a day that opens an issue (and a fix when clear). Nothing merges without the owner (they press Merge, or say yes to an agent's brief). Kept agent-neutral: the check's instructions live in the repository (`docs/operations/daily-check.md`) so any agent can follow them. |
 | Pace | One session per milestone. No large multi-agent workflows. |

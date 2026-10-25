@@ -2,7 +2,7 @@ import { describe as group, expect, it } from "vitest";
 import type { Feed, Folder } from "./feeds";
 import { applyQuestion, appliedMessage, describe, ruleRefused, type Rule } from "./rules";
 
-const feeds: Feed[] = [{ id: 3, title: "Garden Notes", siteUrl: null, unread: 0, folders: [7] }];
+const feeds: Feed[] = [{ id: 3, title: "Garden Notes", siteUrl: null, unread: 0, folders: [7], river: false, check: "automatic", openOnSite: false }];
 const folders: Folder[] = [{ id: 7, name: "Tech" }];
 
 const rule = (change: Partial<Rule>): Rule => ({

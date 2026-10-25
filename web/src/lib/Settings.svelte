@@ -41,6 +41,7 @@
     onClose,
     onImported,
     onFeedHealth,
+    onYourFeeds,
     onMuted,
     feeds,
     folders,
@@ -67,6 +68,8 @@
     onImported: () => void;
     /** Opens the feed health page. */
     onFeedHealth: (event: MouseEvent) => void;
+    /** Opens Your feeds. */
+    onYourFeeds: (event: MouseEvent) => void;
     /** Opens the Muted articles page. */
     onMuted: (event: MouseEvent) => void;
     feeds: Feed[];
@@ -355,11 +358,17 @@
       <section aria-labelledby="feeds-heading">
         <h3 id="feeds-heading" class="inset-head">Feeds</h3>
         <div class="inset-group">
+          <a href="/settings/feeds" onclick={onYourFeeds} class="inset-row inset-action"
+            >Your feeds<span class="row-glyph"><Icon name="chevron-right" size={18} /></span></a
+          >
           <a href="/settings/feed-health" onclick={onFeedHealth} class="inset-row inset-action"
             >Feed health<span class="row-glyph"><Icon name="chevron-right" size={18} /></span></a
           >
         </div>
-        <p class="inset-foot">Feeds that have stopped working, what went wrong, and what you can do about it.</p>
+        <p class="inset-foot">
+          Your feeds lists every feed with when it last posted, finds the quiet ones, and moves or unsubscribes from
+          several at once. Feed health shows feeds that have stopped working, and what you can do about it.
+        </p>
       </section>
 
       <Rules
@@ -377,7 +386,7 @@
         <h3 id="account-heading" class="inset-head">Account</h3>
         <div class="inset-group">
           {#if updates.ready}
-            <!-- Never swapped while you read: the new version starts when you reload, or next time you open nine turtles. -->
+            <!-- Never swapped while you read: the new version starts when you reload, go to another place, or next time you open nine turtles. -->
             <div class="inset-row">
               <p>A new version is ready.</p>
               <button type="button" onclick={() => location.reload()} class="btn btn-small">Reload</button>
@@ -401,7 +410,7 @@
 {/if}
 
 <style>
-  /* A row's name, on its left. A fieldset's legend floats so it sits in the row like any other child. */
+  /* A row's name, on its left. EditFeed.svelte's settings rows copy these; keep the two alike. A fieldset's legend floats so it sits in the row like any other child. */
   .row-name {
     float: left;
     padding: 0;

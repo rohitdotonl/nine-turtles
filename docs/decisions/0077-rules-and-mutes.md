@@ -33,7 +33,7 @@ or one feed, and **mutes**, **stars** or **marks as read** what matches.
   picked up, because the rule's place is cleared when its folder goes.
 - **A switch,** a new control, pauses a rule (DESIGN.md → Visual language).
 
-**Structure change 8** adds the `rules` table, the `articles.muted` column
+**Structure change 10** adds the `rules` table, the `articles.muted` column
 (every stored article starts not muted) and a small index for the Muted page.
 Nothing stored is changed or removed; `tests/structure_changes.rs` tries it
 on real-shaped data first.

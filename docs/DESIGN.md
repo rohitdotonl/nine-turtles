@@ -2,7 +2,7 @@
 
 > **nine turtles is a quiet place to read the web: it shows you what's there, gets out of the way, and lets you finish.**
 
-*Last updated: 25 October 2026 (a logo of nine turtles, decision 0067; a second theme, Plain, with blue article links, and System serif, decision 0063; Apple Books as the design reference, decision 0059). Each change is recorded in `docs/decisions/`.*
+*Last updated: 25 October 2026 (starter feeds in the first-visit welcome, decision 0079; a logo of nine turtles, decision 0067; a second theme, Plain, with blue article links, and System serif, decision 0063; Apple Books as the design reference, decision 0059). Each change is recorded in `docs/decisions/`.*
 
 ## Mission
 
@@ -16,7 +16,7 @@ Help people leave social media and return to reading the open web. Social media 
 
 **nine turtles is not:**
 - **A read-later app:** it doesn't save arbitrary web pages.
-- **A discovery engine:** no recommendations, trending or "you might like." You choose your sources.
+- **A discovery engine:** no recommendations, trending or "you might like." You choose your sources. (One exception, approved by the owner for going multi-user: the first-visit welcome's "New to feeds?" offers a short, fixed list of five starter feeds, the same for everyone, none ticked, gone once you follow anything; decision 0079.)
 - **A social network:** no profiles, followers, likes or comments.
 - **A podcast player:** audio appears as a link to the original. (YouTube videos play in YouTube's own player, since 25 October 2026.)
 - **A newsletter inbox:** no email address that turns newsletters into feeds.
@@ -74,7 +74,7 @@ The article is the product; everything else is a way to reach it.
 
 #### 2. Calm over engagement
 nine turtles never tries to bring you back or keep you longer. It succeeds when you've read what you wanted and closed it.
-- *Explains:* no notifications, river mode, no count of new items, no pull-to-refresh, the view waiting for you, "Show older items" instead of infinite scroll.
+- *Explains:* no notifications, river mode, no count of new items, no pull-to-refresh, the view waiting for you, a list that ends with "You're all caught up." (older items load as you reach the bottom, decision 0075, but only from what you follow).
 - **Test:** would a social media company want this? If yes, be suspicious.
 
 #### 3. Clear at a glance
@@ -91,7 +91,7 @@ The experience is slow; the software never is.
 
 #### 5. Nothing moves unless you move it
 Layout, positions and content change only through the user's action.
-- *Explains:* the fixed three-pane layout, manual refresh, "+ Add feed" always in one place, "mark all as read" only affecting what you've seen, older items loading only when asked, no rearranging what the reader has learned once the look settles (the Apple Books redesign of October 2026 was the deliberate exception, decision 0059).
+- *Explains:* the fixed three-pane layout, manual refresh, "+ Add feed" always in one place, "mark all as read" only affecting what you've seen, older items loading only when you scroll to the bottom (decision 0075), no rearranging what the reader has learned once the look settles (the Apple Books redesign of October 2026 was the deliberate exception, decision 0059).
 - **Test:** could this surprise someone who looked away for a second?
 
 #### 6. Power is hidden, never missing
@@ -131,13 +131,14 @@ The 500-feed user gets everything; the 30-feed user never sees the machinery.
 | Unread counts in V1 | 2. Calm over engagement | Power users with hundreds of feeds need to know what they've seen | Inbox mode only. Muted grey, right-aligned in the sidebar. Never badges or color. Per feed and folder only, no global total. Above 999 shows "999+". |
 | Sidebar search always visible | 6. Power is hidden, never missing | The owner wants finding a feed by name always available | One quiet field that filters feeds and folders by name, shown once there's a feed to find. The same slim, faintly filled capsule as the list's search (decision 0051). Nothing else in the sidebar skips progressive disclosure. |
 | Unread dot (decisions 0028, 0037, 0041) | Type does the hierarchy, never badges | Weight alone was hard to scan in a long list; Apple Books, Mail and Things mark unread with a dot | A drawn 8px dot in the theme's accent, centred in a 24px gutter inside the row's pill, 8px clear of an unread title, which is semibold too. No number, list rows only. |
+| Starter feeds in the welcome (decision 0079) | "Not a discovery engine" | Someone new to feeds needs a first step before they know what to paste | Only behind "New to feeds? Start here" in the first-visit welcome. Five fixed feeds, the same for every reader, never ranked or personalised, none ticked; each added through the ordinary add path. Gone once anything is followed. |
 | Blue links in Plain (decision 0063) | 1. Reading comes first: links that don't compete with the text | The owner asked for his site rohit.onl's bare, plain-HTML look, whose one color is the browser's blue for links | Only the Plain theme, only links inside articles: `#0000EE` (visited `#551A8B`) by day, `#9E9EFF` (visited `#D0ADF0`) by night, always underlined, at 7 : 1 like the text. Plain's accent is its text color, so blue means only a link. Original's links stay in the text color. |
 
 ### Never
 
 - Notifications of any kind
 - Badges, streaks, reading stats or any gamification (no reading-time estimates, no "year in reading")
-- Infinite scroll or algorithmic ranking ("for you")
+- Algorithmic ranking ("for you"), or filling a list with anything you didn't subscribe to, so it never ends. (Older items loading as you reach the bottom of a list is allowed, decision 0075: the list still ends.)
 - In-app likes, comments or social features
 - Branded share buttons for specific platforms
 - Full-article scraping from publishers' websites
@@ -164,6 +165,7 @@ The philosophy applied. The principle is noted where it isn't obvious.
   - **Lines between panes** (decision 0054): on a computer only, where two panes meet (the sidebar's right edge, and the list's when the reading pane is beside it): 1px, the text color at 9%, the same tone as the list's row hairlines. Tone alone barely parts the panes by night.
   - **Hairlines inside a page:** between rows that do different jobs (rows in a grouped list, articles in the list, the parts of the text-size capsule; decision 0055), faint, in a tone of the text color, inset from the left in a grouped list. A field's own edge is a border, not a line between regions.
   - **A hairline under a scrolled top line** (decision 0028): only once a pane's content has scrolled under it, and above the shortcut list's foot while more lies below, so text never looks cut off.
+  - **A hairline above Edit's bar** (decision 0080): on Your feeds, while Edit is on, the bar of actions at the page's foot is solid in the page's color, with the same 9% line above it, so a row scrolling under it reads as scrolling, never as cut off.
   - **A hairline above the phone's article toolbar** (decision 0040): the bar is solid in the page's color, and the line stops a line of text looking sliced where it meets the bar. Both article bars are solid, never see-through.
   - **A soft shadow under things that float:** the note at the bottom of the list, a sheet, the search options popover, the Aa panel, the More menus and the shortcut list, one soft shadow and a faint edge each (decisions 0028, 0048). Nothing that sits in the page casts a shadow, except the 1 to 2px lift under a segmented control's chosen segment (decision 0042), never animated.
   - **A dim behind a sheet** (decisions 0031, 0039): only behind a sheet or the shortcut list, black at 18% by day and 45% by night, never animated; it closes with Escape or a press on it. On a phone it shows as the 10px strip above a page sheet (decision 0055).
@@ -171,6 +173,7 @@ The philosophy applied. The principle is noted where it isn't obvious.
 - **One accent, one family of meanings:** a theme has one accent (ink blue in Original; the text color in Plain, decision 0063) and one second color, a light green used only for a starred article's star (decision 0057). The accent marks what's *yours to look at*: what's unread (the dot) and what a search found (a faint tone behind the words) (decision 0037). Where you are is a plain grey pill with no color, its sidebar icon in ink (decision 0057). Nothing else uses it: never a button, a link, a focus outline or decoration.
 - **Icons where the convention is an icon** (close, clearing the search field, back, search, settings, the sidebar toggle, the list's More (…), and the article's open original, Aa, star and More (…)), each named in its tooltip with its key and to screen readers, so the tools around the text stay quiet (decisions 0034, 0038). **Words** for Add feed, menu items, the phone's back button (with its arrow) and the main action of a form.
 - **Fewer, steadier toolbars** (decision 0038): **one More (…) per place**, as Apple Books has one per collection, holding the less frequent actions as words (the list's Edit, Refresh, Mark all as read and sort order; the article's Copy link or Share and Mark unread, each with its key). **A bar's controls keep to its pane's edges,** their icons about 20px in (lined up with the sidebar button), one group at each end, so they never float in the middle of a wide window.
+- **Edit, for choosing several things** (decision 0080), as in Apple Books' Edit: a quiet button at the right of a list's heading, its word becoming **Done** while it's on; each row then ends in a tick box (the rounded square of Edit feed's folders), **Choose all** / **Choose none** sits beside Done, and a bar at the page's foot says how many are chosen and holds the actions, a destructive one in its red words. Only Your feeds has it so far.
 - **Settings opens in place of the list,** with one top line that never scrolls: the title in the serif, like the list's, and an X that closes it (Escape does too). Below it, one centred column no wider than 560px of grouped lists, as in Apple Books' settings (`docs/SPEC.md` section 18).
 - **Short tasks open as a sheet** over the place you were (Add a feed, Edit feed, Edit folder): a small card that opens a little above the middle of the window, where the eye rests, its height following what's in it, the panes still in view behind it under a light dim (decision 0039). Once open, its top stays put: a message appearing in it grows it downwards, so nothing you're looking at moves. Every sheet is built the same way, like a Mac sheet in Apple Books:
   - its title in the same serif, size and weight as every other title (24px semibold, as the list's and Settings'), so the app speaks in one voice (decision 0042). It takes the keyboard's place as the sheet opens, so screen readers start there, but draws no ring: a heading can't be pressed, and the first Tab lands on a control, which rings as always;
@@ -277,7 +280,7 @@ Plain, unhurried, never urgent: "Nothing new yet," never "You're missing out!" L
 
 - **YouTube videos** in YouTube's own player. Done 25 October 2026: a quiet Play box, nothing loaded until it's pressed (decision 0072, `docs/SPEC.md` section 7).
 - **Public reading list page:** an optional public list of some of your feeds (a modern blogroll) with one-click subscribe. No likes, no comments.
-- **Per-feed modes:** inbox or river for each feed.
+- **Per-feed modes:** inbox or river for each feed. Built 25 October 2026, in Edit feed (decision 0082, `docs/SPEC.md` sections 10 and 15).
 - **Passkey sign-in.**
 - **Chinese and Japanese search.**
 - **Multiple users.**
@@ -285,10 +288,10 @@ Plain, unhurried, never urgent: "Nothing new yet," never "You're missing out!" L
 
 Moved from V1 on 23 October 2026, because V1 is for the owner alone (decision 0012):
 
-- **Backups and recovery:** nightly copies outside the host, and one before every database structure change.
+- **Backups and recovery:** nightly copies outside the host, and one before every database structure change. Built 25 October 2026 (decision 0076).
 - **River mode.** Built 25 October 2026 (SPEC section 10).
 - **WebSub.** Built 25 October 2026 (decision 0069).
 - **Feed health page.** Built 25 October 2026 (decision 0071).
 - **The yearly clean-up** of unstarred articles.
-- **The "New to feeds?" guide page.**
-- **A tab left open across an update keeps working** without a reload.
+- **The "New to feeds?" guide page.** Done 25 October 2026: a guide on the website, and a "New to feeds?" sheet in the welcome (decision 0079).
+- **A tab left open across an update keeps working** without a reload. Built 25 October 2026 (decision 0085).

@@ -625,6 +625,7 @@ test("Settings is one centred column of grouped lists; Your data, Feed health an
     page.getByRole("button", { name: "Import OPML" }),
     page.getByRole("link", { name: "Export OPML" }),
     page.getByRole("link", { name: "Export starred articles" }),
+    page.getByRole("link", { name: "Your feeds" }),
     page.getByRole("link", { name: "Feed health" }),
     page.getByRole("button", { name: "Make an app password" }),
     page.getByRole("button", { name: "Sign out" }),
@@ -646,4 +647,86 @@ test("Settings is one centred column of grouped lists; Your data, Feed health an
   expect(await sampleRow.evaluate((element) => element.closest(".inset-group") !== null && element.parentElement?.firstElementChild === element)).toBe(true);
   const [sampleText, appearanceName] = await Promise.all([sampleRow.locator("p").boundingBox(), page.getByText("Appearance", { exact: true }).boundingBox()]);
   expect(Math.abs(sampleText!.x - appearanceName!.x)).toBeLessThan(1.5);
+});
+
+/** Makes the server's answers to /api/session say a newer version is live, then brings the tab back into view. */
+async function newerVersionLive(page: Page) {
+  await page.route("**/api/session", async (route) => {
+    const response = await route.fetch();
+    await route.fulfill({ response, headers: { ...response.headers(), "x-nine-turtles-version": "a-newer-one" } });
+  });
+  const asked = page.waitForResponse((response) => response.url().endsWith("/api/session"));
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+  await asked;
+  await page.unroute("**/api/session");
+}
+
+/** Marks this page, so a test can tell whether the next move loaded a fresh one. */
+async function markPage(page: Page): Promise<() => Promise<boolean>> {
+  await page.evaluate(() => Object.assign(window, { stillHere: true }));
+  // While the next page is loading there's nothing to ask yet: count that as still here, and ask again.
+  return () => page.evaluate(() => "stillHere" in window).catch(() => true);
+}
+
+test("a tab left open across an update opens the new version at the next place it goes", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the same on every width; Back on a phone is tested below");
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await openApp(page, "/starred");
+  let samePage = await markPage(page);
+
+  // No newer version yet: going somewhere stays in the same page.
+  await sidebar(page).getByRole("link", { name: /^All/ }).click();
+  await expect(page).toHaveURL(/\/all$/);
+  expect(await samePage()).toBe(true);
+
+  // A newer version goes live. The tab notices when it comes back into view.
+  await newerVersionLive(page);
+
+  // Going to another place loads the new version there, with the keyboard's place on its heading.
+  await page.keyboard.press("Shift"); // the keyboard is in use
+  await sidebar(page).getByRole("link", { name: /^Starred/ }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/starred$/);
+  await appReady(page);
+  await expect.poll(samePage).toBe(false);
+  await expect(page.getByRole("heading", { name: "Starred", level: 2 })).toBeFocused();
+
+  // The screen stays as the reader arranged it: the hidden list stays hidden,
+  // and closing Settings goes back to the list they came from.
+  await page.keyboard.press("]");
+  await expect(list(page)).toBeHidden();
+  samePage = await markPage(page);
+  await newerVersionLive(page);
+  await page.getByRole("link", { name: "Settings" }).click();
+  await expect(page).toHaveURL(/\/settings$/);
+  await expect.poll(samePage).toBe(false);
+  await page.getByRole("button", { name: "Close settings" }).click();
+  await expect(page).toHaveURL(/\/starred$/);
+  await expect(list(page)).toBeHidden();
+  await page.keyboard.press("]");
+  await expect(list(page)).toBeVisible();
+
+  // Back switches too: the address has already changed, so that's the page that loads.
+  samePage = await markPage(page);
+  await newerVersionLive(page);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/settings$/);
+  await expect.poll(samePage).toBe(false);
+  await expect(page.getByRole("heading", { name: "Settings" }).first()).toBeVisible();
+});
+
+test("on a phone, Back after an update opens the new version one step back", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "the phone layout only");
+  // A phone opens on the feeds, its home screen.
+  await openApp(page, "/");
+  await sidebar(page).getByRole("link", { name: /^Starred/ }).click();
+  await expect(page).toHaveURL(/\/starred$/);
+  await expect(list(page)).toBeVisible();
+  const samePage = await markPage(page);
+  await newerVersionLive(page);
+  await page.goBack();
+  await expect.poll(samePage).toBe(false);
+  // One step back from a list on a phone is the feeds, the home screen.
+  await expect(sidebar(page)).toBeVisible();
+  await expect(list(page)).toBeHidden();
 });

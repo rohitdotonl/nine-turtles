@@ -373,6 +373,40 @@ test.describe("when saving fails", () => {
   });
 });
 
+test("a newer version waits until a mark is saved before switching", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the same on every width");
+  const blog = await openBlog(page);
+  // The save is held, as if nine turtles were slow to answer.
+  let release = () => {};
+  const held = new Promise<void>((resolve) => (release = resolve));
+  await page.route("**/api/articles/read", async (route) => {
+    await held;
+    return route.fallback();
+  });
+  await page.keyboard.press("j");
+  // A newer version goes live and the tab notices.
+  await page.route("**/api/session", async (route) => {
+    const response = await route.fetch();
+    await route.fulfill({ response, headers: { ...response.headers(), "x-nine-turtles-version": "a-newer-one" } });
+  });
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+  await page.waitForResponse((response) => response.url().endsWith("/api/session"));
+  await page.evaluate(() => Object.assign(window, { stillHere: true }));
+
+  // The mark is still on its way: going somewhere stays in this page, so it isn't lost.
+  await sidebar(page).getByRole("link", { name: /^Starred/ }).click();
+  await expect(page).toHaveURL(/\/starred$/);
+  expect(await page.evaluate(() => "stillHere" in window)).toBe(true);
+
+  // Once it's saved, the next move switches.
+  const saved = page.waitForResponse((response) => response.url().endsWith("/api/articles/read") && response.ok());
+  release();
+  await saved;
+  await feedLink(page, blog).click();
+  await expect.poll(() => page.evaluate(() => "stillHere" in window)).toBe(false);
+  await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, unread/);
+});
+
 test("on a phone, the article's Star button and More's Mark unread work", async ({ page, isMobile }) => {
   test.skip(!isMobile, "the phone layout only");
   const blog = await openBlog(page, 412);

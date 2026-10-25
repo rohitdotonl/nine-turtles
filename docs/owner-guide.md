@@ -153,6 +153,11 @@ lists of known security problems. If it finds one, it opens an issue in the
 repository. It never changes anything by itself; an agent proposes a fix and
 you approve it.
 
+Every 15 minutes, GitHub also checks that the live nine turtles is answering
+(the **health check**). If it isn't, after five tries a minute apart, GitHub
+emails you. Nothing is sent while all is well. What to do when the email
+comes: `docs/operations/health-check.md`.
+
 **CI** ("continuous integration") is that whole practice: every change is
 automatically checked before it's allowed into main. In nine turtles, GitHub
 Actions does the CI.
@@ -238,11 +243,12 @@ each one, what ties us to it, and what leaving would take.
 
 | Service | What it does for nine turtles | What makes leaving easy | What leaving takes |
 |---|---|---|---|
-| **Render** (hosting) | Runs nine turtles | nine turtles is a standard container image plus one SQLite database file. Every setting is listed in `docs/operations/settings.md`. | In V1: start nine turtles on the new host and import your OPML file (your read history stays behind). In V2, `docs/operations/moving-hosts.md` moves everything. |
-| **GitHub** (code, checks, issues) | Holds the code and runs the checks | The code and its full history are in "git", a standard format any code host accepts. All checks run through one script in the repository; GitHub Actions only calls it. | Copy the repository to another host and point its check service at the same script. Issues and pull request discussions stay behind on GitHub unless exported. |
+| **Render** (hosting) | Runs nine turtles | nine turtles is a standard container image plus one SQLite database file. Every setting is listed in `docs/operations/settings.md`. | Follow `docs/operations/moving-hosts.md`: start the same image on the new host with the same settings, and it restores last night's backup. Everything comes along. |
+| **GitHub** (code, checks, issues) | Holds the code and runs the checks | The code and its full history are in "git", a standard format any code host accepts. All checks run through one script in the repository, and so does the health check; GitHub Actions only calls them. | Copy the repository to another host and point its check service at the same script, and any scheduler at `scripts/health-check.sh`. Issues and pull request discussions stay behind on GitHub unless exported. |
 | **Claude Code** (the agents) | Builds and maintains nine turtles | All instructions are plain documents in the repository: `AGENTS.md` (a convention most coding agents read), the `docs/` folder, and the daily check's steps in `docs/operations/daily-check.md` | Start the new agent in the repository. To move the daily check, set a daily timer in the new tool that says "follow docs/operations/daily-check.md". |
 | **GitHub Pages** (the website) | Hosts nineturtles.app | The website is plain files built from `website/` | Build it anywhere (`npm run build` in `website/`), upload the `_site` folder to another host, and point the domain's records there (`docs/operations/website-and-domain.md`) |
 | **Libraries** | Ready-made code inside nine turtles | Standard, widely used choices, listed in `docs/libraries.md` | Replace one at a time, with your approval |
+| **Cloudflare R2** (backups) | Stores the nightly copies of the database | Any S3-compatible storage works; nine turtles speaks S3 itself, and the copies are ordinary SQLite files | Make a bucket at another provider (Backblaze B2, for example) and change five settings (`docs/operations/backups.md`) |
 | **Your reading data** | Your feeds, folders and starred articles | OPML export (feeds and folders) and JSON Feed export (starred articles), both standard formats | Download both from Settings → Your data and import them into another reader |
 
 **The rule agents follow:** nothing important lives only inside one tool's

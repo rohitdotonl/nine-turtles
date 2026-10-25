@@ -118,6 +118,9 @@ struct Due {
     etag: Option<String>,
     last_modified: Option<String>,
     check_every: i64,
+    /// The shortest wait the reader allows this feed (Edit feed): 0, an
+    /// hour or a day.
+    check_at_most: i64,
     failures: i64,
 }
 
@@ -137,7 +140,8 @@ pub async fn check(state: &AppState, feed_id: i64, now: i64) -> Result<(), sqlx:
         return Ok(());
     }
     let feed: Due = sqlx::query_as(
-        "SELECT url, etag, last_modified, check_every, failures FROM feeds WHERE id = ?",
+        "SELECT url, etag, last_modified, check_every, check_at_most, failures FROM feeds
+         WHERE id = ?",
     )
     .bind(feed_id)
     .fetch_one(&state.db)
@@ -214,7 +218,15 @@ async fn worked(
     };
     // While a hub delivers new articles, this check is only the backup:
     // at most twice a day (decision 0069).
-    let mut next = wait(state, every);
+    // "Check at most hourly" or "daily", chosen in Edit feed, is the
+    // shortest rhythm, nudged only upwards so it's never sooner. A day is
+    // also the longest wait, so a daily feed waits exactly a day: daily
+    // feeds still drift apart, since each was last checked at its own time.
+    let mut next = if state.config.test_check_seconds.is_some() {
+        wait(state, every)
+    } else {
+        wait(state, every.max(feed.check_at_most)).max(feed.check_at_most)
+    };
     if state.config.test_check_seconds.is_none()
         && websub::delivering(&state.db, feed_id, now).await?
     {
@@ -280,7 +292,7 @@ async fn failed(
     now: i64,
 ) -> Result<(), sqlx::Error> {
     let failures = feed.failures + 1;
-    let mut next = backoff(feed.check_every, failures);
+    let mut next = backoff(feed.check_every.max(feed.check_at_most), failures);
     if let Failure::Fetch(FetchError::SlowDown(Some(asked))) = failure {
         next = next.max(asked.min(LONGEST_SLOW_DOWN));
     }

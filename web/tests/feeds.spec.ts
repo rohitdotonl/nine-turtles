@@ -97,6 +97,112 @@ test("on a phone-narrow window, a fresh nine turtles shows the welcome in the li
   await expect(page.getByText("Nothing here yet.")).toHaveCount(0);
 });
 
+test("the welcome's New to feeds? opens a sheet that explains feeds and offers a few to start with, none ticked", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/unread");
+  await appReady(page);
+  await signIn(page);
+  const reading = page.getByRole("region", { name: "A quiet place to read." });
+  await reading.getByRole("link", { name: "New to feeds? Start here" }).click();
+  await expect(page).toHaveURL(/\/new-to-feeds$/);
+  const sheet = page.getByRole("dialog", { name: "New to feeds?" });
+  await expect(sheet.getByRole("heading", { level: 2, name: "New to feeds?" })).toBeFocused();
+  // The welcome stays as it was behind the sheet.
+  await expect(reading.locator("#welcome-heading")).toBeVisible();
+  // The website's guide, in a tab of its own (decision 0079).
+  const guide = sheet.getByRole("link", { name: /Here's how feeds work/ });
+  await expect(guide).toHaveAttribute("href", "https://nineturtles.app/new-to-feeds/");
+  await expect(guide).toHaveAttribute("target", "_blank");
+  // A grouped list of tick boxes, nothing chosen for the reader, each row 44px or more.
+  const boxes = sheet.getByRole("group", { name: "A few to start with" }).getByRole("checkbox");
+  await expect(boxes).toHaveCount(5);
+  for (const box of await boxes.all()) await expect(box).not.toBeChecked();
+  for (const row of await sheet.locator("label.check-row").all()) expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  // Nothing ticked: it says so, in words.
+  const addChosen = sheet.getByRole("button", { name: "Add chosen feeds" });
+  await addChosen.click();
+  await expect(sheet.getByRole("status")).toHaveText("Choose a feed first.");
+  // Ticked ones are added one after another through the same path as a pasted address; here
+  // nine turtles is made to say the sites didn't answer, so this fresh nine turtles stays empty.
+  const asked: string[] = [];
+  await page.route("**/api/feeds", async (route) => {
+    if (route.request().method() !== "POST") return route.fallback();
+    asked.push((route.request().postDataJSON() as { address: string }).address);
+    await route.fulfill({ status: 502, json: { error: "unreachable" } });
+  });
+  await sheet.getByRole("checkbox", { name: /The Marginalian/ }).check();
+  await sheet.getByRole("checkbox", { name: /kottke\.org/ }).check();
+  await addChosen.click();
+  await expect(sheet.getByRole("status")).toHaveText("Those feeds couldn't be added just now. Try again later.");
+  expect(asked).toEqual(["https://www.themarginalian.org/feed/", "https://feeds.kottke.org/main"]);
+  await expect(sheet.getByRole("checkbox", { name: /kottke\.org/ })).toBeChecked();
+  // Escape closes it, back to the welcome, with the keyboard back on the link that opened it.
+  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/\/unread$/);
+  await expect(sheet).toHaveCount(0);
+  await expect(reading.getByRole("link", { name: "New to feeds? Start here" })).toBeFocused();
+});
+
+test("New to feeds? works with the keyboard alone, and the starters chosen are added and open Unread", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/unread");
+  await appReady(page);
+  await signIn(page);
+  // nine turtles is made to accept the starters and then list them, so this fresh nine turtles stays empty.
+  const followed: { id: number; title: string; site_url: null; unread: number; folders: number[] }[] = [];
+  await page.route("**/api/feeds", async (route) => {
+    if (route.request().method() === "POST") {
+      const id = 9000 + followed.length;
+      const feed = { id, title: `Starter ${id}`, site_url: null, unread: 0, folders: [] };
+      followed.push(feed);
+      return route.fulfill({ status: 201, json: { feed } });
+    }
+    if (followed.length === 0) return route.fallback();
+    return route.fulfill({ json: { feeds: followed, folders: [] } });
+  });
+  const link = page.getByRole("link", { name: "New to feeds? Start here" });
+  await tabTo(page, link);
+  await page.keyboard.press("Enter");
+  const sheet = page.getByRole("dialog", { name: "New to feeds?" });
+  await expect(sheet.getByRole("heading", { name: "New to feeds?" })).toBeFocused();
+  const first = sheet.getByRole("checkbox", { name: /The Marginalian/ });
+  await tabTo(page, first);
+  await page.keyboard.press("Space");
+  await expect(first).toBeChecked();
+  const nasa = sheet.getByRole("checkbox", { name: /NASA Image of the Day/ });
+  await tabTo(page, nasa);
+  await page.keyboard.press("Space");
+  await tabTo(page, sheet.getByRole("button", { name: "Add chosen feeds" }));
+  await page.keyboard.press("Enter");
+  // Two added: Unread opens, with both in the sidebar.
+  await expect(page).toHaveURL(/\/unread$/);
+  await expect(sheet).toHaveCount(0);
+  await expect(sidebar(page).getByRole("link", { name: /Starter 9000/ })).toBeVisible();
+  await expect(sidebar(page).getByRole("link", { name: /Starter 9001/ })).toBeVisible();
+  // Once anything is followed, the sheet's address opens the home view instead (decision 0079).
+  await page.goBack();
+  await expect(page).toHaveURL(/\/unread$/);
+  await expect(page.getByRole("dialog", { name: "New to feeds?" })).toHaveCount(0);
+});
+
+test("on a phone, New to feeds? is a page sheet with its X and the main action at the foot", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto("/unread");
+  await appReady(page);
+  await signIn(page);
+  await page.getByRole("link", { name: "New to feeds? Start here" }).click();
+  await expect(page).toHaveURL(/\/new-to-feeds$/);
+  await expect(page.getByRole("heading", { level: 2, name: "New to feeds?" })).toBeVisible();
+  await expect(page.getByRole("checkbox")).toHaveCount(5);
+  await expect(page.getByRole("button", { name: "Cancel" })).toHaveCount(0);
+  const add = (await page.getByRole("button", { name: "Add chosen feeds" }).boundingBox())!;
+  expect(add.y + add.height).toBeGreaterThan(700);
+  // The X goes back to the welcome it opened from.
+  await page.getByRole("button", { name: "Close" }).click();
+  await expect(page).toHaveURL(/\/unread$/);
+  await expect(page.getByRole("heading", { level: 2, name: "A quiet place to read." })).toBeVisible();
+});
+
 test("a, a website's address and Enter add its feed, and its articles appear", async ({ page }) => {
   await openApp(page, "/all");
   const name = newBlog();
@@ -191,7 +297,7 @@ test("Escape leaves Add a feed for the list you were on", async ({ page }) => {
   await expect(page).toHaveURL(/\/all$/);
 });
 
-test("the list shows 50 articles, then Show older items adds more below", async ({ page }) => {
+test("the list shows 50 articles, then reaching the bottom loads more below", async ({ page }) => {
   await openApp(page, "/all");
   await follow(page, `${FEED_SITE}/`);
   await page.reload();
@@ -204,12 +310,15 @@ test("the list shows 50 articles, then Show older items adds more below", async 
   // Where the first row sits inside the list, whatever the scrolling.
   const firstTop = () => rows.first().evaluate((row) => (row as HTMLElement).offsetTop);
   const firstBefore = await firstTop();
-  await list.getByRole("button", { name: "Show older items" }).click();
+  // Nothing loads until the bottom of the list comes into view.
+  await expect(rows).toHaveCount(50);
+  await list.locator(".list-bottom").scrollIntoViewIfNeeded();
   await expect(rows).toHaveCount(60);
   expect(await firstTop()).toBe(firstBefore);
   await expect(rows.last()).toContainText("(1)");
   // The list has an end.
   await expect(list.getByRole("button", { name: "Show older items" })).toHaveCount(0);
+  await expect(list.getByText("You're all caught up.")).toBeVisible();
 });
 
 // The keyboard floor: everything above also works with the keyboard alone.
@@ -255,7 +364,7 @@ test("with only the keyboard: 'Go to' a feed you already follow", async ({ page 
   await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeFocused();
 });
 
-test("with only the keyboard: Show older items, and the keyboard's place stays in the list at the end", async ({ page }) => {
+test("with only the keyboard: Tab reaches Show older items, and the keyboard's place stays in the list at the end", async ({ page }) => {
   await openApp(page, "/all");
   await follow(page, `${FEED_SITE}/`);
   await page.reload();
@@ -267,8 +376,13 @@ test("with only the keyboard: Show older items, and the keyboard's place stays i
   const list = page.getByRole("region", { name: "Quiet Notes" });
   const rows = list.getByRole("listitem");
   await expect(rows).toHaveCount(50);
-  await tabTo(page, list.getByRole("button", { name: "Show older items" }), 400);
-  await page.keyboard.press("Enter");
+  // Tab reaches the button under the list. Having the keyboard's place brings
+  // the bottom into view, so the rest load by themselves (decision 0074).
+  for (let i = 0; i < 400; i++) {
+    const on = await page.evaluate(() => document.activeElement?.textContent?.trim() ?? "");
+    if (on === "Show older items") break;
+    await page.keyboard.press("Tab");
+  }
   await expect(rows).toHaveCount(60);
   // The button is gone (the list has ended); the keyboard's place moved to
   // the first article that just arrived, not to the top of the page.

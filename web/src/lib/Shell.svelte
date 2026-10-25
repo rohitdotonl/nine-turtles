@@ -19,15 +19,19 @@
   import CheatSheet from "./CheatSheet.svelte";
   import EditFeed from "./EditFeed.svelte";
   import EditFolder from "./EditFolder.svelte";
+  import EditSearch from "./EditSearch.svelte";
   import ItemList from "./ItemList.svelte";
   import MoreMenu, { type MenuGroup } from "./MoreMenu.svelte";
   import PageHead from "./PageHead.svelte";
   import Sheet from "./Sheet.svelte";
   import Settings from "./Settings.svelte";
   import FeedHealth from "./FeedHealth.svelte";
+  import YourFeeds from "./YourFeeds.svelte";
   import Muted from "./Muted.svelte";
   import SearchBar from "./SearchBar.svelte";
   import SidebarFeeds from "./SidebarFeeds.svelte";
+  import StarterFeeds from "./StarterFeeds.svelte";
+  import { partlyAdded, type Starter } from "./starters";
   import {
     createFolder,
     deleteFolder,
@@ -35,6 +39,7 @@
     lastMode,
     listFeeds,
     loadSettings,
+    marksUnsaved,
     refused,
     resubscribe,
     saveMode,
@@ -54,7 +59,9 @@
   import { device } from "./appearance.svelte";
   import { VIEWS, VIEW_NAMES, nameFor, parse, pathFor, titleFor, type Route } from "./router";
   import { emptyQuery, isSearching, scopeFor, searchParams, searchedTerms, type Query } from "./search";
+  import { deleteSaved, listSaved, refusedSaving, sameQuery, saveSearch, type SavedSearch } from "./saved";
   import { startingStep, stepOf, type Screen } from "./steps";
+  import { arrivedBySwitching, switchesOnMove, switchTo, updates, watchForNewVersions, type Carried } from "./updates.svelte";
 
   let { version, onSignedOut }: { version: string; onSignedOut: () => void } = $props();
 
@@ -66,7 +73,9 @@
   let river = $derived(mode === "river");
   /** Where the app opens: Unread in inbox mode, All in river mode. */
   let home: Route = $derived({ kind: "view", view: homeView(mode) });
-  const asked = parse(location.pathname);
+  const parsed = parse(location.pathname);
+  // "Save search" saves the search on screen: an address alone has none, so it opens the app's home.
+  const asked: Route = parsed.kind === "save-search" ? { kind: "view", view: "unread" } : parsed;
   /** The address was "/", Unread or unknown: the app's home, which depends on the mode. */
   const openedHome = asked.kind === "view" && asked.view === "unread";
   const start = homeFor(asked, untrack(() => mode));
@@ -92,7 +101,16 @@
   });
   /** The feeds you follow and your folders, alphabetically; unknown until the server answers. */
   let feeds: Feed[] | undefined = $state();
+  /** Feeds set to flow past in Edit feed: no count, and their rows look as in river mode (SPEC section 15). */
+  let flowing = $derived(new Set((feeds ?? []).filter((feed) => feed.river).map((feed) => feed.id)));
   let folders: Folder[] = $state([]);
+  /** The reader's saved searches, alphabetically (SPEC section 14); `searchesLoaded` once the server answered. */
+  let searches: SavedSearch[] = $state([]);
+  let searchesLoaded = $state(false);
+  /** The saved searches couldn't be loaded, so a saved search's address can't be told from a deleted one. */
+  let searchesFailed = $state(false);
+  /** What "Save search" or "Edit saved search" will save: the search showing when it was opened. */
+  let toSave: Query | undefined = $state();
   /** What's typed in the sidebar search. */
   let search = $state("");
   /** What the next list's line says on arrival (after unsubscribing or deleting a folder). */
@@ -139,10 +157,11 @@
   let listHeading: HTMLHeadingElement | undefined = $state();
   let settingsHeading: HTMLHeadingElement | undefined = $state();
   let healthHeading: HTMLHeadingElement | undefined = $state();
+  let yourFeedsHeading: HTMLHeadingElement | undefined = $state();
+  /** Feed health, Your feeds or Muted articles was opened from Settings, so closing it is a step back in history. */
   let mutedHeading: HTMLHeadingElement | undefined = $state();
   /** "Add a rule for this feed…" in Edit feed: Settings opens with a new rule for it. */
   let ruleForFeed: number | undefined = $state();
-  /** Feed health (or Muted articles) was opened from Settings, so closing it is a step back in history. */
   let cameFromSettings = false;
   let dataHeading: HTMLHeadingElement | undefined = $state();
   let addField: HTMLInputElement | undefined = $state();
@@ -205,7 +224,7 @@
    * On a window wide enough for the list, adding a feed and editing a feed or
    * folder open as a sheet over the place you were, which stays in view.
    */
-  let sheet = $derived(!phone && (route.kind === "add-feed" || route.kind === "edit-feed" || route.kind === "edit-folder"));
+  let sheet = $derived(!phone && isOver(route));
   /** Where the list and article come from: under a sheet, the place it opened over. */
   let under: Route = $derived(
     !sheet
@@ -214,7 +233,9 @@
         ? { kind: "feed", id: route.id }
         : route.kind === "edit-folder"
           ? { kind: "folder", id: route.id }
-          : lastPlace,
+          : route.kind === "edit-search"
+            ? { kind: "search", id: route.id }
+            : lastPlace,
   );
   let sheetHeading: HTMLHeadingElement | undefined = $state();
   /** What had the keyboard when a sheet opened, to give it back when the sheet closes. */
@@ -223,7 +244,12 @@
   let sheetPushed = false;
 
   function isSheet(place: Route): boolean {
-    return !phone && (place.kind === "add-feed" || place.kind === "edit-feed" || place.kind === "edit-folder");
+    return !phone && isOver(place);
+  }
+
+  /** The short tasks that open over a place: a sheet on a computer, a screen of their own on a phone. */
+  function isOver(place: Route): boolean {
+    return ["add-feed", "new-to-feeds", "edit-feed", "edit-folder", "save-search", "edit-search"].includes(place.kind);
   }
 
   /** Which articles the list shows here. */
@@ -234,7 +260,9 @@
       ? { feed: under.id }
       : under.kind === "folder"
         ? { folder: under.id }
-        : { view: under.kind === "view" ? under.view : homeView(mode) },
+        : under.kind === "search"
+          ? { view: "all" }
+          : { view: under.kind === "view" ? under.view : homeView(mode) },
   );
   /** The list's identity: a new one is loaded when it changes. */
   let listKey = $derived(`${pathFor(under)} ${sort} ${shown ? JSON.stringify(searchParams(shown)) : ""}`);
@@ -249,17 +277,30 @@
       ? folders.find((folder) => folder.id === place.id)
       : undefined;
   });
-  /** A sheet is actually showing (an edit address for a feed or folder you don't have shows none). */
+  let currentSearch = $derived.by(() => {
+    const place = under.kind === "search" ? under : route;
+    return place.kind === "search" || place.kind === "edit-search" ? searches.find((search) => search.id === place.id) : undefined;
+  });
+  /** A sheet is actually showing (an edit address for a feed, folder or saved search you don't have shows none). */
   let sheetShown = $derived(
-    sheet && (route.kind === "add-feed" || (route.kind === "edit-feed" ? currentFeed !== undefined : currentFolder !== undefined)),
+    sheet &&
+      (route.kind === "add-feed" ||
+        route.kind === "new-to-feeds" ||
+        (route.kind === "save-search" && toSave !== undefined) ||
+        (route.kind === "edit-search" && currentSearch !== undefined) ||
+        (route.kind === "edit-feed" && currentFeed !== undefined) ||
+        (route.kind === "edit-folder" && currentFolder !== undefined)),
   );
-  /** The feed's or folder's name, for the heading and the tab's title. */
-  let placeName = $derived(currentFeed?.title ?? currentFolder?.name);
+  /** The feed's, folder's or saved search's name, for the heading and the tab's title. */
+  let placeName = $derived(currentFeed?.title ?? currentFolder?.name ?? currentSearch?.name);
+  /** On a saved search, the search field no longer holds what was saved: Escape puts it back. */
+  let tweaked = $derived(route.kind === "search" && currentSearch !== undefined && !sameQuery(query, currentSearch.query));
   /** A feed or folder address that names none you have. */
   let missing = $derived(
     feeds !== undefined &&
       (((under.kind === "feed" || under.kind === "edit-feed") && !currentFeed) ||
-        ((under.kind === "folder" || under.kind === "edit-folder") && !currentFolder)),
+        ((under.kind === "folder" || under.kind === "edit-folder") && !currentFolder) ||
+        ((under.kind === "search" || under.kind === "edit-search") && searchesLoaded && !searchesFailed && !currentSearch)),
   );
   /** No feeds yet: Unread and All show the add field instead (SPEC section 2). */
   let firstVisit = $derived(feeds !== undefined && feeds.length === 0);
@@ -275,6 +316,19 @@
   /** On a phone with no feeds yet, the welcome is the screen's one visible heading; the list's title is only for screen readers. */
   let welcomeAlone = $derived(phone && welcoming && !missing);
   let welcomeHeading: HTMLHeadingElement | undefined = $state();
+  /**
+   * "New to feeds?" belongs to the first visit only (decision 0079): once anything is followed, its
+   * address (Back after adding starters, a bookmark) quietly becomes the home view instead.
+   */
+  $effect(() => {
+    if (route.kind !== "new-to-feeds" || firstVisit || feeds === undefined) return;
+    untrack(() => {
+      history.replaceState({ screen: "list" }, "", pathFor(home));
+      route = home;
+      lastPlace = home;
+      queueMicrotask(() => placeFocus(home)?.focus());
+    });
+  });
   /** How many articles the list shows, so the empty reading area offers j only when there's one to open. */
   let listCount = $state(0);
   /** The list's "28 results" while it shows search results, so the search options can repeat it where they'd cover it. */
@@ -285,14 +339,16 @@
     missing
       ? under.kind === "folder" || under.kind === "edit-folder"
         ? "Folder not found"
-        : "Feed not found"
-      : shown
+        : under.kind === "search" || under.kind === "edit-search"
+          ? "Saved search not found"
+          : "Feed not found"
+      : shown && under.kind !== "search"
         ? "Search results"
         : nameFor(under, placeName),
   );
 
   function isList(place: Route): boolean {
-    return place.kind === "view" || place.kind === "feed" || place.kind === "folder";
+    return place.kind === "view" || place.kind === "feed" || place.kind === "folder" || place.kind === "search";
   }
 
   /** Counts changed on this screen since the page loaded; see `loadFeeds`. */
@@ -315,6 +371,19 @@
     } catch {
       feedsProblem = true;
     }
+  }
+
+  async function loadSearches() {
+    try {
+      searches = await listSaved();
+      searchesFailed = false;
+    } catch {
+      // The sidebar shows no saved searches until the next try; a saved search's own address says so plainly.
+      searchesFailed = true;
+    }
+    searchesLoaded = true;
+    // A saved search opened from its address (or its Edit address) runs once it's known.
+    if (under.kind === "search" && !shown && currentSearch) resetSearch();
   }
 
   $effect(() => {
@@ -357,7 +426,8 @@
   function unreadChanged(feedId: number, change: number) {
     countChanges++;
     const feed = feeds?.find((each) => each.id === feedId);
-    if (feed) feed.unread = Math.max(0, feed.unread + change);
+    // A feed that flows past counts nothing.
+    if (feed && !feed.river) feed.unread = Math.max(0, feed.unread + change);
   }
 
   async function changeMode(next: ReadingMode) {
@@ -408,12 +478,30 @@
         ],
       },
     ];
-    if (shown) return groups;
+    // On a saved search, even with everything taken out of its field, it can still be edited or deleted.
+    const search = under.kind === "search" ? currentSearch : undefined;
+    if (shown || search) {
+      // A search can be saved, to come back to from the sidebar; a saved one renamed, changed or deleted.
+      groups.push({
+        items: [
+          search
+            ? { label: "Edit saved search…", onSelect: () => openSaving({ kind: "edit-search", id: search.id }) }
+            : { label: "Save search…", onSelect: () => openSaving({ kind: "save-search" }) },
+        ],
+      });
+      return groups;
+    }
     const feed = currentFeed;
     const folder = currentFolder;
     if (feed) groups.push({ items: [{ label: "Edit feed…", onSelect: () => go({ kind: "edit-feed", id: feed.id }) }] });
     else if (folder) groups.push({ items: [{ label: "Edit folder…", onSelect: () => go({ kind: "edit-folder", id: folder.id }) }] });
     return groups;
+  }
+
+  /** Opens "Save search" or "Edit saved search" with the search showing now. */
+  function openSaving(next: Route) {
+    toSave = $state.snapshot(shown ?? query);
+    go(next);
   }
 
   /** The sort order, chosen from the list's More menu: the same setting as in Settings › Reading. */
@@ -436,6 +524,13 @@
     // "/" and unknown addresses open Unread (All in river mode); the address bar says so.
     history.replaceState(firstStep, "", pathFor(route));
 
+    // Arriving here by switching to a new version: the screen is as the
+    // reader left it, and the keyboard's place goes to the heading, as going
+    // here without the switch would have done.
+    const switched = arrivedBySwitching();
+    if (switched) arriveSwitched(switched);
+    const stopWatching = watchForNewVersions();
+
     const queries = [WIDE_REM, MEDIUM_REM].map((rem) => matchMedia(`(min-width: ${rem}rem)`));
     const resized = () => {
       const next = currentWidth();
@@ -453,9 +548,19 @@
 
     // The browser's Back and Forward, and on phones the system back gesture.
     const back = () => {
-      const next = parse(location.pathname);
+      let next = parse(location.pathname);
+      // Back to "Save search" after it was used: there's nothing to save now, so the place it was over.
+      if (next.kind === "save-search" && !toSave) {
+        next = lastPlace;
+        history.replaceState(history.state, "", pathFor(next));
+      }
       cameFromSettings = false;
       const moved = !keepsArticle(route, next);
+      // The address has already changed: loading it opens the new version there.
+      if (moved && switchesOnMove(updates.ready, marksUnsaved(), false)) {
+        switchTo(location.pathname, carried(next));
+        return;
+      }
       const [opening, closing] = [isSheet(next) && !isSheet(route), isSheet(route) && !isSheet(next)];
       if (opening) [sheetOpener, sheetPushed] = [document.activeElement, false];
       route = next;
@@ -541,6 +646,7 @@
     // (and a screen reader) to the top of the new screen.
     (panes.sidebar ? wordmark : placeFocus(route))?.focus();
     loadFeeds();
+    loadSearches();
     loadSettings().then((settings) => {
       mode = settings.mode;
       sort = settings.sort;
@@ -557,6 +663,7 @@
       queries.forEach((query) => query.removeEventListener("change", resized));
       removeEventListener("popstate", back);
       removeEventListener("keydown", pressed);
+      stopWatching();
     };
   });
 
@@ -565,8 +672,12 @@
     // Edit pages bind their heading to `listHeading` too.
     if (place.kind === "settings") return settingsHeading;
     if (place.kind === "feed-health") return healthHeading;
+    if (place.kind === "your-feeds") return yourFeedsHeading;
     if (place.kind === "muted") return mutedHeading;
     if (place.kind === "add-feed") return addField;
+    if (place.kind === "new-to-feeds") return phone ? listHeading : sheetHeading;
+    // "Save search" starts in its name field, which the sheet gives the keyboard itself.
+    if (place.kind === "save-search" && sheetShown) return undefined;
     if (sheetShown) return sheetHeading;
     if (welcomeWide || welcomeAlone) return welcomeHeading;
     return listHeading;
@@ -614,8 +725,7 @@
   function keepsArticle(from: Route, to: Route): boolean {
     if (pathFor(from) === pathFor(to)) return true;
     if (phone) return false;
-    const over = (place: Route) => place.kind === "add-feed" || place.kind === "edit-feed" || place.kind === "edit-folder";
-    return (over(to) && !over(from)) || (over(from) && pathFor(to) === pathFor(under));
+    return (isOver(to) && !isOver(from)) || (isOver(from) && pathFor(to) === pathFor(under));
   }
 
   /** After a sheet closes: the keyboard goes back to what opened it, if that's still there. */
@@ -633,9 +743,62 @@
     else go(under);
   }
 
+  /** The screen as the reader arranged it, for the new version to open the same way (decision 0085). */
+  function carried(next: Route): Carried {
+    return {
+      keyboard: document.documentElement.dataset.keyboard !== undefined,
+      sidebar: sidebarChoice,
+      listHidden,
+      lastPlace: pathFor(isList(next) ? next : lastPlace),
+      sidebarScroll: sidebar?.querySelector(".scroller")?.scrollTop ?? 0,
+    };
+  }
+
+  /** Puts back what the page before the switch carried. Feeds and lists arrive a moment later, so it keeps trying for a few seconds. */
+  function arriveSwitched(was: Carried) {
+    if (was.keyboard) document.documentElement.dataset.keyboard = "";
+    if (width !== "narrow") {
+      sidebarChoice = was.sidebar;
+      listHidden = was.listHidden;
+    }
+    const place = parse(was.lastPlace);
+    if (isList(place) && !isList(route)) lastPlace = place;
+    let [focused, scrolled] = [false, was.sidebarScroll <= 0];
+    let frames = 0;
+    const settle = () => {
+      // Once the reader has put the keyboard's place somewhere, it stays there.
+      // (Opening puts it on the wordmark, or the heading, first; see onMount.)
+      const at = document.activeElement;
+      if (!focused && at && at !== document.body && at !== wordmark && at !== placeFocus(route)) focused = true;
+      if (!focused) {
+        const heading = placeFocus(route);
+        if (heading) {
+          heading.focus();
+          focused = document.activeElement === heading;
+        }
+      }
+      if (!scrolled) {
+        const scroller = sidebar?.querySelector(".scroller");
+        if (scroller && scroller.scrollHeight - scroller.clientHeight >= was.sidebarScroll) {
+          scroller.scrollTop = was.sidebarScroll;
+          scrolled = true;
+        }
+      }
+      // About three seconds at most, then the page is left as it is.
+      if (!(focused && scrolled) && ++frames < 180) requestAnimationFrame(settle);
+    };
+    requestAnimationFrame(settle);
+  }
+
   function go(next: Route, withNotice?: Notice) {
+    // A newer nine turtles is live: going somewhere else redraws the screen
+    // anyway, so arrive there in the new version (decision 0085).
+    if (!keepsArticle(route, next) && switchesOnMove(updates.ready, marksUnsaved(), !!withNotice)) {
+      switchTo(pathFor(next), carried(next));
+      return;
+    }
     const from = screenNow();
-    cameFromSettings = route.kind === "settings" && (next.kind === "feed-health" || next.kind === "muted");
+    cameFromSettings = route.kind === "settings" && (next.kind === "feed-health" || next.kind === "your-feeds" || next.kind === "muted");
     const to: Screen = isList(next) ? "list" : "page";
     const [opening, closing] = [isSheet(next) && !isSheet(route), isSheet(route) && !isSheet(next)];
     let pushed = false;
@@ -655,6 +818,7 @@
     // A feed or folder added elsewhere (another tab, another device) isn't in the list yet.
     if (next.kind === "feed" && !feeds?.some((feed) => feed.id === next.id)) loadFeeds();
     if (next.kind === "folder" && !folders.some((folder) => folder.id === next.id)) loadFeeds();
+    if (next.kind === "search" && !searches.some((search) => search.id === next.id)) loadSearches();
     // On a phone-narrow window the sidebar is the home screen; choosing a
     // place shows it instead.
     if (width === "narrow") sidebarChoice = "hidden";
@@ -666,6 +830,19 @@
   async function added(feed: Feed) {
     await loadFeeds();
     go({ kind: "feed", id: feed.id });
+  }
+
+  /**
+   * Starters chosen in the welcome's "New to feeds?" (decision 0079): one opens as a feed added by
+   * hand does; several open the home view, where they're all together. Any that couldn't be added
+   * are named in the list's note.
+   */
+  async function startersAdded(feeds: Feed[], failed: Starter[]) {
+    await loadFeeds();
+    const note = failed.length > 0 ? { message: partlyAdded(failed) } : undefined;
+    const [only] = feeds;
+    if (feeds.length === 1 && only) go({ kind: "feed", id: only.id }, note);
+    else go(home, note);
   }
 
   /** The empty state's "Import OPML": Settings, at Your data. */
@@ -682,6 +859,43 @@
     else if (sheetShown) closeSheet();
     else if (route.kind === "edit-feed") go({ kind: "feed", id: route.id });
     else if (route.kind === "edit-folder") go({ kind: "folder", id: route.id });
+  }
+
+  /** Back from "Save search" or "Edit saved search", saved or not. A new saved search opens. */
+  function searchSaved(saved?: SavedSearch) {
+    // Used: Back to "Save search" later finds nothing to save, and opens the place it was over.
+    toSave = undefined;
+    if (saved) searches = [...searches.filter((each) => each.id !== saved.id), saved].sort(byName);
+    if (saved && route.kind === "save-search") {
+      go({ kind: "search", id: saved.id });
+      return;
+    }
+    if (phone && stepOf(history.state)?.back === "list") history.back();
+    else if (sheetShown) closeSheet();
+    else if (route.kind === "edit-search") go({ kind: "search", id: route.id });
+    else go(lastPlace);
+  }
+
+  function byName(one: SavedSearch, other: SavedSearch): number {
+    return one.name.localeCompare(other.name, undefined, { sensitivity: "base" }) || one.id - other.id;
+  }
+
+  /** Deletes a saved search (never an article), then shows Unread (All in river mode) with "Deleted … · Undo". */
+  async function deleteSearch(saved: SavedSearch): Promise<string | undefined> {
+    const refusal = await deleteSaved(saved.id);
+    if (refusal) return refusedSaving(refusal);
+    searches = searches.filter((each) => each.id !== saved.id);
+    toSave = undefined;
+    go(home, {
+      message: `Deleted the saved search ${saved.name}`,
+      undo: async () => {
+        const back = await saveSearch(saved.name, saved.query);
+        if (typeof back === "string") return refusedSaving(back);
+        await loadSearches();
+        return undefined;
+      },
+    });
+    return undefined;
   }
 
   /** Unsubscribes, then shows Unread (All in river mode) with "Unsubscribed from … · Undo". */
@@ -737,6 +951,11 @@
     follow(event, { kind: "feed-health" });
   }
 
+  /** Settings › Your feeds. */
+  function goYourFeeds(event: MouseEvent) {
+    follow(event, { kind: "your-feeds" });
+  }
+
   /** Settings › Rules › Muted articles. */
   function goMuted(event: MouseEvent) {
     follow(event, { kind: "muted" });
@@ -756,7 +975,9 @@
 
   /** Close settings, and Escape on Settings or Add a feed: on a phone, back one step to the feeds. */
   function closePage() {
-    if (phone) stepBack("home");
+    // "New to feeds?" opens from the welcome on the list's screen: on a phone its X goes back there.
+    if (phone && route.kind === "new-to-feeds" && stepOf(history.state)?.back === "list") history.back();
+    else if (phone) stepBack("home");
     else if (sheetShown) closeSheet();
     else go(lastPlace);
   }
@@ -830,10 +1051,21 @@
     else itemList.focusSelected();
   }
 
-  /** Enter and o: open the selected article (the first, if none is selected yet) to read. */
+  /**
+   * Enter and o: open the selected article (the first, if none is selected
+   * yet) to read. An article from a feed set to open on the website opens
+   * the publisher's page in a new tab instead, and counts as read (SPEC
+   * section 15); on a computer its summary stays beside the list.
+   */
   function open() {
     if (!itemList || (!panes.list && !panes.article && !reading)) return;
     if (!selected && !itemList.move(1)) return;
+    const article = selected;
+    if (article?.link && !reading && !inArticle() && feeds?.find((feed) => feed.id === article.feedId)?.openOnSite) {
+      window.open(article.link, "_blank", "noopener,noreferrer");
+      itemList.shown(article);
+      return;
+    }
     if (phone && !reading) {
       // On a phone the article is a screen of its own, one step on.
       history.pushState({ screen: "article", back: "list" }, "", location.pathname);
@@ -872,12 +1104,15 @@
     return "No articles yet.";
   }
 
-  /** Search starts afresh, limited to where you are. */
+  /** Search starts afresh, limited to where you are; on a saved search, as it was saved. */
   function resetSearch() {
     clearTimeout(searchTimer);
     phoneSearch = false;
-    query = emptyQuery(route);
-    shown = undefined;
+    // `under`: the saved search under its Edit sheet runs too.
+    const place = under;
+    const saved = place.kind === "search" ? searches.find((search) => search.id === place.id) : undefined;
+    query = saved ? $state.snapshot(saved.query) : emptyQuery(route);
+    shown = saved && isSearching(saved.query) ? $state.snapshot(saved.query) : undefined;
   }
 
   /** `/`: into the search field, from wherever you are; Escape comes back here. */
@@ -916,11 +1151,13 @@
   }
 
   function escape() {
-    if (route.kind === "feed-health" || route.kind === "muted") closeHealth();
-    else if (route.kind === "settings" || route.kind === "add-feed") closePage();
+    if (route.kind === "feed-health" || route.kind === "your-feeds" || route.kind === "muted") closeHealth();
+    else if (route.kind === "settings" || route.kind === "add-feed" || route.kind === "new-to-feeds") closePage();
     else if (route.kind === "edit-feed" || route.kind === "edit-folder") edited(false);
+    else if (route.kind === "save-search" || route.kind === "edit-search") searchSaved();
     else if (reading || (selected && inArticle())) backToList();
-    else if (shown || isSearching(query) || phoneSearch || document.activeElement?.closest("search")) closeSearch();
+    else if (route.kind === "search" ? tweaked || document.activeElement?.closest("search") : shown || isSearching(query) || phoneSearch || document.activeElement?.closest("search"))
+      closeSearch();
     else if (phone && !panes.sidebar) stepBack("home");
   }
 </script>
@@ -937,6 +1174,8 @@
     <div class={start ? "text-left" : "text-center"}>
       <h2 id="welcome-heading" tabindex="-1" bind:this={welcomeHeading} class="font-serif text-xlarge font-semibold tracking-[-0.01em]">A quiet place to read.</h2>
       <p class="mt-3 text-ink-2">Follow the websites you like, and read what they publish here, at your own pace.</p>
+      <!-- For someone who has never used feeds: what they are, and a few to start with, in a sheet (decision 0079). -->
+      <a href="/new-to-feeds" onclick={(event) => follow(event, { kind: "new-to-feeds" })} class="text-link mt-1">New to feeds? Start here</a>
     </div>
     {#if !(sheet && route.kind === "add-feed")}
       <!--
@@ -1107,7 +1346,7 @@
         {/each}
       </ul>
       {#if feeds}
-        <SidebarFeeds {feeds} {folders} {route} {search} {follow} {phone} {river} />
+        <SidebarFeeds {feeds} {folders} {searches} {route} {search} {follow} {phone} {river} />
       {/if}
       {#if feedsProblem}
         <p class="px-4 pt-4 text-small">Your feeds couldn't be loaded. Reload the page to try again.</p>
@@ -1144,9 +1383,9 @@
         href="/settings"
         aria-label="Settings"
         title="Settings"
-        aria-current={route.kind === "settings" || route.kind === "feed-health" || route.kind === "muted" ? "page" : undefined}
+        aria-current={route.kind === "settings" || route.kind === "feed-health" || route.kind === "your-feeds" || route.kind === "muted" ? "page" : undefined}
         onclick={(event) => follow(event, { kind: "settings" })}
-        class={["btn-quiet btn-icon @max-[15rem]:-mr-1.5", (route.kind === "settings" || route.kind === "feed-health" || route.kind === "muted") && "bg-tint-sidebar text-ink"]}><Icon name="settings" size={18} /></a
+        class={["btn-quiet btn-icon @max-[15rem]:-mr-1.5", (route.kind === "settings" || route.kind === "feed-health" || route.kind === "your-feeds" || route.kind === "muted") && "bg-tint-sidebar text-ink"]}><Icon name="settings" size={18} /></a
       >
     </div>
     {#if !phone && (panes.list || panes.article)}
@@ -1177,6 +1416,7 @@
           onClose={closePage}
           onImported={loadFeeds}
           onFeedHealth={goHealth}
+          onYourFeeds={goYourFeeds}
           onMuted={goMuted}
           feeds={feeds ?? []}
           {folders}
@@ -1186,6 +1426,14 @@
         />
       {:else if route.kind === "feed-health"}
         <FeedHealth bind:heading={healthHeading} onClose={closeHealth} onFeedsChanged={loadFeeds} besideToggle={!phone && !panes.sidebar} />
+      {:else if route.kind === "your-feeds"}
+        <YourFeeds
+          bind:heading={yourFeedsHeading}
+          onClose={closeHealth}
+          onOpenFeed={(event, id) => follow(event, { kind: "feed", id })}
+          onFeedsChanged={loadFeeds}
+          besideToggle={!phone && !panes.sidebar}
+        />
       {:else if route.kind === "muted"}
         <Muted bind:heading={mutedHeading} onClose={closeHealth} onChanged={loadFeeds} besideToggle={!phone && !panes.sidebar} />
       {:else if !sheet && route.kind === "edit-feed" && currentFeed}
@@ -1195,6 +1443,7 @@
             {folders}
             bind:heading={listHeading}
             besideToggle={!phone && !panes.sidebar}
+            {river}
             onSaved={() => edited(true)}
             onCancel={() => edited(false)}
             onUnsubscribe={() => unsubscribeFrom(currentFeed!)}
@@ -1210,6 +1459,40 @@
             onSaved={() => edited(true)}
             onCancel={() => edited(false)}
             onDelete={() => deleteThis(currentFolder!)}
+          />
+        {/key}
+      {:else if !sheet && route.kind === "new-to-feeds" && firstVisit}
+        <section aria-labelledby="list-heading" class="page-sheet">
+          <!-- Only on a phone: the phone sheet's one build, as Add a feed's (decisions 0052, 0055). -->
+          <div class="page-sheet-card">
+            <PageHead title="New to feeds?" bind:heading={listHeading} besideToggle={false} onClose={closePage} closeLabel="Close" />
+            <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
+              <div class="mx-auto flex w-full max-w-xl flex-1 flex-col">
+                <StarterFeeds onAdded={startersAdded} page />
+              </div>
+            </div>
+          </div>
+        </section>
+      {:else if !sheet && route.kind === "save-search" && toSave}
+        <EditSearch
+          query={toSave}
+          library={{ feeds: feeds ?? [], folders }}
+          bind:heading={listHeading}
+          besideToggle={!phone && !panes.sidebar}
+          onSaved={searchSaved}
+          onCancel={() => searchSaved()}
+        />
+      {:else if !sheet && route.kind === "edit-search" && currentSearch}
+        {#key currentSearch.id}
+          <EditSearch
+            saved={currentSearch}
+            query={toSave ?? currentSearch.query}
+            library={{ feeds: feeds ?? [], folders }}
+            bind:heading={listHeading}
+            besideToggle={!phone && !panes.sidebar}
+            onSaved={searchSaved}
+            onCancel={() => searchSaved()}
+            onDelete={() => deleteSearch(currentSearch!)}
           />
         {/key}
       {:else if !sheet && route.kind === "add-feed"}
@@ -1315,6 +1598,10 @@
             {/if}
             {#if missing && (under.kind === "folder" || under.kind === "edit-folder")}
               <p class="mt-4">There's no folder here. It may have been deleted or renamed.</p>
+            {:else if under.kind === "search" && searchesFailed && !currentSearch}
+              <p class="mt-4">Your saved searches couldn't be loaded. Reload the page to try again.</p>
+            {:else if missing && (under.kind === "search" || under.kind === "edit-search")}
+              <p class="mt-4">There's no saved search here. It may have been deleted.</p>
             {:else if missing}
               <p class="mt-4">You don't follow this feed. It may have been an old address.</p>
             {:else if welcoming && panes.article}
@@ -1328,7 +1615,7 @@
               -->
               <!-- The list's 28px dot gutter (decision 0054) is for rows: the welcome steps back out to the 20px margin. -->
               <div class={phone ? "mt-[5.5rem] ml-[calc(1.25rem-var(--list-start))] flex" : "mt-8 flex justify-center"}>{@render welcome(phone)}</div>
-            {:else if feeds !== undefined && sort !== undefined}
+            {:else if feeds !== undefined && sort !== undefined && (under.kind !== "search" || searchesLoaded)}
               <!-- The list, with "New items · press r" and Undo in a note floating at its foot (More, with Refresh, sits beside the title). -->
               {#key listKey}
                 <ItemList
@@ -1345,6 +1632,7 @@
                   results={shown !== undefined}
                   oneFeed={under.kind === "feed" && !shown}
                   {river}
+                  {flowing}
                   bind:count={listCount}
                   bind:found={listFound}
                 />
@@ -1419,6 +1707,10 @@
     <p>{ADD_INTRO}</p>
     <AddFeed bind:field={addField} feeds={feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} onCancel={closePage} />
   </Sheet>
+{:else if sheet && route.kind === "new-to-feeds" && firstVisit}
+  <Sheet title="New to feeds?" bind:heading={sheetHeading} onClose={closePage}>
+    <StarterFeeds onAdded={startersAdded} onCancel={closePage} />
+  </Sheet>
 {:else if sheet && route.kind === "edit-feed" && currentFeed}
   {#key currentFeed.id}
     <EditFeed
@@ -1426,10 +1718,26 @@
       feed={currentFeed}
       {folders}
       bind:heading={sheetHeading}
+      {river}
       onSaved={() => edited(true)}
       onCancel={() => edited(false)}
       onUnsubscribe={() => unsubscribeFrom(currentFeed!)}
       onAddRule={() => addRuleFor(currentFeed!)}
+    />
+  {/key}
+{:else if sheet && route.kind === "save-search" && toSave}
+  <EditSearch sheet query={toSave} library={{ feeds: feeds ?? [], folders }} bind:heading={sheetHeading} onSaved={searchSaved} onCancel={() => searchSaved()} />
+{:else if sheet && route.kind === "edit-search" && currentSearch}
+  {#key currentSearch.id}
+    <EditSearch
+      sheet
+      saved={currentSearch}
+      query={toSave ?? currentSearch.query}
+      library={{ feeds: feeds ?? [], folders }}
+      bind:heading={sheetHeading}
+      onSaved={searchSaved}
+      onCancel={() => searchSaved()}
+      onDelete={() => deleteSearch(currentSearch!)}
     />
   {/key}
 {:else if sheet && route.kind === "edit-folder" && currentFolder}

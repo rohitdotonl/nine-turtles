@@ -1,0 +1,28 @@
+---
+permalink: /blog/feed.xml
+eleventyExcludeFromCollections: true
+layout: false
+tags: []
+---
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+  <title>The nine turtles blog</title>
+  <subtitle>Notes from the making of nine turtles, a quiet reader for the open web.</subtitle>
+  <link href="{{ site.url }}/blog/feed.xml" rel="self" />
+  <link href="{{ site.url }}/blog/" />
+  <id>{{ site.url }}/blog/</id>
+  <icon>{{ site.url }}/icons/apple-touch-icon.png</icon>
+  <updated>{{ collections.posts | newestDate }}</updated>
+  <author><name>{{ site.name }}</name></author>
+  {%- for post in collections.posts | reverse %}
+  <entry>
+    <title>{{ post.data.title }}</title>
+    <link href="{{ site.url }}{{ post.url }}" />
+    <id>{{ site.url }}{{ post.url }}</id>
+    <published>{{ post.date | isoDate }}</published>
+    <updated>{{ post.date | isoDate }}</updated>
+    <summary>{{ post.data.description }}</summary>
+    <content type="html">{{ post.content | absoluteLinks(site.url) }}</content>
+  </entry>
+  {%- endfor %}
+</feed>
