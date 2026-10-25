@@ -4,6 +4,13 @@ A plain-language history of nine turtles (called slowfeed until 24 October 2026)
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 25 October 2026: Pull request pictures look like the app in use
+
+- The screenshots on each pull request now show a small made-up library of
+  blogs (Field Notes, The Margins, Small Kitchen and others, two of them in
+  folders) instead of test names like "Blog refresh-desktop-0-…". Nothing
+  in the app itself changed.
+
 ## 25 October 2026: The documents follow Apple Books, and are shorter
 
 - DESIGN.md now says plainly that Apple Books is the one design reference,

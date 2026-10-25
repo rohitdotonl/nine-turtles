@@ -16,6 +16,11 @@ download.
 **Things to know.**
 - The pictures are public, like the whole repository, so screenshots only ever
   show made-up feeds and articles.
+- So the pictures look like nine turtles in use, they're taken on a nine
+  turtles of their own (one for desktop, one for phone) that follows only a
+  small made-up library of blogs with real-looking titles, authors and dates
+  (`web/tests/screens.ts` and `web/tests/feed-server.mjs`), never the feeds
+  the other browser tests add. *(Added 25 October 2026.)*
 - The side branch is always one single commit holding the latest pictures of
   each pull request, replaced on every push. Older pictures are dropped from
   its history, so the repository doesn't grow with every push. Pictures in
