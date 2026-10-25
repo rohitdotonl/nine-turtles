@@ -1,4 +1,4 @@
-# 0060: The redesign notes folded into one
+# 0061: The redesign notes folded into one
 
 *25 October 2026. The owner's request: fewer Markdown files, deleting
 rather than archiving.*

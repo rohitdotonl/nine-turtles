@@ -86,6 +86,14 @@
   /** The search whose results the list shows, or none: the place's own list. */
   let shown: Query | undefined = $state();
   let searchBar: SearchBar | undefined = $state();
+  /**
+   * On a phone the search field waits behind a Search button beside More, so
+   * the list starts right under its title (decision 0060). Once asked for,
+   * it stays until you press the button again with nothing searched, press
+   * Escape, or go to another place: never on its own, so nothing under your
+   * finger moves.
+   */
+  let phoneSearch = $state(false);
   /** Where the keyboard's place was before `/`, to go back to on Escape. */
   let beforeSearch: Element | null = null;
   let searchTimer: ReturnType<typeof setTimeout> | undefined;
@@ -486,7 +494,7 @@
     if (phone) sidebarChoice = screen === "home" ? "shown" : "hidden";
     queueMicrotask(() => {
       if (phone && screen === "home") wordmark?.focus();
-      else if (reading) articleHeading?.focus();
+      else if (reading) articleHeading?.focus({ preventScroll: true });
       else if (selected && isList(route)) itemList?.focusSelected();
       else placeFocus(route)?.focus();
     });
@@ -704,7 +712,7 @@
     const wasReading = reading || inArticle() || !panes.list;
     if (!itemList.move(step)) return;
     showArticleArea();
-    if (wasReading) queueMicrotask(() => articleHeading?.focus());
+    if (wasReading) queueMicrotask(() => articleHeading?.focus({ preventScroll: true }));
     else itemList.focusSelected();
   }
 
@@ -718,7 +726,7 @@
       reading = true;
     }
     showArticleArea();
-    queueMicrotask(() => articleHeading?.focus());
+    queueMicrotask(() => articleHeading?.focus({ preventScroll: true }));
   }
 
   /** Choosing an article shows it, so on a medium window the sidebar makes way. */
@@ -753,6 +761,7 @@
   /** Search starts afresh, limited to where you are. */
   function resetSearch() {
     clearTimeout(searchTimer);
+    phoneSearch = false;
     query = emptyQuery(route);
     shown = undefined;
   }
@@ -762,7 +771,14 @@
     if (!isList(route) || (phone && panes.sidebar)) go(lastPlace);
     else if (reading) backToList();
     else beforeSearch = document.activeElement;
+    phoneSearch = true;
     queueMicrotask(() => searchBar?.focus());
+  }
+
+  /** The phone's Search button: shows the field, ready to type in; pressed again with nothing searched, puts it away. */
+  function toggleSearch() {
+    if (phoneSearch && !shown && !isSearching(query)) phoneSearch = false;
+    else startSearch();
   }
 
   /** The field changed: search now, or a moment after typing stops. */
@@ -789,7 +805,7 @@
     if (route.kind === "settings" || route.kind === "add-feed") closePage();
     else if (route.kind === "edit-feed" || route.kind === "edit-folder") edited(false);
     else if (reading || (selected && inArticle())) backToList();
-    else if (shown || isSearching(query) || document.activeElement?.closest("search")) closeSearch();
+    else if (shown || isSearching(query) || phoneSearch || document.activeElement?.closest("search")) closeSearch();
     else if (phone && !panes.sidebar) stepBack("home");
   }
 </script>
@@ -859,6 +875,12 @@
               </h2>
               {#if itemList && !missing}
                 <div class="-mr-3 flex shrink-0 items-center">
+                  {#if phone}
+                    <!-- The way into search, beside More, as an iOS list keeps it (decision 0060). -->
+                    <button type="button" aria-label="Search" title="Search" aria-expanded={phoneSearch || shown !== undefined || isSearching(query)} onclick={toggleSearch} class="btn-quiet btn-icon"
+                      ><span class="flex size-8 items-center justify-center"><Icon name="search" size={20} /></span></button
+                    >
+                  {/if}
                   <MoreMenu id="list-menu" groups={listMenu()} />
                 </div>
               {/if}
@@ -1157,7 +1179,7 @@
           {/if}
           <!-- A column, so the floating note can sit at the pane's foot even under a short list. -->
           <div use:edge class="scroller relative flex min-h-0 flex-1 scroll-pb-20 flex-col overflow-y-auto pt-2 pr-[var(--list-end)] pb-6 pl-[var(--list-start)]">
-            {#if feeds && feeds.length > 0 && !missing}
+            {#if feeds && feeds.length > 0 && !missing && (!phone || phoneSearch || shown || isSearching(query))}
               <SearchBar bind:this={searchBar} {query} {feeds} {folders} here={scopeFor(under)} found={listFound} onChange={searchChanged} />
             {/if}
             {#if missing && (under.kind === "folder" || under.kind === "edit-folder")}

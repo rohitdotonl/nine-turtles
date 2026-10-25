@@ -12,7 +12,16 @@ not how it was done.
 - Each screen is described once, in SPEC.md, so DESIGN.md is about half as
   long. ENGINEERING.md no longer repeats AGENTS.md's working agreements.
 - The 31 step-by-step redesign decision notes were folded into one summary
-  (decision 0060). Nothing changes in the app.
+  (decision 0061). Nothing changes in the app.
+
+## 25 October 2026: A bookmark in every article, search tucked away on a phone
+
+- Leave a long article halfway and it now opens where you stopped, even
+  after closing the app. Finish it and it starts at the top again. Each
+  device remembers its own places.
+- On a phone, the search box under a list's title is now a magnifier
+  button beside the More (…) button, so one more article fits on the
+  screen. Tap it to search.
 
 ## 24 October 2026: Less space after an article, Show older items as a list row
 

@@ -7,7 +7,7 @@ doesn't undo a deliberate choice by accident.
 One file per decision, numbered in order: `NNNN-short-name.md`. If a
 decision changes, a new note replaces it and the old one says "Replaced by …"
 at the top. Notes that later ones have replaced may be folded into one
-summary note, one line each (as 0060 did); their full text stays in the
+summary note, one line each (as 0061 did); their full text stays in the
 repository's history.
 
 | # | Decision |
@@ -36,9 +36,10 @@ repository's history.
 | [0022](0022-phones-and-installing.md) | Phones and installing: history steps for back, a page-first service worker, a version on every answer |
 | [0023](0023-search.md) | Search: a contentless index of tag-free text, every typed word quoted, title matches first, filters as plain settings, speed |
 | [0024](0024-starred-export-and-final-pass.md) | Starred export as JSON Feed 1.1 with a `_slowfeed` source extension; "Marked as read" spoken to screen readers; export speed |
-| 0025–0055 | The UI redesign, step by step: folded into [0060](0060-redesign-notes-folded.md), one line each |
+| 0025–0055 | The UI redesign, step by step: folded into [0061](0061-redesign-notes-folded.md), one line each |
 | [0056](0056-nine-turtles-one-theme.md) | Renamed nine turtles (the program, settings, database, repository and Render service keep the name slowfeed); one theme, Original, by day and by night, with Light, Dark and Match device; the theme tiles, Bold and Literata's 800 removed (replaces the theme list of 0046) |
 | [0057](0057-grey-pill-green-star.md) | Where you are: a plain neutral grey pill, its sidebar icon in ink; a light green for filled stars, the one second color (changes 0037, 0041 and 0043) |
 | [0058](0058-renamed-everywhere.md) | nine turtles everywhere: repository, image, program, `NINE_TURTLES_*` settings, database file, cookie and saved preferences, with the old names still read for now; Render's address and disk keep slowfeed (changes 0056) |
 | [0059](0059-apple-books-reference.md) | Apple Books is the design reference, written into DESIGN.md: floors first, then Apple Books; principles brought up to date; each screen described once, in SPEC.md |
-| [0060](0060-redesign-notes-folded.md) | The redesign notes 0025–0055 folded into one summary, their files deleted (full text in the history) |
+| [0060](0060-bookmark-and-phone-search-button.md) | A bookmark in every article (your place kept per device, by paragraph, forgotten at the top or the end) and, on a phone, the list's search field behind a Search button beside More |
+| [0061](0061-redesign-notes-folded.md) | The redesign notes 0025–0055 folded into one summary, their files deleted (full text in the history) |

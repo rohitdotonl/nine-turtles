@@ -156,6 +156,7 @@ A few words used throughout:
 - In a night theme, pictures are dimmed a little (never inverted) so a pale one doesn't glare on the dark page; a linked picture shows at full brightness under the pointer or the keyboard. A caption is clearly smaller than the text (13/16 of its size, with a 1.4 line height), 6px under its picture, in the second ink, which keeps 7 : 1 on the page in every theme. A table starts flush with the text's left edge, its header semibold over a fine rule and its rows over fainter ones (decisions 0050, 0053).
 - Anything unsafe in the feed's content (scripts, embedded frames, code hidden in styles) is removed before display.
 - The next article is loaded in advance so moving to it with `j` is instant.
+- **Your place is kept, like a bookmark** (decision 0060). Leave a long article part of the way through and it opens where you stopped next time, even after closing nine turtles. Only your own scrolling moves the place; it is forgotten once you reach the end (a finished article opens at its top again) or scroll back to the top. It's kept by paragraph rather than by pixels, so it holds when pictures load late or the text size changes, and it jumps there at once, never gliding. Each device keeps its own places (in the browser's storage, for the 200 most recent articles); nothing goes to the server.
 
 **How to check it**
 1. Open an article from a full-content blog: it reads well, with headings, quotes and images in place.
@@ -165,6 +166,7 @@ A few words used throughout:
 5. Press `Enter`, read, press Escape: you're back on the same row in the list. Press `+` and `-`: the text grows and shrinks.
 6. Press Aa above an article: the panel opens under it. Press the large A, choose Dark, and Atkinson Hyperlegible: the article changes at once. There are no theme tiles. Press Escape: the panel closes and the keyboard is back on Aa. Settings › Look and feel shows the same choices.
 7. Make the window very wide: Open original, Aa, Star and More stay together at the reading pane's right edge. Scroll an article: the text fades under the top bar.
+8. Scroll halfway down a long article, open another, then come back (or reload the page): it opens where you stopped. Read it to the end, open another and come back: it opens at its top.
 
 ## 8. Read state, marking unread, "mark all as read", undo
 
@@ -392,7 +394,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 - One column you move through: **Feeds → Items → Article**. The feeds list is the home screen; no hamburger menu.
 - Top bar: a back arrow labeled with where it goes (e.g. "‹ Tech", drawn as a small arrow icon; screen readers hear "Back to Tech") and the screen title. More beside a list's title; search and search-options icons on the feeds and items screens (with search, Milestone 10).
   - The feeds screen: the large "nine turtles" wordmark and **Refresh** as an icon alone (a 44px tap, named "Refresh"; it updates the unread numbers); **Add feed** and **Settings** sit together at the bottom, as on a computer. No sidebar toggle. It's the root of the screens, as on an iPhone: no row is marked as selected, and every row (Unread, Starred, All, folders, feeds) ends in a small chevron, after its count, because it leads on to a screen of its own.
-  - A list: "‹ Feeds", then the list's name (one line, ending in "…" if long) with **More** (…) beside it, holding Mark all as read, Refresh, the sort order and Edit (section 6). The top bar never scrolls.
+  - A list: "‹ Feeds", then the list's name (one line, ending in "…" if long) with **Search** (a magnifier) and **More** (…) beside it, More holding Mark all as read, Refresh, the sort order and Edit (section 6). The top bar never scrolls. The search field waits behind the Search button, so the first article sits right under the title (decision 0060): a tap shows the field with the keyboard in it, and it stays until the button is tapped again with nothing searched, Escape, or going to another place (never on its own, so nothing moves under a finger); while a search is on it always shows.
   - An article: the back button with the list's name in words ("‹ Tech"; screen readers hear "Back to Tech"; a long name ends in "…") at the left, and **Open original** as an icon at the right, on the same solid bar as on a computer (section 7).
   - Add a feed: "‹ Feeds".
   - The back button sits in the same place on every screen, its arrow the same size, 8px from the screen's edge, so it never jumps as you move between screens.
