@@ -362,7 +362,7 @@ each with screenshots:
 
 - ✅ A YouTube video plays in YouTube's own privacy-enhanced player, above
   its description, only once you press Play; a YouTube player inside a blog
-  post becomes a link to the video (decision 0067).
+  post becomes a link to the video (decision 0068).
 
 ---
 
