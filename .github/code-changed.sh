@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Prints code=true or code=false for GitHub Actions: false when a pull request
 # changes only documents, so the slow checks and the image build can be
-# skipped (decision 0064). Anything else, including pushes to main, is true.
+# skipped (decision 0065). Anything else, including pushes to main, is true.
 # docs/libraries.md feeds the library check, so it counts as code.
 # Needs the checkout to have its parent commit (fetch-depth: 2).
 #

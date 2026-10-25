@@ -9,7 +9,7 @@ The script stops at the first failure and says which step failed.
 ## Side by side, and skipped for documents
 
 On GitHub the script runs in four parts at once, each on its own computer
-(decision 0064): `scripts/check.sh frontend` (the first six steps below),
+(decision 0065): `scripts/check.sh frontend` (the first six steps below),
 `scripts/check.sh rust` (formatting, lint, tests), and `scripts/check.sh
 browser` (builds the frontend and the release program, then runs the browser
 tests) twice, each with half of the browser tests (`NINE_TURTLES_SHARD=1/2` and

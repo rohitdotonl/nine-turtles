@@ -4,7 +4,7 @@
 # checks. What each check means: docs/operations/checks.md.
 #
 # With no arguments it runs everything, in order. GitHub Actions runs the
-# parts side by side on separate computers to save time (decision 0064):
+# parts side by side on separate computers to save time (decision 0065):
 #   scripts/check.sh frontend   libraries, frontend build, types, tests, motion, size
 #   scripts/check.sh rust       Rust formatting, lint and tests
 #   scripts/check.sh browser    the release program, then the browser tests

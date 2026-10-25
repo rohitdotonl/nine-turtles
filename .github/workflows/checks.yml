@@ -1,7 +1,7 @@
 # Runs every automatic check on each pull request and on main.
 # All the real work is in scripts/check.sh, so the same checks run anywhere
 # (docs/decisions/0001-one-check-script.md). This file only prepares the
-# computers, runs the script's parts side by side (decision 0064) and posts
+# computers, runs the script's parts side by side (decision 0065) and posts
 # the screenshots.
 
 name: Checks
@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   # Pull requests that change only documents skip the slow checks: nothing
-  # they change can break the program or its tests (decision 0064).
+  # they change can break the program or its tests (decision 0065).
   changes:
     name: What changed
     runs-on: ubuntu-24.04

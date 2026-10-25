@@ -256,7 +256,7 @@ test("with nothing found, the reading area doesn't offer j", async ({ page }) =>
   await page.keyboard.type("zzyzxquux");
   await page.keyboard.press("Enter");
   await expect(page.getByText("Nothing found.")).toBeVisible();
-  await expect(reading).toContainText("No article open");
+  await expect(reading).toContainText("Time to read something beautiful.");
   await expect(reading).not.toContainText(/press j/i);
 });
 

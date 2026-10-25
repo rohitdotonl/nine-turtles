@@ -3,7 +3,7 @@
 Each merged pull request adds **one new file here** with its entry for
 [`docs/CHANGELOG.md`](../CHANGELOG.md), instead of editing the changelog
 itself. Two pull requests then never edit the same lines, so they never
-clash and never have to wait for the checks a second time (decision 0064).
+clash and never have to wait for the checks a second time (decision 0065).
 
 - **Name:** the date and a few words, e.g. `2026-10-25-faster-checks.md`.
 - **Inside:** exactly what would go at the top of the changelog: a

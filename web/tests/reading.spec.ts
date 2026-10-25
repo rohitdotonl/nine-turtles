@@ -51,7 +51,7 @@ test.describe("on a wide window", () => {
     // One quiet line in the middle of the paper (decision 0053): serif, muted grey, never the
     // accent; screen readers also hear, since the list has articles to open, how to open one.
     const empty = article(page).locator(".reading-empty");
-    await expect(empty).toHaveText("No article open");
+    await expect(empty).toHaveText("Time to read something beautiful.");
     await expect(empty).toBeVisible();
     await expect(empty).toHaveCSS("font-family", /Literata/);
     const [color, muted] = await empty.evaluate((element) => {
@@ -177,8 +177,8 @@ test.describe("on a wide window", () => {
       .evaluateAll((controls) => controls.map((control) => control.getAttribute("aria-label")));
     expect(order).toEqual(["Open original", "Reading appearance", "Star", "More actions"]);
     expect((await original.innerText()).trim()).toBe("");
-    await expect(article(page).getByRole("button", { name: "Star" })).toHaveAttribute("title", "Star (s)");
-    await expect(original).toHaveAttribute("title", "Open original (v)");
+    await expect(article(page).getByRole("button", { name: "Star" })).toHaveAttribute("title", "Star (S)");
+    await expect(original).toHaveAttribute("title", "Open original (V)");
     // More holds Copy link and Mark unread, its key shown beside it.
     const more = article(page).getByRole("button", { name: "More actions" });
     await expect(more).toHaveAttribute("aria-haspopup", "menu");
@@ -679,7 +679,7 @@ test("the shortcut tip shows only until an article is first opened, then never a
   await expect(title(page, "Only the first page")).toBeVisible();
   await page.reload();
   await appReady(page);
-  await expect(article(page).locator(".reading-empty")).toHaveText("No article open");
+  await expect(article(page).locator(".reading-empty")).toHaveText("Time to read something beautiful.");
   await expect(tip).toHaveCount(0);
   await expect(article(page)).toContainText("Choose one from the list, or press j.");
   await expect(article(page).locator(".sr-only", { hasText: "Choose one from the list" })).toHaveCSS("position", "absolute");
