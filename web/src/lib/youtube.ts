@@ -1,6 +1,6 @@
 /**
  * YouTube videos play in YouTube's own player (the publisher floor, SPEC
- * section 7, decision 0068). An article whose link is a YouTube video gets a
+ * section 7, decision 0072). An article whose link is a YouTube video gets a
  * Play button above its text; nothing loads from YouTube until it's pressed.
  * The same rules as the server's `youtube_video` (server/src/feed.rs).
  */

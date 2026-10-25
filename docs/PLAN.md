@@ -11,13 +11,16 @@ you've merged the previous one and said go.
 short screen recordings where useful). After you merge, you try it for real
 on the live app; anything found then gets a quick follow-up fix.
 
-**Status key:** ⬜ not started · 🔨 in progress · ✅ merged · ⏭ moved to V2
+**Status key:** ⬜ not started · 🔨 in progress · ✅ merged and live · ⏭ moved to V2
 
 **V1 is for the owner alone** (decided 23 October 2026). Backups, river mode,
 WebSub, the feed health page, the yearly clean-up, the feeds guide page and
 keeping old tabs working across updates moved to V2
 (`docs/decisions/0012-v1-for-one-reader.md`). Milestone numbers stay the
 same so older documents still point to the right place.
+
+**V1 is finished, and V2 has started** (25 October 2026). The table at the
+end, "V2 so far", shows which V2 parts are live.
 
 | # | Milestone | Status |
 |---|---|---|
@@ -360,15 +363,31 @@ each with screenshots:
   as a short introduction; what else the website says is the owner's to
   decide.
 
+## V2 so far
+
+*Only what's merged and live is marked ✅.*
+
+| V2 part | Status | Where it's described |
+|---|---|---|
+| River mode | ✅ 25 October 2026 | SPEC section 10, decision 0068 |
+| WebSub (new posts within minutes) | ✅ 25 October 2026 | Milestone 12, SPEC section 12, decision 0069 |
+| YouTube videos in YouTube's own player | ✅ 25 October 2026 | SPEC section 7, decision 0072 |
+| Syncing with Reeder, NetNewsWire and other apps | ✅ 25 October 2026 | SPEC section 26, decision 0070 |
+| Feed health page | ✅ 25 October 2026 | Milestone 11, SPEC section 17, decision 0071 |
+| Backups and moving hosts | ⬜ | Milestone 3 above, `docs/ENGINEERING.md` → "Hosting" |
+| The yearly clean-up of unstarred articles | ⬜ | SPEC section 23 (after backups) |
+| The "New to feeds?" guide page | ⬜ | SPEC section 2 |
+| A tab left open across an update keeps working | ⬜ | `docs/ENGINEERING.md` (decision 0022) |
+
 ## V2: YouTube videos
 
 - ✅ A YouTube video plays in YouTube's own privacy-enhanced player, above
   its description, only once you press Play; a YouTube player inside a blog
-  post becomes a link to the video (decision 0068).
+  post becomes a link to the video (decision 0072).
 
-## Syncing with other apps
+## V2: Syncing with other apps
 
-- 🔨 Reeder, NetNewsWire and other feed readers sync with nine turtles
+- ✅ Reeder, NetNewsWire and other feed readers sync with nine turtles
   through the Google Reader API, with an app password made in Settings
   (SPEC section 26, decision 0070).
 

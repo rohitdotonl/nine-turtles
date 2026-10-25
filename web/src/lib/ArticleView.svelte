@@ -13,7 +13,7 @@
   shows the summary, then a small centred note under the closing rule that
   links the whole article on the publisher's site; nine turtles never fetches
   the rest. A YouTube video plays above its text in YouTube's own player,
-  loaded only once you press Play (decision 0068).
+  loaded only once you press Play (decision 0072).
 
   On a phone (SPEC section 20) the article is a screen of its own: the top
   bar has the back button, labeled with the list's name, and Open original;
@@ -76,7 +76,7 @@
     if (giveBack) aaButton?.focus();
   }
 
-  /** A YouTube video plays above the text, in YouTube's own player, once you press Play (decision 0068). */
+  /** A YouTube video plays above the text, in YouTube's own player, once you press Play (decision 0072). */
   let video = $derived(youtubeVideo(article.link));
 
   let full: FullArticle | undefined = $derived.by(() => {
