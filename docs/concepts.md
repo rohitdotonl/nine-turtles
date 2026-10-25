@@ -163,6 +163,8 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Server-side request forgery (SSRF)
 - Sanitizing HTML (ammonia) and allowlists
 - Content Security Policy (CSP)
+- Embedded frames (iframes), sandboxing and the referrer
+- Privacy-enhanced YouTube player (youtube-nocookie.com)
 - Security headers
 - Secrets
 - Environment variables

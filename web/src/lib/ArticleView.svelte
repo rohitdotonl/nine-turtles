@@ -12,7 +12,8 @@
   source is always credited and linked. A feed that gives only a summary
   shows the summary, then a small centred note under the closing rule that
   links the whole article on the publisher's site; nine turtles never fetches
-  the rest.
+  the rest. A YouTube video plays above its text in YouTube's own player,
+  loaded only once you press Play (decision 0067).
 
   On a phone (SPEC section 20) the article is a screen of its own: the top
   bar has the back button, labeled with the list's name, and Open original;
@@ -24,6 +25,8 @@
   import Icon from "./Icon.svelte";
   import MoreMenu, { type MenuGroup } from "./MoreMenu.svelte";
   import ReadingPanel from "./ReadingPanel.svelte";
+  import YouTubePlayer from "./YouTubePlayer.svelte";
+  import { youtubeVideo } from "./youtube";
   import type { Preferences } from "./preferences";
   import { articleNow, readArticle, when, type Article, type FullArticle } from "./feeds";
   import { goTo, keepPlace, placeIn, placeOf, type Place } from "./places";
@@ -72,6 +75,9 @@
     panelOpen = false;
     if (giveBack) aaButton?.focus();
   }
+
+  /** A YouTube video plays above the text, in YouTube's own player, once you press Play (decision 0067). */
+  let video = $derived(youtubeVideo(article.link));
 
   let full: FullArticle | undefined = $derived.by(() => {
     void arrivals;
@@ -308,6 +314,11 @@
         · <time datetime={new Date(article.at * 1000).toISOString()}>{when(article.at)}</time>
       </p>
 
+      {#if video}
+        {#key article.id}
+          <YouTubePlayer {video} title={article.title || "Untitled"} />
+        {/key}
+      {/if}
       {#if full}
         {#if full.content}
           <!-- Cleaned by nine turtles before it was stored (server/src/feed.rs). -->
@@ -326,6 +337,8 @@
             <span>This feed shares only a summary.</span>{#if article.link}{" "}<a href={article.link} target="_blank" rel="noopener noreferrer">Read the full article<span class="sr-only"> on {article.feedTitle}</span><span aria-hidden="true">&nbsp;›</span></a
               >{/if}
           </p>
+        {:else if video}
+          <hr aria-hidden="true" class="article-end" />
         {:else}
           <p class="mt-6" lang="en">This article has no text in its feed. Open original to read it on the publisher's site.</p>
         {/if}

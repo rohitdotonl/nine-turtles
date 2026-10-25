@@ -358,6 +358,12 @@ each with screenshots:
   as a short introduction; what else the website says is the owner's to
   decide.
 
+## V2: YouTube videos
+
+- ✅ A YouTube video plays in YouTube's own privacy-enhanced player, above
+  its description, only once you press Play; a YouTube player inside a blog
+  post becomes a link to the video (decision 0067).
+
 ---
 
 Responsive layout, accessibility and speed aren't left to the end: each

@@ -4,7 +4,9 @@
 //! Article content is cleaned here, before it's ever stored, so nothing
 //! unsafe from a feed can reach the screen later (the engineering floor).
 //! Invisible 1×1 tracking images are taken out at the same time (DESIGN.md →
-//! "Article view").
+//! "Article view"). A YouTube video's own description becomes its text, and a
+//! YouTube player embedded in an article becomes a link to the video (SPEC
+//! section 7, decision 0067).
 
 use std::borrow::Cow;
 
@@ -84,6 +86,17 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
                 .and_then(|content| {
                     let body = content.body.as_deref()?;
                     Some(clean(body, content.content_type.as_ref(), base))
+                })
+                .filter(|html| !html.trim().is_empty())
+                .or_else(|| {
+                    // A YouTube channel's feed carries each video's description
+                    // in its media details, not as content: that is its text.
+                    link.as_ref().and_then(youtube_video)?;
+                    let description = entry
+                        .media
+                        .iter()
+                        .find_map(|media| media.description.as_ref())?;
+                    Some(clean(&paragraphs(&description.content), "text/html", base))
                 })
                 .filter(|html| !html.trim().is_empty());
             let summary = entry
@@ -205,15 +218,145 @@ fn clean(body: &str, content_type: &str, base: &Url) -> String {
     if !content_type.contains("html") {
         return ammonia::clean_text(body);
     }
-    // Tracking images go first, so the safety cleaning always has the last word.
-    let body = without_tracking_images(body);
-    ammonia::Builder::default()
+    // Tracking images and YouTube players go first, so the safety cleaning
+    // always has the last word. Marks only nine turtles writes (below).
+    let body = body.replace(VIDEO_MARK, "");
+    let body = without_youtube_players(&without_tracking_images(&body));
+    let cleaned = ammonia::Builder::default()
         .url_relative(ammonia::UrlRelative::Custom(Box::new(Whole(base.clone()))))
         .add_generic_attributes(["id"])
         .id_prefix(Some(ANCHOR_PREFIX))
         .set_tag_attribute_value("a", "target", "_blank")
         .clean(&body)
-        .to_string()
+        .to_string();
+    with_video_links(&cleaned)
+}
+
+/// The video a YouTube address shows, as its 11-character ID: a watch page
+/// (`youtube.com/watch?v=…`), a short link (`youtu.be/…`), a Short, a live
+/// video or an embedded player. Anything else is `None`.
+pub fn youtube_video(url: &Url) -> Option<String> {
+    let host = url
+        .host_str()?
+        .trim_start_matches("www.")
+        .trim_start_matches("m.");
+    let mut path = url.path_segments()?;
+    let id = match (host, path.next()?) {
+        ("youtu.be", id) => id.to_owned(),
+        ("youtube.com", "watch") => url
+            .query_pairs()
+            .find(|(name, _)| name == "v")
+            .map(|(_, id)| id.into_owned())?,
+        ("youtube.com" | "youtube-nocookie.com", "shorts" | "live" | "embed" | "v") => {
+            path.next()?.to_owned()
+        }
+        _ => return None,
+    };
+    let valid = id.len() == 11
+        && id
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-' || byte == b'_');
+    valid.then_some(id)
+}
+
+/// Stands in for a YouTube player embedded in an article until the safety
+/// cleaning is done: a character no article uses, the video's ID, the same
+/// character again. `with_video_links` then puts a link to the video there.
+const VIDEO_MARK: char = '\u{E000}';
+
+/// The same HTML with each embedded YouTube player swapped for a mark (see
+/// `VIDEO_MARK`), so the reader still finds the video: the safety cleaning
+/// removes every frame, and would otherwise leave nothing in its place.
+fn without_youtube_players(html: &str) -> String {
+    if !html.contains("<iframe") && !html.contains("<IFRAME") {
+        return html.to_owned();
+    }
+    let mut document = scraper::Html::parse_fragment(html);
+    let frames = scraper::Selector::parse("iframe").expect("a fixed, valid selector");
+    let players: Vec<_> = document
+        .select(&frames)
+        .filter_map(|frame| {
+            let source = frame.value().attr("src")?;
+            // An address starting `//` takes the article's own scheme.
+            let source = source
+                .strip_prefix("//")
+                .map_or(source.to_owned(), |rest| format!("https://{rest}"));
+            Some((frame.id(), youtube_video(&Url::parse(&source).ok()?)?))
+        })
+        .collect();
+    if players.is_empty() {
+        return html.to_owned();
+    }
+    for (id, video) in players {
+        if let Some(mut node) = document.tree.get_mut(id) {
+            node.insert_after(scraper::Node::Text(scraper::node::Text {
+                text: format!("{VIDEO_MARK}{video}{VIDEO_MARK}").into(),
+            }));
+            node.detach();
+        }
+    }
+    document.root_element().inner_html()
+}
+
+/// Puts a link to the video where each mark is. Any mark a feed wrote itself
+/// was taken out before, so each one left is in plain text, where a link can
+/// go; only a valid video ID becomes one.
+fn with_video_links(html: &str) -> String {
+    if !html.contains(VIDEO_MARK) {
+        return html.to_owned();
+    }
+    let mut parts = html.split(VIDEO_MARK);
+    let mut out = parts.next().unwrap_or_default().to_owned();
+    let mut rest: Vec<&str> = parts.collect();
+    rest.reverse();
+    while let Some(part) = rest.pop() {
+        let watch = Url::parse(&format!("https://www.youtube.com/watch?v={part}")).ok();
+        let closed = !rest.is_empty();
+        match watch.as_ref().and_then(youtube_video) {
+            Some(video) if closed && video == part => {
+                out.push_str(&format!(
+                    r#"<a href="https://www.youtube.com/watch?v={video}" target="_blank" rel="noopener noreferrer">Watch the video on YouTube</a>"#
+                ));
+                out.push_str(rest.pop().unwrap_or_default());
+            }
+            _ => out.push_str(part),
+        }
+    }
+    out
+}
+
+/// Plain text with line breaks (a video's description) as HTML paragraphs,
+/// its web addresses as links. The result still goes through the safety
+/// cleaning.
+fn paragraphs(text: &str) -> String {
+    let escape = |text: &str| {
+        text.replace('&', "&amp;")
+            .replace('<', "&lt;")
+            .replace('>', "&gt;")
+            .replace('"', "&quot;")
+    };
+    let line = |line: &str| {
+        line.split(' ')
+            .map(|word| match Url::parse(word) {
+                Ok(url) if matches!(url.scheme(), "http" | "https") => {
+                    format!(r#"<a href="{0}">{0}</a>"#, escape(word))
+                }
+                _ => escape(word),
+            })
+            .collect::<Vec<_>>()
+            .join(" ")
+    };
+    text.replace("\r\n", "\n")
+        .split("\n\n")
+        .map(str::trim)
+        .filter(|paragraph| !paragraph.is_empty())
+        .map(|paragraph| {
+            format!(
+                "<p>{}</p>",
+                paragraph.lines().map(line).collect::<Vec<_>>().join("<br>")
+            )
+        })
+        .collect()
 }
 
 /// Makes an article's relative addresses whole, using its own address;
@@ -408,6 +551,95 @@ mod tests {
         assert!(
             summary.contains(r#"src="https://example.com/photo.jpg""#),
             "{summary}"
+        );
+    }
+
+    #[test]
+    fn youtube_addresses_name_their_video() {
+        for address in [
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "https://youtube.com/watch?feature=share&v=dQw4w9WgXcQ",
+            "https://m.youtube.com/watch?v=dQw4w9WgXcQ",
+            "https://youtu.be/dQw4w9WgXcQ?t=42",
+            "https://www.youtube.com/shorts/dQw4w9WgXcQ",
+            "https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0",
+            "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
+        ] {
+            assert_eq!(
+                youtube_video(&url(address)).as_deref(),
+                Some("dQw4w9WgXcQ"),
+                "{address}"
+            );
+        }
+        for address in [
+            "https://www.youtube.com/",
+            "https://www.youtube.com/@channel",
+            "https://www.youtube.com/watch?v=short",
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ%22onload",
+            "https://example.com/watch?v=dQw4w9WgXcQ",
+            "https://youtu.be.example.com/dQw4w9WgXcQ",
+        ] {
+            assert_eq!(youtube_video(&url(address)), None, "{address}");
+        }
+    }
+
+    #[test]
+    fn a_youtube_videos_description_is_its_text() {
+        let atom = br#"<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns:media="http://search.yahoo.com/mrss/" xmlns="http://www.w3.org/2005/Atom">
+ <title>A Channel</title>
+ <link rel="alternate" href="https://www.youtube.com/channel/UC123"/>
+ <entry>
+  <id>yt:video:dQw4w9WgXcQ</id>
+  <yt:videoId>dQw4w9WgXcQ</yt:videoId>
+  <title>A video</title>
+  <link rel="alternate" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"/>
+  <published>2026-10-01T10:00:00+00:00</published>
+  <media:group>
+   <media:title>A video</media:title>
+   <media:content url="https://www.youtube.com/v/dQw4w9WgXcQ?version=3" type="application/x-shockwave-flash" width="640" height="390"/>
+   <media:description>First line &lt;b&gt;not bold&lt;/b&gt;
+More at https://example.com/notes
+
+Second paragraph</media:description>
+  </media:group>
+ </entry>
+</feed>"#;
+        let feed = parse(
+            atom,
+            &url("https://www.youtube.com/feeds/videos.xml?channel_id=UC123"),
+        )
+        .unwrap();
+        let content = feed.articles[0].content.as_deref().unwrap();
+        assert!(content.starts_with("<p>First line &lt;b&gt;not bold&lt;/b&gt;<br>More at <a href=\"https://example.com/notes\""), "{content}");
+        assert!(content.contains("noopener"), "{content}");
+        assert!(content.ends_with("<p>Second paragraph</p>"), "{content}");
+    }
+
+    #[test]
+    fn a_media_description_is_text_only_for_a_youtube_video() {
+        let rss = br#"<?xml version="1.0"?>
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><title>Photos</title>
+<item><title>A photo</title><link>https://example.com/photo</link>
+<media:content url="https://example.com/a.jpg" medium="image"><media:description>A caption</media:description></media:content>
+</item></channel></rss>"#;
+        let feed = parse(rss, &url("https://example.com/feed.xml")).unwrap();
+        assert_eq!(feed.articles[0].content, None);
+    }
+
+    #[test]
+    fn an_embedded_youtube_player_becomes_a_link_to_the_video() {
+        let html = clean(
+            "<p>Watch this:</p><iframe src=\"//www.youtube.com/embed/dQw4w9WgXcQ\" onload=\"x()\"></iframe>\
+             <iframe src=\"https://evil.example/embed/dQw4w9WgXcQ\"></iframe>\
+             <p title=\"\u{E000}dQw4w9WgXcQ\u{E000}\">\u{E000}abc\u{E000}</p>",
+            "html",
+            &url("https://example.com/post"),
+        );
+        assert_eq!(
+            html,
+            "<p>Watch this:</p><a href=\"https://www.youtube.com/watch?v=dQw4w9WgXcQ\" target=\"_blank\" rel=\"noopener noreferrer\">Watch the video on YouTube</a>\
+             <p title=\"dQw4w9WgXcQ\">abc</p>"
         );
     }
 
