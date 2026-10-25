@@ -236,16 +236,18 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 
 ## 12. WebSub (instant updates from publishers who offer it)
 
-*Moved to V2 (23 October 2026): V1 is for the owner alone. Kept here so V2 starts from it. See `docs/decisions/0012-v1-for-one-reader.md`.*
+*Built in V2 (25 October 2026, decision 0069).*
 
 **What it does**
-- Some publishers announce new articles the moment they publish, through a service called a "hub" (the standard is called WebSub). When a feed offers this, nine turtles signs up and receives new articles as they're published.
-- nine turtles checks that announcements are genuine (each subscription has its own secret).
-- Subscriptions are renewed before they expire.
-- Regular checking continues, less often, as a backup.
+- Some publishers announce new articles the moment they publish, through a service called a "hub" (the standard is called WebSub). When a feed names a hub, nine turtles signs up with it, and the hub sends each new article to nine turtles as it's published.
+- Nothing on screen changes: new articles wait for the reader as always ("New items · press r", section 13). They simply arrive sooner.
+- nine turtles checks that announcements are genuine: each feed's subscription has its own secret, and an announcement without the right signature is ignored.
+- Subscriptions are renewed a day before they expire (halfway through a short one). A hub that never confirms is asked again once a week.
+- Regular checking continues as a backup, at most twice a day while the hub delivers.
+- It only works where hubs can reach nine turtles: the live app, at `https://app.nineturtles.app` (the setting `NINE_TURTLES_PUBLIC_URL`). A copy running on a computer without it checks feeds as before.
 
 **How to check it**
-1. Follow a blog that uses WebSub (we'll pick one together at that milestone).
+1. Follow a blog that uses WebSub: most blogs on WordPress.com or Blogger do, and so does a YouTube channel's feed.
 2. When it publishes, "New items · press r" appears within a few minutes rather than hours.
 
 ## 13. Refresh: the view waits for you
@@ -486,6 +488,6 @@ Covered by sections 14 and 22.
 
 From DESIGN.md: YouTube player, public reading list page, per-feed reading modes, passkey sign-in, Chinese and Japanese search, multiple users. (The own domain name was chosen on 25 October 2026: nineturtles.app, with the app at app.nineturtles.app; decision 0066.)
 
-Moved to V2 on 23 October 2026: backups and moving hosts, river mode (built 25 October 2026), WebSub, the feed health page, the yearly clean-up, the feeds guide page, and keeping a tab that was left open across an update working without a reload.
+Moved to V2 on 23 October 2026: backups and moving hosts, river mode (built 25 October 2026), WebSub (built 25 October 2026), the feed health page, the yearly clean-up, the feeds guide page, and keeping a tab that was left open across an update working without a reload.
 
 Never: notifications, badges, streaks, reading stats, infinite scroll, algorithmic ranking, likes or comments, platform share buttons, scraping full articles, decorative effects or animation.

@@ -287,7 +287,7 @@ Moved from V1 on 23 October 2026, because V1 is for the owner alone (decision 00
 
 - **Backups and recovery:** nightly copies outside the host, and one before every database structure change.
 - **River mode.** Built 25 October 2026 (SPEC section 10).
-- **WebSub.**
+- **WebSub.** Built 25 October 2026 (decision 0069).
 - **Feed health page.**
 - **The yearly clean-up** of unstarred articles.
 - **The "New to feeds?" guide page.**

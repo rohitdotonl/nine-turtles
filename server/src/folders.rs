@@ -255,6 +255,12 @@ pub async fn clear(connection: &mut SqliteConnection, id: i64) -> Result<bool, s
         .bind(id)
         .execute(&mut *connection)
         .await?;
+    // Its hub's deliveries now find no address and are refused; the hub
+    // stops when its lease ends.
+    sqlx::query("DELETE FROM websub WHERE feed_id = ?")
+        .bind(id)
+        .execute(&mut *connection)
+        .await?;
     sqlx::query(
         "DELETE FROM feeds WHERE id = ? AND NOT EXISTS (SELECT 1 FROM articles WHERE feed_id = ?)",
     )
