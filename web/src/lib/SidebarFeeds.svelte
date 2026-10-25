@@ -1,5 +1,8 @@
 <!--
-  The sidebar's folders and feeds (SPEC section 5): folders A to Z, each
+  The sidebar's saved searches, folders and feeds (SPEC section 5). Saved
+  searches come first, A to Z, under their own small heading, only once
+  there is one; each has a small search icon in the icon column, where
+  Unread, Starred and All have theirs, and no count. Then folders A to Z, each
   with a muted unread count (its feeds' counts added up) and a button that
   shows or hides the feeds in it, then the feeds in no folder, A to Z. A
   feed in two folders is listed under both. Which folders are open is
@@ -18,7 +21,8 @@
   in, and a tap on its name opens its list (decision 0043).
 
   While the sidebar search holds text, a flat list of the folders and feeds
-  whose name contains it takes their place.
+  whose name contains it takes their place (saved searches aren't in it:
+  the find field is for feeds and folders, DESIGN.md → Exceptions log).
 
   In river mode (SPEC section 10) there are no counts.
 -->
@@ -26,10 +30,12 @@
   import Icon from "./Icon.svelte";
   import { findByName, folderUnread, inDevanagari, unreadLabel, type Feed, type Folder } from "./feeds";
   import { pathFor, type Route } from "./router";
+  import type { SavedSearch } from "./saved";
 
   let {
     feeds,
     folders,
+    searches,
     route,
     search,
     follow,
@@ -38,6 +44,8 @@
   }: {
     feeds: Feed[];
     folders: Folder[];
+    /** Saved searches, alphabetically (SPEC section 14). */
+    searches: SavedSearch[];
     route: Route;
     /** What's typed in the sidebar search. */
     search: string;
@@ -116,6 +124,24 @@
   </li>
 {/snippet}
 
+{#snippet searchRow(saved: SavedSearch)}
+  {@const place: Route = { kind: "search", id: saved.id }}
+  <li>
+    <a
+      href={pathFor(place)}
+      aria-current={isHere(place) ? "page" : undefined}
+      onclick={(event) => follow(event, place)}
+      title={saved.name}
+      class={[
+        "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-2.5 pr-3.5 pl-3 text-ui pointer-fine:text-small",
+        isHere(place) ? "font-semibold text-ink" : "text-ink",
+      ]}
+      ><span class={isHere(place) ? "text-ink" : "text-muted"}><Icon name="search" size={16} /></span
+      >{@render name(saved.name)}<span class="sr-only"> (saved search)</span>{@render leadsOn()}</a
+    >
+  </li>
+{/snippet}
+
 {#snippet folderLink(folder: Folder, padded: boolean)}
   {@const place: Route = { kind: "folder", id: folder.id }}
   <a
@@ -146,6 +172,14 @@
     </ul>
   {/if}
 {:else}
+  {#if searches.length > 0}
+    <h2 class="sidebar-section">Saved searches</h2>
+    <ul>
+      {#each searches as saved (saved.id)}
+        {@render searchRow(saved)}
+      {/each}
+    </ul>
+  {/if}
   {#if folders.length > 0}
     <h2 class="sidebar-section">Folders</h2>
     <ul>

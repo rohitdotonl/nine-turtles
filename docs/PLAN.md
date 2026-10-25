@@ -380,6 +380,7 @@ each with screenshots:
 | Feed health page | ✅ 25 October 2026 | Milestone 11, SPEC section 17, decision 0071 |
 | Health check every 15 minutes, with an email | ✅ 25 October 2026 | `docs/operations/health-check.md`, decision 0075 |
 | Tidying many feeds at once (Your feeds: Edit, Move to…, quiet feeds) | ✅ 25 October 2026 | SPEC section 15, decision 0080 |
+| Saved searches in the sidebar | ✅ 25 October 2026 | SPEC sections 5 and 14, decision 0081 |
 | Backups and moving hosts | ⬜ | Milestone 3 above, `docs/ENGINEERING.md` → "Hosting" |
 | The yearly clean-up of unstarred articles | ⬜ | SPEC section 23 (after backups) |
 | The "New to feeds?" guide page | ⬜ | SPEC section 2 (the app's own page; the website's page of the same name, nineturtles.app/new-to-feeds/, is separate and doesn't count) |
