@@ -1,5 +1,5 @@
 <!--
-  Settings › Readers › All readers (SPEC section 18, decision 0089): the
+  Settings › Readers › All readers (SPEC section 18, decision 0090): the
   owner's page. First how this nine turtles is doing, in counts (readers,
   feeds, articles, the database's size, backups, email); then what needs a
   look, in plain words, and the problems noted since nine turtles last

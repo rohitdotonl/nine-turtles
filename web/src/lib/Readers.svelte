@@ -3,7 +3,7 @@
   Settings that only the owner sees. Readers: the owner's own email (to sign
   in with, beside the password alone, and for "Forgot your password?"
   links; saving it asks for their password, decision 0088) and All readers ›,
-  the Readers page (decision 0089). Sign-up: Closed (the default),
+  the Readers page (decision 0090). Sign-up: Closed (the default),
   Invite link, or Open, which can be chosen only while nine turtles can send
   the emails that confirm an address (decision 0088). An invite link is made
   here, shown once with a Copy button, and replaced by making a new one. Until

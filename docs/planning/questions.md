@@ -14,7 +14,7 @@ written into `DESIGN.md`, `ENGINEERING.md`, `SPEC.md`, `PLAN.md` and
   anyone can sign up, someone qualified should read both. Not blocking
   anything today.
 - **Show when each reader was last here on your Readers page?** (26 October
-  2026, decision 0089). nine turtles already knows the day each reader last
+  2026, decision 0090). nine turtles already knows the day each reader last
   opened it, signed in or synced (feeds whose readers have all been away for
   30 days are checked once a day). Showing it, as "Here today" or "Away for
   40 days", would tell you whether a tester has tried nine turtles yet. It's
@@ -50,7 +50,7 @@ written into `DESIGN.md`, `ENGINEERING.md`, `SPEC.md`, `PLAN.md` and
 | Q18 | Same article in two feeds | Shows in both. |
 | Q19 | Settings across devices | Reading settings shared; appearance per device. |
 | Q20 | Dead feeds | 7 days "not found" or 3 weeks of any failure; still checked daily. |
-| Q21 | Deleting old articles safely (V2) | Clean-up only runs after a successful nightly backup. |
+| Q21 | Deleting old articles safely (V2) | Clean-up only runs after a successful nightly backup. Built 25 October 2026 (decision 0089). |
 | Q22 | Old unread articles | Any unstarred article older than a year is removed, read or not. (DESIGN.md updated.) |
 | Q23 | Starred export | JSON Feed file. |
 | Q24 | Size budget | 150 KB of app code and styles, 400 KB of fonts. |

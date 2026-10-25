@@ -1,4 +1,4 @@
-// The owner's Readers page (SPEC section 18, decision 0089): how this nine
+// The owner's Readers page (SPEC section 18, decision 0090): how this nine
 // turtles is doing, in counts, and one line for each reader: their email,
 // when they joined and how many feeds they follow (never which). Nothing
 // about what anyone reads.

@@ -167,7 +167,7 @@ and the screen never changed under you.
 - OPML import and export.
 - **This is where you provide your OPML file.** It's used on your live app
   (or locally) only, never committed; `.gitignore` already blocks `*.opml`.
-- Measure how big your database will be with your real feeds, to check the 1 GB disk is enough. V1 keeps every article (the yearly clean-up is V2), so this also tells us how many years the disk lasts. This needs your real feeds, so it happens after you import them on the live app: the daily check reports the size then, and again a week later (decision 0020).
+- Measure how big your database will be with your real feeds, to check the 1 GB disk is enough. V1 kept every article (the yearly clean-up came in V2), so this also tells us how many years the disk lasts. This needs your real feeds, so it happens after you import them on the live app: the daily check reports the size then, and again a week later (decision 0020).
 
 **You can try:** import your OPML file and see your folders and feeds; export it and compare.
 
@@ -388,7 +388,7 @@ each with screenshots:
 | Saved searches in the sidebar | ✅ 25 October 2026 | SPEC sections 5 and 14, decision 0081 |
 | Rules and mutes | ✅ 25 October 2026 | SPEC section 27, decision 0077 |
 | Backups and moving hosts | ✅ 25 October 2026 (switched on once you add the storage settings) | Milestone 3 above, `docs/operations/backups.md`, `docs/operations/moving-hosts.md`, decision 0076 |
-| The yearly clean-up of unstarred articles | ⬜ | SPEC section 23 (after backups) |
+| The yearly clean-up of unstarred articles | ✅ 25 October 2026 | SPEC section 23, decision 0089 (runs only after each night's backup is stored) |
 | The "New to feeds?" guide page | ✅ 25 October 2026 | SPEC section 2, decision 0079 (in the app, a "New to feeds?" sheet in the first-visit welcome; it links to the website's guide at nineturtles.app/new-to-feeds/) |
 | A tab left open across an update keeps working | ✅ 25 October 2026 | SPEC section 18, decisions 0022 and 0085 |
 
@@ -404,7 +404,7 @@ feed is still fetched and stored once; everything personal gets an owner.
 | Part two: each reader's own feeds, marks, stars, search and sync (structure change 12) | ✅ 25 October 2026 |
 | Part three: signing in by email, and the sign-up switch with invite links (structure change 13, decision 0087) | ✅ 25 October 2026 |
 | Part four: account emails over SMTP (confirming Open sign-ups, a new password, changing email) and deleting an account (structure change 14, decision 0088) | ✅ 25 October 2026 |
-| Milestone 5: the owner's Readers page, at most 1,000 feeds per reader, and feeds nobody opens checked once a day (no structure change, decision 0089) | 🔨 Pull request open |
+| Milestone 5: the owner's Readers page, at most 1,000 feeds per reader, and feeds nobody opens checked once a day (no structure change, decision 0090) | 🔨 Pull request open |
 
 ## V2: YouTube videos
 

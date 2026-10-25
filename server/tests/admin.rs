@@ -1,5 +1,5 @@
 //! The owner's Readers page and the fair limits (SPEC sections 11, 15, 16
-//! and 18, decision 0089), tested against a real running nine turtles: at
+//! and 18, decision 0090), tested against a real running nine turtles: at
 //! most 1,000 feeds per reader, feeds whose every follower is away checked
 //! once a day, and the owner's page of readers, which never says which
 //! feeds anyone follows.
@@ -157,7 +157,7 @@ async fn only_the_owner_sees_the_readers_page_and_never_which_feeds() {
     assert_eq!(readers[1]["id"], reader);
     assert_eq!(readers[1]["feeds"], 3);
     assert_eq!(readers[1]["feeds_failing"], 0);
-    // Not when anyone was last here, until the owner decides (decision 0089).
+    // Not when anyone was last here, until the owner decides (decision 0090).
     assert!(readers[1].get("last_here").is_none());
     // How many, never which.
     let text = page.to_string();

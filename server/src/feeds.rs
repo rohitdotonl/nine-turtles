@@ -620,7 +620,8 @@ pub async fn make_room(
 /// never misses one and a number never means two articles. One already stored
 /// (same fingerprint, same feed) that the publisher has since edited gets
 /// the new words quietly: it keeps its place in the list, its read mark and
-/// its star (SPEC section 11). Every reader whose subscription isn't
+/// its star (SPEC section 11). One the yearly clean-up removed stays
+/// removed (`cleanup`). Every reader whose subscription isn't
 /// cleared (including one waiting for Undo) gets an entry for each new one,
 /// unread, and each reader's rules then act on theirs (SPEC section 27).
 pub async fn store_articles(
@@ -638,6 +639,17 @@ pub async fn store_articles(
         .await?;
     for article in articles {
         if !seen.insert(article.fingerprint.as_str()) {
+            continue;
+        }
+        // Removed by the yearly clean-up: still listed, but not new.
+        let forgotten: Option<i64> = sqlx::query_scalar(
+            "SELECT 1 FROM forgotten_articles WHERE feed_id = ? AND fingerprint = ?",
+        )
+        .bind(feed_id)
+        .bind(&article.fingerprint)
+        .fetch_optional(&mut *connection)
+        .await?;
+        if forgotten.is_some() {
             continue;
         }
         let sort_at = article

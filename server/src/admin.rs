@@ -1,5 +1,5 @@
 //! The owner's Readers page and the fair limits (SPEC sections 11, 15 and
-//! 18, decision 0089).
+//! 18, decision 0090).
 //!
 //! - **The Readers page** (`GET /api/admin`, the owner only): how this nine
 //!   turtles is doing (readers, feeds, articles, the database's size,
@@ -7,7 +7,7 @@
 //!   one line for each reader: their email, when they joined, how many feeds
 //!   they follow and how many of those keep failing. Never which feeds,
 //!   nothing about what anyone reads, and not when anyone was last here (the
-//!   owner hasn't decided whether to show that yet; decision 0089).
+//!   owner hasn't decided whether to show that yet; decision 0090).
 //! - **At most `MOST_FEEDS` feeds per reader**, the owner too. Adding one
 //!   more, from the Add field, the welcome, another app or an OPML file, is
 //!   refused; Undo for unsubscribing always works.

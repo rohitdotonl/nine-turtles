@@ -65,7 +65,7 @@ test("an invite link lets someone sign up, and closing sign-up stops it", async 
   await expect(joining.getByRole("heading", { name: "Readers", exact: true })).toHaveCount(0);
 
   // The owner opens the Readers page from the keyboard and sees them, by
-  // email, with how many feeds (decision 0089), and goes back with Escape.
+  // email, with how many feeds (decision 0090), and goes back with Escape.
   await page.reload();
   await appReady(page);
   await readers.getByRole("link", { name: /^All readers/ }).focus();
