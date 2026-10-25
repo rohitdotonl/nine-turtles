@@ -21,7 +21,7 @@ use sqlx::{
     sqlite::{SqliteConnectOptions, SqliteConnection},
 };
 
-use crate::{AppState, db, log, now, storage::Storage};
+use crate::{AppState, cleanup, db, log, now, storage::Storage};
 
 /// Nightly copies are kept for this many nights.
 pub const NIGHTLY_KEPT: usize = 30;
@@ -72,6 +72,9 @@ pub async fn run(state: AppState) {
                 Ok(name) => {
                     log::info(&format!("backed up the database as {name}"));
                     remember(&state, &name);
+                    // Only now, with tonight's copy safely stored, are
+                    // old articles removed (decision 0089).
+                    cleanup::after_backup(&state.db, at).await;
                 }
                 Err(error) => log::problem(&format!(
                     "tonight's backup failed; trying again in an hour: {error}"

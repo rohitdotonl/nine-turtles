@@ -21,7 +21,7 @@ Help people leave social media and return to reading the open web. Social media 
 - **A podcast player:** audio appears as a link to the original. (YouTube videos play in YouTube's own player, since 25 October 2026.)
 - **A newsletter inbox:** no email address that turns newsletters into feeds.
 - **A web scraper:** it shows what publishers put in their feeds (second floor).
-- **A permanent archive:** unstarred articles are kept for one year (the clean-up comes in V2; V1 keeps everything).
+- **A permanent archive:** unstarred articles are kept for one year (the yearly clean-up, built 25 October 2026, decision 0089).
 - **A shared space:** readers on one nine turtles never see each other's feeds, marks, searches or reading (decision 0086).
 
 ## Design reference: Apple Books
@@ -292,6 +292,6 @@ Moved from V1 on 23 October 2026, because V1 is for the owner alone (decision 00
 - **River mode.** Built 25 October 2026 (SPEC section 10).
 - **WebSub.** Built 25 October 2026 (decision 0069).
 - **Feed health page.** Built 25 October 2026 (decision 0071).
-- **The yearly clean-up** of unstarred articles.
+- **The yearly clean-up** of unstarred articles. Built 25 October 2026 (decision 0089).
 - **The "New to feeds?" guide page.** Done 25 October 2026: a guide on the website, and a "New to feeds?" sheet in the welcome (decision 0079).
 - **A tab left open across an update keeps working** without a reload. Built 25 October 2026 (decision 0085).
