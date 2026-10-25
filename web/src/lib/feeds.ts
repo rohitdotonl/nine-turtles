@@ -29,7 +29,7 @@ export type Article = {
   at: number;
   read: boolean;
   starred: boolean;
-  /** A rule (or the reader) muted it: only search and the Muted page show it (SPEC section 27). */
+  /** A rule (or the reader) muted it: only search, the Muted page and Starred show it (SPEC section 27). */
   muted: boolean;
   /**
    * A search result's line of its text around the first searched word, in
@@ -457,13 +457,15 @@ export async function renameFolder(id: number, name: string): Promise<Refusal | 
   return (await change(`/api/folders/${id}`, { name })).refusal;
 }
 
-export async function deleteFolder(id: number): Promise<Refusal | undefined> {
-  return (await change(`/api/folders/${id}/delete`, {})).refusal;
+/** Deletes a folder. Answers the rules that applied to it (SPEC section 27), for Undo to hand back. */
+export async function deleteFolder(id: number): Promise<{ refusal?: Refusal; rules: number[] }> {
+  const { refusal, answer } = await change(`/api/folders/${id}/delete`, {});
+  return { refusal, rules: Array.isArray(answer?.rules) ? answer.rules.map(Number) : [] };
 }
 
-/** Creates a folder with these feeds in it (Undo for deleting one). */
-export async function createFolder(name: string, feeds: number[]): Promise<Refusal | undefined> {
-  return (await change("/api/folders", { name, feeds })).refusal;
+/** Creates a folder with these feeds (and rules) in it: Undo for deleting one. */
+export async function createFolder(name: string, feeds: number[], rules: number[] = []): Promise<Refusal | undefined> {
+  return (await change("/api/folders", { name, feeds, rules })).refusal;
 }
 
 /** What an edit page says when a change wasn't made. */

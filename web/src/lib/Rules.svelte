@@ -96,6 +96,8 @@
     }
     await reload();
     message = "Deleted the rule.";
+    // Made again under a new number, so it now runs after the others: harmless,
+    // as each rule only adds a mark, and the order never decides what's kept.
     undo = async () => {
       const made = await createRule({ ...rule, paused: rule.paused });
       if (typeof made === "string") {
@@ -134,9 +136,16 @@
     await focusLine();
   }
 
-  function notNow() {
+  /** The button the keyboard was on is gone: its place goes to the group's heading, never the page's top. */
+  async function keepPlace() {
+    await tick();
+    document.getElementById("rules-heading")?.focus();
+  }
+
+  async function notNow() {
     question = undefined;
     message = "Rule saved. It acts on new articles as they arrive.";
+    await keepPlace();
   }
 
   async function runUndo() {
@@ -146,6 +155,7 @@
     busy = true;
     await doing();
     busy = false;
+    await keepPlace();
   }
 
   async function toggle(rule: Rule, on: boolean) {

@@ -707,7 +707,7 @@
   /** Deletes a folder (never its feeds), then shows Unread (All in river mode) with "Deleted … · Undo". */
   async function deleteThis(folder: Folder): Promise<string | undefined> {
     const inside = (feeds ?? []).filter((feed) => feed.folders.includes(folder.id)).map((feed) => feed.id);
-    const refusal = await deleteFolder(folder.id);
+    const { refusal, rules } = await deleteFolder(folder.id);
     if (refusal) return refused(refusal, "folder");
     await loadFeeds();
     go(
@@ -715,7 +715,7 @@
       {
         message: `Deleted the folder ${folder.name}`,
         undo: async () => {
-          const problem = await createFolder(folder.name, inside);
+          const problem = await createFolder(folder.name, inside, rules);
           if (problem) return refused(problem, "folder");
           await loadFeeds();
           return undefined;

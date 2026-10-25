@@ -1,4 +1,4 @@
-//! Rules and mutes (SPEC section 27, decision 0073): "when a new article
+//! Rules and mutes (SPEC section 27, decision 0077): "when a new article
 //! matches this, do that", written by the reader in plain fields.
 //!
 //! A rule looks for a word or phrase (in the title, or in the title or the
@@ -11,8 +11,8 @@
 //! articles that already match; the screen asks first and offers Undo.
 //!
 //! A muted article is kept and counts as read, so it waits in no list and
-//! other feed readers see it as read too. Only the Muted page and search
-//! show it; unmuting it (or marking it unread) brings it back, unread.
+//! other feed readers see it as read too. Only the Muted page, search and
+//! (if it's starred) Starred show it; unmuting it (or marking it unread) brings it back, unread.
 
 use std::collections::HashSet;
 
@@ -321,35 +321,49 @@ async fn act(
     Ok(())
 }
 
+/// How many unread articles `matching_now` reads at a time, so even an
+/// all-feeds rule never holds every article's text in memory at once.
+const MATCH_BATCH: i64 = 500;
+
 /// The unread articles of followed feeds a rule would change now: for a
-/// star rule, only those not starred yet.
-async fn matching_now(
-    connection: &mut SqliteConnection,
-    rule: &Rule,
-) -> Result<Vec<i64>, sqlx::Error> {
+/// star rule, only those not starred yet. It only reads, a batch at a time,
+/// so callers run it outside a write, never holding up background checks.
+async fn matching_now(db: &sqlx::SqlitePool, rule: &Rule) -> Result<Vec<i64>, sqlx::Error> {
+    let mut found = Vec::new();
     if rule.place_gone {
-        return Ok(Vec::new());
+        return Ok(found);
     }
-    let lines: Vec<ArticleLine> = sqlx::query_as(
-        "SELECT articles.id, articles.feed_id, articles.title, articles.author,
-                articles.content, articles.summary
-         FROM articles JOIN feeds ON feeds.id = articles.feed_id
-         WHERE articles.read = 0 AND feeds.unsubscribed_at IS NULL
-             AND (?1 = 0 OR articles.starred = 0)
-             AND (?2 IS NULL OR articles.feed_id = ?2)
-             AND (?3 IS NULL OR articles.feed_id IN
-                  (SELECT feed_id FROM feed_folders WHERE folder_id = ?3))",
-    )
-    .bind(rule.action == Action::Star)
-    .bind(rule.feed_id)
-    .bind(rule.folder_id)
-    .fetch_all(&mut *connection)
-    .await?;
-    Ok(candidates(lines)
-        .iter()
-        .filter(|article| rule.matches(article))
-        .map(|article| article.id)
-        .collect())
+    let mut after = 0;
+    loop {
+        let lines: Vec<ArticleLine> = sqlx::query_as(
+            "SELECT articles.id, articles.feed_id, articles.title, articles.author,
+                    articles.content, articles.summary
+             FROM articles JOIN feeds ON feeds.id = articles.feed_id
+             WHERE articles.read = 0 AND feeds.unsubscribed_at IS NULL AND articles.id > ?4
+                 AND (?1 = 0 OR articles.starred = 0)
+                 AND (?2 IS NULL OR articles.feed_id = ?2)
+                 AND (?3 IS NULL OR articles.feed_id IN
+                      (SELECT feed_id FROM feed_folders WHERE folder_id = ?3))
+             ORDER BY articles.id LIMIT ?5",
+        )
+        .bind(rule.action == Action::Star)
+        .bind(rule.feed_id)
+        .bind(rule.folder_id)
+        .bind(after)
+        .bind(MATCH_BATCH)
+        .fetch_all(db)
+        .await?;
+        let Some(last) = lines.last() else {
+            return Ok(found);
+        };
+        after = last.0;
+        found.extend(
+            candidates(lines)
+                .iter()
+                .filter(|article| rule.matches(article))
+                .map(|article| article.id),
+        );
+    }
 }
 
 /// Every rule, and how many articles are muted, for Settings.
@@ -445,7 +459,7 @@ async fn create_rule(
     State(state): State<AppState>,
     Json(form): Json<RuleForm>,
 ) -> Response {
-    let made: Result<Result<(i64, usize), &str>, sqlx::Error> = async {
+    let made: Result<Result<(i64, usize), &'static str>, sqlx::Error> = async {
         let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
         let (words, author) = match checked(&mut transaction, &form).await? {
             Ok(parts) => parts,
@@ -467,11 +481,12 @@ async fn create_rule(
         .bind(now())
         .fetch_one(&mut *transaction)
         .await?;
-        let matching = match rule(&mut transaction, id).await? {
-            Some(rule) => matching_now(&mut transaction, &rule).await?.len(),
+        let made = rule(&mut transaction, id).await?;
+        transaction.commit().await?;
+        let matching = match made {
+            Some(rule) => matching_now(&state.db, &rule).await?.len(),
             None => 0,
         };
-        transaction.commit().await?;
         Ok(Ok((id, matching)))
     }
     .await;
@@ -562,11 +577,20 @@ async fn delete_rule(_: SignedIn, State(state): State<AppState>, Path(id): Path<
 /// the articles it changed, so the screen can undo exactly those.
 async fn apply_rule(_: SignedIn, State(state): State<AppState>, Path(id): Path<i64>) -> Response {
     let applied: Result<Option<(Action, Vec<i64>)>, sqlx::Error> = async {
-        let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
-        let Some(rule) = rule(&mut transaction, id).await? else {
+        let found = rule(&mut *state.db.acquire().await?, id).await?;
+        let Some(rule) = found else {
             return Ok(None);
         };
-        let ids = matching_now(&mut transaction, &rule).await?;
+        // Found first, only reading; then changed in one short write. Only
+        // those still unread are changed, and only those are answered.
+        let ids = matching_now(&state.db, &rule).await?;
+        let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
+        let ids: Vec<i64> = sqlx::query_scalar(
+            "SELECT id FROM articles WHERE id IN (SELECT value FROM json_each(?)) AND read = 0",
+        )
+        .bind(serde_json::to_string(&ids).unwrap_or_else(|_| "[]".to_owned()))
+        .fetch_all(&mut *transaction)
+        .await?;
         act(&mut transaction, rule.action, &ids).await?;
         transaction.commit().await?;
         Ok(Some((rule.action, ids)))
@@ -608,18 +632,38 @@ async fn list_muted(_: SignedIn, State(state): State<AppState>) -> Response {
 }
 
 /// The feed or folder a rule applied to is gone: it stays, matching nothing,
-/// and Settings says so, until the reader chooses somewhere else.
+/// and Settings says so, until the reader chooses somewhere else. Answers
+/// the rules it changed, so Undo for deleting a folder can hand them back
+/// (`back_in_folder`).
 pub async fn place_gone(
     connection: &mut SqliteConnection,
     feed_id: Option<i64>,
     folder_id: Option<i64>,
-) -> Result<(), sqlx::Error> {
-    sqlx::query(
+) -> Result<Vec<i64>, sqlx::Error> {
+    sqlx::query_scalar(
         "UPDATE rules SET place_gone = 1, feed_id = NULL, folder_id = NULL
-         WHERE feed_id = ? OR folder_id = ?",
+         WHERE feed_id = ? OR folder_id = ? RETURNING id",
     )
     .bind(feed_id)
     .bind(folder_id)
+    .fetch_all(connection)
+    .await
+}
+
+/// Undo for deleting a folder: the rules it had go back to the folder made
+/// again, if they still have nowhere else.
+pub async fn back_in_folder(
+    connection: &mut SqliteConnection,
+    folder_id: i64,
+    rules: &[i64],
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "UPDATE rules SET folder_id = ?, place_gone = 0
+         WHERE id IN (SELECT value FROM json_each(?)) AND place_gone = 1
+             AND feed_id IS NULL AND folder_id IS NULL",
+    )
+    .bind(folder_id)
+    .bind(serde_json::to_string(rules).unwrap_or_else(|_| "[]".to_owned()))
     .execute(connection)
     .await?;
     Ok(())

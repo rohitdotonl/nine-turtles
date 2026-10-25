@@ -390,6 +390,42 @@ async fn a_rule_whose_folder_goes_stays_and_matches_nothing() {
 }
 
 #[tokio::test]
+async fn undo_for_deleting_a_folder_hands_its_rules_back() {
+    let reader = Reader::new().await;
+    let blog = reader.follow("blog.xml").await;
+    let (_, folder) = reader
+        .post("/api/folders", json!({ "name": "Tech", "feeds": [blog] }))
+        .await;
+    let folder = folder["folder"]["id"].as_i64().unwrap();
+    reader
+        .post(
+            "/api/rules",
+            json!({ "words": "laptop", "folder_id": folder, "action": "mute" }),
+        )
+        .await;
+    let (status, deleted) = reader
+        .post(&format!("/api/folders/{folder}/delete"), json!({}))
+        .await;
+    assert_eq!(status, StatusCode::OK);
+
+    // Undo makes the folder again, with its feeds and its rules.
+    let (status, made) = reader
+        .post(
+            "/api/folders",
+            json!({ "name": "Tech", "feeds": [blog], "rules": deleted["rules"] }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::CREATED);
+    let rule = &reader.get("/api/rules").await["rules"][0];
+    assert_eq!(rule["place_gone"], false);
+    assert_eq!(rule["folder_id"], made["folder"]["id"]);
+
+    reader.write("1", "A laptop", "A", "Words.");
+    reader.check(blog).await;
+    assert_eq!(reader.unread_count(blog).await, 0);
+}
+
+#[tokio::test]
 async fn marking_a_muted_article_unread_unmutes_it() {
     let reader = Reader::new().await;
     reader

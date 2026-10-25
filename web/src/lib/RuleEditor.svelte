@@ -10,6 +10,7 @@
   as a group of its own and Save at the screen's foot.
 -->
 <script lang="ts">
+  import { tick } from "svelte";
   import Icon from "./Icon.svelte";
   import PageHead from "./PageHead.svelte";
   import Sheet from "./Sheet.svelte";
@@ -107,6 +108,13 @@
 
   let title = $derived(rule ? "Edit rule" : "New rule");
 
+  // The title takes the keyboard's place as the editor opens, so screen
+  // readers start there (as every sheet's does), also on a phone, where it's
+  // a screen of Settings' own rather than a place of its own.
+  $effect(() => {
+    tick().then(() => heading?.focus());
+  });
+
   /** Escape closes the editor unchanged, before anything else hears it (Settings itself would close). */
   function escape(event: KeyboardEvent) {
     if (event.key !== "Escape" || event.defaultPrevented) return;
@@ -142,11 +150,12 @@
           type="text"
           autocomplete="off"
           placeholder="sponsored"
+          aria-describedby="rule-words-help"
           aria-invalid={message !== "" && !words.trim() && !author.trim()}
           class="field"
         />
       </label>
-      <span class="field-help">Found as whole words, whatever their capital letters.</span>
+      <span id="rule-words-help" class="field-help">Found as whole words, whatever their capital letters.</span>
     </div>
 
     <fieldset class="flex min-w-0 flex-col gap-1.5">

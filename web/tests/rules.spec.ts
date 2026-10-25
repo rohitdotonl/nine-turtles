@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
-import { appReady, follow, signIn } from "./screens";
+import { appReady, follow, signIn, tabTo } from "./screens";
 
 // SPEC section 27: rules and mutes. Each run follows a blog of its own and
 // keeps its rules to that blog, so tests running side by side never meet.
@@ -123,4 +123,54 @@ test("a star rule acts on an article as it arrives; rules pause, and Delete has 
   await rules.getByRole("button", { name: "Undo" }).click();
   await expect(rules.getByRole("status")).toContainText("The rule is back.");
   await expect(rules).toContainText(`${sentence} Paused.`);
+});
+
+test("with the keyboard alone: a new rule, its switch, and Not now keep the keyboard's place", async ({ page }) => {
+  const name = `rules-keys-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
+  await page.goto(new URL("/settings", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
+  await page.reload();
+  await appReady(page);
+
+  const rules = page.getByRole("region", { name: "Rules" });
+  await tabTo(page, rules.getByRole("button", { name: "New rule…" }));
+  await page.keyboard.press("Enter");
+  const sheet = page.getByRole("dialog", { name: "New rule" }).or(page.getByRole("region", { name: "New rule" }));
+  await expect(sheet.getByRole("heading", { name: "New rule" })).toBeFocused();
+  await tabTo(page, sheet.getByRole("textbox", { name: "Word or phrase" }));
+  await page.keyboard.type("commonplace");
+  await tabTo(page, sheet.getByRole("combobox", { name: "In" }));
+  await sheet.getByRole("combobox", { name: "In" }).selectOption(`feed:${id}`);
+  await tabTo(page, sheet.getByRole("button", { name: "Save" }));
+  await page.keyboard.press("Enter");
+  await expect(sheet).toBeHidden();
+
+  // "On keeping a commonplace book (3)" already matches: the question takes the keyboard.
+  await expect(rules.getByRole("button", { name: "Mute them" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(rules.getByRole("button", { name: "Not now" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#rules-heading")).toBeFocused();
+
+  const sentence = `Mute articles with “commonplace” in the title, in Blog ${name}.`;
+  const on = rules.getByRole("switch", { name: `On: ${sentence}` });
+  await tabTo(page, on);
+  await page.keyboard.press("Space");
+  await expect(on).not.toBeChecked();
+  await expect(rules).toContainText(`${sentence} Paused.`);
+});
+
+test("on a phone, the back gesture closes the rule editor and stays in Settings", async ({ page }) => {
+  test.skip(test.info().project.name !== "phone", "Only a phone's editor is a screen of its own.");
+  await page.goto(new URL("/settings", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  await page.getByRole("button", { name: "New rule…" }).click();
+  await expect(page.getByRole("heading", { name: "New rule", level: 2 })).toBeVisible();
+  await page.goBack();
+  await expect(page.getByRole("heading", { name: "New rule", level: 2 })).toBeHidden();
+  await expect(page.getByRole("heading", { name: "Settings", level: 2 })).toBeVisible();
+  await expect(page).toHaveURL(/\/settings$/);
 });

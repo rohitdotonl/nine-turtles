@@ -506,7 +506,8 @@ pub struct ArticleRow {
     pub at: i64,
     pub read: bool,
     pub starred: bool,
-    /// A rule (or the reader) muted it: only search and the Muted page show it.
+    /// A rule (or the reader) muted it: only search, the Muted page and
+    /// Starred show it.
     pub muted: bool,
 }
 

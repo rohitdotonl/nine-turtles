@@ -98,13 +98,38 @@
 
   $effect(() => {
     if (ruleForFeed !== undefined) {
-      editing = { feedId: ruleForFeed };
+      openEditor({ feedId: ruleForFeed });
       ruleForFeed = undefined;
     }
   });
 
   /** Closing the editor: on a phone, Settings comes back, and the keyboard returns to Rules. */
+  /**
+   * On a phone the editor is a screen of its own, so it's a step in history:
+   * the back gesture closes it, unchanged, rather than leaving Settings.
+   */
+  let stepped = false;
+  function openEditor(next: { rule?: Rule; feedId?: number }) {
+    editing = next;
+    if (phone && !stepped) {
+      history.pushState(history.state, "", location.href);
+      stepped = true;
+    }
+  }
+
+  /** The back gesture (or Back) while the editor's step is showing: it closes, unchanged. */
+  function backed() {
+    if (!stepped) return;
+    stepped = false;
+    closeEditor();
+  }
+
   function closeEditor() {
+    if (stepped) {
+      // Closed by its X, Save or Delete: its step in history goes too.
+      stepped = false;
+      history.back();
+    }
     editing = undefined;
     queueMicrotask(() => {
       document.getElementById("rules-heading")?.focus();
@@ -146,6 +171,8 @@
     }
   }
 </script>
+
+<svelte:window onpopstate={backed} />
 
 {#if editing}
   {#key editing}
@@ -340,8 +367,8 @@
         {feeds}
         {folders}
         {onMuted}
-        onNew={() => (editing = {})}
-        onEdit={(rule) => (editing = { rule })}
+        onNew={() => openEditor({})}
+        onEdit={(rule) => openEditor({ rule })}
       />
 
       <OtherApps />
