@@ -7,7 +7,7 @@
 //! (`tidy`), saved searches (`saved_searches`), OPML files (`subscriptions`),
 //! instant updates from WebSub hubs (`websub`), syncing with other feed
 //! readers (`apps`, `greader`), backups (`backup`, `storage`), and the
-//! reader's rules and mutes (`rules`).
+//! reader's rules and mutes (`rules`), and the readers and sign-up (`people`).
 //! The frontend is packed into this program (see `assets`).
 
 pub mod apps;
@@ -27,6 +27,7 @@ pub mod health;
 pub mod log;
 pub mod marks;
 pub mod password;
+pub mod people;
 pub mod rules;
 pub mod saved_searches;
 pub mod search;
@@ -67,7 +68,7 @@ pub struct AppState {
     pub db: SqlitePool,
     /// The one downloader for publishers' websites (see `fetch`).
     pub http: reqwest::Client,
-    pub limiter: Arc<Mutex<auth::Limiter>>,
+    pub limiter: Arc<Mutex<auth::Limiters>>,
     pub wrong_passwords: Arc<AtomicU64>,
     /// Seconds since 1970 (UTC) when this run of nine turtles started.
     pub started_at: i64,
@@ -136,6 +137,7 @@ pub fn router(state: AppState) -> Router {
         .merge(subscriptions::routes())
         .merge(tidy::routes())
         .merge(marks::routes())
+        .merge(people::routes())
         .merge(rules::routes())
         .merge(search::routes())
         .merge(saved_searches::routes())

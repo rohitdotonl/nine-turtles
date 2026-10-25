@@ -3,14 +3,19 @@
 //! Each device gets a long random ticket in a cookie the page's scripts can't
 //! read. The database keeps only a scrambled copy of it (BLAKE2s), so a
 //! stolen copy of the database can't be used to sign in. Wrong passwords are
-//! slowed down for everyone at once: there's only one password, so guesses
-//! from many places count together. See docs/decisions/0010-sign-in.md.
+//! slowed down for each account on its own, wherever the guesses come from:
+//! each email address, and the owner's password-only sign-in. See
+//! docs/decisions/0010-sign-in.md and 0087-sign-in-by-email.md.
 //!
-//! Each signed-in device belongs to one reader (decision 0086). For now the
-//! only way in is the owner's password, so every new device is the owner's.
+//! Each signed-in device belongs to one reader (decision 0086). A reader
+//! signs in with their email address and password; the password alone, with
+//! no email, is the owner's sign-in from before there were readers, and
+//! keeps working.
 
 use std::{
+    collections::HashMap,
     fmt::Write as _,
+    sync::OnceLock,
     time::{Duration, Instant},
 };
 
@@ -48,6 +53,11 @@ const LONGEST_WAIT: Duration = Duration::from_secs(60 * 60);
 /// After this long with no wrong password (counted from the end of any
 /// wait), earlier wrong tries are forgotten and the five free tries return.
 const FORGET_AFTER: Duration = Duration::from_secs(60 * 60);
+/// At most this many accounts' wrong tries are remembered at once, so a
+/// stranger typing made-up email addresses can't fill the server's memory.
+/// When it's full, what would be forgotten anyway goes first, then the
+/// account quiet the longest; one that has to wait goes only if all do.
+pub const MOST_ACCOUNTS_REMEMBERED: usize = 4096;
 
 pub fn routes() -> Router<AppState> {
     Router::new()
@@ -120,6 +130,93 @@ impl Limiter {
     pub fn right(&mut self) {
         *self = Self::default();
     }
+
+    /// When this account last had a wrong try or a wait ended.
+    fn quiet_since(&self) -> Option<Instant> {
+        self.last_wrong.max(self.locked_until)
+    }
+
+    /// Whether everything about this account would be forgotten anyway.
+    fn forgotten(&self, now: Instant) -> bool {
+        self.quiet_since()
+            .is_none_or(|since| now.saturating_duration_since(since) >= FORGET_AFTER)
+    }
+}
+
+/// Whose wrong tries a sign-in counts towards.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub enum Account {
+    /// The owner's sign-in with the password alone, as before email addresses.
+    PasswordOnly,
+    /// An email address, in small letters, whether or not anyone has it.
+    Email(String),
+}
+
+impl Account {
+    /// The account a sign-in names: its email address (in small letters, as
+    /// the database compares them), or the password-only sign-in if none.
+    pub fn named(email: Option<&str>) -> Self {
+        match email.map(str::trim).filter(|email| !email.is_empty()) {
+            Some(email) => Self::Email(email.to_ascii_lowercase()),
+            None => Self::PasswordOnly,
+        }
+    }
+}
+
+/// Wrong tries for each account separately, so a stranger guessing one
+/// email address never makes anyone else wait. Only accounts with wrong
+/// tries are remembered, and at most `MOST_ACCOUNTS_REMEMBERED` of them.
+#[derive(Debug, Default)]
+pub struct Limiters {
+    accounts: HashMap<Account, Limiter>,
+}
+
+impl Limiters {
+    pub fn wait(&self, account: &Account, now: Instant) -> Option<Duration> {
+        self.accounts
+            .get(account)
+            .and_then(|limiter| limiter.wait(now))
+    }
+
+    pub fn wrong(&mut self, account: Account, now: Instant) {
+        if !self.accounts.contains_key(&account) && self.accounts.len() >= MOST_ACCOUNTS_REMEMBERED
+        {
+            self.make_room(now);
+        }
+        self.accounts.entry(account).or_default().wrong(now);
+    }
+
+    pub fn right(&mut self, account: &Account) {
+        self.accounts.remove(account);
+    }
+
+    /// How many accounts' wrong tries are remembered.
+    pub fn remembered(&self) -> usize {
+        self.accounts.len()
+    }
+
+    fn make_room(&mut self, now: Instant) {
+        self.accounts.retain(|_, limiter| !limiter.forgotten(now));
+        if self.accounts.len() < MOST_ACCOUNTS_REMEMBERED {
+            return;
+        }
+        let oldest = self
+            .accounts
+            .iter()
+            .min_by_key(|(_, limiter)| (limiter.wait(now).is_some(), limiter.quiet_since()))
+            .map(|(account, _)| account.clone());
+        if let Some(oldest) = oldest {
+            self.accounts.remove(&oldest);
+        }
+    }
+}
+
+/// A scrambled line no password was ever chosen for. A sign-in with an
+/// email nobody has is checked against it, so it takes as long as a real
+/// one and the time taken doesn't tell a stranger which emails exist.
+fn nobodys_password() -> &'static str {
+    static LINE: OnceLock<String> = OnceLock::new();
+    LINE.get_or_init(|| crate::password::hash("nobody chose this password").unwrap_or_default())
 }
 
 /// Whether this device is signed in, and (if so) the version for Status.
@@ -130,20 +227,29 @@ async fn session(State(state): State<AppState>, headers: HeaderMap) -> Response 
     let hash = scramble(&token);
     let now = now();
 
-    let found: Result<Option<i64>, sqlx::Error> = sqlx::query_scalar(
-        "SELECT last_used_at FROM sessions WHERE token_hash = ? AND expires_at > ?",
+    let found: Result<Option<(i64, bool, Option<String>)>, sqlx::Error> = sqlx::query_as(
+        "SELECT sessions.last_used_at, people.owner, people.email
+         FROM sessions JOIN people ON people.id = sessions.person_id
+         WHERE sessions.token_hash = ? AND sessions.expires_at > ?",
     )
     .bind(&hash[..])
     .bind(now)
     .fetch_optional(&state.db)
     .await;
-    let last_used = match found {
-        Ok(Some(last_used)) => last_used,
+    let (last_used, owner, email) = match found {
+        Ok(Some(found)) => found,
         Ok(None) => return signed_out(),
         Err(error) => return database_problem("checking a sign-in", &error),
     };
 
-    let body = Json(json!({ "signed_in": true, "version": crate::VERSION }));
+    // Whether this is the owner (who alone sees Settings › Readers), and
+    // the email they sign in with, if they have one.
+    let body = Json(json!({
+        "signed_in": true,
+        "version": crate::VERSION,
+        "owner": owner,
+        "email": email,
+    }));
     if now - last_used < RENEW_AFTER {
         return body.into_response();
     }
@@ -163,42 +269,78 @@ async fn session(State(state): State<AppState>, headers: HeaderMap) -> Response 
 
 #[derive(Deserialize)]
 struct SignIn {
+    /// Empty or left out: the owner's password-only sign-in.
+    #[serde(default)]
+    email: Option<String>,
     password: String,
 }
 
+/// Signs this device in: with an email address, for the reader who has it;
+/// without one, for the owner with NINE_TURTLES_PASSWORD_HASH, exactly as
+/// before there were readers. A wrong password and an email nobody has get
+/// the same answer, in about the same time.
 async fn sign_in(State(state): State<AppState>, Json(form): Json<SignIn>) -> Response {
-    let stored = match &state.config.password {
-        PasswordSetting::Set(stored) => stored.clone(),
-        missing_or_invalid => {
-            return (
-                StatusCode::SERVICE_UNAVAILABLE,
-                Json(json!({ "error": format!("password-{}", missing_or_invalid.describe()) })),
-            )
-                .into_response();
-        }
+    let owners_line = match &state.config.password {
+        PasswordSetting::Set(stored) => Some(stored.clone()),
+        _ => None,
     };
+    let account = Account::named(form.email.as_deref());
+    if account == Account::PasswordOnly && owners_line.is_none() {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(json!({ "error": format!("password-{}", state.config.password.describe()) })),
+        )
+            .into_response();
+    }
 
     // Held until this try is decided, so tries can't race past the limit.
-    let mut limiter = state.limiter.lock().await;
-    if let Some(wait) = limiter.wait(Instant::now()) {
+    let mut limiters = state.limiter.lock().await;
+    if let Some(wait) = limiters.wait(&account, Instant::now()) {
         return wait_response(wait);
     }
 
-    let password = form.password;
-    let right = tokio::task::spawn_blocking(move || crate::password::matches(&password, &stored))
-        .await
-        .unwrap_or(false);
+    // Whose sign-in this would be, and the scrambled line to check against.
+    let (person, stored) = match &account {
+        Account::PasswordOnly => (Some(OWNER), owners_line),
+        Account::Email(email) => {
+            let found: Result<Option<(i64, bool, Option<String>)>, sqlx::Error> = sqlx::query_as(
+                "SELECT id, owner, password_hash FROM people WHERE email = ? COLLATE NOCASE",
+            )
+            .bind(email)
+            .fetch_optional(&state.db)
+            .await;
+            match found {
+                // The owner uses NINE_TURTLES_PASSWORD_HASH unless they
+                // have a password of their own.
+                Ok(Some((person, owner, own_line))) => {
+                    (Some(person), own_line.or(owners_line.filter(|_| owner)))
+                }
+                Ok(None) => (None, None),
+                Err(error) => return database_problem("finding a reader", &error),
+            }
+        }
+    };
+    let someones = stored.is_some();
 
-    if !right {
-        limiter.wrong(Instant::now());
+    let password = form.password;
+    let matched = tokio::task::spawn_blocking(move || {
+        let stored = stored.unwrap_or_else(|| nobodys_password().to_owned());
+        crate::password::matches(&password, &stored)
+    })
+    .await
+    .unwrap_or(false);
+
+    let Some(person) = person.filter(|_| someones && matched) else {
+        limiters.wrong(account.clone(), Instant::now());
         state
             .wrong_passwords
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        if let Some(wait) = limiter.wait(Instant::now()) {
+        if let Some(wait) = limiters.wait(&account, Instant::now()) {
             // Counted on the diagnostics page, not kept as a "problem", so
             // a patient guesser can't push real problems out of view.
             log::info(&format!(
-                "several wrong passwords in a row; sign-in paused for {} seconds",
+                "several wrong passwords in a row for one account; \
+                 its sign-in is paused for {} seconds",
                 wait.as_secs()
             ));
             return wait_response(wait);
@@ -208,11 +350,11 @@ async fn sign_in(State(state): State<AppState>, Json(form): Json<SignIn>) -> Res
             Json(json!({ "error": "wrong-password" })),
         )
             .into_response();
-    }
-    limiter.right();
-    drop(limiter);
+    };
+    limiters.right(&account);
+    drop(limiters);
 
-    match remember_device(&state.db, OWNER).await {
+    match remember_device(&state.db, person).await {
         Ok(Some(token)) => (
             StatusCode::NO_CONTENT,
             [(header::SET_COOKIE, session_cookie(&token))],
@@ -303,7 +445,7 @@ pub fn database_problem(doing: &str, error: &sqlx::Error) -> Response {
     StatusCode::INTERNAL_SERVER_ERROR.into_response()
 }
 
-fn session_cookie(token: &str) -> HeaderValue {
+pub(crate) fn session_cookie(token: &str) -> HeaderValue {
     let cookie = format!(
         "{COOKIE}={token}; Path=/; Max-Age={SESSION_LIFETIME}; HttpOnly; Secure; SameSite=Strict"
     );
@@ -323,7 +465,7 @@ fn cookie_token(headers: &HeaderMap) -> Option<String> {
 }
 
 /// 32 random bytes from the operating system, written as 64 hex characters.
-fn new_token() -> Result<String, getrandom::Error> {
+pub(crate) fn new_token() -> Result<String, getrandom::Error> {
     let mut bytes = [0u8; 32];
     getrandom::fill(&mut bytes)?;
     Ok(bytes
@@ -341,6 +483,44 @@ pub(crate) fn scramble(token: &str) -> [u8; 32] {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn each_account_counts_its_own_wrong_tries() {
+        let start = Instant::now();
+        let mut limiters = Limiters::default();
+        let stranger = Account::named(Some("Someone@Example.com"));
+        assert_eq!(stranger, Account::named(Some("  someone@example.com ")));
+        for _ in 0..5 {
+            limiters.wrong(stranger.clone(), start);
+        }
+        assert!(limiters.wait(&stranger, start).is_some());
+        assert_eq!(limiters.wait(&Account::PasswordOnly, start), None);
+        assert_eq!(Account::named(Some("  ")), Account::PasswordOnly);
+
+        limiters.right(&stranger);
+        assert_eq!(limiters.wait(&stranger, start), None);
+        assert_eq!(limiters.remembered(), 0);
+    }
+
+    #[test]
+    fn only_so_many_accounts_are_remembered_and_waiting_ones_are_kept() {
+        let start = Instant::now();
+        let mut limiters = Limiters::default();
+        for _ in 0..5 {
+            limiters.wrong(Account::PasswordOnly, start);
+        }
+        for number in 0..MOST_ACCOUNTS_REMEMBERED + 100 {
+            limiters.wrong(Account::Email(format!("{number}@example.com")), start);
+        }
+        assert_eq!(limiters.remembered(), MOST_ACCOUNTS_REMEMBERED);
+        // The one account that has to wait is never the one forgotten.
+        assert!(limiters.wait(&Account::PasswordOnly, start).is_some());
+
+        // An hour later, everything quiet is forgotten to make room.
+        let later = start + FORGET_AFTER + LONGEST_WAIT;
+        limiters.wrong(Account::Email("new@example.com".to_owned()), later);
+        assert_eq!(limiters.remembered(), 1);
+    }
 
     #[test]
     fn five_wrong_tries_are_free_then_the_wait_doubles_up_to_an_hour() {

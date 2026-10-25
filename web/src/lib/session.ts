@@ -3,7 +3,8 @@
 
 import { api } from "./updates.svelte";
 
-export type Session = { signedIn: true; version: string } | { signedIn: false };
+/** Signed in: the version for Status, whether this is the owner (who alone sees Settings › Readers), and the reader's email. */
+export type Session = { signedIn: true; version: string; owner: boolean; email: string | null } | { signedIn: false };
 
 export type SignInResult =
   | { ok: true }
@@ -15,18 +16,24 @@ export async function currentSession(): Promise<Session> {
   if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
   const body: unknown = await response.json();
   if (isRecord(body) && body.signed_in === true && typeof body.version === "string") {
-    return { signedIn: true, version: body.version };
+    return {
+      signedIn: true,
+      version: body.version,
+      owner: body.owner === true,
+      email: typeof body.email === "string" ? body.email : null,
+    };
   }
   return { signedIn: false };
 }
 
-export async function signIn(password: string): Promise<SignInResult> {
+/** With an email, for the reader who has it; with none (""), the owner's password-only sign-in, as before. */
+export async function signIn(email: string, password: string): Promise<SignInResult> {
   let response: Response;
   try {
     response = await api("/api/sign-in", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ email: email.trim(), password }),
     });
   } catch {
     return { ok: false, reason: "unreachable" };
@@ -49,11 +56,14 @@ export async function signOut(): Promise<void> {
   if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
 }
 
-/** What the sign-in page says after a try that didn't work. Plain and calm. */
-export function explain(result: Exclude<SignInResult, { ok: true }>): string {
+/**
+ * What the sign-in page says after a try that didn't work. Plain and calm.
+ * With an email it never says which of the two was wrong, as the server doesn't.
+ */
+export function explain(result: Exclude<SignInResult, { ok: true }>, withEmail = false): string {
   switch (result.reason) {
     case "wrong-password":
-      return "That isn't the password.";
+      return withEmail ? "That email and password don't match." : "That isn't the password.";
     case "wait":
       return `Too many wrong tries. Try again in ${duration(result.waitSeconds)}.`;
     case "password-missing":

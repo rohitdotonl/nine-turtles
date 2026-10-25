@@ -10,13 +10,16 @@
   exports the reader's feeds and folders as an OPML file, and exports their
   starred articles as a JSON Feed file. Rules lists the reader's rules, and
   opens the rule editor over Settings (SPEC section 27). Other apps makes the
-  app password other feed readers sync with (OtherApps).
+  app password other feed readers sync with (OtherApps). Readers, for the
+  owner only, lists who has an account, sets the owner's email and the
+  sign-up switch (Readers, decision 0087).
 -->
 <script lang="ts">
   import { edge } from "./edge";
   import Icon from "./Icon.svelte";
   import ImportOpml from "./ImportOpml.svelte";
   import OtherApps from "./OtherApps.svelte";
+  import Readers from "./Readers.svelte";
   import RuleEditor from "./RuleEditor.svelte";
   import Rules from "./Rules.svelte";
   import type { Rule } from "./rules";
@@ -37,6 +40,8 @@
     heading = $bindable(),
     dataHeading = $bindable(),
     version,
+    owner = false,
+    email = null,
     onSignedOut,
     onClose,
     onImported,
@@ -62,6 +67,10 @@
     /** "Your data", where the empty state's "Import OPML" leads. */
     dataHeading?: HTMLHeadingElement;
     version: string;
+    /** Only the owner sees Readers. */
+    owner?: boolean;
+    /** The email this reader signs in with, if any. */
+    email?: string | null;
     onSignedOut: () => void;
     onClose: () => void;
     /** Feeds were imported: the sidebar loads them. */
@@ -381,6 +390,10 @@
       />
 
       <OtherApps />
+
+      {#if owner}
+        <Readers {email} />
+      {/if}
 
       <section aria-labelledby="account-heading">
         <h3 id="account-heading" class="inset-head">Account</h3>

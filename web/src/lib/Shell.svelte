@@ -63,7 +63,19 @@
   import { startingStep, stepOf, type Screen } from "./steps";
   import { arrivedBySwitching, switchesOnMove, switchTo, updates, watchForNewVersions, type Carried } from "./updates.svelte";
 
-  let { version, onSignedOut }: { version: string; onSignedOut: () => void } = $props();
+  let {
+    version,
+    owner = false,
+    email = null,
+    onSignedOut,
+  }: {
+    version: string;
+    /** The owner sees Settings › Readers (decision 0087). */
+    owner?: boolean;
+    /** The email this reader signs in with, if any. */
+    email?: string | null;
+    onSignedOut: () => void;
+  } = $props();
 
   /** A small sign beside each view's name in the sidebar. */
   const VIEW_ICONS = { unread: "dot", starred: "star", all: "stack" } as const;
@@ -1412,6 +1424,8 @@
           bind:heading={settingsHeading}
           bind:dataHeading
           {version}
+          {owner}
+          {email}
           {onSignedOut}
           onClose={closePage}
           onImported={loadFeeds}

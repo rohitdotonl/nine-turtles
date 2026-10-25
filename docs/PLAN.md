@@ -402,7 +402,7 @@ feed is still fetched and stored once; everything personal gets an owner.
 |---|---|
 | Part one: an owner on settings, folders, saved searches, rules, signed-in devices and app passwords (structure change 11) | ✅ 25 October 2026 |
 | Part two: each reader's own feeds, marks, stars, search and sync (structure change 12) | 🔨 in progress (built, waiting for review) |
-| Part three: signing in by email, and a second account to try | ⬜ |
+| Part three: signing in by email, and the sign-up switch with invite links (structure change 13, decision 0087) | 🔨 in progress |
 
 ## V2: YouTube videos
 
