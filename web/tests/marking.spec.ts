@@ -381,8 +381,10 @@ test("river mode: no Unread view, no counts, no read styling, and it opens on Al
   await row(page, name, NEWEST).click();
   await expect(article(page).getByRole("heading", { name: NEWEST })).toBeVisible();
 
-  // g u does nothing; "/" and the Unread address open All.
+  // Shift+A marks nothing; g u does nothing; "/" and the Unread address open All.
   await page.keyboard.press("Escape");
+  await page.keyboard.press("Shift+A");
+  await expect(page.getByText(/Marked \d+ items? as read/)).toHaveCount(0);
   await page.keyboard.press("g");
   await page.keyboard.press("u");
   await expect(page).toHaveURL(/\/feeds\/\d+$/);
@@ -399,9 +401,34 @@ test("river mode: no Unread view, no counts, no read styling, and it opens on Al
   await appReady(page);
   const reading = page.getByRole("region", { name: "Reading" });
   await expect(reading.getByRole("radio", { name: "River" })).toBeChecked();
-  await reading.getByRole("radio", { name: "Inbox" }).check();
+  // With only the keyboard: Tab to the choice, an arrow key changes it.
+  await tabTo(page, reading.getByRole("radio", { name: "River" }));
+  await page.keyboard.press("ArrowLeft");
+  await expect(reading.getByRole("radio", { name: "Inbox" })).toBeChecked();
   await expect(sidebar(page).getByRole("link", { name: "Unread", exact: true })).toBeVisible();
   await feedLink(page, name).click();
   await expect(row(page, name, MIDDLE)).toContainText("unread");
   await expect(row(page, name, NEWEST)).not.toContainText("unread");
+});
+
+test("the server's reading mode decides where the app opens", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the same on every width");
+  await page.setViewportSize({ width: 1280, height: 800 });
+  // This device last saw inbox mode; the server says river (changed on another device).
+  let mode = "river";
+  await page.route("**/api/settings", (route) => route.fulfill({ json: { sort: "newest", mode } }));
+  await page.goto(new URL("/unread", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  await expect(page).toHaveURL(/\/all$/);
+  await page.reload();
+  await appReady(page);
+  await expect(page).toHaveURL(/\/all$/);
+
+  // Now it remembers river; the server says inbox again: "/" opens Unread after all.
+  mode = "inbox";
+  await page.goto(new URL("/", FEEDS_APP).href);
+  await appReady(page);
+  await expect(page).toHaveURL(/\/unread$/);
+  await expect(sidebar(page).getByRole("link", { name: "Unread", exact: true })).toBeVisible();
 });

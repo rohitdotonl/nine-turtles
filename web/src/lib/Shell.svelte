@@ -63,7 +63,10 @@
   let river = $derived(mode === "river");
   /** Where the app opens: Unread in inbox mode, All in river mode. */
   let home: Route = $derived({ kind: "view", view: homeView(mode) });
-  const start = homeFor(parse(location.pathname), untrack(() => mode));
+  const asked = parse(location.pathname);
+  /** The address was "/", Unread or unknown: the app's home, which depends on the mode. */
+  const openedHome = asked.kind === "view" && asked.view === "unread";
+  const start = homeFor(asked, untrack(() => mode));
   let route: Route = $state(start);
   /** Where Escape and "Close settings" go back to: the last list you were on. */
   let lastPlace: Route = $state(isList(start) ? start : { kind: "view", view: homeView(untrack(() => mode)) });
@@ -530,6 +533,13 @@
     loadSettings().then((settings) => {
       mode = settings.mode;
       sort = settings.sort;
+      // This device last saw river mode, but it's inbox now (changed on
+      // another device): an untouched home opens on Unread after all.
+      if (openedHome && pathFor(route) === pathFor(start) && mode === "inbox" && !(route.kind === "view" && route.view === "unread")) {
+        route = { kind: "view", view: "unread" };
+        lastPlace = route;
+        history.replaceState(history.state, "", pathFor(route));
+      }
     });
 
     return () => {

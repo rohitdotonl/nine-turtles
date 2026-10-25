@@ -9,7 +9,9 @@ change: the table already holds named settings. A save names only what
 changed, so an older open tab that changes the sort order can't switch the
 mode back. In river mode the Unread view is gone: its address and `/` lead to
 All, in place. Each device keeps the last mode it saw, so it opens straight
-in it instead of showing Unread for a moment; the server's answer decides.
+in it instead of showing Unread for a moment; the server's answer decides:
+if it differs, an untouched home (`/` or Unread) moves to the right view, in
+place.
 
 **Kept as they are.** Read state is still recorded, and "Mark unread" and `m`
 stay: SPEC hides only "Mark all as read", and marking unread costs nothing.

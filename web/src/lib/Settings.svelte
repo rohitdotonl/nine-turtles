@@ -107,6 +107,7 @@
       <section aria-labelledby="reading-heading">
         <h3 id="reading-heading" class="inset-head">Reading</h3>
         <div class="inset-group">
+          <!-- All's own sign, on purpose: river mode is everything, flowing past, and opens on All. -->
           <fieldset class="inset-row">
             <legend class="row-name"><span class="inline-flex items-center gap-2"><span class="text-muted"><Icon name="stack" size={16} /></span>Reading mode</span></legend>
             <div class="choices control" style="--columns: 2">
