@@ -647,3 +647,36 @@ test("Settings is one centred column of grouped lists; Your data, Feed health an
   const [sampleText, appearanceName] = await Promise.all([sampleRow.locator("p").boundingBox(), page.getByText("Appearance", { exact: true }).boundingBox()]);
   expect(Math.abs(sampleText!.x - appearanceName!.x)).toBeLessThan(1.5);
 });
+
+test("a tab left open across an update opens the new version at the next place it goes", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the same on every width");
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await openApp(page, "/starred");
+  // A mark on this page that a full page load would wipe.
+  const sameDocument = () => page.evaluate(() => "stillHere" in window);
+  await page.evaluate(() => Object.assign(window, { stillHere: true }));
+
+  // No newer version yet: going somewhere stays in the same page.
+  await sidebar(page).getByRole("link", { name: /^All/ }).click();
+  await expect(page).toHaveURL(/\/all$/);
+  expect(await sameDocument()).toBe(true);
+
+  // A newer version goes live. The tab notices when it comes back into view.
+  await page.route("**/api/session", async (route) => {
+    const response = await route.fetch();
+    await route.fulfill({ response, headers: { ...response.headers(), "x-nine-turtles-version": "a-newer-one" } });
+  });
+  const asked = page.waitForResponse((response) => response.url().endsWith("/api/session"));
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+  await asked;
+  await page.unroute("**/api/session");
+
+  // Going to another place loads the new version there, with the keyboard's place on its heading.
+  await page.keyboard.press("Shift"); // the keyboard is in use
+  await sidebar(page).getByRole("link", { name: /^Starred/ }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/starred$/);
+  await appReady(page);
+  await expect.poll(sameDocument).toBe(false);
+  await expect(page.getByRole("heading", { name: "Starred", level: 2 })).toBeFocused();
+});

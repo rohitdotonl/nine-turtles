@@ -179,6 +179,14 @@ export function newItemsMessage(touch: boolean): string {
 // anyway, and say so, rather than hang.
 let writes: Promise<unknown> = Promise.resolve();
 
+/** How many marks haven't been saved yet (or failed). A tab only switches to a new version once there are none. */
+let unsavedMarks = 0;
+
+/** Whether marks are still on their way to the server. */
+export function marksUnsaved(): boolean {
+  return unsavedMarks > 0;
+}
+
 /** Whether a save is waiting to try again, and who to tell when one starts. */
 let retrying = false;
 const waitingForSaves = new Set<() => void>();
@@ -257,7 +265,8 @@ function send(path: string, body: unknown): Promise<void> {
       }
     }
   });
-  writes = sent.catch(() => undefined);
+  unsavedMarks++;
+  writes = sent.catch(() => undefined).finally(() => unsavedMarks--);
   return sent;
 }
 

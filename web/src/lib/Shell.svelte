@@ -34,6 +34,7 @@
     lastMode,
     listFeeds,
     loadSettings,
+    marksUnsaved,
     refused,
     resubscribe,
     saveMode,
@@ -54,6 +55,7 @@
   import { VIEWS, VIEW_NAMES, nameFor, parse, pathFor, titleFor, type Route } from "./router";
   import { emptyQuery, isSearching, scopeFor, searchParams, searchedTerms, type Query } from "./search";
   import { startingStep, stepOf, type Screen } from "./steps";
+  import { arrivedBySwitching, switchesOnMove, switchTo, updates, watchForNewVersions } from "./updates.svelte";
 
   let { version, onSignedOut }: { version: string; onSignedOut: () => void } = $props();
 
@@ -432,6 +434,13 @@
     // "/" and unknown addresses open Unread (All in river mode); the address bar says so.
     history.replaceState(firstStep, "", pathFor(route));
 
+    // Arriving here by switching to a new version: the keyboard's place goes
+    // to the heading, as going here without the switch would have done.
+    const switched = arrivedBySwitching();
+    if (switched === "keyboard") document.documentElement.dataset.keyboard = "";
+    if (switched) requestAnimationFrame(() => placeFocus(route)?.focus());
+    const stopWatching = watchForNewVersions();
+
     const queries = [WIDE_REM, MEDIUM_REM].map((rem) => matchMedia(`(min-width: ${rem}rem)`));
     const resized = () => {
       const next = currentWidth();
@@ -452,6 +461,11 @@
       const next = parse(location.pathname);
       cameFromSettings = false;
       const moved = !keepsArticle(route, next);
+      // The address has already changed: loading it opens the new version there.
+      if (moved && switchesOnMove(updates.ready, marksUnsaved(), false)) {
+        switchTo(location.pathname);
+        return;
+      }
       const [opening, closing] = [isSheet(next) && !isSheet(route), isSheet(route) && !isSheet(next)];
       if (opening) [sheetOpener, sheetPushed] = [document.activeElement, false];
       route = next;
@@ -552,6 +566,7 @@
       queries.forEach((query) => query.removeEventListener("change", resized));
       removeEventListener("popstate", back);
       removeEventListener("keydown", pressed);
+      stopWatching();
     };
   });
 
@@ -628,6 +643,12 @@
   }
 
   function go(next: Route, withNotice?: Notice) {
+    // A newer nine turtles is live: going somewhere else redraws the screen
+    // anyway, so arrive there in the new version (decision 0075).
+    if (!keepsArticle(route, next) && switchesOnMove(updates.ready, marksUnsaved(), !!withNotice)) {
+      switchTo(pathFor(next));
+      return;
+    }
     const from = screenNow();
     cameFromSettings = route.kind === "settings" && next.kind === "feed-health";
     const to: Screen = isList(next) ? "list" : "page";

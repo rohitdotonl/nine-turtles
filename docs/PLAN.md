@@ -377,7 +377,7 @@ each with screenshots:
 | Backups and moving hosts | ⬜ | Milestone 3 above, `docs/ENGINEERING.md` → "Hosting" |
 | The yearly clean-up of unstarred articles | ⬜ | SPEC section 23 (after backups) |
 | The "New to feeds?" guide page | ⬜ | SPEC section 2 |
-| A tab left open across an update keeps working | ⬜ | `docs/ENGINEERING.md` (decision 0022) |
+| A tab left open across an update keeps working | ✅ 25 October 2026 | SPEC section 18, decisions 0022 and 0075 |
 
 ## V2: YouTube videos
 
