@@ -370,6 +370,7 @@ each with screenshots:
 | V2 part | Status | Where it's described |
 |---|---|---|
 | River mode | ✅ 25 October 2026 | SPEC section 10, decision 0068 |
+| Settings for each feed (reading mode, how often it's checked, open on the website) | ✅ 25 October 2026 | SPEC sections 10, 11 and 15, decision 0073 |
 | WebSub (new posts within minutes) | ✅ 25 October 2026 | Milestone 12, SPEC section 12, decision 0069 |
 | YouTube videos in YouTube's own player | ✅ 25 October 2026 | SPEC section 7, decision 0072 |
 | Syncing with Reeder, NetNewsWire and other apps | ✅ 25 October 2026 | SPEC section 26, decision 0070 |

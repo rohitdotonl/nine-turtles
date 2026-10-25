@@ -44,17 +44,27 @@ struct FeedRow {
     id: i64,
     title: String,
     site_url: Option<String>,
-    /// How many of its articles are unread, for the sidebar's muted count.
+    /// How many of its articles are unread, for the sidebar's muted count;
+    /// none for a feed that flows past.
     unread: i64,
+    /// Its settings from Edit feed (SPEC section 15): it flows past as in
+    /// river mode, the shortest wait between checks (seconds, 0 for its own
+    /// rhythm), and whether its articles open on the publisher's site.
+    river: bool,
+    check_at_most: i64,
+    open_on_site: bool,
     /// The folders it's in, by number.
     #[sqlx(skip)]
     folders: Vec<i64>,
 }
 
 /// Each followed feed's unread count, counted from the
-/// `articles_unread_by_feed` index alone (tests/speed.rs checks this).
-pub const FEEDS: &str = "SELECT id, title, site_url,
-        (SELECT COUNT(*) FROM articles WHERE articles.feed_id = feeds.id AND articles.read = 0) AS unread
+/// `articles_unread_by_feed` index alone (tests/speed.rs checks this). A
+/// feed that flows past (`river`) counts nothing.
+pub const FEEDS: &str = "SELECT id, title, site_url, river, check_at_most, open_on_site,
+        CASE WHEN river THEN 0 ELSE
+            (SELECT COUNT(*) FROM articles WHERE articles.feed_id = feeds.id AND articles.read = 0)
+        END AS unread
      FROM feeds WHERE unsubscribed_at IS NULL ORDER BY title COLLATE NOCASE, id";
 
 /// Every followed feed, alphabetically, with its unread count and folders,
@@ -292,7 +302,8 @@ async fn follow(
              last_modified = excluded.last_modified, added_at = excluded.added_at,
              fetched_at = excluded.fetched_at, check_every = excluded.check_every,
              next_check_at = excluded.next_check_at, failures = 0, failing_since = NULL,
-             missing_since = NULL, problem = NULL, unsubscribed_at = NULL, cleared = 0
+             missing_since = NULL, problem = NULL, unsubscribed_at = NULL, cleared = 0,
+             river = 0, check_at_most = 0, open_on_site = 0
          WHERE feeds.unsubscribed_at IS NOT NULL
          RETURNING id",
     )
@@ -340,6 +351,9 @@ async fn follow(
         title: parsed.title,
         site_url: parsed.site_url,
         unread,
+        river: false,
+        check_at_most: 0,
+        open_on_site: false,
         folders: Vec::new(),
     })
 }
@@ -544,7 +558,10 @@ pub const LATEST: &str = "SELECT COALESCE(MAX(id), 0) FROM articles";
 pub const fn new_sql(list: List) -> Option<&'static str> {
     match list {
         List::All => Some("SELECT EXISTS (SELECT 1 FROM articles WHERE id > ?)"),
-        List::Unread => Some("SELECT EXISTS (SELECT 1 FROM articles WHERE id > ? AND +read = 0)"),
+        List::Unread => Some(
+            "SELECT EXISTS (SELECT 1 FROM articles WHERE id > ? AND +read = 0
+                 AND +feed_id NOT IN (SELECT id FROM feeds WHERE river = 1))",
+        ),
         List::Feed(_) => {
             Some("SELECT EXISTS (SELECT 1 FROM articles WHERE id > ? AND +feed_id = ?)")
         }
@@ -604,7 +621,8 @@ fn parse_cursor(text: &str) -> Option<(i64, i64)> {
 /// gathering them feed by feed and sorting them all on the spot).
 ///
 /// Unread and All leave out feeds the reader has unsubscribed from; Starred
-/// keeps their starred articles (SPEC section 15).
+/// keeps their starred articles (SPEC section 15). Unread also leaves out
+/// feeds that flow past (`river`, set in Edit feed).
 macro_rules! list_query {
     ($filter:literal, $past:literal, $order:literal) => {
         concat!(
@@ -633,12 +651,12 @@ pub const fn list_sql(list: List, order: Order) -> &'static str {
         (List::All, Order::Newest) => list_query!("feeds.unsubscribed_at IS NULL AND", "<", "DESC"),
         (List::All, Order::Oldest) => list_query!("feeds.unsubscribed_at IS NULL AND", ">", "ASC"),
         (List::Unread, Order::Newest) => list_query!(
-            "articles.read = 0 AND feeds.unsubscribed_at IS NULL AND",
+            "articles.read = 0 AND feeds.unsubscribed_at IS NULL AND feeds.river = 0 AND",
             "<",
             "DESC"
         ),
         (List::Unread, Order::Oldest) => list_query!(
-            "articles.read = 0 AND feeds.unsubscribed_at IS NULL AND",
+            "articles.read = 0 AND feeds.unsubscribed_at IS NULL AND feeds.river = 0 AND",
             ">",
             "ASC"
         ),

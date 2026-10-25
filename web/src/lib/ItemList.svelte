@@ -3,7 +3,8 @@
   source and time in quiet small text below. No images, no site icons.
   Unread titles are full strength and semibold, read ones muted and regular,
   starred ones carry a small star: each state shows without color too. In
-  river mode (SPEC section 10) every title looks the same, read or not.
+  river mode (SPEC section 10) every title looks the same, read or not, and
+  so does every title from a feed set to flow past in Edit feed.
 
   It shows 50 and then ends; "Show older items" adds the next 50 below, and
   nothing above moves. Choosing an article (a click, Enter, or j and k)
@@ -61,6 +62,7 @@
     results = false,
     oneFeed = false,
     river = false,
+    flowing = new Set(),
     count = $bindable(0),
     found = $bindable(""),
   }: {
@@ -84,6 +86,8 @@
     oneFeed?: boolean;
     /** River mode (SPEC section 10): every row looks the same, read or not; read state is still recorded. */
     river?: boolean;
+    /** Feeds set to flow past in Edit feed (SPEC section 15): their rows look as in river mode. */
+    flowing?: Set<number>;
     /** How many articles are listed, for the empty reading area's hint. */
     count?: number;
     /** What the line above search results says ("28 results"): empty until they load, and when this isn't a search. */
@@ -418,6 +422,7 @@
   <ul class="item-list">
     {#each articles as article, index (article.id)}
       {@const current = index === selectedIndex}
+      {@const flows = river || flowing.has(article.feedId)}
       <li>
         <!-- Only one row is a Tab stop (the selected one, or the first); the others are reached with j, k or the arrows. -->
         <button
@@ -436,13 +441,13 @@
           ]}
         >
           <!-- Unread: an accent dot in the gutter beside the title, and a semibold title, so it shows without color. -->
-          {#if !article.read && !river}<span aria-hidden="true" class="unread-dot"></span>{/if}
+          {#if !article.read && !flows}<span aria-hidden="true" class="unread-dot"></span>{/if}
           <!-- Unread: full ink, semibold. Read: the second ink, regular. The selected row is never the quietest. In river mode every title is full ink, regular. -->
           <!-- With a mouse, clearly larger (18px) than the interface text, so the title leads its row. -->
-          <span class={["title block text-ui pointer-fine:text-[1.125rem] pointer-fine:leading-[1.3]", river ? "text-ink" : !article.read ? "font-semibold text-ink" : current ? "text-ink" : "text-ink-2"]}
+          <span class={["title block text-ui pointer-fine:text-[1.125rem] pointer-fine:leading-[1.3]", flows ? "text-ink" : !article.read ? "font-semibold text-ink" : current ? "text-ink" : "text-ink-2"]}
             >{#each boldParts(article.title || "Untitled", bold) as part, partIndex (partIndex)}{#if part.bold}<mark class="match"
                   >{part.text}</mark
-                >{:else}{part.text}{/if}{/each}{#if !article.read && !river}<span class="sr-only">, unread</span>{/if}</span
+                >{:else}{part.text}{/if}{/each}{#if !article.read && !flows}<span class="sr-only">, unread</span>{/if}</span
           >
           {#if article.excerpt && article.excerpt.length > 0}
             <!--

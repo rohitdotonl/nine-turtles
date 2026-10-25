@@ -8,11 +8,21 @@ export type Feed = {
   id: number;
   title: string;
   siteUrl: string | null;
-  /** How many of its articles are unread. */
+  /** How many of its articles are unread (none for a feed that flows past). */
   unread: number;
   /** The folders it's in, by number. */
   folders: number[];
-};
+} & FeedSettings;
+
+/**
+ * A feed's own settings, chosen in Edit feed (SPEC section 15): it flows
+ * past as in river mode (no Unread, no count), how often it may be checked,
+ * and whether opening one of its articles opens the publisher's page.
+ */
+export type FeedSettings = { river: boolean; check: Check; openOnSite: boolean };
+
+/** How often a feed is checked in the background: on its own rhythm, or at most hourly or daily. */
+export type Check = "automatic" | "hourly" | "daily";
 
 export type Folder = { id: number; name: string };
 
@@ -374,8 +384,23 @@ async function change(path: string, body: unknown): Promise<{ refusal?: Refusal;
 }
 
 /** "Edit feed": its name and folders; `newFolder` (if any) is created and chosen too. */
-export async function editFeed(id: number, title: string, folders: number[], newFolder: string): Promise<Refusal | undefined> {
-  return (await change(`/api/feeds/${id}`, { title, folders, new_folder: newFolder })).refusal;
+export async function editFeed(
+  id: number,
+  title: string,
+  folders: number[],
+  newFolder: string,
+  settings: FeedSettings,
+): Promise<Refusal | undefined> {
+  return (
+    await change(`/api/feeds/${id}`, {
+      title,
+      folders,
+      new_folder: newFolder,
+      river: settings.river,
+      check: settings.check,
+      open_on_site: settings.openOnSite,
+    })
+  ).refusal;
 }
 
 export async function unsubscribe(id: number): Promise<Refusal | undefined> {
@@ -547,7 +572,17 @@ function toFeed(feed: Record<string, unknown>): Feed {
     siteUrl: text(feed.site_url),
     unread: Number(feed.unread ?? 0),
     folders: Array.isArray(feed.folders) ? feed.folders.map(Number) : [],
+    river: feed.river === true,
+    check: checkFrom(Number(feed.check_at_most ?? 0)),
+    openOnSite: feed.open_on_site === true,
   };
+}
+
+/** The server keeps the shortest wait in seconds: 0, an hour or a day. */
+export function checkFrom(seconds: number): Check {
+  if (seconds >= 24 * 60 * 60) return "daily";
+  if (seconds >= 60 * 60) return "hourly";
+  return "automatic";
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

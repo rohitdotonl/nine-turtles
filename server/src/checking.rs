@@ -118,6 +118,9 @@ struct Due {
     etag: Option<String>,
     last_modified: Option<String>,
     check_every: i64,
+    /// The shortest wait the reader allows this feed (Edit feed): 0, an
+    /// hour or a day.
+    check_at_most: i64,
     failures: i64,
 }
 
@@ -137,7 +140,8 @@ pub async fn check(state: &AppState, feed_id: i64, now: i64) -> Result<(), sqlx:
         return Ok(());
     }
     let feed: Due = sqlx::query_as(
-        "SELECT url, etag, last_modified, check_every, failures FROM feeds WHERE id = ?",
+        "SELECT url, etag, last_modified, check_every, check_at_most, failures FROM feeds
+         WHERE id = ?",
     )
     .bind(feed_id)
     .fetch_one(&state.db)
@@ -220,6 +224,8 @@ async fn worked(
     {
         next = next.max(websub::BACKUP_WAIT);
     }
+    // "Check at most hourly" or "daily", chosen in Edit feed.
+    next = next.max(feed.check_at_most);
     sqlx::query(
         "UPDATE feeds SET etag = ?, last_modified = ?, fetched_at = ?, check_every = ?,
              next_check_at = ?, failures = 0, failing_since = NULL, missing_since = NULL,
@@ -280,7 +286,7 @@ async fn failed(
     now: i64,
 ) -> Result<(), sqlx::Error> {
     let failures = feed.failures + 1;
-    let mut next = backoff(feed.check_every, failures);
+    let mut next = backoff(feed.check_every.max(feed.check_at_most), failures);
     if let Failure::Fetch(FetchError::SlowDown(Some(asked))) = failure {
         next = next.max(asked.min(LONGEST_SLOW_DOWN));
     }

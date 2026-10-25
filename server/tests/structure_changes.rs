@@ -431,3 +431,84 @@ async fn adding_websub_keeps_every_feed_article_and_schedule() {
     // Nothing is subscribed to a hub until a check finds one.
     assert_eq!(count("SELECT COUNT(*) FROM websub").await.unwrap(), 0);
 }
+
+#[tokio::test]
+async fn adding_feed_settings_keeps_every_feed_as_it_was() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database as WebSub left it (structure changes 1 to 7).
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(7, &old)
+        .await
+        .unwrap();
+    for feed in 1..=10 {
+        sqlx::query(
+            "INSERT INTO feeds (id, url, url_key, title, added_at, next_check_at, check_every)
+             VALUES (?, ?, ?, ?, 1, ?, 3600)",
+        )
+        .bind(feed)
+        .bind(format!("https://blog-{feed}.example/feed"))
+        .bind(format!("blog-{feed}.example/feed"))
+        .bind(format!("Blog {feed}"))
+        .bind(1000 + feed)
+        .execute(&old)
+        .await
+        .unwrap();
+        for number in 0..20 {
+            sqlx::query(
+                "INSERT INTO articles (feed_id, fingerprint, title, received_at, sort_at, read,
+                     starred)
+                 VALUES (?, ?, ?, 2, ?, ?, ?)",
+            )
+            .bind(feed)
+            .bind(format!("id:{number}"))
+            .bind(format!("Article {number}"))
+            .bind(number)
+            .bind(number % 2)
+            .bind(i64::from(number % 5 == 0))
+            .execute(&old)
+            .await
+            .unwrap();
+        }
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let count = |sql: &'static str| sqlx::query_scalar::<_, i64>(sql).fetch_one(&db);
+    assert_eq!(count("SELECT COUNT(*) FROM feeds").await.unwrap(), 10);
+    assert_eq!(count("SELECT COUNT(*) FROM articles").await.unwrap(), 200);
+    assert_eq!(
+        count("SELECT COUNT(*) FROM articles WHERE read = 1")
+            .await
+            .unwrap(),
+        100
+    );
+    assert_eq!(
+        count("SELECT COUNT(*) FROM articles WHERE starred = 1")
+            .await
+            .unwrap(),
+        40
+    );
+    assert_eq!(
+        count("SELECT SUM(next_check_at) FROM feeds").await.unwrap(),
+        10 * 1000 + 55
+    );
+    // Every feed behaves as before: inbox, its own rhythm, read in nine turtles.
+    assert_eq!(
+        count(
+            "SELECT COUNT(*) FROM feeds WHERE river = 0 AND check_at_most = 0 AND open_on_site = 0"
+        )
+        .await
+        .unwrap(),
+        10
+    );
+}
