@@ -1,7 +1,7 @@
 //! The app password other feed readers sign in with (SPEC section 26).
 //!
 //! Reeder, NetNewsWire and similar apps sync through the Google Reader API
-//! (`greader`). They never see the reader's own password: they get an app
+//! (`greader`). They never see the reader's own password: each reader gets an app
 //! password that nine turtles makes in Settings, shows once and can turn
 //! off at any time. It's 24 random letters and digits, so, like a signed-in
 //! device's ticket, the database keeps only a scrambled copy (BLAKE2s), and
@@ -36,23 +36,21 @@ pub fn routes() -> Router<AppState> {
 }
 
 /// Whether an app password exists, and since when.
-async fn status(_: SignedIn, State(state): State<AppState>) -> Response {
-    let made: Result<Option<String>, sqlx::Error> =
-        sqlx::query_scalar("SELECT value FROM settings WHERE name = 'app_password_made_at'")
+async fn status(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
+    let made: Result<Option<i64>, sqlx::Error> =
+        sqlx::query_scalar("SELECT made_at FROM app_passwords WHERE person_id = ?")
+            .bind(person)
             .fetch_optional(&state.db)
             .await;
     match made {
-        Ok(made) => {
-            let made_at = made.and_then(|at| at.parse::<i64>().ok());
-            Json(json!({ "on": made_at.is_some(), "made_at": made_at })).into_response()
-        }
+        Ok(made_at) => Json(json!({ "on": made_at.is_some(), "made_at": made_at })).into_response(),
         Err(error) => database_problem("reading the app password", &error),
     }
 }
 
 /// Makes a new app password, replacing any earlier one, and shows it this
 /// once: only its scrambled copy is kept.
-async fn make_password(_: SignedIn, State(state): State<AppState>) -> Response {
+async fn make_password(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
     let password = match new_password() {
         Ok(password) => password,
         Err(error) => {
@@ -60,26 +58,18 @@ async fn make_password(_: SignedIn, State(state): State<AppState>) -> Response {
             return StatusCode::INTERNAL_SERVER_ERROR.into_response();
         }
     };
-    let saved = async {
-        let mut transaction = state.db.begin().await?;
-        for (name, value) in [
-            ("app_password", hex(&scramble(&normalize(&password)))),
-            ("app_password_made_at", now().to_string()),
-        ] {
-            sqlx::query(
-                "INSERT INTO settings (name, value) VALUES (?, ?)
-                 ON CONFLICT (name) DO UPDATE SET value = excluded.value",
-            )
-            .bind(name)
-            .bind(value)
-            .execute(&mut *transaction)
-            .await?;
-        }
-        transaction.commit().await
-    }
+    let saved = sqlx::query(
+        "INSERT INTO app_passwords (person_id, password_hash, made_at) VALUES (?, ?, ?)
+         ON CONFLICT (person_id) DO UPDATE SET
+             password_hash = excluded.password_hash, made_at = excluded.made_at",
+    )
+    .bind(person)
+    .bind(hex(&scramble(&normalize(&password))))
+    .bind(now())
+    .execute(&state.db)
     .await;
     match saved {
-        Ok(()) => (
+        Ok(_) => (
             // Never kept by the browser or anything between.
             [(header::CACHE_CONTROL, "no-store")],
             Json(json!({ "password": password })),
@@ -90,30 +80,28 @@ async fn make_password(_: SignedIn, State(state): State<AppState>) -> Response {
 }
 
 /// Forgets the app password: every app is signed out. Nothing else changes.
-async fn turn_off(_: SignedIn, State(state): State<AppState>) -> Response {
-    let deleted =
-        sqlx::query("DELETE FROM settings WHERE name IN ('app_password', 'app_password_made_at')")
-            .execute(&state.db)
-            .await;
+async fn turn_off(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
+    let deleted = sqlx::query("DELETE FROM app_passwords WHERE person_id = ?")
+        .bind(person)
+        .execute(&state.db)
+        .await;
     match deleted {
         Ok(_) => StatusCode::NO_CONTENT.into_response(),
         Err(error) => database_problem("turning off the app password", &error),
     }
 }
 
-/// Whether `password` (as typed, with or without its dashes) is the current
-/// app password. Always false while none exists.
-pub async fn matches(state: &AppState, password: &str) -> Result<bool, sqlx::Error> {
+/// Whose current app password `password` is (as typed, with or without its
+/// dashes): the reader's number, or `None` if it's nobody's.
+pub async fn matches(state: &AppState, password: &str) -> Result<Option<i64>, sqlx::Error> {
     let password = normalize(password);
     if password.len() != LENGTH {
-        return Ok(false);
+        return Ok(None);
     }
-    let found: Option<i64> =
-        sqlx::query_scalar("SELECT 1 FROM settings WHERE name = 'app_password' AND value = ?")
-            .bind(hex(&scramble(&password)))
-            .fetch_optional(&state.db)
-            .await?;
-    Ok(found.is_some())
+    sqlx::query_scalar("SELECT person_id FROM app_passwords WHERE password_hash = ?")
+        .bind(hex(&scramble(&password)))
+        .fetch_optional(&state.db)
+        .await
 }
 
 /// The password without the dashes that group it, in small letters, so

@@ -12,7 +12,7 @@ Help people leave social media and return to reading the open web. Social media 
 
 ## What nine turtles is, and isn't
 
-**nine turtles is** a reader for writing published through RSS, Atom and JSON Feed, for one person per installation.
+**nine turtles is** a reader for writing published through RSS, Atom and JSON Feed. Each reader has their own feeds and reading; several readers can share one nine turtles without ever seeing each other's (approved by the owner for going multi-user, decision 0086).
 
 **nine turtles is not:**
 - **A read-later app:** it doesn't save arbitrary web pages.
@@ -22,7 +22,7 @@ Help people leave social media and return to reading the open web. Social media 
 - **A newsletter inbox:** no email address that turns newsletters into feeds.
 - **A web scraper:** it shows what publishers put in their feeds (second floor).
 - **A permanent archive:** unstarred articles are kept for one year (the clean-up comes in V2; V1 keeps everything).
-- **A multi-user service:** not in V1 ("not yet," not "never").
+- **A shared space:** readers on one nine turtles never see each other's feeds, marks, searches or reading (decision 0086).
 
 ## Design reference: Apple Books
 
@@ -283,7 +283,7 @@ Plain, unhurried, never urgent: "Nothing new yet," never "You're missing out!" L
 - **Per-feed modes:** inbox or river for each feed. Built 25 October 2026, in Edit feed (decision 0082, `docs/SPEC.md` sections 10 and 15).
 - **Passkey sign-in.**
 - **Chinese and Japanese search.**
-- **Multiple users.**
+- **Multiple users.** Being built (October 2026): decision 0086.
 - **Own domain name.** Chosen on 25 October 2026: nineturtles.app for the website, app.nineturtles.app for the app (decision 0066).
 
 Moved from V1 on 23 October 2026, because V1 is for the owner alone (decision 0012):

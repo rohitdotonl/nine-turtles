@@ -100,6 +100,9 @@ impl Action {
 #[derive(Clone, Debug, Serialize)]
 pub struct Rule {
     pub id: i64,
+    /// Whose rule it is.
+    #[serde(skip)]
+    pub person_id: i64,
     pub words: String,
     pub title_only: bool,
     pub author: String,
@@ -113,6 +116,7 @@ pub struct Rule {
 
 type RuleLine = (
     i64,
+    i64,
     String,
     bool,
     String,
@@ -123,17 +127,33 @@ type RuleLine = (
     bool,
 );
 
-const RULES: &str = "SELECT id, words, title_only, author, feed_id, folder_id, place_gone, action,
-        paused FROM rules ORDER BY id";
+/// A reader's rules, in the order they were made. Takes the reader.
+const RULES: &str = "SELECT id, person_id, words, title_only, author, feed_id, folder_id,
+        place_gone, action, paused FROM rules WHERE person_id = ? ORDER BY id";
 
-async fn rules(connection: &mut SqliteConnection) -> Result<Vec<Rule>, sqlx::Error> {
-    let lines: Vec<RuleLine> = sqlx::query_as(RULES).fetch_all(connection).await?;
+async fn rules(connection: &mut SqliteConnection, person: i64) -> Result<Vec<Rule>, sqlx::Error> {
+    let lines: Vec<RuleLine> = sqlx::query_as(RULES)
+        .bind(person)
+        .fetch_all(connection)
+        .await?;
     Ok(lines
         .into_iter()
         .filter_map(
-            |(id, words, title_only, author, feed_id, folder_id, place_gone, action, paused)| {
+            |(
+                id,
+                person_id,
+                words,
+                title_only,
+                author,
+                feed_id,
+                folder_id,
+                place_gone,
+                action,
+                paused,
+            )| {
                 Some(Rule {
                     id,
+                    person_id,
                     words,
                     title_only,
                     author,
@@ -228,16 +248,21 @@ impl Rule {
     }
 }
 
-/// The folders each feed is in.
+/// The reader's folders a feed is in.
 async fn folders_of(
     connection: &mut SqliteConnection,
+    person: i64,
     feed_id: i64,
 ) -> Result<HashSet<i64>, sqlx::Error> {
-    let folders: Vec<i64> =
-        sqlx::query_scalar("SELECT folder_id FROM feed_folders WHERE feed_id = ?")
-            .bind(feed_id)
-            .fetch_all(connection)
-            .await?;
+    let folders: Vec<i64> = sqlx::query_scalar(
+        "SELECT feed_folders.folder_id FROM feed_folders
+             JOIN folders ON folders.id = feed_folders.folder_id
+         WHERE feed_folders.feed_id = ? AND folders.person_id = ?",
+    )
+    .bind(feed_id)
+    .bind(person)
+    .fetch_all(connection)
+    .await?;
     Ok(folders.into_iter().collect())
 }
 
@@ -250,36 +275,54 @@ type ArticleLine = (
     Option<String>,
 );
 
-/// Does each rule's work on one feed's articles numbered above `after`:
-/// the ones that just arrived. Rules run in the order they were made; an
-/// article can be both starred and muted.
+/// Does each reader's rules' work on one feed's articles numbered above
+/// `after`: the ones that just arrived. Each reader's rules run in the order
+/// they were made; an article can be both starred and muted.
 pub async fn apply_to_new(
     connection: &mut SqliteConnection,
     feed_id: i64,
     after: i64,
 ) -> Result<(), sqlx::Error> {
-    let all = rules(connection).await?;
-    if all.iter().all(|rule| rule.paused || rule.place_gone) {
-        return Ok(());
-    }
-    let folders = folders_of(connection, feed_id).await?;
-    let covering: Vec<&Rule> = all
-        .iter()
-        .filter(|rule| rule.covers(feed_id, &folders))
-        .collect();
-    if covering.is_empty() {
-        return Ok(());
-    }
-    let lines: Vec<ArticleLine> = sqlx::query_as(
-        "SELECT id, feed_id, title, author, content, summary FROM articles
-         WHERE feed_id = ? AND id > ?",
+    let people: Vec<i64> = sqlx::query_scalar(
+        "SELECT DISTINCT person_id FROM rules WHERE paused = 0 AND place_gone = 0 ORDER BY person_id",
     )
-    .bind(feed_id)
-    .bind(after)
     .fetch_all(&mut *connection)
     .await?;
-    let candidates = candidates(lines);
-    for rule in covering {
+    let mut candidates = None;
+    for person in people {
+        let all = rules(connection, person).await?;
+        let folders = folders_of(connection, person, feed_id).await?;
+        let covering: Vec<&Rule> = all
+            .iter()
+            .filter(|rule| rule.covers(feed_id, &folders))
+            .collect();
+        if covering.is_empty() {
+            continue;
+        }
+        if candidates.is_none() {
+            let lines: Vec<ArticleLine> = sqlx::query_as(
+                "SELECT id, feed_id, title, author, content, summary FROM articles
+                 WHERE feed_id = ? AND id > ?",
+            )
+            .bind(feed_id)
+            .bind(after)
+            .fetch_all(&mut *connection)
+            .await?;
+            candidates = Some(self::candidates(lines));
+        }
+        let candidates = candidates.as_deref().unwrap_or_default();
+        act_on_each(connection, &covering, candidates).await?;
+    }
+    Ok(())
+}
+
+/// Does each of one reader's rules' work on the articles that match it.
+async fn act_on_each(
+    connection: &mut SqliteConnection,
+    covering: &[&Rule],
+    candidates: &[Candidate],
+) -> Result<(), sqlx::Error> {
+    for &rule in covering {
         let ids: Vec<i64> = candidates
             .iter()
             .filter(|article| rule.matches(article))
@@ -343,7 +386,8 @@ async fn matching_now(db: &sqlx::SqlitePool, rule: &Rule) -> Result<Vec<i64>, sq
                  AND (?1 = 0 OR articles.starred = 0)
                  AND (?2 IS NULL OR articles.feed_id = ?2)
                  AND (?3 IS NULL OR articles.feed_id IN
-                      (SELECT feed_id FROM feed_folders WHERE folder_id = ?3))
+                      (SELECT feed_id FROM feed_folders WHERE folder_id =
+                           (SELECT id FROM folders WHERE id = ?3 AND person_id = ?6)))
              ORDER BY articles.id LIMIT ?5",
         )
         .bind(rule.action == Action::Star)
@@ -351,6 +395,7 @@ async fn matching_now(db: &sqlx::SqlitePool, rule: &Rule) -> Result<Vec<i64>, sq
         .bind(rule.folder_id)
         .bind(after)
         .bind(MATCH_BATCH)
+        .bind(rule.person_id)
         .fetch_all(db)
         .await?;
         let Some(last) = lines.last() else {
@@ -367,10 +412,10 @@ async fn matching_now(db: &sqlx::SqlitePool, rule: &Rule) -> Result<Vec<i64>, sq
 }
 
 /// Every rule, and how many articles are muted, for Settings.
-async fn list_rules(_: SignedIn, State(state): State<AppState>) -> Response {
+async fn list_rules(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
     let listed: Result<(Vec<Rule>, i64), sqlx::Error> = async {
         let mut connection = state.db.acquire().await?;
-        let all = rules(&mut connection).await?;
+        let all = rules(&mut connection, person).await?;
         let muted = sqlx::query_scalar("SELECT COUNT(*) FROM articles WHERE muted = 1")
             .fetch_one(&mut *connection)
             .await?;
@@ -409,9 +454,11 @@ fn tidy(text: &str) -> Option<String> {
     (tidied.chars().count() <= LONGEST).then_some(tidied)
 }
 
-/// The form, checked: something to look for, a place that exists.
+/// The form, checked: something to look for, a place that exists and is
+/// the reader's.
 async fn checked(
     connection: &mut SqliteConnection,
+    person: i64,
     form: &RuleForm,
 ) -> Result<Result<(String, String), &'static str>, sqlx::Error> {
     let (Some(words), Some(author)) = (tidy(&form.words), tidy(&form.author)) else {
@@ -434,10 +481,12 @@ async fn checked(
         }
     }
     if let Some(folder) = form.folder_id {
-        let found: Option<i64> = sqlx::query_scalar("SELECT id FROM folders WHERE id = ?")
-            .bind(folder)
-            .fetch_optional(&mut *connection)
-            .await?;
+        let found: Option<i64> =
+            sqlx::query_scalar("SELECT id FROM folders WHERE id = ? AND person_id = ?")
+                .bind(folder)
+                .bind(person)
+                .fetch_optional(&mut *connection)
+                .await?;
         if found.is_none() {
             return Ok(Err("no-place"));
         }
@@ -445,8 +494,12 @@ async fn checked(
     Ok(Ok((words, author)))
 }
 
-async fn rule(connection: &mut SqliteConnection, id: i64) -> Result<Option<Rule>, sqlx::Error> {
-    Ok(rules(connection)
+async fn rule(
+    connection: &mut SqliteConnection,
+    person: i64,
+    id: i64,
+) -> Result<Option<Rule>, sqlx::Error> {
+    Ok(rules(connection, person)
         .await?
         .into_iter()
         .find(|rule| rule.id == id))
@@ -455,21 +508,22 @@ async fn rule(connection: &mut SqliteConnection, id: i64) -> Result<Option<Rule>
 /// Makes a rule. Answers its number and how many unread articles already
 /// match it, so the screen can offer to apply it to them too.
 async fn create_rule(
-    _: SignedIn,
+    SignedIn(person): SignedIn,
     State(state): State<AppState>,
     Json(form): Json<RuleForm>,
 ) -> Response {
     let made: Result<Result<(i64, usize), &'static str>, sqlx::Error> = async {
         let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
-        let (words, author) = match checked(&mut transaction, &form).await? {
+        let (words, author) = match checked(&mut transaction, person, &form).await? {
             Ok(parts) => parts,
             Err(refusal) => return Ok(Err(refusal)),
         };
         let id: i64 = sqlx::query_scalar(
-            "INSERT INTO rules (words, title_only, author, feed_id, folder_id, place_gone, action,
-                 paused, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
+            "INSERT INTO rules (person_id, words, title_only, author, feed_id, folder_id,
+                 place_gone, action, paused, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
         )
+        .bind(person)
         .bind(&words)
         .bind(form.title_only)
         .bind(&author)
@@ -481,7 +535,7 @@ async fn create_rule(
         .bind(now())
         .fetch_one(&mut *transaction)
         .await?;
-        let made = rule(&mut transaction, id).await?;
+        let made = rule(&mut transaction, person, id).await?;
         transaction.commit().await?;
         let matching = match made {
             Some(rule) => matching_now(&state.db, &rule).await?.len(),
@@ -499,20 +553,20 @@ async fn create_rule(
 
 /// Changes a rule. It acts on articles arriving from now on.
 async fn edit_rule(
-    _: SignedIn,
+    SignedIn(person): SignedIn,
     State(state): State<AppState>,
     Path(id): Path<i64>,
     Json(form): Json<RuleForm>,
 ) -> Response {
     let saved: Result<Result<bool, &str>, sqlx::Error> = async {
         let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
-        let (words, author) = match checked(&mut transaction, &form).await? {
+        let (words, author) = match checked(&mut transaction, person, &form).await? {
             Ok(parts) => parts,
             Err(refusal) => return Ok(Err(refusal)),
         };
         let changed = sqlx::query(
             "UPDATE rules SET words = ?, title_only = ?, author = ?, feed_id = ?, folder_id = ?,
-                 place_gone = 0, action = ? WHERE id = ?",
+                 place_gone = 0, action = ? WHERE id = ? AND person_id = ?",
         )
         .bind(&words)
         .bind(form.title_only)
@@ -521,6 +575,7 @@ async fn edit_rule(
         .bind(form.folder_id)
         .bind(form.action.word())
         .bind(id)
+        .bind(person)
         .execute(&mut *transaction)
         .await?;
         transaction.commit().await?;
@@ -542,14 +597,15 @@ struct Paused {
 
 /// Pauses a rule, or starts it again.
 async fn pause_rule(
-    _: SignedIn,
+    SignedIn(person): SignedIn,
     State(state): State<AppState>,
     Path(id): Path<i64>,
     Json(form): Json<Paused>,
 ) -> Response {
-    let changed = sqlx::query("UPDATE rules SET paused = ? WHERE id = ?")
+    let changed = sqlx::query("UPDATE rules SET paused = ? WHERE id = ? AND person_id = ?")
         .bind(form.paused)
         .bind(id)
+        .bind(person)
         .execute(&state.db)
         .await;
     match changed {
@@ -561,9 +617,14 @@ async fn pause_rule(
 
 /// Deletes a rule. What it already did stays done. The screen keeps the
 /// rule, so Undo can make it again.
-async fn delete_rule(_: SignedIn, State(state): State<AppState>, Path(id): Path<i64>) -> Response {
-    let deleted = sqlx::query("DELETE FROM rules WHERE id = ?")
+async fn delete_rule(
+    SignedIn(person): SignedIn,
+    State(state): State<AppState>,
+    Path(id): Path<i64>,
+) -> Response {
+    let deleted = sqlx::query("DELETE FROM rules WHERE id = ? AND person_id = ?")
         .bind(id)
+        .bind(person)
         .execute(&state.db)
         .await;
     match deleted {
@@ -575,9 +636,13 @@ async fn delete_rule(_: SignedIn, State(state): State<AppState>, Path(id): Path<
 
 /// Applies a rule, once, to the unread articles that match it now. Answers
 /// the articles it changed, so the screen can undo exactly those.
-async fn apply_rule(_: SignedIn, State(state): State<AppState>, Path(id): Path<i64>) -> Response {
+async fn apply_rule(
+    SignedIn(person): SignedIn,
+    State(state): State<AppState>,
+    Path(id): Path<i64>,
+) -> Response {
     let applied: Result<Option<(Action, Vec<i64>)>, sqlx::Error> = async {
-        let found = rule(&mut *state.db.acquire().await?, id).await?;
+        let found = rule(&mut *state.db.acquire().await?, person, id).await?;
         let Some(rule) = found else {
             return Ok(None);
         };
@@ -650,19 +715,21 @@ pub async fn place_gone(
     .await
 }
 
-/// Undo for deleting a folder: the rules it had go back to the folder made
-/// again, if they still have nowhere else.
+/// Undo for deleting a folder: the reader's rules it had go back to the
+/// folder made again, if they still have nowhere else.
 pub async fn back_in_folder(
     connection: &mut SqliteConnection,
+    person: i64,
     folder_id: i64,
     rules: &[i64],
 ) -> Result<(), sqlx::Error> {
     sqlx::query(
         "UPDATE rules SET folder_id = ?, place_gone = 0
-         WHERE id IN (SELECT value FROM json_each(?)) AND place_gone = 1
+         WHERE person_id = ? AND id IN (SELECT value FROM json_each(?)) AND place_gone = 1
              AND feed_id IS NULL AND folder_id IS NULL",
     )
     .bind(folder_id)
+    .bind(person)
     .bind(serde_json::to_string(rules).unwrap_or_else(|_| "[]".to_owned()))
     .execute(connection)
     .await?;
@@ -680,6 +747,7 @@ mod tests {
     fn rule(words: &str, title_only: bool, author: &str) -> Rule {
         Rule {
             id: 1,
+            person_id: 1,
             words: words.to_owned(),
             title_only,
             author: author.to_owned(),

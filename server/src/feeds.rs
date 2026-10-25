@@ -69,14 +69,18 @@ pub const FEEDS: &str = "SELECT id, title, site_url, river, check_at_most, open_
 
 /// Every followed feed, alphabetically, with its unread count and folders,
 /// and every folder, alphabetically (SPEC section 5).
-async fn list_feeds(_: SignedIn, State(state): State<AppState>) -> Response {
+async fn list_feeds(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
     let listed: Result<(Vec<FeedRow>, Vec<Folder>), sqlx::Error> = async {
         let mut connection = state.db.acquire().await?;
         // One snapshot, so the feeds, folders and memberships agree.
         let mut transaction = sqlx::Connection::begin(&mut *connection).await?;
         let mut feeds: Vec<FeedRow> = sqlx::query_as(FEEDS).fetch_all(&mut *transaction).await?;
-        let folders: Vec<Folder> = sqlx::query_as(FOLDERS).fetch_all(&mut *transaction).await?;
+        let folders: Vec<Folder> = sqlx::query_as(FOLDERS)
+            .bind(person)
+            .fetch_all(&mut *transaction)
+            .await?;
         let memberships: Vec<(i64, i64)> = sqlx::query_as(MEMBERSHIPS)
+            .bind(person)
             .fetch_all(&mut *transaction)
             .await?;
         transaction.commit().await?;
@@ -528,7 +532,7 @@ pub struct ArticleRow {
 /// One page of the item list. `next` says where the next page starts, or is
 /// null at the very end.
 async fn list_articles(
-    _: SignedIn,
+    SignedIn(person): SignedIn,
     State(state): State<AppState>,
     Query(query): Query<ArticlesQuery>,
 ) -> Response {
@@ -542,7 +546,7 @@ async fn list_articles(
     // as new rather than missed.
     let latest: Result<i64, sqlx::Error> = sqlx::query_scalar(LATEST).fetch_one(&state.db).await;
     let listed = match latest {
-        Ok(latest) => page(&state.db, list, query.order, after)
+        Ok(latest) => page(&state.db, person, list, query.order, after)
             .await
             .map(|listed| (latest, listed)),
         Err(error) => Err(error),
@@ -575,7 +579,8 @@ pub const fn new_sql(list: List) -> Option<&'static str> {
         ),
         List::Folder(_) => Some(
             "SELECT EXISTS (SELECT 1 FROM articles WHERE id > ? AND +muted = 0
-                 AND +feed_id IN (SELECT feed_id FROM feed_folders WHERE folder_id = ?))",
+                 AND +feed_id IN (SELECT feed_id FROM feed_folders
+                  WHERE folder_id = (SELECT id FROM folders WHERE id = ? AND person_id = ?)))",
         ),
         // Nothing arrives starred.
         List::Starred => None,
@@ -595,7 +600,7 @@ struct NewQuery {
 /// Whether new articles are waiting for the list on screen, so it can say
 /// "New items · press r" (SPEC section 13). It never says how many.
 async fn new_articles(
-    _: SignedIn,
+    SignedIn(person): SignedIn,
     State(state): State<AppState>,
     Query(query): Query<NewQuery>,
 ) -> Response {
@@ -606,6 +611,9 @@ async fn new_articles(
     let mut question = sqlx::query_scalar(sql).bind(query.since);
     if let List::Feed(id) | List::Folder(id) = list {
         question = question.bind(id);
+    }
+    if let List::Folder(_) = list {
+        question = question.bind(person);
     }
     let found: Result<bool, sqlx::Error> = question.fetch_one(&state.db).await;
     match found {
@@ -654,7 +662,8 @@ macro_rules! list_query {
 }
 
 /// The question for a list in an order. A feed's or folder's question takes
-/// its ID first; every question then takes the cursor (time, id) and the limit.
+/// its ID first, and a folder's then the reader (it must be theirs); every
+/// question then takes the cursor (time, id) and the limit.
 pub const fn list_sql(list: List, order: Order) -> &'static str {
     match (list, order) {
         (List::All, Order::Newest) => list_query!(
@@ -690,13 +699,15 @@ pub const fn list_sql(list: List, order: Order) -> &'static str {
             "ASC"
         ),
         (List::Folder(_), Order::Newest) => list_query!(
-            "+articles.feed_id IN (SELECT feed_id FROM feed_folders WHERE folder_id = ?)
+            "+articles.feed_id IN (SELECT feed_id FROM feed_folders
+                  WHERE folder_id = (SELECT id FROM folders WHERE id = ? AND person_id = ?))
                  AND articles.muted = 0 AND feeds.unsubscribed_at IS NULL AND",
             "<",
             "DESC"
         ),
         (List::Folder(_), Order::Oldest) => list_query!(
-            "+articles.feed_id IN (SELECT feed_id FROM feed_folders WHERE folder_id = ?)
+            "+articles.feed_id IN (SELECT feed_id FROM feed_folders
+                  WHERE folder_id = (SELECT id FROM folders WHERE id = ? AND person_id = ?))
                  AND articles.muted = 0 AND feeds.unsubscribed_at IS NULL AND",
             ">",
             "ASC"
@@ -704,11 +715,12 @@ pub const fn list_sql(list: List, order: Order) -> &'static str {
     }
 }
 
-/// One page of a list, starting after `after` (from the start when absent),
-/// using the list's index. One extra row is asked for, to know whether
-/// another page exists.
+/// One page of reader `person`'s list, starting after `after` (from the
+/// start when absent), using the list's index. One extra row is asked for,
+/// to know whether another page exists.
 pub async fn page(
     db: &sqlx::SqlitePool,
+    person: i64,
     list: List,
     order: Order,
     after: Option<(i64, i64)>,
@@ -721,6 +733,9 @@ pub async fn page(
     let mut query = sqlx::query_as(list_sql(list, order));
     if let List::Feed(id) | List::Folder(id) = list {
         query = query.bind(id);
+    }
+    if let List::Folder(_) = list {
+        query = query.bind(person);
     }
     let mut rows: Vec<ArticleRow> = query
         .bind(after_at)

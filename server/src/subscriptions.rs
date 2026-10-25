@@ -92,7 +92,11 @@ pub struct Summary {
     pub unreadable: Vec<String>,
 }
 
-async fn import(_: SignedIn, State(state): State<AppState>, text: String) -> Response {
+async fn import(
+    SignedIn(person): SignedIn,
+    State(state): State<AppState>,
+    text: String,
+) -> Response {
     let Some(listed) = read(&text) else {
         return (
             StatusCode::BAD_REQUEST,
@@ -103,15 +107,16 @@ async fn import(_: SignedIn, State(state): State<AppState>, text: String) -> Res
     if listed.len() > MOST_FEEDS {
         return StatusCode::PAYLOAD_TOO_LARGE.into_response();
     }
-    match follow_all(&state.db, &listed, now()).await {
+    match follow_all(&state.db, person, &listed, now()).await {
         Ok(summary) => Json(json!({ "summary": summary })).into_response(),
         Err(error) => database_problem("importing an OPML file", &error),
     }
 }
 
-/// Follows every feed listed, all at once or not at all.
+/// Follows every feed listed for reader `person`, all at once or not at all.
 pub async fn follow_all(
     db: &sqlx::SqlitePool,
+    person: i64,
     listed: &[Listed],
     now: i64,
 ) -> Result<Summary, sqlx::Error> {
@@ -134,7 +139,7 @@ pub async fn follow_all(
             id
         };
         if let Some(name) = &entry.folder {
-            let (folder, created) = folders::folder_named(&mut transaction, name).await?;
+            let (folder, created) = folders::folder_named(&mut transaction, person, name).await?;
             summary.folders_added += usize::from(created);
             sqlx::query("INSERT OR IGNORE INTO feed_folders (folder_id, feed_id) VALUES (?, ?)")
                 .bind(folder)
@@ -217,7 +222,7 @@ struct Followed {
 
 /// Downloads an OPML file of every followed feed: each folder A to Z with
 /// its feeds, then the feeds in no folder.
-async fn export(_: SignedIn, State(state): State<AppState>) -> Response {
+async fn export(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
     let gathered: Result<_, sqlx::Error> = async {
         let mut transaction = state.db.begin().await?;
         let feeds: Vec<Followed> = sqlx::query_as(
@@ -226,8 +231,12 @@ async fn export(_: SignedIn, State(state): State<AppState>) -> Response {
         )
         .fetch_all(&mut *transaction)
         .await?;
-        let folders: Vec<Folder> = sqlx::query_as(FOLDERS).fetch_all(&mut *transaction).await?;
+        let folders: Vec<Folder> = sqlx::query_as(FOLDERS)
+            .bind(person)
+            .fetch_all(&mut *transaction)
+            .await?;
         let memberships: Vec<(i64, i64)> = sqlx::query_as(MEMBERSHIPS)
+            .bind(person)
             .fetch_all(&mut *transaction)
             .await?;
         transaction.commit().await?;

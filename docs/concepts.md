@@ -156,6 +156,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Timestamps and UTC
 - Data export
 - Rules and mutes (filters the reader writes)
+- Readers (accounts) and the `people` table
 
 ## Security and sign-in
 

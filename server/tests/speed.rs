@@ -16,6 +16,8 @@ use nine_turtles::{
 use sqlx::SqlitePool;
 
 const FEEDS_COUNT: i64 = 500;
+/// The reader whose library it is: the owner, number 1.
+const READER: i64 = 1;
 /// About one article every other day per feed, for a year.
 const ARTICLES_PER_FEED: i64 = 200;
 const YEAR: i64 = 365 * 24 * 60 * 60;
@@ -64,8 +66,9 @@ async fn big_library() -> SqlitePool {
     // Folders, as if an OPML file was imported: every tenth feed in "Big",
     // feed 250 alone in "Small", the rest in "Other".
     for (folder, name) in [(1, "Big"), (2, "Small"), (3, "Other")] {
-        sqlx::query("INSERT INTO folders (id, name) VALUES (?, ?)")
+        sqlx::query("INSERT INTO folders (id, person_id, name) VALUES (?, ?, ?)")
             .bind(folder)
+            .bind(READER)
             .bind(name)
             .execute(&mut *transaction)
             .await
@@ -136,7 +139,8 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
     ] {
         for order in [Order::Newest, Order::Oldest] {
             let mut binds = match list {
-                List::Feed(id) | List::Folder(id) => vec![id],
+                List::Feed(id) => vec![id],
+                List::Folder(id) => vec![id, READER],
                 _ => vec![],
             };
             binds.extend([i64::MAX, i64::MAX, 51]);
@@ -155,7 +159,7 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
     let mut timings = Vec::new();
     let mut time = async |what: &'static str, list: List, order: Order, after| {
         let started = Instant::now();
-        let (articles, next) = page(&db, list, order, after).await.unwrap();
+        let (articles, next) = page(&db, READER, list, order, after).await.unwrap();
         timings.push((what, started.elapsed()));
         (articles, next)
     };
@@ -226,7 +230,8 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
     for list in [List::All, List::Unread, List::Feed(250), List::Folder(1)] {
         let sql = new_sql(list).unwrap();
         let binds = match list {
-            List::Feed(id) | List::Folder(id) => vec![since - 1000, id],
+            List::Feed(id) => vec![since - 1000, id],
+            List::Folder(id) => vec![since - 1000, id, READER],
             _ => vec![since - 1000],
         };
         let plan = plan(&db, sql, &binds).await;
@@ -238,6 +243,9 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
         let mut question = sqlx::query_scalar::<_, bool>(sql).bind(since - 1000);
         if let List::Feed(id) | List::Folder(id) = list {
             question = question.bind(id);
+        }
+        if let List::Folder(_) = list {
+            question = question.bind(READER);
         }
         question.fetch_one(&db).await.unwrap();
         timings.push(("new items", started.elapsed()));
@@ -375,7 +383,7 @@ async fn search_is_fast_with_500_feeds_and_a_year_of_articles() {
         ),
     ] {
         let started = Instant::now();
-        let (articles, _) = find(&db, &search).await.unwrap().unwrap();
+        let (articles, _) = find(&db, READER, &search).await.unwrap().unwrap();
         timings.push((what, started.elapsed(), allowed));
         assert!(!articles.is_empty(), "{what}");
     }
