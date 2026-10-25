@@ -415,7 +415,7 @@ export type Notice = { message: string; undo?: () => Promise<string | undefined>
 export type Refusal = "no-name" | "already" | "too-late" | "gone" | "trouble";
 
 /** Sends a change to feeds or folders. Unlike marks, the screen waits for the answer. */
-async function change(path: string, body: unknown): Promise<{ refusal?: Refusal; answer?: Record<string, unknown> }> {
+export async function change(path: string, body: unknown): Promise<{ refusal?: Refusal; answer?: Record<string, unknown> }> {
   // Marks sent just before (an article read, then Unsubscribe) are saved first.
   await saved();
   let response: Response;

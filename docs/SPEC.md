@@ -307,12 +307,22 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 - Unsubscribing and deleting a folder happen at once and take you to Unread, where the line says "Unsubscribed from …" or "Deleted the folder …" with Undo (or `u`), until your next action.
 - Unsubscribing from a feed keeps its starred articles in Starred. Undo brings the feed back whole, read history and folders included; after your next action (or ten minutes) its other articles are gone for good. Following it again later starts it afresh, all unread.
 
+- **Your feeds** (tidying many feeds at once; decision 0080): in Settings, under **Feeds**, a **Your feeds** row (ending in ›) opens a page of its own at `/settings/feeds`, built like the feed health page: the same top line with an X ("Close your feeds", or Escape) back to Settings, and one centred column.
+  - It lists every feed A to Z in one grouped list, each on two lines: its name, then, in the muted grey, when it last posted ("Last posted today", "Last posted on 3 Oct 2025", or "Nothing posted yet") and the folders it's in. The group's small heading counts them ("42 feeds"). Out of Edit, a row opens that feed's list.
+  - **Show**, a segmented choice above the list: **All feeds**, **Quiet for 6 months** or **Quiet for a year**. A quiet feed is one with nothing published for that long (counted from when you added it, if it has never posted). The feed health page lists broken feeds; this lists working feeds that have gone silent, so you can let them go. With none, it says "Every feed has posted within the last 6 months" (or year).
+  - **Edit**, as in Apple Books, at the right of the list's heading: each row gets a tick box (the same rounded square as Edit feed's folders), and **Choose all** / **Choose none** appears beside it; Edit becomes **Done**. A bar stays at the page's foot while the list scrolls, solid in the page's color with a hairline above: how many are chosen, **Unsubscribe** in the destructive red words, and **Move to…**.
+  - **Move to…** opens a sheet ("Move 3 feeds") with a choice of one, as a grouped list with a round mark at each row's end: **No folder**, each folder, and **New folder** (with a text box for its name). Each feed leaves the folders it was in and goes to the one chosen. Cancel or Escape closes only the sheet.
+  - Moving and unsubscribing happen at once. A line above the list says what was done ("Moved 3 feeds to Later.", "Unsubscribed from 3 feeds.", naming the feed when there's one) with **Undo**, which the keyboard moves to, until your next action there (pressing Edit, changing Show or another move or unsubscribe ends it). Undo puts every feed back where it was in one go (a folder made just for the move goes too) or brings every feed back whole, as unsubscribing from one feed does. Edit ends after each action.
+
 **How to check it**
 1. Put a feed in two folders. It appears under both, and its unread count is right in each.
 2. Rename a folder: it moves to its new alphabetical position.
 3. Delete a folder: its feeds remain (under other folders or the "no folder" group).
 4. Unsubscribe from a feed, then undo: it's back with its read history.
 5. Star an article, then unsubscribe from its feed: the article is still in Starred.
+6. Open Settings › Your feeds, press Edit, tick two feeds and Move to… a new folder: both are in it, and nowhere else. Press Undo: they're back where they were, and the new folder is gone.
+7. Tick two feeds and press Unsubscribe, then Undo: both are back, with their read history.
+8. Choose "Quiet for 6 months": only feeds with nothing new for six months are listed.
 
 ## 16. OPML import and export
 
@@ -362,7 +372,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 - Sections appear once they have something to do: Reading (sort order) since Milestone 7 (and the reading mode since 25 October 2026), Your data with Milestone 9.
 - **Reading:** the reading mode, inbox or river (section 10), then newest or oldest first.
 - **Your data:** three rows that act: **Import OPML…** (opens the file chooser; it ends in ›), **Export OPML** and **Export starred articles** (each downloads a file; each ends in a download mark), in the text color. What the files are is said under the group; what an import did appears there too.
-- **Feeds:** **Feed health ›** opens the feed health page (section 17).
+- **Feeds:** **Your feeds ›** opens Your feeds, for tidying many feeds at once (section 15), and **Feed health ›** opens the feed health page (section 17).
 - **Other apps:** the app password other feed readers sync with (section 26).
 - **Account:** **Sign out** as a row of its own, ending in a small door mark, in the text color (not red: signing out removes nothing), and the version under the group. (Keeping articles comes in V2.)
 - **Status:** which version of nine turtles you're using. When a newer version is live (nine turtles notices from the server's answers), it says "A new version is ready" with a **Reload** button. Otherwise new versions are used automatically the next time you open or reload the app, never while you're reading. If a tab left open across an update can't carry on, it says so plainly in the note at the bottom of the list (where "New items" appears): "nine turtles was updated. Reload to continue.", with a **Reload** button.

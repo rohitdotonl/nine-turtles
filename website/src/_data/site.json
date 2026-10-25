@@ -2,5 +2,8 @@
   "name": "nine turtles",
   "url": "https://nineturtles.app",
   "app": "https://app.nineturtles.app",
-  "source": "https://github.com/rohitdotonl/nine-turtles"
+  "source": "https://github.com/rohitdotonl/nine-turtles",
+  "email": "hello@nineturtles.app",
+  "maker": "Rohit",
+  "makerSite": "https://rohit.onl"
 }
