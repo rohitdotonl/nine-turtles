@@ -1,16 +1,17 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP, TEST_PASSWORD } from "../playwright.config";
 import { LOOKS, THEMES as THEME_NAMES, type Mode, type Theme } from "../src/lib/themes";
 
 // Every screen of nine turtles. Each new screen is added here, so it is
 // automatically checked for accessibility and photographed for the owner.
-// `base` picks the nine turtles that has feeds (playwright.config.ts); without
-// it, the screen is seen on a nine turtles with none.
+// `library` opens the screen on a nine turtles following the made-up library
+// below (playwright.config.ts); without it, the screen is seen on a nine
+// turtles with no feeds.
 export type Screen = {
   name: string;
   path: string;
   signedIn: boolean;
-  base?: string;
+  library?: boolean;
   open?: (page: Page) => Promise<void>;
 };
 
@@ -22,12 +23,8 @@ export const SCREENS: Screen[] = [
     name: "articles",
     path: "/all",
     signedIn: true,
-    base: FEEDS_APP,
+    library: true,
     open: async (page) => {
-      await follow(page, `${FEED_SITE}/`);
-      await follow(page, `${FEED_SITE}/garden/`);
-      await page.reload();
-      await appReady(page);
       await expect(page.getByRole("button", { name: "Show older items" })).toBeVisible();
     },
   },
@@ -35,7 +32,7 @@ export const SCREENS: Screen[] = [
     name: "add-feed-choice",
     path: "/add-feed",
     signedIn: true,
-    base: FEEDS_APP,
+    library: true,
     open: async (page) => {
       await page.getByLabel("Paste a website or feed URL").fill(`${FEED_SITE}/two/`);
       await page.keyboard.press("Enter");
@@ -46,9 +43,11 @@ export const SCREENS: Screen[] = [
     name: "article",
     path: "/all",
     signedIn: true,
-    base: FEEDS_APP,
+    library: true,
     open: async (page) => {
-      await openReadingRoom(page);
+      // Unread again where the screenshots have a nine turtles to themselves,
+      // so every picture of it starts the same.
+      await openReadingRoom(page, { unread: libraryApp() !== FEEDS_APP });
       await page.keyboard.press("o");
       await expect(page.getByRole("heading", { level: 2, name: "The pleasure of a slow letter" })).toBeFocused();
       await expect(page.getByRole("img", { name: "A river drawn as three blue lines" })).toBeVisible();
@@ -59,12 +58,16 @@ export const SCREENS: Screen[] = [
     name: "marks",
     path: "/all",
     signedIn: true,
-    base: FEEDS_APP,
+    library: true,
     open: async (page) => {
-      const id = await follow(page, `${FEED_SITE}/blog/screen-marks-${Date.now()}/`);
+      // The library's own copy where the screenshots have a nine turtles to
+      // themselves; elsewhere a fresh one, as other tests may be marking it too.
+      const copy = libraryApp() === FEEDS_APP ? `marks-${Date.now()}/` : "";
+      const id = await follow(page, `${FEED_SITE}/shelf/the-margins/${copy}feed.xml`);
+      await unmark(page, id);
       await page.goto(new URL(`/feeds/${id}`, page.url()).href);
       await appReady(page);
-      await expect(page.getByRole("button", { name: /A year of reading slowly/ })).toBeVisible();
+      await expect(page.getByRole("button", { name: /On reading the same book twice/ })).toBeVisible();
       await page.keyboard.press("j");
       await page.keyboard.press("s");
       await page.keyboard.press("j");
@@ -76,13 +79,8 @@ export const SCREENS: Screen[] = [
     name: "folder",
     path: "/all",
     signedIn: true,
-    base: FEEDS_APP,
+    library: true,
     open: async (page) => {
-      const id = await follow(page, `${FEED_SITE}/garden/`);
-      await follow(page, `${FEED_SITE}/`);
-      await page.request.post(new URL(`/api/feeds/${id}`, page.url()).href, {
-        data: { title: "Garden Letters", folders: [], new_folder: "Outdoors" },
-      });
       const listed = await (await page.request.get(new URL("/api/feeds", page.url()).href)).json();
       const folder = listed.folders.find((each: { name: string }) => each.name === "Outdoors").id;
       // Opened in the sidebar, as if its button had been pressed.
@@ -97,9 +95,9 @@ export const SCREENS: Screen[] = [
     name: "edit-feed",
     path: "/all",
     signedIn: true,
-    base: FEEDS_APP,
+    library: true,
     open: async (page) => {
-      const id = await follow(page, `${FEED_SITE}/garden/`);
+      const id = await follow(page, shelf("garden-letters"));
       await page.goto(new URL(`/feeds/${id}/edit`, page.url()).href);
       await appReady(page);
       await expect(page.getByRole("heading", { level: 2, name: "Edit feed" })).toBeVisible();
@@ -109,11 +107,8 @@ export const SCREENS: Screen[] = [
     name: "search",
     path: "/all",
     signedIn: true,
-    base: FEEDS_APP,
+    library: true,
     open: async (page) => {
-      await follow(page, `${FEED_SITE}/garden/`);
-      await page.reload();
-      await appReady(page);
       // On a phone the field waits behind the Search button beside More until asked for (decision 0060).
       await expect(page.getByRole("region", { name: "All" }).getByRole("listitem").first()).toBeVisible();
       await page.keyboard.press("/");
@@ -129,7 +124,7 @@ export const SCREENS: Screen[] = [
       await expect(page.getByRole("region", { name: "Search results" }).locator("mark").first()).toBeVisible();
     },
   },
-  { name: "settings", path: "/settings", signedIn: true },
+  { name: "settings", path: "/settings", signedIn: true, library: true },
   {
     name: "shortcuts",
     path: "/unread",
@@ -140,6 +135,54 @@ export const SCREENS: Screen[] = [
     },
   },
 ];
+
+/** A blog in the made-up library (tests/feed-server.mjs → SHELF), by its feed's address. */
+const shelf = (blog: string) => `${FEED_SITE}/shelf/${blog}/feed.xml`;
+
+/**
+ * What the library screens follow: blogs a real reader might, two of them in
+ * folders, so the pictures on a pull request look like nine turtles in use.
+ */
+const LIBRARY: { address: string; title: string; folder?: string }[] = [
+  { address: shelf("field-notes"), title: "Field Notes", folder: "Outdoors" },
+  { address: shelf("garden-letters"), title: "Garden Letters", folder: "Outdoors" },
+  { address: shelf("low-tide"), title: "Low Tide", folder: "Outdoors" },
+  { address: shelf("the-margins"), title: "The Margins" },
+  { address: `${FEED_SITE}/reading.xml`, title: "Reading Room" },
+  { address: shelf("slow-code"), title: "Slow Code" },
+  { address: shelf("small-kitchen"), title: "Small Kitchen", folder: "Making" },
+  { address: shelf("workbench"), title: "Workbench", folder: "Making" },
+];
+
+/**
+ * The nine turtles that follows the library: the screenshots' own one when
+ * they run (playwright.config.ts), otherwise the one the feed tests share.
+ */
+export function libraryApp(): string {
+  return (test.info().project.metadata as { feedsApp?: string }).feedsApp ?? FEEDS_APP;
+}
+
+/** Follows the whole library, each blog in its folder. Doing it twice is fine. */
+async function followLibrary(page: Page): Promise<void> {
+  for (const { address, title, folder } of LIBRARY) {
+    const id = await follow(page, address);
+    if (!folder) continue;
+    const saved = await page.request.post(new URL(`/api/feeds/${id}`, page.url()).href, {
+      data: { title, folders: [], new_folder: folder },
+    });
+    expect(saved.ok()).toBe(true);
+  }
+}
+
+/** Marks every article of a feed unread and unstarred again, so its screen starts the same each time. */
+async function unmark(page: Page, feed: number): Promise<void> {
+  const listed = await (await page.request.get(new URL(`/api/articles?feed=${feed}`, page.url()).href)).json();
+  const ids = listed.articles.map((article: { id: number }) => article.id);
+  for (const [mark, value] of [["read", false], ["starred", false]] as const) {
+    const done = await page.request.post(new URL(`/api/articles/${mark}`, page.url()).href, { data: { ids, [mark]: value } });
+    expect(done.ok()).toBe(true);
+  }
+}
 
 /** One theme's day or night version, as "calm-dark" (decision 0046). */
 export type Variant = `${Theme}-${Mode}`;
@@ -170,9 +213,10 @@ export async function follow(page: Page, address: string): Promise<number> {
   return Number(body.feed?.id ?? body.feed_id);
 }
 
-/** Follows Reading Room and opens its list, with nothing selected yet. */
-export async function openReadingRoom(page: Page): Promise<void> {
+/** Follows Reading Room and opens its list, with nothing selected yet (and, if asked, nothing read). */
+export async function openReadingRoom(page: Page, { unread = false } = {}): Promise<void> {
   const id = await follow(page, `${FEED_SITE}/reading/`);
+  if (unread) await unmark(page, id);
   await page.goto(new URL(`/feeds/${id}`, page.url()).href);
   await appReady(page);
   await expect(page.getByRole("button", { name: /The pleasure of a slow letter/ })).toBeVisible();
@@ -201,9 +245,14 @@ export async function chooseTheme(page: Page, variant: Variant): Promise<void> {
 
 export async function openScreen(page: Page, screen: Screen, theme: Variant): Promise<void> {
   await chooseTheme(page, theme);
-  await page.goto(screen.base ? new URL(screen.path, screen.base).href : screen.path);
+  await page.goto(screen.library ? new URL(screen.path, libraryApp()).href : screen.path);
   await appReady(page);
   if (screen.signedIn) await signIn(page);
+  if (screen.library) {
+    await followLibrary(page);
+    await page.reload();
+    await appReady(page);
+  }
   await screen.open?.(page);
   await page.evaluate(() => document.fonts.ready);
   await expect
@@ -218,7 +267,7 @@ export async function markAllFromMenu(page: Page): Promise<void> {
 }
 
 /** Presses Tab until the keyboard's place reaches the element: the keyboard floor. */
-export async function tabTo(page: Page, target: Locator, limit = 50): Promise<void> {
+export async function tabTo(page: Page, target: Locator, limit = 100): Promise<void> {
   for (let i = 0; i < limit; i++) {
     if (await target.evaluate((element) => element === document.activeElement)) return;
     await page.keyboard.press("Tab");

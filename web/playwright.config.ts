@@ -12,6 +12,10 @@ const FEEDS_PORT = 4320;
 const FEED_SITE_PORT = 4319;
 export const FEEDS_APP = `http://127.0.0.1:${FEEDS_PORT}`;
 export const FEED_SITE = `http://127.0.0.1:${FEED_SITE_PORT}`;
+// The screenshots get a nine turtles each for desktop and phone, with nothing
+// in them but the made-up library they follow (tests/screens.ts), so the
+// pictures never show the other tests' feeds.
+const SHOTS_PORTS = { desktop: 4321, phone: 4322 };
 const server = process.env.NINE_TURTLES_BINARY ?? "../server/target/release/nine-turtles";
 // Lets a computer with its own copy of Chromium use it instead of downloading one.
 const executablePath = process.env.NINE_TURTLES_CHROMIUM || undefined;
@@ -32,10 +36,18 @@ export default defineConfig({
     // stand in for the server's answers; tests/phone.spec.ts switches it on.
     serviceWorkers: "block",
   },
-  projects: [
-    { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } } },
-    { name: "phone", use: { ...devices["Pixel 7"] } },
-  ],
+  projects: (["desktop", "phone"] as const).flatMap((device) => {
+    const use = device === "desktop" ? { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } } : { ...devices["Pixel 7"] };
+    return [
+      { name: device, use, testIgnore: "screenshots.spec.ts" },
+      {
+        name: `screenshots-${device}`,
+        use,
+        testMatch: "screenshots.spec.ts",
+        metadata: { device, feedsApp: `http://127.0.0.1:${SHOTS_PORTS[device]}` },
+      },
+    ];
+  }),
   webServer: [
     {
       command: server,
@@ -69,5 +81,16 @@ export default defineConfig({
       url: `${FEEDS_APP}/`,
       reuseExistingServer: false,
     },
+    ...Object.entries(SHOTS_PORTS).map(([device, port]) => ({
+      command: server,
+      env: {
+        NINE_TURTLES_LISTEN: `127.0.0.1:${port}`,
+        NINE_TURTLES_PASSWORD_HASH: TEST_PASSWORD_HASH,
+        NINE_TURTLES_DATA_DIR: `test-data/screenshots-${device}-${Date.now()}`,
+        NINE_TURTLES_ALLOW_LOCAL_FEEDS: "yes",
+      },
+      url: `http://127.0.0.1:${port}/`,
+      reuseExistingServer: false,
+    })),
   ],
 });
