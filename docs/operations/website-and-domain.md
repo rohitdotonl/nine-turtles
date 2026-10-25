@@ -9,73 +9,95 @@ nine turtles has two addresses (decision 0066):
   address, slowfeed.onrender.com, keeps working too.
 
 Each one-time step below is yours, because agents never get access to Render
-or to where you buy the domain. It takes about 30 minutes, plus waiting for
-the domain to be looked up correctly everywhere (usually minutes, at most a
-day).
+or to Cloudflare. It takes about 30 minutes, plus waiting for names to be
+looked up correctly everywhere (usually minutes, at most a day).
 
-## 1. Buy the domain (10 minutes)
+## Where you start
 
-Buy **nineturtles.app** from any domain seller ("registrar"), for example
-Cloudflare, Porkbun or Namecheap. Domains ending in `.app` only work over
-HTTPS (the padlock), which both GitHub Pages and Render set up for you.
+You own **nineturtles.app** on **Cloudflare**, where its DNS records (the
+domain's address book: they turn a name into the computer that answers it)
+live. Until this move, nineturtles.app itself leads to the app on Render.
+The move gives the app its new address first, and only then hands
+nineturtles.app to the website, so the app is never unreachable.
+
+In Cloudflare, every record in this guide is set to **DNS only** (a grey
+cloud, with **Proxy status** off), never "Proxied" (an orange cloud).
+Proxied would put Cloudflare in between, and GitHub and Render then can't set
+up their padlocks. Domains ending in `.app` only work over HTTPS (the
+padlock), which GitHub Pages and Render set up for you.
+
+## 1. Give the app its new address (Render and Cloudflare, 10 minutes)
+
+1. In Render, open the nine turtles service → **Settings** → **Custom
+   Domains** → **Add Custom Domain**, type `app.nineturtles.app` and save.
+   Leave `nineturtles.app` there for now. Render shows the record it
+   wants, usually a CNAME to `slowfeed.onrender.com`.
+2. In Cloudflare, open **nineturtles.app** → **DNS** → **Records** → **Add
+   record**: type **CNAME**, name `app`, target `slowfeed.onrender.com` (or
+   what Render showed), **DNS only**. Save.
+3. Back in Render, wait until `app.nineturtles.app` says **Verified** and
+   its certificate is issued (a few minutes; press **Verify** if it waits).
+4. Open https://app.nineturtles.app and sign in. A browser keeps sign-ins
+   and per-device settings (theme, font, text size) for each address
+   separately, so you sign in once on each device and choose those again.
+   Your feeds, stars, reading history and sort order are on the server, so
+   they're all there. On a phone, add the app to the home screen again from
+   the new address, and remove the old icon.
+
+From here on, use app.nineturtles.app. nineturtles.app still leads to the
+app until step 3.
 
 ## 2. Switch on GitHub Pages (5 minutes)
 
 1. On GitHub, open the repository → **Settings** → **Pages**.
 2. Under **Build and deployment**, set **Source** to **GitHub Actions**.
 3. Under **Custom domain**, type `nineturtles.app` and press **Save**.
-   (GitHub says the domain isn't set up yet until step 3 below is done.)
+   GitHub says the domain isn't pointing at it yet; that's expected until
+   step 3.
 4. Open **Actions** → **Website** → **Run workflow** → **Run workflow**.
-   Until you do this, the "Website" run from the merge shows a red cross;
-   that's expected, and this run replaces it.
-   At GitHub's own address (`rohitdotonl.github.io/…`) the page looks
-   unstyled; at nineturtles.app it looks right.
+   This run replaces the red cross from the first, automatic try (it failed
+   only because Pages wasn't switched on). At GitHub's own address
+   (`rohitdotonl.github.io/…`) the page looks unstyled; at nineturtles.app it
+   looks right.
 
 Recommended, so no one else can ever use your domain on GitHub: on GitHub,
 your picture → **Settings** → **Pages** → **Add a domain**, type
-`nineturtles.app`, and add the one `TXT` record it shows you in step 3.
+`nineturtles.app`, and add the one `TXT` record it shows you in Cloudflare.
 
-## 3. Point the names at the hosts (10 minutes)
+## 3. Hand nineturtles.app to the website (Cloudflare, 10 minutes)
 
-In your domain seller's **DNS** settings (the address book that turns
-names into computers), add these records. If your seller is Cloudflare, set
-each one to **DNS only** (the grey cloud), not "Proxied".
+1. In Cloudflare → **nineturtles.app** → **DNS** → **Records**, find the
+   records that send `nineturtles.app` and `www` to Render (an A record to a
+   Render address such as `216.24.57.1`, or a CNAME to
+   `slowfeed.onrender.com`). **Delete them.** Keep the `app` record from
+   step 1, and keep any MX or TXT records (they're for email and proofs of
+   ownership).
+2. Add these records, each **DNS only**:
 
-| Type | Name | Value | For |
-|---|---|---|---|
-| A | `@` (the domain itself) | `185.199.108.153` | the website |
-| A | `@` | `185.199.109.153` | the website |
-| A | `@` | `185.199.110.153` | the website |
-| A | `@` | `185.199.111.153` | the website |
-| AAAA | `@` | `2606:50c0:8000::153` | the website |
-| AAAA | `@` | `2606:50c0:8001::153` | the website |
-| AAAA | `@` | `2606:50c0:8002::153` | the website |
-| AAAA | `@` | `2606:50c0:8003::153` | the website |
-| CNAME | `www` | `rohitdotonl.github.io` | www.nineturtles.app leads to the website |
-| CNAME | `app` | `slowfeed.onrender.com` | the app |
+| Type | Name | Value (Cloudflare calls it IPv4 address, IPv6 address or Target) |
+|---|---|---|
+| A | `@` (nineturtles.app itself) | `185.199.108.153` |
+| A | `@` | `185.199.109.153` |
+| A | `@` | `185.199.110.153` |
+| A | `@` | `185.199.111.153` |
+| AAAA | `@` | `2606:50c0:8000::153` |
+| AAAA | `@` | `2606:50c0:8001::153` |
+| AAAA | `@` | `2606:50c0:8002::153` |
+| AAAA | `@` | `2606:50c0:8003::153` |
+| CNAME | `www` | `rohitdotonl.github.io` |
 
-These values are GitHub's and Render's published addresses, nothing private.
-If Render shows a different value for `app` in step 4, use Render's.
+These are GitHub Pages' published addresses, nothing private.
 
-## 4. Give the app its new address (Render, 5 minutes)
+3. In Render → **Settings** → **Custom Domains**, delete `nineturtles.app`
+   and `www.nineturtles.app`. Keep `app.nineturtles.app`.
 
-1. In Render, open the nine turtles service → **Settings** → **Custom
-   Domains** → **Add Custom Domain**.
-2. Type `app.nineturtles.app` and save. Render checks the `app` record from
-   step 3 and sets up the padlock itself; it says **Verified** when done.
+## 4. Finish up
 
-## 5. Finish up
-
-1. Back in GitHub → **Settings** → **Pages**, once the domain check passes,
-   tick **Enforce HTTPS**.
-2. Open https://nineturtles.app and https://app.nineturtles.app.
-3. At the new app address you sign in once on each device, because a
-   browser keeps sign-ins and per-device settings (theme, font, text size)
-   for each address separately. Choose them again there. Your feeds, stars,
-   reading history and sort order are on the server, so they're all there.
-4. On a phone, add the app to the home screen again from the new address,
-   and remove the old icon.
-5. Tell the agent it's done, so the docs can name the new address.
+1. In GitHub → **Settings** → **Pages**, once the domain check passes (it
+   can take up to an hour), tick **Enforce HTTPS**.
+2. Open https://nineturtles.app (the website, with an "Open the app"
+   button) and https://app.nineturtles.app (the app).
+3. Tell the agent it's done.
 
 ## How changes go live
 
