@@ -239,9 +239,19 @@ test.describe("on a wide window", () => {
     const themes = panel.getByRole("group", { name: "Theme" });
     await expect(themes.getByRole("radio")).toHaveCount(2);
     await expect(themes.getByRole("radio", { name: "Original" })).toBeChecked();
+    const link = article(page).locator(".article-text a").first();
+    const textColor = await article(page).locator(".article-text").first().evaluate((el) => getComputedStyle(el).color);
+    await expect(link).toHaveCSS("color", textColor);
     await themes.getByRole("radio", { name: "Plain" }).check();
     await expect(root).toHaveAttribute("data-theme", "plain");
-    await themes.getByRole("radio", { name: "Original" }).check();
+    await expect(link).toHaveCSS("color", "rgb(0, 0, 238)");
+    await expect(link).toHaveCSS("text-decoration-line", "underline");
+    // With the keyboard, as any radio buttons: the arrow key goes back to Original.
+    await themes.getByRole("radio", { name: "Plain" }).focus();
+    await page.keyboard.press("ArrowLeft");
+    await expect(themes.getByRole("radio", { name: "Original" })).toBeChecked();
+    await expect(root).toHaveAttribute("data-theme", "original");
+    await expect(link).toHaveCSS("color", textColor);
     await panel.getByRole("radio", { name: "Light", exact: true }).check();
     await expect(root).toHaveAttribute("data-theme", "original");
     await expect(root).toHaveAttribute("data-mode", "light");

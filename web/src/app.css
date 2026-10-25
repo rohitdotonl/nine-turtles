@@ -57,8 +57,8 @@
   --color-tint-sidebar: var(--tint-sidebar);
 }
 /*
-  One theme, Original (decision 0056), with a day and a night version.
-  preferences.ts writes it to <html data-theme="…"> and the resolved
+  Two themes, Original (decision 0056) and Plain (decision 0059), each with
+  a day and a night version. preferences.ts writes the theme to <html data-theme="…"> and the resolved
   Appearance (light or dark, following the device unless the reader chose
   one) to data-mode. Before the script runs there are neither, so the page is
   Original, by day or by night as the device is set.
@@ -1171,7 +1171,7 @@ input {
   window it sits in the middle of the reading area, like a page in a book,
   while the bar above it keeps to the pane's edges (decision 0038). Sizes
   inside are relative to the reader's text size, so + and - scale
-  everything together. Links are underlined in the text color, never blue.
+  everything together. Links are underlined in the text color, never blue, except in Plain (below).
   Images never overflow.
 */
 .article {
