@@ -74,7 +74,7 @@ test("an invite link lets someone sign up, and closing sign-up stops it", async 
   await expect(page).toHaveURL(/\/settings\/readers$/);
   const everyone = page.getByRole("region", { name: /^\d+ readers$/ });
   await expect(everyone.getByText("(you)")).toBeVisible();
-  await expect(everyone.getByRole("listitem").filter({ hasText: email })).toContainText(/Joined .* · 0 feeds$/);
+  await expect(everyone.getByRole("listitem").filter({ hasText: email })).toContainText(/Joined .* · 0 feeds\s*$/);
   await expect(page.getByRole("region", { name: "This nine turtles" }).getByText("Readers", { exact: true })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(/\/settings$/);
