@@ -11,7 +11,7 @@ async function openApp(page: Page, path = "/unread") {
 
 const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
 const list = (page: Page) => page.getByRole("region", { name: /^(Unread|Starred|All)$/ });
-// The reading area: an article, "No article open", or the welcome on a nine turtles with no feeds.
+// The reading area: an article, "Time to read something beautiful.", or the welcome on a nine turtles with no feeds.
 const readingArea = (page: Page) => page.getByRole("region", { name: /^(Article|A quiet place to read\.)$/ });
 const toggle = (page: Page) => page.getByRole("button", { name: "Sidebar" });
 
@@ -531,7 +531,7 @@ test("on a computer a 1px line parts the sidebar, the list and the reading pane 
   await expect(page.locator(".list-pane")).toHaveCSS("border-right-width", "1px");
 });
 
-test("the sidebar ends with Add feed, then Shortcuts in words and Settings as an icon; its toggle says what it does", async ({ page, isMobile }) => {
+test("the sidebar ends with Add feed, then Keys (icon and word) and Settings as an icon; its toggle says what it does", async ({ page, isMobile }) => {
   test.skip(isMobile, "The phone has its own screens and no sidebar toggle.");
   await page.setViewportSize({ width: 1440, height: 900 });
   await openApp(page);
@@ -547,8 +547,9 @@ test("the sidebar ends with Add feed, then Shortcuts in words and Settings as an
     expect(Math.min(each.width, each.height)).toBeGreaterThanOrEqual(44);
   }
   expect(add.x + add.width).toBeLessThanOrEqual(k.x + 1);
-  // Shortcuts says what it is in words, and Add feed's words still show whole (decision 0062).
-  await expect(keys).toContainText("Shortcuts");
+  // Keys says what it is in a word beside its icon, as Add feed does, and both show whole (decisions 0062, 0064).
+  await expect(keys).toContainText("Keys");
+  await expect(keys.locator("svg")).toHaveCount(1);
   for (const each of [sidebar(page).getByRole("link", { name: "Add feed" }), keys]) {
     expect(await each.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
   }
@@ -558,7 +559,7 @@ test("the sidebar ends with Add feed, then Shortcuts in words and Settings as an
   await expect(settings).toHaveAttribute("title", "Settings");
   // While the shortcut list is open its button is filled and says its dialog is open (decision 0054).
   // (Found by its label, not its role: the open list's dialog leaves the page behind it inert.)
-  const keysBehind = page.locator('#sidebar button[aria-label="Keyboard shortcuts"]');
+  const keysBehind = page.locator('#sidebar button[aria-label="Keys (keyboard shortcuts)"]');
   await expect(keysBehind).toHaveAttribute("aria-haspopup", "dialog");
   await expect(keysBehind).toHaveAttribute("aria-expanded", "false");
   const restingFill = await keysBehind.evaluate((element) => getComputedStyle(element).backgroundColor);
@@ -571,6 +572,20 @@ test("the sidebar ends with Add feed, then Shortcuts in words and Settings as an
   await expect(toggle(page)).toHaveAttribute("title", "Hide the sidebar ( [ )");
   await toggle(page).click();
   await expect(toggle(page)).toHaveAttribute("title", "Show the sidebar ( [ )");
+});
+
+test("in a sidebar narrowed below 15rem, Keys keeps only its icon and stays a full-size button", async ({ page, isMobile }) => {
+  test.skip(isMobile, "The phone has no sidebar to narrow.");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.addInitScript(() => localStorage.setItem("nine-turtles.sidebar-width", "200"));
+  await openApp(page);
+  const keys = sidebar(page).getByRole("button", { name: "Keys (keyboard shortcuts)" });
+  await expect(keys.locator("svg")).toBeVisible();
+  await expect(keys.getByText("Keys")).toBeHidden();
+  const box = (await keys.boundingBox())!;
+  expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
+  const add = sidebar(page).getByRole("link", { name: "Add feed" });
+  expect(await add.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
 });
 
 test("Settings is one centred column of grouped lists; Your data and Sign out are rows of their own, each ending in a glyph", async ({ page }) => {
