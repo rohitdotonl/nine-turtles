@@ -11,3 +11,5 @@
 /web/screenshots/
 /web/test-data/
 /server/data/
+/website/node_modules/
+/website/_site/

@@ -38,6 +38,10 @@ jobs:
             echo '```'
             (cd web && npm audit) 2>&1 || status=1
             echo '```'
+            echo "## Website libraries (npm audit)"
+            echo '```'
+            (cd website && npm audit) 2>&1 || status=1
+            echo '```'
           } > report.md
           echo "problems=$status" >> "$GITHUB_OUTPUT"
 

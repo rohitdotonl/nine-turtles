@@ -480,7 +480,7 @@ Covered by sections 14 and 22.
 
 ## Not in V1
 
-From DESIGN.md: YouTube player, public reading list page, per-feed reading modes, passkey sign-in, Chinese and Japanese search, multiple users, own domain name.
+From DESIGN.md: YouTube player, public reading list page, per-feed reading modes, passkey sign-in, Chinese and Japanese search, multiple users. (The own domain name was chosen on 25 October 2026: nineturtles.app, with the app at app.nineturtles.app; decision 0066.)
 
 Moved to V2 on 23 October 2026: backups and moving hosts, river mode, WebSub, the feed health page, the yearly clean-up, the feeds guide page, and keeping a tab that was left open across an update working without a reload.
 

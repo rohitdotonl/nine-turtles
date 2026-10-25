@@ -31,6 +31,8 @@ const cssRules = [
   [/scroll-behavior\s*:\s*smooth/g, "smooth scrolling"],
 ];
 for (const file of files(join(root, "web/dist"), [".css", ".html"])) scan(file, cssRules);
+// The website's styles and pages (decision 0066).
+for (const file of files(join(root, "website/src"), [".css", ".html", ".njk", ".md"])) scan(file, cssRules);
 
 // The source: Svelte's animation helpers and the browser's animation API.
 const sourceRules = [

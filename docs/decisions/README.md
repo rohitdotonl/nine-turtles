@@ -47,3 +47,4 @@ repository's history.
 | [0063](0063-plain-theme-system-serif.md) | A second theme, Plain (rohit.onl's bare look: black on white, blue underlined article links, the accent in the text color), and System serif, the device's own serif, as a reading font (adds to 0056) |
 | [0064](0064-a-beautiful-empty-page-and-capital-keys.md) | "Time to read something beautiful." in the empty reading area (replaces "No article open"); tooltips print keys as capitals, like the key caps; Shortcuts becomes "Keys" with an icon |
 | [0065](0065-faster-checks.md) | The checks run in parts side by side (frontend, Rust, browser tests in two halves) behind one **All checks**; documents-only pull requests skip them; changelog entries go in `docs/changes/`, one file each (revisits 0001) |
+| [0066](0066-website-and-domain.md) | A website at nineturtles.app (Eleventy, GitHub Pages), the app at app.nineturtles.app, in one repository; website-only changes skip the app's checks and deploy |
