@@ -8,18 +8,22 @@
   Escape goes back. Reading (the reading mode and the sort order) is shared across the reader's
   devices; the reader controls belong to this device. Your data imports and
   exports the reader's feeds and folders as an OPML file, and exports their
-  starred articles as a JSON Feed file. Other apps makes the app password
-  other feed readers sync with (OtherApps).
+  starred articles as a JSON Feed file. Rules lists the reader's rules, and
+  opens the rule editor over Settings (SPEC section 27). Other apps makes the
+  app password other feed readers sync with (OtherApps).
 -->
 <script lang="ts">
   import { edge } from "./edge";
   import Icon from "./Icon.svelte";
   import ImportOpml from "./ImportOpml.svelte";
   import OtherApps from "./OtherApps.svelte";
+  import RuleEditor from "./RuleEditor.svelte";
+  import Rules from "./Rules.svelte";
+  import type { Rule } from "./rules";
   import PageHead from "./PageHead.svelte";
   import TextSize from "./TextSize.svelte";
   import { APPEARANCES, LOOKS, THEMES } from "./themes";
-  import type { Order, ReadingMode } from "./feeds";
+  import type { Feed, Folder, Order, ReadingMode } from "./feeds";
   import { LINE_WIDTHS, READING_FONTS, type Preferences } from "./preferences";
   import { signOut } from "./session";
   import { updates } from "./updates.svelte";
@@ -37,6 +41,11 @@
     onClose,
     onImported,
     onFeedHealth,
+    onMuted,
+    feeds,
+    folders,
+    phone = false,
+    ruleForFeed = $bindable(),
     besideToggle = false,
   }: {
     preferences: Preferences;
@@ -58,6 +67,14 @@
     onImported: () => void;
     /** Opens the feed health page. */
     onFeedHealth: (event: MouseEvent) => void;
+    /** Opens the Muted articles page. */
+    onMuted: (event: MouseEvent) => void;
+    feeds: Feed[];
+    folders: Folder[];
+    /** On a phone the rule editor is the phone sheet, in place of Settings. */
+    phone?: boolean;
+    /** A new rule for this feed opens at once (Edit feed's "Add a rule for this feed…"). */
+    ruleForFeed?: number;
     /** The sidebar is hidden, so the top line starts clear of its toggle. */
     besideToggle?: boolean;
   } = $props();
@@ -71,6 +88,31 @@
     { value: "inbox", label: "Inbox" },
     { value: "river", label: "River" },
   ] as const;
+
+  /** The rule editor, while open: a rule to change, or a new one (perhaps for a feed). */
+  let editing: { rule?: Rule; feedId?: number } | undefined = $state();
+  let rulesPanel: Rules | undefined = $state();
+  /** What the editor did, for Rules to say once it's showing (on a phone it comes back as the editor closes). */
+  let pending: (() => void) | undefined;
+  let ruleHeading: HTMLHeadingElement | undefined = $state();
+
+  $effect(() => {
+    if (ruleForFeed !== undefined) {
+      editing = { feedId: ruleForFeed };
+      ruleForFeed = undefined;
+    }
+  });
+
+  /** Closing the editor: on a phone, Settings comes back, and the keyboard returns to Rules. */
+  function closeEditor() {
+    editing = undefined;
+    queueMicrotask(() => {
+      document.getElementById("rules-heading")?.focus();
+      const doing = pending;
+      pending = undefined;
+      doing?.();
+    });
+  }
 
   let message = $state("");
   let sortMessage = $state("");
@@ -105,6 +147,28 @@
   }
 </script>
 
+{#if editing}
+  {#key editing}
+    <RuleEditor
+      sheet={!phone}
+      rule={editing.rule}
+      feedId={editing.feedId}
+      {feeds}
+      {folders}
+      bind:heading={ruleHeading}
+      onCancel={closeEditor}
+      onSaved={(draft, made) => {
+        pending = () => rulesPanel?.saved(draft, made);
+        closeEditor();
+      }}
+      onDelete={(rule) => {
+        pending = () => rulesPanel?.remove(rule);
+        closeEditor();
+      }}
+    />
+  {/key}
+{/if}
+{#if !(editing && phone)}
 <section aria-labelledby="settings-heading" class="flex flex-1 flex-col bg-paper">
   <PageHead title="Settings" id="settings-heading" bind:heading {onClose} closeLabel="Close settings" {besideToggle} column="max-w-[35rem]" />
   <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-16 md:px-10">
@@ -271,6 +335,15 @@
         <p class="inset-foot">Feeds that have stopped working, what went wrong, and what you can do about it.</p>
       </section>
 
+      <Rules
+        bind:this={rulesPanel}
+        {feeds}
+        {folders}
+        {onMuted}
+        onNew={() => (editing = {})}
+        onEdit={(rule) => (editing = { rule })}
+      />
+
       <OtherApps />
 
       <section aria-labelledby="account-heading">
@@ -298,6 +371,7 @@
     </div>
   </div>
 </section>
+{/if}
 
 <style>
   /* A row's name, on its left. A fieldset's legend floats so it sits in the row like any other child. */

@@ -1,6 +1,7 @@
 <!--
   "Edit feed" (SPEC section 15): the feed's name, its folders as a
-  checklist ending in a "New folder…" row, and Unsubscribe. Saving changes the name and
+  checklist ending in a "New folder…" row, a shortcut to add a rule for the
+  feed (SPEC section 27), and Unsubscribe. Saving changes the name and
   folders together; Cancel or Escape goes back to the feed unchanged.
   Unsubscribing happens at once, with Undo on the next screen. On a wide
   window it's a sheet over the feed's list; on a phone, a screen of its own.
@@ -28,6 +29,7 @@
     onSaved,
     onCancel,
     onUnsubscribe,
+    onAddRule,
   }: {
     feed: Feed;
     folders: Folder[];
@@ -39,6 +41,8 @@
     onSaved: () => void;
     onCancel: () => void;
     onUnsubscribe: () => Promise<string | undefined>;
+    /** "Add a rule for this feed…": Settings, with a new rule for it (SPEC section 27). */
+    onAddRule: () => void;
   } = $props();
 
   // The form starts from the feed as it is now, once.
@@ -123,6 +127,11 @@
         >{folders.length === 0 ? "No folders yet. " : ""}Optional: a new folder is made when you save, with this feed in it.</span
       >
     </fieldset>
+
+    <!-- A shortcut to Settings › Rules, already set to this feed; leaving this sheet unchanged. -->
+    <p class="text-small">
+      <button type="button" class="text-link" onclick={onAddRule}>Add a rule for this feed…</button>
+    </p>
 
     <!-- A problem, in red words with an icon, only once there is one: the sheet grows by its line. -->
     <p role="status" class={["flex items-start gap-1.5 text-small text-danger", !message && "sr-only"]}>

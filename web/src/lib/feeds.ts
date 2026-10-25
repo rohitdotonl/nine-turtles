@@ -29,6 +29,8 @@ export type Article = {
   at: number;
   read: boolean;
   starred: boolean;
+  /** A rule (or the reader) muted it: only search and the Muted page show it (SPEC section 27). */
+  muted: boolean;
   /**
    * A search result's line of its text around the first searched word, in
    * plain-text pieces, the searched words marked (SPEC section 14). Absent
@@ -570,7 +572,7 @@ async function getJson(path: string): Promise<unknown> {
   return response.json();
 }
 
-function toArticle(article: Record<string, unknown>): Article {
+export function toArticle(article: Record<string, unknown>): Article {
   return {
     id: Number(article.id),
     feedId: Number(article.feed_id),
@@ -580,6 +582,7 @@ function toArticle(article: Record<string, unknown>): Article {
     at: Number(article.at),
     read: article.read === true,
     starred: article.starred === true,
+    muted: article.muted === true,
     ...(Array.isArray(article.excerpt) ? { excerpt: toExcerpt(article.excerpt) } : {}),
   };
 }

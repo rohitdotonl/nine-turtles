@@ -381,9 +381,12 @@ struct RuleForm {
     feed_id: Option<i64>,
     folder_id: Option<i64>,
     action: Action,
-    /// Undo for deleting a rule brings it back paused if it was.
+    /// Undo for deleting a rule brings it back paused if it was, and with
+    /// its place gone if it was, so it never spreads to every feed.
     #[serde(default)]
     paused: bool,
+    #[serde(default)]
+    place_gone: bool,
 }
 
 /// A phrase as the reader typed it, its spaces tidied. None if it's too long.
@@ -449,15 +452,16 @@ async fn create_rule(
             Err(refusal) => return Ok(Err(refusal)),
         };
         let id: i64 = sqlx::query_scalar(
-            "INSERT INTO rules (words, title_only, author, feed_id, folder_id, action, paused,
-                 created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
+            "INSERT INTO rules (words, title_only, author, feed_id, folder_id, place_gone, action,
+                 paused, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
         )
         .bind(&words)
         .bind(form.title_only)
         .bind(&author)
         .bind(form.feed_id)
         .bind(form.folder_id)
+        .bind(form.place_gone && form.feed_id.is_none() && form.folder_id.is_none())
         .bind(form.action.word())
         .bind(form.paused)
         .bind(now())

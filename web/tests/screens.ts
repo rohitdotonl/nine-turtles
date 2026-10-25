@@ -172,6 +172,75 @@ export const SCREENS: Screen[] = [
     },
   },
   {
+    // Settings › Rules with two rules, one paused, and the rule editor open over it. The
+    // rules are as the server would send them, so the library the screenshots follow stays as it is.
+    name: "rules",
+    path: "/settings",
+    signedIn: true,
+    library: true,
+    open: async (page) => {
+      const rule = (id: number, words: string, author: string, action: string, paused: boolean) => ({
+        id,
+        words,
+        title_only: true,
+        author,
+        feed_id: null,
+        folder_id: null,
+        place_gone: false,
+        action,
+        paused,
+      });
+      await page.route("**/api/rules", (route) =>
+        route.request().method() === "GET"
+          ? route.fulfill({
+              json: { rules: [rule(901, "sponsored", "", "mute", false), rule(902, "", "Jane Doe", "star", true)], muted: 12 },
+            })
+          : route.continue(),
+      );
+      await page.reload();
+      await appReady(page);
+      await expect(page.getByText("Mute articles with “sponsored” in the title, in all feeds.")).toBeVisible();
+      await page.getByRole("button", { name: "New rule…" }).click();
+      await expect(page.getByRole("heading", { level: 2, name: "New rule" })).toBeVisible();
+      await page.getByRole("textbox", { name: "Word or phrase" }).fill("giveaway");
+    },
+  },
+  {
+    // Muted articles, as the server would list them.
+    name: "muted",
+    path: "/settings/muted",
+    signedIn: true,
+    open: async (page) => {
+      const day = 24 * 60 * 60;
+      const now = Math.floor(Date.now() / 1000);
+      const article = (id: number, title: string, feed: string, ago: number) => ({
+        id,
+        feed_id: 1,
+        feed_title: feed,
+        title,
+        link: null,
+        at: now - ago * day,
+        read: true,
+        starred: false,
+        muted: true,
+      });
+      await page.route("**/api/muted", (route) =>
+        route.fulfill({
+          json: {
+            articles: [
+              article(901, "Sponsored: the notebook I carry everywhere", "Field Notes", 1),
+              article(902, "A giveaway for readers", "Small Kitchen", 3),
+            ],
+            count: 2,
+          },
+        }),
+      );
+      await page.reload();
+      await appReady(page);
+      await expect(page.getByRole("heading", { name: "2 muted articles" })).toBeVisible();
+    },
+  },
+  {
     name: "shortcuts",
     path: "/unread",
     signedIn: true,
