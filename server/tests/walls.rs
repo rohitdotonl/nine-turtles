@@ -7,7 +7,9 @@
 //! This covers settings, the app password, folders, saved searches and
 //! rules (structure change 11), and following feeds, each feed's name and
 //! settings, and the read, starred and muted marks (structure change 12).
-//! A feed both readers follow is stored and fetched once.
+//! A feed both readers follow is stored and fetched once. Undo buttons,
+//! folders made "back" with things in them, rules pointed elsewhere and
+//! OPML imports never reach another reader's feeds, folders or rules.
 
 mod common;
 
@@ -1684,4 +1686,423 @@ async fn moving_to_an_address_someone_else_follows_keeps_everything_and_lets_go_
     );
     assert_eq!(owner.ids("view=starred").await.len(), 1);
     assert_eq!(other.marks(&list).await, theirs_before);
+}
+
+#[tokio::test]
+async fn undo_buttons_never_bring_back_another_readers_feed() {
+    let (owner, other, state, feed) = two_readers().await;
+    let ids = owner.ids("view=all").await;
+    let app = other.app().await;
+
+    // While the owner follows it: searching that feed, asking an app for it
+    // or marking it all read finds and changes nothing of theirs.
+    assert_eq!(
+        other
+            .get(&format!("/api/search?q=tomatoes&feed={feed}"))
+            .await["articles"],
+        json!([])
+    );
+    let refs = app
+        .get(&format!("stream/items/ids?output=json&n=100&s=feed/{feed}"))
+        .await;
+    assert_eq!(refs["itemRefs"], json!([]));
+    assert_eq!(
+        app.post("mark-all-as-read", &format!("s=feed/{feed}"))
+            .await,
+        StatusCode::OK
+    );
+    // "Subscribe" by its number only brings back a feed they followed.
+    assert_eq!(
+        app.post(
+            "subscription/edit",
+            &format!("ac=subscribe&s=feed/{feed}&t=Mine")
+        )
+        .await,
+        StatusCode::OK
+    );
+    assert_eq!(other.get("/api/feeds").await["feeds"], json!([]));
+    // Putting it back in their own folder (Undo for moving) does nothing.
+    let (_, theirs) = other
+        .post("/api/folders", json!({ "name": "Theirs" }))
+        .await;
+    let theirs = theirs["folder"]["id"].as_i64().unwrap();
+    let (status, _) = other
+        .post(
+            "/api/tidy/restore",
+            json!({ "feeds": [{ "id": feed, "folders": [theirs] }] }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    assert_eq!(count(&state, "SELECT COUNT(*) FROM feed_folders").await, 0);
+
+    // The owner unsubscribes; while their Undo waits, the other reader's
+    // Undo buttons can't bring it back, for either of them.
+    let (status, _) = owner
+        .post(&format!("/api/feeds/{feed}/unsubscribe"), json!({}))
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    let (status, _) = other
+        .post(&format!("/api/feeds/{feed}/resubscribe"), json!({}))
+        .await;
+    assert_eq!(status, StatusCode::CONFLICT);
+    let (status, refused) = other
+        .post("/api/tidy/resubscribe", json!({ "feeds": [feed] }))
+        .await;
+    assert_eq!(status, StatusCode::CONFLICT);
+    assert_eq!(refused["error"], "too-late");
+    assert_eq!(
+        app.post("subscription/edit", &format!("ac=subscribe&s=feed/{feed}"))
+            .await,
+        StatusCode::OK
+    );
+    assert_eq!(owner.get("/api/feeds").await["feeds"], json!([]));
+    assert_eq!(other.get("/api/feeds").await["feeds"], json!([]));
+    assert_eq!(
+        count(
+            &state,
+            "SELECT COUNT(*) FROM subscriptions WHERE unsubscribed_at IS NULL"
+        )
+        .await,
+        0
+    );
+
+    // The owner's own Undo still works, with their marks and name.
+    let (status, _) = owner
+        .post(&format!("/api/feeds/{feed}/resubscribe"), json!({}))
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    let mine = &owner.get("/api/feeds").await["feeds"][0];
+    assert_eq!(mine["title"], "Garden notes");
+    assert_eq!(mine["unread"], 3);
+    assert_eq!(owner.ids("view=unread").await, ids);
+}
+
+#[tokio::test]
+async fn rules_and_folders_cant_be_pointed_at_another_readers_things() {
+    let (owner, other, state, shared, _) = two_followers().await;
+    // A second feed only the owner follows.
+    let only_mine = owner.follow(&publisher().await).await;
+    let (_, garden) = owner
+        .post("/api/folders", json!({ "name": "Garden" }))
+        .await;
+    let garden = garden["folder"]["id"].as_i64().unwrap();
+    owner
+        .post(
+            &format!("/api/feeds/{shared}"),
+            json!({ "title": "Garden notes", "folders": [garden] }),
+        )
+        .await;
+    let (_, in_garden) = owner
+        .post(
+            "/api/rules",
+            json!({ "words": "tomatoes", "action": "star", "folder_id": garden }),
+        )
+        .await;
+    let in_garden = in_garden["id"].as_i64().unwrap();
+    let (status, _) = owner
+        .post(
+            "/api/saved-searches",
+            json!({ "name": "In the garden",
+                    "query": { "scope": { "kind": "folder", "id": garden } } }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::CREATED);
+    // A rule of the owner's whose folder is gone, waiting for Undo.
+    let (_, old) = owner.post("/api/folders", json!({ "name": "Old" })).await;
+    let old = old["folder"]["id"].as_i64().unwrap();
+    let (_, waiting) = owner
+        .post(
+            "/api/rules",
+            json!({ "words": "potatoes", "action": "mute", "folder_id": old }),
+        )
+        .await;
+    let waiting = waiting["id"].as_i64().unwrap();
+    let (_, gone) = owner
+        .post(&format!("/api/folders/{old}/delete"), json!({}))
+        .await;
+    assert_eq!(gone["rules"], json!([waiting]));
+
+    // The other reader's own rule can't be pointed at the owner's folder,
+    // or at a feed only the owner follows.
+    let (_, theirs) = other
+        .post("/api/rules", json!({ "words": "beans", "action": "star" }))
+        .await;
+    let theirs = theirs["id"].as_i64().unwrap();
+    for place in [
+        json!({ "words": "beans", "action": "star", "folder_id": garden }),
+        json!({ "words": "beans", "action": "star", "feed_id": only_mine }),
+    ] {
+        let (status, refused) = other
+            .post(&format!("/api/rules/{theirs}"), place.clone())
+            .await;
+        assert_eq!(status, StatusCode::BAD_REQUEST, "{place}");
+        assert_eq!(refused["error"], "no-place");
+    }
+
+    // Making a folder "back" with the owner's feed and waiting rule takes
+    // neither.
+    let (status, made) = other
+        .post(
+            "/api/folders",
+            json!({ "name": "Old", "feeds": [only_mine], "rules": [waiting] }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::CREATED, "{made}");
+    let made = made["folder"]["id"].as_i64().unwrap();
+    assert_eq!(
+        count(
+            &state,
+            &format!("SELECT COUNT(*) FROM feed_folders WHERE folder_id = {made}")
+        )
+        .await,
+        0
+    );
+    // Their own folder named like the owner's, filled and deleted, leaves
+    // the owner's folder, its rule and its saved search alone.
+    let (status, _) = other
+        .post(&format!("/api/folders/{made}"), json!({ "name": "Garden" }))
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    let (status, _) = other
+        .post(
+            &format!("/api/feeds/{shared}"),
+            json!({ "title": "Garden notes", "folders": [made] }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    let (status, _) = other
+        .post(&format!("/api/folders/{made}/delete"), json!({}))
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+
+    let mine = owner.get("/api/feeds").await;
+    assert_eq!(mine["folders"], json!([{ "id": garden, "name": "Garden" }]));
+    let rules = owner.get("/api/rules").await["rules"].clone();
+    let rule = |id: i64| {
+        rules
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|rule| rule["id"] == id)
+            .unwrap()
+            .clone()
+    };
+    assert_eq!(rule(in_garden)["folder_id"], garden);
+    assert_eq!(rule(in_garden)["place_gone"], false);
+    assert_eq!(rule(waiting)["folder_id"], Value::Null);
+    assert_eq!(rule(waiting)["place_gone"], true);
+    let searches = owner.get("/api/saved-searches").await["searches"].clone();
+    assert_eq!(searches[0]["query"]["scope"]["id"], garden);
+    assert_eq!(
+        owner.get(&format!("/api/articles?folder={garden}")).await["articles"]
+            .as_array()
+            .unwrap()
+            .len(),
+        3
+    );
+    let theirs = other.get("/api/rules").await["rules"].clone();
+    assert_eq!(theirs.as_array().unwrap().len(), 1);
+    assert_eq!(theirs[0]["folder_id"], Value::Null);
+    assert_eq!(theirs[0]["feed_id"], Value::Null);
+}
+
+#[tokio::test]
+async fn one_reader_leaving_a_shared_feed_leaves_the_others_rules_and_searches() {
+    let (owner, other, state, feed, _) = two_followers().await;
+    for reader in [&owner, &other] {
+        let (status, _) = reader
+            .post(
+                "/api/rules",
+                json!({ "words": "tomatoes", "action": "star", "feed_id": feed }),
+            )
+            .await;
+        assert_eq!(status, StatusCode::OK);
+        let (status, _) = reader
+            .post(
+                "/api/saved-searches",
+                json!({ "name": "Garden", "query": { "scope": { "kind": "feed", "id": feed } } }),
+            )
+            .await;
+        assert_eq!(status, StatusCode::CREATED);
+    }
+    let (status, _) = owner
+        .post(&format!("/api/feeds/{feed}/unsubscribe"), json!({}))
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    nine_turtles::folders::clear_unsubscribed(&state.db, None, i64::MAX)
+        .await
+        .unwrap();
+
+    // The owner's rule and search no longer point at it; the other
+    // reader's still do, and their articles are all there.
+    let mine = owner.get("/api/rules").await["rules"][0].clone();
+    assert_eq!(mine["place_gone"], true);
+    assert_eq!(
+        owner.get("/api/saved-searches").await["searches"][0]["query"]["scope"]["id"],
+        0
+    );
+    let theirs = other.get("/api/rules").await["rules"][0].clone();
+    assert_eq!(theirs["place_gone"], false);
+    assert_eq!(theirs["feed_id"], feed);
+    assert_eq!(
+        other.get("/api/saved-searches").await["searches"][0]["query"]["scope"]["id"],
+        feed
+    );
+    assert_eq!(other.ids("view=unread").await.len(), 3);
+}
+
+#[tokio::test]
+async fn importing_opml_files_feeds_only_in_the_importers_folders() {
+    let (owner, other, state, feed) = two_readers().await;
+    let (_, reading) = owner
+        .post("/api/folders", json!({ "name": "Reading" }))
+        .await;
+    let reading = reading["folder"]["id"].as_i64().unwrap();
+    let address = address_of(&state, feed).await;
+    let opml = format!(
+        r#"<?xml version="1.0"?><opml version="2.0"><body>
+        <outline text="Reading"><outline text="Shared blog" xmlUrl="{address}"/>
+        <outline text="Only theirs" xmlUrl="https://only-theirs.example/feed"/></outline>
+        </body></opml>"#
+    );
+    let response = Client::new()
+        .post(format!("{}/api/opml", other.base))
+        .header("cookie", &other.cookie)
+        .header("sec-fetch-site", "same-origin")
+        .body(opml)
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+
+    // Their "Reading" is a folder of their own; the owner's stays empty.
+    let theirs = other.get("/api/feeds").await;
+    assert_eq!(theirs["folders"][0]["name"], "Reading");
+    assert_ne!(theirs["folders"][0]["id"], reading);
+    let mine = owner.get("/api/feeds").await;
+    assert_eq!(
+        mine["folders"],
+        json!([{ "id": reading, "name": "Reading" }])
+    );
+    assert_eq!(mine["feeds"][0]["folders"], json!([]));
+    assert_eq!(
+        count(
+            &state,
+            &format!("SELECT COUNT(*) FROM feed_folders WHERE folder_id = {reading}")
+        )
+        .await,
+        0
+    );
+    assert!(!owner.get_text("/api/opml").await.contains("only-theirs"));
+}
+
+#[tokio::test]
+async fn articles_carried_to_a_new_address_stay_walled_from_the_old_feeds_follower() {
+    let (owner, other, state, feed, _) = two_followers().await;
+    let older = an_older_post(&state, feed).await;
+    mark(&other, "read", &[older]).await;
+    let new_address = address_of(&state, feed)
+        .await
+        .replace("/feed.xml", "/moved.xml");
+    let (status, moved) = other
+        .post(
+            &format!("/api/health/{feed}/address"),
+            json!({ "url": new_address }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK, "{moved}");
+    let new_feed = moved["feed"]["id"].as_i64().unwrap();
+    // The older post is still stored under the owner's feed, but the other
+    // reader's entry for it names their new feed.
+    assert_eq!(
+        count(
+            &state,
+            &format!("SELECT feed_id FROM articles WHERE id = {older}")
+        )
+        .await,
+        feed
+    );
+
+    // The other reader no longer reaches the old feed by its number.
+    assert!(other.ids(&format!("feed={feed}")).await.is_empty());
+    let (status, _) = other
+        .post(
+            &format!("/api/feeds/{feed}"),
+            json!({ "title": "Mine", "folders": [] }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
+    let (status, _) = other
+        .post(&format!("/api/health/{feed}/retry"), json!({}))
+        .await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
+
+    // The owner's marks and rules on the old feed touch only their entry.
+    mark(&owner, "starred", &[older]).await;
+    let (_, rule) = owner
+        .post(
+            "/api/rules",
+            json!({ "words": "tomatoes", "action": "mute", "feed_id": feed }),
+        )
+        .await;
+    let rule = rule["id"].as_i64().unwrap();
+    let (status, _) = owner
+        .post(&format!("/api/rules/{rule}/apply"), json!({}))
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    let opened = other.get(&format!("/api/articles/{older}")).await;
+    assert_eq!(opened["article"]["feed_id"], new_feed);
+    assert_eq!(opened["article"]["read"], true);
+    assert_eq!(opened["article"]["starred"], false);
+    assert_eq!(other.get("/api/muted").await["count"], 0);
+
+    // A new post at the old address reaches only the owner.
+    let new = nine_turtles::feed::ParsedArticle {
+        fingerprint: "post-9".to_owned(),
+        title: "Post 9 about beans".to_owned(),
+        link: None,
+        author: None,
+        content: None,
+        summary: None,
+        language: None,
+        published_at: None,
+    };
+    let mut transaction = state.db.begin().await.unwrap();
+    nine_turtles::feeds::store_articles(&mut transaction, feed, &[new], nine_turtles::now())
+        .await
+        .unwrap();
+    transaction.commit().await.unwrap();
+    assert_eq!(
+        count(
+            &state,
+            "SELECT COUNT(*) FROM entries JOIN articles ON articles.id = entries.article_id
+             WHERE articles.fingerprint = 'post-9' AND entries.person_id = 2"
+        )
+        .await,
+        0
+    );
+
+    // The owner leaves the old feed for good: the other reader keeps the
+    // older post, with their mark.
+    let (status, _) = owner
+        .post(
+            "/api/articles/starred",
+            json!({ "ids": [older], "starred": false }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    let (status, _) = owner
+        .post(&format!("/api/feeds/{feed}/unsubscribe"), json!({}))
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    nine_turtles::folders::clear_unsubscribed(&state.db, None, i64::MAX)
+        .await
+        .unwrap();
+    let opened = other.get(&format!("/api/articles/{older}")).await;
+    assert_eq!(opened["article"]["read"], true);
+    assert_eq!(other.ids(&format!("feed={new_feed}")).await.len(), 4);
+    assert_eq!(
+        owner.status_of(&format!("/api/articles/{older}")).await,
+        StatusCode::NOT_FOUND
+    );
 }
