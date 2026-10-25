@@ -89,14 +89,15 @@ A few words used throughout:
 **What it does**
 - Fixed order, top to bottom:
   1. **Unread · Starred · All**
-  2. **Folders**, alphabetically
-  3. **Feeds not in any folder**, alphabetically
-  4. **Add feed**, then **Keys** (icon and word) and **Settings** as an icon, in one row
+  2. **Saved searches**, alphabetically, once there is one (section 14)
+  3. **Folders**, alphabetically
+  4. **Feeds not in any folder**, alphabetically
+  5. **Add feed**, then **Keys** (icon and word) and **Settings** as an icon, in one row
 - You can't reorder things by hand; order is always alphabetical.
 - At the top of the sidebar: the nine turtles logo and the "nine turtles" wordmark (a name, not a button: Tab never stops on it, though the keyboard's place starts there when the app opens, so screen readers begin at the top), and below it a quiet **field to find a feed or folder by name** (a search icon and its words, the same slim, faintly filled field as the list's search: 36px tall with a mouse on a wide window, 44px on a touch screen or a phone, softly rounded, with no edge), shown whenever you have a feed. Folders and feeds sit under small muted section names ("Folders", then "Other feeds", or just "Feeds" without folders), and every feed name is in full ink; a name in Devanagari is set a touch larger, so it sits level with the others. A long feed name ends in "…" on one line, so the sidebar stays tidy; its whole name shows as a tooltip, is read in full by screen readers, and is the list's title when you open it (one line, then "…", with the whole name as its tooltip).
 - Every name in the sidebar (Unread, Starred and All, folders, feeds, and the words in the find field) starts at one left edge, after a column that holds the icons of Unread, Starred and All, a folder's arrow and the find field's search icon; the section names (Folders, Other feeds) stand further out, at the sidebar's margin. On a computer the names start 46px in and the section names at the 20px margin; a folder's feeds start a step further in (64px), so the hierarchy shows without relying on the arrow.
 - Folders appear once at least one exists. Each has a small arrow button before its name, in the icon column, as in a Mac sidebar, that shows or hides the feeds in it, listed beneath one step further in than the folder's name; folders start closed, and this device remembers which you opened. Choosing a folder's name lists the articles of all its feeds (`/folders/2`). On a phone's feeds screen there's no arrow (every row there already ends in a chevron): a folder's feeds are always listed beneath it, one step in.
-- The search field filters the sidebar as you type: the folders and feeds whose name contains what you typed (capitals and accents don't matter), in one list. Escape empties it.
+- The search field filters the sidebar as you type: the saved searches, folders and feeds whose name contains what you typed (capitals and accents don't matter), in one list. Escape empties it.
 - **Unread counts:** small, muted grey numbers next to each feed and folder (a folder's is its feeds' added up), right-aligned at the row's end, so every count, folder or feed, sits in one column. No count on "Unread", "Starred" or "All", and never a total. Above 999 shows "999+". Never colored, never a badge.
 - Your current place is marked as in the list (section 6), a rounded pill of soft neutral grey set a little in from the sidebar's edges, with no color (decision 0057), its name semibold in full ink, and, for Unread and All, its icon in full ink (Starred's star fills in green). When your place changes, its row scrolls into view in the sidebar if it was out of sight, at once and only as far as needed, never smoothly; it doesn't move when counts change. On a phone's feeds screen nothing is marked: it's where you start, not a place you're in. Under the pointer a row gets a fainter, neutral tone, never the accent.
 - While Settings is open, its button at the foot of the sidebar shows as your place, with the same pill, and screen readers hear it as the current page. The shortcut list's button, while its list is open, sits on a faint ink tile instead (section 19). The fill is never the only sign (decision 0054).
@@ -281,6 +282,7 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 - Under the title of each result whose text (not only its title) holds a searched word, up to two muted lines show that text around the first match, before the source and time: a few words before it, then on to about 90 characters, cut only between words, with "…" where text was left out, and ending in "…" if the list is too narrow for two lines. Three typed dots in the publisher's text show as one "…" too. The searched words in it are marked as in the title, and in full ink rather than muted grey. The line is plain text: nothing from the feed's HTML comes through.
 - Once the field has words in it, a **×** at its end ("Clear search", a 44px target) empties the field, keeping any chips, and leaves the keyboard in it.
 - Works for English, other Latin-alphabet languages, and Hindi.
+- **Saved searches** (decision 0073): while a search shows results, **Save search…** in the More (…) menu opens a sheet built like Edit folder's: a **Name** (started from the searched words, or else what the chips say), a line saying in words what it searches for ("walking · In Garden Notes"), then Cancel and Save. Saved, it opens at once, with an address of its own (`/searches/3`), and is listed in the sidebar under a small **Saved searches** heading, after Unread, Starred and All, A to Z, each with a small search icon where those three have theirs and no unread count. Opening it runs the search again: its name is the list's title, and its chips and words are in the search field, so it always shows what it looks for. Changing the field changes the results for now; Escape puts it back as saved. **Edit saved search…** in the same menu renames it and saves what the field holds now; **Delete**, in red words at the sheet's far left, removes only the search, never an article, and takes you to Unread with "Deleted the saved search …" and Undo. Two saved searches can't share a name. On a phone, the sheets are the phone sheet, as Edit folder's are.
 - Tab moves from the field into the open options, onto the place being searched; Escape closes search and returns you to where you were.
 
 **How to check it**
@@ -290,6 +292,8 @@ Most of this is checked by the automatic tests rather than by eye. You can see i
 4. Open the options, choose Past week: a matching "After …" chip appears in the field, its date in words.
 5. Search a Hindi word from a Hindi article: that article is found.
 6. Press Escape: you're back exactly where you were.
+7. Search for a word, choose More › Save search…, name it and Save. It opens, and appears in the sidebar under Saved searches. Go to All, then choose it in the sidebar: the same results, with the same chips. Remove a chip and press Escape: the chip comes back.
+8. More › Edit saved search…: rename it and Save. Then Edit saved search… › Delete: it leaves the sidebar; Undo brings it back.
 
 ## 15. Folders and managing feeds
 

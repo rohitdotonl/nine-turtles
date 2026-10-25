@@ -310,3 +310,85 @@ test("the search options float over the list; Escape closes them first, then the
   await heading(page).focus();
   await expect(options).toBeHidden();
 });
+
+test("a search can be saved, opened from the sidebar, renamed, and deleted with Undo", async ({ page }) => {
+  const blog = unique("saved");
+  const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
+  await open(page, `/feeds/${id}`, `Blog ${blog}`);
+  const sidebar = page.getByRole("navigation", { name: "Sidebar" });
+  const more = page.getByRole("button", { name: "More", exact: true });
+  const savedLink = (name: string) => sidebar.getByRole("link", { name: `${name} (saved search)` });
+  const chip = page.getByRole("button", { name: `Remove in: Blog ${blog}` });
+
+  // Search, then More › Save search…: a sheet named after the words, ready to type in.
+  await page.keyboard.press("/");
+  await page.keyboard.type("walking");
+  await page.keyboard.press("Enter");
+  await expect(results(page)).toHaveCount(1);
+  await more.click();
+  await page.getByRole("menuitem", { name: "Save search…" }).click();
+  await expect(page.getByRole("heading", { level: 2, name: "Save search" })).toBeVisible();
+  const name = page.getByRole("textbox", { name: "Name" });
+  await expect(name).toBeFocused();
+  await expect(name).toHaveValue("walking");
+  await expect(page.getByRole("dialog")).toContainText(`walking · In Blog ${blog}`);
+  const first = unique("Walks");
+  await name.fill(first);
+  await page.keyboard.press("Enter");
+
+  // Saved: it opens, with its own address, its name as the title, and its place in the sidebar.
+  await expect(page).toHaveURL(/\/searches\/\d+$/);
+  await expect(heading(page)).toHaveText(first);
+  await expect(savedLink(first)).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("heading", { level: 2, name: "Saved searches" })).toBeVisible();
+  await expect(chip).toBeVisible();
+  await expect(field(page)).toHaveValue("walking");
+  const found = () => page.getByRole("region", { name: first }).getByRole("listitem");
+  await expect(found()).toHaveCount(1);
+
+  // Somewhere else, then back from the sidebar: the search runs again. A reload keeps it too.
+  await page.getByRole("link", { name: "All", exact: true }).click();
+  await expect(heading(page)).toHaveText("All");
+  await savedLink(first).click();
+  await expect(heading(page)).toHaveText(first);
+  await expect(found()).toHaveCount(1);
+  await page.reload();
+  await appReady(page);
+  await expect(heading(page)).toHaveText(first);
+  await expect(chip).toBeVisible();
+  await expect(found()).toHaveCount(1);
+
+  // Changing the search, then Escape: it's back as it was saved.
+  await chip.click();
+  await expect(chip).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(chip).toBeVisible();
+
+  // Edit saved search…: a new name.
+  await more.click();
+  await page.getByRole("menuitem", { name: "Edit saved search…" }).click();
+  await expect(page.getByRole("heading", { level: 2, name: "Edit saved search" })).toBeVisible();
+  const second = unique("Rambles");
+  await page.getByRole("textbox", { name: "Name" }).fill(second);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(heading(page)).toHaveText(second);
+  await expect(savedLink(second)).toBeVisible();
+  await expect(savedLink(first)).toHaveCount(0);
+
+  // Delete: only the search goes, with Undo straight afterwards.
+  await more.click();
+  await page.getByRole("menuitem", { name: "Edit saved search…" }).click();
+  await page.getByRole("button", { name: `Delete ${second}` }).click();
+  await expect(page.getByText(`Deleted the saved search ${second}`)).toBeVisible();
+  await expect(savedLink(second)).toHaveCount(0);
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(page.getByText("Undone.")).toBeVisible();
+  await expect(savedLink(second)).toBeVisible();
+
+  // Tidy up, so other tests' sidebars stay as they expect.
+  await savedLink(second).click();
+  await more.click();
+  await page.getByRole("menuitem", { name: "Edit saved search…" }).click();
+  await page.getByRole("button", { name: `Delete ${second}` }).click();
+  await expect(savedLink(second)).toHaveCount(0);
+});
