@@ -4,7 +4,7 @@ title: Privacy policy
 description: What nine turtles and this website know about you, why, who else handles it, and how to have it removed.
 permalink: /privacy/
 updated: 2026-10-25
-draft: This policy will be finished, and checked by someone qualified, before anyone can sign up for nine turtles. The parts that depend on a payment company and an email service are marked "to be decided" until those are chosen.
+draft: This policy will be finished, and checked by someone qualified, before anyone can sign up for nine turtles. The parts that depend on an email service and other details still to settle are marked "to be decided" until those are chosen.
 ---
 
 <p class="lede">
@@ -49,7 +49,7 @@ needs to work:
 | The feeds and folders you follow, the articles they bring, what you've read and starred, and your settings | To be your reader: this is the service |
 | A sign-in cookie on each device you use | To keep you signed in; it's the only cookie, and it never tracks you anywhere else |
 | Short-lived technical logs (times, errors, never what you read) | To keep the service running and secure |
-| Payment details | Held by the payment company, never by us (to be decided) |
+| Payment details | Held by Dodo Payments, the company that takes payments, never by us |
 
 We never sell your data, never show ads, never share what you read, and
 never use your reading to train anyone's AI.
@@ -72,7 +72,7 @@ never use your reading to train anyone's AI.
 |---|---|---|
 | GitHub (Microsoft) | Hosts this website | United States |
 | Render | Hosts the app and its database | To be decided |
-| A payment company | Takes payments and handles sales tax | To be decided |
+| [Dodo Payments](https://dodopayments.com/legal/privacy-policy) | Takes payments, handles sales tax and sends receipts | To be confirmed |
 | An email service | Sends sign-in and receipt emails | To be decided |
 | Cloudflare | Directs nineturtles.app to the right servers, and forwards email sent to {{ site.email }} | Worldwide |
 

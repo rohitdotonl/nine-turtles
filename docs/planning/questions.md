@@ -8,8 +8,7 @@ written into `DESIGN.md`, `ENGINEERING.md`, `SPEC.md`, `PLAN.md` and
 
 - **Finishing the website's privacy policy and terms** (25 October 2026).
   They're on nineturtles.app as drafts, marked "to be decided" where they
-  wait on: the payment company (a merchant of record such as Paddle or
-  Lemon Squeezy, or Stripe), the email service for sign-in and receipts,
+  wait on: the prices, the email service for sign-in and receipts,
   where Render keeps the data, the business details and the law that
   applies, the minimum age, and how long backups keep deleted data. Before
   anyone can sign up, someone qualified should read both. Not blocking
@@ -27,6 +26,7 @@ written into `DESIGN.md`, `ENGINEERING.md`, `SPEC.md`, `PLAN.md` and
 | Q2 | Backups | Nightly to S3-compatible storage (Cloudflare R2 first), plus a copy before every structure change; no new library (the owner's choice, 25 October 2026; decision 0076). |
 | Q3 | Supporting libraries for Milestone 1 | Approved. All approved libraries are listed in `docs/libraries.md`. |
 | Q4 | How the library check knows you approved | The approved list in `docs/libraries.md`. The check fails if the code uses anything not on it. |
+| Q31 | Payment company | Dodo Payments, as merchant of record; the owner signs up as an Individual. Chosen 25 October 2026 (decision 0086). |
 | Q5 | How you try milestones | Screenshots and recordings in each pull request, then the live app after merging. |
 | Q7 | Managing feeds and folders | "Edit feed…" and "Edit folder…" in the More (…) menu beside the item list's title (decision 0038). |
 | Q8 | Settings and Sign out | "Settings" beside the wordmark at the top of the sidebar; Sign out inside Settings. |

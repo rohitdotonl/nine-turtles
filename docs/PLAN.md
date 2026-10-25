@@ -366,6 +366,10 @@ each with screenshots:
   (hello@nineturtles.app), accessibility, and a privacy policy and terms
   marked as drafts until a payment company and an email service are chosen
   (`docs/planning/questions.md`). No pricing page until prices are decided.
+- ✅ Pricing and refunds-and-cancelling pages (25 October 2026), as drafts
+  until prices are set, naming Dodo Payments as the payment company
+  (decision 0086). Dodo checks for them, with terms, privacy and contact,
+  before it approves payments (`docs/operations/dodo-application.md`).
 
 ## V2 so far
 
