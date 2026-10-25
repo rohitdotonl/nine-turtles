@@ -12,5 +12,6 @@ plain steps, no assumed knowledge of a particular tool.
 | [settings.md](settings.md) | Every setting nine turtles reads (names and meanings, never values) |
 | [render-setup.md](render-setup.md) | The owner's one-time guide to putting nine turtles on Render and setting the password |
 | [daily-check.md](daily-check.md) | The daily health check an agent runs on the live app |
+| [website-and-domain.md](website-and-domain.md) | The website at nineturtles.app, the app at app.nineturtles.app, and the owner's one-time setup |
 
 Coming in V2, with backups: `backups.md` and `moving-hosts.md` (V1 has no backups; see `docs/decisions/0012-v1-for-one-reader.md`).

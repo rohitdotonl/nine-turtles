@@ -36,6 +36,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Issue
 - Ruleset (protected branch)
 - `.gitignore`
+- Monorepo
 - Open-source licence (MIT)
 
 ## The web, in general
@@ -48,6 +49,9 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Domain and subdomain
 - Port
 - IP address and DNS (looking up a name)
+- DNS records (A, AAAA, CNAME, TXT)
+- Domain registrar
+- Website and web app
 - Private networks and `localhost`
 - Status codes (200, 301, 308, 404, 410, 429)
 - Redirect
@@ -112,6 +116,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Node.js and npm
 - Progressive web app (PWA)
 - Web app manifest
+- Maskable icon
 - Service worker
 - Web fonts
 - Themes, by day and by night, and Appearance (light, dark, match device)
@@ -201,6 +206,9 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Container registry (GitHub's ghcr.io)
 - Hosting
 - Render
+- GitHub Pages
+- Static site and static site generator (Eleventy)
+- Custom domain
 - Instance
 - Persistent disk
 - Deploy and deploy hook

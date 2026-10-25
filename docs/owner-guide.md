@@ -32,6 +32,16 @@ makes it easy to back up and easy to move to another host.
                                        publishers' websites
 ```
 
+**Two addresses** (decision 0066): the app lives at **app.nineturtles.app**
+(Render; the old slowfeed.onrender.com still works), and the **website**,
+which tells people what nine turtles is, at **nineturtles.app**. The website
+is a handful of plain web pages, written in the `website/` folder of the same
+repository (one repository holding several parts is called a "monorepo") and
+turned into finished pages by a tool called **Eleventy**. **GitHub Pages**
+hosts them for free, separately from the app, so the website stays up even
+when the app is down. Your one-time setup for the domain:
+`docs/operations/website-and-domain.md`.
+
 ## 2. The backend, and why each piece was chosen
 
 **Rust** is the programming language for the backend. It turns into one small,
@@ -191,6 +201,10 @@ you press Merge, or you say yes to the agent's brief.
 (You connect GitHub to Render once, following `docs/operations/render-setup.md`.
 It usually takes up to 15 minutes from merging to live.)
 
+The website works the same way: merging a change to `website/` publishes it
+to GitHub Pages within a few minutes. Every merge still redeploys the app
+too (a minute's pause, as always), so the live app never falls behind.
+
 ## 7. How to merge a pull request
 
 On the GitHub website (or the GitHub phone app):
@@ -227,6 +241,7 @@ each one, what ties us to it, and what leaving would take.
 | **Render** (hosting) | Runs nine turtles | nine turtles is a standard container image plus one SQLite database file. Every setting is listed in `docs/operations/settings.md`. | In V1: start nine turtles on the new host and import your OPML file (your read history stays behind). In V2, `docs/operations/moving-hosts.md` moves everything. |
 | **GitHub** (code, checks, issues) | Holds the code and runs the checks | The code and its full history are in "git", a standard format any code host accepts. All checks run through one script in the repository; GitHub Actions only calls it. | Copy the repository to another host and point its check service at the same script. Issues and pull request discussions stay behind on GitHub unless exported. |
 | **Claude Code** (the agents) | Builds and maintains nine turtles | All instructions are plain documents in the repository: `AGENTS.md` (a convention most coding agents read), the `docs/` folder, and the daily check's steps in `docs/operations/daily-check.md` | Start the new agent in the repository. To move the daily check, set a daily timer in the new tool that says "follow docs/operations/daily-check.md". |
+| **GitHub Pages** (the website) | Hosts nineturtles.app | The website is plain files built from `website/` | Build it anywhere (`npm run build` in `website/`), upload the `_site` folder to another host, and point the domain's records there (`docs/operations/website-and-domain.md`) |
 | **Libraries** | Ready-made code inside nine turtles | Standard, widely used choices, listed in `docs/libraries.md` | Replace one at a time, with your approval |
 | **Your reading data** | Your feeds, folders and starred articles | OPML export (feeds and folders) and JSON Feed export (starred articles), both standard formats | Download both from Settings → Your data and import them into another reader |
 

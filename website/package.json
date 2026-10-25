@@ -1,0 +1,13 @@
+{
+  "name": "nine-turtles-website",
+  "private": true,
+  "description": "The nine turtles website at nineturtles.app, built with Eleventy",
+  "type": "module",
+  "scripts": {
+    "build": "eleventy",
+    "start": "eleventy --serve"
+  },
+  "devDependencies": {
+    "@11ty/eleventy": "^3.1.7"
+  }
+}

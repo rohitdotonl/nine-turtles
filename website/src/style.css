@@ -1,0 +1,156 @@
+/*
+  The website wears the app's Original theme (web/src/app.css): the same
+  paper, inks and fonts, by day and by night. Like the app, it never moves:
+  no animations or transitions (the motion check reads this file too).
+*/
+
+@font-face {
+  font-family: "Literata";
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/literata-400-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Literata";
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/literata-600-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/inter-400-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/inter-600-latin.woff2") format("woff2");
+}
+
+:root {
+  color-scheme: light dark;
+  --paper: #ffffff;
+  --ink: #141414;
+  --ink-2: #3c3c40;
+  --muted: #5f5f64;
+  --line: #dddddf;
+  --serif: "Literata", Georgia, serif;
+  --sans: "Inter", system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #121212;
+    --ink: #e8e8e8;
+    --ink-2: #c4c4c6;
+    --muted: #a4a4a8;
+    --line: #3b3b3b;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0 auto;
+  max-width: 40rem;
+  padding: 0 20px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 1.1875rem;
+  line-height: 1.6;
+}
+
+a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+}
+
+a:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.skip {
+  position: absolute;
+  left: -9999px;
+}
+.skip:focus {
+  left: 20px;
+  top: 12px;
+  background: var(--paper);
+  padding: 8px 12px;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 72px;
+  font-family: var(--sans);
+  font-size: 0.9375rem;
+}
+
+header a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  text-decoration: none;
+}
+
+.wordmark {
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.open {
+  padding: 0 16px;
+  border: 1px solid var(--muted);
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+h1,
+h2 {
+  font-weight: 600;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+h1 {
+  margin: 3rem 0 1.5rem;
+  font-size: 2.25rem;
+}
+
+h2 {
+  margin: 2.5rem 0 1rem;
+  font-size: 1.5rem;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+ul {
+  padding-left: 1.25em;
+}
+
+li + li {
+  margin-top: 0.5em;
+}
+
+footer {
+  margin-top: 4rem;
+  padding: 1.5rem 0 3rem;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 0.875rem;
+}

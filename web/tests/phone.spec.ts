@@ -551,6 +551,7 @@ test.describe("adding nine turtles to the home screen", () => {
     await page.goto("/");
     await appReady(page);
     await expect(page.locator('link[rel="manifest"]')).toHaveAttribute("href", "/manifest.webmanifest");
+    await expect(page.locator('link[rel="icon"][type="image/svg+xml"]')).toHaveAttribute("href", "/icons/icon.svg");
     // The service worker that lets it be installed, and open without a connection.
     const registered = await page.evaluate(async () => (await navigator.serviceWorker.ready).active?.scriptURL);
     expect(registered).toMatch(/\/sw\.js$/);

@@ -1,7 +1,7 @@
 # nine turtles' logo
 
 Nine small turtles seen from the side, in three rows of three, the middle
-row a little to the right (decision 0066). One ink: the text color.
+row a little to the right (decision 0067). One ink: the text color.
 
 - `nine-turtles-mark.svg`: the turtles alone, on nothing, in dark ink.
 - `nine-turtles-icon-light.svg`: the app icon by day, dark on white.
@@ -9,4 +9,4 @@ row a little to the right (decision 0066). One ink: the text color.
 
 The app's own copies are in `web/public/icons/`. The PNGs there are these
 drawings exported at 180, 192 and 512 pixels; the maskable one has the
-turtles at 78% so a circular crop keeps them whole.
+turtles at 75% so a circular crop keeps them whole.

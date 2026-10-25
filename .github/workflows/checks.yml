@@ -20,13 +20,15 @@ concurrency:
 
 jobs:
   # Pull requests that change only documents skip the slow checks: nothing
-  # they change can break the program or its tests (decision 0065).
+  # they change can break the program or its tests (decision 0065). Changes
+  # only to the website (and documents) skip the app's checks (decision 0066).
   changes:
     name: What changed
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
       code: ${{ steps.look.outputs.code }}
+      app: ${{ steps.look.outputs.app }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -39,7 +41,7 @@ jobs:
   frontend:
     name: Frontend checks
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.app == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -57,7 +59,7 @@ jobs:
   rust:
     name: Rust checks
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.app == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -86,7 +88,7 @@ jobs:
   browser:
     name: Browser tests (part ${{ matrix.shard }} of 2)
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.app == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     strategy:
@@ -134,28 +136,57 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+  website:
+    name: Website checks
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: |
+            web/package-lock.json
+            website/package-lock.json
+
+      - name: Install the browser used by the check
+        working-directory: web
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      - name: Run the website checks
+        run: scripts/check.sh website
+
   # The one check main requires. It passes only when every part above passed,
-  # or was skipped because only documents changed.
+  # or was skipped because what changed can't affect it.
   checks:
     name: All checks
-    needs: [changes, frontend, rust, browser]
+    needs: [changes, frontend, rust, browser, website]
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Every part passed
         env:
-          RESULTS: ${{ join(needs.*.result, ' ') }}
+          CHANGES: ${{ needs.changes.result }}
           CODE: ${{ needs.changes.outputs.code }}
+          APP: ${{ needs.changes.outputs.app }}
+          FRONTEND: ${{ needs.frontend.result }}
+          RUST: ${{ needs.rust.result }}
+          BROWSER: ${{ needs.browser.result }}
+          WEBSITE: ${{ needs.website.result }}
         run: |
-          echo "Results: $RESULTS"
-          for result in $RESULTS; do
-            case "$result" in
-              success) ;;
-              skipped) if [ "$CODE" != false ]; then exit 1; fi ;;
-              *) exit 1 ;;
-            esac
-          done
+          echo "What changed: $CHANGES (code=$CODE, app=$APP)"
+          echo "Frontend: $FRONTEND, Rust: $RUST, browser: $BROWSER, website: $WEBSITE"
+          # A part may be skipped only when what changed said to skip it.
+          ok() { [ "$1" = success ] || { [ "$1" = skipped ] && [ "$2" = false ]; }; }
+          [ "$CHANGES" = success ]
+          ok "$FRONTEND" "$APP" && ok "$RUST" "$APP" && ok "$BROWSER" "$APP" && ok "$WEBSITE" "$CODE"
 
   screenshots:
     name: Post screenshots
@@ -167,7 +198,7 @@ jobs:
       github.event_name == 'pull_request'
       && github.event.pull_request.head.repo.full_name == github.repository
       && needs.checks.result == 'success'
-      && needs.changes.outputs.code == 'true'
+      && needs.changes.outputs.app == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
