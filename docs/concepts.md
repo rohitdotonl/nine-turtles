@@ -49,7 +49,9 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Domain and subdomain
 - Port
 - IP address and DNS (looking up a name)
-- DNS records (A, AAAA, CNAME, TXT)
+- DNS records (A, AAAA, CNAME, TXT, MX)
+- Email forwarding (Cloudflare Email Routing)
+- Open Graph (the preview a link shows when shared)
 - Domain registrar
 - Website and web app
 - Private networks and `localhost`
