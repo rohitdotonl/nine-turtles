@@ -5,9 +5,9 @@
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
-  import { SHORTCUT_GROUPS, SHORTCUTS, keyCap, shortcutMatches } from "./keyboard";
+  import { SHORTCUT_GROUPS, keyCap, shortcutMatches, shortcutsFor } from "./keyboard";
 
-  let { open = $bindable() }: { open: boolean } = $props();
+  let { open = $bindable(), river = false }: { open: boolean; /** River mode: Go to Unread and Mark all as read aren't listed. */ river?: boolean } = $props();
 
   let dialog: HTMLDialogElement | undefined = $state();
   let heading: HTMLHeadingElement | undefined = $state();
@@ -42,7 +42,7 @@
   let find = $state("");
   let field: HTMLInputElement | undefined = $state();
   const wanted = $derived(find.trim().toLowerCase());
-  const shown = $derived(SHORTCUTS.filter((each) => each.ready && shortcutMatches(each, find)));
+  const shown = $derived(shortcutsFor(river).filter((each) => shortcutMatches(each, find)));
   const filtersShown = $derived(FILTERS.filter(([filter, meaning]) => wanted === "" || filter.includes(wanted) || meaning.toLowerCase().includes(wanted)));
   const nothing = $derived(shown.length === 0 && filtersShown.length === 0);
   $effect(() => {

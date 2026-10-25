@@ -351,3 +351,57 @@ test("Settings: the sort order is saved for every device", async ({ page, isMobi
   await reading.getByRole("radio", { name: "Newest first" }).check();
   await expect(reading.getByRole("radio", { name: "Newest first" })).toBeChecked();
 });
+
+test("river mode: no Unread view, no counts, no read styling, and it opens on All", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the same on every width");
+  // The setting is shared by every test using this nine turtles, so this
+  // page alone is told it's in river mode, and its changes aren't saved.
+  let mode = "river";
+  await page.route("**/api/settings", (route) =>
+    route.request().method() === "POST"
+      ? ((mode = JSON.parse(route.request().postData() ?? "{}").mode ?? mode),
+        route.fulfill({ json: { sort: "newest", mode } }))
+      : route.fulfill({ json: { sort: "newest", mode } }),
+  );
+  const name = await openBlog(page);
+
+  await expect(sidebar(page).getByRole("link", { name: "All", exact: true })).toBeVisible();
+  await expect(sidebar(page).getByRole("link", { name: "Unread", exact: true })).toHaveCount(0);
+  await expect(feedLink(page, name)).not.toContainText("unread");
+  await expect(row(page, name, NEWEST)).not.toContainText("unread");
+  await expect(row(page, name, NEWEST).locator(".unread-dot")).toHaveCount(0);
+
+  const more = page.getByRole("button", { name: "More", exact: true });
+  await more.click();
+  await expect(page.getByRole("menuitem", { name: "Refresh" })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: "Mark all as read" })).toHaveCount(0);
+  await page.keyboard.press("Escape");
+
+  // Opening an article still records it as read, quietly.
+  await row(page, name, NEWEST).click();
+  await expect(article(page).getByRole("heading", { name: NEWEST })).toBeVisible();
+
+  // g u does nothing; "/" and the Unread address open All.
+  await page.keyboard.press("Escape");
+  await page.keyboard.press("g");
+  await page.keyboard.press("u");
+  await expect(page).toHaveURL(/\/feeds\/\d+$/);
+  await page.goto(new URL("/", FEEDS_APP).href);
+  await appReady(page);
+  await expect(page).toHaveURL(/\/all$/);
+  await page.goto(new URL("/unread", FEEDS_APP).href);
+  await appReady(page);
+  await expect(page).toHaveURL(/\/all$/);
+  await expect(page.getByRole("heading", { name: "All", level: 2 })).toBeVisible();
+
+  // Back to inbox in Settings: Unread and the counts return, and what was read shows as read.
+  await page.goto(new URL("/settings", FEEDS_APP).href);
+  await appReady(page);
+  const reading = page.getByRole("region", { name: "Reading" });
+  await expect(reading.getByRole("radio", { name: "River" })).toBeChecked();
+  await reading.getByRole("radio", { name: "Inbox" }).check();
+  await expect(sidebar(page).getByRole("link", { name: "Unread", exact: true })).toBeVisible();
+  await feedLink(page, name).click();
+  await expect(row(page, name, MIDDLE)).toContainText("unread");
+  await expect(row(page, name, NEWEST)).not.toContainText("unread");
+});
