@@ -105,9 +105,14 @@ header a {
 }
 
 .wordmark {
+  gap: 10px;
   font-family: var(--serif);
   font-size: 1.25rem;
   font-weight: 600;
+}
+
+.wordmark .logo {
+  flex: none;
 }
 
 .open {

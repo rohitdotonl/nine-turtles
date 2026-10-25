@@ -7,7 +7,9 @@ side (a half-circle shell and a round head each), in three rows of three,
 the middle row a little to the right. It is drawn in one ink, the text
 color: dark on white, light on near-black. It is the app icon on a phone's
 home screen and the icon in the browser tab, for the app and the website
-(which copies the app's icons, decision 0066). Inside the app, the wordmark
+(which copies the app's icons, decision 0066). On the website it also
+stands before the name in the top bar, because a phone's browser shows no
+tab icon (added at the owner's request). Inside the app, the wordmark
 stays words. This replaces the "no logo shape" line of "Name and signature"
 in DESIGN.md and the lowercase letter icon of decision 0022.
 
