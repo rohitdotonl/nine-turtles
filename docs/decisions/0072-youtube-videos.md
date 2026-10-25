@@ -5,8 +5,9 @@
 **Decision.** An article whose link is a YouTube video (a channel's feed,
 `youtube.com/feeds/videos.xml?channel_id=…`, gives one per video) shows a
 quiet 16 : 9 box above its text with a round Play mark and the words "Play
-video", and a line under it: "Plays in YouTube's own player. Nothing loads
-until you press Play." Pressing it swaps the box, in the same place and
+video". (A line under it, "Plays in YouTube's own player. Nothing loads
+until you press Play.", was removed at the owner's request the same day.)
+Pressing it swaps the box, in the same place and
 size, for YouTube's own player, which starts playing and takes the
 keyboard. This keeps the publisher floor ("embedded media plays in the
 publisher's own player, so views stay theirs").
