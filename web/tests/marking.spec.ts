@@ -279,10 +279,11 @@ test.describe("when saving fails", () => {
     await page.keyboard.press("j");
     await refused;
     await expect(line(page)).toHaveText("An article couldn't be marked as read. It's still unread.");
+    await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
     await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
     await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 3 unread`);
 
-    // Shown again with saving back: read. Then m, and that save fails: back to read, as the server has it.
+    // Shown again with saving back: read, and the message has gone, its job done. Then m, and that save fails: back to read, as the server has it.
     let saved = 0;
     page.on("response", (response) => {
       if (response.url().endsWith("/api/articles/read") && response.ok()) saved++;
@@ -292,6 +293,8 @@ test.describe("when saving fails", () => {
     await page.keyboard.press("k");
     await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, unread/);
     await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 1 unread`);
+    await expect(page.getByText("An article couldn't be marked as read. It's still unread.")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Try again" })).toHaveCount(0);
     // Both saves (j and k) must reach the server before saving fails again.
     await expect.poll(() => saved).toBe(2);
     failing = true;
@@ -299,6 +302,74 @@ test.describe("when saving fails", () => {
     await expect(line(page)).toHaveText("That couldn't be saved, so it was taken back.");
     await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, unread/);
     await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 1 unread`);
+
+    // Try again, with saving back: unread after all, and the line is quiet.
+    failing = false;
+    await page.getByRole("button", { name: "Try again" }).click();
+    await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
+    await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 2 unread`);
+    await expect(page.getByRole("button", { name: "Try again" })).toHaveCount(0);
+    await expect(page.getByText("That couldn't be saved, so it was taken back.")).toHaveCount(0);
+  });
+
+  test("with only the keyboard: Try again saves a star that couldn't be saved", async ({ page }) => {
+    const blog = await openBlog(page);
+    let failing = true;
+    await page.route("**/api/articles/starred", (route) => (failing ? route.fulfill({ status: 500 }) : route.fallback()));
+    await page.keyboard.press("j");
+    await page.keyboard.press("s");
+    await expect(line(page)).toHaveText("The star couldn't be saved.");
+    failing = false;
+    const again = page.getByRole("button", { name: "Try again" });
+    await tabTo(page, again);
+    await page.keyboard.press("Enter");
+    await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, Starred/);
+    await expect(again).toHaveCount(0);
+    // The button is gone; the keyboard's place stays nearby, on an article, not lost.
+    await expect(page.locator(".item-row:focus")).toHaveCount(1);
+  });
+
+  test("a failure that arrives after a newer action keeps that action's Undo", async ({ page }) => {
+    const blog = await openBlog(page);
+    // The first two saves wait until released: the first then fails, the second goes through.
+    const releases: (() => void)[] = [];
+    const held = [0, 1].map(() => new Promise<void>((resolve) => releases.push(resolve)));
+    let saves = 0;
+    await page.route("**/api/articles/read", async (route) => {
+      const which = saves++;
+      if (which > 1) return route.fallback();
+      await held[which];
+      return which === 0 ? route.fulfill({ status: 500 }) : route.fallback();
+    });
+    await page.keyboard.press("j");
+    await page.keyboard.press("Shift+A");
+    await expect(line(page)).toHaveText("Marked 2 items as read");
+
+    // The first fails: taken back and said, with Try again, and Mark all as read's Undo stays.
+    releases[0]?.();
+    await expect(line(page)).toHaveText("An article couldn't be marked as read. It's still unread.");
+    await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
+    await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Undo" })).toBeVisible();
+
+    // Mark all as read is saved: the connection is back, so the line returns to it, Undo included.
+    releases[1]?.();
+    await expect(line(page)).toHaveText("Marked 2 items as read");
+    await expect(page.getByRole("button", { name: "Try again" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Undo" })).toBeVisible();
+  });
+
+  test("a mark made while nine turtles restarts is saved once it's back, with nothing said", async ({ page }) => {
+    const blog = await openBlog(page);
+    // A new version going live: the host answers "unavailable" for a moment.
+    let refusals = 2;
+    await page.route("**/api/articles/read", (route) => (refusals-- > 0 ? route.fulfill({ status: 503 }) : route.fallback()));
+    const saved = page.waitForResponse((response) => response.url().endsWith("/api/articles/read") && response.ok());
+    await page.keyboard.press("j");
+    await saved;
+    await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, unread/);
+    await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 2 unread`);
+    await expect(page.getByText("couldn't be marked as read")).toHaveCount(0);
   });
 });
 
