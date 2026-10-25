@@ -59,31 +59,52 @@ export function switchesOnMove(ready: boolean, marksUnsaved: boolean, undoOnOffe
   return ready && !marksUnsaved && !undoOnOffer;
 }
 
+/**
+ * What the screen looked like, carried to the page that loads next so the
+ * switch leaves it as the reader arranged it: whether the keyboard was in
+ * use, the panes they hid, the list Settings goes back to, and how far the
+ * sidebar was scrolled.
+ */
+export type Carried = {
+  keyboard: boolean;
+  sidebar: "auto" | "hidden" | "shown";
+  listHidden: boolean;
+  lastPlace: string;
+  sidebarScroll: number;
+};
+
 /** Remembers, for the page that loads next, that it came from switching versions. */
 const SWITCHED_KEY = "nine-turtles-switched";
 
 /** Loads the new version at `path`, so the reader arrives where they were going. */
-export function switchTo(path: string) {
+export function switchTo(path: string, carried: Carried) {
   try {
-    sessionStorage.setItem(SWITCHED_KEY, document.documentElement.dataset.keyboard === undefined ? "pointer" : "keyboard");
+    sessionStorage.setItem(SWITCHED_KEY, JSON.stringify(carried));
   } catch {
-    // Without it the new version still opens; the keyboard's place just starts at the top.
+    // Without it the new version still opens, as a fresh page would.
   }
   location.assign(path);
 }
 
-/**
- * Whether this page opened by switching versions, and whether the keyboard
- * was in use, so the keyboard's place can go to the heading as it would have.
- */
-export function arrivedBySwitching(): "keyboard" | "pointer" | undefined {
+/** What the page before carried, if this page opened by switching versions. */
+export function arrivedBySwitching(): Carried | undefined {
   try {
-    const how = sessionStorage.getItem(SWITCHED_KEY);
+    const kept = sessionStorage.getItem(SWITCHED_KEY);
     sessionStorage.removeItem(SWITCHED_KEY);
-    return how === "keyboard" || how === "pointer" ? how : undefined;
+    return kept ? readCarried(JSON.parse(kept)) : undefined;
   } catch {
     return undefined;
   }
+}
+
+/** Only a note this code wrote counts; anything else is ignored. */
+export function readCarried(value: unknown): Carried | undefined {
+  if (typeof value !== "object" || value === null) return undefined;
+  const { keyboard, sidebar, listHidden, lastPlace, sidebarScroll } = value as Record<string, unknown>;
+  if (typeof keyboard !== "boolean" || typeof listHidden !== "boolean") return undefined;
+  if (sidebar !== "auto" && sidebar !== "hidden" && sidebar !== "shown") return undefined;
+  if (typeof lastPlace !== "string" || typeof sidebarScroll !== "number" || !Number.isFinite(sidebarScroll)) return undefined;
+  return { keyboard, sidebar, listHidden, lastPlace, sidebarScroll };
 }
 
 /** Asks which version is live: on coming back into view, and every few minutes in view. Returns a stop function. */

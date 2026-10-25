@@ -179,7 +179,7 @@ export function newItemsMessage(touch: boolean): string {
 // anyway, and say so, rather than hang.
 let writes: Promise<unknown> = Promise.resolve();
 
-/** How many marks haven't been saved yet (or failed). A tab only switches to a new version once there are none. */
+/** How many marks are still on their way: not yet saved, and not yet failed. A tab only switches to a new version once there are none. */
 let unsavedMarks = 0;
 
 /** Whether marks are still on their way to the server. */
@@ -266,7 +266,9 @@ function send(path: string, body: unknown): Promise<void> {
     }
   });
   unsavedMarks++;
-  writes = sent.catch(() => undefined).finally(() => unsavedMarks--);
+  const settled = () => void unsavedMarks--;
+  sent.then(settled, settled);
+  writes = sent.catch(() => undefined);
   return sent;
 }
 

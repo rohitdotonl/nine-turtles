@@ -290,4 +290,4 @@ Moved from V1 on 23 October 2026, because V1 is for the owner alone (decision 00
 - **Feed health page.** Built 25 October 2026 (decision 0071).
 - **The yearly clean-up** of unstarred articles.
 - **The "New to feeds?" guide page.**
-- **A tab left open across an update keeps working** without a reload.
+- **A tab left open across an update keeps working** without a reload. Built 25 October 2026 (decision 0076).

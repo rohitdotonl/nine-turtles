@@ -19,8 +19,14 @@ switch inside the old page.
   marks trying again during a restart, decision 0073), and when the move
   carries an Undo notice (such as after unsubscribing). The next move after
   that switches instead.
-- **Keyboard.** If the keyboard was in use, its place goes to the new
-  page's heading, as it would have without the switch.
+- **The screen stays as arranged.** The switch carries, in the tab's
+  session storage, what lives only in the page: whether the keyboard was in
+  use, the sidebar and list the reader hid or showed, the list Close
+  settings goes back to, and how far the sidebar was scrolled. The new page
+  puts them back, and puts the keyboard's place on the heading as an
+  ordinary move would, trying for up to about three seconds while feeds and
+  lists arrive, and never once the reader has moved the keyboard's place
+  themselves.
 - **Kept:** "A new version is ready · Reload" in Settings, and "nine turtles
   was updated. Reload to continue." for a request the newer server no
   longer understands.

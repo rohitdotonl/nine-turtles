@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { switchesOnMove, verdict } from "./updates.svelte";
+import { readCarried, switchesOnMove, verdict } from "./updates.svelte";
 
 describe("telling a tab that nine turtles was updated", () => {
   it("says nothing while the versions match, or before the tab knows its own", () => {
@@ -37,5 +37,20 @@ describe("switching an open tab to the new version", () => {
 
   it("waits while an Undo is on offer, so it isn't lost", () => {
     expect(switchesOnMove(true, false, true)).toBe(false);
+  });
+});
+
+describe("what a switch carries to the new version", () => {
+  const carried = { keyboard: true, sidebar: "hidden", listHidden: true, lastPlace: "/feeds/3", sidebarScroll: 120 };
+
+  it("reads back a note it wrote", () => {
+    expect(readCarried(JSON.parse(JSON.stringify(carried)))).toEqual(carried);
+  });
+
+  it("ignores anything else", () => {
+    expect(readCarried(null)).toBeUndefined();
+    expect(readCarried("keyboard")).toBeUndefined();
+    expect(readCarried({ ...carried, sidebar: "sideways" })).toBeUndefined();
+    expect(readCarried({ ...carried, sidebarScroll: "far" })).toBeUndefined();
   });
 });

@@ -55,7 +55,7 @@
   import { VIEWS, VIEW_NAMES, nameFor, parse, pathFor, titleFor, type Route } from "./router";
   import { emptyQuery, isSearching, scopeFor, searchParams, searchedTerms, type Query } from "./search";
   import { startingStep, stepOf, type Screen } from "./steps";
-  import { arrivedBySwitching, switchesOnMove, switchTo, updates, watchForNewVersions } from "./updates.svelte";
+  import { arrivedBySwitching, switchesOnMove, switchTo, updates, watchForNewVersions, type Carried } from "./updates.svelte";
 
   let { version, onSignedOut }: { version: string; onSignedOut: () => void } = $props();
 
@@ -434,11 +434,11 @@
     // "/" and unknown addresses open Unread (All in river mode); the address bar says so.
     history.replaceState(firstStep, "", pathFor(route));
 
-    // Arriving here by switching to a new version: the keyboard's place goes
-    // to the heading, as going here without the switch would have done.
+    // Arriving here by switching to a new version: the screen is as the
+    // reader left it, and the keyboard's place goes to the heading, as going
+    // here without the switch would have done.
     const switched = arrivedBySwitching();
-    if (switched === "keyboard") document.documentElement.dataset.keyboard = "";
-    if (switched) requestAnimationFrame(() => placeFocus(route)?.focus());
+    if (switched) arriveSwitched(switched);
     const stopWatching = watchForNewVersions();
 
     const queries = [WIDE_REM, MEDIUM_REM].map((rem) => matchMedia(`(min-width: ${rem}rem)`));
@@ -463,7 +463,7 @@
       const moved = !keepsArticle(route, next);
       // The address has already changed: loading it opens the new version there.
       if (moved && switchesOnMove(updates.ready, marksUnsaved(), false)) {
-        switchTo(location.pathname);
+        switchTo(location.pathname, carried(next));
         return;
       }
       const [opening, closing] = [isSheet(next) && !isSheet(route), isSheet(route) && !isSheet(next)];
@@ -642,11 +642,58 @@
     else go(under);
   }
 
+  /** The screen as the reader arranged it, for the new version to open the same way (decision 0076). */
+  function carried(next: Route): Carried {
+    return {
+      keyboard: document.documentElement.dataset.keyboard !== undefined,
+      sidebar: sidebarChoice,
+      listHidden,
+      lastPlace: pathFor(isList(next) ? next : lastPlace),
+      sidebarScroll: sidebar?.querySelector(".scroller")?.scrollTop ?? 0,
+    };
+  }
+
+  /** Puts back what the page before the switch carried. Feeds and lists arrive a moment later, so it keeps trying for a few seconds. */
+  function arriveSwitched(was: Carried) {
+    if (was.keyboard) document.documentElement.dataset.keyboard = "";
+    if (width !== "narrow") {
+      sidebarChoice = was.sidebar;
+      listHidden = was.listHidden;
+    }
+    const place = parse(was.lastPlace);
+    if (isList(place) && !isList(route)) lastPlace = place;
+    let [focused, scrolled] = [false, was.sidebarScroll <= 0];
+    let frames = 0;
+    const settle = () => {
+      // Once the reader has put the keyboard's place somewhere, it stays there.
+      // (Opening puts it on the wordmark, or the heading, first; see onMount.)
+      const at = document.activeElement;
+      if (!focused && at && at !== document.body && at !== wordmark && at !== placeFocus(route)) focused = true;
+      if (!focused) {
+        const heading = placeFocus(route);
+        if (heading) {
+          heading.focus();
+          focused = document.activeElement === heading;
+        }
+      }
+      if (!scrolled) {
+        const scroller = sidebar?.querySelector(".scroller");
+        if (scroller && scroller.scrollHeight - scroller.clientHeight >= was.sidebarScroll) {
+          scroller.scrollTop = was.sidebarScroll;
+          scrolled = true;
+        }
+      }
+      // About three seconds at most, then the page is left as it is.
+      if (!(focused && scrolled) && ++frames < 180) requestAnimationFrame(settle);
+    };
+    requestAnimationFrame(settle);
+  }
+
   function go(next: Route, withNotice?: Notice) {
     // A newer nine turtles is live: going somewhere else redraws the screen
     // anyway, so arrive there in the new version (decision 0076).
     if (!keepsArticle(route, next) && switchesOnMove(updates.ready, marksUnsaved(), !!withNotice)) {
-      switchTo(pathFor(next));
+      switchTo(pathFor(next), carried(next));
       return;
     }
     const from = screenNow();
