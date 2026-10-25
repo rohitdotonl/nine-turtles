@@ -11,6 +11,7 @@ plain steps, no assumed knowledge of a particular tool.
 | [protecting-main.md](protecting-main.md) | The owner's step-by-step guide to switching on protection for main |
 | [settings.md](settings.md) | Every setting nine turtles reads (names and meanings, never values) |
 | [render-setup.md](render-setup.md) | The owner's one-time guide to putting nine turtles on Render and setting the password |
+| [health-check.md](health-check.md) | The check every 15 minutes that the live app answers, and the email when it doesn't |
 | [daily-check.md](daily-check.md) | The daily health check an agent runs on the live app |
 | [website-and-domain.md](website-and-domain.md) | The website at nineturtles.app, the app at app.nineturtles.app, and the owner's one-time setup |
 
