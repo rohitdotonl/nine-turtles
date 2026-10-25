@@ -422,7 +422,9 @@ impl Stream {
                 query.push("articles.read = 1 AND feeds.unsubscribed_at IS NULL");
             }
             Self::Feed(id) => {
-                query.push("articles.feed_id = ").push_bind(*id);
+                query
+                    .push("feeds.unsubscribed_at IS NULL AND articles.feed_id = ")
+                    .push_bind(*id);
             }
             Self::Folder(name) => {
                 query
@@ -821,17 +823,13 @@ async fn edit_subscription(_: App, State(state): State<AppState>, params: Params
             },
             (_, Err(_)) => return StatusCode::NOT_FOUND.into_response(),
         };
-        let done = if action == "unsubscribe" {
-            unfollow(&state, id).await
-        } else {
-            file(
-                &state,
-                id,
-                params.first("t"),
-                params.all("a"),
-                params.all("r"),
-            )
-            .await
+        let done = match action {
+            "unsubscribe" => unfollow(&state, id).await,
+            "subscribe" => match bring_back(&state, id).await {
+                Ok(()) => file(&state, id, &params).await,
+                Err(error) => Err(error),
+            },
+            _ => file(&state, id, &params).await,
         };
         if let Err(error) = done {
             return database_problem("changing a feed for an app", &error);
@@ -869,7 +867,9 @@ async fn quick_add(_: App, State(state): State<AppState>, params: Params) -> Res
 /// checked straight away, and cleared for good ten minutes later by
 /// background checking. Unlike unfollowing on nine turtles' own page, an
 /// earlier unfollowed feed isn't cleared early, so each keeps its ten
-/// minutes in which following it again brings it back.
+/// minutes in which following it again brings it back (unless the reader
+/// unsubscribes on nine turtles' page meanwhile, which clears every feed
+/// waiting, since its Undo covers only the last action).
 async fn unfollow(state: &AppState, id: i64) -> Result<(), sqlx::Error> {
     sqlx::query("UPDATE feeds SET unsubscribed_at = ? WHERE id = ? AND unsubscribed_at IS NULL")
         .bind(now())
@@ -879,16 +879,25 @@ async fn unfollow(state: &AppState, id: i64) -> Result<(), sqlx::Error> {
     Ok(())
 }
 
+/// Follows again, by its number, a feed unfollowed but not yet cleared, as
+/// Undo does.
+async fn bring_back(state: &AppState, id: i64) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "UPDATE feeds SET unsubscribed_at = NULL, next_check_at = ?
+         WHERE id = ? AND unsubscribed_at IS NOT NULL AND cleared = 0",
+    )
+    .bind(now())
+    .bind(id)
+    .execute(&state.db)
+    .await?;
+    Ok(())
+}
+
 /// Renames a followed feed and moves it in or out of folders, creating a
 /// folder named for the first time. Names are cleaned as nine turtles' own
-/// fields clean them; a name that's empty or too long is ignored.
-async fn file<'a>(
-    state: &AppState,
-    id: i64,
-    title: Option<&str>,
-    add: impl Iterator<Item = &'a str>,
-    remove: impl Iterator<Item = &'a str>,
-) -> Result<(), sqlx::Error> {
+/// fields clean them; a name that's empty or too long is ignored. `t` is
+/// the new name, `a` folders to put it in and `r` folders to take it out of.
+async fn file(state: &AppState, id: i64, params: &Params) -> Result<(), sqlx::Error> {
     let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
     let followed: Option<i64> =
         sqlx::query_scalar("SELECT id FROM feeds WHERE id = ? AND unsubscribed_at IS NULL")
@@ -898,14 +907,14 @@ async fn file<'a>(
     if followed.is_none() {
         return Ok(());
     }
-    if let Some(title) = title.and_then(folders::clean_name) {
+    if let Some(title) = params.first("t").and_then(folders::clean_name) {
         sqlx::query("UPDATE feeds SET title = ? WHERE id = ?")
             .bind(title)
             .bind(id)
             .execute(&mut *transaction)
             .await?;
     }
-    for name in add.filter_map(folder_name) {
+    for name in params.all("a").filter_map(folder_name) {
         let (folder, _) = folders::folder_named(&mut transaction, &name).await?;
         sqlx::query("INSERT OR IGNORE INTO feed_folders (folder_id, feed_id) VALUES (?, ?)")
             .bind(folder)
@@ -913,7 +922,7 @@ async fn file<'a>(
             .execute(&mut *transaction)
             .await?;
     }
-    for name in remove.filter_map(folder_name) {
+    for name in params.all("r").filter_map(folder_name) {
         sqlx::query(
             "DELETE FROM feed_folders WHERE feed_id = ?
              AND folder_id IN (SELECT id FROM folders WHERE name = ?)",

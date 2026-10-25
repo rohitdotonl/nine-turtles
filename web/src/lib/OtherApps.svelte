@@ -7,6 +7,7 @@
   each have a Copy button.
 -->
 <script lang="ts">
+  import { tick } from "svelte";
   import Icon from "./Icon.svelte";
   import { appsStatus, makeAppPassword, serverAddress, turnOffApps } from "./apps";
 
@@ -16,11 +17,18 @@
   let password = $state("");
   let message = $state("");
   let busy = $state(false);
+  /** Where the keyboard goes when the pressed row is swapped for others. */
+  let copyPassword: HTMLButtonElement | undefined = $state();
+  let makeFirst: HTMLButtonElement | undefined = $state();
   const address = serverAddress(location.origin);
 
   appsStatus().then(
     (status) => (on = status.on),
-    () => (message = "Couldn't check whether other apps are on. Try again in a moment."),
+    () => {
+      // Making a password still works; it replaces any earlier one.
+      on = false;
+      message = "Couldn't check whether other apps are on. Try again in a moment.";
+    },
   );
 
   async function make() {
@@ -31,6 +39,9 @@
       password = await makeAppPassword();
       on = true;
       message = "A new app password is ready. Apps that used the old one need this one now.";
+      busy = false;
+      await tick();
+      copyPassword?.focus();
     } catch {
       message = "Couldn't make an app password. Try again in a moment.";
     }
@@ -46,6 +57,9 @@
       on = false;
       password = "";
       message = "Other apps are off. Any app that was syncing is signed out; your feeds and articles are unchanged.";
+      busy = false;
+      await tick();
+      makeFirst?.focus();
     } catch {
       message = "Couldn't turn other apps off. Try again in a moment.";
     }
@@ -79,7 +93,7 @@
           <p class="min-w-0">
             App password<br /><span class="value text-muted" translate="no">{password}</span>
           </p>
-          <button type="button" class="btn btn-small" onclick={() => copy(password, "App password")}
+          <button bind:this={copyPassword} type="button" class="btn btn-small" onclick={() => copy(password, "App password")}
             >Copy<span class="sr-only"> app password</span></button
           >
         </div>
@@ -92,6 +106,7 @@
       >
     {:else}
       <button
+        bind:this={makeFirst}
         type="button"
         aria-disabled={busy || on === undefined}
         onclick={() => on === false && make()}

@@ -502,6 +502,7 @@ async fn apps_follow_unfollow_rename_and_file_feeds() {
     assert_eq!(status, StatusCode::OK);
     assert!(subscriptions().await.as_array().unwrap().is_empty());
     assert!(app.ids("n=100").await.is_empty());
+    assert!(app.ids(&format!("s={feed}&n=100")).await.is_empty());
 
     // Followed again from the app within ten minutes: back as it was.
     let (status, body) = app
@@ -522,4 +523,14 @@ async fn apps_follow_unfollow_rename_and_file_feeds() {
         .await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(subscriptions().await.as_array().unwrap().len(), 1);
+
+    // Unfollowed again, then followed again by its number: back as well.
+    app.post("subscription/edit", &[("ac", "unsubscribe"), ("s", &feed)])
+        .await;
+    assert!(subscriptions().await.as_array().unwrap().is_empty());
+    let (status, _) = app
+        .post("subscription/edit", &[("ac", "subscribe"), ("s", &feed)])
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(app.ids(&format!("s={feed}&n=100")).await.len(), 30);
 }

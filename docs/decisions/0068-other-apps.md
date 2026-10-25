@@ -20,7 +20,13 @@ cleared by background checking ten minutes later. Following it again from
 an app in that time brings it back as Undo would, with its articles, read
 marks and folders. An app's unfollow doesn't clear earlier unfollowed feeds
 early (nine turtles' own Unsubscribe does, because its Undo only covers the
-last action). "Mark all as read" from an app touches only articles that had
+last action); the other way round, unsubscribing on nine turtles' page
+still clears every feed waiting, an app's too, so the ten minutes hold
+only while the owner doesn't unsubscribe there meanwhile (accepted rather
+than adding a database column to tell them apart). Deleting a folder from
+an app has no Undo; it removes only the grouping, never a feed or an
+article, and the owner's choice covered apps changing folders. Both are
+named to the owner in the merge brief. "Mark all as read" from an app touches only articles that had
 arrived when the app last looked (its `ts`).
 
 **Signing in.** Apps never get the owner's password:

@@ -590,14 +590,20 @@ test("in a sidebar narrowed below 15rem, Keys keeps only its icon and stays a fu
 
 test("Other apps: an app password is made, shown once with the server address, and turned off", async ({ page }) => {
   await openApp(page, "/settings");
-  await page.getByRole("button", { name: "Make an app password" }).click();
+  // With the keyboard alone: the pressed row is replaced, so the keyboard moves to the new password's Copy.
+  await page.getByRole("button", { name: "Make an app password" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("button", { name: "Copy app password" })).toBeFocused();
   const status = page.getByRole("status").filter({ hasText: "app password is ready" });
   await expect(status).toBeVisible();
   await expect(page.getByText(/\/api\/greader$/)).toBeVisible();
   await expect(page.getByText(/^[a-z2-9]{4}(-[a-z2-9]{4}){5}$/)).toBeVisible();
   await expect(page.getByRole("button", { name: "Copy app password" })).toBeVisible();
-  await page.getByRole("button", { name: "Turn off other apps" }).click();
+  await page.getByRole("button", { name: "Turn off other apps" }).focus();
+  await page.keyboard.press("Enter");
   await expect(page.getByRole("status").filter({ hasText: "Other apps are off" })).toBeVisible();
+  // …and back to Make an app password when that row returns.
+  await expect(page.getByRole("button", { name: "Make an app password" })).toBeFocused();
   await expect(page.getByText(/^[a-z2-9]{4}(-[a-z2-9]{4}){5}$/)).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Make an app password" })).toBeVisible();
 });

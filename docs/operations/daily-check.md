@@ -42,7 +42,7 @@ environment blocks it, report that to the owner in the agent's own channel
    | `password_setting` isn't `"set"` | Nobody can sign in | "Sign-in isn't possible: the password setting is missing or broken" |
    | `version` doesn't end with the short commit of the latest successful "Container image" run on main (allow 30 minutes after a merge) | The live app is behind | "The live app is running an older version" |
    | `recent_problems` has entries from the last 24 hours | Something went wrong | Quote the messages (they never contain secrets) |
-   | `wrong_passwords_since_start` above 50 | Someone may be guessing the password | "Many wrong passwords" (sign-in slows guessers down; say so calmly) |
+   | `wrong_passwords_since_start` above 50 | Someone may be guessing the password | "Many wrong passwords" (counts the sign-in page and other apps together: the sign-in page slows guessers down, and an app password can't be guessed; an app still using an old app password also adds to it; say so calmly) |
    | `database_bytes` above 700 MB | The 1 GB disk is filling up | "The database is getting close to the disk's size" |
    | `feeds.feeds_followed` has grown by 20 or more since the last "Database size" issue (or there's none yet and it's above 20) | The owner imported their feeds; Milestone 9 asks how big the database gets | "Database size": give `database_bytes` in MB and `feeds_followed`, once. The next week, comment once more with the new size, so the growth per week (and how many years the 1 GB disk lasts, every article kept) can be worked out. Not a problem; close it after that comment. |
    | `uptime_seconds` under one hour with no merge in the last hour | nine turtles restarted by itself | "nine turtles restarted unexpectedly" |
