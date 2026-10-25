@@ -1019,13 +1019,25 @@ async fn delete_folder(
     else {
         return (StatusCode::BAD_REQUEST, "Name a folder.").into_response();
     };
-    match sqlx::query("DELETE FROM folders WHERE person_id = ? AND name = ?")
-        .bind(person)
-        .bind(name)
-        .execute(&state.db)
-        .await
-    {
-        Ok(_) => text("OK"),
+    // As on nine turtles' own screen: saved searches and rules for the
+    // folder stay, finding and matching nothing (decisions 0077 and 0081).
+    let deleted = async {
+        let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
+        let id: Option<i64> =
+            sqlx::query_scalar("DELETE FROM folders WHERE person_id = ? AND name = ? RETURNING id")
+                .bind(person)
+                .bind(name)
+                .fetch_optional(&mut *transaction)
+                .await?;
+        if let Some(id) = id {
+            crate::saved_searches::forget(&mut *transaction, "folder", id).await?;
+            crate::rules::place_gone(&mut transaction, None, Some(id)).await?;
+        }
+        transaction.commit().await
+    }
+    .await;
+    match deleted {
+        Ok(()) => text("OK"),
         Err(error) => database_problem("deleting a folder for an app", &error),
     }
 }

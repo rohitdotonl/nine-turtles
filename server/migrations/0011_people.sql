@@ -18,6 +18,9 @@ CREATE TABLE people (
     owner INTEGER NOT NULL DEFAULT 0 CHECK (owner IN (0, 1)),
     created_at INTEGER NOT NULL
 ) STRICT;
+-- Only one reader can be the owner; nine turtles knows them as number 1
+-- (auth::OWNER).
+CREATE UNIQUE INDEX people_one_owner ON people (owner) WHERE owner = 1;
 INSERT INTO people (id, owner, created_at) VALUES (1, 1, unixepoch());
 
 -- Signed-in devices, now each someone's.

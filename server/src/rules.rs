@@ -386,7 +386,8 @@ async fn matching_now(db: &sqlx::SqlitePool, rule: &Rule) -> Result<Vec<i64>, sq
                  AND (?1 = 0 OR articles.starred = 0)
                  AND (?2 IS NULL OR articles.feed_id = ?2)
                  AND (?3 IS NULL OR articles.feed_id IN
-                      (SELECT feed_id FROM feed_folders WHERE folder_id = ?3))
+                      (SELECT feed_id FROM feed_folders WHERE folder_id =
+                           (SELECT id FROM folders WHERE id = ?3 AND person_id = ?6)))
              ORDER BY articles.id LIMIT ?5",
         )
         .bind(rule.action == Action::Star)
@@ -394,6 +395,7 @@ async fn matching_now(db: &sqlx::SqlitePool, rule: &Rule) -> Result<Vec<i64>, sq
         .bind(rule.folder_id)
         .bind(after)
         .bind(MATCH_BATCH)
+        .bind(rule.person_id)
         .fetch_all(db)
         .await?;
         let Some(last) = lines.last() else {

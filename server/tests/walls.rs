@@ -394,3 +394,55 @@ async fn signing_out_signs_out_only_that_device() {
         .unwrap();
     assert_eq!(owners, 1);
 }
+
+#[tokio::test]
+async fn deleting_a_folder_from_an_app_pauses_its_rules_as_the_screen_does() {
+    let (owner, _, _, _) = two_readers().await;
+    let (status, folder) = owner
+        .post("/api/folders", json!({ "name": "Garden" }))
+        .await;
+    assert_eq!(status, StatusCode::CREATED);
+    let folder = folder["folder"]["id"].as_i64().unwrap();
+    let (status, _) = owner
+        .post(
+            "/api/rules",
+            json!({ "words": "tomatoes", "action": "star", "folder_id": folder }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    let (status, _) = owner
+        .post(
+            "/api/saved-searches",
+            json!({ "name": "In the garden", "query": { "scope": { "kind": "folder", "id": folder } } }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::CREATED);
+
+    let password = made_for(&owner).await;
+    let response = Client::new()
+        .post(format!(
+            "{}/api/greader/reader/api/0/disable-tag",
+            owner.base
+        ))
+        .header("authorization", format!("GoogleLogin auth={password}"))
+        .header("content-type", "application/x-www-form-urlencoded")
+        .body("s=user/-/label/Garden")
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+
+    assert_eq!(owner.get("/api/feeds").await["folders"], json!([]));
+    let rules = owner.get("/api/rules").await["rules"].clone();
+    assert_eq!(rules[0]["place_gone"], json!(true));
+    assert_eq!(rules[0]["folder_id"], Value::Null);
+    let searches = owner.get("/api/saved-searches").await["searches"].clone();
+    assert_eq!(searches[0]["query"]["scope"]["id"], json!(0));
+}
+
+/// A fresh app password for this reader.
+async fn made_for(reader: &Reader) -> String {
+    let (status, made) = reader.post("/api/apps/password", json!({})).await;
+    assert_eq!(status, StatusCode::OK);
+    made["password"].as_str().unwrap().to_owned()
+}
