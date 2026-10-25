@@ -35,7 +35,7 @@ end, "V2 so far", shows which V2 parts are live.
 | 8 | Polite background fetching and Refresh | ✅ |
 | 9 | Folders, feed editing and OPML import/export | ✅ |
 | 10 | Search | ✅ |
-| 11 | Feed health page | ⏭ (V2, being built) |
+| 11 | Feed health page | ✅ (V2, 25 October 2026) |
 | 12 | WebSub | ✅ (V2, 25 October 2026) |
 | 13 | Phones and installing the app | ✅ |
 | 14 | Keeping things tidy, and the finishing pass | ✅ |
@@ -153,7 +153,7 @@ move around with only the keyboard.
   Last-Modified, `Retry-After`, time and size limits, permanent redirects,
   backoff for failing feeds.
 - "New items · press r", `r` and the Refresh button; fresh on arrival.
-- Failing feeds visible without the feed health page (V2): the diagnostics page
+- Failing feeds visible without the feed health page (built in V2): the diagnostics page
   counts them (never naming them) and the daily check reports "Some feeds keep
   failing", with tests.
 
@@ -178,11 +178,12 @@ and the screen never changed under you.
 
 **You can try:** the checks in SPEC section 14.
 
-## 11. Feed health page ⏭ moved to V2 (🔨 being built)
+## 11. Feed health page ✅ built in V2 (25 October 2026)
 
-Being built in V2 (25 October 2026); not live yet. In V1, the daily check reports failing feeds instead (from Milestone 8).
+In V1, the daily check reported failing feeds instead (from Milestone 8).
 
 - Problems in plain words, sorted worst first, with Retry · Find new address · Unsubscribe.
+- In Settings › Feeds (SPEC section 17, decision 0071).
 
 **You can try:** look at your real feeds' health after a few days of fetching.
 
@@ -372,7 +373,7 @@ each with screenshots:
 | WebSub (new posts within minutes) | ✅ 25 October 2026 | Milestone 12, SPEC section 12, decision 0069 |
 | YouTube videos in YouTube's own player | ✅ 25 October 2026 | SPEC section 7, decision 0072 |
 | Syncing with Reeder, NetNewsWire and other apps | ✅ 25 October 2026 | SPEC section 26, decision 0070 |
-| Feed health page | 🔨 being built | Milestone 11, SPEC section 17 |
+| Feed health page | ✅ 25 October 2026 | Milestone 11, SPEC section 17, decision 0071 |
 | Backups and moving hosts | ⬜ | Milestone 3 above, `docs/ENGINEERING.md` → "Hosting" |
 | The yearly clean-up of unstarred articles | ⬜ | SPEC section 23 (after backups) |
 | The "New to feeds?" guide page | ⬜ | SPEC section 2 |

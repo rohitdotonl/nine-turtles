@@ -126,6 +126,52 @@ export const SCREENS: Screen[] = [
   },
   { name: "settings", path: "/settings", signedIn: true, library: true },
   {
+    name: "feed-health-all-working",
+    path: "/settings/feed-health",
+    signedIn: true,
+    open: async (page) => {
+      await expect(page.getByText("All feeds are working.")).toBeVisible();
+    },
+  },
+  {
+    // Two broken feeds, one of each kind, as the server would describe them,
+    // so the library the screenshots follow stays healthy.
+    name: "feed-health",
+    path: "/settings/feed-health",
+    signedIn: true,
+    library: true,
+    open: async (page) => {
+      const now = Math.floor(Date.now() / 1000);
+      const day = 24 * 60 * 60;
+      const feed = (id: number, title: string, state: string, problem: string, since: number) => ({
+        id,
+        title,
+        url: `https://feeds.example/${id}.xml`,
+        site_url: null,
+        problem,
+        failing_since: now - since * day,
+        missing_since: problem === "not-found" ? now - since * day : null,
+        fetched_at: now - since * day,
+        next_check_at: now + day,
+        failures: 9,
+        state,
+      });
+      await page.route("**/api/health", (route) =>
+        route.fulfill({
+          json: {
+            feeds: [
+              feed(901, "The Old Almanac", "dead", "not-found", 12),
+              feed(902, "Letters from the Coast", "trouble", "unreachable", 2),
+            ],
+          },
+        }),
+      );
+      await page.reload();
+      await appReady(page);
+      await expect(page.getByRole("heading", { name: "Not working" })).toBeVisible();
+    },
+  },
+  {
     name: "shortcuts",
     path: "/unread",
     signedIn: true,

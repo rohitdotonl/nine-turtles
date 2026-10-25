@@ -1,0 +1,406 @@
+//! The feed health page (SPEC section 17): the feeds that aren't working,
+//! worst first, each with what went wrong and three ways to deal with it.
+//!
+//! - **Which feeds:** a feed is listed once two checks in a row have failed
+//!   (one failure is usually a blip that the next check clears). It's
+//!   **dead** after a week of "not found" or three weeks of any failure,
+//!   and still checked once a day in case it comes back; otherwise it's
+//!   **having trouble**. Dead feeds come first, then the longest failing.
+//! - **Retry** checks the feed straight away, exactly as background
+//!   checking would (`checking::check`), unless the publisher asked nine
+//!   turtles to slow down and that wait isn't over: respecting it comes
+//!   first.
+//! - **Find new address** visits the feed's site (the home page its feed
+//!   names, or the feed address's own home page) once, because the reader
+//!   asked, and lists the feeds that page names (decision 0016). It never
+//!   guesses other addresses.
+//! - **Use this address** moves the feed to an address the reader chose:
+//!   it keeps its name, folders, articles, read marks and stars.
+//! - **Unsubscribe** is the usual one, with Undo (`folders`).
+//!
+//! The screen turns the short problem word into plain sentences; no error
+//! codes are ever shown.
+
+use axum::{
+    Json, Router,
+    extract::{Path, State},
+    http::StatusCode,
+    response::{IntoResponse, Response},
+    routing::{get, post},
+};
+use reqwest::Url;
+use serde::{Deserialize, Serialize};
+use serde_json::json;
+
+use crate::{
+    AppState,
+    auth::{SignedIn, database_problem},
+    checking::{self, DEAD_WHEN_FAILING, DEAD_WHEN_MISSING},
+    discover, feed,
+    feeds::{make_room, store_articles},
+    fetch::{self, FetchError},
+    now,
+};
+
+/// Failed checks in a row before a feed is listed.
+pub const LISTED_AFTER: i64 = 2;
+
+pub fn routes() -> Router<AppState> {
+    Router::new()
+        .route("/api/health", get(list))
+        .route("/api/health/{id}/retry", post(retry))
+        .route("/api/health/{id}/find", post(find))
+        .route("/api/health/{id}/address", post(move_to))
+}
+
+/// How a feed is doing.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Condition {
+    Working,
+    Trouble,
+    Dead,
+}
+
+/// One feed as the page shows it.
+#[derive(Debug, Serialize, sqlx::FromRow)]
+pub struct Entry {
+    pub id: i64,
+    pub title: String,
+    pub url: String,
+    pub site_url: Option<String>,
+    /// What went wrong last, as a short word (`checking`), or none.
+    pub problem: Option<String>,
+    /// When its current run of failures began.
+    pub failing_since: Option<i64>,
+    /// When its current run of "not found" answers began.
+    pub missing_since: Option<i64>,
+    /// When it last worked, if ever.
+    pub fetched_at: Option<i64>,
+    /// When it's next checked.
+    pub next_check_at: i64,
+    pub failures: i64,
+    #[sqlx(skip)]
+    pub state: Option<Condition>,
+}
+
+impl Entry {
+    fn judged(mut self, now: i64) -> Self {
+        self.state = Some(judge(
+            self.failures,
+            self.failing_since,
+            self.missing_since,
+            now,
+        ));
+        self
+    }
+}
+
+/// Dead, having trouble, or working, from a feed's failures.
+pub fn judge(
+    failures: i64,
+    failing_since: Option<i64>,
+    missing_since: Option<i64>,
+    now: i64,
+) -> Condition {
+    let dead = missing_since.is_some_and(|since| since <= now - DEAD_WHEN_MISSING)
+        || failing_since.is_some_and(|since| since <= now - DEAD_WHEN_FAILING);
+    if failures == 0 {
+        Condition::Working
+    } else if dead {
+        Condition::Dead
+    } else {
+        Condition::Trouble
+    }
+}
+
+/// The followed feeds, as the page shows them, then `$rest`.
+macro_rules! entries {
+    ($rest:literal) => {
+        concat!(
+            "SELECT id, title, url, site_url, problem, failing_since, missing_since,
+                 fetched_at, next_check_at, failures
+             FROM feeds WHERE unsubscribed_at IS NULL ",
+            $rest
+        )
+    };
+}
+
+/// The followed feeds that aren't working: dead ones first, then the
+/// longest failing, then by name.
+pub async fn listed(db: &sqlx::SqlitePool, now: i64) -> Result<Vec<Entry>, sqlx::Error> {
+    let mut entries: Vec<Entry> = sqlx::query_as(entries!(
+        "AND failures >= ? ORDER BY failing_since, title COLLATE NOCASE, id"
+    ))
+    .bind(LISTED_AFTER)
+    .fetch_all(db)
+    .await?
+    .into_iter()
+    .map(|entry: Entry| entry.judged(now))
+    .collect();
+    // Stable: within each group, the order above stays.
+    entries.sort_by_key(|entry| entry.state != Some(Condition::Dead));
+    Ok(entries)
+}
+
+async fn entry(db: &sqlx::SqlitePool, id: i64, now: i64) -> Result<Option<Entry>, sqlx::Error> {
+    let entry: Option<Entry> = sqlx::query_as(entries!("AND id = ?"))
+        .bind(id)
+        .fetch_optional(db)
+        .await?;
+    Ok(entry.map(|entry| entry.judged(now)))
+}
+
+async fn list(_: SignedIn, State(state): State<AppState>) -> Response {
+    match listed(&state.db, now()).await {
+        Ok(feeds) => Json(json!({ "feeds": feeds })).into_response(),
+        Err(error) => database_problem("listing the feeds that aren't working", &error),
+    }
+}
+
+fn refused(status: StatusCode, error: &str) -> Response {
+    (status, Json(json!({ "error": error }))).into_response()
+}
+
+/// Retry: checks the feed now and answers how it's doing afterwards.
+async fn retry(_: SignedIn, State(state): State<AppState>, Path(id): Path<i64>) -> Response {
+    let now = now();
+    let before = match entry(&state.db, id, now).await {
+        Ok(Some(before)) => before,
+        Ok(None) => return StatusCode::NOT_FOUND.into_response(),
+        Err(error) => return database_problem("retrying a feed", &error),
+    };
+    // The publisher asked for a pause that isn't over: Retry waits too.
+    if before.problem.as_deref() == Some("slow-down") && before.next_check_at > now {
+        return (
+            StatusCode::CONFLICT,
+            Json(json!({ "error": "asked-to-wait", "until": before.next_check_at })),
+        )
+            .into_response();
+    }
+    let after = async {
+        checking::check(&state, id, now).await?;
+        entry(&state.db, id, now).await
+    }
+    .await;
+    match after {
+        Ok(Some(after)) => Json(json!({ "feed": after })).into_response(),
+        Ok(None) => StatusCode::NOT_FOUND.into_response(),
+        Err(error) => database_problem("retrying a feed", &error),
+    }
+}
+
+/// The page Find new address visits: the site the feed names, or the feed
+/// address's own home page.
+pub fn home_page(site_url: Option<&str>, feed_url: &str) -> Option<Url> {
+    let web = |url: Url| matches!(url.scheme(), "http" | "https").then_some(url);
+    site_url
+        .and_then(|site| Url::parse(site).ok())
+        .and_then(web)
+        .or_else(|| {
+            let mut url = web(Url::parse(feed_url).ok()?)?;
+            url.set_path("/");
+            url.set_query(None);
+            url.set_fragment(None);
+            Some(url)
+        })
+}
+
+fn fetch_refusal(error: &FetchError) -> Response {
+    let word = match error {
+        FetchError::NotAllowed => "not-allowed",
+        FetchError::Status(404 | 410) => "not-found",
+        FetchError::TooBig => "too-big",
+        _ => "unreachable",
+    };
+    refused(StatusCode::BAD_GATEWAY, word)
+}
+
+/// Find new address: the feeds the site's home page names, other than the
+/// one that isn't working and any already followed.
+async fn find(_: SignedIn, State(state): State<AppState>, Path(id): Path<i64>) -> Response {
+    let feed = match entry(&state.db, id, now()).await {
+        Ok(Some(feed)) => feed,
+        Ok(None) => return StatusCode::NOT_FOUND.into_response(),
+        Err(error) => return database_problem("finding a feed's new address", &error),
+    };
+    let Some(page) = home_page(feed.site_url.as_deref(), &feed.url) else {
+        return refused(StatusCode::UNPROCESSABLE_ENTITY, "no-feed");
+    };
+    let fetched = match fetch::get(&state.http, &page, state.config.local_feeds_allowed).await {
+        Ok(fetched) => fetched,
+        Err(error) => return fetch_refusal(&error),
+    };
+    // The home page may itself be the feed, now at this address.
+    let found = if feed::parse(&fetched.body, &fetched.final_url).is_some() {
+        vec![discover::Found {
+            title: feed.title.clone(),
+            url: fetched.lasting_url.clone(),
+        }]
+    } else {
+        discover::feeds_in(&String::from_utf8_lossy(&fetched.body), &fetched.final_url)
+    };
+    let mut choices = Vec::new();
+    for found in found {
+        let followed: Result<Option<i64>, sqlx::Error> = sqlx::query_scalar(
+            "SELECT id FROM feeds WHERE url_key = ? AND unsubscribed_at IS NULL",
+        )
+        .bind(feed::normalize(&found.url))
+        .fetch_optional(&state.db)
+        .await;
+        match followed {
+            Ok(None) => choices.push(json!({ "title": found.title, "url": found.url.as_str() })),
+            Ok(Some(_)) => {}
+            Err(error) => return database_problem("finding a feed's new address", &error),
+        }
+    }
+    if choices.is_empty() {
+        return refused(StatusCode::UNPROCESSABLE_ENTITY, "no-feed");
+    }
+    Json(json!({ "page": page.as_str(), "choices": choices })).into_response()
+}
+
+#[derive(Deserialize)]
+struct NewAddress {
+    url: String,
+}
+
+/// Use this address: fetches the feed there and, if it is one, moves the
+/// feed to it, storing what's new. Its name, folders, articles, read marks
+/// and stars stay.
+async fn move_to(
+    _: SignedIn,
+    State(state): State<AppState>,
+    Path(id): Path<i64>,
+    Json(form): Json<NewAddress>,
+) -> Response {
+    let Some(url) = Url::parse(form.url.trim())
+        .ok()
+        .filter(|url| matches!(url.scheme(), "http" | "https") && url.host_str().is_some())
+    else {
+        return refused(StatusCode::BAD_REQUEST, "not-an-address");
+    };
+    let fetched = match fetch::get(&state.http, &url, state.config.local_feeds_allowed).await {
+        Ok(fetched) => fetched,
+        Err(error) => return fetch_refusal(&error),
+    };
+    let Some(parsed) = feed::parse(&fetched.body, &fetched.final_url) else {
+        return refused(StatusCode::UNPROCESSABLE_ENTITY, "no-feed");
+    };
+    let now = now();
+    let moved: Result<Result<(), Response>, sqlx::Error> = async {
+        let lasting = &fetched.lasting_url;
+        let key = feed::normalize(lasting);
+        let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
+        let followed: Option<i64> =
+            sqlx::query_scalar("SELECT id FROM feeds WHERE id = ? AND unsubscribed_at IS NULL")
+                .bind(id)
+                .fetch_optional(&mut *transaction)
+                .await?;
+        if followed.is_none() {
+            return Ok(Err(StatusCode::NOT_FOUND.into_response()));
+        }
+        // A feed unsubscribed from at that address, still waiting for Undo,
+        // is cleared first, as adding it would.
+        make_room(&mut transaction, &key).await?;
+        // Another feed at that address: one followed, or one unsubscribed
+        // from earlier whose line stays for its starred articles. Merging
+        // two feeds is never done quietly, so either is refused, in words
+        // that say which.
+        let taken: Option<bool> = sqlx::query_scalar(
+            "SELECT unsubscribed_at IS NULL FROM feeds WHERE url_key = ? AND id != ?",
+        )
+        .bind(&key)
+        .bind(id)
+        .fetch_optional(&mut *transaction)
+        .await?;
+        match taken {
+            Some(true) => return Ok(Err(refused(StatusCode::CONFLICT, "already"))),
+            Some(false) => return Ok(Err(refused(StatusCode::CONFLICT, "kept-stars"))),
+            None => {}
+        }
+        let every = checking::rhythm(&parsed, now);
+        sqlx::query(
+            "UPDATE feeds SET url = ?, url_key = ?, etag = ?, last_modified = ?, fetched_at = ?,
+                 check_every = ?, next_check_at = ?, failures = 0, failing_since = NULL,
+                 missing_since = NULL, problem = NULL,
+                 site_url = COALESCE(?, site_url), language = COALESCE(?, language)
+             WHERE id = ?",
+        )
+        .bind(lasting.as_str())
+        .bind(&key)
+        .bind(&fetched.etag)
+        .bind(&fetched.last_modified)
+        .bind(now)
+        .bind(every)
+        .bind(now + checking::wait(&state, every))
+        .bind(&parsed.site_url)
+        .bind(&parsed.language)
+        .bind(id)
+        .execute(&mut *transaction)
+        .await?;
+        store_articles(&mut transaction, id, &parsed.articles, now).await?;
+        transaction.commit().await?;
+        Ok(Ok(()))
+    }
+    .await;
+    match moved {
+        Ok(Ok(())) => match entry(&state.db, id, now).await {
+            Ok(Some(after)) => Json(json!({ "feed": after })).into_response(),
+            Ok(None) => StatusCode::NOT_FOUND.into_response(),
+            Err(error) => database_problem("moving a feed to a new address", &error),
+        },
+        Ok(Err(refusal)) => refusal,
+        Err(error) => database_problem("moving a feed to a new address", &error),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::checking::DAY;
+
+    const NOW: i64 = 1_790_000_000;
+
+    #[test]
+    fn a_feed_is_dead_after_a_week_not_found_or_three_weeks_failing() {
+        assert_eq!(judge(0, None, None, NOW), Condition::Working);
+        assert_eq!(judge(3, Some(NOW - DAY), None, NOW), Condition::Trouble);
+        assert_eq!(
+            judge(9, Some(NOW - 6 * DAY), Some(NOW - 6 * DAY), NOW),
+            Condition::Trouble
+        );
+        assert_eq!(
+            judge(9, Some(NOW - 7 * DAY), Some(NOW - 7 * DAY), NOW),
+            Condition::Dead
+        );
+        assert_eq!(
+            judge(9, Some(NOW - 20 * DAY), None, NOW),
+            Condition::Trouble
+        );
+        assert_eq!(judge(9, Some(NOW - 21 * DAY), None, NOW), Condition::Dead);
+    }
+
+    #[test]
+    fn find_new_address_visits_the_site_or_the_feeds_home_page() {
+        let home = |site: Option<&str>, feed: &str| home_page(site, feed).map(String::from);
+        assert_eq!(
+            home(
+                Some("https://blog.example/about"),
+                "https://feeds.example/x.xml"
+            )
+            .as_deref(),
+            Some("https://blog.example/about")
+        );
+        assert_eq!(
+            home(None, "https://blog.example/feed.xml?x=1#y").as_deref(),
+            Some("https://blog.example/")
+        );
+        // A site address that isn't a web page: the feed's home page instead.
+        assert_eq!(
+            home(Some("javascript:alert(1)"), "http://blog.example/rss").as_deref(),
+            Some("http://blog.example/")
+        );
+        assert_eq!(home(None, "not an address"), None);
+    }
+}
