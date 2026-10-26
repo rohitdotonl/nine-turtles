@@ -45,6 +45,7 @@ pub mod saved_searches;
 pub mod search;
 pub mod security;
 pub mod settings;
+pub mod star_import;
 pub mod starred;
 pub mod status;
 pub mod storage;
@@ -202,6 +203,7 @@ pub fn router(state: AppState) -> Router {
         .merge(settings::routes())
         .merge(unread::routes())
         .merge(starred::routes())
+        .merge(star_import::routes())
         .merge(status::routes())
         .merge(websub::routes())
         .merge(newsletters::routes())

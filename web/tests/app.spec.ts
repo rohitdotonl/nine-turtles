@@ -679,6 +679,7 @@ test("Settings is one centred column of grouped lists; Your data, Feed health an
   const rows = [
     page.getByRole("button", { name: "Import OPML" }),
     page.getByRole("link", { name: "Export OPML" }),
+    page.getByRole("button", { name: "Import starred articles" }),
     page.getByRole("link", { name: "Export starred articles" }),
     page.getByRole("link", { name: "Your feeds" }),
     page.getByRole("link", { name: "Feed health" }),
