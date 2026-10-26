@@ -86,12 +86,21 @@ pub async fn run(state: AppState) {
 /// Checks the feeds due at `now`: at most 20, four at a time. Returns how
 /// many were checked. First, feeds unsubscribed long enough ago that Undo
 /// is no longer offered are cleared for good (`folders::clear_unsubscribed`),
-/// newsletter senders are told of those unsubscribes
+/// newsletter senders are told of those unsubscribes in the background
 /// (`newsletters::tell_senders`), and emailed links past their time are
 /// deleted (`accounts::tidy_links`).
 pub async fn round(state: &AppState, now: i64) -> Result<usize, sqlx::Error> {
     folders::clear_unsubscribed(&state.db, None, now - folders::UNDO_FOR).await?;
-    crate::newsletters::tell_senders(state, now).await?;
+    // In the background: a slow sender's server never holds up feed checks.
+    // Each sender is claimed before it's told, so overlapping rounds are fine.
+    let telling = state.clone();
+    tokio::spawn(async move {
+        if let Err(error) = crate::newsletters::tell_senders(&telling, now).await {
+            log::problem(&format!(
+                "couldn't tell newsletter senders about unsubscribes: {error}"
+            ));
+        }
+    });
     // Emailed links past their time go, even when no new one is made.
     crate::accounts::tidy_links(&state.db, now).await?;
     websub::renew(state, now).await?;

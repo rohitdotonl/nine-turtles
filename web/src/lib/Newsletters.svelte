@@ -79,11 +79,13 @@
   }
 
   async function toggle(label: Label, on: boolean) {
+    // The switch shows the change at once, and goes back if it couldn't be saved.
+    label.on = on;
     try {
       await switchLabel(label.label, on);
-      label.on = on;
       message = on ? `${label.address} takes email again.` : `Email to ${label.address} is now turned away.`;
     } catch {
+      label.on = !on;
       message = "Couldn't change that. Try again in a moment.";
     }
   }

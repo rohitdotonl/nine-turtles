@@ -432,13 +432,14 @@ async fn file(
         now,
     )
     .await?;
-    // The sender's one-click unsubscribe, from its newest email that has
-    // one. An email kept means the reader follows the sender (again), so
-    // it hasn't been told to stop since.
+    // The sender's one-click unsubscribe, from its first email that has
+    // one: nothing proves an email is from the sender it names, so a later
+    // one can't swap the address. An email kept means the reader follows
+    // the sender (again), so it hasn't been told to stop since.
     sqlx::query(
         "INSERT INTO newsletter_senders (feed_id, one_click) VALUES (?, ?)
          ON CONFLICT (feed_id) DO UPDATE SET
-             one_click = COALESCE(excluded.one_click, one_click), told_at = NULL",
+             one_click = COALESCE(one_click, excluded.one_click), told_at = NULL",
     )
     .bind(feed)
     .bind(&email.one_click)

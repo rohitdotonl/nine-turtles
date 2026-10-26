@@ -635,7 +635,9 @@ test("Newsletters: the reader's address with Copy, a label's switch, and New add
   await page.reload();
   const label = page.getByRole("switch", { name: `Takes email: ${cooking}` });
   await expect(label).toBeChecked();
-  await label.click();
+  // From the keyboard alone: Space flips the switch.
+  await label.focus();
+  await page.keyboard.press("Space");
   await expect(page.getByRole("status").filter({ hasText: `Email to ${cooking} is now turned away` })).toBeVisible();
   await page.reload();
   await expect(label).not.toBeChecked();
