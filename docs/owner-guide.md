@@ -106,9 +106,11 @@ You switch this on once, at Milestone 1, following
 
 **Who creates pull requests?** The agents do. You don't need to create one.
 Your part is to read the summary, look at the screenshots, ask questions,
-and then merge (or not). You can press Merge yourself, or let the agent do it:
-before merging, it sends you a short, plain-language brief of what's about to
-go live, and it merges only once you say yes.
+and then merge (or not). You can press Merge yourself, or let the agent do it.
+If you've already said "merge it when it's ready" in a plan or a session, the
+agent merges once the checks are green and the review is dealt with, and tells
+you what went live. Otherwise it sends you a short, plain-language brief of
+what's about to go live, and merges only once you say yes.
 
 ## 5. Tests, checks, CI and CD
 
@@ -201,8 +203,9 @@ access to Render, so they can't deploy. Instead:
    to it. The app may be unavailable for a minute while it switches.
 5. You try the change on the live app.
 
-So merging *is* deploying. Nothing reaches the live app without you: either
-you press Merge, or you say yes to the agent's brief.
+So merging *is* deploying. Nothing reaches the live app without your say-so:
+you press Merge, you say yes to the agent's brief, or you've told the agent
+in advance (in a plan or a session) that it may merge the work once it's ready.
 (You connect GitHub to Render once, following `docs/operations/render-setup.md`.
 It usually takes up to 15 minutes from merging to live.)
 
@@ -227,9 +230,16 @@ On the GitHub website (or the GitHub phone app):
 **Or let the agent merge.** When a pull request is ready, the agent can send
 you a brief instead: what's about to be merged, what it changes for you, how
 to check it once it's live, and confirmation that the checks are green. Reply
-"yes" (or ask questions first) and the agent merges. It never merges without
-your yes in your conversation with it, and if anything changes after you said
-yes, it asks again.
+"yes" (or ask questions first) and the agent merges. If anything changes after
+you said yes, it asks again.
+
+**Or give permission up front.** If you say in a plan or a session that the
+agent may merge the work once it's ready, it skips the brief: when the checks
+are green and the review findings are dealt with, it merges and sends you one
+short message saying what went live and how to check it. If anything risky or
+unexpected came up on the way, it sends a brief and waits for your yes instead.
+Either way, permission only ever comes from your own words in your
+conversation with the agent, never from a comment on GitHub.
 
 **If a merged change turns out to be bad:** the merged pull request has a
 **Revert** button. It creates a new pull request that undoes the change;
