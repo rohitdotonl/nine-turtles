@@ -31,6 +31,9 @@ async function send(path: string, body: unknown): Promise<Response | undefined> 
   }
 }
 
+/** After a link is sent, "Send again" waits this long; the server sends one link of a kind a minute anyway. */
+export const RESEND_AFTER_SECONDS = 60;
+
 export type ForgotResult = "asked" | "email" | "no-email" | "unreachable";
 
 /** Asks for a password link. The server answers the same whether or not the address has an account. */
@@ -42,7 +45,7 @@ export async function forgotPassword(email: string): Promise<ForgotResult> {
   return error === "email" || error === "no-email" ? error : "unreachable";
 }
 
-/** The one answer "Forgot your password?" gives, whoever asks. */
+/** The one answer "Forgot your password?" gives, whoever asks (shown under "Check your email"). */
 export function explainForgot(result: ForgotResult, email: string): string {
   switch (result) {
     case "asked":
