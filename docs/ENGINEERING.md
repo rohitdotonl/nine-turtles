@@ -173,6 +173,13 @@ These were decided with the owner. Changing any of them needs the owner's approv
 - The one frame the browser may load is YouTube's privacy-enhanced player (`frame-src https://www.youtube-nocookie.com`), built by nine turtles itself, never from stored content, and only once the reader presses Play on a YouTube video. It is sandboxed and is told nine turtles' address (`strict-origin`), which YouTube's player needs to play (decision 0072).
 - Authors are kept as names only: RSS's `address (Name)` form keeps just the name.
 
+### Payments (decision 0094)
+
+- **Off without** `NINE_TURTLES_DODO_API_KEY`, `_WEBHOOK_SECRET` and `_MONTHLY_PRODUCT` (all three or none; with them, `NINE_TURTLES_PUBLIC_URL` too). Test mode (`https://test.dodopayments.com`) unless `NINE_TURTLES_DODO_MODE=live`. `payments::Settings` never prints the key or secret.
+- **Standing** (`payments::standing`): `Free` for the owner and `people.free` (everyone before structure change 18); else `Paid`/`OnHold` while `plans.access_until` is ahead; else `Trial` until `max(created_at, settings.payments_on_at) + trial_days`; else `Ended`. `Ended` refuses adding feeds (`feeds::add`, so the Add field and other apps; OPML import) with `402 {"error":"plan-ended"}`, and `checking::check` treats a feed with no current follower as away (`admin::AWAY_WAIT`).
+- **Talking to Dodo:** a fresh reqwest client per request (20 s limit), `Authorization: Bearer`. `POST /checkouts` and `POST /customers/{id}/customer-portal/session?return_url=…`; `PATCH /subscriptions/{id}` `{"status":"cancelled"}` before `accounts::delete_me` deletes a reader (a failure answers `502 {"error":"plan"}` and deletes nothing).
+- **Messages** at `POST /payments/dodo` (no cookie and no browser headers, so the same-site rule lets them through): Standard Webhooks signature (`payments::genuine`), five minutes' tolerance, ids kept 90 days in `payment_messages`. 401 for a bad signature, 200 for anything handled or ignored on purpose. `access_until` rules: `payments::access_until`.
+
 ### Newsletters (decision 0091)
 
 - **Arriving:** nine turtles never receives mail itself. Cloudflare Email Routing hands each email for `in.nineturtles.app` to the Worker in `cloudflare/newsletter-worker/`, which posts it, raw and unchanged (`message/rfc822`), to `POST /newsletters/incoming` with `Authorization: Bearer <NINE_TURTLES_NEWSLETTER_SECRET>`. The secret is compared as a Blake2 hash, like the diagnostics key; at least 32 characters, or nine turtles won't start. Without it the route answers 404. Bodies over 10 MB (`EMAIL_SIZE_LIMIT`, the same in the Worker) are refused. The route sends no browser headers, so the same-site rule lets it through, and it uses no cookie.

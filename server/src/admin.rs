@@ -32,7 +32,7 @@ use crate::{
     AppState,
     auth::{SignedIn, database_problem},
     checking::{DAY, KEEPS_FAILING, SHORTEST_WAIT},
-    db, log, now, people,
+    db, log, now, payments, people,
 };
 
 /// The most feeds one reader can follow.
@@ -184,6 +184,10 @@ pub struct Reader {
     /// When nine turtles last saw them (`last_here!`); noted at most once
     /// every 24 hours, so it can be up to a day behind.
     pub last_here: i64,
+    /// Where they stand for paying (`payments::Standing`); none while
+    /// payments are off.
+    #[sqlx(skip)]
+    pub plan: Option<crate::payments::Standing>,
 }
 
 /// Everyone with an account, the owner first, then the newest.
@@ -250,10 +254,18 @@ async fn overview(SignedIn(person): SignedIn, State(state): State<AppState>) -> 
                 .map(|readers| (totals, readers)),
             Err(error) => Err(error),
         };
-        let (totals, readers) = match found {
+        let (totals, mut readers) = match found {
             Ok(found) => found,
             Err(error) => return database_problem("gathering the Readers page", &error),
         };
+        if state.config.payments.is_some() {
+            for reader in &mut readers {
+                match payments::standing(&state, reader.id, now).await {
+                    Ok(standing) => reader.plan = Some(standing),
+                    Err(error) => return database_problem("reading a reader's plan", &error),
+                }
+            }
+        }
         let latest_backup = state
             .latest_backup
             .lock()

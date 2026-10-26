@@ -29,6 +29,14 @@ Changes**. Render restarts nine turtles with the new value (about a minute).
 | `NINE_TURTLES_SMTP_FROM` | Who emails come from: an address, with or without a name, such as `nine turtles <hello@nineturtles.app>`. | Yes, for email | As for the host. Something that isn't an address stops nine turtles with a message. |
 | `NINE_TURTLES_NEWSLETTER_SECRET` | The shared secret the newsletter forwarder at Cloudflare posts emails with ([newsletters.md](newsletters.md)). At least 32 characters; Render's **Generate** button makes one. The same value goes in the forwarder's `NINE_TURTLES_SECRET`. Secret. | Only for newsletters | Newsletters are off: `/newsletters/incoming` answers "not found". Shorter than 32 characters stops nine turtles with a message saying so. |
 | `NINE_TURTLES_NEWSLETTER_DOMAIN` | The domain shown after the @ in readers' newsletter addresses, for a nine turtles at another domain. Not secret. | No | `in.nineturtles.app`. |
+| `NINE_TURTLES_DODO_API_KEY` | Dodo Payments' API key, made in Dodo's dashboard ([payments.md](payments.md), decision 0094). A test-mode key until Dodo approves live payments. Secret. | Only for payments | Payments are off: nobody pays, nothing is limited, Settings shows no plan and `/payments/dodo` answers "not found". Set all three of key, webhook secret and monthly product, or none: some but not all stops nine turtles with a message naming the missing ones. With them but without `NINE_TURTLES_PUBLIC_URL`, nine turtles doesn't start, and says so. |
+| `NINE_TURTLES_DODO_WEBHOOK_SECRET` | The signing secret of the webhook pointed at `https://app.nineturtles.app/payments/dodo`, starting `whsec_`. Secret. | Only for payments | As for the key. Anything not starting `whsec_` stops nine turtles with a message. |
+| `NINE_TURTLES_DODO_MONTHLY_PRODUCT` | The monthly plan's product id in Dodo, starting `pdt_`. Not secret. | Only for payments | As for the key. |
+| `NINE_TURTLES_DODO_YEARLY_PRODUCT` | The yearly plan's product id, starting `pdt_`. Not secret. | No | Only the monthly plan is offered. |
+| `NINE_TURTLES_DODO_MODE` | `test` or `live`. Set `live` only once Dodo has approved the live site and the three settings above are the live ones. | No | `test`: Dodo's test mode, no real money. Anything else stops nine turtles with a message. |
+| `NINE_TURTLES_PRICE_MONTHLY` | The monthly price as Settings › Your plan shows it, such as `$5 a month`. It must match the product's price in Dodo. | No | "Price to be decided". |
+| `NINE_TURTLES_PRICE_YEARLY` | The same for the yearly plan, such as `$50 a year`. | No | "Price to be decided". |
+| `NINE_TURTLES_TRIAL_DAYS` | How many days a new reader's free trial lasts, 0 to 365. | No | 14. |
 | `NINE_TURTLES_LISTEN` | The address and port nine turtles listens on. | Set by the container image to `0.0.0.0:10000`, the port Render expects | `127.0.0.1:8080` (this computer only). |
 
 ## Built in, not settings

@@ -47,6 +47,9 @@ pub struct Config {
     /// Where newsletter addresses are, after the @
     /// (`NINE_TURTLES_NEWSLETTER_DOMAIN`); `in.nineturtles.app` without it.
     pub newsletter_domain: Option<String>,
+    /// Taking payments through Dodo Payments (`NINE_TURTLES_DODO_*`,
+    /// decision 0094). Without it, nobody pays and nothing is limited.
+    pub payments: Option<crate::payments::Settings>,
 }
 
 /// The scrambled password (`NINE_TURTLES_PASSWORD_HASH`), made by
@@ -139,6 +142,13 @@ impl Config {
         }
 
         let newsletter_secret = newsletter_secret(var("NINE_TURTLES_NEWSLETTER_SECRET"))?;
+        let payments = crate::payments::settings(&var)?;
+        if payments.is_some() && public_url.is_none() {
+            return Err("the payment settings (NINE_TURTLES_DODO_*) are set but \
+                 NINE_TURTLES_PUBLIC_URL isn't: Dodo sends readers back to that address after \
+                 paying, so set it too (docs/operations/payments.md)"
+                .to_owned());
+        }
 
         Ok(Self {
             listen,
@@ -156,6 +166,7 @@ impl Config {
             newsletter_secret,
             newsletter_domain: var("NINE_TURTLES_NEWSLETTER_DOMAIN")
                 .map(|domain| domain.trim().trim_start_matches('@').to_lowercase()),
+            payments,
         })
     }
 }

@@ -25,6 +25,7 @@ describe("the owner's Readers page", () => {
       feeds: 30,
       feedsFailing: 1,
       lastHere: 20,
+      plan: null,
     });
     // Without a last visit, the day they joined.
     expect(overview.readers[1]?.lastHere).toBe(11);

@@ -714,6 +714,11 @@ async fn deleting_an_account_leaves_nothing_of_theirs() {
             "INSERT INTO app_passwords (person_id, password_hash, made_at) VALUES (?1, 'x' || ?1, 0)",
             "an app password",
         ),
+        (
+            "INSERT INTO plans (person_id, subscription_id, customer_id, status, access_until, updated_at)
+             VALUES (?1, 'sub_' || ?1, 'cus_' || ?1, 'cancelled', 0, 0)",
+            "a plan",
+        ),
     ] {
         for whose in [person, 1] {
             sqlx::query(statement)

@@ -109,6 +109,17 @@ async fn import(
     if listed.len() > MOST_FEEDS {
         return StatusCode::PAYLOAD_TOO_LARGE.into_response();
     }
+    match crate::payments::may_add_feeds(&state, person).await {
+        Ok(true) => {}
+        Ok(false) => {
+            return (
+                StatusCode::PAYMENT_REQUIRED,
+                Json(json!({ "error": "plan-ended" })),
+            )
+                .into_response();
+        }
+        Err(error) => return database_problem("reading a reader's plan", &error),
+    }
     match follow_all(&state.db, person, &listed, now()).await {
         Ok(Imported::Done(summary)) => Json(json!({ "summary": summary })).into_response(),
         Ok(Imported::TooMany { following, adding }) => (
