@@ -393,6 +393,7 @@ each with screenshots:
 | A tab left open across an update keeps working | ✅ 25 October 2026 | SPEC section 18, decisions 0022 and 0085 |
 | Pausing a feed (Edit feed › Pause this feed) | ✅ 26 October 2026 | SPEC section 15, decision 0095 |
 | Easing unread guilt: unread that lets go by itself, Catch me up, and unread without numbers | ✅ 26 October 2026 | SPEC sections 5, 6, 8 and 18, decision 0097 |
+| Reading offline, words only (200 unread and 200 starred on each device) | ✅ 26 October 2026 | SPEC section 30, decision 0100 |
 
 ## V2: Many readers in one app
 

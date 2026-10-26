@@ -12,6 +12,8 @@
 // A tab asks which version is live when it comes back into view and every
 // few minutes while it's in view, so even a tab left open for days notices.
 
+import { lost, noConnection, reached } from "./connection.svelte";
+
 export const VERSION_HEADER = "x-nine-turtles-version";
 
 /** Statuses meaning "I don't understand that request", rather than an answer the screens explain. */
@@ -38,9 +40,16 @@ export function noteAnswer(response: Response) {
   if (said === "stranded") updates.stranded = true;
 }
 
-/** `fetch`, for nine turtles' own server, noting each answer's version. */
+/** `fetch`, for nine turtles' own server, noting each answer's version, and whether the connection is there. */
 export async function api(input: string, init?: RequestInit): Promise<Response> {
-  const response = await fetch(input, init);
+  let response: Response;
+  try {
+    response = await fetch(input, init);
+  } catch (problem) {
+    if (noConnection(problem)) lost();
+    throw problem;
+  }
+  reached(response);
   noteAnswer(response);
   return response;
 }

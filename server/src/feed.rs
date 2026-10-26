@@ -434,6 +434,53 @@ pub fn without_tracking_images(html: &str) -> String {
     document.root_element().inner_html()
 }
 
+/// What stands in for each image in a copy kept for reading offline.
+pub const IMAGE_OFFLINE: &str =
+    "<span class=\"offline-image\">An image shows here when you\u{2019}re back online.</span>";
+
+/// An article's text without its images, for the copies kept on a device
+/// for reading offline (SPEC section 30): only the words are kept, so the
+/// copies stay small and nothing is fetched from the publisher. Each image
+/// (or picture) becomes a short note saying it appears once the device is
+/// back online; a figure's caption stays.
+pub fn text_only(html: &str) -> String {
+    let lower = html.to_ascii_lowercase();
+    if !lower.contains("<img") && !lower.contains("<picture") {
+        return html.to_owned();
+    }
+    // The note goes in as one character the text can't hold, then becomes
+    // the note's own markup once the rest is written out.
+    const PLACE: char = '\u{FFFC}';
+    let html = html.replace(PLACE, "");
+    let mut document = scraper::Html::parse_fragment(&html);
+    let media = scraper::Selector::parse("img, picture").expect("a fixed, valid selector");
+    let found: Vec<_> = document
+        .select(&media)
+        // An image inside a picture goes with the picture.
+        .filter(|found| {
+            !found.ancestors().any(|above| {
+                above
+                    .value()
+                    .as_element()
+                    .is_some_and(|element| element.name() == "picture")
+            })
+        })
+        .map(|found| found.id())
+        .collect();
+    for id in found {
+        if let Some(mut node) = document.tree.get_mut(id) {
+            node.insert_before(scraper::Node::Text(scraper::node::Text {
+                text: PLACE.to_string().into(),
+            }));
+            node.detach();
+        }
+    }
+    document
+        .root_element()
+        .inner_html()
+        .replace(PLACE, IMAGE_OFFLINE)
+}
+
 /// A size written as `1`, `1px` or ` 1 `, in whole pixels.
 fn pixels(text: &str) -> Option<u32> {
     let text = text.trim();
@@ -443,6 +490,28 @@ fn pixels(text: &str) -> Option<u32> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn copies_for_reading_offline_keep_the_words_and_leave_out_images() {
+        let note = IMAGE_OFFLINE;
+        assert_eq!(text_only("<p>Just words.</p>"), "<p>Just words.</p>");
+        assert_eq!(
+            text_only("<p>Before <img src=\"https://x.example/a.jpg\" alt=\"A\"> after</p>"),
+            format!("<p>Before {note} after</p>")
+        );
+        assert_eq!(
+            text_only(
+                "<figure><picture><source srcset=\"b.webp\"><img src=\"b.jpg\"></picture>\
+                 <figcaption>A heron</figcaption></figure>"
+            ),
+            format!("<figure>{note}<figcaption>A heron</figcaption></figure>")
+        );
+        // The stand-in character can't be smuggled in to make extra notes.
+        assert_eq!(
+            text_only("<p>\u{FFFC}<IMG SRC=\"c.png\"></p>"),
+            format!("<p>{note}</p>")
+        );
+    }
 
     fn url(text: &str) -> Url {
         Url::parse(text).unwrap()

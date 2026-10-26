@@ -30,6 +30,8 @@
   import type { Preferences } from "./preferences";
   import { articleNow, readArticle, when, type Article, type FullArticle } from "./feeds";
   import { goTo, keepPlace, placeIn, placeOf, type Place } from "./places";
+  import { connection } from "./connection.svelte";
+  import { NOT_KEPT } from "./offline";
 
   let {
     article,
@@ -314,7 +316,10 @@
         · <time datetime={new Date(article.at * 1000).toISOString()}>{when(article.at)}</time>
       </p>
 
-      {#if video}
+      {#if video && connection.offline}
+        <!-- Without a connection there's no player to load: the video waits, as images do (SPEC section 30). -->
+        <p class="article-note mt-6" lang="en">The video plays here when you're back online.</p>
+      {:else if video}
         {#key article.id}
           <YouTubePlayer {video} title={article.title || "Untitled"} />
         {/key}
@@ -343,7 +348,7 @@
           <p class="mt-6" lang="en">This article has no text in its feed. Open original to read it on the publisher's site.</p>
         {/if}
       {:else if problem}
-        <p class="mt-6" lang="en">This article couldn't be loaded. Try again in a moment.</p>
+        <p class="mt-6" lang="en">{connection.offline ? NOT_KEPT : "This article couldn't be loaded. Try again in a moment."}</p>
       {/if}
     </article>
   </div>

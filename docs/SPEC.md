@@ -222,7 +222,7 @@ A few words used throughout:
 - Undo reverses **the last action only**, of these: mark all as read, catch me up, mark unread, star/unstar, unsubscribe, delete folder.
 - Read state is recorded in both reading modes, so switching modes never loses it.
 - Each feed's unread number in the sidebar changes at the same moment.
-- If nine turtles can't be reached when a mark is made (the connection dropped, or a new version is going live and the server is restarting), it quietly tries again for about a minute, so a short gap loses nothing and says nothing.
+- If nine turtles can't be reached when a mark is made (the connection dropped, or a new version is going live and the server is restarting), it quietly tries again for about a minute, so a short gap loses nothing and says nothing. With no connection at all, the mark waits on the device and is sent once the connection is back, the latest mark winning (section 30).
 - If a mark still can't be saved, it's taken back and the note at the bottom of the list says so plainly, such as "The star couldn't be saved.", with a **Try again** button in the Undo's place. The message goes as soon as a later mark is saved (the connection is back), or when you press Try again. A failure never takes back a later action on the same article.
 
 **How to check it**
@@ -508,7 +508,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 - Article toolbar at the bottom, within thumb reach and clear of the phone's home indicator, solid in the page's color with a faint line along its top so the text ends at an edge: five quiet icons without words, each a 44px tap with its name for screen readers: previous · next · Aa · star · More (…). The five always share the bar evenly: on the first article Previous (and on the last, Next) keeps its arrow in its place, faded, and does nothing; screen readers hear it as dimmed (decision 0047). More opens upwards with Share (or Copy link) and Mark unread. Aa opens the reading panel (section 7) as a sheet along the bottom of the screen. Article text reads a little smaller than on a wide screen, so a line keeps about 40 characters.
 - Every tap target is at least 44 pixels.
 - Can be added to the home screen on iPhone and Android; it then opens full-screen with its own icon: nine small turtles seen from the side, three rows of three with the middle row a little to the right, dark on white (decision 0067). The same turtles mark the browser tab, on white by day and on near-black by night.
-- Without a connection, the app still opens and says plainly that nine turtles can't be reached. It keeps a copy of the app itself, never of your articles.
+- Without a connection, the app still opens: signed in, with the articles kept on the device for reading offline (section 30); on a device that keeps none, it says plainly that nine turtles can't be reached. The service worker keeps a copy of the app itself and its fonts, never of your articles: those are the app's own copies.
 
 **How to check it**
 1. On your phone, open the app: you see your feeds. Tap a folder, a feed, an article; the back arrow says where it goes each time.
@@ -677,6 +677,34 @@ A rule says "when a new article **matches this**, **do that**", in plain fields,
 2. Press Monthly: Dodo's test checkout opens. Pay with `4242 4242 4242 4242`, any future date and any three digits. Back in Settings, within a minute it says "Monthly plan" and when it renews.
 3. Press Billing and cancelling and cancel: Settings says "Cancelled. It lasts until …".
 4. Signed in as yourself (the owner), Settings has no plan group, and the Readers page shows the new reader's plan.
+
+## 30. Reading offline
+
+*Built 26 October 2026 (decision 0100): the lighter version the owner chose, words only.*
+
+**What's kept.** While nine turtles can be reached, each device quietly keeps a copy of the reader's **first 200 unread articles** (in their sort order; in river mode, the first 200 of All) and their **newest 200 starred articles**. Only the words: each image becomes a short line, "An image shows here when you're back online", and a YouTube article's player says "The video plays here when you're back online." For most readers that's a few megabytes. The copies are brought up to date when nine turtles opens, when the connection comes back, when it comes back into view after a while, and after Refresh, a few dozen at a time, a moment apart, so nothing waits for them. Nothing extra is fetched from publishers.
+
+**Without a connection**
+- nine turtles opens as usual, signed in (on an iPhone, reliably once it's added to the home screen: in a Safari tab the phone may clear the copies after about a week without a visit).
+- Unread, Starred, All, each feed and each folder list the kept articles, with a quiet line above the list: "Offline. Showing the articles saved on this device." Such a list ends with "That's everything saved on this device."; one with nothing kept says "Nothing here is saved on this device. It will show when you're back online." The sidebar shows the feeds and folders as they were last seen, its counts following what's marked here.
+- Articles open from their copy. One that isn't kept says "This article isn't saved on this device. It opens when you're back online."
+- **Reading, marking read or unread, and starring work as usual**, with nothing said: each mark waits on the device and is sent once the connection is back. Each says when it was made, and **the latest mark wins**: a mark made offline at 10:00 doesn't undo one made on another device at 11:00. Undo works too.
+- **What waits for a connection says so:** search ("Search needs a connection. It works again once you're back online."), adding a feed ("Adding a feed needs a connection. Try again once you're back online."), Settings ("Settings need a connection. They open once you're back online."), Refresh ("Refresh needs a connection. This is what's saved on this device.") and Catch me up.
+
+**Switching it off, and privacy**
+- Settings › Your data › **Keep articles for reading offline**, a switch, on by default on phones and computers alike. It's for that device only; switching it off deletes its copies at once.
+- **Signing out deletes the copies** and any marks still waiting, as does being signed out any other way (an expired sign-in, a deleted account), so nothing is left on a shared computer.
+
+**How it works:** the copies live in the browser's own database for nine turtles (IndexedDB), in `web/src/lib/offline.ts`; the server gives up to 50 at once, words only, at `GET /api/articles/several?ids=…`. Each reader's entries remember when the read mark and the star were last set, and a late mark older than that changes nothing (ENGINEERING.md → "Data", decision 0100).
+
+**How to check it**
+1. Open nine turtles online and wait a minute. Switch on airplane mode.
+2. Open Unread and Starred: the line says "Offline. Showing the articles saved on this device." and your articles are there. Open one: its words are there, with a short line where each image was.
+3. Read one, star another, mark one unread. Nothing complains.
+4. Try search, Add feed, Settings and Refresh: each says it needs a connection.
+5. Close nine turtles and open it again, still in airplane mode: it opens with the same articles.
+6. Switch airplane mode off. On another device (or after a reload), the marks from step 3 are there.
+7. Sign out, then switch airplane mode on and open nine turtles: it says it can't be reached, because the copies are gone.
 
 ---
 

@@ -33,7 +33,7 @@ use crate::{
     AppState, apps,
     auth::database_problem,
     feeds, folders, log,
-    marks::{MOST_AT_ONCE, READ_SQL, STAR_SQL},
+    marks::{MOST_AT_ONCE, READ_SQL, STAR_SQL, now_ms},
     now,
 };
 
@@ -810,6 +810,7 @@ async fn edit_tag(App(person): App, State(state): State<AppState>, params: Param
         }
     }
     let ids = serde_json::to_string(&ids).unwrap_or_else(|_| "[]".to_owned());
+    let at = now_ms();
     let changed = async {
         let mut transaction = state.db.begin().await?;
         for (sql, value) in changes {
@@ -817,6 +818,7 @@ async fn edit_tag(App(person): App, State(state): State<AppState>, params: Param
                 .bind(value)
                 .bind(&ids)
                 .bind(person)
+                .bind(at)
                 .execute(&mut *transaction)
                 .await?;
         }

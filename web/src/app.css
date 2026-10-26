@@ -1413,6 +1413,21 @@ input {
 }
 
 /* In the text color, except in Plain, whose links are the browser's own blue and purple (decision 0063). */
+/*
+  In a copy kept for reading offline, each image is this short note instead
+  (SPEC section 30): its own quiet line in the interface font and the second
+  ink, as the article's end note is, so it never reads as the author's words.
+*/
+.article-text .offline-image {
+  display: block;
+  margin-block: 1em;
+  font-family: var(--font-sans);
+  font-size: var(--text-small);
+  font-style: normal;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
 .article-text a {
   color: var(--link, currentColor);
   text-decoration: underline;

@@ -41,6 +41,8 @@
   import { LINE_WIDTHS, READING_FONTS, type Preferences } from "./preferences";
   import { signOut } from "./session";
   import { updates } from "./updates.svelte";
+  import { connection } from "./connection.svelte";
+  import { SETTINGS_NEED_CONNECTION, keeping, setKeeping } from "./offline";
 
   let {
     preferences = $bindable(),
@@ -245,6 +247,14 @@
     }
   }
 
+  /** Whether this device keeps articles for reading offline (SPEC section 30): on unless switched off here. */
+  let keepingOffline = $state(keeping());
+
+  function switchKeeping(on: boolean) {
+    keepingOffline = on;
+    void setKeeping(on);
+  }
+
   async function leave() {
     try {
       await signOut();
@@ -297,6 +307,10 @@
   <PageHead title="Settings" id="settings-heading" bind:heading {onClose} closeLabel="Close settings" {besideToggle} column="max-w-[35rem]" />
   <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-16 md:px-10">
     <div class="mx-auto flex max-w-[35rem] flex-col gap-8">
+      {#if connection.offline}
+        <!-- Without a connection nothing here could be saved, so Settings says so and waits (SPEC section 30). -->
+        <p role="status">{SETTINGS_NEED_CONNECTION}</p>
+      {:else}
       <section aria-labelledby="reading-heading">
         <h3 id="reading-heading" class="inset-head">Reading</h3>
         <div class="inset-group">
@@ -471,6 +485,21 @@
       <section aria-labelledby="data-heading">
         <h3 id="data-heading" tabindex="-1" bind:this={dataHeading} class="inset-head">Your data</h3>
         <div class="inset-group">
+          <!-- A switch, as Apple draws one (decision 0077): this device's copies for reading offline. -->
+          <div class="inset-row">
+            <p id="keep-offline-name" class="row-name">Keep articles for reading offline</p>
+            <label class="switch-target -my-2 -mr-2" title={keepingOffline ? "On: press to stop keeping them and delete them" : "Off: press to keep them"}>
+              <input
+                type="checkbox"
+                role="switch"
+                class="switch"
+                aria-labelledby="keep-offline-name"
+                aria-describedby="keep-offline-foot"
+                checked={keepingOffline}
+                onchange={(event) => switchKeeping(event.currentTarget.checked)}
+              />
+            </label>
+          </div>
           <ImportOpml {onImported} bind:lines={importLines} />
           <a href="/api/starred/export" download class="inset-row inset-action"
             >Export starred articles<span class="row-glyph"><Icon name="download" size={18} /></span></a
@@ -481,6 +510,10 @@
             <p>{line}</p>
           {/each}
         </div>
+        <p id="keep-offline-foot" class="inset-foot">
+          On this device only: the words of your first 200 unread and newest 200 starred articles, without images, so
+          you can read, mark and star them without a connection. Signing out deletes them.
+        </p>
         <p class="inset-foot">
           OPML is the file feed readers use to move your feeds and folders between apps; export one now and then, and
           keep it somewhere safe. Starred articles are saved as a JSON Feed file, which other feed readers can open,
@@ -571,6 +604,7 @@
         {/if}
         <p class="inset-foot" translate="no">Version {version}</p>
       </section>
+      {/if}
     </div>
   </div>
 </section>

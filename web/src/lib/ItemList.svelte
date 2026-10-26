@@ -54,6 +54,8 @@
   import { hugEllipsis } from "./hug";
   import { boldParts } from "./search";
   import { STRANDED_MESSAGE, updates } from "./updates.svelte";
+  import { connection } from "./connection.svelte";
+  import { END_OF_KEPT, NOTHING_KEPT_HERE, NeedsConnection, REFRESH_NEEDS_CONNECTION, SHOWING_KEPT } from "./offline";
 
   let {
     source,
@@ -111,6 +113,8 @@
   let loaded = $state(false);
   let busy = $state(false);
   let problem = $state("");
+  /** Listed from the copies kept on this device, without a connection (SPEC section 30). */
+  let fromDevice = $state(false);
   let rows: HTMLButtonElement[] = $state([]);
   /** The "Show older items" button, and the empty line under the list that loads more when it comes into view. */
   let moreButton: HTMLButtonElement | undefined = $state();
@@ -168,10 +172,11 @@
       articles = after === null ? page.articles : [...articles, ...page.articles];
       next = page.next;
       if (after === null) latest = page.latest;
+      fromDevice = page.kept === true;
       loaded = true;
       ok = true;
-    } catch {
-      problem = "The articles couldn't be loaded. Try again in a moment.";
+    } catch (failure) {
+      problem = couldNotLoad(failure);
     }
     busy = false;
     loadingMore = false;
@@ -222,9 +227,11 @@
       next = page.next;
       latest = page.latest;
       newWaiting = false;
+      fromDevice = page.kept === true;
       loaded = true;
-    } catch {
-      problem = "The articles couldn't be loaded. Try again in a moment.";
+      if (fromDevice) say(REFRESH_NEEDS_CONNECTION);
+    } catch (failure) {
+      problem = couldNotLoad(failure);
     }
     busy = false;
     // If the keyboard was on a row that's gone (read, in Unread), it moves to
@@ -234,9 +241,16 @@
     }
   }
 
+  /** What the list says when it couldn't load: without a connection, search says plainly that it needs one. */
+  function couldNotLoad(failure: unknown): string {
+    if (failure instanceof NeedsConnection) return failure.message;
+    if (connection.offline) return "These articles need a connection. They load once you're back online.";
+    return "The articles couldn't be loaded. Try again in a moment.";
+  }
+
   /** Asks the server, quietly, whether new items are waiting for this list. */
   async function askForNew() {
-    if (!loaded || newWaiting || busy || document.hidden) return;
+    if (!loaded || newWaiting || busy || document.hidden || fromDevice) return;
     try {
       newWaiting = await newItemsWaiting(source, latest);
     } catch {
@@ -458,9 +472,9 @@
     let ids: number[];
     try {
       ids = await catchUpOnServer();
-    } catch {
+    } catch (failure) {
       // The answer may have been lost after the server caught up: Refresh shows where things stand.
-      say("Catching up couldn't be confirmed. Refresh to see where things stand.");
+      say(failure instanceof NeedsConnection ? failure.message : "Catching up couldn't be confirmed. Refresh to see where things stand.");
       return;
     }
     if (ids.length === 0) {
@@ -535,8 +549,13 @@
   <p role="status" class="pt-1 pb-2 text-meta text-muted empty:sr-only">{loaded ? resultCount(articles.length, next !== null) : ""}</p>
 {/if}
 
+{#if fromDevice}
+  <!-- Without a connection: a quiet line above the list says these are the copies kept here (SPEC section 30). -->
+  <p role="status" class="pt-1 pb-2 text-meta text-muted">{SHOWING_KEPT}</p>
+{/if}
+
 {#if loaded && articles.length === 0}
-  <p>{empty}</p>
+  <p>{fromDevice ? NOTHING_KEPT_HERE : empty}</p>
 {:else if articles.length > 0}
   <ul class="item-list">
     {#each articles as article, index (article.id)}
@@ -622,7 +641,7 @@
     </div>
   {:else if articles.length > 0}
     <!-- A finite list says when it's finished (SPEC.md section 6): a quiet caption centred under the last row. -->
-    <p class="mt-5 text-center text-meta text-muted">You're all caught up.</p>
+    <p class="mt-5 text-center text-meta text-muted">{fromDevice ? END_OF_KEPT : "You're all caught up."}</p>
   {/if}
 {/if}
 {#if problem}

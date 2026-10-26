@@ -67,6 +67,8 @@
   import { emptyQuery, isSearching, scopeFor, searchParams, searchedTerms, type Query } from "./search";
   import { deleteSaved, listSaved, refusedSaving, sameQuery, saveSearch, type SavedSearch } from "./saved";
   import { startingStep, stepOf, type Screen } from "./steps";
+  import { keepUpToDate } from "./offline";
+  import { whenBack } from "./connection.svelte";
   import { arrivedBySwitching, switchesOnMove, switchTo, updates, watchForNewVersions, type Carried } from "./updates.svelte";
 
   let {
@@ -376,6 +378,15 @@
     return place.kind === "view" || place.kind === "feed" || place.kind === "folder" || place.kind === "search";
   }
 
+  /** When the copies for reading offline were last brought up to date, and how long before nine turtles in view does it again. */
+  let lastKept = 0;
+  const KEEP_AGAIN_AFTER = 10 * 60_000;
+
+  function keepForOffline() {
+    lastKept = Date.now();
+    void keepUpToDate(sort ?? "newest", mode);
+  }
+
   /** Counts changed on this screen since the page loaded; see `loadFeeds`. */
   let countChanges = 0;
 
@@ -582,6 +593,15 @@
     const switched = arrivedBySwitching();
     if (switched) arriveSwitched(switched);
     const stopWatching = watchForNewVersions();
+    // Reading offline (SPEC section 30): the copies on this device are brought
+    // up to date once the settings are known (below), when the connection
+    // comes back, and when nine turtles comes back into view after a while.
+    const stopWaitingForConnection = whenBack(keepForOffline);
+    const lookedAgain = () => {
+      if (!document.hidden && Date.now() - lastKept > KEEP_AGAIN_AFTER) keepForOffline();
+    };
+    document.addEventListener("visibilitychange", lookedAgain);
+    addEventListener("online", keepForOffline);
 
     const queries = [WIDE_REM, MEDIUM_REM].map((rem) => matchMedia(`(min-width: ${rem}rem)`));
     const resized = () => {
@@ -704,6 +724,7 @@
       sort = settings.sort;
       counts = settings.counts;
       letGo = settings.letGo;
+      keepForOffline();
       // This device last saw river mode, but it's inbox now (changed on
       // another device): an untouched home opens on Unread after all.
       if (openedHome && pathFor(route) === pathFor(start) && mode === "inbox" && !(route.kind === "view" && route.view === "unread")) {
@@ -718,6 +739,9 @@
       removeEventListener("popstate", back);
       removeEventListener("keydown", pressed);
       stopWatching();
+      stopWaitingForConnection();
+      document.removeEventListener("visibilitychange", lookedAgain);
+      removeEventListener("online", keepForOffline);
     };
   });
 
@@ -1704,7 +1728,11 @@
                   bold={shown ? searchedTerms(shown.words) : []}
                   onChoose={chose}
                   onUnreadChange={unreadChanged}
-                  onRefresh={loadFeeds}
+                  onRefresh={() => {
+                    loadFeeds();
+                    // What a refresh brought is kept for reading offline too, at most once a minute.
+                    if (Date.now() - lastKept > 60_000) keepForOffline();
+                  }}
                   onCounts={loadFeeds}
                   results={shown !== undefined}
                   oneFeed={under.kind === "feed" && !shown}
