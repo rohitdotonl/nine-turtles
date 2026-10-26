@@ -1,5 +1,5 @@
 // What email makes possible for a reader's account (SPEC sections 1 and 18,
-// decisions 0088 and 0095): "Forgot your password?", the page a password link
+// decisions 0088 and 0096): "Forgot your password?", the page a password link
 // opens, "Email me a sign-in link" and the page that link opens,
 // the page a confirmation link opens (a new account's address, or a changed
 // one), changing one's email in Settings, and deleting one's account.

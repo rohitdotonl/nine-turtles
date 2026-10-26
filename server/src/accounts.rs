@@ -1,5 +1,5 @@
 //! What email makes possible for a reader's account (SPEC sections 1 and
-//! 18, decisions 0088 and 0095): confirming a new account's address when
+//! 18, decisions 0088 and 0096): confirming a new account's address when
 //! sign-up is Open, setting a new password after "Forgot your password?",
 //! signing in by a link instead of a password ("Email me a sign-in link"),
 //! moving to a new email address, and deleting an account.
