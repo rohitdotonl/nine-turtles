@@ -51,6 +51,16 @@ export default function (eleventyConfig) {
     html.replace(/(href|src)="\/(?!\/)/g, `$1="${base}/`),
   );
 
+  // Starter packs (src/packs/), in the order each pack names.
+  eleventyConfig.addCollection("packs", (collections) =>
+    collections.getFilteredByGlob("src/packs/*.md").sort((a, b) => a.data.order - b.data.order),
+  );
+  // Only a pack with blogs gets a download (src/packs-opml.njk).
+  eleventyConfig.addCollection("packsWithBlogs", (collections) =>
+    collections.getFilteredByGlob("src/packs/*.md").filter((pack) => pack.data.blogs?.length),
+  );
+  eleventyConfig.ignores.add("src/packs/README.md");
+
   return {
     dir: { input: "src", output: "_site" },
     markdownTemplateEngine: "njk",

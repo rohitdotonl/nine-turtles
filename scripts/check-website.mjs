@@ -34,6 +34,7 @@ const types = {
   ".js": "text/javascript",
   ".xml": "application/atom+xml; charset=utf-8",
   ".txt": "text/plain; charset=utf-8",
+  ".opml": "text/x-opml; charset=utf-8",
 };
 
 // Every page the website has, and the page shown for an address it doesn't.

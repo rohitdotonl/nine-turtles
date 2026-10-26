@@ -373,6 +373,9 @@ each with screenshots:
 - ✅ The feed finder (26 October 2026, decision 0099): the first free tool
   from the marketing plan, at nineturtles.app/feed-finder/, with a bookmark
   button; the app at app.nineturtles.app does the looking (SPEC section 30).
+- ✅ Starter packs (26 October 2026): the pages at nineturtles.app/packs/,
+  five themes for the owner to fill with hand-picked blogs, each with an
+  OPML download once it has blogs (SPEC section 31).
 
 ## V2 so far
 
