@@ -8,8 +8,8 @@
 //! 14), works once, and expires: a day to confirm an address, an hour for a
 //! new password. At most `EMAILS_PER_ADDRESS_PER_HOUR` links go to any one
 //! address in an hour, so nine turtles can't be used to flood someone's inbox,
-//! and at most one of a kind a minute (`EMAIL_GAP`), so pressing Send link
-//! twice sends one email.
+//! and at most one password link (or change of email) a minute
+//! (`EMAIL_GAP`), so pressing Send link twice sends one email.
 //!
 //! A link's ticket comes after the `#` (`/reset-password#ticket=…`), the
 //! part of an address no browser sends to a server, so it never reaches a
@@ -47,8 +47,9 @@ pub const CONFIRM_LIFETIME: i64 = 24 * 60 * 60;
 pub const RESET_LIFETIME: i64 = 60 * 60;
 /// At most this many links go to one address in any hour.
 pub const EMAILS_PER_ADDRESS_PER_HOUR: i64 = 3;
-/// A link of one kind goes to one address at most once in this many seconds:
-/// a second press of Send link within it is answered the same, and sends nothing.
+/// A password link (or a change of email's) goes to one address at most once
+/// in this many seconds: a second press of Send link within it is answered
+/// the same, and sends nothing. Sign-up links aren't held to it.
 pub const EMAIL_GAP: i64 = 60;
 
 pub fn routes() -> Router<AppState> {
@@ -137,8 +138,8 @@ async fn changes_tried(
 pub(crate) enum Made {
     /// A link to email, with its ticket.
     Link(String),
-    /// Nothing to send: the address had its hour's share of emails, or one
-    /// like it within the last minute, or the try was only counted
+    /// Nothing to send: the address had its hour's share of emails, or a
+    /// password link within the last minute, or the try was only counted
     /// (`email_to` false).
     Nothing,
     /// The reader has asked to change their email too often this hour.
@@ -150,7 +151,7 @@ pub(crate) enum Made {
 /// Saves a new link, counted and saved in one step behind SQLite's one
 /// writer at a time (`BEGIN IMMEDIATE`), so requests sent together can't
 /// race past the hour's share: at most `EMAILS_PER_ADDRESS_PER_HOUR`
-/// emails to one address (one of a kind a minute), and as many tries to change one reader's email.
+/// emails to one address (one password link a minute), and as many tries to change one reader's email.
 ///
 /// For a changed email, every try is counted towards the reader's share,
 /// whether or not it's emailed: one that isn't (`email_to` false, for an
@@ -188,9 +189,14 @@ pub(crate) async fn make_link(
         transaction.commit().await?;
         return Ok(Made::TooMany);
     }
-    let emailed = emails_to_address(&mut transaction, email, hour_ago).await?
-        < EMAILS_PER_ADDRESS_PER_HOUR
-        && !emailed_lately(&mut transaction, purpose, email, now).await?
+    // Both counts are always read, as `make_no_link` reads them, so the
+    // work done doesn't depend on which limit was reached. A sign-up isn't
+    // held to the minute: signing up again with a corrected password must
+    // save that password's own link.
+    let this_hour = emails_to_address(&mut transaction, email, hour_ago).await?;
+    let lately = emailed_lately(&mut transaction, purpose, email, now).await?;
+    let emailed = this_hour < EMAILS_PER_ADDRESS_PER_HOUR
+        && !(lately && purpose != Purpose::SignUp)
         && email_to;
     if !emailed && purpose != Purpose::Change {
         transaction.commit().await?;

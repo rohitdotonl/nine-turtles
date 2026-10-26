@@ -207,7 +207,6 @@ async fn an_open_sign_up_waits_for_its_emailed_link() {
     // (and the link is sent again); a wrong one hears only "don't match".
     let wrong = sign_in(&base, email, "not the password at all").await;
     assert_eq!(wrong.status(), StatusCode::UNAUTHORIZED);
-    a_minute_passes(&state.db).await;
     let waiting = sign_in(&base, email, READER_PASSWORD).await;
     assert_eq!(waiting.status(), StatusCode::FORBIDDEN);
     let waiting: Value = waiting.text().await.unwrap().parse::<Value>().unwrap();

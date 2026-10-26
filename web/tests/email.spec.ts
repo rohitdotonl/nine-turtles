@@ -81,10 +81,9 @@ test("anyone can sign up while it's open, by the link emailed to them, with only
   // The form gives way to "Check your email", with the keyboard on it.
   await expect(page.getByRole("heading", { name: "Check your email" })).toBeFocused();
   await expect(page.locator("#sign-up-sent")).toContainText(`A link to finish signing up is on its way to ${email}.`);
-  await expect(page.getByText("Didn't get it? Look in your spam folder, or send it again in a minute.")).toBeVisible();
+  await expect(page.getByText("Didn't get it? Look in your spam folder.")).toBeVisible();
 
-  // Signing in before the link is opened says so calmly; within the minute
-  // the link was sent, it doesn't send another (decision 0091).
+  // Signing in before the link is opened says so calmly, and sends it again.
   await page.goto("/");
   await expect(page.getByLabel("Email")).toBeFocused();
   await page.keyboard.type(email);
@@ -92,10 +91,10 @@ test("anyone can sign up while it's open, by the link emailed to them, with only
   await page.keyboard.type(READER_PASSWORD);
   await page.keyboard.press("Enter");
   await expect(page.locator("#sign-in-message")).toHaveText(
-    "Your email isn't confirmed yet. Open the link in the email nine turtles sent you.",
+    "Your email isn't confirmed yet. A new link is on its way: open it to finish signing up.",
   );
 
-  const { mail, link } = await newestMail(email, "Confirm your email for nine turtles");
+  const { mail, link } = await newestMail(email, "Confirm your email for nine turtles", 2);
   expect(mail.body).not.toContain("!");
   expect(link).toMatch(/^\/confirm-email#ticket=[0-9a-f]{64}$/);
   await page.goto(link);
@@ -122,6 +121,8 @@ test("a forgotten password is set again by an emailed link, signing out other de
 
   const context = await browser.newContext({ baseURL: MAIL_APP });
   const page = await context.newPage();
+  // A clock the test moves, to try Send again before and after its minute.
+  await page.clock.install();
   await page.goto("/");
   await expect(page.getByLabel("Email")).toBeFocused();
   await page.keyboard.type(email);
@@ -141,7 +142,14 @@ test("a forgotten password is set again by an emailed link, signing out other de
     `If ${email} has an account here, a link to choose a new password is on its way. It works for an hour.`,
   );
   await expect(page.getByText("nine turtles emails you a link")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Send again" })).toBeHidden();
+  // Send again is there from the start, by keyboard too; within the minute it sends nothing.
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Send again" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("status").filter({ hasText: "Give it a minute" })).toBeVisible();
+  await page.clock.fastForward("01:01");
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("status").filter({ hasText: "Another link is on its way." })).toBeVisible();
   // An address with no account hears exactly the same.
   await page.getByRole("link", { name: "Back to sign in" }).click();
   await page.getByRole("link", { name: "Forgot your password?" }).click();
