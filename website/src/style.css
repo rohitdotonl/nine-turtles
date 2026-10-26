@@ -165,22 +165,25 @@ a:focus-visible {
 
 .top nav a {
   padding: 0 12px;
-  border-radius: 8px;
   color: var(--ink-2);
 }
 
-/* Where you are: a plain grey pill, as in the app's sidebar, with the words
-   in semibold so it never rests on color alone. */
+/* Where you are: quiet text in the full ink, semibold and underlined, so it
+   never rests on color alone (DESIGN.md, "The website's top bar"). */
 .top nav a[aria-current] {
-  background: var(--pill);
   color: var(--ink);
   font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.4em;
 }
 
+/* The one solid button: the door into the app, in the text color. */
 .open {
   padding: 0 16px;
-  border: 1px solid var(--muted);
   border-radius: 8px;
+  background: var(--ink);
+  color: var(--paper);
   font-weight: 600;
 }
 
@@ -543,10 +546,6 @@ footer nav a {
   align-items: center;
   min-height: 44px;
   color: var(--ink-2);
-}
-
-.colophon {
-  margin: 2rem 0 0;
 }
 
 /* Smaller headings on a phone, so a title fits in two or three lines. */

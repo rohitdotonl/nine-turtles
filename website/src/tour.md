@@ -8,7 +8,8 @@ permalink: /tour/
 <p class="lede">
   nine turtles has three parts, side by side on a computer and one at a time
   on a phone: your feeds, a list of articles, and the article itself.
-  Everything else stays out of the way until you need it.
+  Everything else stays out of the way until you need it. If feeds are new
+  to you, <a href="/new-to-feeds/">start here</a>.
 </p>
 
 ## Reading
