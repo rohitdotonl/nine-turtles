@@ -38,6 +38,4 @@ publicly until it's fixed.
 
 ## Elsewhere
 
-The code is public, and you can open an issue there too:
-[nine turtles on GitHub]({{ site.source }}). We don't have social media
-accounts. That's on purpose.
+We don't have social media accounts. That's on purpose.

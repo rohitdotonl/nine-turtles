@@ -41,6 +41,9 @@ pub struct Config {
     /// it, nothing is sent: no confirmation or password emails, and Open
     /// sign-up stays refused.
     pub smtp: Option<crate::email::Settings>,
+    /// The shared secret mail services post newsletter emails with
+    /// (`NINE_TURTLES_NEWSLETTER_SECRET`). Without it, newsletters are off.
+    pub newsletter_secret: Option<String>,
 }
 
 /// The scrambled password (`NINE_TURTLES_PASSWORD_HASH`), made by
@@ -132,6 +135,8 @@ impl Config {
                 .to_owned());
         }
 
+        let newsletter_secret = newsletter_secret(var("NINE_TURTLES_NEWSLETTER_SECRET"))?;
+
         Ok(Self {
             listen,
             data_dir: var("NINE_TURTLES_DATA_DIR")
@@ -145,8 +150,24 @@ impl Config {
             backup,
             restore_from,
             smtp,
+            newsletter_secret,
         })
     }
+}
+
+/// The newsletter secret, if set: long enough that nobody can guess it.
+fn newsletter_secret(value: Option<String>) -> Result<Option<String>, String> {
+    let Some(secret) = value.map(|secret| secret.trim().to_owned()) else {
+        return Ok(None);
+    };
+    if secret.chars().count() < crate::newsletters::SHORTEST_SECRET {
+        return Err(format!(
+            "NINE_TURTLES_NEWSLETTER_SECRET must be at least {} characters long, so nobody can \
+             guess it; Render's Generate button makes one",
+            crate::newsletters::SHORTEST_SECRET
+        ));
+    }
+    Ok(Some(secret))
 }
 
 /// The backup storage settings: all four of endpoint, bucket, key id and
@@ -290,6 +311,18 @@ mod tests {
         assert_eq!(
             PasswordSetting::from_value(Some("my password".into())),
             PasswordSetting::Invalid
+        );
+    }
+
+    #[test]
+    fn a_newsletter_secret_must_be_long() {
+        use super::newsletter_secret;
+        assert_eq!(newsletter_secret(None).unwrap(), None);
+        assert!(newsletter_secret(Some("short".into())).is_err());
+        let long = "x".repeat(40);
+        assert_eq!(
+            newsletter_secret(Some(format!(" {long}\n"))).unwrap(),
+            Some(long)
         );
     }
 

@@ -5,7 +5,8 @@
 #
 # With no arguments it runs everything, in order. GitHub Actions runs the
 # parts side by side on separate computers to save time (decision 0065):
-#   scripts/check.sh frontend   libraries, frontend build, types, tests, motion, size
+#   scripts/check.sh frontend   libraries, frontend build, types, tests, motion, size,
+#                               the health check and the newsletter forwarder
 #   scripts/check.sh rust       Rust formatting, lint and tests
 #   scripts/check.sh browser    the release program, then the browser tests
 #   scripts/check.sh website    the website at nineturtles.app (decision 0066)
@@ -52,6 +53,9 @@ frontend() {
 
   step "Health check script"
   node scripts/check-health-check.mjs
+
+  step "Newsletter forwarder"
+  node scripts/check-newsletter-worker.mjs
 }
 
 rust() {

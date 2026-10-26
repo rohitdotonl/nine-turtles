@@ -10,7 +10,7 @@
   While sign-up is Open (decision 0088) the page works without a ticket too:
   signing up then sends a link to the email, and the page says to open it;
   the account is made when it's followed. The page then says "Check your
-  email", with a quiet Send again (decision 0091).
+  email", with a quiet Send again (decision 0092).
 -->
 <script lang="ts">
   import Logo from "./Logo.svelte";

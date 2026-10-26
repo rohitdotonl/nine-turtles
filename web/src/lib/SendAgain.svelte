@@ -4,7 +4,7 @@
   changes by itself (nothing moves unless you move it): Send again is there
   from the start, and pressed within a minute of the last link it sends
   nothing and says to give it a minute. The server sends one password link a
-  minute anyway (decision 0091).
+  minute anyway (decision 0092).
 -->
 <script lang="ts">
   import { RESEND_AFTER_SECONDS } from "./accounts";

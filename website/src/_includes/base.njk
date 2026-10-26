@@ -42,6 +42,13 @@
       {{ content | safe }}
     </main>
     <footer>
+      <!-- Nine turtles in single file (the logo's turtle, docs/logo/), seven ahead and two a few steps behind, drawn still (DESIGN.md, "The website's footer"). The line under them says it in words, so screen readers skip the drawing. -->
+      <div class="walk">
+        <div class="procession" aria-hidden="true">
+          {%- for i in range(9) %}<svg class="turtle{% if i == 1 %} behind{% endif %}" viewBox="-10 -4.5 22 8.5" focusable="false"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></svg>{% endfor -%}
+        </div>
+        <p>Two of us are always a little behind. That&rsquo;s fine.</p>
+      </div>
       <div class="columns">
         <nav aria-labelledby="foot-reader">
           <h2 id="foot-reader">The reader</h2>
@@ -50,7 +57,6 @@
             <li><a href="/new-to-feeds/">New to feeds?</a></li>
             <li><a href="/faq/">Questions</a></li>
             <li><a href="/pricing/">Pricing</a></li>
-            <li><a href="{{ site.app }}">Open the app</a></li>
           </ul>
         </nav>
         <nav aria-labelledby="foot-us">
@@ -59,7 +65,6 @@
             <li><a href="/about/">About</a></li>
             <li><a href="/blog/">Blog</a></li>
             <li><a href="/contact/">Contact</a></li>
-            <li><a href="{{ site.source }}">Source code</a></li>
           </ul>
         </nav>
         <nav aria-labelledby="foot-legal">
@@ -69,13 +74,11 @@
             <li><a href="/terms/">Terms</a></li>
             <li><a href="/refunds/">Refunds and cancelling</a></li>
             <li><a href="/accessibility/">Accessibility</a></li>
-            <li><a href="/blog/feed.xml">The blog's feed</a></li>
           </ul>
         </nav>
       </div>
       <p class="colophon">
-        {{ site.name }} is open source, under the MIT licence. No cookies, no
-        tracking, no analytics on this website.
+        No cookies, no tracking, no analytics on this website.
       </p>
     </footer>
   </body>

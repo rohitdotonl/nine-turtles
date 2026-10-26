@@ -1,4 +1,4 @@
-# 0091: "Check your email", once, and one password link a minute
+# 0092: "Check your email", once, and one password link a minute
 
 *26 October 2026. The owner pressed Send link twice on "Forgot your
 password?" and got two emails; the page also said twice that an email was

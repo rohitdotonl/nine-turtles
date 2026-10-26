@@ -2,7 +2,7 @@
 
 > **nine turtles is a quiet place to read the web: it shows you what's there, gets out of the way, and lets you finish.**
 
-*Last updated: 25 October 2026 (starter feeds in the first-visit welcome, decision 0079; a logo of nine turtles, decision 0067; a second theme, Plain, with blue article links, and System serif, decision 0063; Apple Books as the design reference, decision 0059). Each change is recorded in `docs/decisions/`.*
+*Last updated: 25 October 2026 (newsletters as feeds, decision 0091; starter feeds in the first-visit welcome, decision 0079; a logo of nine turtles, decision 0067; a second theme, Plain, with blue article links, and System serif, decision 0063; Apple Books as the design reference, decision 0059). Each change is recorded in `docs/decisions/`.*
 
 ## Mission
 
@@ -19,7 +19,7 @@ Help people leave social media and return to reading the open web. Social media 
 - **A discovery engine:** no recommendations, trending or "you might like." You choose your sources. (One exception, approved by the owner for going multi-user: the first-visit welcome's "New to feeds?" offers a short, fixed list of five starter feeds, the same for everyone, none ticked, gone once you follow anything; decision 0079.)
 - **A social network:** no profiles, followers, likes or comments.
 - **A podcast player:** audio appears as a link to the original. (YouTube videos play in YouTube's own player, since 25 October 2026.)
-- **A newsletter inbox:** no email address that turns newsletters into feeds.
+- **An email app:** it never sends email or sees your inbox. (Newsletters can arrive as feeds through a private address of their own, approved by the owner for going multi-user; decision 0091.)
 - **A web scraper:** it shows what publishers put in their feeds (second floor).
 - **A permanent archive:** unstarred articles are kept for one year (the yearly clean-up, built 25 October 2026, decision 0089).
 - **A shared space:** readers on one nine turtles never see each other's feeds, marks, searches or reading (decision 0086).
@@ -57,7 +57,7 @@ No amount of calm or minimalism justifies text some people can't read.
 
 Publishers are the reason there's anything to read.
 
-- **Show what the publisher put in the feed.** Never scrape the full article. A summary-only feed shows the summary and "Open original."
+- **Show what the publisher put in the feed.** Never scrape the full article. A summary-only feed shows the summary and "Open original." A newsletter shows only what its email holds; its web version is never fetched (decision 0091).
 - **Always credit the source** and link to the original.
 - **Fetch politely:** on each feed's own rhythm, with ETag / Last-Modified (and WebSub, since 25 October 2026).
 - **Shared links go to the publisher,** never to nine turtles.
@@ -156,6 +156,7 @@ The philosophy applied. The principle is noted where it isn't obvious.
 - **Name:** nine turtles, at nineturtles.app (decision 0066; app store and trademark checks are under "Still to define").
 - **Wordmark:** "nine turtles" in lowercase, in the reading serif.
 - **Logo** (decision 0067): nine small turtles seen from the side, a half-circle shell and a round head each, in three rows of three, the middle row a little to the right so the rows never read as a menu's stripes. One ink, no color: the text color on the page (dark on white, light on near-black). It is the app icon and, as a single turtle, the browser-tab icon (the app's and the website's), and it stands before the wordmark wherever the wordmark is shown, in the wordmark's own ink. Beside the name it is sized to the name: a touch taller than the letters (1.15 times the name's size), with the name in semibold so it holds its own beside the solid turtles (decision 0073): in the sidebar's top line (23px tall on a computer, 32px on a phone's feeds screen), in the website's top bar (28px), and above the name on the sign-in page (57px tall). Its frame leaves a little room on every side, so no turtle is ever cut off. In a browser tab, where nine turtles would blur into stripes, the icon is a single turtle; the home-screen icons keep the nine, with room around them. Screen readers skip it, since the name says it in words. Its drawings are in `docs/logo/`.
+- **The website's footer:** above its links, the logo's turtle walks in single file, nine times: seven together and, a few steps behind, two more, in the second ink, over one line in the reading face: "Two of us are always a little behind. That's fine." Two stay behind together, not one, so nobody is left alone. Drawn still, as everything is; screen readers skip the drawing and read the line.
 - **Signature:** the accent (ink blue), quietly marking where you are, and the calm itself.
 
 ### Visual language

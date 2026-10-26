@@ -168,7 +168,7 @@ pub fn fingerprint(id: &str, link: Option<&Url>, title: &str, published: Option<
 
 /// Query parts added by newsletters and social sites to track clicks. They
 /// don't change which page a link leads to.
-const TRACKING: &[&str] = &[
+pub(crate) const TRACKING: &[&str] = &[
     "fbclid", "gclid", "dclid", "msclkid", "mc_cid", "mc_eid", "igshid", "ref_src",
 ];
 
@@ -236,7 +236,7 @@ fn plain_text(text: &feed_rs::model::Text) -> String {
 /// text is escaped. Footnotes keep working inside nine turtles: the article's
 /// own anchors (`id`, `#note-1`) are kept, renamed with `article-` in front
 /// so they can never clash with nine turtles' own page.
-fn clean(body: &str, content_type: &str, base: &Url) -> String {
+pub(crate) fn clean(body: &str, content_type: &str, base: &Url) -> String {
     if !content_type.contains("html") {
         return ammonia::clean_text(body);
     }
@@ -352,7 +352,7 @@ fn with_video_links(html: &str) -> String {
 /// Plain text with line breaks (a video's description) as HTML paragraphs,
 /// its web addresses as links. The result still goes through the safety
 /// cleaning.
-fn paragraphs(text: &str) -> String {
+pub(crate) fn paragraphs(text: &str) -> String {
     let escape = |text: &str| {
         text.replace('&', "&amp;")
             .replace('<', "&lt;")

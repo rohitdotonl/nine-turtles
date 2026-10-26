@@ -6,7 +6,7 @@
   password?" turns the page into a request for a password link, and while
   sign-up is Open, "Sign up" leads to the sign-up page (decision 0088). Once
   a link is asked for, the form gives way to "Check your email": where it
-  went, for how long it works, and a quiet Send again (decision 0091).
+  went, for how long it works, and a quiet Send again (decision 0092).
 -->
 <script lang="ts">
   import { tick } from "svelte";

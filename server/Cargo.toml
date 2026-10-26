@@ -30,6 +30,9 @@ scraper = "0.29"
 opml = "1.1"
 ammonia = "4.2"
 lettre = { version = "0.11.23", default-features = false, features = ["smtp-transport", "builder", "tokio1-rustls", "rustls-platform-verifier", "aws-lc-rs"] }
+# Reading newsletter emails (decision 0091). "full_encoding" reads Chinese and
+# Japanese emails too, with encoding_rs, which reqwest already brings.
+mail-parser = { version = "1.0.0", features = ["full_encoding"] }
 
 [lints.rust]
 unsafe_code = "forbid"
