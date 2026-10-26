@@ -39,6 +39,8 @@ feed for you.
 
 If you'd like to look for one yourself:
 
+- Paste the site's address into the [feed finder](/feed-finder/), which
+  shows its feed's address for any feed reader.
 - Look for a small **RSS** or **Feed** link, or the square feed symbol
   with its quarter circles, often at the very bottom of a page.
 - Many sites have their feed at their address followed by `/feed`, `/rss`

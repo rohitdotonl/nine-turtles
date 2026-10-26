@@ -155,3 +155,6 @@ The built website is plain files (HTML, CSS, fonts), so any host can serve
 it: Render's free static sites, Cloudflare Pages, Netlify or your own
 server. Build it with `npm ci && npm run build` in `website/` and publish the
 `website/_site` folder, then point the domain's records at the new host.
+If the website's own address changes (not just its host), also change
+`WEBSITE` in `server/src/finder.rs`, so the feed finder keeps working from
+the new address (decision 0099).

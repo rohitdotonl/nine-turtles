@@ -20,7 +20,7 @@ repository's history.
 | [0006](0006-second-agent-review.md) | The second-agent review is written instructions, not an app |
 | [0007](0007-repository-layout.md) | `server/` and `web/`, with the frontend packed into the program |
 | [0008](0008-fonts-and-placeholder-colors.md) | Fonts served in pieces; placeholder colors until Milestone 4 |
-| [0009](0009-agents-may-merge.md) | Agents may merge after a brief and the owner's yes |
+| [0009](0009-agents-may-merge.md) | Agents may merge once the owner has given permission (per change, or in advance in a plan or session) |
 | [0010](0010-sign-in.md) | How sign-in works: setting the password, signed-in devices, wrong guesses |
 | [0011](0011-container-image.md) | The container image, where it's stored, and automatic deploys |
 | [0012](0012-v1-for-one-reader.md) | V1 is for one reader: no backups, and six features moved to V2 |
@@ -73,3 +73,4 @@ repository's history.
 | [0096](0096-sign-in-links.md) | "Email me a sign-in link": a link that signs in once, within 15 minutes, for every reader including the owner; one press on its page; passwords keep working; the same limits as a password link; structure change 20 adds the `sign-in` purpose to `email_links` |
 | [0097](0097-easing-unread-guilt.md) | Easing unread guilt: unread that lets go after a chosen time, "Catch me up", and Unread counts that can be hidden |
 | [0098](0098-importing-stars.md) | Importing starred articles from other feed readers (Google Reader format and JSON Feed) in Settings › Your data; a star of an article nine turtles already has goes on it, any other is kept in a hidden feed of the reader's own, never shared; read, never fetched, no Undo needed, no structure change; Pocket left out |
+| [0099](0099-feed-finder.md) | The feed finder at nineturtles.app/feed-finder/: the app looks (`/api/find-feeds`, anyone, no sign-in) the way Add feed does, the page and its first feed once; answers remembered 30 minutes, one site at most 6 lookups in half an hour, limits for everyone together and nothing about visitors kept; CORS lets only the website's pages read it; at most 10 feeds read from any page (Add feed too) |

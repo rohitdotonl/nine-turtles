@@ -4,6 +4,14 @@ A plain-language history of nine turtles (called slowfeed until 24 October 2026)
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 26 October 2026: Agents may merge when you've said so in advance
+
+- If you've told an agent in a plan or a session that it may merge the work
+  once it's ready, it no longer needs to send a brief and wait for a second
+  yes. It merges when the checks are green and the review is dealt with, then
+  tells you what went live. Without that permission, the brief and your yes
+  are still needed, and only your own words ever count (decision 0009).
+
 ## 25 October 2026: "Time to read something beautiful."
 
 - With no article open, the reading area now says "Time to read something
