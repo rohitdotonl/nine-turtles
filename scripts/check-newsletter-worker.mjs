@@ -35,12 +35,12 @@ function email(size = RAW.length) {
   return message;
 }
 
-async function run(what, { status, size, forwardTo, wanted }) {
+async function run(what, { status, answer, size, forwardTo, wanted }) {
   const sent = [];
   globalThis.fetch = async (url, init) => {
     sent.push({ url: String(url), init });
     if (status === null) throw new TypeError("network down");
-    return new Response("", { status });
+    return new Response("", { status, headers: answer ? { "x-nine-turtles-answer": answer } : {} });
   };
   const message = email(size);
   const env = { NINE_TURTLES_URL: "https://app.example", NINE_TURTLES_SECRET: "s3cret", FORWARD_TO: forwardTo };
@@ -66,8 +66,9 @@ await run("read but not kept, with an inbox", { status: 202, forwardTo: "me@exam
 await run("refused, with an inbox", { status: 401, forwardTo: "me@example.com", wanted: "forwarded to me@example.com" });
 await run("out of reach, with an inbox", { status: null, forwardTo: "me@example.com", wanted: "forwarded to me@example.com" });
 await run("refused, no inbox", { status: 422, wanted: "bounced" });
-await run("nobody's address, with an inbox", { status: 404, forwardTo: "me@example.com", wanted: "bounced" });
-await run("a replaced address, with an inbox", { status: 410, forwardTo: "me@example.com", wanted: "bounced" });
+await run("nobody's address, with an inbox", { status: 404, answer: "no-such-address", forwardTo: "me@example.com", wanted: "bounced" });
+await run("a replaced address, with an inbox", { status: 410, answer: "replaced", forwardTo: "me@example.com", wanted: "bounced" });
+await run("newsletters off (a plain 404), with an inbox", { status: 404, forwardTo: "me@example.com", wanted: "forwarded to me@example.com" });
 await run("nine turtles down, no inbox", { status: 503, wanted: "error" });
 await run("out of reach, no inbox", { status: null, wanted: "error" });
 await run("read but not kept, no inbox", { status: 202, wanted: "error" });

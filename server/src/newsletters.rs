@@ -17,12 +17,12 @@
 //! still reaches the reader. The first email from a sender makes a feed for
 //! it, the reader's alone (decision 0091); each email is an article.
 //!
-//! **Answers:** 200 when kept (or when the reader unsubscribed from that
-//! sender, so it's dropped on purpose); 404 for an address nobody has and
-//! 410 for one replaced by New address (the forwarder bounces both); 429
-//! when a reader has had `DAILY_LIMIT` emails in a day; 401, 413 and 422 as
-//! before. Anything but 200 is passed on to `FORWARD_TO` by the forwarder,
-//! except 404 and 410.
+//! **Answers:** 200 when kept, or when it's dropped on purpose (the reader
+//! unsubscribed from that sender, or follows as many feeds as one reader
+//! can); 404 for an address nobody has and 410 for one replaced by New
+//! address, both marked with `ANSWER_HEADER` so the forwarder bounces them;
+//! 429 when a reader (or everyone) has had a day's emails; 401, 413 and 422
+//! as before. Anything else is passed on to `FORWARD_TO` by the forwarder.
 
 use axum::{
     Json, Router,
@@ -50,9 +50,28 @@ pub const EMAIL_SIZE_LIMIT: usize = 10 * 1024 * 1024;
 /// The shortest secret nine turtles accepts, so it can't be guessed.
 pub const SHORTEST_SECRET: usize = 32;
 
-/// The most emails one reader's address takes in a day, so the address
-/// can't be used to fill the disk. Real newsletters come nowhere near it.
+/// The most emails one reader's address takes in a day. Real newsletters
+/// come nowhere near it.
 pub const DAILY_LIMIT: i64 = 200;
+
+/// The most newsletter text (after cleaning) one reader keeps in a day: 5 MB,
+/// about fifty long newsletters. With `ALL_DAILY_BYTES`, so a leaked address
+/// can't fill the disk.
+pub const DAILY_BYTES: i64 = 5 * 1024 * 1024;
+
+/// The most newsletter text everyone together keeps in a day: 100 MB, a
+/// tenth of the disk.
+pub const ALL_DAILY_BYTES: i64 = 100 * 1024 * 1024;
+
+/// How long a sender stays away after the reader unsubscribes from it, so a
+/// slow sender's last emails don't bring the feed back. After that, an email
+/// from it (the reader signed up again, say) makes the feed afresh.
+pub const STAYS_AWAY_FOR: i64 = 30 * 24 * 60 * 60;
+
+/// The header nine turtles puts on "no such address" and "replaced", so the
+/// forwarder bounces only those, and passes any other "not found" (the
+/// secret not set, a wrong address for nine turtles) on to `FORWARD_TO`.
+pub const ANSWER_HEADER: &str = "x-nine-turtles-answer";
 
 /// Where newsletter addresses are, after the @, unless
 /// `NINE_TURTLES_NEWSLETTER_DOMAIN` says otherwise.
@@ -61,10 +80,8 @@ pub const DOMAIN: &str = "in.nineturtles.app";
 /// How long Undo after New address can bring the old address back.
 const UNDO_FOR: i64 = 60 * 60;
 
-/// The letters an address is made of: no 0, 1, i, l or o, easy to mistake
-/// for one another when read aloud or typed.
-const ALPHABET: &[u8] = b"abcdefghjkmnpqrstuvwxyz23456789";
-/// After `turtle-`: 8 of them, about 40 bits, so addresses can't be guessed.
+/// After `turtle-`: 8 letters of the app-password alphabet
+/// (`apps::ALPHABET`), about 40 bits, so addresses can't be guessed.
 const LENGTH: usize = 8;
 
 pub fn routes() -> Router<AppState> {
@@ -109,25 +126,39 @@ async fn incoming(State(state): State<AppState>, headers: HeaderMap, body: Bytes
             .into_response();
     };
 
-    let candidates: Vec<String> = headers
+    // Who the mail service delivered it to. Only without that are the
+    // email's own To, Cc and Delivered-To tried: the sender writes those, so
+    // they never overrule the mail service.
+    let delivered_to: Vec<String> = headers
         .get("x-nine-turtles-to")
         .and_then(|value| value.to_str().ok())
         .into_iter()
         .flat_map(|value| value.split(','))
         .map(|address| address.trim().to_lowercase())
-        .chain(email.recipients.iter().cloned())
+        .filter(|address| !address.is_empty())
         .collect();
+    let candidates = if delivered_to.is_empty() {
+        email.recipients.clone()
+    } else {
+        delivered_to
+    };
     let person = match whose(&state.db, &candidates).await {
         Ok(Whose::Reader(person)) => person,
         Ok(Whose::Retired) => {
             return (
                 StatusCode::GONE,
+                [(ANSWER_HEADER, "replaced")],
                 "This address was replaced and no longer takes email.",
             )
                 .into_response();
         }
         Ok(Whose::Nobody) => {
-            return (StatusCode::NOT_FOUND, "There is no such address here.").into_response();
+            return (
+                StatusCode::NOT_FOUND,
+                [(ANSWER_HEADER, "no-such-address")],
+                "There is no such address here.",
+            )
+                .into_response();
         }
         Err(error) => return database_problem("finding whose newsletter address it is", &error),
     };
@@ -143,6 +174,12 @@ async fn incoming(State(state): State<AppState>, headers: HeaderMap, body: Bytes
         }
         Ok(Filed::Unsubscribed) => {
             Json(json!({ "kept": false, "why": "unsubscribed" })).into_response()
+        }
+        Ok(Filed::NoRoom) => {
+            log::info(
+                "a newsletter email was dropped: its reader follows as many feeds as one can",
+            );
+            Json(json!({ "kept": false, "why": "too-many-feeds" })).into_response()
         }
         Ok(Filed::TooMany) => {
             log::problem("a reader's newsletter address had more than its daily emails");
@@ -197,6 +234,9 @@ enum Filed {
     Kept,
     /// The reader unsubscribed from this sender: dropped on purpose.
     Unsubscribed,
+    /// A new sender, and the reader follows `admin::MOST_FEEDS` feeds already.
+    NoRoom,
+    /// Over `DAILY_LIMIT`, `DAILY_BYTES` or `ALL_DAILY_BYTES`.
     TooMany,
 }
 
@@ -222,6 +262,24 @@ async fn file(
     if today >= DAILY_LIMIT {
         return Ok(Filed::TooMany);
     }
+    // The text kept in the last day, the reader's and everyone's, in bytes.
+    let size =
+        i64::try_from(email.article.content.as_deref().map_or(0, str::len)).unwrap_or(i64::MAX);
+    let (theirs, everyone): (i64, i64) = sqlx::query_as(
+        "SELECT COALESCE(SUM(CASE WHEN feeds.newsletter_of = ?1
+                     THEN length(CAST(articles.content AS BLOB)) END), 0),
+                COALESCE(SUM(length(CAST(articles.content AS BLOB))), 0)
+         FROM articles JOIN feeds ON feeds.id = articles.feed_id
+         WHERE feeds.newsletter_of IS NOT NULL AND articles.received_at > ?2",
+    )
+    .bind(person)
+    .bind(now - 24 * 60 * 60)
+    .fetch_one(&mut *transaction)
+    .await?;
+    if theirs.saturating_add(size) > DAILY_BYTES || everyone.saturating_add(size) > ALL_DAILY_BYTES
+    {
+        return Ok(Filed::TooMany);
+    }
     let url = format!("newsletter:{person}:{}", email.sender.key);
     let known: Option<(i64, Option<i64>)> =
         sqlx::query_as("SELECT id, unsubscribed_at FROM feeds WHERE url_key = ?")
@@ -230,9 +288,20 @@ async fn file(
             .await?;
     let feed = match known {
         // Nobody follows it any more: the reader unsubscribed.
-        Some((_, Some(_))) => return Ok(Filed::Unsubscribed),
+        Some((_, Some(at))) if at > now - STAYS_AWAY_FOR => return Ok(Filed::Unsubscribed),
+        // Long enough ago that this is a new sign-up: the feed starts again.
+        Some((id, Some(_))) => {
+            if !crate::admin::room_for_one_more(&mut transaction, person).await? {
+                return Ok(Filed::NoRoom);
+            }
+            subscribe(&mut transaction, person, id, &email.sender.title, now).await?;
+            id
+        }
         Some((id, None)) => id,
         None => {
+            if !crate::admin::room_for_one_more(&mut transaction, person).await? {
+                return Ok(Filed::NoRoom);
+            }
             let id: i64 = sqlx::query_scalar(
                 "INSERT INTO feeds (url, url_key, title, site_url, language, added_at, fetched_at,
                      next_check_at, newsletter_of)
@@ -270,24 +339,9 @@ fn domain(state: &AppState) -> &str {
 
 /// A new address name: `turtle-` and 8 random letters and digits.
 fn new_name() -> Result<String, getrandom::Error> {
-    let mut letters = Vec::with_capacity(LENGTH);
-    // 248 is the largest multiple of 31 under 256: bytes at or above it
-    // are skipped, so every letter is equally likely.
-    let limit = u8::try_from(256 / ALPHABET.len() * ALPHABET.len()).unwrap_or(u8::MAX);
-    while letters.len() < LENGTH {
-        let mut bytes = [0u8; 16];
-        getrandom::fill(&mut bytes)?;
-        letters.extend(
-            bytes
-                .iter()
-                .filter(|byte| **byte < limit)
-                .map(|byte| char::from(ALPHABET[usize::from(*byte) % ALPHABET.len()])),
-        );
-    }
-    letters.truncate(LENGTH);
     Ok(format!(
         "turtle-{}",
-        letters.into_iter().collect::<String>()
+        String::from_utf8_lossy(&crate::apps::random_letters(LENGTH)?)
     ))
 }
 
@@ -320,6 +374,34 @@ async fn replace(db: &sqlx::SqlitePool, person: i64, now: i64) -> Result<String,
         .map_err(|error| Box::new(database_problem("making a newsletter address", &error)))
 }
 
+/// The reader's first address. Two screens asking at once get the same
+/// one: a second address is never made while one is current.
+async fn first(db: &sqlx::SqlitePool, person: i64, now: i64) -> Result<String, Box<Response>> {
+    let name = new_name().map_err(|error| {
+        log::problem(&format!("couldn't make a newsletter address: {error}"));
+        Box::new(StatusCode::INTERNAL_SERVER_ERROR.into_response())
+    })?;
+    let made: Result<String, sqlx::Error> = async {
+        // The one-current-address index turns a second one away.
+        sqlx::query(
+            "INSERT OR IGNORE INTO newsletter_addresses (name, person_id, created_at) VALUES (?, ?, ?)",
+        )
+        .bind(&name)
+        .bind(person)
+        .bind(now)
+        .execute(db)
+        .await?;
+        sqlx::query_scalar(
+            "SELECT name FROM newsletter_addresses WHERE person_id = ? AND retired_at IS NULL",
+        )
+        .bind(person)
+        .fetch_one(db)
+        .await
+    }
+    .await;
+    made.map_err(|error| Box::new(database_problem("making a newsletter address", &error)))
+}
+
 /// Whether newsletters are on, and the reader's address (made the first
 /// time they look).
 async fn address(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
@@ -334,7 +416,7 @@ async fn address(SignedIn(person): SignedIn, State(state): State<AppState>) -> R
     .await;
     let name = match current {
         Ok(Some(name)) => name,
-        Ok(None) => match replace(&state.db, person, now()).await {
+        Ok(None) => match first(&state.db, person, now()).await {
             Ok(name) => name,
             Err(response) => return *response,
         },

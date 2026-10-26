@@ -5,6 +5,6 @@
 - Newsletters sent to it arrive as feeds, one per sender, and each email is an
   article. A newsletter feed is the reader's alone, never shared.
 - Unsubscribing from a newsletter's feed keeps its later emails away. Mail to
-  an address nobody has bounces. At most 200 emails a day reach one address.
+  an address nobody has bounces. At most 200 emails (and 5 MB of text) a day reach one address.
 - The forwarder at Cloudflare now tells nine turtles who each email was for:
   paste its code into Cloudflare again (docs/operations/newsletters.md, step 2).

@@ -613,6 +613,7 @@ test("Other apps: an app password is made, shown once with the server address, a
 });
 
 test("Newsletters: the reader's address with Copy, and New address with Undo", async ({ page }) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   await openApp(page, "/settings");
   const address = page.getByText(/^turtle-[a-z2-9]{8}@in\.nineturtles\.app$/);
   await expect(address).toBeVisible();
@@ -622,9 +623,15 @@ test("Newsletters: the reader's address with Copy, and New address with Undo", a
   await page.keyboard.press("Enter");
   await expect(page.getByRole("status").filter({ hasText: "You have a new address" })).toBeVisible();
   await expect(address).not.toHaveText(old!);
+  const fresh = await address.textContent();
+  // Copying the new address keeps Undo on the line.
+  await page.getByRole("button", { name: "Copy address" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Address copied" })).toBeVisible();
   await page.getByRole("button", { name: "Undo" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Your old address works again" })).toBeVisible();
-  await expect(address).toHaveText(old!);
+  // The address before New address is back. (The desktop and phone runs share one reader, so it's
+  // compared with the new one rather than with the one first shown.)
+  await expect(address).not.toHaveText(fresh!);
 });
 
 test("Settings is one centred column of grouped lists; Your data, Feed health and Sign out are rows of their own, each ending in a glyph", async ({ page }) => {

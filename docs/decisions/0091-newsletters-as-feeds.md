@@ -63,11 +63,16 @@ key is scoped to the reader (or their address), never just `list:…` or
   address, `turtle-` and 8 random letters (Settings › Newsletters, with Copy,
   and New address with an hour's Undo; a `+label` still arrives); emails kept
   as articles under a feed per sender, the reader's alone; a sender's emails
-  dropped once the reader unsubscribes; at most 200 emails a day per
-  address; a deleted reader's newsletters go with them (structure change
-  16). Mail to an address nobody has, or one replaced, bounces.
-- **A question to settle before part two shows emails:** mail services often
-  put a personal tracking code in the address of every picture, not only in
-  1-pixel ones, so loading a newsletter's pictures can tell the sender it was
-  opened. Options include showing pictures only on request for newsletters,
-  or leaving them as today's articles do. Raise it with the owner.
+  dropped for 30 days once the reader unsubscribes (after that, an email from
+  them starts the feed again, as a new sign-up); at most 200 emails and 5 MB
+  of text a day per address, and 100 MB a day for everyone, so a leaked
+  address can't fill the disk; newsletter feeds count towards the 1,000 feeds
+  a reader can follow; a deleted reader's newsletters go with them (structure
+  change 16). Mail to an address nobody has, or one replaced, bounces.
+- **Pictures and "was it opened?" (the owner, 26 October 2026):** mail
+  services put a personal code in the address of a newsletter's pictures, so
+  loading them tells the sender it was opened. nine turtles isn't a privacy
+  tool: its job is good reading. So newsletter pictures load like any
+  article's. And because senders often drop readers who seem never to open
+  their emails, nine turtles will itself "open" each email once when it
+  arrives (part three, with a label per newsletter and one-click unsubscribe).

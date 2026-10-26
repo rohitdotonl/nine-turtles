@@ -7,7 +7,7 @@
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
-  import { newAddress, newslettersStatus, undoNewAddress } from "./newsletters";
+  import { TooLate, newAddress, newslettersStatus, undoNewAddress } from "./newsletters";
 
   let on = $state(false);
   let address = $state("");
@@ -33,7 +33,7 @@
     } catch {
       message = "Couldn't copy. Select the address and copy it yourself.";
     }
-    previous = null;
+    // Undo for New address stays on the line: copying changes nothing.
   }
 
   async function replace() {
@@ -58,8 +58,13 @@
       address = await undoNewAddress(previous);
       message = "Your old address works again.";
       previous = null;
-    } catch {
-      message = "Couldn't bring the old address back.";
+    } catch (error) {
+      if (error instanceof TooLate) {
+        message = "It's been over an hour, so the old address can't come back.";
+        previous = null;
+      } else {
+        message = "Couldn't bring the old address back. Try again in a moment.";
+      }
     }
     busy = false;
   }

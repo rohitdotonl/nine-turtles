@@ -31,6 +31,9 @@ export async function newAddress(): Promise<{ address: string; previous: string 
   return { address, previous: text(body, "previous") };
 }
 
+/** Undo came after the hour it's offered for. */
+export class TooLate extends Error {}
+
 /** Undo for New address: the old address works again. Answers it. */
 export async function undoNewAddress(previous: string): Promise<string> {
   const response = await api("/api/newsletters/undo-new-address", {
@@ -38,6 +41,7 @@ export async function undoNewAddress(previous: string): Promise<string> {
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ previous }),
   });
+  if (response.status === 409) throw new TooLate("too late to undo");
   if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
   const address = text(await response.json(), "address");
   if (!address) throw new Error("nine turtles sent no address");

@@ -101,7 +101,8 @@ forwarder; nine turtles works out whose it is, and refuses the rest.
 
 Turn off the catch-all rule (step 5): mail to `in.nineturtles.app` stops at
 once. Removing `NINE_TURTLES_NEWSLETTER_SECRET` from Render also switches
-nine turtles' side off; the address then answers "not found".
+nine turtles' side off; emails then go to `FORWARD_TO` if it's set, and
+bounce if not.
 
 ## Moving away from Cloudflare
 

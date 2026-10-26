@@ -202,10 +202,22 @@ async fn an_address_nobody_has_or_one_replaced_is_refused_and_undo_brings_it_bac
     let (base, state) = common::start_with_state(on()).await;
     let cookie = common::signed_in(&base).await;
     let old = address(&base, &cookie).await;
+    let nobody = post_to(&base, "turtle-nobody23@in.nineturtles.app", email()).await;
+    assert_eq!(nobody.status(), 404);
+    // Marked, so the forwarder bounces it rather than passing it on.
+    assert_eq!(nobody.headers()["x-nine-turtles-answer"], "no-such-address");
+    // The email's own To can't overrule who the mail service delivered it to.
+    let raw = String::from_utf8(email())
+        .unwrap()
+        .replacen("To: ", &format!("To: {old}, "), 1);
     assert_eq!(
-        post_to(&base, "turtle-nobody23@in.nineturtles.app", email())
-            .await
-            .status(),
+        post_to(
+            &base,
+            "turtle-nobody23@in.nineturtles.app",
+            raw.into_bytes()
+        )
+        .await
+        .status(),
         404
     );
 
@@ -222,7 +234,9 @@ async fn an_address_nobody_has_or_one_replaced_is_refused_and_undo_brings_it_bac
     let new = answer["address"].as_str().unwrap().to_owned();
     assert_ne!(new, old);
     assert_eq!(address(&base, &cookie).await, new);
-    assert_eq!(post_to(&base, &old, email()).await.status(), 410);
+    let replaced = post_to(&base, &old, email()).await;
+    assert_eq!(replaced.status(), 410);
+    assert_eq!(replaced.headers()["x-nine-turtles-answer"], "replaced");
     assert_eq!(post_to(&base, &new, email()).await.status(), 200);
 
     let previous = answer["previous"].as_str().unwrap();
@@ -315,6 +329,18 @@ async fn after_unsubscribing_a_senders_emails_stay_away() {
     assert_eq!(response.status(), 200);
     assert_eq!(json(response).await["kept"], false);
     assert_eq!(count(&state, "SELECT COUNT(*) FROM articles").await, 0);
+
+    // A month on, an email from it is a new sign-up: the feed starts again.
+    sqlx::query("UPDATE feeds SET unsubscribed_at = unsubscribed_at - ?")
+        .bind(nine_turtles::newsletters::STAYS_AWAY_FOR + 1)
+        .execute(&state.db)
+        .await
+        .unwrap();
+    let response = post_to(&base, &to, letter(from, "7@x", "Welcome back")).await;
+    assert_eq!(json(response).await["kept"], true);
+    let feeds = get(&base, &cookie, "/api/feeds").await;
+    assert_eq!(feeds["feeds"].as_array().unwrap().len(), 1);
+    assert_eq!(count(&state, "SELECT COUNT(*) FROM articles").await, 1);
 }
 
 #[tokio::test]
@@ -396,4 +422,61 @@ async fn the_diagnostics_page_says_whether_newsletters_are_on() {
     assert_eq!(page["newsletters"]["on"], true);
     // The secret itself is never shown.
     assert!(!page.to_string().contains(SECRET));
+}
+
+#[tokio::test]
+async fn a_reader_kept_too_much_newsletter_text_in_a_day_is_refused_more() {
+    let (base, state) = common::start_with_state(on()).await;
+    let cookie = common::signed_in(&base).await;
+    let to = address(&base, &cookie).await;
+    post_to(&base, &to, email()).await;
+    let feed = count(&state, "SELECT id FROM feeds").await;
+    // A day's worth of text arrived already, in one big email.
+    sqlx::query(
+        "INSERT INTO articles (feed_id, fingerprint, title, content, received_at, sort_at)
+         VALUES (?, 'big', 'x', ?, unixepoch(), unixepoch())",
+    )
+    .bind(feed)
+    .bind("x".repeat(usize::try_from(nine_turtles::newsletters::DAILY_BYTES).unwrap()))
+    .execute(&state.db)
+    .await
+    .unwrap();
+    let response = post_to(&base, &to, letter("A <a@example.com>", "8@x", "One more")).await;
+    assert_eq!(response.status(), 429);
+}
+
+#[tokio::test]
+async fn a_new_sender_is_dropped_when_the_reader_follows_as_many_feeds_as_one_can() {
+    let (base, state) = common::start_with_state(on()).await;
+    let cookie = common::signed_in(&base).await;
+    let to = address(&base, &cookie).await;
+    post_to(&base, &to, email()).await;
+    sqlx::query(
+        "WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < ?)
+         INSERT INTO feeds (url, url_key, title, added_at, fetched_at, next_check_at)
+         SELECT 'https://example.com/' || i, 'https://example.com/' || i, 'Feed', 0, 0, 0 FROM n",
+    )
+    .bind(nine_turtles::admin::MOST_FEEDS - 1)
+    .execute(&state.db)
+    .await
+    .unwrap();
+    sqlx::query(
+        "INSERT INTO subscriptions (person_id, feed_id, title, added_at)
+         SELECT 1, id, title, 0 FROM feeds WHERE newsletter_of IS NULL",
+    )
+    .execute(&state.db)
+    .await
+    .unwrap();
+
+    let response = post_to(&base, &to, letter("A <a@example.com>", "9@x", "Hello")).await;
+    assert_eq!(response.status(), 200);
+    assert_eq!(json(response).await["why"], "too-many-feeds");
+    // A sender already followed still arrives.
+    let response = post_to(
+        &base,
+        &to,
+        letter("\"The slow garden\" <slowgarden@substack.example.com>\r\nList-Id: <slowgarden.substack.example.com>", "10@x", "Still here"),
+    )
+    .await;
+    assert_eq!(json(response).await["kept"], true);
 }
