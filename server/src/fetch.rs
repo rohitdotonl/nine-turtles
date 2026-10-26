@@ -30,7 +30,7 @@ use reqwest::{
 pub const USER_AGENT: &str = concat!(
     "nine-turtles/",
     env!("CARGO_PKG_VERSION"),
-    " (+https://github.com/rohitdotonl/nine-turtles)"
+    " (+https://nineturtles.app)"
 );
 /// The longest nine turtles waits for one download, start to finish.
 const TIME_LIMIT: Duration = Duration::from_secs(20);
