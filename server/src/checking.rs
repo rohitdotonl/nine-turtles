@@ -14,6 +14,8 @@
 //! - A failing feed waits twice as long after each failure in a row, up to a
 //!   day, and never holds up another feed. A publisher who asks nine turtles to
 //!   slow down gets at least the wait they asked for.
+//! - A feed whose every follower has been away for a month is checked once
+//!   a day, until one of them comes back (`admin`).
 //! - Only the feed file is fetched, never an article's page.
 //!
 //! The screen doesn't change when articles arrive: it says "New items" and
@@ -26,7 +28,7 @@ use serde::Serialize;
 use tokio::task::JoinSet;
 
 use crate::{
-    AppState,
+    AppState, admin,
     feed::{self, ParsedFeed},
     feeds::store_articles,
     fetch::{self, Answer, FetchError, Fetched, Known},
@@ -122,9 +124,11 @@ struct Due {
     last_modified: Option<String>,
     check_every: i64,
     /// The shortest wait the reader allows this feed (Edit feed): 0, an
-    /// hour or a day.
+    /// hour or a day; a day while every follower is away.
     check_at_most: i64,
     failures: i64,
+    /// Every follower is away (`admin::AWAY_AFTER`).
+    away: bool,
 }
 
 /// Checks one feed and stores what's new. Every outcome sets when the feed
@@ -142,13 +146,20 @@ pub async fn check(state: &AppState, feed_id: i64, now: i64) -> Result<(), sqlx:
         // Unsubscribed in the meantime.
         return Ok(());
     }
-    let feed: Due = sqlx::query_as(
-        "SELECT url, etag, last_modified, check_every, check_at_most, failures FROM feeds
-         WHERE id = ?",
-    )
+    let mut feed: Due = sqlx::query_as(concat!(
+        "SELECT url, etag, last_modified, check_every, check_at_most, failures, ",
+        admin::everyone_away!("?1"),
+        " AS away FROM feeds WHERE id = ?2"
+    ))
+    .bind(now - admin::AWAY_AFTER)
     .bind(feed_id)
     .fetch_one(&state.db)
     .await?;
+    // Nobody who follows it has been here for a month: once a day is plenty
+    // until one of them comes back (`admin::here`).
+    if feed.away {
+        feed.check_at_most = feed.check_at_most.max(admin::AWAY_WAIT);
+    }
     let Ok(url) = Url::parse(&feed.url) else {
         return failed(state, feed_id, &feed, Failure::NotAnAddress, now).await;
     };

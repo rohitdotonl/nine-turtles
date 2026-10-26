@@ -270,8 +270,10 @@ async fn session(State(state): State<AppState>, headers: HeaderMap) -> Response 
     let hash = scramble(&token);
     let now = now();
 
-    let found: Result<Option<(i64, bool, Option<String>)>, sqlx::Error> = sqlx::query_as(
-        "SELECT sessions.last_used_at, people.owner, people.email
+    // Whose device, when it was last used, owner or not, and their email.
+    type Found = (i64, i64, bool, Option<String>);
+    let found: Result<Option<Found>, sqlx::Error> = sqlx::query_as(
+        "SELECT sessions.person_id, sessions.last_used_at, people.owner, people.email
          FROM sessions JOIN people ON people.id = sessions.person_id
          WHERE sessions.token_hash = ? AND sessions.expires_at > ?",
     )
@@ -279,7 +281,7 @@ async fn session(State(state): State<AppState>, headers: HeaderMap) -> Response 
     .bind(now)
     .fetch_optional(&state.db)
     .await;
-    let (last_used, owner, email) = match found {
+    let (person, last_used, owner, email) = match found {
         Ok(Some(found)) => found,
         Ok(None) => return signed_out(&state).await,
         Err(error) => return database_problem("checking a sign-in", &error),
@@ -298,7 +300,9 @@ async fn session(State(state): State<AppState>, headers: HeaderMap) -> Response 
     if now - last_used < RENEW_AFTER {
         return body.into_response();
     }
-    // Used again after a day or more: another year from today.
+    // Used again after a day or more: another year from today, and the
+    // reader is noted as here (`admin::here`).
+    crate::admin::note_here(&state.db, person).await;
     let renewed =
         sqlx::query("UPDATE sessions SET last_used_at = ?, expires_at = ? WHERE token_hash = ?")
             .bind(now)
@@ -653,6 +657,9 @@ pub async fn remember_device(db: &SqlitePool, person: i64) -> Result<Option<Stri
             return Ok(None);
         }
     };
+    // Noted before this device's sign-in counts as being here, so a reader
+    // back after a long time finds their feeds checked (`admin::here`).
+    crate::admin::note_here(db, person).await;
     let now = now();
     sqlx::query("DELETE FROM sessions WHERE expires_at <= ?")
         .bind(now)

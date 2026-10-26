@@ -28,6 +28,7 @@
   import FeedHealth from "./FeedHealth.svelte";
   import YourFeeds from "./YourFeeds.svelte";
   import Muted from "./Muted.svelte";
+  import ReadersPage from "./ReadersPage.svelte";
   import SearchBar from "./SearchBar.svelte";
   import SidebarFeeds from "./SidebarFeeds.svelte";
   import StarterFeeds from "./StarterFeeds.svelte";
@@ -173,8 +174,9 @@
   let settingsHeading: HTMLHeadingElement | undefined = $state();
   let healthHeading: HTMLHeadingElement | undefined = $state();
   let yourFeedsHeading: HTMLHeadingElement | undefined = $state();
-  /** Feed health, Your feeds or Muted articles was opened from Settings, so closing it is a step back in history. */
+  /** Feed health, Your feeds, Muted articles or Readers was opened from Settings, so closing it is a step back in history. */
   let mutedHeading: HTMLHeadingElement | undefined = $state();
+  let readersHeading: HTMLHeadingElement | undefined = $state();
   /** "Add a rule for this feed…" in Edit feed: Settings opens with a new rule for it. */
   let ruleForFeed: number | undefined = $state();
   let cameFromSettings = false;
@@ -689,6 +691,7 @@
     if (place.kind === "feed-health") return healthHeading;
     if (place.kind === "your-feeds") return yourFeedsHeading;
     if (place.kind === "muted") return mutedHeading;
+    if (place.kind === "readers") return readersHeading;
     if (place.kind === "add-feed") return addField;
     if (place.kind === "new-to-feeds") return phone ? listHeading : sheetHeading;
     // "Save search" starts in its name field, which the sheet gives the keyboard itself.
@@ -813,7 +816,7 @@
       return;
     }
     const from = screenNow();
-    cameFromSettings = route.kind === "settings" && (next.kind === "feed-health" || next.kind === "your-feeds" || next.kind === "muted");
+    cameFromSettings = route.kind === "settings" && (next.kind === "feed-health" || next.kind === "your-feeds" || next.kind === "muted" || next.kind === "readers");
     const to: Screen = isList(next) ? "list" : "page";
     const [opening, closing] = [isSheet(next) && !isSheet(route), isSheet(route) && !isSheet(next)];
     let pushed = false;
@@ -974,6 +977,11 @@
   /** Settings › Rules › Muted articles. */
   function goMuted(event: MouseEvent) {
     follow(event, { kind: "muted" });
+  }
+
+  /** Settings › Readers › All readers (the owner only). */
+  function goReaders(event: MouseEvent) {
+    follow(event, { kind: "readers" });
   }
 
   /** Edit feed's "Add a rule for this feed…": to Settings, where the new rule's sheet opens for the feed. */
@@ -1166,7 +1174,7 @@
   }
 
   function escape() {
-    if (route.kind === "feed-health" || route.kind === "your-feeds" || route.kind === "muted") closeHealth();
+    if (route.kind === "feed-health" || route.kind === "your-feeds" || route.kind === "muted" || route.kind === "readers") closeHealth();
     else if (route.kind === "settings" || route.kind === "add-feed" || route.kind === "new-to-feeds") closePage();
     else if (route.kind === "edit-feed" || route.kind === "edit-folder") edited(false);
     else if (route.kind === "save-search" || route.kind === "edit-search") searchSaved();
@@ -1398,9 +1406,9 @@
         href="/settings"
         aria-label="Settings"
         title="Settings"
-        aria-current={route.kind === "settings" || route.kind === "feed-health" || route.kind === "your-feeds" || route.kind === "muted" ? "page" : undefined}
+        aria-current={route.kind === "settings" || route.kind === "feed-health" || route.kind === "your-feeds" || route.kind === "muted" || route.kind === "readers" ? "page" : undefined}
         onclick={(event) => follow(event, { kind: "settings" })}
-        class={["btn-quiet btn-icon @max-[15rem]:-mr-1.5", (route.kind === "settings" || route.kind === "feed-health" || route.kind === "your-feeds" || route.kind === "muted") && "bg-tint-sidebar text-ink"]}><Icon name="settings" size={18} /></a
+        class={["btn-quiet btn-icon @max-[15rem]:-mr-1.5", (route.kind === "settings" || route.kind === "feed-health" || route.kind === "your-feeds" || route.kind === "muted" || route.kind === "readers") && "bg-tint-sidebar text-ink"]}><Icon name="settings" size={18} /></a
       >
     </div>
     {#if !phone && (panes.list || panes.article)}
@@ -1436,6 +1444,7 @@
           onFeedHealth={goHealth}
           onYourFeeds={goYourFeeds}
           onMuted={goMuted}
+          onReaders={goReaders}
           feeds={feeds ?? []}
           {folders}
           {phone}
@@ -1454,6 +1463,8 @@
         />
       {:else if route.kind === "muted"}
         <Muted bind:heading={mutedHeading} onClose={closeHealth} onChanged={loadFeeds} besideToggle={!phone && !panes.sidebar} />
+      {:else if route.kind === "readers"}
+        <ReadersPage bind:heading={readersHeading} onClose={closeHealth} besideToggle={!phone && !panes.sidebar} />
       {:else if !sheet && route.kind === "edit-feed" && currentFeed}
         {#key currentFeed.id}
           <EditFeed

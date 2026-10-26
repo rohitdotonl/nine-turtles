@@ -274,6 +274,45 @@ export const SCREENS: Screen[] = [
     },
   },
   {
+    // The owner's Readers page (decision 0090), with three made-up readers.
+    name: "readers",
+    path: "/settings/readers",
+    signedIn: true,
+    open: async (page) => {
+      const day = 24 * 60 * 60;
+      const now = Math.floor(Date.now() / 1000);
+      const reader = (id: number, email: string | null, joined: number, feeds: number, failing: number) => ({
+        id,
+        email,
+        owner: id === 1,
+        created_at: now - joined * day,
+        feeds,
+        feeds_failing: failing,
+      });
+      await page.route("**/api/admin", (route) =>
+        route.fulfill({
+          json: {
+            totals: { readers: 3, feeds: 214, feeds_resting: 12, feeds_failing: 2, articles: 18_430, sign_ups_waiting: 0 },
+            database_bytes: 96_000_000,
+            backups: { on: true, latest_nightly: "nightly/2026-10-25.sqlite" },
+            email_sending: true,
+            problems: [],
+            readers: [
+              reader(1, "owner@example.com", 300, 142, 2),
+              reader(3, "sam@example.com", 2, 18, 0),
+              reader(2, "ada@example.com", 90, 61, 0),
+            ],
+            most_feeds: 1000,
+            away_after_days: 30,
+          },
+        }),
+      );
+      await page.reload();
+      await appReady(page);
+      await expect(page.getByRole("heading", { name: "3 readers" })).toBeVisible();
+    },
+  },
+  {
     name: "shortcuts",
     path: "/unread",
     signedIn: true,

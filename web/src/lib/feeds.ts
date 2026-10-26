@@ -105,9 +105,10 @@ export type Problem =
   | "not-found"
   | "too-big"
   | "no-feed"
+  | "too-many"
   | "trouble";
 
-const PROBLEMS: Problem[] = ["not-an-address", "not-allowed", "unreachable", "not-found", "too-big", "no-feed"];
+const PROBLEMS: Problem[] = ["not-an-address", "not-allowed", "unreachable", "not-found", "too-big", "no-feed", "too-many"];
 
 export async function listFeeds(): Promise<Library> {
   await saved();
@@ -546,8 +547,18 @@ export async function importOpml(file: File): Promise<ImportSummary | string> {
     };
   }
   if (isRecord(body) && body.error === "not-opml") return "That file doesn't look like an OPML file.";
+  if (isRecord(body) && body.error === "too-many") {
+    return tooManyToImport(Number(body.following ?? 0), Number(body.adding ?? 0), Number(body.most ?? 1000));
+  }
   if (response.status === 413) return "That file lists more feeds than nine turtles can take at once.";
   return "The file couldn't be imported. Try again in a moment.";
+}
+
+/** Why nothing was imported: the file would take the reader past the most feeds one reader can follow. */
+export function tooManyToImport(following: number, adding: number, most: number): string {
+  const number = new Intl.NumberFormat("en-GB");
+  const feeds = (count: number) => `${number.format(count)} ${count === 1 ? "feed" : "feeds"}`;
+  return `Nothing was imported. You follow ${feeds(following)}, and this file would add ${number.format(adding)} more, past the ${number.format(most)} one reader can follow.`;
 }
 
 /** The plain summary after an import (SPEC section 16). */
@@ -582,6 +593,8 @@ export function explain(reason: Problem): string {
       return "That file is too big to be a feed.";
     case "no-feed":
       return "This site doesn't seem to offer a feed. Try the feed's own address, or the site's home page.";
+    case "too-many":
+      return "You follow 1,000 feeds, as many as one reader can. Unsubscribe from one to add another.";
     case "trouble":
       return "nine turtles couldn't add that just now. Try again in a moment.";
   }

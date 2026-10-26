@@ -3,6 +3,7 @@ import {
   checkFrom,
   homeView,
   explain,
+  tooManyToImport,
   findByName,
   folderUnread,
   importMessage,
@@ -58,6 +59,15 @@ describe("the add field's messages", () => {
       expect(message.endsWith(".")).toBe(true);
     }
     expect(explain("no-feed")).toBe("This site doesn't seem to offer a feed. Try the feed's own address, or the site's home page.");
+    // The one number shown is the limit itself.
+    expect(explain("too-many")).toBe("You follow 1,000 feeds, as many as one reader can. Unsubscribe from one to add another.");
+  });
+
+  it("say why a file that would go past the limit imported nothing", () => {
+    expect(tooManyToImport(950, 120, 1000)).toBe(
+      "Nothing was imported. You follow 950 feeds, and this file would add 120 more, past the 1,000 one reader can follow.",
+    );
+    expect(tooManyToImport(1, 1000, 1000)).toContain("You follow 1 feed,");
   });
 });
 

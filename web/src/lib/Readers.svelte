@@ -2,8 +2,8 @@
   Readers and Sign-up (SPEC section 18, decision 0087), two groups of
   Settings that only the owner sees. Readers: the owner's own email (to sign
   in with, beside the password alone, and for "Forgot your password?"
-  links; saving it asks for their password, decision 0088) and everyone with an account, by email
-  and when they joined, never what they read. Sign-up: Closed (the default),
+  links; saving it asks for their password, decision 0088) and All readers ›,
+  the Readers page (decision 0090). Sign-up: Closed (the default),
   Invite link, or Open, which can be chosen only while nine turtles can send
   the emails that confirm an address (decision 0088). An invite link is made
   here, shown once with a Copy button, and replaced by making a new one. Until
@@ -26,7 +26,14 @@
     type SignUpMode,
   } from "./readers";
 
-  let { email = null }: { email?: string | null } = $props();
+  let {
+    email = null,
+    onReaders,
+  }: {
+    email?: string | null;
+    /** Opens the Readers page. */
+    onReaders: (event: MouseEvent) => void;
+  } = $props();
 
   let ownEmail = $state("");
   /** The owner's current password, asked for to save their email (decision 0088). */
@@ -194,10 +201,6 @@
       signUpMessage = "Couldn't copy. Select the invite link and copy it yourself.";
     }
   }
-
-  function joined(seconds: number): string {
-    return new Date(seconds * 1000).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
-  }
 </script>
 
 <section aria-labelledby="readers-heading">
@@ -239,23 +242,19 @@
         >Save<span class="sr-only"> your email</span></button
       >
     </div>
-    {#each people as person (person.id)}
-      <div class="inset-row">
-        <p class="min-w-0">
-          <span class="value-ink">{person.email ?? "No email yet"}</span>{#if person.owner}<span class="text-muted"> (you)</span>{/if}<br /><span
-            class="value text-muted">Joined {joined(person.createdAt)}</span
-          >
-        </p>
-      </div>
-    {/each}
+    <a href="/settings/readers" onclick={onReaders} class="inset-row inset-action"
+      >All readers<span class="row-glyph flex items-center gap-1"
+        >{#if people.length > 0}<span class="text-meta">{people.length}</span>{/if}<Icon name="chevron-right" size={18} /></span
+      ></a
+    >
   </div>
   <p id="readers-message" role="status" class={["inset-foot", emailRefused ? "text-danger" : "text-ink", !emailMessage && "sr-only"]}>
     {emailMessage}
   </p>
   <p class="inset-foot">
-    Everyone with an account here, and when they joined. Nobody sees what anyone else reads. With your email you can sign
-    in by email and your password (the password alone still works), and get a link if you forget it. Saving it asks for
-    your password.
+    With your email you can sign in by email and your password (the password alone still works), and get a link if you
+    forget it. Saving it asks for your password. All readers lists everyone with an account here and how this nine
+    turtles is doing; nobody sees what anyone else reads.
   </p>
 </section>
 
@@ -310,7 +309,7 @@
   </p>
   {#if openAvailable}
     <p id="open-note" class="inset-foot">
-      Open: anyone can, once they open the link emailed to them. Who has joined is in Readers above.
+      Open: anyone can, once they open the link emailed to them. Who has joined is under All readers, above.
     </p>
   {:else}
     <p id="open-note" class="inset-foot">
@@ -348,12 +347,9 @@
       flex-basis: 100%;
     }
   }
-  /* Long addresses and links may break anywhere, never off the row. */
-  .value,
-  .value-ink {
-    overflow-wrap: anywhere;
-  }
+  /* Long links may break anywhere, never off the row. */
   .value {
+    overflow-wrap: anywhere;
     font-size: var(--text-meta);
   }
 </style>
