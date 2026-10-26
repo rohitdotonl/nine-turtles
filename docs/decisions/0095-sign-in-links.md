@@ -1,7 +1,7 @@
 # 0095: "Email me a sign-in link"
 
 *26 October 2026. The owner asked for it in their list of next things to
-build, with a yes to merging.*
+build.*
 
 **Decision.**
 

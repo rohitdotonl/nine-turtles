@@ -1284,6 +1284,10 @@ async fn a_new_password_setting_wins_over_one_set_by_email() {
     .await;
     assert_eq!(reset.status(), StatusCode::OK);
     let device = cookie_from(&reset);
+    // A sign-in link asked for and not yet used.
+    ask_sign_in_link(&base, "owner@example.com").await;
+    let (page, sign_in_ticket) = newest_link(&outbox, "owner@example.com");
+    assert_eq!(page, "/sign-in-link");
 
     let alone = |base: String, password: &'static str| async move {
         post(&base, "/api/sign-in", None, json!({ "password": password }))
@@ -1321,7 +1325,8 @@ async fn a_new_password_setting_wins_over_one_set_by_email() {
 
     // A new NINE_TURTLES_PASSWORD_HASH wins: the owner's way back that
     // needs no email. The password set by email stops working, and every
-    // device signed in as the owner is signed out.
+    // device signed in as the owner is signed out, and links sent before
+    // stop working.
     const ANOTHER: &str = "the owner's way back in";
     let mut changed = common::config();
     changed.data_dir = data_dir.clone();
@@ -1329,6 +1334,10 @@ async fn a_new_password_setting_wins_over_one_set_by_email() {
         nine_turtles::config::PasswordSetting::Set(nine_turtles::password::hash(ANOTHER).unwrap());
     let (base, state) = start_with_state(changed.clone()).await;
     assert_eq!(session(&base, Some(&device)).await["signed_in"], false);
+    assert_eq!(
+        use_sign_in_link(&base, &sign_in_ticket).await.status(),
+        StatusCode::GONE
+    );
     assert_eq!(
         alone(base.clone(), NEW_PASSWORD).await,
         StatusCode::UNAUTHORIZED
