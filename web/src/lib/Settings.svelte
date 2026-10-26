@@ -39,7 +39,7 @@
   import PageHead from "./PageHead.svelte";
   import TextSize from "./TextSize.svelte";
   import { APPEARANCES, LOOKS, THEMES } from "./themes";
-  import type { Feed, Folder, Order, ReadingMode } from "./feeds";
+  import type { Counts, Feed, Folder, LetGo, Order, ReadingMode } from "./feeds";
   import { LINE_WIDTHS, READING_FONTS, type Preferences } from "./preferences";
   import { signOut } from "./session";
   import { updates } from "./updates.svelte";
@@ -50,6 +50,10 @@
     onSort,
     mode,
     onMode,
+    counts,
+    onCounts,
+    letGo,
+    onLetGo,
     heading = $bindable(),
     dataHeading = $bindable(),
     version,
@@ -78,6 +82,12 @@
     mode: ReadingMode;
     /** Saves a new reading mode; fails if it couldn't be saved. */
     onMode: (mode: ReadingMode) => Promise<void>;
+    /** Whether the sidebar shows unread counts (decision 0097). */
+    counts: Counts;
+    onCounts: (counts: Counts) => Promise<void>;
+    /** When unread lets go by itself (decision 0097); unknown until the server answers. */
+    letGo: LetGo | undefined;
+    onLetGo: (letGo: LetGo) => Promise<void>;
     heading?: HTMLHeadingElement;
     /** "Your data", where the empty state's "Import OPML" leads. */
     dataHeading?: HTMLHeadingElement;
@@ -118,6 +128,18 @@
   const MODE_CHOICES = [
     { value: "inbox", label: "Inbox" },
     { value: "river", label: "River" },
+  ] as const;
+
+  const COUNT_CHOICES = [
+    { value: "shown", label: "Show" },
+    { value: "hidden", label: "Hide" },
+  ] as const;
+
+  const LET_GO_CHOICES = [
+    { value: "never", label: "Never" },
+    { value: "week", label: "1 week" },
+    { value: "two-weeks", label: "2 weeks" },
+    { value: "month", label: "1 month" },
   ] as const;
 
   /** The rule editor, while open: a rule to change, or a new one (perhaps for a feed). */
@@ -195,6 +217,24 @@
       await onMode(next);
     } catch {
       sortMessage = "The reading mode couldn't be saved. Try again in a moment.";
+    }
+  }
+
+  async function chooseCounts(next: Counts) {
+    sortMessage = "";
+    try {
+      await onCounts(next);
+    } catch {
+      sortMessage = "That couldn't be saved. Try again in a moment.";
+    }
+  }
+
+  async function chooseLetGo(next: LetGo) {
+    sortMessage = "";
+    try {
+      await onLetGo(next);
+    } catch {
+      sortMessage = "That couldn't be saved. Try again in a moment.";
     }
   }
 
@@ -281,6 +321,44 @@
               {/each}
             </div>
           </fieldset>
+          {#if mode === "inbox"}
+            <fieldset class="inset-row">
+              <legend class="row-name"><span class="inline-flex items-center gap-2"><span class="text-muted"><Icon name="dot" size={16} /></span>Unread counts</span></legend>
+              <div class="choices control" style="--columns: 2">
+                {#each COUNT_CHOICES as choice (choice.value)}
+                  <label class="choice">
+                    <input
+                      type="radio"
+                      name="counts"
+                      value={choice.value}
+                      checked={counts === choice.value}
+                      disabled={sort === undefined}
+                      onchange={() => chooseCounts(choice.value)}
+                    />
+                    {choice.label}
+                  </label>
+                {/each}
+              </div>
+            </fieldset>
+            <fieldset class="inset-row">
+              <legend class="row-name"><span class="inline-flex items-center gap-2"><span class="text-muted"><Icon name="clock" size={16} /></span>Let unread go after</span></legend>
+              <div class="choices control" style="--columns: 4">
+                {#each LET_GO_CHOICES as choice (choice.value)}
+                  <label class="choice">
+                    <input
+                      type="radio"
+                      name="let-go"
+                      value={choice.value}
+                      checked={letGo === choice.value}
+                      disabled={letGo === undefined}
+                      onchange={() => chooseLetGo(choice.value)}
+                    />
+                    {choice.label}
+                  </label>
+                {/each}
+              </div>
+            </fieldset>
+          {/if}
           <fieldset class="inset-row">
             <legend class="row-name"><span class="inline-flex items-center gap-2"><span class="text-muted"><Icon name="sort" size={16} /></span>Sort order</span></legend>
             <div class="choices control" style="--columns: 2">
@@ -301,8 +379,9 @@
           </fieldset>
         </div>
         <p class="inset-foot">
-          Inbox keeps an Unread list and counts what's waiting. River lets everything flow past: no Unread, no counts. These
-          apply on all your devices.
+          Inbox keeps an Unread list and counts what's waiting. River lets everything flow past: no Unread, no counts.
+          {#if mode === "inbox"}Hide the counts to keep Unread without the numbers. Unread you haven't got to lets go after the
+            time you choose, a minute or so after you choose it: it counts as read and stays in its feed, All and search.{/if} These apply on all your devices.
         </p>
         <p role="status" class={["inset-foot text-danger", !sortMessage && "sr-only"]}>{sortMessage}</p>
       </section>

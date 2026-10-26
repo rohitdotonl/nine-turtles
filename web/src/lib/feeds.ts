@@ -87,6 +87,14 @@ export type Order = "newest" | "oldest";
  */
 export type ReadingMode = "inbox" | "river";
 
+/** Whether the sidebar shows unread counts in inbox mode (decision 0097). Shared across the reader's devices. */
+export type Counts = "shown" | "hidden";
+
+/** How long unread waits before it lets go by itself (decision 0097): never, the default, or a week, two or a month. */
+export type LetGo = "never" | "week" | "two-weeks" | "month";
+
+const LET_GO: LetGo[] = ["never", "week", "two-weeks", "month"];
+
 /** Where the app opens, and where "/" leads: Unread in inbox mode, All in river mode. */
 export function homeView(mode: ReadingMode): "unread" | "all" {
   return mode === "river" ? "all" : "unread";
@@ -298,20 +306,28 @@ export function markStarred(ids: number[], starred: boolean): Promise<void> {
   return send("/api/articles/starred", { ids, starred });
 }
 
+/** The settings shared across the reader's devices (SPEC section 18). */
+/** `letGo` is unknown when the server can't say, so its choices wait rather than show Never. */
+export type Reading = { sort: Order; mode: ReadingMode; counts: Counts; letGo: LetGo | undefined };
+
 /**
- * The settings shared across the reader's devices: the sort order and the
- * reading mode. Newest first if the server can't say, and the mode this
- * device last saw (inbox if none).
+ * The settings shared across the reader's devices: the sort order, the
+ * reading mode, whether unread counts show and when unread lets go. Newest
+ * first if the server can't say, the wait unknown, and the mode and counts
+ * this device last saw (inbox, shown, if none).
  */
-export async function loadSettings(): Promise<{ sort: Order; mode: ReadingMode }> {
+export async function loadSettings(): Promise<Reading> {
   try {
     const body = await getJson("/api/settings");
     const sort = isRecord(body) && body.sort === "oldest" ? "oldest" : "newest";
     const mode = isRecord(body) && body.mode === "river" ? "river" : "inbox";
+    const counts = isRecord(body) && body.counts === "hidden" ? "hidden" : "shown";
+    const letGo = (isRecord(body) && LET_GO.find((value) => value === body.let_go)) || "never";
     rememberMode(mode);
-    return { sort, mode };
+    rememberCounts(counts);
+    return { sort, mode, counts, letGo };
   } catch {
-    return { sort: "newest", mode: lastMode() };
+    return { sort: "newest", mode: lastMode(), counts: lastCounts(), letGo: undefined };
   }
 }
 
@@ -322,6 +338,70 @@ export function saveSort(sort: Order): Promise<void> {
 export async function saveMode(mode: ReadingMode): Promise<void> {
   await send("/api/settings", { mode });
   rememberMode(mode);
+}
+
+export async function saveCounts(counts: Counts): Promise<void> {
+  await send("/api/settings", { counts });
+  rememberCounts(counts);
+}
+
+export function saveLetGo(letGo: LetGo): Promise<void> {
+  return send("/api/settings", { let_go: letGo });
+}
+
+const COUNTS_KEY = "nine-turtles.counts";
+
+/** Whether this device last saw the counts hidden, so they don't show for a moment before the server answers. */
+export function lastCounts(): Counts {
+  try {
+    return globalThis.localStorage?.getItem(COUNTS_KEY) === "hidden" ? "hidden" : "shown";
+  } catch {
+    return "shown";
+  }
+}
+
+function rememberCounts(counts: Counts) {
+  try {
+    globalThis.localStorage?.setItem(COUNTS_KEY, counts);
+  } catch {
+    // Private browsing: the server's answer still decides, a moment later.
+  }
+}
+
+/**
+ * "Catch me up" (decision 0097): every article in Unread from before the
+ * start of today, on this device's clock, counts as read. Answers which, for
+ * Undo. Unlike marks, the screen waits for the answer: only the server knows
+ * them all.
+ */
+export async function catchUp(now: Date = new Date()): Promise<number[]> {
+  await saved();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const response = await api("/api/articles/catch-up", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ before: Math.floor(today.getTime() / 1000) }),
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!response.ok) throw new Refused(response.status);
+  const body: unknown = await response.json();
+  return isRecord(body) && Array.isArray(body.ids) ? body.ids.map(Number) : [];
+}
+
+/** The most articles one mark names (the server's limit), so Undo after catching up on a huge backlog goes in parts. */
+const MOST_AT_ONCE = 10_000;
+
+/** Undo for "Catch me up": the same articles, unread again, in parts the server takes. */
+export async function uncatchUp(ids: number[]): Promise<void> {
+  const parts = [];
+  for (let start = 0; start < ids.length; start += MOST_AT_ONCE) parts.push(markRead(ids.slice(start, start + MOST_AT_ONCE), false));
+  await Promise.all(parts);
+}
+
+/** What the note says after "Catch me up". */
+export function caughtUpMessage(count: number): string {
+  if (count === 0) return "Nothing from before today is unread.";
+  return `Marked ${count} ${count === 1 ? "item" : "items"} from before today as read`;
 }
 
 const MODE_KEY = "nine-turtles.mode";

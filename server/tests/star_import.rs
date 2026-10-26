@@ -1,5 +1,5 @@
 //! Bringing stars over from another feed reader (SPEC section 23, decision
-//! 0097), tested against a real running nine turtles and a made-up blog.
+//! 0098), tested against a real running nine turtles and a made-up blog.
 
 mod common;
 

@@ -12,6 +12,7 @@ use nine_turtles::{
     feeds::{FEEDS, LATEST, List, Order, list_sql, new_sql, page},
     search::{Search, find},
     starred::{EXPORT, Starred, write},
+    unread::{CATCH_UP, LET_GO},
 };
 use sqlx::SqlitePool;
 
@@ -186,6 +187,15 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
     // The sidebar's unread counts come from their own small index.
     let counts = plan(&db, FEEDS, &[READER]).await;
     assert!(counts.contains("INDEX entries_unread_by_feed"), "{counts}");
+    // Letting unread go and catching up read only the reader's older
+    // entries, through an index, never every entry.
+    for sql in [LET_GO, CATCH_UP] {
+        let plan = plan(&db, sql, &[READER, NOW - YEAR / 52]).await;
+        assert!(
+            plan.contains("SEARCH entries USING INDEX") && plan.contains("sort_at<?"),
+            "{plan}"
+        );
+    }
 
     let mut timings = Vec::new();
     let mut time = async |what: &'static str, list: List, order: Order, after| {

@@ -24,7 +24,8 @@
   whose name contains it takes their place (saved searches aren't in it:
   the find field is for feeds and folders, DESIGN.md → Exceptions log).
 
-  In river mode (SPEC section 10) there are no counts.
+  In river mode (SPEC section 10) there are no counts, nor when the reader
+  hides them in Settings › Reading.
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
@@ -41,6 +42,7 @@
     follow,
     phone = false,
     river = false,
+    numbers = true,
   }: {
     feeds: Feed[];
     folders: Folder[];
@@ -54,6 +56,8 @@
     phone?: boolean;
     /** River mode: no unread counts. */
     river?: boolean;
+    /** Unread counts show; the reader can hide them in Settings › Reading (decision 0097). */
+    numbers?: boolean;
   } = $props();
 
   const OPEN_KEY = "nine-turtles.open-folders";
@@ -91,7 +95,7 @@
 </script>
 
 {#snippet count(unread: number)}
-  {#if !river && unreadLabel(unread)}<span class="min-w-[2ch] shrink-0 text-right text-meta text-muted tabular-nums"
+  {#if !river && numbers && unreadLabel(unread)}<span class="min-w-[2ch] shrink-0 text-right text-meta text-muted tabular-nums"
       >{unreadLabel(unread)}<span class="sr-only"> unread</span></span
     >{/if}
 {/snippet}

@@ -1,5 +1,5 @@
 //! Bringing stars over from another feed reader (SPEC section 23, decision
-//! 0097): Settings › Your data › Import starred articles reads the file
+//! 0098): Settings › Your data › Import starred articles reads the file
 //! another reader exports its starred (or "saved") articles in, and stars
 //! each of them here.
 //!
