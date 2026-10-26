@@ -29,7 +29,7 @@ contain dated facts; check before acting on any of them.
 
 ## Reading another reader's code (26 October 2026)
 
-- [`reader-comparison.md`](reader-comparison.md): what Feedbin, Miniflux,
+- [`reader-comparison.html`](reader-comparison.html) (open it in a browser): what Feedbin, Miniflux,
   NetNewsWire and FreshRSS (all open source) have that nine turtles lacks,
   their small touches, and what they do better, with a rough size for each
   and a mark on anything that would break a floor.

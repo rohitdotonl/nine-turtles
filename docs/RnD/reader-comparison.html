@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How other readers compare</title>
+<style>
+:root{--paper:#fbfbfa;--sheet:#fff;--ink:#1c2230;--muted:#4f586a;--rule:#dde1e8;--accent:#23458f;--soft:#e9eef8;--good:#1f5a2e;--good-soft:#e5f2e8;--warn:#7a4308;--warn-soft:#fbf0e0;--bad:#8c1d1d;--bad-soft:#f9e6e6;--neutral-soft:#eef0f4;
+--serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;--sans:system-ui,-apple-system,"Segoe UI",sans-serif}
+@media(prefers-color-scheme:dark){:root{--paper:#14171d;--sheet:#1b1f27;--ink:#e7e9ee;--muted:#a9b1c0;--rule:#2e3441;--accent:#9db7f0;--soft:#222c40;--good:#8fd19e;--good-soft:#1c2b21;--warn:#f0bd7f;--warn-soft:#2c241a;--bad:#f2a1a1;--bad-soft:#2f2020;--neutral-soft:#242934;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:18px/1.65 var(--serif)}
+.wrap{max-width:46rem;margin:0 auto;padding:2rem 16px 5rem}
+h1{font-size:2.1rem;line-height:1.2;margin:.2em 0}
+h2{font-size:1.6rem;margin:2.6em 0 .2em;padding-top:.6em;border-top:1px solid var(--rule)}
+h3{font-size:1.2rem;margin:1.6em 0 .4em}
+h4{font-size:1.1rem;margin:0;line-height:1.35}
+p,li{max-width:42rem}
+a{color:var(--accent)}
+nav{position:sticky;top:0;background:var(--paper);border-bottom:1px solid var(--rule);padding:.5rem 16px;z-index:2;font:15px/1.4 var(--sans)}
+nav .in{max-width:46rem;margin:0 auto;display:flex;flex-wrap:wrap;gap:.3rem 1rem}
+.lead{font-size:1.05em} .src{font:14px var(--sans);color:var(--muted);margin:.2em 0 .8em;overflow-wrap:anywhere}
+.callout{background:var(--soft);border-radius:10px;padding:1rem 1.2rem;margin:1.2rem 0}
+.filters{font:15px var(--sans);margin:1.2rem 0;display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
+.filters button{font:inherit;min-height:44px;padding:0 14px;border:1px solid var(--rule);background:var(--sheet);color:var(--ink);border-radius:999px;cursor:pointer}
+.filters button[aria-pressed=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.filters button:focus-visible,nav a:focus-visible,a:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.cards{display:grid;gap:1rem;margin-top:1rem}
+.card{background:var(--sheet);border:1px solid var(--rule);border-radius:12px;padding:1rem 1.2rem}
+.card header{display:flex;gap:.7rem;align-items:baseline}
+.num{font:600 13px var(--sans);color:var(--muted);border:1px solid var(--rule);border-radius:6px;padding:1px 6px;flex:none}
+.tags{display:flex;flex-wrap:wrap;gap:.4rem;margin:.6rem 0 .3rem;font:600 13px var(--sans)}
+.tag{padding:3px 10px;border-radius:999px;background:var(--neutral-soft);color:var(--ink)}
+.tag .mark{display:inline-block;width:.6em;height:.6em;margin-right:.45em;background:currentColor}
+.fit-fits{background:var(--good-soft);color:var(--good)} .fit-fits .mark{border-radius:50%}
+.fit-check{background:var(--warn-soft);color:var(--warn)} .fit-check .mark{transform:rotate(45deg)}
+.fit-clashes{background:var(--bad-soft);color:var(--bad)} .fit-clashes .mark{clip-path:polygon(0 0,100% 0,50% 100%)}
+.fit-covered{background:var(--neutral-soft)} .fit-covered .mark{border-radius:2px}
+dl{margin:.4rem 0 0} dt{font:600 13px var(--sans);text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-top:.8rem} dd{margin:.15rem 0 0}
+.note{font-size:.95em;color:var(--muted);border-left:3px solid var(--rule);padding-left:1rem;margin-top:1.4rem}
+ol.list li,ul.list li{margin:.9rem 0} .who{font:14px var(--sans);color:var(--muted)}
+.key{font:15px/1.5 var(--sans);display:grid;gap:.4rem;margin:1rem 0}
+.card.hide{display:none} .card,section{scroll-margin-top:4.5rem}
+footer{font:14px var(--sans);color:var(--muted);margin-top:3rem}
+@media(max-width:480px){body{font-size:17px}h1{font-size:1.7rem}}
+</style></head><body>
+<nav aria-label="Sections"><div class="in"><a href="#start">Start here</a><a href="#first">What to look at first</a><a href="#feedbin">Feedbin</a><a href="#miniflux">Miniflux</a><a href="#nnw">NetNewsWire</a><a href="#freshrss">FreshRSS</a><a href="#decisions">Bigger decisions</a><a href="#noes">Clear noes</a><a href="#limits">Limits</a></div></nav>
+<main class="wrap">
+<h1>How other feed readers compare with nine turtles</h1>
+<p class="src">Research notes, 26 October 2026. Nothing here is decided and nothing was built.</p>
+
+<section id="start"><h2>Start here</h2>
+<p>You asked what four well-known feed readers do that nine turtles does not, and where they do the same thing better. I read the public source code of <strong>Feedbin</strong>, <strong>Miniflux</strong>, <strong>NetNewsWire</strong> and <strong>FreshRSS</strong> and compared them with our own <code>docs/SPEC.md</code>.</p>
+<p>Every idea is a card. Each card says <strong>what the app does</strong>, <strong>why it might matter to a reader</strong>, <strong>what nine turtles does today</strong>, and <strong>my take</strong>. Every card also has two labels:</p>
+<div class="key">
+<div><span class="tag fit-fits"><span class="mark" aria-hidden="true"></span>Fits</span> It sits comfortably inside our rules (calm, no animation, accessible, never fetching article pages).</div>
+<div><span class="tag fit-check"><span class="mark" aria-hidden="true"></span>Needs a decision</span> It could work, but it is a design or product choice for you first.</div>
+<div><span class="tag fit-clashes"><span class="mark" aria-hidden="true"></span>Clashes</span> It breaks a rule in DESIGN.md or AGENTS.md. Listed so we can say no on purpose, not so we build it.</div>
+<div><span class="tag fit-covered"><span class="mark" aria-hidden="true"></span>Already covered</span> We already do this, or something very close.</div>
+</div>
+<p><strong>Effort</strong> is a rough guess: <em>Small</em> is a few hours, <em>Medium</em> is a day or two, <em>Large</em> is a milestone of its own.</p>
+<div class="callout"><p><strong>The short version.</strong> nine turtles is already ahead on the things this project cares about most: reading comfort (the Literata font, the Aa panel, line width), accessibility, reading offline, plain-language settings, a page for broken feeds, rules and mutes, saved searches, importing stars, and the calm brief itself. The other readers are ahead on a handful of small conveniences, mostly keyboard and privacy details, and Feedbin is ahead on one big area we skipped, podcasts. Most of what is worth borrowing is small.</p></div>
+<p><strong>How we use it.</strong> We learn from ideas only. These are other people's programs under their own licences, so nothing is copied and nothing should be. And I read code, not running apps, so how something <em>feels</em> is my guess. Where I say "probably already covered", a quick look in the app is the first step before anyone builds.</p>
+<div class="filters" role="group" aria-label="Show only cards labelled"><span>Show:</span>
+<button type="button" data-f="all" aria-pressed="true">All</button><button type="button" data-f="fits" aria-pressed="false">Fits</button><button type="button" data-f="check" aria-pressed="false">Needs a decision</button><button type="button" data-f="clashes" aria-pressed="false">Clashes</button><button type="button" data-f="covered" aria-pressed="false">Already covered</button></div>
+</section>
+
+<section id="first"><h2>What to look at first</h2>
+<p>When several apps arrive at the same idea independently, that is the best sign it is worth having. These five are all small and all fit our rules.</p>
+<ol class="list"><li><strong>Mark older, or above and below, as read</strong> <span class="who">(Feedbin F1, NetNewsWire C1)</span><br>Two apps agree. It is the single most natural way to triage, and we already have Undo to make it safe. Small effort.</li><li><strong>Space to read onward, n for next unread</strong> <span class="who">(Feedbin F10, NetNewsWire C2)</span><br>The key people expect. It would make reading a whole inbox a one-key job. Small effort.</li><li><strong>Keys for folders and copying the link</strong> <span class="who">(Feedbin F24, NetNewsWire C3)</span><br>Pure keyboard polish. Small effort.</li><li><strong>Privacy hygiene</strong> <span class="who">(Miniflux B1, B2, B4; NetNewsWire C4)</span><br>Four small checks: strip tracking tags from links, send no referrer when leaving, play YouTube without cookies, and block known tracker domains. Our docs mention none of these except the 1x1 pixels, so the first step is just to look at what the app does today.</li><li><strong>Test real Substack and Ghost feeds</strong> <span class="who">(Feedbin F16)</span><br>Add a few, look at them, fix what looks off. Cheap and it directly serves the book-like feeling.</li></ol></section>
+
+<section id="feedbin"><h2>Feedbin</h2><p class="src"><a href="https://github.com/feedbin/feedbin">https://github.com/feedbin/feedbin</a></p><p class="lead">Feedbin is a paid feed reader that has been polished for more than ten years, and its code is public. It is a web app written in Ruby on Rails, with a separate crawler, a search server and a lot of machinery behind it, because it serves many thousands of readers. For us it is mostly a source of small, well-tested conveniences, and a few bigger product questions.</p><div class="cards"><article class="card" data-fit="fits" id="F1">
+<header><span class="num">F1</span><h4>Mark everything above, or below, as read</h4></header>
+<div class="tags"><span class="tag fit-fits"><span aria-hidden="true" class="mark"></span>Fits</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>From any article in the list, Feedbin can mark every article above it as read, or every article below it. It sits right next to &quot;mark all as read&quot; in the code.</dd>
+<dt>Why it might matter</dt><dd>This is how people actually clear a backlog. You read down the list until you lose interest, and then you want to say &quot;everything after this point is not for me&quot; in one move. Today nine turtles only offers &quot;mark all&quot;, which is all or nothing.</dd>
+<dt>What nine turtles does now</dt><dd>We have &quot;Mark all as read&quot; with Undo (SPEC section 8). We have nothing for a part of the list.</dd>
+<dt>My take</dt><dd>Best first candidate. NetNewsWire has the same idea (C1), so two apps agree it is worth having. It would reuse the Undo we already have, so it stays safe.</dd>
+</dl></article>
+<article class="card" data-fit="check" id="F2">
+<header><span class="num">F2</span><h4>A &quot;Recently read&quot; list</h4></header>
+<div class="tags"><span class="tag fit-check"><span aria-hidden="true" class="mark"></span>Needs a decision</span><span class="tag effort">Effort: Small to Medium (a few hours to a day)</span></div>
+<dl>
+<dt>What it is</dt><dd>Feedbin keeps a short list of articles you opened lately, on a screen of its own.</dd>
+<dt>Why it might matter</dt><dd>Solves &quot;I closed that article by accident and now I cannot find it&quot;. Marking something unread covers part of that, but not &quot;show me what I was just reading&quot;.</dd>
+<dt>What nine turtles does now</dt><dd>Nothing. Once you read an article it just drops out of Unread.</dd>
+<dt>My take</dt><dd>Fits if kept very plain: the last 50 articles, newest first, no counts and no streaks. DESIGN.md forbids reading statistics, so it must be a list, never a measurement of the reader. Miniflux has the same thing under the name History (B7).</dd>
+</dl></article>
+<article class="card" data-fit="check" id="F3">
+<header><span class="num">F3</span><h4>Show what changed when a publisher edits an article</h4></header>
+<div class="tags"><span class="tag fit-check"><span aria-hidden="true" class="mark"></span>Needs a decision</span><span class="tag effort">Effort: Medium (a day or two)</span></div>
+<dl>
+<dt>What it is</dt><dd>Feedbin keeps the first copy of an article next to the latest one. If the text changed it can show an inline version with the removed words struck out and the new words marked.</dd>
+<dt>Why it might matter</dt><dd>Publishers quietly fix typos, change headlines and sometimes rewrite whole paragraphs. For a reader who cares about the writing, &quot;this was edited, and here is how&quot; feels like a printed erratum, which suits a book-like app.</dd>
+<dt>What nine turtles does now</dt><dd>We keep only the latest version of an article.</dd>
+<dt>My take</dt><dd>A real product choice. It stores a second copy of every changed article, so the database and the backups grow. If built, show it only on request inside the article, never as an &quot;updated&quot; badge in the list.</dd>
+</dl></article>
+<article class="card" data-fit="clashes" id="F4">
+<header><span class="num">F4</span><h4>Send to other services (Instapaper, Kindle, Pinboard, Mastodon and more)</h4></header>
+<div class="tags"><span class="tag fit-clashes"><span aria-hidden="true" class="mark"></span>Clashes</span><span class="tag effort">Effort: Medium for each service</span></div>
+<dl>
+<dt>What it is</dt><dd>A settings page where the reader switches on share targets such as Instapaper, Kindle, Pinboard, Raindrop, Mastodon, Micro.blog and email. Pocket is on the list too, but Pocket has closed.</dd>
+<dt>Why it might matter</dt><dd>Some people keep a read-it-later tool or a notes tool next to their reader, and these buttons save them copying a link by hand.</dd>
+<dt>What nine turtles does now</dt><dd>Copy link on a computer, the system share sheet on a phone, and nothing platform-specific (SPEC section 21).</dd>
+<dt>My take</dt><dd>Clashes with SPEC section 21, and platform share buttons are on the &quot;Never&quot; list. Listed so we can say no on purpose.</dd>
+</dl></article>
+<article class="card" data-fit="check" id="F5">
+<header><span class="num">F5</span><h4>Email an article to someone</h4></header>
+<div class="tags"><span class="tag fit-check"><span aria-hidden="true" class="mark"></span>Needs a decision</span><span class="tag effort">Effort: Small to Medium</span></div>
+<dl>
+<dt>What it is</dt><dd>An article can be emailed from inside the app, with a reply-to address so the friend can answer.</dd>
+<dt>Why it might matter</dt><dd>A friendly way to say &quot;you will like this&quot;.</dd>
+<dt>What nine turtles does now</dt><dd>We send email only for accounts (sign-in links and so on) and share only the publisher&#x27;s link.</dd>
+<dt>My take</dt><dd>The founding rule is &quot;share the publisher&#x27;s link, not our copy&quot;. An email that carries just the title and the original link would fit; one that carries the article&#x27;s text would not.</dd>
+</dl></article>
+<article class="card" data-fit="check" id="F6">
+<header><span class="num">F6</span><h4>Podcasts: a player, a queue and &quot;pick up where you left off&quot;</h4></header>
+<div class="tags"><span class="tag fit-check"><span aria-hidden="true" class="mark"></span>Needs a decision</span><span class="tag effort">Effort: Large (a milestone of its own)</span></div>
+<dl>
+<dt>What it is</dt><dd>Feedbin plays podcast episodes inside the page. It remembers what is playing, keeps a queue and a recently played list, and has download limits for each podcast.</dd>
+<dt>Why it might matter</dt><dd>Many people who use a feed reader also follow a few podcasts, because podcasts are just feeds with an audio file attached.</dd>
+<dt>What nine turtles does now</dt><dd>Nothing. SPEC does not describe audio at all.</dd>
+<dt>My take</dt><dd>This is a product decision, not polish. Our floor says to play media in the publisher&#x27;s own player, so the most we could do is a plain audio control. Nothing urgent.</dd>
+</dl></article>
+<article class="card" data-fit="covered" id="F7">
+<header><span class="num">F7</span><h4>Full-screen reading</h4></header>
+<div class="tags"><span class="tag fit-covered"><span aria-hidden="true" class="mark"></span>Already covered</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>Pressing capital F hides everything except the article.</dd>
+<dt>Why it might matter</dt><dd>Gives a book-like, nothing-else-on-screen feeling.</dd>
+<dt>What nine turtles does now</dt><dd>We already have [ ] and \ to hide the sidebar, the list, or both (SPEC section 19), which is nearly the same thing.</dd>
+<dt>My take</dt><dd>Probably already covered. The only gap might be a single obvious key that is easy to discover.</dd>
+</dl></article>
+<article class="card" data-fit="covered" id="F8">
+<header><span class="num">F8</span><h4>One-click replacement for a dead feed (&quot;Fix feeds&quot;)</h4></header>
+<div class="tags"><span class="tag fit-covered"><span aria-hidden="true" class="mark"></span>Already covered</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>When a feed&#x27;s address stops working, Feedbin offers a replacement address it found, and swapping takes one click.</dd>
+<dt>Why it might matter</dt><dd>Dead feeds are the most common thing that goes wrong in a reader, and a one-click fix keeps people from giving up on a feed.</dd>
+<dt>What nine turtles does now</dt><dd>We have &quot;Find new address&quot; and the Feed health page (AGENTS.md and SPEC section 17).</dd>
+<dt>My take</dt><dd>Mostly covered. Worth a quick look at whether our swap is as few clicks as theirs.</dd>
+</dl></article>
+<article class="card" data-fit="check" id="F9">
+<header><span class="num">F9</span><h4>More themes</h4></header>
+<div class="tags"><span class="tag fit-check"><span aria-hidden="true" class="mark"></span>Needs a decision</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>Five: Auto, Day, Sunset, Dusk and Night.</dd>
+<dt>Why it might matter</dt><dd>Some readers like a warm, paper-coloured background for long reading.</dd>
+<dt>What nine turtles does now</dt><dd>Original and Plain, each in light and dark, which is deliberately few.</dd>
+<dt>My take</dt><dd>Sunset-style warm paper is the only one that sounds book-like. Whether we add anything is the owner&#x27;s taste call, and &quot;boring and few&quot; argues against more.</dd>
+</dl></article>
+<article class="card" data-fit="fits" id="F10">
+<header><span class="num">F10</span><h4>Space bar reads onward</h4></header>
+<div class="tags"><span class="tag fit-fits"><span aria-hidden="true" class="mark"></span>Fits</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>Space scrolls the article one screen. When you reach the end, it opens the next unread article.</dd>
+<dt>Why it might matter</dt><dd>With Space alone you can read your whole inbox without touching anything else. It is the most natural reading key there is, and it is how people read email and web pages already.</dd>
+<dt>What nine turtles does now</dt><dd>The keyboard list in SPEC section 19 has j and k for next and previous item, but no Space.</dd>
+<dt>My take</dt><dd>Strong candidate. NetNewsWire does exactly the same thing (C2).</dd>
+</dl></article>
+<article class="card" data-fit="check" id="F11">
+<header><span class="num">F11</span><h4>Add a feed by searching for a site&#x27;s name</h4></header>
+<div class="tags"><span class="tag fit-check"><span aria-hidden="true" class="mark"></span>Needs a decision</span><span class="tag effort">Effort: Medium (a day or two)</span></div>
+<dl>
+<dt>What it is</dt><dd>Feedbin has a feed search, so you can type the name of a site instead of its web address.</dd>
+<dt>Why it might matter</dt><dd>Lowers the barrier for someone who has never seen a feed address.</dd>
+<dt>What nine turtles does now</dt><dd>You paste a web address, and nine turtles finds the feed on that page. The website also has a feed finder.</dd>
+<dt>My take</dt><dd>It needs a directory of feeds, which means either an outside service or a list we keep. We dropped starter packs for similar reasons.</dd>
+</dl></article>
+<article class="card" data-fit="clashes" id="F12">
+<header><span class="num">F12</span><h4>Save any web page as an article (&quot;pages&quot;)</h4></header>
+<div class="tags"><span class="tag fit-clashes"><span aria-hidden="true" class="mark"></span>Clashes</span><span class="tag effort">Effort: Medium (a day or two)</span></div>
+<dl>
+<dt>What it is</dt><dd>A bookmarklet and a browser share target that save a web page into Feedbin so you can read it there.</dd>
+<dt>Why it might matter</dt><dd>Turns the reader into a read-it-later tool as well.</dd>
+<dt>What nine turtles does now</dt><dd>Not possible, by design.</dd>
+<dt>My take</dt><dd>Clashes with &quot;never fetch an article&#x27;s web page&quot;. Do not build.</dd>
+</dl></article>
+<article class="card" data-fit="clashes" id="F13">
+<header><span class="num">F13</span><h4>Pull the full article from the website (&quot;extract&quot;)</h4></header>
+<div class="tags"><span class="tag fit-clashes"><span aria-hidden="true" class="mark"></span>Clashes</span><span class="tag effort">Effort: Medium (a day or two)</span></div>
+<dl>
+<dt>What it is</dt><dd>Pressing c fetches the whole web page of a summary-only article and shows it in the reader.</dd>
+<dt>Why it might matter</dt><dd>People love this for feeds that only send a teaser.</dd>
+<dt>What nine turtles does now</dt><dd>We show the summary and a &quot;Read the full article&quot; link to the publisher (SPEC section 7).</dd>
+<dt>My take</dt><dd>Clashes with &quot;never scrape&quot; and &quot;show only what the feed contains&quot;. Our link is the deliberate answer. Do not build.</dd>
+</dl></article>
+<article class="card" data-fit="clashes" id="F14">
+<header><span class="num">F14</span><h4>Push notifications for new articles</h4></header>
+<div class="tags"><span class="tag fit-clashes"><span aria-hidden="true" class="mark"></span>Clashes</span><span class="tag effort">Effort: Medium (a day or two)</span></div>
+<dl>
+<dt>What it is</dt><dd>Browser and phone push for chosen feeds.</dd>
+<dt>Why it might matter</dt><dd>Some people want to know the moment their favourite writer posts.</dd>
+<dt>What nine turtles does now</dt><dd>None, on purpose.</dd>
+<dt>My take</dt><dd>Clashes with &quot;no notifications&quot;, one of the &quot;Never&quot; items. Do not build.</dd>
+</dl></article>
+<article class="card" data-fit="covered" id="F15">
+<header><span class="num">F15</span><h4>A public API, a browser extension and a bookmarklet</h4></header>
+<div class="tags"><span class="tag fit-covered"><span aria-hidden="true" class="mark"></span>Already covered</span><span class="tag effort">Effort: Large (a milestone of its own)</span></div>
+<dl>
+<dt>What it is</dt><dd>A documented programming interface that third-party apps use, plus a browser extension.</dd>
+<dt>Why it might matter</dt><dd>It is what lets a whole ecosystem of apps work with Feedbin.</dd>
+<dt>What nine turtles does now</dt><dd>Section 26 already lets Reeder and NetNewsWire read from nine turtles.</dd>
+<dt>My take</dt><dd>The app-ecosystem need is covered. A browser extension would be a separate product.</dd>
+</dl></article>
+<article class="card" data-fit="fits" id="F16">
+<header><span class="num">F16</span><h4>Special clean-up for Substack and Ghost posts</h4></header>
+<div class="tags"><span class="tag fit-fits"><span aria-hidden="true" class="mark"></span>Fits</span><span class="tag effort">Effort: Small for each platform</span></div>
+<dl>
+<dt>What it is</dt><dd>Feedbin&#x27;s article pipeline has small filters for particular publishing platforms. For Substack it keeps only the post body and drops the page furniture a feed sometimes carries. For Ghost it restyles &quot;bookmark cards&quot; so they do not look broken.</dd>
+<dt>Why it might matter</dt><dd>Substack and Ghost are two of the most common places the writing people follow comes from. If posts from them look slightly wrong, the whole app feels less like a book.</dd>
+<dt>What nine turtles does now</dt><dd>Our sanitiser makes feed content safe and readable generally (SPEC section 7). I have not checked how Substack or Ghost posts look.</dd>
+<dt>My take</dt><dd>Good, cheap work: add a few real Substack and Ghost feeds, look at them, and fix what looks off. It only restyles what the feed already contains, so it respects the floor.</dd>
+</dl></article>
+<article class="card" data-fit="check" id="F17">
+<header><span class="num">F17</span><h4>Images with controls</h4></header>
+<div class="tags"><span class="tag fit-check"><span aria-hidden="true" class="mark"></span>Needs a decision</span><span class="tag effort">Effort: Small to Medium</span></div>
+<dl>
+<dt>What it is</dt><dd>A filter wraps figures so there are small controls, for example open the picture at full size.</dd>
+<dt>Why it might matter</dt><dd>Long photo essays and charts are hard to read when small.</dd>
+<dt>What nine turtles does now</dt><dd>Images show in the text; SPEC does not say you can open one larger.</dd>
+<dt>My take</dt><dd>A plain &quot;open this picture&quot; link fits. A pop-up gallery would be decoration.</dd>
+</dl></article>
+<article class="card" data-fit="fits" id="F18">
+<header><span class="num">F18</span><h4>Lazy-load pictures</h4></header>
+<div class="tags"><span class="tag fit-fits"><span aria-hidden="true" class="mark"></span>Fits</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>Pictures further down an article load only as you scroll toward them.</dd>
+<dt>Why it might matter</dt><dd>Long posts open faster, and publishers&#x27; servers are spared pictures you never reach.</dd>
+<dt>What nine turtles does now</dt><dd>Unknown. I searched our code and docs and found no mention.</dd>
+<dt>My take</dt><dd>Check first. The browser can do this itself with one attribute (loading=lazy), so it may be a one-line fix.</dd>
+</dl></article>
+<article class="card" data-fit="fits" id="F19">
+<header><span class="num">F19</span><h4>Fix relative links and picture addresses</h4></header>
+<div class="tags"><span class="tag fit-fits"><span aria-hidden="true" class="mark"></span>Fits</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>A feed that writes a picture as /pic.png instead of a full address gets it turned into a full address using the feed&#x27;s own site.</dd>
+<dt>Why it might matter</dt><dd>This is a common reason for broken pictures in cheaply made feeds.</dd>
+<dt>What nine turtles does now</dt><dd>Probably handled, but I did not verify.</dd>
+<dt>My take</dt><dd>Worth one test with a made-up feed before anyone builds.</dd>
+</dl></article>
+<article class="card" data-fit="covered" id="F20">
+<header><span class="num">F20</span><h4>&quot;Are you sure?&quot; before marking everything read</h4></header>
+<div class="tags"><span class="tag fit-covered"><span aria-hidden="true" class="mark"></span>Already covered</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>A setting that asks for confirmation before a bulk mark-as-read.</dd>
+<dt>Why it might matter</dt><dd>Prevents accidents.</dd>
+<dt>What nine turtles does now</dt><dd>We have Undo, which is a calmer answer than a question.</dd>
+<dt>My take</dt><dd>Skip. Undo is better than asking.</dd>
+</dl></article>
+<article class="card" data-fit="covered" id="F21">
+<header><span class="num">F21</span><h4>Keep what you just read in the list until you leave</h4></header>
+<div class="tags"><span class="tag fit-covered"><span aria-hidden="true" class="mark"></span>Already covered</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>An article you have just read stays in the Unread list for now, so the list does not jump under your eyes.</dd>
+<dt>Why it might matter</dt><dd>Matches our rule &quot;nothing moves unless you move it&quot;.</dd>
+<dt>What nine turtles does now</dt><dd>SPEC section 13 says the view waits for you, which is probably the same thing.</dd>
+<dt>My take</dt><dd>Probably already how it works.</dd>
+</dl></article>
+<article class="card" data-fit="clashes" id="F22">
+<header><span class="num">F22</span><h4>Colour rows with each site&#x27;s logo colours</h4></header>
+<div class="tags"><span class="tag fit-clashes"><span aria-hidden="true" class="mark"></span>Clashes</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>A setting that tints things using the colours of each feed&#x27;s icon.</dd>
+<dt>Why it might matter</dt><dd>Easier to tell sources apart at a glance.</dd>
+<dt>What nine turtles does now</dt><dd>No site icons in the list, on purpose (SPEC section 6).</dd>
+<dt>My take</dt><dd>Clashes with the accent rules, where colour marks only what is yours to look at. Do not build.</dd>
+</dl></article>
+<article class="card" data-fit="check" id="F23">
+<header><span class="num">F23</span><h4>A small chart of how often a feed posts</h4></header>
+<div class="tags"><span class="tag fit-check"><span aria-hidden="true" class="mark"></span>Needs a decision</span><span class="tag effort">Effort: Small to Medium</span></div>
+<dl>
+<dt>What it is</dt><dd>On a feed&#x27;s settings page, a tiny line chart of posts per day over the last weeks.</dd>
+<dt>Why it might matter</dt><dd>Helps you decide to unfollow a feed that posts forty times a day, without judging you.</dd>
+<dt>What nine turtles does now</dt><dd>The Feed health page exists but, as far as I read, speaks about errors rather than frequency.</dd>
+<dt>My take</dt><dd>It describes the feed, not the reader&#x27;s habits, so it is not &quot;reading stats&quot;. It is still a chart. A plain sentence (&quot;about 12 articles a week&quot;) would fit better.</dd>
+</dl></article>
+<article class="card" data-fit="fits" id="F24">
+<header><span class="num">F24</span><h4>Keys for folders and for copying the link</h4></header>
+<div class="tags"><span class="tag fit-fits"><span aria-hidden="true" class="mark"></span>Fits</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>e expands or collapses a folder, Shift+E opens a feed&#x27;s settings, and capital C selects the article&#x27;s address so you can copy it.</dd>
+<dt>Why it might matter</dt><dd>Tidying and sharing without the mouse.</dd>
+<dt>What nine turtles does now</dt><dd>SPEC section 19 has none of these. Copy link exists in the More menu.</dd>
+<dt>My take</dt><dd>Easy wins. NetNewsWire also has folder keys (C3).</dd>
+</dl></article>
+<article class="card" data-fit="check" id="F25">
+<header><span class="num">F25</span><h4>Remember the widths you drag the columns to</h4></header>
+<div class="tags"><span class="tag fit-check"><span aria-hidden="true" class="mark"></span>Needs a decision</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>You can drag the sidebar and list wider or narrower and Feedbin remembers.</dd>
+<dt>Why it might matter</dt><dd>Useful on a big monitor.</dd>
+<dt>What nine turtles does now</dt><dd>The layout adapts to the window with no options (SPEC section 4).</dd>
+<dt>My take</dt><dd>Low priority. It adds a hidden control to a layout we kept deliberately simple.</dd>
+</dl></article>
+<article class="card" data-fit="clashes" id="F26">
+<header><span class="num">F26</span><h4>Image previews in the list</h4></header>
+<div class="tags"><span class="tag fit-clashes"><span aria-hidden="true" class="mark"></span>Clashes</span><span class="tag effort">Effort: Medium (a day or two)</span></div>
+<dl>
+<dt>What it is</dt><dd>The list can show a small picture beside each title, and it even looks for faces so the crop is good.</dd>
+<dt>Why it might matter</dt><dd>Many people like it because it makes a list feel alive.</dd>
+<dt>What nine turtles does now</dt><dd>No images in the list, on purpose (SPEC section 6).</dd>
+<dt>My take</dt><dd>Clashes in spirit with &quot;reading first, calm over engagement&quot;. Apple Books&#x27; lists lead with titles. Do not build.</dd>
+</dl></article>
+<article class="card" data-fit="fits" id="F27">
+<header><span class="num">F27</span><h4>Let readers hide extra lists</h4></header>
+<div class="tags"><span class="tag fit-fits"><span aria-hidden="true" class="mark"></span>Fits</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>Recently read and Updated can each be switched off in settings.</dd>
+<dt>Why it might matter</dt><dd>A good rule for the app: every extra list in the sidebar should be removable.</dd>
+<dt>What nine turtles does now</dt><dd>The sidebar is short and fixed.</dd>
+<dt>My take</dt><dd>Not a feature, but a rule to follow if we ever add something like F2.</dd>
+</dl></article></div></section><section id="miniflux"><h2>Miniflux</h2><p class="src"><a href="https://github.com/miniflux/v2">https://github.com/miniflux/v2</a></p><p class="lead">Miniflux is a minimal, very fast reader written in Go. It is the closest to nine turtles in spirit: a short feature list, a plain interface, and most of the extras tucked into Settings. It is aimed at people who run their own server, so some of what it offers (fetching article pages, 25 integrations, custom scripts) is exactly what we have decided not to do. The valuable parts are its privacy habits and a few careful details.</p><div class="cards"><article class="card" data-fit="fits" id="B1">
+<header><span class="num">B1</span><h4>Strip tracking tags from links</h4></header>
+<div class="tags"><span class="tag fit-fits"><span aria-hidden="true" class="mark"></span>Fits</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>Links in articles often end with marketing tags such as utm_source, utm_medium, utm_campaign or fbclid. Miniflux removes the known ones. It also follows FeedBurner redirect links to find the real address.</dd>
+<dt>Why it might matter</dt><dd>When you press Copy link or Open original you hand over, or visit, an address that tells the publisher&#x27;s analytics which feed you came from. A clean link keeps our promise to share &quot;the publisher&#x27;s original link&quot; and removes the marketing noise.</dd>
+<dt>What nine turtles does now</dt><dd>I searched the SPEC for utm and tracking parameters and found nothing, so I believe we leave links as the feed wrote them. Worth confirming in the app.</dd>
+<dt>My take</dt><dd>Good privacy hygiene. Strip only a fixed list of well-known tags so a link that really needs its query still works.</dd>
+</dl></article>
+<article class="card" data-fit="fits" id="B2">
+<header><span class="num">B2</span><h4>Don&#x27;t tell the publisher where you came from</h4></header>
+<div class="tags"><span class="tag fit-fits"><span aria-hidden="true" class="mark"></span>Fits</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>Every link that leaves Miniflux has rel=&quot;noopener noreferrer&quot;, and the whole site sends a no-referrer policy header.</dd>
+<dt>Why it might matter</dt><dd>Without this, a browser tells the destination website which page you were on. It is a small leak of information about the reader, and it costs nothing to close.</dd>
+<dt>What nine turtles does now</dt><dd>SPEC does not mention it. We may or may not already send it.</dd>
+<dt>My take</dt><dd>Serves the floor &quot;never put the reader at risk&quot;. First step: look at what the app sends today.</dd>
+</dl></article>
+<article class="card" data-fit="fits" id="B3">
+<header><span class="num">B3</span><h4>A picture proxy, as an option</h4></header>
+<div class="tags"><span class="tag fit-fits"><span aria-hidden="true" class="mark"></span>Fits</span><span class="tag effort">Effort: Large (a milestone of its own)</span></div>
+<dl>
+<dt>What it is</dt><dd>Miniflux can load article pictures through its own server, so the publisher&#x27;s image host never sees the reader.</dd>
+<dt>Why it might matter</dt><dd>With pictures loaded straight from publishers, as we do today (SPEC section 7), a publisher&#x27;s image server can see the reader&#x27;s address and the time they read. A proxy hides that. Feedbin has the same idea (see the cross-cutting questions below).</dd>
+<dt>What nine turtles does now</dt><dd>Pictures load from the publisher&#x27;s site; only 1x1 tracking pixels are removed.</dd>
+<dt>My take</dt><dd>Strongest answer to reader tracking, but it uses bandwidth and cache space on our one small server. A decision for the owner, not a quick fix.</dd>
+</dl></article>
+<article class="card" data-fit="fits" id="B4">
+<header><span class="num">B4</span><h4>YouTube without cookies</h4></header>
+<div class="tags"><span class="tag fit-fits"><span aria-hidden="true" class="mark"></span>Fits</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>YouTube videos play from youtube-nocookie.com, and the reader can swap in another player entirely.</dd>
+<dt>Why it might matter</dt><dd>The no-cookie address stops YouTube from setting tracking cookies before you press play.</dd>
+<dt>What nine turtles does now</dt><dd>We play YouTube in YouTube&#x27;s own player (decision 0072). I did not check which address it uses.</dd>
+<dt>My take</dt><dd>Quick check: if we are not already on the no-cookie address, switching is small.</dd>
+</dl></article>
+<article class="card" data-fit="check" id="B5">
+<header><span class="num">B5</span><h4>A reading time on each article</h4></header>
+<div class="tags"><span class="tag fit-check"><span aria-hidden="true" class="mark"></span>Needs a decision</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>Miniflux works out how many minutes an article takes to read and shows it.</dd>
+<dt>Why it might matter</dt><dd>Apple Books shows how much of a book is left, so a quiet &quot;5 min&quot; under a title would feel at home. It is a fact about the article, not about the reader.</dd>
+<dt>What nine turtles does now</dt><dd>Not shown anywhere.</dd>
+<dt>My take</dt><dd>DESIGN.md decides. The list rows already carry one meta line, so if it is shown at all it belongs in the article header.</dd>
+</dl></article>
+<article class="card" data-fit="fits" id="B6">
+<header><span class="num">B6</span><h4>Passkey sign-in</h4></header>
+<div class="tags"><span class="tag fit-fits"><span aria-hidden="true" class="mark"></span>Fits</span><span class="tag effort">Effort: Medium (a day or two)</span></div>
+<dl>
+<dt>What it is</dt><dd>Sign in with a fingerprint or face scan (the standard called WebAuthn) instead of a password.</dd>
+<dt>Why it might matter</dt><dd>Easier and safer than passwords, and it cannot be phished.</dd>
+<dt>What nine turtles does now</dt><dd>Listed as &quot;Not in V1&quot; in SPEC. Sign-in is email and password.</dd>
+<dt>My take</dt><dd>Miniflux shows that a small program can do it. A timing question for the owner.</dd>
+</dl></article>
+<article class="card" data-fit="check" id="B7">
+<header><span class="num">B7</span><h4>History page</h4></header>
+<div class="tags"><span class="tag fit-check"><span aria-hidden="true" class="mark"></span>Needs a decision</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>A page of everything you have read.</dd>
+<dt>Why it might matter</dt><dd>Same need as Feedbin&#x27;s Recently read (F2).</dd>
+<dt>What nine turtles does now</dt><dd>Nothing.</dd>
+<dt>My take</dt><dd>See F2.</dd>
+</dl></article>
+<article class="card" data-fit="clashes" id="B8">
+<header><span class="num">B8</span><h4>Touch swipes</h4></header>
+<div class="tags"><span class="tag fit-clashes"><span aria-hidden="true" class="mark"></span>Clashes</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>Optional swipe gestures on a phone.</dd>
+<dt>Why it might matter</dt><dd>Quick marking and navigation with a thumb.</dd>
+<dt>What nine turtles does now</dt><dd>SPEC section 20: the system back swipe works, and there are no custom swipes on list items.</dd>
+<dt>My take</dt><dd>Clashes with a choice we already made. Leave.</dd>
+</dl></article>
+<article class="card" data-fit="clashes" id="B9">
+<header><span class="num">B9</span><h4>Fetch the original article (the d key)</h4></header>
+<div class="tags"><span class="tag fit-clashes"><span aria-hidden="true" class="mark"></span>Clashes</span><span class="tag effort">Effort: Medium (a day or two)</span></div>
+<dl>
+<dt>What it is</dt><dd>Pulls the article&#x27;s own web page and cleans it with a built-in reader-mode parser.</dd>
+<dt>Why it might matter</dt><dd>Same appeal as Feedbin&#x27;s extract (F13).</dd>
+<dt>What nine turtles does now</dt><dd>Not possible, by design.</dd>
+<dt>My take</dt><dd>Clashes with &quot;never scrape&quot;. Do not build.</dd>
+</dl></article>
+<article class="card" data-fit="clashes" id="B10">
+<header><span class="num">B10</span><h4>25 integrations and webhooks (Wallabag, Notion, Telegram, Slack and many more)</h4></header>
+<div class="tags"><span class="tag fit-clashes"><span aria-hidden="true" class="mark"></span>Clashes</span><span class="tag effort">Effort: Medium each</span></div>
+<dl>
+<dt>What it is</dt><dd>Send an article to a long list of outside services, or notify other systems when something arrives.</dd>
+<dt>Why it might matter</dt><dd>Power users connect their reader to everything else they use.</dd>
+<dt>What nine turtles does now</dt><dd>None.</dd>
+<dt>My take</dt><dd>Clashes with &quot;no buttons for specific platforms&quot;. Do not build.</dd>
+</dl></article>
+<article class="card" data-fit="clashes" id="B11">
+<header><span class="num">B11</span><h4>Your own style sheet and script</h4></header>
+<div class="tags"><span class="tag fit-clashes"><span aria-hidden="true" class="mark"></span>Clashes</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>Readers paste their own CSS and JavaScript into settings.</dd>
+<dt>Why it might matter</dt><dd>An escape hatch for people with strong taste.</dd>
+<dt>What nine turtles does now</dt><dd>None.</dd>
+<dt>My take</dt><dd>Custom scripts clash with our strict script rules and &quot;boring and few&quot;. A style sheet alone is at least discussable.</dd>
+</dl></article>
+<article class="card" data-fit="clashes" id="B12">
+<header><span class="num">B12</span><h4>Share one article with a public link</h4></header>
+<div class="tags"><span class="tag fit-clashes"><span aria-hidden="true" class="mark"></span>Clashes</span><span class="tag effort">Effort: Medium (a day or two)</span></div>
+<dl>
+<dt>What it is</dt><dd>Make a single article visible to anyone with a link.</dd>
+<dt>Why it might matter</dt><dd>Convenient for a group chat.</dd>
+<dt>What nine turtles does now</dt><dd>Not offered.</dd>
+<dt>My take</dt><dd>Clashes with &quot;Not in V1: public reading list page&quot; and with sharing only the publisher&#x27;s link.</dd>
+</dl></article></div><p class="note">Already covered by nine turtles: keep-or-block filters per feed (our Rules and mutes, section 27), spacing checks by how often a feed posts and honouring Retry-After (section 11), YouTube in its own player.</p></section><section id="nnw"><h2>NetNewsWire</h2><p class="src"><a href="https://github.com/Ranchero-Software/NetNewsWire">https://github.com/Ranchero-Software/NetNewsWire</a></p><p class="lead">NetNewsWire is a free Mac and iPhone reader, written in Swift and loved for how it feels. Because Apple Books is our design reference, it is the best match for how a calm native reading app behaves. It is not a web app, so some things (widgets, Shortcuts) are native-only. I read its code and bundled files; I have not run it, so how anything feels is inference.</p><div class="cards"><article class="card" data-fit="fits" id="C1">
+<header><span class="num">C1</span><h4>Mark older as read (the o key)</h4></header>
+<div class="tags"><span class="tag fit-fits"><span aria-hidden="true" class="mark"></span>Fits</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>Marks every article older than the selected one as read.</dd>
+<dt>Why it might matter</dt><dd>Same idea as Feedbin&#x27;s above/below (F1): one move to clear a backlog.</dd>
+<dt>What nine turtles does now</dt><dd>Only &quot;mark all&quot;.</dd>
+<dt>My take</dt><dd>A second vote for building F1.</dd>
+</dl></article>
+<article class="card" data-fit="fits" id="C2">
+<header><span class="num">C2</span><h4>Space reads onward; n jumps to next unread</h4></header>
+<div class="tags"><span class="tag fit-fits"><span aria-hidden="true" class="mark"></span>Fits</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>Space scrolls and then moves on to the next unread article. A minus key goes back. n jumps straight to the next unread.</dd>
+<dt>Why it might matter</dt><dd>Lets you read a whole inbox with one hand on one key.</dd>
+<dt>What nine turtles does now</dt><dd>Not in our key list.</dd>
+<dt>My take</dt><dd>Same as F10. Two apps agree.</dd>
+</dl></article>
+<article class="card" data-fit="fits" id="C3">
+<header><span class="num">C3</span><h4>Fold and unfold folders from the keyboard</h4></header>
+<div class="tags"><span class="tag fit-fits"><span aria-hidden="true" class="mark"></span>Fits</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>Comma and period collapse or expand the selected folder, and semicolon and apostrophe do all of them.</dd>
+<dt>Why it might matter</dt><dd>Tidying the sidebar without the mouse.</dd>
+<dt>What nine turtles does now</dt><dd>No such keys.</dd>
+<dt>My take</dt><dd>Same as F24.</dd>
+</dl></article>
+<article class="card" data-fit="fits" id="C4">
+<header><span class="num">C4</span><h4>Block known trackers and ad servers inside articles</h4></header>
+<div class="tags"><span class="tag fit-fits"><span aria-hidden="true" class="mark"></span>Fits</span><span class="tag effort">Effort: Small to Medium</span></div>
+<dl>
+<dt>What it is</dt><dd>NetNewsWire ships a short list of ad and analytics domains (Google Analytics, DoubleClick, Taboola, Outbrain, Criteo and others). Anything in an article that tries to contact those is blocked.</dd>
+<dt>Why it might matter</dt><dd>Our sanitiser already removes scripts and 1x1 tracking pixels, but a larger hidden picture from a tracking domain would still load and call home. A small list closes that gap.</dd>
+<dt>What nine turtles does now</dt><dd>We remove invisible 1x1 images only (SPEC section 7).</dd>
+<dt>My take</dt><dd>Serves a floor, and the list is small enough to own in our repository. Good candidate alongside B1 and B2.</dd>
+</dl></article>
+<article class="card" data-fit="check" id="C5">
+<header><span class="num">C5</span><h4>Article looks as simple swappable files</h4></header>
+<div class="tags"><span class="tag fit-check"><span aria-hidden="true" class="mark"></span>Needs a decision</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>Each look (Appanoose, Hyperlegible, NewsFax, Sepia, Biblioteca, Promenade and more) is a small bundle: one style sheet plus a few settings.</dd>
+<dt>Why it might matter</dt><dd>Shows that a reading look can be small and self-contained.</dd>
+<dt>What nine turtles does now</dt><dd>Original and Plain, plus fonts Literata, Atkinson Hyperlegible and System serif. The Aa panel is more considered than NetNewsWire&#x27;s theme list.</dd>
+<dt>My take</dt><dd>A sepia or paper tone is the only addition that sounds book-like. Taste call.</dd>
+</dl></article>
+<article class="card" data-fit="check" id="C6">
+<header><span class="num">C6</span><h4>Group the list by feed; choose newest or oldest first</h4></header>
+<div class="tags"><span class="tag fit-check"><span aria-hidden="true" class="mark"></span>Needs a decision</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>Two timeline settings.</dd>
+<dt>Why it might matter</dt><dd>Reading one feed&#x27;s posts together, in order.</dd>
+<dt>What nine turtles does now</dt><dd>We have Inbox and River modes and a sort choice.</dd>
+<dt>My take</dt><dd>Grouping would add headings to the list. Low priority.</dd>
+</dl></article>
+<article class="card" data-fit="check" id="C7">
+<header><span class="num">C7</span><h4>A &quot;Today&quot; view</h4></header>
+<div class="tags"><span class="tag fit-check"><span aria-hidden="true" class="mark"></span>Needs a decision</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>A smart feed of what arrived today.</dd>
+<dt>Why it might matter</dt><dd>A gentle way in.</dd>
+<dt>What nine turtles does now</dt><dd>Unread, Starred, All.</dd>
+<dt>My take</dt><dd>A fourth view needs a reason. Probably not.</dd>
+</dl></article>
+<article class="card" data-fit="fits" id="C8">
+<header><span class="num">C8</span><h4>Add a feed from the system share sheet or the Shortcuts app</h4></header>
+<div class="tags"><span class="tag fit-fits"><span aria-hidden="true" class="mark"></span>Fits</span><span class="tag effort">Effort: Medium (a day or two)</span></div>
+<dl>
+<dt>What it is</dt><dd>A Safari extension, a share extension, and an App Intent so that Shortcuts can add a feed.</dd>
+<dt>Why it might matter</dt><dd>On an iPhone, &quot;share this site into my reader&quot; is the easiest way to add a feed.</dd>
+<dt>What nine turtles does now</dt><dd>Pasting an address, or the website&#x27;s finder.</dd>
+<dt>My take</dt><dd>A web app can do part of this with a share target in its manifest. Worth checking.</dd>
+</dl></article>
+<article class="card" data-fit="clashes" id="C9">
+<header><span class="num">C9</span><h4>Home-screen widget with unread counts</h4></header>
+<div class="tags"><span class="tag fit-clashes"><span aria-hidden="true" class="mark"></span>Clashes</span><span class="tag effort">Effort: Medium (a day or two)</span></div>
+<dl>
+<dt>What it is</dt><dd>A widget that shows counts outside the app.</dd>
+<dt>Why it might matter</dt><dd>Glanceable.</dd>
+<dt>What nine turtles does now</dt><dd>None.</dd>
+<dt>My take</dt><dd>A count outside the app is a badge by another name. Do not build.</dd>
+</dl></article>
+<article class="card" data-fit="clashes" id="C10">
+<header><span class="num">C10</span><h4>Reader view that fetches the full page</h4></header>
+<div class="tags"><span class="tag fit-clashes"><span aria-hidden="true" class="mark"></span>Clashes</span><span class="tag effort">Effort: Medium (a day or two)</span></div>
+<dl>
+<dt>What it is</dt><dd>Same idea as F13.</dd>
+<dt>Why it might matter</dt><dd>Same appeal.</dd>
+<dt>What nine turtles does now</dt><dd>Not possible by design.</dd>
+<dt>My take</dt><dd>Clashes with &quot;never scrape&quot;.</dd>
+</dl></article>
+<article class="card" data-fit="covered" id="C11">
+<header><span class="num">C11</span><h4>Sync through other services</h4></header>
+<div class="tags"><span class="tag fit-covered"><span aria-hidden="true" class="mark"></span>Already covered</span><span class="tag effort">Effort: Large (a milestone of its own)</span></div>
+<dl>
+<dt>What it is</dt><dd>iCloud, Feedly, NewsBlur, FreshRSS and Feedbin accounts.</dd>
+<dt>Why it might matter</dt><dd>Lets people keep their library across tools.</dd>
+<dt>What nine turtles does now</dt><dd>We are the server. Section 26 lets apps like NetNewsWire read from us.</dd>
+<dt>My take</dt><dd>Not our shape.</dd>
+</dl></article>
+<article class="card" data-fit="fits" id="C12">
+<header><span class="num">C12</span><h4>Keyboard maps kept in a few small plain files</h4></header>
+<div class="tags"><span class="tag fit-fits"><span aria-hidden="true" class="mark"></span>Fits</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>Shortcuts live in separate files for the whole app, the sidebar, the list and the article.</dd>
+<dt>Why it might matter</dt><dd>Keeps the real keys and the shortcut help from drifting apart.</dd>
+<dt>What nine turtles does now</dt><dd>Our cheat sheet is built from one list too.</dd>
+<dt>My take</dt><dd>Check that a test fails if the sheet and the real keys disagree.</dd>
+</dl></article></div><p class="note">NetNewsWire is not ahead of us on typography. Literata and the Aa panel are more considered than its theme list. It is a good model for how the keyboard does most of the moving and nothing outside the window nags, which is what we aim for.</p></section><section id="freshrss"><h2>FreshRSS</h2><p class="src"><a href="https://github.com/FreshRSS/FreshRSS">https://github.com/FreshRSS/FreshRSS</a></p><p class="lead">FreshRSS is built for people who run their own server. It has the longest feature list of the four and a huge number of settings, which is the opposite of calm. We read it as a checklist, to see what the most feature-hungry readers ask for, and mark what fits.</p><div class="cards"><article class="card" data-fit="check" id="D1">
+<header><span class="num">D1</span><h4>Your own labels on articles</h4></header>
+<div class="tags"><span class="tag fit-check"><span aria-hidden="true" class="mark"></span>Needs a decision</span><span class="tag effort">Effort: Medium (a day or two)</span></div>
+<dl>
+<dt>What it is</dt><dd>You can tag any article with your own labels, separate from folders.</dd>
+<dt>Why it might matter</dt><dd>Lets a reader file an article under &quot;to cite&quot; or &quot;recipes&quot; and find it later.</dd>
+<dt>What nine turtles does now</dt><dd>Stars and folders only. Folders hold feeds, not articles.</dd>
+<dt>My take</dt><dd>A second way to sort adds weight. A single idea in the Apple Books spirit, something like Collections for starred articles, might fit. Owner&#x27;s call.</dd>
+</dl></article>
+<article class="card" data-fit="check" id="D2">
+<header><span class="num">D2</span><h4>Keep-how-many rules per feed</h4></header>
+<div class="tags"><span class="tag fit-check"><span aria-hidden="true" class="mark"></span>Needs a decision</span><span class="tag effort">Effort: Medium (a day or two)</span></div>
+<dl>
+<dt>What it is</dt><dd>A feed can keep only its newest N articles, or those from the last three months. Stars are always kept.</dd>
+<dt>Why it might matter</dt><dd>Stops a noisy feed from filling the library.</dd>
+<dt>What nine turtles does now</dt><dd>One yearly clean-up of unstarred articles over a year old (decision 0089).</dd>
+<dt>My take</dt><dd>More granular, but SPEC chose few settings.</dd>
+</dl></article>
+<article class="card" data-fit="check" id="D3">
+<header><span class="num">D3</span><h4>Mark as read when you scroll past or leave</h4></header>
+<div class="tags"><span class="tag fit-check"><span aria-hidden="true" class="mark"></span>Needs a decision</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>Several automatic ways to mark articles as read.</dd>
+<dt>Why it might matter</dt><dd>Saves pressing a key.</dd>
+<dt>What nine turtles does now</dt><dd>Our &quot;Let unread go after&quot; setting (decision 0097).</dd>
+<dt>My take</dt><dd>&quot;Nothing moves unless you move it&quot; argues against. Ours is the calmer version.</dd>
+</dl></article>
+<article class="card" data-fit="clashes" id="D4">
+<header><span class="num">D4</span><h4>Scrape the page for the text (XPath and CSS)</h4></header>
+<div class="tags"><span class="tag fit-clashes"><span aria-hidden="true" class="mark"></span>Clashes</span><span class="tag effort">Effort: Large (a milestone of its own)</span></div>
+<dl>
+<dt>What it is</dt><dd>You tell FreshRSS where on a web page the text is, and it can even build a feed from a page that has none.</dd>
+<dt>Why it might matter</dt><dd>Power users love it.</dd>
+<dt>What nine turtles does now</dt><dd>Not possible by design.</dd>
+<dt>My take</dt><dd>Clashes with &quot;never scrape&quot;. Do not build.</dd>
+</dl></article>
+<article class="card" data-fit="clashes" id="D5">
+<header><span class="num">D5</span><h4>A statistics page</h4></header>
+<div class="tags"><span class="tag fit-clashes"><span aria-hidden="true" class="mark"></span>Clashes</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>Charts of articles per day, idle feeds, unread over time.</dd>
+<dt>Why it might matter</dt><dd>Finding feeds that went quiet is useful.</dd>
+<dt>What nine turtles does now</dt><dd>Feed health shows trouble.</dd>
+<dt>My take</dt><dd>Reading statistics are a &quot;Never&quot;. A plain line such as &quot;this feed has not posted in three months&quot; belongs on Feed health instead.</dd>
+</dl></article>
+<article class="card" data-fit="check" id="D6">
+<header><span class="num">D6</span><h4>Rebindable keys</h4></header>
+<div class="tags"><span class="tag fit-check"><span aria-hidden="true" class="mark"></span>Needs a decision</span><span class="tag effort">Effort: Medium (a day or two)</span></div>
+<dl>
+<dt>What it is</dt><dd>Every shortcut can be changed.</dd>
+<dt>Why it might matter</dt><dd>Different habits and keyboard layouts.</dd>
+<dt>What nine turtles does now</dt><dd>Fixed keys with a searchable cheat sheet.</dd>
+<dt>My take</dt><dd>Fine if tucked away in Settings. Low priority.</dd>
+</dl></article>
+<article class="card" data-fit="check" id="D7">
+<header><span class="num">D7</span><h4>Ten themes</h4></header>
+<div class="tags"><span class="tag fit-check"><span aria-hidden="true" class="mark"></span>Needs a decision</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>Origine, Nord, Dark-pink, Flat and others.</dd>
+<dt>Why it might matter</dt><dd>Taste.</dd>
+<dt>What nine turtles does now</dt><dd>Original and Plain.</dd>
+<dt>My take</dt><dd>&quot;Boring and few&quot; says no.</dd>
+</dl></article>
+<article class="card" data-fit="check" id="D8">
+<header><span class="num">D8</span><h4>Feed priority (Main, Important, Archived)</h4></header>
+<div class="tags"><span class="tag fit-check"><span aria-hidden="true" class="mark"></span>Needs a decision</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>A way to quiet a feed without pausing it.</dd>
+<dt>Why it might matter</dt><dd>Keeps important writers prominent.</dd>
+<dt>What nine turtles does now</dt><dd>Pause this feed (decision 0095).</dd>
+<dt>My take</dt><dd>Pause covers most of it.</dd>
+</dl></article>
+<article class="card" data-fit="check" id="D9">
+<header><span class="num">D9</span><h4>Command-line tools</h4></header>
+<div class="tags"><span class="tag fit-check"><span aria-hidden="true" class="mark"></span>Needs a decision</span><span class="tag effort">Effort: Medium (a day or two)</span></div>
+<dl>
+<dt>What it is</dt><dd>Scripts to create users, back up, export and import per user, and check health.</dd>
+<dt>Why it might matter</dt><dd>For a person running many readers on their own server.</dd>
+<dt>What nine turtles does now</dt><dd>Backups and exports exist in the app.</dd>
+<dt>My take</dt><dd>This is operations, not product. A single &quot;export one reader&quot; command might help the owner once there are many readers.</dd>
+</dl></article>
+<article class="card" data-fit="clashes" id="D10">
+<header><span class="num">D10</span><h4>Anonymous public reading</h4></header>
+<div class="tags"><span class="tag fit-clashes"><span aria-hidden="true" class="mark"></span>Clashes</span><span class="tag effort">Effort: Small (a few hours)</span></div>
+<dl>
+<dt>What it is</dt><dd>A setting that lets anyone read without signing in.</dd>
+<dt>Why it might matter</dt><dd>Sharing a reading list.</dd>
+<dt>What nine turtles does now</dt><dd>Each reader&#x27;s things are walled off (decision 0086).</dd>
+<dt>My take</dt><dd>Clashes with the walls between readers.</dd>
+</dl></article>
+<article class="card" data-fit="clashes" id="D11">
+<header><span class="num">D11</span><h4>Extensions system, email-verified accounts, dynamic OPML</h4></header>
+<div class="tags"><span class="tag fit-clashes"><span aria-hidden="true" class="mark"></span>Clashes</span><span class="tag effort">Effort: Large (a milestone of its own)</span></div>
+<dl>
+<dt>What it is</dt><dd>A plug-in system in PHP, email verification, and subscribing to an OPML address.</dd>
+<dt>Why it might matter</dt><dd>Customisation for self-hosters.</dd>
+<dt>What nine turtles does now</dt><dd>We have email accounts already.</dd>
+<dt>My take</dt><dd>A plug-in system clashes with &quot;boring and few&quot;. Dynamic OPML is a niche.</dd>
+</dl></article></div><p class="note">Already covered by nine turtles: three reading modes (our Inbox and River cover the useful two), WebSub, saved searches, pause a feed.</p></section>
+
+<section id="decisions"><h2>Bigger decisions for you</h2>
+<p>None of these is urgent. Each changes what nine turtles is, so they are yours to weigh.</p>
+<ul class="list"><li><strong>A picture proxy</strong> <span class="who">(Feedbin, Miniflux B3)</span><br>Pictures currently load from the publisher&#x27;s own servers, so they can see when and from where you read. A proxy would hide that. The cost is bandwidth and storage on our single small server, and it is a larger piece of work. A decision for the owner.</li><li><strong>Podcasts</strong> <span class="who">(Feedbin F6)</span><br>A whole area nine turtles has skipped. Nothing urgent, but it is the largest gap against Feedbin.</li><li><strong>Showing what an edited article changed</strong> <span class="who">(Feedbin F3)</span><br>A book-like touch (an erratum) that grows the database.</li><li><strong>Labels or collections</strong> <span class="who">(FreshRSS D1)</span><br>A way to file articles beyond stars. The one feature here that changes how people organise.</li><li><strong>Passkey sign-in</strong> <span class="who">(Miniflux B6)</span><br>Already in the &quot;Not in V1&quot; list. A timing question.</li><li><strong>A warmer, paper-toned theme</strong> <span class="who">(Feedbin F9, NetNewsWire C5)</span><br>A pure taste call.</li></ul></section>
+
+<section id="noes"><h2>Clear noes</h2>
+<p>All four apps do some of these. Each breaks a rule we set, so the sensible answer is to say no on purpose:</p>
+<ul class="list"><li>Sending articles to other services, or share buttons for them (all four)</li><li>Saving or scraping full web pages (Feedbin, Miniflux, NetNewsWire, FreshRSS)</li><li>Push notifications, and widgets with unread counts</li><li>Pictures in the list, and tinting rows with logo colours</li><li>Reading statistics</li><li>Public pages and anonymous reading</li><li>Custom scripts and plug-in systems</li></ul></section>
+
+<section id="limits"><h2>What this research did not do</h2>
+<ul class="list"><li>It read each app's public code, not the running product, so how things feel is guessed from the code.</li>
+<li>It did not test nine turtles against each point. Where I wrote "probably", the first step is a quick look in our app.</li>
+<li>It did not cover Feedbin's, Miniflux's or FreshRSS's separate mobile apps, or paid-only back ends.</li></ul>
+<footer>Lives in the repository as docs/RnD/reader-comparison.html. Research only; the owner's yes is needed before any idea becomes a change.</footer></section>
+</main>
+<script>
+(function(){var b=document.querySelectorAll('.filters button'),c=document.querySelectorAll('.card');
+b.forEach(function(x){x.addEventListener('click',function(){var f=x.getAttribute('data-f');
+b.forEach(function(y){y.setAttribute('aria-pressed',y===x?'true':'false')});
+c.forEach(function(k){k.classList.toggle('hide',f!=='all'&&k.getAttribute('data-fit')!==f)})})})})();
+</script></body></html>
