@@ -106,9 +106,10 @@ export type Problem =
   | "too-big"
   | "no-feed"
   | "too-many"
+  | "plan-ended"
   | "trouble";
 
-const PROBLEMS: Problem[] = ["not-an-address", "not-allowed", "unreachable", "not-found", "too-big", "no-feed", "too-many"];
+const PROBLEMS: Problem[] = ["not-an-address", "not-allowed", "unreachable", "not-found", "too-big", "no-feed", "too-many", "plan-ended"];
 
 export async function listFeeds(): Promise<Library> {
   await saved();
@@ -547,6 +548,7 @@ export async function importOpml(file: File): Promise<ImportSummary | string> {
     };
   }
   if (isRecord(body) && body.error === "not-opml") return "That file doesn't look like an OPML file.";
+  if (isRecord(body) && body.error === "plan-ended") return PLAN_ENDED;
   if (isRecord(body) && body.error === "too-many") {
     return tooManyToImport(Number(body.following ?? 0), Number(body.adding ?? 0), Number(body.most ?? 1000));
   }
@@ -578,6 +580,9 @@ export function importMessage(summary: ImportSummary): string[] {
   return lines;
 }
 
+/** Adding a feed or importing, once the reader's trial or plan has ended (SPEC section 29). */
+export const PLAN_ENDED = "Your free trial or plan has ended. Choose a plan in Settings to add feeds again.";
+
 /** What the add field says when a feed couldn't be added. Plain and calm. */
 export function explain(reason: Problem): string {
   switch (reason) {
@@ -595,6 +600,8 @@ export function explain(reason: Problem): string {
       return "This site doesn't seem to offer a feed. Try the feed's own address, or the site's home page.";
     case "too-many":
       return "You follow 1,000 feeds, as many as one reader can. Unsubscribe from one to add another.";
+    case "plan-ended":
+      return PLAN_ENDED;
     case "trouble":
       return "nine turtles couldn't add that just now. Try again in a moment.";
   }

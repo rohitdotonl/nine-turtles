@@ -249,6 +249,10 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Restore and recovery
 - Request signing (AWS Signature Version 4)
 - Merchant of record (Dodo Payments)
+- Checkout page and customer portal
+- Test mode and live mode
+- Webhook (signed messages, Standard Webhooks)
+- Free trial and grace period
 - Cloudflare Email Routing and catch-all address
 - Cloudflare Worker
 - Shared secret (bearer token)

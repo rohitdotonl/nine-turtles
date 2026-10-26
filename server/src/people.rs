@@ -134,6 +134,9 @@ pub const PER_READER_TABLES: &[(&str, &str)] = &[
     ),
     ("email_links", "DELETE FROM email_links WHERE person_id = ?"),
     ("sessions", "DELETE FROM sessions WHERE person_id = ?"),
+    // The record of their plan; Dodo's own subscription is cancelled first
+    // (`payments::cancel_before_deleting`).
+    ("plans", "DELETE FROM plans WHERE person_id = ?"),
 ];
 
 /// Deletes reader `person` and everything that is theirs, in one step:

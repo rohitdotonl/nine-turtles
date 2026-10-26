@@ -117,6 +117,7 @@ years › written for the next agent.
 | Database structure changes | `docs/ENGINEERING.md` → the floor and "Data" |
 | Hosting, deploys, backups | `docs/ENGINEERING.md` → "Hosting", and `docs/operations/` |
 | Newsletters (`server/src/newsletter*.rs`, `cloudflare/`) | decision 0091, SPEC section 28, `docs/operations/newsletters.md` |
+| Payments (`server/src/payments.rs`) | decision 0094, SPEC section 29, `docs/operations/payments.md` |
 | The website (`website/`) | `docs/operations/website-and-domain.md`, decision 0066, and DESIGN.md's floors |
 | Revisiting an earlier choice | `docs/decisions/` |
 | Open questions | `docs/planning/questions.md` |

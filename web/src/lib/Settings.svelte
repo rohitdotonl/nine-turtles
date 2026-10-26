@@ -14,7 +14,9 @@
   28). Other apps makes the
   app password other feed readers sync with (OtherApps). Readers, for the
   owner only, lists who has an account, sets the owner's email and the
-  sign-up switch (Readers, decision 0087). Account shows the reader's email,
+  sign-up switch (Readers, decision 0087). Your plan, for everyone else
+  while nine turtles takes payments, shows their trial or plan (Plan,
+  decision 0094). Account shows the reader's email,
   with Change… while nine turtles can send email, Sign out, and for every
   reader but the owner Delete account… (ChangeEmail, DeleteAccount,
   decision 0088).
@@ -27,6 +29,7 @@
   import ImportOpml from "./ImportOpml.svelte";
   import Newsletters from "./Newsletters.svelte";
   import OtherApps from "./OtherApps.svelte";
+  import Plan from "./Plan.svelte";
   import Readers from "./Readers.svelte";
   import RuleEditor from "./RuleEditor.svelte";
   import Rules from "./Rules.svelte";
@@ -437,6 +440,8 @@
 
       {#if owner}
         <Readers {email} {onReaders} />
+      {:else}
+        <Plan />
       {/if}
 
       <section aria-labelledby="account-heading">
@@ -481,8 +486,8 @@
         {#if !owner}
           <!-- Readers are told what the owner's Readers page shows of them (decision 0093). -->
           <p class="inset-foot">
-            Whoever runs this nine turtles can see your email, when you joined, how many feeds you follow and the day
-            you were last here. Never which feeds or what you read.
+            Whoever runs this nine turtles can see your email, when you joined, how many feeds you follow, the day
+            you were last here and, once there are plans, which plan you're on. Never which feeds or what you read.
           </p>
         {/if}
         <p class="inset-foot" translate="no">Version {version}</p>

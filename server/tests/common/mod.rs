@@ -27,6 +27,7 @@ pub fn config() -> Config {
         smtp: None,
         newsletter_secret: None,
         newsletter_domain: None,
+        payments: None,
     }
 }
 

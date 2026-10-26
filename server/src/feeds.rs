@@ -125,6 +125,8 @@ pub enum NotAdded {
     Already(i64),
     /// The reader follows as many feeds as one reader can (`admin::MOST_FEEDS`).
     TooMany,
+    /// The reader's trial or plan has ended (`payments`).
+    PlanEnded,
     Database,
 }
 
@@ -138,6 +140,7 @@ impl IntoResponse for NotAdded {
             Self::TooBig => (StatusCode::BAD_GATEWAY, "too-big"),
             Self::NoFeed => (StatusCode::UNPROCESSABLE_ENTITY, "no-feed"),
             Self::TooMany => (StatusCode::CONFLICT, "too-many"),
+            Self::PlanEnded => (StatusCode::PAYMENT_REQUIRED, "plan-ended"),
             Self::Already(id) => {
                 return (
                     StatusCode::CONFLICT,
@@ -199,6 +202,9 @@ enum Added {
 async fn add(state: &AppState, person: i64, address: &str) -> Result<Added, NotAdded> {
     let url = parse_address(address).ok_or(NotAdded::NotAnAddress)?;
     already_followed(state, person, &url).await?;
+    if !crate::payments::may_add_feeds(state, person).await? {
+        return Err(NotAdded::PlanEnded);
+    }
     // Asked before anything is fetched, so no publisher is bothered for
     // nothing; asked again as the feed is followed.
     if !admin::room_for_one_more(&mut *state.db.acquire().await?, person).await? {

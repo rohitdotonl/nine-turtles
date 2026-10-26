@@ -791,6 +791,14 @@ async fn delete_me(SignedIn(person): SignedIn, State(state): State<AppState>) ->
         Ok(false) => {}
         Err(error) => return database_problem("checking who's the owner", &error),
     }
+    // A plan that would charge again is cancelled first; if Dodo can't be
+    // reached, nothing is deleted, so nobody pays for an account that's gone.
+    if let Err(detail) = crate::payments::cancel_before_deleting(&state, person).await {
+        log::problem(&format!(
+            "Dodo Payments: couldn't cancel a subscription before deleting its account: {detail}"
+        ));
+        return refused(StatusCode::BAD_GATEWAY, "plan");
+    }
     match people::delete(&state.db, person).await {
         Ok(()) => {
             log::info("a reader deleted their account");

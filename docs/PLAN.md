@@ -407,6 +407,16 @@ feed is still fetched and stored once; everything personal gets an owner.
 | Part four: account emails over SMTP (confirming Open sign-ups, a new password, changing email) and deleting an account (structure change 14, decision 0088) | ✅ 25 October 2026 |
 | Milestone 5: the owner's Readers page, at most 1,000 feeds per reader, and feeds nobody opens checked once a day (no structure change, decision 0090) | ✅ 26 October 2026 |
 
+## V2: Paying for nine turtles
+
+Milestone 9 of the plan for 100 to 200 readers, decision 0094, SPEC
+section 29.
+
+| Part | Status |
+|---|---|
+| Free trial, monthly and yearly plans through Dodo Payments' checkout, Billing and cancelling, Dodo's signed messages, a plan's end (reading kept, no new feeds, daily checks), cancelling before an account is deleted, structure change 18; test mode only | ✅ 26 October 2026 (switched on once you add the Dodo settings: `docs/operations/payments.md`) |
+| Live payments: after Dodo approves the live site (`docs/operations/dodo-application.md`) | Waiting for the owner |
+
 ## V2: Newsletters as feeds
 
 Milestone 10 of the plan for 100 to 200 readers, decision 0091, SPEC

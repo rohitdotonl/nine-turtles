@@ -11,6 +11,7 @@
 <script lang="ts">
   import { edge } from "./edge";
   import PageHead from "./PageHead.svelte";
+  import { label } from "./plan";
   import { backupDay, count, date, lastHereDay, loadOverview, plural, size, type Overview } from "./admin";
 
   let {
@@ -129,6 +130,9 @@
                   <span class="text-meta text-muted">Last here {lastHereDay(reader.lastHere)}</span>
                   {#if reader.feeds >= overview.mostFeeds}
                     <span class="text-meta text-ink-2">Follows as many feeds as one reader can.</span>
+                  {/if}
+                  {#if reader.plan && reader.plan.standing !== "free"}
+                    <span class="text-meta text-ink-2">{label(reader.plan)}</span>
                   {/if}
                   {#if reader.feedsFailing > 0}
                     <span class="text-meta text-ink-2">{plural(reader.feedsFailing, "feed keeps", "feeds keep")} failing.</span>

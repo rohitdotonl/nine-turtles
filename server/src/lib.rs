@@ -9,7 +9,8 @@
 //! readers (`apps`, `greader`), backups (`backup`, `storage`), and the
 //! reader's rules and mutes (`rules`), the readers and sign-up (`people`),
 //! and what email makes possible (`email`, `accounts`): confirming an
-//! address, a new password, a changed email, and deleting an account.
+//! address, a new password, a changed email, and deleting an account,
+//! and paying through Dodo Payments (`payments`).
 //! The frontend is packed into this program (see `assets`).
 
 pub mod accounts;
@@ -35,6 +36,7 @@ pub mod marks;
 pub mod newsletter;
 pub mod newsletters;
 pub mod password;
+pub mod payments;
 pub mod people;
 pub mod rules;
 pub mod saved_searches;
@@ -143,8 +145,14 @@ pub async fn state(config: Config) -> Result<AppState, String> {
         (None, _) => None,
     };
 
+    let db = db::open_with_backup(&config.data_dir, storage.as_ref()).await?;
+    if config.payments.is_some() {
+        payments::note_switched_on(&db, now())
+            .await
+            .map_err(|error| format!("couldn't note that payments are on: {error}"))?;
+    }
     let state = AppState {
-        db: db::open_with_backup(&config.data_dir, storage.as_ref()).await?,
+        db,
         http: fetch::client(config.local_feeds_allowed)?,
         config: Arc::new(config),
         limiter: Arc::default(),
@@ -180,6 +188,7 @@ pub fn router(state: AppState) -> Router {
         .merge(tidy::routes())
         .merge(marks::routes())
         .merge(people::routes())
+        .merge(payments::routes())
         .merge(rules::routes())
         .merge(search::routes())
         .merge(saved_searches::routes())

@@ -3,6 +3,7 @@
 // email, when they joined, how many feeds they follow (never which) and the
 // day they were last here. Nothing about what anyone reads.
 
+import { type Standing, toStanding } from "./plan";
 import { api } from "./updates.svelte";
 
 export type Reader = {
@@ -15,6 +16,8 @@ export type Reader = {
   feedsFailing: number;
   /** When nine turtles last saw them; noted at most once every 24 hours, so up to a day behind. */
   lastHere: number;
+  /** Where they stand for paying; null while payments are off. */
+  plan: Standing | null;
 };
 
 export type Overview = {
@@ -60,6 +63,7 @@ export function toOverview(body: unknown): Overview {
       feeds: number(reader.feeds),
       feedsFailing: number(reader.feeds_failing),
       lastHere: number(reader.last_here) || number(reader.created_at),
+      plan: isRecord(reader.plan) ? toStanding(reader.plan) : null,
     })),
     totals: {
       readers: number(totals.readers),

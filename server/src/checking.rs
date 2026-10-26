@@ -174,6 +174,10 @@ pub async fn check(state: &AppState, feed_id: i64, now: i64) -> Result<(), sqlx:
     .await?;
     // Nobody who follows it has been here for a month: once a day is plenty
     // until one of them comes back (`admin::here`).
+    // The same when no follower's trial or plan is current (`payments`).
+    if !feed.away && !crate::payments::followed_by_someone_current(state, feed_id, now).await? {
+        feed.away = true;
+    }
     if feed.away {
         feed.check_at_most = feed.check_at_most.max(admin::AWAY_WAIT);
     }

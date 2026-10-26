@@ -14,6 +14,18 @@ written into `DESIGN.md`, `ENGINEERING.md`, `SPEC.md`, `PLAN.md` and
   anyone can sign up, someone qualified should read both. Not blocking
   anything today.
 
+- **Payments, built in test mode** (26 October 2026, decision 0094). Each
+  of these is a setting or a small change, and none blocks trying it:
+  - **The price**, monthly and yearly (`NINE_TURTLES_PRICE_*`, and the
+    products in Dodo). Today: "Price to be decided".
+  - **The trial's length.** Today: 14 days, no card asked for to start.
+    Suggested: keep 14 days and no card (calm, nobody charged by surprise).
+  - **What ends with a plan.** Today: reading, stars, search and exports
+    stay; adding feeds stops and feeds are checked once a day. Stricter
+    (no new articles at all) or gentler (only a note) are both easy.
+  - **Readers from before payments** (your testers) stay free for good.
+  - **The refund window** on the website's refunds page.
+
 ---
 
 ## Decided
