@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-// Easing unread guilt (decision 0096): Catch me up, unread that lets go, and
+// Easing unread guilt (decision 0097): Catch me up, unread that lets go, and
 // counts that can hide. Each test loads feeds.ts afresh.
 async function load() {
   vi.resetModules();

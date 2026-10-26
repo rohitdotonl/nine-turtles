@@ -87,10 +87,10 @@ export type Order = "newest" | "oldest";
  */
 export type ReadingMode = "inbox" | "river";
 
-/** Whether the sidebar shows unread counts in inbox mode (decision 0096). Shared across the reader's devices. */
+/** Whether the sidebar shows unread counts in inbox mode (decision 0097). Shared across the reader's devices. */
 export type Counts = "shown" | "hidden";
 
-/** How long unread waits before it lets go by itself (decision 0096): never, the default, or a week, two or a month. */
+/** How long unread waits before it lets go by itself (decision 0097): never, the default, or a week, two or a month. */
 export type LetGo = "never" | "week" | "two-weeks" | "month";
 
 const LET_GO: LetGo[] = ["never", "week", "two-weeks", "month"];
@@ -369,7 +369,7 @@ function rememberCounts(counts: Counts) {
 }
 
 /**
- * "Catch me up" (decision 0096): every article in Unread from before the
+ * "Catch me up" (decision 0097): every article in Unread from before the
  * start of today, on this device's clock, counts as read. Answers which, for
  * Undo. Unlike marks, the screen waits for the answer: only the server knows
  * them all.

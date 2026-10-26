@@ -56,7 +56,7 @@
     phone?: boolean;
     /** River mode: no unread counts. */
     river?: boolean;
-    /** Unread counts show; the reader can hide them in Settings › Reading (decision 0096). */
+    /** Unread counts show; the reader can hide them in Settings › Reading (decision 0097). */
     numbers?: boolean;
   } = $props();
 

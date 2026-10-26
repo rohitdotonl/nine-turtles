@@ -91,7 +91,7 @@
 
   /** Inbox or river, shared across the reader's devices; this device's last word until the server answers. */
   let mode: ReadingMode = $state(lastMode());
-  /** Whether the sidebar shows unread counts, and when unread lets go (Settings › Reading, decision 0096). */
+  /** Whether the sidebar shows unread counts, and when unread lets go (Settings › Reading, decision 0097). */
   let counts: Counts = $state(lastCounts());
   let letGo: LetGo | undefined = $state();
   let river = $derived(mode === "river");
@@ -514,7 +514,7 @@
           ...(river
             ? []
             : [{ label: "Mark all as read", shortcut: phone ? undefined : "Shift+A", onSelect: () => itemList?.markAllRead() }]),
-          // Everything in Unread from before today, listed or not (decision 0096): only in Unread itself.
+          // Everything in Unread from before today, listed or not (decision 0097): only in Unread itself.
           ...(!river && !shown && under.kind === "view" && under.view === "unread"
             ? [{ label: "Catch me up", onSelect: () => itemList?.catchUp() }]
             : []),
