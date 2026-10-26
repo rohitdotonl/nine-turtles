@@ -400,6 +400,7 @@ each with screenshots:
 | Bringing your stars over from other feed readers | ✅ 26 October 2026 | SPEC section 23, decision 0098 (no structure change) |
 | Pausing a feed (Edit feed › Pause this feed) | ✅ 26 October 2026 | SPEC section 15, decision 0095 |
 | Easing unread guilt: unread that lets go by itself, Catch me up, and unread without numbers | ✅ 26 October 2026 | SPEC sections 5, 6, 8 and 18, decision 0097 |
+| Reading offline, words only (200 unread and 200 starred on each device) | ✅ 26 October 2026 | SPEC section 32, decision 0101 |
 
 ## V2: Many readers in one app
 

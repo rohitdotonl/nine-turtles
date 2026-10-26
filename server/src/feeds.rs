@@ -36,6 +36,7 @@ pub fn routes() -> Router<AppState> {
         .route("/api/feeds", get(list_feeds).post(add_feed))
         .route("/api/articles", get(list_articles))
         .route("/api/articles/new", get(new_articles))
+        .route("/api/articles/several", get(read_several))
         .route("/api/articles/{id}", get(read_article))
 }
 
@@ -1065,7 +1066,66 @@ async fn read_article(
     State(state): State<AppState>,
     Path(id): Path<i64>,
 ) -> Response {
-    let article: Result<Option<FullArticle>, sqlx::Error> = sqlx::query_as(
+    match full_articles(&state, person, &[id]).await {
+        Ok(mut found) => match found.pop() {
+            Some(article) => Json(json!({ "article": article })).into_response(),
+            None => StatusCode::NOT_FOUND.into_response(),
+        },
+        Err(error) => database_problem("reading an article", &error),
+    }
+}
+
+/// The most articles `/api/articles/several` gives at once.
+pub const SEVERAL_AT_ONCE: usize = 50;
+
+#[derive(Deserialize)]
+struct Several {
+    /// The articles' numbers, separated by commas.
+    ids: String,
+}
+
+/// Several articles at once, for the copies kept on a device for reading
+/// offline (SPEC section 32): a few requests instead of hundreds, and only
+/// the words, each image a short note (`feed::text_only`). Only the
+/// reader's own; any other is left out, so the answer may hold fewer than
+/// were asked for.
+async fn read_several(
+    SignedIn(person): SignedIn,
+    State(state): State<AppState>,
+    Query(query): Query<Several>,
+) -> Response {
+    let ids: Option<Vec<i64>> = query
+        .ids
+        .split(',')
+        .filter(|id| !id.is_empty())
+        .map(|id| id.trim().parse().ok())
+        .collect();
+    let Some(ids) = ids else {
+        return StatusCode::BAD_REQUEST.into_response();
+    };
+    if ids.len() > SEVERAL_AT_ONCE {
+        return StatusCode::PAYLOAD_TOO_LARGE.into_response();
+    }
+    match full_articles(&state, person, &ids).await {
+        Ok(mut articles) => {
+            for article in &mut articles {
+                article.content = article.content.take().map(|html| feed::text_only(&html));
+                article.summary = article.summary.take().map(|html| feed::text_only(&html));
+            }
+            Json(json!({ "articles": articles })).into_response()
+        }
+        Err(error) => database_problem("reading articles", &error),
+    }
+}
+
+/// The reader's articles among `ids`, each ready for the reading area.
+async fn full_articles(
+    state: &AppState,
+    person: i64,
+    ids: &[i64],
+) -> Result<Vec<FullArticle>, sqlx::Error> {
+    let ids = serde_json::to_string(ids).unwrap_or_else(|_| "[]".to_owned());
+    let mut articles: Vec<FullArticle> = sqlx::query_as(
         "SELECT articles.id, entries.feed_id, subscriptions.title AS feed_title, feeds.site_url,
                 articles.title, articles.link, articles.author, articles.content,
                 articles.summary, COALESCE(articles.language, feeds.language) AS language,
@@ -1074,28 +1134,26 @@ async fn read_article(
              JOIN feeds ON feeds.id = entries.feed_id
              JOIN subscriptions ON subscriptions.person_id = entries.person_id
                  AND subscriptions.feed_id = entries.feed_id
-         WHERE entries.person_id = ? AND entries.article_id = ?",
+         WHERE entries.person_id = ? AND entries.article_id IN (SELECT value FROM json_each(?))",
     )
     .bind(person)
-    .bind(id)
-    .fetch_optional(&state.db)
-    .await;
-    match article {
-        Ok(Some(mut article)) => {
-            // Articles stored before tracking images were removed on arrival
-            // (Milestone 5) lose them here instead.
-            article.content = article
-                .content
-                .map(|html| feed::without_tracking_images(&html));
-            article.summary = article
-                .summary
-                .map(|html| feed::without_tracking_images(&html));
-            article.language = article.language.filter(|tag| is_language_tag(tag));
-            Json(json!({ "article": article })).into_response()
-        }
-        Ok(None) => StatusCode::NOT_FOUND.into_response(),
-        Err(error) => database_problem("reading an article", &error),
+    .bind(ids)
+    .fetch_all(&state.db)
+    .await?;
+    for article in &mut articles {
+        // Articles stored before tracking images were removed on arrival
+        // (Milestone 5) lose them here instead.
+        article.content = article
+            .content
+            .take()
+            .map(|html| feed::without_tracking_images(&html));
+        article.summary = article
+            .summary
+            .take()
+            .map(|html| feed::without_tracking_images(&html));
+        article.language = article.language.take().filter(|tag| is_language_tag(tag));
     }
+    Ok(articles)
 }
 
 /// A language as feeds write it (`en`, `en-GB`, `hi`), so screen readers can

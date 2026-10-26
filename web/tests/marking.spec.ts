@@ -342,6 +342,8 @@ test.describe("when saving fails", () => {
       return which === 0 ? route.fulfill({ status: 500 }) : route.fallback();
     });
     await page.keyboard.press("j");
+    // The article is marked read once the reading area shows it: that's the first save.
+    await expect.poll(() => saves).toBe(1);
     await page.keyboard.press("Shift+A");
     await expect(line(page)).toHaveText("Marked 2 items as read");
 
@@ -379,11 +381,15 @@ test("a newer version waits until a mark is saved before switching", async ({ pa
   // The save is held, as if nine turtles were slow to answer.
   let release = () => {};
   const held = new Promise<void>((resolve) => (release = resolve));
+  let asked = false;
   await page.route("**/api/articles/read", async (route) => {
+    asked = true;
     await held;
     return route.fallback();
   });
   await page.keyboard.press("j");
+  // The article is marked read once the reading area shows it.
+  await expect.poll(() => asked).toBe(true);
   // A newer version goes live and the tab notices.
   await page.route("**/api/session", async (route) => {
     const response = await route.fetch();
@@ -629,6 +635,7 @@ test("Catch me up: everything in Unread from before today is read, and Undo brin
 
   await page.keyboard.press("u");
   await expect(line(page)).toContainText("Undone.");
-  await expect.poll(() => undone).toContainEqual({ ids, read: false });
+  // Each mark also says when it was made (decision 0101).
+  await expect.poll(() => undone).toContainEqual({ ids, read: false, at: expect.any(Number) });
   await expect(feedLink(page, name)).toHaveAccessibleName(`Blog ${name} 3 unread`);
 });

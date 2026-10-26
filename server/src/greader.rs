@@ -33,7 +33,7 @@ use crate::{
     AppState, apps,
     auth::database_problem,
     feeds, folders, log,
-    marks::{MOST_AT_ONCE, READ_SQL, STAR_SQL},
+    marks::{MOST_AT_ONCE, READ_SQL, STAR_SQL, now_ms},
     now,
 };
 
@@ -810,6 +810,7 @@ async fn edit_tag(App(person): App, State(state): State<AppState>, params: Param
         }
     }
     let ids = serde_json::to_string(&ids).unwrap_or_else(|_| "[]".to_owned());
+    let at = now_ms();
     let changed = async {
         let mut transaction = state.db.begin().await?;
         for (sql, value) in changes {
@@ -817,6 +818,7 @@ async fn edit_tag(App(person): App, State(state): State<AppState>, params: Param
                 .bind(value)
                 .bind(&ids)
                 .bind(person)
+                .bind(at)
                 .execute(&mut *transaction)
                 .await?;
         }
@@ -839,7 +841,9 @@ async fn mark_all_as_read(
 ) -> Response {
     let stream = Stream::parse(params.first("s").unwrap_or(READING_LIST));
     let until = params.number("ts").map_or_else(now, seconds);
-    let mut query = QueryBuilder::<Sqlite>::new("UPDATE entries SET read = 1 WHERE person_id = ");
+    let mut query = QueryBuilder::<Sqlite>::new(
+        "UPDATE entries SET read = 1, read_marked_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE person_id = ",
+    );
     query.push_bind(person).push(concat!(
         " AND read = 0 AND article_id IN (SELECT entries.article_id",
         from_entries!()

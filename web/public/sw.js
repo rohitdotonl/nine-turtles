@@ -1,6 +1,7 @@
 // nine turtles' service worker (SPEC section 20, ENGINEERING.md → "Installable
 // on phones"). With the web app manifest, it lets nine turtles be added to the
-// home screen. It keeps a copy of the app itself, never of your articles:
+// home screen. It keeps a copy of the app itself and its fonts. (Articles kept
+// for reading offline are the app's own, in its database, SPEC section 32.)
 //
 // - Opening nine turtles always asks the server first, so you get the newest
 //   version. Without a connection, the kept copy opens instead and says
@@ -8,6 +9,8 @@
 // - The app's code and styles (in /assets/, whose names change with every
 //   version) are kept and used from the copy. Copies no version uses any
 //   more are removed when nine turtles is next opened.
+// - The fonts (in /fonts/) come from the server, and from the copy only
+//   without a connection, so articles read offline keep their typeface.
 // - Everything else, including all of /api/, goes straight to the server.
 //
 // Nothing here swaps the app while it's open: a new version starts the next
@@ -34,7 +37,22 @@ self.addEventListener("fetch", (event) => {
   if (url.pathname.startsWith("/api/")) return;
   if (request.mode === "navigate") event.respondWith(openApp(request));
   else if (url.pathname.startsWith("/assets/")) event.respondWith(appFile(request));
+  else if (url.pathname.startsWith("/fonts/")) event.respondWith(font(request));
 });
+
+/** A font: from the server, or the kept copy when there's no connection. */
+async function font(request) {
+  const kept = await caches.open(KEPT);
+  try {
+    const response = await fetch(request);
+    if (response.ok) await kept.put(request, response.clone());
+    return response;
+  } catch (problem) {
+    const copy = await kept.match(request);
+    if (copy) return copy;
+    throw problem;
+  }
+}
 
 /** The page itself: from the server, or the kept copy when there's no connection. */
 async function openApp(request) {

@@ -3,6 +3,19 @@
 // show for them.
 import type { View } from "./router";
 import { api } from "./updates.svelte";
+import { noConnection, serverNow, whenBack } from "./connection.svelte";
+import {
+  CATCH_UP_NEEDS_CONNECTION,
+  NeedsConnection,
+  keepLibrary,
+  keptArticle,
+  keptLibrary,
+  keptPage,
+  markSent,
+  noteMark,
+  sending,
+  useFetchers,
+} from "./offline";
 
 export type Feed = {
   id: number;
@@ -69,7 +82,13 @@ export type FullArticle = Article & {
  * at the end. `latest` is the newest article's number when it was loaded, to
  * ask later whether anything new has arrived.
  */
-export type Page = { articles: Article[]; next: string | null; latest: number };
+export type Page = {
+  articles: Article[];
+  next: string | null;
+  latest: number;
+  /** Listed from the copies kept on this device, without a connection (SPEC section 32). */
+  kept?: boolean;
+};
 
 /**
  * Which articles a list shows: one of the views, one feed's or folder's (all
@@ -117,19 +136,30 @@ export type Problem =
   | "no-feed"
   | "too-many"
   | "plan-ended"
+  | "offline"
   | "trouble";
 
 const PROBLEMS: Problem[] = ["not-an-address", "not-allowed", "unreachable", "not-found", "too-big", "no-feed", "too-many", "plan-ended"];
 
+/** The sidebar's feeds and folders: from the server, or, without a connection, as this device last kept them. */
 export async function listFeeds(): Promise<Library> {
   await saved();
-  const body = await getJson("/api/feeds");
+  let body: unknown;
+  try {
+    body = await getJson("/api/feeds");
+  } catch (problem) {
+    const kept = noConnection(problem) ? await keptLibrary() : undefined;
+    if (kept) return kept;
+    throw problem;
+  }
   const feeds = isRecord(body) && Array.isArray(body.feeds) ? body.feeds : [];
   const folders = isRecord(body) && Array.isArray(body.folders) ? body.folders : [];
-  return {
+  const library = {
     feeds: feeds.filter(isRecord).map(toFeed),
     folders: folders.filter(isRecord).map((folder) => ({ id: Number(folder.id), name: String(folder.name ?? "") })),
   };
+  keepLibrary(library);
+  return library;
 }
 
 /** A folder's unread count: its feeds' counts added up (each article is in one feed). */
@@ -163,7 +193,20 @@ function sourceQuery(source: Source): URLSearchParams {
   return query;
 }
 
+/** A page of a list: from the server, or, without a connection, from the copies kept on this device (all at once). */
 export async function listArticles(source: Source, order: Order, after: string | null): Promise<Page> {
+  try {
+    return await listFromServer(source, order, after);
+  } catch (problem) {
+    // A kept list comes whole, so there's never a next page of it to add.
+    if (!noConnection(problem) || after !== null) throw problem;
+    const kept = await keptPage(source, order);
+    if (kept) return kept;
+    throw problem;
+  }
+}
+
+async function listFromServer(source: Source, order: Order, after: string | null): Promise<Page> {
   const query = sourceQuery(source);
   query.set("order", order);
   if (after !== null) query.set("after", after);
@@ -298,12 +341,40 @@ function send(path: string, body: unknown): Promise<void> {
 
 /** Marks articles read or unread. The screen has already changed; this tells the server. */
 export function markRead(ids: number[], read: boolean): Promise<void> {
-  return send("/api/articles/read", { ids, read });
+  return sendMark("read", ids, read, serverNow());
 }
 
 /** Stars or unstars articles. The screen has already changed; this tells the server. */
 export function markStarred(ids: number[], starred: boolean): Promise<void> {
-  return send("/api/articles/starred", { ids, starred });
+  return sendMark("starred", ids, starred, serverNow());
+}
+
+/**
+ * Sends a mark, saying when it was made, so the latest mark wins (decision
+ * 0101). It's written down on this device first: if there's no connection,
+ * it waits there and is sent once there is (SPEC section 32), rather than
+ * being taken back. Without a connection, nothing is tried until then.
+ */
+function sendMark(kind: "read" | "starred", ids: number[], value: boolean, at: number): Promise<void> {
+  const noted = noteMark(kind, ids, value, at);
+  const path = kind === "read" ? "/api/articles/read" : "/api/articles/starred";
+  const body = kind === "read" ? { ids, read: value, at } : { ids, starred: value, at };
+  const offline = globalThis.navigator?.onLine === false;
+  const done = sending(kind, ids, at);
+  const sent = offline ? Promise.reject(new TypeError("offline")) : send(path, body);
+  sent.then(done, done);
+  return sent.then(
+    async () => {
+      await noted;
+      await markSent(kind, ids, at);
+    },
+    async (problem) => {
+      if (noConnection(problem) && (await noted)) return;
+      await noted;
+      await markSent(kind, ids, at);
+      throw problem;
+    },
+  );
 }
 
 /** The settings shared across the reader's devices (SPEC section 18). */
@@ -377,12 +448,18 @@ function rememberCounts(counts: Counts) {
 export async function catchUp(now: Date = new Date()): Promise<number[]> {
   await saved();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const response = await api("/api/articles/catch-up", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ before: Math.floor(today.getTime() / 1000) }),
-    signal: AbortSignal.timeout(15_000),
-  });
+  let response: Response;
+  try {
+    response = await api("/api/articles/catch-up", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ before: Math.floor(today.getTime() / 1000) }),
+      signal: AbortSignal.timeout(15_000),
+    });
+  } catch (problem) {
+    if (noConnection(problem)) throw new NeedsConnection(CATCH_UP_NEEDS_CONNECTION);
+    throw problem;
+  }
   if (!response.ok) throw new Refused(response.status);
   const body: unknown = await response.json();
   return isRecord(body) && Array.isArray(body.ids) ? body.ids.map(Number) : [];
@@ -453,6 +530,12 @@ export function inDevanagari(name: string): boolean {
 const loaded = new Map<number, FullArticle>();
 const loading = new Map<number, Promise<FullArticle>>();
 const KEEP = 20;
+/** Those opened from this device's copies, words only: fetched again in full once the connection is back. */
+const fromDevice = new Set<number>();
+whenBack(() => {
+  for (const id of fromDevice) loaded.delete(id);
+  fromDevice.clear();
+});
 
 /** The article, if it's already here, without waiting. */
 export function articleNow(id: number): FullArticle | undefined {
@@ -466,9 +549,19 @@ export function readArticle(id: number): Promise<FullArticle> {
   const pending = loading.get(id);
   if (pending) return pending;
   const request = getJson(`/api/articles/${id}`)
-    .then((body) => {
-      if (!isRecord(body) || !isRecord(body.article)) throw new Error("nine turtles sent an unexpected answer");
-      const article = toFullArticle(body.article);
+    .then(
+      (body) => {
+        if (!isRecord(body) || !isRecord(body.article)) throw new Error("nine turtles sent an unexpected answer");
+        return toFullArticle(body.article);
+      },
+      async (problem) => {
+        const kept = noConnection(problem) ? await keptArticle(id) : undefined;
+        if (!kept) throw problem;
+        fromDevice.add(id);
+        return kept;
+      },
+    )
+    .then((article) => {
       loaded.set(id, article);
       if (loaded.size > KEEP) loaded.delete(loaded.keys().next().value as number);
       return article;
@@ -494,8 +587,8 @@ export async function addFeed(address: string): Promise<AddResult> {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ address }),
     });
-  } catch {
-    return { kind: "problem", reason: "trouble" };
+  } catch (problem) {
+    return { kind: "problem", reason: noConnection(problem) ? "offline" : "trouble" };
   }
   const body: unknown = await response.json().catch(() => null);
   if (!isRecord(body)) return { kind: "problem", reason: "trouble" };
@@ -736,6 +829,8 @@ export function explain(reason: Problem): string {
       return "You follow 1,000 feeds, as many as one reader can. Unsubscribe from one to add another.";
     case "plan-ended":
       return PLAN_ENDED;
+    case "offline":
+      return "Adding a feed needs a connection. Try again once you're back online.";
     case "trouble":
       return "nine turtles couldn't add that just now. Try again in a moment.";
   }
@@ -832,3 +927,19 @@ export function checkFrom(seconds: number): Check {
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
+
+// How the copies for reading offline are fetched, and waiting marks sent (offline.ts).
+useFetchers({
+  list: listFromServer,
+  async several(ids) {
+    const body = await getJson(`/api/articles/several?ids=${ids.join(",")}`);
+    if (!isRecord(body) || !Array.isArray(body.articles)) throw new Error("nine turtles sent an unexpected answer");
+    return body.articles.filter(isRecord).map(toFullArticle);
+  },
+  refused: (problem) => !worthRetrying(problem),
+  async sendMark(kind, ids, value, at) {
+    const path = kind === "read" ? "/api/articles/read" : "/api/articles/starred";
+    await send(path, kind === "read" ? { ids, read: value, at } : { ids, starred: value, at });
+    await markSent(kind, ids, at);
+  },
+});

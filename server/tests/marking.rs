@@ -609,3 +609,166 @@ fn each_wait_is_as_long_as_its_name_says() {
     assert_eq!(waits_for("month"), Some(30 * 86_400));
     assert_eq!(waits_for("fortnight"), None);
 }
+
+/// Milliseconds since 1970, as a device's clock says.
+fn ms_now() -> i64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_millis() as i64
+}
+
+#[tokio::test]
+async fn a_mark_made_offline_and_sent_late_never_overrides_a_later_one() {
+    let reader = Reader::new().await;
+    let all = reader.list("view=all").await;
+    let (_, id) = all[0].clone();
+
+    // The phone, offline at 10:00, marks it read and stars it. The laptop,
+    // online at 11:00, marks it unread and takes the star off.
+    let ten = ms_now() - 2 * 3_600_000;
+    let eleven = ms_now() - 3_600_000;
+    reader
+        .post(
+            "/api/articles/read",
+            json!({ "ids": [id], "read": false, "at": eleven }),
+        )
+        .await;
+    reader
+        .post(
+            "/api/articles/starred",
+            json!({ "ids": [id], "starred": false, "at": eleven }),
+        )
+        .await;
+    // At noon the phone is back online and sends its 10:00 marks: too old.
+    let (status, answer) = reader
+        .post(
+            "/api/articles/read",
+            json!({ "ids": [id], "read": true, "at": ten }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(answer["marked"], 0);
+    reader
+        .post(
+            "/api/articles/starred",
+            json!({ "ids": [id], "starred": true, "at": ten }),
+        )
+        .await;
+    assert_eq!(
+        reader.get(&format!("/api/articles/{id}")).await["article"]["read"],
+        false
+    );
+    assert_eq!(
+        reader.get(&format!("/api/articles/{id}")).await["article"]["starred"],
+        false
+    );
+
+    // A mark made just now (no time given) wins over both.
+    reader
+        .post(
+            "/api/articles/starred",
+            json!({ "ids": [id], "starred": true }),
+        )
+        .await;
+    assert_eq!(
+        reader.get(&format!("/api/articles/{id}")).await["article"]["starred"],
+        true
+    );
+    // A device whose clock runs a day fast counts as now, not tomorrow, so
+    // the next ordinary mark still wins.
+    reader
+        .post(
+            "/api/articles/starred",
+            json!({ "ids": [id], "starred": false, "at": ms_now() + 86_400_000 }),
+        )
+        .await;
+    assert_eq!(
+        reader.get(&format!("/api/articles/{id}")).await["article"]["starred"],
+        false
+    );
+    tokio::time::sleep(std::time::Duration::from_millis(5)).await;
+    reader
+        .post(
+            "/api/articles/starred",
+            json!({ "ids": [id], "starred": true }),
+        )
+        .await;
+    assert_eq!(
+        reader.get(&format!("/api/articles/{id}")).await["article"]["starred"],
+        true
+    );
+}
+
+#[tokio::test]
+async fn several_articles_come_in_one_answer_for_reading_offline() {
+    let reader = Reader::new().await;
+    let all = reader.list("view=all").await;
+    let wanted: Vec<String> = all[..3].iter().map(|(_, id)| id.to_string()).collect();
+    // One that isn't the reader's is left out.
+    let asked = format!("{},999999", wanted.join(","));
+    let answer = reader
+        .get(&format!("/api/articles/several?ids={asked}"))
+        .await;
+    let mut titles: Vec<&str> = answer["articles"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|article| article["title"].as_str().unwrap())
+        .collect();
+    titles.sort_unstable();
+    assert_eq!(titles, ["Post 118", "Post 119", "Post 120"]);
+
+    // At most 50 at once, and only numbers.
+    let many: Vec<String> = (1..=51).map(|n| n.to_string()).collect();
+    let too_many = Client::new()
+        .get(format!(
+            "{}/api/articles/several?ids={}",
+            reader.base,
+            many.join(",")
+        ))
+        .header("cookie", &reader.cookie)
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(too_many.status(), StatusCode::PAYLOAD_TOO_LARGE);
+    let not_numbers = Client::new()
+        .get(format!("{}/api/articles/several?ids=1,two", reader.base))
+        .header("cookie", &reader.cookie)
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(not_numbers.status(), StatusCode::BAD_REQUEST);
+    // Signed out: nothing.
+    let signed_out = Client::new()
+        .get(format!("{}/api/articles/several?ids=1", reader.base))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(signed_out.status(), StatusCode::UNAUTHORIZED);
+}
+
+#[tokio::test]
+async fn catching_up_counts_as_a_mark_a_late_offline_one_cannot_undo() {
+    let reader = Reader::new().await;
+    let (_, id) = reader.list("view=all").await[60].clone();
+    let earlier = ms_now() - 3_600_000;
+    reader
+        .post(
+            "/api/articles/catch-up",
+            json!({ "before": day_of_post(101) }),
+        )
+        .await;
+    // A phone that was offline an hour ago marked it unread; it arrives now.
+    let (_, answer) = reader
+        .post(
+            "/api/articles/read",
+            json!({ "ids": [id], "read": false, "at": earlier }),
+        )
+        .await;
+    assert_eq!(answer["marked"], 0);
+    assert_eq!(
+        reader.get(&format!("/api/articles/{id}")).await["article"]["read"],
+        true
+    );
+}

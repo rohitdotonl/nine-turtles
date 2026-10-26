@@ -55,8 +55,11 @@ pub fn waits_for(value: &str) -> Option<i64> {
 /// Counts reader `person`'s unread articles from before `before` as read, in
 /// the feeds they follow (a feed in its Undo time after unsubscribing is left
 /// as it was). Uses the `entries_unread` index (tests/speed.rs checks this).
-/// Takes the reader, the time, and the reader again.
-pub const LET_GO: &str = "UPDATE entries SET read = 1
+/// Takes the reader, the time, and the reader again. Like every read mark,
+/// it records when it was made, so an older mark sent late from a device
+/// that was offline doesn't undo it (decision 0101).
+pub const LET_GO: &str =
+    "UPDATE entries SET read = 1, read_marked_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
      WHERE person_id = ?1 AND read = 0 AND sort_at < ?2
          AND feed_id IN (SELECT feed_id FROM subscriptions
              WHERE person_id = ?1 AND unsubscribed_at IS NULL)";
@@ -108,7 +111,8 @@ async fn let_go_for(
 /// with their numbers: only feeds the reader follows, and not those that
 /// flow past (they're never in Unread). Takes the reader, the time, and the
 /// reader again.
-pub const CATCH_UP: &str = "UPDATE entries SET read = 1
+pub const CATCH_UP: &str =
+    "UPDATE entries SET read = 1, read_marked_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
      WHERE person_id = ?1 AND read = 0 AND sort_at < ?2
          AND feed_id IN (SELECT feed_id FROM subscriptions
              WHERE person_id = ?1 AND unsubscribed_at IS NULL AND river = 0)

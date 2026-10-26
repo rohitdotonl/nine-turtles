@@ -17,7 +17,8 @@ addEventListener("keydown", () => (document.documentElement.dataset.keyboard = "
 addEventListener("pointerdown", () => delete document.documentElement.dataset.keyboard, true);
 
 // Lets nine turtles be added to the home screen and open without a connection
-// (public/sw.js). It keeps only the app itself, never your articles.
+// (public/sw.js). It keeps only the app itself and its fonts; articles kept for
+// reading offline are in the app's own database (lib/offline.ts).
 if ("serviceWorker" in navigator) {
   addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js").catch(() => {
