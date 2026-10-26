@@ -1,4 +1,4 @@
--- "Email me a sign-in link" (SPEC section 1, decision 0095): emailed links
+-- "Email me a sign-in link" (SPEC section 1, decision 0096): emailed links
 -- may now also sign a reader in, as 'sign-in'. SQLite can't change a
 -- table's checks in place, so `email_links` is made again with the new
 -- purpose allowed, every line copied across as it is, and its indexes made

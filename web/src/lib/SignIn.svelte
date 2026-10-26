@@ -4,7 +4,7 @@
   email empty and sign in with the password alone, as before there were
   readers (decision 0087). While nine turtles can send email, "Email me a
   sign-in link" turns the page into a request for a link that signs in
-  (decision 0095) and "Forgot your password?" into one for a password link;
+  (decision 0096) and "Forgot your password?" into one for a password link;
   while sign-up is Open, "Sign up" leads to the sign-up page (decision 0088).
   Once a link is asked for, the form gives way to "Check your email": where
   it went, for how long it works, and a quiet Send again (decision 0092).

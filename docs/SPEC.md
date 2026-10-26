@@ -44,7 +44,7 @@ A few words used throughout:
 - **At most 20 sign-ups are tried in any hour**, for the whole app (nine turtles sits behind Render's proxy, so it can't reliably tell one place from another). A try with an email that already has an account counts too, so nobody can keep trying, and so does each Open sign-up waiting for its link. Sign-ups are handled one at a time. At most 20 accounts are made in any hour too, also when Open sign-ups' links are opened. The 21st hears "Many people have signed up in the last hour. Try again later."
 - **Save your own email before you send invites.** Until the owner has saved an email in Settings › Readers, someone with an invite link could sign up with the owner's address first.
 
-**A sign-in link** (decision 0095)
+**A sign-in link** (decision 0096)
 - While nine turtles can send email, the sign-in page shows **Email me a sign-in link** under the form, on a line of its own above Forgot your password? (and Sign up). It's for every reader, the owner too once they've saved an email; passwords keep working as before.
 - It turns the page into one email field ("nine turtles emails you a link that signs you in." under it), **Send link** and **Back to sign in**; the email already typed stays, and the keyboard goes to it.
 - The answer is said once, exactly as for a new password: **Check your email** (the keyboard goes to it) and "If … has an account here, a link to sign in is on its way. It works once, for 15 minutes.", whether or not the email has an account, then the same quiet "Didn't get it? Look in your spam folder." and **Send again** (nothing sent within a minute of the last link), and Back to sign in.
