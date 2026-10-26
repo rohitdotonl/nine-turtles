@@ -1,4 +1,4 @@
-// The feed finder (SPEC section 30, decision 0098). Sends the address typed
+// The feed finder (SPEC section 30, decision 0099). Sends the address typed
 // to the app's finder (app.nineturtles.app/api/find-feeds), which reads the
 // page and the first feed it names, and shows what came back. No cookies or
 // referrer go with the question, and nothing is stored in the browser.

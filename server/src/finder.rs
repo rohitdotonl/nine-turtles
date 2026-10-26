@@ -1,4 +1,4 @@
-//! The feed finder on the website (SPEC section 30, decision 0098): anyone,
+//! The feed finder on the website (SPEC section 30, decision 0099): anyone,
 //! signed in or not, gives the address of a site and gets back the feeds the
 //! page names, with the newest few titles of the first one.
 //!
