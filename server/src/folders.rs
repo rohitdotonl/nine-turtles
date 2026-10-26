@@ -119,6 +119,8 @@ struct EditFeed {
     check: Option<Check>,
     #[serde(default)]
     open_on_site: Option<bool>,
+    #[serde(default)]
+    paused: Option<bool>,
 }
 
 /// How often the reader allows a feed to be checked in the background.
@@ -141,6 +143,12 @@ impl Check {
         }
     }
 }
+
+/// How many of the articles a feed brought while it was paused go back to
+/// Unread when the reader unpauses it: only the newest few, so nothing piles
+/// up (SPEC section 15). The number is also written in SPEC section 15 and
+/// in Edit feed's helper line (`web/src/lib/EditFeed.svelte`).
+pub const BACK_FROM_PAUSE: i64 = 3;
 
 /// "Edit feed": its name, folders and settings, saved together or not at all.
 async fn edit_feed(
@@ -216,6 +224,10 @@ async fn edit_feed(
         .bind(serde_json::to_string(&folders).unwrap_or_else(|_| "[]".to_owned()))
         .execute(&mut *transaction)
         .await?;
+        // After the folders, so rules for folders act on the ones just saved.
+        if let Some(paused) = form.paused {
+            set_paused(&mut transaction, person, id, paused, now()).await?;
+        }
         transaction.commit().await?;
         Ok(Some(()))
     }
@@ -225,6 +237,67 @@ async fn edit_feed(
         Ok(None) => StatusCode::NOT_FOUND.into_response(),
         Err(error) => database_problem("editing a feed", &error),
     }
+}
+
+/// Pauses a feed for the reader, or unpauses it. While it's paused its new
+/// articles arrive already read (`feeds::store_articles`); unpausing puts
+/// the newest few of them back in Unread, and the reader's rules act on
+/// those again, so one a rule marks as read stays read. Pausing a feed
+/// that's already paused (or the reverse) changes nothing.
+async fn set_paused(
+    connection: &mut SqliteConnection,
+    person: i64,
+    id: i64,
+    paused: bool,
+    now: i64,
+) -> Result<(), sqlx::Error> {
+    if paused {
+        sqlx::query(
+            "UPDATE subscriptions SET paused_at = ?
+             WHERE person_id = ? AND feed_id = ? AND paused_at IS NULL",
+        )
+        .bind(now)
+        .bind(person)
+        .bind(id)
+        .execute(&mut *connection)
+        .await?;
+        return Ok(());
+    }
+    let since: Option<i64> = sqlx::query_scalar(
+        "SELECT paused_at FROM subscriptions WHERE person_id = ? AND feed_id = ?",
+    )
+    .bind(person)
+    .bind(id)
+    .fetch_optional(&mut *connection)
+    .await?
+    .flatten();
+    let Some(since) = since else {
+        return Ok(());
+    };
+    sqlx::query("UPDATE subscriptions SET paused_at = NULL WHERE person_id = ? AND feed_id = ?")
+        .bind(person)
+        .bind(id)
+        .execute(&mut *connection)
+        .await?;
+    // The inner SELECT picks the newest few first, then the UPDATE marks
+    // them; keep it uncorrelated so LIMIT applies to the feed, not per row.
+    let back: Vec<i64> = sqlx::query_scalar(
+        "UPDATE entries SET read = 0
+         WHERE person_id = ?1 AND feed_id = ?2 AND article_id IN (
+             SELECT entries.article_id FROM entries
+             JOIN articles ON articles.id = entries.article_id
+             WHERE entries.person_id = ?1 AND entries.feed_id = ?2
+                 AND entries.read = 1 AND entries.muted = 0 AND articles.received_at >= ?3
+             ORDER BY entries.sort_at DESC, entries.article_id DESC LIMIT ?4)
+         RETURNING article_id",
+    )
+    .bind(person)
+    .bind(id)
+    .bind(since)
+    .bind(BACK_FROM_PAUSE)
+    .fetch_all(&mut *connection)
+    .await?;
+    rules::apply_to(connection, person, id, &back).await
 }
 
 /// Unsubscribes: the feed is hidden straight away, and no longer checked if

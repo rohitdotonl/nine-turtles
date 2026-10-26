@@ -1,4 +1,4 @@
-# 0095: Bringing stars over from other feed readers
+# 0097: Bringing stars over from other feed readers
 
 *26 October 2026. Asked for by the owner ("Bringing your stars over from
 other services"), with merging approved.*

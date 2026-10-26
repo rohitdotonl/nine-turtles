@@ -11,6 +11,7 @@ import {
   inDevanagari,
   markedAllMessage,
   newItemsMessage,
+  pausedSince,
   toExcerpt,
   unreadLabel,
   when,
@@ -29,6 +30,12 @@ describe("article times", () => {
     expect(when(at(new Date(2026, 9, 22, 23, 59)), now)).toBe("22 Oct");
     expect(when(at(new Date(2026, 0, 1, 9, 0)), now)).toBe("1 Jan");
     expect(when(at(new Date(2025, 9, 23, 14, 5)), now)).toBe("23 Oct 2025");
+  });
+
+  it("say when a paused feed was paused", () => {
+    expect(pausedSince(at(new Date(2026, 9, 23, 9, 0)), now)).toBe("Paused today.");
+    expect(pausedSince(at(new Date(2026, 9, 20, 9, 0)), now)).toBe("Paused on 20 Oct.");
+    expect(pausedSince(at(new Date(2025, 11, 30, 9, 0)), now)).toBe("Paused on 30 Dec 2025.");
   });
 });
 

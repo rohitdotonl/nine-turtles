@@ -63,12 +63,15 @@ turtles doesn't start, and the log says so.
 ## 4. Check it works
 
 1. Open nine turtles in a private window. The sign-in page now shows
-   **Forgot your password?**.
+   **Email me a sign-in link** and **Forgot your password?**.
 2. Press it, type your own email (the one in Settings › Readers) and press
    **Send link**. An email "A new password for nine turtles" arrives in a
    minute or two. You don't have to use the link: your password stays as it
    is until you do.
-3. In Settings › Sign-up, **Open** can now be chosen.
+3. **Email me a sign-in link** works the same way: an email "Sign in to
+   nine turtles" arrives, with a link that signs you in once, within 15
+   minutes.
+4. In Settings › Sign-up, **Open** can now be chosen.
 
 If no email arrives, look in Render's **Logs** for "couldn't send": the line
 says roughly what went wrong ("the mail server refused it", "couldn't be

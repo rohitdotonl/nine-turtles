@@ -871,7 +871,13 @@
 
   /** Back from an edit page, saved or not, to the feed or folder. */
   async function edited(saved: boolean) {
+    const id = route.kind === "edit-feed" ? route.id : undefined;
+    const pausedBefore = feeds?.find((feed) => feed.id === id)?.pausedAt != null;
     if (saved) await loadFeeds();
+    // Unpausing a feed puts its newest few back in Unread (SPEC section 15): the list under
+    // the sheet shows them unread at once, as the reader's own Save asked.
+    const unpaused = pausedBefore && feeds?.find((feed) => feed.id === id)?.pausedAt == null;
+    if (unpaused) queueMicrotask(() => void itemList?.refresh());
     // On a phone the edit page is a step on from its list: go back that step.
     if (phone && stepOf(history.state)?.back === "list") history.back();
     else if (sheetShown) closeSheet();
