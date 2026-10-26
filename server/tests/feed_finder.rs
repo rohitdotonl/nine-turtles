@@ -176,6 +176,10 @@ async fn problems_are_answered_in_words_the_website_knows() {
     let (status, _, body) = find(&base, &format!("{site}/gone/")).await;
     assert_eq!(status, StatusCode::BAD_GATEWAY);
     assert_eq!(body["error"], "not-found");
+    // A failure is remembered for a while too: asking again doesn't visit.
+    let (_, _, again) = find(&base, &format!("{site}/gone/")).await;
+    assert_eq!(again["error"], "not-found");
+    assert_eq!(*visited.lock().unwrap(), ["/plain/", "/gone/"]);
 
     let (status, _, body) = find(&base, "not an address").await;
     assert_eq!(status, StatusCode::BAD_REQUEST);

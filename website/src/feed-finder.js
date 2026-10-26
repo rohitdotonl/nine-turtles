@@ -11,7 +11,8 @@ const field = form.querySelector("input");
 const status = document.querySelector(".finder-status");
 const found = document.querySelector(".found");
 const app = form.dataset.app;
-let busy = false;
+// Each lookup's number: only the newest one's answer is shown.
+let latest = 0;
 
 const problems = {
   "not-an-address": "That doesn't look like a website's address. Try something like example.com.",
@@ -21,6 +22,7 @@ const problems = {
   "too-big": "That page is too large to look through. Try the site's home page.",
   "no-feed": "That page doesn't name a feed. Try the site's home page, or look on the site for a link called RSS, Atom or Feed. Some sites don't have one.",
   busy: "The finder is busy just now. Try again in a minute.",
+  "site-busy": "That site has been looked up a lot just now. Try again in half an hour.",
 };
 
 form.addEventListener("submit", (event) => {
@@ -42,8 +44,7 @@ if (asked) {
 }
 
 async function look(address) {
-  if (busy) return;
-  busy = true;
+  const mine = ++latest;
   found.replaceChildren();
   say(`Looking at ${address}…`);
   try {
@@ -53,17 +54,27 @@ async function look(address) {
       cache: "no-store",
     });
     const answer = await response.json().catch(() => ({}));
+    if (mine !== latest) return;
     if (response.ok && Array.isArray(answer.feeds)) {
       show(answer);
     } else {
       say(problems[answer.error] ?? problems.unreachable);
     }
   } catch {
-    say("The finder couldn't be reached. Check your connection and try again.");
-  } finally {
-    busy = false;
+    if (mine === latest) say("The finder couldn't be reached. Check your connection and try again.");
   }
 }
+
+// The bookmark button does its work on other sites. Pressed here, it says
+// how to keep it instead, and its address can be copied for a bookmark made
+// by hand (no dragging needed).
+const bookmarklet = document.querySelector(".bookmarklet");
+bookmarklet.addEventListener("click", (event) => {
+  event.preventDefault();
+  say("Drag Find feed to your bookmarks bar, or copy its address below into a new bookmark.");
+});
+const bookmarkAddress = document.querySelector(".bookmark-address");
+document.querySelector(".copy-bookmark").addEventListener("click", () => copyAddress(bookmarklet.href, bookmarkAddress));
 
 function show(answer) {
   const count = answer.feeds.length;

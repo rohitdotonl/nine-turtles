@@ -34,8 +34,9 @@ newest titles. It never guesses addresses or visits the site's articles, so it
 only finds what the publisher chose to share.
 
 Nothing about you is kept: no address you look up is written down. Each
-answer is remembered for half an hour, so a site that many people look up
-isn't asked over and over.
+answer is remembered for half an hour, and any one site is looked at only a
+few times in half an hour, so a site that many people look up isn't asked
+over and over.
 
 If no feed turns up, look on the site for a link called RSS, Atom or Feed.
 Some sites don't have one.
@@ -47,7 +48,18 @@ Some sites don't have one.
   website to bring that page here and find its feed.
 </p>
 
-<p class="actions"><a class="bookmarklet" href="javascript:void(location.href='{{ site.url }}/feed-finder/?address='+encodeURIComponent(location.href))">Find feed</a></p>
+{%- set bookmark = "javascript:void(location.href='" + site.url + "/feed-finder/?address='+encodeURIComponent(location.href))" %}
+<p class="actions"><a class="bookmarklet" href="{{ bookmark }}">Find feed</a></p>
+
+<p>
+  Or make a new bookmark yourself, name it Find feed, and paste this as its
+  address:
+</p>
+
+<div class="bookmark-copy">
+  <code class="bookmark-address">{{ bookmark }}</code>
+  <button type="button" class="copy copy-bookmark">Copy bookmark address</button>
+</div>
 
 <h2>Then what?</h2>
 

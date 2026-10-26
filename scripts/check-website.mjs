@@ -181,6 +181,12 @@ try {
       problems.push(`${where}: a page without a feed shows "${after.status}" and ${after.left} address(es)`);
     }
 
+    // The bookmark button, pressed here, says how to keep it rather than
+    // looking up the finder's own page.
+    await page.locator(".bookmarklet").click();
+    const hint = await page.locator(".finder-status").textContent();
+    if (!hint.startsWith("Drag Find feed")) problems.push(`${where}: pressing Find feed here says "${hint}"`);
+
     // Opened with an address (as the bookmark button does), it looks straight away.
     await page.goto(base + "/feed-finder/?address=quiet.example");
     await page.locator(".feed-url").first().waitFor({ timeout: 5000 }).catch(() => problems.push(`${where}: an address in the page's address isn't looked up`));
