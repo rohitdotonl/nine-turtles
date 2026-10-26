@@ -60,17 +60,20 @@ struct Reader {
     base: String,
     cookie: String,
     feed: i64,
+    /// nine turtles' insides, for running a background round by hand.
+    state: nine_turtles::AppState,
 }
 
 impl Reader {
     /// A signed-in reader following the made-up blog.
     async fn new() -> Self {
-        let base = common::start(common::config()).await;
+        let (base, state) = common::start_with_state(common::config()).await;
         let cookie = common::signed_in(&base).await;
         let mut reader = Self {
             base,
             cookie,
             feed: 0,
+            state,
         };
         let (status, added) = reader
             .post("/api/feeds", json!({ "address": publisher().await }))
@@ -316,7 +319,7 @@ async fn the_sort_order_is_saved_for_every_device() {
     let reader = Reader::new().await;
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "newest", "mode": "inbox" })
+        json!({ "sort": "newest", "mode": "inbox", "counts": "shown", "let_go": "never" })
     );
 
     let (status, _) = reader
@@ -325,7 +328,7 @@ async fn the_sort_order_is_saved_for_every_device() {
     assert_eq!(status, StatusCode::OK);
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "oldest", "mode": "inbox" })
+        json!({ "sort": "oldest", "mode": "inbox", "counts": "shown", "let_go": "never" })
     );
 
     // Another device, signed in separately, sees the same.
@@ -336,7 +339,10 @@ async fn the_sort_order_is_saved_for_every_device() {
         .await
         .unwrap();
     let other: Value = serde_json::from_str(&other.text().await.unwrap()).unwrap();
-    assert_eq!(other, json!({ "sort": "oldest", "mode": "inbox" }));
+    assert_eq!(
+        other,
+        json!({ "sort": "oldest", "mode": "inbox", "counts": "shown", "let_go": "never" })
+    );
 
     let (status, _) = reader
         .post("/api/settings", json!({ "sort": "sideways" }))
@@ -344,7 +350,7 @@ async fn the_sort_order_is_saved_for_every_device() {
     assert!(status.is_client_error());
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "oldest", "mode": "inbox" })
+        json!({ "sort": "oldest", "mode": "inbox", "counts": "shown", "let_go": "never" })
     );
 }
 
@@ -357,7 +363,10 @@ async fn the_reading_mode_is_saved_on_its_own_and_keeps_read_state() {
         .post("/api/settings", json!({ "mode": "river" }))
         .await;
     assert_eq!(status, StatusCode::OK);
-    assert_eq!(body, json!({ "sort": "newest", "mode": "river" }));
+    assert_eq!(
+        body,
+        json!({ "sort": "newest", "mode": "river", "counts": "shown", "let_go": "never" })
+    );
 
     // Changing the sort order alone (as a tab from before river mode would)
     // leaves the mode as it was.
@@ -366,7 +375,7 @@ async fn the_reading_mode_is_saved_on_its_own_and_keeps_read_state() {
         .await;
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "oldest", "mode": "river" })
+        json!({ "sort": "oldest", "mode": "river", "counts": "shown", "let_go": "never" })
     );
 
     // Read state is still recorded quietly in river mode, and shows again
@@ -393,7 +402,7 @@ async fn the_reading_mode_is_saved_on_its_own_and_keeps_read_state() {
     assert!(status.is_client_error());
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "oldest", "mode": "inbox" })
+        json!({ "sort": "oldest", "mode": "inbox", "counts": "shown", "let_go": "never" })
     );
 }
 
@@ -437,4 +446,166 @@ async fn marks_need_sign_in_come_only_from_nine_turtles_and_have_a_limit() {
         .await;
     assert_eq!(status, StatusCode::PAYLOAD_TOO_LARGE);
     assert_eq!(reader.unread_count().await, 120);
+}
+
+/// The start of a made-up day: post `number` was published at its noon.
+fn day_of_post(number: i64) -> i64 {
+    1_767_268_800 + number * 86_400 - 12 * 3_600
+}
+
+#[tokio::test]
+async fn catch_me_up_reads_everything_before_today_and_undo_brings_it_back() {
+    let reader = Reader::new().await;
+    // Reading post 80 first: it isn't caught up again, so Undo leaves it read.
+    let post_80 = reader
+        .list("view=unread")
+        .await
+        .into_iter()
+        .find(|(title, _)| title == "Post 80")
+        .unwrap()
+        .1;
+    reader
+        .post(
+            "/api/articles/read",
+            json!({ "ids": [post_80], "read": true }),
+        )
+        .await;
+
+    // "Today" begins on post 101's day: posts 1 to 100 are from before it.
+    let (status, caught) = reader
+        .post(
+            "/api/articles/catch-up",
+            json!({ "before": day_of_post(101) }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    let caught: Vec<i64> = caught["ids"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|id| id.as_i64().unwrap())
+        .collect();
+    assert_eq!(caught.len(), 99);
+    assert!(!caught.contains(&post_80));
+    let unread = reader.list("view=unread").await;
+    assert_eq!(unread.len(), 20);
+    assert!(
+        unread
+            .iter()
+            .all(|(title, _)| { title.trim_start_matches("Post ").parse::<i64>().unwrap() > 100 })
+    );
+    assert_eq!(reader.unread_count().await, 20);
+    // Nothing left the feed or All.
+    assert_eq!(reader.list("view=all").await.len(), 120);
+
+    // Catching up again finds nothing more.
+    let (_, again) = reader
+        .post(
+            "/api/articles/catch-up",
+            json!({ "before": day_of_post(101) }),
+        )
+        .await;
+    assert_eq!(again["ids"], json!([]));
+
+    // Undo: the screen sends "unread" for exactly those.
+    let (status, _) = reader
+        .post(
+            "/api/articles/read",
+            json!({ "ids": caught, "read": false }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(reader.unread_count().await, 119);
+    assert!(!ids(&reader.list("view=unread").await).contains(&post_80));
+
+    // A device whose clock runs ahead can't catch up on what's still to come.
+    let (_, ahead) = reader
+        .post("/api/articles/catch-up", json!({ "before": i64::MAX }))
+        .await;
+    assert_eq!(ahead["ids"].as_array().unwrap().len(), 119);
+}
+
+#[tokio::test]
+async fn unread_lets_go_only_when_the_reader_chooses_and_nothing_leaves_the_feed() {
+    let reader = Reader::new().await;
+    // Never, by default: every post (all months old) stays unread.
+    assert_eq!(reader.get("/api/settings").await["let_go"], "never");
+    assert_eq!(reader.list("view=unread").await.len(), 120);
+
+    // Hiding the counts is saved alone and changes nothing else.
+    let (status, body) = reader
+        .post("/api/settings", json!({ "counts": "hidden" }))
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(
+        body,
+        json!({ "sort": "newest", "mode": "inbox", "counts": "hidden", "let_go": "never" })
+    );
+    assert_eq!(reader.list("view=unread").await.len(), 120);
+
+    // Moving through the choices with the arrow keys saves each on the way:
+    // passing "1 week" lets nothing go, since a choice must stand a minute.
+    let let_go = async |now: i64| {
+        nine_turtles::unread::let_go(&reader.state.db, now)
+            .await
+            .unwrap()
+    };
+    let now = nine_turtles::now();
+    for each in ["week", "two-weeks", "month"] {
+        let (status, body) = reader
+            .post("/api/settings", json!({ "let_go": each }))
+            .await;
+        assert_eq!(status, StatusCode::OK);
+        assert_eq!(body["let_go"], each);
+        assert_eq!(let_go(now).await, 0);
+    }
+    assert_eq!(reader.list("view=unread").await.len(), 120);
+    // Back to Never before the minute is up: nothing ever let go.
+    reader
+        .post("/api/settings", json!({ "let_go": "never" }))
+        .await;
+    assert_eq!(let_go(now + 3_600).await, 0);
+    assert_eq!(reader.unread_count().await, 120);
+
+    // A month, standing: every post is older, so all let go at the next
+    // round after the minute, and stay in their feed and All, read.
+    reader
+        .post("/api/settings", json!({ "let_go": "month" }))
+        .await;
+    assert_eq!(
+        let_go(nine_turtles::now() + nine_turtles::unread::SETTLES_FOR + 1).await,
+        120
+    );
+    assert!(reader.list("view=unread").await.is_empty());
+    assert_eq!(reader.unread_count().await, 0);
+    assert_eq!(reader.list("view=all").await.len(), 120);
+    assert_eq!(
+        reader.list(&format!("feed={}", reader.feed)).await.len(),
+        120
+    );
+
+    // An article marked unread again waits until the next round lets it go.
+    let first = reader.list("view=all").await[0].1;
+    reader
+        .post(
+            "/api/articles/read",
+            json!({ "ids": [first], "read": false }),
+        )
+        .await;
+    assert_eq!(reader.unread_count().await, 1);
+
+    let (status, _) = reader
+        .post("/api/settings", json!({ "let_go": "sometime" }))
+        .await;
+    assert!(status.is_client_error());
+}
+
+#[test]
+fn each_wait_is_as_long_as_its_name_says() {
+    use nine_turtles::unread::waits_for;
+    assert_eq!(waits_for("never"), None);
+    assert_eq!(waits_for("week"), Some(7 * 86_400));
+    assert_eq!(waits_for("two-weeks"), Some(14 * 86_400));
+    assert_eq!(waits_for("month"), Some(30 * 86_400));
+    assert_eq!(waits_for("fortnight"), None);
 }

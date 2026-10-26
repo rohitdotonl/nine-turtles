@@ -87,8 +87,9 @@ pub async fn run(state: AppState) {
 /// many were checked. First, feeds unsubscribed long enough ago that Undo
 /// is no longer offered are cleared for good (`folders::clear_unsubscribed`),
 /// newsletter senders are told of those unsubscribes in the background
-/// (`newsletters::tell_senders`), and emailed links past their time are
-/// deleted (`accounts::tidy_links`).
+/// (`newsletters::tell_senders`), emailed links past their time are
+/// deleted (`accounts::tidy_links`), and old unread lets go for readers who
+/// chose that (`unread::let_go`).
 pub async fn round(state: &AppState, now: i64) -> Result<usize, sqlx::Error> {
     folders::clear_unsubscribed(&state.db, None, now - folders::UNDO_FOR).await?;
     // In the background: a slow sender's server never holds up feed checks.
@@ -103,6 +104,8 @@ pub async fn round(state: &AppState, now: i64) -> Result<usize, sqlx::Error> {
     });
     // Emailed links past their time go, even when no new one is made.
     crate::accounts::tidy_links(&state.db, now).await?;
+    // Unread that has waited longer than its reader allows lets go.
+    crate::unread::let_go(&state.db, now).await?;
     websub::renew(state, now).await?;
     let due: Vec<i64> = sqlx::query_scalar(DUE)
         .bind(now)

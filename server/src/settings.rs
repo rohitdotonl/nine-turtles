@@ -1,6 +1,8 @@
 //! Each reader's settings shared across their devices (SPEC section 18): the
-//! sort order and the reading mode, inbox or river (SPEC section 10). Reader
-//! controls such as the theme belong to each device and stay in its browser.
+//! sort order, the reading mode, inbox or river (SPEC section 10), whether
+//! unread counts show, and when unread lets go by itself (`unread`, decision
+//! 0097). Reader controls such as the theme belong to each device and stay
+//! in its browser.
 
 use axum::{
     Json, Router,
@@ -31,11 +33,46 @@ enum Mode {
     River,
 }
 
+/// Whether the sidebar shows unread counts (in inbox mode): shown, the
+/// default, or hidden, keeping the Unread view without the numbers.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+enum Counts {
+    #[default]
+    Shown,
+    Hidden,
+}
+
+/// How long unread waits before it lets go by itself: never (the default),
+/// a week, two weeks or a month (`unread::waits_for`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+enum LetGo {
+    #[default]
+    Never,
+    Week,
+    TwoWeeks,
+    Month,
+}
+
+impl LetGo {
+    const fn stored(self) -> &'static str {
+        match self {
+            Self::Never => "never",
+            Self::Week => "week",
+            Self::TwoWeeks => "two-weeks",
+            Self::Month => "month",
+        }
+    }
+}
+
 #[derive(Serialize)]
 struct Settings {
     /// Newest or oldest first.
     sort: Order,
     mode: Mode,
+    counts: Counts,
+    let_go: LetGo,
 }
 
 /// A change: only the settings named are saved, so a tab from before river
@@ -44,12 +81,14 @@ struct Settings {
 struct Change {
     sort: Option<Order>,
     mode: Option<Mode>,
+    counts: Option<Counts>,
+    let_go: Option<LetGo>,
 }
 
 async fn load(db: &SqlitePool, person: i64) -> Result<Settings, sqlx::Error> {
     let rows: Vec<(String, String)> = sqlx::query_as(
         "SELECT name, value FROM person_settings
-         WHERE person_id = ? AND name IN ('sort', 'mode')",
+         WHERE person_id = ? AND name IN ('sort', 'mode', 'counts', 'let_go')",
     )
     .bind(person)
     .fetch_all(db)
@@ -68,7 +107,22 @@ async fn load(db: &SqlitePool, person: i64) -> Result<Settings, sqlx::Error> {
         Some("river") => Mode::River,
         _ => Mode::Inbox,
     };
-    Ok(Settings { sort, mode })
+    let counts = match value("counts") {
+        Some("hidden") => Counts::Hidden,
+        _ => Counts::Shown,
+    };
+    let let_go = match value("let_go") {
+        Some("week") => LetGo::Week,
+        Some("two-weeks") => LetGo::TwoWeeks,
+        Some("month") => LetGo::Month,
+        _ => LetGo::Never,
+    };
+    Ok(Settings {
+        sort,
+        mode,
+        counts,
+        let_go,
+    })
 }
 
 async fn read(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
@@ -91,9 +145,19 @@ async fn change(
         Mode::Inbox => "inbox",
         Mode::River => "river",
     });
+    let counts = change.counts.map(|counts| match counts {
+        Counts::Shown => "shown",
+        Counts::Hidden => "hidden",
+    });
+    let let_go = change.let_go.map(LetGo::stored);
     let saved = async {
         let mut transaction = state.db.begin().await?;
-        for (name, value) in [("sort", sort), ("mode", mode)] {
+        for (name, value) in [
+            ("sort", sort),
+            ("mode", mode),
+            ("counts", counts),
+            ("let_go", let_go),
+        ] {
             if let Some(value) = value {
                 sqlx::query(
                     "INSERT INTO person_settings (person_id, name, value) VALUES (?, ?, ?)
@@ -105,6 +169,19 @@ async fn change(
                 .execute(&mut *transaction)
                 .await?;
             }
+        }
+        // When the wait was chosen: nothing lets go until it has stood a
+        // minute (`unread::let_go`), so passing a shorter one on the way
+        // with the arrow keys marks nothing.
+        if let_go.is_some() {
+            sqlx::query(
+                "INSERT INTO person_settings (person_id, name, value) VALUES (?, 'let_go_at', ?)
+                 ON CONFLICT (person_id, name) DO UPDATE SET value = excluded.value",
+            )
+            .bind(person)
+            .bind(crate::now().to_string())
+            .execute(&mut *transaction)
+            .await?;
         }
         transaction.commit().await?;
         load(&state.db, person).await
