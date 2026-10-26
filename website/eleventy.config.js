@@ -51,6 +51,21 @@ export default function (eleventyConfig) {
     html.replace(/(href|src)="\/(?!\/)/g, `$1="${base}/`),
   );
 
+  // For the checks only (scripts/check.sh), never on the live website: a
+  // made-up pack with blogs, so the list and its download get checked
+  // before any real pack has blogs (decision 0100).
+  if (process.env.NINE_TURTLES_TEST_PACK) {
+    eleventyConfig.addTemplate("packs/test-pack.md", "", {
+      title: "Test pack",
+      description: "Made-up blogs, for the checks only.",
+      order: 99,
+      blogs: [
+        { name: "Quiet & Slow <Notes>", site: "https://quiet.example/", feed: "https://quiet.example/feed.xml", why: "Made up, with \"marks\" to escape." },
+        { name: "Plain Pages", site: "https://plain.example/", feed: "https://plain.example/atom.xml", why: "Also made up." },
+      ],
+    });
+  }
+
   // Starter packs (src/packs/), in the order each pack names.
   eleventyConfig.addCollection("packs", (collections) =>
     collections.getFilteredByGlob("src/packs/*.md").sort((a, b) => a.data.order - b.data.order),

@@ -27,8 +27,12 @@ blogs:
 - **why:** one line on why it's worth reading, in your own words.
 
 8 to 12 blogs a pack is plenty. Change `title`, `description` or `order`
-(its place in the list) freely, add a pack by copying a file, and remove one
+(its place in the list, a whole number: 1, 2, 3…) freely, add a pack by copying a file, and remove one
 by deleting it.
 
 Once a pack has blogs, it also gets a download, `/packs/<name>.opml`,
 that adds every blog in it to nine turtles or any other feed reader.
+
+The checks also build a made-up test pack with blogs (`NINE_TURTLES_TEST_PACK=1`
+in `scripts/check.sh`), never on the live website, so the list and the
+download are checked before any real pack has blogs.

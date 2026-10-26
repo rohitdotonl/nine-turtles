@@ -100,8 +100,10 @@ website() {
   step "Website: install the exact library versions in the lock file"
   (cd website && npm ci --no-audit --no-fund)
 
+  # With a made-up starter pack, so a pack's list and download are checked
+  # too (decision 0100). The live website is built without it.
   step "Website: build"
-  (cd website && npm run build)
+  (cd website && NINE_TURTLES_TEST_PACK=1 npm run build)
 
   # The browser check borrows Playwright and axe from the frontend.
   if [ ! -d web/node_modules ]; then (cd web && npm ci --no-audit --no-fund); fi

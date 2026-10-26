@@ -110,6 +110,29 @@ try {
     }
   }
 
+  // A starter pack's download (decision 0100), from the made-up test pack
+  // scripts/check.sh builds: plain OPML listing each blog's feed and site.
+  {
+    const page = await browser.newPage();
+    const reply = await page.request.get(base + "/packs/test-pack.opml");
+    if (!reply.ok()) problems.push(`/packs/test-pack.opml: didn't load (${reply.status()})`);
+    else {
+      const opml = await page.evaluate((text) => {
+        const doc = new DOMParser().parseFromString(text, "application/xml");
+        if (doc.querySelector("parsererror")) return null;
+        return [...doc.querySelectorAll("outline[xmlUrl]")].map((o) => [o.getAttribute("text"), o.getAttribute("xmlUrl"), o.getAttribute("htmlUrl")]);
+      }, await reply.text());
+      const expected = [
+        ["Quiet & Slow <Notes>", "https://quiet.example/feed.xml", "https://quiet.example/"],
+        ["Plain Pages", "https://plain.example/atom.xml", "https://plain.example/"],
+      ];
+      if (JSON.stringify(opml) !== JSON.stringify(expected)) {
+        problems.push(`/packs/test-pack.opml: isn't the pack's feeds as OPML (${JSON.stringify(opml)})`);
+      }
+    }
+    await page.close();
+  }
+
   // The feed finder, with the app's answers made up here: it never asks the
   // real app.
   const answers = {
