@@ -13,15 +13,13 @@ permalink: /faq/
 
 ## Can I use nine turtles today?
 
-Yes, by running your own copy: nine turtles is open source and runs as one
-program and one database file on a small server. The instructions are in
-[its repository]({{ site.source }}/blob/main/docs/operations/building-and-running.md). A version you can simply sign up for,
-without running anything yourself, is planned.
+Not yet for everyone. A version you can simply sign up for is planned, and
+the [blog](/blog/) will say when it opens.
 
 ## What will it cost?
 
 That isn't decided yet. When it is, the price will be written plainly here,
-with no hidden extras. Running your own copy is free.
+with no hidden extras.
 
 ## Is it a social network?
 
