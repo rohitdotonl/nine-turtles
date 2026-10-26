@@ -7,6 +7,7 @@ import {
   findByName,
   folderUnread,
   importMessage,
+  starsMessage,
   inDevanagari,
   markedAllMessage,
   newItemsMessage,
@@ -150,6 +151,22 @@ describe("the OPML import summary", () => {
       "1 feed was already here, so it wasn't added again.",
     ]);
     expect(importMessage({ added: 0, already: 0, foldersAdded: 0, unreadable: [] })).toEqual(["No new feeds were added."]);
+  });
+});
+
+describe("the starred import summary", () => {
+  it("says what was starred, what was starred already and what couldn't come over", () => {
+    expect(starsMessage({ starred: 1200, already: 3, unreadable: 2 })).toEqual([
+      "Starred 1,200 articles. They're in Starred, each with a link to the original.",
+      "3 articles were starred here already.",
+      "2 articles couldn't be brought over, as the file gives no link to the original.",
+    ]);
+    expect(starsMessage({ starred: 1, already: 1, unreadable: 1 })).toEqual([
+      "Starred 1 article. It's in Starred, with a link to the original.",
+      "1 article was starred here already.",
+      "1 article couldn't be brought over, as the file gives no link to the original.",
+    ]);
+    expect(starsMessage({ starred: 0, already: 0, unreadable: 0 })).toEqual(["No new stars were added."]);
   });
 });
 

@@ -8,7 +8,8 @@
   Escape goes back. Reading (the reading mode and the sort order) is shared across the reader's
   devices; the reader controls belong to this device. Your data imports and
   exports the reader's feeds and folders as an OPML file, and exports their
-  starred articles as a JSON Feed file. Rules lists the reader's rules, and
+  starred articles as a JSON Feed file, and brings starred articles over
+  from other feed readers. Rules lists the reader's rules, and
   opens the rule editor over Settings (SPEC section 27). Newsletters, while
   nine turtles takes them, shows the reader's private address (SPEC section
   28). Other apps makes the
@@ -27,6 +28,7 @@
   import DeleteAccount from "./DeleteAccount.svelte";
   import Icon from "./Icon.svelte";
   import ImportOpml from "./ImportOpml.svelte";
+  import ImportStars from "./ImportStars.svelte";
   import Newsletters from "./Newsletters.svelte";
   import OtherApps from "./OtherApps.svelte";
   import Plan from "./Plan.svelte";
@@ -184,7 +186,7 @@
 
   let message = $state("");
   let sortMessage = $state("");
-  /** What the last OPML import did, in plain words. */
+  /** What the last import (OPML or starred articles) did, in plain words. */
   let importLines: string[] = $state([]);
 
   async function chooseMode(next: ReadingMode) {
@@ -393,6 +395,7 @@
         <h3 id="data-heading" tabindex="-1" bind:this={dataHeading} class="inset-head">Your data</h3>
         <div class="inset-group">
           <ImportOpml {onImported} bind:lines={importLines} />
+          <ImportStars {onImported} bind:lines={importLines} />
           <a href="/api/starred/export" download class="inset-row inset-action"
             >Export starred articles<span class="row-glyph"><Icon name="download" size={18} /></span></a
           >
@@ -405,7 +408,8 @@
         <p class="inset-foot">
           OPML is the file feed readers use to move your feeds and folders between apps; export one now and then, and
           keep it somewhere safe. Starred articles are saved as a JSON Feed file, which other feed readers can open,
-          with each article's text, its original link and the feed it came from.
+          with each article's text, its original link and the feed it came from. To bring your stars over from
+          Inoreader, Feedly, Feedbin or another feed reader, import the JSON file it exports them in.
         </p>
       </section>
 

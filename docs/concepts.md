@@ -75,6 +75,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Atom
 - JSON Feed
 - OPML
+- Google Reader format (starred exports)
 - Starter feeds
 - Feed autodiscovery
 - HTML parsing (scraper)
