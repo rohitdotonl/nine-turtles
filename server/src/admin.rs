@@ -135,19 +135,7 @@ pub async fn here(db: &SqlitePool, person: i64, now: i64) -> Result<(), sqlx::Er
         .fetch_one(&mut *transaction)
         .await?;
     if last <= now - AWAY_AFTER {
-        sqlx::query(
-            "UPDATE feeds SET next_check_at = MIN(next_check_at,
-                 MAX(COALESCE(fetched_at, 0) + MAX(check_at_most, ?2), ?3))
-             WHERE next_check_at > ?3 AND failures = 0 AND unsubscribed_at IS NULL
-                 AND id NOT IN (SELECT feed_id FROM websub WHERE active_until > ?3)
-                 AND id IN (SELECT feed_id FROM subscriptions
-                            WHERE person_id = ?1 AND unsubscribed_at IS NULL)",
-        )
-        .bind(person)
-        .bind(SHORTEST_WAIT)
-        .bind(now)
-        .execute(&mut *transaction)
-        .await?;
+        due_again(&mut transaction, person, now).await?;
     }
     sqlx::query(
         "INSERT INTO person_settings (person_id, name, value) VALUES (?, 'here_at', ?)
@@ -158,6 +146,31 @@ pub async fn here(db: &SqlitePool, person: i64, now: i64) -> Result<(), sqlx::Er
     .execute(&mut *transaction)
     .await?;
     transaction.commit().await
+}
+
+/// Reader `person`'s feeds that are working are due again soon, as when
+/// they come back after being away (`here`) or their plan starts again
+/// (`payments`), unless a follower asked for fewer checks, the feed was
+/// checked in the last 30 minutes, or a WebSub hub delivers its articles.
+pub(crate) async fn due_again(
+    connection: &mut sqlx::SqliteConnection,
+    person: i64,
+    now: i64,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "UPDATE feeds SET next_check_at = MIN(next_check_at,
+             MAX(COALESCE(fetched_at, 0) + MAX(check_at_most, ?2), ?3))
+         WHERE next_check_at > ?3 AND failures = 0 AND unsubscribed_at IS NULL
+             AND id NOT IN (SELECT feed_id FROM websub WHERE active_until > ?3)
+             AND id IN (SELECT feed_id FROM subscriptions
+                        WHERE person_id = ?1 AND unsubscribed_at IS NULL)",
+    )
+    .bind(person)
+    .bind(SHORTEST_WAIT)
+    .bind(now)
+    .execute(connection)
+    .await?;
+    Ok(())
 }
 
 /// `here`, with a problem only logged: being noted must never stop a

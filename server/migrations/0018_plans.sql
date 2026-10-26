@@ -29,6 +29,9 @@ CREATE TABLE plans (
     -- Until when the reader has what they paid for (a few days' grace
     -- included); after it, the plan has ended.
     access_until INTEGER NOT NULL,
+    -- When Dodo said the newest message kept here happened, so a late,
+    -- older one changes nothing.
+    message_at INTEGER NOT NULL DEFAULT 0,
     updated_at INTEGER NOT NULL
 ) STRICT;
 

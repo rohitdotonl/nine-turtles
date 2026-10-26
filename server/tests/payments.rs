@@ -11,7 +11,7 @@ use axum::{
     Json, Router,
     body::Bytes,
     extract::State,
-    http::{HeaderMap, Method, Uri},
+    http::{HeaderMap, Method, StatusCode, Uri},
 };
 use hmac::{Hmac, KeyInit, Mac};
 use nine_turtles::payments::{self, Settings};
@@ -30,18 +30,26 @@ async fn made_up_dodo(
     uri: Uri,
     headers: HeaderMap,
     body: Bytes,
-) -> Json<Value> {
+) -> (StatusCode, Json<Value>) {
     assert_eq!(headers["authorization"], "Bearer test-api-key");
     let body = serde_json::from_slice(&body).unwrap_or(Value::Null);
     asked
         .lock()
         .unwrap()
         .push((method.to_string(), uri.to_string(), body));
-    Json(json!({
+    let status = if uri.path().contains("sub_broken") {
+        StatusCode::INTERNAL_SERVER_ERROR
+    } else if uri.path().contains("sub_gone") {
+        StatusCode::NOT_FOUND
+    } else {
+        StatusCode::OK
+    };
+    let answer = json!({
         "session_id": "cks_1",
         "checkout_url": "https://test.checkout.example/cks_1",
         "link": "https://test.portal.example/cus_1",
-    }))
+    });
+    (status, Json(answer))
 }
 
 /// Starts the made-up Dodo; answers its address and what it was asked.
@@ -143,13 +151,34 @@ async fn message(base: &str, id: &str, event: &Value, signed: bool) -> reqwest::
 }
 
 fn subscription(kind: &str, person: i64, status: &str, next: i64, ending: bool) -> Value {
+    about(
+        "sub_1",
+        nine_turtles::now(),
+        kind,
+        person,
+        status,
+        next,
+        ending,
+    )
+}
+
+/// A message about subscription `id`, sent at `at`.
+fn about(
+    id: &str,
+    at: i64,
+    kind: &str,
+    person: i64,
+    status: &str,
+    next: i64,
+    ending: bool,
+) -> Value {
     json!({
         "business_id": "bus_1",
         "type": kind,
-        "timestamp": "2026-10-26T12:00:00Z",
+        "timestamp": nine_turtles::starred::rfc3339(at),
         "data": {
             "payload_type": "Subscription",
-            "subscription_id": "sub_1",
+            "subscription_id": id,
             "product_id": "pdt_monthly",
             "status": status,
             "next_billing_date": nine_turtles::starred::rfc3339(next),
@@ -277,8 +306,9 @@ async fn checkout_asks_dodo_for_the_readers_plan_and_keeps_the_trials_days() {
         format!("reader{person}@example.com")
     );
     assert_eq!(body["return_url"], "https://app.example/settings");
-    // 14 days, 4 gone: 9 whole days left (and a part).
-    assert_eq!(body["subscription_data"]["trial_period_days"], 9);
+    // 14 days, 4 gone: 9 days and a part, rounded up, so the first charge
+    // never comes before the day Settings showed.
+    assert_eq!(body["subscription_data"]["trial_period_days"], 10);
 
     let unknown = post(
         &base,
@@ -397,4 +427,158 @@ async fn the_owners_readers_page_shows_each_readers_plan() {
     let readers = page["readers"].as_array().unwrap();
     assert_eq!(readers[0]["plan"]["standing"], "free");
     assert_eq!(readers[1]["plan"]["standing"], "trial");
+}
+
+#[tokio::test]
+async fn a_late_or_old_message_never_undoes_a_newer_plan() {
+    let (base, state, _) = start_with_payments().await;
+    let (person, cookie) = reader(&state).await;
+    joined_days_ago(&state, person, 20).await;
+    let now = nine_turtles::now();
+    let next = now + 30 * DAY;
+    let standing = || async { get(&base, &cookie, "/api/plan").await["plan"].clone() };
+
+    // Cancelled, then an older "active" arrives late: still cancelled.
+    let cancelled = about(
+        "sub_1",
+        now,
+        "subscription.cancelled",
+        person,
+        "cancelled",
+        next,
+        true,
+    );
+    assert_eq!(
+        message(&base, "msg_1", &cancelled, true).await.status(),
+        200
+    );
+    let late = about(
+        "sub_1",
+        now - 60,
+        "subscription.active",
+        person,
+        "active",
+        next,
+        false,
+    );
+    assert_eq!(message(&base, "msg_2", &late, true).await.status(), 200);
+    assert_eq!(standing().await["ending"], true);
+
+    // The reader buys again; then the old subscription expires: the new one stays.
+    let again = about(
+        "sub_2",
+        now + 1,
+        "subscription.active",
+        person,
+        "active",
+        next,
+        false,
+    );
+    assert_eq!(message(&base, "msg_3", &again, true).await.status(), 200);
+    let old_ends = about(
+        "sub_1",
+        now + 2,
+        "subscription.expired",
+        person,
+        "expired",
+        next,
+        false,
+    );
+    assert_eq!(message(&base, "msg_4", &old_ends, true).await.status(), 200);
+    let plan = standing().await;
+    assert_eq!(plan["standing"], "paid", "{plan}");
+    assert_eq!(plan["ending"], false);
+    let kept: String = sqlx::query_scalar("SELECT subscription_id FROM plans WHERE person_id = ?")
+        .bind(person)
+        .fetch_one(&state.db)
+        .await
+        .unwrap();
+    assert_eq!(kept, "sub_2");
+}
+
+#[tokio::test]
+async fn a_message_naming_a_reader_whose_email_differs_isnt_theirs() {
+    let (base, state, _) = start_with_payments().await;
+    let (person, cookie) = reader(&state).await;
+    // As if the number had belonged to a deleted reader with another email.
+    let mut event = subscription(
+        "subscription.active",
+        person,
+        "active",
+        nine_turtles::now() + DAY,
+        false,
+    );
+    event["data"]["customer"]["email"] = json!("someone-else@example.com");
+    assert_eq!(message(&base, "msg_1", &event, true).await.status(), 200);
+    assert_eq!(
+        get(&base, &cookie, "/api/plan").await["plan"]["standing"],
+        "trial"
+    );
+}
+
+#[tokio::test]
+async fn deleting_waits_if_dodo_cant_be_reached_but_not_if_the_plan_is_already_over() {
+    let (base, state, _) = start_with_payments().await;
+    let next = nine_turtles::now() + 30 * DAY;
+    // The made-up Dodo answers 500 for sub_broken and 404 for sub_gone.
+    for (id, answer) in [("sub_broken", 502), ("sub_gone", 204)] {
+        let (person, cookie) = reader(&state).await;
+        let event = about(
+            id,
+            nine_turtles::now(),
+            "subscription.active",
+            person,
+            "active",
+            next,
+            false,
+        );
+        assert_eq!(
+            message(&base, &format!("msg_{id}"), &event, true)
+                .await
+                .status(),
+            200
+        );
+        let deleted = post(&base, &cookie, "/api/people/me/delete", json!({})).await;
+        assert_eq!(deleted.status(), answer, "{id}");
+        let left: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM people WHERE id = ?")
+            .bind(person)
+            .fetch_one(&state.db)
+            .await
+            .unwrap();
+        assert_eq!(left, i64::from(answer == 502), "{id}");
+    }
+}
+
+#[tokio::test]
+async fn a_plan_that_starts_brings_the_readers_feeds_forward() {
+    let (base, state, _) = start_with_payments().await;
+    let (person, _) = reader(&state).await;
+    joined_days_ago(&state, person, 20).await;
+    let later = nine_turtles::now() + 20 * 60 * 60;
+    sqlx::query(
+        "INSERT INTO feeds (id, url, url_key, title, added_at, next_check_at)
+         VALUES (500, 'https://example.com/feed', 'example.com/feed', 'A feed', 1, ?)",
+    )
+    .bind(later)
+    .execute(&state.db)
+    .await
+    .unwrap();
+    sqlx::query(
+        "INSERT INTO subscriptions (person_id, feed_id, title, added_at) VALUES (?, 500, 'A feed', 1)",
+    )
+    .bind(person)
+    .execute(&state.db)
+    .await
+    .unwrap();
+    let next = nine_turtles::now() + 30 * DAY;
+    let active = subscription("subscription.active", person, "active", next, false);
+    assert_eq!(message(&base, "msg_1", &active, true).await.status(), 200);
+    let due: i64 = sqlx::query_scalar("SELECT next_check_at FROM feeds WHERE id = 500")
+        .fetch_one(&state.db)
+        .await
+        .unwrap();
+    assert!(
+        due <= nine_turtles::now() + 60 * 60,
+        "due at {due}, not soon"
+    );
 }

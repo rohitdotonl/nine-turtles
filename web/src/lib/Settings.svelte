@@ -486,8 +486,8 @@
         {#if !owner}
           <!-- Readers are told what the owner's Readers page shows of them (decision 0093). -->
           <p class="inset-foot">
-            Whoever runs this nine turtles can see your email, when you joined, how many feeds you follow and the day
-            you were last here. Never which feeds or what you read.
+            Whoever runs this nine turtles can see your email, when you joined, how many feeds you follow, the day
+            you were last here and, once there are plans, which plan you're on. Never which feeds or what you read.
           </p>
         {/if}
         <p class="inset-foot" translate="no">Version {version}</p>

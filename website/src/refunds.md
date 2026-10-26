@@ -14,8 +14,8 @@ draft: This policy will be finished before anyone can pay for nine turtles. The 
 
 ## Cancelling
 
-- Cancel at any time in the app's settings (to be decided: the exact
-  place). You don't need to write to anyone or give a reason.
+- Cancel at any time in the app: Settings › Your plan › Billing and
+  cancelling. You don't need to write to anyone or give a reason.
 - After you cancel, you won't be charged again. You keep using nine
   turtles until the end of the month or year you've already paid for.
 - Your reading stays yours: you can export your feeds and starred articles

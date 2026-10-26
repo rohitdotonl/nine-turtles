@@ -49,6 +49,7 @@ needs to work:
 | A sign-in cookie on each device you use | To keep you signed in; it's the only cookie, and it never tracks you anywhere else |
 | The day you were last here (not the time), and when you joined | To check less often the feeds of readers who've been away a month; whoever runs nine turtles sees the day, never what you read |
 | Short-lived technical logs (times, errors, never what you read) | To keep the service running and secure |
+| Your plan: monthly or yearly, when it renews or ends, and Dodo Payments' reference numbers for it | To know whether you've paid, and to cancel it if you delete your account; whoever runs nine turtles sees which plan you're on, never what you paid or your card |
 | Payment details | Held by Dodo Payments, the company that takes payments, never by us |
 
 We never sell your data, never show ads, never share what you read, and

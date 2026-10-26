@@ -394,7 +394,9 @@ async fn checkout(
         Ok(Standing::Paid { ending: false, .. } | Standing::OnHold { .. }) => {
             return refused(StatusCode::CONFLICT, "already");
         }
-        Ok(Standing::Trial { ends_at }) => (ends_at - now).div_euclid(DAY).max(0),
+        // Whole days, rounded up, so the first charge never comes before
+        // the day Settings showed for the trial's end.
+        Ok(Standing::Trial { ends_at }) => (ends_at - now + DAY - 1).div_euclid(DAY).max(0),
         Ok(Standing::Paid { .. } | Standing::Ended) => 0,
         Err(error) => return database_problem("reading a reader's plan", &error),
     };
@@ -430,7 +432,7 @@ async fn checkout(
             Some(url) => Json(json!({ "url": url })).into_response(),
             None => dodo_problem("start a checkout", "its answer had no checkout_url"),
         },
-        Err(detail) => dodo_problem("start a checkout", &detail),
+        Err(error) => dodo_problem("start a checkout", &error.detail),
     }
 }
 
@@ -457,7 +459,7 @@ async fn manage(SignedIn(person): SignedIn, State(state): State<AppState>) -> Re
             Some(url) => Json(json!({ "url": url })).into_response(),
             None => dodo_problem("open the billing page", "its answer had no link"),
         },
-        Err(detail) => dodo_problem("open the billing page", &detail),
+        Err(error) => dodo_problem("open the billing page", &error.detail),
     }
 }
 
@@ -472,6 +474,28 @@ fn settings_page(state: &AppState) -> String {
     )
 }
 
+/// What went wrong asking Dodo: its answer's status, if it answered.
+#[derive(Debug)]
+pub struct DodoError {
+    pub status: Option<u16>,
+    pub detail: String,
+}
+
+impl std::fmt::Display for DodoError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(&self.detail)
+    }
+}
+
+impl From<String> for DodoError {
+    fn from(detail: String) -> Self {
+        Self {
+            status: None,
+            detail,
+        }
+    }
+}
+
 /// One request to Dodo's API; its answer, or what went wrong (never the key).
 async fn ask_dodo(
     settings: &Settings,
@@ -479,11 +503,11 @@ async fn ask_dodo(
     path: &str,
     query: &[(&str, &str)],
     body: Option<&Value>,
-) -> Result<Value, String> {
+) -> Result<Value, DodoError> {
     let mut url = settings
         .api_url
         .join(path)
-        .map_err(|error| format!("bad address {path:?}: {error}"))?;
+        .map_err(|error| DodoError::from(format!("bad address {path:?}: {error}")))?;
     if !query.is_empty() {
         url.query_pairs_mut().extend_pairs(query);
     }
@@ -491,7 +515,7 @@ async fn ask_dodo(
         .timeout(TIME_LIMIT)
         .user_agent(crate::fetch::USER_AGENT)
         .build()
-        .map_err(|error| error.to_string())?;
+        .map_err(|error| DodoError::from(error.to_string()))?;
     let mut request = client.request(method, url).bearer_auth(&settings.api_key);
     if let Some(body) = body {
         request = request
@@ -500,18 +524,22 @@ async fn ask_dodo(
     }
     let response = request.send().await.map_err(|error| {
         // Without the address: reqwest's errors name it, and that's enough.
-        format!("no answer ({})", error.without_url())
+        DodoError::from(format!("no answer ({})", error.without_url()))
     })?;
     let status = response.status();
     let text = response.text().await.unwrap_or_default();
     if !status.is_success() {
         let shown: String = text.chars().take(200).collect();
-        return Err(format!("it answered {status}: {shown}"));
+        return Err(DodoError {
+            status: Some(status.as_u16()),
+            detail: format!("it answered {status}: {shown}"),
+        });
     }
     if text.trim().is_empty() {
         return Ok(Value::Null);
     }
-    serde_json::from_str(&text).map_err(|error| format!("its answer wasn't JSON: {error}"))
+    serde_json::from_str(&text)
+        .map_err(|error| DodoError::from(format!("its answer wasn't JSON: {error}")))
 }
 
 /// Cancels reader `person`'s subscription at once, if they have one that
@@ -535,9 +563,25 @@ pub async fn cancel_before_deleting(state: &AppState, person: i64) -> Result<(),
     }
     let path = format!("subscriptions/{subscription}");
     let body = json!({ "status": "cancelled" });
-    ask_dodo(settings, reqwest::Method::PATCH, &path, &[], Some(&body))
-        .await
-        .map(|_| log::info("cancelled a reader's subscription before deleting their account"))
+    match ask_dodo(settings, reqwest::Method::PATCH, &path, &[], Some(&body)).await {
+        Ok(_) => {
+            log::info("cancelled a reader's subscription before deleting their account");
+            Ok(())
+        }
+        // Dodo answered that it can't be cancelled (already cancelled or
+        // ended, or unknown): nothing will charge, so the account can go.
+        Err(DodoError {
+            status: Some(400 | 404 | 409 | 410 | 422),
+            detail,
+        }) => {
+            log::problem(&format!(
+                "Dodo Payments wouldn't cancel a subscription before its account was deleted \
+                 ({detail}); it is taken to be over already, but worth a look in Dodo's dashboard"
+            ));
+            Ok(())
+        }
+        Err(error) => Err(error.detail),
+    }
 }
 
 /// A message from Dodo (a webhook): checked, then the reader's plan
@@ -660,11 +704,22 @@ async fn handle(
                 .or_else(|| value.as_i64())
         });
 
-    // Whose: the reader the checkout was started for, else whoever already
-    // has this subscription, else the reader with the customer's email.
+    // When Dodo says this happened: a message older than the last one kept
+    // for this subscription (Dodo retries late ones) changes nothing.
+    let message_at = event
+        .get("timestamp")
+        .and_then(Value::as_str)
+        .and_then(parse_time)
+        .unwrap_or(now);
+
+    // Whose: whoever already has this subscription, else the reader the
+    // checkout was started for (only while their email still matches, since
+    // a deleted reader's number can be given to someone new), else the
+    // reader with the customer's email.
     let person: Option<i64> = sqlx::query_scalar(
-        "SELECT id FROM people WHERE id = ?1
-         UNION ALL SELECT person_id FROM plans WHERE subscription_id = ?2
+        "SELECT person_id FROM plans WHERE subscription_id = ?2
+         UNION ALL SELECT id FROM people
+             WHERE id = ?1 AND (?3 IS NULL OR email = ?3 COLLATE NOCASE)
          UNION ALL SELECT id FROM people WHERE email = ?3 COLLATE NOCASE
          LIMIT 1",
     )
@@ -696,16 +751,41 @@ async fn handle(
             None
         }
     });
-    let earlier: Option<(String, i64)> =
-        sqlx::query_as("SELECT status, access_until FROM plans WHERE subscription_id = ?")
-            .bind(&subscription)
-            .fetch_optional(&mut *transaction)
-            .await?;
+    // The reader's plan on record, whichever subscription it is.
+    let kept: Option<(String, String, i64, i64)> = sqlx::query_as(
+        "SELECT subscription_id, status, access_until, message_at FROM plans WHERE person_id = ?",
+    )
+    .bind(person)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let same = kept.as_ref().filter(|(id, ..)| *id == subscription);
+    if same.is_some_and(|(.., at)| message_at < *at) {
+        log::info(&format!("an older payment message ({kind}) was ignored"));
+        return transaction.commit().await;
+    }
+    let earlier = same.map(|(_, status, until, _)| (status.clone(), *until));
     let access_until = access_until(&status, renews_at, earlier.as_ref(), now);
+    let had_access = kept.as_ref().is_some_and(|(_, _, until, _)| *until > now);
+    if let Some((other, ..)) = kept.as_ref().filter(|(id, ..)| *id != subscription) {
+        if had_access && access_until <= now {
+            // An old subscription ending (the reader bought again after
+            // cancelling): the current one stays on record.
+            log::info(&format!(
+                "a message ({kind}) about a reader's earlier subscription was noted"
+            ));
+            return transaction.commit().await;
+        }
+        if had_access {
+            log::problem(&format!(
+                "a reader has two subscriptions at Dodo; only the newer is kept here, so the \
+                 older ({other}) should be cancelled in Dodo's dashboard"
+            ));
+        }
+    }
     sqlx::query(
         "INSERT INTO plans (person_id, subscription_id, customer_id, period, status, renews_at,
-                            ending, access_until, updated_at)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
+                            ending, access_until, message_at, updated_at)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)
          ON CONFLICT (person_id) DO UPDATE SET
              subscription_id = excluded.subscription_id,
              customer_id = CASE WHEN excluded.customer_id = '' THEN plans.customer_id
@@ -713,7 +793,7 @@ async fn handle(
              period = COALESCE(excluded.period, plans.period),
              status = excluded.status, renews_at = excluded.renews_at,
              ending = excluded.ending, access_until = excluded.access_until,
-             updated_at = excluded.updated_at",
+             message_at = excluded.message_at, updated_at = excluded.updated_at",
     )
     .bind(person)
     .bind(&subscription)
@@ -723,9 +803,15 @@ async fn handle(
     .bind(renews_at)
     .bind(i64::from(ending))
     .bind(access_until)
+    .bind(message_at)
     .bind(now)
     .execute(&mut *transaction)
     .await?;
+    // A plan that starts (or starts again): the reader's feeds, checked once
+    // a day while it had ended, are due again soon.
+    if access_until > now && !had_access {
+        crate::admin::due_again(&mut transaction, person, now).await?;
+    }
     transaction.commit().await?;
     log::info(&format!("a reader's plan is now {status} ({kind})"));
     Ok(())

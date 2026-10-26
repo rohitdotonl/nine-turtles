@@ -1,5 +1,5 @@
 import { describe as group, expect, it } from "vitest";
-import { canSubscribe, describe, toPlanStatus, toStanding } from "./plan";
+import { canSubscribe, describe, label, refusal, toPlanStatus, toStanding } from "./plan";
 
 group("the reader's plan", () => {
   it("reads the server's answer, and anything unknown as ended", () => {
@@ -52,5 +52,14 @@ group("the reader's plan", () => {
     expect(canSubscribe({ standing: "on-hold", until: 1 })).toBe(false);
     expect(canSubscribe({ standing: "paid", until: 1, renewsAt: 1, ending: false, period: null })).toBe(false);
     expect(canSubscribe({ standing: "paid", until: 1, renewsAt: null, ending: true, period: null })).toBe(true);
+  });
+
+  it("names the plan in a few words for the owner, and says why a door stayed shut", () => {
+    expect(label({ standing: "trial", endsAt: 1 })).toBe("Free trial");
+    expect(label({ standing: "paid", until: 1, renewsAt: 1, ending: false, period: "yearly" })).toBe("Yearly plan");
+    expect(label({ standing: "paid", until: 1, renewsAt: null, ending: true, period: "monthly" })).toBe("Plan cancelled");
+    expect(label({ standing: "ended" })).toBe("Plan ended");
+    expect(refusal("no-email")).toBe("Your account needs an email before you can choose a plan.");
+    expect(refusal("something else")).toBe("Payments can't be reached just now. Try again in a moment.");
   });
 });

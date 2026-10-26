@@ -8,7 +8,7 @@
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
-  import { type PlanStatus, UNREACHABLE, billingAddress, canSubscribe, checkoutAddress, describe, loadPlan } from "./plan";
+  import { type PlanStatus, Refused, UNREACHABLE, billingAddress, canSubscribe, checkoutAddress, describe, loadPlan } from "./plan";
 
   let status: PlanStatus = $state({ on: false });
   let message = $state("");
@@ -28,8 +28,8 @@
     try {
       // Dodo's page, in this tab; it sends the reader back to Settings.
       location.assign(await address());
-    } catch {
-      message = UNREACHABLE;
+    } catch (error) {
+      message = error instanceof Refused ? error.message : UNREACHABLE;
       busy = false;
     }
   }
@@ -45,13 +45,13 @@
       </div>
       {#if canSubscribe(status.plan)}
         <button type="button" aria-disabled={busy} onclick={() => go(() => checkoutAddress("monthly"))} class="inset-row inset-action"
-          ><span class="min-w-0">Monthly<span class="text-muted"> · {status.prices.monthly}</span></span><span class="row-glyph"
+          ><span class="min-w-0">Monthly<span class="text-muted">{` · ${status.prices.monthly}`}</span></span><span class="row-glyph"
             ><Icon name="open" size={18} /></span
           ></button
         >
         {#if status.prices.yearly}
           <button type="button" aria-disabled={busy} onclick={() => go(() => checkoutAddress("yearly"))} class="inset-row inset-action"
-            ><span class="min-w-0">Yearly<span class="text-muted"> · {status.prices.yearly}</span></span><span class="row-glyph"
+            ><span class="min-w-0">Yearly<span class="text-muted">{` · ${status.prices.yearly}`}</span></span><span class="row-glyph"
               ><Icon name="open" size={18} /></span
             ></button
           >

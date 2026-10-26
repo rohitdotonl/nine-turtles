@@ -102,6 +102,23 @@ export function describe(plan: Standing): { title: string; detail: string } {
   }
 }
 
+/** The plan in two or three words, for the owner's Readers page. */
+export function label(plan: Standing): string {
+  switch (plan.standing) {
+    case "free":
+      return "Free";
+    case "trial":
+      return "Free trial";
+    case "paid":
+      if (plan.ending) return "Plan cancelled";
+      return plan.period === "yearly" ? "Yearly plan" : plan.period === "monthly" ? "Monthly plan" : "Paid plan";
+    case "on-hold":
+      return "Payment didn't go through";
+    case "ended":
+      return "Plan ended";
+  }
+}
+
 /** Whether the reader can choose a plan now: not while one is paid up and renewing. */
 export function canSubscribe(plan: Standing): boolean {
   return plan.standing === "trial" || plan.standing === "ended" || (plan.standing === "paid" && plan.ending);
@@ -110,11 +127,32 @@ export function canSubscribe(plan: Standing): boolean {
 /** What went wrong reaching Dodo Payments, in a calm sentence. */
 export const UNREACHABLE = "Payments can't be reached just now. Try again in a moment.";
 
+/** nine turtles said no, for a reason trying again won't change; its sentence. */
+export class Refused extends Error {}
+
+/** What each refusal means, in a sentence. */
+export function refusal(error: unknown): string {
+  switch (error) {
+    case "already":
+      return "You already have a plan. Reload to see it.";
+    case "no-email":
+      return "Your account needs an email before you can choose a plan.";
+    case "no-plan":
+      return "There's no plan to manage yet. Reload to see where you stand.";
+    default:
+      return UNREACHABLE;
+  }
+}
+
 async function door(path: string, body?: unknown): Promise<string> {
   const response = await api(path, {
     method: "POST",
     ...(body === undefined ? {} : { headers: { "content-type": "application/json" }, body: JSON.stringify(body) }),
   });
+  if (response.status === 409) {
+    const answer: unknown = await response.json().catch(() => null);
+    throw new Refused(refusal(isRecord(answer) ? answer.error : null));
+  }
   if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
   const answer: unknown = await response.json();
   if (!isRecord(answer) || typeof answer.url !== "string") throw new Error("nine turtles sent no address");

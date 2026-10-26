@@ -24,8 +24,13 @@
   the `whsec_…` secret, base64, any `v1,` signature matching, at most five
   minutes old. Their ids are kept 90 days (`payment_messages`) so a repeat
   changes nothing. Only `subscription.*` messages change anything; the
-  reader is found by `metadata.person_id`, else by the subscription already
-  on record, else by the customer's email.
+  reader is found by the subscription already on record, else by
+  `metadata.person_id` while that reader's email still matches the
+  customer's (a deleted reader's number can be reused), else by the
+  customer's email. A message older (by its own `timestamp`) than the last
+  one kept for that subscription (`plans.message_at`) is ignored, and so is
+  the end of an earlier subscription while a newer one gives access; two
+  live subscriptions for one reader are logged as a problem for the owner.
 - **Our own record** (`plans`, one row per reader): Dodo's subscription and
   customer ids, status, period, next charge, whether it's ending, and
   `access_until`: the next charge plus 7 days (`GRACE`) while active, 7
@@ -36,7 +41,11 @@
   count as away (checked once a day) unless someone current follows them.
 - **Deleting an account** cancels its subscription at Dodo first
   (`PATCH /subscriptions/{id}`, `status: cancelled`); if Dodo can't be
-  reached, nothing is deleted.
+  reached (or answers 5xx, 401, 403 or 429), nothing is deleted. If it
+  answers 400, 404, 409, 410 or 422 (already over, or unknown), the account
+  goes and a problem is logged.
+- **A plan starting again** brings the reader's working feeds forward
+  (`admin::due_again`, shared with a reader coming back after being away).
 - **No new library:** reqwest, hmac and sha2 were already approved; base64
   (about 40 lines) and reading ISO 8601 times are written by hand in
   `payments.rs`, with tests (including the Standard Webhooks example).
