@@ -676,7 +676,7 @@ A rule says "when a new article **matches this**, **do that**", in plain fields,
 
 ## 30. The feed finder (on the website)
 
-*Built 26 October 2026 (decision 0095). A free page at nineturtles.app/feed-finder/, for anyone, with no account.*
+*Built 26 October 2026 (decision 0098). A free page at nineturtles.app/feed-finder/, for anyone, with no account.*
 
 - One field, **A website's address**, and **Find its feed**. Leaving off `https://` is fine. The line under it says the home page usually works, or a blog's own page inside a bigger site.
 - While it looks, a line says "Looking at example.com…". Then it shows **Its feed** (or **Its feeds**): each feed's name and address, with a **Copy address** button (where copying isn't possible, the address is selected instead), and "Found 2 feeds. The first is usually the main one." when there are several. Under them, **Newest in** the first feed's name (linking to the publisher's site), its five newest titles, each linking to the article on the publisher's own website, with its date. A pasted feed address is its own answer.
