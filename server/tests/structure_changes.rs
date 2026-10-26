@@ -1399,7 +1399,7 @@ async fn allowing_sign_in_links_keeps_every_emailed_link() {
     let data_dir = common::config().data_dir;
     std::fs::create_dir_all(&data_dir).unwrap();
 
-    // The database just after payments (structure change 18), with one link
+    // The database just after pausing feeds (structure change 19), with one link
     // of each kind waiting.
     let old = SqlitePoolOptions::new()
         .connect_with(
@@ -1411,7 +1411,7 @@ async fn allowing_sign_in_links_keeps_every_emailed_link() {
         .await
         .unwrap();
     sqlx::migrate!("./migrations")
-        .run_to(18, &old)
+        .run_to(19, &old)
         .await
         .unwrap();
     for sql in [

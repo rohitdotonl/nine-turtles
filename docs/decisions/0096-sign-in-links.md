@@ -1,4 +1,4 @@
-# 0095: "Email me a sign-in link"
+# 0096: "Email me a sign-in link"
 
 *26 October 2026. The owner asked for it in their list of next things to
 build.*
@@ -25,7 +25,7 @@ build.*
   towards the hour.
 - **Nothing else changes when it's used:** other devices stay signed in,
   and the password and app password stay as they are.
-- **Structure change 19.** SQLite can't change a table's checks in place,
+- **Structure change 20.** SQLite can't change a table's checks in place,
   so `email_links` is made again with the purpose `sign-in` allowed, every
   line copied across. nine turtles stores a backup first, as before every
   structure change (decision 0076). The table holds only links, which last a

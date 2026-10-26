@@ -1,6 +1,6 @@
 <!--
   The page a sign-in link opens (/sign-in-link#ticket=…, SPEC section 1,
-  decision 0095). Nothing happens until the reader presses Sign in, so a
+  decision 0096). Nothing happens until the reader presses Sign in, so a
   mail program that opens links to check them can't use the link up first.
   This device is then signed in and nine turtles opens. A link that has run
   out says so calmly.
