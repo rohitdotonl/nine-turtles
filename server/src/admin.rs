@@ -51,7 +51,7 @@ pub fn routes() -> Router<AppState> {
 /// When reader `person` (a column, or `?1`) was last here, in SQL: the
 /// latest of when they joined, when one of their devices was last used,
 /// and when they were last seen (`here`). Each device notes its use at
-/// most once a day, so this is right to the day. (A macro, so every query
+/// most once every 24 hours, so this is at most a day behind. (A macro, so every query
 /// stays one fixed string.)
 macro_rules! last_here {
     ($person:literal) => {
@@ -181,7 +181,8 @@ pub struct Reader {
     pub feeds: i64,
     /// How many of those have failed for three days or more.
     pub feeds_failing: i64,
-    /// When nine turtles last saw them (`last_here!`), right to the day.
+    /// When nine turtles last saw them (`last_here!`); noted at most once
+    /// every 24 hours, so it can be up to a day behind.
     pub last_here: i64,
 }
 

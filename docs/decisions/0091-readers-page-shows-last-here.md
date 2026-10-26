@@ -12,8 +12,9 @@
   already keeps to decide whether a reader's feeds rest (decision 0090):
   the latest of when they joined, when one of their devices was last used,
   and when they last signed in, opened nine turtles or synced from another
-  app. Each of those is noted at most once a day, so it's right to the day
-  and costs no extra writes. No structure change, so no backup was needed.
+  app. Each of those is noted at most once every 24 hours, so it costs no
+  extra writes, and the day shown can be one behind: a reader noted at
+  8 pm who comes back at 9 the next morning still shows the day before. No structure change, so no backup was needed.
 - **Readers are told.** Every reader but the owner sees, under Account in
   Settings: "Whoever runs this nine turtles can see your email, when you
   joined, how many feeds you follow and the day you were last here. Never
@@ -21,4 +22,4 @@
 
 **Why.** It tells the owner whether a tester has tried nine turtles yet,
 without saying anything about what anyone reads. A day is enough for that,
-and it's as coarse as what's stored.
+and a day behind at worst doesn't change the answer.

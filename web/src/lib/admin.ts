@@ -13,7 +13,7 @@ export type Reader = {
   feeds: number;
   /** Of their feeds, how many have failed for three days or more. */
   feedsFailing: number;
-  /** When nine turtles last saw them, right to the day. */
+  /** When nine turtles last saw them; noted at most once every 24 hours, so up to a day behind. */
   lastHere: number;
 };
 
@@ -50,17 +50,20 @@ export function toOverview(body: unknown): Overview {
   const page = isRecord(body) ? body : {};
   const totals = isRecord(page.totals) ? page.totals : {};
   const backups = isRecord(page.backups) ? page.backups : {};
-  const number = (value: unknown) => (typeof value === "number" && Number.isFinite(value) ? value : 0);
+  const number = (value: unknown) =>
+    typeof value === "number" && Number.isFinite(value) ? value : 0;
   return {
-    readers: (Array.isArray(page.readers) ? page.readers : []).filter(isRecord).map((reader) => ({
-      id: number(reader.id),
-      email: typeof reader.email === "string" ? reader.email : null,
-      owner: reader.owner === true,
-      createdAt: number(reader.created_at),
-      feeds: number(reader.feeds),
-      feedsFailing: number(reader.feeds_failing),
-      lastHere: number(reader.last_here) || number(reader.created_at),
-    })),
+    readers: (Array.isArray(page.readers) ? page.readers : [])
+      .filter(isRecord)
+      .map((reader) => ({
+        id: number(reader.id),
+        email: typeof reader.email === "string" ? reader.email : null,
+        owner: reader.owner === true,
+        createdAt: number(reader.created_at),
+        feeds: number(reader.feeds),
+        feedsFailing: number(reader.feeds_failing),
+        lastHere: number(reader.last_here) || number(reader.created_at),
+      })),
     totals: {
       readers: number(totals.readers),
       feeds: number(totals.feeds),
@@ -71,11 +74,17 @@ export function toOverview(body: unknown): Overview {
     },
     databaseBytes: number(page.database_bytes),
     backupsOn: backups.on === true,
-    latestBackup: typeof backups.latest_nightly === "string" ? backups.latest_nightly : null,
+    latestBackup:
+      typeof backups.latest_nightly === "string"
+        ? backups.latest_nightly
+        : null,
     emailSending: page.email_sending === true,
     problems: (Array.isArray(page.problems) ? page.problems : [])
       .filter(isRecord)
-      .map((problem) => ({ at: number(problem.at), message: String(problem.message ?? "") })),
+      .map((problem) => ({
+        at: number(problem.at),
+        message: String(problem.message ?? ""),
+      })),
     mostFeeds: number(page.most_feeds) || 1000,
     awayAfterDays: number(page.away_after_days) || 30,
   };
@@ -96,11 +105,16 @@ export function plural(value: number, one: string, many: string): string {
 /** A size in the units people know: "840 KB", "312 MB", "1.2 GB". */
 export function size(bytes: number): string {
   if (bytes < 1000 * 1000) return `${Math.max(1, Math.round(bytes / 1000))} KB`;
-  if (bytes < 1000 * 1000 * 1000) return `${Math.round(bytes / (1000 * 1000))} MB`;
+  if (bytes < 1000 * 1000 * 1000)
+    return `${Math.round(bytes / (1000 * 1000))} MB`;
   return `${(bytes / (1000 * 1000 * 1000)).toFixed(1)} GB`;
 }
 
-const DATE = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" });
+const DATE = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
 
 /** "25 October 2026", in this device's time zone. */
 export function date(seconds: number): string {
@@ -111,7 +125,9 @@ export function date(seconds: number): string {
 export function lastHereDay(seconds: number, now: Date = new Date()): string {
   const day = new Date(seconds * 1000);
   const sameDay =
-    day.getFullYear() === now.getFullYear() && day.getMonth() === now.getMonth() && day.getDate() === now.getDate();
+    day.getFullYear() === now.getFullYear() &&
+    day.getMonth() === now.getMonth() &&
+    day.getDate() === now.getDate();
   return sameDay ? "today" : date(seconds);
 }
 
@@ -119,10 +135,17 @@ export function lastHereDay(seconds: number, now: Date = new Date()): string {
 export function backupDay(name: string | null): string | null {
   const found = name?.match(/(\d{4})-(\d{2})-(\d{2})/);
   if (!found) return null;
-  const [year, month, day] = [Number(found[1]), Number(found[2]), Number(found[3])];
-  return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(
-    new Date(Date.UTC(year, month - 1, day)),
-  );
+  const [year, month, day] = [
+    Number(found[1]),
+    Number(found[2]),
+    Number(found[3]),
+  ];
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(year, month - 1, day)));
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
