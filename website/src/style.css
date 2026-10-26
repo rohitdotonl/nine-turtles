@@ -477,6 +477,44 @@ footer {
   font-size: 0.875rem;
 }
 
+/* Nine turtles walking in single file above the footer's links: seven
+   together, then a gap, then two more. Still, like everything here. */
+footer .walk {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--line);
+}
+
+footer .procession {
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(4px, 1.4vw, 12px);
+  color: var(--ink-2);
+}
+
+footer .turtle {
+  display: block;
+  flex: none;
+  width: clamp(20px, 3.4vw, 28px);
+  height: auto;
+  fill: currentColor;
+}
+
+footer .turtle.behind {
+  margin-right: clamp(24px, 6vw, 64px);
+}
+
+footer .walk p {
+  margin: 0;
+  color: var(--ink-2);
+  font-family: var(--serif);
+  font-size: 1rem;
+  text-align: center;
+}
+
 footer .columns {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
