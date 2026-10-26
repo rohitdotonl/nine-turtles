@@ -10,7 +10,8 @@
 //! reader's rules and mutes (`rules`), the readers and sign-up (`people`),
 //! and what email makes possible (`email`, `accounts`): confirming an
 //! address, a new password, a changed email, and deleting an account,
-//! and paying through Dodo Payments (`payments`).
+//! paying through Dodo Payments (`payments`), and the website's feed
+//! finder (`finder`).
 //! The frontend is packed into this program (see `assets`).
 
 pub mod accounts;
@@ -28,6 +29,7 @@ pub mod email;
 pub mod feed;
 pub mod feeds;
 pub mod fetch;
+pub mod finder;
 pub mod folders;
 pub mod greader;
 pub mod health;
@@ -87,6 +89,8 @@ pub struct AppState {
     /// Sign-up tries in the last hour. Held while a new reader's password is
     /// scrambled, so sign-ups go one at a time.
     pub sign_ups: Arc<Mutex<people::SignUpTries>>,
+    /// The website's feed finder: its remembered answers and its limits.
+    pub finder: Arc<finder::Finder>,
     pub wrong_passwords: Arc<AtomicU64>,
     /// Seconds since 1970 (UTC) when this run of nine turtles started.
     pub started_at: i64,
@@ -158,6 +162,7 @@ pub async fn state(config: Config) -> Result<AppState, String> {
         limiter: Arc::default(),
         password_checks: Arc::default(),
         sign_ups: Arc::default(),
+        finder: Arc::default(),
         wrong_passwords: Arc::default(),
         started_at: now(),
         last_round: Arc::default(),
@@ -182,6 +187,7 @@ pub fn router(state: AppState) -> Router {
         .merge(apps::routes())
         .merge(greader::routes())
         .merge(feeds::routes())
+        .merge(finder::routes())
         .merge(folders::routes())
         .merge(health::routes())
         .merge(subscriptions::routes())

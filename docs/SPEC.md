@@ -663,6 +663,17 @@ A rule says "when a new article **matches this**, **do that**", in plain fields,
 3. Press Billing and cancelling and cancel: Settings says "Cancelled. It lasts until …".
 4. Signed in as yourself (the owner), Settings has no plan group, and the Readers page shows the new reader's plan.
 
+## 30. The feed finder (on the website)
+
+*Built 26 October 2026 (decision 0095). A free page at nineturtles.app/feed-finder/, for anyone, with no account.*
+
+- One field, **A website's address**, and **Find its feed**. Leaving off `https://` is fine. The line under it says the home page usually works, or a blog's own page inside a bigger site.
+- While it looks, a line says "Looking at example.com…". Then it shows **Its feed** (or **Its feeds**): each feed's name and address, with a **Copy address** button (where copying isn't possible, the address is selected instead), and "Found 2 feeds. The first is usually the main one." when there are several. Under them, **Newest in** the first feed's name (linking to the publisher's site), its five newest titles, each linking to the article on the publisher's own website, with its date. A pasted feed address is its own answer.
+- Problems are a plain sentence in the same line: not an address, a private address, the site not answering, the page not there, the page too large, no feed named ("Try the site's home page, or look on the site for a link called RSS, Atom or Feed. Some sites don't have one."), or the finder busy ("Try again in a minute").
+- It looks exactly as Add feed does (section 3): the one page given, once, and the first feed it names, once, for the titles. It never guesses addresses or visits articles. The same answer is remembered for half an hour, so asking again doesn't bother the publisher; nothing about who asked is kept.
+- The page's own address carries what was asked (`?address=…`), so a lookup can be shared or reloaded. **Find feed**, a button to drag to the bookmarks bar, opens the finder with the page you're on.
+- Below: what it looks at, then "Paste the feed's address into any feed reader. In nine turtles it goes in Add feed," with a link to "New to feeds?". Linked from the website's footer and from "New to feeds?".
+
 ---
 
 ## Not in V1

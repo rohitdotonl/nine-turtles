@@ -402,7 +402,7 @@ pub async fn enter_stored(
 
 /// What the reader typed, as a web address. `example.com` means
 /// `https://example.com`.
-fn parse_address(address: &str) -> Option<Url> {
+pub(crate) fn parse_address(address: &str) -> Option<Url> {
     let address = address.trim();
     if address.is_empty() || address.chars().any(char::is_whitespace) {
         return None;

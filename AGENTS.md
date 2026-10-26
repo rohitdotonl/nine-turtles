@@ -97,7 +97,7 @@ years › written for the next agent.
 - **Never commit the owner's OPML file.** `*.opml` is ignored; test fixtures use made-up feeds.
 - No notifications, badges, gamification, animations or transitions. Ever. Lists end: older items load as you reach the bottom (decision 0074), but nothing pads a list.
 - The accent (ink blue in Original, the text color in Plain) marks only what's yours to look at: what's unread and what a search found (decisions 0037, 0057); where you are is a plain grey pill. Green marks only a filled star. Neither is ever a button, a link or a focus outline.
-- Never fetch an article's web page. Autodiscovery fetches only the page the owner pastes, only when they add a feed or ask "Find new address" (`docs/decisions/0016-adding-feeds.md`).
+- Never fetch an article's web page. Autodiscovery fetches only the page the reader pastes, only when they add a feed, ask "Find new address", or use the website's feed finder (`docs/decisions/0016-adding-feeds.md`, decision 0095).
 - A feature isn't done until it has tests and the checks pass.
 - Significant decisions get a short note in `docs/decisions/`.
 - **No lock-in:** hosts, storage, CI and agent tools stay replaceable; anything a tool needs to know is written in the repository. See `docs/owner-guide.md` → "You're never locked in".

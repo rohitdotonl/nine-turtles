@@ -30,6 +30,12 @@ website or uses the app. To ask anything about your data, write to
   internet) when they send you a page, and GitHub may keep it for a short
   time to keep the service secure. See
   [GitHub's privacy statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement).
+- **The feed finder.** When you use the [feed finder](/feed-finder/), the
+  address you type goes to the app at app.nineturtles.app, which visits
+  that page and its feed to answer. No cookies go with it, nothing about
+  you is kept, and the address isn't written down: the answer is only
+  remembered, in memory, for half an hour, so the site isn't asked again.
+  The publisher sees that nine turtles asked, not who you are.
 - **Email.** If you write to us, we keep your message and address only
   to reply, and delete them when they're no longer needed.
 
