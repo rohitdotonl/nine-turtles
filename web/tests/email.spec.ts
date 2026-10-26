@@ -4,7 +4,7 @@ import { MAILBOX, MAIL_APP, TEST_PASSWORD } from "../playwright.config";
 // SPEC sections 1 and 18 (decision 0088): what email makes possible, against
 // a nine turtles that sends its emails to a made-up mail server on this
 // computer (tests/mail-server.mjs). Open sign-up with a confirmation link,
-// "Forgot your password?", "Email me a sign-in link" (decision 0095),
+// "Forgot your password?", "Email me a sign-in link" (decision 0096),
 // changing an email and deleting an account. Each
 // test uses addresses of its own, so the two window sizes never meet.
 

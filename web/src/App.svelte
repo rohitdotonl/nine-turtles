@@ -2,7 +2,7 @@
   Decides between the sign-in page, the sign-up page (an invite link's
   /sign-up, decision 0087, or anyone's while sign-up is Open), the pages an
   emailed link opens (/reset-password and /confirm-email, decision 0088;
-  /sign-in-link, decision 0095) and
+  /sign-in-link, decision 0096) and
   the signed-in screen. Until the server has answered, nothing is shown, so
   the reader never sees the wrong one.
 -->

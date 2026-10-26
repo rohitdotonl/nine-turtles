@@ -9,4 +9,4 @@
   the server sends at most one sign-in link a minute and three emails an
   hour to any address.
 - The links table was made again to allow the new kind of link (structure
-  change 19); nine turtles stores a backup first, as always.
+  change 20); nine turtles stores a backup first, as always.
