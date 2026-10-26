@@ -16,6 +16,13 @@ export const FEED_SITE = `http://127.0.0.1:${FEED_SITE_PORT}`;
 // in them but the made-up library they follow (tests/screens.ts), so the
 // pictures never show the other tests' feeds.
 const SHOTS_PORTS = { desktop: 4321, phone: 4322 };
+// A nine turtles that sends email (decision 0088), to a made-up mail server on
+// this computer that keeps each email for the tests to read (tests/mail-server.mjs).
+const MAIL_PORT = 4323;
+const MAIL_SMTP_PORT = 4324;
+const MAIL_HTTP_PORT = 4325;
+export const MAIL_APP = `http://127.0.0.1:${MAIL_PORT}`;
+export const MAILBOX = `http://127.0.0.1:${MAIL_HTTP_PORT}`;
 const server = process.env.NINE_TURTLES_BINARY ?? "../server/target/release/nine-turtles";
 // Lets a computer with its own copy of Chromium use it instead of downloading one.
 const executablePath = process.env.NINE_TURTLES_CHROMIUM || undefined;
@@ -79,6 +86,29 @@ export default defineConfig({
         NINE_TURTLES_TEST_CHECK_SECONDS: "2",
       },
       url: `${FEEDS_APP}/`,
+      reuseExistingServer: false,
+    },
+    {
+      command: "node tests/mail-server.mjs",
+      env: { MAIL_SERVER_SMTP_PORT: String(MAIL_SMTP_PORT), MAIL_SERVER_HTTP_PORT: String(MAIL_HTTP_PORT) },
+      url: `${MAILBOX}/`,
+      reuseExistingServer: false,
+    },
+    {
+      command: server,
+      env: {
+        NINE_TURTLES_LISTEN: `127.0.0.1:${MAIL_PORT}`,
+        NINE_TURTLES_PASSWORD_HASH: TEST_PASSWORD_HASH,
+        NINE_TURTLES_DATA_DIR: `test-data/mail-${Date.now()}`,
+        NINE_TURTLES_PUBLIC_URL: MAIL_APP,
+        // Unencrypted, as nine turtles allows only for a mail server on this computer.
+        NINE_TURTLES_SMTP_HOST: "127.0.0.1",
+        NINE_TURTLES_SMTP_PORT: String(MAIL_SMTP_PORT),
+        NINE_TURTLES_SMTP_USERNAME: "tests",
+        NINE_TURTLES_SMTP_PASSWORD: "not a real key",
+        NINE_TURTLES_SMTP_FROM: "nine turtles <hello@nineturtles.test>",
+      },
+      url: `${MAIL_APP}/`,
       reuseExistingServer: false,
     },
     ...Object.entries(SHOTS_PORTS).map(([device, port]) => ({

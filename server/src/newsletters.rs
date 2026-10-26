@@ -1,4 +1,4 @@
-//! Where newsletter emails arrive (SPEC section 28, decision 0087).
+//! Where newsletter emails arrive (SPEC section 28, decision 0091).
 //!
 //! nine turtles can't receive email itself. A mail service (Cloudflare Email
 //! Routing, with the small forwarder in `cloudflare/newsletter-worker/`)

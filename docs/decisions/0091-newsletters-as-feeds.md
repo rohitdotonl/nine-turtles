@@ -1,4 +1,4 @@
-# 0087: Newsletters as feeds
+# 0091: Newsletters as feeds
 
 *25 October 2026. Milestone 10 of the plan for 100 to 200 readers
 (https://claude.ai/artifact/V3GhrBxfXDG1TjPMsXQFPk). The owner approved the

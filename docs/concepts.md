@@ -163,6 +163,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Rules and mutes (filters the reader writes)
 - Readers (accounts) and the `people` table
 - Subscriptions and entries (each reader's feeds and marks)
+- Admin page (the owner's Readers page) and usage limits (fair-use quotas)
 
 ## Security and sign-in
 
@@ -173,6 +174,10 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Random numbers and tokens
 - Session and session cookie
 - App password
+- Invite link and sign-up switch
+- SMTP and STARTTLS (sending email)
+- Email confirmation link
+- Rate limiting per account
 - Secure, HTTP-only and SameSite cookies
 - Cross-site request forgery (CSRF)
 - Cross-site scripting (XSS)

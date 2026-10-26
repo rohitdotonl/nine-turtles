@@ -2106,3 +2106,160 @@ async fn articles_carried_to_a_new_address_stay_walled_from_the_old_feeds_follow
         StatusCode::NOT_FOUND
     );
 }
+
+/// A reader who signs up through the owner's invite link (decision 0087)
+/// starts with an empty library: no feeds, folders, saved searches, rules,
+/// entries or marks of the owner's, now or when the owner's feeds bring new
+/// articles. The owner's library is left exactly as it was.
+#[tokio::test]
+async fn a_reader_who_signs_up_starts_with_an_empty_library() {
+    let (owner, _, state, feed) = two_readers().await;
+    let ids = owner.ids("view=all").await;
+    let (status, _) = owner
+        .post(
+            "/api/articles/read",
+            json!({ "ids": [ids[0]], "read": true }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    let (status, _) = owner
+        .post(
+            "/api/articles/starred",
+            json!({ "ids": [ids[1]], "starred": true }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    let (status, made) = owner
+        .post("/api/folders", json!({ "name": "Garden" }))
+        .await;
+    assert_eq!(status, StatusCode::CREATED);
+    let folder = made["folder"]["id"].as_i64().unwrap();
+    let (status, _) = owner
+        .post(
+            &format!("/api/feeds/{feed}"),
+            json!({ "title": "Garden notes", "folders": [folder] }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    let (status, _) = owner
+        .post(
+            "/api/saved-searches",
+            json!({ "name": "Tomatoes", "query": { "q": "tomatoes" } }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::CREATED);
+    let (status, _) = owner
+        .post(
+            "/api/rules",
+            json!({ "words": "tomatoes", "action": "star" }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    let owners_marks = owner.marks("view=all").await;
+    let owners_feeds = owner.get("/api/feeds").await;
+    let owners_searches = owner.get("/api/saved-searches").await;
+    let owners_rules = owner.get("/api/rules").await;
+
+    // Someone joins through an invite link, as the sign-up page does it.
+    let (status, invite) = owner.post("/api/sign-up/invite", json!({})).await;
+    assert_eq!(status, StatusCode::OK);
+    let joined = Client::new()
+        .post(format!("{}/api/sign-up", owner.base))
+        .header("sec-fetch-site", "same-origin")
+        .header("content-type", "application/json")
+        .body(
+            json!({
+                "email": "new@example.com",
+                "password": "slow mornings, long reads",
+                "invite": invite["invite"],
+            })
+            .to_string(),
+        )
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(joined.status(), StatusCode::NO_CONTENT);
+    let set_cookie = joined.headers()["set-cookie"].to_str().unwrap();
+    let newcomer = Reader {
+        base: owner.base.clone(),
+        cookie: set_cookie.split(';').next().unwrap().to_owned(),
+    };
+    let number: i64 = sqlx::query_scalar("SELECT id FROM people WHERE email = 'new@example.com'")
+        .fetch_one(&state.db)
+        .await
+        .unwrap();
+    assert_ne!(number, 1);
+
+    empty_library(&newcomer).await;
+    for table in [
+        "subscriptions",
+        "entries",
+        "folders",
+        "saved_searches",
+        "rules",
+    ] {
+        let rows: i64 = sqlx::query_scalar(sqlx::AssertSqlSafe(format!(
+            "SELECT COUNT(*) FROM {table} WHERE person_id = ?"
+        )))
+        .bind(number)
+        .fetch_one(&state.db)
+        .await
+        .unwrap();
+        assert_eq!(rows, 0, "{table}");
+    }
+
+    // A new article on the owner's feed reaches the owner only.
+    let new = nine_turtles::feed::ParsedArticle {
+        fingerprint: "post-4".to_owned(),
+        title: "Post 4 about tomatoes".to_owned(),
+        link: None,
+        author: None,
+        content: None,
+        summary: None,
+        language: None,
+        published_at: None,
+    };
+    let mut transaction = state.db.begin().await.unwrap();
+    nine_turtles::feeds::store_articles(&mut transaction, feed, &[new], nine_turtles::now())
+        .await
+        .unwrap();
+    transaction.commit().await.unwrap();
+    empty_library(&newcomer).await;
+    let entries: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM entries WHERE person_id = ?")
+        .bind(number)
+        .fetch_one(&state.db)
+        .await
+        .unwrap();
+    assert_eq!(entries, 0);
+
+    // The owner's library is as it was, plus the new article.
+    let after = owner.marks("view=all").await;
+    assert_eq!(after.len(), owners_marks.len() + 1);
+    assert_eq!(after[1..], owners_marks[..]);
+    let feeds = owner.get("/api/feeds").await;
+    assert_eq!(feeds["folders"], owners_feeds["folders"]);
+    assert_eq!(feeds["feeds"][0]["folders"], json!([folder]));
+    assert_eq!(owner.get("/api/saved-searches").await, owners_searches);
+    assert_eq!(owner.get("/api/rules").await, owners_rules);
+}
+
+/// Checks that this reader's library is empty everywhere it's shown.
+async fn empty_library(reader: &Reader) {
+    let feeds = reader.get("/api/feeds").await;
+    assert_eq!(feeds["feeds"], json!([]));
+    assert_eq!(feeds["folders"], json!([]));
+    for list in ["view=unread", "view=starred", "view=all"] {
+        assert_eq!(reader.ids(list).await, Vec::<i64>::new(), "{list}");
+    }
+    assert_eq!(
+        reader.get("/api/search?q=tomatoes").await["articles"],
+        json!([])
+    );
+    assert_eq!(
+        reader.get("/api/saved-searches").await["searches"],
+        json!([])
+    );
+    assert_eq!(reader.get("/api/rules").await["rules"], json!([]));
+    assert_eq!(reader.get("/api/muted").await["count"], 0);
+    assert!(!reader.get_text("/api/opml").await.contains("Garden"));
+}

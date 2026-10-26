@@ -100,7 +100,7 @@
       case "problem":
         message = explain(result.reason);
         problem = true;
-        badAddress = result.reason !== "unreachable" && result.reason !== "trouble";
+        badAddress = result.reason !== "unreachable" && result.reason !== "trouble" && result.reason !== "too-many";
         break;
     }
   }

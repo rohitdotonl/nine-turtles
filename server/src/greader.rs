@@ -201,7 +201,11 @@ impl FromRequestParts<AppState> for App {
             return Err(unauthorized());
         };
         match apps::matches(state, &password).await {
-            Ok(Some(person)) => Ok(Self(person)),
+            Ok(Some(person)) => {
+                // Syncing counts as being here (`admin::here`).
+                crate::admin::note_here(&state.db, person).await;
+                Ok(Self(person))
+            }
             Ok(None) => Err(unauthorized()),
             Err(error) => Err(database_problem("checking an app password", &error)),
         }

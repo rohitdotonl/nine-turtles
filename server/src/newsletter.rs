@@ -1,5 +1,5 @@
 //! Reading a newsletter email into what nine turtles stores as an article
-//! (SPEC section 28, decision 0087).
+//! (SPEC section 28, decision 0091).
 //!
 //! An email arrives whole, in the standard "raw" form every mail service
 //! can hand over (RFC 5322 with MIME parts), and mail-parser reads it. Its

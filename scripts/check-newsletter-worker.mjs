@@ -1,5 +1,5 @@
 // Tests the newsletter forwarder (cloudflare/newsletter-worker/worker.js,
-// decision 0087) with a pretend Cloudflare: a pretend email and a pretend
+// decision 0091) with a pretend Cloudflare: a pretend email and a pretend
 // nine turtles. Kept emails stay; anything else is passed on to FORWARD_TO,
 // bounced, or reported for the sender to try again.
 

@@ -1,4 +1,4 @@
-// nine turtles' newsletter forwarder (SPEC section 28, decision 0087).
+// nine turtles' newsletter forwarder (SPEC section 28, decision 0091).
 //
 // Cloudflare Email Routing receives the emails sent to nine turtles'
 // newsletter addresses and hands each one to this small program (a

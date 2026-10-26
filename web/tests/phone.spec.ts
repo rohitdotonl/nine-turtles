@@ -602,6 +602,9 @@ test("a tab left open across an update is told to reload, switches on the next m
   await page.getByRole("link", { name: "Settings" }).click();
   await expect(page).toHaveURL(/\/settings$/);
   await expect.poll(() => page.evaluate(() => "oldPage" in window)).toBe(false);
+  // The new page listens for the tab coming back into view only once its
+  // screen is drawn (after its first answer from the server), so wait for that.
+  await expect(page.getByRole("region", { name: "Settings" })).toBeVisible();
   await expect(page.getByText("nine turtles was updated. Reload to continue.")).toHaveCount(0);
 
   // Already in Settings when another version goes live: it offers Reload once the tab comes back into view.

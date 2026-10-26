@@ -1,5 +1,5 @@
 //! The address newsletter emails are posted to (SPEC section 28, decision
-//! 0087): off without the secret, refused with a wrong one, and, with the
+//! 0091): off without the secret, refused with a wrong one, and, with the
 //! right one, each email is read and described but not kept yet.
 
 mod common;

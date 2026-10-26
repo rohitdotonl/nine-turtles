@@ -591,7 +591,11 @@ test("in a sidebar narrowed below 15rem, Keys keeps only its icon and stays a fu
 test("Other apps: an app password is made, shown once with the server address, and turned off", async ({ page }) => {
   await openApp(page, "/settings");
   // With the keyboard alone: the pressed row is replaced, so the keyboard moves to the new password's Copy.
-  await page.getByRole("button", { name: "Make an app password" }).focus();
+  // Until the server says whether other apps are on, the row is unavailable
+  // (aria-disabled) and a press does nothing; a keyboard user hears that too.
+  const makeFirst = page.getByRole("button", { name: "Make an app password" });
+  await expect(makeFirst).toHaveAttribute("aria-disabled", "false");
+  await makeFirst.focus();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("button", { name: "Copy app password" })).toBeFocused();
   const status = page.getByRole("status").filter({ hasText: "app password is ready" });
@@ -611,13 +615,13 @@ test("Other apps: an app password is made, shown once with the server address, a
 test("Settings is one centred column of grouped lists; Your data, Feed health and Sign out are rows of their own, each ending in a glyph", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openApp(page, "/settings");
-  // Each group has a small header above it; the groups share one column, no wider than 560px.
+  // Each group has a small header above it; the groups share one column, no wider than 560px. The owner also sees Readers and Sign-up (decision 0087).
   const groups = page.getByRole("region", { name: "Settings" }).locator(".inset-group");
-  await expect(groups).toHaveCount(7);
+  await expect(groups).toHaveCount(9);
   const boxes = await groups.evaluateAll((all) => all.map((each) => each.getBoundingClientRect()).map((box) => [Math.round(box.x), Math.round(box.width)]));
   for (const [x, width] of boxes) expect([x, width]).toEqual(boxes[0]);
   expect(boxes[0]![1]).toBeLessThanOrEqual(560);
-  for (const name of ["Reading", "Look and feel", "Your data", "Feeds", "Rules", "Other apps", "Account"]) {
+  for (const name of ["Reading", "Look and feel", "Your data", "Feeds", "Rules", "Other apps", "Readers", "Sign-up", "Account"]) {
     await expect(page.getByRole("heading", { level: 3, name })).toBeVisible();
   }
   // The data actions are full-width rows, at least 44px tall, in the text color (the accent means only "where you are").

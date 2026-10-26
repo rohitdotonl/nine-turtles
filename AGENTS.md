@@ -15,7 +15,7 @@ Its name is **nine turtles**, always lowercase (renamed from slowfeed in October
 ## Project facts
 
 - **Owner:** one person, tech-oriented but **not a programmer**: they don't read code. They direct; agents build.
-- **Users:** becoming many readers per installation (decision 0086, `docs/PLAN.md`); each reader's things are walled off from the others'. Today only the owner (reader 1) can sign in, with the one password. English interface; articles in any language.
+- **Users:** becoming many readers per installation (decision 0086, `docs/PLAN.md`); each reader's things are walled off from the others'. Readers sign in by email and password; the owner (reader 1) also with the password alone, and decides who may sign up (decision 0087). English interface; articles in any language.
 - **Stack:** Rust backend (axum, sqlx + SQLite with FTS5 search). TypeScript + Svelte 5 frontend (Vite, Tailwind), installable as a web app, embedded in the Rust program. Deploying = one program + one SQLite file. Code in `server/` and `web/`; the website (nineturtles.app, Eleventy) in `website/`; the newsletter forwarder that runs at Cloudflare in `cloudflare/`.
 - **Hosting:** Render, one instance only (Starter, 1 GB disk), at app.nineturtles.app (and `slowfeed.onrender.com`). The website is on GitHub Pages (decision 0066). **Agents never get access to Render.** Merging a pull request deploys it.
 - **Repository:** **public**, so nothing personal or secret goes in it. GitHub Actions runs the checks and builds the image Render runs. main only accepts pull requests with passing checks.
@@ -83,7 +83,7 @@ summary (or say why none needed it):
 
 - **Everyone can read here:** WCAG AA contrast everywhere (AAA for article text), never color alone, fully keyboard-operable with visible focus, screen-reader friendly, respects system settings, 44px touch targets.
 - **Respect the publisher:** show only what the feed contains (never scrape), always credit and link the original, fetch politely, share the publisher's link, play media in the publisher's player.
-- **Never lose the reader's data or put them at risk:** always sanitize feed content, no secrets in code or GitHub, nothing deletes without undo, back up before any database structure change (nine turtles does this itself, decision 0076), and any change that could lose data is raised with the owner first. Unsubscribing deletes a feed's unstarred articles with only the immediate undo (and the nightly backups); the owner accepted that.
+- **Never lose the reader's data or put them at risk:** always sanitize feed content, no secrets in code or GitHub, nothing deletes without undo, back up before any database structure change (nine turtles does this itself, decision 0076), and any change that could lose data is raised with the owner first. Unsubscribing deletes a feed's unstarred articles with only the immediate undo (and the nightly backups); the owner accepted that. Deleting one's own account has no undo at all, after one "Are you sure?" and an offer of the reader's downloads (decision 0088); the owner chose that too. The yearly clean-up removes unstarred articles over a year old with no undo, only just after the night's backup is stored (decision 0089).
 
 Ranked principles below the floors (higher wins). Design: reading first ›
 calm over engagement › clear at a glance › slow app, fast interface ›
@@ -116,7 +116,7 @@ years › written for the next agent.
 | Reviewing a pull request | `docs/operations/second-agent-review.md` |
 | Database structure changes | `docs/ENGINEERING.md` → the floor and "Data" |
 | Hosting, deploys, backups | `docs/ENGINEERING.md` → "Hosting", and `docs/operations/` |
-| Newsletters (`server/src/newsletter*.rs`, `cloudflare/`) | decision 0087, SPEC section 28, `docs/operations/newsletters.md` |
+| Newsletters (`server/src/newsletter*.rs`, `cloudflare/`) | decision 0091, SPEC section 28, `docs/operations/newsletters.md` |
 | The website (`website/`) | `docs/operations/website-and-domain.md`, decision 0066, and DESIGN.md's floors |
 | Revisiting an earlier choice | `docs/decisions/` |
 | Open questions | `docs/planning/questions.md` |

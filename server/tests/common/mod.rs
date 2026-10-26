@@ -24,6 +24,7 @@ pub fn config() -> Config {
         public_url: None,
         backup: None,
         restore_from: None,
+        smtp: None,
         newsletter_secret: None,
     }
 }
@@ -83,4 +84,48 @@ pub async fn another_reader(state: &nine_turtles::AppState) -> (i64, String) {
         .unwrap()
         .unwrap();
     (person, format!("nine_turtles_session={token}"))
+}
+
+/// Like `start_with_state`, with email switched on: each email is kept in
+/// the returned outbox instead of sent (`email::Mailer::outbox`), and its
+/// links start with this nine turtles' own address.
+pub async fn start_with_mail(
+    config: Config,
+) -> (String, nine_turtles::AppState, nine_turtles::email::Outbox) {
+    let mut state = nine_turtles::state(config).await.unwrap();
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let base = format!("http://{}", listener.local_addr().unwrap());
+    let (mailer, outbox) = nine_turtles::email::Mailer::outbox(reqwest::Url::parse(&base).unwrap());
+    state.mailer = Some(mailer);
+    let app = nine_turtles::router(state.clone());
+    tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+    (base, state, outbox)
+}
+
+/// The emails sent to `to` so far, oldest first.
+pub fn emails_to(outbox: &nine_turtles::email::Outbox, to: &str) -> Vec<nine_turtles::email::Sent> {
+    outbox
+        .lock()
+        .unwrap()
+        .iter()
+        .filter(|sent| sent.to.eq_ignore_ascii_case(to))
+        .cloned()
+        .collect()
+}
+
+/// The page and the ticket of the link in the newest email sent to `to`.
+pub fn newest_link(outbox: &nine_turtles::email::Outbox, to: &str) -> (String, String) {
+    let sent = emails_to(outbox, to);
+    let body = &sent.last().expect("an email was sent").body;
+    let start = body.find("http").expect("a link in the email");
+    let link = body[start..].split_whitespace().next().unwrap();
+    let url = reqwest::Url::parse(link).unwrap();
+    // The ticket comes after the #, never in the query the server would log.
+    assert_eq!(url.query(), None, "no query in {link}");
+    let ticket = url
+        .fragment()
+        .and_then(|fragment| fragment.strip_prefix("ticket="))
+        .expect("the ticket after the #")
+        .to_owned();
+    (url.path().to_owned(), ticket)
 }
