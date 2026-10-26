@@ -478,3 +478,25 @@ test("with only the keyboard: a feed set to river, daily and the website leaves 
   await expect(sheet.getByRole("radio", { name: "Daily" })).toBeChecked();
   await expect(sheet.getByRole("checkbox", { name: "Open articles on the website" })).toBeChecked();
 });
+
+test("with only the keyboard: pausing a feed in Edit feed is remembered, with since when", async ({ page }) => {
+  const [paused] = await openBlogs(page, [unique("pause")]);
+  await tabTo(page, more(page));
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("End");
+  await page.keyboard.press("Enter");
+  const sheet = page.getByRole("dialog", { name: "Edit feed" });
+  const pause = sheet.getByRole("checkbox", { name: "Pause this feed" });
+  await expect(pause).not.toBeChecked();
+  await expect(sheet.getByText("Paused today.")).toHaveCount(0);
+  await tabTo(page, pause);
+  await page.keyboard.press("Space");
+  await tabTo(page, sheet.getByRole("button", { name: "Save" }));
+  await page.keyboard.press("Enter");
+  await expect(sheet).toHaveCount(0);
+
+  await page.goto(new URL(`/feeds/${paused}/edit`, FEEDS_APP).href);
+  await appReady(page);
+  await expect(pause).toBeChecked();
+  await expect(sheet.getByText(/Paused today\./)).toBeVisible();
+});

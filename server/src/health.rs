@@ -420,8 +420,14 @@ async fn follow_elsewhere(
     parsed: &feed::ParsedFeed,
     now: i64,
 ) -> Result<Result<(i64, bool), Response>, sqlx::Error> {
-    let (title, river, check_at_most, open_on_site): (String, bool, i64, bool) = sqlx::query_as(
-        "SELECT title, river, check_at_most, open_on_site FROM subscriptions
+    let (title, river, check_at_most, open_on_site, paused_at): (
+        String,
+        bool,
+        i64,
+        bool,
+        Option<i64>,
+    ) = sqlx::query_as(
+        "SELECT title, river, check_at_most, open_on_site, paused_at FROM subscriptions
              WHERE person_id = ? AND feed_id = ?",
     )
     .bind(person)
@@ -443,12 +449,13 @@ async fn follow_elsewhere(
         Followed::Already(_) => return Ok(Err(refused(StatusCode::CONFLICT, "already"))),
     };
     sqlx::query(
-        "UPDATE subscriptions SET river = ?, check_at_most = ?, open_on_site = ?
+        "UPDATE subscriptions SET river = ?, check_at_most = ?, open_on_site = ?, paused_at = ?
          WHERE person_id = ? AND feed_id = ?",
     )
     .bind(river)
     .bind(check_at_most)
     .bind(open_on_site)
+    .bind(paused_at)
     .bind(person)
     .bind(new)
     .execute(&mut *transaction)

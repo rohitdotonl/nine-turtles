@@ -19,7 +19,7 @@
   import PageHead from "./PageHead.svelte";
   import Sheet from "./Sheet.svelte";
   import { edge } from "./edge";
-  import { editFeed, refused, type Check, type Feed, type Folder } from "./feeds";
+  import { editFeed, pausedSince, refused, type Check, type Feed, type Folder } from "./feeds";
 
   let {
     feed,
@@ -56,6 +56,7 @@
   let flows = $state((() => feed.river)());
   let check: Check = $state((() => feed.check)());
   let openOnSite = $state((() => feed.openOnSite)());
+  let paused = $state((() => feed.pausedAt != null)());
   let busy = $state(false);
   let message = $state("");
 
@@ -64,7 +65,7 @@
     if (busy) return;
     busy = true;
     message = "";
-    const refusal = await editFeed(feed.id, title, chosen, newFolder, { river: flows, check, openOnSite });
+    const refusal = await editFeed(feed.id, title, chosen, newFolder, { river: flows, check, openOnSite, paused });
     busy = false;
     if (refusal) message = refused(refusal, "feed");
     else onSaved();
@@ -180,12 +181,19 @@
           <span class="min-w-0 break-words">Open articles on the website</span>
           <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
         </label>
+        <label class="inset-row check-row">
+          <input type="checkbox" bind:checked={paused} />
+          <span class="min-w-0 break-words">Pause this feed</span>
+          <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
+        </label>
       </div>
       <span id="feed-settings-help" class="field-help mt-0"
         >{river
           ? "The whole app is in river mode for now (Settings › Reading)."
           : "River: its articles skip Unread and show no count."}
-        Hourly or Daily: checked no more often than that. Website: opening an article goes to the publisher's page.</span
+        Hourly or Daily: checked no more often than that. Website: opening an article goes to the publisher's page.
+        Pause: its new articles skip Unread until you untick it; then its newest three come back.{#if feed.pausedAt != null}
+          {pausedSince(feed.pausedAt)}{/if}</span
       >
     </div>
 

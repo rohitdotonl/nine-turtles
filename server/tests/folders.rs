@@ -751,3 +751,106 @@ async fn each_feed_keeps_its_own_reading_mode_check_and_website_settings() {
         .await;
     assert!(status.is_client_error());
 }
+
+#[tokio::test]
+async fn a_paused_feed_piles_nothing_up_and_unpausing_brings_back_its_newest_three() {
+    let reader = Reader::new().await;
+    let alpha = reader.follow("alpha").await;
+    reader.follow("beta").await;
+    let paused_at = |listed: &Value| {
+        listed["feeds"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|feed| feed["id"] == alpha)
+            .unwrap()["paused_at"]
+            .clone()
+    };
+    assert_eq!(paused_at(&reader.get("/api/feeds").await), Value::Null);
+
+    // Pausing leaves what's already unread as it was.
+    let (status, _) = reader
+        .post(
+            &format!("/api/feeds/{alpha}"),
+            json!({ "title": "Alpha blog", "folders": [], "paused": true }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    assert!(paused_at(&reader.get("/api/feeds").await).is_i64());
+    assert_eq!(
+        reader.sidebar().await.0,
+        vec![row("Alpha blog", 3, &[]), row("Beta blog", 3, &[])]
+    );
+
+    // Five new posts arrive while it's paused: they're in its own list,
+    // already read, and Unread doesn't grow. Other feeds carry on.
+    let now = nine_turtles::now() + 10;
+    let posts = |name: &str, count: i64| -> Vec<nine_turtles::feed::ParsedArticle> {
+        (1..=count)
+            .map(|number| nine_turtles::feed::ParsedArticle {
+                fingerprint: format!("{name}-new-{number}"),
+                title: format!("{name} new {number}"),
+                link: None,
+                author: None,
+                content: None,
+                summary: None,
+                language: None,
+                published_at: Some(now - 10 + number),
+            })
+            .collect()
+    };
+    let mut connection = reader.state.db.acquire().await.unwrap();
+    nine_turtles::feeds::store_articles(&mut connection, alpha, &posts("Alpha", 5), now)
+        .await
+        .unwrap();
+    drop(connection);
+    assert_eq!(reader.titles(&format!("feed={alpha}")).await.len(), 8);
+    assert_eq!(
+        reader.sidebar().await.0,
+        vec![row("Alpha blog", 3, &[]), row("Beta blog", 3, &[])]
+    );
+
+    // Saving it paused again changes nothing.
+    reader
+        .post(
+            &format!("/api/feeds/{alpha}"),
+            json!({ "title": "Alpha blog", "folders": [], "paused": true }),
+        )
+        .await;
+    // Unpausing brings back only the newest three it brought.
+    reader
+        .post(
+            &format!("/api/feeds/{alpha}"),
+            json!({ "title": "Alpha blog", "folders": [], "paused": false }),
+        )
+        .await;
+    assert_eq!(paused_at(&reader.get("/api/feeds").await), Value::Null);
+    let unread = reader.titles("view=unread").await;
+    let new: Vec<&String> = unread
+        .iter()
+        .filter(|title| title.contains("new"))
+        .collect();
+    assert_eq!(new, ["Alpha new 5", "Alpha new 4", "Alpha new 3"]);
+    assert_eq!(
+        reader.sidebar().await.0,
+        vec![row("Alpha blog", 6, &[]), row("Beta blog", 3, &[])]
+    );
+
+    // Unpaused, new posts arrive unread as always.
+    let mut connection = reader.state.db.acquire().await.unwrap();
+    let later = vec![nine_turtles::feed::ParsedArticle {
+        fingerprint: "alpha-later".to_owned(),
+        title: "Alpha later".to_owned(),
+        link: None,
+        author: None,
+        content: None,
+        summary: None,
+        language: None,
+        published_at: Some(now),
+    }];
+    nine_turtles::feeds::store_articles(&mut connection, alpha, &later, now + 5)
+        .await
+        .unwrap();
+    drop(connection);
+    assert_eq!(reader.sidebar().await.0[0], row("Alpha blog", 7, &[]));
+}
