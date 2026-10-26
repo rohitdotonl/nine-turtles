@@ -53,6 +53,8 @@ struct FeedRow {
     river: bool,
     check_at_most: i64,
     open_on_site: bool,
+    /// When the reader paused it, if it's paused.
+    paused_at: Option<i64>,
     /// The folders it's in, by number.
     #[sqlx(skip)]
     folders: Vec<i64>,
@@ -63,7 +65,7 @@ struct FeedRow {
 /// (tests/speed.rs checks this). A feed that flows past (`river`) counts
 /// nothing. Takes the reader.
 pub const FEEDS: &str = "SELECT feeds.id, subscriptions.title, feeds.site_url, subscriptions.river,
-        subscriptions.check_at_most, subscriptions.open_on_site,
+        subscriptions.check_at_most, subscriptions.open_on_site, subscriptions.paused_at,
         CASE WHEN subscriptions.river THEN 0 ELSE
             (SELECT COUNT(*) FROM entries WHERE entries.person_id = subscriptions.person_id
                  AND entries.feed_id = subscriptions.feed_id AND entries.read = 0)
@@ -353,7 +355,8 @@ pub async fn subscribe(
         "INSERT INTO subscriptions (person_id, feed_id, title, added_at) VALUES (?, ?, ?, ?)
          ON CONFLICT (person_id, feed_id) DO UPDATE SET
              title = excluded.title, added_at = excluded.added_at, unsubscribed_at = NULL,
-             cleared = 0, river = 0, check_at_most = 0, open_on_site = 0",
+             cleared = 0, river = 0, check_at_most = 0, open_on_site = 0,
+             paused_at = NULL",
     )
     .bind(person)
     .bind(feed_id)
@@ -503,6 +506,7 @@ async fn follow(
         river: false,
         check_at_most: 0,
         open_on_site: false,
+        paused_at: None,
         folders: Vec::new(),
     })
 }
@@ -629,7 +633,8 @@ pub async fn make_room(
 /// its star (SPEC section 11). One the yearly clean-up removed stays
 /// removed (`cleanup`). Every reader whose subscription isn't
 /// cleared (including one waiting for Undo) gets an entry for each new one,
-/// unread, and each reader's rules then act on theirs (SPEC section 27).
+/// unread (or already read, for a reader who paused the feed; SPEC section
+/// 15), and each reader's rules then act on theirs (SPEC section 27).
 pub async fn store_articles(
     connection: &mut sqlx::SqliteConnection,
     feed_id: i64,
@@ -705,8 +710,9 @@ pub async fn store_articles(
         }
     }
     sqlx::query(
-        "INSERT OR IGNORE INTO entries (person_id, article_id, feed_id, sort_at)
-         SELECT subscriptions.person_id, articles.id, articles.feed_id, articles.sort_at
+        "INSERT OR IGNORE INTO entries (person_id, article_id, feed_id, sort_at, read)
+         SELECT subscriptions.person_id, articles.id, articles.feed_id, articles.sort_at,
+             subscriptions.paused_at IS NOT NULL
          FROM articles JOIN subscriptions ON subscriptions.feed_id = articles.feed_id
          WHERE articles.feed_id = ? AND articles.id > ? AND subscriptions.cleared = 0",
     )

@@ -1,7 +1,8 @@
 <!--
   Decides between the sign-in page, the sign-up page (an invite link's
   /sign-up, decision 0087, or anyone's while sign-up is Open), the pages an
-  emailed link opens (/reset-password and /confirm-email, decision 0088) and
+  emailed link opens (/reset-password and /confirm-email, decision 0088;
+  /sign-in-link, decision 0096) and
   the signed-in screen. Until the server has answered, nothing is shown, so
   the reader never sees the wrong one.
 -->
@@ -11,7 +12,8 @@
   import SignUp from "./lib/SignUp.svelte";
   import ResetPassword from "./lib/ResetPassword.svelte";
   import ConfirmEmail from "./lib/ConfirmEmail.svelte";
-  import { CONFIRM_PAGE, RESET_PAGE } from "./lib/accounts";
+  import SignInLink from "./lib/SignInLink.svelte";
+  import { CONFIRM_PAGE, RESET_PAGE, SIGN_IN_LINK_PAGE } from "./lib/accounts";
   import { currentSession, type Session } from "./lib/session";
 
   let session: Session | undefined = $state();
@@ -39,6 +41,8 @@
   <ResetPassword onSignedIn={check} />
 {:else if session && path === CONFIRM_PAGE}
   <ConfirmEmail onSignedIn={check} />
+{:else if session && path === SIGN_IN_LINK_PAGE}
+  <SignInLink onSignedIn={check} />
 {:else if session?.signedIn}
   <Shell
     version={session.version}

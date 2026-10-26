@@ -2,11 +2,12 @@
   The sign-in page (SPEC section 1): the wordmark, an email field and a
   password field, nothing about the reader's feeds. The owner may leave the
   email empty and sign in with the password alone, as before there were
-  readers (decision 0087). While nine turtles can send email, "Forgot your
-  password?" turns the page into a request for a password link, and while
-  sign-up is Open, "Sign up" leads to the sign-up page (decision 0088). Once
-  a link is asked for, the form gives way to "Check your email": where it
-  went, for how long it works, and a quiet Send again (decision 0092).
+  readers (decision 0087). While nine turtles can send email, "Email me a
+  sign-in link" turns the page into a request for a link that signs in
+  (decision 0096) and "Forgot your password?" into one for a password link;
+  while sign-up is Open, "Sign up" leads to the sign-up page (decision 0088).
+  Once a link is asked for, the form gives way to "Check your email": where
+  it went, for how long it works, and a quiet Send again (decision 0092).
 -->
 <script lang="ts">
   import { tick } from "svelte";
@@ -14,7 +15,7 @@
   import Icon from "./Icon.svelte";
   import SendAgain from "./SendAgain.svelte";
   import { explain, signIn } from "./session";
-  import { explainForgot, forgotPassword } from "./accounts";
+  import { type LinkKind, askForLink, explainAsked } from "./accounts";
 
   let {
     onSignedIn,
@@ -23,15 +24,15 @@
     onSignUp,
   }: {
     onSignedIn: () => void;
-    /** nine turtles can send email: "Forgot your password?" is offered. */
+    /** nine turtles can send email: "Email me a sign-in link" and "Forgot your password?" are offered. */
     emailSending?: boolean;
     /** Sign-up is Open: "Sign up" is offered. */
     signUpOpen?: boolean;
     onSignUp?: () => void;
   } = $props();
 
-  /** Asking for a password link instead of signing in. */
-  let forgetting = $state(false);
+  /** Asking for a link instead of signing in: one that signs in, or one to choose a new password. */
+  let asking: LinkKind | "" = $state("");
   let emailField: HTMLInputElement | undefined = $state();
   /** "Not confirmed yet" is news, not a refusal: it's in the text color. */
   let calm = $state(false);
@@ -42,13 +43,13 @@
   /** The password itself was refused, so the field is marked; other problems aren't the field's. */
   let refused = $state(false);
   let busy = $state(false);
-  /** Where a password link was asked for: the form gives way to "Check your email". */
+  /** Where a link was asked for: the form gives way to "Check your email". */
   let sent = $state("");
   let sentHeading: HTMLHeadingElement | undefined = $state();
 
   async function submit(event: SubmitEvent) {
     event.preventDefault();
-    if (forgetting) return ask();
+    if (asking) return ask(asking);
     if (busy || password === "") return;
     busy = true;
     const result = await signIn(email, password);
@@ -63,14 +64,14 @@
     }
   }
 
-  async function ask() {
+  async function ask(kind: LinkKind) {
     if (busy) return;
     if (email.trim() === "") {
       emailField?.focus();
       return;
     }
     busy = true;
-    const result = await forgotPassword(email);
+    const result = await askForLink(kind, email);
     busy = false;
     if (result === "asked") {
       sent = email.trim();
@@ -80,21 +81,22 @@
       tick().then(() => sentHeading?.focus());
       return;
     }
-    message = explainForgot(result, email);
+    message = explainAsked(kind, result, email);
     calm = false;
     refused = result === "email";
   }
 
   /** "Send again", a minute after: the same answer, said shortly. */
   async function askAgain(): Promise<string> {
-    const result = await forgotPassword(sent);
-    return result === "asked" ? "Another link is on its way." : explainForgot(result, sent);
+    if (!asking) return "";
+    const result = await askForLink(asking, sent);
+    return result === "asked" ? "Another link is on its way." : explainAsked(asking, result, sent);
   }
 
   /** Between signing in and asking for a link: the email stays, the keyboard goes to it. */
-  function forget(event: MouseEvent, on: boolean) {
+  function switchTo(event: MouseEvent, kind: LinkKind | "") {
     event.preventDefault();
-    forgetting = on;
+    asking = kind;
     sent = "";
     message = "";
     refused = false;
@@ -115,16 +117,21 @@
     <h1 class="font-serif text-display">nine turtles</h1>
     <p class="mt-3 font-serif text-large text-muted">A quiet place to read.</p>
   </div>
-  {#if forgetting && sent}
+  {#if asking && sent}
     <!-- Said once, in the text color: where the link went and how long it works; nothing says whether the email has an account. -->
     <div class="flex w-full flex-col items-center gap-3 text-center sm:max-w-xs">
       <h2 bind:this={sentHeading} tabindex="-1" class="font-semibold">Check your email</h2>
-      <p id="forgot-sent" role="status" class="break-words">
-        If <span class="font-semibold">{sent}</span> has an account here, a link to choose a new password is on its way. It works
-        for an hour.
+      <p id="link-sent" role="status" class="break-words">
+        {#if asking === "sign-in"}
+          If <span class="font-semibold">{sent}</span> has an account here, a link to sign in is on its way. It works once, for 15
+          minutes.
+        {:else}
+          If <span class="font-semibold">{sent}</span> has an account here, a link to choose a new password is on its way. It works
+          for an hour.
+        {/if}
       </p>
       <SendAgain onSend={askAgain} />
-      <p><a href="/" class="text-link" onclick={(event) => forget(event, false)}>Back to sign in</a></p>
+      <p><a href="/" class="text-link" onclick={(event) => switchTo(event, "")}>Back to sign in</a></p>
     </div>
   {:else}
   <!--
@@ -149,12 +156,14 @@
       autofocus
       bind:this={emailField}
       bind:value={email}
-      aria-describedby={forgetting ? "forgot-help sign-in-message" : "sign-in-message"}
+      aria-describedby={asking ? "link-help sign-in-message" : "sign-in-message"}
       aria-invalid={refused && email.trim() !== "" ? "true" : undefined}
       class="field"
     />
-    {#if forgetting}
-      <p id="forgot-help" class="text-center text-meta text-muted">nine turtles emails you a link to choose a new password.</p>
+    {#if asking}
+      <p id="link-help" class="text-center text-meta text-muted">
+        {asking === "sign-in" ? "nine turtles emails you a link that signs you in." : "nine turtles emails you a link to choose a new password."}
+      </p>
     {:else}
     <label for="password" class="sr-only">Password</label>
     <input
@@ -181,16 +190,20 @@
         {#if message}{#if !calm}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{/if}{message}{/if}
       </p>
       <!-- Busy is said with aria-disabled, not disabled, so the button keeps its look and the keyboard's place (decision 0045). Its corners match the field's. -->
-      <button type="submit" aria-disabled={busy} class="btn-primary rounded-lg">{forgetting ? "Send link" : "Sign in"}</button>
+      <button type="submit" aria-disabled={busy} class="btn-primary rounded-lg">{asking ? "Send link" : "Sign in"}</button>
     </div>
     <!-- Quiet links in words, under the room kept for a message, so nothing above them moves. -->
-    {#if forgetting}
-      <p class="text-center"><a href="/" class="text-link" onclick={(event) => forget(event, false)}>Back to sign in</a></p>
+    {#if asking}
+      <p class="text-center"><a href="/" class="text-link" onclick={(event) => switchTo(event, "")}>Back to sign in</a></p>
     {:else if emailSending || signUpOpen}
-      <p class="flex flex-wrap justify-center gap-x-6 text-center">
-        {#if emailSending}<a href="/" class="text-link" onclick={(event) => forget(event, true)}>Forgot your password?</a>{/if}
-        {#if signUpOpen}<a href="/sign-up" class="text-link" onclick={signUp}>Sign up</a>{/if}
-      </p>
+      <!-- The sign-in link on a line of its own, so the lines never wrap differently from one screen to the next. -->
+      <div class="flex flex-col items-center">
+        {#if emailSending}<a href="/" class="text-link" onclick={(event) => switchTo(event, "sign-in")}>Email me a sign-in link</a>{/if}
+        <p class="flex flex-wrap justify-center gap-x-6 text-center">
+          {#if emailSending}<a href="/" class="text-link" onclick={(event) => switchTo(event, "password")}>Forgot your password?</a>{/if}
+          {#if signUpOpen}<a href="/sign-up" class="text-link" onclick={signUp}>Sign up</a>{/if}
+        </p>
+      </div>
     {/if}
   </form>
   {/if}

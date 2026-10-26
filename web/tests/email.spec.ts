@@ -4,7 +4,8 @@ import { MAILBOX, MAIL_APP, TEST_PASSWORD } from "../playwright.config";
 // SPEC sections 1 and 18 (decision 0088): what email makes possible, against
 // a nine turtles that sends its emails to a made-up mail server on this
 // computer (tests/mail-server.mjs). Open sign-up with a confirmation link,
-// "Forgot your password?", changing an email and deleting an account. Each
+// "Forgot your password?", "Email me a sign-in link" (decision 0096),
+// changing an email and deleting an account. Each
 // test uses addresses of its own, so the two window sizes never meet.
 
 const READER_PASSWORD = "slow mornings, long reads";
@@ -66,8 +67,8 @@ test("anyone can sign up while it's open, by the link emailed to them, with only
   const page = await context.newPage();
   await page.goto("/");
   await expect(page.getByLabel("Email")).toBeFocused();
-  // Email, Password, Sign in, Forgot your password?, then Sign up.
-  for (let step = 0; step < 4; step += 1) await page.keyboard.press("Tab");
+  // Email, Password, Sign in, Email me a sign-in link, Forgot your password?, then Sign up.
+  for (let step = 0; step < 5; step += 1) await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Sign up" })).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/sign-up$/);
@@ -126,7 +127,7 @@ test("a forgotten password is set again by an emailed link, signing out other de
   await page.goto("/");
   await expect(page.getByLabel("Email")).toBeFocused();
   await page.keyboard.type(email);
-  for (let step = 0; step < 3; step += 1) await page.keyboard.press("Tab");
+  for (let step = 0; step < 4; step += 1) await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Forgot your password?" })).toBeFocused();
   await page.keyboard.press("Enter");
   // The email stays, and the keyboard goes back to it.
@@ -138,7 +139,7 @@ test("a forgotten password is set again by an emailed link, signing out other de
   // Send again waits a minute, so it can't be pressed twice at once.
   await expect(page.getByRole("heading", { name: "Check your email" })).toBeFocused();
   await expect(page.getByLabel("Email")).toHaveCount(0);
-  await expect(page.locator("#forgot-sent")).toHaveText(
+  await expect(page.locator("#link-sent")).toHaveText(
     `If ${email} has an account here, a link to choose a new password is on its way. It works for an hour.`,
   );
   await expect(page.getByText("nine turtles emails you a link")).toHaveCount(0);
@@ -155,7 +156,7 @@ test("a forgotten password is set again by an emailed link, signing out other de
   await page.getByRole("link", { name: "Forgot your password?" }).click();
   await page.getByLabel("Email").fill("nobody-here@example.com");
   await page.keyboard.press("Enter");
-  await expect(page.locator("#forgot-sent")).toHaveText(
+  await expect(page.locator("#link-sent")).toHaveText(
     "If nobody-here@example.com has an account here, a link to choose a new password is on its way. It works for an hour.",
   );
 
@@ -253,5 +254,63 @@ test("the owner's own account has no Delete account", async ({ browser }) => {
   await expect(page.getByText(/^Version /)).toBeVisible();
   await expect(page.getByRole("button", { name: "Delete account…" })).toHaveCount(0);
   await expect(page.getByText(/^Whoever runs this nine turtles can see/)).toHaveCount(0);
+  await context.close();
+});
+
+test("a reader signs in by an emailed link, once, with only the keyboard", async ({ browser }, testInfo) => {
+  await openSignUp(browser);
+  const email = `link-${testInfo.project.name}-${Date.now()}@example.com`;
+  const laptop = await newReader(browser, email);
+
+  const context = await browser.newContext({ baseURL: MAIL_APP });
+  const page = await context.newPage();
+  await page.goto("/");
+  await expect(page.getByLabel("Email")).toBeFocused();
+  await page.keyboard.type(email);
+  for (let step = 0; step < 3; step += 1) await page.keyboard.press("Tab");
+  await expect(page.getByRole("link", { name: "Email me a sign-in link" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  // The email stays, and the keyboard goes back to it.
+  await expect(page.getByLabel("Email")).toBeFocused();
+  await expect(page.getByLabel("Email")).toHaveValue(email);
+  await expect(page.getByLabel("Password")).toHaveCount(0);
+  await expect(page.getByText("nine turtles emails you a link that signs you in.")).toBeVisible();
+  await page.keyboard.press("Enter");
+  // Said once, with the keyboard on it.
+  await expect(page.getByRole("heading", { name: "Check your email" })).toBeFocused();
+  await expect(page.getByLabel("Email")).toHaveCount(0);
+  await expect(page.locator("#link-sent")).toHaveText(
+    `If ${email} has an account here, a link to sign in is on its way. It works once, for 15 minutes.`,
+  );
+  await expect(page.getByText("nine turtles emails you a link")).toHaveCount(0);
+  // Send again within the minute sends nothing.
+  await page.getByRole("button", { name: "Send again" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Give it a minute" })).toBeVisible();
+
+  const { link } = await newestMail(email, "Sign in to nine turtles");
+  expect(link).toMatch(/^\/sign-in-link#ticket=[0-9a-f]{64}$/);
+  await page.goto(link);
+  // Nothing happens until Sign in is pressed; the ticket leaves the address bar at once.
+  await expect(page.getByRole("button", { name: "Sign in" })).toBeFocused();
+  expect(new URL(page.url()).hash).toBe("");
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#sidebar")).toBeAttached();
+  expect(new URL(page.url()).pathname).not.toBe("/sign-in-link");
+
+  // The other device stays signed in.
+  await laptop.reload();
+  await expect(laptop.locator("#sidebar")).toBeAttached();
+
+  // A second time, the link has run out.
+  const again = await browser.newContext({ baseURL: MAIL_APP });
+  const second = await again.newPage();
+  await second.goto(link);
+  await second.getByRole("button", { name: "Sign in" }).click();
+  await expect(second.getByRole("status").filter({ hasText: "This link has expired or was already used." })).toBeVisible();
+  await second.getByRole("link", { name: "Sign in" }).click();
+  await expect(second.getByLabel("Password")).toBeVisible();
+
+  await again.close();
+  await laptop.context().close();
   await context.close();
 });

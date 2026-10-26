@@ -28,6 +28,7 @@ changed since you last used an emailed link, the setting wins again.
    - the password you set by email no longer works;
    - every device signed in as you was signed out, so anyone who took over
      your account is out too;
+   - any emailed password link or sign-in link not yet used stopped working;
    - the log has a line "NINE_TURTLES_PASSWORD_HASH has changed, so it's the
      owner's password again".
 4. Open **Settings › Readers** and check **Your email** is yours. If it

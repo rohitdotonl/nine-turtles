@@ -394,6 +394,7 @@ each with screenshots:
 | The yearly clean-up of unstarred articles | ✅ 25 October 2026 | SPEC section 23, decision 0089 (runs only after each night's backup is stored) |
 | The "New to feeds?" guide page | ✅ 25 October 2026 | SPEC section 2, decision 0079 (in the app, a "New to feeds?" sheet in the first-visit welcome; it links to the website's guide at nineturtles.app/new-to-feeds/) |
 | A tab left open across an update keeps working | ✅ 25 October 2026 | SPEC section 18, decisions 0022 and 0085 |
+| Pausing a feed (Edit feed › Pause this feed) | ✅ 26 October 2026 | SPEC section 15, decision 0095 |
 
 ## V2: Many readers in one app
 
@@ -408,6 +409,7 @@ feed is still fetched and stored once; everything personal gets an owner.
 | Part three: labels with switches, one-click unsubscribe, each email "opened" on arrival (structure change 17) | ✅ 26 October 2026 |
 | Part three: signing in by email, and the sign-up switch with invite links (structure change 13, decision 0087) | ✅ 25 October 2026 |
 | Part four: account emails over SMTP (confirming Open sign-ups, a new password, changing email) and deleting an account (structure change 14, decision 0088) | ✅ 25 October 2026 |
+| "Email me a sign-in link": a link that signs in, once, within 15 minutes, for every reader; passwords keep working (structure change 20, decision 0096) | ✅ 26 October 2026 |
 | Milestone 5: the owner's Readers page, at most 1,000 feeds per reader, and feeds nobody opens checked once a day (no structure change, decision 0090) | ✅ 26 October 2026 |
 
 ## V2: Paying for nine turtles

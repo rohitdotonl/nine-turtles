@@ -1,15 +1,17 @@
 //! What email makes possible for a reader's account (SPEC sections 1 and
-//! 18, decision 0088): confirming a new account's address when sign-up is
-//! Open, setting a new password after "Forgot your password?", moving to a
-//! new email address, and deleting an account.
+//! 18, decisions 0088 and 0096): confirming a new account's address when
+//! sign-up is Open, setting a new password after "Forgot your password?",
+//! signing in by a link instead of a password ("Email me a sign-in link"),
+//! moving to a new email address, and deleting an account.
 //!
 //! Every link is sent by email (`email`), carries a long random ticket of
 //! which only a BLAKE2s scramble is kept (`email_links`, structure change
 //! 14), works once, and expires: a day to confirm an address, an hour for a
-//! new password. At most `EMAILS_PER_ADDRESS_PER_HOUR` links go to any one
-//! address in an hour, so nine turtles can't be used to flood someone's inbox,
-//! and at most one password link (or change of email) a minute
-//! (`EMAIL_GAP`), so pressing Send link twice sends one email.
+//! new password, 15 minutes to sign in. At most `EMAILS_PER_ADDRESS_PER_HOUR`
+//! links go to any one address in an hour, so nine turtles can't be used to
+//! flood someone's inbox, and at most one password link (or sign-in link, or
+//! change of email) a minute (`EMAIL_GAP`), so pressing Send link twice sends
+//! one email.
 //!
 //! A link's ticket comes after the `#` (`/reset-password#ticket=…`), the
 //! part of an address no browser sends to a server, so it never reaches a
@@ -45,9 +47,12 @@ use crate::{
 pub const CONFIRM_LIFETIME: i64 = 24 * 60 * 60;
 /// A link to set a new password works this long.
 pub const RESET_LIFETIME: i64 = 60 * 60;
+/// A link to sign in works this long.
+pub const SIGN_IN_LIFETIME: i64 = 15 * 60;
 /// At most this many links go to one address in any hour.
 pub const EMAILS_PER_ADDRESS_PER_HOUR: i64 = 3;
-/// A password link (or a change of email's) goes to one address at most once
+/// A password link (or a sign-in link, or a change of email's) of one kind
+/// goes to one address at most once
 /// in this many seconds: a second press of Send link within it is answered
 /// the same, and sends nothing. Sign-up links aren't held to it.
 pub const EMAIL_GAP: i64 = 60;
@@ -56,6 +61,8 @@ pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/api/password/forgot", post(forgot))
         .route("/api/password/reset", post(reset))
+        .route("/api/sign-in/link", post(ask_sign_in_link))
+        .route("/api/sign-in/link/use", post(use_sign_in_link))
         .route("/api/email/confirm", post(confirm))
         .route("/api/people/me/email/change", post(change_email))
         .route("/api/people/me/delete", post(delete_me))
@@ -67,6 +74,7 @@ pub enum Purpose {
     SignUp,
     Reset,
     Change,
+    SignIn,
 }
 
 impl Purpose {
@@ -75,6 +83,7 @@ impl Purpose {
             Self::SignUp => "sign-up",
             Self::Reset => "reset",
             Self::Change => "change",
+            Self::SignIn => "sign-in",
         }
     }
 }
@@ -179,6 +188,7 @@ pub(crate) async fn make_link(
     let hour_ago = now - 60 * 60;
     let lifetime = match purpose {
         Purpose::Reset => RESET_LIFETIME,
+        Purpose::SignIn => SIGN_IN_LIFETIME,
         Purpose::SignUp | Purpose::Change => CONFIRM_LIFETIME,
     };
     let mut transaction = db.begin_with("BEGIN IMMEDIATE").await?;
@@ -228,14 +238,14 @@ pub(crate) async fn make_link(
 }
 
 /// The same work as `make_link`, for an address with no account ("Forgot
-/// your password?"), so the time taken doesn't tell: the tidy, the count,
-/// and a write that saves nothing.
-async fn make_no_link(db: &SqlitePool, email: &str) -> Result<(), sqlx::Error> {
+/// your password?", "Email me a sign-in link"), so the time taken doesn't
+/// tell: the tidy, the count, and a write that saves nothing.
+async fn make_no_link(db: &SqlitePool, purpose: Purpose, email: &str) -> Result<(), sqlx::Error> {
     let now = now();
     let mut transaction = db.begin_with("BEGIN IMMEDIATE").await?;
     tidy_links_in(&mut transaction, now).await?;
     emails_to_address(&mut transaction, email, now - 60 * 60).await?;
-    emailed_lately(&mut transaction, Purpose::Reset, email, now).await?;
+    emailed_lately(&mut transaction, purpose, email, now).await?;
     sqlx::query(
         "INSERT INTO email_links
              (purpose, person_id, email, password_hash, token_hash, created_at, expires_at)
@@ -250,8 +260,9 @@ async fn make_no_link(db: &SqlitePool, email: &str) -> Result<(), sqlx::Error> {
     transaction.commit().await
 }
 
-/// Deletes links past their time (each lives at least the hour the counts
-/// look back). Run with every new link and every round of background
+/// Deletes links past their time, once the hour the counts look back has
+/// passed too (a sign-in link stops working after 15 minutes, but still
+/// counts towards its address's emails for the hour). Run with every new link and every round of background
 /// checking (`checking::round`), so on a quiet nine turtles too a used
 /// sign-up's email doesn't stay past its day.
 pub async fn tidy_links(db: &SqlitePool, now: i64) -> Result<(), sqlx::Error> {
@@ -263,8 +274,9 @@ async fn tidy_links_in(
     connection: &mut sqlx::SqliteConnection,
     now: i64,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query("DELETE FROM email_links WHERE expires_at <= ?")
+    sqlx::query("DELETE FROM email_links WHERE expires_at <= ? AND created_at <= ?")
         .bind(now)
+        .bind(now - 60 * 60)
         .execute(&mut *connection)
         .await
         .map(|_| ())
@@ -338,7 +350,7 @@ async fn forgot(State(state): State<AppState>, Json(form): Json<Forgot>) -> Resp
         Ok(Some(found)) => found,
         // The same database work as for an address that has an account.
         Ok(None) => {
-            return match make_no_link(&state.db, email).await {
+            return match make_no_link(&state.db, Purpose::Reset, email).await {
                 Ok(()) => asked(),
                 Err(error) => database_problem("making a password link", &error),
             };
@@ -454,13 +466,16 @@ async fn reset(State(state): State<AppState>, Json(form): Json<Reset>) -> Respon
                 .fetch_optional(&mut *transaction)
                 .await?
                 .flatten();
-        // Any other password link for them stops working, every device
-        // signed in as them is signed out, and their app password (for
-        // other feed reader apps) stops working too.
-        sqlx::query("UPDATE email_links SET used = 1 WHERE person_id = ? AND purpose = 'reset'")
-            .bind(person)
-            .execute(&mut *transaction)
-            .await?;
+        // Any other password link or sign-in link for them stops working,
+        // every device signed in as them is signed out, and their app
+        // password (for other feed reader apps) stops working too.
+        sqlx::query(
+            "UPDATE email_links SET used = 1
+             WHERE person_id = ? AND purpose IN ('reset', 'sign-in')",
+        )
+        .bind(person)
+        .execute(&mut *transaction)
+        .await?;
         sqlx::query("DELETE FROM sessions WHERE person_id = ?")
             .bind(person)
             .execute(&mut *transaction)
@@ -502,6 +517,98 @@ async fn reset(State(state): State<AppState>, Json(form): Json<Reset>) -> Respon
     }
     drop(limiters);
     signed_in_as(&state.db, person, json!({ "done": "reset" })).await
+}
+
+#[derive(Deserialize)]
+struct AskSignIn {
+    email: String,
+}
+
+/// "Email me a sign-in link": answered as "Forgot your password?" is,
+/// always the same and in about the same time, whether or not the address
+/// has an account. A link valid for 15 minutes goes to an address that has
+/// one, within the same limits as a password link.
+async fn ask_sign_in_link(State(state): State<AppState>, Json(form): Json<AskSignIn>) -> Response {
+    let Some(mailer) = &state.mailer else {
+        return no_email();
+    };
+    let email = form.email.trim();
+    if !plausible_email(email) {
+        return refused(StatusCode::BAD_REQUEST, "email");
+    }
+    let found: Result<Option<(i64, String)>, sqlx::Error> =
+        sqlx::query_as("SELECT id, email FROM people WHERE email = ? COLLATE NOCASE")
+            .bind(email)
+            .fetch_optional(&state.db)
+            .await;
+    let (person, address) = match found {
+        Ok(Some(found)) => found,
+        Ok(None) => {
+            return match make_no_link(&state.db, Purpose::SignIn, email).await {
+                Ok(()) => asked(),
+                Err(error) => database_problem("making a sign-in link", &error),
+            };
+        }
+        Err(error) => return database_problem("finding a reader", &error),
+    };
+    let made = make_link(
+        &state.db,
+        Purpose::SignIn,
+        Some(person),
+        &address,
+        None,
+        true,
+    )
+    .await;
+    let ticket = match made {
+        Ok(Made::Link(ticket)) => ticket,
+        Ok(Made::Nothing | Made::TooMany | Made::NoTicket) => return asked(),
+        Err(error) => return database_problem("making a sign-in link", &error),
+    };
+    let link = mailer.link("/sign-in-link", &ticket);
+    mailer.send_later(
+        &address,
+        "Sign in to nine turtles",
+        format!(
+            "Hello,\n\nSomeone, hopefully you, asked to sign in to nine turtles with this email. \
+             To sign in, open this link on the device you want to read on:\n\n{link}\n\n\
+             It works once, for the next 15 minutes. Your password stays as it is. \
+             If you didn't ask, ignore this email: nobody can sign in without it.{SIGN_OFF}"
+        ),
+        "a sign-in link",
+    );
+    asked()
+}
+
+#[derive(Deserialize)]
+struct UseSignIn {
+    ticket: String,
+}
+
+/// Signs this device in from a sign-in link: once, within 15 minutes, and
+/// only while the reader still has the address it went to (a changed email
+/// leaves earlier links behind). Nothing else changes: the password stays,
+/// and other devices stay signed in.
+async fn use_sign_in_link(State(state): State<AppState>, Json(form): Json<UseSignIn>) -> Response {
+    let hash = scramble(form.ticket.trim());
+    let claimed: Result<Option<i64>, sqlx::Error> = sqlx::query_scalar(
+        "UPDATE email_links SET used = 1
+         WHERE token_hash = ? AND purpose = 'sign-in' AND used = 0 AND expires_at > ?
+           AND EXISTS (SELECT 1 FROM people
+                       WHERE people.id = email_links.person_id
+                         AND people.email = email_links.email COLLATE NOCASE)
+         RETURNING person_id",
+    )
+    .bind(&hash[..])
+    .bind(now())
+    .fetch_optional(&state.db)
+    .await;
+    let person = match claimed {
+        Ok(Some(person)) => person,
+        Ok(None) => return refused(StatusCode::GONE, "expired"),
+        Err(error) => return database_problem("using a sign-in link", &error),
+    };
+    signed_in_as(&state.db, person, json!({ "done": "signed-in" })).await
 }
 
 /// Signs this device in for `person` and answers `body` with its cookie.

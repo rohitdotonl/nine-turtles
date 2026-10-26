@@ -182,6 +182,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Invite link and sign-up switch
 - SMTP and STARTTLS (sending email)
 - Email confirmation link
+- Sign-in link by email ("magic link")
 - Rate limiting per account
 - Secure, HTTP-only and SameSite cookies
 - Cross-site request forgery (CSRF)

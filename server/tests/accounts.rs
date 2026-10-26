@@ -144,6 +144,15 @@ async fn without_email_settings_nothing_is_sent_and_open_stays_refused() {
     .await;
     assert_eq!(forgot.status(), StatusCode::SERVICE_UNAVAILABLE);
     assert_eq!(error_of(forgot).await, "no-email");
+    let link = post(
+        &base,
+        "/api/sign-in/link",
+        None,
+        json!({ "email": "mira@example.com" }),
+    )
+    .await;
+    assert_eq!(link.status(), StatusCode::SERVICE_UNAVAILABLE);
+    assert_eq!(error_of(link).await, "no-email");
 
     let signed_out = session(&base, None).await;
     assert_eq!(signed_out["email_sending"], false);
@@ -1275,6 +1284,10 @@ async fn a_new_password_setting_wins_over_one_set_by_email() {
     .await;
     assert_eq!(reset.status(), StatusCode::OK);
     let device = cookie_from(&reset);
+    // A sign-in link asked for and not yet used.
+    ask_sign_in_link(&base, "owner@example.com").await;
+    let (page, sign_in_ticket) = newest_link(&outbox, "owner@example.com");
+    assert_eq!(page, "/sign-in-link");
 
     let alone = |base: String, password: &'static str| async move {
         post(&base, "/api/sign-in", None, json!({ "password": password }))
@@ -1312,7 +1325,8 @@ async fn a_new_password_setting_wins_over_one_set_by_email() {
 
     // A new NINE_TURTLES_PASSWORD_HASH wins: the owner's way back that
     // needs no email. The password set by email stops working, and every
-    // device signed in as the owner is signed out.
+    // device signed in as the owner is signed out, and links sent before
+    // stop working.
     const ANOTHER: &str = "the owner's way back in";
     let mut changed = common::config();
     changed.data_dir = data_dir.clone();
@@ -1320,6 +1334,10 @@ async fn a_new_password_setting_wins_over_one_set_by_email() {
         nine_turtles::config::PasswordSetting::Set(nine_turtles::password::hash(ANOTHER).unwrap());
     let (base, state) = start_with_state(changed.clone()).await;
     assert_eq!(session(&base, Some(&device)).await["signed_in"], false);
+    assert_eq!(
+        use_sign_in_link(&base, &sign_in_ticket).await.status(),
+        StatusCode::GONE
+    );
     assert_eq!(
         alone(base.clone(), NEW_PASSWORD).await,
         StatusCode::UNAUTHORIZED
@@ -1366,4 +1384,208 @@ async fn emailed_links_past_their_time_are_tidied_by_background_checking() {
         .await
         .unwrap();
     assert_eq!(count().await, 0);
+}
+
+/// Asks for a sign-in link for `email`, as "Email me a sign-in link" does.
+async fn ask_sign_in_link(base: &str, email: &str) -> Response {
+    post(base, "/api/sign-in/link", None, json!({ "email": email })).await
+}
+
+async fn use_sign_in_link(base: &str, ticket: &str) -> Response {
+    post(
+        base,
+        "/api/sign-in/link/use",
+        None,
+        json!({ "ticket": ticket }),
+    )
+    .await
+}
+
+#[tokio::test]
+async fn a_sign_in_link_signs_in_once_and_leaves_the_password_alone() {
+    let (base, state, outbox, _) = open_app().await;
+    let email = "iris@example.com";
+    let laptop = confirmed_reader(&base, &outbox, email).await;
+    let before = emails_to(&outbox, email).len();
+
+    // The same answer whether or not the address has an account.
+    let nobody = ask_sign_in_link(&base, "nobody@example.com").await;
+    let (nobody_status, nobody_body) = (nobody.status(), nobody.text().await.unwrap());
+    let someone = ask_sign_in_link(&base, "IRIS@example.com").await;
+    assert_eq!(nobody_status, StatusCode::ACCEPTED);
+    assert_eq!(
+        (nobody_status, nobody_body),
+        (someone.status(), someone.text().await.unwrap())
+    );
+    assert!(emails_to(&outbox, "nobody@example.com").is_empty());
+    let sent = emails_to(&outbox, email);
+    assert_eq!(sent.len(), before + 1);
+    assert_eq!(sent.last().unwrap().subject, "Sign in to nine turtles");
+    let (page, ticket) = newest_link(&outbox, email);
+    assert_eq!(page, "/sign-in-link");
+    let lifetime: i64 = sqlx::query_scalar(
+        "SELECT expires_at - created_at FROM email_links WHERE purpose = 'sign-in'",
+    )
+    .fetch_one(&state.db)
+    .await
+    .unwrap();
+    assert_eq!(lifetime, 15 * 60);
+
+    let used = use_sign_in_link(&base, &ticket).await;
+    assert_eq!(used.status(), StatusCode::OK);
+    let phone = cookie_from(&used);
+    let signed_in_as = session(&base, Some(&phone)).await;
+    assert_eq!(signed_in_as["signed_in"], true);
+    assert_eq!(signed_in_as["email"], email);
+    // The other device stays signed in, and the password still works.
+    assert_eq!(session(&base, Some(&laptop)).await["signed_in"], true);
+    assert_eq!(
+        sign_in(&base, email, READER_PASSWORD).await.status(),
+        StatusCode::NO_CONTENT
+    );
+    // Once only.
+    assert_eq!(
+        use_sign_in_link(&base, &ticket).await.status(),
+        StatusCode::GONE
+    );
+    assert_eq!(
+        use_sign_in_link(&base, "made-up").await.status(),
+        StatusCode::GONE
+    );
+}
+
+#[tokio::test]
+async fn a_sign_in_link_lasts_fifteen_minutes_and_still_counts_for_the_hour() {
+    let (base, state, outbox, _) = open_app().await;
+    let email = "lena@example.com";
+    confirmed_reader(&base, &outbox, email).await;
+    ask_sign_in_link(&base, email).await;
+    let (_, ticket) = newest_link(&outbox, email);
+    // Sixteen minutes later.
+    sqlx::query(
+        "UPDATE email_links SET created_at = created_at - 16 * 60,
+                                expires_at = expires_at - 16 * 60",
+    )
+    .execute(&state.db)
+    .await
+    .unwrap();
+    assert_eq!(
+        use_sign_in_link(&base, &ticket).await.status(),
+        StatusCode::GONE
+    );
+    // The confirmation and the sign-in link were two of the hour's three,
+    // though the second has stopped working: one more, then nothing.
+    let before = emails_to(&outbox, email).len();
+    for _ in 0..3 {
+        a_minute_passes(&state.db).await;
+        assert_eq!(
+            ask_sign_in_link(&base, email).await.status(),
+            StatusCode::ACCEPTED
+        );
+    }
+    assert_eq!(emails_to(&outbox, email).len(), before + 1);
+}
+
+#[tokio::test]
+async fn pressing_send_link_twice_sends_one_sign_in_link() {
+    let (base, state, outbox, _) = open_app().await;
+    let email = "twice-in@example.com";
+    confirmed_reader(&base, &outbox, email).await;
+    let before = emails_to(&outbox, email).len();
+    assert_eq!(
+        ask_sign_in_link(&base, email).await.status(),
+        StatusCode::ACCEPTED
+    );
+    assert_eq!(
+        ask_sign_in_link(&base, email).await.status(),
+        StatusCode::ACCEPTED
+    );
+    assert_eq!(emails_to(&outbox, email).len(), before + 1);
+    a_minute_passes(&state.db).await;
+    ask_sign_in_link(&base, email).await;
+    assert_eq!(emails_to(&outbox, email).len(), before + 2);
+}
+
+#[tokio::test]
+async fn a_new_email_or_a_new_password_ends_earlier_sign_in_links() {
+    let (base, state, outbox, _) = open_app().await;
+    let email = "moss@example.com";
+    let laptop = confirmed_reader(&base, &outbox, email).await;
+
+    // A link to the old address stops working once the email changes.
+    ask_sign_in_link(&base, email).await;
+    let (_, to_old) = newest_link(&outbox, email);
+    let change = post(
+        &base,
+        "/api/people/me/email/change",
+        Some(&laptop),
+        json!({ "email": "fern@example.com", "password": READER_PASSWORD }),
+    )
+    .await;
+    assert!(change.status().is_success());
+    let (_, confirm) = newest_link(&outbox, "fern@example.com");
+    let confirmed = post(
+        &base,
+        "/api/email/confirm",
+        None,
+        json!({ "ticket": confirm }),
+    )
+    .await;
+    assert_eq!(confirmed.status(), StatusCode::OK);
+    assert_eq!(
+        use_sign_in_link(&base, &to_old).await.status(),
+        StatusCode::GONE
+    );
+
+    // A new password ends a sign-in link not yet used.
+    a_minute_passes(&state.db).await;
+    ask_sign_in_link(&base, "fern@example.com").await;
+    let (_, sign_in_ticket) = newest_link(&outbox, "fern@example.com");
+    a_minute_passes(&state.db).await;
+    post(
+        &base,
+        "/api/password/forgot",
+        None,
+        json!({ "email": "fern@example.com" }),
+    )
+    .await;
+    let (_, reset_ticket) = newest_link(&outbox, "fern@example.com");
+    let reset = post(
+        &base,
+        "/api/password/reset",
+        None,
+        json!({ "ticket": reset_ticket, "password": NEW_PASSWORD }),
+    )
+    .await;
+    assert_eq!(reset.status(), StatusCode::OK);
+    assert_eq!(
+        use_sign_in_link(&base, &sign_in_ticket).await.status(),
+        StatusCode::GONE
+    );
+}
+
+#[tokio::test]
+async fn the_owner_can_sign_in_by_email_link_too() {
+    let (base, _, outbox) = start_with_mail(common::config()).await;
+    let owner = signed_in(&base).await;
+    // Without a saved email, nothing goes anywhere.
+    ask_sign_in_link(&base, "owner@example.com").await;
+    assert!(emails_to(&outbox, "owner@example.com").is_empty());
+    let saved = post(
+        &base,
+        "/api/people/me/email",
+        Some(&owner),
+        json!({ "email": "owner@example.com", "password": common::PASSWORD }),
+    )
+    .await;
+    assert!(saved.status().is_success());
+    ask_sign_in_link(&base, "owner@example.com").await;
+    let (_, ticket) = newest_link(&outbox, "owner@example.com");
+    let used = use_sign_in_link(&base, &ticket).await;
+    assert_eq!(used.status(), StatusCode::OK);
+    let phone = cookie_from(&used);
+    assert_eq!(session(&base, Some(&phone)).await["owner"], true);
+    // The password-only sign-in is as it was.
+    let alone = post(&base, "/api/sign-in", None, json!({ "password": PASSWORD })).await;
+    assert_eq!(alone.status(), StatusCode::NO_CONTENT);
 }
