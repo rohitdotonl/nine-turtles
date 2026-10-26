@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { explainChange, explainForgot, explainLink, ticketFrom, type ChangeResult, type LinkResult } from "./accounts";
+import { explainAsked, explainChange, explainLink, ticketFrom, type ChangeResult, type LinkResult } from "./accounts";
 import { explain } from "./session";
 
 describe("emailed links", () => {
@@ -13,21 +13,32 @@ describe("emailed links", () => {
 
 describe("the messages about email", () => {
   it("never say whether an address has an account", () => {
-    expect(explainForgot("asked", " mira@example.com ")).toBe(
+    expect(explainAsked("password", "asked", " mira@example.com ")).toBe(
       "If mira@example.com has an account here, a link to choose a new password is on its way. It works for an hour.",
+    );
+    expect(explainAsked("sign-in", "asked", " mira@example.com ")).toBe(
+      "If mira@example.com has an account here, a link to sign in is on its way. It works once, for 15 minutes.",
     );
   });
 
   it("say calmly when nine turtles can't send email", () => {
-    expect(explainForgot("no-email", "")).toContain("can't send email yet");
+    expect(explainAsked("password", "no-email", "")).toContain("can't send email yet");
+    expect(explainAsked("sign-in", "no-email", "")).toBe("This nine turtles can't send email yet. Sign in with your password.");
     expect(explainChange({ ok: false, reason: "no-email" })).toContain("can't send email yet");
   });
 
   it("are calm and never shout", () => {
     const messages = [
-      ...(["asked", "email", "no-email", "unreachable"] as const).map((result) => explainForgot(result, "a@b")),
+      ...(["asked", "email", "no-email", "unreachable"] as const).flatMap((result) => [
+        explainAsked("password", result, "a@b"),
+        explainAsked("sign-in", result, "a@b"),
+      ]),
       ...(["expired", "already", "too-many", "password-short", "password-long", "unreachable"] as const).flatMap(
-        (result: Exclude<LinkResult, "ok">) => [explainLink(result, "reset"), explainLink(result, "confirm")],
+        (result: Exclude<LinkResult, "ok">) => [
+          explainLink(result, "reset"),
+          explainLink(result, "confirm"),
+          explainLink(result, "sign-in"),
+        ],
       ),
       ...(
         [
