@@ -35,6 +35,8 @@
   import Icon from "./Icon.svelte";
   import { onMount, tick, untrack } from "svelte";
   import {
+    catchUp as catchUpOnServer,
+    caughtUpMessage,
     listArticles,
     markedAllMessage,
     markRead,
@@ -47,6 +49,7 @@
     type Notice,
     type Order,
     type Source,
+    uncatchUp,
   } from "./feeds";
   import { hugEllipsis } from "./hug";
   import { boldParts } from "./search";
@@ -62,6 +65,7 @@
     onChoose,
     onUnreadChange,
     onRefresh,
+    onCounts = () => {},
     results = false,
     oneFeed = false,
     river = false,
@@ -83,6 +87,8 @@
     onUnreadChange: (feedId: number, change: number) => void;
     /** The reader asked for new items; the sidebar's counts load again too. */
     onRefresh: () => void;
+    /** Articles not listed here changed too ("Catch me up" and its Undo): the sidebar's counts load again. */
+    onCounts?: () => void;
     /** These are search results: say how many, and there's nothing new to fetch. */
     results?: boolean;
     /** Every article here is from one feed (its own list), so the rows don't repeat its name. */
@@ -441,6 +447,46 @@
     }
     did(markedAllMessage(unread.length), () => setRead(unread, false));
     setRead(unread, true);
+  }
+
+  /**
+   * "Catch me up" (decision 0097): everything in Unread from before today
+   * counts as read, listed here or not. Those listed turn grey where they
+   * are; Undo makes exactly the same articles unread again.
+   */
+  export async function catchUp() {
+    let ids: number[];
+    try {
+      ids = await catchUpOnServer();
+    } catch {
+      // The answer may have been lost after the server caught up: Refresh shows where things stand.
+      say("Catching up couldn't be confirmed. Refresh to see where things stand.");
+      return;
+    }
+    if (ids.length === 0) {
+      say(caughtUpMessage(0));
+      return;
+    }
+    const marked = new Set(ids);
+    const listed = articles.filter((article) => !article.read && marked.has(article.id));
+    for (const article of listed) {
+      confirmed.set(`read:${article.id}`, true);
+      putRead(article, true);
+    }
+    onCounts();
+    did(caughtUpMessage(ids.length), () =>
+      save(
+        "read",
+        listed,
+        false,
+        async () => {
+          await uncatchUp(ids);
+          onCounts();
+        },
+        putRead,
+        "Undo couldn't be saved, so they're still read.",
+      ),
+    );
   }
 
   /** `u` and Undo: reverses the last undoable action, once. */

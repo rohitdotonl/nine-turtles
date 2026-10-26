@@ -50,6 +50,7 @@ pub mod status;
 pub mod storage;
 pub mod subscriptions;
 pub mod tidy;
+pub mod unread;
 pub mod websub;
 
 use std::sync::{
@@ -199,6 +200,7 @@ pub fn router(state: AppState) -> Router {
         .merge(search::routes())
         .merge(saved_searches::routes())
         .merge(settings::routes())
+        .merge(unread::routes())
         .merge(starred::routes())
         .merge(status::routes())
         .merge(websub::routes())

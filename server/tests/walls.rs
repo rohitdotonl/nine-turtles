@@ -260,22 +260,25 @@ async fn settings_are_each_readers_own() {
     let (status, _) = owner
         .post(
             "/api/settings",
-            json!({ "sort": "oldest", "mode": "river" }),
+            json!({ "sort": "oldest", "mode": "river", "counts": "shown", "let_go": "never" }),
         )
         .await;
     assert_eq!(status, StatusCode::OK);
 
     assert_eq!(
         other.get("/api/settings").await,
-        json!({ "sort": "newest", "mode": "inbox" })
+        json!({ "sort": "newest", "mode": "inbox", "counts": "shown", "let_go": "never" })
     );
     let (_, changed) = other
         .post("/api/settings", json!({ "sort": "newest" }))
         .await;
-    assert_eq!(changed, json!({ "sort": "newest", "mode": "inbox" }));
+    assert_eq!(
+        changed,
+        json!({ "sort": "newest", "mode": "inbox", "counts": "shown", "let_go": "never" })
+    );
     assert_eq!(
         owner.get("/api/settings").await,
-        json!({ "sort": "oldest", "mode": "river" })
+        json!({ "sort": "oldest", "mode": "river", "counts": "shown", "let_go": "never" })
     );
 }
 
@@ -2262,4 +2265,49 @@ async fn empty_library(reader: &Reader) {
     assert_eq!(reader.get("/api/rules").await["rules"], json!([]));
     assert_eq!(reader.get("/api/muted").await["count"], 0);
     assert!(!reader.get_text("/api/opml").await.contains("Garden"));
+}
+
+#[tokio::test]
+async fn catching_up_and_letting_go_touch_only_that_readers_unread() {
+    let (owner, other, state, _, _) = two_followers().await;
+    // Their three posts are three weeks old for both.
+    sqlx::query("UPDATE entries SET sort_at = ?")
+        .bind(nine_turtles::now() - 21 * 86_400)
+        .execute(&state.db)
+        .await
+        .unwrap();
+
+    let (status, caught) = other
+        .post(
+            "/api/articles/catch-up",
+            json!({ "before": nine_turtles::now() }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(caught["ids"].as_array().unwrap().len(), 3);
+    assert!(other.ids("view=unread").await.is_empty());
+    assert_eq!(owner.ids("view=unread").await.len(), 3);
+
+    let (status, _) = owner
+        .post("/api/settings", json!({ "let_go": "week" }))
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    nine_turtles::unread::let_go(
+        &state.db,
+        nine_turtles::now() + nine_turtles::unread::SETTLES_FOR + 1,
+    )
+    .await
+    .unwrap();
+    assert!(owner.ids("view=unread").await.is_empty());
+
+    // The other reader's Undo brings back only theirs.
+    let (status, _) = other
+        .post(
+            "/api/articles/read",
+            json!({ "ids": caught["ids"], "read": false }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(other.ids("view=unread").await.len(), 3);
+    assert!(owner.ids("view=unread").await.is_empty());
 }

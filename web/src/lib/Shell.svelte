@@ -45,12 +45,17 @@
     resubscribe,
     saveMode,
     saveSort,
+    saveCounts,
+    saveLetGo,
+    lastCounts,
     unsubscribe,
     type Article,
     type Feed,
     type Folder,
     type Notice,
     type Order,
+    type Counts,
+    type LetGo,
     type ReadingMode,
     type Source,
   } from "./feeds";
@@ -86,6 +91,9 @@
 
   /** Inbox or river, shared across the reader's devices; this device's last word until the server answers. */
   let mode: ReadingMode = $state(lastMode());
+  /** Whether the sidebar shows unread counts, and when unread lets go (Settings › Reading, decision 0097). */
+  let counts: Counts = $state(lastCounts());
+  let letGo: LetGo | undefined = $state();
   let river = $derived(mode === "river");
   /** Where the app opens: Unread in inbox mode, All in river mode. */
   let home: Route = $derived({ kind: "view", view: homeView(mode) });
@@ -458,6 +466,28 @@
     }
   }
 
+  async function changeCounts(next: Counts) {
+    const before = counts;
+    counts = next;
+    try {
+      await saveCounts(next);
+    } catch {
+      counts = before;
+      throw new Error("not saved");
+    }
+  }
+
+  async function changeLetGo(next: LetGo) {
+    const before = letGo;
+    letGo = next;
+    try {
+      await saveLetGo(next);
+    } catch {
+      letGo = before;
+      throw new Error("not saved");
+    }
+  }
+
   async function changeSort(next: Order) {
     const before = sort;
     sort = next;
@@ -470,7 +500,8 @@
   }
 
   /**
-   * The list's More (…) menu (SPEC section 6): Mark all as read and Refresh
+   * The list's More (…) menu (SPEC section 6): Mark all as read (and, in
+   * Unread, Catch me up) and Refresh
    * (Refresh steps aside while searching: results have nothing new to
    * fetch), the sort order, then Edit feed or Edit folder in a feed's or
    * folder's own list. Choosing Edit puts the keyboard on More first, so
@@ -483,6 +514,10 @@
           ...(river
             ? []
             : [{ label: "Mark all as read", shortcut: phone ? undefined : "Shift+A", onSelect: () => itemList?.markAllRead() }]),
+          // Everything in Unread from before today, listed or not (decision 0097): only in Unread itself.
+          ...(!river && !shown && under.kind === "view" && under.view === "unread"
+            ? [{ label: "Catch me up", onSelect: () => itemList?.catchUp() }]
+            : []),
           ...(shown ? [] : [{ label: "Refresh", shortcut: phone ? undefined : "r", onSelect: () => itemList?.refresh() }]),
         ],
       },
@@ -667,6 +702,8 @@
     loadSettings().then((settings) => {
       mode = settings.mode;
       sort = settings.sort;
+      counts = settings.counts;
+      letGo = settings.letGo;
       // This device last saw river mode, but it's inbox now (changed on
       // another device): an untouched home opens on Unread after all.
       if (openedHome && pathFor(route) === pathFor(start) && mode === "inbox" && !(route.kind === "view" && route.view === "unread")) {
@@ -1375,7 +1412,7 @@
         {/each}
       </ul>
       {#if feeds}
-        <SidebarFeeds {feeds} {folders} {searches} {route} {search} {follow} {phone} {river} />
+        <SidebarFeeds {feeds} {folders} {searches} {route} {search} {follow} {phone} {river} numbers={counts === "shown"} />
       {/if}
       {#if feedsProblem}
         <p class="px-4 pt-4 text-small">Your feeds couldn't be loaded. Reload the page to try again.</p>
@@ -1438,6 +1475,10 @@
           onSort={changeSort}
           {mode}
           onMode={changeMode}
+          {counts}
+          onCounts={changeCounts}
+          {letGo}
+          onLetGo={changeLetGo}
           bind:heading={settingsHeading}
           bind:dataHeading
           {version}
@@ -1664,6 +1705,7 @@
                   onChoose={chose}
                   onUnreadChange={unreadChanged}
                   onRefresh={loadFeeds}
+                  onCounts={loadFeeds}
                   results={shown !== undefined}
                   oneFeed={under.kind === "feed" && !shown}
                   {river}
