@@ -126,10 +126,7 @@ fn item(article: &Starred) -> Value {
     // Where it came from. JSON Feed has no field for this, so it's an
     // extension, named with an underscore as the format asks.
     let mut source = Map::new();
-    source.insert(
-        "about".into(),
-        "https://nineturtles.app".into(),
-    );
+    source.insert("about".into(), "https://nineturtles.app".into());
     source.insert("feed_title".into(), article.feed_title.clone().into());
     source.insert("feed_url".into(), article.feed_url.clone().into());
     if let Some(site) = &article.site_url {
