@@ -1,0 +1,24 @@
+---
+layout: base.njk
+---
+<p class="kicker"><a href="/packs/">Starter packs</a></p>
+<h1>{{ title }}</h1>
+<p class="lede">{{ description }}</p>
+{{ content | safe }}
+{%- if blogs.length %}
+<ol class="posts">
+  {%- for blog in blogs %}
+  <li>
+    <h2><a href="{{ blog.site }}">{{ blog.name }}</a></h2>
+    <p>{{ blog.why }}</p>
+  </li>
+  {%- endfor %}
+</ol>
+<p>
+  <a href="/packs/{{ page.fileSlug }}.opml" download>Download this pack</a> as
+  a file (OPML) that adds every blog here to nine turtles, or to any other
+  feed reader. In nine turtles: <strong>Settings</strong>, then <strong>Your data</strong>, then <strong>Import OPML…</strong>
+</p>
+{%- else %}
+<p>The blogs for this pack are still being chosen.</p>
+{%- endif %}

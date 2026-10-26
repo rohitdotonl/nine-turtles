@@ -1,0 +1,20 @@
+---
+layout: base.njk
+permalink: /packs/
+title: Starter packs
+description: Hand-picked blogs and newsletters to start reading, a few on each theme, chosen by a person.
+---
+<h1>Starter packs</h1>
+<p class="lede">
+  Not sure where to start? Each pack is a small shelf of writing worth your
+  time, picked by hand, with a line on why. Add a whole pack to nine turtles,
+  or take it to any feed reader you like.
+</p>
+<ol class="posts">
+  {%- for pack in collections.packs %}
+  <li>
+    <h2><a href="{{ pack.url }}">{{ pack.data.title }}</a></h2>
+    <p>{{ pack.data.description }}</p>
+  </li>
+  {%- endfor %}
+</ol>
