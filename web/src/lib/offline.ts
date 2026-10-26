@@ -337,6 +337,18 @@ export async function markSent(kind: Mark["kind"], ids: number[], at: number): P
   }
 }
 
+/** Marks being sent right now, by the screen that made them: a round of keeping leaves them be, so none goes twice. */
+const beingSent = new Set<string>();
+
+/** Notes that these marks are on their way; returns how to say they've arrived (or failed). */
+export function sending(kind: Mark["kind"], ids: number[], at: number): () => void {
+  const keys = ids.map((id) => `${kind}:${id}:${at}`);
+  for (const key of keys) beingSent.add(key);
+  return () => {
+    for (const key of keys) beingSent.delete(key);
+  };
+}
+
 async function waitingMarks(): Promise<Mark[]> {
   try {
     return await inside(["marks"], "readonly", (tx) => ask(tx.objectStore("marks").getAll() as IDBRequest<Mark[]>));
@@ -370,7 +382,8 @@ export function useFetchers(given: Fetchers): void {
  */
 export async function sendWaiting(): Promise<void> {
   if (!fetchers || !keeping()) return;
-  for (const part of inParts(await waitingMarks())) {
+  const waiting = (await waitingMarks()).filter((mark) => !beingSent.has(`${mark.key}:${mark.at}`));
+  for (const part of inParts(waiting)) {
     try {
       await fetchers.sendMark(part.kind, part.ids, part.value, part.at);
     } catch (problem) {

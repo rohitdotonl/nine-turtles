@@ -13,6 +13,7 @@ import {
   keptPage,
   markSent,
   noteMark,
+  sending,
   useFetchers,
 } from "./offline";
 
@@ -359,7 +360,9 @@ function sendMark(kind: "read" | "starred", ids: number[], value: boolean, at: n
   const path = kind === "read" ? "/api/articles/read" : "/api/articles/starred";
   const body = kind === "read" ? { ids, read: value, at } : { ids, starred: value, at };
   const offline = globalThis.navigator?.onLine === false;
+  const done = sending(kind, ids, at);
   const sent = offline ? Promise.reject(new TypeError("offline")) : send(path, body);
+  sent.then(done, done);
   return sent.then(
     async () => {
       await noted;
