@@ -9,11 +9,14 @@
   success the device is signed in and the reader arrives in nine turtles.
   While sign-up is Open (decision 0088) the page works without a ticket too:
   signing up then sends a link to the email, and the page says to open it;
-  the account is made when it's followed.
+  the account is made when it's followed. The page then says "Check your
+  email", with a quiet Send again a minute later (decision 0091).
 -->
 <script lang="ts">
   import Logo from "./Logo.svelte";
+  import { tick } from "svelte";
   import Icon from "./Icon.svelte";
+  import SendAgain from "./SendAgain.svelte";
   import { PASSWORD_MINIMUM, explainSignUp, inviteFrom, signUp } from "./readers";
 
   let {
@@ -29,6 +32,7 @@
   if (location.hash) history.replaceState(history.state, "", location.pathname);
   /** Where the link to finish signing up went, once it's on its way. */
   let sentTo = $state("");
+  let sentHeading: HTMLHeadingElement | undefined = $state();
   let email = $state("");
   let password = $state("");
   let message = $state("");
@@ -48,6 +52,8 @@
     busy = false;
     if (result.ok && result.confirm) {
       sentTo = result.confirm;
+      // The form and its button are gone: the keyboard goes to what replaced them.
+      tick().then(() => sentHeading?.focus());
       return;
     }
     if (result.ok) {
@@ -67,6 +73,12 @@
           : undefined;
   }
 
+  /** "Send again", a minute after: signs up again with what was typed, which sends a new link. */
+  async function again(): Promise<string> {
+    const result = await signUp(sentTo, password, invite);
+    return result.ok ? "Another link is on its way." : explainSignUp(result);
+  }
+
   function signIn(event: MouseEvent) {
     event.preventDefault();
     history.replaceState(null, "", "/");
@@ -82,10 +94,12 @@
   </div>
   {#if sentTo}
     <div class="flex w-full flex-col items-center gap-3 text-center sm:max-w-xs">
-      <p role="status">
+      <h2 bind:this={sentHeading} tabindex="-1" class="font-semibold">Check your email</h2>
+      <p id="sign-up-sent" role="status" class="break-words">
         A link to finish signing up is on its way to <span class="font-semibold">{sentTo}</span>. Open it within 24
         hours; your account is made then.
       </p>
+      <SendAgain onSend={again} />
       <a href="/" onclick={signIn} class="btn rounded-lg">Sign in</a>
     </div>
   {:else if closed}

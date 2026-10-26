@@ -7,7 +7,9 @@
 //! which only a BLAKE2s scramble is kept (`email_links`, structure change
 //! 14), works once, and expires: a day to confirm an address, an hour for a
 //! new password. At most `EMAILS_PER_ADDRESS_PER_HOUR` links go to any one
-//! address in an hour, so nine turtles can't be used to flood someone's inbox.
+//! address in an hour, so nine turtles can't be used to flood someone's inbox,
+//! and at most one of a kind a minute (`EMAIL_GAP`), so pressing Send link
+//! twice sends one email.
 //!
 //! A link's ticket comes after the `#` (`/reset-password#ticket=…`), the
 //! part of an address no browser sends to a server, so it never reaches a
@@ -45,6 +47,9 @@ pub const CONFIRM_LIFETIME: i64 = 24 * 60 * 60;
 pub const RESET_LIFETIME: i64 = 60 * 60;
 /// At most this many links go to one address in any hour.
 pub const EMAILS_PER_ADDRESS_PER_HOUR: i64 = 3;
+/// A link of one kind goes to one address at most once in this many seconds:
+/// a second press of Send link within it is answered the same, and sends nothing.
+pub const EMAIL_GAP: i64 = 60;
 
 pub fn routes() -> Router<AppState> {
     Router::new()
@@ -91,6 +96,25 @@ async fn emails_to_address(
     .await
 }
 
+/// Whether a link for `purpose` was emailed to `email` within the last
+/// `EMAIL_GAP` seconds.
+async fn emailed_lately(
+    transaction: &mut sqlx::SqliteConnection,
+    purpose: Purpose,
+    email: &str,
+    now: i64,
+) -> Result<bool, sqlx::Error> {
+    sqlx::query_scalar(
+        "SELECT EXISTS (SELECT 1 FROM email_links
+         WHERE email = ? COLLATE NOCASE AND purpose = ? AND emailed = 1 AND created_at > ?)",
+    )
+    .bind(email)
+    .bind(purpose.stored())
+    .bind(now - EMAIL_GAP)
+    .fetch_one(&mut *transaction)
+    .await
+}
+
 /// How many times reader `person` asked to change their email in the last
 /// hour, whether or not an email went.
 async fn changes_tried(
@@ -113,8 +137,9 @@ async fn changes_tried(
 pub(crate) enum Made {
     /// A link to email, with its ticket.
     Link(String),
-    /// Nothing to send: the address had its hour's share of emails, or the
-    /// try was only counted (`email_to` false).
+    /// Nothing to send: the address had its hour's share of emails, or one
+    /// like it within the last minute, or the try was only counted
+    /// (`email_to` false).
     Nothing,
     /// The reader has asked to change their email too often this hour.
     TooMany,
@@ -125,7 +150,7 @@ pub(crate) enum Made {
 /// Saves a new link, counted and saved in one step behind SQLite's one
 /// writer at a time (`BEGIN IMMEDIATE`), so requests sent together can't
 /// race past the hour's share: at most `EMAILS_PER_ADDRESS_PER_HOUR`
-/// emails to one address, and as many tries to change one reader's email.
+/// emails to one address (one of a kind a minute), and as many tries to change one reader's email.
 ///
 /// For a changed email, every try is counted towards the reader's share,
 /// whether or not it's emailed: one that isn't (`email_to` false, for an
@@ -165,6 +190,7 @@ pub(crate) async fn make_link(
     }
     let emailed = emails_to_address(&mut transaction, email, hour_ago).await?
         < EMAILS_PER_ADDRESS_PER_HOUR
+        && !emailed_lately(&mut transaction, purpose, email, now).await?
         && email_to;
     if !emailed && purpose != Purpose::Change {
         transaction.commit().await?;
@@ -203,6 +229,7 @@ async fn make_no_link(db: &SqlitePool, email: &str) -> Result<(), sqlx::Error> {
     let mut transaction = db.begin_with("BEGIN IMMEDIATE").await?;
     tidy_links_in(&mut transaction, now).await?;
     emails_to_address(&mut transaction, email, now - 60 * 60).await?;
+    emailed_lately(&mut transaction, Purpose::Reset, email, now).await?;
     sqlx::query(
         "INSERT INTO email_links
              (purpose, person_id, email, password_hash, token_hash, created_at, expires_at)

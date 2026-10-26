@@ -4,11 +4,15 @@
   email empty and sign in with the password alone, as before there were
   readers (decision 0087). While nine turtles can send email, "Forgot your
   password?" turns the page into a request for a password link, and while
-  sign-up is Open, "Sign up" leads to the sign-up page (decision 0088).
+  sign-up is Open, "Sign up" leads to the sign-up page (decision 0088). Once
+  a link is asked for, the form gives way to "Check your email": where it
+  went, for how long it works, and a quiet Send again (decision 0091).
 -->
 <script lang="ts">
+  import { tick } from "svelte";
   import Logo from "./Logo.svelte";
   import Icon from "./Icon.svelte";
+  import SendAgain from "./SendAgain.svelte";
   import { explain, signIn } from "./session";
   import { explainForgot, forgotPassword } from "./accounts";
 
@@ -29,7 +33,7 @@
   /** Asking for a password link instead of signing in. */
   let forgetting = $state(false);
   let emailField: HTMLInputElement | undefined = $state();
-  /** The message after asking for a link is news, not a refusal: it's in the text color. */
+  /** "Not confirmed yet" is news, not a refusal: it's in the text color. */
   let calm = $state(false);
 
   let email = $state("");
@@ -38,6 +42,9 @@
   /** The password itself was refused, so the field is marked; other problems aren't the field's. */
   let refused = $state(false);
   let busy = $state(false);
+  /** Where a password link was asked for: the form gives way to "Check your email". */
+  let sent = $state("");
+  let sentHeading: HTMLHeadingElement | undefined = $state();
 
   async function submit(event: SubmitEvent) {
     event.preventDefault();
@@ -65,19 +72,34 @@
     busy = true;
     const result = await forgotPassword(email);
     busy = false;
+    if (result === "asked") {
+      sent = email.trim();
+      message = "";
+      refused = false;
+      // The form and its button are gone: the keyboard goes to what replaced them.
+      tick().then(() => sentHeading?.focus());
+      return;
+    }
     message = explainForgot(result, email);
-    calm = result === "asked";
+    calm = false;
     refused = result === "email";
+  }
+
+  /** "Send again", a minute after: the same answer, said shortly. */
+  async function askAgain(): Promise<string> {
+    const result = await forgotPassword(sent);
+    return result === "asked" ? "Another link is on its way." : explainForgot(result, sent);
   }
 
   /** Between signing in and asking for a link: the email stays, the keyboard goes to it. */
   function forget(event: MouseEvent, on: boolean) {
     event.preventDefault();
     forgetting = on;
+    sent = "";
     message = "";
     refused = false;
     password = "";
-    queueMicrotask(() => emailField?.focus());
+    tick().then(() => emailField?.focus());
   }
 
   function signUp(event: MouseEvent) {
@@ -93,6 +115,18 @@
     <h1 class="font-serif text-display">nine turtles</h1>
     <p class="mt-3 font-serif text-large text-muted">A quiet place to read.</p>
   </div>
+  {#if forgetting && sent}
+    <!-- Said once, in the text color: where the link went and how long it works; nothing says whether the email has an account. -->
+    <div class="flex w-full flex-col items-center gap-3 text-center sm:max-w-xs">
+      <h2 bind:this={sentHeading} tabindex="-1" class="font-semibold">Check your email</h2>
+      <p id="forgot-sent" role="status" class="break-words">
+        If <span class="font-semibold">{sent}</span> has an account here, a link to choose a new password is on its way. It works
+        for an hour.
+      </p>
+      <SendAgain onSend={askAgain} />
+      <p><a href="/" class="text-link" onclick={(event) => forget(event, false)}>Back to sign in</a></p>
+    </div>
+  {:else}
   <!--
     One centred column (decision 0048): the field and the button 12px apart,
     the full width between the phone's 20px margins, at most 320px wide on a
@@ -159,4 +193,5 @@
       </p>
     {/if}
   </form>
+  {/if}
 </main>

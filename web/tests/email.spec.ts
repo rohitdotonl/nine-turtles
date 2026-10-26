@@ -52,7 +52,7 @@ async function newReader(browser: Browser, email: string): Promise<Page> {
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(READER_PASSWORD);
   await page.getByRole("button", { name: "Sign up" }).click();
-  await expect(page.getByRole("status")).toContainText("A link to finish signing up is on its way");
+  await expect(page.locator("#sign-up-sent")).toContainText("A link to finish signing up is on its way");
   const { link } = await newestMail(email, "Confirm your email for nine turtles");
   await page.goto(link);
   await page.getByRole("button", { name: "Confirm email" }).click();
@@ -78,9 +78,13 @@ test("anyone can sign up while it's open, by the link emailed to them, with only
   await page.keyboard.press("Tab");
   await page.keyboard.type(READER_PASSWORD);
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("status")).toContainText(`A link to finish signing up is on its way to ${email}.`);
+  // The form gives way to "Check your email", with the keyboard on it.
+  await expect(page.getByRole("heading", { name: "Check your email" })).toBeFocused();
+  await expect(page.locator("#sign-up-sent")).toContainText(`A link to finish signing up is on its way to ${email}.`);
+  await expect(page.getByText("Didn't get it? Look in your spam folder, or send it again in a minute.")).toBeVisible();
 
-  // Signing in before the link is opened says so calmly, and sends it again.
+  // Signing in before the link is opened says so calmly; within the minute
+  // the link was sent, it doesn't send another (decision 0091).
   await page.goto("/");
   await expect(page.getByLabel("Email")).toBeFocused();
   await page.keyboard.type(email);
@@ -88,10 +92,10 @@ test("anyone can sign up while it's open, by the link emailed to them, with only
   await page.keyboard.type(READER_PASSWORD);
   await page.keyboard.press("Enter");
   await expect(page.locator("#sign-in-message")).toHaveText(
-    "Your email isn't confirmed yet. A new link is on its way: open it to finish signing up.",
+    "Your email isn't confirmed yet. Open the link in the email nine turtles sent you.",
   );
 
-  const { mail, link } = await newestMail(email, "Confirm your email for nine turtles", 2);
+  const { mail, link } = await newestMail(email, "Confirm your email for nine turtles");
   expect(mail.body).not.toContain("!");
   expect(link).toMatch(/^\/confirm-email#ticket=[0-9a-f]{64}$/);
   await page.goto(link);
@@ -129,13 +133,21 @@ test("a forgotten password is set again by an emailed link, signing out other de
   await expect(page.getByLabel("Email")).toHaveValue(email);
   await expect(page.getByLabel("Password")).toHaveCount(0);
   await page.keyboard.press("Enter");
-  await expect(page.locator("#sign-in-message")).toHaveText(
+  // The form gives way to one clear answer, said once, with the keyboard on it;
+  // Send again waits a minute, so it can't be pressed twice at once.
+  await expect(page.getByRole("heading", { name: "Check your email" })).toBeFocused();
+  await expect(page.getByLabel("Email")).toHaveCount(0);
+  await expect(page.locator("#forgot-sent")).toHaveText(
     `If ${email} has an account here, a link to choose a new password is on its way. It works for an hour.`,
   );
+  await expect(page.getByText("nine turtles emails you a link")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Send again" })).toBeHidden();
   // An address with no account hears exactly the same.
+  await page.getByRole("link", { name: "Back to sign in" }).click();
+  await page.getByRole("link", { name: "Forgot your password?" }).click();
   await page.getByLabel("Email").fill("nobody-here@example.com");
   await page.keyboard.press("Enter");
-  await expect(page.locator("#sign-in-message")).toHaveText(
+  await expect(page.locator("#forgot-sent")).toHaveText(
     "If nobody-here@example.com has an account here, a link to choose a new password is on its way. It works for an hour.",
   );
 
