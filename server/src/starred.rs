@@ -94,7 +94,15 @@ fn item(article: &Starred) -> Value {
     // An ID unique across feeds: the feed's address with the feed's own ID
     // for the article. Not the link alone: the same post can come through
     // two feeds, and each starred copy must stay its own item.
-    let id = format!("{}#{}", article.feed_url, article.fingerprint);
+    // A star imported from a file that named no feed address has none
+    // (`star_import`): its own link (or fingerprint) is its ID then.
+    let feed_url = Some(article.feed_url.as_str())
+        .filter(|url| url.starts_with("http://") || url.starts_with("https://"));
+    let id = match (feed_url, &article.link) {
+        (Some(url), _) => format!("{url}#{}", article.fingerprint),
+        (None, Some(link)) => link.clone(),
+        (None, None) => article.fingerprint.clone(),
+    };
     item.insert("id".into(), id.into());
     if let Some(link) = &article.link {
         item.insert("url".into(), link.clone().into());
@@ -128,7 +136,9 @@ fn item(article: &Starred) -> Value {
     let mut source = Map::new();
     source.insert("about".into(), "https://nineturtles.app".into());
     source.insert("feed_title".into(), article.feed_title.clone().into());
-    source.insert("feed_url".into(), article.feed_url.clone().into());
+    if let Some(url) = feed_url {
+        source.insert("feed_url".into(), url.into());
+    }
     if let Some(site) = &article.site_url {
         source.insert("home_page_url".into(), site.clone().into());
     }

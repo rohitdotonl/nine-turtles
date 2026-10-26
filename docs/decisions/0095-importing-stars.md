@@ -12,7 +12,8 @@ other services"), with merging approved.*
   The Google Reader format (Inoreader, Feedly, The Old Reader, FreshRSS,
   BazQux and others), JSON Feed (so nine turtles' own export comes back
   whole), and flat lists of articles (as Feedbin's is). At most 10,000
-  articles or 25 MB a file.
+  articles or 25 MB a file, and 10,000 imported articles (50 MB of text) per
+  reader in all, since every reader shares one disk.
 - **Pocket is left out:** it saves whole web pages, not what a feed sent,
   and nine turtles shows only what a feed contains (the publisher floor).
 - **Every star keeps its original link;** an article without one isn't
@@ -41,4 +42,5 @@ other services"), with merging approved.*
   follow; an OPML import does that.
 - **Putting stars of unfollowed feeds in one "Imported" feed:** kept only
   for articles whose file names no feed; otherwise each keeps its feed's
-  name, so the credit travels with it.
+  name (by its address, or by its name when the file gives no address), so
+  the credit travels with it.

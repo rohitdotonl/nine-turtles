@@ -155,8 +155,12 @@ async fn stars_from_another_app_land_in_starred_with_their_originals() {
         reader.titles("view=starred").await,
         ["Alpha post 2", "Walking & reading", "An old Alpha post"]
     );
-    // Brought over read, and no new feed shows in the sidebar.
-    assert_eq!(reader.titles("view=unread").await.len(), 3);
+    // Brought over read (Unread holds only the blog's own three posts), and
+    // no new feed shows in the sidebar.
+    assert_eq!(
+        reader.titles("view=unread").await,
+        ["Alpha post 3", "Alpha post 2", "Alpha post 1"]
+    );
     assert_eq!(reader.feeds().await, ["Alpha blog"]);
 
     // An imported article: cleaned, credited, and linked to its original.
@@ -223,6 +227,32 @@ async fn nine_turtles_starred_export_comes_back_into_a_fresh_one() {
         .await
         .unwrap();
     let exported = response.text().await.unwrap();
+    // Each star keeps the real address and name of the feed it came from.
+    let file: Value = serde_json::from_str(&exported).unwrap();
+    let sources: Vec<(String, String)> = file["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|item| {
+            let source = &item["_nine_turtles"];
+            (
+                source["feed_title"].as_str().unwrap().to_owned(),
+                source["feed_url"].as_str().unwrap().to_owned(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        sources,
+        [
+            ("Alpha blog".to_owned(), alpha.clone()),
+            (
+                "Beta journal".to_owned(),
+                "https://beta.example/feed.xml".to_owned()
+            ),
+            ("Alpha".to_owned(), alpha.clone()),
+        ]
+    );
+    assert!(!exported.contains("imported:"), "{exported}");
 
     let fresh = {
         let base = common::start(common::config()).await;
@@ -245,4 +275,145 @@ async fn nine_turtles_starred_export_comes_back_into_a_fresh_one() {
     fresh.follow(&alpha).await;
     assert_eq!(fresh.feeds().await, ["Alpha blog"]);
     assert_eq!(fresh.titles("view=starred").await.len(), 3);
+}
+
+/// The article titles in Starred with the name of the feed each is credited to.
+async fn credited(reader: &Reader) -> Vec<(String, String)> {
+    reader.get("/api/articles?view=starred").await["articles"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|article| {
+            (
+                article["title"].as_str().unwrap().to_owned(),
+                article["feed_title"].as_str().unwrap().to_owned(),
+            )
+        })
+        .collect()
+}
+
+#[tokio::test]
+async fn stars_without_a_feed_address_keep_their_own_feeds_name() {
+    let (base, state) = common::start_with_state(common::config()).await;
+    let reader = Reader {
+        cookie: common::signed_in(&base).await,
+        base: base.clone(),
+    };
+    // Inoreader gives some items a label instead of a feed's address; a flat
+    // list may name the feed, or nothing.
+    let file = json!({ "items": [
+        { "title": "From B", "published": 1_700_000_300,
+          "alternate": [{ "href": "https://b.example/1" }],
+          "origin": { "streamId": "user/1/label/Reading", "title": "Bee blog" } },
+        { "title": "From C", "published": 1_700_000_200,
+          "alternate": [{ "href": "https://c.example/1" }],
+          "origin": { "streamId": "user/1/label/Reading", "title": "Cee blog" } },
+        { "title": "From nowhere", "published": 1_700_000_100,
+          "url": "https://d.example/1" }
+    ]})
+    .to_string();
+    let (_, answer) = reader.send("/api/starred/import", file).await;
+    assert_eq!(answer["summary"]["starred"], 3, "{answer}");
+    let line = |title: &str, feed: &str| (title.to_owned(), feed.to_owned());
+    assert_eq!(
+        credited(&reader).await,
+        [
+            line("From B", "Bee blog"),
+            line("From C", "Cee blog"),
+            line("From nowhere", "Imported stars"),
+        ]
+    );
+    // Its export says no feed address, and comes back into a fresh nine
+    // turtles credited the same.
+    let exported = Client::new()
+        .get(format!("{base}/api/starred/export"))
+        .header("cookie", &reader.cookie)
+        .send()
+        .await
+        .unwrap()
+        .text()
+        .await
+        .unwrap();
+    assert!(!exported.contains("imported:"), "{exported}");
+    let fresh = {
+        let base = common::start(common::config()).await;
+        Reader {
+            cookie: common::signed_in(&base).await,
+            base,
+        }
+    };
+    let (_, answer) = fresh.send("/api/starred/import", exported).await;
+    assert_eq!(answer["summary"]["starred"], 3, "{answer}");
+    assert_eq!(credited(&fresh).await, credited(&reader).await);
+
+    // Deleting an account takes its imported feeds and articles with it.
+    let (person, cookie) = common::another_reader(&state).await;
+    let other = Reader { base, cookie };
+    let mine = json!([{ "title": "Mine", "url": "https://e.example/1",
+                        "feed_url": "https://e.example/feed" }]);
+    let (_, answer) = other.send("/api/starred/import", mine.to_string()).await;
+    assert_eq!(answer["summary"]["starred"], 1, "{answer}");
+    let theirs = format!("imported:{person}:%");
+    let count = |sql: &'static str| {
+        let state = state.clone();
+        let theirs = theirs.clone();
+        async move {
+            sqlx::query_scalar::<_, i64>(sql)
+                .bind(theirs)
+                .fetch_one(&state.db)
+                .await
+                .unwrap()
+        }
+    };
+    let feeds = "SELECT COUNT(*) FROM feeds WHERE url_key LIKE ?";
+    let articles = "SELECT COUNT(*) FROM articles JOIN feeds ON feeds.id = articles.feed_id
+                    WHERE feeds.url_key LIKE ?";
+    assert_eq!(count(feeds).await, 1);
+    nine_turtles::people::delete(&state.db, person)
+        .await
+        .unwrap();
+    assert_eq!(count(feeds).await, 0);
+    assert_eq!(count(articles).await, 0);
+}
+
+#[tokio::test]
+async fn files_and_readers_have_limits() {
+    let (base, state) = common::start_with_state(common::config()).await;
+    let reader = Reader {
+        cookie: common::signed_in(&base).await,
+        base,
+    };
+    let stars = |from: usize, count: usize| -> Vec<Value> {
+        (from..from + count)
+            .map(|number| {
+                json!({ "title": format!("Post {number}"),
+                                  "url": format!("https://many.example/{number}") })
+            })
+            .collect()
+    };
+    // More than one file may bring: refused, nothing kept.
+    let (status, _) = reader
+        .send(
+            "/api/starred/import",
+            Value::Array(stars(0, nine_turtles::star_import::MOST_STARS + 1)).to_string(),
+        )
+        .await;
+    assert_eq!(status, StatusCode::PAYLOAD_TOO_LARGE);
+    assert!(reader.titles("view=starred").await.is_empty());
+
+    // More than one reader may keep, over two files: the second imports
+    // nothing and says so.
+    let half = usize::try_from(nine_turtles::star_import::MOST_KEPT / 2).unwrap() + 1;
+    let first = Value::Array(stars(0, half)).to_string();
+    let (status, answer) = reader.send("/api/starred/import", first).await;
+    assert_eq!(status, StatusCode::OK, "{answer}");
+    let second = Value::Array(stars(half, half)).to_string();
+    let (status, answer) = reader.send("/api/starred/import", second).await;
+    assert_eq!(status, StatusCode::CONFLICT);
+    assert_eq!(answer["error"], "too-much");
+    let kept: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM entries WHERE starred = 1")
+        .fetch_one(&state.db)
+        .await
+        .unwrap();
+    assert_eq!(kept, i64::try_from(half).unwrap());
 }

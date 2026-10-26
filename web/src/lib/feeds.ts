@@ -606,6 +606,9 @@ export async function importStars(file: File): Promise<StarsSummary | string> {
   if (isRecord(body) && body.error === "not-stars") {
     return "That file doesn't look like starred articles from a feed reader. Choose the JSON file your other app exports them in.";
   }
+  if (isRecord(body) && body.error === "too-much") {
+    return "Nothing was imported. With this file you'd keep more than 10,000 imported articles (or 50 MB of their text), as many as one reader can.";
+  }
   if (response.status === 413) return "That file holds more than nine turtles can take at once (10,000 articles, or 25 MB).";
   return "The file couldn't be imported. Try again in a moment.";
 }

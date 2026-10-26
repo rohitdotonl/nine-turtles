@@ -321,7 +321,7 @@ test("import an OPML file from Settings: a plain summary, folders in the sidebar
   await expect(page.getByText(title)).toBeVisible();
 });
 
-test("with only the keyboard: Edit feed, a new folder, opening it, Edit folder, Unsubscribe, Import OPML and the starred export", async ({ page }) => {
+test("with only the keyboard: Edit feed, a new folder, opening it, Edit folder, Unsubscribe, Import OPML, importing stars and the starred export", async ({ page }) => {
   const blog = unique("keys");
   const folder = unique("Keyboard");
   await openBlogs(page, [blog]);
@@ -388,6 +388,15 @@ test("with only the keyboard: Edit feed, a new folder, opening it, Edit folder, 
   await tabTo(page, page.getByRole("button", { name: "Import OPML" }), 200);
   await opensFilePicker(page, () => page.keyboard.press("Enter"));
 
+  // So does Import starred articles.
+  await opensFilePicker(
+    page,
+    async () => {
+      await tabTo(page, page.getByRole("button", { name: "Import starred articles" }));
+      await page.keyboard.press("Enter");
+    },
+    "json",
+  );
   // So does Export starred articles: Enter downloads the file.
   await tabTo(page, page.getByRole("link", { name: "Export starred articles" }));
   const download = page.waitForEvent("download");

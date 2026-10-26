@@ -43,6 +43,11 @@ pub const SIZE_LIMIT: usize = 25 * 1024 * 1024;
 /// More stars than one file may bring. A file with more is refused rather
 /// than half imported.
 pub const MOST_STARS: usize = 10_000;
+/// The most articles one reader may keep from imports, all files together,
+/// and the most text (content and summary, in bytes): the disk is shared by
+/// every reader. An import that would go past either stores nothing.
+pub const MOST_KEPT: i64 = 10_000;
+pub const MOST_KEPT_BYTES: i64 = 50 * 1024 * 1024;
 /// The name of the feed that holds stars whose file doesn't say where they
 /// came from.
 const NO_FEED_TITLE: &str = "Imported stars";
@@ -106,7 +111,12 @@ async fn import(
         return StatusCode::PAYLOAD_TOO_LARGE.into_response();
     }
     match star_all(&state.db, person, &read, now()).await {
-        Ok(summary) => Json(json!({ "summary": summary })).into_response(),
+        Ok(Imported::Done(summary)) => Json(json!({ "summary": summary })).into_response(),
+        Ok(Imported::TooMuch) => (
+            StatusCode::CONFLICT,
+            Json(json!({ "error": "too-much", "most": MOST_KEPT })),
+        )
+            .into_response(),
         Err(error) => database_problem("importing starred articles", &error),
     }
 }
@@ -125,10 +135,14 @@ pub fn read(text: &str) -> Option<Read> {
         .and_then(|whole| whole.get("version"))
         .and_then(Value::as_str)
         .is_some_and(|version| version.starts_with("https://jsonfeed.org/"));
-    let whole_feed = whole.filter(|_| is_json_feed).map(|whole| Origin {
-        url: text_at(whole, &["feed_url"]).and_then(web_address),
-        title: text_at(whole, &["title"]),
-        site: text_at(whole, &["home_page_url"]),
+    // Only a file that gives its feed's address is one feed's articles; a
+    // collection (nine turtles' own export has none) names no publisher.
+    let whole_feed = whole.filter(|_| is_json_feed).and_then(|whole| {
+        Some(Origin {
+            url: Some(text_at(whole, &["feed_url"]).and_then(web_address)?),
+            title: text_at(whole, &["title"]),
+            site: text_at(whole, &["home_page_url"]),
+        })
     });
     let mut read = Read::default();
     for item in items {
@@ -361,14 +375,24 @@ pub fn rfc3339(text: &str) -> Option<i64> {
     Some(days * 86_400 + hour * 3_600 + minute * 60 + second - offset)
 }
 
+/// What `star_all` did.
+#[derive(Debug, PartialEq, Eq)]
+pub enum Imported {
+    Done(Summary),
+    /// Nothing was imported: the reader would keep more than `MOST_KEPT`
+    /// imported articles, or `MOST_KEPT_BYTES` of their text.
+    TooMuch,
+}
+
 /// Stars every article the file holds for reader `person`, all at once or
-/// not at all.
+/// not at all: nothing, if it would take them past what one reader may keep
+/// from imports.
 pub async fn star_all(
     db: &sqlx::SqlitePool,
     person: i64,
     read: &Read,
     now: i64,
-) -> Result<Summary, sqlx::Error> {
+) -> Result<Imported, sqlx::Error> {
     let mut summary = Summary {
         unreadable: read.unreadable,
         ..Summary::default()
@@ -400,8 +424,24 @@ pub async fn star_all(
             summary.starred += 1;
         }
     }
+    // The reader's own feeds' keys all start `imported:<reader>:`, and none
+    // else does (`own_key`), so this range of the unique index is theirs.
+    let (kept, bytes): (i64, i64) = sqlx::query_as(
+        "SELECT COUNT(*), COALESCE(SUM(length(CAST(articles.content AS BLOB))
+                    + COALESCE(length(CAST(articles.summary AS BLOB)), 0)), 0)
+         FROM feeds JOIN articles ON articles.feed_id = feeds.id
+         WHERE feeds.url_key >= ? AND feeds.url_key < ?",
+    )
+    .bind(format!("imported:{person}:"))
+    .bind(format!("imported:{person};"))
+    .fetch_one(&mut *transaction)
+    .await?;
+    if kept > MOST_KEPT || bytes > MOST_KEPT_BYTES {
+        transaction.rollback().await?;
+        return Ok(Imported::TooMuch);
+    }
     transaction.commit().await?;
-    Ok(summary)
+    Ok(Imported::Done(summary))
 }
 
 /// The article as nine turtles already stores it, if it does: from the
@@ -414,7 +454,7 @@ async fn stored(
     person: i64,
     star: &Star,
 ) -> Result<Option<i64>, sqlx::Error> {
-    let mut keys = vec![own_key(person, star.feed_url.as_ref())];
+    let mut keys = vec![own_key(person, star)];
     if let Some(url) = &star.feed_url {
         keys.insert(0, feed::normalize(url));
     }
@@ -446,25 +486,34 @@ async fn stored(
     Ok(None)
 }
 
-/// The address of the reader's own feed for stars from this feed (or from
-/// nowhere the file says). No two readers ever share one.
-fn own_key(person: i64, feed_url: Option<&Url>) -> String {
-    format!(
-        "imported:{person}:{}",
-        feed_url.map(feed::normalize).unwrap_or_default()
-    )
+/// The key (`url_key`) of the reader's own feed for stars from this feed:
+/// `imported:<reader>:feed:<normalized address>`, or, when the file gives
+/// no address, `imported:<reader>:named:<the feed's name>`, or
+/// `imported:<reader>:` when it names no feed at all. No two readers ever
+/// share one, and no web feed's key can look like one: `feed::normalize`
+/// writes an address without its `http(s)://`, so a key starting
+/// `imported:<number>:` would need a host `imported` with a port followed by
+/// another colon, which no web address has.
+fn own_key(person: i64, star: &Star) -> String {
+    match (&star.feed_url, &star.feed_title) {
+        (Some(url), _) => format!("imported:{person}:feed:{}", feed::normalize(url)),
+        (None, Some(title)) => format!("imported:{person}:named:{}", title.to_lowercase()),
+        (None, None) => format!("imported:{person}:"),
+    }
 }
 
 /// The reader's own feed for stars from this star's feed, made with its
-/// first star: never fetched, nobody follows it, and the reader's hidden
-/// subscription holds its name.
+/// first star: never fetched (nobody follows it, and it's never due), and
+/// the reader's hidden subscription holds its name. Its `url` is the feed's
+/// real address, so the starred export credits it; `imported:` when the
+/// file gave none.
 async fn own_feed(
     connection: &mut sqlx::SqliteConnection,
     person: i64,
     star: &Star,
     now: i64,
 ) -> Result<i64, sqlx::Error> {
-    let key = own_key(person, star.feed_url.as_ref());
+    let key = own_key(person, star);
     let title = star
         .feed_title
         .clone()
@@ -475,12 +524,17 @@ async fn own_feed(
                 .map(|host| host.trim_start_matches("www.").to_owned())
         })
         .unwrap_or_else(|| NO_FEED_TITLE.to_owned());
+    let url = star
+        .feed_url
+        .as_ref()
+        .map_or_else(|| "imported:".to_owned(), |url| url.as_str().to_owned());
     let id: i64 = sqlx::query_scalar(
         "INSERT INTO feeds (url, url_key, title, site_url, added_at, next_check_at, unsubscribed_at)
-         VALUES (?1, ?1, ?2, ?3, ?4, ?5, ?4)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?5)
          ON CONFLICT (url_key) DO UPDATE SET url_key = excluded.url_key
          RETURNING id",
     )
+    .bind(&url)
     .bind(&key)
     .bind(&title)
     .bind(&star.site_url)
@@ -575,6 +629,23 @@ mod tests {
         assert_eq!(time(&json!(1_792_786_715_000_i64)), Some(1_792_786_715));
         assert_eq!(time(&json!("1792786715000000")), Some(1_792_786_715));
         assert_eq!(time(&json!("2026-10-23T20:18:35Z")), Some(1_792_786_715));
+    }
+
+    #[test]
+    fn no_web_address_has_an_imported_key() {
+        for address in [
+            "http://imported:5/x",
+            "https://imported:5@example.com/",
+            "https://imported/5:x",
+            "http://imported.example:8080/feed",
+        ] {
+            let key = feed::normalize(&Url::parse(address).unwrap());
+            let looks_imported = key
+                .strip_prefix("imported:")
+                .and_then(|rest| rest.split_once(':'))
+                .is_some_and(|(reader, _)| reader.parse::<i64>().is_ok());
+            assert!(!looks_imported, "{address} → {key}");
+        }
     }
 
     #[test]
