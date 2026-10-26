@@ -298,6 +298,7 @@ async fn export(SignedIn(person): SignedIn, State(state): State<AppState>) -> Re
             "SELECT feeds.id, subscriptions.title, feeds.url, feeds.site_url
              FROM subscriptions JOIN feeds ON feeds.id = subscriptions.feed_id
              WHERE subscriptions.person_id = ? AND subscriptions.unsubscribed_at IS NULL
+                 AND feeds.newsletter_of IS NULL
              ORDER BY subscriptions.title COLLATE NOCASE, feeds.id",
         )
         .bind(person)

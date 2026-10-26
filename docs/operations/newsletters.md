@@ -6,11 +6,12 @@ one to nine turtles through a tiny program of ours (decision 0091). This page
 is the one-time setup. It takes about 15 minutes, all of it clicking in
 Cloudflare's and Render's websites. You don't need to install anything.
 
-**Where things stand (25 October 2026):** part one is built. Once these steps
-are done, emails reach nine turtles and are read, but **not kept yet**:
-that comes in part two, after many readers is finished. Until then, set an
-inbox in step 4 so every email is also passed on to you and nothing is lost.
-You can also leave these steps until part two.
+**Where things stand (26 October 2026):** both parts are built. Once these
+steps are done, each reader finds their own address in Settings ›
+Newsletters, and newsletters sent to it arrive as feeds. Mail to an address
+nobody has bounces. If you did these steps before 26 October, paste the
+forwarder's code again (step 2, points 5 to 7): the new one tells nine
+turtles who each email was for.
 
 ## The pieces
 
@@ -65,8 +66,9 @@ Press **Deploy** (or Save) after adding them.
    email. Cloudflare sends you a message; press its link. (If it's the
    address hello@ already goes to, it's already there.)
 
-Once emails are kept (part two), you can remove `FORWARD_TO`. Keeping it
-does no harm: only emails nine turtles couldn't take are passed on.
+You can leave `FORWARD_TO` set, or remove it later. It does no harm: only
+emails nine turtles couldn't take for a moment (it was restarting, say) are
+passed on. Mail to an address nobody has always bounces instead.
 
 ## 5. Receive mail for in.nineturtles.app (Email Routing)
 
@@ -78,29 +80,29 @@ does no harm: only emails nine turtles couldn't take are passed on.
    Worker**, destination `nine-turtles-newsletters`. Turn it **on** and
    save.
 
-The catch-all means any name before `@in.nineturtles.app` arrives. In part
-two each reader gets their own name, and nine turtles works out whose it is.
+The catch-all means any name before `@in.nineturtles.app` arrives at the
+forwarder; nine turtles works out whose it is, and refuses the rest.
 
 ## 6. Check it works
 
-1. Send an ordinary email to `test@in.nineturtles.app` from your own
-   address. Within a minute it comes back to you through `FORWARD_TO`.
-   That only shows the mailbox and forwarder work: the forwarder passes on
-   *every* email nine turtles didn't keep, whatever the reason.
-2. The real check is Render → the slowfeed service → **Logs**. Look for a
-   line like `a newsletter email from "Your Name" was read; not kept yet`.
-   That's part one working.
-3. If the log says `an email was posted to /newsletters/incoming without
-   the right secret` instead, the secret differs between Render and
-   Cloudflare: set both again (step 1, then step 3). If there's no line at
-   all, the forwarder couldn't reach nine turtles: check `NINE_TURTLES_URL`
-   (Cloudflare → the Worker → **Logs** shows what happened).
+1. Open nine turtles → Settings → **Newsletters** and press **Copy** next to
+   your address.
+2. From your own email, send anything to that address.
+3. Within a minute a new feed appears in the sidebar, named after you, with
+   your email as its article. That's it working.
+4. If nothing arrives, look in Render → the slowfeed service → **Logs**. A
+   line saying `…without the right secret` means the secret differs between
+   Render and Cloudflare: set both again (step 1, then step 3). No line at
+   all means the forwarder couldn't reach nine turtles: check
+   `NINE_TURTLES_URL` (Cloudflare → the Worker → **Logs** shows what
+   happened).
 
 ## Switching it off
 
 Turn off the catch-all rule (step 5): mail to `in.nineturtles.app` stops at
 once. Removing `NINE_TURTLES_NEWSLETTER_SECRET` from Render also switches
-nine turtles' side off; the address then answers "not found".
+nine turtles' side off; emails then go to `FORWARD_TO` if it's set, and
+bounce if not.
 
 ## Moving away from Cloudflare
 

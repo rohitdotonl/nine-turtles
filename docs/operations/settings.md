@@ -28,6 +28,7 @@ Changes**. Render restarts nine turtles with the new value (about a minute).
 | `NINE_TURTLES_SMTP_PASSWORD` | The SMTP key or password (Brevo: the SMTP key). Secret. | Yes, for email | As for the host. |
 | `NINE_TURTLES_SMTP_FROM` | Who emails come from: an address, with or without a name, such as `nine turtles <hello@nineturtles.app>`. | Yes, for email | As for the host. Something that isn't an address stops nine turtles with a message. |
 | `NINE_TURTLES_NEWSLETTER_SECRET` | The shared secret the newsletter forwarder at Cloudflare posts emails with ([newsletters.md](newsletters.md)). At least 32 characters; Render's **Generate** button makes one. The same value goes in the forwarder's `NINE_TURTLES_SECRET`. Secret. | Only for newsletters | Newsletters are off: `/newsletters/incoming` answers "not found". Shorter than 32 characters stops nine turtles with a message saying so. |
+| `NINE_TURTLES_NEWSLETTER_DOMAIN` | The domain shown after the @ in readers' newsletter addresses, for a nine turtles at another domain. Not secret. | No | `in.nineturtles.app`. |
 | `NINE_TURTLES_LISTEN` | The address and port nine turtles listens on. | Set by the container image to `0.0.0.0:10000`, the port Render expects | `127.0.0.1:8080` (this computer only). |
 
 ## Built in, not settings

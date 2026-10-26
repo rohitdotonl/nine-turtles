@@ -26,6 +26,7 @@ pub fn config() -> Config {
         restore_from: None,
         smtp: None,
         newsletter_secret: None,
+        newsletter_domain: None,
     }
 }
 

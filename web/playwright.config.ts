@@ -63,6 +63,8 @@ export default defineConfig({
         NINE_TURTLES_PASSWORD_HASH: TEST_PASSWORD_HASH,
         // A fresh, empty database for every run.
         NINE_TURTLES_DATA_DIR: `test-data/run-${Date.now()}`,
+        // Newsletters on, so Settings shows their group (SPEC section 28).
+        NINE_TURTLES_NEWSLETTER_SECRET: "a-made-up-newsletter-secret-for-the-browser-tests",
       },
       url: `http://127.0.0.1:${PORT}/`,
       reuseExistingServer: false,

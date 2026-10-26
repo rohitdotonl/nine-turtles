@@ -24,7 +24,7 @@ use crate::{
 
 /// The letters and digits an app password is made of: no 0, 1, i, l or o,
 /// which are easy to mistake for one another when typed on a phone.
-const ALPHABET: &[u8] = b"abcdefghjkmnpqrstuvwxyz23456789";
+pub(crate) const ALPHABET: &[u8] = b"abcdefghjkmnpqrstuvwxyz23456789";
 /// 24 of them: about 119 bits, far beyond guessing.
 const LENGTH: usize = 24;
 
@@ -114,11 +114,11 @@ pub fn normalize(password: &str) -> String {
         .collect()
 }
 
-/// A new app password, in groups of four for reading and typing:
-/// `abcd-efgh-jkmn-pqrs-tuvw-xyz2`.
-fn new_password() -> Result<String, getrandom::Error> {
-    let mut letters = Vec::with_capacity(LENGTH);
-    while letters.len() < LENGTH {
+/// `count` random letters from `ALPHABET`, each equally likely. App
+/// passwords and newsletter addresses are made of them.
+pub(crate) fn random_letters(count: usize) -> Result<Vec<u8>, getrandom::Error> {
+    let mut letters = Vec::with_capacity(count);
+    while letters.len() < count {
         let mut bytes = [0u8; 32];
         getrandom::fill(&mut bytes)?;
         // 248 is the largest multiple of 31 under 256: bytes at or above it
@@ -131,8 +131,14 @@ fn new_password() -> Result<String, getrandom::Error> {
                 .map(|byte| ALPHABET[usize::from(*byte) % ALPHABET.len()]),
         );
     }
-    letters.truncate(LENGTH);
-    Ok(letters
+    letters.truncate(count);
+    Ok(letters)
+}
+
+/// A new app password, in groups of four for reading and typing:
+/// `abcd-efgh-jkmn-pqrs-tuvw-xyz2`.
+fn new_password() -> Result<String, getrandom::Error> {
+    Ok(random_letters(LENGTH)?
         .chunks(4)
         .map(|group| String::from_utf8_lossy(group).into_owned())
         .collect::<Vec<_>>()
