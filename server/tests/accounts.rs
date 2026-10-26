@@ -434,12 +434,13 @@ async fn forgot_your_password_always_answers_the_same() {
 
 #[tokio::test]
 async fn at_most_three_emails_go_to_one_address_in_an_hour() {
-    let (base, _, outbox, _) = open_app().await;
+    let (base, state, outbox, _) = open_app().await;
     let email = "tam@example.com";
     confirmed_reader(&base, &outbox, email).await;
-    // The confirmation was one; two more reset emails, then nothing, though
-    // the answer never changes.
+    // The confirmation was one; two more reset emails, a minute apart, then
+    // nothing, though the answer never changes.
     for _ in 0..5 {
+        a_minute_passes(&state.db).await;
         let response = post(
             &base,
             "/api/password/forgot",
@@ -450,6 +451,38 @@ async fn at_most_three_emails_go_to_one_address_in_an_hour() {
         assert_eq!(response.status(), StatusCode::ACCEPTED);
     }
     assert_eq!(emails_to(&outbox, email).len(), 3);
+}
+
+#[tokio::test]
+async fn pressing_send_link_twice_sends_one_email() {
+    let (base, state, outbox, _) = open_app().await;
+    let email = "twice@example.com";
+    confirmed_reader(&base, &outbox, email).await;
+    let before = emails_to(&outbox, email).len();
+    let forgot = || {
+        post(
+            &base,
+            "/api/password/forgot",
+            None,
+            json!({ "email": email }),
+        )
+    };
+    assert_eq!(forgot().await.status(), StatusCode::ACCEPTED);
+    assert_eq!(forgot().await.status(), StatusCode::ACCEPTED);
+    assert_eq!(emails_to(&outbox, email).len(), before + 1);
+    // A minute later, "Send again" sends another.
+    a_minute_passes(&state.db).await;
+    assert_eq!(forgot().await.status(), StatusCode::ACCEPTED);
+    assert_eq!(emails_to(&outbox, email).len(), before + 2);
+}
+
+/// Moves every link a minute (and a second) into the past, as if a minute
+/// had passed, while staying within the hour the counts look back.
+async fn a_minute_passes(db: &sqlx::SqlitePool) {
+    sqlx::query("UPDATE email_links SET created_at = created_at - 61")
+        .execute(db)
+        .await
+        .unwrap();
 }
 
 #[tokio::test]
@@ -1053,12 +1086,12 @@ async fn an_address_with_a_name_in_it_is_refused() {
 }
 
 #[tokio::test]
-async fn requests_sent_together_cant_pass_three_emails_an_hour() {
+async fn requests_sent_together_cant_pass_the_limits() {
     let (base, _, outbox, _) = open_app().await;
     let email = "rush@example.com";
     let cookie = confirmed_reader(&base, &outbox, email).await;
     // "Forgot your password?" ten times at once: the confirmation was one,
-    // so two more, never more.
+    // and only one password link goes out in a minute.
     let mut forgots = Vec::new();
     for _ in 0..10 {
         let base = base.clone();
@@ -1076,7 +1109,7 @@ async fn requests_sent_together_cant_pass_three_emails_an_hour() {
     for forgot in forgots {
         assert_eq!(forgot.await.unwrap(), StatusCode::ACCEPTED);
     }
-    assert_eq!(emails_to(&outbox, email).len(), 3);
+    assert_eq!(emails_to(&outbox, email).len(), 2);
 
     // Five changes of email at once, each to a new address: three go out,
     // and the rest are told there have been enough.
