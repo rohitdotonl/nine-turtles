@@ -42,9 +42,6 @@ a slow app with a fast interface, nothing moves unless you move it, power
 that's hidden but never missing, and respect for your time. Its look takes
 its lead from Apple Books.
 
-The whole philosophy, every decision and every line of code are public in
-[the nine turtles repository]({{ site.source }}), under the MIT licence.
-
 ## The name
 
 The logo is nine small turtles, in three rows of three. Turtles are slow
@@ -54,7 +51,7 @@ reading.
 ## Who makes it
 
 nine turtles is made by [{{ site.maker }}]({{ site.makerSite }}), who wanted
-a calmer way to read the web, and is built in the open. It started as
+a calmer way to read the web. It started as
 "slowfeed" on 22 October 2026 and took its own name two days later. The
 [blog](/blog/) follows along.
 

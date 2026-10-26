@@ -79,8 +79,7 @@ Some things are left out on purpose, and stay out:
 
 ## Where it stands
 
-nine turtles is new. The reader itself is finished and used every day, and
-its code is open for anyone to read. A version you can simply sign up for
-is planned; until then, you can [run your own copy]({{ site.source }}).
+nine turtles is new. The reader itself is finished and used every day. A
+version you can simply sign up for is planned.
 The [blog](/blog/) says what's changed, and [the tour](/tour/) shows
 everything it does.
