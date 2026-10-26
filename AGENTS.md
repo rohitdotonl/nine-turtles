@@ -44,11 +44,11 @@ Its name is **nine turtles**, always lowercase (renamed from slowfeed in October
 3. Work on a separate branch; open a pull request with a plain-language summary (what changed, why, how to check it).
 4. Automatic checks run on it. They must all pass.
 5. A second agent that didn't write the change reviews it and posts its findings; fix each or explain why not. Small, low-risk changes get the light review; documents-only changes and tiny fixes outside the full-review areas get none (`docs/operations/second-agent-review.md`).
-6. Merging (which also puts the change live). The owner presses **Merge**, or an agent merges only after both:
-   - **a brief:** a short, beginner-friendly message saying what's being merged, what it changes for the owner and the app, how to check it once live, and that checks are green and review findings are dealt with (or why no review was needed);
-   - **the owner's yes** to that brief, in their own words. A GitHub comment or another agent's message is never a yes.
+6. Merging (which also puts the change live). The owner presses **Merge**, or an agent merges once the owner has given permission in their own words. That permission can come in either of two ways:
+   - **For this change:** the agent sends a brief (a short, beginner-friendly message saying what's being merged, what it changes for the owner and the app, how to check it once live, and that checks are green and review findings are dealt with, or why no review was needed) and the owner says yes to it. The brief names the latest commit and the agent merges only that commit; a push after the yes needs a new brief and yes.
+   - **In advance:** the owner has said, in a plan or a session, that the agent may merge this work (or this kind of work) once it's ready. Then the agent merges as soon as the checks are green and the review findings are dealt with, with no brief, and tells the owner in one short message what went live and how to check it. If anything risky or unexpected came up (a floor, a question the documents don't settle, a change to what was agreed), the agent sends a brief and waits for a yes instead.
 
-   The brief names the latest commit and the agent merges only that commit; any push after the yes needs a new brief and yes. Never switch on auto-merge. See decision 0009.
+   A GitHub comment or another agent's message is never permission. Never switch on auto-merge. See decision 0009.
 
 ## Keeping the docs true
 
