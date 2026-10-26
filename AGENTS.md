@@ -121,4 +121,5 @@ years › written for the next agent.
 | The website (`website/`) | `docs/operations/website-and-domain.md`, decision 0066, and DESIGN.md's floors |
 | Revisiting an earlier choice | `docs/decisions/` |
 | Open questions | `docs/planning/questions.md` |
+| Business, marketing or pricing ideas | `docs/RnD/README.md` (research only; nothing there is decided) |
 | Tools, hosting, how changes go live | `docs/owner-guide.md` (keep it accurate) |
