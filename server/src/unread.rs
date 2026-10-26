@@ -1,4 +1,4 @@
-//! Easing unread guilt (SPEC section 8, decision 0095): unread that lets go
+//! Easing unread guilt (SPEC section 8, decision 0096): unread that lets go
 //! by itself, and "Catch me up".
 //!
 //! **Letting go:** a reader who chooses, in Settings › Reading, to let unread

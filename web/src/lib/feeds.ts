@@ -12,6 +12,8 @@ export type Feed = {
   unread: number;
   /** The folders it's in, by number. */
   folders: number[];
+  /** When the reader paused it (seconds since 1970), or null while it isn't paused (SPEC section 15). */
+  pausedAt?: number | null;
 } & FeedSettings;
 
 /**
@@ -85,10 +87,10 @@ export type Order = "newest" | "oldest";
  */
 export type ReadingMode = "inbox" | "river";
 
-/** Whether the sidebar shows unread counts in inbox mode (decision 0095). Shared across the reader's devices. */
+/** Whether the sidebar shows unread counts in inbox mode (decision 0096). Shared across the reader's devices. */
 export type Counts = "shown" | "hidden";
 
-/** How long unread waits before it lets go by itself (decision 0095): never, the default, or a week, two or a month. */
+/** How long unread waits before it lets go by itself (decision 0096): never, the default, or a week, two or a month. */
 export type LetGo = "never" | "week" | "two-weeks" | "month";
 
 const LET_GO: LetGo[] = ["never", "week", "two-weeks", "month"];
@@ -367,7 +369,7 @@ function rememberCounts(counts: Counts) {
 }
 
 /**
- * "Catch me up" (decision 0095): every article in Unread from before the
+ * "Catch me up" (decision 0096): every article in Unread from before the
  * start of today, on this device's clock, counts as read. Answers which, for
  * Undo. Unlike marks, the screen waits for the answer: only the server knows
  * them all.
@@ -548,7 +550,7 @@ export async function editFeed(
   title: string,
   folders: number[],
   newFolder: string,
-  settings: FeedSettings,
+  settings: FeedSettings & { paused: boolean },
 ): Promise<Refusal | undefined> {
   return (
     await change(`/api/feeds/${id}`, {
@@ -558,6 +560,7 @@ export async function editFeed(
       river: settings.river,
       check: settings.check,
       open_on_site: settings.openOnSite,
+      paused: settings.paused,
     })
   ).refusal;
 }
@@ -704,6 +707,15 @@ export function when(at: number, now: Date = new Date()): string {
   return DAY_AND_YEAR.format(date);
 }
 
+/** When a paused feed was paused, for Edit feed: "Paused today.", "Paused on 23 Oct." (SPEC section 15). */
+export function pausedSince(at: number, now: Date = new Date()): string {
+  const date = new Date(at * 1000);
+  const sameDay =
+    date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
+  if (sameDay) return "Paused today.";
+  return `Paused on ${(date.getFullYear() === now.getFullYear() ? DAY : DAY_AND_YEAR).format(date)}.`;
+}
+
 async function getJson(path: string): Promise<unknown> {
   const response = await api(path, { cache: "no-store" });
   if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
@@ -755,6 +767,7 @@ function toFeed(feed: Record<string, unknown>): Feed {
     river: feed.river === true,
     check: checkFrom(Number(feed.check_at_most ?? 0)),
     openOnSite: feed.open_on_site === true,
+    pausedAt: typeof feed.paused_at === "number" ? feed.paused_at : null,
   };
 }
 

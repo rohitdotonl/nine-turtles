@@ -80,10 +80,10 @@
     mode: ReadingMode;
     /** Saves a new reading mode; fails if it couldn't be saved. */
     onMode: (mode: ReadingMode) => Promise<void>;
-    /** Whether the sidebar shows unread counts (decision 0095). */
+    /** Whether the sidebar shows unread counts (decision 0096). */
     counts: Counts;
     onCounts: (counts: Counts) => Promise<void>;
-    /** When unread lets go by itself (decision 0095); unknown until the server answers. */
+    /** When unread lets go by itself (decision 0096); unknown until the server answers. */
     letGo: LetGo | undefined;
     onLetGo: (letGo: LetGo) => Promise<void>;
     heading?: HTMLHeadingElement;

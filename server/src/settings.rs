@@ -1,7 +1,7 @@
 //! Each reader's settings shared across their devices (SPEC section 18): the
 //! sort order, the reading mode, inbox or river (SPEC section 10), whether
 //! unread counts show, and when unread lets go by itself (`unread`, decision
-//! 0095). Reader controls such as the theme belong to each device and stay
+//! 0096). Reader controls such as the theme belong to each device and stay
 //! in its browser.
 
 use axum::{

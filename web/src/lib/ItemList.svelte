@@ -450,7 +450,7 @@
   }
 
   /**
-   * "Catch me up" (decision 0095): everything in Unread from before today
+   * "Catch me up" (decision 0096): everything in Unread from before today
    * counts as read, listed here or not. Those listed turn grey where they
    * are; Undo makes exactly the same articles unread again.
    */

@@ -91,7 +91,7 @@
 
   /** Inbox or river, shared across the reader's devices; this device's last word until the server answers. */
   let mode: ReadingMode = $state(lastMode());
-  /** Whether the sidebar shows unread counts, and when unread lets go (Settings › Reading, decision 0095). */
+  /** Whether the sidebar shows unread counts, and when unread lets go (Settings › Reading, decision 0096). */
   let counts: Counts = $state(lastCounts());
   let letGo: LetGo | undefined = $state();
   let river = $derived(mode === "river");
@@ -514,7 +514,7 @@
           ...(river
             ? []
             : [{ label: "Mark all as read", shortcut: phone ? undefined : "Shift+A", onSelect: () => itemList?.markAllRead() }]),
-          // Everything in Unread from before today, listed or not (decision 0095): only in Unread itself.
+          // Everything in Unread from before today, listed or not (decision 0096): only in Unread itself.
           ...(!river && !shown && under.kind === "view" && under.view === "unread"
             ? [{ label: "Catch me up", onSelect: () => itemList?.catchUp() }]
             : []),
@@ -908,7 +908,13 @@
 
   /** Back from an edit page, saved or not, to the feed or folder. */
   async function edited(saved: boolean) {
+    const id = route.kind === "edit-feed" ? route.id : undefined;
+    const pausedBefore = feeds?.find((feed) => feed.id === id)?.pausedAt != null;
     if (saved) await loadFeeds();
+    // Unpausing a feed puts its newest few back in Unread (SPEC section 15): the list under
+    // the sheet shows them unread at once, as the reader's own Save asked.
+    const unpaused = pausedBefore && feeds?.find((feed) => feed.id === id)?.pausedAt == null;
+    if (unpaused) queueMicrotask(() => void itemList?.refresh());
     // On a phone the edit page is a step on from its list: go back that step.
     if (phone && stepOf(history.state)?.back === "list") history.back();
     else if (sheetShown) closeSheet();
