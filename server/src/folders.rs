@@ -393,6 +393,8 @@ pub async fn clear(
 
 /// Once nobody follows a feed or waits to, its articles nobody has go, its
 /// hub subscription goes, and the feed's line goes if no article is left.
+/// A newsletter feed's line stays, so its sender's later emails stay away
+/// (decision 0091); it goes with its reader's account.
 /// An article any reader still has an entry for (a star, or one carried
 /// over to a new address) always stays, and so does its feed's line.
 /// Leaves a feed someone follows as it is.
@@ -427,7 +429,7 @@ pub async fn let_go(connection: &mut SqliteConnection, id: i64) -> Result<(), sq
             .execute(&mut *connection)
             .await?;
         sqlx::query(
-            "DELETE FROM feeds WHERE id = ?1
+            "DELETE FROM feeds WHERE id = ?1 AND newsletter_of IS NULL
              AND NOT EXISTS (SELECT 1 FROM articles WHERE feed_id = ?1)
              AND NOT EXISTS (SELECT 1 FROM subscriptions WHERE feed_id = ?1)",
         )

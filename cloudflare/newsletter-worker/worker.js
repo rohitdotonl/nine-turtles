@@ -6,11 +6,12 @@
 // the shared secret as its key. nine turtles does everything else.
 //
 // When nine turtles answers "200 OK", the email is kept and that's the end.
-// Any other answer (including "202 Accepted", which means "read but not
-// kept", and nine turtles being out of reach) passes the email on to
-// FORWARD_TO, an ordinary inbox, when one is set, so nothing is lost.
-// Without FORWARD_TO, an email nine turtles refused is bounced back to its
-// sender, and one that couldn't be delivered right now is reported as an
+// "404" (no reader has that address) and "410" (an address a reader
+// replaced) bounce the email back to its sender: that's what replacing an
+// address is for. Any other answer (and nine turtles being out of reach)
+// passes the email on to FORWARD_TO, an ordinary inbox, when one is set, so
+// nothing is lost. Without FORWARD_TO, an email nine turtles refused is
+// bounced, and one that couldn't be delivered right now is reported as an
 // error, which tells the sender's mail service to try again later.
 //
 // Settings, in the Worker's "Settings → Variables and Secrets":
@@ -35,6 +36,8 @@ export default {
         headers: {
           authorization: `Bearer ${env.NINE_TURTLES_SECRET}`,
           "content-type": "message/rfc822",
+          // Who it was delivered to: the email's own To may not say.
+          "x-nine-turtles-to": message.to,
         },
         body: await new Response(message.raw).arrayBuffer(),
       });
@@ -42,6 +45,10 @@ export default {
       // Out of reach: handled below like any answer that isn't "kept".
     }
     if (answer && answer.status === 200) return;
+    if (answer && (answer.status === 404 || answer.status === 410)) {
+      message.setReject("There is no such address at nine turtles.");
+      return;
+    }
     return elsewhere(message, env, answer, "nine turtles couldn't take this email.");
   },
 };

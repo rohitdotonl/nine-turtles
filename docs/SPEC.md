@@ -607,15 +607,17 @@ A rule says "when a new article **matches this**, **do that**", in plain fields,
 
 ## 28. Newsletters as feeds
 
-*Part one built in V2 (25 October 2026, decision 0091): reading and cleaning emails, and the address they arrive at, switched off by default. Nothing is kept yet; part two comes after many readers is finished.*
+*Built in V2 (26 October 2026, decision 0091), in two parts: reading and cleaning emails (part one), then each reader's own address with emails kept as articles (part two). On only while `NINE_TURTLES_NEWSLETTER_SECRET` is set.*
 
-**What it will do (part two)**
-- Settings has a **Newsletters** group with your private address, like `turtle-7k2x@in.nineturtles.app`, a **Copy** button and **New address** (the old one stops working, for when spam arrives).
-- You sign up to a newsletter with that address. The first email from it makes a feed in the sidebar, named after the sender; each email after that is an article, read, starred, searched and muted like any other.
-- Edit feed and Unsubscribe work as usual. Unsubscribing hides the sender's emails; to stop them being sent, use the newsletter's own unsubscribe link, which stays in each article.
-- Only mail sent to that address arrives. nine turtles never sends email, never replies, and never sees your own inbox.
+**What it does**
+- Settings has a **Newsletters** group, after Feeds, with your private address, like `turtle-7k2xab3c@in.nineturtles.app`, made the first time you open Settings, and **Copy**. **New address** gives you another one at once; mail to the old one is refused from then on (for when spam arrives). The line under the group says so, with **Undo**, which brings the old address back (for an hour). The group isn't there while nine turtles takes no newsletters.
+- You sign up to newsletters with that address. A word after a plus sign (`turtle-7k2xab3c+cooking@…`) still reaches you, to tell sign-ups apart.
+- The first email from a newsletter makes a feed for it in the sidebar, named after the sender; each email is an article, read, starred, searched and muted (rules apply) like any other. A newsletter feed is yours alone: if two readers take the same newsletter, each has their own feed and their own copies, because each copy carries personal links (decision 0091).
+- Edit feed and Unsubscribe work as usual. Once you unsubscribe, the sender's later emails are dropped, even after Undo has passed. To stop them being sent, use the newsletter's own unsubscribe link, which stays in each article.
+- A newsletter is never checked in the background and isn't in the OPML file, which lists web feeds.
+- Only mail sent to your address arrives. nine turtles never sends email, never replies, and never sees your own inbox. At most 200 emails a day reach one address; more are refused that day.
 
-**How an email becomes an article (part one)**
+**How an email becomes an article**
 - **Which newsletter:** the mailing list's own name for itself (`List-Id`) when the email gives one, otherwise the sender's address. The feed's name is the sender's name as the email gives it (otherwise the list's name, otherwise the sender's domain).
 - **The article:** its title is the subject ("No subject" when there's none), its date the email's date, and its "Open original" the email's own "View in browser" link when it has one (that link isn't repeated in the text). An email is never stored twice (its Message-ID is its fingerprint).
 - **Cleaned for reading,** then made safe exactly like a feed article (section 7): the hidden preview text mail apps show in the inbox list, parts only Outlook shows, styles, pictures attached inside the email (which can't be shown) and invisible tracking images go; tables used only to lay the email out become plain blocks so the text flows; a real table of data, with headings, stays a table; links lose their tracking parts (`utm_…` and the like). A plain-text email becomes paragraphs, its web addresses links.
@@ -624,9 +626,10 @@ A rule says "when a new article **matches this**, **do that**", in plain fields,
 
 **How emails arrive:** Cloudflare Email Routing receives mail for `in.nineturtles.app` and a small forwarder (`cloudflare/newsletter-worker/`) posts each email to nine turtles' `/newsletters/incoming` with a shared secret. Without `NINE_TURTLES_NEWSLETTER_SECRET` that address doesn't exist. Emails over 10 MB are refused. Setup: `docs/operations/newsletters.md`.
 
-**How to check it (part one)**
-1. With the setup done, send an email to `test@in.nineturtles.app`. Render's log says it was read and not kept yet (it also comes back to the inbox set as `FORWARD_TO`, but that happens for any email nine turtles didn't keep, so the log line is the check).
-2. The diagnostics page says `"newsletters": {"on": true}`.
+**How to check it**
+1. Settings › Newsletters shows your address. Copy it and send an email to it from your own email: within a minute it's a feed in the sidebar, named after you, with the email as its article.
+2. Press New address, then Undo: the first address is back. Without Undo, an email to the old address bounces.
+3. Unsubscribe from that feed and send another email: it doesn't arrive.
 
 ---
 

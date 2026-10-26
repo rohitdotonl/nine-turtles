@@ -37,6 +37,10 @@ pub struct Newsletter {
     /// The newsletter's own web unsubscribe page (`List-Unsubscribe`), if it
     /// gives one. Its unsubscribe link in the text stays too.
     pub unsubscribe: Option<String>,
+    /// The addresses the email names as its recipients (To, Cc,
+    /// Delivered-To), in lowercase. The mail service's own word for who it
+    /// was delivered to comes first when it gives one (`newsletters`).
+    pub recipients: Vec<String>,
 }
 
 /// Who a newsletter comes from: the feed its emails are filed under.
@@ -187,6 +191,22 @@ pub fn parse(raw: &[u8]) -> Option<Newsletter> {
         unsubscribe: header("List-Unsubscribe")
             .as_deref()
             .and_then(first_web_address),
+        recipients: message
+            .to()
+            .into_iter()
+            .chain(message.cc())
+            .flat_map(|list| {
+                list.mailboxes()
+                    .filter_map(|mailbox| mailbox.address().map(str::to_lowercase))
+                    .collect::<Vec<_>>()
+            })
+            .chain(
+                ["Delivered-To", "X-Original-To"]
+                    .into_iter()
+                    .filter_map(header)
+                    .map(|address| address.trim_matches(['<', '>']).trim().to_lowercase()),
+            )
+            .collect(),
     })
 }
 

@@ -44,6 +44,9 @@ pub struct Config {
     /// The shared secret mail services post newsletter emails with
     /// (`NINE_TURTLES_NEWSLETTER_SECRET`). Without it, newsletters are off.
     pub newsletter_secret: Option<String>,
+    /// Where newsletter addresses are, after the @
+    /// (`NINE_TURTLES_NEWSLETTER_DOMAIN`); `in.nineturtles.app` without it.
+    pub newsletter_domain: Option<String>,
 }
 
 /// The scrambled password (`NINE_TURTLES_PASSWORD_HASH`), made by
@@ -151,6 +154,8 @@ impl Config {
             restore_from,
             smtp,
             newsletter_secret,
+            newsletter_domain: var("NINE_TURTLES_NEWSLETTER_DOMAIN")
+                .map(|domain| domain.trim().trim_start_matches('@').to_lowercase()),
         })
     }
 }

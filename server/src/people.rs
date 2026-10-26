@@ -116,6 +116,10 @@ pub const PER_READER_TABLES: &[(&str, &str)] = &[
     ),
     ("rules", "DELETE FROM rules WHERE person_id = ?"),
     (
+        "newsletter_addresses",
+        "DELETE FROM newsletter_addresses WHERE person_id = ?",
+    ),
+    (
         "saved_searches",
         "DELETE FROM saved_searches WHERE person_id = ?",
     ),
@@ -178,6 +182,14 @@ pub async fn delete(db: &SqlitePool, person: i64) -> Result<(), sqlx::Error> {
             .execute(&mut *transaction)
             .await?;
     }
+    // Their newsletter feeds, whose articles have just gone (decision 0091).
+    sqlx::query(
+        "DELETE FROM feeds WHERE newsletter_of = ?1
+         AND NOT EXISTS (SELECT 1 FROM articles WHERE feed_id = feeds.id)",
+    )
+    .bind(person)
+    .execute(&mut *transaction)
+    .await?;
     sqlx::query("DELETE FROM people WHERE id = ? AND owner = 0")
         .bind(person)
         .execute(&mut *transaction)

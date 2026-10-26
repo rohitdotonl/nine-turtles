@@ -414,7 +414,7 @@ section 28.
 | Part | Status |
 |---|---|
 | Part one: reading and cleaning emails, the receiving address (off by default, keeps nothing yet), the Cloudflare forwarder and its setup steps | ✅ 25 October 2026 (setup: `docs/operations/newsletters.md`) |
-| Part two: each reader's own address, emails kept as articles under a feed per sender, limits per reader (after many readers part three) | ⬜ |
+| Part two: each reader's own address, emails kept as articles under a feed per sender, the reader's alone, limits per reader (structure change 16) | ✅ 26 October 2026 |
 
 ## V2: YouTube videos
 

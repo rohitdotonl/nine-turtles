@@ -61,6 +61,7 @@ const AT_ONCE: usize = 4;
 /// The feeds whose time has come, the longest-waiting first, from the
 /// `feeds_due` index (tests/speed.rs checks this).
 pub const DUE: &str = "SELECT id FROM feeds WHERE next_check_at <= ? AND unsubscribed_at IS NULL
+         AND newsletter_of IS NULL
      ORDER BY next_check_at, id LIMIT ?";
 
 /// Runs for as long as nine turtles does: a round, a pause, another round.
@@ -137,13 +138,17 @@ pub async fn check(state: &AppState, feed_id: i64, now: i64) -> Result<(), sqlx:
     // Pushed back first, so even if saving the result fails, the publisher
     // isn't asked again in the next round.
     let claimed =
-        sqlx::query("UPDATE feeds SET next_check_at = ? WHERE id = ? AND unsubscribed_at IS NULL")
+        // A newsletter feed has nothing to fetch: its articles arrive by email.
+        sqlx::query(
+            "UPDATE feeds SET next_check_at = ? WHERE id = ? AND unsubscribed_at IS NULL
+             AND newsletter_of IS NULL",
+        )
             .bind(now + SHORTEST_WAIT)
             .bind(feed_id)
             .execute(&state.db)
             .await?;
     if claimed.rows_affected() == 0 {
-        // Unsubscribed in the meantime.
+        // Unsubscribed in the meantime, or a newsletter.
         return Ok(());
     }
     let mut feed: Due = sqlx::query_as(concat!(

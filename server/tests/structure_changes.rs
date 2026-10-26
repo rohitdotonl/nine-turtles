@@ -1293,3 +1293,53 @@ async fn adding_the_clean_ups_record_keeps_every_feed_article_and_mark() {
         .unwrap();
     assert_eq!(forgotten, 0);
 }
+
+#[tokio::test]
+async fn adding_newsletters_keeps_every_feed_and_makes_none_a_newsletter() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just after the yearly clean-up's record (structure
+    // change 15): one web feed the owner follows, with a starred article.
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(15, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO feeds (id, url, url_key, title, added_at) VALUES (1, 'u', 'u', 'Garden', 1)",
+        "INSERT INTO subscriptions (person_id, feed_id, title, added_at) VALUES (1, 1, 'Garden', 1)",
+        "INSERT INTO articles (id, feed_id, fingerprint, title, received_at, sort_at)
+         VALUES (1, 1, 'a', 'A', 1, 1)",
+        "INSERT INTO entries (person_id, article_id, feed_id, sort_at, starred) VALUES (1, 1, 1, 1, 1)",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let feeds: Vec<(i64, String, Option<i64>)> =
+        sqlx::query_as("SELECT id, title, newsletter_of FROM feeds")
+            .fetch_all(&db)
+            .await
+            .unwrap();
+    assert_eq!(feeds, [(1, "Garden".to_owned(), None)]);
+    let starred: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM entries WHERE starred = 1")
+        .fetch_one(&db)
+        .await
+        .unwrap();
+    assert_eq!(starred, 1);
+    let addresses: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM newsletter_addresses")
+        .fetch_one(&db)
+        .await
+        .unwrap();
+    assert_eq!(addresses, 0);
+}

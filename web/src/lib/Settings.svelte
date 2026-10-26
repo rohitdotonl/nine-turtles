@@ -9,7 +9,9 @@
   devices; the reader controls belong to this device. Your data imports and
   exports the reader's feeds and folders as an OPML file, and exports their
   starred articles as a JSON Feed file. Rules lists the reader's rules, and
-  opens the rule editor over Settings (SPEC section 27). Other apps makes the
+  opens the rule editor over Settings (SPEC section 27). Newsletters, while
+  nine turtles takes them, shows the reader's private address (SPEC section
+  28). Other apps makes the
   app password other feed readers sync with (OtherApps). Readers, for the
   owner only, lists who has an account, sets the owner's email and the
   sign-up switch (Readers, decision 0087). Account shows the reader's email,
@@ -23,6 +25,7 @@
   import DeleteAccount from "./DeleteAccount.svelte";
   import Icon from "./Icon.svelte";
   import ImportOpml from "./ImportOpml.svelte";
+  import Newsletters from "./Newsletters.svelte";
   import OtherApps from "./OtherApps.svelte";
   import Readers from "./Readers.svelte";
   import RuleEditor from "./RuleEditor.svelte";
@@ -427,6 +430,8 @@
         onNew={() => openEditor({})}
         onEdit={(rule) => openEditor({ rule })}
       />
+
+      <Newsletters />
 
       <OtherApps />
 

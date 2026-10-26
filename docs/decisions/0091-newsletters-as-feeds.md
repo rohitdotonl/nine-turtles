@@ -1,6 +1,6 @@
 # 0091: Newsletters as feeds
 
-*25 October 2026. Milestone 10 of the plan for 100 to 200 readers
+*25 and 26 October 2026. Milestone 10 of the plan for 100 to 200 readers
 (https://claude.ai/artifact/V3GhrBxfXDG1TjPMsXQFPk). The owner approved the
 feature, Cloudflare Email Routing, the mail-parser library and the change to
 DESIGN.md's "is not" list on 25 October 2026.*
@@ -59,10 +59,13 @@ key is scoped to the reader (or their address), never just `list:…` or
   others), and the address that receives them, off by default. When
   switched on it reads each email and answers what it would become ("202
   Accepted"), but keeps nothing yet. No database change.
-- **Part two (after many readers is finished):** each reader's own address
-  (with a Copy and a New address button in Settings), storing emails as
-  articles under a feed per sender, limits per reader (emails per day, size)
-  and the disk space they take.
+- **Part two (26 October 2026, after many readers):** each reader's own
+  address, `turtle-` and 8 random letters (Settings › Newsletters, with Copy,
+  and New address with an hour's Undo; a `+label` still arrives); emails kept
+  as articles under a feed per sender, the reader's alone; a sender's emails
+  dropped once the reader unsubscribes; at most 200 emails a day per
+  address; a deleted reader's newsletters go with them (structure change
+  16). Mail to an address nobody has, or one replaced, bounces.
 - **A question to settle before part two shows emails:** mail services often
   put a personal tracking code in the address of every picture, not only in
   1-pixel ones, so loading a newsletter's pictures can tell the sender it was
