@@ -537,3 +537,91 @@ test("the server's reading mode decides where the app opens", async ({ page, isM
   await expect(page).toHaveURL(/\/unread$/);
   await expect(sidebar(page).getByRole("link", { name: "Unread", exact: true })).toBeVisible();
 });
+
+test("Settings: unread counts can hide, and unread can let go after a while", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the same on every width");
+  // Shared by every test using this nine turtles, so this page alone is
+  // told about its settings, and its changes aren't saved.
+  let settings: Record<string, string> = { sort: "newest", mode: "inbox", counts: "shown", let_go: "never" };
+  const changes: unknown[] = [];
+  await page.route("**/api/settings", (route) => {
+    if (route.request().method() === "POST") {
+      const change = JSON.parse(route.request().postData() ?? "{}");
+      changes.push(change);
+      settings = { ...settings, ...change };
+    }
+    return route.fulfill({ json: settings });
+  });
+  const name = await openBlog(page);
+  await expect(feedLink(page, name)).toHaveAccessibleName(`Blog ${name} 3 unread`);
+
+  await page.goto(new URL("/settings", FEEDS_APP).href);
+  await appReady(page);
+  const reading = page.getByRole("region", { name: "Reading" });
+  await expect(reading.getByRole("radio", { name: "Show" })).toBeChecked();
+  await expect(reading.getByRole("radio", { name: "Never" })).toBeChecked();
+  // With only the keyboard: Tab to the choice, an arrow key changes it.
+  await tabTo(page, reading.getByRole("radio", { name: "Show" }));
+  await page.keyboard.press("ArrowRight");
+  await expect(reading.getByRole("radio", { name: "Hide" })).toBeChecked();
+  // The count goes; Unread stays.
+  await expect(feedLink(page, name)).toHaveAccessibleName(`Blog ${name}`);
+  await expect(sidebar(page).getByRole("link", { name: "Unread", exact: true })).toBeVisible();
+
+  await reading.getByRole("radio", { name: "2 weeks" }).check();
+  await expect(reading.getByRole("radio", { name: "2 weeks" })).toBeChecked();
+  expect(changes).toEqual([{ counts: "hidden" }, { let_go: "two-weeks" }]);
+  await expect(reading).toContainText("it counts as read and stays in its feed, All and search");
+
+  // Remembered: after a reload the counts stay hidden.
+  await page.reload();
+  await appReady(page);
+  await expect(reading.getByRole("radio", { name: "Hide" })).toBeChecked();
+  await expect(reading.getByRole("radio", { name: "2 weeks" })).toBeChecked();
+  await expect(feedLink(page, name)).toHaveAccessibleName(`Blog ${name}`);
+
+  // River mode has no Unread to let go of, so the two rows step aside.
+  await reading.getByRole("radio", { name: "River" }).check();
+  await expect(reading.getByRole("radio", { name: "Hide" })).toHaveCount(0);
+  await expect(reading.getByRole("radio", { name: "2 weeks" })).toHaveCount(0);
+});
+
+test("Catch me up: everything in Unread from before today is read, and Undo brings back the same", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the same on every width");
+  const name = await openBlog(page);
+  const blogId = Number(new URL(page.url()).pathname.split("/").pop());
+  const listed = await (await page.request.get(new URL(`/api/articles?feed=${blogId}`, FEEDS_APP).href)).json();
+  const ids: number[] = listed.articles.map((each: { id: number }) => each.id);
+  // Every other test's articles are unread before today too: this page's
+  // catching up answers with this blog's alone and marks nothing.
+  let sentBefore = 0;
+  await page.route("**/api/articles/catch-up", (route) => {
+    sentBefore = JSON.parse(route.request().postData() ?? "{}").before;
+    return route.fulfill({ json: { ids } });
+  });
+  const undone: unknown[] = [];
+  page.on("request", (request) => {
+    if (request.url().endsWith("/api/articles/read")) undone.push(request.postDataJSON());
+  });
+
+  // Only Unread's More menu has it.
+  const more = page.getByRole("button", { name: "More", exact: true });
+  await more.click();
+  await expect(page.getByRole("menuitem", { name: "Mark all as read" })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: "Catch me up" })).toHaveCount(0);
+  await page.keyboard.press("Escape");
+
+  await sidebar(page).getByRole("link", { name: "Unread", exact: true }).click();
+  await more.click();
+  await page.getByRole("menuitem", { name: "Catch me up" }).click();
+  await expect(page.getByText("Marked 3 items from before today as read")).toBeVisible();
+  // The start of today on this device's clock.
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  expect(sentBefore).toBe(today.getTime() / 1000);
+
+  await page.keyboard.press("u");
+  await expect(line(page)).toContainText("Undone.");
+  await expect.poll(() => undone).toContainEqual({ ids, read: false });
+  await expect(feedLink(page, name)).toHaveAccessibleName(`Blog ${name} 3 unread`);
+});
