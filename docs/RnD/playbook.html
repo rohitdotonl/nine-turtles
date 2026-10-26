@@ -1,0 +1,846 @@
+<title>The nine turtles playbook</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a book-like single column of prose with a quiet sticky contents rail on wide screens; ideas set as index cards with labelled fields. */
+:root{
+  --paper:#fbfbfa;
+  --sheet:#ffffff;
+  --ink:#1c2230;
+  --muted:#545d6e;
+  --rule:#dde1e8;
+  --accent:#23458f;
+  --accent-soft:#e9eef8;
+  --star:#2f6b3d;
+  --warn:#8a4b0c;
+  --warn-soft:#fbf1e4;
+  --serif:"Newsreader", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --sans:"Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#14171d; --sheet:#1b1f27; --ink:#e7e9ee; --muted:#a3abba; --rule:#2e3441;
+    --accent:#9db7f0; --accent-soft:#222c40; --star:#8fd19e; --warn:#f0bd7f; --warn-soft:#2c241a;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#14171d; --sheet:#1b1f27; --ink:#e7e9ee; --muted:#a3abba; --rule:#2e3441;
+  --accent:#9db7f0; --accent-soft:#222c40; --star:#8fd19e; --warn:#f0bd7f; --warn-soft:#2c241a;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--serif);font-size:1.125rem;line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:0}
+a{color:var(--accent);text-underline-offset:2px}
+a:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr);gap:56px;padding-block:48px 96px}
+nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;font-family:var(--sans);font-size:.8125rem;line-height:1.45;max-height:calc(100vh - 48px);overflow:auto}
+nav.toc p{text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;margin:0 0 10px}
+nav.toc ol{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+nav.toc a{color:var(--muted);text-decoration:none}
+nav.toc a:hover{color:var(--accent);text-decoration:underline}
+main{min-width:0;max-width:760px}
+header.top .kicker{font-family:var(--sans);font-size:.8125rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+h1{font-size:clamp(2.2rem,5vw,3.4rem);line-height:1.08;font-weight:500;letter-spacing:-.01em;margin:0 0 16px;text-wrap:balance}
+h2{font-size:1.9rem;line-height:1.2;font-weight:500;margin:72px 0 12px;text-wrap:balance;scroll-margin-top:24px}
+h2 .n{font-family:var(--sans);font-size:.8rem;color:var(--muted);display:block;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;font-weight:600}
+h3{font-size:1.3rem;line-height:1.3;font-weight:600;margin:36px 0 8px;text-wrap:balance}
+p,li{max-width:66ch}
+.lede{font-size:1.3rem;line-height:1.5;color:var(--ink)}
+.meta{font-family:var(--sans);font-size:.875rem;color:var(--muted)}
+.box{background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:20px 24px;margin:24px 0}
+.box h3{margin-top:0}
+.plain li{margin-bottom:8px}
+.note{background:var(--warn-soft);border-left:3px solid var(--warn);padding:14px 18px;margin:20px 0;font-size:1rem}
+.note strong{color:var(--warn)}
+.tablewrap{overflow-x:auto;margin:20px 0;border:1px solid var(--rule);border-radius:6px;background:var(--sheet)}
+table{border-collapse:collapse;width:100%;font-family:var(--sans);font-size:.875rem;line-height:1.45}
+th,td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid var(--rule)}
+th{font-weight:600;color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;background:var(--paper)}
+tr:last-child td{border-bottom:0}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill{display:inline-block;font-family:var(--sans);font-size:.72rem;font-weight:600;letter-spacing:.04em;padding:2px 8px;border-radius:999px;border:1px solid var(--rule);color:var(--muted);white-space:nowrap}
+.pill.hi{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.pill.new{border-color:var(--star);color:var(--star)}
+.ideas{display:grid;gap:18px;margin:20px 0}
+.idea{background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:20px 22px}
+.idea h4{font-size:1.15rem;line-height:1.3;margin:0 0 6px;font-weight:600}
+.idea .tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.idea dl{display:grid;grid-template-columns:88px minmax(0,1fr);gap:6px 14px;margin:0;font-size:1rem}
+.idea dt{font-family:var(--sans);font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600;padding-top:4px}
+.idea dd{margin:0;min-width:0}
+.idea .src{font-family:var(--sans);font-size:.8rem;word-break:break-word}
+blockquote{margin:16px 0;padding:0 0 0 18px;border-left:2px solid var(--rule);font-style:italic;color:var(--ink)}
+blockquote cite{display:block;font-style:normal;font-family:var(--sans);font-size:.8rem;color:var(--muted);margin-top:4px}
+.quotes{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:4px 24px}
+.copy{font-size:1.5rem;line-height:1.25;font-weight:500;margin:0}
+.copy + p{margin-top:4px;color:var(--muted);font-size:1rem}
+.copyset{display:grid;gap:18px}
+.legend{font-family:var(--sans);font-size:.85rem;color:var(--muted)}
+footer{margin-top:80px;border-top:1px solid var(--rule);padding-top:20px}
+@media (max-width:900px){
+  .wrap{grid-template-columns:minmax(0,1fr);gap:24px;padding-block:28px 64px}
+  nav.toc{position:static;max-height:none;border:1px solid var(--rule);border-radius:6px;padding:14px 16px;background:var(--sheet)}
+  nav.toc ol{grid-template-columns:1fr 1fr;gap:6px 16px}
+}
+@media (max-width:480px){
+  body{font-size:1.0625rem}
+  .idea dl{grid-template-columns:minmax(0,1fr)}
+  .idea dt{padding-top:6px}
+  nav.toc ol{grid-template-columns:1fr}
+}
+</style>
+
+<div class="wrap">
+<nav class="toc" aria-label="Contents">
+  <p>Contents</p>
+  <ol>
+    <li><a href="#summary">The short version</a></li>
+    <li><a href="#shortlist">The shortlist</a></li>
+    <li><a href="#strategy">Strategy and positioning</a></li>
+    <li><a href="#money">Price and viability</a></li>
+    <li><a href="#windows">Switching moments</a></li>
+    <li><a href="#ai">Marketing in the age of AI</a></li>
+    <li><a href="#seo">Search (SEO)</a></li>
+    <li><a href="#tools">Free tools and trust</a></li>
+    <li><a href="#pain">What hurts readers</a></li>
+    <li><a href="#incumbents">Beating the incumbents</a></li>
+    <li><a href="#lesser">Lesser-known tactics</a></li>
+    <li><a href="#borrowed">Borrowed from elsewhere</a></li>
+    <li><a href="#rohit">rohit.onl and you</a></li>
+    <li><a href="#distribution">Other channels</a></li>
+    <li><a href="#mine">Ideas of our own</a></li>
+    <li><a href="#avoid">What not to do</a></li>
+    <li><a href="#plan">First 90 days</a></li>
+    <li><a href="#round4">What the numbers say</a></li>
+    <li><a href="#yours">Research only you can do</a></li>
+    <li><a href="#limits">How sure is this?</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="top">
+  <p class="kicker">Research for Rohit · 25 October 2026</p>
+  <h1>The nine turtles playbook</h1>
+  <p class="lede">How a calm, paid reader made by one person in India can find its first few hundred readers, and keep them, in a market with older names and in a web being rewritten by AI.</p>
+  <p class="meta">Companion pages: the <a href="https://claude.ai/artifact/NXJdVoVYNtGnBLUntK9dXL">idea bank</a> (298 searchable ideas), <a href="https://claude.ai/artifact/6jMvsYg4UJZ4UjisXAFt4H">posts worth writing</a> (57 blog post ideas) and the <a href="https://claude.ai/artifact/Jdnxvp1WMtGJdfQA9gPLrt">outreach list</a> (named newsletters, podcasts, articles and directories).</p>
+  <p class="meta">Eight research strands run side by side, then pulled together. Every idea has what it is, why it could work, rough effort, the payoff to expect, and sources. Effort: <strong>S</strong> is a day or two with agents, <strong>M</strong> about a week, <strong>L</strong> several weeks or ongoing.</p>
+</header>
+
+<section id="summary">
+<h2><span class="n">Start here</span>The short version</h2>
+<ul class="plain">
+  <li><strong>Sell the ending, not the technology.</strong> Nobody else owns the promise "a reader that ends". Feedly and Inoreader are drifting toward businesses and AI, Readwise toward an everything-inbox, and the one other calm reader (Current) is Apple-only with no web version yet. Own the word <em>finished</em>. The enemy is the endless feed, not other apps. RSS is the plumbing you mention last.</li>
+  <li><strong>This market moves when something breaks.</strong> Feedbin, the best example of a solo paid reader, began two days before Google Reader's closure was announced. Right now Reddit is switching off its feeds, Feedly is wobbling, and Pocket and Omnivore refugees still distrust free apps. Be the calm, honest answer at each of these moments.</li>
+  <li><strong>Trust is the product for a one-person company.</strong> A written "if we ever close" promise, one-click export, open code, a real refund, a founder letter and a public changelog cost days, not weeks. For a buyer who has watched Pocket die, they matter more than features.</li>
+  <li><strong>AI assistants are now a shop window.</strong> They recommend what's named on "best reader" lists, in Reddit threads and in reviews. Getting named on 10 to 15 lists the AIs already read, plus a plain facts page and honest comparison pages, is the cheapest compounding move there is.</li>
+  <li><strong>Your best channel is you.</strong> You write for a living, and a writer who built a reader with AI agents, with every decision public, is a true and unusual story. One flagship essay on rohit.onl brings attention and links. A Show HN brings hundreds of visits but few payers, so the first 100 readers will come from your own writing audience, peers in the calm-reading world and a few partners, the way Feedbin reached 100 payers in three weeks through good timing and Reeder support.</li>
+  <li><strong>Free tools beat how-to articles now.</strong> AI answers swallow simple guides. Tools that give someone a result for <em>their</em> stuff still get visits and links: a feed finder, YouTube subscriptions to a feed list, a tidy-up for old exports, "see your blog as a book".</li>
+  <li><strong>Viable means about 600 to 900 readers, not 200.</strong> At about $48 a year, 200 readers cover costs and pay you around ₹60,000 a month. Around 800 readers is roughly $3,000 a month, a comfortable living in India. 200 is the first milestone, not the finish.</li>
+</ul>
+</section>
+
+<section id="shortlist">
+<h2><span class="n">Do these first</span>The prioritised shortlist</h2>
+<p>Ranked by payoff for effort, and by what needs to be true before the next item works. Items marked <span class="pill">decision</span> need your yes before anyone builds them.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>#</th><th>Idea</th><th>Effort</th><th>Payoff</th><th>Why now</th></tr></thead>
+<tbody>
+<tr><td class="num">1</td><td><strong>Rewrite the home page around "a reader that ends"</strong> and the word <em>finished</em>. <a href="#strategy">More</a></td><td>S</td><td><span class="pill hi">High</span></td><td>Every later page and pitch builds on it.</td></tr>
+<tr><td class="num">2</td><td><strong>The trust pages:</strong> "If nine turtles ever closes", founder letter, "what we'll never do", real 30-day refund, changelog as a feed. <a href="#tools">More</a></td><td>S</td><td><span class="pill hi">High</span></td><td>Turns "one person in India" from a worry into a reason to buy.</td></tr>
+<tr><td class="num">3</td><td><strong>Switching pages:</strong> "Reddit is ending RSS: what to do" (before 13 November), then leaving Feedly, Pocket, Inoreader. <a href="#windows">More</a></td><td>S</td><td><span class="pill hi">High, time-limited</span></td><td>People search hardest the week something breaks.</td></tr>
+<tr><td class="num">4</td><td><strong>Get named by AI assistants:</strong> facts page, honest comparison pages, AlternativeTo (once sign-up is open; it doesn't take closed betas), about 30 personal notes to list authors, a monthly check of 20 questions. Names and links are in the <a href="https://claude.ai/artifact/Jdnxvp1WMtGJdfQA9gPLrt">outreach list</a>. <a href="#ai">More</a></td><td>M</td><td><span class="pill hi">High, compounding</span></td><td>AI answers in this niche draw on a handful of lists that update often.</td></tr>
+<tr><td class="num">5</td><td><strong>Flagship essay on rohit.onl,</strong> then a Show HN with a try-it-without-signing-up demo. <a href="#rohit">More</a></td><td>M</td><td><span class="pill hi">High spike</span></td><td>Attention and links; payers come more slowly than visits.</td></tr>
+<tr><td class="num">6</td><td><strong>Four free tools:</strong> feed finder, YouTube subscriptions to a feed file, export tidy-up and blogroll maker, "see your blog as a book". <a href="#tools">More</a></td><td>M</td><td><span class="pill hi">High, compounding</span></td><td>Tools still earn visits and links when AI answers the guides.</td></tr>
+<tr><td class="num">7</td><td><strong>Set the price:</strong> $48 a year or $5 a month, 30-day trial with no card, founding readers locked at $36, quiet India price. <span class="pill">decision</span> <a href="#money">More</a></td><td>S</td><td><span class="pill hi">High</span></td><td>Needed for the Dodo application anyway.</td></tr>
+<tr><td class="num">8</td><td><strong>Newsletters as the front door:</strong> "read newsletters outside your inbox" guide now, the inbox feature as the launch headline, and a pitch to writers: "follow by feed instead of unsubscribing". <a href="#strategy">More</a></td><td>M</td><td><span class="pill">Medium-high</span></td><td>The most-requested thing in every thread we found.</td></tr>
+<tr><td class="num">9</td><td><strong>Founding 100 by hand:</strong> a personal welcome note from you, a short opinionated first run, postcards from India. <a href="#lesser">More</a></td><td>S per reader</td><td><span class="pill">Medium-high</span></td><td>Keeps the first readers, and gives you quotes and lessons.</td></tr>
+<tr><td class="num">10</td><td><strong>The side door:</strong> get nine turtles listed as a sync option inside Reeder, NetNewsWire and similar apps; consider speaking Feedbin's sync language. <span class="pill">decision</span> <a href="#mine">More</a></td><td>L</td><td><span class="pill hi">High if it lands</span></td><td>This is how Feedbin grew.</td></tr>
+<tr><td class="num">11</td><td><strong>Small-web partners:</strong> Bear Blog, Micro.blog, Buttondown, omg.lol, Ghost, plus a "Follow in nine turtles" link for bloggers. <a href="#lesser">More</a></td><td>M</td><td><span class="pill">Medium</span></td><td>Each is a pond full of exactly the right people.</td></tr>
+<tr><td class="num">12</td><td><strong>"How I read the web" interviews</strong> with writers your reader admires. <span class="pill">decision</span> <a href="#tools">More</a></td><td>M, ongoing</td><td><span class="pill">Medium-high</span></td><td>Each guest brings their audience.</td></tr>
+<tr><td class="num">13</td><td><strong>A $500 test:</strong> sponsor 4 to 8 tiny slow-living newsletters, each with its own link. <a href="#distribution">More</a></td><td>S</td><td><span class="pill">Learning</span></td><td>Shows which small communities convert before you spend more.</td></tr>
+<tr><td class="num">14</td><td><strong>Give a year of reading</strong> gift for December. <span class="pill">decision</span> <a href="#lesser">More</a></td><td>M</td><td><span class="pill">Seasonal</span></td><td>The giver explains feeds for you.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="strategy">
+<h2><span class="n">Strategy</span>Strategy and positioning</h2>
+<p>April Dunford's method (from <em>Obviously Awesome</em>) starts with a simple question: if nine turtles didn't exist, what would your ideal reader use instead? For a Cal Newport reader, the honest answer is mostly <em>not another RSS app</em>.</p>
+
+<div class="tablewrap"><table>
+<thead><tr><th>What they use today</th><th>What it costs them</th><th>What nine turtles offers instead</th></tr></thead>
+<tbody>
+<tr><td>The feed: Instagram, X, YouTube, Reddit, LinkedIn</td><td>Attention, anxiety, it never ends</td><td>Only the writers you chose, and an ending</td></tr>
+<tr><td>Newsletters in the inbox, the Substack app</td><td>40 subscribed, 4 read, a guilt folder</td><td>Newsletters in a quiet room, away from work email</td></tr>
+<tr><td>Read-later and AI tools: Readwise, Pocket (closed), Matter</td><td>Another backlog; summaries instead of reading</td><td>One list, no AI between you and the writer</td></tr>
+<tr><td>Other readers: Feedly, Inoreader, Reeder, NetNewsWire, Current</td><td>Unread counts, clutter, Apple-only, enterprise drift</td><td>Book-like reading on any device, with a finish line</td></tr>
+<tr><td>Nothing: "I'll check the blog when I remember"</td><td>Good writing missed</td><td>Their writing comes to you, in order, once</td></tr>
+</tbody></table></div>
+<p class="meta">Sources: Dunford method notes, <a href="https://www.nateliason.com/notes/obviously-awesome-april-dunford">nateliason.com</a>; competitor facts in <a href="#incumbents">Beating the incumbents</a>.</p>
+
+<h3>Five positions we weighed</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Position</th><th>Strength</th><th>Risk</th></tr></thead>
+<tbody>
+<tr><td><strong>A. A reader that ends</strong> (a reading room for the open web)</td><td>Nobody owns it; fits the app exactly; differs from Current's "articles fade away"</td><td>Needs one plain line saying what it actually does</td></tr>
+<tr><td>B. Apple Books for the web</td><td>Instantly paints the look</td><td>Borrows Apple's name; means nothing on Android or Windows</td></tr>
+<tr><td>C. The anti-AI reader</td><td>Timely, shareable</td><td>A trend can pass; others can add an "AI off" switch</td></tr>
+<tr><td>D. For people who quit social media</td><td>Strong emotional pull for this audience</td><td>Defines you by what you're not</td></tr>
+<tr><td>E. The newsletter reading room</td><td>Uses a habit people already have</td><td>Crowded (Meco, Stoop, Feedbin, Readwise); depends on a feature not yet live</td></tr>
+</tbody></table></div>
+
+<div class="box">
+<h3>Recommendation</h3>
+<p><strong>Lead with A, use D to name the audience, and use E as the first step in.</strong> Own one word: <em>finished</em>. "Calm" belongs to the Calm app, "quiet" to a dozen wellness products, "slow" sounds late. "Finished" is free, true of nine turtles, and the opposite of everything your reader is tired of.</p>
+<p>Name the problem before the product, the way HEY named "email is broken" and Kagi named "you are not the product". Candidate names: <em>unread debt</em>, <em>feed fatigue</em>. Terry Godier (Current) calls unread counts "a measure of social debt", so credit him if you echo him.</p>
+<p>Make the enemy a behaviour, never a company. HEY's enemy was the way Gmail works. Glass's enemy was likes and algorithms. Yours is the feed that never ends.</p>
+</div>
+
+<h3>Words for the home page</h3>
+<div class="copyset">
+  <div><p class="copy">A reader that ends.</p><p>The writers you chose, in one quiet place. When you've read what's there, you're done.</p></div>
+  <div><p class="copy">Quit the feed. Keep the writers.</p><p>Follow the people worth reading directly. You see what they published, and nothing else.</p></div>
+  <div><p class="copy">Get newsletters out of your inbox.</p><p>They arrive in a quiet reading room instead, beside the blogs you follow, and they end.</p></div>
+  <div><p class="copy">A reading list, not a to-do list.</p><p>No counts, no streaks, no ranking. Good type and a finish line.</p></div>
+</div>
+<p>A trust line under every button: <em>"Open source. Export everything, anytime. No ads, no tracking, no AI summaries."</em> And one sentence about the plumbing, low on the page: <em>"Behind the scenes it uses RSS, the open standard writers have used for 25 years, so nobody can take your subscriptions away."</em></p>
+
+<h3>Moats a one-person company can actually build</h3>
+<ul class="plain">
+  <li><strong>Taste you can see.</strong> The "Never" list and the "book or feed?" test, published as a manifesto. Things, Bear, iA Writer and Glass all win on taste.</li>
+  <li><strong>Being the easiest to leave.</strong> Export, open code, sync with other apps. It sounds backwards, but it removes the main fear of buying from a solo founder.</li>
+  <li><strong>A point of view with a name.</strong> Five to ten essays on unread debt and finishing, shared by people, not ranked by algorithms.</li>
+  <li><strong>Low costs.</strong> One program, one database file, free tiers. Feedbin broke even at about 100 readers. Cheap to run means you can outlast better-funded rivals.</li>
+  <li><strong>Saying no.</strong> Bear Blog's founder refuses most feature requests, and the product stays simple and cheap to support. Simplicity is retention.</li>
+</ul>
+</section>
+
+<section id="money">
+<h2><span class="n">Strategy</span>Price and what "viable" means</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Reader</th><th>Price</th><th>Note</th></tr></thead>
+<tbody>
+<tr><td>Current</td><td class="num">$9.99 once</td><td>Apple only, calm, one developer</td></tr>
+<tr><td>Reeder (new)</td><td class="num">$10–15 / yr</td><td>Apple only, timeline style (sources differ; check the App Store)</td></tr>
+<tr><td>BazQux</td><td class="num">~$30 / yr</td><td>Plain, loyal fans</td></tr>
+<tr><td>NewsBlur</td><td class="num">$36 / yr</td><td>Solo founder, open source</td></tr>
+<tr><td>Feedbin</td><td class="num">$70 / yr</td><td>Solo founder, the closest "honest paid" peer; $7 a month, 30-day trial</td></tr>
+<tr><td>Feedly Pro</td><td class="num">$60–72 / yr</td><td>Free tier shows sponsored items</td></tr>
+<tr><td>Inoreader Pro</td><td class="num">~$90 / yr</td><td>Raised from $49 in 2024</td></tr>
+<tr><td>Readwise (with Reader)</td><td class="num">$96–120 / yr</td><td>Your reader already pays this; Reader alone is $7.99 a month billed yearly</td></tr>
+</tbody></table></div>
+<p class="meta">Sources: <a href="https://www.readless.app/blog/readwise-vs-feedly-vs-inoreader-pricing-2026">readless.app</a>, <a href="https://feeder.co/knowledge-base/rss-basics/feedly-alternatives/">feeder.co</a>, <a href="https://talk.macpowerusers.com/t/rss-reader-inoreader-subscription-costs-doubled-90-yr-alternatives/36251">MacPowerUsers forum</a>, <a href="https://www.techcrunch.com/2026/02/19/current-is-a-new-rss-reader-thats-more-like-a-river-than-an-inbox/">TechCrunch on Current</a>. Roundup sites sell their own products, so treat their prices as approximate.</p>
+
+<div class="box">
+<h3>Suggested price</h3>
+<ul class="plain">
+  <li><strong>$48 a year, shown first</strong>, or $5 a month. Under Feedbin, Feedly and Inoreader, but well above "cheap tool". Forum users named $30 to $50 a year as their ceiling for a reader.</li>
+  <li><strong>30-day free trial, no card.</strong> Feedbin, Readwise and NewsBlur all do this, and Dodo supports it. RevenueCat's 2026 report found trials of 17 to 32 days convert 42.5% of triallists to paying, against 37.4% for 5 to 9 days and 25.5% for 4 days or less (<a href="https://www.revenuecat.com/state-of-subscription-apps/">RevenueCat</a>). A reading habit takes weeks to form anyway.</li>
+  <li><strong>Founding readers: $36 a year, locked for as long as they stay.</strong> Cash and loyalty without a lifetime deal, which would leave you paying servers for people who no longer pay you. It's also a promise Inoreader broke, which their users still remember ("extremely user hostile").</li>
+  <li><strong>A quiet India price</strong> of about ₹1,500 to ₹2,000 a year. Dodo has regional pricing built in (each country can be set at 30% to 100% of the list price). Kagi refuses regional prices because its costs are the same everywhere; yours per reader are tiny, so you can afford fairness. Note RevenueCat measured trial conversion in India and Southeast Asia at 15%, against 34% in North America.</li>
+  <li><strong>Why annual first:</strong> Dodo charges 4% + $0.40 per payment, plus 1.5% for international cards and 0.5% for subscriptions, so about 6% + $0.40 for a typical reader abroad. On a $5 monthly charge that's about 14% gone; on one $48 yearly charge, about 7% (<a href="https://dodopayments.com/pricing">Dodo pricing</a>).</li>
+  <li><strong>What Dodo already does:</strong> discount codes (including first-time-only and limited cycles), regional prices, trials without a card, monthly and yearly plans, a customer portal, and affiliates through partner services (Affonso, Dub, Rekomi). We found no built-in gift purchase, so a gift year would need a workaround.</li>
+</ul>
+</div>
+
+<h3>How many readers is a living?</h3>
+<p>Rough sums at $48 a year, about $3.70 a month after Dodo's fees for a reader abroad, and an exchange rate near ₹88 to the dollar. These are our arithmetic, not a forecast.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Paying readers</th><th>Per month</th><th>In rupees</th><th>What it means</th></tr></thead>
+<tbody>
+<tr><td class="num">15</td><td class="num">~$55</td><td class="num">~₹5,000</td><td>Hosting is paid for</td></tr>
+<tr><td class="num">200</td><td class="num">~$740</td><td class="num">~₹65,000</td><td>Costs covered, real part-time income</td></tr>
+<tr><td class="num">400</td><td class="num">~$1,480</td><td class="num">~₹1.3 lakh</td><td>A frugal full-time living</td></tr>
+<tr><td class="num">800</td><td class="num">~$2,960</td><td class="num">~₹2.6 lakh</td><td>Comfortable; room to hire help</td></tr>
+<tr><td class="num">2,700</td><td class="num">~$10,000</td><td class="num">~₹8.8 lakh</td><td>A small, durable business like Feedbin or NewsBlur</td></tr>
+</tbody></table></div>
+<p>The good news from history: Feedbin's founder wrote that about 100 paying readers covered its costs in year one, with profit of $1.62 per reader per month after card fees (<a href="https://feedbin.com/blog/2014/03/11/feedbins-first-year">Feedbin's first year</a>). Pinboard deliberately stayed paid-only to stay small, and that let it absorb a rush of refugees when Delicious collapsed (<a href="https://highscalability.com/pinboardin-architecture-pay-to-play-to-keep-a-system-small/">High Scalability</a>). Small and paid is a proven shape in this exact niche.</p>
+<p>The search researcher's rule of thumb: about 0.5% of qualified visitors become paying customers, so 200 readers needs roughly 40,000 visits. Search alone won't deliver that in year one, which is why the essay, the launch, the lists and the partners carry the early weight (<a href="https://userpilot.com/blog/saas-average-conversion-rate">Userpilot benchmark</a>, a wide range).</p>
+</section>
+
+<section id="windows">
+<h2><span class="n">Strategy</span>Switching moments: when people go looking</h2>
+<p>People rarely change readers on a calm Tuesday. They change when something breaks. Feedbin, Pinboard and Instapaper all got their start from someone else's breakage. These are the live and recent ones.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>When</th><th>What happened</th><th>What to publish</th></tr></thead>
+<tbody>
+<tr><td class="num">13 Nov 2026</td><td><strong>Reddit switches off its RSS feeds.</strong> New public API requests stop on 31 October; more API access ends in January and March 2027.</td><td>"Reddit is ending RSS: what to do". Factual, no promises that nine turtles can fetch Reddit.</td></tr>
+<tr><td class="num">Aug 2026</td><td>Feedly: the web app was slow for over a week ("unusably slow"), which Feedly blamed on a bug, not its pivot; the classic app was retired; the company is refocusing on threat intelligence.</td><td>"Leaving Feedly, calmly", with export and import steps.</td></tr>
+<tr><td class="num">Sep 2026</td><td>Inoreader adds AI "Mentions"; earlier it nearly doubled its price.</td><td>Honest "nine turtles or Inoreader?" page.</td></tr>
+<tr><td class="num">2026</td><td>Current, the other calm reader, is Apple-only with a web version only "planned". It's actively updated (it added Feedly sync in July).</td><td>"Current and nine turtles": generous, factual, for people who want calm on Windows, Android or the web.</td></tr>
+<tr><td class="num">2024–25</td><td>Omnivore closed; Pocket closed and deleted data on 8 October 2025.</td><td>"Why we won't vanish like Pocket": the closing promise and export.</td></tr>
+</tbody></table></div>
+<p class="meta">Sources: <a href="https://mjtsai.com/blog/2026/10/06/reddit-to-remove-rss/">Michael Tsai on Reddit RSS</a>, <a href="https://www.techrepublic.com/article/news-reddit-rss-public-api-shutdown/">TechRepublic</a>, <a href="https://techcrunch.com/2026/08/17/feedly-attributes-weeklong-slowdown-to-bug-not-its-ai-pivot">TechCrunch on Feedly</a>, <a href="https://pricingsaas.com/companies/inoreader">PricingSaaS on Inoreader</a>, <a href="https://www.techradar.com/computing/websites-apps/pocket-shuts-down-today-heres-how-to-get-your-data-before-the-app-closes-plus-the-3-best-alternatives">TechRadar on Pocket</a>.</p>
+<p><strong>A standing habit worth keeping:</strong> watch for the next breakage (a price rise, a shutdown, an acquisition) and have a calm, useful page up within a day. It costs nothing between events.</p>
+</section>
+
+<section id="ai">
+<h2><span class="n">Area 1</span>Marketing in the age of AI</h2>
+<p>More people now ask ChatGPT, Claude, Perplexity or Google's AI "what's a calm RSS reader?" and try whatever gets named. The engines don't have a secret list. They repeat what trusted pages say: "best X" roundups, Reddit threads, review sites, YouTube and Wikipedia. Studies of millions of citations put Reddit first across most engines, and find brand <em>mentions</em> (even without links) matter more than backlinks. AI referrals are still small, around half a percent of web traffic in August 2026, but they convert unusually well, and they concentrate on exactly the niche, specific questions nine turtles can win.</p>
+<p class="meta">Sources: <a href="https://contently.com/2026/04/29/top-sources-llms-cite/">Contently roundup of citation studies</a>, <a href="https://www.averi.ai/how-to/chatgpt-vs.-perplexity-vs.-google-ai-mode-the-b2b-saas-citation-benchmarks-report-(2026)">Averi benchmark</a>, <a href="https://blog.mean.ceo/?p=11346">mean.ceo roundup</a>. Much of this data comes from companies selling AI-visibility tools, so read the numbers as direction, not fact.</p>
+
+<div class="ideas">
+<article class="idea"><h4>Get onto the lists the AIs already read</h4><div class="tags"><span class="pill hi">Top pick</span><span class="pill">Effort M</span></div><dl>
+<dt>What</dt><dd>Find the 10 to 15 roundups that AI answers cite for "best RSS reader", "Feedly alternative" and "calm reader", and write a short, personal note to each author. List nine turtles yourself on AlternativeTo.</dd>
+<dt>Why</dt><dd>ChatGPT leans heavily on "best X" lists. Authors update these posts regularly and like a genuinely different entry. The lists we found name Feedly, Inoreader, NewsBlur, Feedbin, NetNewsWire, Reeder, Readwise Reader and self-hosted tools, and none is positioned as calm and new.</dd>
+<dt>Effort</dt><dd>About 30 notes over a month, each drafted with help and sent by you.</dd>
+<dt>Payoff</dt><dd>High and compounding: one listing feeds every AI that reads it, for years.</dd>
+<dt>Targets</dt><dd class="src"><a href="https://zapier.com/blog/best-rss-feed-reader-apps/">Zapier</a> (updated Oct 2026), <a href="https://bgr.com/2057396/best-rss-reader-apps/">BGR</a>, <a href="https://bloggingwizard.com/free-rss-feed-readers/">Blogging Wizard</a>, <a href="https://daily.dev/blog/best-rss-readers-feed-tools-developers/">daily.dev</a>, <a href="https://alternativeto.net/software/feedly/">AlternativeTo</a>, <a href="https://artemis.jamesg.blog/alternatives/feedly">James G's indie list</a>, <a href="https://feeder.co/knowledge-base/rss-basics/best-rss-readers/">Feeder</a> (a competitor's own list). Still to find: Lifehacker, How-To Geek, MakeUseOf, digital-minimalism newsletters.</dd>
+</dl></article>
+
+<article class="idea"><h4>A plain facts page and honest comparison pages</h4><div class="tags"><span class="pill hi">Top pick</span><span class="pill">Effort S–M</span></div><dl>
+<dt>What</dt><dd>One page of quotable facts (what it is, who makes it, price, what it does and doesn't do), plus short, dated "nine turtles or Feedbin / Feedly / Inoreader / Reeder / NetNewsWire / Readwise / Current?" pages that say when the other app is the better choice.</dd>
+<dt>Why</dt><dd>AI engines lift sentences from clear, structured, recently updated pages. Comparison and "alternative" pages are also among the few page types still winning clicks in Google. Being honest about when a rival is better is rare and builds trust.</dd>
+<dt>Effort</dt><dd>A day for the facts page, half a day per comparison.</dd>
+<dt>Payoff</dt><dd>High; these pages answer the exact questions people ask AIs.</dd>
+<dt>Sources</dt><dd class="src"><a href="https://feeder.co/knowledge-base/rss-basics/best-rss-readers/">Feeder's dated comparison format</a> is the template to beat on tone.</dd>
+</dl></article>
+
+<article class="idea"><h4>Let the right robots in</h4><div class="tags"><span class="pill">Effort S</span></div><dl>
+<dt>What</dt><dd>Allow the AI search robots (OpenAI's, Perplexity's, Anthropic's) in the website's robots file, add standard "structured data" labels (what kind of thing each page is: the app, the company, the FAQ), and verify the site with Google and Bing.</dd>
+<dt>Why</dt><dd>If a robot can't read the page, the AI can't name you. One founder found Cloudflare was silently blocking the robots he wanted.</dd>
+<dt>Effort</dt><dd>Half a day.</dd>
+<dt>Payoff</dt><dd>Small on its own, but it's the foundation.</dd>
+<dt>Sources</dt><dd class="src"><a href="https://dev.to/hey_atlas_5d684863e9b069a/i-audited-my-own-robotstxt-and-found-cloudflare-was-blocking-the-ai-crawlers-i-wanted-4b77">robots.txt audit story</a>, <a href="https://developers.google.com/search/docs/appearance/ai-features">Google on AI features</a>.</dd>
+</dl></article>
+
+<article class="idea"><h4>Skip llms.txt as a growth plan</h4><div class="tags"><span class="pill">Effort S</span><span class="pill">Low payoff</span></div><dl>
+<dt>What</dt><dd>llms.txt is a proposed "summary file for AIs". Adoption jumped about 9 times to 36,000 sites by May 2026.</dd>
+<dt>Why not</dt><dd>Ahrefs looked at about 38,000 of these files and found 97% got no traffic at all in May 2026. Google says it has no effect. Add one only if it takes ten minutes.</dd>
+<dt>Sources</dt><dd class="src"><a href="https://ppc.land/llms-txt-adoption-rises-8-8x-but-97-of-files-get-zero-ai-requests/">ppc.land</a></dd>
+</dl></article>
+
+<article class="idea"><h4>Check your AI visibility once a month, by hand</h4><div class="tags"><span class="pill">Effort S</span></div><dl>
+<dt>What</dt><dd>A list of about 20 questions ("calm RSS reader", "Feedly alternative without AI", "read newsletters outside my inbox", "follow blogs without social media", "Pocket alternative") asked in ChatGPT, Claude, Perplexity, Gemini and Google's AI Mode. Note whether nine turtles is named and which pages are cited. Those cited pages become next month's outreach list. Add "an AI assistant" to the "how did you hear about us?" question, since much AI traffic arrives without a label.</dd>
+<dt>Why</dt><dd>Paid trackers cost money you don't need to spend yet. The free <a href="https://ahrefs.com/free-ai-visibility">Ahrefs checker</a> gives a one-time baseline.</dd>
+<dt>Payoff</dt><dd>Tells you what's working; makes outreach targeted.</dd>
+</dl></article>
+
+<article class="idea"><h4>"No AI between you and the writer"</h4><div class="tags"><span class="pill">Positioning</span><span class="pill">Effort S</span></div><dl>
+<dt>What</dt><dd>A clear line, and a page, saying nine turtles never summarises, rewrites or ranks what writers wrote.</dd>
+<dt>Why</dt><dd>Every major rival is adding AI: Feeder summaries, Inoreader Pro summaries and Mentions, NewsBlur's Ask AI, Readwise's Ghostreader. Your reader is tired of AI filler. Say "no AI summaries" rather than "no AI", so it stays true even if the app later uses AI behind the scenes.</dd>
+<dt>Payoff</dt><dd>Medium; a sharp, shareable difference.</dd>
+</dl></article>
+
+<article class="idea"><h4>Reddit, honestly</h4><div class="tags"><span class="pill">Effort M</span></div><dl>
+<dt>What</dt><dd>A few genuinely useful posts or answers in r/rss and r/digitalminimalism, always saying you made it. Never fake accounts.</dd>
+<dt>Why</dt><dd>Heavy Reddit presence goes with about 3.9 times more ChatGPT citations. It's the one forum effort that also feeds the AI flywheel. If you'd rather not post, gently invite happy readers to mention it when relevant.</dd>
+<dt>Payoff</dt><dd>Medium, long-lasting through AI citations.</dd>
+</dl></article>
+
+<article class="idea"><h4>Later: a nine turtles connector for ChatGPT and Claude</h4><div class="tags"><span class="pill new">Unproven</span><span class="pill">Effort L</span><span class="pill">decision</span></div><dl>
+<dt>What</dt><dd>A small "MCP server" (a standard way for AI assistants to use an app) so someone can say "add this blog to nine turtles" or "what's unread?" inside ChatGPT or Claude. ChatGPT's app directory accepts outside apps; it needs a public server, sign-in, privacy and terms pages and a short video.</dd>
+<dt>Why</dt><dd>Directories inside AI apps are new and uncrowded. Keep it on-brand: add, search and star, never summaries or digests.</dd>
+<dt>Effort</dt><dd>One to three weeks; after launch.</dd>
+<dt>Sources</dt><dd class="src"><a href="https://developers.openai.com/apps-sdk/deploy/submission">OpenAI app submission docs</a></dd>
+</dl></article>
+</div>
+</section>
+
+<section id="seo">
+<h2><span class="n">Area 2</span>Search (SEO) after AI answers</h2>
+<p>Google's AI summaries take clicks. Pew found people click a normal result on 8% of searches with an AI summary against 15% without, and only 1% click a link inside the summary. Ahrefs measured the top result losing about 58% of its clicks when a summary appears. "What is RSS" pages are the most exposed. What still wins: tools, comparison and "alternative" pages, searches for your own name, and pages with a real point of view.</p>
+<p class="meta">Sources: <a href="https://www.pewresearch.org/short-reads/2025/07/22/google-users-are-less-likely-to-click-on-links-when-an-ai-summary-appears-in-the-results/">Pew</a>, <a href="https://ahrefs.com/blog/ai-overviews-reduce-clicks-update/">Ahrefs</a>, <a href="https://www.seerinteractive.com/insights/aio-impact-on-google-ctr-september-2025-update">Seer</a>.</p>
+
+<h3>Three tiers of searches</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Tier</th><th>Examples</th><th>Verdict</th></tr></thead>
+<tbody>
+<tr><td>A: big and contested</td><td>best RSS reader, Feedly alternative</td><td>Too hard for a new site now. Get onto other people's lists instead.</td></tr>
+<tr><td>B: winnable with a tool or a page</td><td>RSS feed for Substack / YouTube / Bluesky, follow Substack without email, Reddit RSS alternative</td><td>Build tools and one hand-checked hub.</td></tr>
+<tr><td>C: your reader, ignored by others</td><td>digital minimalism apps, replace social media with, calm RSS reader, reader without notifications or AI</td><td>Essays and feeling-led pages. Nobody owns these.</td></tr>
+</tbody></table></div>
+<p class="meta">Inferred from who writes about what; the researcher couldn't open keyword tools. Search Console will show real numbers 4 to 8 weeks after setup.</p>
+
+<div class="ideas">
+<article class="idea"><h4>One hand-checked hub, not a thousand pages</h4><div class="tags"><span class="pill hi">Top pick</span><span class="pill">Effort M</span></div><dl>
+<dt>What</dt><dd>15 to 25 hand-written "how to follow X by feed" pages (Substack, Ghost, WordPress, Medium, YouTube, Bluesky, Mastodon, podcasts) plus a hub of about 100 well-known sites marked "has a feed / limited / none".</dd>
+<dt>Why</dt><dd>Automatically generating hundreds of "Does [site] have a feed?" pages is tempting but dangerous: Google's John Mueller said in September 2026 that such sites are "often spam, borderline spam, or low quality", that trust is judged site-wide, and recovery is slow. A small, verified set avoids that.</dd>
+<dt>Payoff</dt><dd>Medium, steady traffic from Tier B searches, each page ending in a tool or a gentle invitation.</dd>
+<dt>Sources</dt><dd class="src"><a href="https://www.techwyse.com/news/search-seo/google-john-mueller-programmatic-seo-site-trust-recovery">Mueller on programmatic SEO</a>; quality model: <a href="https://finder.wprssaggregator.com/rss-feeds/platform">WP RSS Aggregator's platform directory</a>; competitor example: <a href="https://docs.feedly.com/article/645-how-to-find-substack-rss-feeds">Feedly's Substack help page</a>.</dd>
+</dl></article>
+
+<article class="idea"><h4>Technical basics for the two sites</h4><div class="tags"><span class="pill">Effort S</span></div><dl>
+<dt>What</dt><dd>A sitemap; a feed for the website's own blog; a "don't index" tag on app.nineturtles.app and slowfeed.onrender.com so they don't compete with the website; Google Search Console and Bing Webmaster Tools.</dd>
+<dt>Why</dt><dd>Bing powers Copilot and DuckDuckGo results. (A claim that ChatGPT relies on Bing couldn't be confirmed.) Use the "don't index" tag rather than blocking robots, or Google can't see the tag.</dd>
+<dt>Note</dt><dd>The usual Eleventy feed plugin is a new library, so it needs your approval under the project rules.</dd>
+</dl></article>
+
+<article class="idea"><h4>Links from places that already love feeds</h4><div class="tags"><span class="pill">Effort S–M</span></div><dl>
+<dt>What</dt><dd>AlternativeTo (336 Feedly alternatives listed: demand is real), pull requests to the big curated GitHub lists, a /blogroll page with a downloadable list, ooh.directory, design galleries for the website, Product Hunt and Show HN once each.</dd>
+<dt>Sources</dt><dd class="src"><a href="https://github.com/AboutRSS/ALL-about-RSS">ALL-about-RSS</a> (5.9k stars), <a href="https://github.com/plenaryapp/awesome-rss-feeds">awesome-rss-feeds</a> (2.8k stars), <a href="https://alternativeto.net/software/feedly/">AlternativeTo</a>.</dd>
+</dl></article>
+
+<article class="idea"><h4>Never build a "feed for any website" generator</h4><div class="tags"><span class="pill">Avoid</span></div><dl>
+<dt>Why</dt><dd>rss.app and others make feeds for sites that don't have one by scraping them. It's a big traffic source for them, and it breaks the "respect the publisher" floor for you. Say plainly in the FAQ that nine turtles doesn't scrape; that's a selling point to writers.</dd>
+</dl></article>
+</div>
+<p><strong>Timeline to expect:</strong> first appearances in 1 to 3 months, tens of clicks a week by month 3 to 6 on Tier B and C searches. Start now so it's working by launch plus six months.</p>
+</section>
+
+<section id="tools">
+<h2><span class="n">Area 3</span>Free tools, useful content, and winning trust</h2>
+<p>Ahrefs' marketing head says about half of ahrefs.com traffic comes from free tools, but also that conversion from them is "extremely low" for some tools and that they "don't really measure stuff" (<a href="https://getlatka.com/interviews/ahrefs-tim-soulo-2024">interview</a>). The lesson: tools bring visits and links first, customers slowly. The best ones solve a problem the reader already feels and end in a file they keep, with nothing left behind to hook them. That's the "book, not feed" idea applied to marketing.</p>
+
+<h3>Tools worth building</h3>
+<div class="ideas">
+<article class="idea"><h4>Feed finder, with a one-click bookmark button</h4><div class="tags"><span class="pill hi">Top pick</span><span class="pill">Effort S</span></div><dl>
+<dt>What</dt><dd>Paste a website, get its feed address and a preview of how it would look in nine turtles. A bookmark-bar button does the same for the page you're on.</dd>
+<dt>Why</dt><dd>Matches a literal, frequent search. It only fetches the page the person pastes, which the project's rules already allow (decision 0016).</dd>
+<dt>Payoff</dt><dd>High, compounding.</dd>
+</dl></article>
+
+<article class="idea"><h4>YouTube subscriptions to a feed file</h4><div class="tags"><span class="pill hi">Top pick</span><span class="pill">Effort S</span></div><dl>
+<dt>What</dt><dd>Upload the subscriptions file from Google Takeout; get a standard feed list (OPML) back, made in the browser. Same idea for Bluesky and Mastodon follows.</dd>
+<dt>Why</dt><dd>"Follow YouTube without the algorithm" is the digital-minimalism wish in one sentence. It builds addresses from IDs the person supplies, so nothing is scraped. Bluesky has official feeds, though they leave out links; mention the Open RSS variant.</dd>
+<dt>Payoff</dt><dd>High; a "quit kit" for people leaving the feed.</dd>
+<dt>Sources</dt><dd class="src"><a href="https://openrss.org/blog/bluesky-has-launched-rss-feeds">Open RSS on Bluesky feeds</a></dd>
+</dl></article>
+
+<article class="idea"><h4>Export tidy-up and blogroll maker</h4><div class="tags"><span class="pill">Effort M</span></div><dl>
+<dt>What</dt><dd>Upload an export from any reader; get back a clean list with dead, moved, duplicate and long-silent feeds marked, plus a ready-made blogroll page for your own site with the standard blogroll tag.</dd>
+<dt>Why</dt><dd>Catches people at the exact moment they switch readers. The blogroll part rides a small revival: Dave Winer's blogroll standard is used by Micro.blog, and one writer found 20 blogrolls led to 150 sites. No company serves it yet.</dd>
+<dt>Effort</dt><dd>About a week. Fetching tools need the server and rate limits; browser-only tools can live on the static website.</dd>
+<dt>Sources</dt><dd class="src"><a href="https://alexsci.com/blog/blogroll-network/">The blogroll network</a></dd>
+</dl></article>
+
+<article class="idea"><h4>Feed health check for bloggers</h4><div class="tags"><span class="pill">Effort M</span></div><dl>
+<dt>What</dt><dd>"How does my feed look in a reader?" Checks full text versus summary, dates, stable IDs, images, the autodiscovery tag.</dd>
+<dt>Why</dt><dd>Bloggers have audiences. A tool that makes their feed better earns links and goodwill from exactly the writers your readers will follow. nine turtles already has a feed health page inside the app.</dd>
+<dt>Payoff</dt><dd>Medium, plus warm relationships with writers.</dd>
+</dl></article>
+</div>
+
+<h3>Trust, ranked for a solo founder selling from India</h3>
+<p>Pinboard's slow decline in 2024 (outages, a throttled API, silent support) is the cautionary tale this audience remembers (<a href="https://mjtsai.com/blog/2024/09/20/the-end-of-pinboard/">Michael Tsai</a>). So is Pocket. A buyer's real question is "will this still be here, and will my stuff be safe if it isn't?"</p>
+<ol class="plain">
+  <li><strong>"If nine turtles ever closes".</strong> At least 90 days' notice, one-click export, a refund for the unused time, the open code so anyone can run it themselves (one program, one file), a named person who holds the keys. Almost nobody publishes this.</li>
+  <li><strong>A founder letter.</strong> First person, a face, why you built it, how long you intend to run it, an honest line that AI agents help build it. Link to rohit.onl.</li>
+  <li><strong>A refund that really works.</strong> 30 days, no questions.</li>
+  <li><strong>The open code and the decisions folder,</strong> linked from the website.</li>
+  <li><strong>A public changelog that is itself a feed.</strong> A reader app should have a feed of its own changes. A steady rhythm says "alive". Add one line a month about what you said no to.</li>
+  <li><strong>Pledges people can check:</strong> no ads, no data sale, no tracking code, and the code proves it.</li>
+  <li><strong>Open numbers,</strong> only after about 100 readers. Buffer's open revenue post brought 30,000 visitors in a week and about 35 customers: a spike, not a channel (<a href="https://baremetrics.com/blog/buffer-a-week-later">Baremetrics</a>).</li>
+</ol>
+
+<h3>Content that earns trust with this reader</h3>
+<div class="ideas">
+<article class="idea"><h4>"How I read the web" interviews</h4><div class="tags"><span class="pill">Effort M, monthly</span><span class="pill">decision</span></div><dl>
+<dt>What</dt><dd>A monthly interview, in the spirit of "Uses This", with a writer or blogger (1,000 to 50,000 readers) about how they read, with their list of feeds as a download if they agree.</dd>
+<dt>Why</dt><dd>Each guest shares their own interview, which brings their audience. It also answers "what should I read?" with human taste. This is close to the dropped starter packs, so it needs your view: the difference is that it's a person's real list, by consent, not a bundle we assemble.</dd>
+<dt>Payoff</dt><dd>Medium-high; compounding backlinks and audiences.</dd>
+</dl></article>
+
+<article class="idea"><h4>A few essays a quarter, in your voice</h4><div class="tags"><span class="pill">Effort M</span></div><dl>
+<dt>What</dt><dd>"Your reader is not an inbox." "The unread count is a debt you never borrowed." "How to read more and scroll less." Written by you, not generated.</dd>
+<dt>Why</dt><dd>Plausible went from $415 to $22,010 a month in a year with about 50 opinionated posts, five or six Hacker News front pages, and no ads (<a href="https://www.indiehackers.com/post/from-400-to-22k-mrr-in-one-year-with-plausible-a-google-analytics-alternative-ama-776a4803b7">Indie Hackers</a>). Kagi Small Web excludes AI-written content, and this audience can smell it.</dd>
+<dt>Payoff</dt><dd>Slow, then strong. Tier C searches and shares.</dd>
+</dl></article>
+
+<article class="idea"><h4>"Read newsletters outside your inbox" guide</h4><div class="tags"><span class="pill hi">Top pick</span><span class="pill">Effort S</span></div><dl>
+<dt>What</dt><dd>Publish now, honestly naming tools that work today (most newsletters have a feed; Kill the Newsletter turns an email address into one). Update it when nine turtles' own inbox ships.</dd>
+<dt>Why</dt><dd>It's the most requested thing in every thread we found, and it ranks before launch.</dd>
+</dl></article>
+</div>
+<p><strong>A sustainable rhythm:</strong> weekly, a changelog note (an hour); monthly, one interview or guide; quarterly, one essay and one tool; yearly, a "state of feeds" note. Skip video for now.</p>
+</section>
+
+<section id="pain">
+<h2><span class="n">Area 4</span>What hurts readers, in their own words</h2>
+<p>Reddit blocked our researcher, so this draws on Hacker News, blogs, forums and press. Reddit itself is the next place to mine, by hand.</p>
+
+<div class="tablewrap"><table>
+<thead><tr><th>Pain</th><th>How nine turtles answers it</th></tr></thead>
+<tbody>
+<tr><td><strong>Unread guilt and overwhelm</strong> (the biggest, and the best fit)</td><td>No counts as debt; "a reading list, not a to-do list"; pause a feed without unsubscribing; an undoable "catch up". Essay: "Your reader is not an inbox."</td></tr>
+<tr><td><strong>Loud feeds drown quiet blogs</strong></td><td>Rules and mutes exist; possible later: a per-feed daily cap or a "slow lane".</td></tr>
+<tr><td><strong>Newsletters clutter the inbox</strong></td><td>The inbox feature. The guide now.</td></tr>
+<tr><td><strong>Price rises and "RSS should be free"</strong></td><td>$48 a year with a price lock; explain why paid means it lasts.</td></tr>
+<tr><td><strong>Apps that die</strong> (Pocket, Omnivore)</td><td>The closing promise, export, open code.</td></tr>
+<tr><td><strong>Finding good blogs</strong></td><td>Interviews, your /blogroll, the feed finder, ooh.directory links.</td></tr>
+<tr><td><strong>Getting articles onto a Kindle or Kobo</strong></td><td>A possible weekly "Quiet Edition" file (see <a href="#mine">ideas of our own</a>).</td></tr>
+<tr><td><strong>Saving a single link</strong>, like Pocket</td><td>Needs your decision: nine turtles never fetches article pages today.</td></tr>
+<tr><td><strong>AI everywhere</strong></td><td>"No AI summaries." A stable, calm core.</td></tr>
+</tbody></table></div>
+
+<h3>Lines worth borrowing (check exact wording on the page before quoting publicly)</h3>
+<div class="quotes">
+<blockquote>Your reader is a list of things you might like to read. Zero is not the target.<cite><a href="https://danq.me/2023/07/29/rss-zero/">Dan Q</a></cite></blockquote>
+<blockquote>The dreadful little indicator of unread posts felt like a personal failure.<cite><a href="https://pablo.bearblog.dev/you-can-read-the-web-seasonally/">Pablo</a></cite></blockquote>
+<blockquote>They become graveyards of good intentions and self-imposed obligations.<cite>Will Hopkins, via <a href="https://pablo.bearblog.dev/you-can-read-the-web-seasonally/">Pablo</a></cite></blockquote>
+<blockquote>I was treating my feeds like yet another inbox that I had to go in and zero every day.<cite><a href="https://brandur.org/fragments/rss-abandon">Brandur</a></cite></blockquote>
+<blockquote>I subscribe to so many Substacks, and I read zero of them.<cite>Dennis Crowley, via <a href="https://om.co/2023/08/27/how-do-we-fix-the-too-many-newsletters-problem/">Om Malik</a></cite></blockquote>
+<blockquote>My email acts as a to-do list for people I get back to.<cite><a href="https://bryanmanio.com/blog/email-newsletters-to-rss/">Bryan Manio</a></cite></blockquote>
+<blockquote>It's not algorithmic. You see what you subscribe to. And it gets you off Twitter.<cite><a href="https://interconnected.org/home/2023/12/29/recommendations">Matt Webb</a></cite></blockquote>
+<blockquote>I don't mind paying but I think $50 a year would be my max.<cite><a href="https://talk.macpowerusers.com/t/rss-reader-inoreader-subscription-costs-doubled-90-yr-alternatives/36251">MacPowerUsers forum</a></cite></blockquote>
+<blockquote>Free services or VC-funded ones can shut down overnight.<cite><a href="https://wallabag.it/en/blog/2026/06/15/which-read-it-later-app-to-choose-in-2026/">wallabag blog</a></cite></blockquote>
+<blockquote>I want to use my Kobo e-reader to read the news and other newsletters/RSS feeds in the morning. Will pay monthly if this is resolved.<cite><a href="https://mailbrew.featurebase.app/p/will-pay-if-solved-need-either-brews-as-rss-or">Mailbrew feedback board</a></cite></blockquote>
+</div>
+<p>People say <em>overwhelming, anxiety, personal failure, graveyard, inbox zero</em> about the problem, and <em>joy, control, not algorithmic</em> about the fix. "Calm" comes up less than "control". A public library even ran an event called "Stop Doom Scrolling! Slow the Scroll with RSS" (<a href="https://nnyln.org/events/stop-doom-scrolling-slow-the-scroll-with-really-simple-syndication-rss/">NNYLN</a>), a sign the pitch works on non-technical people.</p>
+
+<h3>Questions newcomers ask (each is a page or FAQ entry)</h3>
+<p>What is RSS, and is it dead? · How do I find a site's, a Substack's or a YouTube channel's feed? · What's the best Feedly, Inoreader or Pocket alternative? · How do I stop feeling overwhelmed by unread items? · How do I get newsletters out of my inbox? · How do I move my feeds between apps? · How do I find good blogs? · Can I follow Reddit, Bluesky or YouTube by feed? · Can I read feeds on a Kindle or Kobo? · Why pay when NetNewsWire is free? · What happens to my data if the app closes?</p>
+
+<h3>Second round: what Hacker News says</h3>
+<p>About 25 searches across Hacker News comments, ranked by how often each pain came up. HN leans technical, so people who've never heard of RSS are under-represented. Quotes are short fragments; open the link before using one publicly.</p>
+<ol class="plain">
+  <li><strong>Unread counts become anxiety.</strong> "I certainly got anxiety from my NetNewsWire badge showing 10, then 100, then 10,000 unread articles." (<a href="https://news.ycombinator.com/item?id=46161574">HN</a>)</li>
+  <li><strong>Readers feel like email.</strong> "too much of the infinite unread email feeling" (<a href="https://news.ycombinator.com/item?id=46491972">HN</a>)</li>
+  <li><strong>Backlogs grow until people quit.</strong> "how many of us just had an overgrown 10000+ unread RSS reader that we simply stopped using?" (<a href="https://news.ycombinator.com/item?id=29826607">HN</a>)</li>
+  <li><strong>"Mark all as read" as amnesty.</strong> "like it's a trip odometer reset button" (<a href="https://news.ycombinator.com/item?id=46807845">HN</a>)</li>
+  <li><strong>Too many noisy feeds.</strong></li>
+  <li><strong>Read-later piles are graveyards.</strong> "They are where my good intentions go to die" (<a href="https://news.ycombinator.com/item?id=46880996">HN</a>)</li>
+  <li><strong>Newsletters clutter the inbox.</strong> "I just want to read the thing, not to fill my inbox with newsletters" (<a href="https://news.ycombinator.com/item?id=45926833">HN</a>)</li>
+  <li><strong>Price rises and feature bloat.</strong> Feedly "jacked the pricing and introduced a bunch of needless extra features" (<a href="https://news.ycombinator.com/item?id=42748882">HN</a>)</li>
+  <li><strong>Nobody knows what RSS is.</strong> "People don't know what an rss feed is." (<a href="https://news.ycombinator.com/item?id=49598569">HN</a>)</li>
+  <li><strong>Readers are ugly or built for power users.</strong> "frustrated by how ugly it is" (<a href="https://news.ycombinator.com/item?id=44603876">HN</a>)</li>
+  <li><strong>Shutdowns broke trust</strong> (Google Reader, Pocket).</li>
+  <li><strong>Losing your place;</strong> items expiring unread.</li>
+</ol>
+<div class="quotes">
+<blockquote>Once I'm caught up, it's much easier for me be done and not keep scrolling.<cite><a href="https://news.ycombinator.com/item?id=24664539">HN</a></cite></blockquote>
+<blockquote>It's been fantastic, in part because it's NOT infinite.<cite><a href="https://news.ycombinator.com/item?id=26016218">HN</a></cite></blockquote>
+<blockquote>It feels peaceful knowing I definitely saw everything I might care about.<cite><a href="https://news.ycombinator.com/item?id=42164306">HN</a></cite></blockquote>
+<blockquote>The idea that you have to read everything is a reader UI design flaw.<cite><a href="https://news.ycombinator.com/item?id=46164395">HN</a></cite></blockquote>
+<blockquote>A paid service from a bootstrapped company kind of ensures it won't randomly kill the product.<cite><a href="https://news.ycombinator.com/item?id=44064933">HN</a> (lightly trimmed)</cite></blockquote>
+<blockquote>I miss my RSS reader.<cite><a href="https://news.ycombinator.com/item?id=47304959">HN</a></cite></blockquote>
+</div>
+<div class="box">
+<h3>What this changes</h3>
+<ul class="plain">
+  <li><strong>The ending is wanted, in people's own words.</strong> Some even hand-build finite feeds ("the 25 hot posts and that's it"). That's proof of demand for the core idea.</li>
+  <li><strong>Don't lecture.</strong> There's a rival school ("if you can't finish over coffee, you're using it wrong"; "zero is not the target"). Copy should offer relief, not tell people they've been reading wrong.</li>
+  <li><strong>Price sensitivity is real.</strong> Casual readers balk above about $5 to $6 a month; $10 is accepted mainly by power users. $48 a year sits right at the edge, which supports annual-first.</li>
+  <li><strong>"Paid and bootstrapped" is itself a trust argument.</strong> People say paying a small independent company is how you make sure it doesn't vanish. Say so on the pricing page.</li>
+  <li><strong>Some want to pay once.</strong> The founding price lock is the honest answer: one price, kept for as long as you stay.</li>
+  <li><strong>Many think RSS died with Google Reader.</strong> That's an awareness gap, and "The 25-Year-Old Technology Nobody Managed to Kill" post answers it.</li>
+  <li><strong>Digital Minimalism and RSS already get recommended together</strong> (<a href="https://news.ycombinator.com/item?id=35492002">HN</a>), which backs the ideal-reader choice.</li>
+</ul>
+<p class="meta">Full notes with about 68 quotes: <code>marketing/research-2026-10/14-pain-points-hn.md</code>. Reddit still couldn't be reached by any route, so it stays on your list.</p>
+</div>
+</section>
+
+<section id="incumbents">
+<h2><span class="n">Area 5</span>Beating the incumbents</h2>
+<p>You won't beat Feedly at being Feedly. Small products beat giants by refusing the giant's game: HEY ($99 a year, "email is broken"), Kagi ("you are the customer"), Glass ($50 a year, no likes, "a home for photographers"), Pinboard (tiny, plain, loved, price as a filter). The pattern: a named enemy that's a behaviour, a price that's a statement, and features you proudly don't have.</p>
+
+<div class="tablewrap"><table>
+<thead><tr><th>Rival</th><th>Where it's going</th><th>The opening for you</th></tr></thead>
+<tbody>
+<tr><td><strong>Current</strong> (Terry Godier)</td><td>"An RSS reader that doesn't count." Articles fade after 3 hours to about a week. $9.99 once, Apple only, web "planned". Syncs with iCloud, Feedbin, Miniflux and, since July, Feedly.</td><td>The closest rival and proof that calm reading gets press (TechCrunch covered it). Differ on: any device, a list you <em>finish</em> rather than one that quietly loses things, a full service with newsletters, open code.</td></tr>
+<tr><td><strong>Feedly</strong></td><td>Toward threat and market intelligence for companies (from ~$1,600 a month); ads in the free tier.</td><td>"nine turtles is for one person."</td></tr>
+<tr><td><strong>Inoreader</strong></td><td>Power users, teams, AI; a near-doubled price in 2024.</td><td>One plan, one price, a price lock.</td></tr>
+<tr><td><strong>Readwise Reader</strong></td><td>Everything: highlights, PDFs, video, AI. Grew sharply after Pocket closed.</td><td>Your reader already pays for it but may feel it's an inbox of obligations. "One list, one finish line."</td></tr>
+<tr><td><strong>Feedbin</strong></td><td>Solo, honest, paid, open source; powers several apps.</td><td>The most respected peer. Compete on feeling and design, not on features. Admire it in public.</td></tr>
+<tr><td><strong>NetNewsWire, Reeder</strong></td><td>Excellent, Apple only.</td><td>Not enemies: nine turtles already syncs with them. Be their calm home base.</td></tr>
+<tr><td><strong>Artemis</strong></td><td>Free, invite-only hobby project; refreshes once a day.</td><td>Shows the same instinct; too small to worry about.</td></tr>
+<tr><td><strong>Micro.blog's reader</strong> (Manton Reece)</td><td>Manton wrote in February 2026 that he's building a feed reader whose items "fade", like Current.</td><td>Calm reading is becoming a small movement. Be its friendliest member: write to Manton, and keep "finished, not faded" as the difference.</td></tr>
+</tbody></table></div>
+<p class="meta">Sources: <a href="https://www.techcrunch.com/2026/02/19/current-is-a-new-rss-reader-thats-more-like-a-river-than-an-inbox/">TechCrunch</a>, <a href="https://terrygodier.com/current">Current</a>, <a href="https://moonwriting.bearblog.dev/artemis-and-current-bringing-calmness-into-rss/">Moonwriting on Artemis and Current</a>, <a href="https://pricingsaas.com/companies/inoreader">PricingSaaS</a>, <a href="https://petapixel.com/2021/08/12/glass-is-a-subscription-based-photo-sharing-app-for-photographers">PetaPixel on Glass</a>, <a href="https://kagifeedback.org/d/687-implement-regional-pricing/29">Kagi on pricing</a>, <a href="https://blog.pinboard.in/2014/12/new_pricing_policy/">Pinboard</a>.</p>
+
+<p><strong>What nobody has combined:</strong> web-first, finite, book-like type, accessible, open source, syncs with Reeder and NetNewsWire, newsletters, priced as a lasting service. Current has the philosophy but not the platform. Feedbin has the trust but not the soul. Readwise has the audience but not the calm.</p>
+</section>
+
+<section id="lesser">
+<h2><span class="n">Area 6</span>Lesser-known tactics</h2>
+<p>The winners in this niche mostly grew through a <em>side door</em>: Feedbin through Reeder support, Pocket by getting into hundreds of apps' share menus through open-source code, Instapaper through one mention on Daring Fireball (<a href="https://www.slax.com/blog/read-it-later-growth-history/">read-it-later history</a>). Nobody we found got to 100 paying readers through forum posts alone.</p>
+<div class="ideas">
+<article class="idea"><h4>"Follow in nine turtles" for bloggers and theme makers</h4><div class="tags"><span class="pill">Effort M</span><span class="pill new">Unproven for paid readers</span></div><dl>
+<dt>What</dt><dd>A tiny snippet bloggers paste: "Follow this site in your reader", linking to a page that previews their feed in nine turtles. Offer it as ready-made pieces for Eleventy, Hugo, Ghost and WordPress themes, sent as pull requests.</dd>
+<dt>Why</dt><dd>Each install is a permanent signpost and link. The publisher chooses it, so it respects the floors, unlike a "powered by" footer.</dd>
+<dt>Payoff</dt><dd>Slow, compounding.</dd>
+</dl></article>
+
+<article class="idea"><h4>Be the recommended reader on small-web platforms</h4><div class="tags"><span class="pill">Effort S</span><span class="pill new">Unproven</span></div><dl>
+<dt>What</dt><dd>Personal notes to Herman (Bear Blog), Manton Reece (Micro.blog), Buttondown, omg.lol, Ghost and Kagi Small Web: a free year for them, the follow snippet for their users.</dd>
+<dt>Why</dt><dd>Bear Blog alone had about 5,500 hand-approved blogs at last count; these are ponds of exactly the right people. Ask, explain, accept no.</dd>
+<dt>Sources</dt><dd class="src"><a href="https://herman.bearblog.dev/running-a-blogging-platform/">Herman on running Bear</a></dd>
+</dl></article>
+
+<article class="idea"><h4>Pricing page as manifesto</h4><div class="tags"><span class="pill">Effort S</span><span class="pill">Proven pattern</span></div><dl>
+<dt>What</dt><dd>A pricing page that says what the money buys and what it will never buy, beside a "six refusals" page: no notifications, badges, streaks, endless scrolling, ranking or likes.</dd>
+<dt>Why</dt><dd>Pinboard's oddly honest pricing posts and Bear's manifesto both bring visits and trust. Yours is already written in DESIGN.md.</dd>
+</dl></article>
+
+<article class="idea"><h4>Design galleries for the website</h4><div class="tags"><span class="pill">Effort S</span></div><dl>
+<dt>What</dt><dd>Submit nineturtles.app to Minimal Gallery, Godly, Land-book, siteinspire and One Page Love. Never pay for "featured".</dd>
+<dt>Why</dt><dd>A calm, typographic site is natural gallery material. Free links, and designers overlap heavily with Readwise and Notion buyers.</dd>
+<dt>Sources</dt><dd class="src"><a href="https://www.indiehackers.com/post/the-best-design-directories-to-show-off-your-work-e7b0c99522">design directories list</a></dd>
+</dl></article>
+
+<article class="idea"><h4>Founding 100, by hand</h4><div class="tags"><span class="pill hi">Top pick</span><span class="pill">Effort S per reader</span></div><dl>
+<dt>What</dt><dd>A short, opinionated first run (add a few feeds, done), then a personal welcome note from you, then a handwritten postcard from India for the first 100. Ask each for one sentence you may quote.</dd>
+<dt>Why</dt><dd>Superhuman found 65% of customers who did its hands-on onboarding moved over fully, and that making it optional dropped attendance from 100% to 15%. You don't need a call: a note and a strong first run carry most of it. Postcards cost roughly $150 for 100 and get photographed and shared.</dd>
+<dt>Sources</dt><dd class="src"><a href="https://review.firstround.com/superhuman-onboarding-playbook.md">First Round on Superhuman onboarding</a></dd>
+</dl></article>
+
+<article class="idea"><h4>Community codes, not coupon codes</h4><div class="tags"><span class="pill">Effort S</span></div><dl>
+<dt>What</dt><dd>One-off extended trials for a specific community: readers of a newsletter, a book club, a podcast. "Reply and say you came from X."</dd>
+<dt>Why</dt><dd>Readwise did exactly this with Tiago Forte's Praxis readers (30 extra days). It costs an email reply, not a system, and it tells you where readers come from.</dd>
+<dt>Sources</dt><dd class="src"><a href="https://fortelabs.com/blog/interview-with-readwise-founders/">Forte Labs interview</a></dd>
+</dl></article>
+
+<article class="idea"><h4>Give a year of reading</h4><div class="tags"><span class="pill">Effort M</span><span class="pill">decision</span></div><dl>
+<dt>What</dt><dd>A gift year with a printable card, in your voice. "For someone who left social media."</dd>
+<dt>Why</dt><dd>Gift culture is what bookshops run on. The giver explains feeds, which solves "most people have never heard of RSS". Seasonal: December.</dd>
+</dl></article>
+
+<article class="idea"><h4>A writer's grant</h4><div class="tags"><span class="pill new">Unproven</span><span class="pill">Effort S</span></div><dl>
+<dt>What</dt><dd>$100 each to five small writers a year to keep writing on their own sites, announced openly.</dd>
+<dt>Why</dt><dd>Cheap, kind, true to the mission, and the kind of story Kagi Small Web gets press for. Recipients will mention it.</dd>
+</dl></article>
+
+<article class="idea"><h4>A yearly "slow web" award</h4><div class="tags"><span class="pill new">Unproven</span><span class="pill">Effort S</span></div><dl>
+<dt>What</dt><dd>Five blogs a year chosen by you, with a quiet badge they can show.</dd>
+<dt>Why</dt><dd>A dozen good links a year and goodwill with writers. Unpaid and personal, so no integrity questions.</dd>
+</dl></article>
+
+<article class="idea"><h4>Podcast guesting, in small doses</h4><div class="tags"><span class="pill">Effort M–L</span></div><dl>
+<dt>What</dt><dd>Small shows about reading, digital minimalism, note-taking, the indie web and writing. The story: a writer in a small Indian town built a calm reader with AI agents.</dd>
+<dt>Why</dt><dd>Plausible's co-founder credits content, community and podcasts for $1M a year without ads (<a href="https://churnkey.co/subscription-heroes/how-plausible-grew-to-1m-arr-without-ads-or-investors-marko-saric-co-founder-of-plausible/">Churnkey interview</a>). Each episode is small but permanent.</dd>
+</dl></article>
+</div>
+</section>
+
+<section id="borrowed">
+<h2><span class="n">Area 6, continued</span>Borrowed from other industries</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>From</th><th>What they did</th><th>The nine turtles version</th></tr></thead>
+<tbody>
+<tr><td>Light Phone</td><td>Started by lending flip phones to about a dozen people; tied to the NoSurf crowd; gave phones to a whole school; sold 100,000+ first-generation units. But dumbphones fell from 16% to 11% of phones, so the wave is levelling off (<a href="https://www.fastcompany.com/91549434/is-the-light-phone-getting-too-smart">Fast Company</a>).</td><td>Lend a free "reading year" to twelve people before launch and ask them to write about it. Offer one school or library a free pilot.</td></tr>
+<tr><td>Independent bookshops</td><td>Staff picks, book clubs, gift cards.</td><td>A signed "what I read to wind down" column on the website; book-club reading lists as feeds; gift years.</td></tr>
+<tr><td>Libraries (Libby)</td><td>Reach readers through the library card.</td><td>Free accounts for librarians and a printed one-page "how to read the open web" handout for patrons. Librarians are reading's evangelists.</td></tr>
+<tr><td>Calm and Headspace</td><td>Teacher programmes, gift cards, workplace wellbeing.</td><td>Free for teachers and librarians on request. A one-page letter people can send their employer to expense nine turtles as a focus or learning tool.</td></tr>
+<tr><td>Patagonia, "Don't buy this jacket"</td><td>Anti-marketing that's on-brand.</td><td>A "Who shouldn't buy nine turtles" page. It builds trust and reduces refunds.</td></tr>
+<tr><td>Field Notes</td><td>A side project that became a cult object, with seasonal editions.</td><td>A yearly dated "edition" with a short essay and one new reading theme. A ritual, never scarcity.</td></tr>
+<tr><td>Pinboard</td><td>Paid-only to stay small; honest prices; tiny annual fee.</td><td>Annual first, honest page, raise prices slowly and keep early readers on their price.</td></tr>
+<tr><td>Plausible and Fathom</td><td>Privacy as the position, open source, no ads.</td><td>"No tracking, here's the code that proves it."</td></tr>
+<tr><td>Kagi</td><td>A paid product plus a free public good (Small Web).</td><td>A free, public "nine of the week" page: nine human-picked posts, published as a feed.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="rohit">
+<h2><span class="n">Area 7</span>rohit.onl, and you as the founder</h2>
+<p>rohit.onl today: a warm, text-first personal blog by a 29-year-old writer and content marketer from Mandi Dabwali in Haryana. It runs on Eleventy (like nineturtles.app), has a full-text feed, a /now page (reading <em>Indistractable</em>), a /uses page and 16 posts, the latest from March 2026. Several posts already speak straight to your ideal reader: "What it means to read a book", "Two teaspoons of information, please", "AI is killing the open web. Who can stop it?", "100 books I want to re-read all my life". It never mentions nine turtles.</p>
+<p><strong>The asset most founders don't have:</strong> you write for a living. "A professional writer built the reader he wanted" is a better founder story than "AI built an app", and it makes a no-hype marketing voice believable.</p>
+
+<div class="ideas">
+<article class="idea"><h4>The flagship essay</h4><div class="tags"><span class="pill hi">Top pick</span><span class="pill">Effort M</span></div><dl>
+<dt>What</dt><dd>A long, honest post: why you wanted a book instead of a feed; how a writer who doesn't read code directed AI agents; the specs, the rules, what broke, what it costs; and what you think about the open web. Lead with the feeling, not the AI.</dd>
+<dt>Why</dt><dd>"Non-programmer builds app with AI" is now a crowded genre. What's rare is the proof: a paid, accessible product with public decision records, backups and design rules. That's what Hacker News, newsletters and podcasts will pick up. Herman's Bear Blog started as a weekend project that "just happened to explode on Hacker News".</dd>
+<dt>Risk</dt><dd>Some readers of your own "AI is killing the open web" post may bristle at an AI-built tool. Address it head-on in the essay.</dd>
+<dt>Payoff</dt><dd>The highest of any single item.</dd>
+</dl></article>
+
+<article class="idea"><h4>Five-minute changes</h4><div class="tags"><span class="pill">Effort S</span></div><dl>
+<dt>What</dt><dd>A line in your footer or colophon, on /now and /uses, and a paragraph on /about. A /blogroll page with your real reading list as a download (never committed to the code repository).</dd>
+<dt>Why</dt><dd>Free, permanent, honest links from a site with history.</dd>
+</dl></article>
+
+<article class="idea"><h4>A monthly build letter and an /open page</h4><div class="tags"><span class="pill">Effort S, monthly</span></div><dl>
+<dt>What</dt><dd>One post a month drawn from the project's change notes, plus a page with real running costs on free tiers, and later readers and revenue.</dd>
+<dt>Why</dt><dd>Copy the transparency of Pieter Levels and Marc Lou, not their channel. Their buyers are makers on X; yours are readers. Calm, quarterly-feeling honesty fits better than daily posting. A series you abandon hurts more than one you never start, so pick a rhythm you can keep.</dd>
+</dl></article>
+
+<article class="idea"><h4>Directories for the person, not the product</h4><div class="tags"><span class="pill">Effort S</span></div><dl>
+<dt>What</dt><dd>Submit rohit.onl to blogroll.org, Kagi Small Web, ooh.directory, the 512kb Club and IndieWeb webrings.</dd>
+<dt>Why</dt><dd>These accept personal blogs, not products, so this is honest. They put you inside the small-web community your readers trust.</dd>
+<dt>Sources</dt><dd class="src"><a href="https://blogroll.org/submit-a-blog">blogroll.org</a>, <a href="https://github.com/kagisearch/smallweb">Kagi Small Web</a></dd>
+</dl></article>
+
+<article class="idea"><h4>Publish once, share everywhere</h4><div class="tags"><span class="pill">Effort S</span></div><dl>
+<dt>What</dt><dd>Write on rohit.onl first; share a link and one line on LinkedIn, Bluesky and Mastodon. Hacker News once, for the flagship essay or a Show HN. Skip X for this audience.</dd>
+<dt>Pitch list</dt><dd>Lenny's "How I AI", Every, Indie Hackers, YourStory in India, and two or three feed-reader bloggers by personal email. Lead every pitch with the repository link as proof.</dd>
+</dl></article>
+</div>
+</section>
+
+<section id="distribution">
+<h2><span class="n">Area 8</span>Other channels and the business model</h2>
+<div class="ideas">
+<article class="idea"><h4>Show HN with a demo you can try without signing up</h4><div class="tags"><span class="pill hi">Top pick</span><span class="pill">Effort M</span></div><dl>
+<dt>What</dt><dd>A read-only demo with a sample library (with writers' permission) so anyone can feel the ending in ten seconds. Then Show HN, with the build story.</dd>
+<dt>Why</dt><dd>Hacker News readers don't sign up to look. Plausible's "stop using Google Analytics" post reached the front page and "changed traction". But small Show HN launches we found brought 100 to 500 visits and almost no paying customers, so treat it as a source of attention and links, not revenue. Product Hunt is worth one day but matters less in 2026, and bans company accounts.</dd>
+</dl></article>
+
+<article class="idea"><h4>A $500 newsletter test</h4><div class="tags"><span class="pill">Effort S</span><span class="pill new">Unproven</span></div><dl>
+<dt>What</dt><dd>Four to eight classified-style mentions in small slow-living and reading newsletters at about $50 to $150 each, each with its own plain link (for example /from/slowfolk) and no tracking.</dd>
+<dt>Why</dt><dd>It shows which small communities convert. Big lists are out of reach (The Daily Good charges $1,500 to $3,500). The best verified fit: Dense Discovery, about 38,000 design-minded readers, classified ads from $89 (next slots January 2027). Reletter lists many smaller ones. Even better: swap a free year for a mention.</dd>
+<dt>Sources</dt><dd class="src"><a href="https://www.thegoodtrade.com/newsletter-sponsorship/">The Good Trade rates</a>, <a href="https://reletter.com/publications/calmfeed">Reletter</a>, <a href="https://jamesclear.com/sponsor">James Clear sponsor page</a> (likely too big for now)</dd>
+</dl></article>
+
+<article class="idea"><h4>Free listings that last</h4><div class="tags"><span class="pill">Effort S</span></div><dl>
+<dt>What</dt><dd>AlternativeTo, SaaSHub, Slant, Peerlist, Indie Hackers product page, the GitHub lists. About 15 relevant ones, not a 100-directory spam sweep.</dd>
+<dt>Optional</dt><dd>A Microsoft Store listing through PWABuilder is cheap. Skip the Apple App Store for now: store search is dominated by Reeder, NetNewsWire and Feedly, and this audience finds tools through people. Being a sync option inside those apps is the better route.</dd>
+</dl></article>
+
+<article class="idea"><h4>Referral that fits a calm app</h4><div class="tags"><span class="pill">Effort S–M</span><span class="pill">decision</span></div><dl>
+<dt>What</dt><dd>"Give a month, get a month", shown once, quietly, in settings. Check whether Dodo offers discount codes or an affiliate feature before building anything.</dd>
+<dt>Why</dt><dd>Readers recommend reading tools to friends. No leaderboards, no nagging.</dd>
+</dl></article>
+</div>
+<p><strong>Business-model view:</strong> no product in this niche is venture-scale, but several are durable one-to-three-person businesses that have lasted a decade (Feedbin, NewsBlur, BazQux). That's the right ambition: small, paid, low-cost, slow to churn. Annual billing is the main churn lever. Raise prices slowly and keep early readers on theirs.</p>
+</section>
+
+<section id="mine">
+<h2><span class="n">Area 9</span>Ideas of our own</h2>
+<p>Ideas we didn't find anyone else doing, or not in this way. All untested. Some need product changes and your decision. Hundreds more, including Derek Sivers-inspired ones, are in the <a href="https://claude.ai/artifact/NXJdVoVYNtGnBLUntK9dXL">idea bank</a>.</p>
+<div class="ideas">
+<article class="idea"><h4>Speak Feedbin's language: the calm home base for every Apple reader app</h4><div class="tags"><span class="pill new">New</span><span class="pill">Effort L</span><span class="pill">decision</span></div><dl>
+<dt>What</dt><dd>nine turtles already syncs with Reeder and NetNewsWire through the old Google Reader method. Feedbin's own sync method is supported by even more apps, including Current (which also syncs with Miniflux and Feedly). If nine turtles also spoke one of these, every Current user who wants web and Windows access, and every Reeder or Unread user who wants a calmer home, could pick nine turtles as their sync service. Then ask each app's developer to list nine turtles by name.</dd>
+<dt>Why</dt><dd>It's exactly how Feedbin grew: a named slot inside apps people already love. Current's users are your users, minus a web version.</dd>
+<dt>Check first</dt><dd>Whether those apps accept a custom server address for Feedbin-style sync, and whether copying an API this way is welcome. Ask Feedbin's founder; he's open-source friendly.</dd>
+<dt>Payoff</dt><dd>High if it lands; a permanent side door.</dd>
+</dl></article>
+
+<article class="idea"><h4>"See your blog as a book"</h4><div class="tags"><span class="pill new">New</span><span class="pill">Effort M</span></div><dl>
+<dt>What</dt><dd>A free page where a blogger pastes their site and sees their latest post set in nine turtles' type, by day and by night, with a shareable image of their own words looking beautiful.</dd>
+<dt>Why</dt><dd>Writers love seeing their work treated well, and they share it. Their readers see nine turtles. It only shows the writer's own feed, at their request, so it respects the floors. It doubles as the feed health check.</dd>
+<dt>Payoff</dt><dd>Medium-high; the one share loop that fits a calm product.</dd>
+</dl></article>
+
+<article class="idea"><h4>"Follow instead of unsubscribing", a pitch to newsletter writers</h4><div class="tags"><span class="pill new">New</span><span class="pill">Effort S</span></div><dl>
+<dt>What</dt><dd>Writers lose readers every time inbox fatigue hits. Offer them one line for their footer: "Too much email? Read this in a quiet reader instead", linking to their feed in nine turtles.</dd>
+<dt>Why</dt><dd>It solves the writer's problem (unsubscribes) and the reader's (inbox clutter) at once, so writers have a reason to promote it. Pairs with the newsletter feature.</dd>
+</dl></article>
+
+<article class="idea"><h4>The Quiet Edition</h4><div class="tags"><span class="pill new">New</span><span class="pill">Effort M–L</span><span class="pill">decision</span></div><dl>
+<dt>What</dt><dd>Once a week, a reader can download their finite list as a typeset EPUB or PDF for a Kindle, Kobo or paper, with every writer credited and linked. Feeds that only offer a summary contribute only the summary.</dd>
+<dt>Why</dt><dd>The most literal "book, not feed" feature imaginable, and a press-ready picture. E-ink owners already chose calm reading: r/kobo, r/eink and r/RemarkableTablet each have over 100,000 members. Pocket's Kobo link died in 2025 and Instapaper put Send-to-Kindle behind its paid plan in 2026, so the gap is real right now.</dd>
+</dl></article>
+
+<article class="idea"><h4>A directory of software that respects you</h4><div class="tags"><span class="pill new">New</span><span class="pill">Effort M</span></div><dl>
+<dt>What</dt><dd>A simple, curated page of paid, private, calm tools: Kagi, Fastmail, Buttondown, Plausible, Ente, Bear Blog and others, with nine turtles as one entry.</dd>
+<dt>Why</dt><dd>Listed companies tend to link and share; the page ranks for "privacy-friendly alternatives"; and it places nine turtles in a family your reader already trusts. Keep it small and honest, with dates.</dd>
+</dl></article>
+
+<article class="idea"><h4>Indian-language blogs</h4><div class="tags"><span class="pill new">New</span><span class="pill">Effort L</span></div><dl>
+<dt>What</dt><dd>Small, hand-checked lists of good blogs and newsletters in Hindi, Tamil, Marathi, Bengali, Malayalam and Urdu, plus a page in Hindi about reading the web calmly.</dd>
+<dt>Why</dt><dd>Nobody markets feed reading in Indian languages. nine turtles reads articles in any language, and you're in India. A niche you can own outright. Needs native-speaker help.</dd>
+</dl></article>
+
+<article class="idea"><h4>The "finished" screen as the share moment</h4><div class="tags"><span class="pill new">New</span><span class="pill">Effort S</span></div><dl>
+<dt>What</dt><dd>Make the end-of-list screen quietly beautiful, the screenshot people post when they've had a good morning. No streaks, no counts, no share button.</dd>
+<dt>Why</dt><dd>It's the one viral moment a calm app can honestly have, and it shows the position in a single image.</dd>
+</dl></article>
+
+<article class="idea"><h4>Lottery tickets with near-zero cost</h4><div class="tags"><span class="pill new">New</span><span class="pill">Effort S</span></div><dl>
+<dt>What</dt><dd>Send a listener question about calm feed reading to Cal Newport's <em>Deep Questions</em> podcast, which answers listener questions about technology and attention. Write to the "Stop Doom Scrolling with RSS" library about their next event. Offer a free year to the authors of the two blog posts quoted most above.</dd>
+<dt>Why</dt><dd>Any one of these could put nine turtles in front of thousands of exactly the right people, for the price of an email.</dd>
+</dl></article>
+</div>
+</section>
+
+<section id="avoid">
+<h2><span class="n">Guardrails</span>What not to do</h2>
+<ul class="plain">
+  <li><strong>"Powered by" footers on anything readers share.</strong> They break respect for the publisher.</li>
+  <li><strong>A scraping "feed for any site" tool.</strong> Big traffic for others, a broken floor for you.</li>
+  <li><strong>Hundreds of auto-generated pages.</strong> Google is explicitly hostile to it, and trust is site-wide.</li>
+  <li><strong>Lifetime deals.</strong> Ongoing costs, heaviest support users, capped revenue. Use the founding price lock instead.</li>
+  <li><strong>Exclusive waitlists, countdowns, "only 3 spots left".</strong> The marketing must feel like the app.</li>
+  <li><strong>Fake reviews, invented dates, Reddit sock puppets.</strong> They'd also poison the AI flywheel when found.</li>
+  <li><strong>Leaning on donations.</strong> Bear Blog's founder: "99.9% of people will not contribute to anything they can receive for free."</li>
+  <li><strong>Paid AI-visibility tools and paid ads,</strong> for now.</li>
+  <li><strong>Betting on the dumbphone wave alone.</strong> It's levelling off.</li>
+  <li><strong>A weekly "you have N unread" email.</strong> One researcher suggested it against churn; it's a notification in disguise, so it's out.</li>
+</ul>
+</section>
+
+<section id="plan">
+<h2><span class="n">Sequence</span>The first 90 days</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>When</th><th>Do</th></tr></thead>
+<tbody>
+<tr><td class="num">This week</td><td>Agree the position and price. "Reddit is ending RSS" page before 13 November. Search Console, Bing, robots file, "don't index" on the app.</td></tr>
+<tr><td class="num">Weeks 1–2</td><td>Home page rewrite. Trust pages: closing promise, founder letter, never list, refund, changelog feed. Facts page. Five-minute changes on rohit.onl. Monthly AI question check begins.</td></tr>
+<tr><td class="num">Weeks 2–4</td><td>Feed finder and YouTube-to-feed tool. Newsletter guide. Comparison pages for Feedly, Inoreader, Feedbin and Current. AlternativeTo and about 15 listings.</td></tr>
+<tr><td class="num">Weeks 4–6</td><td>Flagship essay. ~30 personal notes to list authors. Notes to Bear, Micro.blog, Buttondown, omg.lol, Ghost, Kagi.</td></tr>
+<tr><td class="num">Weeks 6–8</td><td>Export tidy-up and blogroll maker. "See your blog as a book". Ask about Feedbin-style sync.</td></tr>
+<tr><td class="num">Weeks 8–12</td><td>Payments live, sign-up open, Show HN with demo, founding-100 welcome notes and postcards. Gift year ready for December. $500 newsletter test. First interview.</td></tr>
+<tr><td class="num">Day 90</td><td>Look at what actually brought readers ("how did you hear?", plain links, Search Console). Keep what worked, drop what didn't.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="round4">
+<h2><span class="n">Fourth round</span>What the numbers say</h2>
+<p>A last round looked for hard numbers from businesses like this one, the Indian market, e-readers and newsletters.</p>
+<div class="ideas">
+<article class="idea"><h4>Small, paid and flat is a fine business</h4><div class="tags"><span class="pill hi">Checked</span></div><dl>
+<dt>Pinboard</dt><dd>Grew from 2,800 to 16,000 active users in its first two years, then stayed between 23,000 and 29,000 for six years, with revenue rising to about 259,000 a year. Its founder called it a "steady state": as many join as leave each month (<a href="https://blog.pinboard.in/2017/07/eight_years_of_victory/">Pinboard</a>).</dd>
+<dt>Kagi</dt><dd>50,000 paying members by June 2025, more than double January 2024, credited to word of mouth (<a href="https://blog.kagi.com/50k">Kagi</a>).</dd>
+<dt>Plausible</dt><dd>From $400 to $188,000 a month in three years, churn just under 2% a month, almost all from word of mouth and writing about twice a week (<a href="https://www.indiehackers.com/post/from-400-mo-to-188-000-mo-in-3-years-marko-saric-of-plausible-tells-us-how-he-did-it-SqKJHAGgPOdpFsplEbhk">Indie Hackers</a>).</dd>
+<dt>Craig Mod</dt><dd>"Thousands" of paying members at $100 a year for a writer's membership, helped by plain public asks such as "I'd like 100 new members" (<a href="https://craigmod.com/membership/">craigmod.com</a>). A model for asking your own readers directly.</dd>
+<dt>NewsBlur</dt><dd>About 8,000 premium subscribers at $36 a year, run by one person (forum, undated).</dd>
+</dl></article>
+
+<article class="idea"><h4>India: big, but the news sources are thin</h4><div class="tags"><span class="pill">Mixed</span></div><dl>
+<dt>Exam aspirants</dt><dd>About 13 lakh people apply for the civil services exam each year, and they read The Hindu and The Indian Express daily. But PIB's feed carries only headlines, and The Hindu's feeds carry one-line summaries, so a nine turtles news desk would mostly send readers to the publisher's site. Interesting, but weaker than it looked; keep it as a later experiment.</dd>
+<dt>Silent reading</dt><dd>Cubbon Reads, a silent reading meet-up in Bengaluru's Cubbon Park, draws 300+ people and inspired about 60 chapters worldwide (<a href="https://homegrown.co.in/homegrown-voices/how-a-bangalore-silent-reading-club-inspired-60-chapters-of-its-kind-across-the-world">Homegrown</a>). India's own version of Silent Book Club, and a natural first partner at home.</dd>
+<dt>Readers online</dt><dd>r/Indianbooks has about 441,000 members. 98% of India's 886 million internet users use content in Indian languages (<a href="https://www.theweek.in/wire-updates/business/2025/01/16/dcm51-biz-iamai-internet-usage-report.html">IAMAI via The Week</a>), but we found almost no Hindi blogs with feeds yet.</dd>
+<dt>Paying</dt><dd>About 1 in 7 Indian news readers say they'd pay for online news (Google and Kantar). Kindle Unlimited launched in India at ₹199 a month. A low-hundreds-of-rupees monthly price is a judgement, not a sourced figure.</dd>
+</dl></article>
+
+<article class="idea"><h4>E-readers: a real, under-served opening</h4><div class="tags"><span class="pill hi">Checked</span></div><dl>
+<dt>Communities</dt><dd>r/kobo about 134,000 members, r/RemarkableTablet about 103,000, r/eink about 101,000, r/Onyx_Boox about 70,000 and growing 37% a year.</dd>
+<dt>The gap</dt><dd>Pocket's Kobo integration died with Pocket in July 2025. Instapaper made Send-to-Kindle paid-only in February 2026, saying building the e-book files is "fairly resource intensive". People on Hacker News say "I wish there was a native RSS reader on kindle" and "practically none of these projects are adapted to this type of screen."</dd>
+<dt>For nine turtles</dt><dd>A weekly EPUB edition (not PDF) is the right shape. Kindles can receive it by email; Kobos can't, and Kobo's browser can't run the web app, so plan for a download. It costs some server work, so it suits the paid plan.</dd>
+</dl></article>
+
+<article class="idea"><h4>Newsletters: the pain is concentrated</h4><div class="tags"><span class="pill hi">Checked</span></div><dl>
+<dt>Pew, 2026</dt><dd>30% of US adults get news from newsletters. Most subscribe to fewer than five, and 62% don't read most of what they receive. Only 7% paid for one in the past year.</dd>
+<dt>Meaning</dt><dd>Overload is a heavy-subscriber problem, which is exactly the reading-lover your ideal reader describes. Speak to people with ten or more newsletters, not to everyone with an inbox.</dd>
+<dt>Rivals</dt><dd>Kill the Newsletter (free, active), Meco ($35 to $40 a year), Mailbrew (acquired in 2025, $59 a year), Feedbin and Readwise. A private address that becomes a feed is now standard; calm and finite is the difference.</dd>
+</dl></article>
+</div>
+<p class="meta">Also checked for the idea bank: Derek Sivers' CD Baby email (he says it "created thousands of new customers"), about 4,000 /now pages on nownownow.com, Sanderson's $41.7M Kickstarter, Tarsnap's picodollar pricing, Sublime Text's unlimited trial, MetaFilter's $5 sign-up and Aza Raskin's "behavioral cocaine" quote. Notes 17 to 19 are in the project files.</p>
+</section>
+
+<section id="yours">
+<h2><span class="n">Your part</span>Research only you can do</h2>
+<p>These need your accounts, your voice, your money or your judgement. Each is small. Ranked by how much it would change the advice.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>#</th><th>What</th><th>Why we can't</th><th>Time</th></tr></thead>
+<tbody>
+<tr><td class="num">1</td><td><strong>Talk to five to ten people who fit the ideal reader.</strong> Ask how they read now, what they gave up, what they pay for, and whether "a reader that ends" makes them lean in. Read them the four home-page lines and note which one they repeat back.</td><td>Needs real people and your voice. Nothing else tells you if the position lands.</td><td>A few calls or chats</td></tr>
+<tr><td class="num">2</td><td><strong>Read Reddit.</strong> r/rss, r/digitalminimalism, r/nosurf, r/productivity: search "RSS reader", "newsletters", "Pocket", "Feedly". Save the ten threads with the most feeling in them.</td><td>Reddit blocked our researchers completely.</td><td>An hour</td></tr>
+<tr><td class="num">3</td><td><strong>Ask the AI assistants yourself.</strong> Ask ChatGPT, Perplexity, Gemini and Claude "what's a calm RSS reader?" and "how do I read newsletters outside my inbox?" in your own accounts. Note who gets named and which pages are cited.</td><td>We can't sign into those apps as you, and answers differ by account and country.</td><td>20 minutes, monthly</td></tr>
+<tr><td class="num">4</td><td><strong>Check what Dodo can do:</strong> discount codes, regional prices, gift purchases, affiliates, the fee per charge. Look in the dashboard or ask their support.</td><td>Dodo's pages wouldn't open for us, and features can depend on your account.</td><td>30 minutes</td></tr>
+<tr><td class="num">5</td><td><strong>Ask an accountant about tax</strong> on selling software abroad from India (GST on exports, whether you need an LUT, income tax on foreign earnings through a merchant of record).</td><td>Needs a professional who knows your situation.</td><td>One meeting</td></tr>
+<tr><td class="num">6</td><td><strong>Check the name.</strong> A quick trademark search for "nine turtles" in India, the US and the EU, before you print anything.</td><td>Legal judgement; databases need careful reading.</td><td>An hour, or a lawyer</td></tr>
+<tr><td class="num">7</td><td><strong>Search data from Google and Bing.</strong> Set up Search Console and Bing Webmaster Tools (we can prepare the files). After four to eight weeks they show real searches.</td><td>Needs your Google and Microsoft accounts.</td><td>15 minutes, then wait</td></tr>
+<tr><td class="num">8</td><td><strong>Ask a few app makers one question:</strong> would Reeder, NetNewsWire, Current or Unread let readers pick nine turtles as their sync service? And ask Ben Ubois (Feedbin) how he'd feel about a Feedbin-compatible service.</td><td>Needs a personal note from the founder.</td><td>Four short emails</td></tr>
+<tr><td class="num">9</td><td><strong>Ask three small newsletters for their sponsorship rates.</strong></td><td>Most only share prices by email.</td><td>Three emails</td></tr>
+<tr><td class="num">10</td><td><strong>Decide what you're comfortable sharing.</strong> Your face, your town, your revenue, the AI story. Several ideas depend on it.</td><td>Only you can decide.</td><td>A think</td></tr>
+<tr><td class="num">11</td><td><strong>List who you already know</strong>: writers, newsletter people, podcast hosts, anyone in the Newport and Clear world. A warm introduction beats any cold note.</td><td>We can't see your contacts.</td><td>30 minutes</td></tr>
+<tr><td class="num">12</td><td><strong>Look where only signed-in people can:</strong> X, LinkedIn, Facebook groups, the Readwise and Obsidian Discords, for how people talk about reading and feeds.</td><td>Needs logins.</td><td>Optional</td></tr>
+</tbody></table></div>
+
+<h3>Things we're not sure about</h3>
+<ul class="plain">
+  <li><strong>Whether "finished" beats "calm" or "quiet" with real people.</strong> It's reasoning, not evidence, until #1 above is done.</li>
+  <li><strong>Whether the AI-built story helps or hurts.</strong> Some readers will love it; some who share your worry about AI and the open web may not. The essay has to meet that head-on.</li>
+  <li><strong>How many people a Show HN or a list mention really brings.</strong> Past examples range from a handful to thousands.</li>
+  <li><strong>The AI-citation numbers.</strong> Most studies come from companies selling AI-visibility tools.</li>
+  <li><strong>Whether Current ships a web or Android version.</strong> It's "planned" and the app is actively updated, so the gap may close. Compete on finishing, not just platforms.</li>
+  <li><strong>Reeder's exact price</strong> (sources differ). Feedbin, Inoreader, Readwise, NewsBlur and Dodo's fees were checked on 25 October.</li>
+  <li><strong>Whether a quiet India price invites misuse,</strong> such as people abroad paying the Indian price. It depends on what Dodo can check.</li>
+  <li><strong>Whether an exam-aspirant news desk is worth it.</strong> The audience is huge, but the key sources publish only headlines or summaries, and the mood differs from the Newport reader. A later experiment at most.</li>
+</ul>
+<p class="meta">More research rounds are running about an hour apart while the web limit refills. This page will update after each one.</p>
+</section>
+
+<section id="limits">
+<h2><span class="n">Honesty</span>How sure is this?</h2>
+<div class="note"><strong>Read numbers as direction, not fact.</strong> The eight research strands ran into a shared limit on how many web pages could be opened per hour, and Reddit blocked page reads entirely. Facts the researchers read on the page are linked. A second round on 25 October checked the biggest claims against primary sources: the Reddit dates, Current, Feedly, Dodo's fees and features, rival prices, RevenueCat's trial data and the search studies, and corrected several (Feedbin is $70 a year, not $50; Current is still updating; Dodo costs more for readers abroad). Still unchecked: small-newsletter sponsorship rates, and whether apps like Current accept a custom Feedbin-style server. Studies of AI citations come mostly from companies selling AI-visibility tools.</div>
+<p>The full working notes from each strand (about 29,000 words, with every source) are saved in the project files under <code>marketing/research-2026-10/</code>, with a summary in <code>marketing/business-research.md</code>.</p>
+</section>
+
+<footer class="meta">
+  <p>Prepared for Rohit, 25 October 2026. Research only: nothing in the app or website was changed.</p>
+</footer>
+</main>
+</div>
