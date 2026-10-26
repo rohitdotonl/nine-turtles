@@ -623,6 +623,15 @@ pub async fn owner_password_follows_setting(
         .bind(OWNER)
         .execute(&mut *transaction)
         .await?;
+    // A password link or sign-in link sent before stops working too, so
+    // nobody who reached the owner's email can come back in with it.
+    sqlx::query(
+        "UPDATE email_links SET used = 1
+         WHERE person_id = ? AND purpose IN ('reset', 'sign-in')",
+    )
+    .bind(OWNER)
+    .execute(&mut *transaction)
+    .await?;
     transaction.commit().await?;
     log::info(
         "NINE_TURTLES_PASSWORD_HASH has changed, so it's the owner's password again; \

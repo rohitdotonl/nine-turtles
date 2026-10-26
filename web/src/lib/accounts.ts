@@ -1,5 +1,6 @@
 // What email makes possible for a reader's account (SPEC sections 1 and 18,
-// decision 0088): "Forgot your password?", the page a password link opens,
+// decisions 0088 and 0095): "Forgot your password?", the page a password link
+// opens, "Email me a sign-in link" and the page that link opens,
 // the page a confirmation link opens (a new account's address, or a changed
 // one), changing one's email in Settings, and deleting one's account.
 // Every link carries a ticket after the # in its address (#ticket=…), the part
@@ -10,9 +11,10 @@ import { PASSWORD_MINIMUM, errorOf, isRecord } from "./readers";
 import { duration } from "./session";
 import { api } from "./updates.svelte";
 
-/** The two pages an emailed link opens. */
+/** The pages an emailed link opens. */
 export const RESET_PAGE = "/reset-password";
 export const CONFIRM_PAGE = "/confirm-email";
+export const SIGN_IN_LINK_PAGE = "/sign-in-link";
 
 /** The ticket after the # in a link's address, or "" if there's none. */
 export function ticketFrom(hash: string): string {
@@ -34,29 +36,45 @@ async function send(path: string, body: unknown): Promise<Response | undefined> 
 /** After a link is sent, "Send again" waits this long; the server sends one link of a kind a minute anyway. */
 export const RESEND_AFTER_SECONDS = 60;
 
-export type ForgotResult = "asked" | "email" | "no-email" | "unreachable";
+/** What the sign-in page can ask to be emailed: a link that signs in, or one to choose a new password. */
+export type LinkKind = "sign-in" | "password";
 
-/** Asks for a password link. The server answers the same whether or not the address has an account. */
-export async function forgotPassword(email: string): Promise<ForgotResult> {
-  const response = await send("/api/password/forgot", { email: email.trim() });
+export type AskResult = "asked" | "email" | "no-email" | "unreachable";
+
+/** Asks for a link. The server answers the same whether or not the address has an account. */
+export async function askForLink(kind: LinkKind, email: string): Promise<AskResult> {
+  const path = kind === "sign-in" ? "/api/sign-in/link" : "/api/password/forgot";
+  const response = await send(path, { email: email.trim() });
   if (!response) return "unreachable";
   if (response.ok) return "asked";
   const error = await errorOf(response);
   return error === "email" || error === "no-email" ? error : "unreachable";
 }
 
-/** The one answer "Forgot your password?" gives, whoever asks (shown under "Check your email"). */
-export function explainForgot(result: ForgotResult, email: string): string {
+/** The one answer asking for a link gives, whoever asks (shown under "Check your email"). */
+export function explainAsked(kind: LinkKind, result: AskResult, email: string): string {
   switch (result) {
     case "asked":
-      return `If ${email.trim()} has an account here, a link to choose a new password is on its way. It works for an hour.`;
+      return kind === "sign-in"
+        ? `If ${email.trim()} has an account here, a link to sign in is on its way. It works once, for 15 minutes.`
+        : `If ${email.trim()} has an account here, a link to choose a new password is on its way. It works for an hour.`;
     case "email":
       return "That doesn't look like an email address.";
     case "no-email":
-      return "This nine turtles can't send email yet. Ask whoever runs it to set a new password for you.";
+      return kind === "sign-in"
+        ? "This nine turtles can't send email yet. Sign in with your password."
+        : "This nine turtles can't send email yet. Ask whoever runs it to set a new password for you.";
     case "unreachable":
       return "nine turtles can't be reached right now. Try again in a moment.";
   }
+}
+
+/** Signs this device in from a sign-in link. */
+export async function signInByLink(ticket: string): Promise<"ok" | "expired" | "unreachable"> {
+  const response = await send("/api/sign-in/link/use", { ticket });
+  if (!response) return "unreachable";
+  if (response.ok) return "ok";
+  return (await errorOf(response)) === "expired" ? "expired" : "unreachable";
 }
 
 export type LinkResult = "ok" | "expired" | "already" | "too-many" | "password-short" | "password-long" | "unreachable";
@@ -95,12 +113,12 @@ export async function confirmEmail(ticket: string): Promise<Confirmed | Exclude<
 }
 
 /** What a link's page says when it didn't work. Plain and calm. */
-export function explainLink(result: Exclude<LinkResult, "ok">, page: "reset" | "confirm"): string {
+export function explainLink(result: Exclude<LinkResult, "ok">, page: "reset" | "confirm" | "sign-in"): string {
   switch (result) {
     case "expired":
-      return page === "reset"
-        ? "This link has expired or was already used. Ask for a new one from the sign-in page."
-        : "This link has expired or was already used. Sign in, or sign up again for a new link.";
+      return page === "confirm"
+        ? "This link has expired or was already used. Sign in, or sign up again for a new link."
+        : "This link has expired or was already used. Ask for a new one from the sign-in page.";
     case "already":
       return "That email already has an account. Sign in instead.";
     case "too-many":
