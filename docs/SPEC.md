@@ -222,7 +222,7 @@ A few words used throughout:
 - Undo reverses **the last action only**, of these: mark all as read, catch me up, mark unread, star/unstar, unsubscribe, delete folder.
 - Read state is recorded in both reading modes, so switching modes never loses it.
 - Each feed's unread number in the sidebar changes at the same moment.
-- If nine turtles can't be reached when a mark is made (the connection dropped, or a new version is going live and the server is restarting), it quietly tries again for about a minute, so a short gap loses nothing and says nothing. With no connection at all, the mark waits on the device and is sent once the connection is back, the latest mark winning (section 31).
+- If nine turtles can't be reached when a mark is made (the connection dropped, or a new version is going live and the server is restarting), it quietly tries again for about a minute, so a short gap loses nothing and says nothing. With no connection at all, the mark waits on the device and is sent once the connection is back, the latest mark winning (section 32).
 - If a mark still can't be saved, it's taken back and the note at the bottom of the list says so plainly, such as "The star couldn't be saved.", with a **Try again** button in the Undo's place. The message goes as soon as a later mark is saved (the connection is back), or when you press Try again. A failure never takes back a later action on the same article.
 
 **How to check it**
@@ -425,7 +425,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 - **Text size** is a stepper, as in Apple Books: one flat capsule on the same faint track as the segmented controls, a small A with a minus and a large A with a plus at its ends and the step's name between them, each part split from the next by a hairline and nothing raised, so it never reads as a choice with something chosen (decision 0055); one step each press, the name said aloud when it changes; at either end the A that can't go further fades to the muted grey. 44px tall to touch. It's the same control as in the Aa panel.
 - Sections appear once they have something to do: Reading (sort order) since Milestone 7 (and the reading mode since 25 October 2026), Your data with Milestone 9.
 - **Reading:** the reading mode, inbox or river (section 10); in inbox mode, **Unread counts** (Show or Hide: hidden, the sidebar shows no numbers, and Unread stays) and **Let unread go after** (Never, 1 week, 2 weeks or 1 month: older unread counts as read, section 8; decision 0097); then newest or oldest first. The line under the group says what each does. River mode has no Unread, so the two in-between rows step aside there.
-- **Your data:** first the **Keep articles for reading offline** switch (section 31, on by default, for this device only), then three rows that act: **Import OPML…** (opens the file chooser; it ends in ›), **Export OPML** and **Export starred articles** (each downloads a file; each ends in a download mark), in the text color. What the files are is said under the group; what an import did appears there too.
+- **Your data:** first the **Keep articles for reading offline** switch (section 32, on by default, for this device only), then four rows that act: **Import OPML…** and **Import starred articles…** (each opens the file chooser; each ends in ›), **Export OPML** and **Export starred articles** (each downloads a file; each ends in a download mark), in the text color. What the files are is said under the group; what an import did appears there too.
 - **Feeds:** **Your feeds ›** opens Your feeds, for tidying many feeds at once (section 15), and **Feed health ›** opens the feed health page (section 17).
 - **Feeds:** **Feed health ›** opens the feed health page (section 17).
 - **Rules:** the reader's rules, New rule… and Muted articles › (section 27).
@@ -508,7 +508,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 - Article toolbar at the bottom, within thumb reach and clear of the phone's home indicator, solid in the page's color with a faint line along its top so the text ends at an edge: five quiet icons without words, each a 44px tap with its name for screen readers: previous · next · Aa · star · More (…). The five always share the bar evenly: on the first article Previous (and on the last, Next) keeps its arrow in its place, faded, and does nothing; screen readers hear it as dimmed (decision 0047). More opens upwards with Share (or Copy link) and Mark unread. Aa opens the reading panel (section 7) as a sheet along the bottom of the screen. Article text reads a little smaller than on a wide screen, so a line keeps about 40 characters.
 - Every tap target is at least 44 pixels.
 - Can be added to the home screen on iPhone and Android; it then opens full-screen with its own icon: nine small turtles seen from the side, three rows of three with the middle row a little to the right, dark on white (decision 0067). The same turtles mark the browser tab, on white by day and on near-black by night.
-- Without a connection, the app still opens: signed in, with the articles kept on the device for reading offline (section 31); on a device that keeps none, it says plainly that nine turtles can't be reached. The service worker keeps a copy of the app itself and its fonts, never of your articles: those are the app's own copies.
+- Without a connection, the app still opens: signed in, with the articles kept on the device for reading offline (section 32); on a device that keeps none, it says plainly that nine turtles can't be reached. The service worker keeps a copy of the app itself and its fonts, never of your articles: those are the app's own copies.
 
 **How to check it**
 1. On your phone, open the app: you see your feeds. Tap a folder, a feed, an article; the back arrow says where it goes each time.
@@ -547,13 +547,15 @@ OPML is the standard file format feed readers use to move subscription lists bet
 - **The yearly clean-up** (decision 0089): an article you haven't starred is removed a year after nine turtles first received it, read or not. Starred articles stay forever. The year counts from when nine turtles received the article, not when it was published, so old posts from a blog you just added stay a year too. (If other readers already follow that blog, nine turtles received its posts when they did: you get those it still keeps, not ones it has already removed.) Another reader's star keeps an article for them, not for you. A removed article never comes back as new, even while its feed still lists it. The clean-up runs each night just after the backup is safely stored, never without one, so anything it removes is in that night's copy (kept up to a year). It happens quietly; the app shows nothing about it.
 - Unsubscribing removes that feed's articles and your read history for it (your starred articles stay in Starred); another reader following the same feed keeps it as it was. Undo brings them back only straight away; after your next action they're gone from the app, though the backups still hold them as they were at the last nightly copy.
 - Export of starred articles as a JSON Feed file (a standard, open format other feed tools can read), from Settings → Your data → **Export starred articles**. It holds every starred article, newest first, with its text, original link and the feed it came from, including starred articles of feeds you've since unsubscribed from.
+- **Import starred articles** (decision 0098), from Settings → Your data: brings your stars over from another feed reader. Choose the JSON file it exports starred (or "saved") articles in: Inoreader, Feedly, The Old Reader, FreshRSS, Feedbin and others that use the Google Reader format, or a JSON Feed file such as nine turtles' own starred export. Each article appears in Starred, read, with its text as the file has it (cleaned like any feed's), its original link and the feed it came from. An article nine turtles already has from a feed is starred as it is. A star whose feed you don't follow stays only in Starred (and search), with a link to the original; no feed is added to your sidebar and nothing is fetched for it. An article the file gives no link to the original for is left out. Importing only adds stars, so nothing needs undoing; importing the same file twice stars nothing new. Afterwards a plain summary says what happened, for example "Starred 120 articles. They're in Starred, each with a link to the original." At most 10,000 articles or 25 MB per file, and each reader keeps at most 10,000 imported articles (50 MB of their text) from all files together; a file that would go past that imports nothing and says so. A star whose file names its feed but not the feed's address keeps that feed's name; one that names no feed at all is credited to "Imported stars". Importing works after a free trial or plan has ended too, as starring does. Pocket isn't supported: it keeps whole web pages, not what a feed sent.
 - **Backups** (decision 0076): every night, nine turtles stores a complete copy of everything (feeds, folders, articles, read marks, stars, settings) in storage outside Render, and another just before any update changes the database's structure. It keeps the last 30 nights, one copy a month for a year, and the last 10 taken before an update. At worst a day of reading activity is lost. Bringing a copy back, or moving to another host, is a written, tested procedure (`docs/operations/backups.md`, `docs/operations/moving-hosts.md`). Backups happen quietly in the background; the app never shows or asks anything about them. Your OPML file and the starred export remain your own safety net too.
 
 **How to check it**
 1. Export your starred articles and open the file: they're all there.
 2. Export your OPML file now and then, and keep it somewhere safe.
-3. In the backup storage (Cloudflare R2), `nightly/` holds a copy from last night.
-4. A year after you start, articles you never starred from before then are gone, and your starred ones are all still in Starred.
+3. Export your starred articles from another feed reader (most offer it in their settings, near OPML export) and import the file: they appear in Starred, each with a link to the original, and your sidebar stays as it was.
+4. In the backup storage (Cloudflare R2), `nightly/` holds a copy from last night.
+5. A year after you start, articles you never starred from before then are gone, and your starred ones are all still in Starred.
 
 ## 24. Languages
 
@@ -689,11 +691,22 @@ A rule says "when a new article **matches this**, **do that**", in plain fields,
 - The page's own address carries what was asked (`?address=…`), so a lookup can be shared or reloaded. **Find feed**, a button to drag to the bookmarks bar, opens the finder with the page you're on (pressed on the finder's own page, it says how to keep it). Its address is shown too, with **Copy bookmark address**, for a bookmark made by hand without dragging.
 - Below: what it looks at, then "Paste the feed's address into any feed reader. In nine turtles it goes in Add feed," with a link to "New to feeds?". Linked from the website's footer and from "New to feeds?".
 
----
+## 31. Starter packs (on the website)
 
-## 31. Reading offline
+*Built 26 October 2026 (decision 0100), as an empty skeleton for the owner to fill. Pages at nineturtles.app/packs/, for anyone, with no account.*
 
-*Built 26 October 2026 (decision 0100): the lighter version the owner chose, words only.*
+- **Starter packs** (/packs/) lists the packs in order, each with its name and one line. Linked from the website's footer.
+- Each pack (/packs/think-more-deeply/ and so on) shows its name, its line, then its blogs: each blog's name linking to its own website, and one line, in the owner's words, on why it's worth reading. Under them, **Download this pack**: an OPML file with every blog's feed, for nine turtles (Settings → Your data → Import OPML…, where the blogs land in a folder named after the pack) or any other reader.
+- A pack with no blogs yet says "The blogs for this pack are still being chosen." and offers no download.
+- The first five: Think more deeply, Do focused work, Live slowly, Curious minds, and Newsletters, out of your inbox. How to fill one in: `website/src/packs/README.md`.
+
+**How to check it**
+1. Open nineturtles.app, and in the footer, Starter packs: five packs are listed.
+2. Open one: it says its blogs are still being chosen.
+
+## 32. Reading offline
+
+*Built 26 October 2026 (decision 0101): the lighter version the owner chose, words only.*
 
 **What's kept.** While nine turtles can be reached, each device quietly keeps a copy of the reader's **first 200 unread articles** (in their sort order; in river mode, the first 200 of All) and their **newest 200 starred articles**. Only the words: each image becomes a short line, "An image shows here when you're back online", and a YouTube article's player says "The video plays here when you're back online." For most readers that's a few megabytes. The copies are brought up to date when nine turtles opens, when the connection comes back, when it comes back into view after a while, and after Refresh, a few dozen at a time, a moment apart, so nothing waits for them. Nothing extra is fetched from publishers.
 
@@ -708,7 +721,7 @@ A rule says "when a new article **matches this**, **do that**", in plain fields,
 - Settings › Your data › **Keep articles for reading offline**, a switch, on by default on phones and computers alike. It's for that device only; switching it off deletes its copies at once, after sending any marks still waiting. Without a connection, Settings shows only this switch under its line.
 - **Signing out deletes the copies**, after sending any marks still waiting, as does being signed out any other way (an expired sign-in, a deleted account), so nothing is left on a shared computer.
 
-**How it works:** the copies live in the browser's own database for nine turtles (IndexedDB), in `web/src/lib/offline.ts`; the server gives up to 50 at once, words only, at `GET /api/articles/several?ids=…`. Each reader's entries remember when the read mark and the star were last set, and a late mark older than that changes nothing (ENGINEERING.md → "Data", decision 0100).
+**How it works:** the copies live in the browser's own database for nine turtles (IndexedDB), in `web/src/lib/offline.ts`; the server gives up to 50 at once, words only, at `GET /api/articles/several?ids=…`. Each reader's entries remember when the read mark and the star were last set, and a late mark older than that changes nothing (ENGINEERING.md → "Data", decision 0101).
 
 **How to check it**
 1. Open nine turtles online and wait a minute. Switch on airplane mode.

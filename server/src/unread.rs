@@ -57,7 +57,7 @@ pub fn waits_for(value: &str) -> Option<i64> {
 /// as it was). Uses the `entries_unread` index (tests/speed.rs checks this).
 /// Takes the reader, the time, and the reader again. Like every read mark,
 /// it records when it was made, so an older mark sent late from a device
-/// that was offline doesn't undo it (decision 0100).
+/// that was offline doesn't undo it (decision 0101).
 pub const LET_GO: &str =
     "UPDATE entries SET read = 1, read_marked_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
      WHERE person_id = ?1 AND read = 0 AND sort_at < ?2

@@ -11,7 +11,7 @@
 //! article changes nothing for another reader of the same feed, and an
 //! article the reader doesn't have is skipped.
 //!
-//! The latest mark wins (decision 0100): a read mark or a star made on a
+//! The latest mark wins (decision 0101): a read mark or a star made on a
 //! device without a connection arrives later, saying when it was made
 //! (`at`, milliseconds since 1970). If the same mark was set since, on
 //! another device, the late one changes nothing. A mark that doesn't say

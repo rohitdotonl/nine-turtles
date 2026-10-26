@@ -1415,7 +1415,7 @@ input {
 /* In the text color, except in Plain, whose links are the browser's own blue and purple (decision 0063). */
 /*
   In a copy kept for reading offline, each image is this short note instead
-  (SPEC section 31): its own quiet line in the interface font and the second
+  (SPEC section 32): its own quiet line in the interface font and the second
   ink, as the article's end note is, so it never reads as the author's words.
 */
 .article-text .offline-image {

@@ -6,7 +6,7 @@
   the signed-in screen. Until the server has answered, nothing is shown, so
   the reader never sees the wrong one. Without a connection, a device that
   keeps articles for reading offline opens the signed-in screen as it last
-  saw it (SPEC section 31); being signed out deletes those copies.
+  saw it (SPEC section 32); being signed out deletes those copies.
 -->
 <script lang="ts">
   import Shell from "./lib/Shell.svelte";

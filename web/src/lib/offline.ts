@@ -1,4 +1,4 @@
-// Reading offline (SPEC section 31, decision 0100). While nine turtles can be
+// Reading offline (SPEC section 32, decision 0101). While nine turtles can be
 // reached, it quietly keeps a copy of the reader's first 200 unread articles
 // (in their sort order; in river mode, the first 200 of All) and their newest
 // 200 starred ones on this device, words only: each image is a short note
@@ -6,7 +6,7 @@
 // Starred, All, feeds and folders list those copies, articles open from them,
 // and reading, marking and starring carry on. Those marks wait here and are
 // sent once the connection is back, each saying when it was made, so the
-// latest mark wins (decision 0100).
+// latest mark wins (decision 0101).
 //
 // The copies live in the browser's own database for this site (IndexedDB),
 // never in the tab's memory, and are fetched a few dozen at a time, a moment
@@ -14,7 +14,7 @@
 // deletes them, as does switching "Keep articles for reading offline" off in
 // Settings; both send any waiting marks first. It's on unless switched off,
 // on each device. (Marks still waiting when a sign-in has expired can't be
-// saved: the server would refuse them anyway. Decision 0100.)
+// saved: the server would refuse them anyway. Decision 0101.)
 
 import type { Article, FullArticle, Library, Order, Page, ReadingMode, Source } from "./feeds";
 

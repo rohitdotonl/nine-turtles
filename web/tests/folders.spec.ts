@@ -28,15 +28,16 @@ test.describe.configure({ mode: "serial" });
  * test browser's own "file chooser" event isn't used: under load, Chromium
  * sometimes doesn't show the chooser even though the field was clicked.
  */
-async function opensFilePicker(page: Page, act: () => Promise<void>): Promise<void> {
-  await page.locator('input[type="file"]').evaluate((input) => {
+async function opensFilePicker(page: Page, act: () => Promise<void>, accepts = "opml"): Promise<void> {
+  const field = page.locator(`input[type="file"][accept*="${accepts}"]`);
+  await field.evaluate((input) => {
     input.addEventListener("click", (event) => {
       event.preventDefault();
       input.dataset.opened = "yes";
     }, { once: true });
   });
   await act();
-  await expect(page.locator('input[type="file"]')).toHaveAttribute("data-opened", "yes");
+  await expect(field).toHaveAttribute("data-opened", "yes");
 }
 
 /** A name no other test uses. */
@@ -268,7 +269,7 @@ test("import an OPML file from Settings: a plain summary, folders in the sidebar
   // The button opens the device's file chooser; the file is then handed
   // over the way a chosen file is.
   await opensFilePicker(page, () => page.getByRole("button", { name: "Import OPML" }).click());
-  await page.locator('input[type="file"]').evaluate((input: HTMLInputElement, text) => {
+  await page.locator('input[type="file"][accept*="opml"]').evaluate((input: HTMLInputElement, text) => {
     const chosen = new DataTransfer();
     chosen.items.add(new File([text], "made-up.opml", { type: "text/x-opml" }));
     input.files = chosen.files;
@@ -292,9 +293,35 @@ test("import an OPML file from Settings: a plain summary, folders in the sidebar
   const starred = await page.request.get(new URL((await starredLink.getAttribute("href")) ?? "", FEEDS_APP).href);
   expect(starred.headers()["content-disposition"]).toContain("attachment");
   expect((await starred.json()).version).toBe("https://jsonfeed.org/version/1.1");
+
+  // Stars come over from another feed reader's export, into Starred.
+  const title = unique("Brought over");
+  const stars = JSON.stringify({
+    items: [
+      {
+        title,
+        published: 1_700_000_000,
+        alternate: [{ href: "https://elsewhere.example/post" }],
+        summary: { content: "<p>From another app.</p>" },
+        origin: { streamId: "feed/https://elsewhere.example/feed.xml", title: "Elsewhere" },
+      },
+      { title: "No link" },
+    ],
+  });
+  await opensFilePicker(page, () => page.getByRole("button", { name: "Import starred articles" }).click(), "json");
+  await page.locator('input[type="file"][accept*="json"]').evaluate((input: HTMLInputElement, text) => {
+    const chosen = new DataTransfer();
+    chosen.items.add(new File([text], "starred.json", { type: "application/json" }));
+    input.files = chosen.files;
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }, stars);
+  await expect(page.getByText("Starred 1 article. It's in Starred, with a link to the original.")).toBeVisible();
+  await expect(page.getByText("1 article couldn't be brought over, as the file gives no link to the original.")).toBeVisible();
+  await sidebar(page).getByRole("link", { name: /^Starred/ }).click();
+  await expect(page.getByText(title)).toBeVisible();
 });
 
-test("with only the keyboard: Edit feed, a new folder, opening it, Edit folder, Unsubscribe, Import OPML and the starred export", async ({ page }) => {
+test("with only the keyboard: Edit feed, a new folder, opening it, Edit folder, Unsubscribe, Import OPML, importing stars and the starred export", async ({ page }) => {
   const blog = unique("keys");
   const folder = unique("Keyboard");
   await openBlogs(page, [blog]);
@@ -361,6 +388,15 @@ test("with only the keyboard: Edit feed, a new folder, opening it, Edit folder, 
   await tabTo(page, page.getByRole("button", { name: "Import OPML" }), 200);
   await opensFilePicker(page, () => page.keyboard.press("Enter"));
 
+  // So does Import starred articles.
+  await opensFilePicker(
+    page,
+    async () => {
+      await tabTo(page, page.getByRole("button", { name: "Import starred articles" }));
+      await page.keyboard.press("Enter");
+    },
+    "json",
+  );
   // So does Export starred articles: Enter downloads the file.
   await tabTo(page, page.getByRole("link", { name: "Export starred articles" }));
   const download = page.waitForEvent("download");

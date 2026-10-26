@@ -8,7 +8,8 @@
   Escape goes back. Reading (the reading mode and the sort order) is shared across the reader's
   devices; the reader controls belong to this device. Your data imports and
   exports the reader's feeds and folders as an OPML file, and exports their
-  starred articles as a JSON Feed file. Rules lists the reader's rules, and
+  starred articles as a JSON Feed file, and brings starred articles over
+  from other feed readers. Rules lists the reader's rules, and
   opens the rule editor over Settings (SPEC section 27). Newsletters, while
   nine turtles takes them, shows the reader's private address (SPEC section
   28). Other apps makes the
@@ -27,6 +28,7 @@
   import DeleteAccount from "./DeleteAccount.svelte";
   import Icon from "./Icon.svelte";
   import ImportOpml from "./ImportOpml.svelte";
+  import ImportStars from "./ImportStars.svelte";
   import Newsletters from "./Newsletters.svelte";
   import OtherApps from "./OtherApps.svelte";
   import Plan from "./Plan.svelte";
@@ -208,7 +210,7 @@
 
   let message = $state("");
   let sortMessage = $state("");
-  /** What the last OPML import did, in plain words. */
+  /** What the last import (OPML or starred articles) did, in plain words. */
   let importLines: string[] = $state([]);
 
   async function chooseMode(next: ReadingMode) {
@@ -247,7 +249,7 @@
     }
   }
 
-  /** Whether this device keeps articles for reading offline (SPEC section 31): on unless switched off here. */
+  /** Whether this device keeps articles for reading offline (SPEC section 32): on unless switched off here. */
   let keepingOffline = $state(keeping());
 
   function switchKeeping(on: boolean) {
@@ -257,7 +259,7 @@
 
   async function leave() {
     try {
-      // Marks made offline go first: signing out deletes this device's copies (SPEC section 31).
+      // Marks made offline go first: signing out deletes this device's copies (SPEC section 32).
       await sendWaiting();
       await signOut();
       onSignedOut();
@@ -335,7 +337,7 @@
   <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-16 md:px-10">
     <div class="mx-auto flex max-w-[35rem] flex-col gap-8">
       {#if connection.offline}
-        <!-- Without a connection nothing here could be saved, so Settings says so and waits (SPEC section 31). -->
+        <!-- Without a connection nothing here could be saved, so Settings says so and waits (SPEC section 32). -->
         <p role="status">{SETTINGS_NEED_CONNECTION}</p>
         <!-- The one setting that needs no connection: this device's own copies, which switching off deletes. -->
         <section aria-label="Reading offline">
@@ -521,6 +523,7 @@
         <div class="inset-group">
           {@render keepSwitch()}
           <ImportOpml {onImported} bind:lines={importLines} />
+          <ImportStars {onImported} bind:lines={importLines} />
           <a href="/api/starred/export" download class="inset-row inset-action"
             >Export starred articles<span class="row-glyph"><Icon name="download" size={18} /></span></a
           >
@@ -534,7 +537,8 @@
         <p class="inset-foot">
           OPML is the file feed readers use to move your feeds and folders between apps; export one now and then, and
           keep it somewhere safe. Starred articles are saved as a JSON Feed file, which other feed readers can open,
-          with each article's text, its original link and the feed it came from.
+          with each article's text, its original link and the feed it came from. To bring your stars over from
+          Inoreader, Feedly, Feedbin or another feed reader, import the JSON file it exports them in.
         </p>
       </section>
 

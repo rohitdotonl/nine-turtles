@@ -1,12 +1,12 @@
 // Whether nine turtles can be reached from this device (reading offline,
-// SPEC section 31). Every request to the server says so: an answer means the
+// SPEC section 32). Every request to the server says so: an answer means the
 // connection is there; a request that never got one (the browser couldn't
 // connect at all) means it isn't. Only then does the app switch to the
 // copies kept on this device; a server that answers "busy" or restarts is
 // not "offline".
 //
 // It also keeps how far this device's clock is from the server's, so a mark
-// made offline says when it was made in the server's time (decision 0100).
+// made offline says when it was made in the server's time (decision 0101).
 
 export const connection = $state({ offline: false });
 

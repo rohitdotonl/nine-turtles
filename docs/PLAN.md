@@ -373,6 +373,9 @@ each with screenshots:
 - ✅ The feed finder (26 October 2026, decision 0099): the first free tool
   from the marketing plan, at nineturtles.app/feed-finder/, with a bookmark
   button; the app at app.nineturtles.app does the looking (SPEC section 30).
+- ✅ Starter packs (26 October 2026): the pages at nineturtles.app/packs/,
+  five themes for the owner to fill with hand-picked blogs, each with an
+  OPML download once it has blogs (SPEC section 31).
 
 ## V2 so far
 
@@ -394,9 +397,10 @@ each with screenshots:
 | The yearly clean-up of unstarred articles | ✅ 25 October 2026 | SPEC section 23, decision 0089 (runs only after each night's backup is stored) |
 | The "New to feeds?" guide page | ✅ 25 October 2026 | SPEC section 2, decision 0079 (in the app, a "New to feeds?" sheet in the first-visit welcome; it links to the website's guide at nineturtles.app/new-to-feeds/) |
 | A tab left open across an update keeps working | ✅ 25 October 2026 | SPEC section 18, decisions 0022 and 0085 |
+| Bringing your stars over from other feed readers | ✅ 26 October 2026 | SPEC section 23, decision 0098 (no structure change) |
 | Pausing a feed (Edit feed › Pause this feed) | ✅ 26 October 2026 | SPEC section 15, decision 0095 |
 | Easing unread guilt: unread that lets go by itself, Catch me up, and unread without numbers | ✅ 26 October 2026 | SPEC sections 5, 6, 8 and 18, decision 0097 |
-| Reading offline, words only (200 unread and 200 starred on each device) | ✅ 26 October 2026 | SPEC section 31, decision 0100 |
+| Reading offline, words only (200 unread and 200 starred on each device) | ✅ 26 October 2026 | SPEC section 32, decision 0101 |
 
 ## V2: Many readers in one app
 

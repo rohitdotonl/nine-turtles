@@ -1,7 +1,7 @@
 // nine turtles' service worker (SPEC section 20, ENGINEERING.md → "Installable
 // on phones"). With the web app manifest, it lets nine turtles be added to the
 // home screen. It keeps a copy of the app itself and its fonts. (Articles kept
-// for reading offline are the app's own, in its database, SPEC section 31.)
+// for reading offline are the app's own, in its database, SPEC section 32.)
 //
 // - Opening nine turtles always asks the server first, so you get the newest
 //   version. Without a connection, the kept copy opens instead and says

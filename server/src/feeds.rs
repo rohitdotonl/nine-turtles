@@ -1085,7 +1085,7 @@ struct Several {
 }
 
 /// Several articles at once, for the copies kept on a device for reading
-/// offline (SPEC section 31): a few requests instead of hundreds, and only
+/// offline (SPEC section 32): a few requests instead of hundreds, and only
 /// the words, each image a short note (`feed::text_only`). Only the
 /// reader's own; any other is left out, so the answer may hold fewer than
 /// were asked for.
