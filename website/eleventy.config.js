@@ -15,7 +15,12 @@ export default function (eleventyConfig) {
   const styles = readFileSync(new URL("./src/style.css", import.meta.url));
   eleventyConfig.addGlobalData("stylesVersion", createHash("sha256").update(styles).digest("hex").slice(0, 10));
 
+  // The same for the feed finder's script.
+  const finder = readFileSync(new URL("./src/feed-finder.js", import.meta.url));
+  eleventyConfig.addGlobalData("finderVersion", createHash("sha256").update(finder).digest("hex").slice(0, 10));
+
   eleventyConfig.addPassthroughCopy({ "src/style.css": "style.css" });
+  eleventyConfig.addPassthroughCopy({ "src/feed-finder.js": "feed-finder.js" });
   eleventyConfig.addPassthroughCopy({ "src/images": "images" });
   eleventyConfig.addPassthroughCopy({
     "../web/public/fonts/literata-400-latin.woff2": "fonts/literata-400-latin.woff2",

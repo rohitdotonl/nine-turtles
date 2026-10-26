@@ -370,6 +370,9 @@ each with screenshots:
   until prices are set, naming Dodo Payments as the payment company
   (decision 0086). Dodo checks for them, with terms, privacy and contact,
   before it approves payments (`docs/operations/dodo-application.md`).
+- ✅ The feed finder (26 October 2026, decision 0099): the first free tool
+  from the marketing plan, at nineturtles.app/feed-finder/, with a bookmark
+  button; the app at app.nineturtles.app does the looking (SPEC section 30).
 
 ## V2 so far
 

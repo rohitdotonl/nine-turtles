@@ -24,7 +24,16 @@ const FEED_TYPES: &[(&str, &str)] = &[
     ("application/feed+json", "JSON Feed"),
 ];
 
-/// The feeds a web page names, in the page's own order, without repeats.
+/// The most feeds read from one page. Real sites name one to a few; a page
+/// naming thousands is only trying to make nine turtles work hard.
+pub const MOST_FEEDS: usize = 10;
+/// The longest address read from a page (a `<base>` or a feed's), and the
+/// longest feed name kept.
+const LONGEST_ADDRESS: usize = 2048;
+const LONGEST_TITLE: usize = 200;
+
+/// The feeds a web page names, in the page's own order, without repeats, at
+/// most `MOST_FEEDS`.
 pub fn feeds_in(html: &str, page_url: &Url) -> Vec<Found> {
     let document = Html::parse_document(html);
     let Ok(links) = Selector::parse("link[href]") else {
@@ -35,6 +44,7 @@ pub fn feeds_in(html: &str, page_url: &Url) -> Vec<Found> {
         .ok()
         .and_then(|selector| document.select(&selector).next())
         .and_then(|element| element.value().attr("href"))
+        .filter(|href| href.len() <= LONGEST_ADDRESS)
         .and_then(|href| page_url.join(href).ok())
         .unwrap_or_else(|| page_url.clone());
 
@@ -62,8 +72,10 @@ pub fn feeds_in(html: &str, page_url: &Url) -> Vec<Found> {
         };
         let Some(url) = attributes
             .attr("href")
+            .filter(|href| href.len() <= LONGEST_ADDRESS)
             .and_then(|href| base.join(href.trim()).ok())
             .filter(|url| matches!(url.scheme(), "http" | "https"))
+            .filter(|url| url.as_str().len() <= LONGEST_ADDRESS)
         else {
             continue;
         };
@@ -72,10 +84,21 @@ pub fn feeds_in(html: &str, page_url: &Url) -> Vec<Found> {
         }
         let title = attributes
             .attr("title")
-            .map(|title| title.split_whitespace().collect::<Vec<_>>().join(" "))
+            .map(|title| {
+                title
+                    .split_whitespace()
+                    .collect::<Vec<_>>()
+                    .join(" ")
+                    .chars()
+                    .take(LONGEST_TITLE)
+                    .collect::<String>()
+            })
             .filter(|title| !title.is_empty())
             .unwrap_or_else(|| kind.to_owned());
         found.push(Found { title, url });
+        if found.len() == MOST_FEEDS {
+            break;
+        }
     }
     found
 }
@@ -110,6 +133,26 @@ mod tests {
                 ("JSON version", "https://example.com/blog/feed.json"),
             ]
         );
+    }
+
+    #[test]
+    fn a_page_naming_too_much_is_cut_short() {
+        let long = "x".repeat(LONGEST_ADDRESS + 1);
+        let mut page = format!(r#"<html><head><base href="https://example.com/{long}/">"#);
+        page.push_str(&format!(
+            r#"<link rel="alternate" type="application/rss+xml" href="/{long}">"#
+        ));
+        for number in 0..1000 {
+            page.push_str(&format!(
+                r#"<link rel="alternate" type="application/rss+xml" title="{}" href="/{number}.xml">"#,
+                "t".repeat(500)
+            ));
+        }
+        let found = feeds_in(&page, &Url::parse("https://example.com/").unwrap());
+        assert_eq!(found.len(), MOST_FEEDS);
+        // The long <base> is ignored and the long address skipped.
+        assert_eq!(found[0].url.as_str(), "https://example.com/0.xml");
+        assert_eq!(found[0].title.chars().count(), LONGEST_TITLE);
     }
 
     #[test]

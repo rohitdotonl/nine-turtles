@@ -61,6 +61,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - TLS certificates and certificate authorities
 - Headers
 - Cookie
+- CORS (cross-origin resource sharing)
 - HTML
 - CSS
 - JavaScript
@@ -77,6 +78,8 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - OPML
 - Starter feeds
 - Feed autodiscovery
+- Feed finder (the website's free tool)
+- Bookmarklet
 - HTML parsing (scraper)
 - Polling
 - Conditional requests (ETag, Last-Modified)
