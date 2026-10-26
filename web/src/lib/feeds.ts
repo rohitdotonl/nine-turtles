@@ -882,6 +882,7 @@ useFetchers({
     if (!isRecord(body) || !Array.isArray(body.articles)) throw new Error("nine turtles sent an unexpected answer");
     return body.articles.filter(isRecord).map(toFullArticle);
   },
+  refused: (problem) => !worthRetrying(problem),
   async sendMark(kind, ids, value, at) {
     const path = kind === "read" ? "/api/articles/read" : "/api/articles/starred";
     await send(path, kind === "read" ? { ids, read: value, at } : { ids, starred: value, at });

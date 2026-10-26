@@ -42,7 +42,7 @@
   import { signOut } from "./session";
   import { updates } from "./updates.svelte";
   import { connection } from "./connection.svelte";
-  import { SETTINGS_NEED_CONNECTION, keeping, setKeeping } from "./offline";
+  import { SETTINGS_NEED_CONNECTION, keeping, sendWaiting, setKeeping } from "./offline";
 
   let {
     preferences = $bindable(),
@@ -257,6 +257,8 @@
 
   async function leave() {
     try {
+      // Marks made offline go first: signing out deletes this device's copies (SPEC section 31).
+      await sendWaiting();
       await signOut();
       onSignedOut();
     } catch {
@@ -266,6 +268,31 @@
 </script>
 
 <svelte:window onpopstate={backed} />
+
+{#snippet keepSwitch()}
+  <!-- A switch, as Apple draws one (decision 0077): this device's copies for reading offline. -->
+  <div class="inset-row">
+    <p class="row-name" aria-hidden="true">Keep articles for reading offline</p>
+    <label class="switch-target -my-2 -mr-2">
+      <input
+        type="checkbox"
+        role="switch"
+        class="switch"
+        aria-label="Keep articles for reading offline"
+        aria-describedby="keep-offline-foot"
+        checked={keepingOffline}
+        onchange={(event) => switchKeeping(event.currentTarget.checked)}
+      />
+    </label>
+  </div>
+{/snippet}
+
+{#snippet keepFoot()}
+  <p id="keep-offline-foot" class="inset-foot">
+    On this device only: the words of your first 200 unread and newest 200 starred articles, without images, so
+    you can read, mark and star them without a connection. Switching this off, or signing out, deletes them.
+  </p>
+{/snippet}
 
 {#if editing}
   {#key editing}
@@ -310,6 +337,13 @@
       {#if connection.offline}
         <!-- Without a connection nothing here could be saved, so Settings says so and waits (SPEC section 31). -->
         <p role="status">{SETTINGS_NEED_CONNECTION}</p>
+        <!-- The one setting that needs no connection: this device's own copies, which switching off deletes. -->
+        <section aria-label="Reading offline">
+          <div class="inset-group">
+            {@render keepSwitch()}
+          </div>
+          {@render keepFoot()}
+        </section>
       {:else}
       <section aria-labelledby="reading-heading">
         <h3 id="reading-heading" class="inset-head">Reading</h3>
@@ -485,21 +519,7 @@
       <section aria-labelledby="data-heading">
         <h3 id="data-heading" tabindex="-1" bind:this={dataHeading} class="inset-head">Your data</h3>
         <div class="inset-group">
-          <!-- A switch, as Apple draws one (decision 0077): this device's copies for reading offline. -->
-          <div class="inset-row">
-            <p id="keep-offline-name" class="row-name">Keep articles for reading offline</p>
-            <label class="switch-target -my-2 -mr-2" title={keepingOffline ? "On: press to stop keeping them and delete them" : "Off: press to keep them"}>
-              <input
-                type="checkbox"
-                role="switch"
-                class="switch"
-                aria-labelledby="keep-offline-name"
-                aria-describedby="keep-offline-foot"
-                checked={keepingOffline}
-                onchange={(event) => switchKeeping(event.currentTarget.checked)}
-              />
-            </label>
-          </div>
+          {@render keepSwitch()}
           <ImportOpml {onImported} bind:lines={importLines} />
           <a href="/api/starred/export" download class="inset-row inset-action"
             >Export starred articles<span class="row-glyph"><Icon name="download" size={18} /></span></a
@@ -510,10 +530,7 @@
             <p>{line}</p>
           {/each}
         </div>
-        <p id="keep-offline-foot" class="inset-foot">
-          On this device only: the words of your first 200 unread and newest 200 starred articles, without images, so
-          you can read, mark and star them without a connection. Signing out deletes them.
-        </p>
+        {@render keepFoot()}
         <p class="inset-foot">
           OPML is the file feed readers use to move your feeds and folders between apps; export one now and then, and
           keep it somewhere safe. Starred articles are saved as a JSON Feed file, which other feed readers can open,

@@ -56,6 +56,13 @@ export function serverNow(): number {
   return Date.now() + clockOffset;
 }
 
+/** The browser says it's online again: one quiet question to the server finds out, so "offline" never lingers. */
+function maybeBack() {
+  if (!connection.offline) return;
+  fetch("/api/session", { cache: "no-store" }).then(reached, () => {});
+}
+
 if (typeof addEventListener === "function") {
   addEventListener("offline", lost);
+  addEventListener("online", maybeBack);
 }

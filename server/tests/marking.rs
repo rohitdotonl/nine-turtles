@@ -747,3 +747,28 @@ async fn several_articles_come_in_one_answer_for_reading_offline() {
         .unwrap();
     assert_eq!(signed_out.status(), StatusCode::UNAUTHORIZED);
 }
+
+#[tokio::test]
+async fn catching_up_counts_as_a_mark_a_late_offline_one_cannot_undo() {
+    let reader = Reader::new().await;
+    let (_, id) = reader.list("view=all").await[60].clone();
+    let earlier = ms_now() - 3_600_000;
+    reader
+        .post(
+            "/api/articles/catch-up",
+            json!({ "before": day_of_post(101) }),
+        )
+        .await;
+    // A phone that was offline an hour ago marked it unread; it arrives now.
+    let (_, answer) = reader
+        .post(
+            "/api/articles/read",
+            json!({ "ids": [id], "read": false, "at": earlier }),
+        )
+        .await;
+    assert_eq!(answer["marked"], 0);
+    assert_eq!(
+        reader.get(&format!("/api/articles/{id}")).await["article"]["read"],
+        true
+    );
+}

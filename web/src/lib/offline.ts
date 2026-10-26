@@ -12,7 +12,9 @@
 // never in the tab's memory, and are fetched a few dozen at a time, a moment
 // apart, so the app never waits for them. Signing out (or being signed out)
 // deletes them, as does switching "Keep articles for reading offline" off in
-// Settings. It's on unless switched off, on each device.
+// Settings; both send any waiting marks first. It's on unless switched off,
+// on each device. (Marks still waiting when a sign-in has expired can't be
+// saved: the server would refuse them anyway. Decision 0100.)
 
 import type { Article, FullArticle, Library, Order, Page, ReadingMode, Source } from "./feeds";
 
@@ -44,8 +46,10 @@ export function keeping(): boolean {
   }
 }
 
-/** Switches keeping on or off on this device. Off deletes every copy at once. */
+/** Switches keeping on or off on this device. Off sends any waiting marks it can, then deletes every copy. */
 export async function setKeeping(on: boolean): Promise<void> {
+  // Waiting marks go first, unless there's plainly no connection to send them on.
+  if (!on && globalThis.navigator?.onLine !== false) await sendWaiting();
   try {
     if (on) globalThis.localStorage?.removeItem(SWITCH_KEY);
     else globalThis.localStorage?.setItem(SWITCH_KEY, "off");
@@ -346,6 +350,8 @@ export type Fetchers = {
   list: (source: Source, order: Order, after: string | null) => Promise<Page>;
   several: (ids: number[]) => Promise<FullArticle[]>;
   sendMark: (kind: Mark["kind"], ids: number[], value: boolean, at: number) => Promise<void>;
+  /** Whether a failed send was the server saying no, rather than not being reached. */
+  refused: (problem: unknown) => boolean;
 };
 
 let fetchers: Fetchers | undefined;
@@ -357,14 +363,19 @@ export function useFetchers(given: Fetchers): void {
   fetchers = given;
 }
 
-/** Sends the marks made without a connection, oldest first. Stops at the first that can't be sent yet. */
+/**
+ * Sends the marks made without a connection, oldest first. Stops at the
+ * first that can't reach the server yet; one the server refuses (it
+ * answered, but not yes) is dropped, so it never holds up the rest.
+ */
 export async function sendWaiting(): Promise<void> {
   if (!fetchers || !keeping()) return;
   for (const part of inParts(await waitingMarks())) {
     try {
       await fetchers.sendMark(part.kind, part.ids, part.value, part.at);
-    } catch {
-      return;
+    } catch (problem) {
+      if (!fetchers.refused(problem)) return;
+      await markSent(part.kind, part.ids, part.at);
     }
   }
 }

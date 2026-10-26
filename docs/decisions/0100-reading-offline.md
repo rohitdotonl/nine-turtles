@@ -39,9 +39,19 @@ the reader read, mark and star them without a connection (SPEC section 31).
   clock is from the server's from each answer's Date header, and the server
   never accepts a time later than its own now, so a device whose clock runs
   fast can't make its marks outlast later ones. Muting, Catch me up, letting
-  go and rules don't take part: they happen on the server, while online.
+  unread go and other apps' "Mark all as read" record their time too, so a
+  late offline mark can't undo them; only rules acting on new arrivals
+  don't (an article that has just arrived has no earlier mark to protect).
 - **What waits for a connection** says so in plain words: search, adding a
   feed, Settings, Refresh and Catch me up.
+
+- **Marks made offline are sent before the copies go:** signing out and
+  switching the setting off both send any waiting marks first (switching off
+  without a connection can't, so those go with the copies, as the reader
+  asked). A waiting mark the server refuses is dropped rather than holding up
+  the rest. One case can't be saved: marks still waiting when the sign-in has
+  expired (after a year), since the server refuses them; they go with the
+  copies. This is rare, and the owner is told when this is merged.
 
 **Why not more.** The owner chose the lighter version: no images, no whole
 library offline, no offline search. Keeping images would cost hundreds of

@@ -123,3 +123,32 @@ test("search and adding a feed say plainly that they need a connection", async (
   await expect(page.getByText("Adding a feed needs a connection. Try again once you're back online.")).toBeVisible();
   await context.setOffline(false);
 });
+
+test("switching off keeping articles, with the keyboard, deletes the copies and keeps nothing more", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the same on every width");
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  const feed = await follow(page, `${FEED_SITE}/blog/offline-switch-${test.info().workerIndex}-${Date.now()}/`);
+  const listed = await (await page.request.get(new URL(`/api/articles?feed=${feed}`, FEEDS_APP).href)).json();
+  const ids: number[] = listed.articles.map((each: { id: number }) => each.id);
+  await page.request.post(new URL("/api/articles/starred", FEEDS_APP).href, { data: { ids, starred: true } });
+  await page.goto(new URL("/settings", FEEDS_APP).href);
+  await appReady(page);
+  await expect.poll(() => keptIds(page), { timeout: 20_000 }).toEqual(expect.arrayContaining(ids));
+
+  const keep = page.getByRole("switch", { name: "Keep articles for reading offline" });
+  await expect(keep).toBeChecked();
+  await keep.focus();
+  await page.keyboard.press("Space");
+  await expect(keep).not.toBeChecked();
+  await expect.poll(() => keptIds(page)).toEqual([]);
+
+  // Opened again, nothing is kept, and the switch stays off on this device.
+  await page.reload();
+  await appReady(page);
+  await expect(page.getByRole("switch", { name: "Keep articles for reading offline" })).not.toBeChecked();
+  await page.waitForTimeout(1_500);
+  expect(await keptIds(page)).toEqual([]);
+});

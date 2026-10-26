@@ -841,7 +841,9 @@ async fn mark_all_as_read(
 ) -> Response {
     let stream = Stream::parse(params.first("s").unwrap_or(READING_LIST));
     let until = params.number("ts").map_or_else(now, seconds);
-    let mut query = QueryBuilder::<Sqlite>::new("UPDATE entries SET read = 1 WHERE person_id = ");
+    let mut query = QueryBuilder::<Sqlite>::new(
+        "UPDATE entries SET read = 1, read_marked_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE person_id = ",
+    );
     query.push_bind(person).push(concat!(
         " AND read = 0 AND article_id IN (SELECT entries.article_id",
         from_entries!()

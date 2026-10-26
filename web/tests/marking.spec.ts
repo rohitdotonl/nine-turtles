@@ -629,6 +629,7 @@ test("Catch me up: everything in Unread from before today is read, and Undo brin
 
   await page.keyboard.press("u");
   await expect(line(page)).toContainText("Undone.");
-  await expect.poll(() => undone).toContainEqual({ ids, read: false });
+  // Each mark also says when it was made (decision 0100).
+  await expect.poll(() => undone).toContainEqual({ ids, read: false, at: expect.any(Number) });
   await expect(feedLink(page, name)).toHaveAccessibleName(`Blog ${name} 3 unread`);
 });
