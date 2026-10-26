@@ -379,7 +379,7 @@
         <p class="inset-foot">
           Inbox keeps an Unread list and counts what's waiting. River lets everything flow past: no Unread, no counts.
           {#if mode === "inbox"}Hide the counts to keep Unread without the numbers. Unread you haven't got to lets go after the
-            time you choose: it counts as read and stays in its feed, All and search.{/if} These apply on all your devices.
+            time you choose, a minute or so after you choose it: it counts as read and stays in its feed, All and search.{/if} These apply on all your devices.
         </p>
         <p role="status" class={["inset-foot text-danger", !sortMessage && "sr-only"]}>{sortMessage}</p>
       </section>

@@ -170,11 +170,20 @@ async fn change(
                 .await?;
             }
         }
-        transaction.commit().await?;
-        // A newly chosen wait lets go at once, not at the next round.
-        if let Some(value) = let_go {
-            crate::unread::let_go_for(&state.db, person, value, crate::now()).await?;
+        // When the wait was chosen: nothing lets go until it has stood a
+        // minute (`unread::let_go`), so passing a shorter one on the way
+        // with the arrow keys marks nothing.
+        if let_go.is_some() {
+            sqlx::query(
+                "INSERT INTO person_settings (person_id, name, value) VALUES (?, 'let_go_at', ?)
+                 ON CONFLICT (person_id, name) DO UPDATE SET value = excluded.value",
+            )
+            .bind(person)
+            .bind(crate::now().to_string())
+            .execute(&mut *transaction)
+            .await?;
         }
+        transaction.commit().await?;
         load(&state.db, person).await
     }
     .await;

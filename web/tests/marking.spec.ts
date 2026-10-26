@@ -572,6 +572,8 @@ test("Settings: unread counts can hide, and unread can let go after a while", as
   await expect(reading.getByRole("radio", { name: "2 weeks" })).toBeChecked();
   expect(changes).toEqual([{ counts: "hidden" }, { let_go: "two-weeks" }]);
   await expect(reading).toContainText("it counts as read and stays in its feed, All and search");
+  // Nothing has let go yet: a choice must stand a minute first.
+  await expect(feedLink(page, name)).toHaveAccessibleName(`Blog ${name}`);
 
   // Remembered: after a reload the counts stay hidden.
   await page.reload();
@@ -612,8 +614,13 @@ test("Catch me up: everything in Unread from before today is read, and Undo brin
   await page.keyboard.press("Escape");
 
   await sidebar(page).getByRole("link", { name: "Unread", exact: true }).click();
-  await more.click();
-  await page.getByRole("menuitem", { name: "Catch me up" }).click();
+  // With only the keyboard: Enter opens More on its first item, the down arrow reaches Catch me up.
+  await more.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("menuitem", { name: "Mark all as read" })).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await expect(page.getByRole("menuitem", { name: "Catch me up" })).toBeFocused();
+  await page.keyboard.press("Enter");
   await expect(page.getByText("Marked 3 items from before today as read")).toBeVisible();
   // The start of today on this device's clock.
   const today = new Date();

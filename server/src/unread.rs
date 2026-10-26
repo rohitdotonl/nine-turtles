@@ -5,7 +5,12 @@
 //! go after a week, two weeks or a month has older unread articles counted as
 //! read. They leave Unread and the counts, and stay in their feed, All and
 //! search; nothing is removed. It happens in each background round
-//! (`checking::round`) and at once when the setting is saved. "Older" is the
+//! (`checking::round`), once the choice has stood for a minute: moving
+//! through the choices with the arrow keys saves each one on the way, and
+//! passing "1 week" on the way to "1 month" must let nothing go. It also runs
+//! in river mode, where its row is hidden, for feeds that flow past too: no
+//! harm, since river mode shows no read state, and back in inbox mode the
+//! old articles have let go as chosen. "Older" is the
 //! article's date in the list (`sort_at`), so a newly added blog's old posts
 //! don't fill Unread either.
 //!
@@ -56,13 +61,24 @@ pub const LET_GO: &str = "UPDATE entries SET read = 1
          AND feed_id IN (SELECT feed_id FROM subscriptions
              WHERE person_id = ?1 AND unsubscribed_at IS NULL)";
 
+/// How long a newly chosen wait must stand before anything lets go.
+pub const SETTLES_FOR: i64 = 60;
+
 /// Lets go every reader's unread articles older than their chosen wait, at
-/// `now`. Answers how many articles let go.
+/// `now`, for each reader whose choice has stood for `SETTLES_FOR` (the
+/// time it was saved is the `let_go_at` setting). Answers how many articles
+/// let go.
 pub async fn let_go(db: &SqlitePool, now: i64) -> Result<u64, sqlx::Error> {
-    let readers: Vec<(i64, String)> =
-        sqlx::query_as("SELECT person_id, value FROM person_settings WHERE name = 'let_go'")
-            .fetch_all(db)
-            .await?;
+    let readers: Vec<(i64, String)> = sqlx::query_as(
+        "SELECT person_id, value FROM person_settings AS chosen
+         WHERE name = 'let_go' AND NOT EXISTS (
+             SELECT 1 FROM person_settings AS saved
+             WHERE saved.person_id = chosen.person_id AND saved.name = 'let_go_at'
+                 AND CAST(saved.value AS INTEGER) > ?)",
+    )
+    .bind(now - SETTLES_FOR)
+    .fetch_all(db)
+    .await?;
     let mut done = 0;
     for (person, value) in readers {
         done += let_go_for(db, person, &value, now).await?;
@@ -71,7 +87,7 @@ pub async fn let_go(db: &SqlitePool, now: i64) -> Result<u64, sqlx::Error> {
 }
 
 /// Lets go one reader's unread articles older than the wait `value` names.
-pub async fn let_go_for(
+async fn let_go_for(
     db: &SqlitePool,
     person: i64,
     value: &str,

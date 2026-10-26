@@ -459,7 +459,8 @@
     try {
       ids = await catchUpOnServer();
     } catch {
-      say("Couldn't catch up. Try again in a moment.");
+      // The answer may have been lost after the server caught up: Refresh shows where things stand.
+      say("Catching up couldn't be confirmed. Refresh to see where things stand.");
       return;
     }
     if (ids.length === 0) {

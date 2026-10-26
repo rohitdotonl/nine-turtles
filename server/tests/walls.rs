@@ -2292,6 +2292,12 @@ async fn catching_up_and_letting_go_touch_only_that_readers_unread() {
         .post("/api/settings", json!({ "let_go": "week" }))
         .await;
     assert_eq!(status, StatusCode::OK);
+    nine_turtles::unread::let_go(
+        &state.db,
+        nine_turtles::now() + nine_turtles::unread::SETTLES_FOR + 1,
+    )
+    .await
+    .unwrap();
     assert!(owner.ids("view=unread").await.is_empty());
 
     // The other reader's Undo brings back only theirs.

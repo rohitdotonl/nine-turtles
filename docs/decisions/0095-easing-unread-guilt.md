@@ -12,8 +12,12 @@ and remove nothing.
   chosen time counts as read: it leaves Unread and the counts, and stays in
   its feed, All, its folders and search. "Older" is the article's date in the
   list, so the old posts of a blog just added don't fill Unread either. It
-  happens in each background round (every 30 seconds) and at once when the
-  setting is saved. It's a real "read" mark, not a filter, so the feed's own
+  happens in each background round (every 30 seconds), once the choice has
+  stood for a minute: a segmented control saves each choice the arrow keys
+  pass, and passing "1 week" on the way to "1 month" must mark nothing (a
+  read mark has no undo here). It carries on in river mode, for feeds that
+  flow past too: river mode shows no read state, and back in inbox mode
+  Unread is as the reader chose. It's a real "read" mark, not a filter, so the feed's own
   list, the counts and syncing apps (decision 0070) all agree. Choosing Never
   again doesn't bring back what has already let go.
 - **Catch me up.** In Unread's More menu: every article in Unread from before
@@ -34,6 +38,11 @@ in inbox mode (river mode has no Unread).
 **Why.** Calm over engagement: a backlog that can only grow is the kind of
 pressure social media builds. Each of these lets the reader set the pile
 down. None deletes anything, so the third floor holds.
+
+**Exceptions log.** Catch me up and letting go mark articles the reader
+hasn't seen, where principle 5 has "mark all as read" touch only what's on
+screen; and the unread counts can now hide altogether. Both are written in
+DESIGN.md's Exceptions log, as the owner asked for these features.
 
 **Not chosen.** Letting go as a filter only (articles stay unread but hide
 from Unread): the feed's own list would still show them unread while the

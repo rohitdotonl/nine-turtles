@@ -305,12 +305,13 @@ export function markStarred(ids: number[], starred: boolean): Promise<void> {
 }
 
 /** The settings shared across the reader's devices (SPEC section 18). */
-export type Reading = { sort: Order; mode: ReadingMode; counts: Counts; letGo: LetGo };
+/** `letGo` is unknown when the server can't say, so its choices wait rather than show Never. */
+export type Reading = { sort: Order; mode: ReadingMode; counts: Counts; letGo: LetGo | undefined };
 
 /**
  * The settings shared across the reader's devices: the sort order, the
  * reading mode, whether unread counts show and when unread lets go. Newest
- * first if the server can't say, never letting go, and the mode and counts
+ * first if the server can't say, the wait unknown, and the mode and counts
  * this device last saw (inbox, shown, if none).
  */
 export async function loadSettings(): Promise<Reading> {
@@ -324,7 +325,7 @@ export async function loadSettings(): Promise<Reading> {
     rememberCounts(counts);
     return { sort, mode, counts, letGo };
   } catch {
-    return { sort: "newest", mode: lastMode(), counts: lastCounts(), letGo: "never" };
+    return { sort: "newest", mode: lastMode(), counts: lastCounts(), letGo: undefined };
   }
 }
 

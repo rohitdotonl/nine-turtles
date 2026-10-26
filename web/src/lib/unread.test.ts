@@ -59,6 +59,11 @@ describe("the reading settings", () => {
     server({ sort: "newest", mode: "inbox", counts: "sideways", let_go: "someday" });
     ({ loadSettings } = await load());
     expect(await loadSettings()).toEqual({ sort: "newest", mode: "inbox", counts: "shown", letGo: "never" });
+
+    // Unreachable: the wait is unknown, so its choices wait rather than show Never.
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("Failed to fetch"); }));
+    ({ loadSettings } = await load());
+    expect((await loadSettings()).letGo).toBeUndefined();
   });
 
   it("save each setting on its own", async () => {

@@ -486,8 +486,6 @@
       letGo = before;
       throw new Error("not saved");
     }
-    // Older unread has just let go: the counts follow.
-    loadFeeds();
   }
 
   async function changeSort(next: Order) {

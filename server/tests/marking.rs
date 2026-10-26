@@ -60,17 +60,20 @@ struct Reader {
     base: String,
     cookie: String,
     feed: i64,
+    /// nine turtles' insides, for running a background round by hand.
+    state: nine_turtles::AppState,
 }
 
 impl Reader {
     /// A signed-in reader following the made-up blog.
     async fn new() -> Self {
-        let base = common::start(common::config()).await;
+        let (base, state) = common::start_with_state(common::config()).await;
         let cookie = common::signed_in(&base).await;
         let mut reader = Self {
             base,
             cookie,
             feed: 0,
+            state,
         };
         let (status, added) = reader
             .post("/api/feeds", json!({ "address": publisher().await }))
@@ -540,13 +543,39 @@ async fn unread_lets_go_only_when_the_reader_chooses_and_nothing_leaves_the_feed
     );
     assert_eq!(reader.list("view=unread").await.len(), 120);
 
-    // A month: every post is older, so all let go at once, and stay in
-    // their feed and All, read.
-    let (status, body) = reader
+    // Moving through the choices with the arrow keys saves each on the way:
+    // passing "1 week" lets nothing go, since a choice must stand a minute.
+    let let_go = async |now: i64| {
+        nine_turtles::unread::let_go(&reader.state.db, now)
+            .await
+            .unwrap()
+    };
+    let now = nine_turtles::now();
+    for each in ["week", "two-weeks", "month"] {
+        let (status, body) = reader
+            .post("/api/settings", json!({ "let_go": each }))
+            .await;
+        assert_eq!(status, StatusCode::OK);
+        assert_eq!(body["let_go"], each);
+        assert_eq!(let_go(now).await, 0);
+    }
+    assert_eq!(reader.list("view=unread").await.len(), 120);
+    // Back to Never before the minute is up: nothing ever let go.
+    reader
+        .post("/api/settings", json!({ "let_go": "never" }))
+        .await;
+    assert_eq!(let_go(now + 3_600).await, 0);
+    assert_eq!(reader.unread_count().await, 120);
+
+    // A month, standing: every post is older, so all let go at the next
+    // round after the minute, and stay in their feed and All, read.
+    reader
         .post("/api/settings", json!({ "let_go": "month" }))
         .await;
-    assert_eq!(status, StatusCode::OK);
-    assert_eq!(body["let_go"], "month");
+    assert_eq!(
+        let_go(nine_turtles::now() + nine_turtles::unread::SETTLES_FOR + 1).await,
+        120
+    );
     assert!(reader.list("view=unread").await.is_empty());
     assert_eq!(reader.unread_count().await, 0);
     assert_eq!(reader.list("view=all").await.len(), 120);
@@ -569,13 +598,6 @@ async fn unread_lets_go_only_when_the_reader_chooses_and_nothing_leaves_the_feed
         .post("/api/settings", json!({ "let_go": "sometime" }))
         .await;
     assert!(status.is_client_error());
-    for each in ["never", "week", "two-weeks", "month"] {
-        let (status, body) = reader
-            .post("/api/settings", json!({ "let_go": each }))
-            .await;
-        assert_eq!(status, StatusCode::OK);
-        assert_eq!(body["let_go"], each);
-    }
 }
 
 #[test]
