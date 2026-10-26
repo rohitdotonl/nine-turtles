@@ -3,7 +3,7 @@ layout: page.njk
 title: Privacy policy
 description: What nine turtles and this website know about you, why, who else handles it, and how to have it removed.
 permalink: /privacy/
-updated: 2026-10-25
+updated: 2026-10-26
 draft: This policy will be finished, and checked by someone qualified, before anyone can sign up for nine turtles. The parts that depend on an email service and other details still to settle are marked "to be decided" until those are chosen.
 ---
 
@@ -36,8 +36,7 @@ website or uses the app. To ask anything about your data, write to
 ## The app (app.nineturtles.app)
 
 Today the app at app.nineturtles.app is one person's private
-installation: it holds only its owner's reading. Anyone can also run their
-own copy of nine turtles; a copy you run yourself sends nothing to us.
+installation: it holds only its owner's reading.
 
 When nine turtles opens for others to sign up, it will keep only what it
 needs to work:

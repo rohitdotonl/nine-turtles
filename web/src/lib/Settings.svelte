@@ -474,7 +474,7 @@
           <p class="inset-foot">Changing your email needs nine turtles to send email; whoever runs it can set that up.</p>
         {/if}
         {#if !owner}
-          <!-- Readers are told what the owner's Readers page shows of them (decision 0091). -->
+          <!-- Readers are told what the owner's Readers page shows of them (decision 0093). -->
           <p class="inset-foot">
             Whoever runs this nine turtles can see your email, when you joined, how many feeds you follow and the day
             you were last here. Never which feeds or what you read.

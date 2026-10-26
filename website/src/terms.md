@@ -3,7 +3,7 @@ layout: page.njk
 title: Terms of use
 description: The rules for using nine turtles, written in plain words.
 permalink: /terms/
-updated: 2026-10-25
+updated: 2026-10-26
 draft: These terms will be finished, and checked by someone qualified, before anyone can sign up or pay for nine turtles. Prices and the law that applies are "to be decided" until the prices and the business details are settled.
 ---
 
@@ -78,12 +78,6 @@ decided, with the law that applies).
 You can stop using nine turtles and delete your account whenever you
 like. We may suspend or close an account that seriously or repeatedly
 breaks these terms, and will tell you why, except where the law stops us.
-
-## Open source
-
-The code that runs nine turtles is open source under the
-[MIT licence]({{ site.source }}/blob/main/LICENSE). These terms cover the
-service we run, not your use of the code.
 
 ## Changes and contact
 

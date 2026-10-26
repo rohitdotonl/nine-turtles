@@ -95,6 +95,10 @@ async fn diagnostics(State(state): State<AppState>, headers: HeaderMap) -> Respo
                 "on": state.storage.is_some(),
                 "latest_nightly": latest_backup,
             },
+            // Whether newsletter emails are accepted (decision 0091).
+            "newsletters": {
+                "on": state.config.newsletter_secret.is_some(),
+            },
         })),
     )
         .into_response()

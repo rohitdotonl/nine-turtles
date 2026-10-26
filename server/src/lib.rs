@@ -32,6 +32,8 @@ pub mod greader;
 pub mod health;
 pub mod log;
 pub mod marks;
+pub mod newsletter;
+pub mod newsletters;
 pub mod password;
 pub mod people;
 pub mod rules;
@@ -185,6 +187,7 @@ pub fn router(state: AppState) -> Router {
         .merge(starred::routes())
         .merge(status::routes())
         .merge(websub::routes())
+        .merge(newsletters::routes())
         .merge(assets::routes())
         .with_state(state);
     security::apply(router)

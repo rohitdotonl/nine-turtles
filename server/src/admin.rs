@@ -6,7 +6,7 @@
 //!   sign-ups waiting for their email, backups, email, problems logged) and
 //!   one line for each reader: their email, when they joined, how many feeds
 //!   they follow, how many of those keep failing, and the day they were last
-//!   here (the owner said yes, 26 October 2026; decision 0091). Never which
+//!   here (the owner said yes, 26 October 2026; decision 0093). Never which
 //!   feeds, nothing about what anyone reads.
 //! - **At most `MOST_FEEDS` feeds per reader**, the owner too. Adding one
 //!   more, from the Add field, the welcome, another app or an OPML file, is

@@ -1,4 +1,4 @@
-# 0091: The Readers page shows the day each reader was last here
+# 0093: The Readers page shows the day each reader was last here
 
 *26 October 2026. The owner answered the open question from decision 0090:
 "Should the Readers page show when each reader last visited? Yes."*

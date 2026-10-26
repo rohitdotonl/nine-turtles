@@ -1,12 +1,11 @@
 ---
-title: Four days, in the open
+title: The first four days
 description: How nine turtles went from a plan to a finished reader, a new name and a home of its own, between 22 and 25 October 2026.
 date: 2026-10-25T12:00:00Z
 ---
 
 nine turtles was planned on 22 October 2026, under the working name
-slowfeed. Everything since has happened in public, in small steps, each
-one checked before it went live. Here's how the first four days went.
+slowfeed. Everything since has happened in small steps, each one checked before it went live. Here's how the first four days went.
 
 ## 22 October: a plan, and the rules first
 

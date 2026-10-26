@@ -406,6 +406,16 @@ feed is still fetched and stored once; everything personal gets an owner.
 | Part four: account emails over SMTP (confirming Open sign-ups, a new password, changing email) and deleting an account (structure change 14, decision 0088) | ✅ 25 October 2026 |
 | Milestone 5: the owner's Readers page, at most 1,000 feeds per reader, and feeds nobody opens checked once a day (no structure change, decision 0090) | ✅ 26 October 2026 |
 
+## V2: Newsletters as feeds
+
+Milestone 10 of the plan for 100 to 200 readers, decision 0091, SPEC
+section 28.
+
+| Part | Status |
+|---|---|
+| Part one: reading and cleaning emails, the receiving address (off by default, keeps nothing yet), the Cloudflare forwarder and its setup steps | ✅ 25 October 2026 (setup: `docs/operations/newsletters.md`) |
+| Part two: each reader's own address, emails kept as articles under a feed per sender, limits per reader (after many readers part three) | ⬜ |
+
 ## V2: YouTube videos
 
 - ✅ A YouTube video plays in YouTube's own privacy-enhanced player, above
