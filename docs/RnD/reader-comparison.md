@@ -1,11 +1,15 @@
-# What Feedbin has that nine turtles doesn't (and the reverse)
+# What other feed readers have that nine turtles doesn't
+
+*Four readers, read from their public code: Feedbin (the first and longest part), then Miniflux, NetNewsWire and FreshRSS (parts B, C and D, further down).*
+
+## Part A: Feedbin
 
 *Research only, written 26 October 2026. Nothing here is decided.
 `docs/DESIGN.md`, `docs/SPEC.md` and `docs/PLAN.md` still win, and any idea
 below that changes the app needs the owner's yes first (AGENTS.md, "How a
 change happens").*
 
-## What this is
+### What this is
 
 [Feedbin](https://github.com/feedbin/feedbin) is a paid feed reader that has
 been polished for over ten years, and its code is public. An agent read its
@@ -38,7 +42,7 @@ skip, which is podcasts and audio. Most of what's worth borrowing is small.
 
 ---
 
-## 1. Features Feedbin has that nine turtles lacks
+### 1. Features Feedbin has that nine turtles lacks
 
 | # | Feature | What Feedbin does | Why it might matter | Effort | Fit |
 |---|---|---|---|---|---|
@@ -60,7 +64,7 @@ skip, which is podcasts and audio. Most of what's worth borrowing is small.
 
 ---
 
-## 2. Small touches and details worth knowing about
+### 2. Small touches and details worth knowing about
 
 These are details I found by reading the code. Each is a *possible* polish
 item, not a gap.
@@ -84,7 +88,7 @@ item, not a gap.
 
 ---
 
-## 3. Things Feedbin does in a better way
+### 3. Things Feedbin does in a better way
 
 What follows is about *how* something is done, not whether it exists.
 
@@ -114,7 +118,7 @@ Fit: Fits, and it serves a floor.)
 
 ---
 
-## What I'd look at first
+### What I'd look at first (Feedbin)
 
 If the owner wants to borrow anything, I'd rank by "most book-like for the
 least work", all of them Small and all of them fitting:
@@ -133,9 +137,120 @@ Things to say no to, on purpose: platform share buttons, page saving,
 full-page extraction, push notifications, list thumbnails and
 logo-coloured rows (1.4, 1.12, 1.13, 1.14, 2.13, 2.8).
 
-## What this research did not do
+---
 
-- It read Feedbin's code, not its live product, so how things *feel* is
+## Part B: Miniflux
+
+[Miniflux](https://github.com/miniflux/v2) is a minimal, fast reader written
+in Go. It is the closest to nine turtles in spirit, so most of its ideas
+are small. (It also does things we won't: it can fetch each article's web
+page, and it ties itself to a PostgreSQL database.)
+
+**Ideas, with what we already have noted**
+
+| # | Idea | What Miniflux does | Why it might matter | Effort | Fit |
+|---|---|---|---|---|---|
+| B.1 | **Strip tracking from links** | Removes `utm_source`, `utm_medium`, `fbclid` and similar tags from article links, and finds the real address behind FeedBurner redirects. | The reader's "Copy link" and "Open original" then hand over a clean address. SPEC section 21 promises "the publisher's original link"; this keeps that promise and removes the marketing tags. | Small | Fits. Check first that it can never break a link that needs its query (strip only a known list). |
+| B.2 | **No referrer when leaving** | Every outgoing link carries `rel="noopener noreferrer"`, and the whole site sends `Referrer-Policy: no-referrer`. | The publisher doesn't learn where the reader came from. A real privacy floor item. | Small | Fits, and serves "respect the reader". SPEC doesn't mention it, so first check what the app sends today. |
+| B.3 | **Picture proxy** | Optional proxy so pictures don't contact the publisher directly. | Same idea as Feedbin's, see "One privacy idea" in Part A. Miniflux makes it a setting, which is a gentler first step. | Large | Fits. |
+| B.4 | **YouTube without cookies** | Plays YouTube from `youtube-nocookie.com`, and can swap in another player. | We play YouTube in YouTube's own player (decision 0072). Worth checking we already use the no-cookie address. | Small | Fits. |
+| B.5 | **Reading time** | Works out "5 min" for each article. | Apple Books shows how much is left, so a quiet "5 min" under the title would be book-like. It's a number about the article, not about the reader. | Small | Check. DESIGN.md decides; keep it out of the list rows (they hold one meta line) and only in the article header, if at all. |
+| B.6 | **Regex "keep or block" filters per feed** | A feed can keep only, or drop, articles matching a pattern. | Our Rules and mutes already cover this in plain words (SPEC section 27). | none | Already covered. |
+| B.7 | **Next check from the feed's own hints** | Spaces checks by how often a feed posts, and honours its `ttl`, `Retry-After` and cache headers. | We already do the same in spirit (SPEC section 11: often for frequent, rarely for quiet, honours 429/503). | none | Already covered. |
+| B.8 | **History view** | A page of everything you've read. | Like Feedbin's "recently read" (item 1.2). | Small | Check, as 1.2. |
+| B.9 | **Passkey sign-in** | Supports passkeys (WebAuthn) next to passwords. | Listed in SPEC "Not in V1"; Miniflux shows it is doable in a small program. | Medium | Fits; the owner's call on timing. |
+| B.10 | **Touch swipes** | Optional swipe gestures on phones. | SPEC section 20 chooses no custom swipes. | Small | **Clashes** with the standing choice. Leave. |
+| B.11 | **Fetch the original article ("fetch original content")** | A key (`d`) pulls the article's page and cleans it with a local reader-mode parser. | Same as Feedbin's "extract". | Medium | **Clashes** with "never scrape". Don't build. |
+| B.12 | **25 "send to" integrations, webhooks** | Wallabag, Pinboard, Notion, Telegram, Slack and many more. | | Medium each | **Clashes** with "no buttons for specific platforms". Don't build. |
+| B.13 | **Custom CSS and JavaScript** | Readers can paste their own style sheet and script. | A power-user escape hatch. | Small | **Clashes** with the strict script rules and "boring and few". A user style sheet alone is at least discussable. |
+| B.14 | **Shareable public article links** | Make one article public by a link. | | Medium | **Clashes** with "Not in V1: public reading list page", and with sharing only the publisher's link. |
+
+**What Miniflux does that a "boring and few" program can learn:** its
+whole feature list fits on one page, and everything beyond reading is
+hidden in Settings. That is the same shape as nine turtles, a good sign.
+
+---
+
+## Part C: NetNewsWire
+
+[NetNewsWire](https://github.com/Ranchero-Software/NetNewsWire) is a free
+Mac and iPhone reader in Swift, and it is the best reference for UI. I
+read its code and bundled files; I did not run the app, so how any of this
+feels is a guess.
+
+| # | Idea | What NetNewsWire does | Why it might matter | Effort | Fit |
+|---|---|---|---|---|---|
+| C.1 | **Mark older as read** | The `o` key marks every article older than the one selected as read. | The same idea as Feedbin's "mark above/below" (1.1): one move to clear the backlog. | Small | Fits. A strong second vote for building 1.1. |
+| C.2 | **Space reads onward** | `Space` scrolls the article and, at the end, goes to the next unread one. `-` goes back. `n` jumps to the next unread. | The most natural "read the whole inbox with one key" flow, found in all the keyboard-driven readers (Feedbin too, item 1.10). | Small | Fits. |
+| C.3 | **Collapse and expand sidebar folders by key** | `,` and `.` collapse and expand the selected folder, `;` and `'` do all of them. | Mouse-free tidying (like Feedbin's `e`, item 2.10). | Small | Fits. |
+| C.4 | **Block trackers and ad servers inside articles** | A bundled list of ad and tracking domains (Google Analytics, DoubleClick, Taboola, Outbrain, Criteo and others) is blocked from loading in the article view. | Articles often embed tracking pictures and scripts that a plain sanitiser keeps. Our sanitiser already removes scripts and 1×1 pixels (SPEC section 7); a block list for known tracker domains would stop the remaining hidden pictures from calling home. | Small to Medium | Fits, and serves a floor. Needs a short, owned list in the repo. |
+| C.5 | **Article themes as simple files** | Each look (Appanoose, Hyperlegible, NewsFax, Sepia, Biblioteca, Promenade and more) is a small bundle of one style sheet plus a few settings that you can drop in. | Shows that a reading look can be small and swappable. Our Original and Plain, plus fonts (Literata, Atkinson Hyperlegible, System serif), already do the job. | Small | Check. "Boring and few" and the owner's taste decide. A sepia or paper tone is the only theme that sounds book-like. |
+| C.6 | **Group the list by feed** and choose newest or oldest first | Two settings in the timeline: sort direction and "group by feed". | We have inbox and river modes and a sort choice; "group by feed" in a mixed list is the extra. | Small | Check. Grouping adds headings into the list; Apple Books groups by series, so it could suit. Low priority. |
+| C.7 | **A "Today" view** | A smart feed of what arrived today. | A calm way in. | Small | Check. We already have Unread, Starred, All; a fourth view needs a good reason (DESIGN.md: "power hidden, never missing"). Probably no. |
+| C.8 | **Add a feed from the system's share sheet and Shortcuts** | A Safari extension, a share extension, and an App Intent so the Shortcuts app can add a feed. | On an iPhone, "share this site into the reader" is the simplest way to add a feed. | Medium | Fits. A web app can do part of it with a share target in its manifest; worth checking. |
+| C.9 | **Home-screen widget** | A widget showing unread counts. | | Medium | **Clashes**: counts outside the app are a badge by another name. Don't build. |
+| C.10 | **Reader view (article extractor)** | A "Reader view" button that fetches the full page. | | Medium | **Clashes** with "never scrape". |
+| C.11 | **Syncing through other services** | iCloud, Feedly, NewsBlur, FreshRSS, Feedbin accounts. | | Large | Not our shape: we are the server. Section 26 already lets apps like NetNewsWire read from us. |
+| C.12 | **Keep one list of keys** | Keyboard maps live in four small plain files (global, sidebar, timeline, article). | A neat way to keep the shortcut sheet and the real keys from drifting apart. | Small | Fits. Our cheat sheet is built from one list too; check that a test fails if the sheet and the keys disagree. |
+
+**What NetNewsWire teaches about UI:** a calm three-column reader works
+when the keyboard does most of the moving, when the article look is
+changed in one place, and when nothing outside the window nags. That is
+nine turtles' design. NetNewsWire is *not* ahead on typography: Literata
+plus the Aa panel is more considered than its theme list.
+
+---
+
+## Part D: FreshRSS
+
+[FreshRSS](https://github.com/FreshRSS/FreshRSS) has the longest feature
+list of the four and is built for self-hosting, so it is a checklist more
+than a model. It is also much busier than we want; I mark what fits.
+
+| # | Idea | What FreshRSS does | Why it might matter | Effort | Fit |
+|---|---|---|---|---|---|
+| D.1 | **Your own labels on articles** | Tags ("my labels") on any article, separate from folders. | Lets a reader file an article under "to cite" or "recipes". We have stars and folders only. | Medium | Check. It adds a second way to sort; Apple Books has Collections, so a *single* "collections for starred articles" idea could fit. Owner's call. |
+| D.2 | **Keep-how-many rules per feed** | A feed can keep only its latest N articles, or those from the last 3 months, and always keeps stars. | We have the yearly clean-up (decision 0089). Per-feed choices are more granular, but SPEC chose few settings. | Medium | Check. |
+| D.3 | **Mark as read when you scroll past, on focus, or on leaving** | Several automatic ways to mark articles read. | | Small | Check. "Nothing moves unless you move it" argues against. Our "Let unread go after" setting covers the calm version. |
+| D.4 | **Article text from the page (XPath/CSS scraping)** | A feed can be turned into a full-text feed by telling FreshRSS where on the page the text is, and even build a feed from a page with no feed. | Power users love it. | Large | **Clashes** with "never scrape". Don't build. |
+| D.5 | **Statistics page** | Charts of articles per day, idle feeds, unread over time. | The "idle feeds" part is useful; the rest is not. | Small | **Clashes** if it shows reading habits (a Never). A plain "this feed hasn't posted in 3 months" line belongs on the Feed health page, which may already do it. |
+| D.6 | **Rebindable keys** | Every shortcut can be changed. | Different habits, left hands, other layouts. | Medium | Check. Power hidden, never missing: fine if tucked into Settings. Low priority. |
+| D.7 | **Ten themes** | Origine, Nord, Dark-pink, Flat and more. | | Small each | Check. "Boring and few". |
+| D.8 | **Three reading modes** | Normal (list and article), Global (everything in headings), Reading (stream of full articles). | Our Inbox and River cover the useful two. | none | Already covered. |
+| D.9 | **Feed priority** | Main stream, Important, Archived. | A way to quiet a feed without pausing it. | Small | Check. We have Pause (decision 0095), which covers most of it. |
+| D.10 | **Command-line tools** | Scripts to create users, back up, export and import per user, check health. | For a self-hoster. | Medium | Check. We already have backups and exports; a single "export one reader" command might help the owner look after readers, which is operations, not product. |
+| D.11 | **Anonymous (public) reading** | A setting to let anyone read without signing in. | | Small | **Clashes** with "walled off" readers (decision 0086) and public pages being out of V1. |
+| D.12 | **Dynamic OPML, WebSub, user queries (saved searches)** | Subscribe to an OPML URL; instant updates; saved filters. | | none | Already covered (WebSub, saved searches). Dynamic OPML is a niche. |
+| D.13 | **Email-verified accounts, extensions system** | An extension API in PHP. | | Large | **Clashes** with "boring and few". Leave. |
+
+---
+
+## What I'd look at first, across all four
+
+Three readers independently arrive at the same small things, which makes
+them the strongest candidates (all Small, all fitting):
+
+1. **Mark older (or above/below) as read**: Feedbin 1.1, NetNewsWire C.1.
+2. **`Space` to read onward, `n` for next unread**: Feedbin 1.10, NetNewsWire C.2.
+3. **Folder keys and copy-link key**: Feedbin 2.10, 2.11, NetNewsWire C.3.
+4. **Privacy hygiene**: strip tracking tags from links (B.1), no-referrer
+   (B.2), block known tracker domains in articles (C.4). Nothing in nine
+   turtles' own docs mentions the first two or the last, so first check
+   what the app does today.
+5. **Test real Substack and Ghost feeds** (Feedbin 2.1).
+
+Bigger decisions for the owner, none urgent: podcasts (1.6), edited
+articles (1.3), a picture proxy (Part A and B.3), labels or collections
+(D.1), passkeys (B.9), and a paper-toned third theme (1.9, C.5).
+
+Clashes to say no to on purpose (all four do these; we don't): sending to
+other services, saving or scraping full pages, push notifications and
+badges, widgets with counts, list thumbnails, reading statistics, public
+pages, custom scripts.
+
+## What these comparisons did not do
+
+- It read each app's public code, not the running product, so how things *feel* is
   guessed from the code and not tested.
 - It did not run nine turtles against each point. Where I wrote "probably
   already done", a quick check in the app is the first step before anyone
