@@ -799,12 +799,46 @@ async fn a_paused_feed_piles_nothing_up_and_unpausing_brings_back_its_newest_thr
             })
             .collect()
     };
+    // Another reader follows the same feed and hasn't paused it.
+    let (other, other_cookie) = common::another_reader(&reader.state).await;
+    let response = Client::new()
+        .post(format!("{}/api/feeds", reader.base))
+        .header("cookie", &other_cookie)
+        .header("sec-fetch-site", "same-origin")
+        .header("content-type", "application/json")
+        .body(json!({ "address": format!("{}/alpha.xml", reader.publisher) }).to_string())
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::CREATED);
     let mut connection = reader.state.db.acquire().await.unwrap();
     nine_turtles::feeds::store_articles(&mut connection, alpha, &posts("Alpha", 5), now)
         .await
         .unwrap();
     drop(connection);
-    assert_eq!(reader.titles(&format!("feed={alpha}")).await.len(), 8);
+    let others_new_unread: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM entries JOIN articles ON articles.id = entries.article_id
+         WHERE entries.person_id = ? AND articles.fingerprint LIKE 'Alpha-new-%'
+             AND entries.read = 0",
+    )
+    .bind(other)
+    .fetch_one(&reader.state.db)
+    .await
+    .unwrap();
+    assert_eq!(others_new_unread, 5, "pausing is one reader's alone");
+    // The newest one is muted (as a rule would): it stays muted on unpausing.
+    sqlx::query(
+        "UPDATE entries SET muted = 1 WHERE person_id = 1 AND article_id =
+             (SELECT id FROM articles WHERE fingerprint = 'Alpha-new-5')",
+    )
+    .execute(&reader.state.db)
+    .await
+    .unwrap();
+    assert_eq!(
+        reader.titles(&format!("feed={alpha}")).await.len(),
+        7,
+        "the muted one leaves the list"
+    );
     assert_eq!(
         reader.sidebar().await.0,
         vec![row("Alpha blog", 3, &[]), row("Beta blog", 3, &[])]
@@ -830,7 +864,7 @@ async fn a_paused_feed_piles_nothing_up_and_unpausing_brings_back_its_newest_thr
         .iter()
         .filter(|title| title.contains("new"))
         .collect();
-    assert_eq!(new, ["Alpha new 5", "Alpha new 4", "Alpha new 3"]);
+    assert_eq!(new, ["Alpha new 4", "Alpha new 3", "Alpha new 2"]);
     assert_eq!(
         reader.sidebar().await.0,
         vec![row("Alpha blog", 6, &[]), row("Beta blog", 3, &[])]

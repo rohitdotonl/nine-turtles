@@ -146,7 +146,8 @@ impl Check {
 
 /// How many of the articles a feed brought while it was paused go back to
 /// Unread when the reader unpauses it: only the newest few, so nothing piles
-/// up (SPEC section 15).
+/// up (SPEC section 15). The number is also written in SPEC section 15 and
+/// in Edit feed's helper line (`web/src/lib/EditFeed.svelte`).
 pub const BACK_FROM_PAUSE: i64 = 3;
 
 /// "Edit feed": its name, folders and settings, saved together or not at all.
@@ -185,9 +186,6 @@ async fn edit_feed(
         .bind(id)
         .execute(&mut *transaction)
         .await?;
-        if let Some(paused) = form.paused {
-            set_paused(&mut transaction, person, id, paused, now()).await?;
-        }
         if form.check.is_some() {
             // The feed is checked as often as its most eager follower
             // allows. A longer wait applies at once: the next check moves
@@ -226,6 +224,10 @@ async fn edit_feed(
         .bind(serde_json::to_string(&folders).unwrap_or_else(|_| "[]".to_owned()))
         .execute(&mut *transaction)
         .await?;
+        // After the folders, so rules for folders act on the ones just saved.
+        if let Some(paused) = form.paused {
+            set_paused(&mut transaction, person, id, paused, now()).await?;
+        }
         transaction.commit().await?;
         Ok(Some(()))
     }
@@ -277,6 +279,8 @@ async fn set_paused(
         .bind(id)
         .execute(&mut *connection)
         .await?;
+    // The inner SELECT picks the newest few first, then the UPDATE marks
+    // them; keep it uncorrelated so LIMIT applies to the feed, not per row.
     let back: Vec<i64> = sqlx::query_scalar(
         "UPDATE entries SET read = 0
          WHERE person_id = ?1 AND feed_id = ?2 AND article_id IN (
