@@ -146,7 +146,8 @@ a:focus-visible {
   flex: none;
 }
 
-.top nav {
+/* The name on the left; the places and the button together on the right. */
+.wordmark {
   margin-right: auto;
 }
 
@@ -192,9 +193,6 @@ a:focus-visible {
   .bar {
     padding-top: 12px;
     padding-bottom: 8px;
-  }
-  .wordmark {
-    margin-right: auto;
   }
   .top nav {
     order: 3;
@@ -472,23 +470,51 @@ th {
 
 footer {
   margin-top: 5rem;
-  padding-top: 2rem;
-  padding-bottom: 3rem;
+  padding-top: 1.5rem;
+  padding-bottom: 2.5rem;
   border-top: 1px solid var(--line);
   color: var(--muted);
   font-family: var(--sans);
   font-size: 0.875rem;
+  text-align: center;
 }
 
-/* Nine turtles walking in single file above the footer's links: seven
+/* The footer's links: two short centred rows, each link a full 44px tall. */
+footer .links ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+footer .links li + li {
+  margin-top: 0;
+}
+
+footer .links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 10px;
+  color: var(--ink-2);
+}
+
+footer .links.small a {
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+/* At the very end of the page, nine turtles walking in single file: seven
    together, then a gap, then two more. Still, like everything here. */
 footer .walk {
   display: grid;
   justify-items: center;
   gap: 10px;
-  margin-bottom: 2rem;
-  padding-bottom: 2rem;
-  border-bottom: 1px solid var(--line);
+  margin-top: 1.5rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--line);
 }
 
 footer .procession {
@@ -515,37 +541,6 @@ footer .walk p {
   color: var(--ink-2);
   font-family: var(--serif);
   font-size: 1rem;
-  text-align: center;
-}
-
-footer .columns {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-  gap: 16px 24px;
-}
-
-footer h2 {
-  margin: 0 0 4px;
-  color: var(--ink);
-  font-family: var(--sans);
-  font-size: 0.875rem;
-}
-
-footer ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-footer li + li {
-  margin-top: 0;
-}
-
-footer nav a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  color: var(--ink-2);
 }
 
 /* Smaller headings on a phone, so a title fits in two or three lines. */
