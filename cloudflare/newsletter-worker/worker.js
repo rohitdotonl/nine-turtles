@@ -6,7 +6,7 @@
 // the shared secret as its key. nine turtles does everything else.
 //
 // When nine turtles answers "200 OK", the email is kept and that's the end.
-// "No such address" and "replaced" (marked with the x-nine-turtles-answer
+// "No such address", "replaced" and "label switched off" (marked with the x-nine-turtles-answer
 // header) bounce the email back to its sender: that's what replacing an
 // address is for. Any other answer, a plain "404" included, (and nine turtles being out of reach)
 // passes the email on to FORWARD_TO, an ordinary inbox, when one is set, so
@@ -48,7 +48,7 @@ export default {
     // Only nine turtles' own "no such address" bounces: a "404" without the
     // mark means nine turtles isn't taking newsletters, or NINE_TURTLES_URL is wrong.
     const said = answer ? answer.headers.get("x-nine-turtles-answer") : null;
-    if (said === "no-such-address" || said === "replaced") {
+    if (said === "no-such-address" || said === "replaced" || said === "label-off") {
       message.setReject("There is no such address at nine turtles.");
       return;
     }

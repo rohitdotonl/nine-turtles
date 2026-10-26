@@ -480,3 +480,189 @@ async fn a_new_sender_is_dropped_when_the_reader_follows_as_many_feeds_as_one_ca
     .await;
     assert_eq!(json(response).await["kept"], true);
 }
+
+/// A made-up sender's website, which notes every request it's sent: the
+/// path, and the body of a post.
+async fn sender_site() -> (
+    String,
+    std::sync::Arc<std::sync::Mutex<Vec<(String, String)>>>,
+) {
+    use axum::{Router, extract::State, http::Uri};
+    type Seen = std::sync::Arc<std::sync::Mutex<Vec<(String, String)>>>;
+    async fn note(State(seen): State<Seen>, uri: Uri, body: String) -> &'static str {
+        seen.lock().unwrap().push((uri.path().to_owned(), body));
+        "ok"
+    }
+    let seen: Seen = Seen::default();
+    let app = Router::new().fallback(note).with_state(seen.clone());
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let base = format!("http://{}", listener.local_addr().unwrap());
+    tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+    (base, seen)
+}
+
+#[tokio::test]
+async fn a_label_reaches_the_reader_and_can_be_switched_off_and_on() {
+    let (base, state) = common::start_with_state(on()).await;
+    let cookie = common::signed_in(&base).await;
+    let to = address(&base, &cookie).await;
+    let (name, domain) = to.split_once('@').unwrap();
+    let cooking = format!("{name}+Cooking@{domain}");
+    assert_eq!(post_to(&base, &cooking, email()).await.status(), 200);
+
+    let answer = get(&base, &cookie, "/api/newsletters").await;
+    assert_eq!(
+        answer["labels"],
+        serde_json::json!([{ "label": "cooking", "address": format!("{name}+cooking@{domain}"), "on": true }])
+    );
+
+    // Another reader can't switch it.
+    let (_, other) = common::another_reader(&state).await;
+    let refused = post_api(
+        &base,
+        &other,
+        "/api/newsletters/labels",
+        serde_json::json!({ "label": "cooking", "on": false }),
+    )
+    .await;
+    assert_eq!(refused.status(), 404);
+
+    let off = post_api(
+        &base,
+        &cookie,
+        "/api/newsletters/labels",
+        serde_json::json!({ "label": "cooking", "on": false }),
+    )
+    .await;
+    assert_eq!(off.status(), 204);
+    let refused = post_to(&base, &cooking, letter("A <a@example.com>", "l1@x", "Hi")).await;
+    assert_eq!(refused.status(), 410);
+    assert_eq!(refused.headers()["x-nine-turtles-answer"], "label-off");
+    // The plain address, and other labels, still take mail.
+    assert_eq!(
+        post_to(&base, &to, letter("A <a@example.com>", "l2@x", "Hi"))
+            .await
+            .status(),
+        200
+    );
+    let garden = format!("{name}+garden@{domain}");
+    assert_eq!(
+        post_to(&base, &garden, letter("B <b@example.com>", "l3@x", "Hi"))
+            .await
+            .status(),
+        200
+    );
+
+    let on_again = post_api(
+        &base,
+        &cookie,
+        "/api/newsletters/labels",
+        serde_json::json!({ "label": "cooking", "on": true }),
+    )
+    .await;
+    assert_eq!(on_again.status(), 204);
+    assert_eq!(
+        post_to(&base, &cooking, letter("A <a@example.com>", "l4@x", "Hi"))
+            .await
+            .status(),
+        200
+    );
+    let labels = get(&base, &cookie, "/api/newsletters").await["labels"].clone();
+    assert_eq!(labels.as_array().unwrap().len(), 2);
+}
+
+#[tokio::test]
+async fn once_an_unsubscribe_is_final_the_sender_is_told_in_one_click_once() {
+    let (base, state) = common::start_with_state(on()).await;
+    let (site, seen) = sender_site().await;
+    let cookie = common::signed_in(&base).await;
+    let to = address(&base, &cookie).await;
+    post_to(&base, &to, email()).await;
+    let feed = count(&state, "SELECT id FROM feeds").await;
+    // The made-up email's own one-click address is on https; here it's the made-up site.
+    let one_click: Option<String> =
+        sqlx::query_scalar("SELECT one_click FROM newsletter_senders WHERE feed_id = ?")
+            .bind(feed)
+            .fetch_one(&state.db)
+            .await
+            .unwrap();
+    assert_eq!(
+        one_click.as_deref(),
+        Some("https://slowgarden.example.com/action/disable_email?token=xyz")
+    );
+    sqlx::query("UPDATE newsletter_senders SET one_click = ?")
+        .bind(format!("{site}/unsubscribe?token=xyz"))
+        .execute(&state.db)
+        .await
+        .unwrap();
+
+    post_api(
+        &base,
+        &cookie,
+        &format!("/api/feeds/{feed}/unsubscribe"),
+        serde_json::json!({}),
+    )
+    .await;
+    let now = nine_turtles::now();
+    // While Undo is offered, the sender hears nothing.
+    nine_turtles::newsletters::tell_senders(&state, now)
+        .await
+        .unwrap();
+    assert!(seen.lock().unwrap().is_empty());
+
+    nine_turtles::folders::clear_unsubscribed(&state.db, None, i64::MAX)
+        .await
+        .unwrap();
+    assert_eq!(
+        nine_turtles::newsletters::tell_senders(&state, now)
+            .await
+            .unwrap(),
+        1
+    );
+    assert_eq!(
+        nine_turtles::newsletters::tell_senders(&state, now)
+            .await
+            .unwrap(),
+        0
+    );
+    assert_eq!(
+        *seen.lock().unwrap(),
+        [(
+            "/unsubscribe".to_owned(),
+            "List-Unsubscribe=One-Click".to_owned()
+        )]
+    );
+}
+
+#[tokio::test]
+async fn a_new_email_is_opened_once_when_it_arrives() {
+    let (base, _state) = common::start_with_state(on()).await;
+    let (site, seen) = sender_site().await;
+    let cookie = common::signed_in(&base).await;
+    let to = address(&base, &cookie).await;
+    let raw = format!(
+        "From: News <news@example.com>\r\nTo: {to}\r\nSubject: Hello\r\nMessage-ID: <o1@x>\r\n\
+         Content-Type: text/html\r\n\r\n<p>Hello</p><img src=\"{site}/open/abc\" width=\"1\" height=\"1\">\
+         <img src=\"{site}/photo.jpg\" width=\"600\">\r\n"
+    );
+    assert_eq!(
+        post_to(&base, &to, raw.clone().into_bytes()).await.status(),
+        200
+    );
+    for _ in 0..50 {
+        if !seen.lock().unwrap().is_empty() {
+            break;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    }
+    // The same email again isn't opened again.
+    post_to(&base, &to, raw.into_bytes()).await;
+    tokio::time::sleep(std::time::Duration::from_millis(300)).await;
+    let paths: Vec<String> = seen
+        .lock()
+        .unwrap()
+        .iter()
+        .map(|(path, _)| path.clone())
+        .collect();
+    assert_eq!(paths, ["/open/abc"]);
+}

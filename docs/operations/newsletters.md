@@ -9,9 +9,10 @@ Cloudflare's and Render's websites. You don't need to install anything.
 **Where things stand (26 October 2026):** both parts are built. Once these
 steps are done, each reader finds their own address in Settings ›
 Newsletters, and newsletters sent to it arrive as feeds. Mail to an address
-nobody has bounces. If you did these steps before 26 October, paste the
-forwarder's code again (step 2, points 5 to 7): the new one tells nine
-turtles who each email was for.
+nobody has bounces. If you made the forwarder before part three (26 October 2026),
+paste its code again (step 2, point 2): the new one bounces email to a label
+you switched off, and passes email on to `FORWARD_TO` when nine turtles isn't
+taking newsletters.
 
 ## The pieces
 

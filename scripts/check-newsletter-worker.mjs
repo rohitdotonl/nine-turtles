@@ -68,6 +68,7 @@ await run("out of reach, with an inbox", { status: null, forwardTo: "me@example.
 await run("refused, no inbox", { status: 422, wanted: "bounced" });
 await run("nobody's address, with an inbox", { status: 404, answer: "no-such-address", forwardTo: "me@example.com", wanted: "bounced" });
 await run("a replaced address, with an inbox", { status: 410, answer: "replaced", forwardTo: "me@example.com", wanted: "bounced" });
+await run("a label switched off, with an inbox", { status: 410, answer: "label-off", forwardTo: "me@example.com", wanted: "bounced" });
 await run("newsletters off (a plain 404), with an inbox", { status: 404, forwardTo: "me@example.com", wanted: "forwarded to me@example.com" });
 await run("nine turtles down, no inbox", { status: 503, wanted: "error" });
 await run("out of reach, no inbox", { status: null, wanted: "error" });

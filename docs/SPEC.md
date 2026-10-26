@@ -607,13 +607,13 @@ A rule says "when a new article **matches this**, **do that**", in plain fields,
 
 ## 28. Newsletters as feeds
 
-*Built in V2 (26 October 2026, decision 0091), in two parts: reading and cleaning emails (part one), then each reader's own address with emails kept as articles (part two). On only while `NINE_TURTLES_NEWSLETTER_SECRET` is set.*
+*Built in V2 (26 October 2026, decision 0091), in three parts: reading and cleaning emails (part one), each reader's own address with emails kept as articles (part two), then labels with switches, one-click unsubscribe and "opened" on arrival (part three). On only while `NINE_TURTLES_NEWSLETTER_SECRET` is set.*
 
 **What it does**
 - Settings has a **Newsletters** group, after Rules, with your private address, like `turtle-7k2xab3c@in.nineturtles.app`, made the first time you open Settings, and **Copy**. **New address** gives you another one at once; mail to the old one is refused from then on (for when spam arrives). The line under the group says so, with **Undo**, which brings the old address back (for an hour). The group isn't there while nine turtles takes no newsletters.
-- You sign up to newsletters with that address. A word after a plus sign (`turtle-7k2xab3c+cooking@…`) still reaches you, to tell sign-ups apart.
+- You sign up to newsletters with that address. **Labels:** a word after a plus sign (`turtle-7k2xab3c+cooking@…`) still reaches you. Once email arrives at a label, it's listed in the group, under your address, with a **switch**; switched off ("Off." follows it), email to that label is turned away (it bounces), while your plain address and other labels still take email. Switch it on again to take its email again. Labels belong to an address: New address starts with none, and Undo brings the old address's back. The words under the group say how labels work and their catch: anyone with a labelled address can find your plain one by taking the label off, and a few sign-up forms don't accept a plus sign. At most 100 labels are listed per address; mail to more still arrives.
 - The first email from a newsletter makes a feed for it in the sidebar, named after the sender; each email is an article, read, starred, searched and muted (rules apply) like any other. A newsletter feed is yours alone: if two readers take the same newsletter, each has their own feed and their own copies, because each copy carries personal links (decision 0091).
-- Edit feed and Unsubscribe work as usual. Once you unsubscribe, the sender's later emails are dropped for 30 days, even after Undo has passed, so a slow sender's last few don't bring the feed back. After that, an email from them (you signed up again, say) starts the feed afresh. To stop them being sent, use the newsletter's own unsubscribe link, which stays in each article.
+- Edit feed and Unsubscribe work as usual. **Unsubscribing also tells the newsletter to stop,** once Undo has passed (10 minutes), when its emails offer one-click unsubscribe (most big mailing services do): nine turtles sends that request once, for you. The sender's later emails are dropped for 30 days, even after Undo has passed, so a slow sender's last few don't bring the feed back. After that, an email from them (you signed up again, say) starts the feed afresh. A newsletter without one-click unsubscribe keeps its own unsubscribe link in each article.
 - A newsletter is never checked in the background and isn't in the OPML file, which lists web feeds.
 - Only mail sent to your address arrives. nine turtles never sends email, never replies, and never sees your own inbox. At most 200 emails, and 5 MB of newsletter text, a day reach one address (and 100 MB a day for everyone together, so a leaked address can't fill the disk); more are refused that day. Newsletter feeds count towards the 1,000 feeds a reader can follow: once you follow 1,000, emails from a new sender are dropped, while the newsletters you already have keep arriving.
 
@@ -622,6 +622,7 @@ A rule says "when a new article **matches this**, **do that**", in plain fields,
 - **The article:** its title is the subject ("No subject" when there's none), its date the email's date, and its "Open original" the email's own "View in browser" link when it has one (that link isn't repeated in the text). An email is never stored twice (its Message-ID is its fingerprint).
 - **Cleaned for reading,** then made safe exactly like a feed article (section 7): the hidden preview text mail apps show in the inbox list, parts only Outlook shows, styles, pictures attached inside the email (which can't be shown) and invisible tracking images go; tables used only to lay the email out become plain blocks so the text flows; a real table of data, with headings, stays a table; links lose their tracking parts (`utm_…` and the like). A plain-text email becomes paragraphs, its web addresses links.
 - **Respecting the publisher:** only what the email holds is shown. nine turtles never fetches the web version or anything else the email links to.
+- **Opened on arrival** (the owner's choice, decision 0091): many senders drop readers who seem never to open their emails. So when a new email arrives, nine turtles loads its invisible tracking images (at most 3) once, as a mail app does when you open an email: the sender sees it was opened. Nothing that comes back is kept. Pictures in a newsletter load like any article's when you read it.
 - **Any language:** emails in any character set are read, Chinese and Japanese ones included; an email that names its language (`Content-Language`) keeps it.
 
 **How emails arrive:** Cloudflare Email Routing receives mail for `in.nineturtles.app` and a small forwarder (`cloudflare/newsletter-worker/`) posts each email to nine turtles' `/newsletters/incoming` with a shared secret. Without `NINE_TURTLES_NEWSLETTER_SECRET` that address doesn't exist. Emails over 10 MB are refused. Setup: `docs/operations/newsletters.md`.
@@ -629,7 +630,8 @@ A rule says "when a new article **matches this**, **do that**", in plain fields,
 **How to check it**
 1. Settings › Newsletters shows your address. Copy it and send an email to it from your own email: within a minute it's a feed in the sidebar, named after you, with the email as its article.
 2. Press New address, then Undo: the first address is back. Without Undo, an email to the old address bounces.
-3. Unsubscribe from that feed and send another email: it doesn't arrive.
+3. Send an email to your address with `+test` before the @: Settings › Newsletters lists that label with a switch. Switch it off and send another: it bounces back to you. Your plain address still works.
+4. Unsubscribe from that feed and send another email: it doesn't arrive.
 
 ---
 

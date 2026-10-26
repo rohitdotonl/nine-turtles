@@ -76,3 +76,12 @@ key is scoped to the reader (or their address), never just `list:…` or
   article's. And because senders often drop readers who seem never to open
   their emails, nine turtles will itself "open" each email once when it
   arrives (part three, with a label per newsletter and one-click unsubscribe).
+- **Part three (26 October 2026, the owner's yes the same day):** labels: each
+  `+label` that has had mail is listed in Settings › Newsletters with a
+  switch; mail to one switched off answers 410 and bounces. Unsubscribing
+  from a newsletter's feed tells its sender to stop, through one-click
+  unsubscribe (RFC 8058) when its emails offer it, once Undo has passed,
+  once. A new email's invisible tracking images (at most 3) are loaded once
+  on arrival, under the same rules as fetching feeds. Structure change 17
+  adds `newsletter_labels` and `newsletter_senders`. The forwarder needs
+  pasting again for the "label switched off" bounce.

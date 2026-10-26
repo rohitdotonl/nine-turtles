@@ -94,6 +94,8 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Newsletters as feeds
 - Raw email (RFC 5322 and MIME)
 - Mailing list headers (`List-Id`, `List-Unsubscribe`)
+- One-click unsubscribe (RFC 8058)
+- Email address labels (plus addressing)
 - Character sets (encodings)
 - Layout tables and preview text (in emails)
 
