@@ -26,3 +26,10 @@ contain dated facts; check before acting on any of them.
 - [`outreach.html`](outreach.html): newsletters, podcasts, bloggers and
   directories to approach.
 - [`research-2026-10/`](research-2026-10/): the 19 working notes, with sources.
+
+## Reading another reader's code (26 October 2026)
+
+- [`feedbin-comparison.md`](feedbin-comparison.md): what Feedbin (open source,
+  paid, ten years old) has that nine turtles lacks, its small touches, and
+  what it does better, with a rough size for each and a mark on anything
+  that would break a floor.
