@@ -4,13 +4,14 @@
   feeds, articles, the database's size, backups, email); then what needs a
   look, in plain words, and the problems noted since nine turtles last
   started; then everyone with an account, newest first after the owner,
-  each with when they joined and how many feeds they follow (never which).
-  Nothing about what anyone reads.
+  each with when they joined, how many feeds they follow (never which) and
+  the day they were last here (decision 0091). Nothing about what anyone
+  reads.
 -->
 <script lang="ts">
   import { edge } from "./edge";
   import PageHead from "./PageHead.svelte";
-  import { backupDay, count, date, loadOverview, plural, size, type Overview } from "./admin";
+  import { backupDay, count, date, lastHereDay, loadOverview, plural, size, type Overview } from "./admin";
 
   let {
     heading = $bindable(),
@@ -125,6 +126,7 @@
                   <span class="text-meta text-muted"
                     >Joined {date(reader.createdAt)} · {plural(reader.feeds, "feed", "feeds")}</span
                   >
+                  <span class="text-meta text-muted">Last here {lastHereDay(reader.lastHere)}</span>
                   {#if reader.feeds >= overview.mostFeeds}
                     <span class="text-meta text-ink-2">Follows as many feeds as one reader can.</span>
                   {/if}
@@ -136,8 +138,8 @@
             {/each}
           </ul>
           <p class="inset-foot">
-            Everyone with an account here. You see how many feeds each follows, never which feeds or what anyone
-            reads.
+            Everyone with an account here. You see how many feeds each follows and the day each was last here,
+            never which feeds or what anyone reads.
           </p>
         </section>
       {/if}

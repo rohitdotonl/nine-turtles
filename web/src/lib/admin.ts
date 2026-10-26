@@ -1,7 +1,7 @@
-// The owner's Readers page (SPEC section 18, decision 0090): how this nine
-// turtles is doing, in counts, and one line for each reader: their email,
-// when they joined and how many feeds they follow (never which). Nothing
-// about what anyone reads.
+// The owner's Readers page (SPEC section 18, decisions 0090 and 0091): how
+// this nine turtles is doing, in counts, and one line for each reader: their
+// email, when they joined, how many feeds they follow (never which) and the
+// day they were last here. Nothing about what anyone reads.
 
 import { api } from "./updates.svelte";
 
@@ -13,6 +13,8 @@ export type Reader = {
   feeds: number;
   /** Of their feeds, how many have failed for three days or more. */
   feedsFailing: number;
+  /** When nine turtles last saw them, right to the day. */
+  lastHere: number;
 };
 
 export type Overview = {
@@ -57,6 +59,7 @@ export function toOverview(body: unknown): Overview {
       createdAt: number(reader.created_at),
       feeds: number(reader.feeds),
       feedsFailing: number(reader.feeds_failing),
+      lastHere: number(reader.last_here) || number(reader.created_at),
     })),
     totals: {
       readers: number(totals.readers),
@@ -102,6 +105,14 @@ const DATE = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", y
 /** "25 October 2026", in this device's time zone. */
 export function date(seconds: number): string {
   return DATE.format(new Date(seconds * 1000));
+}
+
+/** The day a reader was last here: "today", or "24 October 2026". */
+export function lastHereDay(seconds: number, now: Date = new Date()): string {
+  const day = new Date(seconds * 1000);
+  const sameDay =
+    day.getFullYear() === now.getFullYear() && day.getMonth() === now.getMonth() && day.getDate() === now.getDate();
+  return sameDay ? "today" : date(seconds);
 }
 
 /** The nightly copy's day, from its name: "nightly/2026-10-25.sqlite" is "25 October 2026". */

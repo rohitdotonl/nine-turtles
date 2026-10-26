@@ -157,8 +157,18 @@ async fn only_the_owner_sees_the_readers_page_and_never_which_feeds() {
     assert_eq!(readers[1]["id"], reader);
     assert_eq!(readers[1]["feeds"], 3);
     assert_eq!(readers[1]["feeds_failing"], 0);
-    // Not when anyone was last here, until the owner decides (decision 0090).
-    assert!(readers[1].get("last_here").is_none());
+    // The day each was last here (decision 0091): just now, for both.
+    let now = nine_turtles::now();
+    for reader in readers {
+        let last_here = reader["last_here"].as_i64().unwrap();
+        assert!(now - last_here < 60, "{reader}");
+    }
+    // Each reader's own day, not another's.
+    last_seen(&state, reader, 40 * DAY).await;
+    let (_, page) = fetch(&base, &owner, "/api/admin").await;
+    let readers = page["readers"].as_array().unwrap();
+    assert!(now - readers[0]["last_here"].as_i64().unwrap() < 60);
+    assert!((now - 40 * DAY - readers[1]["last_here"].as_i64().unwrap()).abs() < 60);
     // How many, never which.
     let text = page.to_string();
     assert!(!text.contains("blog-0"), "{text}");

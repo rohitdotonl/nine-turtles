@@ -13,14 +13,6 @@ written into `DESIGN.md`, `ENGINEERING.md`, `SPEC.md`, `PLAN.md` and
   applies, the minimum age, and how long backups keep deleted data. Before
   anyone can sign up, someone qualified should read both. Not blocking
   anything today.
-- **Show when each reader was last here on your Readers page?** (26 October
-  2026, decision 0090). nine turtles already knows the day each reader last
-  opened it, signed in or synced (feeds whose readers have all been away for
-  30 days are checked once a day). Showing it, as "Here today" or "Away for
-  40 days", would tell you whether a tester has tried nine turtles yet. It's
-  new information about other readers' activity, so it's off until you say
-  yes; if yes, Settings would tell every reader that you can see it.
-  Suggestion: yes, with that line for readers.
 
 ---
 
