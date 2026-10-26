@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { backupDay, count, plural, size, toOverview } from "./admin";
+import { backupDay, count, date, lastHereDay, plural, size, toOverview } from "./admin";
 
 describe("the owner's Readers page", () => {
   it("reads the server's answer, and anything missing as nothing", () => {
@@ -10,14 +10,24 @@ describe("the owner's Readers page", () => {
       email_sending: false,
       problems: [{ at: 5, message: "something" }],
       readers: [
-        { id: 1, email: null, owner: true, created_at: 10, feeds: 30, feeds_failing: 1 },
+        { id: 1, email: null, owner: true, created_at: 10, feeds: 30, feeds_failing: 1, last_here: 20 },
         { id: 2, email: "a@example.com", owner: false, created_at: 11, feeds: 10, feeds_failing: 0 },
       ],
       most_feeds: 1000,
       away_after_days: 30,
     });
     expect(overview.totals.feedsResting).toBe(3);
-    expect(overview.readers[0]).toEqual({ id: 1, email: null, owner: true, createdAt: 10, feeds: 30, feedsFailing: 1 });
+    expect(overview.readers[0]).toEqual({
+      id: 1,
+      email: null,
+      owner: true,
+      createdAt: 10,
+      feeds: 30,
+      feedsFailing: 1,
+      lastHere: 20,
+    });
+    // Without a last visit, the day they joined.
+    expect(overview.readers[1]?.lastHere).toBe(11);
     expect(overview.latestBackup).toBe("nightly/2026-10-25.sqlite");
     expect(overview.problems).toEqual([{ at: 5, message: "something" }]);
 
@@ -27,6 +37,15 @@ describe("the owner's Readers page", () => {
     expect(empty.backupsOn).toBe(false);
     expect(empty.mostFeeds).toBe(1000);
     expect(empty.awayAfterDays).toBe(30);
+  });
+
+  it("says today, or the day, for a reader's last visit", () => {
+    const now = new Date(2026, 9, 26, 15, 0);
+    const seconds = (at: Date) => at.getTime() / 1000;
+    expect(lastHereDay(seconds(new Date(2026, 9, 26, 0, 5)), now)).toBe("today");
+    const yesterday = seconds(new Date(2026, 9, 25, 23, 55));
+    expect(lastHereDay(yesterday, now)).toBe(date(yesterday));
+    expect(date(yesterday)).toBe("25 October 2026");
   });
 
   it("writes counts and sizes as people read them", () => {

@@ -47,6 +47,7 @@ needs to work:
 | Your password, scrambled so it can't be read back (a "hash") | To sign you in |
 | The feeds and folders you follow, the articles they bring, what you've read and starred, and your settings | To be your reader: this is the service |
 | A sign-in cookie on each device you use | To keep you signed in; it's the only cookie, and it never tracks you anywhere else |
+| The day you were last here (not the time), and when you joined | To check less often the feeds of readers who've been away a month; whoever runs nine turtles sees the day, never what you read |
 | Short-lived technical logs (times, errors, never what you read) | To keep the service running and secure |
 | Payment details | Held by Dodo Payments, the company that takes payments, never by us |
 

@@ -25,7 +25,7 @@ open to change.*
   whether a tester has tried nine turtles yet. But it's new information
   about other readers' activity, which decision 0087 didn't cover and
   readers aren't told about, so it waits for the owner's yes
-  (`docs/planning/questions.md`); if yes, Settings will tell readers too.
+  (`docs/planning/questions.md`); if yes, Settings will tell readers too. (The owner said yes: decision 0093.)
 - **At most 1,000 feeds per reader, the owner included.** It's well above
   what anyone reads (the owner follows about 200), and it keeps one account
   from making nine turtles fetch thousands of feeds for everyone. Following a

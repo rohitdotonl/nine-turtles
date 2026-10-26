@@ -220,6 +220,8 @@ test("a reader changes their email by a link to the new one, then deletes their 
 
   // Deleting: the downloads first, then the one "Are you sure?".
   await page.goto("/settings");
+  // Told what the owner's Readers page shows of them (decision 0093).
+  await expect(page.getByText(/^Whoever runs this nine turtles can see your email/)).toBeVisible();
   await page.getByRole("button", { name: "Delete account…" }).click();
   const sure = page.getByRole("dialog", { name: "Delete your account?" });
   await expect(sure.getByRole("heading", { name: "Delete your account?" })).toBeFocused();
@@ -250,5 +252,6 @@ test("the owner's own account has no Delete account", async ({ browser }) => {
   await page.goto("/settings");
   await expect(page.getByText(/^Version /)).toBeVisible();
   await expect(page.getByRole("button", { name: "Delete account…" })).toHaveCount(0);
+  await expect(page.getByText(/^Whoever runs this nine turtles can see/)).toHaveCount(0);
   await context.close();
 });

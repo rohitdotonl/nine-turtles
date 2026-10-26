@@ -5,9 +5,9 @@
 //!   turtles is doing (readers, feeds, articles, the database's size,
 //!   sign-ups waiting for their email, backups, email, problems logged) and
 //!   one line for each reader: their email, when they joined, how many feeds
-//!   they follow and how many of those keep failing. Never which feeds,
-//!   nothing about what anyone reads, and not when anyone was last here (the
-//!   owner hasn't decided whether to show that yet; decision 0090).
+//!   they follow, how many of those keep failing, and the day they were last
+//!   here (the owner said yes, 26 October 2026; decision 0093). Never which
+//!   feeds, nothing about what anyone reads.
 //! - **At most `MOST_FEEDS` feeds per reader**, the owner too. Adding one
 //!   more, from the Add field, the welcome, another app or an OPML file, is
 //!   refused; Undo for unsubscribing always works.
@@ -51,7 +51,7 @@ pub fn routes() -> Router<AppState> {
 /// When reader `person` (a column, or `?1`) was last here, in SQL: the
 /// latest of when they joined, when one of their devices was last used,
 /// and when they were last seen (`here`). Each device notes its use at
-/// most once a day, so this is right to the day. (A macro, so every query
+/// most once every 24 hours, so this is at most a day behind. (A macro, so every query
 /// stays one fixed string.)
 macro_rules! last_here {
     ($person:literal) => {
@@ -181,19 +181,25 @@ pub struct Reader {
     pub feeds: i64,
     /// How many of those have failed for three days or more.
     pub feeds_failing: i64,
+    /// When nine turtles last saw them (`last_here!`); noted at most once
+    /// every 24 hours, so it can be up to a day behind.
+    pub last_here: i64,
 }
 
 /// Everyone with an account, the owner first, then the newest.
 pub async fn readers(db: &SqlitePool, now: i64) -> Result<Vec<Reader>, sqlx::Error> {
-    sqlx::query_as(
-        "SELECT people.id, people.email, people.owner, people.created_at,
+    // `reader`, not `people`: `last_here!` reads `people` again inside.
+    sqlx::query_as(concat!(
+        "SELECT reader.id, reader.email, reader.owner, reader.created_at,
              (SELECT COUNT(*) FROM subscriptions
-              WHERE person_id = people.id AND unsubscribed_at IS NULL) AS feeds,
+              WHERE person_id = reader.id AND unsubscribed_at IS NULL) AS feeds,
              (SELECT COUNT(*) FROM subscriptions JOIN feeds ON feeds.id = subscriptions.feed_id
-              WHERE subscriptions.person_id = people.id AND subscriptions.unsubscribed_at IS NULL
-                  AND feeds.failing_since <= ?) AS feeds_failing
-         FROM people ORDER BY people.owner DESC, people.created_at DESC, people.id DESC",
-    )
+              WHERE subscriptions.person_id = reader.id AND subscriptions.unsubscribed_at IS NULL
+                  AND feeds.failing_since <= ?) AS feeds_failing, ",
+        last_here!("reader.id"),
+        " AS last_here
+         FROM people AS reader ORDER BY reader.owner DESC, reader.created_at DESC, reader.id DESC"
+    ))
     .bind(now - KEEPS_FAILING)
     .fetch_all(db)
     .await

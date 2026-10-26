@@ -33,7 +33,8 @@ test("a moved feed is listed in plain words, and Find new address moves it", asy
   await expect(page.getByRole("heading", { name: "Having trouble" })).toBeVisible();
   await expect(feed).toContainText("Not found for less than a day.");
   await expect(feed).toContainText("The site says the feed isn't there any more.");
-  await expect(feed).not.toContainText("404");
+  // A word on its own: the title carries a timestamp, which may end in 404.
+  await expect(feed).not.toContainText(/\b404\b/);
 
   await feed.getByRole("button", { name: `Find new address for ${title}` }).click();
   const choice = feed.getByRole("radio", { name: new RegExp(`${title}.*new\\.xml`) });
