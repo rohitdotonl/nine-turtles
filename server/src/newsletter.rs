@@ -21,7 +21,9 @@
 //! - the "View in browser" link becomes the article's "Open original", so
 //!   it isn't repeated at the top of the text.
 //!
-//! Nothing is fetched: what the email contains is all nine turtles shows.
+//! Nothing is fetched to show it: what the email contains is all nine
+//! turtles shows. The invisible tracking images are noted (`opens`), so
+//! nine turtles can "open" the email once when it arrives (`newsletters`).
 
 use mail_parser::{MessageParser, PartKind};
 use reqwest::Url;
@@ -37,6 +39,13 @@ pub struct Newsletter {
     /// The newsletter's own web unsubscribe page (`List-Unsubscribe`), if it
     /// gives one. Its unsubscribe link in the text stays too.
     pub unsubscribe: Option<String>,
+    /// The web address that unsubscribes in one step, without a page to
+    /// click through (RFC 8058: `List-Unsubscribe-Post: List-Unsubscribe=One-Click`
+    /// and an `https://` address in `List-Unsubscribe`), exactly as given.
+    pub one_click: Option<String>,
+    /// The email's invisible tracking images (1 pixel or smaller), at most
+    /// `MOST_OPENS`: loading them tells the sender the email was opened.
+    pub opens: Vec<String>,
     /// The addresses the email names as its recipients (To, Cc,
     /// Delivered-To), in lowercase. The mail service's own word for who it
     /// was delivered to comes first when it gives one (`newsletters`).
@@ -76,6 +85,9 @@ const WEB_VERSION: &[&str] = &[
     "open in browser",
     "web version",
 ];
+
+/// The most tracking images noted for one email.
+pub const MOST_OPENS: usize = 3;
 
 /// Reads a raw email. `None` when it isn't one, or names no sender.
 pub fn parse(raw: &[u8]) -> Option<Newsletter> {
@@ -191,6 +203,15 @@ pub fn parse(raw: &[u8]) -> Option<Newsletter> {
         unsubscribe: header("List-Unsubscribe")
             .as_deref()
             .and_then(first_web_address),
+        one_click: header("List-Unsubscribe-Post")
+            .filter(|value| {
+                value.to_ascii_lowercase().replace(char::is_whitespace, "")
+                    == "list-unsubscribe=one-click"
+            })
+            .and(header("List-Unsubscribe"))
+            .as_deref()
+            .and_then(one_click_address),
+        opens: html.as_deref().map(tracking_images).unwrap_or_default(),
         recipients: message
             .to()
             .into_iter()
@@ -233,6 +254,56 @@ fn first_web_address(value: &str) -> Option<String> {
         })
         .find_map(web_address)
         .map(String::from)
+}
+
+/// The first `https://` address in `List-Unsubscribe`, exactly as written:
+/// its parts say whose subscription to end.
+fn one_click_address(value: &str) -> Option<String> {
+    value
+        .split(',')
+        .map(|part| {
+            part.trim()
+                .trim_start_matches('<')
+                .trim_end_matches('>')
+                .trim()
+        })
+        .find_map(|part| Url::parse(part).ok().filter(|url| url.scheme() == "https"))
+        .map(String::from)
+}
+
+/// The web addresses of an email's invisible tracking images: ones whose
+/// width or height (as written, or in their style) is 1 pixel or less.
+fn tracking_images(html: &str) -> Vec<String> {
+    let document = scraper::Html::parse_document(html);
+    let images = scraper::Selector::parse("img[src]").expect("a fixed, valid selector");
+    let mut found: Vec<String> = Vec::new();
+    for image in document.select(&images) {
+        let element = image.value();
+        let style = element.attr("style").unwrap_or_default();
+        let tiny = ["width", "height"].iter().any(|property| {
+            element
+                .attr(property)
+                .map(str::to_owned)
+                .or_else(|| style_value(style, property))
+                .and_then(|value| pixels(&value))
+                .is_some_and(|size| size <= 1)
+        });
+        let Some(url) = element
+            .attr("src")
+            .and_then(|source| Url::parse(source.trim()).ok())
+            .filter(|url| matches!(url.scheme(), "http" | "https"))
+        else {
+            continue;
+        };
+        let url = String::from(url);
+        if tiny && !found.contains(&url) {
+            found.push(url);
+        }
+        if found.len() == MOST_OPENS {
+            break;
+        }
+    }
+    found
 }
 
 /// A web address, with its tracking parts taken off.
@@ -675,6 +746,13 @@ mod tests {
             email.unsubscribe.as_deref(),
             Some("https://slowgarden.example.com/action/disable_email?token=xyz")
         );
+        // It unsubscribes in one step (List-Unsubscribe-Post), and has one
+        // tracking image, noted though not shown.
+        assert_eq!(email.one_click, email.unsubscribe);
+        assert_eq!(
+            email.opens,
+            ["https://email.mg.slowgarden.example.com/o/eJx1jM0"]
+        );
         // The inbox preview text, styles and the tracking image are gone;
         // the words, the picture and the links stay.
         assert!(!html.contains("Why I stopped mowing the lawn &"), "{html}");
@@ -703,6 +781,8 @@ mod tests {
 
     #[test]
     fn a_mailchimp_style_email_loses_its_layout_and_keeps_its_data_table() {
+        // An unsubscribe page, but not one that works in one step.
+        assert_eq!(read("mailchimp-style.eml").one_click, None);
         let email = read("mailchimp-style.eml");
         assert_eq!(email.sender.key, "from:news@riverclub.example.org");
         assert_eq!(email.sender.title, "River Club");

@@ -13,16 +13,31 @@
 //! **Each reader's own address** (part two): `turtle-…@in.nineturtles.app`,
 //! shown in Settings › Newsletters with Copy and New address. The forwarder
 //! says who the email was delivered to (`X-Nine-Turtles-To`); otherwise the
-//! email's own To, Cc and Delivered-To are tried. A `+label` after the name
-//! still reaches the reader. The first email from a sender makes a feed for
-//! it, the reader's alone (decision 0091); each email is an article.
+//! email's own To, Cc and Delivered-To are tried. The first email from a
+//! sender makes a feed for it, the reader's alone (decision 0091); each
+//! email is an article.
+//!
+//! **Labels** (part three): `name+label@…` reaches the same reader. Each
+//! label that has had mail is listed in Settings › Newsletters with a
+//! switch; mail to one switched off is refused (and bounces).
+//!
+//! **Unsubscribing** (part three): once the reader's unsubscribe is final
+//! (Undo has passed), nine turtles tells the sender, if its emails offer
+//! one-click unsubscribe (RFC 8058), by posting `List-Unsubscribe=One-Click`
+//! to its address once (`tell_senders`, run with background checking).
+//!
+//! **Opened** (part three, the owner's choice): senders often drop readers
+//! who seem never to open their emails. So when a new email arrives, nine
+//! turtles loads its invisible tracking images once (`newsletter::MOST_OPENS`
+//! at most), as a mail app would on opening it, under the same rules as
+//! fetching feeds (public addresses only, the time and size limits).
 //!
 //! **Answers:** 200 when kept, or when it's dropped on purpose (the reader
 //! unsubscribed from that sender, or follows as many feeds as one reader
 //! can); 404 for an address nobody has and 410 for one replaced by New
 //! address, both marked with `ANSWER_HEADER` so the forwarder bounces them;
-//! 429 when a reader (or everyone) has had a day's emails; 401, 413 and 422
-//! as before. Anything else is passed on to `FORWARD_TO` by the forwarder.
+//! 410 too for a label switched off; 429 when a reader (or everyone) has
+//! had a day's emails; 401, 413 and 422 as before. Anything else is passed on to `FORWARD_TO` by the forwarder.
 
 use axum::{
     Json, Router,
@@ -40,7 +55,7 @@ use crate::{
     AppState,
     auth::{SignedIn, database_problem},
     feeds::{store_articles, subscribe},
-    log, newsletter, now,
+    fetch, log, newsletter, now,
 };
 
 /// The biggest email nine turtles reads: 10 MB, room for a long newsletter
@@ -73,6 +88,17 @@ pub const STAYS_AWAY_FOR: i64 = 30 * 24 * 60 * 60;
 /// secret not set, a wrong address for nine turtles) on to `FORWARD_TO`.
 pub const ANSWER_HEADER: &str = "x-nine-turtles-answer";
 
+/// The most labels listed for one address: anyone with the address can
+/// make up labels, so a spammer's thousands aren't kept. Mail to labels
+/// past it still arrives; only the switch is missing.
+pub const MOST_LABELS: i64 = 100;
+
+/// The longest label kept, in letters.
+const LONGEST_LABEL: usize = 64;
+
+/// How many senders are told about unsubscribes in one round.
+const TOLD_PER_ROUND: i64 = 20;
+
 /// Where newsletter addresses are, after the @, unless
 /// `NINE_TURTLES_NEWSLETTER_DOMAIN` says otherwise.
 pub const DOMAIN: &str = "in.nineturtles.app";
@@ -93,6 +119,7 @@ pub fn routes() -> Router<AppState> {
         .route("/api/newsletters", get(address))
         .route("/api/newsletters/new-address", post(new_address))
         .route("/api/newsletters/undo-new-address", post(undo_new_address))
+        .route("/api/newsletters/labels", post(switch_label))
 }
 
 async fn incoming(State(state): State<AppState>, headers: HeaderMap, body: Bytes) -> Response {
@@ -142,8 +169,12 @@ async fn incoming(State(state): State<AppState>, headers: HeaderMap, body: Bytes
     } else {
         delivered_to
     };
-    let person = match whose(&state.db, &candidates).await {
-        Ok(Whose::Reader(person)) => person,
+    let (person, name, label) = match whose(&state.db, &candidates).await {
+        Ok(Whose::Reader {
+            person,
+            name,
+            label,
+        }) => (person, name, label),
         Ok(Whose::Retired) => {
             return (
                 StatusCode::GONE,
@@ -162,14 +193,45 @@ async fn incoming(State(state): State<AppState>, headers: HeaderMap, body: Bytes
         }
         Err(error) => return database_problem("finding whose newsletter address it is", &error),
     };
+    if let Some(label) = &label {
+        let off: Result<Option<Option<i64>>, sqlx::Error> =
+            sqlx::query_scalar("SELECT off_at FROM newsletter_labels WHERE name = ? AND label = ?")
+                .bind(&name)
+                .bind(label)
+                .fetch_optional(&state.db)
+                .await;
+        match off {
+            Ok(Some(Some(_))) => {
+                return (
+                    StatusCode::GONE,
+                    [(ANSWER_HEADER, "label-off")],
+                    "This address was switched off and no longer takes email.",
+                )
+                    .into_response();
+            }
+            Ok(_) => {}
+            Err(error) => return database_problem("reading a newsletter label", &error),
+        }
+    }
     let now = now();
-    match file(&state.db, person, &email, now).await {
+    let arrived = Arrived {
+        person,
+        name: &name,
+        label: label.as_deref(),
+    };
+    match file(&state.db, &arrived, &email, now).await {
         // Only the newsletter's name in the log, never the reader or their address.
-        Ok(Filed::Kept) => {
+        Ok(Filed::Kept { new }) => {
             log::info(&format!(
                 "a newsletter email from {:?} was kept",
                 email.sender.title
             ));
+            if new && !email.opens.is_empty() {
+                let client = state.http.clone();
+                let local = state.config.local_feeds_allowed;
+                let opens = email.opens.clone();
+                tokio::spawn(async move { open(&client, &opens, local).await });
+            }
             Json(json!({ "kept": true })).into_response()
         }
         Ok(Filed::Unsubscribed) => {
@@ -194,7 +256,12 @@ async fn incoming(State(state): State<AppState>, headers: HeaderMap, body: Bytes
 }
 
 enum Whose {
-    Reader(i64),
+    /// A reader's current address: its name, and the label after the `+`.
+    Reader {
+        person: i64,
+        name: String,
+        label: Option<String>,
+    },
     /// Only an address New address replaced.
     Retired,
     Nobody,
@@ -208,7 +275,10 @@ async fn whose(db: &sqlx::SqlitePool, candidates: &[String]) -> Result<Whose, sq
         let Some((local, _domain)) = candidate.rsplit_once('@') else {
             continue;
         };
-        let name = local.split('+').next().unwrap_or_default();
+        let (name, label) = match local.split_once('+') {
+            Some((name, label)) => (name, label_of(label)),
+            None => (local, None),
+        };
         if name.is_empty() {
             continue;
         }
@@ -218,7 +288,13 @@ async fn whose(db: &sqlx::SqlitePool, candidates: &[String]) -> Result<Whose, sq
                 .fetch_optional(db)
                 .await?;
         match found {
-            Some((person, None)) => return Ok(Whose::Reader(person)),
+            Some((person, None)) => {
+                return Ok(Whose::Reader {
+                    person,
+                    name: name.to_owned(),
+                    label,
+                });
+            }
             Some((_, Some(_))) => retired = true,
             None => {}
         }
@@ -230,8 +306,29 @@ async fn whose(db: &sqlx::SqlitePool, candidates: &[String]) -> Result<Whose, sq
     })
 }
 
+/// A label as kept: lowercase letters, digits, `.`, `_` and `-`, at most
+/// `LONGEST_LABEL` of them. Anything else counts as no label (the mail
+/// still arrives).
+fn label_of(text: &str) -> Option<String> {
+    let label = text.to_lowercase();
+    let fine = !label.is_empty()
+        && label.chars().count() <= LONGEST_LABEL
+        && label
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '-'));
+    fine.then_some(label)
+}
+
+/// Where an email arrived: whose address, and which label.
+struct Arrived<'a> {
+    person: i64,
+    name: &'a str,
+    label: Option<&'a str>,
+}
+
 enum Filed {
-    Kept,
+    /// `new` unless the same email had arrived before.
+    Kept { new: bool },
     /// The reader unsubscribed from this sender: dropped on purpose.
     Unsubscribed,
     /// A new sender, and the reader follows `admin::MOST_FEEDS` feeds already.
@@ -246,10 +343,11 @@ enum Filed {
 /// `newsletter:<reader>:<sender key>`, so no two readers ever share one.
 async fn file(
     db: &sqlx::SqlitePool,
-    person: i64,
+    arrived: &Arrived<'_>,
     email: &newsletter::Newsletter,
     now: i64,
 ) -> Result<Filed, sqlx::Error> {
+    let person = arrived.person;
     let mut transaction = db.begin_with("BEGIN IMMEDIATE").await?;
     let today: i64 = sqlx::query_scalar(
         "SELECT COUNT(*) FROM articles JOIN feeds ON feeds.id = articles.feed_id
@@ -321,6 +419,12 @@ async fn file(
             id
         }
     };
+    let seen: Option<i64> =
+        sqlx::query_scalar("SELECT 1 FROM articles WHERE feed_id = ? AND fingerprint = ?")
+            .bind(feed)
+            .bind(&email.article.fingerprint)
+            .fetch_optional(&mut *transaction)
+            .await?;
     store_articles(
         &mut transaction,
         feed,
@@ -328,8 +432,105 @@ async fn file(
         now,
     )
     .await?;
+    // The sender's one-click unsubscribe, from its newest email that has
+    // one. An email kept means the reader follows the sender (again), so
+    // it hasn't been told to stop since.
+    sqlx::query(
+        "INSERT INTO newsletter_senders (feed_id, one_click) VALUES (?, ?)
+         ON CONFLICT (feed_id) DO UPDATE SET
+             one_click = COALESCE(excluded.one_click, one_click), told_at = NULL",
+    )
+    .bind(feed)
+    .bind(&email.one_click)
+    .execute(&mut *transaction)
+    .await?;
+    if let Some(label) = arrived.label {
+        sqlx::query(
+            "INSERT OR IGNORE INTO newsletter_labels (name, label, first_at)
+             SELECT ?1, ?2, ?3
+             WHERE (SELECT COUNT(*) FROM newsletter_labels WHERE name = ?1) < ?4",
+        )
+        .bind(arrived.name)
+        .bind(label)
+        .bind(now)
+        .bind(MOST_LABELS)
+        .execute(&mut *transaction)
+        .await?;
+    }
     transaction.commit().await?;
-    Ok(Filed::Kept)
+    Ok(Filed::Kept {
+        new: seen.is_none(),
+    })
+}
+
+/// "Opens" a new email: loads its tracking images once, so the sender sees
+/// it was opened. What comes back is thrown away, and a failure is only
+/// noted.
+async fn open(client: &reqwest::Client, opens: &[String], local_allowed: bool) {
+    for image in opens {
+        let Ok(url) = reqwest::Url::parse(image) else {
+            continue;
+        };
+        if let Err(error) = fetch::get(client, &url, local_allowed).await {
+            log::info(&format!(
+                "couldn't open a newsletter email's tracking image: {error:?}"
+            ));
+        }
+    }
+}
+
+/// Tells senders their reader unsubscribed: for each newsletter feed whose
+/// reader's unsubscribe is final (Undo has passed) and whose emails offer
+/// one-click unsubscribe, posts `List-Unsubscribe=One-Click` to it, once.
+/// Answers how many were told. Run by each round of background checking.
+pub async fn tell_senders(state: &AppState, now: i64) -> Result<usize, sqlx::Error> {
+    let waiting: Vec<(i64, String)> = sqlx::query_as(
+        "SELECT newsletter_senders.feed_id, newsletter_senders.one_click
+         FROM newsletter_senders JOIN feeds ON feeds.id = newsletter_senders.feed_id
+         WHERE newsletter_senders.one_click IS NOT NULL AND newsletter_senders.told_at IS NULL
+             AND feeds.unsubscribed_at IS NOT NULL
+             AND NOT EXISTS (SELECT 1 FROM subscriptions
+                             WHERE subscriptions.feed_id = feeds.id AND subscriptions.cleared = 0)
+         LIMIT ?",
+    )
+    .bind(TOLD_PER_ROUND)
+    .fetch_all(&state.db)
+    .await?;
+    let mut told = 0;
+    for (feed, address) in waiting {
+        // Claimed first, so a sender is told once even if two rounds overlap.
+        let claimed = sqlx::query(
+            "UPDATE newsletter_senders SET told_at = ? WHERE feed_id = ? AND told_at IS NULL",
+        )
+        .bind(now)
+        .bind(feed)
+        .execute(&state.db)
+        .await?;
+        if claimed.rows_affected() == 0 {
+            continue;
+        }
+        let Ok(url) = reqwest::Url::parse(&address) else {
+            continue;
+        };
+        // The address names the reader's subscription, so it's never logged.
+        match fetch::post_form(
+            &state.http,
+            &url,
+            state.config.local_feeds_allowed,
+            "List-Unsubscribe=One-Click".to_owned(),
+        )
+        .await
+        {
+            Ok(status) => log::info(&format!(
+                "told a newsletter's sender that its reader unsubscribed (it answered {status})"
+            )),
+            Err(error) => log::problem(&format!(
+                "couldn't tell a newsletter's sender that its reader unsubscribed: {error:?}"
+            )),
+        }
+        told += 1;
+    }
+    Ok(told)
 }
 
 /// The domain newsletter addresses are at.
@@ -422,7 +623,59 @@ async fn address(SignedIn(person): SignedIn, State(state): State<AppState>) -> R
         },
         Err(error) => return database_problem("reading a newsletter address", &error),
     };
-    Json(json!({ "on": true, "address": format!("{name}@{}", domain(&state)) })).into_response()
+    let labels: Result<Vec<(String, Option<i64>)>, sqlx::Error> =
+        sqlx::query_as("SELECT label, off_at FROM newsletter_labels WHERE name = ? ORDER BY label")
+            .bind(&name)
+            .fetch_all(&state.db)
+            .await;
+    let labels = match labels {
+        Ok(labels) => labels,
+        Err(error) => return database_problem("reading newsletter labels", &error),
+    };
+    let domain = domain(&state);
+    Json(json!({
+        "on": true,
+        "address": format!("{name}@{domain}"),
+        "labels": labels
+            .iter()
+            .map(|(label, off)| json!({
+                "label": label,
+                "address": format!("{name}+{label}@{domain}"),
+                "on": off.is_none(),
+            }))
+            .collect::<Vec<_>>(),
+    }))
+    .into_response()
+}
+
+#[derive(Deserialize)]
+struct Switch {
+    label: String,
+    on: bool,
+}
+
+/// A label's switch: off refuses its mail from now on; on takes it again.
+async fn switch_label(
+    SignedIn(person): SignedIn,
+    State(state): State<AppState>,
+    Json(switch): Json<Switch>,
+) -> Response {
+    let changed = sqlx::query(
+        "UPDATE newsletter_labels SET off_at = CASE WHEN ?1 THEN NULL ELSE COALESCE(off_at, ?2) END
+         WHERE label = ?3 AND name = (SELECT name FROM newsletter_addresses
+                                      WHERE person_id = ?4 AND retired_at IS NULL)",
+    )
+    .bind(switch.on)
+    .bind(now())
+    .bind(switch.label.to_lowercase())
+    .bind(person)
+    .execute(&state.db)
+    .await;
+    match changed {
+        Ok(done) if done.rows_affected() == 1 => StatusCode::NO_CONTENT.into_response(),
+        Ok(_) => StatusCode::NOT_FOUND.into_response(),
+        Err(error) => database_problem("switching a newsletter label", &error),
+    }
 }
 
 /// New address: the old one stops taking email; Undo can bring it back

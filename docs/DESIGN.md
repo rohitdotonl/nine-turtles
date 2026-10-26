@@ -2,7 +2,7 @@
 
 > **nine turtles is a quiet place to read the web: it shows you what's there, gets out of the way, and lets you finish.**
 
-*Last updated: 25 October 2026 (newsletters as feeds, decision 0091; starter feeds in the first-visit welcome, decision 0079; a logo of nine turtles, decision 0067; a second theme, Plain, with blue article links, and System serif, decision 0063; Apple Books as the design reference, decision 0059). Each change is recorded in `docs/decisions/`.*
+*Last updated: 26 October 2026 (newsletters as feeds, decision 0091, with each email "opened" on arrival; starter feeds in the first-visit welcome, decision 0079; a logo of nine turtles, decision 0067; a second theme, Plain, with blue article links, and System serif, decision 0063; Apple Books as the design reference, decision 0059). Each change is recorded in `docs/decisions/`.*
 
 ## Mission
 
@@ -57,7 +57,7 @@ No amount of calm or minimalism justifies text some people can't read.
 
 Publishers are the reason there's anything to read.
 
-- **Show what the publisher put in the feed.** Never scrape the full article. A summary-only feed shows the summary and "Open original." A newsletter shows only what its email holds; its web version is never fetched (decision 0091).
+- **Show what the publisher put in the feed.** Never scrape the full article. A summary-only feed shows the summary and "Open original." A newsletter shows only what its email holds; its web version is never fetched. (Its invisible tracking images are loaded once when it arrives, so its sender knows it reached a reader: the owner's choice, decision 0091.)
 - **Always credit the source** and link to the original.
 - **Fetch politely:** on each feed's own rhythm, with ETag / Last-Modified (and WebSub, since 25 October 2026).
 - **Shared links go to the publisher,** never to nine turtles.

@@ -612,26 +612,53 @@ test("Other apps: an app password is made, shown once with the server address, a
   await expect(page.getByRole("button", { name: "Make an app password" })).toBeVisible();
 });
 
-test("Newsletters: the reader's address with Copy, and New address with Undo", async ({ page }) => {
+test("Newsletters: the reader's address with Copy, a label's switch, and New address with Undo", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "both runs share one reader, and so one address");
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   await openApp(page, "/settings");
   const address = page.getByText(/^turtle-[a-z2-9]{8}@in\.nineturtles\.app$/);
   await expect(address).toBeVisible();
-  const old = await address.textContent();
+  const old = (await address.textContent())!;
+
+  // An email to a label lists it, with a switch that turns its email away.
+  const [name, domain] = old.split("@");
+  const cooking = `${name}+cooking@${domain}`;
+  const posted = await page.request.post("/newsletters/incoming", {
+    headers: {
+      authorization: "Bearer a-made-up-newsletter-secret-for-the-browser-tests",
+      "content-type": "message/rfc822",
+      "x-nine-turtles-to": cooking,
+    },
+    data: `From: Kitchen <kitchen@example.com>\r\nTo: ${cooking}\r\nSubject: Soup\r\nMessage-ID: <soup@example.com>\r\nContent-Type: text/html\r\n\r\n<p>Soup.</p>\r\n`,
+  });
+  expect(posted.status()).toBe(200);
+  await page.reload();
+  const label = page.getByRole("switch", { name: `Takes email: ${cooking}` });
+  await expect(label).toBeChecked();
+  await label.click();
+  await expect(page.getByRole("status").filter({ hasText: `Email to ${cooking} is now turned away` })).toBeVisible();
+  await page.reload();
+  await expect(label).not.toBeChecked();
+  await label.click();
+  await expect(label).toBeChecked();
+  // The email made a feed; unsubscribing leaves the reader as the other tests expect (a fresh nine turtles).
+  const feeds = await (await page.request.get("/api/feeds")).json();
+  const kitchen = feeds.feeds.find((feed: { title: string }) => feed.title === "Kitchen");
+  expect((await page.request.post(`/api/feeds/${kitchen.id}/unsubscribe`, { data: {} })).ok()).toBe(true);
+
   await expect(page.getByRole("button", { name: "Copy address" })).toBeVisible();
   await page.getByRole("button", { name: "New address" }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("status").filter({ hasText: "You have a new address" })).toBeVisible();
-  await expect(address).not.toHaveText(old!);
-  const fresh = await address.textContent();
+  await expect(address).not.toHaveText(old);
+  await expect(label).toHaveCount(0);
   // Copying the new address keeps Undo on the line.
   await page.getByRole("button", { name: "Copy address" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Address copied" })).toBeVisible();
   await page.getByRole("button", { name: "Undo" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Your old address works again" })).toBeVisible();
-  // The address before New address is back. (The desktop and phone runs share one reader, so it's
-  // compared with the new one rather than with the one first shown.)
-  await expect(address).not.toHaveText(fresh!);
+  await expect(address).toHaveText(old);
+  await expect(label).toBeChecked();
 });
 
 test("Settings is one centred column of grouped lists; Your data, Feed health and Sign out are rows of their own, each ending in a glyph", async ({ page }) => {

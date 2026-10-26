@@ -4,7 +4,20 @@
 
 import { api } from "./updates.svelte";
 
-export type NewslettersStatus = { on: boolean; address: string | null };
+/** A label that has had mail (`name+label@…`), with its switch. */
+export type Label = { label: string; address: string; on: boolean };
+
+export type NewslettersStatus = { on: boolean; address: string | null; labels: Label[] };
+
+function labels(body: unknown): Label[] {
+  if (typeof body !== "object" || body === null || !("labels" in body) || !Array.isArray(body.labels)) return [];
+  return body.labels.flatMap((item: unknown) => {
+    const label = text(item, "label");
+    const address = text(item, "address");
+    if (!label || !address) return [];
+    return [{ label, address, on: typeof item === "object" && item !== null && "on" in item && item.on === true }];
+  });
+}
 
 function text(body: unknown, key: string): string | null {
   if (typeof body !== "object" || body === null || !(key in body)) return null;
@@ -18,7 +31,7 @@ export async function newslettersStatus(): Promise<NewslettersStatus> {
   if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
   const body: unknown = await response.json();
   const on = typeof body === "object" && body !== null && "on" in body && body.on === true;
-  return { on, address: on ? text(body, "address") : null };
+  return { on, address: on ? text(body, "address") : null, labels: on ? labels(body) : [] };
 }
 
 /** A new address; the old one stops taking email. Answers both, for Undo. */
@@ -46,4 +59,14 @@ export async function undoNewAddress(previous: string): Promise<string> {
   const address = text(await response.json(), "address");
   if (!address) throw new Error("nine turtles sent no address");
   return address;
+}
+
+/** A label's switch: off turns its mail away, on takes it again. */
+export async function switchLabel(label: string, on: boolean): Promise<void> {
+  const response = await api("/api/newsletters/labels", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ label, on }),
+  });
+  if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
 }
