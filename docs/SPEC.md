@@ -605,6 +605,29 @@ A rule says "when a new article **matches this**, **do that**", in plain fields,
 4. Turn a rule's switch off: it says "Paused." and stops acting. Edit › Delete, then Undo: it's back as it was.
 5. In Edit feed, press "Add a rule for this feed…": the new rule is already set to that feed.
 
+## 28. Newsletters as feeds
+
+*Part one built in V2 (25 October 2026, decision 0091): reading and cleaning emails, and the address they arrive at, switched off by default. Nothing is kept yet; part two comes after many readers is finished.*
+
+**What it will do (part two)**
+- Settings has a **Newsletters** group with your private address, like `turtle-7k2x@in.nineturtles.app`, a **Copy** button and **New address** (the old one stops working, for when spam arrives).
+- You sign up to a newsletter with that address. The first email from it makes a feed in the sidebar, named after the sender; each email after that is an article, read, starred, searched and muted like any other.
+- Edit feed and Unsubscribe work as usual. Unsubscribing hides the sender's emails; to stop them being sent, use the newsletter's own unsubscribe link, which stays in each article.
+- Only mail sent to that address arrives. nine turtles never sends email, never replies, and never sees your own inbox.
+
+**How an email becomes an article (part one)**
+- **Which newsletter:** the mailing list's own name for itself (`List-Id`) when the email gives one, otherwise the sender's address. The feed's name is the sender's name as the email gives it (otherwise the list's name, otherwise the sender's domain).
+- **The article:** its title is the subject ("No subject" when there's none), its date the email's date, and its "Open original" the email's own "View in browser" link when it has one (that link isn't repeated in the text). An email is never stored twice (its Message-ID is its fingerprint).
+- **Cleaned for reading,** then made safe exactly like a feed article (section 7): the hidden preview text mail apps show in the inbox list, parts only Outlook shows, styles, pictures attached inside the email (which can't be shown) and invisible tracking images go; tables used only to lay the email out become plain blocks so the text flows; a real table of data, with headings, stays a table; links lose their tracking parts (`utm_…` and the like). A plain-text email becomes paragraphs, its web addresses links.
+- **Respecting the publisher:** only what the email holds is shown. nine turtles never fetches the web version or anything else the email links to.
+- **Any language:** emails in any character set are read, Chinese and Japanese ones included; an email that names its language (`Content-Language`) keeps it.
+
+**How emails arrive:** Cloudflare Email Routing receives mail for `in.nineturtles.app` and a small forwarder (`cloudflare/newsletter-worker/`) posts each email to nine turtles' `/newsletters/incoming` with a shared secret. Without `NINE_TURTLES_NEWSLETTER_SECRET` that address doesn't exist. Emails over 10 MB are refused. Setup: `docs/operations/newsletters.md`.
+
+**How to check it (part one)**
+1. With the setup done, send an email to `test@in.nineturtles.app`. Render's log says it was read and not kept yet (it also comes back to the inbox set as `FORWARD_TO`, but that happens for any email nine turtles didn't keep, so the log line is the check).
+2. The diagnostics page says `"newsletters": {"on": true}`.
+
 ---
 
 ## Not in V1
