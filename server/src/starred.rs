@@ -128,7 +128,7 @@ fn item(article: &Starred) -> Value {
     let mut source = Map::new();
     source.insert(
         "about".into(),
-        "https://github.com/rohitdotonl/nine-turtles".into(),
+        "https://nineturtles.app".into(),
     );
     source.insert("feed_title".into(), article.feed_title.clone().into());
     source.insert("feed_url".into(), article.feed_url.clone().into());

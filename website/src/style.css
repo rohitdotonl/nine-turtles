@@ -545,10 +545,6 @@ footer nav a {
   color: var(--ink-2);
 }
 
-.colophon {
-  margin: 2rem 0 0;
-}
-
 /* Smaller headings on a phone, so a title fits in two or three lines. */
 @media (max-width: 760px) {
   h1 {
