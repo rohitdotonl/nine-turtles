@@ -370,6 +370,9 @@ each with screenshots:
   until prices are set, naming Dodo Payments as the payment company
   (decision 0086). Dodo checks for them, with terms, privacy and contact,
   before it approves payments (`docs/operations/dodo-application.md`).
+- ✅ The feed finder (26 October 2026, decision 0099): the first free tool
+  from the marketing plan, at nineturtles.app/feed-finder/, with a bookmark
+  button; the app at app.nineturtles.app does the looking (SPEC section 30).
 
 ## V2 so far
 
@@ -393,7 +396,7 @@ each with screenshots:
 | A tab left open across an update keeps working | ✅ 25 October 2026 | SPEC section 18, decisions 0022 and 0085 |
 | Pausing a feed (Edit feed › Pause this feed) | ✅ 26 October 2026 | SPEC section 15, decision 0095 |
 | Easing unread guilt: unread that lets go by itself, Catch me up, and unread without numbers | ✅ 26 October 2026 | SPEC sections 5, 6, 8 and 18, decision 0097 |
-| Reading offline, words only (200 unread and 200 starred on each device) | ✅ 26 October 2026 | SPEC section 30, decision 0100 |
+| Reading offline, words only (200 unread and 200 starred on each device) | ✅ 26 October 2026 | SPEC section 31, decision 0100 |
 
 ## V2: Many readers in one app
 

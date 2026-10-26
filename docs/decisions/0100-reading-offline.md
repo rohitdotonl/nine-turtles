@@ -5,7 +5,7 @@
 **Decision.** The owner asked for "the lighter version of offline reading on
 all devices" on 26 October 2026, with at most 200 unread and 200 starred
 articles. nine turtles now keeps those on each device, words only, and lets
-the reader read, mark and star them without a connection (SPEC section 30).
+the reader read, mark and star them without a connection (SPEC section 31).
 
 - **What's kept:** the reader's first 200 unread articles in their own sort
   order (in river mode, the first 200 of All) and their newest 200 starred

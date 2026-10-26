@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
 import { appReady, follow, signIn } from "./screens";
 
-// Reading offline (SPEC section 30, decision 0100), "How to check it", done
+// Reading offline (SPEC section 31, decision 0100), "How to check it", done
 // by a browser: the copies kept on the device, reading, marking and starring
 // without a connection, those marks saved once it's back, what waits for a
 // connection, opening the app offline, and signing out deleting the copies.

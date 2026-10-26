@@ -1,4 +1,4 @@
-// Reading offline (SPEC section 30, decision 0100). While nine turtles can be
+// Reading offline (SPEC section 31, decision 0100). While nine turtles can be
 // reached, it quietly keeps a copy of the reader's first 200 unread articles
 // (in their sort order; in river mode, the first 200 of All) and their newest
 // 200 starred ones on this device, words only: each image is a short note

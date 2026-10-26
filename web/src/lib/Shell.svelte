@@ -593,7 +593,7 @@
     const switched = arrivedBySwitching();
     if (switched) arriveSwitched(switched);
     const stopWatching = watchForNewVersions();
-    // Reading offline (SPEC section 30): the copies on this device are brought
+    // Reading offline (SPEC section 31): the copies on this device are brought
     // up to date once the settings are known (below), when the connection
     // comes back, and when nine turtles comes back into view after a while.
     const stopWaitingForConnection = whenBack(keepForOffline);

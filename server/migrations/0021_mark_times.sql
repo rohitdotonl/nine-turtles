@@ -1,4 +1,4 @@
--- Reading offline (SPEC section 30, decision 0100): a mark made on a device
+-- Reading offline (SPEC section 31, decision 0100): a mark made on a device
 -- without a connection is sent later, when the connection is back. By then
 -- another device may have marked the same article since, and the later
 -- mark should stand. So each of a reader's lines now remembers when its

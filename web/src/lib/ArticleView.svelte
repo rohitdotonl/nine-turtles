@@ -317,7 +317,7 @@
       </p>
 
       {#if video && connection.offline}
-        <!-- Without a connection there's no player to load: the video waits, as images do (SPEC section 30). -->
+        <!-- Without a connection there's no player to load: the video waits, as images do (SPEC section 31). -->
         <p class="article-note mt-6" lang="en">The video plays here when you're back online.</p>
       {:else if video}
         {#key article.id}

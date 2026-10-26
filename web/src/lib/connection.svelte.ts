@@ -1,5 +1,5 @@
 // Whether nine turtles can be reached from this device (reading offline,
-// SPEC section 30). Every request to the server says so: an answer means the
+// SPEC section 31). Every request to the server says so: an answer means the
 // connection is there; a request that never got one (the browser couldn't
 // connect at all) means it isn't. Only then does the app switch to the
 // copies kept on this device; a server that answers "busy" or restarts is

@@ -113,7 +113,7 @@
   let loaded = $state(false);
   let busy = $state(false);
   let problem = $state("");
-  /** Listed from the copies kept on this device, without a connection (SPEC section 30). */
+  /** Listed from the copies kept on this device, without a connection (SPEC section 31). */
   let fromDevice = $state(false);
   let rows: HTMLButtonElement[] = $state([]);
   /** The "Show older items" button, and the empty line under the list that loads more when it comes into view. */
@@ -550,7 +550,7 @@
 {/if}
 
 {#if fromDevice}
-  <!-- Without a connection: a quiet line above the list says these are the copies kept here (SPEC section 30). -->
+  <!-- Without a connection: a quiet line above the list says these are the copies kept here (SPEC section 31). -->
   <p role="status" class="pt-1 pb-2 text-meta text-muted">{SHOWING_KEPT}</p>
 {/if}
 

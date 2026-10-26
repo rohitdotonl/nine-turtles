@@ -439,7 +439,7 @@ pub const IMAGE_OFFLINE: &str =
     "<span class=\"offline-image\">An image shows here when you\u{2019}re back online.</span>";
 
 /// An article's text without its images, for the copies kept on a device
-/// for reading offline (SPEC section 30): only the words are kept, so the
+/// for reading offline (SPEC section 31): only the words are kept, so the
 /// copies stay small and nothing is fetched from the publisher. Each image
 /// (or picture) becomes a short note saying it appears once the device is
 /// back online; a figure's caption stays.

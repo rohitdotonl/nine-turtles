@@ -85,7 +85,7 @@ export type Page = {
   articles: Article[];
   next: string | null;
   latest: number;
-  /** Listed from the copies kept on this device, without a connection (SPEC section 30). */
+  /** Listed from the copies kept on this device, without a connection (SPEC section 31). */
   kept?: boolean;
 };
 
@@ -351,7 +351,7 @@ export function markStarred(ids: number[], starred: boolean): Promise<void> {
 /**
  * Sends a mark, saying when it was made, so the latest mark wins (decision
  * 0100). It's written down on this device first: if there's no connection,
- * it waits there and is sent once there is (SPEC section 30), rather than
+ * it waits there and is sent once there is (SPEC section 31), rather than
  * being taken back. Without a connection, nothing is tried until then.
  */
 function sendMark(kind: "read" | "starred", ids: number[], value: boolean, at: number): Promise<void> {

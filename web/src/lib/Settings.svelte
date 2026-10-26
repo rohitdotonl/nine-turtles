@@ -247,7 +247,7 @@
     }
   }
 
-  /** Whether this device keeps articles for reading offline (SPEC section 30): on unless switched off here. */
+  /** Whether this device keeps articles for reading offline (SPEC section 31): on unless switched off here. */
   let keepingOffline = $state(keeping());
 
   function switchKeeping(on: boolean) {
@@ -308,7 +308,7 @@
   <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-16 md:px-10">
     <div class="mx-auto flex max-w-[35rem] flex-col gap-8">
       {#if connection.offline}
-        <!-- Without a connection nothing here could be saved, so Settings says so and waits (SPEC section 30). -->
+        <!-- Without a connection nothing here could be saved, so Settings says so and waits (SPEC section 31). -->
         <p role="status">{SETTINGS_NEED_CONNECTION}</p>
       {:else}
       <section aria-labelledby="reading-heading">
