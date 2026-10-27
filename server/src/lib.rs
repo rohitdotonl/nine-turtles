@@ -10,14 +10,16 @@
 //! reader's rules and mutes (`rules`), the readers and sign-up (`people`),
 //! and what email makes possible (`email`, `accounts`): confirming an
 //! address, a new password, a changed email, and deleting an account,
-//! paying through Dodo Payments (`payments`), and the website's feed
-//! finder (`finder`).
+//! paying through Dodo Payments (`payments`), the website's feed
+//! finder (`finder`), and the reader's own AI assistant connected over MCP
+//! (`assistants`, `mcp`).
 //! The frontend is packed into this program (see `assets`).
 
 pub mod accounts;
 pub mod admin;
 pub mod apps;
 pub mod assets;
+pub mod assistants;
 pub mod auth;
 pub mod backup;
 pub mod checking;
@@ -35,6 +37,7 @@ pub mod greader;
 pub mod health;
 pub mod log;
 pub mod marks;
+pub mod mcp;
 pub mod newsletter;
 pub mod newsletters;
 pub mod password;
@@ -105,6 +108,8 @@ pub struct AppState {
     /// Sends email; `None` when the email settings (or the public address
     /// every link starts with) aren't set, and then nothing is sent.
     pub mailer: Option<email::Mailer>,
+    /// How often assistants register, call tools and add feeds (`mcp`).
+    pub assistant_limits: Arc<assistants::Limits>,
 }
 
 /// Opens the database and builds the whole web application. Tests call it
@@ -171,6 +176,7 @@ pub async fn state(config: Config) -> Result<AppState, String> {
         storage,
         latest_backup: Arc::default(),
         mailer,
+        assistant_limits: Arc::default(),
     };
     // A new NINE_TURTLES_PASSWORD_HASH wins over a password the owner set
     // by email (decision 0088): their way back that needs no email.
@@ -187,6 +193,8 @@ pub fn router(state: AppState) -> Router {
         .merge(accounts::routes())
         .merge(admin::routes())
         .merge(apps::routes())
+        .merge(assistants::routes())
+        .merge(mcp::routes())
         .merge(greader::routes())
         .merge(feeds::routes())
         .merge(finder::routes())

@@ -450,6 +450,14 @@ section 28.
   through the Google Reader API, with an app password made in Settings
   (SPEC section 26, decision 0070).
 
+## V2: Your own AI assistant (MCP)
+
+- ✅ A reader can connect their own AI assistant (Claude, ChatGPT or any
+  other that speaks MCP) with the "Connect this assistant?" page or an
+  assistant key, and it can search, list, read, mark, star, add, tidy and
+  unsubscribe (kept 30 days), and export the feed list (SPEC section 33,
+  decision 0111). Checked every 15 days (`docs/operations/mcp-check.md`).
+
 ---
 
 Responsive layout, accessibility and speed aren't left to the end: each

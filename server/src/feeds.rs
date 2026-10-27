@@ -295,7 +295,7 @@ pub async fn follow_again(
     now: i64,
 ) -> Result<bool, sqlx::Error> {
     let back = sqlx::query(
-        "UPDATE subscriptions SET unsubscribed_at = NULL
+        "UPDATE subscriptions SET unsubscribed_at = NULL, kept_until = NULL
          WHERE person_id = ? AND feed_id = ? AND unsubscribed_at IS NOT NULL AND cleared = 0",
     )
     .bind(person)
@@ -1119,7 +1119,7 @@ async fn read_several(
 }
 
 /// The reader's articles among `ids`, each ready for the reading area.
-async fn full_articles(
+pub(crate) async fn full_articles(
     state: &AppState,
     person: i64,
     ids: &[i64],

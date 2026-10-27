@@ -155,6 +155,10 @@ pub struct Search {
     /// (seconds since 1970; the screen works out the reader's days).
     pub since: Option<i64>,
     pub until: Option<i64>,
+    /// Only articles whose author's name holds this (any capitals). The
+    /// search screen doesn't offer it yet; an assistant can (`mcp`).
+    #[serde(default)]
+    pub author: Option<String>,
     #[serde(default)]
     pub order: Order,
     /// Where the previous page ended, as `title:time:id`.
@@ -171,6 +175,7 @@ impl Search {
             && !self.starred
             && self.since.is_none()
             && self.until.is_none()
+            && self.author.is_none()
     }
 }
 
@@ -489,6 +494,14 @@ pub async fn find(
     if let Some(until) = search.until {
         query.push(" AND entries.sort_at < ");
         query.push_bind(until);
+    }
+    if let Some(author) = &search.author {
+        // `instr` finds the name anywhere, with no wildcard characters to escape.
+        query.push(
+            " AND instr(lower((SELECT author FROM articles WHERE articles.id = entries.article_id)), ",
+        );
+        query.push_bind(author.to_lowercase());
+        query.push(") > 0");
     }
     query.push(")");
 
