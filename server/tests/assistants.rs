@@ -830,18 +830,32 @@ async fn removing_a_folder_or_rule_can_be_undone_by_the_assistant() {
     )
     .await;
 
+    let (_, saved) = post_json(
+        &base,
+        "/api/saved-searches",
+        Some(&cookie),
+        &json!({ "name": "Roses", "query": { "words": "roses", "scope": { "kind": "folder", "id": folder } } }),
+    )
+    .await;
+
     let (removed, error) = tool(&base, key, "delete_folder", json!({ "folder_id": folder })).await;
     assert!(!error);
     assert_eq!(removed["feed_ids"], json!([feed]));
     assert_eq!(removed["rule_ids"], json!([rule["rule_id"]]));
+    assert_eq!(removed["search_ids"], json!([saved["search"]["id"]]));
     let (back, error) = tool(
         &base,
         key,
         "create_folder",
-        json!({ "name": removed["removed"], "feed_ids": removed["feed_ids"], "rule_ids": removed["rule_ids"] }),
+        json!({ "name": removed["removed"], "feed_ids": removed["feed_ids"], "rule_ids": removed["rule_ids"], "search_ids": removed["search_ids"] }),
     )
     .await;
     assert!(!error);
+    let (_, searches) = get_json(&base, "/api/saved-searches", &cookie).await;
+    assert_eq!(
+        searches["searches"][0]["query"]["scope"]["id"],
+        back["folder_id"]
+    );
     let (feeds, _) = tool(&base, key, "list_feeds", json!({})).await;
     assert_eq!(feeds["feeds"][0]["folders"], json!(["Reading"]));
     let (rules, _) = tool(&base, key, "list_rules", json!({})).await;

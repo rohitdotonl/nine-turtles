@@ -201,7 +201,7 @@ async fn a_search_in_a_deleted_folder_never_moves_to_a_new_folder_with_its_numbe
     let (status, _) = reader
         .post(&format!("/api/folders/{folder}/delete"), json!({}))
         .await;
-    assert_eq!(status, StatusCode::NO_CONTENT);
+    assert_eq!(status, StatusCode::OK);
     // SQLite may give a new folder the same number; the saved search now looks in none.
     let (_, made) = reader
         .post("/api/folders", json!({ "name": "New", "feeds": [] }))
@@ -213,4 +213,39 @@ async fn a_search_in_a_deleted_folder_never_moves_to_a_new_folder_with_its_numbe
         json!({ "kind": "folder", "id": 0 })
     );
     assert_eq!(saved["query"]["words"], "rain");
+}
+
+#[tokio::test]
+async fn undo_after_deleting_a_folder_puts_its_saved_searches_back_in_it() {
+    let reader = Reader::new().await;
+    let (_, made) = reader
+        .post("/api/folders", json!({ "name": "Garden", "feeds": [] }))
+        .await;
+    let folder = made["folder"]["id"].as_i64().unwrap();
+    reader
+        .post(
+            "/api/saved-searches",
+            json!({ "name": "Roses", "query": { "words": "roses", "scope": { "kind": "folder", "id": folder } } }),
+        )
+        .await;
+    let (status, deleted) = reader
+        .post(&format!("/api/folders/{folder}/delete"), json!({}))
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    let searches = deleted["searches"].clone();
+    assert_eq!(searches.as_array().map(Vec::len), Some(1));
+
+    // Undo: the folder is made again with what the delete answered.
+    let (status, made) = reader
+        .post(
+            "/api/folders",
+            json!({ "name": "Garden", "feeds": [], "searches": searches }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::CREATED);
+    let again = made["folder"]["id"].as_i64().unwrap();
+    assert_eq!(
+        reader.searches().await[0]["query"]["scope"],
+        json!({ "kind": "folder", "id": again })
+    );
 }
