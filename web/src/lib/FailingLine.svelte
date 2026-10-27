@@ -8,7 +8,7 @@
   has moved, the line says so, and stays until the reader leaves.
 -->
 <script lang="ts">
-  import { tick } from "svelte";
+  import { tick, untrack } from "svelte";
   import NewAddress from "./NewAddress.svelte";
   import type { Feed } from "./feeds";
   import { brokenSince, type Sick } from "./health";
@@ -41,11 +41,17 @@
   let moved = $derived(move !== undefined);
   let place = $derived(move ? move.from : feed.id);
 
-  // Another feed: the line starts afresh.
+  // Another feed: the line starts afresh. A new copy of the same feed (after
+  // Refresh or Catch me up) changes nothing, so an open question stays alone.
+  let shownFor = untrack(() => feed.id);
   $effect.pre(() => {
-    if (move && feed.id !== move.from && feed.id !== move.to) move = undefined;
-    void place;
-    choosing = false;
+    const id = feed.id;
+    untrack(() => {
+      if (id === shownFor) return;
+      shownFor = id;
+      if (move && id !== move.from && id !== move.to) move = undefined;
+      choosing = false;
+    });
   });
 </script>
 

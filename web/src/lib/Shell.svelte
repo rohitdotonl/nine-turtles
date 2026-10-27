@@ -421,7 +421,13 @@
   /** Counts changed on this screen since the page loaded; see `loadFeeds`. */
   let countChanges = 0;
 
-  async function loadFeeds() {
+  /** Loads the feeds and folders. */
+  function loadFeeds() {
+    return reloadFeeds();
+  }
+
+  /** Loads the feeds and folders; `then` runs in the same step as they arrive, so nothing shows in between. */
+  async function reloadFeeds(then?: () => void) {
     try {
       // If a mark (or an undo) changes a count while the feeds are on their
       // way, the answer may predate it: ask again, so it isn't overwritten.
@@ -431,6 +437,7 @@
         if (countChanges === before || tries === 2) {
           feeds = loaded.feeds;
           folders = loaded.folders;
+          then?.();
           break;
         }
       }
@@ -1160,14 +1167,25 @@
    * from Edit feed (decision 0106): the feeds load again, so its line and its
    * count are up to date. If others follow the old address too, the reader
    * now follows the new one, under a new number: the list (or Edit feed)
-   * goes there. The keyboard moves to the title, as the button it was on has
-   * gone.
+   * goes there in the same step as the feeds arrive, and Edit feed stays the
+   * same sheet (`editKey`), so its line still says the feed moved and nothing
+   * typed in it is lost. The keyboard moves to the title, as the button it
+   * was on has gone.
    */
   async function feedMoved(before: number, after: number, heading: () => HTMLHeadingElement | undefined) {
-    await loadFeeds();
-    if (after !== before) go(route.kind === "edit-feed" ? { kind: "edit-feed", id: after } : { kind: "feed", id: after });
+    if (after !== before) movedFeed = { from: before, to: after };
+    await reloadFeeds(() => {
+      if (after !== before) go(route.kind === "edit-feed" ? { kind: "edit-feed", id: after } : { kind: "feed", id: after });
+    });
     await tick();
     heading()?.focus();
+  }
+
+  /** The last feed moved to a new number by Find new address (decision 0106). */
+  let movedFeed: { from: number; to: number } | undefined;
+  /** Edit feed's identity: a feed that just moved to a new number keeps its old one, so the sheet isn't rebuilt. */
+  function editKey(id: number): number {
+    return movedFeed?.to === id ? movedFeed.from : id;
   }
 
   function addRuleFor(feed: Feed) {
@@ -1687,7 +1705,7 @@
       {:else if route.kind === "readers"}
         <ReadersPage bind:heading={readersHeading} onClose={closeHealth} besideToggle={!phone && !panes.sidebar} />
       {:else if !sheet && route.kind === "edit-feed" && currentFeed}
-        {#key currentFeed.id}
+        {#key editKey(currentFeed.id)}
           <EditFeed
             feed={currentFeed}
             {folders}
@@ -1981,7 +1999,7 @@
     <StarterFeeds onAdded={startersAdded} onCancel={closePage} />
   </Sheet>
 {:else if sheet && route.kind === "edit-feed" && currentFeed}
-  {#key currentFeed.id}
+  {#key editKey(currentFeed.id)}
     <EditFeed
       sheet
       feed={currentFeed}

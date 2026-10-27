@@ -30,7 +30,12 @@
 //   /move/NAME         the blog called NAME moves its feed: feed.xml answers
 //                      "not found", and its home page names new.xml instead.
 //                      A blog whose NAME starts with "moving-" names its home
-//                      page here, so Find new address can visit it
+//                      page here, so Find new address can visit it; one
+//                      whose NAME starts with "moving-two-" names its
+//                      comments feed there too, so the site names two feeds
+//   /break/NAME        the blog called NAME loses its feed: feed.xml answers
+//                      "not found", and its home page still names only that,
+//                      so Find new address finds nothing new
 //   /hindi/NAME/       like /blog/NAME/, for a blog written in Hindi
 //   /shelf/BLOG/       the screenshots' library: a handful of made-up blogs
 //                      with real-looking titles, authors and dates (SHELF
@@ -288,6 +293,8 @@ const visits = new Map();
 const grown = new Map();
 // The blogs that moved their feed to new.xml.
 const moved = new Set();
+// The blogs whose feed is gone, with nothing in its place.
+const broken = new Set();
 
 createServer((request, response) => {
   const path = new URL(request.url ?? "/", "http://localhost").pathname;
@@ -343,6 +350,12 @@ createServer((request, response) => {
     return send("text/plain", "Moved.");
   }
 
+  const breaking = path.match(/^\/break\/([a-z0-9-]+)$/);
+  if (breaking) {
+    broken.add(breaking[1]);
+    return send("text/plain", "Broken.");
+  }
+
   const hindi = path.match(/^\/hindi\/([a-z0-9-]+)\/(feed\.xml)?$/);
   if (hindi) {
     const name = hindi[1];
@@ -356,7 +369,7 @@ createServer((request, response) => {
     const home = name.startsWith("moving-") ? `http://${request.headers.host}/blog/${name}/` : `https://${name}.example/`;
     const file = moved.has(name) ? "new.xml" : "feed.xml";
     if (blog[2] === "feed.xml" || blog[2] === "new.xml") {
-      if (blog[2] !== file) {
+      if (blog[2] !== file || broken.has(name)) {
         response.writeHead(404, { "content-type": "text/plain" });
         return response.end("Not found");
       }
@@ -365,7 +378,7 @@ createServer((request, response) => {
     }
     if (blog[2] === "comments.xml") return xml(rss(`Blog ${name}: comments`, `https://${name}.example/comments/`, 1));
     const feeds = [[`Blog ${name}`, `/blog/${name}/${file}`]];
-    if (name.startsWith("two-")) feeds.push([`Comments`, `/blog/${name}/comments.xml`]);
+    if (name.startsWith("two-") || name.startsWith("moving-two-")) feeds.push([`Comments`, `/blog/${name}/comments.xml`]);
     return html(page(`Blog ${name}`, feeds));
   }
 

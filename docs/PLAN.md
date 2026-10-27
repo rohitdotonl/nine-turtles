@@ -408,7 +408,7 @@ each with screenshots:
 | Recently read (the last 50 articles you opened) in the sidebar | ✅ 27 October 2026 | SPEC section 5, decision 0105 (structure change 22) |
 | Hiding Starred, All, Recently read or Saved searches from the sidebar (Settings › Show in the sidebar) | ✅ 27 October 2026 | SPEC sections 5 and 18, decision 0105 |
 | How often a feed posts, in words (Edit feed and Feed health) | ✅ 27 October 2026 | SPEC sections 15 and 17, decision 0105 |
-| Fixing a dead feed where you are: a quiet line above a failing feed's list and in Edit feed, with Find new address, and one plain question when the site names one feed | Built 27 October 2026, waiting to be merged | SPEC sections 6, 15 and 17, decision 0106 |
+| Fixing a dead feed where you are: a quiet line above a failing feed's list and in Edit feed, with Find new address, and one plain question when the site names one feed | ✅ 27 October 2026 | SPEC sections 6, 15 and 17, decision 0106 |
 
 ## V2: Many readers in one app
 

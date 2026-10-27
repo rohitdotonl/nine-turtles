@@ -30,6 +30,9 @@
   } = $props();
 
   type Row = {
+    /** The row's own identity and group, fixed when the page opens: a moved feed may change number and state, but stays put. */
+    key: number;
+    group: "dead" | "trouble";
     feed: Sick;
     /** What the last action said, if anything. */
     message: string;
@@ -48,7 +51,15 @@
     listSick()
       .then((feeds) => {
         now = Date.now() / 1000;
-        rows = feeds.map((feed) => ({ feed, message: "", busy: false, choosing: false, unsubscribed: false }));
+        rows = feeds.map((feed, key) => ({
+          key,
+          group: feed.state === "dead" ? "dead" : "trouble",
+          feed,
+          message: "",
+          busy: false,
+          choosing: false,
+          unsubscribed: false,
+        }));
       })
       .catch(() => (failed = true));
   });
@@ -64,8 +75,8 @@
   }
 
   let groups = $derived([
-    { id: "dead", name: "Not working", rows: (rows ?? []).filter((row) => row.feed.state === "dead") },
-    { id: "trouble", name: "Having trouble", rows: (rows ?? []).filter((row) => row.feed.state !== "dead") },
+    { id: "dead", name: "Not working", rows: (rows ?? []).filter((row) => row.group === "dead") },
+    { id: "trouble", name: "Having trouble", rows: (rows ?? []).filter((row) => row.group === "trouble") },
   ]);
 
   async function tryAgain(row: Row) {
@@ -143,7 +154,7 @@
             <section aria-labelledby={`health-${group.id}`}>
               <h3 id={`health-${group.id}`} class="inset-head">{group.name}</h3>
               <ul class="inset-group">
-                {#each group.rows as row (row.feed.id)}
+                {#each group.rows as row (row.key)}
                   <li id={`health-feed-${row.feed.id}`} class="inset-row feed-row">
                     <h4 class="w-full min-w-0 font-semibold break-words">{row.feed.title}</h4>
                     {#if !row.unsubscribed}

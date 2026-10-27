@@ -36,4 +36,9 @@ is asked one plain question instead of being shown a list of one.
   wait for Save as before.
 - **A feed others follow too** gets a new number when the reader moves
   (decision 0071, `follow_elsewhere`): the list or Edit feed goes to the new
-  number. Its success line stays on the list; in Edit feed it starts afresh.
+  number, in the same step as the feeds reload. Its success line stays on
+  the list, and Edit feed stays the same sheet (it isn't rebuilt for the new
+  number), so its success line and anything typed in it stay too.
+- **On the health page,** a moved feed stays in its group and keeps its
+  place until the page is opened again, even a dead one that now works or
+  one whose number changed, so its success line stays with it.
