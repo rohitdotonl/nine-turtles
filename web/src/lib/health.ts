@@ -148,11 +148,11 @@ export function reason(problem: string | null): string {
   return "The site answered, but not with the feed.";
 }
 
-/** "Last worked today", "Last worked on 3 Oct", or never. */
+/** When it last worked, for the card's "Last worked" line: "Today", "3 Oct", or "Not since you added it". */
 export function lastWorked(feed: Sick, now: Date = new Date()): string {
-  if (feed.fetchedAt === null) return "Hasn't worked since you added it";
+  if (feed.fetchedAt === null) return "Not since you added it";
   const at = when(feed.fetchedAt, now);
-  return /^\d\d:\d\d$/.test(at) ? "Last worked today" : `Last worked on ${at}`;
+  return /^\d\d:\d\d$/.test(at) ? "Today" : at;
 }
 
 /**

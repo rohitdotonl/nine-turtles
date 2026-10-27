@@ -25,6 +25,6 @@
 - The sidebar's "Other feeds" is now just "Feeds".
 - Search results are titled "Results in All" (or the feed or folder), and
   the filter suggestions float over the list, so the results never move.
-- The feed health page shows the address it tried, in small grey text.
+- Each feed on the feed health page is now a card: its name, what happened, the address tried and when it last worked, then Find new address (the main button), Retry and Unsubscribe.
 - An empty collection says what collections are for: "Articles you put
   here stay, even after a year."
