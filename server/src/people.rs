@@ -134,6 +134,15 @@ pub const PER_READER_TABLES: &[(&str, &str)] = &[
     ),
     ("email_links", "DELETE FROM email_links WHERE person_id = ?"),
     ("sessions", "DELETE FROM sessions WHERE person_id = ?"),
+    // Their connected assistants, whose tickets go with them.
+    (
+        "assistant_connections",
+        "DELETE FROM assistant_connections WHERE person_id = ?",
+    ),
+    (
+        "assistant_codes",
+        "DELETE FROM assistant_codes WHERE person_id = ?",
+    ),
     // The record of their plan; Dodo's own subscription is cancelled first
     // (`payments::cancel_before_deleting`).
     ("plans", "DELETE FROM plans WHERE person_id = ?"),

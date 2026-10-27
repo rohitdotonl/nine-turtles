@@ -96,6 +96,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - URL normalization
 - Tracking pixels and tracking parameters
 - Sync service and the Google Reader API
+- MCP (Model Context Protocol) and AI assistants
 - Newsletters as feeds
 - Raw email (RFC 5322 and MIME)
 - Mailing list headers (`List-Id`, `List-Unsubscribe`)
@@ -178,6 +179,8 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 ## Security and sign-in
 
 - Authentication (sign-in)
+- OAuth 2.1, PKCE and dynamic client registration
+- Prompt injection
 - Password hashing (argon2id)
 - Salt
 - Hash function (BLAKE2)

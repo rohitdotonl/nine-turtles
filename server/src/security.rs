@@ -45,12 +45,21 @@ pub fn apply<S: Clone + Send + Sync + 'static>(router: Router<S>) -> Router<S> {
 /// Anything that changes something (sign in, sign out, and later marking
 /// read or unsubscribing) must come from nine turtles' own pages. The cookie is
 /// already `SameSite=Strict`; this is the second lock on the same door.
+///
+/// Assistants' addresses (`/mcp`, `/oauth/token`, `/oauth/register`) are
+/// the exception: they never use the cookie, only tickets the assistant
+/// holds, so another website can't act through them, and an assistant may
+/// say where it comes from.
 async fn same_site_actions_only(request: Request, next: Next) -> Response {
     let reading = matches!(
         *request.method(),
         Method::GET | Method::HEAD | Method::OPTIONS
     );
-    if reading || from_this_site(request.headers()) {
+    let for_assistants = matches!(
+        request.uri().path(),
+        "/mcp" | "/oauth/token" | "/oauth/register"
+    );
+    if reading || for_assistants || from_this_site(request.headers()) {
         next.run(request).await
     } else {
         (

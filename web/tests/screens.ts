@@ -146,6 +146,53 @@ export const SCREENS: Screen[] = [
     },
   },
   { name: "settings", path: "/settings", signedIn: true, library: true },
+  {
+    // Settings › Connected assistants with one assistant and a feed it unsubscribed from
+    // (SPEC section 33). The list is answered here, so no feed is really unsubscribed.
+    name: "connected-assistants",
+    path: "/settings",
+    signedIn: true,
+    open: async (page) => {
+      const now = Math.floor(Date.now() / 1000);
+      await page.route("**/api/assistants", (route) =>
+        route.fulfill({
+          json: {
+            assistants: [{ id: 1, name: "Claude", connected_at: now - 86400, last_used_at: now - 3600 }],
+            unsubscribed: [{ feed_id: 7, title: "Quiet Notes", unsubscribed_at: now - 86400, kept_until: now + 29 * 86400 }],
+          },
+        }),
+      );
+      await page.reload();
+      await appReady(page);
+      const kept = page.getByRole("heading", { name: "Unsubscribed by an assistant" });
+      await kept.scrollIntoViewIfNeeded();
+      await expect(kept).toBeVisible();
+    },
+  },
+  {
+    // The page an assistant opens to ask to connect (SPEC section 33).
+    name: "connect-assistant",
+    path: "/unread",
+    signedIn: true,
+    open: async (page) => {
+      const api = (path: string) => new URL(path, page.url()).href;
+      const redirect = "https://claude.ai/api/mcp/auth_callback";
+      const registered = await (
+        await page.request.post(api("/oauth/register"), { data: { client_name: "Claude", redirect_uris: [redirect] } })
+      ).json();
+      const query = new URLSearchParams({
+        response_type: "code",
+        client_id: registered.client_id,
+        redirect_uri: redirect,
+        code_challenge: "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
+        code_challenge_method: "S256",
+        state: "screens",
+      });
+      await page.goto(api(`/oauth/authorize?${query}`));
+      await expect(page.getByRole("heading", { level: 1, name: "Connect Claude to nine turtles?" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Connect" })).toBeVisible();
+    },
+  },
   { name: "your-feeds", path: "/settings/feeds", signedIn: true, library: true },
   {
     name: "your-feeds-editing",
@@ -453,14 +500,8 @@ export async function markAllFromMenu(page: Page): Promise<void> {
   await page.getByRole("menuitem", { name: "Mark all as read" }).click();
 }
 
-/**
- * Presses Tab until the keyboard's place reaches the element: the keyboard floor.
- * The feed tests share one nine turtles, so by the time a test runs its sidebar
- * may list every other test's feeds, each a stop on the way: reaching Rules in
- * Settings takes over 90 presses in a full run. The limit leaves room for them;
- * an element Tab truly can't reach still fails.
- */
-export async function tabTo(page: Page, target: Locator, limit = 200): Promise<void> {
+/** Presses Tab until the keyboard's place reaches the element: the keyboard floor. The limit leaves room for the sidebar's feeds, which grow as the tests follow more. */
+export async function tabTo(page: Page, target: Locator, limit = 300): Promise<void> {
   for (let i = 0; i < limit; i++) {
     if (await target.evaluate((element) => element === document.activeElement)) return;
     await page.keyboard.press("Tab");

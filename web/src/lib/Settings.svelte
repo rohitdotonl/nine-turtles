@@ -15,7 +15,8 @@
   opens the rule editor over Settings (SPEC section 27). Newsletters, while
   nine turtles takes them, shows the reader's private address (SPEC section
   28). Other apps makes the
-  app password other feed readers sync with (OtherApps). Readers, for the
+  app password other feed readers sync with (OtherApps). Connected
+  assistants connects AI assistants through MCP (Assistants). Readers, for the
   owner only, lists who has an account, sets the owner's email and the
   sign-up switch (Readers, decision 0087). Your plan, for everyone else
   while nine turtles takes payments, shows their trial or plan (Plan,
@@ -34,6 +35,7 @@
   import ImportStars from "./ImportStars.svelte";
   import Newsletters from "./Newsletters.svelte";
   import OtherApps from "./OtherApps.svelte";
+  import Assistants from "./Assistants.svelte";
   import Plan from "./Plan.svelte";
   import Readers from "./Readers.svelte";
   import RuleEditor from "./RuleEditor.svelte";
@@ -575,6 +577,8 @@
       <Newsletters />
 
       <OtherApps />
+
+      <Assistants onFeedsChanged={onImported} />
 
       {#if owner}
         <Readers {email} {onReaders} />
