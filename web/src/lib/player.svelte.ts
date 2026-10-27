@@ -19,6 +19,7 @@
 // skip (the Media Session API, where the browser has it).
 
 import { markRead, readArticle, type Article } from "./feeds";
+import { savedInOrder } from "./inorder";
 import {
   BACK_SECONDS,
   FORWARD_SECONDS,
@@ -306,20 +307,23 @@ export function close(): void {
   sessionState("none");
 }
 
+/** Up Next's saves, in the order made, so a slow older answer never overwrites a newer order (survey A8). */
+const upNextSaves = savedInOrder<number[] | null>(
+  (order) => saveUpNext(order ?? []),
+  (order) => (player.upNext = order),
+);
+
 /**
- * Saves Up Next's new order, at once on screen; it goes back if the server refuses. `byReader` is false only for
- * the removal when an episode starts, which leaves an open Up Next list as it is.
+ * Saves Up Next's new order, at once on screen; it goes back if the server refuses (unless a newer change is on its
+ * way). `byReader` is false only for the removal when an episode starts, which leaves an open Up Next list as it is.
  */
 export async function changeUpNext(order: number[], byReader = true): Promise<boolean> {
-  const before = player.upNext;
-  player.upNext = order;
   if (byReader) player.removed = undefined;
   try {
-    player.upNext = await saveUpNext(order);
+    await upNextSaves(order, player.upNext);
     if (byReader) player.changes++;
     return true;
   } catch {
-    player.upNext = before;
     return false;
   }
 }
