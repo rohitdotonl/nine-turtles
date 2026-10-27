@@ -500,8 +500,8 @@ export async function markAllFromMenu(page: Page): Promise<void> {
   await page.getByRole("menuitem", { name: "Mark all as read" }).click();
 }
 
-/** Presses Tab until the keyboard's place reaches the element: the keyboard floor. */
-export async function tabTo(page: Page, target: Locator, limit = 100): Promise<void> {
+/** Presses Tab until the keyboard's place reaches the element: the keyboard floor. The limit leaves room for the sidebar's feeds, which grow as the tests follow more. */
+export async function tabTo(page: Page, target: Locator, limit = 300): Promise<void> {
   for (let i = 0; i < limit; i++) {
     if (await target.evaluate((element) => element === document.activeElement)) return;
     await page.keyboard.press("Tab");

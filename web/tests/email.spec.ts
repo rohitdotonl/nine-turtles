@@ -40,7 +40,12 @@ async function openSignUp(browser: Browser) {
   await page.goto("/settings");
   const open = page.getByRole("radio", { name: "Open" });
   await expect(open).toBeEnabled();
-  await page.getByText("Open", { exact: true }).click();
+  // The switch shows at once; wait for the server to have it before this browser closes.
+  if (!(await open.isChecked())) {
+    const saved = page.waitForResponse((response) => response.url().endsWith("/api/sign-up/switch") && response.ok());
+    await page.getByText("Open", { exact: true }).click();
+    await saved;
+  }
   await expect(open).toBeChecked();
   await context.close();
 }
