@@ -33,13 +33,9 @@
   import { goTo, keepPlace, placeIn, placeOf, type Place } from "./places";
   import { connection } from "./connection.svelte";
   import { NOT_KEPT } from "./offline";
-<<<<<<< HEAD
   import PictureSheet from "./PictureSheet.svelte";
   import { OPENABLE, markPicture } from "./pictures";
-  import { keyFor } from "./keyboard";
-=======
   import { currentKey, tip } from "./keys.svelte";
->>>>>>> 66ba719 (Let readers choose their own keys, and add Shift+J/K, Home/End, g f and g ,)
 
   let {
     article,
