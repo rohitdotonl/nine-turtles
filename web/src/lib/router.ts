@@ -47,6 +47,14 @@ export function parse(path: string): Route {
   return { kind: "view", view: "unread" };
 }
 
+/** Whether an address is one of nine turtles' places. Any other opens the "Wrong turn?" page (SPEC section 4). */
+export function knownPath(path: string): boolean {
+  const name = path.replace(/^\/+|\/+$/g, "");
+  if (name === "" || name === "unread") return true;
+  const place = parse(path);
+  return !(place.kind === "view" && place.view === "unread");
+}
+
 export function pathFor(route: Route): string {
   switch (route.kind) {
     case "settings":
