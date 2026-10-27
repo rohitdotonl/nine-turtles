@@ -20,7 +20,7 @@ own beside other apps, and the nudged middle row keeps the three rows from
 reading as a menu button's stripes at small sizes.
 
 **Where.** The drawings are in `docs/logo/` (the turtles alone, a light
-icon and a dark icon). The app uses `web/public/icons/`: `icon.svg` (one turtle since decision 0073) for the
+icon and a dark icon). The app uses `web/public/icons/`: `icon.svg` (one turtle since decision 0078) for the
 browser tab (it switches to night by itself; its day colors are plain
 attributes, so it still shows by day where a page's rules block its style), and PNG pictures for phones
 and installing (`apple-touch-icon.png` 180px, `icon-192.png`,
@@ -31,4 +31,4 @@ smaller, so a phone that crops icons to a circle keeps them whole).
 The drawing is also inline in `web/src/lib/Logo.svelte` (the app) and
 `website/src/_includes/base.njk` (the website): change all three together.
 
-*Updated by decision 0073: the logo's frame, its size beside the name, a one-turtle tab icon and roomier home-screen icons.*
+*Updated by decision 0078: the logo's frame, its size beside the name, a one-turtle tab icon and roomier home-screen icons.*

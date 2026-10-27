@@ -85,6 +85,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Bookmarklet
 - HTML parsing (scraper)
 - Polling
+- WebSub (hubs, leases and signatures)
 - Conditional requests (ETag, Last-Modified)
 - User-Agent
 - Rate limiting and `Retry-After`
@@ -149,6 +150,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Font subsets and `unicode-range`
 - Modal dialog
 - Prefetching (loading the next thing in advance)
+- Lazy loading (`loading="lazy"`: pictures load as you reach them)
 - Optimistic update (the screen changes first, saving follows)
 - Clipboard and the system share sheet
 - Container query (styling by a pane's width, not the window's)
@@ -173,6 +175,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Unicode and combining marks
 - Timestamps and UTC
 - Data export
+- Data retention and clean-up
 - Rules and mutes (filters the reader writes)
 - Readers (accounts) and the `people` table
 - Subscriptions and entries (each reader's feeds and marks)
@@ -260,6 +263,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Shell (terminal)
 - Vendor lock-in
 - Backups
+- Disk snapshots
 - S3 and S3-compatible storage
 - Cloudflare R2
 - Object storage
@@ -281,6 +285,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Screen reader
 - Keyboard navigation and focus
 - Keyboard shortcuts
+- Rebinding keys (keys of your own)
 - Touch targets
 - Responsive design (desktop and phone widths)
 - Reduced motion and other system settings
@@ -298,9 +303,3 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Translucent bar (withdrawn by decision 0040)
 - Grouped inset list
 - Stepper (a smaller / larger pair)
-
-## Planned for V2
-
-- Disk snapshots
-- WebSub (hubs, leases and signatures)
-- Data retention and clean-up

@@ -8,7 +8,7 @@ record": a company that sells nine turtles on the owner's behalf, takes the
 payment, pays sales tax (VAT, GST) in each country, handles refunds and
 disputes, and pays out to the owner's bank. The owner signs up as an
 **Individual**; no registered company is needed. Why Dodo and not Paddle,
-Polar, Lemon Squeezy, Stripe or Razorpay: decision 0086 and the
+Polar, Lemon Squeezy, Stripe or Razorpay: decision 0083 and the
 [comparison](https://claude.ai/artifact/ALb8Z7n4zdDv6JpGkdx5p4).
 
 ## When to apply

@@ -140,7 +140,7 @@ The pictures of the app in `website/src/images/` were taken from the app's
 own screenshot set, which follows only made-up blogs; take new ones when
 the app's look changes. The privacy policy, terms, pricing and refunds pages are drafts until the
 open question in `docs/planning/questions.md` is settled; Dodo Payments
-checks all of them, with contact, before approving payments (decision 0086).
+checks all of them, with contact, before approving payments (decision 0083).
 
 ## How changes go live
 

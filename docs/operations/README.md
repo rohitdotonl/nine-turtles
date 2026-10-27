@@ -15,9 +15,10 @@ plain steps, no assumed knowledge of a particular tool.
 | [daily-check.md](daily-check.md) | The daily check an agent runs on the live app (deeper, once a day) |
 | [mcp-check.md](mcp-check.md) | Every 15 days: is the MCP standard still followed, and can assistants still connect |
 | [website-and-domain.md](website-and-domain.md) | The website at nineturtles.app, the app at app.nineturtles.app, and the owner's one-time setup |
-
-- `backups.md`: nightly backups, switching them on, checking them and restoring a copy (decision 0076).
-- `email.md`: switching on email (Brevo, or any SMTP service), for confirmation and password links (decision 0088).
-- `owner-password.md`: getting back in as the owner without email, by putting a new password in Render (decision 0088).
-- `moving-hosts.md`: moving nine turtles to another host with everything kept.
-- `payments.md`: switching on Dodo Payments' test mode, step by step (decision 0094).
+| [backups.md](backups.md) | Nightly backups: switching them on, checking them and restoring a copy (decision 0076) |
+| [moving-hosts.md](moving-hosts.md) | Moving nine turtles to another host with everything kept |
+| [email.md](email.md) | Switching on email (Brevo, or any SMTP service), for confirmation and password links (decision 0088) |
+| [owner-password.md](owner-password.md) | Getting back in as the owner without email, by putting a new password in Render (decision 0088) |
+| [newsletters.md](newsletters.md) | The one-time setup for newsletters as feeds: Cloudflare's mailbox and the forwarder (decision 0091) |
+| [payments.md](payments.md) | Switching on Dodo Payments' test mode, step by step (decision 0094) |
+| [dodo-application.md](dodo-application.md) | The owner's checklist for applying to Dodo Payments for live payments (decision 0083) |

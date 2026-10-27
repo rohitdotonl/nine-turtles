@@ -1,6 +1,6 @@
-# 0086: Dodo Payments takes payments, as merchant of record
+# 0083: Dodo Payments takes payments, as merchant of record
 
-*25 October 2026. The owner's choice.*
+*25 October 2026. The owner's choice. First numbered 0086, which many readers also took.*
 
 ## Decision
 

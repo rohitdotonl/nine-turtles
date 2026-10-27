@@ -293,7 +293,7 @@ Plain, unhurried, never urgent: "Nothing new yet," never "You're missing out!" L
 - **Per-feed modes:** inbox or river for each feed. Built 25 October 2026, in Edit feed (decision 0082, `docs/SPEC.md` sections 10 and 15).
 - **Passkey sign-in.** Built 27 October 2026, beside passwords (decision 0109, `docs/SPEC.md` sections 1 and 18).
 - **Chinese and Japanese search.**
-- **Multiple users.** Being built (October 2026): decision 0086.
+- **Multiple users.** Built 25 and 26 October 2026: each reader's things walled off from the others' (decision 0086, `docs/PLAN.md` → "V2: Many readers in one app").
 - **Own domain name.** Chosen on 25 October 2026: nineturtles.app for the website, app.nineturtles.app for the app (decision 0066).
 
 Moved from V1 on 23 October 2026, because V1 is for the owner alone (decision 0012):

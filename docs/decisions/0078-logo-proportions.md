@@ -1,6 +1,6 @@
-# 0073: The logo beside the name, and a one-turtle tab icon
+# 0078: The logo beside the name, and a one-turtle tab icon
 
-*October 2026.*
+*October 2026. First numbered 0073, which marks trying again also took.*
 
 **Decision.** A review of the logo (decision 0067) everywhere it appears
 found it fine in drawing but off in a few places, and the owner accepted

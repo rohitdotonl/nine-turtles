@@ -755,7 +755,7 @@ A rule says "when a new article **matches this**, **do that**", in plain fields,
 
 **Who pays**
 - **Never the owner, and never anyone with an account on the day this part went live** (26 October 2026; they are marked free for good). Readers who join after that, even while payments are still switched off, have the trial below once payments are switched on. Everyone who joins later has a **free trial**, 14 days unless the owner sets another length, from the day they joined (or from the day payments were switched on, if that's later). No card is asked for to start.
-- After the trial: **one plan, everything included**, monthly or yearly, at the prices the owner sets (shown as "Price to be decided" until then). Payments are taken by Dodo Payments, the merchant of record (decision 0086): it takes the card, adds any sales tax and sends receipts. nine turtles never sees a card.
+- After the trial: **one plan, everything included**, monthly or yearly, at the prices the owner sets (shown as "Price to be decided" until then). Payments are taken by Dodo Payments, the merchant of record (decision 0083): it takes the card, adds any sales tax and sends receipts. nine turtles never sees a card.
 
 **Settings › Your plan** (for every reader but the owner, and not for readers who are free)
 - One row says where you stand, in a few words with a line under it: **Free trial** ("Your trial ends on 9 November 2026."), **Monthly plan** or **Yearly plan** ("Renews on 26 November 2026.", or after cancelling "Cancelled. It lasts until 26 November 2026."), **Your last payment didn't go through** ("Update your card under Billing by 2 November 2026 to keep your plan."), or **Your free trial or plan has ended** (what still works, below).
@@ -920,7 +920,7 @@ nine turtles runs no AI itself. A reader can connect their own assistant (Claude
 
 ## Not in V1
 
-From DESIGN.md: public reading list page, Chinese and Japanese search, multiple users. (Passkey sign-in was built on 27 October 2026, beside passwords: sections 1 and 18, decision 0109. The own domain name was chosen on 25 October 2026: nineturtles.app, with the app at app.nineturtles.app; decision 0066. YouTube videos play in YouTube's own player since 25 October 2026; decision 0072.)
+From DESIGN.md: public reading list page, Chinese and Japanese search, multiple users. (Several readers on one nine turtles was built on 25 and 26 October 2026: section 15, decision 0086. Passkey sign-in was built on 27 October 2026, beside passwords: sections 1 and 18, decision 0109. The own domain name was chosen on 25 October 2026: nineturtles.app, with the app at app.nineturtles.app; decision 0066. YouTube videos play in YouTube's own player since 25 October 2026; decision 0072.)
 
 Moved to V2 on 23 October 2026: backups and moving hosts, river mode (built 25 October 2026; per-feed reading modes too, decision 0082), WebSub (built 25 October 2026), the feed health page (built 25 October 2026), the yearly clean-up (built 25 October 2026, decision 0089), the feeds guide page, and keeping a tab that was left open across an update working without a reload (built 25 October 2026, decision 0085).
 

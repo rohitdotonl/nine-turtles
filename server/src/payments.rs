@@ -1,5 +1,5 @@
 //! Paying for nine turtles, through Dodo Payments (SPEC section 29,
-//! decisions 0086 and 0094).
+//! decisions 0083 and 0094).
 //!
 //! Dodo Payments is the "merchant of record": it sells nine turtles on the
 //! owner's behalf, takes the card, adds sales tax and sends receipts. nine
