@@ -118,6 +118,9 @@ pub struct AppState {
     /// Passkey sign-in: the site's passkey checker and the challenges
     /// waiting for an answer (decision 0109).
     pub passkeys: Arc<passkeys::Passkeys>,
+    /// When Retry last asked each feed's publisher (`health::retry`), so
+    /// pressing it again and again doesn't hammer them.
+    pub retried: Arc<std::sync::Mutex<std::collections::HashMap<i64, i64>>>,
 }
 
 /// Opens the database and builds the whole web application. Tests call it
@@ -186,6 +189,7 @@ pub async fn state(config: Config) -> Result<AppState, String> {
         latest_backup: Arc::default(),
         mailer,
         assistant_limits: Arc::default(),
+        retried: Arc::default(),
     };
     // A new NINE_TURTLES_PASSWORD_HASH wins over a password the owner set
     // by email (decision 0088): their way back that needs no email.

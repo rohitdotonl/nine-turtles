@@ -21,7 +21,7 @@
 use axum::{
     Json, Router,
     extract::State,
-    http::{HeaderValue, StatusCode, header},
+    http::{StatusCode, header},
     response::{IntoResponse, Response},
     routing::post,
 };
@@ -368,7 +368,8 @@ async fn reset(State(state): State<AppState>, Json(form): Json<Reset>) -> Respon
         "SELECT people.id FROM email_links
          JOIN people ON people.id = email_links.person_id
          WHERE email_links.token_hash = ? AND email_links.purpose = 'reset'
-           AND email_links.used = 0 AND email_links.expires_at > ?",
+           AND email_links.used = 0 AND email_links.expires_at > ?
+           AND people.email = email_links.email COLLATE NOCASE",
     )
     .bind(&hash[..])
     .bind(now())
@@ -406,6 +407,11 @@ async fn reset(State(state): State<AppState>, Json(form): Json<Reset>) -> Respon
         let claimed: Option<i64> = sqlx::query_scalar(
             "UPDATE email_links SET used = 1
              WHERE token_hash = ? AND purpose = 'reset' AND used = 0 AND expires_at > ?
+               -- Sent to an address the reader has since moved away from:
+               -- whoever reads that inbox now mustn't get in.
+               AND EXISTS (SELECT 1 FROM people
+                           WHERE people.id = email_links.person_id
+                             AND people.email = email_links.email COLLATE NOCASE)
              RETURNING person_id",
         )
         .bind(&hash[..])
@@ -792,16 +798,7 @@ async fn delete_me(SignedIn(person): SignedIn, State(state): State<AppState>) ->
     match people::delete(&state.db, person).await {
         Ok(()) => {
             log::info("a reader deleted their account");
-            (
-                StatusCode::NO_CONTENT,
-                [(
-                    header::SET_COOKIE,
-                    HeaderValue::from_static(
-                        "nine_turtles_session=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict",
-                    ),
-                )],
-            )
-                .into_response()
+            (StatusCode::NO_CONTENT, crate::auth::signed_out_cookies()).into_response()
         }
         Err(error) => database_problem("deleting an account", &error),
     }

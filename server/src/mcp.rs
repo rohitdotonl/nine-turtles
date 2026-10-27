@@ -38,6 +38,7 @@ use serde_json::{Value, json};
 use crate::{
     AppState, VERSION,
     assistants::Assistant,
+    feed,
     feeds::{self, NotAdded},
     folders, health,
     marks::{READ_SQL, STAR_SQL, now_ms},
@@ -342,11 +343,12 @@ fn tools() -> Vec<Value> {
             "create_folder",
             "Create a folder",
             "Makes a folder (or finds the one with that name), optionally with feeds in it. \
-             To undo delete_folder, pass the name, feed_ids and rule_ids it answered.",
+             To undo delete_folder, pass the name, feed_ids, rule_ids and search_ids it answered.",
             json!({
                 "name": { "type": "string", "maxLength": folders::LONGEST_NAME },
                 "feed_ids": { "type": "array", "items": { "type": "integer" } },
                 "rule_ids": { "type": "array", "items": { "type": "integer" }, "description": "Rules that pointed at a removed folder." },
+                "search_ids": { "type": "array", "items": { "type": "integer" }, "description": "Saved searches that looked in a removed folder." },
             }),
             &["name"],
             changing(false, true),
@@ -363,7 +365,7 @@ fn tools() -> Vec<Value> {
             "delete_folder",
             "Remove a folder",
             "Removes a folder. Its feeds stay followed; they just leave it. Rules for that folder stay, matching nothing. \
-             Answers its feeds and rules, so create_folder can put it back (its undo).",
+             Answers its feeds, rules and saved searches, so create_folder can put it back (its undo).",
             json!({ "folder_id": folder_id }),
             &["folder_id"],
             changing(true, true),
@@ -491,12 +493,14 @@ struct FeedEdit {
 struct FolderName {
     folder_id: Option<i64>,
     name: Option<String>,
-    /// For create_folder: feeds to put in it, and rules to point at it
-    /// again, as delete_folder answered them (its undo).
+    /// For create_folder: feeds to put in it, and rules and saved searches
+    /// to point at it again, as delete_folder answered them (its undo).
     #[serde(default)]
     feed_ids: Vec<i64>,
     #[serde(default)]
     rule_ids: Vec<i64>,
+    #[serde(default)]
+    search_ids: Vec<i64>,
 }
 
 #[derive(Deserialize)]
@@ -593,7 +597,7 @@ async fn find(state: &AppState, person: i64, search: Search) -> Answer {
                         "title": article.title,
                         "feed": article.feed_title,
                         "feed_id": article.feed_id,
-                        "link": article.link,
+                        "link": article.link.as_deref().map(feed::link_without_tracking),
                         "date": rfc3339(article.at),
                         "read": article.read,
                         "starred": article.starred,
@@ -1010,6 +1014,8 @@ async fn folder(state: &AppState, person: i64, tool: &str, asked: FolderName) ->
                 .execute(&mut *transaction)
                 .await?;
                 rules::back_in_folder(&mut transaction, person, id, &asked.rule_ids).await?;
+                crate::saved_searches::back_in(&mut *transaction, person, "folder", id, &asked.search_ids)
+                    .await?;
                 Ok(json!({ "done": true, "folder_id": id, "already_there": !new }))
             }
             ("rename_folder", Some(id), Some(name)) => {
@@ -1057,14 +1063,15 @@ async fn folder(state: &AppState, person: i64, tool: &str, asked: FolderName) ->
                 .await?;
                 match gone {
                     Some(name) => {
-                        crate::saved_searches::forget(&mut *transaction, person, "folder", id).await?;
+                        let searches = crate::saved_searches::forget(&mut *transaction, person, "folder", id).await?;
                         let rules = rules::place_gone(&mut transaction, None, Some(id)).await?;
                         Ok(json!({
                             "done": true,
                             "removed": name,
                             "feed_ids": feeds_in,
                             "rule_ids": rules,
-                            "undo": "create_folder with this name, feed_ids and rule_ids puts it back as it was",
+                            "search_ids": searches,
+                            "undo": "create_folder with this name, feed_ids, rule_ids and search_ids puts it back as it was",
                         }))
                     }
                     None => Err("The reader has no folder with that id.".to_owned()),

@@ -265,8 +265,10 @@ async fn broken_feeds_are_listed_worst_first_and_retry_checks_now() {
     assert_eq!(answer["feed"]["state"], "dead");
     assert_eq!(reader.published.lock().unwrap().asked.len(), asked + 1);
 
-    // Back again: Retry says it's working, and the page no longer lists it.
+    // Back again, a few minutes later (Retry asks at most every five):
+    // Retry says it's working, and the page no longer lists it.
     reader.change(|site| site.old_gone = false);
+    reader.state.retried.lock().unwrap().clear();
     let (_, answer) = reader
         .post(&format!("/api/health/{old}/retry"), json!({}))
         .await;
@@ -467,6 +469,38 @@ async fn moving_matches_posts_by_their_link_without_tracking_tags() {
     assert_eq!(starred[0]["title"], "two");
     assert_ne!(starred[0]["id"], two);
     assert_eq!(starred[0]["link"], "https://blog.example/two");
+}
+
+#[tokio::test]
+async fn pressing_retry_again_and_again_doesnt_hammer_the_publisher() {
+    let reader = Reader::new().await;
+    // A working feed, just fetched when it was added: Retry doesn't ask the
+    // publisher again within half an hour (fetch politely).
+    let working = reader.follow("/other.xml").await;
+    let asked = reader.published.lock().unwrap().asked.len();
+    for _ in 0..5 {
+        let (status, answer) = reader
+            .post(&format!("/api/health/{working}/retry"), json!({}))
+            .await;
+        assert_eq!(status, StatusCode::OK, "{answer}");
+        assert_eq!(answer["feed"]["state"], "working");
+    }
+    assert_eq!(reader.published.lock().unwrap().asked.len(), asked);
+
+    // A failing feed: the first Retry asks at once, the next few minutes'
+    // presses answer with how that went.
+    let old = reader.follow("/old.xml").await;
+    reader.change(|site| site.old_gone = true);
+    reader.check(old, nine_turtles::now()).await;
+    let asked = reader.published.lock().unwrap().asked.len();
+    for _ in 0..5 {
+        let (status, answer) = reader
+            .post(&format!("/api/health/{old}/retry"), json!({}))
+            .await;
+        assert_eq!(status, StatusCode::OK, "{answer}");
+        assert_eq!(answer["feed"]["state"], "trouble");
+    }
+    assert_eq!(reader.published.lock().unwrap().asked.len(), asked + 1);
 }
 
 #[tokio::test]

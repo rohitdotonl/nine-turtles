@@ -23,7 +23,8 @@
   import NotFound from "./lib/NotFound.svelte";
   import { knownPath } from "./lib/router";
   import { CONFIRM_PAGE, RESET_PAGE, SIGN_IN_LINK_PAGE } from "./lib/accounts";
-  import { currentSession, type Session } from "./lib/session";
+  import { currentSession, noteReader, readerChanged, type Session } from "./lib/session";
+  import { forgetLoaded } from "./lib/feeds";
   import { noConnection } from "./lib/connection.svelte";
   import { forget, keepSession, keptSession } from "./lib/offline";
   import { forgetChosenKeys } from "./lib/keys.svelte";
@@ -34,16 +35,28 @@
   /** Which page the address asks for, outside the signed-in screen. */
   let path = $state(location.pathname);
 
+  /**
+   * Everything a reader left on this device: chosen keys, the player and its places in episodes (decision 0113),
+   * the articles fetched so far, and the copies kept for reading offline with their waiting marks.
+   */
+  async function forgetDevice() {
+    forgetChosenKeys();
+    forgetListening();
+    forgetLoaded();
+    await forget();
+  }
+
   async function check() {
     try {
-      session = await currentSession();
-      if (session.signedIn) keepSession({ version: session.version, owner: session.owner, email: session.email, emailSending: session.emailSending });
-      else {
-        forgetChosenKeys();
-        // Nobody signed in: the episode in the player stops, and this device's places in episodes go too (decision 0113).
-        forgetListening();
-        await forget();
-      }
+      const now = await currentSession();
+      if (now.signedIn) {
+        // Another reader than last time: nothing of the last one's is shown, and their waiting marks are never sent as this one's.
+        if (readerChanged(now.reader)) await forgetDevice();
+        // Noted only now: a tab closed halfway through still forgets next time.
+        noteReader(now.reader);
+        keepSession({ version: now.version, owner: now.owner, email: now.email, emailSending: now.emailSending });
+      } else await forgetDevice();
+      session = now;
       unreachable = false;
       path = location.pathname;
       // Already signed in: the sign-up page opens nine turtles itself.
@@ -53,9 +66,15 @@
       }
     } catch (problem) {
       const kept = noConnection(problem) ? await keptSession() : undefined;
-      if (kept) session = { signedIn: true, ...kept };
+      if (kept) session = { signedIn: true, reader: 0, ...kept };
       else unreachable = true;
     }
+  }
+
+  /** Signed out from inside the app: forgotten at once, so a lost connection now can't reopen the signed-in screen. */
+  async function signedOut() {
+    await forgetDevice();
+    await check();
   }
 
   check();
@@ -69,7 +88,7 @@
 {:else if session && path === SIGN_IN_LINK_PAGE}
   <SignInLink onSignedIn={check} />
 {:else if session?.signedIn && path === CONNECT_PAGE}
-  <ConnectAssistant onSignedOut={check} />
+  <ConnectAssistant onSignedOut={signedOut} />
 {:else if session?.signedIn && !knownPath(path)}
   <!-- An address that isn't one of nine turtles' places: "Wrong turn?" (SPEC section 4). -->
   <NotFound
@@ -85,7 +104,7 @@
     email={session.email}
     emailSending={session.emailSending}
     passkeys={session.passkeys ?? null}
-    onSignedOut={check}
+    onSignedOut={signedOut}
   />
 {:else if session && path === "/sign-up"}
   <SignUp onSignedIn={check} />
