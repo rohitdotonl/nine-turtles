@@ -71,7 +71,7 @@
   import { panesFor, widthFor, MEDIUM_REM, WIDE_REM, type SidebarChoice, type Width } from "./layout";
   import { TEXT_SIZES, apply, load, save } from "./preferences";
   import { device } from "./appearance.svelte";
-  import { VIEWS, VIEW_NAMES, nameFor, parse, pathFor, titleFor, type Hideable, type Route, type View } from "./router";
+  import { VIEWS, VIEW_NAMES, inSettings, nameFor, parentOf, parse, pathFor, rowFor, titleFor, type Hideable, type Route, type View } from "./router";
   import { sharedAddress } from "./share";
   import { emptyQuery, isSearching, resultsTitle, scopeFor, searchParams, searchedTerms, type Query } from "./search";
   import { newestAnswer, savedInOrder } from "./inorder";
@@ -255,7 +255,8 @@
   /** "Add a rule for this feed…" in Edit feed: Settings opens with a new rule for it. */
   let ruleForFeed: number | undefined = $state();
   let cameFromSettings = false;
-  let dataHeading: HTMLHeadingElement | undefined = $state();
+  /** Back from a page opened from Settings: the row on its parent page that opened it, for the keyboard to return to (decision 0120). */
+  let returnRow: string | undefined;
   let addField: HTMLInputElement | undefined = $state();
   let sidebar: HTMLElement | undefined = $state();
   let articleHeading: HTMLHeadingElement | undefined = $state();
@@ -747,7 +748,9 @@
         next = lastPlace;
         history.replaceState(history.state, "", pathFor(next));
       }
-      cameFromSettings = false;
+      // Back or Forward onto a page opened from its parent: closing it is a step back again.
+      cameFromSettings = stepOf(history.state)?.fromParent === true;
+      returnRow = backToParent(route, next);
       const moved = !keepsArticle(route, next);
       // The address has already changed: loading it opens the new version there.
       if (moved && switchesOnMove(updates.ready, marksUnsaved(), false)) {
@@ -928,10 +931,20 @@
     };
   });
 
+  /** Going from a page opened from Settings back to the page it was opened from: the row that opened it. */
+  function backToParent(from: Route, to: Route): string | undefined {
+    const parent = parentOf(from);
+    return parent && pathFor(parent) === pathFor(to) ? rowFor(from) : undefined;
+  }
+
   /** Where the keyboard's place goes on arriving somewhere: its heading, or the add field. */
   function placeFocus(place: Route): HTMLElement | undefined {
     // Edit pages bind their heading to `listHeading` too.
-    if (place.kind === "settings") return settingsHeading;
+    if (place.kind === "settings") {
+      // Back from one of its pages: to the row that opened it, if it's there.
+      const row = returnRow ? document.querySelector<HTMLElement>(`[data-settings-row="${returnRow}"]`) : null;
+      return row ?? settingsHeading;
+    }
     if (place.kind === "feed-health") return healthHeading;
     if (place.kind === "your-feeds") return yourFeedsHeading;
     if (place.kind === "muted") return mutedHeading;
@@ -960,8 +973,28 @@
       if (phone && screen === "home") wordmark?.focus();
       else if (reading) articleHeading?.focus({ preventScroll: true });
       else if (selected && isList(route)) itemList?.focusSelected();
-      else placeFocus(route)?.focus();
+      else focusArriving(route);
     });
+  }
+
+  /**
+   * The keyboard's place on arriving back: the row that opened the page, when it's drawn. A row
+   * shown only once its page has loaded (Rules' "Muted articles") is waited for a moment; meanwhile
+   * the keyboard rests on the heading, and stays wherever the reader moves it.
+   */
+  function focusArriving(place: Route) {
+    const first = placeFocus(place);
+    first?.focus();
+    const row = returnRow;
+    if (!row || place.kind !== "settings" || document.querySelector(`[data-settings-row="${row}"]`)) return;
+    let frames = 0;
+    const wait = () => {
+      if (returnRow !== row || document.activeElement !== first) return;
+      const found = document.querySelector<HTMLElement>(`[data-settings-row="${row}"]`);
+      if (found) found.focus();
+      else if (++frames < 180) requestAnimationFrame(wait);
+    };
+    requestAnimationFrame(wait);
   }
 
   /**
@@ -1060,12 +1093,14 @@
       return;
     }
     const from = screenNow();
-    cameFromSettings = route.kind === "settings" && (next.kind === "feed-health" || next.kind === "your-feeds" || next.kind === "muted" || next.kind === "readers");
+    const parent = parentOf(next);
+    cameFromSettings = parent !== undefined && pathFor(parent) === pathFor(route);
+    returnRow = backToParent(route, next);
     const to: Screen = isList(next) ? "list" : "page";
     const [opening, closing] = [isSheet(next) && !isSheet(route), isSheet(route) && !isSheet(next)];
     let pushed = false;
     if (pathFor(next) !== location.pathname || from !== to) {
-      history.pushState({ screen: to, back: from }, "", pathFor(next));
+      history.pushState({ screen: to, back: from, fromParent: cameFromSettings }, "", pathFor(next));
       pushed = true;
     }
     if (opening) [sheetOpener, sheetPushed] = [document.activeElement, pushed];
@@ -1108,10 +1143,9 @@
     else go(home, note);
   }
 
-  /** The empty state's "Import OPML": Settings, at Your data. */
+  /** The empty state's "Import OPML": Settings › Your data. */
   function goImport(event: MouseEvent) {
-    follow(event, { kind: "settings" });
-    if (event.defaultPrevented) queueMicrotask(() => dataHeading?.focus());
+    follow(event, { kind: "settings", page: "data" });
   }
 
   /** Back from an edit page, saved or not, to the feed or folder. */
@@ -1328,13 +1362,19 @@
 
   function addRuleFor(feed: Feed) {
     ruleForFeed = feed.id;
-    go({ kind: "settings" });
+    go({ kind: "settings", page: "rules" });
   }
 
-  /** Close feed health, or Escape there: back to Settings, a step back in history when it came from there. */
+  /**
+   * Close a page opened from Settings (Feed health, Your feeds, Muted articles, All readers, and
+   * Settings' own pages, decision 0120), or Escape there: back to the page it was opened from, a
+   * step back in history when it came from there.
+   */
   function closeHealth() {
+    const parent = parentOf(route);
+    if (!parent) return;
     if (cameFromSettings) history.back();
-    else go({ kind: "settings" });
+    else go(parent);
   }
 
   /** Close settings, and Escape on Settings or Add a feed: on a phone, back one step to the feeds. */
@@ -1591,7 +1631,7 @@
   }
 
   function escape() {
-    if (route.kind === "feed-health" || route.kind === "your-feeds" || route.kind === "muted" || route.kind === "readers") closeHealth();
+    if (parentOf(route)) closeHealth();
     else if (route.kind === "settings" || route.kind === "add-feed" || route.kind === "new-to-feeds") closePage();
     else if (route.kind === "edit-feed" || route.kind === "edit-folder") edited(false);
     else if (route.kind === "save-search" || route.kind === "edit-search") searchSaved();
@@ -1626,7 +1666,7 @@
       -->
       <AddFeed bind:field={addField} feeds={[]} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} {start}>
         {#snippet alternative()}
-          <a href="/settings" onclick={goImport} class="text-link">Import an OPML file…</a>
+          <a href="/settings/data" onclick={goImport} class="text-link">Import an OPML file…</a>
         {/snippet}
       </AddFeed>
     {:else}
@@ -1848,9 +1888,9 @@
         href="/settings"
         aria-label="Settings"
         title="Settings"
-        aria-current={route.kind === "settings" || route.kind === "feed-health" || route.kind === "your-feeds" || route.kind === "muted" || route.kind === "readers" ? "page" : undefined}
+        aria-current={inSettings(route) ? "page" : undefined}
         onclick={(event) => follow(event, { kind: "settings" })}
-        class={["btn-quiet btn-icon @max-[15rem]:-mr-1.5", (route.kind === "settings" || route.kind === "feed-health" || route.kind === "your-feeds" || route.kind === "muted" || route.kind === "readers") && "bg-tint-sidebar text-ink"]}><Icon name="settings" size={18} /></a
+        class={["btn-quiet btn-icon @max-[15rem]:-mr-1.5", inSettings(route) && "bg-tint-sidebar text-ink"]}><Icon name="settings" size={18} /></a
       >
     </div>
     {#if !phone && (panes.list || panes.article)}
@@ -1869,6 +1909,9 @@
     <div class="relative flex min-w-0 flex-1">
       {#if route.kind === "settings"}
         <Settings
+          page={route.page}
+          onOpen={(event, page) => follow(event, { kind: "settings", page })}
+          onBack={closeHealth}
           bind:preferences
           {sort}
           onSort={changeSort}
@@ -1881,7 +1924,6 @@
           {hidden}
           onHidden={changeHidden}
           bind:heading={settingsHeading}
-          bind:dataHeading
           {version}
           {owner}
           {email}

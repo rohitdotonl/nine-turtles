@@ -4,7 +4,9 @@
   or the label of an icon-only button, says what it does.
 -->
 <script lang="ts" module>
-  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "clock" | "history" | "shelf" | "headphones" | "queue";
+  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "clock" | "history" | "shelf" | "headphones" | "queue"
+    // Settings' rows (decision 0120).
+    | "book" | "nine-circle" | "palette" | "a-plus" | "pen-nib" | "feed" | "heart-pulse" | "panel-dots" | "bookmark-plus" | "newspaper" | "plug" | "robot" | "key" | "people" | "card" | "envelope" | "trash";
 </script>
 
 <script lang="ts">
@@ -140,5 +142,84 @@
     <circle cx="4.5" cy="10" r="1.25" fill="currentColor" stroke="none" />
     <circle cx="10" cy="10" r="1.25" fill="currentColor" stroke="none" />
     <circle cx="15.5" cy="10" r="1.25" fill="currentColor" stroke="none" />
+  {:else if name === "book"}
+    <!-- Settings › Reading mode: an open book. -->
+    <path d="M10 5.5c-1.5-1.2-3.5-1.75-6.25-1.75v11c2.75 0 4.75.55 6.25 1.75 1.5-1.2 3.5-1.75 6.25-1.75v-11C13.5 3.75 11.5 4.3 10 5.5Z" />
+    <path d="M10 5.5v11" />
+  {:else if name === "nine-circle"}
+    <!-- Settings › Unread counts: a figure 9 in a ring. -->
+    <circle cx="10" cy="10" r="6.75" />
+    <path d="M11.75 8.75a1.75 1.75 0 1 1-1.75-1.75 1.75 1.75 0 0 1 1.75 1.75Zm0 0c0 2.5-1.1 4-3.25 4.4" />
+  {:else if name === "palette"}
+    <!-- Settings › Appearance: a painter's palette. -->
+    <path d="M10 3.75a6.25 6.25 0 0 0 0 12.5c1 0 1.5-.75 1.25-1.5-.4-1.1.3-2 1.5-2h1.5a2 2 0 0 0 2-2A6.25 6.25 0 0 0 10 3.75Z" />
+    <circle cx="7" cy="9" r=".8" fill="currentColor" />
+    <circle cx="9.75" cy="6.75" r=".8" fill="currentColor" />
+    <circle cx="12.75" cy="8" r=".8" fill="currentColor" />
+  {:else if name === "a-plus"}
+    <!-- Settings › Text size: an A and a plus. -->
+    <path d="M3.5 15.5 7.25 5h1.5L12.5 15.5M5 11.75h6" />
+    <path d="M15.25 6v5M12.75 8.5h5" />
+  {:else if name === "pen-nib"}
+    <!-- Settings › Font, theme and line width: a pen's nib. -->
+    <path d="M10 16.25 5.25 11.5 7 4.75h6l1.75 6.75Z" />
+    <path d="M10 16.25V10" />
+    <circle cx="10" cy="9.25" r="1" />
+  {:else if name === "feed"}
+    <!-- Settings › Your feeds: a feed's waves. -->
+    <path d="M4.5 9.25a6.25 6.25 0 0 1 6.25 6.25" />
+    <path d="M4.5 4.75a10.75 10.75 0 0 1 10.75 10.75" />
+    <circle cx="5.25" cy="14.75" r="1" fill="currentColor" />
+  {:else if name === "heart-pulse"}
+    <!-- Settings › Feed health: a heart with a pulse. -->
+    <path d="M10 16.25s-6.25-3.75-6.25-8a3.25 3.25 0 0 1 6.25-1.4 3.25 3.25 0 0 1 6.25 1.4c0 4.25-6.25 8-6.25 8Z" />
+    <path d="M5.5 10h2l1-1.75 1.5 3 1-1.25h3.5" />
+  {:else if name === "panel-dots"}
+    <!-- Settings › Show in the sidebar: a window with a sidebar of rows. -->
+    <rect x="3.25" y="4.25" width="13.5" height="11.5" rx="1.5" />
+    <path d="M8.25 4.25v11.5" />
+    <path d="M5.25 7.25h1M5.25 10h1M5.25 12.75h1" />
+  {:else if name === "bookmark-plus"}
+    <!-- Settings › Add from anywhere: a bookmark with a plus. -->
+    <path d="M5.75 3.75h8.5a1 1 0 0 1 1 1v11.5L10 13l-5.25 3.25V4.75a1 1 0 0 1 1-1Z" />
+    <path d="M10 6.25v4.5M7.75 8.5h4.5" />
+  {:else if name === "newspaper"}
+    <!-- Settings › Newsletters: a folded paper. -->
+    <path d="M4.25 4.25h9.5v11.5H5.25a1 1 0 0 1-1-1Z" />
+    <path d="M13.75 7.25h2v7.5a1 1 0 0 1-2 0" />
+    <path d="M6.5 7h5M6.5 9.75h5M6.5 12.5h3" />
+  {:else if name === "plug"}
+    <!-- Settings › Other apps: a plug. -->
+    <path d="M7.25 3.5v3M12.75 3.5v3" />
+    <path d="M5.25 6.5h9.5v2.75a4.75 4.75 0 0 1-9.5 0Z" />
+    <path d="M10 14v2.75" />
+  {:else if name === "robot"}
+    <!-- Settings › Connected assistants: a robot's head. -->
+    <rect x="4.25" y="6.75" width="11.5" height="8.5" rx="2" />
+    <path d="M10 3.75v3M7.75 10.25v.75M12.25 10.25v.75M8 13.25h4" />
+  {:else if name === "key"}
+    <!-- Settings › Passkeys: a key. -->
+    <circle cx="7" cy="12.5" r="3.25" />
+    <path d="M9.5 10.25 16.25 3.5" />
+    <path d="m13.5 6.25 2 2" />
+    <path d="m15 4.75 1.5 1.5" />
+  {:else if name === "people"}
+    <!-- Settings › Readers: two people. -->
+    <circle cx="7.5" cy="7" r="2.75" />
+    <path d="M2.75 16.25a4.75 4.75 0 0 1 9.5 0" />
+    <path d="M12.75 4.6a2.75 2.75 0 0 1 0 4.8" />
+    <path d="M14.5 11.9a4.75 4.75 0 0 1 2.75 4.35" />
+  {:else if name === "card"}
+    <!-- Settings › Your plan: a payment card. -->
+    <rect x="2.75" y="4.75" width="14.5" height="10.5" rx="1.5" />
+    <path d="M2.75 8.25h14.5M5.5 12.25h3" />
+  {:else if name === "envelope"}
+    <!-- Settings › Account › Email: an envelope. -->
+    <rect x="3.25" y="4.75" width="13.5" height="10.5" rx="1.5" />
+    <path d="m3.75 5.5 6.25 5 6.25-5" />
+  {:else if name === "trash"}
+    <!-- Settings › Account › Delete data and Delete account: a bin. -->
+    <path d="M3.75 5.75h12.5M8 5.75V4.25a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5v1.5" />
+    <path d="M5.25 5.75l.75 9.5a1 1 0 0 0 1 .95h6a1 1 0 0 0 1-.95l.75-9.5" />
   {/if}
 </svg>

@@ -49,19 +49,19 @@ test("anyone can sign up from the sign-in page, and the owner sees them", async 
   await page.goto("/settings");
   await appReady(page);
   await signIn(page);
-  await page.goto("/settings");
+  await page.goto("/settings/readers");
   const readers = page.getByRole("region", { name: "Readers", exact: true });
   await expect(page.getByRole("heading", { name: "Sign-up" })).toHaveCount(0);
   await readers.getByRole("link", { name: /^All readers/ }).focus();
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("heading", { name: "Readers", level: 2 })).toBeFocused();
-  await expect(page).toHaveURL(/\/settings\/readers$/);
+  await expect(page.getByRole("heading", { name: "All readers", level: 2 })).toBeFocused();
+  await expect(page).toHaveURL(/\/settings\/readers\/all$/);
   const everyone = page.getByRole("region", { name: /^\d+ readers$/ });
   await expect(everyone.getByText("(you)")).toBeVisible();
   await expect(everyone.getByRole("listitem").filter({ hasText: email })).toContainText(/Joined .* · 0 feeds\s*Last here today\s*$/);
   await expect(page.getByRole("region", { name: "This nine turtles" }).getByText("Readers", { exact: true })).toBeVisible();
   await page.keyboard.press("Escape");
-  await expect(page).toHaveURL(/\/settings$/);
+  await expect(page).toHaveURL(/\/settings\/readers$/);
   await stranger.close();
 });
 
@@ -70,7 +70,7 @@ test("the owner sets their email and signs in with it", async ({ page, browser }
   await page.goto("/");
   await appReady(page);
   await signIn(page);
-  await page.goto("/settings");
+  await page.goto("/settings/readers");
   const field = page.getByLabel("Your email");
   await field.fill("not an email");
   await page.getByRole("button", { name: "Save your email" }).click();
@@ -95,8 +95,10 @@ test("the owner sets their email and signs in with it", async ({ page, browser }
   await expect(password).toHaveValue("");
 
   // Closing Settings and opening it again shows the email just saved.
+  await page.getByRole("button", { name: "Back to Settings" }).click();
   await page.getByRole("button", { name: "Close settings" }).click();
   await page.locator("#sidebar").getByRole("link", { name: "Settings" }).click();
+  await page.getByRole("link", { name: "Readers", exact: true }).click();
   await expect(field).toHaveValue("owner@example.com");
 
   const other = await (await browser.newContext()).newPage();

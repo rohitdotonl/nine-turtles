@@ -155,7 +155,7 @@ test.describe("on a wide window", () => {
     await expect(binding(page, "go-unread")).toHaveCount(0);
     // Settings › Keyboard opens the same list, ready to change keys.
     await page.keyboard.press("Escape");
-    await page.goto(new URL("/settings", FEEDS_APP).href);
+    await page.goto(new URL("/settings/keyboard", FEEDS_APP).href);
     await appReady(page);
     await page.getByRole("button", { name: "Change keys…" }).click();
     await expect(sheet(page).getByRole("heading", { name: "Change keys" })).toBeVisible();

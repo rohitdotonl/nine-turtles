@@ -80,7 +80,7 @@ test("Settings › Connected assistants: the address, each connection, a key sho
   );
   await page.route("**/api/feeds/999999/resubscribe", (route) => route.fulfill({ status: 409, json: { error: "too-late" } }));
 
-  await page.goto("/settings");
+  await page.goto("/settings/assistants");
   await appReady(page);
   await signIn(page);
   const group = page.getByRole("region", { name: "Connected assistants" });

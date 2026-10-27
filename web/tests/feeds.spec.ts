@@ -58,8 +58,8 @@ test("a fresh nine turtles shows the welcome in the reading area: the paste fiel
   const rowCentre = (fieldBox!.x + addBox!.x + addBox!.width) / 2;
   expect(Math.abs(importBox!.x + importBox!.width / 2 - rowCentre)).toBeLessThan(3);
   await importLink.click();
-  await expect(page).toHaveURL(/\/settings$/);
-  await expect(page.getByRole("heading", { level: 3, name: "Your data" })).toBeFocused();
+  await expect(page).toHaveURL(/\/settings\/data$/);
+  await expect(page.getByRole("heading", { level: 2, name: "Your data" })).toBeFocused();
   await expect(sidebar(page).getByRole("link", { name: "Add feed" })).toBeVisible();
 });
 
@@ -502,7 +502,7 @@ test("a share menu's text with the address inside it works too, and Escape follo
 });
 
 test("Settings gives the bookmark and the Shortcuts address, built from this nine turtles' own address", async ({ page }) => {
-  await openApp(page, "/settings");
+  await openApp(page, "/settings/add-from-anywhere");
   const group = page.getByRole("region", { name: "Add from anywhere" });
   await expect(group.getByText(`javascript:location.href='${FEEDS_APP}/add-feed?url='+encodeURIComponent(location.href)`)).toBeVisible();
   await expect(group.getByText(`${FEEDS_APP}/add-feed?url=`, { exact: true })).toBeVisible();

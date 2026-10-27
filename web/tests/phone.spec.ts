@@ -441,7 +441,14 @@ test.describe("on a phone", () => {
       const box = element.getBoundingClientRect();
       return box.left + parseFloat(getComputedStyle(element).paddingLeft);
     })));
-    // The preview passage is the Look and feel group's first row: its words start on the rows' words, 16px in from the group's edge (decision 0055).
+    near20((await page.locator(".inset-group").first().boundingBox())!.x);
+    // One of its own pages (decision 0120): ‹ Settings and the title on the same margin.
+    // The preview passage is the group's first row: its words start on the rows' words, 16px in from the group's edge (decision 0055).
+    await page.goto(new URL("/settings/font", FEEDS_APP).href);
+    await appReady(page);
+    const font = page.getByRole("heading", { level: 2, name: "Font, theme and line width" });
+    await expect(font).toBeVisible();
+    near20(await textStart(font));
     expect(Math.abs((await textStart(page.locator(".reading-sample p"))) - 36)).toBeLessThan(1.5);
     near20((await page.locator(".inset-group").first().boundingBox())!.x);
 

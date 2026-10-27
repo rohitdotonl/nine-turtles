@@ -181,7 +181,7 @@ test("switching off keeping articles, with the keyboard, deletes the copies and 
   const listed = await (await page.request.get(new URL(`/api/articles?feed=${feed}`, FEEDS_APP).href)).json();
   const ids: number[] = listed.articles.map((each: { id: number }) => each.id);
   await page.request.post(new URL("/api/articles/starred", FEEDS_APP).href, { data: { ids, starred: true } });
-  await page.goto(new URL("/settings", FEEDS_APP).href);
+  await page.goto(new URL("/settings/data", FEEDS_APP).href);
   await appReady(page);
   await expect.poll(() => keptIds(page), { timeout: 20_000 }).toEqual(expect.arrayContaining(ids));
 

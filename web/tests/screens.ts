@@ -146,11 +146,13 @@ export const SCREENS: Screen[] = [
     },
   },
   { name: "settings", path: "/settings", signedIn: true, library: true },
+  // One of Settings' own pages (decision 0120): the sample, Theme, Reading font and Line width.
+  { name: "settings-font", path: "/settings/font", signedIn: true, library: true },
   {
     // Settings › Connected assistants with one assistant and a feed it unsubscribed from
     // (SPEC section 33). The list is answered here, so no feed is really unsubscribed.
     name: "connected-assistants",
-    path: "/settings",
+    path: "/settings/assistants",
     signedIn: true,
     open: async (page) => {
       const now = Math.floor(Date.now() / 1000);
@@ -255,7 +257,7 @@ export const SCREENS: Screen[] = [
     // Settings › Rules with two rules, one paused, and the rule editor open over it. The
     // rules are as the server would send them, so the library the screenshots follow stays as it is.
     name: "rules",
-    path: "/settings",
+    path: "/settings/rules",
     signedIn: true,
     library: true,
     open: async (page) => {
@@ -323,7 +325,7 @@ export const SCREENS: Screen[] = [
   {
     // The owner's Readers page (decision 0090), with three made-up readers.
     name: "readers",
-    path: "/settings/readers",
+    path: "/settings/readers/all",
     signedIn: true,
     open: async (page) => {
       const day = 24 * 60 * 60;

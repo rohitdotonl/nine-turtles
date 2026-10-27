@@ -9,16 +9,19 @@
 /** The feeds list (home on a phone), a list of articles, an open article, or a page such as Settings. */
 export type Screen = "home" | "list" | "article" | "page";
 
-export type Step = { screen: Screen; back?: Screen };
+/** `fromParent`: a page opened from the page before it (Settings and its pages), so closing it is a step back. */
+export type Step = { screen: Screen; back?: Screen; fromParent?: boolean };
 
 const SCREENS: readonly string[] = ["home", "list", "article", "page"];
 
 /** The step a history entry holds, if nine turtles made it. */
 export function stepOf(state: unknown): Step | undefined {
   if (typeof state !== "object" || state === null) return undefined;
-  const { screen, back } = state as Record<string, unknown>;
+  const { screen, back, fromParent } = state as Record<string, unknown>;
   if (typeof screen !== "string" || !SCREENS.includes(screen)) return undefined;
-  return { screen: screen as Screen, back: typeof back === "string" && SCREENS.includes(back) ? (back as Screen) : undefined };
+  const step: Step = { screen: screen as Screen, back: typeof back === "string" && SCREENS.includes(back) ? (back as Screen) : undefined };
+  if (fromParent === true) step.fromParent = true;
+  return step;
 }
 
 /**

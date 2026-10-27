@@ -206,7 +206,7 @@
     {/each}
     <button type="button" class="inset-row inset-action" onclick={startNew}>New rule…</button>
     {#if muted > 0}
-      <a href="/settings/muted" onclick={onMuted} class="inset-row inset-action"
+      <a href="/settings/muted" onclick={onMuted} data-settings-row="muted" class="inset-row inset-action"
         >Muted articles<span class="row-glyph flex items-center gap-1"><span class="text-meta">{muted}</span><Icon name="chevron-right" size={18} /></span></a
       >
     {/if}
