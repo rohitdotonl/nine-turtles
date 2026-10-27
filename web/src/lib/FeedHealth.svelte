@@ -11,19 +11,10 @@
 <script lang="ts">
   import { tick } from "svelte";
   import { edge } from "./edge";
+  import NewAddress from "./NewAddress.svelte";
   import PageHead from "./PageHead.svelte";
-  import { refused, resubscribe, unsubscribe, type Choice } from "./feeds";
-  import {
-    findAddress,
-    headline,
-    lastWorked,
-    listSick,
-    moveTo,
-    reason,
-    refusalMessage,
-    retry,
-    type Sick,
-  } from "./health";
+  import { refused, resubscribe, unsubscribe } from "./feeds";
+  import { headline, lastWorked, listSick, reason, refusalMessage, retry, type Sick } from "./health";
 
   let {
     heading = $bindable(),
@@ -39,13 +30,16 @@
   } = $props();
 
   type Row = {
+    /** The row's own identity and group, fixed when the page opens: a moved feed may change number and state, but stays put. */
+    key: number;
+    group: "dead" | "trouble";
     feed: Sick;
     /** What the last action said, if anything. */
     message: string;
     busy: boolean;
-    /** Find new address's results, while choosing. */
-    choices: Choice[];
-    chosen: string;
+    /** Find new address (decision 0106), and whether its question or choice is showing. */
+    finder?: NewAddress;
+    choosing: boolean;
     unsubscribed: boolean;
   };
 
@@ -57,7 +51,15 @@
     listSick()
       .then((feeds) => {
         now = Date.now() / 1000;
-        rows = feeds.map((feed) => ({ feed, message: "", busy: false, choices: [], chosen: "", unsubscribed: false }));
+        rows = feeds.map((feed, key) => ({
+          key,
+          group: feed.state === "dead" ? "dead" : "trouble",
+          feed,
+          message: "",
+          busy: false,
+          choosing: false,
+          unsubscribed: false,
+        }));
       })
       .catch(() => (failed = true));
   });
@@ -73,14 +75,13 @@
   }
 
   let groups = $derived([
-    { id: "dead", name: "Not working", rows: (rows ?? []).filter((row) => row.feed.state === "dead") },
-    { id: "trouble", name: "Having trouble", rows: (rows ?? []).filter((row) => row.feed.state !== "dead") },
+    { id: "dead", name: "Not working", rows: (rows ?? []).filter((row) => row.group === "dead") },
+    { id: "trouble", name: "Having trouble", rows: (rows ?? []).filter((row) => row.group === "trouble") },
   ]);
 
   async function tryAgain(row: Row) {
     row.busy = true;
     row.message = "Checking…";
-    row.choices = [];
     const answer = await retry(row.feed.id);
     row.busy = false;
     now = Date.now() / 1000;
@@ -94,41 +95,14 @@
     if (answer.state === "working") onFeedsChanged();
   }
 
-  async function find(row: Row) {
-    row.busy = true;
-    row.message = "Looking on the site…";
-    row.choices = [];
-    const answer = await findAddress(row.feed.id);
-    row.busy = false;
-    if (!Array.isArray(answer)) {
-      row.message = refusalMessage(answer, "find");
-      return;
-    }
-    row.choices = answer;
-    row.chosen = answer[0]?.url ?? "";
-    row.message = answer.length === 1 ? "The site names this feed:" : "The site names these feeds. Choose one:";
-    await focusIn(row, "chosen");
-  }
-
-  async function cancelChoice(row: Row) {
-    row.choices = [];
+  /** Find new address: what the site names shows in the feed's block (NewAddress.svelte). */
+  function find(row: Row) {
     row.message = "";
-    await focusIn(row, "find");
+    row.finder?.find();
   }
 
-  async function use(row: Row) {
-    if (!row.chosen || row.busy) return;
-    row.busy = true;
-    row.message = "Moving…";
-    const answer = await moveTo(row.feed.id, row.chosen);
-    row.busy = false;
-    if ("error" in answer) {
-      row.message = refusalMessage(answer, "move");
-      return;
-    }
-    row.feed = { ...answer, state: "working" };
-    row.choices = [];
-    row.message = "It now reads from its new address and works again. Its articles, stars and folders stayed.";
+  async function moved(row: Row, feed: Sick) {
+    row.feed = feed;
     onFeedsChanged();
     await focusIn(row, "retry");
   }
@@ -142,7 +116,6 @@
       return;
     }
     row.unsubscribed = true;
-    row.choices = [];
     row.message = `Unsubscribed from ${row.feed.title}.`;
     onFeedsChanged();
     await focusIn(row, "undo");
@@ -181,7 +154,7 @@
             <section aria-labelledby={`health-${group.id}`}>
               <h3 id={`health-${group.id}`} class="inset-head">{group.name}</h3>
               <ul class="inset-group">
-                {#each group.rows as row (row.feed.id)}
+                {#each group.rows as row (row.key)}
                   <li id={`health-feed-${row.feed.id}`} class="inset-row feed-row">
                     <h4 class="w-full min-w-0 font-semibold break-words">{row.feed.title}</h4>
                     {#if !row.unsubscribed}
@@ -190,33 +163,25 @@
                         {#if row.feed.state !== "working"}{reason(row.feed.problem)}{/if}
                       </p>
                       <p class="w-full text-meta text-muted">
-                        {#if row.feed.state === "working"}Checked just now{:else}{lastWorked(row.feed)}{/if}{#if row.feed.state === "dead"}. Still checked once a day, in case it comes back{/if}.
+                        {#if row.feed.state === "working"}Checked just now{:else}{lastWorked(row.feed)}{/if}{#if row.feed.state === "dead"}. Still checked once a day, in case it comes back{/if}.{#if row.feed.frequency}
+                        {row.feed.frequency}.{/if}
                       </p>
                     {/if}
                     <p role="status" class={["w-full text-ink", !row.message && "sr-only"]}>{row.message}</p>
-                    {#if row.choices.length > 0}
-                      <div role="radiogroup" aria-label={`Feeds on ${row.feed.title}'s site`} class="choices inset-group w-full">
-                        {#each row.choices as choice (choice.url)}
-                          <label class="inset-row check-row flex-nowrap">
-                            <input type="radio" name={`new-address-${row.feed.id}`} value={choice.url} bind:group={row.chosen} data-focus={choice.url === row.chosen ? "chosen" : undefined} />
-                            <span class="flex min-w-0 flex-col py-1">
-                              <span class="break-words">{choice.title}</span>
-                              <span class="text-small break-all text-muted">{choice.url}</span>
-                            </span>
-                            <span aria-hidden="true" class="radio-mark shrink-0"></span>
-                          </label>
-                        {/each}
-                      </div>
-                      <div class="actions">
-                        <button type="button" class="btn btn-small" onclick={() => cancelChoice(row)}>Cancel</button>
-                        <button type="button" class="btn-primary" aria-disabled={row.busy} onclick={() => use(row)}>Use this address</button>
-                      </div>
-                    {:else if row.unsubscribed}
+                    {#if row.unsubscribed}
                       <div class="actions">
                         <button type="button" class="btn btn-small" data-focus="undo" aria-label={`Undo unsubscribing from ${row.feed.title}`} aria-disabled={row.busy} onclick={() => !row.busy && undo(row)}>Undo</button>
                       </div>
                     {:else}
-                      <div class="actions">
+                      <NewAddress
+                        bind:this={row.finder}
+                        bind:open={row.choosing}
+                        bind:busy={row.busy}
+                        feed={row.feed}
+                        onMoved={(feed) => moved(row, feed)}
+                        onClosed={() => focusIn(row, "find")}
+                      />
+                      <div class="actions" hidden={row.choosing}>
                         <button type="button" class="btn btn-small" data-focus="retry" aria-disabled={row.busy} aria-label={`Retry ${row.feed.title}`} onclick={() => !row.busy && tryAgain(row)}>Retry</button>
                         <button type="button" class="btn btn-small" data-focus="find" aria-disabled={row.busy} aria-label={`Find new address for ${row.feed.title}`} onclick={() => !row.busy && find(row)}>Find new address</button>
                         <button
@@ -265,12 +230,10 @@
     align-items: center;
     margin-top: 0.25rem;
   }
+  .actions[hidden] {
+    display: none;
+  }
   .actions > .btn-danger {
     margin-left: 0;
-  }
-  /* Find new address's choices sit in the feed's block, on the page's own color so they stand apart. */
-  .choices {
-    --group: var(--paper);
-    margin-top: 0.25rem;
   }
 </style>

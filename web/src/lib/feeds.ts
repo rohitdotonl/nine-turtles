@@ -1,14 +1,17 @@
 // Talking to the server about feeds, folders and their articles (SPEC
 // sections 3, 5 to 9, 15, 16 and 18), and the words and times the screens
 // show for them.
-import type { View } from "./router";
+import { HIDEABLE, type Hideable, type View } from "./router";
 import type { KeyMap } from "./keyboard";
 import { api } from "./updates.svelte";
 import { noConnection, serverNow, whenBack } from "./connection.svelte";
 import {
   CATCH_UP_NEEDS_CONNECTION,
   READ_PAST_NEEDS_CONNECTION,
+  COLLECTIONS_NEED_CONNECTION,
   NeedsConnection,
+  RECENT_NEEDS_CONNECTION,
+  UP_NEXT_NEEDS_CONNECTION,
   keepLibrary,
   keptArticle,
   keptLibrary,
@@ -18,6 +21,7 @@ import {
   sending,
   useFetchers,
 } from "./offline";
+import { episodeFrom, type Episode } from "./podcasts";
 
 export type Feed = {
   id: number;
@@ -29,6 +33,11 @@ export type Feed = {
   folders: number[];
   /** When the reader paused it (seconds since 1970), or null while it isn't paused (SPEC section 15). */
   pausedAt?: number | null;
+  /**
+   * When its checks began failing (seconds since 1970), while the feed health
+   * page lists it as not working; null while it works (decision 0106).
+   */
+  failingSince?: number | null;
 } & FeedSettings;
 
 /**
@@ -43,8 +52,8 @@ export type Check = "automatic" | "hourly" | "daily";
 
 export type Folder = { id: number; name: string };
 
-/** Everything the sidebar lists: feeds and folders, each A to Z. */
-export type Library = { feeds: Feed[]; folders: Folder[] };
+/** Everything the sidebar lists: feeds and folders, each A to Z; and, where search needs them, the reader's collections (decision 0108). */
+export type Library = { feeds: Feed[]; folders: Folder[]; collections?: { id: number; name: string }[] };
 
 export type Article = {
   id: number;
@@ -64,6 +73,10 @@ export type Article = {
    * outside search, and when the words were only in the title.
    */
   excerpt?: ExcerptPiece[];
+  /** A podcast's episode (SPEC section 35): its row shows a small headphones mark, and its length if known. */
+  episode?: boolean;
+  /** How long the episode plays, in seconds, if its feed says. */
+  episodeSeconds?: number | null;
 };
 
 /** A piece of a search result's excerpt: plain text, never HTML. */
@@ -77,6 +90,8 @@ export type FullArticle = Article & {
   summary: string | null;
   /** The article's language (or its feed's), or null if neither says. */
   language: string | null;
+  /** Its audio file, if it's a podcast's episode (SPEC section 35): played from the publisher's own address. */
+  audio?: Episode | null;
 };
 
 /**
@@ -96,7 +111,7 @@ export type Page = {
  * Which articles a list shows: one of the views, one feed's or folder's (all
  * of them), or a search's results (`search.ts` → `searchParams`).
  */
-export type Source = { view: View } | { feed: number } | { folder: number } | { search: Record<string, string> };
+export type Source = { view: View } | { feed: number } | { folder: number } | { collection: number } | { search: Record<string, string> };
 
 /** The reader's sort order, shared across their devices (SPEC section 18). */
 export type Order = "newest" | "oldest";
@@ -254,6 +269,7 @@ function sourceQuery(source: Source): URLSearchParams {
   if ("search" in source) for (const [name, value] of Object.entries(source.search)) query.set(name, value);
   else if ("feed" in source) query.set("feed", String(source.feed));
   else if ("folder" in source) query.set("folder", String(source.folder));
+  else if ("collection" in source) query.set("collection", String(source.collection));
   else query.set("view", source.view);
   return query;
 }
@@ -263,6 +279,12 @@ export async function listArticles(source: Source, order: Order, after: string |
   try {
     return await listFromServer(source, order, after);
   } catch (problem) {
+    // Recently read isn't kept on the device: it says plainly that it needs a connection.
+    if (noConnection(problem) && "view" in source && source.view === "recent") throw new NeedsConnection(RECENT_NEEDS_CONNECTION);
+    // Nor is Up Next (decision 0113).
+    if (noConnection(problem) && "view" in source && source.view === "upnext") throw new NeedsConnection(UP_NEXT_NEEDS_CONNECTION);
+    // Nor are collections (decision 0108).
+    if (noConnection(problem) && "collection" in source) throw new NeedsConnection(COLLECTIONS_NEED_CONNECTION);
     // A kept list comes whole, so there's never a next page of it to add.
     if (!noConnection(problem) || after !== null) throw problem;
     const kept = await keptPage(source, order);
@@ -276,6 +298,9 @@ async function listFromServer(source: Source, order: Order, after: string | null
   query.set("order", order);
   if (after !== null) query.set("after", after);
   await saved();
+  // Recently read lists the article just opened too, waiting a moment for
+  // its note, never long: on a slow connection the list comes without it.
+  if ("view" in source && source.view === "recent") await Promise.race([opening, new Promise((done) => setTimeout(done, OPENING_WAIT))]);
   const body = await getJson(`/api/${"search" in source ? "search" : "articles"}?${query}`);
   if (!isRecord(body) || !Array.isArray(body.articles)) throw new Error("nine turtles sent an unexpected answer");
   return {
@@ -404,6 +429,36 @@ function send(path: string, body: unknown): Promise<void> {
   return sent;
 }
 
+/** The last "opened" note on its way, so Recently read waits for it. */
+let opening: Promise<unknown> = Promise.resolve();
+/** The longest Recently read waits for that note, in milliseconds. */
+const OPENING_WAIT = 2_000;
+
+/**
+ * Tells the server the reading area showed an article, for Recently read
+ * (decision 0105). Not a mark: without a connection it isn't sent or kept
+ * for later, and a failure is never said.
+ */
+export function noteOpened(id: number): void {
+  if (globalThis.navigator?.onLine === false) return;
+  opening = api("/api/articles/opened", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ id }),
+    signal: AbortSignal.timeout(15_000),
+  }).catch(() => undefined);
+}
+
+/** How often a feed posts, in plain words ("Posts about 3 times a week"), or nothing if it can't be said just now (decision 0105). */
+export async function feedFrequency(id: number): Promise<string | undefined> {
+  try {
+    const body = await getJson(`/api/feeds/${id}/frequency`);
+    return isRecord(body) && typeof body.words === "string" ? body.words : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /** Marks articles read or unread. The screen has already changed; this tells the server. */
 export function markRead(ids: number[], read: boolean): Promise<void> {
   return sendMark("read", ids, read, serverNow());
@@ -444,14 +499,22 @@ function sendMark(kind: "read" | "starred", ids: number[], value: boolean, at: n
 
 /** The settings shared across the reader's devices (SPEC section 18). */
 /** `letGo` is unknown when the server can't say, so its choices wait rather than show Never. */
-export type Reading = { sort: Order; mode: ReadingMode; counts: Counts; letGo: LetGo | undefined; keys: KeyMap };
+export type Reading = {
+  sort: Order;
+  mode: ReadingMode;
+  counts: Counts;
+  letGo: LetGo | undefined;
+  keys: KeyMap;
+  hidden: Hideable[];
+};
 
 /**
  * The settings shared across the reader's devices: the sort order, the
- * reading mode, whether unread counts show, when unread lets go and the
- * keys the reader chose. Newest first if the server can't say, the wait
- * unknown, and the mode, counts and keys this device last saw (inbox,
- * shown, nine turtles' own keys, if none).
+ * reading mode, whether unread counts show, when unread lets go, the keys
+ * the reader chose and which lists the sidebar hides. Newest first if the
+ * server can't say, the wait unknown, and the mode, counts, keys and hidden
+ * lists this device last saw (inbox, shown, nine turtles' own keys, none,
+ * if none).
  */
 export async function loadSettings(): Promise<Reading> {
   try {
@@ -461,12 +524,14 @@ export async function loadSettings(): Promise<Reading> {
     const counts = isRecord(body) && body.counts === "hidden" ? "hidden" : "shown";
     const letGo = (isRecord(body) && LET_GO.find((value) => value === body.let_go)) || "never";
     const keys = keysFrom(isRecord(body) ? body.keys : undefined);
+    const hidden = isRecord(body) ? hiddenFrom(body.hidden) : [];
     rememberMode(mode);
     rememberCounts(counts);
     rememberKeys(keys);
-    return { sort, mode, counts, letGo, keys };
+    rememberHidden(hidden);
+    return { sort, mode, counts, letGo, keys, hidden };
   } catch {
-    return { sort: "newest", mode: lastMode(), counts: lastCounts(), letGo: undefined, keys: lastKeys() };
+    return { sort: "newest", mode: lastMode(), counts: lastCounts(), letGo: undefined, keys: lastKeys(), hidden: lastHidden() };
   }
 }
 
@@ -498,6 +563,37 @@ export function forgetKeys() {
     globalThis.localStorage?.removeItem(KEYS_KEY);
   } catch {
     // Private browsing: nothing was kept.
+  }
+}
+
+/** The hidden lists named, in one order; anything else is left out. */
+export function hiddenFrom(value: unknown): Hideable[] {
+  if (!Array.isArray(value)) return [];
+  return HIDEABLE.filter((list) => value.includes(list));
+}
+
+/** Hides lists from the sidebar, or shows them again (Settings › Show in the sidebar, decision 0105). */
+export async function saveHidden(hidden: Hideable[]): Promise<void> {
+  await send("/api/settings", { hidden });
+  rememberHidden(hidden);
+}
+
+const HIDDEN_KEY = "nine-turtles.hidden";
+
+/** The lists this device last saw hidden, so they don't show for a moment before the server answers. */
+export function lastHidden(): Hideable[] {
+  try {
+    return hiddenFrom(JSON.parse(globalThis.localStorage?.getItem(HIDDEN_KEY) ?? "[]"));
+  } catch {
+    return [];
+  }
+}
+
+function rememberHidden(hidden: Hideable[]) {
+  try {
+    globalThis.localStorage?.setItem(HIDDEN_KEY, JSON.stringify(hidden));
+  } catch {
+    // Private browsing: the server's answer still decides, a moment later.
   }
 }
 
@@ -1048,6 +1144,9 @@ export function toArticle(article: Record<string, unknown>): Article {
     starred: article.starred === true,
     muted: article.muted === true,
     ...(Array.isArray(article.excerpt) ? { excerpt: toExcerpt(article.excerpt) } : {}),
+    ...(article.episode === true || typeof article.episode_url === "string"
+      ? { episode: true, episodeSeconds: typeof article.episode_seconds === "number" ? article.episode_seconds : null }
+      : {}),
   };
 }
 
@@ -1064,6 +1163,7 @@ function toFullArticle(article: Record<string, unknown>): FullArticle {
     content: text(article.content),
     summary: text(article.summary),
     language: text(article.language),
+    audio: episodeFrom(article),
   };
 }
 
@@ -1082,6 +1182,7 @@ function toFeed(feed: Record<string, unknown>): Feed {
     check: checkFrom(Number(feed.check_at_most ?? 0)),
     openOnSite: feed.open_on_site === true,
     pausedAt: typeof feed.paused_at === "number" ? feed.paused_at : null,
+    failingSince: typeof feed.failing_since === "number" ? feed.failing_since : null,
   };
 }
 

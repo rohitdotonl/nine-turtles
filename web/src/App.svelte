@@ -8,7 +8,8 @@
   the signed-in screen, or "Wrong turn?" for an address it doesn't know. Until the server has answered, nothing is shown, so
   the reader never sees the wrong one. Without a connection, a device that
   keeps articles for reading offline opens the signed-in screen as it last
-  saw it (SPEC section 32); being signed out deletes those copies.
+  saw it (SPEC section 32); being signed out deletes those copies, and stops
+  and empties the podcast player (SPEC section 35).
 -->
 <script lang="ts">
   import Shell from "./lib/Shell.svelte";
@@ -26,6 +27,7 @@
   import { noConnection } from "./lib/connection.svelte";
   import { forget, keepSession, keptSession } from "./lib/offline";
   import { forgetChosenKeys } from "./lib/keys.svelte";
+  import { forgetListening } from "./lib/player.svelte";
 
   let session: Session | undefined = $state();
   let unreachable = $state(false);
@@ -38,6 +40,8 @@
       if (session.signedIn) keepSession({ version: session.version, owner: session.owner, email: session.email, emailSending: session.emailSending });
       else {
         forgetChosenKeys();
+        // Nobody signed in: the episode in the player stops, and this device's places in episodes go too (decision 0113).
+        forgetListening();
         await forget();
       }
       unreachable = false;
@@ -80,6 +84,7 @@
     owner={session.owner}
     email={session.email}
     emailSending={session.emailSending}
+    passkeys={session.passkeys ?? null}
     onSignedOut={check}
   />
 {:else if session && path === "/sign-up"}
@@ -89,6 +94,7 @@
     onSignedIn={check}
     emailSending={session.emailSending}
     signUpOpen={session.signUpOpen}
+    passkeys={session.passkeys}
     onSignUp={() => (path = location.pathname)}
   />
 {:else if unreachable}

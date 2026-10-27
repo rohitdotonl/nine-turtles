@@ -89,6 +89,7 @@ describe("keyboard shortcuts", () => {
   it("stars with s, marks unread with m, marks all as read with Shift+A and undoes with u", () => {
     const read = createKeyReader();
     expect(read(press("s"), 0)).toEqual({ kind: "star" });
+    expect(read(press("l"), 0)).toEqual({ kind: "collect" });
     expect(read(press("m"), 0)).toEqual({ kind: "mark-unread" });
     expect(read(press("A"), 0)).toEqual({ kind: "mark-all-read" });
     expect(read(press("u"), 0)).toEqual({ kind: "undo" });
@@ -108,7 +109,7 @@ describe("keyboard shortcuts", () => {
   });
 
   it("lists every shortcut in SPEC.md in the cheat sheet", () => {
-    expect(SHORTCUTS).toHaveLength(30);
+    expect(SHORTCUTS).toHaveLength(31);
     expect(SHORTCUTS.filter((shortcut) => shortcut.ready).map((shortcut) => shortcut.keys[0])).toEqual([
       "j",
       "n",
@@ -119,10 +120,12 @@ describe("keyboard shortcuts", () => {
       "c",
       "+",
       "s",
+      "l",
       "Esc",
       "g then u",
       "g then s",
       "g then a",
+      "g then r",
       "g then f",
       "g then ,",
       "Shift+J",
@@ -256,7 +259,8 @@ describe.each(CUSTOM)("the cheat sheet and the keys agree: %s", (_, custom) => {
 
   it("keeps the keys of a shortcut that isn't built yet doing nothing", () => {
     const later = SHORTCUTS.filter((each) => !each.ready);
-    expect(later.map((each) => each.action)).toEqual(["Go to Recently read"]);
+    // None today: Go to Recently read (g then r) was the last, until /recent opened Recently read.
+    expect(later.map((each) => each.action)).toEqual([]);
     for (const key of later.flatMap((each) => each.keys)) {
       const read = reader();
       const [first, second] = key.split(" then ");

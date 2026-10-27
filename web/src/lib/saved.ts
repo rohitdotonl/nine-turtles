@@ -96,8 +96,8 @@ export function toQuery(value: unknown): Query {
 function toScope(value: unknown): Scope {
   if (!isRecord(value)) return { kind: "all" };
   const id = Number(value.id);
-  // Number 0 is a feed or folder that's gone (server/src/saved_searches.rs → `forget`): it finds nothing.
-  if ((value.kind === "feed" || value.kind === "folder") && Number.isInteger(id) && id >= 0) return { kind: value.kind, id };
+  // Number 0 is a feed, folder or collection that's gone (server/src/saved_searches.rs → `forget`): it finds nothing.
+  if ((value.kind === "feed" || value.kind === "folder" || value.kind === "collection") && Number.isInteger(id) && id >= 0) return { kind: value.kind, id };
   if (value.kind === "view" && (value.view === "unread" || value.view === "starred")) return { kind: "view", view: value.view };
   return { kind: "all" };
 }

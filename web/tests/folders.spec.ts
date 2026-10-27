@@ -442,6 +442,8 @@ test.describe("on a touch screen beside the list", () => {
     const arrow = sidebar(page).getByRole("button", { name: `Feeds in ${folder}` });
     await expect(arrow).toBeVisible();
     expect(await page.evaluate(() => matchMedia("(pointer: coarse)").matches)).toBe(true);
+    // With a long sidebar (other tests' folders and collections) the arrow may sit under the top line: bring it into view.
+    await arrow.evaluate((element) => element.scrollIntoView({ block: "center" }));
     // The arrow is drawn in the 38px icon column; its target reaches 6px further out (decision 0043).
     const box = (await arrow.boundingBox())!;
     const target = await arrow.evaluate((element) => {

@@ -52,7 +52,7 @@ describe("the reading settings", () => {
     vi.stubGlobal("localStorage", { getItem: (key: string) => stored.get(key) ?? null, setItem: (key: string, value: string) => stored.set(key, value) });
     server({ sort: "oldest", mode: "inbox", counts: "hidden", let_go: "two-weeks", keys: { star: "x", odd: 3 } });
     let { loadSettings, lastCounts, lastKeys } = await load();
-    expect(await loadSettings()).toEqual({ sort: "oldest", mode: "inbox", counts: "hidden", letGo: "two-weeks", keys: { star: "x" } });
+    expect(await loadSettings()).toEqual({ sort: "oldest", mode: "inbox", counts: "hidden", letGo: "two-weeks", keys: { star: "x" }, hidden: [] });
     // This device remembers the counts were hidden, so they don't flash before the server answers,
     // and the reader's keys (decision 0110), so a changed key works from the first press.
     expect(lastCounts()).toBe("hidden");
@@ -60,7 +60,7 @@ describe("the reading settings", () => {
 
     server({ sort: "newest", mode: "inbox", counts: "sideways", let_go: "someday" });
     ({ loadSettings } = await load());
-    expect(await loadSettings()).toEqual({ sort: "newest", mode: "inbox", counts: "shown", letGo: "never", keys: {} });
+    expect(await loadSettings()).toEqual({ sort: "newest", mode: "inbox", counts: "shown", letGo: "never", keys: {}, hidden: [] });
 
     // Unreachable: the wait is unknown, so its choices wait rather than show Never; the keys are this device's.
     stored.set("nine-turtles.keys", JSON.stringify({ star: "z" }));

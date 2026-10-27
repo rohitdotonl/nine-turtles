@@ -5,8 +5,9 @@
   control on the right, every control the same width (decision 0039). It
   fills the list and reading areas while the sidebar stays, so the reader
   never loses their place. "Close settings" or
-  Escape goes back. Reading (the reading mode and the sort order) is shared across the reader's
-  devices; the reader controls belong to this device. Your data imports and
+  Escape goes back. Reading (the reading mode and the sort order) and Show in the sidebar (which
+  lists the sidebar shows, decision 0105) are shared across the reader's devices; the reader
+  controls belong to this device. Your data imports and
   exports the reader's feeds and folders as an OPML file, and exports their
   starred articles as a JSON Feed file, and brings starred articles over
   from other feed readers. Add from anywhere gives the bookmark and the
@@ -20,7 +21,8 @@
   owner only, lists who has an account, sets the owner's email and the
   sign-up switch (Readers, decision 0087). Your plan, for everyone else
   while nine turtles takes payments, shows their trial or plan (Plan,
-  decision 0094). Account shows the reader's email,
+  decision 0094). Passkeys, where passkeys work, lists the reader's passkeys
+  and adds new ones (Passkeys, decision 0109). Account shows the reader's email,
   with Change… while nine turtles can send email, Sign out, and for every
   reader but the owner Delete account… (ChangeEmail, DeleteAccount,
   decision 0088).
@@ -36,6 +38,7 @@
   import Newsletters from "./Newsletters.svelte";
   import OtherApps from "./OtherApps.svelte";
   import Assistants from "./Assistants.svelte";
+  import PasskeysGroup from "./Passkeys.svelte";
   import Plan from "./Plan.svelte";
   import Readers from "./Readers.svelte";
   import RuleEditor from "./RuleEditor.svelte";
@@ -45,6 +48,7 @@
   import TextSize from "./TextSize.svelte";
   import { APPEARANCES, LOOKS, THEMES } from "./themes";
   import type { Counts, Feed, Folder, LetGo, Order, ReadingMode } from "./feeds";
+  import type { Hideable } from "./router";
   import { LINE_WIDTHS, READING_FONTS, type Preferences } from "./preferences";
   import { signOut } from "./session";
   import { updates } from "./updates.svelte";
@@ -61,12 +65,15 @@
     onCounts,
     letGo,
     onLetGo,
+    hidden,
+    onHidden,
     heading = $bindable(),
     dataHeading = $bindable(),
     version,
     owner = false,
     email = null,
     emailSending = false,
+    passkeys = null,
     onSignedOut,
     onClose,
     onImported,
@@ -96,6 +103,9 @@
     /** When unread lets go by itself (decision 0097); unknown until the server answers. */
     letGo: LetGo | undefined;
     onLetGo: (letGo: LetGo) => Promise<void>;
+    /** The lists the sidebar leaves out (decision 0105). */
+    hidden: Hideable[];
+    onHidden: (hidden: Hideable[]) => Promise<void>;
     heading?: HTMLHeadingElement;
     /** "Your data", where the empty state's "Import OPML" leads. */
     dataHeading?: HTMLHeadingElement;
@@ -106,6 +116,8 @@
     email?: string | null;
     /** nine turtles can send email, so the email can be changed here. */
     emailSending?: boolean;
+    /** Where passkeys work, for Passkeys (decision 0109); null when they're off. */
+    passkeys?: string | null;
     onSignedOut: () => void;
     onClose: () => void;
     /** Feeds were imported: the sidebar loads them. */
@@ -144,6 +156,32 @@
     { value: "shown", label: "Show" },
     { value: "hidden", label: "Hide" },
   ] as const;
+
+  /** The lists the sidebar can leave out, as its rows name them. Unread, folders and feeds always show. */
+  const SIDEBAR_LISTS: { value: Hideable; label: string }[] = [
+    { value: "starred", label: "Starred" },
+    { value: "all", label: "All" },
+    { value: "recent", label: "Recently read" },
+    { value: "searches", label: "Saved searches" },
+    { value: "collections", label: "Collections" },
+    // Shown only while it holds an episode, unless unticked here (decision 0113).
+    { value: "upnext", label: "Up Next" },
+  ];
+
+  let sidebarMessage = $state("");
+
+  async function showInSidebar(list: Hideable, box: HTMLInputElement) {
+    sidebarMessage = "";
+    const shown = box.checked;
+    const next = shown ? hidden.filter((each) => each !== list) : [...hidden, list];
+    try {
+      await onHidden(next);
+    } catch {
+      // Back as it was, tick box included.
+      box.checked = !shown;
+      sidebarMessage = "That couldn't be saved. Try again in a moment.";
+    }
+  }
 
   const LET_GO_CHOICES = [
     { value: "never", label: "Never" },
@@ -442,6 +480,30 @@
         <p role="status" class={["inset-foot text-danger", !sortMessage && "sr-only"]}>{sortMessage}</p>
       </section>
 
+      <!-- Which lists the sidebar shows (decision 0105): a tick box row each, as in Edit feed; shared across devices. -->
+      <section aria-labelledby="sidebar-heading">
+        <h3 id="sidebar-heading" class="inset-head">Show in the sidebar</h3>
+        <div class="inset-group" role="group" aria-labelledby="sidebar-heading" aria-describedby="sidebar-help">
+          {#each SIDEBAR_LISTS as list (list.value)}
+            <label class="inset-row check-row">
+              <input
+                type="checkbox"
+                checked={!hidden.includes(list.value)}
+                disabled={sort === undefined}
+                onchange={(event) => showInSidebar(list.value, event.currentTarget)}
+              />
+              <span class="min-w-0 break-words">{list.label}</span>
+              <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
+            </label>
+          {/each}
+        </div>
+        <p id="sidebar-help" class="inset-foot">
+          Unread, your folders and your feeds always show{mode === "river" ? ", and so does All in river mode" : ""}. A list you
+          hide still opens from its address and its keys. These apply on all your devices.
+        </p>
+        <p role="status" class={["inset-foot text-danger", !sidebarMessage && "sr-only"]}>{sidebarMessage}</p>
+      </section>
+
       <section aria-labelledby="reader-heading">
         <h3 id="reader-heading" class="inset-head">Look and feel</h3>
         <div class="inset-group">
@@ -546,6 +608,9 @@
           <a href="/api/starred/export" download class="inset-row inset-action"
             >Export starred articles<span class="row-glyph"><Icon name="download" size={18} /></span></a
           >
+          <a href="/api/collections/export" download class="inset-row inset-action"
+            >Export collections<span class="row-glyph"><Icon name="download" size={18} /></span></a
+          >
         </div>
         <div role="status" class={["inset-foot flex flex-col gap-1 text-ink", importLines.length === 0 && "sr-only"]}>
           {#each importLines as line (line)}
@@ -556,7 +621,8 @@
         <p class="inset-foot">
           OPML is the file feed readers use to move your feeds and folders between apps; export one now and then, and
           keep it somewhere safe. Starred articles are saved as a JSON Feed file, which other feed readers can open,
-          with each article's text, its original link and the feed it came from. To bring your stars over from
+          with each article's text, its original link and the feed it came from; collections the same way, each
+          article tagged with its collections' names. To bring your stars over from
           Inoreader, Feedly, Feedbin or another feed reader, import the JSON file it exports them in.
         </p>
       </section>
@@ -599,6 +665,8 @@
       {:else}
         <Plan />
       {/if}
+
+      <PasskeysGroup origin={passkeys} />
 
       <section aria-labelledby="account-heading">
         <h3 id="account-heading" class="inset-head">Account</h3>

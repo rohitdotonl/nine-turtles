@@ -109,6 +109,21 @@ where
 /// Tables that hang off these (a folder's `feed_folders` pairs) go with them.
 /// Entries come before subscriptions, which they point at.
 pub const PER_READER_TABLES: &[(&str, &str)] = &[
+    // A collection's lines point at entries, so they go first (`delete`
+    // empties them before anything else, too).
+    (
+        "collection_articles",
+        "DELETE FROM collection_articles WHERE person_id = ?",
+    ),
+    ("collections", "DELETE FROM collections WHERE person_id = ?"),
+    // Where they stopped in episodes, and their Up Next (decision 0113):
+    // they'd go with the entries anyway, but are named, like every table
+    // with a reader's lines.
+    (
+        "episode_progress",
+        "DELETE FROM episode_progress WHERE person_id = ?",
+    ),
+    ("up_next", "DELETE FROM up_next WHERE person_id = ?"),
     ("entries", "DELETE FROM entries WHERE person_id = ?"),
     (
         "subscriptions",
@@ -143,6 +158,7 @@ pub const PER_READER_TABLES: &[(&str, &str)] = &[
         "assistant_codes",
         "DELETE FROM assistant_codes WHERE person_id = ?",
     ),
+    ("passkeys", "DELETE FROM passkeys WHERE person_id = ?"),
     // The record of their plan; Dodo's own subscription is cancelled first
     // (`payments::cancel_before_deleting`).
     ("plans", "DELETE FROM plans WHERE person_id = ?"),
@@ -174,6 +190,11 @@ pub async fn delete(db: &SqlitePool, person: i64) -> Result<(), sqlx::Error> {
     .bind(person)
     .execute(&mut *transaction)
     .await?;
+    // Nothing of theirs is kept now: no star, and no collection, holds an entry back.
+    sqlx::query("DELETE FROM collection_articles WHERE person_id = ?")
+        .bind(person)
+        .execute(&mut *transaction)
+        .await?;
     sqlx::query("UPDATE entries SET starred = 0 WHERE person_id = ?")
         .bind(person)
         .execute(&mut *transaction)

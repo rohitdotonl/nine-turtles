@@ -44,6 +44,7 @@
     newItemsMessage,
     newItemsWaiting,
     nothingPastMessage,
+    noteOpened,
     prefetch,
     readPast,
     when,
@@ -54,6 +55,7 @@
     uncatchUp,
   } from "./feeds";
   import { hugEllipsis } from "./hug";
+  import { length } from "./podcasts";
   import { boldParts } from "./search";
   import { STRANDED_MESSAGE, updates } from "./updates.svelte";
   import { connection } from "./connection.svelte";
@@ -440,6 +442,19 @@
     actions++;
   }
 
+  /**
+   * Something undoable done elsewhere (a Save in "Add to collection" that
+   * took the article off a collection): the line says what, and Undo calls
+   * `reverse`, saying its problem if it couldn't.
+   */
+  export function offer(message: string, reverse: () => Promise<string | undefined>) {
+    did(message, () => {
+      reverse().then((problem) => {
+        if (problem) say(problem);
+      });
+    });
+  }
+
   /** A failed save is dealt with: its message goes, back to the last action's Undo if it's still there. */
   function settled() {
     line = undoLast ? undoMessage : "";
@@ -452,8 +467,9 @@
    */
   let spoken = $state("");
 
-  /** The reading area showed this article: it counts as read (not an undoable action). */
+  /** The reading area showed this article: it counts as read (not an undoable action), and joins Recently read. */
   export function shown(article: Article) {
+    noteOpened(article.id);
     if (article.read) return;
     setRead([article], true, "An article couldn't be marked as read. It's still unread.");
     // Said at once, like everything on screen (SPEC section 25); if saving
@@ -757,6 +773,10 @@
           <span class={["row-meta mt-1 text-[0.75rem]", current ? "text-muted" : "text-[color:var(--faint)]"]}>
             <span class={oneFeed ? "sr-only" : "row-feed"}><span class="row-feed-name" use:hugEllipsis={article.feedTitle}>{article.feedTitle}</span>&nbsp;·</span>
             <time datetime={new Date(article.at * 1000).toISOString()} class="row-date">{when(article.at)}</time>
+            {#if article.episode}
+              <!-- A podcast's episode (SPEC section 35): a small headphones mark in the line's own ink, and its length. -->
+              <span class="row-episode">·&nbsp;<Icon name="headphones" size={13} /><span class="sr-only">Episode</span>{#if article.episodeSeconds}&nbsp;{length(article.episodeSeconds)}{/if}</span>
+            {/if}
             {#if article.muted}
               <!-- Only search (and Starred) list a muted article; the word says why it waits in no other list (SPEC section 27). -->
               <span class="row-muted">· Muted</span>
@@ -884,8 +904,13 @@
   }
   .row-date,
   .row-muted,
+  .row-episode,
   .row-star {
     flex: none;
+  }
+  .row-episode {
+    display: flex;
+    align-items: center;
   }
   .row-star {
     display: flex;

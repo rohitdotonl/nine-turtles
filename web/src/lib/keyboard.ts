@@ -33,6 +33,7 @@ export type Action =
   | { kind: "page"; step: 1 | -1 }
   | { kind: "copy-link" }
   | { kind: "star" }
+  | { kind: "collect" }
   | { kind: "mark-unread" }
   | { kind: "mark-all-read" }
   | { kind: "mark-older-read" }
@@ -137,12 +138,12 @@ export const SHORTCUTS: Shortcut[] = [
     [{ key: "=", does: { kind: "text-size", step: 1 }, follows: "text-larger" }],
   ),
   shortcut("Reading", "Star / unstar", [["star", "s", { kind: "star" }]]),
+  shortcut("Reading", "Add to collection", [["collect", "l", { kind: "collect" }]]),
   shortcut("Reading", "Back / close", [["escape", "Esc", { kind: "escape" }]]),
   shortcut("Getting around", "Go to Unread", [["go-unread", "g then u", { kind: "go", view: "unread" }]]),
   shortcut("Getting around", "Go to Starred", [["go-starred", "g then s", { kind: "go", view: "starred" }]]),
   shortcut("Getting around", "Go to All", [["go-all", "g then a", { kind: "go", view: "all" }]]),
-  // Recently read is being built in a change of its own: once /recent opens it, make this a `shortcut`.
-  soon("Getting around", "Go to Recently read", [["go-recent", "g then r", { kind: "go-to", path: "/recent" }]]),
+  shortcut("Getting around", "Go to Recently read", [["go-recent", "g then r", { kind: "go-to", path: "/recent" }]]),
   shortcut("Getting around", "Go to Your feeds", [["go-feeds", "g then f", { kind: "go-to", path: "/settings/feeds" }]]),
   shortcut("Getting around", "Go to Settings", [["go-settings", "g then ,", { kind: "go-to", path: "/settings" }]]),
   shortcut("Getting around", "Next / previous feed", [

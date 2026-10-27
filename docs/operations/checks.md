@@ -9,11 +9,11 @@ The script stops at the first failure and says which step failed.
 ## Side by side, and skipped for documents
 
 On GitHub the script runs in parts at once, each on its own computer
-(decisions 0065 and 0113): `scripts/check.sh frontend` (the first six steps below),
+(decisions 0065 and 0114): `scripts/check.sh frontend` (the first six steps below),
 `scripts/check.sh rust` (formatting, lint, tests), and `scripts/check.sh
 browser` (builds the frontend and the release program, then runs the browser
 tests) four times, each with a quarter of the browser tests
-(`NINE_TURTLES_SHARD=1/4` to `4/4`; decision 0113). Another, `scripts/check.sh website`, builds the website and checks it
+(`NINE_TURTLES_SHARD=1/4` to `4/4`; decision 0114). Another, `scripts/check.sh website`, builds the website and checks it
 in a real browser (decision 0066). The required **All checks** waits for all
 of them and passes only if every one passed. Each part is still a plain script anyone can run; no
 arguments runs everything in order, as before.
@@ -48,7 +48,7 @@ by the next merge, whatever it changes.
 
 ## Keeping the checks quick and steady
 
-- **The Rust tests use optimized libraries** (decision 0113). The tests run
+- **The Rust tests use optimized libraries** (decision 0114). The tests run
   in Rust's quick-to-build "dev" mode, but the libraries in it (password
   scrambling, the database, HTML cleaning) are built optimized, once, and
   remembered between runs (`server/Cargo.toml`, `[profile.dev.package."*"]`).

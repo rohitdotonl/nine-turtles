@@ -5,12 +5,13 @@
 import type { Feed, Folder, Library } from "./feeds";
 import type { Route } from "./router";
 
-/** Where to search: everywhere, one of the views, one feed or one folder. */
+/** Where to search: everywhere, one of the views, one feed, one folder or one of the reader's collections. */
 export type Scope =
   | { kind: "all" }
   | { kind: "view"; view: "unread" | "starred" }
   | { kind: "feed"; id: number }
-  | { kind: "folder"; id: number };
+  | { kind: "folder"; id: number }
+  | { kind: "collection"; id: number };
 
 /**
  * Everything searched for. `words` is what's typed outside the chips; the
@@ -47,7 +48,8 @@ export function dayInWords(date: string): string {
 export function scopeFor(route: Route): Scope {
   if (route.kind === "feed") return { kind: "feed", id: route.id };
   if (route.kind === "folder") return { kind: "folder", id: route.id };
-  if (route.kind === "view" && route.view !== "all") return { kind: "view", view: route.view };
+  if (route.kind === "collection") return { kind: "collection", id: route.id };
+  if (route.kind === "view" && (route.view === "unread" || route.view === "starred")) return { kind: "view", view: route.view };
   return { kind: "all" };
 }
 
@@ -70,6 +72,8 @@ export function scopeName(scope: Scope, library: Library): string {
       return library.feeds.find((feed) => feed.id === scope.id)?.title ?? "A feed";
     case "folder":
       return library.folders.find((folder) => folder.id === scope.id)?.name ?? "A folder";
+    case "collection":
+      return library.collections?.find((collection) => collection.id === scope.id)?.name ?? "A collection";
   }
 }
 
@@ -127,6 +131,7 @@ export function searchParams(query: Query): Record<string, string> {
   const scope = query.scope;
   if (scope.kind === "feed") params.feed = String(scope.id);
   if (scope.kind === "folder") params.folder = String(scope.id);
+  if (scope.kind === "collection") params.collection = String(scope.id);
   if (query.unread || (scope.kind === "view" && scope.view === "unread")) params.unread = "true";
   if (query.starred || (scope.kind === "view" && scope.view === "starred")) params.starred = "true";
   if (isDate(query.after)) params.since = String(startOf(query.after, 1));
@@ -134,10 +139,11 @@ export function searchParams(query: Query): Record<string, string> {
   return params;
 }
 
-const KEYS = ["is", "feed", "folder", "after", "before"] as const;
+/** The filters that can be typed; `in:` names one of the reader's collections (decision 0108). */
+const KEYS = ["is", "feed", "folder", "in", "after", "before"] as const;
 
 /** A filter as typed: `key:value`, or `key:"a name with spaces"`, its closing quote perhaps not typed yet. */
-const FILTER = /(?:^|\s)(?:is|feed|folder|after|before):(?:"[^"]*"?|\S*)/gi;
+const FILTER = /(?:^|\s)(?:is|feed|folder|in|after|before):(?:"[^"]*"?|\S*)/gi;
 
 /** The words without any filter, whole or half typed. */
 function withoutFilters(words: string): string {
@@ -173,6 +179,10 @@ function apply(query: Query, key: Key, value: string, library: Library): Query |
       const folder = byName<Folder>(library.folders, (each) => each.name, plain);
       return folder ? { ...query, scope: { kind: "folder", id: folder.id } } : `No folder matches “${plain}”.`;
     }
+    case "in": {
+      const collection = byName(library.collections ?? [], (each) => each.name, plain);
+      return collection ? { ...query, scope: { kind: "collection", id: collection.id } } : `No collection matches “${plain}”.`;
+    }
     case "after":
     case "before":
       return isDate(plain) ? { ...query, [key]: plain } : `Write the date as YYYY-MM-DD, like ${key}:2026-10-23.`;
@@ -195,7 +205,7 @@ export function takeFilters(
   const kept: string[] = [];
   const pattern = /(\S*"[^"]*"\S*|\S+)(\s*)/g;
   for (const [, token = "", space = ""] of query.words.matchAll(pattern)) {
-    const filter = token.match(/^(is|feed|folder|after|before):(.+)$/i);
+    const filter = token.match(/^(is|feed|folder|in|after|before):(.+)$/i);
     // A name whose closing quote isn't typed yet isn't finished, whatever follows.
     const open = (token.match(/"/g) ?? []).length % 2 === 1;
     if (filter && (finished || (space !== "" && !open))) {
@@ -219,7 +229,7 @@ export type Suggestion = { label: string; text: string } | { label: string; quer
 
 /** The word being typed: whatever follows the last space, or a filter whose quoted name is still open. */
 function lastWord(words: string): string {
-  const quoted = words.match(/(?:^|\s)((?:is|feed|folder|after|before):"[^"]*)$/i);
+  const quoted = words.match(/(?:^|\s)((?:is|feed|folder|in|after|before):"[^"]*)$/i);
   if (quoted?.[1]) return quoted[1];
   if (/\s$/.test(words)) return "";
   return words.split(/\s+/).pop() ?? "";
@@ -228,7 +238,7 @@ function lastWord(words: string): string {
 /** Suggestions for the word being typed, at most six (SPEC section 14: "suggested as you type"). */
 export function suggestions(words: string, library: Library): Suggestion[] {
   const typed = lastWord(words);
-  const filter = typed.match(/^(is|feed|folder|after|before):(.*)$/i);
+  const filter = typed.match(/^(is|feed|folder|in|after|before):(.*)$/i);
   if (filter) {
     const key = (filter[1] ?? "").toLowerCase() as Key;
     const value = fold((filter[2] ?? "").replace(/^"/, ""));
@@ -253,6 +263,14 @@ export function suggestions(words: string, library: Library): Suggestion[] {
             label: `folder:${folder.name}`,
             query: (query: Query) => ({ ...query, scope: { kind: "folder", id: folder.id } }),
           }));
+      case "in":
+        return (library.collections ?? [])
+          .filter((collection) => fold(collection.name).includes(value))
+          .slice(0, 6)
+          .map((collection) => ({
+            label: `in:${collection.name}`,
+            query: (query: Query) => ({ ...query, scope: { kind: "collection", id: collection.id } }),
+          }));
       case "after":
       case "before":
         return [];
@@ -260,7 +278,9 @@ export function suggestions(words: string, library: Library): Suggestion[] {
   }
   const start = fold(typed);
   if (start.length < 2) return [];
-  return KEYS.filter((key) => key.startsWith(start) && (key !== "folder" || library.folders.length > 0)).map((key) => ({
+  return KEYS.filter(
+    (key) => key.startsWith(start) && (key !== "folder" || library.folders.length > 0) && (key !== "in" || (library.collections ?? []).length > 0),
+  ).map((key) => ({
     label: key === "after" || key === "before" ? `${key}:YYYY-MM-DD` : `${key}:`,
     text: `${key}:`,
   }));
@@ -277,7 +297,7 @@ export function searchedTerms(words: string): string[] {
   return words
     .replace(/"/g, " ")
     .split(/\s+/)
-    .filter((word) => word && !/^(is|feed|folder|after|before):/i.test(word))
+    .filter((word) => word && !/^(is|feed|folder|in|after|before):/i.test(word))
     .flatMap((word) => word.match(/[\p{L}\p{M}\p{N}]+/gu) ?? [])
     .map(fold);
 }

@@ -59,8 +59,9 @@ async fn the_right_password_signs_this_device_in_for_a_year() {
 async fn without_signing_in_nothing_is_revealed() {
     let base = common::start(common::config()).await;
     // Only what the sign-in page needs: whether to offer "Forgot your
-    // password?" and "Sign up" (decision 0088).
-    const SIGNED_OUT: &str = r#"{"email_sending":false,"sign_up_open":false,"signed_in":false}"#;
+    // password?" and "Sign up" (decision 0088), and where passkeys work
+    // (decision 0109).
+    const SIGNED_OUT: &str = r#"{"email_sending":false,"passkeys":"http://localhost","sign_up_open":false,"signed_in":false}"#;
     assert_eq!(session(&base, None).await, SIGNED_OUT);
 
     let made_up = format!("nine_turtles_session={}", "0".repeat(64));

@@ -33,6 +33,15 @@ lettre = { version = "0.11.23", default-features = false, features = ["smtp-tran
 # Reading newsletter emails (decision 0091). "full_encoding" reads Chinese and
 # Japanese emails too, with encoding_rs, which reqwest already brings.
 mail-parser = { version = "1.0.0", features = ["full_encoding"] }
+# Passkey sign-in (decision 0109): checks the browser's WebAuthn answers.
+# "conditional-ui" lets a passkey sign in without an email typed first (the
+# browser's passkey autofill, and Sign in with a passkey).
+webauthn-rs = { version = "0.5.5", features = ["conditional-ui"] }
+
+[dev-dependencies]
+# The same project's software passkey, so the tests can add a passkey and
+# sign in with it without a real device.
+webauthn-authenticator-rs = { version = "0.5.5", features = ["softpasskey"] }
 
 [lints.rust]
 unsafe_code = "forbid"
@@ -44,7 +53,7 @@ all = { level = "deny", priority = -1 }
 # optimized (once, then remembered), which makes the tests several times
 # faster: password checks, the database and HTML cleaning run at near full
 # speed. Only line numbers are kept for debugging, which makes the build
-# smaller and quicker to save and restore on GitHub. Decision 0113.
+# smaller and quicker to save and restore on GitHub. Decision 0114.
 [profile.dev]
 debug = "line-tables-only"
 

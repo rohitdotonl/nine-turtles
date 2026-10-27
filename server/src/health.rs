@@ -43,7 +43,7 @@ use crate::{
     discover, feed,
     feeds::{Followed, follow_in, make_room, offer_hub, refresh_shared, store_articles},
     fetch::{self, FetchError, Fetched},
-    folders, now,
+    folders, frequency, now,
 };
 
 /// Failed checks in a row before a feed is listed.
@@ -86,6 +86,9 @@ pub struct Entry {
     pub failures: i64,
     #[sqlx(skip)]
     pub state: Option<Condition>,
+    /// How often it posts, in plain words (`frequency`).
+    #[sqlx(skip)]
+    pub frequency: Option<String>,
 }
 
 impl Entry {
@@ -153,6 +156,12 @@ pub async fn listed(
     .collect();
     // Stable: within each group, the order above stays.
     entries.sort_by_key(|entry| entry.state != Some(Condition::Dead));
+    for entry in &mut entries {
+        entry.frequency = Some(frequency::words(
+            frequency::posting(db, entry.id, now).await?,
+            now,
+        ));
+    }
     Ok(entries)
 }
 
@@ -167,7 +176,17 @@ async fn entry(
         .bind(id)
         .fetch_optional(db)
         .await?;
-    Ok(entry.map(|entry| entry.judged(now)))
+    match entry {
+        Some(entry) => {
+            let mut entry = entry.judged(now);
+            entry.frequency = Some(frequency::words(
+                frequency::posting(db, id, now).await?,
+                now,
+            ));
+            Ok(Some(entry))
+        }
+        None => Ok(None),
+    }
 }
 
 async fn list(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
@@ -592,6 +611,35 @@ async fn carry_entries_over(
             _ => false,
         };
         if merged {
+            // Its collections go with its marks to the copy (decision 0108);
+            // a collection already holding the copy keeps the one line.
+            sqlx::query(
+                "UPDATE OR IGNORE collection_articles SET article_id = ?3
+                 WHERE person_id = ?1 AND article_id = ?2",
+            )
+            .bind(person)
+            .bind(article)
+            .bind(copy)
+            .execute(&mut *connection)
+            .await?;
+            sqlx::query("DELETE FROM collection_articles WHERE person_id = ? AND article_id = ?")
+                .bind(person)
+                .bind(article)
+                .execute(&mut *connection)
+                .await?;
+            // Where they stopped in an episode, and its place in Up Next, go
+            // with it too (decision 0113); what the old line keeps goes with it.
+            for table in ["episode_progress", "up_next"] {
+                sqlx::query(sqlx::AssertSqlSafe(format!(
+                    "UPDATE OR IGNORE {table} SET article_id = ?3
+                     WHERE person_id = ?1 AND article_id = ?2"
+                )))
+                .bind(person)
+                .bind(article)
+                .bind(copy)
+                .execute(&mut *connection)
+                .await?;
+            }
             sqlx::query("DELETE FROM entries WHERE person_id = ? AND article_id = ?")
                 .bind(person)
                 .bind(article)

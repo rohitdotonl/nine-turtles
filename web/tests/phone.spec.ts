@@ -122,10 +122,10 @@ test.describe("on a phone", () => {
       .evaluateAll((controls) => controls.map((control) => control.getAttribute("aria-label")));
     expect(names).toEqual(["Previous", "Next", "Reading appearance", "Star", "More actions"]);
     expect((await toolbar(page).innerText()).trim()).toBe("");
-    // More opens upwards, over the article, with Share (or Copy link) and Mark unread.
+    // More opens upwards, over the article, with Share (or Copy link), Mark unread and Add to collection….
     await toolbar(page).getByRole("button", { name: "More actions" }).click();
     const menu = page.getByRole("menu", { name: "More actions" });
-    await expect(menu.getByRole("menuitem")).toHaveText([/^\s*(Share|Copy link)\s*$/, /^\s*Mark unread/]);
+    await expect(menu.getByRole("menuitem")).toHaveText([/^\s*(Share|Copy link)\s*$/, /^\s*Mark unread/, /^\s*Add to collection/]);
     expect((await menu.boundingBox())!.y + (await menu.boundingBox())!.height).toBeLessThanOrEqual((await toolbar(page).boundingBox())!.y);
     await toolbar(page).getByRole("button", { name: "More actions" }).click();
     await expect(menu).toHaveCount(0);
@@ -584,8 +584,9 @@ test("a tab left open across an update is told to reload, switches on the next m
   await page.goto(new URL("/all", FEEDS_APP).href);
   await appReady(page);
   await signIn(page);
-  await follow(page, `${FEED_SITE}/reading/`);
-  await page.reload();
+  // The feed's own list: in All, other tests' articles can fill the first 50.
+  const id = await follow(page, `${FEED_SITE}/reading/`);
+  await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
   await appReady(page);
 
   // A newer nine turtles that doesn't understand this tab's way of starring.
