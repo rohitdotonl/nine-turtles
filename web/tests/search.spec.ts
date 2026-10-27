@@ -322,7 +322,7 @@ test("with only the keyboard: a search is saved, opened from the sidebar, rename
   const chip = page.getByRole("button", { name: `Remove in: Blog ${blog}` });
   /** More, then its last item: Save search… or Edit saved search…. */
   const lastInMore = async () => {
-    await tabTo(page, more, 200);
+    await tabTo(page, more);
     await page.keyboard.press("Enter");
     await page.keyboard.press("End");
     await page.keyboard.press("Enter");
@@ -360,7 +360,7 @@ test("with only the keyboard: a search is saved, opened from the sidebar, rename
   await page.keyboard.press("g");
   await page.keyboard.press("a");
   await expect(heading(page)).toHaveText("All");
-  await tabTo(page, savedLink(first), 200);
+  await tabTo(page, savedLink(first));
   await page.keyboard.press("Enter");
   await expect(heading(page)).toHaveText(first);
   await expect(found()).toHaveCount(1);
@@ -401,7 +401,7 @@ test("with only the keyboard: a search is saved, opened from the sidebar, rename
   await expect(savedLink(second)).toBeVisible();
 
   // Tidy up, so other tests' sidebars stay as they expect.
-  await tabTo(page, savedLink(second), 200);
+  await tabTo(page, savedLink(second));
   await page.keyboard.press("Enter");
   await lastInMore();
   await tabTo(page, page.getByRole("button", { name: `Delete ${second}` }));

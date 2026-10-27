@@ -235,7 +235,9 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("Enter");
     const scroller = article(page).locator(".reading-scroller");
     await expect(article(page).getByRole("heading", { level: 2, name: "The pleasure of a slow letter" })).toBeFocused();
-    // The title can take the keyboard before the article's text has filled the page.
+    // End only after the article has its full height: its picture loads
+    // lazily, and until then there may be nothing below to scroll to.
+    await expect(article(page).locator('img[alt="A river drawn as three blue lines"]')).toBeVisible();
     await expect.poll(() => scroller.evaluate((element) => element.scrollHeight > element.clientHeight)).toBe(true);
     await page.keyboard.press("End");
     expect(await taken()).toBe(false);

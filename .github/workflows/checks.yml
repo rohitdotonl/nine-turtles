@@ -72,30 +72,41 @@ jobs:
           cache-dependency-path: web/package-lock.json
 
       - name: Remember compiled Rust libraries between runs
+        id: rust-cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
             server/target
-          key: rust-test-${{ runner.os }}-${{ hashFiles('rust-toolchain.toml', 'server/Cargo.lock') }}
+          # Cargo.toml too, because how the libraries are built is set there.
+          key: rust-test-${{ runner.os }}-${{ hashFiles('rust-toolchain.toml', 'server/Cargo.lock', 'server/Cargo.toml') }}
           restore-keys: |
             rust-test-${{ runner.os }}-
 
       - name: Run the Rust checks
         run: scripts/check.sh rust
 
+      # Only the libraries are worth remembering: nine turtles itself is built
+      # fresh every time. Leaving it out keeps the copy small and quick to fetch.
+      - name: Keep only the libraries for next time
+        if: steps.rust-cache.outputs.cache-hit != 'true'
+        working-directory: server
+        run: cargo clean --package nine-turtles
+
   browser:
-    name: Browser tests (part ${{ matrix.shard }} of 2)
+    name: Browser tests (part ${{ matrix.shard }} of 4)
     needs: changes
     if: needs.changes.outputs.app == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     strategy:
-      # Let both halves finish, so one failure shows every failing test.
+      # Let every part finish, so one failure shows every failing test.
+      # Four parts, each on its own computer: one computer runs two tests at
+      # a time at best, so more parts is what makes them finish sooner.
       fail-fast: false
       matrix:
-        shard: [1, 2]
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -106,13 +117,15 @@ jobs:
           cache-dependency-path: web/package-lock.json
 
       - name: Remember compiled Rust libraries between runs
+        id: rust-cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
             server/target
-          key: rust-release-${{ runner.os }}-${{ hashFiles('rust-toolchain.toml', 'server/Cargo.lock') }}
+          # Cargo.toml too, because how the libraries are built is set there.
+          key: rust-release-${{ runner.os }}-${{ hashFiles('rust-toolchain.toml', 'server/Cargo.lock', 'server/Cargo.toml') }}
           restore-keys: |
             rust-release-${{ runner.os }}-
 
@@ -124,8 +137,13 @@ jobs:
 
       - name: Run the browser tests
         env:
-          NINE_TURTLES_SHARD: ${{ matrix.shard }}/2
+          NINE_TURTLES_SHARD: ${{ matrix.shard }}/4
         run: scripts/check.sh browser
+
+      - name: Keep only the libraries for next time
+        if: steps.rust-cache.outputs.cache-hit != 'true'
+        working-directory: server
+        run: cargo clean --release --package nine-turtles
 
       - name: Keep the screenshots for the pull request
         if: github.event_name == 'pull_request'

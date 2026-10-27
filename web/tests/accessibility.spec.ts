@@ -2,6 +2,11 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { SCREENS, THEMES, appReady, openScreen } from "./screens";
 
+// Each check opens its own screen and needs nothing from another, so they may
+// be shared out singly between the computers running the tests (decision
+// 0114): together they are the longest file by far.
+test.describe.configure({ mode: "parallel" });
+
 // The first design floor: every screen, in every theme by day and by night, passes the automatic
 // WCAG checks (including color contrast) at desktop and phone width.
 for (const screen of SCREENS) {

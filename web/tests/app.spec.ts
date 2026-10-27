@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { FEEDS_APP } from "../playwright.config";
 import { appReady, chooseTheme, signIn, tabTo } from "./screens";
 
 // SPEC sections 4, 5, 18 and 19, "How to check it", done by a browser.
@@ -615,7 +616,11 @@ test("Other apps: an app password is made, shown once with the server address, a
 test("Newsletters: the reader's address with Copy, a label's switch, and New address with Undo", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "both runs share one reader, and so one address");
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
-  await openApp(page, "/settings");
+  // On the nine turtles the feed tests share: the email makes a feed for a
+  // moment, and the first one must stay empty for the first-visit tests,
+  // which may be running at the same time (decision 0114).
+  const app = (path: string) => new URL(path, FEEDS_APP).href;
+  await openApp(page, app("/settings"));
   const address = page.getByText(/^turtle-[a-z2-9]{8}@in\.nineturtles\.app$/);
   await expect(address).toBeVisible();
   const old = (await address.textContent())!;
@@ -623,7 +628,7 @@ test("Newsletters: the reader's address with Copy, a label's switch, and New add
   // An email to a label lists it, with a switch that turns its email away.
   const [name, domain] = old.split("@");
   const cooking = `${name}+cooking@${domain}`;
-  const posted = await page.request.post("/newsletters/incoming", {
+  const posted = await page.request.post(app("/newsletters/incoming"), {
     headers: {
       authorization: "Bearer a-made-up-newsletter-secret-for-the-browser-tests",
       "content-type": "message/rfc822",
@@ -643,10 +648,10 @@ test("Newsletters: the reader's address with Copy, a label's switch, and New add
   await expect(label).not.toBeChecked();
   await label.click();
   await expect(label).toBeChecked();
-  // The email made a feed; unsubscribing leaves the reader as the other tests expect (a fresh nine turtles).
-  const feeds = await (await page.request.get("/api/feeds")).json();
+  // The email made a feed; unsubscribing it tidies up after the test.
+  const feeds = await (await page.request.get(app("/api/feeds"))).json();
   const kitchen = feeds.feeds.find((feed: { title: string }) => feed.title === "Kitchen");
-  expect((await page.request.post(`/api/feeds/${kitchen.id}/unsubscribe`, { data: {} })).ok()).toBe(true);
+  expect((await page.request.post(app(`/api/feeds/${kitchen.id}/unsubscribe`), { data: {} })).ok()).toBe(true);
 
   await expect(page.getByRole("button", { name: "Copy address" })).toBeVisible();
   await page.getByRole("button", { name: "New address" }).focus();

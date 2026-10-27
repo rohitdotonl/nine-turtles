@@ -8,14 +8,14 @@ The script stops at the first failure and says which step failed.
 
 ## Side by side, and skipped for documents
 
-On GitHub the script runs in four parts at once, each on its own computer
-(decision 0065): `scripts/check.sh frontend` (the first six steps below),
+On GitHub the script runs in parts at once, each on its own computer
+(decisions 0065 and 0114): `scripts/check.sh frontend` (the first six steps below),
 `scripts/check.sh rust` (formatting, lint, tests), and `scripts/check.sh
 browser` (builds the frontend and the release program, then runs the browser
-tests) twice, each with half of the browser tests (`NINE_TURTLES_SHARD=1/2` and
-`2/2`). A fifth, `scripts/check.sh website`, builds the website and checks it
+tests) four times, each with a quarter of the browser tests
+(`NINE_TURTLES_SHARD=1/4` to `4/4`; decision 0114). Another, `scripts/check.sh website`, builds the website and checks it
 in a real browser (decision 0066). The required **All checks** waits for all
-five and passes only if every one passed. Each part is still a plain script anyone can run; no
+of them and passes only if every one passed. Each part is still a plain script anyone can run; no
 arguments runs everything in order, as before.
 
 A pull request that changes only documents (`*.md` files in `docs/` or at
@@ -46,6 +46,26 @@ by the next merge, whatever it changes.
 | Website: build | The website's pages don't build | Eleventy (`website/`) |
 | Website: accessibility and contrast | Any WCAG A/AA problem (including color contrast) on any page of the website, by day and by night, at computer and phone widths; the first Tab not showing "Skip to the text", a link without a visible focus outline, or a link or picture inside the website that leads nowhere. It checks every page, the "page not found" page too. (The website's part also runs the library check and the no-motion check for the website, so a website-only change can't skip them.) | `scripts/check-website.mjs` (Playwright and axe, borrowed from `web/`) |
 
+## Keeping the checks quick and steady
+
+- **The Rust tests use optimized libraries** (decision 0114). The tests run
+  in Rust's quick-to-build "dev" mode, but the libraries in it (password
+  scrambling, the database, HTML cleaning) are built optimized, once, and
+  remembered between runs (`server/Cargo.toml`, `[profile.dev.package."*"]`).
+  Only nine turtles itself is rebuilt each time. GitHub keeps only the
+  libraries (the "Keep only the libraries for next time" step), so the copy
+  it fetches stays small.
+- **A test never relies on how fast the computer is.** Wait for the thing
+  itself (an answer, a saved setting, a line on the page), not for a moment
+  to pass, and measure something at the moment it's checked. A test that
+  fails now and then is a broken test: fix it the same day, never retry it
+  until it passes.
+- **Tab in the browser tests:** `tabTo` (`web/tests/screens.ts`) presses Tab
+  until it reaches the element, or until Tab has come all the way round, so
+  it never runs out of presses as the sidebar grows.
+- **The first nine turtles stays empty** (see below), even for a moment:
+  the first-visit tests may be running at the same time.
+
 ## The browser tests' two copies of nine turtles
 
 `web/playwright.config.ts` starts two copies of nine turtles and a made-up
@@ -72,7 +92,7 @@ in through the sign-in page with a made-up password (`web/playwright.config.ts`)
   website and publishes it to GitHub Pages when a merge into main changes it
   (decision 0066, `website-and-domain.md`).
 - **Screenshots on the pull request:** posted by GitHub Actions after the
-  checks (decision 0005). Each half of the browser tests keeps its own
+  checks (decision 0005). Each part of the browser tests keeps its own
   pictures; the posting step puts them together.
 - **Weekly security report:** `.github/workflows/security.yml` runs
   `cargo audit` and `npm audit` (for `web/` and `website/`) every Monday. If either finds a known problem,

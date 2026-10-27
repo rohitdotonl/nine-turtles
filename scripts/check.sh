@@ -10,7 +10,7 @@
 #   scripts/check.sh rust       Rust formatting, lint and tests
 #   scripts/check.sh browser    the release program, then the browser tests
 #   scripts/check.sh website    the website at nineturtles.app (decision 0066)
-# NINE_TURTLES_SHARD=1/2 runs only the first half of the browser tests.
+# NINE_TURTLES_SHARD=1/4 runs only the first quarter of the browser tests.
 #
 # Needs: Rust (the version in rust-toolchain.toml), Node 22.12 or newer, and
 # Chromium for Playwright (`npx playwright install chromium` in web/, or point

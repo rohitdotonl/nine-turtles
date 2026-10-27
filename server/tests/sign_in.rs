@@ -92,7 +92,14 @@ async fn after_five_wrong_passwords_even_the_right_one_has_to_wait() {
     }
     let fifth = sign_in(&base, "guess").await;
     assert_eq!(fifth.status(), StatusCode::TOO_MANY_REQUESTS);
-    assert_eq!(fifth.headers()["retry-after"], "60");
+    // A minute from the fifth try, less the moment its password check took
+    // (slow on purpose, and slower still on a busy test computer).
+    let wait: u64 = fifth.headers()["retry-after"]
+        .to_str()
+        .unwrap()
+        .parse()
+        .unwrap();
+    assert!((55..=60).contains(&wait), "retry-after was {wait}");
 
     let right = sign_in(&base, PASSWORD).await;
     assert_eq!(right.status(), StatusCode::TOO_MANY_REQUESTS);
