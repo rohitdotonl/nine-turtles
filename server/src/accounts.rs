@@ -433,7 +433,7 @@ async fn reset(State(state): State<AppState>, Json(form): Json<Reset>) -> Respon
             }
         } else {
             sqlx::query_scalar(
-            "UPDATE email_links SET used = 1
+                "UPDATE email_links SET used = 1
              WHERE token_hash = ? AND purpose = 'reset' AND used = 0 AND expires_at > ?
                -- Sent to an address the reader has since moved away from:
                -- whoever reads that inbox now mustn't get in.
@@ -441,11 +441,11 @@ async fn reset(State(state): State<AppState>, Json(form): Json<Reset>) -> Respon
                            WHERE people.id = email_links.person_id
                              AND people.email = email_links.email COLLATE NOCASE)
              RETURNING person_id",
-        )
-        .bind(&hash[..])
-        .bind(now())
-        .fetch_optional(&mut *transaction)
-        .await?
+            )
+            .bind(&hash[..])
+            .bind(now())
+            .fetch_optional(&mut *transaction)
+            .await?
         };
         let Some(person) = claimed.filter(|person| *person == waiting_for) else {
             return Ok::<_, sqlx::Error>(None);
@@ -640,11 +640,16 @@ impl PasswordChoices {
         let ticket = match new_token() {
             Ok(ticket) => ticket,
             Err(error) => {
-                log::problem(&format!("couldn't make a ticket to choose a password: {error}"));
+                log::problem(&format!(
+                    "couldn't make a ticket to choose a password: {error}"
+                ));
                 return None;
             }
         };
-        let mut waiting = self.waiting.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let mut waiting = self
+            .waiting
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         waiting.retain(|_, choice| choice.expires_at > now);
         waiting.insert(
             scramble(&ticket),
@@ -659,7 +664,10 @@ impl PasswordChoices {
 
     /// Whose ticket `hash` is and the address it's tied to, while it works.
     fn peek(&self, hash: &[u8; 32], now: i64) -> Option<(i64, String)> {
-        let waiting = self.waiting.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let waiting = self
+            .waiting
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         waiting
             .get(hash)
             .filter(|choice| choice.expires_at > now)
@@ -668,7 +676,10 @@ impl PasswordChoices {
 
     /// Spends ticket `hash`, answering whose it was, once only.
     fn take(&self, hash: &[u8; 32], now: i64) -> Option<(i64, String)> {
-        let mut waiting = self.waiting.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let mut waiting = self
+            .waiting
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         waiting
             .remove(hash)
             .filter(|choice| choice.expires_at > now)
@@ -677,7 +688,10 @@ impl PasswordChoices {
 
     /// Every offer for `person` stops working (a new password was set).
     fn end_for(&self, person: i64) {
-        let mut waiting = self.waiting.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let mut waiting = self
+            .waiting
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         waiting.retain(|_, choice| choice.person != person);
     }
 }
