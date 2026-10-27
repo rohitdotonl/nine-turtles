@@ -40,8 +40,8 @@ describe("catch me up", () => {
 
   it("says what it did in plain words", async () => {
     const { caughtUpMessage } = await load();
-    expect(caughtUpMessage(1)).toBe("Marked 1 item from before today as read");
-    expect(caughtUpMessage(230)).toBe("Marked 230 items from before today as read");
+    expect(caughtUpMessage(1)).toBe("Marked 1 article from before today as read");
+    expect(caughtUpMessage(230)).toBe("Marked 230 articles from before today as read");
     expect(caughtUpMessage(0)).toBe("Nothing from before today is unread.");
   });
 });

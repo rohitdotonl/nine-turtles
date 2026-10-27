@@ -71,6 +71,8 @@ export const player = $state({
   changes: 0,
   /** The episode the reader last took off Up Next by hand, and where it was, for its Undo. */
   removed: undefined as { id: number; at: number } | undefined,
+  /** The episode whose own player is on screen now, if any: on a phone the Now playing bar steps aside for it. */
+  inView: undefined as number | undefined,
 });
 
 let audio: HTMLAudioElement | undefined;

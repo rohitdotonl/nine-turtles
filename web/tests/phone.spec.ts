@@ -478,7 +478,7 @@ test.describe("on a phone", () => {
     await expect(field).toBeFocused();
     await expect(search).toHaveAttribute("aria-expanded", "true");
     await page.keyboard.type("slow");
-    await expect(page.locator("#list-heading")).toHaveText("Search results");
+    await expect(page.locator("#list-heading")).toHaveText("Results in Reading Room");
     // It never goes away on its own, so nothing moves under a finger: emptied, it stays.
     await field.fill("");
     await expect(page.locator("#list-heading")).toHaveText("Reading Room");

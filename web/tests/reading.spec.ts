@@ -46,6 +46,49 @@ test.describe("on a wide window", () => {
     await expect(page.getByRole("navigation", { name: "Sidebar" })).toBeVisible();
   });
 
+  test("the keyboard starts on the list's title, and Skip to articles is the first Tab stop", async ({ page }) => {
+    await openRoom(page);
+    // Opening a list puts the keyboard's place on its title, never on the sidebar's wordmark, and draws no ring there.
+    const heading = page.locator("#list-heading");
+    await expect(heading).toBeFocused();
+    await expect(heading).toHaveCSS("outline-style", "none");
+    // From the top of the page, the first Tab lands on "Skip to articles", shown only while it has the keyboard.
+    const skip = page.getByRole("link", { name: "Skip to articles" });
+    expect((await skip.boundingBox())?.width ?? 0).toBeLessThanOrEqual(1);
+    // From the very top of the page, as after a reload with nothing focused.
+    await page.evaluate(() => {
+      document.body.tabIndex = -1;
+      document.body.focus();
+      document.body.removeAttribute("tabindex");
+    });
+    await page.keyboard.press("Tab");
+    await expect(skip).toBeFocused();
+    const box = (await skip.boundingBox())!;
+    expect(box.width).toBeGreaterThan(80);
+    expect(box.height).toBeGreaterThanOrEqual(44);
+    await expect(skip).toHaveCSS("outline-style", "solid");
+    // Enter goes past the sidebar to the first article.
+    await page.keyboard.press("Enter");
+    await expect(page.locator("#list-pane .item-row").first()).toBeFocused();
+  });
+
+  test("on a window about 1024px wide the list keeps room for feed names and titles, even dragged narrower", async ({ page }) => {
+    await openRoom(page, 1024);
+    const list = page.locator("#list-pane");
+    await expect(list).toBeVisible();
+    await expect(page.getByRole("region", { name: "Article" })).toBeVisible();
+    expect((await list.boundingBox())!.width).toBeGreaterThanOrEqual(336);
+    // Its titles get at least 280px of the row.
+    expect((await list.locator(".item-row .title").first().boundingBox())!.width).toBeGreaterThanOrEqual(280);
+    // Narrowed with the keyboard as far as it goes, it stops at 280px.
+    const edge = page.getByRole("separator", { name: "Resize the article list" });
+    await edge.focus();
+    for (let step = 0; step < 20; step++) await page.keyboard.press("ArrowLeft");
+    expect(Math.round((await list.boundingBox())!.width)).toBe(280);
+    await edge.dblclick();
+    await page.evaluate(() => localStorage.removeItem("nine-turtles.list-width"));
+  });
+
   test("j shows an article cleaned and restyled, and j and k move through the list", async ({ page }) => {
     await openRoom(page);
     // One quiet line in the middle of the paper (decision 0053): serif, muted grey, never the
@@ -395,11 +438,11 @@ test.describe("on a wide window", () => {
     });
     expect(fill).toBe(tint);
     // A finished list says so, in a quiet caption centred under it, with no rule.
-    const end = page.getByText("You're all caught up.");
+    const end = page.getByText("That's everything.");
     await expect(end).toBeVisible();
     await expect(end).toHaveCSS("border-top-width", "0px");
     await expect(end).toHaveCSS("text-align", "center");
-    await expect(page.getByRole("button", { name: "Show older items" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Show older articles" })).toHaveCount(0);
     // The note (here, Undo for a star) sits at the foot of the list pane, even under a short list.
     await page.keyboard.press("s");
     const note = page.locator(".toast");
@@ -548,11 +591,11 @@ test.describe("on a wide window", () => {
     expect(scroller!.x + scroller!.width - (text!.x + text!.width)).toBeGreaterThanOrEqual(56);
   });
 
-  test("a summary-only article ends with a small centred note under the closing rule, linking the whole article", async ({ page }) => {
+  test("a summary-only article ends with a small centred note under the closing rule, and a 44px row to read it on the publisher's site", async ({ page }) => {
     await openRoom(page);
     await row(page, "Only the first page").click();
     const note = article(page).locator(".article-note");
-    await expect(note).toContainText("This feed shares only a summary. Read the full article");
+    await expect(note).toContainText("This feed shares only a summary. Read on Reading Room");
     // End matter, as in a book: small upright interface type, centred (decision 0040).
     expect(await note.evaluate((element) => getComputedStyle(element).fontFamily)).not.toContain("Literata");
     await expect(note).toHaveCSS("font-style", "normal");
@@ -560,13 +603,14 @@ test.describe("on a wide window", () => {
     await expect(note).toHaveCSS("font-size", "14px");
     // Only the link is underlined.
     expect(await note.evaluate((element) => getComputedStyle(element).textDecorationLine)).toBe("none");
-    const link = note.getByRole("link", { name: "Read the full article on Reading Room" });
+    const link = note.getByRole("link", { name: "Read on Reading Room" });
     await expect(link).toHaveCSS("text-decoration-line", "underline");
-    // The publisher is named in the byline, so the link's words stay short and, where they fit, on one line (decision 0044).
-    await expect(link).toHaveCSS("display", "inline-block");
-    const lines = await link.evaluate((element) => element.getClientRects().length === 1 && element.getBoundingClientRect().height < parseFloat(getComputedStyle(element).lineHeight) * 1.5);
-    expect(lines).toBe(true);
-    expect(await link.evaluate((element) => element.firstChild?.textContent)).toBe("Read the full article");
+    // A row of its own under the sentence, centred, at least 44px tall to press, its words on one line where they fit.
+    await expect(link).toHaveCSS("display", "flex");
+    const [box, sentence] = await Promise.all([link.boundingBox(), note.locator("span").first().boundingBox()]);
+    expect(box!.height).toBeGreaterThanOrEqual(44);
+    expect(box!.y).toBeGreaterThanOrEqual(sentence!.y + sentence!.height - 1);
+    expect(await link.evaluate((element) => element.getClientRects().length)).toBe(1);
     await expect(link).toHaveAttribute("href", "https://reading-room.example/first-page");
     await expect(link).toHaveAttribute("target", "_blank");
     // It comes after the short closing line, and is the last thing in the article.

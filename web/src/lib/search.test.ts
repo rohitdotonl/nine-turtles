@@ -6,6 +6,7 @@ import {
   emptyQuery,
   isSearching,
   replaceLastWord,
+  resultsTitle,
   searchParams,
   searchedTerms,
   suggestions,
@@ -28,6 +29,16 @@ const library: Library = {
 };
 
 const all: Query = emptyQuery({ kind: "view", view: "all" });
+
+describe("the results' title", () => {
+  it("says where the search looks: All, or the feed, folder, view or collection", () => {
+    expect(resultsTitle({ kind: "all" }, library)).toBe("Results in All");
+    expect(resultsTitle({ kind: "feed", id: 1 }, library)).toBe("Results in Garden Notes");
+    expect(resultsTitle({ kind: "folder", id: 7 }, library)).toBe("Results in Tech");
+    expect(resultsTitle({ kind: "view", view: "starred" }, library)).toBe("Results in Starred");
+    expect(resultsTitle({ kind: "collection", id: 4 }, library)).toBe("Results in Recipes");
+  });
+});
 
 describe("where a search starts", () => {
   it("is limited to where you are, shown as a chip", () => {

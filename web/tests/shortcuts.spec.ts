@@ -128,7 +128,7 @@ test.describe("on a wide window", () => {
     await expect(rows.nth(9)).toHaveAttribute("aria-current", "true");
     await expect(count).toHaveAccessibleName(`Blog ${blog} 54 unread`);
     await page.keyboard.press("Shift+O");
-    await expect(page.getByRole("status").filter({ hasText: "Marked 45 items as read" })).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: "Marked 45 articles as read" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Undo" })).toBeVisible();
     await expect(count).toHaveAccessibleName(`Blog ${blog} 9 unread`);
     // Nothing moved: the rows below turned grey where they are; those above stay unread.
@@ -147,7 +147,7 @@ test.describe("on a wide window", () => {
     await expect(page.getByRole("menuitem", { name: "Mark all below as read" })).toHaveAttribute("aria-keyshortcuts", "Shift+O");
     await expect(page.getByRole("menuitem", { name: "Mark all above as read" })).not.toHaveAttribute("aria-keyshortcuts");
     await page.getByRole("menuitem", { name: "Mark all above as read" }).click();
-    await expect(page.getByRole("status").filter({ hasText: "Marked 9 items as read" })).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: "Marked 9 articles as read" })).toBeVisible();
     await expect(count).toHaveAccessibleName(`Blog ${blog} 45 unread`);
     await expect(rows.nth(0)).not.toHaveAccessibleName(/, unread/);
     await expect(rows.nth(10)).toHaveAccessibleName(/, unread/);
@@ -162,7 +162,7 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("/");
     await expect(page.getByRole("button", { name: `Remove in: Blog ${blog}` })).toBeVisible();
     await page.keyboard.type("summary");
-    const results = page.getByRole("region", { name: "Search results" }).locator("li button[data-space-reads]");
+    const results = page.getByRole("region", { name: /^Results in / }).locator("li button[data-space-reads]");
     await expect(results).toHaveCount(50);
 
     // Older goes by date: articles numbered below the chosen one, one of them perhaps not listed yet.
@@ -171,7 +171,7 @@ test.describe("on a wide window", () => {
     const chosen = Number((await results.nth(9).innerText()).match(/\((\d+)\)/)![1]);
     await expect(count).toHaveAccessibleName(`Blog ${blog} 54 unread`);
     await page.keyboard.press("Shift+O");
-    await expect(page.getByRole("status").filter({ hasText: `Marked ${chosen - 1} ${chosen === 2 ? "item" : "items"} as read` })).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: `Marked ${chosen - 1} ${chosen === 2 ? "article" : "articles"} as read` })).toBeVisible();
     await expect(count).toHaveAccessibleName(`Blog ${blog} ${55 - chosen} unread`);
     await page.keyboard.press("u");
     await expect(page.getByRole("status").filter({ hasText: "Undone." })).toBeVisible();

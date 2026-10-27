@@ -35,6 +35,37 @@ test("a moved feed is listed in plain words, and Find new address moves it", asy
   await expect(feed).toContainText("The site says the feed isn't there any more.");
   // A word on its own: the title carries a timestamp, which may end in 404.
   await expect(feed).not.toContainText(/\b404\b/);
+  // A card (decision 0118): its name, what happened, then Address and Last worked, on a computer and a phone alike.
+  await expect(feed).toHaveCSS("border-top-left-radius", "12px");
+  await expect(feed.locator("dt")).toHaveText(["Address", "Last worked"]);
+  const tried = feed.locator("dd.tried");
+  await expect(tried).toHaveText(`${FEED_SITE}/blog/${name}/feed.xml`);
+  await expect(tried).toHaveCSS("font-family", /Mono|monospace/);
+  await expect(feed.locator("dd").nth(1)).toHaveText(/^(Today|\d+ \w+|Not since you added it)/);
+  const [triedSize, nameSize] = await Promise.all([
+    tried.evaluate((element) => parseFloat(getComputedStyle(element).fontSize)),
+    feed.getByRole("heading", { name: title }).evaluate((element) => parseFloat(getComputedStyle(element).fontSize)),
+  ]);
+  expect(triedSize).toBeLessThan(nameSize);
+  // Find new address first and filled, then Retry, then Unsubscribe; every one at least 44px tall.
+  const find = feed.getByRole("button", { name: `Find new address for ${title}` });
+  const retry = feed.getByRole("button", { name: `Retry ${title}` });
+  const leave = feed.getByRole("button", { name: `Unsubscribe from ${title}` });
+  await expect(feed.locator(".actions > button")).toHaveText(["Find new address", "Retry", "Unsubscribe"]);
+  await expect(find).toHaveClass(/btn-primary/);
+  const [findBox, retryBox, leaveBox, cardBox] = await Promise.all([find.boundingBox(), retry.boundingBox(), leave.boundingBox(), feed.boundingBox()]);
+  for (const box of [findBox!, retryBox!, leaveBox!]) expect(box.height).toBeGreaterThanOrEqual(44);
+  if (cardBox!.width < 24 * 16) {
+    // A narrow card: the two buttons share their row equally, and Unsubscribe has a line of its own below.
+    expect(Math.abs(findBox!.width - retryBox!.width)).toBeLessThanOrEqual(1);
+    expect(Math.abs(findBox!.y - retryBox!.y)).toBeLessThanOrEqual(1);
+    expect(leaveBox!.y).toBeGreaterThan(findBox!.y + findBox!.height - 1);
+    expect(leaveBox!.width).toBeGreaterThan(cardBox!.width - 2 * 18 - 2);
+  } else {
+    // Unsubscribe at the right end of the same row.
+    expect(Math.abs(leaveBox!.y - findBox!.y)).toBeLessThanOrEqual(1);
+    expect(leaveBox!.x + leaveBox!.width).toBeGreaterThan(cardBox!.x + cardBox!.width - 18 - 2);
+  }
 
   // The site names one feed: one plain question, rather than a list of one (decision 0106).
   await feed.getByRole("button", { name: `Find new address for ${title}` }).click();

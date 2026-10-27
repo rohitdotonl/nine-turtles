@@ -77,6 +77,8 @@ export type Article = {
   episode?: boolean;
   /** How long the episode plays, in seconds, if its feed says. */
   episodeSeconds?: number | null;
+  /** Only in Recently read: when the reader last opened it (seconds since 1970), for its day headings. */
+  opened?: number;
 };
 
 /** A piece of a search result's excerpt: plain text, never HTML. */
@@ -323,9 +325,20 @@ export async function newItemsWaiting(source: Source, latest: number): Promise<b
   return isRecord(body) && body.new === true;
 }
 
+/**
+ * The quiet caption that closes a finished list (SPEC section 6): only
+ * Unread is something to get through, so only it is "caught up"; every other
+ * list simply ends, and search results say there are no more.
+ */
+export function endOfList(source: Source): string {
+  if ("search" in source) return "No more results.";
+  if ("view" in source && source.view === "unread") return "You're all caught up.";
+  return "That's everything.";
+}
+
 /** What the note at the foot of the list says when new items are waiting: no number. On a touch screen a Show button follows it. */
 export function newItemsMessage(touch: boolean): string {
-  return touch ? "New items" : "New items · press r";
+  return touch ? "New articles" : "New articles · press r";
 }
 
 // Marks are sent one after another, in the order they were made, so an undo
@@ -708,7 +721,7 @@ export async function uncatchUp(ids: number[]): Promise<void> {
 /** What the note says after "Catch me up". */
 export function caughtUpMessage(count: number): string {
   if (count === 0) return "Nothing from before today is unread.";
-  return `Marked ${count} ${count === 1 ? "item" : "items"} from before today as read`;
+  return `Marked ${count} ${count === 1 ? "article" : "articles"} from before today as read`;
 }
 
 const MODE_KEY = "nine-turtles.mode";
@@ -737,7 +750,7 @@ function rememberMode(mode: ReadingMode) {
 /** What the line above the list says after "Mark all as read". */
 export function markedAllMessage(count: number): string {
   if (count === 0) return "Everything here is already read.";
-  return `Marked ${count} ${count === 1 ? "item" : "items"} as read`;
+  return `Marked ${count} ${count === 1 ? "article" : "articles"} as read`;
 }
 
 /** What the note says when "Mark older as read", or above or below, finds nothing unread there. */
@@ -1117,6 +1130,26 @@ export function when(at: number, now: Date = new Date()): string {
   return DAY_AND_YEAR.format(date);
 }
 
+const WEEKDAY = new Intl.DateTimeFormat("en-GB", { weekday: "long" });
+const LONG_DAY = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long" });
+const LONG_DAY_AND_YEAR = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" });
+
+/**
+ * Recently read's quiet day headings (SPEC section 5), by the device's own
+ * calendar: "Today", "Yesterday", then the weekday for the rest of the last
+ * week ("Monday"), then the date ("12 October", with the year when it isn't
+ * this one). Never a count.
+ */
+export function dayHeading(at: number, now: Date = new Date()): string {
+  const date = new Date(at * 1000);
+  const day = (moment: Date) => Date.UTC(moment.getFullYear(), moment.getMonth(), moment.getDate()) / 86_400_000;
+  const ago = day(now) - day(date);
+  if (ago <= 0) return "Today";
+  if (ago === 1) return "Yesterday";
+  if (ago < 7) return WEEKDAY.format(date);
+  return (date.getFullYear() === now.getFullYear() ? LONG_DAY : LONG_DAY_AND_YEAR).format(date);
+}
+
 /** When a paused feed was paused, for Edit feed: "Paused today.", "Paused on 23 Oct." (SPEC section 15). */
 export function pausedSince(at: number, now: Date = new Date()): string {
   const date = new Date(at * 1000);
@@ -1144,6 +1177,7 @@ export function toArticle(article: Record<string, unknown>): Article {
     starred: article.starred === true,
     muted: article.muted === true,
     ...(Array.isArray(article.excerpt) ? { excerpt: toExcerpt(article.excerpt) } : {}),
+    ...(typeof article.opened === "number" ? { opened: article.opened } : {}),
     ...(article.episode === true || typeof article.episode_url === "string"
       ? { episode: true, episodeSeconds: typeof article.episode_seconds === "number" ? article.episode_seconds : null }
       : {}),

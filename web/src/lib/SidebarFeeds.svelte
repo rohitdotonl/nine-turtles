@@ -260,7 +260,7 @@
     </ul>
   {/if}
   {#if loose.length > 0}
-    <h2 class="sidebar-section">{folders.length > 0 ? "Other feeds" : "Feeds"}</h2>
+    <h2 class="sidebar-section">Feeds</h2>
     <ul>
       {#each loose as feed (feed.id)}
         {@render feedRow(feed, false)}

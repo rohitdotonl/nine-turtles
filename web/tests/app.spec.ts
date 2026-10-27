@@ -45,7 +45,7 @@ test("[ hides and shows the sidebar; its button sits on the sidebar, then waits 
   expect(shown.x + shown.width).toBeLessThanOrEqual(pane.x + pane.width);
   expect(shown.x).toBeGreaterThan(pane.x + pane.width / 2);
 
-  // The keyboard starts in the sidebar (on the wordmark). Hiding the sidebar moves it to the
+  // With the keyboard in the sidebar (here, on the wordmark), hiding the sidebar moves it to the
   // list itself, or with no articles to the sidebar button, never to the list's title (decision 0038).
   await page.locator("#sidebar h1").focus();
   await page.keyboard.press("[");
@@ -93,12 +93,12 @@ test("the sidebar lists Unread, Starred, All and Recently read, with a grey pill
   expect(Math.abs(inset - 8)).toBeLessThan(1);
   // The wordmark is a name, never a Tab stop (decision 0041).
   await expect(sidebar(page).getByRole("heading", { level: 1, name: "nine turtles" })).toHaveAttribute("tabindex", "-1");
-  // When the app puts the keyboard there, its outline stands clear of the letters.
+  // A name can't be pressed, so even with the keyboard on it, it draws no ring.
   const wordmark = sidebar(page).getByRole("heading", { level: 1, name: "nine turtles" });
   await page.keyboard.press("Shift");
   await page.evaluate(() => (document.documentElement.dataset.keyboard = ""));
   await wordmark.focus();
-  await expect(wordmark).toHaveCSS("outline-offset", "3px");
+  await expect(wordmark).toHaveCSS("outline-style", "none");
 
   await sidebar(page).getByRole("link", { name: "Starred" }).click();
   await expect(page).toHaveURL(/\/starred$/);
@@ -113,6 +113,8 @@ test("g then u, s or a goes to Unread, Starred or All; reload and Back keep your
   await page.keyboard.press("s");
   await expect(page).toHaveURL(/\/starred$/);
   await expect(page.getByRole("heading", { level: 2, name: "Starred" })).toBeFocused();
+  // A heading can't be pressed: after a shortcut it takes the keyboard's place but draws no ring.
+  await expect(page.getByRole("heading", { level: 2, name: "Starred" })).toHaveCSS("outline-style", "none");
   await expect(page).toHaveTitle("Starred · nine turtles");
 
   await page.keyboard.press("g");
@@ -136,6 +138,8 @@ test("g then u, s or a goes to Unread, Starred or All; reload and Back keep your
 
 test("? opens the shortcut list, Escape closes it and returns the keyboard's place", async ({ page }) => {
   await openApp(page);
+  // With no feeds yet, the keyboard settles on the welcome's title once the feeds have loaded.
+  await expect(page.locator("#welcome-heading")).toBeFocused();
   const before = await page.evaluate(() => document.activeElement?.textContent?.trim());
   const sidebarShown = await sidebar(page).isVisible();
   await page.keyboard.press("?");
@@ -289,9 +293,11 @@ test("Settings: appearance, font, size and width apply at once and are remembere
   await expect(page.getByLabel("Dark", { exact: true })).toBeChecked();
   await page.keyboard.press("ArrowLeft");
   await expect(page.getByLabel("Light", { exact: true })).toBeChecked();
-  // Font and line width are segmented controls: the chosen one is raised (a fill and a small shadow, no edge) and semibold.
+  // Font and line width are segmented controls: the chosen one is raised (a small shadow) and semibold, and by day
+  // a thin edge sets it at 3 : 1 against the rest of the control (decision 0118).
   await expect(page.locator("label.choice").filter({ hasText: "Medium" })).toHaveCSS("font-weight", "600");
-  await expect(page.locator("label.choice").filter({ hasText: "Medium" })).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+  await expect(page.locator("label.choice").filter({ hasText: "Medium" })).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+  await expect(page.locator("label.choice").filter({ hasText: "Wide" })).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
   await expect(page.locator("label.choice").filter({ hasText: "Medium" })).not.toHaveCSS("box-shadow", "none");
   await expect(page.locator("label.choice").filter({ hasText: "Wide" })).toHaveCSS("font-weight", "400");
   // Each row's control sits at its right end, and every control is the same width.

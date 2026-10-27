@@ -8,15 +8,16 @@
 
   It shows 50; when you reach the bottom, the next 50 load below by
   themselves, with a small grey "Loading…", and nothing above moves
-  (decision 0074). For the keyboard and screen readers, a "Show older items"
+  (decision 0074). For the keyboard and screen readers, a "Show older articles"
   button sits there too, hidden until it has the keyboard's place. At the
-  very end, "You're all caught up." Choosing an article (a click, Enter, or j and k)
+  very end, a quiet caption: "You're all caught up." in Unread, "No more
+  results." after a search, and "That's everything." anywhere else. Choosing an article (a click, Enter, or j and k)
   selects it and the reading area shows it (SPEC section 7); the next one is
   fetched in advance.
 
   Refresh and "Mark all as read" (which marks only the articles listed here)
   sit beside the list's title, in Shell; search results say how many above
-  the list. "New items · press r" and "Marked 23 items as read"
+  the list. "New articles · press r" and "Marked 23 articles as read"
   with Undo appear in a note floating at the bottom of the list, so nothing
   shifts. Every mark
   shows at once and is saved behind; if saving fails, the line says so and
@@ -37,6 +38,8 @@
   import {
     catchUp as catchUpOnServer,
     caughtUpMessage,
+    dayHeading,
+    endOfList,
     listArticles,
     markedAllMessage,
     markRead,
@@ -120,7 +123,7 @@
   /** Listed from the copies kept on this device, without a connection (SPEC section 32). */
   let fromDevice = $state(false);
   let rows: HTMLButtonElement[] = $state([]);
-  /** The "Show older items" button, and the empty line under the list that loads more when it comes into view. */
+  /** The "Show older articles" button, and the empty line under the list that loads more when it comes into view. */
   let moreButton: HTMLButtonElement | undefined = $state();
   let bottom: HTMLElement | undefined = $state();
   let bottomInView = false;
@@ -163,6 +166,19 @@
 
   let selectedIndex = $derived(selected ? articles.findIndex((article) => article.id === selected?.id) : -1);
 
+  /**
+   * Recently read only: a quiet heading where the day each was opened
+   * changes ("Today", "Yesterday", "Monday", "12 October"; SPEC section 5),
+   * worked out against the moment the list loaded, so they never change
+   * while it's on screen.
+   */
+  let loadedAt = $state(new Date());
+  let days = $derived(
+    "view" in source && source.view === "recent"
+      ? articles.map((article) => (article.opened === undefined ? "" : dayHeading(article.opened, loadedAt)))
+      : [],
+  );
+
   async function load(after: string | null) {
     if (busy) return;
     busy = true;
@@ -174,6 +190,7 @@
     try {
       const page = await listArticles(source, order, after);
       articles = after === null ? page.articles : [...articles, ...page.articles];
+      if (after === null) loadedAt = new Date();
       next = page.next;
       if (after === null) latest = page.latest;
       fromDevice = page.kept === true;
@@ -228,6 +245,7 @@
         Object.assign(old, fresh);
         return old;
       });
+      loadedAt = new Date();
       next = page.next;
       latest = page.latest;
       newWaiting = false;
@@ -318,6 +336,13 @@
   export function canMove(step: 1 | -1): boolean {
     const index = selectedIndex === -1 ? 0 : selectedIndex + step;
     return index >= 0 && index < articles.length;
+  }
+
+  /** "Skip to articles": the keyboard goes to the selected article, or the first. False with none listed. */
+  export function focusList(): boolean {
+    const row = rows[selectedIndex] ?? rows[0];
+    row?.focus();
+    return row !== undefined;
   }
 
   /** Moves the keyboard's place to the selected article, scrolled into view if needed. */
@@ -725,6 +750,10 @@
       {@const current = index === selectedIndex}
       {@const flows = river || flowing.has(article.feedId)}
       <li>
+        {#if days[index] && days[index] !== days[index - 1]}
+          <!-- Recently read's day heading: small, semibold and muted, as the sidebar's section names are. -->
+          <h3 class="list-day">{days[index]}</h3>
+        {/if}
         <!-- Only one row is a Tab stop (the selected one, or the first); the others are reached with j, k or the arrows. -->
         <button
           type="button"
@@ -804,19 +833,19 @@
         onclick={() => load(next)}
         class={["list-more cursor-pointer text-meta", !problem && "list-more-hidden"]}
       >
-        {order === "oldest" ? "Show newer items" : "Show older items"}
+        {order === "oldest" ? "Show newer articles" : "Show older articles"}
       </button>
     </div>
   {:else if articles.length > 0}
     <!-- A finite list says when it's finished (SPEC.md section 6): a quiet caption centred under the last row. -->
-    <p class="mt-5 text-center text-meta text-muted">{fromDevice ? END_OF_KEPT : "You're all caught up."}</p>
+    <p class="mt-5 text-center text-meta text-muted">{fromDevice ? END_OF_KEPT : endOfList(source)}</p>
   {/if}
 {/if}
 {#if problem}
   <p role="status" class="mt-4">{problem}</p>
 {/if}
 <!--
-  What was just done (with Undo), "New items · press r", or that nine turtles was
+  What was just done (with Undo), "New articles · press r", or that nine turtles was
   updated: a small note at the foot of the list pane, so nothing in the list
   moves when it appears. It sits in a band of the list's own tone that the
   rows end above, so it never lies over the rows you're acting on
@@ -848,7 +877,7 @@
         >
       {:else if newWaiting && touch}
         <!-- No r key on a touch screen, and Refresh sits in the More menu: the note offers to show them. -->
-        <button type="button" onclick={() => refresh()} aria-label="Show new items" class="ml-2 min-h-11 min-w-11 font-semibold text-ink underline underline-offset-4"
+        <button type="button" onclick={() => refresh()} aria-label="Show new articles" class="ml-2 min-h-11 min-w-11 font-semibold text-ink underline underline-offset-4"
           >Show</button
         >
       {/if}
