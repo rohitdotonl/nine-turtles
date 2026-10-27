@@ -59,7 +59,7 @@ test("Recently read lists what was opened, newest first, and can be hidden from 
     await box.uncheck();
     await expect(link).toHaveCount(0);
     // Unread can't be hidden; Starred and All are still there.
-    await expect(sidebar(page).getByRole("link", { name: "Unread" })).toBeVisible();
+    await expect(sidebar(page).getByRole("link", { name: "Unread", exact: true })).toBeVisible();
     await expect(sidebar(page).getByRole("link", { name: "All", exact: true })).toBeVisible();
 
     // It follows the reader: after a reload it's still hidden, and still opens by its address.

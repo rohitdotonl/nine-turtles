@@ -69,11 +69,11 @@ test("[ hides and shows the sidebar; its button sits on the sidebar, then waits 
 });
 
 
-test("the sidebar lists Unread, Starred and All, with a grey pill marking where you are", async ({ page }) => {
+test("the sidebar lists Unread, Starred, All and Recently read, with a grey pill marking where you are", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await openApp(page);
   const links = sidebar(page).getByRole("list").getByRole("link");
-  await expect(links).toHaveText(["Unread", "Starred", "All"]);
+  await expect(links).toHaveText(["Unread", "Starred", "All", "Recently read"]);
 
   const unread = sidebar(page).getByRole("link", { name: "Unread" });
   await expect(unread).toHaveAttribute("aria-current", "page");
@@ -668,12 +668,12 @@ test("Settings is one centred column of grouped lists; Your data, Feed health an
   await openApp(page, "/settings");
   // Each group has a small header above it; the groups share one column, no wider than 560px. The owner also sees Readers and Sign-up (decision 0087).
   const groups = page.getByRole("region", { name: "Settings" }).locator(".inset-group:visible");
-  await expect(groups).toHaveCount(isMobile ? 12 : 13);
+  await expect(groups).toHaveCount(isMobile ? 13 : 14);
   const boxes = await groups.evaluateAll((all) => all.map((each) => each.getBoundingClientRect()).map((box) => [Math.round(box.x), Math.round(box.width)]));
   for (const [x, width] of boxes) expect([x, width]).toEqual(boxes[0]);
   expect(boxes[0]![1]).toBeLessThanOrEqual(560);
   // Keyboard shows only on a screen with a keyboard (decision 0110).
-  for (const name of [...(isMobile ? [] : ["Keyboard"]), "Reading", "Look and feel", "Your data", "Feeds", "Add from anywhere", "Rules", "Newsletters", "Other apps", "Connected assistants", "Readers", "Sign-up", "Account"]) {
+  for (const name of [...(isMobile ? [] : ["Keyboard"]), "Reading", "Show in the sidebar", "Look and feel", "Your data", "Feeds", "Add from anywhere", "Rules", "Newsletters", "Other apps", "Connected assistants", "Readers", "Sign-up", "Account"]) {
     await expect(page.getByRole("heading", { level: 3, name })).toBeVisible();
   }
   // The data actions are full-width rows, at least 44px tall, in the text color (the accent means only "where you are").
