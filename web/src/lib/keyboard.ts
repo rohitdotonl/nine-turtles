@@ -265,7 +265,8 @@ export function chooseKey(press: KeyPress): { key: string } | { refused: string 
   if (press.ctrlKey || press.metaKey || press.altKey) return { refused: "Keys held with ⌘, Ctrl or Option belong to the browser. Choose another key." };
   if (press.key === "Enter") return { refused: "Enter presses buttons and opens articles, so it stays as it is. Choose another key." };
   if (press.key === "?") return { refused: "? always opens this list, so it stays as it is. Choose another key." };
-  if (press.key === "g") return { refused: "G starts the Go to keys (G then U and the rest), so it can't be used alone. Choose another key." };
+  // Caps Lock changes a letter's case, not which key it is: G without Shift is g.
+  if (press.key.toLowerCase() === "g" && !press.shiftKey) return { refused: "G starts the Go to keys (G then U and the rest), so it can't be used alone. Choose another key." };
   if (press.key === " ") return { key: press.shiftKey ? "Shift+Space" : "Space" };
   if (NAMED.includes(press.key) && !press.shiftKey) return { key: press.key };
   if ([...press.key].length === 1 && press.key.trim() !== "") {

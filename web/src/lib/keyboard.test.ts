@@ -113,6 +113,9 @@ describe("keyboard shortcuts", () => {
     expect(read(press("U", { shiftKey: false }), 10)).toEqual({ kind: "go", view: "unread" });
     expect(chooseKey(press("X", { shiftKey: false }))).toEqual({ key: "x" });
     expect(chooseKey(press("x", { shiftKey: true }))).toEqual({ key: "Shift+X" });
+    // G starts the Go to keys, Caps Lock or not; Shift+G is free to choose.
+    expect(chooseKey(press("G", { shiftKey: false }))).toHaveProperty("refused");
+    expect(chooseKey(press("g", { shiftKey: true }))).toEqual({ key: "Shift+G" });
   });
 
   it("leaves keys alone while a word is being composed (Chinese, Japanese and the like)", () => {
