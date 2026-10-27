@@ -3,8 +3,9 @@
 // owner) at a dead end. Checks Markdown links like [text](path) and file
 // paths in backticks like `docs/SPEC.md`. Web addresses aren't checked.
 // The marketing research (docs/RnD) and the changelog, a record of the past,
-// are left out. Not checked: reference-style links ([ref]: path), backtick
-// paths relative to the document, and anchors inside a file.
+// are left out. Not checked: reference-style links ([ref]: path), links
+// with a title or spaces ([a](path "title"), [a](<a b.md>)), backtick paths
+// relative to the document, and anchors inside a file.
 
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
@@ -28,9 +29,10 @@ const tops = ["docs/", "server/", "web/", "scripts/", "website/", "cloudflare/",
 const built = ["web/dist", "web/screenshots", "server/target", "website/_site"];
 
 for (const file of documents) {
-  // Code blocks (fences at the start of a line) are blanked, keeping lines.
+  // Code blocks (fences that begin a line, maybe indented inside a list) are
+  // blanked, keeping lines. A closing fence is at least as long as the opening.
   const text = readFileSync(join(root, file), "utf8").replace(
-    /^(```|~~~)[^\n]*\n[\s\S]*?^\1[^\n]*$/gm,
+    /^[ \t]*(`{3,}|~{3,})[^\n]*\n[\s\S]*?^[ \t]*\1[`~]*[ \t]*$/gm,
     (block) => block.replace(/[^\n]/g, " "),
   );
   const report = (index, target) => {
@@ -46,14 +48,14 @@ for (const file of documents) {
     try {
       path = decodeURI(target);
     } catch {
-      report(match.index, `${match[1]} (a broken % code)`);
+      problems.push(`${file} line ${text.slice(0, match.index).split("\n").length}: ${match[1]} has a broken % code`);
       continue;
     }
     if (!existsSync(join(from, path))) report(match.index, match[1]);
   }
 
   for (const match of text.matchAll(/`([^`\s]+)`/g)) {
-    const target = match[1].split("#")[0].replace(/(:\d+)+$/, "").replace(/[.,:;]$/, "");
+    const target = match[1].split("#")[0].replace(/[.,:;]$/, "").replace(/(:\d+)+$/, "");
     if (!tops.some((top) => target.startsWith(top))) continue;
     if (/[*<>{}$…]|\.\.\./.test(target)) continue; // a pattern or placeholder, not a file
     if (built.some((b) => target.startsWith(b))) continue;

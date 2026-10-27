@@ -1,6 +1,6 @@
 # 0013: Look and feel foundations
 
-> **Partly replaced** by later look-and-feel notes (summarised in [0061](0061-redesign-notes-folded.md), then [0062](0062-shortcuts-in-words-find-and-one-tip.md)): the "Press ? for shortcuts" hint and the top band's height changed.
+> **Partly replaced** by later look-and-feel notes: ink blue no longer marks where you are (a grey pill does, [0057](0057-grey-pill-green-star.md)); the themes are now Original and Plain ([0056](0056-nine-turtles-one-theme.md), [0063](0063-plain-theme-system-serif.md)); and the "Press ? for shortcuts" hint and the top band's height changed ([0061](0061-redesign-notes-folded.md), [0062](0062-shortcuts-in-words-find-and-one-tip.md)).
 
 *23 October 2026, Milestone 4. Plan approved by the owner; greys chosen by the owner (warm).*
 
