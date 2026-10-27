@@ -996,3 +996,55 @@ async fn a_busy_assistant_is_asked_to_wait() {
     );
     assert_eq!(register_from("198.51.100.4").await, StatusCode::CREATED);
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn two_codes_swapped_at_once_keep_one_line_in_settings() {
+    let base = common::start(common::config()).await;
+    let cookie = common::signed_in(&base).await;
+    let client_id = register(&base).await;
+    let query = authorize_query(&client_id);
+    // The reader approves twice (two tabs, say), and the assistant swaps both
+    // codes at the same moment (survey A9.5).
+    let mut codes = Vec::new();
+    for _ in 0..8 {
+        let (status, approved) = post_json(
+            &base,
+            "/api/oauth/approve",
+            Some(&cookie),
+            &json!({ "query": query }),
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK);
+        let back = Url::parse(approved["redirect"].as_str().unwrap()).unwrap();
+        let (_, code) = back.query_pairs().find(|(key, _)| key == "code").unwrap();
+        codes.push(code.into_owned());
+    }
+    let swaps: Vec<_> = codes
+        .into_iter()
+        .map(|code| {
+            let (base, client_id) = (base.clone(), client_id.clone());
+            tokio::spawn(async move {
+                token(
+                    &base,
+                    &[
+                        ("grant_type", "authorization_code"),
+                        ("code", &code),
+                        ("client_id", &client_id),
+                        ("code_verifier", VERIFIER),
+                    ],
+                )
+                .await
+            })
+        })
+        .collect();
+    for swap in swaps {
+        let (status, tickets) = swap.await.unwrap();
+        assert_eq!(status, StatusCode::OK, "{tickets}");
+    }
+    let (_, listed) = get_json(&base, "/api/assistants", &cookie).await;
+    assert_eq!(
+        listed["assistants"].as_array().unwrap().len(),
+        1,
+        "{listed}"
+    );
+}

@@ -918,6 +918,7 @@
     });
 
     return () => {
+      clearTimeout(searchTimer);
       queries.forEach((query) => query.removeEventListener("change", resized));
       removeEventListener("popstate", back);
       removeEventListener("keydown", pressed);
