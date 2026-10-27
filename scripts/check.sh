@@ -5,6 +5,7 @@
 #
 # With no arguments it runs everything, in order. GitHub Actions runs the
 # parts side by side on separate computers to save time (decision 0065):
+#   scripts/check.sh docs       no broken links between documents (runs for every change)
 #   scripts/check.sh frontend   libraries, frontend build, types, tests, motion, size,
 #                               the health check and the newsletter forwarder
 #   scripts/check.sh rust       Rust formatting, lint and tests
@@ -22,7 +23,7 @@ cd "$(dirname "$0")/.."
 step() { printf '\n==> %s\n' "$1"; }
 
 parts=("$@")
-if [ ${#parts[@]} -eq 0 ]; then parts=(frontend rust browser website); fi
+if [ ${#parts[@]} -eq 0 ]; then parts=(docs frontend rust browser website); fi
 
 build_frontend() {
   step "Frontend: install the exact library versions in the lock file"
@@ -31,6 +32,11 @@ build_frontend() {
   step "Frontend: build"
   (cd web && npm run build)
   frontend_built=yes
+}
+
+docs() {
+  step "No broken links between documents"
+  node scripts/check-doc-links.mjs
 }
 
 frontend() {
@@ -114,9 +120,9 @@ website() {
 
 for part in "${parts[@]}"; do
   case "$part" in
-    frontend | rust | browser | website) "$part" ;;
+    docs | frontend | rust | browser | website) "$part" ;;
     *)
-      echo "Unknown part \"$part\". Use frontend, rust, browser or website (or nothing, for all)." >&2
+      echo "Unknown part \"$part\". Use docs, frontend, rust, browser or website (or nothing, for all)." >&2
       exit 2
       ;;
   esac

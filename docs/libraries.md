@@ -19,7 +19,7 @@ said yes, so every new library shows up clearly in a pull request.
   changes without a deliberate update.
 
 *Versions are the latest at the October 2026 check
-(`docs/planning/tech-check-2026-10.md`). The exact versions in use are
+(`docs/archive/tech-check-2026-10.md`). The exact versions in use are
 whatever the lock files say.*
 
 ## Backend (Rust)
