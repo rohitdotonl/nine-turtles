@@ -6,13 +6,12 @@
 //! Sign-up is always open: anyone can make an account with an email and a
 //! password, at once, with no email sent and no invite (decision 0115).
 //!
-//! At most `SIGN_UPS_PER_HOUR` sign-up tries are
-//! taken in any hour, for the whole app, counting tries with an email that's
-//! already taken as well as new accounts; at most as many accounts are made,
-//! also when a sign-up link emailed before decision 0115 is followed: behind the host's proxy nine turtles can't reliably tell one
-//! place from another. Sign-ups go one at a time, and so do the links
-//! followed (`accounts::confirm`), because scrambling each password takes
-//! about 19 MB of memory and so the hour's count can't be raced past.
+//! At most `SIGN_UPS_PER_HOUR` sign-up tries are taken in any hour, for the
+//! whole app, counting tries with an email that's already taken as well as
+//! new accounts, and at most as many accounts are made: behind the host's
+//! proxy nine turtles can't reliably tell one place from another. Sign-ups
+//! go one at a time, because scrambling each password takes about 19 MB of
+//! memory and so the hour's count can't be raced past.
 //!
 //! A reader's account is deleted by `delete`, which names every table that
 //! holds a reader's things.

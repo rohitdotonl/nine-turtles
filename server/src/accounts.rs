@@ -52,7 +52,7 @@ pub const EMAILS_PER_ADDRESS_PER_HOUR: i64 = 3;
 /// A password link (or a sign-in link, or a change of email's) of one kind
 /// goes to one address at most once
 /// in this many seconds: a second press of Send link within it is answered
-/// the same, and sends nothing. Sign-up links aren't held to it.
+/// the same, and sends nothing.
 pub const EMAIL_GAP: i64 = 60;
 
 pub fn routes() -> Router<AppState> {

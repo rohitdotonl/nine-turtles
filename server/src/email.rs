@@ -1,11 +1,11 @@
-//! Sending email (decision 0088): the links that confirm a new account's
-//! address, set a new password, and confirm a changed address, and the
+//! Sending email (decision 0088): the links that set a new password, sign
+//! in, and confirm a changed address, and the
 //! note that tells an old address it changed.
 //!
 //! nine turtles speaks plain SMTP (with `lettre`), so any email provider
 //! works: Brevo to start with, chosen by the five `NINE_TURTLES_SMTP_*`
 //! settings alone (docs/operations/email.md). Without them nothing is sent,
-//! and what needs email says so calmly (and Open sign-up stays refused).
+//! and what needs email says so calmly (signing up needs none, decision 0115).
 //!
 //! Emails are short plain text: no images, no tracking, no links but the
 //! one the reader asked for. Sending happens behind the answer, so how long

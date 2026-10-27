@@ -6,7 +6,7 @@ import { api } from "./updates.svelte";
 /**
  * Signed in: the version for Status, whether this is the owner (who alone sees Settings › Readers), the reader's
  * email, and whether nine turtles can send email (to change it). Signed out: whether the sign-in page may offer
- * "Forgot your password?" (email can be sent) and "Sign up" (sign-up is Open), decision 0088. Either way, the
+ * "Forgot your password?" (email can be sent) and "Sign up" (always offered, decision 0115), decision 0088. Either way, the
  * address passkeys work at, or null when they're off (decision 0109).
  */
 export type Session =

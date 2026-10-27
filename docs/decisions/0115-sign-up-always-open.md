@@ -19,13 +19,19 @@ likely to give up.
 **What still guards it.**
 - At most 20 sign-up tries, and 20 new accounts, in any hour for the whole
   app, and one sign-up at a time (unchanged), so a bot can't fill the
-  database or use up the server's memory.
+  database quickly or use up the server's memory.
 - Passwords of at least 12 characters, as before.
 
 **What we accept.**
 - Nobody checks that an address belongs to whoever typed it. Someone could
   sign up with another person's address; that person can still take the
-  account over with "Forgot your password?", which emails them.
+  account over with "Forgot your password?", which emails them, but only
+  while nine turtles can send email. Sign-up works without email too; then
+  a taken address can't be won back, and a reader who forgets their
+  password has no way in.
+- A stranger could sign up with the owner's address before the owner saves
+  it in Settings › Readers. The owner had saved theirs when this was
+  decided.
 - Saying "That email already has an account" tells anyone whether an
   address is signed up here. Before, only someone with an invite link could
   learn that. Every sign-up page on the web does the same.
