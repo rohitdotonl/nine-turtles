@@ -134,6 +134,8 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Node.js and npm
 - Progressive web app (PWA)
 - Web app manifest
+- Web Share Target (the share menu, Android)
+- Apple Shortcuts (sharing on iPhone)
 - Maskable icon
 - Service worker
 - Web fonts

@@ -9,7 +9,9 @@
   devices; the reader controls belong to this device. Your data imports and
   exports the reader's feeds and folders as an OPML file, and exports their
   starred articles as a JSON Feed file, and brings starred articles over
-  from other feed readers. Rules lists the reader's rules, and
+  from other feed readers. Add from anywhere gives the bookmark and the
+  Shortcuts address that open Add a feed with a page (AddAnywhere, decision
+  0104). Rules lists the reader's rules, and
   opens the rule editor over Settings (SPEC section 27). Newsletters, while
   nine turtles takes them, shows the reader's private address (SPEC section
   28). Other apps makes the
@@ -24,6 +26,7 @@
 -->
 <script lang="ts">
   import { edge } from "./edge";
+  import AddAnywhere from "./AddAnywhere.svelte";
   import ChangeEmail from "./ChangeEmail.svelte";
   import DeleteAccount from "./DeleteAccount.svelte";
   import Icon from "./Icon.svelte";
@@ -557,6 +560,8 @@
           several at once. Feed health shows feeds that have stopped working, and what you can do about it.
         </p>
       </section>
+
+      <AddAnywhere />
 
       <Rules
         bind:this={rulesPanel}
