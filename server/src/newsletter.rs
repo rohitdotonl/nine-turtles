@@ -135,6 +135,13 @@ pub fn parse(raw: &[u8]) -> Option<Newsletter> {
         ),
     };
     let link = web_link.as_deref().and_then(web_address);
+    // The fingerprint (for an email without a Message-ID) comes from the
+    // link as written, as a feed article's does, so it stays what it was
+    // before more tracking tags were taken off (decision 0102).
+    let written = web_link
+        .as_deref()
+        .and_then(|text| Url::parse(text.trim()).ok())
+        .filter(|url| matches!(url.scheme(), "http" | "https"));
     // Only the list's own archive says where the newsletter lives: a "View
     // in browser" link is often the mailing service's site, not the writer's.
     let site_url = header("List-Archive")
@@ -189,7 +196,7 @@ pub fn parse(raw: &[u8]) -> Option<Newsletter> {
             site_url,
         },
         article: ParsedArticle {
-            fingerprint: feed::fingerprint(message_id, link.as_ref(), &title, published),
+            fingerprint: feed::fingerprint(message_id, written.as_ref(), &title, published),
             title,
             link: link.map(String::from),
             author: None,
@@ -791,6 +798,24 @@ mod tests {
             "{html}"
         );
         assert!(html.contains("unsubscribe from this list</a>"), "{html}");
+    }
+
+    #[test]
+    fn an_email_without_a_message_id_keeps_the_fingerprint_it_always_had() {
+        let raw = "From: Letters <hello@letters.example>\r\n\
+                   Subject: Spring\r\n\
+                   Content-Type: text/html; charset=utf-8\r\n\r\n\
+                   <p><a href=\"https://letters.example/spring?_hsenc=1&amp;utm_source=mail\">View in browser</a></p><p>Words.</p>";
+        let email = parse(raw.as_bytes()).unwrap();
+        assert_eq!(
+            email.article.link.as_deref(),
+            Some("https://letters.example/spring")
+        );
+        // As before `_hsenc` was taken off links: from the link as written.
+        assert_eq!(
+            email.article.fingerprint,
+            "link:letters.example/spring?_hsenc=1"
+        );
     }
 
     #[test]

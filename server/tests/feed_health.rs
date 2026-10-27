@@ -60,6 +60,9 @@ async fn serve(State(site): State<Shared>, uri: Uri) -> Response {
         )
             .into_response(),
         "/old.xml" | "/new.xml" => rss("Old name", &["one", "two", "three"]),
+        // The same posts under other IDs (`v1-one`, `v2-one`): only their
+        // links say they're the same.
+        "/v1.xml" | "/v2.xml" => rss_with_ids("Versions", &["one", "two", "three"], &path[1..4]),
         "/other.xml" | "/busy.xml" => rss("Other", &["a"]),
         _ => StatusCode::NOT_FOUND.into_response(),
     }
@@ -67,12 +70,17 @@ async fn serve(State(site): State<Shared>, uri: Uri) -> Response {
 
 /// A feed whose `link` is left out, so Find new address visits the feed's own home page.
 fn rss(title: &str, posts: &[&str]) -> Response {
+    rss_with_ids(title, posts, "")
+}
+
+/// The same, each post's ID starting with `id_start`.
+fn rss_with_ids(title: &str, posts: &[&str], id_start: &str) -> Response {
     let items: String = posts
         .iter()
         .map(|post| {
             format!(
                 "<item><title>{post}</title><link>https://blog.example/{post}</link>\
-                 <guid>{post}</guid><description>Words.</description></item>"
+                 <guid>{id_start}{post}</guid><description>Words.</description></item>"
             )
         })
         .collect();
@@ -359,6 +367,70 @@ async fn find_new_address_offers_the_sites_feeds_and_moving_keeps_everything() {
         )
         .await;
     assert_eq!(refused["error"], "no-feed", "{status}");
+}
+
+#[tokio::test]
+async fn moving_matches_posts_by_their_link_without_tracking_tags() {
+    let reader = Reader::new().await;
+    let old = reader.follow("/v1.xml").await;
+    // Someone else follows it too, so the reader moves to a feed of its own
+    // and their marks are carried over to its articles.
+    let (_, cookie) = common::another_reader(&reader.state).await;
+    let response = Client::new()
+        .post(format!("{}/api/feeds", reader.base))
+        .header("cookie", cookie)
+        .header("sec-fetch-site", "same-origin")
+        .header("content-type", "application/json")
+        .body(json!({ "address": format!("{}/v1.xml", reader.site) }).to_string())
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::CREATED);
+    let articles = reader.get(&format!("/api/articles?feed={old}")).await;
+    let two = articles["articles"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|article| article["title"] == "two")
+        .unwrap()["id"]
+        .as_i64()
+        .unwrap();
+    let (status, _) = reader
+        .post(
+            "/api/articles/starred",
+            json!({ "ids": [two], "starred": true }),
+        )
+        .await;
+    assert!(status.is_success(), "{status}");
+    // As if stored before tracking tags were taken off on arrival (decision 0102).
+    sqlx::query("UPDATE articles SET link = link || '?utm_source=rss' WHERE feed_id = ?")
+        .bind(old)
+        .execute(&reader.state.db)
+        .await
+        .unwrap();
+
+    let (status, moved) = reader
+        .post(
+            &format!("/api/health/{old}/address"),
+            json!({ "url": format!("{}/v2.xml", reader.site) }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK, "{moved}");
+    let new = moved["feed"]["id"].as_i64().unwrap();
+    assert_ne!(new, old);
+    // Each post once, the star carried over to its new copy.
+    let articles = reader.get(&format!("/api/articles?feed={new}")).await;
+    assert_eq!(
+        articles["articles"].as_array().unwrap().len(),
+        3,
+        "{articles}"
+    );
+    let starred = reader.get("/api/articles?view=starred").await;
+    let starred = starred["articles"].as_array().unwrap();
+    assert_eq!(starred.len(), 1, "{starred:?}");
+    assert_eq!(starred[0]["title"], "two");
+    assert_ne!(starred[0]["id"], two);
+    assert_eq!(starred[0]["link"], "https://blog.example/two");
 }
 
 #[tokio::test]

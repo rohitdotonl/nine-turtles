@@ -511,7 +511,10 @@ const ANCHOR_PREFIX: &str = "article-";
 /// newsletters (SPEC section 7, decision 0102). Add to it as needed, but
 /// never block a place that also serves real pictures (`i0.wp.com` is
 /// WordPress's picture store, so only `pixel.wp.com` and `stats.wp.com` are
-/// listed).
+/// listed). A whole domain is listed only when it does nothing but serve
+/// ads or count visits; a company that also has its own website and blog
+/// (`taboola.com`, `criteo.com`) is listed by its ad and counting
+/// addresses alone, so its own articles keep their pictures.
 const TRACKERS: &[&str] = &[
     // Advertising
     "doubleclick.net",
@@ -520,19 +523,28 @@ const TRACKERS: &[&str] = &[
     "amazon-adsystem.com",
     "adnxs.com",
     "adform.net",
-    "criteo.com",
     "criteo.net",
+    "dis.criteo.com",
+    "sslwidget.criteo.com",
     "moatads.com",
-    "pubmatic.com",
-    "rubiconproject.com",
-    "taboola.com",
-    "outbrain.com",
+    "ads.pubmatic.com",
+    "image2.pubmatic.com",
+    "simage2.pubmatic.com",
+    "pixel.rubiconproject.com",
+    "fastlane.rubiconproject.com",
+    "cdn.taboola.com",
+    "trc.taboola.com",
+    "images.taboola.com",
+    "widgets.outbrain.com",
+    "amplify.outbrain.com",
+    "tr.outbrain.com",
+    "outbrainimg.com",
     // Analytics and audience measurement
     "google-analytics.com",
     "googletagmanager.com",
     "scorecardresearch.com",
     "quantserve.com",
-    "chartbeat.com",
+    "static.chartbeat.com",
     "chartbeat.net",
     "pixel.parsely.com",
     "bat.bing.com",
@@ -953,7 +965,10 @@ mod tests {
 <img src="https://notdoubleclick.net/x.png" alt="Not a tracker">
 <img src="https://doubleclick.net.example.com/x.png" alt="Nor this">
 <img src="https://example.com/track/open.php" alt="Nor here">
-<img src="https://example.us12.list-manage.com/trackers.png" alt="Not the path">"#;
+<img src="https://example.us12.list-manage.com/trackers.png" alt="Not the path">
+<img src="https://www.taboola.com/blog/team.jpg" alt="Their own blog">
+<img src="https://www.criteo.com/wp-content/office.jpg" alt="Theirs too">
+<img src="https://trc.taboola.com/p.gif"><img src="https://widgets.outbrain.com/x.png">"#;
         let cleaned = without_trackers(html, Some(&url("https://example.com/post")));
         for gone in [
             "doubleclick.net/x.gif",
@@ -965,7 +980,10 @@ mod tests {
             "feedburner",
             "open.php?u=1",
             "substackcdn",
-            "aboola",
+            "cdn.taboola",
+            "CDN.Taboola",
+            "trc.taboola",
+            "outbrain",
         ] {
             assert!(!cleaned.contains(gone), "{gone}: {cleaned}");
         }
@@ -976,6 +994,8 @@ mod tests {
             "doubleclick.net.example.com",
             "example.com/track/open.php",
             "trackers.png",
+            "www.taboola.com/blog/team.jpg",
+            "www.criteo.com/wp-content/office.jpg",
         ] {
             assert!(cleaned.contains(kept), "{kept}: {cleaned}");
         }

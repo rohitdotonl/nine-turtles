@@ -20,13 +20,31 @@ has the last word.
   comes from its link as the feed wrote it, and `normalize` keeps its own
   frozen list (`FINGERPRINT_TRACKING`): widening it would change the
   fingerprints and feed keys already stored, and the same article would
-  arrive twice.
+  arrive twice. The same goes for a newsletter without a Message-ID (its
+  fingerprint comes from its "View in browser" link as written) and for
+  imported stars.
+- **Links are compared without their tags** wherever an older stored link
+  meets a new one: moving a feed to a new address (`carry_entries_over`,
+  so stars and read marks carry over to the new copies) and importing
+  stars (`star_import::stored`); an imported star's link is stored without
+  tags too.
 - **Pictures from known trackers go.** A short list kept by hand in the
   repository (`TRACKERS`: advertising, analytics and platform counters such
   as DoubleClick, Google Analytics, Facebook's pixel, `pixel.wp.com`,
   Mailchimp's open tracking and FeedBurner's `~r` images). A domain matches
   itself and everything under it; an entry with a path matches only that
   path, so the same site's real pictures stay (`i0.wp.com` is not listed).
+  A whole domain is listed only when it does nothing but serve ads or count
+  visits; for a company with its own site and blog (Taboola, Outbrain,
+  Criteo, Chartbeat, PubMatic, Rubicon) only its ad and counting hosts are
+  listed, so its own articles keep their pictures.
+- **Newsletters' open pixels (decision 0091).** A newsletter's invisible
+  tracking images are still loaded once when the email arrives, from the
+  email as received, before any cleaning: that is the owner's choice and
+  doesn't change. In the stored article they were already removed as 1×1
+  images; now a counter on the list (Mailchimp's `list-manage.com/track`,
+  Substack's `eotrx.substackcdn.com`) is removed whatever its size, so
+  reading the newsletter never loads it again.
   Pictures are the only things the cleaner keeps that load from elsewhere
   (frames, video and audio never pass the safety cleaning), so pictures are
   all it checks.
@@ -51,8 +69,9 @@ would touch every reader's data for a small gain, and isn't a structure
 change, so the automatic backup before structure changes wouldn't cover it.
 Instead:
 
-- An article still in its feed is refreshed on the next fetch anyway: the
-  stored row is updated when its link or content differ, as they now will.
+- An article still in its feed is refreshed on its next fetch anyway: the
+  stored row is updated when its link or content differ, as they now will,
+  and the original tagged link isn't kept.
 - Every article is cleaned again when it's shown (`feeds::full_articles`,
   as invisible pixels already were since Milestone 5): tracker pictures go,
   pictures load lazily, links in the text and the article's own link lose

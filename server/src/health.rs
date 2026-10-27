@@ -528,23 +528,43 @@ async fn carry_entries_over(
 ) -> Result<(), sqlx::Error> {
     // The new copy of each old article, if there is one: the same
     // fingerprint first, else the same link (the lowest number if several).
-    let pairs: Vec<(i64, Option<i64>)> = sqlx::query_as(
-        "SELECT entries.article_id,
-                COALESCE(
-                    (SELECT twin.id FROM articles AS twin
-                     WHERE twin.feed_id = ?3 AND twin.fingerprint = articles.fingerprint),
-                    (SELECT MIN(twin.id) FROM articles AS twin
-                     WHERE twin.feed_id = ?3 AND articles.link IS NOT NULL
-                         AND twin.link = articles.link))
+    // Links are compared without their tracking tags: an old article may
+    // have been stored with them, its new copy never is (decision 0102).
+    let olds: Vec<(i64, String, Option<String>)> = sqlx::query_as(
+        "SELECT entries.article_id, articles.fingerprint, articles.link
          FROM entries CROSS JOIN articles ON articles.id = entries.article_id
-         WHERE entries.person_id = ?1 AND entries.feed_id = ?2
+         WHERE entries.person_id = ? AND entries.feed_id = ?
          ORDER BY entries.article_id",
     )
     .bind(person)
     .bind(old)
+    .fetch_all(&mut *connection)
+    .await?;
+    let twins: Vec<(i64, String, Option<String>)> = sqlx::query_as(
+        "SELECT id, fingerprint, link FROM articles WHERE feed_id = ? ORDER BY id DESC",
+    )
     .bind(new)
     .fetch_all(&mut *connection)
     .await?;
+    let mut by_fingerprint = std::collections::HashMap::new();
+    let mut by_link = std::collections::HashMap::new();
+    // Highest number first, so the lowest is what's left for each link.
+    for (id, fingerprint, link) in twins {
+        by_fingerprint.insert(fingerprint, id);
+        if let Some(link) = link {
+            by_link.insert(feed::link_without_tracking(&link), id);
+        }
+    }
+    let pairs: Vec<(i64, Option<i64>)> = olds
+        .into_iter()
+        .map(|(article, fingerprint, link)| {
+            let copy = by_fingerprint.get(&fingerprint).copied().or_else(|| {
+                let link = feed::link_without_tracking(link.as_deref()?);
+                by_link.get(&link).copied()
+            });
+            (article, copy)
+        })
+        .collect();
     let mut taken = std::collections::HashSet::new();
     for (article, copy) in pairs {
         // Each new copy takes one old article's marks; any other old
