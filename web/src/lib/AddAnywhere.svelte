@@ -39,7 +39,7 @@
         Address for Apple Shortcuts<br /><span class="value text-muted" translate="no">{shortcut}</span>
       </p>
       <button type="button" class="btn btn-small" onclick={() => copy(shortcut, "Shortcut address")}
-        >Copy<span class="sr-only"> address for Apple Shortcuts</span></button
+        >Copy<span class="sr-only"> the Apple Shortcuts address</span></button
       >
     </div>
   </div>

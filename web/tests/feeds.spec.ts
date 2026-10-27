@@ -466,5 +466,5 @@ test("Settings gives the bookmark and the Shortcuts address, built from this nin
   await expect(group.getByText(`javascript:location.href='${FEEDS_APP}/add-feed?url='+encodeURIComponent(location.href)`)).toBeVisible();
   await expect(group.getByText(`${FEEDS_APP}/add-feed?url=`, { exact: true })).toBeVisible();
   await expect(group.getByRole("button", { name: "Copy bookmark" })).toBeVisible();
-  await expect(group.getByRole("button", { name: "Copy address for Apple Shortcuts" })).toBeVisible();
+  await expect(group.getByRole("button", { name: "Copy the Apple Shortcuts address" })).toBeVisible();
 });
