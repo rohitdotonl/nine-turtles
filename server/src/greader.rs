@@ -1063,7 +1063,7 @@ async fn delete_folder(
                 .await?;
         if let Some(id) = id {
             crate::saved_searches::forget(&mut *transaction, person, "folder", id).await?;
-            crate::rules::place_gone(&mut transaction, None, Some(id)).await?;
+            crate::rules::place_gone(&mut transaction, id).await?;
         }
         transaction.commit().await
     }

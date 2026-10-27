@@ -114,6 +114,8 @@
 
   /** How often the list asks whether new items are waiting. */
   const ASK_EVERY_MS = 60_000;
+  /** An Undo that couldn't reach nine turtles says so, rather than nothing. */
+  const UNDO_FAILED = "That couldn't be undone. Try again in a moment.";
 
   let articles: Article[] = $state([]);
   let next: string | null = $state(null);
@@ -151,9 +153,12 @@
     line = undoMessage = message;
     if (undo) {
       undoLast = () => {
-        undo().then((problem) => {
-          if (problem) say(problem);
-        });
+        undo().then(
+          (problem) => {
+            if (problem) say(problem);
+          },
+          () => say(UNDO_FAILED),
+        );
       };
     }
   });
@@ -483,9 +488,12 @@
    */
   export function offer(message: string, reverse: () => Promise<string | undefined>) {
     did(message, () => {
-      reverse().then((problem) => {
-        if (problem) say(problem);
-      });
+      reverse().then(
+        (problem) => {
+          if (problem) say(problem);
+        },
+        () => say(UNDO_FAILED),
+      );
     });
   }
 

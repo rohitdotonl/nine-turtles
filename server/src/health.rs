@@ -622,11 +622,18 @@ async fn carry_entries_over(
         let merged = match copy {
             Some(copy) if copy != article && taken.insert(copy) => {
                 sqlx::query(
+                    // The times go with the marks, so the article stays in
+                    // Recently read and a late offline mark from before the
+                    // move can't undo a newer one (survey A9.3).
                     "UPDATE entries SET
                          read = old.read, muted = old.muted,
-                         starred = MAX(entries.starred, old.starred)
-                     FROM (SELECT read, starred, muted FROM entries
-                           WHERE person_id = ?1 AND article_id = ?2) AS old
+                         read_marked_at = old.read_marked_at,
+                         starred = MAX(entries.starred, old.starred),
+                         starred_marked_at = MAX(entries.starred_marked_at, old.starred_marked_at),
+                         opened_at = COALESCE(MAX(entries.opened_at, old.opened_at),
+                                              entries.opened_at, old.opened_at)
+                     FROM (SELECT read, starred, muted, read_marked_at, starred_marked_at, opened_at
+                           FROM entries WHERE person_id = ?1 AND article_id = ?2) AS old
                      WHERE entries.person_id = ?1 AND entries.article_id = ?3
                          AND entries.feed_id = ?4",
                 )

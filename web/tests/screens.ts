@@ -478,7 +478,10 @@ export async function signIn(page: Page): Promise<void> {
   await page.getByLabel("Email").fill(OWNER_EMAIL);
   await page.getByLabel("Password").fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.locator("#sidebar")).toBeAttached();
+  // At most two password checks run at once on the whole server, each a
+  // deliberately slow scramble, so with every test signing in together one
+  // can wait its turn for longer than the usual five seconds.
+  await expect(page.locator("#sidebar")).toBeAttached({ timeout: 15_000 });
 }
 
 /**

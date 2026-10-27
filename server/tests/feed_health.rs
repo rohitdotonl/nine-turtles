@@ -440,6 +440,11 @@ async fn moving_matches_posts_by_their_link_without_tracking_tags() {
         )
         .await;
     assert!(status.is_success(), "{status}");
+    // They opened it too, so it's in Recently read.
+    let (status, _) = reader
+        .post("/api/articles/opened", json!({ "id": two }))
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
     // As if stored before tracking tags were taken off on arrival (decision 0112).
     sqlx::query("UPDATE articles SET link = link || '?utm_source=rss' WHERE feed_id = ?")
         .bind(old)
@@ -469,6 +474,24 @@ async fn moving_matches_posts_by_their_link_without_tracking_tags() {
     assert_eq!(starred[0]["title"], "two");
     assert_ne!(starred[0]["id"], two);
     assert_eq!(starred[0]["link"], "https://blog.example/two");
+    // It stays in Recently read, and the times of its marks go with it, so a
+    // late offline mark made before the move can't undo the star (survey A9.3).
+    let recent = reader.get("/api/articles?view=recent").await;
+    let recent: Vec<&str> = recent["articles"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|article| article["title"].as_str().unwrap())
+        .collect();
+    assert_eq!(recent, ["two"]);
+    let copy = starred[0]["id"].as_i64().unwrap();
+    let (marked,): (i64,) =
+        sqlx::query_as("SELECT starred_marked_at FROM entries WHERE article_id = ?")
+            .bind(copy)
+            .fetch_one(&reader.state.db)
+            .await
+            .unwrap();
+    assert!(marked > 0, "the star's time was lost");
 }
 
 #[tokio::test]
