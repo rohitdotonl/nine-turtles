@@ -403,6 +403,7 @@ each with screenshots:
 | Reading offline, words only (200 unread and 200 starred on each device) | ✅ 26 October 2026 | SPEC section 32, decision 0101 |
 | Adding a feed from anywhere (Android's share menu, an Apple Shortcuts shortcut, a bookmark) | ✅ 27 October 2026 | SPEC sections 3, 18 and 20, decision 0104 |
 | Opening a picture in an article larger | ✅ 27 October 2026 | SPEC section 7, decision 0107 |
+| More keys (Space, n, Shift+O, e, Shift+E, c), Mark all above / below as read, and one list of keys for the keys and the cheat sheet | ✅ 27 October 2026 | SPEC sections 6, 7, 8 and 19, decision 0103 |
 
 ## V2: Many readers in one app
 

@@ -35,6 +35,7 @@
   import { NOT_KEPT } from "./offline";
   import PictureSheet from "./PictureSheet.svelte";
   import { OPENABLE, markPicture } from "./pictures";
+  import { keyFor } from "./keyboard";
 
   let {
     article,
@@ -97,8 +98,8 @@
   let more: MenuGroup[] = $derived([
     {
       items: [
-        ...(article.link ? [{ label: sharing ? "Share" : "Copy link", onSelect: share }] : []),
-        { label: "Mark unread", shortcut: phone ? undefined : "m", onSelect: onMarkUnread },
+        ...(article.link ? [{ label: sharing ? "Share" : "Copy link", shortcut: phone || sharing ? undefined : keyFor("copy-link"), onSelect: share }] : []),
+        { label: "Mark unread", shortcut: phone ? undefined : keyFor("mark-unread"), onSelect: onMarkUnread },
       ],
     },
   ]);
@@ -268,12 +269,38 @@
       }
       return;
     }
+    await copyLink();
+  }
+
+  /**
+   * `c`, and Copy link in More: the original's address goes on the
+   * clipboard, and the top bar says so. On a phone with a keyboard too, `c`
+   * copies rather than opening the share sheet.
+   */
+  export async function copyLink() {
+    const link = article.link;
+    if (!link) return;
+    // Emptied first, so the same words are said again for a second copy.
+    copied = "";
     try {
       await navigator.clipboard.writeText(link);
       copied = "Link copied.";
     } catch {
       copied = "The link couldn't be copied. Use Open original and copy it from there.";
     }
+  }
+
+  /**
+   * Space and Shift+Space: the article moves on (1) or back (-1) by a screen,
+   * keeping a few lines of the last one in view so the eye finds its place,
+   * at once, never gliding. At the end (or the top) it simply stops.
+   */
+  export function page(step: 1 | -1) {
+    const area = scroller;
+    if (!area) return;
+    moved = true;
+    const overlap = Math.min(64, area.clientHeight * 0.15);
+    area.scrollBy({ top: step * Math.max(area.clientHeight - overlap, 40), behavior: "instant" });
   }
 </script>
 

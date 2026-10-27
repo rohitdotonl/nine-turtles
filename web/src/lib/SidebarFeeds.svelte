@@ -75,6 +75,18 @@
     }
   }
 
+  /**
+   * `e`: folds or unfolds a folder, as its arrow does (decision 0103). If the
+   * keyboard's place was on one of the feeds it hides, it moves to the
+   * folder's own row rather than being lost.
+   */
+  export function toggleFolder(id: number) {
+    if (phone) return;
+    const inside = document.getElementById(`folder-${id}`)?.contains(document.activeElement) ?? false;
+    toggle(id);
+    if (inside) queueMicrotask(() => document.querySelector<HTMLElement>(`[data-folder-link="${id}"]`)?.focus());
+  }
+
   function toggle(id: number) {
     open = open.includes(id) ? open.filter((each) => each !== id) : [...open, id];
     try {
@@ -152,6 +164,7 @@
     href={pathFor(place)}
     aria-current={isHere(place) ? "page" : undefined}
     onclick={(event) => follow(event, place)}
+    data-folder-link={folder.id}
     title={folder.name}
     class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center gap-3 rounded-md pr-3.5 text-ui pointer-fine:text-small", padded && "pl-[38px]", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
     >{@render name(folder.name)}{@render count(folderUnread(folder, feeds))}{@render leadsOn()}</a

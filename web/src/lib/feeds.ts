@@ -6,6 +6,7 @@ import { api } from "./updates.svelte";
 import { noConnection, serverNow, whenBack } from "./connection.svelte";
 import {
   CATCH_UP_NEEDS_CONNECTION,
+  READ_PAST_NEEDS_CONNECTION,
   NeedsConnection,
   keepLibrary,
   keptArticle,
@@ -465,6 +466,33 @@ export async function catchUp(now: Date = new Date()): Promise<number[]> {
   return isRecord(body) && Array.isArray(body.ids) ? body.ids.map(Number) : [];
 }
 
+/**
+ * "Mark older as read", "Mark all above as read" and "Mark all below as
+ * read" (decision 0103), when more of the list is still to load: every
+ * unread article in the list on one side of `article`, loaded or not, but
+ * none that arrived after the list was loaded (`latest`). Answers which
+ * were marked, for Undo. Not for search results, which the screen marks
+ * page by page itself.
+ */
+export async function readPast(source: Exclude<Source, { search: Record<string, string> }>, side: "older" | "newer", article: Article, latest: number): Promise<number[]> {
+  await saved();
+  let response: Response;
+  try {
+    response = await api("/api/articles/read-past", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ ...source, side, at: article.at, id: article.id, latest }),
+      signal: AbortSignal.timeout(15_000),
+    });
+  } catch (problem) {
+    if (noConnection(problem)) throw new NeedsConnection(READ_PAST_NEEDS_CONNECTION);
+    throw problem;
+  }
+  if (!response.ok) throw new Refused(response.status);
+  const body: unknown = await response.json();
+  return isRecord(body) && Array.isArray(body.ids) ? body.ids.map(Number) : [];
+}
+
 /** The most articles one mark names (the server's limit), so Undo after catching up on a huge backlog goes in parts. */
 const MOST_AT_ONCE = 10_000;
 
@@ -508,6 +536,11 @@ function rememberMode(mode: ReadingMode) {
 export function markedAllMessage(count: number): string {
   if (count === 0) return "Everything here is already read.";
   return `Marked ${count} ${count === 1 ? "item" : "items"} as read`;
+}
+
+/** What the note says when "Mark older as read", or above or below, finds nothing unread there. */
+export function nothingPastMessage(kind: "older" | "above" | "below"): string {
+  return kind === "older" ? "Nothing older is unread." : `Nothing ${kind} it is unread.`;
 }
 
 /** A feed's unread count as the sidebar shows it: nothing for none, "999+" above 999. */

@@ -146,7 +146,7 @@
       {/if}
       <div class="grid gap-x-10 gap-y-6 md:grid-cols-2">
         {#each COLUMNS as column, side (side)}
-          <div class="flex min-w-0 flex-col gap-6">
+          <div class="flex min-w-0 flex-col gap-5">
             {#each column.filter((each) => shown.some((shortcut) => shortcut.group === each)) as group (group)}
               {@const index = SHORTCUT_GROUPS.indexOf(group)}
               <section aria-labelledby={`keys-${index}`}>
@@ -155,14 +155,14 @@
                   <tbody>
                     {#each shown.filter((each) => each.group === group) as shortcut (shortcut.action)}
                       <tr class="border-b border-ink/[0.07] last:border-0">
-                        <td class="py-1.5 pr-4 align-middle">{shortcut.action}</td>
+                        <td class="py-[3px] pr-4 align-middle">{shortcut.action}</td>
                         <!--
                           "g then u" is two presses: a cap for each key, with "then" between them.
                           Each shortcut stays whole; on a narrow phone the alternatives wrap at the slashes.
                           Caps are printed as a Mac prints them: capital letters, ⇧ for Shift (screen readers
                           hear "Shift A"), and a true minus sign on the - key (decisions 0045, 0055).
                         -->
-                        <td class="py-1.5 text-right align-middle whitespace-nowrap">
+                        <td class="py-[3px] text-right align-middle whitespace-nowrap">
                           {#each shortcut.keys as key, index (key)}{#if index > 0}{" "}{/if}<span class="whitespace-nowrap"
                               >{#if index > 0}<span class="text-muted">{"/ "}</span>{/if}{#each key.split(" then ") as press, step (step)}{@const cap = keyCap(press)}{#if step > 0}<span
                                     class="text-[0.75rem] text-muted">{" then "}</span
@@ -185,8 +185,8 @@
                   <tbody>
                     {#each filtersShown as [filter, meaning] (filter)}
                       <tr class="border-b border-ink/[0.07] last:border-0">
-                        <td class="w-px py-1.5 pr-4 whitespace-nowrap sm:pr-8"><code class="font-mono text-meta">{filter}</code></td>
-                        <td class="py-1.5">{meaning}</td>
+                        <td class="w-px py-[3px] pr-4 whitespace-nowrap sm:pr-8"><code class="font-mono text-meta">{filter}</code></td>
+                        <td class="py-[3px]">{meaning}</td>
                       </tr>
                     {/each}
                   </tbody>

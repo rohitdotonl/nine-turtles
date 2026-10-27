@@ -767,7 +767,7 @@ pub enum Order {
 
 impl List {
     /// A feed's or a folder's articles if one is named, otherwise the view's.
-    const fn from_query(feed: Option<i64>, folder: Option<i64>, view: View) -> Self {
+    pub(crate) const fn from_query(feed: Option<i64>, folder: Option<i64>, view: View) -> Self {
         match (feed, folder, view) {
             (Some(feed), _, _) => Self::Feed(feed),
             (None, Some(folder), _) => Self::Folder(folder),
@@ -780,7 +780,7 @@ impl List {
 
 #[derive(Clone, Copy, Default, Deserialize)]
 #[serde(rename_all = "lowercase")]
-enum View {
+pub(crate) enum View {
     #[default]
     All,
     Unread,

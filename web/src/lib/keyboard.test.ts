@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SEQUENCE_MS, SHORTCUTS, createKeyReader, keyCap, shortcutMatches, shortcutsFor, type KeyPress } from "./keyboard";
+import { SEQUENCE_MS, SHORTCUTS, createKeyReader, keyCap, keyFor, pressName, shortcutMatches, shortcutsFor, type KeyPress } from "./keyboard";
 
 const press = (key: string, extra: Partial<KeyPress> = {}): KeyPress => ({
   key,
@@ -88,11 +88,14 @@ describe("keyboard shortcuts", () => {
   });
 
   it("lists every shortcut in SPEC.md in the cheat sheet", () => {
-    expect(SHORTCUTS).toHaveLength(20);
+    expect(SHORTCUTS).toHaveLength(26);
     expect(SHORTCUTS.filter((shortcut) => shortcut.ready).map((shortcut) => shortcut.keys[0])).toEqual([
       "j",
+      "n",
       "Enter",
+      "Space",
       "v",
+      "c",
       "+",
       "s",
       "Esc",
@@ -103,13 +106,36 @@ describe("keyboard shortcuts", () => {
       "[",
       "]",
       "\\",
+      "e",
       "m",
       "Shift+A",
+      "Shift+O",
       "u",
       "r",
+      "Shift+E",
       "a",
       "?",
     ]);
+  });
+
+  // Space on a button or a tick box stays theirs: the browser tests check that (tests/reading.spec.ts).
+  it("scrolls the article with Space and Shift+Space", () => {
+    const read = createKeyReader();
+    expect(read(press(" "), 0)).toEqual({ kind: "page", step: 1 });
+    expect(read(press(" ", { shiftKey: true }), 0)).toEqual({ kind: "page", step: -1 });
+    expect(read(press(" ", { ctrlKey: true }), 0)).toBeUndefined();
+  });
+
+  it("moves to unread articles with n and Shift+N, marks older as read with Shift+O, copies the link with c, and folds or edits with e and Shift+E", () => {
+    const read = createKeyReader();
+    expect(read(press("n"), 0)).toEqual({ kind: "move-unread", step: 1 });
+    expect(read(press("N"), 0)).toEqual({ kind: "move-unread", step: -1 });
+    expect(read(press("O"), 0)).toEqual({ kind: "mark-older-read" });
+    expect(read(press("c"), 0)).toEqual({ kind: "copy-link" });
+    expect(read(press("e"), 0)).toEqual({ kind: "toggle-folder" });
+    expect(read(press("E"), 0)).toEqual({ kind: "edit-place" });
+    expect(keyFor("mark-older-read")).toBe("Shift+O");
+    expect(keyFor("copy-link")).toBe("c");
   });
 
   it("prints keys as a Mac does: capital letters, ⇧ for Shift, a true minus sign, and plain words for screen readers", () => {
@@ -118,6 +144,74 @@ describe("keyboard shortcuts", () => {
     expect(keyCap("Shift+j")).toEqual({ cap: "⇧J", spoken: "Shift J" });
     expect(keyCap("-")).toEqual({ cap: "−" });
     for (const key of ["Enter", "Esc", "[", "/", "?", "+"]) expect(keyCap(key)).toEqual({ cap: key });
+  });
+});
+
+/**
+ * The owner's check (decision 0103): the keys that work and the keys the
+ * cheat sheet lists can never drift apart. Every key a keyboard can type is
+ * pressed, alone and after `g`; any that does something must be listed,
+ * and every listed key must do what its row says.
+ */
+describe("the cheat sheet and the keys agree", () => {
+  const OTHER_KEYS = ["Enter", "Escape", "Tab", "Backspace", "Delete", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End", "PageUp", "PageDown"];
+  const presses: KeyPress[] = [
+    ...Array.from({ length: 126 - 32 }, (_, index) => press(String.fromCharCode(33 + index))),
+    press(" "),
+    press(" ", { shiftKey: true }),
+    ...OTHER_KEYS.map((key) => press(key)),
+  ].filter((each) => each.key.length > 0 && each.key !== "\u007f");
+  const spelled = (each: KeyPress) => (each.key === " " ? (each.shiftKey ? "Shift+ " : " ") : each.key);
+
+  /** Every key the reader answers, as presses, alone or as the second after a first press that waits. */
+  function answered(): { keys: string; does: unknown }[] {
+    const found: { keys: string; does: unknown }[] = [];
+    for (const first of presses) {
+      const read = createKeyReader();
+      const does = read(first, 0);
+      if (does) {
+        found.push({ keys: spelled(first), does });
+        continue;
+      }
+      // A press that does nothing alone may start two (g then u): try every second press after it,
+      // and keep those that do something other than the second press does alone.
+      for (const second of presses) {
+        const after = createKeyReader();
+        after(first, 0);
+        const then = after(second, 10);
+        const alone = createKeyReader()(second, 0);
+        if (then && JSON.stringify(then) !== JSON.stringify(alone)) found.push({ keys: `${spelled(first)} then ${spelled(second)}`, does: then });
+      }
+    }
+    return found;
+  }
+
+  const listed = shortcutsFor(false).flatMap((each) =>
+    each.bindings.map(([key, does]) => ({ keys: key.split(" then ").map(pressName).join(" then "), does })),
+  );
+  const unlisted = SHORTCUTS.flatMap((each) => each.unlisted.map(([key]) => pressName(key)));
+
+  it("lists every key that does something (only = stands in for +, unprinted)", () => {
+    expect(unlisted).toEqual(["="]);
+    const missing = answered().filter((each) => !listed.some((entry) => entry.keys === each.keys) && !unlisted.includes(each.keys));
+    expect(missing).toEqual([]);
+  });
+
+  it("gives every listed key the action its row says", () => {
+    const found = answered();
+    for (const entry of listed) expect(found.find((each) => each.keys === entry.keys)?.does, entry.keys).toEqual(entry.does);
+  });
+
+  it("keeps the keys of a shortcut that isn't built yet doing nothing", () => {
+    const later = SHORTCUTS.filter((each) => !each.ready);
+    expect(later.map((each) => each.action)).toEqual(["Next / previous feed"]);
+    const read = createKeyReader();
+    for (const key of later.flatMap((each) => each.keys)) expect(read(press(pressName(key)), 0)).toBeUndefined();
+  });
+
+  it("prints Space and Shift+Space as keys, so screen readers hear them in words", () => {
+    expect(keyCap("Space")).toEqual({ cap: "Space" });
+    expect(keyCap("Shift+Space")).toEqual({ cap: "⇧Space", spoken: "Shift Space" });
   });
 });
 
@@ -147,14 +241,15 @@ describe("finding a shortcut (decision 0062)", () => {
 });
 
 describe("the cheat sheet in river mode", () => {
-  it("leaves out Go to Unread and Mark all as read, and keeps the rest", () => {
+  it("leaves out Go to Unread, Mark all as read, Mark older as read and the unread moves, and keeps the rest", () => {
     const inbox = shortcutsFor(false).map((each) => each.action);
     const river = shortcutsFor(true).map((each) => each.action);
-    expect(inbox).toContain("Go to Unread");
-    expect(inbox).toContain("Mark all as read");
-    expect(river).not.toContain("Go to Unread");
-    expect(river).not.toContain("Mark all as read");
+    const unreadOnly = ["Go to Unread", "Mark all as read", "Mark older as read", "Next / previous unread article"];
+    for (const action of unreadOnly) {
+      expect(inbox).toContain(action);
+      expect(river).not.toContain(action);
+    }
     expect(river).toContain("Mark unread");
-    expect(river.length).toBe(inbox.length - 2);
+    expect(river.length).toBe(inbox.length - unreadOnly.length);
   });
 });

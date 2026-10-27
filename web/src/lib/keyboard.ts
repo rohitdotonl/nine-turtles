@@ -1,5 +1,11 @@
 // The keyboard shortcuts (SPEC.md section 19). This file
 // only decides what a key press means; the screens carry it out.
+//
+// One table, SHORTCUTS, says every shortcut once: what the cheat sheet calls
+// it, which group it sits in, and each of its keys with the action that key
+// does (decision 0103). The key reader and the `?` cheat sheet are both made
+// from it, so a key can't work without being listed, or be listed without
+// working. A later change may let keys be chosen; the table is the defaults.
 import type { View } from "./router";
 
 export type Action =
@@ -12,13 +18,19 @@ export type Action =
   | { kind: "search" }
   | { kind: "go"; view: View }
   | { kind: "move"; step: 1 | -1 }
+  | { kind: "move-unread"; step: 1 | -1 }
   | { kind: "open" }
   | { kind: "open-original" }
+  | { kind: "page"; step: 1 | -1 }
+  | { kind: "copy-link" }
   | { kind: "star" }
   | { kind: "mark-unread" }
   | { kind: "mark-all-read" }
+  | { kind: "mark-older-read" }
   | { kind: "undo" }
   | { kind: "refresh" }
+  | { kind: "toggle-folder" }
+  | { kind: "edit-place" }
   | { kind: "text-size"; step: 1 | -1 };
 
 export type KeyPress = {
@@ -26,10 +38,133 @@ export type KeyPress = {
   ctrlKey: boolean;
   metaKey: boolean;
   altKey: boolean;
+  /** Only Space needs it: Shift+Space is a key of its own (Shift with a letter shows in `key`, "A"). */
+  shiftKey?: boolean;
   target: EventTarget | null;
 };
 
-const GO_KEYS: Record<string, View> = { u: "unread", s: "starred", a: "all" };
+/**
+ * The cheat sheet's groups, by what you're doing at the time (decision 0062):
+ * reading comes first, as it's what nine turtles is for.
+ */
+export const SHORTCUT_GROUPS = ["Reading", "Getting around", "Tidying up", "Anywhere"] as const;
+export type ShortcutGroup = (typeof SHORTCUT_GROUPS)[number];
+
+/** A key, as the cheat sheet prints it ("j", "Shift+A", "Space", "g then u"), and what it does. */
+type Binding = readonly [key: string, does: Action];
+
+export type Shortcut = {
+  /** What it does, in the cheat sheet's words. */
+  action: string;
+  group: ShortcutGroup;
+  /** Its keys, as the cheat sheet prints them, in order. */
+  keys: string[];
+  /** What each key does. */
+  bindings: readonly Binding[];
+  /** Keys that do the same and aren't printed: `=` is the + key without Shift. */
+  unlisted: readonly Binding[];
+  /** Whether it works today. One that doesn't yet isn't listed, and its keys do nothing. */
+  ready: boolean;
+};
+
+function shortcut(group: ShortcutGroup, action: string, bindings: Binding[], unlisted: Binding[] = []): Shortcut {
+  return { action, group, keys: bindings.map(([key]) => key), bindings, unlisted, ready: true };
+}
+
+/** A shortcut DESIGN.md names whose feature doesn't exist yet: kept for when it does, never listed. */
+function planned(group: ShortcutGroup, action: string, keys: string[]): Shortcut {
+  return { action, group, keys, bindings: [], unlisted: [], ready: false };
+}
+
+/** Every shortcut, in the cheat sheet's order. */
+export const SHORTCUTS: Shortcut[] = [
+  shortcut("Reading", "Next / previous article", [
+    ["j", { kind: "move", step: 1 }],
+    ["k", { kind: "move", step: -1 }],
+  ]),
+  shortcut("Reading", "Next / previous unread article", [
+    ["n", { kind: "move-unread", step: 1 }],
+    ["Shift+N", { kind: "move-unread", step: -1 }],
+  ]),
+  shortcut("Reading", "Open article", [
+    ["Enter", { kind: "open" }],
+    ["o", { kind: "open" }],
+  ]),
+  shortcut("Reading", "Scroll down / up a screen", [
+    ["Space", { kind: "page", step: 1 }],
+    ["Shift+Space", { kind: "page", step: -1 }],
+  ]),
+  shortcut("Reading", "Open original", [["v", { kind: "open-original" }]]),
+  shortcut("Reading", "Copy the article's link", [["c", { kind: "copy-link" }]]),
+  shortcut(
+    "Reading",
+    "Text size",
+    [
+      ["+", { kind: "text-size", step: 1 }],
+      ["-", { kind: "text-size", step: -1 }],
+    ],
+    [["=", { kind: "text-size", step: 1 }]],
+  ),
+  shortcut("Reading", "Star / unstar", [["s", { kind: "star" }]]),
+  shortcut("Reading", "Back / close", [["Esc", { kind: "escape" }]]),
+  shortcut("Getting around", "Go to Unread", [["g then u", { kind: "go", view: "unread" }]]),
+  shortcut("Getting around", "Go to Starred", [["g then s", { kind: "go", view: "starred" }]]),
+  shortcut("Getting around", "Go to All", [["g then a", { kind: "go", view: "all" }]]),
+  planned("Getting around", "Next / previous feed", ["Shift+J", "Shift+K"]),
+  shortcut("Getting around", "Search", [["/", { kind: "search" }]]),
+  shortcut("Getting around", "Show / hide sidebar", [["[", { kind: "toggle-sidebar" }]]),
+  shortcut("Getting around", "Show / hide article list", [["]", { kind: "toggle-list" }]]),
+  shortcut("Getting around", "Full-screen reading (hide sidebar and list)", [["\\", { kind: "toggle-both" }]]),
+  shortcut("Getting around", "Fold / unfold this folder", [["e", { kind: "toggle-folder" }]]),
+  shortcut("Tidying up", "Mark unread", [["m", { kind: "mark-unread" }]]),
+  shortcut("Tidying up", "Mark all as read", [["Shift+A", { kind: "mark-all-read" }]]),
+  shortcut("Tidying up", "Mark older as read", [["Shift+O", { kind: "mark-older-read" }]]),
+  shortcut("Tidying up", "Undo", [["u", { kind: "undo" }]]),
+  shortcut("Tidying up", "Show new items", [["r", { kind: "refresh" }]]),
+  shortcut("Tidying up", "Edit this feed or folder", [["Shift+E", { kind: "edit-place" }]]),
+  shortcut("Anywhere", "Add feed", [["a", { kind: "add-feed" }]]),
+  shortcut("Anywhere", "This list of shortcuts", [["?", { kind: "cheat-sheet" }]]),
+];
+
+/** The key a menu or tooltip shows for an action, from the table: `keyFor("star")` is "s". */
+export function keyFor(kind: Action["kind"]): string {
+  for (const each of SHORTCUTS) for (const [key, does] of each.bindings) if (does.kind === kind) return key;
+  throw new Error(`No key does ${kind}`);
+}
+
+/**
+ * The name a printed key has in a key press: "Shift+A" is "A" (the browser
+ * says the capital), "Esc" is "Escape", "Space" is " ", and Shift+Space,
+ * whose key is " " too, is told apart by Shift.
+ */
+export function pressName(key: string): string {
+  if (key === "Esc") return "Escape";
+  if (key === "Space") return " ";
+  if (key === "Shift+Space") return "Shift+ ";
+  const shifted = /^Shift\+([a-z])$/i.exec(key);
+  if (shifted) return shifted[1]!.toUpperCase();
+  return key;
+}
+
+function nameOf(press: KeyPress): string {
+  return press.key === " " && press.shiftKey ? "Shift+ " : press.key;
+}
+
+/** Every key the reader answers, by its name in a key press; two-press keys under their first press. */
+const SINGLE = new Map<string, Action>();
+const SEQUENCES = new Map<string, Map<string, Action>>();
+for (const each of SHORTCUTS) {
+  if (!each.ready) continue;
+  for (const [key, does] of [...each.bindings, ...each.unlisted]) {
+    const presses = key.split(" then ");
+    if (presses.length === 2) {
+      const [first, second] = presses.map(pressName) as [string, string];
+      const after = SEQUENCES.get(first) ?? new Map<string, Action>();
+      after.set(second, does);
+      SEQUENCES.set(first, after);
+    } else SINGLE.set(pressName(key), does);
+  }
+}
 
 /** How long after `g` the second key still counts, in milliseconds. */
 export const SEQUENCE_MS = 1500;
@@ -39,75 +174,56 @@ export const SEQUENCE_MS = 1500;
  * don't depend on the clock.
  */
 export function createKeyReader() {
-  let pendingGoSince: number | undefined;
+  let pending: { first: string; since: number } | undefined;
 
   return function read(press: KeyPress, now: number): Action | undefined {
     // Escape always works, even in a field: it's how you leave one.
     if (press.key === "Escape") {
-      pendingGoSince = undefined;
-      return { kind: "escape" };
+      pending = undefined;
+      return SINGLE.get("Escape");
     }
     // Shortcuts never fire while typing, or alongside the browser's own keys.
     if (isTyping(press.target) || press.ctrlKey || press.metaKey || press.altKey) return undefined;
 
-    if (pendingGoSince !== undefined && now - pendingGoSince <= SEQUENCE_MS) {
-      pendingGoSince = undefined;
-      const view = GO_KEYS[press.key];
-      return view ? { kind: "go", view } : undefined;
+    if (pending !== undefined && now - pending.since <= SEQUENCE_MS) {
+      const after = SEQUENCES.get(pending.first);
+      pending = undefined;
+      return after?.get(press.key);
     }
-    pendingGoSince = undefined;
+    pending = undefined;
 
-    switch (press.key) {
-      case "j":
-        return { kind: "move", step: 1 };
-      case "k":
-        return { kind: "move", step: -1 };
-      case "Enter":
-        // On a button or a link, Enter does what that button or link does.
-        return isControl(press.target) ? undefined : { kind: "open" };
-      case "o":
-        return { kind: "open" };
-      case "v":
-        return { kind: "open-original" };
-      case "s":
-        return { kind: "star" };
-      case "m":
-        return { kind: "mark-unread" };
-      case "A": // Shift+A
-        return { kind: "mark-all-read" };
-      case "u":
-        return { kind: "undo" };
-      case "r":
-        return { kind: "refresh" };
-      case "+":
-      case "=": // the same key as +, without Shift
-        return { kind: "text-size", step: 1 };
-      case "-":
-        return { kind: "text-size", step: -1 };
-      case "g":
-        pendingGoSince = now;
-        return undefined;
-      case "?":
-        return { kind: "cheat-sheet" };
-      case "[":
-        return { kind: "toggle-sidebar" };
-      case "]":
-        return { kind: "toggle-list" };
-      case "\\":
-        return { kind: "toggle-both" };
-      case "a":
-        return { kind: "add-feed" };
-      case "/":
-        return { kind: "search" };
-      default:
-        return undefined;
+    const name = nameOf(press);
+    if (SEQUENCES.has(name)) {
+      pending = { first: name, since: now };
+      return undefined;
     }
+    // On a button or a link, Enter does what that button or link does.
+    if (name === "Enter" && isControl(press.target)) return undefined;
+    // Space stays with a control that takes it: a button, a tick box, a field.
+    if ((name === " " || name === "Shift+ ") && takesSpace(press.target)) return undefined;
+    return SINGLE.get(name);
   };
 }
 
 function isControl(target: EventTarget | null): boolean {
   if (typeof HTMLElement === "undefined" || !(target instanceof HTMLElement)) return false;
   return target.closest("a[href], button, input, select, textarea, summary, [contenteditable]") !== null;
+}
+
+/**
+ * Whether Space belongs to what has the keyboard's place: a button, a tick
+ * box, a menu item and the like press with Space. A link doesn't, and nor
+ * does an article's row in the list (`data-space-reads`): pressing it again
+ * would only show the same article, so there Space scrolls the article too.
+ */
+function takesSpace(target: EventTarget | null): boolean {
+  if (typeof HTMLElement === "undefined" || !(target instanceof HTMLElement)) return false;
+  if (target.closest("[data-space-reads]")) return false;
+  return (
+    target.closest(
+      "button, input, select, textarea, summary, [contenteditable], iframe, [role='button'], [role='checkbox'], [role='radio'], [role='switch'], [role^='menuitem'], [role='tab'], [role='option'], [role='slider']",
+    ) !== null
+  );
 }
 
 function isTyping(target: EventTarget | null): boolean {
@@ -121,41 +237,19 @@ function isTyping(target: EventTarget | null): boolean {
 }
 
 /**
- * The cheat sheet's groups, by what you're doing at the time (decision 0062):
- * reading comes first, as it's what nine turtles is for.
+ * What river mode has no use for (SPEC section 10): there's no Unread view,
+ * and no read state to mark or move by.
  */
-export const SHORTCUT_GROUPS = ["Reading", "Getting around", "Tidying up", "Anywhere"] as const;
+const NOT_IN_RIVER: Action["kind"][] = ["mark-all-read", "mark-older-read", "move-unread"];
 
-/** Every shortcut in DESIGN.md, for the `?` cheat sheet. `ready` marks what works today; the sheet lists only those. */
-export const SHORTCUTS: { keys: string[]; action: string; ready: boolean; group: (typeof SHORTCUT_GROUPS)[number] }[] = [
-  { keys: ["j", "k"], action: "Next / previous article", ready: true, group: "Reading" },
-  { keys: ["Enter", "o"], action: "Open article", ready: true, group: "Reading" },
-  { keys: ["v"], action: "Open original", ready: true, group: "Reading" },
-  { keys: ["+", "-"], action: "Text size", ready: true, group: "Reading" },
-  { keys: ["s"], action: "Star / unstar", ready: true, group: "Reading" },
-  { keys: ["Esc"], action: "Back / close", ready: true, group: "Reading" },
-  { keys: ["g then u"], action: "Go to Unread", ready: true, group: "Getting around" },
-  { keys: ["g then s"], action: "Go to Starred", ready: true, group: "Getting around" },
-  { keys: ["g then a"], action: "Go to All", ready: true, group: "Getting around" },
-  { keys: ["Shift+J", "Shift+K"], action: "Next / previous feed", ready: false, group: "Getting around" },
-  { keys: ["/"], action: "Search", ready: true, group: "Getting around" },
-  { keys: ["["], action: "Show / hide sidebar", ready: true, group: "Getting around" },
-  { keys: ["]"], action: "Show / hide article list", ready: true, group: "Getting around" },
-  { keys: ["\\"], action: "Show / hide both", ready: true, group: "Getting around" },
-  { keys: ["m"], action: "Mark unread", ready: true, group: "Tidying up" },
-  { keys: ["Shift+A"], action: "Mark all as read", ready: true, group: "Tidying up" },
-  { keys: ["u"], action: "Undo", ready: true, group: "Tidying up" },
-  { keys: ["r"], action: "Show new items", ready: true, group: "Tidying up" },
-  { keys: ["a"], action: "Add feed", ready: true, group: "Anywhere" },
-  { keys: ["?"], action: "This list of shortcuts", ready: true, group: "Anywhere" },
-];
-
-/** What river mode has no use for (SPEC section 10): there's no Unread view, and nothing to mark all as read. */
-const NOT_IN_RIVER = ["g then u", "Shift+A"];
+/** Whether a shortcut does nothing in river mode. */
+function notInRiver(each: Shortcut): boolean {
+  return each.bindings.some(([, does]) => NOT_IN_RIVER.includes(does.kind) || (does.kind === "go" && does.view === "unread"));
+}
 
 /** The shortcuts the cheat sheet lists: those that work today, in this reading mode. */
-export function shortcutsFor(river: boolean): typeof SHORTCUTS {
-  return SHORTCUTS.filter((each) => each.ready && !(river && each.keys.some((key) => NOT_IN_RIVER.includes(key))));
+export function shortcutsFor(river: boolean): Shortcut[] {
+  return SHORTCUTS.filter((each) => each.ready && !(river && notInRiver(each)));
 }
 
 /**
@@ -182,9 +276,9 @@ export function shortcutMatches(shortcut: { keys: string[]; action: string }, ty
  */
 export function keyCap(press: string): { cap: string; spoken?: string } {
   if (press === "-") return { cap: "−" };
-  const shifted = /^Shift\+(.)$/.exec(press);
+  const shifted = /^Shift\+(Space|.)$/.exec(press);
   if (shifted) {
-    const key = shifted[1]!.toUpperCase();
+    const key = shifted[1] === "Space" ? "Space" : shifted[1]!.toUpperCase();
     return { cap: `⇧${key}`, spoken: `Shift ${key}` };
   }
   if (/^[a-z]$/.test(press)) return { cap: press.toUpperCase() };
