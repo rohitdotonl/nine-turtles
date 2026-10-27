@@ -20,11 +20,13 @@ async function signedIn(page: Page, height = 800) {
   await signIn(page);
 }
 
-/** Follows a new blog of this test's own, that has published `count` articles, and opens its list. */
-async function openBlog(page: Page, count = 3): Promise<string> {
-  const name = `keys-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
-  // A blog begins with three; each visit to /grow/NAME publishes one more.
-  for (let more = 3; more < count; more++) await page.request.get(`${FEED_SITE}/grow/${name}`);
+/**
+ * Follows a new blog of this test's own and opens its list: three articles,
+ * or, `many`, 55 (all dated in the past, so they never crowd the top of All
+ * for the other tests).
+ */
+async function openBlog(page: Page, many = false): Promise<string> {
+  const name = `${many ? "many" : "keys"}-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
   await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
   await appReady(page);
@@ -115,7 +117,7 @@ test.describe("on a wide window", () => {
   test("Shift+O marks everything older as read, the rows not loaded yet too, and u undoes it; More offers above and below", async ({ page }) => {
     await signedIn(page);
     // 55 articles: the list loads 50, so the five oldest aren't listed yet.
-    const blog = await openBlog(page, 55);
+    const blog = await openBlog(page, true);
     const count = sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) });
     await expect(count).toHaveAccessibleName(`Blog ${blog} 55 unread`);
     const rows = page.locator("#list-pane li button[data-space-reads]");

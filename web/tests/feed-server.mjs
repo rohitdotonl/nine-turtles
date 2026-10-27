@@ -21,7 +21,10 @@
 //   /blog/NAME/        a home page for a blog called NAME, naming its feed
 //                      (and its comments feed too, if NAME starts with
 //                      "two-"); tests that add a feed use their own NAME,
-//                      so they never meet each other's feeds
+//                      so they never meet each other's feeds. A NAME that
+//                      starts with "many-" has 55 articles from the start,
+//                      all dated in the past, so its list has more than
+//                      one page without crowding the top of All
 //   /grow/NAME         the blog called NAME publishes one more article, so a
 //                      test can watch it arrive in the background
 //   /move/NAME         the blog called NAME moves its feed: feed.xml answers
@@ -357,6 +360,7 @@ createServer((request, response) => {
         response.writeHead(404, { "content-type": "text/plain" });
         return response.end("Not found");
       }
+      if (name.startsWith("many-")) return xml(rss(`Blog ${name}`, home, 55));
       return xml(rss(`Blog ${name}`, home, 3 + (grown.get(name) ?? 0), 3));
     }
     if (blog[2] === "comments.xml") return xml(rss(`Blog ${name}: comments`, `https://${name}.example/comments/`, 1));
