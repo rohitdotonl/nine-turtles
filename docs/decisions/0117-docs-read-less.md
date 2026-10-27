@@ -20,7 +20,8 @@ true and still needed, and every link in them leads somewhere.
   build makes (`web/dist`, `server/target`) and the marketing research and
   changelog are left out. It's quick, needs no library, and runs on every
   pull request, documents-only ones too, because those are the ones that
-  move documents.
+  move documents. It covers `docs/archive/` and `docs/changes/` too, so when
+  a document moves, fixing its links there is the one edit those files get.
 
 **Why.** The documents had grown to more than a megabyte; `PLAN.md` alone
 was 485 lines, mostly finished work, and every agent read it first. Less to

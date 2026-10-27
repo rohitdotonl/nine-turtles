@@ -3,7 +3,8 @@
 // owner) at a dead end. Checks Markdown links like [text](path) and file
 // paths in backticks like `docs/SPEC.md`. Web addresses aren't checked.
 // The marketing research (docs/RnD) and the changelog, a record of the past,
-// are left out.
+// are left out. Not checked: reference-style links ([ref]: path), backtick
+// paths relative to the document, and anchors inside a file.
 
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
@@ -27,23 +28,32 @@ const tops = ["docs/", "server/", "web/", "scripts/", "website/", "cloudflare/",
 const built = ["web/dist", "web/screenshots", "server/target", "website/_site"];
 
 for (const file of documents) {
-  const text = readFileSync(join(root, file), "utf8").replace(/```[\s\S]*?```/g, (block) =>
-    block.replace(/[^\n]/g, " "),
+  // Code blocks (fences at the start of a line) are blanked, keeping lines.
+  const text = readFileSync(join(root, file), "utf8").replace(
+    /^(```|~~~)[^\n]*\n[\s\S]*?^\1[^\n]*$/gm,
+    (block) => block.replace(/[^\n]/g, " "),
   );
   const report = (index, target) => {
     const line = text.slice(0, index).split("\n").length;
     problems.push(`${file} line ${line}: ${target} doesn't exist`);
   };
 
-  for (const match of text.matchAll(/\]\(([^)\s]+)\)/g)) {
+  for (const match of text.matchAll(/\]\(<?([^)\s>]+)>?\)/g)) {
     const target = match[1].split("#")[0];
     if (!target || /^[a-z]+:/i.test(target)) continue;
     const from = target.startsWith("/") ? root : dirname(join(root, file));
-    if (!existsSync(join(from, decodeURI(target)))) report(match.index, match[1]);
+    let path;
+    try {
+      path = decodeURI(target);
+    } catch {
+      report(match.index, `${match[1]} (a broken % code)`);
+      continue;
+    }
+    if (!existsSync(join(from, path))) report(match.index, match[1]);
   }
 
   for (const match of text.matchAll(/`([^`\s]+)`/g)) {
-    const target = match[1].split("#")[0].replace(/[.,:;]$/, "");
+    const target = match[1].split("#")[0].replace(/(:\d+)+$/, "").replace(/[.,:;]$/, "");
     if (!tops.some((top) => target.startsWith(top))) continue;
     if (/[*<>{}$…]|\.\.\./.test(target)) continue; // a pattern or placeholder, not a file
     if (built.some((b) => target.startsWith(b))) continue;
