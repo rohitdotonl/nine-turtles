@@ -76,17 +76,15 @@ describe("a tab left open when another reader signs in on the browser", () => {
     expect(sent.get("content-type")).toBe("application/json");
   });
 
-  it("reloads as the new reader when the server says the tab's reader isn't signed in here any more", async () => {
+  it("stops, says so and offers Reload when the server says the tab's reader isn't signed in here any more", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => new Response('{"error":"other-reader"}', { status: 409, headers: { "x-nine-turtles-other-reader": "1" } })),
     );
-    const reload = vi.fn();
-    vi.stubGlobal("location", { reload });
-    const { api, noteTabReader } = await load();
+    const { OtherReader, api, noteTabReader, updates } = await load();
     noteTabReader(7);
-    await api("/api/articles/starred", { method: "POST" });
-    await api("/api/feeds");
-    expect(reload).toHaveBeenCalledTimes(1);
+    // Never handed back as an answer: 409 means other things to some callers.
+    await expect(api("/api/articles/starred", { method: "POST" })).rejects.toBeInstanceOf(OtherReader);
+    expect(updates.otherReader).toBe(true);
   });
 });
