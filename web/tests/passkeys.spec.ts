@@ -179,8 +179,13 @@ test("a passkey added in Settings signs in from the sign-in page, and the passwo
 
   // Removed for real: the device's passkey no longer signs in, the password does.
   await group.getByRole("button", { name: "Remove This laptop" }).click();
+  await expect(group.getByRole("status")).toContainText(
+    "Your password still works.",
+  );
   await page.getByRole("button", { name: "Sign out" }).click();
-  await expect(page.getByLabel("Password")).toBeVisible();
+  // The sign-in page's own field: Settings › Readers has a "Your password"
+  // box too, so a loose match would go on before signing out had finished.
+  await expect(page.getByLabel("Password", { exact: true })).toBeVisible();
   await page.goto(`${local()}/`);
   await appReady(page);
   await page.getByRole("button", { name: "Sign in with a passkey" }).click();
