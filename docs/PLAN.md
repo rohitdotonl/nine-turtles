@@ -19,8 +19,8 @@ keeping old tabs working across updates moved to V2
 (`docs/decisions/0012-v1-for-one-reader.md`). Milestone numbers stay the
 same so older documents still point to the right place.
 
-**V1 is finished, and V2 has started** (25 October 2026). The table at the
-end, "V2 so far", shows which V2 parts are live.
+**V1 is finished, and V2 has started** (25 October 2026). The table
+"V2 so far", after the V1 milestones, shows which V2 parts are live.
 
 | # | Milestone | Status |
 |---|---|---|
@@ -368,7 +368,7 @@ each with screenshots:
   (`docs/planning/questions.md`). No pricing page until prices are decided.
 - ✅ Pricing and refunds-and-cancelling pages (25 October 2026), as drafts
   until prices are set, naming Dodo Payments as the payment company
-  (decision 0086). Dodo checks for them, with terms, privacy and contact,
+  (decision 0083). Dodo checks for them, with terms, privacy and contact,
   before it approves payments (`docs/operations/dodo-application.md`).
 - ✅ The feed finder (26 October 2026, decision 0099): the first free tool
   from the marketing plan, at nineturtles.app/feed-finder/, with a bookmark
@@ -411,6 +411,7 @@ each with screenshots:
 | How often a feed posts, in words (Edit feed and Feed health) | ✅ 27 October 2026 | SPEC sections 15 and 17, decision 0105 |
 | Fixing a dead feed where you are: a quiet line above a failing feed's list and in Edit feed, with Find new address, and one plain question when the site names one feed | ✅ 27 October 2026 | SPEC sections 6, 15 and 17, decision 0106 |
 | Collections: the reader's own named shelves for articles (Add to collection… and `l`, in the sidebar, `in:` in search, kept forever like a star, exported) | ✅ 27 October 2026 | SPEC section 34, decision 0108 (structure change 23) |
+| Connecting your own AI assistant over MCP (details under "V2: Assistants (MCP)" below) | ✅ 27 October 2026 | SPEC section 33, decision 0111 |
 | Podcasts: episodes play in a calm player from the publisher's own file, your place kept on all your devices, a Now playing bar, Up Next, the lock screen | ✅ 27 October 2026 | SPEC section 35, decision 0113 (structure change 24) |
 
 ## V2: Many readers in one app
@@ -423,7 +424,6 @@ feed is still fetched and stored once; everything personal gets an owner.
 |---|---|
 | Part one: an owner on settings, folders, saved searches, rules, signed-in devices and app passwords (structure change 11) | ✅ 25 October 2026 |
 | Part two: each reader's own feeds, marks, stars, search and sync (structure change 12) | ✅ 25 October 2026 |
-| Part three: labels with switches, one-click unsubscribe, each email "opened" on arrival (structure change 17) | ✅ 26 October 2026 |
 | Part three: signing in by email, and the sign-up switch with invite links (structure change 13, decision 0087) | ✅ 25 October 2026 |
 | Part four: account emails over SMTP (confirming Open sign-ups, a new password, changing email) and deleting an account (structure change 14, decision 0088) | ✅ 25 October 2026 |
 | "Email me a sign-in link": a link that signs in, once, within 15 minutes, for every reader; passwords keep working (structure change 20, decision 0096) | ✅ 26 October 2026 |
@@ -448,18 +448,7 @@ section 28.
 |---|---|
 | Part one: reading and cleaning emails, the receiving address (off by default, keeps nothing yet), the Cloudflare forwarder and its setup steps | ✅ 25 October 2026 (setup: `docs/operations/newsletters.md`) |
 | Part two: each reader's own address, emails kept as articles under a feed per sender, the reader's alone, limits per reader and for everyone (emails and size a day, the 1,000 feeds), structure change 16 | ✅ 26 October 2026 |
-
-## V2: YouTube videos
-
-- ✅ A YouTube video plays in YouTube's own privacy-enhanced player, above
-  its description, only once you press Play; a YouTube player inside a blog
-  post becomes a link to the video (decision 0072).
-
-## V2: Syncing with other apps
-
-- ✅ Reeder, NetNewsWire and other feed readers sync with nine turtles
-  through the Google Reader API, with an app password made in Settings
-  (SPEC section 26, decision 0070).
+| Part three: labels with switches, one-click unsubscribe, each email "opened" on arrival (structure change 17) | ✅ 26 October 2026 |
 
 ## V2: Assistants (MCP)
 
@@ -471,10 +460,9 @@ October 2026 (SPEC section 33).
 
 | Part | Status |
 |---|---|
-| Sign-in: the "Allow this assistant?" screen (OAuth), a fallback assistant key in Settings, and a list of connected assistants with Disconnect | ✅ Done |
-| The 15 tools: search, unread, starred, open an article, feeds and folders, feed health, rules and mutes, mark read or unread, star, add a feed, rename or move a feed, folders, rules and mutes, unsubscribe (with a 30-day undo), export the feed list (plus "bring back a feed") | ✅ Done |
-| Limits per reader, tests with at least two different assistants, SPEC section, and the 15-day upkeep check (`docs/operations/mcp-check.md`) | ✅ Done (official TypeScript and Python MCP clients) |
-
+| Sign-in: the "Allow this assistant?" screen (OAuth), a fallback assistant key in Settings, and a list of connected assistants with Disconnect | ✅ 27 October 2026 |
+| The 15 tools: search, unread, starred, open an article, feeds and folders, feed health, rules and mutes, mark read or unread, star, add a feed, rename or move a feed, folders, rules and mutes, unsubscribe (with a 30-day undo), export the feed list (plus "bring back a feed") | ✅ 27 October 2026 |
+| Limits per reader, tests with at least two different assistants, SPEC section, and the 15-day upkeep check (`docs/operations/mcp-check.md`) | ✅ 27 October 2026 (tested with the official TypeScript and Python MCP clients) |
 
 ## Later: ideas the owner wants, not yet scheduled
 
@@ -486,6 +474,7 @@ here is planned yet; when one starts, it moves into the table above. (Other
 - **A browser extension** for adding feeds while browsing (27 October 2026,
   from the reader comparison). Until then, the bookmark in Settings › Add
   from anywhere does the same job on computers.
+
 ---
 
 Responsive layout, accessibility and speed aren't left to the end: each

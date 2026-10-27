@@ -13,7 +13,7 @@
   (`settings.payments_on_at`), with no card asked for. Then one plan,
   monthly (and yearly if a yearly product is set), at prices that are
   settings (`NINE_TURTLES_PRICE_*`), shown as "Price to be decided" until set.
-- **Dodo does the money** (decision 0086): nine turtles asks Dodo's API for a
+- **Dodo does the money** (decision 0083): nine turtles asks Dodo's API for a
   checkout session (`POST /checkouts`, the reader's email, `metadata.person_id`,
   `return_url` Settings, and the trial's remaining whole days as
   `subscription_data.trial_period_days`), and for a customer-portal session
@@ -57,7 +57,7 @@
   yours" and the plan's promise that cancelling keeps everything readable.
 - Everything about the card stays with Dodo, the merchant of record; nine
   turtles only keeps who has which subscription, so moving away stays
-  possible (decision 0086's risks).
+  possible (decision 0083's risks).
 - Test mode first, because Dodo approves live payments only once the site,
   prices and legal pages are final.
 

@@ -4,6 +4,324 @@ A plain-language history of nine turtles (called slowfeed until 24 October 2026)
 merged pull request, written for the owner: what changed and what it means,
 not how it was done.
 
+## 27 October 2026: Recently read, a tidier sidebar, and how often a feed posts
+
+- **Recently read** in the sidebar, after All: the last 50 articles you opened, the last one first. Just the list: no numbers, no streaks. It needs a connection (decision 0105).
+- **Settings › Show in the sidebar:** untick Starred, All, Recently read or Saved searches to keep them out of the sidebar, on all your devices. They still open from their address and their keys.
+- **How often a feed posts,** in plain words ("Posts about 3 times a week", "Hasn't posted in 4 months", "Hasn't posted in over a year"), under its name in Edit feed and on the feed health page.
+- The database gains one small column for Recently read; nine turtles backs itself up before the change, as always.
+
+## 27 October 2026: Podcasts
+
+- **Podcasts play in nine turtles.** Follow a podcast like any feed. Its episodes show a small headphones icon and their length in the list, and open with a calm player under the title: back 15 seconds, Play, forward 30, the speed (1× to 2×) and a slider with the time played and left (decision 0113).
+- The audio always comes straight from the publisher's own file; nine turtles never downloads or keeps it.
+- **It keeps playing while you read.** A slim Now playing bar sits at the bottom of the app (above the toolbar on a phone), with Play / Pause, back 15 and Close.
+- **Your place is kept** on all your devices: pause on your computer and carry on from your phone. An episode played to its last 30 seconds is marked read.
+- **Up Next:** add an episode from its More menu. Up Next shows in the sidebar while it has something; when an episode ends, the next one starts by itself. Move up, Move down and Remove sit in each episode's player, and Remove has an Undo. Nothing on screen moves by itself: an open Up Next list and its sidebar row stay still until you act or go elsewhere. Settings › Show in the sidebar can hide it.
+- Your phone's lock screen and headphones can play, pause and skip.
+- Signing out stops the episode and forgets this device's places, so the next person on it starts fresh.
+- A podcast you already follow shows its episodes as episodes once its feed next changes.
+- Offline, an episode's notes are there, and its player says it plays once you're back online.
+- The database gains two small tables and a few columns; nine turtles backs itself up before the change, as always.
+
+## 27 October 2026: Fixing a dead feed where you are
+
+- A feed that keeps failing now says so quietly above its own articles: "This feed hasn't worked since 12 October.", with **Find its new address** right there. Edit feed shows the same line, with **Find new address**. Working feeds show nothing new.
+- When the site names just one feed, nine turtles asks one plain question, "Use https://… instead?", with **Use it** and **Cancel**, and says the feed keeps its name, folders, articles and stars. Several feeds still show the list to choose from. This works the same on the feed health page.
+- As before, nine turtles only looks on the site when you press the button (decision 0106).
+
+## 27 October 2026: Collections
+
+- **Collections:** your own named shelves for articles, such as "To cite" or "Recipes". Put an article on one from its More menu (**Add to collection…**) or with the **L** key; an article can be on several. Taking an article off a collection says so at the foot of the list, with Undo. Stars stay as they are (decision 0108).
+- They're listed in the sidebar under Saved searches, A to Z, with a small shelf icon and no numbers. Opening one lists its articles like any list. Its More menu can rename it or delete it; deleting removes the collection, not its articles, and Undo brings it back, with any saved searches limited to it.
+- An article on a collection is **kept forever**, like a starred one: the yearly clean-up never removes it, and unsubscribing from its feed keeps it.
+- **Search** can look in one collection: type `in:` and its name.
+- **Settings › Your data › Export collections** saves them all as a JSON Feed file, each article tagged with its collections. Settings › Show in the sidebar can hide them.
+- Without a connection the sidebar still lists them, and opening one says it needs a connection.
+- The database gains two small tables; nine turtles backs itself up before the change, as always.
+
+## 27 October 2026: Passkey sign-in
+
+- You can now sign in with your fingerprint, face or device PIN. Add a
+  passkey in Settings › Passkeys (it asks for your password first), then
+  press **Sign in with a passkey** on the sign-in page, or pick it from the
+  email field's suggestions. Every reader can; passwords keep working.
+- Each passkey can be renamed, and removed with Undo straight afterwards.
+  Removing one never locks you out.
+- A new password keeps your passkeys (your choice): after one, look in
+  Settings › Passkeys and remove any you don't recognise.
+- Passkeys work at app.nineturtles.app; slowfeed.onrender.com doesn't offer
+  them.
+- One new library, webauthn-rs, checks passkeys (your yes, decision 0109),
+  and a new table holds them (structure change 25, backed up first).
+
+## 27 October 2026: New keys, and marking older articles as read
+
+- Space moves the open article down a screen (Shift+Space back up). At the
+  end it stops; it never jumps to the next article.
+- `n` and `Shift+N` go to the next and previous unread article, passing over
+  ones you've read.
+- `Shift+O` marks everything older than the chosen article as read, even
+  the part of the list that hasn't loaded yet. The list's More menu also has
+  "Mark all above as read" and "Mark all below as read". All of them can be
+  undone with Undo or `u`.
+- `e` folds or unfolds the folder you're in, in the sidebar; `Shift+E` opens
+  Edit feed or Edit folder.
+- `c` copies the open article's link.
+- The `?` list now calls `\` "Full-screen reading (hide sidebar and list)".
+- Every key is now written down once, so the `?` list always matches what
+  the keys do; an automatic check makes sure of it.
+
+## 27 October 2026: Keys of your own, and a few more keys
+
+- You can now change the keys. Press `?`, then **Change keys…** at the
+  foot of the list (or Settings › Keyboard › Change keys…). Choose a key,
+  press the new one, and it's saved for your account, so it works on every
+  device you sign in on.
+- If another shortcut already has that key, nine turtles asks first
+  ("Shift+O already marks older as read. Use it here instead?"). Say yes and
+  the other one is left with no key. Each changed key has Reset, and
+  **Reset all keys** puts everything back.
+- Enter, Escape, `?` and the `g` keys stay as they are, so the list can
+  always be opened.
+- New keys: `Shift+J` / `Shift+K` go to the next / previous feed in the
+  sidebar, `Home` / `End` to the first / last article in the list, `g` then
+  `f` to Your feeds and `g` then `,` to Settings. (`g` then `r` will open
+  Recently read once that's built.)
+- Tooltips, menus and the welcome tip show your keys.
+
+## 27 October 2026: Pictures in an article open larger
+
+- A picture an article shows smaller than it really is can now be opened
+  larger: the pointer becomes a hand over it, and a click, a tap, Enter or
+  Space shows it alone on the dimmed page, as large as fits, with its
+  description under it, an X to close and "Open in new tab".
+- Escape, the X or a click on the dim closes it, and the keyboard is back on
+  the picture. Small pictures and pictures that are links stay as they were.
+- By night the opened picture shows at full brightness.
+
+## 27 October 2026: Articles tell trackers less, and pictures load as you reach them
+
+- Links lose their tracking tags (`utm_…`, `fbclid`, `gclid`, `mc_cid` and similar well-known ones): the article's own link, so Open original, Copy link and Share give the clean address, and the links in its text. Everything else in a link stays as the publisher wrote it.
+- Pictures from known advertising, analytics and tracking services (Google Analytics, DoubleClick, Facebook's pixel, WordPress's and Mailchimp's counters, FeedBurner and a few more) are no longer shown or loaded. The list is short and kept in nine turtles itself.
+- Pictures in an article load only as you scroll near them, so long articles with many pictures open faster.
+- Articles still in their feed are refreshed on their next fetch (the original tagged link isn't kept); older ones are cleaned when shown. There was no one-off pass over stored articles (decision 0112).
+
+## 27 October 2026: Add a feed from anywhere
+
+- Share a page to nine turtles and Add a feed opens with its address, its
+  feed already found. Nothing is followed until you press Add feed.
+- On Android, an installed nine turtles now shows in the share menu. On
+  iPhone and iPad, a short Apple Shortcuts shortcut does the same (steps in
+  SPEC section 20).
+- On a computer, a bookmark does it from any page. Settings › Add from
+  anywhere has the bookmark and the shortcut's address, each with Copy.
+
+## 27 October 2026: Connect your own AI assistant
+
+- You can now connect your own AI assistant (Claude, ChatGPT, or any other that speaks MCP) to nine turtles: add the address from Settings › Connected assistants as a connector, then press Connect on nine turtles' own page.
+- It can search and list your articles, open one, show your feeds, folders, rules and feeds that aren't working, mark and star, add, rename and file feeds, make folders and rules, unsubscribe, and download your feed list. It can't see your password, email or payments.
+- A feed an assistant unsubscribes from is kept for 30 days: bring it back from Settings.
+- Assistants that can't show the Connect page can use an assistant key made in Settings.
+- Every 15 days an agent checks that assistants can still connect and that nine turtles follows the latest MCP standard.
+
+## 27 October 2026: More room on "Wrong turn?"
+
+- The 404 pages in the app and on the website have more space between
+  their parts, and the signature now reads "— Rohit".
+
+## 27 October 2026: Assistants (MCP) added to the plan
+
+- New milestone in the plan: readers will be able to connect their own AI assistant to nine turtles through MCP, an open standard (decision 0111). Not built yet.
+
+## 27 October 2026: "Wrong turn?" for addresses that lead nowhere
+
+- In the app and on the website, an address that leads nowhere now shows
+  "Wrong turn?": a small "404 error", eight turtles walking one way and one
+  turned the other, and a line from Rohit asking which link brought you
+  there. In the app, "Back to your reading" takes you home. Before, the app
+  quietly opened Unread.
+- The website's footer is now just its links. The walking turtles and "Some
+  of us like to read slowly. That's the idea." moved to the end of the About
+  page.
+
+## 26 October 2026: The reader comparison, as one page
+
+- The reader comparison is now a single readable web page with one card per idea (what it is, why it might matter, what nine turtles does now, my take), replacing the tables. Research only (`docs/RnD/reader-comparison.html`).
+
+## 26 October 2026: Research: more readers compared
+
+- The reader comparison now also covers Miniflux, NetNewsWire and FreshRSS, next to Feedbin, with a shared "what to look at first" list. Research only; nothing was built (`docs/RnD/reader-comparison.html`).
+
+## 26 October 2026: Research: nine turtles beside Feedbin
+
+- Added research notes comparing nine turtles with Feedbin, another reader with public code: what it has that we lack, small touches worth knowing about, and what it does better. Nothing was built; it is a list to pick from (`docs/RnD/reader-comparison.html`).
+
+## 26 October 2026: Business research saved in the repository
+
+- The business and marketing research from 25 October (the playbook, idea bank, blog post ideas, outreach list and 19 research notes) now lives in `docs/RnD/`, so future agents can find it. Nothing in the app or website changed.
+- The owner's own strategy notes, organised, are in `docs/RnD/strategy-notes.md`.
+
+## 26 October 2026: Reading offline
+
+- nine turtles now keeps your **first 200 unread and newest 200 starred
+  articles** on each phone and computer, words only, so you can read on a
+  plane or a train. Each image is a short line saying it shows once you're
+  back online. It's a few megabytes for most readers.
+- Without a connection, Unread, Starred, All, feeds and folders show those
+  articles, with a quiet line: "Offline. Showing the articles saved on this
+  device." Reading, marking and starring work as usual; the marks are sent
+  once you're back online, and the latest mark wins.
+- Search, adding a feed, Settings and Refresh say plainly that they need a
+  connection.
+- It's on by default. Settings › Your data › "Keep articles for reading
+  offline" switches it off for one device, which deletes its copies.
+  **Signing out deletes them too.**
+- Each article's read mark and star now remember when they were set
+  (structure change 21); nine turtles stores a backup first, as always.
+
+## 26 October 2026: Starter packs on the website
+
+- nineturtles.app/packs/ lists five starter packs: Think more deeply, Do
+  focused work, Live slowly, Curious minds, and Newsletters, out of your
+  inbox. Each says its blogs are still being chosen, until the owner adds
+  them (`website/src/packs/README.md`).
+- Once a pack has blogs, it lists each with a line on why, and offers a file
+  that adds them all to nine turtles or any other feed reader.
+- The footer links to them.
+
+## 26 October 2026: Email me a sign-in link
+
+- The sign-in page has **Email me a sign-in link**: type your email, and a
+  link that signs you in arrives. It works once, for 15 minutes, for every
+  reader, you included once your email is saved. Passwords keep working.
+- Opening the link shows one **Sign in** button, so a mail program checking
+  links can't use it up first.
+- It's said once ("Check your email"), with the same quiet Send again, and
+  the server sends at most one sign-in link a minute and three emails an
+  hour to any address.
+- The links table was made again to allow the new kind of link (structure
+  change 20); nine turtles stores a backup first, as always.
+
+## 26 October 2026: Pause a feed
+
+- Edit feed has a new setting, **Pause this feed**, for a holiday or a noisy week. While it's paused, its new articles still arrive in its own list but already read, so Unread doesn't grow.
+- Untick it when you're back and only its newest three articles from the pause come back to Unread.
+- Pausing is yours alone; other readers of the same feed see no change.
+
+## 26 October 2026: Bring your stars over
+
+- Settings › Your data › **Import starred articles…** brings your starred articles over from another feed reader: Inoreader, Feedly, Feedbin, The Old Reader, FreshRSS and others, or another nine turtles. Choose the file it exports them in.
+- They appear in Starred, read, each with a link to the original and the name of the feed it came from. Stars of feeds you don't follow stay in Starred without adding anything to your sidebar.
+- Importing only adds stars, and the same file twice adds nothing new. Each reader can keep up to 10,000 imported articles. Pocket isn't supported, as it saves whole web pages rather than what a feed sent.
+
+## 26 October 2026: Easing unread guilt
+
+- **Let unread go after a while:** in Settings › Reading you can choose 1 week, 2 weeks or 1 month (Never is the default). Unread older than that counts as read: it leaves Unread and the counts, and stays in its feed, All and search. Nothing is deleted.
+- **Catch me up:** in Unread's More (…) menu. Everything from before today is marked read at once, with Undo.
+- **Unread without numbers:** Settings › Reading › Unread counts: Hide. The sidebar's numbers go; Unread stays.
+
+## 26 October 2026: The feed finder
+
+- A free page on the website, nineturtles.app/feed-finder/: paste a site's
+  address and get its feed's address, with a Copy button and the site's
+  five newest titles. Anyone can use it, without an account.
+- A "Find feed" button to drag to the bookmarks bar opens the finder with
+  the page you're on.
+- The app does the looking, the same polite way as Add feed: the one page
+  you give it, then its feed once. Nothing about who asked is kept.
+- Linked from the website's footer, from "New to feeds?", and explained in
+  the privacy policy.
+
+## 26 October 2026: Paying for nine turtles, in test mode
+
+- New readers get a **free trial** (14 days, no card needed). You, and everyone who already has an account, stay free for good.
+- Settings › **Your plan** shows the trial or plan, a row to choose **Monthly** or **Yearly**, and **Billing and cancelling**, which opens Dodo Payments' own page. Prices are a setting and read "Price to be decided" for now.
+- When a trial or plan ends, readers keep reading, starring and exporting everything; they can't add feeds, and their feeds are checked once a day. Deleting an account cancels its plan first.
+- It's all in Dodo's **test mode**: no real money. It's off until you add the Dodo settings on Render (`docs/operations/payments.md`).
+
+## 26 October 2026: A tidier website header, footer and home page
+
+- The website's top bar now has the name on the left and How it works,
+  Blog and Open the app together on the right. Pricing moved to the footer.
+- The footer is centred and compact: two short rows of links, with
+  "Questions" now called "FAQ", and the nine turtles at the very end.
+- The home page says the same things in fewer words.
+
+## 26 October 2026: Newsletters, part three
+
+- Labels: add a word after a plus sign to your newsletter address when you
+  sign up. Each label that gets email is listed in Settings › Newsletters with
+  a switch; switched off, its email bounces.
+- Unsubscribing from a newsletter's feed now also tells the newsletter to stop
+  sending, once Undo has passed, when it offers one-click unsubscribe.
+- Each new newsletter email is "opened" once when it arrives, so senders don't
+  drop you as a reader who never opens their emails.
+- The forwarder at Cloudflare changed again: paste its code into Cloudflare
+  once more (docs/operations/newsletters.md, step 2).
+
+## 26 October 2026: nine turtles points to its website, not its code
+
+- When nine turtles checks a feed, the note it leaves for the site now
+  points to nineturtles.app instead of the code on GitHub. The starred
+  articles download does the same.
+- The website's footer no longer ends with "No cookies, no tracking, no
+  analytics" (the privacy policy still says so).
+- The line under the footer's turtles now reads "Some of us like to read
+  slowly. That's the idea."
+- The website's top bar is quieter: three places (How it works, Pricing,
+  Blog) in plain text, the page you're on underlined, and "Open the app" as
+  one solid button. About moves to the footer only; the tour now links
+  "New to feeds?".
+
+## 26 October 2026: Newsletters, part two
+
+- Each reader has a private newsletter address in Settings › Newsletters, with
+  Copy, and New address (with Undo) for when spam arrives.
+- Newsletters sent to it arrive as feeds, one per sender, and each email is an
+  article. A newsletter feed is the reader's alone, never shared.
+- Unsubscribing from a newsletter's feed keeps its later emails away. Mail to
+  an address nobody has bounces. At most 200 emails (and 5 MB of text) a day reach one address.
+- The forwarder at Cloudflare now tells nine turtles who each email was for:
+  paste its code into Cloudflare again (docs/operations/newsletters.md, step 2).
+
+## 26 October 2026: Nine turtles in the website's footer
+
+- The footer of nineturtles.app now starts with nine small turtles walking
+  in single file: seven together and two a few steps behind, over the line
+  "Two of us are always a little behind. That's fine."
+- The footer no longer links the blog's feed; the Blog page already does,
+  and feed readers find it on their own.
+
+## 26 October 2026: Your Readers page shows who's been here
+
+- Each reader on Settings › Readers › All readers now says when they were last here: "Last here today" or "Last here 24 October 2026". Only the day, never the time, and nothing new is recorded: it's the day nine turtles already kept to rest the feeds of readers who've been away.
+- Other readers are told, under Account in their Settings, what you can see about them; the privacy policy says so too.
+
+## 26 October 2026: The website no longer talks about the code
+
+- No page of nineturtles.app mentions open source, the code, the MIT
+  licence or running your own copy any more, since nine turtles may stop
+  being open source.
+- The footer loses its "Open the app" and "Source code" links (the top bar
+  still has "Open the app"), and its last line now just says there are no
+  cookies, tracking or analytics.
+- The terms lose their "Open source" section and the privacy policy its
+  line about copies people run themselves; both show 26 October as their
+  new date.
+
+## 26 October 2026: "Check your email", said once
+
+- After "Forgot your password?" (and after signing up while sign-up is Open), the form gives way to one clear "Check your email": where the link went and how long it works.
+- A quiet "Didn't get it?" line under it offers Send again; within a minute of the last link it sends nothing and says to give it a minute.
+- Pressing Send link twice now sends one email: nine turtles sends at most one password link to an address each minute (as well as three emails an hour).
+
+## 26 October 2026: Your Readers page, and fair limits
+
+- Settings › Readers › **All readers** opens a page only you see: how many readers, feeds and articles there are, how big the database is, whether backups and email are on, anything that needs a look, and each reader's email, when they joined and how many feeds they follow. Never which feeds, and nothing about what anyone reads.
+- Each reader can follow up to **1,000 feeds**. Adding one more says so calmly; an OPML file that would go past it imports nothing.
+- Feeds whose readers have all been away for a month are checked **once a day** until one of them comes back, which is kinder to publishers and to the server.
+
 ## 26 October 2026: Agents may merge when you've said so in advance
 
 - If you've told an agent in a plan or a session that it may merge the work
@@ -11,6 +329,306 @@ not how it was done.
   yes. It merges when the checks are green and the review is dealt with, then
   tells you what went live. Without that permission, the brief and your yes
   are still needed, and only your own words ever count (decision 0009).
+
+## 25 October 2026: The yearly clean-up
+
+- Articles you haven't starred are now removed a year after nine turtles first received them, read or not. Starred articles stay forever.
+- It runs each night just after the backup is stored, so anything removed is still in the backups. Nothing qualifies until October 2027.
+- A removed article never comes back as new, even while its feed still lists it.
+
+## 25 October 2026: Emails for accounts, and deleting an account
+
+- nine turtles can now send a few short, plain emails, through Brevo or any other email service (`docs/operations/email.md`). Nothing is sent until you add the five email settings in Render.
+- With email on, sign-up can be **Open**: anyone can make an account by opening the link emailed to them (within 24 hours). Invite links work as before, without an email.
+- **Forgot your password?** on the sign-in page sends a link to choose a new password (it works once, for an hour, and signs out your other devices). It never says whether an email has an account, and sends at most three emails to an address in an hour.
+- Every reader can change their email in Settings › Account: a link goes to the new address, and the old one is told.
+- Readers (not the owner) can delete their account in Settings › Account: the sheet offers their downloads first, then one "Are you sure?". It can't be undone.
+- The emailed links keep their secret part after the `#`, which never reaches a server's log, as invite links now do; checking a password to change an email counts towards the same waits as signing in.
+- Saving your own email in Settings › Readers now asks for your password, so a device left signed in can't send your password links somewhere else.
+- If you set a new password by email and later can't use email, putting a new `NINE_TURTLES_PASSWORD_HASH` in Render makes it your password again and signs out every device (`docs/operations/owner-password.md`).
+- A new password by email also turns off that reader's app password for other feed reader apps. Only plain addresses are accepted (no name or `<…>` around them), and nothing about an address's account shows in how long an answer takes or when "too many" is said.
+- Structure change 14 adds a table for the emailed links (nothing already stored changes; a backup is taken first).
+
+## 25 October 2026: Signing in by email, and invite links
+
+- The sign-in page has an Email field above Password. You can leave it empty and sign in with your password alone, as before.
+- Settings › Readers (only you see it): save your own email to sign in with, and see everyone with an account and when they joined, never what they read.
+- Settings › Sign-up (only you): Closed (the default), Invite link, or Open. An invite link lets anyone you send it to make an account, until you make a new link or close sign-up. Open waits for confirmation emails, which come later.
+- Wrong passwords are slowed down for each account on its own, so someone guessing another email never makes you wait. Your email and your password alone each get their own five tries, so nobody can find out which email is yours. nine turtles never says whether an email has an account.
+- At most 20 sign-ups can be tried in any hour (a try with an email already taken counts too), and they go one at a time.
+- Save your own email in Settings › Readers before you send an invite link; Settings reminds you while you have none. The invite in a link comes after a #, so it never reaches any server's logs.
+- The database gains two empty columns for emails and passwords (structure change 13), backed up first as always.
+
+## 25 October 2026: Newsletters, part one
+
+- nine turtles can now read newsletter emails: it works out which newsletter
+  sent each one and cleans it for reading (hidden preview text, tracking
+  images, tracking parts of links and email layout tables go; pictures,
+  links and real tables stay). It's tested on made-up emails built like
+  Substack's and Mailchimp's, plain-text ones and Japanese ones.
+- The address that receives them is switched off until you set
+  `NINE_TURTLES_NEWSLETTER_SECRET`. Even then nothing is kept yet: emails are
+  read and passed back to your inbox. Keeping them, and each reader's own
+  address, come in part two, after many readers is finished.
+- The small forwarder that runs at Cloudflare is in the repository
+  (`cloudflare/newsletter-worker/`), with the setup steps in
+  `docs/operations/newsletters.md`.
+
+## 25 October 2026: Getting ready for more readers (part two)
+
+- Nothing changes on screen for you.
+- The feeds you follow, your names for them, their settings, and your read,
+  starred and muted marks are now marked as yours (decision 0086). When
+  more readers arrive, each sees only their own, while a feed several of
+  them follow is still fetched and stored once.
+- Unsubscribing removes only your marks; another reader's copy of the same
+  feed stays as it was.
+- nine turtles takes a backup automatically just before making this change
+  to its database, and a test rehearses restoring that backup.
+
+## 25 October 2026: Getting ready for more readers (part one)
+
+- Nothing changes on screen.
+- Your settings, folders, saved searches, rules, signed-in devices and app
+  password are now marked as yours, so nine turtles is ready to hold more
+  readers, each seeing only their own (decision 0086).
+- nine turtles takes a backup automatically just before making this change
+  to its database.
+
+## 25 October 2026: Pricing and refunds pages, and Dodo Payments
+
+- The website has two new pages, marked as drafts until prices are set:
+  Pricing (nineturtles.app/pricing/) and Refunds and cancelling
+  (nineturtles.app/refunds/). Both are linked from every page's footer.
+- The terms and privacy policy now name Dodo Payments as the company that
+  will take payments and handle sales tax, as you chose.
+- A checklist for applying to Dodo Payments is in
+  `docs/operations/dodo-application.md`, for you to delete before you apply.
+
+## 25 October 2026: The website's styles refresh with its pages
+
+- Each page now asks for its styles by a fingerprint of their contents, so
+  a browser that kept the old styles fetches the new ones straight away.
+  Before, a visitor could see the new pages with the old styles (looking
+  broken) for up to ten minutes after a change went live.
+
+## 25 October 2026: "New to feeds?" in the welcome
+
+- A fresh nine turtles now has a quiet "New to feeds? Start here" link under its welcome.
+- It opens a small sheet that explains what a feed is, links to the website's "New to feeds?" guide, and offers five feeds to start with (none ticked). Tick a few and press "Add chosen feeds".
+- The welcome, and the link, disappear once you follow anything.
+
+## 25 October 2026: Tabs left open switch to new versions by themselves
+
+- A tab left open while a new version goes live now notices within a few minutes, or as soon as you come back to it.
+- The next time you go to another place, you arrive there in the new version. Nothing changes while you're reading, and it waits until your marks are saved and any Undo is done.
+
+## 25 October 2026: Nightly backups
+
+- nine turtles now backs itself up every night: a complete copy of your feeds, articles, read marks and stars goes to storage outside Render (Cloudflare R2 to start with, or any S3-compatible storage).
+- It also stores a copy just before any update changes the database's structure, and won't change anything if that copy fails.
+- Kept: the last 30 nights, one copy a month for a year, and the last 10 taken before an update.
+- Bringing a copy back, or moving to another host, is written down and tested (`docs/operations/backups.md`, `docs/operations/moving-hosts.md`).
+- Backups start once you add the storage settings in Render; until then the diagnostics page says "backups are off".
+
+## 25 October 2026: An automatic health check
+
+- Every 15 minutes, GitHub checks that nine turtles is answering. If it isn't
+  (five tries, a minute apart, so a deploy never counts), GitHub emails you.
+  No outside service, nothing to pay (`docs/operations/health-check.md`).
+
+## 25 October 2026: A fuller website
+
+- nineturtles.app now has the pages a new visitor looks for: a home page
+  with pictures of the app by day and by night, a tour of everything it
+  does, "New to feeds?" for people who've never used a feed reader,
+  questions and answers, about, contact (hello@nineturtles.app) and
+  accessibility.
+- A blog, with four first posts and its own feed at
+  nineturtles.app/blog/feed.xml, so it can be followed in nine turtles.
+- A privacy policy and terms, clearly marked as drafts until you choose a
+  payment company and an email service. There's no pricing page, since
+  prices aren't decided.
+- A top bar with the website's places and a footer listing every page.
+  Addresses that don't exist show a calm "This page isn't here".
+- The website's check now also makes sure every link and picture inside it
+  leads somewhere real.
+
+## 25 October 2026: Saved searches
+
+- A search can now be saved: search, then choose **Save search…** in the
+  list's More (…) menu and give it a name.
+- Saved searches appear in the sidebar under **Saved searches**, right under
+  Unread, Starred and All. Opening one runs the search again.
+- **Edit saved search…** renames one, or saves the changes you made to its
+  search; **Delete** removes only the search, with Undo.
+
+## 25 October 2026: Rules and mutes
+
+- Settings has a new **Rules** group: "when a new article matches this, do that". A rule looks for a word or phrase (in the title, or anywhere in the text), an author, or both, in all feeds, a folder or one feed, and **mutes**, **stars** or **marks as read** what matches.
+- Muted articles are kept, never deleted: they skip every list and count as read, search still finds them (marked "Muted"), and **Settings › Rules › Muted articles** lists them with Unmute.
+- A new rule asks once before touching articles already here ("Also mute the 37 unread articles that match?"), with Undo. Each rule has a switch to pause it; Delete has Undo.
+- Edit feed has a shortcut: **Add a rule for this feed…**.
+
+## 25 October 2026: Settings for each feed
+
+- Edit feed has a new "Settings" group for that one feed:
+  - **Reading mode: Inbox or River.** A river feed's articles flow past: they
+    skip Unread and the feed shows no count, while your other feeds stay in
+    inbox mode. Handy for busy news sites.
+  - **Check for new articles: Automatic, Hourly or Daily.** Hourly and Daily
+    ask a chatty feed for news no more often than that.
+  - **Open articles on the website.** For feeds that share only a summary:
+    pressing Enter on an article (or tapping it on a phone) opens the
+    publisher's page in a new tab instead.
+- Every feed starts as it was, so nothing changes until you choose. The
+  database gained three small columns; nothing you have was touched.
+
+## 25 October 2026: Older items load as you scroll
+
+- The bold blue "Show older items" button is gone. When you reach the bottom of a list, the next 50 articles load by themselves, with a small grey "Loading…" while they arrive. Keyboard and screen-reader users still get a quiet "Show older items" button when they Tab to it.
+- The end of a list now says "You're all caught up.", centred under the last article.
+
+## 25 October 2026: Tidy many feeds at once
+
+- Settings › Feeds has a new page, **Your feeds**: every feed you follow,
+  with when it last posted and which folders it's in.
+- **Show: Quiet for 6 months / Quiet for a year** lists only the feeds that
+  have gone silent, so you can let them go.
+- **Edit** lets you tick several feeds, then **Move to…** one folder (or a
+  new one) or **Unsubscribe** from them all at once. One **Undo** reverses
+  the whole thing.
+- Nothing you have changed: the database is the same.
+
+## 25 October 2026: The logo, tidied
+
+- No turtle in the logo is cut off at the edges any more.
+- The logo and the name "nine turtles" are in proportion everywhere: the name is semibold and the logo a touch taller than its letters. On the website the name is a little bigger.
+- The browser tab shows a single turtle, which stays clear at that tiny size. The home-screen icon keeps the nine, with a little more room around them.
+
+## 25 October 2026: Marks survive a new version going live
+
+- Marking an article read (or starring it) while nine turtles was restarting for a new version used to fail at once, with a message that stayed until you reloaded. Now it quietly tries again for about a minute, so that moment loses nothing.
+- If a mark still can't be saved, the message has a **Try again** button, and it goes away by itself as soon as a later mark is saved.
+- While a mark is waiting to try again, opening lists and feeds no longer waits for it.
+
+## 25 October 2026: A quieter video box
+
+- The line under a YouTube video's Play box ("Plays in YouTube's own
+  player. Nothing loads until you press Play.") is gone. Nothing changed
+  in how videos play: still nothing loads until you press Play.
+
+## 25 October 2026: The plan shows what's live in V2
+
+- `docs/PLAN.md` now has a "V2 so far" table: river mode, WebSub, YouTube
+  videos, syncing with other apps and the feed health page are live;
+  backups, the yearly clean-up, the feeds guide page and
+  keeping old tabs working haven't started.
+- The YouTube decision is now numbered 0072, because river mode also had
+  0068 (and the feed health page takes 0071).
+
+## 25 October 2026: The turtles beside the name
+
+- The nine turtles now stand before the name at the top of the sidebar (on a computer and a phone), above it on the sign-in page, and in the website's top bar, so you can see the logo on a phone too.
+
+## 25 October 2026: Reeder and NetNewsWire can sync with nine turtles
+
+- nine turtles can now be the sync service for other feed readers, such as
+  Reeder and NetNewsWire: they show your feeds, folders and articles, and
+  read, unread and starred stay in step both ways. Following, unfollowing
+  and folders made in the app reach nine turtles too.
+- Apps sign in with an app password you make in Settings › Other apps,
+  never your own password. It's shown once; you can make a new one or turn
+  it off at any time, which signs the apps out.
+- A feed unfollowed from an app can be brought back with its articles by
+  following it again from the app within ten minutes.
+
+## 25 October 2026: River mode
+
+- Settings › Reading has a new choice, **Reading mode: Inbox · River**.
+  Inbox is how nine turtles has always worked. River lets everything flow
+  past: no Unread list, no numbers beside your feeds, no grey "read" titles
+  and no "Mark all as read". The app opens on All.
+- nine turtles still notes quietly what you've read, so switching back to
+  Inbox shows it all as it was.
+- The choice is the same on all your devices.
+
+## 25 October 2026: The feed health page
+
+- Settings has a new **Feeds** group with **Feed health**. It lists the
+  feeds that have stopped working, worst first, and says what went wrong in
+  plain words ("Not found for 8 days. The site says the feed isn't there
+  any more. It may have moved.").
+- Each one has **Retry** (check it again now), **Find new address** (look
+  on the feed's site for where it went, then move it there, keeping its
+  articles, stars and folders) and **Unsubscribe** (with Undo).
+- When nothing is wrong, it says "All feeds are working."
+
+## 25 October 2026: YouTube videos play in the app
+
+- Follow a YouTube channel and its videos now play inside nine turtles, in
+  YouTube's own player, so the views still count for the channel.
+- Nothing is loaded from YouTube until you press Play: skimming past a
+  video tells YouTube nothing. The player is YouTube's privacy-enhanced one.
+- A video's description from the feed is shown as its text.
+- A YouTube video embedded in a blog post, which used to vanish, now leaves
+  a "Watch the video on YouTube" link in its place.
+
+## 25 October 2026: New posts arrive within minutes from blogs that offer it
+
+- Some publishers announce new posts the moment they publish, through a
+  service called a "hub" (the standard is WebSub). nine turtles now signs up
+  with these hubs, so "New items · press r" appears within minutes instead
+  of hours. Most blogs on WordPress.com and Blogger, and YouTube channel
+  feeds, work this way.
+- Every announcement is checked with a secret only nine turtles and the hub
+  know, so nobody can slip in fake articles.
+- Regular checking carries on for these feeds too, at most twice a day, in
+  case an announcement goes missing.
+- Nothing on screen changed, and nothing you have was touched: the database
+  only gained a new table for the hubs.
+
+## 25 October 2026: nine turtles has moved in
+
+- The website is live at nineturtles.app, and the app is at
+  app.nineturtles.app. The documents now use the new addresses.
+
+## 25 October 2026: A logo of nine turtles
+
+- nine turtles has a logo: nine small turtles seen from the side, in three rows of three. It is the icon on your phone's home screen and in the browser tab of the app and the website, dark on white by day and light on near-black by night.
+- The drawings are kept in `docs/logo/`.
+
+## 25 October 2026: The domain guide, as a move
+
+- The website and domain guide now starts from where you are: nineturtles.app
+  on Cloudflare, leading to the app. It moves the app to app.nineturtles.app
+  first, then hands nineturtles.app to the website, so the app is never
+  unreachable.
+
+## 25 October 2026: A website at nineturtles.app
+
+- nine turtles now has a website, a short page saying what it is, with an
+  "Open the app" link. It lives in the new `website/` folder, is built with
+  Eleventy and is published to GitHub Pages whenever a change to it is
+  merged.
+- Once you've bought nineturtles.app and followed
+  `docs/operations/website-and-domain.md`, the website is at
+  nineturtles.app and the app at app.nineturtles.app. The old address keeps
+  working.
+- A pull request that changes only the website skips the app's slow checks,
+  so it's ready sooner.
+
+## 25 October 2026: Pull requests are ready to merge sooner
+
+- The automatic checks now run in four parts at the same time, on separate
+  computers, instead of one after another. A typical pull request is ready
+  in about three minutes instead of five.
+- A pull request that changes only documents skips the slow checks and the
+  image build, and is ready in under a minute.
+- Changelog entries are now written as small separate files in
+  `docs/changes/`, so pull requests made at the same time no longer clash
+  over the top of the changelog and have to run their checks again.
+- Nothing in the app itself changed.
 
 ## 25 October 2026: "Time to read something beautiful."
 
