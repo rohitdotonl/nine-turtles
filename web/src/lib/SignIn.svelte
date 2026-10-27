@@ -8,6 +8,10 @@
   while sign-up is Open, "Sign up" leads to the sign-up page (decision 0088).
   Once a link is asked for, the form gives way to "Check your email": where
   it went, for how long it works, and a quiet Send again (decision 0092).
+  Where passkeys work (this is their address and the browser has WebAuthn),
+  "Sign in with a passkey" opens the browser's own passkey sheet, and the
+  email field offers the device's passkeys among its suggestions (the
+  browser's passkey autofill), decision 0109.
 -->
 <script lang="ts">
   import { tick } from "svelte";
@@ -16,12 +20,21 @@
   import SendAgain from "./SendAgain.svelte";
   import { explain, signIn } from "./session";
   import { type LinkKind, askForLink, explainAsked } from "./accounts";
+  import {
+    type PasskeySignIn,
+    autofillAvailable,
+    browserHasPasskeys,
+    explainPasskeySignIn,
+    passkeysHere,
+    signInWithPasskey,
+  } from "./passkeys";
 
   let {
     onSignedIn,
     emailSending = false,
     signUpOpen = false,
     onSignUp,
+    passkeys = null,
   }: {
     onSignedIn: () => void;
     /** nine turtles can send email: "Email me a sign-in link" and "Forgot your password?" are offered. */
@@ -29,7 +42,74 @@
     /** Sign-up is Open: "Sign up" is offered. */
     signUpOpen?: boolean;
     onSignUp?: () => void;
+    /** Where passkeys work (decision 0109); null when they're off. */
+    passkeys?: string | null;
   } = $props();
+
+  /** Passkeys can sign in on this page: offered as a button and in the email field's suggestions. */
+  const offered = $derived(passkeysHere(passkeys, location, browserHasPasskeys()));
+
+  /** The email field's passkey suggestions, while they wait to be picked. */
+  let autofill: AbortController | undefined;
+  let rearm: ReturnType<typeof setTimeout> | undefined;
+  /** Counts each stop, so an offer still starting when the page moves on never begins. */
+  let offers = 0;
+
+  /**
+   * Offers this site's passkeys among the email field's suggestions. A
+   * challenge lasts five minutes on the server, so a fresh one replaces it
+   * a little before; nothing on the page changes.
+   */
+  async function offerAutofill() {
+    stopAutofill();
+    const mine = offers;
+    // Stopped while the browser answered: the page has moved on.
+    if (!offered || !(await autofillAvailable()) || mine !== offers) return;
+    const waiting = new AbortController();
+    autofill = waiting;
+    rearm = setTimeout(offerAutofill, 4 * 60 * 1000);
+    const result = await signInWithPasskey(true, waiting.signal);
+    if (waiting.signal.aborted) return;
+    passkeyAnswered(result);
+  }
+
+  function stopAutofill() {
+    offers += 1;
+    clearTimeout(rearm);
+    autofill?.abort();
+    autofill = undefined;
+  }
+
+  $effect(() => {
+    if (offered) void offerAutofill();
+    return stopAutofill;
+  });
+
+  /** "Sign in with a passkey": the browser's own passkey sheet, at once. */
+  async function passkey() {
+    if (busy) return;
+    stopAutofill();
+    busy = true;
+    const result = await signInWithPasskey(false);
+    busy = false;
+    passkeyAnswered(result);
+  }
+
+  function passkeyAnswered(result: PasskeySignIn) {
+    if (result === "ok") {
+      stopAutofill();
+      onSignedIn();
+      return;
+    }
+    // Cancelling says nothing; anything else is said where every refusal is.
+    const said = explainPasskeySignIn(result);
+    if (said) {
+      message = said;
+      calm = false;
+      refused = false;
+    }
+    void offerAutofill();
+  }
 
   /** Asking for a link instead of signing in: one that signs in, or one to choose a new password. */
   let asking: LinkKind | "" = $state("");
@@ -149,7 +229,7 @@
       name="email"
       type="text"
       inputmode="email"
-      autocomplete="username"
+      autocomplete={offered ? "username webauthn" : "username"}
       autocapitalize="none"
       spellcheck="false"
       placeholder="Email"
@@ -195,9 +275,11 @@
     <!-- Quiet links in words, under the room kept for a message, so nothing above them moves. -->
     {#if asking}
       <p class="text-center"><a href="/" class="text-link" onclick={(event) => switchTo(event, "")}>Back to sign in</a></p>
-    {:else if emailSending || signUpOpen}
+    {:else if emailSending || signUpOpen || offered}
       <!-- The sign-in link on a line of its own, so the lines never wrap differently from one screen to the next. -->
       <div class="flex flex-col items-center">
+        <!-- A passkey signs in without the fields: a quiet action in words, like the links under it. -->
+        {#if offered}<button type="button" class="text-link" aria-disabled={busy} onclick={passkey}>Sign in with a passkey</button>{/if}
         {#if emailSending}<a href="/" class="text-link" onclick={(event) => switchTo(event, "sign-in")}>Email me a sign-in link</a>{/if}
         <p class="flex flex-wrap justify-center gap-x-6 text-center">
           {#if emailSending}<a href="/" class="text-link" onclick={(event) => switchTo(event, "password")}>Forgot your password?</a>{/if}

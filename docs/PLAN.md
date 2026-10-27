@@ -405,6 +405,7 @@ each with screenshots:
 | Opening a picture in an article larger | ✅ 27 October 2026 | SPEC section 7, decision 0107 |
 | More keys (Space, n, Shift+O, e, Shift+E, c), Mark all above / below as read, and one list of keys for the keys and the cheat sheet | ✅ 27 October 2026 | SPEC sections 6, 7, 8 and 19, decision 0103 |
 | Keys of your own (Change keys… in the `?` list and Settings › Keyboard), and Shift+J / Shift+K, Home / End, g then f and g then , | ✅ 27 October 2026 | SPEC sections 18 and 19, decision 0110 (no structure change; g then r waits for Recently read) |
+| Passkey sign-in (Settings › Passkeys, and Sign in with a passkey; passwords keep working) | ✅ 27 October 2026 | SPEC sections 1 and 18, decision 0109 (structure change 25; one new library, webauthn-rs, the owner's yes) |
 
 ## V2: Many readers in one app
 

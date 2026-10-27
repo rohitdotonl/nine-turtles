@@ -80,6 +80,7 @@
     owner = false,
     email = null,
     emailSending = false,
+    passkeys = null,
     onSignedOut,
   }: {
     version: string;
@@ -89,6 +90,8 @@
     email?: string | null;
     /** nine turtles can send email, so the email can be changed in Settings (decision 0088). */
     emailSending?: boolean;
+    /** Where passkeys work, for Settings › Passkeys (decision 0109); null when they're off. */
+    passkeys?: string | null;
     onSignedOut: () => void;
   } = $props();
 
@@ -1605,6 +1608,7 @@
           {owner}
           {email}
           {emailSending}
+          {passkeys}
           {onSignedOut}
           onClose={closePage}
           onImported={loadFeeds}
