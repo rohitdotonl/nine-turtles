@@ -162,7 +162,7 @@ test("articles go on a collection by l and by the menu; it opens, and deleting i
   await expect(rows).toHaveCount(3);
 
   // Settings › Show in the sidebar: untick Collections, and they leave the sidebar; each still opens by its address.
-  await page.goto(new URL("/settings", FEEDS_APP).href);
+  await page.goto(new URL("/settings/sidebar", FEEDS_APP).href);
   await appReady(page);
   const shown = page.getByRole("group", { name: "Show in the sidebar" }).getByRole("checkbox", { name: "Collections" });
   await expect(shown).toBeChecked();
@@ -176,7 +176,7 @@ test("articles go on a collection by l and by the menu; it opens, and deleting i
     await expect(link).toHaveCount(0);
   } finally {
     // Shown again, as every other test expects.
-    await page.goto(new URL("/settings", FEEDS_APP).href);
+    await page.goto(new URL("/settings/sidebar", FEEDS_APP).href);
     await appReady(page);
     await shown.check();
     await expect(link).toBeVisible();

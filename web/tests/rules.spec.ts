@@ -19,7 +19,7 @@ test("a rule made from Edit feed mutes what matches, with the number asked first
   await page.goto(new URL(`/feeds/${id}/edit`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("button", { name: "Add a rule for this feed…" }).click();
-  await expect(page).toHaveURL(/\/settings$/);
+  await expect(page).toHaveURL(/\/settings\/rules$/);
   const sheet = page.getByRole("dialog", { name: "New rule" }).or(page.getByRole("region", { name: "New rule" }));
   await expect(sheet).toBeVisible();
   await expect(sheet.getByRole("combobox", { name: "In" })).toHaveValue(`feed:${id}`);
@@ -57,15 +57,15 @@ test("a rule made from Edit feed mutes what matches, with the number asked first
   // Nothing moves: it stays, with Undo.
   await expect(muted.getByRole("button", { name: "Undo unmuting Walking the long way home (2)" })).toBeFocused();
 
-  // Escape goes back to Settings.
+  // Escape goes back to Rules (decision 0120).
   await page.keyboard.press("Escape");
-  await expect(page.getByRole("heading", { name: "Settings", level: 2 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Rules", level: 2 })).toBeVisible();
 });
 
 test("a star rule acts on an article as it arrives; rules pause, and Delete has Undo", async ({ page }) => {
   const name = `rules-star-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const title = `Blog ${name}`;
-  await page.goto(new URL("/settings", FEEDS_APP).href);
+  await page.goto(new URL("/settings/rules", FEEDS_APP).href);
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
@@ -75,11 +75,11 @@ test("a star rule acts on an article as it arrives; rules pause, and Delete has 
   const rules = page.getByRole("region", { name: "Rules" });
   await rules.getByRole("button", { name: "New rule…" }).click();
   const sheet = page.getByRole("dialog", { name: "New rule" }).or(page.getByRole("region", { name: "New rule" }));
-  // Escape closes it unchanged, and Settings stays.
+  // Escape closes it unchanged, and Rules stays.
   await expect(sheet).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(sheet).toBeHidden();
-  await expect(page.getByRole("heading", { name: "Settings", level: 2 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Rules", level: 2 })).toBeVisible();
 
   await rules.getByRole("button", { name: "New rule…" }).click();
   await sheet.getByRole("textbox", { name: "Word or phrase" }).fill("river");
@@ -127,7 +127,7 @@ test("a star rule acts on an article as it arrives; rules pause, and Delete has 
 
 test("with the keyboard alone: a new rule, its switch, and Not now keep the keyboard's place", async ({ page }) => {
   const name = `rules-keys-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
-  await page.goto(new URL("/settings", FEEDS_APP).href);
+  await page.goto(new URL("/settings/rules", FEEDS_APP).href);
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
@@ -163,15 +163,15 @@ test("with the keyboard alone: a new rule, its switch, and Not now keep the keyb
   await expect(rules).toContainText(`${sentence} Paused.`);
 });
 
-test("on a phone, the back gesture closes the rule editor and stays in Settings", async ({ page }) => {
+test("on a phone, the back gesture closes the rule editor and stays in Rules", async ({ page }) => {
   test.skip(test.info().project.name !== "phone", "Only a phone's editor is a screen of its own.");
-  await page.goto(new URL("/settings", FEEDS_APP).href);
+  await page.goto(new URL("/settings/rules", FEEDS_APP).href);
   await appReady(page);
   await signIn(page);
   await page.getByRole("button", { name: "New rule…" }).click();
   await expect(page.getByRole("heading", { name: "New rule", level: 2 })).toBeVisible();
   await page.goBack();
   await expect(page.getByRole("heading", { name: "New rule", level: 2 })).toBeHidden();
-  await expect(page.getByRole("heading", { name: "Settings", level: 2 })).toBeVisible();
-  await expect(page).toHaveURL(/\/settings$/);
+  await expect(page.getByRole("heading", { name: "Rules", level: 2 })).toBeVisible();
+  await expect(page).toHaveURL(/\/settings\/rules$/);
 });

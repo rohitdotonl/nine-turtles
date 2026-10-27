@@ -105,6 +105,7 @@ test("a passkey added in Settings signs in from the sign-in page, and the passwo
     .locator("#sidebar")
     .getByRole("link", { name: "Settings" })
     .click();
+  await page.getByRole("link", { name: "Passkeys", exact: true }).click();
 
   const group = page.getByRole("region", { name: "Passkeys" });
   await expect(group).toContainText(
@@ -143,12 +144,14 @@ test("a passkey added in Settings signs in from the sign-in page, and the passwo
   // Signed out, the email field offers the passkey among its suggestions;
   // Chrome's virtual device picks it at once, as a reader would, and it signs
   // in: no email, no password.
+  await page.getByRole("button", { name: "Back to Settings" }).click();
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page.locator("#sidebar")).toBeAttached();
   await page
     .locator("#sidebar")
     .getByRole("link", { name: "Settings" })
     .click();
+  await page.getByRole("link", { name: "Passkeys", exact: true }).click();
   await expect(group).toContainText("Last used today");
 
   // Now the button, in a browser without passkey autofill.
@@ -165,6 +168,7 @@ test("a passkey added in Settings signs in from the sign-in page, and the passwo
     .locator("#sidebar")
     .getByRole("link", { name: "Settings" })
     .click();
+  await page.getByRole("link", { name: "Passkeys", exact: true }).click();
 
   // Removed, with Undo straight afterwards, which brings it back.
   await group.getByRole("button", { name: "Remove This laptop" }).click();
@@ -183,6 +187,7 @@ test("a passkey added in Settings signs in from the sign-in page, and the passwo
   await expect(group.getByRole("status")).toContainText(
     "Your password still works.",
   );
+  await page.getByRole("button", { name: "Back to Settings" }).click();
   await page.getByRole("button", { name: "Sign out" }).click();
   // The sign-in page's own field: Settings › Readers has a "Your password"
   // box too, so a loose match would go on before signing out had finished.
@@ -232,6 +237,8 @@ test("a passkey is added, renamed and removed from the keyboard alone", async ({
     page,
     page.locator("#sidebar").getByRole("link", { name: "Settings" }),
   );
+  await page.keyboard.press("Enter");
+  await tabTo(page, page.getByRole("link", { name: "Passkeys", exact: true }));
   await page.keyboard.press("Enter");
 
   const group = page.getByRole("region", { name: "Passkeys" });
@@ -303,7 +310,7 @@ test("Settings › Passkeys passes the accessibility checks, and Cancel leaves t
   await page.getByLabel("Password").fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page.locator("#sidebar")).toBeAttached();
-  await page.goto(`${local()}/settings`);
+  await page.goto(`${local()}/settings/passkeys`);
   const group = page.getByRole("region", { name: "Passkeys" });
   await expect(group).toBeVisible();
   await passesAccessibilityChecks(page);

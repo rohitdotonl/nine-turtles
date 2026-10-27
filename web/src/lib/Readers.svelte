@@ -149,7 +149,7 @@
         >Save<span class="sr-only"> your email</span></button
       >
     </div>
-    <a href="/settings/readers" onclick={onReaders} class="inset-row inset-action"
+    <a href="/settings/readers/all" onclick={onReaders} data-settings-row="all-readers" class="inset-row inset-action"
       >All readers<span class="row-glyph flex items-center gap-1"
         >{#if people.length > 0}<span class="text-meta">{people.length}</span>{/if}<Icon name="chevron-right" size={18} /></span
       ></a

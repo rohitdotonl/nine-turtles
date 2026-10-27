@@ -767,6 +767,100 @@ textarea {
     font-size: var(--text-meta);
     line-height: 1.4;
   }
+  /*
+    A setting's row, in Settings and Edit feed (decision 0120): its name in the text color
+    (about 0.98rem, weight 500), a short description straight under it in the muted grey
+    (0.8rem, line height 1.35), an icon in the muted grey at the left on Settings' own rows,
+    and its control at the right end (on a phone, under the words at the row's full width).
+    12px above and below on a computer, 14px on a phone. The icon's box is exactly the name's
+    first line tall, so the icon's centre sits on that line's centre with or without a
+    description under it.
+  */
+  .setting {
+    --setting-line: 1.375rem;
+    padding-block: 0.75rem;
+  }
+  .setting:not(.has-control) {
+    flex-wrap: nowrap;
+  }
+  .setting-label {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: flex-start;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+  .has-control > .setting-label {
+    flex: 1 1 10rem;
+  }
+  /*
+    On one of Settings' own pages the title names the group, so a group's own header is left to
+    screen readers (decision 0120).
+  */
+  .settings-page > section > h3.inset-head:first-child {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .setting-icon {
+    display: flex;
+    flex: none;
+    align-items: center;
+    height: var(--setting-line);
+    color: var(--muted);
+  }
+  .setting-words {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1875rem;
+    min-width: 0;
+  }
+  .setting-name {
+    margin: 0;
+    color: var(--ink);
+    font-size: 0.98rem;
+    font-weight: 500;
+    line-height: var(--setting-line);
+    overflow-wrap: anywhere;
+  }
+  .setting-hint {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 400;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+  /* A row with a control (a segmented choice, the text-size stepper): the control at the right end. */
+  .setting-control {
+    flex: 0 0 19rem;
+    min-width: 0;
+  }
+  @media (width < 40rem) {
+    .setting {
+      padding-block: 0.875rem;
+    }
+    .setting.has-control {
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .setting.has-control > .setting-control {
+      flex-basis: 100%;
+    }
+  }
+  /* The heading of a group, in small uppercase muted letters (decision 0120). */
+  .settings-head {
+    margin: 0 0 0.5rem 1rem;
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
   /* A row that is itself a button or link (Import OPML, Sign out): the whole row presses. */
   .inset-action {
     width: 100%;
@@ -1303,6 +1397,10 @@ textarea {
 @media (hover: none) and (pointer: coarse) {
   .keyboard-hint {
     display: none;
+  }
+  /* Settings › More's Keyboard row is its group's first: the row after it then has no hairline above. */
+  .inset-row.keyboard-hint + .inset-row::before {
+    content: none;
   }
 }
 /* What a touch screen says instead of a key hint. */

@@ -253,7 +253,7 @@ test("import an OPML file from Settings: a plain summary, folders in the sidebar
   const [one, two] = [unique("imported"), unique("imported-too")];
   const folder = unique("From OPML");
   await page.setViewportSize({ width: 1280, height: 800 });
-  await page.goto(new URL("/settings", FEEDS_APP).href);
+  await page.goto(new URL("/settings/data", FEEDS_APP).href);
   await appReady(page);
   await signIn(page);
   const file = `<?xml version="1.0"?>
@@ -265,7 +265,7 @@ test("import an OPML file from Settings: a plain summary, folders in the sidebar
   <outline type="rss" text="Broken line" xmlUrl="nowhere"/>
 </body></opml>`;
 
-  await expect(page.getByRole("heading", { level: 3, name: "Your data" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Your data" })).toBeVisible();
   // The button opens the device's file chooser; the file is then handed
   // over the way a chosen file is.
   await opensFilePicker(page, () => page.getByRole("button", { name: "Import OPML" }).click());
@@ -383,7 +383,7 @@ test("with only the keyboard: Edit feed, a new folder, opening it, Edit folder, 
   await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) })).toBeVisible();
 
   // Import OPML opens the device's file chooser from the keyboard too.
-  await page.goto(new URL("/settings", FEEDS_APP).href);
+  await page.goto(new URL("/settings/data", FEEDS_APP).href);
   await appReady(page);
   await tabTo(page, page.getByRole("button", { name: "Import OPML" }));
   await opensFilePicker(page, () => page.keyboard.press("Enter"));

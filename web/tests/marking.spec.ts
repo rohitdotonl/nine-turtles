@@ -588,7 +588,7 @@ test("Settings: unread counts can hide, and unread can let go after a while", as
   await reading.getByRole("radio", { name: "2 weeks" }).check();
   await expect(reading.getByRole("radio", { name: "2 weeks" })).toBeChecked();
   expect(changes).toEqual([{ counts: "hidden" }, { let_go: "two-weeks" }]);
-  await expect(reading).toContainText("it counts as read and stays in its feed, All and search");
+  await expect(reading).toContainText("Older unread counts as read. It stays in its feed, All and search.");
   // Nothing has let go yet: a choice must stand a minute first.
   await expect(feedLink(page, name)).toHaveAccessibleName(`Blog ${name}`);
 
