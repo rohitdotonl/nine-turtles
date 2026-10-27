@@ -12,8 +12,8 @@
   let { onBack }: { onBack: () => void } = $props();
 
   let heading: HTMLHeadingElement | undefined = $state();
-  /** Opens the reader's own email app, with the address they reached already written in. */
-  const tellMe = `mailto:hello@nineturtles.app?subject=${encodeURIComponent("A link that took a wrong turn")}&body=${encodeURIComponent(`It led to ${location.href}\n\nI found the link here: `)}`;
+  /** Opens the reader's own email app, with the address they reached already written in (never what follows a #, which can hold an emailed link's ticket). */
+  const tellMe = `mailto:hello@nineturtles.app?subject=${encodeURIComponent("A link that took a wrong turn")}&body=${encodeURIComponent(`It led to ${location.origin}${location.pathname}\n\nI found the link here: `)}`;
 
   onMount(() => {
     document.title = "Page not found · nine turtles";

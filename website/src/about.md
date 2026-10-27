@@ -57,7 +57,7 @@ a calmer way to read the web. It started as
 
 Questions, ideas or problems are always welcome: [get in touch](/contact/).
 
-<!-- Nine turtles in single file (the logo's turtle, docs/logo/): seven ahead and two a few steps behind, drawn still (DESIGN.md, "The website's footer"). The line under them says it in words, so screen readers skip the drawing. -->
+<!-- Nine turtles in single file (the logo's turtle, docs/logo/): seven ahead and two a few steps behind, drawn still (DESIGN.md, "The About page's end"). The line under them says it in words, so screen readers skip the drawing. -->
 <div class="walk">
   <div class="procession" aria-hidden="true">
     {%- for i in range(9) %}<svg class="turtle{% if i == 1 %} behind{% endif %}" viewBox="-10 -4.5 22 8.5" focusable="false"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></svg>{% endfor -%}

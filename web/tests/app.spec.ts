@@ -787,14 +787,32 @@ test("on a phone, Back after an update opens the new version one step back", asy
   await expect(list(page)).toBeHidden();
 });
 
-test("an address that leads nowhere shows Wrong turn?, and Back to your reading goes home", async ({ page }) => {
+test("an address that leads nowhere shows Wrong turn?, and Back to your reading goes home, by keyboard", async ({ page }) => {
   await openApp(page);
   await page.goto("/nowhere");
   await expect(page.getByRole("heading", { level: 1, name: "Wrong turn?" })).toBeFocused();
   await expect(page.getByText("404 error")).toBeVisible();
   await expect(page).toHaveTitle("Page not found · nine turtles");
-  await expect(page.getByRole("link", { name: "tell me which one" })).toHaveAttribute("href", /^mailto:hello@nineturtles\.app\?.*nowhere/);
-  await page.getByRole("button", { name: "Back to your reading" }).click();
+  const tell = page.getByRole("link", { name: "tell me which one" });
+  await expect(tell).toHaveAttribute("href", /^mailto:hello@nineturtles\.app\?.*nowhere/);
+  await page.keyboard.press("Tab");
+  await expect(tell).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Back to your reading" })).toBeFocused();
+  await page.keyboard.press("Enter");
   await expect(page.locator("#sidebar")).toBeAttached();
   await expect(page).toHaveURL(/\/(unread)?$/);
+});
+
+test("Wrong turn?'s email never carries what follows a # in the address", async ({ page }) => {
+  await openApp(page);
+  await page.goto("/nowhere#ticket=secret");
+  await expect(page.getByRole("link", { name: "tell me which one" })).not.toHaveAttribute("href", /secret/);
+});
+
+test("a signed-in reader opening an invite link goes straight into nine turtles", async ({ page }) => {
+  await openApp(page);
+  await page.goto("/sign-up#invite=ab12");
+  await expect(page.locator("#sidebar")).toBeAttached();
+  await expect(page.getByRole("heading", { name: "Wrong turn?" })).toHaveCount(0);
 });

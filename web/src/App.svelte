@@ -35,7 +35,10 @@
       unreachable = false;
       path = location.pathname;
       // Already signed in: an invite link opens nine turtles itself.
-      if (session.signedIn && path === "/sign-up") history.replaceState(null, "", "/");
+      if (session.signedIn && path === "/sign-up") {
+        history.replaceState(null, "", "/");
+        path = "/";
+      }
     } catch (problem) {
       const kept = noConnection(problem) ? await keptSession() : undefined;
       if (kept) session = { signedIn: true, ...kept };
