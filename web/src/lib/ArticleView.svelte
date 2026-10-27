@@ -13,7 +13,8 @@
   shows the summary, then a small centred note under the closing rule that
   links the whole article on the publisher's site; nine turtles never fetches
   the rest. A YouTube video plays above its text in YouTube's own player,
-  loaded only once you press Play (decision 0072).
+  loaded only once you press Play (decision 0072). A picture shown clearly
+  smaller than it really is opens larger on a sheet of its own (decision 0107).
 
   On a phone (SPEC section 20) the article is a screen of its own: the top
   bar has the back button, labeled with the list's name, and Open original;
@@ -32,6 +33,8 @@
   import { goTo, keepPlace, placeIn, placeOf, type Place } from "./places";
   import { connection } from "./connection.svelte";
   import { NOT_KEPT } from "./offline";
+  import PictureSheet from "./PictureSheet.svelte";
+  import { OPENABLE, markPicture } from "./pictures";
 
   let {
     article,
@@ -196,6 +199,58 @@
     area.addEventListener("click", followAnchor);
     return () => area.removeEventListener("click", followAnchor);
   });
+
+  // Pictures that open larger (decision 0107): one the page shows clearly
+  // smaller than it really is, once it has loaded, and not inside a link,
+  // becomes a button. Looked at again whenever a picture loads or changes
+  // size (the window, the text size or the line width changing).
+  let opened: { src: string; alt: string; picture: HTMLImageElement } | undefined = $state();
+
+  $effect(() => {
+    const body = text;
+    void full?.content;
+    void full?.summary;
+    if (!body) return;
+    const pictures = () => body.querySelectorAll("img");
+    const look = () => pictures().forEach(markPicture);
+    const sizes = new ResizeObserver(look);
+    sizes.observe(body);
+    pictures().forEach((image) => sizes.observe(image));
+    // A picture's load doesn't bubble; listening on the way down catches each one.
+    body.addEventListener("load", look, true);
+    body.addEventListener("error", look, true);
+    const press = (event: MouseEvent | KeyboardEvent) => {
+      const image = event.target;
+      if (!(image instanceof HTMLImageElement) || !image.classList.contains(OPENABLE)) return;
+      if (event instanceof KeyboardEvent && event.key !== "Enter" && event.key !== " ") return;
+      // Enter and Space open the picture, rather than scrolling or opening an article.
+      event.preventDefault();
+      opened = { src: image.currentSrc || image.src, alt: image.alt, picture: image };
+    };
+    body.addEventListener("click", press);
+    body.addEventListener("keydown", press);
+    look();
+    return () => {
+      sizes.disconnect();
+      body.removeEventListener("load", look, true);
+      body.removeEventListener("error", look, true);
+      body.removeEventListener("click", press);
+      body.removeEventListener("keydown", press);
+    };
+  });
+
+  // Another article closes an opened picture.
+  $effect(() => {
+    void article.id;
+    opened = undefined;
+  });
+
+  /** Closing the opened picture gives the keyboard back to it in the article. */
+  function closePicture() {
+    const picture = opened?.picture;
+    opened = undefined;
+    picture?.focus({ preventScroll: true });
+  }
 
   async function share() {
     const link = article.link;
@@ -375,6 +430,10 @@
       <!-- Share (or Copy link) and Mark unread, in a menu that opens upwards. -->
       <MoreMenu id="article-menu" label="More actions" groups={more} size={22} up />
     </div>
+  {/if}
+
+  {#if opened}
+    <PictureSheet src={opened.src} alt={opened.alt} onClose={closePicture} />
   {/if}
 
   {#if panelOpen}

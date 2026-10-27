@@ -90,7 +90,7 @@ test.describe("on a wide window", () => {
     await expect(text.locator("blockquote")).toContainText("Reading is a conversation");
     await expect(text.getByRole("table")).toBeVisible();
     await expect(text.locator("pre")).toContainText("read(book, slowly=True)");
-    const image = article(page).getByRole("img", { name: "A river drawn as three blue lines" });
+    const image = article(page).locator('img[alt="A river drawn as three blue lines"]');
     await expect(image).toBeVisible();
     await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
 
@@ -572,6 +572,58 @@ test.describe("on a wide window", () => {
     // It comes after the short closing line, and is the last thing in the article.
     expect(await note.evaluate((element) => element.previousElementSibling?.classList.contains("article-end"))).toBe(true);
     expect(await note.evaluate((element) => element.nextElementSibling)).toBeNull();
+  });
+
+  test("a big picture opens larger, alone on a dimmed sheet; Escape closes it and the keyboard is back on the picture (decision 0107)", async ({ page }) => {
+    await openRoom(page);
+    // A picture shown at its full size stays the publisher's picture, with nothing added.
+    await row(page, "The pleasure of a slow letter").click();
+    const river = article(page).locator('img[alt="A river drawn as three blue lines"]');
+    await expect.poll(() => river.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+    const shrunk = await river.evaluate((img: HTMLImageElement) => img.naturalWidth >= img.clientWidth * 1.2);
+    if (!shrunk) await expect(river).not.toHaveAttribute("role", "button");
+
+    await row(page, "A third, shorter note").click();
+    const picture = article(page).getByRole("button", { name: "Open picture larger: Two hills at dusk, drawn in greys" });
+    await expect(picture).toBeVisible();
+    await expect(picture).toHaveCSS("cursor", "pointer");
+
+    // A click opens it: alone, its alt text under it, an X and Open in new tab.
+    await picture.click();
+    const sheet = page.getByRole("dialog", { name: "Picture: Two hills at dusk, drawn in greys" });
+    await expect(sheet).toBeVisible();
+    await expect(sheet.locator("figcaption")).toHaveText("Two hills at dusk, drawn in greys");
+    const close = sheet.getByRole("button", { name: "Close" });
+    await expect(close).toHaveAttribute("title", "Close (Esc)");
+    const closeBox = await close.boundingBox();
+    expect(closeBox!.width).toBeGreaterThanOrEqual(44);
+    expect(closeBox!.height).toBeGreaterThanOrEqual(44);
+    const link = sheet.getByRole("link", { name: "Open in new tab" });
+    await expect(link).toHaveAttribute("href", /\/reading\/hills\.svg$/);
+    await expect(link).toHaveAttribute("rel", "noopener noreferrer");
+    await expect(link).toHaveAttribute("target", "_blank");
+    // As large as fits: bigger than in the article, never past the window.
+    const [inArticle, opened] = await Promise.all([picture.boundingBox(), sheet.locator("img").boundingBox()]);
+    expect(opened!.width).toBeGreaterThan(inArticle!.width);
+    expect(opened!.x + opened!.width).toBeLessThanOrEqual(1280);
+    expect(opened!.y + opened!.height).toBeLessThanOrEqual(800);
+
+    // Escape closes it, and the keyboard is back on the picture.
+    await page.keyboard.press("Escape");
+    await expect(sheet).toHaveCount(0);
+    await expect(picture).toBeFocused();
+
+    // With the keyboard only: Enter opens it, the X closes it; Space opens it, a press on the dim closes it.
+    await page.keyboard.press("Enter");
+    await expect(sheet).toBeVisible();
+    await sheet.getByRole("button", { name: "Close" }).press("Enter");
+    await expect(sheet).toHaveCount(0);
+    await expect(picture).toBeFocused();
+    await page.keyboard.press(" ");
+    await expect(sheet).toBeVisible();
+    await page.mouse.click(5, 5);
+    await expect(sheet).toHaveCount(0);
+    await expect(picture).toBeFocused();
   });
 
   test("in high-contrast mode, only the selected article is marked", async ({ page }) => {
