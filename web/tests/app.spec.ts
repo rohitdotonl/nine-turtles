@@ -169,8 +169,8 @@ test("? opens the shortcut list, Escape closes it and returns the keyboard's pla
   await page.keyboard.press("Tab");
   await expect(list).toBeFocused();
   await expect(list).toHaveCSS("outline-style", "solid");
-  // Only what works today is listed.
-  await expect(dialog.getByText("Go to Recently read")).toHaveCount(0);
+  // Recently read is there with its keys (g then r).
+  await expect(dialog.getByText("Go to Recently read")).toBeVisible();
   await expect(dialog.getByText("is:unread")).toBeVisible();
 
   // Shortcuts don't fire behind the open list: a key typed there finds itself in the list instead (decision 0062).

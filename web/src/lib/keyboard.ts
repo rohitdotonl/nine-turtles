@@ -141,8 +141,7 @@ export const SHORTCUTS: Shortcut[] = [
   shortcut("Getting around", "Go to Unread", [["go-unread", "g then u", { kind: "go", view: "unread" }]]),
   shortcut("Getting around", "Go to Starred", [["go-starred", "g then s", { kind: "go", view: "starred" }]]),
   shortcut("Getting around", "Go to All", [["go-all", "g then a", { kind: "go", view: "all" }]]),
-  // Recently read is being built in a change of its own: once /recent opens it, make this a `shortcut`.
-  soon("Getting around", "Go to Recently read", [["go-recent", "g then r", { kind: "go-to", path: "/recent" }]]),
+  shortcut("Getting around", "Go to Recently read", [["go-recent", "g then r", { kind: "go-to", path: "/recent" }]]),
   shortcut("Getting around", "Go to Your feeds", [["go-feeds", "g then f", { kind: "go-to", path: "/settings/feeds" }]]),
   shortcut("Getting around", "Go to Settings", [["go-settings", "g then ,", { kind: "go-to", path: "/settings" }]]),
   shortcut("Getting around", "Next / previous feed", [

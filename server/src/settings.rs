@@ -123,6 +123,8 @@ struct Settings {
     /// with its key as the cheat sheet prints it ("x", "Shift+X"), or "" for
     /// none. Only changed shortcuts are here; the rest keep their own keys.
     keys: Keys,
+    /// The lists the sidebar leaves out; none by default.
+    hidden: Vec<Hideable>,
 }
 
 /// The reader's own keys (decision 0110). The browser decides what each name
@@ -145,8 +147,6 @@ fn keys_fit(keys: &Keys) -> bool {
                 && key.chars().count() <= 20
                 && !key.chars().any(char::is_control)
         })
-    /// The lists the sidebar leaves out; none by default.
-    hidden: Vec<Hideable>,
 }
 
 /// A change: only the settings named are saved, so a tab from before river

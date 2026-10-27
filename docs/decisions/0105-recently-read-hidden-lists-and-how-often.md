@@ -32,7 +32,7 @@ sections 5, 15, 17 and 18).
      opened offline don't join it. This was simpler and honest; showing a
      stale copy could look like the latest.
    - Its More menu has only Refresh; it never says "New items"; searching
-     from it searches everything. No key yet (a later change adds `g r`).
+     from it searches everything. `g` then `r` opens it (decision 0110).
 
 2. **Show in the sidebar**, a group in Settings after Reading: tick boxes for
    Starred, All, Recently read and Saved searches, all ticked by default.

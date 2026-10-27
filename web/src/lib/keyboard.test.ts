@@ -123,6 +123,7 @@ describe("keyboard shortcuts", () => {
       "g then u",
       "g then s",
       "g then a",
+      "g then r",
       "g then f",
       "g then ,",
       "Shift+J",
@@ -256,7 +257,8 @@ describe.each(CUSTOM)("the cheat sheet and the keys agree: %s", (_, custom) => {
 
   it("keeps the keys of a shortcut that isn't built yet doing nothing", () => {
     const later = SHORTCUTS.filter((each) => !each.ready);
-    expect(later.map((each) => each.action)).toEqual(["Go to Recently read"]);
+    // None today: Go to Recently read (g then r) was the last, until /recent opened Recently read.
+    expect(later.map((each) => each.action)).toEqual([]);
     for (const key of later.flatMap((each) => each.keys)) {
       const read = reader();
       const [first, second] = key.split(" then ");
