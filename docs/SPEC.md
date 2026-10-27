@@ -199,7 +199,13 @@ A few words used throughout:
 - On a wide window the article sits in the middle of the reading area, like a page in a book, while its actions keep to the pane's right edge. On a computer at least 56px of paper stays beside the text on each side, as Apple Books keeps on a Mac; in a narrow pane the line gets shorter rather than the margins thinner (decision 0044). On a phone the text keeps the one 20px margin.
 - Body text wraps normally; only the article's last paragraph avoids a lone last word, so no line is pulled visibly short (decision 0040).
 - With no article chosen, the reading area shows one quiet line in its middle, "Time to read something beautiful." (decision 0064; it replaced "No article open"), in the serif and in muted grey (never the accent, no picture). When the list has something to open, screen readers also hear "Choose one from the list, or press j." (on touch screens just "Choose one from the list.").
-- Images load from the publisher's site. Invisible 1×1 "tracking pixels" are removed (any image sized 0 or 1 pixel), so they're never loaded.
+- Images load from the publisher's site, each only as you reach it in the text, so an article with many pictures opens quickly and nothing further down is loaded until you scroll near it.
+- **Reading here tells no one more than it must** (decision 0112):
+  - Invisible 1×1 "tracking pixels" are removed (any image sized 0 or 1 pixel), so they're never loaded.
+  - Pictures from known advertising, analytics and tracking services (a short list nine turtles keeps, such as Google Analytics, DoubleClick, Facebook's pixel, WordPress's and Mailchimp's counters and FeedBurner's) are removed too; the same site's real pictures stay.
+  - Links lose their tracking tags (`utm_…`, `fbclid`, `gclid`, `mc_cid` and similar well-known ones), both the article's own link (Open original, Copy link and Share) and the links in its text. Any other part of a link stays exactly as the publisher wrote it, so it still leads to the same page.
+  - When you open a link or a picture loads, the publisher isn't told it came from nine turtles (no "referrer" is sent).
+  - A YouTube video plays from YouTube's privacy-enhanced address (youtube-nocookie.com), and only once you press Play.
 - In a night theme, pictures are dimmed a little (never inverted) so a pale one doesn't glare on the dark page; a linked picture shows at full brightness under the pointer or the keyboard. A caption is clearly smaller than the text (13/16 of its size, with a 1.4 line height), 6px under its picture, in the second ink, which keeps 7 : 1 on the page in every theme. A table starts flush with the text's left edge, its header semibold over a fine rule and its rows over fainter ones (decisions 0050, 0053).
 - Anything unsafe in the feed's content (scripts, embedded frames, code hidden in styles) is removed before display. A YouTube player embedded in an article leaves a link in its place, "Watch the video on YouTube".
 - **YouTube videos play in YouTube's own player** (decision 0072). An article whose link is a YouTube video (from a channel's feed) shows, under the byline, a quiet box the shape of the video (16 : 9) in a faint tone of the text, with a round Play mark and "Play video", and no line under it (the owner removed it, 25 October 2026). Until it's pressed nothing is loaded from YouTube. Pressing it (a click, or Enter or Space) puts YouTube's privacy-enhanced player in the box's place, at the same size, playing; the keyboard moves into the player, and Tab leaves it. Screen readers hear "Play video: {title}" and, once it plays, "YouTube video: {title}". The video's description from the feed is its text; a video with none is just the video, ending with the closing rule.
@@ -216,6 +222,9 @@ A few words used throughout:
 7. Make the window very wide: Open original, Aa, Star and More stay together at the reading pane's right edge. Scroll an article: the text fades under the top bar.
 8. Scroll halfway down a long article, open another, then come back (or reload the page): it opens where you stopped. Read it to the end, open another and come back: it opens at its top.
 9. Follow a YouTube channel (paste its page address, e.g. youtube.com/@name, into Add a feed) and open a video: a grey box with Play shows above the description. Press it: the video plays in YouTube's own player, in the same place. Open the next video: it waits for Play again.
+10. Open an article whose link came with `?utm_source=…` (many newsletters' and news sites' feeds do this), choose Copy link and paste it: the `utm_…` part is gone, and the link still opens the same article. Hover over a link in the text that had tracking tags: they're gone too.
+11. Open a long article with many pictures on a slow connection: the text shows at once, and the pictures further down load as you scroll towards them.
+12. Open an article from a WordPress blog that showed a tiny stats picture before (`pixel.wp.com` or `stats.wp.com`): with the browser's developer tools on the Network tab, no request goes to those addresses.
 
 ## 8. Read state, marking unread, "mark all as read", undo
 
@@ -539,11 +548,11 @@ OPML is the standard file format feed readers use to move subscription lists bet
 **What it does**
 - Only in the article view, in its More (…) menu (at the right of the top bar on a computer, in the bottom bar on a phone).
 - On phones: the system share sheet. On desktop: **Copy link**.
-- Always shares the publisher's original link, never a nine turtles link.
+- Always shares the publisher's original link, never a nine turtles link, without its tracking tags (`utm_…` and the like, section 7).
 - No buttons for specific platforms.
 
 **How to check it**
-1. On desktop, choose Copy link in the article's More (…) menu and paste somewhere: it's the publisher's address.
+1. On desktop, choose Copy link in the article's More (…) menu and paste somewhere: it's the publisher's address, with no `utm_…` part.
 2. On a phone, choose Share in the More (…) menu: your phone's usual share sheet opens with the publisher's link.
 
 ## 22. Everyone can read here (accessibility)

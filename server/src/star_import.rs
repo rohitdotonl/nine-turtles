@@ -256,7 +256,9 @@ fn star(
         site_url,
         fingerprint,
         title,
-        link,
+        // The fingerprint above came from the link as the file gave it, as
+        // a feed's does; what's stored is the link without tracking tags.
+        link: feed::without_tracking(link),
         author,
         content,
         summary,
@@ -458,20 +460,35 @@ async fn stored(
     if let Some(url) = &star.feed_url {
         keys.insert(0, feed::normalize(url));
     }
+    // The same link counts once both are without tracking tags: an article
+    // stored earlier may still have them (decision 0112). So the database
+    // finds those starting the same, up to the query, and they're compared
+    // here.
+    let link = star.link.as_str();
+    let start = link.split(['?', '#']).next().unwrap_or(link);
     for key in keys {
-        let found: Option<(i64, i64, String)> = sqlx::query_as(
-            "SELECT articles.id, feeds.id, feeds.title
+        let candidates: Vec<(i64, i64, String, String, Option<String>)> = sqlx::query_as(
+            "SELECT articles.id, feeds.id, feeds.title, articles.fingerprint, articles.link
              FROM feeds JOIN articles ON articles.feed_id = feeds.id
-             WHERE feeds.url_key = ? AND feeds.newsletter_of IS NULL
-                 AND (articles.fingerprint = ? OR articles.link = ?)
-             ORDER BY articles.fingerprint != ? LIMIT 1",
+             WHERE feeds.url_key = ?1 AND feeds.newsletter_of IS NULL
+                 AND (articles.fingerprint = ?2
+                      OR substr(articles.link, 1, length(?3)) = ?3)
+             ORDER BY articles.fingerprint != ?2, articles.id",
         )
         .bind(&key)
         .bind(&star.fingerprint)
-        .bind(star.link.as_str())
-        .bind(&star.fingerprint)
-        .fetch_optional(&mut *connection)
+        .bind(start)
+        .fetch_all(&mut *connection)
         .await?;
+        let found = candidates
+            .into_iter()
+            .find(|(_, _, _, fingerprint, stored)| {
+                *fingerprint == star.fingerprint
+                    || stored
+                        .as_deref()
+                        .is_some_and(|stored| feed::link_without_tracking(stored) == link)
+            })
+            .map(|(article, feed, title, _, _)| (article, feed, title));
         if let Some((article, feed, title)) = found {
             hidden_subscription(
                 connection,

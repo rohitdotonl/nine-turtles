@@ -208,6 +208,59 @@ async fn stars_from_another_app_land_in_starred_with_their_originals() {
 }
 
 #[tokio::test]
+async fn a_star_finds_its_article_by_the_link_without_tracking_tags() {
+    let (base, state) = common::start_with_state(common::config()).await;
+    let reader = Reader {
+        cookie: common::signed_in(&base).await,
+        base,
+    };
+    let alpha = blog().await;
+    reader.follow(&alpha).await;
+    // As if stored before tracking tags and trackers were taken out on
+    // arrival (decision 0112).
+    sqlx::query(
+        "UPDATE articles SET link = link || '?utm_source=rss',
+             content = '<p><a href=\"https://x.example/?utm_source=a&amp;id=2\">x</a>\
+<img src=\"https://ad.doubleclick.net/p.gif\"><img src=\"https://alpha.example/a.png\"></p>'
+         WHERE link = 'https://alpha.example/1'",
+    )
+    .execute(&state.db)
+    .await
+    .unwrap();
+
+    // Another app's star of the same post, under its own ID and with its
+    // own tracking tag: only the link says it's the same.
+    let file = json!({
+        "items": [{
+            "title": "Alpha 1 as another app saw it",
+            "alternate": [{ "href": "https://alpha.example/1?fbclid=abc" }],
+            "origin": { "streamId": format!("feed/{alpha}"), "title": "Alpha" }
+        }]
+    });
+    let (status, answer) = reader.send("/api/starred/import", file.to_string()).await;
+    assert_eq!(status, StatusCode::OK, "{answer}");
+    assert_eq!(
+        answer["summary"],
+        json!({ "starred": 1, "already": 0, "unreadable": 0 })
+    );
+    assert_eq!(reader.titles("view=starred").await, ["Alpha post 1"]);
+
+    // Shown, the older article loses its tags and trackers too.
+    let starred = reader.get("/api/articles?view=starred").await;
+    assert_eq!(starred["articles"][0]["link"], "https://alpha.example/1");
+    let id = starred["articles"][0]["id"].as_i64().unwrap();
+    let article = &reader.get(&format!("/api/articles/{id}")).await["article"];
+    assert_eq!(article["link"], "https://alpha.example/1");
+    let content = article["content"].as_str().unwrap();
+    assert!(
+        content.contains(r#"href="https://x.example/?id=2""#),
+        "{content}"
+    );
+    assert!(!content.contains("doubleclick"), "{content}");
+    assert!(content.contains(r#"loading="lazy""#), "{content}");
+}
+
+#[tokio::test]
 async fn nine_turtles_starred_export_comes_back_into_a_fresh_one() {
     let alpha = blog().await;
     let first = {
