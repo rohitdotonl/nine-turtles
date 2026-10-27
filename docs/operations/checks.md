@@ -9,7 +9,7 @@ The script stops at the first failure and says which step failed.
 ## Side by side, and skipped for documents
 
 On GitHub the script runs in parts at once, each on its own computer
-(decisions 0065 and 0114): `scripts/check.sh frontend` (the first six steps below),
+(decisions 0065 and 0114): `scripts/check.sh docs` (the first step below, for every pull request), `scripts/check.sh frontend` (the next six),
 `scripts/check.sh rust` (formatting, lint, tests), and `scripts/check.sh
 browser` (builds the frontend and the release program, then runs the browser
 tests) four times, each with a quarter of the browser tests
@@ -19,7 +19,8 @@ of them and passes only if every one passed. Each part is still a plain script a
 arguments runs everything in order, as before.
 
 A pull request that changes only documents (`*.md` files in `docs/` or at
-the top of the repository) skips every part and the image build:
+the top of the repository) skips every part but `scripts/check.sh docs`
+(the quick link check) and the image build:
 nothing in them can break the program, its tests or the image.
 `docs/libraries.md` is the exception, because the library check reads it.
 One that changes only the website (`website/`) and documents runs just the
@@ -30,6 +31,7 @@ by the next merge, whatever it changes.
 
 | Step | What it catches | Where it lives |
 |---|---|---|
+| No broken links between documents | A Markdown link or a path in backticks (`docs/…`, `server/…`) in AGENTS.md, README.md or `docs/` that points to a file that doesn't exist. Leaves out the marketing research, the changelog and what a build makes. Runs on every pull request, documents-only ones too (decision 0117) | `scripts/check-doc-links.mjs` (`scripts/check.sh docs`) |
 | Libraries are on the approved list | A library in `server/Cargo.toml` (in any of the ways Rust allows listing one), `web/package.json` or `website/package.json` that isn't approved in `docs/libraries.md`; a GitHub Actions building block that isn't GitHub's own or isn't pinned | `scripts/check-libraries.mjs` |
 | Frontend: build | Frontend code that doesn't build | Vite |
 | Frontend: type check | Mistakes in TypeScript and Svelte code | `svelte-check` |

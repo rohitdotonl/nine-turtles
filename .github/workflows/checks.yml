@@ -38,6 +38,22 @@ jobs:
         id: look
         run: .github/code-changed.sh "${{ github.event_name }}" >> "$GITHUB_OUTPUT"
 
+  # Runs for every change, documents too: a moved or renamed document must
+  # not leave a link pointing nowhere.
+  docs:
+    name: Links between documents
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+
+      - name: Check the links between documents
+        run: scripts/check.sh docs
+
   frontend:
     name: Frontend checks
     needs: changes
@@ -184,7 +200,7 @@ jobs:
   # or was skipped because what changed can't affect it.
   checks:
     name: All checks
-    needs: [changes, frontend, rust, browser, website]
+    needs: [changes, docs, frontend, rust, browser, website]
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -192,6 +208,7 @@ jobs:
       - name: Every part passed
         env:
           CHANGES: ${{ needs.changes.result }}
+          DOCS: ${{ needs.docs.result }}
           CODE: ${{ needs.changes.outputs.code }}
           APP: ${{ needs.changes.outputs.app }}
           FRONTEND: ${{ needs.frontend.result }}
@@ -200,10 +217,10 @@ jobs:
           WEBSITE: ${{ needs.website.result }}
         run: |
           echo "What changed: $CHANGES (code=$CODE, app=$APP)"
-          echo "Frontend: $FRONTEND, Rust: $RUST, browser: $BROWSER, website: $WEBSITE"
+          echo "Documents: $DOCS, frontend: $FRONTEND, Rust: $RUST, browser: $BROWSER, website: $WEBSITE"
           # A part may be skipped only when what changed said to skip it.
           ok() { [ "$1" = success ] || { [ "$1" = skipped ] && [ "$2" = false ]; }; }
-          [ "$CHANGES" = success ]
+          [ "$CHANGES" = success ] && [ "$DOCS" = success ]
           ok "$FRONTEND" "$APP" && ok "$RUST" "$APP" && ok "$BROWSER" "$APP" && ok "$WEBSITE" "$CODE"
 
   screenshots:

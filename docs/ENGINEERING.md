@@ -273,6 +273,7 @@ Wherever a principle can be checked by a computer, it is. These run on every pul
 | First floor (accessibility) | Automated accessibility and contrast tests on every screen, in every theme by day and by night |
 | No motion (DESIGN.md) | Fails if animations or transitions appear in the styles |
 | Fast by design | Fails if the frontend download grows past its size budget |
+| Docs stay findable | Fails if a document links to a file that doesn't exist; runs on every pull request, documents-only ones too (decision 0117) |
 | Never add a library without asking | Fails if the code uses a library that isn't on the approved list in `docs/libraries.md`. Agents add to that list only after the owner has said yes. |
 | Publisher floor | Tests confirm conditional requests, backoff and that no article pages are fetched |
 | Search for Hindi | Tests search Hindi text and find the right results |
