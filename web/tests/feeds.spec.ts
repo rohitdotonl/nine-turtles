@@ -406,11 +406,16 @@ async function followed(page: Page): Promise<string> {
   expect(answer.ok()).toBe(true);
   return answer.text();
 }
-test("a shared page opens Add a feed with its address and finds its feed, but follows it only on Add feed", async ({ page }) => {
+
+test("a shared page opens Add a feed with its address and finds its feed, but follows it only on Add feed", async ({ page, isMobile }) => {
   const name = newBlog();
   const address = `${FEED_SITE}/blog/${name}/`;
-  // Signed out at first: after signing in, the sheet opens with the address kept.
-  await openApp(page, `/add-feed?url=${encodeURIComponent(address)}`);
+  // Signed out at first: after signing in, Add a feed opens with the address kept. On a computer
+  // it's the sheet; on a phone (checked at a phone's width) the phone's page sheet.
+  await page.setViewportSize(isMobile ? { width: 390, height: 800 } : { width: 1280, height: 800 });
+  await page.goto(new URL(`/add-feed?url=${encodeURIComponent(address)}`, FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
   await expect(page).toHaveURL(/\/add-feed$/);
   await expect(field(page)).toHaveValue(address);
   await expect(page.locator("#feed-address-status")).toHaveText("Found this feed:");
@@ -420,14 +425,20 @@ test("a shared page opens Add a feed with its address and finds its feed, but fo
   // Nothing is followed yet: not in the sidebar, not on the server.
   await expect(sidebar(page).getByRole("link", { name: `Blog ${name}` })).toHaveCount(0);
   expect(await followed(page)).not.toContain(name);
-  // Add feed follows it.
-  await page.getByRole("button", { name: "Add feed", exact: true }).click();
-  await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeVisible();
-  await expect(sidebar(page).getByRole("link", { name: `Blog ${name}` })).toHaveCount(1);
+  if (isMobile) {
+    // On a phone: Add feed, the full width at the screen's foot, follows it.
+    await page.getByRole("button", { name: "Add feed", exact: true }).tap();
+  } else {
+    // With only the keyboard: the sheet opens with the keyboard in the field, and Enter adds the chosen feed.
+    await expect(field(page)).toBeFocused();
+    await page.keyboard.press("Enter");
+  }
+  await expect(page).toHaveURL(/\/feeds\/[0-9]+$/);
+  expect(await followed(page)).toContain(name);
 });
 
-test("a share menu's text with the address inside it works too, and Cancel follows nothing", async ({ page, isMobile }) => {
-  test.skip(isMobile, "the sheet's Cancel is a computer's; the phone's page is checked by the test above");
+test("a share menu's text with the address inside it works too, and Escape follows nothing", async ({ page, isMobile }) => {
+  test.skip(isMobile, "a computer's sheet and keys; the phone's page sheet is checked at a phone's width by the test above");
   // Installed on Android, nine turtles is offered in the share menu.
   const manifest = await (await page.request.get(`${FEEDS_APP}/manifest.webmanifest`)).json();
   expect(manifest.share_target).toEqual({ action: "/add-feed", method: "GET", params: { title: "title", text: "text", url: "url" } });
@@ -439,7 +450,8 @@ test("a share menu's text with the address inside it works too, and Cancel follo
   const sheet = page.getByRole("dialog", { name: "Add a feed" });
   await expect(sheet.getByLabel("Paste a website or feed URL")).toHaveValue(address);
   await expect(sheet.locator("#feed-address-status")).toHaveText("This site offers more than one feed. Choose one:");
-  await sheet.getByRole("button", { name: "Cancel" }).click();
+  // Escape, as Cancel would, leaves without following anything.
+  await page.keyboard.press("Escape");
   await expect(sheet).toHaveCount(0);
   await expect(sidebar(page).getByRole("link", { name: `Blog ${name}` })).toHaveCount(0);
   expect(await followed(page)).not.toContain(name);

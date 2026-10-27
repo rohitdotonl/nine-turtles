@@ -34,6 +34,7 @@
     start = false,
     alternative,
     shared = "",
+    onShared,
   }: {
     field?: HTMLInputElement;
     /** The feeds already followed, to name one that's added twice. */
@@ -53,6 +54,8 @@
     alternative?: Snippet;
     /** A shared page's address, to fill in and look at on opening (decision 0104). */
     shared?: string;
+    /** The shared address has been taken, so a form built again (crossing the phone width) starts empty. */
+    onShared?: () => void;
   } = $props();
 
   let address = $state("");
@@ -141,7 +144,8 @@
   onMount(() => {
     if (!shared) return;
     address = shared;
-    look(shared);
+    onShared?.();
+    look(address);
   });
 
   function submit(event: SubmitEvent) {
