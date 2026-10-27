@@ -402,7 +402,7 @@ async fn moving_matches_posts_by_their_link_without_tracking_tags() {
         )
         .await;
     assert!(status.is_success(), "{status}");
-    // As if stored before tracking tags were taken off on arrival (decision 0102).
+    // As if stored before tracking tags were taken off on arrival (decision 0112).
     sqlx::query("UPDATE articles SET link = link || '?utm_source=rss' WHERE feed_id = ?")
         .bind(old)
         .execute(&reader.state.db)

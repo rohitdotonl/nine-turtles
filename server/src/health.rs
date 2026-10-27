@@ -529,7 +529,7 @@ async fn carry_entries_over(
     // The new copy of each old article, if there is one: the same
     // fingerprint first, else the same link (the lowest number if several).
     // Links are compared without their tracking tags: an old article may
-    // have been stored with them, its new copy never is (decision 0102).
+    // have been stored with them, its new copy never is (decision 0112).
     let olds: Vec<(i64, String, Option<String>)> = sqlx::query_as(
         "SELECT entries.article_id, articles.fingerprint, articles.link
          FROM entries CROSS JOIN articles ON articles.id = entries.article_id

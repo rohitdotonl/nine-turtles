@@ -6,7 +6,7 @@
 //! Invisible 1×1 tracking images, pictures from known trackers and the
 //! tracking tags on links are taken out at the same time, and pictures are
 //! set to load only as the reader reaches them (DESIGN.md → "Article
-//! view", decision 0102). A YouTube video's own description becomes its text, and a
+//! view", decision 0112). A YouTube video's own description becomes its text, and a
 //! YouTube player embedded in an article becomes a link to the video (SPEC
 //! section 7, decision 0072).
 
@@ -508,7 +508,7 @@ const ANCHOR_PREFIX: &str = "article-";
 /// (`facebook.com/tr`) matches only that path and what's below it, so the
 /// same site's real pictures still show. The list is nine turtles' own,
 /// short and kept by hand from the trackers most often found in feeds and
-/// newsletters (SPEC section 7, decision 0102). Add to it as needed, but
+/// newsletters (SPEC section 7, decision 0112). Add to it as needed, but
 /// never block a place that also serves real pictures (`i0.wp.com` is
 /// WordPress's picture store, so only `pixel.wp.com` and `stats.wp.com` are
 /// listed). A whole domain is listed only when it does nothing but serve
@@ -602,7 +602,7 @@ const LAZY: (&str, &str) = ("lazy", "async");
 /// Relative addresses are read against `base` (the article's address);
 /// without one, only whole addresses are looked at. Anything else is left
 /// exactly as it was. Used on arrival (`clean`) and again whenever an
-/// article is shown, for articles stored before (decision 0102).
+/// article is shown, for articles stored before (decision 0112).
 pub fn without_trackers(html: &str, base: Option<&Url>) -> String {
     let lower = html.to_ascii_lowercase();
     if !lower.contains("<img") && !lower.contains("<a") {

@@ -137,7 +137,7 @@ pub fn parse(raw: &[u8]) -> Option<Newsletter> {
     let link = web_link.as_deref().and_then(web_address);
     // The fingerprint (for an email without a Message-ID) comes from the
     // link as written, as a feed article's does, so it stays what it was
-    // before more tracking tags were taken off (decision 0102).
+    // before more tracking tags were taken off (decision 0112).
     let written = web_link
         .as_deref()
         .and_then(|text| Url::parse(text.trim()).ok())

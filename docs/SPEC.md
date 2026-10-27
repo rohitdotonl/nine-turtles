@@ -200,7 +200,7 @@ A few words used throughout:
 - Body text wraps normally; only the article's last paragraph avoids a lone last word, so no line is pulled visibly short (decision 0040).
 - With no article chosen, the reading area shows one quiet line in its middle, "Time to read something beautiful." (decision 0064; it replaced "No article open"), in the serif and in muted grey (never the accent, no picture). When the list has something to open, screen readers also hear "Choose one from the list, or press j." (on touch screens just "Choose one from the list.").
 - Images load from the publisher's site, each only as you reach it in the text, so an article with many pictures opens quickly and nothing further down is loaded until you scroll near it.
-- **Reading here tells no one more than it must** (decision 0102):
+- **Reading here tells no one more than it must** (decision 0112):
   - Invisible 1×1 "tracking pixels" are removed (any image sized 0 or 1 pixel), so they're never loaded.
   - Pictures from known advertising, analytics and tracking services (a short list nine turtles keeps, such as Google Analytics, DoubleClick, Facebook's pixel, WordPress's and Mailchimp's counters and FeedBurner's) are removed too; the same site's real pictures stay.
   - Links lose their tracking tags (`utm_…`, `fbclid`, `gclid`, `mc_cid` and similar well-known ones), both the article's own link (Open original, Copy link and Share) and the links in its text. Any other part of a link stays exactly as the publisher wrote it, so it still leads to the same page.

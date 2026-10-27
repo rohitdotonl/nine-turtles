@@ -809,7 +809,7 @@ pub struct ArticleRow {
     pub feed_title: String,
     pub title: String,
     /// Without tracking tags, even for an article stored before they were
-    /// taken off on arrival (decision 0102).
+    /// taken off on arrival (decision 0112).
     #[serde(serialize_with = "link_without_tracking")]
     pub link: Option<String>,
     /// Seconds since 1970 (UTC); the screen shows it in the device's time zone.
@@ -1176,7 +1176,7 @@ pub(crate) async fn full_articles(
     .await?;
     for article in &mut articles {
         // Articles stored before trackers were taken out on arrival
-        // (Milestone 5, decision 0102) lose them here instead, and their
+        // (Milestone 5, decision 0112) lose them here instead, and their
         // pictures load as the reader reaches them.
         article.content = article
             .content

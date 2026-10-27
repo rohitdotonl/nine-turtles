@@ -217,7 +217,7 @@ async fn a_star_finds_its_article_by_the_link_without_tracking_tags() {
     let alpha = blog().await;
     reader.follow(&alpha).await;
     // As if stored before tracking tags and trackers were taken out on
-    // arrival (decision 0102).
+    // arrival (decision 0112).
     sqlx::query(
         "UPDATE articles SET link = link || '?utm_source=rss',
              content = '<p><a href=\"https://x.example/?utm_source=a&amp;id=2\">x</a>\

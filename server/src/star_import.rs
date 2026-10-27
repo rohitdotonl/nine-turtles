@@ -461,7 +461,7 @@ async fn stored(
         keys.insert(0, feed::normalize(url));
     }
     // The same link counts once both are without tracking tags: an article
-    // stored earlier may still have them (decision 0102). So the database
+    // stored earlier may still have them (decision 0112). So the database
     // finds those starting the same, up to the query, and they're compared
     // here.
     let link = star.link.as_str();
