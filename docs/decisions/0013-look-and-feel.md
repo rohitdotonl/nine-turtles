@@ -1,5 +1,7 @@
 # 0013: Look and feel foundations
 
+> **Partly replaced** by later look-and-feel notes (summarised in [0061](0061-redesign-notes-folded.md), then [0062](0062-shortcuts-in-words-find-and-one-tip.md)): the "Press ? for shortcuts" hint and the top band's height changed.
+
 *23 October 2026, Milestone 4. Plan approved by the owner; greys chosen by the owner (warm).*
 
 **Colors.** Each theme has six colors and two tints, all in `web/src/app.css`:

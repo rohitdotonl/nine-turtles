@@ -1,5 +1,7 @@
 # 0090: The owner's Readers page, and fair limits
 
+> **Partly replaced:** [0093](0093-readers-page-shows-last-here.md) shows "last here" on the Readers page; [0115](0115-sign-up-always-open.md) removed the count of sign-ups waiting for their email.
+
 *26 October 2026. Milestone 5 of the plan for 100 to 200 readers
 (https://claude.ai/artifact/V3GhrBxfXDG1TjPMsXQFPk): "Your admin page and
 fair limits: see accounts and their problems, and limits such as 1,000 feeds

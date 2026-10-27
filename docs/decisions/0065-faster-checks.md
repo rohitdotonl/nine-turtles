@@ -1,5 +1,7 @@
 # 0065: Checks run side by side; documents-only changes skip them
 
+> **Partly replaced:** [0114](0114-quicker-steadier-checks.md) runs the browser tests in four parts, not two; [0117](0117-docs-read-less.md) runs the link check on documents-only changes too.
+
 *October 2026.*
 
 **Decision.** GitHub Actions runs `scripts/check.sh` in parts at the same

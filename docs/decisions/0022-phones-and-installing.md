@@ -1,5 +1,7 @@
 # 0022: Phones and installing the app
 
+> **Partly replaced by [0067](0067-turtle-logo.md):** the lowercase "s" icon gave way to the turtle; and by [0085](0085-open-tabs-switch-on-the-next-move.md) on tabs left open across an update.
+
 *23 October 2026, Milestone 13. Built from SPEC section 20 and DESIGN.md → "Mobile" without a separate plan (decision 0014). The owner chose to keep all of it in V1, including installing and opening without a connection.*
 
 **Back is history.** On a phone each move (Feeds → list → article) is an

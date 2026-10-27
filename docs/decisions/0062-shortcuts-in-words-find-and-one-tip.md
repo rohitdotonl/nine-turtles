@@ -1,5 +1,7 @@
 # 0062: Shortcuts in words, a list you can search, and one welcome tip
 
+> **Partly replaced by [0064](0064-a-beautiful-empty-page-and-capital-keys.md):** "Shortcuts" became "Keys", and "No article open" became "Time to read something beautiful."
+
 *25 October 2026. The owner asked for these after a fresh-eyes review: "A
 label, not just an icon", grouping, a welcome tip and searching the list.
 Changes 0041's rule that nothing on screen mentions shortcuts.*

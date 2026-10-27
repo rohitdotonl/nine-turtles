@@ -1,5 +1,7 @@
 # 0092: "Check your email", once, and one password link a minute
 
+> **Partly replaced by [0115](0115-sign-up-always-open.md):** there are no sign-up emails any more, so the sign-up link and its exception to the one-a-minute limit are gone.
+
 *26 October 2026. The owner pressed Send link twice on "Forgot your
 password?" and got two emails; the page also said twice that an email was
 coming (the line under the field, then the answer under it), and the button
