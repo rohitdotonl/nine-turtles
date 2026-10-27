@@ -288,6 +288,9 @@ async fn session(State(state): State<AppState>, headers: HeaderMap) -> Response 
     // send email (to change that email, decision 0088).
     let body = Json(json!({
         "signed_in": true,
+        // Whose device it is, so the web app never hands one reader's
+        // offline copies or waiting marks to the next.
+        "reader": person,
         "version": crate::VERSION,
         "owner": owner,
         "email": email,
