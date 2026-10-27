@@ -1198,13 +1198,13 @@ textarea {
     container-type: inline-size;
   }
 
-  /* Never below two-thirds of the reader's text size, so larger text never shrinks it (SPEC section 2). */
+  /* Fits the field at any text size (SPEC section 2): never below 10.5px; "…" only as a last resort. */
   .welcome-field {
     text-overflow: ellipsis;
   }
   .welcome-field::placeholder,
   .welcome-hint {
-    font-size: clamp(0.66rem, calc((100cqi - 8.75rem) / 14.5), 1rem);
+    font-size: clamp(10.5px, calc((100cqi - 8.75rem) / 14.5), 1rem);
   }
 
   @container (max-width: 22rem) {

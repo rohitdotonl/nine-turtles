@@ -124,7 +124,7 @@ test("on a small phone, the welcome's hint fits its field, at 320 and 375 pixels
     await page.evaluate((size) => (document.documentElement.style.fontSize = size), text);
     const { wide, room, size, typed } = await fits();
     expect(wide, `${width}px at ${text}`).toBeLessThanOrEqual(room);
-    // Never smaller than two-thirds of the text size (10.5px at the usual size); what's typed stays the field's own size, so a phone never zooms in.
+    // Never smaller than 10.5px; what's typed stays the field's own size, so a phone never zooms in.
     expect(size).toBeGreaterThanOrEqual(10.5);
     expect(typed).toBeGreaterThanOrEqual(16);
   }
