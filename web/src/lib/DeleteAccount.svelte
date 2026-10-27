@@ -53,9 +53,9 @@
     message = "";
     const deleted = await (data ? deleteData() : deleteAccount());
     if (deleted && data) {
-      // This device's copies were of what's gone; the app opens again, empty.
+      // This device's copies were of what's gone; the app opens again, empty, at its start.
       await forget();
-      location.reload();
+      location.assign("/");
       return;
     }
     busy = false;

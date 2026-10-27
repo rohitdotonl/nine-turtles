@@ -234,9 +234,14 @@ test("Delete data empties the account and keeps the reader signed in", async ({ 
   expect(await folders()).toHaveLength(1);
 
   await page.keyboard.press("Enter");
-  await sure.getByRole("button", { name: "Delete data" }).click();
-  // The app starts again, empty, still signed in.
+  await expect(sure.getByRole("heading", { name: "Delete your data?" })).toBeFocused();
+  // Past the three downloads to Delete data, with only the keyboard.
+  for (let step = 0; step < 4; step += 1) await page.keyboard.press("Tab");
+  await expect(sure.getByRole("button", { name: "Delete data" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  // The app starts again at its start, empty, still signed in.
   await expect.poll(folders).toHaveLength(0);
+  await expect(page).not.toHaveURL(/\/settings/);
   await expect(page.locator("#sidebar")).toBeAttached();
   await page.goto("/settings");
   await expect(page.getByText(email)).toBeVisible();

@@ -13,14 +13,17 @@ Settings › Account › **Delete data…**, keeping the account itself.
   progress and Up Next.
 - **What stays:** email and password, passkeys, app password, connected
   assistants, settings, plan and the newsletter address. The reader stays
-  signed in. A newsletter that arrives later starts its feed again.
+  signed in. A newsletter they still followed starts its feed again when
+  its next email arrives; one they had stopped stays stopped.
 - **How:** the same one "Are you sure?" sheet as Delete account (decision
   0088): it says what goes, offers Export OPML, Export starred articles and
   Export collections first, then Delete data. No undo; the nightly backups
   still hold it. This device's saved copies go too, and the app opens again,
   empty.
 - **Code:** `people::delete_data` shares `people::let_go` with
-  `people::delete`, emptying only `people::DATA_TABLES`. The route is
+  `people::delete`, emptying only `people::DATA_TABLES`; every per-reader
+  table is in exactly one of `DATA_TABLES` and `ACCOUNT_TABLES`, checked by
+  a test. The route is
   `POST /api/people/me/data/delete`. No password is asked for, as with
   deleting an account.
 - **Delete account** already existed for every reader but the owner

@@ -750,13 +750,48 @@ async fn deleting_ones_data_empties_the_account_but_keeps_it() {
     .await;
     assert!(made.status().is_success(), "{}", made.status());
 
+    // Two of their newsletters: one they follow, and one they stopped,
+    // whose feed's line keeps its sender away (decision 0091).
+    for (id, stopped) in [(903, None), (904, Some(1))] {
+        let url = format!("newsletter:{person}:{id}");
+        sqlx::query(
+            "INSERT INTO feeds (id, url, url_key, title, added_at, newsletter_of)
+             VALUES (?, ?2, ?2, 'A letter', 1, ?3)",
+        )
+        .bind(id)
+        .bind(&url)
+        .bind(person)
+        .execute(db)
+        .await
+        .unwrap();
+        sqlx::query(
+            "INSERT INTO subscriptions (person_id, feed_id, title, added_at, unsubscribed_at)
+             VALUES (?, ?, 'A letter', 1, ?)",
+        )
+        .bind(person)
+        .bind(id)
+        .bind(stopped)
+        .execute(db)
+        .await
+        .unwrap();
+    }
+
+    // Each table is the data that goes or the account that stays, never both.
     let tables = tables_with_a_reader(db).await;
+    for (table, _) in nine_turtles::people::PER_READER_TABLES {
+        let data = nine_turtles::people::DATA_TABLES.contains(table);
+        let account = nine_turtles::people::ACCOUNT_TABLES.contains(table);
+        assert!(
+            data != account,
+            "{table} must be in exactly one of people::DATA_TABLES and people::ACCOUNT_TABLES"
+        );
+    }
     let mut owners_before = Vec::new();
     for table in &tables {
         owners_before.push(lines_of(db, table, 1).await);
     }
     let mut kept_before = Vec::new();
-    for table in ["person_settings", "app_passwords"] {
+    for table in nine_turtles::people::ACCOUNT_TABLES {
         kept_before.push(lines_of(db, table, person).await);
     }
 
@@ -780,10 +815,7 @@ async fn deleting_ones_data_empties_the_account_but_keeps_it() {
             "{table} still holds the reader's data"
         );
     }
-    for (table, before) in ["person_settings", "app_passwords"]
-        .into_iter()
-        .zip(kept_before)
-    {
+    for (table, before) in nine_turtles::people::ACCOUNT_TABLES.iter().zip(kept_before) {
         assert_eq!(
             lines_of(db, table, person).await,
             before,
@@ -803,6 +835,12 @@ async fn deleting_ones_data_empties_the_account_but_keeps_it() {
         .await
         .unwrap();
     assert_eq!(feeds, [902]);
+    // The newsletter they followed goes; the one they stopped stays stopped.
+    let letters: Vec<i64> = sqlx::query_scalar("SELECT id FROM feeds WHERE id IN (903, 904)")
+        .fetch_all(db)
+        .await
+        .unwrap();
+    assert_eq!(letters, [904]);
 
     // They're still signed in, and can sign in again with the same password.
     assert_eq!(session(&base, Some(&cookie)).await["signed_in"], true);

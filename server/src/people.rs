@@ -182,9 +182,11 @@ pub async fn delete(db: &SqlitePool, person: i64) -> Result<(), sqlx::Error> {
 }
 
 /// The tables "Delete my data" empties of a reader's lines (decision 0117):
-/// what they follow, read and keep. Their account stays: email and
-/// password, passkeys, app password, connected assistants, settings, plan
-/// and newsletter address.
+/// what they follow, read and keep. Their account stays (`ACCOUNT_TABLES`).
+///
+/// **Every table in `PER_READER_TABLES` is in exactly one of `DATA_TABLES`
+/// and `ACCOUNT_TABLES`**, so a new table is a choice, not an accident; a
+/// test (`server/tests/accounts.rs`) fails otherwise.
 pub const DATA_TABLES: &[&str] = &[
     "collection_articles",
     "collections",
@@ -195,6 +197,20 @@ pub const DATA_TABLES: &[&str] = &[
     "rules",
     "saved_searches",
     "folders",
+];
+
+/// The tables "Delete my data" leaves alone: the account itself, with its
+/// sign-in, settings, plan and newsletter address (decision 0117).
+pub const ACCOUNT_TABLES: &[&str] = &[
+    "newsletter_addresses",
+    "app_passwords",
+    "person_settings",
+    "email_links",
+    "sessions",
+    "assistant_connections",
+    "assistant_codes",
+    "passkeys",
+    "plans",
 ];
 
 /// Empties reader `person`'s account, in one step: all or nothing. Every
@@ -216,6 +232,18 @@ async fn let_go(
     person: i64,
     keep_account: bool,
 ) -> Result<(), sqlx::Error> {
+    // Their newsletters they still follow. One they stopped keeps its feed's
+    // line while their account stays, so the sender stays away and its
+    // one-click unsubscribe can still go out (decision 0091).
+    let newsletters: Vec<i64> = sqlx::query_scalar(
+        "SELECT feeds.id FROM feeds
+             JOIN subscriptions ON subscriptions.feed_id = feeds.id AND subscriptions.person_id = ?1
+         WHERE feeds.newsletter_of = ?1 AND (?2 = 0 OR subscriptions.unsubscribed_at IS NULL)",
+    )
+    .bind(person)
+    .bind(keep_account)
+    .fetch_all(&mut *connection)
+    .await?;
     // Nothing of theirs is kept now: no star, and no collection, holds an entry back.
     sqlx::query("DELETE FROM collection_articles WHERE person_id = ?")
         .bind(person)
@@ -244,14 +272,27 @@ async fn let_go(
             .execute(&mut *connection)
             .await?;
     }
-    // Their newsletter feeds, whose articles have just gone (decision 0091).
-    sqlx::query(
-        "DELETE FROM feeds WHERE newsletter_of = ?1
-         AND NOT EXISTS (SELECT 1 FROM articles WHERE feed_id = feeds.id)",
-    )
-    .bind(person)
-    .execute(&mut *connection)
-    .await?;
+    // Their newsletter feeds, whose articles have just gone (decision 0091):
+    // every one when the account goes too.
+    if !keep_account {
+        sqlx::query(
+            "DELETE FROM feeds WHERE newsletter_of = ?1
+             AND NOT EXISTS (SELECT 1 FROM articles WHERE feed_id = feeds.id)",
+        )
+        .bind(person)
+        .execute(&mut *connection)
+        .await?;
+        return Ok(());
+    }
+    for feed in newsletters {
+        sqlx::query(
+            "DELETE FROM feeds WHERE id = ?
+             AND NOT EXISTS (SELECT 1 FROM articles WHERE feed_id = feeds.id)",
+        )
+        .bind(feed)
+        .execute(&mut *connection)
+        .await?;
+    }
     Ok(())
 }
 
