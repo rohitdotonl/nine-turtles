@@ -608,11 +608,23 @@ async fn deleting_an_account_leaves_nothing_of_theirs() {
 
     let deleted = post(&base, "/api/people/me/delete", Some(&cookie), json!({})).await;
     assert_eq!(deleted.status(), StatusCode::NO_CONTENT);
+    // Both the cookie and its name from before the rename are cleared.
+    let cleared: Vec<&str> = deleted
+        .headers()
+        .get_all("set-cookie")
+        .iter()
+        .map(|value| value.to_str().unwrap())
+        .filter(|value| value.contains("Max-Age=0"))
+        .collect();
     assert!(
-        deleted.headers()["set-cookie"]
-            .to_str()
-            .unwrap()
-            .contains("Max-Age=0")
+        cleared
+            .iter()
+            .any(|value| value.starts_with("nine_turtles_session=;"))
+    );
+    assert!(
+        cleared
+            .iter()
+            .any(|value| value.starts_with("slowfeed_session=;"))
     );
     assert_eq!(session(&base, Some(&cookie)).await["signed_in"], false);
 
