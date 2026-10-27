@@ -38,4 +38,4 @@ API (decision 0070). It isn't marketed as an AI feature.
   libraries used, and that two test assistants can still connect and
   search. Needed updates go through a normal pull request. It says nothing
   when all is fine.
-- **Libraries:** none approved yet; the build asks the owner first.
+- **Libraries:** the owner approved in advance (27 October 2026) whatever libraries this milestone needs. The build still picks few and boring ones and lists each in `docs/libraries.md` with why.
