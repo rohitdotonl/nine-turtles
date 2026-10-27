@@ -764,3 +764,187 @@ async fn a_feed_an_assistant_unsubscribes_from_is_kept_for_thirty_days() {
     let (_, listed) = get_json(&base, "/api/assistants", &cookie).await;
     assert_eq!(listed["unsubscribed"], json!([]));
 }
+
+#[tokio::test]
+async fn removing_a_folder_or_rule_can_be_undone_by_the_assistant() {
+    let base = common::start(common::config()).await;
+    let cookie = common::signed_in(&base).await;
+    let (_, added) = post_json(
+        &base,
+        "/api/feeds",
+        Some(&cookie),
+        &json!({ "address": publisher("Folder Blog").await }),
+    )
+    .await;
+    let feed = added["feed"]["id"].as_i64().unwrap();
+    let (_, made) = post_json(&base, "/api/assistants/key", Some(&cookie), &json!({})).await;
+    let key = made["key"].as_str().unwrap();
+    tool(
+        &base,
+        key,
+        "edit_feed",
+        json!({ "feed_id": feed, "folders": ["Reading"] }),
+    )
+    .await;
+    let (feeds, _) = tool(&base, key, "list_feeds", json!({})).await;
+    let folder = feeds["folders"][0]["id"].as_i64().unwrap();
+    let (rule, _) = tool(
+        &base,
+        key,
+        "add_rule",
+        json!({ "words": "gardens", "folder_id": folder, "action": "star" }),
+    )
+    .await;
+
+    let (removed, error) = tool(&base, key, "delete_folder", json!({ "folder_id": folder })).await;
+    assert!(!error);
+    assert_eq!(removed["feed_ids"], json!([feed]));
+    assert_eq!(removed["rule_ids"], json!([rule["rule_id"]]));
+    let (back, error) = tool(
+        &base,
+        key,
+        "create_folder",
+        json!({ "name": removed["removed"], "feed_ids": removed["feed_ids"], "rule_ids": removed["rule_ids"] }),
+    )
+    .await;
+    assert!(!error);
+    let (feeds, _) = tool(&base, key, "list_feeds", json!({})).await;
+    assert_eq!(feeds["feeds"][0]["folders"], json!(["Reading"]));
+    let (rules, _) = tool(&base, key, "list_rules", json!({})).await;
+    assert_eq!(rules["rules"][0]["folder_id"], back["folder_id"]);
+    assert_eq!(rules["rules"][0]["place_gone"], false);
+
+    let (gone, _) = tool(
+        &base,
+        key,
+        "delete_rule",
+        json!({ "rule_id": rule["rule_id"] }),
+    )
+    .await;
+    let removed = &gone["removed"];
+    let (_, error) = tool(
+        &base,
+        key,
+        "add_rule",
+        json!({ "words": removed["words"], "folder_id": back["folder_id"], "action": removed["action"], "paused": removed["paused"] }),
+    )
+    .await;
+    assert!(!error);
+}
+
+#[tokio::test]
+async fn a_kept_feed_added_again_comes_back_whole() {
+    let base = common::start(common::config()).await;
+    let cookie = common::signed_in(&base).await;
+    let address = publisher("Whole Blog").await;
+    let (_, added) = post_json(
+        &base,
+        "/api/feeds",
+        Some(&cookie),
+        &json!({ "address": address }),
+    )
+    .await;
+    let feed = added["feed"]["id"].as_i64().unwrap();
+    let (_, made) = post_json(&base, "/api/assistants/key", Some(&cookie), &json!({})).await;
+    let key = made["key"].as_str().unwrap();
+    let (unread, _) = tool(&base, key, "list_unread", json!({})).await;
+    let first = unread["articles"][0]["id"].as_i64().unwrap();
+    tool(
+        &base,
+        key,
+        "mark_read",
+        json!({ "article_ids": [first], "read": true }),
+    )
+    .await;
+    tool(&base, key, "unsubscribe_feed", json!({ "feed_id": feed })).await;
+
+    // Through the Add field: back with its read mark, not afresh.
+    let (status, again) = post_json(
+        &base,
+        "/api/feeds",
+        Some(&cookie),
+        &json!({ "address": address }),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CREATED, "{again}");
+    assert_eq!(again["feed"]["id"], feed);
+    assert_eq!(again["feed"]["unread"], 4);
+    let (_, listed) = get_json(&base, "/api/assistants", &cookie).await;
+    assert_eq!(listed["unsubscribed"], json!([]));
+}
+
+#[tokio::test]
+async fn an_assistant_cant_keep_a_feed_the_reader_unsubscribed_from() {
+    let base = common::start(common::config()).await;
+    let cookie = common::signed_in(&base).await;
+    let (_, added) = post_json(
+        &base,
+        "/api/feeds",
+        Some(&cookie),
+        &json!({ "address": publisher("Gone Blog").await }),
+    )
+    .await;
+    let feed = added["feed"]["id"].as_i64().unwrap();
+    let (status, _) = post_json(
+        &base,
+        &format!("/api/feeds/{feed}/unsubscribe"),
+        Some(&cookie),
+        &json!({}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    let (_, made) = post_json(&base, "/api/assistants/key", Some(&cookie), &json!({})).await;
+    let (_, error) = tool(
+        &base,
+        made["key"].as_str().unwrap(),
+        "unsubscribe_feed",
+        json!({ "feed_id": feed }),
+    )
+    .await;
+    assert!(error);
+    let (_, listed) = get_json(&base, "/api/assistants", &cookie).await;
+    assert_eq!(
+        listed["unsubscribed"],
+        json!([]),
+        "it keeps the screen's ten minutes"
+    );
+}
+
+#[tokio::test]
+async fn a_busy_assistant_is_asked_to_wait() {
+    let base = common::start(common::config()).await;
+    let cookie = common::signed_in(&base).await;
+    let (_, made) = post_json(&base, "/api/assistants/key", Some(&cookie), &json!({})).await;
+    let key = made["key"].as_str().unwrap();
+    for _ in 0..60 {
+        let (_, error) = tool(&base, key, "list_rules", json!({})).await;
+        assert!(!error);
+    }
+    let (said, error) = tool(&base, key, "list_rules", json!({})).await;
+    assert!(error);
+    assert!(said.as_str().unwrap().contains("wait"));
+
+    // Registering: ten an hour from one address, then others still can.
+    let register_from = |address: &'static str| {
+        let base = base.clone();
+        async move {
+            Client::new()
+                .post(format!("{base}/oauth/register"))
+                .header("x-forwarded-for", address)
+                .header("content-type", "application/json")
+                .body(json!({ "redirect_uris": [REDIRECT] }).to_string())
+                .send()
+                .await
+                .unwrap()
+                .status()
+        }
+    };
+    for _ in 0..10 {
+        assert_eq!(register_from("203.0.113.9").await, StatusCode::CREATED);
+    }
+    assert_eq!(
+        register_from("203.0.113.9").await,
+        StatusCode::TOO_MANY_REQUESTS
+    );
+    assert_eq!(register_from("198.51.100.4").await, StatusCode::CREATED);
+}

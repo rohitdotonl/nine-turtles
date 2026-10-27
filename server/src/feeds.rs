@@ -204,6 +204,18 @@ enum Added {
 
 async fn add(state: &AppState, person: i64, address: &str) -> Result<Added, NotAdded> {
     let url = parse_address(address).ok_or(NotAdded::NotAnAddress)?;
+    // A feed an assistant unsubscribed from is kept 30 days (SPEC section
+    // 33): adding it again brings it back whole, as Bring back does, rather
+    // than starting it afresh.
+    if let Some(id) = bring_back(state, person, &url, true).await? {
+        let feeds: Vec<FeedRow> = sqlx::query_as(FEEDS)
+            .bind(person)
+            .fetch_all(&state.db)
+            .await?;
+        if let Some(feed) = feeds.into_iter().find(|feed| feed.id == id) {
+            return Ok(Added::Feed(feed));
+        }
+    }
     already_followed(state, person, &url).await?;
     if !crate::payments::may_add_feeds(state, person).await? {
         return Err(NotAdded::PlanEnded);
@@ -242,7 +254,7 @@ async fn add(state: &AppState, person: i64, address: &str) -> Result<Added, NotA
 /// articles, read marks and folders, as Undo would bring it back.
 pub async fn add_for_app(state: &AppState, person: i64, address: &str) -> Result<i64, NotAdded> {
     let url = parse_address(address).ok_or(NotAdded::NotAnAddress)?;
-    if let Some(id) = bring_back(state, person, &url).await? {
+    if let Some(id) = bring_back(state, person, &url, false).await? {
         return Ok(id);
     }
     let address = match add(state, person, url.as_str()).await {
@@ -254,7 +266,7 @@ pub async fn add_for_app(state: &AppState, person: i64, address: &str) -> Result
             None => return Err(NotAdded::NoFeed),
         },
     };
-    if let Some(id) = bring_back(state, person, &address).await? {
+    if let Some(id) = bring_back(state, person, &address, false).await? {
         return Ok(id);
     }
     match add(state, person, address.as_str()).await {
@@ -266,16 +278,24 @@ pub async fn add_for_app(state: &AppState, person: i64, address: &str) -> Result
 }
 
 /// Follows again a feed at this address that the reader unfollowed but
-/// that isn't cleared yet, as Undo does.
-async fn bring_back(state: &AppState, person: i64, url: &Url) -> Result<Option<i64>, sqlx::Error> {
+/// that isn't cleared yet, as Undo does; with `kept_only`, only one an
+/// assistant unsubscribed from (kept 30 days).
+async fn bring_back(
+    state: &AppState,
+    person: i64,
+    url: &Url,
+    kept_only: bool,
+) -> Result<Option<i64>, sqlx::Error> {
     let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
     let waiting: Option<i64> = sqlx::query_scalar(
         "SELECT feeds.id FROM feeds JOIN subscriptions ON subscriptions.feed_id = feeds.id
          WHERE feeds.url_key = ? AND subscriptions.person_id = ?
-             AND subscriptions.unsubscribed_at IS NOT NULL AND subscriptions.cleared = 0",
+             AND subscriptions.unsubscribed_at IS NOT NULL AND subscriptions.cleared = 0
+             AND (? = 0 OR subscriptions.kept_until IS NOT NULL)",
     )
     .bind(feed::normalize(url))
     .bind(person)
+    .bind(kept_only)
     .fetch_optional(&mut *transaction)
     .await?;
     if let Some(id) = waiting {

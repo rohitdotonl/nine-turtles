@@ -56,10 +56,12 @@ const CODE_FOR: i64 = 10 * 60;
 /// A registered assistant nobody connects is forgotten after a day.
 const UNUSED_CLIENT_FOR: i64 = 24 * 60 * 60;
 /// At most this many registered assistants are kept, so registering can't
-/// fill the disk; the oldest unused go first.
-const MOST_CLIENTS: i64 = 500;
-/// At most this many registrations an hour, from anywhere.
-const REGISTRATIONS_AN_HOUR: u32 = 60;
+/// fill the disk: past it, the oldest nobody connected goes to make room.
+const MOST_CLIENTS: i64 = 2_000;
+/// At most this many registrations an hour from one internet address, and
+/// from everywhere together, so one stranger can't crowd out everyone else.
+const REGISTRATIONS_AN_HOUR_EACH: u32 = 10;
+const REGISTRATIONS_AN_HOUR: u32 = 300;
 /// The longest name an assistant may give itself, in characters.
 const LONGEST_NAME: usize = 80;
 /// At most this many return addresses, each this long.
@@ -238,7 +240,31 @@ pub fn allowed_redirect(address: &str) -> bool {
 }
 
 /// Dynamic client registration (RFC 7591): an assistant introduces itself.
-async fn register(State(state): State<AppState>, Json(form): Json<Registration>) -> Response {
+/// Who is asking, as well as nine turtles can tell: the address the host's
+/// proxy says the request came from (the last one it added), as a number
+/// for `Limits`. Render's proxy adds it; it can't be faked from outside,
+/// since anything a stranger adds comes before it. None with no proxy (on
+/// a computer, in the checks): then only the limit for everyone applies.
+fn asker(headers: &HeaderMap) -> Option<i64> {
+    use std::hash::{Hash, Hasher};
+    let address = headers
+        .get_all("x-forwarded-for")
+        .iter()
+        .filter_map(|value| value.to_str().ok())
+        .flat_map(|value| value.split(','))
+        .map(str::trim)
+        .next_back()
+        .filter(|address| !address.is_empty())?;
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    address.hash(&mut hasher);
+    Some(i64::from_ne_bytes(hasher.finish().to_ne_bytes()))
+}
+
+async fn register(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(form): Json<Registration>,
+) -> Response {
     if form.redirect_uris.is_empty()
         || form.redirect_uris.len() > MOST_REDIRECTS
         || !form.redirect_uris.iter().all(|uri| allowed_redirect(uri))
@@ -249,12 +275,11 @@ async fn register(State(state): State<AppState>, Json(form): Json<Registration>)
             "Give one to five return addresses: https, http only to localhost, or an app's own.",
         );
     }
-    if !state.assistant_limits.allow(
-        "register",
-        0,
-        REGISTRATIONS_AN_HOUR,
-        Duration::from_secs(3_600),
-    ) {
+    let hour = Duration::from_secs(3_600);
+    let limits = &state.assistant_limits;
+    let each = asker(&headers)
+        .is_none_or(|who| limits.allow("register-each", who, REGISTRATIONS_AN_HOUR_EACH, hour));
+    if !each || !limits.allow("register", 0, REGISTRATIONS_AN_HOUR, hour) {
         return oauth_error(
             StatusCode::TOO_MANY_REQUESTS,
             "temporarily_unavailable",
@@ -284,7 +309,18 @@ async fn register(State(state): State<AppState>, Json(form): Json<Registration>)
             .fetch_one(&mut *transaction)
             .await?;
         if count >= MOST_CLIENTS {
-            return Ok(false);
+            let made_room = sqlx::query(
+                "DELETE FROM assistant_clients WHERE id = (SELECT id FROM assistant_clients
+                     WHERE id NOT IN (SELECT client_id FROM assistant_connections
+                                      WHERE client_id IS NOT NULL)
+                         AND id NOT IN (SELECT client_id FROM assistant_codes)
+                     ORDER BY created_at, id LIMIT 1)",
+            )
+            .execute(&mut *transaction)
+            .await?;
+            if made_room.rows_affected() == 0 {
+                return Ok(false);
+            }
         }
         sqlx::query(
             "INSERT INTO assistant_clients (client_id, name, redirect_uris, created_at)
@@ -443,7 +479,9 @@ async fn request(
     match checked(&state.db, uri.query().unwrap_or_default()).await {
         Ok(Ok(asked)) => Json(json!({
             "client_name": asked.name,
-            "redirect_host": asked.redirect.host_str().unwrap_or_default(),
+            // An app's own kind of address (`com.example.app:/callback`)
+            // has no website: its scheme names the app.
+            "redirect_host": asked.redirect.host_str().unwrap_or(asked.redirect.scheme()),
         }))
         .into_response(),
         Ok(Err(word)) => refused(word),

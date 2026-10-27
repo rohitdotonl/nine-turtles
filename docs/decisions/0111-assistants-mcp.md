@@ -71,8 +71,11 @@ nothing that can lag behind the standard on its own (ENGINEERING.md →
 
 **Tickets.** An access ticket lasts an hour; a refresh ticket 90 days and is
 swapped for a new one each time (used once). Codes last ten minutes and are
-used once. Registered assistants nobody connects are forgotten after a day,
-at most 500 are kept, and at most 60 register an hour. Return addresses:
+used once. Registered assistants nobody connects are forgotten after a day;
+at most 2,000 are kept (past that the oldest nobody connected makes room),
+and at most 10 register an hour from one internet address (the last one
+Render's proxy adds to `X-Forwarded-For`) and 300 from everywhere, so one
+stranger can't stop other readers connecting. Return addresses:
 https anywhere, http only to `localhost`, or an app's own scheme
 (`cursor://…`, RFC 8252); never `javascript:`, `data:`, `file:` and the like,
 never with a `#` part. Assistants' addresses (`/mcp`, `/oauth/token`,
@@ -99,10 +102,12 @@ from is hidden at once, with `subscriptions.kept_until` 30 days on, and
 `folders::clear_unsubscribed` leaves it alone until then, even when the
 reader unsubscribes from another feed on the screen. Settings lists these
 with **Bring back**. This keeps the floor "nothing deletes without undo"
-whole for assistants. Removing a folder or a rule from an assistant has no
-undo, as from another app: only a grouping or a rule goes, never a feed or
-an article, and the assistant is given the removed rule so it can make it
-again.
+whole for assistants. Removing a folder or a rule has an undo the assistant
+holds, as the screen's Undo is held by the screen: removing a folder answers
+its feeds and the rules that pointed at it, and `create_folder` with those
+puts it back as it was; removing a rule answers it whole, and `add_rule` makes
+it again (paused if it was). Adding a kept feed again by its address (the
+Add field, or `add_feed`) brings it back whole rather than afresh.
 
 **Guards.** An assistant can be told things by the articles it reads
 ("prompt injection"), so: each reader's assistants together get 60 calls a

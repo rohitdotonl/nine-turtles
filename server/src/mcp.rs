@@ -341,8 +341,13 @@ fn tools() -> Vec<Value> {
         tool(
             "create_folder",
             "Create a folder",
-            "Makes a folder (or finds the one with that name).",
-            json!({ "name": { "type": "string", "maxLength": folders::LONGEST_NAME } }),
+            "Makes a folder (or finds the one with that name), optionally with feeds in it. \
+             To undo delete_folder, pass the name, feed_ids and rule_ids it answered.",
+            json!({
+                "name": { "type": "string", "maxLength": folders::LONGEST_NAME },
+                "feed_ids": { "type": "array", "items": { "type": "integer" } },
+                "rule_ids": { "type": "array", "items": { "type": "integer" }, "description": "Rules that pointed at a removed folder." },
+            }),
             &["name"],
             changing(false, true),
         ),
@@ -357,7 +362,8 @@ fn tools() -> Vec<Value> {
         tool(
             "delete_folder",
             "Remove a folder",
-            "Removes a folder. Its feeds stay followed; they just leave it. Rules for that folder stay, matching nothing.",
+            "Removes a folder. Its feeds stay followed; they just leave it. Rules for that folder stay, matching nothing. \
+             Answers its feeds and rules, so create_folder can put it back (its undo).",
             json!({ "folder_id": folder_id }),
             &["folder_id"],
             changing(true, true),
@@ -375,6 +381,7 @@ fn tools() -> Vec<Value> {
                 "feed_id": feed_id,
                 "folder_id": folder_id,
                 "action": { "type": "string", "enum": ["mute", "star", "read"] },
+                "paused": { "type": "boolean", "description": "Made paused, as a removed rule was." },
             }),
             &["action"],
             changing(false, false),
@@ -382,7 +389,7 @@ fn tools() -> Vec<Value> {
         tool(
             "delete_rule",
             "Remove a rule",
-            "Removes one rule. What it already did stays done. Answers the rule as it was, so it can be made again.",
+            "Removes one rule. What it already did stays done. Answers the rule as it was, so add_rule can make it again (its undo).",
             json!({ "rule_id": { "type": "integer" } }),
             &["rule_id"],
             changing(true, true),
@@ -484,6 +491,12 @@ struct FeedEdit {
 struct FolderName {
     folder_id: Option<i64>,
     name: Option<String>,
+    /// For create_folder: feeds to put in it, and rules to point at it
+    /// again, as delete_folder answered them (its undo).
+    #[serde(default)]
+    feed_ids: Vec<i64>,
+    #[serde(default)]
+    rule_ids: Vec<i64>,
 }
 
 #[derive(Deserialize)]
@@ -984,6 +997,19 @@ async fn folder(state: &AppState, person: i64, tool: &str, asked: FolderName) ->
         let answer = match (tool, asked.folder_id, name) {
             ("create_folder", _, Some(name)) => {
                 let (id, new) = folders::folder_named(&mut transaction, person, &name).await?;
+                // Only feeds the reader follows, as the screen's Undo does.
+                sqlx::query(
+                    "INSERT OR IGNORE INTO feed_folders (folder_id, feed_id)
+                     SELECT ?, feed_id FROM subscriptions
+                     WHERE person_id = ? AND feed_id IN (SELECT value FROM json_each(?))
+                         AND unsubscribed_at IS NULL",
+                )
+                .bind(id)
+                .bind(person)
+                .bind(serde_json::to_string(&asked.feed_ids).unwrap_or_else(|_| "[]".to_owned()))
+                .execute(&mut *transaction)
+                .await?;
+                rules::back_in_folder(&mut transaction, person, id, &asked.rule_ids).await?;
                 Ok(json!({ "done": true, "folder_id": id, "already_there": !new }))
             }
             ("rename_folder", Some(id), Some(name)) => {
@@ -1013,6 +1039,15 @@ async fn folder(state: &AppState, person: i64, tool: &str, asked: FolderName) ->
                 }
             }
             ("delete_folder", Some(id), _) => {
+                // Kept for the answer, so the assistant can undo it.
+                let feeds_in: Vec<i64> = sqlx::query_scalar(
+                    "SELECT feed_id FROM feed_folders WHERE folder_id =
+                         (SELECT id FROM folders WHERE id = ? AND person_id = ?)",
+                )
+                .bind(id)
+                .bind(person)
+                .fetch_all(&mut *transaction)
+                .await?;
                 let gone: Option<String> = sqlx::query_scalar(
                     "DELETE FROM folders WHERE id = ? AND person_id = ? RETURNING name",
                 )
@@ -1023,8 +1058,14 @@ async fn folder(state: &AppState, person: i64, tool: &str, asked: FolderName) ->
                 match gone {
                     Some(name) => {
                         crate::saved_searches::forget(&mut *transaction, person, "folder", id).await?;
-                        rules::place_gone(&mut transaction, None, Some(id)).await?;
-                        Ok(json!({ "done": true, "removed": name, "feeds": "kept, now in no folder" }))
+                        let rules = rules::place_gone(&mut transaction, None, Some(id)).await?;
+                        Ok(json!({
+                            "done": true,
+                            "removed": name,
+                            "feed_ids": feeds_in,
+                            "rule_ids": rules,
+                            "undo": "create_folder with this name, feed_ids and rule_ids puts it back as it was",
+                        }))
                     }
                     None => Err("The reader has no folder with that id.".to_owned()),
                 }
@@ -1049,6 +1090,8 @@ struct RuleAsked {
     feed_id: Option<i64>,
     folder_id: Option<i64>,
     action: rules::Action,
+    #[serde(default)]
+    paused: bool,
 }
 
 async fn add_rule(state: &AppState, person: i64, asked: RuleAsked) -> Answer {
@@ -1059,7 +1102,7 @@ async fn add_rule(state: &AppState, person: i64, asked: RuleAsked) -> Answer {
         feed_id: asked.feed_id,
         folder_id: asked.folder_id,
         action: asked.action,
-        paused: false,
+        paused: asked.paused,
         place_gone: false,
     };
     match rules::make(state, person, &form).await {
@@ -1110,12 +1153,18 @@ async fn unsubscribe(state: &AppState, person: i64, asked: OneFeed) -> Answer {
     let hidden = async {
         let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
         let hidden = folders::hide(&mut transaction, person, &[asked.feed_id], at).await?;
-        sqlx::query("UPDATE subscriptions SET kept_until = ? WHERE person_id = ? AND feed_id = ?")
+        // Only a feed this call hid: one the reader unsubscribed from on the
+        // screen keeps the screen's ten minutes.
+        if hidden > 0 {
+            sqlx::query(
+                "UPDATE subscriptions SET kept_until = ? WHERE person_id = ? AND feed_id = ?",
+            )
             .bind(at + KEPT_FOR)
             .bind(person)
             .bind(asked.feed_id)
             .execute(&mut *transaction)
             .await?;
+        }
         transaction.commit().await?;
         Ok::<u64, sqlx::Error>(hidden)
     }
