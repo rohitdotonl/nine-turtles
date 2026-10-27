@@ -41,7 +41,9 @@ for it.*
   "That took too long. Try again." A reader adding a passkey has only their
   newest challenge, in a pool sign-ins can't reach. A restart
   forgets them, which costs only a second try. The sign-in page asks for a
-  fresh autofill challenge every four minutes while it's open.
+  fresh autofill challenge every four minutes while it's open, and never
+  sooner than five seconds after the last: a browser that turns the offer
+  down at once (no passkey for this site) would otherwise ask in a loop.
 - **No waits for wrong passkeys.** A passkey can't be guessed, so a refused
   one makes nobody wait, and can't be used to lock a reader's password out
   (as with app passwords). Refusals are noted in the log as information.
