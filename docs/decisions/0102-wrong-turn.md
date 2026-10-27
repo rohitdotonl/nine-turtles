@@ -11,7 +11,8 @@ Unread (SPEC section 4; DESIGN.md → "Name and signature").
   quietly), then nine turtles from the logo, eight walking one way and one,
   a few steps behind, turned the other, big enough that the joke is seen at
   a glance; then "Wrong turn?", two short lines, an invitation to say which
-  link was broken, signed "Rohit". The app adds "Back to your reading".
+  link was broken, signed "— Rohit" (the dash added the same day, at the
+  owner's request, with more room between the parts). The app adds "Back to your reading".
 - **"Tell me which one"** opens the reader's own email app, addressed to
   hello@nineturtles.app, with the address they reached already written in
   (the app); nine turtles still sends no email itself.
