@@ -808,6 +808,9 @@ pub struct ArticleRow {
     pub feed_id: i64,
     pub feed_title: String,
     pub title: String,
+    /// Without tracking tags, even for an article stored before they were
+    /// taken off on arrival (decision 0102).
+    #[serde(serialize_with = "link_without_tracking")]
     pub link: Option<String>,
     /// Seconds since 1970 (UTC); the screen shows it in the device's time zone.
     pub at: i64,
@@ -816,6 +819,17 @@ pub struct ArticleRow {
     /// A rule (or the reader) muted it: only search, the Muted page and
     /// Starred show it.
     pub muted: bool,
+}
+
+/// Writes an article's link without its tracking tags (`ArticleRow`).
+fn link_without_tracking<S: serde::Serializer>(
+    link: &Option<String>,
+    serializer: S,
+) -> Result<S::Ok, S::Error> {
+    serde::Serialize::serialize(
+        &link.as_deref().map(feed::link_without_tracking),
+        serializer,
+    )
 }
 
 /// One page of the item list. `next` says where the next page starts, or is
@@ -1161,16 +1175,21 @@ pub(crate) async fn full_articles(
     .fetch_all(&state.db)
     .await?;
     for article in &mut articles {
-        // Articles stored before tracking images were removed on arrival
-        // (Milestone 5) lose them here instead.
+        // Articles stored before trackers were taken out on arrival
+        // (Milestone 5, decision 0102) lose them here instead, and their
+        // pictures load as the reader reaches them.
         article.content = article
             .content
             .take()
-            .map(|html| feed::without_tracking_images(&html));
+            .map(|html| feed::without_trackers(&html, None));
         article.summary = article
             .summary
             .take()
-            .map(|html| feed::without_tracking_images(&html));
+            .map(|html| feed::without_trackers(&html, None));
+        article.link = article
+            .link
+            .take()
+            .map(|link| feed::link_without_tracking(&link));
         article.language = article.language.take().filter(|tag| is_language_tag(tag));
     }
     Ok(articles)

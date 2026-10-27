@@ -159,7 +159,7 @@ These were decided with the owner. Changing any of them needs the owner's approv
 ### Duplicates
 
 - Each article gets a fingerprint: the feed's own item ID; otherwise the normalized link; otherwise a hash of title plus date.
-- Links are normalized before comparing (for example http vs https, common tracking parameters).
+- Links are normalized before comparing (for example http vs https, common tracking parameters). The tracking parameters this comparison ignores are frozen (`FINGERPRINT_TRACKING` in `server/src/feed.rs`): changing them would change the fingerprints and feed keys already stored. The longer list taken off stored links (below) is separate.
 - The database refuses a second article with the same fingerprint in the same feed.
 - Feeds are deduplicated the same way: each feed's address is stored normalized too (`url_key`), and the database refuses a second feed with the same one.
 
@@ -167,7 +167,12 @@ These were decided with the owner. Changing any of them needs the owner's approv
 
 - ammonia with a strict allowlist: no scripts, no styles that can run code, no event handlers, no iframes. A YouTube player embedded in an article becomes a link to the video instead (decision 0072).
 - Cleaned **before storing** (from Milestone 5), so the database never holds unsafe content; relative links are made whole using the article's address. Titles and names are stored as plain text, and the screen shows them as text, never as HTML.
-- Remove invisible 1×1 tracking images: any image whose width or height is 0 or 1 pixel and neither is bigger, removed before the safety cleaning so ammonia has the last word on everything it stores. A size that isn't plain pixels (`100%`) counts as bigger. The one exception: articles stored before Milestone 6 lose their tracking images when shown, after their (already done) cleaning; removing an element can't make clean HTML unsafe, and the Content Security Policy stays behind it.
+- Remove trackers (`feed::without_trackers`), before the safety cleaning so ammonia has the last word on everything it stores (decision 0102):
+  - invisible 1×1 tracking images: any image whose width or height is 0 or 1 pixel and neither is bigger. A size that isn't plain pixels (`100%`) counts as bigger;
+  - images from a known ad, analytics or tracking service: the short, hand-kept `TRACKERS` list in `server/src/feed.rs` (a domain matches itself and everything under it; an entry with a path, like `facebook.com/tr`, only that path);
+  - tracking tags on links: `utm_…` and the fixed `TRACKING` list (`fbclid`, `gclid`, `mc_cid`, `_hsenc` and so on), from the article's own link and from links in its text. Only listed names go; every other part of the query stays exactly as written, in its order and spelling;
+  - every image gets `loading="lazy"` and `decoding="async"`, so it loads only as the reader nears it. ammonia keeps only those two values (a fixed attribute filter, not its "set this value", whose order changes from run to run and would make every refetched article look edited).
+- Articles stored earlier get the same treatment when shown (`feeds::full_articles`), after their (already done) cleaning: removing an element, adding two fixed attributes or replacing a link with the same web address minus some query parts can't make clean HTML unsafe, and the Content Security Policy stays behind it. There is no one-off pass over stored articles (decision 0102).
 - Links get `rel="noopener noreferrer"` and open in a new tab. An article's own anchors (`id`s, `#note` links) are kept with `article-` in front, so footnotes work and can't clash with nine turtles' page; the screen scrolls to them instead of opening a tab.
 - Images are the one thing the browser may load from any address (the Content Security Policy's `img-src`), because articles show the publisher's own images. Scripts, styles, fonts and connections stay nine-turtles-only. The page's "no-referrer" rule means publishers aren't told an image was viewed in nine turtles.
 - The one frame the browser may load is YouTube's privacy-enhanced player (`frame-src https://www.youtube-nocookie.com`), built by nine turtles itself, never from stored content, and only once the reader presses Play on a YouTube video. It is sandboxed and is told nine turtles' address (`strict-origin`), which YouTube's player needs to play (decision 0072).

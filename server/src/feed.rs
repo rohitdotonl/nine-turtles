@@ -3,8 +3,10 @@
 //!
 //! Article content is cleaned here, before it's ever stored, so nothing
 //! unsafe from a feed can reach the screen later (the engineering floor).
-//! Invisible 1×1 tracking images are taken out at the same time (DESIGN.md →
-//! "Article view"). A YouTube video's own description becomes its text, and a
+//! Invisible 1×1 tracking images, pictures from known trackers and the
+//! tracking tags on links are taken out at the same time, and pictures are
+//! set to load only as the reader reaches them (DESIGN.md → "Article
+//! view", decision 0102). A YouTube video's own description becomes its text, and a
 //! YouTube player embedded in an article becomes a link to the video (SPEC
 //! section 7, decision 0072).
 
@@ -126,9 +128,13 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
                 .map(|text| clean(&text.content, text.content_type.as_ref(), base))
                 .filter(|html| !html.trim().is_empty());
             ParsedArticle {
+                // The fingerprint comes from the link as the feed wrote it,
+                // so it stays what it always was (`normalize` ignores the
+                // tracking tags it has always ignored); what's stored and
+                // shown is the link without any tracking tags.
                 fingerprint: fingerprint(&entry.id, link.as_ref(), &title, published),
                 title,
-                link: link.map(String::from),
+                link: link.map(without_tracking).map(String::from),
                 author: entry
                     .authors
                     .first()
@@ -166,11 +172,95 @@ pub fn fingerprint(id: &str, link: Option<&Url>, title: &str, published: Option<
     format!("hash:{hex}")
 }
 
-/// Query parts added by newsletters and social sites to track clicks. They
-/// don't change which page a link leads to.
+/// Query parts that only track clicks: added by newsletters, ad networks
+/// and social sites to tell them who followed a link. They never change
+/// which page a link leads to. Only these well-known names are taken off
+/// (plus anything starting `utm_`); an unknown part is always kept, since it
+/// might matter. The list is nine turtles' own, kept by hand: the tags
+/// Google, Microsoft, Meta, Mailchimp, HubSpot, Marketo, Yandex, X, TikTok,
+/// LinkedIn, Vero and Kit are known to add to links.
 pub(crate) const TRACKING: &[&str] = &[
+    "fbclid",
+    "gclid",
+    "gclsrc",
+    "gbraid",
+    "wbraid",
+    "dclid",
+    "msclkid",
+    "yclid",
+    "twclid",
+    "ttclid",
+    "li_fat_id",
+    "mc_cid",
+    "mc_eid",
+    "igshid",
+    "ref_src",
+    "ref_url",
+    "_hsenc",
+    "_hsmi",
+    "__hstc",
+    "__hssc",
+    "__hsfp",
+    "hsctatracking",
+    "mkt_tok",
+    "vero_id",
+    "vero_conv",
+    "oly_anon_id",
+    "oly_enc_id",
+    "ck_subscriber_id",
+];
+
+/// The tracking parts the duplicate check (`normalize`) ignores. Frozen:
+/// changing it would change the fingerprint and key of things already
+/// stored, so the same article or feed would be taken for a new one.
+const FINGERPRINT_TRACKING: &[&str] = &[
     "fbclid", "gclid", "dclid", "msclkid", "mc_cid", "mc_eid", "igshid", "ref_src",
 ];
+
+/// Whether a query part's name (`utm_source`, `fbclid`) only tracks clicks.
+fn is_tracking(name: &str) -> bool {
+    let name = name.to_ascii_lowercase();
+    name.starts_with("utm_") || TRACKING.contains(&name.as_str())
+}
+
+/// The same address without its tracking tags (`TRACKING`). Every other
+/// part of the query stays exactly as written, in its order and spelling,
+/// so a link that needs them still works.
+pub(crate) fn without_tracking(mut url: Url) -> Url {
+    let Some(query) = url.query() else {
+        return url;
+    };
+    let name = |part: &str| part.split('=').next().unwrap_or_default().to_owned();
+    if !query.split('&').any(|part| is_tracking(&name(part))) {
+        return url;
+    }
+    let kept = query
+        .split('&')
+        .filter(|part| !part.is_empty() && !is_tracking(&name(part)))
+        .collect::<Vec<_>>()
+        .join("&");
+    url.set_query((!kept.is_empty()).then_some(kept.as_str()));
+    url
+}
+
+/// A stored link without its tracking tags; one that isn't a web address
+/// stays as it is.
+pub fn link_without_tracking(link: &str) -> String {
+    if !link.contains('?') {
+        return link.to_owned();
+    }
+    match Url::parse(link) {
+        Ok(url) => {
+            let clean = without_tracking(url.clone());
+            if clean == url {
+                link.to_owned()
+            } else {
+                clean.into()
+            }
+        }
+        Err(_) => link.to_owned(),
+    }
+}
 
 /// The same page written two ways becomes one text: `http` and `https` are
 /// treated alike, as are a trailing `#part`, tracking parts of the query and
@@ -182,7 +272,7 @@ pub fn normalize(url: &Url) -> String {
         .query_pairs()
         .filter(|(name, _)| {
             let name = name.to_ascii_lowercase();
-            !name.starts_with("utm_") && !TRACKING.contains(&name.as_str())
+            !name.starts_with("utm_") && !FINGERPRINT_TRACKING.contains(&name.as_str())
         })
         .map(|(name, value)| (name.into_owned(), value.into_owned()))
         .collect();
@@ -231,7 +321,8 @@ fn plain_text(text: &feed_rs::model::Text) -> String {
 }
 
 /// Content made safe to show: no scripts, styles, frames or event handlers;
-/// no tracking images; links open safely, in a new tab, without telling the
+/// no tracking images and no tracking tags on links (`without_trackers`);
+/// pictures load only as the reader reaches them; links open safely, in a new tab, without telling the
 /// site where the reader came from; relative addresses made whole. Plain
 /// text is escaped. Footnotes keep working inside nine turtles: the article's
 /// own anchors (`id`, `#note-1`) are kept, renamed with `article-` in front
@@ -240,14 +331,24 @@ pub(crate) fn clean(body: &str, content_type: &str, base: &Url) -> String {
     if !content_type.contains("html") {
         return ammonia::clean_text(body);
     }
-    // Tracking images and YouTube players go first, so the safety cleaning
-    // always has the last word.
-    let body = without_youtube_players(&without_tracking_images(body));
+    // Trackers and YouTube players go first, so the safety cleaning always
+    // has the last word.
+    let body = without_youtube_players(&without_trackers(body, Some(base)));
     ammonia::Builder::default()
         .url_relative(ammonia::UrlRelative::Custom(Box::new(Whole(base.clone()))))
         .add_generic_attributes(["id"])
         .id_prefix(Some(ANCHOR_PREFIX))
         .set_tag_attribute_value("a", "target", "_blank")
+        // `without_trackers` gave every picture these two; whatever else
+        // they say becomes the same fixed values. (Not ammonia's own "set
+        // this value", which writes them in a different order each time,
+        // so a refetched article would always look edited.)
+        .add_tag_attributes("img", ["loading", "decoding"])
+        .attribute_filter(|element, attribute, value| match (element, attribute) {
+            ("img", "loading") => Some(Cow::Borrowed(LAZY.0)),
+            ("img", "decoding") => Some(Cow::Borrowed(LAZY.1)),
+            _ => Some(Cow::Borrowed(value)),
+        })
         .clean(&body)
         .to_string()
 }
@@ -400,38 +501,197 @@ impl<'a> ammonia::UrlRelativeEvaluate<'a> for Whole {
 /// itself rather than opening a new tab (ArticleView.svelte).
 const ANCHOR_PREFIX: &str = "article-";
 
-/// The same HTML without invisible tracking images: images whose width or
-/// height is set to 0 or 1 pixel, and neither bigger. They show nothing and
-/// only tell someone that the article was opened. Anything else is left
-/// exactly as it was.
-pub fn without_tracking_images(html: &str) -> String {
-    if !html.contains("<img") && !html.contains("<IMG") {
+/// Pictures from these places are never shown: they come from advertising,
+/// analytics and tracking services, and only tell them that someone opened
+/// the article. A name matches that domain and every address under it
+/// (`doubleclick.net` also blocks `ad.doubleclick.net`); one with a path
+/// (`facebook.com/tr`) matches only that path and what's below it, so the
+/// same site's real pictures still show. The list is nine turtles' own,
+/// short and kept by hand from the trackers most often found in feeds and
+/// newsletters (SPEC section 7, decision 0102). Add to it as needed, but
+/// never block a place that also serves real pictures (`i0.wp.com` is
+/// WordPress's picture store, so only `pixel.wp.com` and `stats.wp.com` are
+/// listed).
+const TRACKERS: &[&str] = &[
+    // Advertising
+    "doubleclick.net",
+    "googlesyndication.com",
+    "googleadservices.com",
+    "amazon-adsystem.com",
+    "adnxs.com",
+    "adform.net",
+    "criteo.com",
+    "criteo.net",
+    "moatads.com",
+    "pubmatic.com",
+    "rubiconproject.com",
+    "taboola.com",
+    "outbrain.com",
+    // Analytics and audience measurement
+    "google-analytics.com",
+    "googletagmanager.com",
+    "scorecardresearch.com",
+    "quantserve.com",
+    "chartbeat.com",
+    "chartbeat.net",
+    "pixel.parsely.com",
+    "bat.bing.com",
+    "px.ads.linkedin.com",
+    "analytics.twitter.com",
+    "facebook.com/tr",
+    // Blog and newsletter platforms' own open counters
+    "pixel.wp.com",
+    "stats.wp.com",
+    "list-manage.com/track",
+    "eotrx.substackcdn.com",
+    "feeds.feedburner.com/~r",
+    "feeds.feedburner.com/~ff",
+    "feedproxy.google.com/~r",
+];
+
+/// Whether an address belongs to a known tracker (`TRACKERS`).
+fn is_tracker(url: &Url) -> bool {
+    let Some(host) = url.host_str() else {
+        return false;
+    };
+    let host = host.trim_end_matches('.').to_ascii_lowercase();
+    let path = url.path().trim_start_matches('/');
+    TRACKERS.iter().any(|entry| {
+        let (domain, below) = entry
+            .split_once('/')
+            .map_or((*entry, None), |(domain, below)| (domain, Some(below)));
+        let place = host == domain
+            || host
+                .strip_suffix(domain)
+                .is_some_and(|start| start.ends_with('.'));
+        place
+            && below.is_none_or(|below| {
+                path == below
+                    || path
+                        .strip_prefix(below)
+                        .is_some_and(|rest| rest.starts_with('/'))
+            })
+    })
+}
+
+/// What every picture in an article is given: load only once the reader
+/// is nearly there (`loading`), and without holding up the text
+/// (`decoding`).
+const LAZY: (&str, &str) = ("lazy", "async");
+
+/// The same HTML without trackers, ready to read:
+/// - invisible tracking images (width or height set to 0 or 1 pixel, and
+///   neither bigger) and pictures from known trackers (`TRACKERS`) are
+///   taken out: they show nothing and only tell someone the article was
+///   opened;
+/// - links lose their tracking tags (`without_tracking`);
+/// - every picture loads only as the reader reaches it (`LAZY`).
+///
+/// Relative addresses are read against `base` (the article's address);
+/// without one, only whole addresses are looked at. Anything else is left
+/// exactly as it was. Used on arrival (`clean`) and again whenever an
+/// article is shown, for articles stored before (decision 0102).
+pub fn without_trackers(html: &str, base: Option<&Url>) -> String {
+    let lower = html.to_ascii_lowercase();
+    if !lower.contains("<img") && !lower.contains("<a") {
         return html.to_owned();
     }
+    let whole = |address: &str| {
+        let address = address.trim();
+        match base {
+            Some(base) => base.join(address).ok(),
+            None => Url::parse(address).ok(),
+        }
+        .filter(|url| matches!(url.scheme(), "http" | "https"))
+    };
     let mut document = scraper::Html::parse_fragment(html);
-    let images = scraper::Selector::parse("img").expect("a fixed, valid selector");
-    let pixels: Vec<_> = document
-        .select(&images)
-        .filter(|image| {
+    let found =
+        scraper::Selector::parse("img, a[href], area[href]").expect("a fixed, valid selector");
+    let changes: Vec<_> = document
+        .select(&found)
+        .filter_map(|element| {
+            let value = element.value();
+            if value.name() != "img" {
+                // Only a link's own query is looked at: `#note-1` read
+                // against an article address with tags must stay `#note-1`.
+                let href = value.attr("href").filter(|href| href.contains('?'))?;
+                let link = whole(href)?;
+                let clean = without_tracking(link.clone());
+                return (clean != link).then(|| (element.id(), Change::Link(clean.into())));
+            }
             // A size that isn't plain pixels (`100%`, `auto`) counts as bigger.
             let sizes: Vec<Option<u32>> = ["width", "height"]
                 .iter()
-                .filter_map(|name| image.value().attr(name))
+                .filter_map(|name| value.attr(name))
                 .map(pixels)
                 .collect();
-            !sizes.is_empty() && sizes.iter().all(|size| size.is_some_and(|size| size <= 1))
+            let tiny =
+                !sizes.is_empty() && sizes.iter().all(|size| size.is_some_and(|size| size <= 1));
+            let tracker = value
+                .attr("src")
+                .and_then(whole)
+                .is_some_and(|url| is_tracker(&url));
+            if tiny || tracker {
+                return Some((element.id(), Change::Remove));
+            }
+            let ready =
+                value.attr("loading") == Some(LAZY.0) && value.attr("decoding") == Some(LAZY.1);
+            (!ready).then(|| (element.id(), Change::Lazy))
         })
-        .map(|image| image.id())
         .collect();
-    if pixels.is_empty() {
+    if changes.is_empty() {
         return html.to_owned();
     }
-    for id in pixels {
-        if let Some(mut node) = document.tree.get_mut(id) {
+    // The two attributes every picture is given, taken from a picture that
+    // has them.
+    let lazy = scraper::Html::parse_fragment(&format!(
+        r#"<img loading="{}" decoding="{}">"#,
+        LAZY.0, LAZY.1
+    ));
+    let lazy: Vec<_> = lazy
+        .select(&scraper::Selector::parse("img").expect("a fixed, valid selector"))
+        .next()
+        .map(|image| image.value().attrs.clone())
+        .unwrap_or_default();
+    for (id, change) in changes {
+        let Some(mut node) = document.tree.get_mut(id) else {
+            continue;
+        };
+        if let Change::Remove = change {
             node.detach();
+            continue;
+        }
+        let scraper::Node::Element(element) = node.value() else {
+            continue;
+        };
+        match change {
+            Change::Link(link) => {
+                for (name, value) in &mut element.attrs {
+                    if &*name.local == "href" {
+                        *value = link.as_str().into();
+                    }
+                }
+            }
+            Change::Lazy => {
+                element
+                    .attrs
+                    .retain(|(name, _)| !matches!(&*name.local, "loading" | "decoding"));
+                element.attrs.extend(lazy.iter().cloned());
+            }
+            Change::Remove => {}
         }
     }
     document.root_element().inner_html()
+}
+
+/// What `without_trackers` does to one element.
+enum Change {
+    /// Take it out.
+    Remove,
+    /// Point the link here instead.
+    Link(String),
+    /// Give the picture `LAZY`.
+    Lazy,
 }
 
 /// What stands in for each image in a copy kept for reading offline.
@@ -653,7 +913,7 @@ mod tests {
 <figure><img src="https://example.com/photo.jpg" width="800" height="600" alt="A river"></figure>
 <img src="https://example.com/wide-rule.png" width="600" height="1"><img src="https://example.com/plain.png">
 <img src="https://example.com/full-rule.png" width="100%" height="1">"#;
-        let cleaned = without_tracking_images(html);
+        let cleaned = without_trackers(html, None);
         for pixel in ["open.gif", "b.gif", "c.gif"] {
             assert!(!cleaned.contains(pixel), "{cleaned}");
         }
@@ -667,9 +927,196 @@ mod tests {
         ] {
             assert!(cleaned.contains(kept), "{kept}: {cleaned}");
         }
-        // Without tracking images, nothing changes at all.
-        let plain = "<p>Just <b>words</b>, and <img src=\"a.png\" width=\"40\"></p>";
-        assert_eq!(without_tracking_images(plain), plain);
+        // Without trackers, and with pictures already set to load lazily,
+        // nothing changes at all.
+        let plain = "<p>Just <b>words</b>, <a href=\"https://example.com/?page=2\">a link</a> and \
+                     <img src=\"a.png\" width=\"40\" loading=\"lazy\" decoding=\"async\"></p>";
+        assert_eq!(without_trackers(plain, None), plain);
+        assert_eq!(
+            without_trackers("<p>No pictures</p>", None),
+            "<p>No pictures</p>"
+        );
+    }
+
+    #[test]
+    fn pictures_from_known_trackers_are_removed_and_others_kept() {
+        let html = r#"<img src="https://ad.doubleclick.net/x.gif" alt="">
+<img src="https://www.google-analytics.com/collect?v=1" width="10" height="10">
+<img src="//stats.wp.com/b.gif"><img src="https://pixel.wp.com/g.gif?x=1">
+<img src="https://www.facebook.com/tr?id=1&ev=PageView"><img src="https://facebook.com/tr/">
+<img src="https://feeds.feedburner.com/~r/Blog/~4/abc"><img src="https://feeds.feedburner.com/~ff/Blog?d=1">
+<img src="https://example.us12.list-manage.com/track/open.php?u=1">
+<img src="https://eotrx.substackcdn.com/open?token=1">
+<img src="HTTPS://CDN.Taboola.com/a.png">
+<img src="https://i0.wp.com/example.com/photo.jpg" alt="Kept">
+<img src="https://www.facebook.com/images/logo.png" alt="Also kept">
+<img src="https://notdoubleclick.net/x.png" alt="Not a tracker">
+<img src="https://doubleclick.net.example.com/x.png" alt="Nor this">
+<img src="https://example.com/track/open.php" alt="Nor here">
+<img src="https://example.us12.list-manage.com/trackers.png" alt="Not the path">"#;
+        let cleaned = without_trackers(html, Some(&url("https://example.com/post")));
+        for gone in [
+            "doubleclick.net/x.gif",
+            "google-analytics",
+            "stats.wp.com",
+            "pixel.wp.com",
+            "facebook.com/tr?",
+            "facebook.com/tr/",
+            "feedburner",
+            "open.php?u=1",
+            "substackcdn",
+            "aboola",
+        ] {
+            assert!(!cleaned.contains(gone), "{gone}: {cleaned}");
+        }
+        for kept in [
+            "i0.wp.com",
+            "facebook.com/images/logo.png",
+            "notdoubleclick.net",
+            "doubleclick.net.example.com",
+            "example.com/track/open.php",
+            "trackers.png",
+        ] {
+            assert!(cleaned.contains(kept), "{kept}: {cleaned}");
+        }
+    }
+
+    #[test]
+    fn tracking_tags_come_off_links_and_everything_else_stays() {
+        for (before, after) in [
+            (
+                "https://example.com/a?utm_source=rss&utm_medium=feed",
+                "https://example.com/a",
+            ),
+            (
+                "https://example.com/a?id=7&UTM_Campaign=x&fbclid=y#part",
+                "https://example.com/a?id=7#part",
+            ),
+            // Other parts keep their order and spelling exactly.
+            (
+                "https://example.com/s?q=a+b%20c&mc_cid=1&lang=en&_hsenc=2&flag",
+                "https://example.com/s?q=a+b%20c&lang=en&flag",
+            ),
+            (
+                "https://example.com/a?ref=home",
+                "https://example.com/a?ref=home",
+            ),
+            (
+                "https://example.com/a?page=2&&x=",
+                "https://example.com/a?page=2&&x=",
+            ),
+        ] {
+            assert_eq!(
+                String::from(without_tracking(url(before))),
+                after,
+                "{before}"
+            );
+        }
+        assert_eq!(link_without_tracking("not a link"), "not a link");
+        assert_eq!(
+            link_without_tracking("https://example.com/a?gclid=1"),
+            "https://example.com/a"
+        );
+    }
+
+    #[test]
+    fn a_feeds_links_lose_their_tracking_tags_but_keep_their_fingerprint() {
+        let rss = br##"<?xml version="1.0"?>
+<rss version="2.0"><channel><title>T</title><link>https://example.com/</link>
+<item><title>First</title><link>https://example.com/first?utm_source=rss&amp;id=3</link>
+<description><![CDATA[<p><a href="https://other.example/x?fbclid=1&amp;page=2">x</a> <a href="/y?utm_medium=email">y</a> <a href="#fn1">1</a> <a href="https://other.example/z?q=1">z</a></p><p id="fn1">Note</p>]]></description>
+</item></channel></rss>"##;
+        let feed = parse(rss, &url("https://example.com/feed.xml")).unwrap();
+        let article = &feed.articles[0];
+        assert_eq!(
+            article.link.as_deref(),
+            Some("https://example.com/first?id=3")
+        );
+        // The same fingerprint as before tags were taken off the stored link.
+        assert_eq!(
+            article.fingerprint,
+            fingerprint(
+                "",
+                Some(&url("https://example.com/first?utm_source=rss&id=3")),
+                "",
+                None
+            )
+        );
+        let summary = article.summary.as_deref().unwrap();
+        for kept in [
+            r#"href="https://other.example/x?page=2""#,
+            r#"href="https://example.com/y""#,
+            r##"href="#article-fn1""##,
+            r#"href="https://other.example/z?q=1""#,
+        ] {
+            assert!(summary.contains(kept), "{kept}: {summary}");
+        }
+        assert!(
+            !summary.contains("fbclid") && !summary.contains("utm_"),
+            "{summary}"
+        );
+    }
+
+    #[test]
+    fn pictures_load_as_the_reader_reaches_them() {
+        let html = clean(
+            r#"<p><img src="a.png" alt="A" loading="eager" decoding="sync" onload="x()"></p>"#,
+            "html",
+            &url("https://example.com/post"),
+        );
+        assert_eq!(
+            html,
+            r#"<p><img alt="A" src="https://example.com/a.png" decoding="async" loading="lazy"></p>"#
+        );
+        // The same every time, so an article fetched again isn't taken for
+        // an edited one.
+        for _ in 0..5 {
+            let again = clean(
+                r#"<p><img src="a.png" alt="A" loading="eager" decoding="sync" onload="x()"></p>"#,
+                "html",
+                &url("https://example.com/post"),
+            );
+            assert_eq!(again, html);
+        }
+        // An article stored before gets them when it's shown.
+        let stored = r#"<p><img src="https://example.com/a.png" alt="A"></p>"#;
+        let shown = without_trackers(stored, None);
+        assert!(shown.contains(r#"loading="lazy""#), "{shown}");
+        assert!(shown.contains(r#"decoding="async""#), "{shown}");
+        // Copies kept for reading offline still hold only the words.
+        assert_eq!(text_only(&html), format!("<p>{IMAGE_OFFLINE}</p>"));
+    }
+
+    #[test]
+    fn relative_addresses_are_made_whole_from_the_article_then_the_feed() {
+        let rss = br#"<?xml version="1.0"?>
+<rss version="2.0"><channel><title>T</title><link>https://example.com/</link>
+<item><title>Linked</title><link>https://blog.example/posts/2026/first</link>
+<description><![CDATA[<img src="//cdn.example/x.png" alt="1"><img src="../pics/y.png" alt="2"><img src="z.png" alt="3"><a href="/about">a</a><a href="../up">b</a>]]></description>
+</item>
+<item><title>Unlinked</title>
+<description><![CDATA[<img src="//cdn.example/x.png" alt="1"><img src="../pics/y.png" alt="2"><a href="more">c</a>]]></description>
+</item></channel></rss>"#;
+        let feed = parse(rss, &url("http://feeds.example/blog/rss.xml")).unwrap();
+        let linked = feed.articles[0].summary.as_deref().unwrap();
+        for whole in [
+            r#"src="https://cdn.example/x.png""#,
+            r#"src="https://blog.example/posts/pics/y.png""#,
+            r#"src="https://blog.example/posts/2026/z.png""#,
+            r#"href="https://blog.example/about""#,
+            r#"href="https://blog.example/posts/up""#,
+        ] {
+            assert!(linked.contains(whole), "{whole}: {linked}");
+        }
+        // With no link of its own, the feed's address is used.
+        let unlinked = feed.articles[1].summary.as_deref().unwrap();
+        for whole in [
+            r#"src="http://cdn.example/x.png""#,
+            r#"src="http://feeds.example/pics/y.png""#,
+            r#"href="http://feeds.example/blog/more""#,
+        ] {
+            assert!(unlinked.contains(whole), "{whole}: {unlinked}");
+        }
     }
 
     #[test]
@@ -794,6 +1241,7 @@ Second paragraph</media:description>
         let again = ammonia::Builder::default()
             .add_generic_attributes(["id"])
             .set_tag_attribute_value("a", "target", "_blank")
+            .add_tag_attributes("img", ["loading", "decoding"])
             .clean(&html)
             .to_string();
         assert_eq!(html, again);

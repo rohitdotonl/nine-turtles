@@ -309,30 +309,8 @@ fn tracking_images(html: &str) -> Vec<String> {
 /// A web address, with its tracking parts taken off.
 fn web_address(text: &str) -> Option<Url> {
     let url = Url::parse(text.trim()).ok()?;
-    matches!(url.scheme(), "http" | "https").then(|| without_tracking(url))
-}
-
-/// The same address without `utm_…` and the other click-tracking parts of
-/// its query (`feed::TRACKING`). Everything else stays as written.
-fn without_tracking(mut url: Url) -> Url {
-    let tracking = |name: &str| {
-        let name = name.to_ascii_lowercase();
-        name.starts_with("utm_") || feed::TRACKING.contains(&name.as_str())
-    };
-    if !url.query_pairs().any(|(name, _)| tracking(&name)) {
-        return url;
-    }
-    let kept: Vec<(String, String)> = url
-        .query_pairs()
-        .filter(|(name, _)| !tracking(name))
-        .map(|(name, value)| (name.into_owned(), value.into_owned()))
-        .collect();
-    if kept.is_empty() {
-        url.set_query(None);
-    } else {
-        url.query_pairs_mut().clear().extend_pairs(kept);
-    }
-    url
+    // `utm_…` and the other click-tracking parts (`feed::TRACKING`) go.
+    matches!(url.scheme(), "http" | "https").then(|| feed::without_tracking(url))
 }
 
 /// Runs of spaces and line breaks made single.
