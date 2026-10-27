@@ -786,3 +786,15 @@ test("on a phone, Back after an update opens the new version one step back", asy
   await expect(sidebar(page)).toBeVisible();
   await expect(list(page)).toBeHidden();
 });
+
+test("an address that leads nowhere shows Wrong turn?, and Back to your reading goes home", async ({ page }) => {
+  await openApp(page);
+  await page.goto("/nowhere");
+  await expect(page.getByRole("heading", { level: 1, name: "Wrong turn?" })).toBeFocused();
+  await expect(page.getByText("404 error")).toBeVisible();
+  await expect(page).toHaveTitle("Page not found · nine turtles");
+  await expect(page.getByRole("link", { name: "tell me which one" })).toHaveAttribute("href", /^mailto:hello@nineturtles\.app\?.*nowhere/);
+  await page.getByRole("button", { name: "Back to your reading" }).click();
+  await expect(page.locator("#sidebar")).toBeAttached();
+  await expect(page).toHaveURL(/\/(unread)?$/);
+});
