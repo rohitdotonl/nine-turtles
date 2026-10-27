@@ -147,6 +147,49 @@ test("another reader signing in on this device never gets the last reader's copi
   await other.dispose();
 });
 
+test("a tab the last reader left open never saves its waiting marks as the next reader's", async ({ page, context, playwright, isMobile }) => {
+  test.skip(isMobile, "the same on every width");
+  const name = `open-tab-${test.info().workerIndex}-${Date.now()}`;
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  const feed = await follow(page, `${FEED_SITE}/blog/${name}/`);
+  const listed = await (await page.request.get(new URL(`/api/articles?feed=${feed}`, FEEDS_APP).href)).json();
+  const ids: number[] = listed.articles.map((each: { id: number }) => each.id);
+  const newest = ids[0]!;
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.ready;
+  });
+  await page.goto(new URL(`/feeds/${feed}`, FEEDS_APP).href);
+  await appReady(page);
+  await expect.poll(() => keptIds(page), { timeout: 20_000 }).toEqual(expect.arrayContaining(ids));
+
+  // The first reader stars an article without a connection, and leaves the tab open.
+  await context.setOffline(true);
+  await page.getByRole("button", { name: new RegExp(`${NEWEST.replace(/[()]/g, "\\$&")}.*Blog ${name}`) }).click();
+  await expect(article(page).getByText("A short made-up summary for article 3.")).toBeVisible();
+  await page.keyboard.press("s");
+  await page.waitForTimeout(500);
+
+  // Another reader, who follows the same feed, signs in on this browser (an emailed link).
+  const other = await playwright.request.newContext({ baseURL: FEEDS_APP, extraHTTPHeaders: { "sec-fetch-site": "same-origin" } });
+  const joined = await other.post("/api/sign-up", { data: { email: `${name}@example.com`, password: "a long enough password" } });
+  expect(joined.status()).toBe(204);
+  expect((await other.post("/api/feeds", { data: { address: `${FEED_SITE}/blog/${name}/` } })).ok()).toBe(true);
+  await context.addCookies((await other.storageState()).cookies);
+
+  // The open tab comes back online: its star is refused, and it reloads as the new reader.
+  await context.setOffline(false);
+  await page.waitForTimeout(2_000);
+  await expect(page.locator("#sidebar")).toBeAttached();
+  const theirs = await (await other.get(`/api/articles/${newest}`)).json();
+  expect(theirs.article.starred).toBe(false);
+  const session = await page.evaluate(async () => (await fetch("/api/session")).json());
+  expect(session.email).toBe(`${name}@example.com`);
+  await other.dispose();
+});
+
 test("search and adding a feed say plainly that they need a connection", async ({ page, context, isMobile }) => {
   test.skip(isMobile, "the same on every width");
   await page.setViewportSize({ width: 1280, height: 800 });

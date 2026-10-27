@@ -2367,3 +2367,36 @@ async fn catching_up_and_letting_go_touch_only_that_readers_unread() {
     assert_eq!(other.ids("view=unread").await.len(), 3);
     assert!(owner.ids("view=unread").await.is_empty());
 }
+
+#[tokio::test]
+async fn a_tab_left_open_by_the_last_reader_is_refused_for_the_next() {
+    // Reader 1's tab is still open when reader 2 signs in on the same browser
+    // (an emailed link): the cookie is now reader 2's, but the tab still says
+    // it's reader 1's, so nothing it sends is taken as reader 2's.
+    let (base, state) = common::start_with_state(common::config()).await;
+    let (other, cookie) = common::another_reader(&state).await;
+    let mark = |reader: Option<i64>| {
+        let mut request = reqwest::Client::new()
+            .post(format!("{base}/api/articles/starred"))
+            .header("cookie", &cookie)
+            .header("sec-fetch-site", "same-origin")
+            .header("content-type", "application/json")
+            .body(serde_json::json!({ "ids": [], "starred": true }).to_string());
+        if let Some(reader) = reader {
+            request = request.header("x-nine-turtles-reader", reader.to_string());
+        }
+        request.send()
+    };
+    let refused = mark(Some(other + 100)).await.unwrap();
+    assert_eq!(refused.status(), reqwest::StatusCode::CONFLICT);
+    assert_eq!(
+        refused
+            .headers()
+            .get("x-nine-turtles-other-reader")
+            .map(|value| value.as_bytes()),
+        Some(&b"1"[..])
+    );
+    // The right reader, and a request that doesn't say (an app, a fresh page), go through.
+    assert!(mark(Some(other)).await.unwrap().status().is_success());
+    assert!(mark(None).await.unwrap().status().is_success());
+}

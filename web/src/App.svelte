@@ -24,6 +24,7 @@
   import { knownPath } from "./lib/router";
   import { CONFIRM_PAGE, RESET_PAGE, SIGN_IN_LINK_PAGE } from "./lib/accounts";
   import { currentSession, noteReader, readerChanged, type Session } from "./lib/session";
+  import { noteTabReader } from "./lib/updates.svelte";
   import { forgetLoaded } from "./lib/feeds";
   import { noConnection } from "./lib/connection.svelte";
   import { forget, keepSession, keptSession } from "./lib/offline";
@@ -54,6 +55,7 @@
         if (readerChanged(now.reader)) await forgetDevice();
         // Noted only now: a tab closed halfway through still forgets next time.
         noteReader(now.reader);
+        noteTabReader(now.reader);
         keepSession({ version: now.version, owner: now.owner, email: now.email, emailSending: now.emailSending });
       } else await forgetDevice();
       session = now;

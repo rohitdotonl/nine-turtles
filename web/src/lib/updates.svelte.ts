@@ -15,6 +15,8 @@
 import { lost, noConnection, reached } from "./connection.svelte";
 
 export const VERSION_HEADER = "x-nine-turtles-version";
+const READER_HEADER = "x-nine-turtles-reader";
+const OTHER_READER_HEADER = "x-nine-turtles-other-reader";
 
 /** Statuses meaning "I don't understand that request", rather than an answer the screens explain. */
 const NOT_UNDERSTOOD = new Set([400, 404, 405, 415, 422]);
@@ -40,17 +42,40 @@ export function noteAnswer(response: Response) {
   if (said === "stranded") updates.stranded = true;
 }
 
+/** The reader this tab was opened for: named on every request once known. */
+let tabReader: number | undefined;
+let reloading = false;
+
+/**
+ * Notes whose tab this is. If another reader signs in on this browser while
+ * the tab stays open, the server refuses what the tab sends (so its waiting
+ * marks are never saved as the new reader's), and the tab reloads as the new
+ * reader, which forgets the last one's things first (SPEC section 32).
+ */
+export function noteTabReader(reader: number): void {
+  if (reader > 0) tabReader = reader;
+}
+
 /** `fetch`, for nine turtles' own server, noting each answer's version, and whether the connection is there. */
 export async function api(input: string, init?: RequestInit): Promise<Response> {
   let response: Response;
   try {
-    response = await fetch(input, init);
+    if (tabReader === undefined) response = await fetch(input, init);
+    else {
+      const headers = new Headers(init?.headers);
+      headers.set(READER_HEADER, String(tabReader));
+      response = await fetch(input, { ...init, headers });
+    }
   } catch (problem) {
     if (noConnection(problem)) lost();
     throw problem;
   }
   reached(response);
   noteAnswer(response);
+  if (response.headers.get(OTHER_READER_HEADER) && !reloading) {
+    reloading = true;
+    location.reload();
+  }
   return response;
 }
 
