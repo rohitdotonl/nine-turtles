@@ -9,6 +9,12 @@ October 2026; it is in the repository's history.*
 
 ## Still open
 
+- **How many articles an app may fetch at once** (27 October 2026, from
+  the code survey). Reeder, NetNewsWire and other apps can ask for up to
+  10,000 full articles in one request, which can use tens of MB of memory
+  on the 1 GB server. Suggested: lower it to 1,000, as the other list
+  already is; a few apps might then need two requests instead of one.
+
 - **Finishing the website's privacy policy and terms** (25 October 2026).
   They're on nineturtles.app as drafts, marked "to be decided" where they
   wait on: the prices, the email service for sign-in and receipts,
