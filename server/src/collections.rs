@@ -10,8 +10,8 @@
 //! The list of a collection's articles is `GET /api/articles?collection=3`
 //! (`feeds::page`), in the reader's sort order by the article's date, like
 //! every list. Deleting a collection removes only it and its lines, never an
-//! article; it answers the collection's articles, so the screen's Undo can
-//! make it again with the same ones.
+//! article; it answers the collection's articles and the saved searches
+//! limited to it, so the screen's Undo can make it again with the same ones.
 
 use axum::{
     Json, Router,
@@ -73,6 +73,11 @@ struct NewCollection {
     /// back what was on it. Any the reader no longer has are skipped.
     #[serde(default)]
     articles: Vec<i64>,
+    /// Saved searches to limit to it again: Undo after deleting one gives
+    /// back the searches that were limited to it. Only the reader's own that
+    /// still look in a deleted collection (number 0) change.
+    #[serde(default)]
+    searches: Vec<i64>,
 }
 
 async fn create(
@@ -103,6 +108,17 @@ async fn create(
         .bind(person)
         .bind(now())
         .bind(Value::from(form.articles).to_string())
+        .execute(&mut *transaction)
+        .await?;
+        sqlx::query(
+            "UPDATE saved_searches SET query = json_set(query, '$.scope.id', ?1)
+             WHERE person_id = ?2 AND id IN (SELECT value FROM json_each(?3))
+                 AND json_extract(query, '$.scope.kind') = 'collection'
+                 AND json_extract(query, '$.scope.id') = 0",
+        )
+        .bind(id)
+        .bind(person)
+        .bind(Value::from(form.searches).to_string())
         .execute(&mut *transaction)
         .await?;
         transaction.commit().await?;
@@ -152,9 +168,10 @@ async fn rename(
     }
 }
 
-/// Deletes a collection: only it and its lines go, never an article (one
-/// that was kept only by it is kept until the next clean-up decides as
-/// usual). Answers the articles it held, for Undo.
+/// Deletes a collection: only it and its lines go, never an article at once
+/// (one that was kept only by it, say of a feed since unsubscribed, is then
+/// left to the yearly clean-up as usual). Answers the articles it held and
+/// the saved searches limited to it, for Undo.
 async fn delete(
     SignedIn(person): SignedIn,
     State(state): State<AppState>,
@@ -176,15 +193,27 @@ async fn delete(
             .execute(&mut *transaction)
             .await?
             .rows_affected();
-        // Its number may be given again: saved searches in it now find nothing.
+        // Its number may be given again: saved searches in it now find
+        // nothing. Which ones they were goes back with the answer, for Undo.
+        let searches: Vec<i64> = sqlx::query_scalar(
+            "SELECT id FROM saved_searches
+             WHERE person_id = ? AND json_extract(query, '$.scope.kind') = 'collection'
+                 AND json_extract(query, '$.scope.id') = ? ORDER BY id",
+        )
+        .bind(person)
+        .bind(id)
+        .fetch_all(&mut *transaction)
+        .await?;
         crate::saved_searches::forget(&mut *transaction, person, "collection", id).await?;
         transaction.commit().await?;
-        Ok::<Option<Vec<i64>>, sqlx::Error>((gone > 0).then_some(articles))
+        Ok::<Option<(Vec<i64>, Vec<i64>)>, sqlx::Error>((gone > 0).then_some((articles, searches)))
     }
     .await;
     match deleted {
         Ok(None) => StatusCode::NOT_FOUND.into_response(),
-        Ok(Some(articles)) => Json(json!({ "articles": articles })).into_response(),
+        Ok(Some((articles, searches))) => {
+            Json(json!({ "articles": articles, "searches": searches })).into_response()
+        }
         Err(error) => database_problem("deleting a collection", &error),
     }
 }

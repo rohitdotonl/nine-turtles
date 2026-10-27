@@ -240,7 +240,19 @@ async fn collections_hold_articles_and_go_without_touching_them() {
     assert_eq!(items[0]["_nine_turtles"]["feed_title"], "Kitchen Notes");
     assert_eq!(items[1]["tags"], json!(["Cited"]));
 
-    // Deleting removes only the collection, and answers what was on it for Undo.
+    // A saved search limited to Recipes.
+    let (status, saved) = send(
+        &base,
+        &cookie,
+        "/api/saved-searches",
+        json!({ "name": "Soups", "query": { "words": "soup", "scope": { "kind": "collection", "id": recipes } } }),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CREATED);
+    let soups = saved["search"]["id"].as_i64().unwrap();
+
+    // Deleting removes only the collection, and answers what was on it, and
+    // the saved searches limited to it, for Undo.
     let (status, deleted) = send(
         &base,
         &cookie,
@@ -250,7 +262,19 @@ async fn collections_hold_articles_and_go_without_touching_them() {
     .await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(deleted["articles"], json!([ids[0]]));
+    assert_eq!(deleted["searches"], json!([soups]));
     assert_eq!(names(&base, &cookie).await, ["Cited", "Someday"]);
+    let scope_of_soups = |searches: &Value| {
+        searches["searches"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|each| each["id"] == soups)
+            .unwrap()["query"]["scope"]["id"]
+            .clone()
+    };
+    let (_, searches) = ask(&base, &cookie, "/api/saved-searches").await;
+    assert_eq!(scope_of_soups(&searches), json!(0));
     let (_, all) = ask(&base, &cookie, "/api/articles?view=all").await;
     assert_eq!(titles(&all).len(), 5);
     let (status, _) = send(
@@ -261,18 +285,20 @@ async fn collections_hold_articles_and_go_without_touching_them() {
     )
     .await;
     assert_eq!(status, StatusCode::NOT_FOUND);
-    // Undo: made again with the same articles.
+    // Undo: made again with the same articles, its saved search limited to it again.
     let (status, back) = send(
         &base,
         &cookie,
         "/api/collections",
-        json!({ "name": "Recipes", "articles": deleted["articles"] }),
+        json!({ "name": "Recipes", "articles": deleted["articles"], "searches": deleted["searches"] }),
     )
     .await;
     assert_eq!(status, StatusCode::CREATED);
     let again = back["collection"]["id"].as_i64().unwrap();
     let (_, page) = ask(&base, &cookie, &format!("/api/articles?collection={again}")).await;
     assert_eq!(titles(&page), ["Soup 1"]);
+    let (_, searches) = ask(&base, &cookie, "/api/saved-searches").await;
+    assert_eq!(scope_of_soups(&searches), json!(again));
     let _ = empty;
 }
 

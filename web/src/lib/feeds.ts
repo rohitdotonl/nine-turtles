@@ -50,8 +50,7 @@ export type Check = "automatic" | "hourly" | "daily";
 
 export type Folder = { id: number; name: string };
 
-/** Everything the sidebar lists: feeds and folders, each A to Z. */
-/** The reader's feeds and folders, and, where search needs them, their collections (decision 0108). */
+/** Everything the sidebar lists: feeds and folders, each A to Z; and, where search needs them, the reader's collections (decision 0108). */
 export type Library = { feeds: Feed[]; folders: Folder[]; collections?: { id: number; name: string }[] };
 
 export type Article = {

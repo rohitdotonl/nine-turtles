@@ -441,6 +441,19 @@
     actions++;
   }
 
+  /**
+   * Something undoable done elsewhere (a Save in "Add to collection" that
+   * took the article off a collection): the line says what, and Undo calls
+   * `reverse`, saying its problem if it couldn't.
+   */
+  export function offer(message: string, reverse: () => Promise<string | undefined>) {
+    did(message, () => {
+      reverse().then((problem) => {
+        if (problem) say(problem);
+      });
+    });
+  }
+
   /** A failed save is dealt with: its message goes, back to the last action's Undo if it's still there. */
   function settled() {
     line = undoLast ? undoMessage : "";

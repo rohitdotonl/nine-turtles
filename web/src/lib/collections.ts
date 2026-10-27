@@ -46,9 +46,12 @@ export function byName(one: Collection, other: Collection): number {
   return one.name.localeCompare(other.name, undefined, { sensitivity: "base" }) || one.id - other.id;
 }
 
-/** Makes a collection, with these articles on it already (Undo after deleting one); answers it, or why not. */
-export async function makeCollection(name: string, articles: number[] = []): Promise<Collection | CollectionRefusal> {
-  const { refusal, answer } = await send("/api/collections", { name, articles });
+/**
+ * Makes a collection, with these articles on it already and these saved
+ * searches limited to it again (Undo after deleting one); answers it, or why not.
+ */
+export async function makeCollection(name: string, held: Held = { articles: [], searches: [] }): Promise<Collection | CollectionRefusal> {
+  const { refusal, answer } = await send("/api/collections", { name, articles: held.articles, searches: held.searches });
   if (refusal) return refusal;
   const [made] = toCollections([answer?.collection]);
   return made ?? "trouble";
@@ -58,11 +61,15 @@ export async function renameCollection(id: number, name: string): Promise<Collec
   return (await send(`/api/collections/${id}`, { name })).refusal;
 }
 
-/** Deletes a collection (never an article); answers the articles it held, for Undo, or why not. */
-export async function deleteCollection(id: number): Promise<number[] | CollectionRefusal> {
+/** What a deleted collection held: its articles, and the saved searches limited to it. */
+export type Held = { articles: number[]; searches: number[] };
+
+/** Deletes a collection (never an article); answers what it held, for Undo, or why not. */
+export async function deleteCollection(id: number): Promise<Held | CollectionRefusal> {
   const { refusal, answer } = await send(`/api/collections/${id}/delete`, {});
   if (refusal) return refusal;
-  return Array.isArray(answer?.articles) ? answer.articles.map(Number).filter(Number.isInteger) : [];
+  const numbers = (value: unknown) => (Array.isArray(value) ? value.map(Number).filter(Number.isInteger) : []);
+  return { articles: numbers(answer?.articles), searches: numbers(answer?.searches) };
 }
 
 /** The collections an article is on, by number; undefined if that can't be said just now. */
@@ -80,6 +87,28 @@ export async function collectionsOf(article: number): Promise<number[] | undefin
 /** Puts an article on exactly these collections: it leaves any not named. */
 export async function saveCollectionsOf(article: number, collections: number[]): Promise<CollectionRefusal | undefined> {
   return (await send(`/api/articles/${article}/collections`, { collections })).refusal;
+}
+
+/** What Save in "Add to collection" changed for one article: the collections it was on, and is on now. */
+export type CollectionChange = { article: number; before: number[]; after: number[] };
+
+/**
+ * The collections a Save took the article off (A to Z), and what the line
+ * says about it, so Undo can put it back; undefined when it took it off none.
+ */
+export function takenOff(change: CollectionChange, collections: Collection[]): { ids: number[]; message: string } | undefined {
+  const off = collections.filter((each) => change.before.includes(each.id) && !change.after.includes(each.id)).sort(byName);
+  if (off.length === 0) return undefined;
+  const where = off.length === 1 && off[0] ? off[0].name : `${off.length} collections`;
+  return { ids: off.map((each) => each.id), message: `Took the article off ${where}` };
+}
+
+/** Undo after "Took the article off …": puts it back on those, keeping whatever else it's on now. */
+export async function putBack(article: number, ids: number[]): Promise<string | undefined> {
+  const now = await collectionsOf(article);
+  if (!now) return refusedCollection("trouble");
+  const refusal = await saveCollectionsOf(article, [...new Set([...now, ...ids])]);
+  return refusal ? refusedCollection(refusal) : undefined;
 }
 
 /** What a sheet says when a collection wasn't saved. */

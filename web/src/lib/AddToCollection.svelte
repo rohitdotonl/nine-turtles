@@ -6,7 +6,9 @@
   collection…" as the list's last row, a text box of its own. Save puts the
   article on exactly the ticked ones (and a new one, if named); Cancel or
   Escape leaves everything as it was. Taking an article off a collection
-  never removes the article.
+  never removes the article, and a Save that took it off any is followed by
+  the list's quiet "Took the article off …" with Undo (the page does that,
+  from what `onClose` tells it).
 
   It's the same sheet on a phone, over the article: a short choice about
   the article you're reading, like the Aa panel, rather than a screen of
@@ -22,6 +24,7 @@
     refusedCollection,
     saveCollectionsOf,
     type Collection,
+    type CollectionChange,
   } from "./collections";
 
   let {
@@ -37,18 +40,21 @@
     heading?: HTMLHeadingElement;
     /** A new collection was made here: the sidebar lists it at once. */
     onMade: (collection: Collection) => void;
-    /** `saved`: the article's collections changed. */
-    onClose: (saved: boolean) => void;
+    /** With what Save changed, if it was saved; nothing after Cancel or Escape. */
+    onClose: (change?: CollectionChange) => void;
   } = $props();
 
   /** The ticked collections; unknown until the server says which the article is on. */
   let chosen: number[] | undefined = $state();
+  /** The collections the article was on when the sheet opened, so a Save that took it off one can be undone. */
+  let before: number[] = [];
   let newName = $state("");
   let busy = $state(false);
   let message = $state("");
 
   onMount(async () => {
     chosen = await collectionsOf(article.id);
+    before = chosen ? [...chosen] : [];
     if (!chosen) message = "This article's collections couldn't be loaded. Try again in a moment.";
   });
 
@@ -73,11 +79,11 @@
     const refusal = await saveCollectionsOf(article.id, ticked);
     busy = false;
     if (refusal) message = refusedCollection(refusal);
-    else onClose(true);
+    else onClose({ article: article.id, before, after: ticked });
   }
 </script>
 
-<Sheet title="Add to collection" bind:heading onClose={() => onClose(false)}>
+<Sheet title="Add to collection" bind:heading onClose={() => onClose()}>
   <form onsubmit={save} class="flex flex-col gap-5">
     <fieldset class="flex min-w-0 flex-col gap-1.5">
       <legend class="mb-1.5 min-w-0 text-small break-words text-ink-2">Collections for “{article.title}”</legend>
@@ -122,7 +128,7 @@
       {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
     </p>
     <div class="sheet-actions">
-      <button type="button" onclick={() => onClose(false)} class="btn">Cancel</button>
+      <button type="button" onclick={() => onClose()} class="btn">Cancel</button>
       <button type="submit" aria-disabled={busy || chosen === undefined} class="btn-primary">Save</button>
     </div>
   </form>

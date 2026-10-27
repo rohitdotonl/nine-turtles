@@ -312,6 +312,16 @@ async fn find_new_address_offers_the_sites_feeds_and_moving_keeps_everything() {
         )
         .await;
     assert!(status.is_success(), "{status}");
+    // And puts the first on a collection of theirs (decision 0108).
+    let first_title = articles["articles"][0]["title"].clone();
+    let (status, made) = reader
+        .post(
+            "/api/collections",
+            json!({ "name": "Kept", "articles": [first] }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::CREATED, "{made}");
+    let kept = made["collection"]["id"].as_i64().unwrap();
 
     reader.change(|site| site.old_gone = true);
     let now = nine_turtles::now();
@@ -357,6 +367,13 @@ async fn find_new_address_offers_the_sites_feeds_and_moving_keeps_everything() {
         .map(|article| article["id"].as_i64().unwrap())
         .collect();
     assert_eq!(starred, [second]);
+    // The collected article is still on its collection.
+    let collected = reader
+        .get(&format!("/api/articles?collection={kept}"))
+        .await;
+    let collected = collected["articles"].as_array().unwrap();
+    assert_eq!(collected.len(), 1);
+    assert_eq!(collected[0]["title"], first_title);
     let library = reader.get("/api/feeds").await;
     let moved_feed = library["feeds"]
         .as_array()

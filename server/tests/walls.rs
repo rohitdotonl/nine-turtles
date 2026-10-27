@@ -1619,6 +1619,15 @@ async fn moving_to_an_address_someone_else_follows_keeps_everything_and_lets_go_
     let posts = owner.ids(&format!("feed={feed}")).await;
     mark(&owner, "starred", &[posts[0], older]).await;
     mark(&owner, "read", &[posts[1]]).await;
+    // A collection of the owner's holds one post (decision 0108).
+    let (status, made) = owner
+        .post(
+            "/api/collections",
+            json!({ "name": "Tomatoes", "articles": [posts[1]] }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::CREATED, "{made}");
+    let shelf = made["collection"]["id"].as_i64().unwrap();
     let theirs_before = other.marks(&format!("feed={new_feed}")).await;
 
     let (status, moved) = owner
@@ -1639,6 +1648,10 @@ async fn moving_to_an_address_someone_else_follows_keeps_everything_and_lets_go_
     .to_vec();
     let list = format!("feed={new_feed}");
     assert_eq!(marks_by_title(&owner, &list).await, expected);
+    // The collection holds the new address's copy of that post.
+    let shelved = marks_by_title(&owner, &format!("collection={shelf}")).await;
+    assert_eq!(shelved.len(), 1);
+    assert_eq!(shelved[0].0, "Post 2 about tomatoes");
     // Nobody follows the old address now: its copies of the three posts
     // went (everyone's are the new address's), but the older post stays,
     // and so does the old feed's line under it, no longer checked.

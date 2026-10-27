@@ -80,8 +80,11 @@
     deleteCollection,
     listCollections,
     makeCollection,
+    putBack,
     refusedCollection,
+    takenOff,
     type Collection,
+    type CollectionChange,
   } from "./collections";
   import { startingStep, stepOf, type Screen } from "./steps";
   import { keepUpToDate } from "./offline";
@@ -1167,6 +1170,19 @@
     if (opener instanceof HTMLElement && opener.isConnected && opener !== document.body) queueMicrotask(() => opener.focus());
   }
 
+  /**
+   * "Add to collection" closed. A Save that took the article off any
+   * collection says so in the list's line with Undo, as other removals do,
+   * since an article kept only by a collection could otherwise be lost to
+   * the yearly clean-up. Inside a collection the article's row stays until
+   * the list is next loaded: nothing moves unless you move it.
+   */
+  function collectingClosed(change?: CollectionChange) {
+    const off = change ? takenOff(change, collections) : undefined;
+    collectionSheetClosed();
+    if (change && off) itemList?.offer(off.message, () => putBack(change.article, off.ids));
+  }
+
   /** A collection made in the sheet joins the sidebar at once, in its place A to Z. */
   function collectionMade(made: Collection) {
     collections = [...collections.filter((each) => each.id !== made.id), made].sort(collectionOrder);
@@ -1185,7 +1201,8 @@
       undo: async () => {
         const back = await makeCollection(collection.name, held);
         if (typeof back === "string") return refusedCollection(back);
-        await loadCollections();
+        // Its saved searches are limited to it again.
+        await Promise.all([loadCollections(), held.searches.length > 0 ? loadSearches() : undefined]);
         return undefined;
       },
     });
@@ -2106,7 +2123,7 @@
 <CheatSheet bind:open={cheatSheetOpen} bind:editing={cheatSheetEditing} {river} />
 
 {#if collecting}
-  <AddToCollection article={collecting} {collections} onMade={collectionMade} onClose={collectionSheetClosed} />
+  <AddToCollection article={collecting} {collections} onMade={collectionMade} onClose={collectingClosed} />
 {:else if renaming}
   {#key renaming.id}
     <RenameCollection

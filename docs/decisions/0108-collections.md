@@ -4,7 +4,10 @@
 
 **Decision.** Readers can put articles on **collections**: named shelves of
 their own ("To cite", "Recipes"), as Apple Books has collections of books.
-The owner approved the design (SPEC section 34).
+The owner approved the design "as suggested" on 27 October 2026 (SPEC
+section 34), including keeping collected articles like starred ones
+(point 6), which changes the Data rules (ENGINEERING.md) and the floor's
+wording in AGENTS.md.
 
 1. **What they are.** A name and a set of the reader's articles. An article
    can be on several. Each reader's collections are theirs alone (decision
@@ -19,7 +22,14 @@ The owner approved the design (SPEC section 34).
    where the article already is, and **New collection…** as the last row, a
    text box. Save puts the article on exactly the ticked ones; Cancel or
    Escape changes nothing. Taking an article off a collection never removes
-   the article. On a phone it's the same sheet over the article, not a
+   the article, but it can leave one kept only by that collection (say of a
+   feed since unsubscribed) to the yearly clean-up, so a Save that took the
+   article off any collection is followed by the list's quiet line, "Took
+   the article off Recipes" (or "… off 2 collections"), with **Undo**, as
+   other removals are; Undo puts it back on those, keeping whatever else
+   it's on by then. Inside a collection, an article taken off it keeps its
+   row until the list is next loaded (nothing moves unless you move it). On
+   a phone it's the same sheet over the article, not a
    screen of its own (the "one phone sheet" build is for the sheets that
    have an address; this one belongs to the article on screen, as the Aa
    panel does). `l` was free, and sits beside `s` (star) and `m` (unread) as
@@ -40,12 +50,16 @@ The owner approved the design (SPEC section 34).
    a collection by itself, so it never says "New items".
 5. **Renaming and deleting** come from the collection's own More menu:
    **Rename…** (a sheet with the name, Cancel and Save) and **Delete**, which
-   removes only the collection, never an article, then goes home with
-   "Deleted the collection …" and Undo, as deleting a saved search does. The
-   server answers the articles the collection held, and Undo makes it again
-   with the same name and the same articles. A saved search limited to a
-   deleted collection then finds nothing (`saved_searches::forget`), as for
-   a deleted folder, since a new collection may get its number.
+   removes the collection and deletes no article at once, then goes home
+   with "Deleted the collection …" and Undo, as deleting a saved search
+   does. An article kept only by that collection (of a feed since
+   unsubscribed) is then reachable only through search, and the yearly
+   clean-up treats it as usual. The server answers the articles the
+   collection held and the saved searches limited to it, and Undo makes it
+   again with the same name and the same articles, and limits those saved
+   searches to it again. Until then a saved search limited to a deleted
+   collection finds nothing (`saved_searches::forget`), as for a deleted
+   folder, since a new collection may get its number.
 6. **Kept forever, like a star.** An article on any of the reader's
    collections is never removed by the yearly clean-up (decision 0089), and
    **unsubscribing keeps it**, exactly as it keeps starred articles: the
