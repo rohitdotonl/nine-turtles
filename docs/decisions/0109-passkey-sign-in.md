@@ -32,9 +32,14 @@ for it.*
 - **Challenges are kept in memory, five minutes, used once.** Each step (add,
   or sign in) gets a 32-byte random ticket; what's needed to check the answer
   stays on the server, never in the browser. A challenge is removed as soon
-  as an answer arrives, right or wrong, so no answer can be sent twice. At
-  most 1,000 wait at once for the whole app (expired ones go first; then
-  "wait"), and a reader adding a passkey has only their newest. A restart
+  as an answer arrives, right or wrong, so no answer can be sent twice.
+  Sign-in challenges, which anyone can ask for, and adding challenges, which
+  only a signed-in reader can, are kept apart. At most 1,000 sign-ins wait at
+  once for the whole app; when that's full, the oldest is pushed out (expired
+  ones go first) rather than refusing the new one, so nobody can switch
+  passkeys off by opening sign-in pages, and a pushed-out one only says
+  "That took too long. Try again." A reader adding a passkey has only their
+  newest challenge, in a pool sign-ins can't reach. A restart
   forgets them, which costs only a second try. The sign-in page asks for a
   fresh autofill challenge every four minutes while it's open.
 - **No waits for wrong passkeys.** A passkey can't be guessed, so a refused
@@ -51,7 +56,8 @@ for it.*
   numeric address) or in a browser without WebAuthn.
 - **Remove, with Undo.** Removing marks the passkey removed: it stops signing
   in at once, and Undo brings it back for ten minutes, after which it's
-  deleted for good. Each reader keeps at most 20. A reader's passkeys are
+  deleted for good. A removed passkey doesn't stop that device adding one
+  again straight away; one added again replaces its removed line. Each reader keeps at most 20. A reader's passkeys are
   theirs only (`person_id`, `server/tests/passkeys.rs`), and go with their
   account (`people::PER_READER_TABLES`).
 - **Structure change 25:** a new `passkeys` table (the passkey's public key
@@ -72,7 +78,9 @@ for it.*
 - An email for each new passkey: no email goes out for other sign-in
   changes made while signed in, apart from a changed address.
 
-**Left as it is, for the owner to revisit.** Setting a new password from an
-emailed link, and the owner's way back with a new `NINE_TURTLES_PASSWORD_HASH`,
-sign other devices out but leave passkeys as they are; a reader who fears
-someone else added one removes it in Settings › Passkeys.
+**A new password keeps passkeys (the owner's choice, 27 October 2026).**
+Setting a new password from an emailed link, and the owner's way back with a
+new `NINE_TURTLES_PASSWORD_HASH`, sign other devices out but leave passkeys
+as they are. The advice that goes with it, in SPEC section 1 and
+`docs/operations/owner-password.md`: after a new password, look in Settings ›
+Passkeys and remove any passkey you don't recognise.
