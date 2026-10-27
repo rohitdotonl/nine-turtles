@@ -21,7 +21,7 @@
 use axum::{
     Json, Router,
     extract::State,
-    http::{HeaderValue, StatusCode, header},
+    http::{StatusCode, header},
     response::{IntoResponse, Response},
     routing::post,
 };
@@ -791,16 +791,7 @@ async fn delete_me(SignedIn(person): SignedIn, State(state): State<AppState>) ->
     match people::delete(&state.db, person).await {
         Ok(()) => {
             log::info("a reader deleted their account");
-            (
-                StatusCode::NO_CONTENT,
-                [(
-                    header::SET_COOKIE,
-                    HeaderValue::from_static(
-                        "nine_turtles_session=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict",
-                    ),
-                )],
-            )
-                .into_response()
+            (StatusCode::NO_CONTENT, crate::auth::signed_out_cookies()).into_response()
         }
         Err(error) => database_problem("deleting an account", &error),
     }
