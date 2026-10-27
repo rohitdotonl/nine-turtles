@@ -608,6 +608,40 @@ async fn a_wrong_verifier_or_address_gets_nothing() {
 }
 
 #[tokio::test]
+async fn an_assistant_gets_links_without_tracking_tags_even_old_ones() {
+    let (base, state) = common::start_with_state(common::config()).await;
+    let cookie = common::signed_in(&base).await;
+    let (status, _) = post_json(
+        &base,
+        "/api/feeds",
+        Some(&cookie),
+        &json!({ "address": publisher("Garden Notes").await }),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CREATED);
+    // As if stored before tracking tags were taken out on arrival (decision 0112).
+    sqlx::query("UPDATE articles SET link = link || '?utm_source=rss'")
+        .execute(&state.db)
+        .await
+        .unwrap();
+    let (access, _) = connect(&base, &cookie).await;
+
+    for (name, arguments) in [
+        ("list_unread", json!({})),
+        ("search_articles", json!({ "query": "gardens" })),
+    ] {
+        let (answer, error) = tool(&base, &access, name, arguments).await;
+        assert!(!error, "{name}");
+        let articles = answer["articles"].as_array().unwrap();
+        assert!(!articles.is_empty(), "{name}");
+        for article in articles {
+            let link = article["link"].as_str().unwrap();
+            assert!(!link.contains("utm_source"), "{name}: {link}");
+        }
+    }
+}
+
+#[tokio::test]
 async fn an_assistant_sees_only_its_own_readers_things() {
     let (base, state) = common::start_with_state(common::config()).await;
     let owner = common::signed_in(&base).await;

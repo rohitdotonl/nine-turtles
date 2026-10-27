@@ -32,7 +32,7 @@ use sqlx::{QueryBuilder, Sqlite};
 use crate::{
     AppState, apps,
     auth::database_problem,
-    feeds, folders, log,
+    feed, feeds, folders, log,
     marks::{MOST_AT_ONCE, READ_SQL, STAR_SQL, now_ms},
     now,
 };
@@ -758,11 +758,20 @@ impl Article {
         for name in labels.get(&self.feed_id).into_iter().flatten() {
             categories.push(format!("{LABEL}{name}"));
         }
+        // Articles stored before trackers were taken out on arrival
+        // (decision 0112) lose them here, as on nine turtles' own screen
+        // (`feeds::full_articles`).
         let link: Vec<Value> = self
             .link
             .iter()
-            .map(|href| json!({ "href": href, "type": "text/html" }))
+            .map(|href| json!({ "href": feed::link_without_tracking(href), "type": "text/html" }))
             .collect();
+        let content = self
+            .content
+            .as_deref()
+            .or(self.summary.as_deref())
+            .map(|html| feed::without_trackers(html, None))
+            .unwrap_or_default();
         let published = self.published_at.unwrap_or(self.sort_at);
         json!({
             "id": format!("{ITEM_PREFIX}{:016x}", self.id),
@@ -777,7 +786,7 @@ impl Article {
             "categories": categories,
             "summary": {
                 "direction": "ltr",
-                "content": self.content.clone().or_else(|| self.summary.clone()).unwrap_or_default(),
+                "content": content,
             },
             "origin": {
                 "streamId": format!("feed/{}", self.feed_id),

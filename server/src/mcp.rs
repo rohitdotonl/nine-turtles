@@ -38,6 +38,7 @@ use serde_json::{Value, json};
 use crate::{
     AppState, VERSION,
     assistants::Assistant,
+    feed,
     feeds::{self, NotAdded},
     folders, health,
     marks::{READ_SQL, STAR_SQL, now_ms},
@@ -593,7 +594,7 @@ async fn find(state: &AppState, person: i64, search: Search) -> Answer {
                         "title": article.title,
                         "feed": article.feed_title,
                         "feed_id": article.feed_id,
-                        "link": article.link,
+                        "link": article.link.as_deref().map(feed::link_without_tracking),
                         "date": rfc3339(article.at),
                         "read": article.read,
                         "starred": article.starred,
