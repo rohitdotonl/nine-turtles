@@ -22,7 +22,10 @@ change "in a quiet way, with good UI and UX that goes well with nine turtles".
 - **Home / End: first / last article in the list.** End goes to the last
   article *loaded so far*; it never loads more itself, as `j` doesn't. On a
   control that moves by Home and End itself (a field, a row of choices, a
-  menu) those keys stay the control's.
+  menu) those keys stay the control's. They choose from the list only while
+  a list is in view and the keyboard isn't in the open article: there they
+  scroll the article, and on a page that isn't a list they scroll the page,
+  as a reader expects of a book.
 - **g then f: Your feeds** (Settings › Feeds › Your feeds, `/settings/feeds`),
   and **g then , : Settings**.
 - **g then r: Recently read.** That place is being built in a change of its
@@ -68,7 +71,10 @@ change "in a quiet way, with good UI and UX that goes well with nine turtles".
   20 characters or fewer, no control characters); the browser decides what
   they mean, and ignores names it doesn't know. Each device keeps a copy,
   so a changed key works from the first press, before the server answers,
-  and offline. Each reader's keys are their own.
+  and offline; signing out forgets that copy, so the next reader on a
+  shared browser starts from nine turtles' own keys. Saves go one after
+  another, each with the whole set; if the newest fails, the keys go back
+  to the last set the server has. Each reader's keys are their own.
 
 **Three columns.** With four more rows and the Change keys… link, the `?`
 list no longer fit an 800px-tall window in two columns (decision 0049

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
-import { appReady, follow, signIn, tabTo } from "./screens";
+import { appReady, follow, openReadingRoom, signIn, tabTo } from "./screens";
 
 // Keys of the reader's own (decision 0110, SPEC section 19), done with the
 // keyboard alone, and the keys that came with it: Home and End, Shift+J and
@@ -189,5 +189,69 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("g");
     await page.keyboard.press(",");
     await expect(page).toHaveURL(/\/settings$/);
+  });
+
+  test("a key of your own works without a connection, from this device's copy; signing out forgets it", async ({ page, context }) => {
+    const saved = await keepSettingsHere(page);
+    saved.keys = { star: "x" };
+    await signedIn(page);
+    await openBlog(page);
+    await expect.poll(() => page.evaluate(() => localStorage.getItem("nine-turtles.keys"))).toBe(JSON.stringify({ star: "x" }));
+    await page.keyboard.press("j");
+    const star = article(page).getByRole("button", { name: "Star" });
+    await expect(star).toHaveAttribute("title", "Star (X)");
+
+    await context.setOffline(true);
+    await page.keyboard.press("x");
+    await expect(star).toHaveAttribute("aria-pressed", "true");
+    await page.keyboard.press("s");
+    await expect(star).toHaveAttribute("aria-pressed", "true");
+    await page.keyboard.press("x");
+    await expect(star).toHaveAttribute("aria-pressed", "false");
+    await context.setOffline(false);
+    await page.evaluate(() => dispatchEvent(new Event("online")));
+
+    // Signing out: the next reader on this browser starts from nine turtles' own keys.
+    await page.goto(new URL("/settings", FEEDS_APP).href);
+    await appReady(page);
+    await page.getByRole("button", { name: "Sign out" }).click();
+    await expect(page.getByLabel("Password", { exact: true })).toBeVisible();
+    expect(await page.evaluate(() => localStorage.getItem("nine-turtles.keys"))).toBeNull();
+  });
+
+  test("Home and End keep their usual job in the open article and on a page that isn't a list", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 420 });
+    await page.goto(new URL("/all", FEEDS_APP).href);
+    await appReady(page);
+    await signIn(page);
+    await openReadingRoom(page);
+    // Whether nine turtles took the last key for itself.
+    const watch = () => page.evaluate(() => addEventListener("keydown", (event) => ((window as unknown as { taken: boolean }).taken = event.defaultPrevented)));
+    await watch();
+    const taken = () => page.evaluate(() => (window as unknown as { taken: boolean }).taken);
+
+    // In the open article, End scrolls to its end and Home back to its top; the same article stays chosen.
+    await page.getByRole("button", { name: /The pleasure of a slow letter/ }).click();
+    await page.keyboard.press("Enter");
+    const scroller = article(page).locator(".reading-scroller");
+    await expect(article(page).getByRole("heading", { level: 2, name: "The pleasure of a slow letter" })).toBeFocused();
+    await page.keyboard.press("End");
+    expect(await taken()).toBe(false);
+    await expect.poll(() => scroller.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+    await expect(article(page).locator(".article-title")).toHaveText("The pleasure of a slow letter");
+    await expect(page.getByRole("button", { name: /The pleasure of a slow letter/ })).toHaveAttribute("aria-current", "true");
+    await page.keyboard.press("Home");
+    expect(await taken()).toBe(false);
+    await expect.poll(() => scroller.evaluate((element) => element.scrollTop)).toBe(0);
+
+    // On Settings, a page and not a list, they're the browser's.
+    await page.goto(new URL("/settings", FEEDS_APP).href);
+    await appReady(page);
+    await watch();
+    await page.keyboard.press("End");
+    expect(await taken()).toBe(false);
+    await expect(page).toHaveURL(/\/settings$/);
+    await page.keyboard.press("Home");
+    expect(await taken()).toBe(false);
   });
 });

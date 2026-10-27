@@ -492,6 +492,15 @@ export function lastKeys(): KeyMap {
   }
 }
 
+/** Signed out: this device forgets the keys, so whoever signs in next starts from their own (or nine turtles'). */
+export function forgetKeys() {
+  try {
+    globalThis.localStorage?.removeItem(KEYS_KEY);
+  } catch {
+    // Private browsing: nothing was kept.
+  }
+}
+
 function rememberKeys(keys: KeyMap) {
   try {
     globalThis.localStorage?.setItem(KEYS_KEY, JSON.stringify(keys));

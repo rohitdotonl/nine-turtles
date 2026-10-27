@@ -685,6 +685,9 @@
       if (!action) return;
       // Space with no article open is the browser's own: it scrolls whatever it's on.
       if (action.kind === "page" && !(articleView && selected && panes.article && isList(route))) return;
+      // Home and End choose from the list only while the list is in view and the keyboard isn't in the
+      // open article: there, and on a page that isn't a list, they scroll as usual (decision 0110).
+      if (action.kind === "move-end" && (event.key === "Home" || event.key === "End") && !(isList(route) && panes.list && !reading && !inArticle())) return;
       event.preventDefault();
       switch (action.kind) {
         case "cheat-sheet":
