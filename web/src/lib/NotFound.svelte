@@ -21,7 +21,7 @@
   });
 </script>
 
-<main class="flex min-h-screen flex-col items-center justify-center gap-5 bg-paper px-5 py-12 text-center">
+<main class="flex min-h-screen flex-col items-center justify-center gap-10 bg-paper px-6 py-20 text-center">
   <p class="text-meta tracking-[0.08em] text-muted uppercase">404 error</p>
   <div class="wrong-turn" aria-hidden="true">
     <svg viewBox="-10 -4.5 22 8.5" focusable="false"><path transform="translate(2 0) scale(-1 1)" d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z" /><circle transform="translate(2 0) scale(-1 1)" cx="8.6" cy="0.6" r="2" /></svg>
@@ -31,12 +31,12 @@
     {/each}
   </div>
   <h1 tabindex="-1" bind:this={heading} class="font-serif text-display font-semibold outline-none">Wrong turn?</h1>
-  <div class="flex max-w-md flex-col gap-4 font-serif text-large text-ink-2">
+  <div class="flex max-w-md flex-col gap-6 font-serif text-large leading-relaxed text-ink-2">
     <p>There's nothing at this address. It may have moved, or the link may have a typing mistake in it.</p>
     <p>If a link in this app brought you here, <a class="underline underline-offset-4" href={tellMe}>tell me which one</a> and I'll fix it.</p>
-    <p class="text-ink">Rohit</p>
+    <p class="pt-2 text-ink">— Rohit</p>
   </div>
-  <button type="button" class="btn-primary mt-3 rounded-lg" onclick={onBack}>Back to your reading</button>
+  <button type="button" class="btn-primary rounded-lg" onclick={onBack}>Back to your reading</button>
 </main>
 
 <style>
@@ -45,7 +45,7 @@
     display: flex;
     align-items: flex-end;
     gap: clamp(4px, 1.2vw, 10px);
-    padding-block: 8px 12px;
+    padding-block: 8px;
     color: var(--ink);
   }
   .wrong-turn svg {

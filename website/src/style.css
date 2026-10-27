@@ -718,9 +718,15 @@ footer .links.small a {
 .wrong-turn {
   display: grid;
   justify-items: center;
-  gap: 1rem;
-  margin-block: 3rem 2rem;
+  gap: 2.5rem;
+  margin-block: 5rem;
   text-align: center;
+}
+
+.wrong-turn .words {
+  display: grid;
+  justify-items: center;
+  gap: 1.5rem;
 }
 
 .wrong-turn p {
@@ -729,6 +735,7 @@ footer .links.small a {
   color: var(--ink-2);
   font-family: var(--serif);
   font-size: 1.25rem;
+  line-height: 1.6;
 }
 
 .wrong-turn .code {
@@ -765,6 +772,7 @@ footer .links.small a {
 }
 
 .wrong-turn .signed {
+  padding-top: 0.5rem;
   color: var(--ink);
 }
 
