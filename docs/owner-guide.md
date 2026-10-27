@@ -145,9 +145,9 @@ nine turtles, runs every check, and shows the results on the pull request: a
 green tick ✓ if everything passed, a red cross ✗ if anything failed (with
 details). Because nine turtles' repository is public, GitHub runs these checks for free.
 The required one is called **All checks**. The checks run in parts on several
-computers at once (frontend, Rust, and the browser tests in two halves), and
+computers at once (frontend, Rust, and the browser tests in four parts), and
 **All checks** turns green only when every part has passed, so a typical pull
-request is ready in about three minutes. A pull request that changes only
+request is ready in about four minutes (decision 0114). A pull request that changes only
 documents skips the slow parts and is ready in under a minute (decision 0065).
 
 Once a week, GitHub also checks the libraries nine turtles uses against public

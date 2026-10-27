@@ -340,13 +340,13 @@ test("with only the keyboard: Edit feed, a new folder, opening it, Edit folder, 
 
   // The folder's button shows its feeds; Space or Enter works it.
   const toggle = sidebar(page).getByRole("button", { name: `Feeds in ${folder}` });
-  await tabTo(page, toggle, 200);
+  await tabTo(page, toggle);
   await page.keyboard.press("Enter");
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
   await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) })).toBeVisible();
 
   // Untick the folder from Edit feed: Space on the checkbox, then Save.
-  await tabTo(page, more(page), 200);
+  await tabTo(page, more(page));
   await page.keyboard.press("Enter");
   await page.keyboard.press("End");
   await page.keyboard.press("Enter");
@@ -358,7 +358,7 @@ test("with only the keyboard: Edit feed, a new folder, opening it, Edit folder, 
   await expect(more(page)).toBeFocused();
 
   // Edit folder, from the folder's own list.
-  await tabTo(page, sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) }), 200);
+  await tabTo(page, sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) }));
   await page.keyboard.press("Enter");
   await tabTo(page, more(page));
   await page.keyboard.press("Enter");
@@ -370,7 +370,7 @@ test("with only the keyboard: Edit feed, a new folder, opening it, Edit folder, 
   await expect(line(page)).toHaveText(`Deleted the folder ${folder}`);
 
   // Unsubscribe, and u brings the feed back.
-  await tabTo(page, sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) }), 200);
+  await tabTo(page, sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) }));
   await page.keyboard.press("Enter");
   await tabTo(page, more(page));
   await page.keyboard.press("Enter");
@@ -385,7 +385,7 @@ test("with only the keyboard: Edit feed, a new folder, opening it, Edit folder, 
   // Import OPML opens the device's file chooser from the keyboard too.
   await page.goto(new URL("/settings", FEEDS_APP).href);
   await appReady(page);
-  await tabTo(page, page.getByRole("button", { name: "Import OPML" }), 200);
+  await tabTo(page, page.getByRole("button", { name: "Import OPML" }));
   await opensFilePicker(page, () => page.keyboard.press("Enter"));
 
   // So does Import starred articles.
@@ -453,10 +453,12 @@ test.describe("on a touch screen beside the list", () => {
     expect(Math.max(box.width, target.width)).toBeGreaterThanOrEqual(44);
     expect(Math.max(box.height, target.height)).toBeGreaterThanOrEqual(44);
     // A finger landing in the margin just left of the arrow still finds it.
-    const found = await arrow.evaluate((element, x) => {
+    // Measured at the same moment as it's tried: the sidebar can still move
+    // a little as other tests' feeds arrive in it.
+    const found = await arrow.evaluate((element) => {
       const box = element.getBoundingClientRect();
-      return element.contains(document.elementFromPoint(x, box.top + box.height / 2));
-    }, box.x - 4);
+      return element.contains(document.elementFromPoint(box.left - 4, box.top + box.height / 2));
+    });
     expect(found).toBe(true);
   });
 });

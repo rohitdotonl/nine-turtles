@@ -515,10 +515,31 @@ export async function markAllFromMenu(page: Page): Promise<void> {
   await page.getByRole("menuitem", { name: "Mark all as read" }).click();
 }
 
-/** Presses Tab until the keyboard's place reaches the element: the keyboard floor. The limit leaves room for the sidebar's feeds, which grow as the tests follow more. */
-export async function tabTo(page: Page, target: Locator, limit = 300): Promise<void> {
-  for (let i = 0; i < limit; i++) {
-    if (await target.evaluate((element) => element === document.activeElement)) return;
+/**
+ * Presses Tab until the keyboard's place reaches the element: the keyboard
+ * floor. It gives up only once Tab has come round to a place it has already
+ * been, so the sidebar's feeds, which grow as the tests follow more, never
+ * make it run out of presses. A test that means "within so many presses"
+ * gives its own limit.
+ */
+export async function tabTo(page: Page, target: Locator, limit = 2000): Promise<void> {
+  await page.evaluate(() => {
+    (window as unknown as { tabbed: WeakSet<Element> }).tabbed = new WeakSet();
+  });
+  for (let i = 0; i <= limit; i++) {
+    const where = await target.evaluate((element) => {
+      const here = document.activeElement;
+      if (element === here) return "reached";
+      const tabbed = (window as unknown as { tabbed: WeakSet<Element> }).tabbed;
+      // Inside a frame (a video player) the place stays on the frame itself.
+      if (here && here !== document.body && here.tagName !== "IFRAME") {
+        if (tabbed.has(here)) return "round";
+        tabbed.add(here);
+      }
+      return "on";
+    });
+    if (where === "reached") return;
+    if (where === "round" || i === limit) break;
     await page.keyboard.press("Tab");
   }
   throw new Error("Tab never reached the element");

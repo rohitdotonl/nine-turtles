@@ -48,3 +48,15 @@ unsafe_code = "forbid"
 
 [lints.clippy]
 all = { level = "deny", priority = -1 }
+
+# The tests run in this unoptimized "dev" build. Libraries are built
+# optimized (once, then remembered), which makes the tests several times
+# faster: password checks, the database and HTML cleaning run at near full
+# speed. Only line numbers are kept for debugging, which makes the build
+# smaller and quicker to save and restore on GitHub. Decision 0114.
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+opt-level = 2
+debug = false

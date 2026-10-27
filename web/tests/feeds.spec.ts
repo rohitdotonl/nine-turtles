@@ -346,7 +346,7 @@ test("with only the keyboard: choose one of several feeds, then go back to it fr
   await page.keyboard.press("a");
   await expect(page).toHaveURL(/\/all$/);
   const link = sidebar(page).getByRole("link", { name: `Blog ${name}: comments` });
-  await tabTo(page, link, 400);
+  await tabTo(page, link);
   await page.keyboard.press("Enter");
   await expect(heading).toBeFocused();
 });
@@ -370,7 +370,7 @@ test("with only the keyboard: Tab reaches Show older items, and the keyboard's p
   await page.reload();
   await appReady(page);
   const feed = sidebar(page).getByRole("link", { name: /^Quiet Notes( \d+ unread)?$/ });
-  await tabTo(page, feed, 400);
+  await tabTo(page, feed);
   await page.keyboard.press("Enter");
 
   const list = page.getByRole("region", { name: "Quiet Notes" });
