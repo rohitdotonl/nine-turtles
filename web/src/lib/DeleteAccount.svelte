@@ -11,17 +11,25 @@
   the far left of the one row of actions, Cancel at the right end. On a phone,
   the phone sheet's one build (decision 0052): an X beside the title, no
   Cancel, and Delete account as the one red row of a group of its own.
+
+  With `data`, it is "Delete your data?" instead (decision 0117), opened by
+  every reader, the owner too: the same downloads first, then Delete data,
+  which empties the account (feeds, folders, articles, stars, collections,
+  saved searches, rules) for good and keeps the reader signed in. This
+  device's saved copies go too, and the app starts again, empty.
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
   import PageHead from "./PageHead.svelte";
   import Sheet from "./Sheet.svelte";
   import { edge } from "./edge";
-  import { deleteAccount } from "./accounts";
+  import { deleteAccount, deleteData } from "./accounts";
+  import { forget } from "./offline";
 
   let {
     heading = $bindable(),
     sheet = false,
+    data = false,
     besideToggle = false,
     onDeleted,
     onCancel,
@@ -29,6 +37,8 @@
     heading?: HTMLHeadingElement;
     /** Shown as a sheet over Settings, not as a page. */
     sheet?: boolean;
+    /** Delete the reader's data, keeping their account, instead of the account. */
+    data?: boolean;
     besideToggle?: boolean;
     onDeleted: () => void;
     onCancel: () => void;
@@ -41,13 +51,24 @@
     if (busy) return;
     busy = true;
     message = "";
-    const deleted = await deleteAccount();
+    const deleted = await (data ? deleteData() : deleteAccount());
+    if (deleted && data) {
+      // This device's copies were of what's gone; the app opens again, empty, at its start.
+      await forget();
+      location.assign("/");
+      return;
+    }
     busy = false;
     if (deleted) onDeleted();
-    else message = "Couldn't delete your account. Nothing was deleted; try again in a moment.";
+    else message = `Couldn't delete your ${data ? "data" : "account"}. Nothing was deleted; try again in a moment.`;
   }
 
-  const WHAT = "Your account and everything in it are deleted at once, for good: this can't be undone.";
+  const WHAT = $derived(
+    data
+      ? "Everything in your account is deleted at once, for good: this can't be undone. Your account stays."
+      : "Your account and everything in it are deleted at once, for good: this can't be undone.",
+  );
+  const TITLE = $derived(data ? "Delete your data?" : "Delete your account?");
 </script>
 
 {#snippet remover(look: string)}
@@ -57,15 +78,20 @@
     aria-describedby="delete-account-help"
     title={WHAT}
     onclick={remove}
-    class={look}>Delete account</button
+    class={look}>{data ? "Delete data" : "Delete account"}</button
   >
 {/snippet}
 
 {#snippet body()}
   <div class={["flex flex-col gap-5", !sheet && "flex-1"]}>
     <p id="delete-account-help">
-      Your feeds, folders, read and starred articles, saved searches, rules, app password and passkeys go for good, along
-      with your email and password. This can't be undone.
+      {#if data}
+        Your feeds, folders, read and starred articles, collections, saved searches and rules go for good. This can't
+        be undone. Your account stays: you stay signed in, with the same email, password and settings.
+      {:else}
+        Your feeds, folders, read and starred articles, collections, saved searches, rules, app password and passkeys go
+        for good, along with your email and password. This can't be undone.
+      {/if}
     </p>
     <div class="flex flex-col gap-1.5">
       <p class="text-small text-ink-2">Before you go, you can download them</p>
@@ -76,8 +102,13 @@
         <a href="/api/starred/export" download class="inset-row inset-action"
           >Export starred articles<span class="row-glyph"><Icon name="download" size={18} /></span></a
         >
+        <a href="/api/collections/export" download class="inset-row inset-action"
+          >Export collections<span class="row-glyph"><Icon name="download" size={18} /></span></a
+        >
       </div>
-      <p class="field-help">Your feeds and folders as an OPML file, and your starred articles as a JSON Feed file.</p>
+      <p class="field-help">
+        Your feeds and folders as an OPML file, and your starred articles and collections as JSON Feed files.
+      </p>
     </div>
     <p role="status" class={["flex items-start gap-1.5 text-small text-danger", !message && "sr-only"]}>
       {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
@@ -96,13 +127,13 @@
 {/snippet}
 
 {#if sheet}
-  <Sheet title="Delete your account?" bind:heading onClose={onCancel}>
+  <Sheet title={TITLE} bind:heading onClose={onCancel}>
     {@render body()}
   </Sheet>
 {:else}
   <section aria-labelledby="list-heading" class="page-sheet">
     <div class="page-sheet-card">
-      <PageHead title="Delete your account?" bind:heading {besideToggle} onClose={onCancel} closeLabel="Close" />
+      <PageHead title={TITLE} bind:heading {besideToggle} onClose={onCancel} closeLabel="Close" />
       <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 pb-10 md:px-10">
         <div class="mx-auto flex w-full max-w-xl flex-1 flex-col">
           {@render body()}

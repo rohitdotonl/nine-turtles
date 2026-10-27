@@ -10,9 +10,9 @@ if (!target) throw new Error("nine turtles: the #app element is missing from ind
 apply(load());
 mount(App, { target });
 
-// Whether the reader is using the keyboard right now, so a title the app
-// moves the keyboard to is outlined after a key press but not on first load
-// or after a click (app.css).
+// Whether the reader is using the keyboard right now, so a row the app moves
+// the keyboard back to is outlined after a key press but not after a click
+// (app.css).
 addEventListener("keydown", () => (document.documentElement.dataset.keyboard = ""), true);
 addEventListener("pointerdown", () => delete document.documentElement.dataset.keyboard, true);
 

@@ -48,9 +48,9 @@ describe("the feed health page's words", () => {
     const now = new Date(2026, 9, 25, 12, 0);
     const today = new Date(2026, 9, 25, 9, 0).getTime() / 1000;
     const earlier = new Date(2026, 9, 3, 9, 0).getTime() / 1000;
-    expect(lastWorked(sick({ fetchedAt: today }), now)).toBe("Last worked today");
-    expect(lastWorked(sick({ fetchedAt: earlier }), now)).toBe("Last worked on 3 Oct");
-    expect(lastWorked(sick({ fetchedAt: null }), now)).toBe("Hasn't worked since you added it");
+    expect(lastWorked(sick({ fetchedAt: today }), now)).toBe("Today");
+    expect(lastWorked(sick({ fetchedAt: earlier }), now)).toBe("3 Oct");
+    expect(lastWorked(sick({ fetchedAt: null }), now)).toBe("Not since you added it");
   });
 
   it("says plainly why an action didn't work", () => {

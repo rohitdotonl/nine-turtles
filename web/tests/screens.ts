@@ -26,7 +26,7 @@ export const SCREENS: Screen[] = [
     signedIn: true,
     library: true,
     open: async (page) => {
-      await expect(page.getByRole("button", { name: "Show older items" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Show older articles" })).toBeVisible();
     },
   },
   {
@@ -115,14 +115,14 @@ export const SCREENS: Screen[] = [
       await page.keyboard.press("/");
       await expect(page.locator("#search-field")).toBeFocused();
       await page.keyboard.type("reading is:");
-      await expect(page.locator("#list-heading")).toHaveText("Search results");
+      await expect(page.locator("#list-heading")).toHaveText("Results in All");
       // A filter suggested as it's typed becomes a chip; the options panel shows it too.
       await expect(page.getByRole("option", { name: "is:unread" })).toBeVisible();
       await page.keyboard.type("unread ");
       await expect(page.getByRole("button", { name: "Remove Unread", exact: true })).toBeVisible();
       await page.getByRole("button", { name: "Search options" }).click();
       await expect(page.getByRole("checkbox", { name: "Unread", exact: true })).toBeChecked();
-      await expect(page.getByRole("region", { name: "Search results" }).locator("mark").first()).toBeVisible();
+      await expect(page.getByRole("region", { name: /^Results in / }).locator("mark").first()).toBeVisible();
     },
   },
   {

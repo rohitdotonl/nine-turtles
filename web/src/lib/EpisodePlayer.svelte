@@ -96,6 +96,33 @@
     seek(seconds);
   }
 
+  /**
+   * Tells the player while this episode's own player is on screen, so on a
+   * phone the Now playing bar steps aside rather than showing the same
+   * episode twice (SPEC section 35).
+   */
+  function watch(element: HTMLElement, id: number) {
+    let current = id;
+    const watching = new IntersectionObserver((entries) => {
+      const seen = entries.some((entry) => entry.isIntersecting);
+      if (seen) player.inView = current;
+      else if (player.inView === current) player.inView = undefined;
+    });
+    watching.observe(element);
+    return {
+      update(next: number) {
+        if (player.inView === current) player.inView = undefined;
+        current = next;
+        watching.unobserve(element);
+        watching.observe(element);
+      },
+      destroy() {
+        watching.disconnect();
+        if (player.inView === current) player.inView = undefined;
+      },
+    };
+  }
+
   function slid(event: Event) {
     const value = Number((event.currentTarget as HTMLInputElement).value);
     if (mine) seek(value);
@@ -106,11 +133,11 @@
   }
 </script>
 
-<div class="episode" role="group" aria-label="Episode player">
+<div class="episode" role="group" aria-label="Episode player" use:watch={article.id}>
   <div class="episode-controls">
     <button type="button" class="episode-button" aria-label="Back {BACK_SECONDS} seconds" title="Back {BACK_SECONDS} seconds" onclick={() => goTo(position - BACK_SECONDS)}>
-      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
-        ><path d="M4.25 10a5.75 5.75 0 1 0 1.7-4.08" /><path d="M4 3.5v3h3" /><text x="10" y="12.4" text-anchor="middle" font-size="5.6" stroke="none" fill="currentColor" font-family="system-ui, sans-serif">15</text></svg
+      <svg aria-hidden="true" width="30" height="30" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"
+        ><path d="M4.25 10a5.75 5.75 0 1 0 1.7-4.08" /><path d="M4 3.5v3h3" /><text x="10" y="12.9" text-anchor="middle" font-size="7.5" font-weight="600" stroke="none" fill="currentColor" font-family="system-ui, sans-serif">15</text></svg
       >
     </button>
     <!-- The one round, filled mark, in the text color: Play or Pause, by its shape and its name. -->
@@ -122,12 +149,13 @@
       {/if}
     </button>
     <button type="button" class="episode-button" aria-label="Forward {FORWARD_SECONDS} seconds" title="Forward {FORWARD_SECONDS} seconds" onclick={() => goTo(position + FORWARD_SECONDS)}>
-      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
-        ><path d="M15.75 10a5.75 5.75 0 1 1-1.7-4.08" /><path d="M16 3.5v3h-3" /><text x="10" y="12.4" text-anchor="middle" font-size="5.6" stroke="none" fill="currentColor" font-family="system-ui, sans-serif">30</text></svg
+      <svg aria-hidden="true" width="30" height="30" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"
+        ><path d="M15.75 10a5.75 5.75 0 1 1-1.7-4.08" /><path d="M16 3.5v3h-3" /><text x="10" y="12.9" text-anchor="middle" font-size="7.5" font-weight="600" stroke="none" fill="currentColor" font-family="system-ui, sans-serif">30</text></svg
       >
     </button>
+    <!-- How long it is, until it starts: then the times under the slider say it, so the length steps aside. -->
     <span class="episode-length">
-      {#if episode.seconds}{length(episode.seconds)}<span class="sr-only"> long</span>{/if}
+      {#if episode.seconds && !mine}{length(episode.seconds)}<span class="sr-only"> long</span>{/if}
     </span>
     <button
       type="button"

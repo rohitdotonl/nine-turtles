@@ -57,7 +57,7 @@ pull request, update every document the change affects, and list them in the
 summary (or say why none needed it).
 
 **One fact, one place:** each fact lives in one document; every other
-document links to it instead of repeating it (decision 0117). When work is
+document links to it instead of repeating it (decision 0119). When work is
 finished, `docs/PLAN.md` drops it into `docs/archive/plan-done.md`.
 `scripts/check.sh docs` fails on a link to a file that doesn't exist.
 
@@ -88,7 +88,7 @@ finished, `docs/PLAN.md` drops it into `docs/archive/plan-done.md`.
 
 - **Everyone can read here:** WCAG AA contrast everywhere (AAA for article text), never color alone, fully keyboard-operable with visible focus, screen-reader friendly, respects system settings, 44px touch targets.
 - **Respect the publisher:** show only what the feed contains (never scrape), always credit and link the original, fetch politely, share the publisher's link, play media in the publisher's player; an audio file the feed names plays from the publisher's own address in a simple player (decision 0113).
-- **Never lose the reader's data or put them at risk:** always sanitize feed content, no secrets in code or GitHub, nothing deletes without undo, back up before any database structure change (nine turtles does this itself, decision 0076), and any change that could lose data is raised with the owner first. The owner chose three exceptions to undo, each backed by the nightly backups: unsubscribing and the yearly clean-up (both keep starred and collected articles), and deleting one's own account (which removes everything). Details: `docs/ENGINEERING.md` → "The floor".
+- **Never lose the reader's data or put them at risk:** always sanitize feed content, no secrets in code or GitHub, nothing deletes without undo, back up before any database structure change (nine turtles does this itself, decision 0076), and any change that could lose data is raised with the owner first. The owner chose three exceptions to undo, each backed by the nightly backups: unsubscribing and the yearly clean-up (both keep starred and collected articles), and deleting one's own account or all of one's data (which removes everything, decisions 0088 and 0117). Details: `docs/ENGINEERING.md` → "The floor".
 
 Ranked principles below the floors (higher wins). Design: reading first ›
 calm over engagement › clear at a glance › slow app, fast interface ›

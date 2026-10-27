@@ -167,7 +167,8 @@
 -->
 <form onsubmit={submit} class={["flex flex-col gap-1.5", page && "flex-1"]}>
   <label for="feed-address" class={framed ? "text-small text-ink-2" : "sr-only"}>Paste a website or feed URL</label>
-  <div class="flex gap-2">
+  <!-- In the welcome, a container, so its hint can step down a size on a small phone (welcome-field in app.css). -->
+  <div class={["flex gap-2", !framed && "welcome-row"]}>
     <input
       id="feed-address"
       bind:this={field}
@@ -180,7 +181,7 @@
       placeholder={framed ? "example.com" : "Paste a website or feed URL"}
       aria-describedby="feed-address-status"
       aria-invalid={badAddress ? "true" : undefined}
-      class="field min-w-0 flex-1"
+      class={["field min-w-0 flex-1", !framed && "welcome-field"]}
     />
     {#if !framed}
       <!-- Beside the field, its corners match the field's. -->

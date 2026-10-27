@@ -6,5 +6,5 @@
 - A new quick check fails if any document links to a file that isn't
   there. It runs on every pull request, documents-only ones too.
 - AGENTS.md now says each fact lives in one document, and others link to
-  it (decision 0117).
+  it (decision 0119).
 - Nothing in the app changed.

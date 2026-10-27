@@ -1,4 +1,4 @@
-# 0117: Documents agents can read less of, and trust
+# 0119: Documents agents can read less of, and trust
 
 *October 2026.*
 

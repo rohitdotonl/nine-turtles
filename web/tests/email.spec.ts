@@ -205,8 +205,47 @@ test("the owner's own account has no Delete account", async ({ browser }) => {
   await page.goto("/settings");
   await expect(page.getByText(/^Version /)).toBeVisible();
   await expect(page.getByRole("button", { name: "Delete account…" })).toHaveCount(0);
+  // Their data, though, they can delete (decision 0117).
+  await expect(page.getByRole("button", { name: "Delete data…" })).toBeVisible();
   await expect(page.getByText(/^Whoever runs this nine turtles can see/)).toHaveCount(0);
   await context.close();
+});
+
+test("Delete data empties the account and keeps the reader signed in", async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "the phone's sheets are screens; the flow is the same");
+  const email = `empty-${testInfo.project.name}-${Date.now()}@example.com`;
+  const page = await newReader(browser, email);
+  const made = await page.request.post("/api/folders", { data: { name: "Essays" } });
+  expect(made.ok()).toBe(true);
+  const folders = async () => ((await (await page.request.get("/api/feeds")).json()) as { folders: unknown[] }).folders;
+  expect(await folders()).toHaveLength(1);
+
+  await page.goto("/settings");
+  await page.getByRole("button", { name: "Delete data…" }).click();
+  const sure = page.getByRole("dialog", { name: "Delete your data?" });
+  await expect(sure.getByRole("heading", { name: "Delete your data?" })).toBeFocused();
+  // The downloads first.
+  await expect(sure.getByRole("link", { name: "Export OPML" })).toHaveAttribute("href", "/api/opml");
+  await expect(sure.getByRole("link", { name: "Export collections" })).toHaveAttribute("href", "/api/collections/export");
+  // Escape keeps everything.
+  await page.keyboard.press("Escape");
+  await expect(sure).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Delete data…" })).toBeFocused();
+  expect(await folders()).toHaveLength(1);
+
+  await page.keyboard.press("Enter");
+  await expect(sure.getByRole("heading", { name: "Delete your data?" })).toBeFocused();
+  // Past the three downloads to Delete data, with only the keyboard.
+  for (let step = 0; step < 4; step += 1) await page.keyboard.press("Tab");
+  await expect(sure.getByRole("button", { name: "Delete data" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  // The app starts again at its start, empty, still signed in.
+  await expect.poll(folders).toHaveLength(0);
+  await expect(page).not.toHaveURL(/\/settings/);
+  await expect(page.locator("#sidebar")).toBeAttached();
+  await page.goto("/settings");
+  await expect(page.getByText(email)).toBeVisible();
+  await page.context().close();
 });
 
 test("a reader signs in by an emailed link, once, with only the keyboard", async ({ browser }, testInfo) => {

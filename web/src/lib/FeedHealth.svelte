@@ -3,8 +3,9 @@
   lists only the feeds that aren't working, worst first: "Not working" (dead:
   a week of "not found", or three weeks of failing), then "Having trouble".
   The group's name says which, in words, so no status color is needed.
-  Each feed says what went wrong in plain words and offers Retry, Find new
-  address and Unsubscribe. Nothing moves on its own: a feed that works again
+  Each feed is a card: its name, one sentence on what went wrong, the address
+  tried and when it last worked, then Find new address, Retry and
+  Unsubscribe under a rule. Nothing moves on its own: a feed that works again
   after Retry stays where it is, saying so, until the page is opened again.
   With nothing to list, it says so calmly.
 -->
@@ -72,6 +73,14 @@
   async function focusIn(row: Row, what: string) {
     await tick();
     document.querySelector<HTMLElement>(`#health-feed-${row.feed.id} [data-focus="${what}"]`)?.focus();
+  }
+
+  /** The "Last worked" value: when, then whether it's still checked and how often it posts, as sentences after it. */
+  function worked(feed: Sick): string {
+    const parts = [feed.state === "working" ? "Just now" : lastWorked(feed)];
+    if (feed.state === "dead") parts.push("Still checked once a day, in case it comes back");
+    if (feed.frequency) parts.push(feed.frequency.replace(/\.$/, ""));
+    return parts.length > 1 ? `${parts.join(". ")}.` : parts[0]!;
   }
 
   let groups = $derived([
@@ -153,21 +162,24 @@
           {#if group.rows.length > 0}
             <section aria-labelledby={`health-${group.id}`}>
               <h3 id={`health-${group.id}`} class="inset-head">{group.name}</h3>
-              <ul class="inset-group">
+              <ul class="cards">
                 {#each group.rows as row (row.key)}
-                  <li id={`health-feed-${row.feed.id}`} class="inset-row feed-row">
-                    <h4 class="w-full min-w-0 font-semibold break-words">{row.feed.title}</h4>
+                  <li id={`health-feed-${row.feed.id}`} class="card">
+                    <h4 class="card-name">{row.feed.title}</h4>
                     {#if !row.unsubscribed}
-                      <p class="w-full text-ink-2">
+                      <p class="what text-ink-2">
                         <span class="font-semibold">{headline(row.feed, now)}.</span>
                         {#if row.feed.state !== "working"}{reason(row.feed.problem)}{/if}
                       </p>
-                      <p class="w-full text-meta text-muted">
-                        {#if row.feed.state === "working"}Checked just now{:else}{lastWorked(row.feed)}{/if}{#if row.feed.state === "dead"}. Still checked once a day, in case it comes back{/if}.{#if row.feed.frequency}
-                        {row.feed.frequency}.{/if}
-                      </p>
+                      <dl class="facts">
+                        <dt>Address</dt>
+                        <!-- The address it tried, broken anywhere so a long one never runs off a phone. -->
+                        <dd class="tried">{row.feed.url}</dd>
+                        <dt>Last worked</dt>
+                        <dd>{worked(row.feed)}</dd>
+                      </dl>
                     {/if}
-                    <p role="status" class={["w-full text-ink", !row.message && "sr-only"]}>{row.message}</p>
+                    <p role="status" class={["status text-ink", !row.message && "sr-only"]}>{row.message}</p>
                     {#if row.unsubscribed}
                       <div class="actions">
                         <button type="button" class="btn btn-small" data-focus="undo" aria-label={`Undo unsubscribing from ${row.feed.title}`} aria-disabled={row.busy} onclick={() => !row.busy && undo(row)}>Undo</button>
@@ -182,11 +194,11 @@
                         onClosed={() => focusIn(row, "find")}
                       />
                       <div class="actions" hidden={row.choosing}>
-                        <button type="button" class="btn btn-small" data-focus="retry" aria-disabled={row.busy} aria-label={`Retry ${row.feed.title}`} onclick={() => !row.busy && tryAgain(row)}>Retry</button>
-                        <button type="button" class="btn btn-small" data-focus="find" aria-disabled={row.busy} aria-label={`Find new address for ${row.feed.title}`} onclick={() => !row.busy && find(row)}>Find new address</button>
+                        <button type="button" class="btn-primary" data-focus="find" aria-disabled={row.busy} aria-label={`Find new address for ${row.feed.title}`} onclick={() => !row.busy && find(row)}>Find new address</button>
+                        <button type="button" class="btn retry" data-focus="retry" aria-disabled={row.busy} aria-label={`Retry ${row.feed.title}`} onclick={() => !row.busy && tryAgain(row)}>Retry</button>
                         <button
                           type="button"
-                          class="btn-danger text-small"
+                          class="btn-danger"
                           title="Stops following this feed and removes its articles; starred ones stay. You can undo it straight afterwards."
                           aria-label={`Unsubscribe from ${row.feed.title}`}
                           aria-describedby="health-unsubscribe-help"
@@ -213,27 +225,103 @@
 </section>
 
 <style>
-  /* Each feed is a block of lines: its name, what went wrong, when it last worked, then its actions. */
-  .feed-row {
+  /*
+    Each feed is a card a tone off the page (12px corners, 16px by 18px
+    inside, 12px apart): its name, one sentence on what went wrong, a short
+    list of the address tried and when it last worked, then its actions under
+    a hairline. On a narrow card the two buttons share their row and
+    Unsubscribe takes a line of its own.
+  */
+  .cards {
+    display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 0.25rem;
-    padding-block: 0.75rem;
+    gap: 0.75rem;
   }
-  .feed-row > p {
-    line-height: 1.4;
+  .card {
+    container: card / inline-size;
+    min-width: 0;
+    padding: 1rem 1.125rem;
+    border-radius: 0.75rem;
+    background-color: var(--group, var(--list));
+    color: var(--ink);
+    font-size: var(--text-ui);
+  }
+  .card-name {
+    font-size: 1.02rem;
+    font-weight: 600;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+  .what {
+    margin-top: 0.25rem;
+    line-height: 1.5;
+  }
+  .facts {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.25rem 0.875rem;
+    margin-top: 0.75rem;
+    font-size: 0.84rem;
+    line-height: 1.45;
+  }
+  .facts > dt {
+    color: var(--muted);
+  }
+  .facts > dd {
+    min-width: 0;
+    color: var(--ink-2);
+  }
+  .tried {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    overflow-wrap: anywhere;
+  }
+  .status:not(.sr-only) {
+    margin-top: 0.75rem;
+    line-height: 1.5;
   }
   .actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem 0.75rem;
+    gap: 0.5rem;
     align-items: center;
-    margin-top: 0.25rem;
+    margin-top: 0.875rem;
+    padding-top: 0.875rem;
+    border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
   }
   .actions[hidden] {
     display: none;
   }
+  /* Retry: a quiet filled button in the segmented controls' track grey, so it stands out from the grey card. */
+  .actions > .retry {
+    border-color: transparent;
+    background-color: var(--tone);
+    color: var(--ink);
+  }
+  @media (hover: hover) {
+    .actions > .retry:hover {
+      background-color: color-mix(in srgb, var(--ink) 12%, transparent);
+    }
+  }
+  /* Unsubscribe, in the destructive red words, at the right end. */
   .actions > .btn-danger {
-    margin-left: 0;
+    margin-right: -0.5rem;
+    margin-left: auto;
+  }
+  @container card (width < 24rem) {
+    .actions > .btn-primary,
+    .actions > .retry {
+      flex: 1 1 0;
+      min-width: 0;
+      padding-inline: 0.5rem;
+      line-height: 1.25;
+      text-align: center;
+      white-space: normal;
+    }
+    .actions > .btn-danger {
+      justify-content: center;
+      width: 100%;
+      margin: 0;
+    }
   }
 </style>
