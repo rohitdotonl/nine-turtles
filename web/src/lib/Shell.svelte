@@ -74,6 +74,7 @@
   import { VIEWS, VIEW_NAMES, inSettings, nameFor, parentOf, parse, pathFor, rowFor, titleFor, type Hideable, type Route, type View } from "./router";
   import { sharedAddress } from "./share";
   import { emptyQuery, isSearching, resultsTitle, scopeFor, searchParams, searchedTerms, type Query } from "./search";
+  import { newestAnswer, savedInOrder } from "./inorder";
   import { deleteSaved, listSaved, refusedSaving, sameQuery, saveSearch, type SavedSearch } from "./saved";
   import {
     byName as collectionOrder,
@@ -470,6 +471,12 @@
     return reloadFeeds();
   }
 
+  // A list asked for again before it arrives answers with the newest ask, so a
+  // slow answer from before an unsubscribe can't put the feed back.
+  const newestFeeds = newestAnswer(listFeeds);
+  const newestSearches = newestAnswer(listSaved);
+  const newestCollections = newestAnswer(listCollections);
+
   /** Loads the feeds and folders; `then` runs in the same step as they arrive, so nothing shows in between. */
   async function reloadFeeds(then?: () => void) {
     try {
@@ -477,7 +484,7 @@
       // way, the answer may predate it: ask again, so it isn't overwritten.
       for (let tries = 0; tries < 3; tries++) {
         const before = countChanges;
-        const loaded = await listFeeds();
+        const loaded = await newestFeeds();
         if (countChanges === before || tries === 2) {
           feeds = loaded.feeds;
           folders = loaded.folders;
@@ -493,7 +500,7 @@
 
   async function loadSearches() {
     try {
-      searches = await listSaved();
+      searches = await newestSearches();
       searchesFailed = false;
     } catch {
       // The sidebar shows no saved searches until the next try; a saved search's own address says so plainly.
@@ -506,7 +513,7 @@
 
   async function loadCollections() {
     try {
-      collections = await listCollections();
+      collections = await newestCollections();
       collectionsFailed = false;
     } catch {
       // The sidebar lists none until the next try; a collection's own address says so plainly.
@@ -559,59 +566,44 @@
     if (feed && !feed.river) feed.unread = Math.max(0, feed.unread + change);
   }
 
-  async function changeMode(next: ReadingMode) {
-    const before = mode;
-    mode = next;
-    try {
-      await saveMode(next);
-    } catch {
-      mode = before;
-      throw new Error("not saved");
-    }
+  // Each reading setting saves in the order changed, so an earlier save that fails
+  // never rolls the screen back past a later change.
+  const modeSaves = savedInOrder(saveMode, (next: ReadingMode) => (mode = next));
+  const countsSaves = savedInOrder(saveCounts, (next: Counts) => (counts = next));
+  const letGoSaves = savedInOrder<LetGo | undefined>(
+    (next) => saveLetGo(next as LetGo),
+    (next) => (letGo = next),
+  );
+  const hiddenSaves = savedInOrder(saveHidden, (next: Hideable[]) => (hidden = next));
+  const sortSaves = savedInOrder<Order | undefined>(
+    (next) => saveSort(next as Order),
+    (next) => (sort = next),
+  );
+
+  function changeMode(next: ReadingMode) {
+    return notSaved(modeSaves(next, mode));
   }
 
-  async function changeCounts(next: Counts) {
-    const before = counts;
-    counts = next;
-    try {
-      await saveCounts(next);
-    } catch {
-      counts = before;
-      throw new Error("not saved");
-    }
+  function changeCounts(next: Counts) {
+    return notSaved(countsSaves(next, counts));
   }
 
-  async function changeLetGo(next: LetGo) {
-    const before = letGo;
-    letGo = next;
-    try {
-      await saveLetGo(next);
-    } catch {
-      letGo = before;
-      throw new Error("not saved");
-    }
+  function changeLetGo(next: LetGo) {
+    return notSaved(letGoSaves(next, letGo));
   }
 
-  async function changeHidden(next: Hideable[]) {
-    const before = hidden;
-    hidden = next;
-    try {
-      await saveHidden(next);
-    } catch {
-      hidden = before;
-      throw new Error("not saved");
-    }
+  function changeHidden(next: Hideable[]) {
+    return notSaved(hiddenSaves(next, hidden));
   }
 
-  async function changeSort(next: Order) {
-    const before = sort;
-    sort = next;
-    try {
-      await saveSort(next);
-    } catch {
-      sort = before;
+  function changeSort(next: Order) {
+    return notSaved(sortSaves(next, sort));
+  }
+
+  function notSaved(saving: Promise<void>): Promise<void> {
+    return saving.catch(() => {
       throw new Error("not saved");
-    }
+    });
   }
 
   /**
@@ -1196,6 +1188,8 @@
     const refusal = await deleteSaved(saved.id);
     if (refusal) return refusedSaving(refusal);
     searches = searches.filter((each) => each.id !== saved.id);
+    // Asking again outranks a list already on its way from before the delete.
+    void loadSearches();
     toSave = undefined;
     go(home, {
       message: `Deleted the saved search ${saved.name}`,
@@ -1256,6 +1250,8 @@
       return;
     }
     collections = collections.filter((each) => each.id !== collection.id);
+    // Asking again outranks a list already on its way from before the delete.
+    void loadCollections();
     go(home, {
       message: `Deleted the collection ${collection.name}`,
       undo: async () => {
