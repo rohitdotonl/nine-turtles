@@ -21,11 +21,13 @@ import {
   type KeyPress,
 } from "./keyboard";
 
+// As a browser with Caps Lock off says it: a capital letter comes with Shift.
 const press = (key: string, extra: Partial<KeyPress> = {}): KeyPress => ({
   key,
   ctrlKey: false,
   metaKey: false,
   altKey: false,
+  shiftKey: /^[A-Z]$/.test(key),
   target: null,
   ...extra,
 });
@@ -100,6 +102,23 @@ describe("keyboard shortcuts", () => {
     expect(read(press("r"), 0)).toEqual({ kind: "refresh" });
     expect(read(press("r", { ctrlKey: true }), 0)).toBeUndefined();
     expect(read(press("r", { metaKey: true }), 0)).toBeUndefined();
+  });
+
+  it("reads letters the same with Caps Lock on: the capital without Shift is the plain key, and Shift makes it the Shift key", () => {
+    const read = createKeyReader();
+    expect(read(press("J", { shiftKey: false }), 0)).toEqual(read(press("j"), 0));
+    expect(read(press("A", { shiftKey: false }), 0)).toEqual({ kind: "add-feed" });
+    expect(read(press("a", { shiftKey: true }), 0)).toEqual({ kind: "mark-all-read" });
+    read(press("G", { shiftKey: false }), 0);
+    expect(read(press("U", { shiftKey: false }), 10)).toEqual({ kind: "go", view: "unread" });
+    expect(chooseKey(press("X", { shiftKey: false }))).toEqual({ key: "x" });
+    expect(chooseKey(press("x", { shiftKey: true }))).toEqual({ key: "Shift+X" });
+  });
+
+  it("leaves keys alone while a word is being composed (Chinese, Japanese and the like)", () => {
+    const read = createKeyReader();
+    expect(read(press("Escape", { isComposing: true }), 0)).toBeUndefined();
+    expect(read(press("j", { isComposing: true }), 0)).toBeUndefined();
   });
 
   it("leaves the browser's own shortcuts alone", () => {

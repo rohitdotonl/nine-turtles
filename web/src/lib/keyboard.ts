@@ -48,8 +48,13 @@ export type KeyPress = {
   ctrlKey: boolean;
   metaKey: boolean;
   altKey: boolean;
-  /** Only Space needs it: Shift+Space is a key of its own (Shift with a letter shows in `key`, "A"). */
-  shiftKey?: boolean;
+  /**
+   * Shift+Space is a key of its own, and a letter's Shift comes from here, not
+   * from `key`: with Caps Lock on, "A" arrives without Shift, and Shift+A as "a".
+   */
+  shiftKey: boolean;
+  /** A word is being composed (Chinese, Japanese and the like): its keys are the typing's. */
+  isComposing?: boolean;
   target: EventTarget | null;
 };
 
@@ -264,8 +269,8 @@ export function chooseKey(press: KeyPress): { key: string } | { refused: string 
   if (press.key === " ") return { key: press.shiftKey ? "Shift+Space" : "Space" };
   if (NAMED.includes(press.key) && !press.shiftKey) return { key: press.key };
   if ([...press.key].length === 1 && press.key.trim() !== "") {
-    if (/^[A-Z]$/.test(press.key)) return { key: `Shift+${press.key}` };
-    return { key: press.key.length === 1 && /^[a-z]$/i.test(press.key) ? press.key.toLowerCase() : press.key };
+    if (/^[a-z]$/i.test(press.key)) return { key: press.shiftKey ? `Shift+${press.key.toUpperCase()}` : press.key.toLowerCase() };
+    return { key: press.key };
   }
   return { refused: "That key can't be used for a shortcut. Choose a letter, a number, a sign, Space, Home or End." };
 }
@@ -285,7 +290,10 @@ export function pressName(key: string): string {
 }
 
 function nameOf(press: KeyPress): string {
-  return press.key === " " && press.shiftKey ? "Shift+ " : press.key;
+  if (press.key === " " && press.shiftKey) return "Shift+ ";
+  // Caps Lock changes a letter's case, but not which key it is.
+  if (/^[a-z]$/i.test(press.key)) return press.shiftKey ? press.key.toUpperCase() : press.key.toLowerCase();
+  return press.key;
 }
 
 type Tables = { single: Map<string, Action>; sequences: Map<string, Map<string, Action>> };
@@ -330,6 +338,7 @@ export function createKeyReader(keys: () => KeyMap = () => ({})) {
   };
 
   return function read(press: KeyPress, now: number): Action | undefined {
+    if (press.isComposing) return undefined;
     const { single, sequences } = tables();
     // Escape always works, even in a field: it's how you leave one.
     if (press.key === "Escape") {
@@ -342,7 +351,7 @@ export function createKeyReader(keys: () => KeyMap = () => ({})) {
     if (pending !== undefined && now - pending.since <= SEQUENCE_MS) {
       const after = sequences.get(pending.first);
       pending = undefined;
-      return after?.get(press.key);
+      return after?.get(nameOf(press));
     }
     pending = undefined;
 
