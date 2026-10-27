@@ -317,6 +317,48 @@ async fn a_password_link_lasts_an_hour() {
 }
 
 #[tokio::test]
+async fn a_password_link_stops_working_once_the_email_changes() {
+    let (base, _, outbox, _) = open_app().await;
+    let old = "lee@example.com";
+    let new = "lee@elsewhere.example";
+    let cookie = open_reader(&base, &outbox, old).await;
+    post(&base, "/api/password/forgot", None, json!({ "email": old })).await;
+    let (_, reset_ticket) = newest_link(&outbox, old);
+
+    // The reader moves away from the old inbox.
+    post(
+        &base,
+        "/api/people/me/email/change",
+        Some(&cookie),
+        json!({ "email": new, "password": READER_PASSWORD }),
+    )
+    .await;
+    let (_, confirm_ticket) = newest_link(&outbox, new);
+    let confirmed = post(
+        &base,
+        "/api/email/confirm",
+        None,
+        json!({ "ticket": confirm_ticket }),
+    )
+    .await;
+    assert_eq!(confirmed.status(), StatusCode::OK);
+
+    // Whoever still reads the old inbox can't use the link sent there.
+    let late = post(
+        &base,
+        "/api/password/reset",
+        None,
+        json!({ "ticket": reset_ticket, "password": NEW_PASSWORD }),
+    )
+    .await;
+    assert_eq!(late.status(), StatusCode::GONE);
+    assert_eq!(
+        sign_in(&base, new, READER_PASSWORD).await.status(),
+        StatusCode::NO_CONTENT
+    );
+}
+
+#[tokio::test]
 async fn changing_an_email_waits_for_the_new_address_and_tells_the_old() {
     let (base, _, outbox, _) = open_app().await;
     let old = "kai@example.com";

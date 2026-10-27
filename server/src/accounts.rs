@@ -368,7 +368,8 @@ async fn reset(State(state): State<AppState>, Json(form): Json<Reset>) -> Respon
         "SELECT people.id FROM email_links
          JOIN people ON people.id = email_links.person_id
          WHERE email_links.token_hash = ? AND email_links.purpose = 'reset'
-           AND email_links.used = 0 AND email_links.expires_at > ?",
+           AND email_links.used = 0 AND email_links.expires_at > ?
+           AND people.email = email_links.email COLLATE NOCASE",
     )
     .bind(&hash[..])
     .bind(now())
@@ -406,6 +407,11 @@ async fn reset(State(state): State<AppState>, Json(form): Json<Reset>) -> Respon
         let claimed: Option<i64> = sqlx::query_scalar(
             "UPDATE email_links SET used = 1
              WHERE token_hash = ? AND purpose = 'reset' AND used = 0 AND expires_at > ?
+               -- Sent to an address the reader has since moved away from:
+               -- whoever reads that inbox now mustn't get in.
+               AND EXISTS (SELECT 1 FROM people
+                           WHERE people.id = email_links.person_id
+                             AND people.email = email_links.email COLLATE NOCASE)
              RETURNING person_id",
         )
         .bind(&hash[..])
