@@ -171,21 +171,49 @@ async fn delete(
 /// look in number 0, which is nothing, so they find nothing rather than
 /// searching everything. Feeds and folders are numbered without
 /// AUTOINCREMENT, so SQLite may give the same number to a new one, which
-/// they'd otherwise quietly start searching (decision 0081).
+/// they'd otherwise quietly start searching (decision 0081). Answers which
+/// searches they were, for Undo (`back_in`).
 pub async fn forget<'c>(
     executor: impl sqlx::SqliteExecutor<'c>,
     person: i64,
     kind: &str,
     id: i64,
-) -> Result<(), sqlx::Error> {
-    sqlx::query(
+) -> Result<Vec<i64>, sqlx::Error> {
+    let mut searches: Vec<i64> = sqlx::query_scalar(
         "UPDATE saved_searches SET query = json_set(query, '$.scope.id', 0)
          WHERE person_id = ? AND json_extract(query, '$.scope.kind') = ?
-             AND json_extract(query, '$.scope.id') = ?",
+             AND json_extract(query, '$.scope.id') = ?
+         RETURNING id",
     )
     .bind(person)
     .bind(kind)
     .bind(id)
+    .fetch_all(executor)
+    .await?;
+    searches.sort_unstable();
+    Ok(searches)
+}
+
+/// Undo for deleting a folder or collection: the saved searches `forget`
+/// answered look in the place made again, numbered `id`. Only searches still
+/// looking in no place of that kind move; one changed meanwhile stays as it is.
+pub async fn back_in<'c>(
+    executor: impl sqlx::SqliteExecutor<'c>,
+    person: i64,
+    kind: &str,
+    id: i64,
+    searches: &[i64],
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "UPDATE saved_searches SET query = json_set(query, '$.scope.id', ?1)
+         WHERE person_id = ?2 AND id IN (SELECT value FROM json_each(?3))
+             AND json_extract(query, '$.scope.kind') = ?4
+             AND json_extract(query, '$.scope.id') = 0",
+    )
+    .bind(id)
+    .bind(person)
+    .bind(serde_json::to_string(searches).unwrap_or_else(|_| "[]".to_owned()))
+    .bind(kind)
     .execute(executor)
     .await?;
     Ok(())
