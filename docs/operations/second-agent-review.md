@@ -28,7 +28,7 @@ itself, so small, low-risk changes get a **light review** instead
 (decision 0015), and the smallest get **no review** (decision 0021).
 
 - **Full review** whenever the change touches any of these: `docs/DESIGN.md`,
-  `docs/SPEC.md`, `docs/ENGINEERING.md`, `AGENTS.md`, this file, `docs/libraries.md` (the
+  `docs/SPEC.md` and `docs/spec/`, `docs/ENGINEERING.md`, `AGENTS.md`, this file, `docs/libraries.md` (the
   library check reads it), the checks
   (`scripts/`, `.github/`), a screen, stored data, fetching feeds, sign-in or
   security, or more than about 50 lines of code. Also whenever you're unsure.
@@ -63,7 +63,7 @@ it qualifies.
 
 > You are reviewing pull request <ADDRESS> in the nine turtles repository. You
 > didn't write it. Read `AGENTS.md`, then `docs/DESIGN.md`,
-> `docs/ENGINEERING.md` and the sections of `docs/SPEC.md` the change touches.
+> `docs/ENGINEERING.md` and the sections in `docs/spec/` the change touches.
 > Then read the whole change.
 >
 > Look for, in this order:

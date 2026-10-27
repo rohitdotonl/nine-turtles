@@ -34,7 +34,7 @@ until the owner says so.
 
 Things the owner has said yes to in principle, to build some day. Nothing
 here is planned yet; when one starts, it moves into the table above. (Other
-"not now" lists: SPEC → "Not in V1", and the research notes in
+"not now" lists: SPEC → "Not built yet, and never", and the research notes in
 `docs/RnD/`, which are ideas only.)
 
 - **A browser extension** for adding feeds while browsing (27 October 2026,

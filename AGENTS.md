@@ -63,7 +63,7 @@ finished, `docs/PLAN.md` drops it into `docs/archive/plan-done.md`.
 
 | If the change affects… | Update |
 |---|---|
-| What the reader sees or how a feature behaves | `docs/SPEC.md`; `docs/DESIGN.md` Part 2 when the look changes (Part 1 only with the owner's approval) |
+| What the reader sees or how a feature behaves | its section in `docs/spec/` (a new feature gets a new numbered file, listed in `docs/SPEC.md`); `docs/DESIGN.md` Part 2 when the look changes (Part 1 only with the owner's approval) |
 | A technical rule or choice | `docs/ENGINEERING.md` + a short note in `docs/decisions/` |
 | Libraries | `docs/libraries.md` |
 | Milestone progress | `docs/PLAN.md` (open and next work only; finished work moves to `docs/archive/plan-done.md`) |
@@ -112,8 +112,8 @@ years › written for the next agent.
 | Before you work on… | Read |
 |---|---|
 | Anything | This file, then `docs/PLAN.md` |
-| Anything the reader sees or touches (screens, keys, wording, colors, fonts) | `docs/DESIGN.md` in full, then the matching `docs/SPEC.md` section |
-| A new feature or changed behavior | `docs/DESIGN.md` → "Rules about the rules", then `docs/SPEC.md` |
+| Anything the reader sees or touches (screens, keys, wording, colors, fonts) | `docs/DESIGN.md` in full, then the matching section in `docs/spec/` (the index is `docs/SPEC.md`) |
+| A new feature or changed behavior | `docs/DESIGN.md` → "Rules about the rules", then `docs/SPEC.md` and the sections it touches |
 | Backend, database, fetching, search, sign-in, security | `docs/ENGINEERING.md` Parts 2 and 3 |
 | Libraries | `docs/libraries.md` and `docs/ENGINEERING.md` → "Boring and few", then ask the owner |
 | Checks or CI | `docs/ENGINEERING.md` Part 4, then `docs/operations/checks.md` |

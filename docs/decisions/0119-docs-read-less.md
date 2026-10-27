@@ -13,6 +13,9 @@ true and still needed, and every link in them leads somewhere.
   technical check) to `docs/archive/`. `docs/PLAN.md` holds only open and
   next work. Agents read the archive only when the owner asks about past
   work. Nothing is deleted; the history stays.
+- **The spec, one file per section.** `docs/SPEC.md` is a short index;
+  each section lives in `docs/spec/NN-name.md`, keeping its number, so
+  "SPEC section 28" still finds it. A new feature gets the next number.
 - **A check for broken links between documents.**
   `scripts/check-doc-links.mjs`, run as `scripts/check.sh docs`, fails when
   a document links to a file that doesn't exist, either as a Markdown link
