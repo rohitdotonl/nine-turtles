@@ -86,6 +86,9 @@ export default defineConfig({
         // Only here, and only together with the line above: checks every feed
         // every two seconds, so a test can watch new articles arrive.
         NINE_TURTLES_TEST_CHECK_SECONDS: "2",
+        // Newsletters on here too, for the test that emails one in (tests/app.spec.ts),
+        // so the first nine turtles never gets a feed from it.
+        NINE_TURTLES_NEWSLETTER_SECRET: "a-made-up-newsletter-secret-for-the-browser-tests",
       },
       url: `${FEEDS_APP}/`,
       reuseExistingServer: false,

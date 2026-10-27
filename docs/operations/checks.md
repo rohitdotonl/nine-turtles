@@ -63,6 +63,8 @@ by the next merge, whatever it changes.
 - **Tab in the browser tests:** `tabTo` (`web/tests/screens.ts`) presses Tab
   until it reaches the element, or until Tab has come all the way round, so
   it never runs out of presses as the sidebar grows.
+- **The first nine turtles stays empty** (see below), even for a moment:
+  the first-visit tests may be running at the same time.
 
 ## The browser tests' two copies of nine turtles
 

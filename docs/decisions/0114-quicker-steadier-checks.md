@@ -23,7 +23,11 @@ sooner and stop failing for no real reason. Nothing they check changes.
   add parts when a half passed about two minutes; they had reached over
   three). Each GitHub computer can run only two browser tests at a time
   usefully: four at once was barely quicker and made a test fail. Four
-  computers each running a quarter is what helps.
+  computers each running a quarter is what helps. Playwright shares out
+  whole files, and the accessibility checks (about a fifth of all the
+  tests, each on its own screen) used to land on one computer together, so
+  that file may now be shared out test by test
+  (`test.describe.configure({ mode: "parallel" })`).
 - **Timing fixed in the tests that failed now and then.** A sign-in test
   expected a wait of exactly 60 seconds, though a second could pass while
   the password was checked; it now accepts 55 to 60. `tabTo` gave up after a
@@ -32,12 +36,16 @@ sooner and stop failing for no real reason. Nothing they check changes.
   touch-target test measured an arrow, then tried it a moment later; it now
   measures at the moment it tries. A keys test pressed End before the
   article's lazily loaded picture had given it anything to scroll; it now
-  waits for the picture first.
+  waits for the picture first. The newsletter test emailed a feed into the
+  first nine turtles, the one that must stay empty for the first-visit
+  tests, which failed when they ran at that moment; it now uses the nine
+  turtles the feed tests share.
 
 **Not done.** Retrying failed tests automatically: it would hide tests that
 fail now and then instead of fixing them, and turn real but rare problems
-green. Running the tests in each file in any order (Playwright's
-`fullyParallel`): tests in a file sometimes build on one another.
+green. Sharing out every file test by test (Playwright's `fullyParallel`):
+tests in a file sometimes build on one another, so only files whose tests
+stand alone say so.
 
 **Revisit if** a browser test part passes about two minutes (add parts), or
 the Rust tests pass about two minutes (run their files side by side).
