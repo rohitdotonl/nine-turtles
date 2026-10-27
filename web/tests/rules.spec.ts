@@ -50,6 +50,28 @@ test("a rule made from Edit feed mutes what matches, with the number asked first
   await page.getByRole("link", { name: /Muted articles/ }).click();
   await expect(page).toHaveURL(/\/settings\/muted$/);
   await expect(page.getByRole("heading", { name: "Muted articles", level: 2 })).toBeVisible();
+  // Two pages down, Escape steps back one page at a time, each to the row that opened it, in history (decision 0120).
+  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/\/settings\/rules$/);
+  await expect(page.getByRole("link", { name: /Muted articles/ })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/\/settings$/);
+  await expect(page.locator('[data-settings-row="rules"]')).toBeFocused();
+  // Rules opened from Settings, then Back and Forward onto it: its Escape is still a step back in
+  // history, so Forward finds Rules again rather than a second Settings.
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/settings\/rules$/);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/settings$/);
+  await page.goForward();
+  await expect(page).toHaveURL(/\/settings\/rules$/);
+  await expect(page.getByRole("heading", { name: "Rules", level: 2 })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/\/settings$/);
+  await page.goForward();
+  await expect(page).toHaveURL(/\/settings\/rules$/);
+  await page.getByRole("link", { name: /Muted articles/ }).click();
+  await expect(page).toHaveURL(/\/settings\/muted$/);
   const muted = page.getByRole("listitem").filter({ hasText: "Walking the long way home (2)" }).filter({ hasText: title });
   await expect(muted).toBeVisible();
   await muted.getByRole("button", { name: "Unmute Walking the long way home (2)" }).click();

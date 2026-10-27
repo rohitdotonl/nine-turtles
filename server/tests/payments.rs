@@ -305,7 +305,7 @@ async fn checkout_asks_dodo_for_the_readers_plan_and_keeps_the_trials_days() {
         body["customer"]["email"],
         format!("reader{person}@example.com")
     );
-    assert_eq!(body["return_url"], "https://app.example/settings");
+    assert_eq!(body["return_url"], "https://app.example/settings/plan");
     // 14 days, 4 gone: 9 days and a part, rounded up, so the first charge
     // never comes before the day Settings showed.
     assert_eq!(body["subscription_data"]["trial_period_days"], 10);
@@ -383,7 +383,7 @@ async fn dodos_signed_messages_keep_the_readers_plan() {
     let (_, path, _) = asked.lock().unwrap().last().unwrap().clone();
     assert_eq!(
         path,
-        "/customers/cus_1/customer-portal/session?return_url=https%3A%2F%2Fapp.example%2Fsettings"
+        "/customers/cus_1/customer-portal/session?return_url=https%3A%2F%2Fapp.example%2Fsettings%2Fplan"
     );
 
     // Expired: over.

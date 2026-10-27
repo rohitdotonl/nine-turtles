@@ -463,12 +463,12 @@ async fn manage(SignedIn(person): SignedIn, State(state): State<AppState>) -> Re
     }
 }
 
-/// Where Dodo sends the reader back to: Settings.
+/// Where Dodo sends the reader back to: Settings › Your plan (decision 0120).
 fn settings_page(state: &AppState) -> String {
     state.config.public_url.as_ref().map_or_else(
-        || "/settings".to_owned(),
+        || "/settings/plan".to_owned(),
         |base| {
-            base.join("/settings")
+            base.join("/settings/plan")
                 .map_or_else(|_| base.to_string(), |url| url.to_string())
         },
     )

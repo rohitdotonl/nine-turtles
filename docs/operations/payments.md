@@ -77,7 +77,7 @@ mode works without Dodo's approval; you don't need your ID or bank yet.
 2. In that window, Settings › **Your plan** says "Free trial".
 3. Press **Monthly**. Dodo's test checkout opens. Card number
    `4242 4242 4242 4242`, any future date, any three digits, any name.
-4. You come back to Settings. Within a minute it says "Monthly plan" and
+4. You come back to Settings › Your plan. Within a minute it says "Monthly plan" and
    when it renews. Your own Readers page shows "Monthly plan" under that
    reader.
 5. Press **Billing and cancelling**, cancel, and come back: it says

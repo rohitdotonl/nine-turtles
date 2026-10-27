@@ -756,7 +756,8 @@
         next = lastPlace;
         history.replaceState(history.state, "", pathFor(next));
       }
-      cameFromSettings = false;
+      // Back or Forward onto a page opened from its parent: closing it is a step back again.
+      cameFromSettings = stepOf(history.state)?.fromParent === true;
       returnRow = backToParent(route, next);
       const moved = !keepsArticle(route, next);
       // The address has already changed: loading it opens the new version there.
@@ -980,8 +981,28 @@
       if (phone && screen === "home") wordmark?.focus();
       else if (reading) articleHeading?.focus({ preventScroll: true });
       else if (selected && isList(route)) itemList?.focusSelected();
-      else placeFocus(route)?.focus();
+      else focusArriving(route);
     });
+  }
+
+  /**
+   * The keyboard's place on arriving back: the row that opened the page, when it's drawn. A row
+   * shown only once its page has loaded (Rules' "Muted articles") is waited for a moment; meanwhile
+   * the keyboard rests on the heading, and stays wherever the reader moves it.
+   */
+  function focusArriving(place: Route) {
+    const first = placeFocus(place);
+    first?.focus();
+    const row = returnRow;
+    if (!row || place.kind !== "settings" || document.querySelector(`[data-settings-row="${row}"]`)) return;
+    let frames = 0;
+    const wait = () => {
+      if (returnRow !== row || document.activeElement !== first) return;
+      const found = document.querySelector<HTMLElement>(`[data-settings-row="${row}"]`);
+      if (found) found.focus();
+      else if (++frames < 180) requestAnimationFrame(wait);
+    };
+    requestAnimationFrame(wait);
   }
 
   /**
@@ -1087,7 +1108,7 @@
     const [opening, closing] = [isSheet(next) && !isSheet(route), isSheet(route) && !isSheet(next)];
     let pushed = false;
     if (pathFor(next) !== location.pathname || from !== to) {
-      history.pushState({ screen: to, back: from }, "", pathFor(next));
+      history.pushState({ screen: to, back: from, fromParent: cameFromSettings }, "", pathFor(next));
       pushed = true;
     }
     if (opening) [sheetOpener, sheetPushed] = [document.activeElement, pushed];
@@ -1649,7 +1670,7 @@
       -->
       <AddFeed bind:field={addField} feeds={[]} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} {start}>
         {#snippet alternative()}
-          <a href="/settings" onclick={goImport} class="text-link">Import an OPML file…</a>
+          <a href="/settings/data" onclick={goImport} class="text-link">Import an OPML file…</a>
         {/snippet}
       </AddFeed>
     {:else}
