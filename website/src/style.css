@@ -750,7 +750,7 @@ footer .links.small a {
   display: flex;
   align-items: flex-end;
   gap: clamp(4px, 1.2vw, 10px);
-  padding-block: 0.5rem 0.75rem;
+  padding-block: 0.5rem;
   color: var(--ink);
 }
 
