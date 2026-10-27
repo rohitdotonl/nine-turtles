@@ -89,7 +89,8 @@ pub fn write(starred: &[Starred]) -> Value {
     })
 }
 
-fn item(article: &Starred) -> Value {
+/// One article as a JSON Feed item (the collections export uses it too).
+pub fn item(article: &Starred) -> Value {
     let mut item = Map::new();
     // An ID unique across feeds: the feed's address with the feed's own ID
     // for the article. Not the link alone: the same post can come through

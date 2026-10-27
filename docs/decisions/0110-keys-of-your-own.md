@@ -33,7 +33,7 @@ change "in a quiet way, with good UI and UX that goes well with nine turtles".
   `web/src/lib/keyboard.ts`, going to `/recent`) but isn't listed and does
   nothing. When `/recent` opens Recently read, changing `soon` to `shortcut`
   on that one line makes it work and appear in the `?` list; the checks
-  then expect it.
+  then expect it. (Done with Recently read, decision 0105.)
 
 **Keys of your own.**
 

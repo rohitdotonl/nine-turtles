@@ -21,6 +21,10 @@ const library: Library = {
     { id: 3, title: "हिंदी कविता", siteUrl: null, unread: 0, folders: [], river: false, check: "automatic", openOnSite: false },
   ],
   folders: [{ id: 7, name: "Tech" }],
+  collections: [
+    { id: 4, name: "Recipes" },
+    { id: 5, name: "To cite" },
+  ],
 };
 
 const all: Query = emptyQuery({ kind: "view", view: "all" });
@@ -153,6 +157,22 @@ describe("suggestions as you type", () => {
     ]);
     const [tech] = suggestions("folder:te", library);
     expect(tech && "query" in tech && tech.query(all).scope).toEqual({ kind: "folder", id: 7 });
+  });
+
+  it("search in a collection with in: (decision 0108)", () => {
+    const taken = takeFilters({ ...all, words: 'soup in:"to cite"' }, library, true);
+    expect(taken.query.scope).toEqual({ kind: "collection", id: 5 });
+    expect(taken.query.words).toBe("soup");
+    expect(chipsFor(taken.query, library)).toEqual([{ key: "scope", label: "in: To cite" }]);
+    expect(searchParams(taken.query)).toEqual({ q: "soup", collection: "5" });
+    expect(takeFilters({ ...all, words: "in:nothing" }, library, true).problem).toBe("No collection matches “nothing”.");
+    expect(suggestions("in:re", library).map((each) => each.label)).toEqual(["in:Recipes"]);
+    expect(suggestions("in", library).map((each) => each.label)).toEqual(["in:"]);
+    // With no collections, in: isn't offered.
+    expect(suggestions("in", { ...library, collections: [] })).toEqual([]);
+    expect(searchedTerms("soup in:recipes")).toEqual(["soup"]);
+    // Searching from a collection starts in it.
+    expect(emptyQuery({ kind: "collection", id: 4 }).scope).toEqual({ kind: "collection", id: 4 });
   });
 
   it("replace only the word being typed", () => {

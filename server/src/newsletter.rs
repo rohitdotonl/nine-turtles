@@ -206,6 +206,7 @@ pub fn parse(raw: &[u8]) -> Option<Newsletter> {
                 .and_then(|value| value.split(',').next().map(|tag| tag.trim().to_owned()))
                 .filter(|tag| !tag.is_empty()),
             published_at: published,
+            episode: None,
         },
         unsubscribe: header("List-Unsubscribe")
             .as_deref()

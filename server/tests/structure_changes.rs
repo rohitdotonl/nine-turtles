@@ -1529,6 +1529,200 @@ async fn remembering_when_marks_were_made_keeps_every_mark() {
 }
 
 #[tokio::test]
+async fn remembering_what_was_opened_keeps_every_mark_and_opens_nothing() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just after mark times (structure change 21): one feed the
+    // owner follows, with a starred article and a read one.
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(21, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO feeds (id, url, url_key, title, added_at) VALUES (1, 'u', 'u', 'Garden', 1)",
+        "INSERT INTO subscriptions (person_id, feed_id, title, added_at) VALUES (1, 1, 'Garden', 1)",
+        "INSERT INTO articles (id, feed_id, fingerprint, title, received_at, sort_at)
+         VALUES (1, 1, 'a', 'A', 1, 1), (2, 1, 'b', 'B', 2, 2)",
+        "INSERT INTO entries (person_id, article_id, feed_id, sort_at, read, starred,
+             read_marked_at, starred_marked_at)
+         VALUES (1, 1, 1, 1, 0, 1, 0, 5), (1, 2, 1, 2, 1, 0, 7, 0)",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let entries: Vec<(i64, bool, bool, i64, i64, Option<i64>)> = sqlx::query_as(
+        "SELECT article_id, read, starred, read_marked_at, starred_marked_at, opened_at
+         FROM entries ORDER BY article_id",
+    )
+    .fetch_all(&db)
+    .await
+    .unwrap();
+    assert_eq!(
+        entries,
+        [(1, false, true, 0, 5, None), (2, true, false, 7, 0, None)]
+    );
+}
+
+#[tokio::test]
+async fn adding_collections_keeps_every_entry_and_starts_with_none() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just after Recently read (structure change 22): one feed
+    // the owner follows, with a starred article and an opened one.
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(22, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO feeds (id, url, url_key, title, added_at) VALUES (1, 'u', 'u', 'Garden', 1)",
+        "INSERT INTO subscriptions (person_id, feed_id, title, added_at) VALUES (1, 1, 'Garden', 1)",
+        "INSERT INTO articles (id, feed_id, fingerprint, title, received_at, sort_at)
+         VALUES (1, 1, 'a', 'A', 1, 1), (2, 1, 'b', 'B', 2, 2)",
+        "INSERT INTO entries (person_id, article_id, feed_id, sort_at, read, starred, opened_at)
+         VALUES (1, 1, 1, 1, 0, 1, NULL), (1, 2, 1, 2, 1, 0, 9)",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let entries: Vec<(i64, bool, bool, Option<i64>)> = sqlx::query_as(
+        "SELECT article_id, read, starred, opened_at FROM entries ORDER BY article_id",
+    )
+    .fetch_all(&db)
+    .await
+    .unwrap();
+    assert_eq!(entries, [(1, false, true, None), (2, true, false, Some(9))]);
+    let collections: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM collections")
+        .fetch_one(&db)
+        .await
+        .unwrap();
+    assert_eq!(collections, 0);
+    // A collection's line must point at one of its reader's entries.
+    sqlx::query(
+        "INSERT INTO collections (id, person_id, name, created_at) VALUES (1, 1, 'Soup', 0)",
+    )
+    .execute(&db)
+    .await
+    .unwrap();
+    let stray = sqlx::query(
+        "INSERT INTO collection_articles (collection_id, person_id, article_id, added_at)
+         VALUES (1, 1, 99, 0)",
+    )
+    .execute(&db)
+    .await;
+    assert!(stray.is_err());
+}
+
+#[tokio::test]
+async fn adding_podcasts_keeps_every_article_and_entry_and_makes_none_an_episode() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just after collections (structure change 23): one feed
+    // the owner follows, with a starred article on a collection.
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(23, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO feeds (id, url, url_key, title, added_at) VALUES (1, 'u', 'u', 'Radio', 1)",
+        "INSERT INTO subscriptions (person_id, feed_id, title, added_at) VALUES (1, 1, 'Radio', 1)",
+        "INSERT INTO articles (id, feed_id, fingerprint, title, received_at, sort_at)
+         VALUES (1, 1, 'a', 'A', 1, 1), (2, 1, 'b', 'B', 2, 2)",
+        "INSERT INTO entries (person_id, article_id, feed_id, sort_at, read, starred)
+         VALUES (1, 1, 1, 1, 0, 1), (1, 2, 1, 2, 1, 0)",
+        "INSERT INTO collections (id, person_id, name, created_at) VALUES (1, 1, 'Keep', 0)",
+        "INSERT INTO collection_articles (collection_id, person_id, article_id, added_at)
+         VALUES (1, 1, 1, 0)",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let articles: Vec<(i64, String, Option<String>)> =
+        sqlx::query_as("SELECT id, title, episode_url FROM articles ORDER BY id")
+            .fetch_all(&db)
+            .await
+            .unwrap();
+    assert_eq!(
+        articles,
+        [(1, "A".to_owned(), None), (2, "B".to_owned(), None)]
+    );
+    let entries: Vec<(i64, bool, bool)> =
+        sqlx::query_as("SELECT article_id, read, starred FROM entries ORDER BY article_id")
+            .fetch_all(&db)
+            .await
+            .unwrap();
+    assert_eq!(entries, [(1, false, true), (2, true, false)]);
+    let collected: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM collection_articles")
+        .fetch_one(&db)
+        .await
+        .unwrap();
+    assert_eq!(collected, 1);
+    // A place and an Up Next line must point at one of the reader's
+    // entries, and go with it.
+    let stray = sqlx::query("INSERT INTO up_next (person_id, article_id, place) VALUES (1, 99, 0)")
+        .execute(&db)
+        .await;
+    assert!(stray.is_err());
+    sqlx::query(
+        "INSERT INTO episode_progress (person_id, article_id, position, saved_at)
+         VALUES (1, 2, 12.5, 0)",
+    )
+    .execute(&db)
+    .await
+    .unwrap();
+    sqlx::query("INSERT INTO up_next (person_id, article_id, place) VALUES (1, 2, 0)")
+        .execute(&db)
+        .await
+        .unwrap();
+    sqlx::query("DELETE FROM entries WHERE person_id = 1 AND article_id = 2")
+        .execute(&db)
+        .await
+        .unwrap();
+    let left: i64 = sqlx::query_scalar(
+        "SELECT (SELECT COUNT(*) FROM episode_progress) + (SELECT COUNT(*) FROM up_next)",
+    )
+    .fetch_one(&db)
+    .await
+    .unwrap();
+    assert_eq!(left, 0);
+}
+
+#[tokio::test]
 async fn adding_passkeys_keeps_every_reader_and_device() {
     let data_dir = common::config().data_dir;
     std::fs::create_dir_all(&data_dir).unwrap();

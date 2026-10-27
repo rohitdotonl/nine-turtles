@@ -21,6 +21,7 @@ fn article(fingerprint: &str) -> ParsedArticle {
         summary: None,
         language: None,
         published_at: None,
+        episode: None,
     }
 }
 
@@ -173,6 +174,42 @@ async fn one_readers_star_keeps_the_article_only_for_them() {
 
     // Once they unstar it, the next night's clean-up removes it.
     sqlx::query("UPDATE entries SET starred = 0")
+        .execute(&state.db)
+        .await
+        .unwrap();
+    cleanup::run(&state.db, NOW + DAY).await.unwrap();
+    assert!(articles(&state).await.is_empty());
+}
+
+#[tokio::test]
+async fn an_article_on_a_collection_is_kept_like_a_starred_one_for_its_reader_only() {
+    let (_, state) = common::start_with_state(common::config()).await;
+    let (other, _) = common::another_reader(&state).await;
+    let garden = feed(&state, "garden", &[1, other]).await;
+    receive(&state, garden, &["kept", "gone"], 400).await;
+    let shelf: i64 = sqlx::query_scalar(
+        "INSERT INTO collections (person_id, name, created_at) VALUES (1, 'Recipes', 0) RETURNING id",
+    )
+    .fetch_one(&state.db)
+    .await
+    .unwrap();
+    sqlx::query(
+        "INSERT INTO collection_articles (collection_id, person_id, article_id, added_at)
+         SELECT ?, 1, id, 0 FROM articles WHERE fingerprint = 'kept'",
+    )
+    .bind(shelf)
+    .execute(&state.db)
+    .await
+    .unwrap();
+
+    cleanup::run(&state.db, NOW).await.unwrap();
+    assert_eq!(articles(&state).await, ["kept"]);
+    assert_eq!(entries(&state, 1).await, ["kept"]);
+    // The other reader's line for it goes: a collection keeps it only for its reader.
+    assert!(entries(&state, other).await.is_empty());
+
+    // Taken off the collection (here, the collection deleted), the next night removes it.
+    sqlx::query("DELETE FROM collections")
         .execute(&state.db)
         .await
         .unwrap();

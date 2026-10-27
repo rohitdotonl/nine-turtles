@@ -179,12 +179,12 @@ test.describe("on a wide window", () => {
     expect((await original.innerText()).trim()).toBe("");
     await expect(article(page).getByRole("button", { name: "Star" })).toHaveAttribute("title", "Star (S)");
     await expect(original).toHaveAttribute("title", "Open original (V)");
-    // More holds Copy link and Mark unread, its key shown beside it.
+    // More holds Copy link, Mark unread and Add to collection…, their keys shown beside them.
     const more = article(page).getByRole("button", { name: "More actions" });
     await expect(more).toHaveAttribute("aria-haspopup", "menu");
     await more.click();
     const menu = page.getByRole("menu", { name: "More actions" });
-    await expect(menu.getByRole("menuitem")).toHaveText([/Copy link/, /Mark unread/]);
+    await expect(menu.getByRole("menuitem")).toHaveText([/Copy link/, /Mark unread/, /Add to collection/]);
     await expect(menu.getByRole("menuitem", { name: "Mark unread" })).toHaveAttribute("aria-keyshortcuts", "m");
     await page.keyboard.press("Escape");
     await expect(menu).toHaveCount(0);

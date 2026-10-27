@@ -1,9 +1,9 @@
 //! Each reader's settings shared across their devices (SPEC section 18): the
 //! sort order, the reading mode, inbox or river (SPEC section 10), whether
 //! unread counts show, and when unread lets go by itself (`unread`, decision
-//! 0097), and the keys the reader chose for shortcuts (`keys`, decision
-//! 0110). Reader controls such as the theme belong to each device and stay
-//! in its browser.
+//! 0097), the keys the reader chose for shortcuts (`keys`, decision 0110),
+//! and which lists the sidebar shows (`hidden`, decision 0105). Reader
+//! controls such as the theme belong to each device and stay in its browser.
 
 use axum::{
     Json, Router,
@@ -68,6 +68,62 @@ impl LetGo {
     }
 }
 
+/// A list the reader can hide from the sidebar (Settings › Show in the sidebar). Unread,
+/// folders and feeds always show. A hidden list still opens by its address
+/// and its keys.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+enum Hideable {
+    Starred,
+    All,
+    Recent,
+    Searches,
+    Collections,
+    /// Up Next (decision 0113): shown only while it holds an episode.
+    Upnext,
+}
+
+impl Hideable {
+    const EVERY: [Self; 6] = [
+        Self::Starred,
+        Self::All,
+        Self::Recent,
+        Self::Searches,
+        Self::Collections,
+        Self::Upnext,
+    ];
+
+    const fn stored(self) -> &'static str {
+        match self {
+            Self::Starred => "starred",
+            Self::All => "all",
+            Self::Recent => "recent",
+            Self::Searches => "searches",
+            Self::Collections => "collections",
+            Self::Upnext => "upnext",
+        }
+    }
+}
+
+/// The hidden lists as stored: their words, separated by commas, in one
+/// order. Anything not understood is left out.
+fn hidden_from(stored: Option<&str>) -> Vec<Hideable> {
+    let words: Vec<&str> = stored.unwrap_or("").split(',').collect();
+    Hideable::EVERY
+        .into_iter()
+        .filter(|list| words.contains(&list.stored()))
+        .collect()
+}
+
+fn hidden_stored(hidden: &[Hideable]) -> String {
+    Hideable::EVERY
+        .into_iter()
+        .filter(|list| hidden.contains(list))
+        .map(Hideable::stored)
+        .collect::<Vec<_>>()
+        .join(",")
+}
+
 #[derive(Serialize)]
 struct Settings {
     /// Newest or oldest first.
@@ -79,6 +135,8 @@ struct Settings {
     /// with its key as the cheat sheet prints it ("x", "Shift+X"), or "" for
     /// none. Only changed shortcuts are here; the rest keep their own keys.
     keys: Keys,
+    /// The lists the sidebar leaves out; none by default.
+    hidden: Vec<Hideable>,
 }
 
 /// The reader's own keys (decision 0110). The browser decides what each name
@@ -113,12 +171,13 @@ struct Change {
     let_go: Option<LetGo>,
     /// All the reader's chosen keys at once; `{}` puts every key back.
     keys: Option<Keys>,
+    hidden: Option<Vec<Hideable>>,
 }
 
 async fn load(db: &SqlitePool, person: i64) -> Result<Settings, sqlx::Error> {
     let rows: Vec<(String, String)> = sqlx::query_as(
         "SELECT name, value FROM person_settings
-         WHERE person_id = ? AND name IN ('sort', 'mode', 'counts', 'let_go', 'keys')",
+         WHERE person_id = ? AND name IN ('sort', 'mode', 'counts', 'let_go', 'keys', 'hidden')",
     )
     .bind(person)
     .fetch_all(db)
@@ -151,12 +210,14 @@ async fn load(db: &SqlitePool, person: i64) -> Result<Settings, sqlx::Error> {
         .and_then(|saved| serde_json::from_str::<Keys>(saved).ok())
         .filter(keys_fit)
         .unwrap_or_default();
+    let hidden = hidden_from(value("hidden"));
     Ok(Settings {
         sort,
         mode,
         counts,
         let_go,
         keys,
+        hidden,
     })
 }
 
@@ -195,6 +256,7 @@ async fn change(
         Counts::Hidden => "hidden",
     });
     let let_go = change.let_go.map(LetGo::stored);
+    let hidden = change.hidden.as_deref().map(hidden_stored);
     let saved = async {
         let mut transaction = state.db.begin().await?;
         for (name, value) in [
@@ -203,6 +265,7 @@ async fn change(
             ("counts", counts),
             ("let_go", let_go),
             ("keys", keys.as_deref()),
+            ("hidden", hidden.as_deref()),
         ] {
             if let Some(value) = value {
                 sqlx::query(
@@ -236,5 +299,25 @@ async fn change(
     match saved {
         Ok(settings) => Json(settings).into_response(),
         Err(error) => database_problem("saving settings", &error),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn hidden_lists_are_kept_in_one_order_and_unknown_words_are_left_out() {
+        assert_eq!(
+            hidden_stored(&[Hideable::Searches, Hideable::Starred]),
+            "starred,searches"
+        );
+        assert_eq!(hidden_stored(&[]), "");
+        assert_eq!(
+            hidden_from(Some("recent,later,starred")),
+            [Hideable::Starred, Hideable::Recent]
+        );
+        assert!(hidden_from(None).is_empty());
+        assert!(hidden_from(Some("")).is_empty());
     }
 }

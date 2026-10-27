@@ -595,6 +595,7 @@ async fn old_articles_are_removed_only_once_the_nights_copy_is_stored() {
         summary: None,
         language: None,
         published_at: None,
+        episode: None,
     };
     let mut transaction = state.db.begin().await.unwrap();
     nine_turtles::feeds::store_articles(&mut transaction, 1, &[old], NIGHT - 400 * DAY)

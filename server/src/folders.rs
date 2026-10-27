@@ -399,9 +399,9 @@ pub async fn clear_unsubscribed(
 }
 
 /// Removes, for one reader, a feed they unsubscribed from: their unstarred
-/// entries (their read history), their folder pairs for it, and their
+/// entries (their read history) that aren't on any of their collections, their folder pairs for it, and their
 /// rules' and saved searches' hold on it. Their subscription's line goes
-/// too, unless their starred articles still need its name. Other readers'
+/// too, unless their starred or collected articles still need its name. Other readers'
 /// things are untouched. Once nobody follows or waits on the feed, its
 /// articles nobody has go, its hub subscription goes, and the feed's line
 /// goes if no article is left. Does nothing (and answers false) if the
@@ -430,17 +430,23 @@ pub async fn clear(
         "SELECT DISTINCT articles.feed_id FROM entries
              JOIN articles ON articles.id = entries.article_id
          WHERE entries.person_id = ?1 AND entries.feed_id = ?2 AND entries.starred = 0
-             AND articles.feed_id != ?2",
+             AND articles.feed_id != ?2 AND NOT EXISTS (SELECT 1 FROM collection_articles AS kept
+                 WHERE kept.person_id = ?1 AND kept.article_id = entries.article_id)",
     )
     .bind(person)
     .bind(id)
     .fetch_all(&mut *connection)
     .await?;
-    sqlx::query("DELETE FROM entries WHERE person_id = ? AND feed_id = ? AND starred = 0")
-        .bind(person)
-        .bind(id)
-        .execute(&mut *connection)
-        .await?;
+    // An article on any of their collections stays, as a starred one does (decision 0108).
+    sqlx::query(
+        "DELETE FROM entries WHERE person_id = ?1 AND feed_id = ?2 AND starred = 0
+         AND NOT EXISTS (SELECT 1 FROM collection_articles AS kept
+             WHERE kept.person_id = ?1 AND kept.article_id = entries.article_id)",
+    )
+    .bind(person)
+    .bind(id)
+    .execute(&mut *connection)
+    .await?;
     sqlx::query(
         "DELETE FROM feed_folders WHERE feed_id = ?
          AND folder_id IN (SELECT id FROM folders WHERE person_id = ?)",

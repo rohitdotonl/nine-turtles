@@ -78,6 +78,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - OPML
 - Google Reader format (starred exports)
 - Starter feeds
+- Podcasts, enclosures and `itunes:duration`
 - Feed autodiscovery
 - Feed finder (the website's free tool)
 - Starter packs (the website's hand-picked blogs; not the app's starter feeds)
@@ -126,6 +127,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 
 - TypeScript
 - Type checking
+- The audio element and the Media Session API (the lock screen's player)
 - Svelte
 - Component
 - Single-page app (SPA)
@@ -174,6 +176,8 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Rules and mutes (filters the reader writes)
 - Readers (accounts) and the `people` table
 - Subscriptions and entries (each reader's feeds and marks)
+- Collections (the reader's own shelves of articles) and tags (in JSON Feed)
+- Episode progress and Up Next (each reader's place in an episode, and their queue)
 - Admin page (the owner's Readers page) and usage limits (fair-use quotas)
 
 ## Security and sign-in

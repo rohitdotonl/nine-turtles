@@ -25,7 +25,7 @@ use crate::{
     checking, discover, feed,
     fetch::{self, FetchError, Fetched},
     folders::{self, FOLDERS, Folder, MEMBERSHIPS},
-    log, now, rules, search, websub,
+    log, now, recent, rules, search, websub,
 };
 
 /// How many articles the list shows before "Show older items" (SPEC section 6).
@@ -56,6 +56,10 @@ struct FeedRow {
     open_on_site: bool,
     /// When the reader paused it, if it's paused.
     paused_at: Option<i64>,
+    /// When its checks began failing, while the feed health page lists it
+    /// as not working (`health::LISTED_AFTER` failures in a row), so its
+    /// list can say so and offer Find new address (decision 0106).
+    failing_since: Option<i64>,
     /// The folders it's in, by number.
     #[sqlx(skip)]
     folders: Vec<i64>,
@@ -67,6 +71,7 @@ struct FeedRow {
 /// nothing. Takes the reader.
 pub const FEEDS: &str = "SELECT feeds.id, subscriptions.title, feeds.site_url, subscriptions.river,
         subscriptions.check_at_most, subscriptions.open_on_site, subscriptions.paused_at,
+        CASE WHEN feeds.failures >= 2 THEN feeds.failing_since END AS failing_since,
         CASE WHEN subscriptions.river THEN 0 ELSE
             (SELECT COUNT(*) FROM entries WHERE entries.person_id = subscriptions.person_id
                  AND entries.feed_id = subscriptions.feed_id AND entries.read = 0)
@@ -528,6 +533,7 @@ async fn follow(
         check_at_most: 0,
         open_on_site: false,
         paused_at: None,
+        failing_since: None,
         folders: Vec::new(),
     })
 }
@@ -687,22 +693,32 @@ pub async fn store_articles(
         let sort_at = article
             .published_at
             .map_or(received_at, |published| published.min(received_at));
+        let episode = article.episode.as_ref();
         let stored: Option<i64> = sqlx::query_scalar(
             "INSERT INTO articles (id, feed_id, fingerprint, title, link, author, content,
-                 summary, language, published_at, received_at, sort_at)
+                 summary, language, published_at, received_at, sort_at,
+                 episode_url, episode_type, episode_bytes, episode_seconds, episode_artwork)
              VALUES (1 + MAX(COALESCE((SELECT MAX(id) FROM articles), 0),
                      COALESCE((SELECT CAST(value AS INTEGER) FROM settings
                                WHERE name = 'articles_high_water'), 0)),
-                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON CONFLICT (feed_id, fingerprint) DO UPDATE SET
                  title = excluded.title, link = excluded.link, author = excluded.author,
                  content = excluded.content, summary = excluded.summary,
-                 language = excluded.language
+                 language = excluded.language, episode_url = excluded.episode_url,
+                 episode_type = excluded.episode_type, episode_bytes = excluded.episode_bytes,
+                 episode_seconds = excluded.episode_seconds,
+                 episode_artwork = excluded.episode_artwork
              WHERE articles.title IS NOT excluded.title OR articles.link IS NOT excluded.link
                  OR articles.author IS NOT excluded.author
                  OR articles.content IS NOT excluded.content
                  OR articles.summary IS NOT excluded.summary
                  OR articles.language IS NOT excluded.language
+                 OR articles.episode_url IS NOT excluded.episode_url
+                 OR articles.episode_type IS NOT excluded.episode_type
+                 OR articles.episode_bytes IS NOT excluded.episode_bytes
+                 OR articles.episode_seconds IS NOT excluded.episode_seconds
+                 OR articles.episode_artwork IS NOT excluded.episode_artwork
              RETURNING id",
         )
         .bind(feed_id)
@@ -716,6 +732,11 @@ pub async fn store_articles(
         .bind(article.published_at)
         .bind(received_at)
         .bind(sort_at)
+        .bind(episode.map(|episode| &episode.url))
+        .bind(episode.and_then(|episode| episode.media_type.as_ref()))
+        .bind(episode.and_then(|episode| episode.bytes))
+        .bind(episode.and_then(|episode| episode.seconds))
+        .bind(episode.and_then(|episode| episode.artwork.as_ref()))
         .fetch_optional(&mut *connection)
         .await?;
         // New, or edited since: the search index gets its words.
@@ -754,6 +775,9 @@ pub enum List {
     Feed(i64),
     /// The articles of every feed in a folder, read or not.
     Folder(i64),
+    /// The articles on one of the reader's collections (`collections`),
+    /// muted ones and those of feeds since left included, as in Starred.
+    Collection(i64),
 }
 
 /// The list's order: the reader's "Sort" setting (SPEC section 18).
@@ -766,14 +790,23 @@ pub enum Order {
 }
 
 impl List {
-    /// A feed's or a folder's articles if one is named, otherwise the view's.
-    pub(crate) const fn from_query(feed: Option<i64>, folder: Option<i64>, view: View) -> Self {
-        match (feed, folder, view) {
-            (Some(feed), _, _) => Self::Feed(feed),
-            (None, Some(folder), _) => Self::Folder(folder),
-            (None, None, View::All) => Self::All,
-            (None, None, View::Unread) => Self::Unread,
-            (None, None, View::Starred) => Self::Starred,
+    /// A feed's, a folder's or a collection's articles if one is named,
+    /// otherwise the view's; none for Recently read and Up Next, which are
+    /// `recent`'s and `podcasts`' own lists.
+    pub(crate) const fn from_query(
+        feed: Option<i64>,
+        folder: Option<i64>,
+        collection: Option<i64>,
+        view: View,
+    ) -> Option<Self> {
+        match (feed, folder, collection, view) {
+            (Some(feed), _, _, _) => Some(Self::Feed(feed)),
+            (None, Some(folder), _, _) => Some(Self::Folder(folder)),
+            (None, None, Some(collection), _) => Some(Self::Collection(collection)),
+            (None, None, None, View::All) => Some(Self::All),
+            (None, None, None, View::Unread) => Some(Self::Unread),
+            (None, None, None, View::Starred) => Some(Self::Starred),
+            (None, None, None, View::Recent | View::Upnext) => None,
         }
     }
 }
@@ -785,6 +818,10 @@ pub(crate) enum View {
     All,
     Unread,
     Starred,
+    /// Recently read: the last 50 articles the reader opened (`recent`).
+    Recent,
+    /// Up Next: the episodes the reader lined up, in their order (`podcasts`).
+    Upnext,
 }
 
 #[derive(Deserialize)]
@@ -793,6 +830,7 @@ struct ArticlesQuery {
     /// `view`, decides.
     feed: Option<i64>,
     folder: Option<i64>,
+    collection: Option<i64>,
     #[serde(default)]
     view: View,
     #[serde(default)]
@@ -819,6 +857,11 @@ pub struct ArticleRow {
     /// A rule (or the reader) muted it: only search, the Muted page and
     /// Starred show it.
     pub muted: bool,
+    /// A podcast's episode (SPEC section 35): the list shows a small
+    /// headphones mark and its length.
+    pub episode: bool,
+    /// How long the episode plays, in seconds, if its feed says.
+    pub episode_seconds: Option<i64>,
 }
 
 /// Writes an article's link without its tracking tags (`ArticleRow`).
@@ -844,15 +887,25 @@ async fn list_articles(
         Some(Some(cursor)) => Some(cursor),
         Some(None) => return StatusCode::BAD_REQUEST.into_response(),
     };
-    let list = List::from_query(query.feed, query.folder, query.view);
+    let list = List::from_query(query.feed, query.folder, query.collection, query.view);
     // Asked before the list, so an article arriving in between is reported
     // as new rather than missed.
     let latest: Result<i64, sqlx::Error> = sqlx::query_scalar(LATEST).fetch_one(&state.db).await;
-    let listed = match latest {
-        Ok(latest) => page(&state.db, person, list, query.order, after)
+    let listed = match (latest, list) {
+        (Ok(latest), Some(list)) => page(&state.db, person, list, query.order, after)
             .await
             .map(|listed| (latest, listed)),
-        Err(error) => Err(error),
+        // Up Next is one short page, in the reader's own order, whatever the sort.
+        (Ok(latest), None) if matches!(query.view, View::Upnext) => {
+            crate::podcasts::list(&state.db, person)
+                .await
+                .map(|listed| (latest, (listed, None)))
+        }
+        // Recently read is one short page, in the order opened, whatever the sort.
+        (Ok(latest), None) => recent::list(&state.db, person)
+            .await
+            .map(|listed| (latest, (listed, None))),
+        (Err(error), _) => Err(error),
     };
     match listed {
         Ok((latest, (articles, next))) => {
@@ -897,8 +950,8 @@ pub const fn new_sql(list: List) -> Option<&'static str> {
             "+entries.muted = 0 AND +entries.feed_id IN (SELECT feed_id FROM feed_folders
                   WHERE folder_id = (SELECT id FROM folders WHERE id = ? AND person_id = ?))"
         )),
-        // Nothing arrives starred.
-        List::Starred => None,
+        // Nothing arrives starred, or on a collection.
+        List::Starred | List::Collection(_) => None,
     }
 }
 
@@ -906,6 +959,7 @@ pub const fn new_sql(list: List) -> Option<&'static str> {
 struct NewQuery {
     feed: Option<i64>,
     folder: Option<i64>,
+    collection: Option<i64>,
     #[serde(default)]
     view: View,
     /// The `latest` the list was loaded with.
@@ -919,7 +973,12 @@ async fn new_articles(
     State(state): State<AppState>,
     Query(query): Query<NewQuery>,
 ) -> Response {
-    let list = List::from_query(query.feed, query.folder, query.view);
+    // Nothing arrives already opened, or lined up, so Recently read and Up
+    // Next never have new items.
+    let Some(list) = List::from_query(query.feed, query.folder, query.collection, query.view)
+    else {
+        return Json(json!({ "new": false })).into_response();
+    };
     let Some(sql) = new_sql(list) else {
         return Json(json!({ "new": false })).into_response();
     };
@@ -961,13 +1020,47 @@ macro_rules! list_query {
         concat!(
             "SELECT entries.article_id AS id, entries.feed_id, subscriptions.title AS feed_title,
                     articles.title, articles.link, entries.sort_at AS at,
-                    entries.read, entries.starred, entries.muted
+                    entries.read, entries.starred, entries.muted,
+                    articles.episode_url IS NOT NULL AS episode, articles.episode_seconds
              FROM entries CROSS JOIN articles ON articles.id = entries.article_id
                  CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
                      AND subscriptions.feed_id = entries.feed_id
              WHERE entries.person_id = ? AND ",
             $filter,
             " (entries.sort_at, entries.article_id) ",
+            $past,
+            " (?, ?)
+             ORDER BY entries.sort_at ",
+            $order,
+            ", entries.article_id ",
+            $order,
+            " LIMIT ?"
+        )
+    };
+}
+
+/// A collection's list: its own lines, read through their primary key, then
+/// each one's entry, sorted on the spot. A collection is the reader's own
+/// short shelf, so the sort is small, and walking every entry in order to
+/// find a few would be slower. Takes the reader, then the collection's
+/// number (only lines of the reader's own count), then the cursor and the
+/// limit, as `list_sql`'s questions do. The `+` keeps SQLite from reading
+/// every line of the reader's through `collection_articles_by_entry` instead.
+macro_rules! collection_query {
+    ($past:literal, $order:literal) => {
+        concat!(
+            "SELECT entries.article_id AS id, entries.feed_id, subscriptions.title AS feed_title,
+                    articles.title, articles.link, entries.sort_at AS at,
+                    entries.read, entries.starred, entries.muted,
+                    articles.episode_url IS NOT NULL AS episode, articles.episode_seconds
+             FROM collection_articles
+                 CROSS JOIN entries ON entries.person_id = collection_articles.person_id
+                     AND entries.article_id = collection_articles.article_id
+                 CROSS JOIN articles ON articles.id = entries.article_id
+                 CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
+                     AND subscriptions.feed_id = entries.feed_id
+             WHERE +collection_articles.person_id = ? AND collection_articles.collection_id = ?
+                 AND (entries.sort_at, entries.article_id) ",
             $past,
             " (?, ?)
              ORDER BY entries.sort_at ",
@@ -1029,6 +1122,8 @@ pub const fn list_sql(list: List, order: Order) -> &'static str {
             ">",
             "ASC"
         ),
+        (List::Collection(_), Order::Newest) => collection_query!("<", "DESC"),
+        (List::Collection(_), Order::Oldest) => collection_query!(">", "ASC"),
     }
 }
 
@@ -1048,7 +1143,7 @@ pub async fn page(
     };
     let (after_at, after_id) = after.unwrap_or(start);
     let mut query = sqlx::query_as(list_sql(list, order)).bind(person);
-    if let List::Feed(id) | List::Folder(id) = list {
+    if let List::Feed(id) | List::Folder(id) | List::Collection(id) = list {
         query = query.bind(id);
     }
     if let List::Folder(_) = list {
@@ -1091,6 +1186,14 @@ pub struct FullArticle {
     pub at: i64,
     pub read: bool,
     pub starred: bool,
+    /// A podcast's episode (SPEC section 35): the publisher's own address
+    /// for its audio file, which the reader's browser plays from there.
+    /// Null for any other article.
+    pub episode_url: Option<String>,
+    pub episode_type: Option<String>,
+    pub episode_bytes: Option<i64>,
+    pub episode_seconds: Option<i64>,
+    pub episode_artwork: Option<String>,
 }
 
 /// Only an article the reader has (an entry of theirs); any other is not
@@ -1163,7 +1266,9 @@ pub(crate) async fn full_articles(
         "SELECT articles.id, entries.feed_id, subscriptions.title AS feed_title, feeds.site_url,
                 articles.title, articles.link, articles.author, articles.content,
                 articles.summary, COALESCE(articles.language, feeds.language) AS language,
-                entries.sort_at AS at, entries.read, entries.starred
+                entries.sort_at AS at, entries.read, entries.starred,
+                articles.episode_url, articles.episode_type, articles.episode_bytes,
+                articles.episode_seconds, articles.episode_artwork
          FROM entries JOIN articles ON articles.id = entries.article_id
              JOIN feeds ON feeds.id = entries.feed_id
              JOIN subscriptions ON subscriptions.person_id = entries.person_id
@@ -1210,6 +1315,15 @@ fn is_language_tag(tag: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_feeds_list_says_it_is_failing_exactly_when_feed_health_lists_it() {
+        let listed = format!(
+            "WHEN feeds.failures >= {} THEN feeds.failing_since",
+            crate::health::LISTED_AFTER
+        );
+        assert!(FEEDS.contains(&listed));
+    }
 
     #[test]
     fn only_real_language_tags_mark_an_article() {

@@ -31,6 +31,7 @@
 use axum::{
     Json, Router,
     extract::State,
+    http::StatusCode,
     response::{IntoResponse, Response},
     routing::post,
 };
@@ -228,6 +229,17 @@ pub const fn read_past_sql(list: List, side: Side) -> &'static str {
                  WHERE person_id = ?1 AND unsubscribed_at IS NULL)",
             ">"
         ),
+        // A collection lists muted articles and those of feeds left, as Starred does.
+        (List::Collection(_), Side::Older) => read_past_query!(
+            "article_id IN (SELECT article_id FROM collection_articles
+                 WHERE collection_id = ?5 AND person_id = ?1)",
+            "<"
+        ),
+        (List::Collection(_), Side::Newer) => read_past_query!(
+            "article_id IN (SELECT article_id FROM collection_articles
+                 WHERE collection_id = ?5 AND person_id = ?1)",
+            ">"
+        ),
     }
 }
 
@@ -236,6 +248,7 @@ struct ReadPast {
     /// The list, named as `GET /api/articles` names it.
     feed: Option<i64>,
     folder: Option<i64>,
+    collection: Option<i64>,
     #[serde(default)]
     view: View,
     side: Side,
@@ -255,13 +268,16 @@ async fn read_past(
     State(state): State<AppState>,
     Json(form): Json<ReadPast>,
 ) -> Response {
-    let list = List::from_query(form.feed, form.folder, form.view);
+    // Recently read is no list to mark past (it has no Mark all as read).
+    let Some(list) = List::from_query(form.feed, form.folder, form.collection, form.view) else {
+        return StatusCode::BAD_REQUEST.into_response();
+    };
     let mut question = sqlx::query_scalar(read_past_sql(list, form.side))
         .bind(person)
         .bind(form.latest)
         .bind(form.at)
         .bind(form.id);
-    if let List::Feed(id) | List::Folder(id) = list {
+    if let List::Feed(id) | List::Folder(id) | List::Collection(id) = list {
         question = question.bind(id);
     }
     let marked: Result<Vec<i64>, sqlx::Error> = question.fetch_all(&state.db).await;

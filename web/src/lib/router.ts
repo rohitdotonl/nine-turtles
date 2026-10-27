@@ -2,7 +2,7 @@
 // were and the browser's Back button works. No library: the browser's own
 // history does the work.
 
-export const VIEWS = ["unread", "starred", "all"] as const;
+export const VIEWS = ["unread", "starred", "all", "recent", "upnext"] as const;
 export type View = (typeof VIEWS)[number];
 
 export type Route =
@@ -13,6 +13,7 @@ export type Route =
   | { kind: "edit-folder"; id: number }
   | { kind: "search"; id: number }
   | { kind: "edit-search"; id: number }
+  | { kind: "collection"; id: number }
   | { kind: "save-search" }
   | { kind: "add-feed" }
   | { kind: "new-to-feeds" }
@@ -22,7 +23,14 @@ export type Route =
   | { kind: "muted" }
   | { kind: "readers" };
 
-export const VIEW_NAMES: Record<View, string> = { unread: "Unread", starred: "Starred", all: "All" };
+export const VIEW_NAMES: Record<View, string> = { unread: "Unread", starred: "Starred", all: "All", recent: "Recently read", upnext: "Up Next" };
+
+/**
+ * The lists a reader can hide from the sidebar (Settings › Show in the sidebar, decisions 0105, 0108 and 0113). Unread, folders
+ * and feeds always show; Up Next shows only while it holds an episode.
+ */
+export const HIDEABLE = ["starred", "all", "recent", "searches", "collections", "upnext"] as const;
+export type Hideable = (typeof HIDEABLE)[number];
 
 /** The place an address points to. Anything unknown opens Unread. */
 export function parse(path: string): Route {
@@ -37,6 +45,8 @@ export function parse(path: string): Route {
   if (name === "searches/new") return { kind: "save-search" };
   const saved = name.match(/^searches\/([1-9][0-9]{0,15})(\/edit)?$/);
   if (saved) return saved[2] ? { kind: "edit-search", id: Number(saved[1]) } : { kind: "search", id: Number(saved[1]) };
+  const collection = name.match(/^collections\/([1-9][0-9]{0,15})$/);
+  if (collection) return { kind: "collection", id: Number(collection[1]) };
   const place = name.match(/^(feeds|folders)\/([1-9][0-9]{0,15})(\/edit)?$/);
   if (place) {
     const id = Number(place[2]);
@@ -85,12 +95,14 @@ export function pathFor(route: Route): string {
       return `/searches/${route.id}/edit`;
     case "save-search":
       return "/searches/new";
+    case "collection":
+      return `/collections/${route.id}`;
     case "view":
       return `/${route.view}`;
   }
 }
 
-/** A place's name, as its heading shows it. A feed's, folder's or saved search's name comes from it. */
+/** A place's name, as its heading shows it. A feed's, folder's, saved search's or collection's name comes from it. */
 export function nameFor(route: Route, placeName?: string): string {
   switch (route.kind) {
     case "settings":
@@ -121,6 +133,8 @@ export function nameFor(route: Route, placeName?: string): string {
       return "Edit saved search";
     case "save-search":
       return "Save search";
+    case "collection":
+      return placeName || "Collection";
     case "view":
       return VIEW_NAMES[route.view];
   }

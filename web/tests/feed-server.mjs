@@ -30,13 +30,23 @@
 //   /move/NAME         the blog called NAME moves its feed: feed.xml answers
 //                      "not found", and its home page names new.xml instead.
 //                      A blog whose NAME starts with "moving-" names its home
-//                      page here, so Find new address can visit it
+//                      page here, so Find new address can visit it; one
+//                      whose NAME starts with "moving-two-" names its
+//                      comments feed there too, so the site names two feeds
+//   /break/NAME        the blog called NAME loses its feed: feed.xml answers
+//                      "not found", and its home page still names only that,
+//                      so Find new address finds nothing new
 //   /hindi/NAME/       like /blog/NAME/, for a blog written in Hindi
 //   /shelf/BLOG/       the screenshots' library: a handful of made-up blogs
 //                      with real-looking titles, authors and dates (SHELF
 //                      below), naming /shelf/BLOG/feed.xml
 //   /shelf/BLOG/COPY/  a fresh copy of that blog under its own address, for
 //                      a test that must start with nothing read or starred
+//   /podcast/NAME/     a made-up podcast's home page, naming its feed: two
+//                      episodes, "A long walk" (a minute) and "A short pause"
+//                      (two seconds), whose audio files are silence made here
+//                      (/podcast/audio/long.wav, short.wav), served in parts
+//                      as browsers ask for audio (Range requests)
 
 import { createServer } from "node:http";
 
@@ -283,11 +293,50 @@ function shelf(name, base) {
 <link>${site}</link><language>en</language>${items.join("\n")}</channel></rss>`;
 }
 
+/** `seconds` of silence as a WAV file: 8,000 samples a second, 8 bits, one channel. */
+function silence(seconds) {
+  const samples = 8000 * seconds;
+  const file = Buffer.alloc(44 + samples, 128);
+  file.write("RIFF", 0);
+  file.writeUInt32LE(36 + samples, 4);
+  file.write("WAVEfmt ", 8);
+  file.writeUInt32LE(16, 16);
+  file.writeUInt16LE(1, 20); // plain PCM
+  file.writeUInt16LE(1, 22); // one channel
+  file.writeUInt32LE(8000, 24);
+  file.writeUInt32LE(8000, 28);
+  file.writeUInt16LE(1, 32);
+  file.writeUInt16LE(8, 34);
+  file.write("data", 36);
+  file.writeUInt32LE(samples, 40);
+  return file;
+}
+
+const AUDIO = { long: silence(60), short: silence(2) };
+
+function podcast(name, base) {
+  const episodes = [
+    ["A long walk", "long", 60, "Notes for a walk: where we went, and what we saw."],
+    ["A short pause", "short", 2, "Notes for a pause."],
+  ];
+  const items = episodes.map(([title, file, seconds, notes], index) => {
+    const date = new Date(NEWEST - index * DAY).toUTCString();
+    return `<item><title>${title}</title><link>https://${name}.example/${file}</link><guid>${name}-${file}</guid>
+<pubDate>${date}</pubDate><description>&lt;p&gt;${notes}&lt;/p&gt;</description>
+<enclosure url="${base}/podcast/audio/${file}.wav" length="${AUDIO[file].length}" type="audio/wav"/>
+<itunes:duration>${seconds}</itunes:duration></item>`;
+  });
+  return `<?xml version="1.0"?><rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"><channel>
+<title>Podcast ${name}</title><link>https://${name}.example/</link>${items.join("\n")}</channel></rss>`;
+}
+
 const visits = new Map();
 // How many articles each /blog/NAME/ has published since it began with three.
 const grown = new Map();
 // The blogs that moved their feed to new.xml.
 const moved = new Set();
+// The blogs whose feed is gone, with nothing in its place.
+const broken = new Set();
 
 createServer((request, response) => {
   const path = new URL(request.url ?? "/", "http://localhost").pathname;
@@ -331,6 +380,31 @@ createServer((request, response) => {
     return html(page(SHELF[name].title, [[SHELF[name].title, `${here}feed.xml`]]));
   }
 
+  const audio = path.match(/^\/podcast\/audio\/(long|short)\.wav$/);
+  if (audio) {
+    const file = AUDIO[audio[1]];
+    const range = (request.headers.range ?? "").match(/^bytes=(\d*)-(\d*)$/);
+    if (!range) {
+      response.writeHead(200, { "content-type": "audio/wav", "content-length": file.length, "accept-ranges": "bytes" });
+      return response.end(file);
+    }
+    const start = range[1] ? Number(range[1]) : 0;
+    const end = Math.min(range[2] ? Number(range[2]) : file.length - 1, file.length - 1);
+    response.writeHead(206, {
+      "content-type": "audio/wav",
+      "content-length": end - start + 1,
+      "content-range": `bytes ${start}-${end}/${file.length}`,
+      "accept-ranges": "bytes",
+    });
+    return response.end(file.subarray(start, end + 1));
+  }
+  const cast = path.match(/^\/podcast\/([a-z0-9-]+)\/(feed\.xml)?$/);
+  if (cast) {
+    const name = cast[1];
+    if (cast[2]) return xml(podcast(name, `http://${request.headers.host}`));
+    return html(page(`Podcast ${name}`, [[`Podcast ${name}`, `/podcast/${name}/feed.xml`]]));
+  }
+
   const grow = path.match(/^\/grow\/([a-z0-9-]+)$/);
   if (grow) {
     grown.set(grow[1], (grown.get(grow[1]) ?? 0) + 1);
@@ -341,6 +415,12 @@ createServer((request, response) => {
   if (move) {
     moved.add(move[1]);
     return send("text/plain", "Moved.");
+  }
+
+  const breaking = path.match(/^\/break\/([a-z0-9-]+)$/);
+  if (breaking) {
+    broken.add(breaking[1]);
+    return send("text/plain", "Broken.");
   }
 
   const hindi = path.match(/^\/hindi\/([a-z0-9-]+)\/(feed\.xml)?$/);
@@ -356,7 +436,7 @@ createServer((request, response) => {
     const home = name.startsWith("moving-") ? `http://${request.headers.host}/blog/${name}/` : `https://${name}.example/`;
     const file = moved.has(name) ? "new.xml" : "feed.xml";
     if (blog[2] === "feed.xml" || blog[2] === "new.xml") {
-      if (blog[2] !== file) {
+      if (blog[2] !== file || broken.has(name)) {
         response.writeHead(404, { "content-type": "text/plain" });
         return response.end("Not found");
       }
@@ -365,7 +445,7 @@ createServer((request, response) => {
     }
     if (blog[2] === "comments.xml") return xml(rss(`Blog ${name}: comments`, `https://${name}.example/comments/`, 1));
     const feeds = [[`Blog ${name}`, `/blog/${name}/${file}`]];
-    if (name.startsWith("two-")) feeds.push([`Comments`, `/blog/${name}/comments.xml`]);
+    if (name.startsWith("two-") || name.startsWith("moving-two-")) feeds.push([`Comments`, `/blog/${name}/comments.xml`]);
     return html(page(`Blog ${name}`, feeds));
   }
 
