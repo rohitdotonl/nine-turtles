@@ -261,7 +261,7 @@ Wherever a principle can be checked by a computer, it is. These run on every pul
 
 | Principle | Check |
 |---|---|
-| The computer checks the work | Rust: format, lint and tests. Frontend: type check and tests. Every pull request except documents-only changes and tiny fixes also gets a second-agent review. |
+| The computer checks the work | Rust: format, lint and tests. Frontend: type check and tests. Every pull request except documents-only changes and tiny fixes also gets a second-agent review. A test never depends on how fast the computer is; one that fails now and then is fixed, never retried until it passes (no automatic retries, decision 0113). |
 | Owner can see the change | Screenshots of every screen in Original, by day and by night (the other themes on the list, article, Settings and Edit feed screens), at desktop and phone width, attached to each pull request |
 | Libraries stay safe | A weekly report of known security problems in our libraries. It only reports; nothing is updated automatically. |
 | First floor (accessibility) | Automated accessibility and contrast tests on every screen, in every theme by day and by night |

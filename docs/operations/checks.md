@@ -8,8 +8,8 @@ The script stops at the first failure and says which step failed.
 
 ## Side by side, and skipped for documents
 
-On GitHub the script runs in four parts at once, each on its own computer
-(decision 0065): `scripts/check.sh frontend` (the first six steps below),
+On GitHub the script runs in parts at once, each on its own computer
+(decisions 0065 and 0113): `scripts/check.sh frontend` (the first six steps below),
 `scripts/check.sh rust` (formatting, lint, tests), and `scripts/check.sh
 browser` (builds the frontend and the release program, then runs the browser
 tests) four times, each with a quarter of the browser tests

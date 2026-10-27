@@ -30,7 +30,9 @@ sooner and stop failing for no real reason. Nothing they check changes.
   fixed number of Tab presses, which the growing sidebar of the shared test
   app kept overtaking; it now stops only when Tab comes all the way round. A
   touch-target test measured an arrow, then tried it a moment later; it now
-  measures at the moment it tries.
+  measures at the moment it tries. A keys test pressed End before the
+  article's lazily loaded picture had given it anything to scroll; it now
+  waits for the picture first.
 
 **Not done.** Retrying failed tests automatically: it would hide tests that
 fail now and then instead of fixing them, and turn real but rare problems
