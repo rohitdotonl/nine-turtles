@@ -401,6 +401,7 @@ each with screenshots:
 | Pausing a feed (Edit feed › Pause this feed) | ✅ 26 October 2026 | SPEC section 15, decision 0095 |
 | Easing unread guilt: unread that lets go by itself, Catch me up, and unread without numbers | ✅ 26 October 2026 | SPEC sections 5, 6, 8 and 18, decision 0097 |
 | Reading offline, words only (200 unread and 200 starred on each device) | ✅ 26 October 2026 | SPEC section 32, decision 0101 |
+| Adding a feed from anywhere (Android's share menu, an Apple Shortcuts shortcut, a bookmark) | ✅ 27 October 2026 | SPEC sections 3, 18 and 20, decision 0104 |
 
 ## V2: Many readers in one app
 
@@ -464,6 +465,17 @@ October 2026 (SPEC section 33).
 | The 15 tools: search, unread, starred, open an article, feeds and folders, feed health, rules and mutes, mark read or unread, star, add a feed, rename or move a feed, folders, rules and mutes, unsubscribe (with a 30-day undo), export the feed list (plus "bring back a feed") | ✅ Done |
 | Limits per reader, tests with at least two different assistants, SPEC section, and the 15-day upkeep check (`docs/operations/mcp-check.md`) | ✅ Done (official TypeScript and Python MCP clients) |
 
+
+## Later: ideas the owner wants, not yet scheduled
+
+Things the owner has said yes to in principle, to build some day. Nothing
+here is planned yet; when one starts, it moves into the table above. (Other
+"not now" lists: SPEC → "Not in V1", and the research notes in
+`docs/RnD/`, which are ideas only.)
+
+- **A browser extension** for adding feeds while browsing (27 October 2026,
+  from the reader comparison). Until then, the bookmark in Settings › Add
+  from anywhere does the same job on computers.
 ---
 
 Responsive layout, accessibility and speed aren't left to the end: each

@@ -9,7 +9,8 @@ feed, so the owner chose: slowfeed visits the one page pasted, once, because
 they asked. It reads the `<link rel="alternate">` lines the page names and
 never guesses other addresses (`/feed`, `/rss.xml`). It's still never done in
 the background, and still never for an article's text. `AGENTS.md` and
-`ENGINEERING.md` were reworded to match.
+`ENGINEERING.md` were reworded to match. (Since 27 October 2026, a page the
+reader shares into Add a feed counts as pasted too: decision 0104.)
 
 **Removing a feed stays in Milestone 9,** as planned (the owner's choice).
 Removing needs an undo, which Milestone 9 builds; test feeds added before

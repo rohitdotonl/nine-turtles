@@ -64,6 +64,7 @@
   import { TEXT_SIZES, apply, load, save } from "./preferences";
   import { device } from "./appearance.svelte";
   import { VIEWS, VIEW_NAMES, nameFor, parse, pathFor, titleFor, type Route } from "./router";
+  import { sharedAddress } from "./share";
   import { emptyQuery, isSearching, scopeFor, searchParams, searchedTerms, type Query } from "./search";
   import { deleteSaved, listSaved, refusedSaving, sameQuery, saveSearch, type SavedSearch } from "./saved";
   import { startingStep, stepOf, type Screen } from "./steps";
@@ -108,6 +109,16 @@
   let route: Route = $state(start);
   /** Where Escape and "Close settings" go back to: the last list you were on. */
   let lastPlace: Route = $state(isList(start) ? start : { kind: "view", view: homeView(untrack(() => mode)) });
+  /**
+   * A page shared to nine turtles (a share menu, a Shortcuts shortcut or a bookmark opening
+   * /add-feed?url=…, decision 0104): Add a feed opens with its address and looks at it. Read
+   * before the address bar is tidied to plain /add-feed; used for that one opening only: Add a
+   * feed hands it back (onShared) as soon as it has filled the field, and leaving the place clears it too.
+   */
+  let shared = $state(parsed.kind === "add-feed" ? sharedAddress(location.search) : "");
+  $effect(() => {
+    if (route.kind !== "add-feed") untrack(() => (shared = ""));
+  });
 
   /** River mode has no Unread view: its address (and "/") leads to All. */
   function homeFor(place: Route, current: ReadingMode): Route {
@@ -1609,7 +1620,7 @@
               <!-- 20px under the top line as Settings is: a line on what to paste, the field, then Add feed the full width at the screen's foot. -->
               <div class="mx-auto flex w-full max-w-xl flex-1 flex-col gap-5">
                 <p>{ADD_INTRO}</p>
-                <AddFeed bind:field={addField} feeds={feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} page />
+                <AddFeed bind:field={addField} feeds={feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} page {shared} onShared={() => (shared = "")} />
               </div>
             </div>
           </div>
@@ -1810,7 +1821,7 @@
 {#if sheet && route.kind === "add-feed"}
   <Sheet title="Add a feed" bind:heading={sheetHeading} onClose={closePage} initial={() => addField}>
     <p>{ADD_INTRO}</p>
-    <AddFeed bind:field={addField} feeds={feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} onCancel={closePage} />
+    <AddFeed bind:field={addField} feeds={feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} onCancel={closePage} {shared} onShared={() => (shared = "")} />
   </Sheet>
 {:else if sheet && route.kind === "new-to-feeds" && firstVisit}
   <Sheet title="New to feeds?" bind:heading={sheetHeading} onClose={closePage}>

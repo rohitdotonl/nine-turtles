@@ -97,12 +97,18 @@ A few words used throughout:
 - Adding a feed you already follow says "You already follow this feed." with a link to it, instead of making a copy. The same address written differently (`http` or `https`, a trailing `/` or `#part`) counts as the same feed.
 - The new feed appears in the sidebar and opens, its articles straight away, all unread (including older posts the feed still lists). It's fetched once on adding; new articles arriving on their own come with Milestone 8.
 - Each feed has its own address (`/feeds/3`), so reloading keeps your place. An address for a feed you don't follow says so plainly ("Feed not found").
+- **Adding from anywhere** (decision 0104): `/add-feed?url=<address>` opens Add a feed with that address already in the field, and nine turtles looks at that one page straight away for the feeds it names, as if you had pasted it. It **never follows anything by itself**: what it finds is shown as the usual list ("Found this feed:" over a one-row list for one feed, "This site offers more than one feed. Choose one:" for several), and only **Add feed** follows the chosen one; Cancel, Escape or the X follows nothing. Problems are said in the same sentences as above. If the address has no `url`, the first web address (`http` or `https`) inside `text`, then `title`, is used, because share menus often put the link inside a sentence. The address bar then shows plain `/add-feed`, and the shared address is used for that one opening only. Signed out, the sign-in page comes first; after signing in, Add a feed opens with the address kept. The look uses the same lookup as the website's feed finder (section 30), so while it's busy or can't be reached nine turtles says nothing and the address simply waits in the field for Add feed. Three ways lead there:
+  - **Android (and any browser that supports it):** once nine turtles is on the home screen, it appears in the system share menu ("Share → nine turtles"), through the app's "share target" (the part of its manifest that tells the phone it can take shared links).
+  - **iPhone and iPad:** Safari doesn't offer home-screen apps in the share menu, so an Apple Shortcuts shortcut does it instead (steps in section 20).
+  - **A computer's browser:** a bookmark that opens Add a feed with the page you're on (a "bookmarklet": a bookmark that runs a line of JavaScript). Settings › Add from anywhere shows it, built from this nine turtles' own address, with a Copy button: make a new bookmark and paste it as the bookmark's address. On app.nineturtles.app it is `javascript:location.href='https://app.nineturtles.app/add-feed?url='+encodeURIComponent(location.href)`.
 
 **How to check it**
 1. Press `a` (or click Add feed), paste a blog's home page address (not its feed), press Enter. The blog appears in the sidebar with its articles.
 2. Paste a direct feed address. Same result.
 3. Paste an address of a page with no feed. You get a calm, plain message, not an error code.
 4. Add the same feed twice. nine turtles tells you it's already there instead of creating a duplicate.
+5. Open `/add-feed?url=` followed by a blog's address. Add a feed opens with the address filled in and the feed found and chosen, but the blog isn't in the sidebar until you press Add feed. Press Cancel instead: nothing is added.
+6. In Settings › Add from anywhere, copy the bookmark, make a bookmark with it, and press it on a blog: Add a feed opens with that blog's address.
 
 ## 4. Layout
 
@@ -418,7 +424,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 
 **What it does**
 - Settings opens in place of the list and reading area; the sidebar stays. Its X (named "Close settings") or Escape goes back to where you were.
-- Laid out as Apple Books' settings are: one centred column, no wider than 560px, of grouped lists (Reading, Look and feel, Your data, Feeds, Rules, Other apps, Connected assistants, for the owner Readers and Sign-up, then Account). Each group is a rounded block a tone off the page (by night a clear step lighter than the page, the text color mixed 7% into it, so it never melts into it), with a small muted header above it and a line explaining it below; its rows are at least 44px tall, parted by hairlines inset from the left, each with its name on the left and its control at the right end, every control the same width. On a phone a control sits under its name, the width of the row.
+- Laid out as Apple Books' settings are: one centred column, no wider than 560px, of grouped lists (Reading, Look and feel, Your data, Feeds, Add from anywhere, Rules, Other apps, Connected assistants, for the owner Readers and Sign-up, then Account). Each group is a rounded block a tone off the page (by night a clear step lighter than the page, the text color mixed 7% into it, so it never melts into it), with a small muted header above it and a line explaining it below; its rows are at least 44px tall, parted by hairlines inset from the left, each with its name on the left and its control at the right end, every control the same width. On a phone a control sits under its name, the width of the row.
 - **Look and feel** (this device only): Appearance, theme (Original or Plain), reading font (Literata, Atkinson Hyperlegible, shown as "Atkinson", or System serif), text size (six steps from Smaller to Largest, Medium by default), line width (Narrow, Medium or Wide: about 65, 71 or 78 characters in Literata; Atkinson Hyperlegible's narrower letters fit more). A sample paragraph, the group's first row before its controls (inside the group, its words on the rows' words, a hairline under it), shows how articles will look, and changes apply at once (decision 0055). The same preferences are in the Aa panel above every article (section 7), and the line under the group says so.
 - **Theme:** Original (the default): white paper by day, near-black by night, with an ink-blue accent for unread dots and search matches, and green for starred stars (decisions 0056, 0057). Or Plain: the owner's site rohit.onl's bare look, black on white (white on near-black by night), the unread dot and search matches in the text color, and links in articles in the browser's blue, purple once visited, underlined (decision 0063). Chosen in Settings and the Aa panel. The phone's own bar above the page takes the showing version's color too.
 - **Appearance:** Light, Dark or Match device (the default). Light and Dark always show the day or night version; Match device follows the device's own light or dark setting, and switches with it while nine turtles is open. A theme chosen in an earlier version becomes Original; its Appearance is kept, and a dark theme from before decision 0046 opens by night (decision 0056).
@@ -429,6 +435,7 @@ OPML is the standard file format feed readers use to move subscription lists bet
 - **Your data:** first the **Keep articles for reading offline** switch (section 32, on by default, for this device only), then four rows that act: **Import OPML…** and **Import starred articles…** (each opens the file chooser; each ends in ›), **Export OPML** and **Export starred articles** (each downloads a file; each ends in a download mark), in the text color. What the files are is said under the group; what an import did appears there too.
 - **Feeds:** **Your feeds ›** opens Your feeds, for tidying many feeds at once (section 15), and **Feed health ›** opens the feed health page (section 17).
 - **Feeds:** **Feed health ›** opens the feed health page (section 17).
+- **Add from anywhere** (decision 0104): two rows, each an address in the muted grey with **Copy** at its right end, as Other apps shows its server address: **Bookmark for your browser** (the bookmarklet, section 3) and **Address for Apple Shortcuts** (`…/add-feed?url=`, section 20), both built from this nine turtles' own address. "Bookmark copied." (or how to copy it by hand) is said under the group. The line under the group says how to add a feed from the page you're on: share it on Android, the bookmark on a computer, a shortcut on iPhone and iPad, and that you choose whether to add what's found.
 - **Rules:** the reader's rules, New rule… and Muted articles › (section 27).
 - **Other apps:** the app password other feed readers sync with (section 26).
 - **Connected assistants:** the address to give an AI assistant, the assistants connected, an assistant key, and feeds an assistant unsubscribed from (section 33).
@@ -511,12 +518,21 @@ OPML is the standard file format feed readers use to move subscription lists bet
 - Every tap target is at least 44 pixels.
 - Can be added to the home screen on iPhone and Android; it then opens full-screen with its own icon: nine small turtles seen from the side, three rows of three with the middle row a little to the right, dark on white (decision 0067). The same turtles mark the browser tab, on white by day and on near-black by night.
 - Without a connection, the app still opens: signed in, with the articles kept on the device for reading offline (section 32); on a device that keeps none, it says plainly that nine turtles can't be reached. The service worker keeps a copy of the app itself and its fonts, never of your articles: those are the app's own copies.
+- **Sharing a page to nine turtles** (decision 0104; what happens next is in section 3, "Adding from anywhere"):
+  - **Android:** once nine turtles is on the home screen, share any page and choose **nine turtles**. Add a feed opens with its address and looks for its feed; press Add feed to follow it.
+  - **iPhone and iPad:** Safari doesn't let home-screen web apps appear in the share sheet (Apple doesn't support web share targets), so make a shortcut once in Apple's **Shortcuts** app:
+    1. Open Shortcuts, tap **+** for a new shortcut, and name it **Add to nine turtles**.
+    2. Tap the shortcut's settings (the **ⓘ** or the name at the top) and turn on **Show in Share Sheet**. Under the types it receives, keep only **URLs** and **Safari web pages**.
+    3. Add the action **URL Encode** (search for it); it encodes the **Shortcut Input**.
+    4. Add the action **Open URLs**. As its address, type `https://app.nineturtles.app/add-feed?url=` (Settings › Add from anywhere has it, with Copy) and, right after it with no space, insert the **URL Encoded Text** from the step before.
+    5. Done. In Safari, on any page, tap Share and choose **Add to nine turtles**: nine turtles opens Add a feed with that page.
 
 **How to check it**
 1. On your phone, open the app: you see your feeds. Tap a folder, a feed, an article; the back arrow says where it goes each time.
 2. Swipe back from the screen edge: you go back one step.
 3. In an article, press Next and Previous at the bottom: they move through the list. On the first article, Previous shows a faded arrow in its usual place and does nothing; the bar has no gap.
 4. Use "Add to Home Screen". Open it from the icon: no browser bars.
+5. On Android, with nine turtles on the home screen, share a blog from the browser and choose nine turtles: Add a feed opens with the blog's address and its feed found; nothing is added until you press Add feed. On an iPhone, make the shortcut above and share a blog from Safari to **Add to nine turtles**: the same happens.
 
 ## 21. Sharing
 
@@ -691,6 +707,7 @@ A rule says "when a new article **matches this**, **do that**", in plain fields,
 - Problems are a plain sentence in the same line: not an address, a private address, the site not answering, the page not there, the page too large, no feed named ("Try the site's home page, or look on the site for a link called RSS, Atom or Feed. Some sites don't have one."), the finder busy ("Try again in a minute"), or that one site looked up a lot lately ("Try again in half an hour").
 - It looks exactly as Add feed does (section 3): the one page given, once, and the first feed it names, once, for the titles. It never guesses addresses or visits articles. The same answer is remembered for half an hour (a failure for five minutes), and one site is looked up at most six times in half an hour, so asking again doesn't bother the publisher; nothing about who asked is kept. At most ten of a page's feeds are shown.
 - The page's own address carries what was asked (`?address=…`), so a lookup can be shared or reloaded. **Find feed**, a button to drag to the bookmarks bar, opens the finder with the page you're on (pressed on the finder's own page, it says how to keep it). Its address is shown too, with **Copy bookmark address**, for a bookmark made by hand without dragging.
+- The app's own Add a feed uses the same lookup when a page is shared to it (section 3, "Adding from anywhere"; decision 0104), with the same limits.
 - Below: what it looks at, then "Paste the feed's address into any feed reader. In nine turtles it goes in Add feed," with a link to "New to feeds?". Linked from the website's footer and from "New to feeds?".
 
 ## 31. Starter packs (on the website)

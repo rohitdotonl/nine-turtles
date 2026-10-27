@@ -605,6 +605,35 @@ export async function addFeed(address: string): Promise<AddResult> {
   return { kind: "problem", reason };
 }
 
+/** What looking at a shared page found: its feeds to choose from, a problem to say, or nothing to say ("quiet"). */
+export type FindResult = { kind: "found"; choices: Choice[] } | { kind: "problem"; reason: Problem } | { kind: "quiet" };
+
+/**
+ * Looks for the feeds a shared page names, without following any (decision
+ * 0104): the feed finder's lookup (decision 0099), the same autodiscovery as
+ * Add feed. When the finder is busy, or can't be reached, it says nothing:
+ * the address stays in the field for the reader to add as usual.
+ */
+export async function findFeeds(address: string): Promise<FindResult> {
+  let response: Response;
+  try {
+    response = await api(`/api/find-feeds?address=${encodeURIComponent(address)}`, { cache: "no-store" });
+  } catch {
+    return { kind: "quiet" };
+  }
+  const body: unknown = await response.json().catch(() => null);
+  if (!isRecord(body)) return { kind: "quiet" };
+  if (Array.isArray(body.feeds)) {
+    const choices = body.feeds.filter(isRecord).map((choice) => ({
+      title: String(choice.title ?? ""),
+      url: String(choice.url ?? ""),
+    }));
+    return choices.length > 0 ? { kind: "found", choices } : { kind: "problem", reason: "no-feed" };
+  }
+  const reason = PROBLEMS.find((problem) => problem === body.error);
+  return reason ? { kind: "problem", reason } : { kind: "quiet" };
+}
+
 /**
  * What the item list's line says on arriving, after unsubscribing or
  * deleting a folder. `undo` reverses it; it answers a problem to say, if any.

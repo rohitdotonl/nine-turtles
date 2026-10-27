@@ -13,6 +13,13 @@ const NEWEST = "On keeping a commonplace book (3)";
 const MIDDLE = "Walking the long way home (2)";
 const OLDEST = "A year of reading slowly (1)";
 
+// A test that stands in for the server's answers sets up its page.route
+// before openBlog loads the page, never after. Chromium starts sending a
+// page's requests through Playwright only a moment after page.route is
+// called, and on a busy computer a mark made in that moment slipped past:
+// the real server saved it, so the test never saw the answer it was waiting
+// for. Routed before the page loads, every request goes through it.
+
 /** Signs in, follows a new blog and opens its list. Returns the blog's name. */
 async function openBlog(page: Page, width = 1280): Promise<string> {
   const name = `marks-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
@@ -257,8 +264,8 @@ test.describe("on a wide window", () => {
   });
 
   test("if a star can't be saved, it's taken back and the line says so", async ({ page }) => {
-    const blog = await openBlog(page);
     await page.route("**/api/articles/starred", (route) => route.fulfill({ status: 500 }));
+    const blog = await openBlog(page);
     await page.keyboard.press("j");
     await page.keyboard.press("s");
     await expect(line(page)).toHaveText("The star couldn't be saved.");
@@ -271,9 +278,9 @@ test.describe("when saving fails", () => {
   test.skip(({ isMobile }) => isMobile, "the same on every width");
 
   test("an article that couldn't be marked read stays unread, and a later m isn't taken back", async ({ page }) => {
-    const blog = await openBlog(page);
     let failing = true;
     await page.route("**/api/articles/read", (route) => (failing ? route.fulfill({ status: 500 }) : route.fallback()));
+    const blog = await openBlog(page);
     // Opening the article can take a moment on a busy computer; the failed save comes after it.
     const refused = page.waitForResponse((response) => response.url().endsWith("/api/articles/read"));
     await page.keyboard.press("j");
@@ -313,9 +320,9 @@ test.describe("when saving fails", () => {
   });
 
   test("with only the keyboard: Try again saves a star that couldn't be saved", async ({ page }) => {
-    const blog = await openBlog(page);
     let failing = true;
     await page.route("**/api/articles/starred", (route) => (failing ? route.fulfill({ status: 500 }) : route.fallback()));
+    const blog = await openBlog(page);
     await page.keyboard.press("j");
     await page.keyboard.press("s");
     await expect(line(page)).toHaveText("The star couldn't be saved.");
@@ -330,7 +337,6 @@ test.describe("when saving fails", () => {
   });
 
   test("a failure that arrives after a newer action keeps that action's Undo", async ({ page }) => {
-    const blog = await openBlog(page);
     // The first two saves wait until released: the first then fails, the second goes through.
     const releases: (() => void)[] = [];
     const held = [0, 1].map(() => new Promise<void>((resolve) => releases.push(resolve)));
@@ -341,6 +347,7 @@ test.describe("when saving fails", () => {
       await held[which];
       return which === 0 ? route.fulfill({ status: 500 }) : route.fallback();
     });
+    const blog = await openBlog(page);
     await page.keyboard.press("j");
     // The article is marked read once the reading area shows it: that's the first save.
     await expect.poll(() => saves).toBe(1);
@@ -362,10 +369,10 @@ test.describe("when saving fails", () => {
   });
 
   test("a mark made while nine turtles restarts is saved once it's back, with nothing said", async ({ page }) => {
-    const blog = await openBlog(page);
     // A new version going live: the host answers "unavailable" for a moment.
     let refusals = 2;
     await page.route("**/api/articles/read", (route) => (refusals-- > 0 ? route.fulfill({ status: 503 }) : route.fallback()));
+    const blog = await openBlog(page);
     const saved = page.waitForResponse((response) => response.url().endsWith("/api/articles/read") && response.ok());
     await page.keyboard.press("j");
     await saved;
@@ -377,7 +384,6 @@ test.describe("when saving fails", () => {
 
 test("a newer version waits until a mark is saved before switching", async ({ page, isMobile }) => {
   test.skip(isMobile, "the same on every width");
-  const blog = await openBlog(page);
   // The save is held, as if nine turtles were slow to answer.
   let release = () => {};
   const held = new Promise<void>((resolve) => (release = resolve));
@@ -387,14 +393,19 @@ test("a newer version waits until a mark is saved before switching", async ({ pa
     await held;
     return route.fallback();
   });
+  // Later a newer version goes live: from then on, nine turtles says so.
+  let newer = false;
+  await page.route("**/api/session", async (route) => {
+    if (!newer) return route.fallback();
+    const response = await route.fetch();
+    await route.fulfill({ response, headers: { ...response.headers(), "x-nine-turtles-version": "a-newer-one" } });
+  });
+  const blog = await openBlog(page);
   await page.keyboard.press("j");
   // The article is marked read once the reading area shows it.
   await expect.poll(() => asked).toBe(true);
   // A newer version goes live and the tab notices.
-  await page.route("**/api/session", async (route) => {
-    const response = await route.fetch();
-    await route.fulfill({ response, headers: { ...response.headers(), "x-nine-turtles-version": "a-newer-one" } });
-  });
+  newer = true;
   await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
   await page.waitForResponse((response) => response.url().endsWith("/api/session"));
   await page.evaluate(() => Object.assign(window, { stillHere: true }));
@@ -596,17 +607,18 @@ test("Settings: unread counts can hide, and unread can let go after a while", as
 
 test("Catch me up: everything in Unread from before today is read, and Undo brings back the same", async ({ page, isMobile }) => {
   test.skip(isMobile, "the same on every width");
-  const name = await openBlog(page);
-  const blogId = Number(new URL(page.url()).pathname.split("/").pop());
-  const listed = await (await page.request.get(new URL(`/api/articles?feed=${blogId}`, FEEDS_APP).href)).json();
-  const ids: number[] = listed.articles.map((each: { id: number }) => each.id);
   // Every other test's articles are unread before today too: this page's
   // catching up answers with this blog's alone and marks nothing.
+  let ids: number[] = [];
   let sentBefore = 0;
   await page.route("**/api/articles/catch-up", (route) => {
     sentBefore = JSON.parse(route.request().postData() ?? "{}").before;
     return route.fulfill({ json: { ids } });
   });
+  const name = await openBlog(page);
+  const blogId = Number(new URL(page.url()).pathname.split("/").pop());
+  const listed = await (await page.request.get(new URL(`/api/articles?feed=${blogId}`, FEEDS_APP).href)).json();
+  ids = listed.articles.map((each: { id: number }) => each.id);
   const undone: unknown[] = [];
   page.on("request", (request) => {
     if (request.url().endsWith("/api/articles/read")) undone.push(request.postDataJSON());
