@@ -11,34 +11,51 @@ test("a new browser sees only the email and password fields", async ({ page }) =
 
   // The email first, as password managers expect; everyone, the owner too, fills in both (decision 0116).
   await expect(page.getByLabel("Email")).toBeFocused();
-  await expect(page.getByLabel("Email")).toHaveAttribute("autocomplete", "username");
+  await expect(page.getByLabel("Email")).toHaveAttribute("autocomplete", "email");
   await expect(page.getByLabel("Password")).toHaveAttribute("autocomplete", "current-password");
   await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
+  // Under the form, always: New here? Sign up (decision 0115).
+  await expect(page.getByText("New here?")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Sign up" })).toBeVisible();
+  // This nine turtles can't send email, so there's no Forgot? (decision 0121), and no passkeys at 127.0.0.1.
+  await expect(page.getByRole("link", { name: "Forgot?" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Sign in with a passkey" })).toHaveCount(0);
   await expect(page.getByText("Nothing here yet.")).toHaveCount(0);
   await expect(page.locator("#sidebar")).toHaveCount(0);
 });
 
-test("sign-in is one centred column, at the phone's one 20px margin, the button 12px under the field", async ({ page }) => {
+test("sign-in is one centred column, at the phone's one 20px margin, each field named above it", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 });
   await page.goto("/");
   await appReady(page);
   const email = (await page.getByLabel("Email").boundingBox())!;
   const field = page.getByLabel("Password");
-  // The two fields 12px apart, the email above, at the same margins.
-  expect(Math.abs((await field.boundingBox())!.y - (email.y + email.height) - 12)).toBeLessThan(1);
+  // Real names you can see, above their fields on the column's left edge, 6px over them (decision 0121), not placeholders.
+  const emailName = (await page.locator('label[for="email"]').boundingBox())!;
+  const passwordName = (await page.locator('label[for="password"]').boundingBox())!;
+  await expect(page.locator('label[for="email"]')).toBeVisible();
+  await expect(page.locator('label[for="password"]')).toBeVisible();
+  expect(Math.abs(email.y - (emailName.y + emailName.height) - 6)).toBeLessThan(1);
+  expect(Math.abs(emailName.x - 20)).toBeLessThan(1);
+  const fieldBox = (await field.boundingBox())!;
+  expect(Math.abs(fieldBox.y - (passwordName.y + passwordName.height) - 6)).toBeLessThan(1);
+  // The password's name 24px under the email field: a group to each field.
+  expect(Math.abs(passwordName.y - (email.y + email.height) - 24)).toBeLessThan(1);
+  await expect(page.getByLabel("Email")).not.toHaveAttribute("placeholder");
+  await expect(field).not.toHaveAttribute("placeholder");
   expect(Math.abs(email.x - 20)).toBeLessThan(1);
-  await expect(page.getByLabel("Email")).toHaveAttribute("placeholder", "Email");
   const button = page.getByRole("button", { name: "Sign in" });
-  const [fieldBox, buttonBox] = [(await field.boundingBox())!, (await button.boundingBox())!];
+  const buttonBox = (await button.boundingBox())!;
   // The same margin as every other phone screen (decision 0048).
   expect(Math.abs(fieldBox.x - 20)).toBeLessThan(1);
   expect(Math.abs(fieldBox.x + fieldBox.width - 370)).toBeLessThan(1);
-  // Nothing kept between them while there's no message; the field's name is its placeholder.
+  // Nothing kept between them while there's no message.
   expect(Math.abs(buttonBox.y - (fieldBox.y + fieldBox.height) - 12)).toBeLessThan(1);
-  await expect(field).toHaveAttribute("placeholder", "Password");
   // The button's corners match the field's.
   await expect(button).toHaveCSS("border-top-left-radius", "8px");
   await expect(field).toHaveCSS("border-top-left-radius", "8px");
+  // Sign up, under it, is 44px tall to touch.
+  expect((await page.getByRole("link", { name: "Sign up" }).boundingBox())!.height).toBeGreaterThanOrEqual(44);
 });
 
 test("the logo stands above the name on sign-in and before it in the sidebar, hidden from screen readers", async ({ page }) => {

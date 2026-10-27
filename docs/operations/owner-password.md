@@ -3,10 +3,10 @@
 Your password normally lives in Render, as `NINE_TURTLES_PASSWORD_HASH`
 ([render-setup.md](render-setup.md), step 4). Once email is switched on
 ([email.md](email.md)), you can also choose a new password with
-**Forgot your password?** on the sign-in page. That new password is then the
+**Forgot?** on the sign-in page (decision 0121). That new password is then the
 one that works, not the one in Render (decision 0088).
 
-So if you've used Forgot your password? and later:
+So if you've used Forgot? to choose a new password and later:
 
 - email stops working (say, the Brevo key is revoked) and you've forgotten
   the password, or
@@ -46,4 +46,4 @@ changed since you last used an emailed link, the setting wins again.
 - Pasting back the same line that was in Render before: it has to be a
   newly made line, so make a new one in step 1.
 - Readers other than you: this is only for the owner. A reader who forgets
-  their password uses Forgot your password?, which needs email.
+  their password uses Forgot?, which needs email.

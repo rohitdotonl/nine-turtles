@@ -46,12 +46,19 @@ test("anyone can sign up at once and with no email, with only the keyboard", asy
   const page = await context.newPage();
   await page.goto("/");
   await expect(page.getByLabel("Email")).toBeFocused();
-  // Email, Password, Sign in, Email me a sign-in link, Forgot your password?, then Sign up.
-  for (let step = 0; step < 5; step += 1) await page.keyboard.press("Tab");
+  // Email, Password, Forgot?, Sign in, then Sign up (decision 0121).
+  for (let step = 0; step < 4; step += 1) await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Sign up" })).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/sign-up$/);
   await expect(page.getByLabel("Email")).toBeFocused();
+  // Each field named above it; the password's helper line under it; Sign in, for those who have an account, under Sign up.
+  await expect(page.getByLabel("Email")).toHaveAttribute("autocomplete", "email");
+  await expect(page.getByLabel("Password")).toHaveAttribute("autocomplete", "new-password");
+  await expect(page.getByText("At least 12 characters.")).toBeVisible();
+  await expect(page.getByText("Have an account?")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Sign in" })).toBeVisible();
+  // No confirmation email, so no "Check your email" after signing up (decision 0115).
 
   const email = `open-${testInfo.project.name}-${Date.now()}@example.com`;
   await page.keyboard.type(email);
@@ -68,7 +75,7 @@ test("anyone can sign up at once and with no email, with only the keyboard", asy
   await context.close();
 });
 
-test("a forgotten password is set again by an emailed link, signing out other devices", async ({ browser }, testInfo) => {
+test("Forgot? emails a link that signs in, then a new password can be chosen, signing out other devices", async ({ browser }, testInfo) => {
   const email = `forgot-${testInfo.project.name}-${Date.now()}@example.com`;
   const laptop = await newReader(browser, email);
 
@@ -79,22 +86,41 @@ test("a forgotten password is set again by an emailed link, signing out other de
   await page.goto("/");
   await expect(page.getByLabel("Email")).toBeFocused();
   await page.keyboard.type(email);
-  for (let step = 0; step < 4; step += 1) await page.keyboard.press("Tab");
-  await expect(page.getByRole("link", { name: "Forgot your password?" })).toBeFocused();
+  // Email, Password, then Forgot? (decision 0121).
+  for (let step = 0; step < 2; step += 1) await page.keyboard.press("Tab");
+  const forgot = page.getByRole("link", { name: "Forgot?" });
+  await expect(forgot).toBeFocused();
+  // Small to the eye, on the password name's line at the right, but 44px to touch, never over a field.
+  const [forgotBox, name, field, emailBox] = [
+    (await forgot.boundingBox())!,
+    (await page.locator('label[for="password"]').boundingBox())!,
+    (await page.getByLabel("Password").boundingBox())!,
+    (await page.getByLabel("Email").boundingBox())!,
+  ];
+  expect(forgotBox.height).toBeGreaterThanOrEqual(44);
+  expect(forgotBox.width).toBeGreaterThanOrEqual(44);
+  expect(Math.abs(forgotBox.x + forgotBox.width - (field.x + field.width))).toBeLessThan(1);
+  expect(Math.abs(forgotBox.y + forgotBox.height - (name.y + name.height))).toBeLessThan(1);
+  expect(forgotBox.y).toBeGreaterThanOrEqual(emailBox.y + emailBox.height - 0.5);
+  expect(forgotBox.y + forgotBox.height).toBeLessThanOrEqual(field.y);
   await page.keyboard.press("Enter");
   // The email stays, and the keyboard goes back to it.
   await expect(page.getByLabel("Email")).toBeFocused();
   await expect(page.getByLabel("Email")).toHaveValue(email);
+  await expect(page.getByLabel("Email")).toHaveAttribute("autocomplete", "email");
   await expect(page.getByLabel("Password")).toHaveCount(0);
+  await expect(page.getByText("We'll email you a link that signs you in. You can choose a new password after.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Email me a link" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Back to sign in" })).toBeVisible();
   await page.keyboard.press("Enter");
   // The form gives way to one clear answer, said once, with the keyboard on it;
   // Send again waits a minute, so it can't be pressed twice at once.
   await expect(page.getByRole("heading", { name: "Check your email" })).toBeFocused();
   await expect(page.getByLabel("Email")).toHaveCount(0);
   await expect(page.locator("#link-sent")).toHaveText(
-    `If ${email} has an account here, a link to choose a new password is on its way. It works for an hour.`,
+    `If ${email} has an account here, a link is on its way. It works once, within 15 minutes.`,
   );
-  await expect(page.getByText("nine turtles emails you a link")).toHaveCount(0);
+  await expect(page.getByText("We'll email you a link")).toHaveCount(0);
   // Send again is there from the start, by keyboard too; within the minute it sends nothing.
   await page.keyboard.press("Tab");
   await expect(page.getByRole("button", { name: "Send again" })).toBeFocused();
@@ -105,29 +131,65 @@ test("a forgotten password is set again by an emailed link, signing out other de
   await expect(page.getByRole("status").filter({ hasText: "Another link is on its way." })).toBeVisible();
   // An address with no account hears exactly the same.
   await page.getByRole("link", { name: "Back to sign in" }).click();
-  await page.getByRole("link", { name: "Forgot your password?" }).click();
+  await expect(page.getByLabel("Password")).toBeVisible();
+  await page.getByRole("link", { name: "Forgot?" }).click();
   await page.getByLabel("Email").fill("nobody-here@example.com");
   await page.keyboard.press("Enter");
   await expect(page.locator("#link-sent")).toHaveText(
-    "If nobody-here@example.com has an account here, a link to choose a new password is on its way. It works for an hour.",
+    "If nobody-here@example.com has an account here, a link is on its way. It works once, within 15 minutes.",
   );
 
-  const { link } = await newestMail(email, "A new password for nine turtles");
-  expect(link).toMatch(/^\/reset-password#ticket=[0-9a-f]{64}$/);
+  // The email is the sign-in link, saying a new password can be chosen once in.
+  const { mail, link } = await newestMail(email, "Sign in to nine turtles");
+  expect(mail.body).toContain("you can choose a new password");
+  expect(link).toMatch(/^\/sign-in-link#ticket=[0-9a-f]{64}$/);
   await page.goto(link);
+  await expect(page.getByRole("button", { name: "Sign in" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  // Signed in, and offered a new password, with the keyboard on what replaced the button.
+  await expect(page.getByRole("heading", { name: "You're signed in" })).toBeFocused();
+  await expect(page.getByText("Choose a new password, if you like.")).toBeVisible();
+  await page.keyboard.press("Tab");
   await expect(page.getByLabel("New password")).toBeFocused();
+  await expect(page.getByLabel("New password")).toHaveAttribute("autocomplete", "new-password");
   await page.keyboard.type("short");
   await page.keyboard.press("Enter");
-  await expect(page.locator("#reset-message")).toHaveText("Choose a password of at least 12 characters.");
+  await expect(page.locator("#choose-message")).toHaveText("Choose a password of at least 12 characters.");
   await expect(page.getByLabel("New password")).toHaveAttribute("aria-invalid", "true");
   await page.getByLabel("New password").fill(NEW_PASSWORD);
   await page.keyboard.press("Enter");
   await expect(page.locator("#sidebar")).toBeAttached();
-  expect(new URL(page.url()).pathname).not.toBe("/reset-password");
+  expect(new URL(page.url()).pathname).not.toBe("/sign-in-link");
 
-  // The other device was signed out.
+  // The other device was signed out; the new password signs in, the old one doesn't.
   await laptop.reload();
   await expect(laptop.getByLabel("Password")).toBeVisible();
+  await laptop.getByLabel("Email").fill(email);
+  await laptop.getByLabel("Password").fill(READER_PASSWORD);
+  await laptop.keyboard.press("Enter");
+  await expect(laptop.locator("#sign-in-message")).toHaveText("That email and password don't match.");
+  await laptop.getByLabel("Password").fill(NEW_PASSWORD);
+  await laptop.keyboard.press("Enter");
+  await expect(laptop.locator("#sidebar")).toBeAttached();
+  await laptop.context().close();
+  await context.close();
+});
+
+test("an older password link still sets a new password", async ({ browser }, testInfo) => {
+  // Sent by "Forgot your password?" before decision 0121: such links keep working for their hour.
+  const email = `old-link-${testInfo.project.name}-${Date.now()}@example.com`;
+  const laptop = await newReader(browser, email);
+  const asked = await laptop.request.post("/api/password/forgot", { data: { email } });
+  expect(asked.status()).toBe(202);
+  const { link } = await newestMail(email, "A new password for nine turtles");
+  expect(link).toMatch(/^\/reset-password#ticket=[0-9a-f]{64}$/);
+  const context = await browser.newContext({ baseURL: MAIL_APP });
+  const page = await context.newPage();
+  await page.goto(link);
+  await expect(page.getByLabel("New password")).toBeFocused();
+  await page.keyboard.type(NEW_PASSWORD);
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#sidebar")).toBeAttached();
   await laptop.context().close();
   await context.close();
 });
@@ -248,7 +310,7 @@ test("Delete data empties the account and keeps the reader signed in", async ({ 
   await page.context().close();
 });
 
-test("a reader signs in by an emailed link, once, with only the keyboard", async ({ browser }, testInfo) => {
+test("a reader signs in by an emailed link, once, keeping their password, with only the keyboard", async ({ browser }, testInfo) => {
   const email = `link-${testInfo.project.name}-${Date.now()}@example.com`;
   const laptop = await newReader(browser, email);
 
@@ -257,22 +319,12 @@ test("a reader signs in by an emailed link, once, with only the keyboard", async
   await page.goto("/");
   await expect(page.getByLabel("Email")).toBeFocused();
   await page.keyboard.type(email);
-  for (let step = 0; step < 3; step += 1) await page.keyboard.press("Tab");
-  await expect(page.getByRole("link", { name: "Email me a sign-in link" })).toBeFocused();
+  for (let step = 0; step < 2; step += 1) await page.keyboard.press("Tab");
+  await expect(page.getByRole("link", { name: "Forgot?" })).toBeFocused();
   await page.keyboard.press("Enter");
-  // The email stays, and the keyboard goes back to it.
   await expect(page.getByLabel("Email")).toBeFocused();
-  await expect(page.getByLabel("Email")).toHaveValue(email);
-  await expect(page.getByLabel("Password")).toHaveCount(0);
-  await expect(page.getByText("nine turtles emails you a link that signs you in.")).toBeVisible();
   await page.keyboard.press("Enter");
-  // Said once, with the keyboard on it.
   await expect(page.getByRole("heading", { name: "Check your email" })).toBeFocused();
-  await expect(page.getByLabel("Email")).toHaveCount(0);
-  await expect(page.locator("#link-sent")).toHaveText(
-    `If ${email} has an account here, a link to sign in is on its way. It works once, for 15 minutes.`,
-  );
-  await expect(page.getByText("nine turtles emails you a link")).toHaveCount(0);
   // Send again within the minute sends nothing.
   await page.getByRole("button", { name: "Send again" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Give it a minute" })).toBeVisible();
@@ -284,12 +336,20 @@ test("a reader signs in by an emailed link, once, with only the keyboard", async
   await expect(page.getByRole("button", { name: "Sign in" })).toBeFocused();
   expect(new URL(page.url()).hash).toBe("");
   await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { name: "You're signed in" })).toBeFocused();
+  // Not now: straight to reading, the password as it was.
+  // New password, Set password, then Not now.
+  for (let step = 0; step < 3; step += 1) await page.keyboard.press("Tab");
+  await expect(page.getByRole("link", { name: "Not now" })).toBeFocused();
+  await page.keyboard.press("Enter");
   await expect(page.locator("#sidebar")).toBeAttached();
   expect(new URL(page.url()).pathname).not.toBe("/sign-in-link");
 
-  // The other device stays signed in.
+  // The other device stays signed in, and the password still works.
   await laptop.reload();
   await expect(laptop.locator("#sidebar")).toBeAttached();
+  const stillWorks = await page.request.post("/api/sign-in", { data: { email, password: READER_PASSWORD } });
+  expect(stillWorks.ok()).toBe(true);
 
   // A second time, the link has run out.
   const again = await browser.newContext({ baseURL: MAIL_APP });

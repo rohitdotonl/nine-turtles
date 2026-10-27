@@ -12,26 +12,22 @@ describe("emailed links", () => {
 
 describe("the messages about email", () => {
   it("never say whether an address has an account", () => {
-    expect(explainAsked("password", "asked", " mira@example.com ")).toBe(
-      "If mira@example.com has an account here, a link to choose a new password is on its way. It works for an hour.",
-    );
-    expect(explainAsked("sign-in", "asked", " mira@example.com ")).toBe(
-      "If mira@example.com has an account here, a link to sign in is on its way. It works once, for 15 minutes.",
+    // "Forgot?" sends a sign-in link, which works for 15 minutes (decision 0121).
+    expect(explainAsked("asked", " mira@example.com ")).toBe(
+      "If mira@example.com has an account here, a link is on its way. It works once, within 15 minutes.",
     );
   });
 
   it("say calmly when nine turtles can't send email", () => {
-    expect(explainAsked("password", "no-email", "")).toContain("can't send email yet");
-    expect(explainAsked("sign-in", "no-email", "")).toBe("This nine turtles can't send email yet. Sign in with your password.");
+    expect(explainAsked("no-email", "")).toBe(
+      "This nine turtles can't send email yet. Ask whoever runs it to set a new password for you.",
+    );
     expect(explainChange({ ok: false, reason: "no-email" })).toContain("can't send email yet");
   });
 
   it("are calm and never shout", () => {
     const messages = [
-      ...(["asked", "email", "no-email", "unreachable"] as const).flatMap((result) => [
-        explainAsked("password", result, "a@b"),
-        explainAsked("sign-in", result, "a@b"),
-      ]),
+      ...(["asked", "email", "no-email", "unreachable"] as const).map((result) => explainAsked(result, "a@b")),
       ...(["expired", "already", "too-many", "password-short", "password-long", "unreachable"] as const).flatMap(
         (result: Exclude<LinkResult, "ok">) => [
           explainLink(result, "reset"),

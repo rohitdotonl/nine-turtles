@@ -121,6 +121,9 @@ pub struct AppState {
     /// When Retry last asked each feed's publisher (`health::retry`), so
     /// pressing it again and again doesn't hammer them.
     pub retried: Arc<std::sync::Mutex<std::collections::HashMap<i64, i64>>>,
+    /// After a sign-in link, the offer to choose a new password (decision
+    /// 0121), held in memory only.
+    pub password_choices: Arc<accounts::PasswordChoices>,
 }
 
 /// Opens the database and builds the whole web application. Tests call it
@@ -190,6 +193,7 @@ pub async fn state(config: Config) -> Result<AppState, String> {
         mailer,
         assistant_limits: Arc::default(),
         retried: Arc::default(),
+        password_choices: Arc::default(),
     };
     // A new NINE_TURTLES_PASSWORD_HASH wins over a password the owner set
     // by email (decision 0088): their way back that needs no email.

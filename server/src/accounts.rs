@@ -1,7 +1,9 @@
 //! What email makes possible for a reader's account (SPEC sections 1 and
-//! 18, decisions 0088 and 0096): setting a new password after "Forgot your password?",
-//! signing in by a link instead of a password ("Email me a sign-in link"),
-//! moving to a new email address, and deleting an account.
+//! 18, decisions 0088, 0096 and 0121): signing in by a link instead of a
+//! password (what the sign-in page's "Forgot?" sends), then choosing a new
+//! password if the reader wishes; setting a new password from an emailed
+//! password link (sent by the older "Forgot your password?", whose links and
+//! route still work); moving to a new email address, and deleting an account.
 //!
 //! Every link is sent by email (`email`), carries a long random ticket of
 //! which only a BLAKE2s scramble is kept (`email_links`, structure change
@@ -375,12 +377,29 @@ async fn reset(State(state): State<AppState>, Json(form): Json<Reset>) -> Respon
     .bind(now())
     .fetch_optional(&state.db)
     .await;
+    let found = match found {
+        Ok(Some(person)) => Some(person),
+        Ok(None) => None,
+        Err(error) => return database_problem("finding a password link", &error),
+    };
+    // Not an emailed link: perhaps the choice offered after a sign-in
+    // link (decision 0121), while the reader keeps the address it went to.
+    let chosen = match found {
+        Some(_) => None,
+        None => match state.password_choices.peek(&hash, now()) {
+            Some((person, email)) => match still_has(&state.db, person, &email).await {
+                Ok(true) => Some(person),
+                Ok(false) => None,
+                Err(error) => return database_problem("finding a reader", &error),
+            },
+            None => None,
+        },
+    };
     // Scrambled on the shared line, as a sign-in is checked; the owner's
     // own line is kept for their confirmations while they have no email.
-    let (account, waiting_for) = match found {
-        Ok(Some(person)) => (Account::Email(format!("reader {person}")), person),
-        Ok(None) => return refused(StatusCode::GONE, "expired"),
-        Err(error) => return database_problem("finding a password link", &error),
+    let (account, waiting_for) = match found.or(chosen) {
+        Some(person) => (Account::Email(format!("reader {person}")), person),
+        None => return refused(StatusCode::GONE, "expired"),
     };
     let password = form.password;
     let scrambled = {
@@ -404,7 +423,16 @@ async fn reset(State(state): State<AppState>, Json(form): Json<Reset>) -> Respon
 
     let changed = async {
         let mut transaction = state.db.begin().await?;
-        let claimed: Option<i64> = sqlx::query_scalar(
+        let claimed: Option<i64> = if chosen.is_some() {
+            // Spent here, once, whatever happens next.
+            match state.password_choices.take(&hash, now()) {
+                Some((person, email)) if still_has(&mut *transaction, person, &email).await? => {
+                    Some(person)
+                }
+                _ => None,
+            }
+        } else {
+            sqlx::query_scalar(
             "UPDATE email_links SET used = 1
              WHERE token_hash = ? AND purpose = 'reset' AND used = 0 AND expires_at > ?
                -- Sent to an address the reader has since moved away from:
@@ -417,7 +445,8 @@ async fn reset(State(state): State<AppState>, Json(form): Json<Reset>) -> Respon
         .bind(&hash[..])
         .bind(now())
         .fetch_optional(&mut *transaction)
-        .await?;
+        .await?
+        };
         let Some(person) = claimed.filter(|person| *person == waiting_for) else {
             return Ok::<_, sqlx::Error>(None);
         };
@@ -467,6 +496,8 @@ async fn reset(State(state): State<AppState>, Json(form): Json<Reset>) -> Respon
         Ok(None) => return refused(StatusCode::GONE, "expired"),
         Err(error) => return database_problem("setting a new password", &error),
     };
+    // Any other offer to choose a password, after a sign-in link, ends too.
+    state.password_choices.end_for(person);
 
     // Earlier wrong tries for this account are forgotten: it has a new
     // password. The owner has a count of their own for while they have no email.
@@ -486,7 +517,8 @@ struct AskSignIn {
     email: String,
 }
 
-/// "Email me a sign-in link": answered as "Forgot your password?" is,
+/// "Forgot?" on the sign-in page (decision 0121; "Email me a sign-in link"
+/// before it, decision 0096): answered as "Forgot your password?" is,
 /// always the same and in about the same time, whether or not the address
 /// has an account. A link valid for 15 minutes goes to an address that has
 /// one, within the same limits as a password link.
@@ -534,7 +566,8 @@ async fn ask_sign_in_link(State(state): State<AppState>, Json(form): Json<AskSig
         format!(
             "Hello,\n\nSomeone, hopefully you, asked to sign in to nine turtles with this email. \
              To sign in, open this link on the device you want to read on:\n\n{link}\n\n\
-             It works once, for the next 15 minutes. Your password stays as it is. \
+             It works once, for the next 15 minutes. Once you're in, you can choose a new \
+             password if you like; until then, your password stays as it is. \
              If you didn't ask, ignore this email: nobody can sign in without it.{SIGN_OFF}"
         ),
         "a sign-in link",
@@ -551,26 +584,118 @@ struct UseSignIn {
 /// only while the reader still has the address it went to (a changed email
 /// leaves earlier links behind). Nothing else changes: the password stays,
 /// and other devices stay signed in.
+///
+/// This is the link "Forgot?" on the sign-in page sends (decision 0121), so
+/// the answer also carries a ticket for choosing a new password, if the
+/// reader wishes (`PasswordChoices`): held only by the page that used the
+/// link, and spent by `/api/password/reset` as an emailed password link is.
 async fn use_sign_in_link(State(state): State<AppState>, Json(form): Json<UseSignIn>) -> Response {
     let hash = scramble(form.ticket.trim());
-    let claimed: Result<Option<i64>, sqlx::Error> = sqlx::query_scalar(
+    let claimed: Result<Option<(i64, String)>, sqlx::Error> = sqlx::query_as(
         "UPDATE email_links SET used = 1
          WHERE token_hash = ? AND purpose = 'sign-in' AND used = 0 AND expires_at > ?
            AND EXISTS (SELECT 1 FROM people
                        WHERE people.id = email_links.person_id
                          AND people.email = email_links.email COLLATE NOCASE)
-         RETURNING person_id",
+         RETURNING person_id, email",
     )
     .bind(&hash[..])
     .bind(now())
     .fetch_optional(&state.db)
     .await;
-    let person = match claimed {
-        Ok(Some(person)) => person,
+    let (person, email) = match claimed {
+        Ok(Some(claimed)) => claimed,
         Ok(None) => return refused(StatusCode::GONE, "expired"),
         Err(error) => return database_problem("using a sign-in link", &error),
     };
-    signed_in_as(&state.db, person, json!({ "done": "signed-in" })).await
+    let body = match state.password_choices.offer(person, &email, now()) {
+        Some(ticket) => json!({ "done": "signed-in", "password_ticket": ticket }),
+        // Signed in all the same, with no choice of a new password here.
+        None => json!({ "done": "signed-in" }),
+    };
+    signed_in_as(&state.db, person, body).await
+}
+
+/// After a sign-in link, the reader may choose a new password (decision
+/// 0121). Each offer is a random ticket (only its BLAKE2s scramble is kept)
+/// for one reader and the address the link went to, kept here in memory,
+/// never in the database: it works once, for the hour a password link
+/// works, and only while the reader still has that address. Restarting nine
+/// turtles forgets every offer; "Forgot?" sends a new link.
+#[derive(Default)]
+pub struct PasswordChoices {
+    waiting: std::sync::Mutex<std::collections::HashMap<[u8; 32], Choice>>,
+}
+
+struct Choice {
+    person: i64,
+    email: String,
+    expires_at: i64,
+}
+
+impl PasswordChoices {
+    /// A new ticket for `person`, or `None` if no random one could be made
+    /// (said in the log).
+    fn offer(&self, person: i64, email: &str, now: i64) -> Option<String> {
+        let ticket = match new_token() {
+            Ok(ticket) => ticket,
+            Err(error) => {
+                log::problem(&format!("couldn't make a ticket to choose a password: {error}"));
+                return None;
+            }
+        };
+        let mut waiting = self.waiting.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        waiting.retain(|_, choice| choice.expires_at > now);
+        waiting.insert(
+            scramble(&ticket),
+            Choice {
+                person,
+                email: email.to_owned(),
+                expires_at: now + RESET_LIFETIME,
+            },
+        );
+        Some(ticket)
+    }
+
+    /// Whose ticket `hash` is and the address it's tied to, while it works.
+    fn peek(&self, hash: &[u8; 32], now: i64) -> Option<(i64, String)> {
+        let waiting = self.waiting.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        waiting
+            .get(hash)
+            .filter(|choice| choice.expires_at > now)
+            .map(|choice| (choice.person, choice.email.clone()))
+    }
+
+    /// Spends ticket `hash`, answering whose it was, once only.
+    fn take(&self, hash: &[u8; 32], now: i64) -> Option<(i64, String)> {
+        let mut waiting = self.waiting.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        waiting
+            .remove(hash)
+            .filter(|choice| choice.expires_at > now)
+            .map(|choice| (choice.person, choice.email))
+    }
+
+    /// Every offer for `person` stops working (a new password was set).
+    fn end_for(&self, person: i64) {
+        let mut waiting = self.waiting.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        waiting.retain(|_, choice| choice.person != person);
+    }
+}
+
+/// Whether reader `person` still has the address `email` (however it's
+/// capitalised).
+async fn still_has<'c>(
+    connection: impl sqlx::SqliteExecutor<'c>,
+    person: i64,
+    email: &str,
+) -> Result<bool, sqlx::Error> {
+    sqlx::query_scalar(
+        "SELECT EXISTS (SELECT 1 FROM people WHERE id = ? AND email = ? COLLATE NOCASE)",
+    )
+    .bind(person)
+    .bind(email)
+    .fetch_one(connection)
+    .await
 }
 
 /// Signs this device in for `person` and answers `body` with its cookie.
