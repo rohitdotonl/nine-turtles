@@ -33,9 +33,13 @@
   import { goTo, keepPlace, placeIn, placeOf, type Place } from "./places";
   import { connection } from "./connection.svelte";
   import { NOT_KEPT } from "./offline";
+<<<<<<< HEAD
   import PictureSheet from "./PictureSheet.svelte";
   import { OPENABLE, markPicture } from "./pictures";
   import { keyFor } from "./keyboard";
+=======
+  import { currentKey, tip } from "./keys.svelte";
+>>>>>>> 66ba719 (Let readers choose their own keys, and add Shift+J/K, Home/End, g f and g ,)
 
   let {
     article,
@@ -98,8 +102,8 @@
   let more: MenuGroup[] = $derived([
     {
       items: [
-        ...(article.link ? [{ label: sharing ? "Share" : "Copy link", shortcut: phone || sharing ? undefined : keyFor("copy-link"), onSelect: share }] : []),
-        { label: "Mark unread", shortcut: phone ? undefined : keyFor("mark-unread"), onSelect: onMarkUnread },
+        ...(article.link ? [{ label: sharing ? "Share" : "Copy link", shortcut: phone || sharing ? undefined : currentKey("copy-link"), onSelect: share }] : []),
+        { label: "Mark unread", shortcut: phone ? undefined : currentKey("mark-unread"), onSelect: onMarkUnread },
       ],
     },
   ]);
@@ -334,7 +338,7 @@
 {/snippet}
 
 {#snippet original(size: number)}
-  <a href={article.link} target="_blank" rel="noopener noreferrer" aria-label="Open original" title={phone ? "Open original" : "Open original (V)"} class="btn-quiet btn-icon"
+  <a href={article.link} target="_blank" rel="noopener noreferrer" aria-label="Open original" title={phone ? "Open original" : tip("Open original", "open-original")} class="btn-quiet btn-icon"
     ><Icon name="open" {size} /></a
   >
 {/snippet}
@@ -377,7 +381,7 @@
         {/if}
         {@render aa(20, "btn-quiet btn-icon")}
         <!-- A toggle keeps one name for screen readers ("Star", pressed or not); the filled star shows its state. -->
-        <button type="button" aria-label="Star" aria-pressed={article.starred} title={article.starred ? "Starred (S)" : "Star (S)"} onclick={onStar} class={["btn-quiet btn-icon", article.starred && "text-star"]}>
+        <button type="button" aria-label="Star" aria-pressed={article.starred} title={tip(article.starred ? "Starred" : "Star", "star")} onclick={onStar} class={["btn-quiet btn-icon", article.starred && "text-star"]}>
           {@render starIcon(20)}
         </button>
         <MoreMenu id="article-menu" label="More actions" groups={more} />

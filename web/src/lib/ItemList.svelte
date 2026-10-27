@@ -300,6 +300,18 @@
     return true;
   }
 
+  /**
+   * Home (-1) and End (1): the first or last article listed. End goes to
+   * the last one loaded; it never loads more (decision 0110). Returns
+   * false with nothing listed, or when already there.
+   */
+  export function moveToEnd(step: 1 | -1): boolean {
+    const index = step === 1 ? articles.length - 1 : 0;
+    if (articles.length === 0 || index === selectedIndex) return false;
+    select(index);
+    return true;
+  }
+
   /** Whether `move(step)` has an article to move to; on a phone, the article's Previous and Next say so. */
   export function canMove(step: 1 | -1): boolean {
     const index = selectedIndex === -1 ? 0 : selectedIndex + step;

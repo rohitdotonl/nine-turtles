@@ -50,27 +50,33 @@ describe("the reading settings", () => {
   it("read the counts and the wait, with calm defaults for anything not understood", async () => {
     const stored = new Map<string, string>();
     vi.stubGlobal("localStorage", { getItem: (key: string) => stored.get(key) ?? null, setItem: (key: string, value: string) => stored.set(key, value) });
-    server({ sort: "oldest", mode: "inbox", counts: "hidden", let_go: "two-weeks" });
-    let { loadSettings, lastCounts } = await load();
-    expect(await loadSettings()).toEqual({ sort: "oldest", mode: "inbox", counts: "hidden", letGo: "two-weeks" });
-    // This device remembers the counts were hidden, so they don't flash before the server answers.
+    server({ sort: "oldest", mode: "inbox", counts: "hidden", let_go: "two-weeks", keys: { star: "x", odd: 3 } });
+    let { loadSettings, lastCounts, lastKeys } = await load();
+    expect(await loadSettings()).toEqual({ sort: "oldest", mode: "inbox", counts: "hidden", letGo: "two-weeks", keys: { star: "x" } });
+    // This device remembers the counts were hidden, so they don't flash before the server answers,
+    // and the reader's keys (decision 0110), so a changed key works from the first press.
     expect(lastCounts()).toBe("hidden");
+    expect(lastKeys()).toEqual({ star: "x" });
 
     server({ sort: "newest", mode: "inbox", counts: "sideways", let_go: "someday" });
     ({ loadSettings } = await load());
-    expect(await loadSettings()).toEqual({ sort: "newest", mode: "inbox", counts: "shown", letGo: "never" });
+    expect(await loadSettings()).toEqual({ sort: "newest", mode: "inbox", counts: "shown", letGo: "never", keys: {} });
 
-    // Unreachable: the wait is unknown, so its choices wait rather than show Never.
+    // Unreachable: the wait is unknown, so its choices wait rather than show Never; the keys are this device's.
+    stored.set("nine-turtles.keys", JSON.stringify({ star: "z" }));
     vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("Failed to fetch"); }));
     ({ loadSettings } = await load());
-    expect((await loadSettings()).letGo).toBeUndefined();
+    const offline = await loadSettings();
+    expect(offline.letGo).toBeUndefined();
+    expect(offline.keys).toEqual({ star: "z" });
   });
 
   it("save each setting on its own", async () => {
     const sent = server({});
-    const { saveCounts, saveLetGo } = await load();
+    const { saveCounts, saveLetGo, saveKeys } = await load();
     await saveCounts("hidden");
     await saveLetGo("month");
-    expect(sent.map((each) => each.body)).toEqual([{ counts: "hidden" }, { let_go: "month" }]);
+    await saveKeys({ star: "x" });
+    expect(sent.map((each) => each.body)).toEqual([{ counts: "hidden" }, { let_go: "month" }, { keys: { star: "x" } }]);
   });
 });

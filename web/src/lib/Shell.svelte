@@ -36,7 +36,9 @@
   import {
     createFolder,
     deleteFolder,
+    feedNextTo,
     homeView,
+    savedOpenFolders,
     lastMode,
     listFeeds,
     loadSettings,
@@ -59,7 +61,8 @@
     type ReadingMode,
     type Source,
   } from "./feeds";
-  import { createKeyReader, keyFor } from "./keyboard";
+  import { createKeyReader, keyCap, keyFor } from "./keyboard";
+  import { currentKey, currentKeyOf, keys, tip } from "./keys.svelte";
   import { panesFor, widthFor, MEDIUM_REM, WIDE_REM, type SidebarChoice, type Width } from "./layout";
   import { TEXT_SIZES, apply, load, save } from "./preferences";
   import { device } from "./appearance.svelte";
@@ -163,6 +166,8 @@
   // that names a place opens that place.
   let sidebarChoice: SidebarChoice = $state(currentWidth() === "narrow" && firstStep.screen !== "home" ? "hidden" : "auto");
   let cheatSheetOpen = $state(false);
+  /** The shortcut list opens ready to change keys: from Settings › Keyboard (decision 0110). */
+  let cheatSheetEditing = $state(false);
   /** On a computer, the reader hid the article list (] or its button) to give the article its room. */
   let listHidden = $state(false);
   /** The article chosen in the list, shown in the reading area. */
@@ -533,7 +538,7 @@
    * closing the sheet gives it back there.
    */
   function listMenu(): MenuGroup[] {
-    const key = (kind: Parameters<typeof keyFor>[0]) => (phone ? undefined : keyFor(kind));
+    const key = (kind: Parameters<typeof keyFor>[0]) => (phone ? undefined : currentKey(kind));
     // Shift+O marks what's older: below the chosen article when newest first, above it when oldest first (decision 0103).
     // In search results, ordered by how well they match, older goes by date, so neither row shows the key.
     const olderIs = shown ? undefined : sort === "oldest" ? "above" : "below";
@@ -670,7 +675,8 @@
     };
     addEventListener("popstate", back);
 
-    const readKey = createKeyReader();
+    // The reader's own keys, as they are at each press (decision 0110).
+    const readKey = createKeyReader(() => keys.chosen);
     const pressed = (event: KeyboardEvent) => {
       // A sheet keeps the keyboard to itself; its Escape is the dialog's own
       // (Settings' rule editor is a sheet of Settings' own, so it's asked of the page).
@@ -697,6 +703,17 @@
           // g u does nothing in river mode: there's no Unread view.
           if (!(river && action.view === "unread")) go({ kind: "view", view: action.view });
           break;
+        case "go-to":
+          go(parse(action.path));
+          break;
+        case "move-end":
+          moveToEnd(action.step);
+          break;
+        case "move-feed": {
+          const next = isList(route) ? feedAfter(action.step) : undefined;
+          if (next) go(next);
+          break;
+        }
         case "search":
           startSearch();
           break;
@@ -774,6 +791,7 @@
       sort = settings.sort;
       counts = settings.counts;
       letGo = settings.letGo;
+      keys.chosen = settings.keys;
       keepForOffline();
       // This device last saw river mode, but it's inbox now (changed on
       // another device): an untouched home opens on Unread after all.
@@ -1193,6 +1211,30 @@
   }
 
   /**
+   * Home and End: the first or last article in the list, as far as it has
+   * loaded (End never loads more; decision 0110). The keyboard's place follows as for j and k.
+   */
+  function moveToEnd(step: 1 | -1) {
+    if (!itemList || (!panes.list && !panes.article && !reading)) return;
+    const wasReading = reading || inArticle() || !panes.list;
+    if (!itemList.moveToEnd(step)) return;
+    showArticleArea();
+    if (wasReading) queueMicrotask(() => articleHeading?.focus({ preventScroll: true }));
+    else itemList.focusSelected();
+  }
+
+  /**
+   * Shift+J and Shift+K: the feed after or before the place you're in, in
+   * the sidebar's order (`feedNextTo`, decision 0110).
+   */
+  function feedAfter(step: 1 | -1): Route | undefined {
+    if (!feeds) return undefined;
+    const open = phone ? folders.map((folder) => folder.id) : (sidebarFeeds?.openFolders() ?? savedOpenFolders());
+    const id = feedNextTo({ feeds, folders }, open, route, step);
+    return id === undefined ? undefined : { kind: "feed", id };
+  }
+
+  /**
    * Enter and o: open the selected article (the first, if none is selected
    * yet) to read. An article from a feed set to open on the website opens
    * the publisher's page in a new tab instead, and counts as read (SPEC
@@ -1409,7 +1451,7 @@
       aria-label={bothHidden ? "Sidebar and article list" : "Sidebar"}
       aria-expanded={panes.sidebar}
       aria-controls={bothHidden ? "sidebar list-pane" : "sidebar"}
-      title={bothHidden ? "Show the sidebar and the article list ( \\ )" : panes.sidebar ? "Hide the sidebar ( [ )" : "Show the sidebar ( [ )"}
+      title={bothHidden ? tip("Show the sidebar and the article list", "toggle-both") : tip(panes.sidebar ? "Hide the sidebar" : "Show the sidebar", "toggle-sidebar")}
       onclick={bothHidden ? toggleBoth : toggleSidebar}
       class="bar-button flex size-11 items-center justify-center rounded-md text-ink-2"
     >
@@ -1565,6 +1607,10 @@
           onImported={loadFeeds}
           onFeedHealth={goHealth}
           onYourFeeds={goYourFeeds}
+          onKeys={() => {
+            cheatSheetEditing = true;
+            cheatSheetOpen = true;
+          }}
           onMuted={goMuted}
           onReaders={goReaders}
           feeds={feeds ?? []}
@@ -1687,7 +1733,7 @@
               aria-label="Article list"
               aria-expanded={panes.list}
               aria-controls="list-pane"
-              title={panes.list ? "Hide the article list ( ] )" : "Show the article list ( ] )"}
+              title={tip(panes.list ? "Hide the article list" : "Show the article list", "toggle-list")}
               onclick={toggleList}
               class="bar-button flex size-11 items-center justify-center rounded-md text-ink-2"
             >
@@ -1834,15 +1880,18 @@
               <div class="relative">
                 <p class="reading-empty">Time to read something beautiful.</p>
                 {#if listCount > 0 && !missing}
+                  <!-- The reader's own key for the next article, if they kept one (decision 0110). -->
+                  {@const first = currentKeyOf("next-article")}
+                  {@const cap = first ? keyCap(first) : undefined}
                   {#if tipSeen}
-                    <p class="sr-only">Choose one from the list<span class="keyboard-hint">, or press j</span>.</p>
+                    <p class="sr-only">Choose one from the list{#if cap}<span class="keyboard-hint">, or press {cap.spoken ?? cap.cap}</span>{/if}.</p>
                   {:else}
                     <!--
                       Once, on a screen with a keyboard: the two keys worth knowing first, quietly, under the
                       line (decision 0062). Touch screens hear and see only "Choose one from the list."
                     -->
                     <p class="shortcut-tip keyboard-hint absolute top-full left-1/2 w-[min(28rem,80vw)] -translate-x-1/2">
-                      Press <kbd class="key">J</kbd> to open the first article, or <kbd class="key">?</kbd> for every shortcut.
+                      {#if cap}Press {#if cap.spoken}<kbd class="key" aria-hidden="true">{cap.cap}</kbd><span class="sr-only">{cap.spoken}</span>{:else}<kbd class="key">{cap.cap}</kbd>{/if} to open the first article, or <kbd class="key">?</kbd> for every shortcut.{:else}Press <kbd class="key">?</kbd> for every shortcut.{/if}
                     </p>
                     <p class="sr-only touch-only">Choose one from the list.</p>
                   {/if}
@@ -1857,7 +1906,7 @@
   {/if}
 </main>
 
-<CheatSheet bind:open={cheatSheetOpen} {river} />
+<CheatSheet bind:open={cheatSheetOpen} bind:editing={cheatSheetEditing} {river} />
 
 {#if sheet && route.kind === "add-feed"}
   <Sheet title="Add a feed" bind:heading={sheetHeading} onClose={closePage} initial={() => addField}>

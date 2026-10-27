@@ -848,7 +848,7 @@ test("the shortcut tip shows only until an article is first opened, then never a
   await appReady(page);
   await expect(article(page).locator(".reading-empty")).toHaveText("Time to read something beautiful.");
   await expect(tip).toHaveCount(0);
-  await expect(article(page)).toContainText("Choose one from the list, or press j.");
+  await expect(article(page)).toContainText("Choose one from the list, or press J.");
   await expect(article(page).locator(".sr-only", { hasText: "Choose one from the list" })).toHaveCSS("position", "absolute");
   await expect(article(page).locator("kbd")).toHaveCount(0);
 });

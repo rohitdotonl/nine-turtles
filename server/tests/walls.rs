@@ -260,25 +260,25 @@ async fn settings_are_each_readers_own() {
     let (status, _) = owner
         .post(
             "/api/settings",
-            json!({ "sort": "oldest", "mode": "river", "counts": "shown", "let_go": "never" }),
+            json!({ "sort": "oldest", "mode": "river", "counts": "shown", "let_go": "never", "keys": { "star": "x" } }),
         )
         .await;
     assert_eq!(status, StatusCode::OK);
 
     assert_eq!(
         other.get("/api/settings").await,
-        json!({ "sort": "newest", "mode": "inbox", "counts": "shown", "let_go": "never" })
+        json!({ "sort": "newest", "mode": "inbox", "counts": "shown", "let_go": "never", "keys": {} })
     );
     let (_, changed) = other
         .post("/api/settings", json!({ "sort": "newest" }))
         .await;
     assert_eq!(
         changed,
-        json!({ "sort": "newest", "mode": "inbox", "counts": "shown", "let_go": "never" })
+        json!({ "sort": "newest", "mode": "inbox", "counts": "shown", "let_go": "never", "keys": {} })
     );
     assert_eq!(
         owner.get("/api/settings").await,
-        json!({ "sort": "oldest", "mode": "river", "counts": "shown", "let_go": "never" })
+        json!({ "sort": "oldest", "mode": "river", "counts": "shown", "let_go": "never", "keys": { "star": "x" } })
     );
 }
 

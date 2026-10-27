@@ -170,7 +170,7 @@ test("? opens the shortcut list, Escape closes it and returns the keyboard's pla
   await expect(list).toBeFocused();
   await expect(list).toHaveCSS("outline-style", "solid");
   // Only what works today is listed.
-  await expect(dialog.getByText("Next / previous feed")).toHaveCount(0);
+  await expect(dialog.getByText("Go to Recently read")).toHaveCount(0);
   await expect(dialog.getByText("is:unread")).toBeVisible();
 
   // Shortcuts don't fire behind the open list: a key typed there finds itself in the list instead (decision 0062).
@@ -223,9 +223,9 @@ test("on a desktop window the shortcut list fits without scrolling, at least 48p
   const box = (await dialog.boundingBox())!;
   expect(box.y).toBeGreaterThanOrEqual(48);
   expect(800 - (box.y + box.height)).toBeGreaterThanOrEqual(48);
-  // The search filters sit in the right-hand column, under Anywhere, and the whole list shows.
+  // Three columns (decision 0110): the search filters sit in the last, under Tidying up, and the whole list shows.
   const [everywhere, filters] = [
-    (await dialog.getByRole("region", { name: "Anywhere" }).boundingBox())!,
+    (await dialog.getByRole("region", { name: "Tidying up" }).boundingBox())!,
     (await dialog.getByRole("region", { name: "Search filters" }).boundingBox())!,
   ];
   expect(Math.abs(filters.x - everywhere.x)).toBeLessThan(1);
@@ -663,16 +663,26 @@ test("Newsletters: the reader's address with Copy, a label's switch, and New add
   await expect(label).toBeChecked();
 });
 
-test("Settings is one centred column of grouped lists; Your data, Feed health and Sign out are rows of their own, each ending in a glyph", async ({ page }) => {
+test("Settings is one centred column of grouped lists; Your data, Feed health and Sign out are rows of their own, each ending in a glyph", async ({ page, isMobile }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openApp(page, "/settings");
   // Each group has a small header above it; the groups share one column, no wider than 560px. The owner also sees Readers and Sign-up (decision 0087).
+<<<<<<< HEAD
   const groups = page.getByRole("region", { name: "Settings" }).locator(".inset-group");
   await expect(groups).toHaveCount(12);
   const boxes = await groups.evaluateAll((all) => all.map((each) => each.getBoundingClientRect()).map((box) => [Math.round(box.x), Math.round(box.width)]));
   for (const [x, width] of boxes) expect([x, width]).toEqual(boxes[0]);
   expect(boxes[0]![1]).toBeLessThanOrEqual(560);
   for (const name of ["Reading", "Look and feel", "Your data", "Feeds", "Add from anywhere", "Rules", "Newsletters", "Other apps", "Connected assistants", "Readers", "Sign-up", "Account"]) {
+=======
+  const groups = page.getByRole("region", { name: "Settings" }).locator(".inset-group:visible");
+  await expect(groups).toHaveCount(isMobile ? 10 : 11);
+  const boxes = await groups.evaluateAll((all) => all.map((each) => each.getBoundingClientRect()).map((box) => [Math.round(box.x), Math.round(box.width)]));
+  for (const [x, width] of boxes) expect([x, width]).toEqual(boxes[0]);
+  expect(boxes[0]![1]).toBeLessThanOrEqual(560);
+  // Keyboard shows only on a screen with a keyboard (decision 0110).
+  for (const name of [...(isMobile ? [] : ["Keyboard"]), "Reading", "Look and feel", "Your data", "Feeds", "Rules", "Newsletters", "Other apps", "Readers", "Sign-up", "Account"]) {
+>>>>>>> 66ba719 (Let readers choose their own keys, and add Shift+J/K, Home/End, g f and g ,)
     await expect(page.getByRole("heading", { level: 3, name })).toBeVisible();
   }
   // The data actions are full-width rows, at least 44px tall, in the text color (the accent means only "where you are").

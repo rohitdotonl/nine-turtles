@@ -319,7 +319,7 @@ async fn the_sort_order_is_saved_for_every_device() {
     let reader = Reader::new().await;
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "newest", "mode": "inbox", "counts": "shown", "let_go": "never" })
+        json!({ "sort": "newest", "mode": "inbox", "counts": "shown", "let_go": "never", "keys": {} })
     );
 
     let (status, _) = reader
@@ -328,7 +328,7 @@ async fn the_sort_order_is_saved_for_every_device() {
     assert_eq!(status, StatusCode::OK);
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "oldest", "mode": "inbox", "counts": "shown", "let_go": "never" })
+        json!({ "sort": "oldest", "mode": "inbox", "counts": "shown", "let_go": "never", "keys": {} })
     );
 
     // Another device, signed in separately, sees the same.
@@ -341,7 +341,7 @@ async fn the_sort_order_is_saved_for_every_device() {
     let other: Value = serde_json::from_str(&other.text().await.unwrap()).unwrap();
     assert_eq!(
         other,
-        json!({ "sort": "oldest", "mode": "inbox", "counts": "shown", "let_go": "never" })
+        json!({ "sort": "oldest", "mode": "inbox", "counts": "shown", "let_go": "never", "keys": {} })
     );
 
     let (status, _) = reader
@@ -350,7 +350,7 @@ async fn the_sort_order_is_saved_for_every_device() {
     assert!(status.is_client_error());
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "oldest", "mode": "inbox", "counts": "shown", "let_go": "never" })
+        json!({ "sort": "oldest", "mode": "inbox", "counts": "shown", "let_go": "never", "keys": {} })
     );
 }
 
@@ -365,7 +365,7 @@ async fn the_reading_mode_is_saved_on_its_own_and_keeps_read_state() {
     assert_eq!(status, StatusCode::OK);
     assert_eq!(
         body,
-        json!({ "sort": "newest", "mode": "river", "counts": "shown", "let_go": "never" })
+        json!({ "sort": "newest", "mode": "river", "counts": "shown", "let_go": "never", "keys": {} })
     );
 
     // Changing the sort order alone (as a tab from before river mode would)
@@ -375,7 +375,7 @@ async fn the_reading_mode_is_saved_on_its_own_and_keeps_read_state() {
         .await;
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "oldest", "mode": "river", "counts": "shown", "let_go": "never" })
+        json!({ "sort": "oldest", "mode": "river", "counts": "shown", "let_go": "never", "keys": {} })
     );
 
     // Read state is still recorded quietly in river mode, and shows again
@@ -402,7 +402,7 @@ async fn the_reading_mode_is_saved_on_its_own_and_keeps_read_state() {
     assert!(status.is_client_error());
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "oldest", "mode": "inbox", "counts": "shown", "let_go": "never" })
+        json!({ "sort": "oldest", "mode": "inbox", "counts": "shown", "let_go": "never", "keys": {} })
     );
 }
 
@@ -627,7 +627,7 @@ async fn unread_lets_go_only_when_the_reader_chooses_and_nothing_leaves_the_feed
     assert_eq!(status, StatusCode::OK);
     assert_eq!(
         body,
-        json!({ "sort": "newest", "mode": "inbox", "counts": "hidden", "let_go": "never" })
+        json!({ "sort": "newest", "mode": "inbox", "counts": "hidden", "let_go": "never", "keys": {} })
     );
     assert_eq!(reader.list("view=unread").await.len(), 120);
 
@@ -686,6 +686,48 @@ async fn unread_lets_go_only_when_the_reader_chooses_and_nothing_leaves_the_feed
         .post("/api/settings", json!({ "let_go": "sometime" }))
         .await;
     assert!(status.is_client_error());
+}
+
+#[tokio::test]
+async fn chosen_keys_are_saved_whole_and_only_when_they_fit() {
+    let reader = Reader::new().await;
+    assert_eq!(reader.get("/api/settings").await["keys"], json!({}));
+
+    // Saved for every device; changing another setting leaves them be.
+    let chosen = json!({ "star": "x", "mark-older-read": "", "next-feed": "Shift+Space" });
+    let (status, body) = reader
+        .post("/api/settings", json!({ "keys": chosen }))
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["keys"], chosen);
+    reader
+        .post("/api/settings", json!({ "sort": "oldest" }))
+        .await;
+    assert_eq!(reader.get("/api/settings").await["keys"], chosen);
+
+    // Too long a key, an odd name or too many are refused, and nothing changes.
+    let many: serde_json::Map<String, Value> = (0..101)
+        .map(|n| {
+            (
+                format!("key-{}", "a".repeat(n % 30 + 1)) + &"b".repeat(n / 30),
+                json!("x"),
+            )
+        })
+        .collect();
+    for wrong in [
+        json!({ "star": "x".repeat(21) }),
+        json!({ "Star": "x" }),
+        json!({ "star": "\n" }),
+        Value::Object(many),
+    ] {
+        let (status, _) = reader.post("/api/settings", json!({ "keys": wrong })).await;
+        assert!(status.is_client_error());
+    }
+    assert_eq!(reader.get("/api/settings").await["keys"], chosen);
+
+    // An empty set puts every key back.
+    reader.post("/api/settings", json!({ "keys": {} })).await;
+    assert_eq!(reader.get("/api/settings").await["keys"], json!({}));
 }
 
 #[test]

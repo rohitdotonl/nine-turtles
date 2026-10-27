@@ -1,7 +1,8 @@
 //! Each reader's settings shared across their devices (SPEC section 18): the
 //! sort order, the reading mode, inbox or river (SPEC section 10), whether
 //! unread counts show, and when unread lets go by itself (`unread`, decision
-//! 0097). Reader controls such as the theme belong to each device and stay
+//! 0097), and the keys the reader chose for shortcuts (`keys`, decision
+//! 0110). Reader controls such as the theme belong to each device and stay
 //! in its browser.
 
 use axum::{
@@ -12,6 +13,7 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use sqlx::SqlitePool;
+use std::collections::BTreeMap;
 
 use crate::{
     AppState,
@@ -73,6 +75,32 @@ struct Settings {
     mode: Mode,
     counts: Counts,
     let_go: LetGo,
+    /// The shortcuts given another key, by the shortcut's name ("star"), each
+    /// with its key as the cheat sheet prints it ("x", "Shift+X"), or "" for
+    /// none. Only changed shortcuts are here; the rest keep their own keys.
+    keys: Keys,
+}
+
+/// The reader's own keys (decision 0110). The browser decides what each name
+/// and key means; here they're only checked for size, so a later version's
+/// names come through untouched.
+type Keys = BTreeMap<String, String>;
+
+/// No more than this many changed keys: there are about forty shortcuts.
+const MOST_KEYS: usize = 100;
+
+/// Whether chosen keys are of a sensible size: short names of lowercase
+/// letters and dashes, each key a few characters at most.
+fn keys_fit(keys: &Keys) -> bool {
+    keys.len() <= MOST_KEYS
+        && keys.iter().all(|(name, key)| {
+            (1..=40).contains(&name.len())
+                && name
+                    .bytes()
+                    .all(|byte| byte.is_ascii_lowercase() || byte == b'-')
+                && key.chars().count() <= 20
+                && !key.chars().any(char::is_control)
+        })
 }
 
 /// A change: only the settings named are saved, so a tab from before river
@@ -83,12 +111,14 @@ struct Change {
     mode: Option<Mode>,
     counts: Option<Counts>,
     let_go: Option<LetGo>,
+    /// All the reader's chosen keys at once; `{}` puts every key back.
+    keys: Option<Keys>,
 }
 
 async fn load(db: &SqlitePool, person: i64) -> Result<Settings, sqlx::Error> {
     let rows: Vec<(String, String)> = sqlx::query_as(
         "SELECT name, value FROM person_settings
-         WHERE person_id = ? AND name IN ('sort', 'mode', 'counts', 'let_go')",
+         WHERE person_id = ? AND name IN ('sort', 'mode', 'counts', 'let_go', 'keys')",
     )
     .bind(person)
     .fetch_all(db)
@@ -117,11 +147,16 @@ async fn load(db: &SqlitePool, person: i64) -> Result<Settings, sqlx::Error> {
         Some("month") => LetGo::Month,
         _ => LetGo::Never,
     };
+    let keys = value("keys")
+        .and_then(|saved| serde_json::from_str::<Keys>(saved).ok())
+        .filter(keys_fit)
+        .unwrap_or_default();
     Ok(Settings {
         sort,
         mode,
         counts,
         let_go,
+        keys,
     })
 }
 
@@ -137,6 +172,16 @@ async fn change(
     State(state): State<AppState>,
     Json(change): Json<Change>,
 ) -> Response {
+    if change.keys.as_ref().is_some_and(|keys| !keys_fit(keys)) {
+        return (
+            axum::http::StatusCode::BAD_REQUEST,
+            "Those keys can't be saved.",
+        )
+            .into_response();
+    }
+    let keys = change
+        .keys
+        .map(|keys| serde_json::to_string(&keys).unwrap_or_else(|_| "{}".to_owned()));
     let sort = change.sort.map(|sort| match sort {
         Order::Newest => "newest",
         Order::Oldest => "oldest",
@@ -157,6 +202,7 @@ async fn change(
             ("mode", mode),
             ("counts", counts),
             ("let_go", let_go),
+            ("keys", keys.as_deref()),
         ] {
             if let Some(value) = value {
                 sqlx::query(
