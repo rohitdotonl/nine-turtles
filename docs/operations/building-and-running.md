@@ -4,6 +4,10 @@
 
 - **Rust** through `rustup` (<https://rustup.rs>). The exact version is in
   `rust-toolchain.toml`; `rustup` installs it on first use.
+- **OpenSSL's development files and `pkg-config`**, which webauthn-rs (passkey
+  sign-in, decision 0109) builds against: `libssl-dev` and `pkg-config` on
+  Debian or Ubuntu (GitHub's Ubuntu computers already have them), `openssl`
+  from Homebrew on a Mac. The Dockerfile installs them itself.
 - **Node** 22.12 or newer (CI uses the version in `.node-version`).
 - For the browser checks only: **Chromium**, installed with
   `cd web && npx playwright install chromium`, or an existing copy named in

@@ -288,7 +288,7 @@ Plain, unhurried, never urgent: "Nothing new yet," never "You're missing out!" L
 - **YouTube videos** in YouTube's own player. Done 25 October 2026: a quiet Play box, nothing loaded until it's pressed (decision 0072, `docs/SPEC.md` section 7).
 - **Public reading list page:** an optional public list of some of your feeds (a modern blogroll) with one-click subscribe. No likes, no comments.
 - **Per-feed modes:** inbox or river for each feed. Built 25 October 2026, in Edit feed (decision 0082, `docs/SPEC.md` sections 10 and 15).
-- **Passkey sign-in.**
+- **Passkey sign-in.** Built 27 October 2026, beside passwords (decision 0109, `docs/SPEC.md` sections 1 and 18).
 - **Chinese and Japanese search.**
 - **Multiple users.** Being built (October 2026): decision 0086.
 - **Own domain name.** Chosen on 25 October 2026: nineturtles.app for the website, app.nineturtles.app for the app (decision 0066).

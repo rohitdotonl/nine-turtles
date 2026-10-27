@@ -6,11 +6,12 @@ import { api } from "./updates.svelte";
 /**
  * Signed in: the version for Status, whether this is the owner (who alone sees Settings › Readers), the reader's
  * email, and whether nine turtles can send email (to change it). Signed out: whether the sign-in page may offer
- * "Forgot your password?" (email can be sent) and "Sign up" (sign-up is Open), decision 0088.
+ * "Forgot your password?" (email can be sent) and "Sign up" (sign-up is Open), decision 0088. Either way, the
+ * address passkeys work at, or null when they're off (decision 0109).
  */
 export type Session =
-  | { signedIn: true; version: string; owner: boolean; email: string | null; emailSending: boolean }
-  | { signedIn: false; emailSending: boolean; signUpOpen: boolean };
+  | { signedIn: true; version: string; owner: boolean; email: string | null; emailSending: boolean; passkeys?: string | null }
+  | { signedIn: false; emailSending: boolean; signUpOpen: boolean; passkeys: string | null };
 
 export type SignInResult =
   | { ok: true }
@@ -30,13 +31,20 @@ export async function currentSession(): Promise<Session> {
       owner: body.owner === true,
       email: typeof body.email === "string" ? body.email : null,
       emailSending: body.email_sending === true,
+      passkeys: passkeysOf(body),
     };
   }
   return {
     signedIn: false,
     emailSending: isRecord(body) && body.email_sending === true,
     signUpOpen: isRecord(body) && body.sign_up_open === true,
+    passkeys: passkeysOf(body),
   };
+}
+
+/** Where passkeys work, from the session's answer: null when they're off. */
+function passkeysOf(body: unknown): string | null {
+  return isRecord(body) && typeof body.passkeys === "string" ? body.passkeys : null;
 }
 
 /** With an email, for the reader who has it; with none (""), the owner's password-only sign-in, as before. */

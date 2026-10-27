@@ -45,8 +45,12 @@ whatever the lock files say.*
 | mail-parser | 1.0 | Reads newsletter emails: their senders, subjects and HTML, in any character set (its `full_encoding` part reads Chinese and Japanese ones with encoding_rs, which reqwest already brings). Comes with two small helpers of its own, encodify and hashify, by the same authors | Approved (the owner's yes on 25 October 2026, decision 0091) |
 | blake2 | 0.11 | A fast scrambler: nine turtles stores only a scrambled copy of each device's ticket. Comes with argon2 already | Approved (October 2026, Milestone 2) |
 | lettre | 0.11 | Sends nine turtles' few emails (confirming an address, a new password, a changed address) over plain SMTP, so any email service works (decision 0088). Only its SMTP sending and message-writing parts, encrypted with the rustls that reqwest already uses | Approved (the owner's yes on 25 October 2026, decision 0088) |
+| webauthn-rs | 0.5 | Checks passkeys (decision 0109): makes each challenge, checks the browser's signed answer and the passkey's counter, so nine turtles never writes that delicate checking itself. The best-known Rust library for it, by the Kanidm project and used in their identity server. Its `conditional-ui` part lets a passkey sign in without an email typed first. Brings OpenSSL (the system's own copy, installed by the Dockerfile) | Approved (the owner's yes on 27 October 2026, decision 0109) |
+| webauthn-authenticator-rs | 0.5 | Used only by the tests (a "dev-dependency", never in the program): the same project's software passkey, so the tests can add a passkey and sign in with it without a real device. Only its `softpasskey` part | Approved (the owner's yes on 27 October 2026, decision 0109) |
 
-SQLite itself (and its FTS5 search) comes bundled with sqlx.
+SQLite itself (and its FTS5 search) comes bundled with sqlx. The browser's
+side of passkeys needs no library: it's the browser's own
+`navigator.credentials`, with a few small helpers in `web/src/lib/passkeys.ts`.
 
 ## Frontend (TypeScript)
 

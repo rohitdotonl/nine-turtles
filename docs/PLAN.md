@@ -403,6 +403,7 @@ each with screenshots:
 | Reading offline, words only (200 unread and 200 starred on each device) | ✅ 26 October 2026 | SPEC section 32, decision 0101 |
 | Adding a feed from anywhere (Android's share menu, an Apple Shortcuts shortcut, a bookmark) | ✅ 27 October 2026 | SPEC sections 3, 18 and 20, decision 0104 |
 | Opening a picture in an article larger | ✅ 27 October 2026 | SPEC section 7, decision 0107 |
+| Passkey sign-in (Settings › Passkeys, and Sign in with a passkey; passwords keep working) | ✅ 27 October 2026 | SPEC sections 1 and 18, decision 0109 (structure change 25; one new library, webauthn-rs, the owner's yes) |
 
 ## V2: Many readers in one app
 
