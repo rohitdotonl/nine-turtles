@@ -185,3 +185,9 @@ export async function deleteAccount(): Promise<boolean> {
   const response = await send("/api/people/me/delete", {});
   return response?.ok === true;
 }
+
+/** Empties the signed-in reader's account, for good, keeping them signed in (decision 0117). */
+export async function deleteData(): Promise<boolean> {
+  const response = await send("/api/people/me/data/delete", {});
+  return response?.ok === true;
+}

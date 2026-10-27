@@ -173,29 +173,75 @@ pub async fn delete(db: &SqlitePool, person: i64) -> Result<(), sqlx::Error> {
     .bind(person)
     .execute(&mut *transaction)
     .await?;
-    // Nothing of theirs is kept now: no star, and no collection, holds an entry back.
-    sqlx::query("DELETE FROM collection_articles WHERE person_id = ?")
+    let_go(&mut transaction, person, false).await?;
+    sqlx::query("DELETE FROM people WHERE id = ? AND owner = 0")
         .bind(person)
         .execute(&mut *transaction)
         .await?;
+    transaction.commit().await
+}
+
+/// The tables "Delete my data" empties of a reader's lines (decision 0117):
+/// what they follow, read and keep. Their account stays: email and
+/// password, passkeys, app password, connected assistants, settings, plan
+/// and newsletter address.
+pub const DATA_TABLES: &[&str] = &[
+    "collection_articles",
+    "collections",
+    "episode_progress",
+    "up_next",
+    "entries",
+    "subscriptions",
+    "rules",
+    "saved_searches",
+    "folders",
+];
+
+/// Empties reader `person`'s account, in one step: all or nothing. Every
+/// feed they follow is let go as unsubscribing lets it go, stars and
+/// collections included, then the `DATA_TABLES` are emptied of their lines.
+/// They stay signed in, with everything else of their account. Works for
+/// the owner too (decision 0117).
+pub async fn delete_data(db: &SqlitePool, person: i64) -> Result<(), sqlx::Error> {
+    let mut transaction = db.begin_with("BEGIN IMMEDIATE").await?;
+    let_go(&mut transaction, person, true).await?;
+    transaction.commit().await
+}
+
+/// What deleting an account and deleting one's data share: lets go of
+/// every feed reader `person` follows, then empties the tables of theirs in
+/// `PER_READER_TABLES`, only the `DATA_TABLES` when `keep_account`.
+async fn let_go(
+    connection: &mut sqlx::SqliteConnection,
+    person: i64,
+    keep_account: bool,
+) -> Result<(), sqlx::Error> {
+    // Nothing of theirs is kept now: no star, and no collection, holds an entry back.
+    sqlx::query("DELETE FROM collection_articles WHERE person_id = ?")
+        .bind(person)
+        .execute(&mut *connection)
+        .await?;
     sqlx::query("UPDATE entries SET starred = 0 WHERE person_id = ?")
         .bind(person)
-        .execute(&mut *transaction)
+        .execute(&mut *connection)
         .await?;
     let followed: Vec<i64> = sqlx::query_scalar(
         "UPDATE subscriptions SET unsubscribed_at = COALESCE(unsubscribed_at, unixepoch()), cleared = 0
          WHERE person_id = ? RETURNING feed_id",
     )
     .bind(person)
-    .fetch_all(&mut *transaction)
+    .fetch_all(&mut *connection)
     .await?;
     for feed in followed {
-        crate::folders::clear(&mut transaction, person, feed).await?;
+        crate::folders::clear(&mut *connection, person, feed).await?;
     }
-    for (_, deleting) in PER_READER_TABLES {
+    for (table, deleting) in PER_READER_TABLES {
+        if keep_account && !DATA_TABLES.contains(table) {
+            continue;
+        }
         sqlx::query(*deleting)
             .bind(person)
-            .execute(&mut *transaction)
+            .execute(&mut *connection)
             .await?;
     }
     // Their newsletter feeds, whose articles have just gone (decision 0091).
@@ -204,13 +250,9 @@ pub async fn delete(db: &SqlitePool, person: i64) -> Result<(), sqlx::Error> {
          AND NOT EXISTS (SELECT 1 FROM articles WHERE feed_id = feeds.id)",
     )
     .bind(person)
-    .execute(&mut *transaction)
+    .execute(&mut *connection)
     .await?;
-    sqlx::query("DELETE FROM people WHERE id = ? AND owner = 0")
-        .bind(person)
-        .execute(&mut *transaction)
-        .await?;
-    transaction.commit().await
+    Ok(())
 }
 
 /// Everyone with an account: number, email, whether they're the owner, and
