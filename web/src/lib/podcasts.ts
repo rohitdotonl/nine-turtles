@@ -1,4 +1,4 @@
-// Podcasts (SPEC section 34, decision 0111): the times the player shows,
+// Podcasts (SPEC section 35, decision 0113): the times the player shows,
 // where to carry on from, and Up Next's order, kept apart from the screen so
 // they can be tested; and talking to the server about them.
 //
@@ -139,6 +139,15 @@ function readPlaces(): Record<string, Place> {
 export function devicePlace(id: number): Place | undefined {
   const place = readPlaces()[String(id)];
   return place && typeof place.position === "number" && typeof place.at === "number" ? place : undefined;
+}
+
+/** Forgets every place kept on this device (nobody is signed in). */
+export function forgetPlaces(): void {
+  try {
+    globalThis.localStorage?.removeItem(PLACES_KEY);
+  } catch {
+    // Nothing kept to forget.
+  }
 }
 
 /** Keeps where the reader stopped on this device, for the latest 100 episodes. */

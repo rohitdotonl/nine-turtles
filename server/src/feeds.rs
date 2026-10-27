@@ -857,7 +857,7 @@ pub struct ArticleRow {
     /// A rule (or the reader) muted it: only search, the Muted page and
     /// Starred show it.
     pub muted: bool,
-    /// A podcast's episode (SPEC section 34): the list shows a small
+    /// A podcast's episode (SPEC section 35): the list shows a small
     /// headphones mark and its length.
     pub episode: bool,
     /// How long the episode plays, in seconds, if its feed says.
@@ -1186,7 +1186,7 @@ pub struct FullArticle {
     pub at: i64,
     pub read: bool,
     pub starred: bool,
-    /// A podcast's episode (SPEC section 34): the publisher's own address
+    /// A podcast's episode (SPEC section 35): the publisher's own address
     /// for its audio file, which the reader's browser plays from there.
     /// Null for any other article.
     pub episode_url: Option<String>,

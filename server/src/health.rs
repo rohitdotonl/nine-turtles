@@ -628,7 +628,7 @@ async fn carry_entries_over(
                 .execute(&mut *connection)
                 .await?;
             // Where they stopped in an episode, and its place in Up Next, go
-            // with it too (decision 0111); what the old line keeps goes with it.
+            // with it too (decision 0113); what the old line keeps goes with it.
             for table in ["episode_progress", "up_next"] {
                 sqlx::query(sqlx::AssertSqlSafe(format!(
                     "UPDATE OR IGNORE {table} SET article_id = ?3

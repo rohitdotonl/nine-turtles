@@ -1,4 +1,4 @@
-// The one podcast player (SPEC section 34, decision 0111): a single audio
+// The one podcast player (SPEC section 35, decision 0113): a single audio
 // element for the whole app, so an episode keeps playing while the reader
 // moves through other articles, with the "now playing" bar at the foot of
 // the app. It plays the publisher's own file from the publisher's own
@@ -6,9 +6,15 @@
 //
 // Where the reader is gets saved every 15 seconds while playing, on pause,
 // on seeking and on leaving the page, on this device at once and on the
-// server behind (podcasts.ts). An episode played to within 30 seconds of
-// its end is finished: it's marked read, and the first episode in Up Next
-// starts, with a quiet line saying so. The lock screen and headphones get
+// server behind (podcasts.ts). An episode saved within 30 seconds of its
+// end is finished and marked read; one that plays to its end starts the
+// first episode in Up Next, with a quiet line saying so.
+//
+// Nothing moves by itself (principle 5): an open Up Next list changes only
+// for the reader's own Move, Remove and Undo (`player.changes`), never for
+// the removal when an episode starts. Signing out empties the player and
+// forgets this device's places (`forgetListening`), so the next reader on
+// this browser never hears or resumes the last one's episode. The lock screen and headphones get
 // the title, the podcast's name and its picture, and can play, pause and
 // skip (the Media Session API, where the browser has it).
 
@@ -21,6 +27,7 @@ import {
   added,
   devicePlace,
   finished,
+  forgetPlaces,
   loadUpNext,
   moved,
   removed,
@@ -60,6 +67,10 @@ export const player = $state({
   upNext: null as number[] | null,
   /** A quiet line for screen readers and the bar: "Playing next: …", or a problem. */
   said: "",
+  /** Bumped by the reader's own changes to Up Next (not the removal when one starts), so its open list follows only those. */
+  changes: 0,
+  /** The episode the reader last took off Up Next by hand, and where it was, for its Undo. */
+  removed: undefined as { id: number; at: number } | undefined,
 });
 
 let audio: HTMLAudioElement | undefined;
@@ -124,7 +135,43 @@ function save() {
   // Not before the file says how long it is: until then it's at its start, which isn't where the reader is.
   if (!current || !audio || loadedId !== current.article.id || audio.readyState === 0) return;
   lastSaved = Date.now();
-  savePlace(current.article.id, audio.currentTime, player.duration, finished(audio.currentTime, player.duration));
+  const done = finished(audio.currentTime, player.duration);
+  savePlace(current.article.id, audio.currentTime, player.duration, done);
+  if (done) markFinished(current.article);
+}
+
+/** A finished episode is read, however it got there (played, paused or moved to its last seconds). */
+function markFinished(article: Article) {
+  if (article.read) return;
+  article.read = true;
+  void markRead([article.id], true).catch(() => undefined);
+}
+
+/**
+ * Nobody is signed in any more (signing out, or a session that ended): the
+ * player stops and empties without saving, Up Next is forgotten, and this
+ * device's places go, so the next reader starts from nothing (as offline
+ * copies do, decision 0101).
+ */
+export function forgetListening(): void {
+  loadedId = undefined;
+  if (audio) {
+    audio.pause();
+    audio.removeAttribute("src");
+    audio.load();
+  }
+  player.current = undefined;
+  player.playing = false;
+  player.waiting = false;
+  player.position = 0;
+  player.duration = null;
+  player.said = "";
+  player.upNext = null;
+  player.removed = undefined;
+  forgetPlaces();
+  sessionState("none");
+  const media = session();
+  if (media) media.metadata = null;
 }
 
 /** Leaving the page, or putting it away: where the reader is gets saved. */
@@ -173,19 +220,24 @@ export async function load(article: Article, episode: Episode): Promise<void> {
   describe(article, episode);
 }
 
-/** Plays the episode (loading it first if another is in the player). Playing it takes it off Up Next. */
-export async function play(article: Article, episode: Episode): Promise<void> {
+/**
+ * Plays the episode (loading it first if another is in the player). Playing it takes it off Up Next, quietly:
+ * an open Up Next list keeps its row until the reader refreshes it or goes elsewhere. Answers whether it started.
+ */
+export async function play(article: Article, episode: Episode): Promise<boolean> {
   await load(article, episode);
-  if (!isLoaded(article)) return;
-  if (player.upNext?.includes(article.id)) void changeUpNext(removed(player.upNext, article.id));
+  if (!isLoaded(article)) return false;
+  if (player.upNext?.includes(article.id)) void changeUpNext(removed(player.upNext, article.id), false);
   const sound = element();
   sound.playbackRate = player.rate;
   player.waiting = true;
   try {
     await sound.play();
+    return true;
   } catch {
     // The browser may refuse to start without a press (an episode starting by itself from Up Next).
     player.waiting = false;
+    return false;
   }
 }
 
@@ -252,12 +304,17 @@ export function close(): void {
   sessionState("none");
 }
 
-/** Saves Up Next's new order, at once on screen; it goes back if the server refuses. */
-export async function changeUpNext(order: number[]): Promise<boolean> {
+/**
+ * Saves Up Next's new order, at once on screen; it goes back if the server refuses. `byReader` is false only for
+ * the removal when an episode starts, which leaves an open Up Next list as it is.
+ */
+export async function changeUpNext(order: number[], byReader = true): Promise<boolean> {
   const before = player.upNext;
   player.upNext = order;
+  if (byReader) player.removed = undefined;
   try {
     player.upNext = await saveUpNext(order);
+    if (byReader) player.changes++;
     return true;
   } catch {
     player.upNext = before;
@@ -269,8 +326,21 @@ export function addToUpNext(id: number): Promise<boolean> {
   return changeUpNext(added(player.upNext ?? [], id));
 }
 
-export function removeFromUpNext(id: number): Promise<boolean> {
-  return changeUpNext(removed(player.upNext ?? [], id));
+/** Takes an episode off Up Next by hand; its player then offers Undo, which puts it back where it was. */
+export async function removeFromUpNext(id: number): Promise<boolean> {
+  const at = player.upNext?.indexOf(id) ?? -1;
+  const done = await changeUpNext(removed(player.upNext ?? [], id));
+  if (done && at !== -1) player.removed = { id, at };
+  return done;
+}
+
+/** Undo for `removeFromUpNext`: the episode goes back to its place. */
+export function undoRemove(): Promise<boolean> {
+  const gone = player.removed;
+  if (!gone) return Promise.resolve(false);
+  const order = removed(player.upNext ?? [], gone.id);
+  order.splice(Math.min(gone.at, order.length), 0, gone.id);
+  return changeUpNext(order);
 }
 
 export function moveInUpNext(id: number, step: -1 | 1): Promise<boolean> {
@@ -285,18 +355,15 @@ async function ended(): Promise<void> {
   player.position = player.duration ?? player.position;
   lastSaved = Date.now();
   savePlace(current.article.id, player.position, player.duration, true);
-  if (!current.article.read) {
-    current.article.read = true;
-    void markRead([current.article.id], true).catch(() => undefined);
-  }
+  markFinished(current.article);
   const queue = player.upNext ?? [];
   for (const id of queue) {
     try {
       const next = await readArticle(id);
       if (!next.audio) continue;
-      await play(next, next.audio);
-      // After loading it, which clears the line.
-      if (isLoaded(next)) player.said = `Playing next: ${next.title || "Untitled"}`;
+      const started = await play(next, next.audio);
+      // After loading it, which clears the line. A browser that won't start one without a press is told plainly.
+      if (isLoaded(next)) player.said = started ? `Playing next: ${next.title || "Untitled"}` : `Next: ${next.title || "Untitled"}. Press Play to start it.`;
       return;
     } catch {
       // Gone, or can't be reached: the one after it, if any.

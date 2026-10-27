@@ -15,7 +15,7 @@
   links the whole article on the publisher's site; nine turtles never fetches
   the rest. A YouTube video plays above its text in YouTube's own player,
   loaded only once you press Play (decision 0072). A podcast episode has its
-  player there instead, playing the publisher's own file (decision 0111). A
+  player there instead, playing the publisher's own file (decision 0113). A
   picture shown clearly smaller than it really is opens larger on a sheet of
   its own (decision 0107).
 
@@ -74,7 +74,7 @@
     onMarkUnread: () => void;
     /** "Add to collection…" (or l): the sheet of the reader's collections (decision 0108). */
     onCollect: () => void;
-    /** On a phone, the "now playing" bar, which sits above the article's toolbar (SPEC section 34). */
+    /** On a phone, the "now playing" bar, which sits above the article's toolbar (SPEC section 35). */
     beforeToolbar?: Snippet;
   } = $props();
 
@@ -106,7 +106,7 @@
   const sharing =
     typeof navigator.share === "function" && matchMedia("(hover: none) and (pointer: coarse)").matches;
 
-  /** A podcast's episode (SPEC section 34): its audio, played from the publisher's own address. Copies kept before podcasts have none. */
+  /** A podcast's episode (SPEC section 35): its audio, played from the publisher's own address. Copies kept before podcasts have none. */
   let episode = $derived(full?.audio ?? null);
   let queued = $derived(player.upNext?.includes(article.id) ?? false);
 
@@ -445,7 +445,7 @@
         <!-- Without a connection there's nothing to play from: the episode waits, as a video does (SPEC section 32). -->
         <p class="article-note mt-6" lang="en">{EPISODE_OFFLINE}</p>
       {:else if episode}
-        <!-- A podcast's episode plays here, from the publisher's own file (SPEC section 34, decision 0111). -->
+        <!-- A podcast's episode plays here, from the publisher's own file (SPEC section 35, decision 0113). -->
         {#key article.id}
           <EpisodePlayer {article} {episode} />
         {/key}

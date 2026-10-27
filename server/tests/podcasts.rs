@@ -1,4 +1,4 @@
-//! Podcasts (SPEC section 34, decision 0111): episodes found in a feed,
+//! Podcasts (SPEC section 35, decision 0113): episodes found in a feed,
 //! where each reader stopped in each, and their Up Next, tested against a
 //! real running nine turtles and a made-up podcast. nine turtles keeps only
 //! the publisher's address for each audio file and never fetches it.
@@ -328,6 +328,43 @@ async fn up_next_keeps_the_readers_own_episodes_in_their_order() {
     // Emptied, it's empty.
     send(&base, &cookie, "/api/up-next", json!({ "articles": [] })).await;
     assert!(up_next(&base, &cookie).await.is_empty());
+
+    // A feed the reader leaves takes its episodes out of the order too, not
+    // only out of the list, so "2 of 3" and what plays next agree with it;
+    // a new order kept meanwhile doesn't lose them for the unsubscribe's Undo.
+    send(
+        &base,
+        &cookie,
+        "/api/up-next",
+        json!({ "articles": [first, second] }),
+    )
+    .await;
+    let (status, _) = send(
+        &base,
+        &cookie,
+        &format!("/api/feeds/{feed}/unsubscribe"),
+        json!({}),
+    )
+    .await;
+    assert!(status.is_success());
+    assert!(up_next(&base, &cookie).await.is_empty());
+    let (_, kept) = send(
+        &base,
+        &cookie,
+        "/api/up-next",
+        json!({ "articles": [first] }),
+    )
+    .await;
+    assert_eq!(kept["articles"], json!([]));
+    let (status, _) = send(
+        &base,
+        &cookie,
+        &format!("/api/feeds/{feed}/resubscribe"),
+        json!({}),
+    )
+    .await;
+    assert!(status.is_success());
+    assert_eq!(up_next(&base, &cookie).await, [first, second]);
 }
 
 #[tokio::test]

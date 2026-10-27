@@ -1,6 +1,6 @@
 <!--
-  A podcast episode's player, under the article's byline (SPEC section 34,
-  decision 0111). A calm, still panel in a faint tone of the text: back 15
+  A podcast episode's player, under the article's byline (SPEC section 35,
+  decision 0113). A calm, still panel in a faint tone of the text: back 15
   seconds, Play or Pause, forward 30, the speed (1×, 1.25×, 1.5×, 2×, one
   press each), then the position as a slider with the time played and the
   time left under it, in figures that keep their width. Nothing moves but the
@@ -8,8 +8,8 @@
   show notes follow as the article's text.
 
   It plays the publisher's own file, from the publisher's own address, in
-  the browser's own audio element (player.svelte.ts): the closest thing an
-  audio file has to "the publisher's player" (the second floor). Playing
+  the browser's own audio element (player.svelte.ts), as the second floor
+  says an audio file the feed names plays. Playing
   carries on while the reader moves to other articles, in the bar at the
   foot of the app. It opens where the reader stopped, on any of their devices.
 
@@ -19,13 +19,17 @@
   takes no keys of its own beyond its controls' standard ones.
 
   When the episode is in Up Next, a quiet line says where, with Move up,
-  Move down and Remove.
+  Move down and Remove. Move up and Move down stay where the keyboard is at
+  either end (they say they can't go further, rather than vanishing from
+  under it); Remove leaves "Removed from Up Next." with Undo in its place,
+  and the keyboard on Undo, which puts the episode back and the keyboard on
+  Remove again.
 -->
 <script lang="ts">
-  import { untrack } from "svelte";
+  import { tick, untrack } from "svelte";
   import type { Article } from "./feeds";
   import { BACK_SECONDS, FORWARD_SECONDS, clock, devicePlace, left, length, nextSpeed, resumeFrom, serverPlace, speedLabel, spoken, type Episode } from "./podcasts";
-  import { isLoaded, load, moveInUpNext, play, player, removeFromUpNext, seek, setRate, toggle } from "./player.svelte";
+  import { isLoaded, load, moveInUpNext, play, player, removeFromUpNext, seek, setRate, toggle, undoRemove } from "./player.svelte";
 
   let { article, episode }: { article: Article; episode: Episode } = $props();
 
@@ -50,6 +54,36 @@
   });
 
   let place = $derived(player.upNext ? player.upNext.indexOf(article.id) : -1);
+  /** Taken off Up Next by hand just now (here or from the More menu): Undo puts it back. */
+  let gone = $derived(place === -1 && player.removed?.id === article.id);
+  let removeButton: HTMLButtonElement | undefined = $state();
+  let undoButton: HTMLButtonElement | undefined = $state();
+
+  // Another episode's Undo isn't offered here, nor kept once the reader has moved on to this one.
+  $effect(() => {
+    const id = article.id;
+    untrack(() => {
+      if (player.removed && player.removed.id !== id) player.removed = undefined;
+    });
+  });
+
+  /** Move up or down; at either end the button stays (and keeps the keyboard), it just does nothing. */
+  function move(step: -1 | 1) {
+    const end = step === -1 ? place === 0 : place === (player.upNext?.length ?? 0) - 1;
+    if (!end) void moveInUpNext(article.id, step);
+  }
+
+  async function remove() {
+    if (!(await removeFromUpNext(article.id))) return;
+    await tick();
+    undoButton?.focus();
+  }
+
+  async function undo() {
+    if (!(await undoRemove())) return;
+    await tick();
+    removeButton?.focus();
+  }
 
   async function pressPlay() {
     if (mine) toggle();
@@ -121,18 +155,23 @@
     <span>{clock(position)}</span>
     <span>{duration ? left(position, duration) : ""}</span>
   </div>
-  {#if mine && player.waiting}
-    <p class="episode-note" role="status">Loading from the publisher…</p>
-  {:else if mine && player.said}
-    <p class="episode-note" role="status">{player.said}</p>
+  <p class="episode-note empty:hidden" role="status">{mine && player.waiting ? "Loading from the publisher…" : ""}</p>
+  {#if mine && !player.waiting && player.said}
+    <!-- Seen here; screen readers hear it once, from the Now playing bar's own line. -->
+    <p class="episode-note">{player.said}</p>
   {/if}
   {#if place !== -1 && player.upNext}
-    <!-- Where it waits in Up Next, and moving it, by real buttons rather than dragging (SPEC section 34). -->
+    <!-- Where it waits in Up Next, and moving it, by real buttons rather than dragging (SPEC section 35). -->
     <div class="episode-queue">
       <span class="mr-auto">In Up Next, {place + 1} of {player.upNext.length}</span>
-      <button type="button" class="btn-quiet btn-small" disabled={place === 0} onclick={() => moveInUpNext(article.id, -1)}>Move up</button>
-      <button type="button" class="btn-quiet btn-small" disabled={place === player.upNext.length - 1} onclick={() => moveInUpNext(article.id, 1)}>Move down</button>
-      <button type="button" class="btn-quiet btn-small" onclick={() => removeFromUpNext(article.id)}>Remove<span class="sr-only"> from Up Next</span></button>
+      <button type="button" class="btn-quiet btn-small" aria-disabled={place === 0} onclick={() => move(-1)}>Move up</button>
+      <button type="button" class="btn-quiet btn-small" aria-disabled={place === player.upNext.length - 1} onclick={() => move(1)}>Move down</button>
+      <button type="button" class="btn-quiet btn-small" bind:this={removeButton} onclick={remove}>Remove<span class="sr-only"> from Up Next</span></button>
+    </div>
+  {:else if gone}
+    <div class="episode-queue">
+      <span class="mr-auto">Removed from Up Next.</span>
+      <button type="button" class="btn-quiet btn-small" bind:this={undoButton} onclick={undo}>Undo<span class="sr-only"> removing from Up Next</span></button>
     </div>
   {/if}
 </div>
@@ -223,7 +262,7 @@
     padding-top: 0.5rem;
     border-top: 1px solid color-mix(in srgb, var(--ink) 9%, transparent);
   }
-  .episode-queue button:disabled {
+  .episode-queue button[aria-disabled="true"] {
     opacity: 0.5;
     cursor: default;
   }

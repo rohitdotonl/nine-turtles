@@ -79,7 +79,7 @@ enum Hideable {
     Recent,
     Searches,
     Collections,
-    /// Up Next (decision 0111): shown only while it holds an episode.
+    /// Up Next (decision 0113): shown only while it holds an episode.
     Upnext,
 }
 

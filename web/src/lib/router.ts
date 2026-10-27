@@ -26,7 +26,7 @@ export type Route =
 export const VIEW_NAMES: Record<View, string> = { unread: "Unread", starred: "Starred", all: "All", recent: "Recently read", upnext: "Up Next" };
 
 /**
- * The lists a reader can hide from the sidebar (Settings › Show in the sidebar, decisions 0105, 0108 and 0111). Unread, folders
+ * The lists a reader can hide from the sidebar (Settings › Show in the sidebar, decisions 0105, 0108 and 0113). Unread, folders
  * and feeds always show; Up Next shows only while it holds an episode.
  */
 export const HIDEABLE = ["starred", "all", "recent", "searches", "collections", "upnext"] as const;

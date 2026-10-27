@@ -125,14 +125,15 @@
    * The fixed lists the sidebar shows: river mode has no Unread, and a list
    * the reader hid steps aside, except All in river mode, where it's home
    * (as Unread, which can't be hidden, is in inbox mode). Up Next shows only
-   * while it holds an episode (decision 0111).
+   * while it holds an episode (decision 0113); once emptied it stays until
+   * the reader next goes somewhere, so nothing moves up under them.
    */
   let sidebarViews: View[] = $derived(
     VIEWS.filter(
       (view) =>
         !(river && view === "unread") &&
         !((hidden as string[]).includes(view) && !(river && view === "all")) &&
-        !(view === "upnext" && !player.upNext?.length),
+        !(view === "upnext" && !player.upNext?.length && !upNextStays),
     ),
   );
   /** Where the app opens: Unread in inbox mode, All in river mode. */
@@ -622,7 +623,7 @@
     // In search results, ordered by how well they match, older goes by date, so neither row shows the key.
     const olderIs = shown ? undefined : sort === "oldest" ? "above" : "below";
     // Recently read is in the order opened, and what's in it was read already: only Refresh applies.
-    // So is Up Next, in the reader's own order (decision 0111).
+    // So is Up Next, in the reader's own order (decision 0113).
     const recent = !shown && under.kind === "view" && (under.view === "recent" || under.view === "upnext");
     if (recent) return [{ items: [{ label: "Refresh", shortcut: key("refresh"), onSelect: () => itemList?.refresh() }] }];
     const groups: MenuGroup[] = [
@@ -1462,7 +1463,7 @@
   }
 
   /**
-   * The "now playing" bar's title: opens the episode playing (SPEC section 34). Where it isn't
+   * The "now playing" bar's title: opens the episode playing (SPEC section 35). Where it isn't
    * the article on screen, its podcast's list opens with it chosen, and the keyboard goes to it.
    */
   function openEpisode(article: Article) {
@@ -1478,12 +1479,26 @@
     queueMicrotask(() => articleHeading?.focus({ preventScroll: true }));
   }
 
-  // Up Next's list follows the reader's own changes to its order (decision 0111).
+  // Up Next's list follows only the reader's own changes to it (Move, Remove, Undo, Add), never the removal when
+  // an episode starts by itself or by hand: nothing moves unless you move it (principle 5, decision 0113).
   $effect(() => {
-    void player.upNext;
+    void player.changes;
     untrack(() => {
       if (!shown && under.kind === "view" && under.view === "upnext") void itemList?.refresh();
     });
+  });
+
+  /**
+   * Up Next's sidebar row, once shown, stays while it empties, until the reader next goes somewhere: then it
+   * leaves (decision 0113).
+   */
+  let upNextStays = $state(false);
+  $effect(() => {
+    if (player.upNext?.length) upNextStays = true;
+  });
+  $effect(() => {
+    void route;
+    untrack(() => (upNextStays = Boolean(player.upNext?.length)));
   });
 
   /** Back from the article to its row in the list. */
@@ -1654,7 +1669,7 @@
 -->
 <svelte:window bind:innerWidth={windowWidth} />
 <!--
-  While an episode is in the player, the "now playing" bar takes its own room at the foot (SPEC section 34), so the
+  While an episode is in the player, the "now playing" bar takes its own room at the foot (SPEC section 35), so the
   panes above it end where it starts and it never covers them. On a phone reading an article, it sits above the
   article's toolbar instead.
 -->

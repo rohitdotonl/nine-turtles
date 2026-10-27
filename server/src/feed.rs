@@ -48,11 +48,11 @@ pub struct ParsedArticle {
     /// Seconds since 1970 (UTC), as the feed says.
     pub published_at: Option<i64>,
     /// The audio file attached to it, if it's a podcast's episode (SPEC
-    /// section 34). Only the publisher's address is kept, never the file.
+    /// section 35). Only the publisher's address is kept, never the file.
     pub episode: Option<Episode>,
 }
 
-/// A podcast episode's audio file, as its feed describes it (decision 0111).
+/// A podcast episode's audio file, as its feed describes it (decision 0113).
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Episode {
     /// The publisher's own address for the file: http or https only.
@@ -288,7 +288,7 @@ fn is_audio(media_type: Option<&str>, url: &Url) -> bool {
     }
 }
 
-/// The article's audio file, if it has one (SPEC section 34): the first
+/// The article's audio file, if it has one (SPEC section 35): the first
 /// audio attachment among an RSS `<enclosure>` (or Media RSS content), an
 /// Atom `rel="enclosure"` link and a JSON Feed attachment, with its type and
 /// size, how long it plays (`itunes:duration`) and its picture (the

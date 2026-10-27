@@ -774,7 +774,7 @@
             <span class={oneFeed ? "sr-only" : "row-feed"}><span class="row-feed-name" use:hugEllipsis={article.feedTitle}>{article.feedTitle}</span>&nbsp;·</span>
             <time datetime={new Date(article.at * 1000).toISOString()} class="row-date">{when(article.at)}</time>
             {#if article.episode}
-              <!-- A podcast's episode (SPEC section 34): a small headphones mark in the line's own ink, and its length. -->
+              <!-- A podcast's episode (SPEC section 35): a small headphones mark in the line's own ink, and its length. -->
               <span class="row-episode">·&nbsp;<Icon name="headphones" size={13} /><span class="sr-only">Episode</span>{#if article.episodeSeconds}&nbsp;{length(article.episodeSeconds)}{/if}</span>
             {/if}
             {#if article.muted}

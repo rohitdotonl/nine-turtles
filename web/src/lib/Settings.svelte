@@ -159,7 +159,7 @@
     { value: "recent", label: "Recently read" },
     { value: "searches", label: "Saved searches" },
     { value: "collections", label: "Collections" },
-    // Shown only while it holds an episode, unless unticked here (decision 0111).
+    // Shown only while it holds an episode, unless unticked here (decision 0113).
     { value: "upnext", label: "Up Next" },
   ];
 

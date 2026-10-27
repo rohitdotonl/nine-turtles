@@ -82,7 +82,7 @@ summary (or say why none needed it):
 ## The floors (nothing can trade these away)
 
 - **Everyone can read here:** WCAG AA contrast everywhere (AAA for article text), never color alone, fully keyboard-operable with visible focus, screen-reader friendly, respects system settings, 44px touch targets.
-- **Respect the publisher:** show only what the feed contains (never scrape), always credit and link the original, fetch politely, share the publisher's link, play media in the publisher's player.
+- **Respect the publisher:** show only what the feed contains (never scrape), always credit and link the original, fetch politely, share the publisher's link, play media in the publisher's player; an audio file the feed names plays from the publisher's own address in a simple player (decision 0113).
 - **Never lose the reader's data or put them at risk:** always sanitize feed content, no secrets in code or GitHub, nothing deletes without undo, back up before any database structure change (nine turtles does this itself, decision 0076), and any change that could lose data is raised with the owner first. Unsubscribing deletes a feed's unstarred, uncollected articles with only the immediate undo (and the nightly backups); the owner accepted that. Deleting one's own account has no undo at all, after one "Are you sure?" and an offer of the reader's downloads (decision 0088); the owner chose that too. The yearly clean-up removes unstarred, uncollected articles over a year old with no undo, only just after the night's backup is stored (decision 0089). Articles on any of the reader's collections are kept like starred ones (decision 0108).
 
 Ranked principles below the floors (higher wins). Design: reading first ›

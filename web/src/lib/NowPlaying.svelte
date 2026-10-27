@@ -1,12 +1,13 @@
 <!--
-  The "now playing" bar (SPEC section 34, decision 0111): while an episode is
+  The "now playing" bar (SPEC section 35, decision 0113): while an episode is
   in the player, a still, quiet band at the foot of the app, so it keeps
   playing as the reader moves through other articles. From the left: back 15
   seconds, Play or Pause, then the episode's title and podcast (a button that
   opens the episode), and Close, which stops it and keeps where the reader
   was. It takes its own room at the foot of the screen, so it never covers
   anything; on a phone it sits above the article's toolbar. A quiet line
-  says what happens by itself ("Playing next: …"), for screen readers too.
+  says what happens by itself ("Playing next: …"); this is the one place
+  screen readers hear it (the episode's own player shows it unspoken).
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";

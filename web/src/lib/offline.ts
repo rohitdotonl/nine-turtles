@@ -71,7 +71,7 @@ export const CATCH_UP_NEEDS_CONNECTION = "Catch me up needs a connection. Try ag
 export const READ_PAST_NEEDS_CONNECTION = "Marking articles not yet listed needs a connection. Try again once you're back online.";
 export const RECENT_NEEDS_CONNECTION = "Recently read needs a connection. It shows once you're back online.";
 export const UP_NEXT_NEEDS_CONNECTION = "Up Next needs a connection. It shows once you're back online.";
-/** What an episode in an article kept for reading offline says where its player would be (decision 0111). */
+/** What an episode in an article kept for reading offline says where its player would be (decision 0113). */
 export const EPISODE_OFFLINE = "The episode plays here when you're back online.";
 export const COLLECTIONS_NEED_CONNECTION = "Collections need a connection. They show once you're back online.";
 export const SETTINGS_NEED_CONNECTION = "Settings need a connection. They open once you're back online.";
@@ -119,7 +119,7 @@ export function keptList(kept: Kept[], source: Source, order: Order, library?: L
   if ("search" in source) throw new NeedsConnection(SEARCH_NEEDS_CONNECTION);
   // Recently read isn't kept on the device (decision 0105).
   if ("view" in source && source.view === "recent") throw new NeedsConnection(RECENT_NEEDS_CONNECTION);
-  // Nor is Up Next (decision 0111).
+  // Nor is Up Next (decision 0113).
   if ("view" in source && source.view === "upnext") throw new NeedsConnection(UP_NEXT_NEEDS_CONNECTION);
   // Nor are collections (decision 0108).
   if ("collection" in source) throw new NeedsConnection(COLLECTIONS_NEED_CONNECTION);

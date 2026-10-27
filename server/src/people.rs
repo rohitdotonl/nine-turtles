@@ -116,7 +116,7 @@ pub const PER_READER_TABLES: &[(&str, &str)] = &[
         "DELETE FROM collection_articles WHERE person_id = ?",
     ),
     ("collections", "DELETE FROM collections WHERE person_id = ?"),
-    // Where they stopped in episodes, and their Up Next (decision 0111):
+    // Where they stopped in episodes, and their Up Next (decision 0113):
     // they'd go with the entries anyway, but are named, like every table
     // with a reader's lines.
     (

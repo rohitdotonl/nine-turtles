@@ -73,7 +73,7 @@ export type Article = {
    * outside search, and when the words were only in the title.
    */
   excerpt?: ExcerptPiece[];
-  /** A podcast's episode (SPEC section 34): its row shows a small headphones mark, and its length if known. */
+  /** A podcast's episode (SPEC section 35): its row shows a small headphones mark, and its length if known. */
   episode?: boolean;
   /** How long the episode plays, in seconds, if its feed says. */
   episodeSeconds?: number | null;
@@ -90,7 +90,7 @@ export type FullArticle = Article & {
   summary: string | null;
   /** The article's language (or its feed's), or null if neither says. */
   language: string | null;
-  /** Its audio file, if it's a podcast's episode (SPEC section 34): played from the publisher's own address. */
+  /** Its audio file, if it's a podcast's episode (SPEC section 35): played from the publisher's own address. */
   audio?: Episode | null;
 };
 
@@ -281,7 +281,7 @@ export async function listArticles(source: Source, order: Order, after: string |
   } catch (problem) {
     // Recently read isn't kept on the device: it says plainly that it needs a connection.
     if (noConnection(problem) && "view" in source && source.view === "recent") throw new NeedsConnection(RECENT_NEEDS_CONNECTION);
-    // Nor is Up Next (decision 0111).
+    // Nor is Up Next (decision 0113).
     if (noConnection(problem) && "view" in source && source.view === "upnext") throw new NeedsConnection(UP_NEXT_NEEDS_CONNECTION);
     // Nor are collections (decision 0108).
     if (noConnection(problem) && "collection" in source) throw new NeedsConnection(COLLECTIONS_NEED_CONNECTION);

@@ -1,4 +1,4 @@
-//! Podcasts (SPEC section 34, decision 0111): where each reader stopped in
+//! Podcasts (SPEC section 35, decision 0113): where each reader stopped in
 //! each episode, and their Up Next. Each reader's alone, like every mark.
 //!
 //! nine turtles never fetches, copies or passes on an episode's audio: the
@@ -156,11 +156,27 @@ async fn is_episode_of(db: &sqlx::SqlitePool, person: i64, id: i64) -> Result<bo
     .await
 }
 
-/// The reader's Up Next, in order, by article number.
+/// Up Next's lines whose feed the reader still follows: a feed they left
+/// (or are leaving, during its Undo) keeps its lines out of sight, so the
+/// order, its count and what plays next agree with the list.
+/// (A macro, so the queries stay fixed strings.)
+macro_rules! followed {
+    () => {
+        "EXISTS (SELECT 1 FROM entries JOIN subscriptions
+             ON subscriptions.person_id = entries.person_id AND subscriptions.feed_id = entries.feed_id
+         WHERE entries.person_id = up_next.person_id AND entries.article_id = up_next.article_id
+             AND subscriptions.unsubscribed_at IS NULL)"
+    };
+}
+
+/// The reader's Up Next, in order, by article number: only episodes of
+/// feeds they still follow, as its list shows.
 pub async fn order_of(db: &sqlx::SqlitePool, person: i64) -> Result<Vec<i64>, sqlx::Error> {
-    sqlx::query_scalar(
-        "SELECT article_id FROM up_next WHERE person_id = ? ORDER BY place, article_id",
-    )
+    sqlx::query_scalar(concat!(
+        "SELECT article_id FROM up_next WHERE person_id = ? AND ",
+        followed!(),
+        " ORDER BY place, article_id"
+    ))
     .bind(person)
     .fetch_all(db)
     .await
@@ -180,7 +196,9 @@ struct NewOrder {
 
 /// Replaces the reader's Up Next with this order. An article named twice
 /// counts once, where it's first named; one that isn't an episode they have
-/// is left out. Answers the order kept.
+/// is left out. Lines of a feed they've left stay as they were, out of
+/// sight, so undoing the unsubscribe brings them back. Answers the order
+/// kept.
 async fn set_up_next(
     SignedIn(person): SignedIn,
     State(state): State<AppState>,
@@ -198,17 +216,22 @@ async fn set_up_next(
         .collect();
     let set = async {
         let mut transaction = state.db.begin().await?;
-        sqlx::query("DELETE FROM up_next WHERE person_id = ?")
-            .bind(person)
-            .execute(&mut *transaction)
-            .await?;
+        sqlx::query(concat!(
+            "DELETE FROM up_next WHERE person_id = ? AND ",
+            followed!()
+        ))
+        .bind(person)
+        .execute(&mut *transaction)
+        .await?;
         sqlx::query(
             "INSERT INTO up_next (person_id, article_id, place)
              SELECT entries.person_id, entries.article_id, wanted.key
              FROM json_each(?2) AS wanted
                  JOIN entries ON entries.person_id = ?1 AND entries.article_id = wanted.value
                  JOIN articles ON articles.id = entries.article_id
-             WHERE articles.episode_url IS NOT NULL",
+                 JOIN subscriptions ON subscriptions.person_id = entries.person_id
+                     AND subscriptions.feed_id = entries.feed_id
+             WHERE articles.episode_url IS NOT NULL AND subscriptions.unsubscribed_at IS NULL",
         )
         .bind(person)
         .bind(Value::from(wanted).to_string())

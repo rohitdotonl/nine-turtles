@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { added, clock, episodeFrom, finished, left, length, moved, nextSpeed, removed, resumeFrom, speedLabel, spoken, type Place } from "./podcasts";
 
-describe("the player's times (SPEC section 34)", () => {
+describe("the player's times (SPEC section 35)", () => {
   it("shows times as a clock does, in whole seconds", () => {
     expect(clock(0)).toBe("0:00");
     expect(clock(5.9)).toBe("0:05");

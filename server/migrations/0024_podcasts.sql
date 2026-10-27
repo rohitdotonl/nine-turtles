@@ -1,9 +1,10 @@
--- Podcasts (SPEC section 34, decision 0111): an article whose feed attaches
+-- Podcasts (SPEC section 35, decision 0113): an article whose feed attaches
 -- an audio file (an RSS <enclosure>, an Atom rel="enclosure" link or a JSON
 -- Feed attachment) is an episode. Only the publisher's own address for the
 -- file is kept, never the file: the reader's browser plays it straight from
 -- the publisher. Nothing already stored changes: every article starts as no
--- episode, and becomes one at its feed's next check if it is.
+-- episode, and becomes one once its feed next changes (a feed that hasn't
+-- changed answers "nothing new" to its ETag and isn't read again).
 
 -- The episode's audio file, as the feed gives it (an http or https address).
 ALTER TABLE articles ADD COLUMN episode_url TEXT;
