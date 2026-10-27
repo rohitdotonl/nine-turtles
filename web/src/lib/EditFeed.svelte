@@ -19,7 +19,7 @@
   import PageHead from "./PageHead.svelte";
   import Sheet from "./Sheet.svelte";
   import { edge } from "./edge";
-  import { editFeed, pausedSince, refused, type Check, type Feed, type Folder } from "./feeds";
+  import { editFeed, feedFrequency, pausedSince, refused, type Check, type Feed, type Folder } from "./feeds";
 
   let {
     feed,
@@ -59,6 +59,9 @@
   let paused = $state((() => feed.pausedAt != null)());
   let busy = $state(false);
   let message = $state("");
+  /** How often the feed posts, in plain words (decision 0105), once the server says. */
+  let frequency: string | undefined = $state();
+  feedFrequency((() => feed.id)()).then((words) => (frequency = words));
 
   async function save(event: SubmitEvent) {
     event.preventDefault();
@@ -106,10 +109,17 @@
 
 {#snippet form()}
   <form onsubmit={save} class={["flex flex-col gap-5", !sheet && "flex-1"]}>
-    <label class="flex flex-col gap-1.5">
-      <span class="text-small text-ink-2">Name</span>
-      <input bind:value={title} type="text" autocomplete="off" class="field" />
-    </label>
+    <div class="flex flex-col gap-1.5">
+      <label class="flex flex-col gap-1.5">
+        <span class="text-small text-ink-2">Name</span>
+        <input bind:value={title} type="text" autocomplete="off" class="field" aria-describedby="feed-frequency" />
+      </label>
+      <!--
+        How often it posts, as a field's helper line under the name (decision 0105): plain rounded
+        words, no number to chase. Its line is kept from the start, so nothing moves when the words arrive.
+      -->
+      <span id="feed-frequency" class="field-help mt-0">{frequency ? `${frequency}.` : " "}</span>
+    </div>
 
     <fieldset class="flex min-w-0 flex-col gap-1.5">
       <legend class="mb-1.5 text-small text-ink-2">Folders</legend>

@@ -1527,3 +1527,50 @@ async fn remembering_when_marks_were_made_keeps_every_mark() {
         ]
     );
 }
+
+#[tokio::test]
+async fn remembering_what_was_opened_keeps_every_mark_and_opens_nothing() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just after mark times (structure change 21): one feed the
+    // owner follows, with a starred article and a read one.
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(21, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO feeds (id, url, url_key, title, added_at) VALUES (1, 'u', 'u', 'Garden', 1)",
+        "INSERT INTO subscriptions (person_id, feed_id, title, added_at) VALUES (1, 1, 'Garden', 1)",
+        "INSERT INTO articles (id, feed_id, fingerprint, title, received_at, sort_at)
+         VALUES (1, 1, 'a', 'A', 1, 1), (2, 1, 'b', 'B', 2, 2)",
+        "INSERT INTO entries (person_id, article_id, feed_id, sort_at, read, starred,
+             read_marked_at, starred_marked_at)
+         VALUES (1, 1, 1, 1, 0, 1, 0, 5), (1, 2, 1, 2, 1, 0, 7, 0)",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let entries: Vec<(i64, bool, bool, i64, i64, Option<i64>)> = sqlx::query_as(
+        "SELECT article_id, read, starred, read_marked_at, starred_marked_at, opened_at
+         FROM entries ORDER BY article_id",
+    )
+    .fetch_all(&db)
+    .await
+    .unwrap();
+    assert_eq!(
+        entries,
+        [(1, false, true, 0, 5, None), (2, true, false, 7, 0, None)]
+    );
+}

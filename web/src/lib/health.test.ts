@@ -13,6 +13,7 @@ const sick = (change: Partial<Sick>): Sick => ({
   missingSince: null,
   fetchedAt: NOW - 3 * DAY,
   state: "trouble",
+  frequency: null,
   ...change,
 });
 

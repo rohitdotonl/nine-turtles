@@ -69,6 +69,7 @@ export const SEARCH_NEEDS_CONNECTION = "Search needs a connection. It works agai
 export const REFRESH_NEEDS_CONNECTION = "Refresh needs a connection. This is what's saved on this device.";
 export const CATCH_UP_NEEDS_CONNECTION = "Catch me up needs a connection. Try again once you're back online.";
 export const READ_PAST_NEEDS_CONNECTION = "Marking articles not yet listed needs a connection. Try again once you're back online.";
+export const RECENT_NEEDS_CONNECTION = "Recently read needs a connection. It shows once you're back online.";
 export const SETTINGS_NEED_CONNECTION = "Settings need a connection. They open once you're back online.";
 
 /** Thrown for what can't be done without a connection; its message says so. */
@@ -112,6 +113,8 @@ function feedsOf(source: Source, library: Library | undefined): Set<number> | un
  */
 export function keptList(kept: Kept[], source: Source, order: Order, library?: Library): Article[] {
   if ("search" in source) throw new NeedsConnection(SEARCH_NEEDS_CONNECTION);
+  // Recently read isn't kept on the device (decision 0105).
+  if ("view" in source && source.view === "recent") throw new NeedsConnection(RECENT_NEEDS_CONNECTION);
   const feeds = feedsOf(source, library);
   const view = "view" in source ? source.view : undefined;
   const shown = kept.filter((article) => {

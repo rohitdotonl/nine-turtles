@@ -5,8 +5,9 @@
   control on the right, every control the same width (decision 0039). It
   fills the list and reading areas while the sidebar stays, so the reader
   never loses their place. "Close settings" or
-  Escape goes back. Reading (the reading mode and the sort order) is shared across the reader's
-  devices; the reader controls belong to this device. Your data imports and
+  Escape goes back. Reading (the reading mode and the sort order) and Show in the sidebar (which
+  lists the sidebar shows, decision 0105) are shared across the reader's devices; the reader
+  controls belong to this device. Your data imports and
   exports the reader's feeds and folders as an OPML file, and exports their
   starred articles as a JSON Feed file, and brings starred articles over
   from other feed readers. Add from anywhere gives the bookmark and the
@@ -45,6 +46,7 @@
   import TextSize from "./TextSize.svelte";
   import { APPEARANCES, LOOKS, THEMES } from "./themes";
   import type { Counts, Feed, Folder, LetGo, Order, ReadingMode } from "./feeds";
+  import type { Hideable } from "./router";
   import { LINE_WIDTHS, READING_FONTS, type Preferences } from "./preferences";
   import { signOut } from "./session";
   import { updates } from "./updates.svelte";
@@ -61,6 +63,8 @@
     onCounts,
     letGo,
     onLetGo,
+    hidden,
+    onHidden,
     heading = $bindable(),
     dataHeading = $bindable(),
     version,
@@ -96,6 +100,9 @@
     /** When unread lets go by itself (decision 0097); unknown until the server answers. */
     letGo: LetGo | undefined;
     onLetGo: (letGo: LetGo) => Promise<void>;
+    /** The lists the sidebar leaves out (decision 0105). */
+    hidden: Hideable[];
+    onHidden: (hidden: Hideable[]) => Promise<void>;
     heading?: HTMLHeadingElement;
     /** "Your data", where the empty state's "Import OPML" leads. */
     dataHeading?: HTMLHeadingElement;
@@ -144,6 +151,29 @@
     { value: "shown", label: "Show" },
     { value: "hidden", label: "Hide" },
   ] as const;
+
+  /** The lists the sidebar can leave out, as its rows name them. Unread, folders and feeds always show. */
+  const SIDEBAR_LISTS: { value: Hideable; label: string }[] = [
+    { value: "starred", label: "Starred" },
+    { value: "all", label: "All" },
+    { value: "recent", label: "Recently read" },
+    { value: "searches", label: "Saved searches" },
+  ];
+
+  let sidebarMessage = $state("");
+
+  async function showInSidebar(list: Hideable, box: HTMLInputElement) {
+    sidebarMessage = "";
+    const shown = box.checked;
+    const next = shown ? hidden.filter((each) => each !== list) : [...hidden, list];
+    try {
+      await onHidden(next);
+    } catch {
+      // Back as it was, tick box included.
+      box.checked = !shown;
+      sidebarMessage = "That couldn't be saved. Try again in a moment.";
+    }
+  }
 
   const LET_GO_CHOICES = [
     { value: "never", label: "Never" },
@@ -440,6 +470,30 @@
             time you choose, a minute or so after you choose it: it counts as read and stays in its feed, All and search.{/if} These apply on all your devices.
         </p>
         <p role="status" class={["inset-foot text-danger", !sortMessage && "sr-only"]}>{sortMessage}</p>
+      </section>
+
+      <!-- Which lists the sidebar shows (decision 0105): a tick box row each, as in Edit feed; shared across devices. -->
+      <section aria-labelledby="sidebar-heading">
+        <h3 id="sidebar-heading" class="inset-head">Show in the sidebar</h3>
+        <div class="inset-group" role="group" aria-labelledby="sidebar-heading" aria-describedby="sidebar-help">
+          {#each SIDEBAR_LISTS as list (list.value)}
+            <label class="inset-row check-row">
+              <input
+                type="checkbox"
+                checked={!hidden.includes(list.value)}
+                disabled={sort === undefined}
+                onchange={(event) => showInSidebar(list.value, event.currentTarget)}
+              />
+              <span class="min-w-0 break-words">{list.label}</span>
+              <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
+            </label>
+          {/each}
+        </div>
+        <p id="sidebar-help" class="inset-foot">
+          Unread, your folders and your feeds always show{mode === "river" ? ", and so does All in river mode" : ""}. A list you
+          hide still opens from its address and its keys. These apply on all your devices.
+        </p>
+        <p role="status" class={["inset-foot text-danger", !sidebarMessage && "sr-only"]}>{sidebarMessage}</p>
       </section>
 
       <section aria-labelledby="reader-heading">

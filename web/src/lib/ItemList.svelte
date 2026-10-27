@@ -44,6 +44,7 @@
     newItemsMessage,
     newItemsWaiting,
     nothingPastMessage,
+    noteOpened,
     prefetch,
     readPast,
     when,
@@ -452,8 +453,9 @@
    */
   let spoken = $state("");
 
-  /** The reading area showed this article: it counts as read (not an undoable action). */
+  /** The reading area showed this article: it counts as read (not an undoable action), and joins Recently read. */
   export function shown(article: Article) {
+    noteOpened(article.id);
     if (article.read) return;
     setRead([article], true, "An article couldn't be marked as read. It's still unread.");
     // Said at once, like everything on screen (SPEC section 25); if saving

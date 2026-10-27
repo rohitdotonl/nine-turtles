@@ -33,6 +33,7 @@ pub mod feeds;
 pub mod fetch;
 pub mod finder;
 pub mod folders;
+pub mod frequency;
 pub mod greader;
 pub mod health;
 pub mod log;
@@ -43,6 +44,7 @@ pub mod newsletters;
 pub mod password;
 pub mod payments;
 pub mod people;
+pub mod recent;
 pub mod rules;
 pub mod saved_searches;
 pub mod search;
@@ -203,6 +205,8 @@ pub fn router(state: AppState) -> Router {
         .merge(subscriptions::routes())
         .merge(tidy::routes())
         .merge(marks::routes())
+        .merge(recent::routes())
+        .merge(frequency::routes())
         .merge(people::routes())
         .merge(payments::routes())
         .merge(rules::routes())

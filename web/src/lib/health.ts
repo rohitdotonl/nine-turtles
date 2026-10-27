@@ -19,6 +19,8 @@ export type Sick = {
   /** When it last worked, if ever. */
   fetchedAt: number | null;
   state: Condition;
+  /** How often it posts, in plain words ("Posts about once a week"), if the server said (decision 0105). */
+  frequency: string | null;
 };
 
 /** Why an action on the page didn't work. */
@@ -98,6 +100,7 @@ function toSick(feed: Record<string, unknown>): Sick {
     missingSince: number(feed.missing_since),
     fetchedAt: number(feed.fetched_at),
     state,
+    frequency: typeof feed.frequency === "string" && feed.frequency !== "" ? feed.frequency : null,
   };
 }
 

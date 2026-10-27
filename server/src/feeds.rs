@@ -25,7 +25,7 @@ use crate::{
     checking, discover, feed,
     fetch::{self, FetchError, Fetched},
     folders::{self, FOLDERS, Folder, MEMBERSHIPS},
-    log, now, rules, search, websub,
+    log, now, recent, rules, search, websub,
 };
 
 /// How many articles the list shows before "Show older items" (SPEC section 6).
@@ -766,14 +766,16 @@ pub enum Order {
 }
 
 impl List {
-    /// A feed's or a folder's articles if one is named, otherwise the view's.
-    pub(crate) const fn from_query(feed: Option<i64>, folder: Option<i64>, view: View) -> Self {
+    /// A feed's or a folder's articles if one is named, otherwise the view's;
+    /// none for Recently read, which is `recent`'s own list.
+    pub(crate) const fn from_query(feed: Option<i64>, folder: Option<i64>, view: View) -> Option<Self> {
         match (feed, folder, view) {
-            (Some(feed), _, _) => Self::Feed(feed),
-            (None, Some(folder), _) => Self::Folder(folder),
-            (None, None, View::All) => Self::All,
-            (None, None, View::Unread) => Self::Unread,
-            (None, None, View::Starred) => Self::Starred,
+            (Some(feed), _, _) => Some(Self::Feed(feed)),
+            (None, Some(folder), _) => Some(Self::Folder(folder)),
+            (None, None, View::All) => Some(Self::All),
+            (None, None, View::Unread) => Some(Self::Unread),
+            (None, None, View::Starred) => Some(Self::Starred),
+            (None, None, View::Recent) => None,
         }
     }
 }
@@ -785,6 +787,8 @@ pub(crate) enum View {
     All,
     Unread,
     Starred,
+    /// Recently read: the last 50 articles the reader opened (`recent`).
+    Recent,
 }
 
 #[derive(Deserialize)]
@@ -848,11 +852,15 @@ async fn list_articles(
     // Asked before the list, so an article arriving in between is reported
     // as new rather than missed.
     let latest: Result<i64, sqlx::Error> = sqlx::query_scalar(LATEST).fetch_one(&state.db).await;
-    let listed = match latest {
-        Ok(latest) => page(&state.db, person, list, query.order, after)
+    let listed = match (latest, list) {
+        (Ok(latest), Some(list)) => page(&state.db, person, list, query.order, after)
             .await
             .map(|listed| (latest, listed)),
-        Err(error) => Err(error),
+        // Recently read is one short page, in the order opened, whatever the sort.
+        (Ok(latest), None) => recent::list(&state.db, person)
+            .await
+            .map(|listed| (latest, (listed, None))),
+        (Err(error), _) => Err(error),
     };
     match listed {
         Ok((latest, (articles, next))) => {
@@ -919,7 +927,10 @@ async fn new_articles(
     State(state): State<AppState>,
     Query(query): Query<NewQuery>,
 ) -> Response {
-    let list = List::from_query(query.feed, query.folder, query.view);
+    // Nothing arrives already opened, so Recently read never has new items.
+    let Some(list) = List::from_query(query.feed, query.folder, query.view) else {
+        return Json(json!({ "new": false })).into_response();
+    };
     let Some(sql) = new_sql(list) else {
         return Json(json!({ "new": false })).into_response();
     };

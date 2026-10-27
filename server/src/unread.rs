@@ -31,6 +31,7 @@
 use axum::{
     Json, Router,
     extract::State,
+    http::StatusCode,
     response::{IntoResponse, Response},
     routing::post,
 };
@@ -255,7 +256,10 @@ async fn read_past(
     State(state): State<AppState>,
     Json(form): Json<ReadPast>,
 ) -> Response {
-    let list = List::from_query(form.feed, form.folder, form.view);
+    // Recently read is no list to mark past (it has no Mark all as read).
+    let Some(list) = List::from_query(form.feed, form.folder, form.view) else {
+        return StatusCode::BAD_REQUEST.into_response();
+    };
     let mut question = sqlx::query_scalar(read_past_sql(list, form.side))
         .bind(person)
         .bind(form.latest)

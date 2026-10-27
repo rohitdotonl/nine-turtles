@@ -47,7 +47,7 @@ export function dayInWords(date: string): string {
 export function scopeFor(route: Route): Scope {
   if (route.kind === "feed") return { kind: "feed", id: route.id };
   if (route.kind === "folder") return { kind: "folder", id: route.id };
-  if (route.kind === "view" && route.view !== "all") return { kind: "view", view: route.view };
+  if (route.kind === "view" && (route.view === "unread" || route.view === "starred")) return { kind: "view", view: route.view };
   return { kind: "all" };
 }
 

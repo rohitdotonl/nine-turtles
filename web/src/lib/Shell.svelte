@@ -49,7 +49,9 @@
     saveSort,
     saveCounts,
     saveLetGo,
+    saveHidden,
     lastCounts,
+    lastHidden,
     unsubscribe,
     type Article,
     type Feed,
@@ -66,7 +68,7 @@
   import { panesFor, widthFor, MEDIUM_REM, WIDE_REM, type SidebarChoice, type Width } from "./layout";
   import { TEXT_SIZES, apply, load, save } from "./preferences";
   import { device } from "./appearance.svelte";
-  import { VIEWS, VIEW_NAMES, nameFor, parse, pathFor, titleFor, type Route } from "./router";
+  import { VIEWS, VIEW_NAMES, nameFor, parse, pathFor, titleFor, type Hideable, type Route, type View } from "./router";
   import { sharedAddress } from "./share";
   import { emptyQuery, isSearching, scopeFor, searchParams, searchedTerms, type Query } from "./search";
   import { deleteSaved, listSaved, refusedSaving, sameQuery, saveSearch, type SavedSearch } from "./saved";
@@ -93,14 +95,24 @@
   } = $props();
 
   /** A small sign beside each view's name in the sidebar. */
-  const VIEW_ICONS = { unread: "dot", starred: "star", all: "stack" } as const;
+  const VIEW_ICONS = { unread: "dot", starred: "star", all: "stack", recent: "clock" } as const;
 
   /** Inbox or river, shared across the reader's devices; this device's last word until the server answers. */
   let mode: ReadingMode = $state(lastMode());
   /** Whether the sidebar shows unread counts, and when unread lets go (Settings › Reading, decision 0097). */
   let counts: Counts = $state(lastCounts());
   let letGo: LetGo | undefined = $state();
+  /** The lists the sidebar leaves out (Settings › Sidebar, decision 0105); they still open by address and keys. */
+  let hidden: Hideable[] = $state(lastHidden());
   let river = $derived(mode === "river");
+  /**
+   * The fixed lists the sidebar shows: river mode has no Unread, and a list
+   * the reader hid steps aside, except All in river mode, where it's home
+   * (as Unread, which can't be hidden, is in inbox mode).
+   */
+  let sidebarViews: View[] = $derived(
+    VIEWS.filter((view) => !(river && view === "unread") && !((hidden as string[]).includes(view) && !(river && view === "all"))),
+  );
   /** Where the app opens: Unread in inbox mode, All in river mode. */
   let home: Route = $derived({ kind: "view", view: homeView(mode) });
   const parsed = parse(location.pathname);
@@ -517,6 +529,17 @@
     }
   }
 
+  async function changeHidden(next: Hideable[]) {
+    const before = hidden;
+    hidden = next;
+    try {
+      await saveHidden(next);
+    } catch {
+      hidden = before;
+      throw new Error("not saved");
+    }
+  }
+
   async function changeSort(next: Order) {
     const before = sort;
     sort = next;
@@ -542,6 +565,9 @@
     // Shift+O marks what's older: below the chosen article when newest first, above it when oldest first (decision 0103).
     // In search results, ordered by how well they match, older goes by date, so neither row shows the key.
     const olderIs = shown ? undefined : sort === "oldest" ? "above" : "below";
+    // Recently read is in the order opened, and what's in it was read already: only Refresh applies.
+    const recent = !shown && under.kind === "view" && under.view === "recent";
+    if (recent) return [{ items: [{ label: "Refresh", shortcut: key("refresh"), onSelect: () => itemList?.refresh() }] }];
     const groups: MenuGroup[] = [
       {
         items: [
@@ -745,7 +771,9 @@
           if (selected && panes.article && isList(route)) articleView?.copyLink();
           break;
         case "mark-older-read":
-          if (!river && selected && isList(route) && (panes.list || panes.article || reading)) itemList?.markPast("older");
+          // Not in Recently read either: it's in the order opened, and its menu has no marks.
+          if (!river && selected && isList(route) && !(route.kind === "view" && route.view === "recent" && !shown) && (panes.list || panes.article || reading))
+            itemList?.markPast("older");
           break;
         case "toggle-folder": {
           // The folder you're in, or the first folder of the feed you're in.
@@ -766,7 +794,9 @@
           if (selected && isList(route)) itemList?.markUnread();
           break;
         case "mark-all-read":
-          if (!river && isList(route) && (panes.list || panes.article || reading)) itemList?.markAllRead();
+          // Not in Recently read, whose menu has no Mark all as read either.
+          if (!river && isList(route) && !(route.kind === "view" && route.view === "recent" && !shown) && (panes.list || panes.article || reading))
+            itemList?.markAllRead();
           break;
         case "undo":
           if (isList(route)) itemList?.undo();
@@ -795,6 +825,7 @@
       counts = settings.counts;
       letGo = settings.letGo;
       keys.chosen = settings.keys;
+      hidden = settings.hidden;
       keepForOffline();
       // This device last saw river mode, but it's inbox now (changed on
       // another device): an untouched home opens on Unread after all.
@@ -1287,6 +1318,7 @@
     if (place.kind === "folder") return "No articles in this folder yet.";
     if (place.kind === "view" && place.view === "unread") return "Nothing unread.";
     if (place.kind === "view" && place.view === "starred") return "No starred articles yet.";
+    if (place.kind === "view" && place.view === "recent") return "Articles you open will show here.";
     return "No articles yet.";
   }
 
@@ -1513,7 +1545,7 @@
       </div>
       {/if}
       <ul>
-        {#each VIEWS.filter((view) => !(river && view === "unread")) as view (view)}
+        {#each sidebarViews as view (view)}
           {@const current = !phone && route.kind === "view" && route.view === view}
           <!-- On a phone the feeds screen is the root of a stack: nothing is selected there, and each row leads on with a chevron (decision 0041). -->
           <li>
@@ -1532,7 +1564,7 @@
         {/each}
       </ul>
       {#if feeds}
-        <SidebarFeeds bind:this={sidebarFeeds} {feeds} {folders} {searches} {route} {search} {follow} {phone} {river} numbers={counts === "shown"} />
+        <SidebarFeeds bind:this={sidebarFeeds} {feeds} {folders} searches={hidden.includes("searches") ? [] : searches} {route} {search} {follow} {phone} {river} numbers={counts === "shown"} />
       {/if}
       {#if feedsProblem}
         <p class="px-4 pt-4 text-small">Your feeds couldn't be loaded. Reload the page to try again.</p>
@@ -1599,6 +1631,8 @@
           onCounts={changeCounts}
           {letGo}
           onLetGo={changeLetGo}
+          {hidden}
+          onHidden={changeHidden}
           bind:heading={settingsHeading}
           bind:dataHeading
           {version}

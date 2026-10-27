@@ -190,7 +190,8 @@
                         {#if row.feed.state !== "working"}{reason(row.feed.problem)}{/if}
                       </p>
                       <p class="w-full text-meta text-muted">
-                        {#if row.feed.state === "working"}Checked just now{:else}{lastWorked(row.feed)}{/if}{#if row.feed.state === "dead"}. Still checked once a day, in case it comes back{/if}.
+                        {#if row.feed.state === "working"}Checked just now{:else}{lastWorked(row.feed)}{/if}{#if row.feed.state === "dead"}. Still checked once a day, in case it comes back{/if}.{#if row.feed.frequency}
+                        {row.feed.frequency}.{/if}
                       </p>
                     {/if}
                     <p role="status" class={["w-full text-ink", !row.message && "sr-only"]}>{row.message}</p>

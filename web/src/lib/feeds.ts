@@ -1,7 +1,7 @@
 // Talking to the server about feeds, folders and their articles (SPEC
 // sections 3, 5 to 9, 15, 16 and 18), and the words and times the screens
 // show for them.
-import type { View } from "./router";
+import { HIDEABLE, type Hideable, type View } from "./router";
 import type { KeyMap } from "./keyboard";
 import { api } from "./updates.svelte";
 import { noConnection, serverNow, whenBack } from "./connection.svelte";
@@ -9,6 +9,7 @@ import {
   CATCH_UP_NEEDS_CONNECTION,
   READ_PAST_NEEDS_CONNECTION,
   NeedsConnection,
+  RECENT_NEEDS_CONNECTION,
   keepLibrary,
   keptArticle,
   keptLibrary,
@@ -263,6 +264,8 @@ export async function listArticles(source: Source, order: Order, after: string |
   try {
     return await listFromServer(source, order, after);
   } catch (problem) {
+    // Recently read isn't kept on the device: it says plainly that it needs a connection.
+    if (noConnection(problem) && "view" in source && source.view === "recent") throw new NeedsConnection(RECENT_NEEDS_CONNECTION);
     // A kept list comes whole, so there's never a next page of it to add.
     if (!noConnection(problem) || after !== null) throw problem;
     const kept = await keptPage(source, order);
@@ -276,6 +279,8 @@ async function listFromServer(source: Source, order: Order, after: string | null
   query.set("order", order);
   if (after !== null) query.set("after", after);
   await saved();
+  // Recently read lists the article just opened too.
+  if ("view" in source && source.view === "recent") await opening;
   const body = await getJson(`/api/${"search" in source ? "search" : "articles"}?${query}`);
   if (!isRecord(body) || !Array.isArray(body.articles)) throw new Error("nine turtles sent an unexpected answer");
   return {
@@ -404,6 +409,34 @@ function send(path: string, body: unknown): Promise<void> {
   return sent;
 }
 
+/** The last "opened" note on its way, so Recently read waits for it. */
+let opening: Promise<unknown> = Promise.resolve();
+
+/**
+ * Tells the server the reading area showed an article, for Recently read
+ * (decision 0105). Not a mark: without a connection it isn't sent or kept
+ * for later, and a failure is never said.
+ */
+export function noteOpened(id: number): void {
+  if (globalThis.navigator?.onLine === false) return;
+  opening = api("/api/articles/opened", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ id }),
+    signal: AbortSignal.timeout(15_000),
+  }).catch(() => undefined);
+}
+
+/** How often a feed posts, in plain words ("Posts about 3 times a week"), or nothing if it can't be said just now (decision 0105). */
+export async function feedFrequency(id: number): Promise<string | undefined> {
+  try {
+    const body = await getJson(`/api/feeds/${id}/frequency`);
+    return isRecord(body) && typeof body.words === "string" ? body.words : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /** Marks articles read or unread. The screen has already changed; this tells the server. */
 export function markRead(ids: number[], read: boolean): Promise<void> {
   return sendMark("read", ids, read, serverNow());
@@ -444,14 +477,22 @@ function sendMark(kind: "read" | "starred", ids: number[], value: boolean, at: n
 
 /** The settings shared across the reader's devices (SPEC section 18). */
 /** `letGo` is unknown when the server can't say, so its choices wait rather than show Never. */
-export type Reading = { sort: Order; mode: ReadingMode; counts: Counts; letGo: LetGo | undefined; keys: KeyMap };
+export type Reading = {
+  sort: Order;
+  mode: ReadingMode;
+  counts: Counts;
+  letGo: LetGo | undefined;
+  keys: KeyMap;
+  hidden: Hideable[];
+};
 
 /**
  * The settings shared across the reader's devices: the sort order, the
- * reading mode, whether unread counts show, when unread lets go and the
- * keys the reader chose. Newest first if the server can't say, the wait
- * unknown, and the mode, counts and keys this device last saw (inbox,
- * shown, nine turtles' own keys, if none).
+ * reading mode, whether unread counts show, when unread lets go, the keys
+ * the reader chose and which lists the sidebar hides. Newest first if the
+ * server can't say, the wait unknown, and the mode, counts, keys and hidden
+ * lists this device last saw (inbox, shown, nine turtles' own keys, none,
+ * if none).
  */
 export async function loadSettings(): Promise<Reading> {
   try {
@@ -461,12 +502,14 @@ export async function loadSettings(): Promise<Reading> {
     const counts = isRecord(body) && body.counts === "hidden" ? "hidden" : "shown";
     const letGo = (isRecord(body) && LET_GO.find((value) => value === body.let_go)) || "never";
     const keys = keysFrom(isRecord(body) ? body.keys : undefined);
+    const hidden = isRecord(body) ? hiddenFrom(body.hidden) : [];
     rememberMode(mode);
     rememberCounts(counts);
     rememberKeys(keys);
-    return { sort, mode, counts, letGo, keys };
+    rememberHidden(hidden);
+    return { sort, mode, counts, letGo, keys, hidden };
   } catch {
-    return { sort: "newest", mode: lastMode(), counts: lastCounts(), letGo: undefined, keys: lastKeys() };
+    return { sort: "newest", mode: lastMode(), counts: lastCounts(), letGo: undefined, keys: lastKeys(), hidden: lastHidden() };
   }
 }
 
@@ -498,6 +541,37 @@ export function forgetKeys() {
     globalThis.localStorage?.removeItem(KEYS_KEY);
   } catch {
     // Private browsing: nothing was kept.
+  }
+}
+
+/** The hidden lists named, in one order; anything else is left out. */
+export function hiddenFrom(value: unknown): Hideable[] {
+  if (!Array.isArray(value)) return [];
+  return HIDEABLE.filter((list) => value.includes(list));
+}
+
+/** Hides lists from the sidebar, or shows them again (Settings › Sidebar, decision 0105). */
+export async function saveHidden(hidden: Hideable[]): Promise<void> {
+  await send("/api/settings", { hidden });
+  rememberHidden(hidden);
+}
+
+const HIDDEN_KEY = "nine-turtles.hidden";
+
+/** The lists this device last saw hidden, so they don't show for a moment before the server answers. */
+export function lastHidden(): Hideable[] {
+  try {
+    return hiddenFrom(JSON.parse(globalThis.localStorage?.getItem(HIDDEN_KEY) ?? "[]"));
+  } catch {
+    return [];
+  }
+}
+
+function rememberHidden(hidden: Hideable[]) {
+  try {
+    globalThis.localStorage?.setItem(HIDDEN_KEY, JSON.stringify(hidden));
+  } catch {
+    // Private browsing: the server's answer still decides, a moment later.
   }
 }
 
