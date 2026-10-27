@@ -75,9 +75,18 @@ test("a passkey added in Settings signs in from the sign-in page, and the passwo
     "One device is enough: the phone's run would add a second passkey to the same reader.",
   );
   const { session, authenticatorId } = await virtualDevice(page);
+  let challenges = 0;
+  page.on("request", (request) => {
+    if (request.url().endsWith("/api/sign-in/passkey")) challenges += 1;
+  });
 
   await page.goto(`${local()}/`);
   await appReady(page);
+  // A device with no passkey for this site turns the email field's offer down
+  // at once; it's asked again only after a pause, never in a loop that would
+  // use up the server's challenges.
+  await page.waitForTimeout(2_000);
+  expect(challenges).toBeLessThanOrEqual(2);
   // Offered here, where passkeys belong; the email field offers them among its suggestions.
   await expect(
     page.getByRole("button", { name: "Sign in with a passkey" }),

@@ -54,6 +54,9 @@
   let rearm: ReturnType<typeof setTimeout> | undefined;
   /** Counts each stop, so an offer still starting when the page moves on never begins. */
   let offers = 0;
+  /** When the last offer began, and how far apart offers are kept. */
+  let lastOffer = 0;
+  const AUTOFILL_GAP = 5_000;
 
   /**
    * Offers this site's passkeys among the email field's suggestions. A
@@ -62,9 +65,18 @@
    */
   async function offerAutofill() {
     stopAutofill();
+    // A browser that turns the offer down at once (no passkeys here, or it
+    // won't wait) would otherwise be asked again and again, each time taking
+    // a challenge on the server: offers are at least 5 seconds apart.
+    const wait = lastOffer + AUTOFILL_GAP - Date.now();
+    if (wait > 0) {
+      rearm = setTimeout(offerAutofill, wait);
+      return;
+    }
     const mine = offers;
     // Stopped while the browser answered: the page has moved on.
     if (!offered || !(await autofillAvailable()) || mine !== offers) return;
+    lastOffer = Date.now();
     const waiting = new AbortController();
     autofill = waiting;
     rearm = setTimeout(offerAutofill, 4 * 60 * 1000);
