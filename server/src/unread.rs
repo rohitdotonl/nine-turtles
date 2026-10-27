@@ -18,6 +18,15 @@
 //! before the start of the reader's day as read, and answers which, so Undo
 //! (the screen sending "unread" for the same articles) puts back exactly
 //! those.
+//!
+//! **Marking older (or newer) as read** (decision 0103): `Shift+O` and the
+//! list's "Mark all above as read" and "Mark all below as read" mark every
+//! unread article in the list on screen that lies past the chosen one, in
+//! the list's own order, including those not loaded yet. Only articles that
+//! existed when the list was loaded count (its `latest`, which the list's
+//! "anything new?" question uses too), so nothing that arrived in the
+//! background since is touched. It answers which, so Undo puts back exactly
+//! those.
 
 use axum::{
     Json, Router,
@@ -32,11 +41,14 @@ use sqlx::SqlitePool;
 use crate::{
     AppState,
     auth::{SignedIn, database_problem},
+    feeds::{List, View},
     now,
 };
 
 pub fn routes() -> Router<AppState> {
-    Router::new().route("/api/articles/catch-up", post(catch_up))
+    Router::new()
+        .route("/api/articles/catch-up", post(catch_up))
+        .route("/api/articles/read-past", post(read_past))
 }
 
 const DAY: i64 = 86_400;
@@ -140,5 +152,121 @@ async fn catch_up(
     match marked {
         Ok(ids) => Json(json!({ "ids": ids })).into_response(),
         Err(error) => database_problem("catching up", &error),
+    }
+}
+
+/// The start of every "mark past this one as read" question: the reader's
+/// unread entries in a list, past one place in it (`?3` the date, `?4` the
+/// article), that existed when the list was loaded (`?2`, its `latest`).
+/// Each takes the reader as `?1`; a feed's or folder's then its number as
+/// `?5`. The filters match `feeds::list_sql`, so it marks exactly what the
+/// list would go on to show: muted articles (read already) are listed only
+/// in Starred, Unread leaves out feeds that flow past, and All, Unread and a
+/// folder leave out feeds in their Undo time after unsubscribing.
+macro_rules! read_past_query {
+    ($filter:literal, $past:literal) => {
+        concat!(
+            "UPDATE entries SET read = 1,
+                 read_marked_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+             WHERE person_id = ?1 AND read = 0 AND article_id <= ?2
+                 AND (sort_at, article_id) ",
+            $past,
+            " (?3, ?4) AND ",
+            $filter,
+            " RETURNING article_id"
+        )
+    };
+}
+
+/// Which side of the chosen article to mark: `Older` has an earlier date
+/// (below it when the list is newest first), `Newer` a later one.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Side {
+    Older,
+    Newer,
+}
+
+/// The question that marks one side of a list as read.
+pub const fn read_past_sql(list: List, side: Side) -> &'static str {
+    match (list, side) {
+        (List::All, Side::Older) => read_past_query!(
+            "feed_id IN (SELECT feed_id FROM subscriptions
+                 WHERE person_id = ?1 AND unsubscribed_at IS NULL)",
+            "<"
+        ),
+        (List::All, Side::Newer) => read_past_query!(
+            "feed_id IN (SELECT feed_id FROM subscriptions
+                 WHERE person_id = ?1 AND unsubscribed_at IS NULL)",
+            ">"
+        ),
+        (List::Unread, Side::Older) => read_past_query!(
+            "feed_id IN (SELECT feed_id FROM subscriptions
+                 WHERE person_id = ?1 AND unsubscribed_at IS NULL AND river = 0)",
+            "<"
+        ),
+        (List::Unread, Side::Newer) => read_past_query!(
+            "feed_id IN (SELECT feed_id FROM subscriptions
+                 WHERE person_id = ?1 AND unsubscribed_at IS NULL AND river = 0)",
+            ">"
+        ),
+        (List::Starred, Side::Older) => read_past_query!("starred = 1", "<"),
+        (List::Starred, Side::Newer) => read_past_query!("starred = 1", ">"),
+        (List::Feed(_), Side::Older) => read_past_query!("feed_id = ?5 AND muted = 0", "<"),
+        (List::Feed(_), Side::Newer) => read_past_query!("feed_id = ?5 AND muted = 0", ">"),
+        (List::Folder(_), Side::Older) => read_past_query!(
+            "muted = 0 AND feed_id IN (SELECT feed_id FROM feed_folders
+                 WHERE folder_id = (SELECT id FROM folders WHERE id = ?5 AND person_id = ?1))
+             AND feed_id IN (SELECT feed_id FROM subscriptions
+                 WHERE person_id = ?1 AND unsubscribed_at IS NULL)",
+            "<"
+        ),
+        (List::Folder(_), Side::Newer) => read_past_query!(
+            "muted = 0 AND feed_id IN (SELECT feed_id FROM feed_folders
+                 WHERE folder_id = (SELECT id FROM folders WHERE id = ?5 AND person_id = ?1))
+             AND feed_id IN (SELECT feed_id FROM subscriptions
+                 WHERE person_id = ?1 AND unsubscribed_at IS NULL)",
+            ">"
+        ),
+    }
+}
+
+#[derive(Deserialize)]
+struct ReadPast {
+    /// The list, named as `GET /api/articles` names it.
+    feed: Option<i64>,
+    folder: Option<i64>,
+    #[serde(default)]
+    view: View,
+    side: Side,
+    /// The chosen article's place in the list: its date and its number.
+    at: i64,
+    id: i64,
+    /// The `latest` the list was loaded with: nothing newer is touched.
+    latest: i64,
+}
+
+/// "Mark older as read", "Mark all above as read" and "Mark all below as
+/// read": every unread article on one side of the chosen one, listed yet or
+/// not, counts as read. Answers their numbers, for Undo (which goes in
+/// parts the size one mark takes).
+async fn read_past(
+    SignedIn(person): SignedIn,
+    State(state): State<AppState>,
+    Json(form): Json<ReadPast>,
+) -> Response {
+    let list = List::from_query(form.feed, form.folder, form.view);
+    let mut question = sqlx::query_scalar(read_past_sql(list, form.side))
+        .bind(person)
+        .bind(form.latest)
+        .bind(form.at)
+        .bind(form.id);
+    if let List::Feed(id) | List::Folder(id) = list {
+        question = question.bind(id);
+    }
+    let marked: Result<Vec<i64>, sqlx::Error> = question.fetch_all(&state.db).await;
+    match marked {
+        Ok(ids) => Json(json!({ "ids": ids })).into_response(),
+        Err(error) => database_problem("marking past an article as read", &error),
     }
 }

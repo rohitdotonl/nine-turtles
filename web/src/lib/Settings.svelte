@@ -72,6 +72,7 @@
     onImported,
     onFeedHealth,
     onYourFeeds,
+    onKeys,
     onMuted,
     onReaders,
     feeds,
@@ -113,6 +114,8 @@
     onFeedHealth: (event: MouseEvent) => void;
     /** Opens Your feeds. */
     onYourFeeds: (event: MouseEvent) => void;
+    /** Opens the shortcut list, ready to change keys (decision 0110). */
+    onKeys: () => void;
     /** Opens the Muted articles page. */
     onMuted: (event: MouseEvent) => void;
     /** Opens the owner's Readers page. */
@@ -521,6 +524,17 @@
           These apply to this device only. Match device switches between the day and night versions as the
           device does. The Aa button above an article changes these too, while you read.
         </p>
+      </section>
+
+      <!-- Only on a screen with a keyboard: there's nothing to press on a touch screen (decision 0110). -->
+      <section aria-labelledby="keyboard-heading" class="keyboard-hint">
+        <h3 id="keyboard-heading" class="inset-head">Keyboard</h3>
+        <div class="inset-group">
+          <button type="button" onclick={onKeys} aria-haspopup="dialog" class="inset-row inset-action"
+            >Change keys…<span class="row-glyph"><Icon name="chevron-right" size={18} /></span></button
+          >
+        </div>
+        <p class="inset-foot">Give any shortcut a key of your own, or none. Your keys follow you to every device you sign in on. Press ? anywhere to see them all.</p>
       </section>
 
       <section aria-labelledby="data-heading">

@@ -12,7 +12,7 @@ use nine_turtles::{
     feeds::{FEEDS, LATEST, List, Order, list_sql, new_sql, page},
     search::{Search, find},
     starred::{EXPORT, Starred, write},
-    unread::{CATCH_UP, LET_GO},
+    unread::{CATCH_UP, LET_GO, Side, read_past_sql},
 };
 use sqlx::SqlitePool;
 
@@ -195,6 +195,27 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
             plan.contains("SEARCH entries USING INDEX") && plan.contains("sort_at<?"),
             "{plan}"
         );
+    }
+    // Marking older, above or below as read (decision 0103) reads only the
+    // reader's unread entries on that side, through an index, in every list.
+    for list in [
+        List::All,
+        List::Unread,
+        List::Starred,
+        List::Feed(250),
+        List::Folder(1),
+    ] {
+        for side in [Side::Older, Side::Newer] {
+            let mut binds = vec![READER, i64::MAX, NOW - YEAR / 52, i64::MAX];
+            if let List::Feed(id) | List::Folder(id) = list {
+                binds.push(id);
+            }
+            let plan = plan(&db, read_past_sql(list, side), &binds).await;
+            assert!(
+                plan.contains("SEARCH entries USING INDEX") && !plan.contains("SCAN entries"),
+                "{list:?} {side:?}: {plan}"
+            );
+        }
     }
 
     let mut timings = Vec::new();

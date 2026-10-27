@@ -25,6 +25,7 @@
   import { currentSession, type Session } from "./lib/session";
   import { noConnection } from "./lib/connection.svelte";
   import { forget, keepSession, keptSession } from "./lib/offline";
+  import { forgetChosenKeys } from "./lib/keys.svelte";
 
   let session: Session | undefined = $state();
   let unreachable = $state(false);
@@ -35,7 +36,10 @@
     try {
       session = await currentSession();
       if (session.signedIn) keepSession({ version: session.version, owner: session.owner, email: session.email, emailSending: session.emailSending });
-      else await forget();
+      else {
+        forgetChosenKeys();
+        await forget();
+      }
       unreachable = false;
       path = location.pathname;
       // Already signed in: an invite link opens nine turtles itself.

@@ -68,6 +68,7 @@ export const NOT_KEPT = "This article isn't saved on this device. It opens when 
 export const SEARCH_NEEDS_CONNECTION = "Search needs a connection. It works again once you're back online.";
 export const REFRESH_NEEDS_CONNECTION = "Refresh needs a connection. This is what's saved on this device.";
 export const CATCH_UP_NEEDS_CONNECTION = "Catch me up needs a connection. Try again once you're back online.";
+export const READ_PAST_NEEDS_CONNECTION = "Marking articles not yet listed needs a connection. Try again once you're back online.";
 export const SETTINGS_NEED_CONNECTION = "Settings need a connection. They open once you're back online.";
 
 /** Thrown for what can't be done without a connection; its message says so. */

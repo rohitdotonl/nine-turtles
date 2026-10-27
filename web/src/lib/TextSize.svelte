@@ -11,6 +11,7 @@
 -->
 <script lang="ts">
   import { TEXT_SIZES } from "./preferences";
+  import { tip } from "./keys.svelte";
 
   let {
     size = $bindable(),
@@ -39,7 +40,7 @@
     type="button"
     bind:this={first}
     aria-label="Smaller text"
-    title="Smaller text (−)"
+    title={tip("Smaller text", "text-smaller")}
     aria-disabled={smallest}
     onclick={() => step(-1)}
     class="step"><span aria-hidden="true" class="text-[0.9375rem]">A</span><span aria-hidden="true" class="sign" data-sign="−"></span></button
@@ -48,7 +49,7 @@
   <button
     type="button"
     aria-label="Larger text"
-    title="Larger text (+)"
+    title={tip("Larger text", "text-larger")}
     aria-disabled={largest}
     onclick={() => step(1)}
     class="step"><span aria-hidden="true" class="text-[1.375rem]">A</span><span aria-hidden="true" class="sign" data-sign="+"></span></button

@@ -368,6 +368,21 @@ export const SCREENS: Screen[] = [
       await expect(page.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeVisible();
     },
   },
+  {
+    // Changing keys (decision 0110), with a question open under a row: asked, never saved.
+    name: "change-keys",
+    path: "/unread",
+    signedIn: true,
+    open: async (page) => {
+      await page.keyboard.press("?");
+      // A touch screen hides the way in; pressed from code, the sheet is the same.
+      await page.locator("dialog button", { hasText: "Change keys…" }).evaluate((button: HTMLElement) => button.click());
+      const dialog = page.getByRole("dialog", { name: "Change keys" });
+      await dialog.locator('[data-binding="star"]').click();
+      await page.keyboard.press("Shift+O");
+      await expect(dialog.getByRole("button", { name: "Use it" })).toBeVisible();
+    },
+  },
 ];
 
 /** A blog in the made-up library (tests/feed-server.mjs → SHELF), by its feed's address. */

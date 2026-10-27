@@ -260,25 +260,25 @@ async fn settings_are_each_readers_own() {
     let (status, _) = owner
         .post(
             "/api/settings",
-            json!({ "sort": "oldest", "mode": "river", "counts": "shown", "let_go": "never" }),
+            json!({ "sort": "oldest", "mode": "river", "counts": "shown", "let_go": "never", "keys": { "star": "x" } }),
         )
         .await;
     assert_eq!(status, StatusCode::OK);
 
     assert_eq!(
         other.get("/api/settings").await,
-        json!({ "sort": "newest", "mode": "inbox", "counts": "shown", "let_go": "never" })
+        json!({ "sort": "newest", "mode": "inbox", "counts": "shown", "let_go": "never", "keys": {} })
     );
     let (_, changed) = other
         .post("/api/settings", json!({ "sort": "newest" }))
         .await;
     assert_eq!(
         changed,
-        json!({ "sort": "newest", "mode": "inbox", "counts": "shown", "let_go": "never" })
+        json!({ "sort": "newest", "mode": "inbox", "counts": "shown", "let_go": "never", "keys": {} })
     );
     assert_eq!(
         owner.get("/api/settings").await,
-        json!({ "sort": "oldest", "mode": "river", "counts": "shown", "let_go": "never" })
+        json!({ "sort": "oldest", "mode": "river", "counts": "shown", "let_go": "never", "keys": { "star": "x" } })
     );
 }
 
@@ -2265,6 +2265,49 @@ async fn empty_library(reader: &Reader) {
     assert_eq!(reader.get("/api/rules").await["rules"], json!([]));
     assert_eq!(reader.get("/api/muted").await["count"], 0);
     assert!(!reader.get_text("/api/opml").await.contains("Garden"));
+}
+
+#[tokio::test]
+async fn marking_older_as_read_touches_only_that_readers_unread() {
+    let (owner, other, _, feed, _) = two_followers().await;
+    let page = other.get(&format!("/api/articles?feed={feed}")).await;
+    let newest = &page["articles"][0];
+    let (status, marked) = other
+        .post(
+            "/api/articles/read-past",
+            json!({
+                "feed": feed,
+                "side": "older",
+                "at": newest["at"],
+                "id": newest["id"],
+                "latest": page["latest"],
+            }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(marked["ids"].as_array().unwrap().len(), 2);
+    assert_eq!(other.ids("view=unread").await.len(), 1);
+    assert_eq!(owner.ids("view=unread").await.len(), 3);
+
+    // Naming the other reader's folder marks nothing: it isn't theirs.
+    let (_, folder) = owner
+        .post("/api/folders", json!({ "name": "Mine", "feeds": [feed] }))
+        .await;
+    let folder = folder["folder"]["id"].as_i64().unwrap();
+    let (_, none) = other
+        .post(
+            "/api/articles/read-past",
+            json!({
+                "folder": folder,
+                "side": "newer",
+                "at": 0,
+                "id": 0,
+                "latest": page["latest"],
+            }),
+        )
+        .await;
+    assert_eq!(none["ids"], json!([]));
+    assert_eq!(other.ids("view=unread").await.len(), 1);
 }
 
 #[tokio::test]

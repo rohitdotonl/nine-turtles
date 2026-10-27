@@ -43,7 +43,9 @@
     markStarred,
     newItemsMessage,
     newItemsWaiting,
+    nothingPastMessage,
     prefetch,
+    readPast,
     when,
     type Article,
     type Notice,
@@ -284,6 +286,32 @@
     return true;
   }
 
+  /**
+   * `n` and `Shift+N`: the next (1) or previous (-1) unread article listed,
+   * passing over read ones; from the top (or the foot) if none is selected
+   * yet. Returns false when there's none that way: like `j`, it never loads
+   * more on its own.
+   */
+  export function moveUnread(step: 1 | -1): boolean {
+    let index = selectedIndex === -1 ? (step === 1 ? 0 : articles.length - 1) : selectedIndex + step;
+    while (index >= 0 && index < articles.length && articles[index]!.read) index += step;
+    if (index < 0 || index >= articles.length) return false;
+    select(index);
+    return true;
+  }
+
+  /**
+   * Home (-1) and End (1): the first or last article listed. End goes to
+   * the last one loaded; it never loads more (decision 0110). Returns
+   * false with nothing listed, or when already there.
+   */
+  export function moveToEnd(step: 1 | -1): boolean {
+    const index = step === 1 ? articles.length - 1 : 0;
+    if (articles.length === 0 || index === selectedIndex) return false;
+    select(index);
+    return true;
+  }
+
   /** Whether `move(step)` has an article to move to; on a phone, the article's Previous and Next say so. */
   export function canMove(step: 1 | -1): boolean {
     const index = selectedIndex === -1 ? 0 : selectedIndex + step;
@@ -503,6 +531,125 @@
     );
   }
 
+  /** A "mark past this one" is being worked out: a second press waits for it rather than racing it. */
+  let markingPast = false;
+
+  /**
+   * `Shift+O` ("older"), and "Mark all above as read" and "Mark all below as
+   * read" from the list's More menu (decision 0103): every unread article on
+   * one side of the selected one counts as read, including those the list
+   * hasn't loaded yet, but never one that arrived after it was loaded. Above
+   * and below go by the rows' order; older by their dates, which in a feed,
+   * folder or view is the same thing. Nothing moves; Undo makes exactly
+   * those articles unread again.
+   */
+  export async function markPast(kind: "older" | "above" | "below") {
+    const chosen = selected;
+    const index = selectedIndex;
+    if (!chosen || index === -1 || markingPast) return;
+    // In a list by date, older is below when newest first, and above when oldest first.
+    const side: "older" | "newer" = kind === "older" ? "older" : (kind === "below") === (order === "newest") ? "older" : "newer";
+    const towardsEnd = results ? kind !== "above" : (side === "older") === (order === "newest");
+    const before = (article: Article) => article.at < chosen.at || (article.at === chosen.at && article.id < chosen.id);
+    // What's listed on that side: by position, or, in search results (ordered by how well they match), older by date.
+    const listed =
+      results && kind === "older"
+        ? articles.filter((article) => article.id !== chosen.id && before(article))
+        : towardsEnd
+          ? articles.slice(index + 1)
+          : articles.slice(0, index);
+    const unlisted = towardsEnd && next !== null && !fromDevice;
+    if (unlisted && !("search" in source)) {
+      markingPast = true;
+      try {
+        await markPastOnServer(source, side, chosen, kind);
+      } finally {
+        markingPast = false;
+      }
+      return;
+    }
+    let more: Article[] = [];
+    if (unlisted) {
+      // Search results come page by page: the rest are asked for, and marked by name like the rows shown.
+      markingPast = true;
+      try {
+        more = await rest();
+      } catch (failure) {
+        say(failure instanceof NeedsConnection ? failure.message : "The rest of the list couldn't be loaded, so nothing was marked. Try again in a moment.");
+        return;
+      } finally {
+        markingPast = false;
+      }
+      // Never one that arrived after the search ran, as the server does for lists.
+      more = more.filter((article) => article.id <= latest && (kind !== "older" || before(article)));
+      // Rows loaded while waiting are the same articles: marked as the rows they are, so they turn grey too.
+      const shown = new Map(articles.map((article) => [article.id, article]));
+      const counted = new Set(listed);
+      more = more.map((article) => shown.get(article.id) ?? article).filter((article) => !counted.has(article));
+    }
+    const unread = [...listed, ...more].filter((article) => !article.read);
+    if (unread.length === 0) {
+      say(nothingPastMessage(kind));
+      return;
+    }
+    did(markedAllMessage(unread.length), () => setRead(unread, false));
+    setRead(unread, true);
+  }
+
+  /** The rest of a list after what's loaded, page by page, kept apart from the rows shown (they don't grow by themselves). */
+  async function rest(): Promise<Article[]> {
+    const found: Article[] = [];
+    let after = next;
+    // At most what one mark can name (the server's limit of 10,000).
+    for (let pages = 0; after !== null && pages < 190; pages++) {
+      const page = await listArticles(source, order, after);
+      found.push(...page.articles);
+      after = page.next;
+    }
+    return found;
+  }
+
+  /** The server marks the side of the list not loaded yet too, and answers which, as Catch me up does. */
+  async function markPastOnServer(
+    list: Exclude<Source, { search: Record<string, string> }>,
+    side: "older" | "newer",
+    chosen: Article,
+    kind: "older" | "above" | "below",
+  ) {
+    let ids: number[];
+    try {
+      ids = await readPast(list, side, chosen, latest);
+    } catch (failure) {
+      say(failure instanceof NeedsConnection ? failure.message : "Marking those as read couldn't be confirmed. Refresh to see where things stand.");
+      return;
+    }
+    if (ids.length === 0) {
+      say(nothingPastMessage(kind));
+      return;
+    }
+    // Worked out from the rows as they are now, so any loaded while waiting are shown read too.
+    const marked = new Set(ids);
+    const shown = articles.filter((article) => !article.read && marked.has(article.id));
+    for (const article of shown) {
+      confirmed.set(`read:${article.id}`, true);
+      putRead(article, true);
+    }
+    onCounts();
+    did(markedAllMessage(ids.length), () =>
+      save(
+        "read",
+        shown,
+        false,
+        async () => {
+          await uncatchUp(ids);
+          onCounts();
+        },
+        putRead,
+        "Undo couldn't be saved, so they're still read.",
+      ),
+    );
+  }
+
   /** `u` and Undo: reverses the last undoable action, once. */
   export function undo(): boolean {
     const reverse = undoLast;
@@ -568,6 +715,7 @@
           bind:this={rows[index]}
           tabindex={current || (selectedIndex === -1 && index === 0) ? 0 : -1}
           aria-current={current ? "true" : undefined}
+          data-space-reads
           onclick={(event) => {
             select(index);
             // A click made with Enter has no mouse position.

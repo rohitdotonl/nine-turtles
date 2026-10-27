@@ -29,7 +29,7 @@
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
-  import { findByName, folderUnread, inDevanagari, unreadLabel, type Feed, type Folder } from "./feeds";
+  import { findByName, folderUnread, inDevanagari, saveOpenFolders, savedOpenFolders, unreadLabel, type Feed, type Folder } from "./feeds";
   import { pathFor, type Route } from "./router";
   import type { SavedSearch } from "./saved";
 
@@ -60,28 +60,28 @@
     numbers?: boolean;
   } = $props();
 
-  const OPEN_KEY = "nine-turtles.open-folders";
-  /** Where they were saved before the rename; read when there's nothing under the new name. */
-  const OLD_OPEN_KEY = "slowfeed.open-folders";
+  let open: number[] = $state(savedOpenFolders());
 
-  let open: number[] = $state(loadOpen());
+  /** The folders open now: Shift+J and Shift+K pass over the feeds in the others (decision 0110). */
+  export function openFolders(): number[] {
+    return open;
+  }
 
-  function loadOpen(): number[] {
-    try {
-      const saved: unknown = JSON.parse(localStorage.getItem(OPEN_KEY) ?? localStorage.getItem(OLD_OPEN_KEY) ?? "[]");
-      return Array.isArray(saved) ? saved.filter((id) => typeof id === "number") : [];
-    } catch {
-      return [];
-    }
+  /**
+   * `e`: folds or unfolds a folder, as its arrow does (decision 0103). If the
+   * keyboard's place was on one of the feeds it hides, it moves to the
+   * folder's own row rather than being lost.
+   */
+  export function toggleFolder(id: number) {
+    if (phone) return;
+    const inside = document.getElementById(`folder-${id}`)?.contains(document.activeElement) ?? false;
+    toggle(id);
+    if (inside) queueMicrotask(() => document.querySelector<HTMLElement>(`[data-folder-link="${id}"]`)?.focus());
   }
 
   function toggle(id: number) {
     open = open.includes(id) ? open.filter((each) => each !== id) : [...open, id];
-    try {
-      localStorage.setItem(OPEN_KEY, JSON.stringify(open));
-    } catch {
-      // Not remembered on this device; the folder still opens.
-    }
+    saveOpenFolders(open);
   }
 
   let searching = $derived(search.trim() !== "");
@@ -152,6 +152,7 @@
     href={pathFor(place)}
     aria-current={isHere(place) ? "page" : undefined}
     onclick={(event) => follow(event, place)}
+    data-folder-link={folder.id}
     title={folder.name}
     class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center gap-3 rounded-md pr-3.5 text-ui pointer-fine:text-small", padded && "pl-[38px]", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
     >{@render name(folder.name)}{@render count(folderUnread(folder, feeds))}{@render leadsOn()}</a

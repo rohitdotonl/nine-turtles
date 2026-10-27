@@ -2,10 +2,12 @@
 // sections 3, 5 to 9, 15, 16 and 18), and the words and times the screens
 // show for them.
 import type { View } from "./router";
+import type { KeyMap } from "./keyboard";
 import { api } from "./updates.svelte";
 import { noConnection, serverNow, whenBack } from "./connection.svelte";
 import {
   CATCH_UP_NEEDS_CONNECTION,
+  READ_PAST_NEEDS_CONNECTION,
   NeedsConnection,
   keepLibrary,
   keptArticle,
@@ -182,6 +184,69 @@ export function findByName(library: Library, typed: string): Library {
 
 function fold(text: string): string {
   return text.normalize("NFKD").replace(/\p{M}/gu, "").toLocaleLowerCase();
+}
+
+/**
+ * Shift+J and Shift+K (decision 0110): the feed after (1) or before (-1)
+ * the place you're in, in the sidebar's order: folders A to Z, each with its
+ * feeds while it's open, then the feeds in no folder. Feeds in a folded
+ * folder are passed over, as you can't see them; a feed in two folders
+ * counts once, where it's first listed. Folders, saved searches and Unread,
+ * Starred and All aren't stops: from a folder the next feed is the first
+ * listed after it, and from the places above the folders (Unread, Starred,
+ * All, a saved search) Shift+J goes to the first feed and Shift+K to none.
+ * At either end nothing happens: the list ends.
+ */
+export function feedNextTo(library: Library, open: number[], here: { kind: string; id?: number }, step: 1 | -1): number | undefined {
+  const rows: ({ folder: number } | { feed: number })[] = [];
+  const seen = new Set<number>();
+  for (const folder of library.folders) {
+    rows.push({ folder: folder.id });
+    if (!open.includes(folder.id)) continue;
+    for (const feed of library.feeds) {
+      if (!feed.folders.includes(folder.id) || seen.has(feed.id)) continue;
+      seen.add(feed.id);
+      rows.push({ feed: feed.id });
+    }
+  }
+  for (const feed of library.feeds) if (feed.folders.length === 0 && !seen.has(feed.id)) rows.push({ feed: feed.id });
+
+  let at = -1;
+  if (here.kind === "feed") {
+    at = rows.findIndex((row) => "feed" in row && row.feed === here.id);
+    // A feed in a folded folder: from that folder's row.
+    const feed = library.feeds.find((each) => each.id === here.id);
+    if (at === -1 && feed) at = rows.findIndex((row) => "folder" in row && feed.folders.includes(row.folder));
+  } else if (here.kind === "folder") at = rows.findIndex((row) => "folder" in row && row.folder === here.id);
+
+  for (let index = at + step; index >= 0 && index < rows.length; index += step) {
+    const row = rows[index]!;
+    if ("feed" in row) return row.feed;
+  }
+  return undefined;
+}
+
+const OPEN_KEY = "nine-turtles.open-folders";
+/** Where they were saved before the rename; read when there's nothing under the new name. */
+const OLD_OPEN_KEY = "slowfeed.open-folders";
+
+/** The folders open in the sidebar, as this device remembers them. */
+export function savedOpenFolders(): number[] {
+  try {
+    const saved: unknown = JSON.parse(globalThis.localStorage?.getItem(OPEN_KEY) ?? globalThis.localStorage?.getItem(OLD_OPEN_KEY) ?? "[]");
+    return Array.isArray(saved) ? saved.filter((id) => typeof id === "number") : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Remembers which folders are open in the sidebar, on this device. */
+export function saveOpenFolders(open: number[]) {
+  try {
+    globalThis.localStorage?.setItem(OPEN_KEY, JSON.stringify(open));
+  } catch {
+    // Not remembered on this device; the folder still opens.
+  }
 }
 
 function sourceQuery(source: Source): URLSearchParams {
@@ -379,13 +444,14 @@ function sendMark(kind: "read" | "starred", ids: number[], value: boolean, at: n
 
 /** The settings shared across the reader's devices (SPEC section 18). */
 /** `letGo` is unknown when the server can't say, so its choices wait rather than show Never. */
-export type Reading = { sort: Order; mode: ReadingMode; counts: Counts; letGo: LetGo | undefined };
+export type Reading = { sort: Order; mode: ReadingMode; counts: Counts; letGo: LetGo | undefined; keys: KeyMap };
 
 /**
  * The settings shared across the reader's devices: the sort order, the
- * reading mode, whether unread counts show and when unread lets go. Newest
- * first if the server can't say, the wait unknown, and the mode and counts
- * this device last saw (inbox, shown, if none).
+ * reading mode, whether unread counts show, when unread lets go and the
+ * keys the reader chose. Newest first if the server can't say, the wait
+ * unknown, and the mode, counts and keys this device last saw (inbox,
+ * shown, nine turtles' own keys, if none).
  */
 export async function loadSettings(): Promise<Reading> {
   try {
@@ -394,11 +460,52 @@ export async function loadSettings(): Promise<Reading> {
     const mode = isRecord(body) && body.mode === "river" ? "river" : "inbox";
     const counts = isRecord(body) && body.counts === "hidden" ? "hidden" : "shown";
     const letGo = (isRecord(body) && LET_GO.find((value) => value === body.let_go)) || "never";
+    const keys = keysFrom(isRecord(body) ? body.keys : undefined);
     rememberMode(mode);
     rememberCounts(counts);
-    return { sort, mode, counts, letGo };
+    rememberKeys(keys);
+    return { sort, mode, counts, letGo, keys };
   } catch {
-    return { sort: "newest", mode: lastMode(), counts: lastCounts(), letGo: undefined };
+    return { sort: "newest", mode: lastMode(), counts: lastCounts(), letGo: undefined, keys: lastKeys() };
+  }
+}
+
+/** The reader's keys, from the server or this device's copy: names and keys only, anything else left out. */
+function keysFrom(value: unknown): KeyMap {
+  if (!isRecord(value)) return {};
+  return Object.fromEntries(Object.entries(value).filter((entry): entry is [string, string] => typeof entry[1] === "string"));
+}
+
+/** Saves the reader's keys, all of them at once (decision 0110): `{}` puts every key back. */
+export async function saveKeys(keys: KeyMap): Promise<void> {
+  await send("/api/settings", { keys });
+  rememberKeys(keys);
+}
+const KEYS_KEY = "nine-turtles.keys";
+
+/** The keys this device last saw, so a changed key works from the first press, before the server answers, and offline. */
+export function lastKeys(): KeyMap {
+  try {
+    return keysFrom(JSON.parse(globalThis.localStorage?.getItem(KEYS_KEY) ?? "{}"));
+  } catch {
+    return {};
+  }
+}
+
+/** Signed out: this device forgets the keys, so whoever signs in next starts from their own (or nine turtles'). */
+export function forgetKeys() {
+  try {
+    globalThis.localStorage?.removeItem(KEYS_KEY);
+  } catch {
+    // Private browsing: nothing was kept.
+  }
+}
+
+function rememberKeys(keys: KeyMap) {
+  try {
+    globalThis.localStorage?.setItem(KEYS_KEY, JSON.stringify(keys));
+  } catch {
+    // Private browsing: the server's answer still decides, a moment later.
   }
 }
 
@@ -465,6 +572,33 @@ export async function catchUp(now: Date = new Date()): Promise<number[]> {
   return isRecord(body) && Array.isArray(body.ids) ? body.ids.map(Number) : [];
 }
 
+/**
+ * "Mark older as read", "Mark all above as read" and "Mark all below as
+ * read" (decision 0103), when more of the list is still to load: every
+ * unread article in the list on one side of `article`, loaded or not, but
+ * none that arrived after the list was loaded (`latest`). Answers which
+ * were marked, for Undo. Not for search results, which the screen marks
+ * page by page itself.
+ */
+export async function readPast(source: Exclude<Source, { search: Record<string, string> }>, side: "older" | "newer", article: Article, latest: number): Promise<number[]> {
+  await saved();
+  let response: Response;
+  try {
+    response = await api("/api/articles/read-past", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ ...source, side, at: article.at, id: article.id, latest }),
+      signal: AbortSignal.timeout(15_000),
+    });
+  } catch (problem) {
+    if (noConnection(problem)) throw new NeedsConnection(READ_PAST_NEEDS_CONNECTION);
+    throw problem;
+  }
+  if (!response.ok) throw new Refused(response.status);
+  const body: unknown = await response.json();
+  return isRecord(body) && Array.isArray(body.ids) ? body.ids.map(Number) : [];
+}
+
 /** The most articles one mark names (the server's limit), so Undo after catching up on a huge backlog goes in parts. */
 const MOST_AT_ONCE = 10_000;
 
@@ -508,6 +642,11 @@ function rememberMode(mode: ReadingMode) {
 export function markedAllMessage(count: number): string {
   if (count === 0) return "Everything here is already read.";
   return `Marked ${count} ${count === 1 ? "item" : "items"} as read`;
+}
+
+/** What the note says when "Mark older as read", or above or below, finds nothing unread there. */
+export function nothingPastMessage(kind: "older" | "above" | "below"): string {
+  return kind === "older" ? "Nothing older is unread." : `Nothing ${kind} it is unread.`;
 }
 
 /** A feed's unread count as the sidebar shows it: nothing for none, "999+" above 999. */

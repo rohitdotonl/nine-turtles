@@ -35,6 +35,7 @@
   import { NOT_KEPT } from "./offline";
   import PictureSheet from "./PictureSheet.svelte";
   import { OPENABLE, markPicture } from "./pictures";
+  import { currentKey, tip } from "./keys.svelte";
 
   let {
     article,
@@ -97,8 +98,8 @@
   let more: MenuGroup[] = $derived([
     {
       items: [
-        ...(article.link ? [{ label: sharing ? "Share" : "Copy link", onSelect: share }] : []),
-        { label: "Mark unread", shortcut: phone ? undefined : "m", onSelect: onMarkUnread },
+        ...(article.link ? [{ label: sharing ? "Share" : "Copy link", shortcut: phone || sharing ? undefined : currentKey("copy-link"), onSelect: share }] : []),
+        { label: "Mark unread", shortcut: phone ? undefined : currentKey("mark-unread"), onSelect: onMarkUnread },
       ],
     },
   ]);
@@ -268,12 +269,38 @@
       }
       return;
     }
+    await copyLink();
+  }
+
+  /**
+   * `c`, and Copy link in More: the original's address goes on the
+   * clipboard, and the top bar says so. On a phone with a keyboard too, `c`
+   * copies rather than opening the share sheet.
+   */
+  export async function copyLink() {
+    const link = article.link;
+    if (!link) return;
+    // Emptied first, so the same words are said again for a second copy.
+    copied = "";
     try {
       await navigator.clipboard.writeText(link);
       copied = "Link copied.";
     } catch {
       copied = "The link couldn't be copied. Use Open original and copy it from there.";
     }
+  }
+
+  /**
+   * Space and Shift+Space: the article moves on (1) or back (-1) by a screen,
+   * keeping a few lines of the last one in view so the eye finds its place,
+   * at once, never gliding. At the end (or the top) it simply stops.
+   */
+  export function page(step: 1 | -1) {
+    const area = scroller;
+    if (!area) return;
+    moved = true;
+    const overlap = Math.min(64, area.clientHeight * 0.15);
+    area.scrollBy({ top: step * Math.max(area.clientHeight - overlap, 40), behavior: "instant" });
   }
 </script>
 
@@ -307,7 +334,7 @@
 {/snippet}
 
 {#snippet original(size: number)}
-  <a href={article.link} target="_blank" rel="noopener noreferrer" aria-label="Open original" title={phone ? "Open original" : "Open original (V)"} class="btn-quiet btn-icon"
+  <a href={article.link} target="_blank" rel="noopener noreferrer" aria-label="Open original" title={phone ? "Open original" : tip("Open original", "open-original")} class="btn-quiet btn-icon"
     ><Icon name="open" {size} /></a
   >
 {/snippet}
@@ -350,7 +377,7 @@
         {/if}
         {@render aa(20, "btn-quiet btn-icon")}
         <!-- A toggle keeps one name for screen readers ("Star", pressed or not); the filled star shows its state. -->
-        <button type="button" aria-label="Star" aria-pressed={article.starred} title={article.starred ? "Starred (S)" : "Star (S)"} onclick={onStar} class={["btn-quiet btn-icon", article.starred && "text-star"]}>
+        <button type="button" aria-label="Star" aria-pressed={article.starred} title={tip(article.starred ? "Starred" : "Star", "star")} onclick={onStar} class={["btn-quiet btn-icon", article.starred && "text-star"]}>
           {@render starIcon(20)}
         </button>
         <MoreMenu id="article-menu" label="More actions" groups={more} />
