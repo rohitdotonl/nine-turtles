@@ -71,7 +71,6 @@ turtles doesn't start, and the log says so.
 3. **Email me a sign-in link** works the same way: an email "Sign in to
    nine turtles" arrives, with a link that signs you in once, within 15
    minutes.
-4. In Settings › Sign-up, **Open** can now be chosen.
 
 If no email arrives, look in Render's **Logs** for "couldn't send": the line
 says roughly what went wrong ("the mail server refused it", "couldn't be
