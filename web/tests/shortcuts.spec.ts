@@ -61,7 +61,7 @@ test.describe("on a wide window", () => {
     for (let press = 0; press < 20; press++) await page.keyboard.press(" ");
     const end = await scroller(page).evaluate((element) => element.scrollHeight - element.clientHeight);
     await expect.poll(() => scrolled(page)).toBeGreaterThanOrEqual(end - 1);
-    await expect(article(page).getByRole("heading", { level: 2 })).toHaveText("The pleasure of a slow letter");
+    await expect(article(page).locator(".article-title")).toHaveText("The pleasure of a slow letter");
 
     await page.keyboard.press("Shift+Space");
     await expect.poll(() => scrolled(page)).toBeLessThan(end - screen / 2);
@@ -106,7 +106,7 @@ test.describe("on a wide window", () => {
 
     await page.keyboard.press("n");
     await expect(row(page, 1)).toHaveAttribute("aria-current", "true");
-    await expect(article(page).getByRole("heading", { level: 2 })).toHaveText(/\(1\)/);
+    await expect(article(page).locator(".article-title")).toHaveText(/\(1\)/);
     // Nothing unread above any more: Shift+N stays where it is.
     await page.keyboard.press("Shift+N");
     await expect(row(page, 1)).toHaveAttribute("aria-current", "true");
