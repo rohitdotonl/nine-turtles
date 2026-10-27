@@ -155,6 +155,44 @@ export function lastWorked(feed: Sick, now: Date = new Date()): string {
   return /^\d\d:\d\d$/.test(at) ? "Last worked today" : `Last worked on ${at}`;
 }
 
+/**
+ * The quiet line above a failing feed's list, and in Edit feed (decision
+ * 0106): "This feed hasn't worked since 12 October." (with the year when it
+ * isn't this one), in the device's time zone.
+ */
+export function brokenSince(failingSince: number, now: Date = new Date()): string {
+  const date = new Date(failingSince * 1000);
+  const sameDay =
+    date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
+  if (sameDay) return "This feed hasn't worked since earlier today.";
+  const day = date.getFullYear() === now.getFullYear() ? DAY_MONTH : DAY_MONTH_YEAR;
+  return `This feed hasn't worked since ${day.format(date)}.`;
+}
+
+const DAY_MONTH = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long" });
+const DAY_MONTH_YEAR = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" });
+
+/**
+ * What Find new address found, as the next step (decision 0106): one feed
+ * is a plain question ("Use … instead?"), several a choice of one, none a
+ * plain sentence saying why.
+ */
+export type Found =
+  | { kind: "one"; choice: Choice; said: string }
+  | { kind: "several"; choices: Choice[]; said: string }
+  | { kind: "none"; said: string };
+
+export function found(answer: Choice[] | HealthRefusal): Found {
+  if (!Array.isArray(answer)) return { kind: "none", said: refusalMessage(answer, "find") };
+  const [first] = answer;
+  if (!first) return { kind: "none", said: refusalMessage({ error: "no-feed" }, "find") };
+  if (answer.length === 1) return { kind: "one", choice: first, said: `Use ${first.url} instead?` };
+  return { kind: "several", choices: answer, said: "The site names these feeds. Choose one:" };
+}
+
+/** What Use it or Use this address says once the feed has moved. */
+export const MOVED = "It now reads from its new address and works again. Its articles, stars and folders stayed.";
+
 /** What Retry, Find new address or Use this address says when it couldn't. */
 export function refusalMessage(refusal: HealthRefusal, doing: "retry" | "find" | "move"): string {
   switch (refusal.error) {

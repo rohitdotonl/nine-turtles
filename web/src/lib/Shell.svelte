@@ -13,12 +13,13 @@
   import { edge } from "./edge";
   import Icon from "./Icon.svelte";
   import PaneResizer from "./PaneResizer.svelte";
-  import { onMount, untrack } from "svelte";
+  import { onMount, tick, untrack } from "svelte";
   import AddFeed from "./AddFeed.svelte";
   import ArticleView from "./ArticleView.svelte";
   import CheatSheet from "./CheatSheet.svelte";
   import EditFeed from "./EditFeed.svelte";
   import EditFolder from "./EditFolder.svelte";
+  import FailingLine from "./FailingLine.svelte";
   import EditSearch from "./EditSearch.svelte";
   import ItemList from "./ItemList.svelte";
   import MoreMenu, { type MenuGroup } from "./MoreMenu.svelte";
@@ -1154,6 +1155,21 @@
   }
 
   /** Edit feed's "Add a rule for this feed…": to Settings, where the new rule's sheet opens for the feed. */
+  /**
+   * Find new address moved a failing feed, from the line above its list or
+   * from Edit feed (decision 0106): the feeds load again, so its line and its
+   * count are up to date. If others follow the old address too, the reader
+   * now follows the new one, under a new number: the list (or Edit feed)
+   * goes there. The keyboard moves to the title, as the button it was on has
+   * gone.
+   */
+  async function feedMoved(before: number, after: number, heading: () => HTMLHeadingElement | undefined) {
+    await loadFeeds();
+    if (after !== before) go(route.kind === "edit-feed" ? { kind: "edit-feed", id: after } : { kind: "feed", id: after });
+    await tick();
+    heading()?.focus();
+  }
+
   function addRuleFor(feed: Feed) {
     ruleForFeed = feed.id;
     go({ kind: "settings" });
@@ -1682,6 +1698,7 @@
             onCancel={() => edited(false)}
             onUnsubscribe={() => unsubscribeFrom(currentFeed!)}
             onAddRule={() => addRuleFor(currentFeed!)}
+            onMoved={(after) => feedMoved(currentFeed!.id, after.id, () => listHeading)}
           />
         {/key}
       {:else if !sheet && route.kind === "edit-folder" && currentFolder}
@@ -1850,6 +1867,15 @@
               <!-- The list's 28px dot gutter (decision 0054) is for rows: the welcome steps back out to the 20px margin. -->
               <div class={phone ? "mt-[5.5rem] ml-[calc(1.25rem-var(--list-start))] flex" : "mt-8 flex justify-center"}>{@render welcome(phone)}</div>
             {:else if feeds !== undefined && sort !== undefined && (under.kind !== "search" || searchesLoaded)}
+              {#if under.kind === "feed" && !shown && currentFeed}
+                <!-- A feed that isn't working says so above its list, with Find new address (decision 0106). -->
+                <FailingLine
+                  class="pt-1 pb-2"
+                  feed={currentFeed}
+                  label="Find its new address"
+                  onMoved={(after) => feedMoved(currentFeed!.id, after.id, () => listHeading)}
+                />
+              {/if}
               <!-- The list, with "New items · press r" and Undo in a note floating at its foot (More, with Refresh, sits beside the title). -->
               {#key listKey}
                 <ItemList
@@ -1966,6 +1992,7 @@
       onCancel={() => edited(false)}
       onUnsubscribe={() => unsubscribeFrom(currentFeed!)}
       onAddRule={() => addRuleFor(currentFeed!)}
+      onMoved={(after) => feedMoved(currentFeed!.id, after.id, () => sheetHeading)}
     />
   {/key}
 {:else if sheet && route.kind === "save-search" && toSave}

@@ -56,6 +56,10 @@ struct FeedRow {
     open_on_site: bool,
     /// When the reader paused it, if it's paused.
     paused_at: Option<i64>,
+    /// When its checks began failing, while the feed health page lists it
+    /// as not working (`health::LISTED_AFTER` failures in a row), so its
+    /// list can say so and offer Find new address (decision 0106).
+    failing_since: Option<i64>,
     /// The folders it's in, by number.
     #[sqlx(skip)]
     folders: Vec<i64>,
@@ -67,6 +71,7 @@ struct FeedRow {
 /// nothing. Takes the reader.
 pub const FEEDS: &str = "SELECT feeds.id, subscriptions.title, feeds.site_url, subscriptions.river,
         subscriptions.check_at_most, subscriptions.open_on_site, subscriptions.paused_at,
+        CASE WHEN feeds.failures >= 2 THEN feeds.failing_since END AS failing_since,
         CASE WHEN subscriptions.river THEN 0 ELSE
             (SELECT COUNT(*) FROM entries WHERE entries.person_id = subscriptions.person_id
                  AND entries.feed_id = subscriptions.feed_id AND entries.read = 0)
@@ -528,6 +533,7 @@ async fn follow(
         check_at_most: 0,
         open_on_site: false,
         paused_at: None,
+        failing_since: None,
         folders: Vec::new(),
     })
 }
@@ -1221,6 +1227,15 @@ fn is_language_tag(tag: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_feeds_list_says_it_is_failing_exactly_when_feed_health_lists_it() {
+        let listed = format!(
+            "WHEN feeds.failures >= {} THEN feeds.failing_since",
+            crate::health::LISTED_AFTER
+        );
+        assert!(FEEDS.contains(&listed));
+    }
 
     #[test]
     fn only_real_language_tags_mark_an_article() {

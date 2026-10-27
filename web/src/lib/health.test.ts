@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { forHowLong, headline, lastWorked, reason, refusalMessage, type Sick } from "./health";
+import { brokenSince, forHowLong, found, headline, lastWorked, reason, refusalMessage, type Sick } from "./health";
 
 const DAY = 24 * 60 * 60;
 const NOW = 1_790_000_000;
@@ -57,5 +57,24 @@ describe("the feed health page's words", () => {
     expect(refusalMessage({ error: "no-feed" }, "find")).toMatch(/doesn't name another feed/);
     expect(refusalMessage({ error: "no-feed" }, "move")).toBe("That address isn't a feed.");
     expect(refusalMessage({ error: "already" }, "move")).toBe("You already follow that feed.");
+  });
+});
+
+describe("a failing feed's line and Find new address (decision 0106)", () => {
+  it("says since when the feed hasn't worked, in words", () => {
+    const now = new Date(2026, 9, 27, 12, 0);
+    const at = (...parts: [number, number, number, number]) => new Date(...parts).getTime() / 1000;
+    expect(brokenSince(at(2026, 9, 12, 9), now)).toBe("This feed hasn't worked since 12 October.");
+    expect(brokenSince(at(2025, 11, 3, 9), now)).toBe("This feed hasn't worked since 3 December 2025.");
+    expect(brokenSince(at(2026, 9, 27, 8), now)).toBe("This feed hasn't worked since earlier today.");
+  });
+
+  it("asks one plain question for one feed, offers a choice for several, and explains none", () => {
+    const one = { title: "A blog", url: "https://blog.example/new.xml" };
+    const two = { title: "Comments", url: "https://blog.example/comments.xml" };
+    expect(found([one])).toEqual({ kind: "one", choice: one, said: "Use https://blog.example/new.xml instead?" });
+    expect(found([one, two])).toMatchObject({ kind: "several", choices: [one, two] });
+    expect(found([])).toMatchObject({ kind: "none", said: expect.stringMatching(/doesn't name another feed/) });
+    expect(found({ error: "unreachable" })).toEqual({ kind: "none", said: "The site didn't answer. Try again later." });
   });
 });

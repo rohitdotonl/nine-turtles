@@ -166,6 +166,20 @@ impl Reader {
             .collect()
     }
 
+    /// When the library says a feed began failing: only while the health
+    /// page lists it, so its list can say so (decision 0106).
+    async fn failing_since(&self, id: i64) -> Option<i64> {
+        let library = self.get("/api/feeds").await;
+        let feed = library["feeds"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|feed| feed["id"].as_i64() == Some(id))
+            .unwrap()
+            .clone();
+        feed["failing_since"].as_i64()
+    }
+
     /// Checks one feed as background checking would, at `at`.
     async fn check(&self, id: i64, at: i64) {
         checking::check(&self.state, id, at).await.unwrap();
@@ -198,11 +212,15 @@ async fn broken_feeds_are_listed_worst_first_and_retry_checks_now() {
     // One failure is usually a blip: not listed yet.
     reader.check(old, now).await;
     assert!(reader.listed().await.is_empty());
+    assert_eq!(reader.failing_since(old).await, None);
     reader.check(old, now + HOUR).await;
     assert_eq!(
         reader.listed().await,
         [(old, "trouble".to_owned(), "not-found".to_owned())]
     );
+    // Its list says so too, from when its failures began.
+    assert_eq!(reader.failing_since(old).await, Some(now));
+    assert_eq!(reader.failing_since(other).await, None);
 
     // Another feed failing for longer comes first while both are having
     // trouble; once the first has been "not found" for a week, it's dead,
@@ -257,6 +275,7 @@ async fn broken_feeds_are_listed_worst_first_and_retry_checks_now() {
         reader.listed().await,
         [(other, "trouble".to_owned(), "unreachable".to_owned())]
     );
+    assert_eq!(reader.failing_since(old).await, None);
 
     // A feed that isn't followed can't be retried.
     let (status, _) = reader.post("/api/health/999/retry", json!({})).await;

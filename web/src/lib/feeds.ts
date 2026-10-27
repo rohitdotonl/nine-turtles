@@ -30,6 +30,11 @@ export type Feed = {
   folders: number[];
   /** When the reader paused it (seconds since 1970), or null while it isn't paused (SPEC section 15). */
   pausedAt?: number | null;
+  /**
+   * When its checks began failing (seconds since 1970), while the feed health
+   * page lists it as not working; null while it works (decision 0106).
+   */
+  failingSince?: number | null;
 } & FeedSettings;
 
 /**
@@ -1159,6 +1164,7 @@ function toFeed(feed: Record<string, unknown>): Feed {
     check: checkFrom(Number(feed.check_at_most ?? 0)),
     openOnSite: feed.open_on_site === true,
     pausedAt: typeof feed.paused_at === "number" ? feed.paused_at : null,
+    failingSince: typeof feed.failing_since === "number" ? feed.failing_since : null,
   };
 }
 

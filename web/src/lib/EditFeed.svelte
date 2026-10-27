@@ -2,7 +2,9 @@
   "Edit feed" (SPEC section 15): the feed's name, its folders as a
   checklist ending in a "New folder…" row, its own settings (reading mode,
   how often it's checked, opening on the website), a shortcut to add a rule
-  for the feed (SPEC section 27), and Unsubscribe. Saving
+  for the feed (SPEC section 27), and Unsubscribe. A feed that isn't working
+  says so at the top, with Find new address (decision 0106), which moves it
+  at once rather than on Save. Saving
   changes them all together; Cancel or Escape goes back to the feed unchanged.
   Unsubscribing happens at once, with Undo on the next screen. On a wide
   window it's a sheet over the feed's list; on a phone, a screen of its own.
@@ -15,11 +17,13 @@
   the full width at the screen's foot, at least 32px below it.
 -->
 <script lang="ts">
+  import FailingLine from "./FailingLine.svelte";
   import Icon from "./Icon.svelte";
   import PageHead from "./PageHead.svelte";
   import Sheet from "./Sheet.svelte";
   import { edge } from "./edge";
   import { editFeed, feedFrequency, pausedSince, refused, type Check, type Feed, type Folder } from "./feeds";
+  import type { Sick } from "./health";
 
   let {
     feed,
@@ -32,6 +36,7 @@
     onCancel,
     onUnsubscribe,
     onAddRule,
+    onMoved,
   }: {
     feed: Feed;
     folders: Folder[];
@@ -47,6 +52,8 @@
     onUnsubscribe: () => Promise<string | undefined>;
     /** "Add a rule for this feed…": Settings, with a new rule for it (SPEC section 27). */
     onAddRule: () => void;
+    /** Find new address moved the feed (decision 0106). */
+    onMoved: (feed: Sick) => void;
   } = $props();
 
   // The form starts from the feed as it is now, once.
@@ -109,6 +116,8 @@
 
 {#snippet form()}
   <form onsubmit={save} class={["flex flex-col gap-5", !sheet && "flex-1"]}>
+    <!-- Only while it isn't working, as the feed health page would list it: one quiet line and Find new address. -->
+    <FailingLine {feed} label="Find new address" {onMoved} />
     <div class="flex flex-col gap-1.5">
       <label class="flex flex-col gap-1.5">
         <span class="text-small text-ink-2">Name</span>
