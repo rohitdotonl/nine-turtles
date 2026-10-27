@@ -8,6 +8,7 @@ import { noConnection, serverNow, whenBack } from "./connection.svelte";
 import {
   CATCH_UP_NEEDS_CONNECTION,
   READ_PAST_NEEDS_CONNECTION,
+  COLLECTIONS_NEED_CONNECTION,
   NeedsConnection,
   RECENT_NEEDS_CONNECTION,
   keepLibrary,
@@ -50,7 +51,8 @@ export type Check = "automatic" | "hourly" | "daily";
 export type Folder = { id: number; name: string };
 
 /** Everything the sidebar lists: feeds and folders, each A to Z. */
-export type Library = { feeds: Feed[]; folders: Folder[] };
+/** The reader's feeds and folders, and, where search needs them, their collections (decision 0108). */
+export type Library = { feeds: Feed[]; folders: Folder[]; collections?: { id: number; name: string }[] };
 
 export type Article = {
   id: number;
@@ -102,7 +104,7 @@ export type Page = {
  * Which articles a list shows: one of the views, one feed's or folder's (all
  * of them), or a search's results (`search.ts` → `searchParams`).
  */
-export type Source = { view: View } | { feed: number } | { folder: number } | { search: Record<string, string> };
+export type Source = { view: View } | { feed: number } | { folder: number } | { collection: number } | { search: Record<string, string> };
 
 /** The reader's sort order, shared across their devices (SPEC section 18). */
 export type Order = "newest" | "oldest";
@@ -260,6 +262,7 @@ function sourceQuery(source: Source): URLSearchParams {
   if ("search" in source) for (const [name, value] of Object.entries(source.search)) query.set(name, value);
   else if ("feed" in source) query.set("feed", String(source.feed));
   else if ("folder" in source) query.set("folder", String(source.folder));
+  else if ("collection" in source) query.set("collection", String(source.collection));
   else query.set("view", source.view);
   return query;
 }
@@ -271,6 +274,8 @@ export async function listArticles(source: Source, order: Order, after: string |
   } catch (problem) {
     // Recently read isn't kept on the device: it says plainly that it needs a connection.
     if (noConnection(problem) && "view" in source && source.view === "recent") throw new NeedsConnection(RECENT_NEEDS_CONNECTION);
+    // Nor are collections (decision 0108).
+    if (noConnection(problem) && "collection" in source) throw new NeedsConnection(COLLECTIONS_NEED_CONNECTION);
     // A kept list comes whole, so there's never a next page of it to add.
     if (!noConnection(problem) || after !== null) throw problem;
     const kept = await keptPage(source, order);

@@ -611,6 +611,22 @@ async fn carry_entries_over(
             _ => false,
         };
         if merged {
+            // Its collections go with its marks to the copy (decision 0108);
+            // a collection already holding the copy keeps the one line.
+            sqlx::query(
+                "UPDATE OR IGNORE collection_articles SET article_id = ?3
+                 WHERE person_id = ?1 AND article_id = ?2",
+            )
+            .bind(person)
+            .bind(article)
+            .bind(copy)
+            .execute(&mut *connection)
+            .await?;
+            sqlx::query("DELETE FROM collection_articles WHERE person_id = ? AND article_id = ?")
+                .bind(person)
+                .bind(article)
+                .execute(&mut *connection)
+                .await?;
             sqlx::query("DELETE FROM entries WHERE person_id = ? AND article_id = ?")
                 .bind(person)
                 .bind(article)

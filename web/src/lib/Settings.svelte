@@ -158,6 +158,7 @@
     { value: "all", label: "All" },
     { value: "recent", label: "Recently read" },
     { value: "searches", label: "Saved searches" },
+    { value: "collections", label: "Collections" },
   ];
 
   let sidebarMessage = $state("");
@@ -600,6 +601,9 @@
           <a href="/api/starred/export" download class="inset-row inset-action"
             >Export starred articles<span class="row-glyph"><Icon name="download" size={18} /></span></a
           >
+          <a href="/api/collections/export" download class="inset-row inset-action"
+            >Export collections<span class="row-glyph"><Icon name="download" size={18} /></span></a
+          >
         </div>
         <div role="status" class={["inset-foot flex flex-col gap-1 text-ink", importLines.length === 0 && "sr-only"]}>
           {#each importLines as line (line)}
@@ -610,7 +614,8 @@
         <p class="inset-foot">
           OPML is the file feed readers use to move your feeds and folders between apps; export one now and then, and
           keep it somewhere safe. Starred articles are saved as a JSON Feed file, which other feed readers can open,
-          with each article's text, its original link and the feed it came from. To bring your stars over from
+          with each article's text, its original link and the feed it came from; collections the same way, each
+          article tagged with its collections' names. To bring your stars over from
           Inoreader, Feedly, Feedbin or another feed reader, import the JSON file it exports them in.
         </p>
       </section>

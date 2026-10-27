@@ -109,6 +109,13 @@ where
 /// Tables that hang off these (a folder's `feed_folders` pairs) go with them.
 /// Entries come before subscriptions, which they point at.
 pub const PER_READER_TABLES: &[(&str, &str)] = &[
+    // A collection's lines point at entries, so they go first (`delete`
+    // empties them before anything else, too).
+    (
+        "collection_articles",
+        "DELETE FROM collection_articles WHERE person_id = ?",
+    ),
+    ("collections", "DELETE FROM collections WHERE person_id = ?"),
     ("entries", "DELETE FROM entries WHERE person_id = ?"),
     (
         "subscriptions",
@@ -174,6 +181,11 @@ pub async fn delete(db: &SqlitePool, person: i64) -> Result<(), sqlx::Error> {
     .bind(person)
     .execute(&mut *transaction)
     .await?;
+    // Nothing of theirs is kept now: no star, and no collection, holds an entry back.
+    sqlx::query("DELETE FROM collection_articles WHERE person_id = ?")
+        .bind(person)
+        .execute(&mut *transaction)
+        .await?;
     sqlx::query("UPDATE entries SET starred = 0 WHERE person_id = ?")
         .bind(person)
         .execute(&mut *transaction)

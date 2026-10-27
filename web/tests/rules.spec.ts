@@ -135,7 +135,8 @@ test("with the keyboard alone: a new rule, its switch, and Not now keep the keyb
   await appReady(page);
 
   const rules = page.getByRole("region", { name: "Rules" });
-  await tabTo(page, rules.getByRole("button", { name: "New rule…" }));
+  // Past every feed the other tests have added to the sidebar, then Settings' rows.
+  await tabTo(page, rules.getByRole("button", { name: "New rule…" }), 200);
   await page.keyboard.press("Enter");
   const sheet = page.getByRole("dialog", { name: "New rule" }).or(page.getByRole("region", { name: "New rule" }));
   await expect(sheet.getByRole("heading", { name: "New rule" })).toBeFocused();

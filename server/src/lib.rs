@@ -24,6 +24,7 @@ pub mod auth;
 pub mod backup;
 pub mod checking;
 pub mod cleanup;
+pub mod collections;
 pub mod config;
 pub mod db;
 pub mod discover;
@@ -212,6 +213,7 @@ pub fn router(state: AppState) -> Router {
         .merge(rules::routes())
         .merge(search::routes())
         .merge(saved_searches::routes())
+        .merge(collections::routes())
         .merge(settings::routes())
         .merge(unread::routes())
         .merge(starred::routes())

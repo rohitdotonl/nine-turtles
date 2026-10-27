@@ -6,7 +6,8 @@
   to screen readers, together at the right as Apple Books keeps its reading
   toolbar (decision 0050): Open original, Aa (the reading panel), Star and
   More (…). More holds Copy
-  link (Share on phones) and Mark unread (SPEC sections 7, 8, 9 and 21). The
+  link (Share on phones), Mark unread and Add to collection… (SPEC sections
+  7, 8, 9, 21 and 33). The
   bar is solid, in the page's own color, above the scrolling text, with a
   hairline under it only once the text has scrolled (decision 0040). The
   source is always credited and linked. A feed that gives only a summary
@@ -45,6 +46,7 @@
     toggles = 0,
     onStar,
     onMarkUnread,
+    onCollect,
   }: {
     /** The article chosen in the list; its title, source and time show at once. */
     article: Article;
@@ -64,6 +66,8 @@
     toggles?: number;
     onStar: () => void;
     onMarkUnread: () => void;
+    /** "Add to collection…" (or l): the sheet of the reader's collections (decision 0108). */
+    onCollect: () => void;
   } = $props();
 
   // Bumped when an article arrives from the server, so the page looks again.
@@ -94,12 +98,13 @@
   const sharing =
     typeof navigator.share === "function" && matchMedia("(hover: none) and (pointer: coarse)").matches;
 
-  /** The article's less frequent actions, behind More (…): sharing its link, and marking it unread. */
+  /** The article's less frequent actions, behind More (…): sharing its link, marking it unread, and its collections. */
   let more: MenuGroup[] = $derived([
     {
       items: [
         ...(article.link ? [{ label: sharing ? "Share" : "Copy link", shortcut: phone || sharing ? undefined : currentKey("copy-link"), onSelect: share }] : []),
         { label: "Mark unread", shortcut: phone ? undefined : currentKey("mark-unread"), onSelect: onMarkUnread },
+        { label: "Add to collection…", shortcut: phone ? undefined : currentKey("collect"), onSelect: onCollect },
       ],
     },
   ]);

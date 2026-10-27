@@ -78,10 +78,17 @@ enum Hideable {
     All,
     Recent,
     Searches,
+    Collections,
 }
 
 impl Hideable {
-    const EVERY: [Self; 4] = [Self::Starred, Self::All, Self::Recent, Self::Searches];
+    const EVERY: [Self; 5] = [
+        Self::Starred,
+        Self::All,
+        Self::Recent,
+        Self::Searches,
+        Self::Collections,
+    ];
 
     const fn stored(self) -> &'static str {
         match self {
@@ -89,6 +96,7 @@ impl Hideable {
             Self::All => "all",
             Self::Recent => "recent",
             Self::Searches => "searches",
+            Self::Collections => "collections",
         }
     }
 }

@@ -144,9 +144,11 @@ pub struct Search {
     /// searched as those words together, in that order.
     #[serde(default)]
     pub q: String,
-    /// Only this feed's articles; otherwise `folder`'s; otherwise every feed's.
+    /// Only this feed's articles; otherwise `folder`'s; otherwise those on
+    /// `collection` (one of the reader's, decision 0108); otherwise every feed's.
     pub feed: Option<i64>,
     pub folder: Option<i64>,
+    pub collection: Option<i64>,
     #[serde(default)]
     pub unread: bool,
     #[serde(default)]
@@ -171,6 +173,7 @@ impl Search {
         words.is_none()
             && self.feed.is_none()
             && self.folder.is_none()
+            && self.collection.is_none()
             && !self.unread
             && !self.starred
             && self.since.is_none()
@@ -446,9 +449,10 @@ pub async fn find(
     } else {
         query.push("0 AS in_title FROM entries ");
     }
-    // An unsubscribed feed's articles are left out, except starred ones,
-    // which are kept (SPEC section 15). The reader's few unsubscribed feeds
-    // are listed once, rather than each match looking up its subscription.
+    // An unsubscribed feed's articles are left out, except starred ones and
+    // those on a collection, which are kept (SPEC sections 15 and 34). The
+    // reader's few unsubscribed feeds are listed once, rather than each
+    // match looking up its subscription.
     query.push("WHERE entries.person_id = ");
     query.push_bind(person);
     query.push(
@@ -457,7 +461,12 @@ pub async fn find(
               WHERE person_id = ",
     );
     query.push_bind(person);
-    query.push(" AND unsubscribed_at IS NOT NULL))");
+    query.push(
+        " AND unsubscribed_at IS NOT NULL)
+         OR entries.article_id IN (SELECT article_id FROM collection_articles WHERE person_id = ",
+    );
+    query.push_bind(person);
+    query.push("))");
     if let Some(words) = &words {
         query.push(" AND articles_search MATCH ");
         query.push_bind(words.clone());
@@ -474,6 +483,16 @@ pub async fn find(
         query.push(" AND person_id = ");
         query.push_bind(person);
         query.push("))");
+    } else if let Some(collection) = search.collection {
+        // Only the reader's own lines count, so another's collection finds nothing.
+        query.push(
+            " AND entries.article_id IN (SELECT article_id FROM collection_articles
+              WHERE collection_id = ",
+        );
+        query.push_bind(collection);
+        query.push(" AND person_id = ");
+        query.push_bind(person);
+        query.push(")");
     }
     if search.unread {
         // A feed that flows past is never in Unread (SPEC section 10).

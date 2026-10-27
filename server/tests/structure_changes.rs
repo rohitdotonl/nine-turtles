@@ -1574,3 +1574,64 @@ async fn remembering_what_was_opened_keeps_every_mark_and_opens_nothing() {
         [(1, false, true, 0, 5, None), (2, true, false, 7, 0, None)]
     );
 }
+
+#[tokio::test]
+async fn adding_collections_keeps_every_entry_and_starts_with_none() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just after Recently read (structure change 22): one feed
+    // the owner follows, with a starred article and an opened one.
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(22, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO feeds (id, url, url_key, title, added_at) VALUES (1, 'u', 'u', 'Garden', 1)",
+        "INSERT INTO subscriptions (person_id, feed_id, title, added_at) VALUES (1, 1, 'Garden', 1)",
+        "INSERT INTO articles (id, feed_id, fingerprint, title, received_at, sort_at)
+         VALUES (1, 1, 'a', 'A', 1, 1), (2, 1, 'b', 'B', 2, 2)",
+        "INSERT INTO entries (person_id, article_id, feed_id, sort_at, read, starred, opened_at)
+         VALUES (1, 1, 1, 1, 0, 1, NULL), (1, 2, 1, 2, 1, 0, 9)",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let entries: Vec<(i64, bool, bool, Option<i64>)> = sqlx::query_as(
+        "SELECT article_id, read, starred, opened_at FROM entries ORDER BY article_id",
+    )
+    .fetch_all(&db)
+    .await
+    .unwrap();
+    assert_eq!(entries, [(1, false, true, None), (2, true, false, Some(9))]);
+    let collections: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM collections")
+        .fetch_one(&db)
+        .await
+        .unwrap();
+    assert_eq!(collections, 0);
+    // A collection's line must point at one of its reader's entries.
+    sqlx::query(
+        "INSERT INTO collections (id, person_id, name, created_at) VALUES (1, 1, 'Soup', 0)",
+    )
+    .execute(&db)
+    .await
+    .unwrap();
+    let stray = sqlx::query(
+        "INSERT INTO collection_articles (collection_id, person_id, article_id, added_at)
+         VALUES (1, 1, 99, 0)",
+    )
+    .execute(&db)
+    .await;
+    assert!(stray.is_err());
+}

@@ -760,6 +760,9 @@ pub enum List {
     Feed(i64),
     /// The articles of every feed in a folder, read or not.
     Folder(i64),
+    /// The articles on one of the reader's collections (`collections`),
+    /// muted ones and those of feeds since left included, as in Starred.
+    Collection(i64),
 }
 
 /// The list's order: the reader's "Sort" setting (SPEC section 18).
@@ -772,16 +775,23 @@ pub enum Order {
 }
 
 impl List {
-    /// A feed's or a folder's articles if one is named, otherwise the view's;
-    /// none for Recently read, which is `recent`'s own list.
-    pub(crate) const fn from_query(feed: Option<i64>, folder: Option<i64>, view: View) -> Option<Self> {
-        match (feed, folder, view) {
-            (Some(feed), _, _) => Some(Self::Feed(feed)),
-            (None, Some(folder), _) => Some(Self::Folder(folder)),
-            (None, None, View::All) => Some(Self::All),
-            (None, None, View::Unread) => Some(Self::Unread),
-            (None, None, View::Starred) => Some(Self::Starred),
-            (None, None, View::Recent) => None,
+    /// A feed's, a folder's or a collection's articles if one is named,
+    /// otherwise the view's; none for Recently read, which is `recent`'s own
+    /// list.
+    pub(crate) const fn from_query(
+        feed: Option<i64>,
+        folder: Option<i64>,
+        collection: Option<i64>,
+        view: View,
+    ) -> Option<Self> {
+        match (feed, folder, collection, view) {
+            (Some(feed), _, _, _) => Some(Self::Feed(feed)),
+            (None, Some(folder), _, _) => Some(Self::Folder(folder)),
+            (None, None, Some(collection), _) => Some(Self::Collection(collection)),
+            (None, None, None, View::All) => Some(Self::All),
+            (None, None, None, View::Unread) => Some(Self::Unread),
+            (None, None, None, View::Starred) => Some(Self::Starred),
+            (None, None, None, View::Recent) => None,
         }
     }
 }
@@ -803,6 +813,7 @@ struct ArticlesQuery {
     /// `view`, decides.
     feed: Option<i64>,
     folder: Option<i64>,
+    collection: Option<i64>,
     #[serde(default)]
     view: View,
     #[serde(default)]
@@ -854,7 +865,7 @@ async fn list_articles(
         Some(Some(cursor)) => Some(cursor),
         Some(None) => return StatusCode::BAD_REQUEST.into_response(),
     };
-    let list = List::from_query(query.feed, query.folder, query.view);
+    let list = List::from_query(query.feed, query.folder, query.collection, query.view);
     // Asked before the list, so an article arriving in between is reported
     // as new rather than missed.
     let latest: Result<i64, sqlx::Error> = sqlx::query_scalar(LATEST).fetch_one(&state.db).await;
@@ -911,8 +922,8 @@ pub const fn new_sql(list: List) -> Option<&'static str> {
             "+entries.muted = 0 AND +entries.feed_id IN (SELECT feed_id FROM feed_folders
                   WHERE folder_id = (SELECT id FROM folders WHERE id = ? AND person_id = ?))"
         )),
-        // Nothing arrives starred.
-        List::Starred => None,
+        // Nothing arrives starred, or on a collection.
+        List::Starred | List::Collection(_) => None,
     }
 }
 
@@ -920,6 +931,7 @@ pub const fn new_sql(list: List) -> Option<&'static str> {
 struct NewQuery {
     feed: Option<i64>,
     folder: Option<i64>,
+    collection: Option<i64>,
     #[serde(default)]
     view: View,
     /// The `latest` the list was loaded with.
@@ -934,7 +946,8 @@ async fn new_articles(
     Query(query): Query<NewQuery>,
 ) -> Response {
     // Nothing arrives already opened, so Recently read never has new items.
-    let Some(list) = List::from_query(query.feed, query.folder, query.view) else {
+    let Some(list) = List::from_query(query.feed, query.folder, query.collection, query.view)
+    else {
         return Json(json!({ "new": false })).into_response();
     };
     let Some(sql) = new_sql(list) else {
@@ -996,6 +1009,38 @@ macro_rules! list_query {
     };
 }
 
+/// A collection's list: its own lines, read through their primary key, then
+/// each one's entry, sorted on the spot. A collection is the reader's own
+/// short shelf, so the sort is small, and walking every entry in order to
+/// find a few would be slower. Takes the reader, then the collection's
+/// number (only lines of the reader's own count), then the cursor and the
+/// limit, as `list_sql`'s questions do. The `+` keeps SQLite from reading
+/// every line of the reader's through `collection_articles_by_entry` instead.
+macro_rules! collection_query {
+    ($past:literal, $order:literal) => {
+        concat!(
+            "SELECT entries.article_id AS id, entries.feed_id, subscriptions.title AS feed_title,
+                    articles.title, articles.link, entries.sort_at AS at,
+                    entries.read, entries.starred, entries.muted
+             FROM collection_articles
+                 CROSS JOIN entries ON entries.person_id = collection_articles.person_id
+                     AND entries.article_id = collection_articles.article_id
+                 CROSS JOIN articles ON articles.id = entries.article_id
+                 CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
+                     AND subscriptions.feed_id = entries.feed_id
+             WHERE +collection_articles.person_id = ? AND collection_articles.collection_id = ?
+                 AND (entries.sort_at, entries.article_id) ",
+            $past,
+            " (?, ?)
+             ORDER BY entries.sort_at ",
+            $order,
+            ", entries.article_id ",
+            $order,
+            " LIMIT ?"
+        )
+    };
+}
+
 /// The question for a list in an order. Every question takes the reader
 /// first; a feed's or folder's then its ID, and a folder's the reader again
 /// (it must be theirs); every question then takes the cursor (time, id) and
@@ -1046,6 +1091,8 @@ pub const fn list_sql(list: List, order: Order) -> &'static str {
             ">",
             "ASC"
         ),
+        (List::Collection(_), Order::Newest) => collection_query!("<", "DESC"),
+        (List::Collection(_), Order::Oldest) => collection_query!(">", "ASC"),
     }
 }
 
@@ -1065,7 +1112,7 @@ pub async fn page(
     };
     let (after_at, after_id) = after.unwrap_or(start);
     let mut query = sqlx::query_as(list_sql(list, order)).bind(person);
-    if let List::Feed(id) | List::Folder(id) = list {
+    if let List::Feed(id) | List::Folder(id) | List::Collection(id) = list {
         query = query.bind(id);
     }
     if let List::Folder(_) = list {

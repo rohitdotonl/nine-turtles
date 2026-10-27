@@ -4,7 +4,7 @@
   or the label of an icon-only button, says what it does.
 -->
 <script lang="ts" module>
-  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "clock" | "history";
+  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "clock" | "history" | "shelf";
 </script>
 
 <script lang="ts">
@@ -118,6 +118,12 @@
     <path d="M1.75 16 6 4l4.25 12M3.35 12h5.3" />
     <circle cx="14.5" cy="13.5" r="2.5" />
     <path d="M17 11v5" />
+  {:else if name === "shelf"}
+    <!-- A collection (decision 0108): two books upright and one leaning, on a shelf. -->
+    <path d="M2.75 16.25h14.5" />
+    <path d="M4 16.25V5a.75.75 0 0 1 .75-.75h1.5A.75.75 0 0 1 7 5v11.25" />
+    <path d="M7 16.25V7.5a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 .75.75v8.75" />
+    <path d="m11.5 6.35 2.4-.65 2.6 9.9-2.4.65Z" />
   {:else if name === "more"}
     <!-- More: three dots in a row. -->
     <circle cx="4.5" cy="10" r="1.25" fill="currentColor" stroke="none" />

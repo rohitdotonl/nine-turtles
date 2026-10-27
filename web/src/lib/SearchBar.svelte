@@ -15,6 +15,7 @@
 <script lang="ts">
   import Icon from "./Icon.svelte";
   import type { Feed, Folder } from "./feeds";
+  import type { Collection } from "./collections";
   import {
     chipsFor,
     replaceLastWord,
@@ -32,6 +33,7 @@
     query,
     feeds,
     folders,
+    collections = [],
     here,
     found = "",
     river = false,
@@ -40,6 +42,8 @@
     query: Query;
     feeds: Feed[];
     folders: Folder[];
+    /** The reader's collections, for `in:` and the options' list (decision 0108). */
+    collections?: Collection[];
     /** Where search started: its row in the options reads "This list". */
     here: Scope;
     /** How many the search found ("28 results"), empty until known; the options repeat it where they'd cover the list's own line. */
@@ -59,7 +63,7 @@
   /** Suggestions are offered only while the reader types in the field. */
   let offering = $state(false);
 
-  let library = $derived({ feeds, folders });
+  let library = $derived({ feeds, folders, collections });
   let chips = $derived(chipsFor(query, library));
   /** The keyboard or a pointer is inside the search (a press counts, so a chip's button can't vanish under a click). */
   let inside = $state(false);
@@ -169,7 +173,7 @@
   function scopeFrom(value: string): Scope {
     const [kind, rest] = value.split(":");
     if (kind === "view") return { kind: "view", view: rest === "starred" ? "starred" : "unread" };
-    if (kind === "feed" || kind === "folder") return { kind, id: Number(rest) };
+    if (kind === "feed" || kind === "folder" || kind === "collection") return { kind, id: Number(rest) };
     return { kind: "all" };
   }
 
@@ -384,6 +388,13 @@
             <option value="" disabled>Other feed or folder</option>
             {#if !river}<option value="view:unread">Unread</option>{/if}
             <option value="view:starred">Starred</option>
+            {#if collections.length > 0}
+              <optgroup label="Collections">
+                {#each collections as collection (collection.id)}
+                  <option value="collection:{collection.id}">{collection.name}</option>
+                {/each}
+              </optgroup>
+            {/if}
             {#if folders.length > 0}
               <optgroup label="Folders">
                 {#each folders as folder (folder.id)}

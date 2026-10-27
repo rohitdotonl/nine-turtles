@@ -70,6 +70,7 @@ export const REFRESH_NEEDS_CONNECTION = "Refresh needs a connection. This is wha
 export const CATCH_UP_NEEDS_CONNECTION = "Catch me up needs a connection. Try again once you're back online.";
 export const READ_PAST_NEEDS_CONNECTION = "Marking articles not yet listed needs a connection. Try again once you're back online.";
 export const RECENT_NEEDS_CONNECTION = "Recently read needs a connection. It shows once you're back online.";
+export const COLLECTIONS_NEED_CONNECTION = "Collections need a connection. They show once you're back online.";
 export const SETTINGS_NEED_CONNECTION = "Settings need a connection. They open once you're back online.";
 
 /** Thrown for what can't be done without a connection; its message says so. */
@@ -115,6 +116,8 @@ export function keptList(kept: Kept[], source: Source, order: Order, library?: L
   if ("search" in source) throw new NeedsConnection(SEARCH_NEEDS_CONNECTION);
   // Recently read isn't kept on the device (decision 0105).
   if ("view" in source && source.view === "recent") throw new NeedsConnection(RECENT_NEEDS_CONNECTION);
+  // Nor are collections (decision 0108).
+  if ("collection" in source) throw new NeedsConnection(COLLECTIONS_NEED_CONNECTION);
   const feeds = feedsOf(source, library);
   const view = "view" in source ? source.view : undefined;
   const shown = kept.filter((article) => {
@@ -263,6 +266,15 @@ export function keepLibrary(library: Library): void {
 
 export async function keptLibrary(): Promise<Library | undefined> {
   return keeping() ? about<Library>("library") : undefined;
+}
+
+/** Keeps the reader's collections' names, so the sidebar lists them without a connection (decision 0108). */
+export function keepCollections(collections: { id: number; name: string }[]): void {
+  if (keeping()) void remember("collections", collections);
+}
+
+export async function keptCollections(): Promise<unknown> {
+  return keeping() ? about<unknown>("collections") : undefined;
 }
 
 /** A list from the copies on this device, or undefined when there are none to show from. */

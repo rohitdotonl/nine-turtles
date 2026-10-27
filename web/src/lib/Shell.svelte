@@ -21,6 +21,8 @@
   import EditFolder from "./EditFolder.svelte";
   import FailingLine from "./FailingLine.svelte";
   import EditSearch from "./EditSearch.svelte";
+  import AddToCollection from "./AddToCollection.svelte";
+  import RenameCollection from "./RenameCollection.svelte";
   import ItemList from "./ItemList.svelte";
   import MoreMenu, { type MenuGroup } from "./MoreMenu.svelte";
   import PageHead from "./PageHead.svelte";
@@ -73,6 +75,14 @@
   import { sharedAddress } from "./share";
   import { emptyQuery, isSearching, scopeFor, searchParams, searchedTerms, type Query } from "./search";
   import { deleteSaved, listSaved, refusedSaving, sameQuery, saveSearch, type SavedSearch } from "./saved";
+  import {
+    byName as collectionOrder,
+    deleteCollection,
+    listCollections,
+    makeCollection,
+    refusedCollection,
+    type Collection,
+  } from "./collections";
   import { startingStep, stepOf, type Screen } from "./steps";
   import { keepUpToDate } from "./offline";
   import { whenBack } from "./connection.svelte";
@@ -162,6 +172,16 @@
   let searchesLoaded = $state(false);
   /** The saved searches couldn't be loaded, so a saved search's address can't be told from a deleted one. */
   let searchesFailed = $state(false);
+  /** The reader's collections, A to Z (SPEC section 34); `collectionsLoaded` once the server (or this device) answered. */
+  let collections: Collection[] = $state([]);
+  let collectionsLoaded = $state(false);
+  /** The collections couldn't be loaded, so a collection's address can't be told from a deleted one. */
+  let collectionsFailed = $state(false);
+  /** The article whose "Add to collection" sheet is open, and the collection being renamed (decision 0108). */
+  let collecting: Article | undefined = $state();
+  let renaming: Collection | undefined = $state();
+  /** What had the keyboard when one of those two sheets opened, to give it back. */
+  let collectionOpener: Element | null = null;
   /** What "Save search" or "Edit saved search" will save: the search showing when it was opened. */
   let toSave: Query | undefined = $state();
   /** What's typed in the sidebar search. */
@@ -318,9 +338,11 @@
       ? { feed: under.id }
       : under.kind === "folder"
         ? { folder: under.id }
-        : under.kind === "search"
-          ? { view: "all" }
-          : { view: under.kind === "view" ? under.view : homeView(mode) },
+        : under.kind === "collection"
+          ? { collection: under.id }
+          : under.kind === "search"
+            ? { view: "all" }
+            : { view: under.kind === "view" ? under.view : homeView(mode) },
   );
   /** The list's identity: a new one is loaded when it changes. */
   let listKey = $derived(`${pathFor(under)} ${sort} ${shown ? JSON.stringify(searchParams(shown)) : ""}`);
@@ -339,6 +361,7 @@
     const place = under.kind === "search" ? under : route;
     return place.kind === "search" || place.kind === "edit-search" ? searches.find((search) => search.id === place.id) : undefined;
   });
+  let currentCollection = $derived(under.kind === "collection" ? collections.find((each) => each.id === under.id) : undefined);
   /** A sheet is actually showing (an edit address for a feed, folder or saved search you don't have shows none). */
   let sheetShown = $derived(
     sheet &&
@@ -350,7 +373,7 @@
         (route.kind === "edit-folder" && currentFolder !== undefined)),
   );
   /** The feed's, folder's or saved search's name, for the heading and the tab's title. */
-  let placeName = $derived(currentFeed?.title ?? currentFolder?.name ?? currentSearch?.name);
+  let placeName = $derived(currentFeed?.title ?? currentFolder?.name ?? currentSearch?.name ?? currentCollection?.name);
   /** On a saved search, the search field no longer holds what was saved: Escape puts it back. */
   let tweaked = $derived(route.kind === "search" && currentSearch !== undefined && !sameQuery(query, currentSearch.query));
   /** A feed or folder address that names none you have. */
@@ -358,7 +381,8 @@
     feeds !== undefined &&
       (((under.kind === "feed" || under.kind === "edit-feed") && !currentFeed) ||
         ((under.kind === "folder" || under.kind === "edit-folder") && !currentFolder) ||
-        ((under.kind === "search" || under.kind === "edit-search") && searchesLoaded && !searchesFailed && !currentSearch)),
+        ((under.kind === "search" || under.kind === "edit-search") && searchesLoaded && !searchesFailed && !currentSearch) ||
+        (under.kind === "collection" && collectionsLoaded && !collectionsFailed && !currentCollection)),
   );
   /** No feeds yet: Unread and All show the add field instead (SPEC section 2). */
   let firstVisit = $derived(feeds !== undefined && feeds.length === 0);
@@ -399,14 +423,16 @@
         ? "Folder not found"
         : under.kind === "search" || under.kind === "edit-search"
           ? "Saved search not found"
-          : "Feed not found"
+          : under.kind === "collection"
+            ? "Collection not found"
+            : "Feed not found"
       : shown && under.kind !== "search"
         ? "Search results"
         : nameFor(under, placeName),
   );
 
   function isList(place: Route): boolean {
-    return place.kind === "view" || place.kind === "feed" || place.kind === "folder" || place.kind === "search";
+    return place.kind === "view" || place.kind === "feed" || place.kind === "folder" || place.kind === "search" || place.kind === "collection";
   }
 
   /** When the copies for reading offline were last brought up to date, and how long before nine turtles in view does it again. */
@@ -458,6 +484,17 @@
     searchesLoaded = true;
     // A saved search opened from its address (or its Edit address) runs once it's known.
     if (under.kind === "search" && !shown && currentSearch) resetSearch();
+  }
+
+  async function loadCollections() {
+    try {
+      collections = await listCollections();
+      collectionsFailed = false;
+    } catch {
+      // The sidebar lists none until the next try; a collection's own address says so plainly.
+      collectionsFailed = true;
+    }
+    collectionsLoaded = true;
   }
 
   $effect(() => {
@@ -613,6 +650,17 @@
           search
             ? { label: "Edit saved search…", onSelect: () => openSaving({ kind: "edit-search", id: search.id }) }
             : { label: "Save search…", onSelect: () => openSaving({ kind: "save-search" }) },
+        ],
+      });
+      return groups;
+    }
+    // A collection's own list: renaming it, and deleting it (never its articles), with Undo (decision 0108).
+    const collection = currentCollection;
+    if (collection) {
+      groups.push({
+        items: [
+          { label: "Rename…", onSelect: () => openRenaming(collection) },
+          { label: "Delete", onSelect: () => void removeCollection(collection) },
         ],
       });
       return groups;
@@ -798,6 +846,9 @@
         case "star":
           if (selected && isList(route)) itemList?.toggleStar();
           break;
+        case "collect":
+          if (selected && isList(route)) openCollecting(selected);
+          break;
         case "mark-unread":
           if (selected && isList(route)) itemList?.markUnread();
           break;
@@ -827,6 +878,7 @@
     (panes.sidebar ? wordmark : placeFocus(route))?.focus();
     loadFeeds();
     loadSearches();
+    loadCollections();
     loadSettings().then((settings) => {
       mode = settings.mode;
       sort = settings.sort;
@@ -1008,6 +1060,7 @@
     if (next.kind === "feed" && !feeds?.some((feed) => feed.id === next.id)) loadFeeds();
     if (next.kind === "folder" && !folders.some((folder) => folder.id === next.id)) loadFeeds();
     if (next.kind === "search" && !searches.some((search) => search.id === next.id)) loadSearches();
+    if (next.kind === "collection" && !collections.some((collection) => collection.id === next.id)) loadCollections();
     // On a phone-narrow window the sidebar is the home screen; choosing a
     // place shows it instead.
     if (width === "narrow") sidebarChoice = "hidden";
@@ -1091,6 +1144,51 @@
       },
     });
     return undefined;
+  }
+
+  /** "Add to collection…" or l: the sheet of the reader's collections for this article (decision 0108). */
+  function openCollecting(article: Article) {
+    collectionOpener = document.activeElement;
+    collecting = article;
+  }
+
+  /** A collection's "Rename…". */
+  function openRenaming(collection: Collection) {
+    collectionOpener = document.activeElement;
+    renaming = collection;
+  }
+
+  /** One of the collection sheets closed: the keyboard goes back to what opened it. */
+  function collectionSheetClosed() {
+    collecting = undefined;
+    renaming = undefined;
+    const opener = collectionOpener;
+    collectionOpener = null;
+    if (opener instanceof HTMLElement && opener.isConnected && opener !== document.body) queueMicrotask(() => opener.focus());
+  }
+
+  /** A collection made in the sheet joins the sidebar at once, in its place A to Z. */
+  function collectionMade(made: Collection) {
+    collections = [...collections.filter((each) => each.id !== made.id), made].sort(collectionOrder);
+  }
+
+  /** Deletes a collection (never an article), then shows Unread (All in river mode) with "Deleted … · Undo". */
+  async function removeCollection(collection: Collection) {
+    const held = await deleteCollection(collection.id);
+    if (typeof held === "string") {
+      itemList?.say(refusedCollection(held));
+      return;
+    }
+    collections = collections.filter((each) => each.id !== collection.id);
+    go(home, {
+      message: `Deleted the collection ${collection.name}`,
+      undo: async () => {
+        const back = await makeCollection(collection.name, held);
+        if (typeof back === "string") return refusedCollection(back);
+        await loadCollections();
+        return undefined;
+      },
+    });
   }
 
   /** Unsubscribes, then shows Unread (All in river mode) with "Unsubscribed from … · Undo". */
@@ -1353,6 +1451,7 @@
     if (place.kind === "view" && place.view === "unread") return "Nothing unread.";
     if (place.kind === "view" && place.view === "starred") return "No starred articles yet.";
     if (place.kind === "view" && place.view === "recent") return "Articles you open will show here.";
+    if (place.kind === "collection") return "Nothing in this collection yet. Add an article from its More menu.";
     return "No articles yet.";
   }
 
@@ -1598,7 +1697,19 @@
         {/each}
       </ul>
       {#if feeds}
-        <SidebarFeeds bind:this={sidebarFeeds} {feeds} {folders} searches={hidden.includes("searches") ? [] : searches} {route} {search} {follow} {phone} {river} numbers={counts === "shown"} />
+        <SidebarFeeds
+          bind:this={sidebarFeeds}
+          {feeds}
+          {folders}
+          searches={hidden.includes("searches") ? [] : searches}
+          collections={hidden.includes("collections") ? [] : collections}
+          {route}
+          {search}
+          {follow}
+          {phone}
+          {river}
+          numbers={counts === "shown"}
+        />
       {/if}
       {#if feedsProblem}
         <p class="px-4 pt-4 text-small">Your feeds couldn't be loaded. Reload the page to try again.</p>
@@ -1745,7 +1856,7 @@
       {:else if !sheet && route.kind === "save-search" && toSave}
         <EditSearch
           query={toSave}
-          library={{ feeds: feeds ?? [], folders }}
+          library={{ feeds: feeds ?? [], folders, collections }}
           bind:heading={listHeading}
           besideToggle={!phone && !panes.sidebar}
           onSaved={searchSaved}
@@ -1756,7 +1867,7 @@
           <EditSearch
             saved={currentSearch}
             query={toSave ?? currentSearch.query}
-            library={{ feeds: feeds ?? [], folders }}
+            library={{ feeds: feeds ?? [], folders, collections }}
             bind:heading={listHeading}
             besideToggle={!phone && !panes.sidebar}
             onSaved={searchSaved}
@@ -1863,7 +1974,7 @@
           <!-- A column, so the floating note can sit at the pane's foot even under a short list. -->
           <div use:edge class="scroller relative flex min-h-0 flex-1 scroll-pb-20 flex-col overflow-y-auto pt-2 pr-[var(--list-end)] pb-6 pl-[var(--list-start)]">
             {#if feeds && feeds.length > 0 && !missing && (!phone || phoneSearch || shown || isSearching(query))}
-              <SearchBar bind:this={searchBar} {query} {feeds} {folders} here={scopeFor(under)} found={listFound} {river} onChange={searchChanged} />
+              <SearchBar bind:this={searchBar} {query} {feeds} {folders} {collections} here={scopeFor(under)} found={listFound} {river} onChange={searchChanged} />
             {/if}
             {#if missing && (under.kind === "folder" || under.kind === "edit-folder")}
               <p class="mt-4">There's no folder here. It may have been deleted or renamed.</p>
@@ -1871,6 +1982,10 @@
               <p class="mt-4">Your saved searches couldn't be loaded. Reload the page to try again.</p>
             {:else if missing && (under.kind === "search" || under.kind === "edit-search")}
               <p class="mt-4">There's no saved search here. It may have been deleted.</p>
+            {:else if under.kind === "collection" && collectionsFailed && !currentCollection}
+              <p class="mt-4">Your collections couldn't be loaded. Reload the page to try again.</p>
+            {:else if missing && under.kind === "collection"}
+              <p class="mt-4">There's no collection here. It may have been deleted.</p>
             {:else if missing}
               <p class="mt-4">You don't follow this feed. It may have been an old address.</p>
             {:else if welcoming && panes.article}
@@ -1884,7 +1999,7 @@
               -->
               <!-- The list's 28px dot gutter (decision 0054) is for rows: the welcome steps back out to the 20px margin. -->
               <div class={phone ? "mt-[5.5rem] ml-[calc(1.25rem-var(--list-start))] flex" : "mt-8 flex justify-center"}>{@render welcome(phone)}</div>
-            {:else if feeds !== undefined && sort !== undefined && (under.kind !== "search" || searchesLoaded)}
+            {:else if feeds !== undefined && sort !== undefined && (under.kind !== "search" || searchesLoaded) && (under.kind !== "collection" || collectionsLoaded)}
               {#if under.kind === "feed" && !shown && currentFeed}
                 <!-- A feed that isn't working says so above its list, with Find new address (decision 0106). -->
                 <FailingLine
@@ -1935,6 +2050,7 @@
               bind:preferences
               onStar={() => itemList?.toggleStar()}
               onMarkUnread={() => itemList?.markUnread()}
+              onCollect={() => openCollecting(selected!)}
               phone={phone
                 ? {
                     back: nameFor(route, placeName),
@@ -1989,6 +2105,22 @@
 
 <CheatSheet bind:open={cheatSheetOpen} bind:editing={cheatSheetEditing} {river} />
 
+{#if collecting}
+  <AddToCollection article={collecting} {collections} onMade={collectionMade} onClose={collectionSheetClosed} />
+{:else if renaming}
+  {#key renaming.id}
+    <RenameCollection
+      collection={renaming}
+      onSaved={(name) => {
+        const id = renaming?.id;
+        collections = collections.map((each) => (each.id === id ? { ...each, name } : each)).sort(collectionOrder);
+        collectionSheetClosed();
+      }}
+      onCancel={collectionSheetClosed}
+    />
+  {/key}
+{/if}
+
 {#if sheet && route.kind === "add-feed"}
   <Sheet title="Add a feed" bind:heading={sheetHeading} onClose={closePage} initial={() => addField}>
     <p>{ADD_INTRO}</p>
@@ -2014,14 +2146,14 @@
     />
   {/key}
 {:else if sheet && route.kind === "save-search" && toSave}
-  <EditSearch sheet query={toSave} library={{ feeds: feeds ?? [], folders }} bind:heading={sheetHeading} onSaved={searchSaved} onCancel={() => searchSaved()} />
+  <EditSearch sheet query={toSave} library={{ feeds: feeds ?? [], folders, collections }} bind:heading={sheetHeading} onSaved={searchSaved} onCancel={() => searchSaved()} />
 {:else if sheet && route.kind === "edit-search" && currentSearch}
   {#key currentSearch.id}
     <EditSearch
       sheet
       saved={currentSearch}
       query={toSave ?? currentSearch.query}
-      library={{ feeds: feeds ?? [], folders }}
+      library={{ feeds: feeds ?? [], folders, collections }}
       bind:heading={sheetHeading}
       onSaved={searchSaved}
       onCancel={() => searchSaved()}

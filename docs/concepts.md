@@ -174,6 +174,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Rules and mutes (filters the reader writes)
 - Readers (accounts) and the `people` table
 - Subscriptions and entries (each reader's feeds and marks)
+- Collections (the reader's own shelves of articles) and tags (in JSON Feed)
 - Admin page (the owner's Readers page) and usage limits (fair-use quotas)
 
 ## Security and sign-in
