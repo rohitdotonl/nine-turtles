@@ -15,7 +15,7 @@ export type Session =
 
 export type SignInResult =
   | { ok: true }
-  | { ok: false; reason: "wrong-password" | "password-missing" | "password-invalid" | "unreachable" }
+  | { ok: false; reason: "wrong-password" | "email-needed" | "password-missing" | "password-invalid" | "unreachable" }
   | { ok: false; reason: "wait"; waitSeconds: number };
 
 export async function currentSession(): Promise<Session> {
@@ -63,7 +63,7 @@ export async function signIn(email: string, password: string): Promise<SignInRes
   if (error === "wait" && isRecord(body) && typeof body.wait_seconds === "number") {
     return { ok: false, reason: "wait", waitSeconds: body.wait_seconds };
   }
-  if (error === "wrong-password" || error === "password-missing" || error === "password-invalid") {
+  if (error === "wrong-password" || error === "email-needed" || error === "password-missing" || error === "password-invalid") {
     return { ok: false, reason: error };
   }
   return { ok: false, reason: "unreachable" };
@@ -82,6 +82,8 @@ export function explain(result: Exclude<SignInResult, { ok: true }>): string {
   switch (result.reason) {
     case "wrong-password":
       return "That email and password don't match.";
+    case "email-needed":
+      return "Type your email too.";
     case "wait":
       return `Too many wrong tries. Try again in ${duration(result.waitSeconds)}.`;
     case "password-missing":

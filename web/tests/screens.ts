@@ -1,4 +1,4 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, test, type APIRequestContext, type Locator, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP, OWNER_EMAIL, TEST_PASSWORD } from "../playwright.config";
 import { LOOKS, THEMES as THEME_NAMES, type Mode, type Theme } from "../src/lib/themes";
 
@@ -477,6 +477,19 @@ export async function signIn(page: Page): Promise<void> {
   await page.getByLabel("Password").fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page.locator("#sidebar")).toBeAttached();
+}
+
+/**
+ * Gives the owner their email, as their first sign-in does (decision 0116), so
+ * a test's wrong tries with other emails never count as tries at the owner's
+ * password on a nine turtles whose owner has no email yet.
+ */
+export async function ownerHasEmail(request: APIRequestContext, base = ""): Promise<void> {
+  const answer = await request.post(`${base}/api/sign-in`, {
+    data: { email: OWNER_EMAIL, password: TEST_PASSWORD },
+    headers: { "sec-fetch-site": "same-origin" },
+  });
+  expect(answer.status()).toBe(204);
 }
 
 /** Waits until nine turtles has decided which screen to show. */

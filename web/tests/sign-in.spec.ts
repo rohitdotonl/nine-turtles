@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { OWNER_EMAIL, TEST_PASSWORD } from "../playwright.config";
-import { appReady, signIn, tabTo } from "./screens";
+import { appReady, ownerHasEmail, signIn, tabTo } from "./screens";
 
 // SPEC section 1, "How to check it", done by a browser. Everything here uses
 // the keyboard only (the keyboard floor), except signIn, which other tests share.
@@ -61,7 +61,8 @@ test("the logo stands above the name on sign-in and before it in the sidebar, hi
   await expect(sidebarLogo).toHaveAttribute("focusable", "false");
 });
 
-test("a wrong password says so calmly and keeps you out", async ({ page }, testInfo) => {
+test("a wrong password says so calmly and keeps you out", async ({ page, request }, testInfo) => {
+  await ownerHasEmail(request);
   await page.goto("/");
   await appReady(page);
   const fieldBefore = (await page.getByLabel("Password").boundingBox())!;
@@ -83,7 +84,8 @@ test("a wrong password says so calmly and keeps you out", async ({ page }, testI
   await expect(page.locator("#sidebar")).toHaveCount(0);
 });
 
-test("while signing in, the button says it's busy and a second press sends nothing more", async ({ page }, testInfo) => {
+test("while signing in, the button says it's busy and a second press sends nothing more", async ({ page, request }, testInfo) => {
+  await ownerHasEmail(request);
   await page.goto("/");
   await appReady(page);
   // Hold the answer back, so the page stays busy for as long as the test needs.
@@ -170,7 +172,8 @@ test("without an email, nothing is sent and the email field is asked for", async
   await expect(page.locator("#sidebar")).toHaveCount(0);
 });
 
-test("a wrong password never says whether the email has an account", async ({ page }) => {
+test("a wrong password never says whether the email has an account", async ({ page, request }) => {
+  await ownerHasEmail(request);
   await page.goto("/");
   await appReady(page);
   await page.keyboard.type("nobody-here@example.com");

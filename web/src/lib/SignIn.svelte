@@ -137,7 +137,7 @@
     if (asking) return ask(asking);
     if (busy) return;
     if (email.trim() === "") {
-      message = "Type your email too.";
+      message = explain({ ok: false, reason: "email-needed" });
       refused = false;
       emailField?.focus();
       return;

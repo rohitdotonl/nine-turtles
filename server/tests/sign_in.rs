@@ -115,6 +115,43 @@ async fn a_wrong_first_sign_in_saves_nothing() {
 }
 
 #[tokio::test]
+async fn new_emails_each_try_cant_guess_the_owners_first_password() {
+    let base = common::start(common::config()).await;
+    // Before the owner has an email, every try with a new email is a try
+    // at the owner's password, and counts for the owner too.
+    for n in 0..4 {
+        let email = format!("guess{n}@example.com");
+        assert_eq!(
+            sign_in_with(&base, Some(&email), "guess").await.status(),
+            StatusCode::UNAUTHORIZED
+        );
+    }
+    assert_eq!(
+        sign_in_with(&base, Some("guess4@example.com"), "guess")
+            .await
+            .status(),
+        StatusCode::TOO_MANY_REQUESTS
+    );
+    assert_eq!(
+        sign_in_with(&base, Some("guess5@example.com"), PASSWORD)
+            .await
+            .status(),
+        StatusCode::TOO_MANY_REQUESTS
+    );
+}
+
+#[tokio::test]
+async fn the_owners_first_email_has_to_look_like_one() {
+    let base = common::start(common::config()).await;
+    let typo = sign_in_with(&base, Some("rohit"), PASSWORD).await;
+    assert_eq!(typo.status(), StatusCode::UNAUTHORIZED);
+    assert_eq!(
+        sign_in(&base, PASSWORD).await.status(),
+        StatusCode::NO_CONTENT
+    );
+}
+
+#[tokio::test]
 async fn without_signing_in_nothing_is_revealed() {
     let base = common::start(common::config()).await;
     // Only what the sign-in page needs: whether to offer "Forgot your

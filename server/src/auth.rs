@@ -375,7 +375,9 @@ async fn sign_in(State(state): State<AppState>, Json(form): Json<SignIn>) -> Res
             };
             (Some(person), stored, false)
         }
-        // Nobody has this email. If the owner has none yet, it may be theirs.
+        // Nobody has this email. If the owner has none yet, it may be theirs
+        // (only an email that could be real, as sign-up asks).
+        Ok(None) if !crate::people::plausible_email(&email) => (None, None, false),
         Ok(None) => match owner_without_email(&state.db).await {
             Ok(Some(own_line)) => {
                 if own_line.is_none() && owners_line.is_none() {
@@ -398,13 +400,24 @@ async fn sign_in(State(state): State<AppState>, Json(form): Json<SignIn>) -> Res
     // The lock is held only to check and record the count, never during the
     // password check, so one account's guesses never hold up anyone else.
     // The try counts as wrong from the start (and is forgotten if it turns
-    // out right), so tries sent together can't race past the limit.
+    // out right), so tries sent together can't race past the limit. A try
+    // at the owner's password with a new email also counts for the owner,
+    // so changing the email every few tries can't guess it unhindered.
+    let mut counted = vec![account.clone()];
+    if claims_owner {
+        counted.push(Account::Owner);
+    }
     {
         let mut limiters = state.limiter.lock().await;
-        if let Some(wait) = limiters.wait(&account, Instant::now()) {
+        if let Some(wait) = counted
+            .iter()
+            .find_map(|one| limiters.wait(one, Instant::now()))
+        {
             return wait_response(wait);
         }
-        limiters.wrong(account.clone(), Instant::now());
+        for one in &counted {
+            limiters.wrong(one.clone(), Instant::now());
+        }
     }
 
     let someones = stored.is_some();
@@ -428,7 +441,10 @@ async fn sign_in(State(state): State<AppState>, Json(form): Json<SignIn>) -> Res
         state
             .wrong_passwords
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        if let Some(wait) = limiters.wait(&account, Instant::now()) {
+        if let Some(wait) = counted
+            .iter()
+            .find_map(|one| limiters.wait(one, Instant::now()))
+        {
             // Counted on the diagnostics page, not kept as a "problem", so
             // a patient guesser can't push real problems out of view.
             log::info(&format!(
@@ -444,9 +460,14 @@ async fn sign_in(State(state): State<AppState>, Json(form): Json<SignIn>) -> Res
         )
             .into_response();
     };
-    limiters.right(&account);
+    for one in &counted {
+        limiters.right(one);
+    }
     drop(limiters);
 
+    // Two first sign-ins at once with different emails: only the first
+    // saves its email; the other still signs in as the owner (it had the
+    // owner's password), which is harmless.
     if claims_owner {
         let saved = sqlx::query("UPDATE people SET email = ? WHERE id = ? AND email IS NULL")
             .bind(&email)
