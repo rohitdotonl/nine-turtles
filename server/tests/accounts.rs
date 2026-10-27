@@ -1,5 +1,5 @@
 //! What email makes possible (SPEC sections 1 and 18, decision 0088):
-//! confirming an Open sign-up, "Forgot your password?", changing an email,
+//! "Forgot your password?", signing in by link, changing an email,
 //! and deleting an account, tested against a real running nine turtles
 //! whose emails land in an outbox instead of being sent.
 
@@ -66,74 +66,46 @@ async fn error_of(response: Response) -> String {
     body["error"].as_str().unwrap_or_default().to_owned()
 }
 
-/// A nine turtles that can send email, with sign-up switched to Open by the
-/// owner. Answers its address, its insides, the outbox and the owner's cookie.
+/// A nine turtles that can send email. Answers its address, its insides,
+/// the outbox and the owner's cookie.
 async fn open_app() -> (String, nine_turtles::AppState, Outbox, String) {
     let (base, state, outbox) = start_with_mail(common::config()).await;
     let owner = signed_in(&base).await;
-    let switched = post(
-        &base,
-        "/api/sign-up/switch",
-        Some(&owner),
-        json!({ "sign_up": "open" }),
-    )
-    .await;
-    assert_eq!(switched.status(), StatusCode::NO_CONTENT);
     (base, state, outbox, owner)
 }
 
-/// Signs up while Open and follows the emailed link: answers the new reader's cookie.
-async fn confirmed_reader(base: &str, outbox: &Outbox, email: &str) -> String {
-    let asked = post(
+/// Signs up (made at once, no email sent, decision 0115): answers the new
+/// reader's cookie.
+async fn open_reader(base: &str, outbox: &Outbox, email: &str) -> String {
+    let made = post(
         base,
         "/api/sign-up",
         None,
-        json!({ "email": email, "password": READER_PASSWORD, "invite": "" }),
+        json!({ "email": email, "password": READER_PASSWORD }),
     )
     .await;
-    assert_eq!(asked.status(), StatusCode::ACCEPTED);
-    let (page, ticket) = newest_link(outbox, email);
-    assert_eq!(page, "/confirm-email");
-    let confirmed = post(
-        base,
-        "/api/email/confirm",
-        None,
-        json!({ "ticket": ticket }),
-    )
-    .await;
-    assert_eq!(confirmed.status(), StatusCode::OK);
-    cookie_from(&confirmed)
+    assert_eq!(made.status(), StatusCode::NO_CONTENT);
+    assert!(emails_to(outbox, email).is_empty());
+    cookie_from(&made)
 }
 
 #[tokio::test]
-async fn without_email_settings_nothing_is_sent_and_open_stays_refused() {
+async fn without_email_settings_nothing_is_sent_and_sign_up_still_works() {
     let (base, state) = start_with_state(common::config()).await;
     assert!(state.mailer.is_none());
     let owner = signed_in(&base).await;
 
-    let switched = post(
-        &base,
-        "/api/sign-up/switch",
-        Some(&owner),
-        json!({ "sign_up": "open" }),
-    )
-    .await;
-    assert_eq!(switched.status(), StatusCode::BAD_REQUEST);
-    assert_eq!(error_of(switched).await, "open-needs-email");
-
-    // Even set by hand, Open isn't open without email.
-    sqlx::query("INSERT OR REPLACE INTO settings (name, value) VALUES ('sign_up', 'open')")
-        .execute(&state.db)
-        .await
-        .unwrap();
+    // Sign-up needs no email (decision 0115): the account is made at once.
     let signed_up = post(
         &base,
         "/api/sign-up",
         None,
-        json!({ "email": "mira@example.com", "password": READER_PASSWORD, "invite": "" }),
+        json!({ "email": "mira@example.com", "password": READER_PASSWORD }),
     )
     .await;
-    assert_eq!(signed_up.status(), StatusCode::FORBIDDEN);
+    assert_eq!(signed_up.status(), StatusCode::NO_CONTENT);
+    let mira = cookie_from(&signed_up);
+    assert_eq!(session(&base, Some(&mira)).await["signed_in"], true);
 
     let forgot = post(
         &base,
@@ -156,195 +128,14 @@ async fn without_email_settings_nothing_is_sent_and_open_stays_refused() {
 
     let signed_out = session(&base, None).await;
     assert_eq!(signed_out["email_sending"], false);
-    assert_eq!(signed_out["sign_up_open"], false);
     assert_eq!(session(&base, Some(&owner)).await["email_sending"], false);
-}
-
-#[tokio::test]
-async fn an_open_sign_up_waits_for_its_emailed_link() {
-    let (base, state, outbox, owner) = open_app().await;
-    let settings: Value = Client::new()
-        .get(format!("{base}/api/sign-up/settings"))
-        .header("cookie", &owner)
-        .send()
-        .await
-        .unwrap()
-        .text()
-        .await
-        .unwrap()
-        .parse()
-        .unwrap();
-    assert_eq!(settings["sign_up"], "open");
-    assert_eq!(settings["open_available"], true);
-    let signed_out = session(&base, None).await;
-    assert_eq!(signed_out["sign_up_open"], true);
-    assert_eq!(signed_out["email_sending"], true);
-
-    let email = "mira@example.com";
-    let asked = post(
-        &base,
-        "/api/sign-up",
-        None,
-        json!({ "email": email, "password": READER_PASSWORD, "invite": "" }),
-    )
-    .await;
-    assert_eq!(asked.status(), StatusCode::ACCEPTED);
-    assert!(asked.headers().get("set-cookie").is_none());
-    let sent = emails_to(&outbox, email);
-    assert_eq!(sent.len(), 1);
-    assert_eq!(sent[0].subject, "Confirm your email for nine turtles");
-    assert!(!sent[0].body.contains('!'));
-    let (page, ticket) = newest_link(&outbox, email);
-    assert_eq!(page, "/confirm-email");
-    assert_eq!(ticket.len(), 64);
-
-    // No account yet; only a scramble of the ticket is kept.
-    let people: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM people WHERE email = ?")
-        .bind(email)
-        .fetch_one(&state.db)
-        .await
-        .unwrap();
-    assert_eq!(people, 0);
-    let stored: Vec<u8> = sqlx::query_scalar("SELECT token_hash FROM email_links")
-        .fetch_one(&state.db)
-        .await
-        .unwrap();
-    assert_ne!(stored, ticket.as_bytes());
-    assert_eq!(stored.len(), 32);
-
-    // Signing in before confirming: the right password hears it's waiting
-    // (and the link is sent again); a wrong one hears only "don't match".
-    let wrong = sign_in(&base, email, "not the password at all").await;
-    assert_eq!(wrong.status(), StatusCode::UNAUTHORIZED);
-    let waiting = sign_in(&base, email, READER_PASSWORD).await;
-    assert_eq!(waiting.status(), StatusCode::FORBIDDEN);
-    let waiting: Value = waiting.text().await.unwrap().parse::<Value>().unwrap();
-    assert_eq!(waiting["error"], "unconfirmed");
-    assert_eq!(waiting["sent"], true);
-    assert_eq!(emails_to(&outbox, email).len(), 2);
-
-    // The first link still works, once.
-    let confirmed = post(
-        &base,
-        "/api/email/confirm",
-        None,
-        json!({ "ticket": ticket }),
-    )
-    .await;
-    assert_eq!(confirmed.status(), StatusCode::OK);
-    let cookie = cookie_from(&confirmed);
-    let now = session(&base, Some(&cookie)).await;
-    assert_eq!(now["signed_in"], true);
-    assert_eq!(now["owner"], false);
-    assert_eq!(now["email"], email);
-    let again = post(
-        &base,
-        "/api/email/confirm",
-        None,
-        json!({ "ticket": ticket }),
-    )
-    .await;
-    assert_eq!(again.status(), StatusCode::GONE);
-    // The link sent again is spent too.
-    let (_, resent) = newest_link(&outbox, email);
-    let resent = post(
-        &base,
-        "/api/email/confirm",
-        None,
-        json!({ "ticket": resent }),
-    )
-    .await;
-    assert_eq!(resent.status(), StatusCode::GONE);
-
-    assert_eq!(
-        sign_in(&base, email, READER_PASSWORD).await.status(),
-        StatusCode::NO_CONTENT
-    );
-
-    // Signing up again with the same address answers the same, and sends nothing.
-    let twice = post(
-        &base,
-        "/api/sign-up",
-        None,
-        json!({ "email": "MIRA@example.com", "password": READER_PASSWORD, "invite": "" }),
-    )
-    .await;
-    assert_eq!(twice.status(), StatusCode::ACCEPTED);
-    assert_eq!(emails_to(&outbox, email).len(), 2);
-}
-
-#[tokio::test]
-async fn a_confirmation_link_lasts_a_day() {
-    let (base, state, outbox, _) = open_app().await;
-    let email = "late@example.com";
-    post(
-        &base,
-        "/api/sign-up",
-        None,
-        json!({ "email": email, "password": READER_PASSWORD, "invite": "" }),
-    )
-    .await;
-    let lifetime: i64 = sqlx::query_scalar("SELECT expires_at - created_at FROM email_links")
-        .fetch_one(&state.db)
-        .await
-        .unwrap();
-    assert_eq!(lifetime, 24 * 60 * 60);
-    sqlx::query("UPDATE email_links SET expires_at = unixepoch() - 1")
-        .execute(&state.db)
-        .await
-        .unwrap();
-    let (_, ticket) = newest_link(&outbox, email);
-    let late = post(
-        &base,
-        "/api/email/confirm",
-        None,
-        json!({ "ticket": ticket }),
-    )
-    .await;
-    assert_eq!(late.status(), StatusCode::GONE);
-    assert_eq!(error_of(late).await, "expired");
-    // And an expired sign-up can't be signed in to either.
-    assert_eq!(
-        sign_in(&base, email, READER_PASSWORD).await.status(),
-        StatusCode::UNAUTHORIZED
-    );
-}
-
-#[tokio::test]
-async fn invite_sign_ups_need_no_email() {
-    let (base, _, outbox) = start_with_mail(common::config()).await;
-    let owner = signed_in(&base).await;
-    post(
-        &base,
-        "/api/sign-up/switch",
-        Some(&owner),
-        json!({ "sign_up": "invite" }),
-    )
-    .await;
-    let made: Value = post(&base, "/api/sign-up/invite", Some(&owner), json!({}))
-        .await
-        .text()
-        .await
-        .unwrap()
-        .parse()
-        .unwrap();
-    let invite = made["invite"].as_str().unwrap();
-    let joined = post(
-        &base,
-        "/api/sign-up",
-        None,
-        json!({ "email": "ines@example.com", "password": READER_PASSWORD, "invite": invite }),
-    )
-    .await;
-    assert_eq!(joined.status(), StatusCode::NO_CONTENT);
-    assert!(outbox.lock().unwrap().is_empty());
 }
 
 #[tokio::test]
 async fn forgot_your_password_always_answers_the_same() {
     let (base, state, outbox, _) = open_app().await;
     let email = "noor@example.com";
-    let laptop = confirmed_reader(&base, &outbox, email).await;
+    let laptop = open_reader(&base, &outbox, email).await;
     let before = emails_to(&outbox, email).len();
     let reader: i64 = sqlx::query_scalar("SELECT id FROM people WHERE email = ?")
         .bind(email)
@@ -445,9 +236,9 @@ async fn forgot_your_password_always_answers_the_same() {
 async fn at_most_three_emails_go_to_one_address_in_an_hour() {
     let (base, state, outbox, _) = open_app().await;
     let email = "tam@example.com";
-    confirmed_reader(&base, &outbox, email).await;
-    // The confirmation was one; two more reset emails, a minute apart, then
-    // nothing, though the answer never changes.
+    open_reader(&base, &outbox, email).await;
+    // Three reset emails, a minute apart, then nothing, though the answer
+    // never changes.
     for _ in 0..5 {
         a_minute_passes(&state.db).await;
         let response = post(
@@ -466,7 +257,7 @@ async fn at_most_three_emails_go_to_one_address_in_an_hour() {
 async fn pressing_send_link_twice_sends_one_email() {
     let (base, state, outbox, _) = open_app().await;
     let email = "twice@example.com";
-    confirmed_reader(&base, &outbox, email).await;
+    open_reader(&base, &outbox, email).await;
     let before = emails_to(&outbox, email).len();
     let forgot = || {
         post(
@@ -498,7 +289,7 @@ async fn a_minute_passes(db: &sqlx::SqlitePool) {
 async fn a_password_link_lasts_an_hour() {
     let (base, state, outbox, _) = open_app().await;
     let email = "ada@example.com";
-    confirmed_reader(&base, &outbox, email).await;
+    open_reader(&base, &outbox, email).await;
     post(
         &base,
         "/api/password/forgot",
@@ -530,7 +321,7 @@ async fn changing_an_email_waits_for_the_new_address_and_tells_the_old() {
     let (base, _, outbox, _) = open_app().await;
     let old = "kai@example.com";
     let new = "kai@elsewhere.example";
-    let cookie = confirmed_reader(&base, &outbox, old).await;
+    let cookie = open_reader(&base, &outbox, old).await;
 
     let wrong = post(
         &base,
@@ -595,8 +386,8 @@ async fn changing_an_email_waits_for_the_new_address_and_tells_the_old() {
 #[tokio::test]
 async fn an_address_another_reader_has_gets_nothing() {
     let (base, _, outbox, _) = open_app().await;
-    let cookie = confirmed_reader(&base, &outbox, "one@example.com").await;
-    confirmed_reader(&base, &outbox, "two@example.com").await;
+    let cookie = open_reader(&base, &outbox, "one@example.com").await;
+    open_reader(&base, &outbox, "two@example.com").await;
     let before = emails_to(&outbox, "two@example.com").len();
     let asked = post(
         &base,
@@ -684,22 +475,22 @@ async fn tables_with_a_reader(db: &sqlx::SqlitePool) -> Vec<String> {
 async fn deleting_an_account_leaves_nothing_of_theirs() {
     let (base, state, outbox, owner) = open_app().await;
     let email = "leaving@example.com";
-    let cookie = confirmed_reader(&base, &outbox, email).await;
+    let cookie = open_reader(&base, &outbox, email).await;
     let person: i64 = sqlx::query_scalar("SELECT id FROM people WHERE email = ?")
         .bind(email)
         .fetch_one(&state.db)
         .await
         .unwrap();
 
-    // Once confirmed, the password scramble waiting with the sign-up link is blanked.
-    let waiting: Vec<String> = sqlx::query_scalar(
-        "SELECT password_hash FROM email_links WHERE purpose = 'sign-up' AND email = ?",
+    // A link asked for by address, which holds their email.
+    let forgot = post(
+        &base,
+        "/api/password/forgot",
+        None,
+        json!({ "email": email }),
     )
-    .bind(email)
-    .fetch_all(&state.db)
-    .await
-    .unwrap();
-    assert_eq!(waiting, [""]);
+    .await;
+    assert_eq!(forgot.status(), StatusCode::ACCEPTED);
 
     // Something of theirs, and of the owner's, in every table that can hold it.
     for (statement, what) in [
@@ -832,8 +623,7 @@ async fn deleting_an_account_leaves_nothing_of_theirs() {
         // there; every other line of the owner's stays.
         assert_eq!(still, owners, "{table} lost some of the owner's lines");
     }
-    // Their Open sign-up's links had no reader number, but held their email
-    // (and, until confirmed, a password scramble): gone too.
+    // Their emailed links held their email: gone too.
     let links: i64 =
         sqlx::query_scalar("SELECT COUNT(*) FROM email_links WHERE email = ? COLLATE NOCASE")
             .bind(email)
@@ -887,7 +677,7 @@ async fn still_waiting<T>(task: &tokio::task::JoinHandle<T>) -> bool {
 async fn changing_an_email_counts_wrong_passwords_as_sign_in_does() {
     let (base, _, outbox, _) = open_app().await;
     let email = "ivy@example.com";
-    let cookie = confirmed_reader(&base, &outbox, email).await;
+    let cookie = open_reader(&base, &outbox, email).await;
     let change = |password: &'static str| {
         post(
             &base,
@@ -922,7 +712,7 @@ async fn changing_an_email_counts_wrong_passwords_as_sign_in_does() {
 async fn emailed_links_wait_their_turn_for_a_password_check() {
     let (base, state, outbox, _) = open_app().await;
     let email = "lee@example.com";
-    let cookie = confirmed_reader(&base, &outbox, email).await;
+    let cookie = open_reader(&base, &outbox, email).await;
     post(
         &base,
         "/api/password/forgot",
@@ -987,100 +777,9 @@ async fn emailed_links_wait_their_turn_for_a_password_check() {
 }
 
 #[tokio::test]
-async fn confirming_a_sign_up_goes_one_at_a_time_within_the_hours_count() {
-    let (base, state, outbox, _) = open_app().await;
-    let email = "noa@example.com";
-    let asked = post(
-        &base,
-        "/api/sign-up",
-        None,
-        json!({ "email": email, "password": READER_PASSWORD, "invite": "" }),
-    )
-    .await;
-    assert_eq!(asked.status(), StatusCode::ACCEPTED);
-    let (_, ticket) = newest_link(&outbox, email);
-
-    // The hour's accounts are made meanwhile: the link must wait.
-    for number in 0..nine_turtles::people::SIGN_UPS_PER_HOUR {
-        sqlx::query(
-            "INSERT INTO people (owner, email, password_hash, created_at)
-             VALUES (0, ?, NULL, unixepoch())",
-        )
-        .bind(format!("made{number}@example.com"))
-        .execute(&state.db)
-        .await
-        .unwrap();
-    }
-    let capped = post(
-        &base,
-        "/api/email/confirm",
-        None,
-        json!({ "ticket": ticket }),
-    )
-    .await;
-    assert_eq!(capped.status(), StatusCode::TOO_MANY_REQUESTS);
-    assert_eq!(error_of(capped).await, "too-many");
-    sqlx::query("UPDATE people SET created_at = unixepoch() - 7200 WHERE owner = 0")
-        .execute(&state.db)
-        .await
-        .unwrap();
-
-    // Behind another sign-up, the link waits its turn; it still works.
-    let one_at_a_time = state.sign_ups.lock().await;
-    let confirmed = tokio::spawn({
-        let base = base.clone();
-        async move {
-            post(
-                &base,
-                "/api/email/confirm",
-                None,
-                json!({ "ticket": ticket }),
-            )
-            .await
-            .status()
-        }
-    });
-    assert!(still_waiting(&confirmed).await);
-    drop(one_at_a_time);
-    assert_eq!(confirmed.await.unwrap(), StatusCode::OK);
-}
-
-#[tokio::test]
-async fn an_open_sign_up_with_a_taken_email_takes_as_long() {
-    let (base, _, outbox, _) = open_app().await;
-    confirmed_reader(&base, &outbox, "here@example.com").await;
-    let timed = |email: &'static str| {
-        let base = base.clone();
-        async move {
-            let started = std::time::Instant::now();
-            let response = post(
-                &base,
-                "/api/sign-up",
-                None,
-                json!({ "email": email, "password": READER_PASSWORD, "invite": "" }),
-            )
-            .await;
-            let took = started.elapsed();
-            (response.status(), response.text().await.unwrap(), took)
-        }
-    };
-    let (free_status, _, free_took) = timed("new@example.com").await;
-    let (taken_status, taken_body, taken_took) = timed("HERE@example.com").await;
-    assert_eq!(free_status, StatusCode::ACCEPTED);
-    assert_eq!(taken_status, StatusCode::ACCEPTED);
-    assert!(taken_body.contains("confirm"), "{taken_body}");
-    // Both scramble the password; without it, the taken one would answer
-    // in a few milliseconds.
-    assert!(
-        taken_took * 3 >= free_took,
-        "a taken email answered in {taken_took:?}, a free one in {free_took:?}"
-    );
-}
-
-#[tokio::test]
 async fn an_address_with_a_name_in_it_is_refused() {
     let (base, _, outbox, _) = open_app().await;
-    confirmed_reader(&base, &outbox, "victim@example.com").await;
+    open_reader(&base, &outbox, "victim@example.com").await;
     for path in ["/api/password/forgot", "/api/sign-up"] {
         let response = post(
             &base,
@@ -1089,23 +788,22 @@ async fn an_address_with_a_name_in_it_is_refused() {
             json!({
                 "email": "evil<victim@example.com>",
                 "password": READER_PASSWORD,
-                "invite": "",
             }),
         )
         .await;
         assert_eq!(response.status(), StatusCode::BAD_REQUEST, "{path}");
         assert_eq!(error_of(response).await, "email", "{path}");
     }
-    assert_eq!(emails_to(&outbox, "victim@example.com").len(), 1);
+    assert!(emails_to(&outbox, "victim@example.com").is_empty());
 }
 
 #[tokio::test]
 async fn requests_sent_together_cant_pass_the_limits() {
     let (base, _, outbox, _) = open_app().await;
     let email = "rush@example.com";
-    let cookie = confirmed_reader(&base, &outbox, email).await;
-    // "Forgot your password?" ten times at once: the confirmation was one,
-    // and only one password link goes out in a minute.
+    let cookie = open_reader(&base, &outbox, email).await;
+    // "Forgot your password?" ten times at once: only one password link
+    // goes out in a minute.
     let mut forgots = Vec::new();
     for _ in 0..10 {
         let base = base.clone();
@@ -1123,7 +821,7 @@ async fn requests_sent_together_cant_pass_the_limits() {
     for forgot in forgots {
         assert_eq!(forgot.await.unwrap(), StatusCode::ACCEPTED);
     }
-    assert_eq!(emails_to(&outbox, email).len(), 2);
+    assert_eq!(emails_to(&outbox, email).len(), 1);
 
     // Five changes of email at once, each to a new address: three go out,
     // and the rest are told there have been enough.
@@ -1167,9 +865,9 @@ async fn requests_sent_together_cant_pass_the_limits() {
 #[tokio::test]
 async fn changing_to_a_taken_address_counts_as_any_change() {
     let (base, _, outbox, _) = open_app().await;
-    let cookie = confirmed_reader(&base, &outbox, "asks@example.com").await;
-    confirmed_reader(&base, &outbox, "taken@example.com").await;
-    let other = confirmed_reader(&base, &outbox, "other@example.com").await;
+    let cookie = open_reader(&base, &outbox, "asks@example.com").await;
+    open_reader(&base, &outbox, "taken@example.com").await;
+    let other = open_reader(&base, &outbox, "other@example.com").await;
     let change = |cookie: String, email: &'static str| {
         let base = base.clone();
         async move {
@@ -1202,7 +900,7 @@ async fn changing_to_a_taken_address_counts_as_any_change() {
     );
     // The taken address got nothing, and its own emails aren't used up:
     // its reader can still ask for a new password.
-    assert_eq!(emails_to(&outbox, "taken@example.com").len(), 1);
+    assert!(emails_to(&outbox, "taken@example.com").is_empty());
     post(
         &base,
         "/api/password/forgot",
@@ -1210,7 +908,7 @@ async fn changing_to_a_taken_address_counts_as_any_change() {
         json!({ "email": "taken@example.com" }),
     )
     .await;
-    assert_eq!(emails_to(&outbox, "taken@example.com").len(), 2);
+    assert_eq!(emails_to(&outbox, "taken@example.com").len(), 1);
 }
 
 #[tokio::test]
@@ -1361,13 +1059,15 @@ async fn a_new_password_setting_wins_over_one_set_by_email() {
 #[tokio::test]
 async fn emailed_links_past_their_time_are_tidied_by_background_checking() {
     let (base, state, outbox, _) = open_app().await;
-    post(
+    open_reader(&base, &outbox, "later@example.com").await;
+    let changed = post(
         &base,
-        "/api/sign-up",
+        "/api/password/forgot",
         None,
-        json!({ "email": "later@example.com", "password": READER_PASSWORD, "invite": "" }),
+        json!({ "email": "later@example.com" }),
     )
     .await;
+    assert_eq!(changed.status(), StatusCode::ACCEPTED);
     assert_eq!(emails_to(&outbox, "later@example.com").len(), 1);
     let count = || async {
         sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM email_links")
@@ -1405,7 +1105,7 @@ async fn use_sign_in_link(base: &str, ticket: &str) -> Response {
 async fn a_sign_in_link_signs_in_once_and_leaves_the_password_alone() {
     let (base, state, outbox, _) = open_app().await;
     let email = "iris@example.com";
-    let laptop = confirmed_reader(&base, &outbox, email).await;
+    let laptop = open_reader(&base, &outbox, email).await;
     let before = emails_to(&outbox, email).len();
 
     // The same answer whether or not the address has an account.
@@ -1458,7 +1158,7 @@ async fn a_sign_in_link_signs_in_once_and_leaves_the_password_alone() {
 async fn a_sign_in_link_lasts_fifteen_minutes_and_still_counts_for_the_hour() {
     let (base, state, outbox, _) = open_app().await;
     let email = "lena@example.com";
-    confirmed_reader(&base, &outbox, email).await;
+    open_reader(&base, &outbox, email).await;
     ask_sign_in_link(&base, email).await;
     let (_, ticket) = newest_link(&outbox, email);
     // Sixteen minutes later.
@@ -1473,8 +1173,8 @@ async fn a_sign_in_link_lasts_fifteen_minutes_and_still_counts_for_the_hour() {
         use_sign_in_link(&base, &ticket).await.status(),
         StatusCode::GONE
     );
-    // The confirmation and the sign-in link were two of the hour's three,
-    // though the second has stopped working: one more, then nothing.
+    // The sign-in link was one of the hour's three, though it has stopped
+    // working: two more, then nothing.
     let before = emails_to(&outbox, email).len();
     for _ in 0..3 {
         a_minute_passes(&state.db).await;
@@ -1483,14 +1183,14 @@ async fn a_sign_in_link_lasts_fifteen_minutes_and_still_counts_for_the_hour() {
             StatusCode::ACCEPTED
         );
     }
-    assert_eq!(emails_to(&outbox, email).len(), before + 1);
+    assert_eq!(emails_to(&outbox, email).len(), before + 2);
 }
 
 #[tokio::test]
 async fn pressing_send_link_twice_sends_one_sign_in_link() {
     let (base, state, outbox, _) = open_app().await;
     let email = "twice-in@example.com";
-    confirmed_reader(&base, &outbox, email).await;
+    open_reader(&base, &outbox, email).await;
     let before = emails_to(&outbox, email).len();
     assert_eq!(
         ask_sign_in_link(&base, email).await.status(),
@@ -1510,7 +1210,7 @@ async fn pressing_send_link_twice_sends_one_sign_in_link() {
 async fn a_new_email_or_a_new_password_ends_earlier_sign_in_links() {
     let (base, state, outbox, _) = open_app().await;
     let email = "moss@example.com";
-    let laptop = confirmed_reader(&base, &outbox, email).await;
+    let laptop = open_reader(&base, &outbox, email).await;
 
     // A link to the old address stops working once the email changes.
     ask_sign_in_link(&base, email).await;

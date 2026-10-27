@@ -1,24 +1,15 @@
 //! The readers of one nine turtles, and how new ones join (SPEC sections 1
-//! and 18, decision 0087).
+//! and 18, decisions 0087 and 0115).
 //!
 //! The owner (reader 1) sees who has an account (their email and when they
-//! joined, never anything they read), sets the email they sign in with, and
-//! chooses whether anyone may sign up:
+//! joined, never anything they read) and sets the email they sign in with.
+//! Sign-up is always open: anyone can make an account with an email and a
+//! password, at once, with no email sent and no invite (decision 0115).
 //!
-//! - **Closed** (the default): nobody can.
-//! - **Invite link**: anyone with the current invite link can. The link
-//!   carries a long random ticket, of which only a scrambled copy (BLAKE2s)
-//!   is kept in `settings`, as for signed-in devices. It works for several
-//!   sign-ups until the owner makes a new one or closes sign-up.
-//! - **Open**: anyone can, once they follow the link emailed to them
-//!   (decision 0088). Only while nine turtles can send email; without the
-//!   email settings the server refuses it whatever it's sent.
-//!
-//! However sign-up is set, at most `SIGN_UPS_PER_HOUR` sign-up tries are
+//! At most `SIGN_UPS_PER_HOUR` sign-up tries are
 //! taken in any hour, for the whole app, counting tries with an email that's
-//! already taken as well as new accounts and Open sign-ups waiting for their
-//! link; at most as many accounts are made, also when those links are
-//! followed: behind the host's proxy nine turtles can't reliably tell one
+//! already taken as well as new accounts; at most as many accounts are made,
+//! also when a sign-up link emailed before decision 0115 is followed: behind the host's proxy nine turtles can't reliably tell one
 //! place from another. Sign-ups go one at a time, and so do the links
 //! followed (`accounts::confirm`), because scrambling each password takes
 //! about 19 MB of memory and so the hour's count can't be raced past.
@@ -44,10 +35,7 @@ use sqlx::SqlitePool;
 
 use crate::{
     AppState,
-    auth::{
-        Account, SignedIn, ask_password, database_problem, new_token, remember_device, scramble,
-        session_cookie,
-    },
+    auth::{Account, SignedIn, ask_password, database_problem, remember_device, session_cookie},
     config::PasswordSetting,
     log, now,
 };
@@ -65,9 +53,6 @@ pub fn routes() -> Router<AppState> {
         .route("/api/people", get(list))
         .route("/api/people/me/email", post(set_email))
         .route("/api/sign-up", post(sign_up))
-        .route("/api/sign-up/settings", get(sign_up_settings))
-        .route("/api/sign-up/switch", post(switch))
-        .route("/api/sign-up/invite", post(make_invite))
 }
 
 /// One reader as the owner sees them: number, email, owner or not, joined.
@@ -170,7 +155,7 @@ pub const PER_READER_TABLES: &[(&str, &str)] = &[
 /// go (`folders::clear`), their stars included, so a feed nobody else
 /// follows stops being checked and its articles nobody has go too; then
 /// every table in `PER_READER_TABLES` is emptied of their lines, and every
-/// emailed link to their address (an Open sign-up's has no reader number).
+/// emailed link to their address.
 pub async fn delete(db: &SqlitePool, person: i64) -> Result<(), sqlx::Error> {
     let mut transaction = db.begin_with("BEGIN IMMEDIATE").await?;
     let owner: Option<bool> = sqlx::query_scalar("SELECT owner FROM people WHERE id = ?")
@@ -180,9 +165,8 @@ pub async fn delete(db: &SqlitePool, person: i64) -> Result<(), sqlx::Error> {
     if owner != Some(false) {
         return Ok(());
     }
-    // An Open sign-up's links have no reader number yet, but hold their
-    // email (and, until confirmed, a password scramble): they go too, as
-    // does any other link to their address.
+    // Every link to their address goes, including any without a reader
+    // number (sign-up links from before decision 0115).
     sqlx::query(
         "DELETE FROM email_links
          WHERE email = (SELECT email FROM people WHERE id = ?) COLLATE NOCASE",
@@ -228,12 +212,6 @@ pub async fn delete(db: &SqlitePool, person: i64) -> Result<(), sqlx::Error> {
         .execute(&mut *transaction)
         .await?;
     transaction.commit().await
-}
-
-/// Whether anyone may sign up without an invite: sign-up is Open and nine
-/// turtles can send the email that confirms an address.
-pub async fn open_for_anyone(state: &AppState) -> Result<bool, sqlx::Error> {
-    Ok(state.mailer.is_some() && load(&state.db).await?.mode == "open")
 }
 
 /// Everyone with an account: number, email, whether they're the owner, and
@@ -312,118 +290,15 @@ async fn set_email(
     .await
 }
 
-/// What sign-up is set to, as the owner sees it in Settings.
-async fn sign_up_settings(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
-    owner_only(&state, person, async {
-        match load(&state.db).await {
-            Ok(settings) => Json(json!({
-                "sign_up": settings.mode,
-                "invite_made_at": settings.invite_made_at,
-                // Open needs confirmation emails (decision 0088).
-                "open_available": state.mailer.is_some(),
-            }))
-            .into_response(),
-            Err(error) => database_problem("reading the sign-up setting", &error),
-        }
-    })
-    .await
-}
-
-#[derive(Deserialize)]
-struct Switch {
-    sign_up: String,
-}
-
-/// Closed, Invite link or Open. Closing forgets the invite link, so it
-/// never works again; Invite link and Open keep any link already made (it
-/// works again if Invite link is chosen later). Open is refused while nine
-/// turtles can't send email.
-async fn switch(
-    SignedIn(person): SignedIn,
-    State(state): State<AppState>,
-    Json(form): Json<Switch>,
-) -> Response {
-    owner_only(&state, person, async {
-        let saved = match form.sign_up.as_str() {
-            "closed" => close(&state.db).await,
-            "invite" => save(&state.db, &[("sign_up", "invite")]).await,
-            "open" if state.mailer.is_none() => {
-                return refused(StatusCode::BAD_REQUEST, "open-needs-email");
-            }
-            "open" => save(&state.db, &[("sign_up", "open")]).await,
-            _ => return refused(StatusCode::BAD_REQUEST, "sign-up"),
-        };
-        match saved {
-            Ok(()) => StatusCode::NO_CONTENT.into_response(),
-            Err(error) => database_problem("saving the sign-up setting", &error),
-        }
-    })
-    .await
-}
-
-/// Makes a new invite link's ticket, replacing any earlier one (which stops
-/// working), sets sign-up to Invite link, and shows the ticket this once.
-async fn make_invite(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
-    owner_only(&state, person, async {
-        let ticket = match new_token() {
-            Ok(ticket) => ticket,
-            Err(error) => {
-                log::problem(&format!("couldn't make an invite link: {error}"));
-                return StatusCode::INTERNAL_SERVER_ERROR.into_response();
-            }
-        };
-        let made_at = now().to_string();
-        let saved = save(
-            &state.db,
-            &[
-                ("sign_up", "invite"),
-                ("sign_up_invite", &hex(&scramble(&ticket))),
-                ("sign_up_invite_made_at", &made_at),
-            ],
-        )
-        .await;
-        match saved {
-            Ok(()) => (
-                // Never kept by the browser or anything between.
-                [(header::CACHE_CONTROL, "no-store")],
-                Json(json!({ "invite": ticket })),
-            )
-                .into_response(),
-            Err(error) => database_problem("saving the invite link", &error),
-        }
-    })
-    .await
-}
-
 #[derive(Deserialize)]
 struct SignUp {
     email: String,
     password: String,
-    #[serde(default)]
-    invite: String,
 }
 
-/// Makes an account with an email and a password. With the current invite
-/// link, while sign-up is set to it, the account is made at once and this
-/// device signed in (the owner knows whom they invited). While sign-up is
-/// Open, a link is emailed instead, and the account is made only when it's
-/// followed (`accounts::confirm`).
+/// Makes an account with an email and a password, at once, and signs this
+/// device in. No email is sent and no invite is needed (decision 0115).
 async fn sign_up(State(state): State<AppState>, Json(form): Json<SignUp>) -> Response {
-    let settings = match load(&state.db).await {
-        Ok(settings) => settings,
-        Err(error) => return database_problem("reading the sign-up setting", &error),
-    };
-    // Closed, Open (not yet), no link made, or a wrong or replaced one: all
-    // the same answer.
-    let invited = settings.mode == "invite"
-        && settings
-            .invite
-            .is_some_and(|stored| stored == hex(&scramble(form.invite.trim())));
-    let open = settings.mode == "open" && state.mailer.is_some();
-    if !invited && !open {
-        return refused(StatusCode::FORBIDDEN, "closed");
-    }
-
     let email = form.email.trim().to_owned();
     if !plausible_email(&email) {
         return refused(StatusCode::BAD_REQUEST, "email");
@@ -448,10 +323,6 @@ async fn sign_up(State(state): State<AppState>, Json(form): Json<SignUp>) -> Res
     // to be taken, so nobody can make the server scramble endlessly.
     if !tries.try_one(Instant::now()) {
         return too_many();
-    }
-
-    if open {
-        return sign_up_by_email(&state, &email, form.password, hour_ago).await;
     }
 
     let password = form.password;
@@ -532,114 +403,6 @@ impl SignUpTries {
 }
 
 const HOUR: Duration = Duration::from_secs(60 * 60);
-
-/// Open sign-up: the email gets a link that makes the account. The answer
-/// is the same whether or not the address already has an account, or has
-/// had its hour's share of emails, so nobody learns which addresses are
-/// here. At most `SIGN_UPS_PER_HOUR` such links go out in an hour, for the
-/// whole app, as with accounts.
-async fn sign_up_by_email(
-    state: &AppState,
-    email: &str,
-    password: String,
-    hour_ago: i64,
-) -> Response {
-    let links: Result<i64, sqlx::Error> = sqlx::query_scalar(
-        "SELECT COUNT(*) FROM email_links WHERE purpose = 'sign-up' AND created_at > ?",
-    )
-    .bind(hour_ago)
-    .fetch_one(&state.db)
-    .await;
-    match links {
-        Ok(count) if count >= SIGN_UPS_PER_HOUR => return too_many(),
-        Ok(_) => {}
-        Err(error) => return database_problem("counting sign-ups", &error),
-    }
-    let checked = (StatusCode::ACCEPTED, Json(json!({ "confirm": email }))).into_response();
-    // The password is scrambled whether or not the address is taken (still
-    // one sign-up at a time), so the time taken doesn't tell either.
-    let line = match tokio::task::spawn_blocking(move || crate::password::hash(&password)).await {
-        Ok(Ok(line)) => line,
-        Ok(Err(error)) => {
-            log::problem(&error);
-            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
-        }
-        Err(error) => {
-            log::problem(&format!(
-                "couldn't scramble a new reader's password: {error}"
-            ));
-            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
-        }
-    };
-    let taken: Result<bool, sqlx::Error> =
-        sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM people WHERE email = ? COLLATE NOCASE)")
-            .bind(email)
-            .fetch_one(&state.db)
-            .await;
-    match taken {
-        // The scramble is dropped: nothing waits for an address that has an account.
-        Ok(true) => checked,
-        Ok(false) => match crate::accounts::send_sign_up_link(state, email, &line).await {
-            Ok(_) => checked,
-            Err(error) => database_problem("making a sign-up link", &error),
-        },
-        Err(error) => database_problem("making an account", &error),
-    }
-}
-
-/// Sign-up as stored: the mode ("closed" unless set), and the invite link's
-/// scrambled ticket and when it was made, if there is one.
-struct SignUpSettings {
-    mode: String,
-    invite: Option<String>,
-    invite_made_at: Option<i64>,
-}
-
-async fn load(db: &SqlitePool) -> Result<SignUpSettings, sqlx::Error> {
-    let rows: Vec<(String, String)> = sqlx::query_as(
-        "SELECT name, value FROM settings
-         WHERE name IN ('sign_up', 'sign_up_invite', 'sign_up_invite_made_at')",
-    )
-    .fetch_all(db)
-    .await?;
-    let value = |name: &str| {
-        rows.iter()
-            .find(|(each, _)| each == name)
-            .map(|(_, value)| value.clone())
-    };
-    Ok(SignUpSettings {
-        mode: value("sign_up")
-            .filter(|mode| mode == "invite" || mode == "open")
-            .unwrap_or_else(|| "closed".to_owned()),
-        invite: value("sign_up_invite"),
-        invite_made_at: value("sign_up_invite_made_at").and_then(|made| made.parse().ok()),
-    })
-}
-
-async fn save(db: &SqlitePool, values: &[(&str, &str)]) -> Result<(), sqlx::Error> {
-    let mut transaction = db.begin().await?;
-    for (name, value) in values {
-        sqlx::query(
-            "INSERT INTO settings (name, value) VALUES (?, ?)
-             ON CONFLICT (name) DO UPDATE SET value = excluded.value",
-        )
-        .bind(name)
-        .bind(value)
-        .execute(&mut *transaction)
-        .await?;
-    }
-    transaction.commit().await
-}
-
-/// Closed, and the invite link forgotten.
-async fn close(db: &SqlitePool) -> Result<(), sqlx::Error> {
-    sqlx::query(
-        "DELETE FROM settings WHERE name IN ('sign_up', 'sign_up_invite', 'sign_up_invite_made_at')",
-    )
-    .execute(db)
-    .await
-    .map(|_| ())
-}
 
 pub(crate) async fn recent_sign_ups(db: &SqlitePool, since: i64) -> Result<i64, sqlx::Error> {
     sqlx::query_scalar("SELECT COUNT(*) FROM people WHERE owner = 0 AND created_at > ?")

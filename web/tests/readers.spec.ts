@@ -2,49 +2,22 @@ import { expect, test } from "@playwright/test";
 import { TEST_PASSWORD } from "../playwright.config";
 import { appReady, signIn } from "./screens";
 
-// SPEC sections 1 and 18 (decision 0087): the owner's Readers and Sign-up in
-// Settings, and joining through an invite link. Sign-up is one setting for
-// the whole app, and both window sizes share one nine turtles, so the tests
-// that change it run on the computer-sized window only.
+// SPEC sections 1 and 18 (decisions 0087 and 0115): the owner's Readers in
+// Settings, and joining from the sign-up page, which is open to anyone.
 
 const READER_PASSWORD = "slow mornings, long reads";
 
-test("an invite link lets someone sign up, and closing sign-up stops it", async ({ page, browser }, testInfo) => {
-  test.skip(testInfo.project.name !== "desktop", "sign-up is one setting for the whole app");
-  await page.goto("/settings");
-  await appReady(page);
-  await signIn(page);
-  await page.goto("/settings");
-
-  const readers = page.getByRole("region", { name: "Readers", exact: true });
-  await expect(readers.getByRole("link", { name: /^All readers/ })).toBeVisible();
-
-  // Open waits for confirmation emails: shown, never chosen.
-  const open = page.getByRole("radio", { name: "Open" });
-  await expect(open).toBeDisabled();
-  await expect(page.getByText(/Open, for anyone, becomes possible once/)).toBeVisible();
-
-  await page.getByText("Invite link", { exact: true }).click();
-  await expect(page.getByRole("radio", { name: "Invite link" })).toBeChecked();
-  await page.getByRole("button", { name: "Make an invite link" }).click();
-  // The keyboard goes to its Copy button, and the link shows this once.
-  await expect(page.getByRole("button", { name: "Copy invite link" })).toBeFocused();
-  // The ticket is after the #, which no server ever sees.
-  const link = (await page.getByText(/\/sign-up#invite=[0-9a-f]{64}$/).textContent())!.trim();
-  expect(link.startsWith(new URL(page.url()).origin)).toBe(true);
-
-  // Someone else, in a browser of their own, follows the link.
+test("anyone can sign up from the sign-in page, and the owner sees them", async ({ page, browser }, testInfo) => {
+  // Someone else, in a browser of their own, finds Sign up under the sign-in form.
   const stranger = await browser.newContext();
   const joining = await stranger.newPage();
-  const asked: string[] = [];
-  joining.on("request", (request) => asked.push(request.url()));
-  await joining.goto(link);
+  await joining.goto("/");
+  await appReady(joining);
+  await joining.getByRole("link", { name: "Sign up" }).click();
+  await expect(joining).toHaveURL(/\/sign-up$/);
   await expect(joining.getByLabel("Email")).toBeFocused();
-  // Read, then taken out of the address bar at once, and never in an address sent anywhere.
-  expect(new URL(joining.url()).hash).toBe("");
-  expect(new URL(joining.url()).pathname).toBe("/sign-up");
   await expect(joining.getByLabel("Password")).toHaveAttribute("autocomplete", "new-password");
-  const email = `reader-${Date.now()}@example.com`;
+  const email = `reader-${testInfo.project.name}-${Date.now()}@example.com`;
   await joining.keyboard.type(email);
   await joining.keyboard.press("Tab");
   await joining.keyboard.type("short");
@@ -54,8 +27,6 @@ test("an invite link lets someone sign up, and closing sign-up stops it", async 
   await joining.getByLabel("Password").fill(READER_PASSWORD);
   await joining.keyboard.press("Enter");
   await expect(joining.locator("#sidebar")).toBeAttached();
-  const ticket = new URL(link).hash.replace("#invite=", "");
-  expect(asked.filter((address) => address.includes(ticket))).toEqual([]);
   // The new reader arrives in nine turtles, and isn't the owner: no Readers in their Settings.
   expect(new URL(joining.url()).pathname).not.toBe("/sign-up");
   const session = await joining.evaluate(async () => (await fetch("/api/session")).json());
@@ -64,10 +35,23 @@ test("an invite link lets someone sign up, and closing sign-up stops it", async 
   await expect(joining.getByText(/^Version /)).toBeVisible();
   await expect(joining.getByRole("heading", { name: "Readers", exact: true })).toHaveCount(0);
 
+  // The same email can't sign up twice: Sign in is offered instead.
+  const again = await (await browser.newContext()).newPage();
+  await again.goto("/sign-up");
+  await again.getByLabel("Email").fill(email);
+  await again.getByLabel("Password").fill(READER_PASSWORD);
+  await again.getByRole("button", { name: "Sign up" }).click();
+  await expect(again.getByRole("status")).toHaveText("That email already has an account. Sign in instead.");
+  await expect(again.getByRole("link", { name: "Sign in" })).toBeVisible();
+
   // The owner opens the Readers page from the keyboard and sees them, by
   // email, with how many feeds (decision 0090), and goes back with Escape.
-  await page.reload();
+  await page.goto("/settings");
   await appReady(page);
+  await signIn(page);
+  await page.goto("/settings");
+  const readers = page.getByRole("region", { name: "Readers", exact: true });
+  await expect(page.getByRole("heading", { name: "Sign-up" })).toHaveCount(0);
   await readers.getByRole("link", { name: /^All readers/ }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { name: "Readers", level: 2 })).toBeFocused();
@@ -78,32 +62,7 @@ test("an invite link lets someone sign up, and closing sign-up stops it", async 
   await expect(page.getByRole("region", { name: "This nine turtles" }).getByText("Readers", { exact: true })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(/\/settings$/);
-  await page.getByText("Closed", { exact: true }).click();
-  await expect(page.getByText("Sign-up is closed. Any invite link no longer works.")).toBeVisible();
-
-  // The old link now says calmly that sign-up isn't open.
-  const late = await (await browser.newContext()).newPage();
-  await late.goto(link);
-  await late.getByLabel("Email").fill(`late-${Date.now()}@example.com`);
-  await late.getByLabel("Password").fill(READER_PASSWORD);
-  await late.getByRole("button", { name: "Sign up" }).click();
-  await expect(late.getByRole("status")).toHaveText(
-    "Sign-up isn't open. Ask whoever runs this nine turtles for a new invite link.",
-  );
-  await expect(late.getByRole("link", { name: "Sign in" })).toBeVisible();
-  await expect(late.locator("#sidebar")).toHaveCount(0);
   await stranger.close();
-});
-
-test("the sign-up page without an invite says sign-up isn't open", async ({ page }) => {
-  await page.goto("/sign-up");
-  await expect(page.getByRole("status")).toHaveText(
-    "Sign-up isn't open. Ask whoever runs this nine turtles for an invite link.",
-  );
-  await expect(page.getByLabel("Password")).toHaveCount(0);
-  await page.getByRole("link", { name: "Sign in" }).click();
-  await expect(page.getByLabel("Email")).toBeFocused();
-  expect(new URL(page.url()).pathname).toBe("/");
 });
 
 test("the owner sets their email and signs in with it", async ({ page, browser }, testInfo) => {
@@ -113,12 +72,6 @@ test("the owner sets their email and signs in with it", async ({ page, browser }
   await signIn(page);
   await page.goto("/settings");
   const field = page.getByLabel("Your email");
-  // While the owner has no email, choosing Invite link says to save it first.
-  const saveFirst = page.getByText(/^Save your own email under Readers before you send an invite link/);
-  await page.getByText("Invite link", { exact: true }).click();
-  await expect(page.getByRole("radio", { name: "Invite link" })).toBeChecked();
-  await expect(saveFirst).toBeVisible();
-
   await field.fill("not an email");
   await page.getByRole("button", { name: "Save your email" }).click();
   await expect(page.getByText("That doesn't look like an email address.")).toBeVisible();
@@ -140,15 +93,11 @@ test("the owner sets their email and signs in with it", async ({ page, browser }
   await page.getByRole("button", { name: "Save your email" }).click();
   await expect(page.getByText(/^Saved\. You can sign in with owner@example\.com/)).toBeVisible();
   await expect(password).toHaveValue("");
-  await expect(saveFirst).toHaveCount(0);
 
   // Closing Settings and opening it again shows the email just saved.
   await page.getByRole("button", { name: "Close settings" }).click();
   await page.locator("#sidebar").getByRole("link", { name: "Settings" }).click();
   await expect(field).toHaveValue("owner@example.com");
-  await expect(saveFirst).toHaveCount(0);
-  await page.getByText("Closed", { exact: true }).click();
-  await expect(page.getByText("Sign-up is closed. Any invite link no longer works.")).toBeVisible();
 
   const other = await (await browser.newContext()).newPage();
   await other.goto("/");

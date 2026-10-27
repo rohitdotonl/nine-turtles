@@ -29,7 +29,6 @@ export type Overview = {
     feedsResting: number;
     feedsFailing: number;
     articles: number;
-    signUpsWaiting: number;
   };
   databaseBytes: number;
   backupsOn: boolean;
@@ -71,7 +70,6 @@ export function toOverview(body: unknown): Overview {
       feedsResting: number(totals.feeds_resting),
       feedsFailing: number(totals.feeds_failing),
       articles: number(totals.articles),
-      signUpsWaiting: number(totals.sign_ups_waiting),
     },
     databaseBytes: number(page.database_bytes),
     backupsOn: backups.on === true,

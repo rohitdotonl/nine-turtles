@@ -232,8 +232,6 @@ pub struct Totals {
     pub feeds_resting: i64,
     pub feeds_failing: i64,
     pub articles: i64,
-    /// Open sign-ups whose emailed link hasn't been opened yet.
-    pub sign_ups_waiting: i64,
 }
 
 pub async fn totals(db: &SqlitePool, now: i64) -> Result<Totals, sqlx::Error> {
@@ -245,13 +243,10 @@ pub async fn totals(db: &SqlitePool, now: i64) -> Result<Totals, sqlx::Error> {
         ") AS feeds_resting,
              (SELECT COUNT(*) FROM feeds WHERE unsubscribed_at IS NULL AND failing_since <= ?2)
                  AS feeds_failing,
-             (SELECT COUNT(*) FROM articles) AS articles,
-             (SELECT COUNT(*) FROM email_links
-              WHERE purpose = 'sign-up' AND used = 0 AND expires_at > ?3) AS sign_ups_waiting"
+             (SELECT COUNT(*) FROM articles) AS articles"
     ))
     .bind(now - AWAY_AFTER)
     .bind(now - KEEPS_FAILING)
-    .bind(now)
     .fetch_one(db)
     .await
 }

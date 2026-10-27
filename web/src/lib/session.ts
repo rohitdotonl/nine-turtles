@@ -11,14 +11,12 @@ import { api } from "./updates.svelte";
  */
 export type Session =
   | { signedIn: true; version: string; owner: boolean; email: string | null; emailSending: boolean; passkeys?: string | null }
-  | { signedIn: false; emailSending: boolean; signUpOpen: boolean; passkeys: string | null };
+  | { signedIn: false; emailSending: boolean; passkeys: string | null };
 
 export type SignInResult =
   | { ok: true }
   | { ok: false; reason: "wrong-password" | "password-missing" | "password-invalid" | "unreachable" }
-  | { ok: false; reason: "wait"; waitSeconds: number }
-  /** The right password for an account whose email isn't confirmed yet; `sent` if the link went out again. */
-  | { ok: false; reason: "unconfirmed"; sent: boolean };
+  | { ok: false; reason: "wait"; waitSeconds: number };
 
 export async function currentSession(): Promise<Session> {
   const response = await api("/api/session", { cache: "no-store" });
@@ -37,7 +35,6 @@ export async function currentSession(): Promise<Session> {
   return {
     signedIn: false,
     emailSending: isRecord(body) && body.email_sending === true,
-    signUpOpen: isRecord(body) && body.sign_up_open === true,
     passkeys: passkeysOf(body),
   };
 }
@@ -66,9 +63,6 @@ export async function signIn(email: string, password: string): Promise<SignInRes
   if (error === "wait" && isRecord(body) && typeof body.wait_seconds === "number") {
     return { ok: false, reason: "wait", waitSeconds: body.wait_seconds };
   }
-  if (error === "unconfirmed") {
-    return { ok: false, reason: "unconfirmed", sent: isRecord(body) && body.sent === true };
-  }
   if (error === "wrong-password" || error === "password-missing" || error === "password-invalid") {
     return { ok: false, reason: error };
   }
@@ -94,10 +88,6 @@ export function explain(result: Exclude<SignInResult, { ok: true }>, withEmail =
       return "No password has been set yet. The setup guide explains how to set one.";
     case "password-invalid":
       return "The password setting isn't valid. Run nine-turtles set-password again and paste the whole line.";
-    case "unconfirmed":
-      return result.sent
-        ? "Your email isn't confirmed yet. A new link is on its way: open it to finish signing up."
-        : "Your email isn't confirmed yet. Open the link in the email nine turtles sent you.";
     case "unreachable":
       return "nine turtles can't be reached right now. Try again in a moment.";
   }

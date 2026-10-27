@@ -5,7 +5,7 @@
   readers (decision 0087). While nine turtles can send email, "Email me a
   sign-in link" turns the page into a request for a link that signs in
   (decision 0096) and "Forgot your password?" into one for a password link;
-  while sign-up is Open, "Sign up" leads to the sign-up page (decision 0088).
+  "Sign up" always leads to the sign-up page (decision 0115).
   Once a link is asked for, the form gives way to "Check your email": where
   it went, for how long it works, and a quiet Send again (decision 0092).
   Where passkeys work (this is their address and the browser has WebAuthn),
@@ -32,15 +32,12 @@
   let {
     onSignedIn,
     emailSending = false,
-    signUpOpen = false,
     onSignUp,
     passkeys = null,
   }: {
     onSignedIn: () => void;
     /** nine turtles can send email: "Email me a sign-in link" and "Forgot your password?" are offered. */
     emailSending?: boolean;
-    /** Sign-up is Open: "Sign up" is offered. */
-    signUpOpen?: boolean;
     onSignUp?: () => void;
     /** Where passkeys work (decision 0109); null when they're off. */
     passkeys?: string | null;
@@ -117,7 +114,6 @@
     const said = explainPasskeySignIn(result);
     if (said) {
       message = said;
-      calm = false;
       refused = false;
     }
     void offerAutofill();
@@ -126,8 +122,6 @@
   /** Asking for a link instead of signing in: one that signs in, or one to choose a new password. */
   let asking: LinkKind | "" = $state("");
   let emailField: HTMLInputElement | undefined = $state();
-  /** "Not confirmed yet" is news, not a refusal: it's in the text color. */
-  let calm = $state(false);
 
   let email = $state("");
   let password = $state("");
@@ -151,7 +145,6 @@
     } else {
       message = explain(result, email.trim() !== "");
       refused = result.reason === "wrong-password";
-      calm = result.reason === "unconfirmed";
       password = "";
     }
   }
@@ -174,7 +167,6 @@
       return;
     }
     message = explainAsked(kind, result, email);
-    calm = false;
     refused = result === "email";
   }
 
@@ -278,8 +270,8 @@
       words after an icon, so it isn't told by color or place alone.
     -->
     <div class="flex min-h-[6rem] flex-col gap-3">
-      <p id="sign-in-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-small", calm ? "text-ink" : "text-danger", !message && "sr-only"]}>
-        {#if message}{#if !calm}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{/if}{message}{/if}
+      <p id="sign-in-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-small", "text-danger", !message && "sr-only"]}>
+        {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
       </p>
       <!-- Busy is said with aria-disabled, not disabled, so the button keeps its look and the keyboard's place (decision 0045). Its corners match the field's. -->
       <button type="submit" aria-disabled={busy} class="btn-primary rounded-lg">{asking ? "Send link" : "Sign in"}</button>
@@ -287,7 +279,7 @@
     <!-- Quiet links in words, under the room kept for a message, so nothing above them moves. -->
     {#if asking}
       <p class="text-center"><a href="/" class="text-link" onclick={(event) => switchTo(event, "")}>Back to sign in</a></p>
-    {:else if emailSending || signUpOpen || offered}
+    {:else}
       <!-- The sign-in link on a line of its own, so the lines never wrap differently from one screen to the next. -->
       <div class="flex flex-col items-center">
         <!-- A passkey signs in without the fields: a quiet action in words, like the links under it. -->
@@ -295,7 +287,7 @@
         {#if emailSending}<a href="/" class="text-link" onclick={(event) => switchTo(event, "sign-in")}>Email me a sign-in link</a>{/if}
         <p class="flex flex-wrap justify-center gap-x-6 text-center">
           {#if emailSending}<a href="/" class="text-link" onclick={(event) => switchTo(event, "password")}>Forgot your password?</a>{/if}
-          {#if signUpOpen}<a href="/sign-up" class="text-link" onclick={signUp}>Sign up</a>{/if}
+          <a href="/sign-up" class="text-link" onclick={signUp}>Sign up</a>
         </p>
       </div>
     {/if}

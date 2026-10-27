@@ -1,5 +1,7 @@
 # 0088: Account emails: confirming, a new password, a new address, and deleting an account
 
+> **Partly replaced by [0115](0115-sign-up-always-open.md):** sign-up no longer sends a confirmation email.
+
 *25 October 2026. Part of "Many readers in one app" (decision 0086), at the
 owner's request. Builds on decision 0087 (signing in by email, the sign-up
 switch).*

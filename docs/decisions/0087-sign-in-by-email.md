@@ -1,5 +1,7 @@
 # 0087: Signing in by email, and the sign-up switch
 
+> **Partly replaced by [0115](0115-sign-up-always-open.md):** the sign-up switch and invite links are gone; sign-up is always open.
+
 *25 October 2026. Part three of "Many readers in one app" (decision 0086),
 at the owner's request. Builds on decision 0010 (sign-in).*
 

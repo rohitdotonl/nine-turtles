@@ -1,25 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { explainSignUp, inviteFrom, inviteLink, plausibleEmail, type SignUpResult } from "./readers";
-
-describe("invite links", () => {
-  it("are this site's sign-up page with the ticket", () => {
-    expect(inviteLink("https://app.nineturtles.app", "ab12")).toBe("https://app.nineturtles.app/sign-up#invite=ab12");
-    expect(inviteLink("http://127.0.0.1:8080/", "ab12")).toBe("http://127.0.0.1:8080/sign-up#invite=ab12");
-  });
-
-  it("keep their ticket after #, which never reaches a server", () => {
-    const link = new URL(inviteLink("https://app.nineturtles.app", "ab12"));
-    expect(link.search).toBe("");
-    expect(link.hash).toBe("#invite=ab12");
-  });
-
-  it("give their ticket back to the sign-up page", () => {
-    expect(inviteFrom("#invite=ab12")).toBe("ab12");
-    expect(inviteFrom("invite=ab12")).toBe("ab12");
-    expect(inviteFrom("#other=1")).toBe("");
-    expect(inviteFrom("")).toBe("");
-  });
-});
+import { explainSignUp, plausibleEmail, type SignUpResult } from "./readers";
 
 describe("email addresses", () => {
   it("are checked as the server checks them", () => {
@@ -46,7 +26,7 @@ describe("email addresses", () => {
 
 describe("the sign-up page's messages", () => {
   it("are calm and never shout", () => {
-    const reasons = ["closed", "email", "password-short", "password-long", "already", "too-many", "unreachable"] as const;
+    const reasons = ["email", "password-short", "password-long", "already", "too-many", "unreachable"] as const;
     for (const reason of reasons) {
       const message = explainSignUp({ ok: false, reason } as Exclude<SignUpResult, { ok: true }>);
       expect(message).not.toContain("!");

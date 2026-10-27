@@ -1,12 +1,11 @@
 //! What email makes possible for a reader's account (SPEC sections 1 and
-//! 18, decisions 0088 and 0096): confirming a new account's address when
-//! sign-up is Open, setting a new password after "Forgot your password?",
+//! 18, decisions 0088 and 0096): setting a new password after "Forgot your password?",
 //! signing in by a link instead of a password ("Email me a sign-in link"),
 //! moving to a new email address, and deleting an account.
 //!
 //! Every link is sent by email (`email`), carries a long random ticket of
 //! which only a BLAKE2s scramble is kept (`email_links`, structure change
-//! 14), works once, and expires: a day to confirm an address, an hour for a
+//! 14), works once, and expires: a day to confirm a new address, an hour for a
 //! new password, 15 minutes to sign in. At most `EMAILS_PER_ADDRESS_PER_HOUR`
 //! links go to any one address in an hour, so nine turtles can't be used to
 //! flood someone's inbox, and at most one password link (or sign-in link, or
@@ -15,8 +14,7 @@
 //!
 //! A link's ticket comes after the `#` (`/reset-password#ticket=…`), the
 //! part of an address no browser sends to a server, so it never reaches a
-//! log; the page reads it and sends it in the body of a POST, as the invite
-//! link does (decision 0087). Every password checked or scrambled here
+//! log; the page reads it and sends it in the body of a POST. Every password checked or scrambled here
 //! waits its turn in sign-in's bounded lines (`AppState.password_checks`),
 //! and a password checked counts towards sign-in's wrong tries.
 
@@ -71,7 +69,6 @@ pub fn routes() -> Router<AppState> {
 /// What a link is for (`email_links.purpose`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Purpose {
-    SignUp,
     Reset,
     Change,
     SignIn,
@@ -80,7 +77,6 @@ pub enum Purpose {
 impl Purpose {
     fn stored(self) -> &'static str {
         match self {
-            Self::SignUp => "sign-up",
             Self::Reset => "reset",
             Self::Change => "change",
             Self::SignIn => "sign-in",
@@ -189,7 +185,7 @@ pub(crate) async fn make_link(
     let lifetime = match purpose {
         Purpose::Reset => RESET_LIFETIME,
         Purpose::SignIn => SIGN_IN_LIFETIME,
-        Purpose::SignUp | Purpose::Change => CONFIRM_LIFETIME,
+        Purpose::Change => CONFIRM_LIFETIME,
     };
     let mut transaction = db.begin_with("BEGIN IMMEDIATE").await?;
     tidy_links_in(&mut transaction, now).await?;
@@ -200,14 +196,10 @@ pub(crate) async fn make_link(
         return Ok(Made::TooMany);
     }
     // Both counts are always read, as `make_no_link` reads them, so the
-    // work done doesn't depend on which limit was reached. A sign-up isn't
-    // held to the minute: signing up again with a corrected password must
-    // save that password's own link.
+    // work done doesn't depend on which limit was reached.
     let this_hour = emails_to_address(&mut transaction, email, hour_ago).await?;
     let lately = emailed_lately(&mut transaction, purpose, email, now).await?;
-    let emailed = this_hour < EMAILS_PER_ADDRESS_PER_HOUR
-        && !(lately && purpose != Purpose::SignUp)
-        && email_to;
+    let emailed = this_hour < EMAILS_PER_ADDRESS_PER_HOUR && !lately && email_to;
     if !emailed && purpose != Purpose::Change {
         transaction.commit().await?;
         return Ok(Made::Nothing);
@@ -264,7 +256,7 @@ async fn make_no_link(db: &SqlitePool, purpose: Purpose, email: &str) -> Result<
 /// passed too (a sign-in link stops working after 15 minutes, but still
 /// counts towards its address's emails for the hour). Run with every new link and every round of background
 /// checking (`checking::round`), so on a quiet nine turtles too a used
-/// sign-up's email doesn't stay past its day.
+/// link's email doesn't stay past its day.
 pub async fn tidy_links(db: &SqlitePool, now: i64) -> Result<(), sqlx::Error> {
     let mut connection = db.acquire().await?;
     tidy_links_in(&mut connection, now).await
@@ -280,43 +272,6 @@ async fn tidy_links_in(
         .execute(&mut *connection)
         .await
         .map(|_| ())
-}
-
-/// Sends the email that confirms a new account (sign-up while Open, or a
-/// sign-in to an account not yet confirmed), if the address hasn't had its
-/// hour's share. Answers whether it was sent.
-pub(crate) async fn send_sign_up_link(
-    state: &AppState,
-    email: &str,
-    password_hash: &str,
-) -> Result<bool, sqlx::Error> {
-    let Some(mailer) = &state.mailer else {
-        return Ok(false);
-    };
-    let Made::Link(ticket) = make_link(
-        &state.db,
-        Purpose::SignUp,
-        None,
-        email,
-        Some(password_hash),
-        true,
-    )
-    .await?
-    else {
-        return Ok(false);
-    };
-    let link = mailer.link("/confirm-email", &ticket);
-    mailer.send_later(
-        email,
-        "Confirm your email for nine turtles",
-        format!(
-            "Hello,\n\nTo finish making your nine turtles account, open this link:\n\n{link}\n\n\
-             It works once, for the next 24 hours. If you didn't sign up, ignore this email: \
-             no account is made without it.{SIGN_OFF}"
-        ),
-        "a link to confirm a new account",
-    );
-    Ok(true)
 }
 
 /// Without the email settings, what needs email says so.
@@ -636,10 +591,6 @@ pub(crate) fn password_problem(password: &str) -> Option<Response> {
     None
 }
 
-/// A confirmation link just used: its purpose, whose it is, the address,
-/// and (for a sign-up) the waiting password's scramble.
-type ClaimedLink = (String, Option<i64>, String, Option<String>);
-
 /// A reader's email, own scrambled password, and whether they're the owner.
 type SigningIn = (Option<String>, Option<String>, bool);
 
@@ -648,98 +599,29 @@ struct Confirm {
     ticket: String,
 }
 
-/// Follows a link that confirms an address: a new account's (it's made
-/// now, and this device signed in) or a changed one (the reader's email
-/// changes now, and the old address is told).
+/// Follows a link that confirms a changed address: the reader's email
+/// changes now, and the old address is told. (Links that once confirmed an
+/// Open sign-up, before decision 0115, no longer work.)
 async fn confirm(State(state): State<AppState>, Json(form): Json<Confirm>) -> Response {
     let hash = scramble(form.ticket.trim());
-    // A new account is made one at a time with every other sign-up, behind
-    // the same lock (`AppState.sign_ups`), so the hour's count of accounts
-    // can't be raced past by links followed together or alongside sign-ups.
-    // A changed address waits its turn too: it's quick.
-    let _one_at_a_time = state.sign_ups.lock().await;
     let mut transaction = match state.db.begin().await {
         Ok(transaction) => transaction,
         Err(error) => return database_problem("confirming an email", &error),
     };
-    let claimed: Result<Option<ClaimedLink>, sqlx::Error> = sqlx::query_as(
+    let claimed: Result<Option<(Option<i64>, String)>, sqlx::Error> = sqlx::query_as(
         "UPDATE email_links SET used = 1
-             WHERE token_hash = ? AND purpose IN ('sign-up', 'change') AND used = 0
-               AND expires_at > ?
-             RETURNING purpose, person_id, email, password_hash",
+             WHERE token_hash = ? AND purpose = 'change' AND used = 0 AND expires_at > ?
+             RETURNING person_id, email",
     )
     .bind(&hash[..])
     .bind(now())
     .fetch_optional(&mut *transaction)
     .await;
-    let (purpose, person, email, password_hash) = match claimed {
+    let (person, email) = match claimed {
         Ok(Some(claimed)) => claimed,
         Ok(None) => return refused(StatusCode::GONE, "expired"),
         Err(error) => return database_problem("confirming an email", &error),
     };
-
-    if purpose == "sign-up" {
-        // The hour's cap on new accounts holds here too, where the account
-        // is made: the same 20 an hour as every sign-up.
-        let hour_ago = now() - 60 * 60;
-        match people::recent_sign_ups(&state.db, hour_ago).await {
-            // The link stays unused, to follow again later.
-            Ok(count) if count >= people::SIGN_UPS_PER_HOUR => return too_many(),
-            Ok(_) => {}
-            Err(error) => return database_problem("counting sign-ups", &error),
-        }
-        let made: Result<Option<i64>, sqlx::Error> = sqlx::query_scalar(
-            "INSERT INTO people (owner, email, password_hash, created_at)
-             SELECT 0, ?, ?, ?
-             WHERE (SELECT COUNT(*) FROM people WHERE owner = 0 AND created_at > ?) < ?
-             RETURNING id",
-        )
-        .bind(&email)
-        .bind(&password_hash)
-        .bind(now())
-        .bind(hour_ago)
-        .bind(people::SIGN_UPS_PER_HOUR)
-        .fetch_optional(&mut *transaction)
-        .await;
-        let person = match made {
-            // The link stays unused, to follow again later.
-            Ok(None) => return too_many(),
-            Ok(Some(person)) => person,
-            Err(error) if is_taken(&error) => {
-                // Someone made an account with this address meanwhile; the link is spent.
-                return match transaction.commit().await {
-                    Ok(()) => refused(StatusCode::CONFLICT, "already"),
-                    Err(error) => database_problem("confirming an email", &error),
-                };
-            }
-            Err(error) => return database_problem("making an account", &error),
-        };
-        // Every other link waiting to make this account stops working, and
-        // the password scrambles waiting with them are blanked: the account
-        // has its own now. The emptied lines stay only for the hour's
-        // counts, until they expire (`tidy_links`).
-        let spent = sqlx::query(
-            "UPDATE email_links SET used = 1, password_hash = ''
-             WHERE purpose = 'sign-up' AND email = ? COLLATE NOCASE",
-        )
-        .bind(&email)
-        .execute(&mut *transaction)
-        .await;
-        if let Err(error) = spent {
-            return database_problem("confirming an email", &error);
-        }
-        if let Err(error) = transaction.commit().await {
-            return database_problem("making an account", &error);
-        }
-        return signed_in_as(
-            &state.db,
-            person,
-            json!({ "done": "signed-up", "email": email }),
-        )
-        .await;
-    }
-
-    // A changed address.
     let Some(person) = person else {
         return refused(StatusCode::GONE, "expired");
     };

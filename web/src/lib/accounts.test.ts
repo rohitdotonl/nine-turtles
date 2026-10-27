@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { explainAsked, explainChange, explainLink, ticketFrom, type ChangeResult, type LinkResult } from "./accounts";
-import { explain } from "./session";
 
 describe("emailed links", () => {
   it("give their ticket to the page they open", () => {
@@ -51,8 +50,6 @@ describe("the messages about email", () => {
           { ok: false, reason: "unreachable" },
         ] as ChangeResult[]
       ).map(explainChange),
-      explain({ ok: false, reason: "unconfirmed", sent: true }),
-      explain({ ok: false, reason: "unconfirmed", sent: false }),
     ];
     for (const message of messages) {
       expect(message).not.toContain("!");
@@ -63,6 +60,6 @@ describe("the messages about email", () => {
 
   it("send the reader back the right way when a link has run out", () => {
     expect(explainLink("expired", "reset")).toContain("sign-in page");
-    expect(explainLink("expired", "confirm")).toContain("sign up again");
+    expect(explainLink("expired", "confirm")).toContain("Change your email again");
   });
 });

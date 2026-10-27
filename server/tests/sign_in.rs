@@ -61,7 +61,8 @@ async fn without_signing_in_nothing_is_revealed() {
     // Only what the sign-in page needs: whether to offer "Forgot your
     // password?" and "Sign up" (decision 0088), and where passkeys work
     // (decision 0109).
-    const SIGNED_OUT: &str = r#"{"email_sending":false,"passkeys":"http://localhost","sign_up_open":false,"signed_in":false}"#;
+    const SIGNED_OUT: &str =
+        r#"{"email_sending":false,"passkeys":"http://localhost","signed_in":false}"#;
     assert_eq!(session(&base, None).await, SIGNED_OUT);
 
     let made_up = format!("nine_turtles_session={}", "0".repeat(64));

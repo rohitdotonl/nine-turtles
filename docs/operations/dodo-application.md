@@ -29,8 +29,7 @@ A visitor without an account must be able to find, from nineturtles.app:
 - [ ] **A contact address the owner reads**: hello@nineturtles.app ([/contact/](https://nineturtles.app/contact/)).
 - [ ] No "Draft" notes left on any of these pages, and no "to be decided".
 - [ ] A way to actually subscribe and use the app on the day of applying
-      (the sign-up switch set to Open, or at least Invite link with a
-      working checkout).
+      (sign-up is always open, decision 0115, so a working checkout).
 
 ## 2. The application form
 
