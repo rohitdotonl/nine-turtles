@@ -20,7 +20,8 @@
   owner only, lists who has an account, sets the owner's email and the
   sign-up switch (Readers, decision 0087). Your plan, for everyone else
   while nine turtles takes payments, shows their trial or plan (Plan,
-  decision 0094). Account shows the reader's email,
+  decision 0094). Passkeys, where passkeys work, lists the reader's passkeys
+  and adds new ones (Passkeys, decision 0109). Account shows the reader's email,
   with Change… while nine turtles can send email, Sign out, and for every
   reader but the owner Delete account… (ChangeEmail, DeleteAccount,
   decision 0088).
@@ -36,6 +37,7 @@
   import Newsletters from "./Newsletters.svelte";
   import OtherApps from "./OtherApps.svelte";
   import Assistants from "./Assistants.svelte";
+  import PasskeysGroup from "./Passkeys.svelte";
   import Plan from "./Plan.svelte";
   import Readers from "./Readers.svelte";
   import RuleEditor from "./RuleEditor.svelte";
@@ -67,6 +69,7 @@
     owner = false,
     email = null,
     emailSending = false,
+    passkeys = null,
     onSignedOut,
     onClose,
     onImported,
@@ -106,6 +109,8 @@
     email?: string | null;
     /** nine turtles can send email, so the email can be changed here. */
     emailSending?: boolean;
+    /** Where passkeys work, for Passkeys (decision 0109); null when they're off. */
+    passkeys?: string | null;
     onSignedOut: () => void;
     onClose: () => void;
     /** Feeds were imported: the sidebar loads them. */
@@ -599,6 +604,8 @@
       {:else}
         <Plan />
       {/if}
+
+      <PasskeysGroup origin={passkeys} />
 
       <section aria-labelledby="account-heading">
         <h3 id="account-heading" class="inset-head">Account</h3>

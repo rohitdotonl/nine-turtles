@@ -296,6 +296,7 @@ async fn session(State(state): State<AppState>, headers: HeaderMap) -> Response 
         "owner": owner,
         "email": email,
         "email_sending": state.mailer.is_some(),
+        "passkeys": state.passkeys.origin(),
     }));
     if now - last_used < RENEW_AFTER {
         return body.into_response();
@@ -726,6 +727,7 @@ async fn signed_out(state: &AppState) -> Response {
         "signed_in": false,
         "email_sending": state.mailer.is_some(),
         "sign_up_open": open,
+        "passkeys": state.passkeys.origin(),
     }))
     .into_response()
 }

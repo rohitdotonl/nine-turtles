@@ -64,8 +64,8 @@
 {#snippet body()}
   <div class={["flex flex-col gap-5", !sheet && "flex-1"]}>
     <p id="delete-account-help">
-      Your feeds, folders, read and starred articles, saved searches, rules and app password go for good, along with your
-      email and password. This can't be undone.
+      Your feeds, folders, read and starred articles, saved searches, rules, app password and passkeys go for good, along
+      with your email and password. This can't be undone.
     </p>
     <div class="flex flex-col gap-1.5">
       <p class="text-small text-ink-2">Before you go, you can download them</p>

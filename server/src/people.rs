@@ -143,6 +143,7 @@ pub const PER_READER_TABLES: &[(&str, &str)] = &[
         "assistant_codes",
         "DELETE FROM assistant_codes WHERE person_id = ?",
     ),
+    ("passkeys", "DELETE FROM passkeys WHERE person_id = ?"),
     // The record of their plan; Dodo's own subscription is cancelled first
     // (`payments::cancel_before_deleting`).
     ("plans", "DELETE FROM plans WHERE person_id = ?"),
