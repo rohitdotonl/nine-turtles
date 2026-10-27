@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { FEED_SITE, FEEDS_APP, TEST_PASSWORD } from "../playwright.config";
+import { FEED_SITE, FEEDS_APP, OWNER_EMAIL, TEST_PASSWORD } from "../playwright.config";
 import { LOOKS, THEMES as THEME_NAMES, type Mode, type Theme } from "../src/lib/themes";
 
 // Every screen of nine turtles. Each new screen is added here, so it is
@@ -473,6 +473,7 @@ export async function openReadingRoom(page: Page, { unread = false } = {}): Prom
 
 /** Signs in through the sign-in page, the way the reader does. */
 export async function signIn(page: Page): Promise<void> {
+  await page.getByLabel("Email").fill(OWNER_EMAIL);
   await page.getByLabel("Password").fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page.locator("#sidebar")).toBeAttached();

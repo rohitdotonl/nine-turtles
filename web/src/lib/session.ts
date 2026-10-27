@@ -44,7 +44,7 @@ function passkeysOf(body: unknown): string | null {
   return isRecord(body) && typeof body.passkeys === "string" ? body.passkeys : null;
 }
 
-/** With an email, for the reader who has it; with none (""), the owner's password-only sign-in, as before. */
+/** With an email and password, for the reader who has that email, the owner too (decision 0116). */
 export async function signIn(email: string, password: string): Promise<SignInResult> {
   let response: Response;
   try {
@@ -76,12 +76,12 @@ export async function signOut(): Promise<void> {
 
 /**
  * What the sign-in page says after a try that didn't work. Plain and calm.
- * With an email it never says which of the two was wrong, as the server doesn't.
+ * It never says which of the two was wrong, as the server doesn't.
  */
-export function explain(result: Exclude<SignInResult, { ok: true }>, withEmail = false): string {
+export function explain(result: Exclude<SignInResult, { ok: true }>): string {
   switch (result.reason) {
     case "wrong-password":
-      return withEmail ? "That email and password don't match." : "That isn't the password.";
+      return "That email and password don't match.";
     case "wait":
       return `Too many wrong tries. Try again in ${duration(result.waitSeconds)}.`;
     case "password-missing":

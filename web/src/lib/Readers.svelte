@@ -75,7 +75,7 @@
     const result = await setOwnEmail(next, ownPassword);
     busy = false;
     if (result.ok) {
-      emailMessage = `Saved. You can sign in with ${next} and your password; the password alone still works.`;
+      emailMessage = `Saved. From now on, sign in with ${next} and your password.`;
       savedEmail = next;
       ownEmail = next;
       ownPassword = "";
@@ -159,8 +159,8 @@
     {emailMessage}
   </p>
   <p class="inset-foot">
-    With your email you can sign in by email and your password (the password alone still works), and get a link if you
-    forget it. Saving it asks for your password. All readers lists everyone with an account here and how this nine
+    You sign in with your email and your password, and get a link at your email if you forget the password. Changing it
+    asks for your password. All readers lists everyone with an account here and how this nine
     turtles is doing; nobody sees what anyone else reads.
   </p>
 </section>

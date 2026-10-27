@@ -373,8 +373,8 @@ async fn reset(State(state): State<AppState>, Json(form): Json<Reset>) -> Respon
     .bind(now())
     .fetch_optional(&state.db)
     .await;
-    // Scrambled on the shared line, as a sign-in by email is checked; the
-    // owner's own line is kept for their password-only sign-in.
+    // Scrambled on the shared line, as a sign-in is checked; the owner's
+    // own line is kept for their confirmations while they have no email.
     let (account, waiting_for) = match found {
         Ok(Some(person)) => (Account::Email(format!("reader {person}")), person),
         Ok(None) => return refused(StatusCode::GONE, "expired"),
@@ -462,7 +462,7 @@ async fn reset(State(state): State<AppState>, Json(form): Json<Reset>) -> Respon
     };
 
     // Earlier wrong tries for this account are forgotten: it has a new
-    // password. The owner's password-only sign-in has a count of its own.
+    // password. The owner has a count of their own for while they have no email.
     let mut limiters = state.limiter.lock().await;
     if email.is_some() {
         limiters.right(&Account::named(email.as_deref()));

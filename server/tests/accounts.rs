@@ -428,7 +428,8 @@ async fn the_owner_can_set_a_new_password_by_email_too() {
     )
     .await;
     assert_eq!(reset.status(), StatusCode::OK);
-    // The new password works with the email and alone; the old one no longer does.
+    // The new password works with the email; the old one no longer does,
+    // and the password alone signs nobody in (decision 0116).
     let alone = post(
         &base,
         "/api/sign-in",
@@ -436,9 +437,12 @@ async fn the_owner_can_set_a_new_password_by_email_too() {
         json!({ "password": NEW_PASSWORD }),
     )
     .await;
-    assert_eq!(alone.status(), StatusCode::NO_CONTENT);
-    let old = post(&base, "/api/sign-in", None, json!({ "password": PASSWORD })).await;
-    assert_eq!(old.status(), StatusCode::UNAUTHORIZED);
+    assert_eq!(alone.status(), StatusCode::BAD_REQUEST);
+    assert_eq!(error_of(alone).await, "email-needed");
+    assert_eq!(
+        sign_in(&base, "owner@example.com", PASSWORD).await.status(),
+        StatusCode::UNAUTHORIZED
+    );
     assert_eq!(
         sign_in(&base, "owner@example.com", NEW_PASSWORD)
             .await
@@ -940,15 +944,17 @@ async fn the_owners_email_needs_their_password() {
         .fetch_one(&state.db)
         .await
         .unwrap();
-    assert_eq!(email, None);
-    // The fifth wrong try starts the wait, for the password alone too.
+    assert_eq!(email.as_deref(), Some(common::OWNER_EMAIL));
+    // The fifth wrong try starts the wait, for signing in with the owner's email too.
     assert_eq!(
         save("not the owner's password").await.status(),
         StatusCode::TOO_MANY_REQUESTS
     );
     assert_eq!(save(PASSWORD).await.status(), StatusCode::TOO_MANY_REQUESTS);
-    let alone = post(&base, "/api/sign-in", None, json!({ "password": PASSWORD })).await;
-    assert_eq!(alone.status(), StatusCode::TOO_MANY_REQUESTS);
+    assert_eq!(
+        sign_in(&base, common::OWNER_EMAIL, PASSWORD).await.status(),
+        StatusCode::TOO_MANY_REQUESTS
+    );
 }
 
 #[tokio::test]
@@ -987,10 +993,8 @@ async fn a_new_password_setting_wins_over_one_set_by_email() {
     let (page, sign_in_ticket) = newest_link(&outbox, "owner@example.com");
     assert_eq!(page, "/sign-in-link");
 
-    let alone = |base: String, password: &'static str| async move {
-        post(&base, "/api/sign-in", None, json!({ "password": password }))
-            .await
-            .status()
+    let owner_with = |base: String, password: &'static str| async move {
+        sign_in(&base, "owner@example.com", password).await.status()
     };
 
     // Started again with the same setting: the password set by email stays.
@@ -999,7 +1003,7 @@ async fn a_new_password_setting_wins_over_one_set_by_email() {
     same.password = first_setting.clone();
     let (base, _) = start_with_state(same).await;
     assert_eq!(
-        alone(base.clone(), NEW_PASSWORD).await,
+        owner_with(base.clone(), NEW_PASSWORD).await,
         StatusCode::NO_CONTENT
     );
     assert_eq!(session(&base, Some(&device)).await["signed_in"], true);
@@ -1011,10 +1015,6 @@ async fn a_new_password_setting_wins_over_one_set_by_email() {
     none.password = nine_turtles::config::PasswordSetting::Missing;
     let (base, _) = start_with_state(none).await;
     assert_eq!(
-        alone(base.clone(), NEW_PASSWORD).await,
-        StatusCode::SERVICE_UNAVAILABLE
-    );
-    assert_eq!(
         sign_in(&base, "owner@example.com", NEW_PASSWORD)
             .await
             .status(),
@@ -1022,7 +1022,7 @@ async fn a_new_password_setting_wins_over_one_set_by_email() {
     );
 
     // A new NINE_TURTLES_PASSWORD_HASH wins: the owner's way back that
-    // needs no email. The password set by email stops working, and every
+    // needs no email sent. The password set by email stops working, and every
     // device signed in as the owner is signed out, and links sent before
     // stop working.
     const ANOTHER: &str = "the owner's way back in";
@@ -1037,12 +1037,11 @@ async fn a_new_password_setting_wins_over_one_set_by_email() {
         StatusCode::GONE
     );
     assert_eq!(
-        alone(base.clone(), NEW_PASSWORD).await,
+        owner_with(base.clone(), NEW_PASSWORD).await,
         StatusCode::UNAUTHORIZED
     );
-    assert_eq!(alone(base.clone(), ANOTHER).await, StatusCode::NO_CONTENT);
     assert_eq!(
-        sign_in(&base, "owner@example.com", ANOTHER).await.status(),
+        owner_with(base.clone(), ANOTHER).await,
         StatusCode::NO_CONTENT
     );
     let own: Option<String> = sqlx::query_scalar("SELECT password_hash FROM people WHERE id = 1")
@@ -1053,7 +1052,7 @@ async fn a_new_password_setting_wins_over_one_set_by_email() {
 
     // And once the setting is in force again, starting again changes nothing more.
     let (base, _) = start_with_state(changed).await;
-    assert_eq!(alone(base, ANOTHER).await, StatusCode::NO_CONTENT);
+    assert_eq!(owner_with(base, ANOTHER).await, StatusCode::NO_CONTENT);
 }
 
 #[tokio::test]
@@ -1267,25 +1266,19 @@ async fn a_new_email_or_a_new_password_ends_earlier_sign_in_links() {
 #[tokio::test]
 async fn the_owner_can_sign_in_by_email_link_too() {
     let (base, _, outbox) = start_with_mail(common::config()).await;
-    let owner = signed_in(&base).await;
-    // Without a saved email, nothing goes anywhere.
+    // Before the owner's first sign-in saves their email, nothing goes anywhere.
     ask_sign_in_link(&base, "owner@example.com").await;
     assert!(emails_to(&outbox, "owner@example.com").is_empty());
-    let saved = post(
-        &base,
-        "/api/people/me/email",
-        Some(&owner),
-        json!({ "email": "owner@example.com", "password": common::PASSWORD }),
-    )
-    .await;
-    assert!(saved.status().is_success());
+    signed_in(&base).await;
     ask_sign_in_link(&base, "owner@example.com").await;
     let (_, ticket) = newest_link(&outbox, "owner@example.com");
     let used = use_sign_in_link(&base, &ticket).await;
     assert_eq!(used.status(), StatusCode::OK);
     let phone = cookie_from(&used);
     assert_eq!(session(&base, Some(&phone)).await["owner"], true);
-    // The password-only sign-in is as it was.
-    let alone = post(&base, "/api/sign-in", None, json!({ "password": PASSWORD })).await;
-    assert_eq!(alone.status(), StatusCode::NO_CONTENT);
+    // Signing in with the email and password is as it was.
+    assert_eq!(
+        sign_in(&base, "owner@example.com", PASSWORD).await.status(),
+        StatusCode::NO_CONTENT
+    );
 }

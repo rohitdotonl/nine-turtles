@@ -1,8 +1,7 @@
 <!--
   The sign-in page (SPEC section 1): the wordmark, an email field and a
-  password field, nothing about the reader's feeds. The owner may leave the
-  email empty and sign in with the password alone, as before there were
-  readers (decision 0087). While nine turtles can send email, "Email me a
+  password field, nothing about the reader's feeds. Everyone, the owner too,
+  signs in with both (decision 0116). While nine turtles can send email, "Email me a
   sign-in link" turns the page into a request for a link that signs in
   (decision 0096) and "Forgot your password?" into one for a password link;
   "Sign up" always leads to the sign-up page (decision 0115).
@@ -136,14 +135,21 @@
   async function submit(event: SubmitEvent) {
     event.preventDefault();
     if (asking) return ask(asking);
-    if (busy || password === "") return;
+    if (busy) return;
+    if (email.trim() === "") {
+      message = "Type your email too.";
+      refused = false;
+      emailField?.focus();
+      return;
+    }
+    if (password === "") return;
     busy = true;
     const result = await signIn(email, password);
     busy = false;
     if (result.ok) {
       onSignedIn();
     } else {
-      message = explain(result, email.trim() !== "");
+      message = explain(result);
       refused = result.reason === "wrong-password";
       password = "";
     }

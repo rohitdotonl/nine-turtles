@@ -75,12 +75,15 @@ usually within 15 minutes of pressing Merge.
    - **Save Changes.** Render restarts nine turtles (about a minute).
 
 **Check it (SPEC section 1):**
-1. Open your address in a private window: only the password field.
-2. Type a wrong password: "That isn't the password." After five wrong tries
-   it asks you to wait.
-3. Type the right one: you're in, with Status showing the version. Close the
-   browser and reopen: still signed in.
-4. **Sign out**, reload: back to the password field.
+1. Open your address in a private window: only the email and password
+   fields.
+2. Type your email and the password you just chose: you're in, with Status
+   showing the version. This first sign-in saves that email as yours
+   (decision 0116); from now on, sign in with it. Close the browser and
+   reopen: still signed in.
+3. **Sign out**, reload: back to the sign-in page.
+4. Type your email and a wrong password: "That email and password don't
+   match." After five wrong tries it asks you to wait.
 5. Do the same on your phone.
 
 **To change your password later:** repeat step 4 and replace the old value.

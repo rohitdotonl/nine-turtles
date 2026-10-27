@@ -29,6 +29,8 @@ const executablePath = process.env.NINE_TURTLES_CHROMIUM || undefined;
 // The browser tests sign in with this made-up password. The line below is its
 // scrambled form, made with `nine-turtles set-password`; it protects nothing real.
 export const TEST_PASSWORD = "a quiet place to read";
+// The owner's email in the browser tests: their first sign-in saves it (decision 0116).
+export const OWNER_EMAIL = "owner@example.com";
 const TEST_PASSWORD_HASH =
   "$argon2id$v=19$m=19456,t=2,p=1$8nl1b5uDMerwM3og4iDG4w$bgqLzKbYivttmjWGuPa/48SDwiFl6rHYxP2bfsccFJQ";
 
