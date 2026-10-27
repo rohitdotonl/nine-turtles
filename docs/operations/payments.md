@@ -72,8 +72,8 @@ mode works without Dodo's approval; you don't need your ID or bank yet.
 
 ## 6. Try it
 
-1. In nine turtles, Settings › Readers, make an **Invite link** and open it
-   in a private window. Sign up as a test reader.
+1. Open nine turtles in a private window, press **Sign up** and sign up
+   as a test reader.
 2. In that window, Settings › **Your plan** says "Free trial".
 3. Press **Monthly**. Dodo's test checkout opens. Card number
    `4242 4242 4242 4242`, any future date, any three digits, any name.

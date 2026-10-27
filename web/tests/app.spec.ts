@@ -294,7 +294,7 @@ test("Settings: appearance, font, size and width apply at once and are remembere
   await page.keyboard.press("ArrowLeft");
   await expect(page.getByLabel("Light", { exact: true })).toBeChecked();
   // Font and line width are segmented controls: the chosen one is raised (a small shadow) and semibold, and by day
-  // a thin edge sets it at 3 : 1 against the rest of the control (decision 0115).
+  // a thin edge sets it at 3 : 1 against the rest of the control (decision 0116).
   await expect(page.locator("label.choice").filter({ hasText: "Medium" })).toHaveCSS("font-weight", "600");
   await expect(page.locator("label.choice").filter({ hasText: "Medium" })).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
   await expect(page.locator("label.choice").filter({ hasText: "Wide" })).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
@@ -677,14 +677,14 @@ test("Newsletters: the reader's address with Copy, a label's switch, and New add
 test("Settings is one centred column of grouped lists; Your data, Feed health and Sign out are rows of their own, each ending in a glyph", async ({ page, isMobile }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openApp(page, "/settings");
-  // Each group has a small header above it; the groups share one column, no wider than 560px. The owner also sees Readers and Sign-up (decision 0087).
+  // Each group has a small header above it; the groups share one column, no wider than 560px. The owner also sees Readers (decision 0087).
   const groups = page.getByRole("region", { name: "Settings" }).locator(".inset-group:visible");
-  await expect(groups).toHaveCount(isMobile ? 13 : 14);
+  await expect(groups).toHaveCount(isMobile ? 12 : 13);
   const boxes = await groups.evaluateAll((all) => all.map((each) => each.getBoundingClientRect()).map((box) => [Math.round(box.x), Math.round(box.width)]));
   for (const [x, width] of boxes) expect([x, width]).toEqual(boxes[0]);
   expect(boxes[0]![1]).toBeLessThanOrEqual(560);
   // Keyboard shows only on a screen with a keyboard (decision 0110).
-  for (const name of [...(isMobile ? [] : ["Keyboard"]), "Reading", "Show in the sidebar", "Look and feel", "Your data", "Feeds", "Add from anywhere", "Rules", "Newsletters", "Other apps", "Connected assistants", "Readers", "Sign-up", "Account"]) {
+  for (const name of [...(isMobile ? [] : ["Keyboard"]), "Reading", "Show in the sidebar", "Look and feel", "Your data", "Feeds", "Add from anywhere", "Rules", "Newsletters", "Other apps", "Connected assistants", "Readers", "Account"]) {
     await expect(page.getByRole("heading", { level: 3, name })).toBeVisible();
   }
   // The data actions are full-width rows, at least 44px tall, in the text color (the accent means only "where you are").
@@ -822,9 +822,9 @@ test("Wrong turn?'s email never carries what follows a # in the address", async 
   await expect(page.getByRole("link", { name: "tell me which one" })).not.toHaveAttribute("href", /secret/);
 });
 
-test("a signed-in reader opening an invite link goes straight into nine turtles", async ({ page }) => {
+test("a signed-in reader opening the sign-up page goes straight into nine turtles", async ({ page }) => {
   await openApp(page);
-  await page.goto("/sign-up#invite=ab12");
+  await page.goto("/sign-up");
   await expect(page.locator("#sidebar")).toBeAttached();
   await expect(page.getByRole("heading", { name: "Wrong turn?" })).toHaveCount(0);
 });

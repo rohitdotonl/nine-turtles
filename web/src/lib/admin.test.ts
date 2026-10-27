@@ -4,7 +4,7 @@ import { backupDay, count, date, lastHereDay, plural, size, toOverview } from ".
 describe("the owner's Readers page", () => {
   it("reads the server's answer, and anything missing as nothing", () => {
     const overview = toOverview({
-      totals: { readers: 2, feeds: 40, feeds_resting: 3, feeds_failing: 1, articles: 900, sign_ups_waiting: 0 },
+      totals: { readers: 2, feeds: 40, feeds_resting: 3, feeds_failing: 1, articles: 900 },
       database_bytes: 12_000_000,
       backups: { on: true, latest_nightly: "nightly/2026-10-25.sqlite" },
       email_sending: false,

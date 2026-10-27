@@ -1,6 +1,6 @@
 <!--
-  Decides between the sign-in page, the sign-up page (an invite link's
-  /sign-up, decision 0087, or anyone's while sign-up is Open), the pages an
+  Decides between the sign-in page, the sign-up page (/sign-up, open
+  to anyone, decision 0115), the pages an
   emailed link opens (/reset-password and /confirm-email, decision 0088;
   /sign-in-link, decision 0096), the page where an AI assistant asks to
   connect (/oauth/authorize, shown once signed in; signed out, sign-in
@@ -46,7 +46,7 @@
       }
       unreachable = false;
       path = location.pathname;
-      // Already signed in: an invite link opens nine turtles itself.
+      // Already signed in: the sign-up page opens nine turtles itself.
       if (session.signedIn && path === "/sign-up") {
         history.replaceState(null, "", "/");
         path = "/";
@@ -88,12 +88,11 @@
     onSignedOut={check}
   />
 {:else if session && path === "/sign-up"}
-  <SignUp onSignedIn={check} open={session.signUpOpen} />
+  <SignUp onSignedIn={check} />
 {:else if session}
   <SignIn
     onSignedIn={check}
     emailSending={session.emailSending}
-    signUpOpen={session.signUpOpen}
     passkeys={session.passkeys}
     onSignUp={() => (path = location.pathname)}
   />

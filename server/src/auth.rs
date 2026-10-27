@@ -358,10 +358,7 @@ async fn sign_in(State(state): State<AppState>, Json(form): Json<SignIn>) -> Res
     // A sign-in by email is counted under that email and checked on the
     // shared line whoever has it, the owner too, so neither the answer nor
     // the time taken tells a stranger which email is the owner's. (The
-    // owner then has two separate sets of five tries: decision 0087.) An
-    // email with no account may be one signed up for while Open and not yet
-    // confirmed: its line is the one waiting with the link (decision 0088).
-    let mut waiting = false;
+    // owner then has two separate sets of five tries: decision 0087.)
     let (account, person, stored) = match account {
         // Once the owner has a password of their own (set by a password
         // link, decision 0088), it replaces NINE_TURTLES_PASSWORD_HASH here too.
@@ -394,13 +391,7 @@ async fn sign_in(State(state): State<AppState>, Json(form): Json<SignIn>) -> Res
                     };
                     (Account::Email(email), Some(person), stored)
                 }
-                Ok(None) => match waiting_sign_up(&state.db, &email).await {
-                    Ok(line) => {
-                        waiting = line.is_some();
-                        (Account::Email(email), None, line)
-                    }
-                    Err(error) => return database_problem("finding a sign-up", &error),
-                },
+                Ok(None) => (Account::Email(email), None, None),
                 Err(error) => return database_problem("finding a reader", &error),
             }
         }
@@ -434,26 +425,7 @@ async fn sign_in(State(state): State<AppState>, Json(form): Json<SignIn>) -> Res
         .unwrap_or(false)
     };
 
-    // The right password for an account not yet confirmed: said calmly, and
-    // the link sent again (within the address's hourly share). Only someone
-    // who knows the password learns the account is waiting.
     let mut limiters = state.limiter.lock().await;
-    if waiting && matched {
-        limiters.right(&account);
-        drop(limiters);
-        let Account::Email(email) = &account else {
-            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
-        };
-        let sent = crate::accounts::send_sign_up_link(&state, email, &stored.unwrap_or_default())
-            .await
-            .unwrap_or(false);
-        return (
-            StatusCode::FORBIDDEN,
-            Json(json!({ "error": "unconfirmed", "sent": sent })),
-        )
-            .into_response();
-    }
-
     let Some(person) = person.filter(|_| someones && matched) else {
         state
             .wrong_passwords
@@ -641,21 +613,6 @@ pub async fn owner_password_follows_setting(
     Ok(true)
 }
 
-/// The scrambled password waiting with the newest unused, unexpired link
-/// that would make an account for `email` (Open sign-up, decision 0088).
-async fn waiting_sign_up(db: &SqlitePool, email: &str) -> Result<Option<String>, sqlx::Error> {
-    sqlx::query_scalar(
-        "SELECT password_hash FROM email_links
-         WHERE purpose = 'sign-up' AND email = ? COLLATE NOCASE AND used = 0 AND expires_at > ?
-         ORDER BY created_at DESC, id DESC LIMIT 1",
-    )
-    .bind(email)
-    .bind(now())
-    .fetch_optional(db)
-    .await
-    .map(Option::flatten)
-}
-
 /// Signs a new device in for reader `person`: answers the ticket for its
 /// cookie, or `None` if no random ticket could be made (said in the log).
 /// Devices whose year ran out are tidied away first.
@@ -720,13 +677,11 @@ pub async fn signed_in_devices(state: &AppState) -> Result<i64, sqlx::Error> {
 }
 
 /// Not signed in: and whether the sign-in page may offer "Forgot your
-/// password?" (nine turtles can send email) and "Sign up" (sign-up is Open).
+/// password?" (nine turtles can send email). "Sign up" is always offered.
 async fn signed_out(state: &AppState) -> Response {
-    let open = crate::people::open_for_anyone(state).await.unwrap_or(false);
     Json(json!({
         "signed_in": false,
         "email_sending": state.mailer.is_some(),
-        "sign_up_open": open,
         "passkeys": state.passkeys.origin(),
     }))
     .into_response()

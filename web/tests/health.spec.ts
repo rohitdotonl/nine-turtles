@@ -35,7 +35,7 @@ test("a moved feed is listed in plain words, and Find new address moves it", asy
   await expect(feed).toContainText("The site says the feed isn't there any more.");
   // A word on its own: the title carries a timestamp, which may end in 404.
   await expect(feed).not.toContainText(/\b404\b/);
-  // A card (decision 0115): its name, what happened, then Address and Last worked, on a computer and a phone alike.
+  // A card (decision 0116): its name, what happened, then Address and Last worked, on a computer and a phone alike.
   await expect(feed).toHaveCSS("border-top-left-radius", "12px");
   await expect(feed.locator("dt")).toHaveText(["Address", "Last worked"]);
   const tried = feed.locator("dd.tried");

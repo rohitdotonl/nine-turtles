@@ -122,7 +122,7 @@ test("sign in with the keyboard, stay signed in, sign out", async ({ page, isMob
   await page.keyboard.press("Enter");
   await expect(page.locator("#sidebar")).toBeAttached();
   // The keyboard's place moves to the new screen's heading: what there is to read (here, with no
-  // feeds yet, the welcome's), or on a phone's feeds screen its name (decision 0115).
+  // feeds yet, the welcome's), or on a phone's feeds screen its name (decision 0116).
   if (isMobile) await expect(page.getByRole("heading", { level: 1, name: "nine turtles" })).toBeFocused();
   else await expect(page.getByRole("heading", { level: 2, name: "A quiet place to read." })).toBeFocused();
 

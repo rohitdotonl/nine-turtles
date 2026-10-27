@@ -339,7 +339,7 @@ export const SCREENS: Screen[] = [
       await page.route("**/api/admin", (route) =>
         route.fulfill({
           json: {
-            totals: { readers: 3, feeds: 214, feeds_resting: 12, feeds_failing: 2, articles: 18_430, sign_ups_waiting: 0 },
+            totals: { readers: 3, feeds: 214, feeds_resting: 12, feeds_failing: 2, articles: 18_430 },
             database_bytes: 96_000_000,
             backups: { on: true, latest_nightly: "nightly/2026-10-25.sqlite" },
             email_sending: true,

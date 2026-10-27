@@ -33,7 +33,7 @@ by the next merge, whatever it changes.
 | Libraries are on the approved list | A library in `server/Cargo.toml` (in any of the ways Rust allows listing one), `web/package.json` or `website/package.json` that isn't approved in `docs/libraries.md`; a GitHub Actions building block that isn't GitHub's own or isn't pinned | `scripts/check-libraries.mjs` |
 | Frontend: build | Frontend code that doesn't build | Vite |
 | Frontend: type check | Mistakes in TypeScript and Svelte code | `svelte-check` |
-| Frontend: tests | Broken frontend logic (layout, keys, addresses, reader settings); any theme color pair below the contrast floor, read straight from `app.css`, including a segmented control's chosen side under 3 : 1 against the rest of the control (decision 0115) | `web/src/**/*.test.ts` (Vitest) |
+| Frontend: tests | Broken frontend logic (layout, keys, addresses, reader settings); any theme color pair below the contrast floor, read straight from `app.css`, including a segmented control's chosen side under 3 : 1 against the rest of the control (decision 0116) | `web/src/**/*.test.ts` (Vitest) |
 | No motion | Any animation or transition in the built styles or the website's; Svelte's or the browser's animation tools in the code; smooth scrolling | `scripts/check-motion.mjs` |
 | Download size budget | More than 150 KB (compressed) of app code and styles, or more than 400 KB of fonts | `scripts/check-size.mjs` |
 | Health check script | The health check (`health-check.md`) passing when nine turtles is down, or failing when it's running | `scripts/check-health-check.mjs` |

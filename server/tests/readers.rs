@@ -56,33 +56,22 @@ async fn session(base: &str, cookie: &str) -> Value {
         .unwrap()
 }
 
-/// The owner makes an invite link; answers its ticket.
-async fn invite(base: &str, owner: &str) -> String {
-    let response = post(base, "/api/sign-up/invite", Some(owner), json!({})).await;
-    assert_eq!(response.status(), StatusCode::OK);
-    let body: Value = json_of(response).await;
-    let ticket = body["invite"].as_str().unwrap().to_owned();
-    assert_eq!(ticket.len(), 64);
-    ticket
-}
-
-async fn sign_up(base: &str, email: &str, password: &str, invite: &str) -> Response {
+/// Signs up as the sign-up page does: anyone can, at once (decision 0115).
+async fn sign_up(base: &str, email: &str, password: &str) -> Response {
     post(
         base,
         "/api/sign-up",
         None,
-        json!({ "email": email, "password": password, "invite": invite }),
+        json!({ "email": email, "password": password }),
     )
     .await
 }
 
 #[tokio::test]
-async fn an_invited_reader_signs_up_and_then_signs_in_with_their_email() {
+async fn anyone_signs_up_and_then_signs_in_with_their_email() {
     let base = common::start(common::config()).await;
-    let owner = common::signed_in(&base).await;
-    let ticket = invite(&base, &owner).await;
 
-    let joined = sign_up(&base, "Mira@Example.com", READER_PASSWORD, &ticket).await;
+    let joined = sign_up(&base, "Mira@Example.com", READER_PASSWORD).await;
     assert_eq!(joined.status(), StatusCode::NO_CONTENT);
     let joined_session = session(&base, &cookie_from(&joined)).await;
     assert_eq!(joined_session["signed_in"], true);
@@ -179,7 +168,7 @@ async fn the_password_alone_is_still_the_owners_sign_in() {
 }
 
 #[tokio::test]
-async fn only_the_owner_sees_the_readers_and_sets_sign_up() {
+async fn only_the_owner_sees_the_readers() {
     let (base, state) = common::start_with_state(common::config()).await;
     let owner = common::signed_in(&base).await;
     let (_, reader) = common::another_reader(&state).await;
@@ -197,147 +186,29 @@ async fn only_the_owner_sees_the_readers_and_sets_sign_up() {
         assert_eq!(fields, ["created_at", "email", "id", "owner"]);
     }
 
-    for path in ["/api/people", "/api/sign-up/settings"] {
-        assert_eq!(
-            get(&base, path, &reader).await.status(),
-            StatusCode::FORBIDDEN,
-            "{path}"
-        );
-    }
-    for (path, body) in [
-        ("/api/sign-up/switch", json!({ "sign_up": "invite" })),
-        ("/api/sign-up/invite", json!({})),
-        ("/api/people/me/email", json!({ "email": "me@example.com" })),
-    ] {
-        assert_eq!(
-            post(&base, path, Some(&reader), body).await.status(),
-            StatusCode::FORBIDDEN,
-            "{path}"
-        );
-    }
-    let settings: Value = get(&base, "/api/sign-up/settings", &owner)
-        .await
-        .text()
-        .await
-        .unwrap()
-        .parse::<Value>()
-        .unwrap();
-    assert_eq!(settings["sign_up"], "closed");
-}
-
-#[tokio::test]
-async fn while_sign_up_is_closed_nobody_can_join() {
-    let base = common::start(common::config()).await;
-    let owner = common::signed_in(&base).await;
-
-    // A fresh nine turtles starts closed.
-    let refused = sign_up(&base, "mira@example.com", READER_PASSWORD, "").await;
-    assert_eq!(refused.status(), StatusCode::FORBIDDEN);
-    assert_eq!(refused.text().await.unwrap(), r#"{"error":"closed"}"#);
-
-    // Closing again forgets the invite link.
-    let ticket = invite(&base, &owner).await;
-    let closed = post(
-        &base,
-        "/api/sign-up/switch",
-        Some(&owner),
-        json!({ "sign_up": "closed" }),
-    )
-    .await;
-    assert_eq!(closed.status(), StatusCode::NO_CONTENT);
     assert_eq!(
-        sign_up(&base, "mira@example.com", READER_PASSWORD, &ticket)
-            .await
-            .status(),
+        get(&base, "/api/people", &reader).await.status(),
         StatusCode::FORBIDDEN
     );
-    // Choosing Invite link again doesn't bring the old link back.
-    post(
-        &base,
-        "/api/sign-up/switch",
-        Some(&owner),
-        json!({ "sign_up": "invite" }),
-    )
-    .await;
     assert_eq!(
-        sign_up(&base, "mira@example.com", READER_PASSWORD, &ticket)
-            .await
-            .status(),
+        post(
+            &base,
+            "/api/people/me/email",
+            Some(&reader),
+            json!({ "email": "me@example.com" })
+        )
+        .await
+        .status(),
         StatusCode::FORBIDDEN
     );
-}
-
-#[tokio::test]
-async fn an_invite_link_works_for_several_until_a_new_one_is_made() {
-    let base = common::start(common::config()).await;
-    let owner = common::signed_in(&base).await;
-    let first = invite(&base, &owner).await;
-
-    for email in ["one@example.com", "two@example.com"] {
+    // The switch and invite links are gone: sign-up is always open.
+    for path in ["/api/sign-up/switch", "/api/sign-up/invite"] {
         assert_eq!(
-            sign_up(&base, email, READER_PASSWORD, &first)
+            post(&base, path, Some(&owner), json!({ "sign_up": "closed" }))
                 .await
                 .status(),
-            StatusCode::NO_CONTENT,
-            "{email}"
-        );
-    }
-
-    let second = invite(&base, &owner).await;
-    assert_ne!(first, second);
-    assert_eq!(
-        sign_up(&base, "three@example.com", READER_PASSWORD, &first)
-            .await
-            .status(),
-        StatusCode::FORBIDDEN
-    );
-    assert_eq!(
-        sign_up(&base, "three@example.com", READER_PASSWORD, &second)
-            .await
-            .status(),
-        StatusCode::NO_CONTENT
-    );
-    let settings: Value = get(&base, "/api/sign-up/settings", &owner)
-        .await
-        .text()
-        .await
-        .unwrap()
-        .parse::<Value>()
-        .unwrap();
-    assert_eq!(settings["sign_up"], "invite");
-    assert!(settings["invite_made_at"].is_i64());
-}
-
-#[tokio::test]
-async fn open_sign_up_is_refused_until_confirmation_emails_work() {
-    let (base, state) = common::start_with_state(common::config()).await;
-    let owner = common::signed_in(&base).await;
-    let ticket = invite(&base, &owner).await;
-
-    let switched = post(
-        &base,
-        "/api/sign-up/switch",
-        Some(&owner),
-        json!({ "sign_up": "open" }),
-    )
-    .await;
-    assert_eq!(switched.status(), StatusCode::BAD_REQUEST);
-    assert_eq!(
-        switched.text().await.unwrap(),
-        r#"{"error":"open-needs-email"}"#
-    );
-
-    // Even if the stored setting somehow said "open", nobody joins by it.
-    sqlx::query("UPDATE settings SET value = 'open' WHERE name = 'sign_up'")
-        .execute(&state.db)
-        .await
-        .unwrap();
-    for ticket in ["", ticket.as_str()] {
-        assert_eq!(
-            sign_up(&base, "mira@example.com", READER_PASSWORD, ticket)
-                .await
-                .status(),
-            StatusCode::FORBIDDEN
+            StatusCode::NOT_FOUND,
+            "{path}"
         );
     }
 }
@@ -346,7 +217,6 @@ async fn open_sign_up_is_refused_until_confirmation_emails_work() {
 async fn an_email_already_used_is_refused_and_so_are_poor_details() {
     let base = common::start(common::config()).await;
     let owner = common::signed_in(&base).await;
-    let ticket = invite(&base, &owner).await;
     post(
         &base,
         "/api/people/me/email",
@@ -355,14 +225,14 @@ async fn an_email_already_used_is_refused_and_so_are_poor_details() {
     )
     .await;
     assert_eq!(
-        sign_up(&base, "mira@example.com", READER_PASSWORD, &ticket)
+        sign_up(&base, "mira@example.com", READER_PASSWORD)
             .await
             .status(),
         StatusCode::NO_CONTENT
     );
 
     for email in ["MIRA@example.com", "Rohit@Example.com"] {
-        let again = sign_up(&base, email, READER_PASSWORD, &ticket).await;
+        let again = sign_up(&base, email, READER_PASSWORD).await;
         assert_eq!(again.status(), StatusCode::CONFLICT, "{email}");
         assert_eq!(again.text().await.unwrap(), r#"{"error":"already"}"#);
     }
@@ -382,7 +252,7 @@ async fn an_email_already_used_is_refused_and_so_are_poor_details() {
         // One short of the 12 the owner's own password needs too.
         ("new@example.com", "eleven char", "password-short"),
     ] {
-        let refused = sign_up(&base, email, password, &ticket).await;
+        let refused = sign_up(&base, email, password).await;
         assert_eq!(refused.status(), StatusCode::BAD_REQUEST);
         assert_eq!(
             refused.text().await.unwrap(),
@@ -394,8 +264,7 @@ async fn an_email_already_used_is_refused_and_so_are_poor_details() {
 #[tokio::test]
 async fn no_more_than_twenty_accounts_are_made_in_an_hour() {
     let (base, state) = common::start_with_state(common::config()).await;
-    let owner = common::signed_in(&base).await;
-    let ticket = invite(&base, &owner).await;
+    common::signed_in(&base).await;
     for number in 0..nine_turtles::people::SIGN_UPS_PER_HOUR {
         sqlx::query("INSERT INTO people (email, created_at) VALUES (?, unixepoch())")
             .bind(format!("{number}@example.com"))
@@ -404,7 +273,7 @@ async fn no_more_than_twenty_accounts_are_made_in_an_hour() {
             .unwrap();
     }
 
-    let capped = sign_up(&base, "late@example.com", READER_PASSWORD, &ticket).await;
+    let capped = sign_up(&base, "late@example.com", READER_PASSWORD).await;
     assert_eq!(capped.status(), StatusCode::TOO_MANY_REQUESTS);
     assert_eq!(capped.text().await.unwrap(), r#"{"error":"too-many"}"#);
 
@@ -414,7 +283,7 @@ async fn no_more_than_twenty_accounts_are_made_in_an_hour() {
         .await
         .unwrap();
     assert_eq!(
-        sign_up(&base, "late@example.com", READER_PASSWORD, &ticket)
+        sign_up(&base, "late@example.com", READER_PASSWORD)
             .await
             .status(),
         StatusCode::NO_CONTENT
@@ -424,10 +293,9 @@ async fn no_more_than_twenty_accounts_are_made_in_an_hour() {
 #[tokio::test]
 async fn tries_with_a_taken_email_count_towards_the_hours_twenty() {
     let (base, state) = common::start_with_state(common::config()).await;
-    let owner = common::signed_in(&base).await;
-    let ticket = invite(&base, &owner).await;
+    common::signed_in(&base).await;
     assert_eq!(
-        sign_up(&base, "mira@example.com", READER_PASSWORD, &ticket)
+        sign_up(&base, "mira@example.com", READER_PASSWORD)
             .await
             .status(),
         StatusCode::NO_CONTENT
@@ -441,13 +309,13 @@ async fn tries_with_a_taken_email_count_towards_the_hours_twenty() {
     }
 
     // The twentieth: a taken email, with the same answer as always.
-    let taken = sign_up(&base, "Mira@example.com", READER_PASSWORD, &ticket).await;
+    let taken = sign_up(&base, "Mira@example.com", READER_PASSWORD).await;
     assert_eq!(taken.status(), StatusCode::CONFLICT);
     assert_eq!(taken.text().await.unwrap(), r#"{"error":"already"}"#);
 
     // It counted, so the hour is used up, for taken and new emails alike.
     for email in ["mira@example.com", "new@example.com"] {
-        let capped = sign_up(&base, email, READER_PASSWORD, &ticket).await;
+        let capped = sign_up(&base, email, READER_PASSWORD).await;
         assert_eq!(capped.status(), StatusCode::TOO_MANY_REQUESTS, "{email}");
         assert_eq!(capped.text().await.unwrap(), r#"{"error":"too-many"}"#);
     }
@@ -456,8 +324,7 @@ async fn tries_with_a_taken_email_count_towards_the_hours_twenty() {
 #[tokio::test]
 async fn sign_ups_sent_together_go_one_at_a_time_and_stop_at_twenty() {
     let (base, state) = common::start_with_state(common::config()).await;
-    let owner = common::signed_in(&base).await;
-    let ticket = invite(&base, &owner).await;
+    common::signed_in(&base).await;
     {
         let mut tries = state.sign_ups.lock().await;
         for _ in 0..nine_turtles::people::SIGN_UPS_PER_HOUR - 2 {
@@ -467,16 +334,11 @@ async fn sign_ups_sent_together_go_one_at_a_time_and_stop_at_twenty() {
 
     let mut together = tokio::task::JoinSet::new();
     for number in 0..5 {
-        let (base, ticket) = (base.clone(), ticket.clone());
+        let base = base.clone();
         together.spawn(async move {
-            sign_up(
-                &base,
-                &format!("{number}@example.com"),
-                READER_PASSWORD,
-                &ticket,
-            )
-            .await
-            .status()
+            sign_up(&base, &format!("{number}@example.com"), READER_PASSWORD)
+                .await
+                .status()
         });
     }
     let answers = together.join_all().await;
@@ -503,9 +365,8 @@ async fn the_owners_email_cant_be_told_apart_while_the_password_alone_waits() {
         json!({ "email": "rohit@example.com", "password": common::PASSWORD }),
     )
     .await;
-    let ticket = invite(&base, &owner).await;
     assert_eq!(
-        sign_up(&base, "mira@example.com", READER_PASSWORD, &ticket)
+        sign_up(&base, "mira@example.com", READER_PASSWORD)
             .await
             .status(),
         StatusCode::NO_CONTENT

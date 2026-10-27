@@ -1,9 +1,9 @@
 # Sending email
 
-nine turtles sends a few short emails (decision 0088): the link that confirms
-a new reader's address, the link for a new password, and the link that
-confirms a changed address. Without email, none of these work, and sign-up
-can't be **Open**. This page sets it up with **Brevo**. Any other email
+nine turtles sends a few short emails (decision 0088): the link for a new
+password, the link that signs in, and the link that confirms a changed
+address. Without email, none of these work. Signing up needs no email
+(decision 0115). This page sets it up with **Brevo**. Any other email
 service that offers "SMTP" works the same way: only the five settings change.
 
 You'll need: your Brevo account, Cloudflare (where nineturtles.app's
@@ -71,7 +71,6 @@ turtles doesn't start, and the log says so.
 3. **Email me a sign-in link** works the same way: an email "Sign in to
    nine turtles" arrives, with a link that signs you in once, within 15
    minutes.
-4. In Settings › Sign-up, **Open** can now be chosen.
 
 If no email arrives, look in Render's **Logs** for "couldn't send": the line
 says roughly what went wrong ("the mail server refused it", "couldn't be

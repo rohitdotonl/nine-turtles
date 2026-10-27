@@ -3,8 +3,8 @@ import { MAILBOX, MAIL_APP, TEST_PASSWORD } from "../playwright.config";
 
 // SPEC sections 1 and 18 (decision 0088): what email makes possible, against
 // a nine turtles that sends its emails to a made-up mail server on this
-// computer (tests/mail-server.mjs). Open sign-up with a confirmation link,
-// "Forgot your password?", "Email me a sign-in link" (decision 0096),
+// computer (tests/mail-server.mjs). Sign-up (which sends none, decision
+// 0115), "Forgot your password?", "Email me a sign-in link" (decision 0096),
 // changing an email and deleting an account. Each
 // test uses addresses of its own, so the two window sizes never meet.
 
@@ -29,28 +29,7 @@ async function newestMail(to: string, subject: string, count = 1): Promise<{ mai
   return { mail, link: url ? url.replace(MAIL_APP, "") : "" };
 }
 
-/** The owner switches sign-up to Open (it's one setting for the whole app; doing it twice is harmless). */
-async function openSignUp(browser: Browser) {
-  const context = await browser.newContext({ baseURL: MAIL_APP });
-  const page = await context.newPage();
-  await page.goto("/");
-  await page.getByLabel("Password").fill(TEST_PASSWORD);
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.locator("#sidebar")).toBeAttached();
-  await page.goto("/settings");
-  const open = page.getByRole("radio", { name: "Open" });
-  await expect(open).toBeEnabled();
-  // The switch shows at once; wait for the server to have it before this browser closes.
-  if (!(await open.isChecked())) {
-    const saved = page.waitForResponse((response) => response.url().endsWith("/api/sign-up/switch") && response.ok());
-    await page.getByText("Open", { exact: true }).click();
-    await saved;
-  }
-  await expect(open).toBeChecked();
-  await context.close();
-}
-
-/** Signs up while Open and follows the emailed link, in a browser of its own. */
+/** Signs up, in a browser of its own: the account is made at once (decision 0115). */
 async function newReader(browser: Browser, email: string): Promise<Page> {
   const context = await browser.newContext({ baseURL: MAIL_APP });
   const page = await context.newPage();
@@ -58,16 +37,11 @@ async function newReader(browser: Browser, email: string): Promise<Page> {
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(READER_PASSWORD);
   await page.getByRole("button", { name: "Sign up" }).click();
-  await expect(page.locator("#sign-up-sent")).toContainText("A link to finish signing up is on its way");
-  const { link } = await newestMail(email, "Confirm your email for nine turtles");
-  await page.goto(link);
-  await page.getByRole("button", { name: "Confirm email" }).click();
   await expect(page.locator("#sidebar")).toBeAttached();
   return page;
 }
 
-test("anyone can sign up while it's open, by the link emailed to them, with only the keyboard", async ({ browser }, testInfo) => {
-  await openSignUp(browser);
+test("anyone can sign up at once and with no email, with only the keyboard", async ({ browser }, testInfo) => {
   const context = await browser.newContext({ baseURL: MAIL_APP });
   const page = await context.newPage();
   await page.goto("/");
@@ -84,44 +58,17 @@ test("anyone can sign up while it's open, by the link emailed to them, with only
   await page.keyboard.press("Tab");
   await page.keyboard.type(READER_PASSWORD);
   await page.keyboard.press("Enter");
-  // The form gives way to "Check your email", with the keyboard on it.
-  await expect(page.getByRole("heading", { name: "Check your email" })).toBeFocused();
-  await expect(page.locator("#sign-up-sent")).toContainText(`A link to finish signing up is on its way to ${email}.`);
-  await expect(page.getByText("Didn't get it? Look in your spam folder.")).toBeVisible();
-
-  // Signing in before the link is opened says so calmly, and sends it again.
-  await page.goto("/");
-  await expect(page.getByLabel("Email")).toBeFocused();
-  await page.keyboard.type(email);
-  await page.keyboard.press("Tab");
-  await page.keyboard.type(READER_PASSWORD);
-  await page.keyboard.press("Enter");
-  await expect(page.locator("#sign-in-message")).toHaveText(
-    "Your email isn't confirmed yet. A new link is on its way: open it to finish signing up.",
-  );
-
-  const { mail, link } = await newestMail(email, "Confirm your email for nine turtles", 2);
-  expect(mail.body).not.toContain("!");
-  expect(link).toMatch(/^\/confirm-email#ticket=[0-9a-f]{64}$/);
-  await page.goto(link);
-  await expect(page.getByRole("button", { name: "Confirm email" })).toBeFocused();
-  await page.keyboard.press("Enter");
+  // In nine turtles at once, signed in as the new reader.
   await expect(page.locator("#sidebar")).toBeAttached();
-  expect(new URL(page.url()).hash).toBe("");
   const session = await page.evaluate(async () => (await fetch("/api/session")).json());
   expect(session).toMatchObject({ signed_in: true, owner: false, email });
-
-  // The link works once.
-  await page.goto(link);
-  await page.getByRole("button", { name: "Confirm email" }).click();
-  await expect(page.getByRole("status")).toHaveText(
-    "This link has expired or was already used. Sign in, or sign up again for a new link.",
-  );
+  // And no email went to them.
+  const mail = (await (await fetch(`${MAILBOX}/mail?to=${encodeURIComponent(email)}`)).json()) as Mail[];
+  expect(mail).toEqual([]);
   await context.close();
 });
 
 test("a forgotten password is set again by an emailed link, signing out other devices", async ({ browser }, testInfo) => {
-  await openSignUp(browser);
   const email = `forgot-${testInfo.project.name}-${Date.now()}@example.com`;
   const laptop = await newReader(browser, email);
 
@@ -187,7 +134,6 @@ test("a forgotten password is set again by an emailed link, signing out other de
 
 test("a reader changes their email by a link to the new one, then deletes their account", async ({ browser }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "the phone's sheets are screens; the flow is the same");
-  await openSignUp(browser);
   const stamp = `${testInfo.project.name}-${Date.now()}`;
   const old = `move-${stamp}@example.com`;
   const next = `moved-${stamp}@example.com`;
@@ -263,7 +209,6 @@ test("the owner's own account has no Delete account", async ({ browser }) => {
 });
 
 test("a reader signs in by an emailed link, once, with only the keyboard", async ({ browser }, testInfo) => {
-  await openSignUp(browser);
   const email = `link-${testInfo.project.name}-${Date.now()}@example.com`;
   const laptop = await newReader(browser, email);
 

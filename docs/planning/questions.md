@@ -13,9 +13,9 @@ October 2026; it is in the repository's history.*
   They're on nineturtles.app as drafts, marked "to be decided" where they
   wait on: the prices, the email service for sign-in and receipts,
   where Render keeps the data, the business details and the law that
-  applies, the minimum age, and how long backups keep deleted data. Before
-  anyone can sign up, someone qualified should read both. Not blocking
-  anything today.
+  applies, the minimum age, and how long backups keep deleted data. Sign-up
+  is now open to anyone (decision 0115), so someone qualified should read
+  both soon.
 
 - **Payments, built in test mode** (26 October 2026, decision 0094). Each
   of these is a setting or a small change, and none blocks trying it:
