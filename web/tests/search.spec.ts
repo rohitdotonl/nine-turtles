@@ -10,7 +10,7 @@ test.skip(({ isMobile }) => isMobile, "the wide layout shows the list beside the
 
 const field = (page: Page) => page.getByRole("combobox", { name: "Search", exact: true });
 const heading = (page: Page) => page.locator("#list-heading");
-const results = (page: Page) => page.getByRole("region", { name: "Search results" }).getByRole("listitem");
+const results = (page: Page) => page.getByRole("region", { name: /^Results in / }).getByRole("listitem");
 
 function unique(prefix: string): string {
   return `${prefix}-${test.info().workerIndex}-${Date.now()}`;
@@ -54,7 +54,7 @@ test("a search starts where you are, marks the words it found, and Escape brings
   // With a chip in it, the box still stays one line.
   expect((await page.locator(".search-box").boundingBox())!.height).toBeLessThan(50);
   await page.keyboard.type("walking");
-  await expect(heading(page)).toHaveText("Search results");
+  await expect(heading(page)).toHaveText(`Results in ${folder}`);
   await expect(results(page)).toHaveCount(1);
   await expect(results(page).first()).toContainText(`Walking the long way home`);
   await expect(results(page).first()).toContainText(`Blog ${filed}`);
@@ -73,7 +73,7 @@ test("a search starts where you are, marks the words it found, and Escape brings
   expect(wordWeight).toBe(titleWeight);
   // A quiet line above the results says how many; there's nothing new to fetch, so Refresh steps aside.
   await expect(page.getByRole("status").filter({ hasText: /^1 result$/ })).toBeVisible();
-  await expect(page.getByRole("region", { name: "Search results" }).getByRole("button", { name: "Refresh" })).toHaveCount(0);
+  await expect(page.getByRole("region", { name: /^Results in / }).getByRole("button", { name: "Refresh" })).toHaveCount(0);
 
   // 2. Without the chip (Backspace at the start of the field removes it), results come from every feed.
   await page.keyboard.press("Home");
@@ -84,11 +84,25 @@ test("a search starts where you are, marks the words it found, and Escape brings
 
   // A typed filter is suggested, and becomes a chip.
   await page.keyboard.press("End");
+  const before = await results(page).first().boundingBox();
   await page.keyboard.type(" feed:");
   await expect(page.getByRole("option").first()).toBeVisible();
   await page.keyboard.type(loose);
-  await expect(page.getByRole("option", { name: `feed:Blog ${loose}` })).toBeVisible();
+  const suggestion = page.getByRole("option", { name: `feed:Blog ${loose}` });
+  await expect(suggestion).toBeVisible();
+  // The suggestions float over the results in a panel of their own: nothing under them moves.
+  const listbox = page.getByRole("listbox", { name: "Suggestions" });
+  await expect(listbox).toHaveCSS("position", "absolute");
+  expect(await results(page).first().boundingBox()).toEqual(before);
+  // ↓ chooses one, which the field says to screen readers; its mark is a bar in the text color, never the accent.
   await page.keyboard.press("ArrowDown");
+  await expect(suggestion).toHaveAttribute("aria-selected", "true");
+  await expect(field(page)).toHaveAttribute("aria-activedescendant", (await suggestion.getAttribute("id"))!);
+  const [bar, ink] = await Promise.all([
+    suggestion.evaluate((element) => getComputedStyle(element).borderLeftColor),
+    page.evaluate(() => getComputedStyle(document.body).color),
+  ]);
+  expect(bar).toBe(ink);
   await page.keyboard.press("Enter");
   await expect(page.getByRole("button", { name: `Remove in: Blog ${loose}` })).toBeVisible();
   await expect(field(page)).toHaveValue("walking");
@@ -173,7 +187,7 @@ test("Mark all as read marks only the results, and u undoes it", async ({ page }
   await expect(results(page)).toHaveCount(1);
   await results(page).first().getByRole("button").focus();
   await page.keyboard.press("Shift+A");
-  await expect(page.getByText("Marked 1 item as read")).toBeVisible();
+  await expect(page.getByText("Marked 1 article as read")).toBeVisible();
   await expect(count(2)).toBeVisible();
   await page.keyboard.press("u");
   await expect(page.getByText("Undone.")).toBeVisible();

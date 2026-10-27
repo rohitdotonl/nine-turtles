@@ -282,6 +282,31 @@ async fn an_old_cookie_left_from_before_the_rename_doesnt_get_in_the_way() {
 }
 
 #[tokio::test]
+async fn signing_out_ends_the_ticket_under_either_name() {
+    let base = common::start(common::config()).await;
+    let first = cookie_from(&sign_in(&base, PASSWORD).await);
+    let second = cookie_from(&sign_in(&base, PASSWORD).await);
+    let old_name = first.replacen("nine_turtles_session=", "slowfeed_session=", 1);
+    let both = format!("{old_name}; {second}");
+
+    let response = Client::new()
+        .post(format!("{base}/api/sign-out"))
+        .header("cookie", &both)
+        .header("sec-fetch-site", "same-origin")
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::NO_CONTENT);
+    for cookie in [&first, &second] {
+        assert!(
+            session(&base, Some(cookie))
+                .await
+                .contains(r#""signed_in":false"#)
+        );
+    }
+}
+
+#[tokio::test]
 async fn sign_ins_survive_a_restart() {
     let config = common::config();
     let first = common::start(config.clone()).await;

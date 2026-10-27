@@ -127,7 +127,7 @@ test.describe("on a wide window", () => {
     for (const title of [NEWEST, MIDDLE, OLDEST]) {
       await expect(row(page, blog, title)).not.toHaveAccessibleName(/, unread/);
     }
-    await expect(line(page)).toHaveText("Marked 3 items as read");
+    await expect(line(page)).toHaveText("Marked 3 articles as read");
     // No unread articles: no number at all.
     await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog}`);
 
@@ -150,7 +150,7 @@ test.describe("on a wide window", () => {
     await expect(markAll).toBeFocused();
     await expect(markAll).toHaveAttribute("aria-keyshortcuts", "Shift+A");
     await page.keyboard.press("Enter");
-    await expect(line(page)).toHaveText("Marked 3 items as read");
+    await expect(line(page)).toHaveText("Marked 3 articles as read");
     // The menu closes, and the keyboard goes back to its button.
     await expect(page.getByRole("menu")).toHaveCount(0);
     await expect(more).toBeFocused();
@@ -352,7 +352,7 @@ test.describe("when saving fails", () => {
     // The article is marked read once the reading area shows it: that's the first save.
     await expect.poll(() => saves).toBe(1);
     await page.keyboard.press("Shift+A");
-    await expect(line(page)).toHaveText("Marked 2 items as read");
+    await expect(line(page)).toHaveText("Marked 2 articles as read");
 
     // The first fails: taken back and said, with Try again, and Mark all as read's Undo stays.
     releases[0]?.();
@@ -363,7 +363,7 @@ test.describe("when saving fails", () => {
 
     // Mark all as read is saved: the connection is back, so the line returns to it, Undo included.
     releases[1]?.();
-    await expect(line(page)).toHaveText("Marked 2 items as read");
+    await expect(line(page)).toHaveText("Marked 2 articles as read");
     await expect(page.getByRole("button", { name: "Try again" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Undo" })).toBeVisible();
   });
@@ -639,7 +639,7 @@ test("Catch me up: everything in Unread from before today is read, and Undo brin
   await page.keyboard.press("ArrowDown");
   await expect(page.getByRole("menuitem", { name: "Catch me up" })).toBeFocused();
   await page.keyboard.press("Enter");
-  await expect(page.getByText("Marked 3 items from before today as read")).toBeVisible();
+  await expect(page.getByText("Marked 3 articles from before today as read")).toBeVisible();
   // The start of today on this device's clock.
   const today = new Date();
   today.setHours(0, 0, 0, 0);

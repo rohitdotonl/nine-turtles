@@ -460,12 +460,15 @@
           <div bind:this={text} class="article-text" dir="auto">{@html full.summary}</div>
           <hr aria-hidden="true" class="article-end" />
           <!--
-            End matter, under the closing rule as in a book: where the rest of it is. The publisher is already
-            named in the byline, so the link says only "Read the full article ›"; screen readers hear whose site
-            it opens. Each sentence stays whole wherever it fits on a line, so a narrow column never strands a word (decision 0044).
+            End matter, under the closing rule as in a book: where the rest of it is. The sentence, then the
+            link to the publisher on a row of its own, 44px tall to press: "Read on {publisher} ›", or for a
+            podcast's episode "Read the episode page on {publisher} ›" (SPEC sections 7 and 35). The sentence
+            and the link each stay whole wherever they fit on a line, so a narrow column never strands a word
+            (decision 0044).
           -->
           <p class="article-note" lang="en">
-            <span>This feed shares only a summary.</span>{#if article.link}{" "}<a href={article.link} target="_blank" rel="noopener noreferrer">Read the full article<span class="sr-only"> on {article.feedTitle}</span><span aria-hidden="true">&nbsp;›</span></a
+            <span>This feed shares only a summary.</span>{#if article.link}{" "}<a href={article.link} target="_blank" rel="noopener noreferrer"
+                >{episode ? "Read the episode page on" : "Read on"} {article.feedTitle}<span aria-hidden="true">&nbsp;›</span></a
               >{/if}
           </p>
         {:else if video || episode}

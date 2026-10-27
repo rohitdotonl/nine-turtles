@@ -64,6 +64,7 @@ pub fn routes() -> Router<AppState> {
         .route("/api/email/confirm", post(confirm))
         .route("/api/people/me/email/change", post(change_email))
         .route("/api/people/me/delete", post(delete_me))
+        .route("/api/people/me/data/delete", post(delete_my_data))
 }
 
 /// What a link is for (`email_links.purpose`).
@@ -794,5 +795,19 @@ async fn delete_me(SignedIn(person): SignedIn, State(state): State<AppState>) ->
             (StatusCode::NO_CONTENT, crate::auth::signed_out_cookies()).into_response()
         }
         Err(error) => database_problem("deleting an account", &error),
+    }
+}
+
+/// Empties the signed-in reader's account, the owner's too, at once and for
+/// good (decision 0117: one "Are you sure?" in the page, no undo). Their
+/// feeds, folders, articles, stars, collections, saved searches and rules
+/// go; they stay signed in, with their email, password and plan.
+async fn delete_my_data(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
+    match people::delete_data(&state.db, person).await {
+        Ok(()) => {
+            log::info("a reader deleted their data");
+            StatusCode::NO_CONTENT.into_response()
+        }
+        Err(error) => database_problem("deleting a reader's data", &error),
     }
 }

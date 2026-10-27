@@ -44,9 +44,9 @@ test("new items wait for r, and mark all as read never touches them", async ({ p
   const sidebar = page.getByRole("navigation", { name: "Sidebar" });
   await expect(sidebar.getByRole("link", { name: `Blog ${blog} 3 unread` })).toBeVisible();
 
-  await publishAndWait(page, blog, "New items · press r");
+  await publishAndWait(page, blog, "New articles · press r");
   // The note floats below the articles, not above them.
-  const note = (await page.getByRole("status").filter({ hasText: "New items" }).boundingBox())!;
+  const note = (await page.getByRole("status").filter({ hasText: "New articles" }).boundingBox())!;
   expect(note.y).toBeGreaterThan((await row(page, NEWEST).boundingBox())!.y);
   // The list hasn't moved: the new article isn't shown, and the counts wait too.
   await expect(row(page, NEW_ARTICLE)).toHaveCount(0);
@@ -55,13 +55,13 @@ test("new items wait for r, and mark all as read never touches them", async ({ p
 
   // Mark all as read without pressing r: only the three on screen.
   await page.keyboard.press("Shift+A");
-  await expect(page.getByRole("status").filter({ hasText: "Marked 3 items as read" })).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "Marked 3 articles as read" })).toBeVisible();
 
   // r: the new article appears at once, still unread; the line is quiet again.
   await page.keyboard.press("r");
   await expect(row(page, NEW_ARTICLE)).toHaveAccessibleName(/, unread/);
   await expect(row(page, NEWEST)).not.toHaveAccessibleName(/, unread/);
-  await expect(page.getByRole("status").filter({ hasText: "New items" })).toHaveCount(0);
+  await expect(page.getByRole("status").filter({ hasText: "New articles" })).toHaveCount(0);
   await expect(sidebar.getByRole("link", { name: `Blog ${blog} 1 unread` })).toBeVisible();
   // Undo still works after r, for the same three.
   await page.keyboard.press("u");
@@ -73,9 +73,9 @@ test("on a phone, the note offers Show, which shows new items; Refresh in the Mo
   test.skip(!isMobile, "the phone layout only");
   const blog = await openBlog(page);
 
-  await publishAndWait(page, blog, "New items");
+  await publishAndWait(page, blog, "New articles");
   await expect(row(page, NEW_ARTICLE)).toHaveCount(0);
-  const show = page.getByRole("button", { name: "Show new items" });
+  const show = page.getByRole("button", { name: "Show new articles" });
   await expect(show).toHaveText("Show");
   expect((await show.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   await show.click();
@@ -90,7 +90,7 @@ test("on a phone, the note offers Show, which shows new items; Refresh in the Mo
 test("reopening the app shows what arrived, without pressing anything", async ({ page, isMobile }) => {
   test.skip(isMobile, "the same on every width");
   const blog = await openBlog(page);
-  await publishAndWait(page, blog, "New items · press r");
+  await publishAndWait(page, blog, "New articles · press r");
   await page.reload();
   await appReady(page);
   await expect(row(page, NEW_ARTICLE)).toBeVisible();

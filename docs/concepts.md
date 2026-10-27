@@ -281,6 +281,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 
 - Accessibility (a11y)
 - WCAG and contrast ratios (AA, AAA)
+- Non-text contrast (3 : 1 for a control's parts and states)
 - Screen reader
 - Keyboard navigation and focus
 - Keyboard shortcuts
@@ -293,6 +294,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Breakpoints (where the layout changes with width)
 - Landmarks (named regions for screen readers)
 - Focus outline (`:focus-visible`)
+- Skip link ("Skip to articles")
 - Hover state
 - Control kinds (everyday button, main button, toolbar action, field)
 - Icon set

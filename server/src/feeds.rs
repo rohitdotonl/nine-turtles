@@ -862,6 +862,12 @@ pub struct ArticleRow {
     pub episode: bool,
     /// How long the episode plays, in seconds, if its feed says.
     pub episode_seconds: Option<i64>,
+    /// When the reader last opened it, in seconds since 1970 (UTC): only in
+    /// Recently read, whose list is grouped by day on screen (SPEC section
+    /// 5). Left out of every other list.
+    #[sqlx(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub opened: Option<i64>,
 }
 
 /// Writes an article's link without its tracking tags (`ArticleRow`).

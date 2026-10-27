@@ -608,11 +608,23 @@ async fn deleting_an_account_leaves_nothing_of_theirs() {
 
     let deleted = post(&base, "/api/people/me/delete", Some(&cookie), json!({})).await;
     assert_eq!(deleted.status(), StatusCode::NO_CONTENT);
+    // Both the cookie and its name from before the rename are cleared.
+    let cleared: Vec<&str> = deleted
+        .headers()
+        .get_all("set-cookie")
+        .iter()
+        .map(|value| value.to_str().unwrap())
+        .filter(|value| value.contains("Max-Age=0"))
+        .collect();
     assert!(
-        deleted.headers()["set-cookie"]
-            .to_str()
-            .unwrap()
-            .contains("Max-Age=0")
+        cleared
+            .iter()
+            .any(|value| value.starts_with("nine_turtles_session=;"))
+    );
+    assert!(
+        cleared
+            .iter()
+            .any(|value| value.starts_with("slowfeed_session=;"))
     );
     assert_eq!(session(&base, Some(&cookie)).await["signed_in"], false);
 
@@ -669,6 +681,202 @@ async fn deleting_an_account_leaves_nothing_of_theirs() {
         sign_in(&base, email, READER_PASSWORD).await.status(),
         StatusCode::UNAUTHORIZED
     );
+}
+
+#[tokio::test]
+async fn deleting_ones_data_empties_the_account_but_keeps_it() {
+    let (base, state, outbox, owner) = open_app().await;
+    let email = "fresh@example.com";
+    let cookie = open_reader(&base, &outbox, email).await;
+    let person: i64 = sqlx::query_scalar("SELECT id FROM people WHERE email = ?")
+        .bind(email)
+        .fetch_one(&state.db)
+        .await
+        .unwrap();
+    let db = &state.db;
+
+    // Some of their data, and the owner's, and two things of their account.
+    for statement in [
+        "INSERT INTO folders (person_id, name) VALUES (?, 'Essays')",
+        "INSERT INTO saved_searches (person_id, name, query, created_at) VALUES (?, 'Gardens', '{\"words\":\"garden\"}', 0)",
+        "INSERT INTO rules (person_id, words, action, created_at) VALUES (?, 'Sponsored', 'mute', 0)",
+        "INSERT INTO person_settings (person_id, name, value) VALUES (?, 'sort', 'oldest')",
+        "INSERT INTO app_passwords (person_id, password_hash, made_at) VALUES (?1, 'x' || ?1, 0)",
+    ] {
+        for whose in [person, 1] {
+            sqlx::query(statement)
+                .bind(whose)
+                .execute(db)
+                .await
+                .unwrap();
+        }
+    }
+    // A feed only they follow, with a starred article on a collection, and
+    // one the owner follows too.
+    for (id, url, followers) in [
+        (901, "https://only.example/feed", vec![person]),
+        (902, "https://shared.example/feed", vec![person, 1]),
+    ] {
+        sqlx::query(
+            "INSERT INTO feeds (id, url, url_key, title, added_at) VALUES (?, ?, ?, 'A feed', 1)",
+        )
+        .bind(id)
+        .bind(url)
+        .bind(url)
+        .execute(db)
+        .await
+        .unwrap();
+        sqlx::query(
+            "INSERT INTO articles (id, feed_id, fingerprint, title, received_at, sort_at)
+             VALUES (?1, ?1, 'one', 'A post', 1, 1)",
+        )
+        .bind(id)
+        .execute(db)
+        .await
+        .unwrap();
+        for follower in followers {
+            sqlx::query(
+                "INSERT INTO subscriptions (person_id, feed_id, title, added_at) VALUES (?, ?, 'A feed', 1)",
+            )
+            .bind(follower)
+            .bind(id)
+            .execute(db)
+            .await
+            .unwrap();
+            sqlx::query(
+                "INSERT INTO entries (person_id, article_id, feed_id, sort_at, starred) VALUES (?, ?2, ?2, 1, 1)",
+            )
+            .bind(follower)
+            .bind(id)
+            .execute(db)
+            .await
+            .unwrap();
+        }
+    }
+    let made = post(
+        &base,
+        "/api/collections",
+        Some(&cookie),
+        json!({ "name": "Keep" }),
+    )
+    .await;
+    assert!(made.status().is_success(), "{}", made.status());
+
+    // Two of their newsletters: one they follow, and one they stopped,
+    // whose feed's line keeps its sender away (decision 0091).
+    for (id, stopped) in [(903, None), (904, Some(1))] {
+        let url = format!("newsletter:{person}:{id}");
+        sqlx::query(
+            "INSERT INTO feeds (id, url, url_key, title, added_at, newsletter_of)
+             VALUES (?, ?2, ?2, 'A letter', 1, ?3)",
+        )
+        .bind(id)
+        .bind(&url)
+        .bind(person)
+        .execute(db)
+        .await
+        .unwrap();
+        sqlx::query(
+            "INSERT INTO subscriptions (person_id, feed_id, title, added_at, unsubscribed_at)
+             VALUES (?, ?, 'A letter', 1, ?)",
+        )
+        .bind(person)
+        .bind(id)
+        .bind(stopped)
+        .execute(db)
+        .await
+        .unwrap();
+    }
+
+    // Each table is the data that goes or the account that stays, never both.
+    let tables = tables_with_a_reader(db).await;
+    for (table, _) in nine_turtles::people::PER_READER_TABLES {
+        let data = nine_turtles::people::DATA_TABLES.contains(table);
+        let account = nine_turtles::people::ACCOUNT_TABLES.contains(table);
+        assert!(
+            data != account,
+            "{table} must be in exactly one of people::DATA_TABLES and people::ACCOUNT_TABLES"
+        );
+    }
+    let mut owners_before = Vec::new();
+    for table in &tables {
+        owners_before.push(lines_of(db, table, 1).await);
+    }
+    let mut kept_before = Vec::new();
+    for table in nine_turtles::people::ACCOUNT_TABLES {
+        kept_before.push(lines_of(db, table, person).await);
+    }
+
+    // Signed out, nothing happens.
+    let refused = post(&base, "/api/people/me/data/delete", None, json!({})).await;
+    assert_eq!(refused.status(), StatusCode::UNAUTHORIZED);
+
+    let emptied = post(
+        &base,
+        "/api/people/me/data/delete",
+        Some(&cookie),
+        json!({}),
+    )
+    .await;
+    assert_eq!(emptied.status(), StatusCode::NO_CONTENT);
+
+    for table in nine_turtles::people::DATA_TABLES {
+        assert_eq!(
+            lines_of(db, table, person).await,
+            0,
+            "{table} still holds the reader's data"
+        );
+    }
+    for (table, before) in nine_turtles::people::ACCOUNT_TABLES.iter().zip(kept_before) {
+        assert_eq!(
+            lines_of(db, table, person).await,
+            before,
+            "{table} lost some of the reader's account"
+        );
+    }
+    for (table, owners) in tables.iter().zip(owners_before) {
+        assert_eq!(
+            lines_of(db, table, 1).await,
+            owners,
+            "{table} lost some of the owner's lines"
+        );
+    }
+    // The feed only they followed goes; the shared one stays for the owner.
+    let feeds: Vec<i64> = sqlx::query_scalar("SELECT id FROM feeds WHERE id IN (901, 902)")
+        .fetch_all(db)
+        .await
+        .unwrap();
+    assert_eq!(feeds, [902]);
+    // The newsletter they followed goes; the one they stopped stays stopped.
+    let letters: Vec<i64> = sqlx::query_scalar("SELECT id FROM feeds WHERE id IN (903, 904)")
+        .fetch_all(db)
+        .await
+        .unwrap();
+    assert_eq!(letters, [904]);
+
+    // They're still signed in, and can sign in again with the same password.
+    assert_eq!(session(&base, Some(&cookie)).await["signed_in"], true);
+    assert_eq!(
+        sign_in(&base, email, READER_PASSWORD).await.status(),
+        StatusCode::NO_CONTENT
+    );
+
+    // The owner can empty their own account too.
+    let emptied = post(&base, "/api/people/me/data/delete", Some(&owner), json!({})).await;
+    assert_eq!(emptied.status(), StatusCode::NO_CONTENT);
+    for table in nine_turtles::people::DATA_TABLES {
+        assert_eq!(
+            lines_of(db, table, 1).await,
+            0,
+            "{table} still holds the owner's data"
+        );
+    }
+    let feeds: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM feeds WHERE id IN (901, 902)")
+        .fetch_one(db)
+        .await
+        .unwrap();
+    assert_eq!(feeds, 0);
+    assert_eq!(session(&base, Some(&owner)).await["signed_in"], true);
 }
 
 /// Whether `task` is still waiting after a moment.

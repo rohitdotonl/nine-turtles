@@ -73,7 +73,7 @@
   import { device } from "./appearance.svelte";
   import { VIEWS, VIEW_NAMES, nameFor, parse, pathFor, titleFor, type Hideable, type Route, type View } from "./router";
   import { sharedAddress } from "./share";
-  import { emptyQuery, isSearching, scopeFor, searchParams, searchedTerms, type Query } from "./search";
+  import { emptyQuery, isSearching, resultsTitle, scopeFor, searchParams, searchedTerms, type Query } from "./search";
   import { deleteSaved, listSaved, refusedSaving, sameQuery, saveSearch, type SavedSearch } from "./saved";
   import {
     byName as collectionOrder,
@@ -266,6 +266,8 @@
   /** Widths the reader dragged the sidebar and the list to, on this device; undefined is the usual width. */
   let sidebarWidth: number | undefined = $state(storedWidth("nine-turtles.sidebar-width"));
   let listWidth: number | undefined = $state(storedWidth("nine-turtles.list-width"));
+  /** The list is never narrower than this beside the article, so feed names and titles aren't squeezed (SPEC section 4). */
+  const LIST_MIN = 280;
   /** The window's width in pixels, so the list never leaves the article less than 400px. */
   let windowWidth = $state(innerWidth);
 
@@ -442,7 +444,7 @@
             ? "Collection not found"
             : "Feed not found"
       : shown && under.kind !== "search"
-        ? "Search results"
+        ? resultsTitle(shown.scope, { feeds: feeds ?? [], folders, collections })
         : nameFor(under, placeName),
   );
 
@@ -890,9 +892,19 @@
     addEventListener("keydown", pressed);
 
     // After signing in, the password field is gone. Move the keyboard's place
-    // (and a screen reader) to the top of the new screen.
-    (panes.sidebar ? wordmark : placeFocus(route))?.focus();
-    loadFeeds();
+    // (and a screen reader) to the list's title, so screen readers start at
+    // what's to read; on a phone's feeds screen, which has no list, to the wordmark.
+    const opening = phone && panes.sidebar ? wordmark : placeFocus(route);
+    opening?.focus();
+    // The first feeds can turn the list into the welcome, which hides the list's title: the
+    // keyboard follows to the welcome's, unless the reader has already moved it.
+    reloadFeeds(() => {
+      void tick().then(() => {
+        const at = document.activeElement;
+        const now = phone && panes.sidebar ? wordmark : placeFocus(route);
+        if (now && now !== opening && (at === opening || at === document.body || at === null)) now.focus();
+      });
+    });
     loadSearches();
     loadCollections();
     void loadQueue();
@@ -1460,6 +1472,15 @@
     if (width === "medium" && panes.sidebar) sidebarChoice = "hidden";
   }
 
+  /** "Skip to articles" is offered only while a list of articles is on screen. */
+  let skipShown = $derived(isList(route) && panes.list && !welcoming && !missing && !sheetShown);
+
+  /** "Skip to articles": the keyboard goes to the chosen article in the list, or the first; with none, to the list's title. */
+  function skipToArticles(event: MouseEvent) {
+    event.preventDefault();
+    if (!itemList?.focusList()) listHeading?.focus();
+  }
+
   function chose(byKeyboard: boolean) {
     if (width === "narrow" || byKeyboard) open();
     else showArticleArea();
@@ -1522,7 +1543,7 @@
     if (place.kind === "view" && place.view === "starred") return "No starred articles yet.";
     if (place.kind === "view" && place.view === "recent") return "Articles you open will show here.";
     if (place.kind === "view" && place.view === "upnext") return "Nothing in Up Next. Add an episode from its More menu.";
-    if (place.kind === "collection") return "Nothing in this collection yet. Add an article from its More menu.";
+    if (place.kind === "collection") return "Nothing in this collection yet. Articles you put here stay, even after a year. Add one from an article's More menu.";
     return "No articles yet.";
   }
 
@@ -1618,8 +1639,8 @@
         reach, so nothing behind the sheet moves as it opens or closes (decision 0048).
       -->
       <div inert aria-hidden="true" class="flex flex-col gap-1.5">
-        <div class="flex gap-2">
-          <span class="field flex min-w-0 flex-1 items-center overflow-hidden whitespace-nowrap text-muted">Paste a website or feed URL</span>
+        <div class="welcome-row flex gap-2">
+          <span class="field flex min-w-0 flex-1 items-center overflow-hidden whitespace-nowrap text-muted"><span class="welcome-hint">Paste a website or feed URL</span></span>
           <span class="btn-primary rounded-lg">Add feed</span>
         </div>
         <div class="flex min-h-[5.8rem] flex-col items-center">
@@ -1677,6 +1698,13 @@
   article's toolbar instead.
 -->
 <main class="relative flex h-dvh flex-col overflow-hidden" style:--sidebar-w={`${sidebarWidth ?? 256}px`}>
+  {#if skipShown}
+    <!--
+      First in the Tab order (SPEC section 19; the keyboard itself starts later, on the list's title): out of sight until the keyboard reaches it, then a small
+      label at the top left. It goes past the sidebar to the articles: the chosen one, or the first.
+    -->
+    <a href="#list-pane" class="skip-link" onclick={skipToArticles}>Skip to articles</a>
+  {/if}
   <div class="relative flex min-h-0 flex-1 overflow-hidden">
   {#if !panes.sidebar}
     <!-- The wordmark is the page's main heading; with the sidebar hidden, screen readers still find it. -->
@@ -1984,9 +2012,9 @@
               "absolute top-1.5 z-20",
               !panes.list
                 ? panes.sidebar ? "left-2" : "left-14"
-                : panes.article ? (listWidth ? "" : "left-[calc(20rem-3.25rem)] xl:left-[calc(24rem-3.25rem)] 2xl:left-[calc(26rem-3.25rem)]") : "right-2",
+                : panes.article ? (listWidth ? "" : "left-[calc(22rem-3.25rem)] xl:left-[calc(24rem-3.25rem)] 2xl:left-[calc(26rem-3.25rem)]") : "right-2",
             ]}
-            style:left={panes.list && panes.article && listWidth ? `${listWidth - 52}px` : undefined}
+            style:left={panes.list && panes.article && listWidth ? `${Math.max(LIST_MIN, listWidth) - 52}px` : undefined}
           >
             <button
               type="button"
@@ -2012,19 +2040,20 @@
             // A container, so the list's title can step down a size when the pane is narrow (decision 0041).
             "list-pane relative @container flex-col bg-list",
             phone && "phone",
-            panes.article ? "w-80 shrink-0 xl:w-96 2xl:w-[26rem]" : "min-w-0 flex-1",
+            // 352px by default below 1280px, so on a window about 1024px wide feed names and titles have room (SPEC section 4).
+            panes.article ? "w-[22rem] shrink-0 xl:w-96 2xl:w-[26rem]" : "min-w-0 flex-1",
             panes.list && !welcomeWide && "flex",
             // A 1px line where the list meets the reading pane, as where the sidebar meets the list (decision 0054).
             !phone && panes.article && "pane-edge",
           ]}
-          style:width={!phone && panes.article && listWidth ? `${listWidth}px` : undefined}
+          style:width={!phone && panes.article && listWidth ? `${Math.max(LIST_MIN, listWidth)}px` : undefined}
         >
           {#if !phone && panes.article && !welcomeWide}
             <PaneResizer
               label="Resize the article list"
               bind:width={listWidth}
-              min={260}
-              max={Math.max(260, Math.min(640, windowWidth - (panes.sidebar ? (sidebarWidth ?? 256) : 0) - 400))}
+              min={LIST_MIN}
+              max={Math.max(LIST_MIN, Math.min(640, windowWidth - (panes.sidebar ? (sidebarWidth ?? 256) : 0) - 400))}
               pane={listSection}
               onDone={() => storeWidth("nine-turtles.list-width", listWidth)}
             />
@@ -2087,7 +2116,7 @@
                   onMoved={(after) => feedMoved(currentFeed!.id, after.id, () => listHeading)}
                 />
               {/if}
-              <!-- The list, with "New items · press r" and Undo in a note floating at its foot (More, with Refresh, sits beside the title). -->
+              <!-- The list, with "New articles · press r" and Undo in a note floating at its foot (More, with Refresh, sits beside the title). -->
               {#key listKey}
                 <ItemList
                   bind:this={itemList}
@@ -2182,12 +2211,12 @@
   {/if}
   </div>
   {#if !(phone && reading && panes.article && selected)}
-    <NowPlaying onOpen={openEpisode} />
+    <NowPlaying onOpen={openEpisode} stepAside={phone} />
   {/if}
 </main>
 
 {#snippet nowPlayingAboveToolbar()}
-  <NowPlaying onOpen={openEpisode} bottom={false} />
+  <NowPlaying onOpen={openEpisode} bottom={false} stepAside />
 {/snippet}
 
 <CheatSheet bind:open={cheatSheetOpen} bind:editing={cheatSheetEditing} {river} />

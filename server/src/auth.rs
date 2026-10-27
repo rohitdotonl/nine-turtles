@@ -697,7 +697,8 @@ pub async fn remember_device(db: &SqlitePool, person: i64) -> Result<Option<Stri
 
 /// Signs out this device only. Other devices stay signed in.
 async fn sign_out(State(state): State<AppState>, headers: HeaderMap) -> Response {
-    if let Some(token) = cookie_token(&headers) {
+    // Both tickets go, should a device send a live one under each name.
+    for token in cookie_tokens(&headers) {
         let deleted = sqlx::query("DELETE FROM sessions WHERE token_hash = ?")
             .bind(&scramble(&token)[..])
             .execute(&state.db)
@@ -751,10 +752,14 @@ pub(crate) fn session_cookie(token: &str) -> HeaderValue {
 }
 
 fn cookie_token(headers: &HeaderMap) -> Option<String> {
-    // A device signed in before the rename may still send the old cookie
-    // (first, as browsers send older cookies first) with a ticket that's
-    // long gone, so the new name wins, and a malformed value never hides a
-    // good one.
+    cookie_tokens(headers).into_iter().next()
+}
+
+/// The well-formed tickets this device sends, the new cookie's first. A
+/// device signed in before the rename may still send the old cookie (first,
+/// as browsers send older cookies first) with a ticket that's long gone, so
+/// the new name wins, and a malformed value never hides a good one.
+fn cookie_tokens(headers: &HeaderMap) -> Vec<String> {
     let tickets: Vec<(&str, &str)> = headers
         .get_all(header::COOKIE)
         .iter()
@@ -765,12 +770,15 @@ fn cookie_token(headers: &HeaderMap) -> Option<String> {
             value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_hexdigit())
         })
         .collect();
-    [COOKIE, OLD_COOKIE].iter().find_map(|wanted| {
-        tickets
-            .iter()
-            .find(|(name, _)| name == wanted)
-            .map(|(_, value)| (*value).to_owned())
-    })
+    [COOKIE, OLD_COOKIE]
+        .iter()
+        .filter_map(|wanted| {
+            tickets
+                .iter()
+                .find(|(name, _)| name == wanted)
+                .map(|(_, value)| (*value).to_owned())
+        })
+        .collect()
 }
 
 /// Set-Cookie headers that sign this device out: both the cookie and its

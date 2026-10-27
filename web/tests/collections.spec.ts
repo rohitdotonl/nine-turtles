@@ -222,3 +222,23 @@ test("on a phone, Add to collection is the same small sheet over the article, an
   await expect(page.getByRole("heading", { level: 2, name })).toBeVisible();
   await expect(rows).toHaveCount(1);
 });
+
+test("an empty collection says what collections are for", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the words are the same on a phone");
+  const name = `Zz empty ${test.info().workerIndex}-${Date.now()}`;
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  const made = await page.request.post(new URL("/api/collections", FEEDS_APP).href, { data: { name } });
+  expect(made.status()).toBe(201);
+  const { id } = ((await made.json()) as { collection: { id: number } }).collection;
+  try {
+    await page.goto(new URL(`/collections/${id}`, FEEDS_APP).href);
+    await appReady(page);
+    await expect(page.getByRole("heading", { level: 2, name })).toBeVisible();
+    await expect(page.getByText("Nothing in this collection yet. Articles you put here stay, even after a year. Add one from an article's More menu.")).toBeVisible();
+  } finally {
+    await page.request.post(new URL(`/api/collections/${id}/delete`, FEEDS_APP).href);
+  }
+});

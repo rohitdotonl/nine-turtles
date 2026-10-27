@@ -86,7 +86,8 @@ pub async fn note(db: &sqlx::SqlitePool, person: i64, id: i64, at: i64) -> Resul
     transaction.commit().await
 }
 
-/// The reader's recently read list, newest-opened first: every article they
+/// The reader's recently read list, newest-opened first, each with when it
+/// was last opened (in seconds, for the screen's day headings): every article they
 /// still have with an opening time, from feeds they still follow (a starred
 /// article of a feed since left stays in Starred, not here). Muted ones are
 /// left out, as in All. Takes the reader.
@@ -94,7 +95,8 @@ pub const LIST: &str =
     "SELECT entries.article_id AS id, entries.feed_id, subscriptions.title AS feed_title,
             articles.title, articles.link, entries.sort_at AS at,
             entries.read, entries.starred, entries.muted,
-            articles.episode_url IS NOT NULL AS episode, articles.episode_seconds
+            articles.episode_url IS NOT NULL AS episode, articles.episode_seconds,
+            entries.opened_at / 1000 AS opened
      FROM entries CROSS JOIN articles ON articles.id = entries.article_id
          CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
              AND subscriptions.feed_id = entries.feed_id

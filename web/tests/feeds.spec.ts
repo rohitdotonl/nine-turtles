@@ -97,6 +97,47 @@ test("on a phone-narrow window, a fresh nine turtles shows the welcome in the li
   await expect(page.getByText("Nothing here yet.")).toHaveCount(0);
 });
 
+test("on a small phone, the welcome's hint fits its field, at 320 and 375 pixels and with larger text", async ({ page, isMobile }) => {
+  await page.setViewportSize({ width: 375, height: 700 });
+  await page.goto("/unread");
+  await appReady(page);
+  await signIn(page);
+  const hint = page.getByRole("region", { name: "Unread" }).getByLabel("Paste a website or feed URL");
+  await expect(hint).toBeVisible();
+  // The hint's own width, in the hint's own type, against the room inside the field.
+  const fits = () =>
+    hint.evaluate((input) => {
+      const field = input as HTMLInputElement;
+      const style = getComputedStyle(field, "::placeholder");
+      const context = document.createElement("canvas").getContext("2d")!;
+      context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+      const own = getComputedStyle(field);
+      const room = field.clientWidth - parseFloat(own.paddingLeft) - parseFloat(own.paddingRight);
+      return { wide: context.measureText(field.placeholder).width, room, size: parseFloat(style.fontSize), typed: parseFloat(own.fontSize) };
+    });
+  for (const [width, text] of [
+    [375, "100%"],
+    [320, "100%"],
+    [375, "125%"],
+  ] as const) {
+    await page.setViewportSize({ width, height: 700 });
+    await page.evaluate((size) => (document.documentElement.style.fontSize = size), text);
+    const { wide, room, size, typed } = await fits();
+    expect(wide, `${width}px at ${text}`).toBeLessThanOrEqual(room);
+    // Never smaller than 10.5px; what's typed stays the field's own size, so a phone never zooms in.
+    expect(size).toBeGreaterThanOrEqual(10.5);
+    expect(typed).toBeGreaterThanOrEqual(16);
+  }
+  // With room to spare, on a computer's window, the hint keeps the field's own size.
+  if (isMobile) return;
+  await page.evaluate(() => (document.documentElement.style.fontSize = ""));
+  await page.setViewportSize({ width: 1280, height: 800 });
+  // The welcome moves into the reading area as the window widens: asked again until it has.
+  await expect
+    .poll(() => page.getByLabel("Paste a website or feed URL").evaluate((input) => getComputedStyle(input, "::placeholder").fontSize))
+    .toBe("16px");
+});
+
 test("the welcome's New to feeds? opens a sheet that explains feeds and offers a few to start with, none ticked", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/unread");
@@ -317,8 +358,8 @@ test("the list shows 50 articles, then reaching the bottom loads more below", as
   expect(await firstTop()).toBe(firstBefore);
   await expect(rows.last()).toContainText("(1)");
   // The list has an end.
-  await expect(list.getByRole("button", { name: "Show older items" })).toHaveCount(0);
-  await expect(list.getByText("You're all caught up.")).toBeVisible();
+  await expect(list.getByRole("button", { name: "Show older articles" })).toHaveCount(0);
+  await expect(list.getByText("That's everything.")).toBeVisible();
 });
 
 // The keyboard floor: everything above also works with the keyboard alone.
@@ -364,7 +405,7 @@ test("with only the keyboard: 'Go to' a feed you already follow", async ({ page 
   await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeFocused();
 });
 
-test("with only the keyboard: Tab reaches Show older items, and the keyboard's place stays in the list at the end", async ({ page }) => {
+test("with only the keyboard: Tab reaches Show older articles, and the keyboard's place stays in the list at the end", async ({ page }) => {
   await openApp(page, "/all");
   await follow(page, `${FEED_SITE}/`);
   await page.reload();
@@ -381,7 +422,7 @@ test("with only the keyboard: Tab reaches Show older items, and the keyboard's p
   // can arrive, and the button go, before the next look: stop Tabbing then too.
   for (let i = 0; i < 400; i++) {
     const on = await page.evaluate(() => document.activeElement?.textContent?.trim() ?? "");
-    if (on === "Show older items" || (await rows.count()) > 50) break;
+    if (on === "Show older articles" || (await rows.count()) > 50) break;
     await page.keyboard.press("Tab");
   }
   await expect(rows).toHaveCount(60);
