@@ -5,7 +5,7 @@
   /sign-in-link, decision 0096), the page where an AI assistant asks to
   connect (/oauth/authorize, shown once signed in; signed out, sign-in
   comes first and the address, with its query, stays) and
-  the signed-in screen. Until the server has answered, nothing is shown, so
+  the signed-in screen, or "Wrong turn?" for an address it doesn't know. Until the server has answered, nothing is shown, so
   the reader never sees the wrong one. Without a connection, a device that
   keeps articles for reading offline opens the signed-in screen as it last
   saw it (SPEC section 32); being signed out deletes those copies.
@@ -19,6 +19,8 @@
   import SignInLink from "./lib/SignInLink.svelte";
   import ConnectAssistant from "./lib/ConnectAssistant.svelte";
   import { CONNECT_PAGE } from "./lib/assistants";
+  import NotFound from "./lib/NotFound.svelte";
+  import { knownPath } from "./lib/router";
   import { CONFIRM_PAGE, RESET_PAGE, SIGN_IN_LINK_PAGE } from "./lib/accounts";
   import { currentSession, type Session } from "./lib/session";
   import { noConnection } from "./lib/connection.svelte";
@@ -37,7 +39,10 @@
       unreachable = false;
       path = location.pathname;
       // Already signed in: an invite link opens nine turtles itself.
-      if (session.signedIn && path === "/sign-up") history.replaceState(null, "", "/");
+      if (session.signedIn && path === "/sign-up") {
+        history.replaceState(null, "", "/");
+        path = "/";
+      }
     } catch (problem) {
       const kept = noConnection(problem) ? await keptSession() : undefined;
       if (kept) session = { signedIn: true, ...kept };
@@ -57,6 +62,14 @@
   <SignInLink onSignedIn={check} />
 {:else if session?.signedIn && path === CONNECT_PAGE}
   <ConnectAssistant onSignedOut={check} />
+{:else if session?.signedIn && !knownPath(path)}
+  <!-- An address that isn't one of nine turtles' places: "Wrong turn?" (SPEC section 4). -->
+  <NotFound
+    onBack={() => {
+      history.replaceState(null, "", "/");
+      path = "/";
+    }}
+  />
 {:else if session?.signedIn}
   <Shell
     version={session.version}
