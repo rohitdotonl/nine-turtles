@@ -1700,7 +1700,7 @@
 <main class="relative flex h-dvh flex-col overflow-hidden" style:--sidebar-w={`${sidebarWidth ?? 256}px`}>
   {#if skipShown}
     <!--
-      The first Tab stop (SPEC section 19): out of sight until the keyboard reaches it, then a small
+      First in the Tab order (SPEC section 19; the keyboard itself starts later, on the list's title): out of sight until the keyboard reaches it, then a small
       label at the top left. It goes past the sidebar to the articles: the chosen one, or the first.
     -->
     <a href="#list-pane" class="skip-link" onclick={skipToArticles}>Skip to articles</a>

@@ -12,7 +12,7 @@
   "Read on {publisher} ›" ("Read the episode page on {podcast} ›" for an
   episode).
 - The keyboard starts on the list's title, not the sidebar's name; a title
-  never shows a focus ring; and "Skip to articles" is the first Tab stop.
+  never shows a focus ring; and "Skip to articles" comes first in the Tab order.
 - "Articles", not "items", everywhere: "Marked 8 articles as read", "Show
   older articles", "New articles · press r".
 - Recently read has quiet day headings: Today, Yesterday, the weekday, then

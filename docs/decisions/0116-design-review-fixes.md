@@ -30,8 +30,9 @@ what the server sends.
    sidebar's wordmark (decision 0041), so screen readers begin with what
    there is to read. On a phone's feeds screen, which has no list, it still
    starts on the wordmark.
-4. **"Skip to articles"** is the first Tab stop while a list of articles
-   shows, a standard skip link: hidden until the keyboard reaches it.
+4. **"Skip to articles"** comes first in the Tab order while a list of
+   articles shows (the keyboard starts later, on the list's title, so it is
+   reached by Tab from the browser's address bar), a standard skip link: hidden until the keyboard reaches it.
 5. **Recently read sends when each article was opened.** Each row of
    `GET /api/articles?view=recent` now has `opened` (seconds since 1970),
    read from `entries.opened_at`, which structure change 22 already keeps.
