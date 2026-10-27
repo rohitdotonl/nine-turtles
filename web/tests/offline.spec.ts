@@ -225,6 +225,8 @@ test("a mark the last reader's open tab leaves on the device is never sent by th
   await context.setOffline(true);
   await page.keyboard.press("s");
   await page.waitForTimeout(500);
+  // Closed before the connection is back, so only the new reader's tab could send it.
+  await page.close();
   await context.setOffline(false);
   // The new reader's tab sends what waits on the device: never that star.
   await next.reload();

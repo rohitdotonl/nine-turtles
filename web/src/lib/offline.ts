@@ -412,9 +412,11 @@ export async function sendWaiting(): Promise<void> {
   const all = (await waitingMarks()).filter((mark) => !beingSent.has(`${mark.key}:${mark.at}`));
   // A mark another reader's tab left here (they're no longer signed in on this
   // browser) is never sent as this reader's: it goes (decision 0121).
+  // While this tab's reader isn't known, only marks from before decision 0121
+  // (which name no reader) go; the rest wait for a tab that knows.
   const theirs = reader === undefined ? [] : all.filter((mark) => mark.reader !== undefined && mark.reader !== reader);
   for (const part of inParts(theirs)) await markSent(part.kind, part.ids, part.at);
-  const waiting = all.filter((mark) => !theirs.includes(mark));
+  const waiting = all.filter((mark) => (reader === undefined ? mark.reader === undefined : !theirs.includes(mark)));
   for (const part of inParts(waiting)) {
     try {
       await fetchers.sendMark(part.kind, part.ids, part.value, part.at);

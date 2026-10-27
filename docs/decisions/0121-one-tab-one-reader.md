@@ -20,6 +20,12 @@ device's shared store and be sent by the new reader's tab. Only the server
 can refuse the first reliably, and only a mark that knows its reader can
 stop the second.
 
+**Limits.** A tab still running the version from before this change, left
+open across the update, sends no header, so its requests are taken as the
+cookie's reader until it's reloaded. The note with Reload shows where the
+article list is on screen, as the "nine turtles was updated" note does; on
+other screens the refused actions fail with their usual message.
+
 **Rejected.** Listening for the device's reader changing in another tab
 (`storage` events) alone: it misses a tab that comes back online before
 another tab loads. Reloading the tab by itself: nothing moves unless the
