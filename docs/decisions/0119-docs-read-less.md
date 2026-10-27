@@ -14,7 +14,7 @@ true and still needed, and every link in them leads somewhere.
   next work. Agents read the archive only when the owner asks about past
   work. Nothing is deleted; the history stays.
 - **The spec, one file per section.** `docs/SPEC.md` is a short index;
-  each section lives in `docs/spec/NN-name.md`, keeping its number, so
+  each section lives in its own numbered file in `docs/spec/`, keeping its number, so
   "SPEC section 28" still finds it. A new feature gets the next number.
 - **A check for broken links between documents.**
   `scripts/check-doc-links.mjs`, run as `scripts/check.sh docs`, fails when
