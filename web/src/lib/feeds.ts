@@ -778,6 +778,12 @@ export function inDevanagari(name: string): boolean {
 const loaded = new Map<number, FullArticle>();
 const loading = new Map<number, Promise<FullArticle>>();
 const KEEP = 20;
+
+/** Another reader, or nobody: the articles fetched so far (with the last reader's marks) go. */
+export function forgetLoaded(): void {
+  loaded.clear();
+  loading.clear();
+}
 /** Those opened from this device's copies, words only: fetched again in full once the connection is back. */
 const fromDevice = new Set<number>();
 whenBack(() => {

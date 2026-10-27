@@ -10,7 +10,7 @@ import { api } from "./updates.svelte";
  * address passkeys work at, or null when they're off (decision 0109).
  */
 export type Session =
-  | { signedIn: true; version: string; owner: boolean; email: string | null; emailSending: boolean; passkeys?: string | null }
+  | { signedIn: true; reader: number; version: string; owner: boolean; email: string | null; emailSending: boolean; passkeys?: string | null }
   | { signedIn: false; emailSending: boolean; passkeys: string | null };
 
 export type SignInResult =
@@ -25,6 +25,7 @@ export async function currentSession(): Promise<Session> {
   if (isRecord(body) && body.signed_in === true && typeof body.version === "string") {
     return {
       signedIn: true,
+      reader: typeof body.reader === "number" ? body.reader : 0,
       version: body.version,
       owner: body.owner === true,
       email: typeof body.email === "string" ? body.email : null,
@@ -37,6 +38,25 @@ export async function currentSession(): Promise<Session> {
     emailSending: isRecord(body) && body.email_sending === true,
     passkeys: passkeysOf(body),
   };
+}
+
+const READER_KEY = "nine-turtles.reader";
+
+/**
+ * Notes whose device this is now, and answers whether it was another reader's
+ * until now: then everything the last reader left on it must go before anything
+ * is shown or sent. An emailed link (sign-in, new password, new email) can
+ * switch readers without passing the sign-in page.
+ */
+export function readerChanged(reader: number): boolean {
+  try {
+    const last = globalThis.localStorage?.getItem(READER_KEY);
+    globalThis.localStorage?.setItem(READER_KEY, String(reader));
+    return last != null && last !== String(reader);
+  } catch {
+    // Private browsing: nothing was kept, so there's nothing to hand over.
+    return false;
+  }
 }
 
 /** Where passkeys work, from the session's answer: null when they're off. */

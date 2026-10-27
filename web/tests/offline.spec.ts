@@ -100,6 +100,53 @@ test("articles kept on the device open, mark and star offline, and the marks are
   await expect.poll(() => keptIds(page)).toEqual([]);
 });
 
+test("another reader signing in on this device never gets the last reader's copies or waiting marks", async ({ page, context, playwright, isMobile }) => {
+  test.skip(isMobile, "the same on every width");
+  const name = `handover-${test.info().workerIndex}-${Date.now()}`;
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  const feed = await follow(page, `${FEED_SITE}/blog/${name}/`);
+  const listed = await (await page.request.get(new URL(`/api/articles?feed=${feed}`, FEEDS_APP).href)).json();
+  const ids: number[] = listed.articles.map((each: { id: number }) => each.id);
+  const newest = ids[0]!;
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.ready;
+  });
+  await page.goto(new URL(`/feeds/${feed}`, FEEDS_APP).href);
+  await appReady(page);
+  await expect.poll(() => keptIds(page), { timeout: 20_000 }).toEqual(expect.arrayContaining(ids));
+
+  // The first reader stars an article without a connection: the mark waits on the device.
+  await context.setOffline(true);
+  await page.getByRole("button", { name: new RegExp(`${NEWEST.replace(/[()]/g, "\\$&")}.*Blog ${name}`) }).click();
+  await expect(article(page).getByText("A short made-up summary for article 3.")).toBeVisible();
+  await page.keyboard.press("s");
+  await page.waitForTimeout(500);
+  await page.close();
+
+  // Another reader, who follows the same feed, signs in on this device the way an
+  // emailed link does: the sign-in cookie changes without passing the sign-in page.
+  const other = await playwright.request.newContext({ baseURL: FEEDS_APP, extraHTTPHeaders: { "sec-fetch-site": "same-origin" } });
+  const joined = await other.post("/api/sign-up", { data: { email: `${name}@example.com`, password: "a long enough password" } });
+  expect(joined.status()).toBe(204);
+  expect((await other.post("/api/feeds", { data: { address: `${FEED_SITE}/blog/${name}/` } })).ok()).toBe(true);
+  await context.addCookies((await other.storageState()).cookies);
+  await context.setOffline(false);
+
+  const next = await context.newPage();
+  await next.setViewportSize({ width: 1280, height: 800 });
+  await next.goto(new URL("/all", FEEDS_APP).href);
+  await expect(next.locator("#sidebar")).toBeAttached();
+  // The first reader's copies are gone, and their star never reaches the other reader.
+  await expect.poll(() => keptIds(next)).not.toEqual(expect.arrayContaining([newest]));
+  await next.waitForTimeout(1500);
+  const theirs = await (await other.get(`/api/articles/${newest}`)).json();
+  expect(theirs.article.starred).toBe(false);
+  await other.dispose();
+});
+
 test("search and adding a feed say plainly that they need a connection", async ({ page, context, isMobile }) => {
   test.skip(isMobile, "the same on every width");
   await page.setViewportSize({ width: 1280, height: 800 });
