@@ -1,0 +1,478 @@
+# Finished milestones (archive)
+
+*Moved here from `docs/PLAN.md` on 27 October 2026 so agents read less. Everything below is built and live (or marked otherwise). Agents don't read this file unless the owner asks about past work; what each feature does is in `docs/SPEC.md`, and why in `docs/decisions/`.*
+
+## The V1 build plan, as it was
+
+*Agreed with the owner. Agents build from this plan without a separate plan step (decision 0014).*
+
+V1 is built in small milestones, one at a time, in this order. Each one ends
+with something you can try yourself, a pull request with a plain-language
+summary, and green automatic checks. The next milestone starts only after
+you've merged the previous one and said go.
+
+**How you try each milestone:** each pull request includes screenshots (and
+short screen recordings where useful). After you merge, you try it for real
+on the live app; anything found then gets a quick follow-up fix.
+
+**Status key:** ⬜ not started · 🔨 in progress · ✅ merged and live · ⏭ moved to V2
+
+**V1 is for the owner alone** (decided 23 October 2026). Backups, river mode,
+WebSub, the feed health page, the yearly clean-up, the feeds guide page and
+keeping old tabs working across updates moved to V2
+(`docs/decisions/0012-v1-for-one-reader.md`). Milestone numbers stay the
+same so older documents still point to the right place.
+
+**V1 is finished, and V2 has started** (25 October 2026). The table
+"V2 so far", after the V1 milestones, shows which V2 parts are live.
+
+| # | Milestone | Status |
+|---|---|---|
+| 0 | Planning documents, README, licence (MIT), change history | ✅ |
+| 1 | Skeleton and automatic checks | ✅ |
+| 2 | Live on Render, with sign-in | ✅ |
+| 3 | Backups and recovery | ✅ (V2, 25 October 2026) |
+| 4 | Look and feel foundations | ✅ |
+| 5 | Add a feed and see its items | ✅ |
+| 6 | Reading articles | ✅ |
+| 7 | Read, unread, star and undo | ✅ |
+| 8 | Polite background fetching and Refresh | ✅ |
+| 9 | Folders, feed editing and OPML import/export | ✅ |
+| 10 | Search | ✅ |
+| 11 | Feed health page | ✅ (V2, 25 October 2026) |
+| 12 | WebSub | ✅ (V2, 25 October 2026) |
+| 13 | Phones and installing the app | ✅ |
+| 14 | Keeping things tidy, and the finishing pass | ✅ |
+
+---
+
+## 1. Skeleton and automatic checks
+
+**Goal:** an empty but real app, and the robot reviewers in place before any feature exists.
+
+- The Rust server program and the Svelte frontend, wired together so the
+  frontend is built into the one program file.
+- A placeholder page in the nine turtles wordmark, with "Nothing here yet."
+- Automatic checks on every pull request (GitHub Actions):
+  - One script that runs every check, so GitHub Actions, any other service, an agent or a person all run the same checks.
+  - Rust: formatting, lint ("clippy", a tool that spots likely mistakes), tests.
+  - Frontend: type check and tests.
+  - Accessibility and contrast tests of every screen, in all three themes.
+  - "No motion": fails if any animation or transition appears in the styles.
+  - Download size budget (150 KB of app code and styles, 400 KB of fonts).
+  - Library check: fails if the code uses a library not on the approved list in `docs/libraries.md`.
+  - A test that the database's search engine (FTS5) is switched on and handles Hindi.
+  - Screenshots of every screen (three themes, desktop and phone width) attached to the pull request.
+  - A weekly security report on our libraries (reports only).
+  - The second-agent review, set up as a standard step.
+- **You switch on protection for main** (a GitHub "ruleset", free for public
+  repositories), with a step-by-step guide: only pull requests with passing
+  checks can be merged, and nobody can save straight to main.
+- `docs/decisions/` started, with a note for each of the technical decisions.
+- `docs/operations/` started (how to build and run).
+
+**You can try:** open the pull request and see the list of green checks. The
+agent will also show you a deliberately broken change failing the checks, so
+you know they bite.
+
+## 2. Live on Render, with sign-in
+
+**Goal:** nine turtles exists at its public address and only you can get in.
+
+- Single-user password sign-in, long-lived device sessions, slowed-down
+  repeated wrong guesses (section 1 of SPEC).
+- Settings read from environment variables only, listed (names, never values) in `docs/operations/settings.md`.
+- GitHub Actions builds nine turtles into a container image; Render runs it.
+- Public status page and key-protected diagnostics page, shown to you in Settings → Status.
+- The daily automatic check: its instructions written in `docs/operations/daily-check.md`
+  (so any agent can follow them), then scheduled. You allow the agents' environment
+  to reach your nine turtles address and add the diagnostics key to its settings.
+- A step-by-step guide for you to set up Render (the agent has no access to
+  it), including setting your password with `nine-turtles set-password` in
+  Render's Shell tab (decided October 2026): `docs/operations/render-setup.md`.
+
+**You can try:** open the address on your computer and phone, sign in, stay
+signed in, sign out. A private window sees only the password field.
+
+## 3. Backups and recovery ✅ (V2, 25 October 2026)
+
+*V1 had no backups (decision 0012). Built in V2 as planned here, with one change: no new library; nine turtles speaks S3 itself (decision 0076).*
+
+**Goal:** before any of your data exists, prove it can be recovered.
+
+- Built into nine turtles: a nightly copy of the database, uploaded to Cloudflare R2
+  (S3-compatible storage outside Render; you create the account, agents never see the keys).
+  No new library: the upload code is written with libraries nine turtles already has (decision 0076).
+- The temporary copy is made outside the data disk. Keeps 30 nightly copies plus one a month for a year.
+- An automatic copy before every database structure change.
+- `docs/operations/backups.md` and `docs/operations/moving-hosts.md`, tested.
+
+**You can try:** follow the restore guide with the agent: restore a backup
+into a fresh copy and see it work.
+
+## 4. Look and feel foundations
+
+**Goal:** the empty three-pane app, looking and behaving like nine turtles.
+
+- Three themes, the fonts (served by nine turtles), type scale and muted greys
+  (you choose between two or three options shown as screenshots), ink blue "where you are".
+- Three panes adapting to width, collapsible sidebar, the fixed sidebar views.
+- Keyboard groundwork: the focus outline, `?` cheat sheet, `[`, Escape, `g` keys.
+- Settings screen with reader controls and theme choice, and Sign out.
+
+**You can try:** switch themes and fonts, resize the window, zoom to 200%,
+move around with only the keyboard.
+
+## 5. Add a feed and see its items
+
+- Empty state with the paste field (the feeds guide page is V2; the "Import OPML" link arrives with the import itself, Milestone 9).
+- "+ Add feed" and `a`, with autodiscovery from a website address (looking at exactly the page you paste; the owner's choice, October 2026).
+- Fetching a feed once on adding it; storing articles without duplicates.
+- Item list: title, source and time, newest first, "Show older items".
+- A made-up database the size of 500 feeds and a year of articles, used by the speed tests from now on.
+
+**You can try:** add a few of your favorite blogs by their website address and see their articles listed.
+
+## 6. Reading articles
+
+- Article view: cleaned content, safety cleaning, tracking pixels removed,
+  summary-only feeds, "Open original", Copy link / Share, language marking.
+- Next article loaded in advance for instant `j`.
+- `j`/`k`, `Enter`/`o`, `v`, `+`/`-`.
+
+**You can try:** read articles from several blogs with `j` and `k`.
+
+## 7. Read, unread, star and undo
+
+- Read when shown, `m` to mark unread, mark all as read (on-screen items only), undo.
+- Star and the Starred view; Unread and All views.
+- Unread counts (muted, per feed and folder, "999+").
+- Inbox mode (river mode is V2, built 25 October 2026); sort order setting.
+
+**You can try:** the checks in SPEC sections 8, 9 and 10.
+
+## 8. Polite background fetching and Refresh
+
+- Background checking on each feed's own rhythm, spread out, with ETag /
+  Last-Modified, `Retry-After`, time and size limits, permanent redirects,
+  backoff for failing feeds.
+- "New items · press r", `r` and the Refresh button; fresh on arrival.
+- Failing feeds visible without the feed health page (built in V2): the diagnostics page
+  counts them (never naming them) and the daily check reports "Some feeds keep
+  failing", with tests.
+
+**You can try:** leave it for a day; new articles have arrived on their own,
+and the screen never changed under you.
+
+## 9. Folders, feed editing and OPML import/export
+
+- Folders (a feed in several), "Edit feed" and "Edit folder", unsubscribing, with undo.
+- Sidebar search (find a feed or folder by name).
+- OPML import and export.
+- **This is where you provide your OPML file.** It's used on your live app
+  (or locally) only, never committed; `.gitignore` already blocks `*.opml`.
+- Measure how big your database will be with your real feeds, to check the 1 GB disk is enough. V1 kept every article (the yearly clean-up came in V2), so this also tells us how many years the disk lasts. This needs your real feeds, so it happens after you import them on the live app: the daily check reports the size then, and again a week later (decision 0020).
+
+**You can try:** import your OPML file and see your folders and feeds; export it and compare.
+
+## 10. Search
+
+- Full-text search with scope chip, Search options panel, filter syntax, bold
+  matches, Hindi support, results in the normal list.
+
+**You can try:** the checks in SPEC section 14.
+
+## 11. Feed health page ✅ built in V2 (25 October 2026)
+
+In V1, the daily check reported failing feeds instead (from Milestone 8).
+
+- Problems in plain words, sorted worst first, with Retry · Find new address · Unsubscribe.
+- In Settings › Feeds (SPEC section 17, decision 0071).
+
+**You can try:** look at your real feeds' health after a few days of fetching.
+
+## 12. WebSub ✅ (V2, built 25 October 2026)
+
+- Subscribe to hubs, verify, check signatures, renew, reduced backup polling
+  (decision 0069).
+
+**You can try:** follow a WebSub blog and see new posts arrive within minutes.
+
+## 13. Phones and installing the app
+
+- Single-column drill-down, labeled back arrow, bottom article toolbar,
+  system share sheet, Refresh button, 44px targets.
+- Web app manifest and service worker so it installs to the home screen.
+- A tab left open across an update that can't carry on says, in the list's
+  reserved line, "nine turtles was updated. Reload to continue.", with tests.
+
+**You can try:** read on your phone; add it to the home screen.
+
+## 14. Keeping things tidy, and the finishing pass
+
+- Export of starred articles. (Removing year-old articles moved to V2, with backups.)
+- A full accessibility pass with a screen reader, and a speed pass.
+- Docs brought fully up to date.
+
+**You can try:** export your starred articles; run through all of SPEC as a final check.
+
+*Built and merged on 23 October 2026 (decision 0024). The automatic checks
+cover a screen reader's view; the owner's own pass with VoiceOver or
+TalkBack, through every SPEC "How to check it", is still to do.*
+
+---
+
+## After V1: polishing the look and feel
+
+The owner asked for a professional-grade finish after V1, guided by
+Anthropic's frontend-design skill, Vercel's Web Interface Guidelines and
+Impeccable, always inside DESIGN.md's rules. Done in small pull requests,
+each with screenshots:
+
+- ✅ Calmer controls: four kinds of button and field, one icon set, a
+  one-line search box (decision 0025).
+- ✅ Settings choices as tiles, key caps, a quiet empty reading area, a line
+  under the sign-in wordmark, the browser bar in the chosen theme.
+- ✅ Back arrows as icons, and the article centred on wide windows.
+- ✅ A tidier shortcut list, tick boxes the same size everywhere, and
+  "Edit feed" lined up under a long name.
+- ✅ The phone's article toolbar keeps its icons in one line.
+- ✅ A real hierarchy: a type scale, three ink levels, unread in semibold
+  and read in a softer ink, one shared top line for every pane, and calmer
+  sidebar, list and article tops (decision 0026).
+- ✅ Taste first: icons where they're expected (close, settings, the
+  article's actions), Settings as grouped cards with theme pictures, a
+  grouped shortcut list, and a clearer search box (decision 0027).
+- ✅ One rounded "where you are" shape, an unread dot, a floating note for
+  Undo and new items, and matching page titles (decision 0028).
+- ✅ A one-line search box with a tidier options panel, the empty reading
+  area centred, the byline under the article's title, and an ending to
+  every article.
+- ✅ Clearer sign-in and add-feed problems, a quieter search box at rest,
+  Edit feed as an icon, pages centred, and warmer, better separated dark
+  panes.
+- ✅ Lighter weights: Literata semibold for titles, a softer main button,
+  single-line focus on fields, and phone text that keeps about 40
+  characters a line.
+- ✅ "Where you are" as a fill and a bar flush with the pane's edge, the
+  same in both panes, and one focus outline for every row (decision
+  0030).
+- ✅ Add a feed, Edit feed and Edit folder as sheets over the list, search
+  options as a popover with date presets, one-line list titles, and tidier
+  phone settings and article toolbar (decision 0031).
+- ✅ Eight more themes to try, four light and four dark, each with its own
+  "where you are" accent (decision 0032).
+- ✅ A calmer selected row, warmer selection tints, one search field style,
+  aligned counts and header lines, steadier sheets with Cancel, and an end
+  to every list (decision 0033).
+- ✅ Toward Apple Books (the owner's one reference from 24 October 2026):
+  the system interface font, a selection that keeps its fill, list
+  hairlines, a tighter reading rhythm, an "Aa" reading panel, quiet icon
+  toolbars and a More menu, sheets as one family, search excerpts and a
+  welcome in the reading area (decisions 0034 to 0036).
+- ✅ One selection pill for the sidebar and the list, the keyboard's ring
+  inside it, an accent unread dot, one search highlight and a calmer list
+  rhythm (decision 0037).
+- ✅ Toolbars and chrome: the article's tools anchored to the pane's edges
+  with a More menu, one More menu per list (Edit and Refresh inside), a
+  see-through top bar, a labelled back button and a five-icon bottom bar on
+  phones, and book-like title, headings, byline and summary note (decision
+  0038).
+- ✅ Settings as Apple Books' grouped lists with "Aa" theme tiles and an
+  A/A text size; sheets that grow with their content, the destructive action
+  at the bottom left; thin fields with red errors; search options as a
+  checkmark menu; a calmer first visit (decision 0039).
+- ✅ Toward Apple Books, batch 3: solid article bars with a line only once
+  scrolled and an edge on the phone's toolbar, no scrollbar strip, the
+  summary note as end matter, titles at full measure, search results as
+  title, text, meta, and a silent empty reading pane (decision 0040).
+- ✅ Sheets and Settings in one voice: serif sheet titles, a quiet Cancel,
+  one line on a refused field, a folder checklist that shows both states, a
+  shortcut list that fits; Settings' sample on the page, marks on rows that
+  act, A | Medium | A, edgeless raised choices and lighter dark groups
+  (decision 0042).
+- ✅ List and sidebar geometry (third critique, batch 3): a gutter for the
+  unread dot with titles lined up under the list's title, hairlines that end
+  with the pill, a one-line list title, one search well at rest, counts in
+  one column with folder arrows first, no shortcut hint, the welcome alone
+  on a first visit, warm dark pills, and a phone feeds screen with chevrons
+  and no stale selection (decision 0041).
+- ✅ One top line and phone edges (fourth critique): one top-line height
+  for all three panes so their lines meet, toolbar focus rings clear of the
+  window's top, one left edge for every sidebar name, the selected place's
+  icon in the accent, and on a phone one back button position, one 20px
+  margin and one chevron per folder row (decision 0043).
+- ✅ Quiet endings and blank paper (fourth critique): a short end-note link
+  that never breaks, balanced titles, at least 56px beside the text on a
+  computer, and an empty reading pane with nothing drawn (decision 0044).
+- ✅ Controls that say what they are (fourth critique): a text-size stepper
+  of two round-ended As, one ring on the chosen theme, tick boxes and 44px
+  rows for Edit feed's folders, a main button that never looks switched off,
+  importing just under the welcome's field, and a true minus in the shortcut
+  list (decision 0045).
+- ✅ Apple Books' themes: six themes (Original, Quiet, Paper, Bold, Calm,
+  Focus), each by day and by night, an Appearance choice of Light, Dark or
+  Match device, heavier article text in Bold, and old choices carried over
+  (decision 0046, replacing the eleven of decision 0032).
+- ✅ A quiet article title (fifth critique): no ring on the title when an
+  article opens, a clear pause before the byline with looser tracking, and
+  a phone toolbar with no gap on the first article (decision 0047).
+- ✅ One-line rows, plain chips, one empty state (fifth critique): a list
+  row's meta on one line in proportional figures, search chips in the menu's
+  words, a submenu row for another feed or folder, the note in a band the
+  rows end above, a centred sign-in at the phone margin, and a centred,
+  still welcome that takes the list's room on a first visit (decision 0048).
+- ✅ One sheet, one close rule (fifth critique, batch 5): a round mark on
+  Add a feed's choice of feeds, Cancel or an X but never both, the shortcut
+  list full-screen on a phone and fitting a computer window, 20px under
+  every top line, the Settings preview on the phone's margin, and the
+  phone's unread dot clear of the row ring (decision 0049).
+- ✅ Article view (sixth critique, batch 6): pictures dimmed at night,
+  smaller captions at 7 : 1, tables flush with the text, Open original in
+  the right-hand toolbar cluster, a 14px byline (decision 0050).
+- ✅ One search field, a warmer selection (sixth critique, batch 6): the
+  list's search and the sidebar's find field as one slim capsule, the day
+  selection pill made from its own pane, row rings only for the keyboard,
+  the "·" hugging a cut-short name, and the sidebar keeping your place in
+  view (decision 0051).
+- ✅ One phone sheet and raised night surfaces (sixth critique, batch 6):
+  an X-only phone sheet with its main action full width at the foot,
+  lifted sheets, menus and note by night, Settings' themes 3×2 and text
+  size on the segmented track, helper text on the grid, a shortcut-list
+  footer with edged key caps, one heading on a phone's empty state
+  (decision 0052).
+- ✅ Article view and text (seventh critique, batch 7): a quiet "No article
+  open" line in the empty reading pane, smaller captions at 7 : 1, and a
+  warm Paper selection pill by day (decision 0053).
+- ✅ List and sidebar finish (seventh critique, batch 7): a faint line
+  between panes on a computer, a 28px dot gutter in a phone's list, the
+  shortcuts button marked while its list is open, and a result count the
+  search options never hide (decision 0054).
+- ✅ Sheets, Settings and shortcuts (seventh critique, batch 7): iOS page
+  sheets on a phone, a flat text-size capsule, the chosen theme's ring
+  clear of its tile, the sample inside its group, a softer field ring,
+  ⇧A key caps, and "Import an OPML file…" as a link on the margin
+  (decision 0055).
+- ✅ Renamed **nine turtles**, and one theme, Original, by day and by night;
+  the Apple Books theme set removed (decision 0056).
+- ✅ Small touches of color, tried side by side on the owner's computer: a
+  plain grey pill for where you are, and green stars (decision 0057).
+
+## A website and a domain
+
+- ✅ A website at nineturtles.app, built with Eleventy from `website/` in
+  this repository and hosted on GitHub Pages, and the app moved to
+  app.nineturtles.app; the owner finished the domain move on 25 October 2026
+  (`docs/operations/website-and-domain.md`, decision 0066).
+- ✅ The website built out (25 October 2026, the pages the owner agreed):
+  the home page with pictures of the app, a tour, "New to feeds?",
+  questions, about, a blog with its own Atom feed, contact
+  (hello@nineturtles.app), accessibility, and a privacy policy and terms
+  marked as drafts until a payment company and an email service are chosen
+  (`docs/planning/questions.md`). No pricing page until prices are decided.
+- ✅ Pricing and refunds-and-cancelling pages (25 October 2026), as drafts
+  until prices are set, naming Dodo Payments as the payment company
+  (decision 0083). Dodo checks for them, with terms, privacy and contact,
+  before it approves payments (`docs/operations/dodo-application.md`).
+- ✅ The feed finder (26 October 2026, decision 0099): the first free tool
+  from the marketing plan, at nineturtles.app/feed-finder/, with a bookmark
+  button; the app at app.nineturtles.app does the looking (SPEC section 30).
+- ✅ Starter packs (26 October 2026): the pages at nineturtles.app/packs/,
+  five themes for the owner to fill with hand-picked blogs, each with an
+  OPML download once it has blogs (SPEC section 31).
+
+## V2 so far
+
+*Only what's merged and live is marked ✅.*
+
+| V2 part | Status | Where it's described |
+|---|---|---|
+| River mode | ✅ 25 October 2026 | SPEC section 10, decision 0068 |
+| Settings for each feed (reading mode, how often it's checked, open on the website) | ✅ 25 October 2026 | SPEC sections 10, 11 and 15, decision 0082 |
+| WebSub (new posts within minutes) | ✅ 25 October 2026 | Milestone 12, SPEC section 12, decision 0069 |
+| YouTube videos in YouTube's own player | ✅ 25 October 2026 | SPEC section 7, decision 0072 |
+| Syncing with Reeder, NetNewsWire and other apps | ✅ 25 October 2026 | SPEC section 26, decision 0070 |
+| Feed health page | ✅ 25 October 2026 | Milestone 11, SPEC section 17, decision 0071 |
+| Health check every 15 minutes, with an email | ✅ 25 October 2026 | `docs/operations/health-check.md`, decision 0075 |
+| Tidying many feeds at once (Your feeds: Edit, Move to…, quiet feeds) | ✅ 25 October 2026 | SPEC section 15, decision 0080 |
+| Saved searches in the sidebar | ✅ 25 October 2026 | SPEC sections 5 and 14, decision 0081 |
+| Rules and mutes | ✅ 25 October 2026 | SPEC section 27, decision 0077 |
+| Backups and moving hosts | ✅ 25 October 2026 (switched on once you add the storage settings) | Milestone 3 above, `docs/operations/backups.md`, `docs/operations/moving-hosts.md`, decision 0076 |
+| The yearly clean-up of unstarred articles | ✅ 25 October 2026 | SPEC section 23, decision 0089 (runs only after each night's backup is stored) |
+| The "New to feeds?" guide page | ✅ 25 October 2026 | SPEC section 2, decision 0079 (in the app, a "New to feeds?" sheet in the first-visit welcome; it links to the website's guide at nineturtles.app/new-to-feeds/) |
+| A tab left open across an update keeps working | ✅ 25 October 2026 | SPEC section 18, decisions 0022 and 0085 |
+| Bringing your stars over from other feed readers | ✅ 26 October 2026 | SPEC section 23, decision 0098 (no structure change) |
+| Pausing a feed (Edit feed › Pause this feed) | ✅ 26 October 2026 | SPEC section 15, decision 0095 |
+| Easing unread guilt: unread that lets go by itself, Catch me up, and unread without numbers | ✅ 26 October 2026 | SPEC sections 5, 6, 8 and 18, decision 0097 |
+| Reading offline, words only (200 unread and 200 starred on each device) | ✅ 26 October 2026 | SPEC section 32, decision 0101 |
+| Adding a feed from anywhere (Android's share menu, an Apple Shortcuts shortcut, a bookmark) | ✅ 27 October 2026 | SPEC sections 3, 18 and 20, decision 0104 |
+| Opening a picture in an article larger | ✅ 27 October 2026 | SPEC section 7, decision 0107 |
+| More keys (Space, n, Shift+O, e, Shift+E, c), Mark all above / below as read, and one list of keys for the keys and the cheat sheet | ✅ 27 October 2026 | SPEC sections 6, 7, 8 and 19, decision 0103 |
+| Keys of your own (Change keys… in the `?` list and Settings › Keyboard), and Shift+J / Shift+K, Home / End, g then f and g then , | ✅ 27 October 2026 | SPEC sections 18 and 19, decision 0110 (no structure change) |
+| Passkey sign-in (Settings › Passkeys, and Sign in with a passkey; passwords keep working) | ✅ 27 October 2026 | SPEC sections 1 and 18, decision 0109 (structure change 25; one new library, webauthn-rs, the owner's yes) |
+| Recently read (the last 50 articles you opened) in the sidebar | ✅ 27 October 2026 | SPEC section 5, decision 0105 (structure change 22) |
+| Hiding Starred, All, Recently read or Saved searches from the sidebar (Settings › Show in the sidebar) | ✅ 27 October 2026 | SPEC sections 5 and 18, decision 0105 |
+| How often a feed posts, in words (Edit feed and Feed health) | ✅ 27 October 2026 | SPEC sections 15 and 17, decision 0105 |
+| Fixing a dead feed where you are: a quiet line above a failing feed's list and in Edit feed, with Find new address, and one plain question when the site names one feed | ✅ 27 October 2026 | SPEC sections 6, 15 and 17, decision 0106 |
+| Collections: the reader's own named shelves for articles (Add to collection… and `l`, in the sidebar, `in:` in search, kept forever like a star, exported) | ✅ 27 October 2026 | SPEC section 34, decision 0108 (structure change 23) |
+| Connecting your own AI assistant over MCP (details under "V2: Assistants (MCP)" below) | ✅ 27 October 2026 | SPEC section 33, decision 0111 |
+| Podcasts: episodes play in a calm player from the publisher's own file, your place kept on all your devices, a Now playing bar, Up Next, the lock screen | ✅ 27 October 2026 | SPEC section 35, decision 0113 (structure change 24) |
+
+## V2: Many readers in one app
+
+Milestone 3 of the plan for 100 to 200 readers
+(https://claude.ai/artifact/V3GhrBxfXDG1TjPMsXQFPk), decision 0086. Each
+feed is still fetched and stored once; everything personal gets an owner.
+
+| Part | Status |
+|---|---|
+| Part one: an owner on settings, folders, saved searches, rules, signed-in devices and app passwords (structure change 11) | ✅ 25 October 2026 |
+| Part two: each reader's own feeds, marks, stars, search and sync (structure change 12) | ✅ 25 October 2026 |
+| Part three: signing in by email, and the sign-up switch with invite links (structure change 13, decision 0087) | ✅ 25 October 2026 |
+| Part four: account emails over SMTP (confirming Open sign-ups, a new password, changing email) and deleting an account (structure change 14, decision 0088) | ✅ 25 October 2026 |
+| "Email me a sign-in link": a link that signs in, once, within 15 minutes, for every reader; passwords keep working (structure change 20, decision 0096) | ✅ 26 October 2026 |
+| Milestone 5: the owner's Readers page, at most 1,000 feeds per reader, and feeds nobody opens checked once a day (no structure change, decision 0090) | ✅ 26 October 2026 |
+| Sign-up always open: no switch, no invite links, no confirmation email (no structure change, decision 0115) | ✅ 27 October 2026 |
+
+## V2: Paying for nine turtles
+
+Milestone 9 of the plan for 100 to 200 readers, decision 0094, SPEC
+section 29.
+
+| Part | Status |
+|---|---|
+| Free trial, monthly and yearly plans through Dodo Payments' checkout, Billing and cancelling, Dodo's signed messages, a plan's end (reading kept, no new feeds, daily checks), cancelling before an account is deleted, structure change 18; test mode only | ✅ 26 October 2026 (switched on once you add the Dodo settings: `docs/operations/payments.md`) |
+| Live payments: after Dodo approves the live site (`docs/operations/dodo-application.md`) | Waiting for the owner |
+
+## V2: Newsletters as feeds
+
+Milestone 10 of the plan for 100 to 200 readers, decision 0091, SPEC
+section 28.
+
+| Part | Status |
+|---|---|
+| Part one: reading and cleaning emails, the receiving address (off by default, keeps nothing yet), the Cloudflare forwarder and its setup steps | ✅ 25 October 2026 (setup: `docs/operations/newsletters.md`) |
+| Part two: each reader's own address, emails kept as articles under a feed per sender, the reader's alone, limits per reader and for everyone (emails and size a day, the 1,000 feeds), structure change 16 | ✅ 26 October 2026 |
+| Part three: labels with switches, one-click unsubscribe, each email "opened" on arrival (structure change 17) | ✅ 26 October 2026 |
+
+## V2: Assistants (MCP)
+
+Decision 0111. A reader can connect their own AI assistant (Claude, ChatGPT,
+Gemini, coding tools, open-source agents) to their account through MCP, the
+open standard assistants use to reach apps. nine turtles runs no AI itself:
+it only opens a door, like the Google Reader API does for Reeder. Built 27
+October 2026 (SPEC section 33).
+
+| Part | Status |
+|---|---|
+| Sign-in: the "Allow this assistant?" screen (OAuth), a fallback assistant key in Settings, and a list of connected assistants with Disconnect | ✅ 27 October 2026 |
+| The 15 tools: search, unread, starred, open an article, feeds and folders, feed health, rules and mutes, mark read or unread, star, add a feed, rename or move a feed, folders, rules and mutes, unsubscribe (with a 30-day undo), export the feed list (plus "bring back a feed") | ✅ 27 October 2026 |
+| Limits per reader, tests with at least two different assistants, SPEC section, and the 15-day upkeep check (`docs/operations/mcp-check.md`) | ✅ 27 October 2026 (tested with the official TypeScript and Python MCP clients) |
+
+---
+
+Responsive layout, accessibility and speed aren't left to the end: each
+milestone must pass the automatic checks for them, every feature comes with
+keyboard-only tests, and each milestone that changes screens includes a
+5-minute checklist you can follow yourself. Milestones 13 and 14 add
+the phone-specific parts and a final human pass.

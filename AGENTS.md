@@ -54,14 +54,19 @@ Its name is **nine turtles**, always lowercase (renamed from slowfeed in October
 
 The documents are the owner's only view of the project. Before opening the
 pull request, update every document the change affects, and list them in the
-summary (or say why none needed it):
+summary (or say why none needed it).
+
+**One fact, one place:** each fact lives in one document; every other
+document links to it instead of repeating it (decision 0117). When work is
+finished, `docs/PLAN.md` drops it into `docs/archive/plan-done.md`.
+`scripts/check.sh docs` fails on a link to a file that doesn't exist.
 
 | If the change affects… | Update |
 |---|---|
 | What the reader sees or how a feature behaves | `docs/SPEC.md`; `docs/DESIGN.md` Part 2 when the look changes (Part 1 only with the owner's approval) |
 | A technical rule or choice | `docs/ENGINEERING.md` + a short note in `docs/decisions/` |
 | Libraries | `docs/libraries.md` |
-| Milestone progress | `docs/PLAN.md` |
+| Milestone progress | `docs/PLAN.md` (open and next work only; finished work moves to `docs/archive/plan-done.md`) |
 | Tools, hosting, workflow, how changes go live | `docs/owner-guide.md` |
 | Settings, backups, deploys, moving hosts, the daily check | `docs/operations/` |
 | An open question, or the owner's answer | `docs/planning/questions.md` |
@@ -73,7 +78,7 @@ summary (or say why none needed it):
 
 - **One milestone per thread.** When its pull request is merged, the thread is done; the next milestone starts in a fresh thread. Hand over through the documents, not memory.
 - Read only what the map says, and only the sections you need (search for the heading).
-- Don't read `docs/owner-guide.md`, `docs/CHANGELOG.md`, `README.md` or `docs/planning/tech-check-2026-10.md` unless updating them; for the changelog read only `docs/changes/README.md`, for concepts search by name.
+- Don't read `docs/owner-guide.md`, `docs/CHANGELOG.md`, `README.md` unless updating them, nor anything in `docs/archive/` (finished plans and one-off checks) unless the owner asks about it; for the changelog read only `docs/changes/README.md`, for concepts search by name.
 - Keep command output short: show failures, not pages of passes. CI runs the full set.
 - Look at screenshots only when a screen changed, one or two at a time.
 - Send wide searches to a helper agent so only its conclusion enters the session.
@@ -120,7 +125,8 @@ years › written for the next agent.
 | AI assistants over MCP (`server/src/mcp.rs`, `assistants.rs`) | decision 0111, SPEC section 33, `docs/operations/mcp-check.md` |
 | Payments (`server/src/payments.rs`) | decision 0094, SPEC section 29, `docs/operations/payments.md` |
 | The website (`website/`) | `docs/operations/website-and-domain.md`, decision 0066, and DESIGN.md's floors |
-| Revisiting an earlier choice | `docs/decisions/` |
+| Revisiting an earlier choice | `docs/decisions/README.md` (one line per decision), then the note |
+| Past milestones, finished one-off reports | `docs/archive/` (only when the owner asks) |
 | Open questions | `docs/planning/questions.md` |
 | Business, marketing or pricing ideas | `docs/RnD/README.md` (research only; nothing there is decided) |
 | Tools, hosting, how changes go live | `docs/owner-guide.md` (keep it accurate) |
