@@ -354,3 +354,138 @@ async fn each_readers_passkeys_are_theirs_alone() {
         .unwrap();
     assert_eq!(count, 1);
 }
+
+/// The passkey numbers a new challenge to add a passkey tells the device to
+/// refuse (ones it already holds for this reader).
+async fn excluded(base: &str, cookie: &str) -> Vec<String> {
+    let started: Value = post(
+        base,
+        "/api/passkeys/add",
+        Some(cookie),
+        json!({ "password": PASSWORD }),
+    )
+    .await
+    .text()
+    .await
+    .unwrap()
+    .parse()
+    .unwrap();
+    started["options"]["publicKey"]["excludeCredentials"]
+        .as_array()
+        .map(|list| {
+            list.iter()
+                .map(|item| item["id"].as_str().unwrap().to_owned())
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+#[tokio::test]
+async fn the_same_device_adds_once_and_again_straight_after_removing() {
+    let (base, _state) = start_with_state(common::config()).await;
+    let owner = signed_in(&base).await;
+    let mut laptop = device();
+    let (finished, added) = add(&base, &owner, PASSWORD, &mut laptop).await;
+    let id = finished.text().await.unwrap().parse::<Value>().unwrap()["id"]
+        .as_i64()
+        .unwrap();
+    let added = added.unwrap();
+    // The device that holds it is told not to make a second one.
+    assert_eq!(
+        excluded(&base, &owner).await,
+        vec![added.credential_id.clone()]
+    );
+
+    // Removed (Undo still possible), it no longer stands in the way.
+    post(
+        &base,
+        &format!("/api/passkeys/{id}/remove"),
+        Some(&owner),
+        json!({}),
+    )
+    .await;
+    assert_eq!(excluded(&base, &owner).await, Vec::<String>::new());
+    let (again, _) = add(&base, &owner, PASSWORD, &mut laptop).await;
+    assert_eq!(again.status(), StatusCode::CREATED);
+}
+
+#[tokio::test]
+async fn each_reader_keeps_at_most_twenty_passkeys() {
+    let (base, state) = start_with_state(common::config()).await;
+    let owner = signed_in(&base).await;
+    for number in 0..20u8 {
+        sqlx::query(
+            "INSERT INTO passkeys (person_id, credential_id, user_handle, passkey, created_at)
+             VALUES (1, ?, '00000000-0000-0000-0000-000000000001', '{}', unixepoch())",
+        )
+        .bind(vec![number; 16])
+        .execute(&state.db)
+        .await
+        .unwrap();
+    }
+    let refused = post(
+        &base,
+        "/api/passkeys/add",
+        Some(&owner),
+        json!({ "password": PASSWORD }),
+    )
+    .await;
+    assert_eq!(refused.status(), StatusCode::CONFLICT);
+    assert_eq!(error_of(refused).await, "too-many");
+
+    // One removed makes room again.
+    let first = get(&base, "/api/passkeys", &owner).await["passkeys"][0]["id"]
+        .as_i64()
+        .unwrap();
+    post(
+        &base,
+        &format!("/api/passkeys/{first}/remove"),
+        Some(&owner),
+        json!({}),
+    )
+    .await;
+    let (added, _) = add(&base, &owner, PASSWORD, &mut device()).await;
+    assert_eq!(added.status(), StatusCode::CREATED);
+}
+
+#[tokio::test]
+async fn undo_brings_a_passkey_back_for_ten_minutes_only() {
+    let (base, state) = start_with_state(common::config()).await;
+    let owner = signed_in(&base).await;
+    let (finished, _) = add(&base, &owner, PASSWORD, &mut device()).await;
+    let id = finished.text().await.unwrap().parse::<Value>().unwrap()["id"]
+        .as_i64()
+        .unwrap();
+    post(
+        &base,
+        &format!("/api/passkeys/{id}/remove"),
+        Some(&owner),
+        json!({}),
+    )
+    .await;
+    // Ten minutes and a second later.
+    sqlx::query("UPDATE passkeys SET removed_at = unixepoch() - 601 WHERE id = ?")
+        .bind(id)
+        .execute(&state.db)
+        .await
+        .unwrap();
+    let late = post(
+        &base,
+        &format!("/api/passkeys/{id}/undo"),
+        Some(&owner),
+        json!({}),
+    )
+    .await;
+    assert_eq!(late.status(), StatusCode::GONE);
+    assert_eq!(error_of(late).await, "expired");
+    // And then it's deleted for good.
+    assert_eq!(
+        get(&base, "/api/passkeys", &owner).await["passkeys"],
+        json!([])
+    );
+    let left: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM passkeys")
+        .fetch_one(&state.db)
+        .await
+        .unwrap();
+    assert_eq!(left, 0);
+}

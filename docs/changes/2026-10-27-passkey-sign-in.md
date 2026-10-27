@@ -6,6 +6,8 @@
   email field's suggestions. Every reader can; passwords keep working.
 - Each passkey can be renamed, and removed with Undo straight afterwards.
   Removing one never locks you out.
+- A new password keeps your passkeys (your choice): after one, look in
+  Settings › Passkeys and remove any you don't recognise.
 - Passkeys work at app.nineturtles.app; slowfeed.onrender.com doesn't offer
   them.
 - One new library, webauthn-rs, checks passkeys (your yes, decision 0109),

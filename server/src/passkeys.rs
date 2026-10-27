@@ -41,7 +41,7 @@ use crate::{
     AppState,
     auth::{
         Account, SignedIn, ask_password, database_problem, new_token, remember_device,
-        session_cookie, wait_response,
+        session_cookie,
     },
     config::PasswordSetting,
     log, now,
@@ -49,9 +49,12 @@ use crate::{
 
 /// How long the browser has to answer a challenge.
 pub const CEREMONY_LIFETIME: Duration = Duration::from_secs(5 * 60);
-/// At most this many challenges wait for an answer at once, for the whole
-/// app, so nobody can fill the server's memory by opening sign-in pages.
-pub const MOST_CEREMONIES: usize = 1000;
+/// At most this many sign-in challenges wait for an answer at once, for the
+/// whole app, so nobody can fill the server's memory by opening sign-in
+/// pages. When it's full, the oldest gives way to the newest. Adding a
+/// passkey keeps its own challenges, one per signed-in reader, so nobody
+/// signed out can push those out.
+pub const MOST_SIGN_INS: usize = 1000;
 /// How long Undo can bring a removed passkey back, in seconds.
 pub const UNDO_FOR: i64 = 10 * 60;
 /// At most this many passkeys for each reader.
@@ -91,18 +94,13 @@ impl Passkeys {
         self.origin.as_deref()
     }
 
-    fn begin(&self, step: Step) -> Result<String, Box<Response>> {
-        let Ok(ticket) = new_token() else {
-            return Err(Box::new(StatusCode::INTERNAL_SERVER_ERROR.into_response()));
-        };
-        let mut ceremonies = self
-            .ceremonies
+    fn begin(&self, step: Step) -> Option<String> {
+        let ticket = new_token().ok()?;
+        self.ceremonies
             .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner);
-        ceremonies
-            .begin(ticket.clone(), step, Instant::now())
-            .map_err(|wait| Box::new(wait_response(wait)))?;
-        Ok(ticket)
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .begin(ticket.clone(), step, Instant::now());
+        Some(ticket)
     }
 
     fn take(&self, ticket: &str) -> Option<Step> {
@@ -147,50 +145,66 @@ struct Ceremony {
 }
 
 /// The challenges waiting for an answer, each under a random ticket the
-/// page sends back with the answer.
+/// page sends back with the answer: sign-ins (open to anyone) and adding a
+/// passkey (signed-in readers only) apart, so one can't crowd out the other.
 #[derive(Default)]
 pub struct Ceremonies {
-    open: HashMap<String, Ceremony>,
+    signing_in: HashMap<String, Ceremony>,
+    adding: HashMap<String, Ceremony>,
 }
 
 impl Ceremonies {
     /// Keeps `step` under `ticket` until `CEREMONY_LIFETIME` from `now`. A
     /// reader adding a passkey has only their newest challenge. When
-    /// `MOST_CEREMONIES` are waiting, answers how long until one runs out.
-    pub fn begin(&mut self, ticket: String, step: Step, now: Instant) -> Result<(), Duration> {
-        self.open.retain(|_, ceremony| ceremony.until > now);
-        if let Step::Adding { person, .. } = &step {
-            self.open.retain(
-                |_, ceremony| !matches!(&ceremony.step, Step::Adding { person: theirs, .. } if theirs == person),
-            );
-        }
-        if self.open.len() >= MOST_CEREMONIES {
-            let soonest = self.open.values().map(|ceremony| ceremony.until).min();
-            return Err(soonest.map_or(CEREMONY_LIFETIME, |until| {
-                until.saturating_duration_since(now)
-            }));
-        }
-        self.open.insert(
+    /// `MOST_SIGN_INS` sign-ins are waiting, the oldest is forgotten (its
+    /// answer then says "That took too long"), so the newest always works.
+    pub fn begin(&mut self, ticket: String, step: Step, now: Instant) {
+        self.signing_in.retain(|_, ceremony| ceremony.until > now);
+        self.adding.retain(|_, ceremony| ceremony.until > now);
+        let pool = match &step {
+            Step::Adding { person, .. } => {
+                self.adding.retain(|_, ceremony| {
+                    !matches!(&ceremony.step, Step::Adding { person: theirs, .. } if theirs == person)
+                });
+                &mut self.adding
+            }
+            Step::SigningIn(_) => {
+                while self.signing_in.len() >= MOST_SIGN_INS {
+                    let oldest = self
+                        .signing_in
+                        .iter()
+                        .min_by_key(|(_, ceremony)| ceremony.until)
+                        .map(|(ticket, _)| ticket.clone());
+                    match oldest {
+                        Some(oldest) => self.signing_in.remove(&oldest),
+                        None => break,
+                    };
+                }
+                &mut self.signing_in
+            }
+        };
+        pool.insert(
             ticket,
             Ceremony {
                 step,
                 until: now + CEREMONY_LIFETIME,
             },
         );
-        Ok(())
     }
 
     /// The challenge kept under `ticket`, used up: a second answer to the
     /// same challenge finds nothing. `None` once it has run out.
     pub fn take(&mut self, ticket: &str, now: Instant) -> Option<Step> {
-        self.open
+        self.signing_in
             .remove(ticket)
+            .or_else(|| self.adding.remove(ticket))
             .filter(|ceremony| ceremony.until > now)
             .map(|ceremony| ceremony.step)
     }
 
-    pub fn waiting(&self) -> usize {
-        self.open.len()
+    /// How many sign-in and adding challenges are waiting.
+    pub fn waiting(&self) -> (usize, usize) {
+        (self.signing_in.len(), self.adding.len())
     }
 }
 
@@ -341,9 +355,12 @@ async fn add_start(
             Uuid::from_bytes(bytes)
         }
     };
-    // The same device can't add a second passkey for the same reader.
+    // The same device can't add a second passkey for the same reader. A
+    // removed one (still within Undo) doesn't count: that device can add a
+    // passkey again at once.
     let exclude: Vec<CredentialID> = existing
         .into_iter()
+        .filter(|(_, _, removed)| removed.is_none())
         .map(|(id, _, _)| CredentialID::from(id))
         .collect();
     // What the device shows beside the passkey: the reader's email.
@@ -373,8 +390,8 @@ async fn add_start(
         registration,
     };
     match state.passkeys.begin(step) {
-        Ok(ticket) => Json(json!({ "ceremony": ticket, "options": options })).into_response(),
-        Err(refusal) => *refusal,
+        Some(ticket) => Json(json!({ "ceremony": ticket, "options": options })).into_response(),
+        None => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
     }
 }
 
@@ -416,6 +433,18 @@ async fn add_finish(
     let Ok(stored) = serde_json::to_string(&passkey) else {
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
     };
+    // The same passkey added again after the reader removed it takes the
+    // removed one's place (its Undo then finds nothing).
+    let replaced = sqlx::query(
+        "DELETE FROM passkeys WHERE person_id = ? AND credential_id = ? AND removed_at IS NOT NULL",
+    )
+    .bind(person)
+    .bind(passkey.cred_id().as_ref())
+    .execute(&state.db)
+    .await;
+    if let Err(error) = replaced {
+        return database_problem("replacing a removed passkey", &error);
+    }
     let added: Result<(i64, i64), sqlx::Error> = sqlx::query_as(
         "INSERT INTO passkeys (person_id, credential_id, user_handle, passkey, created_at)
          VALUES (?, ?, ?, ?, ?) RETURNING id, created_at",
@@ -547,8 +576,8 @@ async fn sign_in_start(State(state): State<AppState>) -> Response {
         fields.remove("mediation");
     }
     match state.passkeys.begin(Step::SigningIn(authentication)) {
-        Ok(ticket) => Json(json!({ "ceremony": ticket, "options": options })).into_response(),
-        Err(refusal) => *refusal,
+        Some(ticket) => Json(json!({ "ceremony": ticket, "options": options })).into_response(),
+        None => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
     }
 }
 
@@ -645,37 +674,65 @@ mod tests {
     fn a_challenge_is_used_once_and_runs_out() {
         let start = Instant::now();
         let mut ceremonies = Ceremonies::default();
-        ceremonies
-            .begin("one".to_owned(), signing_in(), start)
-            .unwrap();
+        ceremonies.begin("one".to_owned(), signing_in(), start);
         assert!(ceremonies.take("one", start).is_some());
         assert!(ceremonies.take("one", start).is_none());
 
-        ceremonies
-            .begin("two".to_owned(), signing_in(), start)
-            .unwrap();
+        ceremonies.begin("two".to_owned(), signing_in(), start);
         assert!(ceremonies.take("two", start + CEREMONY_LIFETIME).is_none());
     }
 
+    fn adding(person: i64) -> Step {
+        let webauthn = relying_party(None).unwrap().0;
+        let handle = Uuid::from_bytes([7; 16]);
+        let (_, registration) = webauthn
+            .start_passkey_registration(handle, "reader", "reader", None)
+            .unwrap();
+        Step::Adding {
+            person,
+            handle,
+            registration,
+        }
+    }
+
     #[test]
-    fn only_so_many_challenges_wait_at_once() {
+    fn a_full_sign_in_pool_forgets_its_oldest_and_never_touches_adding() {
         let start = Instant::now();
         let mut ceremonies = Ceremonies::default();
-        for number in 0..MOST_CEREMONIES {
-            ceremonies
-                .begin(number.to_string(), signing_in(), start)
-                .unwrap();
+        ceremonies.begin("adding".to_owned(), adding(1), start);
+        for number in 0..MOST_SIGN_INS {
+            let when = start + Duration::from_millis(u64::try_from(number).unwrap());
+            ceremonies.begin(number.to_string(), signing_in(), when);
         }
-        let wait = ceremonies
-            .begin("one more".to_owned(), signing_in(), start)
-            .unwrap_err();
-        assert_eq!(wait, CEREMONY_LIFETIME);
-        // Once they've run out, there's room again.
+        assert_eq!(ceremonies.waiting(), (MOST_SIGN_INS, 1));
+        // One more: the oldest sign-in gives way, the newest works.
+        let now = start + Duration::from_secs(2);
+        ceremonies.begin("one more".to_owned(), signing_in(), now);
+        assert_eq!(ceremonies.waiting(), (MOST_SIGN_INS, 1));
+        assert!(ceremonies.take("0", now).is_none());
+        assert!(ceremonies.take("1", now).is_some());
+        assert!(ceremonies.take("one more", now).is_some());
+        // The reader adding a passkey was never pushed out.
+        assert!(matches!(
+            ceremonies.take("adding", now),
+            Some(Step::Adding { person: 1, .. })
+        ));
+    }
+
+    #[test]
+    fn a_reader_adding_a_passkey_has_only_their_newest_challenge() {
+        let start = Instant::now();
+        let mut ceremonies = Ceremonies::default();
+        ceremonies.begin("first".to_owned(), adding(1), start);
+        ceremonies.begin("someone else".to_owned(), adding(2), start);
+        ceremonies.begin("second".to_owned(), adding(1), start);
+        assert_eq!(ceremonies.waiting(), (0, 2));
+        assert!(ceremonies.take("first", start).is_none());
+        assert!(ceremonies.take("second", start).is_some());
+        // Once they've run out, they're gone.
         let later = start + CEREMONY_LIFETIME;
-        ceremonies
-            .begin("one more".to_owned(), signing_in(), later)
-            .unwrap();
-        assert_eq!(ceremonies.waiting(), 1);
+        ceremonies.begin("third".to_owned(), signing_in(), later);
+        assert_eq!(ceremonies.waiting(), (1, 0));
     }
 
     #[test]

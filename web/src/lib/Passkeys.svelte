@@ -73,6 +73,17 @@
     passwordField?.focus();
   }
 
+  /** Cancel, or Escape in the password box: back to "Add a passkey", with the keyboard on it. */
+  async function stopAdding() {
+    if (busy) return;
+    asking = false;
+    password = "";
+    passwordRefused = false;
+    say("");
+    await tick();
+    addButton?.focus();
+  }
+
   async function add(event: SubmitEvent) {
     event.preventDefault();
     if (busy) return;
@@ -229,9 +240,19 @@
             bind:value={password}
             aria-describedby="passkeys-message"
             aria-invalid={passwordRefused ? "true" : undefined}
+            onkeydown={(event) => {
+              if (event.key === "Escape") {
+                event.preventDefault();
+                event.stopPropagation();
+                void stopAdding();
+              }
+            }}
             class="inset-input"
           />
-          <button type="submit" aria-disabled={busy} class="btn btn-small">Continue<span class="sr-only"> adding a passkey</span></button>
+          <span class="flex shrink-0 items-center gap-2">
+            <button type="button" class="btn btn-small" onclick={stopAdding}>Cancel<span class="sr-only"> adding a passkey</span></button>
+            <button type="submit" aria-disabled={busy} class="btn btn-small">Continue<span class="sr-only"> adding a passkey</span></button>
+          </span>
         </form>
       {:else}
         <button bind:this={addButton} type="button" class="inset-row inset-action" onclick={startAdding}
