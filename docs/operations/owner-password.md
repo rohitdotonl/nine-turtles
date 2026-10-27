@@ -24,7 +24,7 @@ changed since you last used an emailed link, the setting wins again.
 2. Paste it as the new value of `NINE_TURTLES_PASSWORD_HASH` in
    **Environment**, and press **Save Changes**. Render restarts nine turtles
    (about a minute).
-3. Sign in with the new password. What happened:
+3. Sign in with your email and the new password. What happened:
    - the password you set by email no longer works;
    - every device signed in as you was signed out, so anyone who took over
      your account is out too, unless they added a passkey: passkeys stay

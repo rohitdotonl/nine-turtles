@@ -246,9 +246,9 @@ struct Email {
 
 /// The owner's own email, to sign in with and to get "Forgot your
 /// password?" links at. Their current password is asked for (decision
-/// 0088), checked as their password-only sign-in checks it (the same count
-/// of wrong tries and the same line), so a device left signed in as the
-/// owner can't send the owner's password links somewhere else.
+/// 0088), checked on the same line as their sign-in, so a device left
+/// signed in as the owner can't send the owner's password links somewhere
+/// else.
 async fn set_email(
     SignedIn(person): SignedIn,
     State(state): State<AppState>,
@@ -259,20 +259,28 @@ async fn set_email(
         if !plausible_email(email) {
             return refused(StatusCode::BAD_REQUEST, "email");
         }
-        let own: Result<Option<Option<String>>, sqlx::Error> =
-            sqlx::query_scalar("SELECT password_hash FROM people WHERE id = ?")
+        // Their email, and their own scrambled password if they have one.
+        type Owners = (Option<String>, Option<String>);
+        let own: Result<Option<Owners>, sqlx::Error> =
+            sqlx::query_as("SELECT email, password_hash FROM people WHERE id = ?")
                 .bind(person)
                 .fetch_optional(&state.db)
                 .await;
-        let stored = match own {
-            Ok(own) => own.flatten().or(match &state.config.password {
-                PasswordSetting::Set(line) => Some(line.clone()),
-                _ => None,
-            }),
+        let (current, own_line) = match own {
+            Ok(own) => own.unwrap_or_default(),
             Err(error) => return database_problem("finding the owner", &error),
         };
+        let stored = own_line.or(match &state.config.password {
+            PasswordSetting::Set(line) => Some(line.clone()),
+            _ => None,
+        });
+        // Counted where their sign-in counts: under their email, once they have one.
+        let account = match current.as_deref() {
+            Some(current) => Account::named(Some(current)),
+            None => Account::Owner,
+        };
         let password = form.password.clone();
-        if let Some(refusal) = ask_password(&state, &Account::Owner, password, stored).await {
+        if let Some(refusal) = ask_password(&state, &account, password, stored).await {
             return refusal;
         }
         let saved = sqlx::query("UPDATE people SET email = ? WHERE id = ?")

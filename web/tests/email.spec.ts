@@ -1,5 +1,5 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
-import { MAILBOX, MAIL_APP, TEST_PASSWORD } from "../playwright.config";
+import { MAILBOX, MAIL_APP, OWNER_EMAIL, TEST_PASSWORD } from "../playwright.config";
 
 // SPEC sections 1 and 18 (decision 0088): what email makes possible, against
 // a nine turtles that sends its emails to a made-up mail server on this
@@ -198,6 +198,7 @@ test("the owner's own account has no Delete account", async ({ browser }) => {
   const context = await browser.newContext({ baseURL: MAIL_APP });
   const page = await context.newPage();
   await page.goto("/");
+  await page.getByLabel("Email").fill(OWNER_EMAIL);
   await page.getByLabel("Password").fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page.locator("#sidebar")).toBeAttached();

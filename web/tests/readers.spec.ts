@@ -91,7 +91,7 @@ test("the owner sets their email and signs in with it", async ({ page, browser }
 
   await password.fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Save your email" }).click();
-  await expect(page.getByText(/^Saved\. You can sign in with owner@example\.com/)).toBeVisible();
+  await expect(page.getByText(/^Saved\. From now on, sign in with owner@example\.com/)).toBeVisible();
   await expect(password).toHaveValue("");
 
   // Closing Settings and opening it again shows the email just saved.

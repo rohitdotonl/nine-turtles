@@ -137,9 +137,7 @@ async fn a_stranger_guessing_one_email_never_locks_the_owner_out() {
     let fifth = sign_in(&base, "MIRA@example.com", "guess").await;
     assert_eq!(fifth.status(), StatusCode::TOO_MANY_REQUESTS);
 
-    // The owner signs in both ways, with the password alone and with their email.
-    let password_only = common::signed_in(&base).await;
-    assert_eq!(session(&base, &password_only).await["owner"], true);
+    // The owner still signs in with their email, in any letters.
     let by_email = sign_in(&base, "Rohit@Example.com", PASSWORD).await;
     assert_eq!(by_email.status(), StatusCode::NO_CONTENT);
     let owner_session = session(&base, &cookie_from(&by_email)).await;
@@ -151,20 +149,6 @@ async fn a_stranger_guessing_one_email_never_locks_the_owner_out() {
         sign_in(&base, "mira@example.com", "guess").await.status(),
         StatusCode::TOO_MANY_REQUESTS
     );
-}
-
-#[tokio::test]
-async fn the_password_alone_is_still_the_owners_sign_in() {
-    let base = common::start(common::config()).await;
-    let cookie = common::signed_in(&base).await;
-    let answer = session(&base, &cookie).await;
-    assert_eq!(answer["owner"], true);
-    assert_eq!(answer["email"], Value::Null);
-
-    // An empty email is the same as none.
-    let empty = sign_in(&base, "", PASSWORD).await;
-    assert_eq!(empty.status(), StatusCode::NO_CONTENT);
-    assert_eq!(session(&base, &cookie_from(&empty)).await["owner"], true);
 }
 
 #[tokio::test]
@@ -355,7 +339,7 @@ async fn sign_ups_sent_together_go_one_at_a_time_and_stop_at_twenty() {
 }
 
 #[tokio::test]
-async fn the_owners_email_cant_be_told_apart_while_the_password_alone_waits() {
+async fn the_owners_email_cant_be_told_apart() {
     let base = common::start(common::config()).await;
     let owner = common::signed_in(&base).await;
     post(
@@ -372,19 +356,7 @@ async fn the_owners_email_cant_be_told_apart_while_the_password_alone_waits() {
         StatusCode::NO_CONTENT
     );
 
-    // A stranger uses up the password-only sign-in's five free tries...
-    for _ in 0..4 {
-        assert_eq!(
-            sign_in(&base, "", "guess").await.status(),
-            StatusCode::UNAUTHORIZED
-        );
-    }
-    assert_eq!(
-        sign_in(&base, "", "guess").await.status(),
-        StatusCode::TOO_MANY_REQUESTS
-    );
-
-    // ...then tries emails: the owner's answers just as the others do.
+    // A stranger tries emails: the owner's answers just as the others do.
     let mut answers = Vec::new();
     for email in [
         "Rohit@example.com",
@@ -411,24 +383,24 @@ async fn the_owners_email_cant_be_told_apart_while_the_password_alone_waits() {
 async fn a_password_too_long_to_be_right_is_refused_at_once() {
     let (base, state) = common::start_with_state(common::config()).await;
     let long = "x".repeat(nine_turtles::password::MAXIMUM_LENGTH + 1);
-    let wrong = sign_in(&base, "", "guess").await;
+    let wrong = sign_in(&base, "nobody@example.com", "guess").await;
     let wrong = (wrong.status(), wrong.text().await.unwrap());
     let checked_before = state
         .wrong_passwords
         .load(std::sync::atomic::Ordering::Relaxed);
-    for email in ["", "nobody@example.com"] {
+    for email in [common::OWNER_EMAIL, "nobody@example.com"] {
         for _ in 0..10 {
             let answer = sign_in(&base, email, &long).await;
             assert_eq!((answer.status(), answer.text().await.unwrap()), wrong);
         }
     }
-    // Never checked or counted: the password alone still has its tries.
+    // Never checked or counted: the owner still has their tries.
     let checked = state
         .wrong_passwords
         .load(std::sync::atomic::Ordering::Relaxed);
     assert_eq!(checked, checked_before);
     assert_eq!(
-        sign_in(&base, "", PASSWORD).await.status(),
+        sign_in(&base, common::OWNER_EMAIL, PASSWORD).await.status(),
         StatusCode::NO_CONTENT
     );
 }
@@ -457,7 +429,7 @@ async fn guesses_sent_together_cant_race_past_the_five_free_tries() {
 }
 
 #[tokio::test]
-async fn guesses_at_other_emails_never_hold_up_the_owners_sign_in() {
+async fn the_owners_email_waits_in_the_same_line_as_any_other() {
     let (base, state) = common::start_with_state(common::config()).await;
     let owner = common::signed_in(&base).await;
     post(
@@ -480,12 +452,7 @@ async fn guesses_at_other_emails_never_hold_up_the_owners_sign_in() {
         async move { sign_in(&base, "nobody@example.com", "guess").await.status() }
     });
 
-    // A guess is waiting its turn, yet the password alone signs in at once.
-    let quickly = std::time::Duration::from_secs(30);
-    let signed_in = tokio::time::timeout(quickly, sign_in(&base, "", PASSWORD))
-        .await
-        .expect("the owner's sign-in waited behind the guesses");
-    assert_eq!(signed_in.status(), StatusCode::NO_CONTENT);
+    tokio::time::sleep(std::time::Duration::from_millis(300)).await;
     assert!(!guess.is_finished());
 
     // The owner's email waits in the same line as every other email, so its

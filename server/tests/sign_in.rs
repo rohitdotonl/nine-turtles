@@ -3,16 +3,25 @@
 
 mod common;
 
-use common::{DIAGNOSTICS_KEY, PASSWORD};
+use common::{DIAGNOSTICS_KEY, OWNER_EMAIL, PASSWORD};
 use nine_turtles::config::PasswordSetting;
 use reqwest::{Client, Response, StatusCode};
 
+/// Signs in as the owner, with their email and `password`.
 async fn sign_in(base: &str, password: &str) -> Response {
+    sign_in_with(base, Some(OWNER_EMAIL), password).await
+}
+
+async fn sign_in_with(base: &str, email: Option<&str>, password: &str) -> Response {
+    let body = match email {
+        Some(email) => serde_json::json!({ "email": email, "password": password }),
+        None => serde_json::json!({ "password": password }),
+    };
     Client::new()
         .post(format!("{base}/api/sign-in"))
         .header("content-type", "application/json")
         .header("sec-fetch-site", "same-origin")
-        .body(format!(r#"{{"password":"{password}"}}"#))
+        .body(body.to_string())
         .send()
         .await
         .unwrap()
@@ -53,6 +62,93 @@ async fn the_right_password_signs_this_device_in_for_a_year() {
     let answer = session(&base, Some(&cookie)).await;
     assert!(answer.contains(r#""signed_in":true"#), "{answer}");
     assert!(answer.contains(nine_turtles::VERSION));
+}
+
+#[tokio::test]
+async fn the_password_alone_signs_nobody_in() {
+    let base = common::start(common::config()).await;
+    for email in [None, Some(""), Some("   ")] {
+        let response = sign_in_with(&base, email, PASSWORD).await;
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        assert!(response.headers().get("set-cookie").is_none());
+        assert_eq!(
+            response.text().await.unwrap(),
+            r#"{"error":"email-needed"}"#
+        );
+    }
+}
+
+#[tokio::test]
+async fn the_owners_first_sign_in_saves_their_email() {
+    let base = common::start(common::config()).await;
+    // A new nine turtles: the owner has no email yet, so the first sign-in
+    // with the owner's password and an email nobody has makes it theirs.
+    let first = sign_in_with(&base, Some("Me@Example.com"), PASSWORD).await;
+    assert_eq!(first.status(), StatusCode::NO_CONTENT);
+    let cookie = cookie_from(&first);
+    let answer = session(&base, Some(&cookie)).await;
+    assert!(answer.contains(r#""owner":true"#), "{answer}");
+    assert!(answer.contains(r#""email":"Me@Example.com""#), "{answer}");
+
+    // From then on it's that email, in any letters, and no other.
+    assert_eq!(
+        sign_in_with(&base, Some("me@example.com"), PASSWORD)
+            .await
+            .status(),
+        StatusCode::NO_CONTENT
+    );
+    let other = sign_in_with(&base, Some(OWNER_EMAIL), PASSWORD).await;
+    assert_eq!(other.status(), StatusCode::UNAUTHORIZED);
+    assert_eq!(other.text().await.unwrap(), r#"{"error":"wrong-password"}"#);
+}
+
+#[tokio::test]
+async fn a_wrong_first_sign_in_saves_nothing() {
+    let base = common::start(common::config()).await;
+    let wrong = sign_in_with(&base, Some("stranger@example.com"), "a guess").await;
+    assert_eq!(wrong.status(), StatusCode::UNAUTHORIZED);
+    // The owner's email is still theirs to choose.
+    assert_eq!(
+        sign_in(&base, PASSWORD).await.status(),
+        StatusCode::NO_CONTENT
+    );
+}
+
+#[tokio::test]
+async fn new_emails_each_try_cant_guess_the_owners_first_password() {
+    let base = common::start(common::config()).await;
+    // Before the owner has an email, every try with a new email is a try
+    // at the owner's password, and counts for the owner too.
+    for n in 0..4 {
+        let email = format!("guess{n}@example.com");
+        assert_eq!(
+            sign_in_with(&base, Some(&email), "guess").await.status(),
+            StatusCode::UNAUTHORIZED
+        );
+    }
+    assert_eq!(
+        sign_in_with(&base, Some("guess4@example.com"), "guess")
+            .await
+            .status(),
+        StatusCode::TOO_MANY_REQUESTS
+    );
+    assert_eq!(
+        sign_in_with(&base, Some("guess5@example.com"), PASSWORD)
+            .await
+            .status(),
+        StatusCode::TOO_MANY_REQUESTS
+    );
+}
+
+#[tokio::test]
+async fn the_owners_first_email_has_to_look_like_one() {
+    let base = common::start(common::config()).await;
+    let typo = sign_in_with(&base, Some("rohit"), PASSWORD).await;
+    assert_eq!(typo.status(), StatusCode::UNAUTHORIZED);
+    assert_eq!(
+        sign_in(&base, PASSWORD).await.status(),
+        StatusCode::NO_CONTENT
+    );
 }
 
 #[tokio::test]

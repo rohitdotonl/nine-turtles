@@ -10,6 +10,8 @@ use std::{
 use nine_turtles::config::{Config, PasswordSetting};
 
 pub const PASSWORD: &str = "a quiet place to read";
+/// The owner's email: their first sign-in saves it (decision 0116).
+pub const OWNER_EMAIL: &str = "owner@example.com";
 pub const DIAGNOSTICS_KEY: &str = "test-diagnostics-key";
 
 /// Settings like the live app's: a password and a diagnostics key are set.
@@ -58,13 +60,17 @@ fn fresh_data_dir() -> PathBuf {
     dir
 }
 
-/// Signs in and returns the cookie a browser would send back.
+/// Signs the owner in with their email and password (on a new nine turtles,
+/// this first sign-in saves the email) and returns the cookie a browser
+/// would send back.
 pub async fn signed_in(base: &str) -> String {
     let response = reqwest::Client::new()
         .post(format!("{base}/api/sign-in"))
         .header("content-type", "application/json")
         .header("sec-fetch-site", "same-origin")
-        .body(format!(r#"{{"password":"{PASSWORD}"}}"#))
+        .body(format!(
+            r#"{{"email":"{OWNER_EMAIL}","password":"{PASSWORD}"}}"#
+        ))
         .send()
         .await
         .unwrap();

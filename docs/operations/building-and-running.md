@@ -39,7 +39,9 @@ server/target/release/nine-turtles set-password      # prints a line starting $a
 NINE_TURTLES_PASSWORD_HASH='<that line>' server/target/release/nine-turtles
 ```
 
-(Single quotes matter: the line contains `$` signs.) Every setting is listed
+(Single quotes matter: the line contains `$` signs.) Sign in with any email
+and that password: the first sign-in saves the email as the owner's
+(decision 0116). Every setting is listed
 in [settings.md](settings.md).
 
 ## Run the container image

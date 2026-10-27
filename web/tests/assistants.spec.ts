@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { TEST_PASSWORD } from "../playwright.config";
+import { OWNER_EMAIL, TEST_PASSWORD } from "../playwright.config";
 import { appReady, signIn } from "./screens";
 
 // Connecting an AI assistant through MCP: the "Connect this assistant?" page
@@ -24,6 +24,7 @@ test("the connect page comes after sign-in, says what the assistant may do, and 
   await page.goto(`/oauth/authorize${QUERY}`);
   await appReady(page);
   // Signed out, sign-in comes first; the address, with its query, stays.
+  await page.getByLabel("Email").fill(OWNER_EMAIL);
   await page.getByLabel("Password").fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
 
