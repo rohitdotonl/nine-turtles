@@ -89,7 +89,7 @@ async fn create(
         return problem(StatusCode::BAD_REQUEST, "no-name");
     };
     let made = async {
-        let mut transaction = state.db.begin().await?;
+        let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
         let id: i64 = sqlx::query_scalar(
             "INSERT INTO collections (person_id, name, created_at) VALUES (?, ?, ?) RETURNING id",
         )
@@ -178,7 +178,7 @@ async fn delete(
     Path(id): Path<i64>,
 ) -> Response {
     let deleted = async {
-        let mut transaction = state.db.begin().await?;
+        let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
         let articles: Vec<i64> = sqlx::query_scalar(
             "SELECT article_id FROM collection_articles
              WHERE collection_id = ? AND person_id = ? ORDER BY article_id",
@@ -279,7 +279,7 @@ async fn set_for_article(
 ) -> Response {
     let chosen = Value::from(form.collections).to_string();
     let saved = async {
-        let mut transaction = state.db.begin().await?;
+        let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
         if !has(&mut *transaction, person, id).await? {
             return Ok(false);
         }
