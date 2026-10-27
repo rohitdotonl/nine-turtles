@@ -451,6 +451,17 @@ section 28.
   through the Google Reader API, with an app password made in Settings
   (SPEC section 26, decision 0070).
 
+## Later: ideas the owner wants, not yet scheduled
+
+Things the owner has said yes to in principle, to build some day. Nothing
+here is planned yet; when one starts, it moves into the table above. (Other
+"not now" lists: SPEC → "Not in V1", and the research notes in
+`docs/RnD/`, which are ideas only.)
+
+- **A browser extension** for adding feeds while browsing (27 October 2026,
+  from the reader comparison). Until then, the bookmark in Settings › Add
+  from anywhere does the same job on computers.
+
 ---
 
 Responsive layout, accessibility and speed aren't left to the end: each
