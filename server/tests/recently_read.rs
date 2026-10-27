@@ -125,6 +125,18 @@ async fn recently_read_lists_the_last_50_opened_newest_opened_first_for_their_re
         tokio::time::sleep(std::time::Duration::from_millis(3)).await;
     }
     assert_eq!(recent(&base, &cookie).await, ["Post 1", "Post 2"]);
+    // Each says when it was last opened (seconds), for the screen's day headings; other lists don't.
+    let (_, page) = ask(&base, &cookie, "/api/articles?view=recent").await;
+    let now = nine_turtles::now();
+    for article in page["articles"].as_array().unwrap() {
+        let opened = article["opened"].as_i64().unwrap();
+        assert!(
+            (now - 60..=now + 1).contains(&opened),
+            "{opened} is not just now"
+        );
+    }
+    let (_, all) = ask(&base, &cookie, &format!("/api/articles?feed={feed}")).await;
+    assert!(all["articles"][0].get("opened").is_none());
 
     // Opening is no mark: nothing changes in Unread or Starred.
     let (_, unread) = ask(&base, &cookie, "/api/articles?view=unread").await;
