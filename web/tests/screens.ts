@@ -51,7 +51,7 @@ export const SCREENS: Screen[] = [
       await openReadingRoom(page, { unread: libraryApp() !== FEEDS_APP });
       await page.keyboard.press("o");
       await expect(page.getByRole("heading", { level: 2, name: "The pleasure of a slow letter" })).toBeFocused();
-      await expect(page.getByRole("img", { name: "A river drawn as three blue lines" })).toBeVisible();
+      await expect(page.locator('img[alt="A river drawn as three blue lines"]')).toBeVisible();
     },
   },
   {

@@ -1482,15 +1482,21 @@ input {
   At night a picture is dimmed a little, as Apple Books does, so a pale
   illustration doesn't glare on the dark page; never inverted. A linked
   picture shows at full brightness under the pointer or the keyboard
-  (decision 0050).
+  (decision 0050), as does one that opens larger (decision 0107); opened,
+  it is shown at full brightness (PictureSheet.svelte).
 */
-:root[data-mode="dark"] .article-text :where(img, svg):not(:where(a:hover, a:focus-visible) *) {
+:root[data-mode="dark"] .article-text :where(img, svg):not(:where(a:hover, a:focus-visible) *):not(.openable:hover, .openable:focus-visible) {
   filter: brightness(0.82);
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-mode]) .article-text :where(img, svg):not(:where(a:hover, a:focus-visible) *) {
+  :root:not([data-mode]) .article-text :where(img, svg):not(:where(a:hover, a:focus-visible) *):not(.openable:hover, .openable:focus-visible) {
     filter: brightness(0.82);
   }
+}
+
+/* A picture shown smaller than it really is opens larger with a press (decision 0107, pictures.ts). */
+.article-text img.openable {
+  cursor: pointer;
 }
 
 /*

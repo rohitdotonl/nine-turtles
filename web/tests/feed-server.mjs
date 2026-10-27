@@ -9,7 +9,10 @@
 //   /plain/            a page naming no feed
 //   /reading/          Reading Room's home page, naming /reading.xml: one
 //                      full article (headings, a quote, code, a table, an
-//                      image and a tracking image), one summary only
+//                      image and a tracking image), one summary only, and
+//                      a summary with pictures: a big one that opens
+//                      larger, the same inside a link, a small one and
+//                      one that opens larger only in a narrow window
 //   /videos/           Slow Films' home page, naming /videos.xml: a made-up
 //                      YouTube channel's feed (Atom with media details),
 //                      one video with a description and one without
@@ -118,7 +121,7 @@ const reading = `<?xml version="1.0"?>
 <description>&lt;p&gt;This feed shares just the opening paragraph of each article.&lt;/p&gt;</description></item>
 <item><title>A third, shorter note</title><link>${ROOM}third</link><guid>${ROOM}third</guid>
 <pubDate>${new Date(NEWEST - 2 * DAY).toUTCString()}</pubDate>
-<description>&lt;p&gt;Three is a good number of articles.&lt;/p&gt;</description></item>
+<description>&lt;p&gt;Three is a good number of articles.&lt;/p&gt;&lt;img src="http://127.0.0.1:${port}/reading/hills.svg" alt="Two hills at dusk, drawn in greys"&gt;&lt;a href="${ROOM}hills"&gt;&lt;img src="http://127.0.0.1:${port}/reading/hills.svg" alt="The same hills, as a link"&gt;&lt;/a&gt;&lt;img src="http://127.0.0.1:${port}/reading/stone.svg" alt="A small stone"&gt;&lt;img src="http://127.0.0.1:${port}/reading/field.svg" alt="A wide field"&gt;</description></item>
 </channel></rss>`;
 
 const RIVER = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="240" viewBox="0 0 640 240">
@@ -126,6 +129,23 @@ const RIVER = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="240" 
 <path d="M0 80 C160 40 320 120 640 70" stroke="#2f4a7a" stroke-width="6" fill="none"/>
 <path d="M0 130 C200 90 360 170 640 120" stroke="#2f4a7a" stroke-width="6" fill="none"/>
 <path d="M0 180 C180 140 380 220 640 170" stroke="#2f4a7a" stroke-width="6" fill="none"/></svg>`;
+
+// A big picture (1600 by 1000), shown smaller in the column, so it opens larger (decision 0107).
+const HILLS = `<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+<rect width="1600" height="1000" fill="#e9e4dc"/>
+<path d="M0 700 C300 450 600 450 900 700 Z" fill="#8c8a86"/>
+<path d="M600 1000 C900 500 1300 500 1600 760 L1600 1000 Z" fill="#5c5b58"/>
+<rect y="760" width="1600" height="240" fill="#5c5b58"/></svg>`;
+
+// A small picture (160 by 100), shown at its full size, so it stays as it was.
+const STONE = `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="100" viewBox="0 0 160 100">
+<rect width="160" height="100" fill="#e9e4dc"/><ellipse cx="80" cy="60" rx="50" ry="28" fill="#8c8a86"/></svg>`;
+
+// A picture (FIELD_WIDTH by 160) that fits the column of a wide window but is
+// shown smaller in a narrow one, so it opens larger only there.
+const FIELD_WIDTH = 560;
+const FIELD = `<svg xmlns="http://www.w3.org/2000/svg" width="${FIELD_WIDTH}" height="160" viewBox="0 0 ${FIELD_WIDTH} 160">
+<rect width="${FIELD_WIDTH}" height="160" fill="#e9e4dc"/><rect y="100" width="${FIELD_WIDTH}" height="60" fill="#8c8a86"/></svg>`;
 
 // A made-up blog in Hindi, to show search finds Hindi words whole.
 const kavita = (title, link) => `<?xml version="1.0"?><rss version="2.0"><channel><title>${title}</title>
@@ -292,6 +312,9 @@ createServer((request, response) => {
   if (path === "/reading/") return html(page("Reading Room", [["Reading Room", "/reading.xml"]]));
   if (path === "/reading.xml") return xml(reading);
   if (path === "/reading/river.svg") return send("image/svg+xml", RIVER);
+  if (path === "/reading/hills.svg") return send("image/svg+xml", HILLS);
+  if (path === "/reading/stone.svg") return send("image/svg+xml", STONE);
+  if (path === "/reading/field.svg") return send("image/svg+xml", FIELD);
   if (path === "/reading/pixel.gif") return send("image/gif", "GIF89a");
   if (path === "/videos/") return html(page("Slow Films", [["Slow Films", "/videos.xml", "application/atom+xml"]]));
   if (path === "/videos.xml") return send("application/atom+xml", videos);
