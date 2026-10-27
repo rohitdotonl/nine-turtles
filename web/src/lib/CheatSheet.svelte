@@ -59,8 +59,8 @@
   }
 
   const FILTERS: [string, string][] = [
-    ["is:unread", "Unread items only"],
-    ["is:starred", "Starred items only"],
+    ["is:unread", "Unread articles only"],
+    ["is:starred", "Starred articles only"],
     ["feed:name", "One feed"],
     ["folder:name", "One folder"],
     ["after:YYYY-MM-DD", "Published after that day"],

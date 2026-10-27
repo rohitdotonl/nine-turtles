@@ -166,6 +166,8 @@
                         {#if row.feed.state === "working"}Checked just now{:else}{lastWorked(row.feed)}{/if}{#if row.feed.state === "dead"}. Still checked once a day, in case it comes back{/if}.{#if row.feed.frequency}
                         {row.feed.frequency}.{/if}
                       </p>
+                      <!-- The address it tried, in small muted text, broken anywhere so a long one never runs off a phone. -->
+                      <p class="tried w-full text-meta text-muted">Tried {row.feed.url}</p>
                     {/if}
                     <p role="status" class={["w-full text-ink", !row.message && "sr-only"]}>{row.message}</p>
                     {#if row.unsubscribed}
@@ -222,6 +224,9 @@
   }
   .feed-row > p {
     line-height: 1.4;
+  }
+  .tried {
+    overflow-wrap: anywhere;
   }
   .actions {
     display: flex;

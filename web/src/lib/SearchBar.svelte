@@ -7,7 +7,8 @@
   button that removes it; Backspace in an empty field removes the last one.
   The panel and the chips always match, since both show the same `query`.
 
-  While typing, filters are suggested under the field (↓ and ↑ choose, Enter
+  While typing, filters are suggested in a small panel floating under the
+  field, over the list, so the results never move (↓ and ↑ choose, Enter
   takes one). Enter searches straight away; otherwise the search follows a
   moment after typing stops. Tab moves from the field into the open panel.
   Escape is the app's: it closes search and returns you to where you were.
@@ -472,25 +473,38 @@
         </div>
       {/if}
     </div>
+    <!--
+      The suggestions as you type (is:, in: and the rest): a small panel floating over the list, in
+      the family of the search options, so the results under it never move. Still a listbox the
+      field controls: ↓ and ↑ choose (aria-activedescendant), Enter takes one, and screen readers
+      hear each as it's chosen. The chosen one has a bar at its start in the text color and a
+      tone behind it, never the accent.
+    -->
+    <ul
+      id="search-suggestions"
+      role="listbox"
+      aria-label="Suggestions"
+      hidden={offered.length === 0}
+      class="floating search-suggestions absolute top-full left-0 z-30 mt-1 w-full max-w-[24rem] cursor-default p-1.5"
+    >
+      {#each offered as suggestion, index (suggestion.label)}
+        <!-- Chosen with the mouse on press, before the field loses the keyboard's place. -->
+        <li
+          id="search-suggestion-{index}"
+          role="option"
+          aria-selected={index === active}
+          onmousedown={(event) => {
+            event.preventDefault();
+            choose(suggestion);
+          }}
+          class={["flex min-h-11 items-center rounded-md border-l-4 px-3 font-mono text-small", index === active ? "border-ink bg-[var(--tone)]" : "border-transparent"]}
+        >
+          {suggestion.label}
+        </li>
+      {/each}
+    </ul>
   </div>
 
-  <ul id="search-suggestions" role="listbox" aria-label="Suggestions" hidden={offered.length === 0} class="mt-1 rounded-md border border-muted bg-paper py-1">
-    {#each offered as suggestion, index (suggestion.label)}
-      <!-- Chosen with the mouse on press, before the field loses the keyboard's place. -->
-      <li
-        id="search-suggestion-{index}"
-        role="option"
-        aria-selected={index === active}
-        onmousedown={(event) => {
-          event.preventDefault();
-          choose(suggestion);
-        }}
-        class={["flex min-h-11 cursor-default items-center border-l-4 px-3 font-mono text-small", index === active ? "border-accent bg-tint-list" : "border-transparent"]}
-      >
-        {suggestion.label}
-      </li>
-    {/each}
-  </ul>
 
   <p id="search-problem" role="status" class="mt-1 text-small empty:sr-only">{problem}</p>
 

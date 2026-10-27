@@ -41,6 +41,11 @@ test("Recently read lists what was opened, newest first, and can be hidden from 
   await expect(rows).toHaveCount(2);
   await expect(rows.nth(0)).toHaveAccessibleName(new RegExp(MIDDLE.replace(/[()]/g, "\\$&")));
   await expect(rows.nth(1)).toHaveAccessibleName(new RegExp(NEWEST.replace(/[()]/g, "\\$&")));
+  // A quiet day heading over what was opened today, once, above the first; other lists have none.
+  const days = page.locator("#list-pane").getByRole("heading", { level: 3 });
+  await expect(days.first()).toHaveText("Today");
+  await expect(page.locator("#list-pane").getByRole("heading", { level: 3, name: "Today" })).toHaveCount(1);
+  await expect(days.first()).toHaveCSS("font-weight", "600");
 
   // Edit feed says how often the feed posts, in words, under its name.
   await page.goto(new URL(`/feeds/${id}/edit`, FEEDS_APP).href);

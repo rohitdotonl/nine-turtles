@@ -113,9 +113,11 @@
   --surface-raised: #28282a;
   --raised-edge: rgb(255 255 255 / 0.08);
   --raised-group: color-mix(in srgb, #ffffff 4%, var(--surface-raised));
-  --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
   --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
   --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
+  --chosen: color-mix(in srgb, var(--ink) 65%, var(--paper));
+  --chosen-ink: var(--paper);
+  --chosen-edge: transparent;
   --scrim: rgb(0 0 0 / 0.45);
 }
 
@@ -165,9 +167,11 @@
   --link-visited: #d0adf0;
   --raised-edge: rgb(255 255 255 / 0.08);
   --raised-group: color-mix(in srgb, #ffffff 4%, var(--surface-raised));
-  --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
   --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
   --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
+  --chosen: color-mix(in srgb, var(--ink) 65%, var(--paper));
+  --chosen-ink: var(--paper);
+  --chosen-edge: transparent;
   --scrim: rgb(0 0 0 / 0.45);
 }
 
@@ -190,9 +194,11 @@
     --surface-raised: #28282a;
     --raised-edge: rgb(255 255 255 / 0.08);
     --raised-group: color-mix(in srgb, #ffffff 4%, var(--surface-raised));
-    --raised: color-mix(in srgb, var(--ink) 24%, var(--paper));
     --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
     --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
+    --chosen: color-mix(in srgb, var(--ink) 65%, var(--paper));
+    --chosen-ink: var(--paper);
+    --chosen-edge: transparent;
     --scrim: rgb(0 0 0 / 0.45);
   }
 }
@@ -275,49 +281,48 @@ body {
 }
 
 /*
-  A heading that receives the keyboard's place when a screen opens (so screen
-  readers start reading there) shows a quiet outline when you got there by
-  keyboard, so you can always see where the focus is (SPEC section 19), and
-  nothing on first load or after a click (main.ts notes which you're using).
+  A heading that receives the keyboard's place (a screen opening, a sheet,
+  an opened article, a shortcut such as g then a), so screen readers start
+  reading there, draws no ring, even after a key: it can't be pressed, and a
+  ring would make it look like a button. The next Tab lands on a real
+  control, which rings as always (decisions 0042, 0047; since 27 October
+  2026 every such heading, the list's and Settings' titles too).
 */
-:is(h1, h2, h3)[tabindex="-1"]:focus {
-  outline: none;
-}
-:root[data-keyboard] :is(h1, h2, h3)[tabindex="-1"]:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 4px;
-  border-radius: 2px;
-}
-/*
-  A sheet's or the shortcut list's title takes the keyboard's place as it
-  opens (so screen readers start there) but draws no ring: it can't be
-  pressed, and it would look like a button. The first Tab lands on a real
-  control, which rings as always (decision 0042).
-*/
-:root[data-keyboard] dialog h2[tabindex="-1"]:focus-visible {
-  outline: none;
-}
-/*
-  An opened article's title is the same: the keyboard's place moves there so
-  screen readers start reading at the title, but a ring round the largest
-  words on the page would be louder than the article, and the title can't be
-  pressed. The next Tab lands on the article's first link or control, which
-  rings as always (decision 0047).
-*/
-:root[data-keyboard] .article-title[tabindex="-1"]:focus-visible {
+:is(h1, h2, h3)[tabindex="-1"]:focus,
+:is(h1, h2, h3)[tabindex="-1"]:focus-visible {
   outline: none;
 }
 
 /*
-  The sidebar's wordmark is a name, not a control: it's never a Tab stop
-  (tabindex -1). The keyboard lands on it only when the app opens or the
-  phone's feeds screen returns, so screen readers start at the top. Then its
-  outline stands clear of the letters with soft corners, inside its own row,
-  so it never looks clipped (decision 0041).
+  "Skip to articles": the first Tab stop on the app's screen, out of sight
+  until the keyboard reaches it, then a small solid label at the top left
+  with the usual ring. Pressing it puts the keyboard on the list itself.
 */
-:root[data-keyboard] h1.wordmark[tabindex="-1"]:focus-visible {
-  outline-offset: 3px;
-  border-radius: 6px;
+.skip-link {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 60;
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  padding-inline: 1rem;
+  border: 1px solid var(--raised-edge, transparent);
+  border-radius: 0.5rem;
+  background-color: var(--surface-raised);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.14);
+}
+.skip-link:not(:focus) {
+  position: absolute;
+  /* Out of sight, but still its full 44px tall, as every target is. */
+  width: 1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 /*
@@ -384,8 +389,23 @@ body {
   border-top: 1px solid color-mix(in srgb, var(--ink) 9%, transparent);
 }
 .item-list > li:has(> [aria-current]) + li::before,
-.item-list > li:has(> [aria-current])::before {
+.item-list > li:has(> [aria-current])::before,
+.item-list > li:has(> .list-day)::before {
   display: none;
+}
+/*
+  Recently read's day headings (SPEC section 5): quiet, as the sidebar's
+  section names are, small, semibold and in the muted grey, on the titles'
+  edge, with room above to part one day from the next. Never a count.
+*/
+.list-day {
+  padding: 1.25rem var(--list-end, 1.5rem) 0.375rem var(--list-start, 2rem);
+  font-size: var(--text-meta);
+  font-weight: 600;
+  color: var(--muted);
+}
+.item-list > li:first-child > .list-day {
+  padding-top: 0.25rem;
 }
 @media (hover: hover) {
   .item-list > li:has(> .item-row:hover) + li::before,
@@ -420,7 +440,7 @@ body {
 /*
   The foot of a list that has more to load: reaching it loads the next 50
   (decision 0074), and "Loading…" shows there meanwhile, in small grey
-  centred text. Its "Show older items" button is for the keyboard and
+  centred text. Its "Show older articles" button is for the keyboard and
   screen readers: hidden until it has the keyboard's place (or a load
   failed), then a small, quiet pill centred under the list, in muted grey
   with a soft hairline around it. Never in the accent: the accent marks
@@ -962,8 +982,8 @@ textarea {
 
   /*
     A segmented choice (Settings, the search options): a row of options on a
-    soft track; the chosen one is a raised tile, a lighter fill with a small
-    shadow and no edge, and semibold words. Each option is a real radio button or tick box, hidden
+    soft track; the chosen one is a raised tile with a small shadow and
+    semibold words, with a thin edge by day and a strong fill by night. Each option is a real radio button or tick box, hidden
     under its tile, so keyboards and screen readers get the usual control.
   */
   .choices {
@@ -1016,11 +1036,17 @@ textarea {
     opacity: 0;
     cursor: pointer;
   }
-  /* The chosen one: a raised fill with a small shadow under it and no edge, as Apple draws it (decision 0042), and semibold words. */
+  /*
+    The chosen one: a raised tile with a small shadow under it, as Apple
+    draws it (decision 0042), and semibold words, at 3 : 1 against the rest
+    of the control: by day with a thin edge, by night filled in the softened
+    text color with its words in the page's color (--chosen, above).
+  */
   .choice:has(input:checked) {
-    background-color: var(--raised, var(--paper));
+    border-color: var(--chosen-edge);
+    background-color: var(--chosen);
     box-shadow: var(--raised-shadow, 0 1px 2px rgb(0 0 0 / 0.12));
-    color: var(--ink);
+    color: var(--chosen-ink);
     font-weight: 600;
   }
   .choice:has(input:focus-visible) {
@@ -1160,6 +1186,30 @@ textarea {
   }
 
   /*
+    The welcome's field (SPEC section 2): its hint, "Paste a website or feed
+    URL", steps down from 16px to as little as 10.5px as the row narrows, so on
+    a small phone (320px) or with a larger text size it is never cut off.
+    The row's width less Add feed, the gap and the field's own padding
+    (about 8.75rem, which grows with the text size) is what's left for the hint, which is under 14.5 times
+    its type size wide. On a narrow row the field's padding steps in a
+    little too. What's typed stays 16px, so a phone never zooms in.
+  */
+  .welcome-row {
+    container-type: inline-size;
+  }
+
+  .welcome-field::placeholder,
+  .welcome-hint {
+    font-size: clamp(10.5px, calc((100cqi - 8.75rem) / 14.5), 1rem);
+  }
+
+  @container (max-width: 22rem) {
+    .welcome-row > .field {
+      padding-inline: 0.5rem;
+    }
+  }
+
+  /*
     The one search field (decision 0051): the list's search and the
     sidebar's "Find a feed or folder" are the same slim capsule, as Apple
     Books draws its search: --search-height tall (36px with a mouse on a
@@ -1202,6 +1252,16 @@ textarea {
   --place-focus: color-mix(in srgb, var(--ink) 65%, transparent);
   /* Searched words in a result: a faint tone of the accent behind them (contrast.test.ts checks text on it). */
   --mark: color-mix(in srgb, var(--accent) 12%, transparent);
+  /*
+    A segmented choice's chosen tile (.choice), held to 3 : 1 against the
+    rest of the control (WCAG's non-text contrast; contrast.test.ts checks):
+    by day the page's own tone with a thin edge of the softened text color;
+    by night (each dark theme's block) filled with the softened text color,
+    its words in the page's color, with no edge.
+  */
+  --chosen: var(--paper);
+  --chosen-ink: var(--ink);
+  --chosen-edge: color-mix(in srgb, var(--ink) 60%, var(--paper));
   /* A field's edge and fill (.field). */
   --field-edge: color-mix(in srgb, var(--ink) 55%, transparent);
   --field: color-mix(in srgb, var(--ink) 3%, var(--paper));
@@ -1340,6 +1400,19 @@ input {
   display: inline-block;
   max-width: 100%;
   text-wrap: balance;
+}
+
+/*
+  The link to the publisher is a row of its own under the sentence, at
+  least 44px tall to press, its words centred and underlined.
+*/
+.article-note > a {
+  display: flex;
+  width: fit-content;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  margin-inline: auto;
 }
 
 .article-note a {

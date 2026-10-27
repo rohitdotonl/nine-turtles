@@ -113,7 +113,7 @@ test("while signing in, the button says it's busy and a second press sends nothi
   expect(requests).toBe(1);
 });
 
-test("sign in with the keyboard, stay signed in, sign out", async ({ page }) => {
+test("sign in with the keyboard, stay signed in, sign out", async ({ page, isMobile }) => {
   await page.goto("/");
   await appReady(page);
   // The email field has the keyboard's place; the owner leaves it empty and Tabs on to the password.
@@ -121,8 +121,10 @@ test("sign in with the keyboard, stay signed in, sign out", async ({ page }) => 
   await page.keyboard.type(TEST_PASSWORD);
   await page.keyboard.press("Enter");
   await expect(page.locator("#sidebar")).toBeAttached();
-  // The keyboard's place moves to the new screen's heading.
-  await expect(page.getByRole("heading", { level: 1, name: "nine turtles" })).toBeFocused();
+  // The keyboard's place moves to the new screen's heading: what there is to read (here, with no
+  // feeds yet, the welcome's), or on a phone's feeds screen its name (decision 0115).
+  if (isMobile) await expect(page.getByRole("heading", { level: 1, name: "nine turtles" })).toBeFocused();
+  else await expect(page.getByRole("heading", { level: 2, name: "A quiet place to read." })).toBeFocused();
 
   // Still signed in after closing and reopening (a reload, here).
   await page.reload();

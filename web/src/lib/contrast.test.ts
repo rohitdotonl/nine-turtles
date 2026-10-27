@@ -305,9 +305,7 @@ describe.each(Object.entries(SELECTORS))(
     const colors = THEMES[name]!;
     const dark = luminance(colors.paper!) < 0.5;
     const groupShare = darkShare(selector, "group");
-    const raisedShare = darkShare(selector, "raised");
     const group = dark ? mix(colors.ink!, colors.paper!, groupShare!) : colors.list!;
-    const raised = dark ? mix(colors.ink!, colors.paper!, raisedShare!) : colors.paper!;
     const track = mix(colors.ink!, group, 0.07);
 
     it("set a dark theme's group a clear step off the page", () => {
@@ -323,11 +321,62 @@ describe.each(Object.entries(SELECTORS))(
       }
     });
 
-    it("raise the chosen segment above its track, with its words at 4.5 : 1", () => {
-      // Lighter than its track: the page's own tone in a light theme, a lighter mix in a dark one.
-      expect(luminance(raised)).toBeGreaterThan(luminance(track));
-      expect(contrast(colors.ink!, raised)).toBeGreaterThanOrEqual(4.5);
+    it("keep the unchosen segments' words at 4.5 : 1 on their track", () => {
       expect(contrast(colors["ink-2"]!, track)).toBeGreaterThanOrEqual(4.5);
+    });
+  },
+);
+
+// A segmented choice's chosen side (Inbox / River, Light / Dark…, in
+// Settings, Edit feed and the Aa panel) must stand at 3 : 1 against the rest
+// of the control, WCAG's non-text contrast (the first floor): by day a thin
+// edge of the softened text color around the page-toned tile, by night the
+// tile filled with the softened text color and its words in the page's
+// color. On every surface a control sits on: the page, the panes, a grouped
+// list, a sheet or panel, and a group inside one.
+describe.each(Object.entries(SELECTORS))(
+  "the %s theme's segmented choices",
+  (name, selector) => {
+    const colors = THEMES[name]!;
+    const dark = luminance(colors.paper!) < 0.5;
+    const raisedSurface = colors["surface-raised"]!;
+    const group = dark ? mix(colors.ink!, colors.paper!, darkShare(selector, "group")!) : colors.list!;
+    const raisedGroup = dark ? mix("#ffffff", raisedSurface, 0.04) : group;
+    const surfaces = { paper: colors.paper!, list: colors.list!, sidebar: colors.sidebar!, raised: raisedSurface, group, raisedGroup };
+    const share = (block: string, variable: string) => {
+      const found = block.match(new RegExp(`--${variable}: color-mix\\(in srgb, var\\(--ink\\) (\\d+)%, var\\(--paper\\)\\);`));
+      return Number(found![1]) / 100;
+    };
+
+    it("draw the chosen tile from the --chosen colors", () => {
+      expect(css).toMatch(
+        /\.choice:has\(input:checked\) \{\s*border-color: var\(--chosen-edge\);\s*background-color: var\(--chosen\);[^}]*color: var\(--chosen-ink\);/,
+      );
+    });
+
+    it("set the chosen side at 3 : 1 against the rest of the control, its words at 4.5 : 1", () => {
+      if (dark) {
+        // By night: a strong fill, the words in the page's color, and no edge.
+        const start = css.indexOf(selector);
+        const block = css.slice(start, css.indexOf("}", start));
+        expect(block).toContain("--chosen-ink: var(--paper);");
+        expect(block).toContain("--chosen-edge: transparent;");
+        const tile = mix(colors.ink!, colors.paper!, share(block, "chosen"));
+        expect(contrast(colors.paper!, tile)).toBeGreaterThanOrEqual(4.5);
+        for (const [surface, background] of Object.entries(surfaces)) {
+          expect(contrast(tile, mix(colors.ink!, background, 0.07)), `on ${surface}`).toBeGreaterThanOrEqual(3);
+        }
+      } else {
+        // By day: the page's own tone, with a thin edge that stands out from both the tile and the track.
+        expect(css).toContain("--chosen: var(--paper);");
+        expect(css).toContain("--chosen-ink: var(--ink);");
+        const edge = mix(colors.ink!, colors.paper!, share(css, "chosen-edge"));
+        expect(contrast(edge, colors.paper!)).toBeGreaterThanOrEqual(3);
+        expect(contrast(colors.ink!, colors.paper!)).toBeGreaterThanOrEqual(4.5);
+        for (const [surface, background] of Object.entries(surfaces)) {
+          expect(contrast(edge, mix(colors.ink!, background, 0.07)), `on ${surface}`).toBeGreaterThanOrEqual(3);
+        }
+      }
     });
   },
 );

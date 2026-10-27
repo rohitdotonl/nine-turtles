@@ -35,6 +35,14 @@ test("a moved feed is listed in plain words, and Find new address moves it", asy
   await expect(feed).toContainText("The site says the feed isn't there any more.");
   // A word on its own: the title carries a timestamp, which may end in 404.
   await expect(feed).not.toContainText(/\b404\b/);
+  // The address it tried, in small muted text, on a computer and a phone alike.
+  const tried = feed.locator(".tried");
+  await expect(tried).toContainText(`Tried ${FEED_SITE}/blog/${name}/`);
+  const [triedSize, nameSize] = await Promise.all([
+    tried.evaluate((element) => parseFloat(getComputedStyle(element).fontSize)),
+    feed.getByRole("heading", { name: title }).evaluate((element) => parseFloat(getComputedStyle(element).fontSize)),
+  ]);
+  expect(triedSize).toBeLessThan(nameSize);
 
   // The site names one feed: one plain question, rather than a list of one (decision 0106).
   await feed.getByRole("button", { name: `Find new address for ${title}` }).click();

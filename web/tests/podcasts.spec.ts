@@ -61,10 +61,25 @@ test("an episode plays, and carries on where it stopped after a reload", async (
 
   await open(page, LONG);
   const slider = player(page).getByRole("slider", { name: "Position" });
+  // Until it starts, the player says how long it is; the 15 and 30 in the skip buttons are big enough to read.
+  const length = player(page).locator(".episode-length");
+  await expect(length).toHaveText(/^1 min\s*long$/);
+  for (const name of ["Back 15 seconds", "Forward 30 seconds"]) {
+    const button = player(page).getByRole("button", { name });
+    await expect(button).toHaveAttribute("title", name);
+    const figures = (await button.locator("text").boundingBox())!;
+    expect(figures.height).toBeGreaterThanOrEqual(8);
+  }
+  // Its show notes end with a link to the episode's own page, on a row 44px tall.
+  const page_ = article(page).getByRole("link", { name: /^Read the episode page on Podcast cast-/ });
+  await expect(page_).toBeVisible();
+  expect((await page_.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   // By the keyboard: Space on Play, and the button keeps the keyboard as it becomes Pause.
   await press(page, player(page).getByRole("button", { name: "Play" }), "Space");
   await expect(player(page).getByRole("button", { name: "Pause" })).toBeFocused();
   await expect(bar(page)).toBeVisible();
+  // Once it has started, the times under the slider say how long: the length beside the speed steps aside.
+  await expect(length).toHaveText("");
   await expect.poll(async () => Number(await slider.inputValue()), { timeout: 10_000 }).toBeGreaterThanOrEqual(3);
   await checkAccessibility(page);
   await page.keyboard.press("Enter");
@@ -103,13 +118,20 @@ test("an episode plays, and carries on where it stopped after a reload", async (
   expect(await page.evaluate(() => [...document.querySelectorAll("audio")].some((audio) => !audio.paused))).toBe(false);
 });
 
-test("on a phone, the Now playing bar sits just above the article's toolbar", async ({ page, isMobile }) => {
+test("on a phone, the Now playing bar steps aside for the episode's own player, and otherwise sits just above the article's toolbar", async ({ page, isMobile }) => {
   test.skip(!isMobile, "the phone layout only");
   await openPodcast(page, false);
   await open(page, LONG);
   await press(page, player(page).getByRole("button", { name: "Play" }));
-  await expect(bar(page)).toBeVisible();
+  await expect(player(page).getByRole("button", { name: "Pause" })).toBeVisible();
+  // The same episode's player is on screen, so the bar would only say it twice.
+  await expect(bar(page)).toHaveCount(0);
+  // On the next episode, the one playing shows in the bar.
   const toolbar = article(page).getByRole("group", { name: "Article actions" });
+  await toolbar.getByRole("button", { name: "Next" }).click();
+  await expect(article(page).getByRole("heading", { name: SHORT })).toBeVisible();
+  await expect(bar(page)).toBeVisible();
+  await expect(bar(page)).toContainText(LONG);
   const [above, below] = [await bar(page).boundingBox(), await toolbar.boundingBox()];
   expect(above && below && Math.abs(above.y + above.height - below.y)).toBeLessThanOrEqual(1);
   await checkAccessibility(page);
