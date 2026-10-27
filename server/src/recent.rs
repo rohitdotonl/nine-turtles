@@ -51,7 +51,8 @@ async fn opened(
 }
 
 /// Notes that reader `person` opened article `id` at `at` (milliseconds),
-/// keeping only their latest `KEPT` times. Both in one transaction.
+/// keeping only the latest `KEPT` times their list can show. Both in one
+/// transaction.
 pub async fn note(db: &sqlx::SqlitePool, person: i64, id: i64, at: i64) -> Result<(), sqlx::Error> {
     let mut transaction = db.begin().await?;
     let changed =
@@ -63,14 +64,19 @@ pub async fn note(db: &sqlx::SqlitePool, person: i64, id: i64, at: i64) -> Resul
             .await?
             .rows_affected();
     if changed > 0 {
-        // Every time but the latest 50 goes, read through the
-        // `entries_opened` index: at most one, usually.
+        // Every time but the latest 50 the list can show goes, read through
+        // the `entries_opened` index: at most one, usually. A muted article,
+        // or one of a feed since left, isn't listed, so it keeps no place
+        // and the list always fills its 50.
         sqlx::query(
             "UPDATE entries SET opened_at = NULL
              WHERE person_id = ?1 AND opened_at IS NOT NULL AND article_id NOT IN (
-                 SELECT article_id FROM entries
-                 WHERE person_id = ?1 AND opened_at IS NOT NULL
-                 ORDER BY opened_at DESC, article_id DESC LIMIT ?2)",
+                 SELECT entries.article_id FROM entries
+                     CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
+                         AND subscriptions.feed_id = entries.feed_id
+                 WHERE entries.person_id = ?1 AND entries.opened_at IS NOT NULL
+                     AND entries.muted = 0 AND subscriptions.unsubscribed_at IS NULL
+                 ORDER BY entries.opened_at DESC, entries.article_id DESC LIMIT ?2)",
         )
         .bind(person)
         .bind(KEPT)

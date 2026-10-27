@@ -279,8 +279,9 @@ async function listFromServer(source: Source, order: Order, after: string | null
   query.set("order", order);
   if (after !== null) query.set("after", after);
   await saved();
-  // Recently read lists the article just opened too.
-  if ("view" in source && source.view === "recent") await opening;
+  // Recently read lists the article just opened too, waiting a moment for
+  // its note, never long: on a slow connection the list comes without it.
+  if ("view" in source && source.view === "recent") await Promise.race([opening, new Promise((done) => setTimeout(done, OPENING_WAIT))]);
   const body = await getJson(`/api/${"search" in source ? "search" : "articles"}?${query}`);
   if (!isRecord(body) || !Array.isArray(body.articles)) throw new Error("nine turtles sent an unexpected answer");
   return {
@@ -411,6 +412,8 @@ function send(path: string, body: unknown): Promise<void> {
 
 /** The last "opened" note on its way, so Recently read waits for it. */
 let opening: Promise<unknown> = Promise.resolve();
+/** The longest Recently read waits for that note, in milliseconds. */
+const OPENING_WAIT = 2_000;
 
 /**
  * Tells the server the reading area showed an article, for Recently read
@@ -550,7 +553,7 @@ export function hiddenFrom(value: unknown): Hideable[] {
   return HIDEABLE.filter((list) => value.includes(list));
 }
 
-/** Hides lists from the sidebar, or shows them again (Settings › Sidebar, decision 0105). */
+/** Hides lists from the sidebar, or shows them again (Settings › Show in the sidebar, decision 0105). */
 export async function saveHidden(hidden: Hideable[]): Promise<void> {
   await send("/api/settings", { hidden });
   rememberHidden(hidden);

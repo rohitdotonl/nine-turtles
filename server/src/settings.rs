@@ -68,7 +68,7 @@ impl LetGo {
     }
 }
 
-/// A list the reader can hide from the sidebar (Settings › Sidebar). Unread,
+/// A list the reader can hide from the sidebar (Settings › Show in the sidebar). Unread,
 /// folders and feeds always show. A hidden list still opens by its address
 /// and its keys.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]

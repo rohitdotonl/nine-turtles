@@ -9,6 +9,12 @@
 //! when it arrived if they don't say, never later than that), through the
 //! `articles_newest_by_feed` index. A feed's articles are the feed's, shared
 //! by its readers; only a reader who follows the feed is told.
+//!
+//! The yearly clean-up (`cleanup`) removes unstarred articles a year after
+//! they arrived, so a long-silent feed may have none left, or only an old
+//! starred one. A silence of a year or more is therefore only ever "over a
+//! year", and a feed with no articles is counted from when nine turtles
+//! started fetching it.
 
 use axum::{
     Json, Router,
@@ -22,7 +28,7 @@ use serde_json::json;
 use crate::{
     AppState,
     auth::{SignedIn, database_problem},
-    now,
+    cleanup, now,
 };
 
 const DAY: i64 = 86_400;
@@ -46,6 +52,8 @@ pub struct Posting {
     pub some: i64,
     /// How many it posted in the last `WINDOW_DAYS`.
     pub recent: i64,
+    /// When nine turtles started fetching it.
+    pub added: i64,
 }
 
 /// The facts for feed `feed`, as of `now`, each read from the index alone.
@@ -54,7 +62,8 @@ pub async fn posting(db: &sqlx::SqlitePool, feed: i64, now: i64) -> Result<Posti
         "SELECT (SELECT MAX(sort_at) FROM articles WHERE feed_id = ?1) AS newest,
                 (SELECT MIN(sort_at) FROM articles WHERE feed_id = ?1) AS oldest,
                 (SELECT COUNT(*) FROM (SELECT 1 FROM articles WHERE feed_id = ?1 LIMIT ?3)) AS some,
-                (SELECT COUNT(*) FROM articles WHERE feed_id = ?1 AND sort_at > ?2) AS recent",
+                (SELECT COUNT(*) FROM articles WHERE feed_id = ?1 AND sort_at > ?2) AS recent,
+                (SELECT added_at FROM feeds WHERE id = ?1) AS added",
     )
     .bind(feed)
     .bind(now - WINDOW_DAYS * DAY)
@@ -96,11 +105,9 @@ async fn read(
     }
 }
 
-/// "2 months", "a year", "3 years": a quiet span, rounded down.
+/// "2 months", "3 weeks", "a day": a quiet span under a year, rounded down.
 fn span(days: i64) -> String {
-    let (count, unit) = if days >= 365 {
-        (days / 365, "year")
-    } else if days >= 60 {
+    let (count, unit) = if days >= 60 {
         (days / 30, "month")
     } else if days >= 14 {
         (days / 7, "week")
@@ -123,13 +130,29 @@ fn times(count: i64) -> String {
     }
 }
 
+/// "Hasn't posted in 4 months", for a silence of `seconds`. From a year on,
+/// the clean-up may have removed what came later, so only "over a year".
+fn silent_for(seconds: i64) -> String {
+    if seconds >= cleanup::KEPT_FOR {
+        "Hasn't posted in over a year".to_owned()
+    } else {
+        format!("Hasn't posted in {}", span(seconds / DAY))
+    }
+}
+
 /// How often a feed posts, in plain rounded words.
 pub fn words(posting: Posting, now: i64) -> String {
     let (Some(newest), Some(oldest)) = (posting.newest, posting.oldest) else {
-        return "Too new to tell".to_owned();
+        // None left: silent since it was added, or since the clean-up's
+        // year if it was emptied by it.
+        let since = now - posting.added;
+        if since < SHORTEST_DAYS * DAY {
+            return "Too new to tell".to_owned();
+        }
+        return silent_for(since);
     };
     if posting.recent == 0 {
-        return format!("Hasn't posted in {}", span((now - newest) / DAY));
+        return silent_for(now - newest);
     }
     let history = (now - oldest).clamp(0, WINDOW_DAYS * DAY);
     if posting.some < FEWEST || history < SHORTEST_DAYS * DAY {
@@ -173,6 +196,7 @@ mod tests {
                 oldest: Some(NOW - history * DAY),
                 some: FEWEST,
                 recent,
+                added: NOW - history * DAY,
             },
             NOW,
         )
@@ -209,9 +233,14 @@ mod tests {
             oldest: Some(NOW - 300 * DAY),
             some: 2,
             recent: 1,
+            added: NOW - 300 * DAY,
         };
         assert_eq!(words(two, NOW), "Too new to tell");
-        assert_eq!(words(Posting::default(), NOW), "Too new to tell");
+        let empty = Posting {
+            added: NOW - 3 * DAY,
+            ..Posting::default()
+        };
+        assert_eq!(words(empty, NOW), "Too new to tell");
     }
 
     #[test]
@@ -223,13 +252,33 @@ mod tests {
                     oldest: Some(NOW - 2_000 * DAY),
                     some: 3,
                     recent: 0,
+                    added: NOW - 2_000 * DAY,
                 },
                 NOW,
             )
         };
         assert_eq!(quiet(91), "Hasn't posted in 3 months");
         assert_eq!(quiet(130), "Hasn't posted in 4 months");
-        assert_eq!(quiet(400), "Hasn't posted in a year");
-        assert_eq!(quiet(800), "Hasn't posted in 2 years");
+        assert_eq!(quiet(300), "Hasn't posted in 10 months");
+        // A year on, the clean-up may have removed later posts.
+        assert_eq!(quiet(400), "Hasn't posted in over a year");
+        assert_eq!(quiet(800), "Hasn't posted in over a year");
+    }
+
+    #[test]
+    fn a_feed_with_no_articles_left_counts_from_when_it_was_added() {
+        let empty = |days: i64| {
+            words(
+                Posting {
+                    added: NOW - days * DAY,
+                    ..Posting::default()
+                },
+                NOW,
+            )
+        };
+        assert_eq!(empty(10), "Too new to tell");
+        assert_eq!(empty(130), "Hasn't posted in 4 months");
+        // Emptied by the yearly clean-up: nothing arrived in the last year.
+        assert_eq!(empty(900), "Hasn't posted in over a year");
     }
 }

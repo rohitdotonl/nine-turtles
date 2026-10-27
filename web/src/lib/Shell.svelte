@@ -95,14 +95,14 @@
   } = $props();
 
   /** A small sign beside each view's name in the sidebar. */
-  const VIEW_ICONS = { unread: "dot", starred: "star", all: "stack", recent: "clock" } as const;
+  const VIEW_ICONS = { unread: "dot", starred: "star", all: "stack", recent: "history" } as const;
 
   /** Inbox or river, shared across the reader's devices; this device's last word until the server answers. */
   let mode: ReadingMode = $state(lastMode());
   /** Whether the sidebar shows unread counts, and when unread lets go (Settings › Reading, decision 0097). */
   let counts: Counts = $state(lastCounts());
   let letGo: LetGo | undefined = $state();
-  /** The lists the sidebar leaves out (Settings › Sidebar, decision 0105); they still open by address and keys. */
+  /** The lists the sidebar leaves out (Settings › Show in the sidebar, decision 0105); they still open by address and keys. */
   let hidden: Hideable[] = $state(lastHidden());
   let river = $derived(mode === "river");
   /**

@@ -174,6 +174,29 @@ async fn recently_read_lists_the_last_50_opened_newest_opened_first_for_their_re
     .unwrap();
     assert_eq!(kept, 50);
 
+    // A muted article isn't listed, so it keeps no place: opening Post 60
+    // again after muting Post 1 still leaves 50 to show.
+    let (status, _) = send(
+        &base,
+        &cookie,
+        "/api/articles/muted",
+        json!({ "ids": [ids[0]], "muted": true }),
+    )
+    .await;
+    assert!(status.is_success());
+    send(
+        &base,
+        &cookie,
+        "/api/articles/opened",
+        json!({ "id": ids[59] }),
+    )
+    .await;
+    let listed = recent(&base, &cookie).await;
+    assert_eq!(listed.len(), 50);
+    assert_eq!(listed[0], "Post 60");
+    assert_eq!(listed[1], "Post 2");
+    assert_eq!(listed[49], "Post 50");
+
     // Leaving the feed takes its articles out of the list.
     let (status, _) = send(
         &base,
@@ -251,4 +274,57 @@ async fn how_often_a_feed_posts_is_said_in_words_to_its_readers_only() {
     let (_, other) = common::another_reader(&state).await;
     let (status, _) = ask(&base, &other, &format!("/api/feeds/{feed}/frequency")).await;
     assert_eq!(status, StatusCode::NOT_FOUND);
+}
+
+#[tokio::test]
+async fn how_often_a_feed_posts_shows_on_feed_health_even_once_cleaned_up() {
+    let (base, state) = common::start_with_state(common::config()).await;
+    let cookie = common::signed_in(&base).await;
+    let (_, added) = send(
+        &base,
+        &cookie,
+        "/api/feeds",
+        json!({ "address": publisher().await }),
+    )
+    .await;
+    let feed = added["feed"]["id"].as_i64().unwrap();
+    let now = nine_turtles::now();
+
+    // It stops working: listed on Feed health, with how often it posts.
+    sqlx::query("UPDATE feeds SET failures = ?, failing_since = ? WHERE id = ?")
+        .bind(nine_turtles::health::LISTED_AFTER)
+        .bind(now - 10 * 86_400)
+        .bind(feed)
+        .execute(&state.db)
+        .await
+        .unwrap();
+    let (status, health) = ask(&base, &cookie, "/api/health").await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(health["feeds"][0]["id"], feed);
+    assert_eq!(health["feeds"][0]["frequency"], "Posts about once a day");
+
+    // Years later the yearly clean-up has emptied it: it doesn't say "Too
+    // new to tell", but that nothing came for over a year.
+    sqlx::query("UPDATE feeds SET added_at = ? WHERE id = ?")
+        .bind(now - 900 * 86_400)
+        .bind(feed)
+        .execute(&state.db)
+        .await
+        .unwrap();
+    nine_turtles::cleanup::run(&state.db, now + 2 * nine_turtles::cleanup::KEPT_FOR)
+        .await
+        .unwrap();
+    let left: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM articles WHERE feed_id = ?")
+        .bind(feed)
+        .fetch_one(&state.db)
+        .await
+        .unwrap();
+    assert_eq!(left, 0);
+    let (_, health) = ask(&base, &cookie, "/api/health").await;
+    assert_eq!(
+        health["feeds"][0]["frequency"],
+        "Hasn't posted in over a year"
+    );
+    let (_, answer) = ask(&base, &cookie, &format!("/api/feeds/{feed}/frequency")).await;
+    assert_eq!(answer["words"], "Hasn't posted in over a year");
 }

@@ -6,15 +6,18 @@
 sections 5, 15, 17 and 18).
 
 1. **Recently read** (`/recent`), a fixed list in the sidebar after All, with
-   a clock as its icon: the last 50 articles the reader opened, the one
-   opened last first.
+   a clock whose rim turns back (a history sign, so it isn't confused with
+   Let unread go's plain clock face) as its icon: the last 50 articles the
+   reader opened, the one opened last first.
    - **Opened** means the reading area showed it (or its page opened on the
      publisher's site, for a feed set to do that), whether that marked it
      read or it was read already. The app tells the server each time
      (`POST /api/articles/opened`).
    - **Stored** on the reader's own entry for the article (`entries.opened_at`,
      milliseconds, structure change 22, with a partial index), and only for
-     their latest 50: each new opening clears the oldest. A column rather
+     their latest 50 that the list can show: each new opening clears the
+     oldest, and a muted article or one of a feed since left keeps no place,
+     so the list always fills. A column rather
      than a table, because the entry is already walled off per reader and
      already goes when the article or the reader does. nine turtles backs
      itself up before the change, as for every structure change (decision
@@ -51,8 +54,13 @@ sections 5, 15, 17 and 18).
      Rounded to the nearest whole: "about 12 a day", "about once a day",
      "about 3 times a week", "about twice a month", "about once a month",
      "less than once a month".
-   - Nothing in 90 days: "Hasn't posted in 4 months" (months, or years past
-     a year).
+   - Nothing in 90 days: "Hasn't posted in 4 months"; from a year on, only
+     "Hasn't posted in over a year", because the yearly clean-up (decision
+     0089) may have removed later posts, and a surviving starred article
+     could overstate the silence. A feed with no articles left (emptied by
+     the clean-up) is counted from when nine turtles started fetching it
+     (`feeds.added_at`), so Feed health never calls a long-dead feed "too
+     new".
    - Fewer than 3 articles, or under two weeks since its oldest: "Too new to
      tell".
    - No chart, no decimals, no judgement ("quiet", "busy"): the words describe,

@@ -4,7 +4,7 @@
   or the label of an icon-only button, says what it does.
 -->
 <script lang="ts" module>
-  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "clock";
+  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "clock" | "history";
 </script>
 
 <script lang="ts">
@@ -66,6 +66,11 @@
     <!-- Letting unread go after a while: a clock face. -->
     <circle cx="10" cy="10" r="6.75" />
     <path d="M10 6.25V10l2.5 1.75" />
+  {:else if name === "history"}
+    <!-- Recently read: a clock face whose rim turns back, as a history. -->
+    <path d="M3.75 10a6.25 6.25 0 1 0 1.83-4.42" />
+    <path d="M3.75 3.25v3.5h3.5" />
+    <path d="M10 6.75V10l2.25 1.5" />
   {:else if name === "dot"}
     <!-- Unread: a ring with a filled centre. -->
     <circle cx="10" cy="10" r="6.75" />
