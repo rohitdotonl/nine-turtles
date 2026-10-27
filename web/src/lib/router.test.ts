@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parse, pathFor, titleFor } from "./router";
+import { knownPath, parse, pathFor, titleFor } from "./router";
 
 describe("addresses", () => {
   it("gives each fixed view and Settings its own address", () => {
@@ -33,6 +33,13 @@ describe("addresses", () => {
   it("opens Unread for the front page or an unknown address", () => {
     expect(parse("/")).toEqual({ kind: "view", view: "unread" });
     expect(parse("/nowhere")).toEqual({ kind: "view", view: "unread" });
+  });
+
+  it("knows its own places, so any other address is a wrong turn", () => {
+    for (const path of ["/", "/unread", "/unread/", "/starred", "/all", "/settings", "/settings/feeds", "/add-feed", "/new-to-feeds", "/feeds/12", "/folders/4/edit", "/searches/7", "/searches/new"])
+      expect(knownPath(path), path).toBe(true);
+    for (const path of ["/nowhere", "/feeds/0", "/feeds/abc", "/feeds/12/more", "/searches/0", "/blog", "/settings/nothing"])
+      expect(knownPath(path), path).toBe(false);
   });
 
   it("turns a place back into its address and title", () => {

@@ -676,25 +676,25 @@ footer .links.small a {
   font-size: 0.8125rem;
 }
 
-/* At the very end of the page, nine turtles walking in single file: seven
+/* At the end of the About page, nine turtles walking in single file: seven
    together, then a gap, then two more. Still, like everything here. */
-footer .walk {
+.walk {
   display: grid;
   justify-items: center;
   gap: 10px;
-  margin-top: 1.5rem;
+  margin-top: 3rem;
   padding-top: 1.75rem;
   border-top: 1px solid var(--line);
 }
 
-footer .procession {
+.procession {
   display: flex;
   align-items: flex-end;
   gap: clamp(4px, 1.4vw, 12px);
   color: var(--ink-2);
 }
 
-footer .turtle {
+.procession .turtle {
   display: block;
   flex: none;
   width: clamp(20px, 3.4vw, 28px);
@@ -702,15 +702,78 @@ footer .turtle {
   fill: currentColor;
 }
 
-footer .turtle.behind {
+.procession .turtle.behind {
   margin-right: clamp(24px, 6vw, 64px);
 }
 
-footer .walk p {
+.walk p {
   margin: 0;
   color: var(--ink-2);
   font-family: var(--serif);
   font-size: 1rem;
+}
+
+/* The 404 page, "Wrong turn?": eight turtles one way and one the other, big
+   enough to see the joke at a glance, still on one line on a small phone. */
+.wrong-turn {
+  display: grid;
+  justify-items: center;
+  gap: 2.5rem;
+  margin-block: 5rem;
+  text-align: center;
+}
+
+.wrong-turn .words {
+  display: grid;
+  justify-items: center;
+  gap: 1.5rem;
+}
+
+.wrong-turn p {
+  max-width: 30rem;
+  margin: 0;
+  color: var(--ink-2);
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  line-height: 1.6;
+}
+
+.wrong-turn .code {
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.wrong-turn .turtles {
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(4px, 1.2vw, 10px);
+  padding-block: 0.5rem;
+  color: var(--ink);
+}
+
+.wrong-turn .turtles svg {
+  display: block;
+  flex: none;
+  width: clamp(22px, 6.2vw, 56px);
+  height: auto;
+  fill: currentColor;
+}
+
+.wrong-turn .apart {
+  flex: none;
+  width: clamp(12px, 4vw, 32px);
+}
+
+.wrong-turn h1 {
+  margin: 0;
+}
+
+.wrong-turn .signed {
+  padding-top: 0.5rem;
+  color: var(--ink);
 }
 
 /* Smaller headings on a phone, so a title fits in two or three lines. */
