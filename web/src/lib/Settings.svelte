@@ -25,7 +25,8 @@
   and adds new ones (Passkeys, decision 0109). Account shows the reader's email,
   with Change… while nine turtles can send email, Sign out, and for every
   reader but the owner Delete account… (ChangeEmail, DeleteAccount,
-  decision 0088).
+  decision 0088). Delete data…, for every reader, empties the account and
+  keeps it (DeleteAccount with `data`, decision 0117).
 -->
 <script lang="ts">
   import { edge } from "./edge";
@@ -240,16 +241,17 @@
     });
   }
 
-  /** Change email or Delete account, while open: a sheet over Settings, or on a phone a screen in its place. */
-  let task: "email" | "delete" | undefined = $state();
+  /** Change email, Delete data or Delete account, while open: a sheet over Settings, or on a phone a screen in its place. */
+  let task: "email" | "data" | "delete" | undefined = $state();
   let taskHeading: HTMLHeadingElement | undefined = $state();
   let changeButton: HTMLButtonElement | undefined = $state();
   let deleteButton: HTMLButtonElement | undefined = $state();
+  let dataButton: HTMLButtonElement | undefined = $state();
   /** What Change email did, said under Account. */
   let accountNote = $state("");
 
   function closeTask() {
-    const from = task === "email" ? changeButton : deleteButton;
+    const from = task === "email" ? changeButton : task === "data" ? dataButton : deleteButton;
     task = undefined;
     queueMicrotask(() => from?.focus());
   }
@@ -374,6 +376,8 @@
       closeTask();
     }}
   />
+{:else if task === "data"}
+  <DeleteAccount data sheet={!phone} {besideToggle} bind:heading={taskHeading} onCancel={closeTask} onDeleted={closeTask} />
 {:else if task === "delete"}
   <DeleteAccount sheet={!phone} {besideToggle} bind:heading={taskHeading} onCancel={closeTask} onDeleted={onSignedOut} />
 {/if}
@@ -695,8 +699,11 @@
           <button type="button" onclick={leave} class="inset-row inset-action"
             >Sign out<span class="row-glyph"><Icon name="sign-out" size={18} /></span></button
           >
+          <!-- Red words: these remove something. What each removes is said in the sheet it opens, before anything goes. -->
+          <button bind:this={dataButton} type="button" onclick={() => (task = "data")} class="inset-row inset-action text-danger font-semibold"
+            >Delete data…</button
+          >
           {#if !owner}
-            <!-- Red words: this removes something. What it removes is said in the sheet it opens, before anything goes. -->
             <button bind:this={deleteButton} type="button" onclick={() => (task = "delete")} class="inset-row inset-action text-danger font-semibold"
               >Delete account…</button
             >
