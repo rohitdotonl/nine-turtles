@@ -43,19 +43,26 @@ export async function currentSession(): Promise<Session> {
 const READER_KEY = "nine-turtles.reader";
 
 /**
- * Notes whose device this is now, and answers whether it was another reader's
- * until now: then everything the last reader left on it must go before anything
- * is shown or sent. An emailed link (sign-in, new password, new email) can
- * switch readers without passing the sign-in page.
+ * Whether this device was another reader's until now: then everything the last
+ * reader left on it must go before anything is shown or sent. An emailed link
+ * (sign-in, new password, new email) can switch readers without passing the
+ * sign-in page. Unknown (first load, private browsing) counts as no change.
  */
 export function readerChanged(reader: number): boolean {
   try {
     const last = globalThis.localStorage?.getItem(READER_KEY);
-    globalThis.localStorage?.setItem(READER_KEY, String(reader));
     return last != null && last !== String(reader);
   } catch {
-    // Private browsing: nothing was kept, so there's nothing to hand over.
     return false;
+  }
+}
+
+/** Notes whose device this is, only once the last reader's things are gone. */
+export function noteReader(reader: number): void {
+  try {
+    globalThis.localStorage?.setItem(READER_KEY, String(reader));
+  } catch {
+    // Private browsing: nothing is kept, so there's nothing to hand over.
   }
 }
 

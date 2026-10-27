@@ -23,7 +23,7 @@
   import NotFound from "./lib/NotFound.svelte";
   import { knownPath } from "./lib/router";
   import { CONFIRM_PAGE, RESET_PAGE, SIGN_IN_LINK_PAGE } from "./lib/accounts";
-  import { currentSession, readerChanged, type Session } from "./lib/session";
+  import { currentSession, noteReader, readerChanged, type Session } from "./lib/session";
   import { forgetLoaded } from "./lib/feeds";
   import { noConnection } from "./lib/connection.svelte";
   import { forget, keepSession, keptSession } from "./lib/offline";
@@ -52,6 +52,8 @@
       if (now.signedIn) {
         // Another reader than last time: nothing of the last one's is shown, and their waiting marks are never sent as this one's.
         if (readerChanged(now.reader)) await forgetDevice();
+        // Noted only now: a tab closed halfway through still forgets next time.
+        noteReader(now.reader);
         keepSession({ version: now.version, owner: now.owner, email: now.email, emailSending: now.emailSending });
       } else await forgetDevice();
       session = now;
