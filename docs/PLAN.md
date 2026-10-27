@@ -405,6 +405,7 @@ each with screenshots:
 | Opening a picture in an article larger | ✅ 27 October 2026 | SPEC section 7, decision 0107 |
 | More keys (Space, n, Shift+O, e, Shift+E, c), Mark all above / below as read, and one list of keys for the keys and the cheat sheet | ✅ 27 October 2026 | SPEC sections 6, 7, 8 and 19, decision 0103 |
 | Keys of your own (Change keys… in the `?` list and Settings › Keyboard), and Shift+J / Shift+K, Home / End, g then f and g then , | ✅ 27 October 2026 | SPEC sections 18 and 19, decision 0110 (no structure change) |
+| Passkey sign-in (Settings › Passkeys, and Sign in with a passkey; passwords keep working) | ✅ 27 October 2026 | SPEC sections 1 and 18, decision 0109 (structure change 25; one new library, webauthn-rs, the owner's yes) |
 | Recently read (the last 50 articles you opened) in the sidebar | ✅ 27 October 2026 | SPEC section 5, decision 0105 (structure change 22) |
 | Hiding Starred, All, Recently read or Saved searches from the sidebar (Settings › Show in the sidebar) | ✅ 27 October 2026 | SPEC sections 5 and 18, decision 0105 |
 | How often a feed posts, in words (Edit feed and Feed health) | ✅ 27 October 2026 | SPEC sections 15 and 17, decision 0105 |

@@ -291,7 +291,7 @@ Plain, unhurried, never urgent: "Nothing new yet," never "You're missing out!" L
 - **Podcasts** played in place. Done 27 October 2026: a calm player, your place kept on all your devices, and Up Next (decision 0113, `docs/SPEC.md` section 35).
 - **Public reading list page:** an optional public list of some of your feeds (a modern blogroll) with one-click subscribe. No likes, no comments.
 - **Per-feed modes:** inbox or river for each feed. Built 25 October 2026, in Edit feed (decision 0082, `docs/SPEC.md` sections 10 and 15).
-- **Passkey sign-in.**
+- **Passkey sign-in.** Built 27 October 2026, beside passwords (decision 0109, `docs/SPEC.md` sections 1 and 18).
 - **Chinese and Japanese search.**
 - **Multiple users.** Being built (October 2026): decision 0086.
 - **Own domain name.** Chosen on 25 October 2026: nineturtles.app for the website, app.nineturtles.app for the app (decision 0066).

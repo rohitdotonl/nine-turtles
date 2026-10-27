@@ -1721,3 +1721,65 @@ async fn adding_podcasts_keeps_every_article_and_entry_and_makes_none_an_episode
     .unwrap();
     assert_eq!(left, 0);
 }
+
+#[tokio::test]
+async fn adding_passkeys_keeps_every_reader_and_device() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just after marks remembered their times (structure
+    // change 21): the owner and another reader, each signed in on a device.
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(21, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO people (id, created_at, email) VALUES (2, 5, 'reader@example.com')",
+        "INSERT INTO sessions (person_id, token_hash, created_at, last_used_at, expires_at)
+         VALUES (1, x'00112233', 1, 1, 9999999999), (2, x'44556677', 1, 1, 9999999999)",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let people: Vec<(i64, Option<String>)> =
+        sqlx::query_as("SELECT id, email FROM people ORDER BY id")
+            .fetch_all(&db)
+            .await
+            .unwrap();
+    assert_eq!(
+        people,
+        [(1, None), (2, Some("reader@example.com".to_owned()))]
+    );
+    let devices: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM sessions")
+        .fetch_one(&db)
+        .await
+        .unwrap();
+    assert_eq!(devices, 2);
+    // Nobody has a passkey yet, and one passkey can't be two readers'.
+    let passkeys: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM passkeys")
+        .fetch_one(&db)
+        .await
+        .unwrap();
+    assert_eq!(passkeys, 0);
+    let add = |person: i64| {
+        sqlx::query(
+            "INSERT INTO passkeys (person_id, credential_id, user_handle, passkey, created_at)
+             VALUES (?, x'0102', 'handle', '{}', 1)",
+        )
+        .bind(person)
+        .execute(&db)
+    };
+    add(1).await.unwrap();
+    assert!(add(2).await.is_err());
+}

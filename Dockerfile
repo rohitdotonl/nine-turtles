@@ -13,6 +13,10 @@ RUN npm run build
 
 # 2. The one nine turtles program, with the frontend packed inside it.
 FROM rust:1.99.1-slim-trixie AS server
+# OpenSSL, which webauthn-rs checks passkeys with (decision 0109).
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends pkg-config libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 COPY rust-toolchain.toml ./
 COPY server/ server/
@@ -26,9 +30,10 @@ RUN cd server && cargo build --locked --release
 # 3. What runs: a small Linux with only the program on it.
 FROM debian:trixie-slim
 # The list of trusted certificate authorities, so nine turtles can check it's
-# really talking to each publisher's https:// website.
+# really talking to each publisher's https:// website. And OpenSSL's library,
+# which passkey sign-in uses (decision 0109).
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates \
+    && apt-get install -y --no-install-recommends ca-certificates libssl3t64 \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=server /src/server/target/release/nine-turtles /usr/local/bin/nine-turtles
 # The old name still works in Render's Shell tab (`slowfeed set-password`).

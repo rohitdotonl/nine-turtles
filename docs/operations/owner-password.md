@@ -27,7 +27,9 @@ changed since you last used an emailed link, the setting wins again.
 3. Sign in with the new password. What happened:
    - the password you set by email no longer works;
    - every device signed in as you was signed out, so anyone who took over
-     your account is out too;
+     your account is out too, unless they added a passkey: passkeys stay
+     (decision 0109), so open **Settings › Passkeys** and remove any passkey
+     you don't recognise;
    - any emailed password link or sign-in link not yet used stopped working;
    - the log has a line "NINE_TURTLES_PASSWORD_HASH has changed, so it's the
      owner's password again".

@@ -195,6 +195,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - SMTP and STARTTLS (sending email)
 - Email confirmation link
 - Sign-in link by email ("magic link")
+- Passkeys and WebAuthn (relying party, challenge, discoverable credential, passkey autofill)
 - Rate limiting per account
 - Secure, HTTP-only and SameSite cookies
 - Cross-site request forgery (CSRF)

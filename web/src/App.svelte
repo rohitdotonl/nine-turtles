@@ -84,6 +84,7 @@
     owner={session.owner}
     email={session.email}
     emailSending={session.emailSending}
+    passkeys={session.passkeys ?? null}
     onSignedOut={check}
   />
 {:else if session && path === "/sign-up"}
@@ -93,6 +94,7 @@
     onSignedIn={check}
     emailSending={session.emailSending}
     signUpOpen={session.signUpOpen}
+    passkeys={session.passkeys}
     onSignUp={() => (path = location.pathname)}
   />
 {:else if unreachable}

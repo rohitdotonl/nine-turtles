@@ -140,7 +140,8 @@ test("sign in with the keyboard, stay signed in, sign out", async ({ page }) => 
     await page.keyboard.press("Tab");
   }
   await page.keyboard.press("Enter");
-  await expect(page.getByLabel("Password")).toBeVisible();
+  // The sign-in page's own field, not Settings › Readers' "Your password".
+  await expect(page.getByLabel("Password", { exact: true })).toBeVisible();
 
   await page.reload();
   await appReady(page);

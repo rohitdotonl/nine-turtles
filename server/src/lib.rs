@@ -11,8 +11,8 @@
 //! and what email makes possible (`email`, `accounts`): confirming an
 //! address, a new password, a changed email, and deleting an account,
 //! paying through Dodo Payments (`payments`), the website's feed
-//! finder (`finder`), and the reader's own AI assistant connected over MCP
-//! (`assistants`, `mcp`).
+//! finder (`finder`), the reader's own AI assistant connected over MCP
+//! (`assistants`, `mcp`), and signing in with a passkey (`passkeys`).
 //! The frontend is packed into this program (see `assets`).
 
 pub mod accounts;
@@ -42,6 +42,7 @@ pub mod marks;
 pub mod mcp;
 pub mod newsletter;
 pub mod newsletters;
+pub mod passkeys;
 pub mod password;
 pub mod payments;
 pub mod people;
@@ -114,6 +115,9 @@ pub struct AppState {
     pub mailer: Option<email::Mailer>,
     /// How often assistants register, call tools and add feeds (`mcp`).
     pub assistant_limits: Arc<assistants::Limits>,
+    /// Passkey sign-in: the site's passkey checker and the challenges
+    /// waiting for an answer (decision 0109).
+    pub passkeys: Arc<passkeys::Passkeys>,
 }
 
 /// Opens the database and builds the whole web application. Tests call it
@@ -169,6 +173,7 @@ pub async fn state(config: Config) -> Result<AppState, String> {
     let state = AppState {
         db,
         http: fetch::client(config.local_feeds_allowed)?,
+        passkeys: Arc::new(passkeys::Passkeys::new(config.public_url.as_ref())),
         config: Arc::new(config),
         limiter: Arc::default(),
         password_checks: Arc::default(),
@@ -195,6 +200,7 @@ pub fn router(state: AppState) -> Router {
     let router = Router::new()
         .merge(auth::routes())
         .merge(accounts::routes())
+        .merge(passkeys::routes())
         .merge(admin::routes())
         .merge(apps::routes())
         .merge(assistants::routes())
