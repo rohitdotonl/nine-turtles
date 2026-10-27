@@ -152,4 +152,88 @@ test.describe("on a wide window", () => {
     await expect(rows.nth(0)).not.toHaveAccessibleName(/, unread/);
     await expect(rows.nth(10)).toHaveAccessibleName(/, unread/);
   });
+  test("Shift+O in search results marks the older results as read, those not loaded yet too", async ({ page }) => {
+    await signedIn(page);
+    const blog = await openBlog(page, true);
+    const count = sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) });
+    await expect(count).toHaveAccessibleName(`Blog ${blog} 55 unread`);
+    // A search in this blog only: all 55 match, and 50 are listed at first.
+    await page.locator("#list-heading").focus();
+    await page.keyboard.press("/");
+    await expect(page.getByRole("button", { name: `Remove in: Blog ${blog}` })).toBeVisible();
+    await page.keyboard.type("summary");
+    const results = page.getByRole("region", { name: "Search results" }).locator("li button[data-space-reads]");
+    await expect(results).toHaveCount(50);
+
+    // Older goes by date: articles numbered below the chosen one, one of them perhaps not listed yet.
+    await results.nth(9).click();
+    await expect(results.nth(9)).toHaveAttribute("aria-current", "true");
+    const chosen = Number((await results.nth(9).innerText()).match(/\((\d+)\)/)![1]);
+    await expect(count).toHaveAccessibleName(`Blog ${blog} 54 unread`);
+    await page.keyboard.press("Shift+O");
+    await expect(page.getByRole("status").filter({ hasText: `Marked ${chosen - 1} ${chosen === 2 ? "item" : "items"} as read` })).toBeVisible();
+    await expect(count).toHaveAccessibleName(`Blog ${blog} ${55 - chosen} unread`);
+    await page.keyboard.press("u");
+    await expect(page.getByRole("status").filter({ hasText: "Undone." })).toBeVisible();
+    await expect(count).toHaveAccessibleName(`Blog ${blog} 54 unread`);
+  });
+
+  test("without a connection, Shift+O says marking articles not yet listed needs one, and marks nothing", async ({ page, context }) => {
+    await signedIn(page);
+    const blog = await openBlog(page, true);
+    const count = sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) });
+    const rows = page.locator("#list-pane li button[data-space-reads]");
+    await expect(rows).toHaveCount(50);
+    await rows.nth(9).click();
+    await expect(count).toHaveAccessibleName(`Blog ${blog} 54 unread`);
+
+    await context.setOffline(true);
+    await page.keyboard.press("Shift+O");
+    await expect(page.getByText("Marking articles not yet listed needs a connection. Try again once you're back online.")).toBeVisible();
+    await expect(rows.nth(10)).toHaveAccessibleName(/, unread/);
+    await expect(rows.nth(49)).toHaveAccessibleName(/, unread/);
+    await expect(count).toHaveAccessibleName(`Blog ${blog} 54 unread`);
+    await context.setOffline(false);
+    await page.evaluate(() => dispatchEvent(new Event("online")));
+    // On the server too, only the chosen one is read.
+    const unread = async () => (await (await page.request.get(new URL("/api/feeds", FEEDS_APP).href)).json()).feeds.find((each: { title: string }) => each.title === `Blog ${blog}`).unread;
+    await expect.poll(unread).toBe(54);
+  });
+
+  test("e folds and unfolds the folder you're in, or your feed's; Shift+E edits the feed or folder", async ({ page }) => {
+    await signedIn(page);
+    const blog = await openBlog(page);
+    const folder = `Keys-${test.info().workerIndex}-${Date.now()}`;
+    const library = await (await page.request.get(new URL("/api/feeds", FEEDS_APP).href)).json();
+    const feed = library.feeds.find((each: { title: string }) => each.title === `Blog ${blog}`).id;
+    await page.request.post(new URL(`/api/feeds/${feed}`, FEEDS_APP).href, { data: { title: `Blog ${blog}`, folders: [], new_folder: folder } });
+    await page.reload();
+    await appReady(page);
+    const toggle = sidebar(page).getByRole("button", { name: `Feeds in ${folder}` });
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+
+    // In the feed: e unfolds its folder, and folds it again.
+    await page.locator("#list-heading").focus();
+    await page.keyboard.press("e");
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
+    await page.keyboard.press("e");
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    // Shift+E edits the feed; Escape goes back.
+    await page.keyboard.press("Shift+E");
+    await expect(page.getByRole("heading", { level: 2, name: "Edit feed" })).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("heading", { level: 2, name: `Blog ${blog}` })).toBeVisible();
+
+    // In the folder: e folds and unfolds it; Shift+E edits it.
+    await sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) }).click();
+    await expect(page.getByRole("heading", { level: 2, name: folder })).toBeFocused();
+    await page.keyboard.press("e");
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
+    await page.keyboard.press("e");
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await page.keyboard.press("Shift+E");
+    await expect(page.getByRole("heading", { level: 2, name: "Edit folder" })).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("heading", { level: 2, name: folder })).toBeVisible();
+  });
 });

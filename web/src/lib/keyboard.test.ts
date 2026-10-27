@@ -118,7 +118,7 @@ describe("keyboard shortcuts", () => {
     ]);
   });
 
-  // Space on a button or a tick box stays theirs: the browser tests check that (tests/reading.spec.ts).
+  // Space on a button or a tick box stays theirs: the browser tests check that (tests/shortcuts.spec.ts).
   it("scrolls the article with Space and Shift+Space", () => {
     const read = createKeyReader();
     expect(read(press(" "), 0)).toEqual({ kind: "page", step: 1 });

@@ -481,6 +481,25 @@ async fn unsubscribed_feeds_keep_only_their_starred_articles_in_search() {
 }
 
 #[tokio::test]
+async fn results_say_the_newest_article_when_searched() {
+    // "Mark older as read" in the results never marks an article that
+    // arrived after the search ran (decision 0103), so the answer says which
+    // was the newest then, as a list's first page does.
+    let reader = Reader::new().await;
+    let (status, body) = reader.search(&[("q", "tomatoes")]).await;
+    assert_eq!(status, StatusCode::OK, "{body}");
+    let latest = body["latest"].as_i64().unwrap();
+    let newest = body["articles"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|article| article["id"].as_i64().unwrap())
+        .max()
+        .unwrap();
+    assert!(latest >= newest, "{latest} < {newest}");
+}
+
+#[tokio::test]
 async fn search_needs_signing_in() {
     let base = common::start(common::config()).await;
     let response = Client::new()

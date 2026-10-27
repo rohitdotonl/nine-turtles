@@ -550,7 +550,7 @@
     if (unlisted && !("search" in source)) {
       markingPast = true;
       try {
-        await markPastOnServer(source, side, chosen, listed, kind);
+        await markPastOnServer(source, side, chosen, kind);
       } finally {
         markingPast = false;
       }
@@ -568,7 +568,12 @@
       } finally {
         markingPast = false;
       }
-      if (kind === "older") more = more.filter(before);
+      // Never one that arrived after the search ran, as the server does for lists.
+      more = more.filter((article) => article.id <= latest && (kind !== "older" || before(article)));
+      // Rows loaded while waiting are the same articles: marked as the rows they are, so they turn grey too.
+      const shown = new Map(articles.map((article) => [article.id, article]));
+      const counted = new Set(listed);
+      more = more.map((article) => shown.get(article.id) ?? article).filter((article) => !counted.has(article));
     }
     const unread = [...listed, ...more].filter((article) => !article.read);
     if (unread.length === 0) {
@@ -597,7 +602,6 @@
     list: Exclude<Source, { search: Record<string, string> }>,
     side: "older" | "newer",
     chosen: Article,
-    listed: Article[],
     kind: "older" | "above" | "below",
   ) {
     let ids: number[];
@@ -611,8 +615,9 @@
       say(nothingPastMessage(kind));
       return;
     }
+    // Worked out from the rows as they are now, so any loaded while waiting are shown read too.
     const marked = new Set(ids);
-    const shown = listed.filter((article) => !article.read && marked.has(article.id));
+    const shown = articles.filter((article) => !article.read && marked.has(article.id));
     for (const article of shown) {
       confirmed.set(`read:${article.id}`, true);
       putRead(article, true);
