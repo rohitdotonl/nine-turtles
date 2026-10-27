@@ -130,6 +130,8 @@
   let loadingMore = $state(false);
   /** The newest article's number when the list was loaded, and whether anything has arrived since. */
   let latest = 0;
+  /** Bumped each time the list loads from the top, so an older "anything new?" answer is ignored. */
+  let topLoads = 0;
   let newWaiting = $state(false);
   // Touch screens have no r key; their note has a Show button instead (same test as the keyboard hint).
   const touch = matchMedia("(hover: none) and (pointer: coarse)").matches;
@@ -192,7 +194,10 @@
       articles = after === null ? page.articles : [...articles, ...page.articles];
       if (after === null) loadedAt = new Date();
       next = page.next;
-      if (after === null) latest = page.latest;
+      if (after === null) {
+        latest = page.latest;
+        topLoads++;
+      }
       fromDevice = page.kept === true;
       loaded = true;
       ok = true;
@@ -248,6 +253,7 @@
       loadedAt = new Date();
       next = page.next;
       latest = page.latest;
+      topLoads++;
       newWaiting = false;
       fromDevice = page.kept === true;
       loaded = true;
@@ -273,8 +279,11 @@
   /** Asks the server, quietly, whether new items are waiting for this list. */
   async function askForNew() {
     if (!loaded || newWaiting || busy || document.hidden || fromDevice) return;
+    const asked = topLoads;
     try {
-      newWaiting = await newItemsWaiting(source, latest);
+      const waiting = await newItemsWaiting(source, latest);
+      // A refresh while asking already brought whatever was new.
+      if (topLoads === asked && !busy) newWaiting = waiting;
     } catch {
       // Nothing to say: it asks again in a minute.
     }
