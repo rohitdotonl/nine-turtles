@@ -138,7 +138,10 @@ type RuleLine = (
 const RULES: &str = "SELECT id, person_id, words, title_only, author, feed_id, folder_id,
         place_gone, action, paused FROM rules WHERE person_id = ? ORDER BY id";
 
-async fn rules(connection: &mut SqliteConnection, person: i64) -> Result<Vec<Rule>, sqlx::Error> {
+pub(crate) async fn rules(
+    connection: &mut SqliteConnection,
+    person: i64,
+) -> Result<Vec<Rule>, sqlx::Error> {
     let lines: Vec<RuleLine> = sqlx::query_as(RULES)
         .bind(person)
         .fetch_all(connection)
@@ -482,22 +485,22 @@ async fn list_rules(SignedIn(person): SignedIn, State(state): State<AppState>) -
 
 /// A rule as the screen sends it.
 #[derive(Deserialize)]
-struct RuleForm {
+pub(crate) struct RuleForm {
     #[serde(default)]
-    words: String,
+    pub words: String,
     #[serde(default)]
-    title_only: bool,
+    pub title_only: bool,
     #[serde(default)]
-    author: String,
-    feed_id: Option<i64>,
-    folder_id: Option<i64>,
-    action: Action,
+    pub author: String,
+    pub feed_id: Option<i64>,
+    pub folder_id: Option<i64>,
+    pub action: Action,
     /// Undo for deleting a rule brings it back paused if it was, and with
     /// its place gone if it was, so it never spreads to every feed.
     #[serde(default)]
-    paused: bool,
+    pub paused: bool,
     #[serde(default)]
-    place_gone: bool,
+    pub place_gone: bool,
 }
 
 /// A phrase as the reader typed it, its spaces tidied. None if it's too long.
@@ -552,6 +555,45 @@ async fn rule(
         .find(|rule| rule.id == id))
 }
 
+/// Makes a rule for reader `person`, from the screen or an assistant
+/// (`mcp`). Answers its number and how many unread articles already match
+/// it, or why it was refused.
+pub(crate) async fn make(
+    state: &AppState,
+    person: i64,
+    form: &RuleForm,
+) -> Result<Result<(i64, usize), &'static str>, sqlx::Error> {
+    let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
+    let (words, author) = match checked(&mut transaction, person, form).await? {
+        Ok(parts) => parts,
+        Err(refusal) => return Ok(Err(refusal)),
+    };
+    let id: i64 = sqlx::query_scalar(
+        "INSERT INTO rules (person_id, words, title_only, author, feed_id, folder_id,
+             place_gone, action, paused, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
+    )
+    .bind(person)
+    .bind(&words)
+    .bind(form.title_only)
+    .bind(&author)
+    .bind(form.feed_id)
+    .bind(form.folder_id)
+    .bind(form.place_gone && form.feed_id.is_none() && form.folder_id.is_none())
+    .bind(form.action.word())
+    .bind(form.paused)
+    .bind(now())
+    .fetch_one(&mut *transaction)
+    .await?;
+    let made = rule(&mut transaction, person, id).await?;
+    transaction.commit().await?;
+    let matching = match made {
+        Some(rule) => matching_now(&state.db, &rule).await?.len(),
+        None => 0,
+    };
+    Ok(Ok((id, matching)))
+}
+
 /// Makes a rule. Answers its number and how many unread articles already
 /// match it, so the screen can offer to apply it to them too.
 async fn create_rule(
@@ -559,38 +601,7 @@ async fn create_rule(
     State(state): State<AppState>,
     Json(form): Json<RuleForm>,
 ) -> Response {
-    let made: Result<Result<(i64, usize), &'static str>, sqlx::Error> = async {
-        let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
-        let (words, author) = match checked(&mut transaction, person, &form).await? {
-            Ok(parts) => parts,
-            Err(refusal) => return Ok(Err(refusal)),
-        };
-        let id: i64 = sqlx::query_scalar(
-            "INSERT INTO rules (person_id, words, title_only, author, feed_id, folder_id,
-                 place_gone, action, paused, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
-        )
-        .bind(person)
-        .bind(&words)
-        .bind(form.title_only)
-        .bind(&author)
-        .bind(form.feed_id)
-        .bind(form.folder_id)
-        .bind(form.place_gone && form.feed_id.is_none() && form.folder_id.is_none())
-        .bind(form.action.word())
-        .bind(form.paused)
-        .bind(now())
-        .fetch_one(&mut *transaction)
-        .await?;
-        let made = rule(&mut transaction, person, id).await?;
-        transaction.commit().await?;
-        let matching = match made {
-            Some(rule) => matching_now(&state.db, &rule).await?.len(),
-            None => 0,
-        };
-        Ok(Ok((id, matching)))
-    }
-    .await;
+    let made = make(&state, person, &form).await;
     match made {
         Ok(Ok((id, matching))) => Json(json!({ "id": id, "matching": matching })).into_response(),
         Ok(Err(refusal)) => problem(refusal),
@@ -718,7 +729,8 @@ async fn apply_rule(
 }
 
 /// How many articles the reader has muted, from the `entries_muted` index.
-const MUTED_COUNT: &str = "SELECT COUNT(*) FROM entries WHERE person_id = ? AND muted = 1";
+pub(crate) const MUTED_COUNT: &str =
+    "SELECT COUNT(*) FROM entries WHERE person_id = ? AND muted = 1";
 
 /// The Muted page: the reader's newest muted articles, and how many there are.
 async fn list_muted(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {

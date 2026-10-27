@@ -303,8 +303,28 @@ struct Followed {
 /// Downloads an OPML file of every followed feed: each folder A to Z with
 /// its feeds, then the feeds in no folder.
 async fn export(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
+    match opml_for(&state.db, person).await {
+        Ok(Some(file)) => (
+            [
+                (header::CONTENT_TYPE, "text/x-opml; charset=utf-8"),
+                (
+                    header::CONTENT_DISPOSITION,
+                    "attachment; filename=\"nine-turtles-feeds.opml\"",
+                ),
+            ],
+            file,
+        )
+            .into_response(),
+        Ok(None) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+        Err(error) => database_problem("exporting an OPML file", &error),
+    }
+}
+
+/// Reader `person`'s OPML file, as Export downloads it and an assistant
+/// asks for it (`mcp`). None if it couldn't be written.
+pub async fn opml_for(db: &sqlx::SqlitePool, person: i64) -> Result<Option<String>, sqlx::Error> {
     let gathered: Result<_, sqlx::Error> = async {
-        let mut transaction = state.db.begin().await?;
+        let mut transaction = db.begin().await?;
         let feeds: Vec<Followed> = sqlx::query_as(
             "SELECT feeds.id, subscriptions.title, feeds.url, feeds.site_url
              FROM subscriptions JOIN feeds ON feeds.id = subscriptions.feed_id
@@ -327,24 +347,8 @@ async fn export(SignedIn(person): SignedIn, State(state): State<AppState>) -> Re
         Ok((feeds, folders, memberships))
     }
     .await;
-    let (feeds, folders, memberships) = match gathered {
-        Ok(gathered) => gathered,
-        Err(error) => return database_problem("exporting an OPML file", &error),
-    };
-    match write(&feeds, &folders, &memberships) {
-        Some(file) => (
-            [
-                (header::CONTENT_TYPE, "text/x-opml; charset=utf-8"),
-                (
-                    header::CONTENT_DISPOSITION,
-                    "attachment; filename=\"nine-turtles-feeds.opml\"",
-                ),
-            ],
-            file,
-        )
-            .into_response(),
-        None => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
-    }
+    let (feeds, folders, memberships) = gathered?;
+    Ok(write(&feeds, &folders, &memberships))
 }
 
 fn write(feeds: &[Followed], folders: &[Folder], memberships: &[(i64, i64)]) -> Option<String> {

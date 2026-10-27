@@ -332,7 +332,7 @@ pub async fn hide(
     now: i64,
 ) -> Result<u64, sqlx::Error> {
     let hidden: Vec<i64> = sqlx::query_scalar(
-        "UPDATE subscriptions SET unsubscribed_at = ?
+        "UPDATE subscriptions SET unsubscribed_at = ?, kept_until = NULL
          WHERE person_id = ? AND feed_id IN (SELECT value FROM json_each(?))
              AND unsubscribed_at IS NULL
          RETURNING feed_id",
@@ -370,8 +370,9 @@ async fn resubscribe(
 }
 
 /// Clears, for good, every subscription unsubscribed at or before `before`
-/// that isn't cleared yet: one reader's, or (`None`) everyone's. Answers
-/// how many.
+/// that isn't cleared yet: one reader's, or (`None`) everyone's. A feed an
+/// assistant unsubscribed from waits until its `kept_until` has passed
+/// (30 days, `mcp::KEPT_FOR`), whatever `before` says. Answers how many.
 pub async fn clear_unsubscribed(
     db: &sqlx::SqlitePool,
     person: Option<i64>,
@@ -380,10 +381,12 @@ pub async fn clear_unsubscribed(
     let waiting: Vec<(i64, i64)> = sqlx::query_as(
         "SELECT person_id, feed_id FROM subscriptions
          WHERE unsubscribed_at <= ? AND cleared = 0 AND (?2 IS NULL OR person_id = ?2)
+             AND (kept_until IS NULL OR kept_until <= ?3)
          ORDER BY person_id, feed_id",
     )
     .bind(before)
     .bind(person)
+    .bind(now())
     .fetch_all(db)
     .await?;
     let mut cleared = 0;

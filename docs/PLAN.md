@@ -455,14 +455,14 @@ section 28.
 Decision 0111. A reader can connect their own AI assistant (Claude, ChatGPT,
 Gemini, coding tools, open-source agents) to their account through MCP, the
 open standard assistants use to reach apps. nine turtles runs no AI itself:
-it only opens a door, like the Google Reader API does for Reeder. Starts
-after the passkeys work merges, since both touch sign-in.
+it only opens a door, like the Google Reader API does for Reeder. Built 27
+October 2026 (SPEC section 33).
 
 | Part | Status |
 |---|---|
-| Sign-in: the "Allow this assistant?" screen (OAuth), a fallback assistant key in Settings, and a list of connected assistants with Disconnect | Not started |
-| The 15 tools: search, unread, starred, open an article, feeds and folders, feed health, rules and mutes, mark read or unread, star, add a feed, rename or move a feed, folders, rules and mutes, unsubscribe (with a 30-day undo), export the feed list | Not started |
-| Limits per reader, tests with at least two different assistants, SPEC section, and the 15-day upkeep check (`docs/operations/mcp-check.md`) | Not started |
+| Sign-in: the "Allow this assistant?" screen (OAuth), a fallback assistant key in Settings, and a list of connected assistants with Disconnect | ✅ Done |
+| The 15 tools: search, unread, starred, open an article, feeds and folders, feed health, rules and mutes, mark read or unread, star, add a feed, rename or move a feed, folders, rules and mutes, unsubscribe (with a 30-day undo), export the feed list (plus "bring back a feed") | ✅ Done |
+| Limits per reader, tests with at least two different assistants, SPEC section, and the 15-day upkeep check (`docs/operations/mcp-check.md`) | ✅ Done (official TypeScript and Python MCP clients) |
 
 ---
 
