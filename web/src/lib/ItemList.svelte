@@ -130,7 +130,7 @@
   let loadingMore = $state(false);
   /** The newest article's number when the list was loaded, and whether anything has arrived since. */
   let latest = 0;
-  /** Bumped each time the list loads from the top, so an older "anything new?" answer is ignored (survey A8). */
+  /** Bumped each time the list loads from the top, so an older "anything new?" answer is ignored. */
   let topLoads = 0;
   let newWaiting = $state(false);
   // Touch screens have no r key; their note has a Show button instead (same test as the keyboard hint).

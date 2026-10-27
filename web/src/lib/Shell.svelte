@@ -471,7 +471,7 @@
   }
 
   // A list asked for again before it arrives answers with the newest ask, so a
-  // slow answer from before an unsubscribe can't put the feed back (survey A8).
+  // slow answer from before an unsubscribe can't put the feed back.
   const newestFeeds = newestAnswer(listFeeds);
   const newestSearches = newestAnswer(listSaved);
   const newestCollections = newestAnswer(listCollections);
@@ -566,7 +566,7 @@
   }
 
   // Each reading setting saves in the order changed, so an earlier save that fails
-  // never rolls the screen back past a later change (survey A8).
+  // never rolls the screen back past a later change.
   const modeSaves = savedInOrder(saveMode, (next: ReadingMode) => (mode = next));
   const countsSaves = savedInOrder(saveCounts, (next: Counts) => (counts = next));
   const letGoSaves = savedInOrder<LetGo | undefined>(
@@ -1154,6 +1154,8 @@
     const refusal = await deleteSaved(saved.id);
     if (refusal) return refusedSaving(refusal);
     searches = searches.filter((each) => each.id !== saved.id);
+    // Asking again outranks a list already on its way from before the delete.
+    void loadSearches();
     toSave = undefined;
     go(home, {
       message: `Deleted the saved search ${saved.name}`,
@@ -1214,6 +1216,8 @@
       return;
     }
     collections = collections.filter((each) => each.id !== collection.id);
+    // Asking again outranks a list already on its way from before the delete.
+    void loadCollections();
     go(home, {
       message: `Deleted the collection ${collection.name}`,
       undo: async () => {

@@ -307,7 +307,7 @@ export function close(): void {
   sessionState("none");
 }
 
-/** Up Next's saves, in the order made, so a slow older answer never overwrites a newer order (survey A8). */
+/** Up Next's saves, in the order made, so a slow older answer never overwrites a newer order. */
 const upNextSaves = savedInOrder<number[] | null>(
   (order) => saveUpNext(order ?? []),
   (order) => (player.upNext = order),

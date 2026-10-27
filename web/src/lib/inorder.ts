@@ -1,5 +1,5 @@
-// Answers that come back out of order (survey bug A8). Two small helpers so a
-// slow, older answer never overwrites what a newer one put on screen.
+// Answers that come back out of order. Two small helpers so a slow, older
+// answer never overwrites what a newer one put on screen.
 
 /**
  * Saves one thing the reader changes (a setting, Up Next's order) so the newest
@@ -11,7 +11,9 @@
  * does), which the screen then shows; otherwise what was sent counts.
  *
  * The returned function takes the new value and the one on screen before it,
- * and rejects when its own save failed.
+ * and rejects when its own save failed and it is still the newest change (an
+ * older failure ends quietly, so "couldn't be saved" never shows for a choice
+ * the reader has already replaced).
  */
 export function savedInOrder<T>(save: (value: T) => Promise<T | void>, show: (value: T) => void) {
   let queue: Promise<unknown> = Promise.resolve();
@@ -34,7 +36,9 @@ export function savedInOrder<T>(save: (value: T) => Promise<T | void>, show: (va
       },
       (failure: unknown) => {
         pending--;
-        if (ticket === made) show(kept);
+        // A newer change is on its way: it alone says how saving went.
+        if (ticket !== made) return;
+        show(kept);
         throw failure;
       },
     );

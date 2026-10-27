@@ -35,7 +35,7 @@ async function load() {
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe("Up Next when two changes are on their way at once (survey A8)", () => {
+describe("Up Next when two changes are on their way at once", () => {
   it("keeps the newer order when the older answer comes back last", async () => {
     const server = slowServer();
     const { player, changeUpNext } = await load();
@@ -63,7 +63,7 @@ describe("Up Next when two changes are on their way at once (survey A8)", () => 
     await settle();
     expect(player.upNext).toEqual([2, 3, 1]);
     server.answer(1, 200);
-    expect(await first).toBe(false);
+    expect(await first).toBe(true);
     expect(await second).toBe(true);
     expect(player.upNext).toEqual([2, 3, 1]);
   });

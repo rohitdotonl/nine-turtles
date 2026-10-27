@@ -14,7 +14,7 @@ function later<T>() {
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-describe("a setting changed twice before the first save answers (survey A8)", () => {
+describe("a setting changed twice before the first save answers", () => {
   function setting() {
     const saves: { value: string; done: ReturnType<typeof later<void>> }[] = [];
     let shown = "newest";
@@ -55,7 +55,8 @@ describe("a setting changed twice before the first save answers (survey A8)", ()
     void sort.set("random");
     await settle();
     sort.save(0).reject(new Error("refused"));
-    expect(await first).toBe("not saved");
+    // Replaced already, so it says nothing about saving.
+    expect(await first).toBeUndefined();
     expect(sort.shown()).toBe("random");
   });
 
@@ -84,7 +85,7 @@ describe("a setting changed twice before the first save answers (survey A8)", ()
   });
 });
 
-describe("a list loaded again before the first answer arrives (survey A8)", () => {
+describe("a list loaded again before the first answer arrives", () => {
   it("hands every caller the newest answer, even when the older one arrives last", async () => {
     const answers = [later<string[]>(), later<string[]>()] as const;
     let asked = 0;
