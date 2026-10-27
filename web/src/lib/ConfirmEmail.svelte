@@ -1,10 +1,10 @@
 <!--
-  The page a confirmation link opens (/confirm-email#ticket=…, SPEC sections 1
-  and 18, decision 0088): a new account's address while sign-up is Open, or a
-  reader's new address. Nothing happens until the reader presses Confirm
-  email, so a mail program that opens links to check them can't use the link
-  up first. A new account is then made and this device signed in; a changed
-  address is said, with Continue. A link that has run out says so calmly.
+  The page a confirmation link opens (/confirm-email#ticket=…, SPEC section
+  18, decision 0088): a reader's new address. Nothing happens until the
+  reader presses Confirm email, so a mail program that opens links to check
+  them can't use the link up first. The changed address is then said, with
+  Continue. A link that has run out says so calmly. (Open sign-up once
+  confirmed new accounts here too; since decision 0115 it needs no email.)
 -->
 <script lang="ts">
   import Logo from "./Logo.svelte";
@@ -30,11 +30,6 @@
     const result = await confirmEmail(ticket);
     busy = false;
     if (typeof result === "object") {
-      if (result.done === "signed-up") {
-        history.replaceState(null, "", "/");
-        onSignedIn();
-        return;
-      }
       history.replaceState(null, "", "/confirm-email");
       changedTo = result.email;
       return;

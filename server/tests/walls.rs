@@ -2126,8 +2126,7 @@ async fn articles_carried_to_a_new_address_stay_walled_from_the_old_feeds_follow
     );
 }
 
-/// A reader who signs up through the owner's invite link (decision 0087)
-/// starts with an empty library: no feeds, folders, saved searches, rules,
+/// A reader who signs up (decision 0115) starts with an empty library: no feeds, folders, saved searches, rules,
 /// entries or marks of the owner's, now or when the owner's feeds bring new
 /// articles. The owner's library is left exactly as it was.
 #[tokio::test]
@@ -2179,9 +2178,7 @@ async fn a_reader_who_signs_up_starts_with_an_empty_library() {
     let owners_searches = owner.get("/api/saved-searches").await;
     let owners_rules = owner.get("/api/rules").await;
 
-    // Someone joins through an invite link, as the sign-up page does it.
-    let (status, invite) = owner.post("/api/sign-up/invite", json!({})).await;
-    assert_eq!(status, StatusCode::OK);
+    // Someone joins, as the sign-up page does it.
     let joined = Client::new()
         .post(format!("{}/api/sign-up", owner.base))
         .header("sec-fetch-site", "same-origin")
@@ -2190,7 +2187,6 @@ async fn a_reader_who_signs_up_starts_with_an_empty_library() {
             json!({
                 "email": "new@example.com",
                 "password": "slow mornings, long reads",
-                "invite": invite["invite"],
             })
             .to_string(),
         )

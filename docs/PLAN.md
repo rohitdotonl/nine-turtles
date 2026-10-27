@@ -428,6 +428,7 @@ feed is still fetched and stored once; everything personal gets an owner.
 | Part four: account emails over SMTP (confirming Open sign-ups, a new password, changing email) and deleting an account (structure change 14, decision 0088) | ✅ 25 October 2026 |
 | "Email me a sign-in link": a link that signs in, once, within 15 minutes, for every reader; passwords keep working (structure change 20, decision 0096) | ✅ 26 October 2026 |
 | Milestone 5: the owner's Readers page, at most 1,000 feeds per reader, and feeds nobody opens checked once a day (no structure change, decision 0090) | ✅ 26 October 2026 |
+| Sign-up always open: no switch, no invite links, no confirmation email (no structure change, decision 0115) | ✅ 27 October 2026 |
 
 ## V2: Paying for nine turtles
 

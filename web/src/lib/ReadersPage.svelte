@@ -73,9 +73,6 @@
             <div class="inset-row"><dt>Feeds</dt><dd class="figure">{count(overview.totals.feeds)}</dd></div>
             <div class="inset-row"><dt>Articles kept</dt><dd class="figure">{count(overview.totals.articles)}</dd></div>
             <div class="inset-row"><dt>Database</dt><dd class="figure">{size(overview.databaseBytes)}</dd></div>
-            {#if overview.emailSending || overview.totals.signUpsWaiting > 0}
-              <div class="inset-row"><dt>Waiting to confirm their email</dt><dd class="figure">{count(overview.totals.signUpsWaiting)}</dd></div>
-            {/if}
             <div class="inset-row">
               <dt>Backups</dt>
               <dd class="figure">
