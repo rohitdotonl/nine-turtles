@@ -23,7 +23,6 @@ describe("the sign-in page's messages", () => {
   });
 
   it("never say whether an email has an account", () => {
-    expect(explain({ ok: false, reason: "wrong-password" })).toBe("That isn't the password.");
-    expect(explain({ ok: false, reason: "wrong-password" }, true)).toBe("That email and password don't match.");
+    expect(explain({ ok: false, reason: "wrong-password" })).toBe("That email and password don't match.");
   });
 });

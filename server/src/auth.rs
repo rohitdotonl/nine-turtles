@@ -4,14 +4,12 @@
 //! read. The database keeps only a scrambled copy of it (BLAKE2s), so a
 //! stolen copy of the database can't be used to sign in. Wrong passwords are
 //! slowed down for each account on its own, wherever the guesses come from:
-//! each email address, and the owner (the password alone or their email,
-//! counted together). See docs/decisions/0010-sign-in.md and
-//! 0087-sign-in-by-email.md.
+//! each email address. See docs/decisions/0010-sign-in.md,
+//! 0087-sign-in-by-email.md and 0116-email-for-everyone.md.
 //!
-//! Each signed-in device belongs to one reader (decision 0086). A reader
-//! signs in with their email address and password; the password alone, with
-//! no email, is the owner's sign-in from before there were readers, and
-//! keeps working.
+//! Each signed-in device belongs to one reader (decision 0086). Every reader,
+//! the owner too, signs in with their email address and password (decision
+//! 0116); the password alone no longer signs anyone in.
 
 use std::{
     collections::HashMap,
@@ -36,8 +34,8 @@ use sqlx::SqlitePool;
 
 use crate::{AppState, config::PasswordSetting, log, now};
 
-/// The owner's number in `people`: the one reader who signs in with the
-/// password set as NINE_TURTLES_PASSWORD_HASH.
+/// The owner's number in `people`: the one reader whose password is the one
+/// set as NINE_TURTLES_PASSWORD_HASH (until they choose their own).
 pub const OWNER: i64 = 1;
 
 const COOKIE: &str = "nine_turtles_session";
@@ -149,7 +147,8 @@ impl Limiter {
 /// Whose wrong tries a sign-in counts towards.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Account {
-    /// The owner's password-only sign-in (as before email addresses).
+    /// The owner while they have no email yet, when they confirm their
+    /// password in Settings (their email, or a passkey).
     Owner,
     /// An email address, in small letters, whether or not anyone has it,
     /// the owner's own email too (so it can't be told apart from others).
@@ -157,9 +156,9 @@ pub enum Account {
 }
 
 impl Account {
-    /// The account a sign-in names before anything is looked up: its email
-    /// address (in small letters, as the database compares them), or the
-    /// owner's password-only sign-in if none.
+    /// The account an email names before anything is looked up: the email
+    /// address in small letters, as the database compares them, or the
+    /// owner (with no email yet) if none.
     pub fn named(email: Option<&str>) -> Self {
         match email.map(str::trim).filter(|email| !email.is_empty()) {
             Some(email) => Self::Email(email.to_ascii_lowercase()),
@@ -169,16 +168,13 @@ impl Account {
 }
 
 /// How many password checks (argon2, about 19 MB each) may run at once, so
-/// a flood of sign-in tries can't use up the server's memory. The owner's
-/// password-only sign-in has a place of its own: guesses at emails queue
-/// only behind each other, never in front of it. Its queue stays short,
-/// because it allows only five wrong tries before every further try is
-/// refused at once, with no check. A sign-in with the owner's email waits
-/// on the shared line like any other email, so its timing gives nothing
-/// away.
+/// a flood of sign-in tries can't use up the server's memory. An owner with
+/// no email yet confirming their password in Settings has a place of their
+/// own: guesses at emails never queue in front of it. Every sign-in, the
+/// owner's too, waits on the shared line, so its timing gives nothing away.
 #[derive(Debug)]
 pub struct PasswordChecks {
-    /// The owner's password-only checks, one at a time.
+    /// The owner's checks while they have no email, one at a time.
     pub owner: Semaphore,
     /// Every sign-in by email, the owner's email and emails nobody has too.
     pub others: Semaphore,
@@ -319,26 +315,29 @@ async fn session(State(state): State<AppState>, headers: HeaderMap) -> Response 
 
 #[derive(Deserialize)]
 struct SignIn {
-    /// Empty or left out: the owner's password-only sign-in.
     #[serde(default)]
-    email: Option<String>,
+    email: String,
     password: String,
 }
 
-/// Signs this device in: with an email address, for the reader who has it;
-/// without one, for the owner with NINE_TURTLES_PASSWORD_HASH, exactly as
-/// before there were readers. A wrong password and an email nobody has get
-/// the same answer, in about the same time.
+/// Signs this device in with an email address and password, for the reader
+/// who has that email, the owner too (decision 0116). A wrong password and
+/// an email nobody has get the same answer, in about the same time.
+///
+/// On a brand-new nine turtles the owner has no email yet. Then the first
+/// sign-in with an email nobody has and the owner's password (the one set
+/// as NINE_TURTLES_PASSWORD_HASH) signs in as the owner and saves that email
+/// as theirs, so from then on they sign in with it like everyone else.
 async fn sign_in(State(state): State<AppState>, Json(form): Json<SignIn>) -> Response {
     let owners_line = match &state.config.password {
         PasswordSetting::Set(stored) => Some(stored.clone()),
         _ => None,
     };
-    let account = Account::named(form.email.as_deref());
-    if account == Account::Owner && owners_line.is_none() {
+    let email = form.email.trim().to_owned();
+    if email.is_empty() {
         return (
-            StatusCode::SERVICE_UNAVAILABLE,
-            Json(json!({ "error": format!("password-{}", state.config.password.describe()) })),
+            StatusCode::BAD_REQUEST,
+            Json(json!({ "error": "email-needed" })),
         )
             .into_response();
     }
@@ -355,58 +354,70 @@ async fn sign_in(State(state): State<AppState>, Json(form): Json<SignIn>) -> Res
     }
 
     // Whose sign-in this would be, and the scrambled line to check against.
-    // A sign-in by email is counted under that email and checked on the
-    // shared line whoever has it, the owner too, so neither the answer nor
-    // the time taken tells a stranger which email is the owner's. (The
-    // owner then has two separate sets of five tries: decision 0087.)
-    let (account, person, stored) = match account {
-        // Once the owner has a password of their own (set by a password
-        // link, decision 0088), it replaces NINE_TURTLES_PASSWORD_HASH here too.
-        Account::Owner => {
-            let own: Result<Option<Option<String>>, sqlx::Error> =
-                sqlx::query_scalar("SELECT password_hash FROM people WHERE id = ?")
-                    .bind(OWNER)
-                    .fetch_optional(&state.db)
-                    .await;
-            match own {
-                Ok(own) => (Account::Owner, Some(OWNER), own.flatten().or(owners_line)),
-                Err(error) => return database_problem("finding the owner", &error),
-            }
+    // Every sign-in is counted under its email and checked on the shared
+    // line whoever has it, the owner too, so neither the answer nor the time
+    // taken tells a stranger which email is the owner's.
+    let account = Account::named(Some(&email));
+    let found: Result<Option<(i64, bool, Option<String>)>, sqlx::Error> = sqlx::query_as(
+        "SELECT id, owner, password_hash FROM people WHERE email = ? COLLATE NOCASE",
+    )
+    .bind(&email)
+    .fetch_optional(&state.db)
+    .await;
+    let (person, stored, claims_owner) = match found {
+        // The owner uses NINE_TURTLES_PASSWORD_HASH unless they have a
+        // password of their own (set by a password link, decision 0088).
+        Ok(Some((person, owner, own_line))) => {
+            let stored = if owner {
+                own_line.or(owners_line)
+            } else {
+                own_line
+            };
+            (Some(person), stored, false)
         }
-        Account::Email(email) => {
-            let found: Result<Option<(i64, bool, Option<String>)>, sqlx::Error> = sqlx::query_as(
-                "SELECT id, owner, password_hash FROM people WHERE email = ? COLLATE NOCASE",
-            )
-            .bind(&email)
-            .fetch_optional(&state.db)
-            .await;
-            match found {
-                // The owner uses NINE_TURTLES_PASSWORD_HASH unless they
-                // have a password of their own.
-                Ok(Some((person, owner, own_line))) => {
-                    let stored = if owner {
-                        own_line.or(owners_line)
-                    } else {
-                        own_line
-                    };
-                    (Account::Email(email), Some(person), stored)
+        // Nobody has this email. If the owner has none yet, it may be theirs
+        // (only an email that could be real, as sign-up asks).
+        Ok(None) if !crate::people::plausible_email(&email) => (None, None, false),
+        Ok(None) => match owner_without_email(&state.db).await {
+            Ok(Some(own_line)) => {
+                if own_line.is_none() && owners_line.is_none() {
+                    return (
+                        StatusCode::SERVICE_UNAVAILABLE,
+                        Json(json!({
+                            "error": format!("password-{}", state.config.password.describe())
+                        })),
+                    )
+                        .into_response();
                 }
-                Ok(None) => (Account::Email(email), None, None),
-                Err(error) => return database_problem("finding a reader", &error),
+                (Some(OWNER), own_line.or(owners_line), true)
             }
-        }
+            Ok(None) => (None, None, false),
+            Err(error) => return database_problem("finding the owner", &error),
+        },
+        Err(error) => return database_problem("finding a reader", &error),
     };
 
     // The lock is held only to check and record the count, never during the
     // password check, so one account's guesses never hold up anyone else.
     // The try counts as wrong from the start (and is forgotten if it turns
-    // out right), so tries sent together can't race past the limit.
+    // out right), so tries sent together can't race past the limit. A try
+    // at the owner's password with a new email also counts for the owner,
+    // so changing the email every few tries can't guess it unhindered.
+    let mut counted = vec![account.clone()];
+    if claims_owner {
+        counted.push(Account::Owner);
+    }
     {
         let mut limiters = state.limiter.lock().await;
-        if let Some(wait) = limiters.wait(&account, Instant::now()) {
+        if let Some(wait) = counted
+            .iter()
+            .find_map(|one| limiters.wait(one, Instant::now()))
+        {
             return wait_response(wait);
         }
-        limiters.wrong(account.clone(), Instant::now());
+        for one in &counted {
+            limiters.wrong(one.clone(), Instant::now());
+        }
     }
 
     let someones = stored.is_some();
@@ -430,7 +441,10 @@ async fn sign_in(State(state): State<AppState>, Json(form): Json<SignIn>) -> Res
         state
             .wrong_passwords
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        if let Some(wait) = limiters.wait(&account, Instant::now()) {
+        if let Some(wait) = counted
+            .iter()
+            .find_map(|one| limiters.wait(one, Instant::now()))
+        {
             // Counted on the diagnostics page, not kept as a "problem", so
             // a patient guesser can't push real problems out of view.
             log::info(&format!(
@@ -446,8 +460,33 @@ async fn sign_in(State(state): State<AppState>, Json(form): Json<SignIn>) -> Res
         )
             .into_response();
     };
-    limiters.right(&account);
+    for one in &counted {
+        limiters.right(one);
+    }
     drop(limiters);
+
+    // Two first sign-ins at once with different emails: only the first
+    // saves its email; the other still signs in as the owner (it had the
+    // owner's password), which is harmless.
+    if claims_owner {
+        let saved = sqlx::query("UPDATE people SET email = ? WHERE id = ? AND email IS NULL")
+            .bind(&email)
+            .bind(OWNER)
+            .execute(&state.db)
+            .await;
+        match saved {
+            Ok(_) => log::info("the owner signed in for the first time and saved their email"),
+            // Someone signed up with this email a moment ago: it's theirs.
+            Err(error) if crate::people::is_taken(&error) => {
+                return (
+                    StatusCode::UNAUTHORIZED,
+                    Json(json!({ "error": "wrong-password" })),
+                )
+                    .into_response();
+            }
+            Err(error) => return database_problem("saving the owner's email", &error),
+        }
+    }
 
     match remember_device(&state.db, person).await {
         Ok(Some(token)) => (
@@ -537,6 +576,16 @@ pub(crate) async fn ask_password(
     }
     limiters.right(account);
     None
+}
+
+/// While the owner has no email yet (a brand-new nine turtles), their own
+/// scrambled password if they have one (`Some(None)` if not); `None` once
+/// they have an email.
+async fn owner_without_email(db: &SqlitePool) -> Result<Option<Option<String>>, sqlx::Error> {
+    sqlx::query_scalar("SELECT password_hash FROM people WHERE id = ? AND email IS NULL")
+        .bind(OWNER)
+        .fetch_optional(db)
+        .await
 }
 
 /// Where `settings` keeps a fingerprint (BLAKE2s) of the

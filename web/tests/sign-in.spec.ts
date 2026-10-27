@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { TEST_PASSWORD } from "../playwright.config";
-import { appReady, signIn, tabTo } from "./screens";
+import { OWNER_EMAIL, TEST_PASSWORD } from "../playwright.config";
+import { appReady, ownerHasEmail, signIn, tabTo } from "./screens";
 
 // SPEC section 1, "How to check it", done by a browser. Everything here uses
 // the keyboard only (the keyboard floor), except signIn, which other tests share.
@@ -9,7 +9,7 @@ test("a new browser sees only the email and password fields", async ({ page }) =
   await page.goto("/");
   await appReady(page);
 
-  // The email first, as password managers expect; the owner may leave it empty (decision 0087).
+  // The email first, as password managers expect; everyone, the owner too, fills in both (decision 0116).
   await expect(page.getByLabel("Email")).toBeFocused();
   await expect(page.getByLabel("Email")).toHaveAttribute("autocomplete", "username");
   await expect(page.getByLabel("Password")).toHaveAttribute("autocomplete", "current-password");
@@ -61,17 +61,19 @@ test("the logo stands above the name on sign-in and before it in the sidebar, hi
   await expect(sidebarLogo).toHaveAttribute("focusable", "false");
 });
 
-test("a wrong password says so calmly and keeps you out", async ({ page }) => {
+test("a wrong password says so calmly and keeps you out", async ({ page, request }, testInfo) => {
+  await ownerHasEmail(request);
   await page.goto("/");
   await appReady(page);
   const fieldBefore = (await page.getByLabel("Password").boundingBox())!;
 
-  // The email left empty: the owner's password-only sign-in.
+  // An email of its own, so these wrong tries never make the owner wait.
+  await page.keyboard.type(`wrong-${testInfo.project.name}@example.com`);
   await page.keyboard.press("Tab");
   await page.keyboard.type("not the password");
   await page.keyboard.press("Enter");
 
-  await expect(page.getByRole("status")).toHaveText("That isn't the password.");
+  await expect(page.getByRole("status")).toHaveText("That email and password don't match.");
   expect((await page.getByLabel("Password").boundingBox())!.y).toBe(fieldBefore.y);
   // The message sits between the field and the button, and the field is marked. The room for
   // it is kept below the button, so the field and the title above it don't move (decision 0048).
@@ -82,7 +84,8 @@ test("a wrong password says so calmly and keeps you out", async ({ page }) => {
   await expect(page.locator("#sidebar")).toHaveCount(0);
 });
 
-test("while signing in, the button says it's busy and a second press sends nothing more", async ({ page }) => {
+test("while signing in, the button says it's busy and a second press sends nothing more", async ({ page, request }, testInfo) => {
+  await ownerHasEmail(request);
   await page.goto("/");
   await appReady(page);
   // Hold the answer back, so the page stays busy for as long as the test needs.
@@ -95,6 +98,7 @@ test("while signing in, the button says it's busy and a second press sends nothi
     await route.continue();
   });
 
+  await page.keyboard.type(`busy-${testInfo.project.name}@example.com`);
   await page.keyboard.press("Tab");
   await page.keyboard.type("not the password");
   await page.keyboard.press("Enter");
@@ -108,7 +112,7 @@ test("while signing in, the button says it's busy and a second press sends nothi
   expect(requests).toBe(1);
 
   release();
-  await expect(page.getByRole("status")).toHaveText("That isn't the password.");
+  await expect(page.getByRole("status")).toHaveText("That email and password don't match.");
   await expect(button).not.toHaveAttribute("aria-disabled", "true");
   expect(requests).toBe(1);
 });
@@ -116,13 +120,14 @@ test("while signing in, the button says it's busy and a second press sends nothi
 test("sign in with the keyboard, stay signed in, sign out", async ({ page, isMobile }) => {
   await page.goto("/");
   await appReady(page);
-  // The email field has the keyboard's place; the owner leaves it empty and Tabs on to the password.
+  // The email field has the keyboard's place: the email, then Tab on to the password.
+  await page.keyboard.type(OWNER_EMAIL);
   await page.keyboard.press("Tab");
   await page.keyboard.type(TEST_PASSWORD);
   await page.keyboard.press("Enter");
   await expect(page.locator("#sidebar")).toBeAttached();
   // The keyboard's place moves to the new screen's heading: what there is to read (here, with no
-  // feeds yet, the welcome's), or on a phone's feeds screen its name (decision 0116).
+  // feeds yet, the welcome's), or on a phone's feeds screen its name (decision 0118).
   if (isMobile) await expect(page.getByRole("heading", { level: 1, name: "nine turtles" })).toBeFocused();
   else await expect(page.getByRole("heading", { level: 2, name: "A quiet place to read." })).toBeFocused();
 
@@ -150,7 +155,27 @@ test("sign in with the keyboard, stay signed in, sign out", async ({ page, isMob
   await expect(page.getByLabel("Password")).toBeVisible();
 });
 
-test("with an email, a wrong password never says whether the email has an account", async ({ page }) => {
+test("without an email, nothing is sent and the email field is asked for", async ({ page }) => {
+  await page.goto("/");
+  await appReady(page);
+  let requests = 0;
+  await page.route("**/api/sign-in", async (route) => {
+    requests += 1;
+    await route.continue();
+  });
+  // The password alone signs nobody in (decision 0116).
+  await page.keyboard.press("Tab");
+  await page.keyboard.type(TEST_PASSWORD);
+  await page.keyboard.press("Enter");
+
+  await expect(page.getByRole("status")).toHaveText("Type your email too.");
+  await expect(page.getByLabel("Email")).toBeFocused();
+  expect(requests).toBe(0);
+  await expect(page.locator("#sidebar")).toHaveCount(0);
+});
+
+test("a wrong password never says whether the email has an account", async ({ page, request }) => {
+  await ownerHasEmail(request);
   await page.goto("/");
   await appReady(page);
   await page.keyboard.type("nobody-here@example.com");

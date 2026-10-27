@@ -308,7 +308,7 @@ async fn add_start(
     };
 
     // Counted where this reader's sign-in counts: under their email, or for
-    // an owner with none, the password-only sign-in (as `change_email`).
+    // an owner with none yet, the owner's own count (as `change_email`).
     let account = match email.as_deref() {
         Some(email) => Account::named(Some(email)),
         None if owner => Account::Owner,

@@ -294,7 +294,7 @@ test("Settings: appearance, font, size and width apply at once and are remembere
   await page.keyboard.press("ArrowLeft");
   await expect(page.getByLabel("Light", { exact: true })).toBeChecked();
   // Font and line width are segmented controls: the chosen one is raised (a small shadow) and semibold, and by day
-  // a thin edge sets it at 3 : 1 against the rest of the control (decision 0116).
+  // a thin edge sets it at 3 : 1 against the rest of the control (decision 0118).
   await expect(page.locator("label.choice").filter({ hasText: "Medium" })).toHaveCSS("font-weight", "600");
   await expect(page.locator("label.choice").filter({ hasText: "Medium" })).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
   await expect(page.locator("label.choice").filter({ hasText: "Wide" })).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");

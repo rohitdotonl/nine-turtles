@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { TEST_PASSWORD } from "../playwright.config";
+import { OWNER_EMAIL, TEST_PASSWORD } from "../playwright.config";
 import { appReady } from "./screens";
 
 // Passkeys (SPEC sections 1 and 18, decision 0109), with Chrome's own
@@ -97,6 +97,7 @@ test("a passkey added in Settings signs in from the sign-in page, and the passwo
   );
   await passesAccessibilityChecks(page);
 
+  await page.getByLabel("Email").fill(OWNER_EMAIL);
   await page.getByLabel("Password").fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page.locator("#sidebar")).toBeAttached();
@@ -192,6 +193,7 @@ test("a passkey added in Settings signs in from the sign-in page, and the passwo
   await expect(page.getByRole("status")).toHaveText(
     "That passkey isn't one this nine turtles knows. Sign in with your password.",
   );
+  await page.getByLabel("Email").fill(OWNER_EMAIL);
   await page.getByLabel("Password").fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page.locator("#sidebar")).toBeAttached();
@@ -220,7 +222,9 @@ test("a passkey is added, renamed and removed from the keyboard alone", async ({
 
   await page.goto(`${local()}/`);
   await appReady(page);
-  await tabTo(page, page.getByLabel("Password"));
+  await tabTo(page, page.getByLabel("Email"));
+  await page.keyboard.type(OWNER_EMAIL);
+  await page.keyboard.press("Tab");
   await page.keyboard.type(TEST_PASSWORD);
   await page.keyboard.press("Enter");
   await expect(page.locator("#sidebar")).toBeAttached();
@@ -295,6 +299,7 @@ test("Settings › Passkeys passes the accessibility checks, and Cancel leaves t
 }) => {
   await page.goto(`${local()}/`);
   await appReady(page);
+  await page.getByLabel("Email").fill(OWNER_EMAIL);
   await page.getByLabel("Password").fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page.locator("#sidebar")).toBeAttached();
