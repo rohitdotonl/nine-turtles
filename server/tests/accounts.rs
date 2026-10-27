@@ -1532,3 +1532,89 @@ async fn the_owner_can_sign_in_by_email_link_too() {
         StatusCode::NO_CONTENT
     );
 }
+
+/// The sign-in cookie's lock and lifetime: the same whichever way the
+/// device got in (ENGINEERING.md "Sign-in and security").
+fn assert_lasting_and_locked(response: &Response) {
+    let set_cookie = response.headers()["set-cookie"].to_str().unwrap();
+    assert!(
+        set_cookie.starts_with("nine_turtles_session="),
+        "{set_cookie}"
+    );
+    for part in [
+        "Max-Age=31536000",
+        "HttpOnly",
+        "Secure",
+        "SameSite=Strict",
+        "Path=/",
+    ] {
+        assert!(set_cookie.contains(part), "{set_cookie} lacks {part}");
+    }
+}
+
+#[tokio::test]
+async fn every_way_in_sets_the_same_locked_cookie_for_a_year() {
+    let (base, _, outbox, _) = open_app().await;
+    let email = "ines@example.com";
+
+    // Signing up.
+    let made = post(
+        &base,
+        "/api/sign-up",
+        None,
+        json!({ "email": email, "password": READER_PASSWORD }),
+    )
+    .await;
+    assert_eq!(made.status(), StatusCode::NO_CONTENT);
+    assert_lasting_and_locked(&made);
+
+    // A password.
+    let signed_in = sign_in(&base, email, READER_PASSWORD).await;
+    assert_eq!(signed_in.status(), StatusCode::NO_CONTENT);
+    assert_lasting_and_locked(&signed_in);
+
+    // An emailed sign-in link.
+    let asked = post(&base, "/api/sign-in/link", None, json!({ "email": email })).await;
+    assert_eq!(asked.status(), StatusCode::ACCEPTED);
+    let (_, ticket) = newest_link(&outbox, email);
+    let used = post(
+        &base,
+        "/api/sign-in/link/use",
+        None,
+        json!({ "ticket": ticket }),
+    )
+    .await;
+    assert!(used.status().is_success(), "{}", used.status());
+    assert_lasting_and_locked(&used);
+
+    // A new password from an emailed link.
+    let asked = post(
+        &base,
+        "/api/password/forgot",
+        None,
+        json!({ "email": email }),
+    )
+    .await;
+    assert_eq!(asked.status(), StatusCode::ACCEPTED);
+    let (_, ticket) = newest_link(&outbox, email);
+    let reset = post(
+        &base,
+        "/api/password/reset",
+        None,
+        json!({ "ticket": ticket, "password": NEW_PASSWORD }),
+    )
+    .await;
+    assert_eq!(reset.status(), StatusCode::OK);
+    assert_lasting_and_locked(&reset);
+
+    // Each of them really signs in.
+    for response in [&made, &signed_in, &used] {
+        let cookie = cookie_from(response);
+        // A new password signs every other device out (decision 0088).
+        assert_eq!(session(&base, Some(&cookie)).await["signed_in"], false);
+    }
+    assert_eq!(
+        session(&base, Some(&cookie_from(&reset))).await["signed_in"],
+        true
+    );
+}
