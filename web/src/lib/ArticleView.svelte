@@ -245,11 +245,16 @@
     opened = undefined;
   });
 
-  /** Closing the opened picture gives the keyboard back to it in the article. */
+  /**
+   * Closing the opened picture gives the keyboard back to it in the article,
+   * or to the article's title if it no longer opens larger (the window
+   * changed size meanwhile), so the keyboard never lands on the page itself.
+   */
   function closePicture() {
     const picture = opened?.picture;
     opened = undefined;
-    picture?.focus({ preventScroll: true });
+    if (picture?.isConnected && picture.classList.contains(OPENABLE)) picture.focus({ preventScroll: true });
+    else heading?.focus({ preventScroll: true });
   }
 
   async function share() {
@@ -433,7 +438,7 @@
   {/if}
 
   {#if opened}
-    <PictureSheet src={opened.src} alt={opened.alt} onClose={closePicture} />
+    <PictureSheet src={opened.src} alt={opened.alt} lang={full?.language ?? undefined} onClose={closePicture} />
   {/if}
 
   {#if panelOpen}

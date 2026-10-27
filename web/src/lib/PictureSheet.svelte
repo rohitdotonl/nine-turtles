@@ -5,7 +5,10 @@
   caption in the second ink, and a quiet "Open in new tab" to the picture's
   own address. It's a picture you only look at, so it closes with an X
   (DESIGN.md → "One close rule"), Escape, or a press on the dim; the page
-  then gives the keyboard back to the picture. A native modal dialog, like
+  then gives the keyboard back to the picture (or to the article's title, if
+  it no longer opens larger). The sheet is drawn outside the article, so it
+  carries the article's language itself, as the article does, and its own
+  English words say theirs. A native modal dialog, like
   the shortcut list, so the keyboard stays inside while it's open. It appears
   at once and goes at once: nothing moves. Nothing stops a phone's pinch-zoom.
 
@@ -19,12 +22,15 @@
   let {
     src,
     alt,
+    lang,
     onClose,
   }: {
     /** The picture's address, as the article loaded it. */
     src: string;
     /** The publisher's description of the picture, shown as its caption; empty when there's none. */
     alt: string;
+    /** The article's language: the sheet is drawn outside the article, so its caption and name say it themselves. */
+    lang?: string;
     onClose: () => void;
   } = $props();
 
@@ -58,6 +64,7 @@
 <dialog
   bind:this={dialog}
   aria-label={caption ? `Picture: ${caption}` : "Picture"}
+  {lang}
   oncancel={cancel}
   onpointerdown={(event) => (pressedOutside = event.target === dialog)}
   onclick={outside}
@@ -65,7 +72,7 @@
 >
   <div class="flex flex-col items-center px-4 pb-3">
     <div class="flex w-full justify-end pt-1">
-      <button type="button" onclick={close} aria-label="Close" title="Close (Esc)" class="btn-quiet btn-icon -mr-2"><Icon name="close" size={18} /></button>
+      <button type="button" onclick={close} lang="en" aria-label="Close" title="Close (Esc)" class="btn-quiet btn-icon -mr-2"><Icon name="close" size={18} /></button>
     </div>
     <figure class="m-0 flex flex-col items-center">
       <!-- Its alt text is the caption below, so the picture itself isn't named twice. -->
@@ -74,7 +81,7 @@
         <figcaption class="mt-2 max-w-[60ch] text-center text-small text-ink-2">{caption}</figcaption>
       {/if}
     </figure>
-    <a href={src} target="_blank" rel="noopener noreferrer" class="picture-sheet-link text-small text-ink-2">Open in new tab</a>
+    <a href={src} lang="en" target="_blank" rel="noopener noreferrer" class="picture-sheet-link text-small text-ink-2">Open in new tab</a>
   </div>
 </dialog>
 

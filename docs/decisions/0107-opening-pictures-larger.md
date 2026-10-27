@@ -24,7 +24,9 @@ own (SPEC section 7).
   size; its alt text as a caption in the second ink; a quiet "Open in new
   tab" to the picture's address (`rel="noopener noreferrer"`); an X, since
   it's only looked at (DESIGN.md → "One close rule"). Escape, the X or a
-  press on the dim closes it and the keyboard returns to the picture. No
+  press on the dim closes it and the keyboard returns to the picture, or
+  to the article's title if a resize means it no longer qualifies. The sheet
+  is drawn outside the article, so it carries the article's `lang` itself. No
   motion. On a phone it stays a card over the dim, not a screen of its own:
   it is a picture, not a form, and pinch-zoom is never blocked.
 - **By night:** the picture in the article keeps its slight dimming

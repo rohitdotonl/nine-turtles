@@ -576,23 +576,35 @@ test.describe("on a wide window", () => {
 
   test("a big picture opens larger, alone on a dimmed sheet; Escape closes it and the keyboard is back on the picture (decision 0107)", async ({ page }) => {
     await openRoom(page);
-    // A picture shown at its full size stays the publisher's picture, with nothing added.
-    await row(page, "The pleasure of a slow letter").click();
-    const river = article(page).locator('img[alt="A river drawn as three blue lines"]');
-    await expect.poll(() => river.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
-    const shrunk = await river.evaluate((img: HTMLImageElement) => img.naturalWidth >= img.clientWidth * 1.2);
-    if (!shrunk) await expect(river).not.toHaveAttribute("role", "button");
-
     await row(page, "A third, shorter note").click();
     const picture = article(page).getByRole("button", { name: "Open picture larger: Two hills at dusk, drawn in greys" });
     await expect(picture).toBeVisible();
     await expect(picture).toHaveCSS("cursor", "pointer");
+
+    // A picture shown at its full size, or inside a link, stays the publisher's picture, with nothing added.
+    const stone = article(page).locator('img[alt="A small stone"]');
+    const linked = article(page).locator('img[alt="The same hills, as a link"]');
+    for (const other of [stone, linked]) {
+      await expect.poll(() => other.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+      await expect(other).not.toHaveAttribute("role", "button");
+      await expect(other).not.toHaveAttribute("tabindex");
+    }
+    // The linked one really is shown smaller, so only the link keeps it from opening.
+    expect(await linked.evaluate((img: HTMLImageElement) => img.naturalWidth > img.clientWidth * 1.2)).toBe(true);
+
+    // Tab reaches the picture from the article's title.
+    await title(page, "A third, shorter note").focus();
+    await tabTo(page, picture, 20);
 
     // A click opens it: alone, its alt text under it, an X and Open in new tab.
     await picture.click();
     const sheet = page.getByRole("dialog", { name: "Picture: Two hills at dusk, drawn in greys" });
     await expect(sheet).toBeVisible();
     await expect(sheet.locator("figcaption")).toHaveText("Two hills at dusk, drawn in greys");
+    // Drawn outside the article, it says the article's language itself.
+    const language = await article(page).locator("article").getAttribute("lang");
+    expect(language).toBeTruthy();
+    await expect(sheet).toHaveAttribute("lang", language!);
     const close = sheet.getByRole("button", { name: "Close" });
     await expect(close).toHaveAttribute("title", "Close (Esc)");
     const closeBox = await close.boundingBox();
@@ -624,6 +636,30 @@ test.describe("on a wide window", () => {
     await page.mouse.click(5, 5);
     await expect(sheet).toHaveCount(0);
     await expect(picture).toBeFocused();
+  });
+
+  test("a picture is looked at again when the window changes size; one that no longer opens larger gives the keyboard to the title on closing (decision 0107)", async ({ page }) => {
+    await openRoom(page);
+    await row(page, "A third, shorter note").click();
+    // The field fits the column of a wide window, so it stays as it was.
+    const field = article(page).locator('img[alt="A wide field"]');
+    await expect.poll(() => field.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+    await expect(field).not.toHaveAttribute("role", "button");
+
+    // In a narrower window it's shown smaller, so it opens larger.
+    await page.setViewportSize({ width: 900, height: 800 });
+    await expect(field).toHaveAttribute("role", "button");
+    await expect(field).toHaveAttribute("tabindex", "0");
+    await field.click();
+    const sheet = page.getByRole("dialog", { name: "Picture: A wide field" });
+    await expect(sheet).toBeVisible();
+
+    // Wide again while it's open: it no longer opens larger, so closing puts the keyboard on the title.
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await expect(field).not.toHaveAttribute("role", "button");
+    await page.keyboard.press("Escape");
+    await expect(sheet).toHaveCount(0);
+    await expect(title(page, "A third, shorter note")).toBeFocused();
   });
 
   test("in high-contrast mode, only the selected article is marked", async ({ page }) => {
@@ -769,6 +805,35 @@ test("on a phone, an article fills the screen and the back button returns to the
   await article(page).getByRole("button", { name: "Back to Reading Room" }).click();
   await expect(row(page, "The pleasure of a slow letter")).toBeFocused();
   await expect(article(page)).toBeHidden();
+});
+
+test("on a phone, a tap opens a big picture larger, inside the screen, and the X closes it (decision 0107)", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "the phone layout only");
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  await openReadingRoom(page);
+
+  await row(page, "A third, shorter note").click();
+  const picture = article(page).getByRole("button", { name: "Open picture larger: Two hills at dusk, drawn in greys" });
+  await expect(picture).toBeVisible();
+  await expect(article(page).locator('img[alt="The same hills, as a link"]')).not.toHaveAttribute("role", "button");
+  await picture.tap();
+  const sheet = page.getByRole("dialog", { name: "Picture: Two hills at dusk, drawn in greys" });
+  await expect(sheet).toBeVisible();
+  const viewport = page.viewportSize()!;
+  const opened = await sheet.locator("img").boundingBox();
+  expect(opened!.x).toBeGreaterThanOrEqual(0);
+  expect(opened!.x + opened!.width).toBeLessThanOrEqual(viewport.width);
+  expect(opened!.y + opened!.height).toBeLessThanOrEqual(viewport.height);
+  await expect(sheet.getByRole("link", { name: "Open in new tab" })).toBeVisible();
+  const close = sheet.getByRole("button", { name: "Close" });
+  const closeBox = await close.boundingBox();
+  expect(closeBox!.width).toBeGreaterThanOrEqual(44);
+  expect(closeBox!.height).toBeGreaterThanOrEqual(44);
+  await close.tap();
+  await expect(sheet).toHaveCount(0);
+  await expect(picture).toBeFocused();
 });
 
 test("the shortcut tip shows only until an article is first opened, then never again on this device (decision 0062)", async ({ page, isMobile }) => {
