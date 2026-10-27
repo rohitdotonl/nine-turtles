@@ -693,22 +693,32 @@ pub async fn store_articles(
         let sort_at = article
             .published_at
             .map_or(received_at, |published| published.min(received_at));
+        let episode = article.episode.as_ref();
         let stored: Option<i64> = sqlx::query_scalar(
             "INSERT INTO articles (id, feed_id, fingerprint, title, link, author, content,
-                 summary, language, published_at, received_at, sort_at)
+                 summary, language, published_at, received_at, sort_at,
+                 episode_url, episode_type, episode_bytes, episode_seconds, episode_artwork)
              VALUES (1 + MAX(COALESCE((SELECT MAX(id) FROM articles), 0),
                      COALESCE((SELECT CAST(value AS INTEGER) FROM settings
                                WHERE name = 'articles_high_water'), 0)),
-                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON CONFLICT (feed_id, fingerprint) DO UPDATE SET
                  title = excluded.title, link = excluded.link, author = excluded.author,
                  content = excluded.content, summary = excluded.summary,
-                 language = excluded.language
+                 language = excluded.language, episode_url = excluded.episode_url,
+                 episode_type = excluded.episode_type, episode_bytes = excluded.episode_bytes,
+                 episode_seconds = excluded.episode_seconds,
+                 episode_artwork = excluded.episode_artwork
              WHERE articles.title IS NOT excluded.title OR articles.link IS NOT excluded.link
                  OR articles.author IS NOT excluded.author
                  OR articles.content IS NOT excluded.content
                  OR articles.summary IS NOT excluded.summary
                  OR articles.language IS NOT excluded.language
+                 OR articles.episode_url IS NOT excluded.episode_url
+                 OR articles.episode_type IS NOT excluded.episode_type
+                 OR articles.episode_bytes IS NOT excluded.episode_bytes
+                 OR articles.episode_seconds IS NOT excluded.episode_seconds
+                 OR articles.episode_artwork IS NOT excluded.episode_artwork
              RETURNING id",
         )
         .bind(feed_id)
@@ -722,6 +732,11 @@ pub async fn store_articles(
         .bind(article.published_at)
         .bind(received_at)
         .bind(sort_at)
+        .bind(episode.map(|episode| &episode.url))
+        .bind(episode.and_then(|episode| episode.media_type.as_ref()))
+        .bind(episode.and_then(|episode| episode.bytes))
+        .bind(episode.and_then(|episode| episode.seconds))
+        .bind(episode.and_then(|episode| episode.artwork.as_ref()))
         .fetch_optional(&mut *connection)
         .await?;
         // New, or edited since: the search index gets its words.
@@ -776,8 +791,8 @@ pub enum Order {
 
 impl List {
     /// A feed's, a folder's or a collection's articles if one is named,
-    /// otherwise the view's; none for Recently read, which is `recent`'s own
-    /// list.
+    /// otherwise the view's; none for Recently read and Up Next, which are
+    /// `recent`'s and `podcasts`' own lists.
     pub(crate) const fn from_query(
         feed: Option<i64>,
         folder: Option<i64>,
@@ -791,7 +806,7 @@ impl List {
             (None, None, None, View::All) => Some(Self::All),
             (None, None, None, View::Unread) => Some(Self::Unread),
             (None, None, None, View::Starred) => Some(Self::Starred),
-            (None, None, None, View::Recent) => None,
+            (None, None, None, View::Recent | View::Upnext) => None,
         }
     }
 }
@@ -805,6 +820,8 @@ pub(crate) enum View {
     Starred,
     /// Recently read: the last 50 articles the reader opened (`recent`).
     Recent,
+    /// Up Next: the episodes the reader lined up, in their order (`podcasts`).
+    Upnext,
 }
 
 #[derive(Deserialize)]
@@ -840,6 +857,11 @@ pub struct ArticleRow {
     /// A rule (or the reader) muted it: only search, the Muted page and
     /// Starred show it.
     pub muted: bool,
+    /// A podcast's episode (SPEC section 34): the list shows a small
+    /// headphones mark and its length.
+    pub episode: bool,
+    /// How long the episode plays, in seconds, if its feed says.
+    pub episode_seconds: Option<i64>,
 }
 
 /// Writes an article's link without its tracking tags (`ArticleRow`).
@@ -873,6 +895,12 @@ async fn list_articles(
         (Ok(latest), Some(list)) => page(&state.db, person, list, query.order, after)
             .await
             .map(|listed| (latest, listed)),
+        // Up Next is one short page, in the reader's own order, whatever the sort.
+        (Ok(latest), None) if matches!(query.view, View::Upnext) => {
+            crate::podcasts::list(&state.db, person)
+                .await
+                .map(|listed| (latest, (listed, None)))
+        }
         // Recently read is one short page, in the order opened, whatever the sort.
         (Ok(latest), None) => recent::list(&state.db, person)
             .await
@@ -945,7 +973,8 @@ async fn new_articles(
     State(state): State<AppState>,
     Query(query): Query<NewQuery>,
 ) -> Response {
-    // Nothing arrives already opened, so Recently read never has new items.
+    // Nothing arrives already opened, or lined up, so Recently read and Up
+    // Next never have new items.
     let Some(list) = List::from_query(query.feed, query.folder, query.collection, query.view)
     else {
         return Json(json!({ "new": false })).into_response();
@@ -991,7 +1020,8 @@ macro_rules! list_query {
         concat!(
             "SELECT entries.article_id AS id, entries.feed_id, subscriptions.title AS feed_title,
                     articles.title, articles.link, entries.sort_at AS at,
-                    entries.read, entries.starred, entries.muted
+                    entries.read, entries.starred, entries.muted,
+                    articles.episode_url IS NOT NULL AS episode, articles.episode_seconds
              FROM entries CROSS JOIN articles ON articles.id = entries.article_id
                  CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
                      AND subscriptions.feed_id = entries.feed_id
@@ -1021,7 +1051,8 @@ macro_rules! collection_query {
         concat!(
             "SELECT entries.article_id AS id, entries.feed_id, subscriptions.title AS feed_title,
                     articles.title, articles.link, entries.sort_at AS at,
-                    entries.read, entries.starred, entries.muted
+                    entries.read, entries.starred, entries.muted,
+                    articles.episode_url IS NOT NULL AS episode, articles.episode_seconds
              FROM collection_articles
                  CROSS JOIN entries ON entries.person_id = collection_articles.person_id
                      AND entries.article_id = collection_articles.article_id
@@ -1155,6 +1186,14 @@ pub struct FullArticle {
     pub at: i64,
     pub read: bool,
     pub starred: bool,
+    /// A podcast's episode (SPEC section 34): the publisher's own address
+    /// for its audio file, which the reader's browser plays from there.
+    /// Null for any other article.
+    pub episode_url: Option<String>,
+    pub episode_type: Option<String>,
+    pub episode_bytes: Option<i64>,
+    pub episode_seconds: Option<i64>,
+    pub episode_artwork: Option<String>,
 }
 
 /// Only an article the reader has (an entry of theirs); any other is not
@@ -1227,7 +1266,9 @@ pub(crate) async fn full_articles(
         "SELECT articles.id, entries.feed_id, subscriptions.title AS feed_title, feeds.site_url,
                 articles.title, articles.link, articles.author, articles.content,
                 articles.summary, COALESCE(articles.language, feeds.language) AS language,
-                entries.sort_at AS at, entries.read, entries.starred
+                entries.sort_at AS at, entries.read, entries.starred,
+                articles.episode_url, articles.episode_type, articles.episode_bytes,
+                articles.episode_seconds, articles.episode_artwork
          FROM entries JOIN articles ON articles.id = entries.article_id
              JOIN feeds ON feeds.id = entries.feed_id
              JOIN subscriptions ON subscriptions.person_id = entries.person_id

@@ -93,7 +93,8 @@ pub async fn note(db: &sqlx::SqlitePool, person: i64, id: i64, at: i64) -> Resul
 pub const LIST: &str =
     "SELECT entries.article_id AS id, entries.feed_id, subscriptions.title AS feed_title,
             articles.title, articles.link, entries.sort_at AS at,
-            entries.read, entries.starred, entries.muted
+            entries.read, entries.starred, entries.muted,
+            articles.episode_url IS NOT NULL AS episode, articles.episode_seconds
      FROM entries CROSS JOIN articles ON articles.id = entries.article_id
          CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
              AND subscriptions.feed_id = entries.feed_id

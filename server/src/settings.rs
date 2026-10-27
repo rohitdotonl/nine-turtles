@@ -79,15 +79,18 @@ enum Hideable {
     Recent,
     Searches,
     Collections,
+    /// Up Next (decision 0111): shown only while it holds an episode.
+    Upnext,
 }
 
 impl Hideable {
-    const EVERY: [Self; 5] = [
+    const EVERY: [Self; 6] = [
         Self::Starred,
         Self::All,
         Self::Recent,
         Self::Searches,
         Self::Collections,
+        Self::Upnext,
     ];
 
     const fn stored(self) -> &'static str {
@@ -97,6 +100,7 @@ impl Hideable {
             Self::Recent => "recent",
             Self::Searches => "searches",
             Self::Collections => "collections",
+            Self::Upnext => "upnext",
         }
     }
 }

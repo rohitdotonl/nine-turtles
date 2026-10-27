@@ -21,6 +21,7 @@ fn article(fingerprint: &str) -> ParsedArticle {
         summary: None,
         language: None,
         published_at: None,
+        episode: None,
     }
 }
 

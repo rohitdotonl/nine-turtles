@@ -18,8 +18,12 @@ use tower_http::set_header::SetResponseHeaderLayer;
 /// serve an image. An image can't run code. The one frame allowed is
 /// YouTube's own player, in its privacy-enhanced form, which an article about
 /// a YouTube video loads only when the reader presses Play (decision 0072).
+/// Audio is the other exception: a podcast's episode plays straight from the
+/// publisher's own address, in the browser's own audio element (decision
+/// 0111). Audio can't run code either.
 pub const CONTENT_SECURITY_POLICY: &str = "default-src 'self'; script-src 'self'; \
-    style-src 'self'; img-src 'self' data: https: http:; font-src 'self'; connect-src 'self'; \
+    style-src 'self'; img-src 'self' data: https: http:; media-src 'self' https: http:; \
+    font-src 'self'; connect-src 'self'; \
     frame-src https://www.youtube-nocookie.com; \
     object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'";
 

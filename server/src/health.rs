@@ -627,6 +627,19 @@ async fn carry_entries_over(
                 .bind(article)
                 .execute(&mut *connection)
                 .await?;
+            // Where they stopped in an episode, and its place in Up Next, go
+            // with it too (decision 0111); what the old line keeps goes with it.
+            for table in ["episode_progress", "up_next"] {
+                sqlx::query(sqlx::AssertSqlSafe(format!(
+                    "UPDATE OR IGNORE {table} SET article_id = ?3
+                     WHERE person_id = ?1 AND article_id = ?2"
+                )))
+                .bind(person)
+                .bind(article)
+                .bind(copy)
+                .execute(&mut *connection)
+                .await?;
+            }
             sqlx::query("DELETE FROM entries WHERE person_id = ? AND article_id = ?")
                 .bind(person)
                 .bind(article)

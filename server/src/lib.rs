@@ -45,6 +45,7 @@ pub mod newsletters;
 pub mod password;
 pub mod payments;
 pub mod people;
+pub mod podcasts;
 pub mod recent;
 pub mod rules;
 pub mod saved_searches;
@@ -207,6 +208,7 @@ pub fn router(state: AppState) -> Router {
         .merge(tidy::routes())
         .merge(marks::routes())
         .merge(recent::routes())
+        .merge(podcasts::routes())
         .merge(frequency::routes())
         .merge(people::routes())
         .merge(payments::routes())

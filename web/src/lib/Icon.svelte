@@ -4,7 +4,7 @@
   or the label of an icon-only button, says what it does.
 -->
 <script lang="ts" module>
-  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "clock" | "history" | "shelf";
+  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "clock" | "history" | "shelf" | "headphones" | "queue";
 </script>
 
 <script lang="ts">
@@ -118,6 +118,17 @@
     <path d="M1.75 16 6 4l4.25 12M3.35 12h5.3" />
     <circle cx="14.5" cy="13.5" r="2.5" />
     <path d="M17 11v5" />
+  {:else if name === "headphones"}
+    <!-- A podcast's episode (decision 0111): headphones, a band and two ear cups. -->
+    <path d="M3.75 13v-2.25a6.25 6.25 0 0 1 12.5 0V13" />
+    <path d="M3.75 12.25h1.5a1 1 0 0 1 1 1v2.5a1 1 0 0 1-1 1h-.5a1 1 0 0 1-1-1Z" />
+    <path d="M16.25 12.25h-1.5a1 1 0 0 0-1 1v2.5a1 1 0 0 0 1 1h.5a1 1 0 0 0 1-1Z" />
+  {:else if name === "queue"}
+    <!-- Up Next (decision 0111): three lines of a list, the first led by a small play mark. -->
+    <path d="M3.75 5.25 7 7.25 3.75 9.25Z" />
+    <path d="M9.5 7.25h6.75" />
+    <path d="M3.75 11.75h12.5" />
+    <path d="M3.75 15.25h12.5" />
   {:else if name === "shelf"}
     <!-- A collection (decision 0108): two books upright and one leaning, on a shelf. -->
     <path d="M2.75 16.25h14.5" />

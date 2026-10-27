@@ -14,8 +14,10 @@
   shows the summary, then a small centred note under the closing rule that
   links the whole article on the publisher's site; nine turtles never fetches
   the rest. A YouTube video plays above its text in YouTube's own player,
-  loaded only once you press Play (decision 0072). A picture shown clearly
-  smaller than it really is opens larger on a sheet of its own (decision 0107).
+  loaded only once you press Play (decision 0072). A podcast episode has its
+  player there instead, playing the publisher's own file (decision 0111). A
+  picture shown clearly smaller than it really is opens larger on a sheet of
+  its own (decision 0107).
 
   On a phone (SPEC section 20) the article is a screen of its own: the top
   bar has the back button, labeled with the list's name, and Open original;
@@ -28,12 +30,15 @@
   import MoreMenu, { type MenuGroup } from "./MoreMenu.svelte";
   import ReadingPanel from "./ReadingPanel.svelte";
   import YouTubePlayer from "./YouTubePlayer.svelte";
+  import EpisodePlayer from "./EpisodePlayer.svelte";
+  import type { Snippet } from "svelte";
   import { youtubeVideo } from "./youtube";
+  import { addToUpNext, player, removeFromUpNext } from "./player.svelte";
   import type { Preferences } from "./preferences";
   import { articleNow, readArticle, when, type Article, type FullArticle } from "./feeds";
   import { goTo, keepPlace, placeIn, placeOf, type Place } from "./places";
   import { connection } from "./connection.svelte";
-  import { NOT_KEPT } from "./offline";
+  import { EPISODE_OFFLINE, NOT_KEPT } from "./offline";
   import PictureSheet from "./PictureSheet.svelte";
   import { OPENABLE, markPicture } from "./pictures";
   import { currentKey, tip } from "./keys.svelte";
@@ -47,6 +52,7 @@
     onStar,
     onMarkUnread,
     onCollect,
+    beforeToolbar,
   }: {
     /** The article chosen in the list; its title, source and time show at once. */
     article: Article;
@@ -68,6 +74,8 @@
     onMarkUnread: () => void;
     /** "Add to collection…" (or l): the sheet of the reader's collections (decision 0108). */
     onCollect: () => void;
+    /** On a phone, the "now playing" bar, which sits above the article's toolbar (SPEC section 34). */
+    beforeToolbar?: Snippet;
   } = $props();
 
   // Bumped when an article arrives from the server, so the page looks again.
@@ -98,16 +106,33 @@
   const sharing =
     typeof navigator.share === "function" && matchMedia("(hover: none) and (pointer: coarse)").matches;
 
-  /** The article's less frequent actions, behind More (…): sharing its link, marking it unread, and its collections. */
+  /** A podcast's episode (SPEC section 34): its audio, played from the publisher's own address. Copies kept before podcasts have none. */
+  let episode = $derived(full?.audio ?? null);
+  let queued = $derived(player.upNext?.includes(article.id) ?? false);
+
+  /** The article's less frequent actions, behind More (…): sharing its link, marking it unread, its collections, and, for an episode, Up Next. */
   let more: MenuGroup[] = $derived([
     {
       items: [
         ...(article.link ? [{ label: sharing ? "Share" : "Copy link", shortcut: phone || sharing ? undefined : currentKey("copy-link"), onSelect: share }] : []),
         { label: "Mark unread", shortcut: phone ? undefined : currentKey("mark-unread"), onSelect: onMarkUnread },
         { label: "Add to collection…", shortcut: phone ? undefined : currentKey("collect"), onSelect: onCollect },
+        ...(episode && player.upNext !== null
+          ? [
+              queued
+                ? { label: "Remove from Up Next", onSelect: () => void upNext(false) }
+                : { label: "Add to Up Next", onSelect: () => void upNext(true) },
+            ]
+          : []),
       ],
     },
   ]);
+
+  /** Adds the episode to Up Next, or takes it off, and says so quietly. */
+  async function upNext(add: boolean) {
+    const done = add ? await addToUpNext(article.id) : await removeFromUpNext(article.id);
+    copied = done ? (add ? "Added to Up Next." : "Removed from Up Next.") : "Up Next couldn't be changed. Try again in a moment.";
+  }
 
   // Your place, like a bookmark (decision 0060). Only the reader's own
   // scrolling moves it: opening an article, or putting it back at its
@@ -416,6 +441,15 @@
           <YouTubePlayer {video} title={article.title || "Untitled"} />
         {/key}
       {/if}
+      {#if episode && connection.offline && !(player.current?.article.id === article.id)}
+        <!-- Without a connection there's nothing to play from: the episode waits, as a video does (SPEC section 32). -->
+        <p class="article-note mt-6" lang="en">{EPISODE_OFFLINE}</p>
+      {:else if episode}
+        <!-- A podcast's episode plays here, from the publisher's own file (SPEC section 34, decision 0111). -->
+        {#key article.id}
+          <EpisodePlayer {article} {episode} />
+        {/key}
+      {/if}
       {#if full}
         {#if full.content}
           <!-- Cleaned by nine turtles before it was stored (server/src/feed.rs). -->
@@ -434,7 +468,7 @@
             <span>This feed shares only a summary.</span>{#if article.link}{" "}<a href={article.link} target="_blank" rel="noopener noreferrer">Read the full article<span class="sr-only"> on {article.feedTitle}</span><span aria-hidden="true">&nbsp;›</span></a
               >{/if}
           </p>
-        {:else if video}
+        {:else if video || episode}
           <hr aria-hidden="true" class="article-end" />
         {:else}
           <p class="mt-6" lang="en">This article has no text in its feed. Open original to read it on the publisher's site.</p>
@@ -445,6 +479,9 @@
     </article>
   </div>
 
+  {#if phone && beforeToolbar}
+    {@render beforeToolbar()}
+  {/if}
   {#if phone}
     <!--
       Within thumb reach: quiet icons, each named for screen readers, above a

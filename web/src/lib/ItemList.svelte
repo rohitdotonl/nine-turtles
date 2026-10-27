@@ -55,6 +55,7 @@
     uncatchUp,
   } from "./feeds";
   import { hugEllipsis } from "./hug";
+  import { length } from "./podcasts";
   import { boldParts } from "./search";
   import { STRANDED_MESSAGE, updates } from "./updates.svelte";
   import { connection } from "./connection.svelte";
@@ -772,6 +773,10 @@
           <span class={["row-meta mt-1 text-[0.75rem]", current ? "text-muted" : "text-[color:var(--faint)]"]}>
             <span class={oneFeed ? "sr-only" : "row-feed"}><span class="row-feed-name" use:hugEllipsis={article.feedTitle}>{article.feedTitle}</span>&nbsp;·</span>
             <time datetime={new Date(article.at * 1000).toISOString()} class="row-date">{when(article.at)}</time>
+            {#if article.episode}
+              <!-- A podcast's episode (SPEC section 34): a small headphones mark in the line's own ink, and its length. -->
+              <span class="row-episode">·&nbsp;<Icon name="headphones" size={13} /><span class="sr-only">Episode</span>{#if article.episodeSeconds}&nbsp;{length(article.episodeSeconds)}{/if}</span>
+            {/if}
             {#if article.muted}
               <!-- Only search (and Starred) list a muted article; the word says why it waits in no other list (SPEC section 27). -->
               <span class="row-muted">· Muted</span>
@@ -899,8 +904,13 @@
   }
   .row-date,
   .row-muted,
+  .row-episode,
   .row-star {
     flex: none;
+  }
+  .row-episode {
+    display: flex;
+    align-items: center;
   }
   .row-star {
     display: flex;

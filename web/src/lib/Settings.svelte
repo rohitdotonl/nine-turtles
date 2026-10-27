@@ -159,6 +159,8 @@
     { value: "recent", label: "Recently read" },
     { value: "searches", label: "Saved searches" },
     { value: "collections", label: "Collections" },
+    // Shown only while it holds an episode, unless unticked here (decision 0111).
+    { value: "upnext", label: "Up Next" },
   ];
 
   let sidebarMessage = $state("");

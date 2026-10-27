@@ -47,6 +47,24 @@ pub struct ParsedArticle {
     pub language: Option<String>,
     /// Seconds since 1970 (UTC), as the feed says.
     pub published_at: Option<i64>,
+    /// The audio file attached to it, if it's a podcast's episode (SPEC
+    /// section 34). Only the publisher's address is kept, never the file.
+    pub episode: Option<Episode>,
+}
+
+/// A podcast episode's audio file, as its feed describes it (decision 0111).
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct Episode {
+    /// The publisher's own address for the file: http or https only.
+    pub url: String,
+    /// Its type, such as `audio/mpeg`, if the feed says.
+    pub media_type: Option<String>,
+    /// Its size in bytes, if the feed says.
+    pub bytes: Option<i64>,
+    /// How long it plays, in whole seconds (`itunes:duration`), if the feed says.
+    pub seconds: Option<i64>,
+    /// The episode's picture, else the podcast's, if either is a web address.
+    pub artwork: Option<String>,
 }
 
 /// Reads a feed file. `None` means it isn't a feed (often a web page).
@@ -57,7 +75,7 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
         .base_uri(Some(feed_url.as_str()))
         .id_generator(|_, _, _| String::new())
         .build();
-    let feed = parser.parse(body).ok()?;
+    let feed = parser.parse(with_itunes_kept(body).as_ref()).ok()?;
 
     let site_url = feed
         .links
@@ -77,6 +95,12 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
         hub,
         topic: web_link("self").unwrap_or_else(|| feed_url.clone()),
     });
+    // The podcast's own picture (`itunes:image`, or the RSS `<image>`), for
+    // episodes that have none of their own.
+    let feed_artwork = feed
+        .logo
+        .as_ref()
+        .and_then(|logo| web_address(feed_url, &logo.uri));
     let title = feed
         .title
         .as_ref()
@@ -94,10 +118,18 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
         .entries
         .into_iter()
         .map(|entry| {
+            // A JSON Feed's attachments come as links too, with their type:
+            // the article's own link is a page, never its audio file.
             let link = entry
                 .links
                 .iter()
-                .find(|link| link.rel.as_deref().is_none_or(|rel| rel == "alternate"))
+                .find(|link| {
+                    link.rel.as_deref().is_none_or(|rel| rel == "alternate")
+                        && link
+                            .media_type
+                            .as_deref()
+                            .is_none_or(|kind| kind.contains("html"))
+                })
                 .and_then(|link| feed_url.join(&link.href).ok())
                 .filter(|url| matches!(url.scheme(), "http" | "https"));
             let title = entry.title.as_ref().map(plain_text).unwrap_or_default();
@@ -127,6 +159,7 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
                 .as_ref()
                 .map(|text| clean(&text.content, text.content_type.as_ref(), base))
                 .filter(|html| !html.trim().is_empty());
+            let episode = episode(&entry, base, feed_artwork.as_deref());
             ParsedArticle {
                 // The fingerprint comes from the link as the feed wrote it,
                 // so it stays what it always was (`normalize` ignores the
@@ -144,6 +177,7 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
                 summary,
                 language: entry.language.or_else(|| feed.language.clone()),
                 published_at: published,
+                episode,
             }
         })
         .collect();
@@ -154,6 +188,178 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
         language: feed.language,
         articles,
         hub,
+    })
+}
+
+/// What stands before each episode's `itunes:duration` and `itunes:image`,
+/// so feed-rs keeps them. It drops an item's iTunes details unless they
+/// include a title or a summary, which many podcasts leave out; a title of
+/// its own makes them count. nine turtles never shows that title.
+const ITUNES_KEEP: &[u8] = b"<itunes:title>-</itunes:title>";
+
+/// The feed file with `ITUNES_KEEP` before each `<itunes:duration` and
+/// `<itunes:image` (unchanged, and not copied, when it has neither, or is a
+/// JSON Feed). At the channel's level feed-rs ignores an iTunes title, so
+/// the podcast's own picture is read as before.
+fn with_itunes_kept(body: &[u8]) -> Cow<'_, [u8]> {
+    const TAGS: [&[u8]; 2] = [b"<itunes:duration", b"<itunes:image"];
+    let starts = |at: usize| TAGS.iter().any(|tag| body[at..].starts_with(tag));
+    // A JSON Feed has no iTunes tags: words in its text are left alone.
+    let json = body
+        .iter()
+        .find(|byte| !byte.is_ascii_whitespace())
+        .is_some_and(|byte| *byte == b'{');
+    if json || !body.windows(8).any(|window| window == b"<itunes:") {
+        return Cow::Borrowed(body);
+    }
+    let mut out = Vec::with_capacity(body.len() + 1024);
+    // A duration written as minutes and seconds ("30:00") would be read as
+    // 30 seconds: it gets its hours ("0:30:00").
+    let mut hours_missing: Option<&[u8]> = None;
+    for (at, byte) in body.iter().enumerate() {
+        if *byte == b'<' && starts(at) {
+            out.extend_from_slice(ITUNES_KEEP);
+        }
+        if let Some(hours) = hours_missing.filter(|_| !byte.is_ascii_whitespace()) {
+            out.extend_from_slice(hours);
+            hours_missing = None;
+        }
+        out.push(*byte);
+        if *byte == b'>' {
+            hours_missing = match minutes_and_seconds_follow(body, at) {
+                Some(1) => Some(b"0:0"),
+                Some(_) => Some(b"0:"),
+                None => None,
+            };
+        }
+    }
+    Cow::Owned(out)
+}
+
+/// If the tag ending at `at` is an `<itunes:duration>` holding minutes and
+/// seconds alone, such as `30:00` or ` 5:07 `, how many digits its minutes
+/// have.
+fn minutes_and_seconds_follow(body: &[u8], at: usize) -> Option<usize> {
+    const TAG: &[u8] = b"<itunes:duration";
+    let start = at.checked_sub(TAG.len())?;
+    if &body[start..at] != TAG {
+        return None;
+    }
+    let rest = &body[at + 1..];
+    let end = rest
+        .iter()
+        .position(|byte| *byte == b'<')
+        .unwrap_or(rest.len());
+    let text = String::from_utf8_lossy(&rest[..end]);
+    let (minutes, seconds) = text.trim().split_once(':')?;
+    let digits = |part: &str| part.bytes().all(|byte| byte.is_ascii_digit());
+    (!minutes.is_empty()
+        && minutes.len() <= 4
+        && digits(minutes)
+        && seconds.len() == 2
+        && digits(seconds))
+    .then_some(minutes.len())
+}
+
+/// The longest address kept for an episode's file or picture. Real ones
+/// are far shorter; a longer one is left out rather than stored.
+const LONGEST_ADDRESS: usize = 2048;
+
+/// Endings of audio files, for an attachment whose feed doesn't say its type.
+const AUDIO_ENDINGS: &[&str] = &[".mp3", ".m4a", ".aac", ".ogg", ".opus"];
+
+/// An address from a feed made whole against `base`, if it's a web address
+/// (http or https) of a sensible length. Anything else is left out.
+fn web_address(base: &Url, text: &str) -> Option<String> {
+    let url = base.join(text.trim()).ok()?;
+    (matches!(url.scheme(), "http" | "https") && url.as_str().len() <= LONGEST_ADDRESS)
+        .then(|| url.into())
+}
+
+/// Whether an attachment is audio: its type says so (`audio/…`), or, when
+/// the feed gives no type, its address ends like an audio file.
+fn is_audio(media_type: Option<&str>, url: &Url) -> bool {
+    match media_type.map(str::trim).filter(|kind| !kind.is_empty()) {
+        Some(kind) => kind.to_ascii_lowercase().starts_with("audio/"),
+        None => {
+            let path = url.path().to_ascii_lowercase();
+            AUDIO_ENDINGS.iter().any(|ending| path.ends_with(ending))
+        }
+    }
+}
+
+/// The article's audio file, if it has one (SPEC section 34): the first
+/// audio attachment among an RSS `<enclosure>` (or Media RSS content), an
+/// Atom `rel="enclosure"` link and a JSON Feed attachment, with its type and
+/// size, how long it plays (`itunes:duration`) and its picture (the
+/// episode's own `itunes:image`, else the podcast's). A video or a picture
+/// attached isn't an episode. Only http and https addresses are kept.
+fn episode(
+    entry: &feed_rs::model::Entry,
+    base: &Url,
+    feed_artwork: Option<&str>,
+) -> Option<Episode> {
+    struct Found {
+        url: Url,
+        media_type: Option<String>,
+        bytes: Option<u64>,
+        seconds: Option<u64>,
+    }
+    let from_media = entry.media.iter().flat_map(|media| {
+        media.content.iter().filter_map(|content| {
+            Some(Found {
+                url: content.url.clone()?,
+                media_type: content.content_type.as_ref().map(ToString::to_string),
+                bytes: content.size,
+                seconds: content.duration.map(|duration| duration.as_secs()),
+            })
+        })
+    });
+    let from_links = entry
+        .links
+        .iter()
+        // An Atom enclosure, or a JSON Feed attachment (a link with a type and no rel).
+        .filter(|link| match link.rel.as_deref() {
+            Some(rel) => rel == "enclosure",
+            None => link.media_type.is_some(),
+        })
+        .filter_map(|link| {
+            Some(Found {
+                url: base.join(link.href.trim()).ok()?,
+                media_type: link.media_type.clone(),
+                bytes: link.length,
+                seconds: None,
+            })
+        });
+    let found = from_media
+        .chain(from_links)
+        .find(|found| is_audio(found.media_type.as_deref(), &found.url))?;
+    let url = web_address(base, found.url.as_str())?;
+    let seconds = found.seconds.or_else(|| {
+        entry
+            .media
+            .iter()
+            .find_map(|media| media.duration)
+            .map(|duration| duration.as_secs())
+    });
+    let artwork = entry
+        .media
+        .iter()
+        .flat_map(|media| &media.thumbnails)
+        .find_map(|thumbnail| web_address(base, &thumbnail.image.uri))
+        .or_else(|| feed_artwork.map(ToOwned::to_owned));
+    let media_type = found
+        .media_type
+        .map(|kind| kind.trim().to_ascii_lowercase())
+        .filter(|kind| !kind.is_empty() && kind.len() <= 100);
+    Some(Episode {
+        url,
+        media_type,
+        bytes: found.bytes.and_then(|bytes| i64::try_from(bytes).ok()),
+        seconds: seconds
+            .filter(|seconds| *seconds > 0)
+            .and_then(|seconds| i64::try_from(seconds).ok()),
+        artwork,
     })
 }
 
@@ -1266,6 +1472,173 @@ Second paragraph</media:description>
             .to_string();
         assert_eq!(html, again);
         assert!(!html.contains("alt=\"A <a"), "{html}");
+    }
+
+    #[test]
+    fn an_rss_enclosure_with_itunes_tags_is_an_episode() {
+        let rss = br#"<?xml version="1.0"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"><channel>
+<title>Slow Radio</title><link>https://radio.example/</link>
+<itunes:image href="https://radio.example/show.jpg"/>
+<item><title>Episode 1</title><link>https://radio.example/1</link><guid>ep-1</guid>
+<description>Show notes</description>
+<enclosure url="/audio/1.mp3" length="12345678" type="audio/mpeg"/>
+<itunes:duration>1:02:03</itunes:duration>
+<itunes:image href="https://radio.example/1.jpg"/>
+</item>
+<item><title>Episode 2</title><guid>ep-2</guid>
+<enclosure url="https://cdn.example/2.m4a" length="" type=""/>
+<itunes:duration>754</itunes:duration>
+</item>
+<item><title>A video</title><guid>v</guid>
+<enclosure url="https://cdn.example/v.mp4" length="9" type="video/mp4"/>
+</item>
+<item><title>Not on the web</title><guid>f</guid>
+<enclosure url="ftp://cdn.example/f.mp3" type="audio/mpeg"/>
+</item>
+</channel></rss>"#;
+        let feed = parse(rss, &url("https://radio.example/feed.xml")).unwrap();
+        assert_eq!(
+            feed.articles[0].episode,
+            Some(Episode {
+                url: "https://radio.example/audio/1.mp3".to_owned(),
+                media_type: Some("audio/mpeg".to_owned()),
+                bytes: Some(12_345_678),
+                seconds: Some(3723),
+                artwork: Some("https://radio.example/1.jpg".to_owned()),
+            })
+        );
+        // No type: its ending says audio. No picture of its own: the podcast's.
+        assert_eq!(
+            feed.articles[1].episode,
+            Some(Episode {
+                url: "https://cdn.example/2.m4a".to_owned(),
+                media_type: None,
+                bytes: None,
+                seconds: Some(754),
+                artwork: Some("https://radio.example/show.jpg".to_owned()),
+            })
+        );
+        // A video, and an address that isn't on the web, are no episodes.
+        assert_eq!(feed.articles[2].episode, None);
+        assert_eq!(feed.articles[3].episode, None);
+        // The show notes are the article's text, as for any article.
+        assert!(
+            feed.articles[0]
+                .summary
+                .as_deref()
+                .unwrap()
+                .contains("Show notes")
+        );
+    }
+
+    #[test]
+    fn itunes_durations_are_read_in_every_usual_form() {
+        let seconds = |duration: &str| {
+            let rss = format!(
+                r#"<?xml version="1.0"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"><channel>
+<title>P</title><item><title>E</title><guid>e</guid>
+<enclosure url="https://p.example/e.mp3" type="audio/mpeg"/>
+<itunes:duration>{duration}</itunes:duration></item></channel></rss>"#
+            );
+            parse(rss.as_bytes(), &url("https://p.example/feed"))
+                .unwrap()
+                .articles[0]
+                .episode
+                .as_ref()
+                .unwrap()
+                .seconds
+        };
+        assert_eq!(seconds("1:02:03"), Some(3723));
+        assert_eq!(seconds("30:00"), Some(1800));
+        assert_eq!(seconds(" 5:07 "), Some(307));
+        assert_eq!(seconds("754"), Some(754));
+        assert_eq!(seconds(""), None);
+        assert_eq!(seconds("soon"), None);
+    }
+
+    #[test]
+    fn an_atom_enclosure_link_is_an_episode() {
+        let atom = br#"<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom">
+<title>Talks</title><id>t</id><updated>2026-10-01T00:00:00Z</updated>
+<entry><title>A talk</title><id>talk-1</id><updated>2026-10-01T00:00:00Z</updated>
+<link rel="alternate" type="text/html" href="https://talks.example/1"/>
+<link rel="enclosure" type="audio/ogg" length="2048" href="https://talks.example/1.ogg"/>
+<content type="html">&lt;p&gt;Notes&lt;/p&gt;</content>
+</entry>
+<entry><title>Slides</title><id>talk-2</id><updated>2026-10-01T00:00:00Z</updated>
+<link rel="enclosure" type="application/pdf" href="https://talks.example/2.pdf"/>
+</entry></feed>"#;
+        let feed = parse(atom, &url("https://talks.example/feed")).unwrap();
+        let first = &feed.articles[0];
+        assert_eq!(first.link.as_deref(), Some("https://talks.example/1"));
+        assert_eq!(
+            first.episode,
+            Some(Episode {
+                url: "https://talks.example/1.ogg".to_owned(),
+                media_type: Some("audio/ogg".to_owned()),
+                bytes: Some(2048),
+                seconds: None,
+                artwork: None,
+            })
+        );
+        assert_eq!(feed.articles[1].episode, None);
+    }
+
+    #[test]
+    fn a_json_feed_audio_attachment_is_an_episode_and_never_the_articles_link() {
+        let json = br#"{"version": "https://jsonfeed.org/version/1.1", "title": "Pod",
+            "icon": "https://pod.example/icon.png",
+            "items": [
+              {"id": "1", "url": "https://pod.example/1", "content_html": "<p>Notes</p>",
+               "attachments": [{"url": "https://pod.example/1.opus", "mime_type": "audio/opus",
+                                "size_in_bytes": 999, "duration_in_seconds": 61}]},
+              {"id": "2", "content_text": "Only audio",
+               "attachments": [{"url": "https://pod.example/2.mp3", "mime_type": "audio/mpeg"}]},
+              {"id": "3", "content_text": "A picture",
+               "attachments": [{"url": "https://pod.example/3.jpg", "mime_type": "image/jpeg"}]}
+            ]}"#;
+        let feed = parse(json, &url("https://pod.example/feed.json")).unwrap();
+        let first = &feed.articles[0];
+        assert_eq!(first.link.as_deref(), Some("https://pod.example/1"));
+        let episode = first.episode.as_ref().unwrap();
+        assert_eq!(episode.url, "https://pod.example/1.opus");
+        assert_eq!(episode.media_type.as_deref(), Some("audio/opus"));
+        assert_eq!(episode.bytes, Some(999));
+        // An item with no page of its own has no link: its audio file never stands in for one.
+        assert_eq!(feed.articles[1].link, None);
+        assert_eq!(
+            feed.articles[1]
+                .episode
+                .as_ref()
+                .map(|episode| episode.url.as_str()),
+            Some("https://pod.example/2.mp3")
+        );
+        assert_eq!(feed.articles[2].episode, None);
+    }
+
+    #[test]
+    fn only_audio_counts_and_only_web_addresses_are_kept() {
+        let base = url("https://example.com/feed");
+        assert!(is_audio(Some("audio/mpeg"), &url("https://example.com/a")));
+        assert!(is_audio(Some(" Audio/MP4 "), &url("https://example.com/a")));
+        assert!(!is_audio(
+            Some("video/mp4"),
+            &url("https://example.com/a.mp3")
+        ));
+        for ending in ["a.mp3", "a.M4A", "a.aac", "a.ogg", "a.opus"] {
+            assert!(is_audio(None, &base.join(ending).unwrap()), "{ending}");
+        }
+        assert!(!is_audio(None, &url("https://example.com/a.mp4")));
+        assert_eq!(
+            web_address(&base, "/a.mp3").as_deref(),
+            Some("https://example.com/a.mp3")
+        );
+        assert_eq!(web_address(&base, "javascript:alert(1)"), None);
+        assert_eq!(web_address(&base, "data:audio/mpeg;base64,AAAA"), None);
+        let long = format!("https://example.com/{}.mp3", "a".repeat(3000));
+        assert_eq!(web_address(&base, &long), None);
     }
 
     #[test]

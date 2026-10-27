@@ -410,6 +410,7 @@ each with screenshots:
 | How often a feed posts, in words (Edit feed and Feed health) | ✅ 27 October 2026 | SPEC sections 15 and 17, decision 0105 |
 | Fixing a dead feed where you are: a quiet line above a failing feed's list and in Edit feed, with Find new address, and one plain question when the site names one feed | ✅ 27 October 2026 | SPEC sections 6, 15 and 17, decision 0106 |
 | Collections: the reader's own named shelves for articles (Add to collection… and `l`, in the sidebar, `in:` in search, kept forever like a star, exported) | ✅ 27 October 2026 | SPEC section 34, decision 0108 (structure change 23) |
+| Podcasts: episodes play in a calm player from the publisher's own file, your place kept on all your devices, a Now playing bar, Up Next, the lock screen | ✅ 27 October 2026 | SPEC section 34, decision 0111 (structure change 24) |
 
 ## V2: Many readers in one app
 

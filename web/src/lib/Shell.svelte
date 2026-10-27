@@ -88,6 +88,8 @@
   } from "./collections";
   import { startingStep, stepOf, type Screen } from "./steps";
   import { keepUpToDate } from "./offline";
+  import NowPlaying from "./NowPlaying.svelte";
+  import { loadQueue, player } from "./player.svelte";
   import { whenBack } from "./connection.svelte";
   import { arrivedBySwitching, switchesOnMove, switchTo, updates, watchForNewVersions, type Carried } from "./updates.svelte";
 
@@ -109,7 +111,7 @@
   } = $props();
 
   /** A small sign beside each view's name in the sidebar. */
-  const VIEW_ICONS = { unread: "dot", starred: "star", all: "stack", recent: "history" } as const;
+  const VIEW_ICONS = { unread: "dot", starred: "star", all: "stack", recent: "history", upnext: "queue" } as const;
 
   /** Inbox or river, shared across the reader's devices; this device's last word until the server answers. */
   let mode: ReadingMode = $state(lastMode());
@@ -122,10 +124,16 @@
   /**
    * The fixed lists the sidebar shows: river mode has no Unread, and a list
    * the reader hid steps aside, except All in river mode, where it's home
-   * (as Unread, which can't be hidden, is in inbox mode).
+   * (as Unread, which can't be hidden, is in inbox mode). Up Next shows only
+   * while it holds an episode (decision 0111).
    */
   let sidebarViews: View[] = $derived(
-    VIEWS.filter((view) => !(river && view === "unread") && !((hidden as string[]).includes(view) && !(river && view === "all"))),
+    VIEWS.filter(
+      (view) =>
+        !(river && view === "unread") &&
+        !((hidden as string[]).includes(view) && !(river && view === "all")) &&
+        !(view === "upnext" && !player.upNext?.length),
+    ),
   );
   /** Where the app opens: Unread in inbox mode, All in river mode. */
   let home: Route = $derived({ kind: "view", view: homeView(mode) });
@@ -614,7 +622,8 @@
     // In search results, ordered by how well they match, older goes by date, so neither row shows the key.
     const olderIs = shown ? undefined : sort === "oldest" ? "above" : "below";
     // Recently read is in the order opened, and what's in it was read already: only Refresh applies.
-    const recent = !shown && under.kind === "view" && under.view === "recent";
+    // So is Up Next, in the reader's own order (decision 0111).
+    const recent = !shown && under.kind === "view" && (under.view === "recent" || under.view === "upnext");
     if (recent) return [{ items: [{ label: "Refresh", shortcut: key("refresh"), onSelect: () => itemList?.refresh() }] }];
     const groups: MenuGroup[] = [
       {
@@ -830,8 +839,8 @@
           if (selected && panes.article && isList(route)) articleView?.copyLink();
           break;
         case "mark-older-read":
-          // Not in Recently read either: it's in the order opened, and its menu has no marks.
-          if (!river && selected && isList(route) && !(route.kind === "view" && route.view === "recent" && !shown) && (panes.list || panes.article || reading))
+          // Not in Recently read or Up Next either: each is in its own order, and its menu has no marks.
+          if (!river && selected && isList(route) && !(route.kind === "view" && (route.view === "recent" || route.view === "upnext") && !shown) && (panes.list || panes.article || reading))
             itemList?.markPast("older");
           break;
         case "toggle-folder": {
@@ -857,7 +866,7 @@
           break;
         case "mark-all-read":
           // Not in Recently read, whose menu has no Mark all as read either.
-          if (!river && isList(route) && !(route.kind === "view" && route.view === "recent" && !shown) && (panes.list || panes.article || reading))
+          if (!river && isList(route) && !(route.kind === "view" && (route.view === "recent" || route.view === "upnext") && !shown) && (panes.list || panes.article || reading))
             itemList?.markAllRead();
           break;
         case "undo":
@@ -882,6 +891,7 @@
     loadFeeds();
     loadSearches();
     loadCollections();
+    void loadQueue();
     loadSettings().then((settings) => {
       mode = settings.mode;
       sort = settings.sort;
@@ -1451,6 +1461,31 @@
     else showArticleArea();
   }
 
+  /**
+   * The "now playing" bar's title: opens the episode playing (SPEC section 34). Where it isn't
+   * the article on screen, its podcast's list opens with it chosen, and the keyboard goes to it.
+   */
+  function openEpisode(article: Article) {
+    if (selected?.id !== article.id) {
+      if (!(isList(route) && route.kind === "feed" && route.id === article.feedId)) go({ kind: "feed", id: article.feedId });
+      selected = article;
+    }
+    if (phone && !reading) {
+      history.pushState({ screen: "article", back: "list" }, "", location.pathname);
+      reading = true;
+    }
+    showArticleArea();
+    queueMicrotask(() => articleHeading?.focus({ preventScroll: true }));
+  }
+
+  // Up Next's list follows the reader's own changes to its order (decision 0111).
+  $effect(() => {
+    void player.upNext;
+    untrack(() => {
+      if (!shown && under.kind === "view" && under.view === "upnext") void itemList?.refresh();
+    });
+  });
+
   /** Back from the article to its row in the list. */
   function backToList() {
     if (reading) {
@@ -1468,6 +1503,7 @@
     if (place.kind === "view" && place.view === "unread") return "Nothing unread.";
     if (place.kind === "view" && place.view === "starred") return "No starred articles yet.";
     if (place.kind === "view" && place.view === "recent") return "Articles you open will show here.";
+    if (place.kind === "view" && place.view === "upnext") return "Nothing in Up Next. Add an episode from its More menu.";
     if (place.kind === "collection") return "Nothing in this collection yet. Add an article from its More menu.";
     return "No articles yet.";
   }
@@ -1617,7 +1653,13 @@
   lines. A new scrolling area needs the same, and any new bar must sit inside an area, not beside it.
 -->
 <svelte:window bind:innerWidth={windowWidth} />
-<main class="relative flex h-dvh overflow-hidden" style:--sidebar-w={`${sidebarWidth ?? 256}px`}>
+<!--
+  While an episode is in the player, the "now playing" bar takes its own room at the foot (SPEC section 34), so the
+  panes above it end where it starts and it never covers them. On a phone reading an article, it sits above the
+  article's toolbar instead.
+-->
+<main class="relative flex h-dvh flex-col overflow-hidden" style:--sidebar-w={`${sidebarWidth ?? 256}px`}>
+  <div class="relative flex min-h-0 flex-1 overflow-hidden">
   {#if !panes.sidebar}
     <!-- The wordmark is the page's main heading; with the sidebar hidden, screen readers still find it. -->
     <h1 class="sr-only">nine turtles</h1>
@@ -2068,6 +2110,7 @@
               onStar={() => itemList?.toggleStar()}
               onMarkUnread={() => itemList?.markUnread()}
               onCollect={() => openCollecting(selected!)}
+              beforeToolbar={nowPlayingAboveToolbar}
               phone={phone
                 ? {
                     back: nameFor(route, placeName),
@@ -2118,7 +2161,15 @@
       {/if}
     </div>
   {/if}
+  </div>
+  {#if !(phone && reading && panes.article && selected)}
+    <NowPlaying onOpen={openEpisode} />
+  {/if}
 </main>
+
+{#snippet nowPlayingAboveToolbar()}
+  <NowPlaying onOpen={openEpisode} bottom={false} />
+{/snippet}
 
 <CheatSheet bind:open={cheatSheetOpen} bind:editing={cheatSheetEditing} {river} />
 

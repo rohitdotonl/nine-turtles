@@ -431,7 +431,8 @@ pub async fn find(
     let mut query: QueryBuilder<Sqlite> = QueryBuilder::new(
         "SELECT entries.article_id AS id, entries.feed_id, subscriptions.title AS feed_title,
                 articles.title, articles.link, entries.sort_at AS at, entries.read,
-                entries.starred, entries.muted, page.in_title, articles.content, articles.summary
+                entries.starred, entries.muted, articles.episode_url IS NOT NULL AS episode,
+                articles.episode_seconds, page.in_title, articles.content, articles.summary
          FROM (SELECT * FROM (SELECT entries.article_id AS id, entries.sort_at AS at, ",
     );
     if let Some(words) = &words {

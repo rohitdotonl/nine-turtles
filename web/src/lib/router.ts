@@ -2,7 +2,7 @@
 // were and the browser's Back button works. No library: the browser's own
 // history does the work.
 
-export const VIEWS = ["unread", "starred", "all", "recent"] as const;
+export const VIEWS = ["unread", "starred", "all", "recent", "upnext"] as const;
 export type View = (typeof VIEWS)[number];
 
 export type Route =
@@ -23,10 +23,13 @@ export type Route =
   | { kind: "muted" }
   | { kind: "readers" };
 
-export const VIEW_NAMES: Record<View, string> = { unread: "Unread", starred: "Starred", all: "All", recent: "Recently read" };
+export const VIEW_NAMES: Record<View, string> = { unread: "Unread", starred: "Starred", all: "All", recent: "Recently read", upnext: "Up Next" };
 
-/** The lists a reader can hide from the sidebar (Settings › Show in the sidebar, decisions 0105 and 0108). Unread, folders and feeds always show. */
-export const HIDEABLE = ["starred", "all", "recent", "searches", "collections"] as const;
+/**
+ * The lists a reader can hide from the sidebar (Settings › Show in the sidebar, decisions 0105, 0108 and 0111). Unread, folders
+ * and feeds always show; Up Next shows only while it holds an episode.
+ */
+export const HIDEABLE = ["starred", "all", "recent", "searches", "collections", "upnext"] as const;
 export type Hideable = (typeof HIDEABLE)[number];
 
 /** The place an address points to. Anything unknown opens Unread. */

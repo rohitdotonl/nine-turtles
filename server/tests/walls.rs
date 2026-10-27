@@ -687,6 +687,7 @@ async fn a_feed_two_readers_follow_is_stored_and_fetched_once() {
         summary: None,
         language: None,
         published_at: None,
+        episode: None,
     };
     let mut transaction = state.db.begin().await.unwrap();
     nine_turtles::feeds::store_articles(&mut transaction, feed, &[new], nine_turtles::now())
@@ -1188,6 +1189,7 @@ async fn each_readers_rules_act_only_on_their_own_marks() {
         summary: None,
         language: None,
         published_at: None,
+        episode: None,
     };
     let mut transaction = state.db.begin().await.unwrap();
     nine_turtles::feeds::store_articles(&mut transaction, feed, &[new], nine_turtles::now())
@@ -2082,6 +2084,7 @@ async fn articles_carried_to_a_new_address_stay_walled_from_the_old_feeds_follow
         summary: None,
         language: None,
         published_at: None,
+        episode: None,
     };
     let mut transaction = state.db.begin().await.unwrap();
     nine_turtles::feeds::store_articles(&mut transaction, feed, &[new], nine_turtles::now())
@@ -2234,6 +2237,7 @@ async fn a_reader_who_signs_up_starts_with_an_empty_library() {
         summary: None,
         language: None,
         published_at: None,
+        episode: None,
     };
     let mut transaction = state.db.begin().await.unwrap();
     nine_turtles::feeds::store_articles(&mut transaction, feed, &[new], nine_turtles::now())
