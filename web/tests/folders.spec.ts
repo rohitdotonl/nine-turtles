@@ -136,6 +136,14 @@ test("a feed put in two folders appears under both, with its unread count in eac
   await expect(page).toHaveURL(/\/folders\/[0-9]+$/);
   await expect(page.getByRole("heading", { level: 2, name: first })).toBeFocused();
   await expect(page.getByRole("region", { name: first }).getByRole("listitem")).toHaveCount(3);
+  // The whole row is its toggle: choosing the folder you're in folds it, and again unfolds it (decision 0123).
+  const firstToggle = sidebar(page).getByRole("button", { name: `Feeds in ${first}` });
+  await expect(firstToggle).toHaveAttribute("aria-expanded", "true");
+  await sidebar(page).getByRole("link", { name: `${first} 3 unread` }).click();
+  await expect(firstToggle).toHaveAttribute("aria-expanded", "false");
+  await expect(page).toHaveURL(/\/folders\/[0-9]+$/);
+  await sidebar(page).getByRole("link", { name: `${first} 3 unread` }).click();
+  await expect(firstToggle).toHaveAttribute("aria-expanded", "true");
 });
 
 test("rename a folder; delete it, its feeds stay, and Undo brings it back", async ({ page }) => {

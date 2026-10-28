@@ -18,7 +18,9 @@ What each screen looks like is in `docs/SPEC.md` sections 5, 6, 7 and 27 and
    icons of Unread, Starred and All start, with no icon of its own: its
    show-or-hide arrow moves to the row's right end, showing in place of the
    count on hover, on the keyboard and always on touch (replacing decision
-   0041's arrow before the name), and choosing a closed folder opens it. Its
+   0041's arrow before the name), and choosing a closed folder opens it, while choosing
+   the folder you're already in folds or unfolds it (the owner asked for the
+   whole row to be the toggle). Its
    feeds sit on the names' edge, under the folder, with a faint 1px line
    down their left under the folder's name, so they read as its contents. (The owner tried and turned
    down folders in spaced capitals on the margin, a folder icon, and no
