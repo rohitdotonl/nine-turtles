@@ -106,9 +106,9 @@
     >{/if}
 {/snippet}
 
-{#snippet name(text: string)}
-  <!-- Devanagari a touch larger, so it sits level with Latin names (decision 0041). -->
-  <span class={["min-w-0 flex-1 truncate", inDevanagari(text) && "devanagari"]}>{text}</span>
+{#snippet name(text: string, folder = false)}
+  <!-- Devanagari a touch larger, so it sits level with Latin names (decision 0041). A folder's name is in small spaced capitals (decision 0123). -->
+  <span class={["min-w-0 flex-1 truncate", inDevanagari(text) && "devanagari", folder && "folder-name"]}>{text}</span>
 {/snippet}
 
 {#snippet leadsOn()}
@@ -179,7 +179,7 @@
     data-folder-link={folder.id}
     title={folder.name}
     class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center gap-3 rounded-md pr-3.5 text-ui pointer-fine:text-small", padded && "pl-[38px]", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
-    >{@render name(folder.name)}{@render count(folderUnread(folder, feeds))}{@render leadsOn()}</a
+    >{@render name(folder.name, true)}{@render count(folderUnread(folder, feeds))}{@render leadsOn()}</a
   >
 {/snippet}
 
@@ -248,7 +248,7 @@
             {@render folderLink(folder, phone)}
           </div>
           {#if shown}
-            <ul id={`folder-${folder.id}`}>
+            <ul id={`folder-${folder.id}`} class={[!phone && "folder-feeds"]}>
               {#each inside as feed (feed.id)}
                 {@render feedRow(feed, true)}
               {:else}
@@ -271,6 +271,32 @@
 {/if}
 
 <style>
+  /*
+    A folder's name in small spaced capitals, semibold, in full ink, so a
+    folder reads as a heading over its feeds rather than as one more feed
+    (decision 0123). Screen readers still read the name as written.
+  */
+  .folder-name {
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  /*
+    A faint line down the left of an open folder's feeds, under the folder's
+    name, so the feeds read as its contents at a glance (decision 0123).
+  */
+  .folder-feeds {
+    position: relative;
+  }
+  .folder-feeds::before {
+    content: "";
+    position: absolute;
+    top: 0.25rem;
+    bottom: 0.25rem;
+    left: 48px;
+    border-left: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+  }
   /*
     The arrow is drawn in the 38px icon column so every name shares one left
     edge; on a touch screen its target reaches 6px further out, into the

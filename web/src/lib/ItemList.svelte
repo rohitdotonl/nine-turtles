@@ -921,7 +921,9 @@
     white-space: nowrap;
     font-variant-numeric: proportional-nums;
   }
+  /* The publisher's name a step stronger than the time, so the credit reads first (decision 0123). */
   .row-feed {
+    color: var(--muted);
     display: flex;
     min-width: 0;
     flex: 0 1 auto;
