@@ -445,15 +445,7 @@ async fn an_address_another_reader_has_gets_nothing() {
 #[tokio::test]
 async fn the_owner_can_set_a_new_password_by_email_too() {
     let (base, _, outbox) = start_with_mail(common::config()).await;
-    let owner = signed_in(&base).await;
-    let saved = post(
-        &base,
-        "/api/people/me/email",
-        Some(&owner),
-        json!({ "email": "owner@example.com", "password": common::PASSWORD }),
-    )
-    .await;
-    assert!(saved.status().is_success());
+    signed_in(&base).await;
     post(
         &base,
         "/api/password/forgot",
@@ -1167,21 +1159,12 @@ async fn the_owners_email_needs_their_password() {
     let save = |password: &'static str| {
         post(
             &base,
-            "/api/people/me/email",
+            "/api/people/me/email/change",
             Some(&owner),
             json!({ "email": "taker@example.com", "password": password }),
         )
     };
-    let missing = post(
-        &base,
-        "/api/people/me/email",
-        Some(&owner),
-        json!({ "email": "taker@example.com" }),
-    )
-    .await;
-    assert_eq!(missing.status(), StatusCode::UNAUTHORIZED);
-    assert_eq!(error_of(missing).await, "wrong-password");
-    for _ in 0..3 {
+    for _ in 0..4 {
         let wrong = save("not the owner's password").await;
         assert_eq!(wrong.status(), StatusCode::UNAUTHORIZED);
     }
@@ -1208,14 +1191,7 @@ async fn a_new_password_setting_wins_over_one_set_by_email() {
     let data_dir = first.data_dir.clone();
     let first_setting = first.password.clone();
     let (base, _, outbox) = start_with_mail(first).await;
-    let owner = signed_in(&base).await;
-    post(
-        &base,
-        "/api/people/me/email",
-        Some(&owner),
-        json!({ "email": "owner@example.com", "password": PASSWORD }),
-    )
-    .await;
+    signed_in(&base).await;
     post(
         &base,
         "/api/password/forgot",

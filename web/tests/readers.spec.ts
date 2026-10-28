@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { TEST_PASSWORD } from "../playwright.config";
+import { OWNER_EMAIL } from "../playwright.config";
 import { appReady, signIn } from "./screens";
 
 // SPEC sections 1 and 18 (decisions 0087 and 0115): the owner's Readers in
@@ -65,49 +65,18 @@ test("anyone can sign up from the sign-in page, and the owner sees them", async 
   await stranger.close();
 });
 
-test("the owner sets their email and signs in with it", async ({ page, browser }, testInfo) => {
+test("the owner's email is changed like everyone's, not on the Readers page", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "the owner has one email for the whole app");
   await page.goto("/");
   await appReady(page);
   await signIn(page);
+  // Account shows the email the owner signs in with; changing it goes by a
+  // link to the new address, as for every reader (decision 0125).
+  await page.goto("/settings");
+  const account = page.getByRole("region", { name: "Account", exact: true });
+  await expect(account.getByText(OWNER_EMAIL)).toBeVisible();
   await page.goto("/settings/readers");
-  const field = page.getByLabel("Your email");
-  await field.fill("not an email");
-  await page.getByRole("button", { name: "Save your email" }).click();
-  await expect(page.getByText("That doesn't look like an email address.")).toBeVisible();
-  await expect(field).toHaveAttribute("aria-invalid", "true");
-
-  // Saving it asks for the owner's password, so a device left signed in
-  // can't send the owner's password links somewhere else.
-  const password = page.getByLabel("Your password");
-  await field.fill("owner@example.com");
-  await page.getByRole("button", { name: "Save your email" }).click();
-  await expect(page.getByText("Type your password too, to save your email.")).toBeVisible();
-  await expect(password).toHaveAttribute("aria-invalid", "true");
-  await password.fill("not the owner's password");
-  await password.press("Enter");
-  await expect(page.getByText("That isn't your password.")).toBeVisible();
-  await expect(password).toHaveValue("");
-
-  await password.fill(TEST_PASSWORD);
-  await page.getByRole("button", { name: "Save your email" }).click();
-  await expect(page.getByText(/^Saved\. From now on, sign in with owner@example\.com/)).toBeVisible();
-  await expect(password).toHaveValue("");
-
-  // Closing Settings and opening it again shows the email just saved.
-  await page.getByRole("button", { name: "Back to Settings" }).click();
-  await page.getByRole("button", { name: "Close settings" }).click();
-  await page.locator("#sidebar").getByRole("link", { name: "Settings" }).click();
-  await page.getByRole("link", { name: "Readers", exact: true }).click();
-  await expect(field).toHaveValue("owner@example.com");
-
-  const other = await (await browser.newContext()).newPage();
-  await other.goto("/");
-  await appReady(other);
-  await other.getByLabel("Email").fill("Owner@Example.com");
-  await other.getByLabel("Password").fill(TEST_PASSWORD);
-  await other.getByRole("button", { name: "Sign in" }).click();
-  await expect(other.locator("#sidebar")).toBeAttached();
-  const session = await other.evaluate(async () => (await fetch("/api/session")).json());
-  expect(session).toMatchObject({ owner: true, email: "owner@example.com" });
+  await expect(page.getByRole("link", { name: /^All readers/ })).toBeVisible();
+  await expect(page.getByLabel("Your email")).toHaveCount(0);
+  await expect(page.getByLabel("Your password")).toHaveCount(0);
 });

@@ -196,8 +196,8 @@ impl Account {
 
 /// How many password checks (argon2, about 19 MB each) may run at once, so
 /// a flood of sign-in tries can't use up the server's memory. An owner with
-/// no email yet confirming their password in Settings has a place of their
-/// own: guesses at emails never queue in front of it. Every sign-in, the
+/// no email yet confirming their password (adding a passkey) has a place of
+/// their own: guesses at emails never queue in front of it. Every sign-in, the
 /// owner's too, waits on the shared line, so its timing gives nothing away.
 #[derive(Debug)]
 pub struct PasswordChecks {

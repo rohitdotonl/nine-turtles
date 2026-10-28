@@ -129,7 +129,7 @@ async fn emailed_lately(
 /// hour, whether or not an email went.
 async fn changes_tried(
     transaction: &mut sqlx::SqliteConnection,
-    person: Option<i64>,
+    person: i64,
     hour_ago: i64,
 ) -> Result<i64, sqlx::Error> {
     sqlx::query_scalar(
@@ -172,9 +172,8 @@ pub(crate) enum Made {
 pub(crate) async fn make_link(
     db: &SqlitePool,
     purpose: Purpose,
-    person: Option<i64>,
+    person: i64,
     email: &str,
-    password_hash: Option<&str>,
     email_to: bool,
 ) -> Result<Made, sqlx::Error> {
     let ticket = match new_token() {
@@ -210,14 +209,12 @@ pub(crate) async fn make_link(
     }
     sqlx::query(
         "INSERT INTO email_links
-             (purpose, person_id, email, password_hash, token_hash, created_at, expires_at,
-              used, emailed)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+             (purpose, person_id, email, token_hash, created_at, expires_at, used, emailed)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(purpose.stored())
     .bind(person)
     .bind(email)
-    .bind(password_hash)
     .bind(&scramble(&ticket)[..])
     .bind(now)
     .bind(now + lifetime)
@@ -244,8 +241,8 @@ async fn make_no_link(db: &SqlitePool, purpose: Purpose, email: &str) -> Result<
     emailed_lately(&mut transaction, purpose, email, now).await?;
     sqlx::query(
         "INSERT INTO email_links
-             (purpose, person_id, email, password_hash, token_hash, created_at, expires_at)
-         SELECT 'reset', 0, ?, NULL, ?, ?, ? WHERE 0",
+             (purpose, person_id, email, token_hash, created_at, expires_at)
+         SELECT 'reset', 0, ?, ?, ?, ? WHERE 0",
     )
     .bind(email)
     .bind(&scramble(email)[..])
@@ -316,15 +313,7 @@ async fn forgot(State(state): State<AppState>, Json(form): Json<Forgot>) -> Resp
         }
         Err(error) => return database_problem("finding a reader", &error),
     };
-    let made = make_link(
-        &state.db,
-        Purpose::Reset,
-        Some(person),
-        &address,
-        None,
-        true,
-    )
-    .await;
+    let made = make_link(&state.db, Purpose::Reset, person, &address, true).await;
     let ticket = match made {
         Ok(Made::Link(ticket)) => ticket,
         Ok(Made::Nothing | Made::TooMany | Made::NoTicket) => return asked(),
@@ -546,15 +535,7 @@ async fn ask_sign_in_link(State(state): State<AppState>, Json(form): Json<AskSig
         }
         Err(error) => return database_problem("finding a reader", &error),
     };
-    let made = make_link(
-        &state.db,
-        Purpose::SignIn,
-        Some(person),
-        &address,
-        None,
-        true,
-    )
-    .await;
+    let made = make_link(&state.db, Purpose::SignIn, person, &address, true).await;
     let ticket = match made {
         Ok(Made::Link(ticket)) => ticket,
         Ok(Made::Nothing | Made::TooMany | Made::NoTicket) => return asked(),
@@ -756,7 +737,7 @@ async fn confirm(State(state): State<AppState>, Json(form): Json<Confirm>) -> Re
         Ok(transaction) => transaction,
         Err(error) => return database_problem("confirming an email", &error),
     };
-    let claimed: Result<Option<(Option<i64>, String)>, sqlx::Error> = sqlx::query_as(
+    let claimed: Result<Option<(i64, String)>, sqlx::Error> = sqlx::query_as(
         "UPDATE email_links SET used = 1
              WHERE token_hash = ? AND purpose = 'change' AND used = 0 AND expires_at > ?
              RETURNING person_id, email",
@@ -769,9 +750,6 @@ async fn confirm(State(state): State<AppState>, Json(form): Json<Confirm>) -> Re
         Ok(Some(claimed)) => claimed,
         Ok(None) => return refused(StatusCode::GONE, "expired"),
         Err(error) => return database_problem("confirming an email", &error),
-    };
-    let Some(person) = person else {
-        return refused(StatusCode::GONE, "expired");
     };
     let old: Result<Option<Option<String>>, sqlx::Error> =
         sqlx::query_scalar("SELECT email FROM people WHERE id = ?")
@@ -888,15 +866,7 @@ async fn change_email(
         Ok(taken) => taken,
         Err(error) => return database_problem("finding a reader", &error),
     };
-    let made = make_link(
-        &state.db,
-        Purpose::Change,
-        Some(person),
-        &email,
-        None,
-        !taken,
-    )
-    .await;
+    let made = make_link(&state.db, Purpose::Change, person, &email, !taken).await;
     let ticket = match made {
         Ok(Made::Link(ticket)) => ticket,
         Ok(Made::Nothing) => return sent,

@@ -34,8 +34,7 @@ use sqlx::SqlitePool;
 
 use crate::{
     AppState,
-    auth::{Account, SignedIn, ask_password, database_problem, remember_device, session_cookie},
-    config::PasswordSetting,
+    auth::{SignedIn, database_problem, remember_device, session_cookie},
     log, now, refused,
 };
 
@@ -50,7 +49,6 @@ pub const SIGN_UPS_PER_HOUR: i64 = 20;
 pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/api/people", get(list))
-        .route("/api/people/me/email", post(set_email))
         .route("/api/sign-up", post(sign_up))
 }
 
@@ -315,66 +313,6 @@ async fn list(SignedIn(person): SignedIn, State(state): State<AppState>) -> Resp
             }))
             .into_response(),
             Err(error) => database_problem("listing readers", &error),
-        }
-    })
-    .await
-}
-
-#[derive(Deserialize)]
-struct Email {
-    email: String,
-    #[serde(default)]
-    password: String,
-}
-
-/// The owner's own email, to sign in with and to get "Forgot your
-/// password?" links at. Their current password is asked for (decision
-/// 0088), checked on the same line as their sign-in, so a device left
-/// signed in as the owner can't send the owner's password links somewhere
-/// else.
-async fn set_email(
-    SignedIn(person): SignedIn,
-    State(state): State<AppState>,
-    Json(form): Json<Email>,
-) -> Response {
-    owner_only(&state, person, async {
-        let email = form.email.trim();
-        if !plausible_email(email) {
-            return refused(StatusCode::BAD_REQUEST, "email");
-        }
-        // Their email, and their own scrambled password if they have one.
-        type Owners = (Option<String>, Option<String>);
-        let own: Result<Option<Owners>, sqlx::Error> =
-            sqlx::query_as("SELECT email, password_hash FROM people WHERE id = ?")
-                .bind(person)
-                .fetch_optional(&state.db)
-                .await;
-        let (current, own_line) = match own {
-            Ok(own) => own.unwrap_or_default(),
-            Err(error) => return database_problem("finding the owner", &error),
-        };
-        let stored = own_line.or(match &state.config.password {
-            PasswordSetting::Set(line) => Some(line.clone()),
-            _ => None,
-        });
-        // Counted where their sign-in counts: under their email, once they have one.
-        let account = match current.as_deref() {
-            Some(current) => Account::named(Some(current)),
-            None => Account::Owner,
-        };
-        let password = form.password.clone();
-        if let Some(refusal) = ask_password(&state, &account, password, stored).await {
-            return refusal;
-        }
-        let saved = sqlx::query("UPDATE people SET email = ? WHERE id = ?")
-            .bind(email)
-            .bind(person)
-            .execute(&state.db)
-            .await;
-        match saved {
-            Ok(_) => Json(json!({ "email": email })).into_response(),
-            Err(error) if is_taken(&error) => refused(StatusCode::CONFLICT, "already"),
-            Err(error) => database_problem("saving the owner's email", &error),
         }
     })
     .await

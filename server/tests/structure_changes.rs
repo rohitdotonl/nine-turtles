@@ -1424,9 +1424,13 @@ async fn allowing_sign_in_links_keeps_every_emailed_link() {
     ] {
         sqlx::query(sql).execute(&old).await.unwrap();
     }
-    old.close().await;
+    // Only as far as this change: a later one drops sign-up links.
+    sqlx::migrate!("./migrations")
+        .run_to(20, &old)
+        .await
+        .unwrap();
 
-    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let db = old;
     let links: Vec<(String, Option<i64>, String, i64, i64)> = sqlx::query_as(
         "SELECT purpose, person_id, email, used, emailed FROM email_links ORDER BY id",
     )
@@ -1782,4 +1786,104 @@ async fn adding_passkeys_keeps_every_reader_and_device() {
     };
     add(1).await.unwrap();
     assert!(add(2).await.is_err());
+}
+
+#[tokio::test]
+async fn dropping_sign_up_links_keeps_every_readers_link_and_setting() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just after assistants (structure change 26), with a
+    // waiting sign-up link, one of each other kind, and the old Sign-up
+    // switch's settings beside one that stays.
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(26, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO people (id, owner, email, created_at) VALUES (2, 0, 'kai@example.com', 1)",
+        "INSERT INTO email_links (purpose, person_id, email, password_hash, token_hash, created_at,
+                                  expires_at, used, emailed)
+         VALUES ('sign-up', NULL, 'new@example.com', 'line', x'01', 1, 9999999999, 0, 1),
+                ('reset', 2, 'kai@example.com', NULL, x'02', 1, 9999999999, 1, 1),
+                ('change', 2, 'taken@example.com', NULL, x'03', 1, 9999999999, 1, 0),
+                ('sign-in', 2, 'kai@example.com', NULL, x'04', 1, 9999999999, 0, 1)",
+        "INSERT INTO settings (name, value)
+         VALUES ('sign_up', 'invite'), ('sign_up_invite', 'ab'),
+                ('sign_up_invite_made_at', '1'), ('theme', 'plain')",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let links: Vec<(String, i64, String, Vec<u8>, i64, i64)> = sqlx::query_as(
+        "SELECT purpose, person_id, email, token_hash, used, emailed FROM email_links ORDER BY id",
+    )
+    .fetch_all(&db)
+    .await
+    .unwrap();
+    assert_eq!(
+        links,
+        [
+            (
+                "reset".to_owned(),
+                2,
+                "kai@example.com".to_owned(),
+                vec![2],
+                1,
+                1
+            ),
+            (
+                "change".to_owned(),
+                2,
+                "taken@example.com".to_owned(),
+                vec![3],
+                1,
+                0
+            ),
+            (
+                "sign-in".to_owned(),
+                2,
+                "kai@example.com".to_owned(),
+                vec![4],
+                0,
+                1
+            ),
+        ]
+    );
+    let settings: Vec<(String, String)> =
+        sqlx::query_as("SELECT name, value FROM settings ORDER BY name")
+            .fetch_all(&db)
+            .await
+            .unwrap();
+    assert_eq!(settings, [("theme".to_owned(), "plain".to_owned())]);
+    // A link with nobody's name, or for a sign-up, can't be stored any more.
+    for sql in [
+        "INSERT INTO email_links (purpose, person_id, email, token_hash, created_at, expires_at)
+         VALUES ('sign-up', 2, 'new@example.com', x'05', 1, 901)",
+        "INSERT INTO email_links (purpose, person_id, email, token_hash, created_at, expires_at)
+         VALUES ('reset', NULL, 'new@example.com', x'06', 1, 901)",
+    ] {
+        assert!(sqlx::query(sql).execute(&db).await.is_err(), "{sql}");
+    }
+    // Deleting a reader still takes their links with them.
+    sqlx::query("DELETE FROM people WHERE id = 2")
+        .execute(&db)
+        .await
+        .unwrap();
+    let left: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM email_links")
+        .fetch_one(&db)
+        .await
+        .unwrap();
+    assert_eq!(left, 0);
 }
