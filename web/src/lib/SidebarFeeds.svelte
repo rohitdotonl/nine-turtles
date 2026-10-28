@@ -106,9 +106,9 @@
     >{/if}
 {/snippet}
 
-{#snippet name(text: string)}
-  <!-- Devanagari a touch larger, so it sits level with Latin names (decision 0041). -->
-  <span class={["min-w-0 flex-1 truncate", inDevanagari(text) && "devanagari"]}>{text}</span>
+{#snippet name(text: string, folder = false)}
+  <!-- Devanagari a touch larger, so it sits level with Latin names (decision 0041). A folder's name in quiet spaced capitals. -->
+  <span class={["min-w-0 flex-1 truncate", inDevanagari(text) && "devanagari", folder && "folder-name"]}>{text}</span>
 {/snippet}
 
 {#snippet leadsOn()}
@@ -126,7 +126,7 @@
       class={[
         "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-3 pr-3.5 text-ui pointer-fine:text-small",
         // Every name starts on the sidebar's one left edge; inside a folder, one step further in.
-        indent ? "pl-14" : "pl-[38px]",
+        indent ? "pl-[30px]" : "pl-3",
         isHere(place) ? "font-semibold text-ink" : "text-ink",
       ]}
       >{@render name(plainSourceName(feed.title))}{@render count(feed.unread)}{@render leadsOn()}</a
@@ -146,7 +146,6 @@
         "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-2.5 pr-3.5 pl-3 text-ui pointer-fine:text-small",
         isHere(place) ? "font-semibold text-ink" : "text-ink",
       ]}
-      ><span class={isHere(place) ? "text-ink" : "text-muted"}><Icon name="search" size={16} /></span
       >{@render name(saved.name)}<span class="sr-only"> (saved search)</span>{@render leadsOn()}</a
     >
   </li>
@@ -164,7 +163,6 @@
         "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-2.5 pr-3.5 pl-3 text-ui pointer-fine:text-small",
         isHere(place) ? "font-semibold text-ink" : "text-ink",
       ]}
-      ><span class={isHere(place) ? "text-ink" : "text-muted"}><Icon name="shelf" size={16} /></span
       >{@render name(collection.name)}<span class="sr-only"> (collection)</span>{@render leadsOn()}</a
     >
   </li>
@@ -183,7 +181,7 @@
     data-folder-link={folder.id}
     title={folder.name}
     class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center rounded-md pr-3.5 text-ui pointer-fine:text-small", padded ? "gap-3 pl-[38px]" : "gap-2.5 pl-3", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
-    >{#if !padded}<span class={["shrink-0", isHere(place) ? "text-ink" : "text-muted"]}><Icon name="folder" size={16} /></span>{/if}{@render name(folder.name)}<span class="folder-count contents">{@render count(folderUnread(folder, feeds))}</span>{@render leadsOn()}</a
+    >{@render name(folder.name, !padded)}<span class="folder-count contents">{@render count(folderUnread(folder, feeds))}</span>{@render leadsOn()}</a
   >
 {/snippet}
 
@@ -285,6 +283,12 @@
     A faint line down the left of an open folder's feeds, under the folder's
     icon, so the feeds read as its contents at a glance (decision 0123).
   */
+  .folder-name {
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
   .folder-feeds {
     position: relative;
   }
@@ -293,7 +297,7 @@
     position: absolute;
     top: 0.25rem;
     bottom: 0.25rem;
-    left: 28px;
+    left: 21px;
     border-left: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
   }
   /* The arrow hides until it's wanted; the count shows in its place meanwhile. */
