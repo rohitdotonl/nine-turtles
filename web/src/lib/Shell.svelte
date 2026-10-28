@@ -38,7 +38,7 @@
   import { partlyAdded, type Starter } from "./starters";
   import type { Article, Feed, Folder, Source } from "./shapes";
   import { homeView, lastMode, loadSettings, saveMode, saveSort, saveCounts, saveLetGo, saveHidden, lastCounts, lastHidden, type Order, type Counts, type LetGo, type ReadingMode } from "./reading";
-  import { createFolder, deleteFolder, feedNextTo, savedOpenFolders, listFeeds, refused, resubscribe, unsubscribe, type Notice } from "./feeds";
+  import { feedNextTo, savedOpenFolders, type Notice } from "./feeds";
   import { marksUnsaved } from "./saving";
   import { createKeyReader, keyCap, keyFor } from "./keyboard";
   import { currentKey, currentKeyOf, keys, tip } from "./keys.svelte";
@@ -48,19 +48,10 @@
   import { VIEWS, VIEW_NAMES, inSettings, nameFor, parentOf, parse, pathFor, rowFor, titleFor, type Hideable, type Route, type View } from "./router";
   import { sharedAddress } from "./share";
   import { emptyQuery, isSearching, resultsTitle, scopeFor, searchParams, searchedTerms, type Query } from "./search";
-  import { newestAnswer, savedInOrder } from "./inorder";
-  import { deleteSaved, listSaved, refusedSaving, sameQuery, saveSearch, type SavedSearch } from "./saved";
-  import {
-    byName as collectionOrder,
-    deleteCollection,
-    listCollections,
-    makeCollection,
-    putBack,
-    refusedCollection,
-    takenOff,
-    type Collection,
-    type CollectionChange,
-  } from "./collections";
+  import { savedInOrder } from "./inorder";
+  import { sameQuery, type SavedSearch } from "./saved";
+  import { putBack, takenOff, type Collection, type CollectionChange } from "./collections";
+  import { LoadedLibrary } from "./library.svelte";
   import { startingStep, stepOf, type Screen } from "./steps";
   import { keepUpToDate } from "./offline";
   import NowPlaying from "./NowPlaying.svelte";
@@ -153,21 +144,12 @@
       history.replaceState(history.state, "", pathFor(next));
     });
   });
-  /** The feeds you follow and your folders, alphabetically; unknown until the server answers. */
-  let feeds: Feed[] | undefined = $state();
+  /** The feeds, folders, saved searches and collections (library.svelte.ts). A saved search opened from its address (or its Edit address) runs once it's known. */
+  const library = new LoadedLibrary(() => {
+    if (under.kind === "search" && !shown && currentSearch) resetSearch();
+  });
   /** Feeds set to flow past in Edit feed: no count, and their rows look as in river mode (SPEC section 15). */
-  let flowing = $derived(new Set((feeds ?? []).filter((feed) => feed.river).map((feed) => feed.id)));
-  let folders: Folder[] = $state([]);
-  /** The reader's saved searches, alphabetically (SPEC section 14); `searchesLoaded` once the server answered. */
-  let searches: SavedSearch[] = $state([]);
-  let searchesLoaded = $state(false);
-  /** The saved searches couldn't be loaded, so a saved search's address can't be told from a deleted one. */
-  let searchesFailed = $state(false);
-  /** The reader's collections, A to Z (SPEC section 34); `collectionsLoaded` once the server (or this device) answered. */
-  let collections: Collection[] = $state([]);
-  let collectionsLoaded = $state(false);
-  /** The collections couldn't be loaded, so a collection's address can't be told from a deleted one. */
-  let collectionsFailed = $state(false);
+  let flowing = $derived(new Set((library.feeds ?? []).filter((feed) => feed.river).map((feed) => feed.id)));
   /** The article whose "Add to collection" sheet is open, and the collection being renamed (decision 0108). */
   let collecting: Article | undefined = $state();
   let renaming: Collection | undefined = $state();
@@ -179,7 +161,6 @@
   let search = $state("");
   /** What the next list's line says on arrival (after unsubscribing or deleting a folder). */
   let notice: Notice | undefined = $state();
-  let feedsProblem = $state(false);
   /** The reader's sort order, shared across their devices; unknown until the server answers. */
   let sort: Order | undefined = $state();
   let preferences = $state(load());
@@ -327,19 +308,19 @@
 
   let currentFeed = $derived.by(() => {
     const place = under.kind === "feed" ? under : route;
-    return place.kind === "feed" || place.kind === "edit-feed" ? feeds?.find((feed) => feed.id === place.id) : undefined;
+    return place.kind === "feed" || place.kind === "edit-feed" ? library.feeds?.find((feed) => feed.id === place.id) : undefined;
   });
   let currentFolder = $derived.by(() => {
     const place = under.kind === "folder" ? under : route;
     return place.kind === "folder" || place.kind === "edit-folder"
-      ? folders.find((folder) => folder.id === place.id)
+      ? library.folders.find((folder) => folder.id === place.id)
       : undefined;
   });
   let currentSearch = $derived.by(() => {
     const place = under.kind === "search" ? under : route;
-    return place.kind === "search" || place.kind === "edit-search" ? searches.find((search) => search.id === place.id) : undefined;
+    return place.kind === "search" || place.kind === "edit-search" ? library.searches.find((search) => search.id === place.id) : undefined;
   });
-  let currentCollection = $derived(under.kind === "collection" ? collections.find((each) => each.id === under.id) : undefined);
+  let currentCollection = $derived(under.kind === "collection" ? library.collections.find((each) => each.id === under.id) : undefined);
   /** A sheet is actually showing (an edit address for a feed, folder or saved search you don't have shows none). */
   let sheetShown = $derived(
     sheet &&
@@ -356,14 +337,14 @@
   let tweaked = $derived(route.kind === "search" && currentSearch !== undefined && !sameQuery(query, currentSearch.query));
   /** A feed or folder address that names none you have. */
   let missing = $derived(
-    feeds !== undefined &&
+    library.feeds !== undefined &&
       (((under.kind === "feed" || under.kind === "edit-feed") && !currentFeed) ||
         ((under.kind === "folder" || under.kind === "edit-folder") && !currentFolder) ||
-        ((under.kind === "search" || under.kind === "edit-search") && searchesLoaded && !searchesFailed && !currentSearch) ||
-        (under.kind === "collection" && collectionsLoaded && !collectionsFailed && !currentCollection)),
+        ((under.kind === "search" || under.kind === "edit-search") && library.searchesLoaded && !library.searchesFailed && !currentSearch) ||
+        (under.kind === "collection" && library.collectionsLoaded && !library.collectionsFailed && !currentCollection)),
   );
   /** No feeds yet: Unread and All show the add field instead (SPEC section 2). */
-  let firstVisit = $derived(feeds !== undefined && feeds.length === 0);
+  let firstVisit = $derived(library.feeds !== undefined && library.feeds.length === 0);
   // Starred keeps its own list even with no feeds: it is where its More menu and sort live.
   let welcoming = $derived(firstVisit && !(under.kind === "view" && under.view === "starred"));
   /** On a computer with the sidebar and the list both hidden, their two buttons become one, which brings both back. */
@@ -381,7 +362,7 @@
    * address (Back after adding starters, a bookmark) quietly becomes the home view instead.
    */
   $effect(() => {
-    if (route.kind !== "new-to-feeds" || firstVisit || feeds === undefined) return;
+    if (route.kind !== "new-to-feeds" || firstVisit || library.feeds === undefined) return;
     untrack(() => {
       history.replaceState({ screen: "list" }, "", pathFor(home));
       route = home;
@@ -405,7 +386,7 @@
             ? "Collection not found"
             : "Feed not found"
       : shown && under.kind !== "search"
-        ? resultsTitle(shown.scope, { feeds: feeds ?? [], folders, collections })
+        ? resultsTitle(shown.scope, library.names)
         : nameFor(under, placeName),
   );
 
@@ -422,63 +403,9 @@
     void keepUpToDate(sort ?? "newest", mode);
   }
 
-  /** Counts changed on this screen since the page loaded; see `loadFeeds`. */
-  let countChanges = 0;
-
   /** Loads the feeds and folders. */
   function loadFeeds() {
-    return reloadFeeds();
-  }
-
-  // A list asked for again before it arrives answers with the newest ask, so a
-  // slow answer from before an unsubscribe can't put the feed back.
-  const newestFeeds = newestAnswer(listFeeds);
-  const newestSearches = newestAnswer(listSaved);
-  const newestCollections = newestAnswer(listCollections);
-
-  /** Loads the feeds and folders; `then` runs in the same step as they arrive, so nothing shows in between. */
-  async function reloadFeeds(then?: () => void) {
-    try {
-      // If a mark (or an undo) changes a count while the feeds are on their
-      // way, the answer may predate it: ask again, so it isn't overwritten.
-      for (let tries = 0; tries < 3; tries++) {
-        const before = countChanges;
-        const loaded = await newestFeeds();
-        if (countChanges === before || tries === 2) {
-          feeds = loaded.feeds;
-          folders = loaded.folders;
-          then?.();
-          break;
-        }
-      }
-      feedsProblem = false;
-    } catch {
-      feedsProblem = true;
-    }
-  }
-
-  async function loadSearches() {
-    try {
-      searches = await newestSearches();
-      searchesFailed = false;
-    } catch {
-      // The sidebar shows no saved searches until the next try; a saved search's own address says so plainly.
-      searchesFailed = true;
-    }
-    searchesLoaded = true;
-    // A saved search opened from its address (or its Edit address) runs once it's known.
-    if (under.kind === "search" && !shown && currentSearch) resetSearch();
-  }
-
-  async function loadCollections() {
-    try {
-      collections = await newestCollections();
-      collectionsFailed = false;
-    } catch {
-      // The sidebar lists none until the next try; a collection's own address says so plainly.
-      collectionsFailed = true;
-    }
-    collectionsLoaded = true;
+    return library.loadFeeds();
   }
 
   $effect(() => {
@@ -495,7 +422,7 @@
   // place changes, its row scrolls just far enough to show, at once, never
   // smoothly (decision 0051). Not when the feeds' counts change, so nothing
   // moves unless you move it. The phone's feeds screen marks no place.
-  let sidebarPlace = $derived(!phone && panes.sidebar && feeds !== undefined ? pathFor(route) : "");
+  let sidebarPlace = $derived(!phone && panes.sidebar && library.feeds !== undefined ? pathFor(route) : "");
   $effect(() => {
     if (sidebarPlace === "") return;
     untrack(() => {
@@ -517,13 +444,6 @@
       if (showing) itemList?.shown(showing);
     });
   });
-
-  function unreadChanged(feedId: number, change: number) {
-    countChanges++;
-    const feed = feeds?.find((each) => each.id === feedId);
-    // A feed that flows past counts nothing.
-    if (feed && !feed.river) feed.unread = Math.max(0, feed.unread + change);
-  }
 
   // Each reading setting saves in the order changed, so an earlier save that fails
   // never rolls the screen back past a later change.
@@ -852,15 +772,15 @@
     opening?.focus();
     // The first feeds can turn the list into the welcome, which hides the list's title: the
     // keyboard follows to the welcome's, unless the reader has already moved it.
-    reloadFeeds(() => {
+    library.loadFeeds(() => {
       void tick().then(() => {
         const at = document.activeElement;
         const now = phone && panes.sidebar ? wordmark : placeFocus(route);
         if (now && now !== opening && (at === opening || at === document.body || at === null)) now.focus();
       });
     });
-    loadSearches();
-    loadCollections();
+    library.loadSearches();
+    library.loadCollections();
     void loadQueue();
     loadSettings().then((settings) => {
       mode = settings.mode;
@@ -1073,10 +993,10 @@
     if (!sameScreen) resetSearch();
     if (isList(next)) lastPlace = next;
     // A feed or folder added elsewhere (another tab, another device) isn't in the list yet.
-    if (next.kind === "feed" && !feeds?.some((feed) => feed.id === next.id)) loadFeeds();
-    if (next.kind === "folder" && !folders.some((folder) => folder.id === next.id)) loadFeeds();
-    if (next.kind === "search" && !searches.some((search) => search.id === next.id)) loadSearches();
-    if (next.kind === "collection" && !collections.some((collection) => collection.id === next.id)) loadCollections();
+    if (next.kind === "feed" && !library.feeds?.some((feed) => feed.id === next.id)) loadFeeds();
+    if (next.kind === "folder" && !library.folders.some((folder) => folder.id === next.id)) loadFeeds();
+    if (next.kind === "search" && !library.searches.some((search) => search.id === next.id)) library.loadSearches();
+    if (next.kind === "collection" && !library.collections.some((collection) => collection.id === next.id)) library.loadCollections();
     // On a phone-narrow window the sidebar is the home screen; choosing a
     // place shows it instead.
     if (width === "narrow") sidebarChoice = "hidden";
@@ -1111,11 +1031,11 @@
   /** Back from an edit page, saved or not, to the feed or folder. */
   async function edited(saved: boolean) {
     const id = route.kind === "edit-feed" ? route.id : undefined;
-    const pausedBefore = feeds?.find((feed) => feed.id === id)?.pausedAt != null;
+    const pausedBefore = library.feeds?.find((feed) => feed.id === id)?.pausedAt != null;
     if (saved) await loadFeeds();
     // Unpausing a feed puts its newest few back in Unread (SPEC section 15): the list under
     // the sheet shows them unread at once, as the reader's own Save asked.
-    const unpaused = pausedBefore && feeds?.find((feed) => feed.id === id)?.pausedAt == null;
+    const unpaused = pausedBefore && library.feeds?.find((feed) => feed.id === id)?.pausedAt == null;
     if (unpaused) queueMicrotask(() => void itemList?.refresh());
     // On a phone the edit page is a step on from its list: go back that step.
     if (phone && stepOf(history.state)?.back === "list") history.back();
@@ -1128,7 +1048,7 @@
   function searchSaved(saved?: SavedSearch) {
     // Used: Back to "Save search" later finds nothing to save, and opens the place it was over.
     toSave = undefined;
-    if (saved) searches = [...searches.filter((each) => each.id !== saved.id), saved].sort(byName);
+    if (saved) library.searchSaved(saved);
     if (saved && route.kind === "save-search") {
       go({ kind: "search", id: saved.id });
       return;
@@ -1139,27 +1059,12 @@
     else go(lastPlace);
   }
 
-  function byName(one: SavedSearch, other: SavedSearch): number {
-    return one.name.localeCompare(other.name, undefined, { sensitivity: "base" }) || one.id - other.id;
-  }
-
   /** Deletes a saved search (never an article), then shows Unread (All in river mode) with "Deleted … · Undo". */
   async function deleteSearch(saved: SavedSearch): Promise<string | undefined> {
-    const refusal = await deleteSaved(saved.id);
-    if (refusal) return refusedSaving(refusal);
-    searches = searches.filter((each) => each.id !== saved.id);
-    // Asking again outranks a list already on its way from before the delete.
-    void loadSearches();
+    const done = await library.deleteSearch(saved);
+    if (typeof done === "string") return done;
     toSave = undefined;
-    go(home, {
-      message: `Deleted the saved search ${saved.name}`,
-      undo: async () => {
-        const back = await saveSearch(saved.name, saved.query);
-        if (typeof back === "string") return refusedSaving(back);
-        await loadSearches();
-        return undefined;
-      },
-    });
+    go(home, done);
     return undefined;
   }
 
@@ -1192,77 +1097,31 @@
    * the list is next loaded: nothing moves unless you move it.
    */
   function collectingClosed(change?: CollectionChange) {
-    const off = change ? takenOff(change, collections) : undefined;
+    const off = change ? takenOff(change, library.collections) : undefined;
     collectionSheetClosed();
     if (change && off) itemList?.offer(off.message, () => putBack(change.article, off.ids));
   }
 
-  /** A collection made in the sheet joins the sidebar at once, in its place A to Z. */
-  function collectionMade(made: Collection) {
-    collections = [...collections.filter((each) => each.id !== made.id), made].sort(collectionOrder);
-  }
-
   /** Deletes a collection (never an article), then shows Unread (All in river mode) with "Deleted … · Undo". */
   async function removeCollection(collection: Collection) {
-    const held = await deleteCollection(collection.id);
-    if (typeof held === "string") {
-      itemList?.say(refusedCollection(held));
-      return;
-    }
-    collections = collections.filter((each) => each.id !== collection.id);
-    // Asking again outranks a list already on its way from before the delete.
-    void loadCollections();
-    go(home, {
-      message: `Deleted the collection ${collection.name}`,
-      undo: async () => {
-        const back = await makeCollection(collection.name, held);
-        if (typeof back === "string") return refusedCollection(back);
-        // Its saved searches are limited to it again.
-        await Promise.all([loadCollections(), held.searches.length > 0 ? loadSearches() : undefined]);
-        return undefined;
-      },
-    });
+    const done = await library.deleteCollection(collection);
+    if (typeof done === "string") itemList?.say(done);
+    else go(home, done);
   }
 
   /** Unsubscribes, then shows Unread (All in river mode) with "Unsubscribed from … · Undo". */
   async function unsubscribeFrom(feed: Feed): Promise<string | undefined> {
-    const refusal = await unsubscribe(feed.id);
-    if (refusal) return refused(refusal, "feed");
-    await loadFeeds();
-    go(
-      home,
-      {
-        message: `Unsubscribed from ${feed.title}`,
-        undo: async () => {
-          const problem = await resubscribe(feed.id);
-          if (problem) return refused(problem, "feed");
-          await loadFeeds();
-          return undefined;
-        },
-      },
-    );
+    const done = await library.unsubscribe(feed);
+    if (typeof done === "string") return done;
+    go(home, done);
     return undefined;
   }
 
   /** Deletes a folder (never its feeds), then shows Unread (All in river mode) with "Deleted … · Undo". */
   async function deleteThis(folder: Folder): Promise<string | undefined> {
-    const inside = (feeds ?? []).filter((feed) => feed.folders.includes(folder.id)).map((feed) => feed.id);
-    const { refusal, rules, searches } = await deleteFolder(folder.id);
-    if (refusal) return refused(refusal, "folder");
-    await loadFeeds();
-    go(
-      home,
-      {
-        message: `Deleted the folder ${folder.name}`,
-        undo: async () => {
-          const problem = await createFolder(folder.name, inside, rules, searches);
-          if (problem) return refused(problem, "folder");
-          await loadFeeds();
-          if (searches.length > 0) await loadSearches();
-          return undefined;
-        },
-      },
-    );
+    const done = await library.deleteFolder(folder);
+    if (typeof done === "string") return done;
+    go(home, done);
     return undefined;
   }
 
@@ -1306,7 +1165,7 @@
    */
   async function feedMoved(before: number, after: number, heading: () => HTMLHeadingElement | undefined) {
     if (after !== before) movedFeed = { from: before, to: after };
-    await reloadFeeds(() => {
+    await library.loadFeeds(() => {
       if (after !== before) go(route.kind === "edit-feed" ? { kind: "edit-feed", id: after } : { kind: "feed", id: after });
     });
     await tick();
@@ -1434,9 +1293,9 @@
    * the sidebar's order (`feedNextTo`, decision 0110).
    */
   function feedAfter(step: 1 | -1): Route | undefined {
-    if (!feeds) return undefined;
-    const open = phone ? folders.map((folder) => folder.id) : (sidebarFeeds?.openFolders() ?? savedOpenFolders());
-    const id = feedNextTo({ feeds, folders }, open, route, step);
+    if (!library.feeds) return undefined;
+    const open = phone ? library.folders.map((folder) => folder.id) : (sidebarFeeds?.openFolders() ?? savedOpenFolders());
+    const id = feedNextTo({ feeds: library.feeds, folders: library.folders }, open, route, step);
     return id === undefined ? undefined : { kind: "feed", id };
   }
 
@@ -1450,7 +1309,7 @@
     if (!itemList || (!panes.list && !panes.article && !reading)) return;
     if (!selected && !itemList.move(1)) return;
     const article = selected;
-    if (article?.link && !reading && !inArticle() && feeds?.find((feed) => feed.id === article.feedId)?.openOnSite) {
+    if (article?.link && !reading && !inArticle() && library.feeds?.find((feed) => feed.id === article.feedId)?.openOnSite) {
       window.open(article.link, "_blank", "noopener,noreferrer");
       itemList.shown(article);
       return;
@@ -1550,7 +1409,7 @@
     phoneSearch = false;
     // `under`: the saved search under its Edit sheet runs too.
     const place = under;
-    const saved = place.kind === "search" ? searches.find((search) => search.id === place.id) : undefined;
+    const saved = place.kind === "search" ? library.searches.find((search) => search.id === place.id) : undefined;
     query = saved ? $state.snapshot(saved.query) : emptyQuery(route);
     shown = saved && isSearching(saved.query) ? $state.snapshot(saved.query) : undefined;
   }
@@ -1757,7 +1616,7 @@
         Always shown once there's a feed (DESIGN.md → Exceptions log): finds a feed or folder by name.
         With no feeds there's nothing to find, so the welcome has the screen to itself (decision 0041).
       -->
-      {#if feeds === undefined || feeds.length > 0}
+      {#if library.feeds === undefined || library.feeds.length > 0}
       <!-- On the rows' grid (decision 0043): its icon in the column of the places' icons, its words where their names start. -->
       <div class="relative mx-2 pb-4">
         <span class="pointer-events-none absolute top-0 left-3 flex h-(--search-height) w-4 items-center justify-center text-muted"><Icon name="search" size={14} /></span>
@@ -1798,13 +1657,13 @@
           </li>
         {/each}
       </ul>
-      {#if feeds}
+      {#if library.feeds}
         <SidebarFeeds
           bind:this={sidebarFeeds}
-          {feeds}
-          {folders}
-          searches={hidden.includes("searches") ? [] : searches}
-          collections={hidden.includes("collections") ? [] : collections}
+          feeds={library.feeds}
+          folders={library.folders}
+          searches={hidden.includes("searches") ? [] : library.searches}
+          collections={hidden.includes("collections") ? [] : library.collections}
           {route}
           {search}
           {follow}
@@ -1813,7 +1672,7 @@
           numbers={counts === "shown"}
         />
       {/if}
-      {#if feedsProblem}
+      {#if library.feedsFailed}
         <p class="px-4 pt-4 text-small">Your feeds couldn't be loaded. Reload the page to try again.</p>
       {/if}
     </div>
@@ -1900,8 +1759,8 @@
           }}
           onMuted={goMuted}
           onReaders={goReaders}
-          feeds={feeds ?? []}
-          {folders}
+          feeds={library.feeds ?? []}
+          folders={library.folders}
           {phone}
           bind:ruleForFeed
           besideToggle={!phone && !panes.sidebar}
@@ -1924,7 +1783,7 @@
         {#key editKey(currentFeed.id)}
           <EditFeed
             feed={currentFeed}
-            {folders}
+            folders={library.folders}
             bind:heading={listHeading}
             besideToggle={!phone && !panes.sidebar}
             {river}
@@ -1961,7 +1820,7 @@
       {:else if !sheet && route.kind === "save-search" && toSave}
         <EditSearch
           query={toSave}
-          library={{ feeds: feeds ?? [], folders, collections }}
+          library={library.names}
           bind:heading={listHeading}
           besideToggle={!phone && !panes.sidebar}
           onSaved={searchSaved}
@@ -1972,7 +1831,7 @@
           <EditSearch
             saved={currentSearch}
             query={toSave ?? currentSearch.query}
-            library={{ feeds: feeds ?? [], folders, collections }}
+            library={library.names}
             bind:heading={listHeading}
             besideToggle={!phone && !panes.sidebar}
             onSaved={searchSaved}
@@ -1994,7 +1853,7 @@
               <!-- 20px under the top line as Settings is: a line on what to paste, the field, then Add feed the full width at the screen's foot. -->
               <div class="mx-auto flex w-full max-w-xl flex-1 flex-col gap-5">
                 <p>{ADD_INTRO}</p>
-                <AddFeed bind:field={addField} feeds={feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} page {shared} onShared={() => (shared = "")} />
+                <AddFeed bind:field={addField} feeds={library.feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} page {shared} onShared={() => (shared = "")} />
               </div>
             </div>
           </div>
@@ -2079,16 +1938,16 @@
           {/if}
           <!-- A column, so the floating note can sit at the pane's foot even under a short list. -->
           <div use:edge class="scroller relative flex min-h-0 flex-1 scroll-pb-20 flex-col overflow-y-auto pt-2 pr-[var(--list-end)] pb-6 pl-[var(--list-start)]">
-            {#if feeds && feeds.length > 0 && !missing && (!phone || phoneSearch || shown || isSearching(query))}
-              <SearchBar bind:this={searchBar} {query} {feeds} {folders} {collections} here={scopeFor(under)} found={listFound} {river} onChange={searchChanged} />
+            {#if library.feeds && library.feeds.length > 0 && !missing && (!phone || phoneSearch || shown || isSearching(query))}
+              <SearchBar bind:this={searchBar} {query} feeds={library.feeds} folders={library.folders} collections={library.collections} here={scopeFor(under)} found={listFound} {river} onChange={searchChanged} />
             {/if}
             {#if missing && (under.kind === "folder" || under.kind === "edit-folder")}
               <p class="mt-4">There's no folder here. It may have been deleted or renamed.</p>
-            {:else if under.kind === "search" && searchesFailed && !currentSearch}
+            {:else if under.kind === "search" && library.searchesFailed && !currentSearch}
               <p class="mt-4">Your saved searches couldn't be loaded. Reload the page to try again.</p>
             {:else if missing && (under.kind === "search" || under.kind === "edit-search")}
               <p class="mt-4">There's no saved search here. It may have been deleted.</p>
-            {:else if under.kind === "collection" && collectionsFailed && !currentCollection}
+            {:else if under.kind === "collection" && library.collectionsFailed && !currentCollection}
               <p class="mt-4">Your collections couldn't be loaded. Reload the page to try again.</p>
             {:else if missing && under.kind === "collection"}
               <p class="mt-4">There's no collection here. It may have been deleted.</p>
@@ -2105,7 +1964,7 @@
               -->
               <!-- The list's 28px dot gutter (decision 0054) is for rows: the welcome steps back out to the 20px margin. -->
               <div class={phone ? "mt-[5.5rem] ml-[calc(1.25rem-var(--list-start))] flex" : "mt-8 flex justify-center"}>{@render welcome(phone)}</div>
-            {:else if feeds !== undefined && sort !== undefined && (under.kind !== "search" || searchesLoaded) && (under.kind !== "collection" || collectionsLoaded)}
+            {:else if library.feeds !== undefined && sort !== undefined && (under.kind !== "search" || library.searchesLoaded) && (under.kind !== "collection" || library.collectionsLoaded)}
               {#if under.kind === "feed" && !shown && currentFeed}
                 <!-- A feed that isn't working says so above its list, with Find new address (decision 0106). -->
                 <FailingLine
@@ -2126,7 +1985,7 @@
                   empty={shown ? "Nothing found." : emptyText(under)}
                   bold={shown ? searchedTerms(shown.words) : []}
                   onChoose={chose}
-                  onUnreadChange={unreadChanged}
+                  onUnreadChange={(feedId, change) => library.unreadChanged(feedId, change)}
                   onRefresh={() => {
                     loadFeeds();
                     // What a refresh brought is kept for reading offline too, at most once a minute.
@@ -2221,14 +2080,13 @@
 <CheatSheet bind:open={cheatSheetOpen} bind:editing={cheatSheetEditing} {river} />
 
 {#if collecting}
-  <AddToCollection article={collecting} {collections} onMade={collectionMade} onClose={collectingClosed} />
+  <AddToCollection article={collecting} collections={library.collections} onMade={(made) => library.collectionMade(made)} onClose={collectingClosed} />
 {:else if renaming}
   {#key renaming.id}
     <RenameCollection
       collection={renaming}
       onSaved={(name) => {
-        const id = renaming?.id;
-        collections = collections.map((each) => (each.id === id ? { ...each, name } : each)).sort(collectionOrder);
+        if (renaming) library.collectionRenamed(renaming.id, name);
         collectionSheetClosed();
       }}
       onCancel={collectionSheetClosed}
@@ -2239,7 +2097,7 @@
 {#if sheet && route.kind === "add-feed"}
   <Sheet title="Add a feed" bind:heading={sheetHeading} onClose={closePage} initial={() => addField}>
     <p>{ADD_INTRO}</p>
-    <AddFeed bind:field={addField} feeds={feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} onCancel={closePage} {shared} onShared={() => (shared = "")} />
+    <AddFeed bind:field={addField} feeds={library.feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} onCancel={closePage} {shared} onShared={() => (shared = "")} />
   </Sheet>
 {:else if sheet && route.kind === "new-to-feeds" && firstVisit}
   <Sheet title="New to feeds?" bind:heading={sheetHeading} onClose={closePage}>
@@ -2250,7 +2108,7 @@
     <EditFeed
       sheet
       feed={currentFeed}
-      {folders}
+      folders={library.folders}
       bind:heading={sheetHeading}
       {river}
       onSaved={() => edited(true)}
@@ -2261,14 +2119,14 @@
     />
   {/key}
 {:else if sheet && route.kind === "save-search" && toSave}
-  <EditSearch sheet query={toSave} library={{ feeds: feeds ?? [], folders, collections }} bind:heading={sheetHeading} onSaved={searchSaved} onCancel={() => searchSaved()} />
+  <EditSearch sheet query={toSave} library={library.names} bind:heading={sheetHeading} onSaved={searchSaved} onCancel={() => searchSaved()} />
 {:else if sheet && route.kind === "edit-search" && currentSearch}
   {#key currentSearch.id}
     <EditSearch
       sheet
       saved={currentSearch}
       query={toSave ?? currentSearch.query}
-      library={{ feeds: feeds ?? [], folders, collections }}
+      library={library.names}
       bind:heading={sheetHeading}
       onSaved={searchSaved}
       onCancel={() => searchSaved()}

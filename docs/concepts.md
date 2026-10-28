@@ -155,6 +155,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Race condition (an older answer arriving after a newer one), saves in order and the newest answer (`inorder.ts`)
 - Clipboard and the system share sheet
 - Container query (styling by a pane's width, not the window's)
+- The reader's library on screen: feeds, folders, saved searches and collections, loaded and removed with Undo (`library.svelte.ts`)
 
 ## Data and the database
 
