@@ -20,6 +20,7 @@ import type { Article, FullArticle, Library, Page, Source } from "./shapes";
 import type { Order, ReadingMode } from "./reading";
 import { currentTabReader } from "./updates.svelte";
 import { deviceText, setDeviceText } from "./device";
+import { whenBack } from "./connection.svelte";
 
 /** At most this many unread articles, and this many starred ones, are kept (the owner's limit). */
 export const KEEP_UNREAD = 200;
@@ -496,4 +497,56 @@ function withWaiting(kept: Kept, waiting: Map<string, Mark>): Kept {
     if (mark) result = withMark(result, mark);
   }
   return result;
+}
+
+/** Back in view after this long, the copies are brought up to date again. */
+export const KEEP_AGAIN_AFTER = 10 * 60_000;
+/** After a refresh, the copies are brought up to date again if they're at least this old. */
+export const KEEP_AFTER_REFRESH = 60_000;
+
+/**
+ * When the copies are brought up to date (one per signed-in screen): once
+ * the settings are known (`now`), when the connection comes back, when
+ * nine turtles comes back into view after a while (`watch`), and after a
+ * refresh at most once a minute (`refreshed`). `keep` is what brings them up
+ * to date; the clock is passed in so tests can move it. `now`, `refreshed`
+ * and `lookedAgain` are arrow functions, so each can be handed on alone.
+ */
+export class Keeper {
+  #last = 0;
+  readonly #keep: () => void;
+  readonly #clock: () => number;
+
+  constructor(keep: () => void, clock: () => number = Date.now) {
+    this.#keep = keep;
+    this.#clock = clock;
+  }
+
+  /** Brings the copies up to date now. */
+  now = () => {
+    this.#last = this.#clock();
+    this.#keep();
+  };
+
+  /** A refresh brought new articles: they're kept too, at most once a minute. */
+  refreshed = () => {
+    if (this.#clock() - this.#last > KEEP_AFTER_REFRESH) this.now();
+  };
+
+  /** nine turtles came back into view (or went out of it). */
+  lookedAgain = () => {
+    if (!document.hidden && this.#clock() - this.#last > KEEP_AGAIN_AFTER) this.now();
+  };
+
+  /** Starts keeping up when the connection comes back and on coming back into view. Returns how to stop. */
+  watch(): () => void {
+    const stopWaitingForConnection = whenBack(this.now);
+    document.addEventListener("visibilitychange", this.lookedAgain);
+    addEventListener("online", this.now);
+    return () => {
+      stopWaitingForConnection();
+      document.removeEventListener("visibilitychange", this.lookedAgain);
+      removeEventListener("online", this.now);
+    };
+  }
 }
