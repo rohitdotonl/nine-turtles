@@ -467,7 +467,7 @@
   }
   /*
     On a phone-narrow window (the width at which the app shows one screen at
-    a time, layout.ts) it's a screen of its own, as Add a feed and Edit feed
+    a time, layout.svelte.ts) it's a screen of its own, as Add a feed and Edit feed
     are there: no card, no dim around it, nothing behind it showing past its
     edge (decision 0049).
   */

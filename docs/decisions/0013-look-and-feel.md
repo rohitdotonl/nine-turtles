@@ -44,7 +44,7 @@ unknown address with the app (`server/src/assets.rs`).
 
 **Layout.** The width steps are in rem (75rem wide, 48rem medium), so zooming
 in or a larger system text size steps the layout down rather than letting
-things overlap. The rules are in `web/src/lib/layout.ts`, tested on their own.
+things overlap. The rules are in `web/src/lib/layout.svelte.ts`, tested on their own.
 
 **A band that never scrolls.** The top 4rem of every area stays still and
 only the content below it scrolls. The Sidebar button (top left) and "Press ?
