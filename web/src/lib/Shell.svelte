@@ -50,13 +50,14 @@
   import { device } from "./appearance.svelte";
   import { VIEWS, VIEW_NAMES, inSettings, nameFor, parentOf, parse, pathFor, titleFor, type Route, type View } from "./router";
   import { sharedAddress } from "./share";
-  import { resultsTitle, scopeFor, searchParams, searchedTerms } from "./search";
+  import { scopeFor, searchParams, searchedTerms } from "./search";
   import { sameQuery, type SavedSearch } from "./saved";
   import type { Collection, CollectionChange } from "./collections";
   import { CollectionSheets } from "./collecting.svelte";
   import { Searching } from "./searching.svelte";
   import { LoadedLibrary } from "./library.svelte";
-  import { emptyText, insteadOfList, missingFrom, NOT_FOUND, type Found } from "./listWording";
+  import { emptyText, insteadOfList, missingFrom, type Found } from "./listWording";
+  import { headingFor, placeNameOf } from "./listHeading";
   import { isFirstVisit, newToFeedsGivesWay, welcomeFor } from "./firstVisit";
   import { startingStep, stepOf, type Screen } from "./steps";
   import { homeFor, isList, isOver, moveTo, Opener, opensFromHere, Steps, underSheet } from "./navigation";
@@ -268,7 +269,7 @@
         (route.kind === "edit-folder" && currentFolder !== undefined)),
   );
   /** The feed's, folder's or saved search's name, for the heading and the tab's title. */
-  let placeName = $derived(currentFeed?.title ?? currentFolder?.name ?? currentSearch?.name ?? currentCollection?.name);
+  let placeName = $derived(placeNameOf({ feed: currentFeed, folder: currentFolder, search: currentSearch, collection: currentCollection }));
   /** On a saved search, the search field no longer holds what was saved: Escape puts it back. */
   let tweaked = $derived(route.kind === "search" && currentSearch !== undefined && !sameQuery(searching.query, currentSearch.query));
   /** What the screen has found for the place on screen, for the words an empty or missing place shows. */
@@ -312,13 +313,8 @@
   let listFound = $state("");
   /** The line above the add field, in the sheet and on the phone's page. */
   const ADD_INTRO = "nine turtles finds the feed on any website you like, and lists its articles.";
-  let headingText = $derived(
-    missing
-      ? NOT_FOUND[missing]
-      : searching.shown && under.kind !== "search"
-        ? resultsTitle(searching.shown.scope, library.names)
-        : nameFor(under, placeName),
-  );
+  /** The list's heading (`listHeading.ts`). */
+  let headingText = $derived(headingFor({ under, placeName, missing, results: searching.shown?.scope, names: library.names }));
 
   /** Keeps the copies for reading offline up to date, in the reader's own order. */
   const keeper = new Keeper(() => void keepUpToDate(settings.sort ?? "newest", settings.mode));
