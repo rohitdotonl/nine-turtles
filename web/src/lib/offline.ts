@@ -509,7 +509,8 @@ export const KEEP_AFTER_REFRESH = 60_000;
  * the settings are known (`now`), when the connection comes back, when
  * nine turtles comes back into view after a while (`watch`), and after a
  * refresh at most once a minute (`refreshed`). `keep` is what brings them up
- * to date; the clock is passed in so tests can move it.
+ * to date; the clock is passed in so tests can move it. `now`, `refreshed`
+ * and `lookedAgain` are arrow functions, so each can be handed on alone.
  */
 export class Keeper {
   #last = 0;
@@ -528,9 +529,9 @@ export class Keeper {
   };
 
   /** A refresh brought new articles: they're kept too, at most once a minute. */
-  refreshed() {
+  refreshed = () => {
     if (this.#clock() - this.#last > KEEP_AFTER_REFRESH) this.now();
-  }
+  };
 
   /** nine turtles came back into view (or went out of it). */
   lookedAgain = () => {

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Article, Library } from "./shapes";
-import { offsetFrom } from "./connection.svelte";
+import { lost, offsetFrom, reached } from "./connection.svelte";
 import { KEEP_AFTER_REFRESH, KEEP_AGAIN_AFTER, KEEP_STARRED, KEEP_UNREAD, Keeper, NeedsConnection, countsAfter, inParts, keptList, toKeep, withMark, type Kept } from "./offline";
 
 function row(id: number, more: Partial<Article> = {}): Article {
@@ -147,7 +147,7 @@ describe("when the copies are brought up to date", () => {
     expect(kept).toHaveLength(2);
   });
 
-  it("watches for the browser going online and coming back into view, until told to stop", () => {
+  it("watches for the connection coming back and for coming back into view, until told to stop", () => {
     const page = Object.assign(new EventTarget(), { hidden: false });
     const browser = new EventTarget();
     vi.stubGlobal("document", page);
@@ -157,13 +157,18 @@ describe("when the copies are brought up to date", () => {
     const stop = keeper.watch();
     browser.dispatchEvent(new Event("online"));
     expect(kept).toHaveLength(1);
+    lost();
+    reached(new Response());
+    expect(kept).toHaveLength(2);
     wait(KEEP_AGAIN_AFTER + 1);
     page.dispatchEvent(new Event("visibilitychange"));
-    expect(kept).toHaveLength(2);
+    expect(kept).toHaveLength(3);
     stop();
     wait(KEEP_AGAIN_AFTER + 1);
     browser.dispatchEvent(new Event("online"));
     page.dispatchEvent(new Event("visibilitychange"));
-    expect(kept).toHaveLength(2);
+    lost();
+    reached(new Response());
+    expect(kept).toHaveLength(3);
   });
 });
