@@ -5,7 +5,7 @@
 **Decision.** Reading an article in nine turtles tells publishers and
 trackers as little as possible, and its pictures load only as the reader
 reaches them (SPEC sections 7 and 21). All of it happens in the server's feed
-cleaner, `server/src/feed.rs`, before the safety cleaning, so ammonia still
+cleaner, `server/src/feed/clean.rs`, before the safety cleaning, so ammonia still
 has the last word.
 
 - **Tracking tags come off links.** `utm_…` and a fixed list of well-known
