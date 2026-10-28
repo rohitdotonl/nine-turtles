@@ -14,7 +14,7 @@ use axum::{
     http::{HeaderMap, Method, StatusCode, Uri},
 };
 use hmac::{Hmac, KeyInit, Mac};
-use nine_turtles::payments::{self, Settings};
+use nine_turtles::payments::Settings;
 use serde_json::{Value, json};
 
 const DAY: i64 = 24 * 60 * 60;
@@ -134,9 +134,9 @@ async fn message(base: &str, id: &str, event: &Value, signed: bool) -> reqwest::
     let timestamp = nine_turtles::now().to_string();
     let mut mac = <Hmac<sha2::Sha256> as KeyInit>::new_from_slice(KEY).unwrap();
     mac.update(format!("{id}.{timestamp}.{body}").as_bytes());
-    let mut signature = payments::base64_encode(&mac.finalize().into_bytes());
+    let mut signature = nine_turtles::encoding::base64(&mac.finalize().into_bytes());
     if !signed {
-        signature = payments::base64_encode(b"not the signature at all, no");
+        signature = nine_turtles::encoding::base64(b"not the signature at all, no");
     }
     reqwest::Client::new()
         .post(format!("{base}/payments/dodo"))
@@ -175,13 +175,13 @@ fn about(
     json!({
         "business_id": "bus_1",
         "type": kind,
-        "timestamp": nine_turtles::starred::rfc3339(at),
+        "timestamp": nine_turtles::dates::rfc3339(at),
         "data": {
             "payload_type": "Subscription",
             "subscription_id": id,
             "product_id": "pdt_monthly",
             "status": status,
-            "next_billing_date": nine_turtles::starred::rfc3339(next),
+            "next_billing_date": nine_turtles::dates::rfc3339(next),
             "cancel_at_next_billing_date": ending,
             "customer": { "customer_id": "cus_1", "email": format!("reader{person}@example.com") },
             "metadata": { "person_id": person.to_string() },

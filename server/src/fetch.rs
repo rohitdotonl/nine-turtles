@@ -278,13 +278,7 @@ fn http_date(value: &str) -> Option<i64> {
     {
         return None;
     }
-    // Days since 1970 for a calendar date (Howard Hinnant's well-known method).
-    let shifted = if month <= 2 { year - 1 } else { year };
-    let era = shifted.div_euclid(400);
-    let year_of_era = shifted - era * 400;
-    let day_of_year = (153 * ((month + 9) % 12) + 2) / 5 + day - 1;
-    let day_of_era = year_of_era * 365 + year_of_era / 4 - year_of_era / 100 + day_of_year;
-    let days = era * 146_097 + day_of_era - 719_468;
+    let days = crate::dates::days_from_civil(year, month, day);
     Some(days * 86_400 + hour * 3_600 + minute * 60 + second)
 }
 

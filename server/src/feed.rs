@@ -385,8 +385,7 @@ pub fn fingerprint(id: &str, link: Option<&Url>, title: &str, published: Option<
         return format!("link:{}", normalize(link));
     }
     let digest = Blake2s256::digest(format!("{title}\n{}", published.unwrap_or(0)).as_bytes());
-    let hex: String = digest.iter().map(|byte| format!("{byte:02x}")).collect();
-    format!("hash:{hex}")
+    format!("hash:{}", crate::encoding::hex(&digest))
 }
 
 /// Query parts that only track clicks: added by newsletters, ad networks

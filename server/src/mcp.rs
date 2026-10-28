@@ -38,13 +38,13 @@ use serde_json::{Value, json};
 use crate::{
     AppState, VERSION,
     assistants::Assistant,
+    dates::rfc3339,
     feed,
     feeds::{self, NotAdded},
     folders, health,
     marks::{READ_SQL, STAR_SQL, now_ms},
     now, rules,
     search::{self, Search},
-    starred::rfc3339,
     subscriptions,
 };
 

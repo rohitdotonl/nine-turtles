@@ -36,7 +36,7 @@ use crate::{
     AppState,
     auth::{Account, SignedIn, ask_password, database_problem, remember_device, session_cookie},
     config::PasswordSetting,
-    log, now,
+    log, now, refused,
 };
 
 /// A new reader's password: at least this many characters, the same as the
@@ -534,20 +534,8 @@ pub(crate) fn is_taken(error: &sqlx::Error) -> bool {
         .is_some_and(|error| error.is_unique_violation())
 }
 
-pub(crate) fn refused(status: StatusCode, error: &str) -> Response {
-    (status, Json(json!({ "error": error }))).into_response()
-}
-
 pub(crate) fn too_many() -> Response {
     refused(StatusCode::TOO_MANY_REQUESTS, "too-many")
-}
-
-pub(crate) fn hex(bytes: &[u8]) -> String {
-    use std::fmt::Write as _;
-    bytes.iter().fold(String::new(), |mut text, byte| {
-        let _ = write!(text, "{byte:02x}");
-        text
-    })
 }
 
 #[cfg(test)]

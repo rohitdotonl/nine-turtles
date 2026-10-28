@@ -28,7 +28,7 @@ fn feed() -> impl IntoResponse {
                  <link href=\"https://kitchen.example/soup-{day}\"/>\
                  <content type=\"html\">A warm soup, number {day}.</content>\
                  <updated>{}</updated></entry>",
-                nine_turtles::starred::rfc3339(now - day * 86_400)
+                nine_turtles::dates::rfc3339(now - day * 86_400)
             )
         })
         .collect();

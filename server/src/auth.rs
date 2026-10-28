@@ -13,7 +13,6 @@
 
 use std::{
     collections::HashMap,
-    fmt::Write as _,
     sync::OnceLock,
     time::{Duration, Instant},
 };
@@ -630,7 +629,7 @@ pub const OWNER_PASSWORD_FROM: &str = "owner_password_from";
 /// `OWNER_PASSWORD_FROM`: never the line itself.
 pub(crate) fn setting_fingerprint(setting: &PasswordSetting) -> String {
     match setting {
-        PasswordSetting::Set(line) => crate::people::hex(&scramble(line)),
+        PasswordSetting::Set(line) => crate::encoding::hex(&scramble(line)),
         PasswordSetting::Missing | PasswordSetting::Invalid => "none".to_owned(),
     }
 }
@@ -830,14 +829,7 @@ pub(crate) fn signed_out_cookies() -> AppendHeaders<[(header::HeaderName, Header
 
 /// 32 random bytes from the operating system, written as 64 hex characters.
 pub(crate) fn new_token() -> Result<String, getrandom::Error> {
-    let mut bytes = [0u8; 32];
-    getrandom::fill(&mut bytes)?;
-    Ok(bytes
-        .iter()
-        .fold(String::with_capacity(64), |mut text, byte| {
-            let _ = write!(text, "{byte:02x}");
-            text
-        }))
+    crate::encoding::random_hex(32)
 }
 
 pub(crate) fn scramble(token: &str) -> [u8; 32] {

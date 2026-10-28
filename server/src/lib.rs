@@ -26,9 +26,11 @@ pub mod checking;
 pub mod cleanup;
 pub mod collections;
 pub mod config;
+pub mod dates;
 pub mod db;
 pub mod discover;
 pub mod email;
+pub mod encoding;
 pub mod feed;
 pub mod feeds;
 pub mod fetch;
@@ -266,4 +268,10 @@ pub fn now() -> i64 {
         .map_or(0, |elapsed| {
             i64::try_from(elapsed.as_secs()).unwrap_or(i64::MAX)
         })
+}
+
+/// A refusal the web app understands: the status and `{"error": word}`.
+pub(crate) fn refused(status: axum::http::StatusCode, error: &str) -> axum::response::Response {
+    use axum::response::IntoResponse as _;
+    (status, axum::Json(serde_json::json!({ "error": error }))).into_response()
 }
