@@ -58,6 +58,7 @@
   import { LoadedLibrary } from "./library.svelte";
   import { emptyText, insteadOfList, missingFrom, type Found } from "./listWording";
   import { headingFor, placeNameOf } from "./listHeading";
+  import { focusArriving, landingFor, type Headings } from "./landing";
   import { moveArticle, nextFeed, type ArticleMove } from "./moving";
   import { isFirstVisit, newToFeedsGivesWay, welcomeFor } from "./firstVisit";
   import { startingStep, stepOf, type Screen } from "./steps";
@@ -174,19 +175,14 @@
   let phone = $derived(layout.phone);
 
   let wordmark: HTMLHeadingElement | undefined = $state();
-  let listHeading: HTMLHeadingElement | undefined = $state();
-  let settingsHeading: HTMLHeadingElement | undefined = $state();
-  let healthHeading: HTMLHeadingElement | undefined = $state();
-  let yourFeedsHeading: HTMLHeadingElement | undefined = $state();
-  let mutedHeading: HTMLHeadingElement | undefined = $state();
-  let readersHeading: HTMLHeadingElement | undefined = $state();
+  /** The headings (and the add field) the keyboard's place lands on (`landing.ts`). */
+  const headings: Headings = $state({});
   /** "Add a rule for this feed…" in Edit feed: Settings opens with a new rule for it. */
   let ruleForFeed: number | undefined = $state();
   /** Feed health, Your feeds, Muted articles or Readers was opened from Settings, so closing it is a step back in history. */
   let cameFromSettings = false;
   /** Back from a page opened from Settings: the row on its parent page that opened it, for the keyboard to return to (decision 0120). */
   let returnRow: string | undefined;
-  let addField: HTMLInputElement | undefined = $state();
   let sidebar: HTMLElement | undefined = $state();
   let articleHeading: HTMLHeadingElement | undefined = $state();
   let itemList: ItemList | undefined = $state();
@@ -221,7 +217,6 @@
   let sheet = $derived(!phone && isOver(route));
   /** Where the list and article come from: under a sheet, the place it opened over (navigation.ts). */
   let under: Route = $derived(underSheet(route, lastPlace, phone));
-  let sheetHeading: HTMLHeadingElement | undefined = $state();
   /** What had the keyboard when a sheet opened, to give it back when the sheet closes. */
   const sheetOpener = new Opener();
   /** The browser's history: the step each move adds, and the steps back (navigation.ts). */
@@ -297,7 +292,6 @@
   let bothHidden = $derived(!phone && !panes.sidebar && !panes.list && isList(route) && !welcoming);
   let welcomeWide = $derived(whereWelcome.wide);
   let welcomeAlone = $derived(whereWelcome.alone);
-  let welcomeHeading: HTMLHeadingElement | undefined = $state();
   /** "New to feeds?" is for the first visit only: once anything is followed, it becomes the home view. */
   $effect(() => {
     if (!newToFeedsGivesWay(route, library.feeds)) return;
@@ -503,25 +497,9 @@
     };
   });
 
-  /** Where the keyboard's place goes on arriving somewhere: its heading, or the add field. */
+  /** Where the keyboard's place goes on arriving somewhere (`landing.ts`). */
   function placeFocus(place: Route): HTMLElement | undefined {
-    // Edit pages bind their heading to `listHeading` too.
-    if (place.kind === "settings") {
-      // Back from one of its pages: to the row that opened it, if it's there.
-      const row = returnRow ? document.querySelector<HTMLElement>(`[data-settings-row="${returnRow}"]`) : null;
-      return row ?? settingsHeading;
-    }
-    if (place.kind === "feed-health") return healthHeading;
-    if (place.kind === "your-feeds") return yourFeedsHeading;
-    if (place.kind === "muted") return mutedHeading;
-    if (place.kind === "readers") return readersHeading;
-    if (place.kind === "add-feed") return addField;
-    if (place.kind === "new-to-feeds") return phone ? listHeading : sheetHeading;
-    // "Save search" starts in its name field, which the sheet gives the keyboard itself.
-    if (place.kind === "save-search" && sheetShown) return undefined;
-    if (sheetShown) return sheetHeading;
-    if (welcomeWide || welcomeAlone) return welcomeHeading;
-    return listHeading;
+    return landingFor(place, headings, { phone, sheetShown, welcome: welcomeWide || welcomeAlone, returnRow });
   }
 
   /** The screen showing now: on a phone, the feeds list is the home screen. */
@@ -539,28 +517,8 @@
       if (phone && screen === "home") wordmark?.focus();
       else if (reading) articleHeading?.focus({ preventScroll: true });
       else if (selected && isList(route)) itemList?.focusSelected();
-      else focusArriving(route);
+      else focusArriving(route, placeFocus, () => returnRow);
     });
-  }
-
-  /**
-   * The keyboard's place on arriving back: the row that opened the page, when it's drawn. A row
-   * shown only once its page has loaded (Rules' "Muted articles") is waited for a moment; meanwhile
-   * the keyboard rests on the heading, and stays wherever the reader moves it.
-   */
-  function focusArriving(place: Route) {
-    const first = placeFocus(place);
-    first?.focus();
-    const row = returnRow;
-    if (!row || place.kind !== "settings" || document.querySelector(`[data-settings-row="${row}"]`)) return;
-    let frames = 0;
-    const wait = () => {
-      if (returnRow !== row || document.activeElement !== first) return;
-      const found = document.querySelector<HTMLElement>(`[data-settings-row="${row}"]`);
-      if (found) found.focus();
-      else if (++frames < 180) requestAnimationFrame(wait);
-    };
-    requestAnimationFrame(wait);
   }
 
   /** The screen as the reader arranged it, for the new version to open the same way (decision 0085). */
@@ -915,7 +873,7 @@
   /** "Skip to articles": the keyboard goes to the chosen article in the list, or the first; with none, to the list's title. */
   function skipToArticles(event: MouseEvent) {
     event.preventDefault();
-    if (!itemList?.focusList()) listHeading?.focus();
+    if (!itemList?.focusList()) headings.list?.focus();
   }
 
   function chose(byKeyboard: boolean) {
@@ -1003,7 +961,7 @@
     const back = searching.close(route, savedHere());
     queueMicrotask(() => {
       if (back instanceof HTMLElement && back.isConnected && back !== document.body) back.focus();
-      else listHeading?.focus();
+      else headings.list?.focus();
     });
   }
 
@@ -1079,7 +1037,7 @@
   -->
   <div class="flex w-full max-w-[26.25rem] flex-col gap-6">
     <div class={start ? "text-left" : "text-center"}>
-      <h2 id="welcome-heading" tabindex="-1" bind:this={welcomeHeading} class="font-serif text-xlarge font-semibold tracking-[-0.01em]">A quiet place to read.</h2>
+      <h2 id="welcome-heading" tabindex="-1" bind:this={headings.welcome} class="font-serif text-xlarge font-semibold tracking-[-0.01em]">A quiet place to read.</h2>
       <p class="mt-3 text-ink-2">Follow the websites you like, and read what they publish here, at your own pace.</p>
       <!-- For someone who has never used feeds: what they are, and a few to start with, in a sheet (decision 0079). -->
       <a href="/new-to-feeds" onclick={(event) => follow(event, { kind: "new-to-feeds" })} class="text-link mt-1">New to feeds? Start here</a>
@@ -1091,7 +1049,7 @@
         underlined as the article's note links are, with no side padding so its words line up
         with the heading's, in a 44px-tall target (decision 0055).
       -->
-      <AddFeed bind:field={addField} feeds={[]} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} {start}>
+      <AddFeed bind:field={headings.add} feeds={[]} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} {start}>
         {#snippet alternative()}
           <a href="/settings/data" onclick={goImport} class="text-link">Import an OPML file…</a>
         {/snippet}
@@ -1128,7 +1086,7 @@
               <h2
                 id="list-heading"
                 tabindex="-1"
-                bind:this={listHeading}
+                bind:this={headings.list}
                 title={headingText}
                 class="min-w-0 flex-1 truncate font-serif text-heading leading-[1.3] font-semibold tracking-[-0.01em] @max-[340px]:text-[1.375rem]"
               >
@@ -1350,7 +1308,7 @@
           onLetGo={(next) => settings.changeLetGo(next)}
           hidden={settings.hidden}
           onHidden={(next) => settings.changeHidden(next)}
-          bind:heading={settingsHeading}
+          bind:heading={headings.settings}
           {version}
           {owner}
           {email}
@@ -1374,39 +1332,39 @@
           besideToggle={!phone && !panes.sidebar}
         />
       {:else if route.kind === "feed-health"}
-        <FeedHealth bind:heading={healthHeading} onClose={closeHealth} onFeedsChanged={loadFeeds} besideToggle={!phone && !panes.sidebar} />
+        <FeedHealth bind:heading={headings.health} onClose={closeHealth} onFeedsChanged={loadFeeds} besideToggle={!phone && !panes.sidebar} />
       {:else if route.kind === "your-feeds"}
         <YourFeeds
-          bind:heading={yourFeedsHeading}
+          bind:heading={headings.yourFeeds}
           onClose={closeHealth}
           onOpenFeed={(event, id) => follow(event, { kind: "feed", id })}
           onFeedsChanged={loadFeeds}
           besideToggle={!phone && !panes.sidebar}
         />
       {:else if route.kind === "muted"}
-        <Muted bind:heading={mutedHeading} onClose={closeHealth} onChanged={loadFeeds} besideToggle={!phone && !panes.sidebar} />
+        <Muted bind:heading={headings.muted} onClose={closeHealth} onChanged={loadFeeds} besideToggle={!phone && !panes.sidebar} />
       {:else if route.kind === "readers"}
-        <ReadersPage bind:heading={readersHeading} onClose={closeHealth} besideToggle={!phone && !panes.sidebar} />
+        <ReadersPage bind:heading={headings.readers} onClose={closeHealth} besideToggle={!phone && !panes.sidebar} />
       {:else if !sheet && route.kind === "edit-feed" && currentFeed}
         {#key editKey(currentFeed.id)}
           <EditFeed
             feed={currentFeed}
             folders={library.folders}
-            bind:heading={listHeading}
+            bind:heading={headings.list}
             besideToggle={!phone && !panes.sidebar}
             {river}
             onSaved={() => edited(true)}
             onCancel={() => edited(false)}
             onUnsubscribe={() => unsubscribeFrom(currentFeed!)}
             onAddRule={() => addRuleFor(currentFeed!)}
-            onMoved={(after) => feedMoved(currentFeed!.id, after.id, () => listHeading)}
+            onMoved={(after) => feedMoved(currentFeed!.id, after.id, () => headings.list)}
           />
         {/key}
       {:else if !sheet && route.kind === "edit-folder" && currentFolder}
         {#key currentFolder.id}
           <EditFolder
             folder={currentFolder}
-            bind:heading={listHeading}
+            bind:heading={headings.list}
             besideToggle={!phone && !panes.sidebar}
             onSaved={() => edited(true)}
             onCancel={() => edited(false)}
@@ -1417,7 +1375,7 @@
         <section aria-labelledby="list-heading" class="page-sheet">
           <!-- Only on a phone: the phone sheet's one build, as Add a feed's (decisions 0052, 0055). -->
           <div class="page-sheet-card">
-            <PageHead title="New to feeds?" bind:heading={listHeading} besideToggle={false} onClose={closePage} closeLabel="Close" />
+            <PageHead title="New to feeds?" bind:heading={headings.list} besideToggle={false} onClose={closePage} closeLabel="Close" />
             <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
               <div class="mx-auto flex w-full max-w-xl flex-1 flex-col">
                 <StarterFeeds onAdded={startersAdded} page />
@@ -1429,7 +1387,7 @@
         <EditSearch
           query={searching.saving}
           library={library.names}
-          bind:heading={listHeading}
+          bind:heading={headings.list}
           besideToggle={!phone && !panes.sidebar}
           onSaved={searchSaved}
           onCancel={() => searchSaved()}
@@ -1440,7 +1398,7 @@
             saved={currentSearch}
             query={searching.saving ?? currentSearch.query}
             library={library.names}
-            bind:heading={listHeading}
+            bind:heading={headings.list}
             besideToggle={!phone && !panes.sidebar}
             onSaved={searchSaved}
             onCancel={() => searchSaved()}
@@ -1456,12 +1414,12 @@
             arrow and no Cancel.
           -->
           <div class="page-sheet-card">
-            <PageHead title="Add a feed" bind:heading={listHeading} besideToggle={!phone && !panes.sidebar} onClose={closePage} closeLabel="Close" />
+            <PageHead title="Add a feed" bind:heading={headings.list} besideToggle={!phone && !panes.sidebar} onClose={closePage} closeLabel="Close" />
             <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
               <!-- 20px under the top line as Settings is: a line on what to paste, the field, then Add feed the full width at the screen's foot. -->
               <div class="mx-auto flex w-full max-w-xl flex-1 flex-col gap-5">
                 <p>{ADD_INTRO}</p>
-                <AddFeed bind:field={addField} feeds={library.feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} page {shared} onShared={() => (shared = "")} />
+                <AddFeed bind:field={headings.add} feeds={library.feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} page {shared} onShared={() => (shared = "")} />
               </div>
             </div>
           </div>
@@ -1569,7 +1527,7 @@
                   class="pt-1 pb-2"
                   feed={currentFeed}
                   label="Find its new address"
-                  onMoved={(after) => feedMoved(currentFeed!.id, after.id, () => listHeading)}
+                  onMoved={(after) => feedMoved(currentFeed!.id, after.id, () => headings.list)}
                 />
               {/if}
               <!-- The list, with "New articles · press r" and Undo in a note floating at its foot (More, with Refresh, sits beside the title). -->
@@ -1692,12 +1650,12 @@
 {/if}
 
 {#if sheet && route.kind === "add-feed"}
-  <Sheet title="Add a feed" bind:heading={sheetHeading} onClose={closePage} initial={() => addField}>
+  <Sheet title="Add a feed" bind:heading={headings.sheet} onClose={closePage} initial={() => headings.add}>
     <p>{ADD_INTRO}</p>
-    <AddFeed bind:field={addField} feeds={library.feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} onCancel={closePage} {shared} onShared={() => (shared = "")} />
+    <AddFeed bind:field={headings.add} feeds={library.feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} onCancel={closePage} {shared} onShared={() => (shared = "")} />
   </Sheet>
 {:else if sheet && route.kind === "new-to-feeds" && firstVisit}
-  <Sheet title="New to feeds?" bind:heading={sheetHeading} onClose={closePage}>
+  <Sheet title="New to feeds?" bind:heading={headings.sheet} onClose={closePage}>
     <StarterFeeds onAdded={startersAdded} onCancel={closePage} />
   </Sheet>
 {:else if sheet && route.kind === "edit-feed" && currentFeed}
@@ -1706,17 +1664,17 @@
       sheet
       feed={currentFeed}
       folders={library.folders}
-      bind:heading={sheetHeading}
+      bind:heading={headings.sheet}
       {river}
       onSaved={() => edited(true)}
       onCancel={() => edited(false)}
       onUnsubscribe={() => unsubscribeFrom(currentFeed!)}
       onAddRule={() => addRuleFor(currentFeed!)}
-      onMoved={(after) => feedMoved(currentFeed!.id, after.id, () => sheetHeading)}
+      onMoved={(after) => feedMoved(currentFeed!.id, after.id, () => headings.sheet)}
     />
   {/key}
 {:else if sheet && route.kind === "save-search" && searching.saving}
-  <EditSearch sheet query={searching.saving} library={library.names} bind:heading={sheetHeading} onSaved={searchSaved} onCancel={() => searchSaved()} />
+  <EditSearch sheet query={searching.saving} library={library.names} bind:heading={headings.sheet} onSaved={searchSaved} onCancel={() => searchSaved()} />
 {:else if sheet && route.kind === "edit-search" && currentSearch}
   {#key currentSearch.id}
     <EditSearch
@@ -1724,7 +1682,7 @@
       saved={currentSearch}
       query={searching.saving ?? currentSearch.query}
       library={library.names}
-      bind:heading={sheetHeading}
+      bind:heading={headings.sheet}
       onSaved={searchSaved}
       onCancel={() => searchSaved()}
       onDelete={() => deleteSearch(currentSearch!)}
@@ -1735,7 +1693,7 @@
     <EditFolder
       sheet
       folder={currentFolder}
-      bind:heading={sheetHeading}
+      bind:heading={headings.sheet}
       onSaved={() => edited(true)}
       onCancel={() => edited(false)}
       onDelete={() => deleteThis(currentFolder!)}

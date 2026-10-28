@@ -167,6 +167,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - The first visit: where the welcome shows, and when "New to feeds?" gives way to home (`firstVisit.ts`)
 - The list's heading: the place's name, "Folder not found" or "Results in …" (`listHeading.ts`)
 - Stepping through articles and feeds with the keyboard (`moving.ts`)
+- Where the keyboard lands on arriving somewhere (`landing.ts`)
 
 ## Data and the database
 
