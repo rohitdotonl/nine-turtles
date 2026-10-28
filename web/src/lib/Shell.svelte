@@ -49,9 +49,10 @@
   import { device } from "./appearance.svelte";
   import { VIEWS, VIEW_NAMES, inSettings, nameFor, parentOf, parse, pathFor, titleFor, type Route, type View } from "./router";
   import { sharedAddress } from "./share";
-  import { emptyQuery, isSearching, resultsTitle, scopeFor, searchParams, searchedTerms, type Query } from "./search";
+  import { resultsTitle, scopeFor, searchParams, searchedTerms, type Query } from "./search";
   import { sameQuery, type SavedSearch } from "./saved";
   import { putBack, takenOff, type Collection, type CollectionChange } from "./collections";
+  import { Searching } from "./searching.svelte";
   import { LoadedLibrary } from "./library.svelte";
   import { startingStep, stepOf, type Screen } from "./steps";
   import { homeFor, isList, isOver, moveTo, Opener, opensFromHere, underSheet } from "./navigation";
@@ -137,7 +138,7 @@
   });
   /** The feeds, folders, saved searches and collections (library.svelte.ts). A saved search opened from its address (or its Edit address) runs once it's known. */
   const library = new LoadedLibrary(() => {
-    if (under.kind === "search" && !shown && currentSearch) resetSearch();
+    if (under.kind === "search" && !searching.shown && currentSearch) resetSearch();
   });
   /** Feeds set to flow past in Edit feed: no count, and their rows look as in river mode (SPEC section 15). */
   let flowing = $derived(new Set((library.feeds ?? []).filter((feed) => feed.river).map((feed) => feed.id)));
@@ -162,22 +163,9 @@
   let selected: Article | undefined = $state();
   /** On a phone-narrow window, the opened article takes the list's place. */
   let reading = $state(false);
-  /** What the search field holds: chips and words (SPEC section 14). */
-  let query: Query = $state(emptyQuery(start));
-  /** The search whose results the list shows, or none: the place's own list. */
-  let shown: Query | undefined = $state();
+  /** What the search field holds, the search the list shows and the phone's search field (searching.svelte.ts, SPEC section 14). */
+  const searching = new Searching(start);
   let searchBar: SearchBar | undefined = $state();
-  /**
-   * On a phone the search field waits behind a Search button beside More, so
-   * the list starts right under its title (decision 0060). Once asked for,
-   * it stays until you press the button again with nothing searched, press
-   * Escape, or go to another place: never on its own, so nothing under your
-   * finger moves.
-   */
-  let phoneSearch = $state(false);
-  /** Where the keyboard's place was before `/`, to go back to on Escape. */
-  let beforeSearch: Element | null = null;
-  let searchTimer: ReturnType<typeof setTimeout> | undefined;
 
   /** The window's width step, which areas show, the sidebar and list toggles and their dragged widths (layout.svelte.ts). */
   const layout = new ScreenLayout(currentWidth(), innerWidth, () => reading, firstStep.screen === "home");
@@ -240,8 +228,8 @@
 
   /** Which articles the list shows here. */
   let source: Source = $derived(
-    shown
-      ? { search: searchParams(shown) }
+    searching.shown
+      ? { search: searchParams(searching.shown) }
       : under.kind === "feed"
       ? { feed: under.id }
       : under.kind === "folder"
@@ -253,7 +241,7 @@
             : { view: under.kind === "view" ? under.view : homeView(settings.mode) },
   );
   /** The list's identity: a new one is loaded when it changes. */
-  let listKey = $derived(`${pathFor(under)} ${settings.sort} ${shown ? JSON.stringify(searchParams(shown)) : ""}`);
+  let listKey = $derived(`${pathFor(under)} ${settings.sort} ${searching.shown ? JSON.stringify(searchParams(searching.shown)) : ""}`);
 
   let currentFeed = $derived.by(() => {
     const place = under.kind === "feed" ? under : route;
@@ -283,7 +271,7 @@
   /** The feed's, folder's or saved search's name, for the heading and the tab's title. */
   let placeName = $derived(currentFeed?.title ?? currentFolder?.name ?? currentSearch?.name ?? currentCollection?.name);
   /** On a saved search, the search field no longer holds what was saved: Escape puts it back. */
-  let tweaked = $derived(route.kind === "search" && currentSearch !== undefined && !sameQuery(query, currentSearch.query));
+  let tweaked = $derived(route.kind === "search" && currentSearch !== undefined && !sameQuery(searching.query, currentSearch.query));
   /** A feed or folder address that names none you have. */
   let missing = $derived(
     library.feeds !== undefined &&
@@ -334,8 +322,8 @@
           : under.kind === "collection"
             ? "Collection not found"
             : "Feed not found"
-      : shown && under.kind !== "search"
-        ? resultsTitle(shown.scope, library.names)
+      : searching.shown && under.kind !== "search"
+        ? resultsTitle(searching.shown.scope, library.names)
         : nameFor(under, placeName),
   );
 
@@ -397,10 +385,10 @@
     const key = (kind: Parameters<typeof keyFor>[0]) => (phone ? undefined : currentKey(kind));
     // Shift+O marks what's older: below the chosen article when newest first, above it when oldest first (decision 0103).
     // In search results, ordered by how well they match, older goes by date, so neither row shows the key.
-    const olderIs = shown ? undefined : settings.sort === "oldest" ? "above" : "below";
+    const olderIs = searching.shown ? undefined : settings.sort === "oldest" ? "above" : "below";
     // Recently read is in the order opened, and what's in it was read already: only Refresh applies.
     // So is Up Next, in the reader's own order (decision 0113).
-    const recent = !shown && under.kind === "view" && (under.view === "recent" || under.view === "upnext");
+    const recent = !searching.shown && under.kind === "view" && (under.view === "recent" || under.view === "upnext");
     if (recent) return [{ items: [{ label: "Refresh", shortcut: key("refresh"), onSelect: () => itemList?.refresh() }] }];
     const groups: MenuGroup[] = [
       {
@@ -415,10 +403,10 @@
                 onSelect: () => itemList?.markPast(side),
               }))),
           // Everything in Unread from before today, listed or not (decision 0097): only in Unread itself.
-          ...(!river && !shown && under.kind === "view" && under.view === "unread"
+          ...(!river && !searching.shown && under.kind === "view" && under.view === "unread"
             ? [{ label: "Catch me up", onSelect: () => itemList?.catchUp() }]
             : []),
-          ...(shown ? [] : [{ label: "Refresh", shortcut: key("refresh"), onSelect: () => itemList?.refresh() }]),
+          ...(searching.shown ? [] : [{ label: "Refresh", shortcut: key("refresh"), onSelect: () => itemList?.refresh() }]),
         ],
       },
       {
@@ -432,7 +420,7 @@
     ];
     // On a saved search, even with everything taken out of its field, it can still be edited or deleted.
     const search = under.kind === "search" ? currentSearch : undefined;
-    if (shown || search) {
+    if (searching.shown || search) {
       // A search can be saved, to come back to from the sidebar; a saved one renamed, changed or deleted.
       groups.push({
         items: [
@@ -463,7 +451,7 @@
 
   /** Opens "Save search" or "Edit saved search" with the search showing now. */
   function openSaving(next: Route) {
-    toSave = $state.snapshot(shown ?? query);
+    toSave = searching.toSave();
     go(next);
   }
 
@@ -578,7 +566,7 @@
     });
 
     return () => {
-      clearTimeout(searchTimer);
+      searching.stop();
       stopWatchingWidth();
       removeEventListener("popstate", back);
       removeEventListener("keydown", pressed);
@@ -1101,7 +1089,7 @@
   $effect(() => {
     void player.changes;
     untrack(() => {
-      if (!shown && under.kind === "view" && under.view === "upnext") void itemList?.refresh();
+      if (!searching.shown && under.kind === "view" && under.view === "upnext") void itemList?.refresh();
     });
   });
 
@@ -1142,44 +1130,33 @@
 
   /** Search starts afresh, limited to where you are; on a saved search, as it was saved. */
   function resetSearch() {
-    clearTimeout(searchTimer);
-    phoneSearch = false;
-    // `under`: the saved search under its Edit sheet runs too.
+    searching.reset(route, savedHere());
+  }
+
+  /** The saved search that runs here. `under`: the saved search under its Edit sheet runs too. */
+  function savedHere(): SavedSearch | undefined {
     const place = under;
-    const saved = place.kind === "search" ? library.searches.find((search) => search.id === place.id) : undefined;
-    query = saved ? $state.snapshot(saved.query) : emptyQuery(route);
-    shown = saved && isSearching(saved.query) ? $state.snapshot(saved.query) : undefined;
+    return place.kind === "search" ? library.searches.find((search) => search.id === place.id) : undefined;
   }
 
   /** `/`: into the search field, from wherever you are; Escape comes back here. */
   function startSearch() {
+    let from: Element | null | undefined;
     if (!isList(route) || (phone && panes.sidebar)) go(lastPlace);
     else if (reading) backToList();
-    else beforeSearch = document.activeElement;
-    phoneSearch = true;
+    else from = document.activeElement;
+    searching.started(from);
     queueMicrotask(() => searchBar?.focus());
   }
 
   /** The phone's Search button: shows the field, ready to type in; pressed again with nothing searched, puts it away. */
   function toggleSearch() {
-    if (phoneSearch && !shown && !isSearching(query)) phoneSearch = false;
-    else startSearch();
-  }
-
-  /** The field changed: search now, or a moment after typing stops. */
-  function searchChanged(next: Query, now: boolean) {
-    query = next;
-    clearTimeout(searchTimer);
-    const run = () => (shown = isSearching(query) ? $state.snapshot(query) : undefined);
-    if (now) run();
-    else searchTimer = setTimeout(run, 300);
+    if (!searching.putAway()) startSearch();
   }
 
   /** Escape: search closes, the place's own list returns, and the keyboard goes back where it was. */
   function closeSearch() {
-    resetSearch();
-    const back = beforeSearch;
-    beforeSearch = null;
+    const back = searching.close(route, savedHere());
     queueMicrotask(() => {
       if (back instanceof HTMLElement && back.isConnected && back !== document.body) back.focus();
       else listHeading?.focus();
@@ -1192,7 +1169,7 @@
     else if (route.kind === "edit-feed" || route.kind === "edit-folder") edited(false);
     else if (route.kind === "save-search" || route.kind === "edit-search") searchSaved();
     else if (reading || (selected && inArticle())) backToList();
-    else if (route.kind === "search" ? tweaked || document.activeElement?.closest("search") : shown || isSearching(query) || phoneSearch || document.activeElement?.closest("search"))
+    else if (route.kind === "search" ? tweaked || document.activeElement?.closest("search") : searching.open || document.activeElement?.closest("search"))
       closeSearch();
     else if (phone && !panes.sidebar) stepBack("home");
   }
@@ -1202,8 +1179,8 @@
     return {
       river,
       onList: isList(route),
-      searching: shown !== undefined,
-      ownOrder: route.kind === "view" && (route.view === "recent" || route.view === "upnext") && !shown,
+      searching: searching.shown !== undefined,
+      ownOrder: route.kind === "view" && (route.view === "recent" || route.view === "upnext") && !searching.shown,
       sidebar: panes.sidebar,
       list: panes.list,
       article: panes.article,
@@ -1318,7 +1295,7 @@
                 <div class="-mr-3 flex shrink-0 items-center">
                   {#if phone}
                     <!-- The way into search, beside More, as an iOS list keeps it (decision 0060). -->
-                    <button type="button" aria-label="Search" title="Search" aria-expanded={phoneSearch || shown !== undefined || isSearching(query)} onclick={toggleSearch} class="btn-quiet btn-icon"
+                    <button type="button" aria-label="Search" title="Search" aria-expanded={searching.open} onclick={toggleSearch} class="btn-quiet btn-icon"
                       ><span class="flex size-8 items-center justify-center"><Icon name="search" size={20} /></span></button
                     >
                   {/if}
@@ -1726,8 +1703,8 @@
           {/if}
           <!-- A column, so the floating note can sit at the pane's foot even under a short list. -->
           <div use:edge class="scroller relative flex min-h-0 flex-1 scroll-pb-20 flex-col overflow-y-auto pt-2 pr-[var(--list-end)] pb-6 pl-[var(--list-start)]">
-            {#if library.feeds && library.feeds.length > 0 && !missing && (!phone || phoneSearch || shown || isSearching(query))}
-              <SearchBar bind:this={searchBar} {query} feeds={library.feeds} folders={library.folders} collections={library.collections} here={scopeFor(under)} found={listFound} {river} onChange={searchChanged} />
+            {#if library.feeds && library.feeds.length > 0 && !missing && (!phone || searching.open)}
+              <SearchBar bind:this={searchBar} query={searching.query} feeds={library.feeds} folders={library.folders} collections={library.collections} here={scopeFor(under)} found={listFound} {river} onChange={(next, now) => searching.changed(next, now)} />
             {/if}
             {#if missing && (under.kind === "folder" || under.kind === "edit-folder")}
               <p class="mt-4">There's no folder here. It may have been deleted or renamed.</p>
@@ -1753,7 +1730,7 @@
               <!-- The list's 28px dot gutter (decision 0054) is for rows: the welcome steps back out to the 20px margin. -->
               <div class={phone ? "mt-[5.5rem] ml-[calc(1.25rem-var(--list-start))] flex" : "mt-8 flex justify-center"}>{@render welcome(phone)}</div>
             {:else if library.feeds !== undefined && settings.sort !== undefined && (under.kind !== "search" || library.searchesLoaded) && (under.kind !== "collection" || library.collectionsLoaded)}
-              {#if under.kind === "feed" && !shown && currentFeed}
+              {#if under.kind === "feed" && !searching.shown && currentFeed}
                 <!-- A feed that isn't working says so above its list, with Find new address (decision 0106). -->
                 <FailingLine
                   class="pt-1 pb-2"
@@ -1770,8 +1747,8 @@
                   {source}
                   order={settings.sort}
                   {notice}
-                  empty={shown ? "Nothing found." : emptyText(under)}
-                  bold={shown ? searchedTerms(shown.words) : []}
+                  empty={searching.shown ? "Nothing found." : emptyText(under)}
+                  bold={searching.shown ? searchedTerms(searching.shown.words) : []}
                   onChoose={chose}
                   onUnreadChange={(feedId, change) => library.unreadChanged(feedId, change)}
                   onRefresh={() => {
@@ -1779,8 +1756,8 @@
                     keeper.refreshed();
                   }}
                   onCounts={loadFeeds}
-                  results={shown !== undefined}
-                  oneFeed={under.kind === "feed" && !shown}
+                  results={searching.shown !== undefined}
+                  oneFeed={under.kind === "feed" && !searching.shown}
                   {river}
                   {flowing}
                   bind:count={listCount}
