@@ -276,7 +276,7 @@
     max-width: 100%;
     padding: 0 0.125rem;
     border: 0;
-    border-bottom: 1px dashed color-mix(in srgb, var(--ink) 45%, transparent);
+    border-bottom: 1px dashed color-mix(in srgb, var(--ink) 60%, transparent);
     border-radius: 0;
     background: transparent;
     color: var(--ink);

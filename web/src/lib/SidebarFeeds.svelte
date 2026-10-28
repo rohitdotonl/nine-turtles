@@ -115,7 +115,7 @@
   {#if phone}<span class="-mr-1 shrink-0 text-muted"><Icon name="chevron-right" size={16} /></span>{/if}
 {/snippet}
 
-{#snippet feedRow(feed: Feed, indent: boolean)}
+{#snippet feedRow(feed: Feed)}
   {@const place: Route = { kind: "feed", id: feed.id }}
   <li>
     <a
@@ -125,7 +125,7 @@
       title={feed.title}
       class={[
         "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-3 pr-3.5 text-ui pointer-fine:text-small",
-        // Every name starts on the sidebar's one left edge; inside a folder, one step further in.
+        // Every feed's name starts on the sidebar's one name edge, in a folder or not (decision 0123).
         "pl-[38px]",
         isHere(place) ? "font-semibold text-ink" : "text-ink",
       ]}
@@ -183,13 +183,13 @@
         toggle(folder.id);
         return;
       }
-      if (!phone && !searching && !open.includes(folder.id)) toggle(folder.id);
+      if (!phone && !searching && !open.includes(folder.id) && !event.metaKey && !event.ctrlKey && !event.shiftKey) toggle(folder.id);
       follow(event, place);
     }}
     data-folder-link={folder.id}
     title={folder.name}
     class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center rounded-md pr-3.5 text-ui pointer-fine:text-small", padded ? "gap-3 pl-[38px]" : "gap-3 pl-3", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
-    >{@render name(folder.name)}<span class="folder-count contents">{@render count(folderUnread(folder, feeds))}</span>{@render leadsOn()}</a
+    >{@render name(folder.name)}<span class="folder-count flex shrink-0">{@render count(folderUnread(folder, feeds))}</span>{@render leadsOn()}</a
   >
 {/snippet}
 
@@ -206,7 +206,7 @@
         </li>
       {/each}
       {#each found.feeds as feed (feed.id)}
-        {@render feedRow(feed, false)}
+        {@render feedRow(feed)}
       {/each}
     </ul>
   {/if}
@@ -266,7 +266,7 @@
           {#if shown}
             <ul id={`folder-${folder.id}`} class={["mb-1", !phone && "folder-feeds"]}>
               {#each inside as feed (feed.id)}
-                {@render feedRow(feed, true)}
+                {@render feedRow(feed)}
               {:else}
                 <li class="py-2 pr-5 pl-[46px] text-meta text-muted">No feeds in this folder.</li>
               {/each}
@@ -280,7 +280,7 @@
     <h2 class="sidebar-section">Feeds</h2>
     <ul>
       {#each loose as feed (feed.id)}
-        {@render feedRow(feed, false)}
+        {@render feedRow(feed)}
       {/each}
     </ul>
   {/if}
@@ -310,16 +310,22 @@
   .disclosure:focus-visible {
     opacity: 1;
   }
+  /* Made see-through rather than hidden, so screen readers still read the count in the folder's name. */
   .folder-row:hover :global(.folder-count),
   .folder-row:has(.disclosure:focus-visible) :global(.folder-count) {
-    visibility: hidden;
+    opacity: 0;
   }
+  /* On a touch screen the arrow always shows, and the count steps left of it rather than under it. */
   @media (pointer: coarse) {
     .disclosure {
       opacity: 1;
     }
-    .folder-row :global(.folder-count) {
-      visibility: hidden;
+    .folder-row:hover :global(.folder-count),
+    .folder-row:has(.disclosure:focus-visible) :global(.folder-count) {
+      opacity: 1;
+    }
+    .folder-row > :global(a) {
+      padding-right: 2.75rem;
     }
   }
 </style>

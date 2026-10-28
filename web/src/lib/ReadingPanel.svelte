@@ -96,7 +96,7 @@
     second ink. Radio buttons underneath, so the arrow keys move along a line.
   -->
   <div class="aa-line">
-    <p id="aa-size-name" class="aa-name">Size</p>
+    <p id="aa-size-name" class="aa-name">Text size</p>
     <div class="min-w-0 flex-1"><TextSize bind:size={preferences.textSize} labelledby="aa-size-name" bind:first /></div>
   </div>
 
@@ -198,23 +198,16 @@
     align-items: center;
     gap: 0.25rem 0.875rem;
   }
+  /* Every choice 44px to press, with a mouse too: the floor allows less only in the sidebar and the search options. */
   .word,
   .swatch {
     position: relative;
     display: inline-flex;
+    min-width: 2.75rem;
     min-height: 2.75rem;
     align-items: center;
+    justify-content: center;
     cursor: pointer;
-  }
-  @media (pointer: fine) {
-    .phone .word,
-    .phone .swatch {
-      min-height: 2.75rem;
-    }
-    .popover .word,
-    .popover .swatch {
-      min-height: 2.25rem;
-    }
   }
   .word input,
   .swatch input {
@@ -256,7 +249,7 @@
     width: 1.5rem;
     height: 1.5rem;
     border-radius: 999px;
-    border: 1px solid color-mix(in srgb, var(--ink) 30%, transparent);
+    border: 1px solid color-mix(in srgb, var(--ink) 60%, transparent);
   }
   .dot.light {
     background: #ffffff;

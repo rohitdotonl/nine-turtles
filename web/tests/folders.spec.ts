@@ -145,6 +145,18 @@ test("a feed put in two folders appears under both, with its unread count in eac
   await expect(page).toHaveURL(/\/folders\/[0-9]+$/);
   await firstRow.click();
   await expect(firstToggle).toHaveAttribute("aria-expanded", "true");
+  // With the keyboard too: Enter on the folder you're in folds it.
+  await firstRow.focus();
+  await page.keyboard.press("Enter");
+  await expect(firstToggle).toHaveAttribute("aria-expanded", "false");
+  // The arrow waits unseen at the row's end (the pointer moved away), and shows once the keyboard reaches it.
+  await page.mouse.move(700, 500);
+  await expect(firstToggle).toHaveCSS("opacity", "0");
+  await page.keyboard.press("Tab");
+  await expect(firstToggle).toBeFocused();
+  await expect(firstToggle).toHaveCSS("opacity", "1");
+  await page.keyboard.press("Enter");
+  await expect(firstToggle).toHaveAttribute("aria-expanded", "true");
 });
 
 test("rename a folder; delete it, its feeds stay, and Undo brings it back", async ({ page }) => {

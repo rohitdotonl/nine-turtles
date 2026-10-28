@@ -4,6 +4,8 @@
 import { describe, expect, it } from "vitest";
 import css from "../app.css?raw";
 import html from "../../index.html?raw";
+import ruleEditor from "./RuleEditor.svelte?raw";
+import readingPanel from "./ReadingPanel.svelte?raw";
 import { BAR_COLORS } from "./preferences";
 import { LOOKS, THEMES as THEME_NAMES, type Mode } from "./themes";
 
@@ -476,5 +478,28 @@ describe.each(["plain light", "plain dark"])("the %s theme's article links", (na
 
   it("never share the accent's color, so blue means only a link", () => {
     expect(colors.accent).not.toBe(colors.link);
+  });
+});
+
+// The rule sentence's blanks and the Aa panel's swatches (decision 0123) are
+// shown only by a line drawn in a share of the text color: a dashed line under
+// each blank on a sheet, and a ring around each swatch on the raised surface.
+// Each line stands at 3 : 1, WCAG's non-text contrast, by day and by night, and
+// a swatch's ring also against the white or black inside it.
+
+describe.each(Object.entries(THEMES))("the %s theme's rule blanks and appearance swatches", (_name, colors) => {
+  const share = (source: string, pattern: RegExp) => Number(source.match(pattern)![1]) / 100;
+
+  it("draw a rule blank's dashed line at 3 : 1 on the sheet", () => {
+    const line = share(ruleEditor, /border-bottom: 1px dashed color-mix\(in srgb, var\(--ink\) (\d+)%, transparent\)/);
+    for (const surface of ["paper", "surface-raised"]) {
+      expect(contrast(mix(colors.ink!, colors[surface]!, line), colors[surface]!), surface).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it("ring each swatch at 3 : 1 on the panel", () => {
+    const edge = share(readingPanel, /\.dot \{[^}]*border: 1px solid color-mix\(in srgb, var\(--ink\) (\d+)%, transparent\)/);
+    const surface = colors["surface-raised"]!;
+    expect(contrast(mix(colors.ink!, surface, edge), surface)).toBeGreaterThanOrEqual(3);
   });
 });

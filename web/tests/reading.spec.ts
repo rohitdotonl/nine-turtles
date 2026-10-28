@@ -281,6 +281,16 @@ test.describe("on a wide window", () => {
 
     // Appearance: day, night or as the device is set, applied at once (decision 0056).
     await expect(panel.getByRole("group", { name: "Appearance" }).getByRole("radio")).toHaveCount(3);
+    // One line per setting (decision 0123): every choice 44px to press; the chosen word
+    // semibold and underlined, so it shows without color; Appearance as named swatches.
+    for (const choice of await panel.locator("label").all()) {
+      const box = (await choice.boundingBox())!;
+      expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
+    }
+    const chosenWidth = panel.locator("label", { has: page.getByRole("radio", { name: "Medium" }) });
+    await expect(chosenWidth).toHaveCSS("font-weight", "600");
+    await expect(chosenWidth).toHaveCSS("text-decoration-line", "underline");
+    await expect(panel.locator("label", { has: page.getByRole("radio", { name: "Match device" }) })).toHaveAttribute("title", "Match device");
     await expect(panel.getByRole("radio", { name: "Match device" })).toBeChecked();
     // Theme: Original or Plain, whose article links are the browser's blue (decision 0063).
     const themes = panel.getByRole("group", { name: "Theme" });
