@@ -1542,6 +1542,7 @@ fn assert_lasting_and_locked(response: &Response) {
         "{set_cookie}"
     );
     for part in [
+        // 365 days, in seconds.
         "Max-Age=31536000",
         "HttpOnly",
         "Secure",
@@ -1552,8 +1553,10 @@ fn assert_lasting_and_locked(response: &Response) {
     }
 }
 
+/// Passkeys get their cookie from the same `remember_device`; signing in with
+/// one needs a pretend authenticator, which lives in `passkeys.rs`.
 #[tokio::test]
-async fn every_way_in_sets_the_same_locked_cookie_for_a_year() {
+async fn sign_up_password_link_and_reset_set_the_same_locked_cookie_for_a_year() {
     let (base, _, outbox, _) = open_app().await;
     let email = "ines@example.com";
 
@@ -1587,6 +1590,14 @@ async fn every_way_in_sets_the_same_locked_cookie_for_a_year() {
     assert!(used.status().is_success(), "{}", used.status());
     assert_lasting_and_locked(&used);
 
+    // Each of them really signs in.
+    for response in [&made, &signed_in, &used] {
+        assert_eq!(
+            session(&base, Some(&cookie_from(response))).await["signed_in"],
+            true
+        );
+    }
+
     // A new password from an emailed link.
     let asked = post(
         &base,
@@ -1607,11 +1618,12 @@ async fn every_way_in_sets_the_same_locked_cookie_for_a_year() {
     assert_eq!(reset.status(), StatusCode::OK);
     assert_lasting_and_locked(&reset);
 
-    // Each of them really signs in.
+    // A new password signs every other device out (decision 0088).
     for response in [&made, &signed_in, &used] {
-        let cookie = cookie_from(response);
-        // A new password signs every other device out (decision 0088).
-        assert_eq!(session(&base, Some(&cookie)).await["signed_in"], false);
+        assert_eq!(
+            session(&base, Some(&cookie_from(response))).await["signed_in"],
+            false
+        );
     }
     assert_eq!(
         session(&base, Some(&cookie_from(&reset))).await["signed_in"],
