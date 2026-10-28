@@ -1,8 +1,10 @@
 # Sending email
 
-nine turtles sends a few short emails (decision 0088): the link for a new
-password, the link that signs in, and the link that confirms a changed
-address. Without email, none of these work. Signing up needs no email
+nine turtles sends a few short emails (decision 0088): the link that signs
+in, which **Forgot?** on the sign-in page sends and after which the reader
+may choose a new password (decision 0122), and the link that confirms a
+changed address. (The older "A new password for nine turtles" link is no
+longer offered on the sign-in page; one already sent still works.) Without email, none of these work. Signing up needs no email
 (decision 0115). This page sets it up with **Brevo**. Any other email
 service that offers "SMTP" works the same way: only the five settings change.
 
@@ -62,15 +64,14 @@ turtles doesn't start, and the log says so.
 
 ## 4. Check it works
 
-1. Open nine turtles in a private window. The sign-in page now shows
-   **Email me a sign-in link** and **Forgot your password?**.
+1. Open nine turtles in a private window. The sign-in page now shows a
+   small **Forgot?** beside Password.
 2. Press it, type your own email (the one in Settings › Readers) and press
-   **Send link**. An email "A new password for nine turtles" arrives in a
-   minute or two. You don't have to use the link: your password stays as it
-   is until you do.
-3. **Email me a sign-in link** works the same way: an email "Sign in to
-   nine turtles" arrives, with a link that signs you in once, within 15
-   minutes.
+   **Email me a link**. An email "Sign in to nine turtles" arrives in a
+   minute or two, with a link that signs you in once, within 15 minutes.
+   You don't have to use the link: your password stays as it is until you do.
+3. Open the link and press **Sign in**. You can then choose a new password,
+   or press **Not now** to keep the one you have.
 
 If no email arrives, look in Render's **Logs** for "couldn't send": the line
 says roughly what went wrong ("the mail server refused it", "couldn't be

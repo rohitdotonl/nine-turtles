@@ -214,8 +214,48 @@ test("passkeys aren't offered where they can't work", async ({ page }) => {
   ).toHaveCount(0);
   await expect(page.getByLabel("Email")).toHaveAttribute(
     "autocomplete",
-    "username",
+    "email",
   );
+});
+
+test("the keyboard goes Email, Password, Forgot?, Sign in, the passkey, then Sign up", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, "Tab is for screens with a keyboard.");
+  // This nine turtles can't send email; its answer is changed to say it can, so
+  // Forgot? shows beside the passkey button (decision 0122).
+  await page.route("**/api/session", async (route) => {
+    const response = await route.fetch();
+    await route.fulfill({
+      response,
+      json: { ...(await response.json()), email_sending: true },
+    });
+  });
+  await page.goto(`${local()}/`);
+  await appReady(page);
+  const passkey = page.getByRole("button", { name: "Sign in with a passkey" });
+  await expect(passkey).toBeVisible();
+  await expect(page.getByLabel("Email")).toBeFocused();
+  const order = [
+    page.getByLabel("Password"),
+    page.getByRole("link", { name: "Forgot?" }),
+    page.getByRole("button", { name: "Sign in", exact: true }),
+    passkey,
+    page.getByRole("link", { name: "Sign up" }),
+  ];
+  for (const next of order) {
+    await page.keyboard.press("Tab");
+    await expect(next).toBeFocused();
+  }
+  // The passkey is a quieter button, edged and unfilled, 44px tall, under Sign in.
+  const signIn = (await order[2]!.boundingBox())!;
+  const quiet = (await passkey.boundingBox())!;
+  expect(quiet.y).toBeGreaterThan(signIn.y + signIn.height);
+  expect(quiet.height).toBeGreaterThanOrEqual(44);
+  expect(Math.abs(quiet.width - signIn.width)).toBeLessThan(1);
+  await expect(passkey).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await passesAccessibilityChecks(page);
 });
 
 test("a passkey is added, renamed and removed from the keyboard alone", async ({

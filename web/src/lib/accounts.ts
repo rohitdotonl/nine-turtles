@@ -1,6 +1,7 @@
 // What email makes possible for a reader's account (SPEC sections 1 and 18,
-// decisions 0088 and 0096): "Forgot your password?", the page a password link
-// opens, "Email me a sign-in link" and the page that link opens,
+// decisions 0088, 0096 and 0122): "Forgot?", which emails a link that signs in,
+// and the page that link opens (where a new password may be chosen); the page an
+// older password link opens,
 // the page a confirmation link opens (a new account's address, or a changed
 // one), changing one's email in Settings, and deleting one's account.
 // Every link carries a ticket after the # in its address (#ticket=…), the part
@@ -36,15 +37,18 @@ async function send(path: string, body: unknown): Promise<Response | undefined> 
 /** After a link is sent, "Send again" waits this long; the server sends one link of a kind a minute anyway. */
 export const RESEND_AFTER_SECONDS = 60;
 
-/** What the sign-in page can ask to be emailed: a link that signs in, or one to choose a new password. */
-export type LinkKind = "sign-in" | "password";
-
 export type AskResult = "asked" | "email" | "no-email" | "unreachable";
 
-/** Asks for a link. The server answers the same whether or not the address has an account. */
-export async function askForLink(kind: LinkKind, email: string): Promise<AskResult> {
-  const path = kind === "sign-in" ? "/api/sign-in/link" : "/api/password/forgot";
-  const response = await send(path, { email: email.trim() });
+/** How long a sign-in link works, in minutes (the server's `SIGN_IN_LIFETIME`). */
+export const SIGN_IN_LINK_MINUTES = 15;
+
+/**
+ * "Forgot?" on the sign-in page (decision 0122): asks for a link that signs in,
+ * after which the reader may choose a new password. The server answers the same
+ * whether or not the address has an account.
+ */
+export async function askForLink(email: string): Promise<AskResult> {
+  const response = await send("/api/sign-in/link", { email: email.trim() });
   if (!response) return "unreachable";
   if (response.ok) return "asked";
   const error = await errorOf(response);
@@ -52,29 +56,34 @@ export async function askForLink(kind: LinkKind, email: string): Promise<AskResu
 }
 
 /** The one answer asking for a link gives, whoever asks (shown under "Check your email"). */
-export function explainAsked(kind: LinkKind, result: AskResult, email: string): string {
+export function explainAsked(result: AskResult, email: string): string {
   switch (result) {
     case "asked":
-      return kind === "sign-in"
-        ? `If ${email.trim()} has an account here, a link to sign in is on its way. It works once, for 15 minutes.`
-        : `If ${email.trim()} has an account here, a link to choose a new password is on its way. It works for an hour.`;
+      return `If ${email.trim()} has an account here, a link is on its way. It works once, within ${SIGN_IN_LINK_MINUTES} minutes.`;
     case "email":
       return "That doesn't look like an email address.";
     case "no-email":
-      return kind === "sign-in"
-        ? "This nine turtles can't send email yet. Sign in with your password."
-        : "This nine turtles can't send email yet. Ask whoever runs it to set a new password for you.";
+      return "This nine turtles can't send email yet. Ask whoever runs it to set a new password for you.";
     case "unreachable":
       return "nine turtles can't be reached right now. Try again in a moment.";
   }
 }
 
-/** Signs this device in from a sign-in link. */
-export async function signInByLink(ticket: string): Promise<"ok" | "expired" | "unreachable"> {
+export type LinkSignIn = { ok: true; passwordTicket: string } | { ok: false; reason: "expired" | "unreachable" };
+
+/**
+ * Signs this device in from a sign-in link. The answer carries a ticket for choosing
+ * a new password straight after, if the reader wishes ("" when there's none).
+ */
+export async function signInByLink(ticket: string): Promise<LinkSignIn> {
   const response = await send("/api/sign-in/link/use", { ticket });
-  if (!response) return "unreachable";
-  if (response.ok) return "ok";
-  return (await errorOf(response)) === "expired" ? "expired" : "unreachable";
+  if (!response) return { ok: false, reason: "unreachable" };
+  if (response.ok) {
+    const body: unknown = await response.json().catch(() => null);
+    const passwordTicket = isRecord(body) && typeof body.password_ticket === "string" ? body.password_ticket : "";
+    return { ok: true, passwordTicket };
+  }
+  return { ok: false, reason: (await errorOf(response)) === "expired" ? "expired" : "unreachable" };
 }
 
 export type LinkResult = "ok" | "expired" | "already" | "too-many" | "password-short" | "password-long" | "unreachable";
