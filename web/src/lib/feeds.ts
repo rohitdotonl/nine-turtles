@@ -3,7 +3,7 @@
 // show for them.
 import { HIDEABLE, type Hideable, type View } from "./router";
 import type { KeyMap } from "./keyboard";
-import { api } from "./updates.svelte";
+import { OtherReader, api } from "./updates.svelte";
 import { noConnection, serverNow, whenBack } from "./connection.svelte";
 import {
   CATCH_UP_NEEDS_CONNECTION,
@@ -402,6 +402,8 @@ export class Refused extends Error {
 
 /** Whether a failed save is worth trying again: the connection, a timeout or a restart, never a refusal. */
 export function worthRetrying(problem: unknown): boolean {
+  // Another reader is signed in on this browser: no try from this tab will be taken.
+  if (problem instanceof OtherReader) return false;
   return !(problem instanceof Refused) || OUT_OF_REACH.has(problem.status);
 }
 

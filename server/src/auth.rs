@@ -71,8 +71,19 @@ pub fn routes() -> Router<AppState> {
 /// reader's number in `people`. A handler that takes it never runs for anyone
 /// else: they get 401 "not signed in". Everything a handler reads or changes
 /// for the reader is limited to this number (decision 0086).
+///
+/// A tab of the web app names the reader it was opened for in `READER_HEADER`.
+/// When that isn't the reader the cookie now belongs to (another reader signed
+/// in on the browser while the tab stayed open), the request is refused with
+/// 409 and `OTHER_READER_HEADER`, so nothing the tab still holds, such as its
+/// waiting marks, is ever saved as the new reader's; the tab then reloads.
 #[derive(Clone, Copy, Debug)]
 pub struct SignedIn(pub i64);
+
+/// The header a tab of the web app names its reader in.
+pub const READER_HEADER: &str = "x-nine-turtles-reader";
+/// The header on the answer to a tab whose reader is no longer signed in here.
+pub const OTHER_READER_HEADER: &str = "x-nine-turtles-other-reader";
 
 impl FromRequestParts<AppState> for SignedIn {
     type Rejection = Response;
@@ -89,11 +100,30 @@ impl FromRequestParts<AppState> for SignedIn {
         .fetch_optional(&state.db)
         .await;
         match found {
+            Ok(Some(person)) if tab_reader(&parts.headers).is_some_and(|tab| tab != person) => {
+                Err((
+                    StatusCode::CONFLICT,
+                    [(OTHER_READER_HEADER, "1")],
+                    Json(json!({ "error": "other-reader" })),
+                )
+                    .into_response())
+            }
             Ok(Some(person)) => Ok(Self(person)),
             Ok(None) => Err(StatusCode::UNAUTHORIZED.into_response()),
             Err(error) => Err(database_problem("checking a sign-in", &error)),
         }
     }
+}
+
+/// The reader a tab says it was opened for, if it says.
+fn tab_reader(headers: &HeaderMap) -> Option<i64> {
+    headers
+        .get(READER_HEADER)?
+        .to_str()
+        .ok()?
+        .trim()
+        .parse()
+        .ok()
 }
 
 /// Counts wrong passwords in a row and decides how long to wait.
