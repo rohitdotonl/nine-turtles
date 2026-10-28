@@ -70,8 +70,9 @@ pub enum Mark {
 }
 
 impl Mark {
-    /// Takes the mark, the articles, the reader and when the mark was made;
-    /// a read mark or star older than the one stored is skipped.
+    /// The statement that sets this mark. It is filled in with the mark,
+    /// the articles, the reader and when the mark was made; a read mark or
+    /// star older than the one stored is skipped.
     fn sql(self) -> &'static str {
         match self {
             Self::Read => READ_SQL,
