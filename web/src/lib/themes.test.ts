@@ -24,5 +24,4 @@ describe("themes", () => {
     expect(resolveMode("auto", true)).toBe("dark");
     expect(resolveMode("auto", false)).toBe("light");
   });
-
 });

@@ -23,7 +23,7 @@ use axum::{
     Json, Router,
     extract::{FromRequestParts, State},
     http::{HeaderMap, HeaderValue, StatusCode, header, request::Parts},
-    response::{AppendHeaders, IntoResponse, Response},
+    response::{IntoResponse, Response},
     routing::{get, post},
 };
 use blake2::{Blake2s256, Digest};
