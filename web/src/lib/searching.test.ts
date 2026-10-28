@@ -102,4 +102,14 @@ describe("searching", () => {
     searching.changed(typed("go"), false);
     expect(searching.toSave().words).toBe("go");
   });
+
+  it("holds what Save search will save, through a move to another place, until it's used", () => {
+    const searching = new Searching(FEED);
+    searching.changed(typed("rust"), true);
+    searching.holdForSaving();
+    searching.reset({ kind: "save-search" });
+    expect(searching.saving?.words).toBe("rust");
+    searching.saving = undefined;
+    expect(searching.saving).toBeUndefined();
+  });
 });

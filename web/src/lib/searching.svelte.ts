@@ -28,6 +28,12 @@ export class Searching {
    * finger moves.
    */
   phoneField = $state(false);
+  /**
+   * What "Save search" or "Edit saved search" will save: the search showing
+   * when it was opened (`holdForSaving`). Shell clears it once used, so Back
+   * to "Save search" finds nothing to save. Going to a place keeps it.
+   */
+  saving: Query | undefined = $state();
   /** Where the keyboard's place was before `/`, to go back to on Escape. */
   #before: Element | null = null;
   #timer: ReturnType<typeof setTimeout> | undefined;
@@ -82,6 +88,11 @@ export class Searching {
   /** What "Save search" or "Edit saved search" would save: the search showing, or else what's typed. */
   toSave(): Query {
     return $state.snapshot(this.shown ?? this.query);
+  }
+
+  /** "Save search" or "Edit saved search" opens: holds what it will save. */
+  holdForSaving() {
+    this.saving = this.toSave();
   }
 
   /** Forgets a search still waiting for typing to stop. */
