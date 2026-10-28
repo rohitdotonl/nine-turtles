@@ -289,6 +289,26 @@ async fn the_starred_export_is_a_json_feed_of_every_starred_article() {
         "https://quiet.example/"
     );
 
+    // An article stored before trackers and tracking tags were taken out on
+    // arrival (decision 0112) leaves without them, as on screen.
+    sqlx::query(
+        "UPDATE articles SET link = 'https://quiet.example/117?utm_source=rss',
+             content = '<p><a href=\"https://x.example/?utm_source=a&amp;id=2\">x</a>\
+<img src=\"https://ad.doubleclick.net/p.gif\" width=\"1\" height=\"1\"></p>'
+         WHERE id = ?",
+    )
+    .bind(ids[0])
+    .execute(&reader.state.db)
+    .await
+    .unwrap();
+    let file = reader.get("/api/starred/export").await;
+    let item = &file["items"][0];
+    assert_eq!(item["url"], "https://quiet.example/117");
+    let content = item["content_html"].as_str().unwrap();
+    assert!(!content.contains("doubleclick"), "{content}");
+    assert!(!content.contains("utm_source"), "{content}");
+    assert!(content.contains("id=2"), "{content}");
+
     // Not signed in: nothing.
     let response = Client::new()
         .get(format!("{}/api/starred/export", reader.base))

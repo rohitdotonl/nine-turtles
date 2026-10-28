@@ -919,10 +919,7 @@ fn link_without_tracking<S: serde::Serializer>(
     link: &Option<String>,
     serializer: S,
 ) -> Result<S::Ok, S::Error> {
-    serde::Serialize::serialize(
-        &link.as_deref().map(feed::link_without_tracking),
-        serializer,
-    )
+    serde::Serialize::serialize(&link.as_deref().map(stored_link), serializer)
 }
 
 /// One page of the item list. `next` says where the next page starts, or is
@@ -1305,6 +1302,37 @@ async fn read_several(
     }
 }
 
+/// Where a reader's articles come from: their own entries, each with its
+/// article, its feed and the reader's subscription to it (whose title is
+/// their name for the feed). Followed by the reader. Every list that shows
+/// articles with their text uses it: the reading area, sync apps
+/// (`greader`) and the starred and collections exports.
+macro_rules! from_entries {
+    () => {
+        " FROM entries CROSS JOIN articles ON articles.id = entries.article_id
+             CROSS JOIN feeds ON feeds.id = entries.feed_id
+             CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
+                 AND subscriptions.feed_id = entries.feed_id
+         WHERE entries.person_id = "
+    };
+}
+pub(crate) use from_entries;
+
+/// A stored article's text as every reader of it gets it: on screen, in
+/// sync apps, to assistants and in exports. Articles stored before trackers
+/// were taken out on arrival (Milestone 5, decision 0112) lose them here
+/// instead, and their pictures load as the reader reaches them. Newer
+/// articles come through unchanged.
+pub(crate) fn stored_html(html: &str) -> String {
+    feed::without_trackers(html, None)
+}
+
+/// A stored article's link without tracking tags, for the same reason as
+/// `stored_html`.
+pub(crate) fn stored_link(link: &str) -> String {
+    feed::link_without_tracking(link)
+}
+
 /// The reader's articles among `ids`, each ready for the reading area.
 pub(crate) async fn full_articles(
     state: &AppState,
@@ -1312,39 +1340,25 @@ pub(crate) async fn full_articles(
     ids: &[i64],
 ) -> Result<Vec<FullArticle>, sqlx::Error> {
     let ids = serde_json::to_string(ids).unwrap_or_else(|_| "[]".to_owned());
-    let mut articles: Vec<FullArticle> = sqlx::query_as(
-        "SELECT articles.id, entries.feed_id, subscriptions.title AS feed_title, feeds.site_url,
-                articles.title, articles.link, articles.author, articles.content,
-                articles.summary, COALESCE(articles.language, feeds.language) AS language,
-                entries.sort_at AS at, entries.read, entries.starred,
-                articles.episode_url, articles.episode_type, articles.episode_bytes,
-                articles.episode_seconds, articles.episode_artwork
-         FROM entries JOIN articles ON articles.id = entries.article_id
-             JOIN feeds ON feeds.id = entries.feed_id
-             JOIN subscriptions ON subscriptions.person_id = entries.person_id
-                 AND subscriptions.feed_id = entries.feed_id
-         WHERE entries.person_id = ? AND entries.article_id IN (SELECT value FROM json_each(?))",
-    )
+    let mut articles: Vec<FullArticle> = sqlx::query_as(concat!(
+        "SELECT articles.id, entries.feed_id, subscriptions.title AS feed_title,
+                 feeds.site_url, articles.title, articles.link, articles.author,
+                 articles.content, articles.summary,
+                 COALESCE(articles.language, feeds.language) AS language,
+                 entries.sort_at AS at, entries.read, entries.starred,
+                 articles.episode_url, articles.episode_type, articles.episode_bytes,
+                 articles.episode_seconds, articles.episode_artwork",
+        from_entries!(),
+        "? AND entries.article_id IN (SELECT value FROM json_each(?))"
+    ))
     .bind(person)
     .bind(ids)
     .fetch_all(&state.db)
     .await?;
     for article in &mut articles {
-        // Articles stored before trackers were taken out on arrival
-        // (Milestone 5, decision 0112) lose them here instead, and their
-        // pictures load as the reader reaches them.
-        article.content = article
-            .content
-            .take()
-            .map(|html| feed::without_trackers(&html, None));
-        article.summary = article
-            .summary
-            .take()
-            .map(|html| feed::without_trackers(&html, None));
-        article.link = article
-            .link
-            .take()
-            .map(|link| feed::link_without_tracking(&link));
+        article.content = article.content.take().map(|html| stored_html(&html));
+        article.summary = article.summary.take().map(|html| stored_html(&html));
+        article.link = article.link.take().map(|link| stored_link(&link));
         article.language = article.language.take().filter(|tag| is_language_tag(tag));
     }
     Ok(articles)

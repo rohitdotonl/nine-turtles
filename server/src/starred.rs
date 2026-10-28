@@ -21,6 +21,7 @@ use crate::{
     AppState,
     auth::{SignedIn, database_problem},
     dates::rfc3339,
+    feeds,
 };
 
 pub fn routes() -> Router<AppState> {
@@ -43,20 +44,28 @@ pub struct Starred {
     pub site_url: Option<String>,
 }
 
+/// The columns a `Starred` is read from, after `SELECT` and before
+/// `feeds::from_entries!()` (the collections export uses them too).
+macro_rules! columns {
+    () => {
+        "articles.fingerprint, articles.title, articles.link, articles.author,
+         articles.content, articles.summary,
+         COALESCE(articles.language, feeds.language) AS language,
+         articles.published_at, subscriptions.title AS feed_title,
+         feeds.url AS feed_url, feeds.site_url"
+    };
+}
+pub(crate) use columns;
+
 /// Every article the reader starred, newest first, from the
 /// `entries_starred` index, with their name for its feed. Takes the reader.
-pub const EXPORT: &str =
-    "SELECT articles.fingerprint, articles.title, articles.link, articles.author,
-                articles.content, articles.summary,
-                COALESCE(articles.language, feeds.language) AS language,
-                articles.published_at, subscriptions.title AS feed_title,
-                feeds.url AS feed_url, feeds.site_url
-         FROM entries CROSS JOIN articles ON articles.id = entries.article_id
-             CROSS JOIN feeds ON feeds.id = entries.feed_id
-             CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
-                 AND subscriptions.feed_id = entries.feed_id
-         WHERE entries.person_id = ? AND entries.starred = 1
-         ORDER BY entries.sort_at DESC, entries.article_id DESC";
+pub const EXPORT: &str = concat!(
+    "SELECT ",
+    columns!(),
+    feeds::from_entries!(),
+    "? AND entries.starred = 1
+     ORDER BY entries.sort_at DESC, entries.article_id DESC"
+);
 
 async fn export(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
     let starred: Result<Vec<Starred>, sqlx::Error> = sqlx::query_as(EXPORT)
@@ -107,7 +116,7 @@ pub fn item(article: &Starred) -> Value {
     };
     item.insert("id".into(), id.into());
     if let Some(link) = &article.link {
-        item.insert("url".into(), link.clone().into());
+        item.insert("url".into(), feeds::stored_link(link).into());
     }
     item.insert("title".into(), article.title.clone().into());
     // JSON Feed needs one of the two; an article with neither keeps an
@@ -116,13 +125,14 @@ pub fn item(article: &Starred) -> Value {
         "content_html".into(),
         article
             .content
-            .clone()
-            .or_else(|| article.summary.clone())
+            .as_deref()
+            .or(article.summary.as_deref())
+            .map(feeds::stored_html)
             .unwrap_or_default()
             .into(),
     );
     if let (Some(summary), Some(_)) = (&article.summary, &article.content) {
-        item.insert("summary".into(), summary.clone().into());
+        item.insert("summary".into(), feeds::stored_html(summary).into());
     }
     if let Some(at) = article.published_at {
         item.insert("date_published".into(), rfc3339(at).into());
