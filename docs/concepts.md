@@ -158,6 +158,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - The reader's library on screen: feeds, folders, saved searches and collections, loaded and removed with Undo (`library.svelte.ts`)
 - The reading settings on screen: mode, sort order, counts, when unread lets go and hidden lists, each saved in order; a saved change made before the server first answers stays (`settings.svelte.ts`, keys in `keys.svelte.ts`)
 - When a shortcut applies: what's on screen at the press (`KeyScene`) and what the screen can do (`KeyHands`), decided in one place (`shortcuts.ts`)
+- Moving between places: lists, sheets that open over a place (`underSheet`), what a move keeps (`moveTo`) and giving the keyboard back when a sheet closes (`Opener`), in `navigation.ts`
 
 ## Data and the database
 

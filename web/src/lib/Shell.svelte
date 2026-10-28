@@ -37,7 +37,7 @@
   import StarterFeeds from "./StarterFeeds.svelte";
   import { partlyAdded, type Starter } from "./starters";
   import type { Article, Feed, Folder, Source } from "./shapes";
-  import { homeView, type Order, type ReadingMode } from "./reading";
+  import { homeView, type Order } from "./reading";
   import { ReadingSettings } from "./settings.svelte";
   import { feedNextTo, savedOpenFolders, type Notice } from "./feeds";
   import { marksUnsaved } from "./saving";
@@ -47,13 +47,14 @@
   import { panesFor, widthFor, MEDIUM_REM, WIDE_REM, type SidebarChoice, type Width } from "./layout";
   import { apply, load, save } from "./preferences";
   import { device } from "./appearance.svelte";
-  import { VIEWS, VIEW_NAMES, inSettings, nameFor, parentOf, parse, pathFor, rowFor, titleFor, type Route, type View } from "./router";
+  import { VIEWS, VIEW_NAMES, inSettings, nameFor, parentOf, parse, pathFor, titleFor, type Route, type View } from "./router";
   import { sharedAddress } from "./share";
   import { emptyQuery, isSearching, resultsTitle, scopeFor, searchParams, searchedTerms, type Query } from "./search";
   import { sameQuery, type SavedSearch } from "./saved";
   import { putBack, takenOff, type Collection, type CollectionChange } from "./collections";
   import { LoadedLibrary } from "./library.svelte";
   import { startingStep, stepOf, type Screen } from "./steps";
+  import { homeFor, isList, isOver, moveTo, Opener, opensFromHere, underSheet } from "./navigation";
   import { keepUpToDate } from "./offline";
   import NowPlaying from "./NowPlaying.svelte";
   import { loadQueue, player } from "./player.svelte";
@@ -124,11 +125,6 @@
     if (route.kind !== "add-feed") untrack(() => (shared = ""));
   });
 
-  /** River mode has no Unread view: its address (and "/") leads to All. */
-  function homeFor(place: Route, current: ReadingMode): Route {
-    return current === "river" && place.kind === "view" && place.view === "unread" ? { kind: "view", view: "all" } : place;
-  }
-
   // Switching to river mode (here, or on another device before this one
   // heard) while on Unread moves you to All, in place: no new history step.
   $effect(() => {
@@ -150,7 +146,7 @@
   let collecting: Article | undefined = $state();
   let renaming: Collection | undefined = $state();
   /** What had the keyboard when one of those two sheets opened, to give it back. */
-  let collectionOpener: Element | null = null;
+  const collectionOpener = new Opener();
   /** What "Save search" or "Edit saved search" will save: the search showing when it was opened. */
   let toSave: Query | undefined = $state();
   /** What's typed in the sidebar search. */
@@ -252,36 +248,17 @@
   let listToggle: HTMLButtonElement | undefined = $state();
 
   /**
-   * On a window wide enough for the list, adding a feed and editing a feed or
-   * folder open as a sheet over the place you were, which stays in view.
+   * On a window wide enough for the list, adding a feed and editing a feed, folder or
+   * saved search open as a sheet over the place you were, which stays in view.
    */
   let sheet = $derived(!phone && isOver(route));
-  /** Where the list and article come from: under a sheet, the place it opened over. */
-  let under: Route = $derived(
-    !sheet
-      ? route
-      : route.kind === "edit-feed"
-        ? { kind: "feed", id: route.id }
-        : route.kind === "edit-folder"
-          ? { kind: "folder", id: route.id }
-          : route.kind === "edit-search"
-            ? { kind: "search", id: route.id }
-            : lastPlace,
-  );
+  /** Where the list and article come from: under a sheet, the place it opened over (navigation.ts). */
+  let under: Route = $derived(underSheet(route, lastPlace, phone));
   let sheetHeading: HTMLHeadingElement | undefined = $state();
   /** What had the keyboard when a sheet opened, to give it back when the sheet closes. */
-  let sheetOpener: Element | null = null;
+  const sheetOpener = new Opener();
   /** The sheet was opened with a step in the browser's history, so closing it is a step back. */
   let sheetPushed = false;
-
-  function isSheet(place: Route): boolean {
-    return !phone && isOver(place);
-  }
-
-  /** The short tasks that open over a place: a sheet on a computer, a screen of their own on a phone. */
-  function isOver(place: Route): boolean {
-    return ["add-feed", "new-to-feeds", "edit-feed", "edit-folder", "save-search", "edit-search"].includes(place.kind);
-  }
 
   /** Which articles the list shows here. */
   let source: Source = $derived(
@@ -383,10 +360,6 @@
         ? resultsTitle(shown.scope, library.names)
         : nameFor(under, placeName),
   );
-
-  function isList(place: Route): boolean {
-    return place.kind === "view" || place.kind === "feed" || place.kind === "folder" || place.kind === "search" || place.kind === "collection";
-  }
 
   /** When the copies for reading offline were last brought up to date, and how long before nine turtles in view does it again. */
   let lastKept = 0;
@@ -583,22 +556,24 @@
       }
       // Back or Forward onto a page opened from its parent: closing it is a step back again.
       cameFromSettings = stepOf(history.state)?.fromParent === true;
-      returnRow = backToParent(route, next);
-      const moved = !keepsArticle(route, next);
+      const move = moveTo({ route, under, phone }, next);
+      returnRow = move.returnRow;
       // The address has already changed: loading it opens the new version there.
-      if (moved && switchesOnMove(updates.ready, marksUnsaved(), false)) {
+      if (!move.keepsArticle && switchesOnMove(updates.ready, marksUnsaved(), false)) {
         switchTo(location.pathname, carried(next));
         return;
       }
-      const [opening, closing] = [isSheet(next) && !isSheet(route), isSheet(route) && !isSheet(next)];
-      if (opening) [sheetOpener, sheetPushed] = [document.activeElement, false];
+      if (move.opening) {
+        sheetOpener.remember(document.activeElement);
+        sheetPushed = false;
+      }
       route = next;
       if (isList(route)) lastPlace = route;
-      if (moved) {
+      if (!move.keepsArticle) {
         selected = undefined;
         resetSearch();
       }
-      if (closing && giveBack()) return;
+      if (move.closing && sheetOpener.giveBack()) return;
       arrive(stepOf(history.state)?.screen ?? (isList(route) ? "list" : "page"));
     };
     addEventListener("popstate", back);
@@ -657,12 +632,6 @@
       removeEventListener("online", keepForOffline);
     };
   });
-
-  /** Going from a page opened from Settings back to the page it was opened from: the row that opened it. */
-  function backToParent(from: Route, to: Route): string | undefined {
-    const parent = parentOf(from);
-    return parent && pathFor(parent) === pathFor(to) ? rowFor(from) : undefined;
-  }
 
   /** Where the keyboard's place goes on arriving somewhere: its heading, or the add field. */
   function placeFocus(place: Route): HTMLElement | undefined {
@@ -739,26 +708,6 @@
     arrive(screen);
   }
 
-  /**
-   * Goes to a place, and moves the keyboard's place to its heading. A list
-   * arrived at with a `withNotice` shows it in its line, with Undo.
-   */
-  /** Opening a sheet over a place, or closing it back to that place, leaves its article open. */
-  function keepsArticle(from: Route, to: Route): boolean {
-    if (pathFor(from) === pathFor(to)) return true;
-    if (phone) return false;
-    return (isOver(to) && !isOver(from)) || (isOver(from) && pathFor(to) === pathFor(under));
-  }
-
-  /** After a sheet closes: the keyboard goes back to what opened it, if that's still there. */
-  function giveBack(): boolean {
-    const opener = sheetOpener;
-    sheetOpener = null;
-    if (!(opener instanceof HTMLElement) || !opener.isConnected || opener === document.body) return false;
-    queueMicrotask(() => opener.focus());
-    return true;
-  }
-
   /** Closes a sheet: a step back if it opened with one, so Back doesn't reopen it. */
   function closeSheet() {
     if (sheetPushed && stepOf(history.state)?.back === "list") history.back();
@@ -812,32 +761,37 @@
     requestAnimationFrame(settle);
   }
 
+  /**
+   * Goes to a place, and moves the keyboard's place to its heading. A list
+   * arrived at with a `withNotice` shows it in its line, with Undo.
+   */
   function go(next: Route, withNotice?: Notice) {
+    const move = moveTo({ route, under, phone }, next);
     // A newer nine turtles is live: going somewhere else redraws the screen
     // anyway, so arrive there in the new version (decision 0085).
-    if (!keepsArticle(route, next) && switchesOnMove(updates.ready, marksUnsaved(), !!withNotice)) {
+    if (!move.keepsArticle && switchesOnMove(updates.ready, marksUnsaved(), !!withNotice)) {
       switchTo(pathFor(next), carried(next));
       return;
     }
     const from = screenNow();
-    const parent = parentOf(next);
-    cameFromSettings = parent !== undefined && pathFor(parent) === pathFor(route);
-    returnRow = backToParent(route, next);
+    cameFromSettings = opensFromHere(route, next);
+    returnRow = move.returnRow;
     const to: Screen = isList(next) ? "list" : "page";
-    const [opening, closing] = [isSheet(next) && !isSheet(route), isSheet(route) && !isSheet(next)];
     let pushed = false;
     if (pathFor(next) !== location.pathname || from !== to) {
       history.pushState({ screen: to, back: from, fromParent: cameFromSettings }, "", pathFor(next));
       pushed = true;
     }
-    if (opening) [sheetOpener, sheetPushed] = [document.activeElement, pushed];
+    if (move.opening) {
+      sheetOpener.remember(document.activeElement);
+      sheetPushed = pushed;
+    }
     // Opening a sheet over a place, or closing it back there, keeps that place as it was: its article and its search.
-    const sameScreen = keepsArticle(route, next) && pathFor(route) !== pathFor(next);
-    if (!keepsArticle(route, next)) selected = undefined;
+    if (!move.keepsArticle) selected = undefined;
     reading = false;
     notice = withNotice;
     route = next;
-    if (!sameScreen) resetSearch();
+    if (!move.sameScreen) resetSearch();
     if (isList(next)) lastPlace = next;
     // A feed or folder added elsewhere (another tab, another device) isn't in the list yet.
     if (next.kind === "feed" && !library.feeds?.some((feed) => feed.id === next.id)) loadFeeds();
@@ -847,8 +801,8 @@
     // On a phone-narrow window the sidebar is the home screen; choosing a
     // place shows it instead.
     if (width === "narrow") sidebarChoice = "hidden";
-    if (closing && sameScreen && giveBack()) return;
-    sheetOpener = closing ? null : sheetOpener;
+    if (move.closing && move.sameScreen && sheetOpener.giveBack()) return;
+    if (move.closing) sheetOpener.forget();
     queueMicrotask(() => placeFocus(next)?.focus());
   }
 
@@ -917,13 +871,13 @@
 
   /** "Add to collection…" or l: the sheet of the reader's collections for this article (decision 0108). */
   function openCollecting(article: Article) {
-    collectionOpener = document.activeElement;
+    collectionOpener.remember(document.activeElement);
     collecting = article;
   }
 
   /** A collection's "Rename…". */
   function openRenaming(collection: Collection) {
-    collectionOpener = document.activeElement;
+    collectionOpener.remember(document.activeElement);
     renaming = collection;
   }
 
@@ -931,9 +885,7 @@
   function collectionSheetClosed() {
     collecting = undefined;
     renaming = undefined;
-    const opener = collectionOpener;
-    collectionOpener = null;
-    if (opener instanceof HTMLElement && opener.isConnected && opener !== document.body) queueMicrotask(() => opener.focus());
+    collectionOpener.giveBack();
   }
 
   /**
