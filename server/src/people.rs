@@ -162,8 +162,8 @@ pub async fn delete(db: &SqlitePool, person: i64) -> Result<(), sqlx::Error> {
     if owner != Some(false) {
         return Ok(());
     }
-    // Every link to their address goes, including any without a reader
-    // number (sign-up links from before decision 0115).
+    // Every link to their address goes, other readers' spent tries to
+    // change to it too.
     sqlx::query(
         "DELETE FROM email_links
          WHERE email = (SELECT email FROM people WHERE id = ?) COLLATE NOCASE",

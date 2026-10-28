@@ -175,7 +175,7 @@ impl Limiter {
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Account {
     /// The owner while they have no email yet, when they confirm their
-    /// password in Settings (their email, or a passkey).
+    /// password to add a passkey.
     Owner,
     /// An email address, in small letters, whether or not anyone has it,
     /// the owner's own email too (so it can't be told apart from others).

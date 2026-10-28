@@ -1153,6 +1153,47 @@ async fn changing_to_a_taken_address_counts_as_any_change() {
 }
 
 #[tokio::test]
+async fn the_owner_changes_their_email_by_a_link_like_everyone() {
+    let (base, _, outbox) = start_with_mail(common::config()).await;
+    let owner = signed_in(&base).await;
+    let new = "owner@elsewhere.example";
+    // Their password is the one in NINE_TURTLES_PASSWORD_HASH (decision 0125).
+    let asked = post(
+        &base,
+        "/api/people/me/email/change",
+        Some(&owner),
+        json!({ "email": new, "password": PASSWORD }),
+    )
+    .await;
+    assert_eq!(asked.status(), StatusCode::ACCEPTED);
+    let (_, ticket) = newest_link(&outbox, new);
+    let confirmed = post(
+        &base,
+        "/api/email/confirm",
+        None,
+        json!({ "ticket": ticket }),
+    )
+    .await;
+    assert_eq!(confirmed.status(), StatusCode::OK);
+    let now = session(&base, Some(&owner)).await;
+    assert_eq!(now["email"], new);
+    assert_eq!(now["owner"], true);
+    let told = emails_to(&outbox, common::OWNER_EMAIL);
+    assert_eq!(
+        told.last().unwrap().subject,
+        "Your nine turtles email was changed"
+    );
+    assert_eq!(
+        sign_in(&base, new, PASSWORD).await.status(),
+        StatusCode::NO_CONTENT
+    );
+    assert_eq!(
+        sign_in(&base, common::OWNER_EMAIL, PASSWORD).await.status(),
+        StatusCode::UNAUTHORIZED
+    );
+}
+
+#[tokio::test]
 async fn the_owners_email_needs_their_password() {
     let (base, state, _) = start_with_mail(common::config()).await;
     let owner = signed_in(&base).await;
