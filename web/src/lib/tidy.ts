@@ -107,4 +107,3 @@ export async function moveAll(
 export async function restoreFolders(feeds: { id: number; folders: number[] }[]): Promise<Refusal | undefined> {
   return (await change("/api/tidy/restore", { feeds })).refusal;
 }
-

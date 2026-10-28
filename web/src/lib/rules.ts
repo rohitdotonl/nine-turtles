@@ -194,4 +194,3 @@ function toRule(rule: Record<string, unknown>): Rule {
     paused: rule.paused === true,
   };
 }
-

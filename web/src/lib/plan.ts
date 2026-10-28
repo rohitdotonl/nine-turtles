@@ -24,7 +24,6 @@ export type PlanStatus =
       canManage: boolean;
     };
 
-
 function number(value: unknown): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }

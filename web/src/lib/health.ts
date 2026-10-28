@@ -221,4 +221,3 @@ export function refusalMessage(refusal: HealthRefusal, doing: "retry" | "find" |
       return "That didn't work just now. Try again in a moment.";
   }
 }
-

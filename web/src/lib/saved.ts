@@ -110,4 +110,3 @@ function toSaved(search: Record<string, unknown>): SavedSearch {
 function send(path: string, body: unknown): Promise<{ refusal?: SavedRefusal; answer?: Record<string, unknown> }> {
   return sendChange(path, body, ["no-name", "already", "too-large"]);
 }
-

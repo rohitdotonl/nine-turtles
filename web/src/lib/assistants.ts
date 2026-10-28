@@ -38,7 +38,6 @@ export type ConnectRequest =
 
 export type ConnectAnswer = { kind: "redirect"; url: string } | { kind: "invalid" } | { kind: "signed-out" } | { kind: "trouble" };
 
-
 /** Reads the server's answer to GET /api/oauth/request. */
 export function readRequest(status: number, body: unknown): ConnectRequest {
   if (status === 401) return { kind: "signed-out" };

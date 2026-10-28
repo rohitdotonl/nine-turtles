@@ -156,7 +156,6 @@ export function keepOnDevice(id: number, place: Place): void {
 
 // ---- The server -----------------------------------------------------------
 
-
 /** Where the reader stopped in episode `id`, as the server has it; undefined if nowhere, or if it can't be asked. */
 export async function serverPlace(id: number): Promise<Place | undefined> {
   try {

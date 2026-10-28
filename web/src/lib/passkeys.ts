@@ -73,7 +73,6 @@ export function browserHasPasskeys(): boolean {
 
 type Json = Record<string, unknown>;
 
-
 /** A list of credential descriptors with their ids as bytes. */
 function descriptors(list: unknown): PublicKeyCredentialDescriptor[] | undefined {
   if (!Array.isArray(list)) return undefined;

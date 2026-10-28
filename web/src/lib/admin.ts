@@ -127,4 +127,3 @@ export function backupDay(name: string | null): string | null {
     new Date(Date.UTC(year, month - 1, day)),
   );
 }
-

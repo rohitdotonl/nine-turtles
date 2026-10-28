@@ -54,6 +54,7 @@ const KEY = "nine-turtles.preferences";
 /** Where they were saved before the rename; read when there's nothing under the new name. */
 const OLD_KEY = "slowfeed.preferences";
 
+// Takes a storage (rather than using device.ts) so tests can give their own; deviceStorage() is undefined when the browser refuses.
 /** Reads the saved preferences, keeping only values nine turtles understands. */
 export function load(storage: Pick<Storage, "getItem"> | undefined = deviceStorage()): Preferences {
   let saved: unknown;

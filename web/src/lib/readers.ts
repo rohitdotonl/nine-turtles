@@ -125,4 +125,3 @@ export async function errorOf(response: Response): Promise<unknown> {
   const body: unknown = await response.json().catch(() => null);
   return isRecord(body) ? body.error : undefined;
 }
-

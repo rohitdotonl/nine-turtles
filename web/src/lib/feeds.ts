@@ -1175,7 +1175,6 @@ export function checkFrom(seconds: number): Check {
   return "automatic";
 }
 
-
 // How the copies for reading offline are fetched, and waiting marks sent (offline.ts).
 useFetchers({
   list: listFromServer,

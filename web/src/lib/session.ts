@@ -127,4 +127,3 @@ export function duration(seconds: number): string {
   const minutes = Math.ceil(seconds / 60);
   return minutes === 1 ? "1 minute" : `${minutes} minutes`;
 }
-

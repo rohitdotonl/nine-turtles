@@ -129,4 +129,3 @@ export function refusedCollection(refusal: CollectionRefusal): string {
 function send(path: string, body: unknown): Promise<{ refusal?: CollectionRefusal; answer?: Record<string, unknown> }> {
   return sendChange(path, body, ["no-name", "already"]);
 }
-
