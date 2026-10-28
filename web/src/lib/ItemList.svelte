@@ -776,8 +776,8 @@
           <!-- Unread: an accent dot in the gutter beside the title, and a semibold title, so it shows without color. -->
           {#if !article.read && !flows}<span aria-hidden="true" class="unread-dot"></span>{/if}
           <!-- Unread: full ink, semibold. Read: the second ink, regular. The selected row is never the quietest. In river mode every title is full ink, regular. -->
-          <!-- With a mouse, clearly larger (18px) than the interface text, so the title leads its row. -->
-          <span class={["title block text-ui pointer-fine:text-[1.125rem] pointer-fine:leading-[1.3]", flows ? "text-ink" : !article.read ? "font-semibold text-ink" : current ? "text-ink" : "text-ink-2"]}
+          <!-- In the reading serif; with a mouse, clearly larger (19px) than the interface text, so the title leads its row (app.css .item-row). -->
+          <span class={["title block", flows ? "text-ink" : !article.read ? "font-semibold text-ink" : current ? "text-ink" : "text-ink-2"]}
             >{#each boldParts(article.title || "Untitled", bold) as part, partIndex (partIndex)}{#if part.bold}<mark class="match"
                   >{part.text}</mark
                 >{:else}{part.text}{/if}{/each}{#if !article.read && !flows}<span class="sr-only">, unread</span>{/if}</span
@@ -802,7 +802,7 @@
             is 12px, so the title leads: the time a step fainter than muted grey, the publisher's name in muted grey
             (.row-feed, decision 0123) so the credit reads first; on the selected row both are muted grey (AA).
           -->
-          <span class={["row-meta mt-1 text-[0.75rem]", current ? "text-muted" : "text-[color:var(--faint)]"]}>
+          <span class={["row-meta mt-2 text-[0.75rem]", current ? "text-muted" : "text-[color:var(--faint)]"]}>
             <span class={oneFeed ? "sr-only" : "row-feed"}><span class="row-feed-name" use:hugEllipsis={plainSourceName(article.feedTitle)}>{plainSourceName(article.feedTitle)}</span>&nbsp;·</span>
             <time datetime={new Date(article.at * 1000).toISOString()} class="row-date">{when(article.at)}</time>
             {#if article.episode}
@@ -915,6 +915,7 @@
     as tightly as they do in the sidebar.
   */
   .row-meta {
+    letter-spacing: 0.06em;
     display: flex;
     min-width: 0;
     align-items: center;
