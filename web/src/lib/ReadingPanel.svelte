@@ -243,7 +243,7 @@
   }
   .word:has(input:focus-visible),
   .swatch:has(input:focus-visible) {
-    outline: 2px solid color-mix(in srgb, var(--ink) 65%, transparent);
+    outline: 2px solid var(--ink);
     outline-offset: 2px;
     border-radius: 6px;
   }

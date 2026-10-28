@@ -182,7 +182,9 @@ test("rename a folder; delete it, its feeds stay, and Undo brings it back", asyn
   await page.keyboard.press("u");
   await expect(line(page)).toHaveText("Undone.");
   await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Aa-${folder}`) })).toBeVisible();
-  await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) })).toHaveCount(0);
+  // The feed is back in its folder, open since choosing it opened it (decision 0123), and in no other place.
+  await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) })).toHaveCount(1);
+  await expect(sidebar(page).locator('ul[id^="folder-"]').getByRole("link", { name: new RegExp(`^Blog ${blog}`) })).toBeVisible();
 });
 
 test("Undo after deleting a folder limits its saved searches to it again", async ({ page }) => {
