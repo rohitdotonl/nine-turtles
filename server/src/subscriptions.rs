@@ -29,7 +29,7 @@ use crate::{
     AppState, admin,
     auth::{SignedIn, database_problem},
     feed,
-    feeds::{make_room, subscribe},
+    feeds::{enter_read, followed_at, make_room, stored_at, subscribe},
     folders::{self, FOLDERS, Folder, MEMBERSHIPS, clean_name},
     now,
 };
@@ -218,16 +218,7 @@ async fn follow_one(
     summary: &mut Summary,
 ) -> Result<i64, sqlx::Error> {
     make_room(connection, person, key).await?;
-    let followed: Option<i64> = sqlx::query_scalar(
-        "SELECT feeds.id FROM feeds JOIN subscriptions ON subscriptions.feed_id = feeds.id
-         WHERE feeds.url_key = ? AND subscriptions.person_id = ?
-             AND subscriptions.unsubscribed_at IS NULL",
-    )
-    .bind(key)
-    .bind(person)
-    .fetch_optional(&mut *connection)
-    .await?;
-    if let Some(id) = followed {
+    if let Some(id) = followed_at(&mut *connection, person, key).await? {
         summary.already += 1;
         return Ok(id);
     }
@@ -264,24 +255,12 @@ async fn follow_one(
     .await?;
     let id = match fresh {
         Some(id) => id,
-        None => {
-            sqlx::query_scalar("SELECT id FROM feeds WHERE url_key = ?")
-                .bind(key)
-                .fetch_one(&mut *connection)
-                .await?
-        }
+        None => stored_at(&mut *connection, key).await?,
     };
     subscribe(connection, person, id, &title, now).await?;
     // Nothing is fetched here, so what's already stored counts as read;
     // what arrives from the next check is new.
-    sqlx::query(
-        "INSERT OR IGNORE INTO entries (person_id, article_id, feed_id, sort_at, read)
-         SELECT ?, id, feed_id, sort_at, 1 FROM articles WHERE feed_id = ?",
-    )
-    .bind(person)
-    .bind(id)
-    .execute(&mut *connection)
-    .await?;
+    enter_read(connection, person, id).await?;
     summary.added += 1;
     Ok(id)
 }

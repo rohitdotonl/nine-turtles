@@ -30,7 +30,7 @@ use tokio::task::JoinSet;
 use crate::{
     AppState, admin,
     feed::{self, ParsedFeed},
-    feeds::store_articles,
+    feeds::{self, store_articles},
     fetch::{self, Answer, FetchError, Fetched, Known},
     folders, log, now, websub,
 };
@@ -231,12 +231,7 @@ async fn worked(
     // marks are saved at the same moment.
     let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
     // Unsubscribed while it was being fetched: nothing to store.
-    let followed: Option<i64> =
-        sqlx::query_scalar("SELECT id FROM feeds WHERE id = ? AND unsubscribed_at IS NULL")
-            .bind(feed_id)
-            .fetch_optional(&mut *transaction)
-            .await?;
-    if followed.is_none() {
+    if !feeds::still_followed(&mut transaction, feed_id).await? {
         return transaction.commit().await;
     }
     let (every, etag, last_modified) = match changed {

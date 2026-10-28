@@ -292,17 +292,7 @@ async fn bring_back(
     kept_only: bool,
 ) -> Result<Option<i64>, sqlx::Error> {
     let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
-    let waiting: Option<i64> = sqlx::query_scalar(
-        "SELECT feeds.id FROM feeds JOIN subscriptions ON subscriptions.feed_id = feeds.id
-         WHERE feeds.url_key = ? AND subscriptions.person_id = ?
-             AND subscriptions.unsubscribed_at IS NOT NULL AND subscriptions.cleared = 0
-             AND (? = 0 OR subscriptions.kept_until IS NOT NULL)",
-    )
-    .bind(feed::normalize(url))
-    .bind(person)
-    .bind(kept_only)
-    .fetch_optional(&mut *transaction)
-    .await?;
+    let waiting = waiting_at(&mut transaction, person, &feed::normalize(url), kept_only).await?;
     if let Some(id) = waiting {
         follow_again(&mut transaction, person, id, now()).await?;
     }
@@ -418,15 +408,26 @@ pub async fn enter_stored(
         .await?;
         unread.extend(entered);
     }
+    enter_read(connection, person, feed_id).await?;
+    rules::apply_to(connection, person, feed_id, &unread).await
+}
+
+/// Gives the reader their own entry, already read, for each article of
+/// this feed stored for other readers that they don't have an entry for yet.
+pub async fn enter_read(
+    connection: &mut sqlx::SqliteConnection,
+    person: i64,
+    feed_id: i64,
+) -> Result<(), sqlx::Error> {
     sqlx::query(
         "INSERT OR IGNORE INTO entries (person_id, article_id, feed_id, sort_at, read)
          SELECT ?, id, feed_id, sort_at, 1 FROM articles WHERE feed_id = ?",
     )
     .bind(person)
     .bind(feed_id)
-    .execute(&mut *connection)
+    .execute(connection)
     .await?;
-    rules::apply_to(connection, person, feed_id, &unread).await
+    Ok(())
 }
 
 /// What the reader typed, as a web address. `example.com` means
@@ -448,16 +449,73 @@ pub(crate) fn parse_address(address: &str) -> Option<Url> {
 }
 
 async fn already_followed(state: &AppState, person: i64, url: &Url) -> Result<(), NotAdded> {
-    let id: Option<i64> = sqlx::query_scalar(
+    let mut connection = state.db.acquire().await?;
+    let id = followed_at(&mut connection, person, &feed::normalize(url)).await?;
+    id.map_or(Ok(()), |id| Err(NotAdded::Already(id)))
+}
+
+/// The feed at this address (its `url_key`) that the reader follows, if any.
+pub async fn followed_at(
+    connection: &mut sqlx::SqliteConnection,
+    person: i64,
+    url_key: &str,
+) -> Result<Option<i64>, sqlx::Error> {
+    sqlx::query_scalar(
         "SELECT feeds.id FROM feeds JOIN subscriptions ON subscriptions.feed_id = feeds.id
          WHERE feeds.url_key = ? AND subscriptions.person_id = ?
              AND subscriptions.unsubscribed_at IS NULL",
     )
-    .bind(feed::normalize(url))
+    .bind(url_key)
     .bind(person)
-    .fetch_optional(&state.db)
-    .await?;
-    id.map_or(Ok(()), |id| Err(NotAdded::Already(id)))
+    .fetch_optional(connection)
+    .await
+}
+
+/// The feed at this address (its `url_key`) that the reader unsubscribed
+/// from but that isn't cleared yet, so Undo could still bring it back; with
+/// `kept_only`, only one an assistant unsubscribed from (kept 30 days).
+async fn waiting_at(
+    connection: &mut sqlx::SqliteConnection,
+    person: i64,
+    url_key: &str,
+    kept_only: bool,
+) -> Result<Option<i64>, sqlx::Error> {
+    sqlx::query_scalar(
+        "SELECT feeds.id FROM feeds JOIN subscriptions ON subscriptions.feed_id = feeds.id
+         WHERE feeds.url_key = ? AND subscriptions.person_id = ?
+             AND subscriptions.unsubscribed_at IS NOT NULL AND subscriptions.cleared = 0
+             AND (? = 0 OR subscriptions.kept_until IS NOT NULL)",
+    )
+    .bind(url_key)
+    .bind(person)
+    .bind(kept_only)
+    .fetch_optional(connection)
+    .await
+}
+
+/// The number of the feed stored at this address (its `url_key`).
+pub async fn stored_at(
+    connection: &mut sqlx::SqliteConnection,
+    url_key: &str,
+) -> Result<i64, sqlx::Error> {
+    sqlx::query_scalar("SELECT id FROM feeds WHERE url_key = ?")
+        .bind(url_key)
+        .fetch_one(connection)
+        .await
+}
+
+/// Is anyone still following this feed? A check or a hub's delivery that
+/// finishes after the last reader unsubscribed stores nothing.
+pub async fn still_followed(
+    connection: &mut sqlx::SqliteConnection,
+    feed_id: i64,
+) -> Result<bool, sqlx::Error> {
+    let found: Option<i64> =
+        sqlx::query_scalar("SELECT id FROM feeds WHERE id = ? AND unsubscribed_at IS NULL")
+            .bind(feed_id)
+            .fetch_optional(connection)
+            .await?;
+    Ok(found.is_some())
 }
 
 /// Does the reader follow this feed (not unsubscribed)?
@@ -607,14 +665,9 @@ pub async fn follow_in(
     .bind(now + checking::wait(state, every))
     .fetch_optional(&mut *transaction)
     .await?;
-    let feed_id: i64 = match fresh {
+    let feed_id = match fresh {
         Some(id) => id,
-        None => {
-            sqlx::query_scalar("SELECT id FROM feeds WHERE url_key = ?")
-                .bind(&key)
-                .fetch_one(&mut *transaction)
-                .await?
-        }
+        None => stored_at(&mut *transaction, &key).await?,
     };
     if follows(&mut *transaction, person, feed_id).await? {
         return Ok(Followed::Already(feed_id));
@@ -637,16 +690,7 @@ pub async fn make_room(
     person: i64,
     url_key: &str,
 ) -> Result<(), sqlx::Error> {
-    let waiting: Option<i64> = sqlx::query_scalar(
-        "SELECT feeds.id FROM feeds JOIN subscriptions ON subscriptions.feed_id = feeds.id
-         WHERE feeds.url_key = ? AND subscriptions.person_id = ?
-             AND subscriptions.unsubscribed_at IS NOT NULL AND subscriptions.cleared = 0",
-    )
-    .bind(url_key)
-    .bind(person)
-    .fetch_optional(&mut *connection)
-    .await?;
-    if let Some(id) = waiting {
+    if let Some(id) = waiting_at(&mut *connection, person, url_key, false).await? {
         folders::clear(connection, person, id).await?;
     }
     Ok(())
