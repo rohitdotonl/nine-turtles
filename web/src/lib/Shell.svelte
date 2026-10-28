@@ -44,7 +44,7 @@
   import { createKeyReader, keyCap, keyFor } from "./keyboard";
   import { carryOut, keyIsOurs, type KeyHands, type KeyScene } from "./shortcuts";
   import { currentKey, currentKeyOf, keys, tip } from "./keys.svelte";
-  import { panesFor, widthFor, MEDIUM_REM, WIDE_REM, type SidebarChoice, type Width } from "./layout";
+  import { currentWidth, LIST_MIN, ScreenLayout, watchWidth } from "./layout.svelte";
   import { apply, load, save } from "./preferences";
   import { device } from "./appearance.svelte";
   import { VIEWS, VIEW_NAMES, inSettings, nameFor, parentOf, parse, pathFor, titleFor, type Route, type View } from "./router";
@@ -154,17 +154,11 @@
   /** What the next list's line says on arrival (after unsubscribing or deleting a folder). */
   let notice: Notice | undefined = $state();
   let preferences = $state(load());
-  let width: Width = $state(currentWidth());
   /** Which screen this history entry shows (see steps.ts). */
   const firstStep = startingStep(history.state, currentWidth() === "narrow", location.pathname, isList(start));
-  // On a phone-narrow window the sidebar is the home screen, but an address
-  // that names a place opens that place.
-  let sidebarChoice: SidebarChoice = $state(currentWidth() === "narrow" && firstStep.screen !== "home" ? "hidden" : "auto");
   let cheatSheetOpen = $state(false);
   /** The shortcut list opens ready to change keys: from Settings › Keyboard (decision 0110). */
   let cheatSheetEditing = $state(false);
-  /** On a computer, the reader hid the article list (] or its button) to give the article its room. */
-  let listHidden = $state(false);
   /** The article chosen in the list, shown in the reading area. */
   let selected: Article | undefined = $state();
   /** On a phone-narrow window, the opened article takes the list's place. */
@@ -186,9 +180,10 @@
   let beforeSearch: Element | null = null;
   let searchTimer: ReturnType<typeof setTimeout> | undefined;
 
-  let panes = $derived(panesFor(width, sidebarChoice, reading, listHidden));
-  /** A phone-narrow window: one screen at a time, with a top bar and, while reading, a bottom toolbar. */
-  let phone = $derived(width === "narrow");
+  /** The window's width step, which areas show, the sidebar and list toggles and their dragged widths (layout.svelte.ts). */
+  const layout = new ScreenLayout(currentWidth(), innerWidth, () => reading, firstStep.screen === "home");
+  let panes = $derived(layout.panes);
+  let phone = $derived(layout.phone);
 
   let wordmark: HTMLHeadingElement | undefined = $state();
   let listHeading: HTMLHeadingElement | undefined = $state();
@@ -211,19 +206,6 @@
   let sidebarFeeds: SidebarFeeds | undefined = $state();
   /** The list's pane and the sidebar button, for where the keyboard goes when the sidebar hides. */
   let listSection: HTMLElement | undefined = $state();
-  /** Widths the reader dragged the sidebar and the list to, on this device; undefined is the usual width. */
-  let sidebarWidth: number | undefined = $state(storedWidth("nine-turtles.sidebar-width"));
-  let listWidth: number | undefined = $state(storedWidth("nine-turtles.list-width"));
-  /** The list is never narrower than this beside the article, so feed names and titles aren't squeezed (SPEC section 4). */
-  const LIST_MIN = 280;
-  /** The window's width in pixels, so the list never leaves the article less than 400px. */
-  let windowWidth = $state(innerWidth);
-
-  function storedWidth(name: string): number | undefined {
-    const value = Number(deviceText(name));
-    return value > 0 ? value : undefined;
-  }
-
   /**
    * The one-time tip in the empty reading area (decision 0062): shown until
    * you first open an article, by any means, or the shortcut list, then
@@ -241,9 +223,6 @@
     setDeviceText(TIP_KEY, "yes");
   });
 
-  function storeWidth(name: string, value: number | undefined) {
-    setDeviceText(name, value === undefined ? null : String(value));
-  }
   let sidebarToggle: HTMLButtonElement | undefined = $state();
   let listToggle: HTMLButtonElement | undefined = $state();
 
@@ -505,12 +484,6 @@
     }
   }
 
-  function currentWidth(): Width {
-    if (matchMedia(`(min-width: ${WIDE_REM}rem)`).matches) return "wide";
-    if (matchMedia(`(min-width: ${MEDIUM_REM}rem)`).matches) return "medium";
-    return widthFor(0);
-  }
-
   onMount(() => {
     // "/" and unknown addresses open Unread (All in river mode); the address bar says so.
     history.replaceState(firstStep, "", pathFor(route));
@@ -531,20 +504,15 @@
     document.addEventListener("visibilitychange", lookedAgain);
     addEventListener("online", keepForOffline);
 
-    const queries = [WIDE_REM, MEDIUM_REM].map((rem) => matchMedia(`(min-width: ${rem}rem)`));
-    const resized = () => {
-      const next = currentWidth();
-      if (next !== width) {
-        const focusWasInside = sidebar?.contains(document.activeElement) ?? false;
-        width = next;
-        sidebarChoice = "auto";
-        // If the sidebar just hid with the keyboard's place in it, don't lose that place.
-        queueMicrotask(() => {
-          if (focusWasInside && !panes.sidebar) afterSidebarHid();
-        });
-      }
-    };
-    queries.forEach((query) => query.addEventListener("change", resized));
+    const stopWatchingWidth = watchWidth((next) => {
+      if (next === layout.width) return;
+      const focusWasInside = sidebar?.contains(document.activeElement) ?? false;
+      layout.resized(next);
+      // If the sidebar just hid with the keyboard's place in it, don't lose that place.
+      queueMicrotask(() => {
+        if (focusWasInside && !panes.sidebar) afterSidebarHid();
+      });
+    });
 
     // The browser's Back and Forward, and on phones the system back gesture.
     const back = () => {
@@ -623,7 +591,7 @@
 
     return () => {
       clearTimeout(searchTimer);
-      queries.forEach((query) => query.removeEventListener("change", resized));
+      stopWatchingWidth();
       removeEventListener("popstate", back);
       removeEventListener("keydown", pressed);
       stopWatching();
@@ -664,7 +632,7 @@
   /** Shows a screen the browser's history went back (or forward) to. */
   function arrive(screen: Screen) {
     reading = phone && screen === "article" && selected !== undefined;
-    if (phone) sidebarChoice = screen === "home" ? "shown" : "hidden";
+    layout.showHome(screen === "home");
     queueMicrotask(() => {
       if (phone && screen === "home") wordmark?.focus();
       else if (reading) articleHeading?.focus({ preventScroll: true });
@@ -718,8 +686,7 @@
   function carried(next: Route): Carried {
     return {
       keyboard: document.documentElement.dataset.keyboard !== undefined,
-      sidebar: sidebarChoice,
-      listHidden,
+      ...layout.carried(),
       lastPlace: pathFor(isList(next) ? next : lastPlace),
       sidebarScroll: sidebar?.querySelector(".scroller")?.scrollTop ?? 0,
     };
@@ -728,10 +695,7 @@
   /** Puts back what the page before the switch carried. Feeds and lists arrive a moment later, so it keeps trying for a few seconds. */
   function arriveSwitched(was: Carried) {
     if (was.keyboard) document.documentElement.dataset.keyboard = "";
-    if (width !== "narrow") {
-      sidebarChoice = was.sidebar;
-      listHidden = was.listHidden;
-    }
+    layout.putBack(was);
     const place = parse(was.lastPlace);
     if (isList(place) && !isList(route)) lastPlace = place;
     let [focused, scrolled] = [false, was.sidebarScroll <= 0];
@@ -800,7 +764,7 @@
     if (next.kind === "collection" && !library.collections.some((collection) => collection.id === next.id)) library.loadCollections();
     // On a phone-narrow window the sidebar is the home screen; choosing a
     // place shows it instead.
-    if (width === "narrow") sidebarChoice = "hidden";
+    layout.showHome(false);
     if (move.closing && move.sameScreen && sheetOpener.giveBack()) return;
     if (move.closing) sheetOpener.forget();
     queueMicrotask(() => placeFocus(next)?.focus());
@@ -1010,10 +974,8 @@
       if (!panes.sidebar) stepBack("home");
       return;
     }
-    const hiding = panes.sidebar;
     const focusWasInside = sidebar?.contains(document.activeElement) ?? false;
-    sidebarChoice = hiding ? "hidden" : "shown";
-    if (hiding && focusWasInside) {
+    if (layout.toggleSidebar() && focusWasInside) {
       queueMicrotask(afterSidebarHid);
     }
   }
@@ -1021,20 +983,15 @@
   /** ] and the list's button: on a computer, hide the article list so the article has its room, or show it again. */
   function toggleList() {
     if (phone || !isList(route)) return;
-    const hiding = panes.list;
     const focusWasInside = listSection?.contains(document.activeElement) ?? false;
-    listHidden = hiding;
-    if (hiding && focusWasInside) queueMicrotask(() => (selected ? articleHeading : listToggle)?.focus());
+    if (layout.toggleList() && focusWasInside) queueMicrotask(() => (selected ? articleHeading : listToggle)?.focus());
   }
 
   /** \: hide the sidebar and the list together, for just the article; pressed again, both come back. */
   function toggleBoth() {
     if (phone || !isList(route)) return;
-    const hiding = panes.sidebar || panes.list;
     const focusWasInside = (sidebar?.contains(document.activeElement) || listSection?.contains(document.activeElement)) ?? false;
-    sidebarChoice = hiding ? "hidden" : "shown";
-    listHidden = hiding;
-    if (hiding && focusWasInside) queueMicrotask(() => (selected ? articleHeading : listToggle)?.focus());
+    if (layout.toggleBoth() && focusWasInside) queueMicrotask(() => (selected ? articleHeading : listToggle)?.focus());
   }
 
   /**
@@ -1069,7 +1026,7 @@
     const wasReading = reading || inArticle() || !panes.list;
     // n and Shift+N pass over read articles (decision 0103).
     if (!(unread ? itemList.moveUnread(step) : itemList.move(step))) return;
-    showArticleArea();
+    layout.makeWayForArticle();
     if (wasReading) queueMicrotask(() => articleHeading?.focus({ preventScroll: true }));
     else itemList.focusSelected();
   }
@@ -1082,7 +1039,7 @@
     if (!itemList || (!panes.list && !panes.article && !reading)) return;
     const wasReading = reading || inArticle() || !panes.list;
     if (!itemList.moveToEnd(step)) return;
-    showArticleArea();
+    layout.makeWayForArticle();
     if (wasReading) queueMicrotask(() => articleHeading?.focus({ preventScroll: true }));
     else itemList.focusSelected();
   }
@@ -1118,13 +1075,8 @@
       history.pushState({ screen: "article", back: "list" }, "", location.pathname);
       reading = true;
     }
-    showArticleArea();
+    layout.makeWayForArticle();
     queueMicrotask(() => articleHeading?.focus({ preventScroll: true }));
-  }
-
-  /** Choosing an article shows it, so on a medium window the sidebar makes way. */
-  function showArticleArea() {
-    if (width === "medium" && panes.sidebar) sidebarChoice = "hidden";
   }
 
   /** "Skip to articles" is offered only while a list of articles is on screen. */
@@ -1137,8 +1089,8 @@
   }
 
   function chose(byKeyboard: boolean) {
-    if (width === "narrow" || byKeyboard) open();
-    else showArticleArea();
+    if (phone || byKeyboard) open();
+    else layout.makeWayForArticle();
   }
 
   /**
@@ -1154,7 +1106,7 @@
       history.pushState({ screen: "article", back: "list" }, "", location.pathname);
       reading = true;
     }
-    showArticleArea();
+    layout.makeWayForArticle();
     queueMicrotask(() => articleHeading?.focus({ preventScroll: true }));
   }
 
@@ -1397,13 +1349,13 @@
   So every scrolling area here and in the screens it shows is `relative`: it holds its own hidden
   lines. A new scrolling area needs the same, and any new bar must sit inside an area, not beside it.
 -->
-<svelte:window bind:innerWidth={windowWidth} />
+<svelte:window bind:innerWidth={layout.windowWidth} />
 <!--
   While an episode is in the player, the "now playing" bar takes its own room at the foot (SPEC section 35), so the
   panes above it end where it starts and it never covers them. On a phone reading an article, it sits above the
   article's toolbar instead.
 -->
-<main class="relative flex h-dvh flex-col overflow-hidden" style:--sidebar-w={`${sidebarWidth ?? 256}px`}>
+<main class="relative flex h-dvh flex-col overflow-hidden" style:--sidebar-w={`${layout.sidebarPx}px`}>
   {#if skipShown}
     <!--
       First in the Tab order (SPEC section 19; the keyboard itself starts later, on the list's title): out of sight until the keyboard reaches it, then a small
@@ -1565,11 +1517,11 @@
     {#if !phone && (panes.list || panes.article)}
       <PaneResizer
         label="Resize the sidebar"
-        bind:width={sidebarWidth}
+        bind:width={layout.sidebarWidth}
         min={200}
         max={400}
         pane={sidebar}
-        onDone={() => storeWidth("nine-turtles.sidebar-width", sidebarWidth)}
+        onDone={() => layout.storeSidebarWidth()}
       />
     {/if}
   </nav>
@@ -1720,9 +1672,9 @@
               "absolute top-1.5 z-20",
               !panes.list
                 ? panes.sidebar ? "left-2" : "left-14"
-                : panes.article ? (listWidth ? "" : "left-[calc(22rem-3.25rem)] xl:left-[calc(24rem-3.25rem)] 2xl:left-[calc(26rem-3.25rem)]") : "right-2",
+                : panes.article ? (layout.listPx ? "" : "left-[calc(22rem-3.25rem)] xl:left-[calc(24rem-3.25rem)] 2xl:left-[calc(26rem-3.25rem)]") : "right-2",
             ]}
-            style:left={panes.list && panes.article && listWidth ? `${Math.max(LIST_MIN, listWidth) - 52}px` : undefined}
+            style:left={panes.list && panes.article && layout.listPx ? `${layout.listPx - 52}px` : undefined}
           >
             <button
               type="button"
@@ -1754,16 +1706,16 @@
             // A 1px line where the list meets the reading pane, as where the sidebar meets the list (decision 0054).
             !phone && panes.article && "pane-edge",
           ]}
-          style:width={!phone && panes.article && listWidth ? `${Math.max(LIST_MIN, listWidth)}px` : undefined}
+          style:width={!phone && panes.article && layout.listPx ? `${layout.listPx}px` : undefined}
         >
           {#if !phone && panes.article && !welcomeWide}
             <PaneResizer
               label="Resize the article list"
-              bind:width={listWidth}
+              bind:width={layout.listWidth}
               min={LIST_MIN}
-              max={Math.max(LIST_MIN, Math.min(640, windowWidth - (panes.sidebar ? (sidebarWidth ?? 256) : 0) - 400))}
+              max={layout.listMax}
               pane={listSection}
-              onDone={() => storeWidth("nine-turtles.list-width", listWidth)}
+              onDone={() => layout.storeListWidth()}
             />
           {/if}
           {#if phone}
