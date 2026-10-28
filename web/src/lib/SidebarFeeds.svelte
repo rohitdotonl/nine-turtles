@@ -31,7 +31,7 @@
 <script lang="ts">
   import Icon from "./Icon.svelte";
   import type { Feed, Folder } from "./shapes";
-  import { findByName, folderUnread, inDevanagari, saveOpenFolders, savedOpenFolders, unreadLabel } from "./feeds";
+  import { findByName, folderUnread, inDevanagari, plainSourceName, saveOpenFolders, savedOpenFolders, unreadLabel } from "./feeds";
   import { pathFor, type Route } from "./router";
   import type { SavedSearch } from "./saved";
   import type { Collection } from "./collections";
@@ -129,7 +129,7 @@
         indent ? "pl-14" : "pl-[38px]",
         isHere(place) ? "font-semibold text-ink" : "text-ink",
       ]}
-      >{@render name(feed.title)}{@render count(feed.unread)}{@render leadsOn()}</a
+      >{@render name(plainSourceName(feed.title))}{@render count(feed.unread)}{@render leadsOn()}</a
     >
   </li>
 {/snippet}
@@ -175,11 +175,15 @@
   <a
     href={pathFor(place)}
     aria-current={isHere(place) ? "page" : undefined}
-    onclick={(event) => follow(event, place)}
+    onclick={(event) => {
+      // Choosing a closed folder opens it too, so its feeds show under it (decision 0123).
+      if (!phone && !searching && !open.includes(folder.id)) toggle(folder.id);
+      follow(event, place);
+    }}
     data-folder-link={folder.id}
     title={folder.name}
-    class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center gap-3 rounded-md pr-3.5 text-ui pointer-fine:text-small", padded && "pl-[38px]", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
-    >{@render name(folder.name, true)}{@render count(folderUnread(folder, feeds))}{@render leadsOn()}</a
+    class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center gap-3 rounded-md pr-3.5 text-ui pointer-fine:text-small", padded ? "pl-[38px]" : "pl-3", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
+    >{@render name(folder.name, !padded || phone)}<span class="folder-count contents">{@render count(folderUnread(folder, feeds))}</span>{@render leadsOn()}</a
   >
 {/snippet}
 
@@ -225,34 +229,40 @@
         {@const inside = feeds.filter((feed) => feed.folders.includes(folder.id))}
         {@const shown = phone || open.includes(folder.id)}
         <li>
-          <div class="place mx-2 flex" data-here={here || undefined}>
+          <div class="place folder-row relative mx-2 mt-2 flex" data-here={here || undefined}>
+            {@render folderLink(folder, false)}
             {#if !phone}
-            <!-- The arrow first, as a Mac source list's disclosure, in the column where Unread, Starred and All have their icons. -->
-            <button
-              type="button"
-              aria-expanded={shown}
-              aria-controls={`folder-${folder.id}`}
-              aria-label={`Feeds in ${folder.name}`}
-              onclick={() => toggle(folder.id)}
-              class="disclosure relative flex min-h-11 pointer-fine:min-h-8 w-[38px] shrink-0 items-center justify-center rounded-md text-muted"
-            >
-              <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                {#if shown}
-                  <path d="M2.5 4.5 6 8l3.5-3.5" />
-                {:else}
-                  <path d="M4.5 2.5 8 6 4.5 9.5" />
-                {/if}
-              </svg>
-            </button>
+              <!--
+                The show-or-hide arrow at the row's right end, over the count, shown when the
+                pointer is on the row, the keyboard is on it, or on a touch screen; the count
+                steps aside while it shows, so the folder's name starts on the margin with
+                nothing before it (decision 0123).
+              -->
+              <button
+                type="button"
+                aria-expanded={shown}
+                aria-controls={`folder-${folder.id}`}
+                aria-label={`Feeds in ${folder.name}`}
+                title={shown ? "Hide feeds" : "Show feeds"}
+                onclick={() => toggle(folder.id)}
+                class="disclosure absolute inset-y-0 right-0 flex w-9 pointer-coarse:w-11 items-center justify-center rounded-md text-muted"
+              >
+                <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  {#if shown}
+                    <path d="M2.5 4.5 6 8l3.5-3.5" />
+                  {:else}
+                    <path d="M4.5 2.5 8 6 4.5 9.5" />
+                  {/if}
+                </svg>
+              </button>
             {/if}
-            {@render folderLink(folder, phone)}
           </div>
           {#if shown}
-            <ul id={`folder-${folder.id}`} class={[!phone && "folder-feeds"]}>
+            <ul id={`folder-${folder.id}`} class={["mb-1", !phone && "folder-feeds"]}>
               {#each inside as feed (feed.id)}
-                {@render feedRow(feed, true)}
+                {@render feedRow(feed, phone)}
               {:else}
-                <li class="py-2 pr-5 pl-16 text-meta text-muted">No feeds in this folder.</li>
+                <li class="py-2 pr-5 pl-[46px] text-meta text-muted">No feeds in this folder.</li>
               {/each}
             </ul>
           {/if}
@@ -277,9 +287,9 @@
     (decision 0123). Screen readers still read the name as written.
   */
   .folder-name {
-    font-size: 0.85em;
+    font-size: 0.92em;
     font-weight: 600;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.09em;
     text-transform: uppercase;
   }
   /*
@@ -294,20 +304,27 @@
     position: absolute;
     top: 0.25rem;
     bottom: 0.25rem;
-    left: 48px;
+    left: 21px;
     border-left: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
   }
-  /*
-    The arrow is drawn in the 38px icon column so every name shares one left
-    edge; on a touch screen its target reaches 6px further out, into the
-    pane's margin, so a finger still gets 44px.
-  */
+  /* The arrow hides until it's wanted; the count shows in its place meanwhile. */
+  .disclosure {
+    opacity: 0;
+  }
+  .folder-row:hover .disclosure,
+  .disclosure:focus-visible {
+    opacity: 1;
+  }
+  .folder-row:hover :global(.folder-count),
+  .folder-row:has(.disclosure:focus-visible) :global(.folder-count) {
+    visibility: hidden;
+  }
   @media (pointer: coarse) {
-    .disclosure::before {
-      content: "";
-      position: absolute;
-      inset-block: 0;
-      inset-inline: -6px 0;
+    .disclosure {
+      opacity: 1;
+    }
+    .folder-row :global(.folder-count) {
+      visibility: hidden;
     }
   }
 </style>
