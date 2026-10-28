@@ -14,13 +14,13 @@ What each screen looks like is in `docs/SPEC.md` sections 5, 6, 7 and 27 and
    first. The unread dot stays centred on the title's first line.
 2. **Quieter section names, plainer folders.** The sidebar's section names
    (Folders, Feeds) are small, semibold, uppercase and tracked, as Settings'
-   group names are. A folder's name is in plain words on the same text edge
-   as Unread, Starred and All, with no icon and nothing before it: its
+   group names are. A folder's name is in plain words, starting where the
+   icons of Unread, Starred and All start, with no icon of its own: its
    show-or-hide arrow moves to the row's right end, showing in place of the
    count on hover, on the keyboard and always on touch (replacing decision
    0041's arrow before the name), and choosing a closed folder opens it. Its
-   feeds sit one step in with a faint 1px line down their left under the
-   folder's name, so they read as its contents. (The owner tried and turned
+   feeds sit on the names' edge, under the folder, with a faint 1px line
+   down their left under the folder's name, so they read as its contents. (The owner tried and turned
    down folders in spaced capitals on the margin, a folder icon, and no
    icons at all in the sidebar: the icons on the fixed lists help, a folder
    icon didn't look right.) Sidebar feed names, like the list's, leave out a

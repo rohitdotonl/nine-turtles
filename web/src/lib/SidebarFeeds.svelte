@@ -126,7 +126,7 @@
       class={[
         "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-3 pr-3.5 text-ui pointer-fine:text-small",
         // Every name starts on the sidebar's one left edge; inside a folder, one step further in.
-        indent ? "pl-14" : "pl-[38px]",
+        "pl-[38px]",
         isHere(place) ? "font-semibold text-ink" : "text-ink",
       ]}
       >{@render name(plainSourceName(feed.title))}{@render count(feed.unread)}{@render leadsOn()}</a
@@ -182,7 +182,7 @@
     }}
     data-folder-link={folder.id}
     title={folder.name}
-    class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center rounded-md pr-3.5 text-ui pointer-fine:text-small", "gap-3 pl-[38px]", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
+    class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center rounded-md pr-3.5 text-ui pointer-fine:text-small", padded ? "gap-3 pl-[38px]" : "gap-3 pl-3", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
     >{@render name(folder.name)}<span class="folder-count contents">{@render count(folderUnread(folder, feeds))}</span>{@render leadsOn()}</a
   >
 {/snippet}
@@ -262,7 +262,7 @@
               {#each inside as feed (feed.id)}
                 {@render feedRow(feed, true)}
               {:else}
-                <li class="py-2 pr-5 pl-16 text-meta text-muted">No feeds in this folder.</li>
+                <li class="py-2 pr-5 pl-[46px] text-meta text-muted">No feeds in this folder.</li>
               {/each}
             </ul>
           {/if}
@@ -293,7 +293,7 @@
     position: absolute;
     top: 0.25rem;
     bottom: 0.25rem;
-    left: 49px;
+    left: 21px;
     border-left: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
   }
   /* The arrow hides until it's wanted; the count shows in its place meanwhile. */
