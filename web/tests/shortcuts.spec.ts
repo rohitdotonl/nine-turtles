@@ -225,12 +225,14 @@ test.describe("on a wide window", () => {
     await expect(page.getByRole("heading", { level: 2, name: `Blog ${blog}` })).toBeVisible();
 
     // In the folder: e folds and unfolds it; Shift+E edits it.
+    // Choosing a closed folder opens it (decision 0123).
     await sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) }).click();
     await expect(page.getByRole("heading", { level: 2, name: folder })).toBeFocused();
-    await page.keyboard.press("e");
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
     await page.keyboard.press("e");
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await page.keyboard.press("e");
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
     await page.keyboard.press("Shift+E");
     await expect(page.getByRole("heading", { level: 2, name: "Edit folder" })).toBeFocused();
     await page.keyboard.press("Escape");

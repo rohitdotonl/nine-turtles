@@ -88,30 +88,37 @@
     </div>
   {/if}
 
-  <!-- Text size: the same six steps as + and -, and the same control as Settings. -->
-  <div class="flex flex-col gap-1.5">
-    <p id="aa-size-name" class="text-small text-ink-2">Text size</p>
-    <TextSize bind:size={preferences.textSize} labelledby="aa-size-name" bind:first />
+  <!--
+    One quiet line per setting (decision 0123): its name in small spaced
+    capitals at the left, its choices as plain words (or, for Appearance,
+    three small swatches) at the right. The chosen word is semibold in full
+    ink and underlined, so it shows without color; the rest are in the
+    second ink. Radio buttons underneath, so the arrow keys move along a line.
+  -->
+  <div class="aa-line">
+    <p id="aa-size-name" class="aa-name">Text size</p>
+    <div class="min-w-0 flex-1"><TextSize bind:size={preferences.textSize} labelledby="aa-size-name" bind:first /></div>
   </div>
 
-  <!-- Day, night or as the device is set: the same control as Settings (decision 0056). -->
-  <fieldset class="flex min-w-0 flex-col">
-    <legend class="mb-1.5 text-small text-ink-2">Appearance</legend>
-    <div class="choices fill" style="--columns: 3">
+  <!-- Day, night or as the device is set (decision 0056): a white swatch, a black one and one half of each. -->
+  <fieldset class="aa-line">
+    <legend class="aa-name">Appearance</legend>
+    <div class="aa-choices">
       {#each APPEARANCES as choice (choice.value)}
-        <label class="choice">
+        <label class="swatch" title={choice.label}>
           <input type="radio" name="aa-appearance" value={choice.value} bind:group={preferences.appearance} />
-          {choice.label}
+          <span aria-hidden="true" class={["dot", choice.value]}></span>
+          <span class="sr-only">{choice.label}</span>
         </label>
       {/each}
     </div>
   </fieldset>
 
-  <fieldset class="flex min-w-0 flex-col">
-    <legend class="mb-1.5 text-small text-ink-2">Theme</legend>
-    <div class="choices fill" style="--columns: 2">
+  <fieldset class="aa-line">
+    <legend class="aa-name">Theme</legend>
+    <div class="aa-choices">
       {#each THEMES as theme (theme)}
-        <label class="choice">
+        <label class="word">
           <input type="radio" name="aa-theme" value={theme} bind:group={preferences.theme} />
           {LOOKS[theme].label}
         </label>
@@ -119,12 +126,12 @@
     </div>
   </fieldset>
 
-  <fieldset class="flex min-w-0 flex-col">
-    <legend class="mb-1.5 text-small text-ink-2">Font</legend>
-    <div class="choices fill" style="--columns: 3">
+  <fieldset class="aa-line">
+    <legend class="aa-name">Font</legend>
+    <div class="aa-choices">
       {#each Object.entries(READING_FONTS) as [value, font] (value)}
         <!-- Each name is set in its own font, so the choice shows itself. -->
-        <label class="choice" style:font-family={font.family}>
+        <label class="word" style:font-family={font.family}>
           <input type="radio" name="aa-font" {value} bind:group={preferences.readingFont} />
           {font.label}{#if font.rest}<span class="sr-only">{font.rest}</span>{/if}
         </label>
@@ -132,11 +139,11 @@
     </div>
   </fieldset>
 
-  <fieldset class="flex min-w-0 flex-col">
-    <legend class="mb-1.5 text-small text-ink-2">Line width</legend>
-    <div class="choices fill" style="--columns: 3">
+  <fieldset class="aa-line">
+    <legend class="aa-name">Line width</legend>
+    <div class="aa-choices">
       {#each Object.entries(LINE_WIDTHS) as [value, width] (value)}
-        <label class="choice">
+        <label class="word">
           <input type="radio" name="aa-width" {value} bind:group={preferences.lineWidth} />
           {width.label}
         </label>
@@ -151,7 +158,7 @@
     position: fixed;
   }
   .popover {
-    width: min(22rem, calc(100vw - 2rem));
+    width: min(26rem, calc(100vw - 2rem));
     max-height: calc(100dvh - 6rem);
     padding: 1rem;
   }
@@ -165,17 +172,103 @@
     border-radius: 1rem 1rem 0 0;
   }
 
-  /* app.css's segmented control, filling the panel in even columns. */
-  .fill {
-    display: grid;
-    grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+  /* A line: the setting's name in a fixed column, its choices after it. */
+  .aa-line {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.75rem;
   }
-  .fill :global(.choice) {
+  .aa-name {
+    float: left;
+    flex: none;
+    width: 5.5rem;
+    padding: 0;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .aa-choices {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.875rem;
+  }
+  /* Every choice 44px to press, with a mouse too: the floor allows less only in the sidebar and the search options. */
+  .word,
+  .swatch {
+    position: relative;
+    display: inline-flex;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    align-items: center;
     justify-content: center;
-    padding-inline: 0.5rem;
-    text-align: center;
-    line-height: 1.2;
-    text-wrap: balance;
+    cursor: pointer;
   }
-
+  .word {
+    color: var(--ink-2);
+    text-decoration: underline 2px transparent;
+    text-underline-offset: 0.4em;
+  }
+  @media (hover: hover) {
+    .word:hover {
+      color: var(--ink);
+    }
+  }
+  .word:has(input:checked) {
+    color: var(--ink);
+    font-weight: 600;
+    text-decoration-color: currentColor;
+  }
+  .word input,
+  .swatch input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .word:has(input:focus-visible),
+  .swatch:has(input:focus-visible) {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  .swatch {
+    width: 2.75rem;
+  }
+  /* A swatch: 24px, with a faint edge so the white one shows on white; the chosen one has a ring of the text color around it. */
+  .dot {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--ink) 60%, transparent);
+  }
+  .dot.light {
+    background: #ffffff;
+  }
+  .dot.dark {
+    background: #141414;
+  }
+  .dot.auto {
+    background: linear-gradient(90deg, #ffffff 50%, #141414 50%);
+  }
+  .swatch:has(input:checked) .dot {
+    box-shadow:
+      0 0 0 2px var(--surface-raised),
+      0 0 0 4px var(--ink);
+  }
+  @media (forced-colors: active) {
+    .swatch:has(input:checked) .dot {
+      forced-color-adjust: none;
+      outline: 2px solid Highlight;
+      outline-offset: 2px;
+    }
+  }
 </style>

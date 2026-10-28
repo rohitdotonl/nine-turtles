@@ -110,12 +110,13 @@ test("a feed put in two folders appears under both, with its unread count in eac
   }
   // Under both, and nowhere else.
   await expect(sidebar(page).getByRole("link", { name: `Renamed ${blog} 3 unread` })).toHaveCount(2);
-  // As in a Mac source list, a folder's arrow comes before its name, and every count ends at the
-  // same right edge, one column of numbers, folder or feed (decision 0041).
+  // A folder's arrow sits at the row's right end, over its count, so the name starts on the
+  // margin with nothing before it; every count still ends at one right edge (decisions 0041, 0123).
   const folderLink = sidebar(page).getByRole("link", { name: `${first} 3 unread` });
   const arrow = (await sidebar(page).getByRole("button", { name: `Feeds in ${first}` }).boundingBox())!;
-  expect(arrow.x + arrow.width).toBeLessThanOrEqual((await folderLink.boundingBox())!.x + 1);
-  // Every name starts on one left edge, Unread's, the folder's and a loose feed's alike; a folder's feeds one step in (decision 0043).
+  const folderBox = (await folderLink.boundingBox())!;
+  expect(Math.abs(arrow.x + arrow.width - (folderBox.x + folderBox.width))).toBeLessThan(1);
+  // A folder's name starts where the icons do; its feeds, like every other name, on Unread's edge (decision 0123).
   const nameStart = (link: Locator) =>
     link.evaluate((element) => {
       const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, (node) => (node.textContent!.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP));
@@ -124,8 +125,8 @@ test("a feed put in two folders appears under both, with its unread count in eac
       return range.getBoundingClientRect().left;
     });
   const labelEdge = await nameStart(sidebar(page).getByRole("link", { name: "Unread", exact: true }));
-  expect(Math.abs((await nameStart(folderLink)) - labelEdge)).toBeLessThan(1);
-  expect(Math.abs((await nameStart(sidebar(page).getByRole("link", { name: `Renamed ${blog} 3 unread` }).first())) - labelEdge - 18)).toBeLessThan(1);
+  expect(Math.abs((await nameStart(folderLink)) - labelEdge + 26)).toBeLessThan(1);
+  expect(Math.abs((await nameStart(sidebar(page).getByRole("link", { name: `Renamed ${blog} 3 unread` }).first())) - labelEdge)).toBeLessThan(1);
   const countEnd = (link: Locator) => link.locator(".tabular-nums").evaluate((element) => element.getBoundingClientRect().right);
   const feedLink = sidebar(page).getByRole("link", { name: `Renamed ${blog} 3 unread` }).first();
   expect(Math.abs((await countEnd(folderLink)) - (await countEnd(feedLink)))).toBeLessThan(1);
@@ -135,6 +136,30 @@ test("a feed put in two folders appears under both, with its unread count in eac
   await expect(page).toHaveURL(/\/folders\/[0-9]+$/);
   await expect(page.getByRole("heading", { level: 2, name: first })).toBeFocused();
   await expect(page.getByRole("region", { name: first }).getByRole("listitem")).toHaveCount(3);
+  // The whole row is its toggle: choosing the folder you're in folds it, and again unfolds it (decision 0123).
+  const firstToggle = sidebar(page).getByRole("button", { name: `Feeds in ${first}` });
+  await expect(firstToggle).toHaveAttribute("aria-expanded", "true");
+  const firstRow = sidebar(page).locator(`[data-folder-link]`, { hasText: first }).first();
+  await expect(firstRow).toHaveAttribute("aria-expanded", "true");
+  await firstRow.click();
+  await expect(firstToggle).toHaveAttribute("aria-expanded", "false");
+  // A screen reader hears the change on the name too.
+  await expect(firstRow).toHaveAttribute("aria-expanded", "false");
+  await expect(page).toHaveURL(/\/folders\/[0-9]+$/);
+  await firstRow.click();
+  await expect(firstToggle).toHaveAttribute("aria-expanded", "true");
+  // With the keyboard too: Enter on the folder you're in folds it.
+  await firstRow.focus();
+  await page.keyboard.press("Enter");
+  await expect(firstToggle).toHaveAttribute("aria-expanded", "false");
+  // The arrow waits unseen at the row's end (the pointer moved away), and shows once the keyboard reaches it.
+  await page.mouse.move(700, 500);
+  await expect(firstToggle).toHaveCSS("opacity", "0");
+  await page.keyboard.press("Tab");
+  await expect(firstToggle).toBeFocused();
+  await expect(firstToggle).toHaveCSS("opacity", "1");
+  await page.keyboard.press("Enter");
+  await expect(firstToggle).toHaveAttribute("aria-expanded", "true");
 });
 
 test("rename a folder; delete it, its feeds stay, and Undo brings it back", async ({ page }) => {
@@ -176,7 +201,9 @@ test("rename a folder; delete it, its feeds stay, and Undo brings it back", asyn
   await page.keyboard.press("u");
   await expect(line(page)).toHaveText("Undone.");
   await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Aa-${folder}`) })).toBeVisible();
-  await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) })).toHaveCount(0);
+  // The feed is back in its folder, open since choosing it opened it (decision 0123), and in no other place.
+  await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) })).toHaveCount(1);
+  await expect(sidebar(page).locator('ul[id^="folder-"]').getByRole("link", { name: new RegExp(`^Blog ${blog}`) })).toBeVisible();
 });
 
 test("Undo after deleting a folder limits its saved searches to it again", async ({ page }) => {
@@ -462,7 +489,7 @@ test("Edit feed opens over the article you were reading; closing it gives the ke
 test.describe("on a touch screen beside the list", () => {
   test.use({ hasTouch: true });
 
-  test("a folder's arrow keeps a 44px target for a finger, reaching into the pane's margin", async ({ page }) => {
+  test("a folder's arrow shows on a touch screen, with a 44px target for a finger", async ({ page }) => {
     const blog = unique("touched");
     const folder = unique("Drawer");
     await openBlogs(page, [blog]);
@@ -474,22 +501,11 @@ test.describe("on a touch screen beside the list", () => {
     expect(await page.evaluate(() => matchMedia("(pointer: coarse)").matches)).toBe(true);
     // With a long sidebar (other tests' folders and collections) the arrow may sit under the top line: bring it into view.
     await arrow.evaluate((element) => element.scrollIntoView({ block: "center" }));
-    // The arrow is drawn in the 38px icon column; its target reaches 6px further out (decision 0043).
+    // On a touch screen the arrow always shows, at the row's right end, a full 44px to press (decision 0123).
     const box = (await arrow.boundingBox())!;
-    const target = await arrow.evaluate((element) => {
-      const before = getComputedStyle(element, "::before");
-      return { width: parseFloat(before.width), height: parseFloat(before.height) };
-    });
-    expect(Math.max(box.width, target.width)).toBeGreaterThanOrEqual(44);
-    expect(Math.max(box.height, target.height)).toBeGreaterThanOrEqual(44);
-    // A finger landing in the margin just left of the arrow still finds it.
-    // Measured at the same moment as it's tried: the sidebar can still move
-    // a little as other tests' feeds arrive in it.
-    const found = await arrow.evaluate((element) => {
-      const box = element.getBoundingClientRect();
-      return element.contains(document.elementFromPoint(box.left - 4, box.top + box.height / 2));
-    });
-    expect(found).toBe(true);
+    expect(box.width).toBeGreaterThanOrEqual(44);
+    expect(box.height).toBeGreaterThanOrEqual(44);
+    await expect(arrow).toHaveCSS("opacity", "1");
   });
 });
 

@@ -16,7 +16,7 @@
   import Sheet from "./Sheet.svelte";
   import { edge } from "./edge";
   import type { Feed, Folder } from "./shapes";
-  import { ACTIONS, createRule, editRule, ruleRefused, type Rule, type RuleAction, type RuleDraft } from "./rules";
+  import { ACTIONS, blankWidth, createRule, editRule, placeChoice, ruleRefused, type Rule, type RuleAction, type RuleDraft } from "./rules";
 
   let {
     rule,
@@ -44,12 +44,6 @@
     onDelete: (rule: Rule) => void;
   } = $props();
 
-  const ACTION_HELP: Record<RuleAction, string> = {
-    mute: "Kept, but out of every list and counted as read. Search still finds it.",
-    star: "It goes straight into Starred.",
-    read: "It stays in its feed's list, already read.",
-  };
-
   // The form starts from the rule as it is now (or a fresh one), once.
   const start = (() => rule)();
   const startFeed = (() => feedId)();
@@ -61,6 +55,8 @@
   let place = $state(
     start?.placeGone ? "" : start?.feedId != null ? `feed:${start.feedId}` : start?.folderId != null ? `folder:${start.folderId}` : startFeed !== undefined ? `feed:${startFeed}` : "all",
   );
+  let chosen = $derived(ACTIONS.find((choice) => choice.value === action) ?? ACTIONS[0]!);
+
   let busy = $state(false);
   let message = $state("");
   let wordsField: HTMLInputElement | undefined = $state();
@@ -141,84 +137,79 @@
 
 {#snippet form()}
   <form onsubmit={save} class={["flex flex-col gap-5", !sheet && "flex-1"]}>
-    <div class="flex flex-col">
-      <label class="flex flex-col gap-1.5">
-        <span class="text-small text-ink-2">Word or phrase</span>
-        <input
-          bind:this={wordsField}
-          bind:value={words}
-          type="text"
-          autocomplete="off"
-          placeholder="sponsored"
-          aria-describedby="rule-words-help"
-          aria-invalid={message !== "" && !words.trim() && !author.trim()}
-          class="field"
-        />
-      </label>
-      <span id="rule-words-help" class="field-help">Found as whole words, whatever their capital letters.</span>
+    <!--
+      The rule as one sentence, its blanks the fields (decision 0123): "When a
+      new article has ___ in its title, by any author, from all feeds, then
+      mute it." Each blank is a real field or menu, named for screen readers,
+      with a dashed line under it and 44px to press.
+    -->
+    <!-- The two text blanks are never narrower than their placeholders ("a word" is 6 letters, "any author" 10). -->
+    <div role="group" aria-label="Rule" class="rule-sentence">
+      When a new article has
+      <input
+        bind:this={wordsField}
+        bind:value={words}
+        type="text"
+        autocomplete="off"
+        placeholder="a word"
+        aria-label="Word or phrase"
+        aria-describedby="rule-words-help"
+        aria-invalid={message !== "" && !words.trim() && !author.trim()}
+        class="blank"
+        style:width={blankWidth(words.padEnd(6), 0.3)}
+      />
+      in
+      <span class="blank-pick"
+        ><select bind:value={titleOnly} aria-label="Where to look" class="blank" style:width={blankWidth(titleOnly ? "its title" : "its title or text")}>
+          <option value={true}>its title</option>
+          <option value={false}>its title or text</option>
+        </select><Icon name="chevron-down" size={14} /></span
+      >, by
+      <input
+        bind:value={author}
+        type="text"
+        autocomplete="off"
+        placeholder="any author"
+        aria-label="Author"
+        aria-describedby="rule-author-help"
+        class="blank"
+        style:width={blankWidth(author.padEnd(10), 0.3)}
+      />, from
+      <span class="blank-pick"
+        ><select bind:value={place} aria-label="In" aria-invalid={place === ""} class="blank" style:width={blankWidth(placeChoice(place, feeds, folders))}>
+          {#if place === ""}<option value="" disabled>choose where…</option>{/if}
+          <option value="all">all feeds</option>
+          {#if folders.length > 0}
+            <optgroup label="Folders">
+              {#each folders as folder (folder.id)}
+                <option value={`folder:${folder.id}`}>{folder.name}</option>
+              {/each}
+            </optgroup>
+          {/if}
+          {#if feeds.length > 0}
+            <optgroup label="Feeds">
+              {#each feeds as feed (feed.id)}
+                <option value={`feed:${feed.id}`}>{feed.title}</option>
+              {/each}
+            </optgroup>
+          {/if}
+        </select><Icon name="chevron-down" size={14} /></span
+      >, then
+      <span class="blank-pick"
+        ><select bind:value={action} aria-label="Then" aria-describedby="rule-action-help" class="blank" style:width={blankWidth(chosen.words)}>
+          {#each ACTIONS as choice (choice.value)}
+            <option value={choice.value}>{choice.words}</option>
+          {/each}
+        </select><Icon name="chevron-down" size={14} /></span
+      >.
     </div>
 
-    <fieldset class="flex min-w-0 flex-col gap-1.5">
-      <legend class="mb-1.5 text-small text-ink-2">Look in</legend>
-      <div class="inset-group">
-        <label class="inset-row check-row">
-          <input type="radio" name="rule-where" value={true} bind:group={titleOnly} />
-          <span>The title</span>
-          <span aria-hidden="true" class="radio-mark shrink-0"></span>
-        </label>
-        <label class="inset-row check-row">
-          <input type="radio" name="rule-where" value={false} bind:group={titleOnly} />
-          <span>The title or the text</span>
-          <span aria-hidden="true" class="radio-mark shrink-0"></span>
-        </label>
-      </div>
-    </fieldset>
-
-    <div class="flex flex-col">
-      <label class="flex flex-col gap-1.5">
-        <span class="text-small text-ink-2">Author</span>
-        <input bind:value={author} type="text" autocomplete="off" class="field" aria-describedby="rule-author-help" />
-      </label>
-      <span id="rule-author-help" class="field-help">Optional: only articles by this author.</span>
+    <!-- What the chosen action does, and how words are found, in quiet words under the sentence. -->
+    <div class="flex flex-col gap-1 text-small text-muted">
+      <span id="rule-action-help">{chosen.help}</span>
+      <span id="rule-words-help">Words are found whole, whatever their capital letters.</span>
+      <span id="rule-author-help" class="sr-only">Optional: only articles by this author.</span>
     </div>
-
-    <label class="flex flex-col gap-1.5">
-      <span class="text-small text-ink-2">In</span>
-      <select bind:value={place} class="field" aria-invalid={place === ""}>
-        {#if place === ""}<option value="" disabled>Choose where…</option>{/if}
-        <option value="all">All feeds</option>
-        {#if folders.length > 0}
-          <optgroup label="Folders">
-            {#each folders as folder (folder.id)}
-              <option value={`folder:${folder.id}`}>{folder.name}</option>
-            {/each}
-          </optgroup>
-        {/if}
-        {#if feeds.length > 0}
-          <optgroup label="Feeds">
-            {#each feeds as feed (feed.id)}
-              <option value={`feed:${feed.id}`}>{feed.title}</option>
-            {/each}
-          </optgroup>
-        {/if}
-      </select>
-    </label>
-
-    <fieldset class="flex min-w-0 flex-col gap-1.5">
-      <legend class="mb-1.5 text-small text-ink-2">Then</legend>
-      <div class="inset-group">
-        {#each ACTIONS as choice (choice.value)}
-          <label class="inset-row check-row flex-nowrap">
-            <input type="radio" name="rule-action" value={choice.value} bind:group={action} aria-describedby={`rule-action-${choice.value}`} />
-            <span class="flex min-w-0 flex-col py-1">
-              <span>{choice.label}</span>
-              <span id={`rule-action-${choice.value}`} class="text-small text-muted">{ACTION_HELP[choice.value]}</span>
-            </span>
-            <span aria-hidden="true" class="radio-mark shrink-0"></span>
-          </label>
-        {/each}
-      </div>
-    </fieldset>
 
     <!-- A problem, in red words with an icon, only once there is one: the sheet grows by its line. -->
     <p role="status" class={["flex items-start gap-1.5 text-small text-danger", !message && "sr-only"]}>
@@ -243,6 +234,63 @@
     {/if}
   </form>
 {/snippet}
+
+<style>
+  /*
+    The rule's sentence (decision 0123): set in the reading serif, large
+    enough that the blanks read as part of it. A blank is a field or menu
+    with no box, only a dashed line under it in a soft tone of the text, so
+    it reads as a space to fill; the keyboard's outline marks the one in use.
+  */
+  .rule-sentence {
+    font-family: var(--font-serif);
+    font-size: 1.375rem;
+    line-height: 2.75rem;
+    color: var(--ink-2);
+  }
+  .blank {
+    min-height: 2.75rem;
+    max-width: 100%;
+    padding: 0 0.125rem;
+    border: 0;
+    border-bottom: 1px dashed color-mix(in srgb, var(--ink) 60%, transparent);
+    border-radius: 0;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    vertical-align: baseline;
+  }
+  .blank::placeholder {
+    color: var(--muted);
+    opacity: 1;
+  }
+  .blank[aria-invalid="true"] {
+    border-bottom: 1px solid var(--danger);
+  }
+  .blank:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--ink) 65%, transparent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  .blank-pick {
+    position: relative;
+    display: inline-flex;
+    max-width: 100%;
+    align-items: center;
+    color: var(--muted);
+  }
+  select.blank {
+    appearance: none;
+    padding-right: 1.25rem;
+    text-overflow: ellipsis;
+    cursor: pointer;
+  }
+  .blank-pick :global(svg) {
+    position: absolute;
+    right: 0.125rem;
+    pointer-events: none;
+  }
+</style>
 
 {#if sheet}
   <Sheet {title} bind:heading onClose={onCancel}>

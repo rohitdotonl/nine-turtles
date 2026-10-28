@@ -281,6 +281,16 @@ test.describe("on a wide window", () => {
 
     // Appearance: day, night or as the device is set, applied at once (decision 0056).
     await expect(panel.getByRole("group", { name: "Appearance" }).getByRole("radio")).toHaveCount(3);
+    // One line per setting (decision 0123): every choice 44px to press; the chosen word
+    // semibold and underlined, so it shows without color; Appearance as named swatches.
+    for (const choice of await panel.locator("label").all()) {
+      const box = (await choice.boundingBox())!;
+      expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
+    }
+    const chosenWidth = panel.locator("label", { has: page.getByRole("radio", { name: "Medium" }) });
+    await expect(chosenWidth).toHaveCSS("font-weight", "600");
+    await expect(chosenWidth).toHaveCSS("text-decoration-line", "underline");
+    await expect(panel.locator("label", { has: page.getByRole("radio", { name: "Match device" }) })).toHaveAttribute("title", "Match device");
     await expect(panel.getByRole("radio", { name: "Match device" })).toBeChecked();
     // Theme: Original or Plain, whose article links are the browser's blue (decision 0063).
     const themes = panel.getByRole("group", { name: "Theme" });
@@ -420,13 +430,8 @@ test.describe("on a wide window", () => {
     expect(Math.abs(titleX - paneX - 32)).toBeLessThan(1);
     expect(Math.abs((await page.locator("#list-heading").boundingBox())!.x - titleX)).toBeLessThan(1);
     expect(Math.abs((await page.locator(".search-box").boundingBox())!.x - titleX)).toBeLessThan(1);
-    // The hairlines run from the titles' edge to the pill's right edge, so a
-    // line and the selection end in the same place.
-    const hairline = await page.locator(".item-list > li + li").first().evaluate((element) => {
-      const css = getComputedStyle(element, "::before");
-      return [css.left, css.right];
-    });
-    expect(hairline).toEqual(["32px", "8px"]);
+    // No line parts the rows: space alone does (decision 0123).
+    expect(await page.locator(".item-list > li + li").first().evaluate((element) => getComputedStyle(element, "::before").content)).toBe("none");
     await expect(selected).toHaveCSS("outline-offset", "-2px");
     // The pill is the accent mixed into the list: deeper than the list, never the hover's neutral tone.
     const [fill, tint] = await selected.evaluate((element) => {

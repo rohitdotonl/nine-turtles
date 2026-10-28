@@ -32,11 +32,33 @@ export type RuleDraft = Pick<Rule, "words" | "titleOnly" | "author" | "feedId" |
   placeGone?: boolean;
 };
 
-export const ACTIONS: { value: RuleAction; label: string }[] = [
-  { value: "mute", label: "Mute" },
-  { value: "star", label: "Star" },
-  { value: "read", label: "Mark as read" },
+/** Each action: its words at the end of the rule's sentence, and the quiet line under it saying what it does. */
+export const ACTIONS: { value: RuleAction; words: string; help: string }[] = [
+  { value: "mute", words: "mute it", help: "Kept, but out of every list and counted as read. Search still finds it." },
+  { value: "star", words: "star it", help: "It goes straight into Starred." },
+  { value: "read", words: "mark it as read", help: "It stays in its feed's list, already read." },
 ];
+
+/**
+ * The words a chosen place shows in the rule's sentence: "all feeds", a
+ * folder's or feed's name, or "choose where…" while none is chosen. `place`
+ * is the editor's menu value: "all", "folder:7", "feed:3" or "".
+ */
+export function placeChoice(place: string, feeds: Feed[], folders: Folder[]): string {
+  const [kind, id] = place.split(":");
+  if (kind === "folder") return folders.find((folder) => folder.id === Number(id))?.name ?? "";
+  if (kind === "feed") return feeds.find((feed) => feed.id === Number(id))?.title ?? "";
+  return place === "" ? "choose where…" : "all feeds";
+}
+
+/**
+ * How wide a blank in the rule's sentence is, as CSS: about half an em per
+ * letter of its words (28 at most), plus room for a menu's small arrow
+ * (1.25rem) or a field's edge (0.3rem), so the sentence reads without gaps.
+ */
+export function blankWidth(words: string, room = 1.25): string {
+  return `calc(${Math.min(words.length, 28) * 0.5 + 0.3}em + ${room}rem)`;
+}
 
 /** Why a rule wasn't saved. */
 export type RuleRefusal = "nothing-to-match" | "too-long" | "no-place" | "gone" | "trouble";

@@ -31,7 +31,7 @@
 <script lang="ts">
   import Icon from "./Icon.svelte";
   import type { Feed, Folder } from "./shapes";
-  import { findByName, folderUnread, inDevanagari, saveOpenFolders, savedOpenFolders, unreadLabel } from "./feeds";
+  import { findByName, folderChoice, folderUnread, inDevanagari, plainSourceName, saveOpenFolders, savedOpenFolders, unreadLabel } from "./feeds";
   import { pathFor, type Route } from "./router";
   import type { SavedSearch } from "./saved";
   import type { Collection } from "./collections";
@@ -115,7 +115,7 @@
   {#if phone}<span class="-mr-1 shrink-0 text-muted"><Icon name="chevron-right" size={16} /></span>{/if}
 {/snippet}
 
-{#snippet feedRow(feed: Feed, indent: boolean)}
+{#snippet feedRow(feed: Feed)}
   {@const place: Route = { kind: "feed", id: feed.id }}
   <li>
     <a
@@ -125,11 +125,11 @@
       title={feed.title}
       class={[
         "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-3 pr-3.5 text-ui pointer-fine:text-small",
-        // Every name starts on the sidebar's one left edge; inside a folder, one step further in.
-        indent ? "pl-14" : "pl-[38px]",
+        // Every feed's name starts on the sidebar's one name edge, in a folder or not (decision 0123).
+        "pl-[38px]",
         isHere(place) ? "font-semibold text-ink" : "text-ink",
       ]}
-      >{@render name(feed.title)}{@render count(feed.unread)}{@render leadsOn()}</a
+      >{@render name(plainSourceName(feed.title))}{@render count(feed.unread)}{@render leadsOn()}</a
     >
   </li>
 {/snippet}
@@ -170,16 +170,28 @@
   </li>
 {/snippet}
 
+<!--
+  A folder's name: a link to its articles. On the folder you're in it is also
+  the fold (decision 0123), so there it says whether the feeds show, for
+  screen readers, as the arrow button does.
+-->
 {#snippet folderLink(folder: Folder, padded: boolean)}
   {@const place: Route = { kind: "folder", id: folder.id }}
   <a
     href={pathFor(place)}
     aria-current={isHere(place) ? "page" : undefined}
-    onclick={(event) => follow(event, place)}
+    aria-expanded={!phone && !searching && isHere(place) ? open.includes(folder.id) : undefined}
+    onclick={(event) => {
+      const plain = !phone && !searching && !event.metaKey && !event.ctrlKey && !event.shiftKey;
+      const does = folderChoice(isHere(place), open.includes(folder.id), plain);
+      if (does === "fold") event.preventDefault();
+      if (does !== "go") toggle(folder.id);
+      if (does !== "fold") follow(event, place);
+    }}
     data-folder-link={folder.id}
     title={folder.name}
-    class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center gap-3 rounded-md pr-3.5 text-ui pointer-fine:text-small", padded && "pl-[38px]", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
-    >{@render name(folder.name)}{@render count(folderUnread(folder, feeds))}{@render leadsOn()}</a
+    class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center rounded-md pr-3.5 text-ui pointer-fine:text-small", padded ? "gap-3 pl-[38px]" : "gap-3 pl-3", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
+    >{@render name(folder.name)}<span class="folder-count flex shrink-0">{@render count(folderUnread(folder, feeds))}</span>{@render leadsOn()}</a
   >
 {/snippet}
 
@@ -196,7 +208,7 @@
         </li>
       {/each}
       {#each found.feeds as feed (feed.id)}
-        {@render feedRow(feed, false)}
+        {@render feedRow(feed)}
       {/each}
     </ul>
   {/if}
@@ -225,34 +237,40 @@
         {@const inside = feeds.filter((feed) => feed.folders.includes(folder.id))}
         {@const shown = phone || open.includes(folder.id)}
         <li>
-          <div class="place mx-2 flex" data-here={here || undefined}>
+          <div class="place folder-row relative mx-2 flex" data-here={here || undefined}>
+            {@render folderLink(folder, false)}
             {#if !phone}
-            <!-- The arrow first, as a Mac source list's disclosure, in the column where Unread, Starred and All have their icons. -->
-            <button
-              type="button"
-              aria-expanded={shown}
-              aria-controls={`folder-${folder.id}`}
-              aria-label={`Feeds in ${folder.name}`}
-              onclick={() => toggle(folder.id)}
-              class="disclosure relative flex min-h-11 pointer-fine:min-h-8 w-[38px] shrink-0 items-center justify-center rounded-md text-muted"
-            >
-              <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                {#if shown}
-                  <path d="M2.5 4.5 6 8l3.5-3.5" />
-                {:else}
-                  <path d="M4.5 2.5 8 6 4.5 9.5" />
-                {/if}
-              </svg>
-            </button>
+              <!--
+                The show-or-hide arrow at the row's right end, over the count, shown when the
+                pointer is on the row, the keyboard is on it, or on a touch screen; the count
+                steps aside while it shows, so the folder's name starts on the margin with
+                nothing before it (decision 0123).
+              -->
+              <button
+                type="button"
+                aria-expanded={shown}
+                aria-controls={`folder-${folder.id}`}
+                aria-label={`Feeds in ${folder.name}`}
+                title={shown ? "Hide feeds" : "Show feeds"}
+                onclick={() => toggle(folder.id)}
+                class="disclosure absolute inset-y-0 right-0 flex w-9 pointer-coarse:w-11 items-center justify-center rounded-md text-muted"
+              >
+                <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  {#if shown}
+                    <path d="M2.5 4.5 6 8l3.5-3.5" />
+                  {:else}
+                    <path d="M4.5 2.5 8 6 4.5 9.5" />
+                  {/if}
+                </svg>
+              </button>
             {/if}
-            {@render folderLink(folder, phone)}
           </div>
           {#if shown}
-            <ul id={`folder-${folder.id}`}>
+            <ul id={`folder-${folder.id}`} class={["mb-1", !phone && "folder-feeds"]}>
               {#each inside as feed (feed.id)}
-                {@render feedRow(feed, true)}
+                {@render feedRow(feed)}
               {:else}
-                <li class="py-2 pr-5 pl-16 text-meta text-muted">No feeds in this folder.</li>
+                <li class="py-2 pr-5 pl-[46px] text-meta text-muted">No feeds in this folder.</li>
               {/each}
             </ul>
           {/if}
@@ -264,7 +282,7 @@
     <h2 class="sidebar-section">Feeds</h2>
     <ul>
       {#each loose as feed (feed.id)}
-        {@render feedRow(feed, false)}
+        {@render feedRow(feed)}
       {/each}
     </ul>
   {/if}
@@ -272,16 +290,34 @@
 
 <style>
   /*
-    The arrow is drawn in the 38px icon column so every name shares one left
-    edge; on a touch screen its target reaches 6px further out, into the
-    pane's margin, so a finger still gets 44px.
+    A faint line down the left of an open folder's feeds, under the folder's
+    name, so the feeds read as its contents at a glance (decision 0123).
   */
+  .folder-feeds {
+    position: relative;
+  }
+  .folder-feeds::before {
+    content: "";
+    position: absolute;
+    inset-block: 0.25rem;
+    left: 21px;
+    border-left: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+  }
+  /*
+    With a mouse or keyboard the arrow hides until it's wanted, and the count
+    shows in its place meanwhile: made see-through rather than hidden, so
+    screen readers still read it in the folder's name. On a touch screen the
+    arrow always shows, and the count steps left of it rather than under it.
+  */
+  @media not (pointer: coarse) {
+    .folder-row:not(:hover) .disclosure:not(:focus-visible),
+    .folder-row:is(:hover, :has(.disclosure:focus-visible)) :global(.folder-count) {
+      opacity: 0;
+    }
+  }
   @media (pointer: coarse) {
-    .disclosure::before {
-      content: "";
-      position: absolute;
-      inset-block: 0;
-      inset-inline: -6px 0;
+    .folder-row > :global(a) {
+      padding-right: 2.75rem;
     }
   }
 </style>

@@ -129,6 +129,20 @@ export function saveOpenFolders(open: number[]) {
   setDeviceText(OPEN_KEY, JSON.stringify(open));
 }
 
+/**
+ * What choosing a folder's name in the sidebar does: the whole row is its
+ * toggle (decision 0123). Choosing the folder you're already in folds or
+ * unfolds it and stays put; choosing a closed one opens it and goes there; an
+ * open one elsewhere is just gone to. `plain` is false on a phone, in the
+ * sidebar's search results, or with ⌘, Ctrl or Shift held (a new tab or
+ * window): then it's only gone to.
+ */
+export function folderChoice(here: boolean, open: boolean, plain: boolean): "fold" | "open-and-go" | "go" {
+  if (!plain) return "go";
+  if (here) return "fold";
+  return open ? "go" : "open-and-go";
+}
+
 /** How often a feed posts, in plain words ("Posts about 3 times a week"), or nothing if it can't be said just now (decision 0105). */
 export async function feedFrequency(id: number): Promise<string | undefined> {
   try {
@@ -143,6 +157,16 @@ export async function feedFrequency(id: number): Promise<string | undefined> {
 export function unreadLabel(count: number): string {
   if (count <= 0) return "";
   return count > 999 ? "999+" : String(count);
+}
+
+/**
+ * A source's name as the article list shows it: a newsletter's name without
+ * the sender's address that its feed title carries ("Every (hi@every.to)"
+ * shows as "Every"). The address says nothing a reader needs on every row.
+ */
+export function plainSourceName(title: string): string {
+  const plain = title.replace(/\s*[(<][^()<>\s]+@[^()<>\s]+[)>]\s*$/, "").trim();
+  return plain || title;
 }
 
 /**

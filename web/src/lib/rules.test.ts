@@ -1,6 +1,6 @@
 import { describe as group, expect, it } from "vitest";
 import type { Feed, Folder } from "./shapes";
-import { applyQuestion, appliedMessage, describe, ruleRefused, type Rule } from "./rules";
+import { ACTIONS, applyQuestion, appliedMessage, blankWidth, describe, placeChoice, ruleRefused, type Rule } from "./rules";
 
 const feeds: Feed[] = [{ id: 3, title: "Garden Notes", siteUrl: null, unread: 0, folders: [7], river: false, check: "automatic", openOnSite: false }];
 const folders: Folder[] = [{ id: 7, name: "Tech" }];
@@ -50,5 +50,26 @@ group("a rule in words", () => {
   it("never shows an error code", () => {
     expect(ruleRefused("nothing-to-match")).toBe("Write a word, a phrase or an author to look for.");
     expect(ruleRefused("trouble")).not.toMatch(/[0-9]/);
+  });
+});
+
+group("the rule's sentence", () => {
+  it("names the chosen place in its blank", () => {
+    expect(placeChoice("all", feeds, folders)).toBe("all feeds");
+    expect(placeChoice("folder:7", feeds, folders)).toBe("Tech");
+    expect(placeChoice("feed:3", feeds, folders)).toBe("Garden Notes");
+    expect(placeChoice("", feeds, folders)).toBe("choose where…");
+    expect(placeChoice("feed:99", feeds, folders)).toBe("");
+  });
+
+  it("sizes a blank to its words, with room for a menu's arrow, up to 28 letters", () => {
+    expect(blankWidth("star it")).toBe("calc(3.8em + 1.25rem)");
+    expect(blankWidth("a word", 0.3)).toBe("calc(3.3em + 0.3rem)");
+    expect(blankWidth("x".repeat(40))).toBe(blankWidth("x".repeat(28)));
+  });
+
+  it("ends with each action's words, and says what it does", () => {
+    expect(ACTIONS.map((choice) => choice.words)).toEqual(["mute it", "star it", "mark it as read"]);
+    expect(ACTIONS.every((choice) => choice.help.endsWith("."))).toBe(true);
   });
 });

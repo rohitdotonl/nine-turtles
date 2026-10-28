@@ -37,7 +37,7 @@
   import { onMount, tick, untrack } from "svelte";
   import type { Article, Source } from "./shapes";
   import type { Order } from "./reading";
-  import type { Notice } from "./feeds";
+  import { plainSourceName, type Notice } from "./feeds";
   import { catchUp as catchUpOnServer, caughtUpMessage, endOfList, listArticles, markedAllMessage, newItemsMessage, newItemsWaiting, nothingPastMessage, noteOpened, readPast, uncatchUp } from "./lists";
   import { markRead, markStarred } from "./saving";
   import { prefetch } from "./articles";
@@ -799,10 +799,11 @@
           <!--
             Always one line, as Apple Books' rows are (decision 0048): a long source name ends in "…",
             and the time and the star never wrap below it. The "·" hugs the "…" (decision 0051). The whole line
-            is 12px and a step fainter than muted grey, so the title leads; on the selected row it's muted grey (AA).
+            is 12px, so the title leads: the time a step fainter than muted grey, the publisher's name in muted grey
+            (.row-feed, decision 0123) so the credit reads first; on the selected row both are muted grey (AA).
           -->
           <span class={["row-meta mt-1 text-[0.75rem]", current ? "text-muted" : "text-[color:var(--faint)]"]}>
-            <span class={oneFeed ? "sr-only" : "row-feed"}><span class="row-feed-name" use:hugEllipsis={article.feedTitle}>{article.feedTitle}</span>&nbsp;·</span>
+            <span class={oneFeed ? "sr-only" : "row-feed"}><span class="row-feed-name" use:hugEllipsis={plainSourceName(article.feedTitle)}>{plainSourceName(article.feedTitle)}</span>&nbsp;·</span>
             <time datetime={new Date(article.at * 1000).toISOString()} class="row-date">{when(article.at)}</time>
             {#if article.episode}
               <!-- A podcast's episode (SPEC section 35): a small headphones mark in the line's own ink, and its length. -->
@@ -921,7 +922,9 @@
     white-space: nowrap;
     font-variant-numeric: proportional-nums;
   }
+  /* The publisher's name a step stronger than the time, so the credit reads first (decision 0123). */
   .row-feed {
+    color: var(--muted);
     display: flex;
     min-width: 0;
     flex: 0 1 auto;
