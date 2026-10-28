@@ -177,3 +177,5 @@ SMTP: one provider's way of working, where SMTP is the same everywhere. A
 grace period before deleting (the owner chose none). A captcha on sign-up
 (the owner chose limits and confirmation instead). Confirming invite
 sign-ups (above). Confirming as the page opens (above).
+
+*Update, 28 October 2026 (decision 0125):* the owner's "Your email" box is gone; the owner changes their email by Change… and a link, like everyone.

@@ -161,7 +161,6 @@ test("Readers is only the owner's", async ({ browser, page }, testInfo) => {
   await expect(reader.getByRole("button", { name: "Delete account…" })).toBeVisible();
   await reader.goto("/settings/readers");
   await expect(reader.getByText("Only whoever runs this nine turtles sees Readers.")).toBeVisible();
-  await expect(reader.getByPlaceholder("Your email")).toHaveCount(0);
   await other.close();
 });
 

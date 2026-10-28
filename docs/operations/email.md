@@ -66,7 +66,7 @@ turtles doesn't start, and the log says so.
 
 1. Open nine turtles in a private window. The sign-in page now shows a
    small **Forgot?** beside Password.
-2. Press it, type your own email (the one in Settings › Readers) and press
+2. Press it, type your own email (the one in Settings › Account) and press
    **Email me a link**. An email "Sign in to nine turtles" arrives in a
    minute or two, with a link that signs you in once, within 15 minutes.
    You don't have to use the link: your password stays as it is until you do.
