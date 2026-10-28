@@ -674,16 +674,17 @@ impl PasswordChoices {
             .map(|choice| (choice.person, choice.email.clone()))
     }
 
-    /// Spends ticket `hash`, answering whose it was, once only.
+    /// Spends ticket `hash`, answering whose it was, once only. Every other
+    /// ticket of that reader's goes with it, so two used at once can't both
+    /// set a password (as an emailed link can be used only once).
     fn take(&self, hash: &[u8; 32], now: i64) -> Option<(i64, String)> {
         let mut waiting = self
             .waiting
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
-        waiting
-            .remove(hash)
-            .filter(|choice| choice.expires_at > now)
-            .map(|choice| (choice.person, choice.email))
+        let choice = waiting.remove(hash)?;
+        waiting.retain(|_, other| other.person != choice.person);
+        (choice.expires_at > now).then_some((choice.person, choice.email))
     }
 
     /// Every offer for `person` stops working (a new password was set).
@@ -936,6 +937,9 @@ async fn delete_me(SignedIn(person): SignedIn, State(state): State<AppState>) ->
     }
     match people::delete(&state.db, person).await {
         Ok(()) => {
+            // A later account could be given the same number: nothing waiting
+            // for this one carries over to it.
+            state.password_choices.end_for(person);
             log::info("a reader deleted their account");
             (StatusCode::NO_CONTENT, crate::auth::signed_out_cookies()).into_response()
         }
@@ -954,5 +958,51 @@ async fn delete_my_data(SignedIn(person): SignedIn, State(state): State<AppState
             StatusCode::NO_CONTENT.into_response()
         }
         Err(error) => database_problem("deleting a reader's data", &error),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn choices() -> PasswordChoices {
+        PasswordChoices {
+            waiting: std::sync::Mutex::new(std::collections::HashMap::new()),
+        }
+    }
+
+    #[test]
+    fn a_choice_works_once_within_the_hour() {
+        let waiting = choices();
+        let ticket = waiting.offer(7, "sam@example.com", 1_000).unwrap();
+        let hash = scramble(&ticket);
+        assert_eq!(
+            waiting.peek(&hash, 1_000 + RESET_LIFETIME - 1),
+            Some((7, "sam@example.com".to_owned()))
+        );
+        assert_eq!(waiting.peek(&hash, 1_000 + RESET_LIFETIME), None);
+        assert_eq!(waiting.take(&hash, 1_000 + RESET_LIFETIME), None);
+        let again = scramble(&waiting.offer(7, "sam@example.com", 2_000).unwrap());
+        assert_eq!(
+            waiting.take(&again, 2_001),
+            Some((7, "sam@example.com".to_owned()))
+        );
+        assert_eq!(waiting.take(&again, 2_002), None);
+    }
+
+    #[test]
+    fn using_one_choice_ends_the_readers_others_but_nobody_elses() {
+        let waiting = choices();
+        let first = scramble(&waiting.offer(7, "sam@example.com", 1_000).unwrap());
+        let second = scramble(&waiting.offer(7, "sam@example.com", 1_001).unwrap());
+        let theirs = scramble(&waiting.offer(8, "kim@example.com", 1_002).unwrap());
+        assert!(waiting.take(&first, 1_003).is_some());
+        assert_eq!(waiting.take(&second, 1_004), None);
+        assert_eq!(
+            waiting.peek(&theirs, 1_005),
+            Some((8, "kim@example.com".to_owned()))
+        );
+        waiting.end_for(8);
+        assert_eq!(waiting.peek(&theirs, 1_006), None);
     }
 }

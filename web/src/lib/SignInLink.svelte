@@ -31,6 +31,7 @@
   /** The choice ran out (an hour, or nine turtles restarted): the password stays, the reader goes on. */
   let lapsed = $state(false);
   let signedInHeading: HTMLHeadingElement | undefined = $state();
+  let lapsedMessage: HTMLParagraphElement | undefined = $state();
 
   async function signIn() {
     if (busy) return;
@@ -59,6 +60,8 @@
     if (result === "expired") {
       lapsed = true;
       message = "That took too long, so your password stays as it is. To choose a new one, sign out and press Forgot? again.";
+      // The form is gone: the keyboard, and a screen reader with it, goes to what replaced it.
+      tick().then(() => lapsedMessage?.focus());
       return;
     }
     message = explainLink(result, "reset");
@@ -90,7 +93,7 @@
         <p>Choose a new password, if you like.</p>
       </div>
       {#if lapsed}
-        <p role="status" class="text-center">{message}</p>
+        <p bind:this={lapsedMessage} tabindex="-1" class="text-center">{message}</p>
         <a href="/" onclick={leave} class="btn-primary rounded-lg">Open nine turtles</a>
       {:else}
         <form class="flex flex-col gap-3" onsubmit={choose}>

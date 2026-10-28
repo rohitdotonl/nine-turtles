@@ -364,3 +364,30 @@ test("a reader signs in by an emailed link, once, keeping their password, with o
   await laptop.context().close();
   await context.close();
 });
+
+test("choosing a password after the hour has run out says so, and the keyboard goes to what it says", async ({ browser }, testInfo) => {
+  const email = `lapsed-${testInfo.project.name}-${Date.now()}@example.com`;
+  const laptop = await newReader(browser, email);
+  const context = await browser.newContext({ baseURL: MAIL_APP });
+  const page = await context.newPage();
+  await page.goto("/");
+  await page.getByLabel("Email").fill(email);
+  await page.getByRole("link", { name: "Forgot?" }).click();
+  await page.getByRole("button", { name: "Email me a link" }).click();
+  await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
+  const { link } = await newestMail(email, "Sign in to nine turtles");
+  await page.goto(link);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page.getByRole("heading", { name: "You're signed in" })).toBeFocused();
+  // As if the hour ran out, or nine turtles restarted, while the page was open.
+  await page.route("**/api/password/reset", (route) => route.fulfill({ status: 410, contentType: "application/json", body: JSON.stringify({ error: "expired" }) }));
+  await page.getByLabel("New password").fill("a-new-long-password");
+  await page.getByRole("button", { name: "Set password" }).click();
+  await expect(page.getByText("That took too long, so your password stays as it is.")).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("link", { name: "Open nine turtles" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#sidebar")).toBeAttached();
+  await laptop.context().close();
+  await context.close();
+});
