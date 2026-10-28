@@ -172,13 +172,13 @@ async fn edit_feed(
         if !follows(&mut transaction, person, id).await? {
             return Ok(None);
         }
+        rename_feed(&mut transaction, person, id, &title).await?;
         sqlx::query(
-            "UPDATE subscriptions SET title = ?, river = COALESCE(?, river),
+            "UPDATE subscriptions SET river = COALESCE(?, river),
                  open_on_site = COALESCE(?, open_on_site),
                  check_at_most = COALESCE(?, check_at_most)
              WHERE person_id = ? AND feed_id = ?",
         )
-        .bind(&title)
         .bind(form.river)
         .bind(form.open_on_site)
         .bind(form.check.map(Check::at_most))
@@ -200,23 +200,11 @@ async fn edit_feed(
             .execute(&mut *transaction)
             .await?;
         }
-        take_out_of_folders(&mut transaction, person, id).await?;
         let mut folders = form.folders.clone();
         if let Some(name) = &new_folder {
             folders.push(folder_named(&mut transaction, person, name).await?.0);
         }
-        // Folders that no longer exist (deleted in another tab), or that
-        // aren't the reader's, are skipped.
-        sqlx::query(
-            "INSERT OR IGNORE INTO feed_folders (folder_id, feed_id)
-             SELECT folders.id, ? FROM folders
-             WHERE folders.person_id = ? AND folders.id IN (SELECT value FROM json_each(?))",
-        )
-        .bind(id)
-        .bind(person)
-        .bind(serde_json::to_string(&folders).unwrap_or_else(|_| "[]".to_owned()))
-        .execute(&mut *transaction)
-        .await?;
+        file_in(&mut transaction, person, id, &folders).await?;
         // After the folders, so rules for folders act on the ones just saved.
         if let Some(paused) = form.paused {
             set_paused(&mut transaction, person, id, paused, now()).await?;
@@ -230,6 +218,46 @@ async fn edit_feed(
         Ok(None) => StatusCode::NOT_FOUND.into_response(),
         Err(error) => database_problem("editing a feed", &error),
     }
+}
+
+/// Gives a followed feed the reader's own name for it. The name is already
+/// cleaned (`clean_name`). Every way of renaming a feed comes here.
+pub async fn rename_feed(
+    connection: &mut SqliteConnection,
+    person: i64,
+    id: i64,
+    title: &str,
+) -> Result<(), sqlx::Error> {
+    sqlx::query("UPDATE subscriptions SET title = ? WHERE person_id = ? AND feed_id = ?")
+        .bind(title)
+        .bind(person)
+        .bind(id)
+        .execute(&mut *connection)
+        .await?;
+    Ok(())
+}
+
+/// Puts a feed in exactly these folders of the reader's, and out of their
+/// others. Folders that no longer exist (deleted in another tab), or that
+/// aren't the reader's, are skipped.
+pub async fn file_in(
+    connection: &mut SqliteConnection,
+    person: i64,
+    id: i64,
+    folders: &[i64],
+) -> Result<(), sqlx::Error> {
+    take_out_of_folders(connection, person, id).await?;
+    sqlx::query(
+        "INSERT OR IGNORE INTO feed_folders (folder_id, feed_id)
+         SELECT folders.id, ? FROM folders
+         WHERE folders.person_id = ? AND folders.id IN (SELECT value FROM json_each(?))",
+    )
+    .bind(id)
+    .bind(person)
+    .bind(serde_json::to_string(folders).unwrap_or_else(|_| "[]".to_owned()))
+    .execute(&mut *connection)
+    .await?;
+    Ok(())
 }
 
 /// Pauses a feed for the reader, or unpauses it. While it's paused its new
@@ -293,27 +321,60 @@ async fn set_paused(
     rules::apply_to(connection, person, id, &back).await
 }
 
-/// Unsubscribes: the feed is hidden straight away, and no longer checked if
-/// nobody else follows it. Any feed the reader unsubscribed from before is
-/// cleared for good first, since Undo only reverses the last action.
+/// Unsubscribes on the screen (Undo comes back through `resubscribe`).
 async fn unsubscribe(
     SignedIn(person): SignedIn,
     State(state): State<AppState>,
     Path(id): Path<i64>,
 ) -> Response {
-    let done: Result<u64, sqlx::Error> = async {
-        clear_unsubscribed(&state.db, Some(person), i64::MAX).await?;
-        let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
-        let hidden = hide(&mut transaction, person, &[id], now()).await?;
-        transaction.commit().await?;
-        Ok(hidden)
-    }
-    .await;
-    match done {
-        Ok(0) => StatusCode::NOT_FOUND.into_response(),
-        Ok(_) => StatusCode::NO_CONTENT.into_response(),
+    match leave(&state.db, person, id, now(), Leaving::Screen).await {
+        Ok(false) => StatusCode::NOT_FOUND.into_response(),
+        Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Err(error) => database_problem("unsubscribing", &error),
     }
+}
+
+/// Where a reader unsubscribed, which decides how long the feed waits,
+/// hidden, to be brought back.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Leaving {
+    /// Ten minutes (SPEC section 15). Any feed the reader unsubscribed from
+    /// before is cleared for good first, since Undo only reverses the last
+    /// action.
+    Screen,
+    /// Ten minutes too, but earlier feeds keep theirs (SPEC section 26).
+    App,
+    /// 30 days (`mcp::KEPT_FOR`), with Bring back in Settings (SPEC
+    /// section 33). Only a feed this hides: one the reader unsubscribed from
+    /// elsewhere keeps its own time.
+    Assistant,
+}
+
+/// Unsubscribes the reader from a feed: it's hidden straight away, and no
+/// longer checked if nobody else follows it. Background checking clears it
+/// for good once its time is up. Answers whether they followed it.
+pub async fn leave(
+    db: &sqlx::SqlitePool,
+    person: i64,
+    id: i64,
+    at: i64,
+    leaving: Leaving,
+) -> Result<bool, sqlx::Error> {
+    if leaving == Leaving::Screen {
+        clear_unsubscribed(db, Some(person), i64::MAX).await?;
+    }
+    let mut transaction = db.begin_with("BEGIN IMMEDIATE").await?;
+    let hidden = hide(&mut transaction, person, &[id], at).await? > 0;
+    if hidden && leaving == Leaving::Assistant {
+        sqlx::query("UPDATE subscriptions SET kept_until = ? WHERE person_id = ? AND feed_id = ?")
+            .bind(at + crate::mcp::KEPT_FOR)
+            .bind(person)
+            .bind(id)
+            .execute(&mut *transaction)
+            .await?;
+    }
+    transaction.commit().await?;
+    Ok(hidden)
 }
 
 /// Hides these feeds from the reader, as unsubscribed at `now`, and stops

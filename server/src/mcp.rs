@@ -40,8 +40,9 @@ use crate::{
     assistants::Assistant,
     dates::rfc3339,
     feeds::{self, NotAdded},
-    folders, health,
-    marks::{READ_SQL, STAR_SQL, now_ms},
+    folders::{self, Leaving},
+    health,
+    marks::{self, Mark, now_ms},
     now, rules,
     search::{self, Search},
     subscriptions,
@@ -824,25 +825,26 @@ async fn mark(state: &AppState, person: i64, asked: Marking) -> Answer {
     if asked.article_ids.len() > MOST_AT_ONCE {
         return Err(format!("At most {MOST_AT_ONCE} articles at once."));
     }
-    let (sql, value, word) = match (asked.read, asked.starred) {
-        (Some(read), None) => (READ_SQL, read, if read { "read" } else { "unread" }),
+    let (which, value, word) = match (asked.read, asked.starred) {
+        (Some(read), None) => (Mark::Read, read, if read { "read" } else { "unread" }),
         (None, Some(starred)) => (
-            STAR_SQL,
+            Mark::Starred,
             starred,
             if starred { "starred" } else { "unstarred" },
         ),
         _ => return Err("Say read (for mark_read) or starred (for star).".to_owned()),
     };
-    let ids = serde_json::to_string(&asked.article_ids).unwrap_or_else(|_| "[]".to_owned());
-    let changed = sqlx::query(sql)
-        .bind(value)
-        .bind(ids)
-        .bind(person)
-        .bind(now_ms())
-        .execute(&state.db)
-        .await
-        .map_err(|error| database(&error))?;
-    Ok(json!({ "done": true, "articles": changed.rows_affected(), "now": word }))
+    let changed = marks::set(
+        &state.db,
+        person,
+        which,
+        &asked.article_ids,
+        value,
+        now_ms(),
+    )
+    .await
+    .map_err(|error| database(&error))?;
+    Ok(json!({ "done": true, "articles": changed, "now": word }))
 }
 
 async fn mark_feed_read(state: &AppState, person: i64, asked: OneFeed) -> Answer {
@@ -937,12 +939,7 @@ async fn edit_feed(state: &AppState, person: i64, asked: FeedEdit) -> Answer {
             return Ok(false);
         }
         if let Some(title) = &title {
-            sqlx::query("UPDATE subscriptions SET title = ? WHERE person_id = ? AND feed_id = ?")
-                .bind(title)
-                .bind(person)
-                .bind(asked.feed_id)
-                .execute(&mut *transaction)
-                .await?;
+            folders::rename_feed(&mut transaction, person, asked.feed_id, title).await?;
         }
         if let Some(names) = &wanted {
             let mut ids = Vec::with_capacity(names.len());
@@ -953,25 +950,7 @@ async fn edit_feed(state: &AppState, person: i64, asked: FeedEdit) -> Answer {
                         .0,
                 );
             }
-            let ids = serde_json::to_string(&ids).unwrap_or_else(|_| "[]".to_owned());
-            sqlx::query(
-                "DELETE FROM feed_folders WHERE feed_id = ?
-                 AND folder_id IN (SELECT id FROM folders WHERE person_id = ?)
-                 AND folder_id NOT IN (SELECT value FROM json_each(?))",
-            )
-            .bind(asked.feed_id)
-            .bind(person)
-            .bind(&ids)
-            .execute(&mut *transaction)
-            .await?;
-            sqlx::query(
-                "INSERT OR IGNORE INTO feed_folders (folder_id, feed_id)
-                 SELECT value, ? FROM json_each(?)",
-            )
-            .bind(asked.feed_id)
-            .bind(&ids)
-            .execute(&mut *transaction)
-            .await?;
+            folders::file_in(&mut transaction, person, asked.feed_id, &ids).await?;
         }
         transaction.commit().await?;
         Ok::<bool, sqlx::Error>(true)
@@ -1132,27 +1111,10 @@ async fn delete_rule(state: &AppState, person: i64, asked: OneRule) -> Answer {
 
 async fn unsubscribe(state: &AppState, person: i64, asked: OneFeed) -> Answer {
     let at = now();
-    let hidden = async {
-        let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
-        let hidden = folders::hide(&mut transaction, person, &[asked.feed_id], at).await?;
-        // Only a feed this call hid: one the reader unsubscribed from on the
-        // screen keeps the screen's ten minutes.
-        if hidden > 0 {
-            sqlx::query(
-                "UPDATE subscriptions SET kept_until = ? WHERE person_id = ? AND feed_id = ?",
-            )
-            .bind(at + KEPT_FOR)
-            .bind(person)
-            .bind(asked.feed_id)
-            .execute(&mut *transaction)
-            .await?;
-        }
-        transaction.commit().await?;
-        Ok::<u64, sqlx::Error>(hidden)
-    }
-    .await
-    .map_err(|error| database(&error))?;
-    if hidden == 0 {
+    let hidden = folders::leave(&state.db, person, asked.feed_id, at, Leaving::Assistant)
+        .await
+        .map_err(|error| database(&error))?;
+    if !hidden {
         return Err("The reader doesn't follow a feed with that id.".to_owned());
     }
     Ok(json!({
