@@ -377,8 +377,8 @@ test("a chosen Appearance stays, whatever the device's light or dark setting", a
   await expect(page.locator("body")).toHaveCSS("background-color", "rgb(255, 255, 255)");
 });
 
-test("a removed theme opens as Original, keeping its Appearance (decision 0056)", async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("slowfeed.preferences", JSON.stringify({ theme: "calm", appearance: "dark" })));
+test("a removed theme opens as Original, keeping its Appearance", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("nine-turtles.preferences", JSON.stringify({ theme: "calm", appearance: "dark" })));
   await page.goto("/");
   await appReady(page);
   await expect(page.locator("html")).toHaveAttribute("data-theme", "original");

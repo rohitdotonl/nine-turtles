@@ -84,15 +84,10 @@ impl PasswordSetting {
 
 impl Config {
     pub fn from_env() -> Result<Self, String> {
-        // Each setting is read by its name, or by the name it had before the
-        // rename (SLOWFEED_…), so a host that still uses the old names keeps working.
         let var = |name: &str| {
-            let read = |name: &str| {
-                std::env::var(name)
-                    .ok()
-                    .filter(|value| !value.trim().is_empty())
-            };
-            read(name).or_else(|| read(&name.replacen("NINE_TURTLES_", "SLOWFEED_", 1)))
+            std::env::var(name)
+                .ok()
+                .filter(|value| !value.trim().is_empty())
         };
 
         let listen_text = var("NINE_TURTLES_LISTEN").unwrap_or_else(|| DEFAULT_LISTEN.to_owned());

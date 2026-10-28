@@ -36,8 +36,6 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates libssl3t64 \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=server /src/server/target/release/nine-turtles /usr/local/bin/nine-turtles
-# The old name still works in Render's Shell tab (`slowfeed set-password`).
-RUN ln -s nine-turtles /usr/local/bin/slowfeed
 # Render sends visitors to port 10000; the database lives on the disk at /data.
 # WebSub hubs deliver new articles to the public address (decision 0069).
 ENV NINE_TURTLES_LISTEN=0.0.0.0:10000 \

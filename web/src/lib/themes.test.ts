@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { APPEARANCES, LOOKS, OLD_THEMES, THEMES, isAppearance, isTheme, resolveMode } from "./themes";
+import { APPEARANCES, LOOKS, THEMES, isAppearance, isTheme, resolveMode } from "./themes";
 
 describe("themes", () => {
   it("has the themes from DESIGN.md: Original (decision 0056) and Plain (decision 0063)", () => {
@@ -23,15 +23,5 @@ describe("themes", () => {
     expect(resolveMode("dark", false)).toBe("dark");
     expect(resolveMode("auto", true)).toBe("dark");
     expect(resolveMode("auto", false)).toBe("light");
-  });
-
-  it("gives every earlier theme a home in Original", () => {
-    expect(Object.keys(OLD_THEMES).sort()).toEqual(
-      ["quiet", "paper", "bold", "calm", "focus", "system", "off-white", "sepia", "porcelain", "linen", "mist", "sage", "dark", "graphite", "night", "midnight", "black"].sort(),
-    );
-    for (const choice of Object.values(OLD_THEMES)) {
-      expect(choice.theme).toBe("original");
-      expect(isAppearance(choice.appearance)).toBe(true);
-    }
   });
 });

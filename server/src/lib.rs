@@ -248,18 +248,11 @@ pub fn router(state: AppState) -> Router {
             HeaderName::from_static(VERSION_HEADER),
             HeaderValue::from_static(VERSION),
         ))
-        // The header's name before the rename, for a tab opened before it.
-        .layer(SetResponseHeaderLayer::overriding(
-            HeaderName::from_static(OLD_VERSION_HEADER),
-            HeaderValue::from_static(VERSION),
-        ))
         .layer(CompressionLayer::new())
 }
 
 /// The name of the header that carries `VERSION` on every answer.
 pub const VERSION_HEADER: &str = "x-nine-turtles-version";
-/// Its name before the rename.
-pub const OLD_VERSION_HEADER: &str = "x-slowfeed-version";
 
 /// Seconds since 1970 (UTC), the way nine turtles stores times.
 pub fn now() -> i64 {

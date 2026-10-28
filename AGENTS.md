@@ -8,7 +8,7 @@ tell the owner which ones and how.
 
 A quiet, single-user reader for writing on the open web (RSS, Atom, JSON
 Feed). Finite, calm and quiet: the opposite of social media.
-Its name is **nine turtles**, always lowercase (renamed from slowfeed in October 2026, decisions 0056 and 0058). The program is `nine-turtles`, its settings `NINE_TURTLES_*`, the database `nine-turtles.sqlite` and the repository `rohitdotonl/nine-turtles`. For a while the old names still work: `SLOWFEED_*` settings, the `slowfeed` command, the old database file (renamed on start), the old sign-in cookie and saved preferences. The Render service and its address (slowfeed.onrender.com) and disk (`slowfeed-data`) keep the old name.
+Its name is **nine turtles**, always lowercase (renamed from slowfeed in October 2026, decisions 0056 and 0058). The program is `nine-turtles`, its settings `NINE_TURTLES_*`, the database `nine-turtles.sqlite` and the repository `rohitdotonl/nine-turtles`. The old name is gone from the code (decision 0124); nothing reads `SLOWFEED_*` settings, the old database file, cookie or saved preferences any more. The Render service and its address (slowfeed.onrender.com) and disk (`slowfeed-data`) keep the old name.
 **Tiebreaker:** does this make nine turtles feel more like a book, or more like a feed?
 **Design reference:** Apple Books on the Mac and iPhone, and no other app. The floors come first, then Apple Books, then the rest of `docs/DESIGN.md` (DESIGN.md → "Design reference", decision 0059).
 
