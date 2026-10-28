@@ -535,14 +535,7 @@ async fn follow_elsewhere(
     .execute(&mut *transaction)
     .await?;
     carry_entries_over(&mut *transaction, person, old, new).await?;
-    sqlx::query(
-        "DELETE FROM feed_folders WHERE feed_id = ?
-         AND folder_id IN (SELECT id FROM folders WHERE person_id = ?)",
-    )
-    .bind(old)
-    .bind(person)
-    .execute(&mut *transaction)
-    .await?;
+    folders::take_out_of_folders(&mut *transaction, person, old).await?;
     // No entry points at it any more (the foreign key would refuse
     // otherwise), so the line can go.
     sqlx::query("DELETE FROM subscriptions WHERE person_id = ? AND feed_id = ?")

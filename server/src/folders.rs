@@ -200,14 +200,7 @@ async fn edit_feed(
             .execute(&mut *transaction)
             .await?;
         }
-        sqlx::query(
-            "DELETE FROM feed_folders WHERE feed_id = ?
-             AND folder_id IN (SELECT id FROM folders WHERE person_id = ?)",
-        )
-        .bind(id)
-        .bind(person)
-        .execute(&mut *transaction)
-        .await?;
+        take_out_of_folders(&mut transaction, person, id).await?;
         let mut folders = form.folders.clone();
         if let Some(name) = &new_folder {
             folders.push(folder_named(&mut transaction, person, name).await?.0);
@@ -369,6 +362,24 @@ async fn resubscribe(
     }
 }
 
+/// Takes a feed out of every one of the reader's folders (other readers'
+/// folders are theirs).
+pub async fn take_out_of_folders(
+    connection: &mut SqliteConnection,
+    person: i64,
+    feed_id: i64,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "DELETE FROM feed_folders WHERE feed_id = ?
+         AND folder_id IN (SELECT id FROM folders WHERE person_id = ?)",
+    )
+    .bind(feed_id)
+    .bind(person)
+    .execute(connection)
+    .await?;
+    Ok(())
+}
+
 /// Clears, for good, every subscription unsubscribed at or before `before`
 /// that isn't cleared yet: one reader's, or (`None`) everyone's. A feed an
 /// assistant unsubscribed from waits until its `kept_until` has passed
@@ -447,14 +458,7 @@ pub async fn clear(
     .bind(id)
     .execute(&mut *connection)
     .await?;
-    sqlx::query(
-        "DELETE FROM feed_folders WHERE feed_id = ?
-         AND folder_id IN (SELECT id FROM folders WHERE person_id = ?)",
-    )
-    .bind(id)
-    .bind(person)
-    .execute(&mut *connection)
-    .await?;
+    take_out_of_folders(&mut *connection, person, id).await?;
     // Their rules for it stay, paused and saying so (SPEC section 27).
     rules::place_gone_for(connection, person, id).await?;
     crate::saved_searches::forget(&mut *connection, person, "feed", id).await?;

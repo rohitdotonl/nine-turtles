@@ -272,14 +272,7 @@ async fn restore(
     let restored: Result<(), sqlx::Error> = async {
         let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
         for feed in &form.feeds {
-            sqlx::query(
-                "DELETE FROM feed_folders WHERE feed_id = ?
-                 AND folder_id IN (SELECT id FROM folders WHERE person_id = ?)",
-            )
-            .bind(feed.id)
-            .bind(person)
-            .execute(&mut *transaction)
-            .await?;
+            folders::take_out_of_folders(&mut transaction, person, feed.id).await?;
             sqlx::query(
                 "INSERT OR IGNORE INTO feed_folders (folder_id, feed_id)
                  SELECT folders.id, subscriptions.feed_id FROM folders, subscriptions

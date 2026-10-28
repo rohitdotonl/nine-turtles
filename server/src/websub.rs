@@ -40,7 +40,7 @@ use crate::{
     checking::{DAY, HOUR, SHORTEST_WAIT},
     encoding::{from_hex, random_hex},
     feed::{self, Hub},
-    feeds::store_articles,
+    feeds::{self, store_articles},
     fetch::{self, SIZE_LIMIT},
     log, now,
 };
@@ -401,12 +401,7 @@ async fn store_delivery(
     // As in `checking::worked`: take the right to write first, and store
     // nothing if the reader unsubscribed in the meantime.
     let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
-    let followed: Option<i64> =
-        sqlx::query_scalar("SELECT id FROM feeds WHERE id = ? AND unsubscribed_at IS NULL")
-            .bind(subscription.feed_id)
-            .fetch_optional(&mut *transaction)
-            .await?;
-    if followed.is_some() {
+    if feeds::still_followed(&mut transaction, subscription.feed_id).await? {
         store_articles(
             &mut transaction,
             subscription.feed_id,
