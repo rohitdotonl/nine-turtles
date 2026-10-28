@@ -1321,7 +1321,7 @@
       inArticle: inArticle(),
       selected: selected !== undefined,
       link: selected?.link ?? undefined,
-      articleDrawn: articleView !== undefined,
+      articleDrawn: articleView != null,
       feed: currentFeed?.id,
       folder: currentFolder?.id,
       feedsFolder: currentFeed?.folders[0],
