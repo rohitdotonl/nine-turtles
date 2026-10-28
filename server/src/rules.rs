@@ -765,27 +765,26 @@ async fn list_muted(SignedIn(person): SignedIn, State(state): State<AppState>) -
     }
 }
 
-/// The feed or folder a rule applied to is gone: it stays, matching nothing,
-/// and Settings says so, until the reader chooses somewhere else. Answers
-/// the rules it changed, so Undo for deleting a folder can hand them back
-/// (`back_in_folder`).
+/// The folder a rule applied to is gone (folders belong to one reader): its
+/// rules stay, matching nothing, and Settings says so, until the reader
+/// chooses somewhere else. Answers the rules it changed, so Undo for deleting
+/// a folder can hand them back (`back_in_folder`). A feed's rules go with
+/// `place_gone_for`, which keeps to one reader, since others may follow it.
 pub async fn place_gone(
     connection: &mut SqliteConnection,
-    feed_id: Option<i64>,
-    folder_id: Option<i64>,
+    folder_id: i64,
 ) -> Result<Vec<i64>, sqlx::Error> {
     sqlx::query_scalar(
         "UPDATE rules SET place_gone = 1, feed_id = NULL, folder_id = NULL
-         WHERE feed_id = ? OR folder_id = ? RETURNING id",
+         WHERE folder_id = ? RETURNING id",
     )
-    .bind(feed_id)
     .bind(folder_id)
     .fetch_all(connection)
     .await
 }
 
 /// A reader's feed is cleared: their rules for it stay, matching nothing,
-/// as `place_gone` says. Other readers' rules for the same feed carry on.
+/// as `place_gone` says for a folder. Other readers' rules for the same feed carry on.
 pub async fn place_gone_for(
     connection: &mut SqliteConnection,
     person: i64,

@@ -8,7 +8,7 @@
   row opens that feed's list.
 -->
 <script lang="ts">
-  import { tick } from "svelte";
+  import { onMount, tick } from "svelte";
   import { edge } from "./edge";
   import Icon from "./Icon.svelte";
   import PageHead from "./PageHead.svelte";
@@ -78,12 +78,13 @@
   async function load() {
     try {
       ({ feeds, folders } = await listTended());
+      failed = false;
     } catch {
       failed = true;
     }
   }
 
-  $effect(() => {
+  onMount(() => {
     load();
   });
 

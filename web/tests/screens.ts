@@ -15,8 +15,71 @@ export type Screen = {
   open?: (page: Page) => Promise<void>;
 };
 
+/**
+ * This nine turtles can't send email: its answer is changed to say it can, so the
+ * sign-in page shows Forgot? (decision 0122), and asking for a link is answered as
+ * the server would, with nothing sent.
+ */
+async function pretendEmail(page: Page): Promise<void> {
+  await page.route("**/api/session", async (route) => {
+    const response = await route.fetch();
+    await route.fulfill({ response, json: { ...(await response.json()), email_sending: true } });
+  });
+  await page.route("**/api/sign-in/link", (route) => route.fulfill({ status: 202, json: { asked: true } }));
+  await page.reload();
+  await appReady(page);
+}
+
 export const SCREENS: Screen[] = [
   { name: "sign-in", path: "/", signedIn: false },
+  {
+    name: "sign-in-with-email",
+    path: "/",
+    signedIn: false,
+    open: async (page) => {
+      await pretendEmail(page);
+      await expect(page.getByRole("link", { name: "Forgot?" })).toBeVisible();
+    },
+  },
+  { name: "sign-up", path: "/sign-up", signedIn: false },
+  {
+    name: "forgot",
+    path: "/",
+    signedIn: false,
+    open: async (page) => {
+      await pretendEmail(page);
+      await page.getByLabel("Email").fill("reader@example.com");
+      await page.getByRole("link", { name: "Forgot?" }).click();
+      await expect(page.getByRole("button", { name: "Email me a link" })).toBeVisible();
+    },
+  },
+  {
+    name: "forgot-sent",
+    path: "/",
+    signedIn: false,
+    open: async (page) => {
+      await pretendEmail(page);
+      await page.getByLabel("Email").fill("reader@example.com");
+      await page.getByRole("link", { name: "Forgot?" }).click();
+      await page.getByRole("button", { name: "Email me a link" }).click();
+      await expect(page.getByRole("heading", { name: "Check your email" })).toBeFocused();
+    },
+  },
+  {
+    // The page the emailed link opens, once Sign in is pressed: a new password, if the reader wishes.
+    name: "choose-password",
+    path: "/",
+    signedIn: false,
+    open: async (page) => {
+      await page.route("**/api/sign-in/link/use", (route) =>
+        route.fulfill({ json: { done: "signed-in", password_ticket: "a-made-up-ticket" } }),
+      );
+      await page.goto("/sign-in-link#ticket=a-made-up-ticket");
+      await expect(page.getByRole("button", { name: "Sign in" })).toBeFocused();
+      await page.getByRole("button", { name: "Sign in" }).click();
+      await expect(page.getByRole("heading", { name: "You're signed in" })).toBeFocused();
+    },
+  },
   { name: "first-visit", path: "/unread", signedIn: true },
   { name: "add-feed", path: "/add-feed", signedIn: true },
   { name: "new-to-feeds", path: "/new-to-feeds", signedIn: true },
@@ -146,11 +209,13 @@ export const SCREENS: Screen[] = [
     },
   },
   { name: "settings", path: "/settings", signedIn: true, library: true },
+  // One of Settings' own pages (decision 0120): the sample, Theme, Reading font and Line width.
+  { name: "settings-font", path: "/settings/font", signedIn: true, library: true },
   {
     // Settings › Connected assistants with one assistant and a feed it unsubscribed from
     // (SPEC section 33). The list is answered here, so no feed is really unsubscribed.
     name: "connected-assistants",
-    path: "/settings",
+    path: "/settings/assistants",
     signedIn: true,
     open: async (page) => {
       const now = Math.floor(Date.now() / 1000);
@@ -255,7 +320,7 @@ export const SCREENS: Screen[] = [
     // Settings › Rules with two rules, one paused, and the rule editor open over it. The
     // rules are as the server would send them, so the library the screenshots follow stays as it is.
     name: "rules",
-    path: "/settings",
+    path: "/settings/rules",
     signedIn: true,
     library: true,
     open: async (page) => {
@@ -323,7 +388,7 @@ export const SCREENS: Screen[] = [
   {
     // The owner's Readers page (decision 0090), with three made-up readers.
     name: "readers",
-    path: "/settings/readers",
+    path: "/settings/readers/all",
     signedIn: true,
     open: async (page) => {
       const day = 24 * 60 * 60;
@@ -476,7 +541,10 @@ export async function signIn(page: Page): Promise<void> {
   await page.getByLabel("Email").fill(OWNER_EMAIL);
   await page.getByLabel("Password").fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.locator("#sidebar")).toBeAttached();
+  // At most two password checks run at once on the whole server, each a
+  // deliberately slow scramble, so with every test signing in together one
+  // can wait its turn for longer than the usual five seconds.
+  await expect(page.locator("#sidebar")).toBeAttached({ timeout: 15_000 });
 }
 
 /**

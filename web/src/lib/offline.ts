@@ -17,6 +17,7 @@
 // saved: the server would refuse them anyway. Decision 0101.)
 
 import type { Article, FullArticle, Library, Order, Page, ReadingMode, Source } from "./feeds";
+import { currentTabReader } from "./updates.svelte";
 
 /** At most this many unread articles, and this many starred ones, are kept (the owner's limit). */
 export const KEEP_UNREAD = 200;
@@ -29,8 +30,12 @@ const PAUSE_MS = 250;
 /** A kept article: what the reading area needs, with whether it was in the reader's first page of Unread (or All). */
 export type Kept = FullArticle & { first: boolean };
 
-/** A mark made here and not yet confirmed by the server. */
-export type Mark = { key: string; kind: "read" | "starred"; id: number; value: boolean; at: number };
+/**
+ * A mark made here and not yet confirmed by the server, with the reader whose
+ * tab made it (none for marks from before decision 0121): another tab sends
+ * it only for that reader.
+ */
+export type Mark = { key: string; kind: "read" | "starred"; id: number; value: boolean; at: number; reader?: number };
 
 /** What the signed-in screen needs to open without a connection. */
 export type KeptSession = { version: string; owner: boolean; email: string | null; emailSending: boolean };
@@ -323,7 +328,7 @@ export async function noteMark(kind: Mark["kind"], ids: number[], value: boolean
       const before = new Map<number, Kept>();
       const changed: Kept[] = [];
       for (const id of ids) {
-        marks.put({ key: `${kind}:${id}`, kind, id, value, at } satisfies Mark);
+        marks.put({ key: `${kind}:${id}`, kind, id, value, at, reader: currentTabReader() } satisfies Mark);
         const kept = await ask(articles.get(id) as IDBRequest<Kept | undefined>);
         if (!kept) continue;
         const after = withMark(kept, { kind, value });
@@ -403,7 +408,15 @@ export function useFetchers(given: Fetchers): void {
  */
 export async function sendWaiting(): Promise<void> {
   if (!fetchers || !keeping()) return;
-  const waiting = (await waitingMarks()).filter((mark) => !beingSent.has(`${mark.key}:${mark.at}`));
+  const reader = currentTabReader();
+  const all = (await waitingMarks()).filter((mark) => !beingSent.has(`${mark.key}:${mark.at}`));
+  // A mark another reader's tab left here (they're no longer signed in on this
+  // browser) is never sent as this reader's: it goes (decision 0121).
+  // While this tab's reader isn't known, only marks from before decision 0121
+  // (which name no reader) go; the rest wait for a tab that knows.
+  const theirs = reader === undefined ? [] : all.filter((mark) => mark.reader !== undefined && mark.reader !== reader);
+  for (const part of inParts(theirs)) await markSent(part.kind, part.ids, part.at);
+  const waiting = all.filter((mark) => (reader === undefined ? mark.reader === undefined : !theirs.includes(mark)));
   for (const part of inParts(waiting)) {
     try {
       await fetchers.sendMark(part.kind, part.ids, part.value, part.at);

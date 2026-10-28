@@ -20,7 +20,7 @@
 - **Once the trial or plan has ended,** you still read, star, search and export everything you have, change settings, and can delete your account. You **can't add feeds** (the Add field, an OPML file or another app say "Your free trial or plan has ended. Choose a plan in Settings to add feeds again."), and your feeds are checked **once a day**, as for a reader who has been away for a month (section 11): a feed someone current also follows is still checked as usual. Newsletters keep arriving, new senders included (they cost nothing to fetch). Choosing a plan brings everything back at once: adding works again and the feeds are due for a check within minutes.
 - **Deleting your account cancels your plan first.** If Dodo can't be reached just then, nothing is deleted, so nobody is charged for an account that's gone.
 
-**The owner's Readers page** shows each reader's plan under their line in a few words ("Free trial", "Monthly plan", "Plan cancelled", "Payment didn't go through", "Plan ended"), never what they paid. Readers are told so under Account in Settings and in the privacy policy.
+**The owner's All readers page** shows each reader's plan under their line in a few words ("Free trial", "Monthly plan", "Plan cancelled", "Payment didn't go through", "Plan ended"), never what they paid. Readers are told so under Account in Settings and in the privacy policy.
 
 **How it works:** nine turtles asks Dodo for a checkout page (with the reader's email and number), and Dodo tells nine turtles about each subscription in signed messages (webhooks) at `/payments/dodo`. A message without Dodo's signature, or more than five minutes old, is ignored; one sent twice changes nothing, and neither does one older than the last kept for that subscription, or the end of an earlier subscription once the reader has bought a new one. Deleting an account waits only when Dodo can't be reached; if Dodo answers that the plan is already over, the account goes. nine turtles keeps its own record of each reader's subscription, so moving to another payment company stays possible. Setup: `docs/operations/payments.md`.
 
@@ -28,4 +28,4 @@
 1. Sign up as a new reader: Settings › Your plan says "Free trial" and when it ends.
 2. Press Monthly: Dodo's test checkout opens. Pay with `4242 4242 4242 4242`, any future date and any three digits. Back in Settings, within a minute it says "Monthly plan" and when it renews.
 3. Press Billing and cancelling and cancel: Settings says "Cancelled. It lasts until …".
-4. Signed in as yourself (the owner), Settings has no plan group, and the Readers page shows the new reader's plan.
+4. Signed in as yourself (the owner), Settings has no Your plan row, and the All readers page shows the new reader's plan.

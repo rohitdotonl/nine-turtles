@@ -102,7 +102,11 @@ pub fn client(local_allowed: bool) -> Result<Client, String> {
         .default_headers(headers)
         .timeout(TIME_LIMIT)
         .connect_timeout(CONNECT_LIMIT)
-        .redirect(redirect::Policy::none());
+        .redirect(redirect::Policy::none())
+        // Never through a proxy named in the host's settings: the
+        // public-addresses-only check would then see only the proxy, and a
+        // name pointing at a private address would get through.
+        .no_proxy();
     let builder = if local_allowed {
         builder
     } else {

@@ -105,6 +105,7 @@ test("a passkey added in Settings signs in from the sign-in page, and the passwo
     .locator("#sidebar")
     .getByRole("link", { name: "Settings" })
     .click();
+  await page.getByRole("link", { name: "Passkeys", exact: true }).click();
 
   const group = page.getByRole("region", { name: "Passkeys" });
   await expect(group).toContainText(
@@ -143,12 +144,14 @@ test("a passkey added in Settings signs in from the sign-in page, and the passwo
   // Signed out, the email field offers the passkey among its suggestions;
   // Chrome's virtual device picks it at once, as a reader would, and it signs
   // in: no email, no password.
+  await page.getByRole("button", { name: "Back to Settings" }).click();
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page.locator("#sidebar")).toBeAttached();
   await page
     .locator("#sidebar")
     .getByRole("link", { name: "Settings" })
     .click();
+  await page.getByRole("link", { name: "Passkeys", exact: true }).click();
   await expect(group).toContainText("Last used today");
 
   // Now the button, in a browser without passkey autofill.
@@ -165,6 +168,7 @@ test("a passkey added in Settings signs in from the sign-in page, and the passwo
     .locator("#sidebar")
     .getByRole("link", { name: "Settings" })
     .click();
+  await page.getByRole("link", { name: "Passkeys", exact: true }).click();
 
   // Removed, with Undo straight afterwards, which brings it back.
   await group.getByRole("button", { name: "Remove This laptop" }).click();
@@ -183,6 +187,7 @@ test("a passkey added in Settings signs in from the sign-in page, and the passwo
   await expect(group.getByRole("status")).toContainText(
     "Your password still works.",
   );
+  await page.getByRole("button", { name: "Back to Settings" }).click();
   await page.getByRole("button", { name: "Sign out" }).click();
   // The sign-in page's own field: Settings › Readers has a "Your password"
   // box too, so a loose match would go on before signing out had finished.
@@ -209,8 +214,48 @@ test("passkeys aren't offered where they can't work", async ({ page }) => {
   ).toHaveCount(0);
   await expect(page.getByLabel("Email")).toHaveAttribute(
     "autocomplete",
-    "username",
+    "email",
   );
+});
+
+test("the keyboard goes Email, Password, Forgot?, Sign in, the passkey, then Sign up", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, "Tab is for screens with a keyboard.");
+  // This nine turtles can't send email; its answer is changed to say it can, so
+  // Forgot? shows beside the passkey button (decision 0122).
+  await page.route("**/api/session", async (route) => {
+    const response = await route.fetch();
+    await route.fulfill({
+      response,
+      json: { ...(await response.json()), email_sending: true },
+    });
+  });
+  await page.goto(`${local()}/`);
+  await appReady(page);
+  const passkey = page.getByRole("button", { name: "Sign in with a passkey" });
+  await expect(passkey).toBeVisible();
+  await expect(page.getByLabel("Email")).toBeFocused();
+  const order = [
+    page.getByLabel("Password"),
+    page.getByRole("link", { name: "Forgot?" }),
+    page.getByRole("button", { name: "Sign in", exact: true }),
+    passkey,
+    page.getByRole("link", { name: "Sign up" }),
+  ];
+  for (const next of order) {
+    await page.keyboard.press("Tab");
+    await expect(next).toBeFocused();
+  }
+  // The passkey is a quieter button, edged and unfilled, 44px tall, under Sign in.
+  const signIn = (await order[2]!.boundingBox())!;
+  const quiet = (await passkey.boundingBox())!;
+  expect(quiet.y).toBeGreaterThan(signIn.y + signIn.height);
+  expect(quiet.height).toBeGreaterThanOrEqual(44);
+  expect(Math.abs(quiet.width - signIn.width)).toBeLessThan(1);
+  await expect(passkey).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await passesAccessibilityChecks(page);
 });
 
 test("a passkey is added, renamed and removed from the keyboard alone", async ({
@@ -232,6 +277,8 @@ test("a passkey is added, renamed and removed from the keyboard alone", async ({
     page,
     page.locator("#sidebar").getByRole("link", { name: "Settings" }),
   );
+  await page.keyboard.press("Enter");
+  await tabTo(page, page.getByRole("link", { name: "Passkeys", exact: true }));
   await page.keyboard.press("Enter");
 
   const group = page.getByRole("region", { name: "Passkeys" });
@@ -303,7 +350,7 @@ test("Settings › Passkeys passes the accessibility checks, and Cancel leaves t
   await page.getByLabel("Password").fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page.locator("#sidebar")).toBeAttached();
-  await page.goto(`${local()}/settings`);
+  await page.goto(`${local()}/settings/passkeys`);
   const group = page.getByRole("region", { name: "Passkeys" });
   await expect(group).toBeVisible();
   await passesAccessibilityChecks(page);

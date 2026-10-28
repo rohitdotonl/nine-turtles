@@ -1,39 +1,40 @@
 <!--
   Settings (SPEC section 18), laid out as Apple Books' settings are: one
-  centred column of grouped inset lists, each group with a small header above
-  it and an explaining line below, each row its name on the left and its
-  control on the right, every control the same width (decision 0039). It
-  fills the list and reading areas while the sidebar stays, so the reader
-  never loses their place. "Close settings" or
-  Escape goes back. Reading (the reading mode and the sort order) and Show in the sidebar (which
-  lists the sidebar shows, decision 0105) are shared across the reader's devices; the reader
-  controls belong to this device. Your data imports and
-  exports the reader's feeds and folders as an OPML file, and exports their
-  starred articles as a JSON Feed file, and brings starred articles over
-  from other feed readers. Add from anywhere gives the bookmark and the
-  Shortcuts address that open Add a feed with a page (AddAnywhere, decision
-  0104). Rules lists the reader's rules, and
-  opens the rule editor over Settings (SPEC section 27). Newsletters, while
-  nine turtles takes them, shows the reader's private address (SPEC section
-  28). Other apps makes the
-  app password other feed readers sync with (OtherApps). Connected
-  assistants connects AI assistants through MCP (Assistants). Readers, for the
-  owner only, lists who has an account, sets the owner's email and the
-  sign-up switch (Readers, decision 0087). Your plan, for everyone else
-  while nine turtles takes payments, shows their trial or plan (Plan,
-  decision 0094). Passkeys, where passkeys work, lists the reader's passkeys
-  and adds new ones (Passkeys, decision 0109). Account shows the reader's email,
-  with Change… while nine turtles can send email, Sign out, and for every
-  reader but the owner Delete account… (ChangeEmail, DeleteAccount,
-  decision 0088). Delete data…, for every reader, empties the account and
-  keeps it (DeleteAccount with `data`, decision 0117).
+  centred column of grouped inset lists, each group with a small uppercase
+  header above it (decision 0120). It fills the list and reading areas while
+  the sidebar stays, so the reader never loses their place. "Close settings"
+  or Escape goes back.
+
+  Its first page keeps only the everyday settings (decision 0120): Reading
+  (reading mode, unread counts, letting unread go, sort order, shared across
+  the reader's devices) and Look and feel (Appearance and Text size, for this
+  device). Everything else is a row ending in › that opens a page of its own
+  in place of Settings, at /settings/<page> (`page`), with "‹ Settings" above
+  its title; Escape goes back too, and the keyboard returns to the row:
+  Font, theme and line width; Your library (Your feeds and Feed health,
+  pages of their own, then Show in the sidebar and Your data); More
+  (Keyboard on a screen with keys, Add from anywhere, Rules, Newsletters
+  while nine turtles takes them, Other apps, Connected assistants, Passkeys
+  where they work); Your nine turtles (Readers, the owner only); and Account
+  (Your plan while nine turtles takes payments, Email with Change…, Sign
+  out, Delete data… and, for everyone but the owner, Delete account…).
+
+  Each row on the first page has its icon at the left, in the muted grey,
+  lined up with the first line of its name, and a setting's description
+  sits straight under its name (S1, decision 0120).
+
+  The groups' own components: AddAnywhere (decision 0104), Rules and the
+  rule editor (SPEC section 27), Newsletters (SPEC section 28), OtherApps
+  (SPEC section 26), Assistants (SPEC section 33), Readers (decision 0087),
+  Plan (decision 0094), Passkeys (decision 0109), ChangeEmail and
+  DeleteAccount (decisions 0088 and 0117).
 -->
 <script lang="ts">
   import { edge } from "./edge";
   import AddAnywhere from "./AddAnywhere.svelte";
   import ChangeEmail from "./ChangeEmail.svelte";
   import DeleteAccount from "./DeleteAccount.svelte";
-  import Icon from "./Icon.svelte";
+  import Icon, { type IconName } from "./Icon.svelte";
   import ImportOpml from "./ImportOpml.svelte";
   import ImportStars from "./ImportStars.svelte";
   import Newsletters from "./Newsletters.svelte";
@@ -49,14 +50,18 @@
   import TextSize from "./TextSize.svelte";
   import { APPEARANCES, LOOKS, THEMES } from "./themes";
   import type { Counts, Feed, Folder, LetGo, Order, ReadingMode } from "./feeds";
-  import type { Hideable } from "./router";
+  import { SETTINGS_PAGES, type Hideable, type SettingsPage } from "./router";
   import { LINE_WIDTHS, READING_FONTS, type Preferences } from "./preferences";
   import { signOut } from "./session";
   import { updates } from "./updates.svelte";
   import { connection } from "./connection.svelte";
   import { SETTINGS_NEED_CONNECTION, keeping, sendWaiting, setKeeping } from "./offline";
+  import { newslettersStatus } from "./newsletters";
+  import { browserHasPasskeys, passkeysHere } from "./passkeys";
+  import { describe, loadPlan } from "./plan";
 
   let {
+    page = undefined,
     preferences = $bindable(),
     sort,
     onSort,
@@ -69,7 +74,6 @@
     hidden,
     onHidden,
     heading = $bindable(),
-    dataHeading = $bindable(),
     version,
     owner = false,
     email = null,
@@ -77,6 +81,8 @@
     passkeys = null,
     onSignedOut,
     onClose,
+    onOpen,
+    onBack,
     onImported,
     onFeedHealth,
     onYourFeeds,
@@ -89,6 +95,8 @@
     ruleForFeed = $bindable(),
     besideToggle = false,
   }: {
+    /** One of Settings' own pages, or Settings itself (decision 0120). */
+    page?: SettingsPage;
     preferences: Preferences;
     /** Newest or oldest first; unknown until the server answers. */
     sort: Order | undefined;
@@ -108,8 +116,6 @@
     hidden: Hideable[];
     onHidden: (hidden: Hideable[]) => Promise<void>;
     heading?: HTMLHeadingElement;
-    /** "Your data", where the empty state's "Import OPML" leads. */
-    dataHeading?: HTMLHeadingElement;
     version: string;
     /** Only the owner sees Readers. */
     owner?: boolean;
@@ -121,6 +127,10 @@
     passkeys?: string | null;
     onSignedOut: () => void;
     onClose: () => void;
+    /** Opens one of Settings' own pages. */
+    onOpen: (event: MouseEvent, page: SettingsPage) => void;
+    /** "‹ Settings": back from one of its pages. */
+    onBack: () => void;
     /** Feeds were imported: the sidebar loads them. */
     onImported: () => void;
     /** Opens the feed health page. */
@@ -131,7 +141,7 @@
     onKeys: () => void;
     /** Opens the Muted articles page. */
     onMuted: (event: MouseEvent) => void;
-    /** Opens the owner's Readers page. */
+    /** Opens the owner's All readers page. */
     onReaders: (event: MouseEvent) => void;
     feeds: Feed[];
     folders: Folder[];
@@ -205,7 +215,6 @@
     }
   });
 
-  /** Closing the editor: on a phone, Settings comes back, and the keyboard returns to Rules. */
   /**
    * On a phone the editor is a screen of its own, so it's a step in history:
    * the back gesture closes it, unchanged, rather than leaving Settings.
@@ -226,6 +235,7 @@
     closeEditor();
   }
 
+  /** Closing the editor: on a phone, Settings comes back, and the keyboard returns to Rules. */
   function closeEditor() {
     if (stepped) {
       // Closed by its X, Save or Delete: its step in history goes too.
@@ -315,14 +325,56 @@
       message = "Couldn't sign out. Try again in a moment.";
     }
   }
+
+  /** Newsletters' row shows only while nine turtles takes them (SPEC section 28). */
+  let newslettersOn = $state(false);
+  newslettersStatus().then(
+    (status) => (newslettersOn = status.on),
+    () => {
+      // Hidden until the server answers.
+    },
+  );
+
+  /** Your plan's row shows only while nine turtles takes payments, never to the owner (SPEC section 29): what it says now. */
+  let planStanding: string | undefined = $state();
+  loadPlan().then(
+    (status) => (planStanding = status.on && status.plan.standing !== "free" ? describe(status.plan).title : undefined),
+    () => {
+      // Hidden until the server answers.
+    },
+  );
+  const planNow = $derived(owner ? undefined : planStanding);
+
+  const passkeysShown = $derived(passkeysHere(passkeys, location, browserHasPasskeys()));
+
+  function open(next: SettingsPage) {
+    return (event: MouseEvent) => onOpen(event, next);
+  }
 </script>
 
 <svelte:window onpopstate={backed} />
 
+<!-- What a screen reader hears after each row's name that opens a page of its own. -->
+<span id="opens-page" hidden>Opens its own page.</span>
+
+{#snippet icon(name: IconName)}
+  <span class="setting-icon" aria-hidden="true"><Icon {name} size={18} /></span>
+{/snippet}
+
+<!-- A row that opens a page of its own (decision 0120): its icon, its name, perhaps what it's set to, then ›. -->
+{#snippet pageRow(key: string, href: string, label: string, name: IconName, onclick: (event: MouseEvent) => void, value?: string, extra?: string)}
+  <a {href} {onclick} data-settings-row={key} aria-describedby="opens-page" class={["inset-row inset-action setting", extra]}>
+    <span class="setting-label">{@render icon(name)}<span class="setting-words"><span class="setting-name">{label}</span></span></span>
+    <span class="row-glyph flex items-center gap-2"
+      >{#if value}<span class="setting-value">{value}</span>{/if}<Icon name="chevron-right" size={18} /></span
+    >
+  </a>
+{/snippet}
+
 {#snippet keepSwitch()}
   <!-- A switch, as Apple draws one (decision 0077): this device's copies for reading offline. -->
-  <div class="inset-row">
-    <p class="row-name" aria-hidden="true">Keep articles for reading offline</p>
+  <div class="inset-row setting">
+    <p class="setting-name" aria-hidden="true">Keep articles for reading offline</p>
     <label class="switch-target -my-2 -mr-2">
       <input
         type="checkbox"
@@ -382,28 +434,43 @@
   <DeleteAccount sheet={!phone} {besideToggle} bind:heading={taskHeading} onCancel={closeTask} onDeleted={onSignedOut} />
 {/if}
 {#if !(editing && phone) && !(task && phone)}
-<section aria-labelledby="settings-heading" class="flex flex-1 flex-col bg-paper">
-  <PageHead title="Settings" id="settings-heading" bind:heading {onClose} closeLabel="Close settings" {besideToggle} column="max-w-[35rem]" />
+<!-- On one of its pages, the page itself is the region named after it, inside Settings. -->
+<section aria-labelledby={page ? undefined : "settings-heading"} aria-label={page ? "Settings" : undefined} class="flex flex-1 flex-col bg-paper">
+  {#if page}
+    <PageHead title={SETTINGS_PAGES[page]} id="settings-heading" bind:heading onBack={onBack} backTo="Settings" {besideToggle} column="max-w-[35rem]" />
+  {:else}
+    <PageHead title="Settings" id="settings-heading" bind:heading {onClose} closeLabel="Close settings" {besideToggle} column="max-w-[35rem]" />
+  {/if}
+  {#key page}
   <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-16 md:px-10">
-    <div class="mx-auto flex max-w-[35rem] flex-col gap-8">
+    <div class={["mx-auto flex max-w-[35rem] flex-col gap-8", page && "settings-page"]}>
       {#if connection.offline}
         <!-- Without a connection nothing here could be saved, so Settings says so and waits (SPEC section 32). -->
         <p role="status">{SETTINGS_NEED_CONNECTION}</p>
-        <!-- The one setting that needs no connection: this device's own copies, which switching off deletes. -->
-        <section aria-label="Reading offline">
-          <div class="inset-group">
-            {@render keepSwitch()}
-          </div>
-          {@render keepFoot()}
-        </section>
-      {:else}
+        {#if !page || page === "data"}
+          <!-- The one setting that needs no connection: this device's own copies, which switching off deletes. -->
+          <section aria-label="Reading offline">
+            <div class="inset-group">
+              {@render keepSwitch()}
+            </div>
+            {@render keepFoot()}
+          </section>
+        {/if}
+      {:else if !page}
       <section aria-labelledby="reading-heading">
-        <h3 id="reading-heading" class="inset-head">Reading</h3>
+        <h3 id="reading-heading" class="settings-head">Reading</h3>
         <div class="inset-group">
-          <!-- All's own sign, on purpose: river mode is everything, flowing past, and opens on All. -->
-          <fieldset class="inset-row">
-            <legend class="row-name"><span class="inline-flex items-center gap-2"><span class="text-muted"><Icon name="stack" size={16} /></span>Reading mode</span></legend>
-            <div class="choices control" style="--columns: 2">
+          <div class="inset-row setting has-control">
+            <div class="setting-label">
+              {@render icon("book")}
+              <div class="setting-words">
+                <p id="mode-name" class="setting-name">Reading mode</p>
+                <p id="mode-hint" class="setting-hint">
+                  {mode === "inbox" ? "An Unread list, with counts of what's waiting." : "Everything flows past. No Unread list, no counts."}
+                </p>
+              </div>
+            </div>
+            <div role="group" aria-labelledby="mode-name" aria-describedby="mode-hint" class="choices setting-control" style="--columns: 2">
               {#each MODE_CHOICES as choice (choice.value)}
                 <label class="choice">
                   <input
@@ -418,11 +485,18 @@
                 </label>
               {/each}
             </div>
-          </fieldset>
+          </div>
+          <!-- River mode has no Unread, so these two step aside there. -->
           {#if mode === "inbox"}
-            <fieldset class="inset-row">
-              <legend class="row-name"><span class="inline-flex items-center gap-2"><span class="text-muted"><Icon name="dot" size={16} /></span>Unread counts</span></legend>
-              <div class="choices control" style="--columns: 2">
+            <div class="inset-row setting has-control">
+              <div class="setting-label">
+                {@render icon("nine-circle")}
+                <div class="setting-words">
+                  <p id="counts-name" class="setting-name">Unread counts</p>
+                  <p id="counts-hint" class="setting-hint">Hide keeps Unread, without the numbers.</p>
+                </div>
+              </div>
+              <div role="group" aria-labelledby="counts-name" aria-describedby="counts-hint" class="choices setting-control" style="--columns: 2">
                 {#each COUNT_CHOICES as choice (choice.value)}
                   <label class="choice">
                     <input
@@ -437,10 +511,18 @@
                   </label>
                 {/each}
               </div>
-            </fieldset>
-            <fieldset class="inset-row">
-              <legend class="row-name"><span class="inline-flex items-center gap-2"><span class="text-muted"><Icon name="clock" size={16} /></span>Let unread go after</span></legend>
-              <div class="choices control" style="--columns: 4">
+            </div>
+            <div class="inset-row setting has-control">
+              <div class="setting-label">
+                {@render icon("clock")}
+                <div class="setting-words">
+                  <p id="let-go-name" class="setting-name">Let unread go after</p>
+                  <p id="let-go-hint" class="setting-hint">
+                    Older unread counts as read. It stays in its feed, All and search.
+                  </p>
+                </div>
+              </div>
+              <div role="group" aria-labelledby="let-go-name" aria-describedby="let-go-hint" class="choices setting-control" style="--columns: 4">
                 {#each LET_GO_CHOICES as choice (choice.value)}
                   <label class="choice">
                     <input
@@ -455,11 +537,16 @@
                   </label>
                 {/each}
               </div>
-            </fieldset>
+            </div>
           {/if}
-          <fieldset class="inset-row">
-            <legend class="row-name"><span class="inline-flex items-center gap-2"><span class="text-muted"><Icon name="sort" size={16} /></span>Sort order</span></legend>
-            <div class="choices control" style="--columns: 2">
+          <div class="inset-row setting has-control">
+            <div class="setting-label">
+              {@render icon("sort")}
+              <div class="setting-words">
+                <p id="sort-name" class="setting-name">Sort order</p>
+              </div>
+            </div>
+            <div role="group" aria-labelledby="sort-name" class="choices setting-control" style="--columns: 2">
               {#each SORT_CHOICES as choice (choice.value)}
                 <label class="choice">
                   <input
@@ -474,20 +561,206 @@
                 </label>
               {/each}
             </div>
-          </fieldset>
+          </div>
         </div>
-        <p class="inset-foot">
-          Inbox keeps an Unread list and counts what's waiting. River lets everything flow past: no Unread, no counts.
-          {#if mode === "inbox"}Hide the counts to keep Unread without the numbers. Unread you haven't got to lets go after the
-            time you choose, a minute or so after you choose it: it counts as read and stays in its feed, All and search.{/if} These apply on all your devices.
-        </p>
+        <p class="inset-foot">These apply on all your devices.</p>
         <p role="status" class={["inset-foot text-danger", !sortMessage && "sr-only"]}>{sortMessage}</p>
       </section>
 
+      <section aria-labelledby="reader-heading">
+        <h3 id="reader-heading" class="settings-head">Look and feel</h3>
+        <div class="inset-group">
+          <!-- Day, night or as the device is set: the theme's day or night version (decision 0056). -->
+          <div class="inset-row setting has-control">
+            <div class="setting-label">
+              {@render icon("palette")}
+              <div class="setting-words"><p id="appearance-name" class="setting-name">Appearance</p></div>
+            </div>
+            <div role="group" aria-labelledby="appearance-name" class="choices setting-control" style="--columns: 3">
+              {#each APPEARANCES as choice (choice.value)}
+                <label class="choice">
+                  <input type="radio" name="appearance" value={choice.value} bind:group={preferences.appearance} />
+                  {choice.label}
+                </label>
+              {/each}
+            </div>
+          </div>
+          <div class="inset-row setting has-control">
+            <div class="setting-label">
+              {@render icon("a-plus")}
+              <div class="setting-words"><p id="text-size-name" class="setting-name">Text size</p></div>
+            </div>
+            <!-- A flat "A | step | A" capsule: a small A and a large A at its ends, the current step between them as plain words, parted by hairlines (decisions 0045, 0055). -->
+            <div class="setting-control">
+              <TextSize bind:size={preferences.textSize} labelledby="text-size-name" />
+            </div>
+          </div>
+          {@render pageRow("font", "/settings/font", SETTINGS_PAGES.font, "pen-nib", open("font"), READING_FONTS[preferences.readingFont].label)}
+        </div>
+        <!-- The same preferences as the Aa panel above an article (decision 0034). -->
+        <p class="inset-foot">
+          These apply to this device only. Match device switches between the day and night versions as the
+          device does. The Aa button above an article changes these too, while you read.
+        </p>
+      </section>
+
+      <section aria-labelledby="library-heading">
+        <h3 id="library-heading" class="settings-head">Your library</h3>
+        <div class="inset-group">
+          {@render pageRow("feeds", "/settings/feeds", "Your feeds", "feed", onYourFeeds)}
+          {@render pageRow("feed-health", "/settings/feed-health", "Feed health", "heart-pulse", onFeedHealth)}
+          {@render pageRow("sidebar", "/settings/sidebar", SETTINGS_PAGES.sidebar, "panel-dots", open("sidebar"))}
+          {@render pageRow("data", "/settings/data", SETTINGS_PAGES.data, "download", open("data"))}
+        </div>
+      </section>
+
+      <section aria-labelledby="more-heading">
+        <h3 id="more-heading" class="settings-head">More</h3>
+        <div class="inset-group">
+          <!-- Only on a screen with a keyboard: there's nothing to press on a touch screen (decision 0110). -->
+          {@render pageRow("keyboard", "/settings/keyboard", SETTINGS_PAGES.keyboard, "keyboard", open("keyboard"), undefined, "keyboard-hint")}
+          {@render pageRow("add-from-anywhere", "/settings/add-from-anywhere", SETTINGS_PAGES["add-from-anywhere"], "bookmark-plus", open("add-from-anywhere"))}
+          {@render pageRow("rules", "/settings/rules", SETTINGS_PAGES.rules, "sliders", open("rules"))}
+          {#if newslettersOn}
+            {@render pageRow("newsletters", "/settings/newsletters", SETTINGS_PAGES.newsletters, "newspaper", open("newsletters"))}
+          {/if}
+          {@render pageRow("other-apps", "/settings/other-apps", SETTINGS_PAGES["other-apps"], "plug", open("other-apps"))}
+          {@render pageRow("assistants", "/settings/assistants", SETTINGS_PAGES.assistants, "robot", open("assistants"))}
+          {#if passkeysShown}
+            {@render pageRow("passkeys", "/settings/passkeys", SETTINGS_PAGES.passkeys, "key", open("passkeys"))}
+          {/if}
+        </div>
+      </section>
+
+      {#if owner}
+        <section aria-labelledby="yours-heading">
+          <h3 id="yours-heading" class="settings-head">Your nine turtles<span class="sr-only">, </span><span class="only-you">Only you</span></h3>
+          <div class="inset-group">
+            {@render pageRow("readers", "/settings/readers", SETTINGS_PAGES.readers, "people", open("readers"))}
+          </div>
+        </section>
+      {/if}
+
+      <section aria-labelledby="account-heading">
+        <h3 id="account-heading" class="settings-head">Account</h3>
+        <div class="inset-group">
+          {#if updates.ready}
+            <!-- Never swapped while you read: the new version starts when you reload, go to another place, or next time you open nine turtles. -->
+            <div class="inset-row setting">
+              <span class="setting-label">{@render icon("refresh")}<span class="setting-name">A new version is ready.</span></span>
+              <button type="button" onclick={() => location.reload()} class="btn btn-small">Reload</button>
+            </div>
+          {/if}
+          {#if planNow}
+            {@render pageRow("plan", "/settings/plan", SETTINGS_PAGES.plan, "card", open("plan"), planNow)}
+          {/if}
+          <!-- The email this reader signs in with; changing it sends a link to the new one (decision 0088). -->
+          <div class="inset-row setting">
+            <div class="setting-label">
+              {@render icon("envelope")}
+              <div class="setting-words">
+                <p class="setting-name">Email</p>
+                <p class="setting-hint">{email ?? "No email yet"}</p>
+              </div>
+            </div>
+            {#if emailSending && email}
+              <button bind:this={changeButton} type="button" onclick={() => (task = "email")} class="btn btn-small shrink-0"
+                >Change…<span class="sr-only"> email</span></button
+              >
+            {/if}
+          </div>
+          <!--
+            In the text color, not the destructive red: signing out removes
+            nothing, and red in nine turtles means something goes (decision 0042).
+          -->
+          <button type="button" onclick={leave} class="inset-row inset-action setting"
+            ><span class="setting-label">{@render icon("sign-out")}<span class="setting-name">Sign out</span></span></button
+          >
+          <!-- Red words: these remove something. What each removes is said in the sheet it opens, before anything goes. -->
+          <button bind:this={dataButton} type="button" onclick={() => (task = "data")} class="inset-row inset-action setting"
+            ><span class="setting-label">{@render icon("trash")}<span class="setting-name danger-name">Delete data…</span></span></button
+          >
+          {#if !owner}
+            <button bind:this={deleteButton} type="button" onclick={() => (task = "delete")} class="inset-row inset-action setting"
+              ><span class="setting-label">{@render icon("trash")}<span class="setting-name danger-name">Delete account…</span></span></button
+            >
+          {/if}
+        </div>
+        <p role="status" class={["inset-foot text-ink", !accountNote && "sr-only"]}>{accountNote}</p>
+        <p role="status" class={["inset-foot text-danger", !message && "sr-only"]}>{message}</p>
+        {#if email && !emailSending}
+          <p class="inset-foot">Changing your email needs nine turtles to send email; whoever runs it can set that up.</p>
+        {/if}
+        {#if !owner}
+          <!-- Readers are told what the owner's Readers page shows of them (decision 0093). -->
+          <p class="inset-foot">
+            Whoever runs this nine turtles can see your email, when you joined, how many feeds you follow, the day
+            you were last here and, once there are plans, which plan you're on. Never which feeds or what you read.
+          </p>
+        {/if}
+        <p class="inset-foot" translate="no">Version {version}</p>
+      </section>
+      {:else if page === "font"}
+      <section aria-labelledby="settings-heading">
+        <div class="inset-group">
+          <!--
+            A short passage set as articles will be, the group's first row, before
+            the controls, as Apple Books keeps its sample inside the themes panel:
+            its words start on the rows' words, 16px in, and a hairline parts it
+            from the rows below (decision 0055). A row, never a card inside a card.
+          -->
+          <figure class="inset-row reading-sample" style:--sample-share={`${(LINE_WIDTHS[preferences.lineWidth].ch / LINE_WIDTHS.wide.ch) * 100}%`}>
+            <figcaption class="sr-only">Preview</figcaption>
+            <p>
+              Most writing on the open web was never meant to be skimmed. It was written slowly, by someone who
+              cared, for whoever would read it to the end. A reader can be built the same way: it shows you what is
+              there, and then it lets you go.
+            </p>
+          </figure>
+          <!-- Original, or Plain: rohit.onl's bare look (decision 0063). -->
+          <div class="inset-row setting has-control">
+            <p id="theme-name" class="setting-name">Theme</p>
+            <div role="group" aria-labelledby="theme-name" class="choices setting-control" style="--columns: 2">
+              {#each THEMES as theme (theme)}
+                <label class="choice">
+                  <input type="radio" name="theme" value={theme} bind:group={preferences.theme} />
+                  {LOOKS[theme].label}
+                </label>
+              {/each}
+            </div>
+          </div>
+          <div class="inset-row setting has-control">
+            <p id="reading-font-name" class="setting-name">Reading font</p>
+            <div role="group" aria-labelledby="reading-font-name" class="choices setting-control" style="--columns: 3">
+              {#each Object.entries(READING_FONTS) as [value, font] (value)}
+                <!-- Each name is set in its own font, so the choice shows itself. -->
+                <label class="choice" style:font-family={font.family}>
+                  <input type="radio" name="reading-font" {value} bind:group={preferences.readingFont} />
+                  {font.label}{#if font.rest}<span class="sr-only">{font.rest}</span>{/if}
+                </label>
+              {/each}
+            </div>
+          </div>
+          <div class="inset-row setting has-control">
+            <p id="line-width-name" class="setting-name">Line width</p>
+            <div role="group" aria-labelledby="line-width-name" class="choices setting-control" style="--columns: 3">
+              {#each Object.entries(LINE_WIDTHS) as [value, width] (value)}
+                <label class="choice">
+                  <input type="radio" name="line-width" {value} bind:group={preferences.lineWidth} />
+                  {width.label}
+                </label>
+              {/each}
+            </div>
+          </div>
+        </div>
+        <p class="inset-foot">
+          These apply to this device only. The Aa button above an article changes these too, while you read.
+        </p>
+      </section>
+      {:else if page === "sidebar"}
       <!-- Which lists the sidebar shows (decision 0105): a tick box row each, as in Edit feed; shared across devices. -->
-      <section aria-labelledby="sidebar-heading">
-        <h3 id="sidebar-heading" class="inset-head">Show in the sidebar</h3>
-        <div class="inset-group" role="group" aria-labelledby="sidebar-heading" aria-describedby="sidebar-help">
+      <section aria-labelledby="settings-heading">
+        <div class="inset-group" role="group" aria-labelledby="settings-heading" aria-describedby="sidebar-help">
           {#each SIDEBAR_LISTS as list (list.value)}
             <label class="inset-row check-row">
               <input
@@ -496,7 +769,7 @@
                 disabled={sort === undefined}
                 onchange={(event) => showInSidebar(list.value, event.currentTarget)}
               />
-              <span class="min-w-0 break-words">{list.label}</span>
+              <span class="setting-name min-w-0">{list.label}</span>
               <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
             </label>
           {/each}
@@ -507,104 +780,8 @@
         </p>
         <p role="status" class={["inset-foot text-danger", !sidebarMessage && "sr-only"]}>{sidebarMessage}</p>
       </section>
-
-      <section aria-labelledby="reader-heading">
-        <h3 id="reader-heading" class="inset-head">Look and feel</h3>
-        <div class="inset-group">
-          <!--
-            A short passage set as articles will be, the group's first row, before
-            the controls, as Apple Books keeps its sample inside the themes panel:
-            its words start on the rows' words, 16px in, and a hairline parts it
-            from Appearance below (decision 0055). A row, never a card inside a card.
-          -->
-          <figure class="inset-row reading-sample" style:--sample-share={`${(LINE_WIDTHS[preferences.lineWidth].ch / LINE_WIDTHS.wide.ch) * 100}%`}>
-            <figcaption class="sr-only">Preview</figcaption>
-            <p>
-              Most writing on the open web was never meant to be skimmed. It was written slowly, by someone who
-              cared, for whoever would read it to the end. A reader can be built the same way: it shows you what is
-              there, and then it lets you go.
-            </p>
-          </figure>
-          <!-- Day, night or as the device is set: the theme's day or night version (decision 0056). -->
-          <fieldset class="inset-row">
-            <legend class="row-name">Appearance</legend>
-            <div class="choices control" style="--columns: 3">
-              {#each APPEARANCES as choice (choice.value)}
-                <label class="choice">
-                  <input type="radio" name="appearance" value={choice.value} bind:group={preferences.appearance} />
-                  {choice.label}
-                </label>
-              {/each}
-            </div>
-          </fieldset>
-
-          <!-- Original, or Plain: rohit.onl's bare look (decision 0063). -->
-          <fieldset class="inset-row">
-            <legend class="row-name">Theme</legend>
-            <div class="choices control" style="--columns: 2">
-              {#each THEMES as theme (theme)}
-                <label class="choice">
-                  <input type="radio" name="theme" value={theme} bind:group={preferences.theme} />
-                  {LOOKS[theme].label}
-                </label>
-              {/each}
-            </div>
-          </fieldset>
-
-          <fieldset class="inset-row">
-            <legend class="row-name">Reading font</legend>
-            <div class="choices control" style="--columns: 3">
-              {#each Object.entries(READING_FONTS) as [value, font] (value)}
-                <!-- Each name is set in its own font, so the choice shows itself. -->
-                <label class="choice" style:font-family={font.family}>
-                  <input type="radio" name="reading-font" {value} bind:group={preferences.readingFont} />
-                  {font.label}{#if font.rest}<span class="sr-only">{font.rest}</span>{/if}
-                </label>
-              {/each}
-            </div>
-          </fieldset>
-
-          <div class="inset-row">
-            <p id="text-size-name" class="row-name">Text size</p>
-            <!-- A flat "A | step | A" capsule: a small A and a large A at its ends, the current step between them as plain words, parted by hairlines (decisions 0045, 0055). -->
-            <div class="control">
-              <TextSize bind:size={preferences.textSize} labelledby="text-size-name" />
-            </div>
-          </div>
-
-          <fieldset class="inset-row">
-            <legend class="row-name">Line width</legend>
-            <div class="choices control" style="--columns: 3">
-              {#each Object.entries(LINE_WIDTHS) as [value, width] (value)}
-                <label class="choice">
-                  <input type="radio" name="line-width" {value} bind:group={preferences.lineWidth} />
-                  {width.label}
-                </label>
-              {/each}
-            </div>
-          </fieldset>
-
-        </div>
-        <!-- The same preferences as the Aa panel above an article (decision 0034). -->
-        <p class="inset-foot">
-          These apply to this device only. Match device switches between the day and night versions as the
-          device does. The Aa button above an article changes these too, while you read.
-        </p>
-      </section>
-
-      <!-- Only on a screen with a keyboard: there's nothing to press on a touch screen (decision 0110). -->
-      <section aria-labelledby="keyboard-heading" class="keyboard-hint">
-        <h3 id="keyboard-heading" class="inset-head">Keyboard</h3>
-        <div class="inset-group">
-          <button type="button" onclick={onKeys} aria-haspopup="dialog" class="inset-row inset-action"
-            >Change keys…<span class="row-glyph"><Icon name="chevron-right" size={18} /></span></button
-          >
-        </div>
-        <p class="inset-foot">Give any shortcut a key of your own, or none. Your keys follow you to every device you sign in on. Press ? anywhere to see them all.</p>
-      </section>
-
-      <section aria-labelledby="data-heading">
-        <h3 id="data-heading" tabindex="-1" bind:this={dataHeading} class="inset-head">Your data</h3>
+      {:else if page === "data"}
+      <section aria-labelledby="settings-heading">
         <div class="inset-group">
           {@render keepSwitch()}
           <ImportOpml {onImported} bind:lines={importLines} />
@@ -630,135 +807,85 @@
           Inoreader, Feedly, Feedbin or another feed reader, import the JSON file it exports them in.
         </p>
       </section>
-
-      <section aria-labelledby="feeds-heading">
-        <h3 id="feeds-heading" class="inset-head">Feeds</h3>
+      {:else if page === "keyboard"}
+      <section aria-labelledby="settings-heading">
         <div class="inset-group">
-          <a href="/settings/feeds" onclick={onYourFeeds} class="inset-row inset-action"
-            >Your feeds<span class="row-glyph"><Icon name="chevron-right" size={18} /></span></a
-          >
-          <a href="/settings/feed-health" onclick={onFeedHealth} class="inset-row inset-action"
-            >Feed health<span class="row-glyph"><Icon name="chevron-right" size={18} /></span></a
+          <button type="button" onclick={onKeys} aria-haspopup="dialog" class="inset-row inset-action"
+            >Change keys…<span class="row-glyph"><Icon name="chevron-right" size={18} /></span></button
           >
         </div>
-        <p class="inset-foot">
-          Your feeds lists every feed with when it last posted, finds the quiet ones, and moves or unsubscribes from
-          several at once. Feed health shows feeds that have stopped working, and what you can do about it.
-        </p>
+        <p class="inset-foot">Give any shortcut a key of your own, or none. Your keys follow you to every device you sign in on. Press ? anywhere to see them all.</p>
       </section>
-
-      <AddAnywhere />
-
-      <Rules
-        bind:this={rulesPanel}
-        {feeds}
-        {folders}
-        {onMuted}
-        onNew={() => openEditor({})}
-        onEdit={(rule) => openEditor({ rule })}
-      />
-
-      <Newsletters />
-
-      <OtherApps />
-
-      <Assistants onFeedsChanged={onImported} />
-
-      {#if owner}
-        <Readers {email} {onReaders} />
-      {:else}
+      {:else if page === "add-from-anywhere"}
+        <AddAnywhere />
+      {:else if page === "rules"}
+        <Rules
+          bind:this={rulesPanel}
+          {feeds}
+          {folders}
+          {onMuted}
+          onNew={() => openEditor({})}
+          onEdit={(rule) => openEditor({ rule })}
+        />
+      {:else if page === "newsletters"}
+        <Newsletters />
+      {:else if page === "other-apps"}
+        <OtherApps />
+      {:else if page === "assistants"}
+        <Assistants onFeedsChanged={onImported} />
+      {:else if page === "passkeys"}
+        <PasskeysGroup origin={passkeys} />
+        {#if !passkeysShown}
+          <p>Passkeys work only at this nine turtles' own address, in a browser that has them.</p>
+        {/if}
+      {:else if page === "readers"}
+        {#if owner}
+          <Readers {email} {onReaders} />
+        {:else}
+          <p>Only whoever runs this nine turtles sees Readers.</p>
+        {/if}
+      {:else if page === "plan"}
         <Plan />
-      {/if}
-
-      <PasskeysGroup origin={passkeys} />
-
-      <section aria-labelledby="account-heading">
-        <h3 id="account-heading" class="inset-head">Account</h3>
-        <div class="inset-group">
-          {#if updates.ready}
-            <!-- Never swapped while you read: the new version starts when you reload, go to another place, or next time you open nine turtles. -->
-            <div class="inset-row">
-              <p>A new version is ready.</p>
-              <button type="button" onclick={() => location.reload()} class="btn btn-small">Reload</button>
-            </div>
-          {/if}
-          <!-- The email this reader signs in with; changing it sends a link to the new one (decision 0088). -->
-          <div class="inset-row">
-            <p class="min-w-0">Email<br /><span class="value text-muted">{email ?? "No email yet"}</span></p>
-            {#if emailSending && email}
-              <button bind:this={changeButton} type="button" onclick={() => (task = "email")} class="btn btn-small"
-                >Change…<span class="sr-only"> email</span></button
-              >
-            {/if}
-          </div>
-          <!--
-            In the text color, not the destructive red: signing out removes
-            nothing, and red in nine turtles means something goes (decision 0042).
-            Its trailing door says it acts, as the rows above do.
-          -->
-          <button type="button" onclick={leave} class="inset-row inset-action"
-            >Sign out<span class="row-glyph"><Icon name="sign-out" size={18} /></span></button
-          >
-          <!-- Red words: these remove something. What each removes is said in the sheet it opens, before anything goes. -->
-          <button bind:this={dataButton} type="button" onclick={() => (task = "data")} class="inset-row inset-action text-danger font-semibold"
-            >Delete data…</button
-          >
-          {#if !owner}
-            <button bind:this={deleteButton} type="button" onclick={() => (task = "delete")} class="inset-row inset-action text-danger font-semibold"
-              >Delete account…</button
-            >
-          {/if}
-        </div>
-        <p role="status" class={["inset-foot text-ink", !accountNote && "sr-only"]}>{accountNote}</p>
-        <p role="status" class={["inset-foot text-danger", !message && "sr-only"]}>{message}</p>
-        {#if email && !emailSending}
-          <p class="inset-foot">Changing your email needs nine turtles to send email; whoever runs it can set that up.</p>
-        {/if}
-        {#if !owner}
-          <!-- Readers are told what the owner's Readers page shows of them (decision 0093). -->
-          <p class="inset-foot">
-            Whoever runs this nine turtles can see your email, when you joined, how many feeds you follow, the day
-            you were last here and, once there are plans, which plan you're on. Never which feeds or what you read.
-          </p>
-        {/if}
-        <p class="inset-foot" translate="no">Version {version}</p>
-      </section>
       {/if}
     </div>
   </div>
+  {/key}
 </section>
 {/if}
 
 <style>
-  /* A row's name, on its left. EditFeed.svelte's settings rows copy these; keep the two alike. A fieldset's legend floats so it sits in the row like any other child. */
-  .row-name {
-    float: left;
-    padding: 0;
-    color: var(--ink);
-    font-size: var(--text-ui);
-  }
-  /* Every control the same width at a row's right end; on a narrow screen it takes the row's width under its name. */
-  .control {
-    flex: 0 1 22rem;
-    min-width: 0;
-  }
-  .choices.control {
+  /* Each segmented choice fills its control in even columns. */
+  .choices.setting-control {
     display: grid;
     grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
   }
-  .choices.control :global(.choice) {
+  .choices.setting-control :global(.choice) {
     justify-content: center;
-    padding-inline: 0.5rem;
+    padding-inline: 0.375rem;
     text-align: center;
     line-height: 1.2;
     text-wrap: balance;
   }
-  @media (width < 40rem) {
-    .control {
-      flex-basis: 100%;
-    }
+  /* What a row that opens a page is set to (the reading font, the plan), before its ›. */
+  .setting-value {
+    font-size: var(--text-meta);
   }
-  /* The group's first row: a passage set as articles will be, 16px in on every side, its left edge on the rows' words. */
+  /* Delete data… and Delete account…: red words, saying what they remove. */
+  .danger-name {
+    color: var(--danger);
+    font-weight: 600;
+  }
+  /* "Only you", beside the owner's own group's header: a small outlined word, never a color. */
+  .only-you {
+    margin-left: 0.5rem;
+    padding: 0 0.375rem;
+    border: 1px solid color-mix(in srgb, var(--ink) 25%, transparent);
+    border-radius: 999px;
+    font-size: 0.66rem;
+    letter-spacing: 0.05em;
+    vertical-align: 1px;
+  }
+  /* The passage set as articles will be, 16px in on every side, its left edge on the rows' words. */
   .reading-sample {
     display: block;
     margin: 0;
@@ -775,10 +902,6 @@
   */
   .reading-sample p {
     max-width: min(var(--reading-measure), var(--sample-share, 100%));
-  }
-  .value {
-    font-size: var(--text-meta);
-    overflow-wrap: anywhere;
   }
   /* On a phone articles read a tenth smaller; so does the sample. */
   @media (max-width: 40rem) {

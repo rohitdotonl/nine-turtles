@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { readCarried, switchesOnMove, verdict } from "./updates.svelte";
 
 describe("telling a tab that nine turtles was updated", () => {
@@ -52,5 +52,39 @@ describe("what a switch carries to the new version", () => {
     expect(readCarried("keyboard")).toBeUndefined();
     expect(readCarried({ ...carried, sidebar: "sideways" })).toBeUndefined();
     expect(readCarried({ ...carried, sidebarScroll: "far" })).toBeUndefined();
+  });
+});
+
+describe("a tab left open when another reader signs in on the browser", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  async function load() {
+    vi.resetModules();
+    return import("./updates.svelte");
+  }
+
+  it("names its reader on every request, once it knows it", async () => {
+    const fetch = vi.fn(async (_input: string, _init?: RequestInit) => new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetch);
+    const { api, noteTabReader } = await load();
+    await api("/api/articles/starred", { method: "POST", headers: { "content-type": "application/json" } });
+    expect(new Headers(fetch.mock.calls[0]?.[1]?.headers).get("x-nine-turtles-reader")).toBeNull();
+    noteTabReader(7);
+    await api("/api/articles/starred", { method: "POST", headers: { "content-type": "application/json" } });
+    const sent = new Headers(fetch.mock.calls[1]?.[1]?.headers);
+    expect(sent.get("x-nine-turtles-reader")).toBe("7");
+    expect(sent.get("content-type")).toBe("application/json");
+  });
+
+  it("stops, says so and offers Reload when the server says the tab's reader isn't signed in here any more", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response('{"error":"other-reader"}', { status: 409, headers: { "x-nine-turtles-other-reader": "1" } })),
+    );
+    const { OtherReader, api, noteTabReader, updates } = await load();
+    noteTabReader(7);
+    // Never handed back as an answer: 409 means other things to some callers.
+    await expect(api("/api/articles/starred", { method: "POST" })).rejects.toBeInstanceOf(OtherReader);
+    expect(updates.otherReader).toBe(true);
   });
 });

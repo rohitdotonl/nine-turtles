@@ -3,7 +3,7 @@
 // show for them.
 import { HIDEABLE, type Hideable, type View } from "./router";
 import type { KeyMap } from "./keyboard";
-import { api } from "./updates.svelte";
+import { OtherReader, api } from "./updates.svelte";
 import { noConnection, serverNow, whenBack } from "./connection.svelte";
 import {
   CATCH_UP_NEEDS_CONNECTION,
@@ -402,6 +402,8 @@ export class Refused extends Error {
 
 /** Whether a failed save is worth trying again: the connection, a timeout or a restart, never a refusal. */
 export function worthRetrying(problem: unknown): boolean {
+  // Another reader is signed in on this browser: no try from this tab will be taken.
+  if (problem instanceof OtherReader) return false;
   return !(problem instanceof Refused) || OUT_OF_REACH.has(problem.status);
 }
 
@@ -778,6 +780,12 @@ export function inDevanagari(name: string): boolean {
 const loaded = new Map<number, FullArticle>();
 const loading = new Map<number, Promise<FullArticle>>();
 const KEEP = 20;
+
+/** Another reader, or nobody: the articles fetched so far (with the last reader's marks) go. */
+export function forgetLoaded(): void {
+  loaded.clear();
+  loading.clear();
+}
 /** Those opened from this device's copies, words only: fetched again in full once the connection is back. */
 const fromDevice = new Set<number>();
 whenBack(() => {
@@ -948,15 +956,19 @@ export async function renameFolder(id: number, name: string): Promise<Refusal | 
   return (await change(`/api/folders/${id}`, { name })).refusal;
 }
 
-/** Deletes a folder. Answers the rules that applied to it (SPEC section 27), for Undo to hand back. */
-export async function deleteFolder(id: number): Promise<{ refusal?: Refusal; rules: number[] }> {
+/**
+ * Deletes a folder. Answers the rules that applied to it (SPEC section 27) and the saved searches that looked in it,
+ * for Undo to hand back.
+ */
+export async function deleteFolder(id: number): Promise<{ refusal?: Refusal; rules: number[]; searches: number[] }> {
   const { refusal, answer } = await change(`/api/folders/${id}/delete`, {});
-  return { refusal, rules: Array.isArray(answer?.rules) ? answer.rules.map(Number) : [] };
+  const numbers = (list: unknown) => (Array.isArray(list) ? list.map(Number) : []);
+  return { refusal, rules: numbers(answer?.rules), searches: numbers(answer?.searches) };
 }
 
-/** Creates a folder with these feeds (and rules) in it: Undo for deleting one. */
-export async function createFolder(name: string, feeds: number[], rules: number[] = []): Promise<Refusal | undefined> {
-  return (await change("/api/folders", { name, feeds, rules })).refusal;
+/** Creates a folder with these feeds (and rules and saved searches) in it: Undo for deleting one. */
+export async function createFolder(name: string, feeds: number[], rules: number[] = [], searches: number[] = []): Promise<Refusal | undefined> {
+  return (await change("/api/folders", { name, feeds, rules, searches })).refusal;
 }
 
 /** What an edit page says when a change wasn't made. */

@@ -172,10 +172,20 @@
     -->
     <div class="flex min-w-0 flex-col gap-1.5">
       <span class="text-small text-ink-2" id="feed-settings-name">Settings</span>
-      <div class="inset-group" role="group" aria-labelledby="feed-settings-name" aria-describedby="feed-settings-help">
-        <fieldset class="inset-row">
-          <legend class="row-name">Reading mode</legend>
-          <div class="choices control" style="--columns: 2">
+      <!-- Each setting's name with a short description straight under it, as in Settings (S1, decision 0120). -->
+      <div class="inset-group" role="group" aria-labelledby="feed-settings-name">
+        <div class="inset-row setting has-control">
+          <div class="setting-words setting-label">
+            <p id="feed-mode-name" class="setting-name">Reading mode</p>
+            <p id="feed-mode-hint" class="setting-hint">
+              {river
+                ? "The whole app is in river mode for now (Settings › Reading)."
+                : flows
+                  ? "Its articles skip Unread and show no count."
+                  : "New articles go to Unread."}
+            </p>
+          </div>
+          <div role="group" aria-labelledby="feed-mode-name" aria-describedby="feed-mode-hint" class="choices setting-control" style="--columns: 2">
             {#each MODE_CHOICES as choice (choice.label)}
               <label class="choice">
                 <input type="radio" name="feed-mode" value={choice.value} bind:group={flows} />
@@ -183,10 +193,19 @@
               </label>
             {/each}
           </div>
-        </fieldset>
-        <fieldset class="inset-row">
-          <legend class="row-name">Check for new articles</legend>
-          <div class="choices control" style="--columns: 3">
+        </div>
+        <div class="inset-row setting has-control">
+          <div class="setting-words setting-label">
+            <p id="feed-check-name" class="setting-name">Check for new articles</p>
+            <p id="feed-check-hint" class="setting-hint">
+              {check === "hourly"
+                ? "No more often than once an hour."
+                : check === "daily"
+                  ? "No more often than once a day."
+                  : "As often as this feed usually posts."}
+            </p>
+          </div>
+          <div role="group" aria-labelledby="feed-check-name" aria-describedby="feed-check-hint" class="choices setting-control" style="--columns: 3">
             {#each CHECK_CHOICES as choice (choice.value)}
               <label class="choice">
                 <input type="radio" name="feed-check" value={choice.value} bind:group={check} />
@@ -194,26 +213,27 @@
               </label>
             {/each}
           </div>
-        </fieldset>
-        <label class="inset-row check-row">
-          <input type="checkbox" bind:checked={openOnSite} />
-          <span class="min-w-0 break-words">Open articles on the website</span>
+        </div>
+        <label class="inset-row check-row setting">
+          <input type="checkbox" bind:checked={openOnSite} aria-describedby="feed-site-hint" />
+          <span class="setting-words">
+            <span class="setting-name">Open articles on the website</span>
+            <span id="feed-site-hint" class="setting-hint">Opens the publisher's page instead of the text here.</span>
+          </span>
           <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
         </label>
-        <label class="inset-row check-row">
-          <input type="checkbox" bind:checked={paused} />
-          <span class="min-w-0 break-words">Pause this feed</span>
+        <label class="inset-row check-row setting">
+          <input type="checkbox" bind:checked={paused} aria-describedby="feed-pause-hint" />
+          <span class="setting-words">
+            <span class="setting-name">Pause this feed</span>
+            <span id="feed-pause-hint" class="setting-hint"
+              >New articles skip Unread until you untick it; then its newest three come back.{#if feed.pausedAt != null}
+                {pausedSince(feed.pausedAt)}{/if}</span
+            >
+          </span>
           <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
         </label>
       </div>
-      <span id="feed-settings-help" class="field-help mt-0"
-        >{river
-          ? "The whole app is in river mode for now (Settings › Reading)."
-          : "River: its articles skip Unread and show no count."}
-        Hourly or Daily: checked no more often than that. Website: opening an article goes to the publisher's page.
-        Pause: its new articles skip Unread until you untick it; then its newest three come back.{#if feed.pausedAt != null}
-          {pausedSince(feed.pausedAt)}{/if}</span
-      >
     </div>
 
     <!-- A shortcut to Settings › Rules, already set to this feed; leaving this sheet unchanged. -->
@@ -270,30 +290,22 @@
 {/if}
 
 <style>
-  /* The same rows as Settings.svelte's (keep the two alike): a row's name on its left; a fieldset's legend floats so it sits in the row like any other child. */
-  .row-name {
-    float: left;
-    padding: 0;
-    color: var(--ink);
-    font-size: var(--text-ui);
-  }
-  /* The choice at the row's right end, as wide as it needs; under the name once the row is too narrow. */
-  .control {
-    flex: 0 1 15rem;
-    min-width: 0;
-  }
-  .choices.control {
+  /* The same rows as Settings.svelte's (keep the two alike, decision 0120): each choice fills its control in even columns. */
+  .choices.setting-control {
+    /* A sheet is narrower than Settings' column, so its controls are too. */
+    flex-basis: 15rem;
     display: grid;
     grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
   }
-  .choices.control :global(.choice) {
+  .choices.setting-control :global(.choice) {
     justify-content: center;
     padding-inline: 0.5rem;
     text-align: center;
     line-height: 1.2;
   }
+  /* On a phone, under the words at the row's full width, as in Settings. */
   @media (width < 40rem) {
-    .control {
+    .choices.setting-control {
       flex-basis: 100%;
     }
   }

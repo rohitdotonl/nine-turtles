@@ -35,6 +35,11 @@ test("Your plan shows the trial, works from the keyboard, and says why a door st
   });
   await page.goto("/settings");
   await appReady(page);
+  // Settings' Account group starts with Your plan ›, saying where the reader stands (decision 0120).
+  const row = page.getByRole("link", { name: /^Your plan/ });
+  await expect(row).toContainText("Free trial");
+  await row.click();
+  await expect(page).toHaveURL(/\/settings\/plan$/);
 
   const plan = page.getByRole("region", { name: "Your plan" });
   await expect(plan.getByText("Free trial")).toBeVisible();

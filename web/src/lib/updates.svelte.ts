@@ -15,6 +15,8 @@
 import { lost, noConnection, reached } from "./connection.svelte";
 
 export const VERSION_HEADER = "x-nine-turtles-version";
+const READER_HEADER = "x-nine-turtles-reader";
+const OTHER_READER_HEADER = "x-nine-turtles-other-reader";
 
 /** Statuses meaning "I don't understand that request", rather than an answer the screens explain. */
 const NOT_UNDERSTOOD = new Set([400, 404, 405, 415, 422]);
@@ -27,7 +29,7 @@ export function verdict(running: string | undefined, answered: string | null, st
   return NOT_UNDERSTOOD.has(status) ? "stranded" : "newer";
 }
 
-export const updates = $state({ ready: false, stranded: false });
+export const updates = $state({ ready: false, stranded: false, otherReader: false });
 
 let running: string | undefined;
 
@@ -40,19 +42,56 @@ export function noteAnswer(response: Response) {
   if (said === "stranded") updates.stranded = true;
 }
 
+/** The reader this tab was opened for: named on every request once known. */
+let tabReader: number | undefined;
+
+/**
+ * Notes whose tab this is. If another reader signs in on this browser while
+ * the tab stays open, the server refuses what the tab sends (so its waiting
+ * marks are never saved as the new reader's), and the tab says so, with
+ * Reload (SPEC section 32, decision 0121).
+ */
+export function noteTabReader(reader: number): void {
+  if (reader > 0) tabReader = reader;
+}
+
+/** Whose tab this is, once known: the reader each mark waiting on the device belongs to. */
+export function currentTabReader(): number | undefined {
+  return tabReader;
+}
+
+/** What `api` throws once another reader is signed in on this browser: the request wasn't taken. */
+export class OtherReader extends Error {
+  constructor() {
+    super("another reader is signed in on this browser");
+  }
+}
+
 /** `fetch`, for nine turtles' own server, noting each answer's version, and whether the connection is there. */
 export async function api(input: string, init?: RequestInit): Promise<Response> {
   let response: Response;
   try {
-    response = await fetch(input, init);
+    if (tabReader === undefined) response = await fetch(input, init);
+    else {
+      const headers = new Headers(init?.headers);
+      headers.set(READER_HEADER, String(tabReader));
+      response = await fetch(input, { ...init, headers });
+    }
   } catch (problem) {
     if (noConnection(problem)) lost();
     throw problem;
   }
   reached(response);
   noteAnswer(response);
+  if (response.headers.get(OTHER_READER_HEADER)) {
+    updates.otherReader = true;
+    throw new OtherReader();
+  }
   return response;
 }
+
+/** The note at the bottom of the list once another reader has signed in on this browser. */
+export const OTHER_READER_MESSAGE = "Someone else signed in on this browser. Reload to continue.";
 
 /** The message for the note at the bottom of the list, once this tab can't carry on. */
 export const STRANDED_MESSAGE = "nine turtles was updated. Reload to continue.";

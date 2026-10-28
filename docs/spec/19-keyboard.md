@@ -25,7 +25,7 @@
   | `/` | Search |
   | `a` | Add feed |
   | `g` then `u` / `s` / `a` | Go to Unread / Starred / All (also when Starred or All is hidden from the sidebar) |
-  | `g` then `f` | Go to Your feeds (Settings › Feeds) |
+  | `g` then `f` | Go to Your feeds (Settings › Your library) |
   | `g` then `,` | Go to Settings |
   | `g` then `r` | Go to Recently read (also when it's hidden from the sidebar) |
   | `e` | Fold / unfold the folder you're in, in the sidebar |
@@ -52,7 +52,7 @@
 - The keyboard's place is shown by a 2px outline in the text color (never the accent, which marks what's unread and what a search found). Rows draw it just inside their rounded edge, in a slightly softened text color, so it never reaches over the hairlines between rows; the selected row keeps its pill. A text field in use rings the same softened text color, 2px, 1px clear of the field, its own edge stepping aside, at 3 : 1 or more against the field and whatever it sits on in every theme (decision 0055). A title that receives the place (a screen opening, a sheet, an opened article, or a key such as `g` then `a`), so screen readers start there, shows no ring, even after a key: it can't be pressed, and the next Tab lands on a real control, which rings (decisions 0042, 0047; since 27 October 2026 for every title).
 - **Skip to articles** is the first thing on the app's screen to take the keyboard while a list of articles shows (the keyboard starts later, on the list's title, so it's reached by Tab from the browser's own address bar and controls): hidden until the keyboard reaches it, then a small label at the top left with its ring. Enter takes the keyboard past the sidebar to the chosen article in the list, or the first (with none, to the list's title).
 - A tooltip names its button's key after its name, in brackets, as a capital letter, the same way the key caps print it: "Star (S)", "Open original (V)" (decision 0064). With a key of your own it names yours ("Star (X)"); with none, only the name.
-- Shortcuts don't fire while you're typing in a field.
+- Shortcuts don't fire while you're typing in a field, nor while a word is being composed (Chinese, Japanese and the like). Caps Lock doesn't change them: with it on, `a` is still `a`, and Shift+A still Shift+A.
 - Podcasts add no keys (decision 0113): Space still scrolls the article, and the player's controls answer to Enter, Space and the arrow keys only while the keyboard is on them (section 35). Up Next has no `g` key yet.
 
 **How to check it**

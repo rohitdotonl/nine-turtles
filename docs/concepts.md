@@ -152,6 +152,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Prefetching (loading the next thing in advance)
 - Lazy loading (`loading="lazy"`: pictures load as you reach them)
 - Optimistic update (the screen changes first, saving follows)
+- Race condition (an older answer arriving after a newer one), saves in order and the newest answer (`inorder.ts`)
 - Clipboard and the system share sheet
 - Container query (styling by a pane's width, not the window's)
 

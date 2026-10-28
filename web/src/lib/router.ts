@@ -17,11 +17,35 @@ export type Route =
   | { kind: "save-search" }
   | { kind: "add-feed" }
   | { kind: "new-to-feeds" }
-  | { kind: "settings" }
+  | { kind: "settings"; page?: SettingsPage }
   | { kind: "feed-health" }
   | { kind: "your-feeds" }
   | { kind: "muted" }
   | { kind: "readers" };
+
+/**
+ * Settings' own pages (decision 0120): each opens in place of Settings from a row ending in ›, at
+ * /settings/<its name>, with "‹ Settings" to go back. The values are their titles.
+ */
+export const SETTINGS_PAGES = {
+  font: "Font, theme and line width",
+  sidebar: "Show in the sidebar",
+  data: "Your data",
+  keyboard: "Keyboard",
+  "add-from-anywhere": "Add from anywhere",
+  rules: "Rules",
+  newsletters: "Newsletters",
+  "other-apps": "Other apps",
+  assistants: "Connected assistants",
+  passkeys: "Passkeys",
+  readers: "Readers",
+  plan: "Your plan",
+} as const;
+export type SettingsPage = keyof typeof SETTINGS_PAGES;
+
+function settingsPage(name: string): SettingsPage | undefined {
+  return Object.hasOwn(SETTINGS_PAGES, name) ? (name as SettingsPage) : undefined;
+}
 
 export const VIEW_NAMES: Record<View, string> = { unread: "Unread", starred: "Starred", all: "All", recent: "Recently read", upnext: "Up Next" };
 
@@ -39,7 +63,9 @@ export function parse(path: string): Route {
   if (name === "settings/feed-health") return { kind: "feed-health" };
   if (name === "settings/feeds") return { kind: "your-feeds" };
   if (name === "settings/muted") return { kind: "muted" };
-  if (name === "settings/readers") return { kind: "readers" };
+  if (name === "settings/readers/all") return { kind: "readers" };
+  const page = name.startsWith("settings/") ? settingsPage(name.slice("settings/".length)) : undefined;
+  if (page) return { kind: "settings", page };
   if (name === "add-feed") return { kind: "add-feed" };
   if (name === "new-to-feeds") return { kind: "new-to-feeds" };
   if (name === "searches/new") return { kind: "save-search" };
@@ -68,7 +94,7 @@ export function knownPath(path: string): boolean {
 export function pathFor(route: Route): string {
   switch (route.kind) {
     case "settings":
-      return "/settings";
+      return route.page ? `/settings/${route.page}` : "/settings";
     case "feed-health":
       return "/settings/feed-health";
     case "your-feeds":
@@ -76,7 +102,7 @@ export function pathFor(route: Route): string {
     case "muted":
       return "/settings/muted";
     case "readers":
-      return "/settings/readers";
+      return "/settings/readers/all";
     case "add-feed":
       return "/add-feed";
     case "new-to-feeds":
@@ -106,7 +132,7 @@ export function pathFor(route: Route): string {
 export function nameFor(route: Route, placeName?: string): string {
   switch (route.kind) {
     case "settings":
-      return "Settings";
+      return route.page ? SETTINGS_PAGES[route.page] : "Settings";
     case "feed-health":
       return "Feed health";
     case "your-feeds":
@@ -114,7 +140,7 @@ export function nameFor(route: Route, placeName?: string): string {
     case "muted":
       return "Muted articles";
     case "readers":
-      return "Readers";
+      return "All readers";
     case "add-feed":
       return "Add a feed";
     case "new-to-feeds":
@@ -143,4 +169,31 @@ export function nameFor(route: Route, placeName?: string): string {
 /** The browser tab's title, which screen readers also announce. */
 export function titleFor(route: Route, placeName?: string): string {
   return `${nameFor(route, placeName)} · nine turtles`;
+}
+
+/**
+ * The page a Settings page goes back to (decision 0120): Settings itself for its own pages, Feed
+ * health and Your feeds; Rules for Muted articles; Readers for All readers. Nothing elsewhere.
+ */
+export function parentOf(route: Route): Route | undefined {
+  if (route.kind === "settings") return route.page ? { kind: "settings" } : undefined;
+  if (route.kind === "feed-health" || route.kind === "your-feeds") return { kind: "settings" };
+  if (route.kind === "muted") return { kind: "settings", page: "rules" };
+  if (route.kind === "readers") return { kind: "settings", page: "readers" };
+  return undefined;
+}
+
+/** The row on its parent page that opens a place (its `data-settings-row`), so the keyboard goes back to it. */
+export function rowFor(route: Route): string | undefined {
+  if (route.kind === "settings") return route.page;
+  if (route.kind === "feed-health") return "feed-health";
+  if (route.kind === "your-feeds") return "feeds";
+  if (route.kind === "muted") return "muted";
+  if (route.kind === "readers") return "all-readers";
+  return undefined;
+}
+
+/** Settings, or a page opened from it: the sidebar's Settings button shows where you are. */
+export function inSettings(route: Route): boolean {
+  return route.kind === "settings" || parentOf(route) !== undefined;
 }

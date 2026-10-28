@@ -113,7 +113,10 @@ fn rename_old_database(data_dir: &Path) -> Result<(), String> {
     if !old.exists() || path(data_dir).exists() {
         return Ok(());
     }
-    for suffix in ["", "-wal", "-shm"] {
+    // The main file last: until it moves, a crash part way leaves the old
+    // name in place and the next start finishes the move, so changes still in
+    // the `-wal` file are never parted from their database.
+    for suffix in ["-wal", "-shm", ""] {
         let from = data_dir.join(format!("{OLD_FILE_NAME}{suffix}"));
         if from.exists() {
             let to = data_dir.join(format!("{FILE_NAME}{suffix}"));

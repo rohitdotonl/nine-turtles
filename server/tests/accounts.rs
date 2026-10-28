@@ -317,6 +317,48 @@ async fn a_password_link_lasts_an_hour() {
 }
 
 #[tokio::test]
+async fn a_password_link_stops_working_once_the_email_changes() {
+    let (base, _, outbox, _) = open_app().await;
+    let old = "lee@example.com";
+    let new = "lee@elsewhere.example";
+    let cookie = open_reader(&base, &outbox, old).await;
+    post(&base, "/api/password/forgot", None, json!({ "email": old })).await;
+    let (_, reset_ticket) = newest_link(&outbox, old);
+
+    // The reader moves away from the old inbox.
+    post(
+        &base,
+        "/api/people/me/email/change",
+        Some(&cookie),
+        json!({ "email": new, "password": READER_PASSWORD }),
+    )
+    .await;
+    let (_, confirm_ticket) = newest_link(&outbox, new);
+    let confirmed = post(
+        &base,
+        "/api/email/confirm",
+        None,
+        json!({ "ticket": confirm_ticket }),
+    )
+    .await;
+    assert_eq!(confirmed.status(), StatusCode::OK);
+
+    // Whoever still reads the old inbox can't use the link sent there.
+    let late = post(
+        &base,
+        "/api/password/reset",
+        None,
+        json!({ "ticket": reset_ticket, "password": NEW_PASSWORD }),
+    )
+    .await;
+    assert_eq!(late.status(), StatusCode::GONE);
+    assert_eq!(
+        sign_in(&base, new, READER_PASSWORD).await.status(),
+        StatusCode::NO_CONTENT
+    );
+}
+
+#[tokio::test]
 async fn changing_an_email_waits_for_the_new_address_and_tells_the_old() {
     let (base, _, outbox, _) = open_app().await;
     let old = "kai@example.com";
@@ -608,11 +650,23 @@ async fn deleting_an_account_leaves_nothing_of_theirs() {
 
     let deleted = post(&base, "/api/people/me/delete", Some(&cookie), json!({})).await;
     assert_eq!(deleted.status(), StatusCode::NO_CONTENT);
+    // Both the cookie and its name from before the rename are cleared.
+    let cleared: Vec<&str> = deleted
+        .headers()
+        .get_all("set-cookie")
+        .iter()
+        .map(|value| value.to_str().unwrap())
+        .filter(|value| value.contains("Max-Age=0"))
+        .collect();
     assert!(
-        deleted.headers()["set-cookie"]
-            .to_str()
-            .unwrap()
-            .contains("Max-Age=0")
+        cleared
+            .iter()
+            .any(|value| value.starts_with("nine_turtles_session=;"))
+    );
+    assert!(
+        cleared
+            .iter()
+            .any(|value| value.starts_with("slowfeed_session=;"))
     );
     assert_eq!(session(&base, Some(&cookie)).await["signed_in"], false);
 
@@ -1455,6 +1509,132 @@ async fn a_new_email_or_a_new_password_ends_earlier_sign_in_links() {
     assert_eq!(reset.status(), StatusCode::OK);
     assert_eq!(
         use_sign_in_link(&base, &sign_in_ticket).await.status(),
+        StatusCode::GONE
+    );
+}
+
+/// Uses a sign-in link and answers this device's cookie and the ticket for
+/// choosing a new password that comes with it (decision 0122).
+async fn sign_in_by_link(base: &str, ticket: &str) -> (String, String) {
+    let used = use_sign_in_link(base, ticket).await;
+    assert_eq!(used.status(), StatusCode::OK);
+    let cookie = cookie_from(&used);
+    let body: Value = used.text().await.unwrap().parse().unwrap();
+    assert_eq!(body["done"], "signed-in");
+    let choose = body["password_ticket"].as_str().unwrap().to_owned();
+    assert_eq!(choose.len(), 64);
+    (cookie, choose)
+}
+
+async fn choose_password(base: &str, ticket: &str, password: &str) -> Response {
+    post(
+        base,
+        "/api/password/reset",
+        None,
+        json!({ "ticket": ticket, "password": password }),
+    )
+    .await
+}
+
+#[tokio::test]
+async fn after_a_sign_in_link_a_new_password_can_be_chosen_once() {
+    let (base, state, outbox, _) = open_app().await;
+    let email = "wren@example.com";
+    let laptop = open_reader(&base, &outbox, email).await;
+    ask_sign_in_link(&base, email).await;
+    let (_, ticket) = newest_link(&outbox, email);
+    assert!(
+        emails_to(&outbox, email)
+            .last()
+            .unwrap()
+            .body
+            .contains("you can choose a new password")
+    );
+    let sent_before = emails_to(&outbox, email).len();
+    let (phone, choose) = sign_in_by_link(&base, &ticket).await;
+    // Nothing more is emailed, and the database holds nothing of the choice.
+    assert_eq!(emails_to(&outbox, email).len(), sent_before);
+    let links: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM email_links")
+        .fetch_one(&state.db)
+        .await
+        .unwrap();
+    assert_eq!(links, 1);
+
+    // Not choosing changes nothing: the password and the other device stay.
+    assert_eq!(session(&base, Some(&laptop)).await["signed_in"], true);
+    assert_eq!(session(&base, Some(&phone)).await["signed_in"], true);
+
+    // Too short is refused, and the ticket keeps working.
+    let short = choose_password(&base, &choose, "short").await;
+    assert_eq!(short.status(), StatusCode::BAD_REQUEST);
+    assert_eq!(error_of(short).await, "password-short");
+
+    let chosen = choose_password(&base, &choose, NEW_PASSWORD).await;
+    assert_eq!(chosen.status(), StatusCode::OK);
+    let fresh = cookie_from(&chosen);
+    assert_eq!(session(&base, Some(&fresh)).await["signed_in"], true);
+    // Every other device is signed out, as with an emailed password link.
+    assert_eq!(session(&base, Some(&laptop)).await["signed_in"], false);
+    assert_eq!(session(&base, Some(&phone)).await["signed_in"], false);
+    assert_eq!(
+        sign_in(&base, email, NEW_PASSWORD).await.status(),
+        StatusCode::NO_CONTENT
+    );
+    assert_ne!(
+        sign_in(&base, email, READER_PASSWORD).await.status(),
+        StatusCode::NO_CONTENT
+    );
+    // Once only.
+    assert_eq!(
+        choose_password(&base, &choose, "yet another long password")
+            .await
+            .status(),
+        StatusCode::GONE
+    );
+}
+
+#[tokio::test]
+async fn the_choice_of_a_password_ends_with_a_new_email() {
+    let (base, _, outbox, _) = open_app().await;
+    let email = "teal@example.com";
+    let laptop = open_reader(&base, &outbox, email).await;
+    ask_sign_in_link(&base, email).await;
+    let (_, ticket) = newest_link(&outbox, email);
+    let (_, choose) = sign_in_by_link(&base, &ticket).await;
+
+    // The reader moves to a new address: whoever reads the old inbox can't set a password.
+    let change = post(
+        &base,
+        "/api/people/me/email/change",
+        Some(&laptop),
+        json!({ "email": "olive@example.com", "password": READER_PASSWORD }),
+    )
+    .await;
+    assert!(change.status().is_success());
+    let (_, confirm) = newest_link(&outbox, "olive@example.com");
+    post(
+        &base,
+        "/api/email/confirm",
+        None,
+        json!({ "ticket": confirm }),
+    )
+    .await;
+    assert_eq!(
+        choose_password(&base, &choose, NEW_PASSWORD).await.status(),
+        StatusCode::GONE
+    );
+    assert_eq!(
+        sign_in(&base, "olive@example.com", READER_PASSWORD)
+            .await
+            .status(),
+        StatusCode::NO_CONTENT
+    );
+
+    // A made-up ticket is refused the same way.
+    assert_eq!(
+        choose_password(&base, &"0".repeat(64), NEW_PASSWORD)
+            .await
+            .status(),
         StatusCode::GONE
     );
 }

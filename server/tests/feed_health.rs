@@ -265,8 +265,10 @@ async fn broken_feeds_are_listed_worst_first_and_retry_checks_now() {
     assert_eq!(answer["feed"]["state"], "dead");
     assert_eq!(reader.published.lock().unwrap().asked.len(), asked + 1);
 
-    // Back again: Retry says it's working, and the page no longer lists it.
+    // Back again, a few minutes later (Retry asks at most every five):
+    // Retry says it's working, and the page no longer lists it.
     reader.change(|site| site.old_gone = false);
+    reader.state.retried.lock().unwrap().clear();
     let (_, answer) = reader
         .post(&format!("/api/health/{old}/retry"), json!({}))
         .await;
@@ -438,6 +440,11 @@ async fn moving_matches_posts_by_their_link_without_tracking_tags() {
         )
         .await;
     assert!(status.is_success(), "{status}");
+    // They opened it too, so it's in Recently read.
+    let (status, _) = reader
+        .post("/api/articles/opened", json!({ "id": two }))
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
     // As if stored before tracking tags were taken off on arrival (decision 0112).
     sqlx::query("UPDATE articles SET link = link || '?utm_source=rss' WHERE feed_id = ?")
         .bind(old)
@@ -467,6 +474,56 @@ async fn moving_matches_posts_by_their_link_without_tracking_tags() {
     assert_eq!(starred[0]["title"], "two");
     assert_ne!(starred[0]["id"], two);
     assert_eq!(starred[0]["link"], "https://blog.example/two");
+    // It stays in Recently read, and the times of its marks go with it, so a
+    // late offline mark made before the move can't undo the star (survey A9.3).
+    let recent = reader.get("/api/articles?view=recent").await;
+    let recent: Vec<&str> = recent["articles"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|article| article["title"].as_str().unwrap())
+        .collect();
+    assert_eq!(recent, ["two"]);
+    let copy = starred[0]["id"].as_i64().unwrap();
+    let (marked,): (i64,) =
+        sqlx::query_as("SELECT starred_marked_at FROM entries WHERE article_id = ?")
+            .bind(copy)
+            .fetch_one(&reader.state.db)
+            .await
+            .unwrap();
+    assert!(marked > 0, "the star's time was lost");
+}
+
+#[tokio::test]
+async fn pressing_retry_again_and_again_doesnt_hammer_the_publisher() {
+    let reader = Reader::new().await;
+    // A working feed, just fetched when it was added: Retry doesn't ask the
+    // publisher again within half an hour (fetch politely).
+    let working = reader.follow("/other.xml").await;
+    let asked = reader.published.lock().unwrap().asked.len();
+    for _ in 0..5 {
+        let (status, answer) = reader
+            .post(&format!("/api/health/{working}/retry"), json!({}))
+            .await;
+        assert_eq!(status, StatusCode::OK, "{answer}");
+        assert_eq!(answer["feed"]["state"], "working");
+    }
+    assert_eq!(reader.published.lock().unwrap().asked.len(), asked);
+
+    // A failing feed: the first Retry asks at once, the next few minutes'
+    // presses answer with how that went.
+    let old = reader.follow("/old.xml").await;
+    reader.change(|site| site.old_gone = true);
+    reader.check(old, nine_turtles::now()).await;
+    let asked = reader.published.lock().unwrap().asked.len();
+    for _ in 0..5 {
+        let (status, answer) = reader
+            .post(&format!("/api/health/{old}/retry"), json!({}))
+            .await;
+        assert_eq!(status, StatusCode::OK, "{answer}");
+        assert_eq!(answer["feed"]["state"], "trouble");
+    }
+    assert_eq!(reader.published.lock().unwrap().asked.len(), asked + 1);
 }
 
 #[tokio::test]

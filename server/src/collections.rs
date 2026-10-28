@@ -110,17 +110,8 @@ async fn create(
         .bind(Value::from(form.articles).to_string())
         .execute(&mut *transaction)
         .await?;
-        sqlx::query(
-            "UPDATE saved_searches SET query = json_set(query, '$.scope.id', ?1)
-             WHERE person_id = ?2 AND id IN (SELECT value FROM json_each(?3))
-                 AND json_extract(query, '$.scope.kind') = 'collection'
-                 AND json_extract(query, '$.scope.id') = 0",
-        )
-        .bind(id)
-        .bind(person)
-        .bind(Value::from(form.searches).to_string())
-        .execute(&mut *transaction)
-        .await?;
+        crate::saved_searches::back_in(&mut *transaction, person, "collection", id, &form.searches)
+            .await?;
         transaction.commit().await?;
         Ok::<i64, sqlx::Error>(id)
     }
@@ -195,16 +186,8 @@ async fn delete(
             .rows_affected();
         // Its number may be given again: saved searches in it now find
         // nothing. Which ones they were goes back with the answer, for Undo.
-        let searches: Vec<i64> = sqlx::query_scalar(
-            "SELECT id FROM saved_searches
-             WHERE person_id = ? AND json_extract(query, '$.scope.kind') = 'collection'
-                 AND json_extract(query, '$.scope.id') = ? ORDER BY id",
-        )
-        .bind(person)
-        .bind(id)
-        .fetch_all(&mut *transaction)
-        .await?;
-        crate::saved_searches::forget(&mut *transaction, person, "collection", id).await?;
+        let searches =
+            crate::saved_searches::forget(&mut *transaction, person, "collection", id).await?;
         transaction.commit().await?;
         Ok::<Option<(Vec<i64>, Vec<i64>)>, sqlx::Error>((gone > 0).then_some((articles, searches)))
     }

@@ -71,9 +71,10 @@
   import { panesFor, widthFor, MEDIUM_REM, WIDE_REM, type SidebarChoice, type Width } from "./layout";
   import { TEXT_SIZES, apply, load, save } from "./preferences";
   import { device } from "./appearance.svelte";
-  import { VIEWS, VIEW_NAMES, nameFor, parse, pathFor, titleFor, type Hideable, type Route, type View } from "./router";
+  import { VIEWS, VIEW_NAMES, inSettings, nameFor, parentOf, parse, pathFor, rowFor, titleFor, type Hideable, type Route, type View } from "./router";
   import { sharedAddress } from "./share";
   import { emptyQuery, isSearching, resultsTitle, scopeFor, searchParams, searchedTerms, type Query } from "./search";
+  import { newestAnswer, savedInOrder } from "./inorder";
   import { deleteSaved, listSaved, refusedSaving, sameQuery, saveSearch, type SavedSearch } from "./saved";
   import {
     byName as collectionOrder,
@@ -254,7 +255,8 @@
   /** "Add a rule for this feed…" in Edit feed: Settings opens with a new rule for it. */
   let ruleForFeed: number | undefined = $state();
   let cameFromSettings = false;
-  let dataHeading: HTMLHeadingElement | undefined = $state();
+  /** Back from a page opened from Settings: the row on its parent page that opened it, for the keyboard to return to (decision 0120). */
+  let returnRow: string | undefined;
   let addField: HTMLInputElement | undefined = $state();
   let sidebar: HTMLElement | undefined = $state();
   let articleHeading: HTMLHeadingElement | undefined = $state();
@@ -469,6 +471,12 @@
     return reloadFeeds();
   }
 
+  // A list asked for again before it arrives answers with the newest ask, so a
+  // slow answer from before an unsubscribe can't put the feed back.
+  const newestFeeds = newestAnswer(listFeeds);
+  const newestSearches = newestAnswer(listSaved);
+  const newestCollections = newestAnswer(listCollections);
+
   /** Loads the feeds and folders; `then` runs in the same step as they arrive, so nothing shows in between. */
   async function reloadFeeds(then?: () => void) {
     try {
@@ -476,7 +484,7 @@
       // way, the answer may predate it: ask again, so it isn't overwritten.
       for (let tries = 0; tries < 3; tries++) {
         const before = countChanges;
-        const loaded = await listFeeds();
+        const loaded = await newestFeeds();
         if (countChanges === before || tries === 2) {
           feeds = loaded.feeds;
           folders = loaded.folders;
@@ -492,7 +500,7 @@
 
   async function loadSearches() {
     try {
-      searches = await listSaved();
+      searches = await newestSearches();
       searchesFailed = false;
     } catch {
       // The sidebar shows no saved searches until the next try; a saved search's own address says so plainly.
@@ -505,7 +513,7 @@
 
   async function loadCollections() {
     try {
-      collections = await listCollections();
+      collections = await newestCollections();
       collectionsFailed = false;
     } catch {
       // The sidebar lists none until the next try; a collection's own address says so plainly.
@@ -558,59 +566,44 @@
     if (feed && !feed.river) feed.unread = Math.max(0, feed.unread + change);
   }
 
-  async function changeMode(next: ReadingMode) {
-    const before = mode;
-    mode = next;
-    try {
-      await saveMode(next);
-    } catch {
-      mode = before;
-      throw new Error("not saved");
-    }
+  // Each reading setting saves in the order changed, so an earlier save that fails
+  // never rolls the screen back past a later change.
+  const modeSaves = savedInOrder(saveMode, (next: ReadingMode) => (mode = next));
+  const countsSaves = savedInOrder(saveCounts, (next: Counts) => (counts = next));
+  const letGoSaves = savedInOrder<LetGo | undefined>(
+    (next) => saveLetGo(next as LetGo),
+    (next) => (letGo = next),
+  );
+  const hiddenSaves = savedInOrder(saveHidden, (next: Hideable[]) => (hidden = next));
+  const sortSaves = savedInOrder<Order | undefined>(
+    (next) => saveSort(next as Order),
+    (next) => (sort = next),
+  );
+
+  function changeMode(next: ReadingMode) {
+    return notSaved(modeSaves(next, mode));
   }
 
-  async function changeCounts(next: Counts) {
-    const before = counts;
-    counts = next;
-    try {
-      await saveCounts(next);
-    } catch {
-      counts = before;
-      throw new Error("not saved");
-    }
+  function changeCounts(next: Counts) {
+    return notSaved(countsSaves(next, counts));
   }
 
-  async function changeLetGo(next: LetGo) {
-    const before = letGo;
-    letGo = next;
-    try {
-      await saveLetGo(next);
-    } catch {
-      letGo = before;
-      throw new Error("not saved");
-    }
+  function changeLetGo(next: LetGo) {
+    return notSaved(letGoSaves(next, letGo));
   }
 
-  async function changeHidden(next: Hideable[]) {
-    const before = hidden;
-    hidden = next;
-    try {
-      await saveHidden(next);
-    } catch {
-      hidden = before;
-      throw new Error("not saved");
-    }
+  function changeHidden(next: Hideable[]) {
+    return notSaved(hiddenSaves(next, hidden));
   }
 
-  async function changeSort(next: Order) {
-    const before = sort;
-    sort = next;
-    try {
-      await saveSort(next);
-    } catch {
-      sort = before;
+  function changeSort(next: Order) {
+    return notSaved(sortSaves(next, sort));
+  }
+
+  function notSaved(saving: Promise<void>): Promise<void> {
+    return saving.catch(() => {
       throw new Error("not saved");
-    }
+    });
   }
 
   /**
@@ -755,7 +748,9 @@
         next = lastPlace;
         history.replaceState(history.state, "", pathFor(next));
       }
-      cameFromSettings = false;
+      // Back or Forward onto a page opened from its parent: closing it is a step back again.
+      cameFromSettings = stepOf(history.state)?.fromParent === true;
+      returnRow = backToParent(route, next);
       const moved = !keepsArticle(route, next);
       // The address has already changed: loading it opens the new version there.
       if (moved && switchesOnMove(updates.ready, marksUnsaved(), false)) {
@@ -926,6 +921,7 @@
     });
 
     return () => {
+      clearTimeout(searchTimer);
       queries.forEach((query) => query.removeEventListener("change", resized));
       removeEventListener("popstate", back);
       removeEventListener("keydown", pressed);
@@ -936,10 +932,20 @@
     };
   });
 
+  /** Going from a page opened from Settings back to the page it was opened from: the row that opened it. */
+  function backToParent(from: Route, to: Route): string | undefined {
+    const parent = parentOf(from);
+    return parent && pathFor(parent) === pathFor(to) ? rowFor(from) : undefined;
+  }
+
   /** Where the keyboard's place goes on arriving somewhere: its heading, or the add field. */
   function placeFocus(place: Route): HTMLElement | undefined {
     // Edit pages bind their heading to `listHeading` too.
-    if (place.kind === "settings") return settingsHeading;
+    if (place.kind === "settings") {
+      // Back from one of its pages: to the row that opened it, if it's there.
+      const row = returnRow ? document.querySelector<HTMLElement>(`[data-settings-row="${returnRow}"]`) : null;
+      return row ?? settingsHeading;
+    }
     if (place.kind === "feed-health") return healthHeading;
     if (place.kind === "your-feeds") return yourFeedsHeading;
     if (place.kind === "muted") return mutedHeading;
@@ -968,8 +974,28 @@
       if (phone && screen === "home") wordmark?.focus();
       else if (reading) articleHeading?.focus({ preventScroll: true });
       else if (selected && isList(route)) itemList?.focusSelected();
-      else placeFocus(route)?.focus();
+      else focusArriving(route);
     });
+  }
+
+  /**
+   * The keyboard's place on arriving back: the row that opened the page, when it's drawn. A row
+   * shown only once its page has loaded (Rules' "Muted articles") is waited for a moment; meanwhile
+   * the keyboard rests on the heading, and stays wherever the reader moves it.
+   */
+  function focusArriving(place: Route) {
+    const first = placeFocus(place);
+    first?.focus();
+    const row = returnRow;
+    if (!row || place.kind !== "settings" || document.querySelector(`[data-settings-row="${row}"]`)) return;
+    let frames = 0;
+    const wait = () => {
+      if (returnRow !== row || document.activeElement !== first) return;
+      const found = document.querySelector<HTMLElement>(`[data-settings-row="${row}"]`);
+      if (found) found.focus();
+      else if (++frames < 180) requestAnimationFrame(wait);
+    };
+    requestAnimationFrame(wait);
   }
 
   /**
@@ -1068,12 +1094,14 @@
       return;
     }
     const from = screenNow();
-    cameFromSettings = route.kind === "settings" && (next.kind === "feed-health" || next.kind === "your-feeds" || next.kind === "muted" || next.kind === "readers");
+    const parent = parentOf(next);
+    cameFromSettings = parent !== undefined && pathFor(parent) === pathFor(route);
+    returnRow = backToParent(route, next);
     const to: Screen = isList(next) ? "list" : "page";
     const [opening, closing] = [isSheet(next) && !isSheet(route), isSheet(route) && !isSheet(next)];
     let pushed = false;
     if (pathFor(next) !== location.pathname || from !== to) {
-      history.pushState({ screen: to, back: from }, "", pathFor(next));
+      history.pushState({ screen: to, back: from, fromParent: cameFromSettings }, "", pathFor(next));
       pushed = true;
     }
     if (opening) [sheetOpener, sheetPushed] = [document.activeElement, pushed];
@@ -1116,10 +1144,9 @@
     else go(home, note);
   }
 
-  /** The empty state's "Import OPML": Settings, at Your data. */
+  /** The empty state's "Import OPML": Settings › Your data. */
   function goImport(event: MouseEvent) {
-    follow(event, { kind: "settings" });
-    if (event.defaultPrevented) queueMicrotask(() => dataHeading?.focus());
+    follow(event, { kind: "settings", page: "data" });
   }
 
   /** Back from an edit page, saved or not, to the feed or folder. */
@@ -1162,6 +1189,8 @@
     const refusal = await deleteSaved(saved.id);
     if (refusal) return refusedSaving(refusal);
     searches = searches.filter((each) => each.id !== saved.id);
+    // Asking again outranks a list already on its way from before the delete.
+    void loadSearches();
     toSave = undefined;
     go(home, {
       message: `Deleted the saved search ${saved.name}`,
@@ -1222,6 +1251,8 @@
       return;
     }
     collections = collections.filter((each) => each.id !== collection.id);
+    // Asking again outranks a list already on its way from before the delete.
+    void loadCollections();
     go(home, {
       message: `Deleted the collection ${collection.name}`,
       undo: async () => {
@@ -1257,7 +1288,7 @@
   /** Deletes a folder (never its feeds), then shows Unread (All in river mode) with "Deleted … · Undo". */
   async function deleteThis(folder: Folder): Promise<string | undefined> {
     const inside = (feeds ?? []).filter((feed) => feed.folders.includes(folder.id)).map((feed) => feed.id);
-    const { refusal, rules } = await deleteFolder(folder.id);
+    const { refusal, rules, searches } = await deleteFolder(folder.id);
     if (refusal) return refused(refusal, "folder");
     await loadFeeds();
     go(
@@ -1265,9 +1296,10 @@
       {
         message: `Deleted the folder ${folder.name}`,
         undo: async () => {
-          const problem = await createFolder(folder.name, inside, rules);
+          const problem = await createFolder(folder.name, inside, rules, searches);
           if (problem) return refused(problem, "folder");
           await loadFeeds();
+          if (searches.length > 0) await loadSearches();
           return undefined;
         },
       },
@@ -1331,13 +1363,19 @@
 
   function addRuleFor(feed: Feed) {
     ruleForFeed = feed.id;
-    go({ kind: "settings" });
+    go({ kind: "settings", page: "rules" });
   }
 
-  /** Close feed health, or Escape there: back to Settings, a step back in history when it came from there. */
+  /**
+   * Close a page opened from Settings (Feed health, Your feeds, Muted articles, All readers, and
+   * Settings' own pages, decision 0120), or Escape there: back to the page it was opened from, a
+   * step back in history when it came from there.
+   */
   function closeHealth() {
+    const parent = parentOf(route);
+    if (!parent) return;
     if (cameFromSettings) history.back();
-    else go({ kind: "settings" });
+    else go(parent);
   }
 
   /** Close settings, and Escape on Settings or Add a feed: on a phone, back one step to the feeds. */
@@ -1594,7 +1632,7 @@
   }
 
   function escape() {
-    if (route.kind === "feed-health" || route.kind === "your-feeds" || route.kind === "muted" || route.kind === "readers") closeHealth();
+    if (parentOf(route)) closeHealth();
     else if (route.kind === "settings" || route.kind === "add-feed" || route.kind === "new-to-feeds") closePage();
     else if (route.kind === "edit-feed" || route.kind === "edit-folder") edited(false);
     else if (route.kind === "save-search" || route.kind === "edit-search") searchSaved();
@@ -1629,7 +1667,7 @@
       -->
       <AddFeed bind:field={addField} feeds={[]} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} {start}>
         {#snippet alternative()}
-          <a href="/settings" onclick={goImport} class="text-link">Import an OPML file…</a>
+          <a href="/settings/data" onclick={goImport} class="text-link">Import an OPML file…</a>
         {/snippet}
       </AddFeed>
     {:else}
@@ -1851,9 +1889,9 @@
         href="/settings"
         aria-label="Settings"
         title="Settings"
-        aria-current={route.kind === "settings" || route.kind === "feed-health" || route.kind === "your-feeds" || route.kind === "muted" || route.kind === "readers" ? "page" : undefined}
+        aria-current={inSettings(route) ? "page" : undefined}
         onclick={(event) => follow(event, { kind: "settings" })}
-        class={["btn-quiet btn-icon @max-[15rem]:-mr-1.5", (route.kind === "settings" || route.kind === "feed-health" || route.kind === "your-feeds" || route.kind === "muted" || route.kind === "readers") && "bg-tint-sidebar text-ink"]}><Icon name="settings" size={18} /></a
+        class={["btn-quiet btn-icon @max-[15rem]:-mr-1.5", inSettings(route) && "bg-tint-sidebar text-ink"]}><Icon name="settings" size={18} /></a
       >
     </div>
     {#if !phone && (panes.list || panes.article)}
@@ -1872,6 +1910,9 @@
     <div class="relative flex min-w-0 flex-1">
       {#if route.kind === "settings"}
         <Settings
+          page={route.page}
+          onOpen={(event, page) => follow(event, { kind: "settings", page })}
+          onBack={closeHealth}
           bind:preferences
           {sort}
           onSort={changeSort}
@@ -1884,7 +1925,6 @@
           {hidden}
           onHidden={changeHidden}
           bind:heading={settingsHeading}
-          bind:dataHeading
           {version}
           {owner}
           {email}

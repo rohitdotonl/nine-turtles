@@ -54,7 +54,7 @@ test("Recently read lists what was opened, newest first, and can be hidden from 
   await page.keyboard.press("Escape");
 
   // Settings › Show in the sidebar: untick Recently read, and it leaves the sidebar.
-  await page.goto(new URL("/settings", FEEDS_APP).href);
+  await page.goto(new URL("/settings/sidebar", FEEDS_APP).href);
   await appReady(page);
   const group = page.getByRole("group", { name: "Show in the sidebar" });
   const box = group.getByRole("checkbox", { name: "Recently read" });
@@ -75,7 +75,7 @@ test("Recently read lists what was opened, newest first, and can be hidden from 
     await expect(rows.first()).toBeVisible();
   } finally {
     // Shown again, as every other test expects.
-    await page.goto(new URL("/settings", FEEDS_APP).href);
+    await page.goto(new URL("/settings/sidebar", FEEDS_APP).href);
     await appReady(page);
     await box.check();
     await expect(link).toBeVisible();
@@ -106,7 +106,7 @@ test("Starred, All and Saved searches can be hidden by keyboard, and their keys 
   await page.goto(new URL("/settings", FEEDS_APP).href);
   await appReady(page);
   await signIn(page);
-  await page.goto(new URL("/settings", FEEDS_APP).href);
+  await page.goto(new URL("/settings/sidebar", FEEDS_APP).href);
   await appReady(page);
 
   const nav = sidebar(page);
@@ -132,6 +132,9 @@ test("Starred, All and Saved searches can be hidden by keyboard, and their keys 
   await expect(nav.getByRole("link", { name: "Recently read", exact: true })).toBeVisible();
 
   // Their keys still go to them.
+  // Escape goes back to Settings, and again closes it.
+  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/\/settings$/);
   await page.keyboard.press("Escape");
   await expect(page).not.toHaveURL(/\/settings$/);
   await page.keyboard.press("g");

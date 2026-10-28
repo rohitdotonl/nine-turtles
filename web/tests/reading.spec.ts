@@ -353,8 +353,9 @@ test.describe("on a wide window", () => {
     await expect(panel).toHaveCount(0);
     await page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: "Settings" }).click();
     await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "Light", exact: true })).toBeChecked();
-    await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "Wide" })).toBeChecked();
     await expect(page.getByText("The Aa button above an article changes these too")).toBeVisible();
+    await page.getByRole("link", { name: /^Font, theme and line width/ }).click();
+    await expect(page.getByRole("radio", { name: "Wide" })).toBeChecked();
   });
 
   test("a footnote link stays inside the article", async ({ page }) => {

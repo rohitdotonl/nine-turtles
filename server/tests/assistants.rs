@@ -608,6 +608,40 @@ async fn a_wrong_verifier_or_address_gets_nothing() {
 }
 
 #[tokio::test]
+async fn an_assistant_gets_links_without_tracking_tags_even_old_ones() {
+    let (base, state) = common::start_with_state(common::config()).await;
+    let cookie = common::signed_in(&base).await;
+    let (status, _) = post_json(
+        &base,
+        "/api/feeds",
+        Some(&cookie),
+        &json!({ "address": publisher("Garden Notes").await }),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CREATED);
+    // As if stored before tracking tags were taken out on arrival (decision 0112).
+    sqlx::query("UPDATE articles SET link = link || '?utm_source=rss'")
+        .execute(&state.db)
+        .await
+        .unwrap();
+    let (access, _) = connect(&base, &cookie).await;
+
+    for (name, arguments) in [
+        ("list_unread", json!({})),
+        ("search_articles", json!({ "query": "gardens" })),
+    ] {
+        let (answer, error) = tool(&base, &access, name, arguments).await;
+        assert!(!error, "{name}");
+        let articles = answer["articles"].as_array().unwrap();
+        assert!(!articles.is_empty(), "{name}");
+        for article in articles {
+            let link = article["link"].as_str().unwrap();
+            assert!(!link.contains("utm_source"), "{name}: {link}");
+        }
+    }
+}
+
+#[tokio::test]
 async fn an_assistant_sees_only_its_own_readers_things() {
     let (base, state) = common::start_with_state(common::config()).await;
     let owner = common::signed_in(&base).await;
@@ -796,18 +830,32 @@ async fn removing_a_folder_or_rule_can_be_undone_by_the_assistant() {
     )
     .await;
 
+    let (_, saved) = post_json(
+        &base,
+        "/api/saved-searches",
+        Some(&cookie),
+        &json!({ "name": "Roses", "query": { "words": "roses", "scope": { "kind": "folder", "id": folder } } }),
+    )
+    .await;
+
     let (removed, error) = tool(&base, key, "delete_folder", json!({ "folder_id": folder })).await;
     assert!(!error);
     assert_eq!(removed["feed_ids"], json!([feed]));
     assert_eq!(removed["rule_ids"], json!([rule["rule_id"]]));
+    assert_eq!(removed["search_ids"], json!([saved["search"]["id"]]));
     let (back, error) = tool(
         &base,
         key,
         "create_folder",
-        json!({ "name": removed["removed"], "feed_ids": removed["feed_ids"], "rule_ids": removed["rule_ids"] }),
+        json!({ "name": removed["removed"], "feed_ids": removed["feed_ids"], "rule_ids": removed["rule_ids"], "search_ids": removed["search_ids"] }),
     )
     .await;
     assert!(!error);
+    let (_, searches) = get_json(&base, "/api/saved-searches", &cookie).await;
+    assert_eq!(
+        searches["searches"][0]["query"]["scope"]["id"],
+        back["folder_id"]
+    );
     let (feeds, _) = tool(&base, key, "list_feeds", json!({})).await;
     assert_eq!(feeds["feeds"][0]["folders"], json!(["Reading"]));
     let (rules, _) = tool(&base, key, "list_rules", json!({})).await;
@@ -947,4 +995,56 @@ async fn a_busy_assistant_is_asked_to_wait() {
         StatusCode::TOO_MANY_REQUESTS
     );
     assert_eq!(register_from("198.51.100.4").await, StatusCode::CREATED);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn two_codes_swapped_at_once_keep_one_line_in_settings() {
+    let base = common::start(common::config()).await;
+    let cookie = common::signed_in(&base).await;
+    let client_id = register(&base).await;
+    let query = authorize_query(&client_id);
+    // The reader approves twice (two tabs, say), and the assistant swaps both
+    // codes at the same moment (survey A9.5).
+    let mut codes = Vec::new();
+    for _ in 0..8 {
+        let (status, approved) = post_json(
+            &base,
+            "/api/oauth/approve",
+            Some(&cookie),
+            &json!({ "query": query }),
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK);
+        let back = Url::parse(approved["redirect"].as_str().unwrap()).unwrap();
+        let (_, code) = back.query_pairs().find(|(key, _)| key == "code").unwrap();
+        codes.push(code.into_owned());
+    }
+    let swaps: Vec<_> = codes
+        .into_iter()
+        .map(|code| {
+            let (base, client_id) = (base.clone(), client_id.clone());
+            tokio::spawn(async move {
+                token(
+                    &base,
+                    &[
+                        ("grant_type", "authorization_code"),
+                        ("code", &code),
+                        ("client_id", &client_id),
+                        ("code_verifier", VERIFIER),
+                    ],
+                )
+                .await
+            })
+        })
+        .collect();
+    for swap in swaps {
+        let (status, tickets) = swap.await.unwrap();
+        assert_eq!(status, StatusCode::OK, "{tickets}");
+    }
+    let (_, listed) = get_json(&base, "/api/assistants", &cookie).await;
+    assert_eq!(
+        listed["assistants"].as_array().unwrap().len(),
+        1,
+        "{listed}"
+    );
 }

@@ -265,8 +265,6 @@ test("Settings: appearance, font, size and width apply at once and are remembere
 
   // Original, matching the device until another Appearance is chosen (decision 0056); Plain is the other theme (decision 0063).
   await expect(page.locator("label.tile")).toHaveCount(0);
-  await expect(page.getByRole("group", { name: "Theme" }).getByRole("radio")).toHaveCount(2);
-  await expect(page.getByRole("radio", { name: "Original" })).toBeChecked();
   await expect(page.getByLabel("Match device")).toBeChecked();
   await page.getByLabel("Light", { exact: true }).check();
   await expect(page.locator("body")).toHaveCSS("background-color", "rgb(255, 255, 255)");
@@ -293,32 +291,12 @@ test("Settings: appearance, font, size and width apply at once and are remembere
   await expect(page.getByLabel("Dark", { exact: true })).toBeChecked();
   await page.keyboard.press("ArrowLeft");
   await expect(page.getByLabel("Light", { exact: true })).toBeChecked();
-  // Font and line width are segmented controls: the chosen one is raised (a small shadow) and semibold, and by day
-  // a thin edge sets it at 3 : 1 against the rest of the control (decision 0118).
-  await expect(page.locator("label.choice").filter({ hasText: "Medium" })).toHaveCSS("font-weight", "600");
-  await expect(page.locator("label.choice").filter({ hasText: "Medium" })).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
-  await expect(page.locator("label.choice").filter({ hasText: "Wide" })).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
-  await expect(page.locator("label.choice").filter({ hasText: "Medium" })).not.toHaveCSS("box-shadow", "none");
-  await expect(page.locator("label.choice").filter({ hasText: "Wide" })).toHaveCSS("font-weight", "400");
   // Each row's control sits at its right end, and every control is the same width.
   const look = page.getByRole("region", { name: "Look and feel" });
-  const controls = await look.locator(".control").evaluateAll((all) => all.map((each) => Math.round(each.getBoundingClientRect().width)));
-  expect(controls).toHaveLength(5);
+  const widths = (where: Locator) => where.locator(".setting-control").evaluateAll((all) => all.map((each) => Math.round(each.getBoundingClientRect().width)));
+  const controls = [...(await widths(page.getByRole("region", { name: "Reading" }))), ...(await widths(look))];
+  expect(controls).toHaveLength(6);
   expect(new Set(controls).size).toBe(1);
-
-  const sample = page.locator(".reading-sample");
-  await expect(sample).toHaveCSS("font-family", /^Literata/);
-  // rohit.onl's font, the device's own serif (decision 0063).
-  await page.getByLabel("System serif").check();
-  await expect(sample).toHaveCSS("font-family", /^ui-serif/);
-  await page.getByLabel("Atkinson Hyperlegible").check();
-  await expect(sample).toHaveCSS("font-family", /^"Atkinson Hyperlegible"/);
-  // Plain: rohit.onl's bare look, black on white by day, and back to Original (decision 0063).
-  await page.getByRole("radio", { name: "Plain" }).check();
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "plain");
-  await expect(page.locator("body")).toHaveCSS("color", "rgb(0, 0, 0)");
-  await page.getByRole("radio", { name: "Original" }).check();
-  await expect(page.locator("body")).toHaveCSS("color", "rgb(20, 20, 20)");
   // Text size is a stepper, as in the Aa panel: one flat capsule, a small A and a large A at its ends
   // and the step's name between them, parted by hairlines, nothing raised, so it never reads as a
   // chosen segment (decision 0055).
@@ -339,16 +317,52 @@ test("Settings: appearance, font, size and width apply at once and are remembere
   for (let step = 0; step < 3; step++) await larger.click();
   await expect(look.getByRole("status")).toHaveText("Largest");
   await expect(larger).toHaveAttribute("aria-disabled", "true");
+
+  // Theme, font and line width are a page of their own (decision 0120), its row showing the font.
+  const fontRow = look.getByRole("link", { name: /^Font, theme and line width/ });
+  await expect(fontRow).toContainText("Literata");
+  await fontRow.click();
+  await expect(page).toHaveURL(/\/settings\/font$/);
+  await expect(page.getByRole("group", { name: "Theme" }).getByRole("radio")).toHaveCount(2);
+  await expect(page.getByRole("radio", { name: "Original" })).toBeChecked();
+  // Font and line width are segmented controls: the chosen one is raised (a small shadow) and semibold, and by day
+  // a thin edge sets it at 3 : 1 against the rest of the control (decision 0118).
+  await expect(page.locator("label.choice").filter({ hasText: "Medium" })).toHaveCSS("font-weight", "600");
+  await expect(page.locator("label.choice").filter({ hasText: "Medium" })).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+  await expect(page.locator("label.choice").filter({ hasText: "Wide" })).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+  await expect(page.locator("label.choice").filter({ hasText: "Medium" })).not.toHaveCSS("box-shadow", "none");
+  await expect(page.locator("label.choice").filter({ hasText: "Wide" })).toHaveCSS("font-weight", "400");
+  const pageControls = await page.locator(".setting-control").evaluateAll((all) => all.map((each) => Math.round(each.getBoundingClientRect().width)));
+  expect(pageControls).toHaveLength(3);
+  expect(new Set([...pageControls, ...controls]).size).toBe(1);
+
+  const sample = page.locator(".reading-sample");
   await expect(sample).toHaveCSS("font-size", "28px");
+  await expect(sample).toHaveCSS("font-family", /^Literata/);
+  // rohit.onl's font, the device's own serif (decision 0063).
+  await page.getByLabel("System serif").check();
+  await expect(sample).toHaveCSS("font-family", /^ui-serif/);
+  await page.getByLabel("Atkinson Hyperlegible").check();
+  await expect(sample).toHaveCSS("font-family", /^"Atkinson Hyperlegible"/);
+  // Plain: rohit.onl's bare look, black on white by day, and back to Original (decision 0063).
+  await page.getByRole("radio", { name: "Plain" }).check();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "plain");
+  await expect(page.locator("body")).toHaveCSS("color", "rgb(0, 0, 0)");
+  await page.getByRole("radio", { name: "Original" }).check();
+  await expect(page.locator("body")).toHaveCSS("color", "rgb(20, 20, 20)");
   await page.getByLabel("Narrow").check();
 
   await page.reload();
   await appReady(page);
   await expect(page.locator("body")).toHaveCSS("background-color", "rgb(255, 255, 255)");
-  await expect(page.getByLabel("Light", { exact: true })).toBeChecked();
   await expect(page.getByLabel("Atkinson Hyperlegible")).toBeChecked();
-  await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("status")).toHaveText("Largest");
   await expect(page.getByLabel("Narrow")).toBeChecked();
+  // Escape goes back to Settings, where the rest was remembered too.
+  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/\/settings$/);
+  await expect(page.getByLabel("Light", { exact: true })).toBeChecked();
+  await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("status")).toHaveText("Largest");
+  await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("link", { name: /^Font, theme and line width/ })).toContainText("Atkinson");
 
   // Escape closes Settings and returns to where you were.
   await page.keyboard.press("Escape");
@@ -398,7 +412,7 @@ test("every font comes from nine turtles itself", async ({ page }) => {
     if (request.resourceType() === "font") fontOrigins.push(new URL(request.url()).origin);
   });
   await page.setViewportSize({ width: 1280, height: 800 });
-  await openApp(page, "/settings");
+  await openApp(page, "/settings/font");
   await page.getByLabel("Atkinson Hyperlegible").check();
   await page.evaluate(() => document.fonts.ready);
   const families = await page.evaluate(() =>
@@ -596,7 +610,7 @@ test("in a sidebar narrowed below 15rem, Keys keeps only its icon and stays a fu
 });
 
 test("Other apps: an app password is made, shown once with the server address, and turned off", async ({ page }) => {
-  await openApp(page, "/settings");
+  await openApp(page, "/settings/other-apps");
   // With the keyboard alone: the pressed row is replaced, so the keyboard moves to the new password's Copy.
   // Until the server says whether other apps are on, the row is unavailable
   // (aria-disabled) and a press does nothing; a keyboard user hears that too.
@@ -626,7 +640,7 @@ test("Newsletters: the reader's address with Copy, a label's switch, and New add
   // moment, and the first one must stay empty for the first-visit tests,
   // which may be running at the same time (decision 0114).
   const app = (path: string) => new URL(path, FEEDS_APP).href;
-  await openApp(page, app("/settings"));
+  await openApp(page, app("/settings/newsletters"));
   const address = page.getByText(/^turtle-[a-z2-9]{8}@in\.nineturtles\.app$/);
   await expect(address).toBeVisible();
   const old = (await address.textContent())!;
@@ -674,47 +688,61 @@ test("Newsletters: the reader's address with Copy, a label's switch, and New add
   await expect(label).toBeChecked();
 });
 
-test("Settings is one centred column of grouped lists; Your data, Feed health and Sign out are rows of their own, each ending in a glyph", async ({ page, isMobile }) => {
+test("Settings is one centred column of grouped lists; its rows that act or open a page are rows of their own", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openApp(page, "/settings");
-  // Each group has a small header above it; the groups share one column, no wider than 560px. The owner also sees Readers (decision 0087).
+  // Each group has a small header above it; the groups share one column, no wider than 560px. The owner also sees Your nine turtles (decision 0087).
   const groups = page.getByRole("region", { name: "Settings" }).locator(".inset-group:visible");
-  await expect(groups).toHaveCount(isMobile ? 12 : 13);
+  await expect(groups).toHaveCount(6);
   const boxes = await groups.evaluateAll((all) => all.map((each) => each.getBoundingClientRect()).map((box) => [Math.round(box.x), Math.round(box.width)]));
   for (const [x, width] of boxes) expect([x, width]).toEqual(boxes[0]);
   expect(boxes[0]![1]).toBeLessThanOrEqual(560);
-  // Keyboard shows only on a screen with a keyboard (decision 0110).
-  for (const name of [...(isMobile ? [] : ["Keyboard"]), "Reading", "Show in the sidebar", "Look and feel", "Your data", "Feeds", "Add from anywhere", "Rules", "Newsletters", "Other apps", "Connected assistants", "Readers", "Account"]) {
+  for (const name of ["Reading", "Look and feel", "Your library", "More", /^Your nine turtles/, "Account"]) {
     await expect(page.getByRole("heading", { level: 3, name })).toBeVisible();
   }
-  // The data actions are full-width rows, at least 44px tall, in the text color (the accent means only "where you are").
-  const rows = [
-    page.getByRole("button", { name: "Import OPML" }),
-    page.getByRole("link", { name: "Export OPML" }),
-    page.getByRole("button", { name: "Import starred articles" }),
-    page.getByRole("link", { name: "Export starred articles" }),
-    page.getByRole("link", { name: "Your feeds" }),
-    page.getByRole("link", { name: "Feed health" }),
-    page.getByRole("button", { name: "Make an app password" }),
-    page.getByRole("button", { name: "Sign out" }),
-  ];
   const ink = await page.locator("body").evaluate((body) => getComputedStyle(body).color);
-  for (const row of rows) {
+  // Rows that open a page are full-width rows, at least 44px tall, in the text color, ending in ›, never the accent (decision 0042).
+  for (const row of [page.getByRole("link", { name: "Your feeds" }), page.getByRole("link", { name: "Feed health" }), page.getByRole("link", { name: "Your data" })]) {
     const box = (await row.boundingBox())!;
     expect(Math.round(box.width)).toBe(boxes[0]![1]);
     expect(box.height).toBeGreaterThanOrEqual(44);
     expect(await row.evaluate((element) => getComputedStyle(element).color)).toBe(ink);
-    // A quiet glyph at its right end says it acts (› opens, a tray saves a file, a door signs out), never the accent (decision 0042).
     const glyph = (await row.locator(".row-glyph").boundingBox())!;
     expect(box.x + box.width - (glyph.x + glyph.width)).toBeLessThan(20);
   }
-  // Import opens something, so it ends in "…"; Sign out removes nothing, so it isn't in the destructive red.
-  await expect(rows[0]!).toHaveText("Import OPML…");
-  // The preview passage is the first row of the "Look and feel" group, its words on the rows' words (decision 0055).
+  // Sign out removes nothing, so it isn't in the destructive red; its door is its icon, at the left.
+  const signOut = page.getByRole("button", { name: "Sign out" });
+  expect(Math.round((await signOut.boundingBox())!.width)).toBe(boxes[0]![1]);
+  expect(await signOut.locator(".setting-name").evaluate((element) => getComputedStyle(element).color)).toBe(ink);
+
+  // Your data's rows act: each a full-width row, at least 44px tall, in the text color, ending in a glyph
+  // (› opens, a tray saves a file).
+  await page.getByRole("link", { name: "Your data" }).click();
+  await expect(page).toHaveURL(/\/settings\/data$/);
+  const data = page.getByRole("region", { name: "Your data" });
+  const width = Math.round((await data.locator(".inset-group").boundingBox())!.width);
+  for (const row of [
+    page.getByRole("button", { name: "Import OPML" }),
+    page.getByRole("link", { name: "Export OPML" }),
+    page.getByRole("button", { name: "Import starred articles" }),
+    page.getByRole("link", { name: "Export starred articles" }),
+  ]) {
+    const box = (await row.boundingBox())!;
+    expect(Math.round(box.width)).toBe(width);
+    expect(box.height).toBeGreaterThanOrEqual(44);
+    expect(await row.evaluate((element) => getComputedStyle(element).color)).toBe(ink);
+    const glyph = (await row.locator(".row-glyph").boundingBox())!;
+    expect(box.x + box.width - (glyph.x + glyph.width)).toBeLessThan(20);
+  }
+  // Import opens something, so it ends in "…".
+  await expect(page.getByRole("button", { name: "Import OPML" })).toHaveText("Import OPML…");
+
+  // The preview passage is the first row of Font, theme and line width's group, its words on the rows' words (decision 0055).
+  await page.goto("/settings/font");
   const sampleRow = page.locator(".reading-sample");
   expect(await sampleRow.evaluate((element) => element.closest(".inset-group") !== null && element.parentElement?.firstElementChild === element)).toBe(true);
-  const [sampleText, appearanceName] = await Promise.all([sampleRow.locator("p").boundingBox(), page.getByText("Appearance", { exact: true }).boundingBox()]);
-  expect(Math.abs(sampleText!.x - appearanceName!.x)).toBeLessThan(1.5);
+  const [sampleText, themeName] = await Promise.all([sampleRow.locator("p").boundingBox(), page.getByText("Theme", { exact: true }).boundingBox()]);
+  expect(Math.abs(sampleText!.x - themeName!.x)).toBeLessThan(1.5);
 });
 
 /** Makes the server's answers to /api/session say a newer version is live, then brings the tab back into view. */

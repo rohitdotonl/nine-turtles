@@ -49,6 +49,10 @@ use crate::{
 /// Failed checks in a row before a feed is listed.
 pub const LISTED_AFTER: i64 = 2;
 
+/// Retry asks a failing feed's publisher at most once in this long; presses
+/// in between answer with how the last try went (fetch politely).
+pub const RETRY_GAP: i64 = 5 * 60;
+
 pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/api/health", get(list))
@@ -200,7 +204,8 @@ fn refused(status: StatusCode, error: &str) -> Response {
     (status, Json(json!({ "error": error }))).into_response()
 }
 
-/// Retry: checks the feed now and answers how it's doing afterwards.
+/// Retry: checks the feed now, unless that would be impolite (`may_ask`),
+/// and answers how it's doing afterwards.
 async fn retry(
     SignedIn(person): SignedIn,
     State(state): State<AppState>,
@@ -220,16 +225,42 @@ async fn retry(
         )
             .into_response();
     }
-    let after = async {
-        checking::check(&state, id, now).await?;
-        entry(&state.db, person, id, now).await
+    if may_ask(&state, &before, now)
+        && let Err(error) = checking::check(&state, id, now).await
+    {
+        return database_problem("retrying a feed", &error);
     }
-    .await;
+    let after = entry(&state.db, person, id, now).await;
     match after {
         Ok(Some(after)) => Json(json!({ "feed": after })).into_response(),
         Ok(None) => StatusCode::NOT_FOUND.into_response(),
         Err(error) => database_problem("retrying a feed", &error),
     }
+}
+
+/// Whether Retry may ask the publisher now: a working feed only when it
+/// wasn't fetched in the last half hour (as background checking waits), and
+/// any feed at most once every `RETRY_GAP`, whoever presses it. Claims the
+/// try, so two presses at once ask only once.
+fn may_ask(state: &AppState, feed: &Entry, now: i64) -> bool {
+    let working = feed.failures == 0;
+    if working
+        && feed
+            .fetched_at
+            .is_some_and(|at| at > now - checking::SHORTEST_WAIT)
+    {
+        return false;
+    }
+    let mut retried = state
+        .retried
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    retried.retain(|_, at| *at > now - RETRY_GAP);
+    if retried.contains_key(&feed.id) {
+        return false;
+    }
+    retried.insert(feed.id, now);
+    true
 }
 
 /// The page Find new address visits: the site the feed names, or the feed
@@ -591,11 +622,18 @@ async fn carry_entries_over(
         let merged = match copy {
             Some(copy) if copy != article && taken.insert(copy) => {
                 sqlx::query(
+                    // The times go with the marks, so the article stays in
+                    // Recently read and a late offline mark from before the
+                    // move can't undo a newer one (survey A9.3).
                     "UPDATE entries SET
                          read = old.read, muted = old.muted,
-                         starred = MAX(entries.starred, old.starred)
-                     FROM (SELECT read, starred, muted FROM entries
-                           WHERE person_id = ?1 AND article_id = ?2) AS old
+                         read_marked_at = old.read_marked_at,
+                         starred = MAX(entries.starred, old.starred),
+                         starred_marked_at = MAX(entries.starred_marked_at, old.starred_marked_at),
+                         opened_at = COALESCE(MAX(entries.opened_at, old.opened_at),
+                                              entries.opened_at, old.opened_at)
+                     FROM (SELECT read, starred, muted, read_marked_at, starred_marked_at, opened_at
+                           FROM entries WHERE person_id = ?1 AND article_id = ?2) AS old
                      WHERE entries.person_id = ?1 AND entries.article_id = ?3
                          AND entries.feed_id = ?4",
                 )
