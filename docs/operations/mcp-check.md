@@ -25,7 +25,7 @@ check does nothing. No "all good" issues, no messages.
 1. **Has the standard changed?** Read the specification's versions list
    (`https://modelcontextprotocol.io/specification`, and the changelog of the
    newest version) and compare with `PROTOCOL_VERSIONS` in
-   `server/src/mcp.rs`. A new version matters when it changes something nine
+   `server/src/mcp/mod.rs`. A new version matters when it changes something nine
    turtles uses: Streamable HTTP, `initialize`, `tools/list`, `tools/call`,
    tool annotations, or the authorization rules (OAuth 2.1, PKCE, RFC 8414,
    RFC 9728, RFC 7591, client ID metadata documents).
@@ -59,7 +59,7 @@ check does nothing. No "all good" issues, no messages.
 
 5. **Security notices.** nine turtles uses no MCP or OAuth library (decision
    0111), so look for published weaknesses in MCP servers' or OAuth's way of
-   working that apply to how `server/src/assistants.rs` and `mcp.rs` do it
+   working that apply to how `server/src/assistants.rs` and `server/src/mcp/` do it
    (for example a new attack on PKCE, dynamic registration or redirects),
    and run `cargo audit` if available for the libraries it does use (`sha2`,
    `blake2`, `axum`).
