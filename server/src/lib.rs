@@ -122,7 +122,7 @@ pub struct AppState {
     /// pressing it again and again doesn't hammer them.
     pub retried: Arc<std::sync::Mutex<std::collections::HashMap<i64, i64>>>,
     /// After a sign-in link, the offer to choose a new password (decision
-    /// 0121), held in memory only.
+    /// 0122), held in memory only.
     pub password_choices: Arc<accounts::PasswordChoices>,
 }
 

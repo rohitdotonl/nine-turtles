@@ -2,7 +2,7 @@
 
 nine turtles sends a few short emails (decision 0088): the link that signs
 in, which **Forgot?** on the sign-in page sends and after which the reader
-may choose a new password (decision 0121), and the link that confirms a
+may choose a new password (decision 0122), and the link that confirms a
 changed address. (The older "A new password for nine turtles" link is no
 longer offered on the sign-in page; one already sent still works.) Without email, none of these work. Signing up needs no email
 (decision 0115). This page sets it up with **Brevo**. Any other email

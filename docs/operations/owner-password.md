@@ -3,7 +3,7 @@
 Your password normally lives in Render, as `NINE_TURTLES_PASSWORD_HASH`
 ([render-setup.md](render-setup.md), step 4). Once email is switched on
 ([email.md](email.md)), you can also choose a new password with
-**Forgot?** on the sign-in page (decision 0121). That new password is then the
+**Forgot?** on the sign-in page (decision 0122). That new password is then the
 one that works, not the one in Render (decision 0088).
 
 So if you've used Forgot? to choose a new password and later:

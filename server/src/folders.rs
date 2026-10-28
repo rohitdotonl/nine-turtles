@@ -661,7 +661,7 @@ async fn delete_folder(
         // lists of numbers, so Undo can hand them back.
         let searches =
             crate::saved_searches::forget(&mut *transaction, person, "folder", id).await?;
-        let rules = rules::place_gone(&mut transaction, None, Some(id)).await?;
+        let rules = rules::place_gone(&mut transaction, id).await?;
         transaction.commit().await?;
         Ok(Some((rules, searches)))
     }

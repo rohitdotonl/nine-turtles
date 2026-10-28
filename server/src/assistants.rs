@@ -709,26 +709,28 @@ async fn swap_code(
         return Ok(Err("The PKCE code_verifier doesn't match."));
     }
     // Connecting the same assistant again keeps one line for it in Settings.
-    let earlier: Option<i64> = sqlx::query_scalar(
-        "SELECT id FROM assistant_connections WHERE person_id = ? AND client_id = ?",
+    // One statement adds the line only if there's none yet, so two codes
+    // swapped at the same moment can't both add one (survey A9.5).
+    sqlx::query(
+        "INSERT INTO assistant_connections (person_id, client_id, name, created_at)
+         SELECT ?1, id, name, ?2 FROM assistant_clients WHERE id = ?3
+             AND NOT EXISTS (SELECT 1 FROM assistant_connections
+                             WHERE person_id = ?1 AND client_id = ?3)",
+    )
+    .bind(person)
+    .bind(now())
+    .bind(client)
+    .execute(db)
+    .await?;
+    let connection: Option<i64> = sqlx::query_scalar(
+        "SELECT MIN(id) FROM assistant_connections WHERE person_id = ? AND client_id = ?",
     )
     .bind(person)
     .bind(client)
-    .fetch_optional(db)
+    .fetch_one(db)
     .await?;
-    let connection: i64 = match earlier {
-        Some(id) => id,
-        None => {
-            sqlx::query_scalar(
-                "INSERT INTO assistant_connections (person_id, client_id, name, created_at)
-                 SELECT ?, id, name, ? FROM assistant_clients WHERE id = ? RETURNING id",
-            )
-            .bind(person)
-            .bind(now())
-            .bind(client)
-            .fetch_one(db)
-            .await?
-        }
+    let Some(connection) = connection else {
+        return Ok(Err("That assistant isn't known any more. Connect again."));
     };
     Ok(issue(db, connection)
         .await?

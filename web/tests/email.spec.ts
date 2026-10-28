@@ -46,7 +46,7 @@ test("anyone can sign up at once and with no email, with only the keyboard", asy
   const page = await context.newPage();
   await page.goto("/");
   await expect(page.getByLabel("Email")).toBeFocused();
-  // Email, Password, Forgot?, Sign in, then Sign up (decision 0121).
+  // Email, Password, Forgot?, Sign in, then Sign up (decision 0122).
   for (let step = 0; step < 4; step += 1) await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Sign up" })).toBeFocused();
   await page.keyboard.press("Enter");
@@ -86,7 +86,7 @@ test("Forgot? emails a link that signs in, then a new password can be chosen, si
   await page.goto("/");
   await expect(page.getByLabel("Email")).toBeFocused();
   await page.keyboard.type(email);
-  // Email, Password, then Forgot? (decision 0121).
+  // Email, Password, then Forgot? (decision 0122).
   for (let step = 0; step < 2; step += 1) await page.keyboard.press("Tab");
   const forgot = page.getByRole("link", { name: "Forgot?" });
   await expect(forgot).toBeFocused();
@@ -176,7 +176,7 @@ test("Forgot? emails a link that signs in, then a new password can be chosen, si
 });
 
 test("an older password link still sets a new password", async ({ browser }, testInfo) => {
-  // Sent by "Forgot your password?" before decision 0121: such links keep working for their hour.
+  // Sent by "Forgot your password?" before decision 0122: such links keep working for their hour.
   const email = `old-link-${testInfo.project.name}-${Date.now()}@example.com`;
   const laptop = await newReader(browser, email);
   const asked = await laptop.request.post("/api/password/forgot", { data: { email } });

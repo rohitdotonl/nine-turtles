@@ -17,7 +17,7 @@ export type Screen = {
 
 /**
  * This nine turtles can't send email: its answer is changed to say it can, so the
- * sign-in page shows Forgot? (decision 0121), and asking for a link is answered as
+ * sign-in page shows Forgot? (decision 0122), and asking for a link is answered as
  * the server would, with nothing sent.
  */
 async function pretendEmail(page: Page): Promise<void> {
@@ -541,7 +541,10 @@ export async function signIn(page: Page): Promise<void> {
   await page.getByLabel("Email").fill(OWNER_EMAIL);
   await page.getByLabel("Password").fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.locator("#sidebar")).toBeAttached();
+  // At most two password checks run at once on the whole server, each a
+  // deliberately slow scramble, so with every test signing in together one
+  // can wait its turn for longer than the usual five seconds.
+  await expect(page.locator("#sidebar")).toBeAttached({ timeout: 15_000 });
 }
 
 /**

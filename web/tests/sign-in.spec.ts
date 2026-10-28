@@ -17,7 +17,7 @@ test("a new browser sees only the email and password fields", async ({ page }) =
   // Under the form, always: New here? Sign up (decision 0115).
   await expect(page.getByText("New here?")).toBeVisible();
   await expect(page.getByRole("link", { name: "Sign up" })).toBeVisible();
-  // This nine turtles can't send email, so there's no Forgot? (decision 0121), and no passkeys at 127.0.0.1.
+  // This nine turtles can't send email, so there's no Forgot? (decision 0122), and no passkeys at 127.0.0.1.
   await expect(page.getByRole("link", { name: "Forgot?" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Sign in with a passkey" })).toHaveCount(0);
   await expect(page.getByText("Nothing here yet.")).toHaveCount(0);
@@ -30,7 +30,7 @@ test("sign-in is one centred column, at the phone's one 20px margin, each field 
   await appReady(page);
   const email = (await page.getByLabel("Email").boundingBox())!;
   const field = page.getByLabel("Password");
-  // Real names you can see, above their fields on the column's left edge, 6px over them (decision 0121), not placeholders.
+  // Real names you can see, above their fields on the column's left edge, 6px over them (decision 0122), not placeholders.
   const emailName = (await page.locator('label[for="email"]').boundingBox())!;
   const passwordName = (await page.locator('label[for="password"]').boundingBox())!;
   await expect(page.locator('label[for="email"]')).toBeVisible();

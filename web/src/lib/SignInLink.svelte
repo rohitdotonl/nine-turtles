@@ -1,6 +1,6 @@
 <!--
   The page a sign-in link opens (/sign-in-link#ticket=…, SPEC section 1,
-  decisions 0096 and 0121): the link "Forgot?" emails. Nothing happens until
+  decisions 0096 and 0122): the link "Forgot?" emails. Nothing happens until
   the reader presses Sign in, so a mail program that opens links to check
   them can't use the link up first. This device is then signed in, and the
   reader may choose a new password straight away, or press Not now and

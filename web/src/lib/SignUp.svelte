@@ -1,5 +1,5 @@
 <!--
-  The sign-up page (/sign-up, SPEC section 1, decisions 0115 and 0121), open
+  The sign-up page (/sign-up, SPEC section 1, decisions 0115 and 0122), open
   to anyone: built as the sign-in page is, one centred column of "Email",
   "Password" (each named above its field, "At least 12 characters." under the
   password), Sign up, and "Have an account? Sign in". On success the account

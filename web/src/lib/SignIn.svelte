@@ -1,5 +1,5 @@
 <!--
-  The sign-in page (SPEC section 1, decision 0121): the wordmark, then
+  The sign-in page (SPEC section 1, decision 0122): the wordmark, then
   "Email" and "Password", each named above its field, nothing about the
   reader's feeds. Everyone, the owner too, signs in with both (decision 0116).
   One main action, Sign in; under it, where passkeys work, the quieter "Sign
@@ -223,7 +223,7 @@
     One centred column (decision 0048): the full width between the phone's
     20px margins, at most 320px wide on a larger screen. Each field's name
     stands above it, in small second-ink words on its left edge, as in a
-    sheet (decision 0121). The email comes first, as password managers expect.
+    sheet (decision 0122). The email comes first, as password managers expect.
   -->
   <form class="flex w-full flex-col gap-3 sm:max-w-xs" onsubmit={submit}>
     <div class="flex flex-col gap-1.5">
@@ -308,7 +308,7 @@
   /*
     "Forgot?": the meta size, its words on the password name's line, its box
     44px tall and at least 44px wide, reaching up into the room between the
-    fields (decision 0121).
+    fields (decision 0122).
   */
   .forgot {
     align-items: flex-end;

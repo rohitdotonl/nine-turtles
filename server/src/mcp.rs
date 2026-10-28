@@ -1064,7 +1064,7 @@ async fn folder(state: &AppState, person: i64, tool: &str, asked: FolderName) ->
                 match gone {
                     Some(name) => {
                         let searches = crate::saved_searches::forget(&mut *transaction, person, "folder", id).await?;
-                        let rules = rules::place_gone(&mut transaction, None, Some(id)).await?;
+                        let rules = rules::place_gone(&mut transaction, id).await?;
                         Ok(json!({
                             "done": true,
                             "removed": name,

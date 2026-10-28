@@ -224,7 +224,7 @@ test("the keyboard goes Email, Password, Forgot?, Sign in, the passkey, then Sig
 }) => {
   test.skip(isMobile, "Tab is for screens with a keyboard.");
   // This nine turtles can't send email; its answer is changed to say it can, so
-  // Forgot? shows beside the passkey button (decision 0121).
+  // Forgot? shows beside the passkey button (decision 0122).
   await page.route("**/api/session", async (route) => {
     const response = await route.fetch();
     await route.fulfill({

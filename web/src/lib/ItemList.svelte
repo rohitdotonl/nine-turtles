@@ -60,7 +60,7 @@
   import { hugEllipsis } from "./hug";
   import { length } from "./podcasts";
   import { boldParts } from "./search";
-  import { STRANDED_MESSAGE, updates } from "./updates.svelte";
+  import { OTHER_READER_MESSAGE, STRANDED_MESSAGE, updates } from "./updates.svelte";
   import { connection } from "./connection.svelte";
   import { END_OF_KEPT, NOTHING_KEPT_HERE, NeedsConnection, REFRESH_NEEDS_CONNECTION, SHOWING_KEPT } from "./offline";
 
@@ -114,6 +114,8 @@
 
   /** How often the list asks whether new items are waiting. */
   const ASK_EVERY_MS = 60_000;
+  /** An Undo that couldn't reach nine turtles says so, rather than nothing. */
+  const UNDO_FAILED = "That couldn't be undone. Try again in a moment.";
 
   let articles: Article[] = $state([]);
   let next: string | null = $state(null);
@@ -151,9 +153,12 @@
     line = undoMessage = message;
     if (undo) {
       undoLast = () => {
-        undo().then((problem) => {
-          if (problem) say(problem);
-        });
+        undo().then(
+          (problem) => {
+            if (problem) say(problem);
+          },
+          () => say(UNDO_FAILED),
+        );
       };
     }
   });
@@ -483,9 +488,12 @@
    */
   export function offer(message: string, reverse: () => Promise<string | undefined>) {
     did(message, () => {
-      reverse().then((problem) => {
-        if (problem) say(problem);
-      });
+      reverse().then(
+        (problem) => {
+          if (problem) say(problem);
+        },
+        () => say(UNDO_FAILED),
+      );
     });
   }
 
@@ -861,11 +869,11 @@
   (decision 0048). Empty, it's hidden but stays for screen readers, which
   hear each message as it arrives.
 -->
-<div class={["toast-band sticky bottom-0 z-10 mt-auto flex justify-center", !!(line || undoLast || updates.stranded || newWaiting) && "toast-band-shown"]}>
+<div class={["toast-band sticky bottom-0 z-10 mt-auto flex justify-center", !!(line || undoLast || updates.stranded || updates.otherReader || newWaiting) && "toast-band-shown"]}>
   <div
     class={[
       "toast pointer-events-auto flex min-h-11 max-w-full flex-wrap items-center gap-x-3 rounded-lg border px-4 text-small text-ink-2",
-      !(line || undoLast || updates.stranded || newWaiting) && "sr-only",
+      !(line || undoLast || updates.stranded || updates.otherReader || newWaiting) && "sr-only",
     ]}
   >
     <p class={["flex flex-wrap items-center gap-x-2", !(line || undoLast) && "sr-only"]}>
@@ -878,9 +886,9 @@
         <button type="button" onclick={undoByButton} class="-mr-2 min-h-11 min-w-11 px-2 font-semibold text-ink underline underline-offset-4">Undo</button>
       {/if}
     </p>
-    <p class={["flex items-center", !(updates.stranded || newWaiting) && "sr-only"]}>
-      <span role="status">{updates.stranded ? STRANDED_MESSAGE : newWaiting ? newItemsMessage(touch) : ""}</span>
-      {#if updates.stranded}
+    <p class={["flex items-center", !(updates.stranded || updates.otherReader || newWaiting) && "sr-only"]}>
+      <span role="status">{updates.otherReader ? OTHER_READER_MESSAGE : updates.stranded ? STRANDED_MESSAGE : newWaiting ? newItemsMessage(touch) : ""}</span>
+      {#if updates.stranded || updates.otherReader}
         <button type="button" onclick={() => location.reload()} class="ml-2 min-h-11 min-w-11 font-semibold text-ink underline underline-offset-4"
           >Reload</button
         >

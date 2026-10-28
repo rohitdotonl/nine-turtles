@@ -1,5 +1,5 @@
 // What email makes possible for a reader's account (SPEC sections 1 and 18,
-// decisions 0088, 0096 and 0121): "Forgot?", which emails a link that signs in,
+// decisions 0088, 0096 and 0122): "Forgot?", which emails a link that signs in,
 // and the page that link opens (where a new password may be chosen); the page an
 // older password link opens,
 // the page a confirmation link opens (a new account's address, or a changed
@@ -43,7 +43,7 @@ export type AskResult = "asked" | "email" | "no-email" | "unreachable";
 export const SIGN_IN_LINK_MINUTES = 15;
 
 /**
- * "Forgot?" on the sign-in page (decision 0121): asks for a link that signs in,
+ * "Forgot?" on the sign-in page (decision 0122): asks for a link that signs in,
  * after which the reader may choose a new password. The server answers the same
  * whether or not the address has an account.
  */

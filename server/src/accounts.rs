@@ -1,5 +1,5 @@
 //! What email makes possible for a reader's account (SPEC sections 1 and
-//! 18, decisions 0088, 0096 and 0121): signing in by a link instead of a
+//! 18, decisions 0088, 0096 and 0122): signing in by a link instead of a
 //! password (what the sign-in page's "Forgot?" sends), then choosing a new
 //! password if the reader wishes; setting a new password from an emailed
 //! password link (sent by the older "Forgot your password?", whose links and
@@ -383,7 +383,7 @@ async fn reset(State(state): State<AppState>, Json(form): Json<Reset>) -> Respon
         Err(error) => return database_problem("finding a password link", &error),
     };
     // Not an emailed link: perhaps the choice offered after a sign-in
-    // link (decision 0121), while the reader keeps the address it went to.
+    // link (decision 0122), while the reader keeps the address it went to.
     let chosen = match found {
         Some(_) => None,
         None => match state.password_choices.peek(&hash, now()) {
@@ -517,7 +517,7 @@ struct AskSignIn {
     email: String,
 }
 
-/// "Forgot?" on the sign-in page (decision 0121; "Email me a sign-in link"
+/// "Forgot?" on the sign-in page (decision 0122; "Email me a sign-in link"
 /// before it, decision 0096): answered as "Forgot your password?" is,
 /// always the same and in about the same time, whether or not the address
 /// has an account. A link valid for 15 minutes goes to an address that has
@@ -585,7 +585,7 @@ struct UseSignIn {
 /// leaves earlier links behind). Nothing else changes: the password stays,
 /// and other devices stay signed in.
 ///
-/// This is the link "Forgot?" on the sign-in page sends (decision 0121), so
+/// This is the link "Forgot?" on the sign-in page sends (decision 0122), so
 /// the answer also carries a ticket for choosing a new password, if the
 /// reader wishes (`PasswordChoices`): held only by the page that used the
 /// link, and spent by `/api/password/reset` as an emailed password link is.
@@ -617,7 +617,7 @@ async fn use_sign_in_link(State(state): State<AppState>, Json(form): Json<UseSig
 }
 
 /// After a sign-in link, the reader may choose a new password (decision
-/// 0121). Each offer is a random ticket (only its BLAKE2s scramble is kept)
+/// 0122). Each offer is a random ticket (only its BLAKE2s scramble is kept)
 /// for one reader and the address the link went to, kept here in memory,
 /// never in the database: it works once, for the hour a password link
 /// works, and only while the reader still has that address. Restarting nine

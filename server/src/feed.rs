@@ -216,7 +216,18 @@ fn with_itunes_kept(body: &[u8]) -> Cow<'_, [u8]> {
     // A duration written as minutes and seconds ("30:00") would be read as
     // 30 seconds: it gets its hours ("0:30:00").
     let mut hours_missing: Option<&[u8]> = None;
+    // Inside CDATA (show notes quoting the tags) nothing is added.
+    let mut in_cdata = false;
     for (at, byte) in body.iter().enumerate() {
+        if *byte == b'<' && body[at..].starts_with(b"<![CDATA[") {
+            in_cdata = true;
+        } else if in_cdata && *byte == b']' && body[at..].starts_with(b"]]>") {
+            in_cdata = false;
+        }
+        if in_cdata {
+            out.push(*byte);
+            continue;
+        }
         if *byte == b'<' && starts(at) {
             out.extend_from_slice(ITUNES_KEEP);
         }
@@ -1529,6 +1540,30 @@ Second paragraph</media:description>
                 .as_deref()
                 .unwrap()
                 .contains("Show notes")
+        );
+    }
+
+    #[test]
+    fn show_notes_that_quote_itunes_tags_are_left_as_written() {
+        // Show notes explaining how to add a picture quote the tag in CDATA
+        // (survey A9.10): the workaround for feed-rs must leave it alone.
+        let rss = br#"<?xml version="1.0"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"><channel>
+<title>Podcasting tips</title><link>https://tips.example/</link>
+<item><title>Artwork</title><guid>a</guid>
+<description><![CDATA[<p>Add <code><itunes:image href="..."/></code> and <code><itunes:duration>30:00</itunes:duration></code> to each episode.</p>]]></description>
+<enclosure url="https://tips.example/a.mp3" type="audio/mpeg"/>
+<itunes:duration>30:00</itunes:duration>
+</item>
+</channel></rss>"#;
+        let feed = parse(rss, &url("https://tips.example/feed.xml")).unwrap();
+        let notes = feed.articles[0].summary.as_deref().unwrap();
+        assert!(!notes.contains("<code>-"), "{notes}");
+        assert!(!notes.contains("0:30:00"), "{notes}");
+        // Outside the notes the workaround still works.
+        assert_eq!(
+            feed.articles[0].episode.as_ref().unwrap().seconds,
+            Some(1800)
         );
     }
 

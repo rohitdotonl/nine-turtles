@@ -1514,7 +1514,7 @@ async fn a_new_email_or_a_new_password_ends_earlier_sign_in_links() {
 }
 
 /// Uses a sign-in link and answers this device's cookie and the ticket for
-/// choosing a new password that comes with it (decision 0121).
+/// choosing a new password that comes with it (decision 0122).
 async fn sign_in_by_link(base: &str, ticket: &str) -> (String, String) {
     let used = use_sign_in_link(base, ticket).await;
     assert_eq!(used.status(), StatusCode::OK);

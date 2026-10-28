@@ -57,6 +57,16 @@ export function readerChanged(reader: number): boolean {
   }
 }
 
+/** Whose device this is, as last noted: what a tab opened without a connection goes by. */
+export function deviceReader(): number | undefined {
+  try {
+    const last = Number(globalThis.localStorage?.getItem(READER_KEY));
+    return Number.isInteger(last) && last > 0 ? last : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /** Notes whose device this is, only once the last reader's things are gone. */
 export function noteReader(reader: number): void {
   try {

@@ -12,7 +12,7 @@ describe("emailed links", () => {
 
 describe("the messages about email", () => {
   it("never say whether an address has an account", () => {
-    // "Forgot?" sends a sign-in link, which works for 15 minutes (decision 0121).
+    // "Forgot?" sends a sign-in link, which works for 15 minutes (decision 0122).
     expect(explainAsked("asked", " mira@example.com ")).toBe(
       "If mira@example.com has an account here, a link is on its way. It works once, within 15 minutes.",
     );
