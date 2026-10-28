@@ -170,7 +170,7 @@
       />
       in
       <span class="blank-pick"
-        ><select bind:value={titleOnly} aria-label="Look in" class="blank">
+        ><select bind:value={titleOnly} aria-label="Where to look" class="blank">
           <option value={true}>its title</option>
           <option value={false}>its title or text</option>
         </select><Icon name="chevron-down" size={14} /></span

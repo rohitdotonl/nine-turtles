@@ -105,7 +105,7 @@ test("a star rule acts on an article as it arrives; rules pause, and Delete has 
 
   await rules.getByRole("button", { name: "New rule…" }).click();
   await sheet.getByRole("textbox", { name: "Word or phrase" }).fill("river");
-  await sheet.getByRole("combobox", { name: "Look in" }).selectOption("its title or text");
+  await sheet.getByRole("combobox", { name: "Where to look" }).selectOption("its title or text");
   await sheet.getByRole("combobox", { name: "In" }).selectOption(`feed:${id}`);
   await sheet.getByRole("combobox", { name: "Then" }).selectOption("star");
   await sheet.getByRole("button", { name: "Save" }).click();
