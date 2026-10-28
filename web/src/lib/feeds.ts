@@ -5,7 +5,7 @@ import { api } from "./updates.svelte";
 import { noConnection } from "./connection.svelte";
 import { keepLibrary, keptLibrary } from "./offline";
 import { getJson, isRecord, sendChange } from "./http";
-import { deviceJson, deviceText, setDeviceText } from "./device";
+import { deviceJson, setDeviceText } from "./device";
 import { saved } from "./saving";
 import { toFeed, type Feed, type FeedSettings, type Folder, type Library } from "./shapes";
 
@@ -115,12 +115,10 @@ export function feedNextTo(library: Library, open: number[], here: { kind: strin
 }
 
 const OPEN_KEY = "nine-turtles.open-folders";
-/** Where they were saved before the rename; read when there's nothing under the new name. */
-const OLD_OPEN_KEY = "slowfeed.open-folders";
 
 /** The folders open in the sidebar, as this device remembers them. */
 export function savedOpenFolders(): number[] {
-  const saved = deviceJson(deviceText(OPEN_KEY) === null ? OLD_OPEN_KEY : OPEN_KEY) ?? [];
+  const saved = deviceJson(OPEN_KEY) ?? [];
   return Array.isArray(saved) ? saved.filter((id) => typeof id === "number") : [];
 }
 

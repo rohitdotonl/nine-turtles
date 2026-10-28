@@ -186,9 +186,7 @@ pub async fn restore_if_empty(
     storage: Option<&Storage>,
     name: &str,
 ) -> Result<(), String> {
-    if db::exists(data_dir)
-        && !(db::has_only_new_name(data_dir) && is_empty(&db::path(data_dir)).await)
-    {
+    if db::exists(data_dir) && !is_empty(&db::path(data_dir)).await {
         log::problem(
             "NINE_TURTLES_RESTORE_FROM is set, but a database is already here, so nothing \
              was restored; remove the setting (docs/operations/backups.md)",

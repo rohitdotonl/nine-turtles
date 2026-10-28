@@ -942,7 +942,7 @@ async fn delete_me(SignedIn(person): SignedIn, State(state): State<AppState>) ->
             // for this one carries over to it.
             state.password_choices.end_for(person);
             log::info("a reader deleted their account");
-            (StatusCode::NO_CONTENT, crate::auth::signed_out_cookies()).into_response()
+            (StatusCode::NO_CONTENT, [crate::auth::signed_out_cookie()]).into_response()
         }
         Err(error) => database_problem("deleting an account", &error),
     }
