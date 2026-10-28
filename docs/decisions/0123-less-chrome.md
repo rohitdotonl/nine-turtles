@@ -12,18 +12,19 @@ What each screen looks like is in `docs/SPEC.md` sections 5, 6, 7 and 27 and
    a hairline, decision 0041). The publisher's name in a row's meta line is
    in the muted grey, a step stronger than the time, so the credit reads
    first. The unread dot stays centred on the title's first line.
-2. **Spaced capitals for names that head others.** The sidebar's section
-   names (Folders, Feeds) and a folder's own name are small, semibold,
-   uppercase and tracked, as Settings' group names are. A folder's name
-   starts on the 20px margin with nothing before it: its show-or-hide arrow
-   moves to the row's right end, showing in place of the count on hover, on
-   the keyboard and always on touch (replacing decision 0041's arrow before
-   the name), and choosing a closed folder opens it. Its feeds sit on the
-   sidebar's one 46px name edge (no longer a step further in, decision 0043)
-   with a faint 1px line down their left under the folder's name, and each
-   folder group has 8px of room above it. Screen readers read the names as
-   written. Sidebar feed names, like the list's, leave out a newsletter
-   sender's address in brackets.
+2. **Quieter section names, plainer folders.** The sidebar's section names
+   (Folders, Feeds) are small, semibold, uppercase and tracked, as Settings'
+   group names are. A folder's name is in plain words on the same text edge
+   as Unread, Starred and All, with no icon and nothing before it: its
+   show-or-hide arrow moves to the row's right end, showing in place of the
+   count on hover, on the keyboard and always on touch (replacing decision
+   0041's arrow before the name), and choosing a closed folder opens it. Its
+   feeds sit one step in with a faint 1px line down their left under the
+   folder's name, so they read as its contents. (The owner tried and turned
+   down folders in spaced capitals on the margin, a folder icon, and no
+   icons at all in the sidebar: the icons on the fixed lists help, a folder
+   icon didn't look right.) Sidebar feed names, like the list's, leave out a
+   newsletter sender's address in brackets.
 3. **A rule is one sentence.** "When a new article has ___ in its title, by
    any author, from all feeds, then mute it." Each blank is a real text box
    or menu with its own name for screen readers, 44px to press, with only a
