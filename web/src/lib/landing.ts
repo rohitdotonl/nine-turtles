@@ -1,6 +1,6 @@
-// Where the keyboard's place lands on arriving somewhere (decisions 0038 and
-// 0120): a page's heading, the add field, a sheet's heading, the welcome's, or
-// back on the Settings row that opened a page. The screen (`Shell.svelte`)
+// Where the keyboard's place lands on arriving somewhere: a page's heading,
+// the add field, a sheet's heading, the welcome's, or back on the Settings row
+// that opened a page (decision 0120). The screen (`Shell.svelte`)
 // binds the headings and hands over what's on screen; these choose among
 // them, so the rules are in one place and can be tested without drawing
 // anything. Moving between articles is `moving.ts`.
