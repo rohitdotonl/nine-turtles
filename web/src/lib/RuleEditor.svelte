@@ -143,6 +143,7 @@
       mute it." Each blank is a real field or menu, named for screen readers,
       with a dashed line under it and 44px to press.
     -->
+    <!-- The two text blanks are never narrower than their placeholders ("a word" is 6 letters, "any author" 10). -->
     <div role="group" aria-label="Rule" class="rule-sentence">
       When a new article has
       <input

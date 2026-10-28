@@ -170,17 +170,23 @@
   </li>
 {/snippet}
 
+<!--
+  A folder's name: a link to its articles. On the folder you're in it is also
+  the fold (decision 0123), so there it says whether the feeds show, for
+  screen readers, as the arrow button does.
+-->
 {#snippet folderLink(folder: Folder, padded: boolean)}
   {@const place: Route = { kind: "folder", id: folder.id }}
   <a
     href={pathFor(place)}
     aria-current={isHere(place) ? "page" : undefined}
+    aria-expanded={!phone && !searching && isHere(place) ? open.includes(folder.id) : undefined}
     onclick={(event) => {
       const plain = !phone && !searching && !event.metaKey && !event.ctrlKey && !event.shiftKey;
       const does = folderChoice(isHere(place), open.includes(folder.id), plain);
-      if (does === "fold") return (event.preventDefault(), toggle(folder.id));
-      if (does === "open-and-go") toggle(folder.id);
-      follow(event, place);
+      if (does === "fold") event.preventDefault();
+      if (does !== "go") toggle(folder.id);
+      if (does !== "fold") follow(event, place);
     }}
     data-folder-link={folder.id}
     title={folder.name}

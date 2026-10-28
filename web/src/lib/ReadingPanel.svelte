@@ -261,7 +261,7 @@
   }
   .swatch:has(input:checked) .dot {
     box-shadow:
-      0 0 0 2px var(--paper),
+      0 0 0 2px var(--surface-raised),
       0 0 0 4px var(--ink);
   }
   @media (forced-colors: active) {

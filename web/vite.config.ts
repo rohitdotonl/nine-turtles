@@ -14,23 +14,27 @@ const node = globalThis as unknown as { process: { getBuiltinModule(name: "node:
 // comments, so that is safe), the page its comments and line breaks, the web
 // app manifest its spaces and the icon its line breaks.
 function trimPublicFiles(): Plugin {
+  let dist = "dist";
   return {
     name: "trim-public-files",
     apply: "build",
+    configResolved(config) {
+      dist = config.build.outDir;
+    },
     transformIndexHtml(html) {
       return html.replace(/<!--[\s\S]*?-->/g, "").replace(/\n\s*/g, "").replaceAll(" />", ">");
     },
     closeBundle() {
       const { readFileSync, writeFileSync } = node.process.getBuiltinModule("node:fs");
-      const file = "dist/sw.js";
+      const file = `${dist}/sw.js`;
       const lines = readFileSync(file, "utf8").split("\n");
       const kept = lines
         .map((line) => line.trim())
         .filter((line) => line !== "" && !line.startsWith("//") && !(line.startsWith("/*") && line.endsWith("*/")));
       writeFileSync(file, kept.join("\n") + "\n");
-      const icon = "dist/icons/icon.svg";
+      const icon = `${dist}/icons/icon.svg`;
       writeFileSync(icon, readFileSync(icon, "utf8").replace(/\n/g, ""));
-      const manifest = "dist/manifest.webmanifest";
+      const manifest = `${dist}/manifest.webmanifest`;
       writeFileSync(manifest, JSON.stringify(JSON.parse(readFileSync(manifest, "utf8"))));
     },
   };

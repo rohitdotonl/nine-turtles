@@ -140,8 +140,11 @@ test("a feed put in two folders appears under both, with its unread count in eac
   const firstToggle = sidebar(page).getByRole("button", { name: `Feeds in ${first}` });
   await expect(firstToggle).toHaveAttribute("aria-expanded", "true");
   const firstRow = sidebar(page).locator(`[data-folder-link]`, { hasText: first }).first();
+  await expect(firstRow).toHaveAttribute("aria-expanded", "true");
   await firstRow.click();
   await expect(firstToggle).toHaveAttribute("aria-expanded", "false");
+  // A screen reader hears the change on the name too.
+  await expect(firstRow).toHaveAttribute("aria-expanded", "false");
   await expect(page).toHaveURL(/\/folders\/[0-9]+$/);
   await firstRow.click();
   await expect(firstToggle).toHaveAttribute("aria-expanded", "true");
