@@ -5,6 +5,7 @@
 
 import { when, type Choice } from "./feeds";
 import { api } from "./updates.svelte";
+import { isRecord } from "./http";
 
 /** Dead: a week of "not found" or three weeks of failing. Working: it worked when last tried. */
 export type Condition = "dead" | "trouble" | "working";
@@ -219,8 +220,4 @@ export function refusalMessage(refusal: HealthRefusal, doing: "retry" | "find" |
     case "trouble":
       return "That didn't work just now. Try again in a moment.";
   }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

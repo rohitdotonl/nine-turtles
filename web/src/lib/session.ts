@@ -2,6 +2,8 @@
 // cookie itself is invisible to this code: the browser keeps it.
 
 import { api } from "./updates.svelte";
+import { isRecord } from "./http";
+import { deviceText, setDeviceText } from "./device";
 
 /**
  * Signed in: the version for Status, whether this is the owner (who alone sees Settings › Readers), the reader's
@@ -49,31 +51,19 @@ const READER_KEY = "nine-turtles.reader";
  * sign-in page. Unknown (first load, private browsing) counts as no change.
  */
 export function readerChanged(reader: number): boolean {
-  try {
-    const last = globalThis.localStorage?.getItem(READER_KEY);
-    return last != null && last !== String(reader);
-  } catch {
-    return false;
-  }
+  const last = deviceText(READER_KEY);
+  return last !== null && last !== String(reader);
 }
 
 /** Whose device this is, as last noted: what a tab opened without a connection goes by. */
 export function deviceReader(): number | undefined {
-  try {
-    const last = Number(globalThis.localStorage?.getItem(READER_KEY));
-    return Number.isInteger(last) && last > 0 ? last : undefined;
-  } catch {
-    return undefined;
-  }
+  const last = Number(deviceText(READER_KEY));
+  return Number.isInteger(last) && last > 0 ? last : undefined;
 }
 
 /** Notes whose device this is, only once the last reader's things are gone. */
 export function noteReader(reader: number): void {
-  try {
-    globalThis.localStorage?.setItem(READER_KEY, String(reader));
-  } catch {
-    // Private browsing: nothing is kept, so there's nothing to hand over.
-  }
+  setDeviceText(READER_KEY, String(reader));
 }
 
 /** Where passkeys work, from the session's answer: null when they're off. */
@@ -136,8 +126,4 @@ export function duration(seconds: number): string {
   if (seconds < 60) return seconds === 1 ? "1 second" : `${seconds} seconds`;
   const minutes = Math.ceil(seconds / 60);
   return minutes === 1 ? "1 minute" : `${minutes} minutes`;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
 }

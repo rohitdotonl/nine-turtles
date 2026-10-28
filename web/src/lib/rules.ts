@@ -3,7 +3,7 @@
 // writes each rule as one plain sentence, the way Settings lists it.
 
 import { toArticle, type Article, type Feed, type Folder } from "./feeds";
-import { api } from "./updates.svelte";
+import { getJson, isRecord, sendChange } from "./http";
 
 /** Mute: kept, counted as read, shown only in search and on the Muted page. */
 export type RuleAction = "mute" | "star" | "read";
@@ -176,29 +176,8 @@ function body(draft: RuleDraft): Record<string, unknown> {
 }
 
 async function post(path: string, change: unknown): Promise<Record<string, unknown> | RuleRefusal> {
-  let response: Response;
-  try {
-    response = await api(path, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(change),
-      signal: AbortSignal.timeout(15_000),
-    });
-  } catch {
-    return "trouble";
-  }
-  const answer: unknown = await response.json().catch(() => null);
-  if (response.ok) return isRecord(answer) ? answer : {};
-  if (response.status === 404) return "gone";
-  const error = isRecord(answer) ? answer.error : undefined;
-  if (error === "nothing-to-match" || error === "too-long" || error === "no-place") return error;
-  return "trouble";
-}
-
-async function getJson(path: string): Promise<unknown> {
-  const response = await api(path, { cache: "no-store" });
-  if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
-  return response.json();
+  const sent = await sendChange(path, change, ["nothing-to-match", "too-long", "no-place"]);
+  return sent.refusal ?? sent.answer ?? {};
 }
 
 function toRule(rule: Record<string, unknown>): Rule {
@@ -214,8 +193,4 @@ function toRule(rule: Record<string, unknown>): Rule {
     action,
     paused: rule.paused === true,
   };
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
 }

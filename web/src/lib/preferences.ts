@@ -3,6 +3,7 @@
 // different sizes. So they're kept in the browser's own storage, and nothing
 // is lost if that storage is unavailable: nine turtles simply uses the defaults.
 import { LOOKS, OLD_THEMES, THEMES, isAppearance, isTheme, resolveMode, type Appearance, type Mode, type Theme } from "./themes";
+import { deviceStorage } from "./device";
 
 export type ReadingFont = "literata" | "atkinson" | "system-serif";
 export type LineWidth = "narrow" | "medium" | "wide";
@@ -53,8 +54,9 @@ const KEY = "nine-turtles.preferences";
 /** Where they were saved before the rename; read when there's nothing under the new name. */
 const OLD_KEY = "slowfeed.preferences";
 
+// Takes a storage (rather than using device.ts) so tests can give their own; deviceStorage() is undefined when the browser refuses.
 /** Reads the saved preferences, keeping only values nine turtles understands. */
-export function load(storage: Pick<Storage, "getItem"> | undefined = safeStorage()): Preferences {
+export function load(storage: Pick<Storage, "getItem"> | undefined = deviceStorage()): Preferences {
   let saved: unknown;
   try {
     saved = JSON.parse(storage?.getItem(KEY) ?? storage?.getItem(OLD_KEY) ?? "null");
@@ -76,7 +78,7 @@ export function load(storage: Pick<Storage, "getItem"> | undefined = safeStorage
   };
 }
 
-export function save(preferences: Preferences, storage: Pick<Storage, "setItem"> | undefined = safeStorage()): void {
+export function save(preferences: Preferences, storage: Pick<Storage, "setItem"> | undefined = deviceStorage()): void {
   try {
     storage?.setItem(KEY, JSON.stringify(preferences));
   } catch {
@@ -121,11 +123,3 @@ export function apply(preferences: Preferences, root: HTMLElement = document.doc
 export const BAR_COLORS = Object.fromEntries(
   THEMES.map((theme) => [theme, { light: LOOKS[theme].light.page.toUpperCase(), dark: LOOKS[theme].dark.page.toUpperCase() }]),
 ) as Record<Theme, Record<Mode, string>>;
-
-function safeStorage(): Storage | undefined {
-  try {
-    return globalThis.localStorage;
-  } catch {
-    return undefined;
-  }
-}

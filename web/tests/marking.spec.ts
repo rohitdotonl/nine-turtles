@@ -109,7 +109,10 @@ test.describe("on a wide window", () => {
 
     // Mark unread in the article's More menu does the same as m.
     await article(page).getByRole("button", { name: "More actions" }).click();
-    const savedUnread = page.waitForResponse((response) => response.url().endsWith("/api/articles/read") && response.ok());
+    // The one that marks it unread: u's "read" may still be answering.
+    const savedUnread = page.waitForResponse(
+      (response) => response.url().endsWith("/api/articles/read") && response.ok() && response.request().postDataJSON()?.read === false,
+    );
     await page.getByRole("menuitem", { name: "Mark unread" }).click();
     await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
 

@@ -93,6 +93,7 @@
   import { loadQueue, player } from "./player.svelte";
   import { whenBack } from "./connection.svelte";
   import { arrivedBySwitching, switchesOnMove, switchTo, updates, watchForNewVersions, type Carried } from "./updates.svelte";
+  import { deviceText, setDeviceText } from "./device";
 
   let {
     version,
@@ -274,12 +275,8 @@
   let windowWidth = $state(innerWidth);
 
   function storedWidth(name: string): number | undefined {
-    try {
-      const value = Number(localStorage.getItem(name));
-      return value > 0 ? value : undefined;
-    } catch {
-      return undefined;
-    }
+    const value = Number(deviceText(name));
+    return value > 0 ? value : undefined;
   }
 
   /**
@@ -290,29 +287,17 @@
   const TIP_KEY = "nine-turtles.shortcut-tip-seen";
   let tipSeen = $state(readTipSeen());
   function readTipSeen(): boolean {
-    try {
-      return localStorage.getItem(TIP_KEY) !== null;
-    } catch {
-      return false;
-    }
+    return deviceText(TIP_KEY) !== null;
   }
   $effect(() => {
     if (tipSeen || (!selected && !cheatSheetOpen)) return;
     tipSeen = true;
-    try {
-      localStorage.setItem(TIP_KEY, "yes");
-    } catch {
-      // Private windows may refuse; the tip shows again next visit until an article is opened.
-    }
+    // Private windows may refuse; the tip shows again next visit until an article is opened.
+    setDeviceText(TIP_KEY, "yes");
   });
 
   function storeWidth(name: string, value: number | undefined) {
-    try {
-      if (value === undefined) localStorage.removeItem(name);
-      else localStorage.setItem(name, String(value));
-    } catch {
-      // Private windows may refuse; the width just isn't remembered.
-    }
+    setDeviceText(name, value === undefined ? null : String(value));
   }
   let sidebarToggle: HTMLButtonElement | undefined = $state();
   let listToggle: HTMLButtonElement | undefined = $state();

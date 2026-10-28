@@ -4,6 +4,7 @@
 // always open; the sign-up page itself uses `signUp`.
 
 import { api } from "./updates.svelte";
+import { isRecord } from "./http";
 
 export type Person = { id: number; email: string | null; owner: boolean; createdAt: number };
 
@@ -123,8 +124,4 @@ export function plausibleEmail(text: string): boolean {
 export async function errorOf(response: Response): Promise<unknown> {
   const body: unknown = await response.json().catch(() => null);
   return isRecord(body) ? body.error : undefined;
-}
-
-export function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
 }

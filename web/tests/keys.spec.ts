@@ -83,7 +83,7 @@ test.describe("on a wide window", () => {
     await expect(binding(page, "star")).toHaveAccessibleName("Change the key that stars and unstars, now X");
     await expect(binding(page, "star")).toBeFocused();
     await expect(sheet(page).getByRole("button", { name: "Reset the key that stars and unstars to S" })).toBeVisible();
-    expect(saved.keys).toEqual({ star: "x" });
+    await expect.poll(() => saved.keys).toEqual({ star: "x" });
 
     await tabTo(page, sheet(page).getByRole("button", { name: "Done" }));
     await page.keyboard.press("Enter");
@@ -132,7 +132,7 @@ test.describe("on a wide window", () => {
     await expect(sheet(page)).toBeVisible();
     await expect(said(page)).toHaveText("Not changed.");
     await expect(binding(page, "star")).toBeFocused();
-    expect(saved.keys).toEqual({});
+    await expect.poll(() => saved.keys).toEqual({});
 
     await page.keyboard.press("Enter");
     await page.keyboard.press("Shift+O");
@@ -140,7 +140,7 @@ test.describe("on a wide window", () => {
     await expect(said(page)).toHaveText("Shift+O now stars and unstars. Nothing marks older as read now.");
     await expect(binding(page, "mark-older-read")).toHaveText("No key");
     await expect(binding(page, "star")).toBeFocused();
-    expect(saved.keys).toEqual({ star: "Shift+O", "mark-older-read": "" });
+    await expect.poll(() => saved.keys).toEqual({ star: "Shift+O", "mark-older-read": "" });
 
     // Reset all keys, at the sheet's foot.
     await tabTo(page, sheet(page).getByRole("button", { name: "Reset all keys" }));
@@ -148,7 +148,7 @@ test.describe("on a wide window", () => {
     await expect(said(page)).toHaveText("Every key is back as it was.");
     await expect(binding(page, "star")).toHaveAccessibleName("Change the key that stars and unstars, now S");
     await expect(binding(page, "mark-older-read")).toHaveAccessibleName("Change the key that marks older as read, now Shift+O");
-    expect(saved.keys).toEqual({});
+    await expect.poll(() => saved.keys).toEqual({});
 
     // Keys that stay as they are aren't buttons at all.
     await expect(binding(page, "cheat-sheet")).toHaveCount(0);

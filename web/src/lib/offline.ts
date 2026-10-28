@@ -18,6 +18,7 @@
 
 import type { Article, FullArticle, Library, Order, Page, ReadingMode, Source } from "./feeds";
 import { currentTabReader } from "./updates.svelte";
+import { deviceText, setDeviceText } from "./device";
 
 /** At most this many unread articles, and this many starred ones, are kept (the owner's limit). */
 export const KEEP_UNREAD = 200;
@@ -44,23 +45,15 @@ const SWITCH_KEY = "nine-turtles.offline";
 
 /** Whether this device keeps articles for reading offline: yes unless switched off in Settings. */
 export function keeping(): boolean {
-  try {
-    return globalThis.localStorage?.getItem(SWITCH_KEY) !== "off";
-  } catch {
-    return true;
-  }
+  return deviceText(SWITCH_KEY) !== "off";
 }
 
 /** Switches keeping on or off on this device. Off sends any waiting marks it can, then deletes every copy. */
 export async function setKeeping(on: boolean): Promise<void> {
   // Waiting marks go first, unless there's plainly no connection to send them on.
   if (!on && globalThis.navigator?.onLine !== false) await sendWaiting();
-  try {
-    if (on) globalThis.localStorage?.removeItem(SWITCH_KEY);
-    else globalThis.localStorage?.setItem(SWITCH_KEY, "off");
-  } catch {
-    // Private browsing may refuse: then it's on for as long as this tab is open.
-  }
+  // Private browsing may refuse: then it's on for as long as this tab is open.
+  setDeviceText(SWITCH_KEY, on ? null : "off");
   if (!on) await forget();
 }
 

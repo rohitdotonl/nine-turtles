@@ -4,6 +4,7 @@
 // sidebar, the sheets and the list show it.
 import { keepCollections, keptCollections } from "./offline";
 import { api } from "./updates.svelte";
+import { isRecord, sendChange } from "./http";
 
 export type Collection = { id: number; name: string };
 
@@ -125,26 +126,6 @@ export function refusedCollection(refusal: CollectionRefusal): string {
   }
 }
 
-async function send(path: string, body: unknown): Promise<{ refusal?: CollectionRefusal; answer?: Record<string, unknown> }> {
-  let response: Response;
-  try {
-    response = await api(path, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(15_000),
-    });
-  } catch {
-    return { refusal: "trouble" };
-  }
-  const answer: unknown = await response.json().catch(() => null);
-  if (response.ok) return { answer: isRecord(answer) ? answer : {} };
-  if (response.status === 404) return { refusal: "gone" };
-  const error = isRecord(answer) ? answer.error : undefined;
-  if (error === "no-name" || error === "already") return { refusal: error };
-  return { refusal: "trouble" };
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+function send(path: string, body: unknown): Promise<{ refusal?: CollectionRefusal; answer?: Record<string, unknown> }> {
+  return sendChange(path, body, ["no-name", "already"]);
 }

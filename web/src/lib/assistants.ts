@@ -8,6 +8,7 @@
 // unsubscribed from, which are kept for 30 days.
 
 import { api } from "./updates.svelte";
+import { isRecord } from "./http";
 
 /** The address the connect page lives at. */
 export const CONNECT_PAGE = "/oauth/authorize";
@@ -36,10 +37,6 @@ export type ConnectRequest =
   | { kind: "trouble" };
 
 export type ConnectAnswer = { kind: "redirect"; url: string } | { kind: "invalid" } | { kind: "signed-out" } | { kind: "trouble" };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 /** Reads the server's answer to GET /api/oauth/request. */
 export function readRequest(status: number, body: unknown): ConnectRequest {

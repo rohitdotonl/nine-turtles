@@ -4,6 +4,7 @@
 
 import { change, when, type Folder, type Refusal } from "./feeds";
 import { api } from "./updates.svelte";
+import { isRecord } from "./http";
 
 export type Tended = {
   id: number;
@@ -105,8 +106,4 @@ export async function moveAll(
 /** Undo for moving: each feed goes back to the folders it was in. */
 export async function restoreFolders(feeds: { id: number; folders: number[] }[]): Promise<Refusal | undefined> {
   return (await change("/api/tidy/restore", { feeds })).refusal;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

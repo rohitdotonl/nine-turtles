@@ -9,6 +9,8 @@
 
 import { api } from "./updates.svelte";
 import { serverNow } from "./connection.svelte";
+import { isRecord } from "./http";
+import { deviceJson, setDeviceText } from "./device";
 
 /** An episode's audio file, as its feed describes it. */
 export type Episode = {
@@ -127,12 +129,8 @@ const PLACES_KEY = "nine-turtles.episode-places";
 const KEEP_PLACES = 100;
 
 function readPlaces(): Record<string, Place> {
-  try {
-    const saved: unknown = JSON.parse(globalThis.localStorage?.getItem(PLACES_KEY) ?? "{}");
-    return typeof saved === "object" && saved !== null ? (saved as Record<string, Place>) : {};
-  } catch {
-    return {};
-  }
+  const saved = deviceJson(PLACES_KEY);
+  return isRecord(saved) ? (saved as Record<string, Place>) : {};
 }
 
 /** This device's own copy of where the reader stopped in episode `id`. */
@@ -143,11 +141,7 @@ export function devicePlace(id: number): Place | undefined {
 
 /** Forgets every place kept on this device (nobody is signed in). */
 export function forgetPlaces(): void {
-  try {
-    globalThis.localStorage?.removeItem(PLACES_KEY);
-  } catch {
-    // Nothing kept to forget.
-  }
+  setDeviceText(PLACES_KEY, null);
 }
 
 /** Keeps where the reader stopped on this device, for the latest 100 episodes. */
@@ -157,18 +151,10 @@ export function keepOnDevice(id: number, place: Place): void {
   const newest = Object.entries(places)
     .sort(([, one], [, other]) => other.at - one.at)
     .slice(0, KEEP_PLACES);
-  try {
-    globalThis.localStorage?.setItem(PLACES_KEY, JSON.stringify(Object.fromEntries(newest)));
-  } catch {
-    // Private browsing may refuse: the server still has it.
-  }
+  setDeviceText(PLACES_KEY, JSON.stringify(Object.fromEntries(newest)));
 }
 
 // ---- The server -----------------------------------------------------------
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
 
 /** Where the reader stopped in episode `id`, as the server has it; undefined if nowhere, or if it can't be asked. */
 export async function serverPlace(id: number): Promise<Place | undefined> {

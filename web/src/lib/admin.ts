@@ -5,6 +5,7 @@
 
 import { type Standing, toStanding } from "./plan";
 import { api } from "./updates.svelte";
+import { isRecord } from "./http";
 
 export type Reader = {
   id: number;
@@ -125,8 +126,4 @@ export function backupDay(name: string | null): string | null {
   return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(
     new Date(Date.UTC(year, month - 1, day)),
   );
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

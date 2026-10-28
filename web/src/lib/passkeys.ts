@@ -7,6 +7,7 @@
 
 import { duration } from "./session";
 import { api } from "./updates.svelte";
+import { isRecord } from "./http";
 
 /** One of the reader's passkeys. `name` is null for "Passkey added <the day>". */
 export type PasskeyRow = { id: number; name: string | null; createdAt: number; lastUsedAt: number | null };
@@ -71,10 +72,6 @@ export function browserHasPasskeys(): boolean {
 }
 
 type Json = Record<string, unknown>;
-
-function isRecord(value: unknown): value is Json {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 /** A list of credential descriptors with their ids as bytes. */
 function descriptors(list: unknown): PublicKeyCredentialDescriptor[] | undefined {

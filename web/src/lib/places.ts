@@ -4,6 +4,8 @@
 // phone and a laptop each remember their own place. Nothing is lost if that
 // storage is unavailable: an article simply opens at its top.
 
+import { deviceStorage } from "./device";
+
 /**
  * A place: which block of the article's text was at the top of the window
  * (a paragraph, a picture, a heading), and how far down that block, from 0
@@ -42,13 +44,13 @@ function isPlace(value: unknown): value is Place {
 }
 
 /** Where you stopped in this article, if you stopped part of the way through. */
-export function placeOf(article: number, storage: Pick<Storage, "getItem"> | undefined = safeStorage()): Place | undefined {
+export function placeOf(article: number, storage: Pick<Storage, "getItem"> | undefined = deviceStorage()): Place | undefined {
   const place = read(storage)[article];
   return isPlace(place) ? { block: place.block, within: place.within } : undefined;
 }
 
 /** Remembers where you are; `undefined` forgets it (at the top, or once you've reached the end). */
-export function keepPlace(article: number, place: Place | undefined, storage: Pick<Storage, "getItem" | "setItem"> | undefined = safeStorage(), now = Date.now()): void {
+export function keepPlace(article: number, place: Place | undefined, storage: Pick<Storage, "getItem" | "setItem"> | undefined = deviceStorage(), now = Date.now()): void {
   const saved = read(storage);
   if (place === undefined) {
     if (!(article in saved)) return;
@@ -92,12 +94,4 @@ export function goTo(scroller: HTMLElement, text: HTMLElement, place: Place): vo
   const box = block.getBoundingClientRect();
   const top = scroller.getBoundingClientRect().top;
   scroller.scrollTop += box.top - top + box.height * place.within;
-}
-
-function safeStorage(): Storage | undefined {
-  try {
-    return globalThis.localStorage;
-  } catch {
-    return undefined;
-  }
 }

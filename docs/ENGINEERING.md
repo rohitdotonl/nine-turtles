@@ -42,7 +42,7 @@ Prefer well-known, mature tools, and as few of them as possible. Every new libra
 
 **Test:** Can this be done with what we already have?
 
-Small things a library would usually do are written once, in one place, rather than added as a library: hex, base64 and web forms in `server/src/encoding.rs`, calendar dates and RFC 3339 times in `server/src/dates.rs`. Use those instead of writing another copy.
+Small things a library would usually do are written once, in one place, rather than added as a library: hex, base64 and web forms in `server/src/encoding.rs`, calendar dates and RFC 3339 times in `server/src/dates.rs`. In the web app, talking to the server (`isRecord`, `getJson`, `sendChange`) is in `web/src/lib/http.ts`, and small settings kept on the device (local storage, which a private window may refuse) in `web/src/lib/device.ts`. Use those instead of writing another copy.
 
 ### 3. No vendor lock-in
 

@@ -38,6 +38,7 @@ import {
   serverPlace,
   type Episode,
 } from "./podcasts";
+import { deviceText, setDeviceText } from "./device";
 
 /** The episode loaded in the player: its article (as the list shows it) and its audio. */
 export type Playing = { article: Article; episode: Episode };
@@ -45,12 +46,8 @@ export type Playing = { article: Article; episode: Episode };
 const SPEED_KEY = "nine-turtles.speed";
 
 function storedSpeed(): number {
-  try {
-    const value = Number(globalThis.localStorage?.getItem(SPEED_KEY));
-    return (SPEEDS as readonly number[]).includes(value) ? value : 1;
-  } catch {
-    return 1;
-  }
+  const value = Number(deviceText(SPEED_KEY));
+  return (SPEEDS as readonly number[]).includes(value) ? value : 1;
 }
 
 export const player = $state({
@@ -283,11 +280,7 @@ export function forward(): void {
 export function setRate(rate: number): void {
   player.rate = rate;
   if (audio) audio.playbackRate = rate;
-  try {
-    globalThis.localStorage?.setItem(SPEED_KEY, String(rate));
-  } catch {
-    // Not remembered on this device; it plays at this speed for now.
-  }
+  setDeviceText(SPEED_KEY, String(rate));
 }
 
 /** Stops and empties the player (the bar's Close), keeping where the reader was. */
