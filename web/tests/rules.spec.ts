@@ -129,9 +129,12 @@ test("a star rule acts on an article as it arrives; rules pause, and Delete has 
   // Its switch pauses it, saying so in words.
   const on = rules.getByRole("switch", { name: `On: ${sentence}` });
   await expect(on).toBeChecked();
+  // The switch flips at once; wait for the server to keep it before reloading.
+  const kept = page.waitForResponse((answer) => answer.url().endsWith("/paused") && answer.ok());
   await on.click();
   await expect(on).not.toBeChecked();
   await expect(rules).toContainText(`${sentence} Paused.`);
+  await kept;
   await page.reload();
   await appReady(page);
   await expect(rules.getByRole("switch", { name: `On: ${sentence}` })).not.toBeChecked();
