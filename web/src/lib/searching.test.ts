@@ -54,6 +54,23 @@ describe("searching", () => {
     expect(searching.shown).toEqual(SAVED.query);
   });
 
+  it("a saved search with nothing to search for shows the place's own list", () => {
+    const searching = new Searching(FEED);
+    const empty = { ...SAVED, query: emptyQuery({ kind: "view", view: "unread" }) };
+    searching.reset({ kind: "search", id: 9 }, empty);
+    expect(searching.query).toEqual(empty.query);
+    expect(searching.shown).toBeUndefined();
+  });
+
+  it("Escape on a saved search puts back what was saved", () => {
+    const searching = new Searching(FEED);
+    searching.reset({ kind: "search", id: 9 }, SAVED);
+    searching.changed({ ...SAVED.query, words: "rust lang" }, true);
+    searching.close({ kind: "search", id: 9 }, SAVED);
+    expect(searching.query).toEqual(SAVED.query);
+    expect(searching.shown).toEqual(SAVED.query);
+  });
+
   it("puts the phone's field away only when nothing is searched", () => {
     const searching = new Searching(FEED);
     expect(searching.putAway()).toBe(false);
