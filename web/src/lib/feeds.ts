@@ -129,6 +129,20 @@ export function saveOpenFolders(open: number[]) {
   setDeviceText(OPEN_KEY, JSON.stringify(open));
 }
 
+/**
+ * What choosing a folder's name in the sidebar does: the whole row is its
+ * toggle (decision 0123). Choosing the folder you're already in folds or
+ * unfolds it and stays put; choosing a closed one opens it and goes there; an
+ * open one elsewhere is just gone to. `plain` is false on a phone, in the
+ * sidebar's search results, or with ⌘, Ctrl or Shift held (a new tab or
+ * window): then it's only gone to.
+ */
+export function folderChoice(here: boolean, open: boolean, plain: boolean): "fold" | "open-and-go" | "go" {
+  if (!plain) return "go";
+  if (here) return "fold";
+  return open ? "go" : "open-and-go";
+}
+
 /** How often a feed posts, in plain words ("Posts about 3 times a week"), or nothing if it can't be said just now (decision 0105). */
 export async function feedFrequency(id: number): Promise<string | undefined> {
   try {

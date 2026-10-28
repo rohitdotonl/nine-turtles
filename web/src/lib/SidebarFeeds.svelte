@@ -31,7 +31,7 @@
 <script lang="ts">
   import Icon from "./Icon.svelte";
   import type { Feed, Folder } from "./shapes";
-  import { findByName, folderUnread, inDevanagari, plainSourceName, saveOpenFolders, savedOpenFolders, unreadLabel } from "./feeds";
+  import { findByName, folderChoice, folderUnread, inDevanagari, plainSourceName, saveOpenFolders, savedOpenFolders, unreadLabel } from "./feeds";
   import { pathFor, type Route } from "./router";
   import type { SavedSearch } from "./saved";
   import type { Collection } from "./collections";
@@ -176,12 +176,10 @@
     href={pathFor(place)}
     aria-current={isHere(place) ? "page" : undefined}
     onclick={(event) => {
-      // The whole row folds (decision 0123): choosing a closed folder opens it and lists its
-      // articles; choosing the folder you're already in folds or unfolds it.
-      if (!phone && !searching && !event.metaKey && !event.ctrlKey && !event.shiftKey) {
-        if (isHere(place)) return (event.preventDefault(), toggle(folder.id));
-        if (!open.includes(folder.id)) toggle(folder.id);
-      }
+      const plain = !phone && !searching && !event.metaKey && !event.ctrlKey && !event.shiftKey;
+      const does = folderChoice(isHere(place), open.includes(folder.id), plain);
+      if (does === "fold") return (event.preventDefault(), toggle(folder.id));
+      if (does === "open-and-go") toggle(folder.id);
       follow(event, place);
     }}
     data-folder-link={folder.id}

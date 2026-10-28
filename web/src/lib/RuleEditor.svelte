@@ -16,7 +16,7 @@
   import Sheet from "./Sheet.svelte";
   import { edge } from "./edge";
   import type { Feed, Folder } from "./shapes";
-  import { ACTIONS, createRule, editRule, ruleRefused, type Rule, type RuleAction, type RuleDraft } from "./rules";
+  import { ACTIONS, blankWidth, createRule, editRule, placeChoice, ruleRefused, type Rule, type RuleAction, type RuleDraft } from "./rules";
 
   let {
     rule,
@@ -44,19 +44,6 @@
     onDelete: (rule: Rule) => void;
   } = $props();
 
-  /** Each action as the sentence's last words. */
-  const SAID: Record<RuleAction, string> = {
-    mute: "mute it",
-    star: "star it",
-    read: "mark it as read",
-  };
-
-  const ACTION_HELP: Record<RuleAction, string> = {
-    mute: "Kept, but out of every list and counted as read. Search still finds it.",
-    star: "It goes straight into Starred.",
-    read: "It stays in its feed's list, already read.",
-  };
-
   // The form starts from the rule as it is now (or a fresh one), once.
   const start = (() => rule)();
   const startFeed = (() => feedId)();
@@ -68,18 +55,7 @@
   let place = $state(
     start?.placeGone ? "" : start?.feedId != null ? `feed:${start.feedId}` : start?.folderId != null ? `folder:${start.folderId}` : startFeed !== undefined ? `feed:${startFeed}` : "all",
   );
-  /** The chosen place's words, so its menu is as wide as they are. */
-  let placeName = $derived.by(() => {
-    const [kind, id] = place.split(":");
-    if (kind === "folder") return folders.find((folder) => folder.id === Number(id))?.name ?? "";
-    if (kind === "feed") return feeds.find((feed) => feed.id === Number(id))?.title ?? "";
-    return place === "" ? "choose where…" : "all feeds";
-  });
-
-  /** A blank in the sentence is as wide as its words (and a menu's small arrow), so the sentence reads without gaps. */
-  function fit(words: string, arrow = 1.25): string {
-    return `calc(${Math.min(words.length, 28) * 0.5 + 0.3}em + ${arrow}rem)`;
-  }
+  let chosen = $derived(ACTIONS.find((choice) => choice.value === action) ?? ACTIONS[0]!);
 
   let busy = $state(false);
   let message = $state("");
@@ -179,11 +155,11 @@
         aria-describedby="rule-words-help"
         aria-invalid={message !== "" && !words.trim() && !author.trim()}
         class="blank"
-        style:width={fit(words.padEnd(6), 0.3)}
+        style:width={blankWidth(words.padEnd(6), 0.3)}
       />
       in
       <span class="blank-pick"
-        ><select bind:value={titleOnly} aria-label="Where to look" class="blank" style:width={fit(titleOnly ? "its title" : "its title or text")}>
+        ><select bind:value={titleOnly} aria-label="Where to look" class="blank" style:width={blankWidth(titleOnly ? "its title" : "its title or text")}>
           <option value={true}>its title</option>
           <option value={false}>its title or text</option>
         </select><Icon name="chevron-down" size={14} /></span
@@ -196,10 +172,10 @@
         aria-label="Author"
         aria-describedby="rule-author-help"
         class="blank"
-        style:width={fit(author.padEnd(10), 0.3)}
+        style:width={blankWidth(author.padEnd(10), 0.3)}
       />, from
       <span class="blank-pick"
-        ><select bind:value={place} aria-label="In" aria-invalid={place === ""} class="blank" style:width={fit(placeName)}>
+        ><select bind:value={place} aria-label="In" aria-invalid={place === ""} class="blank" style:width={blankWidth(placeChoice(place, feeds, folders))}>
           {#if place === ""}<option value="" disabled>choose where…</option>{/if}
           <option value="all">all feeds</option>
           {#if folders.length > 0}
@@ -219,9 +195,9 @@
         </select><Icon name="chevron-down" size={14} /></span
       >, then
       <span class="blank-pick"
-        ><select bind:value={action} aria-label="Then" aria-describedby="rule-action-help" class="blank" style:width={fit(SAID[action])}>
+        ><select bind:value={action} aria-label="Then" aria-describedby="rule-action-help" class="blank" style:width={blankWidth(chosen.words)}>
           {#each ACTIONS as choice (choice.value)}
-            <option value={choice.value}>{SAID[choice.value]}</option>
+            <option value={choice.value}>{choice.words}</option>
           {/each}
         </select><Icon name="chevron-down" size={14} /></span
       >.
@@ -229,7 +205,7 @@
 
     <!-- What the chosen action does, and how words are found, in quiet words under the sentence. -->
     <div class="flex flex-col gap-1 text-small text-muted">
-      <span id="rule-action-help">{ACTION_HELP[action]}</span>
+      <span id="rule-action-help">{chosen.help}</span>
       <span id="rule-words-help">Words are found whole, whatever their capital letters.</span>
       <span id="rule-author-help" class="sr-only">Optional: only articles by this author.</span>
     </div>

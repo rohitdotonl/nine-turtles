@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Feed } from "./shapes";
-import { explain, findByName, folderUnread, inDevanagari, plainSourceName, unreadLabel, type Problem } from "./feeds";
+import { explain, findByName, folderChoice, folderUnread, inDevanagari, plainSourceName, unreadLabel, type Problem } from "./feeds";
 
 describe("the add field's messages", () => {
   it("are calm, plain and never an error code", () => {
@@ -75,5 +75,18 @@ describe("source names in the article list", () => {
     expect(plainSourceName("Notes (2026)")).toBe("Notes (2026)");
     // A name that is only an address stays as it is.
     expect(plainSourceName("(hi@example.com)")).toBe("(hi@example.com)");
+  });
+});
+
+describe("folderChoice", () => {
+  it("folds the folder you're in, opens a closed one, and only goes to an open one", () => {
+    expect(folderChoice(true, true, true)).toBe("fold");
+    expect(folderChoice(true, false, true)).toBe("fold");
+    expect(folderChoice(false, false, true)).toBe("open-and-go");
+    expect(folderChoice(false, true, true)).toBe("go");
+  });
+  it("only goes there on a phone, in search results or with a key held for a new tab", () => {
+    expect(folderChoice(true, true, false)).toBe("go");
+    expect(folderChoice(false, false, false)).toBe("go");
   });
 });
