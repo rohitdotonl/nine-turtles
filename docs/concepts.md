@@ -160,7 +160,8 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - When a shortcut applies: what's on screen at the press (`KeyScene`) and what the screen can do (`KeyHands`), decided in one place (`shortcuts.ts`)
 - Moving between places: lists, sheets that open over a place (`underSheet`), what a move keeps (`moveTo`), giving the keyboard back when a sheet closes (`Opener`) and the browser's history steps (`Steps`), in `navigation.ts`
 - The screen's arrangement: the width step, which areas show (`panesFor`), the sidebar and list toggles and their dragged widths, kept on the device (`ScreenLayout`, in `layout.svelte.ts`)
-- The search on screen: what the field holds, the results the list shows, searching a moment after typing stops, and the phone's Search field (`Searching`, in `searching.svelte.ts`)
+- The search on screen: what the field holds, the results the list shows, searching a moment after typing stops, the phone's Search field, and what Save search will save (`Searching`, in `searching.svelte.ts`)
+- The collection sheets on screen: Add to collection and Rename, giving the keyboard back when they close, and the Undo line when an article came off a collection (`CollectionSheets`, in `collecting.svelte.ts`)
 
 ## Data and the database
 

@@ -49,9 +49,10 @@
   import { device } from "./appearance.svelte";
   import { VIEWS, VIEW_NAMES, inSettings, nameFor, parentOf, parse, pathFor, titleFor, type Route, type View } from "./router";
   import { sharedAddress } from "./share";
-  import { resultsTitle, scopeFor, searchParams, searchedTerms, type Query } from "./search";
+  import { resultsTitle, scopeFor, searchParams, searchedTerms } from "./search";
   import { sameQuery, type SavedSearch } from "./saved";
-  import { putBack, takenOff, type Collection, type CollectionChange } from "./collections";
+  import type { Collection, CollectionChange } from "./collections";
+  import { CollectionSheets } from "./collecting.svelte";
   import { Searching } from "./searching.svelte";
   import { LoadedLibrary } from "./library.svelte";
   import { startingStep, stepOf, type Screen } from "./steps";
@@ -142,13 +143,8 @@
   });
   /** Feeds set to flow past in Edit feed: no count, and their rows look as in river mode (SPEC section 15). */
   let flowing = $derived(new Set((library.feeds ?? []).filter((feed) => feed.river).map((feed) => feed.id)));
-  /** The article whose "Add to collection" sheet is open, and the collection being renamed (decision 0108). */
-  let collecting: Article | undefined = $state();
-  let renaming: Collection | undefined = $state();
-  /** What had the keyboard when one of those two sheets opened, to give it back. */
-  const collectionOpener = new Opener();
-  /** What "Save search" or "Edit saved search" will save: the search showing when it was opened. */
-  let toSave: Query | undefined = $state();
+  /** "Add to collection" and a collection's "Rename…" (collecting.svelte.ts, decision 0108). */
+  const collectionSheets = new CollectionSheets();
   /** What's typed in the sidebar search. */
   let search = $state("");
   /** What the next list's line says on arrival (after unsubscribing or deleting a folder). */
@@ -263,7 +259,7 @@
     sheet &&
       (route.kind === "add-feed" ||
         route.kind === "new-to-feeds" ||
-        (route.kind === "save-search" && toSave !== undefined) ||
+        (route.kind === "save-search" && searching.saving !== undefined) ||
         (route.kind === "edit-search" && currentSearch !== undefined) ||
         (route.kind === "edit-feed" && currentFeed !== undefined) ||
         (route.kind === "edit-folder" && currentFolder !== undefined)),
@@ -436,7 +432,7 @@
     if (collection) {
       groups.push({
         items: [
-          { label: "Rename…", onSelect: () => openRenaming(collection) },
+          { label: "Rename…", onSelect: () => collectionSheets.rename(collection, document.activeElement) },
           { label: "Delete", onSelect: () => void removeCollection(collection) },
         ],
       });
@@ -451,7 +447,7 @@
 
   /** Opens "Save search" or "Edit saved search" with the search showing now. */
   function openSaving(next: Route) {
-    toSave = searching.toSave();
+    searching.holdForSaving();
     go(next);
   }
 
@@ -494,7 +490,7 @@
     const back = () => {
       let next = parse(location.pathname);
       // Back to "Save search" after it was used: there's nothing to save now, so the place it was over.
-      if (next.kind === "save-search" && !toSave) {
+      if (next.kind === "save-search" && !searching.saving) {
         next = lastPlace;
         history.replaceState(history.state, "", pathFor(next));
       }
@@ -757,7 +753,7 @@
   /** Back from "Save search" or "Edit saved search", saved or not. A new saved search opens. */
   function searchSaved(saved?: SavedSearch) {
     // Used: Back to "Save search" later finds nothing to save, and opens the place it was over.
-    toSave = undefined;
+    searching.saving = undefined;
     if (saved) library.searchSaved(saved);
     if (saved && route.kind === "save-search") {
       go({ kind: "search", id: saved.id });
@@ -773,41 +769,20 @@
   async function deleteSearch(saved: SavedSearch): Promise<string | undefined> {
     const done = await library.deleteSearch(saved);
     if (typeof done === "string") return done;
-    toSave = undefined;
+    searching.saving = undefined;
     go(home, done);
     return undefined;
   }
 
   /** "Add to collection…" or l: the sheet of the reader's collections for this article (decision 0108). */
   function openCollecting(article: Article) {
-    collectionOpener.remember(document.activeElement);
-    collecting = article;
+    collectionSheets.collect(article, document.activeElement);
   }
 
-  /** A collection's "Rename…". */
-  function openRenaming(collection: Collection) {
-    collectionOpener.remember(document.activeElement);
-    renaming = collection;
-  }
-
-  /** One of the collection sheets closed: the keyboard goes back to what opened it. */
-  function collectionSheetClosed() {
-    collecting = undefined;
-    renaming = undefined;
-    collectionOpener.giveBack();
-  }
-
-  /**
-   * "Add to collection" closed. A Save that took the article off any
-   * collection says so in the list's line with Undo, as other removals do,
-   * since an article kept only by a collection could otherwise be lost to
-   * the yearly clean-up. Inside a collection the article's row stays until
-   * the list is next loaded: nothing moves unless you move it.
-   */
+  /** "Add to collection" closed: a Save that took the article off a collection says so in the list's line, with Undo. */
   function collectingClosed(change?: CollectionChange) {
-    const off = change ? takenOff(change, library.collections) : undefined;
-    collectionSheetClosed();
-    if (change && off) itemList?.offer(off.message, () => putBack(change.article, off.ids));
+    const line = collectionSheets.closedCollecting(change, library.collections);
+    if (line) itemList?.offer(line.message, line.undo);
   }
 
   /** Deletes a collection (never an article), then shows Unread (All in river mode) with "Deleted … · Undo". */
@@ -1553,9 +1528,9 @@
             </div>
           </div>
         </section>
-      {:else if !sheet && route.kind === "save-search" && toSave}
+      {:else if !sheet && route.kind === "save-search" && searching.saving}
         <EditSearch
-          query={toSave}
+          query={searching.saving}
           library={library.names}
           bind:heading={listHeading}
           besideToggle={!phone && !panes.sidebar}
@@ -1566,7 +1541,7 @@
         {#key currentSearch.id}
           <EditSearch
             saved={currentSearch}
-            query={toSave ?? currentSearch.query}
+            query={searching.saving ?? currentSearch.query}
             library={library.names}
             bind:heading={listHeading}
             besideToggle={!phone && !panes.sidebar}
@@ -1814,17 +1789,17 @@
 
 <CheatSheet bind:open={cheatSheetOpen} bind:editing={cheatSheetEditing} {river} />
 
-{#if collecting}
-  <AddToCollection article={collecting} collections={library.collections} onMade={(made) => library.collectionMade(made)} onClose={collectingClosed} />
-{:else if renaming}
-  {#key renaming.id}
+{#if collectionSheets.collecting}
+  <AddToCollection article={collectionSheets.collecting} collections={library.collections} onMade={(made) => library.collectionMade(made)} onClose={collectingClosed} />
+{:else if collectionSheets.renaming}
+  {#key collectionSheets.renaming.id}
     <RenameCollection
-      collection={renaming}
+      collection={collectionSheets.renaming}
       onSaved={(name) => {
-        if (renaming) library.collectionRenamed(renaming.id, name);
-        collectionSheetClosed();
+        if (collectionSheets.renaming) library.collectionRenamed(collectionSheets.renaming.id, name);
+        collectionSheets.closed();
       }}
-      onCancel={collectionSheetClosed}
+      onCancel={() => collectionSheets.closed()}
     />
   {/key}
 {/if}
@@ -1853,14 +1828,14 @@
       onMoved={(after) => feedMoved(currentFeed!.id, after.id, () => sheetHeading)}
     />
   {/key}
-{:else if sheet && route.kind === "save-search" && toSave}
-  <EditSearch sheet query={toSave} library={library.names} bind:heading={sheetHeading} onSaved={searchSaved} onCancel={() => searchSaved()} />
+{:else if sheet && route.kind === "save-search" && searching.saving}
+  <EditSearch sheet query={searching.saving} library={library.names} bind:heading={sheetHeading} onSaved={searchSaved} onCancel={() => searchSaved()} />
 {:else if sheet && route.kind === "edit-search" && currentSearch}
   {#key currentSearch.id}
     <EditSearch
       sheet
       saved={currentSearch}
-      query={toSave ?? currentSearch.query}
+      query={searching.saving ?? currentSearch.query}
       library={library.names}
       bind:heading={sheetHeading}
       onSaved={searchSaved}
