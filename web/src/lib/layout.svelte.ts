@@ -107,8 +107,9 @@ export class ScreenLayout {
 
   /**
    * `reading` says whether a phone shows an opened article in the list's
-   * place; it must read Svelte state (`$state`), or `panes` won't follow it. On a phone-narrow window the sidebar is the home screen, but an
-   * address that names a place opens that place (`openingHome` false).
+   * place; it must read Svelte state (`$state`), or `panes` won't follow it.
+   * On a phone-narrow window the sidebar is the home screen, but an address
+   * that names a place opens that place (`openingHome` false).
    */
   constructor(width: Width, windowWidth: number, reading: () => boolean, openingHome: boolean) {
     this.width = width;
