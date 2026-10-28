@@ -106,9 +106,9 @@
     >{/if}
 {/snippet}
 
-{#snippet name(text: string)}
-  <!-- Devanagari a touch larger, so it sits level with Latin names (decision 0041). -->
-  <span class={["min-w-0 flex-1 truncate", inDevanagari(text) && "devanagari"]}>{text}</span>
+{#snippet name(text: string, folder = false)}
+  <!-- Devanagari a touch larger, so it sits level with Latin names (decision 0041). A folder's name in quiet spaced capitals. -->
+  <span class={["min-w-0 flex-1 truncate", inDevanagari(text) && "devanagari", folder && "folder-name"]}>{text}</span>
 {/snippet}
 
 {#snippet leadsOn()}
@@ -183,7 +183,7 @@
     data-folder-link={folder.id}
     title={folder.name}
     class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center rounded-md pr-3.5 text-ui pointer-fine:text-small", padded ? "gap-3 pl-[38px]" : "gap-3 pl-3", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
-    >{@render name(folder.name)}<span class="folder-count contents">{@render count(folderUnread(folder, feeds))}</span>{@render leadsOn()}</a
+    >{@render name(folder.name, !padded)}<span class="folder-count contents">{@render count(folderUnread(folder, feeds))}</span>{@render leadsOn()}</a
   >
 {/snippet}
 
@@ -285,6 +285,16 @@
     A faint line down the left of an open folder's feeds, under the folder's
     name, so the feeds read as its contents at a glance (decision 0123).
   */
+  .folder-name {
+    font-size: 0.8em;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  [aria-current] > .folder-name {
+    color: var(--ink);
+  }
   .folder-feeds {
     position: relative;
   }
