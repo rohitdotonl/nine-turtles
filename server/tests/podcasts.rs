@@ -38,7 +38,7 @@ async fn podcast(audio_asked: Arc<AtomicUsize>) -> String {
 
 fn feed() -> impl IntoResponse {
     let now = nine_turtles::now();
-    let date = |days: i64| nine_turtles::starred::rfc3339(now - days * 86_400);
+    let date = |days: i64| nine_turtles::dates::rfc3339(now - days * 86_400);
     (
         [(header::CONTENT_TYPE, "application/rss+xml")],
         format!(

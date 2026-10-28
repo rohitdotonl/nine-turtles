@@ -24,7 +24,7 @@ fn feed() -> impl IntoResponse {
             format!(
                 "<entry><title>Post {day}</title><id>post-{day}</id>\
                  <updated>{}</updated></entry>",
-                nine_turtles::starred::rfc3339(now - day * 86_400)
+                nine_turtles::dates::rfc3339(now - day * 86_400)
             )
         })
         .collect();

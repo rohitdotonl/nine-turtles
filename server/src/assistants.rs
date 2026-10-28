@@ -43,6 +43,7 @@ use sqlx::SqlitePool;
 use crate::{
     AppState,
     auth::{SignedIn, database_problem, new_token, scramble},
+    encoding::{base64url, form_pairs},
     log, now,
 };
 
@@ -374,14 +375,9 @@ struct Asked {
 
 /// The parts of a query string, the first of each name.
 fn query_pairs(query: &str) -> HashMap<String, String> {
-    let query = query.trim_start_matches('?');
     let mut pairs = HashMap::new();
-    if let Ok(url) = Url::parse(&format!("http://query.invalid/?{query}")) {
-        for (key, value) in url.query_pairs() {
-            pairs
-                .entry(key.into_owned())
-                .or_insert_with(|| value.into_owned());
-        }
+    for (key, value) in form_pairs(query) {
+        pairs.entry(key).or_insert(value);
     }
     pairs
 }
@@ -554,26 +550,6 @@ async fn deny(
     }
 }
 
-/// base64url without padding, as PKCE writes a SHA-256.
-fn base64url(bytes: &[u8]) -> String {
-    const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-    let mut text = String::with_capacity(bytes.len().div_ceil(3) * 4);
-    for chunk in bytes.chunks(3) {
-        let b = [
-            chunk[0],
-            *chunk.get(1).unwrap_or(&0),
-            *chunk.get(2).unwrap_or(&0),
-        ];
-        let n = (u32::from(b[0]) << 16) | (u32::from(b[1]) << 8) | u32::from(b[2]);
-        let take = chunk.len() + 1;
-        for i in 0..take {
-            let index = (n >> (18 - 6 * i)) & 63;
-            text.push(char::from(ALPHABET[index as usize]));
-        }
-    }
-    text
-}
-
 /// PKCE (RFC 7636): the secret the assistant kept matches the challenge it
 /// sent before the reader approved.
 pub fn verifier_matches(verifier: &str, challenge: &str) -> bool {
@@ -665,7 +641,7 @@ async fn token(
 fn basic_client_id(headers: &HeaderMap) -> Option<String> {
     let value = headers.get(header::AUTHORIZATION)?.to_str().ok()?;
     let encoded = value.trim().strip_prefix("Basic ")?;
-    let decoded = String::from_utf8(crate::payments::base64_decode(encoded)?).ok()?;
+    let decoded = String::from_utf8(crate::encoding::from_base64(encoded)?).ok()?;
     let id = decoded.split(':').next()?;
     // Percent-encoded, as RFC 6749 asks; client ids here never need it.
     query_pairs(&format!("id={id}")).remove("id")
@@ -985,9 +961,6 @@ mod tests {
             "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXl",
             "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"
         ));
-        assert_eq!(base64url(b"f"), "Zg");
-        assert_eq!(base64url(b"fo"), "Zm8");
-        assert_eq!(base64url(b"foo"), "Zm9v");
     }
 
     #[test]

@@ -43,7 +43,7 @@ use crate::{
     discover, feed,
     feeds::{Followed, follow_in, make_room, offer_hub, refresh_shared, store_articles},
     fetch::{self, FetchError, Fetched},
-    folders, frequency, now,
+    folders, frequency, now, refused,
 };
 
 /// Failed checks in a row before a feed is listed.
@@ -198,10 +198,6 @@ async fn list(SignedIn(person): SignedIn, State(state): State<AppState>) -> Resp
         Ok(feeds) => Json(json!({ "feeds": feeds })).into_response(),
         Err(error) => database_problem("listing the feeds that aren't working", &error),
     }
-}
-
-fn refused(status: StatusCode, error: &str) -> Response {
-    (status, Json(json!({ "error": error }))).into_response()
 }
 
 /// Retry: checks the feed now, unless that would be impolite (`may_ask`),

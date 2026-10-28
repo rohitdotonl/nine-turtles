@@ -44,7 +44,7 @@ use crate::{
         session_cookie,
     },
     config::PasswordSetting,
-    log, now,
+    log, now, refused,
 };
 
 /// How long the browser has to answer a challenge.
@@ -218,10 +218,6 @@ pub fn routes() -> Router<AppState> {
         .route("/api/passkeys/{id}/undo", post(undo_remove))
         .route("/api/sign-in/passkey", post(sign_in_start))
         .route("/api/sign-in/passkey/finish", post(sign_in_finish))
-}
-
-fn refused(status: StatusCode, error: &str) -> Response {
-    (status, Json(json!({ "error": error }))).into_response()
 }
 
 fn checker(state: &AppState) -> Result<&Webauthn, Box<Response>> {

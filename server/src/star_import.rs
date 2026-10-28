@@ -319,7 +319,7 @@ fn time(value: &Value) -> Option<i64> {
             .or_else(|| number.as_f64().map(|float| float as i64))?,
         Value::String(text) => match text.trim().parse::<i64>() {
             Ok(number) => number,
-            Err(_) => return rfc3339(text.trim()),
+            Err(_) => return crate::dates::parse_rfc3339(text),
         },
         _ => return None,
     };
@@ -329,52 +329,6 @@ fn time(value: &Value) -> Option<i64> {
         n => n,
     };
     (seconds > 0).then_some(seconds)
-}
-
-/// Reads `2026-10-23T20:18:35Z` (or with a fraction of a second, a space for
-/// the `T`, or an offset such as `+05:30`) as seconds since 1970.
-pub fn rfc3339(text: &str) -> Option<i64> {
-    let number = |range: std::ops::Range<usize>| -> Option<i64> {
-        let part = text.get(range)?;
-        part.bytes()
-            .all(|byte| byte.is_ascii_digit())
-            .then(|| part.parse().ok())?
-    };
-    let (year, month, day) = (number(0..4)?, number(5..7)?, number(8..10)?);
-    let (hour, minute, second) = (number(11..13)?, number(14..16)?, number(17..19)?);
-    let separators = text.as_bytes();
-    if separators.get(4) != Some(&b'-')
-        || separators.get(7) != Some(&b'-')
-        || !matches!(separators.get(10), Some(b'T' | b't' | b' '))
-        || separators.get(13) != Some(&b':')
-        || separators.get(16) != Some(&b':')
-        || !(1..=12).contains(&month)
-        || !(1..=31).contains(&day)
-        || hour > 23
-        || minute > 59
-        || second > 60
-    {
-        return None;
-    }
-    let rest = text[19..].trim_start_matches(|c: char| c == '.' || c.is_ascii_digit());
-    let offset = match rest.as_bytes().first() {
-        None | Some(b'Z' | b'z') => 0,
-        Some(sign @ (b'+' | b'-')) => {
-            let hours: i64 = rest.get(1..3)?.parse().ok()?;
-            let minutes: i64 = rest.get(4..6).map_or(Some(0), |m| m.parse().ok())?;
-            let offset = hours * 3_600 + minutes * 60;
-            if *sign == b'+' { offset } else { -offset }
-        }
-        _ => return None,
-    };
-    // A calendar date to days since 1970 (Howard Hinnant's "days_from_civil").
-    let year = if month <= 2 { year - 1 } else { year };
-    let era = year.div_euclid(400);
-    let year_of_era = year.rem_euclid(400);
-    let day_of_year = (153 * (if month > 2 { month - 3 } else { month + 9 }) + 2) / 5 + day - 1;
-    let day_of_era = year_of_era * 365 + year_of_era / 4 - year_of_era / 100 + day_of_year;
-    let days = era * 146_097 + day_of_era - 719_468;
-    Some(days * 86_400 + hour * 3_600 + minute * 60 + second - offset)
 }
 
 /// What `star_all` did.
@@ -635,13 +589,6 @@ mod tests {
 
     #[test]
     fn times_are_read_in_seconds_milliseconds_or_rfc_3339() {
-        assert_eq!(rfc3339("2026-10-23T20:18:35Z"), Some(1_792_786_715));
-        assert_eq!(rfc3339("2026-10-23T20:18:35.123456Z"), Some(1_792_786_715));
-        assert_eq!(rfc3339("2026-10-24T01:48:35+05:30"), Some(1_792_786_715));
-        assert_eq!(rfc3339("2000-02-29 00:00:00"), Some(951_782_400));
-        assert_eq!(rfc3339("1969-12-31T23:59:59Z"), Some(-1));
-        assert_eq!(rfc3339("yesterday"), None);
-        assert_eq!(rfc3339("2026-13-01T00:00:00Z"), None);
         assert_eq!(time(&json!(1_792_786_715)), Some(1_792_786_715));
         assert_eq!(time(&json!(1_792_786_715_000_i64)), Some(1_792_786_715));
         assert_eq!(time(&json!("1792786715000000")), Some(1_792_786_715));

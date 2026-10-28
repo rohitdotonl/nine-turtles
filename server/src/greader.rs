@@ -32,6 +32,7 @@ use sqlx::{QueryBuilder, Sqlite};
 use crate::{
     AppState, apps,
     auth::database_problem,
+    encoding::form_pairs,
     feed, feeds, folders, log,
     marks::{MOST_AT_ONCE, READ_SQL, STAR_SQL, now_ms},
     now,
@@ -141,50 +142,16 @@ impl FromRequest<AppState> for Params {
     type Rejection = Response;
 
     async fn from_request(request: Request, state: &AppState) -> Result<Self, Response> {
-        let mut pairs = request.uri().query().map(decode_form).unwrap_or_default();
+        let mut pairs = request.uri().query().map(form_pairs).unwrap_or_default();
         let body = Bytes::from_request(request, state)
             .await
             .map_err(IntoResponse::into_response)?;
         if body.len() > LARGEST_BODY {
             return Err(StatusCode::PAYLOAD_TOO_LARGE.into_response());
         }
-        pairs.extend(decode_form(&String::from_utf8_lossy(&body)));
+        pairs.extend(form_pairs(&String::from_utf8_lossy(&body)));
         Ok(Self(pairs))
     }
-}
-
-/// Reads `a=1&b=two+words&c=%2F` into pairs.
-fn decode_form(text: &str) -> Vec<(String, String)> {
-    text.split('&')
-        .filter(|pair| !pair.is_empty())
-        .map(|pair| {
-            let (name, value) = pair.split_once('=').unwrap_or((pair, ""));
-            (percent_decode(name), percent_decode(value))
-        })
-        .collect()
-}
-
-fn percent_decode(text: &str) -> String {
-    let bytes = text.as_bytes();
-    let hex = |at: usize| {
-        bytes
-            .get(at)
-            .and_then(|byte| char::from(*byte).to_digit(16))
-    };
-    let mut out = Vec::with_capacity(bytes.len());
-    let mut at = 0;
-    while let Some(&byte) = bytes.get(at) {
-        match (byte, hex(at + 1), hex(at + 2)) {
-            (b'+', _, _) => out.push(b' '),
-            (b'%', Some(high), Some(low)) => {
-                out.push(u8::try_from(high * 16 + low).unwrap_or(b'?'));
-                at += 2;
-            }
-            _ => out.push(byte),
-        }
-        at += 1;
-    }
-    String::from_utf8_lossy(&out).into_owned()
 }
 
 /// Proof that a request comes from an app holding a reader's app password,
@@ -1108,21 +1075,6 @@ mod tests {
             Some(42)
         );
         assert_eq!(item_number("nonsense"), None);
-    }
-
-    #[test]
-    fn forms_are_decoded() {
-        assert_eq!(
-            decode_form("i=1&i=2&a=user%2F-%2Fstate%2Fcom.google%2Fread&T=x+y&bad=%zz&end=%"),
-            vec![
-                ("i".to_owned(), "1".to_owned()),
-                ("i".to_owned(), "2".to_owned()),
-                ("a".to_owned(), "user/-/state/com.google/read".to_owned()),
-                ("T".to_owned(), "x y".to_owned()),
-                ("bad".to_owned(), "%zz".to_owned()),
-                ("end".to_owned(), "%".to_owned()),
-            ]
-        );
     }
 
     #[test]

@@ -14,6 +14,8 @@ use reqwest::{Client, Method, Url};
 use sha2::{Digest, Sha256};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
+use crate::encoding::hex;
+
 /// How long one upload or download may take. Generous: a big database over
 /// a slow line can take minutes.
 const TIME_LIMIT: Duration = Duration::from_secs(30 * 60);
@@ -290,10 +292,6 @@ fn hmac(key: &[u8], data: &[u8]) -> Vec<u8> {
     mac.finalize().into_bytes().to_vec()
 }
 
-fn hex(bytes: &[u8]) -> String {
-    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
-}
-
 /// Percent-encodes everything but letters, digits and `-_.~` (and `/` when
 /// `keep_slash`), the way the signature expects.
 fn encode(text: &str, keep_slash: bool) -> String {
@@ -313,7 +311,7 @@ fn encode(text: &str, keep_slash: bool) -> String {
 
 /// `20261025T030000Z` for seconds since 1970.
 fn amz_date(at: i64) -> String {
-    let (year, month, day) = crate::backup::civil_date(at);
+    let (year, month, day) = crate::dates::civil_date(at);
     let seconds = at.rem_euclid(86_400);
     format!(
         "{year:04}{month:02}{day:02}T{:02}{:02}{:02}Z",

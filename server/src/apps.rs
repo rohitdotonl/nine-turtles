@@ -19,6 +19,7 @@ use serde_json::json;
 use crate::{
     AppState,
     auth::{SignedIn, database_problem, scramble},
+    encoding::hex,
     log, now,
 };
 
@@ -143,14 +144,6 @@ fn new_password() -> Result<String, getrandom::Error> {
         .map(|group| String::from_utf8_lossy(group).into_owned())
         .collect::<Vec<_>>()
         .join("-"))
-}
-
-fn hex(bytes: &[u8]) -> String {
-    use std::fmt::Write as _;
-    bytes.iter().fold(String::new(), |mut text, byte| {
-        let _ = write!(text, "{byte:02x}");
-        text
-    })
 }
 
 /// The app password an app sends with each request, if any: Google Reader

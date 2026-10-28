@@ -40,7 +40,8 @@ use crate::{
     config::PasswordSetting,
     email::SIGN_OFF,
     log, now,
-    people::{self, is_taken, plausible_email, refused, too_many},
+    people::{self, is_taken, plausible_email, too_many},
+    refused,
 };
 
 /// A link to confirm an address (a new account's, or a changed one) works this long.

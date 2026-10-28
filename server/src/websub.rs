@@ -38,6 +38,7 @@ use serde::Deserialize;
 use crate::{
     AppState,
     checking::{DAY, HOUR, SHORTEST_WAIT},
+    encoding::{from_hex, random_hex},
     feed::{self, Hub},
     feeds::store_articles,
     fetch::{self, SIZE_LIMIT},
@@ -129,7 +130,7 @@ pub async fn offered(
     }
     // New, or the hub changed: a fresh address and secret, so nothing the
     // old hub sends is believed any more.
-    let (Some(token), Some(secret)) = (random_hex(16), random_hex(32)) else {
+    let (Ok(token), Ok(secret)) = (random_hex(16), random_hex(32)) else {
         return Ok(());
     };
     sqlx::query(
@@ -464,24 +465,6 @@ pub fn signed(secret: &[u8], body: &[u8], signature: Option<&str>) -> bool {
     }
 }
 
-fn from_hex(text: &str) -> Option<Vec<u8>> {
-    let text = text.trim();
-    if text.is_empty() || !text.len().is_multiple_of(2) {
-        return None;
-    }
-    (0..text.len())
-        .step_by(2)
-        .map(|at| u8::from_str_radix(text.get(at..at + 2)?, 16).ok())
-        .collect()
-}
-
-/// `bytes` random bytes, written as hex; none if the computer can't give them.
-fn random_hex(bytes: usize) -> Option<String> {
-    let mut random = vec![0u8; bytes];
-    getrandom::fill(&mut random).ok()?;
-    Some(random.iter().map(|byte| format!("{byte:02x}")).collect())
-}
-
 fn database_problem(error: &sqlx::Error) -> Response {
     log::problem(&format!(
         "database error while handling a WebSub hub: {error}"
@@ -492,6 +475,7 @@ fn database_problem(error: &sqlx::Error) -> Response {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::encoding::hex;
 
     #[test]
     fn only_a_delivery_signed_with_the_feeds_secret_is_believed() {
@@ -500,13 +484,7 @@ mod tests {
         let sign = |method: &str| {
             let mut mac = <Hmac<sha2::Sha256> as KeyInit>::new_from_slice(secret).unwrap();
             mac.update(body);
-            let hex: String = mac
-                .finalize()
-                .into_bytes()
-                .iter()
-                .map(|byte| format!("{byte:02x}"))
-                .collect();
-            format!("{method}={hex}")
+            format!("{method}={}", hex(&mac.finalize().into_bytes()))
         };
         assert!(signed(secret, body, Some(&sign("sha256"))));
         assert!(signed(secret, body, Some(&sign("SHA256"))));
@@ -554,14 +532,5 @@ mod tests {
             callback(&public, "abc"),
             "https://app.nineturtles.app/websub/abc"
         );
-    }
-
-    #[test]
-    fn secrets_and_addresses_are_random_and_long_enough() {
-        let one = random_hex(32).unwrap();
-        assert_eq!(one.len(), 64);
-        assert_ne!(one, random_hex(32).unwrap());
-        assert_eq!(from_hex("00ff10"), Some(vec![0, 255, 16]));
-        assert_eq!(from_hex("abc"), None);
     }
 }

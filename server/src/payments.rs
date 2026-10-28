@@ -46,7 +46,9 @@ use crate::{
     AppState,
     auth::{SignedIn, database_problem},
     checking::DAY,
-    log, now,
+    dates::parse_rfc3339,
+    encoding::from_base64,
+    log, now, refused,
 };
 
 /// How long a plan whose renewal failed lasts while Dodo tries again.
@@ -170,7 +172,7 @@ pub fn settings(var: &dyn Fn(&str) -> Option<String>) -> Result<Option<Settings>
 
 /// The signing key in a webhook secret: base64 after `whsec_`.
 pub fn webhook_key(secret: &str) -> Option<Vec<u8>> {
-    let key = base64_decode(secret.trim().strip_prefix("whsec_")?)?;
+    let key = from_base64(secret.trim().strip_prefix("whsec_")?)?;
     (!key.is_empty()).then_some(key)
 }
 
@@ -358,10 +360,6 @@ async fn plan(SignedIn(person): SignedIn, State(state): State<AppState>) -> Resp
 #[derive(Deserialize)]
 struct Checkout {
     period: String,
-}
-
-fn refused(status: StatusCode, error: &str) -> Response {
-    (status, Json(json!({ "error": error }))).into_response()
 }
 
 /// Dodo couldn't be reached, or said no: logged, and a calm answer.
@@ -641,7 +639,7 @@ pub fn genuine(
         return false;
     }
     signatures.split_whitespace().any(|signature| {
-        let Some(given) = signature.strip_prefix("v1,").and_then(base64_decode) else {
+        let Some(given) = signature.strip_prefix("v1,").and_then(from_base64) else {
             return false;
         };
         <Hmac<sha2::Sha256> as KeyInit>::new_from_slice(key).is_ok_and(|mut mac| {
@@ -709,7 +707,7 @@ async fn handle(
     let message_at = event
         .get("timestamp")
         .and_then(Value::as_str)
-        .and_then(parse_time)
+        .and_then(parse_rfc3339)
         .unwrap_or(now);
 
     // Whose: whoever already has this subscription, else the reader the
@@ -737,7 +735,7 @@ async fn handle(
 
     let status =
         text(data, "status").unwrap_or_else(|| kind.trim_start_matches("subscription.").to_owned());
-    let renews_at = text(data, "next_billing_date").and_then(|date| parse_time(&date));
+    let renews_at = text(data, "next_billing_date").and_then(|date| parse_rfc3339(&date));
     let ending = data
         .get("cancel_at_next_billing_date")
         .and_then(Value::as_bool)
@@ -841,99 +839,9 @@ pub fn access_until(
     }
 }
 
-/// Seconds since 1970 for an ISO 8601 time such as
-/// `2026-11-26T11:08:33.123Z` (or with `+05:30`).
-pub fn parse_time(text: &str) -> Option<i64> {
-    let text = text.trim();
-    let number = |range: std::ops::Range<usize>| -> Option<i64> { text.get(range)?.parse().ok() };
-    let (year, month, day) = (number(0..4)?, number(5..7)?, number(8..10)?);
-    if text.get(4..5)? != "-" || text.get(7..8)? != "-" {
-        return None;
-    }
-    let (hour, minute, second) = if text.len() >= 19 {
-        (number(11..13)?, number(14..16)?, number(17..19)?)
-    } else {
-        (0, 0, 0)
-    };
-    if !(1..=12).contains(&month) || !(1..=31).contains(&day) || hour > 23 || minute > 59 {
-        return None;
-    }
-    // The offset, after any fraction of a second: Z, +hh:mm or -hh:mm.
-    let rest = text.get(19..).unwrap_or_default();
-    let rest = rest.trim_start_matches(|c: char| c == '.' || c.is_ascii_digit());
-    let offset = match rest.chars().next() {
-        Some(sign @ ('+' | '-')) => {
-            let hours: i64 = rest.get(1..3)?.parse().ok()?;
-            let minutes: i64 = rest.get(4..6).and_then(|m| m.parse().ok()).unwrap_or(0);
-            let seconds = hours * 3600 + minutes * 60;
-            if sign == '+' { seconds } else { -seconds }
-        }
-        _ => 0,
-    };
-    // Days since 1970 (Howard Hinnant's method, the reverse of `backup::civil_date`).
-    let shifted_year = if month <= 2 { year - 1 } else { year };
-    let era = shifted_year.div_euclid(400);
-    let year_of_era = shifted_year - era * 400;
-    let shifted_month = if month > 2 { month - 3 } else { month + 9 };
-    let day_of_year = (153 * shifted_month + 2) / 5 + day - 1;
-    let day_of_era = year_of_era * 365 + year_of_era / 4 - year_of_era / 100 + day_of_year;
-    let days = era * 146_097 + day_of_era - 719_468;
-    Some(days * 86_400 + hour * 3600 + minute * 60 + second - offset)
-}
-
-const BASE64: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-/// Standard base64 (with or without `=` at the end); `None` if it isn't.
-pub fn base64_decode(text: &str) -> Option<Vec<u8>> {
-    let text = text.trim().trim_end_matches('=');
-    let mut bytes = Vec::with_capacity(text.len() * 3 / 4);
-    let mut buffer: u32 = 0;
-    let mut bits = 0;
-    for character in text.bytes() {
-        let value = BASE64.iter().position(|&known| known == character)?;
-        buffer = (buffer << 6) | u32::try_from(value).ok()?;
-        bits += 6;
-        if bits >= 8 {
-            bits -= 8;
-            bytes.push(u8::try_from((buffer >> bits) & 0xff).ok()?);
-        }
-    }
-    Some(bytes)
-}
-
-/// Standard base64, with `=` at the end.
-pub fn base64_encode(bytes: &[u8]) -> String {
-    let mut text = String::with_capacity(bytes.len().div_ceil(3) * 4);
-    for chunk in bytes.chunks(3) {
-        let joined = chunk.iter().enumerate().fold(0u32, |all, (at, byte)| {
-            all | (u32::from(*byte) << (16 - 8 * at))
-        });
-        for at in 0..4 {
-            if at <= chunk.len() {
-                let index = (joined >> (18 - 6 * at)) & 0x3f;
-                text.push(char::from(BASE64[index as usize]));
-            } else {
-                text.push('=');
-            }
-        }
-    }
-    text
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn base64_goes_both_ways() {
-        for bytes in [&b""[..], b"f", b"fo", b"foo", b"foob", b"fooba", b"foobar"] {
-            assert_eq!(base64_decode(&base64_encode(bytes)).unwrap(), bytes);
-        }
-        assert_eq!(base64_encode(b"foobar"), "Zm9vYmFy");
-        assert_eq!(base64_encode(b"fo"), "Zm8=");
-        assert_eq!(base64_decode("Zm8").unwrap(), b"fo");
-        assert_eq!(base64_decode("not base64!"), None);
-    }
 
     #[test]
     fn a_webhook_secret_starts_with_whsec() {
@@ -973,19 +881,6 @@ mod tests {
         assert!(!genuine(&key, id, timestamp, signature, body, at + 6 * 60));
         assert!(!genuine(&key, "msg_other", timestamp, signature, body, at));
         assert!(!genuine(&key, id, timestamp, "", body, at));
-    }
-
-    #[test]
-    fn times_are_read_with_their_offset() {
-        assert_eq!(parse_time("1970-01-01T00:00:00Z"), Some(0));
-        assert_eq!(parse_time("2026-10-23T20:18:35Z"), Some(1_792_786_715));
-        assert_eq!(
-            parse_time("2026-10-23T20:18:35.123456Z"),
-            Some(1_792_786_715)
-        );
-        assert_eq!(parse_time("2026-10-24T01:48:35+05:30"), Some(1_792_786_715));
-        assert_eq!(parse_time("2000-02-29"), Some(951_782_400));
-        assert_eq!(parse_time("soon"), None);
     }
 
     #[test]
