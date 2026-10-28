@@ -38,7 +38,7 @@ publisher's own player, so views stay theirs").
   embedded playlist isn't one video and gets no link).
 - **The video is found from the article's link** (`watch?v=`, `youtu.be/`,
   Shorts, live videos and embed addresses), the same rules on the server
-  (`server/src/feed.rs`) and the screen (`web/src/lib/youtube.ts`), each
+  (`server/src/feed/clean.rs`) and the screen (`web/src/lib/youtube.ts`), each
   with its own tests.
 
 **Considered.** Allowing YouTube's `<iframe>` through the HTML cleaning

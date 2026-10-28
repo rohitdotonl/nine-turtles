@@ -1223,7 +1223,7 @@ pub struct FullArticle {
     /// The original article: "Open original" and Copy link go here.
     pub link: Option<String>,
     pub author: Option<String>,
-    /// The article's text, already cleaned (feed.rs). Null when the feed
+    /// The article's text, already cleaned (feed/clean.rs). Null when the feed
     /// gives only a summary.
     pub content: Option<String>,
     pub summary: Option<String>,
