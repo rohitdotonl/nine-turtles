@@ -45,16 +45,42 @@ export async function chooseKeys(next: KeyMap): Promise<void> {
   keys.chosen = next;
   const sent = saving.then(() => saveKeys(next));
   saving = sent.catch(() => undefined);
+  if (asked) asked.changed = true;
   try {
     await sent;
     confirmed = next;
+    if (asked) asked.saved = true;
   } catch (problem) {
     if (mine !== changes) return;
     keys.chosen = confirmed;
+    // None of the reader's changes reached the server: its answer, once come, is what it has.
+    if (asked && !asked.saved) {
+      asked.changed = false;
+      if (asked.answer) keys.chosen = confirmed = asked.answer;
+    }
     throw problem;
   } finally {
     unsaved--;
   }
+}
+
+/** The keys asked for from the server, and what the reader did while the answer was on its way. */
+let asked: { changed: boolean; saved: boolean; answer?: KeyMap } | undefined;
+
+/**
+ * The keys are being asked for from the server: call what this answers with
+ * the keys when they arrive. A change the reader made in the meantime is newer
+ * and stays, unless it couldn't be saved and nothing else was, when the
+ * server's keys are shown after all.
+ */
+export function keysAsked(): (answer: KeyMap) => void {
+  const mine: NonNullable<typeof asked> = { changed: false, saved: false };
+  asked = mine;
+  return (answer) => {
+    if (asked !== mine) return;
+    mine.answer = answer;
+    if (!mine.changed) keys.chosen = answer;
+  };
 }
 
 /** Signed out: this device's copy goes, and the keys are nine turtles' own until the next reader's arrive. */
@@ -62,4 +88,5 @@ export function forgetChosenKeys(): void {
   forgetKeys();
   keys.chosen = {};
   confirmed = {};
+  asked = undefined;
 }
