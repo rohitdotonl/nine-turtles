@@ -1292,6 +1292,7 @@
                 "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-2.5 pr-3.5 pl-3 text-ui pointer-fine:text-small",
                 current ? "font-semibold text-ink" : "text-ink-2",
               ]}
+              ><span class={current ? (view === "starred" ? "text-star" : "text-ink") : "text-muted"}><Icon name={VIEW_ICONS[view]} size={16} filled={view === "starred" && current} /></span
               ><span class="min-w-0 flex-1">{VIEW_NAMES[view]}</span>{#if phone}<span class="-mr-1 shrink-0 text-muted"><Icon name="chevron-right" size={16} /></span>{/if}</a
             >
           </li>

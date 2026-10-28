@@ -4,7 +4,7 @@
   or the label of an icon-only button, says what it does.
 -->
 <script lang="ts" module>
-  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "clock" | "history" | "shelf" | "folder" | "headphones" | "queue"
+  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "clock" | "history" | "shelf" | "headphones" | "queue"
     // Settings' rows (decision 0120).
     | "book" | "nine-circle" | "palette" | "a-plus" | "pen-nib" | "feed" | "heart-pulse" | "panel-dots" | "bookmark-plus" | "newspaper" | "plug" | "robot" | "key" | "people" | "card" | "envelope" | "trash";
 </script>
@@ -131,10 +131,6 @@
     <path d="M9.5 7.25h6.75" />
     <path d="M3.75 11.75h12.5" />
     <path d="M3.75 15.25h12.5" />
-  {:else if name === "folder"}
-    <!-- A folder (decision 0123): a tab on the left of a rounded box. -->
-    <path d="M2.75 6.25V5a1.25 1.25 0 0 1 1.25-1.25h3.5l1.75 2h6.75A1.25 1.25 0 0 1 17.25 7v8A1.25 1.25 0 0 1 16 16.25H4A1.25 1.25 0 0 1 2.75 15z" />
-    <path d="M2.75 7.75h14.5" />
   {:else if name === "shelf"}
     <!-- A collection (decision 0108): two books upright and one leaning, on a shelf. -->
     <path d="M2.75 16.25h14.5" />

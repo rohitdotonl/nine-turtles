@@ -116,7 +116,7 @@ test("a feed put in two folders appears under both, with its unread count in eac
   const arrow = (await sidebar(page).getByRole("button", { name: `Feeds in ${first}` }).boundingBox())!;
   const folderBox = (await folderLink.boundingBox())!;
   expect(Math.abs(arrow.x + arrow.width - (folderBox.x + folderBox.width))).toBeLessThan(1);
-  // A folder's name starts on the section names' margin; its feeds on the one name edge, Unread's (decision 0123).
+  // Every name starts on one left edge, Unread's, the folder's and a loose feed's alike; a folder's feeds one step in (decisions 0043, 0123).
   const nameStart = (link: Locator) =>
     link.evaluate((element) => {
       const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, (node) => (node.textContent!.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP));
@@ -125,13 +125,8 @@ test("a feed put in two folders appears under both, with its unread count in eac
       return range.getBoundingClientRect().left;
     });
   const labelEdge = await nameStart(sidebar(page).getByRole("link", { name: "Unread", exact: true }));
-  const sectionEdge = (await sidebar(page).getByRole("heading", { name: "Folders" }).evaluate((element) => {
-    const range = document.createRange();
-    range.selectNodeContents(element);
-    return range.getBoundingClientRect().left;
-  }));
-  expect(Math.abs((await nameStart(folderLink)) - sectionEdge)).toBeLessThan(1);
-  expect(Math.abs((await nameStart(sidebar(page).getByRole("link", { name: `Renamed ${blog} 3 unread` }).first())) - labelEdge)).toBeLessThan(1);
+  expect(Math.abs((await nameStart(folderLink)) - labelEdge)).toBeLessThan(1);
+  expect(Math.abs((await nameStart(sidebar(page).getByRole("link", { name: `Renamed ${blog} 3 unread` }).first())) - labelEdge - 18)).toBeLessThan(1);
   const countEnd = (link: Locator) => link.locator(".tabular-nums").evaluate((element) => element.getBoundingClientRect().right);
   const feedLink = sidebar(page).getByRole("link", { name: `Renamed ${blog} 3 unread` }).first();
   expect(Math.abs((await countEnd(folderLink)) - (await countEnd(feedLink)))).toBeLessThan(1);
