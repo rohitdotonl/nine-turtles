@@ -36,7 +36,7 @@ received it, so a feed with dates in the future can't pin an article to the
 top. Stored as `sort_at`, which the list and its indexes use.
 
 **The list asks the database in list order** (`CROSS JOIN` in
-`server/src/feeds.rs`). Written the ordinary way, SQLite chose to read every
+`server/src/feeds/lists.rs`). Written the ordinary way, SQLite chose to read every
 article and sort afterwards; the new speed test (`server/tests/speed.rs`,
 500 feeds and 100,000 articles) caught it. It now checks that the list
 always uses its index and answers in under 100 ms.
