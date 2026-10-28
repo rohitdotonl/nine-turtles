@@ -1,5 +1,7 @@
 # 0056: Renamed nine turtles, and one theme, Original
 
+> **Partly replaced:** [0058](0058-renamed-everywhere.md) renamed the names this note kept (program, settings, database, repository); [0063](0063-plain-theme-system-serif.md) added a second theme, Plain.
+
 *24 October 2026. The owner's request, in their own words: "We are completely
 deviating from Apple Books theming. Change the name to nine turtles (from
 slowfeed). Remove all the current themes except original." Replaces the

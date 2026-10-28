@@ -1,5 +1,7 @@
 # 0010: How sign-in works
 
+> **Partly replaced:** [0087](0087-sign-in-by-email.md) counts wrong tries for each account, not the whole app; [0116](0116-email-for-everyone.md) ended signing in with the password alone.
+
 *October 2026, Milestone 2. Password method and libraries approved by the owner.*
 
 **Setting the password.** The owner runs `slowfeed set-password` in Render's

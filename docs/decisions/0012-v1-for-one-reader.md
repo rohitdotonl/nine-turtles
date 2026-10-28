@@ -1,5 +1,7 @@
 # 0012: V1 is for one reader: no backups, and six features moved to V2
 
+> **Mostly replaced:** nine turtles now has many readers ([0086](0086-many-readers.md)), backups ([0076](0076-backups.md)), a yearly clean-up ([0089](0089-yearly-clean-up.md)), and the features moved to V2 are built: river mode [0068](0068-river-mode.md), WebSub [0069](0069-websub.md), feed health [0071](0071-feed-health-page.md), "New to feeds?" [0079](0079-new-to-feeds.md), tabs across updates [0085](0085-open-tabs-switch-on-the-next-move.md).
+
 *23 October 2026, before Milestone 3. Decided by the owner.*
 
 **Update, 25 October 2026:** the "no backups" part is replaced by decision

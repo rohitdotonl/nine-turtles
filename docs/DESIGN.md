@@ -293,21 +293,8 @@ Plain, unhurried, never urgent: "Nothing new yet," never "You're missing out!" L
 
 ## V2 parking lot
 
-- **YouTube videos** in YouTube's own player. Done 25 October 2026: a quiet Play box, nothing loaded until it's pressed (decision 0072, `docs/SPEC.md` section 7).
-- **Podcasts** played in place. Done 27 October 2026: a calm player, your place kept on all your devices, and Up Next (decision 0113, `docs/SPEC.md` section 35).
+Ideas not built yet. Once one is built, it leaves this list; what it does is
+then in `docs/SPEC.md`, and the finished work in `docs/archive/plan-done.md`.
+
 - **Public reading list page:** an optional public list of some of your feeds (a modern blogroll) with one-click subscribe. No likes, no comments.
-- **Per-feed modes:** inbox or river for each feed. Built 25 October 2026, in Edit feed (decision 0082, `docs/SPEC.md` sections 10 and 15).
-- **Passkey sign-in.** Built 27 October 2026, beside passwords (decision 0109, `docs/SPEC.md` sections 1 and 18).
 - **Chinese and Japanese search.**
-- **Multiple users.** Built 25 and 26 October 2026: each reader's things walled off from the others' (decision 0086, `docs/archive/plan-done.md` → "V2: Many readers in one app").
-- **Own domain name.** Chosen on 25 October 2026: nineturtles.app for the website, app.nineturtles.app for the app (decision 0066).
-
-Moved from V1 on 23 October 2026, because V1 is for the owner alone (decision 0012):
-
-- **Backups and recovery:** nightly copies outside the host, and one before every database structure change. Built 25 October 2026 (decision 0076).
-- **River mode.** Built 25 October 2026 (SPEC section 10).
-- **WebSub.** Built 25 October 2026 (decision 0069).
-- **Feed health page.** Built 25 October 2026 (decision 0071).
-- **The yearly clean-up** of unstarred articles. Built 25 October 2026 (decision 0089).
-- **The "New to feeds?" guide page.** Done 25 October 2026: a guide on the website, and a "New to feeds?" sheet in the welcome (decision 0079).
-- **A tab left open across an update keeps working** without a reload. Built 25 October 2026 (decision 0085).

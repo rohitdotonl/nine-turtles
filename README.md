@@ -20,7 +20,7 @@ In development. V1 is being built in small milestones; see
 ## Read more
 
 - [`docs/DESIGN.md`](docs/DESIGN.md): the design philosophy and decisions
-- [`docs/SPEC.md`](docs/SPEC.md): what V1 does, feature by feature
+- [`docs/SPEC.md`](docs/SPEC.md): what nine turtles does, one short file per feature
 - [`docs/ENGINEERING.md`](docs/ENGINEERING.md): engineering principles and technical choices
 - [`docs/owner-guide.md`](docs/owner-guide.md): a plain-language guide to how it's built
 - [`docs/concepts.md`](docs/concepts.md): the concepts nine turtles is built with, as a list to learn from

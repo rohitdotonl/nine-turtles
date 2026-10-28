@@ -1,4 +1,4 @@
-# 0117: Documents agents can read less of, and trust
+# 0119: Documents agents can read less of, and trust
 
 *October 2026.*
 
@@ -13,6 +13,9 @@ true and still needed, and every link in them leads somewhere.
   technical check) to `docs/archive/`. `docs/PLAN.md` holds only open and
   next work. Agents read the archive only when the owner asks about past
   work. Nothing is deleted; the history stays.
+- **The spec, one file per section.** `docs/SPEC.md` is a short index;
+  each section lives in its own numbered file in `docs/spec/`, keeping its number, so
+  "SPEC section 28" still finds it. A new feature gets the next number.
 - **A check for broken links between documents.**
   `scripts/check-doc-links.mjs`, run as `scripts/check.sh docs`, fails when
   a document links to a file that doesn't exist, either as a Markdown link
@@ -20,7 +23,8 @@ true and still needed, and every link in them leads somewhere.
   build makes (`web/dist`, `server/target`) and the marketing research and
   changelog are left out. It's quick, needs no library, and runs on every
   pull request, documents-only ones too, because those are the ones that
-  move documents.
+  move documents. It covers `docs/archive/` and `docs/changes/` too, so when
+  a document moves, fixing its links there is the one edit those files get.
 
 **Why.** The documents had grown to more than a megabyte; `PLAN.md` alone
 was 485 lines, mostly finished work, and every agent read it first. Less to

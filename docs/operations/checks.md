@@ -31,7 +31,7 @@ by the next merge, whatever it changes.
 
 | Step | What it catches | Where it lives |
 |---|---|---|
-| No broken links between documents | A Markdown link or a path in backticks (`docs/…`, `server/…`) in AGENTS.md, README.md or `docs/` that points to a file that doesn't exist. Leaves out the marketing research, the changelog and what a build makes. Runs on every pull request, documents-only ones too (decision 0117) | `scripts/check-doc-links.mjs` (`scripts/check.sh docs`) |
+| No broken links between documents | A Markdown link or a path in backticks (`docs/…`, `server/…`) in AGENTS.md, README.md or `docs/` that points to a file that doesn't exist. Leaves out the marketing research, the changelog and what a build makes. Runs on every pull request, documents-only ones too (decision 0119) | `scripts/check-doc-links.mjs` (`scripts/check.sh docs`) |
 | Libraries are on the approved list | A library in `server/Cargo.toml` (in any of the ways Rust allows listing one), `web/package.json` or `website/package.json` that isn't approved in `docs/libraries.md`; a GitHub Actions building block that isn't GitHub's own or isn't pinned | `scripts/check-libraries.mjs` |
 | Frontend: build | Frontend code that doesn't build | Vite |
 | Frontend: type check | Mistakes in TypeScript and Svelte code | `svelte-check` |

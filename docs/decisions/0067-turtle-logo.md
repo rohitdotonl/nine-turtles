@@ -1,5 +1,7 @@
 # 0067: A logo of nine turtles
 
+> **Partly replaced by [0078](0078-logo-proportions.md):** the logo's frame, its size beside the name, and the tab and home-screen icons.
+
 *October 2026.*
 
 **Decision.** nine turtles has a logo: nine small turtles seen from the
