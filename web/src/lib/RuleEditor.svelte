@@ -76,9 +76,9 @@
     return place === "" ? "choose where…" : "all feeds";
   });
 
-  /** A menu in the sentence is as wide as its chosen words and its small arrow, so the sentence reads without gaps. */
-  function fit(words: string): string {
-    return `calc(${(Math.min(words.length, 28) * 0.5 + 0.3).toFixed(2)}em + 1.25rem)`;
+  /** A blank in the sentence is as wide as its words (and a menu's small arrow), so the sentence reads without gaps. */
+  function fit(words: string, arrow = 1.25): string {
+    return `calc(${Math.min(words.length, 28) * 0.5 + 0.3}em + ${arrow}rem)`;
   }
 
   let busy = $state(false);
@@ -179,7 +179,7 @@
         aria-describedby="rule-words-help"
         aria-invalid={message !== "" && !words.trim() && !author.trim()}
         class="blank"
-        style:width={`${(Math.max(words.length, 6) * 0.5 + 0.6).toFixed(2)}em`}
+        style:width={fit(words.padEnd(6), 0.3)}
       />
       in
       <span class="blank-pick"
@@ -196,7 +196,7 @@
         aria-label="Author"
         aria-describedby="rule-author-help"
         class="blank"
-        style:width={`${(Math.max(author.length, 10) * 0.5 + 0.6).toFixed(2)}em`}
+        style:width={fit(author.padEnd(10), 0.3)}
       />, from
       <span class="blank-pick"
         ><select bind:value={place} aria-label="In" aria-invalid={place === ""} class="blank" style:width={fit(placeName)}>

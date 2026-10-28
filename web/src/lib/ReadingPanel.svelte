@@ -209,16 +209,6 @@
     justify-content: center;
     cursor: pointer;
   }
-  .word input,
-  .swatch input {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    opacity: 0;
-    cursor: pointer;
-  }
   .word {
     color: var(--ink-2);
     text-decoration: underline 2px transparent;
@@ -234,6 +224,16 @@
     font-weight: 600;
     text-decoration-color: currentColor;
   }
+  .word input,
+  .swatch input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
   .word:has(input:focus-visible),
   .swatch:has(input:focus-visible) {
     outline: 2px solid var(--ink);
@@ -242,7 +242,6 @@
   }
   .swatch {
     width: 2.75rem;
-    justify-content: center;
   }
   /* A swatch: 24px, with a faint edge so the white one shows on white; the chosen one has a ring of the text color around it. */
   .dot {
@@ -266,9 +265,6 @@
       0 0 0 4px var(--ink);
   }
   @media (forced-colors: active) {
-    .word:has(input:checked) {
-      text-decoration-color: CanvasText;
-    }
     .swatch:has(input:checked) .dot {
       forced-color-adjust: none;
       outline: 2px solid Highlight;

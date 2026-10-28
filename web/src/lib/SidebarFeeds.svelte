@@ -178,12 +178,10 @@
     onclick={(event) => {
       // The whole row folds (decision 0123): choosing a closed folder opens it and lists its
       // articles; choosing the folder you're already in folds or unfolds it.
-      if (!phone && !searching && isHere(place) && !event.metaKey && !event.ctrlKey && !event.shiftKey) {
-        event.preventDefault();
-        toggle(folder.id);
-        return;
+      if (!phone && !searching && !event.metaKey && !event.ctrlKey && !event.shiftKey) {
+        if (isHere(place)) return (event.preventDefault(), toggle(folder.id));
+        if (!open.includes(folder.id)) toggle(folder.id);
       }
-      if (!phone && !searching && !open.includes(folder.id) && !event.metaKey && !event.ctrlKey && !event.shiftKey) toggle(folder.id);
       follow(event, place);
     }}
     data-folder-link={folder.id}
@@ -297,33 +295,23 @@
   .folder-feeds::before {
     content: "";
     position: absolute;
-    top: 0.25rem;
-    bottom: 0.25rem;
+    inset-block: 0.25rem;
     left: 21px;
     border-left: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
   }
-  /* The arrow hides until it's wanted; the count shows in its place meanwhile. */
-  .disclosure {
-    opacity: 0;
+  /*
+    With a mouse or keyboard the arrow hides until it's wanted, and the count
+    shows in its place meanwhile: made see-through rather than hidden, so
+    screen readers still read it in the folder's name. On a touch screen the
+    arrow always shows, and the count steps left of it rather than under it.
+  */
+  @media not (pointer: coarse) {
+    .folder-row:not(:hover) .disclosure:not(:focus-visible),
+    .folder-row:is(:hover, :has(.disclosure:focus-visible)) :global(.folder-count) {
+      opacity: 0;
+    }
   }
-  .folder-row:hover .disclosure,
-  .disclosure:focus-visible {
-    opacity: 1;
-  }
-  /* Made see-through rather than hidden, so screen readers still read the count in the folder's name. */
-  .folder-row:hover :global(.folder-count),
-  .folder-row:has(.disclosure:focus-visible) :global(.folder-count) {
-    opacity: 0;
-  }
-  /* On a touch screen the arrow always shows, and the count steps left of it rather than under it. */
   @media (pointer: coarse) {
-    .disclosure {
-      opacity: 1;
-    }
-    .folder-row:hover :global(.folder-count),
-    .folder-row:has(.disclosure:focus-visible) :global(.folder-count) {
-      opacity: 1;
-    }
     .folder-row > :global(a) {
       padding-right: 2.75rem;
     }
