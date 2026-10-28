@@ -20,7 +20,8 @@
 //! come a page at a time, an article's text is cut at `LONGEST_TEXT`,
 //! marking takes at most `MOST_AT_ONCE` articles, and adding feeds is
 //! limited too (`ADDS_AN_HOUR`), so a tricked assistant can't use nine
-//! turtles' fetching to reach many addresses.//!
+//! turtles' fetching to reach many addresses.
+//!
 //! The files: this one speaks the protocol and hands each tool call to its
 //! code; `tools.rs` describes the tools; `reading.rs` and `changing.rs` do
 //! the work.
