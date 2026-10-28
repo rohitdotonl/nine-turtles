@@ -16,7 +16,7 @@ vi.mock("./reading", async (actual) => ({
   ...server,
 }));
 
-const { ReadingSettings } = await import("./settings.svelte");
+const { ReadingSettings } = await import("./reading-settings.svelte");
 const { keys, chooseKeys } = await import("./keys.svelte");
 
 /** A promise and the hands that settle it, for an answer that arrives when the test says. */
