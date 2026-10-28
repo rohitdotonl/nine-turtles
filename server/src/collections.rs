@@ -26,6 +26,7 @@ use serde_json::{Value, json};
 use crate::{
     AppState,
     auth::{SignedIn, database_problem},
+    feeds,
     folders::clean_name,
     now,
     starred::{self, Starred},
@@ -300,23 +301,19 @@ async fn set_for_article(
 
 /// Every article on any of the reader's collections, newest first, each with
 /// the names of its collections (A to Z), as JSON. Takes the reader.
-const EXPORT: &str = "SELECT articles.fingerprint, articles.title, articles.link, articles.author,
-            articles.content, articles.summary,
-            COALESCE(articles.language, feeds.language) AS language,
-            articles.published_at, subscriptions.title AS feed_title,
-            feeds.url AS feed_url, feeds.site_url,
-            (SELECT json_group_array(name) FROM (
-                 SELECT collections.name FROM collection_articles AS mine
-                     JOIN collections ON collections.id = mine.collection_id
-                 WHERE mine.person_id = entries.person_id AND mine.article_id = entries.article_id
-                 ORDER BY collections.name COLLATE NOCASE)) AS tags
-     FROM entries CROSS JOIN articles ON articles.id = entries.article_id
-         CROSS JOIN feeds ON feeds.id = entries.feed_id
-         CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
-             AND subscriptions.feed_id = entries.feed_id
-     WHERE entries.person_id = ?1 AND entries.article_id IN
+const EXPORT: &str = concat!(
+    "SELECT ",
+    starred::columns!(),
+    ", (SELECT json_group_array(name) FROM (
+           SELECT collections.name FROM collection_articles AS mine
+               JOIN collections ON collections.id = mine.collection_id
+           WHERE mine.person_id = entries.person_id AND mine.article_id = entries.article_id
+           ORDER BY collections.name COLLATE NOCASE)) AS tags",
+    feeds::from_entries!(),
+    "?1 AND entries.article_id IN
          (SELECT article_id FROM collection_articles WHERE person_id = ?1)
-     ORDER BY entries.sort_at DESC, entries.article_id DESC";
+     ORDER BY entries.sort_at DESC, entries.article_id DESC"
+);
 
 #[derive(sqlx::FromRow)]
 struct Collected {

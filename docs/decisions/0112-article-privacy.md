@@ -77,5 +77,7 @@ Instead:
   pictures load lazily, links in the text and the article's own link lose
   their tags. List rows (`ArticleRow`) send their link without tags too, so
   `v` from the list matches. Nothing stored changes.
-- Not covered for older articles: the sync API for other apps (SPEC section
-  26) and the reader's downloads send stored content as it is.
+- Later covered for older articles too: the sync API for other apps (SPEC
+  section 26) and assistants (#138), then the starred and collections
+  downloads (code tidy, October 2026). Every path now shares
+  `feeds::stored_html` and `feeds::stored_link`.

@@ -33,7 +33,7 @@ use crate::{
     AppState, apps,
     auth::database_problem,
     encoding::form_pairs,
-    feed, feeds, folders, log,
+    feeds, folders, log,
     marks::{MOST_AT_ONCE, READ_SQL, STAR_SQL, now_ms},
     now,
 };
@@ -61,18 +61,6 @@ macro_rules! article_columns {
          feeds.site_url, articles.title, articles.link, articles.author, articles.content,
          articles.summary, articles.published_at, articles.received_at, entries.sort_at,
          entries.read, entries.starred"
-    };
-}
-
-/// Where an app's articles come from: the reader's own entries, each with
-/// its article, feed and the reader's subscription. Followed by the reader.
-macro_rules! from_entries {
-    () => {
-        " FROM entries CROSS JOIN articles ON articles.id = entries.article_id
-             CROSS JOIN feeds ON feeds.id = entries.feed_id
-             CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
-                 AND subscriptions.feed_id = entries.feed_id
-         WHERE entries.person_id = "
     };
 }
 
@@ -497,7 +485,7 @@ impl Asked {
     /// The query for this page of reader `person`'s articles, with one extra
     /// row to know whether another page follows.
     fn query(&self, columns: &str, person: i64) -> QueryBuilder<Sqlite> {
-        let mut query = QueryBuilder::new(format!("SELECT {columns}{}", from_entries!()));
+        let mut query = QueryBuilder::new(format!("SELECT {columns}{}", feeds::from_entries!()));
         query.push_bind(person).push(" AND ");
         self.stream.condition(&mut query, person);
         for (states, value) in [(&self.exclude, 0), (&self.include, 1)] {
@@ -658,7 +646,7 @@ async fn item_contents(
         let articles = sqlx::query_as(concat!(
             "SELECT ",
             article_columns!(),
-            from_entries!(),
+            feeds::from_entries!(),
             "? AND entries.article_id IN (SELECT value FROM json_each(?))
              ORDER BY entries.sort_at DESC, entries.article_id DESC"
         ))
@@ -725,19 +713,16 @@ impl Article {
         for name in labels.get(&self.feed_id).into_iter().flatten() {
             categories.push(format!("{LABEL}{name}"));
         }
-        // Articles stored before trackers were taken out on arrival
-        // (decision 0112) lose them here, as on nine turtles' own screen
-        // (`feeds::full_articles`).
         let link: Vec<Value> = self
             .link
             .iter()
-            .map(|href| json!({ "href": feed::link_without_tracking(href), "type": "text/html" }))
+            .map(|href| json!({ "href": feeds::stored_link(href), "type": "text/html" }))
             .collect();
         let content = self
             .content
             .as_deref()
             .or(self.summary.as_deref())
-            .map(|html| feed::without_trackers(html, None))
+            .map(feeds::stored_html)
             .unwrap_or_default();
         let published = self.published_at.unwrap_or(self.sort_at);
         json!({
@@ -822,7 +807,7 @@ async fn mark_all_as_read(
     );
     query.push_bind(person).push(concat!(
         " AND read = 0 AND article_id IN (SELECT entries.article_id",
-        from_entries!()
+        feeds::from_entries!()
     ));
     query.push_bind(person).push(" AND ");
     stream.condition(&mut query, person);
