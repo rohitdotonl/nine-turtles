@@ -1,7 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Article, Library } from "./shapes";
 import { offsetFrom } from "./connection.svelte";
-import { KEEP_STARRED, KEEP_UNREAD, NeedsConnection, countsAfter, inParts, keptList, toKeep, withMark, type Kept } from "./offline";
+import { KEEP_AFTER_REFRESH, KEEP_AGAIN_AFTER, KEEP_STARRED, KEEP_UNREAD, Keeper, NeedsConnection, countsAfter, inParts, keptList, toKeep, withMark, type Kept } from "./offline";
 
 function row(id: number, more: Partial<Article> = {}): Article {
   return { id, feedId: 1, feedTitle: "Garden", title: `Post ${id}`, link: null, at: id * 100, read: false, starred: false, muted: false, ...more };
@@ -106,5 +106,64 @@ describe("the server's clock", () => {
     expect(offsetFrom(1_000_000, 1_000_600, 0)).toBe(0);
     expect(offsetFrom(1_300_000, 1_000_000, 0)).toBe(300_000);
     expect(offsetFrom(1_300_000, 1_000_500, 300_000)).toBe(300_000);
+  });
+});
+
+describe("when the copies are brought up to date", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  function setUp() {
+    let time = 1_000_000;
+    const kept: number[] = [];
+    const keeper = new Keeper(() => kept.push(time), () => time);
+    return { keeper, kept, wait: (ms: number) => (time += ms) };
+  }
+
+  it("keeps after a refresh only once a minute has passed", () => {
+    const { keeper, kept, wait } = setUp();
+    keeper.now();
+    wait(KEEP_AFTER_REFRESH);
+    keeper.refreshed();
+    expect(kept).toHaveLength(1);
+    wait(1);
+    keeper.refreshed();
+    expect(kept).toHaveLength(2);
+  });
+
+  it("keeps on coming back into view only after a while, and only when in view", () => {
+    const page = { hidden: false };
+    vi.stubGlobal("document", page);
+    const { keeper, kept, wait } = setUp();
+    keeper.now();
+    wait(KEEP_AGAIN_AFTER);
+    keeper.lookedAgain();
+    expect(kept).toHaveLength(1);
+    wait(1);
+    page.hidden = true;
+    keeper.lookedAgain();
+    expect(kept).toHaveLength(1);
+    page.hidden = false;
+    keeper.lookedAgain();
+    expect(kept).toHaveLength(2);
+  });
+
+  it("watches for the browser going online and coming back into view, until told to stop", () => {
+    const page = Object.assign(new EventTarget(), { hidden: false });
+    const browser = new EventTarget();
+    vi.stubGlobal("document", page);
+    vi.stubGlobal("addEventListener", browser.addEventListener.bind(browser));
+    vi.stubGlobal("removeEventListener", browser.removeEventListener.bind(browser));
+    const { keeper, kept, wait } = setUp();
+    const stop = keeper.watch();
+    browser.dispatchEvent(new Event("online"));
+    expect(kept).toHaveLength(1);
+    wait(KEEP_AGAIN_AFTER + 1);
+    page.dispatchEvent(new Event("visibilitychange"));
+    expect(kept).toHaveLength(2);
+    stop();
+    wait(KEEP_AGAIN_AFTER + 1);
+    browser.dispatchEvent(new Event("online"));
+    page.dispatchEvent(new Event("visibilitychange"));
+    expect(kept).toHaveLength(2);
   });
 });
