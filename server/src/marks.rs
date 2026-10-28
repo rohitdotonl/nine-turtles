@@ -58,14 +58,35 @@ struct Starred {
     at: Option<i64>,
 }
 
-/// Marking a muted article unread unmutes it, so it waits in Unread again.
-/// Takes the mark, the articles, the reader and when the mark was made, as
-/// every mark here does; a mark older than the one stored is skipped.
-pub const READ_SQL: &str = "UPDATE entries SET read = ?1, muted = muted * ?1, read_marked_at = ?4
+/// One of a reader's marks on an article. Every way of marking (the screen,
+/// other apps, assistants) sets them with `set`, so they all behave alike.
+#[derive(Clone, Copy)]
+pub enum Mark {
+    /// Marking a muted article unread unmutes it, so it waits in Unread again.
+    Read,
+    Starred,
+    /// Muted articles count as read; unmuted, they come back unread.
+    Muted,
+}
+
+impl Mark {
+    /// The statement that sets this mark. It is filled in with the mark,
+    /// the articles, the reader and when the mark was made; a read mark or
+    /// star older than the one stored is skipped.
+    fn sql(self) -> &'static str {
+        match self {
+            Self::Read => READ_SQL,
+            Self::Starred => STAR_SQL,
+            Self::Muted => MUTE_SQL,
+        }
+    }
+}
+
+const READ_SQL: &str = "UPDATE entries SET read = ?1, muted = muted * ?1, read_marked_at = ?4
      WHERE person_id = ?3 AND article_id IN (SELECT value FROM json_each(?2))
          AND read_marked_at <= ?4";
 
-pub const STAR_SQL: &str = "UPDATE entries SET starred = ?1, starred_marked_at = ?4
+const STAR_SQL: &str = "UPDATE entries SET starred = ?1, starred_marked_at = ?4
      WHERE person_id = ?3 AND article_id IN (SELECT value FROM json_each(?2))
          AND starred_marked_at <= ?4";
 
@@ -96,7 +117,7 @@ async fn mark_read(
     mark(
         &state,
         person,
-        READ_SQL,
+        Mark::Read,
         &form.ids,
         form.read,
         made_at(form.at),
@@ -110,7 +131,7 @@ async fn mark_starred(
     Json(form): Json<Starred>,
 ) -> Response {
     let at = made_at(form.at);
-    mark(&state, person, STAR_SQL, &form.ids, form.starred, at).await
+    mark(&state, person, Mark::Starred, &form.ids, form.starred, at).await
 }
 
 #[derive(Deserialize)]
@@ -127,17 +148,14 @@ async fn mark_muted(
     State(state): State<AppState>,
     Json(form): Json<Muted>,
 ) -> Response {
-    mark(&state, person, MUTE_SQL, &form.ids, form.muted, now_ms()).await
+    mark(&state, person, Mark::Muted, &form.ids, form.muted, now_ms()).await
 }
 
-/// Sets one of the reader's marks on the named articles, all in one step.
-/// Articles they don't have (gone, or of a feed they never followed) are
-/// skipped, and so are those whose mark was set later than `at`. Answers
-/// how many it changed.
+/// Marks the named articles for the screen, answering how many changed.
 async fn mark(
     state: &AppState,
     person: i64,
-    sql: &'static str,
+    which: Mark,
     ids: &[i64],
     value: bool,
     at: i64,
@@ -145,16 +163,31 @@ async fn mark(
     if ids.len() > MOST_AT_ONCE {
         return StatusCode::PAYLOAD_TOO_LARGE.into_response();
     }
+    match set(&state.db, person, which, ids, value, at).await {
+        Ok(marked) => Json(json!({ "marked": marked })).into_response(),
+        Err(error) => database_problem("marking articles", &error),
+    }
+}
+
+/// Sets one of the reader's marks on the named articles, all in one step.
+/// Articles they don't have (gone, or of a feed they never followed) are
+/// skipped, and so are those whose mark was set later than `at`. Answers
+/// how many it changed. Callers refuse more than `MOST_AT_ONCE` first.
+pub async fn set<'c>(
+    executor: impl sqlx::SqliteExecutor<'c>,
+    person: i64,
+    which: Mark,
+    ids: &[i64],
+    value: bool,
+    at: i64,
+) -> Result<u64, sqlx::Error> {
     let ids = serde_json::to_string(ids).unwrap_or_else(|_| "[]".to_owned());
-    match sqlx::query(sql)
+    let done = sqlx::query(which.sql())
         .bind(value)
         .bind(ids)
         .bind(person)
         .bind(at)
-        .execute(&state.db)
-        .await
-    {
-        Ok(done) => Json(json!({ "marked": done.rows_affected() })).into_response(),
-        Err(error) => database_problem("marking articles", &error),
-    }
+        .execute(executor)
+        .await?;
+    Ok(done.rows_affected())
 }

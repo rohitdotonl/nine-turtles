@@ -619,3 +619,47 @@ async fn an_app_deleting_a_folder_leaves_its_rules_and_searches_as_the_screen_do
     let search = &owner.get("/api/saved-searches").await["searches"][0];
     assert_eq!(search["query"]["scope"]["id"], 0);
 }
+
+#[tokio::test]
+async fn an_app_unfollowing_keeps_earlier_ones_waiting_until_the_screen_unsubscribes() {
+    let owner = Owner::new().await;
+    let app = App::sign_in(&owner.base, &owner.make_app_password().await)
+        .await
+        .unwrap();
+    let mut feeds = vec![owner.feed];
+    for _ in 0..2 {
+        let (status, added) = owner
+            .post("/api/feeds", &json!({ "address": publisher().await }))
+            .await;
+        assert_eq!(status, StatusCode::CREATED);
+        feeds.push(added["feed"]["id"].as_i64().unwrap());
+    }
+    let waiting = || async {
+        sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM subscriptions WHERE unsubscribed_at IS NOT NULL AND cleared = 0",
+        )
+        .fetch_one(&owner.state.db)
+        .await
+        .unwrap()
+    };
+
+    // Two unfollowed from the app: the second doesn't cut the first short.
+    for feed in &feeds[..2] {
+        let (status, _) = app
+            .post(
+                "subscription/edit",
+                &[("ac", "unsubscribe"), ("s", &format!("feed/{feed}"))],
+            )
+            .await;
+        assert_eq!(status, StatusCode::OK);
+    }
+    assert_eq!(waiting().await, 2);
+
+    // Unsubscribing on the screen clears them first (its Undo covers only
+    // the last action), so only its own feed waits.
+    let (status, _) = owner
+        .post(&format!("/api/feeds/{}/unsubscribe", feeds[2]), &json!({}))
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    assert_eq!(waiting().await, 1);
+}

@@ -33,8 +33,10 @@ use crate::{
     AppState, apps,
     auth::database_problem,
     encoding::form_pairs,
-    feeds, folders, log,
-    marks::{MOST_AT_ONCE, READ_SQL, STAR_SQL, now_ms},
+    feeds,
+    folders::{self, Leaving},
+    log,
+    marks::{self, MOST_AT_ONCE, Mark, now_ms},
     now,
 };
 
@@ -758,30 +760,23 @@ async fn edit_tag(App(person): App, State(state): State<AppState>, params: Param
         return StatusCode::PAYLOAD_TOO_LARGE.into_response();
     }
     // Marked unread, a muted article is unmuted too, as on nine turtles' own screen.
-    let mut changes: Vec<(&'static str, bool)> = Vec::new();
+    let mut changes: Vec<(Mark, bool)> = Vec::new();
     for (tags, adding) in [(params.all("a"), true), (params.all("r"), false)] {
         for tag in tags {
             match mine(tag).as_str() {
-                READ => changes.push((READ_SQL, adding)),
-                KEPT_UNREAD => changes.push((READ_SQL, !adding)),
-                STARRED => changes.push((STAR_SQL, adding)),
+                READ => changes.push((Mark::Read, adding)),
+                KEPT_UNREAD => changes.push((Mark::Read, !adding)),
+                STARRED => changes.push((Mark::Starred, adding)),
                 // Folders hold feeds here, not articles: nothing to do.
                 _ => {}
             }
         }
     }
-    let ids = serde_json::to_string(&ids).unwrap_or_else(|_| "[]".to_owned());
     let at = now_ms();
     let changed = async {
         let mut transaction = state.db.begin().await?;
-        for (sql, value) in changes {
-            sqlx::query(sql)
-                .bind(value)
-                .bind(&ids)
-                .bind(person)
-                .bind(at)
-                .execute(&mut *transaction)
-                .await?;
+        for (which, value) in changes {
+            marks::set(&mut *transaction, person, which, &ids, value, at).await?;
         }
         transaction.commit().await
     }
@@ -886,18 +881,12 @@ async fn quick_add(App(person): App, State(state): State<AppState>, params: Para
     }
 }
 
-/// Unfollows the way nine turtles does: the feed is hidden straight away
-/// (and no longer checked, if nobody else follows it), and cleared for good
-/// ten minutes later by background checking. Unlike unfollowing on nine
-/// turtles' own page, an earlier unfollowed feed isn't cleared early, so
-/// each keeps its ten minutes in which following it again brings it back
-/// (unless the reader unsubscribes on nine turtles' page meanwhile, which
-/// clears every feed of theirs waiting, since its Undo covers only the last
-/// action).
+/// Unfollows the way nine turtles does (SPEC section 26): hidden straight
+/// away, cleared ten minutes later, and an earlier unfollowed feed keeps
+/// its own ten minutes.
 async fn unfollow(state: &AppState, person: i64, id: i64) -> Result<(), sqlx::Error> {
-    let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
-    folders::hide(&mut transaction, person, &[id], now()).await?;
-    transaction.commit().await
+    folders::leave(&state.db, person, id, now(), Leaving::App).await?;
+    Ok(())
 }
 
 /// Follows again, by its number, a feed the reader unfollowed but that
@@ -918,12 +907,7 @@ async fn file(state: &AppState, person: i64, id: i64, params: &Params) -> Result
         return Ok(());
     }
     if let Some(title) = params.first("t").and_then(folders::clean_name) {
-        sqlx::query("UPDATE subscriptions SET title = ? WHERE person_id = ? AND feed_id = ?")
-            .bind(title)
-            .bind(person)
-            .bind(id)
-            .execute(&mut *transaction)
-            .await?;
+        folders::rename_feed(&mut transaction, person, id, &title).await?;
     }
     for name in params.all("a").filter_map(folder_name) {
         let (folder, _) = folders::folder_named(&mut transaction, person, &name).await?;
