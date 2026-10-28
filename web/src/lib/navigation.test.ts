@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { homeFor, isList, isOver, moveTo, Opener, opensFromHere, underSheet, type Here } from "./navigation";
+import { homeFor, isList, isOver, moveTo, Opener, opensFromHere, stepFor, Steps, underSheet, type Browser, type Here } from "./navigation";
 import type { Route } from "./router";
 
 const unread: Route = { kind: "view", view: "unread" };
@@ -119,5 +119,75 @@ describe("Opener", () => {
     expect(opener.giveBack()).toBe(false);
     opener.remember(null);
     expect(opener.giveBack()).toBe(false);
+  });
+});
+
+describe("stepFor", () => {
+  it("adds a step when the address or the screen changes, and none when both stay", () => {
+    expect(stepFor(feed, "list", "/", false)).toEqual({ screen: "list", back: "list", fromParent: false });
+    expect(stepFor(settings, "list", "/feeds/7", false)).toEqual({ screen: "page", back: "list", fromParent: false });
+    expect(stepFor(health, "page", "/settings", true)).toEqual({ screen: "page", back: "page", fromParent: true });
+    // The same place, from the article (a phone) or the feeds (home): back to its list is a step.
+    expect(stepFor(feed, "article", "/feeds/7", false)).toEqual({ screen: "list", back: "article", fromParent: false });
+    expect(stepFor(feed, "list", "/feeds/7", false)).toBeUndefined();
+  });
+});
+
+describe("Steps", () => {
+  /** A browser history that records what's asked of it, and the screen's hands. */
+  function made(state: unknown = null, path = "/feeds/7") {
+    const asked: string[] = [];
+    const browser: Browser = {
+      get state() {
+        return state;
+      },
+      back: () => asked.push("back"),
+      pushState: (step, _, url) => {
+        asked.push(`push ${url} ${JSON.stringify(step)}`);
+        state = step;
+      },
+      replaceState: (step, _, url) => asked.push(`replace ${url} ${JSON.stringify(step)}`),
+    };
+    const steps = new Steps({ arrive: (screen) => asked.push(`arrive ${screen}`), goUnder: () => asked.push("go under") }, browser, () => path);
+    return { steps, asked };
+  }
+
+  it("steps back in history when the step before was that screen, and moves in place when not", () => {
+    const before = made({ screen: "list", back: "home" });
+    before.steps.back("home");
+    expect(before.asked).toEqual(["back"]);
+    // Arrived straight from a link or a reload: nothing before it to go back to.
+    const straight = made({ screen: "list" });
+    straight.steps.back("home");
+    expect(straight.asked).toEqual(['replace /feeds/7 {"screen":"home"}', "arrive home"]);
+  });
+
+  it("closes a sheet opened with a step by stepping back, so Back doesn't reopen it", () => {
+    const { steps, asked } = made({ screen: "list" });
+    steps.goTo(addFeed, "list", false, true);
+    steps.closeSheet();
+    expect(asked).toEqual(['push /add-feed {"screen":"page","back":"list","fromParent":false}', "back"]);
+  });
+
+  it("closes a sheet with no step of its own by going to the place under it", () => {
+    // Opened by the browser's Forward: the step is the browser's, not one we added.
+    const forward = made({ screen: "page", back: "list" });
+    forward.steps.sheetOpenedByBrowser();
+    forward.steps.closeSheet();
+    expect(forward.asked).toEqual(["go under"]);
+    // Opened where the address and screen didn't change: no step was added.
+    const inPlace = made({ screen: "page", back: "list" }, "/add-feed");
+    inPlace.steps.goTo(addFeed, "page", false, true);
+    inPlace.steps.closeSheet();
+    expect(inPlace.asked).toEqual(["go under"]);
+  });
+
+  it("opens an article on a phone as a step on from its list", () => {
+    const { steps, asked } = made({ screen: "list" });
+    steps.openArticle();
+    expect(asked).toEqual(['push /feeds/7 {"screen":"article","back":"list"}']);
+    expect(steps.cameFrom("list")).toBe(true);
+    steps.goBack();
+    expect(asked.at(-1)).toBe("back");
   });
 });
