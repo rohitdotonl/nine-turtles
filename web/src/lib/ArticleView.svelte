@@ -452,7 +452,7 @@
       {/if}
       {#if full}
         {#if full.content}
-          <!-- Cleaned by nine turtles before it was stored (server/src/feed.rs). -->
+          <!-- Cleaned by nine turtles before it was stored (server/src/feed/clean.rs). -->
           <div bind:this={text} class="article-text" dir="auto">{@html full.content}</div>
           <!-- The last page: a short rule, so the article ends rather than stops. -->
           <hr aria-hidden="true" class="article-end" />
