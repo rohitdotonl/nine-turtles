@@ -29,7 +29,7 @@ test("a rule made from Edit feed mutes what matches, with the number asked first
   await expect(sheet.getByRole("status")).toHaveText("Write a word, a phrase or an author to look for.");
 
   await sheet.getByRole("textbox", { name: "Word or phrase" }).fill("Long Way");
-  await sheet.getByRole("radio", { name: /^Mute/ }).check();
+  await sheet.getByRole("combobox", { name: "Then" }).selectOption("mute");
   await sheet.getByRole("button", { name: "Save" }).click();
   await expect(sheet).toBeHidden();
 
@@ -105,9 +105,9 @@ test("a star rule acts on an article as it arrives; rules pause, and Delete has 
 
   await rules.getByRole("button", { name: "New rule…" }).click();
   await sheet.getByRole("textbox", { name: "Word or phrase" }).fill("river");
-  await sheet.getByRole("radio", { name: "The title or the text" }).check();
+  await sheet.getByRole("combobox", { name: "Look in" }).selectOption("its title or text");
   await sheet.getByRole("combobox", { name: "In" }).selectOption(`feed:${id}`);
-  await sheet.getByRole("radio", { name: /^Star/ }).check();
+  await sheet.getByRole("combobox", { name: "Then" }).selectOption("star");
   await sheet.getByRole("button", { name: "Save" }).click();
   const sentence = `Star articles with “river” in the title or text, in ${title}.`;
   await expect(rules).toContainText(sentence);
