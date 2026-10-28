@@ -130,7 +130,11 @@ function openSaving(next: Route, hands: MenuHands) {
   hands.go(next);
 }
 
-/** The sort order, chosen from the menu: the same setting as in Settings › Reading. */
+/**
+ * The sort order, chosen from the menu: the same setting as in Settings › Reading.
+ * It compares with the order the menu was drawn with; the screen draws the
+ * menu again whenever the setting changes, so that is the order showing now.
+ */
 async function sortFromMenu(next: Order, scene: MenuScene, hands: MenuHands) {
   if (next === scene.sort) return;
   try {

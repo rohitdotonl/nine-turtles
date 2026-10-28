@@ -129,6 +129,13 @@ describe("the list's More menu", () => {
     ]);
   });
 
+  it("asks the list to mark, catch up or refresh when those rows are chosen", () => {
+    const { given, done } = hands();
+    const groups = listMenu(scene({ selected: true }), given);
+    for (const label of ["Mark all as read", "Mark all above as read", "Mark all below as read", "Catch me up", "Refresh"]) choose(groups, label);
+    expect(done).toEqual([["markAllRead"], ["markPast", "above"], ["markPast", "below"], ["catchUp"], ["refresh"]]);
+  });
+
   it("shows no keys when the screen has none to show (a phone)", () => {
     const { given } = hands();
     const groups = listMenu(scene({ selected: true }), { ...given, shortcut: () => undefined });
