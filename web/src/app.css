@@ -417,6 +417,11 @@ body {
 .item-row .title {
   line-height: 1.3;
 }
+@media (pointer: fine) {
+  .item-row {
+    --row-title-size: 1.125rem;
+  }
+}
 
 /*
   The foot of a list that has more to load: reaching it loads the next 50
@@ -510,7 +515,8 @@ body {
 */
 .unread-dot {
   position: absolute;
-  top: calc(0.625rem + var(--text-ui) * 0.65 - 4px);
+  /* Centred on the title's first line: the row's top room, then half the line (1.3 times the title's size). */
+  top: calc(0.875rem + var(--row-title-size, var(--text-ui)) * 0.65 - 4px);
   left: var(--dot-left, 8px);
   width: 8px;
   height: 8px;

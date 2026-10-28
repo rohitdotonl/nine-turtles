@@ -68,6 +68,19 @@
   let place = $state(
     start?.placeGone ? "" : start?.feedId != null ? `feed:${start.feedId}` : start?.folderId != null ? `folder:${start.folderId}` : startFeed !== undefined ? `feed:${startFeed}` : "all",
   );
+  /** The chosen place's words, so its menu is as wide as they are. */
+  let placeName = $derived.by(() => {
+    const [kind, id] = place.split(":");
+    if (kind === "folder") return folders.find((folder) => folder.id === Number(id))?.name ?? "";
+    if (kind === "feed") return feeds.find((feed) => feed.id === Number(id))?.title ?? "";
+    return place === "" ? "choose where…" : "all feeds";
+  });
+
+  /** A menu in the sentence is as wide as its chosen words and its small arrow, so the sentence reads without gaps. */
+  function fit(words: string): string {
+    return `calc(${(Math.min(words.length, 28) * 0.5 + 0.3).toFixed(2)}em + 1.25rem)`;
+  }
+
   let busy = $state(false);
   let message = $state("");
   let wordsField: HTMLInputElement | undefined = $state();
@@ -166,11 +179,11 @@
         aria-describedby="rule-words-help"
         aria-invalid={message !== "" && !words.trim() && !author.trim()}
         class="blank"
-        style:width={`${Math.max(words.length, 6) + 1}ch`}
+        style:width={`${(Math.max(words.length, 6) * 0.5 + 0.6).toFixed(2)}em`}
       />
       in
       <span class="blank-pick"
-        ><select bind:value={titleOnly} aria-label="Where to look" class="blank">
+        ><select bind:value={titleOnly} aria-label="Where to look" class="blank" style:width={fit(titleOnly ? "its title" : "its title or text")}>
           <option value={true}>its title</option>
           <option value={false}>its title or text</option>
         </select><Icon name="chevron-down" size={14} /></span
@@ -183,10 +196,10 @@
         aria-label="Author"
         aria-describedby="rule-author-help"
         class="blank"
-        style:width={`${Math.max(author.length, 10) + 1}ch`}
+        style:width={`${(Math.max(author.length, 10) * 0.5 + 0.6).toFixed(2)}em`}
       />, from
       <span class="blank-pick"
-        ><select bind:value={place} aria-label="In" aria-invalid={place === ""} class="blank">
+        ><select bind:value={place} aria-label="In" aria-invalid={place === ""} class="blank" style:width={fit(placeName)}>
           {#if place === ""}<option value="" disabled>choose where…</option>{/if}
           <option value="all">all feeds</option>
           {#if folders.length > 0}
@@ -206,7 +219,7 @@
         </select><Icon name="chevron-down" size={14} /></span
       >, then
       <span class="blank-pick"
-        ><select bind:value={action} aria-label="Then" aria-describedby="rule-action-help" class="blank">
+        ><select bind:value={action} aria-label="Then" aria-describedby="rule-action-help" class="blank" style:width={fit(SAID[action])}>
           {#each ACTIONS as choice (choice.value)}
             <option value={choice.value}>{SAID[choice.value]}</option>
           {/each}

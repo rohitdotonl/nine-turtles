@@ -118,6 +118,20 @@ export const SCREENS: Screen[] = [
     },
   },
   {
+    // The Aa panel open over an article: one quiet line per setting (decision 0123).
+    name: "aa-panel",
+    path: "/all",
+    signedIn: true,
+    library: true,
+    open: async (page) => {
+      await openReadingRoom(page, { unread: libraryApp() !== FEEDS_APP });
+      await page.keyboard.press("o");
+      await expect(page.getByRole("heading", { level: 2, name: "The pleasure of a slow letter" })).toBeFocused();
+      await page.getByRole("button", { name: "Reading appearance" }).first().click();
+      await expect(page.getByRole("dialog", { name: "Reading appearance" })).toBeVisible();
+    },
+  },
+  {
     // Read, unread, selected and starred rows together, and the line with Undo.
     name: "marks",
     path: "/all",
