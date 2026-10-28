@@ -107,6 +107,17 @@ impl Owner {
         (status, serde_json::from_str(&text).unwrap_or(Value::Null))
     }
 
+    async fn get(&self, path: &str) -> Value {
+        let response = Client::new()
+            .get(format!("{}{path}", self.base))
+            .header("cookie", &self.cookie)
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK, "{path}");
+        serde_json::from_str(&response.text().await.unwrap()).unwrap()
+    }
+
     async fn make_app_password(&self) -> String {
         let (status, made) = self.post("/api/apps/password", &json!({})).await;
         assert_eq!(status, StatusCode::OK);
@@ -565,4 +576,46 @@ async fn apps_follow_unfollow_rename_and_file_feeds() {
         .await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(app.ids(&format!("s={feed}&n=100")).await.len(), 30);
+}
+
+#[tokio::test]
+async fn an_app_deleting_a_folder_leaves_its_rules_and_searches_as_the_screen_does() {
+    let owner = Owner::new().await;
+    let (status, made) = owner
+        .post(
+            "/api/folders",
+            &json!({ "name": "Garden", "feeds": [owner.feed] }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::CREATED);
+    let folder = made["folder"]["id"].as_i64().unwrap();
+    let (status, _) = owner
+        .post(
+            "/api/rules",
+            &json!({ "words": "laptop", "folder_id": folder, "action": "mute" }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    let (status, _) = owner
+        .post(
+            "/api/saved-searches",
+            &json!({ "name": "Roses", "query": { "words": "roses", "scope": { "kind": "folder", "id": folder } } }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::CREATED);
+    let app = App::sign_in(&owner.base, &owner.make_app_password().await)
+        .await
+        .unwrap();
+
+    let (status, _) = app
+        .post("disable-tag", &[("s", "user/-/label/Garden")])
+        .await;
+    assert_eq!(status, StatusCode::OK);
+
+    // The rule stays, paused and saying so; the search looks in no folder.
+    let rule = &owner.get("/api/rules").await["rules"][0];
+    assert_eq!(rule["place_gone"], true);
+    assert_eq!(rule["folder_id"], Value::Null);
+    let search = &owner.get("/api/saved-searches").await["searches"][0];
+    assert_eq!(search["query"]["scope"]["id"], 0);
 }

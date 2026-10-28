@@ -1001,20 +1001,15 @@ async fn folder(state: &AppState, person: i64, tool: &str, asked: FolderName) ->
             ("create_folder", _, Some(name)) => {
                 let (id, new) = folders::folder_named(&mut transaction, person, &name).await?;
                 // Only feeds the reader follows, as the screen's Undo does.
-                sqlx::query(
-                    "INSERT OR IGNORE INTO feed_folders (folder_id, feed_id)
-                     SELECT ?, feed_id FROM subscriptions
-                     WHERE person_id = ? AND feed_id IN (SELECT value FROM json_each(?))
-                         AND unsubscribed_at IS NULL",
+                folders::put_back(
+                    &mut transaction,
+                    person,
+                    id,
+                    &asked.feed_ids,
+                    &asked.rule_ids,
+                    &asked.search_ids,
                 )
-                .bind(id)
-                .bind(person)
-                .bind(serde_json::to_string(&asked.feed_ids).unwrap_or_else(|_| "[]".to_owned()))
-                .execute(&mut *transaction)
                 .await?;
-                rules::back_in_folder(&mut transaction, person, id, &asked.rule_ids).await?;
-                crate::saved_searches::back_in(&mut *transaction, person, "folder", id, &asked.search_ids)
-                    .await?;
                 Ok(json!({ "done": true, "folder_id": id, "already_there": !new }))
             }
             ("rename_folder", Some(id), Some(name)) => {
@@ -1044,35 +1039,16 @@ async fn folder(state: &AppState, person: i64, tool: &str, asked: FolderName) ->
                 }
             }
             ("delete_folder", Some(id), _) => {
-                // Kept for the answer, so the assistant can undo it.
-                let feeds_in: Vec<i64> = sqlx::query_scalar(
-                    "SELECT feed_id FROM feed_folders WHERE folder_id =
-                         (SELECT id FROM folders WHERE id = ? AND person_id = ?)",
-                )
-                .bind(id)
-                .bind(person)
-                .fetch_all(&mut *transaction)
-                .await?;
-                let gone: Option<String> = sqlx::query_scalar(
-                    "DELETE FROM folders WHERE id = ? AND person_id = ? RETURNING name",
-                )
-                .bind(id)
-                .bind(person)
-                .fetch_optional(&mut *transaction)
-                .await?;
-                match gone {
-                    Some(name) => {
-                        let searches = crate::saved_searches::forget(&mut *transaction, person, "folder", id).await?;
-                        let rules = rules::place_gone(&mut transaction, id).await?;
-                        Ok(json!({
-                            "done": true,
-                            "removed": name,
-                            "feed_ids": feeds_in,
-                            "rule_ids": rules,
-                            "search_ids": searches,
-                            "undo": "create_folder with this name, feed_ids, rule_ids and search_ids puts it back as it was",
-                        }))
-                    }
+                match folders::delete(&mut transaction, person, id).await? {
+                    // Everything the assistant needs to undo it.
+                    Some(gone) => Ok(json!({
+                        "done": true,
+                        "removed": gone.name,
+                        "feed_ids": gone.feeds,
+                        "rule_ids": gone.rules,
+                        "search_ids": gone.searches,
+                        "undo": "create_folder with this name, feed_ids, rule_ids and search_ids puts it back as it was",
+                    })),
                     None => Err("The reader has no folder with that id.".to_owned()),
                 }
             }

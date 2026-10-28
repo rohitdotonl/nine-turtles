@@ -569,20 +569,15 @@ async fn create_folder(
         if !new {
             return Ok(Err(id));
         }
-        sqlx::query(
-            "INSERT OR IGNORE INTO feed_folders (folder_id, feed_id)
-             SELECT ?, feed_id FROM subscriptions
-             WHERE person_id = ? AND feed_id IN (SELECT value FROM json_each(?))
-                 AND unsubscribed_at IS NULL",
+        put_back(
+            &mut transaction,
+            person,
+            id,
+            &form.feeds,
+            &form.rules,
+            &form.searches,
         )
-        .bind(id)
-        .bind(person)
-        .bind(serde_json::to_string(&form.feeds).unwrap_or_else(|_| "[]".to_owned()))
-        .execute(&mut *transaction)
         .await?;
-        rules::back_in_folder(&mut transaction, person, id, &form.rules).await?;
-        crate::saved_searches::back_in(&mut *transaction, person, "folder", id, &form.searches)
-            .await?;
         transaction.commit().await?;
         Ok(Ok(id))
     }
@@ -648,38 +643,100 @@ async fn delete_folder(
     State(state): State<AppState>,
     Path(id): Path<i64>,
 ) -> Response {
-    // The rules and saved searches it had, for Undo to hand back.
-    type HandedBack = (Vec<i64>, Vec<i64>);
-    let deleted: Result<Option<HandedBack>, sqlx::Error> = async {
+    let deleted: Result<Option<Deleted>, sqlx::Error> = async {
         let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
-        let deleted = sqlx::query("DELETE FROM folders WHERE id = ? AND person_id = ?")
-            .bind(id)
-            .bind(person)
-            .execute(&mut *transaction)
-            .await?;
-        if deleted.rows_affected() == 0 {
-            return Ok(None);
-        }
-        // Saved searches in it now look in no folder, and rules for it stay,
-        // paused and saying so (SPEC section 27); the screen keeps both
-        // lists of numbers, so Undo can hand them back.
-        let searches =
-            crate::saved_searches::forget(&mut *transaction, person, "folder", id).await?;
-        let rules = rules::place_gone(&mut transaction, id).await?;
+        let deleted = delete(&mut transaction, person, id).await?;
         transaction.commit().await?;
-        Ok(Some((rules, searches)))
+        Ok(deleted)
     }
     .await;
+    // The screen keeps the name and feeds itself; it needs back only the
+    // rules and saved searches, for Undo.
     match deleted {
         Ok(None) => StatusCode::NOT_FOUND.into_response(),
-        Ok(Some((rules, searches))) if rules.is_empty() && searches.is_empty() => {
+        Ok(Some(deleted)) if deleted.rules.is_empty() && deleted.searches.is_empty() => {
             StatusCode::NO_CONTENT.into_response()
         }
-        Ok(Some((rules, searches))) => {
-            Json(json!({ "rules": rules, "searches": searches })).into_response()
+        Ok(Some(deleted)) => {
+            Json(json!({ "rules": deleted.rules, "searches": deleted.searches })).into_response()
         }
         Err(error) => database_problem("deleting a folder", &error),
     }
+}
+
+/// What deleting a folder took away, for Undo to hand back (`put_back`).
+pub struct Deleted {
+    pub name: String,
+    /// The feeds that were in it.
+    pub feeds: Vec<i64>,
+    /// Rules for it, now paused and saying so (SPEC section 27).
+    pub rules: Vec<i64>,
+    /// Saved searches that looked in it, now looking in no folder.
+    pub searches: Vec<i64>,
+}
+
+/// Deletes one of the reader's folders, the one way every door does it (the
+/// screen, sync apps, assistants). Its feeds stay followed; they just leave
+/// it. Rules and saved searches for it stay, matching and finding nothing
+/// (decisions 0077 and 0081). Answers what Undo needs, or `None` when the
+/// reader has no such folder.
+pub async fn delete(
+    connection: &mut SqliteConnection,
+    person: i64,
+    id: i64,
+) -> Result<Option<Deleted>, sqlx::Error> {
+    let feeds: Vec<i64> = sqlx::query_scalar(
+        "SELECT feed_id FROM feed_folders WHERE folder_id =
+             (SELECT id FROM folders WHERE id = ? AND person_id = ?)",
+    )
+    .bind(id)
+    .bind(person)
+    .fetch_all(&mut *connection)
+    .await?;
+    let name: Option<String> =
+        sqlx::query_scalar("DELETE FROM folders WHERE id = ? AND person_id = ? RETURNING name")
+            .bind(id)
+            .bind(person)
+            .fetch_optional(&mut *connection)
+            .await?;
+    let Some(name) = name else {
+        return Ok(None);
+    };
+    let searches = crate::saved_searches::forget(&mut *connection, person, "folder", id).await?;
+    let rules = rules::place_gone(connection, id).await?;
+    Ok(Some(Deleted {
+        name,
+        feeds,
+        rules,
+        searches,
+    }))
+}
+
+/// Undo for `delete`: fills the folder made again, numbered `id`, with the
+/// feeds the reader still follows, and hands back its rules and saved
+/// searches.
+pub async fn put_back(
+    connection: &mut SqliteConnection,
+    person: i64,
+    id: i64,
+    feeds: &[i64],
+    rules: &[i64],
+    searches: &[i64],
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "INSERT OR IGNORE INTO feed_folders (folder_id, feed_id)
+         SELECT ?, feed_id FROM subscriptions
+         WHERE person_id = ? AND feed_id IN (SELECT value FROM json_each(?))
+             AND unsubscribed_at IS NULL",
+    )
+    .bind(id)
+    .bind(person)
+    .bind(serde_json::to_string(feeds).unwrap_or_else(|_| "[]".to_owned()))
+    .execute(&mut *connection)
+    .await?;
+    rules::back_in_folder(connection, person, id, rules).await?;
+    crate::saved_searches::back_in(&mut *connection, person, "folder", id, searches).await?;
+    Ok(())
 }
 
 fn already(id: i64) -> Response {
