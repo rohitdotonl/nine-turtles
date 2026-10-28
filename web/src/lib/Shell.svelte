@@ -36,36 +36,10 @@
   import SidebarFeeds from "./SidebarFeeds.svelte";
   import StarterFeeds from "./StarterFeeds.svelte";
   import { partlyAdded, type Starter } from "./starters";
-  import {
-    createFolder,
-    deleteFolder,
-    feedNextTo,
-    homeView,
-    savedOpenFolders,
-    lastMode,
-    listFeeds,
-    loadSettings,
-    marksUnsaved,
-    refused,
-    resubscribe,
-    saveMode,
-    saveSort,
-    saveCounts,
-    saveLetGo,
-    saveHidden,
-    lastCounts,
-    lastHidden,
-    unsubscribe,
-    type Article,
-    type Feed,
-    type Folder,
-    type Notice,
-    type Order,
-    type Counts,
-    type LetGo,
-    type ReadingMode,
-    type Source,
-  } from "./feeds";
+  import type { Article, Feed, Folder, Source } from "./shapes";
+  import { homeView, lastMode, loadSettings, saveMode, saveSort, saveCounts, saveLetGo, saveHidden, lastCounts, lastHidden, type Order, type Counts, type LetGo, type ReadingMode } from "./reading";
+  import { createFolder, deleteFolder, feedNextTo, savedOpenFolders, listFeeds, refused, resubscribe, unsubscribe, type Notice } from "./feeds";
+  import { marksUnsaved } from "./saving";
   import { createKeyReader, keyCap, keyFor } from "./keyboard";
   import { currentKey, currentKeyOf, keys, tip } from "./keys.svelte";
   import { panesFor, widthFor, MEDIUM_REM, WIDE_REM, type SidebarChoice, type Width } from "./layout";

@@ -10,7 +10,7 @@
 <script lang="ts">
   import { tick, untrack } from "svelte";
   import NewAddress from "./NewAddress.svelte";
-  import type { Feed } from "./feeds";
+  import type { Feed } from "./shapes";
   import { brokenSince, type Sick } from "./health";
 
   let {

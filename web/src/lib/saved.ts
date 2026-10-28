@@ -3,7 +3,7 @@
 // is the search field's `Query`, kept by the server as it's sent
 // (server/src/saved_searches.rs). This file only talks to the server and
 // decides; the sidebar and the sheet show it.
-import type { Library } from "./feeds";
+import type { Library } from "./shapes";
 import { chipsFor, isDate, type Query, type Scope } from "./search";
 import { api } from "./updates.svelte";
 import { isRecord, sendChange } from "./http";

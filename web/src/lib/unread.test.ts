@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 // Easing unread guilt (decision 0097): Catch me up, unread that lets go, and
-// counts that can hide. Each test loads feeds.ts afresh.
+// counts that can hide. Each test loads lists.ts and reading.ts afresh.
 async function load() {
   vi.resetModules();
-  return import("./feeds");
+  return { ...(await import("./lists")), ...(await import("./reading")) };
 }
 
 /** A fetch that answers every request with `body`, and remembers what it was sent. */

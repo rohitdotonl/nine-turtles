@@ -30,7 +30,8 @@
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
-  import { findByName, folderUnread, inDevanagari, saveOpenFolders, savedOpenFolders, unreadLabel, type Feed, type Folder } from "./feeds";
+  import type { Feed, Folder } from "./shapes";
+  import { findByName, folderUnread, inDevanagari, saveOpenFolders, savedOpenFolders, unreadLabel } from "./feeds";
   import { pathFor, type Route } from "./router";
   import type { SavedSearch } from "./saved";
   import type { Collection } from "./collections";

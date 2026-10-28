@@ -8,7 +8,7 @@
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
-  import { importStars, starsMessage } from "./feeds";
+  import { importStars, starsMessage } from "./importing";
 
   let { onImported, lines = $bindable([]) }: { onImported: () => void; lines?: string[] } = $props();
 

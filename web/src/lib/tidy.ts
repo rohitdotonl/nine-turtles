@@ -2,7 +2,9 @@
 // with when it last posted, the quiet ones, and moving or unsubscribing from
 // several feeds in one go, each with one Undo.
 
-import { change, when, type Folder, type Refusal } from "./feeds";
+import type { Folder } from "./shapes";
+import { change, type Refusal } from "./feeds";
+import { when } from "./times";
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
 

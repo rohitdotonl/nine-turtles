@@ -13,7 +13,8 @@
   import PageHead from "./PageHead.svelte";
   import Sheet from "./Sheet.svelte";
   import { edge } from "./edge";
-  import { refused, renameFolder, type Folder } from "./feeds";
+  import type { Folder } from "./shapes";
+  import { refused, renameFolder } from "./feeds";
 
   let {
     folder,

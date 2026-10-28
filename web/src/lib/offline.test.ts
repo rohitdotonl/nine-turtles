@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Article, Library } from "./feeds";
+import type { Article, Library } from "./shapes";
 import { offsetFrom } from "./connection.svelte";
 import { KEEP_STARRED, KEEP_UNREAD, NeedsConnection, countsAfter, inParts, keptList, toKeep, withMark, type Kept } from "./offline";
 

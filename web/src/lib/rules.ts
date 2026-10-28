@@ -2,7 +2,7 @@
 // that", in plain fields. This file talks to the server about them and
 // writes each rule as one plain sentence, the way Settings lists it.
 
-import { toArticle, type Article, type Feed, type Folder } from "./feeds";
+import { toArticle, type Article, type Feed, type Folder } from "./shapes";
 import { getJson, isRecord, sendChange } from "./http";
 
 /** Mute: kept, counted as read, shown only in search and on the Muted page. */

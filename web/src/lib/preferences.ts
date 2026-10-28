@@ -4,6 +4,7 @@
 // is lost if that storage is unavailable: nine turtles simply uses the defaults.
 import { LOOKS, OLD_THEMES, THEMES, isAppearance, isTheme, resolveMode, type Appearance, type Mode, type Theme } from "./themes";
 import { deviceStorage } from "./device";
+import { isRecord } from "./http";
 
 export type ReadingFont = "literata" | "atkinson" | "system-serif";
 export type LineWidth = "narrow" | "medium" | "wide";
@@ -63,7 +64,7 @@ export function load(storage: Pick<Storage, "getItem"> | undefined = deviceStora
   } catch {
     saved = null;
   }
-  const s = typeof saved === "object" && saved !== null ? (saved as Record<string, unknown>) : {};
+  const s = isRecord(saved) ? saved : {};
   // A theme saved by an earlier version becomes Original, keeping its Appearance (decision 0056).
   const old = typeof s.theme === "string" && Object.hasOwn(OLD_THEMES, s.theme) ? OLD_THEMES[s.theme] : undefined;
   return {

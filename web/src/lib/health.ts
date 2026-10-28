@@ -3,7 +3,8 @@
 // Unsubscribe. The server sends a short problem word ("not-found"); only
 // this file turns it into sentences, and no error code is ever shown.
 
-import { when, type Choice } from "./feeds";
+import type { Choice } from "./feeds";
+import { when } from "./times";
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
 

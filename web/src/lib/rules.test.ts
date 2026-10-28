@@ -1,5 +1,5 @@
 import { describe as group, expect, it } from "vitest";
-import type { Feed, Folder } from "./feeds";
+import type { Feed, Folder } from "./shapes";
 import { applyQuestion, appliedMessage, describe, ruleRefused, type Rule } from "./rules";
 
 const feeds: Feed[] = [{ id: 3, title: "Garden Notes", siteUrl: null, unread: 0, folders: [7], river: false, check: "automatic", openOnSite: false }];

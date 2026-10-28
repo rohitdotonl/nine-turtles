@@ -35,7 +35,9 @@
   import { youtubeVideo } from "./youtube";
   import { addToUpNext, player, removeFromUpNext } from "./player.svelte";
   import type { Preferences } from "./preferences";
-  import { articleNow, readArticle, when, type Article, type FullArticle } from "./feeds";
+  import type { Article, FullArticle } from "./shapes";
+  import { articleNow, readArticle } from "./articles";
+  import { when } from "./times";
   import { goTo, keepPlace, placeIn, placeOf, type Place } from "./places";
   import { connection } from "./connection.svelte";
   import { EPISODE_OFFLINE, NOT_KEPT } from "./offline";

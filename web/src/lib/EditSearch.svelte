@@ -14,7 +14,7 @@
   import PageHead from "./PageHead.svelte";
   import Sheet from "./Sheet.svelte";
   import { edge } from "./edge";
-  import type { Library } from "./feeds";
+  import type { Library } from "./shapes";
   import { changeSaved, describe, refusedSaving, saveSearch, suggestedName, type SavedSearch } from "./saved";
   import type { Query } from "./search";
 

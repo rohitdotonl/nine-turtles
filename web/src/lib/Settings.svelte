@@ -49,7 +49,8 @@
   import PageHead from "./PageHead.svelte";
   import TextSize from "./TextSize.svelte";
   import { APPEARANCES, LOOKS, THEMES } from "./themes";
-  import type { Counts, Feed, Folder, LetGo, Order, ReadingMode } from "./feeds";
+  import type { Feed, Folder } from "./shapes";
+  import type { Counts, LetGo, Order, ReadingMode } from "./reading";
   import { SETTINGS_PAGES, type Hideable, type SettingsPage } from "./router";
   import { LINE_WIDTHS, READING_FONTS, type Preferences } from "./preferences";
   import { signOut } from "./session";

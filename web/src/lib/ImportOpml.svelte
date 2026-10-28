@@ -7,7 +7,7 @@
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
-  import { importMessage, importOpml } from "./feeds";
+  import { importMessage, importOpml } from "./importing";
 
   let { onImported, lines = $bindable([]) }: { onImported: () => void; lines?: string[] } = $props();
 

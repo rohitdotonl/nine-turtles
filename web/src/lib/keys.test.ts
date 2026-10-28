@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Each save waits until the test answers it, so two changes can overlap.
 const answers: { keys: Record<string, string>; settle: (ok: boolean) => void }[] = [];
-vi.mock("./feeds", () => ({
+vi.mock("./reading", () => ({
   lastKeys: () => ({}),
   forgetKeys: vi.fn(),
   saveKeys: (keys: Record<string, string>) =>

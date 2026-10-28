@@ -4,6 +4,7 @@
 // only a scrambled copy.
 
 import { api } from "./updates.svelte";
+import { isRecord } from "./http";
 
 export type AppsStatus = { on: boolean };
 
@@ -16,7 +17,7 @@ export async function appsStatus(): Promise<AppsStatus> {
   const response = await api("/api/apps", { cache: "no-store" });
   if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
   const body: unknown = await response.json();
-  return { on: typeof body === "object" && body !== null && "on" in body && body.on === true };
+  return { on: isRecord(body) && body.on === true };
 }
 
 /** Makes a new app password, replacing any earlier one, and returns it. */
@@ -24,7 +25,7 @@ export async function makeAppPassword(): Promise<string> {
   const response = await api("/api/apps/password", { method: "POST" });
   if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
   const body: unknown = await response.json();
-  if (typeof body === "object" && body !== null && "password" in body && typeof body.password === "string") {
+  if (isRecord(body) && typeof body.password === "string") {
     return body.password;
   }
   throw new Error("nine turtles sent no password");

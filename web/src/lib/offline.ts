@@ -16,7 +16,8 @@
 // on each device. (Marks still waiting when a sign-in has expired can't be
 // saved: the server would refuse them anyway. Decision 0101.)
 
-import type { Article, FullArticle, Library, Order, Page, ReadingMode, Source } from "./feeds";
+import type { Article, FullArticle, Library, Page, Source } from "./shapes";
+import type { Order, ReadingMode } from "./reading";
 import { currentTabReader } from "./updates.svelte";
 import { deviceText, setDeviceText } from "./device";
 
@@ -376,7 +377,7 @@ async function waitingMarks(): Promise<Mark[]> {
   }
 }
 
-/** How the copies are fetched and marks sent: given by feeds.ts, so this file stays free of the server's details. */
+/** How the copies are fetched and marks sent: given by lists.ts, so this file stays free of the server's details. */
 export type Fetchers = {
   list: (source: Source, order: Order, after: string | null) => Promise<Page>;
   several: (ids: number[]) => Promise<FullArticle[]>;

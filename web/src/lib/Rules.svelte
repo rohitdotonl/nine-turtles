@@ -10,7 +10,7 @@
 <script lang="ts">
   import { tick } from "svelte";
   import Icon from "./Icon.svelte";
-  import type { Feed, Folder } from "./feeds";
+  import type { Feed, Folder } from "./shapes";
   import {
     appliedMessage,
     applyQuestion,

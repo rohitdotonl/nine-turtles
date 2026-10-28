@@ -35,28 +35,13 @@
 <script lang="ts">
   import Icon from "./Icon.svelte";
   import { onMount, tick, untrack } from "svelte";
-  import {
-    catchUp as catchUpOnServer,
-    caughtUpMessage,
-    dayHeading,
-    endOfList,
-    listArticles,
-    markedAllMessage,
-    markRead,
-    markStarred,
-    newItemsMessage,
-    newItemsWaiting,
-    nothingPastMessage,
-    noteOpened,
-    prefetch,
-    readPast,
-    when,
-    type Article,
-    type Notice,
-    type Order,
-    type Source,
-    uncatchUp,
-  } from "./feeds";
+  import type { Article, Source } from "./shapes";
+  import type { Order } from "./reading";
+  import type { Notice } from "./feeds";
+  import { catchUp as catchUpOnServer, caughtUpMessage, endOfList, listArticles, markedAllMessage, newItemsMessage, newItemsWaiting, nothingPastMessage, noteOpened, readPast, uncatchUp } from "./lists";
+  import { markRead, markStarred } from "./saving";
+  import { prefetch } from "./articles";
+  import { dayHeading, when } from "./times";
   import { hugEllipsis } from "./hug";
   import { length } from "./podcasts";
   import { boldParts } from "./search";

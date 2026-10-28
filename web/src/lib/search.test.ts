@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Library } from "./feeds";
+import type { Library } from "./shapes";
 import {
   boldParts,
   chipsFor,

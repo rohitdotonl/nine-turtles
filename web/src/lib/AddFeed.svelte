@@ -22,7 +22,8 @@
 <script lang="ts">
   import { onMount, type Snippet } from "svelte";
   import Icon from "./Icon.svelte";
-  import { addFeed, explain, findFeeds, type Choice, type Feed } from "./feeds";
+  import type { Feed } from "./shapes";
+  import { addFeed, explain, findFeeds, type Choice } from "./feeds";
 
   let {
     field = $bindable(),

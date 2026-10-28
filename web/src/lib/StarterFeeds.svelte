@@ -13,7 +13,7 @@
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
-  import type { Feed } from "./feeds";
+  import type { Feed } from "./shapes";
   import { GUIDE_URL, STARTERS, addStarters, startProblem, type Starter } from "./starters";
 
   let {
