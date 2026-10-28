@@ -106,9 +106,9 @@
     >{/if}
 {/snippet}
 
-{#snippet name(text: string, folder = false)}
-  <!-- Devanagari a touch larger, so it sits level with Latin names (decision 0041). A folder's name is in small spaced capitals (decision 0123). -->
-  <span class={["min-w-0 flex-1 truncate", inDevanagari(text) && "devanagari", folder && "folder-name"]}>{text}</span>
+{#snippet name(text: string)}
+  <!-- Devanagari a touch larger, so it sits level with Latin names (decision 0041). -->
+  <span class={["min-w-0 flex-1 truncate", inDevanagari(text) && "devanagari"]}>{text}</span>
 {/snippet}
 
 {#snippet leadsOn()}
@@ -182,8 +182,8 @@
     }}
     data-folder-link={folder.id}
     title={folder.name}
-    class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center gap-3 rounded-md pr-3.5 text-ui pointer-fine:text-small", padded ? "pl-[38px]" : "pl-3", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
-    >{@render name(folder.name, !padded || phone)}<span class="folder-count contents">{@render count(folderUnread(folder, feeds))}</span>{@render leadsOn()}</a
+    class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center rounded-md pr-3.5 text-ui pointer-fine:text-small", padded ? "gap-3 pl-[38px]" : "gap-2.5 pl-3", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
+    >{#if !padded}<span class={["shrink-0", isHere(place) ? "text-ink" : "text-muted"]}><Icon name="folder" size={16} /></span>{/if}{@render name(folder.name)}<span class="folder-count contents">{@render count(folderUnread(folder, feeds))}</span>{@render leadsOn()}</a
   >
 {/snippet}
 
@@ -229,7 +229,7 @@
         {@const inside = feeds.filter((feed) => feed.folders.includes(folder.id))}
         {@const shown = phone || open.includes(folder.id)}
         <li>
-          <div class="place folder-row relative mx-2 mt-2 flex" data-here={here || undefined}>
+          <div class="place folder-row relative mx-2 flex" data-here={here || undefined}>
             {@render folderLink(folder, false)}
             {#if !phone}
               <!--
@@ -260,9 +260,9 @@
           {#if shown}
             <ul id={`folder-${folder.id}`} class={["mb-1", !phone && "folder-feeds"]}>
               {#each inside as feed (feed.id)}
-                {@render feedRow(feed, phone)}
+                {@render feedRow(feed, true)}
               {:else}
-                <li class="py-2 pr-5 pl-[46px] text-meta text-muted">No feeds in this folder.</li>
+                <li class="py-2 pr-5 pl-16 text-meta text-muted">No feeds in this folder.</li>
               {/each}
             </ul>
           {/if}
@@ -282,19 +282,8 @@
 
 <style>
   /*
-    A folder's name in small spaced capitals, semibold, in full ink, so a
-    folder reads as a heading over its feeds rather than as one more feed
-    (decision 0123). Screen readers still read the name as written.
-  */
-  .folder-name {
-    font-size: 0.92em;
-    font-weight: 600;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
-  }
-  /*
     A faint line down the left of an open folder's feeds, under the folder's
-    name, so the feeds read as its contents at a glance (decision 0123).
+    icon, so the feeds read as its contents at a glance (decision 0123).
   */
   .folder-feeds {
     position: relative;
@@ -304,7 +293,7 @@
     position: absolute;
     top: 0.25rem;
     bottom: 0.25rem;
-    left: 21px;
+    left: 28px;
     border-left: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
   }
   /* The arrow hides until it's wanted; the count shows in its place meanwhile. */
