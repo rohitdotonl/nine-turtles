@@ -13,7 +13,8 @@
   import Icon from "./Icon.svelte";
   import PageHead from "./PageHead.svelte";
   import Sheet from "./Sheet.svelte";
-  import { deleteFolder, refused, type Folder } from "./feeds";
+  import type { Folder } from "./shapes";
+  import { deleteFolder, refused } from "./feeds";
   import {
     folderNames,
     lastPostedWords,

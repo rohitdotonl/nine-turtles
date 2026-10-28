@@ -22,7 +22,9 @@
   import PageHead from "./PageHead.svelte";
   import Sheet from "./Sheet.svelte";
   import { edge } from "./edge";
-  import { editFeed, feedFrequency, pausedSince, refused, type Check, type Feed, type Folder } from "./feeds";
+  import type { Check, Feed, Folder } from "./shapes";
+  import { editFeed, feedFrequency, refused } from "./feeds";
+  import { pausedSince } from "./times";
   import type { Sick } from "./health";
 
   let {

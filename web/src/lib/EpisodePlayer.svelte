@@ -27,7 +27,7 @@
 -->
 <script lang="ts">
   import { tick, untrack } from "svelte";
-  import type { Article } from "./feeds";
+  import type { Article } from "./shapes";
   import { BACK_SECONDS, FORWARD_SECONDS, clock, devicePlace, left, length, nextSpeed, resumeFrom, serverPlace, speedLabel, spoken, type Episode } from "./podcasts";
   import { isLoaded, load, moveInUpNext, play, player, removeFromUpNext, seek, setRate, toggle, undoRemove } from "./player.svelte";
 

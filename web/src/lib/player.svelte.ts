@@ -18,7 +18,9 @@
 // the title, the podcast's name and its picture, and can play, pause and
 // skip (the Media Session API, where the browser has it).
 
-import { markRead, readArticle, type Article } from "./feeds";
+import type { Article } from "./shapes";
+import { markRead } from "./saving";
+import { readArticle } from "./articles";
 import { savedInOrder } from "./inorder";
 import {
   BACK_SECONDS,

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { feedNextTo, type Feed } from "./feeds";
+import type { Feed } from "./shapes";
+import { feedNextTo } from "./feeds";
 import {
   SEQUENCE_MS,
   SHORTCUTS,

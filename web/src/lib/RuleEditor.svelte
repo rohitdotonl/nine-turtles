@@ -15,7 +15,7 @@
   import PageHead from "./PageHead.svelte";
   import Sheet from "./Sheet.svelte";
   import { edge } from "./edge";
-  import type { Feed, Folder } from "./feeds";
+  import type { Feed, Folder } from "./shapes";
   import { ACTIONS, createRule, editRule, ruleRefused, type Rule, type RuleAction, type RuleDraft } from "./rules";
 
   let {

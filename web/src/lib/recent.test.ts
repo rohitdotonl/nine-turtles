@@ -4,10 +4,10 @@ import { nameFor, parse, pathFor } from "./router";
 import { scopeFor } from "./search";
 
 // Recently read, hiding lists from the sidebar, and how often a feed posts
-// (decision 0105). Each test that talks to the server loads feeds.ts afresh.
+// (decision 0105). Each test that talks to the server loads its files afresh.
 async function load() {
   vi.resetModules();
-  return import("./feeds");
+  return { ...(await import("./lists")), ...(await import("./feeds")), ...(await import("./reading")) };
 }
 
 /** A fetch that answers every request with `body`, and remembers what it was sent. */

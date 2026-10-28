@@ -5,6 +5,7 @@
 // storage is unavailable: an article simply opens at its top.
 
 import { deviceStorage } from "./device";
+import { isRecord } from "./http";
 
 /**
  * A place: which block of the article's text was at the top of the window
@@ -23,7 +24,7 @@ type Saved = Record<string, Place & { at: number }>;
 function read(storage: Pick<Storage, "getItem"> | undefined): Saved {
   try {
     const saved: unknown = JSON.parse(storage?.getItem(KEY) ?? "null");
-    return typeof saved === "object" && saved !== null && !Array.isArray(saved) ? (saved as Saved) : {};
+    return isRecord(saved) ? (saved as Saved) : {};
   } catch {
     return {};
   }

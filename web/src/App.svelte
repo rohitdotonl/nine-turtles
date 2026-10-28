@@ -25,7 +25,7 @@
   import { CONFIRM_PAGE, RESET_PAGE, SIGN_IN_LINK_PAGE } from "./lib/accounts";
   import { currentSession, deviceReader, noteReader, readerChanged, type Session } from "./lib/session";
   import { noteTabReader } from "./lib/updates.svelte";
-  import { forgetLoaded } from "./lib/feeds";
+  import { forgetLoaded } from "./lib/articles";
   import { noConnection } from "./lib/connection.svelte";
   import { forget, keepSession, keptSession } from "./lib/offline";
   import { forgetChosenKeys } from "./lib/keys.svelte";

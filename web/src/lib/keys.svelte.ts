@@ -4,7 +4,7 @@
 // Saved for the reader's account (Settings on the server), with a copy on
 // this device so they work from the first press and offline.
 
-import { forgetKeys, lastKeys, saveKeys } from "./feeds";
+import { forgetKeys, lastKeys, saveKeys } from "./reading";
 import { keyFor, keyOf, withKey, type Action, type KeyMap } from "./keyboard";
 
 export const keys = $state<{ chosen: KeyMap }>({ chosen: lastKeys() });

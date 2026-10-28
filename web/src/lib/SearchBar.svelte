@@ -15,7 +15,7 @@
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
-  import type { Feed, Folder } from "./feeds";
+  import type { Feed, Folder } from "./shapes";
   import type { Collection } from "./collections";
   import {
     chipsFor,

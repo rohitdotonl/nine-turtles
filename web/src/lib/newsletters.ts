@@ -3,6 +3,7 @@
 // sent to it arrive as feeds, one per sender.
 
 import { api } from "./updates.svelte";
+import { isRecord } from "./http";
 
 /** A label that has had mail (`name+label@…`), with its switch. */
 export type Label = { label: string; address: string; on: boolean };
@@ -10,18 +11,17 @@ export type Label = { label: string; address: string; on: boolean };
 export type NewslettersStatus = { on: boolean; address: string | null; labels: Label[] };
 
 function labels(body: unknown): Label[] {
-  if (typeof body !== "object" || body === null || !("labels" in body) || !Array.isArray(body.labels)) return [];
+  if (!isRecord(body) || !Array.isArray(body.labels)) return [];
   return body.labels.flatMap((item: unknown) => {
     const label = text(item, "label");
     const address = text(item, "address");
     if (!label || !address) return [];
-    return [{ label, address, on: typeof item === "object" && item !== null && "on" in item && item.on === true }];
+    return [{ label, address, on: isRecord(item) && item.on === true }];
   });
 }
 
 function text(body: unknown, key: string): string | null {
-  if (typeof body !== "object" || body === null || !(key in body)) return null;
-  const value = (body as Record<string, unknown>)[key];
+  const value = isRecord(body) ? body[key] : undefined;
   return typeof value === "string" ? value : null;
 }
 
@@ -30,7 +30,7 @@ export async function newslettersStatus(): Promise<NewslettersStatus> {
   const response = await api("/api/newsletters", { cache: "no-store" });
   if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
   const body: unknown = await response.json();
-  const on = typeof body === "object" && body !== null && "on" in body && body.on === true;
+  const on = isRecord(body) && body.on === true;
   return { on, address: on ? text(body, "address") : null, labels: on ? labels(body) : [] };
 }
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { AddResult, Feed } from "./feeds";
+import type { Feed } from "./shapes";
+import type { AddResult } from "./feeds";
 import { GUIDE_URL, STARTERS, addStarters, partlyAdded, startProblem, type Starter } from "./starters";
 
 const [first, second, third] = STARTERS as readonly [Starter, Starter, Starter, ...Starter[]];

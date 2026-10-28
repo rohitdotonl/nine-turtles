@@ -2,7 +2,7 @@
 // show it, the filters they can type, the suggestions offered as they type,
 // and which words of a title to show in bold. This file only decides; the
 // search field (SearchBar.svelte) shows it.
-import type { Feed, Folder, Library } from "./feeds";
+import type { Feed, Folder, Library } from "./shapes";
 import type { Route } from "./router";
 
 /** Where to search: everywhere, one of the views, one feed, one folder or one of the reader's collections. */

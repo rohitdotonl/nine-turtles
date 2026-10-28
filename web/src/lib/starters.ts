@@ -7,7 +7,8 @@
  * never looks at a web page (decision 0016).
  */
 
-import { addFeed, type Feed } from "./feeds";
+import type { Feed } from "./shapes";
+import { addFeed } from "./feeds";
 
 export type Starter = {
   name: string;

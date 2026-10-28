@@ -9,7 +9,8 @@
   import { tick } from "svelte";
   import { edge } from "./edge";
   import PageHead from "./PageHead.svelte";
-  import { when, type Article } from "./feeds";
+  import type { Article } from "./shapes";
+  import { when } from "./times";
   import { listMuted, ruleRefused, setMuted } from "./rules";
 
   let {

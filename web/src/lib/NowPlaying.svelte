@@ -11,7 +11,7 @@
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
-  import type { Article } from "./feeds";
+  import type { Article } from "./shapes";
   import { BACK_SECONDS } from "./podcasts";
   import { back, close, player, toggle } from "./player.svelte";
 
