@@ -86,7 +86,8 @@ pub fn form_pairs(text: &str) -> Vec<(String, String)> {
     let Ok(mut url) = reqwest::Url::parse("http://form.invalid/") else {
         return Vec::new();
     };
-    // Set rather than parsed, so a `#` is part of a value, not the end.
+    // Set rather than parsed, so a `#` is part of a value, not the end. The
+    // URL parser drops raw tabs and line breaks; forms send them as `%0A`.
     url.set_query(Some(text.trim_start_matches('?')));
     url.query_pairs()
         .map(|(name, value)| (name.into_owned(), value.into_owned()))

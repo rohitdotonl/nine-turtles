@@ -82,7 +82,13 @@ pub fn parse_rfc3339(text: &str) -> Option<i64> {
         None | Some(b'Z' | b'z') => 0,
         Some(sign @ (b'+' | b'-')) => {
             let hours: i64 = rest.get(1..3)?.parse().ok()?;
-            let minutes: i64 = rest.get(4..6).map_or(Some(0), |m| m.parse().ok())?;
+            // `+05:30`, `+0530` or `+05`.
+            let minutes = if rest.get(3..4) == Some(":") {
+                4..6
+            } else {
+                3..5
+            };
+            let minutes: i64 = rest.get(minutes).map_or(Some(0), |m| m.parse().ok())?;
             let offset = hours * 3_600 + minutes * 60;
             if *sign == b'+' { offset } else { -offset }
         }
@@ -123,6 +129,10 @@ mod tests {
         );
         assert_eq!(
             parse_rfc3339("2026-10-24T01:48:35+05:30"),
+            Some(1_792_786_715)
+        );
+        assert_eq!(
+            parse_rfc3339("2026-10-24T01:48:35+0530"),
             Some(1_792_786_715)
         );
         assert_eq!(parse_rfc3339("2026-10-23T15:18:35-05"), Some(1_792_786_715));
