@@ -179,6 +179,36 @@ test("rename a folder; delete it, its feeds stay, and Undo brings it back", asyn
   await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) })).toHaveCount(0);
 });
 
+test("Undo after deleting a folder limits its saved searches to it again", async ({ page }) => {
+  const blog = unique("searched");
+  const folder = unique("Zz-searched");
+  const ids = await openBlogs(page, [blog]);
+  await page.request.post(new URL(`/api/feeds/${ids[0]}`, FEEDS_APP).href, {
+    data: { title: `Blog ${blog}`, folders: [], new_folder: folder },
+  });
+  const library = await (await page.request.get(new URL("/api/feeds", FEEDS_APP).href)).json();
+  const folderId: number = library.folders.find((each: { name: string }) => each.name === folder).id;
+  const name = unique("Letters in folder");
+  const saved = await page.request.post(new URL("/api/saved-searches", FEEDS_APP).href, {
+    data: { name, query: { words: "letters", scope: { kind: "folder", id: folderId } } },
+  });
+  expect(saved.ok()).toBe(true);
+  await page.reload();
+  await appReady(page);
+
+  await sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) }).click();
+  await openEdit(page, "Edit folder");
+  await page.getByRole("button", { name: `Delete ${folder}` }).click();
+  await expect(line(page)).toHaveText(`Deleted the folder ${folder}`);
+  await page.keyboard.press("u");
+  await expect(line(page)).toHaveText("Undone.");
+
+  // The saved search opens limited to the folder again, by its name.
+  await sidebar(page).getByRole("link", { name: `${name} (saved search)` }).click();
+  await expect(page.getByRole("heading", { level: 2, name })).toBeVisible();
+  await expect(page.getByRole("button", { name: `Remove in: ${folder}` })).toBeVisible();
+});
+
 test("unsubscribe, then Undo: the feed is back with its read history; a star outlives unsubscribing", async ({ page }) => {
   const [blog, other] = [unique("leaving"), unique("starred")];
   await openBlogs(page, [blog, other]);
