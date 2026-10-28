@@ -57,6 +57,7 @@
   import { Searching } from "./searching.svelte";
   import { LoadedLibrary } from "./library.svelte";
   import { emptyText, insteadOfList, missingFrom, NOT_FOUND, type Found } from "./listWording";
+  import { isFirstVisit, newToFeedsGivesWay, welcomeFor } from "./firstVisit";
   import { startingStep, stepOf, type Screen } from "./steps";
   import { homeFor, isList, isOver, moveTo, Opener, opensFromHere, Steps, underSheet } from "./navigation";
   import { Keeper, keepUpToDate } from "./offline";
@@ -286,26 +287,18 @@
   let missing = $derived(missingFrom(under, found));
   /** The line the list area shows instead of a list, if any. */
   let listInstead = $derived(insteadOfList(under, found));
-  /** No feeds yet: Unread and All show the add field instead (SPEC section 2). */
-  let firstVisit = $derived(library.feeds !== undefined && library.feeds.length === 0);
-  // Starred keeps its own list even with no feeds: it is where its More menu and sort live.
-  let welcoming = $derived(firstVisit && !(under.kind === "view" && under.view === "starred"));
+  /** No feeds yet: Unread and All show the welcome instead (`firstVisit.ts`). */
+  let firstVisit = $derived(isFirstVisit(library.feeds));
+  let whereWelcome = $derived(welcomeFor({ firstVisit, under, article: panes.article, phone, missing: missing !== undefined }));
+  let welcoming = $derived(whereWelcome.shown);
   /** On a computer with the sidebar and the list both hidden, their two buttons become one, which brings both back. */
   let bothHidden = $derived(!phone && !panes.sidebar && !panes.list && isList(route) && !welcoming);
-  /**
-   * With a reading area beside the list, the welcome takes the list's room too: one empty state,
-   * not an empty column beside it, as Apple Books shows (decision 0048).
-   */
-  let welcomeWide = $derived(welcoming && panes.article && !missing);
-  /** On a phone with no feeds yet, the welcome is the screen's one visible heading; the list's title is only for screen readers. */
-  let welcomeAlone = $derived(phone && welcoming && !missing);
+  let welcomeWide = $derived(whereWelcome.wide);
+  let welcomeAlone = $derived(whereWelcome.alone);
   let welcomeHeading: HTMLHeadingElement | undefined = $state();
-  /**
-   * "New to feeds?" belongs to the first visit only (decision 0079): once anything is followed, its
-   * address (Back after adding starters, a bookmark) quietly becomes the home view instead.
-   */
+  /** "New to feeds?" is for the first visit only: once anything is followed, it becomes the home view. */
   $effect(() => {
-    if (route.kind !== "new-to-feeds" || firstVisit || library.feeds === undefined) return;
+    if (!newToFeedsGivesWay(route, library.feeds)) return;
     untrack(() => {
       history.replaceState({ screen: "list" }, "", pathFor(home));
       route = home;
