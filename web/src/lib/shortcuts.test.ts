@@ -41,7 +41,6 @@ function hands(next?: Route) {
     escape: note("escape"),
     startSearch: note("startSearch"),
     move: note("move"),
-    moveToEnd: note("moveToEnd"),
     feedAfter: () => next,
     open: note("open"),
     openLink: note("openLink"),
@@ -97,7 +96,7 @@ describe("carryOut", () => {
     expect(run({ kind: "go", view: "unread" }, scene({ river: true }))).toEqual([]);
     expect(run({ kind: "go", view: "starred" }, scene({ river: true }))).toEqual([["go", { kind: "view", view: "starred" }]]);
     expect(run({ kind: "move-unread", step: 1 }, scene({ river: true }))).toEqual([]);
-    expect(run({ kind: "move-unread", step: -1 }, scene())).toEqual([["move", -1, true]]);
+    expect(run({ kind: "move-unread", step: -1 }, scene())).toEqual([["move", "moveUnread", -1]]);
   });
 
   it("goes to a place by its address", () => {
@@ -181,8 +180,8 @@ describe("carryOut", () => {
   it("passes the rest straight to the screen", () => {
     expect(run({ kind: "cheat-sheet" }, scene())).toEqual([["openCheatSheet"]]);
     expect(run({ kind: "add-feed" }, scene())).toEqual([["go", { kind: "add-feed" }]]);
-    expect(run({ kind: "move", step: 1 }, scene())).toEqual([["move", 1]]);
-    expect(run({ kind: "move-end", step: -1 }, scene())).toEqual([["moveToEnd", -1]]);
+    expect(run({ kind: "move", step: 1 }, scene())).toEqual([["move", "move", 1]]);
+    expect(run({ kind: "move-end", step: -1 }, scene())).toEqual([["move", "moveToEnd", -1]]);
     expect(run({ kind: "page", step: 1 }, scene())).toEqual([["page", 1]]);
     expect(run({ kind: "open" }, scene())).toEqual([["open"]]);
   });
