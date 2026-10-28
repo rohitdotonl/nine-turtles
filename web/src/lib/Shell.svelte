@@ -42,9 +42,10 @@
   import { feedNextTo, savedOpenFolders, type Notice } from "./feeds";
   import { marksUnsaved } from "./saving";
   import { createKeyReader, keyCap, keyFor } from "./keyboard";
+  import { carryOut, keyIsOurs, type KeyHands, type KeyScene } from "./shortcuts";
   import { currentKey, currentKeyOf, keys, tip } from "./keys.svelte";
   import { panesFor, widthFor, MEDIUM_REM, WIDE_REM, type SidebarChoice, type Width } from "./layout";
-  import { TEXT_SIZES, apply, load, save } from "./preferences";
+  import { apply, load, save } from "./preferences";
   import { device } from "./appearance.svelte";
   import { VIEWS, VIEW_NAMES, inSettings, nameFor, parentOf, parse, pathFor, rowFor, titleFor, type Route, type View } from "./router";
   import { sharedAddress } from "./share";
@@ -610,111 +611,10 @@
       if (event.defaultPrevented || cheatSheetOpen || sheetShown || document.querySelector("dialog:modal")) return;
       const action = readKey(event, event.timeStamp);
       if (!action) return;
-      // Space with no article open is the browser's own: it scrolls whatever it's on.
-      if (action.kind === "page" && !(articleView && selected && panes.article && isList(route))) return;
-      // Home and End choose from the list only while the list is in view and the keyboard isn't in the
-      // open article: there, and on a page that isn't a list, they scroll as usual (decision 0110).
-      if (action.kind === "move-end" && (event.key === "Home" || event.key === "End") && !(isList(route) && panes.list && !reading && !inArticle())) return;
+      const scene = keyScene();
+      if (!keyIsOurs(action, event.key, scene)) return;
       event.preventDefault();
-      switch (action.kind) {
-        case "cheat-sheet":
-          cheatSheetOpen = true;
-          break;
-        case "toggle-sidebar":
-          toggleSidebar();
-          break;
-        case "toggle-list":
-          toggleList();
-          break;
-        case "toggle-both":
-          toggleBoth();
-          break;
-        case "go":
-          // g u does nothing in river mode: there's no Unread view.
-          if (!(river && action.view === "unread")) go({ kind: "view", view: action.view });
-          break;
-        case "go-to":
-          go(parse(action.path));
-          break;
-        case "move-end":
-          moveToEnd(action.step);
-          break;
-        case "move-feed": {
-          const next = isList(route) ? feedAfter(action.step) : undefined;
-          if (next) go(next);
-          break;
-        }
-        case "search":
-          startSearch();
-          break;
-        case "add-feed":
-          go({ kind: "add-feed" });
-          break;
-        case "escape":
-          escape();
-          break;
-        case "move":
-          move(action.step);
-          break;
-        case "move-unread":
-          if (!river) move(action.step, true);
-          break;
-        case "open":
-          open();
-          break;
-        case "open-original":
-          if (selected?.link && panes.article) window.open(selected.link, "_blank", "noopener,noreferrer");
-          break;
-        case "page":
-          articleView?.page(action.step);
-          break;
-        case "copy-link":
-          if (selected && panes.article && isList(route)) articleView?.copyLink();
-          break;
-        case "mark-older-read":
-          // Not in Recently read or Up Next either: each is in its own order, and its menu has no marks.
-          if (!river && selected && isList(route) && !(route.kind === "view" && (route.view === "recent" || route.view === "upnext") && !shown) && (panes.list || panes.article || reading))
-            itemList?.markPast("older");
-          break;
-        case "toggle-folder": {
-          // The folder you're in, or the first folder of the feed you're in.
-          const folder = currentFolder?.id ?? currentFeed?.folders[0];
-          if (isList(route) && panes.sidebar && folder !== undefined) sidebarFeeds?.toggleFolder(folder);
-          break;
-        }
-        case "edit-place":
-          if (isList(route) && !shown) {
-            if (currentFeed) go({ kind: "edit-feed", id: currentFeed.id });
-            else if (currentFolder) go({ kind: "edit-folder", id: currentFolder.id });
-          }
-          break;
-        case "star":
-          if (selected && isList(route)) itemList?.toggleStar();
-          break;
-        case "collect":
-          if (selected && isList(route)) openCollecting(selected);
-          break;
-        case "mark-unread":
-          if (selected && isList(route)) itemList?.markUnread();
-          break;
-        case "mark-all-read":
-          // Not in Recently read, whose menu has no Mark all as read either.
-          if (!river && isList(route) && !(route.kind === "view" && (route.view === "recent" || route.view === "upnext") && !shown) && (panes.list || panes.article || reading))
-            itemList?.markAllRead();
-          break;
-        case "undo":
-          if (isList(route)) itemList?.undo();
-          break;
-        case "refresh":
-          if (isList(route) && (panes.list || panes.article || reading)) itemList?.refresh();
-          break;
-        case "text-size":
-          if (selected && panes.article) {
-            const size = preferences.textSize + action.step;
-            if (size >= 0 && size < TEXT_SIZES.length) preferences.textSize = size;
-          }
-          break;
-      }
+      carryOut(action, scene, keyHands);
     };
     addEventListener("keydown", pressed);
 
@@ -1406,6 +1306,57 @@
       closeSearch();
     else if (phone && !panes.sidebar) stepBack("home");
   }
+
+  /** The screen as a shortcut sees it, at the moment of the press (`shortcuts.ts`). */
+  function keyScene(): KeyScene {
+    return {
+      river,
+      onList: isList(route),
+      searching: shown !== undefined,
+      ownOrder: route.kind === "view" && (route.view === "recent" || route.view === "upnext") && !shown,
+      sidebar: panes.sidebar,
+      list: panes.list,
+      article: panes.article,
+      reading,
+      inArticle: inArticle(),
+      selected: selected !== undefined,
+      link: selected?.link ?? undefined,
+      articleDrawn: articleView != null,
+      feed: currentFeed?.id,
+      folder: currentFolder?.id,
+      feedsFolder: currentFeed?.folders[0],
+      textSize: preferences.textSize,
+    };
+  }
+
+  /** What a shortcut can ask of the screen. */
+  const keyHands: KeyHands = {
+    openCheatSheet: () => (cheatSheetOpen = true),
+    toggleSidebar,
+    toggleList,
+    toggleBoth,
+    go: (place) => go(place),
+    escape,
+    startSearch,
+    move,
+    moveToEnd,
+    feedAfter,
+    open,
+    openLink: (link) => window.open(link, "_blank", "noopener,noreferrer"),
+    page: (step) => articleView?.page(step),
+    copyLink: () => articleView?.copyLink(),
+    markOlderRead: () => itemList?.markPast("older"),
+    markAllRead: () => itemList?.markAllRead(),
+    toggleFolder: (id) => sidebarFeeds?.toggleFolder(id),
+    star: () => itemList?.toggleStar(),
+    collect: () => {
+      if (selected) openCollecting(selected);
+    },
+    markUnread: () => itemList?.markUnread(),
+    undo: () => itemList?.undo(),
+    refresh: () => itemList?.refresh(),
+    setTextSize: (size) => (preferences.textSize = size),
+  };
 </script>
 
 {#snippet welcome(start: boolean)}

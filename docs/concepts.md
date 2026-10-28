@@ -157,6 +157,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Container query (styling by a pane's width, not the window's)
 - The reader's library on screen: feeds, folders, saved searches and collections, loaded and removed with Undo (`library.svelte.ts`)
 - The reading settings on screen: mode, sort order, counts, when unread lets go and hidden lists, each saved in order; a saved change made before the server first answers stays (`settings.svelte.ts`, keys in `keys.svelte.ts`)
+- When a shortcut applies: what's on screen at the press (`KeyScene`) and what the screen can do (`KeyHands`), decided in one place (`shortcuts.ts`)
 
 ## Data and the database
 
