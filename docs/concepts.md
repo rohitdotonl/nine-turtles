@@ -156,7 +156,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Clipboard and the system share sheet
 - Container query (styling by a pane's width, not the window's)
 - The reader's library on screen: feeds, folders, saved searches and collections, loaded and removed with Undo (`library.svelte.ts`)
-- The reading settings on screen: mode, sort order, counts, when unread lets go and hidden lists, each saved in order; a change made before the server first answers stays (`settings.svelte.ts`)
+- The reading settings on screen: mode, sort order, counts, when unread lets go and hidden lists, each saved in order; a saved change made before the server first answers stays (`settings.svelte.ts`, keys in `keys.svelte.ts`)
 
 ## Data and the database
 

@@ -65,6 +65,30 @@ describe("the reading settings", () => {
     expect([settings.sort, settings.counts, settings.letGo]).toEqual(["oldest", "hidden", "month"]);
   });
 
+  it("show the server's answer after all when the change made while it was on its way couldn't be saved", async () => {
+    const answer = later<Reading>();
+    server.loadSettings.mockReturnValue(answer.promise);
+    server.saveMode.mockRejectedValue(new Error("offline"));
+    server.saveKeys.mockRejectedValue(new Error("offline"));
+    const settings = new ReadingSettings();
+    const loading = settings.load();
+    // One fails before the answer arrives, the other after.
+    await expect(settings.changeMode("inbox")).rejects.toThrow("not saved");
+    const saving = later<void>();
+    server.saveHidden.mockReturnValue(saving.promise);
+    const hiding = settings.changeHidden(["starred"]);
+    const choosing = chooseKeys({ star: "z" });
+    answer.resolve(ON_THE_SERVER);
+    await loading;
+    expect(settings.hidden).toEqual(["starred"]);
+    await expect(choosing).rejects.toThrow("offline");
+    saving.reject(new Error("offline"));
+    await expect(hiding).rejects.toThrow("not saved");
+    expect(settings.mode).toBe("river");
+    expect(settings.hidden).toEqual(["recent"]);
+    expect(keys.chosen).toEqual({ star: "x" });
+  });
+
   it("show a change at once, and go back to what the server has when it can't be saved", async () => {
     server.loadSettings.mockResolvedValue(ON_THE_SERVER);
     const settings = new ReadingSettings();
