@@ -25,9 +25,9 @@ export function homeFor(place: Route, mode: ReadingMode): Route {
 
 /**
  * Where the list and article come from. On a window wide enough for the list,
- * adding a feed and editing a feed, folder or saved search open as a sheet over
- * the place you were, which stays in view: editing over the thing edited, the
- * rest over `lastPlace`, the last list you were on.
+ * the short tasks in `isOver` open as a sheet over the place you were, which
+ * stays in view: editing over the thing edited, the rest over `lastPlace`, the
+ * last list you were on.
  */
 export function underSheet(route: Route, lastPlace: Route, phone: boolean): Route {
   if (phone || !isOver(route)) return route;

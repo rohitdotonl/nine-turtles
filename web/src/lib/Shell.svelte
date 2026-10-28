@@ -248,8 +248,8 @@
   let listToggle: HTMLButtonElement | undefined = $state();
 
   /**
-   * On a window wide enough for the list, adding a feed and editing a feed, folder or
-   * saved search open as a sheet over the place you were, which stays in view.
+   * On a window wide enough for the list, the short tasks (adding a feed, editing, saving a
+   * search, "New to feeds?"; `isOver`) open as a sheet over the place you were, which stays in view.
    */
   let sheet = $derived(!phone && isOver(route));
   /** Where the list and article come from: under a sheet, the place it opened over (navigation.ts). */
