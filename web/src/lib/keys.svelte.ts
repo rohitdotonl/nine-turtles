@@ -57,6 +57,11 @@ export async function chooseKeys(next: KeyMap): Promise<void> {
   }
 }
 
+/** How many key changes the reader has made on this page, so keys arriving from the server can tell whether one came after they were asked for. */
+export function keysChosenSoFar(): number {
+  return changes;
+}
+
 /** Signed out: this device's copy goes, and the keys are nine turtles' own until the next reader's arrive. */
 export function forgetChosenKeys(): void {
   forgetKeys();

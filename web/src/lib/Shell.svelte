@@ -37,7 +37,8 @@
   import StarterFeeds from "./StarterFeeds.svelte";
   import { partlyAdded, type Starter } from "./starters";
   import type { Article, Feed, Folder, Source } from "./shapes";
-  import { homeView, lastMode, loadSettings, saveMode, saveSort, saveCounts, saveLetGo, saveHidden, lastCounts, lastHidden, type Order, type Counts, type LetGo, type ReadingMode } from "./reading";
+  import { homeView, type Order, type ReadingMode } from "./reading";
+  import { ReadingSettings } from "./settings.svelte";
   import { feedNextTo, savedOpenFolders, type Notice } from "./feeds";
   import { marksUnsaved } from "./saving";
   import { createKeyReader, keyCap, keyFor } from "./keyboard";
@@ -45,10 +46,9 @@
   import { panesFor, widthFor, MEDIUM_REM, WIDE_REM, type SidebarChoice, type Width } from "./layout";
   import { TEXT_SIZES, apply, load, save } from "./preferences";
   import { device } from "./appearance.svelte";
-  import { VIEWS, VIEW_NAMES, inSettings, nameFor, parentOf, parse, pathFor, rowFor, titleFor, type Hideable, type Route, type View } from "./router";
+  import { VIEWS, VIEW_NAMES, inSettings, nameFor, parentOf, parse, pathFor, rowFor, titleFor, type Route, type View } from "./router";
   import { sharedAddress } from "./share";
   import { emptyQuery, isSearching, resultsTitle, scopeFor, searchParams, searchedTerms, type Query } from "./search";
-  import { savedInOrder } from "./inorder";
   import { sameQuery, type SavedSearch } from "./saved";
   import { putBack, takenOff, type Collection, type CollectionChange } from "./collections";
   import { LoadedLibrary } from "./library.svelte";
@@ -83,14 +83,9 @@
   /** A small sign beside each view's name in the sidebar. */
   const VIEW_ICONS = { unread: "dot", starred: "star", all: "stack", recent: "history", upnext: "queue" } as const;
 
-  /** Inbox or river, shared across the reader's devices; this device's last word until the server answers. */
-  let mode: ReadingMode = $state(lastMode());
-  /** Whether the sidebar shows unread counts, and when unread lets go (Settings › Reading, decision 0097). */
-  let counts: Counts = $state(lastCounts());
-  let letGo: LetGo | undefined = $state();
-  /** The lists the sidebar leaves out (Settings › Show in the sidebar, decision 0105); they still open by address and keys. */
-  let hidden: Hideable[] = $state(lastHidden());
-  let river = $derived(mode === "river");
+  /** The reading mode, sort order, counts, when unread lets go and the hidden lists (settings.svelte.ts). */
+  const settings = new ReadingSettings();
+  let river = $derived(settings.mode === "river");
   /**
    * The fixed lists the sidebar shows: river mode has no Unread, and a list
    * the reader hid steps aside, except All in river mode, where it's home
@@ -102,21 +97,21 @@
     VIEWS.filter(
       (view) =>
         !(river && view === "unread") &&
-        !((hidden as string[]).includes(view) && !(river && view === "all")) &&
+        !((settings.hidden as string[]).includes(view) && !(river && view === "all")) &&
         !(view === "upnext" && !player.upNext?.length && !upNextStays),
     ),
   );
   /** Where the app opens: Unread in inbox mode, All in river mode. */
-  let home: Route = $derived({ kind: "view", view: homeView(mode) });
+  let home: Route = $derived({ kind: "view", view: homeView(settings.mode) });
   const parsed = parse(location.pathname);
   // "Save search" saves the search on screen: an address alone has none, so it opens the app's home.
   const asked: Route = parsed.kind === "save-search" ? { kind: "view", view: "unread" } : parsed;
   /** The address was "/", Unread or unknown: the app's home, which depends on the mode. */
   const openedHome = asked.kind === "view" && asked.view === "unread";
-  const start = homeFor(asked, untrack(() => mode));
+  const start = homeFor(asked, untrack(() => settings.mode));
   let route: Route = $state(start);
   /** Where Escape and "Close settings" go back to: the last list you were on. */
-  let lastPlace: Route = $state(isList(start) ? start : { kind: "view", view: homeView(untrack(() => mode)) });
+  let lastPlace: Route = $state(isList(start) ? start : { kind: "view", view: homeView(untrack(() => settings.mode)) });
   /**
    * A page shared to nine turtles (a share menu, a Shortcuts shortcut or a bookmark opening
    * /add-feed?url=…, decision 0104): Add a feed opens with its address and looks at it. Read
@@ -136,11 +131,11 @@
   // Switching to river mode (here, or on another device before this one
   // heard) while on Unread moves you to All, in place: no new history step.
   $effect(() => {
-    const next = homeFor(route, mode);
+    const next = homeFor(route, settings.mode);
     if (next === route) return;
     untrack(() => {
       route = next;
-      if (isList(lastPlace)) lastPlace = homeFor(lastPlace, mode);
+      if (isList(lastPlace)) lastPlace = homeFor(lastPlace, settings.mode);
       history.replaceState(history.state, "", pathFor(next));
     });
   });
@@ -161,8 +156,6 @@
   let search = $state("");
   /** What the next list's line says on arrival (after unsubscribing or deleting a folder). */
   let notice: Notice | undefined = $state();
-  /** The reader's sort order, shared across their devices; unknown until the server answers. */
-  let sort: Order | undefined = $state();
   let preferences = $state(load());
   let width: Width = $state(currentWidth());
   /** Which screen this history entry shows (see steps.ts). */
@@ -301,10 +294,10 @@
           ? { collection: under.id }
           : under.kind === "search"
             ? { view: "all" }
-            : { view: under.kind === "view" ? under.view : homeView(mode) },
+            : { view: under.kind === "view" ? under.view : homeView(settings.mode) },
   );
   /** The list's identity: a new one is loaded when it changes. */
-  let listKey = $derived(`${pathFor(under)} ${sort} ${shown ? JSON.stringify(searchParams(shown)) : ""}`);
+  let listKey = $derived(`${pathFor(under)} ${settings.sort} ${shown ? JSON.stringify(searchParams(shown)) : ""}`);
 
   let currentFeed = $derived.by(() => {
     const place = under.kind === "feed" ? under : route;
@@ -400,7 +393,7 @@
 
   function keepForOffline() {
     lastKept = Date.now();
-    void keepUpToDate(sort ?? "newest", mode);
+    void keepUpToDate(settings.sort ?? "newest", settings.mode);
   }
 
   /** Loads the feeds and folders. */
@@ -445,46 +438,6 @@
     });
   });
 
-  // Each reading setting saves in the order changed, so an earlier save that fails
-  // never rolls the screen back past a later change.
-  const modeSaves = savedInOrder(saveMode, (next: ReadingMode) => (mode = next));
-  const countsSaves = savedInOrder(saveCounts, (next: Counts) => (counts = next));
-  const letGoSaves = savedInOrder<LetGo | undefined>(
-    (next) => saveLetGo(next as LetGo),
-    (next) => (letGo = next),
-  );
-  const hiddenSaves = savedInOrder(saveHidden, (next: Hideable[]) => (hidden = next));
-  const sortSaves = savedInOrder<Order | undefined>(
-    (next) => saveSort(next as Order),
-    (next) => (sort = next),
-  );
-
-  function changeMode(next: ReadingMode) {
-    return notSaved(modeSaves(next, mode));
-  }
-
-  function changeCounts(next: Counts) {
-    return notSaved(countsSaves(next, counts));
-  }
-
-  function changeLetGo(next: LetGo) {
-    return notSaved(letGoSaves(next, letGo));
-  }
-
-  function changeHidden(next: Hideable[]) {
-    return notSaved(hiddenSaves(next, hidden));
-  }
-
-  function changeSort(next: Order) {
-    return notSaved(sortSaves(next, sort));
-  }
-
-  function notSaved(saving: Promise<void>): Promise<void> {
-    return saving.catch(() => {
-      throw new Error("not saved");
-    });
-  }
-
   /**
    * The list's More (…) menu (SPEC section 6): Mark all as read, with an
    * article chosen Mark all above or below as read (decision 0103), in
@@ -498,7 +451,7 @@
     const key = (kind: Parameters<typeof keyFor>[0]) => (phone ? undefined : currentKey(kind));
     // Shift+O marks what's older: below the chosen article when newest first, above it when oldest first (decision 0103).
     // In search results, ordered by how well they match, older goes by date, so neither row shows the key.
-    const olderIs = shown ? undefined : sort === "oldest" ? "above" : "below";
+    const olderIs = shown ? undefined : settings.sort === "oldest" ? "above" : "below";
     // Recently read is in the order opened, and what's in it was read already: only Refresh applies.
     // So is Up Next, in the reader's own order (decision 0113).
     const recent = !shown && under.kind === "view" && (under.view === "recent" || under.view === "upnext");
@@ -526,8 +479,8 @@
         label: "Sort order",
         icon: "sort",
         items: [
-          { label: "Newest first", checked: sort === "newest", onSelect: () => sortFromMenu("newest") },
-          { label: "Oldest first", checked: sort === "oldest", onSelect: () => sortFromMenu("oldest") },
+          { label: "Newest first", checked: settings.sort === "newest", onSelect: () => sortFromMenu("newest") },
+          { label: "Oldest first", checked: settings.sort === "oldest", onSelect: () => sortFromMenu("oldest") },
         ],
       },
     ];
@@ -570,9 +523,9 @@
 
   /** The sort order, chosen from the list's More menu: the same setting as in Settings › Reading. */
   async function sortFromMenu(next: Order) {
-    if (next === sort) return;
+    if (next === settings.sort) return;
     try {
-      await changeSort(next);
+      await settings.changeSort(next);
     } catch {
       itemList?.say("The sort order couldn't be saved. Try again in a moment.");
     }
@@ -782,17 +735,11 @@
     library.loadSearches();
     library.loadCollections();
     void loadQueue();
-    loadSettings().then((settings) => {
-      mode = settings.mode;
-      sort = settings.sort;
-      counts = settings.counts;
-      letGo = settings.letGo;
-      keys.chosen = settings.keys;
-      hidden = settings.hidden;
+    void settings.load().then(() => {
       keepForOffline();
       // This device last saw river mode, but it's inbox now (changed on
       // another device): an untouched home opens on Unread after all.
-      if (openedHome && pathFor(route) === pathFor(start) && mode === "inbox" && !(route.kind === "view" && route.view === "unread")) {
+      if (openedHome && pathFor(route) === pathFor(start) && settings.mode === "inbox" && !(route.kind === "view" && route.view === "unread")) {
         route = { kind: "view", view: "unread" };
         lastPlace = route;
         history.replaceState(history.state, "", pathFor(route));
@@ -1662,14 +1609,14 @@
           bind:this={sidebarFeeds}
           feeds={library.feeds}
           folders={library.folders}
-          searches={hidden.includes("searches") ? [] : library.searches}
-          collections={hidden.includes("collections") ? [] : library.collections}
+          searches={settings.hidden.includes("searches") ? [] : library.searches}
+          collections={settings.hidden.includes("collections") ? [] : library.collections}
           {route}
           {search}
           {follow}
           {phone}
           {river}
-          numbers={counts === "shown"}
+          numbers={settings.counts === "shown"}
         />
       {/if}
       {#if library.feedsFailed}
@@ -1732,16 +1679,16 @@
           onOpen={(event, page) => follow(event, { kind: "settings", page })}
           onBack={closeHealth}
           bind:preferences
-          {sort}
-          onSort={changeSort}
-          {mode}
-          onMode={changeMode}
-          {counts}
-          onCounts={changeCounts}
-          {letGo}
-          onLetGo={changeLetGo}
-          {hidden}
-          onHidden={changeHidden}
+          sort={settings.sort}
+          onSort={(next) => settings.changeSort(next)}
+          mode={settings.mode}
+          onMode={(next) => settings.changeMode(next)}
+          counts={settings.counts}
+          onCounts={(next) => settings.changeCounts(next)}
+          letGo={settings.letGo}
+          onLetGo={(next) => settings.changeLetGo(next)}
+          hidden={settings.hidden}
+          onHidden={(next) => settings.changeHidden(next)}
           bind:heading={settingsHeading}
           {version}
           {owner}
@@ -1964,7 +1911,7 @@
               -->
               <!-- The list's 28px dot gutter (decision 0054) is for rows: the welcome steps back out to the 20px margin. -->
               <div class={phone ? "mt-[5.5rem] ml-[calc(1.25rem-var(--list-start))] flex" : "mt-8 flex justify-center"}>{@render welcome(phone)}</div>
-            {:else if library.feeds !== undefined && sort !== undefined && (under.kind !== "search" || library.searchesLoaded) && (under.kind !== "collection" || library.collectionsLoaded)}
+            {:else if library.feeds !== undefined && settings.sort !== undefined && (under.kind !== "search" || library.searchesLoaded) && (under.kind !== "collection" || library.collectionsLoaded)}
               {#if under.kind === "feed" && !shown && currentFeed}
                 <!-- A feed that isn't working says so above its list, with Find new address (decision 0106). -->
                 <FailingLine
@@ -1980,7 +1927,7 @@
                   bind:this={itemList}
                   bind:selected
                   {source}
-                  order={sort}
+                  order={settings.sort}
                   {notice}
                   empty={shown ? "Nothing found." : emptyText(under)}
                   bold={shown ? searchedTerms(shown.words) : []}
