@@ -4,6 +4,7 @@
 
 import { date } from "./admin";
 import { api } from "./updates.svelte";
+import { isRecord } from "./http";
 
 /** Where a reader stands, as the server says (`payments::Standing`). */
 export type Standing =
@@ -23,9 +24,6 @@ export type PlanStatus =
       canManage: boolean;
     };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
 
 function number(value: unknown): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;

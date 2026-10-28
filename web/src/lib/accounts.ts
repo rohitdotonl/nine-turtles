@@ -8,7 +8,8 @@
 // no browser sends to a server, so it never reaches a log; it's sent to the server
 // once and then taken out of the address bar.
 
-import { PASSWORD_MINIMUM, errorOf, isRecord } from "./readers";
+import { PASSWORD_MINIMUM, errorOf } from "./readers";
+import { isRecord } from "./http";
 import { duration } from "./session";
 import { api } from "./updates.svelte";
 

@@ -4,6 +4,7 @@
 
 import { change, when, type Folder, type Refusal } from "./feeds";
 import { api } from "./updates.svelte";
+import { isRecord } from "./http";
 
 export type Tended = {
   id: number;
@@ -107,6 +108,3 @@ export async function restoreFolders(feeds: { id: number; folders: number[] }[])
   return (await change("/api/tidy/restore", { feeds })).refusal;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}

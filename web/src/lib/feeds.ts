@@ -22,6 +22,8 @@ import {
   useFetchers,
 } from "./offline";
 import { episodeFrom, type Episode } from "./podcasts";
+import { getJson, isRecord, sendChange } from "./http";
+import { deviceJson, deviceText, setDeviceText } from "./device";
 
 export type Feed = {
   id: number;
@@ -249,21 +251,13 @@ const OLD_OPEN_KEY = "slowfeed.open-folders";
 
 /** The folders open in the sidebar, as this device remembers them. */
 export function savedOpenFolders(): number[] {
-  try {
-    const saved: unknown = JSON.parse(globalThis.localStorage?.getItem(OPEN_KEY) ?? globalThis.localStorage?.getItem(OLD_OPEN_KEY) ?? "[]");
-    return Array.isArray(saved) ? saved.filter((id) => typeof id === "number") : [];
-  } catch {
-    return [];
-  }
+  const saved = deviceJson(deviceText(OPEN_KEY) === null ? OLD_OPEN_KEY : OPEN_KEY) ?? [];
+  return Array.isArray(saved) ? saved.filter((id) => typeof id === "number") : [];
 }
 
 /** Remembers which folders are open in the sidebar, on this device. */
 export function saveOpenFolders(open: number[]) {
-  try {
-    globalThis.localStorage?.setItem(OPEN_KEY, JSON.stringify(open));
-  } catch {
-    // Not remembered on this device; the folder still opens.
-  }
+  setDeviceText(OPEN_KEY, JSON.stringify(open));
 }
 
 function sourceQuery(source: Source): URLSearchParams {
@@ -565,20 +559,12 @@ const KEYS_KEY = "nine-turtles.keys";
 
 /** The keys this device last saw, so a changed key works from the first press, before the server answers, and offline. */
 export function lastKeys(): KeyMap {
-  try {
-    return keysFrom(JSON.parse(globalThis.localStorage?.getItem(KEYS_KEY) ?? "{}"));
-  } catch {
-    return {};
-  }
+  return keysFrom(deviceJson(KEYS_KEY));
 }
 
 /** Signed out: this device forgets the keys, so whoever signs in next starts from their own (or nine turtles'). */
 export function forgetKeys() {
-  try {
-    globalThis.localStorage?.removeItem(KEYS_KEY);
-  } catch {
-    // Private browsing: nothing was kept.
-  }
+  setDeviceText(KEYS_KEY, null);
 }
 
 /** The hidden lists named, in one order; anything else is left out. */
@@ -597,27 +583,15 @@ const HIDDEN_KEY = "nine-turtles.hidden";
 
 /** The lists this device last saw hidden, so they don't show for a moment before the server answers. */
 export function lastHidden(): Hideable[] {
-  try {
-    return hiddenFrom(JSON.parse(globalThis.localStorage?.getItem(HIDDEN_KEY) ?? "[]"));
-  } catch {
-    return [];
-  }
+  return hiddenFrom(deviceJson(HIDDEN_KEY));
 }
 
 function rememberHidden(hidden: Hideable[]) {
-  try {
-    globalThis.localStorage?.setItem(HIDDEN_KEY, JSON.stringify(hidden));
-  } catch {
-    // Private browsing: the server's answer still decides, a moment later.
-  }
+  setDeviceText(HIDDEN_KEY, JSON.stringify(hidden));
 }
 
 function rememberKeys(keys: KeyMap) {
-  try {
-    globalThis.localStorage?.setItem(KEYS_KEY, JSON.stringify(keys));
-  } catch {
-    // Private browsing: the server's answer still decides, a moment later.
-  }
+  setDeviceText(KEYS_KEY, JSON.stringify(keys));
 }
 
 export function saveSort(sort: Order): Promise<void> {
@@ -642,19 +616,11 @@ const COUNTS_KEY = "nine-turtles.counts";
 
 /** Whether this device last saw the counts hidden, so they don't show for a moment before the server answers. */
 export function lastCounts(): Counts {
-  try {
-    return globalThis.localStorage?.getItem(COUNTS_KEY) === "hidden" ? "hidden" : "shown";
-  } catch {
-    return "shown";
-  }
+  return deviceText(COUNTS_KEY) === "hidden" ? "hidden" : "shown";
 }
 
 function rememberCounts(counts: Counts) {
-  try {
-    globalThis.localStorage?.setItem(COUNTS_KEY, counts);
-  } catch {
-    // Private browsing: the server's answer still decides, a moment later.
-  }
+  setDeviceText(COUNTS_KEY, counts);
 }
 
 /**
@@ -734,19 +700,11 @@ const MODE_KEY = "nine-turtles.mode";
  * decides.
  */
 export function lastMode(): ReadingMode {
-  try {
-    return globalThis.localStorage?.getItem(MODE_KEY) === "river" ? "river" : "inbox";
-  } catch {
-    return "inbox";
-  }
+  return deviceText(MODE_KEY) === "river" ? "river" : "inbox";
 }
 
 function rememberMode(mode: ReadingMode) {
-  try {
-    globalThis.localStorage?.setItem(MODE_KEY, mode);
-  } catch {
-    // Private windows may refuse; the server still has it.
-  }
+  setDeviceText(MODE_KEY, mode);
 }
 
 /** What the line above the list says after "Mark all as read". */
@@ -903,23 +861,7 @@ export type Refusal = "no-name" | "already" | "too-late" | "gone" | "trouble";
 export async function change(path: string, body: unknown): Promise<{ refusal?: Refusal; answer?: Record<string, unknown> }> {
   // Marks sent just before (an article read, then Unsubscribe) are saved first.
   await saved();
-  let response: Response;
-  try {
-    response = await api(path, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(15_000),
-    });
-  } catch {
-    return { refusal: "trouble" };
-  }
-  const answer: unknown = await response.json().catch(() => null);
-  if (response.ok) return { answer: isRecord(answer) ? answer : {} };
-  if (response.status === 404) return { refusal: "gone" };
-  const error = isRecord(answer) ? answer.error : undefined;
-  if (error === "no-name" || error === "already" || error === "too-late") return { refusal: error };
-  return { refusal: "trouble" };
+  return sendChange(path, body, ["no-name", "already", "too-late"]);
 }
 
 /** "Edit feed": its name and folders; `newFolder` (if any) is created and chosen too. */
@@ -1171,12 +1113,6 @@ export function pausedSince(at: number, now: Date = new Date()): string {
   return `Paused on ${(date.getFullYear() === now.getFullYear() ? DAY : DAY_AND_YEAR).format(date)}.`;
 }
 
-async function getJson(path: string): Promise<unknown> {
-  const response = await api(path, { cache: "no-store" });
-  if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
-  return response.json();
-}
-
 export function toArticle(article: Record<string, unknown>): Article {
   return {
     id: Number(article.id),
@@ -1239,9 +1175,6 @@ export function checkFrom(seconds: number): Check {
   return "automatic";
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
 
 // How the copies for reading offline are fetched, and waiting marks sent (offline.ts).
 useFetchers({
