@@ -162,6 +162,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - The screen's arrangement: the width step, which areas show (`panesFor`), the sidebar and list toggles and their dragged widths, kept on the device (`ScreenLayout`, in `layout.svelte.ts`)
 - The search on screen: what the field holds, the results the list shows, searching a moment after typing stops, the phone's Search field, and what Save search will save (`Searching`, in `searching.svelte.ts`)
 - The collection sheets on screen: Add to collection and Rename, giving the keyboard back when they close, and the Undo line when an article came off a collection (`CollectionSheets`, in `collecting.svelte.ts`)
+- The list's More menu: which rows show for the list on screen (`MenuScene`) and what each asks of the screen (`MenuHands`), decided in one place (`listMenu.ts`)
 
 ## Data and the database
 
