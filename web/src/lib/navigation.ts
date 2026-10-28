@@ -3,8 +3,10 @@
 // (the open article, the search) and where the keyboard goes back to. Shell
 // does the moving (focus, what's shown); the rules for each move are decided
 // here, the same for a click (`go`) and for the browser's Back and Forward.
-// `Steps` keeps the browser's history: the step each move adds, and the steps
-// back (the phone's back arrow, closing a sheet).
+// `Steps` adds and takes the steps in the browser's history: the step each
+// move adds, and the steps back (the phone's back arrow, closing a sheet).
+// Shell still corrects the address in place (`history.replaceState`) when it
+// opens and when Back lands somewhere it leads on from.
 
 import { parentOf, pathFor, rowFor, type Route } from "./router";
 import type { ReadingMode } from "./reading";
