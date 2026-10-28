@@ -39,7 +39,7 @@
   import type { Article, Feed, Folder, Source } from "./shapes";
   import { homeView } from "./reading";
   import { ReadingSettings } from "./reading-settings.svelte";
-  import { feedNextTo, savedOpenFolders, type Notice } from "./feeds";
+  import type { Notice } from "./feeds";
   import { marksUnsaved } from "./saving";
   import { createKeyReader, keyCap } from "./keyboard";
   import { listMenu, type MenuHands, type MenuScene } from "./listMenu";
@@ -58,6 +58,7 @@
   import { LoadedLibrary } from "./library.svelte";
   import { emptyText, insteadOfList, missingFrom, type Found } from "./listWording";
   import { headingFor, placeNameOf } from "./listHeading";
+  import { moveArticle, nextFeed, type ArticleMove } from "./moving";
   import { isFirstVisit, newToFeedsGivesWay, welcomeFor } from "./firstVisit";
   import { startingStep, stepOf, type Screen } from "./steps";
   import { homeFor, isList, isOver, moveTo, Opener, opensFromHere, Steps, underSheet } from "./navigation";
@@ -868,42 +869,20 @@
   }
 
   /**
-   * j and k: the next or previous article. The keyboard's place follows: to
-   * the new article if you were reading, otherwise to its row in the list.
+   * j and k, n and Shift+N, Home and End: another article in the list
+   * (`moving.ts`). The keyboard's place follows, to the article or its row.
    */
-  function move(step: 1 | -1, unread = false) {
-    if (!itemList || (!panes.list && !panes.article && !reading)) return;
-    // With the list hidden there's no row to go to, so the article keeps the keyboard.
-    const wasReading = reading || inArticle() || !panes.list;
-    // n and Shift+N pass over read articles (decision 0103).
-    if (!(unread ? itemList.moveUnread(step) : itemList.move(step))) return;
+  function move(to: ArticleMove, step: 1 | -1) {
+    const focus = moveArticle(itemList, to, step, { ...panes, reading, inArticle: inArticle() });
+    if (!focus) return;
     layout.makeWayForArticle();
-    if (wasReading) queueMicrotask(() => articleHeading?.focus({ preventScroll: true }));
-    else itemList.focusSelected();
+    if (focus === "row") itemList?.focusSelected();
+    else queueMicrotask(() => articleHeading?.focus({ preventScroll: true }));
   }
 
-  /**
-   * Home and End: the first or last article in the list, as far as it has
-   * loaded (End never loads more; decision 0110). The keyboard's place follows as for j and k.
-   */
-  function moveToEnd(step: 1 | -1) {
-    if (!itemList || (!panes.list && !panes.article && !reading)) return;
-    const wasReading = reading || inArticle() || !panes.list;
-    if (!itemList.moveToEnd(step)) return;
-    layout.makeWayForArticle();
-    if (wasReading) queueMicrotask(() => articleHeading?.focus({ preventScroll: true }));
-    else itemList.focusSelected();
-  }
-
-  /**
-   * Shift+J and Shift+K: the feed after or before the place you're in, in
-   * the sidebar's order (`feedNextTo`, decision 0110).
-   */
+  /** Shift+J and Shift+K: the feed after or before the place you're in, in the sidebar's order. */
   function feedAfter(step: 1 | -1): Route | undefined {
-    if (!library.feeds) return undefined;
-    const open = phone ? library.folders.map((folder) => folder.id) : (sidebarFeeds?.openFolders() ?? savedOpenFolders());
-    const id = feedNextTo({ feeds: library.feeds, folders: library.folders }, open, route, step);
-    return id === undefined ? undefined : { kind: "feed", id };
+    return nextFeed(library, phone, sidebarFeeds?.openFolders(), route, step);
   }
 
   /**
@@ -1071,7 +1050,6 @@
     escape,
     startSearch,
     move,
-    moveToEnd,
     feedAfter,
     open,
     openLink: (link) => window.open(link, "_blank", "noopener,noreferrer"),
@@ -1640,8 +1618,8 @@
                 ? {
                     back: nameFor(route, placeName),
                     onBack: backToList,
-                    onPrevious: () => move(-1),
-                    onNext: () => move(1),
+                    onPrevious: () => move("move", -1),
+                    onNext: () => move("move", 1),
                     hasPrevious: itemList?.canMove(-1) ?? false,
                     hasNext: itemList?.canMove(1) ?? false,
                   }

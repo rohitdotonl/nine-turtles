@@ -6,6 +6,7 @@
 // (`KeyHands`), so every rule about when a key works is here, in one place,
 // and can be tested without drawing anything.
 import type { Action } from "./keyboard";
+import type { ArticleMove } from "./moving";
 import { TEXT_SIZES } from "./preferences";
 import { parse, type Route } from "./router";
 
@@ -48,8 +49,8 @@ export type KeyHands = {
   go(place: Route): void;
   escape(): void;
   startSearch(): void;
-  move(step: 1 | -1, unread?: boolean): void;
-  moveToEnd(step: 1 | -1): void;
+  /** Another article in the list (`moving.ts`). */
+  move(to: ArticleMove, step: 1 | -1): void;
   /** The feed after or before this place in the sidebar's order, if there is one. */
   feedAfter(step: 1 | -1): Route | undefined;
   open(): void;
@@ -112,7 +113,7 @@ export function carryOut(action: Action, scene: KeyScene, hands: KeyHands) {
       hands.go(parse(action.path));
       break;
     case "move-end":
-      hands.moveToEnd(action.step);
+      hands.move("moveToEnd", action.step);
       break;
     case "move-feed": {
       const next = scene.onList ? hands.feedAfter(action.step) : undefined;
@@ -129,10 +130,10 @@ export function carryOut(action: Action, scene: KeyScene, hands: KeyHands) {
       hands.escape();
       break;
     case "move":
-      hands.move(action.step);
+      hands.move("move", action.step);
       break;
     case "move-unread":
-      if (!scene.river) hands.move(action.step, true);
+      if (!scene.river) hands.move("moveUnread", action.step);
       break;
     case "open":
       hands.open();
