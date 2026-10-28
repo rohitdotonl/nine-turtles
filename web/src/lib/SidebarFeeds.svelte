@@ -176,7 +176,13 @@
     href={pathFor(place)}
     aria-current={isHere(place) ? "page" : undefined}
     onclick={(event) => {
-      // Choosing a closed folder opens it too, so its feeds show under it (decision 0123).
+      // The whole row folds (decision 0123): choosing a closed folder opens it and lists its
+      // articles; choosing the folder you're already in folds or unfolds it.
+      if (!phone && !searching && isHere(place) && !event.metaKey && !event.ctrlKey && !event.shiftKey) {
+        event.preventDefault();
+        toggle(folder.id);
+        return;
+      }
       if (!phone && !searching && !open.includes(folder.id)) toggle(folder.id);
       follow(event, place);
     }}
