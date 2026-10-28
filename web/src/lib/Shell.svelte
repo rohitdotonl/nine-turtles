@@ -56,6 +56,7 @@
   import { CollectionSheets } from "./collecting.svelte";
   import { Searching } from "./searching.svelte";
   import { LoadedLibrary } from "./library.svelte";
+  import { emptyText, insteadOfList, missingFrom, NOT_FOUND, type Found } from "./listWording";
   import { startingStep, stepOf, type Screen } from "./steps";
   import { homeFor, isList, isOver, moveTo, Opener, opensFromHere, Steps, underSheet } from "./navigation";
   import { Keeper, keepUpToDate } from "./offline";
@@ -269,14 +270,22 @@
   let placeName = $derived(currentFeed?.title ?? currentFolder?.name ?? currentSearch?.name ?? currentCollection?.name);
   /** On a saved search, the search field no longer holds what was saved: Escape puts it back. */
   let tweaked = $derived(route.kind === "search" && currentSearch !== undefined && !sameQuery(searching.query, currentSearch.query));
-  /** A feed or folder address that names none you have. */
-  let missing = $derived(
-    library.feeds !== undefined &&
-      (((under.kind === "feed" || under.kind === "edit-feed") && !currentFeed) ||
-        ((under.kind === "folder" || under.kind === "edit-folder") && !currentFolder) ||
-        ((under.kind === "search" || under.kind === "edit-search") && library.searchesLoaded && !library.searchesFailed && !currentSearch) ||
-        (under.kind === "collection" && library.collectionsLoaded && !library.collectionsFailed && !currentCollection)),
-  );
+  /** What the screen has found for the place on screen, for the words an empty or missing place shows. */
+  let found: Found = $derived({
+    feeds: library.feeds !== undefined,
+    feed: currentFeed !== undefined,
+    folder: currentFolder !== undefined,
+    search: currentSearch !== undefined,
+    collection: currentCollection !== undefined,
+    searchesLoaded: library.searchesLoaded,
+    searchesFailed: library.searchesFailed,
+    collectionsLoaded: library.collectionsLoaded,
+    collectionsFailed: library.collectionsFailed,
+  });
+  /** A feed, folder, saved search or collection address that names none you have. */
+  let missing = $derived(missingFrom(under, found));
+  /** The line the list area shows instead of a list, if any. */
+  let listInstead = $derived(insteadOfList(under, found));
   /** No feeds yet: Unread and All show the add field instead (SPEC section 2). */
   let firstVisit = $derived(library.feeds !== undefined && library.feeds.length === 0);
   // Starred keeps its own list even with no feeds: it is where its More menu and sort live.
@@ -312,13 +321,7 @@
   const ADD_INTRO = "nine turtles finds the feed on any website you like, and lists its articles.";
   let headingText = $derived(
     missing
-      ? under.kind === "folder" || under.kind === "edit-folder"
-        ? "Folder not found"
-        : under.kind === "search" || under.kind === "edit-search"
-          ? "Saved search not found"
-          : under.kind === "collection"
-            ? "Collection not found"
-            : "Feed not found"
+      ? NOT_FOUND[missing]
       : searching.shown && under.kind !== "search"
         ? resultsTitle(searching.shown.scope, library.names)
         : nameFor(under, placeName),
@@ -1001,18 +1004,6 @@
     itemList?.focusSelected();
   }
 
-  /** What an empty list says, plainly. */
-  function emptyText(place: Route): string {
-    if (place.kind === "feed") return "This feed has no articles yet.";
-    if (place.kind === "folder") return "No articles in this folder yet.";
-    if (place.kind === "view" && place.view === "unread") return "Nothing unread.";
-    if (place.kind === "view" && place.view === "starred") return "No starred articles yet.";
-    if (place.kind === "view" && place.view === "recent") return "Articles you open will show here.";
-    if (place.kind === "view" && place.view === "upnext") return "Nothing in Up Next. Add an episode from its More menu.";
-    if (place.kind === "collection") return "Nothing in this collection yet. Articles you put here stay, even after a year. Add one from an article's More menu.";
-    return "No articles yet.";
-  }
-
   /** Search starts afresh, limited to where you are; on a saved search, as it was saved. */
   function resetSearch() {
     searching.reset(route, savedHere());
@@ -1591,18 +1582,8 @@
             {#if library.feeds && library.feeds.length > 0 && !missing && (!phone || searching.open)}
               <SearchBar bind:this={searchBar} query={searching.query} feeds={library.feeds} folders={library.folders} collections={library.collections} here={scopeFor(under)} found={listFound} {river} onChange={(next, now) => searching.changed(next, now)} />
             {/if}
-            {#if missing && (under.kind === "folder" || under.kind === "edit-folder")}
-              <p class="mt-4">There's no folder here. It may have been deleted or renamed.</p>
-            {:else if under.kind === "search" && library.searchesFailed && !currentSearch}
-              <p class="mt-4">Your saved searches couldn't be loaded. Reload the page to try again.</p>
-            {:else if missing && (under.kind === "search" || under.kind === "edit-search")}
-              <p class="mt-4">There's no saved search here. It may have been deleted.</p>
-            {:else if under.kind === "collection" && library.collectionsFailed && !currentCollection}
-              <p class="mt-4">Your collections couldn't be loaded. Reload the page to try again.</p>
-            {:else if missing && under.kind === "collection"}
-              <p class="mt-4">There's no collection here. It may have been deleted.</p>
-            {:else if missing}
-              <p class="mt-4">You don't follow this feed. It may have been an old address.</p>
+            {#if listInstead}
+              <p class="mt-4">{listInstead}</p>
             {:else if welcoming && panes.article}
               <!-- The welcome has the reading area and owns the screen: the list beside it stays empty, saying nothing (decision 0041). -->
             {:else if welcoming}

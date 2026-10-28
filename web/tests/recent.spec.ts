@@ -60,8 +60,12 @@ test("Recently read lists what was opened, newest first, and can be hidden from 
   const box = group.getByRole("checkbox", { name: "Recently read" });
   await expect(box).toBeChecked();
   await expect(group.getByRole("checkbox", { name: "Starred" })).toBeChecked();
+  /** The hidden lists reaching the server, so a reload can't come before the save does. */
+  const settingsSaved = () => page.waitForResponse((response) => response.url().endsWith("/api/settings") && response.request().method() === "POST" && response.ok());
   try {
+    const hiding = settingsSaved();
     await box.uncheck();
+    await hiding;
     await expect(link).toHaveCount(0);
     // Unread can't be hidden; Starred and All are still there.
     await expect(sidebar(page).getByRole("link", { name: "Unread", exact: true })).toBeVisible();
@@ -77,7 +81,10 @@ test("Recently read lists what was opened, newest first, and can be hidden from 
     // Shown again, as every other test expects.
     await page.goto(new URL("/settings/sidebar", FEEDS_APP).href);
     await appReady(page);
+    // Wait for the save only when there's one to wait for (an earlier failure may have left it ticked).
+    const showing = (await box.isChecked()) ? undefined : settingsSaved();
     await box.check();
+    await showing;
     await expect(link).toBeVisible();
   }
 });
