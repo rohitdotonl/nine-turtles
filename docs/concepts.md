@@ -156,7 +156,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Clipboard and the system share sheet
 - Container query (styling by a pane's width, not the window's)
 - The reader's library on screen: feeds, folders, saved searches and collections, loaded and removed with Undo (`library.svelte.ts`)
-- The reading settings on screen: mode, sort order, counts, when unread lets go and hidden lists, each saved in order; a saved change made before the server first answers stays (`settings.svelte.ts`, keys in `keys.svelte.ts`)
+- The reading settings on screen: mode, sort order, counts, when unread lets go and hidden lists, each saved in order; a saved change made before the server first answers stays (`reading-settings.svelte.ts`, keys in `keys.svelte.ts`)
 - When a shortcut applies: what's on screen at the press (`KeyScene`) and what the screen can do (`KeyHands`), decided in one place (`shortcuts.ts`)
 - Moving between places: lists, sheets that open over a place (`underSheet`), what a move keeps (`moveTo`), giving the keyboard back when a sheet closes (`Opener`) and the browser's history steps (`Steps`), in `navigation.ts`
 - The screen's arrangement: the width step, which areas show (`panesFor`), the sidebar and list toggles and their dragged widths, kept on the device (`ScreenLayout`, in `layout.svelte.ts`)
