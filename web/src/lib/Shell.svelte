@@ -55,7 +55,7 @@
   import { Searching } from "./searching.svelte";
   import { LoadedLibrary } from "./library.svelte";
   import { startingStep, stepOf, type Screen } from "./steps";
-  import { homeFor, isList, isOver, moveTo, Opener, opensFromHere, underSheet } from "./navigation";
+  import { homeFor, isList, isOver, moveTo, Opener, opensFromHere, Steps, underSheet } from "./navigation";
   import { Keeper, keepUpToDate } from "./offline";
   import NowPlaying from "./NowPlaying.svelte";
   import { loadQueue, player } from "./player.svelte";
@@ -177,11 +177,11 @@
   let settingsHeading: HTMLHeadingElement | undefined = $state();
   let healthHeading: HTMLHeadingElement | undefined = $state();
   let yourFeedsHeading: HTMLHeadingElement | undefined = $state();
-  /** Feed health, Your feeds, Muted articles or Readers was opened from Settings, so closing it is a step back in history. */
   let mutedHeading: HTMLHeadingElement | undefined = $state();
   let readersHeading: HTMLHeadingElement | undefined = $state();
   /** "Add a rule for this feed…" in Edit feed: Settings opens with a new rule for it. */
   let ruleForFeed: number | undefined = $state();
+  /** Feed health, Your feeds, Muted articles or Readers was opened from Settings, so closing it is a step back in history. */
   let cameFromSettings = false;
   /** Back from a page opened from Settings: the row on its parent page that opened it, for the keyboard to return to (decision 0120). */
   let returnRow: string | undefined;
@@ -223,8 +223,8 @@
   let sheetHeading: HTMLHeadingElement | undefined = $state();
   /** What had the keyboard when a sheet opened, to give it back when the sheet closes. */
   const sheetOpener = new Opener();
-  /** The sheet was opened with a step in the browser's history, so closing it is a step back. */
-  let sheetPushed = false;
+  /** The browser's history: the step each move adds, and the steps back (navigation.ts). */
+  const steps = new Steps({ arrive, goUnder: () => go(under) });
 
   /** Which articles the list shows here. */
   let source: Source = $derived(
@@ -509,7 +509,7 @@
       }
       if (move.opening) {
         sheetOpener.remember(document.activeElement);
-        sheetPushed = false;
+        steps.sheetOpenedByBrowser();
       }
       route = next;
       if (isList(route)) lastPlace = route;
@@ -635,27 +635,6 @@
     requestAnimationFrame(wait);
   }
 
-  /**
-   * The phone's labeled back arrow, and Escape on a phone: one step back, to
-   * `screen`. If that's the step before this one in the browser's history,
-   * it's the same as the system's back; after arriving straight from a link
-   * or a reload, it moves there in place.
-   */
-  function stepBack(screen: Screen) {
-    if (stepOf(history.state)?.back === screen) {
-      history.back();
-      return;
-    }
-    history.replaceState({ screen }, "", location.pathname);
-    arrive(screen);
-  }
-
-  /** Closes a sheet: a step back if it opened with one, so Back doesn't reopen it. */
-  function closeSheet() {
-    if (sheetPushed && stepOf(history.state)?.back === "list") history.back();
-    else go(under);
-  }
-
   /** The screen as the reader arranged it, for the new version to open the same way (decision 0085). */
   function carried(next: Route): Carried {
     return {
@@ -714,16 +693,8 @@
     const from = screenNow();
     cameFromSettings = opensFromHere(route, next);
     returnRow = move.returnRow;
-    const to: Screen = isList(next) ? "list" : "page";
-    let pushed = false;
-    if (pathFor(next) !== location.pathname || from !== to) {
-      history.pushState({ screen: to, back: from, fromParent: cameFromSettings }, "", pathFor(next));
-      pushed = true;
-    }
-    if (move.opening) {
-      sheetOpener.remember(document.activeElement);
-      sheetPushed = pushed;
-    }
+    if (move.opening) sheetOpener.remember(document.activeElement);
+    steps.goTo(next, from, cameFromSettings, move.opening);
     // Opening a sheet over a place, or closing it back there, keeps that place as it was: its article and its search.
     if (!move.keepsArticle) selected = undefined;
     reading = false;
@@ -777,8 +748,8 @@
     const unpaused = pausedBefore && library.feeds?.find((feed) => feed.id === id)?.pausedAt == null;
     if (unpaused) queueMicrotask(() => void itemList?.refresh());
     // On a phone the edit page is a step on from its list: go back that step.
-    if (phone && stepOf(history.state)?.back === "list") history.back();
-    else if (sheetShown) closeSheet();
+    if (phone && steps.cameFrom("list")) steps.goBack();
+    else if (sheetShown) steps.closeSheet();
     else if (route.kind === "edit-feed") go({ kind: "feed", id: route.id });
     else if (route.kind === "edit-folder") go({ kind: "folder", id: route.id });
   }
@@ -792,8 +763,8 @@
       go({ kind: "search", id: saved.id });
       return;
     }
-    if (phone && stepOf(history.state)?.back === "list") history.back();
-    else if (sheetShown) closeSheet();
+    if (phone && steps.cameFrom("list")) steps.goBack();
+    else if (sheetShown) steps.closeSheet();
     else if (route.kind === "edit-search") go({ kind: "search", id: route.id });
     else go(lastPlace);
   }
@@ -929,23 +900,23 @@
   function closeHealth() {
     const parent = parentOf(route);
     if (!parent) return;
-    if (cameFromSettings) history.back();
+    if (cameFromSettings) steps.goBack();
     else go(parent);
   }
 
   /** Close settings, and Escape on Settings or Add a feed: on a phone, back one step to the feeds. */
   function closePage() {
     // "New to feeds?" opens from the welcome on the list's screen: on a phone its X goes back there.
-    if (phone && route.kind === "new-to-feeds" && stepOf(history.state)?.back === "list") history.back();
-    else if (phone) stepBack("home");
-    else if (sheetShown) closeSheet();
+    if (phone && route.kind === "new-to-feeds" && steps.cameFrom("list")) steps.goBack();
+    else if (phone) steps.back("home");
+    else if (sheetShown) steps.closeSheet();
     else go(lastPlace);
   }
 
   function toggleSidebar() {
     // On a phone the feeds are the home screen, one step back.
     if (phone) {
-      if (!panes.sidebar) stepBack("home");
+      if (!panes.sidebar) steps.back("home");
       return;
     }
     const focusWasInside = sidebar?.contains(document.activeElement) ?? false;
@@ -1046,7 +1017,7 @@
     }
     if (phone && !reading) {
       // On a phone the article is a screen of its own, one step on.
-      history.pushState({ screen: "article", back: "list" }, "", location.pathname);
+      steps.openArticle();
       reading = true;
     }
     layout.makeWayForArticle();
@@ -1077,7 +1048,7 @@
       selected = article;
     }
     if (phone && !reading) {
-      history.pushState({ screen: "article", back: "list" }, "", location.pathname);
+      steps.openArticle();
       reading = true;
     }
     layout.makeWayForArticle();
@@ -1109,7 +1080,7 @@
   /** Back from the article to its row in the list. */
   function backToList() {
     if (reading) {
-      stepBack("list");
+      steps.back("list");
       return;
     }
     if (!panes.list) return;
@@ -1171,7 +1142,7 @@
     else if (reading || (selected && inArticle())) backToList();
     else if (route.kind === "search" ? tweaked || document.activeElement?.closest("search") : searching.open || document.activeElement?.closest("search"))
       closeSearch();
-    else if (phone && !panes.sidebar) stepBack("home");
+    else if (phone && !panes.sidebar) steps.back("home");
   }
 
   /** The screen as a shortcut sees it, at the moment of the press (`shortcuts.ts`). */
@@ -1684,7 +1655,7 @@
           {#if phone}
             <!-- The phone's top bar (SPEC section 20): back to the feeds, then the screen's title with More beside it. It never scrolls. -->
             <div class="pane-bar nav-bar">
-              <button type="button" onclick={() => stepBack("home")} aria-label="Back to Feeds" class="btn-quiet nav-back"
+              <button type="button" onclick={() => steps.back("home")} aria-label="Back to Feeds" class="btn-quiet nav-back"
                 ><Icon name="back" size={22} />Feeds</button
               >
             </div>

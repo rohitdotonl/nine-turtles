@@ -1,12 +1,14 @@
 // Moving between places on the signed-in screen (Shell.svelte): which places
 // are lists, which open as a sheet over the place you were, what a move keeps
 // (the open article, the search) and where the keyboard goes back to. Shell
-// does the moving (the browser's history, focus, what's shown); the rules for
-// each move are decided here, the same for a click (`go`) and for the
-// browser's Back and Forward.
+// does the moving (focus, what's shown); the rules for each move are decided
+// here, the same for a click (`go`) and for the browser's Back and Forward.
+// `Steps` keeps the browser's history: the step each move adds, and the steps
+// back (the phone's back arrow, closing a sheet).
 
 import { parentOf, pathFor, rowFor, type Route } from "./router";
 import type { ReadingMode } from "./reading";
+import { stepOf, type Screen, type Step } from "./steps";
 
 /** A place that shows a list of articles: a view, a feed, a folder, a saved search or a collection. */
 export function isList(place: Route): boolean {
@@ -95,5 +97,98 @@ export class Opener {
     if (!(at instanceof HTMLElement) || !at.isConnected || at === document.body) return false;
     queueMicrotask(() => at.focus());
     return true;
+  }
+}
+
+/**
+ * The step `go` adds to the browser's history for a move to `next` from the screen `from`, at the
+ * address `at`; none when both the address and the screen stay the same. `fromParent`: `next` was
+ * opened from where you are (`opensFromHere`).
+ */
+export function stepFor(next: Route, from: Screen, at: string, fromParent: boolean): Step | undefined {
+  const to: Screen = isList(next) ? "list" : "page";
+  if (pathFor(next) === at && from === to) return undefined;
+  return { screen: to, back: from, fromParent };
+}
+
+/** The part of the browser's history `Steps` uses (`window.history` has it). */
+export type Browser = {
+  readonly state: unknown;
+  back(): void;
+  pushState(state: unknown, unused: string, url?: string): void;
+  replaceState(state: unknown, unused: string, url?: string): void;
+};
+
+/** What `Steps` asks of the screen. */
+export type StepHands = {
+  /** Shows `screen`, as after the browser's Back (Shell's `arrive`). */
+  arrive(screen: Screen): void;
+  /** Goes to the place under the sheet, without a step back. */
+  goUnder(): void;
+};
+
+/** The browser's history as nine turtles moves through it: one per signed-in screen. */
+export class Steps {
+  #hands: StepHands;
+  #browser: Browser;
+  #path: () => string;
+  /** The sheet on screen was opened with a step in the browser's history, so closing it is a step back. */
+  #sheetPushed = false;
+
+  constructor(hands: StepHands, browser: Browser = history, path: () => string = () => location.pathname) {
+    this.#hands = hands;
+    this.#browser = browser;
+    this.#path = path;
+  }
+
+  /** The step before this one in the browser's history showed `screen`. */
+  cameFrom(screen: Screen): boolean {
+    return stepOf(this.#browser.state)?.back === screen;
+  }
+
+  /** One step back in the browser's history, as its Back button does. */
+  goBack() {
+    this.#browser.back();
+  }
+
+  /**
+   * `go` moves to `next` from the screen `from`: adds its step (`stepFor`). `opening`: a sheet
+   * opens with this move, and remembers whether it added a step, for `closeSheet`.
+   */
+  goTo(next: Route, from: Screen, fromParent: boolean, opening: boolean) {
+    const step = stepFor(next, from, this.#path(), fromParent);
+    if (step) this.#browser.pushState(step, "", pathFor(next));
+    if (opening) this.#sheetPushed = step !== undefined;
+  }
+
+  /** On a phone the article is a screen of its own, one step on from its list. */
+  openArticle() {
+    this.#browser.pushState({ screen: "article", back: "list" } satisfies Step, "", this.#path());
+  }
+
+  /** The browser's Back or Forward opened a sheet: no step of ours to go back from it. */
+  sheetOpenedByBrowser() {
+    this.#sheetPushed = false;
+  }
+
+  /**
+   * The phone's labeled back arrow, and Escape on a phone: one step back, to
+   * `screen`. If that's the step before this one in the browser's history,
+   * it's the same as the system's back; after arriving straight from a link
+   * or a reload, it moves there in place.
+   */
+  back(screen: Screen) {
+    if (this.cameFrom(screen)) {
+      this.#browser.back();
+      return;
+    }
+    this.#browser.replaceState({ screen }, "", this.#path());
+    this.#hands.arrive(screen);
+  }
+
+  /** Closes a sheet: a step back if it opened with one, so Back doesn't reopen it. */
+  closeSheet() {
+    if (this.#sheetPushed && this.cameFrom("list")) this.#browser.back();
+    else this.#hands.goUnder();
   }
 }
