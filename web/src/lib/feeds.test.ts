@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Feed } from "./shapes";
-import { explain, findByName, folderUnread, inDevanagari, unreadLabel, type Problem } from "./feeds";
+import { explain, findByName, folderUnread, inDevanagari, plainSourceName, unreadLabel, type Problem } from "./feeds";
 
 describe("the add field's messages", () => {
   it("are calm, plain and never an error code", () => {
@@ -64,5 +64,16 @@ describe("folders and the sidebar search", () => {
     expect(findByName({ feeds, folders }, "cafe").feeds.map((each) => each.id)).toEqual([1]);
     expect(findByName({ feeds, folders }, "nothing like it")).toEqual({ feeds: [], folders: [] });
     expect(findByName({ feeds, folders }, " ")).toEqual({ feeds, folders });
+  });
+});
+
+describe("source names in the article list", () => {
+  it("leave out a newsletter sender's address", () => {
+    expect(plainSourceName("Every (every1@example.com)")).toBe("Every");
+    expect(plainSourceName("Ava <ava@example.com>")).toBe("Ava");
+    expect(plainSourceName("Read the Tea Leaves")).toBe("Read the Tea Leaves");
+    expect(plainSourceName("Notes (2026)")).toBe("Notes (2026)");
+    // A name that is only an address stays as it is.
+    expect(plainSourceName("(hi@example.com)")).toBe("(hi@example.com)");
   });
 });

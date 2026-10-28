@@ -150,6 +150,16 @@ export function unreadLabel(count: number): string {
  * the sidebar sets a touch larger so it sits level with Latin names
  * (decision 0041). The script decides, not a guess at the language.
  */
+/**
+ * A source's name as the article list shows it: a newsletter's name without
+ * the sender's address that its feed title carries ("Every (hi@every.to)"
+ * shows as "Every"). The address says nothing a reader needs on every row.
+ */
+export function plainSourceName(title: string): string {
+  const plain = title.replace(/\s*[(<][^()<>\s]+@[^()<>\s]+[)>]\s*$/, "").trim();
+  return plain || title;
+}
+
 export function inDevanagari(name: string): boolean {
   return /\p{Script=Devanagari}/u.test(name);
 }
