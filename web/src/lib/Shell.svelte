@@ -24,7 +24,7 @@
   import AddToCollection from "./AddToCollection.svelte";
   import RenameCollection from "./RenameCollection.svelte";
   import ItemList from "./ItemList.svelte";
-  import MoreMenu, { type MenuGroup } from "./MoreMenu.svelte";
+  import MoreMenu from "./MoreMenu.svelte";
   import PageHead from "./PageHead.svelte";
   import Sheet from "./Sheet.svelte";
   import Settings from "./Settings.svelte";
@@ -37,11 +37,12 @@
   import StarterFeeds from "./StarterFeeds.svelte";
   import { partlyAdded, type Starter } from "./starters";
   import type { Article, Feed, Folder, Source } from "./shapes";
-  import { homeView, type Order } from "./reading";
+  import { homeView } from "./reading";
   import { ReadingSettings } from "./settings.svelte";
   import { feedNextTo, savedOpenFolders, type Notice } from "./feeds";
   import { marksUnsaved } from "./saving";
-  import { createKeyReader, keyCap, keyFor } from "./keyboard";
+  import { createKeyReader, keyCap } from "./keyboard";
+  import { listMenu, type MenuHands, type MenuScene } from "./listMenu";
   import { carryOut, keyIsOurs, type KeyHands, type KeyScene } from "./shortcuts";
   import { currentKey, currentKeyOf, keys, tip } from "./keys.svelte";
   import { currentWidth, LIST_MIN, ScreenLayout, watchWidth } from "./layout.svelte";
@@ -368,98 +369,36 @@
     });
   });
 
-  /**
-   * The list's More (…) menu (SPEC section 6): Mark all as read, with an
-   * article chosen Mark all above or below as read (decision 0103), in
-   * Unread Catch me up, and Refresh
-   * (Refresh steps aside while searching: results have nothing new to
-   * fetch), the sort order, then Edit feed or Edit folder in a feed's or
-   * folder's own list. Choosing Edit puts the keyboard on More first, so
-   * closing the sheet gives it back there.
-   */
-  function listMenu(): MenuGroup[] {
-    const key = (kind: Parameters<typeof keyFor>[0]) => (phone ? undefined : currentKey(kind));
-    // Shift+O marks what's older: below the chosen article when newest first, above it when oldest first (decision 0103).
-    // In search results, ordered by how well they match, older goes by date, so neither row shows the key.
-    const olderIs = searching.shown ? undefined : settings.sort === "oldest" ? "above" : "below";
-    // Recently read is in the order opened, and what's in it was read already: only Refresh applies.
-    // So is Up Next, in the reader's own order (decision 0113).
-    const recent = !searching.shown && under.kind === "view" && (under.view === "recent" || under.view === "upnext");
-    if (recent) return [{ items: [{ label: "Refresh", shortcut: key("refresh"), onSelect: () => itemList?.refresh() }] }];
-    const groups: MenuGroup[] = [
-      {
-        items: [
-          ...(river ? [] : [{ label: "Mark all as read", shortcut: key("mark-all-read"), onSelect: () => itemList?.markAllRead() }]),
-          // Everything on one side of the chosen article, loaded yet or not (decision 0103).
-          ...(river || !selected
-            ? []
-            : (["above", "below"] as const).map((side) => ({
-                label: `Mark all ${side} as read`,
-                shortcut: olderIs === side ? key("mark-older-read") : undefined,
-                onSelect: () => itemList?.markPast(side),
-              }))),
-          // Everything in Unread from before today, listed or not (decision 0097): only in Unread itself.
-          ...(!river && !searching.shown && under.kind === "view" && under.view === "unread"
-            ? [{ label: "Catch me up", onSelect: () => itemList?.catchUp() }]
-            : []),
-          ...(searching.shown ? [] : [{ label: "Refresh", shortcut: key("refresh"), onSelect: () => itemList?.refresh() }]),
-        ],
-      },
-      {
-        label: "Sort order",
-        icon: "sort",
-        items: [
-          { label: "Newest first", checked: settings.sort === "newest", onSelect: () => sortFromMenu("newest") },
-          { label: "Oldest first", checked: settings.sort === "oldest", onSelect: () => sortFromMenu("oldest") },
-        ],
-      },
-    ];
-    // On a saved search, even with everything taken out of its field, it can still be edited or deleted.
-    const search = under.kind === "search" ? currentSearch : undefined;
-    if (searching.shown || search) {
-      // A search can be saved, to come back to from the sidebar; a saved one renamed, changed or deleted.
-      groups.push({
-        items: [
-          search
-            ? { label: "Edit saved search…", onSelect: () => openSaving({ kind: "edit-search", id: search.id }) }
-            : { label: "Save search…", onSelect: () => openSaving({ kind: "save-search" }) },
-        ],
-      });
-      return groups;
-    }
-    // A collection's own list: renaming it, and deleting it (never its articles), with Undo (decision 0108).
-    const collection = currentCollection;
-    if (collection) {
-      groups.push({
-        items: [
-          { label: "Rename…", onSelect: () => collectionSheets.rename(collection, document.activeElement) },
-          { label: "Delete", onSelect: () => void removeCollection(collection) },
-        ],
-      });
-      return groups;
-    }
-    const feed = currentFeed;
-    const folder = currentFolder;
-    if (feed) groups.push({ items: [{ label: "Edit feed…", shortcut: key("edit-place"), onSelect: () => go({ kind: "edit-feed", id: feed.id }) }] });
-    else if (folder) groups.push({ items: [{ label: "Edit folder…", shortcut: key("edit-place"), onSelect: () => go({ kind: "edit-folder", id: folder.id }) }] });
-    return groups;
+  /** The list as its More menu sees it, each time the menu is drawn (`listMenu.ts`). */
+  function menuScene(): MenuScene {
+    return {
+      river,
+      searching: searching.shown !== undefined,
+      ownOrder: under.kind === "view" && (under.view === "recent" || under.view === "upnext"),
+      unread: under.kind === "view" && under.view === "unread",
+      selected: selected !== undefined,
+      sort: settings.sort,
+      savedSearch: under.kind === "search" ? currentSearch?.id : undefined,
+      collection: currentCollection,
+      feed: currentFeed?.id,
+      folder: currentFolder?.id,
+    };
   }
 
-  /** Opens "Save search" or "Edit saved search" with the search showing now. */
-  function openSaving(next: Route) {
-    searching.holdForSaving();
-    go(next);
-  }
-
-  /** The sort order, chosen from the list's More menu: the same setting as in Settings › Reading. */
-  async function sortFromMenu(next: Order) {
-    if (next === settings.sort) return;
-    try {
-      await settings.changeSort(next);
-    } catch {
-      itemList?.say("The sort order couldn't be saved. Try again in a moment.");
-    }
-  }
+  /** What the list's More menu can ask of the screen. */
+  const menuHands: MenuHands = {
+    shortcut: (kind) => (phone ? undefined : currentKey(kind)),
+    markAllRead: () => itemList?.markAllRead(),
+    markPast: (side) => itemList?.markPast(side),
+    catchUp: () => itemList?.catchUp(),
+    refresh: () => itemList?.refresh(),
+    changeSort: (next) => settings.changeSort(next),
+    say: (message) => itemList?.say(message),
+    holdSearch: () => searching.holdForSaving(),
+    go: (place) => go(place),
+    renameCollection: (collection) => collectionSheets.rename(collection, document.activeElement),
+    deleteCollection: (collection) => void removeCollection(collection),
+  };
 
   onMount(() => {
     // "/" and unknown addresses open Unread (All in river mode); the address bar says so.
@@ -1245,7 +1184,7 @@
                       ><span class="flex size-8 items-center justify-center"><Icon name="search" size={20} /></span></button
                     >
                   {/if}
-                  <MoreMenu id="list-menu" groups={listMenu()} />
+                  <MoreMenu id="list-menu" groups={listMenu(menuScene(), menuHands)} />
                 </div>
               {/if}
             </div>
