@@ -38,7 +38,7 @@
   import { partlyAdded, type Starter } from "./starters";
   import type { Article, Feed, Folder, Source } from "./shapes";
   import { homeView } from "./reading";
-  import { ReadingSettings } from "./settings.svelte";
+  import { ReadingSettings } from "./reading-settings.svelte";
   import { feedNextTo, savedOpenFolders, type Notice } from "./feeds";
   import { marksUnsaved } from "./saving";
   import { createKeyReader, keyCap } from "./keyboard";
