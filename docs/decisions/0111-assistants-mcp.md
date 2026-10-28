@@ -47,7 +47,7 @@ connect their own AI assistant (Claude, ChatGPT, or any other that speaks the
 open Model Context Protocol) to their account (SPEC section 33). nine
 turtles runs no AI itself and isn't marketed as an AI feature: it's a door,
 like the Google Reader API for other apps (decision 0070). Code:
-`server/src/mcp.rs` (the tools) and `server/src/assistants.rs` (signing in
+`server/src/mcp/` (the tools) and `server/src/assistants.rs` (signing in
 and Settings); screens `web/src/lib/ConnectAssistant.svelte` and
 `web/src/lib/Assistants.svelte`; structure change 26.
 

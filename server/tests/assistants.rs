@@ -959,6 +959,31 @@ async fn an_assistant_cant_keep_a_feed_the_reader_unsubscribed_from() {
 }
 
 #[tokio::test]
+async fn every_tool_listed_is_one_nine_turtles_can_do() {
+    let base = common::start(common::config()).await;
+    let cookie = common::signed_in(&base).await;
+    let (_, made) = post_json(&base, "/api/assistants/key", Some(&cookie), &json!({})).await;
+    let key = made["key"].as_str().unwrap();
+    let listed: Value = rpc(&base, key, "tools/list", json!({}))
+        .await
+        .then_read()
+        .await;
+    let tools = listed["result"]["tools"].as_array().unwrap();
+    assert_eq!(tools.len(), 20);
+    // With no arguments a tool may refuse them, but it's never unknown.
+    for listed in tools {
+        let name = listed["name"].as_str().unwrap();
+        let (said, _) = tool(&base, key, name, json!({})).await;
+        assert!(
+            !said
+                .as_str()
+                .is_some_and(|said| said.starts_with("There's no tool")),
+            "{name} is listed but not done"
+        );
+    }
+}
+
+#[tokio::test]
 async fn a_busy_assistant_is_asked_to_wait() {
     let base = common::start(common::config()).await;
     let cookie = common::signed_in(&base).await;
