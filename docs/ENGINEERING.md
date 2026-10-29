@@ -273,6 +273,7 @@ Wherever a principle can be checked by a computer, it is. These run on every pul
 | Libraries stay safe | A weekly report of known security problems in our libraries. It only reports; nothing is updated automatically. |
 | First floor (accessibility) | Automated accessibility and contrast tests on every screen, in every theme by day and by night |
 | No motion (DESIGN.md) | Fails if animations or transitions appear in the styles |
+| Written for the next agent | Fails if a file of the app's own code grows past 800 lines (a few older, longer files may only shrink), or if a file, an export or a server `pub` item is unused (decision 0126) |
 | Fast by design | Fails if the frontend download grows past its size budget |
 | Docs stay findable | Fails if a document links to a file that doesn't exist; runs on every pull request, documents-only ones too (decision 0119) |
 | Never add a library without asking | Fails if the code uses a library that isn't on the approved list in `docs/libraries.md`. Agents add to that list only after the owner has said yes. |

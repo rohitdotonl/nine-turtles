@@ -1,0 +1,122 @@
+// "Code stays tidy" (decision 0126): the two habits that let the code grow
+// messy before the 2026 tidy-up, checked so they can't creep back.
+//
+// 1. No giant files. A file of the app's own code (server/src, web/src and
+//    the newsletter forwarder) has at most LIMIT lines, about what an agent
+//    can read and hold in mind at once. Files that were already longer when
+//    this check began are listed in CEILINGS with their size then: they may
+//    shrink but never grow, and leave the list once they fit under LIMIT.
+//    Tests are left out: a long test file is a list of cases, read one at a
+//    time.
+// 2. Nothing unused. A file in web/src that nothing imports, a name a web
+//    file exports that nothing uses (exporting a name its own file uses is
+//    fine: it documents the shape), or a `pub` item in the server
+//    whose name appears nowhere else. (Unused names inside a file are already
+//    caught: clippy for Rust, `noUnusedLocals` in web/tsconfig.json for the
+//    web app.)
+
+import { readFileSync, readdirSync } from "node:fs";
+import { basename, join, relative } from "node:path";
+
+const LIMIT = 800;
+
+// Lines each long file had when the check began (29 October 2026). Lower a
+// number when its file shrinks; never raise one. Splitting a file by concept
+// is the way down (docs/ENGINEERING.md → "Keep files small").
+const CEILINGS = {
+  "web/src/app.css": 1921,
+  "web/src/lib/Shell.svelte": 1525,
+  "server/src/greader.rs": 1052,
+  "server/src/assistants.rs": 1019,
+  "server/src/accounts.rs": 979,
+  "server/src/newsletter.rs": 965,
+  "web/src/lib/ItemList.svelte": 954,
+  "server/src/auth.rs": 954,
+  "server/src/payments.rs": 946,
+  "server/src/rules.rs": 918,
+  "web/src/lib/Settings.svelte": 913,
+  "server/src/folders.rs": 834,
+};
+
+const root = join(import.meta.dirname, "..");
+const problems = [];
+const notes = [];
+
+function files(dir, extensions) {
+  return readdirSync(join(root, dir), { recursive: true, withFileTypes: true })
+    .filter((entry) => entry.isFile() && extensions.some((ext) => entry.name.endsWith(ext)))
+    .map((entry) => relative(root, join(entry.parentPath, entry.name)));
+}
+
+const text = new Map();
+const read = (file) => {
+  if (!text.has(file)) text.set(file, readFileSync(join(root, file), "utf8"));
+  return text.get(file);
+};
+const lines = (file) => read(file).split("\n").length - (read(file).endsWith("\n") ? 1 : 0);
+const isTest = (file) => /\.test\.ts$/.test(file);
+
+// 1. No giant files.
+const appCode = [
+  ...files("server/src", [".rs"]),
+  ...files("web/src", [".ts", ".svelte", ".css", ".js"]).filter((file) => !isTest(file)),
+  ...files("cloudflare", [".js"]),
+];
+for (const file of appCode) {
+  const count = lines(file);
+  const ceiling = CEILINGS[file];
+  if (ceiling === undefined && count > LIMIT) {
+    problems.push(`${file} has ${count} lines, over the limit of ${LIMIT}. Split it by concept.`);
+  } else if (ceiling !== undefined && count > ceiling) {
+    problems.push(`${file} grew to ${count} lines; it may not grow past ${ceiling}. Move something out first.`);
+  } else if (ceiling !== undefined && count <= LIMIT) {
+    problems.push(`${file} is down to ${count} lines: take it off CEILINGS in scripts/check-tidy.mjs.`);
+  } else if (ceiling !== undefined && count < ceiling) {
+    notes.push(`${file} shrank to ${count} lines: lower its ceiling (${ceiling}) in scripts/check-tidy.mjs.`);
+  }
+}
+for (const file of Object.keys(CEILINGS)) {
+  if (!appCode.includes(file)) problems.push(`${file} is on CEILINGS but doesn't exist: take it off.`);
+}
+
+// 2. Nothing unused: the web app.
+const webCode = files("web/src", [".ts", ".svelte", ".js"]);
+const webAll = [...webCode, ...files("web/tests", [".ts"]), "web/vite.config.ts", "web/playwright.config.ts"];
+const word = (name) => new RegExp(`(?<![\\w$])${name.replace(/\$/g, "\\$")}(?![\\w$])`);
+const elsewhere = (name, file, among) => among.some((other) => other !== file && word(name).test(read(other)));
+
+for (const file of webCode.filter((file) => !isTest(file))) {
+  for (const match of read(file).matchAll(
+    /^export\s+(?:async\s+)?(?:const|let|function|class|type|interface|enum)\s+([A-Za-z_$][\w$]*)/gm,
+  )) {
+    const inside = read(file).split(word(match[1])).length - 1;
+    if (inside <= 1 && !elsewhere(match[1], file, webAll)) {
+      problems.push(`${file} exports ${match[1]}, which nothing uses. Delete it.`);
+    }
+  }
+  if (file === "web/src/main.ts") continue; // where the app starts
+  const name = basename(file).replace(/\.(ts|js)$/, "");
+  const imported = new RegExp(`from\\s+["'][^"']*/${name.replace(/\./g, "\\.")}(\\.(ts|js))?["']`);
+  if (!webAll.some((other) => other !== file && imported.test(read(other)))) {
+    problems.push(`${file} isn't imported by any other file. Delete it.`);
+  }
+}
+
+// 2. Nothing unused: the server. A `pub` item is used if its name appears
+// anywhere else in the server's code or tests.
+const serverAll = [...files("server/src", [".rs"]), ...files("server/tests", [".rs"])];
+const pubItem = /^\s*pub(?:\([^)]*\))?\s+(?:async\s+)?(?:const\s+|unsafe\s+)?(?:fn|struct|enum|const|static|type|trait)\s+([A-Za-z_]\w*)/gm;
+for (const file of serverAll.filter((file) => file.startsWith("server/src/"))) {
+  for (const match of read(file).matchAll(pubItem)) {
+    const name = new RegExp(`\\b${match[1]}\\b`, "g");
+    const uses = serverAll.reduce((sum, other) => sum + (read(other).match(name)?.length ?? 0), 0);
+    if (uses <= 1) problems.push(`${file}: pub ${match[1]} is used nowhere. Delete it.`);
+  }
+}
+
+for (const note of notes) console.log(`Note: ${note}`);
+if (problems.length > 0) {
+  console.error("Tidy-code check failed:\n" + problems.map((p) => `  - ${p}`).join("\n"));
+  process.exit(1);
+}
+console.log(`Tidy-code check passed (${appCode.length} files of app code, none over its limit; nothing unused).`);
