@@ -108,6 +108,19 @@ Every agent session starts with no memory. Code, docs and decision records expla
 
 What the code tidy-up of October 2026 learned (its check is decision 0126). The code had grown hard to work on in ways each change made a little worse, because an agent can't see what it can't read:
 
+**Before writing code, ask in this order, and stop at the first yes** (decision 0127, after Ponytail's ladder):
+
+1. Does this need to exist at all? The best code is code nobody has to write or keep.
+2. Is it already in this codebase? Search first; reuse or extend what's there.
+3. Does Rust's standard library, SQLite or the browser already do it?
+4. Does a library we already have do it (`docs/libraries.md`)? Adding a new one needs the owner's yes.
+5. Can it be a line or two in an existing place?
+6. Only then write the smallest thing that works, with a test if it has any logic.
+
+Never cut the floors to write less: sanitizing, security, accessibility, undo and backups stay whole.
+
+The lessons:
+
 - **Keep files small, one concept each.** Giant files were the root of most of the mess: `Shell.svelte` reached 2,261 lines, and an agent that can't read a whole file adds a new copy of something instead of finding the old one. Files have a size limit, not counting tests, and a few older, longer files may only shrink ("Code stays tidy" in `docs/operations/checks.md` says how much). When a file nears the limit, first split it by concept, as its own pull request that only moves code (tests move with it), then make the change.
 - **Look before you write.** Search for an existing helper first ("Boring and few" above lists the shared ones). The survey found six copies of hex encoding, four of the calendar-date sum and thirteen of `isRecord`, each slightly different.
 - **One action, one place.** The web app, the sync API (Google Reader) and the AI assistants (MCP) do the same things for a reader, so new code makes them call the same functions (as `folders::delete`, `marks::set` and `feeds::from_entries!` already are), never a copy of the SQL of their own. Copies drift: the sync API once sent tracking pixels the web app removed. Still written more than once, to merge when next touched: renaming a folder (`folders.rs`, `mcp/changing.rs`, `greader.rs`), deleting a rule (`rules.rs`, `mcp/changing.rs`) and marking a feed or list read (`unread.rs`, `greader.rs`, `mcp/changing.rs`).
