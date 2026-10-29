@@ -80,9 +80,11 @@ uses a blog name of its own, so tests never meet each other's feeds.
 show at once and are saved a moment later. A test that changes something
 and then reloads or opens another page must first wait for the server to
 answer the save, or the next page can load the old choice and the test
-fails only sometimes. For Settings, `settingsSaved(page)` in
-`web/tests/screens.ts` does this: start it before the change, await it
-after. Elsewhere, wait for the line that says the change was saved.
+fails only sometimes. For a reading setting, wherever it's changed (Settings
+or a list's More menu), `settingsSaved(page)` in `web/tests/screens.ts` does
+this: start it before the change, await it after. For anything else, wait for
+the save's answer (`page.waitForResponse`) or for a line the app shows only
+once the save has answered.
 
 ## Adding a screen
 
