@@ -50,7 +50,7 @@
   import { currentWidth, LIST_MIN, ScreenLayout, watchWidth } from "./layout.svelte";
   import { apply, load, save } from "./preferences";
   import { device } from "./appearance.svelte";
-  import { inSettings, nameFor, parentOf, parse, pathFor, titleFor, type Route, type View } from "./router";
+  import { inSettings, nameFor, parentOf, parse, pathFor, titleFor, type Route } from "./router";
   import { sharedAddress } from "./share";
   import { scopeFor, searchParams, searchedTerms } from "./search";
   import { sameQuery, type SavedSearch } from "./saved";
