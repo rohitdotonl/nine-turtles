@@ -53,7 +53,9 @@ it qualifies.
 > comment and do the full review instead. Otherwise read another document only to check
 > something the change refers to. Look for: anything
 > that breaks a floor or a hard rule, mistakes, documents the change
-> affects but didn't update, and wording a future agent would misread.
+> affects but didn't update, wording a future agent would misread, and
+> untidy code: a second copy of something that already exists, or old code
+> the change replaced but left behind.
 > Check each finding before reporting it. Post one comment titled
 > "Second-agent review (light)", listing each finding with how serious it is
 > (must fix / should fix / minor), where, and why, in plain language. If you
@@ -77,6 +79,12 @@ it qualifies.
 > 6. Libraries added without approval in `docs/libraries.md`.
 > 7. Anything a future agent would misunderstand without a comment or a
 >    note in `docs/decisions/`.
+> 8. Untidy code (`docs/ENGINEERING.md` → "Keeping the code tidy"): a
+>    second copy of something that already exists, the same reader action
+>    written again for another way in (web, sync API, MCP), a screen drawn
+>    twice for phone and computer, old code the change replaced but left
+>    behind, or a file growing toward its size limit that should be split
+>    first.
 >
 > Check each finding against the code before reporting it; don't report
 > guesses. Post one comment on the pull request titled "Second-agent review",
