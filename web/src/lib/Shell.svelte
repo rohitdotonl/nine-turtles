@@ -35,6 +35,7 @@
   import ReadersPage from "./ReadersPage.svelte";
   import SearchBar from "./SearchBar.svelte";
   import SidebarFeeds from "./SidebarFeeds.svelte";
+  import SidebarViews from "./SidebarViews.svelte";
   import StarterFeeds from "./StarterFeeds.svelte";
   import { partlyAdded, type Starter } from "./starters";
   import type { Article, Feed, Folder, Source } from "./shapes";
@@ -49,7 +50,7 @@
   import { currentWidth, LIST_MIN, ScreenLayout, watchWidth } from "./layout.svelte";
   import { apply, load, save } from "./preferences";
   import { device } from "./appearance.svelte";
-  import { VIEWS, VIEW_NAMES, inSettings, nameFor, parentOf, parse, pathFor, titleFor, type Route, type View } from "./router";
+  import { inSettings, nameFor, parentOf, parse, pathFor, titleFor, type Route } from "./router";
   import { sharedAddress } from "./share";
   import { scopeFor, searchParams, searchedTerms } from "./search";
   import { sameQuery, type SavedSearch } from "./saved";
@@ -90,27 +91,9 @@
     onSignedOut: () => void;
   } = $props();
 
-  /** A small sign beside each view's name in the sidebar. */
-  const VIEW_ICONS = { unread: "dot", starred: "star", all: "stack", recent: "history", upnext: "queue" } as const;
-
   /** The reading mode, sort order, counts, when unread lets go and the hidden lists (settings.svelte.ts). */
   const settings = new ReadingSettings();
   let river = $derived(settings.mode === "river");
-  /**
-   * The fixed lists the sidebar shows: river mode has no Unread, and a list
-   * the reader hid steps aside, except All in river mode, where it's home
-   * (as Unread, which can't be hidden, is in inbox mode). Up Next shows only
-   * while it holds an episode (decision 0113); once emptied it stays until
-   * the reader next goes somewhere, so nothing moves up under them.
-   */
-  let sidebarViews: View[] = $derived(
-    VIEWS.filter(
-      (view) =>
-        !(river && view === "unread") &&
-        !((settings.hidden as string[]).includes(view) && !(river && view === "all")) &&
-        !(view === "upnext" && !player.upNext?.length && !upNextStays),
-    ),
-  );
   /** Where the app opens: Unread in inbox mode, All in river mode. */
   let home: Route = $derived({ kind: "view", view: homeView(settings.mode) });
   const parsed = parse(location.pathname);
@@ -910,19 +893,6 @@
     });
   });
 
-  /**
-   * Up Next's sidebar row, once shown, stays while it empties, until the reader next goes somewhere: then it
-   * leaves (decision 0113).
-   */
-  let upNextStays = $state(false);
-  $effect(() => {
-    if (player.upNext?.length) upNextStays = true;
-  });
-  $effect(() => {
-    void route;
-    untrack(() => (upNextStays = Boolean(player.upNext?.length)));
-  });
-
   /** Back from the article to its row in the list. */
   function backToList() {
     if (reading) {
@@ -1165,25 +1135,7 @@
         />
       </div>
       {/if}
-      <ul>
-        {#each sidebarViews as view (view)}
-          {@const current = !phone && route.kind === "view" && route.view === view}
-          <!-- On a phone the feeds screen is the root of a stack: nothing is selected there, and each row leads on with a chevron (decision 0041). -->
-          <li>
-            <a
-              href={pathFor({ kind: "view", view })}
-              aria-current={current ? "page" : undefined}
-              onclick={(event) => follow(event, { kind: "view", view })}
-              class={[
-                "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-2.5 pr-3.5 pl-3 text-ui pointer-fine:text-small",
-                current ? "font-semibold text-ink" : "text-ink-2",
-              ]}
-              ><span class={current ? (view === "starred" ? "text-star" : "text-ink") : "text-muted"}><Icon name={VIEW_ICONS[view]} size={16} filled={view === "starred" && current} /></span
-              ><span class="min-w-0 flex-1">{VIEW_NAMES[view]}</span>{#if phone}<span class="-mr-1 shrink-0 text-muted"><Icon name="chevron-right" size={16} /></span>{/if}</a
-            >
-          </li>
-        {/each}
-      </ul>
+      <SidebarViews {route} {follow} {phone} {river} hidden={settings.hidden} />
       {#if library.feeds}
         <SidebarFeeds
           bind:this={sidebarFeeds}
