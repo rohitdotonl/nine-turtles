@@ -668,6 +668,8 @@ test("Newsletters: the reader's address with Copy, a label's switch, and New add
   await expect(label).not.toBeChecked();
   await label.click();
   await expect(label).toBeChecked();
+  // The switch moves at once; wait for its save to answer too, or its line could land after New address's and hide it.
+  await expect(page.getByRole("status").filter({ hasText: `${cooking} takes email again` })).toBeVisible();
   // The email made a feed; unsubscribing it tidies up after the test.
   const feeds = await (await page.request.get(app("/api/feeds"))).json();
   const kitchen = feeds.feeds.find((feed: { title: string }) => feed.title === "Kitchen");

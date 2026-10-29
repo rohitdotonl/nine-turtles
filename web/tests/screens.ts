@@ -580,6 +580,16 @@ export async function appReady(page: Page): Promise<void> {
   await expect(page.getByLabel("Password", { exact: true }).or(page.locator("#sidebar"))).toBeAttached();
 }
 
+/**
+ * Waits for a change in Settings (sort order, hidden lists, …) to reach the
+ * server. Start waiting before the change is made, and await it before a
+ * reload or a new page: otherwise the page can load before the save lands
+ * and still show the old choice.
+ */
+export function settingsSaved(page: Page): Promise<unknown> {
+  return page.waitForResponse((response) => response.url().endsWith("/api/settings") && response.request().method() === "POST" && response.ok());
+}
+
 /** Chooses a theme and its day or night version the way Settings saves them, before the page loads. */
 export async function chooseTheme(page: Page, variant: Variant): Promise<void> {
   const [theme, appearance] = parts(variant);
