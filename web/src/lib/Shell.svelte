@@ -254,16 +254,15 @@
     return place.kind === "search" || place.kind === "edit-search" ? library.searches.find((search) => search.id === place.id) : undefined;
   });
   let currentCollection = $derived(under.kind === "collection" ? library.collections.find((each) => each.id === under.id) : undefined);
-  /** A sheet is actually showing (an edit address for a feed, folder or saved search you don't have shows none). */
-  let sheetShown = $derived(
-    sheet &&
-      (route.kind === "add-feed" ||
-        route.kind === "new-to-feeds" ||
-        (route.kind === "save-search" && searching.saving !== undefined) ||
-        (route.kind === "edit-search" && currentSearch !== undefined) ||
-        (route.kind === "edit-feed" && currentFeed !== undefined) ||
-        (route.kind === "edit-folder" && currentFolder !== undefined)),
+  /** An edit screen whose feed, folder or saved search is found: `editor` draws it, as a sheet or (on a phone) a page. */
+  let editing = $derived(
+    (route.kind === "save-search" && searching.saving !== undefined) ||
+      (route.kind === "edit-search" && currentSearch !== undefined) ||
+      (route.kind === "edit-feed" && currentFeed !== undefined) ||
+      (route.kind === "edit-folder" && currentFolder !== undefined),
   );
+  /** A sheet is actually showing (an edit address for a feed, folder or saved search you don't have shows none). */
+  let sheetShown = $derived(sheet && (route.kind === "add-feed" || route.kind === "new-to-feeds" || editing));
   /** The feed's, folder's or saved search's name, for the heading and the tab's title. */
   let placeName = $derived(placeNameOf({ feed: currentFeed, folder: currentFolder, search: currentSearch, collection: currentCollection }));
   /** On a saved search, the search field no longer holds what was saved: Escape puts it back. */
@@ -1345,32 +1344,8 @@
         <Muted bind:heading={headings.muted} onClose={closeHealth} onChanged={loadFeeds} besideToggle={!phone && !panes.sidebar} />
       {:else if route.kind === "readers"}
         <ReadersPage bind:heading={headings.readers} onClose={closeHealth} besideToggle={!phone && !panes.sidebar} />
-      {:else if !sheet && route.kind === "edit-feed" && currentFeed}
-        {#key editKey(currentFeed.id)}
-          <EditFeed
-            feed={currentFeed}
-            folders={library.folders}
-            bind:heading={headings.list}
-            besideToggle={!phone && !panes.sidebar}
-            {river}
-            onSaved={() => edited(true)}
-            onCancel={() => edited(false)}
-            onUnsubscribe={() => unsubscribeFrom(currentFeed!)}
-            onAddRule={() => addRuleFor(currentFeed!)}
-            onMoved={(after) => feedMoved(currentFeed!.id, after.id, () => headings.list)}
-          />
-        {/key}
-      {:else if !sheet && route.kind === "edit-folder" && currentFolder}
-        {#key currentFolder.id}
-          <EditFolder
-            folder={currentFolder}
-            bind:heading={headings.list}
-            besideToggle={!phone && !panes.sidebar}
-            onSaved={() => edited(true)}
-            onCancel={() => edited(false)}
-            onDelete={() => deleteThis(currentFolder!)}
-          />
-        {/key}
+      {:else if !sheet && editing}
+        {@render editor(false)}
       {:else if !sheet && route.kind === "new-to-feeds" && firstVisit}
         <section aria-labelledby="list-heading" class="page-sheet">
           <!-- Only on a phone: the phone sheet's one build, as Add a feed's (decisions 0052, 0055). -->
@@ -1383,28 +1358,6 @@
             </div>
           </div>
         </section>
-      {:else if !sheet && route.kind === "save-search" && searching.saving}
-        <EditSearch
-          query={searching.saving}
-          library={library.names}
-          bind:heading={headings.list}
-          besideToggle={!phone && !panes.sidebar}
-          onSaved={searchSaved}
-          onCancel={() => searchSaved()}
-        />
-      {:else if !sheet && route.kind === "edit-search" && currentSearch}
-        {#key currentSearch.id}
-          <EditSearch
-            saved={currentSearch}
-            query={searching.saving ?? currentSearch.query}
-            library={library.names}
-            bind:heading={headings.list}
-            besideToggle={!phone && !panes.sidebar}
-            onSaved={searchSaved}
-            onCancel={() => searchSaved()}
-            onDelete={() => deleteSearch(currentSearch!)}
-          />
-        {/key}
       {:else if !sheet && route.kind === "add-feed"}
         <section aria-labelledby="list-heading" class="page-sheet">
           <!--
@@ -1658,45 +1611,57 @@
   <Sheet title="New to feeds?" bind:heading={headings.sheet} onClose={closePage}>
     <StarterFeeds onAdded={startersAdded} onCancel={closePage} />
   </Sheet>
-{:else if sheet && route.kind === "edit-feed" && currentFeed}
-  {#key editKey(currentFeed.id)}
-    <EditFeed
-      sheet
-      feed={currentFeed}
-      folders={library.folders}
-      bind:heading={headings.sheet}
-      {river}
-      onSaved={() => edited(true)}
-      onCancel={() => edited(false)}
-      onUnsubscribe={() => unsubscribeFrom(currentFeed!)}
-      onAddRule={() => addRuleFor(currentFeed!)}
-      onMoved={(after) => feedMoved(currentFeed!.id, after.id, () => headings.sheet)}
-    />
-  {/key}
-{:else if sheet && route.kind === "save-search" && searching.saving}
-  <EditSearch sheet query={searching.saving} library={library.names} bind:heading={headings.sheet} onSaved={searchSaved} onCancel={() => searchSaved()} />
-{:else if sheet && route.kind === "edit-search" && currentSearch}
-  {#key currentSearch.id}
-    <EditSearch
-      sheet
-      saved={currentSearch}
-      query={searching.saving ?? currentSearch.query}
-      library={library.names}
-      bind:heading={headings.sheet}
-      onSaved={searchSaved}
-      onCancel={() => searchSaved()}
-      onDelete={() => deleteSearch(currentSearch!)}
-    />
-  {/key}
-{:else if sheet && route.kind === "edit-folder" && currentFolder}
-  {#key currentFolder.id}
-    <EditFolder
-      sheet
-      folder={currentFolder}
-      bind:heading={headings.sheet}
-      onSaved={() => edited(true)}
-      onCancel={() => edited(false)}
-      onDelete={() => deleteThis(currentFolder!)}
-    />
-  {/key}
+{:else if sheet && editing}
+  {@render editor(true)}
 {/if}
+
+<!-- The edit screens, drawn once for both places: a sheet over the screen, or on a phone a page in the list's place. -->
+{#snippet editor(inSheet: boolean)}
+  {@const at = inSheet ? "sheet" : "list"}
+  {@const besideToggle = !inSheet && !phone && !panes.sidebar}
+  {#if route.kind === "edit-feed" && currentFeed}
+    {#key editKey(currentFeed.id)}
+      <EditFeed
+        sheet={inSheet}
+        feed={currentFeed}
+        folders={library.folders}
+        bind:heading={headings[at]}
+        {besideToggle}
+        {river}
+        onSaved={() => edited(true)}
+        onCancel={() => edited(false)}
+        onUnsubscribe={() => unsubscribeFrom(currentFeed!)}
+        onAddRule={() => addRuleFor(currentFeed!)}
+        onMoved={(after) => feedMoved(currentFeed!.id, after.id, () => headings[at])}
+      />
+    {/key}
+  {:else if route.kind === "edit-folder" && currentFolder}
+    {#key currentFolder.id}
+      <EditFolder
+        sheet={inSheet}
+        folder={currentFolder}
+        bind:heading={headings[at]}
+        {besideToggle}
+        onSaved={() => edited(true)}
+        onCancel={() => edited(false)}
+        onDelete={() => deleteThis(currentFolder!)}
+      />
+    {/key}
+  {:else if route.kind === "save-search" && searching.saving}
+    <EditSearch sheet={inSheet} query={searching.saving} library={library.names} bind:heading={headings[at]} {besideToggle} onSaved={searchSaved} onCancel={() => searchSaved()} />
+  {:else if route.kind === "edit-search" && currentSearch}
+    {#key currentSearch.id}
+      <EditSearch
+        sheet={inSheet}
+        saved={currentSearch}
+        query={searching.saving ?? currentSearch.query}
+        library={library.names}
+        bind:heading={headings[at]}
+        {besideToggle}
+        onSaved={searchSaved}
+        onCancel={() => searchSaved()}
+        onDelete={() => deleteSearch(currentSearch!)}
+      />
+    {/key}
+  {/if}
+{/snippet}
