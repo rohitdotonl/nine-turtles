@@ -83,8 +83,9 @@ it qualifies.
 >    second copy of something that already exists, the same reader action
 >    written again for another way in (web, sync API, MCP), a screen drawn
 >    twice for phone and computer, old code the change replaced but left
->    behind, or a file growing toward its size limit that should be split
->    first.
+>    behind, a file growing toward its size limit that should be split
+>    first, or new code that one of the six "before writing code"
+>    questions there would have made unnecessary.
 >
 > Check each finding against the code before reporting it; don't report
 > guesses. Post one comment on the pull request titled "Second-agent review",
