@@ -394,7 +394,7 @@ body {
   padding-top: 0.25rem;
 }
 /*
-  A row in the list, like a line of a book's contents (decisions 0123, 0127):
+  A row in the list, like a line of a book's contents (decisions 0123, 0128):
   the list's own pill tint; 22px above, 28px below, the title in the reading
   serif at 1.35 line height (the --row-* values, which ItemList's titles and
   the unread dot's place follow) and the line under it 8px below. The pill is 8px in from the

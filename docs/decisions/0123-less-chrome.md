@@ -9,7 +9,7 @@ What each screen looks like is in `docs/SPEC.md` sections 5, 6, 7 and 27 and
 
 1. **No lines between the list's rows.** Space parts one article from the
    next: 14px above a title and 15px below its meta line (was 10 and 11 with
-   a hairline, decision 0041; now 22 and 28, decision 0127). The publisher's name in a row's meta line is
+   a hairline, decision 0041; now 22 and 28, decision 0128). The publisher's name in a row's meta line is
    in the muted grey, a step stronger than the time, so the credit reads
    first. The unread dot stays centred on the title's first line.
 2. **Quieter section names, plainer folders.** The sidebar's section names

@@ -106,7 +106,20 @@ Every agent session starts with no memory. Code, docs and decision records expla
 
 ### Keeping the code tidy
 
-What the code tidy-up of October 2026 learned (its check is decision 0126). The code had grown hard to work on in ways each change made a little worse, because an agent can't see what it can't read:
+What the code tidy-up of October 2026 learned (its check is decision 0126). The code had grown hard to work on in ways each change made a little worse, because an agent can't see what it can't read.
+
+**Before writing code, ask in this order, and stop at the first yes** (decision 0127, after Ponytail's ladder). These are about the code, not the feature: what to build is settled by `docs/SPEC.md` and the owner, and if you think a feature shouldn't exist, ask.
+
+1. Could the change work without this new code at all? The best code is code nobody has to write or keep.
+2. Is it already in this codebase (see "Look before you write" below)?
+3. Does Rust's standard library, SQLite or the browser already do it?
+4. Does a library we already have do it (`docs/libraries.md`)? Adding a new one needs the owner's yes.
+5. Can it be a line or two in an existing place?
+6. If every answer is no, write the smallest thing that works, with its tests (a feature always has tests).
+
+Never cut the floors to write less: sanitizing, security, accessibility, undo and backups stay whole.
+
+The lessons:
 
 - **Keep files small, one concept each.** Giant files were the root of most of the mess: `Shell.svelte` reached 2,261 lines, and an agent that can't read a whole file adds a new copy of something instead of finding the old one. Files have a size limit, not counting tests, and a few older, longer files may only shrink ("Code stays tidy" in `docs/operations/checks.md` says how much). When a file nears the limit, first split it by concept, as its own pull request that only moves code (tests move with it), then make the change.
 - **Look before you write.** Search for an existing helper first ("Boring and few" above lists the shared ones). The survey found six copies of hex encoding, four of the calendar-date sum and thirteen of `isRecord`, each slightly different.

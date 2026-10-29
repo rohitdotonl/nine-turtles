@@ -86,7 +86,7 @@ test.describe("on a wide window", () => {
     // starts where a read row's does (decision 0041).
     expect(titleBox.x - (dotBox.x + dotBox.width)).toBeGreaterThanOrEqual(7.5);
     expect(Math.abs((await row(page, blog, NEWEST).locator(".title").boundingBox())!.x - titleBox.x)).toBeLessThan(1);
-    // Titles in the reading serif, like a book's contents page, with the dot centred on the first line (decision 0127).
+    // Titles in the reading serif, like a book's contents page, with the dot centred on the first line (decision 0128).
     const title1 = row(page, blog, MIDDLE).locator(".title");
     expect(await title1.evaluate((element) => getComputedStyle(element).fontFamily)).toContain("Literata");
     const firstLine = await title1.evaluate((element) => parseFloat(getComputedStyle(element).lineHeight));
