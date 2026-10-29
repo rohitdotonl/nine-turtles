@@ -34,15 +34,13 @@ const LIMIT = 800;
 const CEILINGS = {
   "web/src/app.css": 1921,
   "web/src/lib/Shell.svelte": 1525,
-  "server/src/greader.rs": 1009,
+  "server/src/greader.rs": 1004,
   "web/src/lib/ItemList.svelte": 954,
   "server/src/assistants.rs": 948,
   "server/src/accounts.rs": 934,
   "web/src/lib/Settings.svelte": 913,
   "server/src/payments.rs": 841,
-  "server/src/rules.rs": 828,
   "server/src/auth.rs": 819,
-  "server/src/folders.rs": 814,
 };
 
 const root = join(import.meta.dirname, "..");

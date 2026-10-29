@@ -952,23 +952,24 @@ async fn rename_folder(
     ) else {
         return (StatusCode::BAD_REQUEST, "Name a folder and its new name.").into_response();
     };
-    let renamed = sqlx::query(
-        "UPDATE folders SET name = ?1 WHERE person_id = ?2 AND name = ?3
-         AND NOT EXISTS (SELECT 1 FROM folders AS other
-                         WHERE other.person_id = ?2 AND other.name = ?1 AND other.name != ?3)",
-    )
-    .bind(&new)
-    .bind(person)
-    .bind(&old)
-    .execute(&state.db)
+    // Apps name folders, so find its number, then rename it as the screen does.
+    let renamed = async {
+        let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
+        let renamed = match folders::named(&mut transaction, person, &old).await? {
+            Some(id) => folders::rename(&mut transaction, person, id, &new).await?,
+            None => folders::Renamed::NoFolder,
+        };
+        transaction.commit().await?;
+        Ok::<_, sqlx::Error>(renamed)
+    }
     .await;
     match renamed {
-        Ok(done) if done.rows_affected() == 0 => (
+        Ok(folders::Renamed::Done) => text("OK"),
+        Ok(_) => (
             StatusCode::BAD_REQUEST,
             "No such folder, or another folder already has that name.",
         )
             .into_response(),
-        Ok(_) => text("OK"),
         Err(error) => database_problem("renaming a folder for an app", &error),
     }
 }
@@ -989,13 +990,7 @@ async fn delete_folder(
     };
     let deleted = async {
         let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
-        let id: Option<i64> =
-            sqlx::query_scalar("SELECT id FROM folders WHERE person_id = ? AND name = ?")
-                .bind(person)
-                .bind(name)
-                .fetch_optional(&mut *transaction)
-                .await?;
-        if let Some(id) = id {
+        if let Some(id) = folders::named(&mut transaction, person, &name).await? {
             folders::delete(&mut transaction, person, id).await?;
         }
         transaction.commit().await

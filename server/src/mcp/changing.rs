@@ -12,9 +12,10 @@ use crate::{
     AppState,
     dates::rfc3339,
     feeds::{self, NotAdded},
-    folders::{self, Leaving},
+    folders::{self, Leaving, Renamed},
     marks::{self, Mark, now_ms},
     now, rules,
+    unread::{self, Side},
 };
 
 #[derive(Deserialize)]
@@ -87,16 +88,20 @@ pub(super) async fn mark(state: &AppState, person: i64, asked: Marking) -> Answe
 }
 
 pub(super) async fn mark_feed_read(state: &AppState, person: i64, asked: OneFeed) -> Answer {
-    let changed = sqlx::query(
-        "UPDATE entries SET read = 1, read_marked_at = ? WHERE person_id = ? AND feed_id = ? AND read = 0",
+    // The whole feed: everything older than the newest possible place, as
+    // the screen's Mark older as read counts it.
+    let all = (i64::MAX, i64::MAX);
+    let changed = unread::mark_past(
+        &state.db,
+        person,
+        feeds::List::Feed(asked.feed_id),
+        Side::Older,
+        all,
+        i64::MAX,
     )
-    .bind(now_ms())
-    .bind(person)
-    .bind(asked.feed_id)
-    .execute(&state.db)
     .await
     .map_err(|error| database(&error))?;
-    Ok(json!({ "done": true, "marked_read": changed.rows_affected() }))
+    Ok(json!({ "done": true, "marked_read": changed.len() }))
 }
 
 /// Why a feed wasn't added, in words an assistant can pass on.
@@ -231,29 +236,10 @@ pub(super) async fn folder(state: &AppState, person: i64, tool: &str, asked: Fol
                 Ok(json!({ "done": true, "folder_id": id, "already_there": !new }))
             }
             ("rename_folder", Some(id), Some(name)) => {
-                let other: Option<i64> = sqlx::query_scalar(
-                    "SELECT id FROM folders WHERE person_id = ? AND name = ? AND id != ?",
-                )
-                .bind(person)
-                .bind(&name)
-                .bind(id)
-                .fetch_optional(&mut *transaction)
-                .await?;
-                if other.is_some() {
-                    Err("Another folder already has that name.".to_owned())
-                } else {
-                    let renamed =
-                        sqlx::query("UPDATE folders SET name = ? WHERE id = ? AND person_id = ?")
-                            .bind(&name)
-                            .bind(id)
-                            .bind(person)
-                            .execute(&mut *transaction)
-                            .await?;
-                    if renamed.rows_affected() == 0 {
-                        Err("The reader has no folder with that id.".to_owned())
-                    } else {
-                        Ok(json!({ "done": true }))
-                    }
+                match folders::rename(&mut transaction, person, id, &name).await? {
+                    Renamed::Done => Ok(json!({ "done": true })),
+                    Renamed::NoFolder => Err("The reader has no folder with that id.".to_owned()),
+                    Renamed::Taken(_) => Err("Another folder already has that name.".to_owned()),
                 }
             }
             ("delete_folder", Some(id), _) => {
@@ -332,11 +318,7 @@ pub(super) async fn delete_rule(state: &AppState, person: i64, asked: OneRule) -
             .into_iter()
             .find(|rule| rule.id == asked.rule_id);
         if rule.is_some() {
-            sqlx::query("DELETE FROM rules WHERE id = ? AND person_id = ?")
-                .bind(asked.rule_id)
-                .bind(person)
-                .execute(&mut *connection)
-                .await?;
+            rules::delete(&mut *connection, person, asked.rule_id).await?;
         }
         Ok::<_, sqlx::Error>(rule)
     }
