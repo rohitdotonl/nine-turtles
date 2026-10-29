@@ -15,16 +15,26 @@ tidy-up"), using only tools already in the stack.
 runs with the frontend part of `scripts/check.sh`:
 
 1. **Small files.** A file of the app's own code (`server/src/`, `web/src/`,
-   the newsletter forwarder) has at most 800 lines. Tests are left out. The
-   twelve files that were already longer are listed in the script with the
-   size they had: they may shrink but never grow, and leave the list once
-   they fit. Their numbers are only ever lowered.
+   the newsletter forwarder) has at most 800 lines of code. Tests don't
+   count: test files are left out, and so is a Rust file's own tests part
+   (from `#[cfg(test)]` to the end), so a fix never has to split a file to
+   add its test. The eleven files that were already longer are listed in
+   the script with their size: they may shrink but never grow. When one
+   shrinks, the check fails until its number is lowered to match, and it
+   leaves the list once it fits.
 2. **Nothing unused.** It fails on a file in `web/src/` that nothing
    imports, a web export that nothing uses, and a server `pub` item whose
    name appears nowhere else. The web type check now also refuses unused
    names and parameters inside a file (`noUnusedLocals`,
    `noUnusedParameters`; a parameter that must stay starts with `_`), as
-   clippy already does for Rust.
+   clippy already does for Rust. "Used" counts tests: code only its own
+   tests use passes.
+
+The check matches text, not meaning, so some things slip past it: a dead
+file named like a live one in another folder, `export { … }` and
+`export default`, and an unused server item with a common name (`new`,
+`get`). It catches the common cases cheaply; the second-agent review looks
+for the rest.
 
 Turning these on found two unused things, both removed: the keyboard's
 `soon()` (for shortcuts not built yet; the last one was built) with its

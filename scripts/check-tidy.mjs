@@ -5,42 +5,48 @@
 //    the newsletter forwarder) has at most LIMIT lines, about what an agent
 //    can read and hold in mind at once. Files that were already longer when
 //    this check began are listed in CEILINGS with their size then: they may
-//    shrink but never grow, and leave the list once they fit under LIMIT.
-//    Tests are left out: a long test file is a list of cases, read one at a
-//    time.
+//    shrink but never grow: when one shrinks, its number is lowered in the
+//    same change, and it leaves the list once it fits under LIMIT. Tests are
+//    left out (test files, and a Rust file's `#[cfg(test)]` part at its end):
+//    a long test file is a list of cases, read one at a time, and a fix
+//    should never have to split a file to add its test.
 // 2. Nothing unused. A file in web/src that nothing imports, a name a web
 //    file exports that nothing uses (exporting a name its own file uses is
 //    fine: it documents the shape), or a `pub` item in the server
 //    whose name appears nowhere else. (Unused names inside a file are already
 //    caught: clippy for Rust, `noUnusedLocals` in web/tsconfig.json for the
-//    web app.)
+//    web app.) "Used" counts tests: code only its own tests use passes.
+//
+// What it can't see: it matches text, not meaning. A dead file named like a
+// live one elsewhere, `export { … }` and `export default`, and an unused
+// server item with a common name (`new`, `get`) all pass. It catches the
+// common cases cheaply; the second-agent review looks for the rest.
 
 import { readFileSync, readdirSync } from "node:fs";
 import { basename, join, relative } from "node:path";
 
 const LIMIT = 800;
 
-// Lines each long file had when the check began (29 October 2026). Lower a
-// number when its file shrinks; never raise one. Splitting a file by concept
-// is the way down (docs/ENGINEERING.md → "Keep files small").
+// Lines of code (tests left out) each long file has. The check fails until a
+// number is lowered to match a file that shrank; never raise one. Splitting
+// a file by concept is the way down (docs/ENGINEERING.md → "Keeping the code
+// tidy").
 const CEILINGS = {
   "web/src/app.css": 1921,
   "web/src/lib/Shell.svelte": 1525,
-  "server/src/greader.rs": 1052,
-  "server/src/assistants.rs": 1019,
-  "server/src/accounts.rs": 979,
-  "server/src/newsletter.rs": 965,
+  "server/src/greader.rs": 1009,
   "web/src/lib/ItemList.svelte": 954,
-  "server/src/auth.rs": 954,
-  "server/src/payments.rs": 946,
-  "server/src/rules.rs": 918,
+  "server/src/assistants.rs": 948,
+  "server/src/accounts.rs": 934,
   "web/src/lib/Settings.svelte": 913,
-  "server/src/folders.rs": 834,
+  "server/src/payments.rs": 841,
+  "server/src/rules.rs": 828,
+  "server/src/auth.rs": 819,
+  "server/src/folders.rs": 814,
 };
 
 const root = join(import.meta.dirname, "..");
 const problems = [];
-const notes = [];
 
 function files(dir, extensions) {
   return readdirSync(join(root, dir), { recursive: true, withFileTypes: true })
@@ -53,7 +59,13 @@ const read = (file) => {
   if (!text.has(file)) text.set(file, readFileSync(join(root, file), "utf8"));
   return text.get(file);
 };
-const lines = (file) => read(file).split("\n").length - (read(file).endsWith("\n") ? 1 : 0);
+// Lines of code: a Rust file's own tests (from `#[cfg(test)]` on) don't count.
+const lines = (file) => {
+  const all = read(file).split("\n");
+  if (all.at(-1) === "") all.pop();
+  const tests = file.endsWith(".rs") ? all.findIndex((line) => line.startsWith("#[cfg(test)]")) : -1;
+  return tests === -1 ? all.length : tests;
+};
 const isTest = (file) => /\.test\.ts$/.test(file);
 
 // 1. No giant files.
@@ -72,7 +84,7 @@ for (const file of appCode) {
   } else if (ceiling !== undefined && count <= LIMIT) {
     problems.push(`${file} is down to ${count} lines: take it off CEILINGS in scripts/check-tidy.mjs.`);
   } else if (ceiling !== undefined && count < ceiling) {
-    notes.push(`${file} shrank to ${count} lines: lower its ceiling (${ceiling}) in scripts/check-tidy.mjs.`);
+    problems.push(`${file} shrank to ${count} lines: lower its number in CEILINGS (${ceiling}) to ${count}.`);
   }
 }
 for (const file of Object.keys(CEILINGS)) {
@@ -87,7 +99,7 @@ const elsewhere = (name, file, among) => among.some((other) => other !== file &&
 
 for (const file of webCode.filter((file) => !isTest(file))) {
   for (const match of read(file).matchAll(
-    /^export\s+(?:async\s+)?(?:const|let|function|class|type|interface|enum)\s+([A-Za-z_$][\w$]*)/gm,
+    /^\s*export\s+(?:async\s+)?(?:const|let|function|class|type|interface|enum)\s+([A-Za-z_$][\w$]*)/gm,
   )) {
     const inside = read(file).split(word(match[1])).length - 1;
     if (inside <= 1 && !elsewhere(match[1], file, webAll)) {
@@ -96,7 +108,8 @@ for (const file of webCode.filter((file) => !isTest(file))) {
   }
   if (file === "web/src/main.ts") continue; // where the app starts
   const name = basename(file).replace(/\.(ts|js)$/, "");
-  const imported = new RegExp(`from\\s+["'][^"']*/${name.replace(/\./g, "\\.")}(\\.(ts|js))?["']`);
+  // `from "./name"`, `import "./name"` or `import("./name")`.
+  const imported = new RegExp(`(?:from|import)\\s*\\(?\\s*["'][^"']*/${name.replace(/\./g, "\\.")}(\\.(ts|js))?["']`);
   if (!webAll.some((other) => other !== file && imported.test(read(other)))) {
     problems.push(`${file} isn't imported by any other file. Delete it.`);
   }
@@ -114,7 +127,6 @@ for (const file of serverAll.filter((file) => file.startsWith("server/src/"))) {
   }
 }
 
-for (const note of notes) console.log(`Note: ${note}`);
 if (problems.length > 0) {
   console.error("Tidy-code check failed:\n" + problems.map((p) => `  - ${p}`).join("\n"));
   process.exit(1);
