@@ -272,17 +272,42 @@ async fn read_past(
     let Some(list) = List::from_query(form.feed, form.folder, form.collection, form.view) else {
         return StatusCode::BAD_REQUEST.into_response();
     };
-    let mut question = sqlx::query_scalar(read_past_sql(list, form.side))
-        .bind(person)
-        .bind(form.latest)
-        .bind(form.at)
-        .bind(form.id);
-    if let List::Feed(id) | List::Folder(id) | List::Collection(id) = list {
-        question = question.bind(id);
-    }
-    let marked: Result<Vec<i64>, sqlx::Error> = question.fetch_all(&state.db).await;
+    let marked = mark_past(
+        &state.db,
+        person,
+        list,
+        form.side,
+        (form.at, form.id),
+        form.latest,
+    )
+    .await;
     match marked {
         Ok(ids) => Json(json!({ "ids": ids })).into_response(),
         Err(error) => database_problem("marking past an article as read", &error),
     }
+}
+
+/// Marks one side of a list read, the one way every door does it (the
+/// screen's Mark older and Mark all as read, assistants' mark_feed_read):
+/// the reader's unread articles past `place` (a date and an article number)
+/// on `side`, numbered `latest` or lower. Answers their numbers. A whole
+/// list is every place: `(i64::MAX, i64::MAX)` on the older side, with
+/// `latest` `i64::MAX`.
+pub async fn mark_past(
+    db: &SqlitePool,
+    person: i64,
+    list: List,
+    side: Side,
+    place: (i64, i64),
+    latest: i64,
+) -> Result<Vec<i64>, sqlx::Error> {
+    let mut question = sqlx::query_scalar(read_past_sql(list, side))
+        .bind(person)
+        .bind(latest)
+        .bind(place.0)
+        .bind(place.1);
+    if let List::Feed(id) | List::Folder(id) | List::Collection(id) = list {
+        question = question.bind(id);
+    }
+    question.fetch_all(db).await
 }
