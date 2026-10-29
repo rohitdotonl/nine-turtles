@@ -61,7 +61,8 @@ one, it answers 401; without the setting, 404.
   storage couldn't be listed just then (the problem is logged).
 - `coming_up` lists, sorted by day, each plan that renews (`renews`) or
   ends (`ends`: cancelled, or a renewal still failing) and each trial that
-  ends (`trial-ends`) in the next 30 days. While payments are off, everyone
+  ends (`trial-ends`) in the next 30 days. A day already past isn't listed,
+  even while a plan is still paid in its few days of grace. While payments are off, everyone
   is free and the list is empty.
 - `here_last_30_days` can be up to a day behind: nine turtles notes that a
   reader was here at most once a day.

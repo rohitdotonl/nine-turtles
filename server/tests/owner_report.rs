@@ -117,18 +117,34 @@ async fn the_report_counts_who_pays_and_the_days_plans_change_but_never_who() {
     plan(&state, later, "active", Some(60), 63).await;
     let card = reader(&state, 40 * DAY, "card@example.com").await;
     plan(&state, card, "on_hold", Some(3), 3).await;
-    reader(&state, 100 * DAY, "gone@example.com").await;
+    // Dodo's message about yesterday's renewal is late: still paid, but
+    // that day is past, so it isn't coming up.
+    let late = reader(&state, 40 * DAY, "late@example.com").await;
+    plan(&state, late, "active", Some(-1), 6).await;
+    let gone = reader(&state, 100 * DAY, "gone@example.com").await;
+    // Not seen since they joined: no device used, never noted as here.
+    for forget in [
+        "UPDATE sessions SET last_used_at = unixepoch() - 100 * 86400 WHERE person_id = ?",
+        "DELETE FROM person_settings WHERE name = 'here_at' AND person_id = ?",
+    ] {
+        sqlx::query(forget)
+            .bind(gone)
+            .execute(&state.db)
+            .await
+            .unwrap();
+    }
 
     let report = ask(&base, Some(KEY)).await.text().await.unwrap();
     assert!(!report.contains('@'), "{report} names someone");
     let report: Value = serde_json::from_str(&report).unwrap();
-    assert_eq!(report["readers"]["total"], 7);
+    assert_eq!(report["readers"]["total"], 8);
     assert_eq!(report["readers"]["joined_last_30_days"], 2);
+    assert_eq!(report["readers"]["here_last_30_days"], 7);
     assert_eq!(report["payments"]["on"], true);
     assert_eq!(report["payments"]["live"], false);
     assert_eq!(
         report["payments"]["readers"],
-        serde_json::json!({ "free": 1, "trial": 1, "paid": 3, "on_hold": 1, "ended": 1 })
+        serde_json::json!({ "free": 1, "trial": 1, "paid": 4, "on_hold": 1, "ended": 1 })
     );
 
     let day = |from_now: i64| nine_turtles::backup::day_name(nine_turtles::now() + from_now * DAY);
@@ -153,4 +169,18 @@ async fn the_report_counts_who_pays_and_the_days_plans_change_but_never_who() {
             (day(13), "trial-ends".to_owned()),
         ]
     );
+}
+
+#[tokio::test]
+async fn the_report_counts_every_problem_not_only_the_ones_remembered() {
+    let base = common::start(config()).await;
+    // More than the diagnostics page remembers (20). Other tests may log
+    // problems too, so the count is at least this many.
+    for problem in 0..25 {
+        nine_turtles::log::problem(&format!("a made-up problem {problem}"));
+    }
+    let report: Value =
+        serde_json::from_str(&ask(&base, Some(KEY)).await.text().await.unwrap()).unwrap();
+    assert!(report["problems_since_start"].as_u64().unwrap() >= 25);
+    assert!(!report.to_string().contains("made-up problem"));
 }

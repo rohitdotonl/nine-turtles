@@ -95,7 +95,7 @@ async fn report(State(state): State<AppState>, headers: HeaderMap) -> Response {
             Standing::Ended => (&mut paying.ended, None),
         };
         *count += 1;
-        if let Some((at, what)) = upcoming.filter(|(at, _)| *at <= now + COMING_UP) {
+        if let Some((at, what)) = upcoming.filter(|(at, _)| (now..=now + COMING_UP).contains(at)) {
             coming_up.push(Upcoming {
                 day: backup::day_name(at),
                 what,
@@ -125,7 +125,7 @@ async fn report(State(state): State<AppState>, headers: HeaderMap) -> Response {
             "generated_at": now,
             "started_at": state.started_at,
             "database_bytes": db::size_in_bytes(&state.config.data_dir),
-            "problems_since_start": log::recent_problems().len(),
+            "problems_since_start": log::problems_since_start(),
             "backups": backups,
             "readers": {
                 "total": totals.readers,

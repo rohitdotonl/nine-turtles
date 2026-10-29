@@ -178,6 +178,8 @@ impl Config {
 }
 
 /// A secret setting (`name`), if set: long enough that nobody can guess it.
+/// The newsletter secret and the owner report key share this rule
+/// (`newsletters::SHORTEST_SECRET`), on purpose.
 fn long_secret(name: &str, value: Option<String>) -> Result<Option<String>, String> {
     let Some(secret) = value.map(|secret| secret.trim().to_owned()) else {
         return Ok(None);
