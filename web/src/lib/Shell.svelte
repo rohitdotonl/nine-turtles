@@ -305,6 +305,9 @@
   let listCount = $state(0);
   /** The list's "28 results" while it shows search results, so the search options can repeat it where they'd cover it. */
   let listFound = $state("");
+  /** Add a feed or "New to feeds?" is open (the `task` snippet draws them), and its title. */
+  let tasking = $derived(route.kind === "add-feed" || (route.kind === "new-to-feeds" && firstVisit));
+  let taskTitle = $derived(route.kind === "add-feed" ? "Add a feed" : "New to feeds?");
   /** The line above the add field, in the sheet and on the phone's page. */
   const ADD_INTRO = "nine turtles finds the feed on any website you like, and lists its articles.";
   /** The list's heading (`listHeading.ts`). */
@@ -1346,37 +1349,26 @@
         <ReadersPage bind:heading={headings.readers} onClose={closeHealth} besideToggle={!phone && !panes.sidebar} />
       {:else if !sheet && editing}
         {@render editor(false)}
-      {:else if !sheet && route.kind === "new-to-feeds" && firstVisit}
-        <section aria-labelledby="list-heading" class="page-sheet">
-          <!-- Only on a phone: the phone sheet's one build, as Add a feed's (decisions 0052, 0055). -->
-          <div class="page-sheet-card">
-            <PageHead title="New to feeds?" bind:heading={headings.list} besideToggle={false} onClose={closePage} closeLabel="Close" />
-            <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
-              <div class="mx-auto flex w-full max-w-xl flex-1 flex-col">
-                <StarterFeeds onAdded={startersAdded} page />
+      {:else if !sheet && tasking}
+        {#key route.kind}
+          <section aria-labelledby="list-heading" class="page-sheet">
+            <!--
+              Only on a phone (wider windows get the sheet). The phone sheet's one build (decisions 0052,
+              0055): an iOS page sheet, its grouped ground 10px below the dimmed screen's top with 12px
+              top corners, the title with an X that goes back to the feeds (as Escape does), no back
+              arrow and no Cancel.
+            -->
+            <div class="page-sheet-card">
+              <PageHead title={taskTitle} bind:heading={headings.list} besideToggle={false} onClose={closePage} closeLabel="Close" />
+              <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
+                <!-- 20px under the top line as Settings is: Add a feed's line on what to paste, the field, then Add feed the full width at the screen's foot. -->
+                <div class="mx-auto flex w-full max-w-xl flex-1 flex-col gap-5">
+                  {@render task(false)}
+                </div>
               </div>
             </div>
-          </div>
-        </section>
-      {:else if !sheet && route.kind === "add-feed"}
-        <section aria-labelledby="list-heading" class="page-sheet">
-          <!--
-            Only on a phone (wider windows get the sheet). The phone sheet's one build (decisions 0052,
-            0055): an iOS page sheet, its grouped ground 10px below the dimmed screen's top with 12px
-            top corners, the title with an X that goes back to the feeds (as Escape does), no back
-            arrow and no Cancel.
-          -->
-          <div class="page-sheet-card">
-            <PageHead title="Add a feed" bind:heading={headings.list} besideToggle={!phone && !panes.sidebar} onClose={closePage} closeLabel="Close" />
-            <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
-              <!-- 20px under the top line as Settings is: a line on what to paste, the field, then Add feed the full width at the screen's foot. -->
-              <div class="mx-auto flex w-full max-w-xl flex-1 flex-col gap-5">
-                <p>{ADD_INTRO}</p>
-                <AddFeed bind:field={headings.add} feeds={library.feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} page {shared} onShared={() => (shared = "")} />
-              </div>
-            </div>
-          </div>
-        </section>
+          </section>
+        {/key}
       {:else}
         {#if !phone && !welcoming && !bothHidden}
           <!--
@@ -1602,18 +1594,26 @@
   {/key}
 {/if}
 
-{#if sheet && route.kind === "add-feed"}
-  <Sheet title="Add a feed" bind:heading={headings.sheet} onClose={closePage} initial={() => headings.add}>
-    <p>{ADD_INTRO}</p>
-    <AddFeed bind:field={headings.add} feeds={library.feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} onCancel={closePage} {shared} onShared={() => (shared = "")} />
-  </Sheet>
-{:else if sheet && route.kind === "new-to-feeds" && firstVisit}
-  <Sheet title="New to feeds?" bind:heading={headings.sheet} onClose={closePage}>
-    <StarterFeeds onAdded={startersAdded} onCancel={closePage} />
-  </Sheet>
+{#if sheet && tasking}
+  {#key route.kind}
+    <Sheet title={taskTitle} bind:heading={headings.sheet} onClose={closePage} initial={route.kind === "add-feed" ? () => headings.add : undefined}>
+      {@render task(true)}
+    </Sheet>
+  {/key}
 {:else if sheet && editing}
   {@render editor(true)}
 {/if}
+
+<!-- Add a feed and "New to feeds?", drawn once for both places: a sheet over the screen, or on a phone a page in the list's place. -->
+{#snippet task(inSheet: boolean)}
+  {@const onCancel = inSheet ? closePage : undefined}
+  {#if route.kind === "add-feed"}
+    <p>{ADD_INTRO}</p>
+    <AddFeed bind:field={headings.add} feeds={library.feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} {onCancel} page={!inSheet} {shared} onShared={() => (shared = "")} />
+  {:else}
+    <StarterFeeds onAdded={startersAdded} {onCancel} page={!inSheet} />
+  {/if}
+{/snippet}
 
 <!-- The edit screens, drawn once for both places: a sheet over the screen, or on a phone a page in the list's place. -->
 {#snippet editor(inSheet: boolean)}
