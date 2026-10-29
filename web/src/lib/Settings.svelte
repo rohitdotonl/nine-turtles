@@ -841,7 +841,7 @@
         {/if}
       {:else if page === "readers"}
         {#if owner}
-          <Readers {email} {onReaders} />
+          <Readers {onReaders} />
         {:else}
           <p>Only whoever runs this nine turtles sees Readers.</p>
         {/if}

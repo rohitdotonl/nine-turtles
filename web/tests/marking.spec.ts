@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
-import { appReady, follow, markAllFromMenu, signIn, tabTo } from "./screens";
+import { appReady, follow, markAllFromMenu, settingsSaved, signIn, tabTo } from "./screens";
 
 // SPEC sections 8, 9, 18 (sort order) and 25 (a failed save), "How to check
 // it", done by a browser. Each test follows a made-up blog of its own
@@ -86,7 +86,7 @@ test.describe("on a wide window", () => {
     // starts where a read row's does (decision 0041).
     expect(titleBox.x - (dotBox.x + dotBox.width)).toBeGreaterThanOrEqual(7.5);
     expect(Math.abs((await row(page, blog, NEWEST).locator(".title").boundingBox())!.x - titleBox.x)).toBeLessThan(1);
-    // Titles in the reading serif, like a book's contents page, with the dot centred on the first line (decision 0124).
+    // Titles in the reading serif, like a book's contents page, with the dot centred on the first line (decision 0127).
     const title1 = row(page, blog, MIDDLE).locator(".title");
     expect(await title1.evaluate((element) => getComputedStyle(element).fontFamily)).toContain("Literata");
     const firstLine = await title1.evaluate((element) => parseFloat(getComputedStyle(element).lineHeight));
@@ -456,14 +456,19 @@ test("Settings: the sort order is saved for every device", async ({ page, isMobi
   await expect(newest).toBeChecked();
   // With only the keyboard: Tab to the choice, an arrow key changes it.
   await tabTo(page, newest);
+  // Each change is saved before the next page loads, or that page could still show the old order.
+  let saved = settingsSaved(page);
   await page.keyboard.press("ArrowDown");
   await expect(reading.getByRole("radio", { name: "Oldest first" })).toBeChecked();
   await expect(reading.getByRole("radio", { name: "Oldest first" })).toBeFocused();
+  await saved;
   await page.reload();
   await appReady(page);
   await expect(reading.getByRole("radio", { name: "Oldest first" })).toBeChecked();
+  saved = settingsSaved(page);
   await reading.getByRole("radio", { name: "Newest first" }).check();
   await expect(reading.getByRole("radio", { name: "Newest first" })).toBeChecked();
+  await saved;
 
   // The list's More menu sets the same sort order (Starred has a list even with no feeds).
   await page.goto("/starred");
@@ -471,15 +476,19 @@ test("Settings: the sort order is saved for every device", async ({ page, isMobi
   const more = page.getByRole("button", { name: "More", exact: true });
   await more.click();
   await expect(page.getByRole("menuitemradio", { name: "Newest first" })).toHaveAttribute("aria-checked", "true");
+  saved = settingsSaved(page);
   await page.getByRole("menuitemradio", { name: "Oldest first" }).click();
+  await saved;
   await more.click();
   await expect(page.getByRole("menuitemradio", { name: "Oldest first" })).toHaveAttribute("aria-checked", "true");
   await page.keyboard.press("Escape");
   await page.goto("/settings");
   await appReady(page);
   await expect(reading.getByRole("radio", { name: "Oldest first" })).toBeChecked();
+  saved = settingsSaved(page);
   await reading.getByRole("radio", { name: "Newest first" }).check();
   await expect(reading.getByRole("radio", { name: "Newest first" })).toBeChecked();
+  await saved;
 });
 
 test("river mode: no Unread view, no counts, no read styling, and it opens on All", async ({ page, isMobile }) => {

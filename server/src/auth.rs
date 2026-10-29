@@ -23,7 +23,7 @@ use axum::{
     Json, Router,
     extract::{FromRequestParts, State},
     http::{HeaderMap, HeaderValue, StatusCode, header, request::Parts},
-    response::{AppendHeaders, IntoResponse, Response},
+    response::{IntoResponse, Response},
     routing::{get, post},
 };
 use blake2::{Blake2s256, Digest};
@@ -38,8 +38,6 @@ use crate::{AppState, config::PasswordSetting, log, now};
 pub const OWNER: i64 = 1;
 
 const COOKIE: &str = "nine_turtles_session";
-/// The cookie's name before the rename: still accepted, so nobody is signed out by it.
-const OLD_COOKIE: &str = "slowfeed_session";
 /// A device stays signed in for a year after it was last used.
 const SESSION_LIFETIME: i64 = 365 * 24 * 60 * 60;
 /// How often a device's year is renewed. Daily is plenty, and keeps the
@@ -177,7 +175,7 @@ impl Limiter {
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Account {
     /// The owner while they have no email yet, when they confirm their
-    /// password in Settings (their email, or a passkey).
+    /// password to add a passkey.
     Owner,
     /// An email address, in small letters, whether or not anyone has it,
     /// the owner's own email too (so it can't be told apart from others).
@@ -198,8 +196,8 @@ impl Account {
 
 /// How many password checks (argon2, about 19 MB each) may run at once, so
 /// a flood of sign-in tries can't use up the server's memory. An owner with
-/// no email yet confirming their password in Settings has a place of their
-/// own: guesses at emails never queue in front of it. Every sign-in, the
+/// no email yet confirming their password (adding a passkey) has a place of
+/// their own: guesses at emails never queue in front of it. Every sign-in, the
 /// owner's too, waits on the shared line, so its timing gives nothing away.
 #[derive(Debug)]
 pub struct PasswordChecks {
@@ -729,8 +727,7 @@ pub async fn remember_device(db: &SqlitePool, person: i64) -> Result<Option<Stri
 
 /// Signs out this device only. Other devices stay signed in.
 async fn sign_out(State(state): State<AppState>, headers: HeaderMap) -> Response {
-    // Both tickets go, should a device send a live one under each name.
-    for token in cookie_tokens(&headers) {
+    if let Some(token) = cookie_token(&headers) {
         let deleted = sqlx::query("DELETE FROM sessions WHERE token_hash = ?")
             .bind(&scramble(&token)[..])
             .execute(&state.db)
@@ -739,7 +736,7 @@ async fn sign_out(State(state): State<AppState>, headers: HeaderMap) -> Response
             return database_problem("signing out", &error);
         }
     }
-    (StatusCode::NO_CONTENT, signed_out_cookies()).into_response()
+    (StatusCode::NO_CONTENT, [signed_out_cookie()]).into_response()
 }
 
 pub async fn signed_in_devices(state: &AppState) -> Result<i64, sqlx::Error> {
@@ -783,48 +780,32 @@ pub(crate) fn session_cookie(token: &str) -> HeaderValue {
     HeaderValue::from_str(&cookie).unwrap_or_else(|_| HeaderValue::from_static(""))
 }
 
+/// This device's ticket, if it sends a well-formed one. A malformed value
+/// never hides a good one.
 fn cookie_token(headers: &HeaderMap) -> Option<String> {
-    cookie_tokens(headers).into_iter().next()
-}
-
-/// The well-formed tickets this device sends, the new cookie's first. A
-/// device signed in before the rename may still send the old cookie (first,
-/// as browsers send older cookies first) with a ticket that's long gone, so
-/// the new name wins, and a malformed value never hides a good one.
-fn cookie_tokens(headers: &HeaderMap) -> Vec<String> {
-    let tickets: Vec<(&str, &str)> = headers
+    headers
         .get_all(header::COOKIE)
         .iter()
         .filter_map(|value| value.to_str().ok())
         .flat_map(|value| value.split(';'))
         .filter_map(|pair| pair.trim().split_once('='))
-        .filter(|(_, value)| {
-            value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_hexdigit())
+        .find(|(name, value)| {
+            *name == COOKIE
+                && value.len() == 64
+                && value.bytes().all(|byte| byte.is_ascii_hexdigit())
         })
-        .collect();
-    [COOKIE, OLD_COOKIE]
-        .iter()
-        .filter_map(|wanted| {
-            tickets
-                .iter()
-                .find(|(name, _)| name == wanted)
-                .map(|(_, value)| (*value).to_owned())
-        })
-        .collect()
+        .map(|(_, value)| value.to_owned())
 }
 
-/// Set-Cookie headers that sign this device out: both the cookie and its
-/// name from before the rename, so an old ticket can't linger.
-pub(crate) fn signed_out_cookies() -> AppendHeaders<[(header::HeaderName, HeaderValue); 2]> {
-    AppendHeaders([COOKIE, OLD_COOKIE].map(|name| {
-        (
-            header::SET_COOKIE,
-            HeaderValue::from_str(&format!(
-                "{name}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict"
-            ))
-            .unwrap_or_else(|_| HeaderValue::from_static("")),
-        )
-    }))
+/// The Set-Cookie header that signs this device out.
+pub(crate) fn signed_out_cookie() -> (header::HeaderName, HeaderValue) {
+    (
+        header::SET_COOKIE,
+        HeaderValue::from_str(&format!(
+            "{COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict"
+        ))
+        .unwrap_or_else(|_| HeaderValue::from_static("")),
+    )
 }
 
 /// 32 random bytes from the operating system, written as 64 hex characters.
@@ -958,30 +939,13 @@ mod tests {
     }
 
     #[test]
-    fn the_new_cookie_wins_over_the_old_one() {
-        // A device signed in before the rename still sends the old cookie,
-        // and browsers put it first. Its ticket may be long gone.
-        let dead = "ab".repeat(32);
-        let live = "cd".repeat(32);
-        let mut headers = HeaderMap::new();
-        headers.insert(
-            header::COOKIE,
-            HeaderValue::from_str(&format!(
-                "slowfeed_session={dead}; nine_turtles_session={live}"
-            ))
-            .unwrap(),
-        );
-        assert_eq!(cookie_token(&headers), Some(live));
-    }
-
-    #[test]
     fn a_malformed_cookie_doesnt_hide_a_good_one() {
         let token = "ab".repeat(32);
         let mut headers = HeaderMap::new();
         headers.insert(
             header::COOKIE,
             HeaderValue::from_str(&format!(
-                "nine_turtles_session=junk; slowfeed_session={token}"
+                "nine_turtles_session=junk; nine_turtles_session={token}"
             ))
             .unwrap(),
         );

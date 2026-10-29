@@ -27,7 +27,6 @@ until the owner says so.
 |---|---|---|
 | Live payments, after Dodo approves the live site | ⏳ The owner applies once the site, price and legal pages are final | SPEC section 29, decision 0094, `docs/operations/dodo-application.md` |
 | The open questions (privacy policy and terms, prices, trial) | ⏳ The owner's answers | [`planning/questions.md`](planning/questions.md) |
-| A bug hunt, then a code tidy-up | 🔨 Bugs found by a survey fixed (#135 to #142) and safety-net tests added (#143); next, tidying the code | `docs/changes/` |
 
 ## Later: ideas the owner wants, not yet scheduled
 

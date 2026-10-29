@@ -12,6 +12,7 @@
   import Logo from "./Logo.svelte";
   import { edge } from "./edge";
   import Icon from "./Icon.svelte";
+  import ListHead from "./ListHead.svelte";
   import PaneResizer from "./PaneResizer.svelte";
   import { onMount, tick, untrack } from "svelte";
   import AddFeed from "./AddFeed.svelte";
@@ -24,16 +25,18 @@
   import AddToCollection from "./AddToCollection.svelte";
   import RenameCollection from "./RenameCollection.svelte";
   import ItemList from "./ItemList.svelte";
-  import MoreMenu from "./MoreMenu.svelte";
   import PageHead from "./PageHead.svelte";
   import Sheet from "./Sheet.svelte";
   import Settings from "./Settings.svelte";
   import FeedHealth from "./FeedHealth.svelte";
   import YourFeeds from "./YourFeeds.svelte";
+  import Welcome from "./Welcome.svelte";
   import Muted from "./Muted.svelte";
   import ReadersPage from "./ReadersPage.svelte";
   import SearchBar from "./SearchBar.svelte";
   import SidebarFeeds from "./SidebarFeeds.svelte";
+  import SidebarFoot from "./SidebarFoot.svelte";
+  import SidebarViews from "./SidebarViews.svelte";
   import StarterFeeds from "./StarterFeeds.svelte";
   import { partlyAdded, type Starter } from "./starters";
   import type { Article, Feed, Folder, Source } from "./shapes";
@@ -48,7 +51,7 @@
   import { currentWidth, LIST_MIN, ScreenLayout, watchWidth } from "./layout.svelte";
   import { apply, load, save } from "./preferences";
   import { device } from "./appearance.svelte";
-  import { VIEWS, VIEW_NAMES, inSettings, nameFor, parentOf, parse, pathFor, titleFor, type Route, type View } from "./router";
+  import { nameFor, parentOf, parse, pathFor, titleFor, type Route } from "./router";
   import { sharedAddress } from "./share";
   import { scopeFor, searchParams, searchedTerms } from "./search";
   import { sameQuery, type SavedSearch } from "./saved";
@@ -58,6 +61,7 @@
   import { LoadedLibrary } from "./library.svelte";
   import { emptyText, insteadOfList, missingFrom, type Found } from "./listWording";
   import { headingFor, placeNameOf } from "./listHeading";
+  import { focusArriving, landingFor, type Headings } from "./landing";
   import { moveArticle, nextFeed, type ArticleMove } from "./moving";
   import { isFirstVisit, newToFeedsGivesWay, welcomeFor } from "./firstVisit";
   import { startingStep, stepOf, type Screen } from "./steps";
@@ -88,27 +92,9 @@
     onSignedOut: () => void;
   } = $props();
 
-  /** A small sign beside each view's name in the sidebar. */
-  const VIEW_ICONS = { unread: "dot", starred: "star", all: "stack", recent: "history", upnext: "queue" } as const;
-
   /** The reading mode, sort order, counts, when unread lets go and the hidden lists (settings.svelte.ts). */
   const settings = new ReadingSettings();
   let river = $derived(settings.mode === "river");
-  /**
-   * The fixed lists the sidebar shows: river mode has no Unread, and a list
-   * the reader hid steps aside, except All in river mode, where it's home
-   * (as Unread, which can't be hidden, is in inbox mode). Up Next shows only
-   * while it holds an episode (decision 0113); once emptied it stays until
-   * the reader next goes somewhere, so nothing moves up under them.
-   */
-  let sidebarViews: View[] = $derived(
-    VIEWS.filter(
-      (view) =>
-        !(river && view === "unread") &&
-        !((settings.hidden as string[]).includes(view) && !(river && view === "all")) &&
-        !(view === "upnext" && !player.upNext?.length && !upNextStays),
-    ),
-  );
   /** Where the app opens: Unread in inbox mode, All in river mode. */
   let home: Route = $derived({ kind: "view", view: homeView(settings.mode) });
   const parsed = parse(location.pathname);
@@ -174,19 +160,14 @@
   let phone = $derived(layout.phone);
 
   let wordmark: HTMLHeadingElement | undefined = $state();
-  let listHeading: HTMLHeadingElement | undefined = $state();
-  let settingsHeading: HTMLHeadingElement | undefined = $state();
-  let healthHeading: HTMLHeadingElement | undefined = $state();
-  let yourFeedsHeading: HTMLHeadingElement | undefined = $state();
-  let mutedHeading: HTMLHeadingElement | undefined = $state();
-  let readersHeading: HTMLHeadingElement | undefined = $state();
+  /** The headings (and the add field) the keyboard's place lands on (`landing.ts`). */
+  const headings: Headings = $state({});
   /** "Add a rule for this feed…" in Edit feed: Settings opens with a new rule for it. */
   let ruleForFeed: number | undefined = $state();
   /** Feed health, Your feeds, Muted articles or Readers was opened from Settings, so closing it is a step back in history. */
   let cameFromSettings = false;
   /** Back from a page opened from Settings: the row on its parent page that opened it, for the keyboard to return to (decision 0120). */
   let returnRow: string | undefined;
-  let addField: HTMLInputElement | undefined = $state();
   let sidebar: HTMLElement | undefined = $state();
   let articleHeading: HTMLHeadingElement | undefined = $state();
   let itemList: ItemList | undefined = $state();
@@ -221,7 +202,6 @@
   let sheet = $derived(!phone && isOver(route));
   /** Where the list and article come from: under a sheet, the place it opened over (navigation.ts). */
   let under: Route = $derived(underSheet(route, lastPlace, phone));
-  let sheetHeading: HTMLHeadingElement | undefined = $state();
   /** What had the keyboard when a sheet opened, to give it back when the sheet closes. */
   const sheetOpener = new Opener();
   /** The browser's history: the step each move adds, and the steps back (navigation.ts). */
@@ -259,16 +239,15 @@
     return place.kind === "search" || place.kind === "edit-search" ? library.searches.find((search) => search.id === place.id) : undefined;
   });
   let currentCollection = $derived(under.kind === "collection" ? library.collections.find((each) => each.id === under.id) : undefined);
-  /** A sheet is actually showing (an edit address for a feed, folder or saved search you don't have shows none). */
-  let sheetShown = $derived(
-    sheet &&
-      (route.kind === "add-feed" ||
-        route.kind === "new-to-feeds" ||
-        (route.kind === "save-search" && searching.saving !== undefined) ||
-        (route.kind === "edit-search" && currentSearch !== undefined) ||
-        (route.kind === "edit-feed" && currentFeed !== undefined) ||
-        (route.kind === "edit-folder" && currentFolder !== undefined)),
+  /** An edit screen whose feed, folder or saved search is found: `editor` draws it, as a sheet or (on a phone) a page. */
+  let editing = $derived(
+    (route.kind === "save-search" && searching.saving !== undefined) ||
+      (route.kind === "edit-search" && currentSearch !== undefined) ||
+      (route.kind === "edit-feed" && currentFeed !== undefined) ||
+      (route.kind === "edit-folder" && currentFolder !== undefined),
   );
+  /** A sheet is actually showing (an edit address for a feed, folder or saved search you don't have shows none). */
+  let sheetShown = $derived(sheet && (route.kind === "add-feed" || route.kind === "new-to-feeds" || editing));
   /** The feed's, folder's or saved search's name, for the heading and the tab's title. */
   let placeName = $derived(placeNameOf({ feed: currentFeed, folder: currentFolder, search: currentSearch, collection: currentCollection }));
   /** On a saved search, the search field no longer holds what was saved: Escape puts it back. */
@@ -297,7 +276,6 @@
   let bothHidden = $derived(!phone && !panes.sidebar && !panes.list && isList(route) && !welcoming);
   let welcomeWide = $derived(whereWelcome.wide);
   let welcomeAlone = $derived(whereWelcome.alone);
-  let welcomeHeading: HTMLHeadingElement | undefined = $state();
   /** "New to feeds?" is for the first visit only: once anything is followed, it becomes the home view. */
   $effect(() => {
     if (!newToFeedsGivesWay(route, library.feeds)) return;
@@ -312,6 +290,9 @@
   let listCount = $state(0);
   /** The list's "28 results" while it shows search results, so the search options can repeat it where they'd cover it. */
   let listFound = $state("");
+  /** Add a feed or "New to feeds?" is open (the `task` snippet draws them), and its title. */
+  let tasking = $derived(route.kind === "add-feed" || (route.kind === "new-to-feeds" && firstVisit));
+  let taskTitle = $derived(route.kind === "add-feed" ? "Add a feed" : "New to feeds?");
   /** The line above the add field, in the sheet and on the phone's page. */
   const ADD_INTRO = "nine turtles finds the feed on any website you like, and lists its articles.";
   /** The list's heading (`listHeading.ts`). */
@@ -503,25 +484,9 @@
     };
   });
 
-  /** Where the keyboard's place goes on arriving somewhere: its heading, or the add field. */
+  /** Where the keyboard's place goes on arriving somewhere (`landing.ts`). */
   function placeFocus(place: Route): HTMLElement | undefined {
-    // Edit pages bind their heading to `listHeading` too.
-    if (place.kind === "settings") {
-      // Back from one of its pages: to the row that opened it, if it's there.
-      const row = returnRow ? document.querySelector<HTMLElement>(`[data-settings-row="${returnRow}"]`) : null;
-      return row ?? settingsHeading;
-    }
-    if (place.kind === "feed-health") return healthHeading;
-    if (place.kind === "your-feeds") return yourFeedsHeading;
-    if (place.kind === "muted") return mutedHeading;
-    if (place.kind === "readers") return readersHeading;
-    if (place.kind === "add-feed") return addField;
-    if (place.kind === "new-to-feeds") return phone ? listHeading : sheetHeading;
-    // "Save search" starts in its name field, which the sheet gives the keyboard itself.
-    if (place.kind === "save-search" && sheetShown) return undefined;
-    if (sheetShown) return sheetHeading;
-    if (welcomeWide || welcomeAlone) return welcomeHeading;
-    return listHeading;
+    return landingFor(place, headings, { phone, sheetShown, welcome: welcomeWide || welcomeAlone, returnRow });
   }
 
   /** The screen showing now: on a phone, the feeds list is the home screen. */
@@ -539,28 +504,8 @@
       if (phone && screen === "home") wordmark?.focus();
       else if (reading) articleHeading?.focus({ preventScroll: true });
       else if (selected && isList(route)) itemList?.focusSelected();
-      else focusArriving(route);
+      else focusArriving(route, placeFocus, () => returnRow);
     });
-  }
-
-  /**
-   * The keyboard's place on arriving back: the row that opened the page, when it's drawn. A row
-   * shown only once its page has loaded (Rules' "Muted articles") is waited for a moment; meanwhile
-   * the keyboard rests on the heading, and stays wherever the reader moves it.
-   */
-  function focusArriving(place: Route) {
-    const first = placeFocus(place);
-    first?.focus();
-    const row = returnRow;
-    if (!row || place.kind !== "settings" || document.querySelector(`[data-settings-row="${row}"]`)) return;
-    let frames = 0;
-    const wait = () => {
-      if (returnRow !== row || document.activeElement !== first) return;
-      const found = document.querySelector<HTMLElement>(`[data-settings-row="${row}"]`);
-      if (found) found.focus();
-      else if (++frames < 180) requestAnimationFrame(wait);
-    };
-    requestAnimationFrame(wait);
   }
 
   /** The screen as the reader arranged it, for the new version to open the same way (decision 0085). */
@@ -643,9 +588,14 @@
     queueMicrotask(() => placeFocus(next)?.focus());
   }
 
+  /** Opens a feed's list. */
+  function openFeed(id: number) {
+    go({ kind: "feed", id });
+  }
+
   async function added(feed: Feed) {
     await loadFeeds();
-    go({ kind: "feed", id: feed.id });
+    openFeed(feed.id);
   }
 
   /**
@@ -661,11 +611,6 @@
     else go(home, note);
   }
 
-  /** The empty state's "Import OPML": Settings › Your data. */
-  function goImport(event: MouseEvent) {
-    follow(event, { kind: "settings", page: "data" });
-  }
-
   /** Back from an edit page, saved or not, to the feed or folder. */
   async function edited(saved: boolean) {
     const id = route.kind === "edit-feed" ? route.id : undefined;
@@ -678,7 +623,7 @@
     // On a phone the edit page is a step on from its list: go back that step.
     if (phone && steps.cameFrom("list")) steps.goBack();
     else if (sheetShown) steps.closeSheet();
-    else if (route.kind === "edit-feed") go({ kind: "feed", id: route.id });
+    else if (route.kind === "edit-feed") openFeed(route.id);
     else if (route.kind === "edit-folder") go({ kind: "folder", id: route.id });
   }
 
@@ -915,7 +860,7 @@
   /** "Skip to articles": the keyboard goes to the chosen article in the list, or the first; with none, to the list's title. */
   function skipToArticles(event: MouseEvent) {
     event.preventDefault();
-    if (!itemList?.focusList()) listHeading?.focus();
+    if (!itemList?.focusList()) headings.list?.focus();
   }
 
   function chose(byKeyboard: boolean) {
@@ -947,19 +892,6 @@
     untrack(() => {
       if (!searching.shown && under.kind === "view" && under.view === "upnext") void itemList?.refresh();
     });
-  });
-
-  /**
-   * Up Next's sidebar row, once shown, stays while it empties, until the reader next goes somewhere: then it
-   * leaves (decision 0113).
-   */
-  let upNextStays = $state(false);
-  $effect(() => {
-    if (player.upNext?.length) upNextStays = true;
-  });
-  $effect(() => {
-    void route;
-    untrack(() => (upNextStays = Boolean(player.upNext?.length)));
   });
 
   /** Back from the article to its row in the list. */
@@ -1003,7 +935,7 @@
     const back = searching.close(route, savedHere());
     queueMicrotask(() => {
       if (back instanceof HTMLElement && back.isConnected && back !== document.body) back.focus();
-      else listHeading?.focus();
+      else headings.list?.focus();
     });
   }
 
@@ -1070,82 +1002,19 @@
 </script>
 
 {#snippet welcome(start: boolean)}
-  <!--
-    The welcome, before the first feed (SPEC section 2): a title in the reading serif, one
-    sentence, a wide field with Add feed, and importing a list of feeds as a quiet second way in,
-    all in one centred 420px column, like Apple Books' empty library: one message, one action.
-    On a phone (`start`) it's left-aligned on the screen's 20px margin instead (decision 0052).
-    With the Add a feed sheet open over it, the sheet has the only field.
-  -->
-  <div class="flex w-full max-w-[26.25rem] flex-col gap-6">
-    <div class={start ? "text-left" : "text-center"}>
-      <h2 id="welcome-heading" tabindex="-1" bind:this={welcomeHeading} class="font-serif text-xlarge font-semibold tracking-[-0.01em]">A quiet place to read.</h2>
-      <p class="mt-3 text-ink-2">Follow the websites you like, and read what they publish here, at your own pace.</p>
-      <!-- For someone who has never used feeds: what they are, and a few to start with, in a sheet (decision 0079). -->
-      <a href="/new-to-feeds" onclick={(event) => follow(event, { kind: "new-to-feeds" })} class="text-link mt-1">New to feeds? Start here</a>
-    </div>
-    {#if !(sheet && route.kind === "add-feed")}
-      <!--
-        Importing sits just under the field, centred as everything here is (on a phone, on the
-        screen's margin), as the other way in (decisions 0045, 0048): a link in the text color,
-        underlined as the article's note links are, with no side padding so its words line up
-        with the heading's, in a 44px-tall target (decision 0055).
-      -->
-      <AddFeed bind:field={addField} feeds={[]} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} {start}>
-        {#snippet alternative()}
-          <a href="/settings/data" onclick={goImport} class="text-link">Import an OPML file…</a>
-        {/snippet}
-      </AddFeed>
-    {:else}
-      <!--
-        With the Add a feed sheet over it, the field is the sheet's (one field of that name on the page).
-        The welcome keeps its exact shape under the dim, a still picture of itself that nothing can
-        reach, so nothing behind the sheet moves as it opens or closes (decision 0048).
-      -->
-      <div inert aria-hidden="true" class="flex flex-col gap-1.5">
-        <div class="welcome-row flex gap-2">
-          <span class="field flex min-w-0 flex-1 items-center overflow-hidden whitespace-nowrap text-muted"><span class="welcome-hint">Paste a website or feed URL</span></span>
-          <span class="btn-primary rounded-lg">Add feed</span>
-        </div>
-        <div class="flex min-h-[5.8rem] flex-col items-center">
-          <span class="text-link">Import an OPML file…</span>
-        </div>
-      </div>
-    {/if}
-  </div>
+  <Welcome {start} covered={sheet && route.kind === "add-feed"} bind:heading={headings.welcome} bind:field={headings.add} {follow} onAdded={added} onOpen={openFeed} />
 {/snippet}
 
 {#snippet listHead()}
-            <!--
-              The list's title is one line, as Apple Books' collection titles are (decision 0041): a long
-              name ends in "…", with its whole name as its tooltip and read in full by screen readers, so
-              the search field below and More beside it never move. In a pane narrower than 340px it
-              steps down from 24px to 22px. Beside it, one quiet More (…) button, as Apple Books has one
-              per collection (decision 0038): Mark all as read, Refresh, the sort order, and Edit feed or
-              Edit folder in a feed's or folder's own list (SPEC section 6).
-            -->
-            <div class="flex min-h-11 min-w-0 flex-1 items-center gap-4">
-              <h2
-                id="list-heading"
-                tabindex="-1"
-                bind:this={listHeading}
-                title={headingText}
-                class="min-w-0 flex-1 truncate font-serif text-heading leading-[1.3] font-semibold tracking-[-0.01em] @max-[340px]:text-[1.375rem]"
-              >
-                {headingText}
-              </h2>
-              {#if itemList && !missing}
-                <div class="-mr-3 flex shrink-0 items-center">
-                  {#if phone}
-                    <!-- The way into search, beside More, as an iOS list keeps it (decision 0060). -->
-                    <button type="button" aria-label="Search" title="Search" aria-expanded={searching.open} onclick={toggleSearch} class="btn-quiet btn-icon"
-                      ><span class="flex size-8 items-center justify-center"><Icon name="search" size={20} /></span></button
-                    >
-                  {/if}
-                  <MoreMenu id="list-menu" groups={listMenu(menuScene(), menuHands)} />
-                </div>
-              {/if}
-            </div>
+  <ListHead
+    text={headingText}
+    actions={!!itemList && !missing}
+    {phone}
+    searchOpen={searching.open}
+    onSearch={toggleSearch}
+    menu={() => listMenu(menuScene(), menuHands)}
+    bind:heading={headings.list}
+  />
 {/snippet}
 
 <!--
@@ -1246,25 +1115,7 @@
         />
       </div>
       {/if}
-      <ul>
-        {#each sidebarViews as view (view)}
-          {@const current = !phone && route.kind === "view" && route.view === view}
-          <!-- On a phone the feeds screen is the root of a stack: nothing is selected there, and each row leads on with a chevron (decision 0041). -->
-          <li>
-            <a
-              href={pathFor({ kind: "view", view })}
-              aria-current={current ? "page" : undefined}
-              onclick={(event) => follow(event, { kind: "view", view })}
-              class={[
-                "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-2.5 pr-3.5 pl-3 text-ui pointer-fine:text-small",
-                current ? "font-semibold text-ink" : "text-ink-2",
-              ]}
-              ><span class={current ? (view === "starred" ? "text-star" : "text-ink") : "text-muted"}><Icon name={VIEW_ICONS[view]} size={16} filled={view === "starred" && current} /></span
-              ><span class="min-w-0 flex-1">{VIEW_NAMES[view]}</span>{#if phone}<span class="-mr-1 shrink-0 text-muted"><Icon name="chevron-right" size={16} /></span>{/if}</a
-            >
-          </li>
-        {/each}
-      </ul>
+      <SidebarViews {route} {follow} {phone} {river} hidden={settings.hidden} />
       {#if library.feeds}
         <SidebarFeeds
           bind:this={sidebarFeeds}
@@ -1284,42 +1135,7 @@
         <p class="px-4 pt-4 text-small">Your feeds couldn't be loaded. Reload the page to try again.</p>
       {/if}
     </div>
-    <!--
-      Always at the very bottom, outside the scrolling list, so it never moves:
-      Add feed and Keys (the shortcut list), each an icon and a word, so they
-      read as two buttons, not one phrase (decisions 0062, 0064), then
-      Settings as an icon, the way a Mac app keeps its tools at the foot of
-      the sidebar. In a sidebar narrowed below 15rem, Keys keeps only its icon.
-    -->
-    <div class="@container flex shrink-0 items-center gap-1 border-t border-ink/10 py-1.5 pr-3">
-      <!-- An action, not a place: it never shows the "where you are" bar. -->
-      <a
-        href="/add-feed"
-        onclick={(event) => follow(event, { kind: "add-feed" })}
-        class="btn-quiet ml-1.5 min-w-0 flex-1 justify-start gap-2.5 pl-[14px] text-small text-ink-2 @max-[15rem]:ml-0 @max-[15rem]:gap-1.5 @max-[15rem]:pr-1.5 @max-[15rem]:pl-1.5"><Icon name="plus" size={16} />Add feed</a
-      >
-      {#if !phone}
-        <!-- Filled in a neutral ink tone while the shortcut list is open (never the accent: this is a button, not a place), and it says it opens a dialog (decision 0054). -->
-        <button
-          type="button"
-          onclick={() => (cheatSheetOpen = true)}
-          aria-label="Keys (keyboard shortcuts)"
-          title="Keyboard shortcuts (?)"
-          aria-haspopup="dialog"
-          aria-expanded={cheatSheetOpen}
-          class={["btn-quiet gap-2.5 px-2.5 text-small text-ink-2 @max-[15rem]:w-11 @max-[15rem]:px-0", cheatSheetOpen && "bg-ink/10 text-ink"]}
-          ><Icon name="keyboard" size={16} /><span class="@max-[15rem]:hidden">Keys</span></button
-        >
-      {/if}
-      <a
-        href="/settings"
-        aria-label="Settings"
-        title="Settings"
-        aria-current={inSettings(route) ? "page" : undefined}
-        onclick={(event) => follow(event, { kind: "settings" })}
-        class={["btn-quiet btn-icon @max-[15rem]:-mr-1.5", inSettings(route) && "bg-tint-sidebar text-ink"]}><Icon name="settings" size={18} /></a
-      >
-    </div>
+    <SidebarFoot {route} {follow} {phone} bind:keysOpen={cheatSheetOpen} />
     {#if !phone && (panes.list || panes.article)}
       <PaneResizer
         label="Resize the sidebar"
@@ -1350,7 +1166,7 @@
           onLetGo={(next) => settings.changeLetGo(next)}
           hidden={settings.hidden}
           onHidden={(next) => settings.changeHidden(next)}
-          bind:heading={settingsHeading}
+          bind:heading={headings.settings}
           {version}
           {owner}
           {email}
@@ -1374,98 +1190,42 @@
           besideToggle={!phone && !panes.sidebar}
         />
       {:else if route.kind === "feed-health"}
-        <FeedHealth bind:heading={healthHeading} onClose={closeHealth} onFeedsChanged={loadFeeds} besideToggle={!phone && !panes.sidebar} />
+        <FeedHealth bind:heading={headings.health} onClose={closeHealth} onFeedsChanged={loadFeeds} besideToggle={!phone && !panes.sidebar} />
       {:else if route.kind === "your-feeds"}
         <YourFeeds
-          bind:heading={yourFeedsHeading}
+          bind:heading={headings.yourFeeds}
           onClose={closeHealth}
           onOpenFeed={(event, id) => follow(event, { kind: "feed", id })}
           onFeedsChanged={loadFeeds}
           besideToggle={!phone && !panes.sidebar}
         />
       {:else if route.kind === "muted"}
-        <Muted bind:heading={mutedHeading} onClose={closeHealth} onChanged={loadFeeds} besideToggle={!phone && !panes.sidebar} />
+        <Muted bind:heading={headings.muted} onClose={closeHealth} onChanged={loadFeeds} besideToggle={!phone && !panes.sidebar} />
       {:else if route.kind === "readers"}
-        <ReadersPage bind:heading={readersHeading} onClose={closeHealth} besideToggle={!phone && !panes.sidebar} />
-      {:else if !sheet && route.kind === "edit-feed" && currentFeed}
-        {#key editKey(currentFeed.id)}
-          <EditFeed
-            feed={currentFeed}
-            folders={library.folders}
-            bind:heading={listHeading}
-            besideToggle={!phone && !panes.sidebar}
-            {river}
-            onSaved={() => edited(true)}
-            onCancel={() => edited(false)}
-            onUnsubscribe={() => unsubscribeFrom(currentFeed!)}
-            onAddRule={() => addRuleFor(currentFeed!)}
-            onMoved={(after) => feedMoved(currentFeed!.id, after.id, () => listHeading)}
-          />
-        {/key}
-      {:else if !sheet && route.kind === "edit-folder" && currentFolder}
-        {#key currentFolder.id}
-          <EditFolder
-            folder={currentFolder}
-            bind:heading={listHeading}
-            besideToggle={!phone && !panes.sidebar}
-            onSaved={() => edited(true)}
-            onCancel={() => edited(false)}
-            onDelete={() => deleteThis(currentFolder!)}
-          />
-        {/key}
-      {:else if !sheet && route.kind === "new-to-feeds" && firstVisit}
-        <section aria-labelledby="list-heading" class="page-sheet">
-          <!-- Only on a phone: the phone sheet's one build, as Add a feed's (decisions 0052, 0055). -->
-          <div class="page-sheet-card">
-            <PageHead title="New to feeds?" bind:heading={listHeading} besideToggle={false} onClose={closePage} closeLabel="Close" />
-            <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
-              <div class="mx-auto flex w-full max-w-xl flex-1 flex-col">
-                <StarterFeeds onAdded={startersAdded} page />
+        <ReadersPage bind:heading={headings.readers} onClose={closeHealth} besideToggle={!phone && !panes.sidebar} />
+      {:else if !sheet && editing}
+        {@render editor(false)}
+      {:else if !sheet && tasking}
+        <!-- Keyed as the sheet is, so one task following the other gets a fresh page. -->
+        {#key route.kind}
+          <section aria-labelledby="list-heading" class="page-sheet">
+            <!--
+              Only on a phone (wider windows get the sheet). The phone sheet's one build (decisions 0052,
+              0055): an iOS page sheet, its grouped ground 10px below the dimmed screen's top with 12px
+              top corners, the title with an X that goes back to the feeds (as Escape does), no back
+              arrow and no Cancel.
+            -->
+            <div class="page-sheet-card">
+              <PageHead title={taskTitle} bind:heading={headings.list} besideToggle={false} onClose={closePage} closeLabel="Close" />
+              <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
+                <!-- 20px under the top line as Settings is: Add a feed's line on what to paste, the field, then Add feed the full width at the screen's foot. -->
+                <div class="mx-auto flex w-full max-w-xl flex-1 flex-col gap-5">
+                  {@render task(false)}
+                </div>
               </div>
             </div>
-          </div>
-        </section>
-      {:else if !sheet && route.kind === "save-search" && searching.saving}
-        <EditSearch
-          query={searching.saving}
-          library={library.names}
-          bind:heading={listHeading}
-          besideToggle={!phone && !panes.sidebar}
-          onSaved={searchSaved}
-          onCancel={() => searchSaved()}
-        />
-      {:else if !sheet && route.kind === "edit-search" && currentSearch}
-        {#key currentSearch.id}
-          <EditSearch
-            saved={currentSearch}
-            query={searching.saving ?? currentSearch.query}
-            library={library.names}
-            bind:heading={listHeading}
-            besideToggle={!phone && !panes.sidebar}
-            onSaved={searchSaved}
-            onCancel={() => searchSaved()}
-            onDelete={() => deleteSearch(currentSearch!)}
-          />
+          </section>
         {/key}
-      {:else if !sheet && route.kind === "add-feed"}
-        <section aria-labelledby="list-heading" class="page-sheet">
-          <!--
-            Only on a phone (wider windows get the sheet). The phone sheet's one build (decisions 0052,
-            0055): an iOS page sheet, its grouped ground 10px below the dimmed screen's top with 12px
-            top corners, the title with an X that goes back to the feeds (as Escape does), no back
-            arrow and no Cancel.
-          -->
-          <div class="page-sheet-card">
-            <PageHead title="Add a feed" bind:heading={listHeading} besideToggle={!phone && !panes.sidebar} onClose={closePage} closeLabel="Close" />
-            <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
-              <!-- 20px under the top line as Settings is: a line on what to paste, the field, then Add feed the full width at the screen's foot. -->
-              <div class="mx-auto flex w-full max-w-xl flex-1 flex-col gap-5">
-                <p>{ADD_INTRO}</p>
-                <AddFeed bind:field={addField} feeds={library.feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} page {shared} onShared={() => (shared = "")} />
-              </div>
-            </div>
-          </div>
-        </section>
       {:else}
         {#if !phone && !welcoming && !bothHidden}
           <!--
@@ -1569,7 +1329,7 @@
                   class="pt-1 pb-2"
                   feed={currentFeed}
                   label="Find its new address"
-                  onMoved={(after) => feedMoved(currentFeed!.id, after.id, () => listHeading)}
+                  onMoved={(after) => feedMoved(currentFeed!.id, after.id, () => headings.list)}
                 />
               {/if}
               <!-- The list, with "New articles · press r" and Undo in a note floating at its foot (More, with Refresh, sits beside the title). -->
@@ -1691,54 +1451,75 @@
   {/key}
 {/if}
 
-{#if sheet && route.kind === "add-feed"}
-  <Sheet title="Add a feed" bind:heading={sheetHeading} onClose={closePage} initial={() => addField}>
-    <p>{ADD_INTRO}</p>
-    <AddFeed bind:field={addField} feeds={library.feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} onCancel={closePage} {shared} onShared={() => (shared = "")} />
-  </Sheet>
-{:else if sheet && route.kind === "new-to-feeds" && firstVisit}
-  <Sheet title="New to feeds?" bind:heading={sheetHeading} onClose={closePage}>
-    <StarterFeeds onAdded={startersAdded} onCancel={closePage} />
-  </Sheet>
-{:else if sheet && route.kind === "edit-feed" && currentFeed}
-  {#key editKey(currentFeed.id)}
-    <EditFeed
-      sheet
-      feed={currentFeed}
-      folders={library.folders}
-      bind:heading={sheetHeading}
-      {river}
-      onSaved={() => edited(true)}
-      onCancel={() => edited(false)}
-      onUnsubscribe={() => unsubscribeFrom(currentFeed!)}
-      onAddRule={() => addRuleFor(currentFeed!)}
-      onMoved={(after) => feedMoved(currentFeed!.id, after.id, () => sheetHeading)}
-    />
+{#if sheet && tasking}
+  <!-- Keyed so one task following the other opens a fresh sheet: the keyboard lands again and no form state lingers. -->
+  {#key route.kind}
+    <Sheet title={taskTitle} bind:heading={headings.sheet} onClose={closePage} initial={route.kind === "add-feed" ? () => headings.add : undefined}>
+      {@render task(true)}
+    </Sheet>
   {/key}
-{:else if sheet && route.kind === "save-search" && searching.saving}
-  <EditSearch sheet query={searching.saving} library={library.names} bind:heading={sheetHeading} onSaved={searchSaved} onCancel={() => searchSaved()} />
-{:else if sheet && route.kind === "edit-search" && currentSearch}
-  {#key currentSearch.id}
-    <EditSearch
-      sheet
-      saved={currentSearch}
-      query={searching.saving ?? currentSearch.query}
-      library={library.names}
-      bind:heading={sheetHeading}
-      onSaved={searchSaved}
-      onCancel={() => searchSaved()}
-      onDelete={() => deleteSearch(currentSearch!)}
-    />
-  {/key}
-{:else if sheet && route.kind === "edit-folder" && currentFolder}
-  {#key currentFolder.id}
-    <EditFolder
-      sheet
-      folder={currentFolder}
-      bind:heading={sheetHeading}
-      onSaved={() => edited(true)}
-      onCancel={() => edited(false)}
-      onDelete={() => deleteThis(currentFolder!)}
-    />
-  {/key}
+{:else if sheet && editing}
+  {@render editor(true)}
 {/if}
+
+<!-- Add a feed and "New to feeds?", drawn once for both places: a sheet over the screen, or on a phone a page in the list's place. -->
+{#snippet task(inSheet: boolean)}
+  {@const onCancel = inSheet ? closePage : undefined}
+  {#if route.kind === "add-feed"}
+    <p>{ADD_INTRO}</p>
+    <AddFeed bind:field={headings.add} feeds={library.feeds ?? []} onAdded={added} onOpen={openFeed} {onCancel} page={!inSheet} {shared} onShared={() => (shared = "")} />
+  {:else}
+    <StarterFeeds onAdded={startersAdded} {onCancel} page={!inSheet} />
+  {/if}
+{/snippet}
+
+<!-- The edit screens, drawn once for both places: a sheet over the screen, or on a phone a page in the list's place. -->
+{#snippet editor(inSheet: boolean)}
+  {@const at = inSheet ? "sheet" : "list"}
+  {@const besideToggle = !inSheet && !phone && !panes.sidebar}
+  {#if route.kind === "edit-feed" && currentFeed}
+    {#key editKey(currentFeed.id)}
+      <EditFeed
+        sheet={inSheet}
+        feed={currentFeed}
+        folders={library.folders}
+        bind:heading={headings[at]}
+        {besideToggle}
+        {river}
+        onSaved={() => edited(true)}
+        onCancel={() => edited(false)}
+        onUnsubscribe={() => unsubscribeFrom(currentFeed!)}
+        onAddRule={() => addRuleFor(currentFeed!)}
+        onMoved={(after) => feedMoved(currentFeed!.id, after.id, () => headings[at])}
+      />
+    {/key}
+  {:else if route.kind === "edit-folder" && currentFolder}
+    {#key currentFolder.id}
+      <EditFolder
+        sheet={inSheet}
+        folder={currentFolder}
+        bind:heading={headings[at]}
+        {besideToggle}
+        onSaved={() => edited(true)}
+        onCancel={() => edited(false)}
+        onDelete={() => deleteThis(currentFolder!)}
+      />
+    {/key}
+  {:else if route.kind === "save-search" && searching.saving}
+    <EditSearch sheet={inSheet} query={searching.saving} library={library.names} bind:heading={headings[at]} {besideToggle} onSaved={searchSaved} onCancel={() => searchSaved()} />
+  {:else if route.kind === "edit-search" && currentSearch}
+    {#key currentSearch.id}
+      <EditSearch
+        sheet={inSheet}
+        saved={currentSearch}
+        query={searching.saving ?? currentSearch.query}
+        library={library.names}
+        bind:heading={headings[at]}
+        {besideToggle}
+        onSaved={searchSaved}
+        onCancel={() => searchSaved()}
+        onDelete={() => deleteSearch(currentSearch!)}
+      />
+    {/key}
+  {/if}
+{/snippet}

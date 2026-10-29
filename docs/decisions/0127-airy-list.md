@@ -1,4 +1,4 @@
-# 0124: The article list in the reading serif, with more room
+# 0127: The article list in the reading serif, with more room
 
 *28 October 2026.*
 

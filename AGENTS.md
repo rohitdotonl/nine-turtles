@@ -8,7 +8,7 @@ tell the owner which ones and how.
 
 A quiet, single-user reader for writing on the open web (RSS, Atom, JSON
 Feed). Finite, calm and quiet: the opposite of social media.
-Its name is **nine turtles**, always lowercase (renamed from slowfeed in October 2026, decisions 0056 and 0058). The program is `nine-turtles`, its settings `NINE_TURTLES_*`, the database `nine-turtles.sqlite` and the repository `rohitdotonl/nine-turtles`. For a while the old names still work: `SLOWFEED_*` settings, the `slowfeed` command, the old database file (renamed on start), the old sign-in cookie and saved preferences. The Render service and its address (slowfeed.onrender.com) and disk (`slowfeed-data`) keep the old name.
+Its name is **nine turtles**, always lowercase (renamed from slowfeed in October 2026, decisions 0056 and 0058). The program is `nine-turtles`, its settings `NINE_TURTLES_*`, the database `nine-turtles.sqlite` and the repository `rohitdotonl/nine-turtles`. The old name is gone from the code (decision 0124); nothing reads `SLOWFEED_*` settings, the old database file, cookie or saved preferences any more. The Render service and its address (slowfeed.onrender.com) and disk (`slowfeed-data`) keep the old name.
 **Tiebreaker:** does this make nine turtles feel more like a book, or more like a feed?
 **Design reference:** Apple Books on the Mac and iPhone, and no other app. The floors come first, then Apple Books, then the rest of `docs/DESIGN.md` (DESIGN.md → "Design reference", decision 0059).
 
@@ -104,6 +104,7 @@ years › written for the next agent.
 - The accent (ink blue in Original, the text color in Plain) marks only what's yours to look at: what's unread and what a search found (decisions 0037, 0057); where you are is a plain grey pill. Green marks only a filled star. Neither is ever a button, a link or a focus outline.
 - Never fetch an article's web page. Autodiscovery fetches only the page the reader pastes, only when they add a feed, ask "Find new address", use the website's feed finder, or share a page into Add a feed (`docs/decisions/0016-adding-feeds.md`, decisions 0099 and 0104).
 - A feature isn't done until it has tests and the checks pass.
+- **Keep the code tidy:** small files, one concept each; one copy of each thing (look for it first); delete what you replace in the same change. `scripts/check-tidy.mjs` checks the size and anything unused; the lessons behind it are in `docs/ENGINEERING.md` → "Keeping the code tidy".
 - Significant decisions get a short note in `docs/decisions/`.
 - **No lock-in:** hosts, storage, CI and agent tools stay replaceable; anything a tool needs to know is written in the repository. See `docs/owner-guide.md` → "You're never locked in".
 
@@ -115,6 +116,7 @@ years › written for the next agent.
 | Anything the reader sees or touches (screens, keys, wording, colors, fonts) | `docs/DESIGN.md` in full, then the matching section in `docs/spec/` (the index is `docs/SPEC.md`) |
 | A new feature or changed behavior | `docs/DESIGN.md` → "Rules about the rules", then `docs/SPEC.md` and the sections it touches |
 | Backend, database, fetching, search, sign-in, security | `docs/ENGINEERING.md` Parts 2 and 3 |
+| Splitting, moving or tidying code; a file near its size limit | `docs/ENGINEERING.md` → "Keeping the code tidy" and "Boring and few" (where shared helpers and the web app's pieces live) |
 | Libraries | `docs/libraries.md` and `docs/ENGINEERING.md` → "Boring and few", then ask the owner |
 | Checks or CI | `docs/ENGINEERING.md` Part 4, then `docs/operations/checks.md` |
 | Building or running nine turtles | `docs/operations/building-and-running.md` |

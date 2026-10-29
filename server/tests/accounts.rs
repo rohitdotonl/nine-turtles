@@ -445,15 +445,7 @@ async fn an_address_another_reader_has_gets_nothing() {
 #[tokio::test]
 async fn the_owner_can_set_a_new_password_by_email_too() {
     let (base, _, outbox) = start_with_mail(common::config()).await;
-    let owner = signed_in(&base).await;
-    let saved = post(
-        &base,
-        "/api/people/me/email",
-        Some(&owner),
-        json!({ "email": "owner@example.com", "password": common::PASSWORD }),
-    )
-    .await;
-    assert!(saved.status().is_success());
+    signed_in(&base).await;
     post(
         &base,
         "/api/password/forgot",
@@ -650,7 +642,7 @@ async fn deleting_an_account_leaves_nothing_of_theirs() {
 
     let deleted = post(&base, "/api/people/me/delete", Some(&cookie), json!({})).await;
     assert_eq!(deleted.status(), StatusCode::NO_CONTENT);
-    // Both the cookie and its name from before the rename are cleared.
+    // The cookie is cleared.
     let cleared: Vec<&str> = deleted
         .headers()
         .get_all("set-cookie")
@@ -662,11 +654,6 @@ async fn deleting_an_account_leaves_nothing_of_theirs() {
         cleared
             .iter()
             .any(|value| value.starts_with("nine_turtles_session=;"))
-    );
-    assert!(
-        cleared
-            .iter()
-            .any(|value| value.starts_with("slowfeed_session=;"))
     );
     assert_eq!(session(&base, Some(&cookie)).await["signed_in"], false);
 
@@ -1166,27 +1153,59 @@ async fn changing_to_a_taken_address_counts_as_any_change() {
 }
 
 #[tokio::test]
+async fn the_owner_changes_their_email_by_a_link_like_everyone() {
+    let (base, _, outbox) = start_with_mail(common::config()).await;
+    let owner = signed_in(&base).await;
+    let new = "owner@elsewhere.example";
+    // Their password is the one in NINE_TURTLES_PASSWORD_HASH (decision 0125).
+    let asked = post(
+        &base,
+        "/api/people/me/email/change",
+        Some(&owner),
+        json!({ "email": new, "password": PASSWORD }),
+    )
+    .await;
+    assert_eq!(asked.status(), StatusCode::ACCEPTED);
+    let (_, ticket) = newest_link(&outbox, new);
+    let confirmed = post(
+        &base,
+        "/api/email/confirm",
+        None,
+        json!({ "ticket": ticket }),
+    )
+    .await;
+    assert_eq!(confirmed.status(), StatusCode::OK);
+    let now = session(&base, Some(&owner)).await;
+    assert_eq!(now["email"], new);
+    assert_eq!(now["owner"], true);
+    let told = emails_to(&outbox, common::OWNER_EMAIL);
+    assert_eq!(
+        told.last().unwrap().subject,
+        "Your nine turtles email was changed"
+    );
+    assert_eq!(
+        sign_in(&base, new, PASSWORD).await.status(),
+        StatusCode::NO_CONTENT
+    );
+    assert_eq!(
+        sign_in(&base, common::OWNER_EMAIL, PASSWORD).await.status(),
+        StatusCode::UNAUTHORIZED
+    );
+}
+
+#[tokio::test]
 async fn the_owners_email_needs_their_password() {
     let (base, state, _) = start_with_mail(common::config()).await;
     let owner = signed_in(&base).await;
     let save = |password: &'static str| {
         post(
             &base,
-            "/api/people/me/email",
+            "/api/people/me/email/change",
             Some(&owner),
             json!({ "email": "taker@example.com", "password": password }),
         )
     };
-    let missing = post(
-        &base,
-        "/api/people/me/email",
-        Some(&owner),
-        json!({ "email": "taker@example.com" }),
-    )
-    .await;
-    assert_eq!(missing.status(), StatusCode::UNAUTHORIZED);
-    assert_eq!(error_of(missing).await, "wrong-password");
-    for _ in 0..3 {
+    for _ in 0..4 {
         let wrong = save("not the owner's password").await;
         assert_eq!(wrong.status(), StatusCode::UNAUTHORIZED);
     }
@@ -1213,14 +1232,7 @@ async fn a_new_password_setting_wins_over_one_set_by_email() {
     let data_dir = first.data_dir.clone();
     let first_setting = first.password.clone();
     let (base, _, outbox) = start_with_mail(first).await;
-    let owner = signed_in(&base).await;
-    post(
-        &base,
-        "/api/people/me/email",
-        Some(&owner),
-        json!({ "email": "owner@example.com", "password": PASSWORD }),
-    )
-    .await;
+    signed_in(&base).await;
     post(
         &base,
         "/api/password/forgot",

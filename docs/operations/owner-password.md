@@ -33,8 +33,9 @@ changed since you last used an emailed link, the setting wins again.
    - any emailed password link or sign-in link not yet used stopped working;
    - the log has a line "NINE_TURTLES_PASSWORD_HASH has changed, so it's the
      owner's password again".
-4. Open **Settings › Readers** and check **Your email** is yours. If it
-   isn't, type your own and your new password, and press **Save**.
+4. Open **Settings** and check the **Email** under Account is yours. If it
+   isn't, press **Change…**, type your own and your new password, and
+   press **Send link**; your email changes once you open the link it sends.
 
 ## What doesn't trigger it
 

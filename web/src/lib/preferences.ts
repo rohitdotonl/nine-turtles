@@ -2,7 +2,7 @@
 // device, not to the reader's account: a phone and a laptop often want
 // different sizes. So they're kept in the browser's own storage, and nothing
 // is lost if that storage is unavailable: nine turtles simply uses the defaults.
-import { LOOKS, OLD_THEMES, THEMES, isAppearance, isTheme, resolveMode, type Appearance, type Mode, type Theme } from "./themes";
+import { LOOKS, THEMES, isAppearance, isTheme, resolveMode, type Appearance, type Mode, type Theme } from "./themes";
 import { deviceStorage } from "./device";
 import { isRecord } from "./http";
 
@@ -52,24 +52,20 @@ function isReadingFont(value: unknown): value is ReadingFont {
 export const DEFAULTS: Preferences = { theme: "original", appearance: "auto", readingFont: "literata", textSize: 2, lineWidth: "medium" };
 
 const KEY = "nine-turtles.preferences";
-/** Where they were saved before the rename; read when there's nothing under the new name. */
-const OLD_KEY = "slowfeed.preferences";
 
 // Takes a storage (rather than using device.ts) so tests can give their own; deviceStorage() is undefined when the browser refuses.
 /** Reads the saved preferences, keeping only values nine turtles understands. */
 export function load(storage: Pick<Storage, "getItem"> | undefined = deviceStorage()): Preferences {
   let saved: unknown;
   try {
-    saved = JSON.parse(storage?.getItem(KEY) ?? storage?.getItem(OLD_KEY) ?? "null");
+    saved = JSON.parse(storage?.getItem(KEY) ?? "null");
   } catch {
     saved = null;
   }
   const s = isRecord(saved) ? saved : {};
-  // A theme saved by an earlier version becomes Original, keeping its Appearance (decision 0056).
-  const old = typeof s.theme === "string" && Object.hasOwn(OLD_THEMES, s.theme) ? OLD_THEMES[s.theme] : undefined;
   return {
-    theme: isTheme(s.theme) ? s.theme : (old?.theme ?? DEFAULTS.theme),
-    appearance: isAppearance(s.appearance) ? s.appearance : (old?.appearance ?? DEFAULTS.appearance),
+    theme: isTheme(s.theme) ? s.theme : DEFAULTS.theme,
+    appearance: isAppearance(s.appearance) ? s.appearance : DEFAULTS.appearance,
     readingFont: isReadingFont(s.readingFont) ? s.readingFont : DEFAULTS.readingFont,
     textSize:
       typeof s.textSize === "number" && Number.isInteger(s.textSize) && s.textSize >= 0 && s.textSize < TEXT_SIZES.length

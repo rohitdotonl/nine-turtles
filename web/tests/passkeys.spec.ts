@@ -189,8 +189,7 @@ test("a passkey added in Settings signs in from the sign-in page, and the passwo
   );
   await page.getByRole("button", { name: "Back to Settings" }).click();
   await page.getByRole("button", { name: "Sign out" }).click();
-  // The sign-in page's own field: Settings › Readers has a "Your password"
-  // box too, so a loose match would go on before signing out had finished.
+  // The sign-in page's own field, matched exactly so the test waits for it.
   await expect(page.getByLabel("Password", { exact: true })).toBeVisible();
   await page.goto(`${local()}/`);
   await appReady(page);

@@ -24,38 +24,6 @@ export async function listPeople(): Promise<Person[]> {
   }));
 }
 
-export type EmailResult =
-  | { ok: true }
-  | { ok: false; reason: "email" | "already" | "wrong-password" | "unreachable" }
-  | { ok: false; reason: "wait"; waitSeconds: number };
-
-/**
- * The owner's own email, to sign in with and to get "Forgot your password?"
- * links at. Their current password goes with it (decision 0088), so a
- * device left signed in can't send those links somewhere else.
- */
-export async function setOwnEmail(email: string, password: string): Promise<EmailResult> {
-  let response: Response;
-  try {
-    response = await api("/api/people/me/email", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-  } catch {
-    return { ok: false, reason: "unreachable" };
-  }
-  if (response.ok) return { ok: true };
-  const body: unknown = await response.json().catch(() => null);
-  const error = isRecord(body) ? body.error : undefined;
-  if (error === "wait" && isRecord(body) && typeof body.wait_seconds === "number") {
-    return { ok: false, reason: "wait", waitSeconds: body.wait_seconds };
-  }
-  return error === "email" || error === "already" || error === "wrong-password"
-    ? { ok: false, reason: error }
-    : { ok: false, reason: "unreachable" };
-}
-
 export type SignUpResult =
   | { ok: true }
   | { ok: false; reason: "email" | "password-short" | "password-long" | "already" | "too-many" | "unreachable" };

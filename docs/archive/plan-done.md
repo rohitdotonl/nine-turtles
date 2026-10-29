@@ -469,6 +469,22 @@ October 2026 (SPEC section 33).
 | The 15 tools: search, unread, starred, open an article, feeds and folders, feed health, rules and mutes, mark read or unread, star, add a feed, rename or move a feed, folders, rules and mutes, unsubscribe (with a 30-day undo), export the feed list (plus "bring back a feed") | ✅ 27 October 2026 |
 | Limits per reader, tests with at least two different assistants, SPEC section, and the 15-day upkeep check (`docs/operations/mcp-check.md`) | ✅ 27 October 2026 (tested with the official TypeScript and Python MCP clients) |
 
+
+## A bug hunt, then a code tidy-up
+
+Approved by the owner 27 October 2026; done 29 October 2026. Agents
+surveyed the code for likely bugs and tidy-up ideas, fixed each bug with a
+failing test first, added tests where risky areas had few, then tidied the
+code in small pull requests that changed nothing in the app.
+
+| Part | Status |
+|---|---|
+| Survey: likely bugs and tidy-up ideas | ✅ 27 October 2026 |
+| Bugs fixed, each with a test (#135 to #140, #142; decision 0121) | ✅ 28 October 2026 |
+| Safety-net tests for the risky areas (#143) | ✅ 28 October 2026 |
+| Tidy-up: shared helpers, one way to do each reader action, giant files split by concept, the old name and old sign-in leftovers removed (#147 to #183; decisions 0124, 0125) | ✅ 29 October 2026 |
+| Wrap-up: a check that keeps the code tidy (#184, decision 0126) and the lessons written down (`docs/ENGINEERING.md` → "Keeping the code tidy") | ✅ 29 October 2026 |
+
 ---
 
 Responsive layout, accessibility and speed aren't left to the end: each

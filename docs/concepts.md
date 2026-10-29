@@ -164,9 +164,12 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - The collection sheets on screen: Add to collection and Rename, giving the keyboard back when they close, and the Undo line when an article came off a collection (`CollectionSheets`, in `collecting.svelte.ts`)
 - The list's More menu: which rows show for the list on screen (`MenuScene`) and what each asks of the screen (`MenuHands`), decided in one place (`listMenu.ts`)
 - The list's words when it has nothing to show: a place you don't have (`missingFrom`, "Folder not found"), a list that couldn't load, and each empty list's line (`listWording.ts`)
-- The first visit: where the welcome shows, and when "New to feeds?" gives way to home (`firstVisit.ts`)
-- The list's heading: the place's name, "Folder not found" or "Results in …" (`listHeading.ts`)
+- The first visit: where the welcome shows, and when "New to feeds?" gives way to home (`firstVisit.ts`); the welcome itself (`Welcome.svelte`)
+- The list's heading: the place's name, "Folder not found" or "Results in …" (`listHeading.ts`); the title line that shows it, with Search on a phone and More beside it (`ListHead.svelte`)
 - Stepping through articles and feeds with the keyboard (`moving.ts`)
+- Where the keyboard lands on arriving somewhere (`landing.ts`)
+- The sidebar's fixed lists: Unread, Starred, All, Recently read and Up Next, which show, and Up Next's row staying while it empties (`SidebarViews.svelte`)
+- The sidebar's foot: Add feed, Keys and Settings, always at the bottom of the sidebar (`SidebarFoot.svelte`)
 
 ## Data and the database
 
@@ -252,6 +255,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Screenshots in pull requests
 - Accessibility testing (axe)
 - Performance budget
+- Tidy-code check (file size limit, unused code)
 
 ## Building, hosting and deploying
 

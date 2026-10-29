@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
-import { appReady, follow, signIn, tabTo } from "./screens";
+import { appReady, follow, settingsSaved, signIn, tabTo } from "./screens";
 
 // SPEC sections 5, 15 and 18 (decision 0105), "How to check it", done by a
 // browser: Recently read, hiding it from the sidebar in Settings, and how
@@ -60,10 +60,8 @@ test("Recently read lists what was opened, newest first, and can be hidden from 
   const box = group.getByRole("checkbox", { name: "Recently read" });
   await expect(box).toBeChecked();
   await expect(group.getByRole("checkbox", { name: "Starred" })).toBeChecked();
-  /** The hidden lists reaching the server, so a reload can't come before the save does. */
-  const settingsSaved = () => page.waitForResponse((response) => response.url().endsWith("/api/settings") && response.request().method() === "POST" && response.ok());
   try {
-    const hiding = settingsSaved();
+    const hiding = settingsSaved(page);
     await box.uncheck();
     await hiding;
     await expect(link).toHaveCount(0);
@@ -82,7 +80,7 @@ test("Recently read lists what was opened, newest first, and can be hidden from 
     await page.goto(new URL("/settings/sidebar", FEEDS_APP).href);
     await appReady(page);
     // Wait for the save only when there's one to wait for (an earlier failure may have left it ticked).
-    const showing = (await box.isChecked()) ? undefined : settingsSaved();
+    const showing = (await box.isChecked()) ? undefined : settingsSaved(page);
     await box.check();
     await showing;
     await expect(link).toBeVisible();

@@ -163,7 +163,7 @@ describe.each(Object.entries(THEMES))("the %s theme's keyboard outline on rows",
 // pane at 8% by day and 12% by night, so the accent bar beside it is the one
 // touch of color (decision 0057). The text checks above cover it.
 
-describe.each(Object.entries(THEMES))("the %s theme's selection pill", (name, colors) => {
+describe.each(Object.entries(THEMES))("the %s theme's selection pill", (_name, colors) => {
   const dark = luminance(colors.paper!) < 0.5;
   it("is the text color mixed into the list and the sidebar", () => {
     const [from, share] = [colors.ink!, dark ? 0.12 : 0.08];

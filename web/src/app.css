@@ -396,7 +396,7 @@ body {
 /*
   A row in the list: the list's own pill tint; 22px above and 28px below
   (more room than Apple Books' 10px, so the list reads like a book's
-  contents page, decisions 0123 and 0124), the title at 1.35 line height and
+  contents page, decisions 0123 and 0127), the title at 1.35 line height and
   the line under it 8px below. The pill is 8px in from the pane; inside it a
   24px gutter holds the unread dot, so every title starts 32px into the
   pane, lined up with the list's title, the search field and the caption
@@ -418,7 +418,7 @@ body {
 .item-list {
   margin-inline: calc(-1 * var(--list-start, 2rem)) calc(-1 * var(--list-end, 1.5rem));
 }
-/* Titles in the reading serif, with room around each row, like a book's contents page (decision 0124). */
+/* Titles in the reading serif, with room around each row, like a book's contents page (decision 0127). */
 .item-row .title {
   font-family: var(--font-serif);
   font-size: var(--row-title-size);

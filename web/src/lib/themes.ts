@@ -49,30 +49,3 @@ export function isAppearance(value: unknown): value is Appearance {
 export function resolveMode(appearance: Appearance, deviceDark: boolean): Mode {
   return appearance === "auto" ? (deviceDark ? "dark" : "light") : appearance;
 }
-
-/**
- * Themes saved by earlier versions all become Original (decision 0056). The
- * Appearance is the one saved with them; a theme from before decision 0046
- * had none, so it gets the nearest: day for a light theme, night for a dark one.
- */
-export const OLD_THEMES: Record<string, { theme: Theme; appearance: Appearance }> = {
-  // Decision 0046's themes, removed by decision 0056.
-  quiet: { theme: "original", appearance: "auto" },
-  paper: { theme: "original", appearance: "auto" },
-  bold: { theme: "original", appearance: "auto" },
-  calm: { theme: "original", appearance: "auto" },
-  focus: { theme: "original", appearance: "auto" },
-  // The themes before decision 0046.
-  system: { theme: "original", appearance: "auto" },
-  "off-white": { theme: "original", appearance: "light" },
-  sepia: { theme: "original", appearance: "light" },
-  porcelain: { theme: "original", appearance: "light" },
-  linen: { theme: "original", appearance: "light" },
-  mist: { theme: "original", appearance: "light" },
-  sage: { theme: "original", appearance: "light" },
-  dark: { theme: "original", appearance: "dark" },
-  graphite: { theme: "original", appearance: "dark" },
-  night: { theme: "original", appearance: "dark" },
-  midnight: { theme: "original", appearance: "dark" },
-  black: { theme: "original", appearance: "dark" },
-};

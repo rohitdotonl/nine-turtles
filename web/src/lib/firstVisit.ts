@@ -2,7 +2,7 @@
 // welcome instead of a list (SPEC section 2), and "New to feeds?" opens from it
 // (decision 0079). The screen (`Shell.svelte`) hands over what it knows, and
 // every rule about where the welcome shows is here, so it can be tested without
-// drawing anything. The welcome itself is drawn in Shell's `welcome` snippet.
+// drawing anything. The welcome itself is drawn by `Welcome.svelte`.
 import type { Route } from "./router";
 
 /** No feeds yet, once the feeds have loaded. */

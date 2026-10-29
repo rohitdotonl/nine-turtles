@@ -115,18 +115,7 @@ async fn a_wrong_password_and_an_unknown_email_get_the_same_answer() {
 #[tokio::test]
 async fn a_stranger_guessing_one_email_never_locks_the_owner_out() {
     let base = common::start(common::config()).await;
-    let owner = common::signed_in(&base).await;
-    assert_eq!(
-        post(
-            &base,
-            "/api/people/me/email",
-            Some(&owner),
-            json!({ "email": "rohit@example.com", "password": common::PASSWORD })
-        )
-        .await
-        .status(),
-        StatusCode::OK
-    );
+    common::signed_in(&base).await;
 
     for _ in 0..4 {
         assert_eq!(
@@ -138,11 +127,11 @@ async fn a_stranger_guessing_one_email_never_locks_the_owner_out() {
     assert_eq!(fifth.status(), StatusCode::TOO_MANY_REQUESTS);
 
     // The owner still signs in with their email, in any letters.
-    let by_email = sign_in(&base, "Rohit@Example.com", PASSWORD).await;
+    let by_email = sign_in(&base, "Owner@Example.com", PASSWORD).await;
     assert_eq!(by_email.status(), StatusCode::NO_CONTENT);
     let owner_session = session(&base, &cookie_from(&by_email)).await;
     assert_eq!(owner_session["owner"], true);
-    assert_eq!(owner_session["email"], "rohit@example.com");
+    assert_eq!(owner_session["email"], "owner@example.com");
 
     // And the owner's own wrong tries don't make the guessed email wait longer, or vice versa.
     assert_eq!(
@@ -174,16 +163,18 @@ async fn only_the_owner_sees_the_readers() {
         get(&base, "/api/people", &reader).await.status(),
         StatusCode::FORBIDDEN
     );
+    // The owner's own direct save of their email is gone too: they change
+    // it through the confirm-by-link step like everyone else (decision 0125).
     assert_eq!(
         post(
             &base,
             "/api/people/me/email",
-            Some(&reader),
-            json!({ "email": "me@example.com" })
+            Some(&owner),
+            json!({ "email": "me@example.com", "password": common::PASSWORD })
         )
         .await
         .status(),
-        StatusCode::FORBIDDEN
+        StatusCode::NOT_FOUND
     );
     // The switch and invite links are gone: sign-up is always open.
     for path in ["/api/sign-up/switch", "/api/sign-up/invite"] {
@@ -200,14 +191,7 @@ async fn only_the_owner_sees_the_readers() {
 #[tokio::test]
 async fn an_email_already_used_is_refused_and_so_are_poor_details() {
     let base = common::start(common::config()).await;
-    let owner = common::signed_in(&base).await;
-    post(
-        &base,
-        "/api/people/me/email",
-        Some(&owner),
-        json!({ "email": "rohit@example.com", "password": common::PASSWORD }),
-    )
-    .await;
+    common::signed_in(&base).await;
     assert_eq!(
         sign_up(&base, "mira@example.com", READER_PASSWORD)
             .await
@@ -215,20 +199,11 @@ async fn an_email_already_used_is_refused_and_so_are_poor_details() {
         StatusCode::NO_CONTENT
     );
 
-    for email in ["MIRA@example.com", "Rohit@Example.com"] {
+    for email in ["MIRA@example.com", "Owner@Example.com"] {
         let again = sign_up(&base, email, READER_PASSWORD).await;
         assert_eq!(again.status(), StatusCode::CONFLICT, "{email}");
         assert_eq!(again.text().await.unwrap(), r#"{"error":"already"}"#);
     }
-    // The owner can't take a reader's email either.
-    let taken = post(
-        &base,
-        "/api/people/me/email",
-        Some(&owner),
-        json!({ "email": "Mira@example.com", "password": common::PASSWORD }),
-    )
-    .await;
-    assert_eq!(taken.status(), StatusCode::CONFLICT);
 
     for (email, password, error) in [
         ("not an email", READER_PASSWORD, "email"),
@@ -341,14 +316,7 @@ async fn sign_ups_sent_together_go_one_at_a_time_and_stop_at_twenty() {
 #[tokio::test]
 async fn the_owners_email_cant_be_told_apart() {
     let base = common::start(common::config()).await;
-    let owner = common::signed_in(&base).await;
-    post(
-        &base,
-        "/api/people/me/email",
-        Some(&owner),
-        json!({ "email": "rohit@example.com", "password": common::PASSWORD }),
-    )
-    .await;
+    common::signed_in(&base).await;
     assert_eq!(
         sign_up(&base, "mira@example.com", READER_PASSWORD)
             .await
@@ -359,7 +327,7 @@ async fn the_owners_email_cant_be_told_apart() {
     // A stranger tries emails: the owner's answers just as the others do.
     let mut answers = Vec::new();
     for email in [
-        "Rohit@example.com",
+        "Owner@example.com",
         "mira@example.com",
         "nobody@example.com",
     ] {
@@ -374,7 +342,7 @@ async fn the_owners_email_cant_be_told_apart() {
 
     // The owner's email has a count of its own, so it still signs in.
     assert_eq!(
-        sign_in(&base, "rohit@example.com", PASSWORD).await.status(),
+        sign_in(&base, "owner@example.com", PASSWORD).await.status(),
         StatusCode::NO_CONTENT
     );
 }
@@ -431,14 +399,7 @@ async fn guesses_sent_together_cant_race_past_the_five_free_tries() {
 #[tokio::test]
 async fn the_owners_email_waits_in_the_same_line_as_any_other() {
     let (base, state) = common::start_with_state(common::config()).await;
-    let owner = common::signed_in(&base).await;
-    post(
-        &base,
-        "/api/people/me/email",
-        Some(&owner),
-        json!({ "email": "rohit@example.com", "password": common::PASSWORD }),
-    )
-    .await;
+    common::signed_in(&base).await;
 
     // Every place for other emails' checks is taken, as in a flood of guesses.
     let flood = state
@@ -459,7 +420,7 @@ async fn the_owners_email_waits_in_the_same_line_as_any_other() {
     // timing can't give it away.
     let by_email = tokio::spawn({
         let base = base.clone();
-        async move { sign_in(&base, "Rohit@Example.com", PASSWORD).await.status() }
+        async move { sign_in(&base, "Owner@Example.com", PASSWORD).await.status() }
     });
     tokio::time::sleep(std::time::Duration::from_millis(300)).await;
     assert!(!by_email.is_finished());
