@@ -3,7 +3,7 @@ name = "nine-turtles"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.99"
-license = "MIT"
+license-file = "../LICENSE"
 publish = false
 
 # Every library here must be on the approved list in docs/libraries.md;

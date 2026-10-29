@@ -29,4 +29,4 @@ In development. V1 is being built in small milestones; see
 
 ## Licence
 
-MIT. See [`LICENSE`](LICENSE).
+All rights reserved: you may read the code here, but not copy or reuse it. See [`LICENSE`](LICENSE) (decision 0129).
