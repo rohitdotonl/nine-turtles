@@ -1350,6 +1350,7 @@
       {:else if !sheet && editing}
         {@render editor(false)}
       {:else if !sheet && tasking}
+        <!-- Keyed as the sheet is, so one task following the other gets a fresh page. -->
         {#key route.kind}
           <section aria-labelledby="list-heading" class="page-sheet">
             <!--
@@ -1595,6 +1596,7 @@
 {/if}
 
 {#if sheet && tasking}
+  <!-- Keyed so one task following the other opens a fresh sheet: the keyboard lands again and no form state lingers. -->
   {#key route.kind}
     <Sheet title={taskTitle} bind:heading={headings.sheet} onClose={closePage} initial={route.kind === "add-feed" ? () => headings.add : undefined}>
       {@render task(true)}
