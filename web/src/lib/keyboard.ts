@@ -85,8 +85,6 @@ export type Shortcut = {
   /** Each of its keys, with what it does. */
   bindings: readonly Binding[];
   unlisted: readonly Unlisted[];
-  /** Whether it works today. One that doesn't yet isn't listed, and its keys do nothing. */
-  ready: boolean;
 };
 
 /** Keys that stay as they are and can't be given to anything else (decision 0110). */
@@ -97,16 +95,7 @@ type Entry = [id: string, key: string, does: Action];
 function shortcut(group: ShortcutGroup, action: string, entries: Entry[], unlisted: Unlisted[] = []): Shortcut {
   // Two presses (g then u), Enter, Escape and ? stay as they are.
   const bindings = entries.map(([id, key, does]) => ({ id, key, does, fixed: key.includes(" then ") || FIXED.includes(key) }));
-  return { action, group, keys: entries.map(([, key]) => key), bindings, unlisted, ready: true };
-}
-
-/**
- * A shortcut whose place isn't built yet: its keys are written down, so it
- * works the moment it's made a `shortcut`, but until then it isn't listed
- * and its keys do nothing.
- */
-function soon(group: ShortcutGroup, action: string, entries: Entry[]): Shortcut {
-  return { ...shortcut(group, action, entries), ready: false };
+  return { action, group, keys: entries.map(([, key]) => key), bindings, unlisted };
 }
 
 /** Every shortcut, in the cheat sheet's order. */
@@ -304,7 +293,6 @@ function tablesFor(custom: KeyMap): Tables {
   const single = new Map<string, Action>();
   const sequences = new Map<string, Map<string, Action>>();
   for (const each of resolve(custom)) {
-    if (!each.ready) continue;
     for (const { key, does } of [...each.bindings, ...each.unlisted]) {
       if (key === "") continue;
       const presses = key.split(" then ");
@@ -419,9 +407,9 @@ function notInRiver(each: Shortcut): boolean {
   return each.bindings.some(({ does }) => NOT_IN_RIVER.includes(does.kind) || (does.kind === "go" && does.view === "unread"));
 }
 
-/** The shortcuts the cheat sheet lists, with the reader's keys: those that work today, in this reading mode. */
+/** The shortcuts the cheat sheet lists, with the reader's keys: those that work in this reading mode. */
 export function shortcutsFor(river: boolean, custom: KeyMap = {}): Shortcut[] {
-  return resolve(custom).filter((each) => each.ready && !(river && notInRiver(each)));
+  return resolve(custom).filter((each) => !(river && notInRiver(each)));
 }
 
 /**

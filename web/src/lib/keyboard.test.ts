@@ -133,7 +133,7 @@ describe("keyboard shortcuts", () => {
 
   it("lists every shortcut in SPEC.md in the cheat sheet", () => {
     expect(SHORTCUTS).toHaveLength(31);
-    expect(SHORTCUTS.filter((shortcut) => shortcut.ready).map((shortcut) => shortcut.keys[0])).toEqual([
+    expect(SHORTCUTS.map((shortcut) => shortcut.keys[0])).toEqual([
       "j",
       "n",
       "Home",
@@ -277,18 +277,6 @@ describe.each(CUSTOM)("the cheat sheet and the keys agree: %s", (_, custom) => {
       const row = sheet.find((each) => each.bindings.some((binding) => binding.id === id));
       expect(row?.bindings.find((binding) => binding.id === id)?.key).toBe(key);
       if (key === "") expect(row?.keys).not.toContain(keyOf(id));
-    }
-  });
-
-  it("keeps the keys of a shortcut that isn't built yet doing nothing", () => {
-    const later = SHORTCUTS.filter((each) => !each.ready);
-    // None today: Go to Recently read (g then r) was the last, until /recent opened Recently read.
-    expect(later.map((each) => each.action)).toEqual([]);
-    for (const key of later.flatMap((each) => each.keys)) {
-      const read = reader();
-      const [first, second] = key.split(" then ");
-      expect(read(press(pressName(first!)), 0)).toBeUndefined();
-      if (second) expect(read(press(pressName(second)), 10)).toBeUndefined();
     }
   });
 });

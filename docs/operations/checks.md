@@ -9,7 +9,7 @@ The script stops at the first failure and says which step failed.
 ## Side by side, and skipped for documents
 
 On GitHub the script runs in parts at once, each on its own computer
-(decisions 0065 and 0114): `scripts/check.sh docs` (the first step below, for every pull request), `scripts/check.sh frontend` (the next six),
+(decisions 0065 and 0114): `scripts/check.sh docs` (the first step below, for every pull request), `scripts/check.sh frontend` (the next nine),
 `scripts/check.sh rust` (formatting, lint, tests), and `scripts/check.sh
 browser` (builds the frontend and the release program, then runs the browser
 tests) four times, each with a quarter of the browser tests
@@ -37,6 +37,7 @@ by the next merge, whatever it changes.
 | Frontend: type check | Mistakes in TypeScript and Svelte code | `svelte-check` |
 | Frontend: tests | Broken frontend logic (layout, keys, addresses, reader settings); any theme color pair below the contrast floor, read straight from `app.css`, including a segmented control's chosen side under 3 : 1 against the rest of the control (decision 0118) | `web/src/**/*.test.ts` (Vitest) |
 | No motion | Any animation or transition in the built styles or the website's; Svelte's or the browser's animation tools in the code; smooth scrolling | `scripts/check-motion.mjs` |
+| Code stays tidy | A file of the app's own code (`server/src/`, `web/src/`, the newsletter forwarder) over 800 lines, not counting tests (test files, or a Rust file's `#[cfg(test)]` part), or one of the few files that were already longer growing (the list and its sizes are in the script; when one shrinks, its number must be lowered to match; decision 0126); a file in `web/src/` nothing imports, a name a web file exports that nothing uses, or a `pub` item in the server whose name appears nowhere else. Unused names inside a file are caught by the type check (`noUnusedLocals`, `noUnusedParameters`) and clippy | `scripts/check-tidy.mjs` |
 | Download size budget | More than 150 KB (compressed) of app code and styles, or more than 400 KB of fonts | `scripts/check-size.mjs` |
 | Health check script | The health check (`health-check.md`) passing when nine turtles is down, or failing when it's running | `scripts/check-health-check.mjs` |
 | Newsletter forwarder | The forwarder at Cloudflare (`newsletters.md`) losing an email: anything nine turtles didn't keep must go on to `FORWARD_TO`, bounce, or be asked for again; its size limit must match nine turtles' | `scripts/check-newsletter-worker.mjs` |
