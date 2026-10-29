@@ -255,6 +255,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Screenshots in pull requests
 - Accessibility testing (axe)
 - Performance budget
+- Tidy-code check (file size limit, unused code)
 
 ## Building, hosting and deploying
 
