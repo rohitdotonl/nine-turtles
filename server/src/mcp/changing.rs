@@ -88,7 +88,8 @@ pub(super) async fn mark(state: &AppState, person: i64, asked: Marking) -> Answe
 }
 
 pub(super) async fn mark_feed_read(state: &AppState, person: i64, asked: OneFeed) -> Answer {
-    // The whole feed, as the screen's Mark all as read does it.
+    // The whole feed: everything older than the newest possible place, as
+    // the screen's Mark older as read counts it.
     let all = (i64::MAX, i64::MAX);
     let changed = unread::mark_past(
         &state.db,

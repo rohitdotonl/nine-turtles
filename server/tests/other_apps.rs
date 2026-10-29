@@ -529,6 +529,13 @@ async fn apps_follow_unfollow_rename_and_file_feeds() {
     assert_eq!(status, StatusCode::OK);
     assert_eq!(subscriptions().await[0]["categories"][0]["label"], "Later");
     let (status, _) = app
+        .post(
+            "rename-tag",
+            &[("s", "user/-/label/Nowhere"), ("dest", "user/-/label/Else")],
+        )
+        .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    let (status, _) = app
         .post("disable-tag", &[("s", "user/-/label/Later")])
         .await;
     assert_eq!(status, StatusCode::OK);

@@ -288,7 +288,8 @@ async fn read_past(
 }
 
 /// Marks one side of a list read, the one way every door does it (the
-/// screen's Mark older and Mark all as read, assistants' mark_feed_read):
+/// screen's Mark older, Mark all above and Mark all below as read;
+/// assistants' mark_feed_read):
 /// the reader's unread articles past `place` (a date and an article number)
 /// on `side`, numbered `latest` or lower. Answers their numbers. A whole
 /// list is every place: `(i64::MAX, i64::MAX)` on the older side, with

@@ -375,8 +375,9 @@ async fn the_reader_approves_and_the_assistant_works() {
     assert!(!error);
     let (unread, _) = tool(&base, &access, "list_unread", json!({ "feed_id": feed })).await;
     assert_eq!(unread["articles"].as_array().unwrap().len(), 4);
-    let (_, error) = tool(&base, &access, "mark_feed_read", json!({ "feed_id": feed })).await;
+    let (marked, error) = tool(&base, &access, "mark_feed_read", json!({ "feed_id": feed })).await;
     assert!(!error);
+    assert_eq!(marked["marked_read"], 4);
     let (unread, _) = tool(&base, &access, "list_unread", json!({})).await;
     assert_eq!(unread["articles"].as_array().unwrap().len(), 0);
 
@@ -400,6 +401,14 @@ async fn the_reader_approves_and_the_assistant_works() {
     )
     .await;
     assert!(!error);
+    let (_, error) = tool(
+        &base,
+        &access,
+        "rename_folder",
+        json!({ "folder_id": folder + 1000, "name": "Elsewhere" }),
+    )
+    .await;
+    assert!(error, "no such folder");
     let (made, _) = tool(&base, &access, "create_folder", json!({ "name": "Later" })).await;
     let (_, error) = tool(
         &base,
