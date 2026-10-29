@@ -30,6 +30,7 @@
   import Settings from "./Settings.svelte";
   import FeedHealth from "./FeedHealth.svelte";
   import YourFeeds from "./YourFeeds.svelte";
+  import Welcome from "./Welcome.svelte";
   import Muted from "./Muted.svelte";
   import ReadersPage from "./ReadersPage.svelte";
   import SearchBar from "./SearchBar.svelte";
@@ -603,9 +604,14 @@
     queueMicrotask(() => placeFocus(next)?.focus());
   }
 
+  /** Opens a feed's list. */
+  function openFeed(id: number) {
+    go({ kind: "feed", id });
+  }
+
   async function added(feed: Feed) {
     await loadFeeds();
-    go({ kind: "feed", id: feed.id });
+    openFeed(feed.id);
   }
 
   /**
@@ -621,11 +627,6 @@
     else go(home, note);
   }
 
-  /** The empty state's "Import OPML": Settings › Your data. */
-  function goImport(event: MouseEvent) {
-    follow(event, { kind: "settings", page: "data" });
-  }
-
   /** Back from an edit page, saved or not, to the feed or folder. */
   async function edited(saved: boolean) {
     const id = route.kind === "edit-feed" ? route.id : undefined;
@@ -638,7 +639,7 @@
     // On a phone the edit page is a step on from its list: go back that step.
     if (phone && steps.cameFrom("list")) steps.goBack();
     else if (sheetShown) steps.closeSheet();
-    else if (route.kind === "edit-feed") go({ kind: "feed", id: route.id });
+    else if (route.kind === "edit-feed") openFeed(route.id);
     else if (route.kind === "edit-folder") go({ kind: "folder", id: route.id });
   }
 
@@ -1030,49 +1031,7 @@
 </script>
 
 {#snippet welcome(start: boolean)}
-  <!--
-    The welcome, before the first feed (SPEC section 2): a title in the reading serif, one
-    sentence, a wide field with Add feed, and importing a list of feeds as a quiet second way in,
-    all in one centred 420px column, like Apple Books' empty library: one message, one action.
-    On a phone (`start`) it's left-aligned on the screen's 20px margin instead (decision 0052).
-    With the Add a feed sheet open over it, the sheet has the only field.
-  -->
-  <div class="flex w-full max-w-[26.25rem] flex-col gap-6">
-    <div class={start ? "text-left" : "text-center"}>
-      <h2 id="welcome-heading" tabindex="-1" bind:this={headings.welcome} class="font-serif text-xlarge font-semibold tracking-[-0.01em]">A quiet place to read.</h2>
-      <p class="mt-3 text-ink-2">Follow the websites you like, and read what they publish here, at your own pace.</p>
-      <!-- For someone who has never used feeds: what they are, and a few to start with, in a sheet (decision 0079). -->
-      <a href="/new-to-feeds" onclick={(event) => follow(event, { kind: "new-to-feeds" })} class="text-link mt-1">New to feeds? Start here</a>
-    </div>
-    {#if !(sheet && route.kind === "add-feed")}
-      <!--
-        Importing sits just under the field, centred as everything here is (on a phone, on the
-        screen's margin), as the other way in (decisions 0045, 0048): a link in the text color,
-        underlined as the article's note links are, with no side padding so its words line up
-        with the heading's, in a 44px-tall target (decision 0055).
-      -->
-      <AddFeed bind:field={headings.add} feeds={[]} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} {start}>
-        {#snippet alternative()}
-          <a href="/settings/data" onclick={goImport} class="text-link">Import an OPML file…</a>
-        {/snippet}
-      </AddFeed>
-    {:else}
-      <!--
-        With the Add a feed sheet over it, the field is the sheet's (one field of that name on the page).
-        The welcome keeps its exact shape under the dim, a still picture of itself that nothing can
-        reach, so nothing behind the sheet moves as it opens or closes (decision 0048).
-      -->
-      <div inert aria-hidden="true" class="flex flex-col gap-1.5">
-        <div class="welcome-row flex gap-2">
-          <span class="field flex min-w-0 flex-1 items-center overflow-hidden whitespace-nowrap text-muted"><span class="welcome-hint">Paste a website or feed URL</span></span>
-          <span class="btn-primary rounded-lg">Add feed</span>
-        </div>
-        <div class="flex min-h-[5.8rem] flex-col items-center">
-          <span class="text-link">Import an OPML file…</span>
-        </div>
-      </div>
-    {/if}
-  </div>
+  <Welcome {start} covered={sheet && route.kind === "add-feed"} bind:heading={headings.welcome} bind:field={headings.add} {follow} onAdded={added} onOpen={openFeed} />
 {/snippet}
 
 {#snippet listHead()}
@@ -1611,7 +1570,7 @@
   {@const onCancel = inSheet ? closePage : undefined}
   {#if route.kind === "add-feed"}
     <p>{ADD_INTRO}</p>
-    <AddFeed bind:field={headings.add} feeds={library.feeds ?? []} onAdded={added} onOpen={(id) => go({ kind: "feed", id })} {onCancel} page={!inSheet} {shared} onShared={() => (shared = "")} />
+    <AddFeed bind:field={headings.add} feeds={library.feeds ?? []} onAdded={added} onOpen={openFeed} {onCancel} page={!inSheet} {shared} onShared={() => (shared = "")} />
   {:else}
     <StarterFeeds onAdded={startersAdded} {onCancel} page={!inSheet} />
   {/if}
