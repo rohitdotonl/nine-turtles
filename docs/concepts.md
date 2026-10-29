@@ -168,6 +168,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - The list's heading: the place's name, "Folder not found" or "Results in …" (`listHeading.ts`)
 - Stepping through articles and feeds with the keyboard (`moving.ts`)
 - Where the keyboard lands on arriving somewhere (`landing.ts`)
+- The sidebar's fixed lists: Unread, Starred, All, Recently read and Up Next, which show, and Up Next's row staying while it empties (`SidebarViews.svelte`)
 
 ## Data and the database
 
