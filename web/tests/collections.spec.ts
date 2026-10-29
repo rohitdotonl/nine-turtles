@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
-import { appReady, follow, signIn, tabTo } from "./screens";
+import { appReady, follow, settingsSaved, signIn, tabTo } from "./screens";
 
 // SPEC section 34 (decision 0108), "How to check it", done by a browser with
 // the keyboard only: an article goes on a new collection with l, another
@@ -167,7 +167,10 @@ test("articles go on a collection by l and by the menu; it opens, and deleting i
   const shown = page.getByRole("group", { name: "Show in the sidebar" }).getByRole("checkbox", { name: "Collections" });
   await expect(shown).toBeChecked();
   try {
+    // Saved before the next page loads, or it could still show them.
+    const hiding = settingsSaved(page);
     await shown.uncheck();
+    await hiding;
     await expect(link).toHaveCount(0);
     await expect(sidebar(page).getByRole("heading", { name: "Collections" })).toHaveCount(0);
     await page.goto(again);
@@ -178,7 +181,10 @@ test("articles go on a collection by l and by the menu; it opens, and deleting i
     // Shown again, as every other test expects.
     await page.goto(new URL("/settings/sidebar", FEEDS_APP).href);
     await appReady(page);
+    // Wait for the save only when there's one to wait for (an earlier failure may have left it ticked).
+    const showing = (await shown.isChecked()) ? undefined : settingsSaved(page);
     await shown.check();
+    await showing;
     await expect(link).toBeVisible();
   }
 });
