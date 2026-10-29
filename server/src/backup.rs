@@ -155,6 +155,41 @@ pub async fn before_structure_change(
     Ok(name)
 }
 
+/// What's stored of each kind, as the owner report shows it.
+#[derive(Debug, serde::Serialize)]
+pub struct Kept {
+    pub nightly: Kind,
+    pub monthly: Kind,
+    pub before_change: Kind,
+}
+
+/// The copies stored of one kind.
+#[derive(Debug, serde::Serialize)]
+pub struct Kind {
+    pub count: usize,
+    /// The newest copy's name, such as `nightly/2026-10-25.sqlite`.
+    pub newest: Option<String>,
+    pub bytes: u64,
+}
+
+/// Lists what's stored of each kind (three listings of the storage).
+pub async fn kept(storage: &Storage) -> Result<Kept, String> {
+    Ok(Kept {
+        nightly: kind(storage, NIGHTLY).await?,
+        monthly: kind(storage, MONTHLY).await?,
+        before_change: kind(storage, BEFORE_CHANGE).await?,
+    })
+}
+
+async fn kind(storage: &Storage, prefix: &str) -> Result<Kind, String> {
+    let stored = storage.list(prefix).await?;
+    Ok(Kind {
+        count: stored.len(),
+        newest: stored.last().map(|copy| copy.name.clone()),
+        bytes: stored.iter().map(|copy| copy.bytes).sum(),
+    })
+}
+
 /// Deletes all but the newest `keep` copies under `prefix`. Names start
 /// with the date, so name order is age order. The new copy is already
 /// stored, so a failure here is only reported: it never fails the backup,

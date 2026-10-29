@@ -239,6 +239,20 @@ async fn keeps_thirty_nights_and_twelve_months() {
     let monthly = names(&objects, "monthly/");
     assert_eq!(monthly.len(), backup::MONTHLY_KEPT);
     assert_eq!(monthly.last().unwrap(), "monthly/2026-12.sqlite");
+
+    // The owner report's view of the same (decision 0130).
+    let kept = backup::kept(&storage).await.unwrap();
+    assert_eq!(kept.nightly.count, backup::NIGHTLY_KEPT);
+    assert_eq!(
+        kept.nightly.newest.as_deref(),
+        Some("nightly/2026-12-03.sqlite")
+    );
+    assert!(kept.nightly.bytes > 0);
+    assert_eq!(kept.monthly.count, backup::MONTHLY_KEPT);
+    assert_eq!(
+        kept.before_change.count,
+        names(&objects, "before-change/").len()
+    );
 }
 
 /// A database as an earlier nine turtles left it, before structure change 7.

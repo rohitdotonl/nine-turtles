@@ -29,12 +29,14 @@ async fn status() -> Response {
         .into_response()
 }
 
-/// Needs the read-only key in an `Authorization: Bearer <key>` header (never
-/// in the address, where it would end up in logs). Shows how nine turtles is
-/// doing, never anything the reader has read or subscribed to.
-async fn diagnostics(State(state): State<AppState>, headers: HeaderMap) -> Response {
-    let Some(key) = &state.config.diagnostics_key else {
-        return StatusCode::NOT_FOUND.into_response();
+/// The answer to give unless the request shows `key` in an `Authorization:
+/// Bearer <key>` header (never in the address, where it would end up in
+/// logs): "not found" when the key isn't set, as if the page didn't exist,
+/// otherwise "unauthorized". None when the key is right. Used by the
+/// diagnostics page and the owner report (`owner_report`).
+pub(crate) fn key_refused(headers: &HeaderMap, key: Option<&str>) -> Option<Response> {
+    let Some(key) = key else {
+        return Some(StatusCode::NOT_FOUND.into_response());
     };
     let given = headers
         .get(header::AUTHORIZATION)
@@ -44,11 +46,22 @@ async fn diagnostics(State(state): State<AppState>, headers: HeaderMap) -> Respo
     // Comparing scrambled copies takes the same time however much of the key
     // was right, so the key can't be guessed one character at a time.
     if Blake2s256::digest(given.trim().as_bytes()) != Blake2s256::digest(key.as_bytes()) {
-        return (
-            StatusCode::UNAUTHORIZED,
-            [(header::WWW_AUTHENTICATE, "Bearer")],
-        )
-            .into_response();
+        return Some(
+            (
+                StatusCode::UNAUTHORIZED,
+                [(header::WWW_AUTHENTICATE, "Bearer")],
+            )
+                .into_response(),
+        );
+    }
+    None
+}
+
+/// Needs the read-only diagnostics key (`key_refused`). Shows how nine turtles
+/// is doing, never anything the reader has read or subscribed to.
+async fn diagnostics(State(state): State<AppState>, headers: HeaderMap) -> Response {
+    if let Some(refused) = key_refused(&headers, state.config.diagnostics_key.as_deref()) {
+        return refused;
     }
 
     let devices = match auth::signed_in_devices(&state).await {

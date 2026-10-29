@@ -21,6 +21,7 @@ pub fn config() -> Config {
         data_dir: fresh_data_dir(),
         password: PasswordSetting::Set(nine_turtles::password::hash(PASSWORD).unwrap()),
         diagnostics_key: Some(DIAGNOSTICS_KEY.to_owned()),
+        owner_report_key: None,
         local_feeds_allowed: true,
         test_check_seconds: None,
         public_url: None,

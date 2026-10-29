@@ -44,6 +44,7 @@ pub mod marks;
 pub mod mcp;
 pub mod newsletter;
 pub mod newsletters;
+pub mod owner_report;
 pub mod passkeys;
 pub mod password;
 pub mod payments;
@@ -237,6 +238,7 @@ pub fn router(state: AppState) -> Router {
         .merge(starred::routes())
         .merge(star_import::routes())
         .merge(status::routes())
+        .merge(owner_report::routes())
         .merge(websub::routes())
         .merge(newsletters::routes())
         .merge(assets::routes())
