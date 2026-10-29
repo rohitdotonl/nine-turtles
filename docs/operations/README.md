@@ -12,6 +12,7 @@ plain steps, no assumed knowledge of a particular tool.
 | [settings.md](settings.md) | Every setting nine turtles reads (names and meanings, never values) |
 | [render-setup.md](render-setup.md) | The owner's one-time guide to putting nine turtles on Render and setting the password |
 | [health-check.md](health-check.md) | The check every 15 minutes that the live app answers, and the email when it doesn't |
+| [owner-report.md](owner-report.md) | The hidden owner report for the owner's private manual: switching it on and what it gives (decision 0130) |
 | [daily-check.md](daily-check.md) | The daily check an agent runs on the live app (deeper, once a day) |
 | [mcp-check.md](mcp-check.md) | Every 15 days: is the MCP standard still followed, and can assistants still connect |
 | [website-and-domain.md](website-and-domain.md) | The website at nineturtles.app, the app at app.nineturtles.app, and the owner's one-time setup |

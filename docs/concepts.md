@@ -276,6 +276,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Status page and health check
 - Scheduled job (cron)
 - Diagnostics
+- Owner report
 - Shell (terminal)
 - Vendor lock-in
 - Backups

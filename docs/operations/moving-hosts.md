@@ -21,7 +21,7 @@ DigitalOcean, or a computer at home.
 2. **Create the service** on the new host from the image
    `ghcr.io/rohitdotonl/nine-turtles:latest`, with a disk mounted at `/data`.
 3. **Copy every setting** from the old host (Render → Environment) to the new
-   one: the password, the diagnostics key and the five backup settings
+   one: the password, the diagnostics key, the owner report key (if set) and the five backup settings
    (`settings.md` lists them all). The image already sets
    `NINE_TURTLES_DATA_DIR`, `NINE_TURTLES_LISTEN` and
    `NINE_TURTLES_PUBLIC_URL`; if the new host expects another port, set

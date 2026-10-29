@@ -20,6 +20,9 @@ pub struct Config {
     pub password: PasswordSetting,
     /// The read-only key for the diagnostics page. Without it the page is off.
     pub diagnostics_key: Option<String>,
+    /// The key for the owner report (`owner_report`), which only the owner's
+    /// own manual holds. Without it the report is off.
+    pub owner_report_key: Option<String>,
     /// Lets nine turtles fetch feeds from this computer and private networks.
     /// Only the browser tests set it, to serve made-up feeds; never on Render.
     pub local_feeds_allowed: bool,
@@ -136,7 +139,14 @@ impl Config {
                 .to_owned());
         }
 
-        let newsletter_secret = newsletter_secret(var("NINE_TURTLES_NEWSLETTER_SECRET"))?;
+        let newsletter_secret = long_secret(
+            "NINE_TURTLES_NEWSLETTER_SECRET",
+            var("NINE_TURTLES_NEWSLETTER_SECRET"),
+        )?;
+        let owner_report_key = long_secret(
+            "NINE_TURTLES_OWNER_REPORT_KEY",
+            var("NINE_TURTLES_OWNER_REPORT_KEY"),
+        )?;
         let payments = crate::payments::settings(&var)?;
         if payments.is_some() && public_url.is_none() {
             return Err("the payment settings (NINE_TURTLES_DODO_*) are set but \
@@ -152,6 +162,7 @@ impl Config {
                 .into(),
             password: PasswordSetting::from_value(var("NINE_TURTLES_PASSWORD_HASH")),
             diagnostics_key: var("NINE_TURTLES_DIAGNOSTICS_KEY").map(|key| key.trim().to_owned()),
+            owner_report_key,
             local_feeds_allowed,
             test_check_seconds,
             public_url,
@@ -166,14 +177,16 @@ impl Config {
     }
 }
 
-/// The newsletter secret, if set: long enough that nobody can guess it.
-fn newsletter_secret(value: Option<String>) -> Result<Option<String>, String> {
+/// A secret setting (`name`), if set: long enough that nobody can guess it.
+/// The newsletter secret and the owner report key share this rule
+/// (`newsletters::SHORTEST_SECRET`), on purpose.
+fn long_secret(name: &str, value: Option<String>) -> Result<Option<String>, String> {
     let Some(secret) = value.map(|secret| secret.trim().to_owned()) else {
         return Ok(None);
     };
     if secret.chars().count() < crate::newsletters::SHORTEST_SECRET {
         return Err(format!(
-            "NINE_TURTLES_NEWSLETTER_SECRET must be at least {} characters long, so nobody can \
+            "{name} must be at least {} characters long, so nobody can \
              guess it; Render's Generate button makes one",
             crate::newsletters::SHORTEST_SECRET
         ));
@@ -326,13 +339,15 @@ mod tests {
     }
 
     #[test]
-    fn a_newsletter_secret_must_be_long() {
-        use super::newsletter_secret;
-        assert_eq!(newsletter_secret(None).unwrap(), None);
-        assert!(newsletter_secret(Some("short".into())).is_err());
+    fn secrets_must_be_long() {
+        use super::long_secret;
+        let name = "NINE_TURTLES_OWNER_REPORT_KEY";
+        assert_eq!(long_secret(name, None).unwrap(), None);
+        let error = long_secret(name, Some("short".into())).unwrap_err();
+        assert!(error.starts_with(name), "{error}");
         let long = "x".repeat(40);
         assert_eq!(
-            newsletter_secret(Some(format!(" {long}\n"))).unwrap(),
+            long_secret(name, Some(format!(" {long}\n"))).unwrap(),
             Some(long)
         );
     }
