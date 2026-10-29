@@ -106,16 +106,16 @@ Every agent session starts with no memory. Code, docs and decision records expla
 
 ### Keeping the code tidy
 
-What the code tidy-up of October 2026 learned (its check is decision 0126). The code had grown hard to work on in ways each change made a little worse, because an agent can't see what it can't read:
+What the code tidy-up of October 2026 learned (its check is decision 0126). The code had grown hard to work on in ways each change made a little worse, because an agent can't see what it can't read.
 
-**Before writing code, ask in this order, and stop at the first yes** (decision 0127, after Ponytail's ladder):
+**Before writing code, ask in this order, and stop at the first yes** (decision 0127, after Ponytail's ladder). These are about the code, not the feature: what to build is settled by `docs/SPEC.md` and the owner, and if you think a feature shouldn't exist, ask.
 
-1. Does this need to exist at all? The best code is code nobody has to write or keep.
-2. Is it already in this codebase? Search first; reuse or extend what's there.
+1. Could the change work without this new code at all? The best code is code nobody has to write or keep.
+2. Is it already in this codebase (see "Look before you write" below)?
 3. Does Rust's standard library, SQLite or the browser already do it?
 4. Does a library we already have do it (`docs/libraries.md`)? Adding a new one needs the owner's yes.
 5. Can it be a line or two in an existing place?
-6. Only then write the smallest thing that works, with a test if it has any logic.
+6. If every answer is no, write the smallest thing that works, with its tests (a feature always has tests).
 
 Never cut the floors to write less: sanitizing, security, accessibility, undo and backups stay whole.
 

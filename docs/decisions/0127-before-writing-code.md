@@ -3,11 +3,12 @@
 *29 October 2026.*
 
 **Decision.** Before writing code, an agent asks six questions in order and
-stops at the first yes: does this need to exist; is it already in this
-codebase; does the standard library, SQLite or the browser do it; does a
-library we already have do it; can it be a line or two in an existing
-place; and only then, the smallest thing that works, with a test if it has
-logic. The list lives in `docs/ENGINEERING.md` → "Keeping the code tidy";
+stops at the first yes: could the change work without new code; is it
+already in this codebase; does the standard library, SQLite or the browser
+do it; does a library we already have do it; can it be a line or two in an
+existing place; and only if every answer is no, the smallest thing that
+works, with its tests. The questions are about the code, never about
+whether a feature the owner or `docs/SPEC.md` asks for should exist. The list lives in `docs/ENGINEERING.md` → "Keeping the code tidy";
 AGENTS.md points to it and the second-agent review looks for code it would
 have made unnecessary. The floors are never cut to write less.
 
