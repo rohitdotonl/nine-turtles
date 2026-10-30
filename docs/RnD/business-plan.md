@@ -171,8 +171,8 @@ hours are Rohit's.
 
 | Line | Value | Where it comes from |
 |---|---|---|
-| Target monthly income (after costs) | **Rohit:** ______ | |
-| Hours a week Rohit can give | **Rohit:** ______ | |
+| Target monthly income (after costs) | **$10,000 a month within 2 years** (Rohit, 30 October 2026) | From nine turtles alone (Rohit dropped the idea of a second app, 30 October 2026). |
+| Hours a week Rohit can give | **Full time**, with agents' help (Rohit, 30 October 2026); Rohit has other income meanwhile | |
 | Running costs a month | about **$9** | Render Starter $7 + 1 GB disk about $0.25; domain about $1 a month; Brevo email free up to 300 a day; Cloudflare R2 backups free under 10 GB; GitHub free. Add your Claude plan if you count it as a business cost. |
 | Net per paying reader, yearly at $48 | about **$3.70 a month** | Dodo takes 4% + $0.40, plus 1.5% for buyers abroad and 0.5% for subscriptions: about $3.30 of $48. Before income tax. |
 | Net per paying reader, monthly at $5 | about **$4.30 a month** | The same fees: about $0.70 of $5. Yearly earns a little less per month but keeps readers longer. |
@@ -183,7 +183,35 @@ hours are Rohit's.
 | **Paying readers to replace each month** | paying readers × 0.04 | |
 | Cost of a free (trial or ended) reader | close to **$0** | They cost only disk space. After the trial their feeds are checked once a day, and the yearly clean-up keeps the database small. |
 
-**Examples** (at about ₹88 to the dollar, $4 net per reader a month):
+### The target: $10,000 a month by October 2028
+
+What it takes at $48 a year (about $3.70 net per reader a month). **$48 is only a working number for the math;** the price is decided in section 6, after positioning.
+
+- **About 2,700 paying readers.**
+- By month 24, about **200 new paying readers a month**, since about 80 a
+  month leave by then (3% churn). At 15% trial → paid, that's about
+  **1,300 trials a month, or 45 a day**.
+
+**Checkpoints:** 300 paying readers by month 6 (about $1,100 a month),
+1,000 by month 12 (about $3,700), 2,700 by month 24. **If month 12 is
+under 500, rethink price or positioning** rather than only pushing harder.
+
+**Claude says:**
+
+- **Agents make building, writing and research cheap; they don't make
+  people want or trust the app,** and rivals have the same agents. Reaching
+  people is the bottleneck, so most full-time hours go to writing,
+  partners and launches.
+- **Two levers:**
+  1. **Price (not decided; examples only).** At $60 a year (about $4.70 net) the target needs about
+     2,100 readers; at $8 a month, about 1,400. Decide it with positioning:
+     a price is also a statement about who it's for.
+  2. **Plan the bigger setup around month 9:** 2,700 readers is well past
+     the 100–200 planned for. It's a bigger disk and plan, prepared in time.
+
+**Rohit's call:**
+
+**Examples at smaller targets** (at about ₹88 to the dollar, $4 net per reader a month):
 
 | Target a month | Paying readers | Sign-ups needed | To replace each month |
 |---|---|---|---|
@@ -343,6 +371,29 @@ newsletters in that world. The positioning ideas are in
   (2) small newsletters in the Newport/Clear world (the $500 test, or a
   free year swapped for a mention); (3) being named on "best RSS reader"
   lists and by AI assistants. Search pays off in year two.
+- **Being the face (Rohit, 30 October 2026: yes, like Herman for Bear
+  Blog).** What follows: a personal blog that sounds like you, at a steady
+  pace; an About page with your face and story; saying no to features in
+  public; perhaps an open numbers page later.
+- **A clash to settle:** the strategy notes' firm no says "don't say
+  publicly whether AI agents helped build nine turtles", but the repository
+  is public (decision 0129) and every commit names Claude as a co-author.
+  Anyone curious can see it. Options: keep the repository public and change
+  the no to "don't lead with it"; make the repository private; or keep both
+  and accept that it may come out. Claude's suggestion: the first. Once
+  you're the face, being found out costs more trust than saying it
+  plainly. **Rohit's call (30 October 2026):** make the repository
+  private once the app opens to readers and Rohit starts sharing it in
+  public.
+  - **Claude says, before that day:** going private has costs to plan for.
+    GitHub Pages from a private repository needs a paid GitHub plan (about
+    $4 a month), and the website is in this repository. Private
+    repositories get a limited number of free check minutes a month, and
+    the checks here use many. Render must be given a key to fetch the
+    image. "Open code" is one of the trust arguments in the research and on
+    the website, so those pages change too. And the history already
+    public stays visible to anyone who copied it. Decision 0129 gets a new
+    note. Plan this as its own small change a few weeks before launch.
 - **Watch the "loves the idea of reading" risk.** The ideal-reader note
   says it: people who love the idea of reading don't always read. That
   makes activation the number to watch hardest.
