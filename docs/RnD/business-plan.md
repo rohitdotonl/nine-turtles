@@ -58,7 +58,7 @@ The research ranks a "Reddit is ending RSS: what to do" page third on its
 shortlist, and that chance is gone once the date passes. If you want it, it
 has to be written in the next two weeks. Your call: do it, or let it go.
 
-**Rohit's call:**
+**Rohit's call (30 October 2026):** let it go. The website isn't ready for public traffic, and a new site wouldn't rank in two weeks anyway.
 
 ---
 
