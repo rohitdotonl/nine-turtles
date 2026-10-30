@@ -171,7 +171,7 @@ hours are Rohit's.
 
 | Line | Value | Where it comes from |
 |---|---|---|
-| Target monthly income (after costs) | **$10,000 a month within 2 years** (Rohit, 30 October 2026) | From nine turtles alone, or together with Rohit's read-later app. |
+| Target monthly income (after costs) | **$10,000 a month within 2 years** (Rohit, 30 October 2026) | From nine turtles alone (Rohit dropped the idea of a second app, 30 October 2026). |
 | Hours a week Rohit can give | **Full time**, with agents' help (Rohit, 30 October 2026); Rohit has other income meanwhile | |
 | Running costs a month | about **$9** | Render Starter $7 + 1 GB disk about $0.25; domain about $1 a month; Brevo email free up to 300 a day; Cloudflare R2 backups free under 10 GB; GitHub free. Add your Claude plan if you count it as a business cost. |
 | Net per paying reader, yearly at $48 | about **$3.70 a month** | Dodo takes 4% + $0.40, plus 1.5% for buyers abroad and 0.5% for subscriptions: about $3.30 of $48. Before income tax. |
@@ -202,20 +202,12 @@ under 500, rethink price or positioning** rather than only pushing harder.
   people want or trust the app,** and rivals have the same agents. Reaching
   people is the bottleneck, so most full-time hours go to writing,
   partners and launches.
-- **Three levers:**
-  1. **One subscription for both apps** (nine turtles + the read-later
-     app). Readwise charges $8–13 a month for that pair. At about $8 a
-     month (about $7.40 net), the target needs **about 1,400 readers**
-     instead of 2,700, and the second app helps reach the target instead of
-     splitting your attention.
-  2. **A slightly higher price,** say $60 a year, if positioning supports
-     it.
-  3. **Plan the bigger setup around month 9:** 2,700 readers is well past
+- **Two levers:**
+  1. **Price.** At $60 a year (about $4.70 net) the target needs about
+     2,100 readers; at $8 a month, about 1,400. Decide it with positioning:
+     a price is also a statement about who it's for.
+  2. **Plan the bigger setup around month 9:** 2,700 readers is well past
      the 100–200 planned for. It's a bigger disk and plan, prepared in time.
-- **The read-later app and the floors:** read-later apps save the
-  article's web page; nine turtles never fetches one (AGENTS.md → "Hard
-  rules"). Either the read-later app is its own product with its own
-  rules, or that rule is revisited with Rohit. Its twist decides which.
 
 **Rohit's call:**
 
