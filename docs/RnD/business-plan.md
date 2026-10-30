@@ -371,6 +371,18 @@ newsletters in that world. The positioning ideas are in
   (2) small newsletters in the Newport/Clear world (the $500 test, or a
   free year swapped for a mention); (3) being named on "best RSS reader"
   lists and by AI assistants. Search pays off in year two.
+- **Being the face (Rohit, 30 October 2026: yes, like Herman for Bear
+  Blog).** What follows: a personal blog that sounds like you, at a steady
+  pace; an About page with your face and story; saying no to features in
+  public; perhaps an open numbers page later.
+- **A clash to settle:** the strategy notes' firm no says "don't say
+  publicly whether AI agents helped build nine turtles", but the repository
+  is public (decision 0129) and every commit names Claude as a co-author.
+  Anyone curious can see it. Options: keep the repository public and change
+  the no to "don't lead with it"; make the repository private; or keep both
+  and accept that it may come out. Claude's suggestion: the first. Once
+  you're the face, being found out costs more trust than saying it
+  plainly. **Rohit's call:**
 - **Watch the "loves the idea of reading" risk.** The ideal-reader note
   says it: people who love the idea of reading don't always read. That
   makes activation the number to watch hardest.
