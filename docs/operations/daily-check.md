@@ -18,7 +18,9 @@ Two environment variables in the agent's environment (never in the
 repository): `NINE_TURTLES_ADDRESS` (`https://app.nineturtles.app`; Render's own `https://slowfeed.onrender.com` works too)
 and `NINE_TURTLES_DIAGNOSTICS_KEY`. If the address ends with `/`, drop it first
 (`A="${NINE_TURTLES_ADDRESS%/}"` and use `$A` below): `//status` reaches the app's
-front page instead of the status page. Network access to that address. Read access
+front page instead of the status page. Until the scheduled routine's prompt is
+updated it still names them `SLOWFEED_ADDRESS` and `SLOWFEED_DIAGNOSTICS_KEY`:
+use the `NINE_TURTLES_` names, and the old ones only if the new ones are missing. Network access to that address. Read access
 to this repository, and permission to open issues and pull requests in it.
 
 If a variable is missing or the address can't be reached because the
