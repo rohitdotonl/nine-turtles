@@ -139,6 +139,22 @@ What the research already found:
       into a "their words" list.
 - [ ] Write the shortlist: two or three positionings, each as *who +
       problem + why nine turtles*.
+- [ ] **Use the best apps yourself** (added 30 October 2026), about 30
+      minutes each, by 12 November. Start a fresh account in each and note
+      what works and what doesn't.
+      - *Feed readers (rivals):* Feedbin, Inoreader, Feedly, Reeder,
+        NetNewsWire, Current.
+      - *Built for readers:* Readwise Reader, Kindle, Apple Books (the
+        design reference), Matter, Instapaper, Kobo.
+      - *Calm, paid, one-person peers:* Bear Blog, HEY, Kagi.
+
+**Claude says (on using the apps):** yes, it belongs here, because it
+feeds positioning and price. Keep it to five things per app so it doesn't
+turn into a feature wish list: (1) the first five minutes for a newcomer,
+(2) the price, trial and how it asks you to pay, (3) how it feels when
+you're "done" (or never are), (4) how cancelling works, (5) one thing to
+learn from and one thing to avoid. Any feature you like goes to the daily
+list, not into launch.
 
 **Claude says:**
 
