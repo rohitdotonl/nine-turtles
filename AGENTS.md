@@ -132,5 +132,5 @@ years › written for the next agent.
 | Revisiting an earlier choice | `docs/decisions/README.md` (one line per decision), then the note |
 | Past milestones, finished one-off reports | `docs/archive/` (only when the owner asks) |
 | Open questions | `docs/planning/questions.md` |
-| Business, marketing or pricing ideas | `docs/RnD/README.md` (research only; nothing there is decided) |
+| Business, marketing or pricing ideas | `docs/RnD/business-plan.md`, then `docs/RnD/README.md` (research only; nothing there is decided) |
 | Tools, hosting, how changes go live | `docs/owner-guide.md` (keep it accurate) |

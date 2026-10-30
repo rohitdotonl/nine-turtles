@@ -4,6 +4,18 @@ Research that informs nine turtles but isn't a plan or a rule. Nothing here is
 decided: `docs/PLAN.md`, `docs/SPEC.md` and `docs/DESIGN.md` still win, and any
 idea here that changes the app needs the owner's yes first.
 
+## The business plan (30 October 2026)
+
+- [`business-plan.md`](business-plan.md): the one plan for making nine
+  turtles a sustainable business. Rohit's draft, with what's done, what
+  he still has to do and Claude's comments for him to accept or overrule.
+  Start here; the files below are its research.
+
+## The ideal reader (25 October 2026)
+
+- [`ideal-reader.md`](ideal-reader.md): who nine turtles is for, where to
+  find them, and the first marketing directions.
+
 ## The owner's strategy notes (26 October 2026)
 
 - [`strategy-notes.md`](strategy-notes.md): Rohit's own plan after reading
