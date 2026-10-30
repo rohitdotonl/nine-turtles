@@ -35,6 +35,11 @@ here is planned yet; when one starts, it moves into the table above. (Other
 "not now" lists: SPEC → "Not built yet, and never", and the research notes in
 `docs/RnD/`, which are ideas only.)
 
+- **"How did you hear about nine turtles?"** (30 October 2026, from the
+  business plan, `docs/RnD/business-plan.md` sections 2 and 5): one
+  optional question at sign-up (a blog, a friend, a search, an AI
+  assistant, Reddit, other), counted together in the owner report, never
+  per reader. Needs a SPEC section before it's built.
 - **A browser extension** for adding feeds while browsing (27 October 2026,
   from the reader comparison). Until then, the bookmark in Settings › Add
   from anywhere does the same job on computers.

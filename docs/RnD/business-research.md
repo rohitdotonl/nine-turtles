@@ -1,6 +1,6 @@
 # nine turtles: business and marketing research (25 October 2026)
 
-Research only; nothing in the app or website was changed. Full report: https://claude.ai/artifact/Bd8q8dRUd5Q3XHvxZnmeuC (the playbook). Idea bank (288 ideas): https://claude.ai/artifact/NXJdVoVYNtGnBLUntK9dXL. Working notes with all sources: `marketing/research-2026-10/` (01 to 12).
+Research only; nothing in the app or website was changed. Full report: https://claude.ai/artifact/Bd8q8dRUd5Q3XHvxZnmeuC (the playbook). Idea bank (288 ideas): https://claude.ai/artifact/NXJdVoVYNtGnBLUntK9dXL. Working notes with all sources: [`research-2026-10/`](research-2026-10/) (01 to 12).
 
 Nothing below is decided. Price, positioning and anything that adds a feature need Rohit's yes.
 
@@ -35,7 +35,7 @@ Dodo fees and features (discount codes, regional prices, gifts), Feedbin's curre
 1. Talk to 5 to 10 ideal readers; test the four home-page lines. 2. Read Reddit (r/rss, r/digitalminimalism, r/nosurf), since it blocked our researchers. 3. Ask ChatGPT, Perplexity, Gemini and Claude the key questions from his own accounts, monthly. 4. Check Dodo's dashboard or support: discount codes, regional prices, gifts, affiliates, fees. 5. Accountant: GST on exports, LUT, income tax via a merchant of record. 6. Trademark search for "nine turtles" (India, US, EU). 7. Set up Search Console and Bing Webmaster Tools. 8. Ask Reeder, NetNewsWire, Current, Unread makers about being a sync option, and Feedbin's founder about a compatible service. 9. Ask three small newsletters for rates. 10. Decide what personal details he's comfortable sharing. 11. List people he already knows. 12. Optional: signed-in places (X, LinkedIn, Discords).
 
 Not sure yet: whether "finished" beats "calm"; whether the AI-built story helps or hurts; launch traffic; AI-citation stats (vendor data); Current's real status; Feedbin's price; India price misuse; brand fit of an exam-aspirant news desk.
-- Blog post ideas (57): https://claude.ai/artifact/6jMvsYg4UJZ4UjisXAFt4H (copy: marketing/post-ideas.html)
+- Blog post ideas (57): https://claude.ai/artifact/6jMvsYg4UJZ4UjisXAFt4H (copy: [`post-ideas.html`](post-ideas.html))
 
 ## Round 2 corrections and findings (25 Oct, ~21:00 UTC)
 
@@ -47,7 +47,7 @@ Not sure yet: whether "finished" beats "calm"; whether the AI-built story helps 
 
 ## Round 3: outreach list (25 Oct, ~22:00 UTC)
 
-Page: https://claude.ai/artifact/Jdnxvp1WMtGJdfQA9gPLrt (copy: marketing/outreach.html; notes 15 and 16). Highlights: Dense Discovery classified $89 (~38k readers, next slots Jan 2027); Tedium price on request; Deep Questions takes listener case studies (thedeeplife.com/listen); Manton Reece is building a "fading" reader too (Feb 2026); AlternativeTo doesn't accept closed betas; Product Hunt bans company accounts; no opened listicle features a calm paid reader.
+Page: https://claude.ai/artifact/Jdnxvp1WMtGJdfQA9gPLrt (copy: [`outreach.html`](outreach.html); notes 15 and 16). Highlights: Dense Discovery classified $89 (~38k readers, next slots Jan 2027); Tedium price on request; Deep Questions takes listener case studies (thedeeplife.com/listen); Manton Reece is building a "fading" reader too (Feb 2026); AlternativeTo doesn't accept closed betas; Product Hunt bans company accounts; no opened listicle features a calm paid reader.
 
 ## Round 4: numbers, India, e-ink, newsletters (25 Oct, ~23:15 UTC)
 
@@ -56,4 +56,4 @@ Page: https://claude.ai/artifact/Jdnxvp1WMtGJdfQA9gPLrt (copy: marketing/outreac
 - India: ~13 lakh UPSC applicants/yr, but PIB feed is headline-only and The Hindu's are summaries, so a news desk is a later experiment. Cubbon Reads (Bengaluru silent reading, 300+ people, ~60 chapters) is a natural home partner. r/Indianbooks ~441k.
 - E-ink: r/kobo 134k, r/RemarkableTablet 103k, r/eink 101k, r/Onyx_Boox 70k (+37%/yr). Pocket–Kobo died 2025; Instapaper made Send-to-Kindle paid-only Feb 2026. Weekly EPUB edition is a real gap; Kobo browser can't run the PWA.
 - Newsletters (Pew 2026): 62% of newsletter readers don't read most of what they get; overload is a heavy-subscriber problem. Meco $35–40/yr, Mailbrew acquired 2025.
-- Copies of all pages: marketing/playbook.html, idea-bank.html, post-ideas.html, outreach.html. Notes 01–19 in marketing/research-2026-10/.
+- Copies of all pages, in this folder: [`playbook.html`](playbook.html), [`idea-bank.html`](idea-bank.html), [`post-ideas.html`](post-ideas.html), [`outreach.html`](outreach.html). Notes 01–19 in [`research-2026-10/`](research-2026-10/).
