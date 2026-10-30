@@ -266,6 +266,8 @@ Plus one early warning, not a target: **is the core loop healthy?**
   otherwise **A**. Either is counted as a number for everyone together,
   never per person.
 
+**Rohit's call (30 October 2026):** the core-loop measure is parked until positioning is chosen; don't spend time on it before then.
+
 ### Thresholds (set before launch)
 
 | Metric | Target | By date | If missed → |
@@ -384,8 +386,13 @@ put on hold, not dropped.
   engagement tricks, no AI rewriting or ranking what writers wrote, no
   ads, full export, no lock-in. Add: *no unread counts as debt* and *no
   notifications, ever*.
-- **One addition before launch, if anything:** the "How did you hear
-  about us?" question (section 2). Everything else waits for real readers.
+- **One addition before launch:** the "How did you hear about us?"
+  question (section 2). Everything else waits for real readers.
+
+**Rohit's call (30 October 2026):** yes to "How did you hear about us?",
+asked at the right step (one optional question at sign-up). It's listed in
+`docs/PLAN.md` → "Later"; building it needs its own start from Rohit and a
+SPEC section first.
 
 **Conclusion:** _______________________________________________
 
@@ -505,11 +512,11 @@ feedback is always optional. From lightest to heaviest:
    multi-screen flows, no automatic discounts.
 4. **One personal email a few days after cancelling,** plain text, from
    Rohit: thanks, one question, no reply needed. Sent once.
-5. **A check-in before they leave:** when a paying reader stops reading
-   for 2+ weeks, one personal note.
+5. ~~**A check-in before they leave:** when a paying reader stops reading
+   for 2+ weeks, one personal note.~~ Dropped (Rohit, 30 October 2026).
 
 Rohit's draft rollout: launch with 1 + 3, plus the OPML export right on the
-cancel screen; add 4 once readers arrive; add 5 once the data allows.
+cancel screen; add 4 once readers arrive.
 
 **Claude says:**
 
@@ -527,7 +534,7 @@ cancel screen; add 4 once readers arrive; add 5 once the data allows.
   each paying reader around day 60 ("how is it going?"), the same for
   everyone, whatever they've read.
 
-**Rohit's call:**
+**Rohit's call (30 October 2026):** option 5 (the note after 2 weeks without reading) is dropped.
 
 ---
 
