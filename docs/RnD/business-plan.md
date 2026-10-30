@@ -152,9 +152,9 @@ What the research already found:
       navigation; going through the app and changing things; the core
       reading experience; whether you ever feel "done"; two things to copy
       and two to avoid. Optional, 5 minutes: how it asks you to pay
-      (trial length, card up front or not, when the price appears) and how
-      cancelling works (how many steps, any guilt, whether it offers your
-      data).
+      (trial length, card up front or not, when the price appears). Not
+      cancelling: nine turtles never makes leaving hard and never
+      guilt-trips anyone (Rohit, 30 October 2026).
 
 **Claude says (on using the apps):** keep it strict, as above. Any
 feature you like goes to the daily list, not into launch. Most of these
