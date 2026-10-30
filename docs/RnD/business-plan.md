@@ -185,7 +185,7 @@ hours are Rohit's.
 
 ### The target: $10,000 a month by October 2028
 
-What it takes at $48 a year (about $3.70 net per reader a month):
+What it takes at $48 a year (about $3.70 net per reader a month). **$48 is only a working number for the math;** the price is decided in section 6, after positioning.
 
 - **About 2,700 paying readers.**
 - By month 24, about **200 new paying readers a month**, since about 80 a
@@ -203,7 +203,7 @@ under 500, rethink price or positioning** rather than only pushing harder.
   people is the bottleneck, so most full-time hours go to writing,
   partners and launches.
 - **Two levers:**
-  1. **Price.** At $60 a year (about $4.70 net) the target needs about
+  1. **Price (not decided; examples only).** At $60 a year (about $4.70 net) the target needs about
      2,100 readers; at $8 a month, about 1,400. Decide it with positioning:
      a price is also a statement about who it's for.
   2. **Plan the bigger setup around month 9:** 2,700 readers is well past
