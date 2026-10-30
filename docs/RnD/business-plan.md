@@ -146,7 +146,8 @@ What the research already found:
         NetNewsWire, Current.
       - *Built for readers:* Readwise Reader, Kindle, Apple Books (the
         design reference), Matter, Instapaper, Kobo.
-      - *Calm, paid, one-person peers:* Bear Blog, HEY, Kagi.
+      - *Paid, opinionated peers:* Bear Blog (one person), HEY and Kagi
+        (small companies that sell "calm" and "you are the customer").
 
 **Claude says (on using the apps):** yes, it belongs here, because it
 feeds positioning and price. Keep it to five things per app so it doesn't
