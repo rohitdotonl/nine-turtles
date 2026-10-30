@@ -171,8 +171,8 @@ hours are Rohit's.
 
 | Line | Value | Where it comes from |
 |---|---|---|
-| Target monthly income (after costs) | **Rohit:** ______ | |
-| Hours a week Rohit can give | **Rohit:** ______ | |
+| Target monthly income (after costs) | **$10,000 a month within 2 years** (Rohit, 30 October 2026) | From nine turtles alone, or together with Rohit's read-later app. |
+| Hours a week Rohit can give | **Full time**, with agents' help (Rohit, 30 October 2026); Rohit has other income meanwhile | |
 | Running costs a month | about **$9** | Render Starter $7 + 1 GB disk about $0.25; domain about $1 a month; Brevo email free up to 300 a day; Cloudflare R2 backups free under 10 GB; GitHub free. Add your Claude plan if you count it as a business cost. |
 | Net per paying reader, yearly at $48 | about **$3.70 a month** | Dodo takes 4% + $0.40, plus 1.5% for buyers abroad and 0.5% for subscriptions: about $3.30 of $48. Before income tax. |
 | Net per paying reader, monthly at $5 | about **$4.30 a month** | The same fees: about $0.70 of $5. Yearly earns a little less per month but keeps readers longer. |
@@ -183,7 +183,43 @@ hours are Rohit's.
 | **Paying readers to replace each month** | paying readers × 0.04 | |
 | Cost of a free (trial or ended) reader | close to **$0** | They cost only disk space. After the trial their feeds are checked once a day, and the yearly clean-up keeps the database small. |
 
-**Examples** (at about ₹88 to the dollar, $4 net per reader a month):
+### The target: $10,000 a month by October 2028
+
+What it takes at $48 a year (about $3.70 net per reader a month):
+
+- **About 2,700 paying readers.**
+- By month 24, about **200 new paying readers a month**, since about 80 a
+  month leave by then (3% churn). At 15% trial → paid, that's about
+  **1,300 trials a month, or 45 a day**.
+
+**Checkpoints:** 300 paying readers by month 6 (about $1,100 a month),
+1,000 by month 12 (about $3,700), 2,700 by month 24. **If month 12 is
+under 500, rethink price or positioning** rather than only pushing harder.
+
+**Claude says:**
+
+- **Agents make building, writing and research cheap; they don't make
+  people want or trust the app,** and rivals have the same agents. Reaching
+  people is the bottleneck, so most full-time hours go to writing,
+  partners and launches.
+- **Three levers:**
+  1. **One subscription for both apps** (nine turtles + the read-later
+     app). Readwise charges $8–13 a month for that pair. At about $8 a
+     month (about $7.40 net), the target needs **about 1,400 readers**
+     instead of 2,700, and the second app helps reach the target instead of
+     splitting your attention.
+  2. **A slightly higher price,** say $60 a year, if positioning supports
+     it.
+  3. **Plan the bigger setup around month 9:** 2,700 readers is well past
+     the 100–200 planned for. It's a bigger disk and plan, prepared in time.
+- **The read-later app and the floors:** read-later apps save the
+  article's web page; nine turtles never fetches one (AGENTS.md → "Hard
+  rules"). Either the read-later app is its own product with its own
+  rules, or that rule is revisited with Rohit. Its twist decides which.
+
+**Rohit's call:**
+
+**Examples at smaller targets** (at about ₹88 to the dollar, $4 net per reader a month):
 
 | Target a month | Paying readers | Sign-ups needed | To replace each month |
 |---|---|---|---|
