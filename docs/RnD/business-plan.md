@@ -382,7 +382,18 @@ newsletters in that world. The positioning ideas are in
   the no to "don't lead with it"; make the repository private; or keep both
   and accept that it may come out. Claude's suggestion: the first. Once
   you're the face, being found out costs more trust than saying it
-  plainly. **Rohit's call:**
+  plainly. **Rohit's call (30 October 2026):** make the repository
+  private once the app opens to readers and Rohit starts sharing it in
+  public.
+  - **Claude says, before that day:** going private has costs to plan for.
+    GitHub Pages from a private repository needs a paid GitHub plan (about
+    $4 a month), and the website is in this repository. Private
+    repositories get a limited number of free check minutes a month, and
+    the checks here use many. Render must be given a key to fetch the
+    image. "Open code" is one of the trust arguments in the research and on
+    the website, so those pages change too. And the history already
+    public stays visible to anyone who copied it. Decision 0129 gets a new
+    note. Plan this as its own small change a few weeks before launch.
 - **Watch the "loves the idea of reading" risk.** The ideal-reader note
   says it: people who love the idea of reading don't always read. That
   makes activation the number to watch hardest.
