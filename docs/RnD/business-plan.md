@@ -139,9 +139,8 @@ What the research already found:
       into a "their words" list.
 - [ ] Write the shortlist: two or three positionings, each as *who +
       problem + why nine turtles*.
-- [ ] **Use the best apps yourself** (added 30 October 2026), about 30
-      minutes each, by 12 November. Start a fresh account in each and note
-      what works and what doesn't.
+- [ ] **Use the best apps yourself** (added 30 October 2026), strictly
+      45 minutes each, by 12 November. Start a fresh account in each.
       - *Feed readers (rivals):* Feedbin, Inoreader, Feedly, Reeder,
         NetNewsWire, Current.
       - *Built for readers:* Readwise Reader, Kindle, Apple Books (the
@@ -149,13 +148,18 @@ What the research already found:
       - *Paid, opinionated peers:* Bear Blog (one person), HEY and Kagi
         (small companies that sell "calm" and "you are the customer").
 
-**Claude says (on using the apps):** yes, it belongs here, because it
-feeds positioning and price. Keep it to five things per app so it doesn't
-turn into a feature wish list: (1) the first five minutes for a newcomer,
-(2) the price, trial and how it asks you to pay, (3) how it feels when
-you're "done" (or never are), (4) how cancelling works, (5) one thing to
-learn from and one thing to avoid. Any feature you like goes to the daily
-list, not into launch.
+      For each, note only (Rohit's list, 30 October 2026): onboarding;
+      navigation; going through the app and changing things; the core
+      reading experience; whether you ever feel "done"; two things to copy
+      and two to avoid. Optional, 5 minutes: how it asks you to pay
+      (trial length, card up front or not, when the price appears) and how
+      cancelling works (how many steps, any guilt, whether it offers your
+      data).
+
+**Claude says (on using the apps):** keep it strict, as above. Any
+feature you like goes to the daily list, not into launch. Most of these
+are free or have a free trial; Current costs about $10 once. Where a trial
+asks for a card, cancel it the same day so you aren't charged.
 
 **Claude says:**
 
