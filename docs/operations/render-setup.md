@@ -102,7 +102,7 @@ environment needs two settings. The current setup is Claude's cloud
 environment (settings for the environment this project's agents use):
 
 1. Allow its network to reach your nine turtles address (`slowfeed-….onrender.com`).
-2. Add two environment variables: `SLOWFEED_ADDRESS` (your full address,
+2. Add two environment variables: `NINE_TURTLES_ADDRESS` (your full address,
    starting `https://`) and `NINE_TURTLES_DIAGNOSTICS_KEY` (copy the value from
    Render → Environment).
 

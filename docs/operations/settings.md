@@ -56,7 +56,7 @@ Changes**. Render restarts nine turtles with the new value (about a minute).
 
 | Name | What it's for |
 |---|---|
-| `SLOWFEED_ADDRESS` | nine turtles' public address, `https://app.nineturtles.app` (or Render's own `https://slowfeed.onrender.com`) |
+| `NINE_TURTLES_ADDRESS` | nine turtles' public address, `https://app.nineturtles.app` (or Render's own `https://slowfeed.onrender.com`) |
 | `NINE_TURTLES_DIAGNOSTICS_KEY` | The same key as above, so the check can read the diagnostics page |
 
 See [daily-check.md](daily-check.md).
