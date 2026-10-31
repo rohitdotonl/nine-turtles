@@ -100,6 +100,9 @@ Rohit's plan:
   before any marketing. Fine for full time, but if writing slips, this is
   where to trim.
 
+**Rohit's call (31 October 2026):** yes to all three: read with a
+question, start from that shelf, and trim here first if writing slips.
+
 **Claude says:**
 
 - **Start the 75% marketing time now, not after launch.** You're a
