@@ -80,6 +80,28 @@ Rohit's plan:
   - **Adoption rule:** a new tool becomes part of the setup only when it
     solves a real bottleneck. Novelty isn't enough.
   - Revisit the split now and then.
+- **1 hour: read about product design** every working day (added 31
+  October 2026). Without it, improving the app is throwing darts in the
+  dark.
+
+**Claude says (on design reading):**
+
+- **Read with a question from that day's use.** If something in nine
+  turtles felt off this morning, read about why. Write one line afterwards:
+  what you learned and what it means for nine turtles. Those lines feed the
+  daily list.
+- **A starting shelf, most useful first:** *Calm Technology* (Amber Case),
+  which is nine turtles' philosophy as a book; *The Design of Everyday
+  Things* (Don Norman); *Don't Make Me Think* (Steve Krug); *Laws of UX*
+  (Jon Yablonski, also a free website); Apple's Human Interface Guidelines,
+  since Apple Books is the design reference; and `docs/DESIGN.md` Part 1,
+  which are nine turtles' own principles.
+- **Watch the total.** Use, tools and reading now come to 2.5 hours a day
+  before any marketing. Fine for full time, but if writing slips, this is
+  where to trim.
+
+**Rohit's call (31 October 2026):** yes to all three: read with a
+question, start from that shelf, and trim here first if writing slips.
 
 **Claude says:**
 
