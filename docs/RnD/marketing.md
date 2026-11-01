@@ -45,9 +45,7 @@ working.
    test (Dense Discovery, or a free year for a mention).
 
 **Not doing:** Product Hunt, ads, a waitlist form (the site says "write to
-me"), X or Instagram, SEO how-to guides, a site about RSS tools, a series
-of comparison pages, free tools for now, r/rss as a channel, anything
-aimed at power users.
+me"), X or Instagram, SEO how-to guides, anything aimed at power users.
 
 ## Kept from the October research
 
