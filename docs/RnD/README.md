@@ -20,9 +20,9 @@ idea here that changes the app needs the owner's yes first.
   readers' pains in their own words, feature ideas, marketing ideas and
   questions to look into.
 
-## The ideal reader (25 October 2026)
+## The ideal reader (changed 1 November 2026)
 
-- [`ideal-reader.md`](ideal-reader.md): who nine turtles is for, where to
+- [`ideal-reader.md`](ideal-reader.md): who nine turtles is for (people who write on the small web), where to
   find them, and the first marketing directions.
 
 ## The owner's strategy notes (26 October 2026)
