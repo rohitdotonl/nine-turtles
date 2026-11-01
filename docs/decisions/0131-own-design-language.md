@@ -5,8 +5,8 @@
 **Decision.** The owner dropped Apple Books as nine turtles' design
 reference, replacing decision 0059. nine turtles will have its own design
 principles and design language, with design treated as a first-class part
-of the product. The aim is design good enough that people in the industry
-cite nine turtles as an example, as they cite Linear.
+of the product. The aim: cited for taste and coherence, recognisable from one
+screenshot (wording settled in decision 0133).
 
 **Until the new language is written:** the floors come first, then
 `docs/DESIGN.md` as it stands. The current look stays; nobody changes
