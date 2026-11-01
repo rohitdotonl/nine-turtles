@@ -2,7 +2,7 @@
 
 > **nine turtles is a quiet place to read the web: it shows you what's there, gets out of the way, and lets you finish.**
 
-*Last updated: 1 November 2026 (design first, the book tiebreaker retired, a warmer voice with "I" from Rohit and never "we", honesty as a public promise, easter eggs found and never shown, and "no decoration that pretends", decision 0132; Apple Books dropped as the design reference, decision 0131; before that, 28 October: the article list's titles in the reading serif with more room around each row, decision 0128; less chrome: space instead of lines between the list's rows, spaced capitals for the sidebar's section names, folders' arrows at their rows' right end, a rule written as a sentence and a quieter Aa panel, decision 0123; simpler sign-in pages with names above their fields, a small Forgot? beside Password and the passkey as a quieter button, decision 0122; a shorter Settings, with a page of its own for each less everyday group, an icon on each row and a clearer hierarchy of names and descriptions, decision 0120; fixes from a design review, decision 0118: the chosen side of a segmented control held to 3 : 1, no ring on a title, Skip to articles, the podcast player's skip figures, Recently read's day headings, the search suggestions floating and the feed health page's cards; "Wrong turn?", the 404 page, and the footer's turtles moved to About, decision 0102; newsletters as feeds, decision 0091, with each email "opened" on arrival; starter feeds in the first-visit welcome, decision 0079; a logo of nine turtles, decision 0067; a second theme, Plain, with blue article links, and System serif, decision 0063; Apple Books as the design reference, decision 0059). Each change is recorded in `docs/decisions/`.*
+*Last updated: 1 November 2026 (our own eight ranked principles, "Nothing pulls" first, breaking a principle only on purpose and written down, and one system for spacing, type and names, decision 0133; design first, the book tiebreaker retired, a warmer voice with "I" from Rohit and never "we", honesty as a public promise, easter eggs found and never shown, and "no decoration that pretends", decision 0132; Apple Books dropped as the design reference, decision 0131; before that, 28 October: the article list's titles in the reading serif with more room around each row, decision 0128; less chrome: space instead of lines between the list's rows, spaced capitals for the sidebar's section names, folders' arrows at their rows' right end, a rule written as a sentence and a quieter Aa panel, decision 0123; simpler sign-in pages with names above their fields, a small Forgot? beside Password and the passkey as a quieter button, decision 0122; a shorter Settings, with a page of its own for each less everyday group, an icon on each row and a clearer hierarchy of names and descriptions, decision 0120; fixes from a design review, decision 0118: the chosen side of a segmented control held to 3 : 1, no ring on a title, Skip to articles, the podcast player's skip figures, Recently read's day headings, the search suggestions floating and the feed health page's cards; "Wrong turn?", the 404 page, and the footer's turtles moved to About, decision 0102; newsletters as feeds, decision 0091, with each email "opened" on arrival; starter feeds in the first-visit welcome, decision 0079; a logo of nine turtles, decision 0067; a second theme, Plain, with blue article links, and System serif, decision 0063; Apple Books as the design reference, decision 0059). Each change is recorded in `docs/decisions/`.*
 
 ## Mission
 
@@ -26,12 +26,12 @@ Help people leave social media and return to reading the open web. Social media 
 
 ## Design reference: our own design language (being written)
 
-On 1 November 2026 the owner dropped Apple Books as the design reference (decision 0131, replacing decision 0059). nine turtles will have **its own design principles and design language**, with design as a first-class part of the product; the aim is design good enough that people cite nine turtles as an example, as they cite Linear. The new principles are being written with the owner and will replace this section; the draft under discussion is in [`RnD/design-principles.md`](RnD/design-principles.md) and changes nothing until the owner settles it.
+On 1 November 2026 the owner dropped Apple Books as the design reference (decision 0131, replacing decision 0059). nine turtles will have **its own design principles and design language**, with design as a first-class part of the product; the goal: **cited for taste and coherence, recognisable from one screenshot.** The principles in Part 1 are our own (decision 0133); the design language (colors, type, accent, the turtles' role, the brand idea) is being decided with the owner through mockups, and until it is, the current look stays.
 
 **Design comes first** (decision 0132): design is the most important thing in nine turtles. Agents are proactive about it and bring up broken or better design even outside the task at hand; design, UI and UX decisions are tried in mockups, a safe and a bold choice each, preferably running locally on the owner's Mac. Words alone don't settle a look.
 
-- **Until then:** the floors first, always; then the rest of this document as it stands. The current look (much of it first modelled on Apple Books) stays until the new language replaces it; don't change things only to come closer to Apple Books, and don't start redesign work without the owner.
-- **What's fixed:** only the three-pane structure (sidebar, list, page; one at a time on a phone), until the new language says otherwise.
+- **Until the design language is settled:** the floors first, always; then the rest of this document as it stands. The current look (much of it first modelled on Apple Books) stays until the new language replaces it; don't change things only to come closer to Apple Books, and don't start redesign work without the owner.
+- **What's fixed:** the three-pane structure (sidebar, list, page; one at a time on a phone). It is one of the most reliable designs a reader has; mockups may question it (for example a first screen arranged by person), but changing it is a big, careful decision for the owner, never a side effect.
 - **Who may change what:** the mission, the floors, the ranked principles and the "Never" list change only with the owner's yes.
 
 ---
@@ -69,44 +69,48 @@ Publishers are the reason there's anything to read.
 
 ### The ranked principles
 
-#### 1. Reading comes first
-The article is the product; everything else is a way to reach it.
-- *Explains:* in-app reading, serif by default, no images in the list, curated reader controls one press from the text (the Aa panel), links that don't compete with the text.
-- **Test:** does this make reading better, or compete with it?
+Adopted with the owner on 1 November 2026 (decision 0133), replacing the seven principles first modelled on Apple Books. Where each one comes from (the owner's design field guide: Norman, Rams, Victor, Reichenstein, Tufte, Vignelli, Fukasawa and Hara) is in [`RnD/design-principles.md`](RnD/design-principles.md).
 
-#### 2. Calm over engagement
-nine turtles never tries to bring you back or keep you longer. It succeeds when you've read what you wanted and closed it.
-- *Explains:* no notifications, river mode, no count of new items, no pull-to-refresh, the view waiting for you, a list that ends with "You're all caught up." (older items load as you reach the bottom, decision 0075, but only from what you follow).
-- **Test:** would a social media company want this? If yes, be suspicious.
+#### 1. Nothing pulls
+nine turtles never tries to bring you back or keep you longer. It succeeds when you've read what you wanted and closed it. The one thing that reaches out, the weekly email, is chosen by the reader, ends, and turns off in one press.
+- *Explains:* no notifications, no counts or streaks, no pull-to-refresh, manual refresh, a list that ends (older items load as you reach the bottom, decision 0075, but only from what you follow).
+- **Test:** would the reader be glad it happened, even on a week they didn't open the app? Would a social media company want it? If yes, be suspicious.
+
+#### 2. The writer comes first
+The article and the person who wrote it are the product; nine turtles only helps the reader and the writer meet. Our tools step back around their words.
+- *Explains:* in-app reading, serif by default, no images in the list, the publisher's name leading the byline, reader controls one press from the text (the Aa panel), links that don't compete with the text.
+- **Test:** does this make the writer clearer, or put us in front of them?
 
 #### 3. Clear at a glance
-Anyone understands any screen within a second: what it's for, where they are, what they can do.
-- *Explains:* regions separated by tone, one accent with one meaning, icons only where the convention is an icon and words everywhere else, the search scope chip, a plain name.
-- **Test:** squint (are the regions still distinct?) and five seconds (can someone say what the screen is for and where the main action is?).
+Every screen says what it's for, where you are and what you can do there, in the reader's words, without a tour. Quiet must never become hidden.
+- *Explains:* regions separated by tone, one accent with one meaning, words wherever an icon isn't universal, the search scope chip, plain names.
+- **Test:** squint (are the regions still distinct?) and five seconds (can someone say what the screen is for and where to act?).
 
-#### 4. Slow app, fast interface
-The experience is slow; the software never is.
-- Every action feels instant (under ~100 ms). No spinners for what the app already has; prefetch the next article so `j` is instant.
-- Act immediately, confirm silently; sync happens behind the scenes.
-- No transitions: views switch instantly. Animation makes an interface *feel* slower.
-- **Test:** does the user ever wait for the interface rather than for themselves?
+#### 4. Honest by default
+Say what things do and cost; leaving is as easy as joining. Said plainly, never preached (see "Honest by default: a public promise" in Part 2).
+- **Test:** would we be comfortable if the reader saw exactly how this works?
 
-#### 5. Nothing moves unless you move it
-Layout, positions and content change only through the user's action.
-- *Explains:* the fixed three-pane layout, manual refresh, "+ Add feed" always in one place, "mark all as read" only affecting what you've seen, older items loading only when you scroll to the bottom (decision 0075), no rearranging what the reader has learned once the look settles (the Apple Books redesign of October 2026 was the deliberate exception, decision 0059).
-- **Test:** could this surprise someone who looked away for a second?
+#### 5. Made by a person
+Care shows in the details and a person's voice is in it. Every state is designed: empty, loading, offline, error, a very long name, another script, 200% text.
+- **Test:** could this screen belong to any other app? Is any state left to chance?
 
-#### 6. Power is hidden, never missing
-The 500-feed user gets everything; the 30-feed user never sees the machinery.
-- *Explains:* vim keys, search filter syntax, multi-folder feeds, the search options panel, the feed health page, progressive disclosure in the sidebar.
-- **Test:** does a beginner have to see this? If not, hide it until needed.
+#### 6. Instant and still
+Every press is answered within about a tenth of a second, visibly, without motion. Layout, positions and content change only through the reader's action.
+- *Explains:* no spinners for what the app already has, the next article prefetched, act immediately and confirm quietly, no transitions, no feedback through motion (no springs, no pull-to-refresh), the fixed layout, "mark all as read" only affecting what you've seen.
+- **Test:** does anyone ever wait for the interface, or see something move by itself?
 
-#### 7. Respect: for the reader and for time
-- **The reader:** their data is theirs (OPML import and export, starred export); they're free to leave.
-- **Time:** nothing that looks dated next year. No trends, no glass, no decoration that pretends.
-- **Test:** would this still feel right in ten years?
+#### 7. Power is findable, never in the way
+Keys and advanced tools speed up what's visible; nothing exists only as a key. A beginner never trips on them and can find them when needed.
+- *Explains:* the shortcut list, keys named in tooltips, search filter syntax, the search options panel, the feed health page, progressive disclosure in the sidebar; a command menu is planned (`RnD/design-principles.md`).
+- **Test:** can a beginner find this when they need it, and ignore it until then?
+
+#### 8. Built to last
+Fewer things, done better. Nothing that looks dated next year: no trends, no glass, no decoration that pretends. The reader's data is theirs, and they're free to leave.
+- **Test:** will this still look right in ten years?
 
 (Respect for the publisher is the second floor, above all of these.)
+
+**Breaking a principle on purpose** (the owner, 1 November 2026): a principle can be broken consciously when the result is clearly better, never by accident. Every break is written in the Exceptions log below with its reason and its limits; if it can't be justified there, it doesn't ship.
 
 ### Rules about the rules
 
@@ -114,29 +118,29 @@ The 500-feed user gets everything; the 30-feed user never sees the machinery.
 2. **Exceptions are written down** in the Exceptions log below: where, why and within what limits. Floors have no exceptions; only the owner can change a floor's wording, through a note in `docs/decisions/`.
 3. **New features go through the floors and principles in order** and stop at the first "no":
    1. Does it break a floor? → no.
-   2. Does it hurt reading? → no.
-   3. Does it pull people back or keep them longer than they wanted? → no.
-   4. Is it clear at a glance? If not, can it be hidden for power users?
-   5. Is it instant?
-   6. Does it move or rearrange anything the user didn't ask to change? → redesign until it doesn't.
-   7. Will it still feel right in ten years?
+   2. Does it pull people back or keep them longer than they wanted? → no.
+   3. Does it put us in front of the writer, or hurt reading? → no.
+   4. Is it clear at a glance? If not, can it be found when needed and stay out of the way?
+   5. Is it honest, and is every state of it designed?
+   6. Is it instant, and does it leave everything still that the reader didn't move? If not, redesign until it is.
+   7. Will it still look right in ten years?
 4. **Scope is checked too.** A feature that would make nine turtles one of the things under "nine turtles is not" is out, however good.
 
-**Worked example: AI summaries.** They compete with reading (1), but a power user (6) might want them to triage 500 feeds. Result: never in the reading pane; possibly an opt-in, hidden triage tool in the list. The philosophy answered *where*, not yes or no.
+**Worked example: AI summaries.** They put something between the reader and the writer (2), but a power user (7) might want them to triage 500 feeds. Result: never in the reading pane; possibly an opt-in, hidden triage tool in the list. The philosophy answered *where*, not yes or no.
 
-**Worked example: fetch the full article when a feed has only a summary.** It would help reading (1) but breaks the publisher floor. Floors aren't ranked against principles, so the answer is no: show the summary and "Open original."
+**Worked example: fetch the full article when a feed has only a summary.** It would help reading (2) but breaks the publisher floor. Floors aren't ranked against principles, so the answer is no: show the summary and "Open original."
 
 ### Exceptions log
 
 | Exception | Principle bent | Why | Limits |
 |---|---|---|---|
-| Unread counts in V1 | 2. Calm over engagement | Power users with hundreds of feeds need to know what they've seen | Inbox mode only. Muted grey, right-aligned in the sidebar. Never badges or color. Per feed and folder only, no global total. Above 999 shows "999+". The reader can hide them all (Settings › Reading, decision 0097). |
-| Sidebar search always visible | 6. Power is hidden, never missing | The owner wants finding a feed by name always available | One quiet field that filters feeds and folders by name, shown once there's a feed to find. The same slim, faintly filled capsule as the list's search (decision 0051). Nothing else in the sidebar skips progressive disclosure. |
+| Unread counts in V1 | 1. Nothing pulls | Power users with hundreds of feeds need to know what they've seen | Inbox mode only. Muted grey, right-aligned in the sidebar. Never badges or color. Per feed and folder only, no global total. Above 999 shows "999+". The reader can hide them all (Settings › Reading, decision 0097). |
+| Sidebar search always visible | 7. Power is findable, never in the way | The owner wants finding a feed by name always available | One quiet field that filters feeds and folders by name, shown once there's a feed to find. The same slim, faintly filled capsule as the list's search (decision 0051). Nothing else in the sidebar skips progressive disclosure. |
 | Unread dot (decisions 0028, 0037, 0041) | Type does the hierarchy, never badges | Weight alone was hard to scan in a long list; Apple Books, Mail and Things mark unread with a dot | A drawn 8px dot in the theme's accent, centred in a 24px gutter inside the row's pill, 8px clear of an unread title, which is semibold too. No number, list rows only. |
 | Starter feeds in the welcome (decision 0079) | "Not a discovery engine" | Someone new to feeds needs a first step before they know what to paste | Only behind "New to feeds? Start here" in the first-visit welcome. Five fixed feeds, the same for every reader, never ranked or personalised, none ticked; each added through the ordinary add path. Gone once anything is followed. |
-| Catch me up and letting unread go (decision 0097) | 5. Nothing moves unless you move it: "mark all as read" only affecting what you've seen | The owner asked for ways to set an unread backlog down; a pile that only grows is the pull social media uses | Only by the reader's own choice: Catch me up from Unread's More menu, with Undo for exactly what it marked; letting go only once chosen in Settings (Never by default), only for articles older than the chosen wait, and never removing anything. Neither touches today's articles or moves a row on screen. |
-| Mark older, above or below as read (decision 0103) | 5. Nothing moves unless you move it: "mark all as read" only affecting what you've seen | The owner asked, 27 October 2026, that marking past the chosen article include the rest of the list not loaded yet, so one press really clears what's behind it | Only by the reader's own choice (`Shift+O`, or the list's More menu), with Undo for exactly what it marked; only articles that were there when the list was loaded, never one that arrived since; only the list on screen, by its own rules; never in river mode. No row moves. |
-| Blue links in Plain (decision 0063) | 1. Reading comes first: links that don't compete with the text | The owner asked for his site rohit.onl's bare, plain-HTML look, whose one color is the browser's blue for links | Only the Plain theme, only links inside articles: `#0000EE` (visited `#551A8B`) by day, `#9E9EFF` (visited `#D0ADF0`) by night, always underlined, at 7 : 1 like the text. Plain's accent is its text color, so blue means only a link. Original's links stay in the text color. |
+| Catch me up and letting unread go (decision 0097) | 6. Instant and still: "mark all as read" only affecting what you've seen | The owner asked for ways to set an unread backlog down; a pile that only grows is the pull social media uses | Only by the reader's own choice: Catch me up from Unread's More menu, with Undo for exactly what it marked; letting go only once chosen in Settings (Never by default), only for articles older than the chosen wait, and never removing anything. Neither touches today's articles or moves a row on screen. |
+| Mark older, above or below as read (decision 0103) | 6. Instant and still: "mark all as read" only affecting what you've seen | The owner asked, 27 October 2026, that marking past the chosen article include the rest of the list not loaded yet, so one press really clears what's behind it | Only by the reader's own choice (`Shift+O`, or the list's More menu), with Undo for exactly what it marked; only articles that were there when the list was loaded, never one that arrived since; only the list on screen, by its own rules; never in river mode. No row moves. |
+| Blue links in Plain (decision 0063) | 2. The writer comes first: links that don't compete with the text | The owner asked for his site rohit.onl's bare, plain-HTML look, whose one color is the browser's blue for links | Only the Plain theme, only links inside articles: `#0000EE` (visited `#551A8B`) by day, `#9E9EFF` (visited `#D0ADF0`) by night, always underlined, at 7 : 1 like the text. Plain's accent is its text color, so blue means only a link. Original's links stay in the text color. |
 
 ### Never
 
@@ -206,7 +210,8 @@ The philosophy applied. The principle is noted where it isn't obvious.
 - **A rule is written as one sentence** (decision 0123): in the reading serif, its blanks real text boxes and menus with no box of their own, only a dashed line under each in a soft tone of the text, as wide as their words and 44px to press; the keyboard's outline marks the one in use, and a refused blank's line turns the muted red beside the message's words.
 - **Small menus and panels float under their button:** the list's and the article's More menus and the Aa panel, in the same family, a rounded card with one soft shadow, closed by Escape (back to the button), a press outside, or the keyboard leaving them. On a phone the Aa panel is a sheet along the bottom of the screen with a Close button, and the article's More menu opens upwards from the bottom bar.
 - **One search field:** the sidebar's find field and the list's search are one slim capsule, as Apple Books draws its search: 36px tall with a mouse on a wide window, 44px on touch or a phone, 10px corners, a faint fill of the text color (6%) and no edge, a 14px search icon in the icon column and the interface's text size; the keyboard's outline marks the one in use. A chip inside it is 24px tall with 6px corners; its Remove button is still a full 44px to press. Its options menu floats on the raised surface (decision 0051, replacing 0041's unfilled find field).
-- **No motion.** Views switch instantly.
+- **No motion.** Views switch instantly, and feedback is instant and visible without moving (principle 6).
+- **One system** (decision 0133, after Vignelli): one spacing scale, a short type scale, and the same thing always looks the same and is named the same everywhere. A new size, spacing, color or name is added to the system here first, never as a one-off.
 
 #### Color
 

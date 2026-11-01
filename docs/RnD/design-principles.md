@@ -1,37 +1,57 @@
-# nine turtles: design principles (draft, under discussion)
+# nine turtles: design principles, where they came from, and what's next
 
-Being written with Rohit since 1 November 2026. **Nothing here is decided:**
-until Rohit settles them, `docs/DESIGN.md` Part 1's principles stand. What
-he has already settled is in DESIGN.md and decision 0132. The full
+The eight ranked principles were adopted with Rohit on 1 November 2026
+(decision 0133); their wording lives in `docs/DESIGN.md` Part 1. This note
+keeps where each came from and what is still to be decided. The full
 discussion is in Rohit's working doc "Brand and design language: a
 proposal to argue with".
 
-## Draft 2 (1 November 2026)
+## Where each principle comes from
 
-The floors stay above all of these, accessibility first. Between
-principles, the higher one wins.
+From Rohit's design field guide ("Less, but better": Norman, Rams, Victor,
+Reichenstein, Brichter, Matas, Rizzi, Tufte, Vignelli, Fukasawa, Hara).
 
-| # | Principle | In one line | Test |
-|---|---|---|---|
-| 1 | **The writer comes first** | We only help the reader and the writer meet; our tools step back around their words. | Does this make the writer clearer, or put us in front of them? |
-| 2 | **Clear at a glance** | Every screen says what it's for and what you can do there, in the reader's words, without a tour. | Five seconds: can someone say what this screen is for and where to act? |
-| 3 | **Nothing pulls** | No counts, streaks or endless lists. The one thing that reaches out (the opt-in weekly email) is chosen by the reader and ends. | Would the reader be glad it happened, even on a week they didn't open the app? |
-| 4 | **Honest by default** | Say what things do and cost; leaving as easy as joining. Said plainly, never preached. | Would we be comfortable if Maya saw exactly how this works? |
-| 5 | **Made by a person** | Care shows in the details: every state designed (empty, offline, error, a very long name, 200% text), and a person's voice in it. | Could this screen belong to any other app? Is any state left to chance? |
-| 6 | **Instant and still** | Every press answered within a tenth of a second, without motion. | Does anyone wait, or see something move by itself? |
-| 7 | **Power is findable, never in the way** | Keys and advanced tools speed up what's visible; nothing exists only as a key. | Can a beginner find this when they need it, and ignore it until then? |
-| 8 | **Built to last** | Fewer things, done better. No trends. | Will this look right in 2036? |
+| # | Principle | From the guide |
+|---|---|---|
+| 1 | Nothing pulls | Be honest (Rams); Reeder dropping unread counts (Rizzi) |
+| 2 | The writer comes first | Get out of the way; typography is the interface (Rams, Reichenstein) |
+| 3 | Clear at a glance | Show what's possible; fit what people already do (Norman, Fukasawa) |
+| 4 | Honest by default | Be honest (Rams; the 2025 FTC case on cancelling) |
+| 5 | Made by a person | Thorough to the last detail (Rams, Vignelli) |
+| 6 | Instant and still | Answer every action; close the loop (Norman, Victor), without motion |
+| 7 | Power is findable, never in the way | Show what's possible; less, but better (Norman, Rams) |
+| 8 | Built to last | Design for decades (Rams, Vignelli, Fukasawa) |
 
-Rohit agreed with 1, 3, 5 and 6 in round 1. In round 2 Claude brought
-"Clear at a glance" back (it had proposed folding it into the tests) and
-reworded "Power is hidden" as "findable", after Rohit's design field guide
-(Norman: a minimal app first loses showing people what they can do).
+**Where we part from the guide:** Matas and Brichter teach feedback through
+motion (springs, pull-to-refresh). nine turtles keeps no motion: feedback is
+instant and visible without moving.
 
-## Open
+**Why "Clear at a glance" ranks below "Nothing pulls":** when they clash
+(how much is waiting from the people you read), clarity finds a way that
+doesn't pull, such as names instead of numbers.
 
-- Rank and wording of draft 2.
-- How the opt-in weekly email fits "Nothing pulls", and how far nine
-  turtles helps a reader leave social media without preaching.
-- The new tiebreaker, to be tested in UI and UX trials.
-- After the principles: the design language, decided through mockups
-  (colors, type, the turtles' role), then the brand idea.
+## Agreed, to do through mockups
+
+- **A command menu:** type an action's name, see its key beside it, so
+  every key is findable (principle 7).
+- **An every-state check** of every screen: empty, loading, offline,
+  error, long names, other scripts, 200% text (principle 5).
+- **The zero-tap question** (Bret Victor): the reader opens nine turtles to
+  learn whether anyone they like wrote something; mock up first screens
+  that answer it, including one arranged by person. The three-pane layout
+  is one of the most reliable designs for a reader, so changing it is
+  done very carefully, with a safe and a bold option side by side.
+- **Icon-only tools around the article** (Aa, star, More): judged by the
+  principles; any break is written in the Exceptions log.
+
+## Still open, decided only after mockups
+
+- The new tiebreaker (candidate: "a letter from someone, or a feed from
+  something?").
+- The brand idea (candidate: "letters from people": warm, personal,
+  correspondence).
+- Colors (how many, for what, as few as possible), typography (character
+  without hurting readability), the accent.
+- The turtles, the logo's role, any mascot.
+- The weekly opt-in email's exact shape, and how far nine turtles helps a
+  reader leave social media without preaching.

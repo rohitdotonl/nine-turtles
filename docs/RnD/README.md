@@ -26,10 +26,11 @@ idea here that changes the app needs the owner's yes first.
   home-page shape, who it competes with, and what we said no to. Replaces
   every earlier positioning idea, including the draft in the research notes.
 
-## Design principles (draft, from 1 November 2026)
+## Design principles (1 November 2026)
 
-- [`design-principles.md`](design-principles.md): the principles being
-  discussed with Rohit to replace DESIGN.md Part 1's, and what's still open.
+- [`design-principles.md`](design-principles.md): where the eight
+  principles in DESIGN.md came from, what's agreed for mockups, and what's
+  still open.
 
 ## The ideal reader (changed 1 November 2026)
 
