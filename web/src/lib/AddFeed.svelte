@@ -80,6 +80,17 @@
 
   let alreadyTitle = $derived(feeds.find((feed) => feed.id === alreadyId)?.title);
 
+  /** Problems that aren't the address's fault (the site, the connection, nine turtles, the reader's plan): the field isn't marked. */
+  const NOT_THE_ADDRESS = ["unreachable", "trouble", "too-many", "plan-ended", "offline"];
+
+  /** The address was changed after several feeds were offered: they belong to the old one, so they go, and Add feed looks again. */
+  function edited() {
+    if (choices.length > 0 && address !== choicesFor) {
+      choices = [];
+      message = "";
+    }
+  }
+
   // The choices stay on screen while the chosen one is being added, so a
   // choice that fails can be swapped for another. Add feed says it's busy
   // with `aria-disabled` rather than `disabled`, which would drop the
@@ -113,7 +124,7 @@
       case "problem":
         message = explain(result.reason);
         problem = true;
-        badAddress = result.reason !== "unreachable" && result.reason !== "trouble" && result.reason !== "too-many" && result.reason !== "plan-ended";
+        badAddress = !NOT_THE_ADDRESS.includes(result.reason);
         break;
     }
   }
@@ -182,6 +193,7 @@
       placeholder={framed ? "example.com" : "Paste a website or feed URL"}
       aria-describedby="feed-address-status"
       aria-invalid={badAddress ? "true" : undefined}
+      oninput={edited}
       class={["field min-w-0 flex-1", !framed && "welcome-field"]}
     />
     {#if !framed}
