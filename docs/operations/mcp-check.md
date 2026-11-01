@@ -47,7 +47,8 @@ check does nothing. No "all good" issues, no messages.
    must work. Two scripts that do this are in
    [mcp-clients/](mcp-clients/) (`ts-client.mjs` and `py-client.py`; they
    expect nine turtles at `http://localhost:8090` with the password
-   `quiet reading time`, and the TypeScript one takes a feed address).
+   `quiet reading time`, sign in with a made-up email, and the TypeScript one
+   takes a feed address).
    Install the SDKs in a scratch folder, not in `web/`; update the scripts
    if the SDKs changed.
 

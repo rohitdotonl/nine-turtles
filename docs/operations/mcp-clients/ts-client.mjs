@@ -6,9 +6,11 @@ import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
 
 const BASE = "http://localhost:8090";
 const PASSWORD = "quiet reading time";
+// Any made-up email: the first sign-in saves it as the owner's (decision 0116).
+const EMAIL = "check@example.com";
 
 async function signIn() {
-  const r = await fetch(`${BASE}/api/sign-in`, { method: "POST", headers: { "content-type": "application/json", "sec-fetch-site": "same-origin" }, body: JSON.stringify({ password: PASSWORD }) });
+  const r = await fetch(`${BASE}/api/sign-in`, { method: "POST", headers: { "content-type": "application/json", "sec-fetch-site": "same-origin" }, body: JSON.stringify({ email: EMAIL, password: PASSWORD }) });
   return r.headers.get("set-cookie").split(";")[0];
 }
 
