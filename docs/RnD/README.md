@@ -11,6 +11,15 @@ idea here that changes the app needs the owner's yes first.
   he still has to do and Claude's comments for him to accept or overrule.
   Start here; the files below are its research.
 
+## Rohit's research notes (1 November 2026)
+
+- [`research-notes-2026-11.md`](research-notes-2026-11.md): Rohit's own
+  notes from r/rss, rival apps and the small web, put in order: what comes
+  first (positioning, then the ideal user, then the brand), a draft
+  positioning ("Read people, not feeds"), website inspiration, rivals,
+  readers' pains in their own words, feature ideas, marketing ideas and
+  questions to look into.
+
 ## The ideal reader (25 October 2026)
 
 - [`ideal-reader.md`](ideal-reader.md): who nine turtles is for, where to

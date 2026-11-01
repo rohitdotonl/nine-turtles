@@ -139,6 +139,9 @@ question, start from that shelf, and trim here first if writing slips.
 - [`strategy-notes.md`](strategy-notes.md): Rohit's own conclusions,
   including the firm noes (no donations, no AI summaries, no lifetime
   deals).
+- [`research-notes-2026-11.md`](research-notes-2026-11.md): Rohit's own
+  notes of 1 November 2026 (rivals, inspiration sites, readers' words,
+  feature and marketing ideas), put in order.
 
 What the research already found:
 
