@@ -127,11 +127,11 @@ question, start from that shelf, and trim here first if writing slips.
 
 **Already done:**
 
-- [`business-research.md`](business-research.md): the summary, rivals,
+- [`business-research.md`](../archive/rnd-2026-10/business-research.md): the summary, rivals,
   prices, the ranked shortlist.
-- [`playbook.html`](playbook.html): the full report;
-  [`idea-bank.html`](idea-bank.html): about 300 ideas.
-- [`research-2026-10/`](research-2026-10/): 19 working notes with
+- [`playbook.html`](../archive/rnd-2026-10/playbook.html): the full report;
+  [`idea-bank.html`](../archive/rnd-2026-10/idea-bank.html): about 300 ideas.
+- [`research-2026-10/`](../archive/rnd-2026-10/research-2026-10/): 19 working notes with
   sources. The most useful here: 03 (pain points), 04 (rivals and
   positioning), 14 (Hacker News pain points), 19 (founder playbooks).
 - [`reader-comparison.html`](reader-comparison.html): Feedbin, Miniflux,
@@ -500,7 +500,7 @@ SPEC section first.
 questions (`docs/planning/questions.md`).
 
 **Already done:** the research suggestion in
-[`business-research.md`](business-research.md) → "Suggested price" and
+[`business-research.md`](../archive/rnd-2026-10/business-research.md) → "Suggested price" and
 [`strategy-notes.md`](strategy-notes.md) → "Pricing". Built today: one
 plan, monthly or yearly; a **14-day** trial with no card; after the trial
 you can still read everything you have, but you can't add feeds.
@@ -564,9 +564,9 @@ Rohit's plan leans on channels that compound and that run without him:
 - **Moments worth sharing,** for word of mouth.
 - Track sign-ups by channel; cut what doesn't work.
 
-**Already done:** [`playbook.html`](playbook.html) (launch, lists, AI
-mentions), [`outreach.html`](outreach.html) (newsletters, podcasts,
-bloggers, directories to approach), [`post-ideas.html`](post-ideas.html)
+**Already done:** [`playbook.html`](../archive/rnd-2026-10/playbook.html) (launch, lists, AI
+mentions), [`outreach.html`](../archive/rnd-2026-10/outreach.html) (newsletters, podcasts,
+bloggers, directories to approach), [`post-ideas.html`](../archive/rnd-2026-10/post-ideas.html)
 (57 blog posts).
 
 **Claude says:**
@@ -648,7 +648,7 @@ this file, with the numbers and what you decided.
 ## Rohit's other to-dos from the research
 
 Things only Rohit can do, from
-[`business-research.md`](business-research.md) → "Research only Rohit can
+[`business-research.md`](../archive/rnd-2026-10/business-research.md) → "Research only Rohit can
 do". Tick them here.
 
 - [ ] Ask ChatGPT, Perplexity, Gemini and Claude the key questions from

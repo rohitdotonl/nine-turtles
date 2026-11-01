@@ -1,7 +1,7 @@
 # Making nine turtles a business: the owner's strategy notes (26 October 2026)
 
 Rohit's own notes after reading the October research (`business-research.md`,
-`playbook.html`), rewritten and put in order. They are a working plan, not
+`playbook.html`, now in `docs/archive/rnd-2026-10/`), rewritten and put in order. They are a working plan, not
 decisions: anything here that changes the app, the website or
 `docs/DESIGN.md` still goes through the usual process.
 

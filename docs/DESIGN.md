@@ -2,7 +2,7 @@
 
 > **nine turtles is a quiet place to read the web: it shows you what's there, gets out of the way, and lets you finish.**
 
-*Last updated: 28 October 2026 (the article list's titles in the reading serif with more room around each row, decision 0128; less chrome: space instead of lines between the list's rows, spaced capitals for the sidebar's section names, folders' arrows at their rows' right end, a rule written as a sentence and a quieter Aa panel, decision 0123; simpler sign-in pages with names above their fields, a small Forgot? beside Password and the passkey as a quieter button, decision 0122; a shorter Settings, with a page of its own for each less everyday group, an icon on each row and a clearer hierarchy of names and descriptions, decision 0120; fixes from a design review, decision 0118: the chosen side of a segmented control held to 3 : 1, no ring on a title, Skip to articles, the podcast player's skip figures, Recently read's day headings, the search suggestions floating and the feed health page's cards; "Wrong turn?", the 404 page, and the footer's turtles moved to About, decision 0102; newsletters as feeds, decision 0091, with each email "opened" on arrival; starter feeds in the first-visit welcome, decision 0079; a logo of nine turtles, decision 0067; a second theme, Plain, with blue article links, and System serif, decision 0063; Apple Books as the design reference, decision 0059). Each change is recorded in `docs/decisions/`.*
+*Last updated: 1 November 2026 (Apple Books dropped as the design reference, decision 0131; before that, 28 October: the article list's titles in the reading serif with more room around each row, decision 0128; less chrome: space instead of lines between the list's rows, spaced capitals for the sidebar's section names, folders' arrows at their rows' right end, a rule written as a sentence and a quieter Aa panel, decision 0123; simpler sign-in pages with names above their fields, a small Forgot? beside Password and the passkey as a quieter button, decision 0122; a shorter Settings, with a page of its own for each less everyday group, an icon on each row and a clearer hierarchy of names and descriptions, decision 0120; fixes from a design review, decision 0118: the chosen side of a segmented control held to 3 : 1, no ring on a title, Skip to articles, the podcast player's skip figures, Recently read's day headings, the search suggestions floating and the feed health page's cards; "Wrong turn?", the 404 page, and the footer's turtles moved to About, decision 0102; newsletters as feeds, decision 0091, with each email "opened" on arrival; starter feeds in the first-visit welcome, decision 0079; a logo of nine turtles, decision 0067; a second theme, Plain, with blue article links, and System serif, decision 0063; Apple Books as the design reference, decision 0059). Each change is recorded in `docs/decisions/`.*
 
 ## Mission
 
@@ -24,13 +24,13 @@ Help people leave social media and return to reading the open web. Social media 
 - **A permanent archive:** unstarred articles are kept for one year (the yearly clean-up, built 25 October 2026, decision 0089).
 - **A shared space:** readers on one nine turtles never see each other's feeds, marks, searches or reading (decision 0086).
 
-## Design reference: Apple Books
+## Design reference: our own design language (being written)
 
-Since 24 October 2026 the look and feel follow **Apple Books on the Mac and the iPhone**, and no other app (decision 0059). When unsure how something should look or behave, do what Apple Books does.
+On 1 November 2026 the owner dropped Apple Books as the design reference (decision 0131, replacing decision 0059). nine turtles will have **its own design principles and design language**, with design as a first-class part of the product; the aim is design good enough that people cite nine turtles as an example, as they cite Linear. The new principles are being written with the owner and will replace this section.
 
-- **What wins:** the two floors first, always; then Apple Books; then the rest of this document. The owner's order is "taste first, good UI/UX principles second, my own rules last", but the floors are never traded.
-- **What's fixed:** only the three-pane structure (sidebar, list, page; one at a time on a phone). Everything else may change to come closer to Apple Books.
-- **Who may change what:** agents may change Part 2 of this document and `docs/SPEC.md` to follow Apple Books, in the same pull request as the code, with a note in `docs/decisions/`. The mission, the floors, the ranked principles and the "Never" list still change only with the owner's yes.
+- **Until then:** the floors first, always; then the rest of this document as it stands. The current look (much of it first modelled on Apple Books) stays until the new language replaces it; don't change things only to come closer to Apple Books, and don't start redesign work without the owner.
+- **What's fixed:** only the three-pane structure (sidebar, list, page; one at a time on a phone), until the new language says otherwise.
+- **Who may change what:** the mission, the floors, the ranked principles and the "Never" list change only with the owner's yes.
 
 ---
 
@@ -108,7 +108,7 @@ The 500-feed user gets everything; the 30-feed user never sees the machinery.
 
 ### Rules about the rules
 
-1. **Apple Books settles questions of look and feel** (see "Design reference"); the floors still come first.
+1. **The design language settles questions of look and feel** once it's written (see "Design reference"); until then this document does. The floors always come first.
 2. **Exceptions are written down** in the Exceptions log below: where, why and within what limits. Floors have no exceptions; only the owner can change a floor's wording, through a note in `docs/decisions/`.
 3. **New features go through the floors and principles in order** and stop at the first "no":
    1. Does it break a floor? → no.
