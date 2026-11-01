@@ -19,7 +19,7 @@
   import { onMount } from "svelte";
   import Icon from "./Icon.svelte";
   import type { Feed } from "./shapes";
-  import { addFeed } from "./feeds";
+  import { addFeed, type Problem } from "./feeds";
   import { lookAt, sayProblem, siteOf, type Person } from "./follow";
 
   let {
@@ -46,6 +46,8 @@
   let busy = $state(false);
   let person: Person | undefined = $state();
   let problem = $state("");
+  /** The problem is one trying again can't fix, so Follow stays locked. */
+  let stuck = $state(false);
 
   let site = $derived(siteOf(person?.site || address));
 
@@ -55,15 +57,19 @@
     if (looked.kind === "found") {
       person = looked;
       name = looked.name;
-    } else if (looked.kind === "problem") {
-      problem = sayProblem(looked.reason);
-    }
+    } else if (looked.kind === "problem") said(looked.reason);
   });
+
+  function said(reason: Problem) {
+    problem = sayProblem(reason);
+    stuck = !["unreachable", "offline", "trouble"].includes(reason);
+  }
 
   async function follow(event: SubmitEvent) {
     event.preventDefault();
     if (held) return;
     busy = true;
+    problem = "";
     let result = await addFeed(person?.choices[0]?.url ?? address);
     // Asked without a look, a site naming several: its first, as the look would have chosen.
     if (result.kind === "choose" && result.choices[0]) result = await addFeed(result.choices[0].url);
@@ -71,19 +77,19 @@
     if (result.kind === "added") onFollowed(result.feed);
     // Followed already: Follow takes them to that person instead.
     else if (result.kind === "already") onOpen(result.feedId);
-    else if (result.kind === "problem") problem = sayProblem(result.reason);
+    else if (result.kind === "problem") said(result.reason);
   }
 
-  /** Follow can't be pressed: still looking, or a problem. */
-  let held = $derived(busy || looking || problem !== "");
+  /** Follow can't be pressed: busy, still looking, or a problem trying again can't fix. */
+  let held = $derived(busy || looking || stuck);
 </script>
 
 <form onsubmit={follow} class={["flex flex-col gap-4", page && "flex-1"]}>
   <div class="flex flex-col gap-1">
     <p class="break-all text-ink-2">{site}</p>
-    <!-- Screen readers hear each new line here without moving the keyboard's place. -->
+    <!-- Screen readers hear each new line here without moving the keyboard's place: the question again once the name is known, since the keyboard reached the title before it was. -->
     <p role="status" class={["flex items-start gap-1.5 text-small", problem ? "text-danger" : "text-ink-2"]}>
-      {#if looking}Looking…{:else if problem}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{problem}{/if}
+      {#if looking}Looking…{:else if problem}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{problem}{:else if name}<span class="sr-only">Follow {name}?</span>{/if}
     </p>
   </div>
 

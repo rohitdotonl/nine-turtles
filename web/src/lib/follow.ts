@@ -18,10 +18,7 @@ export type Person = {
 };
 
 /** What looking at a shared page found: the person, a problem to say, or nothing to say ("quiet"). */
-export type Looked =
-  | ({ kind: "found" } & Person)
-  | { kind: "problem"; reason: Problem }
-  | { kind: "quiet" };
+export type Looked = ({ kind: "found" } & Person) | { kind: "problem"; reason: Problem } | { kind: "quiet" };
 
 /**
  * Looks at a shared page without following anything (decision 0104): the
@@ -31,10 +28,7 @@ export type Looked =
 export async function lookAt(address: string): Promise<Looked> {
   let response: Response;
   try {
-    response = await api(
-      `/api/find-feeds?address=${encodeURIComponent(address)}`,
-      { cache: "no-store" },
-    );
+    response = await api(`/api/find-feeds?address=${encodeURIComponent(address)}`, { cache: "no-store" });
   } catch {
     return { kind: "quiet" };
   }

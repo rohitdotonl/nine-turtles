@@ -310,7 +310,7 @@
   });
 
   $effect(() => {
-    document.title = titleFor(route, placeName);
+    document.title = shared ? `${taskTitle} · nine turtles` : titleFor(route, placeName);
   });
 
   // Where you are is always in sight in the sidebar (SPEC section 5): when the
