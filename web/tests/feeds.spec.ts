@@ -330,6 +330,61 @@ test("a page without a feed gets a calm, plain message", async ({ page }) => {
   await expect(page.locator("#feed-address-status")).toHaveText("That doesn't look like a web address.");
 });
 
+test("changing the address after a choice of feeds takes the old choices away", async ({ page }) => {
+  await openApp(page, "/add-feed");
+  await field(page).fill(`${FEED_SITE}/blog/${newBlog("two")}/`);
+  await page.keyboard.press("Enter");
+  const choices = page.getByRole("radiogroup", { name: "Feeds on this site" });
+  await expect(choices).toBeVisible();
+  // The chosen feed fails for an address reason: the field is marked, and the choices stay to pick another.
+  await page.route("**/api/feeds", (route) =>
+    route.request().method() === "POST" ? route.fulfill({ status: 422, json: { error: "not-found" } }) : route.continue(),
+  );
+  await page.getByRole("button", { name: "Add feed", exact: true }).click();
+  await expect(page.locator("#feed-address-status")).toHaveText("Nothing was found at that address.");
+  await expect(field(page)).toHaveAttribute("aria-invalid", "true");
+  await page.unroute("**/api/feeds");
+  // They belong to the old address: typing another one clears them and all that was said, red edge included, and Add feed looks again.
+  await field(page).fill(`${FEED_SITE}/plain/`);
+  await expect(choices).toHaveCount(0);
+  await expect(page.locator("#feed-address-status")).toHaveText("");
+  await expect(field(page)).not.toHaveAttribute("aria-invalid", "true");
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#feed-address-status")).toHaveText("This site doesn't seem to offer a feed. Try the feed's own address, or the site's home page.");
+});
+
+test("without a connection, adding says so without marking the address as wrong", async ({ page, context }) => {
+  await openApp(page, "/add-feed");
+  await field(page).fill(`${FEED_SITE}/blog/${newBlog()}/`);
+  await context.setOffline(true);
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#feed-address-status")).toHaveText("Adding a feed needs a connection. Try again once you're back online.");
+  await expect(field(page)).not.toHaveAttribute("aria-invalid", "true");
+  await context.setOffline(false);
+});
+
+test("Escape while nine turtles is still looking leaves you where you were, with the feed in the sidebar", async ({ page }) => {
+  await openApp(page, "/all");
+  // A slow site: the answer comes after the reader has closed the sheet.
+  let answer: () => void = () => {};
+  const answered = new Promise<void>((resolve) => (answer = resolve));
+  await page.route("**/api/feeds", async (route) => {
+    if (route.request().method() !== "POST") return route.continue();
+    await answered;
+    await route.continue();
+  });
+  const name = newBlog();
+  await page.keyboard.press("a");
+  await field(page).fill(`${FEED_SITE}/blog/${name}/`);
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#feed-address-status")).toHaveText("Looking for a feed…");
+  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/\/all$/);
+  answer();
+  await expect(sidebar(page).getByRole("link", { name: new RegExp(`Blog ${name}`) })).toBeVisible();
+  await expect(page).toHaveURL(/\/all$/);
+});
+
 test("Escape leaves Add a feed for the list you were on", async ({ page }) => {
   await openApp(page, "/all");
   await page.keyboard.press("a");

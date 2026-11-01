@@ -594,8 +594,9 @@
   }
 
   async function added(feed: Feed) {
+    const stay = route.kind !== "add-feed" && !firstVisit; // Add a feed closed while still looking: the feed only joins the sidebar.
     await loadFeeds();
-    openFeed(feed.id);
+    if (!stay) openFeed(feed.id);
   }
 
   /**
@@ -712,7 +713,6 @@
     follow(event, { kind: "readers" });
   }
 
-  /** Edit feed's "Add a rule for this feed…": to Settings, where the new rule's sheet opens for the feed. */
   /**
    * Find new address moved a failing feed, from the line above its list or
    * from Edit feed (decision 0106): the feeds load again, so its line and its
@@ -739,7 +739,7 @@
     return movedFeed?.to === id ? movedFeed.from : id;
   }
 
-  function addRuleFor(feed: Feed) {
+  function addRuleFor(feed: Feed) { // Edit feed's "Add a rule for this feed…": Settings, with a new rule for the feed.
     ruleForFeed = feed.id;
     go({ kind: "settings", page: "rules" });
   }
