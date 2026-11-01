@@ -9,6 +9,8 @@ from mcp.shared.auth import OAuthClientMetadata
 
 BASE = "http://localhost:8090"
 PASSWORD = "quiet reading time"
+# Any made-up email: the first sign-in saves it as the owner's (decision 0116).
+EMAIL = "check@example.com"
 
 class Memory:
     def __init__(self): self.tokens = None; self.client = None
@@ -24,7 +26,7 @@ async def redirect_handler(url):
 
 async def callback_handler():
     async with httpx2.AsyncClient() as http:
-        r = await http.post(f"{BASE}/api/sign-in", json={"password": PASSWORD}, headers={"sec-fetch-site": "same-origin"})
+        r = await http.post(f"{BASE}/api/sign-in", json={"email": EMAIL, "password": PASSWORD}, headers={"sec-fetch-site": "same-origin"})
         cookie = r.headers["set-cookie"].split(";")[0]
         query = "?" + urllib.parse.urlsplit(redirected["url"]).query
         shown = (await http.get(f"{BASE}/api/oauth/request{query}", headers={"cookie": cookie})).json()
