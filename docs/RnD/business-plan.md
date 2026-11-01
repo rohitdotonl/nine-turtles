@@ -531,6 +531,13 @@ every device.
   they've got. Keep it. It's the "nothing is taken away" trust argument,
   and it costs almost nothing.
 
+**Rohit's call (1 November 2026):** dollars with Dodo's automatic regional
+(PPP) prices; the yearly price shown first; no supporter price (no
+donations); a 30-day free trial with no card; after a trial or plan,
+nothing is deleted and feeds are checked once a day for three months;
+pausing instead of cancelling, if Dodo allows it. The amounts are still
+open. The build work is in `docs/PLAN.md` → "Later".
+
 **Conclusion:** _______________________________________________
 
 ---
