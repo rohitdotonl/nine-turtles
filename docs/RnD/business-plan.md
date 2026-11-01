@@ -129,9 +129,8 @@ question, start from that shelf, and trim here first if writing slips.
 
 - [`business-research.md`](../archive/rnd-2026-10/business-research.md): the summary, rivals,
   prices, the ranked shortlist.
-- [`playbook.html`](../archive/rnd-2026-10/playbook.html): the full report;
-  [`idea-bank.html`](../archive/rnd-2026-10/idea-bank.html): about 300 ideas.
-- [`research-2026-10/`](../archive/rnd-2026-10/research-2026-10/): 19 working notes with
+- [`playbook.html`](../archive/rnd-2026-10/playbook.html): the full report.
+- [`research-2026-10/`](../archive/rnd-2026-10/research-2026-10/): the remaining working notes with
   sources. The most useful here: 03 (pain points), 04 (rivals and
   positioning), 14 (Hacker News pain points), 19 (founder playbooks).
 - [`reader-comparison.html`](reader-comparison.html): Feedbin, Miniflux,
@@ -555,10 +554,9 @@ Rohit's plan leans on channels that compound and that run without him:
 - **Moments worth sharing,** for word of mouth.
 - Track sign-ups by channel; cut what doesn't work.
 
-**Already done:** [`playbook.html`](../archive/rnd-2026-10/playbook.html) (launch, lists, AI
-mentions), [`outreach.html`](../archive/rnd-2026-10/outreach.html) (newsletters, podcasts,
-bloggers, directories to approach), [`post-ideas.html`](../archive/rnd-2026-10/post-ideas.html)
-(57 blog posts).
+**Already done:** [`marketing.md`](marketing.md) holds the marketing
+proposal (1 November 2026, waiting on Rohit's calls) and everything still
+useful from the October research.
 
 **Claude says:**
 
