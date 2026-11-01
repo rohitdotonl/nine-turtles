@@ -26,11 +26,11 @@ October 2026; it is in the repository's history.*
 - **Payments, built in test mode** (26 October 2026, decision 0094). Each
   of these is a setting or a small change, and none blocks trying it:
   - **The price**, monthly and yearly (`NINE_TURTLES_PRICE_*`, and the
-    products in Dodo). Today: "Price to be decided".
-  - **The trial's length.** Today: 14 days, no card asked for to start.
-    Suggested: keep 14 days and no card (calm, nobody charged by surprise).
-  - **What ends with a plan.** Today: reading, stars, search and exports
-    stay; adding feeds stops and feeds are checked once a day. Stricter
-    (no new articles at all) or gentler (only a note) are both easy.
+    products in Dodo). Today: "Price to be decided". Decided so far (1
+    November 2026): in dollars, the yearly price shown first, Dodo's
+    automatic regional (PPP) prices, no supporter price. The amounts are
+    still open ($48 a year or $5 a month suggested).
+  - The trial's length and what ends with a plan were answered on 1
+    November 2026 (`docs/PLAN.md` → "Later").
   - **Readers from before payments** (your testers) stay free for good.
   - **The refund window** on the website's refunds page.
