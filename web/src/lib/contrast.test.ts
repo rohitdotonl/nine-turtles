@@ -303,9 +303,13 @@ describe.each(Object.entries(SELECTORS))("the %s theme's field focus ring", (nam
 // segment the page's; in a dark one each is the text color mixed into the
 // page, read from the theme's block in app.css.
 function darkShare(selector: string, name: string): number | undefined {
-  const start = css.indexOf(selector);
-  const block = css.slice(start, css.indexOf("}", start));
-  const found = block.match(new RegExp(`--${name}: color-mix\\(in srgb, var\\(--ink\\) (\\d+)%, var\\(--paper\\)\\);`));
+  const pattern = new RegExp(`--${name}: color-mix\\(in srgb, var\\(--ink\\) (\\d+)%, var\\(--paper\\)\\);`);
+  const block = (from: string) => {
+    const start = css.indexOf(from);
+    return css.slice(start, css.indexOf("}", start));
+  };
+  // A theme's night version takes it from its own block, or from the night block every theme shares (themes.css).
+  const found = block(selector).match(pattern) ?? (selector.includes('[data-mode="dark"]') ? block(':root[data-mode="dark"] {').match(pattern) : null);
   return found ? Number(found[1]) / 100 : undefined;
 }
 
@@ -367,8 +371,10 @@ describe.each(Object.entries(SELECTORS))(
     it("set the chosen side at 3 : 1 against the rest of the control, its words at 4.5 : 1", () => {
       if (dark) {
         // By night: a strong fill, the words in the page's color, and no edge.
-        const start = css.indexOf(selector);
-        const block = css.slice(start, css.indexOf("}", start));
+        // Its own block, or the night block every theme shares (themes.css).
+        const own = css.slice(css.indexOf(selector), css.indexOf("}", css.indexOf(selector)));
+        const shared = ':root[data-mode="dark"] {';
+        const block = own.includes("--chosen:") ? own : css.slice(css.indexOf(shared), css.indexOf("}", css.indexOf(shared)));
         expect(block).toContain("--chosen-ink: var(--paper);");
         expect(block).toContain("--chosen-edge: transparent;");
         const tile = mix(colors.ink!, colors.paper!, share(block, "chosen"));
@@ -426,7 +432,7 @@ describe.each(Object.entries(THEMES))("the %s theme's raised surface", (_name, c
   });
 });
 
-it("covers all six themes by day and by night", () => {
+it("covers every theme by day and by night", () => {
   expect(Object.keys(THEMES)).toHaveLength(THEME_NAMES.length * 2 + 1);
 });
 

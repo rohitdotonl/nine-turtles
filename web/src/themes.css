@@ -15,7 +15,8 @@
   list, the menus and popovers, and the note at the list's foot (decision
   0052). By day it's the page itself. By night it's a small lift above the
   page (#28282a), with a 1px edge of 8% white (--raised-edge) and grouped rows
-  inside it at 4% white over it (--raised-group). contrast.test.ts checks
+  inside it at 4% white over it (--raised-group); each theme sets its own
+  lift, and the shared night block below the rest. contrast.test.ts checks
   every text color on it.
 */
 
@@ -54,14 +55,6 @@
   --tint-list: #333333;
   --tint-sidebar: #3b3b3b;
   --surface-raised: #28282a;
-  --raised-edge: rgb(255 255 255 / 0.08);
-  --raised-group: color-mix(in srgb, #ffffff 4%, var(--surface-raised));
-  --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
-  --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
-  --chosen: color-mix(in srgb, var(--ink) 65%, var(--paper));
-  --chosen-ink: var(--paper);
-  --chosen-edge: transparent;
-  --scrim: rgb(0 0 0 / 0.45);
 }
 
 /*
@@ -108,14 +101,6 @@
   --surface-raised: #262626;
   --link: #9e9eff;
   --link-visited: #d0adf0;
-  --raised-edge: rgb(255 255 255 / 0.08);
-  --raised-group: color-mix(in srgb, #ffffff 4%, var(--surface-raised));
-  --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
-  --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
-  --chosen: color-mix(in srgb, var(--ink) 65%, var(--paper));
-  --chosen-ink: var(--paper);
-  --chosen-edge: transparent;
-  --scrim: rgb(0 0 0 / 0.45);
 }
 
 /*
@@ -148,7 +133,7 @@
   --list: #212122;
   --sidebar: #29292b;
   --ink: #ececea;
-  --ink-2: #e0e0dd;
+  --ink-2: #cbcbcb;
   --muted: #adadb0;
   --faint: #adadb0;
   --danger: #e8968a;
@@ -157,14 +142,6 @@
   --tint-list: #39393a;
   --tint-sidebar: #404042;
   --surface-raised: #2b2b2c;
-  --raised-edge: rgb(255 255 255 / 0.08);
-  --raised-group: color-mix(in srgb, #ffffff 4%, var(--surface-raised));
-  --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
-  --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
-  --chosen: color-mix(in srgb, var(--ink) 65%, var(--paper));
-  --chosen-ink: var(--paper);
-  --chosen-edge: transparent;
-  --scrim: rgb(0 0 0 / 0.45);
 }
 
 :root[data-theme="anodised"][data-mode="light"] {
@@ -190,7 +167,7 @@
   --list: #1f2328;
   --sidebar: #272c32;
   --ink: #e9edf2;
-  --ink-2: #dde2e8;
+  --ink-2: #c8ced6;
   --muted: #a9b2bc;
   --faint: #a9b2bc;
   --danger: #e8968a;
@@ -199,14 +176,6 @@
   --tint-list: #373b40;
   --tint-sidebar: #3e4349;
   --surface-raised: #292c30;
-  --raised-edge: rgb(255 255 255 / 0.08);
-  --raised-group: color-mix(in srgb, #ffffff 4%, var(--surface-raised));
-  --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
-  --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
-  --chosen: color-mix(in srgb, var(--ink) 65%, var(--paper));
-  --chosen-ink: var(--paper);
-  --chosen-edge: transparent;
-  --scrim: rgb(0 0 0 / 0.45);
 }
 
 :root[data-theme="fountain-pen"][data-mode="light"] {
@@ -232,7 +201,7 @@
   --list: #1c212b;
   --sidebar: #232937;
   --ink: #e6eaf3;
-  --ink-2: #dce1ec;
+  --ink-2: #c6cbd8;
   --muted: #a5adbe;
   --faint: #a5adbe;
   --danger: #e8968a;
@@ -241,14 +210,6 @@
   --tint-list: #343943;
   --tint-sidebar: #3a404e;
   --surface-raised: #272b33;
-  --raised-edge: rgb(255 255 255 / 0.08);
-  --raised-group: color-mix(in srgb, #ffffff 4%, var(--surface-raised));
-  --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
-  --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
-  --chosen: color-mix(in srgb, var(--ink) 65%, var(--paper));
-  --chosen-ink: var(--paper);
-  --chosen-edge: transparent;
-  --scrim: rgb(0 0 0 / 0.45);
 }
 
 :root[data-theme="heather"][data-mode="light"] {
@@ -274,7 +235,7 @@
   --list: #222127;
   --sidebar: #2a2830;
   --ink: #edebf1;
-  --ink-2: #e1dfe6;
+  --ink-2: #cecbd4;
   --muted: #afacb9;
   --faint: #afacb9;
   --danger: #e8968a;
@@ -283,14 +244,6 @@
   --tint-list: #3a393f;
   --tint-sidebar: #413f47;
   --surface-raised: #2c2b30;
-  --raised-edge: rgb(255 255 255 / 0.08);
-  --raised-group: color-mix(in srgb, #ffffff 4%, var(--surface-raised));
-  --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
-  --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
-  --chosen: color-mix(in srgb, var(--ink) 65%, var(--paper));
-  --chosen-ink: var(--paper);
-  --chosen-edge: transparent;
-  --scrim: rgb(0 0 0 / 0.45);
 }
 
 :root[data-theme="signal"][data-mode="light"] {
@@ -316,7 +269,7 @@
   --list: #1e1e1e;
   --sidebar: #262626;
   --ink: #eeeeee;
-  --ink-2: #e2e2e2;
+  --ink-2: #cccccc;
   --muted: #aaaaaa;
   --faint: #aaaaaa;
   --danger: #e8968a;
@@ -325,6 +278,15 @@
   --tint-list: #373737;
   --tint-sidebar: #3e3e3e;
   --surface-raised: #282828;
+}
+
+/*
+  Every theme's night version shares these: what floats over the page (a
+  small lift, a 1px edge of 8% white, grouped rows 4% whiter), a grouped
+  list's ground, a segmented control's chosen side and the dimming behind
+  a sheet.
+*/
+:root[data-mode="dark"] {
   --raised-edge: rgb(255 255 255 / 0.08);
   --raised-group: color-mix(in srgb, #ffffff 4%, var(--surface-raised));
   --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);

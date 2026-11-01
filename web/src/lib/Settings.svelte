@@ -718,7 +718,7 @@
               there, and then it lets you go.
             </p>
           </figure>
-          <!-- Original, or Plain: rohit.onl's bare look (decision 0063). -->
+          <!-- Original, Plain (rohit.onl's bare look, decision 0063) or one of the five Braun themes (decision 0136). -->
           <div class="inset-row setting has-control">
             <p id="theme-name" class="setting-name">Theme</p>
             <div role="group" aria-labelledby="theme-name" class="choices setting-control" style="--columns: 2">

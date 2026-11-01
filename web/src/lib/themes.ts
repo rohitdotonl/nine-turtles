@@ -1,7 +1,7 @@
 // The themes from DESIGN.md → "Themes": Original (decision 0056), Plain
 // (decision 0063) and five after Braun's colors, each with a day ("light") and a night ("dark") version. It is written to
 // <html data-theme="…"> and the version in use to data-mode (see
-// preferences.ts; app.css holds both versions' colors).
+// preferences.ts; themes.css holds both versions' colors).
 export const THEMES = ["original", "plain", "brushed", "anodised", "fountain-pen", "heather", "signal"] as const;
 
 export type Theme = (typeof THEMES)[number];
@@ -22,7 +22,7 @@ type Look = { page: string; side: string; ink: string };
 
 /**
  * Each theme's name, and per version its page, sidebar and text colors for
- * the browser's bar. contrast.test.ts checks they match app.css.
+ * the browser's bar. contrast.test.ts checks they match themes.css.
  */
 export const LOOKS: Record<Theme, { label: string } & Record<Mode, Look>> = {
   original: {
