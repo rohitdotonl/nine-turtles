@@ -18,47 +18,47 @@ export const APPEARANCES: { value: Appearance; label: string }[] = [
   { value: "auto", label: "Match device" },
 ];
 
-type Look = { page: string; side: string; ink: string };
+type Look = { page: string };
 
 /**
- * Each theme's name, and per version its page, sidebar and text colors for
+ * Each theme's name, and per version its page color for
  * the browser's bar. contrast.test.ts checks they match themes.css.
  */
 export const LOOKS: Record<Theme, { label: string } & Record<Mode, Look>> = {
   original: {
     label: "Original",
-    light: { page: "#ffffff", side: "#efeff1", ink: "#141414" },
-    dark: { page: "#121212", side: "#232323", ink: "#e8e8e8" },
+    light: { page: "#ffffff" },
+    dark: { page: "#121212" },
   },
   plain: {
     label: "Plain",
-    light: { page: "#ffffff", side: "#f5f5f5", ink: "#000000" },
-    dark: { page: "#121212", side: "#1c1c1c", ink: "#ffffff" },
+    light: { page: "#ffffff" },
+    dark: { page: "#121212" },
   },
   brushed: {
     label: "Brushed",
-    light: { page: "#fafaf9", side: "#e6e6e3", ink: "#18181a" },
-    dark: { page: "#1b1b1c", side: "#29292b", ink: "#ececea" },
+    light: { page: "#fafaf9" },
+    dark: { page: "#1b1b1c" },
   },
   anodised: {
     label: "Anodised",
-    light: { page: "#f8f9fa", side: "#e3e7eb", ink: "#141a21" },
-    dark: { page: "#191c20", side: "#272c32", ink: "#e9edf2" },
+    light: { page: "#f8f9fa" },
+    dark: { page: "#191c20" },
   },
   "fountain-pen": {
     label: "Fountain pen",
-    light: { page: "#fafaf8", side: "#e6e6e1", ink: "#152039" },
-    dark: { page: "#171b24", side: "#232937", ink: "#e6eaf3" },
+    light: { page: "#fafaf8" },
+    dark: { page: "#171b24" },
   },
   heather: {
     label: "Heather",
-    light: { page: "#faf9fb", side: "#e6e4eb", ink: "#1b1a21" },
-    dark: { page: "#1c1b20", side: "#2a2830", ink: "#edebf1" },
+    light: { page: "#faf9fb" },
+    dark: { page: "#1c1b20" },
   },
   signal: {
     label: "Signal",
-    light: { page: "#ffffff", side: "#ebebea", ink: "#111111" },
-    dark: { page: "#181818", side: "#262626", ink: "#eeeeee" },
+    light: { page: "#ffffff" },
+    dark: { page: "#181818" },
   },
 };
 

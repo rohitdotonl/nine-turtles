@@ -441,13 +441,9 @@ it("before nine turtles' script runs, a page is Original: by day, or by night on
   expect(theme(":root,")).toEqual(THEMES["original light"]);
 });
 
-it("each theme's tile in Settings uses its own page, sidebar and text colors, by day and by night", () => {
+it("each theme's page color in themes.ts matches themes.css, by day and by night", () => {
   for (const name of THEME_NAMES) {
-    for (const mode of MODES) {
-      const colors = THEMES[`${name} ${mode}`]!;
-      const look = LOOKS[name][mode];
-      expect([look.page, look.side, look.ink], `${name} ${mode}`).toEqual([colors.paper, colors.sidebar, colors.ink]);
-    }
+    for (const mode of MODES) expect(LOOKS[name][mode].page, `${name} ${mode}`).toBe(THEMES[`${name} ${mode}`]!.paper);
   }
 });
 
