@@ -92,10 +92,11 @@ finished, `docs/PLAN.md` drops it into `docs/archive/plan-done.md`.
 - **Respect the publisher:** show only what the feed contains (never scrape), always credit and link the original, fetch politely, share the publisher's link, play media in the publisher's player; an audio file the feed names plays from the publisher's own address in a simple player (decision 0113).
 - **Never lose the reader's data or put them at risk:** always sanitize feed content, no secrets in code or GitHub, nothing deletes without undo, back up before any database structure change (nine turtles does this itself, decision 0076), and any change that could lose data is raised with the owner first. The owner chose three exceptions to undo, each backed by the nightly backups: unsubscribing and the yearly clean-up (both keep starred and collected articles), and deleting one's own account or all of one's data (which removes everything, decisions 0088 and 0117). Details: `docs/ENGINEERING.md` → "The floor".
 
-Ranked principles below the floors (higher wins; decision 0133). Design:
-nothing pulls › the writer comes first › clear at a glance › honest by
-default › made by a person › instant and still › power is findable, never
-in the way › built to last. A principle is broken only on purpose, with its
+Ranked principles below the floors (higher wins; decisions 0133, 0134).
+Design: nothing pulls › the writer comes first › clear at a glance ›
+forgiving › honest by default › cohesive › made by a person, to the last
+detail › instant and still › power is findable, never in the way › less,
+but better, and built to last. A principle is broken only on purpose, with its
 reason in DESIGN.md's Exceptions log.
 Engineering: the computer checks the work › boring and few › no vendor
 lock-in › fast by design › fail small, fail visibly › built to last ten
