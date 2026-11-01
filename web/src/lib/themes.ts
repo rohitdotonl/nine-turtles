@@ -1,8 +1,8 @@
-// The themes from DESIGN.md → "Themes": Original (decision 0056) and Plain
-// (decision 0063), each with a day ("light") and a night ("dark") version. It is written to
+// The themes from DESIGN.md → "Themes": Original (decision 0056), Plain
+// (decision 0063) and five after Braun's colors, each with a day ("light") and a night ("dark") version. It is written to
 // <html data-theme="…"> and the version in use to data-mode (see
 // preferences.ts; app.css holds both versions' colors).
-export const THEMES = ["original", "plain"] as const;
+export const THEMES = ["original", "plain", "brushed", "anodised", "fountain-pen", "heather", "signal"] as const;
 
 export type Theme = (typeof THEMES)[number];
 
@@ -34,6 +34,31 @@ export const LOOKS: Record<Theme, { label: string } & Record<Mode, Look>> = {
     label: "Plain",
     light: { page: "#ffffff", side: "#f5f5f5", ink: "#000000" },
     dark: { page: "#121212", side: "#1c1c1c", ink: "#ffffff" },
+  },
+  brushed: {
+    label: "Brushed",
+    light: { page: "#fafaf9", side: "#e6e6e3", ink: "#18181a" },
+    dark: { page: "#1b1b1c", side: "#29292b", ink: "#ececea" },
+  },
+  anodised: {
+    label: "Anodised",
+    light: { page: "#f8f9fa", side: "#e3e7eb", ink: "#141a21" },
+    dark: { page: "#191c20", side: "#272c32", ink: "#e9edf2" },
+  },
+  "fountain-pen": {
+    label: "Fountain pen",
+    light: { page: "#fafaf8", side: "#e6e6e1", ink: "#152039" },
+    dark: { page: "#171b24", side: "#232937", ink: "#e6eaf3" },
+  },
+  heather: {
+    label: "Heather",
+    light: { page: "#faf9fb", side: "#e6e4eb", ink: "#1b1a21" },
+    dark: { page: "#1c1b20", side: "#2a2830", ink: "#edebf1" },
+  },
+  signal: {
+    label: "Signal",
+    light: { page: "#ffffff", side: "#ebebea", ink: "#111111" },
+    dark: { page: "#181818", side: "#262626", ink: "#eeeeee" },
   },
 };
 
