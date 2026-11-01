@@ -9,7 +9,7 @@ tell the owner which ones and how.
 A quiet, single-user reader for writing on the open web (RSS, Atom, JSON
 Feed). Finite, calm and quiet: the opposite of social media.
 Its name is **nine turtles**, always lowercase (renamed from slowfeed in October 2026, decisions 0056 and 0058). The program is `nine-turtles`, its settings `NINE_TURTLES_*`, the database `nine-turtles.sqlite` and the repository `rohitdotonl/nine-turtles`. The old name is gone from the code (decision 0124); nothing reads `SLOWFEED_*` settings, the old database file, cookie or saved preferences any more. The Render service and its address (slowfeed.onrender.com) and disk (`slowfeed-data`) keep the old name on purpose: renaming them gains nothing a reader sees, and the address is one other services rely on.
-**Tiebreaker:** does this make nine turtles feel more like a book, or more like a feed?
+**Tiebreaker:** the book question is retired (decision 0132). A new one is being tested in UI and UX trials before it's adopted (candidate: "a letter from someone, or a feed from something?"); until then, decide by the floors and the principles.
 **Design reference:** no outside app any more. Apple Books was dropped on 1 November 2026; nine turtles is getting its own design principles and design language, being written with the owner. Until then: the floors, then `docs/DESIGN.md` as it stands (DESIGN.md → "Design reference", decision 0131).
 
 ## Project facts
@@ -37,6 +37,7 @@ Its name is **nine turtles**, always lowercase (renamed from slowfeed in October
 8. **Never touch the live app or its data without telling the owner first.**
 9. **If unsure, ask instead of guessing.**
 10. **If a request conflicts with a principle, stop and say which one,** even when it's the owner's request.
+11. **Design comes first** (decision 0132): design is the most important thing in nine turtles. Be proactive about design: bring up anything broken or a better design you notice, even outside the ask. For design, UI and UX decisions, ask the owner whether to work locally on their Mac, where trying things is quicker, and offer choices, a safe one and a bold one, within the principles. Accessibility is never traded: if an idea conflicts with it, find another way.
 
 ### How a change happens
 
