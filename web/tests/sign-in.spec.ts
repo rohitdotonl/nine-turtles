@@ -139,7 +139,7 @@ test("while signing in, the button says it's busy and a second press sends nothi
   expect(requests).toBe(1);
 });
 
-test("sign in with the keyboard, stay signed in, sign out", async ({ page, isMobile }) => {
+test("sign in with the keyboard, stay signed in, sign out", async ({ page }) => {
   await page.goto("/");
   await appReady(page);
   // The email field has the keyboard's place: the email, then Tab on to the password.
