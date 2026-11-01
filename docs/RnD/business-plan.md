@@ -159,9 +159,9 @@ What the research already found:
 
 **Rohit's to-do:**
 
-- [ ] Read Reddit yourself (it blocked our researchers): r/rss,
-      r/digitalminimalism, r/nosurf, r/kobo. Copy real readers' sentences
-      into a "their words" list.
+- [x] Read Reddit yourself (it blocked our researchers): r/rss. Copy real
+      readers' sentences into a "their words" list. Done 1 November 2026:
+      [`research-notes-2026-11.md`](research-notes-2026-11.md).
 - [ ] Write the shortlist: two or three positionings, each as *who +
       problem + why nine turtles*.
 - [ ] **Use the best apps yourself** (added 30 October 2026), strictly
@@ -200,9 +200,9 @@ asks for a card, cancel it the same day so you aren't charged.
      price. (Easiest to reach right now, but they compare features, and
      most of them are not the ideal reader.)
 - **Weigh whose comments you read.** r/rss is full of power users, who are
-  loud online but not your ideal reader. Your ideal reader is more likely
-  to be on r/digitalminimalism and r/nosurf, in newsletter comments, and in
-  Cal Newport's world. Count their words for more.
+  loud online but not your ideal reader. Your ideal reader writes on the
+  small web (Bear Blog, Mataroa, Pika, blogrolls); count their words for
+  more.
 
 **Conclusion:** _______________________________________________
 
@@ -394,13 +394,12 @@ talking as it can get:
 
 ## 4. Ideal reader + positioning + channel (decided together)
 
-**Status:** 🟡 the ideal reader was agreed on 25 October.
+**Status:** 🟡 the ideal reader was changed on 1 November.
 
-**Already done:** [`ideal-reader.md`](ideal-reader.md): people who drifted
-away from reading because of social media and want to come back; who read
-Cal Newport and James Clear; who already pay for Readwise, Notion or a
-Kindle. Reach them through r/digitalminimalism, focus podcasts and
-newsletters in that world. The positioning ideas are in
+**Already done:** [`ideal-reader.md`](ideal-reader.md): people who write
+on the small web, the kind who pay for Bear Blog, Mataroa or Pika, and
+read other people's blogs closely. Reach them on their own blogs, blogrolls
+and the small-web places they gather. The positioning ideas are in
 [`strategy-notes.md`](strategy-notes.md) → "Positioning" (own the word
 *finished*; the enemy is the endless feed, never a company).
 
@@ -414,7 +413,7 @@ newsletters in that world. The positioning ideas are in
 
 - **Pick one channel you can work every week,** not five. For this reader,
   my order: (1) your own writing, an essay series on rohit.onl and the blog;
-  (2) small newsletters in the Newport/Clear world (the $500 test, or a
+  (2) small newsletters about the indie web (the $500 test, or a
   free year swapped for a mention); (3) being named on "best RSS reader"
   lists and by AI assistants. Search pays off in year two.
 - **Being the face (Rohit, 30 October 2026: yes, like Herman for Bear
