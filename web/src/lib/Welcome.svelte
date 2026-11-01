@@ -56,7 +56,7 @@
     -->
     <AddFeed bind:field feeds={[]} {onAdded} {onOpen} {start}>
       {#snippet alternative()}
-        <ImportOpml link={BRING} bind:lines={importLines} onImported={(lines) => onImported(lines.join(" "))} />
+        <ImportOpml link={BRING} bind:lines={importLines} onImported={(lines, added) => added > 0 && onImported(lines.join(" "))} />
         <div role="status" class={["flex flex-col gap-1 text-small text-ink-2", importLines.length === 0 && "sr-only"]}>
           {#each importLines as line, index (index)}<p>{line}</p>{/each}
         </div>

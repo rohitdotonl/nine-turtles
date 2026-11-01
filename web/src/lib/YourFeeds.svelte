@@ -155,14 +155,14 @@
   async function move(event: SubmitEvent) {
     event.preventDefault();
     if (busy) return;
-    const going = picked();
-    const before = going.map((feed) => ({ id: feed.id, folders: [...feed.folders] }));
-    const folder = destination === "none" || destination === "new" ? null : Number(destination);
-    const naming = destination === "new" ? newFolder.trim() : "";
     if (!destination) {
       moveProblem = "Choose where they go first.";
       return;
     }
+    const going = picked();
+    const before = going.map((feed) => ({ id: feed.id, folders: [...feed.folders] }));
+    const folder = destination === "none" || destination === "new" ? null : Number(destination);
+    const naming = destination === "new" ? newFolder.trim() : "";
     if (destination === "new" && !naming) {
       moveProblem = "Give the new folder a name.";
       return;

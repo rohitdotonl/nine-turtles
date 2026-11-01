@@ -15,8 +15,8 @@
     lines = $bindable([]),
     link,
   }: {
-    /** Something was imported; `lines` say what. */
-    onImported: (lines: string[]) => void;
+    /** A list was read; `lines` say what came of it, and `added` how many feeds came in. */
+    onImported: (lines: string[], added: number) => void;
     lines?: string[];
     /** In the welcome: only the way in, as a text link with these words (no Settings rows, no Export). */
     link?: string;
@@ -38,7 +38,7 @@
       return;
     }
     lines = importMessage(result);
-    onImported(lines);
+    onImported(lines, result.added);
   }
 </script>
 

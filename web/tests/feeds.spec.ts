@@ -84,6 +84,14 @@ test("a fresh nine turtles shows the welcome in the reading area: the paste fiel
   await choose(page, "not a list");
   await expect(reading.getByRole("status").filter({ hasText: "OPML" })).toHaveText("That file doesn't look like an OPML file.");
   await expect(page).toHaveURL(/\/unread$/);
+  // A list that brings no one in says so in the same place; the welcome and the keyboard's place stay.
+  const again = page.waitForEvent("filechooser");
+  await importLink.press("Enter");
+  await again;
+  await choose(page, `<?xml version="1.0"?><opml version="2.0"><body><outline text="Empty"/></body></opml>`);
+  await expect(reading.getByRole("status").filter({ hasText: "No new" })).toHaveText("No new feeds were added.");
+  await expect(importLink).toBeFocused();
+  await expect(reading.getByRole("heading", { level: 2, name: "A quiet place to read." })).toBeVisible();
   await expect(sidebar(page).getByRole("link", { name: "Add feed" })).toBeVisible();
 });
 
