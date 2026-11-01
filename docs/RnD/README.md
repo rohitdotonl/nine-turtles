@@ -20,6 +20,11 @@ idea here that changes the app needs the owner's yes first.
   readers' pains in their own words, feature ideas, marketing ideas and
   questions to look into.
 
+## Design principles (draft, from 1 November 2026)
+
+- [`design-principles.md`](design-principles.md): the principles being
+  discussed with Rohit to replace DESIGN.md Part 1's, and what's still open.
+
 ## The ideal reader (changed 1 November 2026)
 
 - [`ideal-reader.md`](ideal-reader.md): who nine turtles is for (people who write on the small web), where to

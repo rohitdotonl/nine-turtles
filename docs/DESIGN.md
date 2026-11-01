@@ -2,13 +2,13 @@
 
 > **nine turtles is a quiet place to read the web: it shows you what's there, gets out of the way, and lets you finish.**
 
-*Last updated: 1 November 2026 (Apple Books dropped as the design reference, decision 0131; before that, 28 October: the article list's titles in the reading serif with more room around each row, decision 0128; less chrome: space instead of lines between the list's rows, spaced capitals for the sidebar's section names, folders' arrows at their rows' right end, a rule written as a sentence and a quieter Aa panel, decision 0123; simpler sign-in pages with names above their fields, a small Forgot? beside Password and the passkey as a quieter button, decision 0122; a shorter Settings, with a page of its own for each less everyday group, an icon on each row and a clearer hierarchy of names and descriptions, decision 0120; fixes from a design review, decision 0118: the chosen side of a segmented control held to 3 : 1, no ring on a title, Skip to articles, the podcast player's skip figures, Recently read's day headings, the search suggestions floating and the feed health page's cards; "Wrong turn?", the 404 page, and the footer's turtles moved to About, decision 0102; newsletters as feeds, decision 0091, with each email "opened" on arrival; starter feeds in the first-visit welcome, decision 0079; a logo of nine turtles, decision 0067; a second theme, Plain, with blue article links, and System serif, decision 0063; Apple Books as the design reference, decision 0059). Each change is recorded in `docs/decisions/`.*
+*Last updated: 1 November 2026 (design first, the book tiebreaker retired, a warmer voice with "I" from Rohit and never "we", honesty as a public promise, easter eggs found and never shown, and "no decoration that pretends", decision 0132; Apple Books dropped as the design reference, decision 0131; before that, 28 October: the article list's titles in the reading serif with more room around each row, decision 0128; less chrome: space instead of lines between the list's rows, spaced capitals for the sidebar's section names, folders' arrows at their rows' right end, a rule written as a sentence and a quieter Aa panel, decision 0123; simpler sign-in pages with names above their fields, a small Forgot? beside Password and the passkey as a quieter button, decision 0122; a shorter Settings, with a page of its own for each less everyday group, an icon on each row and a clearer hierarchy of names and descriptions, decision 0120; fixes from a design review, decision 0118: the chosen side of a segmented control held to 3 : 1, no ring on a title, Skip to articles, the podcast player's skip figures, Recently read's day headings, the search suggestions floating and the feed health page's cards; "Wrong turn?", the 404 page, and the footer's turtles moved to About, decision 0102; newsletters as feeds, decision 0091, with each email "opened" on arrival; starter feeds in the first-visit welcome, decision 0079; a logo of nine turtles, decision 0067; a second theme, Plain, with blue article links, and System serif, decision 0063; Apple Books as the design reference, decision 0059). Each change is recorded in `docs/decisions/`.*
 
 ## Mission
 
 Help people leave social media and return to reading the open web. Social media is **infinite, urgent and attention-grabbing**; nine turtles is **finite, calm and quiet**.
 
-**Tiebreaker for every decision:** *does this make nine turtles feel more like a book, or more like a feed?*
+**Tiebreaker:** the book question ("more like a book, or more like a feed?") was retired by the owner on 1 November 2026 (decision 0132). A new one will be tested in UI and UX trials before it's adopted; the candidate is *"does this feel like a letter from someone, or a feed from something?"* Until then, decide by the floors and the principles.
 
 ## What nine turtles is, and isn't
 
@@ -26,7 +26,9 @@ Help people leave social media and return to reading the open web. Social media 
 
 ## Design reference: our own design language (being written)
 
-On 1 November 2026 the owner dropped Apple Books as the design reference (decision 0131, replacing decision 0059). nine turtles will have **its own design principles and design language**, with design as a first-class part of the product; the aim is design good enough that people cite nine turtles as an example, as they cite Linear. The new principles are being written with the owner and will replace this section.
+On 1 November 2026 the owner dropped Apple Books as the design reference (decision 0131, replacing decision 0059). nine turtles will have **its own design principles and design language**, with design as a first-class part of the product; the aim is design good enough that people cite nine turtles as an example, as they cite Linear. The new principles are being written with the owner and will replace this section; the draft under discussion is in [`RnD/design-principles.md`](RnD/design-principles.md) and changes nothing until the owner settles it.
+
+**Design comes first** (decision 0132): design is the most important thing in nine turtles. Agents are proactive about it and bring up broken or better design even outside the task at hand; design, UI and UX decisions are tried in mockups, a safe and a bold choice each, preferably running locally on the owner's Mac. Words alone don't settle a look.
 
 - **Until then:** the floors first, always; then the rest of this document as it stands. The current look (much of it first modelled on Apple Books) stays until the new language replaces it; don't change things only to come closer to Apple Books, and don't start redesign work without the owner.
 - **What's fixed:** only the three-pane structure (sidebar, list, page; one at a time on a phone), until the new language says otherwise.
@@ -42,7 +44,7 @@ Every decision in Part 2 traces back to these. Reason from them rather than deba
 
 ### The first floor: everyone can read here
 
-No amount of calm or minimalism justifies text some people can't read.
+No amount of calm or minimalism justifies text some people can't read. Everything else in this document may change; this never does. When a design idea conflicts with it, we find another way to do the idea (the owner, 1 November 2026).
 
 - **Contrast:** WCAG AA minimum everywhere; aim for AAA in article text. This includes muted text (read items, counts, source names).
 - **Never color alone:** every state also has a non-color signal (a bar, a weight, a word).
@@ -101,7 +103,7 @@ The 500-feed user gets everything; the 30-feed user never sees the machinery.
 
 #### 7. Respect: for the reader and for time
 - **The reader:** their data is theirs (OPML import and export, starred export); they're free to leave.
-- **Time:** nothing that looks dated next year. No trends, no glass, no decoration.
+- **Time:** nothing that looks dated next year. No trends, no glass, no decoration that pretends.
 - **Test:** would this still feel right in ten years?
 
 (Respect for the publisher is the second floor, above all of these.)
@@ -145,7 +147,7 @@ The 500-feed user gets everything; the 30-feed user never sees the machinery.
 - Branded share buttons for specific platforms
 - Full-article scraping from publishers' websites
 - Rearranging what people have learned, once the look settles (see principle 5)
-- Decoration that does no job: glass, blur, gradients, motion for delight; shadows except under things that float, as Apple draws them (see Visual language → Rules). The article's bars are solid, never see-through (decision 0040)
+- Decoration that pretends: glass, blur, gradients, fake depth, motion for delight; shadows except under things that float, as Apple draws them (see Visual language → Rules). The article's bars are solid, never see-through (decision 0040). Honest, handmade touches, such as a still drawing or a signature, are welcome at the edges, never in the reading pane (decision 0132)
 
 ---
 
@@ -287,7 +289,34 @@ Each screen (layout, sidebar, list, article, search, Settings, phones, keyboard,
 
 ### Voice
 
-Plain, unhurried, never urgent: "Nothing new yet," never "You're missing out!" Labels say what things are and do. No exclamation marks, no hype.
+nine turtles speaks like **a friend who writes well: plain, warm, a little dry, never selling.** Unhurried and never urgent ("Nothing new yet," never "You're missing out!"). It treats the reader as an adult: helpful and careful, never talking down. Labels say what things are and do, and text with a job (a password hint, an error) stays plainly functional. No exclamation marks, no hype. "Calm" and "quiet" are true of nine turtles but aren't its brand: every reader says them (decision 0132).
+
+- **Who speaks:** "I" when Rohit speaks (the website, emails, About, the 404 page, the pricing page). Never "we": nine turtles is one person with no investors. Where "I" would be awkward, no pronoun at all; the app itself speaks without one ("Nothing new yet.").
+- **Every email and every line of copy is a chance to win the reader over,** so each gets real time and care.
+
+| Instead of | Say |
+|---|---|
+| "Welcome to nine turtles! Let's get started" | "Hello. Who would you like to read?" |
+| "You're all caught up!" | "That's everything for now." |
+| "Upgrade to Pro to unlock" | "This part is for paying readers. Here's why it costs money." |
+| "We're sorry to see you go" | "Done. Your account is paused; nothing's deleted. Thanks for reading." |
+| "Our team is working on it" | "I'm on it. — Rohit" |
+
+### Honest by default: a public promise
+
+Said plainly on the website, never preached: honesty is how nine turtles behaves, not its selling point (decision 0132).
+
+- Leaving is as easy as joining: pause or cancel in one place, one press, no survey you must fill in.
+- Yes and no look the same weight. No pre-ticked boxes, no "No thanks, I like paying more."
+- No fake urgency: no countdowns, no "only today", no "3 people are viewing this".
+- The price, the trial and what happens when it ends are on one screen, before you start; prices adjusted by country are said plainly.
+- Export everything, notes too, in one press, any time, even after you stop paying.
+- What's measured is listed in plain words, and it's only what tells us something broke.
+- A public page of what changed, in Rohit's words, mistakes included.
+
+### Easter eggs: found, never shown
+
+A few small surprises, for the reader who looks (decision 0132): still (words or a still drawing, never animation or sound), never in the reading pane or between the reader and an article, never a pop-up and never a reward for using the app more, always readable by a screen reader and never the only way to do something, and rare. Text with a job stays functional; a joke never makes an instruction less clear. The 404 page already is one and stays as it is.
 
 ---
 
