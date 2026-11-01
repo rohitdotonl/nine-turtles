@@ -33,35 +33,7 @@ Hold one long session to answer, in writing:
 
 ## 2. Positioning
 
-Shaped by the brainstorm, and by Derek Sivers and Rory Sutherland.
-
-- **Lead with "a reader that ends",** name the audience as people tired of
-  social media, and use "get newsletters out of your inbox" as the first
-  step in.
-- **Own one word: finished.** "Calm" belongs to the Calm app, "quiet" to a
-  dozen wellness products, "slow" sounds late. "Finished" is free, true of
-  nine turtles, and the opposite of what the reader is tired of.
-- **Name the problem before the product,** as HEY named "email is broken"
-  and Kagi named "you are not the product". Candidates: *unread debt*,
-  *feed fatigue*. Terry Godier (Current) calls unread counts "a measure of
-  social debt"; credit him if we echo him.
-- **Make the enemy a behaviour, never a company.** HEY's enemy was the way
-  Gmail works; Glass's was likes and algorithms. Ours is the feed that never
-  ends.
-- **"No AI between you and the writer."** A clear line, and a page:
-  nine turtles never summarises, rewrites or ranks what writers wrote.
-- **Tentative home-page copy:** "A reader that ends. The writers you chose,
-  in one quiet place. When you've read what's there, you're done."
-- **Add to the website:** "Behind the scenes it uses RSS, the open standard
-  writers have used for 25 years, so nobody can take your subscriptions
-  away."
-- **Anti-marketing that's on brand,** like Patagonia's "Don't buy this
-  jacket": a "Who shouldn't buy nine turtles" page. It builds trust and
-  cuts refunds.
-- **Use real people's words.** Before writing final copy, collect real lines
-  from real readers (Reddit, forums, interviews) and use their wording.
-- **Not sure yet:** whether "finished" beats "calm" or "quiet" with real
-  people. It's reasoning, not evidence, until I've talked to readers.
+Replaced on 1 November 2026: see [`positioning.md`](positioning.md).
 
 ## 3. Pricing
 
@@ -245,7 +217,7 @@ don't have.
 | **Feedbin** | Solo, honest, paid, open source; powers several apps. | The most respected peer. Compete on feeling and design, not on features. Admire it in public. |
 | **NetNewsWire, Reeder** | Excellent, Apple only. | Not enemies: nine turtles already syncs with them. Be their calm home base. |
 | **Artemis** | Free, invite-only hobby project; refreshes once a day. | Shows the same instinct; too small to worry about. |
-| **Micro.blog's reader** (Manton Reece) | Manton wrote in February 2026 that he's building a feed reader whose items "fade", like Current. | Calm reading is becoming a small movement. Be its friendliest member: write to Manton, and keep "finished, not faded" as the difference. |
+| **Micro.blog's reader** (Manton Reece) | Manton wrote in February 2026 that he's building a feed reader whose items "fade", like Current. | Calm reading is becoming a small movement. Be its friendliest member: write to Manton, and keep "people you write back to" as the difference. |
 
 Sources: [TechCrunch](https://www.techcrunch.com/2026/02/19/current-is-a-new-rss-reader-thats-more-like-a-river-than-an-inbox/),
 [Current](https://terrygodier.com/current),
