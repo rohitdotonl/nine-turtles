@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { bookmarklet, firstWebAddress, sharedAddress, shortcutAddress } from "./share";
 
 describe("a shared link's address", () => {
@@ -43,42 +43,5 @@ describe("the ways in from elsewhere", () => {
       "javascript:location.href='https://app.nineturtles.app/add-feed?url='+encodeURIComponent(location.href)",
     );
     expect(shortcutAddress("http://localhost:8080")).toBe("http://localhost:8080/add-feed?url=");
-  });
-});
-
-describe("looking at a shared page", () => {
-  /** A fetch that answers with `body` and `status`, and remembers what it was asked and how. */
-  function server(body: unknown, status = 200) {
-    const asked: { path: string; method: string }[] = [];
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (path: string, init?: RequestInit) => {
-        asked.push({ path, method: init?.method ?? "GET" });
-        return new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
-      }),
-    );
-    return asked;
-  }
-  async function load() {
-    vi.resetModules();
-    return import("./feeds");
-  }
-  afterEach(() => vi.unstubAllGlobals());
-
-  it("only looks (a GET to the finder), never follows", async () => {
-    const asked = server({ feeds: [{ title: "A blog", url: "https://example.com/feed" }], preview: null });
-    const { findFeeds } = await load();
-    expect(await findFeeds("https://example.com/a b")).toEqual({
-      kind: "found",
-      choices: [{ title: "A blog", url: "https://example.com/feed" }],
-    });
-    expect(asked).toEqual([{ path: "/api/find-feeds?address=https%3A%2F%2Fexample.com%2Fa%20b", method: "GET" }]);
-  });
-
-  it("says the finder's problems in Add feed's words, and keeps quiet when it's busy", async () => {
-    server({ error: "no-feed" }, 422);
-    expect(await (await load()).findFeeds("example.com")).toEqual({ kind: "problem", reason: "no-feed" });
-    server({ error: "site-busy" }, 429);
-    expect(await (await load()).findFeeds("example.com")).toEqual({ kind: "quiet" });
   });
 });

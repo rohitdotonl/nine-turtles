@@ -18,8 +18,8 @@
 - Every tap target is at least 44 pixels.
 - Can be added to the home screen on iPhone and Android; it then opens full-screen with its own icon: nine small turtles seen from the side, three rows of three with the middle row a little to the right, dark on white (decision 0067). The same turtles mark the browser tab, on white by day and on near-black by night.
 - Without a connection, the app still opens: signed in, with the articles kept on the device for reading offline (section 32); on a device that keeps none, it says plainly that nine turtles can't be reached. The service worker keeps a copy of the app itself and its fonts, never of your articles: those are the app's own copies.
-- **Sharing a page to nine turtles** (decision 0104; what happens next is in section 3, "Adding from anywhere"):
-  - **Android:** once nine turtles is on the home screen, share any page and choose **nine turtles**. Add a feed opens with its address and looks for its feed; press Add feed to follow it.
+- **Sharing a page to nine turtles** (decisions 0104 and 0132; what happens next is in section 3, "Adding from anywhere"):
+  - **Android:** once nine turtles is on the home screen, share any page and choose **nine turtles**. nine turtles asks "Follow <name>?"; press Follow.
   - **iPhone and iPad:** Safari doesn't let home-screen web apps appear in the share sheet (Apple doesn't support web share targets), so make a shortcut once in Apple's **Shortcuts** app:
     1. Open Shortcuts, tap **+** for a new shortcut, and name it **Add to nine turtles**.
     2. Tap the shortcut's settings (the **ⓘ** or the name at the top) and turn on **Show in Share Sheet**. Under the types it receives, keep only **URLs** and **Safari web pages**.

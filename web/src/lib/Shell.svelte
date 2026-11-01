@@ -16,6 +16,7 @@
   import PaneResizer from "./PaneResizer.svelte";
   import { onMount, tick, untrack } from "svelte";
   import AddFeed from "./AddFeed.svelte";
+  import FollowPerson from "./FollowPerson.svelte";
   import ArticleView from "./ArticleView.svelte";
   import CheatSheet from "./CheatSheet.svelte";
   import EditFeed from "./EditFeed.svelte";
@@ -53,6 +54,7 @@
   import { device } from "./appearance.svelte";
   import { nameFor, parentOf, parse, pathFor, titleFor, type Route } from "./router";
   import { sharedAddress } from "./share";
+  import { followTitle } from "./follow";
   import { scopeFor, searchParams, searchedTerms } from "./search";
   import { sameQuery, type SavedSearch } from "./saved";
   import type { Collection, CollectionChange } from "./collections";
@@ -106,13 +108,10 @@
   let route: Route = $state(start);
   /** Where Escape and "Close settings" go back to: the last list you were on. */
   let lastPlace: Route = $state(isList(start) ? start : { kind: "view", view: homeView(untrack(() => settings.mode)) });
-  /**
-   * A page shared to nine turtles (a share menu, a Shortcuts shortcut or a bookmark opening
-   * /add-feed?url=…, decision 0104): Add a feed opens with its address and looks at it. Read
-   * before the address bar is tidied to plain /add-feed; used for that one opening only: Add a
-   * feed hands it back (onShared) as soon as it has filled the field, and leaving the place clears it too.
-   */
+  /** A page shared here (/add-feed?url=…, decisions 0104, 0132), read before the address is tidied, for
+   * "Follow this person?" (`sharedName`: who it's by); leaving clears it, so Add a feed opens empty after. */
   let shared = $state(parsed.kind === "add-feed" ? sharedAddress(location.search) : "");
+  let sharedName = $state("");
   $effect(() => {
     if (route.kind !== "add-feed") untrack(() => (shared = ""));
   });
@@ -292,9 +291,7 @@
   let listFound = $state("");
   /** Add a feed or "New to feeds?" is open (the `task` snippet draws them), and its title. */
   let tasking = $derived(route.kind === "add-feed" || (route.kind === "new-to-feeds" && firstVisit));
-  let taskTitle = $derived(route.kind === "add-feed" ? "Add a feed" : "New to feeds?");
-  /** The line above the add field, in the sheet and on the phone's page. */
-  const ADD_INTRO = "nine turtles finds the feed on any website you like, and lists its articles.";
+  let taskTitle = $derived(route.kind === "add-feed" ? (shared ? followTitle(sharedName) : "Add a feed") : "New to feeds?");
   /** The list's heading (`listHeading.ts`). */
   let headingText = $derived(headingFor({ under, placeName, missing, results: searching.shown?.scope, names: library.names }));
 
@@ -1454,7 +1451,7 @@
 {#if sheet && tasking}
   <!-- Keyed so one task following the other opens a fresh sheet: the keyboard lands again and no form state lingers. -->
   {#key route.kind}
-    <Sheet title={taskTitle} bind:heading={headings.sheet} onClose={closePage} initial={route.kind === "add-feed" ? () => headings.add : undefined}>
+    <Sheet title={taskTitle} bind:heading={headings.sheet} onClose={closePage} initial={route.kind === "add-feed" && !shared ? () => headings.add : undefined}>
       {@render task(true)}
     </Sheet>
   {/key}
@@ -1465,9 +1462,11 @@
 <!-- Add a feed and "New to feeds?", drawn once for both places: a sheet over the screen, or on a phone a page in the list's place. -->
 {#snippet task(inSheet: boolean)}
   {@const onCancel = inSheet ? closePage : undefined}
-  {#if route.kind === "add-feed"}
-    <p>{ADD_INTRO}</p>
-    <AddFeed bind:field={headings.add} feeds={library.feeds ?? []} onAdded={added} onOpen={openFeed} {onCancel} page={!inSheet} {shared} onShared={() => (shared = "")} />
+  {#if route.kind === "add-feed" && shared}
+    <FollowPerson address={shared} bind:name={sharedName} onFollowed={added} onOpen={openFeed} {onCancel} page={!inSheet} />
+  {:else if route.kind === "add-feed"}
+    <p>nine turtles finds the feed on any website you like, and lists its articles.</p>
+    <AddFeed bind:field={headings.add} feeds={library.feeds ?? []} onAdded={added} onOpen={openFeed} {onCancel} page={!inSheet} />
   {:else}
     <StarterFeeds onAdded={startersAdded} {onCancel} page={!inSheet} />
   {/if}
