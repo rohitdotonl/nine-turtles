@@ -63,8 +63,8 @@
   let message = $state("");
   let undo: (() => Promise<void>) | undefined = $state();
   let moving = $state(false);
-  /** In the Move sheet: "none" for no folder, "new" for a new one, or a folder's number. */
-  let destination = $state("none");
+  /** Where Move to… sends them: "none" (no folder), a folder's number, "new", or "" until one is chosen, so Move never strips folders by default. */
+  let destination = $state("");
   let newFolder = $state("");
   /** Why the Move sheet couldn't move them, in its own words. */
   let moveProblem = $state("");
@@ -140,7 +140,7 @@
 
   function openMove() {
     if (picked().length === 0) return;
-    destination = "none";
+    destination = "";
     newFolder = "";
     moveProblem = "";
     moving = true;
@@ -159,6 +159,10 @@
     const before = going.map((feed) => ({ id: feed.id, folders: [...feed.folders] }));
     const folder = destination === "none" || destination === "new" ? null : Number(destination);
     const naming = destination === "new" ? newFolder.trim() : "";
+    if (!destination) {
+      moveProblem = "Choose where they go first.";
+      return;
+    }
     if (destination === "new" && !naming) {
       moveProblem = "Give the new folder a name.";
       return;
