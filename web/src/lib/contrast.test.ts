@@ -86,7 +86,7 @@ describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
 
   // The five Braun themes' accent is a bright signal color, drawn only as the
   // unread dot and a search's faint tone, never as text, so it's held to the
-  // 3 : 1 for marks below instead (awaiting the owner's yes, 1 November 2026).
+  // 3 : 1 for marks below instead (the owner's choice, 1 November 2026).
   it.runIf(!BRAUN.some((name) => _name.startsWith(name)))("has the accent at AAA (7 : 1) on the reading area", () => {
     expect(contrast(colors.accent!, colors.paper!)).toBeGreaterThanOrEqual(7);
   });
