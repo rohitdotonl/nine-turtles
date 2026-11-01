@@ -186,25 +186,9 @@ feature you like goes to the daily list, not into launch. Most of these
 are free or have a free trial; Current costs about $10 once. Where a trial
 asks for a card, cancel it the same day so you aren't charged.
 
-**Claude says:**
-
-- **Here's a shortlist to start from** (edit freely):
-  1. *People tired of social media who want to read again.* Problem: the
-     endless feed. Why us: a reader that ends. (The research's first
-     choice.)
-  2. *Newsletter readers drowning in their inbox.* Problem: unread
-     newsletters pile up as guilt. Why us: newsletters as a calm list you
-     finish. (A sharper, easier problem to name; also a way in for 1.)
-  3. *RSS users leaving Feedly, Inoreader or Reddit.* Problem: their
-     reader got loud, expensive or full of AI. Why us: calm, no AI, fair
-     price. (Easiest to reach right now, but they compare features, and
-     most of them are not the ideal reader.)
-- **Weigh whose comments you read.** r/rss is full of power users, who are
-  loud online but not your ideal reader. Your ideal reader writes on the
-  small web (Bear Blog, Mataroa, Pika, blogrolls); count their words for
-  more.
-
-**Conclusion:** _______________________________________________
+**Conclusion (1 November 2026):** a reader for the small web, for people who
+want the people worth knowing instead of social media; see
+[`positioning.md`](positioning.md).
 
 ---
 
@@ -336,8 +320,8 @@ Plus one early warning, not a target: **is the core loop healthy?**
   - **C. Weeks in a row:** how many of the last 4 weeks a reader read
     something. Better at warning early, but harder to explain.
 
-  Claude's suggestion: **B** if the positioning is "a reader that ends",
-  otherwise **A**. Either is counted as a number for everyone together,
+  Claude's suggestion: **A**, now that the positioning is "read people,
+  write back" rather than "a reader that ends". Either is counted as a number for everyone together,
   never per person.
 
 **Rohit's call (30 October 2026):** the core-loop measure is parked until positioning is chosen; don't spend time on it before then.
@@ -384,11 +368,12 @@ talking as it can get:
   annoys you) and keep the answers in one file. After 20 replies you'll
   have the interviews you couldn't do before launch.
 - **Test the home-page line in public, cheaply.** Post the same idea with
-  two framings on your own social accounts or blog ("a reader that ends"
-  against "your newsletters, out of your inbox") and see which one people
+  two framings on your own social accounts or blog and see which one people
   repeat back to you.
 
-**Conclusion:** _______________________________________________
+**Conclusion (1 November 2026):** "The good part of the internet, in one
+quiet place", explained as "Read people. Write back."; no A/B tests until
+the website has the visitors for them ([`positioning.md`](positioning.md)).
 
 ---
 
@@ -399,9 +384,8 @@ talking as it can get:
 **Already done:** [`ideal-reader.md`](ideal-reader.md): people who write
 on the small web, the kind who pay for Bear Blog, Mataroa or Pika, and
 read other people's blogs closely. Reach them on their own blogs, blogrolls
-and the small-web places they gather. The positioning ideas are in
-[`strategy-notes.md`](strategy-notes.md) → "Positioning" (own the word
-*finished*; the enemy is the endless feed, never a company).
+and the small-web places they gather. The positioning is in [`positioning.md`](positioning.md) (decided
+1 November).
 
 **Rohit's to-do:**
 
