@@ -555,7 +555,7 @@ Rohit's plan leans on channels that compound and that run without him:
 - Track sign-ups by channel; cut what doesn't work.
 
 **Already done:** [`marketing.md`](marketing.md) holds the marketing
-proposal (1 November 2026, waiting on Rohit's calls) and everything still
+plan (decided 1 November 2026) and everything still
 useful from the October research.
 
 **Claude says:**

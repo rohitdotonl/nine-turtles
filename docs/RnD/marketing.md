@@ -2,51 +2,52 @@
 
 How nine turtles finds its readers. Started with Rohit on 1 November 2026,
 building on [`positioning.md`](positioning.md) and
-[`ideal-reader.md`](ideal-reader.md). Nothing here is decided until it
-says "Rohit's call". This is the one place for marketing: it replaces the
+[`ideal-reader.md`](ideal-reader.md). The plan below is decided; the rest is
+material to draw on. This is the one place for marketing: it replaces the
 marketing parts of the October research (deleted 1 November) and of
 [`strategy-notes.md`](strategy-notes.md).
 
-## The proposal (1 November 2026, waiting on Rohit)
+## The plan (decided 1 November 2026)
 
-Claude's proposal, with eight calls for Rohit at the end, is in the Claude
-Doc "Marketing: a proposal to argue with"
-(https://claude.ai/artifact/BD72V6WxPZ3QaEHg9dVjFB). In short:
+Rohit, 1 November: "I trust your judgment." So Claude's proposal is the
+plan. The longer reasoning is in the Claude Doc "Marketing: a proposal to
+argue with" (https://claude.ai/artifact/BD72V6WxPZ3QaEHg9dVjFB).
 
-- **Market by doing what the app helps with, in public:** read people and
-  write back. Rohit's blog (rohit.onl) is the main channel.
-- **Write back to about five small-web writers a week,** about their post,
-  never pitching the app.
-- **"How I read the web" interviews** as the series other people share.
-- **A warmer [aboutfeeds.com](https://aboutfeeds.com/):** "how to follow
-  the people you like", with a link bloggers can put on their own sites.
-- **Dropped:** the power-user guide as cornerstone, a site about RSS
-  tools, a series of comparison pages, free tools for now, r/rss as a
-  channel, SEO how-to guides, Product Hunt.
-- **Launch by gates, not a date:** warm up now; the first 100 by personal
-  invite; one public day built on one essay (Show HN on the side); then a
-  weekly habit. "Write to me" instead of a waitlist form.
+**The idea:** market nine turtles by doing in public what it helps people
+do: read people and write back. Rohit is the face; rohit.onl is the home.
 
-**Rohit's calls:** (none yet)
+**Now, before the design is done (no app needed):**
 
-## Worth raising before deciding
+1. **A weekly short post on rohit.onl:** what he read, who he wrote back
+   to, a feature he said no to and why.
+2. **Write back to five small-web writers a week,** about their post. The
+   app comes up only if they ask.
+3. **"How I read the web" interviews every two weeks:** five questions to
+   a small-web writer; the guest shares it with their readers.
+4. **Draft the essay** ("the good part of the internet is still there").
+   Keep a plain list of people who write back with interest.
 
-Points from the October research that push against the proposal:
+**After the essay: the following guide.** A warm page on how to follow
+the people you like on the web (a better aboutfeeds.com), with a small
+"How to follow me" link bloggers can put on their sites. It's the part
+that compounds, answering Rohit's earlier wish for marketing that keeps
+working.
 
-- **Invites without theatre.** The founder research warns against
-  "exclusive waitlists" and invite queues. Invites must be personal and
-  real, never scarcity.
-- **Compounding versus one by one.** On 25 October Rohit preferred
-  marketing that compounds (search, free tools) over talking to people one
-  by one. The proposal leans on one-to-one writing back.
-- **Comparison and "alternative" pages** are among the few pages still
-  winning clicks, and AlternativeTo's Feedly, Inoreader and Pocket pages
-  are what AI assistants cite. AlternativeTo takes no closed betas, so
-  listings wait for public sign-up. At least: list on AlternativeTo,
-  SaaSHub and Slant at launch.
-- **Free tools** are what survives AI answers (moderate evidence).
-- **Reddit:** weak vendor data links a Reddit presence with more ChatGPT
-  mentions. The only argument for it.
+**The launch, by gates, not a date:**
+
+1. When the new design and V1 are in: the first 100 by personal invite
+   (never scarcity or a queue), each welcomed by Rohit.
+2. When most still read after 4 weeks and price and Dodo are live: one
+   public day built on one essay. The same week: about 15 free listings
+   AI assistants read (AlternativeTo, SaaSHub, Slant), a plain facts page,
+   one honest "other readers" page, and Show HN on the side.
+3. Then the weekly habit, sign-ups by channel monthly, and a newsletter
+   test (Dense Discovery, or a free year for a mention).
+
+**Not doing:** Product Hunt, ads, a waitlist form (the site says "write to
+me"), X or Instagram, SEO how-to guides, a site about RSS tools, a series
+of comparison pages, free tools for now, r/rss as a channel, anything
+aimed at power users.
 
 ## Kept from the October research
 

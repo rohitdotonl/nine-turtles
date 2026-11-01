@@ -40,7 +40,7 @@ idea here that changes the app needs the owner's yes first.
 ## Marketing (started 1 November 2026)
 
 - [`marketing.md`](marketing.md): how nine turtles finds its readers. The
-  proposal waiting on Rohit's calls, points to raise, and everything still
+  plan (decided 1 November), points to keep in mind, and everything still
   useful from the October marketing research.
 
 ## The owner's strategy notes (26 October 2026)
