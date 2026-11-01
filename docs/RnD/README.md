@@ -20,6 +20,12 @@ idea here that changes the app needs the owner's yes first.
   readers' pains in their own words, feature ideas, marketing ideas and
   questions to look into.
 
+## Positioning (decided 1 November 2026)
+
+- [`positioning.md`](positioning.md): what nine turtles is called, the
+  home-page shape, who it competes with, and what we said no to. Replaces
+  every earlier positioning idea, including the draft in the research notes.
+
 ## Design principles (draft, from 1 November 2026)
 
 - [`design-principles.md`](design-principles.md): the principles being
