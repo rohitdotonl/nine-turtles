@@ -44,7 +44,7 @@ test("Edit moves several feeds to a new folder and unsubscribes from them, each 
   await expect(page.getByText("2 chosen")).toBeVisible();
   await page.getByRole("button", { name: "Move to…" }).click();
   const sheet = page.getByRole("dialog", { name: "Move 2 feeds" });
-  // Nothing is chosen at first, so Move never takes them out of their folders by default (decision 0136).
+  // Nothing is chosen at first, so Move never takes them out of their folders by default (decision 0137).
   await expect(sheet.getByRole("radio", { checked: true })).toHaveCount(0);
   await sheet.getByRole("button", { name: "Move" }).click();
   await expect(sheet.getByRole("status")).toHaveText("Choose where they go first.");

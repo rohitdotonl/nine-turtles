@@ -51,7 +51,7 @@
       screen's margin), as the other way in (decisions 0045, 0048): a link in the text color,
       underlined as the article's note links are, with no side padding so its words line up
       with the heading's, in a 44px-tall target (decision 0055). It opens the device's file
-      chooser at once (decision 0136); what came in is said on the list that follows, and a
+      chooser at once (decision 0137); what came in is said on the list that follows, and a
       file that brought nothing is said here, under it.
     -->
     <AddFeed bind:field feeds={[]} {onAdded} {onOpen} {start}>

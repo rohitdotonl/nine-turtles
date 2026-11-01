@@ -69,7 +69,7 @@ test("a fresh nine turtles shows the welcome in the reading area: the paste fiel
   await expect(field(page)).toHaveAttribute("placeholder", "Paste a website or feed URL");
   await expect(reading.locator("label[for='feed-address']")).toHaveClass(/sr-only/);
   // "Bring your list from another app…", an underlined link in the text color just under the field and
-  // centred under it, 44px tall to touch (decisions 0045, 0048, 0055), opens the file chooser at once (decision 0136).
+  // centred under it, 44px tall to touch (decisions 0045, 0048, 0055), opens the file chooser at once (decision 0137).
   const importLink = reading.getByRole("button", { name: "Bring your list from another app…" });
   const [fieldBox, importBox, addBox] = await Promise.all([field(page).boundingBox(), importLink.boundingBox(), reading.getByRole("button", { name: "Add feed" }).boundingBox()]);
   expect(importBox!.y - (fieldBox!.y + fieldBox!.height)).toBeLessThanOrEqual(12);
