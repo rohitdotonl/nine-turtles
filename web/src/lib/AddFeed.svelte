@@ -83,11 +83,17 @@
   /** Problems that aren't the address's fault (the site, the connection, nine turtles, the reader's plan): the field isn't marked. */
   const NOT_THE_ADDRESS = ["unreachable", "trouble", "too-many", "plan-ended", "offline"];
 
-  /** The address was changed after several feeds were offered: they belong to the old one, so they go, and Add feed looks again. */
+  /**
+   * The address was changed after several feeds were offered: they belong to the old one, so they go with
+   * everything said about them (a problem's red edge, "Go to …"), and Add feed looks again.
+   */
   function edited() {
     if (choices.length > 0 && address !== choicesFor) {
       choices = [];
       message = "";
+      problem = false;
+      badAddress = false;
+      alreadyId = undefined;
     }
   }
 

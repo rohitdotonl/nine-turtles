@@ -336,10 +336,19 @@ test("changing the address after a choice of feeds takes the old choices away", 
   await page.keyboard.press("Enter");
   const choices = page.getByRole("radiogroup", { name: "Feeds on this site" });
   await expect(choices).toBeVisible();
-  // They belong to the old address: typing another one clears them and their line, and Add feed looks again.
+  // The chosen feed fails for an address reason: the field is marked, and the choices stay to pick another.
+  await page.route("**/api/feeds", (route) =>
+    route.request().method() === "POST" ? route.fulfill({ status: 422, json: { error: "not-found" } }) : route.continue(),
+  );
+  await page.getByRole("button", { name: "Add feed", exact: true }).click();
+  await expect(page.locator("#feed-address-status")).toHaveText("Nothing was found at that address.");
+  await expect(field(page)).toHaveAttribute("aria-invalid", "true");
+  await page.unroute("**/api/feeds");
+  // They belong to the old address: typing another one clears them and all that was said, red edge included, and Add feed looks again.
   await field(page).fill(`${FEED_SITE}/plain/`);
   await expect(choices).toHaveCount(0);
   await expect(page.locator("#feed-address-status")).toHaveText("");
+  await expect(field(page)).not.toHaveAttribute("aria-invalid", "true");
   await page.keyboard.press("Enter");
   await expect(page.locator("#feed-address-status")).toHaveText("This site doesn't seem to offer a feed. Try the feed's own address, or the site's home page.");
 });

@@ -855,7 +855,7 @@
 {/if}
 
 <style>
-  /* Each segmented choice fills its control in even columns, never narrower than its own word (decision 0120). */
+  /* Each segmented choice shares its control evenly, but is never narrower than its own word (decision 0120). */
   .choices.setting-control {
     display: grid;
     grid-template-columns: repeat(var(--columns), minmax(min-content, 1fr));
