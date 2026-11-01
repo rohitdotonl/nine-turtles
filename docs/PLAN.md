@@ -26,6 +26,7 @@ until the owner says so.
 | Work | Status | Where it's described |
 |---|---|---|
 | Live payments, after Dodo approves the live site | ⏳ The owner applies once the site, price and legal pages are final | SPEC section 29, decision 0094, `docs/operations/dodo-application.md` |
+| Positioning, ideal reader, brand, design language and principles, V1 features, marketing and pricing plans | 🟡 Being worked out with the owner (1 November 2026); no building until they're settled | `docs/RnD/business-plan.md`, `docs/RnD/ideal-reader.md`, decision 0131 |
 | The open questions (privacy policy and terms, prices, trial) | ⏳ The owner's answers | [`planning/questions.md`](planning/questions.md) |
 
 ## Later: ideas the owner wants, not yet scheduled
@@ -40,6 +41,11 @@ here is planned yet; when one starts, it moves into the table above. (Other
   optional question at sign-up (a blog, a friend, a search, an AI
   assistant, Reddit, other), counted together in the owner report, never
   per reader. Needs a SPEC section before it's built.
+- **No unread counts** (1 November 2026, the owner's decision): remove the
+  numbers from the sidebar and folders entirely, and the Settings › Reading
+  row that hides them; the sidebar keeps a quiet sign that something is new,
+  a small dot with no number. Built in its own change with SPEC sections 5
+  and 18, ideally with the new design language.
 - **A browser extension** for adding feeds while browsing (27 October 2026,
   from the reader comparison). Until then, the bookmark in Settings › Add
   from anywhere does the same job on computers.
