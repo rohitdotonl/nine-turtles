@@ -38,11 +38,11 @@ ones to discuss, then the pricing ones last, with prices and launch.
 
 **Must** (promised by the headline "Read people. Write back."):
 
-1. **Person pages.** The sidebar stays as it is: a feed already is a
-   person. A person's page shows everything they wrote, newest first,
-   their site and the address to write back to. A person's blog,
-   newsletter and channel can be joined under one name (optional).
-   Still open: whether joined feeds show as one row in the sidebar.
+1. **People.** One name over everything a person publishes (their blog,
+   channel, newsletter), with a page of their own: everything they wrote,
+   newest first, their sites and the address to write back to. How a
+   person fits with feeds and folders in the sidebar is still being
+   discussed with the owner.
 2. **Write back.** A Write back button on every article opens the reader's
    own email app with the writer's address and "Re: the title" filled in.
    The address comes from a newsletter's sender or the feed itself; if
@@ -52,7 +52,8 @@ ones to discuss, then the pricing ones last, with prices and launch.
    and the Settings › Reading row that hides them; a small dot with no
    number says something is new. Built with the new design language
    (SPEC sections 5 and 18).
-4. **YouTube as a first-class citizen,** always through YouTube's own feeds
+4. **YouTube as a first-class citizen** (being discussed in its own
+   thread; this is the starting list), always through YouTube's own feeds
    and player, never scraping: follow any YouTube link (channel, handle,
    video, playlist); Shorts and live streams left out by default, each with
    a switch on the same screen; playlists as feeds; bringing your YouTube
