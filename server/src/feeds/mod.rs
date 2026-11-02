@@ -30,6 +30,7 @@ use crate::{
     AppState,
     auth::{SignedIn, database_problem},
     folders::{FOLDERS, Folder, MEMBERSHIPS},
+    writers::{PEOPLE, Writer},
 };
 
 pub fn routes() -> Router<AppState> {
@@ -65,6 +66,14 @@ struct FeedRow {
     /// "Last checked today at 14:20." (decision 0142). None for a newsletter,
     /// which is never checked: its emails arrive by themselves.
     checked_at: Option<i64>,
+    /// The person it's one place of, when the reader joined it to others
+    /// (`writers`); none for a place on its own.
+    person: Option<i64>,
+    /// What kind of place it is, for the person's page and their list's
+    /// labels (SPEC section 36): "blog", "video" or "newsletter".
+    place: String,
+    /// When the reader followed it, for the person's page's "Following since".
+    added_at: i64,
     /// The folders it's in, by number.
     #[sqlx(skip)]
     folders: Vec<i64>,
@@ -78,6 +87,9 @@ pub const FEEDS: &str = "SELECT feeds.id, subscriptions.title, feeds.site_url, s
         subscriptions.check_at_most, subscriptions.open_on_site, subscriptions.paused_at,
         CASE WHEN feeds.failures >= 2 THEN feeds.failing_since END AS failing_since,
         CASE WHEN feeds.url NOT LIKE 'newsletter:%' THEN feeds.fetched_at END AS checked_at,
+        subscriptions.writer_id AS person, subscriptions.added_at,
+        CASE WHEN feeds.url LIKE 'newsletter:%' THEN 'newsletter'
+             WHEN feeds.url LIKE '%youtube.com/feeds/%' THEN 'video' ELSE 'blog' END AS place,
         CASE WHEN subscriptions.river THEN 0 ELSE
             (SELECT COUNT(*) FROM entries WHERE entries.person_id = subscriptions.person_id
                  AND entries.feed_id = subscriptions.feed_id AND entries.read = 0)
@@ -86,10 +98,14 @@ pub const FEEDS: &str = "SELECT feeds.id, subscriptions.title, feeds.site_url, s
      WHERE subscriptions.person_id = ? AND subscriptions.unsubscribed_at IS NULL
      ORDER BY subscriptions.title COLLATE NOCASE, feeds.id";
 
+/// The sidebar's feeds, folders and people.
+type Sidebar = (Vec<FeedRow>, Vec<Folder>, Vec<Writer>);
+
 /// Every followed feed, alphabetically, with its unread count and folders,
-/// and every folder, alphabetically (SPEC section 5).
+/// every folder, alphabetically (SPEC section 5), and the people places
+/// were joined into (SPEC section 36).
 async fn list_feeds(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
-    let listed: Result<(Vec<FeedRow>, Vec<Folder>), sqlx::Error> = async {
+    let listed: Result<Sidebar, sqlx::Error> = async {
         let mut connection = state.db.acquire().await?;
         // One snapshot, so the feeds, folders and memberships agree.
         let mut transaction = sqlx::Connection::begin(&mut *connection).await?;
@@ -105,6 +121,10 @@ async fn list_feeds(SignedIn(person): SignedIn, State(state): State<AppState>) -
             .bind(person)
             .fetch_all(&mut *transaction)
             .await?;
+        let people: Vec<Writer> = sqlx::query_as(PEOPLE)
+            .bind(person)
+            .fetch_all(&mut *transaction)
+            .await?;
         transaction.commit().await?;
         let mut by_feed = std::collections::HashMap::<i64, Vec<i64>>::new();
         for (feed, folder) in memberships {
@@ -113,11 +133,13 @@ async fn list_feeds(SignedIn(person): SignedIn, State(state): State<AppState>) -
         for feed in &mut feeds {
             feed.folders = by_feed.remove(&feed.id).unwrap_or_default();
         }
-        Ok((feeds, folders))
+        Ok((feeds, folders, people))
     }
     .await;
     match listed {
-        Ok((feeds, folders)) => Json(json!({ "feeds": feeds, "folders": folders })).into_response(),
+        Ok((feeds, folders, people)) => {
+            Json(json!({ "feeds": feeds, "folders": folders, "people": people })).into_response()
+        }
         Err(error) => database_problem("listing feeds", &error),
     }
 }

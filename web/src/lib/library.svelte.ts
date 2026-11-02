@@ -11,7 +11,8 @@ import { createFolder, deleteFolder, listFeeds, refused, resubscribe, unsubscrib
 import { newestAnswer } from "./inorder";
 import { deleteSaved, listSaved, refusedSaving, saveSearch, type SavedSearch } from "./saved";
 import { byName as collectionOrder, deleteCollection, listCollections, makeCollection, refusedCollection, type Collection } from "./collections";
-import type { Feed, Folder, Library } from "./shapes";
+import { folderToPerson, personOf, putBack, rowFor, rowsOf } from "./people";
+import type { Feed, Folder, Library, Person } from "./shapes";
 
 /** A removal was made, with its line and Undo; or a sentence saying why it wasn't. */
 export type Removed = Notice | string;
@@ -21,6 +22,10 @@ export class LoadedLibrary {
   feeds: Feed[] | undefined = $state();
   /** Your folders, alphabetically. */
   folders: Folder[] = $state([]);
+  /** The people you joined places into (SPEC section 36). */
+  people: Person[] = $state([]);
+  /** The sidebar's rows, A to Z: one per person, a person's places as one (`people.ts` → `rowsOf`). */
+  rows: Feed[] | undefined = $derived(this.feeds && rowsOf(this.feeds, this.people));
   /** The feeds couldn't be loaded. */
   feedsFailed = $state(false);
   /** Your saved searches, alphabetically (SPEC section 14); `searchesLoaded` once the server answered. */
@@ -34,9 +39,15 @@ export class LoadedLibrary {
   /** The collections couldn't be loaded, so a collection's address can't be told from a deleted one. */
   collectionsFailed = $state(false);
 
-  /** Feeds, folders and collections together, as search and saved searches name them. */
+  /** People, folders and collections together, as search and saved searches name them: a person by their row. */
   get names(): Library {
-    return { feeds: this.feeds ?? [], folders: this.folders, collections: this.collections };
+    return { feeds: this.rows ?? [], folders: this.folders, collections: this.collections };
+  }
+
+  /** The place numbered `id` as the screen names it: under its person's name, if it has one. */
+  shownAs(feed: Feed | undefined): Feed | undefined {
+    const person = feed && personOf(feed, this.people);
+    return feed && person ? { ...feed, title: person.name } : feed;
   }
 
   /** Counts changed on this screen since the page loaded; see `loadFeeds`. */
@@ -64,6 +75,7 @@ export class LoadedLibrary {
         if (this.#countChanges === before || tries === 2) {
           this.feeds = loaded.feeds;
           this.folders = loaded.folders;
+          this.people = loaded.people ?? [];
           then?.();
           break;
         }
@@ -150,6 +162,32 @@ export class LoadedLibrary {
         await this.loadFeeds();
         if (searches.length > 0) await this.loadSearches();
         return undefined;
+      },
+    };
+  }
+
+  /**
+   * "This is one person" on a folder (SPEC section 36): its places become one person named as the
+   * folder was, and the folder goes. "… is one person now · Undo" puts the places back on their
+   * own and makes the folder again, with its rules and saved searches. Answers the place the
+   * person's row opens.
+   */
+  async folderToPerson(folder: Folder): Promise<(Notice & { lead: number }) | string> {
+    const inside = (this.feeds ?? []).filter((feed) => feed.folders.includes(folder.id)).map((feed) => feed.id);
+    const { refusal, before, rules, searches } = await folderToPerson(folder.id);
+    if (refusal) return refusal;
+    await this.loadFeeds();
+    const lead = rowFor(inside[0] ?? 0, this.rows ?? [])?.id ?? inside[0] ?? 0;
+    return {
+      lead,
+      message: `${folder.name} is one person now`,
+      undo: async () => {
+        const back = await putBack(before);
+        if (back) return back;
+        const refusal = await createFolder(folder.name, inside, rules, searches);
+        await this.loadFeeds();
+        if (searches.length > 0) await this.loadSearches();
+        return refusal ? refused(refusal, "folder") : undefined;
       },
     };
   }

@@ -7,7 +7,7 @@ import { keepLibrary, keptLibrary } from "./offline";
 import { getJson, isRecord, sendChange } from "./http";
 import { deviceJson, setDeviceText } from "./device";
 import { saved } from "./saving";
-import { toFeed, type Feed, type FeedSettings, type Folder, type Library } from "./shapes";
+import { toFeed, toPerson, type Feed, type FeedSettings, type Folder, type Library } from "./shapes";
 
 export type Choice = { title: string; url: string };
 
@@ -44,9 +44,11 @@ export async function listFeeds(): Promise<Library> {
   }
   const feeds = isRecord(body) && Array.isArray(body.feeds) ? body.feeds : [];
   const folders = isRecord(body) && Array.isArray(body.folders) ? body.folders : [];
+  const people = isRecord(body) && Array.isArray(body.people) ? body.people : [];
   const library = {
     feeds: feeds.filter(isRecord).map(toFeed),
     folders: folders.filter(isRecord).map((folder) => ({ id: Number(folder.id), name: String(folder.name ?? "") })),
+    people: people.filter(isRecord).map(toPerson),
   };
   keepLibrary(library);
   return library;

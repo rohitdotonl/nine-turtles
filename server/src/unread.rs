@@ -215,6 +215,16 @@ pub const fn read_past_sql(list: List, side: Side) -> &'static str {
         (List::Starred, Side::Newer) => read_past_query!("starred = 1", ">"),
         (List::Feed(_), Side::Older) => read_past_query!("feed_id = ?5 AND muted = 0", "<"),
         (List::Feed(_), Side::Newer) => read_past_query!("feed_id = ?5 AND muted = 0", ">"),
+        (List::Writer(_), Side::Older) => read_past_query!(
+            "muted = 0 AND feed_id IN (SELECT feed_id FROM subscriptions
+                 WHERE writer_id = ?5 AND person_id = ?1 AND unsubscribed_at IS NULL)",
+            "<"
+        ),
+        (List::Writer(_), Side::Newer) => read_past_query!(
+            "muted = 0 AND feed_id IN (SELECT feed_id FROM subscriptions
+                 WHERE writer_id = ?5 AND person_id = ?1 AND unsubscribed_at IS NULL)",
+            ">"
+        ),
         (List::Folder(_), Side::Older) => read_past_query!(
             "muted = 0 AND feed_id IN (SELECT feed_id FROM feed_folders
                  WHERE folder_id = (SELECT id FROM folders WHERE id = ?5 AND person_id = ?1))
@@ -302,12 +312,13 @@ pub async fn mark_past(
     place: (i64, i64),
     latest: i64,
 ) -> Result<Vec<i64>, sqlx::Error> {
+    let list = crate::writers::widen(db, person, list).await?;
     let mut question = sqlx::query_scalar(read_past_sql(list, side))
         .bind(person)
         .bind(latest)
         .bind(place.0)
         .bind(place.1);
-    if let List::Feed(id) | List::Folder(id) | List::Collection(id) = list {
+    if let List::Feed(id) | List::Folder(id) | List::Writer(id) | List::Collection(id) = list {
         question = question.bind(id);
     }
     question.fetch_all(db).await

@@ -429,7 +429,8 @@ pub async fn find(
     // outer one then fetches what the list shows for just those 51.
     // Only the reader's own entries are searched, with their marks.
     let mut query: QueryBuilder<Sqlite> = QueryBuilder::new(
-        "SELECT entries.article_id AS id, entries.feed_id, subscriptions.title AS feed_title,
+        "SELECT entries.article_id AS id, entries.feed_id,
+                COALESCE(writers.name, subscriptions.title) AS feed_title,
                 articles.title, articles.link, entries.sort_at AS at, entries.read,
                 entries.starred, entries.muted, articles.episode_url IS NOT NULL AS episode,
                 articles.episode_seconds, page.in_title, articles.content, articles.summary
@@ -473,8 +474,16 @@ pub async fn find(
         query.push_bind(words.clone());
     }
     if let Some(feed) = search.feed {
-        query.push(" AND entries.feed_id = ");
+        // A place of a person with others looks in all of theirs (SPEC section 36).
+        query.push(" AND entries.feed_id IN (SELECT feed_id FROM subscriptions WHERE person_id = ");
+        query.push_bind(person);
+        query.push(" AND (feed_id = ");
         query.push_bind(feed);
+        query.push(" OR writer_id = (SELECT writer_id FROM subscriptions WHERE person_id = ");
+        query.push_bind(person);
+        query.push(" AND feed_id = ");
+        query.push_bind(feed);
+        query.push(")))");
     } else if let Some(folder) = search.folder {
         query.push(
             " AND entries.feed_id IN (SELECT feed_id FROM feed_folders
@@ -551,7 +560,8 @@ pub async fn find(
         " AND entries.article_id = page.id
          CROSS JOIN articles ON articles.id = page.id
          CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
-             AND subscriptions.feed_id = entries.feed_id",
+             AND subscriptions.feed_id = entries.feed_id
+         LEFT JOIN writers ON writers.id = subscriptions.writer_id",
     );
     query.push(
         order

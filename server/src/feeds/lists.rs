@@ -31,6 +31,10 @@ pub enum List {
     Feed(i64),
     /// The articles of every feed in a folder, read or not.
     Folder(i64),
+    /// The articles of every place of a person with two or more (SPEC
+    /// section 36), read or not; asked for as one of their places' lists
+    /// (`writers::widen`).
+    Writer(i64),
     /// The articles on one of the reader's collections (`collections`),
     /// muted ones and those of feeds since left included, as in Starred.
     Collection(i64),
@@ -151,9 +155,12 @@ pub(super) async fn list_articles(
     // as new rather than missed.
     let latest: Result<i64, sqlx::Error> = sqlx::query_scalar(LATEST).fetch_one(&state.db).await;
     let listed = match (latest, list) {
-        (Ok(latest), Some(list)) => page(&state.db, person, list, query.order, after)
-            .await
-            .map(|listed| (latest, listed)),
+        (Ok(latest), Some(list)) => match crate::writers::widen(&state.db, person, list).await {
+            Ok(list) => page(&state.db, person, list, query.order, after)
+                .await
+                .map(|listed| (latest, listed)),
+            Err(error) => Err(error),
+        },
         // Up Next is one short page, in the reader's own order, whatever the sort.
         (Ok(latest), None) if matches!(query.view, View::Upnext) => {
             crate::podcasts::list(&state.db, person)
@@ -209,6 +216,10 @@ pub const fn new_sql(list: List) -> Option<&'static str> {
             "+entries.muted = 0 AND +entries.feed_id IN (SELECT feed_id FROM feed_folders
                   WHERE folder_id = (SELECT id FROM folders WHERE id = ? AND person_id = ?))"
         )),
+        List::Writer(_) => Some(new_query!(
+            "+entries.muted = 0 AND +entries.feed_id IN (SELECT feed_id FROM subscriptions
+                  WHERE writer_id = ? AND person_id = ?)"
+        )),
         // Nothing arrives starred, or on a collection.
         List::Starred | List::Collection(_) => None,
     }
@@ -238,14 +249,18 @@ pub(super) async fn new_articles(
     else {
         return Json(json!({ "new": false })).into_response();
     };
+    let list = match crate::writers::widen(&state.db, person, list).await {
+        Ok(list) => list,
+        Err(error) => return database_problem("looking for new articles", &error),
+    };
     let Some(sql) = new_sql(list) else {
         return Json(json!({ "new": false })).into_response();
     };
     let mut question = sqlx::query_scalar(sql).bind(person).bind(query.since);
-    if let List::Feed(id) | List::Folder(id) = list {
+    if let List::Feed(id) | List::Folder(id) | List::Writer(id) = list {
         question = question.bind(id);
     }
-    if let List::Folder(_) = list {
+    if let List::Folder(_) | List::Writer(_) = list {
         question = question.bind(person);
     }
     let found: Result<bool, sqlx::Error> = question.fetch_one(&state.db).await;
@@ -277,13 +292,14 @@ fn parse_cursor(text: &str) -> Option<(i64, i64)> {
 macro_rules! list_query {
     ($filter:literal, $past:literal, $order:literal) => {
         concat!(
-            "SELECT entries.article_id AS id, entries.feed_id, subscriptions.title AS feed_title,
+            "SELECT entries.article_id AS id, entries.feed_id, COALESCE(writers.name, subscriptions.title) AS feed_title,
                     articles.title, articles.link, entries.sort_at AS at,
                     entries.read, entries.starred, entries.muted,
                     articles.episode_url IS NOT NULL AS episode, articles.episode_seconds
              FROM entries CROSS JOIN articles ON articles.id = entries.article_id
                  CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
                      AND subscriptions.feed_id = entries.feed_id
+                 LEFT JOIN writers ON writers.id = subscriptions.writer_id
              WHERE entries.person_id = ? AND ",
             $filter,
             " (entries.sort_at, entries.article_id) ",
@@ -308,7 +324,7 @@ macro_rules! list_query {
 macro_rules! collection_query {
     ($past:literal, $order:literal) => {
         concat!(
-            "SELECT entries.article_id AS id, entries.feed_id, subscriptions.title AS feed_title,
+            "SELECT entries.article_id AS id, entries.feed_id, COALESCE(writers.name, subscriptions.title) AS feed_title,
                     articles.title, articles.link, entries.sort_at AS at,
                     entries.read, entries.starred, entries.muted,
                     articles.episode_url IS NOT NULL AS episode, articles.episode_seconds
@@ -318,6 +334,7 @@ macro_rules! collection_query {
                  CROSS JOIN articles ON articles.id = entries.article_id
                  CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
                      AND subscriptions.feed_id = entries.feed_id
+                 LEFT JOIN writers ON writers.id = subscriptions.writer_id
              WHERE +collection_articles.person_id = ? AND collection_articles.collection_id = ?
                  AND (entries.sort_at, entries.article_id) ",
             $past,
@@ -381,6 +398,20 @@ pub const fn list_sql(list: List, order: Order) -> &'static str {
             ">",
             "ASC"
         ),
+        (List::Writer(_), Order::Newest) => list_query!(
+            "+entries.feed_id IN (SELECT feed_id FROM subscriptions
+                  WHERE writer_id = ? AND person_id = ?)
+                 AND entries.muted = 0 AND subscriptions.unsubscribed_at IS NULL AND",
+            "<",
+            "DESC"
+        ),
+        (List::Writer(_), Order::Oldest) => list_query!(
+            "+entries.feed_id IN (SELECT feed_id FROM subscriptions
+                  WHERE writer_id = ? AND person_id = ?)
+                 AND entries.muted = 0 AND subscriptions.unsubscribed_at IS NULL AND",
+            ">",
+            "ASC"
+        ),
         (List::Collection(_), Order::Newest) => collection_query!("<", "DESC"),
         (List::Collection(_), Order::Oldest) => collection_query!(">", "ASC"),
     }
@@ -402,10 +433,10 @@ pub async fn page(
     };
     let (after_at, after_id) = after.unwrap_or(start);
     let mut query = sqlx::query_as(list_sql(list, order)).bind(person);
-    if let List::Feed(id) | List::Folder(id) | List::Collection(id) = list {
+    if let List::Feed(id) | List::Folder(id) | List::Writer(id) | List::Collection(id) = list {
         query = query.bind(id);
     }
-    if let List::Folder(_) = list {
+    if let List::Folder(_) | List::Writer(_) = list {
         query = query.bind(person);
     }
     let mut rows: Vec<ArticleRow> = query

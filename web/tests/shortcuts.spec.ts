@@ -209,7 +209,7 @@ test.describe("on a wide window", () => {
     await page.request.post(new URL(`/api/feeds/${feed}`, FEEDS_APP).href, { data: { title: `Blog ${blog}`, folders: [], new_folder: folder } });
     await page.reload();
     await appReady(page);
-    const toggle = sidebar(page).getByRole("button", { name: `Feeds in ${folder}` });
+    const toggle = sidebar(page).getByRole("button", { name: `People in ${folder}` });
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
 
     // In the feed: e unfolds its folder, and folds it again.
@@ -220,7 +220,7 @@ test.describe("on a wide window", () => {
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
     // Shift+E edits the feed; Escape goes back.
     await page.keyboard.press("Shift+E");
-    await expect(page.getByRole("heading", { level: 2, name: "Edit feed" })).toBeFocused();
+    await expect(page.getByRole("heading", { level: 2, name: "Edit person" })).toBeFocused();
     await page.keyboard.press("Escape");
     await expect(page.getByRole("heading", { level: 2, name: `Blog ${blog}` })).toBeVisible();
 

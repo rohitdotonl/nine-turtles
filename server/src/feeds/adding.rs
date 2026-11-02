@@ -290,6 +290,14 @@ async fn follow(
         paused_at: None,
         failing_since: None,
         checked_at: Some(now),
+        person: None,
+        place: if fetched.lasting_url.as_str().contains("youtube.com/feeds/") {
+            "video"
+        } else {
+            "blog"
+        }
+        .to_owned(),
+        added_at: now,
         folders: Vec::new(),
     })
 }

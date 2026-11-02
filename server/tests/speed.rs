@@ -168,11 +168,12 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
         (List::Starred, "entries_starred"),
         (List::Feed(250), "entries_newest_by_feed"),
         (List::Folder(1), "entries_newest"),
+        (List::Writer(1), "entries_newest"),
     ] {
         for order in [Order::Newest, Order::Oldest] {
             let mut binds = match list {
                 List::Feed(id) => vec![READER, id],
-                List::Folder(id) => vec![READER, id, READER],
+                List::Folder(id) | List::Writer(id) => vec![READER, id, READER],
                 _ => vec![READER],
             };
             binds.extend([i64::MAX, i64::MAX, 51]);
@@ -220,11 +221,14 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
         List::Starred,
         List::Feed(250),
         List::Folder(1),
+        List::Writer(1),
         List::Collection(1),
     ] {
         for side in [Side::Older, Side::Newer] {
             let mut binds = vec![READER, i64::MAX, NOW - YEAR / 52, i64::MAX];
-            if let List::Feed(id) | List::Folder(id) | List::Collection(id) = list {
+            if let List::Feed(id) | List::Folder(id) | List::Writer(id) | List::Collection(id) =
+                list
+            {
                 binds.push(id);
             }
             let plan = plan(&db, read_past_sql(list, side), &binds).await;

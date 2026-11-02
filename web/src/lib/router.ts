@@ -150,7 +150,7 @@ export function nameFor(route: Route, placeName?: string): string {
     case "folder":
       return placeName || "Folder";
     case "edit-feed":
-      return "Edit feed";
+      return "Edit person";
     case "edit-folder":
       return "Edit folder";
     case "search":

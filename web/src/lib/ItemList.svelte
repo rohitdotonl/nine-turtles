@@ -37,7 +37,8 @@
   import { onMount, tick, untrack } from "svelte";
   import type { Article, Source } from "./shapes";
   import type { Order } from "./reading";
-  import { plainSourceName, type Notice } from "./feeds";
+  import type { Notice } from "./feeds";
+  import { sourceOf, type OneSource } from "./people";
   import { catchUp as catchUpOnServer, caughtUpMessage, endOfList, listArticles, markedAllMessage, newItemsMessage, newItemsWaiting, nothingPastMessage, noteOpened, readPast, uncatchUp } from "./lists";
   import { markRead, markStarred } from "./saving";
   import { prefetch } from "./articles";
@@ -85,8 +86,8 @@
     onCounts?: () => void;
     /** These are search results: say how many, and there's nothing new to fetch. */
     results?: boolean;
-    /** Every article here is from one feed (its own list), so the rows don't repeat its name. */
-    oneFeed?: boolean;
+    /** One person's list: rows don't repeat their name, or say which place each is from (`people.ts` → `sourceOf`). */
+    oneFeed?: OneSource;
     /** River mode (SPEC section 10): every row looks the same, read or not; read state is still recorded. */
     river?: boolean;
     /** Feeds set to flow past in Edit feed (SPEC section 15): their rows look as in river mode. */
@@ -797,13 +798,12 @@
             >
           {/if}
           <!--
-            Always one line, as Apple Books' rows are (decision 0048): a long source name ends in "…",
-            and the time and the star never wrap below it. The "·" hugs the "…" (decision 0051). The whole line
+            Always one line (decision 0048): a long source name ends in "…", the time and star never wrap. The "·" hugs the "…" (decision 0051). The whole line
             is 12px, so the title leads: the time a step fainter than muted grey, the publisher's name in muted grey
             (.row-feed, decision 0123) so the credit reads first; on the selected row both are muted grey (AA).
           -->
           <span class={["row-meta mt-2 text-[0.75rem] tracking-[0.06em]", current ? "text-muted" : "text-[color:var(--faint)]"]}>
-            <span class={oneFeed ? "sr-only" : "row-feed"}><span class="row-feed-name" use:hugEllipsis={plainSourceName(article.feedTitle)}>{plainSourceName(article.feedTitle)}</span>&nbsp;·</span>
+            <span class={oneFeed === true ? "sr-only" : "row-feed"}><span class="row-feed-name" use:hugEllipsis={sourceOf(article, oneFeed)}>{sourceOf(article, oneFeed)}</span>&nbsp;·</span>
             <time datetime={new Date(article.at * 1000).toISOString()} class="row-date">{when(article.at)}</time>
             {#if article.episode}
               <!-- A podcast's episode (SPEC section 35): a small headphones mark in the line's own ink, and its length. -->

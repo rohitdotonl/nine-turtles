@@ -61,7 +61,7 @@ test.describe("on a phone", () => {
     expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
     await more.click();
     await expect(page.getByRole("menuitem", { name: "Refresh" })).toBeVisible();
-    await expect(page.getByRole("menuitem", { name: "Edit feed" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "Edit person" })).toBeVisible();
     await more.click();
     await expect(page.getByRole("menu")).toHaveCount(0);
 
@@ -262,10 +262,10 @@ test.describe("on a phone", () => {
     await openHome(page);
     await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
     await list(page).getByRole("button", { name: "More", exact: true }).click();
-    await page.getByRole("menuitem", { name: "Edit feed" }).click();
+    await page.getByRole("menuitem", { name: "Edit person" }).click();
     // The phone sheet's one build (decision 0052): an X beside the title and no Cancel; its first
     // field starts 20px under the top line, as Settings' first group does.
-    const heading = page.getByRole("heading", { level: 2, name: "Edit feed" });
+    const heading = page.getByRole("heading", { level: 2, name: "Edit person" });
     await expect(heading).toBeVisible();
     await expect(page.getByRole("button", { name: "Cancel" })).toHaveCount(0);
     const bar = (await page.locator(".pane-bar").filter({ has: heading }).boundingBox())!;
@@ -373,7 +373,7 @@ test.describe("on a phone", () => {
     await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
     await appReady(page);
     await page.getByRole("button", { name: "More", exact: true }).click();
-    await page.getByRole("menuitem", { name: "Edit feed" }).click();
+    await page.getByRole("menuitem", { name: "Edit person" }).click();
     await page.getByLabel("New folder").fill(folder);
     await page.getByRole("button", { name: "Save" }).click();
     await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeVisible();
@@ -383,7 +383,7 @@ test.describe("on a phone", () => {
     const folderLink = sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) });
     await expect(folderLink).toBeVisible();
     // One chevron per row: no show-or-hide arrow, so the folder's feeds are simply there (decision 0043).
-    await expect(sidebar(page).getByRole("button", { name: `Feeds in ${folder}` })).toHaveCount(0);
+    await expect(sidebar(page).getByRole("button", { name: `People in ${folder}` })).toHaveCount(0);
     await expect(sidebar(page).locator("[aria-expanded]")).toHaveCount(0);
     const feedLink = sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${name}`) });
     await expect(feedLink).toBeVisible();

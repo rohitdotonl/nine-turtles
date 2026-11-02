@@ -100,6 +100,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Sync service and the Google Reader API
 - MCP (Model Context Protocol) and AI assistants
 - Newsletters as feeds
+- People and places (a person's blog, channel and newsletter as one)
 - Raw email (RFC 5322 and MIME)
 - Mailing list headers (`List-Id`, `List-Unsubscribe`)
 - One-click unsubscribe (RFC 8058)

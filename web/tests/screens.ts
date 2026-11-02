@@ -178,7 +178,7 @@ export const SCREENS: Screen[] = [
       const id = await follow(page, shelf("garden-letters"));
       await page.goto(new URL(`/feeds/${id}/edit`, page.url()).href);
       await appReady(page);
-      await expect(page.getByRole("heading", { level: 2, name: "Edit feed" })).toBeVisible();
+      await expect(page.getByRole("heading", { level: 2, name: "Edit person" })).toBeVisible();
     },
   },
   {

@@ -64,6 +64,7 @@ pub mod subscriptions;
 pub mod tidy;
 pub mod unread;
 pub mod websub;
+pub mod writers;
 
 use std::sync::{
     Arc,
@@ -240,6 +241,7 @@ pub fn router(state: AppState) -> Router {
         .merge(status::routes())
         .merge(owner_report::routes())
         .merge(websub::routes())
+        .merge(writers::routes())
         .merge(newsletters::routes())
         .merge(assets::routes())
         .with_state(state);
