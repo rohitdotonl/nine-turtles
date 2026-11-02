@@ -49,8 +49,8 @@ what's live.
   | Signal | violet `#6953A0` | `#B8A8EE` |
 
 - **The dot is never green or red** (green and red are the colors most often confused). (Live)
-- **The star** is drawn in the theme's own ink: filled when starred, an outline when not. Green retires. (Being built)
-- **Delete and errors** are oxblood, `#8C2F39` by day and `#E39AA4` by night, always with words that say what. (Being built; a brighter red is live.)
+- **The star** is drawn in the theme's own ink: filled when starred, an outline when not. Green retired. (Live, decision 0143)
+- **Delete and errors** are oxblood, `#8C2F39` by day and `#E39AA4` by night, always with words that say what. (Live, decision 0143)
 - **No brand color outside the app.** The website, icons and share picture use ink only: near-black `#141414` and light `#EFEFF1`. The reader's theme color is theirs, not the brand's. (Being built)
 - **No more colors.** A new feature uses ink strengths, the greys, the one accent and oxblood. Tags and folders get names, never colors. (Live)
 

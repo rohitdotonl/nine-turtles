@@ -948,7 +948,7 @@
   }
   .row-star {
     display: flex;
-    /* Green, as a filled star is (decision 0057); the shape says it too. */
-    color: var(--star);
+    /* The theme's ink, as every star is (decision 0143); the filled shape says it. */
+    color: var(--ink);
   }
 </style>
