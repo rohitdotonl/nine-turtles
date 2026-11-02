@@ -18,7 +18,7 @@ body { font-family: var(--serif); font-size: 20px; line-height: 32px; -webkit-fo
 body::before { content: ""; position: fixed; left: 0; top: 0; bottom: 0; width: max(0px, calc(50vw - 640px + 432px)); background: var(--side); }
 header.col { position: fixed; left: max(20px, calc(50vw - 640px + 80px)); top: 0; width: 320px; margin: 0; display: block; padding-top: 32px; }
 header.col nav { flex-direction: column; gap: 0; margin-top: 32px; line-height: 32px; }
-main.col { padding-top: 352px; }
+@media (min-width: 1101px) { body main.col { padding-top: 352px; } }
 .lead { font-family: var(--sans); font-size: 19px; }
 @media (max-width: 1100px) { body::before { right: 0; bottom: auto; width: auto; height: 64px; } header.col { position: static; width: min(488px, 100% - 40px); margin: 0 auto; display: flex; align-items: baseline; height: 64px; padding-top: 16px; } header.col nav { flex-direction: row; gap: 24px; margin: 0 0 0 auto; } }
 .wm { display: inline-flex; align-items: baseline; gap: 8px; font-weight: 600; color: var(--ink); text-decoration: none; margin-right: auto; }
