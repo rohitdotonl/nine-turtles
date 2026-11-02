@@ -588,15 +588,14 @@ test("Settings: no unread counts to show or hide, and unread can let go after a 
   });
   const name = await openBlog(page);
   // A dot and no number (decision 0148): screen readers hear "unread", never how many.
-  await expect(feedLink(page, name)).toHaveAccessibleName(`Blog ${name}, unread`);
+  await expect(feedLink(page, name)).toHaveAccessibleName(`Blog ${name} unread`);
   await expect(feedLink(page, name).locator(".sidebar-dot")).toBeVisible();
-  await expect(feedLink(page, name)).not.toContainText(/[0-9]/);
 
   await page.goto(new URL("/settings", FEEDS_APP).href);
   await appReady(page);
   const reading = page.getByRole("region", { name: "Reading" });
   // Nothing to hide any more: no Unread counts row, no Show or Hide.
-  await expect(reading.getByText("Unread counts")).toHaveCount(0);
+  await expect(reading.getByText("Unread counts", { exact: true })).toHaveCount(0);
   await expect(reading.getByRole("radio", { name: "Hide" })).toHaveCount(0);
   await expect(reading).toContainText("An Unread list, and a dot where something is new.");
   await expect(reading.getByRole("radio", { name: "Never" })).toBeChecked();

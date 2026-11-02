@@ -30,8 +30,8 @@ refinement round.*
 2. **Where it sits:** at the row's right end, where the count was, so every
    dot sits in one column; a folder's arrow still takes its place under the
    pointer, as it did the count's.
-3. **What screen readers hear:** ", unread" after the name ("Alpha,
-   unread"), as after an unread article's title, never a number.
+3. **What screen readers hear:** "unread" after the name ("Alpha unread"),
+   as they heard "3 unread" before, never a number.
 4. **A folder's dot** shows when any of its feeds has something unread.
 5. **The reader's old choice** (`counts` in `person_settings`, and this
    device's `nine-turtles.counts`) is left where it is and no longer read:

@@ -178,7 +178,7 @@ test("Mark all as read marks only the results, and u undoes it", async ({ page }
   const [id] = await start(page, [`${FEED_SITE}/blog/${name}/`]);
   await open(page, `/feeds/${id}`, `Blog ${name}`);
   const count = (unread: number) =>
-    page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: `Blog ${name}, unread` }).and(page.locator(`[data-unread="${unread}"]`));
+    page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: `Blog ${name} unread` }).and(page.locator(`[data-unread="${unread}"]`));
   await expect(count(3)).toBeVisible();
 
   await page.keyboard.press("/");

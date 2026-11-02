@@ -457,7 +457,7 @@ test("the list shows 50 articles, then reaching the bottom loads more below", as
   await follow(page, `${FEED_SITE}/`);
   await page.reload();
   await appReady(page);
-  await sidebar(page).getByRole("link", { name: /^Quiet Notes( \d+ unread)?$/ }).click();
+  await sidebar(page).getByRole("link", { name: /^Quiet Notes( unread)?$/ }).click();
 
   const list = page.getByRole("region", { name: "Quiet Notes" });
   const rows = list.getByRole("listitem");
@@ -524,7 +524,7 @@ test("with only the keyboard: Tab reaches Show older articles, and the keyboard'
   await follow(page, `${FEED_SITE}/`);
   await page.reload();
   await appReady(page);
-  const feed = sidebar(page).getByRole("link", { name: /^Quiet Notes( \d+ unread)?$/ });
+  const feed = sidebar(page).getByRole("link", { name: /^Quiet Notes( unread)?$/ });
   await tabTo(page, feed);
   await page.keyboard.press("Enter");
 

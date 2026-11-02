@@ -42,7 +42,7 @@ test("new items wait for r, and mark all as read never touches them", async ({ p
   test.skip(isMobile, "the phone has its own test below");
   const blog = await openBlog(page);
   const sidebar = page.getByRole("navigation", { name: "Sidebar" });
-  await expect(sidebar.getByRole("link", { name: `Blog ${blog}, unread` }).and(page.locator(`[data-unread="3"]`))).toBeVisible();
+  await expect(sidebar.getByRole("link", { name: `Blog ${blog} unread` }).and(page.locator(`[data-unread="3"]`))).toBeVisible();
 
   await publishAndWait(page, blog, "New articles · press r");
   // The note floats below the articles, not above them.
@@ -51,7 +51,7 @@ test("new items wait for r, and mark all as read never touches them", async ({ p
   // The list hasn't moved: the new article isn't shown, and the counts wait too.
   await expect(row(page, NEW_ARTICLE)).toHaveCount(0);
   await expect(page.getByRole("region", { name: `Blog ${blog}` }).getByRole("list").getByRole("button")).toHaveCount(3);
-  await expect(sidebar.getByRole("link", { name: `Blog ${blog}, unread` }).and(page.locator(`[data-unread="3"]`))).toBeVisible();
+  await expect(sidebar.getByRole("link", { name: `Blog ${blog} unread` }).and(page.locator(`[data-unread="3"]`))).toBeVisible();
 
   // Mark all as read without pressing r: only the three on screen.
   await page.keyboard.press("Shift+A");
@@ -62,11 +62,11 @@ test("new items wait for r, and mark all as read never touches them", async ({ p
   await expect(row(page, NEW_ARTICLE)).toHaveAccessibleName(/, unread/);
   await expect(row(page, NEWEST)).not.toHaveAccessibleName(/, unread/);
   await expect(page.getByRole("status").filter({ hasText: "New articles" })).toHaveCount(0);
-  await expect(sidebar.getByRole("link", { name: `Blog ${blog}, unread` }).and(page.locator(`[data-unread="1"]`))).toBeVisible();
+  await expect(sidebar.getByRole("link", { name: `Blog ${blog} unread` }).and(page.locator(`[data-unread="1"]`))).toBeVisible();
   // Undo still works after r, for the same three.
   await page.keyboard.press("u");
   await expect(row(page, NEWEST)).toHaveAccessibleName(/, unread/);
-  await expect(sidebar.getByRole("link", { name: `Blog ${blog}, unread` }).and(page.locator(`[data-unread="4"]`))).toBeVisible();
+  await expect(sidebar.getByRole("link", { name: `Blog ${blog} unread` }).and(page.locator(`[data-unread="4"]`))).toBeVisible();
 });
 
 test("on a phone, the note offers Show, which shows new items; Refresh in the More menu does too", async ({ page, isMobile }) => {

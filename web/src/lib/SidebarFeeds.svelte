@@ -101,15 +101,18 @@
   Something unread here: the list's own unread dot, a step smaller to suit the
   sidebar's names, at the row's end. No number is shown (decision 0148); the
   row keeps it only as `data-unread`, unseen and unheard, for the tests.
-  Screen readers hear ", unread" after the name, as after an unread article's title.
+  Screen readers hear "unread" after the name, never a number.
 -->
 {#snippet dot(unread: number)}
-  {#if !river && unread > 0}<span aria-hidden="true" class="unread-dot sidebar-dot"></span><span class="sr-only">, unread</span>{/if}
+  {#if !river && unread > 0}<span aria-hidden="true" class="unread-dot sidebar-dot"></span>{/if}
 {/snippet}
 
-{#snippet name(text: string)}
+<!-- "unread" sits inside the name, so screen readers hear "Alpha unread", never a number. -->
+{#snippet name(text: string, unread = 0)}
   <!-- Devanagari a touch larger, so it sits level with Latin names (decision 0041). -->
-  <span class={["min-w-0 flex-1 truncate", inDevanagari(text) && "devanagari"]}>{text}</span>
+  <span class={["min-w-0 flex-1 truncate", inDevanagari(text) && "devanagari"]}
+    >{text}{#if !river && unread > 0}<span class="sr-only"> unread</span>{/if}</span
+  >
 {/snippet}
 
 {#snippet leadsOn()}
@@ -133,7 +136,7 @@
         "pl-[38px]",
         here ? "font-semibold text-ink" : "text-ink",
       ]}
-      >{@render name(plainSourceName(feed.title))}{@render dot(feed.unread)}{@render leadsOn()}</a
+      >{@render name(plainSourceName(feed.title), feed.unread)}{@render dot(feed.unread)}{@render leadsOn()}</a
     >
   </li>
 {/snippet}
@@ -196,7 +199,7 @@
     data-unread={river ? undefined : folderUnread(folder, feeds)}
     title={folder.name}
     class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center rounded-md pr-3.5 text-ui pointer-fine:text-small", padded ? "gap-3 pl-[38px]" : "gap-3 pl-3", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
-    >{@render name(folder.name)}<span class="folder-dot flex shrink-0">{@render dot(folderUnread(folder, feeds))}</span>{@render leadsOn()}</a
+    >{@render name(folder.name, folderUnread(folder, feeds))}<span class="folder-dot flex shrink-0">{@render dot(folderUnread(folder, feeds))}</span>{@render leadsOn()}</a
   >
 {/snippet}
 
@@ -322,8 +325,7 @@
   }
   /*
     With a mouse or keyboard the arrow hides until it's wanted, and the dot
-    shows in its place meanwhile: made see-through rather than hidden, so
-    screen readers still hear "unread" in the folder's name. On a touch screen the
+    shows in its place meanwhile: made see-through rather than hidden. On a touch screen the
     arrow always shows, and the dot steps left of it rather than under it.
   */
   @media not (pointer: coarse) {
