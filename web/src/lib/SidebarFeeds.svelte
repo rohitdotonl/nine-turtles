@@ -104,7 +104,7 @@
   Screen readers hear ", unread" after the name, as after an unread article's title.
 -->
 {#snippet dot(unread: number)}
-  {#if !river && unread > 0}<span aria-hidden="true" class="sidebar-dot"></span><span class="sr-only">, unread</span>{/if}
+  {#if !river && unread > 0}<span aria-hidden="true" class="unread-dot sidebar-dot"></span><span class="sr-only">, unread</span>{/if}
 {/snippet}
 
 {#snippet name(text: string)}
@@ -295,24 +295,16 @@
 
 <style>
   /*
-    The sidebar's dot (decision 0148): a feed, person or folder with something
-    unread. The list's unread dot a step smaller (6px), as the sidebar's names
-    are smaller than the list's titles; in the theme's accent, never a number.
-    Its row's name says "unread" to screen readers, so it never rests on color.
+    The sidebar's dot (decision 0148): the list's unread dot (app.css
+    .unread-dot: the accent, round, CanvasText in forced colors), a step
+    smaller (6px) as the sidebar's names are smaller than the list's titles,
+    and in the row's flow at its end rather than in a gutter.
   */
   .sidebar-dot {
+    position: static;
     flex-shrink: 0;
-    display: block;
     width: 6px;
     height: 6px;
-    border-radius: 9999px;
-    background-color: var(--accent);
-  }
-  @media (forced-colors: active) {
-    .sidebar-dot {
-      forced-color-adjust: none;
-      background-color: CanvasText;
-    }
   }
   /*
     A faint line down the left of an open folder's feeds, under the folder's

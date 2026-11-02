@@ -59,7 +59,7 @@ async function openBlogs(page: Page, names: string[]): Promise<number[]> {
   return ids;
 }
 
-test("a feed put in two folders appears under both, with its unread count in each", async ({ page }) => {
+test("a feed put in two folders appears under both, with its unread dot in each", async ({ page }) => {
   const blog = unique("filed");
   const [first, second] = [unique("Essays"), unique("Letters")];
   await openBlogs(page, [blog]);

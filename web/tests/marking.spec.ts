@@ -491,7 +491,7 @@ test("Settings: the sort order is saved for every device", async ({ page, isMobi
   await saved;
 });
 
-test("river mode: no Unread view, no counts, no read styling, and it opens on All", async ({ page, isMobile }) => {
+test("river mode: no Unread view, no dots, no read styling, and it opens on All", async ({ page, isMobile }) => {
   test.skip(isMobile, "the same on every width");
   // The setting is shared by every test using this nine turtles, so this
   // page alone is told it's in river mode, and its changes aren't saved.
