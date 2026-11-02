@@ -22,7 +22,7 @@ header.col nav { flex-direction: column; gap: 0; margin-top: 32px; line-height: 
 .lead { font-family: var(--sans); font-size: 19px; }
 @media (max-width: 1100px) { body::before { right: 0; bottom: auto; width: auto; height: 64px; } header.col { position: static; width: min(488px, 100% - 40px); margin: 0 auto; display: flex; align-items: baseline; height: 64px; padding-top: 16px; } header.col nav { flex-direction: row; gap: 24px; margin: 0 0 0 auto; } }
 .wm { display: inline-flex; align-items: baseline; gap: 8px; font-weight: 600; color: var(--ink); text-decoration: none; margin-right: auto; }
-.wm svg { width: 32px; height: 24px; transform: translateY(1px); }
+.wm svg { flex: none; }
 nav { display: flex; gap: 28px; font-family: var(--sans); font-size: 16px; }
 nav a { color: var(--ink2); text-decoration: none; }
 nav a:hover { text-decoration: underline; }
@@ -58,17 +58,7 @@ footer a:hover, .toc a:hover { text-decoration: underline; }
 </head>
 <body>
 <header class="col">
-  <a class="wm" href="#top" aria-label="nine turtles"><svg viewBox="9.5 18.7 72.8 55.5" aria-hidden="true"><g fill="currentColor">
-      <g transform="translate(18.5 22.7)"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></g>
-      <g transform="translate(42.5 22.7)"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></g>
-      <g transform="translate(66.5 22.7)"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></g>
-      <g transform="translate(23.7 46.7)"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></g>
-      <g transform="translate(47.7 46.7)"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></g>
-      <g transform="translate(71.7 46.7)"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></g>
-      <g transform="translate(18.5 70.7)"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></g>
-      <g transform="translate(42.5 70.7)"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></g>
-      <g transform="translate(66.5 70.7)"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></g>
-    </g></svg>nine turtles</a>
+  <a class="wm" href="#top" aria-label="nine turtles"><svg viewBox="0 0 75.8 49" width="35.6" height="23" aria-hidden="true"><g fill="currentColor"><g transform="translate(9 5.5)"><path d="M-9 3.5 A7.5 9 0 0 1 6 3.5 Z"/><circle cx="9.4" cy="-0.4" r="2.4"/></g><g transform="translate(32.5 5.5)"><path d="M-9 3.5 A7.5 9 0 0 1 6 3.5 Z"/><circle cx="9.4" cy="-0.4" r="2.4"/></g><g transform="translate(56 5.5)"><path d="M-9 3.5 A7.5 9 0 0 1 6 3.5 Z"/><circle cx="9.4" cy="-0.4" r="2.4"/></g><g transform="translate(17 25.5)"><path d="M-9 3.5 A7.5 9 0 0 1 6 3.5 Z"/><circle cx="9.4" cy="-0.4" r="2.4"/></g><g transform="translate(40.5 25.5)"><path d="M-9 3.5 A7.5 9 0 0 1 6 3.5 Z"/><circle cx="9.4" cy="-0.4" r="2.4"/></g><g transform="translate(64 25.5)"><path d="M-9 3.5 A7.5 9 0 0 1 6 3.5 Z"/><circle cx="9.4" cy="-0.4" r="2.4"/></g><g transform="translate(9 45.5)"><path d="M-9 3.5 A7.5 9 0 0 1 6 3.5 Z"/><circle cx="9.4" cy="-0.4" r="2.4"/></g><g transform="translate(32.5 45.5)"><path d="M-9 3.5 A7.5 9 0 0 1 6 3.5 Z"/><circle cx="9.4" cy="-0.4" r="2.4"/></g><g transform="translate(56 45.5)"><path d="M-9 3.5 A7.5 9 0 0 1 6 3.5 Z"/><circle cx="9.4" cy="-0.4" r="2.4"/></g></g></svg>nine turtles</a>
   <nav aria-label="Site"><a href="#">How it works</a><a href="#">Blog</a></nav>
   <ul class="toc" aria-label="On this page">
     <li><a href="#people">People, not sources</a></li>
