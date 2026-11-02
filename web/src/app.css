@@ -53,7 +53,6 @@
   --color-muted: var(--muted);
   --color-danger: var(--danger);
   --color-accent: var(--accent);
-  --color-star: var(--star);
   --color-tint-list: var(--tint-list);
   --color-tint-sidebar: var(--tint-sidebar);
 }
@@ -68,9 +67,8 @@
     --ink-2: #c4c4c6;
     --muted: #a4a4a8;
   --faint: #98989c;
-    --danger: #e8968a;
+    --danger: #e39aa4;
     --accent: #94b2e6;
-    --star: #56d364;
     --tint-list: #333333;
     --tint-sidebar: #3b3b3b;
     --surface-raised: #28282a;

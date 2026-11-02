@@ -8,7 +8,7 @@
 
   --tint-list and --tint-sidebar are the selection pill's fill: a neutral
   grey, the text color mixed into the list or sidebar (8% by day, 12% by
-  night), with no color (decision 0057). --star is the green of a starred article's filled star.
+  night), with no color (decision 0057). The star has no color of its own: it is drawn in --ink, filled when starred (decision 0142). --danger is oxblood, for what removes something and for errors.
   contrast.test.ts recomputes each and checks every text color on it.
 
   --surface-raised is what floats over the page: the sheets, the shortcut
@@ -32,9 +32,8 @@
   --muted: #5f5f64;
   /* A step fainter than muted, for the list's dates: 4.9 : 1 on the list, never used on the selected row's tint. */
   --faint: #6b6b70;
-  --danger: #a3261b;
+  --danger: #8c2f39;
   --accent: #2c4f8c;
-  --star: #2a8a43;
   --tint-list: #e5e5e5;
   --tint-sidebar: #dddddf;
   --surface-raised: #ffffff;
@@ -49,9 +48,8 @@
   --ink-2: #c4c4c6;
   --muted: #a4a4a8;
   --faint: #98989c;
-  --danger: #e8968a;
+  --danger: #e39aa4;
   --accent: #94b2e6;
-  --star: #56d364;
   --tint-list: #333333;
   --tint-sidebar: #3b3b3b;
   --surface-raised: #28282a;
@@ -74,9 +72,8 @@
   --ink-2: #333333;
   --muted: #595959;
   --faint: #666666;
-  --danger: #a3261b;
+  --danger: #8c2f39;
   --accent: #000000;
-  --star: #2a8a43;
   --tint-list: #e7e7e7;
   --tint-sidebar: #e1e1e1;
   --surface-raised: #ffffff;
@@ -93,9 +90,8 @@
   --ink-2: #cccccc;
   --muted: #a6a6a6;
   --faint: #999999;
-  --danger: #e8968a;
+  --danger: #e39aa4;
   --accent: #ffffff;
-  --star: #56d364;
   --tint-list: #323232;
   --tint-sidebar: #373737;
   --surface-raised: #262626;
@@ -119,9 +115,8 @@
   --ink-2: #343437;
   --muted: #56565b;
   --faint: #56565b;
-  --danger: #a3261b;
+  --danger: #8c2f39;
   --accent: #2b6c8c;
-  --star: #267f3d;
   --tint-list: #e0e0de;
   --tint-sidebar: #d6d6d3;
   --surface-raised: #fafaf9;
@@ -136,9 +131,8 @@
   --ink-2: #cbcbcb;
   --muted: #adadb0;
   --faint: #adadb0;
-  --danger: #e8968a;
+  --danger: #e39aa4;
   --accent: #6fb0d4;
-  --star: #56d364;
   --tint-list: #39393a;
   --tint-sidebar: #404042;
   --surface-raised: #2b2b2c;
@@ -153,9 +147,8 @@
   --ink-2: #2e353f;
   --muted: #4e5763;
   --faint: #4e5763;
-  --danger: #a3261b;
+  --danger: #8c2f39;
   --accent: #cf4f17;
-  --star: #267f3d;
   --tint-list: #dde0e2;
   --tint-sidebar: #d2d7db;
   --surface-raised: #f8f9fa;
@@ -170,9 +163,8 @@
   --ink-2: #c8ced6;
   --muted: #a9b2bc;
   --faint: #a9b2bc;
-  --danger: #e8968a;
+  --danger: #e39aa4;
   --accent: #f08a52;
-  --star: #56d364;
   --tint-list: #373b40;
   --tint-sidebar: #3e4349;
   --surface-raised: #292c30;
@@ -187,9 +179,8 @@
   --ink-2: #2e374e;
   --muted: #4c5468;
   --faint: #4c5468;
-  --danger: #a3261b;
+  --danger: #8c2f39;
   --accent: #c2410c;
-  --star: #267f3d;
   --tint-list: #e0e0df;
   --tint-sidebar: #d5d6d4;
   --surface-raised: #fafaf8;
@@ -204,9 +195,8 @@
   --ink-2: #c6cbd8;
   --muted: #a5adbe;
   --faint: #a5adbe;
-  --danger: #e8968a;
+  --danger: #e39aa4;
   --accent: #f08a5d;
-  --star: #56d364;
   --tint-list: #343943;
   --tint-sidebar: #3a404e;
   --surface-raised: #272b33;
@@ -221,9 +211,8 @@
   --ink-2: #35333d;
   --muted: #55525f;
   --faint: #55525f;
-  --danger: #a3261b;
+  --danger: #8c2f39;
   --accent: #9a6608;
-  --star: #267f3d;
   --tint-list: #e1e0e3;
   --tint-sidebar: #d6d4db;
   --surface-raised: #faf9fb;
@@ -238,9 +227,8 @@
   --ink-2: #cecbd4;
   --muted: #afacb9;
   --faint: #afacb9;
-  --danger: #e8968a;
+  --danger: #e39aa4;
   --accent: #e0b04a;
-  --star: #56d364;
   --tint-list: #3a393f;
   --tint-sidebar: #413f47;
   --surface-raised: #2c2b30;
@@ -255,9 +243,8 @@
   --ink-2: #303030;
   --muted: #555555;
   --faint: #555555;
-  --danger: #a3261b;
+  --danger: #8c2f39;
   --accent: #5a3fc0;
-  --star: #267f3d;
   --tint-list: #e3e3e2;
   --tint-sidebar: #dadad9;
   --surface-raised: #ffffff;
@@ -272,9 +259,8 @@
   --ink-2: #cccccc;
   --muted: #aaaaaa;
   --faint: #aaaaaa;
-  --danger: #e8968a;
+  --danger: #e39aa4;
   --accent: #a99af0;
-  --star: #56d364;
   --tint-list: #373737;
   --tint-sidebar: #3e3e3e;
   --surface-raised: #282828;

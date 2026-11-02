@@ -17,7 +17,7 @@
   | Unread | Full-strength, semibold title, and a small dot in the theme's accent before it |
   | Read | A softer second ink, regular-weight title (the title stays full-strength while it's the selected row) |
   | Selected | A rounded pill of soft neutral grey set a little in from the list's edges, with no color (the same as in the sidebar; decision 0057); the title in full ink. When you're using the keyboard, an outline is drawn just inside the pill's edge too |
-  | Starred | A small filled star after the time, in light green (read out as "Starred"; decision 0057). The article's own star button is green while it's starred, and so is the Starred icon in the sidebar while you're there |
+  | Starred | A small filled star after the time, in the ink (read out as "Starred"; decision 0142). The article's own star button is filled, in full ink, while it's starred, and so is the Starred icon in the sidebar while you're there |
 
 - A podcast episode's meta line ends with a small headphones icon and the episode's length ("45 min"), in the same quiet text (section 35).
 - Items you read in the Unread view stay where they are (greyed) until you press `r` or leave the view, so nothing jumps under your cursor.

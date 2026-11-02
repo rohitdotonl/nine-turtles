@@ -97,11 +97,8 @@ describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
     }
   });
 
-  it("has the starred green clearly visible (3 : 1) wherever a star is drawn (decision 0057)", () => {
-    expect(colors.star, "every version names its star color").toBeDefined();
-    for (const background of [...BACKGROUNDS, "surface-raised"]) {
-      if (colors[background]?.startsWith("#")) expect(contrast(colors.star!, colors[background]!), background).toBeGreaterThanOrEqual(3);
-    }
+  it("gives the star no color of its own: it's drawn in the ink (decision 0142)", () => {
+    expect(colors.star).toBeUndefined();
   });
 
   it("tells the three areas apart by tone, deeper from reading area to sidebar", () => {
