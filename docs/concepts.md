@@ -101,6 +101,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - MCP (Model Context Protocol) and AI assistants
 - Newsletters as feeds
 - People and places (a person's blog, channel and newsletter as one)
+- Write back (a `mailto:` link that opens the reader's own email app)
 - Raw email (RFC 5322 and MIME)
 - Mailing list headers (`List-Id`, `List-Unsubscribe`)
 - One-click unsubscribe (RFC 8058)

@@ -75,7 +75,8 @@ test("articles go on a collection by l and by the menu; it opens, and deleting i
   const shelf = Number(/\/collections\/(\d+)$/.exec(page.url())?.[1]);
   await expect(page.getByRole("heading", { level: 2, name })).toBeVisible();
   await expect(link).toHaveAttribute("aria-current", "page");
-  const rows = page.getByRole("button", { name: new RegExp(`Blog ${blog}`) });
+  // The list's rows, not the article's Write back button, which names the blog too.
+  const rows = page.getByRole("button", { name: new RegExp(`^(?!Write back)[^]*Blog ${blog}`) });
   await expect(rows).toHaveCount(2);
   await expect(rows.nth(0)).toHaveAccessibleName(new RegExp(NEWEST.replace(/[()]/g, "\\$&")));
   await expect(rows.nth(1)).toHaveAccessibleName(new RegExp(MIDDLE.replace(/[()]/g, "\\$&")));
@@ -199,7 +200,8 @@ test("on a phone, Add to collection is the same small sheet over the article, an
   const id = await follow(page, `${FEED_SITE}/blog/${blog}/`);
   await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
   await appReady(page);
-  const rows = page.getByRole("button", { name: new RegExp(`Blog ${blog}`) });
+  // The list's rows, not the article's Write back button, which names the blog too.
+  const rows = page.getByRole("button", { name: new RegExp(`^(?!Write back)[^]*Blog ${blog}`) });
   await rows.first().tap();
   await expect(article(page).getByRole("heading", { name: NEWEST })).toBeVisible();
 

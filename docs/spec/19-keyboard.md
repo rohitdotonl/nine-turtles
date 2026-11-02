@@ -17,6 +17,7 @@
   | `c` | Copy the open article's link |
   | `s` | Star / unstar |
   | `l` | Add to collection (the open or selected article; section 34) |
+  | `w` | Write back to whoever wrote the open or selected article (section 37) |
   | `m` | Mark current item unread |
   | `Shift+A` | Mark all as read |
   | `Shift+O` | Mark older as read |

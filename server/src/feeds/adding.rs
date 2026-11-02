@@ -110,7 +110,7 @@ pub(super) async fn add_feed(
 }
 
 enum Added {
-    Feed(FeedRow),
+    Feed(Box<FeedRow>),
     /// The page names several feeds; the reader picks one.
     Choices(Vec<discover::Found>),
 }
@@ -126,7 +126,7 @@ async fn add(state: &AppState, person: i64, address: &str) -> Result<Added, NotA
             .fetch_all(&state.db)
             .await?;
         if let Some(feed) = feeds.into_iter().find(|feed| feed.id == id) {
-            return Ok(Added::Feed(feed));
+            return Ok(Added::Feed(Box::new(feed)));
         }
     }
     already_followed(state, person, &url).await?;
@@ -142,7 +142,9 @@ async fn add(state: &AppState, person: i64, address: &str) -> Result<Added, NotA
     let fetched = fetch::get(&state.http, &url, local).await?;
 
     if let Some(parsed) = feed::parse(&fetched.body, &fetched.final_url) {
-        return Ok(Added::Feed(follow(state, person, &fetched, parsed).await?));
+        return Ok(Added::Feed(Box::new(
+            follow(state, person, &fetched, parsed).await?,
+        )));
     }
 
     // Not a feed, so a web page: look for the feeds it names.
@@ -154,7 +156,9 @@ async fn add(state: &AppState, person: i64, address: &str) -> Result<Added, NotA
             already_followed(state, person, &only.url).await?;
             let fetched = fetch::get(&state.http, &only.url, local).await?;
             let parsed = feed::parse(&fetched.body, &fetched.final_url).ok_or(NotAdded::NoFeed)?;
-            Ok(Added::Feed(follow(state, person, &fetched, parsed).await?))
+            Ok(Added::Feed(Box::new(
+                follow(state, person, &fetched, parsed).await?,
+            )))
         }
         _ => Ok(Added::Choices(found)),
     }
@@ -293,6 +297,8 @@ async fn follow(
         person: None,
         place: super::place_of(fetched.lasting_url.as_str()).to_owned(),
         added_at: now,
+        write_to: None,
+        email: parsed.email,
         folders: Vec::new(),
     })
 }

@@ -16,6 +16,8 @@ pub struct ParsedFeed {
     pub articles: Vec<ParsedArticle>,
     /// The publisher's WebSub hub, if the feed names one (SPEC section 12).
     pub hub: Option<Hub>,
+    /// Where to write to its writer, if the feed says (`write_back::from_feed`).
+    pub email: Option<String>,
 }
 
 /// Where a feed's WebSub hub is, and the address the publisher announces
@@ -105,6 +107,7 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
                 .to_owned()
         });
 
+    let email = crate::write_back::from_feed(&feed);
     let articles = feed
         .entries
         .into_iter()
@@ -179,6 +182,7 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
         language: feed.language,
         articles,
         hub,
+        email,
     })
 }
 

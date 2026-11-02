@@ -58,6 +58,7 @@ A few words used throughout:
 | 34 | [Collections](spec/34-collections.md) |
 | 35 | [Podcasts](spec/35-podcasts.md) |
 | 36 | [People](spec/36-people.md) |
+| 37 | [Writing back](spec/37-writing-back.md) |
 
 ## Not built yet, and never
 

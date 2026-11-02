@@ -6,8 +6,8 @@
   to screen readers, together at the right as Apple Books keeps its reading
   toolbar (decision 0050): Open original, Aa (the reading panel), Star and
   More (…). More holds Copy
-  link (Share on phones), Mark unread and Add to collection… (SPEC sections
-  7, 8, 9, 21 and 33). The
+  link (Share on phones), Mark unread, Add to collection… and Write back (SPEC
+  sections 7, 8, 9, 21, 33 and 37). Write back also ends the article. The
   bar is solid, in the page's own color, above the scrolling text, with a
   hairline under it only once the text has scrolled (decision 0040). The
   source is always credited and linked. A feed that gives only a summary
@@ -31,6 +31,8 @@
   import ReadingPanel from "./ReadingPanel.svelte";
   import YouTubePlayer from "./YouTubePlayer.svelte";
   import EpisodePlayer from "./EpisodePlayer.svelte";
+  import WriteBack from "./WriteBack.svelte";
+  import type { LoadedLibrary } from "./library.svelte";
   import type { Snippet } from "svelte";
   import { youtubeVideo } from "./youtube";
   import { addToUpNext, player, removeFromUpNext } from "./player.svelte";
@@ -55,6 +57,7 @@
     onMarkUnread,
     onCollect,
     beforeToolbar,
+    library,
   }: {
     /** The article chosen in the list; its title, source and time show at once. */
     article: Article;
@@ -78,7 +81,13 @@
     onCollect: () => void;
     /** On a phone, the "now playing" bar, which sits above the article's toolbar (SPEC section 35). */
     beforeToolbar?: Snippet;
+    /** The reader's people, for writing back to whoever wrote it (SPEC section 37). */
+    library: LoadedLibrary;
   } = $props();
+
+  /** Write back, at the article's end; the More menu and `w` start it too. */
+  let writeBack: WriteBack | undefined = $state();
+  let followed = $derived(library.feeds?.some((feed) => feed.id === article.feedId) ?? false);
 
   // Bumped when an article arrives from the server, so the page looks again.
   let arrivals = $state(0);
@@ -119,6 +128,7 @@
         ...(article.link ? [{ label: sharing ? "Share" : "Copy link", shortcut: phone || sharing ? undefined : currentKey("copy-link"), onSelect: share }] : []),
         { label: "Mark unread", shortcut: phone ? undefined : currentKey("mark-unread"), onSelect: onMarkUnread },
         { label: "Add to collection…", shortcut: phone ? undefined : currentKey("collect"), onSelect: onCollect },
+        ...(followed && full ? [{ label: "Write back", shortcut: phone ? undefined : currentKey("write-back"), onSelect: startWriting }] : []),
         ...(episode && player.upNext !== null
           ? [
               queued
@@ -322,6 +332,11 @@
     }
   }
 
+  /** `w`, and Write back in More: the reader's email app, or the box asking for the writer's address. */
+  export function startWriting() {
+    void writeBack?.start();
+  }
+
   /**
    * Space and Shift+Space: the article moves on (1) or back (-1) by a screen,
    * keeping a few lines of the last one in view so the eye finds its place,
@@ -480,6 +495,10 @@
         {/if}
       {:else if problem}
         <p class="mt-6" lang="en">{connection.offline ? NOT_KEPT : "This article couldn't be loaded. Try again in a moment."}</p>
+      {/if}
+      {#if full}
+        <!-- The article's last word is the reader's: write back to whoever wrote it (SPEC section 37). -->
+        <WriteBack bind:this={writeBack} {article} {library} />
       {/if}
     </article>
   </div>

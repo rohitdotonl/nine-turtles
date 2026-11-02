@@ -237,6 +237,12 @@ async fn worked(
     let (every, etag, last_modified) = match changed {
         Some((fetched, parsed)) => {
             store_articles(&mut transaction, feed_id, &parsed.articles, now).await?;
+            // Where to write back, as the feed says now (decision 0147).
+            sqlx::query("UPDATE feeds SET email = ? WHERE id = ?")
+                .bind(&parsed.email)
+                .bind(feed_id)
+                .execute(&mut *transaction)
+                .await?;
             (
                 rhythm(parsed, now),
                 fetched.etag.clone(),

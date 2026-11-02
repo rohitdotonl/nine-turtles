@@ -29,6 +29,9 @@ export type Feed = {
   addedAt?: number;
   /** Only on a sidebar row standing for a person (`people.ts` → `rowsOf`): their places' numbers. */
   places?: number[];
+  /** Where to write back (decision 0147): the address the reader typed for the person, and the one this place gives. */
+  writeTo?: string | null;
+  email?: string | null;
 } & FeedSettings;
 
 /**
@@ -176,6 +179,8 @@ export function toFeed(feed: Record<string, unknown>): Feed {
     person: typeof feed.person === "number" ? feed.person : null,
     place: feed.place === "video" || feed.place === "newsletter" ? feed.place : "blog",
     addedAt: typeof feed.added_at === "number" ? feed.added_at : undefined,
+    writeTo: text(feed.write_to),
+    email: text(feed.email),
   };
 }
 

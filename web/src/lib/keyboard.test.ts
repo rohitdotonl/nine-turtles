@@ -132,7 +132,7 @@ describe("keyboard shortcuts", () => {
   });
 
   it("lists every shortcut in SPEC.md in the cheat sheet", () => {
-    expect(SHORTCUTS).toHaveLength(31);
+    expect(SHORTCUTS).toHaveLength(32);
     expect(SHORTCUTS.map((shortcut) => shortcut.keys[0])).toEqual([
       "j",
       "n",
@@ -144,6 +144,7 @@ describe("keyboard shortcuts", () => {
       "+",
       "s",
       "l",
+      "w",
       "Esc",
       "g then u",
       "g then s",

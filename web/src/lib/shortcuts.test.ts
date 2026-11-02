@@ -51,6 +51,7 @@ function hands(next?: Route) {
     toggleFolder: note("toggleFolder"),
     star: note("star"),
     collect: note("collect"),
+    writeBack: note("writeBack"),
     markUnread: note("markUnread"),
     undo: note("undo"),
     refresh: note("refresh"),
@@ -147,6 +148,13 @@ describe("carryOut", () => {
     expect(run({ kind: "open-original" }, scene({ article: false }))).toEqual([]);
     expect(run({ kind: "copy-link" }, scene())).toEqual([["copyLink"]]);
     expect(run({ kind: "copy-link" }, scene({ onList: false }))).toEqual([]);
+  });
+
+  it("writes back about the chosen article only with it in view", () => {
+    expect(run({ kind: "write-back" }, scene())).toEqual([["writeBack"]]);
+    expect(run({ kind: "write-back" }, scene({ selected: false }))).toEqual([]);
+    expect(run({ kind: "write-back" }, scene({ article: false }))).toEqual([]);
+    expect(run({ kind: "write-back" }, scene({ onList: false }))).toEqual([]);
   });
 
   it("opens the folder you're in, or the feed's first folder, with the sidebar in view", () => {

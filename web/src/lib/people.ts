@@ -16,7 +16,7 @@ import type { Article, Feed, Person, PlaceKind } from "./shapes";
 export const PLACE_NAMES: Record<PlaceKind, string> = { blog: "Blog", video: "Video", newsletter: "Newsletter" };
 
 /** A place before a join or a separation, as the server answers it, for Undo. */
-type Before = { feed: number; writer: number | null; name: string | null; folders: number[] };
+type Before = { feed: number; writer: number | null; name: string | null; folders: number[]; write_to: string | null };
 
 /** A place's person, if the reader joined it to others. */
 export function personOf(feed: Feed, people: Person[]): Person | undefined {
@@ -178,6 +178,7 @@ function befores(list: unknown): Before[] {
       writer: typeof each.writer === "number" ? each.writer : null,
       name: typeof each.name === "string" ? each.name : null,
       folders: Array.isArray(each.folders) ? each.folders.map(Number) : [],
+      write_to: typeof each.write_to === "string" ? each.write_to : null,
     }));
 }
 

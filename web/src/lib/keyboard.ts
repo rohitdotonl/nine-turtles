@@ -34,6 +34,7 @@ export type Action =
   | { kind: "copy-link" }
   | { kind: "star" }
   | { kind: "collect" }
+  | { kind: "write-back" }
   | { kind: "mark-unread" }
   | { kind: "mark-all-read" }
   | { kind: "mark-older-read" }
@@ -133,6 +134,7 @@ export const SHORTCUTS: Shortcut[] = [
   ),
   shortcut("Reading", "Star / unstar", [["star", "s", { kind: "star" }]]),
   shortcut("Reading", "Add to collection", [["collect", "l", { kind: "collect" }]]),
+  shortcut("Reading", "Write back", [["write-back", "w", { kind: "write-back" }]]),
   shortcut("Reading", "Back / close", [["escape", "Esc", { kind: "escape" }]]),
   shortcut("Getting around", "Go to Unread", [["go-unread", "g then u", { kind: "go", view: "unread" }]]),
   shortcut("Getting around", "Go to Starred", [["go-starred", "g then s", { kind: "go", view: "starred" }]]),

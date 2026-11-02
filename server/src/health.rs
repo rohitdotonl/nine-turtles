@@ -418,7 +418,8 @@ async fn move_to(
             "UPDATE feeds SET url = ?, url_key = ?, etag = ?, last_modified = ?, fetched_at = ?,
                  check_every = ?, next_check_at = ?, failures = 0, failing_since = NULL,
                  missing_since = NULL, problem = NULL,
-                 site_url = COALESCE(?, site_url), language = COALESCE(?, language)
+                 site_url = COALESCE(?, site_url), language = COALESCE(?, language),
+                 email = COALESCE(?, email)
              WHERE id = ?",
         )
         .bind(lasting.as_str())
@@ -430,6 +431,7 @@ async fn move_to(
         .bind(now + checking::wait(&state, every))
         .bind(&parsed.site_url)
         .bind(&parsed.language)
+        .bind(&parsed.email)
         .bind(id)
         .execute(&mut *transaction)
         .await?;
