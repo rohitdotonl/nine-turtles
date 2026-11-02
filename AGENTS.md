@@ -10,7 +10,7 @@ A quiet, single-user reader for writing on the open web (RSS, Atom, JSON
 Feed). Finite, calm and quiet: the opposite of social media.
 Its name is **nine turtles**, always lowercase (renamed from slowfeed in October 2026, decisions 0056 and 0058). The program is `nine-turtles`, its settings `NINE_TURTLES_*`, the database `nine-turtles.sqlite` and the repository `rohitdotonl/nine-turtles`. The old name is gone from the code (decision 0124); nothing reads `SLOWFEED_*` settings, the old database file, cookie or saved preferences any more. The Render service and its address (slowfeed.onrender.com) and disk (`slowfeed-data`) keep the old name on purpose: renaming them gains nothing a reader sees, and the address is one other services rely on.
 **Tiebreaker:** the book question is retired (decision 0132). A new one is being tested in UI and UX trials before it's adopted (candidate: "a letter from someone, or a feed from something?"); until then, decide by the floors and the principles.
-**Design reference:** no outside app any more. Apple Books was dropped on 1 November 2026; nine turtles is getting its own design principles and design language, being written with the owner. Until then: the floors, then `docs/DESIGN.md` as it stands (DESIGN.md → "Design reference", decision 0131).
+**Design reference:** no outside app any more. Apple Books was dropped on 1 November 2026; nine turtles is getting its own design principles and design language, being written with the owner. Until then: the floors, then `docs/DESIGN.md` as it stands (DESIGN.md → "Design reference", decision 0131). Every brand decision is on one page, `docs/BRAND.md` (part of DESIGN.md, decision 0139): every change a reader can see follows it.
 
 ## Project facts
 
@@ -65,6 +65,7 @@ finished, `docs/PLAN.md` drops it into `docs/archive/plan-done.md`.
 
 | If the change affects… | Update |
 |---|---|
+| The brand (name, words, typefaces, colors, logo, icons, turtles, emails' voice) | `docs/BRAND.md` (a new brand decision only with the owner's yes) |
 | What the reader sees or how a feature behaves | its section in `docs/spec/` (a new feature gets a new numbered file, listed in `docs/SPEC.md`); `docs/DESIGN.md` Part 2 when the look changes (Part 1 only with the owner's approval) |
 | A technical rule or choice | `docs/ENGINEERING.md` + a short note in `docs/decisions/` |
 | Libraries | `docs/libraries.md` |
@@ -118,7 +119,7 @@ years › written for the next agent.
 | Before you work on… | Read |
 |---|---|
 | Anything | This file, then `docs/PLAN.md` |
-| Anything the reader sees or touches (screens, keys, wording, colors, fonts) | `docs/DESIGN.md` in full, then the matching section in `docs/spec/` (the index is `docs/SPEC.md`) |
+| Anything the reader sees or touches (screens, keys, wording, colors, fonts) | `docs/BRAND.md`, `docs/DESIGN.md` in full, then the matching section in `docs/spec/` (the index is `docs/SPEC.md`) |
 | A new feature or changed behavior | `docs/DESIGN.md` → "Rules about the rules", then `docs/SPEC.md` and the sections it touches |
 | Backend, database, fetching, search, sign-in, security | `docs/ENGINEERING.md` Parts 2 and 3 |
 | Splitting, moving or tidying code; a file near its size limit | `docs/ENGINEERING.md` → "Keeping the code tidy" and "Boring and few" (where shared helpers and the web app's pieces live) |
