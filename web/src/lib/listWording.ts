@@ -5,6 +5,7 @@
 // has found for the place on screen (`Found`), so every rule about which words
 // show is here, in one place, and can be tested without drawing anything.
 import type { Route } from "./router";
+import { when } from "./times";
 
 /** What the screen knows about the place on screen. */
 export type Found = {
@@ -64,14 +65,33 @@ export function insteadOfList(place: Route, found: Found): string | undefined {
   return undefined;
 }
 
-/** What an empty list says, plainly. */
-export function emptyText(place: Route): string {
-  if (place.kind === "feed") return "This feed has no articles yet.";
-  if (place.kind === "folder") return "No articles in this folder yet.";
-  if (place.kind === "view" && place.view === "unread") return "Nothing unread.";
-  if (place.kind === "view" && place.view === "starred") return "No starred articles yet.";
-  if (place.kind === "view" && place.view === "recent") return "Articles you open will show here.";
-  if (place.kind === "view" && place.view === "upnext") return "Nothing in Up Next. Add an episode from its More menu.";
-  if (place.kind === "collection") return "Nothing in this collection yet. Articles you put here stay, even after a year. Add one from an article's More menu.";
-  return "No articles yet.";
+/**
+ * What an empty list says (decision 0140): one short fact, and, only when
+ * there's something to do, a quieter line saying how. Every "nothing yet"
+ * is said the same way, and a feed says when it was last checked, the fact a
+ * reader wonders about ("is it broken, or just quiet?").
+ */
+export type EmptyWords = { fact: string; how?: string };
+
+export function emptyText(place: Route, checkedAt: number | null = null, now: Date = new Date()): EmptyWords {
+  if (place.kind === "feed") return checkedAt === null ? { fact: "Nothing from this feed yet." } : { fact: "Nothing from this feed yet.", how: lastChecked(checkedAt, now) };
+  if (place.kind === "folder") return { fact: "Nothing in this folder yet." };
+  if (place.kind === "view" && place.view === "unread") return { fact: "Nothing unread." };
+  if (place.kind === "view" && place.view === "starred") return { fact: "Nothing starred yet.", how: "Press the star on any article to keep it here." };
+  if (place.kind === "view" && place.view === "recent") return { fact: "Articles you open will show here." };
+  if (place.kind === "view" && place.view === "upnext") return { fact: "Nothing in Up Next.", how: "Add an episode from its More menu." };
+  if (place.kind === "collection") return { fact: "Nothing in this collection yet.", how: "Add an article from its More menu." };
+  return { fact: "No articles yet." };
+}
+
+/** "Last checked today at 14:20.", or "Last checked on 3 Oct." */
+function lastChecked(at: number, now: Date): string {
+  const said = when(at, now);
+  return /^\d\d:\d\d$/.test(said) ? `Last checked today at ${said}.` : `Last checked on ${said}.`;
+}
+
+/** A search that found nothing says what it looked for and where: "Nothing found for “walking” in Starred." */
+export function nothingFound(words: string, where: string): EmptyWords {
+  const typed = words.trim();
+  return { fact: typed === "" ? `Nothing found in ${where}.` : `Nothing found for “${typed}” in ${where}.` };
 }

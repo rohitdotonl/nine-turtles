@@ -48,8 +48,8 @@ test("a fresh nine turtles shows the welcome in the reading area: the paste fiel
   await signIn(page);
   // The welcome is in the reading area, centred, and owns the screen (decision 0041): the list
   // beside it says nothing, and the sidebar has no find field while there's nothing to find.
-  const reading = page.getByRole("region", { name: "A quiet place to read." });
-  await expect(reading.getByRole("heading", { level: 2, name: "A quiet place to read." })).toBeVisible();
+  const reading = page.getByRole("region", { name: "Hello. Who would you like to read?" });
+  await expect(reading.getByRole("heading", { level: 2, name: "Hello. Who would you like to read?" })).toBeVisible();
   await expect(reading.getByLabel("Paste a website or feed URL")).toBeVisible();
   await expect(reading.getByRole("button", { name: "Add feed" })).toBeVisible();
   await expect(page.getByText("Nothing here yet.")).toHaveCount(0);
@@ -91,7 +91,7 @@ test("a fresh nine turtles shows the welcome in the reading area: the paste fiel
   await choose(page, `<?xml version="1.0"?><opml version="2.0"><body><outline text="Empty"/></body></opml>`);
   await expect(reading.getByRole("status").filter({ hasText: "No new" })).toHaveText("No new feeds were added.");
   await expect(importLink).toBeFocused();
-  await expect(reading.getByRole("heading", { level: 2, name: "A quiet place to read." })).toBeVisible();
+  await expect(reading.getByRole("heading", { level: 2, name: "Hello. Who would you like to read?" })).toBeVisible();
   await expect(sidebar(page).getByRole("link", { name: "Add feed" })).toBeVisible();
 });
 
@@ -101,7 +101,7 @@ test("the welcome stays still under the Add a feed sheet", async ({ page, isMobi
   await page.goto("/unread");
   await appReady(page);
   await signIn(page);
-  const reading = page.getByRole("region", { name: "A quiet place to read." });
+  const reading = page.getByRole("region", { name: "Hello. Who would you like to read?" });
   const shape = () => Promise.all([page.locator("#welcome-heading").boundingBox(), page.getByText("Bring your list from another app…").first().boundingBox()]);
   const before = await shape();
   // Nothing behind the sheet moves as it opens or closes (decision 0048): the welcome keeps its shape under the dim.
@@ -123,7 +123,7 @@ test("on a phone-narrow window, a fresh nine turtles shows the welcome in the li
   await appReady(page);
   await signIn(page);
   const list = page.getByRole("region", { name: "Unread" });
-  await expect(list.getByRole("heading", { level: 2, name: "A quiet place to read." })).toBeVisible();
+  await expect(list.getByRole("heading", { level: 2, name: "Hello. Who would you like to read?" })).toBeVisible();
   await expect(list.getByLabel("Paste a website or feed URL")).toBeVisible();
   await expect(list.getByRole("button", { name: "Bring your list from another app…" })).toBeVisible();
   await expect(page.getByText("Nothing here yet.")).toHaveCount(0);
@@ -141,7 +141,7 @@ test("a new reader brings their list from another app straight from the welcome"
   );
   // The welcome gives way to Unread, whose line says what came in; the folder is in the sidebar.
   await expect(page.getByText("Added 1 feed and 1 folder. Its articles arrive over the next few minutes.")).toBeVisible();
-  await expect(page.getByRole("heading", { level: 2, name: "A quiet place to read." })).toHaveCount(0);
+  await expect(page.getByRole("heading", { level: 2, name: "Hello. Who would you like to read?" })).toHaveCount(0);
   await expect(sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) })).toBeVisible();
 });
 
@@ -149,11 +149,11 @@ test("on a phone, a new reader who follows no one opens on the welcome, and Back
   await newReader(page, 390);
   await page.goto(new URL("/", FEEDS_APP).href);
   await appReady(page);
-  await expect(page.getByRole("heading", { level: 2, name: "A quiet place to read." })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Hello. Who would you like to read?" })).toBeVisible();
   await expect(field(page)).toBeVisible();
   await page.goBack();
   await expect(page.getByRole("link", { name: /^Unread/ })).toBeVisible();
-  await expect(page.getByRole("heading", { level: 2, name: "A quiet place to read." })).toBeHidden();
+  await expect(page.getByRole("heading", { level: 2, name: "Hello. Who would you like to read?" })).toBeHidden();
 });
 
 test("on a small phone, the welcome's hint fits its field, at 320 and 375 pixels and with larger text", async ({ page, isMobile }) => {
@@ -202,7 +202,7 @@ test("the welcome's New to feeds? opens a sheet that explains feeds and offers a
   await page.goto("/unread");
   await appReady(page);
   await signIn(page);
-  const reading = page.getByRole("region", { name: "A quiet place to read." });
+  const reading = page.getByRole("region", { name: "Hello. Who would you like to read?" });
   await reading.getByRole("link", { name: "New to feeds? Start here" }).click();
   await expect(page).toHaveURL(/\/new-to-feeds$/);
   const sheet = page.getByRole("dialog", { name: "New to feeds?" });
@@ -300,7 +300,7 @@ test("on a phone, New to feeds? is a page sheet with its X and the main action a
   // The X goes back to the welcome it opened from.
   await page.getByRole("button", { name: "Close" }).click();
   await expect(page).toHaveURL(/\/unread$/);
-  await expect(page.getByRole("heading", { level: 2, name: "A quiet place to read." })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Hello. Who would you like to read?" })).toBeVisible();
 });
 
 test("a, a website's address and Enter add its feed, and its articles appear", async ({ page }) => {

@@ -13,7 +13,7 @@ async function openApp(page: Page, path = "/unread") {
 const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
 const list = (page: Page) => page.getByRole("region", { name: /^(Unread|Starred|All)$/ });
 // The reading area: an article, "Time to read something beautiful.", or the welcome on a nine turtles with no feeds.
-const readingArea = (page: Page) => page.getByRole("region", { name: /^(Article|A quiet place to read\.)$/ });
+const readingArea = (page: Page) => page.getByRole("region", { name: /^(Article|Hello\. Who would you like to read\?)$/ });
 const toggle = (page: Page) => page.getByRole("button", { name: "Sidebar" });
 
 test("a wide window shows three areas, a medium one two, a phone-narrow one one", async ({ page }) => {
@@ -104,7 +104,7 @@ test("the sidebar lists Unread, Starred, All and Recently read, with a grey pill
   await expect(page).toHaveURL(/\/starred$/);
   await expect(sidebar(page).getByRole("link", { name: "Starred" })).toHaveAttribute("aria-current", "page");
   await expect(unread).not.toHaveAttribute("aria-current", "page");
-  await expect(page.getByText("No starred articles yet.")).toBeVisible();
+  await expect(page.getByText("Nothing starred yet.")).toBeVisible();
 });
 
 test("g then u, s or a goes to Unread, Starred or All; reload and Back keep your place", async ({ page }) => {

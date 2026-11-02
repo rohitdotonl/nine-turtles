@@ -1564,7 +1564,7 @@ input {
 .reading-empty {
   font-family: var(--font-serif);
   font-size: var(--text-large);
-  line-height: var(--text-large--line-height);
+  line-height: 2rem;
   color: var(--muted);
   text-align: center;
 }

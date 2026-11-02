@@ -228,8 +228,9 @@ pub fn parse_from(text: &str) -> Result<Mailbox, String> {
     })
 }
 
-/// The words every email ends with: who sent it, and that nothing else will come.
-pub const SIGN_OFF: &str = "\n\nnine turtles\n";
+/// The words every email ends with: the person who sent it, since emails
+/// speak as Rohit (DESIGN.md, Voice; decision 0140), then the name.
+pub const SIGN_OFF: &str = "\n\nRohit\nnine turtles\n";
 
 #[cfg(test)]
 mod tests {

@@ -552,10 +552,10 @@ test.describe("adding nine turtles to the home screen", () => {
       expect(image.headers()["content-type"]).toBe("image/png");
     }
     expect((await page.request.get("/icons/apple-touch-icon.png")).ok()).toBe(true);
-    // The browser tab's icon: a single turtle (decision 0078), drawn so it follows light and dark.
+    // The browser tab's icon: a single turtle (decision 0078), light on the app icon's black, by day and night (decision 0140).
     const tabIcon = await page.request.get("/icons/icon.svg");
     expect(tabIcon.headers()["content-type"]).toContain("image/svg+xml");
-    expect(await tabIcon.text()).toContain("prefers-color-scheme:dark");
+    expect(await tabIcon.text()).toContain('fill="#141414"');
 
     await page.goto("/");
     await appReady(page);

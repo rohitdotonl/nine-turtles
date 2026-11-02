@@ -72,7 +72,7 @@ test("the logo stands above the name on sign-in and before it in the sidebar, hi
   await signIn(page);
   // A phone that follows no one opens on the welcome (decision 0137); Escape goes back to the feeds, where the wordmark is.
   if (isMobile) {
-    await expect(page.getByRole("heading", { level: 2, name: "A quiet place to read." })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Hello. Who would you like to read?" })).toBeVisible();
     await page.keyboard.press("Escape");
   }
   const wordmark = page.getByRole("heading", { level: 1 });
@@ -150,7 +150,7 @@ test("sign in with the keyboard, stay signed in, sign out", async ({ page }) => 
   await expect(page.locator("#sidebar")).toBeAttached();
   // The keyboard's place moves to the new screen's heading: what there is to read (here, with no
   // feeds yet, the welcome's, which a phone opens on too; decisions 0118, 0137).
-  await expect(page.getByRole("heading", { level: 2, name: "A quiet place to read." })).toBeFocused();
+  await expect(page.getByRole("heading", { level: 2, name: "Hello. Who would you like to read?" })).toBeFocused();
 
   // Still signed in after closing and reopening (a reload, here).
   await page.reload();

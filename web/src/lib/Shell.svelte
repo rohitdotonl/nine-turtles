@@ -55,13 +55,13 @@
   import { nameFor, parentOf, parse, pathFor, titleFor, type Route } from "./router";
   import { sharedAddress } from "./share";
   import { followTitle } from "./follow";
-  import { scopeFor, searchParams, searchedTerms } from "./search";
+  import { scopeFor, scopeName, searchParams, searchedTerms } from "./search";
   import { sameQuery, type SavedSearch } from "./saved";
   import type { Collection, CollectionChange } from "./collections";
   import { CollectionSheets } from "./collecting.svelte";
   import { Searching } from "./searching.svelte";
   import { LoadedLibrary } from "./library.svelte";
-  import { emptyText, insteadOfList, missingFrom, type Found } from "./listWording";
+  import { emptyText, insteadOfList, missingFrom, nothingFound, type Found } from "./listWording";
   import { headingFor, placeNameOf } from "./listHeading";
   import { focusArriving, landingFor, type Headings } from "./landing";
   import { moveArticle, nextFeed, type ArticleMove } from "./moving";
@@ -1336,7 +1336,7 @@
                   {source}
                   order={settings.sort}
                   {notice}
-                  empty={searching.shown ? "Nothing found." : emptyText(under)}
+                  empty={searching.shown ? nothingFound(searching.shown.words, scopeName(searching.shown.scope, library.names)) : emptyText(under, currentFeed?.checkedAt ?? null)}
                   bold={searching.shown ? searchedTerms(searching.shown.words) : []}
                   onChoose={chose}
                   onUnreadChange={(feedId, change) => library.unreadChanged(feedId, change)}
@@ -1390,9 +1390,9 @@
             <!--
               One quiet line in the middle of the paper, as a Mac app shows when nothing is chosen
               (decision 0053): serif, muted, never the accent, no picture. Screen readers also hear,
-              when the list has something to open, how to open one.
+              when the list has something to open, how to open one. It sits 40% down (decision 0140).
             -->
-            <section aria-label="Article" class="flex min-w-0 flex-1 flex-col items-center justify-center bg-paper px-5">
+            <section aria-label="Article" class="flex min-w-0 flex-1 flex-col items-center justify-center bg-paper px-5 pb-[20vh]">
               <div class="relative">
                 <p class="reading-empty">Time to read something beautiful.</p>
                 {#if listCount > 0 && !missing}
