@@ -30,9 +30,11 @@ made the help possible. The Claude Doc "Marketing: the plan"
    still matter to him.
 7. **Answer honestly when people ask** how to follow blogs without social
    media, naming several apps, free ones too.
-8. **A kind note when a blogger's feed breaks** (needs building; after
-   launch, only when Rohit says so): nine turtles tells the blogger how to
-   fix it, never who reads them.
+8. **A kind note when a blogger's feed breaks,** written by Rohit by hand
+   (Rohit, 2 November 2026): the owner report lists feeds broken for over
+   a week that 3 or more readers follow, never who (needs building; after
+   launch, only when Rohit says so). nine turtles never emails bloggers by
+   itself.
 9. **Let the app's kindness be what people talk about:** easy leaving and
    export, refunds with no questions, Rohit answers every email.
 

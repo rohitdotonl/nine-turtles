@@ -17,7 +17,9 @@
   in Settings, not offered once at setup), installing the app said plainly,
   and "How did you hear about nine turtles?" (totals only, in the owner
   report).
-- **To discuss:** tags, and a note to bloggers whose feed breaks.
+- **Settled the same day:** no tags (folders stay folders); the note to
+  bloggers whose feed breaks is written by Rohit by hand, from a list in
+  the owner report, never sent automatically.
 - **Last, with prices and launch:** the 30-day trial, after-trial checking
   and pause instead of cancel: there's no subscription to pause until
   payments are built for real.
