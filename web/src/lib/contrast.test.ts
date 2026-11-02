@@ -46,7 +46,7 @@ const THEMES: Record<string, Record<string, string>> = Object.fromEntries(
   Object.entries(SELECTORS).map(([name, selector]) => [name, theme(selector)]),
 );
 const BACKGROUNDS = ["paper", "list", "sidebar", "tint-list", "tint-sidebar"];
-const BRAUN = ["brushed", "anodised", "fountain-pen", "heather", "signal"];
+const BRAUN = ["fountain-pen", "signal"];
 
 describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
   it("defines every color", () => {
@@ -84,7 +84,7 @@ describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
     expect(contrast(colors.danger!, colors.list!)).toBeGreaterThanOrEqual(4.5);
   });
 
-  // The five Braun themes' accent is a bright signal color, drawn only as the
+  // The Braun themes' accent is a bright signal color, drawn only as the
   // unread dot and a search's faint tone, never as text, so it's held to the
   // 3 : 1 for marks below instead (the owner's choice, 1 November 2026).
   it.runIf(!BRAUN.some((name) => _name.startsWith(name)))("has the accent at AAA (7 : 1) on the reading area", () => {

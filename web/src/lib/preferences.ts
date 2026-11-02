@@ -2,7 +2,7 @@
 // device, not to the reader's account: a phone and a laptop often want
 // different sizes. So they're kept in the browser's own storage, and nothing
 // is lost if that storage is unavailable: nine turtles simply uses the defaults.
-import { LOOKS, THEMES, isAppearance, isTheme, resolveMode, type Appearance, type Mode, type Theme } from "./themes";
+import { LOOKS, THEMES, isAppearance, resolveMode, savedTheme, type Appearance, type Mode, type Theme } from "./themes";
 import { deviceStorage } from "./device";
 import { isRecord } from "./http";
 
@@ -64,7 +64,7 @@ export function load(storage: Pick<Storage, "getItem"> | undefined = deviceStora
   }
   const s = isRecord(saved) ? saved : {};
   return {
-    theme: isTheme(s.theme) ? s.theme : DEFAULTS.theme,
+    theme: savedTheme(s.theme),
     appearance: isAppearance(s.appearance) ? s.appearance : DEFAULTS.appearance,
     readingFont: isReadingFont(s.readingFont) ? s.readingFont : DEFAULTS.readingFont,
     textSize:

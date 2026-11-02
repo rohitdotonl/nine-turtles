@@ -38,7 +38,7 @@ what's live.
 
 ## Color
 
-- **Four themes**, each with a day and a night version: **Original**, **Plain**, **Fountain pen** (the warm one) and **Signal**. Readers on Brushed move to Original; readers on Anodised or Heather move to Fountain pen. (Being built; seven themes are live today.)
+- **Four themes**, each with a day and a night version: **Original**, **Plain**, **Fountain pen** (the warm one) and **Signal**. Readers on Brushed move to Original; readers on Anodised or Heather move to Fountain pen. (Live, decision 0145.)
 - **Each theme has one color, its accent:** the unread dot and the faint tone behind a search match, nothing else. Never a button, a link or a focus outline. (Live)
 
   | Theme | Accent by day | Accent by night |
@@ -47,6 +47,8 @@ what's live.
   | Plain | the text color | the text color |
   | Fountain pen | old-ink brown `#8C5500` | `#DCAA6A` |
   | Signal | violet `#6953A0` | `#B8A8EE` |
+
+  Fountain pen's and Signal's retuned dots are being built; until then they are burnt orange and indigo (`web/src/themes.css`).
 
 - **The dot is never green or red** (green and red are the colors most often confused). (Live)
 - **The star** is drawn in the theme's own ink: filled when starred, an outline when not. Green retired. (Live, decision 0143)

@@ -25,6 +25,14 @@ describe("reader preferences", () => {
     expect(load(storage)).toEqual(DEFAULTS);
   });
 
+  it("opens a retired theme (decision 0145) as the theme that replaced it, keeping the rest", () => {
+    const storage = memory();
+    storage.setItem("nine-turtles.preferences", JSON.stringify({ theme: "heather", appearance: "dark", lineWidth: "wide" }));
+    expect(load(storage)).toEqual({ ...DEFAULTS, theme: "fountain-pen", appearance: "dark", lineWidth: "wide" });
+    storage.setItem("nine-turtles.preferences", JSON.stringify({ theme: "brushed" }));
+    expect(load(storage)).toEqual(DEFAULTS);
+  });
+
   it("remembers what was chosen on this device", () => {
     const storage = memory();
     const chosen: Preferences = { theme: "original", appearance: "dark", readingFont: "atkinson", textSize: 4, lineWidth: "wide" };

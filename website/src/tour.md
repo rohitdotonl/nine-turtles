@@ -24,9 +24,10 @@ title, as in a magazine.
   own serif) and the line width. The **Aa** button beside every article
   (in the bar above it on a computer, below it on a phone) holds them,
   one press from the text.
-- **Two themes, by day and by night.** Original, white paper with ink-blue
-  marks for what's unread, or Plain, black on white with links in the
-  browser's own blue. Each follows your device's light or dark setting, or
+- **Four themes, by day and by night.** Original, white paper with ink-blue
+  marks for what's unread; Plain, black on white with links in the
+  browser's own blue; Fountain pen, the warm one; and Signal, pure white
+  and graphite. Each follows your device's light or dark setting, or
   stays the way you choose.
 - **Videos play in the publisher's player.** A YouTube video plays in
   YouTube's own player, so the views stay theirs.

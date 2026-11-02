@@ -1,8 +1,9 @@
-// The themes from DESIGN.md → "Themes": Original (decision 0056), Plain
-// (decision 0063) and five after Braun's colors, each with a day ("light") and a night ("dark") version. It is written to
+// The four themes from DESIGN.md → "Themes": Original (decision 0056), Plain
+// (decision 0063), Fountain pen and Signal (decisions 0136, 0145), each with a
+// day ("light") and a night ("dark") version. It is written to
 // <html data-theme="…"> and the version in use to data-mode (see
 // preferences.ts; themes.css holds both versions' colors).
-export const THEMES = ["original", "plain", "brushed", "anodised", "fountain-pen", "heather", "signal"] as const;
+export const THEMES = ["original", "plain", "fountain-pen", "signal"] as const;
 
 export type Theme = (typeof THEMES)[number];
 
@@ -35,25 +36,10 @@ export const LOOKS: Record<Theme, { label: string } & Record<Mode, Look>> = {
     light: { page: "#ffffff" },
     dark: { page: "#121212" },
   },
-  brushed: {
-    label: "Brushed",
-    light: { page: "#fafaf9" },
-    dark: { page: "#1b1b1c" },
-  },
-  anodised: {
-    label: "Anodised",
-    light: { page: "#f8f9fa" },
-    dark: { page: "#191c20" },
-  },
   "fountain-pen": {
     label: "Fountain pen",
     light: { page: "#fafaf8" },
     dark: { page: "#171b24" },
-  },
-  heather: {
-    label: "Heather",
-    light: { page: "#faf9fb" },
-    dark: { page: "#1c1b20" },
   },
   signal: {
     label: "Signal",
@@ -64,6 +50,24 @@ export const LOOKS: Record<Theme, { label: string } & Record<Mode, Look>> = {
 
 export function isTheme(value: unknown): value is Theme {
   return typeof value === "string" && (THEMES as readonly string[]).includes(value);
+}
+
+/**
+ * Themes that were retired, and the theme a reader who chose one now sees
+ * (decision 0145): Brushed was closest to Original, Anodised and Heather to
+ * Fountain pen. Saved choices are kept on the device, so this is read every
+ * time preferences load, not run once.
+ */
+const RETIRED: Record<string, Theme> = {
+  brushed: "original",
+  anodised: "fountain-pen",
+  heather: "fountain-pen",
+};
+
+/** A saved theme as a theme nine turtles still has: a retired one becomes its successor, anything unknown Original. */
+export function savedTheme(value: unknown): Theme {
+  if (isTheme(value)) return value;
+  return typeof value === "string" && Object.hasOwn(RETIRED, value) ? RETIRED[value]! : "original";
 }
 
 export function isAppearance(value: unknown): value is Appearance {

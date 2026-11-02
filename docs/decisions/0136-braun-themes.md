@@ -1,5 +1,7 @@
 # 0136: Five themes after Braun's colors
 
+*Partly replaced by [0145](0145-four-themes.md) (2 November 2026): Brushed, Anodised and Heather retired; Fountain pen and Signal remain, and the 3 : 1 rule for their accent still holds.*
+
 *1 November 2026.*
 
 **Decision.** Five new themes join Original and Plain, each with a day and
