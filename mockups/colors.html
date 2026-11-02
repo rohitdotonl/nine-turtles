@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nine turtles colors</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Atkinson+Hyperlegible+Next:wght@400;500;600&display=swap">
+<style>
+/* Color, part 2 of the brand. Every sample is drawn in the decided type (Literata + Atkinson) and the real theme values. */
+:root { --bg: #f2f2f0; --ink: #141414; --ink2: #3c3c40; --muted: #5f5f64; --line: rgba(20,20,20,.12);
+  --lit: 'Literata', Georgia, serif; --atk: 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--atk); font-size: 17px; line-height: 1.55; }
+.wrap { max-width: 1160px; margin: 0 auto; padding: 56px max(16px, env(safe-area-inset-left, 0px)) 120px; display: grid; gap: 96px; }
+.intro { display: grid; gap: 12px; max-width: 700px; }
+h1, h2 { font-family: var(--lit); font-weight: 400; margin: 0; letter-spacing: -.01em; }
+h1 { font-size: 40px; line-height: 1.15; } h2 { font-size: 28px; line-height: 1.2; }
+h3 { font-size: 16px; font-weight: 600; margin: 0; }
+p { margin: 0; color: var(--ink2); max-width: 68ch; }
+section { display: grid; gap: 20px; }
+.mode { display: flex; gap: 8px; }
+.mode button { font: inherit; font-size: 15px; min-height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; }
+.mode button[aria-pressed="true"] { border-color: var(--ink); font-weight: 600; }
+button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.opt { background: #fff; border-radius: 12px; box-shadow: 0 0 0 1px var(--line); padding: 18px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.opt.pick { box-shadow: 0 0 0 2px var(--ink); }
+.opt .tag { font-size: 14px; color: var(--muted); }
+.opt p { font-size: 15px; }
+.stack { display: grid; gap: 6px; }
+/* app samples */
+.row { display: grid; grid-template-columns: 22px 1fr 26px; align-items: start; gap: 6px; padding: 10px 12px 10px 4px; border-radius: 10px; }
+.row .dot { width: 8px; height: 8px; border-radius: 50%; margin: 9px auto 0; }
+.row b { font-family: var(--lit); font-weight: 600; font-size: 16px; line-height: 24px; display: block; }
+.row small { font-size: 12.5px; display: block; }
+.row .th { font-size: 11px; font-weight: 600; letter-spacing: .02em; display: block; margin-bottom: 2px; }
+.sheet { border-radius: 12px; padding: 16px; display: grid; gap: 12px; font-size: 15px; }
+.sheet label { font-size: 13px; }
+.field { border-radius: 8px; padding: 9px 12px; font-size: 15px; }
+.msg { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+.acts { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.acts .del { margin-right: auto; font-weight: 600; }
+.acts .cn { padding: 7px 12px; border-radius: 8px; }
+.acts .mn { padding: 7px 14px; border-radius: 8px; font-weight: 600; }
+.dots { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.tile { border-radius: 10px; padding: 12px; display: grid; gap: 8px; }
+.tile .n { font-size: 12.5px; font-weight: 600; }
+.tile .r { display: flex; gap: 8px; align-items: center; font-family: var(--lit); font-size: 14px; }
+.tile .r i { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.icons { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.icon { width: 72px; height: 72px; border-radius: 17px; display: grid; place-items: center; }
+.card { border-radius: 10px; overflow: hidden; display: grid; grid-template-columns: 30% 1fr; aspect-ratio: 1200 / 630; box-shadow: 0 0 0 1px var(--line); }
+.card .l { padding: 7% 8%; display: flex; gap: 8px; align-items: flex-start; font-family: var(--lit); font-weight: 600; font-size: 15px; }
+.card .r { padding: 7%; display: grid; align-content: center; gap: 8px; }
+.card .r b { font-family: var(--atk); font-weight: 600; font-size: 19px; }
+.card .r span { font-family: var(--lit); font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="intro">
+    <h1>Color</h1>
+    <p>The idea: ink and paper do the work. Each theme has one color, its dot, which means "something here is yours to read". Everything else is ink, grey or a word. Every sample below uses the real theme colors and the letters you just chose.</p>
+    <div class="mode" role="group" aria-label="Show by day or by night"><button type="button" id="d" aria-pressed="true">By day</button><button type="button" id="n" aria-pressed="false">By night</button></div>
+  </header>
+
+  <section>
+    <h2>1. The star</h2>
+    <p>Filled means starred, an outline means not. The shape already says it, so the color only has to look calm.</p>
+    <div class="opts" id="star"></div>
+  </section>
+
+  <section>
+    <h2>2. Delete, and errors</h2>
+    <p>Today it's a red. It sits right next to Anodised's and Fountain pen's orange dot, so in those themes "Unsubscribe" and "unread" look like the same color. Errors (a refused field) should follow whatever delete does, so the app has one way of warning you.</p>
+    <div class="opts" id="del"></div>
+  </section>
+
+  <section>
+    <h2>3. The seven dots as one family</h2>
+    <p>Today two dots are the same orange (Anodised and Fountain pen), some are loud and some faint, and Heather's dot is gold while its greys are lilac. The retune gives every dot the same lightness and strength and spreads them evenly, still never green or red. Original and Plain don't change.</p>
+    <div class="opts" id="dots"></div>
+  </section>
+
+  <section>
+    <h2>4. nine turtles' own color, outside the app</h2>
+    <p>The app icon, the preview card when someone shares a link, and emails. Inside the app the blue means "unread", so using it as the brand would give it two meanings.</p>
+    <div class="opts" id="brand"></div>
+  </section>
+</div>
+<script>
+const TH = {
+  original:{n:'Original', d:{p:'#ffffff',l:'#f7f7f7',s:'#efeff1',i:'#141414',m:'#5f5f64',a:'#2c4f8c'}, k:{p:'#121212',l:'#1a1a1a',s:'#232323',i:'#e8e8e8',m:'#a4a4a8',a:'#94b2e6'}},
+  plain:{n:'Plain', d:{p:'#ffffff',l:'#fbfbfb',s:'#f5f5f5',i:'#000000',m:'#595959',a:'#000000'}, k:{p:'#121212',l:'#161616',s:'#1c1c1c',i:'#ffffff',m:'#a6a6a6',a:'#ffffff'}},
+  brushed:{n:'Brushed', d:{p:'#fafaf9',l:'#f1f1ef',s:'#e6e6e3',i:'#18181a',m:'#56565b',a:'#2b6c8c',a2:'#006f98'}, k:{p:'#1b1b1c',l:'#212122',s:'#29292b',i:'#ececea',m:'#adadb0',a:'#6fb0d4',a2:'#69c1e6'}},
+  anodised:{n:'Anodised', d:{p:'#f8f9fa',l:'#eff1f3',s:'#e3e7eb',i:'#141a21',m:'#4e5763',a:'#cf4f17',a2:'#9a4825'}, k:{p:'#191c20',l:'#1f2328',s:'#272c32',i:'#e9edf2',m:'#a9b2bc',a:'#f08a52',a2:'#eb9f81'}},
+  fountain:{n:'Fountain pen', d:{p:'#fafaf8',l:'#f2f1ed',s:'#e6e6e1',i:'#152039',m:'#4c5468',a:'#c2410c',a2:'#8c5500'}, k:{p:'#171b24',l:'#1c212b',s:'#232937',i:'#e6eaf3',m:'#a5adbe',a:'#f08a5d',a2:'#dcaa6a'}},
+  heather:{n:'Heather', d:{p:'#faf9fb',l:'#f2f1f4',s:'#e6e4eb',i:'#1b1a21',m:'#55525f',a:'#9a6608',a2:'#884783'}, k:{p:'#1c1b20',l:'#222127',s:'#2a2830',i:'#edebf1',m:'#afacb9',a:'#e0b04a',a2:'#d99dd3'}},
+  signal:{n:'Signal', d:{p:'#ffffff',l:'#f5f5f4',s:'#ebebea',i:'#111111',m:'#555555',a:'#5a3fc0',a2:'#6953a0'}, k:{p:'#181818',l:'#1e1e1e',s:'#262626',i:'#eeeeee',m:'#aaaaaa',a:'#a99af0',a2:'#b8a8ee'}}
+};
+let night = false;
+const C = t => night ? TH[t].k : TH[t].d;
+const star = (fill, filled) => `<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z" fill="${filled ? fill : 'none'}" stroke="${fill}" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
+const T = '<path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/>';
+const P = [[18.5,22.7],[42.5,22.7],[66.5,22.7],[23.7,46.7],[47.7,46.7],[71.7,46.7],[18.5,70.7],[42.5,70.7],[66.5,70.7]];
+const mark = (ink, w) => `<svg width="${w}" height="${w*0.762}" viewBox="9.5 18.7 72.8 55.5" aria-hidden="true"><g fill="${ink}">${P.map(p=>`<g transform="translate(${p[0]} ${p[1]})">${T}</g>`).join('')}</g></svg>`;
+const opt = (o, body) => `<div class="opt${o.pick?' pick':''}"><span class="tag">${o.tag}</span><h3>${o.t}</h3>${body}<p>${o.p}</p></div>`;
+
+function drawStar() {
+  const show = ['original','anodised','heather'];
+  const O = [
+    {tag:'Today', t:'Green', c:()=> night ? '#56d364' : '#2a8a43', p:'The only green in the app, and the one color that has nothing to do with the theme you chose.'},
+    {tag:'Bold', t:'One warm gold', c:()=> night ? '#e3b34c' : '#8a5a00', p:'The usual star color. But it sits right next to Heather\'s gold dot, so in Heather a star and "unread" would look alike.'},
+    {tag:'My pick', pick:true, t:'The theme\'s own ink', c:t=> C(t).i, p:'A filled star in the text color. The dot stays the only color on the screen, and it works in all seven themes with nothing to check.'}
+  ];
+  document.getElementById('star').innerHTML = O.map(o => opt(o, `<div class="stack">${show.map(t=>{const k=C(t);return `<div class="row" style="background:${k.l};color:${k.i}"><span class="dot" style="background:${k.a}"></span><span><span class="th" style="color:${k.m}">${TH[t].n}</span><b>On keeping a commonplace book</b><small style="color:${k.m}">Priya Ramaswamy</small></span>${star(o.c(t), true)}</div><div class="row" style="background:${k.l};color:${k.i}"><span></span><span><b style="font-weight:400">Notes from a slow week of sourdough</b><small style="color:${k.m}">Ines Halvorsen</small></span>${star(k.m, false)}</div>`}).join('')}</div>`)).join('');
+}
+function drawDel() {
+  const show = ['original','anodised'];
+  const O = [
+    {tag:'Today', t:'Muted red', c:t=> night ? '#e8968a' : '#a3261b', p:'Clear, but in Anodised (and Fountain pen) the red and the orange dot are almost the same color.'},
+    {tag:'My pick', pick:true, t:'Oxblood, a deeper red', c:t=> night ? '#e39aa4' : '#8c2f39', p:'Still says "careful" before you press, which is what makes it forgiving. Pulled away from orange, so it never looks like the dot. Errors use it too.'},
+    {tag:'Bold (the creative director\'s pick)', t:'Ink, with the word doing the work', c:t=> C(t).i, p:'No red anywhere. The word says what goes, it sits apart, and Undo follows. Calmer, but Delete then looks as safe as Save until you read it.'}
+  ];
+  document.getElementById('del').innerHTML = O.map(o => opt(o, `<div class="stack">${show.map(t=>{const k=C(t); const c=o.c(t); return `<div class="sheet" style="background:${k.p};color:${k.i};box-shadow:0 0 0 1px ${k.i}22">
+    <div class="row" style="padding:0;grid-template-columns:22px 1fr"><span class="dot" style="background:${k.a}"></span><span><span class="th" style="color:${k.m}">${TH[t].n}</span><b>Hedgerow Notes</b></span></div>
+    <label style="color:${k.m}">Address</label><div class="field" style="box-shadow:0 0 0 ${o.tag.startsWith('Bold')?2:1}px ${c};background:${k.i}08">hedgerow-notes.example/feed</div>
+    <div class="msg" style="color:${c}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="${c}"/><rect x="7.1" y="3.6" width="1.8" height="5.6" rx=".9" fill="${k.p}"/><circle cx="8" cy="11.6" r="1.1" fill="${k.p}"/></svg><span${o.tag.startsWith('Bold')?' style="font-weight:600"':''}>That address didn't answer. Check it and try again.</span></div>
+    <div class="acts"><span class="del" style="color:${c}">Unsubscribe</span><span class="cn" style="background:${k.i}10">Cancel</span><span class="mn" style="background:${k.i};color:${k.p}">Save</span></div></div>`}).join('')}</div>`)).join('');
+}
+function drawDots() {
+  const order = ['original','plain','brushed','anodised','fountain','heather','signal'];
+  const O = [
+    {tag:'Today', t:'As shipping now', key:'a', p:'Two oranges, one gold on lilac, and uneven strength from theme to theme.'},
+    {tag:'My pick', pick:true, t:'Retuned as one family', key:'a2', p:'Same lightness and strength for every dot: rust, old-ink brown, steel, ink blue, violet and heather. Each at 4 : 1 or more on its own selected row.'}
+  ];
+  document.getElementById('dots').innerHTML = O.map(o => opt(o, `<div class="dots">${order.map(t=>{const k=C(t); const a=k[o.key]||k.a; return `<div class="tile" style="background:${k.l};color:${k.i};box-shadow:0 0 0 1px ${k.i}14"><span class="n">${TH[t].n}</span><span class="r"><i style="background:${a}"></i>A new essay</span><span class="r" style="color:${k.m}"><i></i>Read already</span></div>`}).join('')}</div>`)).join('');
+  document.querySelectorAll('#dots .opt').forEach(el => el.style.gridColumn = '1 / -1');
+}
+function drawBrand() {
+  const O = [
+    {tag:'My pick', pick:true, t:'Ink only', tiles:[['#ffffff','#141414','0 0 0 1px #14141426'],['#121212','#e8e8e8','none']], card:['#ffffff','#efeff1','#141414'], p:'Black on white with the grey band, like the website you liked. The logo was always one ink. The colors stay the reader\'s, inside the app.'},
+    {tag:'Bold', t:'Ink blue', tiles:[['#2c4f8c','#ffffff','none'],['#1b2f52','#e8e8e8','none']], card:['#2c4f8c','#24427a','#ffffff'], p:'Handsome, and easy to spot on a phone. But the same blue means "unread" in the app, so it would mean two things.'}
+  ];
+  document.getElementById('brand').innerHTML = O.map(o => opt(o, `<div class="icons">${o.tiles.map(([b,i,s])=>`<span class="icon" style="background:${b};box-shadow:${s}">${mark(i,46)}</span>`).join('')}</div>
+    <div class="card" style="background:${o.card[0]};color:${o.card[2]}"><div class="l" style="background:${o.card[1]}">${mark(o.card[2],22)}nine turtles</div><div class="r"><b>Read people. Write back.</b><span>A reader for the small web.</span></div></div>`)).join('');
+}
+function draw() { drawStar(); drawDel(); drawDots(); drawBrand(); }
+const bd = document.getElementById('d'), bn = document.getElementById('n');
+bd.onclick = () => { night = false; bd.setAttribute('aria-pressed','true'); bn.setAttribute('aria-pressed','false'); draw(); };
+bn.onclick = () => { night = true; bn.setAttribute('aria-pressed','true'); bd.setAttribute('aria-pressed','false'); draw(); };
+draw();
+</script>
+</body>
+</html>
