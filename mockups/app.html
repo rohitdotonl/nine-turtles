@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nine turtles</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cg fill='%23141414'%3E%3Cpath d='M1 11 A5 6 0 0 1 11 11 Z'/%3E%3Ccircle cx='13.4' cy='8.6' r='1.6'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Atkinson+Hyperlegible+Next:wght@400;500;600&display=swap">
+<style>
+/* A real-size, clickable mockup of the app with the decided brand. Not the real app: the articles are made up. */
+:root { --lit: 'Literata', Georgia, serif; --atk: 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, sans-serif; --size: 20px; }
+.t-original { --p:#ffffff; --l:#f7f7f7; --s:#efeff1; --i:#141414; --i2:#3c3c40; --m:#5f5f64; --a:#2c4f8c; --x:#8c2f39; --pill:#e4e4e6; color-scheme: light; }
+.t-original.night { --p:#121212; --l:#1a1a1a; --s:#232323; --i:#e8e8e8; --i2:#c4c4c6; --m:#a4a4a8; --a:#94b2e6; --x:#e39aa4; --pill:#323234; color-scheme: dark; }
+.t-plain { --p:#ffffff; --l:#fbfbfb; --s:#f5f5f5; --i:#000000; --i2:#333333; --m:#595959; --a:#000000; --x:#8c2f39; --pill:#e9e9e9; color-scheme: light; }
+.t-plain.night { --p:#121212; --l:#161616; --s:#1c1c1c; --i:#ffffff; --i2:#cccccc; --m:#a6a6a6; --a:#ffffff; --x:#e39aa4; --pill:#2e2e2e; color-scheme: dark; }
+.t-fountain { --p:#fafaf8; --l:#f2f1ed; --s:#e6e6e1; --i:#152039; --i2:#2e374e; --m:#4c5468; --a:#8c5500; --x:#8c2f39; --pill:#dddcd8; color-scheme: light; }
+.t-fountain.night { --p:#171b24; --l:#1c212b; --s:#232937; --i:#e6eaf3; --i2:#c6cbd8; --m:#a5adbe; --a:#dcaa6a; --x:#e39aa4; --pill:#2f3646; color-scheme: dark; }
+.t-signal { --p:#ffffff; --l:#f5f5f4; --s:#ebebea; --i:#111111; --i2:#303030; --m:#555555; --a:#6953a0; --x:#8c2f39; --pill:#e2e2e1; color-scheme: light; }
+.t-signal.night { --p:#181818; --l:#1e1e1e; --s:#262626; --i:#eeeeee; --i2:#cccccc; --m:#aaaaaa; --a:#b8a8ee; --x:#e39aa4; --pill:#323232; color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--p); color: var(--i); font-family: var(--atk); }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }
+:focus-visible { outline: 2px solid var(--i); outline-offset: 2px; }
+.app { height: 100vh; display: grid; grid-template-columns: 256px 400px 1fr; }
+.side { background: var(--s); padding: 0 12px; border-right: 1px solid color-mix(in srgb, var(--i) 9%, transparent); display: flex; flex-direction: column; overflow-y: auto; }
+.list { background: var(--l); padding: 0 16px; border-right: 1px solid color-mix(in srgb, var(--i) 9%, transparent); overflow-y: auto; }
+.read { background: var(--p); overflow-y: auto; }
+.top { height: 76px; display: flex; align-items: flex-end; padding-bottom: 16px; flex: none; }
+.wm { display: inline-flex; align-items: baseline; gap: 9px; font-family: var(--lit); font-weight: 600; font-size: 23px; letter-spacing: -.01em; padding-left: 10px; }
+.wm svg { flex: none; }
+.nav { display: grid; gap: 2px; margin-top: 14px; font-size: 15px; }
+.nav button { min-height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 8px; width: 100%; }
+.nav button[aria-current="page"] { background: var(--pill); font-weight: 600; }
+.nav svg { width: 18px; height: 18px; color: var(--m); flex: none; }
+.nav .n { margin-left: auto; font-size: 13px; color: var(--m); font-weight: 400; }
+.secn { margin: 22px 10px 6px; font-size: 13px; font-weight: 600; color: var(--m); }
+.foot { margin-top: auto; display: flex; gap: 4px; padding: 8px 0; font-size: 14px; color: var(--i2); }
+.foot button { min-height: 44px; padding: 0 10px; border-radius: 8px; }
+.list .top { font-family: var(--lit); font-size: 27px; padding-left: 24px; letter-spacing: -.005em; justify-content: space-between; padding-right: 4px; }
+.list .top button { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 8px; color: var(--i2); margin-bottom: -10px; }
+.sbox { display: none; margin: 4px 0 8px; }
+.searching .sbox { display: block; }
+.sbox input { width: 100%; min-height: 44px; padding: 0 12px; border-radius: 8px; border: 0; background: var(--p); color: var(--i); font: 15px var(--atk); box-shadow: 0 0 0 1px color-mix(in srgb, var(--i) 55%, transparent); }
+.rows { display: grid; gap: 4px; margin-top: 8px; }
+.row { display: grid; grid-template-columns: 24px 1fr 22px; padding: 12px 10px 12px 0; border-radius: 10px; width: 100%; }
+.row[aria-current="true"] { background: var(--pill); }
+.row i { width: 8px; height: 8px; border-radius: 50%; background: var(--a); margin: 9px auto 0; }
+.row b { font-family: var(--lit); font-size: 18px; line-height: 26px; font-weight: 600; display: block; }
+.row.r b { font-weight: 400; color: var(--i2); }
+.row small { font-size: 13px; color: var(--m); display: block; margin-top: 3px; }
+.st { margin-top: 4px; }
+mark { background: none; color: var(--a); font-weight: 600; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.end { font-family: var(--lit); font-size: 16px; color: var(--m); margin: 36px 0 48px 24px; }
+.read .top { justify-content: flex-end; gap: 8px; color: var(--i2); font-size: 14px; padding: 0 24px 16px; position: sticky; top: 0; background: var(--p); }
+.read .top button, .read .top a { display: inline-flex; gap: 6px; align-items: center; min-height: 44px; padding: 0 10px; border-radius: 8px; color: inherit; text-decoration: none; }
+.read .top .st { margin-top: 0; }
+.read .top .back { display: none; margin-right: auto; }
+article { padding: 0 88px 96px; }
+.t { font-family: var(--lit); font-size: 40px; line-height: 48px; font-weight: 600; letter-spacing: -.012em; max-width: 660px; margin: 28px 0 0; }
+.by { font-size: 14px; color: var(--m); margin-top: 16px; }
+.by b { color: var(--i); font-weight: 600; }
+.bd { font-family: var(--lit); font-size: var(--size); line-height: 1.7; max-width: 660px; margin: 28px 0 0; }
+.bd + .bd { margin-top: 18px; }
+.orig { display: inline-flex; margin-top: 40px; min-height: 44px; align-items: center; color: var(--i); font-size: 15px; text-underline-offset: 3px; }
+.empty { font-family: var(--lit); color: var(--m); padding: 140px 88px; font-size: 18px; }
+/* sheets */
+.veil { position: fixed; inset: 0; background: rgba(0,0,0,.28); display: none; z-index: 5; }
+.night .veil { background: rgba(0,0,0,.55); }
+.veil.open { display: block; }
+.sheet { position: absolute; left: 50%; top: 96px; width: min(560px, calc(100vw - 32px)); transform: translateX(-50%); background: var(--p); border-radius: 12px; box-shadow: 0 0 0 1px color-mix(in srgb, var(--i) 10%, transparent), 0 18px 50px rgba(0,0,0,.18); padding: 24px 28px 28px; display: grid; gap: 16px; max-height: calc(100vh - 128px); overflow-y: auto; }
+.night .sheet { background: var(--s); }
+.sheet header { display: flex; justify-content: space-between; align-items: center; }
+.sheet h2 { font-family: var(--lit); font-weight: 600; font-size: 24px; margin: 0; }
+.close { width: 44px; height: 44px; display: grid; place-items: center; color: var(--i2); border-radius: 8px; margin-right: -10px; }
+.sheet label { font-size: 13px; color: var(--i2); display: block; margin-bottom: 6px; }
+.fld { width: 100%; border-radius: 8px; padding: 0 12px; min-height: 44px; font: 15px var(--atk); color: var(--i); border: 0; box-shadow: 0 0 0 1px color-mix(in srgb, var(--i) 55%, transparent); background: color-mix(in srgb, var(--i) 3%, transparent); }
+.fld[aria-invalid="true"] { box-shadow: 0 0 0 1px var(--x); }
+.msg { margin-top: -10px; display: none; gap: 8px; align-items: center; font-size: 14px; color: var(--x); }
+.msg.show { display: flex; }
+.acts { display: flex; gap: 12px; align-items: center; margin-top: 4px; }
+.acts button { min-height: 44px; display: inline-flex; align-items: center; border-radius: 8px; font-size: 15px; }
+.acts .del { margin-right: auto; color: var(--x); font-weight: 600; padding: 0 10px; margin-left: -10px; }
+.acts .cn { padding: 0 16px; background: color-mix(in srgb, var(--i) 7%, transparent); }
+.acts .mn { padding: 0 18px; background: var(--i); color: var(--p); font-weight: 600; }
+.gname { font-size: 13px; font-weight: 600; color: var(--m); margin: 8px 0 -6px; }
+.group { background: color-mix(in srgb, var(--i) 3.5%, var(--p)); border-radius: 12px; }
+.srow { display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center; padding: 12px 16px; }
+.srow + .srow { border-top: 1px solid color-mix(in srgb, var(--i) 8%, transparent); }
+.srow b { font-weight: 500; font-size: 15.5px; display: block; }
+.srow small { font-size: 13px; color: var(--m); display: block; }
+.sw { display: flex; gap: 6px; }
+.sw button { display: grid; gap: 6px; justify-items: center; font-size: 12.5px; color: var(--i2); min-width: 58px; padding: 4px 0; border-radius: 8px; }
+.sw i { width: 46px; height: 34px; border-radius: 8px; display: grid; place-items: center; position: relative; overflow: hidden; }
+.sw [aria-checked="true"] { font-weight: 600; color: var(--i); text-decoration: underline; text-underline-offset: 3px; }
+.sw [aria-checked="true"] i { outline: 2px solid var(--i); outline-offset: 2px; }
+.seg { display: inline-flex; border-radius: 9px; padding: 2px; background: color-mix(in srgb, var(--i) 7%, transparent); font-size: 14px; }
+.seg button { min-height: 40px; display: inline-flex; align-items: center; padding: 0 14px; border-radius: 7px; }
+.seg [aria-checked="true"] { background: var(--p); box-shadow: 0 0 0 1px color-mix(in srgb, var(--i) 60%, transparent); font-weight: 600; }
+.step { display: inline-flex; align-items: center; gap: 4px; font-size: 15px; }
+.step button { width: 44px; height: 44px; border-radius: 9px; display: grid; place-items: center; background: color-mix(in srgb, var(--i) 7%, transparent); }
+.step output { width: 44px; text-align: center; font-weight: 600; }
+.note { position: fixed; right: 16px; bottom: 16px; font-size: 13px; color: var(--m); background: var(--s); padding: 8px 12px; border-radius: 8px; max-width: 360px; z-index: 4; }
+/* phone */
+@media (max-width: 900px) {
+  .app { grid-template-columns: 1fr; }
+  .side { display: none; }
+  .list .top { padding-left: 24px; }
+  .reading .list { display: none; }
+  .read { display: none; }
+  .reading .read { display: block; }
+  .read .top .back { display: inline-flex; }
+  article { padding: 0 20px 96px; }
+  .t { font-size: 28px; line-height: 34px; }
+  .note { display: none; }
+}
+</style>
+</head>
+<body class="t-original">
+<div class="app" id="app">
+  <nav class="side" aria-label="Places">
+    <div class="top"><span class="wm" id="wm"></span></div>
+    <div class="nav" id="places"></div>
+    <div class="secn">People</div>
+    <div class="nav" id="people" style="margin-top:0"></div>
+    <div class="foot"><button id="addBtn">Add a feed</button><button id="setBtn">Settings</button></div>
+  </nav>
+  <section class="list" aria-label="Articles">
+    <div class="top"><span id="ltitle">Today</span><button id="findBtn" aria-label="Search"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg></button></div>
+    <div class="sbox"><input id="q" type="search" placeholder="Search your articles" aria-label="Search your articles"></div>
+    <div class="rows" id="rows"></div>
+    <p class="end" id="end"></p>
+  </section>
+  <main class="read" id="read"></main>
+</div>
+
+<div class="veil" id="setVeil"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="setH">
+  <header><h2 id="setH">Settings</h2><button class="close" data-close aria-label="Close"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 4l12 12M16 4L4 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></header>
+  <div class="gname">Appearance</div>
+  <div class="group">
+    <div class="srow"><div><b>Theme</b><small>The colors of the whole app.</small></div><div class="sw" role="radiogroup" aria-label="Theme" id="themes"></div></div>
+    <div class="srow"><div><b>Day or night</b><small>Match device follows your device's own setting.</small></div><div class="seg" role="radiogroup" aria-label="Day or night" id="modes"></div></div>
+    <div class="srow"><div><b>Text size</b><small>For articles only.</small></div><div class="step"><button id="smaller" aria-label="Smaller">A−</button><output id="sz">20</output><button id="larger" aria-label="Larger">A+</button></div></div>
+  </div>
+</div></div>
+
+<div class="veil" id="addVeil"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="addH">
+  <header><h2 id="addH">Add a feed</h2><button class="close" data-close aria-label="Close"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 4l12 12M16 4L4 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></header>
+  <div><label for="addr">The address of a blog, newsletter or channel</label><input class="fld" id="addr" value="hedgerow-notes.example/feed" aria-describedby="addMsg"></div>
+  <div class="msg" id="addMsg" role="alert"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="var(--x)"/><rect x="7.1" y="3.6" width="1.8" height="5.6" rx=".9" fill="var(--p)"/><circle cx="8" cy="11.6" r="1.1" fill="var(--p)"/></svg>That address didn't answer. Check it and try again.</div>
+  <div class="acts"><button class="cn" data-close>Cancel</button><button class="mn" id="addGo">Add</button></div>
+</div></div>
+
+<div class="veil" id="editVeil"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="editH">
+  <header><h2 id="editH">Edit feed</h2><button class="close" data-close aria-label="Close"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 4l12 12M16 4L4 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></header>
+  <div><label for="ename">Name</label><input class="fld" id="ename"></div>
+  <div class="acts"><button class="del" data-close>Unsubscribe</button><button class="cn" data-close>Cancel</button><button class="mn" data-close>Save</button></div>
+</div></div>
+
+<p class="note" id="note">A clickable mockup with made-up articles. Try: open articles, Star, Search, Settings (themes), Add a feed (shows an error), j and k to move.</p>
+
+<script>
+const BT = '<path d="M-9 3.5 A7.5 9.5 0 0 1 6 3.5 Z"/><circle cx="10" cy="-0.6" r="2.9"/>';
+const BP = [[9,6],[35,6],[61,6],[18,25],[44,25],[70,25],[9,44],[35,44],[61,44]];
+const nine = h => `<svg height="${h}" width="${(h*82.9/47.5).toFixed(1)}" viewBox="0 0 82.9 47.5" aria-hidden="true"><g fill="currentColor">${BP.map(p=>`<g transform="translate(${p[0]} ${p[1]})">${BT}</g>`).join('')}</g></svg>`;
+document.getElementById('wm').innerHTML = nine(28) + 'nine turtles';
+const star = f => `<svg class="st" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z" fill="${f?'var(--i)':'none'}" stroke="${f?'var(--i)':'var(--m)'}" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
+const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+
+const A = [
+ {who:'Mira Okonkwo-Lind', pub:'Hedgerow Notes', d:'28 October', t:'The year I stopped mending my bicycle myself', b:["For eleven winters I kept a tin of spare spokes by the back door and a printed chart of tyre pressures taped inside the cupboard. This autumn I walked the bike to Tomasz's shop on Fenwick Road instead, and I learned more standing at his counter for twenty minutes than in all those evenings alone.","He didn't fix it while I waited. He showed me where the wheel had been rubbing for a year, and then he asked what I'd been reading.","I told him about the book on hedgerows I'd been carrying around since August, the one with the pressed leaf in it that isn't mine. He said his father had laid hedges in the old way, and that you can still see the cuts if you know where to look.","So now I know where to look. The bicycle is fine. I am a little less sure that doing everything myself was ever the point."], unread:true, star:false},
+ {who:'Ines Halvorsen', pub:'Small Loaves', d:'27 October', t:'Notes from a slow week of sourdough', b:["Monday the starter sulked. Tuesday it rose, a little, as if to make a point. By Thursday I had stopped checking it every hour, and that was the day it doubled.","There is a lesson in that I'd rather not learn, so I'll just tell you about the bread. It was good. Not the best I've made, but the first I didn't hurry."], unread:true, star:false},
+ {who:'Kenji Morrow', pub:'Field Recordings', d:'25 October', t:'What the river sounded like in October', b:["I left the recorder on the bank for six hours. Most of it is water, which is what you'd expect. But at about four in the afternoon, a heron lands, and you can hear it fold its wings.","I've listened to that eleven seconds more times than I can admit."], unread:true, star:true},
+ {who:'Priya Ramaswamy', pub:'Commonplace', d:'22 October', t:'On keeping a commonplace book for ten years', b:["The first notebook is mostly quotes I wanted to be seen agreeing with. By the fourth, it's mostly my own sentences, crossed out and tried again.","If you start one, my only advice is: write the date. You will want to know who you were."], unread:false, star:true},
+ {who:'Daniel Ferreira', pub:'Letters from the Allotment', d:'20 October', t:'Why I still write my newsletter by hand first', b:["Every issue starts on paper, at the kitchen table, before anyone else is up. The typed version is always shorter, and I think better.","A few of you have written back to ask about the pen. It's nothing special. It's the one that was there."], unread:false, star:false},
+];
+const PEOPLE = [...new Set(A.map(a=>a.who))];
+const S = { place:'today', person:null, open:0, q:'', theme:'original', mode:'auto', size:20 };
+try { Object.assign(S, JSON.parse(localStorage.getItem('nt-mock')||'{}'), {place:'today',person:null,open:0,q:''}); } catch(e) {}
+const save = () => { try { localStorage.setItem('nt-mock', JSON.stringify({theme:S.theme, mode:S.mode, size:S.size})); } catch(e) {} };
+const esc = s => s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const hl = s => S.q ? esc(s).replace(new RegExp('('+S.q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig'),'<mark>$1</mark>') : esc(s);
+
+function shown() {
+  return A.map((a,k)=>({...a,k})).filter(a =>
+    S.q ? (a.t+' '+a.b.join(' ')+' '+a.who).toLowerCase().includes(S.q.toLowerCase()) :
+    S.person ? a.who===S.person : S.place==='starred' ? a.star : S.place==='today' ? (a.unread || a.k===S.open) : true);
+}
+function render() {
+  const places = [['today','Today',ic('<circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/>')],['starred','Starred',ic('<path d="M12 4l2.4 5 5.4.6-4 3.7 1.1 5.4L12 16l-4.9 2.7 1.1-5.4-4-3.7 5.4-.6z"/>')],['all','All articles',ic('<path d="M5 7h14M5 12h14M5 17h14"/>')]];
+  const unread = A.filter(a=>a.unread).length;
+  document.getElementById('places').innerHTML = places.map(([k,n,svg]) => `<button data-place="${k}" ${!S.person&&!S.q&&S.place===k?'aria-current="page"':''}>${svg}${n}${k==='today'&&unread?`<span class="n">${unread}</span>`:''}</button>`).join('');
+  document.getElementById('people').innerHTML = PEOPLE.map(p => `<button data-person="${p}" ${S.person===p&&!S.q?'aria-current="page"':''}>${p}</button>`).join('');
+  document.getElementById('ltitle').textContent = S.q ? 'Search' : S.person || places.find(p=>p[0]===S.place)[1];
+  const L = shown();
+  document.getElementById('rows').innerHTML = L.map(a => `<button class="row ${a.unread?'':'r'}" data-open="${a.k}" ${a.k===S.open?'aria-current="true"':''}>${a.unread?'<i></i>':'<span></span>'}<span><b>${hl(a.t)}</b><small>${esc(a.who)}${a.unread?'<span style="position:absolute;left:-9999px">, unread</span>':''}</small></span>${a.star?star(true):'<span></span>'}</button>`).join('');
+  document.getElementById('end').textContent = S.q ? (L.length ? `${L.length} article${L.length>1?'s':''}.` : 'Nothing matches that.') : L.length ? "That's everything for now." : (S.place==='starred' ? 'Nothing starred yet.' : "You've read everything. That's it for today.");
+  const a = A[S.open];
+  document.getElementById('read').innerHTML = a ? `<div class="top"><button class="back" id="back">‹ Back</button><button id="aa" aria-label="Settings">Aa</button><button id="starBtn" aria-pressed="${a.star}">${star(a.star)}${a.star?'Starred':'Star'}</button><button id="editBtn">Edit feed</button></div>
+    <article><h1 class="t">${esc(a.t)}</h1><p class="by"><b>${esc(a.who)}</b>, ${esc(a.pub)}, ${a.d}</p>${a.b.map(p=>`<p class="bd">${hl(p)}</p>`).join('')}<a class="orig" href="#" onclick="return false">Read it on ${esc(a.pub)} ↗</a></article>` : '<p class="empty">Choose an article.</p>';
+}
+function open(k) { S.open = k; A[k].unread = false; render(); document.getElementById('app').classList.add('reading'); document.getElementById('read').scrollTop = 0; }
+
+function applyLook() {
+  const dark = S.mode==='dark' || (S.mode==='auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+  document.body.className = 't-'+S.theme + (dark?' night':'');
+  document.documentElement.style.setProperty('--size', S.size+'px');
+  document.getElementById('sz').textContent = S.size;
+  const T = {original:['#ffffff','#efeff1','#141414','#2c4f8c','Original'], plain:['#ffffff','#f5f5f5','#000000','#000000','Plain'], fountain:['#fafaf8','#e6e6e1','#152039','#8c5500','Fountain pen'], signal:['#ffffff','#ebebea','#111111','#6953a0','Signal']};
+  document.getElementById('themes').innerHTML = Object.entries(T).map(([k,[p,s,i,a,n]]) => `<button role="radio" aria-checked="${S.theme===k}" data-theme="${k}"><i style="background:${p};box-shadow:0 0 0 1px ${i}22"><span style="position:absolute;left:0;top:0;bottom:0;width:30%;background:${s}"></span><span style="width:7px;height:7px;border-radius:50%;background:${a};position:relative;left:6px"></span></i>${n}</button>`).join('');
+  document.getElementById('modes').innerHTML = [['light','Light'],['dark','Dark'],['auto','Match device']].map(([k,n]) => `<button role="radio" aria-checked="${S.mode===k}" data-mode="${k}">${n}</button>`).join('');
+  save();
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyLook);
+
+let lastFocus = null;
+function sheet(id, on) { const v = document.getElementById(id); v.classList.toggle('open', on); if (on) { lastFocus = document.activeElement; v.querySelector('input, button').focus(); } else if (lastFocus) lastFocus.focus(); }
+const closeAll = () => document.querySelectorAll('.veil.open').forEach(v => sheet(v.id, false));
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('button, .veil'); if (!t) return;
+  if (t.classList.contains('veil')) { if (e.target === t) closeAll(); return; }
+  if (t.dataset.place) { S.place = t.dataset.place; S.person = null; S.q=''; document.getElementById('q').value=''; document.querySelector('.list').classList.remove('searching'); render(); }
+  else if (t.dataset.person) { S.person = t.dataset.person; S.q=''; render(); }
+  else if (t.dataset.open) open(+t.dataset.open);
+  else if (t.dataset.theme) { S.theme = t.dataset.theme; applyLook(); document.querySelector(`[data-theme="${S.theme}"]`).focus(); }
+  else if (t.dataset.mode) { S.mode = t.dataset.mode; applyLook(); document.querySelector(`[data-mode="${S.mode}"]`).focus(); }
+  else if (t.hasAttribute('data-close')) closeAll();
+  else if (t.id==='starBtn') { A[S.open].star = !A[S.open].star; render(); document.getElementById('starBtn').focus(); }
+  else if (t.id==='back') { document.getElementById('app').classList.remove('reading'); }
+  else if (t.id==='setBtn' || t.id==='aa') sheet('setVeil', true);
+  else if (t.id==='addBtn') { document.getElementById('addr').removeAttribute('aria-invalid'); document.getElementById('addMsg').classList.remove('show'); sheet('addVeil', true); }
+  else if (t.id==='addGo') { document.getElementById('addr').setAttribute('aria-invalid','true'); document.getElementById('addMsg').classList.add('show'); }
+  else if (t.id==='editBtn') { document.getElementById('ename').value = A[S.open].pub; sheet('editVeil', true); }
+  else if (t.id==='findBtn') { const l = document.querySelector('.list'); l.classList.toggle('searching'); if (l.classList.contains('searching')) document.getElementById('q').focus(); else { S.q=''; document.getElementById('q').value=''; render(); } }
+  else if (t.id==='smaller') { S.size = Math.max(16, S.size-1); applyLook(); }
+  else if (t.id==='larger') { S.size = Math.min(28, S.size+1); applyLook(); }
+});
+document.getElementById('q').addEventListener('input', e => { S.q = e.target.value.trim(); render(); });
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape') return closeAll();
+  if (e.target.matches('input') || document.querySelector('.veil.open')) return;
+  const L = shown().map(a=>a.k), i = L.indexOf(S.open);
+  if (e.key==='j' && L.length) open(L[Math.min(L.length-1, i+1)]);
+  else if (e.key==='k' && L.length) open(L[Math.max(0, i-1)]);
+  else if (e.key==='s' && A[S.open]) { A[S.open].star = !A[S.open].star; render(); }
+  else if (e.key==='/') { e.preventDefault(); document.querySelector('.list').classList.add('searching'); document.getElementById('q').focus(); }
+});
+A[0].unread = false; applyLook(); render();
+</script>
+</body>
+</html>
