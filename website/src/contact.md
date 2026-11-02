@@ -26,16 +26,16 @@ serious one. Please write, and say what you use to read.
 ## Publishers
 
 If you publish a feed and would like nine turtles to treat it differently,
-for example to check it less often, write to us. nine turtles identifies
+for example to check it less often, write to me. nine turtles identifies
 itself to every site it checks as `nine-turtles`, followed by its version.
 
 ## Privacy and security
 
-To ask what we hold about you, or to have it deleted, write to the same
+To ask what I hold about you, or to have it deleted, write to the same
 address (more in the [privacy policy](/privacy/)). To report a security
 problem, write with "Security" in the subject line; please don't share it
 publicly until it's fixed.
 
 ## Elsewhere
 
-We don't have social media accounts. That's on purpose.
+I don't have social media accounts for nine turtles. That's on purpose.

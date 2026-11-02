@@ -32,10 +32,10 @@ draft: Prices aren't set yet. This page will show them before anyone can sign up
 
 ## How paying works
 
-Payments are handled by **Dodo Payments**, which sells nine turtles on our
+Payments are handled by **Dodo Payments**, which sells nine turtles on my
 behalf as its "merchant of record". That means Dodo Payments takes the
 payment, adds and pays any sales tax (like VAT or GST) where you live, and
-sends your receipt. Your card details go to Dodo Payments, never to us.
+sends your receipt. Your card details go to Dodo Payments, never to me.
 
 Your plan renews automatically at the end of each month or year until you
 cancel. You can cancel yourself at any time, in the app, without having to

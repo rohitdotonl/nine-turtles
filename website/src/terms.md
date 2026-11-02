@@ -9,7 +9,7 @@ draft: These terms will be finished, and checked by someone qualified, before an
 
 <p class="lede">
   These terms are the agreement between you and nine turtles when you use
-  the app or this website. We've kept them short and in plain words.
+  the app or this website. I've kept them short and in plain words.
 </p>
 
 ## The service
@@ -37,7 +37,7 @@ Please don't use nine turtles to:
 - overload the service, or use it to overload other people's websites (for
   example, by adding huge numbers of feeds to make it hit one site).
 
-We may set reasonable limits, such as how many feeds an account can follow,
+I may set reasonable limits, such as how many feeds an account can follow,
 to keep the service fast and fair for everyone, and polite to publishers.
 
 ## What you read belongs to its publishers
@@ -51,12 +51,12 @@ writing outside nine turtles is between you and its publisher.
 
 What you put into nine turtles (your feeds, folders, stars and settings)
 is yours. You can export it at any time, and deleting your account deletes
-it. How we look after it is in the [privacy policy](/privacy/).
+it. How I look after it is in the [privacy policy](/privacy/).
 
 ## Paying
 
 Prices are on the [pricing](/pricing/) page (to be decided). Payments are
-handled by Dodo Payments, which sells nine turtles on our behalf as its
+handled by Dodo Payments, which sells nine turtles on my behalf as its
 merchant of record: it takes the payment, handles sales tax and sends your
 receipt, and its own [buyer terms](https://dodopayments.com/legal/buyer-terms)
 also apply to the payment. Plans renew automatically until you cancel.
@@ -66,18 +66,18 @@ page.
 
 ## If things go wrong
 
-We work hard to keep nine turtles running and your data safe, but the
-service is provided "as is": we can't promise it will never be down, never
+I work hard to keep nine turtles running and your data safe, but the
+service is provided "as is": I can't promise it will never be down, never
 miss an article from a feed, or never lose data. Keep your own exports of
-anything you can't do without. As far as the law allows, we're not liable
+anything you can't do without. As far as the law allows, I'm not liable
 for indirect losses from using nine turtles (the full wording is to be
 decided, with the law that applies).
 
 ## Ending
 
 You can stop using nine turtles and delete your account whenever you
-like. We may suspend or close an account that seriously or repeatedly
-breaks these terms, and will tell you why, except where the law stops us.
+like. I may suspend or close an account that seriously or repeatedly
+breaks these terms, and will tell you why, except where the law stops me.
 
 ## Changes and contact
 

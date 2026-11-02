@@ -70,4 +70,4 @@ nine turtles checks your feeds on its own from then on, politely, and new
 articles wait for you until you next open it.
 
 Still unsure about something? The [questions page](/faq/) may help, or
-[write to us](/contact/).
+[write to me](/contact/).

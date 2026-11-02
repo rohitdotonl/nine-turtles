@@ -1,7 +1,7 @@
 ---
 layout: page.njk
 title: Accessibility
-description: How nine turtles makes sure everyone can read, and how to tell us when something falls short.
+description: How nine turtles makes sure everyone can read, and how to tell me when something falls short.
 permalink: /accessibility/
 updated: 2026-10-25
 ---
@@ -12,7 +12,7 @@ updated: 2026-10-25
   read.
 </p>
 
-## What we hold ourselves to
+## What I hold nine turtles to
 
 The app and this website aim to meet the
 [Web Content Accessibility Guidelines (WCAG) 2.2](https://www.w3.org/TR/WCAG22/)
@@ -46,7 +46,7 @@ Every change to nine turtles is checked automatically before it can go
 live: each screen, by day and by night, on a computer and a phone, is
 tested in a real browser for contrast and accessibility problems, and for
 working with the keyboard alone. These checks catch a lot, but not
-everything that matters to a real person reading, which is why we want to
+everything that matters to a real person reading, which is why I want to
 hear from you.
 
 ## Known gaps
@@ -57,9 +57,9 @@ hear from you.
 - Articles come from publishers' own feeds. If a publisher's images have no
   descriptions, nine turtles can't add them.
 
-## Tell us
+## Tell me
 
 If anything in nine turtles is hard to read or use, please write to
-<a href="mailto:{{ site.email }}">{{ site.email }}</a> and tell us what
+<a href="mailto:{{ site.email }}">{{ site.email }}</a> and tell me what
 happened and what you use to read (your device, browser, screen reader or
-settings). We treat it as a serious bug.
+settings). I treat it as a serious bug.
