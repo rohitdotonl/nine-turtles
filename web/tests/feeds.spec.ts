@@ -551,9 +551,10 @@ test("an address for a feed you don't follow says so", async ({ page }) => {
   await expect(page.getByText("You don't follow this feed.")).toBeVisible();
 });
 
-// Adding from elsewhere (SPEC section 3, decision 0104): a share menu, an Apple Shortcuts
-// shortcut or a bookmark opens /add-feed with the page's address. Each test here looks once at
-// the made-up publisher through the feed finder, which allows only a few lookups a site.
+// Adding from elsewhere (SPEC section 3, decisions 0104 and 0138): a share menu, an Apple
+// Shortcuts shortcut or a bookmark opens /add-feed with the page's address, and nine turtles asks
+// "Follow <name>?". Each test here looks once at the made-up publisher through the feed finder,
+// which allows only a few lookups a site (six in half an hour: five are used here).
 
 /** The reader's feeds as the server has them, signed in as the page is. */
 async function followed(page: Page): Promise<string> {
@@ -562,30 +563,38 @@ async function followed(page: Page): Promise<string> {
   return answer.text();
 }
 
-test("a shared page opens Add a feed with its address and finds its feed, but follows it only on Add feed", async ({ page, isMobile }) => {
+/** The question's form: the site, the status line and its buttons. */
+const question = (page: Page) => page.locator("form", { has: page.getByRole("button", { name: "Follow", exact: true }) });
+
+test("a shared page asks \"Follow <name>?\", but follows only on Follow", async ({ page, isMobile }) => {
   const name = newBlog();
   const address = `${FEED_SITE}/blog/${name}/`;
-  // Signed out at first: after signing in, Add a feed opens with the address kept. On a computer
+  // Signed out at first: after signing in, the question opens with the address kept. On a computer
   // it's the sheet; on a phone (checked at a phone's width) the phone's page sheet.
   await page.setViewportSize(isMobile ? { width: 390, height: 800 } : { width: 1280, height: 800 });
   await page.goto(new URL(`/add-feed?url=${encodeURIComponent(address)}`, FEEDS_APP).href);
   await appReady(page);
   await signIn(page);
   await expect(page).toHaveURL(/\/add-feed$/);
-  await expect(field(page)).toHaveValue(address);
-  await expect(page.locator("#feed-address-status")).toHaveText("Found this feed:");
-  const choice = page.getByRole("radiogroup", { name: "Feeds on this site" }).getByRole("radio");
-  await expect(choice).toHaveCount(1);
-  await expect(choice).toBeChecked();
+  const title = page.getByRole("heading", { name: `Follow Blog ${name}?` });
+  await expect(title).toBeVisible();
+  await expect(page).toHaveTitle(`Follow Blog ${name}? · nine turtles`);
+  // Screen readers hear the question with the name once it's known, and no word of feeds or RSS anywhere.
+  await expect(question(page).getByRole("status")).toHaveText(`Follow Blog ${name}?`);
+  await expect(question(page)).not.toContainText(/feed|rss/i);
+  await expect(page.getByLabel("Paste a website or feed URL")).toHaveCount(0);
+  // What they wrote lately, so the reader knows who they're saying yes to.
+  await expect(page.getByRole("region", { name: "Lately" }).getByRole("listitem")).toHaveCount(3);
   // Nothing is followed yet: not in the sidebar, not on the server.
   await expect(sidebar(page).getByRole("link", { name: `Blog ${name}` })).toHaveCount(0);
   expect(await followed(page)).not.toContain(name);
   if (isMobile) {
-    // On a phone: Add feed, the full width at the screen's foot, follows it.
-    await page.getByRole("button", { name: "Add feed", exact: true }).tap();
+    // On a phone: Follow, the full width at the screen's foot.
+    await page.getByRole("button", { name: "Follow", exact: true }).tap();
   } else {
-    // With only the keyboard: the sheet opens with the keyboard in the field, and Enter adds the chosen feed.
-    await expect(field(page)).toBeFocused();
+    // With only the keyboard: the sheet opens on its question, Tab reaches Follow, and Enter follows.
+    await expect(title).toBeFocused();
+    await tabTo(page, page.getByRole("button", { name: "Follow", exact: true }), 5);
     await page.keyboard.press("Enter");
   }
   await expect(page).toHaveURL(/\/feeds\/[0-9]+$/);
@@ -598,14 +607,15 @@ test("a share menu's text with the address inside it works too, and Escape follo
   const manifest = await (await page.request.get(`${FEEDS_APP}/manifest.webmanifest`)).json();
   expect(manifest.share_target).toEqual({ action: "/add-feed", method: "GET", params: { title: "title", text: "text", url: "url" } });
 
+  // A site naming two feeds: still one question, and Follow would follow its first.
   const name = newBlog("two");
   const address = `${FEED_SITE}/blog/${name}/`;
   const text = `Have a look at ${address}, it's lovely.`;
   await openApp(page, `/add-feed?title=${encodeURIComponent(`Blog ${name}`)}&text=${encodeURIComponent(text)}`);
-  const sheet = page.getByRole("dialog", { name: "Add a feed" });
-  await expect(sheet.getByLabel("Paste a website or feed URL")).toHaveValue(address);
-  await expect(sheet.locator("#feed-address-status")).toHaveText("This site offers more than one feed. Choose one:");
-  // Escape, as Cancel would, leaves without following anything.
+  const sheet = page.getByRole("dialog", { name: `Follow Blog ${name}?` });
+  await expect(sheet.getByRole("button", { name: "Follow", exact: true })).toHaveAttribute("aria-disabled", "false");
+  await expect(sheet.getByRole("radio")).toHaveCount(0);
+  // Escape leaves without following anything.
   await page.keyboard.press("Escape");
   await expect(sheet).toHaveCount(0);
   await expect(sidebar(page).getByRole("link", { name: `Blog ${name}` })).toHaveCount(0);
@@ -613,6 +623,28 @@ test("a share menu's text with the address inside it works too, and Escape follo
   // The shared address was for that one opening: Add a feed opens empty again.
   await page.keyboard.press("a");
   await expect(field(page)).toHaveValue("");
+});
+
+test("a page that can't be followed says so plainly, keeps Follow locked, and Not now leaves", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the computer's sheet; the phone's page sheet is the same form");
+  await openApp(page, `/add-feed?url=${encodeURIComponent(`${FEED_SITE}/no-such-page-${newBlog()}`)}`);
+  const sheet = page.getByRole("dialog", { name: "Follow this person?" });
+  await expect(sheet.getByRole("status")).toHaveText("Nothing was found at that address.");
+  await expect(sheet.getByRole("button", { name: "Follow", exact: true })).toHaveAttribute("aria-disabled", "true");
+  await sheet.getByRole("button", { name: "Not now" }).click();
+  await expect(sheet).toHaveCount(0);
+});
+
+test("Follow on someone already followed takes you to them", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the computer's sheet; the phone's page sheet is the same form");
+  const name = newBlog();
+  await openApp(page, "/unread");
+  const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
+  await page.goto(new URL(`/add-feed?url=${encodeURIComponent(`${FEED_SITE}/blog/${name}/`)}`, FEEDS_APP).href);
+  await appReady(page);
+  const sheet = page.getByRole("dialog", { name: `Follow Blog ${name}?` });
+  await sheet.getByRole("button", { name: "Follow", exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/feeds/${id}$`));
 });
 
 test("Settings gives the bookmark and the Shortcuts address, built from this nine turtles' own address", async ({ page }) => {

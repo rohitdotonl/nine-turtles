@@ -3,6 +3,10 @@
 *27 October 2026. Asked for by the owner: add a feed from the system share
 sheet, from Apple's Shortcuts app, and from any link.*
 
+*Since 1 November 2026 a shared page opens "Follow this person?" instead of
+Add a feed's field (decision 0138). The ways in, looking without following,
+and the rules below still stand.*
+
 ## Decision
 
 - **One address does it all: `/add-feed?url=<address>`.** It opens Add a feed

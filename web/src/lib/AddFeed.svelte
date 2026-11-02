@@ -13,17 +13,14 @@
   the full width at the screen's foot. In the welcome, with no Cancel, "Add
   feed" sits beside the field.
 
-  Opened with a shared page's address (`shared`: a share menu, a Shortcuts
-  shortcut or a bookmark, decision 0104), the field starts with it and nine
-  turtles looks for the feeds the page names straight away, without
-  following any: what it finds is offered as a choice, and only Add feed
-  follows one.
+  A shared page's address opens "Follow this person?" instead
+  (FollowPerson.svelte, decision 0138).
 -->
 <script lang="ts">
-  import { onMount, type Snippet } from "svelte";
+  import type { Snippet } from "svelte";
   import Icon from "./Icon.svelte";
   import type { Feed } from "./shapes";
-  import { addFeed, explain, findFeeds, type Choice } from "./feeds";
+  import { addFeed, explain, type Choice } from "./feeds";
 
   let {
     field = $bindable(),
@@ -34,8 +31,6 @@
     page = false,
     start = false,
     alternative,
-    shared = "",
-    onShared,
   }: {
     field?: HTMLInputElement;
     /** The feeds already followed, to name one that's added twice. */
@@ -53,10 +48,6 @@
      * field, so it reads as an alternative to it rather than a footer.
      */
     alternative?: Snippet;
-    /** A shared page's address, to fill in and look at on opening (decision 0104). */
-    shared?: string;
-    /** The shared address has been taken, so a form built again (crossing the phone width) starts empty. */
-    onShared?: () => void;
   } = $props();
 
   let address = $state("");
@@ -134,37 +125,6 @@
         break;
     }
   }
-
-  // A shared page: only look, never follow. Add feed then follows the chosen feed.
-  async function look(text: string) {
-    busy = true;
-    const result = await findFeeds(text);
-    busy = false;
-    // The reader changed the address meanwhile: theirs wins.
-    if (address !== text) return;
-    switch (result.kind) {
-      case "found":
-        choices = result.choices;
-        chosen = result.choices[0]?.url ?? "";
-        choicesFor = text;
-        message = result.choices.length > 1 ? "This site offers more than one feed. Choose one:" : "Found this feed:";
-        break;
-      case "problem":
-        message = explain(result.reason);
-        problem = true;
-        badAddress = result.reason !== "unreachable";
-        break;
-      case "quiet":
-        break;
-    }
-  }
-
-  onMount(() => {
-    if (!shared) return;
-    address = shared;
-    onShared?.();
-    look(address);
-  });
 
   function submit(event: SubmitEvent) {
     event.preventDefault();

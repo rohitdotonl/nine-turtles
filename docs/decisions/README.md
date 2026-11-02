@@ -117,3 +117,4 @@ repository's history.
 | [0135](0135-critique-checklist.md) | Twelve critique questions (from the owner's design field guide) every change the reader sees answers before its pull request; the full review checks them |
 | [0136](0136-braun-themes.md) | Five themes after Braun's colors (Brushed, Anodised, Fountain pen, Heather, Signal); their bright accent, only the unread dot, held to 3 : 1 |
 | [0137](0137-following-loop-defaults.md) | Small defaults from the loop walk-through: a phone opens on the welcome while you follow no one; the welcome's "Bring your list from another app…" opens the file chooser at once; Move to… starts with nothing chosen |
+| [0138](0138-follow-this-person.md) | A page shared to nine turtles opens one question, "Follow <name>?", with the site under it and one press, Follow (the site's own feed, its first); no field, no choice of feeds, no word of "feed" or "RSS"; nothing saved as a link, no read-later (the owner, 1 November 2026) |
