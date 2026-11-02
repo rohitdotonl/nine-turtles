@@ -106,7 +106,7 @@ years › written for the next agent.
 
 - **Never commit the owner's OPML file.** `*.opml` is ignored; test fixtures use made-up feeds.
 - No notifications, badges, gamification, animations or transitions. Ever. Lists end: older items load as you reach the bottom (decision 0074), but nothing pads a list.
-- The accent (ink blue in Original, the text color in Plain) marks only what's yours to look at: what's unread and what a search found (decisions 0037, 0057); where you are is a plain grey pill. Green marks only a filled star. Neither is ever a button, a link or a focus outline.
+- The accent (ink blue in Original, the text color in Plain, a Braun signal color in the five Braun themes) marks only what's yours to look at: what's unread and what a search found (decisions 0037, 0057); where you are is a plain grey pill. Green marks only a filled star. Neither is ever a button, a link or a focus outline.
 - Never fetch an article's web page. Autodiscovery fetches only the page the reader pastes, only when they add a feed, ask "Find new address", use the website's feed finder, or share a page into Add a feed (`docs/decisions/0016-adding-feeds.md`, decisions 0099 and 0104).
 - A feature isn't done until it has tests and the checks pass.
 - **Keep the code tidy:** before writing code, ask the six questions in `docs/ENGINEERING.md` → "Keeping the code tidy" (can it work without new code, is it already here…); small files, one concept each; one copy of each thing; delete what you replace in the same change. `scripts/check-tidy.mjs` checks the size and anything unused; the lessons behind it are in `docs/ENGINEERING.md` → "Keeping the code tidy".

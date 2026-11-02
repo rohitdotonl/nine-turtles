@@ -294,7 +294,7 @@ test.describe("on a wide window", () => {
     await expect(panel.getByRole("radio", { name: "Match device" })).toBeChecked();
     // Theme: Original or Plain, whose article links are the browser's blue (decision 0063).
     const themes = panel.getByRole("group", { name: "Theme" });
-    await expect(themes.getByRole("radio")).toHaveCount(2);
+    await expect(themes.getByRole("radio")).toHaveCount(7);
     await expect(themes.getByRole("radio", { name: "Original" })).toBeChecked();
     const link = article(page).locator(".article-text a").first();
     const textColor = await article(page).locator(".article-text").first().evaluate((el) => getComputedStyle(el).color);

@@ -81,7 +81,7 @@ nine turtles must be able to move to any host in an afternoon.
 
 The engineering side of "slow app, fast interface." Speed is a requirement with numbers attached:
 - Interface actions under ~100 ms.
-- A small page download, with a size budget checked automatically: at most 150 KB (compressed) of app code and styles on first visit, and at most 400 KB of fonts (only the alphabets nine turtles needs, cached after the first visit). The build leaves notes for the next agent out of the files it copies from `web/public/` (the service worker, the page, the manifest and the icon), so they don't count against it (`web/vite.config.ts`).
+- A small page download, with a size budget checked automatically: at most 200 KB (compressed) of app code and styles on first visit (raised from 150 KB by the owner, 2 November 2026, decision 0136), and at most 400 KB of fonts (only the alphabets nine turtles needs, cached after the first visit). The build leaves notes for the next agent out of the files it copies from `web/public/` (the service worker, the page, the manifest and the icon), so they don't count against it (`web/vite.config.ts`).
 - No database query that searches without an index.
 
 **Test:** Is the speed checked automatically, or are we hoping?
@@ -128,7 +128,7 @@ The lessons:
 - **Delete what you replace, in the same change.** A replaced feature, an old name or an old way of signing in doesn't stay "for a while" without a date: the old-name shims and the owner-password leftovers outlived their reason by weeks (decisions 0124, 0125). Nothing unused stays; the check fails on it.
 - **Answers can arrive out of order.** Two saves or loads in flight can come back in either order; use `saving.ts` and `inorder.ts` rather than trusting the last answer.
 - **Never name two files the same but for capitals** (`settings.svelte.ts` beside `Settings.svelte`): a Mac's disk can't tell them apart, and the build broke there while Linux checks passed.
-- **Splitting costs a little download.** A new Svelte component costs about 250 bytes, and the app is close to its 150 KB budget; prefer a plain `.ts` file for logic, and moves that also delete code.
+- **Splitting costs a little download.** A new Svelte component costs about 250 bytes, and the download has a 200 KB budget; prefer a plain `.ts` file for logic, and moves that also delete code.
 - **A test that fails now and then is fixed at once**, never retried until it passes (decision 0114): flaky tests cost every later pull request a slow re-run.
 
 ---

@@ -1,8 +1,8 @@
-// The themes from DESIGN.md → "Themes": Original (decision 0056) and Plain
-// (decision 0063), each with a day ("light") and a night ("dark") version. It is written to
+// The themes from DESIGN.md → "Themes": Original (decision 0056), Plain
+// (decision 0063) and five after Braun's colors, each with a day ("light") and a night ("dark") version. It is written to
 // <html data-theme="…"> and the version in use to data-mode (see
-// preferences.ts; app.css holds both versions' colors).
-export const THEMES = ["original", "plain"] as const;
+// preferences.ts; themes.css holds both versions' colors).
+export const THEMES = ["original", "plain", "brushed", "anodised", "fountain-pen", "heather", "signal"] as const;
 
 export type Theme = (typeof THEMES)[number];
 
@@ -18,22 +18,47 @@ export const APPEARANCES: { value: Appearance; label: string }[] = [
   { value: "auto", label: "Match device" },
 ];
 
-type Look = { page: string; side: string; ink: string };
+type Look = { page: string };
 
 /**
- * Each theme's name, and per version its page, sidebar and text colors for
- * the browser's bar. contrast.test.ts checks they match app.css.
+ * Each theme's name, and per version its page color for
+ * the browser's bar. contrast.test.ts checks they match themes.css.
  */
 export const LOOKS: Record<Theme, { label: string } & Record<Mode, Look>> = {
   original: {
     label: "Original",
-    light: { page: "#ffffff", side: "#efeff1", ink: "#141414" },
-    dark: { page: "#121212", side: "#232323", ink: "#e8e8e8" },
+    light: { page: "#ffffff" },
+    dark: { page: "#121212" },
   },
   plain: {
     label: "Plain",
-    light: { page: "#ffffff", side: "#f5f5f5", ink: "#000000" },
-    dark: { page: "#121212", side: "#1c1c1c", ink: "#ffffff" },
+    light: { page: "#ffffff" },
+    dark: { page: "#121212" },
+  },
+  brushed: {
+    label: "Brushed",
+    light: { page: "#fafaf9" },
+    dark: { page: "#1b1b1c" },
+  },
+  anodised: {
+    label: "Anodised",
+    light: { page: "#f8f9fa" },
+    dark: { page: "#191c20" },
+  },
+  "fountain-pen": {
+    label: "Fountain pen",
+    light: { page: "#fafaf8" },
+    dark: { page: "#171b24" },
+  },
+  heather: {
+    label: "Heather",
+    light: { page: "#faf9fb" },
+    dark: { page: "#1c1b20" },
+  },
+  signal: {
+    label: "Signal",
+    light: { page: "#ffffff" },
+    dark: { page: "#181818" },
   },
 };
 
