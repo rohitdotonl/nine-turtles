@@ -333,7 +333,7 @@ test("Settings: appearance, font, size and width apply at once and are remembere
   await expect(fontRow).toContainText("Literata");
   await fontRow.click();
   await expect(page).toHaveURL(/\/settings\/font$/);
-  await expect(page.getByRole("group", { name: "Theme" }).getByRole("radio")).toHaveCount(7);
+  await expect(page.getByRole("group", { name: "Theme" }).getByRole("radio")).toHaveCount(4);
   await expect(page.getByRole("radio", { name: "Original" })).toBeChecked();
   // Font and line width are segmented controls: the chosen one is raised (a small shadow) and semibold, and by day
   // a thin edge sets it at 3 : 1 against the rest of the control (decision 0118).
