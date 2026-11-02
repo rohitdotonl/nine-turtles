@@ -32,11 +32,22 @@ export function writeBackLink(address: string, title: string): string {
 }
 
 /**
- * Whether `text` looks like one email address, as the server checks it: one @,
- * something before it, a website's name after it, and no spaces or commas.
+ * Whether `text` looks like one email address, at least as strictly as the
+ * server checks it (`write_back::address`), so the email app never opens to
+ * an address the server then refuses: one @, something before it, a
+ * website's name after it, and no spaces or commas.
  */
 export function looksLikeAddress(text: string): boolean {
-  return /^[^\s@<>()[\]\\,;:"]+@[\p{L}\p{N}-]+(\.[\p{L}\p{N}-]+)+$/u.test(text.trim().replace(/^mailto:/i, ""));
+  const address = text.trim().replace(/^mailto:/i, "");
+  const [local = "", domain = "", ...more] = address.split("@");
+  return (
+    more.length === 0 &&
+    address.length <= 254 &&
+    local.length <= 64 &&
+    /^[^\s@<>()[\]\\,;:".][^\s@<>()[\]\\,;:"]*$/.test(local) &&
+    !local.endsWith(".") &&
+    /^[\p{L}\p{N}](?:[\p{L}\p{N}-]*[\p{L}\p{N}])?(\.[\p{L}\p{N}](?:[\p{L}\p{N}-]*[\p{L}\p{N}])?)+$/u.test(domain)
+  );
 }
 
 /** Why an address wasn't kept, in the reader's words; undefined once it was. */

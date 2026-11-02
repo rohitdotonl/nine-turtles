@@ -33,7 +33,7 @@ describe("writing back", () => {
     for (const fine of ["alpha@alpha.example", " mailto:alpha@alpha.example ", "ålpha@bücher.example", "a.b+c@mail.alpha.co.uk"]) {
       expect(looksLikeAddress(fine), fine).toBe(true);
     }
-    for (const wrong of ["", "alpha", "alpha@", "@alpha.example", "alpha@alpha", "al pha@alpha.example", "a@b.example, c@d.example", "a@@b.example"]) {
+    for (const wrong of ["", "alpha", "alpha@", "@alpha.example", "alpha@alpha", "al pha@alpha.example", "a@b.example, c@d.example", "a@@b.example", ".alpha@x.org", "alpha.@x.org", `${"a".repeat(65)}@x.org`, "alpha@-x.org", "alpha@x-.org", "a@b.example@c.example"]) {
       expect(looksLikeAddress(wrong), wrong).toBe(false);
     }
   });

@@ -28,6 +28,8 @@
   let address = $derived(place && addressFor(place, library.feeds ?? []));
 
   let asking = $state(false);
+  let busy = $state(false);
+  let written: HTMLAnchorElement | undefined = $state();
   let typed = $state("");
   let message = $state("");
   let field: HTMLInputElement | undefined = $state();
@@ -62,7 +64,7 @@
 
   async function write(event: SubmitEvent) {
     event.preventDefault();
-    if (!place) return;
+    if (!place || busy) return;
     message = "";
     if (!looksLikeAddress(typed)) {
       message = typed.trim() ? "That doesn't look like an email address. Check it and try again." : `Type ${name}'s email address first.`;
@@ -71,14 +73,20 @@
     }
     // The email app opens while the press still counts as the reader's own; the address is kept meanwhile.
     window.location.href = writeBackLink(typed.trim().replace(/^mailto:/i, ""), article.title);
+    busy = true;
     const problem = await keepAddress(place.id, typed);
     if (problem) {
+      busy = false;
       message = problem;
       return;
     }
     await library.loadFeeds();
+    busy = false;
     asking = false;
     typed = "";
+    // The keyboard stays where it was: on Write back, now a link to the email app.
+    await tick();
+    (written ?? opener)?.focus();
   }
 </script>
 
@@ -110,12 +118,12 @@
           {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
         </p>
         <div class="flex flex-wrap gap-2">
-          <button type="submit" class="btn-primary">Write back</button>
+          <button type="submit" class="btn-primary" aria-disabled={busy}>Write back</button>
           <button type="button" class="btn-quiet" onclick={notNow}>Not now</button>
         </div>
       </form>
     {:else if address}
-      <a class="btn" href={writeBackLink(address, article.title)}>Write back to {name}</a>
+      <a class="btn" bind:this={written} href={writeBackLink(address, article.title)}>Write back to {name}</a>
       <p class="to">{address}</p>
     {:else}
       <button type="button" class="btn" bind:this={opener} onclick={start}>Write back to {name}</button>

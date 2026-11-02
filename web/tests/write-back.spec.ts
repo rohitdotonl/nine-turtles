@@ -46,6 +46,8 @@ test("Write back asks once for an address, keeps it on their page, then opens th
   await pane(page).getByRole("button", { name: "Write back", exact: true }).click();
   const link = pane(page).getByRole("link", { name: `Write back to Blog ${name}` });
   await expect(link).toHaveAttribute("href", /^mailto:ivy@ivy\.example\?subject=Re%3A%20/);
+  // The keyboard stays on Write back, now a link to the email app.
+  await expect(link).toBeFocused();
   await expect(pane(page)).toContainText("ivy@ivy.example");
 
   // The More menu has it too.

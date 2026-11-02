@@ -69,6 +69,10 @@ pub struct Before {
     #[serde(default)]
     pub name: Option<String>,
     pub folders: Vec<i64>,
+    /// The address the reader had typed for it (decision 0147), so Undo
+    /// brings it back too.
+    #[serde(default)]
+    pub write_to: Option<String>,
 }
 
 /// A place's list becomes its person's when they have two or more places
@@ -103,8 +107,11 @@ async fn before_of(
     person: i64,
     feeds: &[i64],
 ) -> Result<Vec<Before>, sqlx::Error> {
-    let places: Vec<(i64, Option<i64>, Option<String>)> = sqlx::query_as(
-        "SELECT subscriptions.feed_id, subscriptions.writer_id, writers.name FROM subscriptions
+    // Each place: its feed, person, that person's name and the address typed for it.
+    type Place = (i64, Option<i64>, Option<String>, Option<String>);
+    let places: Vec<Place> = sqlx::query_as(
+        "SELECT subscriptions.feed_id, subscriptions.writer_id, writers.name,
+             subscriptions.write_to FROM subscriptions
          LEFT JOIN writers ON writers.id = subscriptions.writer_id
          WHERE subscriptions.person_id = ? AND subscriptions.unsubscribed_at IS NULL
              AND subscriptions.feed_id IN (SELECT value FROM json_each(?))
@@ -115,7 +122,7 @@ async fn before_of(
     .fetch_all(&mut *connection)
     .await?;
     let mut before = Vec::with_capacity(places.len());
-    for (feed, writer, name) in places {
+    for (feed, writer, name, write_to) in places {
         let folders: Vec<i64> = sqlx::query_scalar(
             "SELECT feed_folders.folder_id FROM feed_folders
              JOIN folders ON folders.id = feed_folders.folder_id
@@ -131,6 +138,7 @@ async fn before_of(
             writer,
             name,
             folders,
+            write_to,
         });
     }
     Ok(before)
@@ -265,12 +273,19 @@ pub async fn put_back(
         }
         let changed = sqlx::query(
             "UPDATE subscriptions SET writer_id =
-                 (SELECT id FROM writers WHERE id = ?1 AND person_id = ?2)
+                 (SELECT id FROM writers WHERE id = ?1 AND person_id = ?2), write_to = ?4
              WHERE person_id = ?2 AND feed_id = ?3 AND unsubscribed_at IS NULL",
         )
         .bind(place.writer)
         .bind(person)
         .bind(place.feed)
+        // Only ever an address in its one written form.
+        .bind(
+            place
+                .write_to
+                .as_deref()
+                .and_then(crate::write_back::address),
+        )
         .execute(&mut *connection)
         .await?;
         if changed.rows_affected() > 0 {
@@ -434,8 +449,10 @@ async fn separate_place(
         let Some(writer) = before.first().and_then(|place| place.writer) else {
             return Ok(None);
         };
+        // The address typed for the person was theirs, not this place's
+        // (decision 0147); Undo brings it back.
         sqlx::query(
-            "UPDATE subscriptions SET writer_id = NULL, same_asked = 1
+            "UPDATE subscriptions SET writer_id = NULL, same_asked = 1, write_to = NULL
              WHERE person_id = ? AND feed_id = ?",
         )
         .bind(person)

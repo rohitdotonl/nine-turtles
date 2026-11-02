@@ -128,7 +128,7 @@
         ...(article.link ? [{ label: sharing ? "Share" : "Copy link", shortcut: phone || sharing ? undefined : currentKey("copy-link"), onSelect: share }] : []),
         { label: "Mark unread", shortcut: phone ? undefined : currentKey("mark-unread"), onSelect: onMarkUnread },
         { label: "Add to collection…", shortcut: phone ? undefined : currentKey("collect"), onSelect: onCollect },
-        ...(followed ? [{ label: "Write back", shortcut: phone ? undefined : currentKey("write-back"), onSelect: startWriting }] : []),
+        ...(followed && full ? [{ label: "Write back", shortcut: phone ? undefined : currentKey("write-back"), onSelect: startWriting }] : []),
         ...(episode && player.upNext !== null
           ? [
               queued

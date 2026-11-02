@@ -184,3 +184,46 @@ async fn the_feeds_address_arrives_and_the_readers_own_stays_with_the_person() {
     assert_eq!(status, StatusCode::NOT_FOUND);
     assert_eq!(reader.addresses(blog).await.0, Value::Null);
 }
+
+#[tokio::test]
+async fn a_place_that_leaves_its_person_leaves_their_address_until_undo() {
+    let (base, _state) = common::start_with_state(common::config()).await;
+    let reader = Reader {
+        cookie: common::signed_in(&base).await,
+        base,
+        publisher: publisher().await,
+    };
+    let blog = reader.follow("alpha.xml").await;
+    let letters = reader.follow("alpha-news.xml").await;
+    let _ = reader
+        .post("/api/writers/join", json!({ "feeds": [blog, letters] }))
+        .await;
+    let (status, _) = reader
+        .post(
+            &format!("/api/feeds/{blog}/write-to"),
+            json!({ "address": "alpha@home.example" }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+
+    // "… isn't the same person": the address was the person's, so it stays with them.
+    let (status, separated) = reader
+        .post("/api/writers/separate", json!({ "feed": letters }))
+        .await;
+    assert_eq!(status, StatusCode::OK, "{separated}");
+    assert_eq!(reader.addresses(letters).await.0, Value::Null);
+    assert_eq!(reader.addresses(blog).await.0, json!("alpha@home.example"));
+
+    // Undo brings it back with the person.
+    let (status, _) = reader
+        .post(
+            "/api/writers/put-back",
+            json!({ "before": separated["before"] }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    assert_eq!(
+        reader.addresses(letters).await.0,
+        json!("alpha@home.example")
+    );
+}

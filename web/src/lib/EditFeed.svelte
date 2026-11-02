@@ -35,7 +35,7 @@
   import type { LoadedLibrary } from "./library.svelte";
   import { PLACE_NAMES, placeShownAs, placesOf, putBack, separate } from "./people";
   import { pausedSince } from "./times";
-  import { addressFor, keepAddress } from "./writeBack";
+  import { addressFor, keepAddress, looksLikeAddress } from "./writeBack";
   import type { Sick } from "./health";
 
   let {
@@ -99,10 +99,16 @@
   async function save(event: SubmitEvent) {
     event.preventDefault();
     if (busy) return;
-    busy = true;
     message = "";
+    // A wrong address is caught before anything is saved, keeping what was typed.
+    const newAddress = address.trim() !== knownAddress;
+    if (newAddress && address.trim() && !looksLikeAddress(address)) {
+      message = "That doesn't look like an email address. Check it and try again.";
+      return;
+    }
+    busy = true;
     const refusal = await editFeed(feed.id, title, chosen, newFolder, { river: flows, check, openOnSite, paused });
-    const problem = refusal ? refused(refusal, "feed") : address.trim() !== knownAddress ? await keepAddress(feed.id, address) : undefined;
+    const problem = refusal ? refused(refusal, "feed") : newAddress ? await keepAddress(feed.id, address) : undefined;
     busy = false;
     if (problem) message = problem;
     else onSaved();
