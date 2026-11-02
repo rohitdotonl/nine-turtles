@@ -549,7 +549,7 @@ Rohit's plan leans on channels that compound and that run without him:
 
 - **Search:** pages for the chosen positioning's searches.
 - **Free tools that bring people in:** feed finder (built), YouTube
-  subscriptions to a feed file, export tidy-up and blogroll maker, "see
+  subscriptions to a feed file, export tidy-up, "see
   your blog as a book", public starter packs.
 - **Moments worth sharing,** for word of mouth.
 - Track sign-ups by channel; cut what doesn't work.
