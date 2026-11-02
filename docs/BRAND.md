@@ -1,6 +1,6 @@
 # nine turtles: the brand sheet
 
-*Every brand decision on one page. Last updated: 2 November 2026 (decision 0139).*
+*Every brand decision on one page. Last updated: 2 November 2026 (decision 0141).*
 
 **How to use this page.** Every change a reader can see (in the app, on the
 website, in an email, in a link preview) follows this page. This page is
@@ -28,12 +28,12 @@ what's live.
 - **How it sounds:** warm, never cute. True, specific facts, never invented feelings. No stories or metaphors (letters, fountain pens) told about the brand: it wins on craft. (Live)
 - **Marketing copy** isn't written fresh by an agent: use settled copy word for word, and ask Rohit before adding any. (Live)
 
-## Typefaces (Being built)
+## Typefaces (Live, decision 0141)
 
 - **Literata** for everything written: reading, the article list's titles, page titles and the wordmark (weight 600).
-- **Atkinson Hyperlegible Next** (400, 500, 600) for the whole interface, on every device. The system font and Inter retire.
-- **Atkinson Hyperlegible Mono** for code in articles. JetBrains Mono retires.
-- The reader can still pick another reading font in the Aa panel.
+- **Atkinson Hyperlegible Next** (400, 500, 600) for the whole interface, on every device. It replaced the device's own font and Inter.
+- **Atkinson Hyperlegible Mono** for code in articles. It replaced JetBrains Mono.
+- The reader can still pick another reading font in the Aa panel: Atkinson Hyperlegible Next or the device's own serif.
 - All served by nine turtles itself, never by a font service.
 
 ## Color

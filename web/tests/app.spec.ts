@@ -343,7 +343,7 @@ test("Settings: appearance, font, size and width apply at once and are remembere
   await page.getByLabel("System serif").check();
   await expect(sample).toHaveCSS("font-family", /^ui-serif/);
   await page.getByLabel("Atkinson Hyperlegible").check();
-  await expect(sample).toHaveCSS("font-family", /^"Atkinson Hyperlegible"/);
+  await expect(sample).toHaveCSS("font-family", /^"Atkinson Hyperlegible Next"/);
   // Plain: rohit.onl's bare look, black on white by day, and back to Original (decision 0063).
   await page.getByRole("radio", { name: "Plain" }).check();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "plain");
@@ -423,7 +423,7 @@ test("every font comes from nine turtles itself", async ({ page }) => {
   const families = await page.evaluate(() =>
     [...document.fonts].filter((face) => face.status === "loaded").map((face) => face.family.replaceAll('"', "")),
   );
-  expect(new Set(families)).toEqual(new Set(["Literata", "Inter", "Atkinson Hyperlegible"]));
+  expect(new Set(families)).toEqual(new Set(["Literata", "Atkinson Hyperlegible Next"]));
   expect(new Set(fontOrigins)).toEqual(new Set([new URL(page.url()).origin]));
 });
 
