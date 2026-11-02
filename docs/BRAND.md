@@ -80,7 +80,7 @@ sleeps, celebrates or stands for a feeling. No mascot.
 - "Open original" is an arrow with no box. AI assistants keep the robot.
 - A new icon follows the same rule. If Rohit dislikes one later, offer alternatives one at a time.
 
-## Empty screens and the ends of lists (Live, decision 0140)
+## Empty screens and the ends of lists (Live, decision 0142)
 
 - **One shape for every empty list:** on the list's left edge, never centred. First the fact in Literata, in the second ink ("Nothing in this folder yet."). Then, only if there's something to do, how to do it in Atkinson, muted ("Add an article from its More menu."). A button only where one action is the obvious next step. No picture, no turtle, no icon.
 - **One pattern for the words:** "Nothing … yet." A feed says when it was last checked; a search says where it looked ("Nothing found for "walking" in Starred.").
@@ -90,7 +90,7 @@ sleeps, celebrates or stands for a feeling. No mascot.
 - **"Wrong turn?"** (the 404 page): everything on one left edge, "404 error" in sentence case, the turtle drawing unchanged.
 - Exact sizes: `spec/06-item-list.md` for lists, DESIGN.md Part 2 for "Wrong turn?".
 
-## Emails (Live, decision 0140)
+## Emails (Live, decision 0142)
 
 - **Plain text,** no pictures and no logo: the name is text.
 - **From** "nine turtles <hello@nineturtles.app>"; replies reach Rohit.

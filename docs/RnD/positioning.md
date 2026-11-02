@@ -63,8 +63,8 @@ We never name a company in copy: the enemy is a behaviour.
    likes; export everything in one click.
 6. **Made by a person you can write to:** Rohit is the face.
 
-Person pages and reply by email are what the headline promises, so they
-belong in V1 (to settle in the V1 step).
+Person pages and writing back are what the headline promises, so they
+are V1 musts (`docs/PLAN.md`, decision 0140).
 
 ## What we said no to
 
@@ -72,3 +72,6 @@ belong in V1 (to settle in the V1 step).
   copying the publisher's web page, which the floor forbids, and saved
   piles become the next guilt list. The star keeps articles from people
   you follow.
+- **A blogroll to show (on the reader's site or a page on nine turtles):**
+  no. Rohit, 2 November 2026: it feels like social media. Not to be
+  suggested again.

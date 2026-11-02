@@ -66,7 +66,7 @@ export function insteadOfList(place: Route, found: Found): string | undefined {
 }
 
 /**
- * What an empty list says (decision 0140): one short fact, and, only when
+ * What an empty list says (decision 0142): one short fact, and, only when
  * there's something to do, a quieter line saying how. Every "nothing yet"
  * is said the same way, and a feed says when it was last checked, the fact a
  * reader wonders about ("is it broken, or just quiet?").

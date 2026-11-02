@@ -840,7 +840,7 @@
       </button>
     </div>
   {:else if articles.length > 0}
-    <!-- A finite list says when it's finished (SPEC.md section 6): a quiet caption on the row titles' edge, with room under it so the list visibly stops (decision 0140). -->
+    <!-- A finite list says when it's finished (SPEC.md section 6): a quiet caption on the row titles' edge, with room under it so the list visibly stops (decision 0142). -->
     <p class="list-end">{fromDevice ? END_OF_KEPT : endOfList(source)}</p>
   {/if}
 {/if}

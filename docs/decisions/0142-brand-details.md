@@ -1,4 +1,4 @@
-# 0140: The brand's details: empty lists, "Wrong turn?", emails, the share picture, the tab icon
+# 0142: The brand's details: empty lists, "Wrong turn?", emails, the share picture, the tab icon
 
 *2 November 2026. Chosen by the owner from mockups (today, a safe and a bold
 option for each, with a creative director's review), in the brand work's

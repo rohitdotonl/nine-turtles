@@ -2,7 +2,7 @@
   The "Wrong turn?" page (SPEC section 4): what an address that isn't one of
   nine turtles' places opens, in place of the app. A small "404 error", then
   nine turtles from the logo: eight walking one way and, a few steps behind,
-  one turned the other, all on one left edge (decision 0140). The website's 404 page (website/src/404.md) is the
+  one turned the other, all on one left edge (decision 0142). The website's 404 page (website/src/404.md) is the
   same page: change both together. Screen readers skip the drawing; the
   words say it all.
 -->
@@ -22,7 +22,7 @@
 </script>
 
 <!--
-  One left edge, like the website's home page (decision 0140): the column starts 192px down (96px on
+  One left edge, like the website's home page (decision 0142): the column starts 192px down (96px on
   a phone), and its parts group by their gaps, 16 / 48 / 20 / 24 / 40, rather than one even spacing.
 -->
 <main class="min-h-screen bg-paper px-5 pt-24 pb-20 sm:pt-48">

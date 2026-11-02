@@ -104,7 +104,7 @@ test("the sidebar lists Unread, Starred, All and Recently read, with a grey pill
   await expect(page).toHaveURL(/\/starred$/);
   await expect(sidebar(page).getByRole("link", { name: "Starred" })).toHaveAttribute("aria-current", "page");
   await expect(unread).not.toHaveAttribute("aria-current", "page");
-  // An empty list (decision 0140): the fact in the serif, then how to start, quieter, both on the list's left edge.
+  // An empty list (decision 0142): the fact in the serif, then how to start, quieter, both on the list's left edge.
   const fact = page.getByText("Nothing starred yet.");
   const how = page.getByText("Press the star on any article to keep it here.");
   await expect(fact).toBeVisible();

@@ -108,7 +108,7 @@ test.describe("on a wide window", () => {
     expect(color).toBe(muted);
     const [line, pane] = await Promise.all([empty.boundingBox(), article(page).boundingBox()]);
     expect(Math.abs(line!.x + line!.width / 2 - (pane!.x + pane!.width / 2))).toBeLessThan(4);
-    // At the optical middle, a little above half way (decision 0140).
+    // At the optical middle, a little above half way (decision 0142).
     expect(line!.y + line!.height / 2).toBeLessThan(pane!.y + pane!.height / 2 - 20);
     // The first time, a quiet tip under it names the two keys worth knowing first (decision 0062),
     // small, in the same muted grey, its keys as key caps.
@@ -444,7 +444,7 @@ test.describe("on a wide window", () => {
       return [getComputedStyle(element).backgroundColor, color];
     });
     expect(fill).toBe(tint);
-    // A finished list says so, in a quiet caption on the list's edge, in the serif, with no rule (decision 0140).
+    // A finished list says so, in a quiet caption on the list's edge, in the serif, with no rule (decision 0142).
     const end = page.getByText("That's everything.");
     await expect(end).toBeVisible();
     await expect(end).toHaveCSS("border-top-width", "0px");

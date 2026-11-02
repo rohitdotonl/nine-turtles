@@ -1390,7 +1390,7 @@
             <!--
               One quiet line in the middle of the paper, as a Mac app shows when nothing is chosen
               (decision 0053): serif, muted, never the accent, no picture. Screen readers also hear,
-              when the list has something to open, how to open one. It sits 40% down (decision 0140).
+              when the list has something to open, how to open one. It sits 40% down (decision 0142).
             -->
             <section aria-label="Article" class="flex min-w-0 flex-1 flex-col items-center justify-center bg-paper px-5 pb-[20vh]">
               <div class="relative">

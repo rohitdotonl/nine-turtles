@@ -715,7 +715,7 @@ footer .links.small a {
 
 /* The 404 page, "Wrong turn?": eight turtles one way and one the other, big
    enough to see the joke at a glance, still on one line on a small phone. */
-/* "Wrong turn?" on one left edge, its parts grouped by their gaps: 16 / 48 / 20 / 24 (decision 0140). */
+/* "Wrong turn?" on one left edge, its parts grouped by their gaps: 16 / 48 / 20 / 24 (decision 0142). */
 .wrong-turn {
   display: grid;
   justify-items: start;

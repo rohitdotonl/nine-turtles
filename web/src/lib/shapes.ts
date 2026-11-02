@@ -19,7 +19,7 @@ export type Feed = {
    * page lists it as not working; null while it works (decision 0106).
    */
   failingSince?: number | null;
-  /** When it was last checked with an answer (seconds since 1970), for an empty feed's "Last checked…" (decision 0140). */
+  /** When it was last checked with an answer (seconds since 1970), for an empty feed's "Last checked…" (decision 0142). */
   checkedAt?: number | null;
 } & FeedSettings;
 

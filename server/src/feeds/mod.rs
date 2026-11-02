@@ -62,7 +62,7 @@ struct FeedRow {
     /// list can say so and offer Find new address (decision 0106).
     failing_since: Option<i64>,
     /// When it was last checked with an answer, so an empty feed can say
-    /// "Last checked today at 14:20." (decision 0140). None for a newsletter,
+    /// "Last checked today at 14:20." (decision 0142). None for a newsletter,
     /// which is never checked: its emails arrive by themselves.
     checked_at: Option<i64>,
     /// The folders it's in, by number.
