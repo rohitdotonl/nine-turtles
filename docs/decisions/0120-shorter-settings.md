@@ -35,8 +35,8 @@ note records the rules and the choices the try-outs left open.
    letter-spacing 0.07em); rows 12px above and below on a computer, 14px on
    a phone; the control at the right on a computer, under the words at full
    width on a phone. Weight 500 is new: before, the interface used only 400
-   and 600. The self-hosted Inter has no 500, so where the device's own
-   font is missing the names show in Inter's regular.
+   and 600. Replaced by 0141: the interface is now Atkinson Hyperlegible
+   Next, which has a real 500.
 
 **Choices the try-outs left open** (each the one closest to the mock-up):
 

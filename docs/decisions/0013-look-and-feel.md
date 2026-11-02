@@ -26,7 +26,8 @@ Google Fonts' files (SIL Open Font License, a licence file per font beside
 them). About 339 KB of the 400 KB budget. Bold italic isn't shipped: the
 browser slants the bold instead, which is the price of staying in budget.
 Nothing was added to `package.json`; the files are simply part of the
-repository. Replaces the font part of 0008.
+repository. Replaces the font part of 0008. Replaced by 0141 (three
+typefaces: Literata, Atkinson Hyperlegible Next and its Mono).
 
 **Type scale.** Tailwind's own text sizes are switched off in `app.css` and
 replaced by DESIGN.md's five, so nothing else can be used by accident.

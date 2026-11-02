@@ -16,9 +16,9 @@
 
 @theme {
   --font-serif: "Literata", Georgia, serif;
-  /* Inter everywhere; Safari on Apple devices swaps in San Francisco (below the theme). */
-  --font-sans: "Inter", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  /* The interface's one typeface on every device, and code's (decision 0141). */
+  --font-sans: "Atkinson Hyperlegible Next", system-ui, sans-serif;
+  --font-mono: "Atkinson Hyperlegible Mono", ui-monospace, monospace;
 
   --text-*: initial;
   /* Meta: times, source names, counts, hints. */
@@ -93,18 +93,6 @@
   --reading-font: var(--font-serif);
   --reading-size: 1.25rem;
   --reading-measure: 57ch;
-}
-
-/*
-  The device's own interface font, San Francisco, as Apple Books uses, but only
-  in Safari on a Mac, iPhone or iPad (only Safari knows -apple-system-body).
-  Asked for by name elsewhere, -apple-system can match some other font on
-  Linux, so other browsers keep the self-hosted Inter.
-*/
-@supports (font: -apple-system-body) {
-  :root {
-    --font-sans: -apple-system, "Inter", system-ui, sans-serif;
-  }
 }
 
 body {
