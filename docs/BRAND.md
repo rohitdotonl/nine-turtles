@@ -24,7 +24,7 @@ what's live.
 - **The name** is *nine turtles*, always lowercase, even at the start of a sentence. At nineturtles.app. (Live)
 - **The headline** is "Read people. Write back." (Being built: the website still shows an older one.)
 - **The first line under it:** "There are people online you'd like to know. Most of them have a blog, a newsletter or a channel." The rest of the paragraph and the website's points are in [`RnD/positioning.md`](RnD/positioning.md), used word for word. (Being built)
-- **Who speaks:** "I" when Rohit speaks (website, emails, About, the 404 page). Never "we". The app itself speaks without a pronoun. Details: DESIGN.md → "Voice". (Live)
+- **Who speaks:** "I" when Rohit speaks (website, emails, About, the 404 page). Never "we". The app itself speaks without a pronoun. Details: DESIGN.md → "Voice". (Live in the app and emails; being built on the website, where several pages, the blog and the legal pages still say "we".)
 - **How it sounds:** warm, never cute. True, specific facts, never invented feelings. No stories or metaphors (letters, fountain pens) told about the brand: it wins on craft. (Live)
 - **Marketing copy** isn't written fresh by an agent: use settled copy word for word, and ask Rohit before adding any. (Live)
 
