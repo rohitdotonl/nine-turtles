@@ -204,7 +204,7 @@
 
 <main class="flex min-h-screen flex-col items-center justify-center gap-8 px-5 py-8">
   <div class="flex flex-col items-center text-center">
-    <div class="mb-5"><Logo height={57} /></div>
+    <div class="mb-5"><Logo height={56} /></div>
     <h1 class="font-serif text-display">nine turtles</h1>
     <p class="mt-3 font-serif text-large text-muted">Read people. Write back.</p>
   </div>

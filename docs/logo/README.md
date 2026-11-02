@@ -1,16 +1,24 @@
 # nine turtles' logo
 
 Nine small turtles seen from the side, in three rows of three, the middle
-row a little to the right (decision 0067). One ink: the text color.
+row a little to the right (decision 0067), redrawn heavier in November 2026
+(D2, `docs/BRAND.md` → "The logo"). One ink: the text color.
 
-- `nine-turtles-mark.svg`: the turtles alone, on nothing, in dark ink.
-- `nine-turtles-icon-light.svg`: the app icon by day, dark on white.
-- `nine-turtles-icon-dark.svg`: the app icon by night, light on near-black.
+There are two weights of the same drawing:
 
-The turtles in the icons are drawn at 84% so they have room on every side
-(decision 0078). The app's own copies are in `web/public/icons/`. The PNGs
-there are these drawings exported at 180, 192 and 512 pixels; the maskable
-one has the turtles at 75% so a circular crop keeps them whole.
+- **Heavy (24 to 63 pixels tall):** the logo beside the name, in the app
+  (`web/src/lib/Logo.svelte`) and the website's top bar
+  (`website/src/_includes/base.njk`). Its box ends at the shells' feet, so it
+  stands on the name's baseline.
+- **Large (64 pixels and up):** a slightly lighter drawing for big sizes:
+  `nine-turtles-mark.svg` (the turtles alone, on nothing, in dark ink) and
+  the app icon.
+
+`nine-turtles-icon.svg` is the app icon: a black tile `#141414` with the
+large nine in light `#EFEFF1`, 46% of the tile's height, the same by day and
+by night. The PNGs in `web/public/icons/` (`apple-touch-icon.png` at 180,
+`icon-192.png`, `icon-512.png`) are it exported; `icon-maskable-512.png` has
+the nine at 85% of that, so a circular crop keeps them whole.
 
 The browser-tab icon is a single turtle instead (decision 0078), since nine
 blur into stripes at 16 pixels: `web/public/icons/icon.svg` and `icon-32.png`,
