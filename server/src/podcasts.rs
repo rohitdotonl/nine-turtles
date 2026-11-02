@@ -251,7 +251,7 @@ async fn set_up_next(
 /// episodes of feeds they still follow (one they left leaves it with its
 /// entry). Muted ones stay: the reader lined them up themselves.
 const LIST: &str =
-    "SELECT entries.article_id AS id, entries.feed_id, subscriptions.title AS feed_title,
+    "SELECT entries.article_id AS id, entries.feed_id, COALESCE(writers.name, subscriptions.title) AS feed_title,
             articles.title, articles.link, entries.sort_at AS at,
             entries.read, entries.starred, entries.muted,
             articles.episode_url IS NOT NULL AS episode, articles.episode_seconds
@@ -260,6 +260,7 @@ const LIST: &str =
          CROSS JOIN articles ON articles.id = entries.article_id
          CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
              AND subscriptions.feed_id = entries.feed_id
+         LEFT JOIN writers ON writers.id = subscriptions.writer_id
      WHERE up_next.person_id = ? AND subscriptions.unsubscribed_at IS NULL
      ORDER BY up_next.place, up_next.article_id";
 

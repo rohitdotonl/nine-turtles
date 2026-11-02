@@ -21,6 +21,9 @@
   import CheatSheet from "./CheatSheet.svelte";
   import EditFeed from "./EditFeed.svelte";
   import EditFolder from "./EditFolder.svelte";
+  import EmptyReading from "./EmptyReading.svelte";
+  import PersonPage from "./PersonPage.svelte";
+  import { placeLabels, placesOf, placesWatch } from "./people";
   import FailingLine from "./FailingLine.svelte";
   import EditSearch from "./EditSearch.svelte";
   import AddToCollection from "./AddToCollection.svelte";
@@ -45,10 +48,10 @@
   import { ReadingSettings } from "./reading-settings.svelte";
   import type { Notice } from "./feeds";
   import { marksUnsaved } from "./saving";
-  import { createKeyReader, keyCap } from "./keyboard";
+  import { createKeyReader } from "./keyboard";
   import { listMenu, type MenuHands, type MenuScene } from "./listMenu";
   import { carryOut, keyIsOurs, type KeyHands, type KeyScene } from "./shortcuts";
-  import { currentKey, currentKeyOf, keys, tip } from "./keys.svelte";
+  import { currentKey, keys, tip } from "./keys.svelte";
   import { currentWidth, LIST_MIN, ScreenLayout, watchWidth } from "./layout.svelte";
   import { apply, load, save } from "./preferences";
   import { device } from "./appearance.svelte";
@@ -221,12 +224,16 @@
             : { view: under.kind === "view" ? under.view : homeView(settings.mode) },
   );
   /** The list's identity: a new one is loaded when it changes. */
-  let listKey = $derived(`${pathFor(under)} ${settings.sort} ${searching.shown ? JSON.stringify(searchParams(searching.shown)) : ""}`);
 
   let currentFeed = $derived.by(() => {
     const place = under.kind === "feed" ? under : route;
     return place.kind === "feed" || place.kind === "edit-feed" ? library.feeds?.find((feed) => feed.id === place.id) : undefined;
   });
+  /** The places of the person on screen (SPEC section 36): just the place, for one on its own. */
+  let currentPlaces = $derived(currentFeed && library.feeds ? placesOf(currentFeed, library.feeds) : []);
+  // A person's places joined or parted: their list refreshes in place, keeping its line and Undo.
+  const placesChanged = placesWatch();
+  $effect(() => void (placesChanged(currentFeed?.id, currentPlaces.length) && untrack(() => itemList?.refresh())));
   let currentFolder = $derived.by(() => {
     const place = under.kind === "folder" ? under : route;
     return place.kind === "folder" || place.kind === "edit-folder"
@@ -248,7 +255,8 @@
   /** A sheet is actually showing (an edit address for a feed, folder or saved search you don't have shows none). */
   let sheetShown = $derived(sheet && (route.kind === "add-feed" || route.kind === "new-to-feeds" || editing));
   /** The feed's, folder's or saved search's name, for the heading and the tab's title. */
-  let placeName = $derived(placeNameOf({ feed: currentFeed, folder: currentFolder, search: currentSearch, collection: currentCollection }));
+  let listKey = $derived(`${pathFor(under)} ${settings.sort} ${searching.shown ? JSON.stringify(searchParams(searching.shown)) : ""}`);
+  let placeName = $derived(placeNameOf({ feed: library.shownAs(currentFeed), folder: currentFolder, search: currentSearch, collection: currentCollection }));
   /** On a saved search, the search field no longer holds what was saved: Escape puts it back. */
   let tweaked = $derived(route.kind === "search" && currentSearch !== undefined && !sameQuery(searching.query, currentSearch.query));
   /** What the screen has found for the place on screen, for the words an empty or missing place shows. */
@@ -682,6 +690,12 @@
     return undefined;
   }
 
+  /** "This is one person" on a folder (SPEC section 36): its places become one person; their list, with "… · Undo". */
+  async function personFrom(folder: Folder): Promise<string | undefined> {
+    const done = await library.folderToPerson(folder);
+    return typeof done === "string" ? done : void go({ kind: "feed", id: done.lead }, done);
+  }
+
   function follow(event: MouseEvent, next: Route) {
     // Let the browser handle a click meant for a new tab or window.
     if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
@@ -823,7 +837,7 @@
 
   /** Shift+J and Shift+K: the feed after or before the place you're in, in the sidebar's order. */
   function feedAfter(step: 1 | -1): Route | undefined {
-    return nextFeed(library, phone, sidebarFeeds?.openFolders(), route, step);
+    return nextFeed({ feeds: library.rows, folders: library.folders }, phone, sidebarFeeds?.openFolders(), route, step);
   }
 
   /**
@@ -1093,12 +1107,12 @@
       <!-- On the rows' grid (decision 0043): its icon in the column of the places' icons, its words where their names start. -->
       <div class="relative mx-2 pb-4">
         <span class="pointer-events-none absolute top-0 left-3 flex h-(--search-height) w-4 items-center justify-center text-muted"><Icon name="search" size={14} /></span>
-        <label for="sidebar-search" class="sr-only">Find a feed or folder</label>
+        <label for="sidebar-search" class="sr-only">Find a person or folder</label>
         <input
           id="sidebar-search"
           type="search"
           bind:value={search}
-          placeholder="Find a feed or folder"
+          placeholder="Find a person or folder"
           autocomplete="off"
           onkeydown={(event) => {
             // Escape empties the search first; pressed again, it does what it does elsewhere.
@@ -1115,7 +1129,7 @@
       {#if library.feeds}
         <SidebarFeeds
           bind:this={sidebarFeeds}
-          feeds={library.feeds}
+          feeds={library.rows ?? []}
           folders={library.folders}
           searches={settings.hidden.includes("searches") ? [] : library.searches}
           collections={settings.hidden.includes("collections") ? [] : library.collections}
@@ -1303,7 +1317,7 @@
           <!-- A column, so the floating note can sit at the pane's foot even under a short list. -->
           <div use:edge class="scroller relative flex min-h-0 flex-1 scroll-pb-20 flex-col overflow-y-auto pt-2 pr-[var(--list-end)] pb-6 pl-[var(--list-start)]">
             {#if library.feeds && library.feeds.length > 0 && !missing && (!phone || searching.open)}
-              <SearchBar bind:this={searchBar} query={searching.query} feeds={library.feeds} folders={library.folders} collections={library.collections} here={scopeFor(under)} found={listFound} {river} onChange={(next, now) => searching.changed(next, now)} />
+              <SearchBar bind:this={searchBar} query={searching.query} feeds={library.rows ?? []} folders={library.folders} collections={library.collections} here={scopeFor(under)} found={listFound} {river} onChange={(next, now) => searching.changed(next, now)} />
             {/if}
             {#if listInstead}
               <p class="mt-4">{listInstead}</p>
@@ -1346,7 +1360,7 @@
                   }}
                   onCounts={loadFeeds}
                   results={searching.shown !== undefined}
-                  oneFeed={under.kind === "feed" && !searching.shown}
+                  oneFeed={under.kind === "feed" && !searching.shown && placeLabels(currentPlaces)}
                   {river}
                   {flowing}
                   bind:count={listCount}
@@ -1386,34 +1400,10 @@
             <section aria-labelledby="welcome-heading" class="flex min-w-0 flex-1 flex-col items-center justify-center bg-paper px-5 pb-[12vh] md:px-10">
               {@render welcome(false)}
             </section>
+          {:else if under.kind === "feed" && currentFeed && library.feeds && !missing && !searching.shown}
+            <PersonPage feed={currentFeed} {library} {listCount} {tipSeen} onEdit={() => go({ kind: "edit-feed", id: currentFeed!.id })} onJoined={(done, lead) => go({ kind: "feed", id: lead }, done)} />
           {:else}
-            <!--
-              One quiet line in the middle of the paper, as a Mac app shows when nothing is chosen
-              (decision 0053): serif, muted, never the accent, no picture. Screen readers also hear,
-              when the list has something to open, how to open one. It sits 40% down (decision 0142).
-            -->
-            <section aria-label="Article" class="flex min-w-0 flex-1 flex-col items-center justify-center bg-paper px-5 pb-[20vh]">
-              <div class="relative">
-                <p class="reading-empty">Time to read something beautiful.</p>
-                {#if listCount > 0 && !missing}
-                  <!-- The reader's own key for the next article, if they kept one (decision 0110). -->
-                  {@const first = currentKeyOf("next-article")}
-                  {@const cap = first ? keyCap(first) : undefined}
-                  {#if tipSeen}
-                    <p class="sr-only">Choose one from the list{#if cap}<span class="keyboard-hint">, or press {cap.spoken ?? cap.cap}</span>{/if}.</p>
-                  {:else}
-                    <!--
-                      Once, on a screen with a keyboard: the two keys worth knowing first, quietly, under the
-                      line (decision 0062). Touch screens hear and see only "Choose one from the list."
-                    -->
-                    <p class="shortcut-tip keyboard-hint absolute top-full left-1/2 w-[min(28rem,80vw)] -translate-x-1/2">
-                      {#if cap}Press {#if cap.spoken}<kbd class="key" aria-hidden="true">{cap.cap}</kbd><span class="sr-only">{cap.spoken}</span>{:else}<kbd class="key">{cap.cap}</kbd>{/if} to open the first article, or <kbd class="key">?</kbd> for every shortcut.{:else}Press <kbd class="key">?</kbd> for every shortcut.{/if}
-                    </p>
-                    <p class="sr-only touch-only">Choose one from the list.</p>
-                  {/if}
-                {/if}
-              </div>
-            </section>
+            <EmptyReading {listCount} missing={missing !== undefined} {tipSeen} />
           {/if}
           </div>
         {/if}
@@ -1487,6 +1477,9 @@
         onSaved={() => edited(true)}
         onCancel={() => edited(false)}
         onUnsubscribe={() => unsubscribeFrom(currentFeed!)}
+        {library}
+        onPeople={(done, lead) => go({ kind: "feed", id: lead }, done)}
+        onPlace={(id) => go({ kind: "edit-feed", id })}
         onAddRule={() => addRuleFor(currentFeed!)}
         onMoved={(after) => feedMoved(currentFeed!.id, after.id, () => headings[at])}
       />
@@ -1501,6 +1494,7 @@
         onSaved={() => edited(true)}
         onCancel={() => edited(false)}
         onDelete={() => deleteThis(currentFolder!)}
+        onPerson={(name) => personFrom({ ...currentFolder!, name })}
       />
     {/key}
   {:else if route.kind === "save-search" && searching.saving}

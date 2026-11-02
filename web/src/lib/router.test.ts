@@ -71,7 +71,7 @@ describe("addresses", () => {
     expect(titleFor({ kind: "search", id: 7 }, "Climate")).toBe("Climate · nine turtles");
     expect(titleFor({ kind: "save-search" })).toBe("Save search · nine turtles");
     expect(titleFor({ kind: "folder", id: 4 }, "Tech")).toBe("Tech · nine turtles");
-    expect(titleFor({ kind: "edit-feed", id: 3 })).toBe("Edit feed · nine turtles");
+    expect(titleFor({ kind: "edit-feed", id: 3 })).toBe("Edit person · nine turtles");
   });
 
   it("gives each of Settings' own pages an address that comes back to it (decision 0120)", () => {

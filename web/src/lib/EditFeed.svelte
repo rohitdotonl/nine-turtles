@@ -1,5 +1,12 @@
 <!--
-  "Edit feed" (SPEC section 15): the feed's name, its folders as a
+  "Edit person" (SPEC sections 15 and 36): managing a person, opened from
+  their list's More menu or their page. Their name; their places, with Add
+  another place and, for a person with several, "Not the same person" for
+  this place; their folders (one list for all their places); then this
+  place's own settings. A place on its own is a person with one place: the
+  name is the place's, as before.
+
+  Built as "Edit feed" was: the name, the folders as a
   checklist ending in a "New folder…" row, its own settings (reading mode,
   how often it's checked, opening on the website), a shortcut to add a rule
   for the feed (SPEC section 27), and Unsubscribe. A feed that isn't working
@@ -22,8 +29,11 @@
   import PageHead from "./PageHead.svelte";
   import Sheet from "./Sheet.svelte";
   import { edge } from "./edge";
+  import AddPlace from "./AddPlace.svelte";
   import type { Check, Feed, Folder } from "./shapes";
-  import { editFeed, feedFrequency, refused } from "./feeds";
+  import { editFeed, feedFrequency, refused, type Notice } from "./feeds";
+  import type { LoadedLibrary } from "./library.svelte";
+  import { PLACE_NAMES, placeShownAs, placesOf, putBack, separate } from "./people";
   import { pausedSince } from "./times";
   import type { Sick } from "./health";
 
@@ -39,6 +49,9 @@
     onUnsubscribe,
     onAddRule,
     onMoved,
+    library,
+    onPeople,
+    onPlace,
   }: {
     feed: Feed;
     folders: Folder[];
@@ -56,11 +69,18 @@
     onAddRule: () => void;
     /** Find new address moved the feed (decision 0106). */
     onMoved: (feed: Sick) => void;
+    library: LoadedLibrary;
+    /** Places were joined or parted (SPEC section 36): their list, with "… · Undo". */
+    onPeople: (done: Notice, lead: number) => void;
+    /** Another of the person's places, to edit its own settings. */
+    onPlace: (id: number) => void;
   } = $props();
 
-  // The form starts from the feed as it is now, once.
-  let title = $state((() => feed.title)());
-  let chosen: number[] = $state((() => [...feed.folders])());
+  let places = $derived(placesOf(feed, library.feeds ?? []));
+  let kind = $derived(PLACE_NAMES[feed.place ?? "blog"].toLowerCase());
+  // The form starts from the person as they are now, once: their name, and every folder any of their places is in.
+  let title = $state((() => library.shownAs(feed)?.title ?? feed.title)());
+  let chosen: number[] = $state((() => [...new Set(placesOf(feed, library.feeds ?? []).flatMap((place) => place.folders))])());
   let newFolder = $state("");
   let flows = $state((() => feed.river)());
   let check: Check = $state((() => feed.check)());
@@ -93,6 +113,27 @@
     { value: "daily", label: "Daily" },
   ];
 
+  /** "Not the same person": this place stands on its own again, with Undo on its list. */
+  async function part() {
+    if (busy) return;
+    busy = true;
+    message = "";
+    const { refusal, before } = await separate(feed.id);
+    if (refusal) {
+      busy = false;
+      message = refusal;
+      return;
+    }
+    await library.loadFeeds();
+    busy = false;
+    const undo = async () => {
+      const problem = await putBack(before);
+      await library.loadFeeds();
+      return problem;
+    };
+    onPeople({ message: `${placeShownAs(feed)} is on its own again`, undo }, feed.id);
+  }
+
   async function leave() {
     if (busy) return;
     busy = true;
@@ -108,7 +149,7 @@
     type="button"
     aria-disabled={busy}
     aria-describedby="unsubscribe-help"
-    title="Stops following this feed and removes its articles; starred ones stay. You can undo it straight afterwards."
+    title="Stops following {places.length > 1 ? `this ${kind}` : 'them'} and removes the articles; starred ones stay. You can undo it straight afterwards."
     aria-label="Unsubscribe from {feed.title}"
     onclick={leave}
     class={look}>Unsubscribe</button
@@ -130,6 +171,32 @@
         words, no number to chase. Its line is kept from the start, so nothing moves when the words arrive.
       -->
       <span id="feed-frequency" class="field-help mt-0">{frequency ? `${frequency}.` : " "}</span>
+    </div>
+
+    <!-- Their places on the web (SPEC section 36): what each is, each other place leading to its own settings. -->
+    <div class="flex min-w-0 flex-col gap-1.5">
+      <span class="text-small text-ink-2" id="person-places-name">Places</span>
+      <ul class="inset-group" aria-labelledby="person-places-name">
+        {#each places as place (place.id)}
+          <li class="inset-row gap-3">
+            <span class="w-24 shrink-0 text-muted">{PLACE_NAMES[place.place ?? "blog"]}</span>
+            <span class="min-w-0 flex-1 break-words">{placeShownAs(place)}</span>
+            {#if places.length > 1 && place.id === feed.id}
+              <span class="shrink-0 text-small text-muted">Settings below</span>
+            {:else if places.length > 1}
+              <button type="button" class="text-link shrink-0 text-small" onclick={() => onPlace(place.id)}>Its settings</button>
+            {/if}
+          </li>
+        {/each}
+      </ul>
+      <div class="mt-2 flex flex-col gap-3">
+        <AddPlace {feed} name={title.trim() || feed.title} {library} onJoined={onPeople} />
+        {#if places.length > 1}
+          <button type="button" class="text-link self-start text-small" aria-disabled={busy} onclick={part}
+            >{placeShownAs(feed)} isn't the same person</button
+          >
+        {/if}
+      </div>
     </div>
 
     <fieldset class="flex min-w-0 flex-col gap-1.5">
@@ -163,7 +230,7 @@
       </div>
       <!-- On the field's own left edge, 6px under it (the fieldset's gap). -->
       <span id="new-folder-hint" class="field-help mt-0"
-        >{folders.length === 0 ? "No folders yet. " : ""}Optional: a new folder is made when you save, with this feed in it.</span
+        >{folders.length === 0 ? "No folders yet. " : ""}Optional: a new folder is made when you save, with them in it.</span
       >
     </fieldset>
 
@@ -173,7 +240,7 @@
       setting starts as every feed behaves, so only the feeds that need it change.
     -->
     <div class="flex min-w-0 flex-col gap-1.5">
-      <span class="text-small text-ink-2" id="feed-settings-name">Settings</span>
+      <span class="text-small text-ink-2" id="feed-settings-name">{places.length > 1 ? `Settings for this ${kind}` : "Settings"}</span>
       <!-- Each setting's name with a short description straight under it, as in Settings (S1, decision 0120). -->
       <div class="inset-group" role="group" aria-labelledby="feed-settings-name">
         <div class="inset-row setting has-control">
@@ -204,7 +271,7 @@
                 ? "No more often than once an hour."
                 : check === "daily"
                   ? "No more often than once a day."
-                  : "As often as this feed usually posts."}
+                  : "As often as it usually posts."}
             </p>
           </div>
           <div role="group" aria-labelledby="feed-check-name" aria-describedby="feed-check-hint" class="choices setting-control" style="--columns: 3">
@@ -227,7 +294,7 @@
         <label class="inset-row check-row setting">
           <input type="checkbox" bind:checked={paused} aria-describedby="feed-pause-hint" />
           <span class="setting-words">
-            <span class="setting-name">Pause this feed</span>
+            <span class="setting-name">Pause for a while</span>
             <span id="feed-pause-hint" class="setting-hint"
               >New articles skip Unread until you untick it; then its newest three come back.{#if feed.pausedAt != null}
                 {pausedSince(feed.pausedAt)}{/if}</span
@@ -240,7 +307,7 @@
 
     <!-- A shortcut to Settings › Rules, already set to this feed; leaving this sheet unchanged. -->
     <p class="text-small">
-      <button type="button" class="text-link" onclick={onAddRule}>Add a rule for this feed…</button>
+      <button type="button" class="text-link" onclick={onAddRule}>Add a rule…</button>
     </p>
 
     <!-- A problem, in red words with an icon, only once there is one: the sheet grows by its line. -->
@@ -268,7 +335,7 @@
 {/snippet}
 
 {#if sheet}
-  <Sheet title="Edit feed" bind:heading onClose={onCancel}>
+  <Sheet title="Edit person" bind:heading onClose={onCancel}>
     {@render form()}
   </Sheet>
 {:else}
@@ -281,7 +348,7 @@
     screen's foot.
   -->
   <div class="page-sheet-card">
-    <PageHead title="Edit feed" bind:heading {besideToggle} onClose={onCancel} closeLabel="Close" />
+    <PageHead title="Edit person" bind:heading {besideToggle} onClose={onCancel} closeLabel="Close" />
     <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
       <div class="mx-auto flex w-full max-w-xl flex-1 flex-col">
         {@render form()}

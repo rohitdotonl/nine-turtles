@@ -149,7 +149,9 @@ impl Check {
 /// in Edit feed's helper line (`web/src/lib/EditFeed.svelte`).
 pub const BACK_FROM_PAUSE: i64 = 3;
 
-/// "Edit feed": its name, folders and settings, saved together or not at all.
+/// "Edit person": a place's name, folders and settings, saved together or not
+/// at all. On a place of a person with others, the name is the person's and
+/// the folders are all their places' (`writers`).
 async fn edit_feed(
     SignedIn(person): SignedIn,
     State(state): State<AppState>,
@@ -171,7 +173,7 @@ async fn edit_feed(
         if !follows(&mut transaction, person, id).await? {
             return Ok(None);
         }
-        rename_feed(&mut transaction, person, id, &title).await?;
+        crate::writers::rename_place(&mut transaction, person, id, &title).await?;
         sqlx::query(
             "UPDATE subscriptions SET river = COALESCE(?, river),
                  open_on_site = COALESCE(?, open_on_site),
@@ -203,7 +205,7 @@ async fn edit_feed(
         if let Some(name) = &new_folder {
             folders.push(folder_named(&mut transaction, person, name).await?.0);
         }
-        file_in(&mut transaction, person, id, &folders).await?;
+        crate::writers::file_places(&mut transaction, person, id, &folders).await?;
         // After the folders, so rules for folders act on the ones just saved.
         if let Some(paused) = form.paused {
             set_paused(&mut transaction, person, id, paused, now()).await?;

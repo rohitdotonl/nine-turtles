@@ -119,7 +119,7 @@ export function listMenu(scene: MenuScene, hands: MenuHands): MenuGroup[] {
     return groups;
   }
   const { feed, folder } = scene;
-  if (feed !== undefined) groups.push({ items: [{ label: "Edit feed…", shortcut: key("edit-place"), onSelect: () => hands.go({ kind: "edit-feed", id: feed }) }] });
+  if (feed !== undefined) groups.push({ items: [{ label: "Edit person…", shortcut: key("edit-place"), onSelect: () => hands.go({ kind: "edit-feed", id: feed }) }] });
   else if (folder !== undefined) groups.push({ items: [{ label: "Edit folder…", shortcut: key("edit-place"), onSelect: () => hands.go({ kind: "edit-folder", id: folder }) }] });
   return groups;
 }

@@ -1887,3 +1887,77 @@ async fn dropping_sign_up_links_keeps_every_readers_link_and_setting() {
         .unwrap();
     assert_eq!(left, 0);
 }
+
+#[tokio::test]
+async fn adding_people_keeps_every_feed_on_its_own_with_its_name_and_folder() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just after sign-up links went (structure change 27): two
+    // feeds followed, one in a folder.
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(27, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO feeds (id, url, url_key, title, added_at)
+         VALUES (1, 'a', 'a', 'Garden', 1), (2, 'b', 'b', 'Radio', 1)",
+        "INSERT INTO subscriptions (person_id, feed_id, title, added_at)
+         VALUES (1, 1, 'My garden', 1), (1, 2, 'Radio', 2)",
+        "INSERT INTO folders (id, person_id, name) VALUES (1, 1, 'Friends')",
+        "INSERT INTO feed_folders (folder_id, feed_id) VALUES (1, 1)",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    // Every feed is still followed, with its own name, on its own, and not
+    // yet asked about; the folder keeps its feed.
+    let followed: Vec<(i64, String, Option<i64>, i64)> = sqlx::query_as(
+        "SELECT feed_id, title, writer_id, same_asked FROM subscriptions ORDER BY feed_id",
+    )
+    .fetch_all(&db)
+    .await
+    .unwrap();
+    assert_eq!(
+        followed,
+        [
+            (1, "My garden".to_owned(), None, 0),
+            (2, "Radio".to_owned(), None, 0)
+        ]
+    );
+    let filed: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM feed_folders")
+        .fetch_one(&db)
+        .await
+        .unwrap();
+    assert_eq!(filed, 1);
+    // A person can be made, and removing them leaves their places followed.
+    sqlx::query("INSERT INTO writers (id, person_id, name, created_at) VALUES (1, 1, 'Kai', 1)")
+        .execute(&db)
+        .await
+        .unwrap();
+    sqlx::query("UPDATE subscriptions SET writer_id = 1")
+        .execute(&db)
+        .await
+        .unwrap();
+    sqlx::query("DELETE FROM writers")
+        .execute(&db)
+        .await
+        .unwrap();
+    let alone: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM subscriptions WHERE writer_id IS NULL")
+            .fetch_one(&db)
+            .await
+            .unwrap();
+    assert_eq!(alone, 2);
+}

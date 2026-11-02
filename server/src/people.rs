@@ -111,6 +111,8 @@ pub const PER_READER_TABLES: &[(&str, &str)] = &[
         "subscriptions",
         "DELETE FROM subscriptions WHERE person_id = ?",
     ),
+    // The people they joined places into (SPEC section 36).
+    ("writers", "DELETE FROM writers WHERE person_id = ?"),
     ("rules", "DELETE FROM rules WHERE person_id = ?"),
     (
         "newsletter_addresses",
@@ -192,6 +194,7 @@ pub const DATA_TABLES: &[&str] = &[
     "up_next",
     "entries",
     "subscriptions",
+    "writers",
     "rules",
     "saved_searches",
     "folders",

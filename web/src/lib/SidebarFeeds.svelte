@@ -115,19 +115,21 @@
   {#if phone}<span class="-mr-1 shrink-0 text-muted"><Icon name="chevron-right" size={16} /></span>{/if}
 {/snippet}
 
+<!-- A person's row (SPEC section 36): one per person, however many places they have; it's where you are on any of them. -->
 {#snippet feedRow(feed: Feed)}
   {@const place: Route = { kind: "feed", id: feed.id }}
+  {@const here = !phone && route.kind === "feed" && (feed.places ?? [feed.id]).includes(route.id)}
   <li>
     <a
       href={pathFor(place)}
-      aria-current={isHere(place) ? "page" : undefined}
+      aria-current={here ? "page" : undefined}
       onclick={(event) => follow(event, place)}
       title={feed.title}
       class={[
         "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-3 pr-3.5 text-ui pointer-fine:text-small",
         // Every feed's name starts on the sidebar's one name edge, in a folder or not (decision 0123).
         "pl-[38px]",
-        isHere(place) ? "font-semibold text-ink" : "text-ink",
+        here ? "font-semibold text-ink" : "text-ink",
       ]}
       >{@render name(plainSourceName(feed.title))}{@render count(feed.unread)}{@render leadsOn()}</a
     >
@@ -198,7 +200,7 @@
 {#if searching}
   <h2 class="sr-only">Found by name</h2>
   {#if found.folders.length === 0 && found.feeds.length === 0}
-    <p class="px-4 pt-4 text-small">No feed or folder has that in its name.</p>
+    <p class="px-4 pt-4 text-small">No person or folder has that in their name.</p>
   {:else}
     <ul class="mt-4">
       {#each found.folders as folder (folder.id)}
@@ -250,8 +252,8 @@
                 type="button"
                 aria-expanded={shown}
                 aria-controls={`folder-${folder.id}`}
-                aria-label={`Feeds in ${folder.name}`}
-                title={shown ? "Hide feeds" : "Show feeds"}
+                aria-label={`People in ${folder.name}`}
+                title={shown ? "Hide people" : "Show people"}
                 onclick={() => toggle(folder.id)}
                 class="disclosure absolute inset-y-0 right-0 flex w-9 pointer-coarse:w-11 items-center justify-center rounded-md text-muted"
               >
@@ -270,7 +272,7 @@
               {#each inside as feed (feed.id)}
                 {@render feedRow(feed)}
               {:else}
-                <li class="py-2 pr-5 pl-[46px] text-meta text-muted">No feeds in this folder.</li>
+                <li class="py-2 pr-5 pl-[46px] text-meta text-muted">No one in this folder yet.</li>
               {/each}
             </ul>
           {/if}
@@ -279,7 +281,7 @@
     </ul>
   {/if}
   {#if loose.length > 0}
-    <h2 class="sidebar-section">Feeds</h2>
+    <h2 class="sidebar-section">People</h2>
     <ul>
       {#each loose as feed (feed.id)}
         {@render feedRow(feed)}

@@ -16,6 +16,7 @@
 // on each device. (Marks still waiting when a sign-in has expired can't be
 // saved: the server would refuse them anyway. Decision 0101.)
 
+import { placesOf } from "./people";
 import type { Article, FullArticle, Library, Page, Source } from "./shapes";
 import type { Order, ReadingMode } from "./reading";
 import { currentTabReader } from "./updates.svelte";
@@ -104,7 +105,11 @@ export function withMark(kept: Kept, mark: Pick<Mark, "kind" | "value">): Kept {
 
 /** The feeds a list without a connection shows: one feed, a folder's, or all of them. */
 function feedsOf(source: Source, library: Library | undefined): Set<number> | undefined {
-  if ("feed" in source) return new Set([source.feed]);
+  // A person's list holds all their places (SPEC section 36).
+  if ("feed" in source) {
+    const feed = library?.feeds.find((each) => each.id === source.feed);
+    return new Set([source.feed, ...(feed && library ? placesOf(feed, library.feeds).map((place) => place.id) : [])]);
+  }
   if ("folder" in source) return new Set((library?.feeds ?? []).filter((feed) => feed.folders.includes(source.folder)).map((feed) => feed.id));
   return undefined;
 }

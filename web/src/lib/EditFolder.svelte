@@ -1,5 +1,8 @@
 <!--
-  "Edit folder" (SPEC section 15): rename it, or delete it. Deleting a
+  "Edit folder" (SPEC section 15): rename it, make it one person (SPEC
+  section 36: "This is one person", for a folder that holds one person's
+  places; on Save its places become one row named as the folder, and the
+  folder goes, with Undo on the next screen), or delete it. Deleting a
   folder never deletes its feeds; it happens at once, with Undo on the next
   screen. Cancel or Escape goes back to the folder unchanged. On a wide
   window it's a sheet over the folder's list; on a phone, a screen of its own.
@@ -24,6 +27,7 @@
     onSaved,
     onCancel,
     onDelete,
+    onPerson,
   }: {
     folder: Folder;
     heading?: HTMLHeadingElement;
@@ -34,10 +38,13 @@
     onSaved: () => void;
     onCancel: () => void;
     onDelete: () => Promise<string | undefined>;
+    /** "This is one person" was ticked and saved: its places become one person named `name` (the folder's name as saved), and the folder goes. */
+    onPerson: (name: string) => Promise<string | undefined>;
   } = $props();
 
   // The form starts from the folder's name as it is now, once.
   let name = $state((() => folder.name)());
+  let onePerson = $state(false);
   let busy = $state(false);
   let message = $state("");
 
@@ -46,10 +53,16 @@
     if (busy) return;
     busy = true;
     message = "";
-    const refusal = await renameFolder(folder.id, name);
+    const refusal = name === folder.name ? undefined : await renameFolder(folder.id, name);
+    if (refusal) {
+      busy = false;
+      message = refused(refusal, "folder");
+      return;
+    }
+    const problem = onePerson ? await onPerson(name === folder.name ? folder.name : name.trim()) : undefined;
     busy = false;
-    if (refusal) message = refused(refusal, "folder");
-    else onSaved();
+    if (problem) message = problem;
+    else if (!onePerson) onSaved();
   }
 
   async function remove() {
@@ -81,6 +94,21 @@
       <span class="text-small text-ink-2">Name</span>
       <input bind:value={name} type="text" autocomplete="off" class="field" />
     </label>
+    <!-- For a folder made to hold one person's places (their blog, their channel): it becomes that person. -->
+    <div class="flex flex-col gap-1.5">
+      <div class="inset-group">
+        <label class="inset-row check-row setting">
+          <input type="checkbox" bind:checked={onePerson} aria-describedby="one-person-hint" />
+          <span class="setting-words">
+            <span class="setting-name">This is one person</span>
+            <span id="one-person-hint" class="setting-hint"
+              >Everything in it becomes one row, "{name.trim() || folder.name}", with one page. The folder goes; you can undo it straight afterwards.</span
+            >
+          </span>
+          <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
+        </label>
+      </div>
+    </div>
     <!-- A problem, in red words with an icon, only once there is one: the sheet grows by its line. -->
     <p role="status" class={["flex items-start gap-1.5 text-small text-danger", !message && "sr-only"]}>
       {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}

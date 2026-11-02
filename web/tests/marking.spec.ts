@@ -189,7 +189,7 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("ArrowDown");
     await expect(menu.getByRole("menuitemradio", { name: "Newest first" })).toBeFocused();
     await page.keyboard.press("End");
-    await expect(menu.getByRole("menuitem", { name: "Edit feed" })).toBeFocused();
+    await expect(menu.getByRole("menuitem", { name: "Edit person" })).toBeFocused();
     await page.keyboard.press("ArrowUp");
     await expect(menu.getByRole("menuitemradio", { name: "Oldest first" })).toBeFocused();
     await page.keyboard.press("End");

@@ -74,7 +74,7 @@ describe("the list's More menu", () => {
     expect(labels(listMenu(scene({ unread: false, feed: 3 }), hands().given))).toEqual([
       ["Mark all as read", "Refresh"],
       ["Newest first", "Oldest first"],
-      ["Edit feed…"],
+      ["Edit person…"],
     ]);
   });
 
@@ -121,7 +121,7 @@ describe("the list's More menu", () => {
     const { given, done } = hands();
     const feed = listMenu(scene({ unread: false, feed: 3 }), given);
     expect(rows(feed, 2)[0]?.shortcut).toBe("key:edit-place");
-    choose(feed, "Edit feed…");
+    choose(feed, "Edit person…");
     choose(listMenu(scene({ unread: false, folder: 5 }), given), "Edit folder…");
     expect(done).toEqual([
       ["go", { kind: "edit-feed", id: 3 }],

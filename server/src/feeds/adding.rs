@@ -290,6 +290,9 @@ async fn follow(
         paused_at: None,
         failing_since: None,
         checked_at: Some(now),
+        person: None,
+        place: super::place_of(fetched.lasting_url.as_str()).to_owned(),
+        added_at: now,
         folders: Vec::new(),
     })
 }

@@ -12,7 +12,7 @@ const line = (page: Page) => page.getByRole("status").filter({ hasText: /\S/ }).
 /** The list's More (…) button; Edit feed and Edit folder are in its menu (decision 0038). */
 const more = (page: Page) => page.getByRole("button", { name: "More", exact: true });
 
-async function openEdit(page: Page, name: "Edit feed" | "Edit folder") {
+async function openEdit(page: Page, name: "Edit person" | "Edit folder") {
   await more(page).click();
   await page.getByRole("menuitem", { name }).click();
 }
@@ -64,21 +64,21 @@ test("a feed put in two folders appears under both, with its unread count in eac
   const [first, second] = [unique("Essays"), unique("Letters")];
   await openBlogs(page, [blog]);
 
-  await openEdit(page, "Edit feed");
+  await openEdit(page, "Edit person");
   await expect(page).toHaveURL(/\/feeds\/[0-9]+\/edit$/);
-  await expect(page.getByRole("heading", { level: 2, name: "Edit feed" })).toBeFocused();
+  await expect(page.getByRole("heading", { level: 2, name: "Edit person" })).toBeFocused();
   // Its title is the same serif as every other title (decision 0042).
-  expect(await page.getByRole("heading", { level: 2, name: "Edit feed" }).evaluate((element) => getComputedStyle(element).fontFamily)).toContain("Literata");
+  expect(await page.getByRole("heading", { level: 2, name: "Edit person" }).evaluate((element) => getComputedStyle(element).fontFamily)).toContain("Literata");
   // It's a sheet over the feed's list; Cancel closes it unchanged.
-  await expect(page.getByRole("dialog", { name: "Edit feed" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Edit person" })).toBeVisible();
   await page.getByRole("button", { name: "Cancel" }).click();
   await expect(more(page)).toBeFocused();
-  await openEdit(page, "Edit feed");
+  await openEdit(page, "Edit person");
   await page.getByLabel("New folder").fill(first);
   await page.getByRole("button", { name: "Save" }).click();
   await expect(more(page)).toBeFocused();
 
-  await openEdit(page, "Edit feed");
+  await openEdit(page, "Edit person");
   await expect(page.getByRole("checkbox", { name: first })).toBeChecked();
   // The folders are a checklist whose last row is "New folder…", one grouped list (decision 0042).
   // Each folder's mark is a tick box (a rounded square, not a ring, since several can be ticked):
@@ -103,7 +103,7 @@ test("a feed put in two folders appears under both, with its unread count in eac
   // Folders are listed with their counts; their feeds show when opened.
   for (const folder of [first, second]) {
     await expect(sidebar(page).getByRole("link", { name: `${folder} 3 unread` })).toBeVisible();
-    const toggle = sidebar(page).getByRole("button", { name: `Feeds in ${folder}` });
+    const toggle = sidebar(page).getByRole("button", { name: `People in ${folder}` });
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
     await toggle.click();
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
@@ -113,7 +113,7 @@ test("a feed put in two folders appears under both, with its unread count in eac
   // A folder's arrow sits at the row's right end, over its count, so the name starts on the
   // margin with nothing before it; every count still ends at one right edge (decisions 0041, 0123).
   const folderLink = sidebar(page).getByRole("link", { name: `${first} 3 unread` });
-  const arrow = (await sidebar(page).getByRole("button", { name: `Feeds in ${first}` }).boundingBox())!;
+  const arrow = (await sidebar(page).getByRole("button", { name: `People in ${first}` }).boundingBox())!;
   const folderBox = (await folderLink.boundingBox())!;
   expect(Math.abs(arrow.x + arrow.width - (folderBox.x + folderBox.width))).toBeLessThan(1);
   // A folder's name starts where the icons do; its feeds, like every other name, on Unread's edge (decision 0123).
@@ -137,7 +137,7 @@ test("a feed put in two folders appears under both, with its unread count in eac
   await expect(page.getByRole("heading", { level: 2, name: first })).toBeFocused();
   await expect(page.getByRole("region", { name: first }).getByRole("listitem")).toHaveCount(3);
   // The whole row is its toggle: choosing the folder you're in folds it, and again unfolds it (decision 0123).
-  const firstToggle = sidebar(page).getByRole("button", { name: `Feeds in ${first}` });
+  const firstToggle = sidebar(page).getByRole("button", { name: `People in ${first}` });
   await expect(firstToggle).toHaveAttribute("aria-expanded", "true");
   const firstRow = sidebar(page).locator(`[data-folder-link]`, { hasText: first }).first();
   await expect(firstRow).toHaveAttribute("aria-expanded", "true");
@@ -244,10 +244,10 @@ test("unsubscribe, then Undo: the feed is back with its read history; a star out
   await page.keyboard.press("j");
   await expect(sidebar(page).getByRole("link", { name: `Blog ${blog} 2 unread` })).toBeVisible();
 
-  await openEdit(page, "Edit feed");
+  await openEdit(page, "Edit person");
   // In the one row at the foot, as a Mac sheet has it: Unsubscribe at the far left, in a muted red
   // with no edge (the word says what it does), then Cancel and Save at the right end.
-  const sheet = page.getByRole("dialog", { name: "Edit feed" });
+  const sheet = page.getByRole("dialog", { name: "Edit person" });
   const leave = sheet.getByRole("button", { name: `Unsubscribe from Blog ${blog}` });
   await expect(leave).toHaveText("Unsubscribe");
   await expect(leave).toHaveCSS("border-top-width", "0px");
@@ -274,7 +274,7 @@ test("unsubscribe, then Undo: the feed is back with its read history; a star out
   await page.keyboard.press("j");
   await page.keyboard.press("s");
   await expect(line(page)).toHaveText("Starred");
-  await openEdit(page, "Edit feed");
+  await openEdit(page, "Edit person");
   await page.getByRole("button", { name: `Unsubscribe from Blog ${other}` }).click();
   await expect(line(page)).toHaveText(`Unsubscribed from Blog ${other}`);
   // Other tests star articles too, so look through every page of Starred.
@@ -291,7 +291,7 @@ test("unsubscribe, then Undo: the feed is back with its read history; a star out
 test("the sidebar search finds feeds and folders by name, and Escape empties it", async ({ page }) => {
   const blog = unique("findable");
   await openBlogs(page, [blog]);
-  const search = sidebar(page).getByRole("searchbox", { name: "Find a feed or folder" });
+  const search = sidebar(page).getByRole("searchbox", { name: "Find a person or folder" });
   // The same faintly filled capsule as the list's search, at rest and in use (decision 0051).
   await expect(search).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await search.fill(blog.toUpperCase());
@@ -299,7 +299,7 @@ test("the sidebar search finds feeds and folders by name, and Escape empties it"
   await expect(sidebar(page).getByRole("link", { name: /^Quiet Notes/ })).toHaveCount(0);
 
   await search.fill(`${blog}-nothing`);
-  await expect(sidebar(page).getByText("No feed or folder has that in its name.")).toBeVisible();
+  await expect(sidebar(page).getByText("No person or folder has that in their name.")).toBeVisible();
 
   await search.press("Escape");
   await expect(search).toHaveValue("");
@@ -387,16 +387,16 @@ test("with only the keyboard: Edit feed, a new folder, opening it, Edit folder, 
   await page.keyboard.press("Enter");
   await page.keyboard.press("End");
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("heading", { level: 2, name: "Edit feed" })).toBeFocused();
+  await expect(page.getByRole("heading", { level: 2, name: "Edit person" })).toBeFocused();
   await tabTo(page, page.getByLabel("New folder"));
   await page.keyboard.type(folder);
   await page.keyboard.press("Enter");
   // Saved: the sheet closes and the keyboard is back on More, where Edit feed was chosen.
-  await expect(page.getByRole("dialog", { name: "Edit feed" })).toHaveCount(0);
+  await expect(page.getByRole("dialog", { name: "Edit person" })).toHaveCount(0);
   await expect(more(page)).toBeFocused();
 
   // The folder's button shows its feeds; Space or Enter works it.
-  const toggle = sidebar(page).getByRole("button", { name: `Feeds in ${folder}` });
+  const toggle = sidebar(page).getByRole("button", { name: `People in ${folder}` });
   await tabTo(page, toggle);
   await page.keyboard.press("Enter");
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
@@ -472,18 +472,18 @@ test("Edit feed opens over the article you were reading; closing it gives the ke
   await edit.focus();
   await page.keyboard.press("Enter");
   await page.keyboard.press("End");
-  await expect(page.getByRole("menuitem", { name: "Edit feed" })).toBeFocused();
+  await expect(page.getByRole("menuitem", { name: "Edit person" })).toBeFocused();
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("dialog", { name: "Edit feed" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Edit person" })).toBeVisible();
   // The article stays open behind the sheet.
   await expect(title).toBeVisible();
   await page.keyboard.press("Escape");
-  await expect(page.getByRole("dialog", { name: "Edit feed" })).toHaveCount(0);
+  await expect(page.getByRole("dialog", { name: "Edit person" })).toHaveCount(0);
   await expect(edit).toBeFocused();
   await expect(title).toBeVisible();
   await expect(page).not.toHaveURL(/\/edit$/);
   await page.goBack();
-  await expect(page.getByRole("dialog", { name: "Edit feed" })).toHaveCount(0);
+  await expect(page.getByRole("dialog", { name: "Edit person" })).toHaveCount(0);
 });
 
 test.describe("on a touch screen beside the list", () => {
@@ -493,10 +493,10 @@ test.describe("on a touch screen beside the list", () => {
     const blog = unique("touched");
     const folder = unique("Drawer");
     await openBlogs(page, [blog]);
-    await openEdit(page, "Edit feed");
+    await openEdit(page, "Edit person");
     await page.getByLabel("New folder").fill(folder);
     await page.getByRole("button", { name: "Save" }).click();
-    const arrow = sidebar(page).getByRole("button", { name: `Feeds in ${folder}` });
+    const arrow = sidebar(page).getByRole("button", { name: `People in ${folder}` });
     await expect(arrow).toBeVisible();
     expect(await page.evaluate(() => matchMedia("(pointer: coarse)").matches)).toBe(true);
     // With a long sidebar (other tests' folders and collections) the arrow may sit under the top line: bring it into view.
@@ -525,7 +525,7 @@ test("with only the keyboard: a feed set to river, daily and the website leaves 
   await page.keyboard.press("Enter");
   await page.keyboard.press("End");
   await page.keyboard.press("Enter");
-  const sheet = page.getByRole("dialog", { name: "Edit feed" });
+  const sheet = page.getByRole("dialog", { name: "Edit person" });
   // Every setting starts as every feed behaves.
   await expect(sheet.getByRole("radio", { name: "Inbox" })).toBeChecked();
   await expect(sheet.getByRole("radio", { name: "Automatic" })).toBeChecked();
@@ -571,8 +571,8 @@ test("with only the keyboard: pausing a feed in Edit feed is remembered, with si
   await page.keyboard.press("Enter");
   await page.keyboard.press("End");
   await page.keyboard.press("Enter");
-  const sheet = page.getByRole("dialog", { name: "Edit feed" });
-  const pause = sheet.getByRole("checkbox", { name: "Pause this feed" });
+  const sheet = page.getByRole("dialog", { name: "Edit person" });
+  const pause = sheet.getByRole("checkbox", { name: "Pause for a while" });
   await expect(pause).not.toBeChecked();
   await expect(sheet.getByText("Paused today.")).toHaveCount(0);
   await tabTo(page, pause);

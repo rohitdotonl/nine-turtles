@@ -21,6 +21,14 @@ export type Feed = {
   failingSince?: number | null;
   /** When it was last checked with an answer (seconds since 1970), for an empty feed's "Last checked…" (decision 0142). */
   checkedAt?: number | null;
+  /** The person it's one place of, when the reader joined it to others (SPEC section 36); null on its own. */
+  person?: number | null;
+  /** What kind of place it is: a blog, a YouTube channel or a newsletter. */
+  place?: PlaceKind;
+  /** When the reader followed it (seconds since 1970), for "Following since". */
+  addedAt?: number;
+  /** Only on a sidebar row standing for a person (`people.ts` → `rowsOf`): their places' numbers. */
+  places?: number[];
 } & FeedSettings;
 
 /**
@@ -35,8 +43,22 @@ export type Check = "automatic" | "hourly" | "daily";
 
 export type Folder = { id: number; name: string };
 
-/** Everything the sidebar lists: feeds and folders, each A to Z; and, where search needs them, the reader's collections (decision 0108). */
-export type Library = { feeds: Feed[]; folders: Folder[]; collections?: { id: number; name: string }[] };
+/** A person the reader joined places into (SPEC section 36): their name, as the reader calls them. */
+export type Person = { id: number; name: string };
+
+/** What a place is, for a person's page and the labels in their list. */
+export type PlaceKind = "blog" | "video" | "newsletter";
+
+export function toPerson(person: Record<string, unknown>): Person {
+  return { id: Number(person.id), name: String(person.name ?? "") };
+}
+
+/**
+ * Everything the sidebar lists: feeds and folders, each A to Z; the people
+ * places were joined into (SPEC section 36); and, where search needs them,
+ * the reader's collections (decision 0108).
+ */
+export type Library = { feeds: Feed[]; folders: Folder[]; people?: Person[]; collections?: { id: number; name: string }[] };
 
 export type Article = {
   id: number;
@@ -151,6 +173,9 @@ export function toFeed(feed: Record<string, unknown>): Feed {
     pausedAt: typeof feed.paused_at === "number" ? feed.paused_at : null,
     failingSince: typeof feed.failing_since === "number" ? feed.failing_since : null,
     checkedAt: typeof feed.checked_at === "number" ? feed.checked_at : null,
+    person: typeof feed.person === "number" ? feed.person : null,
+    place: feed.place === "video" || feed.place === "newsletter" ? feed.place : "blog",
+    addedAt: typeof feed.added_at === "number" ? feed.added_at : undefined,
   };
 }
 

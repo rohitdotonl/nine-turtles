@@ -92,7 +92,7 @@ pub async fn note(db: &sqlx::SqlitePool, person: i64, id: i64, at: i64) -> Resul
 /// article of a feed since left stays in Starred, not here). Muted ones are
 /// left out, as in All. Takes the reader.
 pub const LIST: &str =
-    "SELECT entries.article_id AS id, entries.feed_id, subscriptions.title AS feed_title,
+    "SELECT entries.article_id AS id, entries.feed_id, COALESCE(writers.name, subscriptions.title) AS feed_title,
             articles.title, articles.link, entries.sort_at AS at,
             entries.read, entries.starred, entries.muted,
             articles.episode_url IS NOT NULL AS episode, articles.episode_seconds,
@@ -100,6 +100,7 @@ pub const LIST: &str =
      FROM entries CROSS JOIN articles ON articles.id = entries.article_id
          CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
              AND subscriptions.feed_id = entries.feed_id
+         LEFT JOIN writers ON writers.id = subscriptions.writer_id
      WHERE entries.person_id = ? AND entries.opened_at IS NOT NULL AND entries.muted = 0
          AND subscriptions.unsubscribed_at IS NULL
      ORDER BY entries.opened_at DESC, entries.article_id DESC

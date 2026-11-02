@@ -7,7 +7,7 @@ import { keepLibrary, keptLibrary } from "./offline";
 import { getJson, isRecord, sendChange } from "./http";
 import { deviceJson, setDeviceText } from "./device";
 import { saved } from "./saving";
-import { toFeed, type Feed, type FeedSettings, type Folder, type Library } from "./shapes";
+import { toFeed, toPerson, type Feed, type FeedSettings, type Folder, type Library } from "./shapes";
 
 export type Choice = { title: string; url: string };
 
@@ -44,9 +44,11 @@ export async function listFeeds(): Promise<Library> {
   }
   const feeds = isRecord(body) && Array.isArray(body.feeds) ? body.feeds : [];
   const folders = isRecord(body) && Array.isArray(body.folders) ? body.folders : [];
+  const people = isRecord(body) && Array.isArray(body.people) ? body.people : [];
   const library = {
     feeds: feeds.filter(isRecord).map(toFeed),
     folders: folders.filter(isRecord).map((folder) => ({ id: Number(folder.id), name: String(folder.name ?? "") })),
+    people: people.filter(isRecord).map(toPerson),
   };
   keepLibrary(library);
   return library;
@@ -208,6 +210,15 @@ export async function addFeed(address: string): Promise<AddResult> {
  * deleting a folder. `undo` reverses it; it answers a problem to say, if any.
  */
 export type Notice = { message: string; undo?: () => Promise<string | undefined> };
+
+const shownNotices = new WeakSet<Notice>();
+
+/** True the first time a list shows `notice`: a list redrawn later (say, after Undo) never says it again. */
+export function firstShowing(notice: Notice): boolean {
+  if (shownNotices.has(notice)) return false;
+  shownNotices.add(notice);
+  return true;
+}
 
 /** Why a change to feeds or folders wasn't made. */
 export type Refusal = "no-name" | "already" | "too-late" | "gone" | "trouble";

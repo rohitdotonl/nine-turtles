@@ -119,6 +119,7 @@ macro_rules! from_entries {
              CROSS JOIN feeds ON feeds.id = entries.feed_id
              CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
                  AND subscriptions.feed_id = entries.feed_id
+             LEFT JOIN writers ON writers.id = subscriptions.writer_id
          WHERE entries.person_id = "
     };
 }
@@ -147,7 +148,7 @@ pub(crate) async fn full_articles(
 ) -> Result<Vec<FullArticle>, sqlx::Error> {
     let ids = serde_json::to_string(ids).unwrap_or_else(|_| "[]".to_owned());
     let mut articles: Vec<FullArticle> = sqlx::query_as(concat!(
-        "SELECT articles.id, entries.feed_id, subscriptions.title AS feed_title,
+        "SELECT articles.id, entries.feed_id, COALESCE(writers.name, subscriptions.title) AS feed_title,
                  feeds.site_url, articles.title, articles.link, articles.author,
                  articles.content, articles.summary,
                  COALESCE(articles.language, feeds.language) AS language,

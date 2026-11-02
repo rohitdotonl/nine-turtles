@@ -63,7 +63,8 @@ pub async fn refresh_shared(
 
 /// The reader follows a feed already stored: a new subscription with the
 /// name given and every setting as new, or their old one (kept for its
-/// starred articles) started afresh.
+/// starred articles) started afresh, on its own again rather than one of a
+/// person's places.
 pub async fn subscribe(
     connection: &mut sqlx::SqliteConnection,
     person: i64,
@@ -76,7 +77,7 @@ pub async fn subscribe(
          ON CONFLICT (person_id, feed_id) DO UPDATE SET
              title = excluded.title, added_at = excluded.added_at, unsubscribed_at = NULL,
              cleared = 0, river = 0, check_at_most = 0, open_on_site = 0,
-             paused_at = NULL",
+             paused_at = NULL, writer_id = NULL, same_asked = 0",
     )
     .bind(person)
     .bind(feed_id)

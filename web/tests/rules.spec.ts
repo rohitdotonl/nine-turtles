@@ -18,7 +18,7 @@ test("a rule made from Edit feed mutes what matches, with the number asked first
   // Edit feed › Add a rule for this feed…: Settings, with the rule sheet set to this feed.
   await page.goto(new URL(`/feeds/${id}/edit`, FEEDS_APP).href);
   await appReady(page);
-  await page.getByRole("button", { name: "Add a rule for this feed…" }).click();
+  await page.getByRole("button", { name: "Add a rule…" }).click();
   await expect(page).toHaveURL(/\/settings\/rules$/);
   const sheet = page.getByRole("dialog", { name: "New rule" }).or(page.getByRole("region", { name: "New rule" }));
   await expect(sheet).toBeVisible();
