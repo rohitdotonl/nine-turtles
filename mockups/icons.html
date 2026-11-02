@@ -44,6 +44,12 @@ section { display: grid; gap: 18px; }
 .srow.danger { color: var(--x); } .srow.danger svg { color: var(--x); }
 .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px 32px; }
 .notes div { display: grid; gap: 4px; } .notes b { font-weight: 600; } .notes p { font-size: 15.5px; }
+.cmp { background: #fff; border-radius: 10px; box-shadow: 0 0 0 1px rgba(20,20,20,.12); display: grid; grid-template-columns: 1fr 120px 120px 1.6fr; align-items: center; color: #141414; }
+.cmp > * { padding: 14px 20px; border-top: 1px solid rgba(20,20,20,.08); }
+.cmp .h { font-size: 13px; font-weight: 600; color: #5f5f64; border-top: 0; }
+.cmp .ic { display: flex; justify-content: center; }
+.cmp .why { font-size: 14.5px; color: #3c3c40; }
+@media (max-width: 700px) { .cmp { grid-template-columns: 1fr 80px 80px; } .cmp .why { grid-column: 1 / -1; border-top: 0; padding-top: 0; } }
 .toggle { display: flex; gap: 8px; }
 .toggle button { font: inherit; font-size: 14px; min-height: 44px; padding: 0 14px; border-radius: 8px; border: 1px solid #8a8a8f; background: #fff; cursor: pointer; }
 .toggle [aria-pressed="true"] { background: #141414; color: #fff; border-color: #141414; }
@@ -56,6 +62,7 @@ section { display: grid; gap: 18px; }
     <p>nine turtles has about 50 small line icons: in the sidebar, above an article and down Settings' first page. Each direction is shown twice: the whole set, and in the app at its real size. Faded icons are the ones that direction removes.</p>
     <div class="toggle"><button aria-pressed="true" data-n="0">By day</button><button aria-pressed="false" data-n="1">By night</button></div>
   </header>
+  <section id="diff"></section>
   <div id="out"></div>
 </div>
 <script>
@@ -87,6 +94,11 @@ function draw(night) {
   </section>`).join('');
 }
 draw(false);
+const WHY = {"palette": ["Appearance", "An artist's palette, a picture of painting.", "Half a circle filled: light and dark, which is what the setting chooses."], "heart-pulse": ["Feed health", "A heartbeat line, a hospital picture.", "A ring with a tick: \"is it working?\""], "robot": ["AI assistants", "A robot face, a cartoon.", "A speech bubble: something you talk to."], "pen-nib": ["Reading font", "A fountain pen nib, about writing, not reading.", "The same Aa as the reading panel, so one sign means \"letters\"."], "newspaper": ["Newsletters", "A newspaper, which says news.", "An envelope with a line of writing: a letter that arrives."], "feed": ["Your feeds", "The feed waves, with a blobby dot.", "The same waves, drawn to the shared circle, with a clean solid dot."], "dot": ["Unread (and Unread counts)", "A ring with a small dot.", "A ring with a bigger solid dot, the same \"on\" fill as a starred star."], "open": ["Open the original", "An arrow out of a box, easy to mix up with Share and Download.", "Just the arrow, so it can't be mistaken for the other two."], "search": ["Search", "A slightly large circle.", "A smaller lens and a longer handle, sized to the other circles."], "stack": ["All articles", "Square corners.", "Corners rounded to the same curve as every other box."]};
+document.getElementById('diff').innerHTML = `<span class="which">Comparing 1 and 3</span><h2>Only what differs</h2><p>Everything else in 1 and 3 is identical. These ten are the whole difference, drawn three times their real size, then once at real size.</p>
+<div class="cmp"><span class="h">Where</span><span class="h" style="text-align:center">1, the safe one</span><span class="h" style="text-align:center">3, my pick</span><span class="h">Why it changes</span>
+${Object.entries(WHY).map(([n,[w,a,c]]) => `<span><b style="font-weight:600">${w}</b><br><span style="font-size:13px;color:#5f5f64">real size: ${svg('A',n,18,1.5)} → ${svg('C',n,18,1.5)}</span></span><span class="ic">${svg('A',n,54,1.1)}</span><span class="ic">${svg('C',n,54,1.1)}</span><span class="why"><b style="font-weight:500">1:</b> ${a}<br><b style="font-weight:500">3:</b> ${c}</span>`).join('')}</div>`;
+
 document.querySelectorAll('.toggle button').forEach(b => b.onclick = () => { document.querySelectorAll('.toggle button').forEach(x => x.setAttribute('aria-pressed', x===b)); draw(b.dataset.n==='1'); });
 </script>
 </body>
