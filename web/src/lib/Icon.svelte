@@ -1,7 +1,8 @@
 <!--
   nine turtles' few icons, drawn on one 20px grid with the same 1.5px line, so
-  they look like one set. Screen readers skip them: the word beside an icon,
-  or the label of an icon-only button, says what it does.
+  they look like one set. One solid part only where the real object has one
+  (docs/BRAND.md → Icons); never on plain signs. Screen readers skip them: the
+  word beside an icon, or the label of an icon-only button, says what it does.
 -->
 <script lang="ts" module>
   export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "clock" | "history" | "shelf" | "headphones" | "queue"
@@ -34,9 +35,8 @@
     <path d="M12.5 4.5 15.5 7.5" />
     <path d="M3.75 16.25 4.5 12.5 13.75 3.25a1.06 1.06 0 0 1 1.5 0l1.5 1.5a1.06 1.06 0 0 1 0 1.5L7.5 15.5Z" />
   {:else if name === "open"}
-    <path d="M11.25 3.75h5v5" />
-    <path d="M16.25 3.75 9 11" />
-    <path d="M14.25 11.75v3.5a1 1 0 0 1-1 1h-8.5a1 1 0 0 1-1-1v-8.5a1 1 0 0 1 1-1h3.5" />
+    <!-- Open the original: an arrow out, with no box. -->
+    <path d="M8.5 4.75h6.75v6.75M15.25 4.75 4.75 15.25" />
   {:else if name === "link"}
     <path d="M8.5 11.5a3.5 3.5 0 0 0 5 0l2.5-2.5a3.54 3.54 0 0 0-5-5l-.75.75" />
     <path d="M11.5 8.5a3.5 3.5 0 0 0-5 0L4 11a3.54 3.54 0 0 0 5 5l.75-.75" />
@@ -44,13 +44,10 @@
     <path d="M10 12.5V2.75" />
     <path d="M6.5 6.25 10 2.75l3.5 3.5" />
     <path d="M6.25 9H5a1 1 0 0 0-1 1v6.25a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V10a1 1 0 0 0-1-1h-1.25" />
-  {:else if name === "unread"}
-    <rect x="3" y="4.75" width="14" height="10.5" rx="1.25" />
-    <path d="m3.5 5.5 6.5 5 6.5-5" />
   {:else if name === "close"}
-    <path d="m5 5 10 10M15 5 5 15" />
+    <path d="M5.5 5.5l9 9M14.5 5.5l-9 9" />
   {:else if name === "back"}
-    <path d="M12.5 4 6.5 10l6 6" />
+    <path d="M12.25 5.5 7.75 10l4.5 4.5" />
   {:else if name === "search"}
     <circle cx="8.5" cy="8.5" r="5.75" />
     <path d="m12.75 12.75 4.5 4.5" />
@@ -73,8 +70,8 @@
     <path d="M3.75 10a6.25 6.25 0 1 0 1.83-4.42" />
     <path d="M3.75 3.25v3.5h3.5" />
     <path d="M10 6.75V10l2.25 1.5" />
-  {:else if name === "dot"}
-    <!-- Unread: a ring with a filled centre. -->
+  {:else if name === "dot" || name === "unread" || name === "nine-circle"}
+    <!-- Unread, and Settings › Unread counts: a ring with a filled centre. -->
     <circle cx="10" cy="10" r="6.75" />
     <circle cx="10" cy="10" r="2.25" fill="currentColor" stroke="none" />
   {:else if name === "stack"}
@@ -82,8 +79,13 @@
     <rect x="3.25" y="7.25" width="13.5" height="9.5" rx="1.5" />
     <path d="M5.25 4.75h9.5M7.25 2.5h5.5" />
   {:else if name === "keyboard"}
-    <rect x="2.25" y="5.25" width="15.5" height="10" rx="1.75" />
-    <path d="M5.5 8.5h.01M8.5 8.5h.01M11.5 8.5h.01M14.5 8.5h.01M7 12h6" />
+    <!-- A keyboard: a row of keys and a space bar. -->
+    <rect x="2.75" y="5.25" width="14.5" height="9.5" rx="1.5" />
+    <circle cx="6" cy="8.5" r="0.9" fill="currentColor" stroke="none" />
+    <circle cx="8.67" cy="8.5" r="0.9" fill="currentColor" stroke="none" />
+    <circle cx="11.33" cy="8.5" r="0.9" fill="currentColor" stroke="none" />
+    <circle cx="14" cy="8.5" r="0.9" fill="currentColor" stroke="none" />
+    <path d="M7 11.75h6" />
   {:else if name === "sidebar"}
     <rect x="2.75" y="3.75" width="14.5" height="12.5" rx="1.5" />
     <path d="M7.75 3.75v12.5" />
@@ -91,15 +93,12 @@
     <!-- Sort order: an arrow down and an arrow up, side by side. -->
     <path d="M6.5 3.5v13M3.5 13.5l3 3 3-3M13.5 16.5v-13M10.5 6.5l3-3 3 3" />
   {:else if name === "star"}
-    <path
-      d="M10 2.5l2.4 4.9 5.35.78-3.87 3.77.91 5.33L10 14.77l-4.79 2.51.91-5.33-3.87-3.77 5.35-.78z"
-      fill={filled ? "currentColor" : "none"}
-    />
+    <path d="M10 2.5l2.4 4.9 5.35.78-3.87 3.77.91 5.33L10 14.77l-4.79 2.51.91-5.33-3.87-3.77 5.35-.78z" fill={filled ? "currentColor" : "none"} />
   {:else if name === "chevron-down"}
     <path d="m5.5 8 4.5 4.5L14.5 8" />
   {:else if name === "chevron-right"}
     <!-- A row that leads on to something (a file chooser, a flow): ›. -->
-    <path d="m8 5.5 4.5 4.5L8 14.5" />
+    <path d="m7.75 5.5 4.5 4.5-4.5 4.5" />
   {:else if name === "download"}
     <!-- A row that saves a file: an arrow down onto a tray. -->
     <path d="M10 3.25v9.5" />
@@ -111,32 +110,30 @@
     <path d="M8.5 10h8.25" />
     <path d="m13.5 6.75 3.25 3.25-3.25 3.25" />
   {:else if name === "alert"}
-    <circle cx="10" cy="10" r="7.25" />
-    <path d="M10 6.5v4" />
-    <path d="M10 13.4v.1" />
-  {:else if name === "aa"}
-    <!-- The reading panel: a large A and a small a, like a book app's type button. -->
+    <circle cx="10" cy="10" r="6.75" />
+    <path d="M10 6.75v3.75" />
+    <circle cx="10" cy="13.25" r="1" fill="currentColor" stroke="none" />
+  {:else if name === "aa" || name === "a-plus"}
+    <!-- The reading panel, and Settings › Text size: a large A and a small a. -->
     <!-- A clear gap between the two letters, and the small a's stem no taller than its bowl, so it reads as "a", not "d". -->
-    <path d="M1.75 16 6 4l4.25 12M3.35 12h5.3" />
-    <circle cx="14.5" cy="13.5" r="2.5" />
-    <path d="M17 11v5" />
+    <path d="M2.75 16 6.5 4.75 10.25 16M4.1 12.25h4.8" />
+    <circle cx="14.25" cy="13.5" r="2.5" />
+    <path d="M16.75 11v5" />
   {:else if name === "headphones"}
-    <!-- A podcast's episode (decision 0113): headphones, a band and two ear cups. -->
-    <path d="M3.75 13v-2.25a6.25 6.25 0 0 1 12.5 0V13" />
-    <path d="M3.75 12.25h1.5a1 1 0 0 1 1 1v2.5a1 1 0 0 1-1 1h-.5a1 1 0 0 1-1-1Z" />
-    <path d="M16.25 12.25h-1.5a1 1 0 0 0-1 1v2.5a1 1 0 0 0 1 1h.5a1 1 0 0 0 1-1Z" />
+    <!-- A podcast's episode (decision 0113): headphones, a thin band and two solid ear cups. -->
+    <path d="M4.25 12v-1.5a5.75 5.75 0 0 1 11.5 0V12" />
+    <rect x="3" y="11.25" width="3.75" height="5.75" rx="1.1" fill="currentColor" stroke="none" />
+    <rect x="13.25" y="11.25" width="3.75" height="5.75" rx="1.1" fill="currentColor" stroke="none" />
   {:else if name === "queue"}
     <!-- Up Next (decision 0113): three lines of a list, the first led by a small play mark. -->
-    <path d="M3.75 5.25 7 7.25 3.75 9.25Z" />
-    <path d="M9.5 7.25h6.75" />
-    <path d="M3.75 11.75h12.5" />
-    <path d="M3.75 15.25h12.5" />
+    <path d="M3.5 5 7.5 7.5 3.5 10Z" fill="currentColor" />
+    <path d="M9.5 7.5h7M3.5 12h13M3.5 15.5h13" />
   {:else if name === "shelf"}
-    <!-- A collection (decision 0108): two books upright and one leaning, on a shelf. -->
+    <!-- A collection (decision 0108): two books upright and one solid book leaning, on a shelf. -->
     <path d="M2.75 16.25h14.5" />
     <path d="M4 16.25V5a.75.75 0 0 1 .75-.75h1.5A.75.75 0 0 1 7 5v11.25" />
     <path d="M7 16.25V7.5a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 .75.75v8.75" />
-    <path d="m11.5 6.35 2.4-.65 2.6 9.9-2.4.65Z" />
+    <path d="m11 6.2 2.9-.8 2.85 10.25-2.9.8Z" fill="currentColor" stroke="none" />
   {:else if name === "more"}
     <!-- More: three dots in a row. -->
     <circle cx="4.5" cy="10" r="1.25" fill="currentColor" stroke="none" />
@@ -146,20 +143,12 @@
     <!-- Settings › Reading mode: an open book. -->
     <path d="M10 5.5c-1.5-1.2-3.5-1.75-6.25-1.75v11c2.75 0 4.75.55 6.25 1.75 1.5-1.2 3.5-1.75 6.25-1.75v-11C13.5 3.75 11.5 4.3 10 5.5Z" />
     <path d="M10 5.5v11" />
-  {:else if name === "nine-circle"}
-    <!-- Settings › Unread counts: a figure 9 in a ring. -->
-    <circle cx="10" cy="10" r="6.75" />
-    <path d="M11.75 8.75a1.75 1.75 0 1 1-1.75-1.75 1.75 1.75 0 0 1 1.75 1.75Zm0 0c0 2.5-1.1 4-3.25 4.4" />
   {:else if name === "palette"}
-    <!-- Settings › Appearance: a painter's palette. -->
-    <path d="M10 3.75a6.25 6.25 0 0 0 0 12.5c1 0 1.5-.75 1.25-1.5-.4-1.1.3-2 1.5-2h1.5a2 2 0 0 0 2-2A6.25 6.25 0 0 0 10 3.75Z" />
-    <circle cx="7" cy="9" r=".8" fill="currentColor" />
-    <circle cx="9.75" cy="6.75" r=".8" fill="currentColor" />
-    <circle cx="12.75" cy="8" r=".8" fill="currentColor" />
-  {:else if name === "a-plus"}
-    <!-- Settings › Text size: an A and a plus. -->
-    <path d="M3.5 15.5 7.25 5h1.5L12.5 15.5M5 11.75h6" />
-    <path d="M15.25 6v5M12.75 8.5h5" />
+    <!-- Settings › Appearance: a painter's palette with three solid dabs of paint. -->
+    <path d="M10.25 3.5C5.9 3.5 2.75 6.3 2.75 9.9c0 3.7 3.1 6.6 7 6.6 1.3 0 1.9-.75 1.7-1.65-.25-1.25.55-2.1 1.85-2.1h1.45c1.85 0 3-1.15 3-3.05 0-3.6-3.1-6.2-7.5-6.2Z" />
+    <circle cx="6.6" cy="8.9" r="1.3" fill="currentColor" stroke="none" />
+    <circle cx="9.9" cy="6.6" r="1.3" fill="currentColor" stroke="none" />
+    <circle cx="13.3" cy="8" r="1.3" fill="currentColor" stroke="none" />
   {:else if name === "pen-nib"}
     <!-- Settings › Font, theme and line width: a pen's nib. -->
     <path d="M10 16.25 5.25 11.5 7 4.75h6l1.75 6.75Z" />
@@ -171,23 +160,24 @@
     <path d="M4.5 4.75a10.75 10.75 0 0 1 10.75 10.75" />
     <circle cx="5.25" cy="14.75" r="1" fill="currentColor" />
   {:else if name === "heart-pulse"}
-    <!-- Settings › Feed health: a heart with a pulse. -->
-    <path d="M10 16.25s-6.25-3.75-6.25-8a3.25 3.25 0 0 1 6.25-1.4 3.25 3.25 0 0 1 6.25 1.4c0 4.25-6.25 8-6.25 8Z" />
-    <path d="M5.5 10h2l1-1.75 1.5 3 1-1.25h3.5" />
+    <!-- Settings › Feed health: a solid heart and a pulse line. -->
+    <path d="M6.25 14.5S2.5 12.2 2.5 9.4a2.1 2.1 0 0 1 3.75-1.3A2.1 2.1 0 0 1 10 9.4c0 2.8-3.75 5.1-3.75 5.1Z" fill="currentColor" stroke="none" />
+    <path d="M10.75 11.5h1.5l1-3.75 1.5 6 1-2.25h1.5" />
   {:else if name === "panel-dots"}
     <!-- Settings › Show in the sidebar: a window with a sidebar of rows. -->
     <rect x="3.25" y="4.25" width="13.5" height="11.5" rx="1.5" />
     <path d="M8.25 4.25v11.5" />
     <path d="M5.25 7.25h1M5.25 10h1M5.25 12.75h1" />
   {:else if name === "bookmark-plus"}
-    <!-- Settings › Add from anywhere: a bookmark with a plus. -->
-    <path d="M5.75 3.75h8.5a1 1 0 0 1 1 1v11.5L10 13l-5.25 3.25V4.75a1 1 0 0 1 1-1Z" />
-    <path d="M10 6.25v4.5M7.75 8.5h4.5" />
+    <!-- Settings › Add from anywhere: a solid bookmark and a plus. -->
+    <path d="M4 3.25h6.5v13.25L7.25 14 4 16.5Z" fill="currentColor" stroke="none" />
+    <path d="M14.25 7.25v5.5M11.5 10h5.5" />
   {:else if name === "newspaper"}
-    <!-- Settings › Newsletters: a folded paper. -->
-    <path d="M4.25 4.25h9.5v11.5H5.25a1 1 0 0 1-1-1Z" />
-    <path d="M13.75 7.25h2v7.5a1 1 0 0 1-2 0" />
-    <path d="M6.5 7h5M6.5 9.75h5M6.5 12.5h3" />
+    <!-- Settings › Newsletters: a newspaper page with a solid picture. -->
+    <rect x="3" y="3.25" width="14" height="13.5" rx="1" />
+    <path d="M5.25 6h9.5" />
+    <path d="M5.25 9.25h3M5.25 11.75h3M5.25 14.25h3" />
+    <rect x="10.5" y="8.75" width="4.5" height="5.5" rx=".4" fill="currentColor" stroke="none" />
   {:else if name === "plug"}
     <!-- Settings › Other apps: a plug. -->
     <path d="M7.25 3.5v3M12.75 3.5v3" />
@@ -204,15 +194,16 @@
     <path d="m13.5 6.25 2 2" />
     <path d="m15 4.75 1.5 1.5" />
   {:else if name === "people"}
-    <!-- Settings › Readers: two people. -->
-    <circle cx="7.5" cy="7" r="2.75" />
-    <path d="M2.75 16.25a4.75 4.75 0 0 1 9.5 0" />
-    <path d="M12.75 4.6a2.75 2.75 0 0 1 0 4.8" />
-    <path d="M14.5 11.9a4.75 4.75 0 0 1 2.75 4.35" />
+    <!-- Settings › Readers: two people, the nearer one's head solid. -->
+    <circle cx="7.5" cy="7.25" r="3" fill="currentColor" stroke="none" />
+    <path d="M2.75 16.5a4.75 4.75 0 0 1 9.5 0" />
+    <path d="M12.5 4.75a2.6 2.6 0 0 1 0 5" />
+    <path d="M14.5 11.9a4.75 4.75 0 0 1 2.75 4.6" />
   {:else if name === "card"}
-    <!-- Settings › Your plan: a payment card. -->
+    <!-- Settings › Your plan: a payment card with its chip and number. -->
     <rect x="2.75" y="4.75" width="14.5" height="10.5" rx="1.5" />
-    <path d="M2.75 8.25h14.5M5.5 12.25h3" />
+    <rect x="5" y="7.25" width="3.25" height="2.5" rx=".5" />
+    <path d="M5 12.5h1.5M8.5 12.5h1.5M12 12.5h1.5" />
   {:else if name === "envelope"}
     <!-- Settings › Account › Email: an envelope. -->
     <rect x="3.25" y="4.75" width="13.5" height="10.5" rx="1.5" />

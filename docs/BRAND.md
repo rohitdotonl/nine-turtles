@@ -74,7 +74,7 @@ sleeps, celebrates or stands for a feeling. No mascot.
 - **Never:** empty lists, the end of a list, the reading pane, emails, buttons, loading, errors, confirmations, settings, or any new drawing that tells a story.
 - **When it appears:** the logo's own drawing, at most once per screen, still, in the page's ink, and skipped by screen readers, because the words beside it say it.
 
-## Icons (Being built)
+## Icons (Live)
 
 - **A thin line everywhere** (1.5px on a 20px grid): today's set, tidied.
 - **One solid part only where the real object has one:** the palette (Appearance), the heart with a pulse (Feed health), the bookmark (Add from anywhere), Newsletters, Readers, the shelf (To read slowly), the headphones (Field recordings) and the card (Plan).
