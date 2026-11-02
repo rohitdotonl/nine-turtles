@@ -5,8 +5,9 @@
   at small sizes, in the color of the text around it. Its box ends at the
   shells' feet, so beside the name (aligned to the baseline) the turtles stand
   on the name's line. The name says it in words, so screen readers skip it.
-  The same drawing is in docs/logo/ and in the website's top bar
-  (website/src/_includes/base.njk): change all three together.
+  The same heavy drawing is in the website's top bar
+  (website/src/_includes/base.njk): change both together. docs/logo/ holds the
+  large drawing for 64px and up (its README explains the two).
 -->
 <script lang="ts">
   // Sized by height: 28px beside the 23px name in the sidebar (BRAND.md).
