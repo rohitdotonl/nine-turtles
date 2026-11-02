@@ -29,7 +29,7 @@ DigitalOcean, or a computer at home.
 4. **Add** `NINE_TURTLES_RESTORE_FROM` with the name of the newest copy, such
    as `nightly/2026-10-25.sqlite`.
 5. **Start it.** The log says `restored the database from …`. Open its
-   address, sign in, and check your feeds, stars and unread counts.
+   address, sign in, and check your feeds, stars and what's unread.
 6. **Remove** `NINE_TURTLES_RESTORE_FROM` from the new host's settings.
 7. **Point the address** `app.nineturtles.app` at the new host
    (`website-and-domain.md` says where the domain's records live), and update

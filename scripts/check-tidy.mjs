@@ -33,12 +33,12 @@ const LIMIT = 800;
 // tidy").
 const CEILINGS = {
   "web/src/app.css": 1789,
-  "web/src/lib/Shell.svelte": 1516,
+  "web/src/lib/Shell.svelte": 1513,
   "server/src/greader.rs": 1004,
   "web/src/lib/ItemList.svelte": 954,
   "server/src/assistants.rs": 948,
   "server/src/accounts.rs": 934,
-  "web/src/lib/Settings.svelte": 913,
+  "web/src/lib/Settings.svelte": 870,
   "server/src/payments.rs": 841,
   "server/src/auth.rs": 819,
 };

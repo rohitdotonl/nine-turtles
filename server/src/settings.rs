@@ -1,7 +1,6 @@
 //! Each reader's settings shared across their devices (SPEC section 18): the
-//! sort order, the reading mode, inbox or river (SPEC section 10), whether
-//! unread counts show, and when unread lets go by itself (`unread`, decision
-//! 0097), the keys the reader chose for shortcuts (`keys`, decision 0110),
+//! sort order, the reading mode, inbox or river (SPEC section 10), when
+//! unread lets go by itself (`unread`, decision 0097), the keys the reader chose for shortcuts (`keys`, decision 0110),
 //! and which lists the sidebar shows (`hidden`, decision 0105). Reader
 //! controls such as the theme belong to each device and stay in its browser.
 
@@ -26,23 +25,13 @@ pub fn routes() -> Router<AppState> {
 }
 
 /// Inbox (things to get through, the default) or river (things flowing past,
-/// with no unread view, styling or counts). Read state is recorded in both.
+/// with no unread view, styling or dots). Read state is recorded in both.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 enum Mode {
     #[default]
     Inbox,
     River,
-}
-
-/// Whether the sidebar shows unread counts (in inbox mode): shown, the
-/// default, or hidden, keeping the Unread view without the numbers.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, Deserialize, Serialize)]
-#[serde(rename_all = "lowercase")]
-enum Counts {
-    #[default]
-    Shown,
-    Hidden,
 }
 
 /// How long unread waits before it lets go by itself: never (the default),
@@ -129,7 +118,6 @@ struct Settings {
     /// Newest or oldest first.
     sort: Order,
     mode: Mode,
-    counts: Counts,
     let_go: LetGo,
     /// The shortcuts given another key, by the shortcut's name ("star"), each
     /// with its key as the cheat sheet prints it ("x", "Shift+X"), or "" for
@@ -167,7 +155,6 @@ fn keys_fit(keys: &Keys) -> bool {
 struct Change {
     sort: Option<Order>,
     mode: Option<Mode>,
-    counts: Option<Counts>,
     let_go: Option<LetGo>,
     /// All the reader's chosen keys at once; `{}` puts every key back.
     keys: Option<Keys>,
@@ -177,7 +164,7 @@ struct Change {
 async fn load(db: &SqlitePool, person: i64) -> Result<Settings, sqlx::Error> {
     let rows: Vec<(String, String)> = sqlx::query_as(
         "SELECT name, value FROM person_settings
-         WHERE person_id = ? AND name IN ('sort', 'mode', 'counts', 'let_go', 'keys', 'hidden')",
+         WHERE person_id = ? AND name IN ('sort', 'mode', 'let_go', 'keys', 'hidden')",
     )
     .bind(person)
     .fetch_all(db)
@@ -196,10 +183,6 @@ async fn load(db: &SqlitePool, person: i64) -> Result<Settings, sqlx::Error> {
         Some("river") => Mode::River,
         _ => Mode::Inbox,
     };
-    let counts = match value("counts") {
-        Some("hidden") => Counts::Hidden,
-        _ => Counts::Shown,
-    };
     let let_go = match value("let_go") {
         Some("week") => LetGo::Week,
         Some("two-weeks") => LetGo::TwoWeeks,
@@ -214,7 +197,6 @@ async fn load(db: &SqlitePool, person: i64) -> Result<Settings, sqlx::Error> {
     Ok(Settings {
         sort,
         mode,
-        counts,
         let_go,
         keys,
         hidden,
@@ -251,10 +233,6 @@ async fn change(
         Mode::Inbox => "inbox",
         Mode::River => "river",
     });
-    let counts = change.counts.map(|counts| match counts {
-        Counts::Shown => "shown",
-        Counts::Hidden => "hidden",
-    });
     let let_go = change.let_go.map(LetGo::stored);
     let hidden = change.hidden.as_deref().map(hidden_stored);
     let saved = async {
@@ -262,7 +240,6 @@ async fn change(
         for (name, value) in [
             ("sort", sort),
             ("mode", mode),
-            ("counts", counts),
             ("let_go", let_go),
             ("keys", keys.as_deref()),
             ("hidden", hidden.as_deref()),

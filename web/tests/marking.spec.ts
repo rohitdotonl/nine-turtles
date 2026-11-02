@@ -39,7 +39,7 @@ function row(page: Page, blog: string, title: string) {
   return page.getByRole("button", { name: new RegExp(`${escape(title)}.*Blog ${blog}`) });
 }
 
-/** The blog's link in the sidebar, which carries its unread count. */
+/** The blog's link in the sidebar, with its unread number kept unseen in data-unread. */
 function feedLink(page: Page, blog: string) {
   return sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) });
 }
@@ -53,13 +53,13 @@ test.describe("on a wide window", () => {
 
   test("showing an article marks it read; m marks it unread again, and u undoes that", async ({ page }) => {
     const blog = await openBlog(page);
-    await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 3 unread`);
+    await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `3`);
     await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
 
     // Shown in the reading area: read, greyed, and the count drops by one.
     await page.keyboard.press("j");
     await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, unread/);
-    await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 2 unread`);
+    await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `2`);
     // A screen reader hears it, though the line above the list stays quiet.
     await expect(page.locator('[aria-live="polite"]', { hasText: "Marked as read" })).toBeAttached();
     const title = row(page, blog, NEWEST).locator("span:not([aria-hidden])").first();
@@ -98,7 +98,7 @@ test.describe("on a wide window", () => {
     const before = (await row(page, blog, NEWEST).boundingBox())!.y;
     await page.keyboard.press("m");
     await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
-    await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 3 unread`);
+    await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `3`);
     await expect(line(page)).toHaveText("Marked as unread");
     await expect(page.getByRole("button", { name: "Undo" })).toBeVisible();
     expect((await row(page, blog, NEWEST).boundingBox())!.y).toBe(before);
@@ -108,7 +108,7 @@ test.describe("on a wide window", () => {
     // u: read again. Undo works once.
     await page.keyboard.press("u");
     await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, unread/);
-    await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 2 unread`);
+    await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `2`);
     await expect(line(page)).toHaveText("Undone.");
     await expect(page.getByRole("button", { name: "Undo" })).toHaveCount(0);
 
@@ -126,7 +126,7 @@ test.describe("on a wide window", () => {
     await page.reload();
     await appReady(page);
     await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
-    await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 3 unread`);
+    await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `3`);
   });
 
   test("Shift+A marks everything shown as read at once, and u brings it back", async ({ page }) => {
@@ -143,7 +143,7 @@ test.describe("on a wide window", () => {
     for (const title of [NEWEST, MIDDLE, OLDEST]) {
       await expect(row(page, blog, title)).toHaveAccessibleName(/, unread/);
     }
-    await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 3 unread`);
+    await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `3`);
   });
 
   test("with only the keyboard: the More menu's Mark all as read, and Undo, work too", async ({ page }) => {
@@ -166,7 +166,7 @@ test.describe("on a wide window", () => {
     const undo = page.getByRole("button", { name: "Undo" });
     await tabTo(page, undo);
     await page.keyboard.press("Enter");
-    await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 3 unread`);
+    await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `3`);
     // The Undo button is gone; the keyboard's place stays nearby, on an article, not lost.
     await expect(page.locator(".item-row:focus")).toHaveCount(1);
   });
@@ -296,7 +296,7 @@ test.describe("when saving fails", () => {
     await expect(line(page)).toHaveText("An article couldn't be marked as read. It's still unread.");
     await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
     await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
-    await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 3 unread`);
+    await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `3`);
 
     // Shown again with saving back: read, and the message has gone, its job done. Then m, and that save fails: back to read, as the server has it.
     let saved = 0;
@@ -307,7 +307,7 @@ test.describe("when saving fails", () => {
     await page.keyboard.press("j");
     await page.keyboard.press("k");
     await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, unread/);
-    await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 1 unread`);
+    await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `1`);
     await expect(page.getByText("An article couldn't be marked as read. It's still unread.")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Try again" })).toHaveCount(0);
     // Both saves (j and k) must reach the server before saving fails again.
@@ -316,13 +316,13 @@ test.describe("when saving fails", () => {
     await page.keyboard.press("m");
     await expect(line(page)).toHaveText("That couldn't be saved, so it was taken back.");
     await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, unread/);
-    await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 1 unread`);
+    await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `1`);
 
     // Try again, with saving back: unread after all, and the line is quiet.
     failing = false;
     await page.getByRole("button", { name: "Try again" }).click();
     await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
-    await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 2 unread`);
+    await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `2`);
     await expect(page.getByRole("button", { name: "Try again" })).toHaveCount(0);
     await expect(page.getByText("That couldn't be saved, so it was taken back.")).toHaveCount(0);
   });
@@ -385,7 +385,7 @@ test.describe("when saving fails", () => {
     await page.keyboard.press("j");
     await saved;
     await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, unread/);
-    await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog} 2 unread`);
+    await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `2`);
     await expect(page.getByText("couldn't be marked as read")).toHaveCount(0);
   });
 });
@@ -572,11 +572,11 @@ test("the server's reading mode decides where the app opens", async ({ page, isM
   await expect(sidebar(page).getByRole("link", { name: "Unread", exact: true })).toBeVisible();
 });
 
-test("Settings: unread counts can hide, and unread can let go after a while", async ({ page, isMobile }) => {
+test("Settings: no unread counts to show or hide, and unread can let go after a while", async ({ page, isMobile }) => {
   test.skip(isMobile, "the same on every width");
   // Shared by every test using this nine turtles, so this page alone is
   // told about its settings, and its changes aren't saved.
-  let settings: Record<string, string> = { sort: "newest", mode: "inbox", counts: "shown", let_go: "never" };
+  let settings: Record<string, string> = { sort: "newest", mode: "inbox", let_go: "never" };
   const changes: unknown[] = [];
   await page.route("**/api/settings", (route) => {
     if (route.request().method() === "POST") {
@@ -587,39 +587,41 @@ test("Settings: unread counts can hide, and unread can let go after a while", as
     return route.fulfill({ json: settings });
   });
   const name = await openBlog(page);
-  await expect(feedLink(page, name)).toHaveAccessibleName(`Blog ${name} 3 unread`);
+  // A dot and no number (decision 0148): screen readers hear "unread", never how many.
+  await expect(feedLink(page, name)).toHaveAccessibleName(`Blog ${name}, unread`);
+  await expect(feedLink(page, name).locator(".sidebar-dot")).toBeVisible();
+  await expect(feedLink(page, name)).not.toContainText(/[0-9]/);
 
   await page.goto(new URL("/settings", FEEDS_APP).href);
   await appReady(page);
   const reading = page.getByRole("region", { name: "Reading" });
-  await expect(reading.getByRole("radio", { name: "Show" })).toBeChecked();
+  // Nothing to hide any more: no Unread counts row, no Show or Hide.
+  await expect(reading.getByText("Unread counts")).toHaveCount(0);
+  await expect(reading.getByRole("radio", { name: "Hide" })).toHaveCount(0);
+  await expect(reading).toContainText("An Unread list, and a dot where something is new.");
   await expect(reading.getByRole("radio", { name: "Never" })).toBeChecked();
   // With only the keyboard: Tab to the choice, an arrow key changes it.
-  await tabTo(page, reading.getByRole("radio", { name: "Show" }));
+  await tabTo(page, reading.getByRole("radio", { name: "Never" }));
   await page.keyboard.press("ArrowRight");
-  await expect(reading.getByRole("radio", { name: "Hide" })).toBeChecked();
-  // The count goes; Unread stays.
-  await expect(feedLink(page, name)).toHaveAccessibleName(`Blog ${name}`);
-  await expect(sidebar(page).getByRole("link", { name: "Unread", exact: true })).toBeVisible();
-
+  await expect(reading.getByRole("radio", { name: "1 week" })).toBeChecked();
   await reading.getByRole("radio", { name: "2 weeks" }).check();
   await expect(reading.getByRole("radio", { name: "2 weeks" })).toBeChecked();
-  expect(changes).toEqual([{ counts: "hidden" }, { let_go: "two-weeks" }]);
+  expect(changes).toEqual([{ let_go: "week" }, { let_go: "two-weeks" }]);
   await expect(reading).toContainText("Older unread counts as read. It stays in its feed, All and search.");
   // Nothing has let go yet: a choice must stand a minute first.
-  await expect(feedLink(page, name)).toHaveAccessibleName(`Blog ${name}`);
+  await expect(feedLink(page, name)).toHaveAttribute("data-unread", "3");
 
-  // Remembered: after a reload the counts stay hidden.
+  // Remembered after a reload.
   await page.reload();
   await appReady(page);
-  await expect(reading.getByRole("radio", { name: "Hide" })).toBeChecked();
   await expect(reading.getByRole("radio", { name: "2 weeks" })).toBeChecked();
-  await expect(feedLink(page, name)).toHaveAccessibleName(`Blog ${name}`);
 
-  // River mode has no Unread to let go of, so the two rows step aside.
+  // River mode has no Unread to let go of, so the row steps aside, and the sidebar has no dots.
   await reading.getByRole("radio", { name: "River" }).check();
-  await expect(reading.getByRole("radio", { name: "Hide" })).toHaveCount(0);
+  await expect(reading).toContainText("Everything flows past. No Unread list, no dots.");
   await expect(reading.getByRole("radio", { name: "2 weeks" })).toHaveCount(0);
+  await expect(feedLink(page, name)).toHaveAccessibleName(`Blog ${name}`);
+  await expect(sidebar(page).locator(".sidebar-dot")).toHaveCount(0);
 });
 
 test("Catch me up: everything in Unread from before today is read, and Undo brings back the same", async ({ page, isMobile }) => {
@@ -666,5 +668,5 @@ test("Catch me up: everything in Unread from before today is read, and Undo brin
   await expect(line(page)).toContainText("Undone.");
   // Each mark also says when it was made (decision 0101).
   await expect.poll(() => undone).toContainEqual({ ids, read: false, at: expect.any(Number) });
-  await expect(feedLink(page, name)).toHaveAccessibleName(`Blog ${name} 3 unread`);
+  await expect(feedLink(page, name)).toHaveAttribute("data-unread", `3`);
 });

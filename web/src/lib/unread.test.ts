@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-// Easing unread guilt (decision 0097): Catch me up, unread that lets go, and
-// counts that can hide. Each test loads lists.ts and reading.ts afresh.
+// Easing unread guilt (decision 0097): Catch me up and unread that lets go
+// (the counts themselves are gone, decision 0148). Each test loads lists.ts and reading.ts afresh.
 async function load() {
   vi.resetModules();
   return { ...(await import("./lists")), ...(await import("./reading")) };
@@ -47,20 +47,18 @@ describe("catch me up", () => {
 });
 
 describe("the reading settings", () => {
-  it("read the counts and the wait, with calm defaults for anything not understood", async () => {
+  it("read the wait, with calm defaults for anything not understood", async () => {
     const stored = new Map<string, string>();
     vi.stubGlobal("localStorage", { getItem: (key: string) => stored.get(key) ?? null, setItem: (key: string, value: string) => stored.set(key, value) });
-    server({ sort: "oldest", mode: "inbox", counts: "hidden", let_go: "two-weeks", keys: { star: "x", odd: 3 } });
-    let { loadSettings, lastCounts, lastKeys } = await load();
-    expect(await loadSettings()).toEqual({ sort: "oldest", mode: "inbox", counts: "hidden", letGo: "two-weeks", keys: { star: "x" }, hidden: [] });
-    // This device remembers the counts were hidden, so they don't flash before the server answers,
-    // and the reader's keys (decision 0110), so a changed key works from the first press.
-    expect(lastCounts()).toBe("hidden");
+    server({ sort: "oldest", mode: "inbox", let_go: "two-weeks", keys: { star: "x", odd: 3 } });
+    let { loadSettings, lastKeys } = await load();
+    expect(await loadSettings()).toEqual({ sort: "oldest", mode: "inbox", letGo: "two-weeks", keys: { star: "x" }, hidden: [] });
+    // This device remembers the reader's keys (decision 0110), so a changed key works from the first press.
     expect(lastKeys()).toEqual({ star: "x" });
 
-    server({ sort: "newest", mode: "inbox", counts: "sideways", let_go: "someday" });
+    server({ sort: "newest", mode: "inbox", let_go: "someday" });
     ({ loadSettings } = await load());
-    expect(await loadSettings()).toEqual({ sort: "newest", mode: "inbox", counts: "shown", letGo: "never", keys: {}, hidden: [] });
+    expect(await loadSettings()).toEqual({ sort: "newest", mode: "inbox", letGo: "never", keys: {}, hidden: [] });
 
     // Unreachable: the wait is unknown, so its choices wait rather than show Never; the keys are this device's.
     stored.set("nine-turtles.keys", JSON.stringify({ star: "z" }));
@@ -73,10 +71,9 @@ describe("the reading settings", () => {
 
   it("save each setting on its own", async () => {
     const sent = server({});
-    const { saveCounts, saveLetGo, saveKeys } = await load();
-    await saveCounts("hidden");
+    const { saveLetGo, saveKeys } = await load();
     await saveLetGo("month");
     await saveKeys({ star: "x" });
-    expect(sent.map((each) => each.body)).toEqual([{ counts: "hidden" }, { let_go: "month" }, { keys: { star: "x" } }]);
+    expect(sent.map((each) => each.body)).toEqual([{ let_go: "month" }, { keys: { star: "x" } }]);
   });
 });

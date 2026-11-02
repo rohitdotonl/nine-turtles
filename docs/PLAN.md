@@ -41,7 +41,7 @@ thread, in this order:
 5. **The final icon set** 🔨
 6. **People** (V1 item 1 below) ✅
 7. **Write back** (V1 item 2) ✅
-8. **No unread counts** (V1 item 3)
+8. **No unread counts** (V1 item 3) ✅
 9. **YouTube as a first-class citizen** (V1 item 4, decision 0143)
 10. **A weekly email** (V1 item 5)
 11. **Installing the app, said plainly** (V1 item 6)
@@ -72,10 +72,11 @@ milestone order above.
    The address comes from a newsletter's sender or the feed itself; if
    neither has one, the reader types it once and the person page keeps it.
    nine turtles never sends or reads that email.
-3. **No unread counts.** Remove the numbers from the sidebar and folders,
-   and the Settings › Reading row that hides them; a small dot with no
-   number says something is new. Built with the new design language
-   (SPEC sections 5 and 18).
+3. **No unread counts** ✅ built (SPEC sections 5 and 18, decision 0148; its
+   smaller choices listed there for the refinement round). The sidebar
+   shows no numbers; a small dot in the accent at a row's end says
+   something is new, and the Settings › Reading row that hid the numbers is
+   gone.
 4. **YouTube as a first-class citizen** (decision 0144), always through
    YouTube's own feeds and player, never scraping: follow any YouTube link
    (channel, handle, video, playlist); Shorts and live streams left out by

@@ -22,6 +22,6 @@
 3. Press `Shift+A` in a feed: everything shown turns grey at once. Press `u`: they're unread again.
 4. Wait until "New articles · press r" appears, then mark all as read *without* pressing `r`. Press `r`: the new items are still unread.
 5. Turn the Wi-Fi off, open an unread article, and turn it back on within half a minute: the article stays read and nothing is said. Leave it off longer: "An article couldn't be marked as read. It's still unread." appears with Try again; once the Wi-Fi is back, opening another unread article (or pressing Try again) clears it.
-6. In Unread, open More (…) and choose Catch me up: everything from before today turns grey and the counts drop; today's articles stay unread. Press `u`: they're all unread again.
+6. In Unread, open More (…) and choose Catch me up: everything from before today turns grey, and the sidebar's dots go for anyone with nothing newer; today's articles stay unread. Press `u`: they're all unread again.
 7. In a feed with more than 50 articles, choose the tenth and press `Shift+O`: the rows below it turn grey, the feed's count drops to 9 (the older ones not yet listed are counted too), and `u` brings them all back. Open More (…): **Mark all above as read** marks the nine above.
-8. In Settings › Reading choose Let unread go after: 2 weeks. Unread now starts at two weeks ago; the older articles are still in their feeds, read. Choose Unread counts: Hide: the numbers in the sidebar go, and Unread stays.
+8. In Settings › Reading choose Let unread go after: 2 weeks. Unread now starts at two weeks ago; the older articles are still in their feeds, read.

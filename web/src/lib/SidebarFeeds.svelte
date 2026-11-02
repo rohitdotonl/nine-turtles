@@ -2,21 +2,22 @@
   The sidebar's saved searches, collections, folders and feeds (SPEC section
   5). Saved searches come first, A to Z, under their own small heading, only
   once there is one; each has a small search icon in the icon column, where
-  Unread, Starred and All have theirs, and no count. Collections follow the
+  Unread, Starred and All have theirs, and no dot. Collections follow the
   same way, each with a small shelf of books (SPEC section 34). Then folders A to Z, each
-  with a muted unread count (its feeds' counts added up) and a button that
+  with a small dot when any of its feeds has something unread, and a button that
   shows or hides the feeds in it, then the feeds in no folder, A to Z. A
   feed in two folders is listed under both. Which folders are open is
   remembered on this device.
 
   As in a Mac source list (decision 0041), a folder's show-or-hide arrow
-  sits before its name, so every row's count ends at the same right edge,
-  one column of numbers. Every name starts at one left edge, 46px into the
+  sits before its name, so every row's dot sits at the same right edge,
+  in one column. There are no numbers (decision 0148): a dot says something
+  is new, never how much. Every name starts at one left edge, 46px into the
   sidebar, where Unread, Starred and All start theirs; a folder's feeds
   start one step further in (decision 0043).
 
   On a phone the feeds screen is the root of a stack: nothing is marked as
-  selected there, and every row ends in a chevron, after its count, because
+  selected there, and every row ends in a chevron, after its dot, because
   it leads on to a screen of its own. So a folder there has no arrow of its
   own (one chevron per row): its feeds are always listed under it, a step
   in, and a tap on its name opens its list (decision 0043).
@@ -25,13 +26,12 @@
   whose name contains it takes their place (saved searches and collections aren't in it:
   the find field is for feeds and folders, DESIGN.md → Exceptions log).
 
-  In river mode (SPEC section 10) there are no counts, nor when the reader
-  hides them in Settings › Reading.
+  In river mode (SPEC section 10) there are no dots.
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
   import type { Feed, Folder } from "./shapes";
-  import { findByName, folderChoice, folderUnread, inDevanagari, plainSourceName, saveOpenFolders, savedOpenFolders, unreadLabel } from "./feeds";
+  import { findByName, folderChoice, folderUnread, inDevanagari, plainSourceName, saveOpenFolders, savedOpenFolders } from "./feeds";
   import { pathFor, type Route } from "./router";
   import type { SavedSearch } from "./saved";
   import type { Collection } from "./collections";
@@ -46,7 +46,6 @@
     follow,
     phone = false,
     river = false,
-    numbers = true,
   }: {
     feeds: Feed[];
     folders: Folder[];
@@ -60,10 +59,8 @@
     follow: (event: MouseEvent, next: Route) => void;
     /** The phone's feeds screen: no selection, and a chevron on every row. */
     phone?: boolean;
-    /** River mode: no unread counts. */
+    /** River mode: no unread dots. */
     river?: boolean;
-    /** Unread counts show; the reader can hide them in Settings › Reading (decision 0097). */
-    numbers?: boolean;
   } = $props();
 
   let open: number[] = $state(savedOpenFolders());
@@ -100,10 +97,14 @@
   }
 </script>
 
-{#snippet count(unread: number)}
-  {#if !river && numbers && unreadLabel(unread)}<span class="min-w-[2ch] shrink-0 text-right text-meta text-muted tabular-nums"
-      >{unreadLabel(unread)}<span class="sr-only"> unread</span></span
-    >{/if}
+<!--
+  Something unread here: the list's own unread dot, a step smaller to suit the
+  sidebar's names, at the row's end. No number is shown (decision 0148); the
+  row keeps it only as `data-unread`, unseen and unheard, for the tests.
+  Screen readers hear ", unread" after the name, as after an unread article's title.
+-->
+{#snippet dot(unread: number)}
+  {#if !river && unread > 0}<span aria-hidden="true" class="sidebar-dot"></span><span class="sr-only">, unread</span>{/if}
 {/snippet}
 
 {#snippet name(text: string)}
@@ -125,13 +126,14 @@
       aria-current={here ? "page" : undefined}
       onclick={(event) => follow(event, place)}
       title={feed.title}
+      data-unread={river ? undefined : feed.unread}
       class={[
         "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-3 pr-3.5 text-ui pointer-fine:text-small",
         // Every feed's name starts on the sidebar's one name edge, in a folder or not (decision 0123).
         "pl-[38px]",
         here ? "font-semibold text-ink" : "text-ink",
       ]}
-      >{@render name(plainSourceName(feed.title))}{@render count(feed.unread)}{@render leadsOn()}</a
+      >{@render name(plainSourceName(feed.title))}{@render dot(feed.unread)}{@render leadsOn()}</a
     >
   </li>
 {/snippet}
@@ -191,9 +193,10 @@
       if (does !== "fold") follow(event, place);
     }}
     data-folder-link={folder.id}
+    data-unread={river ? undefined : folderUnread(folder, feeds)}
     title={folder.name}
     class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center rounded-md pr-3.5 text-ui pointer-fine:text-small", padded ? "gap-3 pl-[38px]" : "gap-3 pl-3", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
-    >{@render name(folder.name)}<span class="folder-count flex shrink-0">{@render count(folderUnread(folder, feeds))}</span>{@render leadsOn()}</a
+    >{@render name(folder.name)}<span class="folder-dot flex shrink-0">{@render dot(folderUnread(folder, feeds))}</span>{@render leadsOn()}</a
   >
 {/snippet}
 
@@ -243,8 +246,8 @@
             {@render folderLink(folder, false)}
             {#if !phone}
               <!--
-                The show-or-hide arrow at the row's right end, over the count, shown when the
-                pointer is on the row, the keyboard is on it, or on a touch screen; the count
+                The show-or-hide arrow at the row's right end, over the dot, shown when the
+                pointer is on the row, the keyboard is on it, or on a touch screen; the dot
                 steps aside while it shows, so the folder's name starts on the margin with
                 nothing before it (decision 0123).
               -->
@@ -292,6 +295,26 @@
 
 <style>
   /*
+    The sidebar's dot (decision 0148): a feed, person or folder with something
+    unread. The list's unread dot a step smaller (6px), as the sidebar's names
+    are smaller than the list's titles; in the theme's accent, never a number.
+    Its row's name says "unread" to screen readers, so it never rests on color.
+  */
+  .sidebar-dot {
+    flex-shrink: 0;
+    display: block;
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    background-color: var(--accent);
+  }
+  @media (forced-colors: active) {
+    .sidebar-dot {
+      forced-color-adjust: none;
+      background-color: CanvasText;
+    }
+  }
+  /*
     A faint line down the left of an open folder's feeds, under the folder's
     name, so the feeds read as its contents at a glance (decision 0123).
   */
@@ -306,14 +329,14 @@
     border-left: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
   }
   /*
-    With a mouse or keyboard the arrow hides until it's wanted, and the count
+    With a mouse or keyboard the arrow hides until it's wanted, and the dot
     shows in its place meanwhile: made see-through rather than hidden, so
-    screen readers still read it in the folder's name. On a touch screen the
-    arrow always shows, and the count steps left of it rather than under it.
+    screen readers still hear "unread" in the folder's name. On a touch screen the
+    arrow always shows, and the dot steps left of it rather than under it.
   */
   @media not (pointer: coarse) {
     .folder-row:not(:hover) .disclosure:not(:focus-visible),
-    .folder-row:is(:hover, :has(.disclosure:focus-visible)) :global(.folder-count) {
+    .folder-row:is(:hover, :has(.disclosure:focus-visible)) :global(.folder-dot) {
       opacity: 0;
     }
   }

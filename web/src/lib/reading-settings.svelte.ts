@@ -1,5 +1,5 @@
 // The reading settings as the signed-in screen holds them (SPEC section 18):
-// the reading mode, the sort order, unread counts, when unread lets go and
+// the reading mode, the sort order, when unread lets go and
 // the lists the sidebar hides. Each shows this device's last copy until the
 // server answers, and each change shows at once and saves in the order made,
 // so an earlier save that fails never rolls the screen back past a later one.
@@ -8,12 +8,12 @@
 // One is made for each signed-in screen (Shell.svelte), never shared, so
 // nothing of one reader's is left for the next to see.
 
-import { lastCounts, lastHidden, lastMode, loadSettings, saveCounts, saveHidden, saveLetGo, saveMode, saveSort, type Counts, type LetGo, type Order, type Reading, type ReadingMode } from "./reading";
+import { lastHidden, lastMode, loadSettings, saveHidden, saveLetGo, saveMode, saveSort, type LetGo, type Order, type Reading, type ReadingMode } from "./reading";
 import { savedInOrder } from "./inorder";
 import { keysAsked } from "./keys.svelte";
 import type { Hideable } from "./router";
 
-const SETTINGS = ["mode", "sort", "counts", "letGo", "hidden"] as const;
+const SETTINGS = ["mode", "sort", "letGo", "hidden"] as const;
 type Setting = (typeof SETTINGS)[number];
 
 export class ReadingSettings {
@@ -21,8 +21,6 @@ export class ReadingSettings {
   mode: ReadingMode = $state(lastMode());
   /** The reader's sort order, shared across their devices; unknown until the server answers. */
   sort: Order | undefined = $state();
-  /** Whether the sidebar shows unread counts (Settings › Reading, decision 0097). */
-  counts: Counts = $state(lastCounts());
   /** When unread lets go (decision 0097); unknown until the server answers, so its choices wait rather than show Never. */
   letGo: LetGo | undefined = $state();
   /** The lists the sidebar leaves out (Settings › Show in the sidebar, decision 0105); they still open by address and keys. */
@@ -42,7 +40,6 @@ export class ReadingSettings {
     this.#saving("sort", (next) => saveSort(next as Order)),
     (next) => (this.sort = next),
   );
-  #countsSaves = savedInOrder(this.#saving("counts", saveCounts), (next: Counts) => (this.counts = next));
   #letGoSaves = savedInOrder<LetGo | undefined>(
     this.#saving("letGo", (next) => saveLetGo(next as LetGo)),
     (next) => (this.letGo = next),
@@ -73,10 +70,6 @@ export class ReadingSettings {
 
   changeSort(next: Order): Promise<void> {
     return this.#change("sort", this.#sortSaves(next, this.sort));
-  }
-
-  changeCounts(next: Counts): Promise<void> {
-    return this.#change("counts", this.#countsSaves(next, this.counts));
   }
 
   changeLetGo(next: LetGo): Promise<void> {
@@ -111,7 +104,6 @@ export class ReadingSettings {
   #show(setting: Setting, answer: Reading) {
     if (setting === "mode") this.mode = answer.mode;
     else if (setting === "sort") this.sort = answer.sort;
-    else if (setting === "counts") this.counts = answer.counts;
     else if (setting === "letGo") this.letGo = answer.letGo;
     else this.hidden = answer.hidden;
   }

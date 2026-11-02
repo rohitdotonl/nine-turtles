@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Feed } from "./shapes";
-import { explain, findByName, folderChoice, folderUnread, inDevanagari, plainSourceName, unreadLabel, type Problem } from "./feeds";
+import { explain, findByName, folderChoice, folderUnread, inDevanagari, plainSourceName, type Problem } from "./feeds";
 
 describe("the add field's messages", () => {
   it("are calm, plain and never an error code", () => {
@@ -13,16 +13,6 @@ describe("the add field's messages", () => {
     expect(explain("no-feed")).toBe("This site doesn't seem to offer a feed. Try the feed's own address, or the site's home page.");
     // The one number shown is the limit itself.
     expect(explain("too-many")).toBe("You follow 1,000 feeds, as many as one reader can. Unsubscribe from one to add another.");
-  });
-});
-
-describe("unread counts", () => {
-  it("show nothing for none, the number up to 999, and 999+ above", () => {
-    expect(unreadLabel(0)).toBe("");
-    expect(unreadLabel(1)).toBe("1");
-    expect(unreadLabel(999)).toBe("999");
-    expect(unreadLabel(1000)).toBe("999+");
-    expect(unreadLabel(25000)).toBe("999+");
   });
 });
 

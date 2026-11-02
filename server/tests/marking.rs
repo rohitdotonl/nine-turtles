@@ -339,7 +339,7 @@ async fn the_sort_order_is_saved_for_every_device() {
     let reader = Reader::new().await;
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "newest", "mode": "inbox", "counts": "shown", "let_go": "never", "keys": {}, "hidden": [] })
+        json!({ "sort": "newest", "mode": "inbox", "let_go": "never", "keys": {}, "hidden": [] })
     );
 
     let (status, _) = reader
@@ -348,7 +348,7 @@ async fn the_sort_order_is_saved_for_every_device() {
     assert_eq!(status, StatusCode::OK);
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "oldest", "mode": "inbox", "counts": "shown", "let_go": "never", "keys": {}, "hidden": [] })
+        json!({ "sort": "oldest", "mode": "inbox", "let_go": "never", "keys": {}, "hidden": [] })
     );
 
     // Another device, signed in separately, sees the same.
@@ -361,7 +361,7 @@ async fn the_sort_order_is_saved_for_every_device() {
     let other: Value = serde_json::from_str(&other.text().await.unwrap()).unwrap();
     assert_eq!(
         other,
-        json!({ "sort": "oldest", "mode": "inbox", "counts": "shown", "let_go": "never", "keys": {}, "hidden": [] })
+        json!({ "sort": "oldest", "mode": "inbox", "let_go": "never", "keys": {}, "hidden": [] })
     );
 
     let (status, _) = reader
@@ -370,7 +370,7 @@ async fn the_sort_order_is_saved_for_every_device() {
     assert!(status.is_client_error());
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "oldest", "mode": "inbox", "counts": "shown", "let_go": "never", "keys": {}, "hidden": [] })
+        json!({ "sort": "oldest", "mode": "inbox", "let_go": "never", "keys": {}, "hidden": [] })
     );
 }
 
@@ -385,7 +385,7 @@ async fn the_reading_mode_is_saved_on_its_own_and_keeps_read_state() {
     assert_eq!(status, StatusCode::OK);
     assert_eq!(
         body,
-        json!({ "sort": "newest", "mode": "river", "counts": "shown", "let_go": "never", "keys": {}, "hidden": [] })
+        json!({ "sort": "newest", "mode": "river", "let_go": "never", "keys": {}, "hidden": [] })
     );
 
     // Changing the sort order alone (as a tab from before river mode would)
@@ -395,7 +395,7 @@ async fn the_reading_mode_is_saved_on_its_own_and_keeps_read_state() {
         .await;
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "oldest", "mode": "river", "counts": "shown", "let_go": "never", "keys": {}, "hidden": [] })
+        json!({ "sort": "oldest", "mode": "river", "let_go": "never", "keys": {}, "hidden": [] })
     );
 
     // Read state is still recorded quietly in river mode, and shows again
@@ -422,7 +422,7 @@ async fn the_reading_mode_is_saved_on_its_own_and_keeps_read_state() {
     assert!(status.is_client_error());
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "oldest", "mode": "inbox", "counts": "shown", "let_go": "never", "keys": {}, "hidden": [] })
+        json!({ "sort": "oldest", "mode": "inbox", "let_go": "never", "keys": {}, "hidden": [] })
     );
 }
 
@@ -640,14 +640,15 @@ async fn unread_lets_go_only_when_the_reader_chooses_and_nothing_leaves_the_feed
     assert_eq!(reader.get("/api/settings").await["let_go"], "never");
     assert_eq!(reader.list("view=unread").await.len(), 120);
 
-    // Hiding the counts is saved alone and changes nothing else.
+    // There are no counts to hide any more (decision 0148): a tab from
+    // before still saves, and nothing changes.
     let (status, body) = reader
         .post("/api/settings", json!({ "counts": "hidden" }))
         .await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(
         body,
-        json!({ "sort": "newest", "mode": "inbox", "counts": "hidden", "let_go": "never", "keys": {}, "hidden": [] })
+        json!({ "sort": "newest", "mode": "inbox", "let_go": "never", "keys": {}, "hidden": [] })
     );
     assert_eq!(reader.list("view=unread").await.len(), 120);
 
