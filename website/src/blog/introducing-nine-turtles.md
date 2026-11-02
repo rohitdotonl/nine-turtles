@@ -26,17 +26,12 @@ meant to be the opposite: finite, calm and quiet.
 - **It doesn't call you back.** No notifications, no badges, no streaks,
   no "you missed this".
 
-One question settles every choice we make, from the size of a margin to
-whether a feature belongs at all: *does this make nine turtles feel more
-like a book, or more like a feed?*
-
 ## Made for reading
 
 The article is the point. It's set in Literata, a typeface designed for
 long reading on screens, at a comfortable line length, by day or by night.
 You can change the size, the font and the width, and that's about all
-there is around the text. The look takes its lead from Apple Books, which
-has spent years getting this right.
+there is around the text.
 
 ## Where it stands
 

@@ -133,6 +133,8 @@ async fn an_email_to_a_readers_address_becomes_an_article_of_its_senders_feed() 
     let feeds = feeds["feeds"].as_array().unwrap();
     assert_eq!(feeds.len(), 1, "{feeds:?}");
     assert_eq!(feeds[0]["title"], "The slow garden");
+    // A newsletter is never checked, so it never says when it last was (decision 0140).
+    assert!(feeds[0]["checked_at"].is_null(), "{feeds:?}");
     let feed = feeds[0]["id"].as_i64().unwrap();
     let articles = get(&base, &cookie, &format!("/api/articles?feed={feed}")).await;
     let articles = articles["articles"].as_array().unwrap();

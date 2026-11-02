@@ -1,8 +1,9 @@
 /*
   The article list's empty state and closing caption (SPEC section 6; decision 0140): one shape for every list.
-  The fact in the reading serif, in the second ink, 48px under the title; how
-  to start, when there is something to do, in the interface's text, muted,
-  8px under it; at most 300px wide, on the list's left edge, never centred.
+  The fact in the reading serif at the row titles' size, in the second ink,
+  40px down from where the list starts (under its search field); how to
+  start, when there is something to do, in the interface's text, muted, 8px
+  under it; at most 300px wide, on the list's left edge, never centred.
   The closing caption sits 40px under the last row with 96px of room below.
 */
 .list-empty {
@@ -11,8 +12,8 @@
 }
 .list-empty-fact {
   font-family: var(--font-serif);
-  font-size: 1.125rem;
-  line-height: 1.75rem;
+  font-size: var(--row-title-size, 1.1875rem);
+  line-height: 1.5;
   color: var(--ink-2);
 }
 .list-empty-how {

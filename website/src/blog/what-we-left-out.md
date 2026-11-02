@@ -1,5 +1,5 @@
 ---
-title: What we left out, on purpose
+title: What I left out, on purpose
 description: No notifications, no infinite scroll, no recommendations. The features nine turtles will never have, and why.
 date: 2026-10-25T10:00:00Z
 ---
@@ -19,7 +19,7 @@ quiet when you don't.
 At the bottom of your list, the list ends. If you want older articles,
 there's a row that says **Show older items**, and it loads them only when
 you press it. Infinite scroll is the single best tool ever invented for
-keeping people looking at a screen longer than they meant to. We'd rather
+keeping people looking at a screen longer than they meant to. I'd rather
 you didn't.
 
 ## No recommendations
@@ -32,13 +32,13 @@ Nothing jumps the queue because it's loud.
 
 nine turtles isn't social. Nobody sees what you read, and there's no
 number anywhere to make you feel behind. Sharing an article shares the
-publisher's own link, never ours: Copy link on a computer, your phone's
+publisher's own link, never one of nine turtles': Copy link on a computer, your phone's
 usual share sheet on a phone.
 
 ## No badges and no stats
 
 No streaks, no "articles read this week", no year in review. Reading
-isn't a score. The one number we keep is the count of unread articles
+isn't a score. The one number I keep is the count of unread articles
 beside each feed, in a muted grey, because people with hundreds of feeds
 need to know what they've seen. If you'd rather not see even that, **river mode** takes it
 away, along with the unread list, and lets everything simply flow past.

@@ -14,18 +14,17 @@ of social media to read the people worth knowing, and write back to them.
 
 The words will change; the shape is decided.
 
-> **The good part of the internet, in one quiet place.**
-> Read people. Write back. The people worth knowing are still writing, on
-> their own blogs, newsletters and channels. nine turtles keeps them in one
-> quiet place, helps you write back to them, and ends when you've read
-> what's there. No algorithm, no likes, no AI in between. Built on RSS,
-> the open standard, so your list is always yours.
+> **Read people. Write back.**
+> There are people online you'd like to know. Most of them have a blog, a
+> newsletter or a channel. nine turtles keeps them in one quiet place,
+> helps you write back to them, and ends when you've read what's there.
+> No algorithm, no likes, no AI in between. Built on RSS, the open
+> standard, so your list is always yours.
 
-- **Headline:** "The good part of the internet, in one quiet place."
-  Rohit keeps "in one quiet place": the warmth matters to people worn out
-  by cold algorithms. Right after it, the copy explains **"Read people.
-  Write back."**: you read people you like, and you write back to them, in
-  an app made for exactly that.
+- **Headline:** "Read people. Write back." (Rohit, 2 November 2026; it
+  replaced "The good part of the internet, in one quiet place."). The
+  headline and the first line are kept in [`../BRAND.md`](../BRAND.md);
+  this paragraph is the rest, used word for word.
 - **No A/B testing yet.** It needs thousands of visitors per version.
   Before then, try lines in public posts and see which ones people repeat.
   Never test inside the app.

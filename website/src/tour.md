@@ -20,7 +20,7 @@ length, with the publisher's name and the author in a quiet line under the
 title, as in a magazine.
 
 - **Your page, your way.** Choose the text size (six steps), the font
-  (Literata, Atkinson Hyperlegible, made for low vision, or your device's
+  (Literata, Atkinson Hyperlegible Next, made for low vision, or your device's
   own serif) and the line width. The **Aa** button beside every article
   (in the bar above it on a computer, below it on a phone) holds them,
   one press from the text.
@@ -94,7 +94,7 @@ words, and can look for a site's new feed address.
 
 On a phone, you move through one screen at a time: feeds, then articles,
 then the article. Add nine turtles to your home screen and it opens like an
-app of its own. Sharing an article shares the publisher's link, never ours.
+app of its own. Sharing an article shares the publisher's link, never one of nine turtles'.
 
 ## With the keyboard
 

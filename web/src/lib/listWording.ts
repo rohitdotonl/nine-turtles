@@ -5,7 +5,7 @@
 // has found for the place on screen (`Found`), so every rule about which words
 // show is here, in one place, and can be tested without drawing anything.
 import type { Route } from "./router";
-import { when } from "./times";
+import { lastChecked } from "./times";
 
 /** What the screen knows about the place on screen. */
 export type Found = {
@@ -82,12 +82,6 @@ export function emptyText(place: Route, checkedAt: number | null = null, now: Da
   if (place.kind === "view" && place.view === "upnext") return { fact: "Nothing in Up Next.", how: "Add an episode from its More menu." };
   if (place.kind === "collection") return { fact: "Nothing in this collection yet.", how: "Add an article from its More menu." };
   return { fact: "No articles yet." };
-}
-
-/** "Last checked today at 14:20.", or "Last checked on 3 Oct." */
-function lastChecked(at: number, now: Date): string {
-  const said = when(at, now);
-  return /^\d\d:\d\d$/.test(said) ? `Last checked today at ${said}.` : `Last checked on ${said}.`;
 }
 
 /** A search that found nothing says what it looked for and where: "Nothing found for “walking” in Starred." */

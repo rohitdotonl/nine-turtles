@@ -308,6 +308,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Responsive design (desktop and phone widths)
 - Reduced motion and other system settings
 - Design tokens (colors, fonts, spacing)
+- Brand sheet (every brand decision on one page)
 - Type scale
 - Breakpoints (where the layout changes with width)
 - Landmarks (named regions for screen readers)

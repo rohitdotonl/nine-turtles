@@ -17,16 +17,16 @@
   src: url("/fonts/literata-600-latin.woff2") format("woff2");
 }
 @font-face {
-  font-family: "Inter";
+  font-family: "Atkinson Hyperlegible Next";
   font-weight: 400;
   font-display: swap;
-  src: url("/fonts/inter-400-latin.woff2") format("woff2");
+  src: url("/fonts/atkinson-hyperlegible-next-400-latin.woff2") format("woff2");
 }
 @font-face {
-  font-family: "Inter";
+  font-family: "Atkinson Hyperlegible Next";
   font-weight: 600;
   font-display: swap;
-  src: url("/fonts/inter-600-latin.woff2") format("woff2");
+  src: url("/fonts/atkinson-hyperlegible-next-600-latin.woff2") format("woff2");
 }
 
 :root {
@@ -40,7 +40,7 @@
   --tone-2: #efeff1;
   --pill: #ececec;
   --serif: "Literata", Georgia, serif;
-  --sans: "Inter", system-ui, sans-serif;
+  --sans: "Atkinson Hyperlegible Next", system-ui, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -771,8 +771,6 @@ footer .links.small a {
 
 .wrong-turn h1 {
   margin: 3rem 0 0;
-  font-size: 2.5rem;
-  line-height: 3rem;
 }
 
 .wrong-turn .signed {

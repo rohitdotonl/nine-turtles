@@ -9,7 +9,7 @@ draft: This policy will be finished before anyone can pay for nine turtles. The 
 
 <p class="lede">
   You can cancel whenever you like, on your own, in a few seconds. If
-  nine turtles isn't right for you, ask and we'll refund you.
+  nine turtles isn't right for you, ask and I'll refund you.
 </p>
 
 ## Cancelling
@@ -25,7 +25,7 @@ draft: This policy will be finished before anyone can pay for nine turtles. The 
 
 - If you ask within the first days of a payment (to be decided: how many
   days), you get your money back in full, no questions asked.
-- After that, we'll still look at every request kindly, for example if you
+- After that, I'll still look at every request kindly, for example if you
   were charged after you meant to cancel.
 - To ask, write to <a href="mailto:{{ site.email }}">{{ site.email }}</a>
   from the email address on your account.

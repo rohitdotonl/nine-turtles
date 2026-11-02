@@ -57,4 +57,4 @@ the original. Sharing shares their link. And when a publisher includes a
 video, it plays in their chosen player, so the views count for them.
 
 Publishers are the reason there's anything to read. If you publish a feed
-and would like nine turtles to treat it differently, [tell us](/contact/).
+and would like nine turtles to treat it differently, [tell me](/contact/).

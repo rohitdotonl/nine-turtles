@@ -104,7 +104,17 @@ test("the sidebar lists Unread, Starred, All and Recently read, with a grey pill
   await expect(page).toHaveURL(/\/starred$/);
   await expect(sidebar(page).getByRole("link", { name: "Starred" })).toHaveAttribute("aria-current", "page");
   await expect(unread).not.toHaveAttribute("aria-current", "page");
-  await expect(page.getByText("Nothing starred yet.")).toBeVisible();
+  // An empty list (decision 0140): the fact in the serif, then how to start, quieter, both on the list's left edge.
+  const fact = page.getByText("Nothing starred yet.");
+  const how = page.getByText("Press the star on any article to keep it here.");
+  await expect(fact).toBeVisible();
+  await expect(fact).toHaveCSS("font-family", /Literata/);
+  await expect(how).toBeVisible();
+  await expect(fact).toHaveCSS("text-align", "start");
+  const [factBox, howBox, title] = await Promise.all([fact.boundingBox(), how.boundingBox(), page.locator("#list-heading").boundingBox()]);
+  expect(Math.abs(factBox!.x - howBox!.x)).toBeLessThan(1);
+  expect(Math.abs(factBox!.x - title!.x)).toBeLessThan(2);
+  expect(howBox!.y).toBeGreaterThan(factBox!.y + factBox!.height);
 });
 
 test("g then u, s or a goes to Unread, Starred or All; reload and Back keep your place", async ({ page }) => {
@@ -343,7 +353,7 @@ test("Settings: appearance, font, size and width apply at once and are remembere
   await page.getByLabel("System serif").check();
   await expect(sample).toHaveCSS("font-family", /^ui-serif/);
   await page.getByLabel("Atkinson Hyperlegible").check();
-  await expect(sample).toHaveCSS("font-family", /^"Atkinson Hyperlegible"/);
+  await expect(sample).toHaveCSS("font-family", /^"Atkinson Hyperlegible Next"/);
   // Plain: rohit.onl's bare look, black on white by day, and back to Original (decision 0063).
   await page.getByRole("radio", { name: "Plain" }).check();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "plain");
@@ -423,7 +433,7 @@ test("every font comes from nine turtles itself", async ({ page }) => {
   const families = await page.evaluate(() =>
     [...document.fonts].filter((face) => face.status === "loaded").map((face) => face.family.replaceAll('"', "")),
   );
-  expect(new Set(families)).toEqual(new Set(["Literata", "Inter", "Atkinson Hyperlegible"]));
+  expect(new Set(families)).toEqual(new Set(["Literata", "Atkinson Hyperlegible Next"]));
   expect(new Set(fontOrigins)).toEqual(new Set([new URL(page.url()).origin]));
 });
 
