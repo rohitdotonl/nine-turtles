@@ -20,7 +20,7 @@ length, with the publisher's name and the author in a quiet line under the
 title, as in a magazine.
 
 - **Your page, your way.** Choose the text size (six steps), the font
-  (Literata, Atkinson Hyperlegible, made for low vision, or your device's
+  (Literata, Atkinson Hyperlegible Next, made for low vision, or your device's
   own serif) and the line width. The **Aa** button beside every article
   (in the bar above it on a computer, below it on a phone) holds them,
   one press from the text.

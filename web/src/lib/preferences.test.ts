@@ -71,7 +71,7 @@ describe("reader preferences", () => {
     apply({ theme: "original", appearance: "dark", readingFont: "atkinson", textSize: 0, lineWidth: "narrow" }, page, false);
     expect(root.dataset.theme).toBe("original");
     expect(root.dataset.mode).toBe("dark");
-    expect(set.get("--reading-font")).toContain("Atkinson Hyperlegible");
+    expect(set.get("--reading-font")).toContain("Atkinson Hyperlegible Next");
     expect(set.get("--reading-size")).toBe("1rem");
     expect(set.get("--reading-measure")).toBe("52ch");
 
