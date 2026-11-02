@@ -1,0 +1,24 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,600&family=Atkinson+Hyperlegible+Next:wght@500&display=swap">
+<style>
+html,body{margin:0}
+.c{width:1200px;height:630px;position:relative;overflow:hidden}
+.safe{background:#fff;color:#141414}
+.safe .wm{position:absolute;left:96px;top:96px;display:flex;align-items:baseline;gap:16px;font:600 40px/1 'Literata';letter-spacing:-.01em}
+.safe h1{position:absolute;left:96px;bottom:72px;margin:0;font:600 96px/104px 'Literata';letter-spacing:-.015em}
+.bold{background:#141414;color:#efeff1;display:flex;flex-direction:column;align-items:center}
+.bold svg{margin-top:88px}
+.bold h1{margin:52px 0 0;font:600 88px/96px 'Literata';letter-spacing:-.015em;text-align:center}
+.bold p{position:absolute;bottom:48px;left:0;right:0;text-align:center;margin:0;font:500 24px/1 'Atkinson Hyperlegible Next';color:#a4a4a8}
+</style></head><body>
+<div class="c" id="c"></div>
+<script>
+const BT='<path d="M-9 3.5 A7.5 9.5 0 0 1 6 3.5 Z"/><circle cx="10" cy="-0.6" r="2.9"/>';
+const AT='<path d="M-9 3.5 A7.5 9 0 0 1 6 3.5 Z"/><circle cx="9.4" cy="-0.4" r="2.4"/>';
+const BP=[[9,6],[35,6],[61,6],[18,25],[44,25],[70,25],[9,44],[35,44],[61,44]];
+const AP=[[9,5.5],[32.5,5.5],[56,5.5],[17,25.5],[40.5,25.5],[64,25.5],[9,45.5],[32.5,45.5],[56,45.5]];
+const nine=(h,big)=>{const[T,P,W,H]=big?[AT,AP,75.8,49]:[BT,BP,82.9,47.5];return `<svg height="${h}" width="${(h*W/H).toFixed(1)}" viewBox="0 0 ${W} ${H}"><g fill="currentColor">${P.map(p=>`<g transform="translate(${p[0]} ${p[1]})">${T}</g>`).join('')}</g></svg>`};
+const v=location.search.slice(1)||'bold', c=document.getElementById('c'); c.className='c '+v;
+c.innerHTML = v==='safe' ? `<div class="wm">${nine(46,false)}nine turtles</div><h1>Read people.<br>Write back.</h1>`
+ : `${nine(132,true)}<h1>Read people.<br>Write back.</h1><p>nineturtles.app</p>`;
+</script></body></html>
