@@ -77,10 +77,6 @@ Never with a pitch.
 - **Submit rohit.onl, the person, not the product,** to blogroll.org, Kagi
   Small Web (a pull request to kagisearch/smallweb), ooh.directory, the
   512KB Club and IndieWeb webrings.
-- **A /blogroll page** with a downloadable feed list (never the owner's
-  file in this repository). Blogrolls are coming back: Dave Winer's
-  blogroll standard is used by Micro.blog; one writer found 20 blogrolls
-  led to 150 sites.
 - **The archive already speaks to Maya:** "What it means to read a book",
   "Two teaspoons of information, please.", "AI is killing the open web".
 - **Pace honestly.** Rohit posted 2 to 8 times a year, with a pause since
@@ -98,11 +94,8 @@ Never with a pitch.
   a spec change).
 - **Sponsor** NetNewsWire, Kill the Newsletter or JSON Feed on GitHub
   Sponsors ($5–10 a month).
-- **Posts:** "Letters to a Young Blogger" (after Rilke), "The Blogroll Is
-  Back", "Still Here: blogs that have published for 20 years" (the blogs
+- **Posts:** "Letters to a Young Blogger" (after Rilke), "Still Here: blogs that have published for 20 years" (the blogs
   named tend to share it).
-- **Blogrolls:** import any blogroll in one click, and a yearly blogroll
-  week.
 
 ### Founder precedents worth quoting
 
