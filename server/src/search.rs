@@ -479,7 +479,8 @@ pub async fn find(
         query.push_bind(person);
         query.push(" AND (feed_id = ");
         query.push_bind(feed);
-        query.push(" OR writer_id = (SELECT writer_id FROM subscriptions WHERE person_id = ");
+        // Their other places only while followed, as their list shows them.
+        query.push(" OR unsubscribed_at IS NULL AND writer_id = (SELECT writer_id FROM subscriptions WHERE person_id = ");
         query.push_bind(person);
         query.push(" AND feed_id = ");
         query.push_bind(feed);

@@ -34,10 +34,10 @@
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
-  import { onMount, tick, untrack } from "svelte";
+  import { onMount, tick } from "svelte";
   import type { Article, Source } from "./shapes";
   import type { Order } from "./reading";
-  import type { Notice } from "./feeds";
+  import { firstShowing, type Notice } from "./feeds";
   import { sourceOf, type OneSource } from "./people";
   import { catchUp as catchUpOnServer, caughtUpMessage, endOfList, listArticles, markedAllMessage, newItemsMessage, newItemsWaiting, nothingPastMessage, noteOpened, readPast, uncatchUp } from "./lists";
   import { markRead, markStarred } from "./saving";
@@ -132,9 +132,9 @@
   let actions = 0;
   /** After a mark couldn't be saved: what Try again sends again. */
   let retryLast: (() => void) | undefined = $state();
-  // The notice is read once, when the list opens.
-  untrack(() => {
-    if (!notice) return;
+  // The notice is read when the list opens, and again when a move brings a new one to the same list.
+  $effect(() => {
+    if (!notice || !firstShowing(notice)) return;
     const { message, undo } = notice;
     line = undoMessage = message;
     if (undo) {

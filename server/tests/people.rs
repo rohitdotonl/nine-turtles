@@ -32,6 +32,7 @@ fn feed(file: &str) -> Response {
         "alpha.xml" => ("Alpha's blog", "https://alpha.example/", 1),
         "alpha-news.xml" => ("Alpha's letters", "https://www.alpha.example/news", 2),
         "beta.xml" => ("Beta's notebook", "https://beta.example/", 3),
+        "gamma.xml" => ("Gamma's pictures", "https://gamma.example/", 4),
         _ => return StatusCode::NOT_FOUND.into_response(),
     };
     let items: String = (1..=3)
@@ -427,4 +428,78 @@ async fn another_reader_cannot_touch_someones_people() {
     assert_eq!(status, StatusCode::NO_CONTENT);
     assert_eq!(reader.people().await[0].1, [blog, letters]);
     assert!(other.people().await.is_empty());
+}
+
+#[tokio::test]
+async fn undo_gives_people_back_the_names_and_places_a_join_took() {
+    let (reader, _state) = Reader::new().await;
+    let blog = reader.follow("alpha.xml").await;
+    let letters = reader.follow("alpha-news.xml").await;
+    let beta = reader.follow("beta.xml").await;
+    let (status, _) = reader
+        .post(
+            "/api/writers/join",
+            json!({ "feeds": [blog, letters], "name": "Alpha" }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    let (_, made) = reader
+        .post(
+            "/api/folders",
+            json!({ "name": "Friends", "feeds": [letters, beta] }),
+        )
+        .await;
+    let folder = made["folder"]["id"].as_i64().unwrap();
+
+    // The folder takes Alpha in, under its own name.
+    let (status, person) = reader
+        .post(&format!("/api/folders/{folder}/person"), json!({}))
+        .await;
+    assert_eq!(status, StatusCode::OK, "{person}");
+    assert_eq!(
+        reader.people().await,
+        [("Friends".to_owned(), vec![blog, letters, beta])]
+    );
+
+    // Undo: Alpha has their name and their two places again; Beta stands on its own.
+    reader
+        .post(
+            "/api/writers/put-back",
+            json!({ "before": person["before"] }),
+        )
+        .await;
+    assert_eq!(
+        reader.people().await,
+        [("Alpha".to_owned(), vec![blog, letters])]
+    );
+
+    // A join that merges one person into another: Undo brings the merged one back by name.
+    let gamma = reader.follow("gamma.xml").await;
+    let (_, second) = reader
+        .post(
+            "/api/writers/join",
+            json!({ "feeds": [beta, gamma], "name": "Beta" }),
+        )
+        .await;
+    assert_eq!(reader.people().await.len(), 2, "{second}");
+    let (_, merged) = reader
+        .post("/api/writers/join", json!({ "feeds": [blog, beta] }))
+        .await;
+    assert_eq!(
+        reader.people().await,
+        [("Alpha".to_owned(), vec![blog, letters, beta, gamma])]
+    );
+    reader
+        .post(
+            "/api/writers/put-back",
+            json!({ "before": merged["before"] }),
+        )
+        .await;
+    assert_eq!(
+        reader.people().await,
+        [
+            ("Alpha".to_owned(), vec![blog, letters]),
+            ("Beta".to_owned(), vec![beta, gamma])
+        ]
+    );
 }

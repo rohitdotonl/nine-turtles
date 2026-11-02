@@ -16,7 +16,7 @@ import type { Article, Feed, Person, PlaceKind } from "./shapes";
 export const PLACE_NAMES: Record<PlaceKind, string> = { blog: "Blog", video: "Video", newsletter: "Newsletter" };
 
 /** A place before a join or a separation, as the server answers it, for Undo. */
-type Before = { feed: number; writer: number | null; folders: number[] };
+type Before = { feed: number; writer: number | null; name: string | null; folders: number[] };
 
 /** A place's person, if the reader joined it to others. */
 export function personOf(feed: Feed, people: Person[]): Person | undefined {
@@ -62,6 +62,19 @@ export function rowsOf(feeds: Feed[], people: Person[]): Feed[] {
 /** The row that stands for the place numbered `id`: its person's, or its own. */
 export function rowFor(id: number, rows: Feed[]): Feed | undefined {
   return rows.find((row) => row.id === id || row.places?.includes(id));
+}
+
+/**
+ * Tells, each time it's asked, whether the person on screen (`id`) gained or lost a place
+ * since it was last asked: their list then refreshes in place, keeping its line and Undo.
+ */
+export function placesWatch(): (id: number | undefined, count: number) => boolean {
+  let seen: [number | undefined, number] = [undefined, 0];
+  return (id, count) => {
+    const changed = id === seen[0] && count !== seen[1];
+    seen = [id, count];
+    return changed;
+  };
 }
 
 /** The website part of a place's address, without "www.", for its line on the person's page. */
@@ -151,8 +164,9 @@ export async function sameAs(feed: number): Promise<Same | undefined> {
 }
 
 /** A no to "Is this the same person?": neither place is asked about again. */
-export async function notTheSame(feeds: number[]): Promise<void> {
-  await change("/api/writers/same/no", { feeds });
+export async function notTheSame(feeds: number[]): Promise<string | undefined> {
+  const { refusal } = await change("/api/writers/same/no", { feeds });
+  return refusal ? refused(refusal, "feed") : undefined;
 }
 
 function befores(list: unknown): Before[] {
@@ -162,6 +176,7 @@ function befores(list: unknown): Before[] {
     .map((each) => ({
       feed: Number(each.feed),
       writer: typeof each.writer === "number" ? each.writer : null,
+      name: typeof each.name === "string" ? each.name : null,
       folders: Array.isArray(each.folders) ? each.folders.map(Number) : [],
     }));
 }

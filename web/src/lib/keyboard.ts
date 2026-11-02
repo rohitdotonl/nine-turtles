@@ -154,7 +154,7 @@ export const SHORTCUTS: Shortcut[] = [
   shortcut("Tidying up", "Mark older as read", [["mark-older-read", "Shift+O", { kind: "mark-older-read" }]]),
   shortcut("Tidying up", "Undo", [["undo", "u", { kind: "undo" }]]),
   shortcut("Tidying up", "Show new articles", [["refresh", "r", { kind: "refresh" }]]),
-  shortcut("Tidying up", "Edit this feed or folder", [["edit-place", "Shift+E", { kind: "edit-place" }]]),
+  shortcut("Tidying up", "Edit this person or folder", [["edit-place", "Shift+E", { kind: "edit-place" }]]),
   shortcut("Anywhere", "Add feed", [["add-feed", "a", { kind: "add-feed" }]]),
   shortcut("Anywhere", "This list of shortcuts", [["cheat-sheet", "?", { kind: "cheat-sheet" }]]),
 ];

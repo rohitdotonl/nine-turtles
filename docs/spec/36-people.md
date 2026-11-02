@@ -39,7 +39,9 @@ V1, item 1). The page's look isn't final: it gets a refinement round.*
   newsletter (**Follow and join**: followed as Add a feed would, then joined;
   a site offering several feeds gives its first). Either way their list opens
   with "Alpha is one person now · Undo". Undo puts every place back as it was,
-  with its own folders.
+  with its own folders and each person under the name they had; a place
+  followed just then by Follow and join is unfollowed again. The keyboard
+  starts on the first field, and Not now puts it back on the button.
 - **Joining** puts every place of the person in every folder any of them was
   in; the person keeps the name they had, or, for two places on their own,
   takes the first one's (the place the reader started from). Places of two
@@ -53,7 +55,7 @@ V1, item 1). The page's look isn't final: it gets a refinement round.*
   blog?", "Their places are on the same website.", then **Yes, they're one
   person** and **No**. Yes joins them, with Undo; No (or joining them any
   other way) and it's never asked about those places again.
-- **Edit person** (the list's More menu, `e`, or the page's **Edit person…**;
+- **Edit person** (the list's More menu, `Shift+E`, or the page's **Edit person…**;
   the sheet at `/feeds/3/edit` that was Edit feed, SPEC section 15): **Name**
   (the person's; for a place on its own, as before), then **Places**, each by
   what it is and its name, with Add another place under them and, on a person

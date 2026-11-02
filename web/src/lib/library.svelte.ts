@@ -180,8 +180,9 @@ export class LoadedLibrary {
   async folderToPerson(folder: Folder): Promise<(Notice & { lead: number }) | string> {
     const inside = (this.feeds ?? []).filter((feed) => feed.folders.includes(folder.id)).map((feed) => feed.id);
     const { refusal, before, rules, searches } = await folderToPerson(folder.id);
-    if (refusal) return refusal;
+    // Either way the sidebar catches up: a rename saved in the same press stays saved.
     await this.loadFeeds();
+    if (refusal) return refusal;
     const lead = this.rowOf(inside[0] ?? 0);
     return {
       lead,

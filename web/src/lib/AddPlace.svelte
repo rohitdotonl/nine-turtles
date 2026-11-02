@@ -7,8 +7,9 @@
   its own, so it can sit in Edit person's.
 -->
 <script lang="ts">
+  import { tick } from "svelte";
   import Icon from "./Icon.svelte";
-  import { addFeed, explain, plainSourceName, type Notice } from "./feeds";
+  import { addFeed, explain, plainSourceName, refused, unsubscribe, type Notice } from "./feeds";
   import type { LoadedLibrary } from "./library.svelte";
   import { join, joinedNotice } from "./people";
   import type { Feed } from "./shapes";
@@ -31,19 +32,51 @@
   let address = $state("");
   let busy = $state(false);
   let message = $state("");
-  let field: HTMLSelectElement | undefined = $state();
+  let group: HTMLDivElement | undefined = $state();
+  let opener: HTMLButtonElement | undefined = $state();
 
   /** Everyone else the reader follows, A to Z, as the sidebar lists them. */
   let others = $derived((library.rows ?? []).filter((row) => row.id !== feed.id && !(row.places ?? []).includes(feed.id)));
 
-  async function joinWith(other: number) {
+  /** Joins `other` to this person; `followed` when it was followed just now, so Undo unfollows it too. */
+  async function joinWith(other: number, followed = false) {
     const { refusal, before } = await join([feed.id, other]);
     if (refusal) {
       message = refusal;
       return;
     }
     await library.loadFeeds();
-    onJoined(joinedNotice(name, before, () => library.loadFeeds()), library.rowOf(feed.id));
+    open = false;
+    const done = joinedNotice(name, before, () => library.loadFeeds());
+    const undo = done.undo!;
+    onJoined(
+      followed
+        ? {
+            ...done,
+            undo: async () => {
+              const problem = await undo();
+              if (problem) return problem;
+              const refusal = await unsubscribe(other);
+              await library.loadFeeds();
+              return refusal ? refused(refusal, "feed") : undefined;
+            },
+          }
+        : done,
+      library.rowOf(feed.id),
+    );
+  }
+
+  async function show() {
+    open = true;
+    await tick();
+    // The first field there is: the list of people, or the address when the reader follows no one else.
+    group?.querySelector<HTMLElement>("select, input")?.focus();
+  }
+
+  async function hide() {
+    open = false;
+    await tick();
+    opener?.focus();
   }
 
   async function addChosen() {
@@ -69,7 +102,7 @@
     let added = await addFeed(address);
     // A site that offers several: its first, which is nearly always the main one.
     if (added.kind === "choose" && added.choices[0]) added = await addFeed(added.choices[0].url);
-    if (added.kind === "added") await joinWith(added.feed.id);
+    if (added.kind === "added") await joinWith(added.feed.id, true);
     else if (added.kind === "already") await joinWith(added.feedId);
     else if (added.kind === "problem") message = explain(added.reason);
     else message = "nine turtles couldn't tell which to follow there. Try the address of the blog or channel itself.";
@@ -81,19 +114,17 @@
   <button
     type="button"
     class="btn self-start"
-    onclick={() => {
-      open = true;
-      queueMicrotask(() => field?.focus());
-    }}><Icon name="plus" size={16} />Add another place</button
+    bind:this={opener}
+    onclick={show}><Icon name="plus" size={16} />Add another place</button
   >
 {:else}
-  <div class="add-place flex flex-col gap-4" role="group" aria-labelledby="add-place-title">
+  <div bind:this={group} class="add-place flex flex-col gap-4" role="group" aria-labelledby="add-place-title">
     <p id="add-place-title" class="text-base font-semibold text-ink">Add another place for {name}</p>
     {#if others.length > 0}
       <div class="flex flex-col gap-1.5">
         <label for="add-place-who" class="text-small text-ink-2">Someone you already follow</label>
         <div class="flex flex-wrap gap-2">
-          <select id="add-place-who" bind:this={field} bind:value={chosen} class="field min-w-0 flex-1">
+          <select id="add-place-who" bind:value={chosen} class="field min-w-0 flex-1">
             <option value="">Choose…</option>
             {#each others as other (other.id)}
               <option value={String(other.id)}>{plainSourceName(other.title)}</option>
@@ -127,7 +158,7 @@
     <p role="status" class={["flex items-start gap-1.5 text-small", message ? "text-danger" : busy ? "text-muted" : "sr-only"]}>
       {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{:else if busy}Joining…{/if}
     </p>
-    <button type="button" class="btn-quiet self-start" onclick={() => (open = false)}>Not now</button>
+    <button type="button" class="btn-quiet self-start" onclick={hide}>Not now</button>
   </div>
 {/if}
 

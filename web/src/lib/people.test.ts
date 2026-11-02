@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Article, Feed } from "./shapes";
-import { followingSince, placeLabels, placeShownAs, placesOf, rowFor, rowsOf, siteName, sourceOf } from "./people";
+import { followingSince, placeLabels, placeShownAs, placesOf, placesWatch, rowFor, rowsOf, siteName, sourceOf } from "./people";
 
 function place(id: number, title: string, more: Partial<Feed> = {}): Feed {
   return { id, title, siteUrl: null, unread: 0, folders: [], river: false, check: "automatic", openOnSite: false, person: null, place: "blog", addedAt: id, ...more };
@@ -67,5 +67,16 @@ describe("the rows of a person's list", () => {
   it("don't repeat a name in one place's own list, and credit the maker everywhere else", () => {
     expect(placeLabels([place(3, "Alpha's blog")])).toBe(true);
     expect(sourceOf(article(3), false)).toBe("Alpha");
+  });
+});
+
+describe("a person's list on screen", () => {
+  it("refreshes when the same person gains or loses a place, not when another person opens", () => {
+    const changed = placesWatch();
+    expect(changed(3, 1)).toBe(false);
+    expect(changed(3, 2)).toBe(true);
+    expect(changed(3, 2)).toBe(false);
+    expect(changed(4, 1)).toBe(false);
+    expect(changed(4, 1)).toBe(false);
   });
 });

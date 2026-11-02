@@ -23,7 +23,7 @@
   import EditFolder from "./EditFolder.svelte";
   import EmptyReading from "./EmptyReading.svelte";
   import PersonPage from "./PersonPage.svelte";
-  import { placeLabels, placesOf } from "./people";
+  import { placeLabels, placesOf, placesWatch } from "./people";
   import FailingLine from "./FailingLine.svelte";
   import EditSearch from "./EditSearch.svelte";
   import AddToCollection from "./AddToCollection.svelte";
@@ -231,6 +231,9 @@
   });
   /** The places of the person on screen (SPEC section 36): just the place, for one on its own. */
   let currentPlaces = $derived(currentFeed && library.feeds ? placesOf(currentFeed, library.feeds) : []);
+  // A person's places joined or parted: their list refreshes in place, keeping its line and Undo.
+  const placesChanged = placesWatch();
+  $effect(() => void (placesChanged(currentFeed?.id, currentPlaces.length) && untrack(() => itemList?.refresh())));
   let currentFolder = $derived.by(() => {
     const place = under.kind === "folder" ? under : route;
     return place.kind === "folder" || place.kind === "edit-folder"
@@ -252,8 +255,7 @@
   /** A sheet is actually showing (an edit address for a feed, folder or saved search you don't have shows none). */
   let sheetShown = $derived(sheet && (route.kind === "add-feed" || route.kind === "new-to-feeds" || editing));
   /** The feed's, folder's or saved search's name, for the heading and the tab's title. */
-  // A person's places joined or parted: their list is another list now.
-  let listKey = $derived(`${pathFor(under)} ${currentPlaces.length} ${settings.sort} ${searching.shown ? JSON.stringify(searchParams(searching.shown)) : ""}`);
+  let listKey = $derived(`${pathFor(under)} ${settings.sort} ${searching.shown ? JSON.stringify(searchParams(searching.shown)) : ""}`);
   let placeName = $derived(placeNameOf({ feed: library.shownAs(currentFeed), folder: currentFolder, search: currentSearch, collection: currentCollection }));
   /** On a saved search, the search field no longer holds what was saved: Escape puts it back. */
   let tweaked = $derived(route.kind === "search" && currentSearch !== undefined && !sameQuery(searching.query, currentSearch.query));
@@ -691,9 +693,7 @@
   /** "This is one person" on a folder (SPEC section 36): its places become one person; their list, with "… · Undo". */
   async function personFrom(folder: Folder): Promise<string | undefined> {
     const done = await library.folderToPerson(folder);
-    if (typeof done === "string") return done;
-    go({ kind: "feed", id: done.lead }, done);
-    return undefined;
+    return typeof done === "string" ? done : void go({ kind: "feed", id: done.lead }, done);
   }
 
   function follow(event: MouseEvent, next: Route) {
@@ -1494,7 +1494,7 @@
         onSaved={() => edited(true)}
         onCancel={() => edited(false)}
         onDelete={() => deleteThis(currentFolder!)}
-        onPerson={() => personFrom(currentFolder!)}
+        onPerson={(name) => personFrom({ ...currentFolder!, name })}
       />
     {/key}
   {:else if route.kind === "save-search" && searching.saving}

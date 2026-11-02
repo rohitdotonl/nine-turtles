@@ -37,21 +37,33 @@
     onJoined(joinedNotice(joinedName, before, () => library.loadFeeds()), library.rowOf(feed.id));
   }
 
+  let box: HTMLDivElement | undefined = $state();
+
   async function no() {
-    if (!same) return;
-    const other = same.feed;
+    if (!same || busy) return;
+    busy = true;
+    message = "";
+    const asked = same;
+    const problem = await notTheSame([feed.id, asked.feed]);
+    busy = false;
+    if (problem) {
+      message = problem;
+      return;
+    }
+    // The keyboard moves on to what follows the question (Add another place), never to nowhere.
+    const next = box?.nextElementSibling;
     same = undefined;
-    await notTheSame([feed.id, other]);
+    (next instanceof HTMLButtonElement ? next : next?.querySelector("button"))?.focus();
   }
 </script>
 
 {#if same}
-  <div class="same-person" role="group" aria-labelledby="same-person-question">
+  <div bind:this={box} class="same-person" role="group" aria-labelledby="same-person-question">
     <p id="same-person-question" class="text-base text-ink">Is {name} the same person as {same.name}?</p>
     <p class="text-small text-muted">Their places are on the same website.</p>
     <div class="mt-3 flex flex-wrap gap-3">
       <button type="button" class="btn" aria-disabled={busy} onclick={yes}>Yes, they're one person</button>
-      <button type="button" class="btn-quiet" onclick={no}>No</button>
+      <button type="button" class="btn-quiet" aria-disabled={busy} onclick={no}>No</button>
     </div>
     {#if message}<p role="status" class="mt-2 text-small text-danger">{message}</p>{/if}
   </div>

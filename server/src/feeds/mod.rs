@@ -79,6 +79,18 @@ struct FeedRow {
     folders: Vec<i64>,
 }
 
+/// What kind of place a feed is, from its address alone (decision 0146):
+/// newsletter, video (YouTube's feeds) or blog. `FEEDS` says the same in SQL.
+pub fn place_of(url: &str) -> &'static str {
+    if url.starts_with("newsletter:") {
+        "newsletter"
+    } else if url.contains("youtube.com/feeds/") {
+        "video"
+    } else {
+        "blog"
+    }
+}
+
 /// Each feed a reader follows, with their name for it, their settings and
 /// their unread count, counted from the `entries_unread_by_feed` index alone
 /// (tests/speed.rs checks this). A feed that flows past (`river`) counts

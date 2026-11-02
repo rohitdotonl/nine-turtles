@@ -38,8 +38,8 @@
     onSaved: () => void;
     onCancel: () => void;
     onDelete: () => Promise<string | undefined>;
-    /** "This is one person" was ticked and saved: its places become one person, and the folder goes. */
-    onPerson: () => Promise<string | undefined>;
+    /** "This is one person" was ticked and saved: its places become one person named `name` (the folder's name as saved), and the folder goes. */
+    onPerson: (name: string) => Promise<string | undefined>;
   } = $props();
 
   // The form starts from the folder's name as it is now, once.
@@ -59,7 +59,7 @@
       message = refused(refusal, "folder");
       return;
     }
-    const problem = onePerson ? await onPerson() : undefined;
+    const problem = onePerson ? await onPerson(name === folder.name ? folder.name : name.trim()) : undefined;
     busy = false;
     if (problem) message = problem;
     else if (!onePerson) onSaved();
