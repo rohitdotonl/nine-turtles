@@ -1,4 +1,4 @@
-//! People (SPEC section 36, decision 0145): a person is one human with one
+//! People (SPEC section 36, decision 0146): a person is one human with one
 //! or more places on the web (a blog, a channel, a newsletter). In the code
 //! they're "writers", because the readers are already `people`; on screen
 //! they're always "people", and the word "feed" stays off their screens.

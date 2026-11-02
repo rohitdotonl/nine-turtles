@@ -1,4 +1,4 @@
-# 0145: People: one row and one page per person
+# 0146: People: one row and one page per person
 
 *2 November 2026. The shape was agreed with the owner (PLAN.md → V1, item
 1, and the pictures at https://claude.ai/artifact/N6VBtfpfGavgN8Dz7bPyFS);

@@ -1,7 +1,7 @@
 # 36. People
 
 *Part of the spec ([index](../SPEC.md)). `docs/DESIGN.md` takes precedence.
-Decision 0145; the shape agreed with the owner on 2 November 2026 (PLAN.md →
+Decision 0146; the shape agreed with the owner on 2 November 2026 (PLAN.md →
 V1, item 1). The page's look isn't final: it gets a refinement round.*
 
 **What it does**

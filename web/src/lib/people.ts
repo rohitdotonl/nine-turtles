@@ -1,4 +1,4 @@
-// People (SPEC section 36, decision 0145): a person is one human with one or
+// People (SPEC section 36, decision 0146): a person is one human with one or
 // more places on the web (a blog, a channel, a newsletter), and each person is
 // one row in the sidebar and one page. A place the reader hasn't joined to
 // another is a person with one place, and looks as it always did. The server
@@ -134,7 +134,7 @@ export async function folderToPerson(folder: number): Promise<{ refusal?: string
   return { before: befores(answer?.before), rules: numbers(answer?.rules), searches: numbers(answer?.searches) };
 }
 
-/** The one place nine turtles would ask about, if any: "Is this the same person as …?" (decision 0145). */
+/** The one place nine turtles would ask about, if any: "Is this the same person as …?" (decision 0146). */
 export type Same = { feed: number; name: string };
 
 export async function sameAs(feed: number): Promise<Same | undefined> {

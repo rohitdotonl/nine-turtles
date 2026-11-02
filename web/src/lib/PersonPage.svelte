@@ -45,7 +45,8 @@
 <section aria-label="Article" class="person-page flex min-w-0 flex-1 flex-col overflow-y-auto bg-paper">
   <div class="flex w-full max-w-[34rem] flex-col gap-8">
     <div class="flex flex-col gap-5">
-      <h2 id="person-heading" class="font-serif text-xlarge font-semibold text-ink [overflow-wrap:anywhere]">{name}</h2>
+      <!-- A step under the list's own title, which also names them. -->
+      <h3 class="font-serif text-xlarge font-semibold text-ink [overflow-wrap:anywhere]">{name}</h3>
       <dl class="person-facts">
         {#each places as place (place.id)}
           <dt>{PLACE_NAMES[place.place ?? "blog"]}</dt>

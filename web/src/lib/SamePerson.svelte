@@ -1,5 +1,5 @@
 <!--
-  "Is this the same person?" (SPEC section 36, decision 0145): asked once, only
+  "Is this the same person?" (SPEC section 36, decision 0146): asked once, only
   on clear evidence (two places on one website of their own), never joined
   without a yes. Yes joins them, with Undo on the line that follows; No, or
   joining any other way, and it's never asked about these places again.

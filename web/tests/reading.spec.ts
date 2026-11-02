@@ -91,8 +91,14 @@ test.describe("on a wide window", () => {
 
   test("j shows an article cleaned and restyled, and j and k move through the list", async ({ page }) => {
     await openRoom(page);
-    // One quiet line in the middle of the paper (decision 0053): serif, muted grey, never the
-    // accent; screen readers also hear, since the list has articles to open, how to open one.
+    const room = page.url();
+    // Beside a person's list, their page (SPEC section 36), with the same first-time tip under it.
+    await expect(article(page)).toHaveClass(/person-page/);
+    await expect(article(page).locator(".shortcut-tip")).toContainText("to open the first article, or");
+    // Everywhere else, one quiet line in the middle of the paper (decision 0053): serif, muted grey,
+    // never the accent; screen readers also hear, since the list has articles to open, how to open one.
+    await page.goto(new URL("/all", room).href);
+    await appReady(page);
     const empty = article(page).locator(".reading-empty");
     await expect(empty).toHaveText("Time to read something beautiful.");
     await expect(empty).toBeVisible();
@@ -118,6 +124,9 @@ test.describe("on a wide window", () => {
     await expect(tip.locator("kbd")).toHaveText(["J", "?"]);
     expect(await tip.evaluate((element) => getComputedStyle(element).color)).toBe(muted);
 
+    await page.goto(room);
+    await appReady(page);
+    await expect(row(page, "The pleasure of a slow letter")).toBeVisible();
     await page.keyboard.press("j");
     await expect(row(page, "The pleasure of a slow letter")).toHaveAttribute("aria-current", "true");
     await expect(row(page, "The pleasure of a slow letter")).toBeFocused();
@@ -896,7 +905,7 @@ test("the shortcut tip shows only until an article is first opened, then never a
   // Opened with a click, not a key: the tip has done its job either way.
   await row(page, "Only the first page").click();
   await expect(title(page, "Only the first page")).toBeVisible();
-  await page.reload();
+  await page.goto(new URL("/all", page.url()).href);
   await appReady(page);
   await expect(article(page).locator(".reading-empty")).toHaveText("Time to read something beautiful.");
   await expect(tip).toHaveCount(0);

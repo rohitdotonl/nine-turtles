@@ -62,8 +62,8 @@ milestone order above.
 
 **Must** (promised by the headline "Read people. Write back."):
 
-1. **People** ✅ built (SPEC section 36, decision 0145): one row and one
-   page per person, whose places list as one. Decision 0145 lists the
+1. **People** ✅ built (SPEC section 36, decision 0146): one row and one
+   page per person, whose places list as one. Decision 0146 lists the
    smaller choices made while the owner was away, for the refinement round;
    the person's page gets the address to write back with item 2.
 2. **Write back.** A Write back button on every article opens the reader's
