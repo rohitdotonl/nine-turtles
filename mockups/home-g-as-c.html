@@ -6,7 +6,7 @@
 <title>nine turtles</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Atkinson+Hyperlegible+Next:wght@400;600&display=swap">
 <style>
-/* G set as C: the app's grey sidebar on the left holds the name and links; the lead in the app's sans. Was G set as A: one size (20/32), one 32px grid, white and ink only. The column starts on grid column 5 at 1280px. */
+/* G set as C: the app's grey sidebar (248px, the app's own width) on the left holds the name and links; the words are centred in the white; the lead in the app's sans. Was G set as A: one size (20/32), one 32px grid, white and ink only. The column starts on grid column 5 at 1280px. */
 :root { --paper: #ffffff; --ink: #141414; --ink2: #3c3c40; --side: #efeff1;
   --serif: 'Literata', Georgia, serif; --sans: 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, sans-serif; }
 @media (prefers-color-scheme: dark) { :root { --paper: #121212; --ink: #e8e8e8; --ink2: #c4c4c6; --side: #232323; color-scheme: dark; } }
@@ -15,10 +15,10 @@ html, body { margin: 0; background: var(--paper); color: var(--ink); }
 body { font-family: var(--serif); font-size: 20px; line-height: 32px; -webkit-font-smoothing: antialiased; }
 .col { width: min(488px, 100% - 40px); margin-left: max(20px, calc(50vw - 640px + 464px)); }
 @media (max-width: 1100px) { .col { margin-left: auto; margin-right: auto; } }
-body::before { content: ""; position: fixed; left: 0; top: 0; bottom: 0; width: max(0px, calc(50vw - 640px + 432px)); background: var(--side); }
-header.col { position: fixed; left: max(20px, calc(50vw - 640px + 80px)); top: 0; width: 320px; margin: 0; display: block; padding-top: 32px; }
+body::before { content: ""; position: fixed; left: 0; top: 0; bottom: 0; width: 248px; background: var(--side); }
+header.col { position: fixed; left: 32px; top: 0; width: 200px; margin: 0; display: block; padding-top: 32px; }
 header.col nav { flex-direction: column; gap: 0; margin-top: 32px; line-height: 32px; }
-@media (min-width: 1101px) { body main.col { padding-top: 352px; } }
+@media (min-width: 1101px) { body main.col { padding-top: 352px; margin-left: calc(248px + (100vw - 248px - 488px) / 2); } }
 .lead { font-family: var(--sans); font-size: 19px; }
 @media (max-width: 1100px) { body::before { right: 0; bottom: auto; width: auto; height: 64px; } header.col { position: static; width: min(488px, 100% - 40px); margin: 0 auto; display: flex; align-items: baseline; height: 64px; padding-top: 16px; } header.col nav { flex-direction: row; gap: 24px; margin: 0 0 0 auto; } }
 .wm { display: inline-flex; align-items: baseline; gap: 8px; font-weight: 600; color: var(--ink); text-decoration: none; margin-right: auto; }
