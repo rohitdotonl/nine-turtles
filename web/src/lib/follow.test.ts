@@ -35,6 +35,7 @@ describe("looking at a shared page", () => {
       choices: [{ title: "A blog", url: "https://example.com/feed" }],
       name: "A blog",
       site: "",
+      lately: [],
     });
     expect(asked).toEqual([
       {
@@ -53,18 +54,20 @@ describe("looking at a shared page", () => {
 });
 
 describe("who a shared page is by", () => {
-  it("names them by the feed's own title, with their site", () => {
+  it("names them by the feed's own title, with their site and three newest titles", () => {
     const looked = readLooked({
       feeds: [{ title: "Comments", url: "https://jane.example/feed" }],
       preview: {
         title: "  Jane\n Doe ",
         site: "https://jane.example/",
+        articles: [{ title: "One" }, { title: "" }, { title: "Two" }, { title: "Three" }, { title: "Four" }],
       },
     });
     expect(looked).toMatchObject({
       kind: "found",
       name: "Jane Doe",
       site: "https://jane.example/",
+      lately: ["One", "Two", "Three"],
     });
   });
 

@@ -2,14 +2,18 @@
 // pairs that no screen shows yet (a read item's grey title on the selected
 // row's tint, say) are covered too. The browser tests check what's on screen.
 import { describe, expect, it } from "vitest";
-import css from "../app.css?raw";
+import appCss from "../app.css?raw";
+import themesCss from "../themes.css?raw";
 import html from "../../index.html?raw";
 import ruleEditor from "./RuleEditor.svelte?raw";
 import readingPanel from "./ReadingPanel.svelte?raw";
 import { BAR_COLORS } from "./preferences";
 import { LOOKS, THEMES as THEME_NAMES, type Mode } from "./themes";
 
-/** The color settings of one theme's block in app.css. */
+// The themes' colors (themes.css) and everything drawn with them (app.css).
+const css = themesCss + appCss;
+
+/** The color settings of one theme's block in themes.css. */
 function theme(selector: string): Record<string, string> {
   const start = css.indexOf(selector);
   const block = css.slice(start, css.indexOf("}", start));
@@ -42,6 +46,7 @@ const THEMES: Record<string, Record<string, string>> = Object.fromEntries(
   Object.entries(SELECTORS).map(([name, selector]) => [name, theme(selector)]),
 );
 const BACKGROUNDS = ["paper", "list", "sidebar", "tint-list", "tint-sidebar"];
+const BRAUN = ["brushed", "anodised", "fountain-pen", "heather", "signal"];
 
 describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
   it("defines every color", () => {
@@ -79,7 +84,10 @@ describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
     expect(contrast(colors.danger!, colors.list!)).toBeGreaterThanOrEqual(4.5);
   });
 
-  it("has the accent at AAA (7 : 1) on the reading area", () => {
+  // The five Braun themes' accent is a bright signal color, drawn only as the
+  // unread dot and a search's faint tone, never as text, so it's held to the
+  // 3 : 1 for marks below instead (the owner's choice, 1 November 2026).
+  it.runIf(!BRAUN.some((name) => _name.startsWith(name)))("has the accent at AAA (7 : 1) on the reading area", () => {
     expect(contrast(colors.accent!, colors.paper!)).toBeGreaterThanOrEqual(7);
   });
 
@@ -295,9 +303,13 @@ describe.each(Object.entries(SELECTORS))("the %s theme's field focus ring", (nam
 // segment the page's; in a dark one each is the text color mixed into the
 // page, read from the theme's block in app.css.
 function darkShare(selector: string, name: string): number | undefined {
-  const start = css.indexOf(selector);
-  const block = css.slice(start, css.indexOf("}", start));
-  const found = block.match(new RegExp(`--${name}: color-mix\\(in srgb, var\\(--ink\\) (\\d+)%, var\\(--paper\\)\\);`));
+  const pattern = new RegExp(`--${name}: color-mix\\(in srgb, var\\(--ink\\) (\\d+)%, var\\(--paper\\)\\);`);
+  const block = (from: string) => {
+    const start = css.indexOf(from);
+    return css.slice(start, css.indexOf("}", start));
+  };
+  // A theme's night version takes it from its own block, or from the night block every theme shares (themes.css).
+  const found = block(selector).match(pattern) ?? (selector.includes('[data-mode="dark"]') ? block(':root[data-mode="dark"] {').match(pattern) : null);
   return found ? Number(found[1]) / 100 : undefined;
 }
 
@@ -359,8 +371,10 @@ describe.each(Object.entries(SELECTORS))(
     it("set the chosen side at 3 : 1 against the rest of the control, its words at 4.5 : 1", () => {
       if (dark) {
         // By night: a strong fill, the words in the page's color, and no edge.
-        const start = css.indexOf(selector);
-        const block = css.slice(start, css.indexOf("}", start));
+        // Its own block, or the night block every theme shares (themes.css).
+        const own = css.slice(css.indexOf(selector), css.indexOf("}", css.indexOf(selector)));
+        const shared = ':root[data-mode="dark"] {';
+        const block = own.includes("--chosen:") ? own : css.slice(css.indexOf(shared), css.indexOf("}", css.indexOf(shared)));
         expect(block).toContain("--chosen-ink: var(--paper);");
         expect(block).toContain("--chosen-edge: transparent;");
         const tile = mix(colors.ink!, colors.paper!, share(block, "chosen"));
@@ -418,7 +432,7 @@ describe.each(Object.entries(THEMES))("the %s theme's raised surface", (_name, c
   });
 });
 
-it("covers all six themes by day and by night", () => {
+it("covers every theme by day and by night", () => {
   expect(Object.keys(THEMES)).toHaveLength(THEME_NAMES.length * 2 + 1);
 });
 
@@ -427,13 +441,9 @@ it("before nine turtles' script runs, a page is Original: by day, or by night on
   expect(theme(":root,")).toEqual(THEMES["original light"]);
 });
 
-it("each theme's tile in Settings uses its own page, sidebar and text colors, by day and by night", () => {
+it("each theme's page color in themes.ts matches themes.css, by day and by night", () => {
   for (const name of THEME_NAMES) {
-    for (const mode of MODES) {
-      const colors = THEMES[`${name} ${mode}`]!;
-      const look = LOOKS[name][mode];
-      expect([look.page, look.side, look.ink], `${name} ${mode}`).toEqual([colors.paper, colors.sidebar, colors.ink]);
-    }
+    for (const mode of MODES) expect(LOOKS[name][mode].page, `${name} ${mode}`).toBe(THEMES[`${name} ${mode}`]!.paper);
   }
 });
 

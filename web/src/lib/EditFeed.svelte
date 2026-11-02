@@ -292,12 +292,12 @@
 {/if}
 
 <style>
-  /* The same rows as Settings.svelte's (keep the two alike, decision 0120): each choice fills its control in even columns. */
+  /* The same rows as Settings.svelte's (keep the two alike, decision 0120): each choice shares its control evenly, but is never narrower than its own word, so "Automatic" keeps its padding. */
   .choices.setting-control {
     /* A sheet is narrower than Settings' column, so its controls are too. */
     flex-basis: 15rem;
     display: grid;
-    grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+    grid-template-columns: repeat(var(--columns), minmax(min-content, 1fr));
   }
   .choices.setting-control :global(.choice) {
     justify-content: center;

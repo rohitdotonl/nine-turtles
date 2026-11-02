@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./fonts.css";
+@import "./themes.css";
 
 /*
   Colors come from DESIGN.md → "Color". The backgrounds and the "where you are" accent
@@ -56,125 +57,6 @@
   --color-tint-list: var(--tint-list);
   --color-tint-sidebar: var(--tint-sidebar);
 }
-/*
-  Two themes, Original (decision 0056) and Plain (decision 0063), each with
-  a day and a night version. preferences.ts writes the theme to <html data-theme="…"> and the resolved
-  Appearance (light or dark, following the device unless the reader chose
-  one) to data-mode. Before the script runs there are neither, so the page is
-  Original, by day or by night as the device is set.
-
-  --tint-list and --tint-sidebar are the selection pill's fill: a neutral
-  grey, the text color mixed into the list or sidebar (8% by day, 12% by
-  night), with no color (decision 0057). --star is the green of a starred article's filled star.
-  contrast.test.ts recomputes each and checks every text color on it.
-
-  --surface-raised is what floats over the page: the sheets, the shortcut
-  list, the menus and popovers, and the note at the list's foot (decision
-  0052). By day it's the page itself. By night it's a small lift above the
-  page (#28282a), with a 1px edge of 8% white (--raised-edge) and grouped rows
-  inside it at 4% white over it (--raised-group). contrast.test.ts checks
-  every text color on it.
-*/
-
-/* Original: Apple Books' plain white page and its near-black night. */
-:root,
-:root[data-theme="original"][data-mode="light"] {
-  color-scheme: light;
-  --paper: #ffffff;
-  --list: #f7f7f7;
-  --sidebar: #efeff1;
-  --ink: #141414;
-  --ink-2: #3c3c40;
-  --muted: #5f5f64;
-  /* A step fainter than muted, for the list's dates: 4.9 : 1 on the list, never used on the selected row's tint. */
-  --faint: #6b6b70;
-  --danger: #a3261b;
-  --accent: #2c4f8c;
-  --star: #2a8a43;
-  --tint-list: #e5e5e5;
-  --tint-sidebar: #dddddf;
-  --surface-raised: #ffffff;
-}
-
-:root[data-theme="original"][data-mode="dark"] {
-  color-scheme: dark;
-  --paper: #121212;
-  --list: #1a1a1a;
-  --sidebar: #232323;
-  --ink: #e8e8e8;
-  --ink-2: #c4c4c6;
-  --muted: #a4a4a8;
-  --faint: #98989c;
-  --danger: #e8968a;
-  --accent: #94b2e6;
-  --star: #56d364;
-  --tint-list: #333333;
-  --tint-sidebar: #3b3b3b;
-  --surface-raised: #28282a;
-  --raised-edge: rgb(255 255 255 / 0.08);
-  --raised-group: color-mix(in srgb, #ffffff 4%, var(--surface-raised));
-  --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
-  --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
-  --chosen: color-mix(in srgb, var(--ink) 65%, var(--paper));
-  --chosen-ink: var(--paper);
-  --chosen-edge: transparent;
-  --scrim: rgb(0 0 0 / 0.45);
-}
-
-/*
-  Plain (decision 0063): rohit.onl's bare, plain-HTML look. Black words on
-  white, every area all but white, and the one color the early web had: links
-  in articles in the browser's own blue, purple once visited, always
-  underlined. Its accent (the unread dot, search matches) is the text color,
-  so blue still means only "a link". By night: the colors a browser gives a
-  plain page in dark mode.
-*/
-:root[data-theme="plain"][data-mode="light"] {
-  color-scheme: light;
-  --paper: #ffffff;
-  --list: #fbfbfb;
-  --sidebar: #f5f5f5;
-  --ink: #000000;
-  --ink-2: #333333;
-  --muted: #595959;
-  --faint: #666666;
-  --danger: #a3261b;
-  --accent: #000000;
-  --star: #2a8a43;
-  --tint-list: #e7e7e7;
-  --tint-sidebar: #e1e1e1;
-  --surface-raised: #ffffff;
-  --link: #0000ee;
-  --link-visited: #551a8b;
-}
-
-:root[data-theme="plain"][data-mode="dark"] {
-  color-scheme: dark;
-  --paper: #121212;
-  --list: #161616;
-  --sidebar: #1c1c1c;
-  --ink: #ffffff;
-  --ink-2: #cccccc;
-  --muted: #a6a6a6;
-  --faint: #999999;
-  --danger: #e8968a;
-  --accent: #ffffff;
-  --star: #56d364;
-  --tint-list: #323232;
-  --tint-sidebar: #373737;
-  --surface-raised: #262626;
-  --link: #9e9eff;
-  --link-visited: #d0adf0;
-  --raised-edge: rgb(255 255 255 / 0.08);
-  --raised-group: color-mix(in srgb, #ffffff 4%, var(--surface-raised));
-  --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
-  --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
-  --chosen: color-mix(in srgb, var(--ink) 65%, var(--paper));
-  --chosen-ink: var(--paper);
-  --chosen-edge: transparent;
-  --scrim: rgb(0 0 0 / 0.45);
-}
-
 /* Before nine turtles' script has run, a dark device gets Original's night. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-mode]) {
@@ -1207,7 +1089,7 @@ textarea {
   }
 
   /*
-    A link set in running words (the welcome's "Import an OPML file…";
+    A link set in running words (the welcome's "Bring your list from another app…";
     decision 0055): the text color, underlined as the article's note links
     are (1px, 3px below the letters, the line softer than the words but still
     3 : 1 against the page), with no side padding so its words start on the

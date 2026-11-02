@@ -72,7 +72,9 @@ it qualifies.
 > 1. Anything that breaks a floor (accessibility, respect for the publisher,
 >    the reader's data and safety) or a "Never" rule.
 > 2. Bugs: wrong behavior, missing error handling, security problems.
-> 3. A principle broken without an entry in DESIGN.md's Exceptions log.
+> 3. A principle broken without an entry in DESIGN.md's Exceptions log,
+>    and, for anything the reader sees, each question of the critique
+>    checklist in DESIGN.md → "Rules about the rules" (rule 5).
 > 4. Missing tests (every feature needs them, including keyboard-only ones).
 > 5. Documents the change affects but didn't update (AGENTS.md → "Keeping
 >    the docs true"), and whether the summary lists them.

@@ -3,7 +3,7 @@
 *Part of the spec ([index](../SPEC.md)). `docs/DESIGN.md` takes precedence.*
 
 **What it does**
-- One column you move through: **Feeds → Items → Article**. The feeds list is the home screen; no hamburger menu.
+- One column you move through: **Feeds → Items → Article**. The feeds list is the home screen; no hamburger menu. While you follow no one, nine turtles opens on the welcome instead (section 2), one step on from the home screen, so Back goes there (decision 0137).
 - Top bar: a back arrow labeled with where it goes (e.g. "‹ Tech", drawn as a small arrow icon; screen readers hear "Back to Tech") and the screen title. More beside a list's title; search and search-options icons on the feeds and items screens (with search, Milestone 10).
   - The feeds screen: the large "nine turtles" wordmark and **Refresh** as an icon alone (a 44px tap, named "Refresh"; it updates the unread numbers); **Add feed** and **Settings** sit together at the bottom, as on a computer. No sidebar toggle. It's the root of the screens, as on an iPhone: no row is marked as selected, and every row (Unread, Starred, All, Recently read, folders, feeds) ends in a small chevron, after its count, because it leads on to a screen of its own.
   - A list: "‹ Feeds", then the list's name (one line, ending in "…" if long) with **Search** (a magnifier) and **More** (…) beside it, More holding Mark all as read, Refresh, the sort order and Edit (section 6). The top bar never scrolls. The search field waits behind the Search button, so the first article sits right under the title (decision 0060): a tap shows the field with the keyboard in it, and it stays until the button is tapped again with nothing searched, Escape, or going to another place (never on its own, so nothing moves under a finger); while a search is on it always shows.
@@ -18,7 +18,7 @@
 - Every tap target is at least 44 pixels.
 - Can be added to the home screen on iPhone and Android; it then opens full-screen with its own icon: nine small turtles seen from the side, three rows of three with the middle row a little to the right, dark on white (decision 0067). The same turtles mark the browser tab, on white by day and on near-black by night.
 - Without a connection, the app still opens: signed in, with the articles kept on the device for reading offline (section 32); on a device that keeps none, it says plainly that nine turtles can't be reached. The service worker keeps a copy of the app itself and its fonts, never of your articles: those are the app's own copies.
-- **Sharing a page to nine turtles** (decisions 0104 and 0132; what happens next is in section 3, "Adding from anywhere"):
+- **Sharing a page to nine turtles** (decisions 0104 and 0138; what happens next is in section 3, "Adding from anywhere"):
   - **Android:** once nine turtles is on the home screen, share any page and choose **nine turtles**. nine turtles asks "Follow <name>?"; press Follow.
   - **iPhone and iPad:** Safari doesn't let home-screen web apps appear in the share sheet (Apple doesn't support web share targets), so make a shortcut once in Apple's **Shortcuts** app:
     1. Open Shortcuts, tap **+** for a new shortcut, and name it **Add to nine turtles**.

@@ -16,6 +16,26 @@ async function openApp(page: Page, path: string, base = FEEDS_APP) {
   await signIn(page);
 }
 
+/** Hands the open file chooser a file with this text, the way a chosen file arrives. */
+async function choose(page: Page, text: string) {
+  await page.locator('input[type="file"][accept*="opml"]').evaluate((input: HTMLInputElement, contents) => {
+    const chosen = new DataTransfer();
+    chosen.items.add(new File([contents], "list.opml", { type: "text/x-opml" }));
+    input.files = chosen.files;
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }, text);
+}
+
+/** Signs up a reader of their own on the nine turtles that reads the made-up publisher: one who follows no one yet. */
+async function newReader(page: Page, width: number) {
+  await page.setViewportSize({ width, height: 800 });
+  await page.goto(new URL("/sign-up", FEEDS_APP).href);
+  await page.getByLabel("Email").fill(`${newBlog("new")}@example.com`);
+  await page.getByLabel("Password").fill("slow mornings, long reads");
+  await page.getByRole("button", { name: "Sign up" }).click();
+  await expect(page.locator("#sidebar")).toBeAttached();
+}
+
 /** A blog name no other test uses. */
 function newBlog(prefix = "blog"): string {
   return `${prefix}-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
@@ -48,18 +68,30 @@ test("a fresh nine turtles shows the welcome in the reading area: the paste fiel
   // readers), so no line sits left-aligned under the centred title.
   await expect(field(page)).toHaveAttribute("placeholder", "Paste a website or feed URL");
   await expect(reading.locator("label[for='feed-address']")).toHaveClass(/sr-only/);
-  // "Import an OPML file…", an underlined link in the text color just under the field and centred
-  // under it, 44px tall to touch, leads to Settings, at Your data (decisions 0045, 0048, 0055).
-  const importLink = page.getByRole("link", { name: "import an OPML file" });
+  // "Bring your list from another app…", an underlined link in the text color just under the field and
+  // centred under it, 44px tall to touch (decisions 0045, 0048, 0055), opens the file chooser at once (decision 0137).
+  const importLink = reading.getByRole("button", { name: "Bring your list from another app…" });
   const [fieldBox, importBox, addBox] = await Promise.all([field(page).boundingBox(), importLink.boundingBox(), reading.getByRole("button", { name: "Add feed" }).boundingBox()]);
   expect(importBox!.y - (fieldBox!.y + fieldBox!.height)).toBeLessThanOrEqual(12);
   expect(importBox!.height).toBeGreaterThanOrEqual(44);
   await expect(importLink).toHaveCSS("text-decoration-line", "underline");
   const rowCentre = (fieldBox!.x + addBox!.x + addBox!.width) / 2;
   expect(Math.abs(importBox!.x + importBox!.width / 2 - rowCentre)).toBeLessThan(3);
+  // A file that isn't a list is said under the link, and the welcome stays.
+  const chooser = page.waitForEvent("filechooser");
   await importLink.click();
-  await expect(page).toHaveURL(/\/settings\/data$/);
-  await expect(page.getByRole("heading", { level: 2, name: "Your data" })).toBeFocused();
+  await chooser;
+  await choose(page, "not a list");
+  await expect(reading.getByRole("status").filter({ hasText: "OPML" })).toHaveText("That file doesn't look like an OPML file.");
+  await expect(page).toHaveURL(/\/unread$/);
+  // A list that brings no one in says so in the same place; the welcome and the keyboard's place stay.
+  const again = page.waitForEvent("filechooser");
+  await importLink.press("Enter");
+  await again;
+  await choose(page, `<?xml version="1.0"?><opml version="2.0"><body><outline text="Empty"/></body></opml>`);
+  await expect(reading.getByRole("status").filter({ hasText: "No new" })).toHaveText("No new feeds were added.");
+  await expect(importLink).toBeFocused();
+  await expect(reading.getByRole("heading", { level: 2, name: "A quiet place to read." })).toBeVisible();
   await expect(sidebar(page).getByRole("link", { name: "Add feed" })).toBeVisible();
 });
 
@@ -70,7 +102,7 @@ test("the welcome stays still under the Add a feed sheet", async ({ page, isMobi
   await appReady(page);
   await signIn(page);
   const reading = page.getByRole("region", { name: "A quiet place to read." });
-  const shape = () => Promise.all([page.locator("#welcome-heading").boundingBox(), page.getByText("Import an OPML file…").first().boundingBox()]);
+  const shape = () => Promise.all([page.locator("#welcome-heading").boundingBox(), page.getByText("Bring your list from another app…").first().boundingBox()]);
   const before = await shape();
   // Nothing behind the sheet moves as it opens or closes (decision 0048): the welcome keeps its shape under the dim.
   await page.keyboard.press("a");
@@ -93,8 +125,35 @@ test("on a phone-narrow window, a fresh nine turtles shows the welcome in the li
   const list = page.getByRole("region", { name: "Unread" });
   await expect(list.getByRole("heading", { level: 2, name: "A quiet place to read." })).toBeVisible();
   await expect(list.getByLabel("Paste a website or feed URL")).toBeVisible();
-  await expect(list.getByRole("link", { name: "import an OPML file" })).toBeVisible();
+  await expect(list.getByRole("button", { name: "Bring your list from another app…" })).toBeVisible();
   await expect(page.getByText("Nothing here yet.")).toHaveCount(0);
+});
+
+test("a new reader brings their list from another app straight from the welcome", async ({ page }) => {
+  await newReader(page, 1280);
+  const [name, folder] = [newBlog(), newBlog("Folder")];
+  const chooser = page.waitForEvent("filechooser");
+  await page.getByRole("button", { name: "Bring your list from another app…" }).click();
+  await chooser;
+  await choose(
+    page,
+    `<?xml version="1.0"?><opml version="2.0"><body><outline text="${folder}"><outline type="rss" text="Blog ${name}" xmlUrl="${FEED_SITE}/blog/${name}/feed.xml"/></outline></body></opml>`,
+  );
+  // The welcome gives way to Unread, whose line says what came in; the folder is in the sidebar.
+  await expect(page.getByText("Added 1 feed and 1 folder. Its articles arrive over the next few minutes.")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "A quiet place to read." })).toHaveCount(0);
+  await expect(sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) })).toBeVisible();
+});
+
+test("on a phone, a new reader who follows no one opens on the welcome, and Back goes to the home screen", async ({ page }) => {
+  await newReader(page, 390);
+  await page.goto(new URL("/", FEEDS_APP).href);
+  await appReady(page);
+  await expect(page.getByRole("heading", { level: 2, name: "A quiet place to read." })).toBeVisible();
+  await expect(field(page)).toBeVisible();
+  await page.goBack();
+  await expect(page.getByRole("link", { name: /^Unread/ })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "A quiet place to read." })).toBeHidden();
 });
 
 test("on a small phone, the welcome's hint fits its field, at 320 and 375 pixels and with larger text", async ({ page, isMobile }) => {
@@ -330,6 +389,61 @@ test("a page without a feed gets a calm, plain message", async ({ page }) => {
   await expect(page.locator("#feed-address-status")).toHaveText("That doesn't look like a web address.");
 });
 
+test("changing the address after a choice of feeds takes the old choices away", async ({ page }) => {
+  await openApp(page, "/add-feed");
+  await field(page).fill(`${FEED_SITE}/blog/${newBlog("two")}/`);
+  await page.keyboard.press("Enter");
+  const choices = page.getByRole("radiogroup", { name: "Feeds on this site" });
+  await expect(choices).toBeVisible();
+  // The chosen feed fails for an address reason: the field is marked, and the choices stay to pick another.
+  await page.route("**/api/feeds", (route) =>
+    route.request().method() === "POST" ? route.fulfill({ status: 422, json: { error: "not-found" } }) : route.continue(),
+  );
+  await page.getByRole("button", { name: "Add feed", exact: true }).click();
+  await expect(page.locator("#feed-address-status")).toHaveText("Nothing was found at that address.");
+  await expect(field(page)).toHaveAttribute("aria-invalid", "true");
+  await page.unroute("**/api/feeds");
+  // They belong to the old address: typing another one clears them and all that was said, red edge included, and Add feed looks again.
+  await field(page).fill(`${FEED_SITE}/plain/`);
+  await expect(choices).toHaveCount(0);
+  await expect(page.locator("#feed-address-status")).toHaveText("");
+  await expect(field(page)).not.toHaveAttribute("aria-invalid", "true");
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#feed-address-status")).toHaveText("This site doesn't seem to offer a feed. Try the feed's own address, or the site's home page.");
+});
+
+test("without a connection, adding says so without marking the address as wrong", async ({ page, context }) => {
+  await openApp(page, "/add-feed");
+  await field(page).fill(`${FEED_SITE}/blog/${newBlog()}/`);
+  await context.setOffline(true);
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#feed-address-status")).toHaveText("Adding a feed needs a connection. Try again once you're back online.");
+  await expect(field(page)).not.toHaveAttribute("aria-invalid", "true");
+  await context.setOffline(false);
+});
+
+test("Escape while nine turtles is still looking leaves you where you were, with the feed in the sidebar", async ({ page }) => {
+  await openApp(page, "/all");
+  // A slow site: the answer comes after the reader has closed the sheet.
+  let answer: () => void = () => {};
+  const answered = new Promise<void>((resolve) => (answer = resolve));
+  await page.route("**/api/feeds", async (route) => {
+    if (route.request().method() !== "POST") return route.continue();
+    await answered;
+    await route.continue();
+  });
+  const name = newBlog();
+  await page.keyboard.press("a");
+  await field(page).fill(`${FEED_SITE}/blog/${name}/`);
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#feed-address-status")).toHaveText("Looking for a feed…");
+  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/\/all$/);
+  answer();
+  await expect(sidebar(page).getByRole("link", { name: new RegExp(`Blog ${name}`) })).toBeVisible();
+  await expect(page).toHaveURL(/\/all$/);
+});
+
 test("Escape leaves Add a feed for the list you were on", async ({ page }) => {
   await openApp(page, "/all");
   await page.keyboard.press("a");
@@ -437,7 +551,7 @@ test("an address for a feed you don't follow says so", async ({ page }) => {
   await expect(page.getByText("You don't follow this feed.")).toBeVisible();
 });
 
-// Adding from elsewhere (SPEC section 3, decisions 0104 and 0132): a share menu, an Apple
+// Adding from elsewhere (SPEC section 3, decisions 0104 and 0138): a share menu, an Apple
 // Shortcuts shortcut or a bookmark opens /add-feed with the page's address, and nine turtles asks
 // "Follow <name>?". Each test here looks once at the made-up publisher through the feed finder,
 // which allows only a few lookups a site (six in half an hour: five are used here).
@@ -469,6 +583,8 @@ test("a shared page asks \"Follow <name>?\", but follows only on Follow", async 
   await expect(question(page).getByRole("status")).toHaveText(`Follow Blog ${name}?`);
   await expect(question(page)).not.toContainText(/feed|rss/i);
   await expect(page.getByLabel("Paste a website or feed URL")).toHaveCount(0);
+  // What they wrote lately, so the reader knows who they're saying yes to.
+  await expect(page.getByRole("region", { name: "Lately" }).getByRole("listitem")).toHaveCount(3);
   // Nothing is followed yet: not in the sidebar, not on the server.
   await expect(sidebar(page).getByRole("link", { name: `Blog ${name}` })).toHaveCount(0);
   expect(await followed(page)).not.toContain(name);

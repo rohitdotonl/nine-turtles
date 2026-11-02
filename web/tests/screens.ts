@@ -512,18 +512,19 @@ async function unmark(page: Page, feed: number): Promise<void> {
   }
 }
 
-/** One theme's day or night version, as "calm-dark" (decision 0046). */
+/** One theme's day or night version, as "fountain-pen-dark". */
 export type Variant = `${Theme}-${Mode}`;
 
-/** Every theme by day and by night: twelve versions, each checked and photographed. */
+/** Every theme by day and by night, each checked and photographed. */
 export const THEMES: Variant[] = THEME_NAMES.flatMap((theme) => (["light", "dark"] as const).map((mode) => `${theme}-${mode}` as const));
 
 function parts(variant: Variant): [Theme, Mode] {
-  const [theme, mode] = variant.split("-") as [Theme, Mode];
-  return [theme, mode];
+  // Split at the last hyphen: a theme's own name may have one ("fountain-pen").
+  const at = variant.lastIndexOf("-");
+  return [variant.slice(0, at) as Theme, variant.slice(at + 1) as Mode];
 }
 
-// Each version's reading background (themes.ts, checked against app.css), used to prove the theme took effect.
+// Each version's reading background (themes.ts, checked against themes.css), used to prove the theme took effect.
 function background(variant: Variant): string {
   const [theme, mode] = parts(variant);
   const hex = LOOKS[theme][mode].page;

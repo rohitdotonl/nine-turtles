@@ -129,9 +129,8 @@ question, start from that shelf, and trim here first if writing slips.
 
 - [`business-research.md`](../archive/rnd-2026-10/business-research.md): the summary, rivals,
   prices, the ranked shortlist.
-- [`playbook.html`](../archive/rnd-2026-10/playbook.html): the full report;
-  [`idea-bank.html`](../archive/rnd-2026-10/idea-bank.html): about 300 ideas.
-- [`research-2026-10/`](../archive/rnd-2026-10/research-2026-10/): 19 working notes with
+- [`playbook.html`](../archive/rnd-2026-10/playbook.html): the full report.
+- [`research-2026-10/`](../archive/rnd-2026-10/research-2026-10/): the remaining working notes with
   sources. The most useful here: 03 (pain points), 04 (rivals and
   positioning), 14 (Hacker News pain points), 19 (founder playbooks).
 - [`reader-comparison.html`](reader-comparison.html): Feedbin, Miniflux,
@@ -186,25 +185,9 @@ feature you like goes to the daily list, not into launch. Most of these
 are free or have a free trial; Current costs about $10 once. Where a trial
 asks for a card, cancel it the same day so you aren't charged.
 
-**Claude says:**
-
-- **Here's a shortlist to start from** (edit freely):
-  1. *People tired of social media who want to read again.* Problem: the
-     endless feed. Why us: a reader that ends. (The research's first
-     choice.)
-  2. *Newsletter readers drowning in their inbox.* Problem: unread
-     newsletters pile up as guilt. Why us: newsletters as a calm list you
-     finish. (A sharper, easier problem to name; also a way in for 1.)
-  3. *RSS users leaving Feedly, Inoreader or Reddit.* Problem: their
-     reader got loud, expensive or full of AI. Why us: calm, no AI, fair
-     price. (Easiest to reach right now, but they compare features, and
-     most of them are not the ideal reader.)
-- **Weigh whose comments you read.** r/rss is full of power users, who are
-  loud online but not your ideal reader. Your ideal reader writes on the
-  small web (Bear Blog, Mataroa, Pika, blogrolls); count their words for
-  more.
-
-**Conclusion:** _______________________________________________
+**Conclusion (1 November 2026):** a reader for the small web, for people who
+want the people worth knowing instead of social media; see
+[`positioning.md`](positioning.md).
 
 ---
 
@@ -336,8 +319,8 @@ Plus one early warning, not a target: **is the core loop healthy?**
   - **C. Weeks in a row:** how many of the last 4 weeks a reader read
     something. Better at warning early, but harder to explain.
 
-  Claude's suggestion: **B** if the positioning is "a reader that ends",
-  otherwise **A**. Either is counted as a number for everyone together,
+  Claude's suggestion: **A**, now that the positioning is "read people,
+  write back" rather than "a reader that ends". Either is counted as a number for everyone together,
   never per person.
 
 **Rohit's call (30 October 2026):** the core-loop measure is parked until positioning is chosen; don't spend time on it before then.
@@ -384,11 +367,12 @@ talking as it can get:
   annoys you) and keep the answers in one file. After 20 replies you'll
   have the interviews you couldn't do before launch.
 - **Test the home-page line in public, cheaply.** Post the same idea with
-  two framings on your own social accounts or blog ("a reader that ends"
-  against "your newsletters, out of your inbox") and see which one people
+  two framings on your own social accounts or blog and see which one people
   repeat back to you.
 
-**Conclusion:** _______________________________________________
+**Conclusion (1 November 2026):** "The good part of the internet, in one
+quiet place", explained as "Read people. Write back."; no A/B tests until
+the website has the visitors for them ([`positioning.md`](positioning.md)).
 
 ---
 
@@ -399,9 +383,8 @@ talking as it can get:
 **Already done:** [`ideal-reader.md`](ideal-reader.md): people who write
 on the small web, the kind who pay for Bear Blog, Mataroa or Pika, and
 read other people's blogs closely. Reach them on their own blogs, blogrolls
-and the small-web places they gather. The positioning ideas are in
-[`strategy-notes.md`](strategy-notes.md) → "Positioning" (own the word
-*finished*; the enemy is the endless feed, never a company).
+and the small-web places they gather. The positioning is in [`positioning.md`](positioning.md) (decided
+1 November).
 
 **Rohit's to-do:**
 
@@ -571,10 +554,9 @@ Rohit's plan leans on channels that compound and that run without him:
 - **Moments worth sharing,** for word of mouth.
 - Track sign-ups by channel; cut what doesn't work.
 
-**Already done:** [`playbook.html`](../archive/rnd-2026-10/playbook.html) (launch, lists, AI
-mentions), [`outreach.html`](../archive/rnd-2026-10/outreach.html) (newsletters, podcasts,
-bloggers, directories to approach), [`post-ideas.html`](../archive/rnd-2026-10/post-ideas.html)
-(57 blog posts).
+**Already done:** [`marketing.md`](marketing.md) holds the marketing
+plan (decided 1 November 2026) and everything still
+useful from the October research.
 
 **Claude says:**
 

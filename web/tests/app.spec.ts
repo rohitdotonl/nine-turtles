@@ -323,7 +323,7 @@ test("Settings: appearance, font, size and width apply at once and are remembere
   await expect(fontRow).toContainText("Literata");
   await fontRow.click();
   await expect(page).toHaveURL(/\/settings\/font$/);
-  await expect(page.getByRole("group", { name: "Theme" }).getByRole("radio")).toHaveCount(2);
+  await expect(page.getByRole("group", { name: "Theme" }).getByRole("radio")).toHaveCount(7);
   await expect(page.getByRole("radio", { name: "Original" })).toBeChecked();
   // Font and line width are segmented controls: the chosen one is raised (a small shadow) and semibold, and by day
   // a thin edge sets it at 3 : 1 against the rest of the control (decision 0118).
@@ -348,6 +348,11 @@ test("Settings: appearance, font, size and width apply at once and are remembere
   await page.getByRole("radio", { name: "Plain" }).check();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "plain");
   await expect(page.locator("body")).toHaveCSS("color", "rgb(0, 0, 0)");
+  // A Braun theme by keyboard: the arrow moves from Plain to Brushed, and the page and the phone's bar follow (decision 0136).
+  await page.getByRole("radio", { name: "Plain" }).press("ArrowRight");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "brushed");
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(250, 250, 249)");
+  await expect(page.locator('meta[name="theme-color"]').first()).toHaveAttribute("content", "#FAFAF9");
   await page.getByRole("radio", { name: "Original" }).check();
   await expect(page.locator("body")).toHaveCSS("color", "rgb(20, 20, 20)");
   await page.getByLabel("Narrow").check();
@@ -815,8 +820,8 @@ test("a tab left open across an update opens the new version at the next place i
 
 test("on a phone, Back after an update opens the new version one step back", async ({ page, isMobile }) => {
   test.skip(!isMobile, "the phone layout only");
-  // A phone opens on the feeds, its home screen.
-  await openApp(page, "/");
+  // A phone opens on the feeds, its home screen (on a nine turtles that follows some: with none, it opens on the welcome).
+  await openApp(page, new URL("/", FEEDS_APP).href);
   await sidebar(page).getByRole("link", { name: /^Starred/ }).click();
   await expect(page).toHaveURL(/\/starred$/);
   await expect(list(page)).toBeVisible();

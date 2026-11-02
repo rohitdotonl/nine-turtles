@@ -718,7 +718,7 @@
               there, and then it lets you go.
             </p>
           </figure>
-          <!-- Original, or Plain: rohit.onl's bare look (decision 0063). -->
+          <!-- Original, Plain (rohit.onl's bare look, decision 0063) or one of the five Braun themes (decision 0136). -->
           <div class="inset-row setting has-control">
             <p id="theme-name" class="setting-name">Theme</p>
             <div role="group" aria-labelledby="theme-name" class="choices setting-control" style="--columns: 2">
@@ -855,10 +855,10 @@
 {/if}
 
 <style>
-  /* Each segmented choice fills its control in even columns. */
+  /* Each segmented choice shares its control evenly, but is never narrower than its own word (decision 0120). */
   .choices.setting-control {
     display: grid;
-    grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+    grid-template-columns: repeat(var(--columns), minmax(min-content, 1fr));
   }
   .choices.setting-control :global(.choice) {
     justify-content: center;

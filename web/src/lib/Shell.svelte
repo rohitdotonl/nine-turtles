@@ -108,7 +108,7 @@
   let route: Route = $state(start);
   /** Where Escape and "Close settings" go back to: the last list you were on. */
   let lastPlace: Route = $state(isList(start) ? start : { kind: "view", view: homeView(untrack(() => settings.mode)) });
-  /** A page shared here (/add-feed?url=…, decisions 0104, 0132), read before the address is tidied, for
+  /** A page shared here (/add-feed?url=…, decisions 0104, 0138), read before the address is tidied, for
    * "Follow this person?" (`sharedName`: who it's by); leaving clears it, so Add a feed opens empty after. */
   let shared = $state(parsed.kind === "add-feed" ? sharedAddress(location.search) : "");
   let sharedName = $state("");
@@ -298,10 +298,9 @@
   /** Keeps the copies for reading offline up to date, in the reader's own order. */
   const keeper = new Keeper(() => void keepUpToDate(settings.sort ?? "newest", settings.mode));
 
-  /** Loads the feeds and folders. */
-  function loadFeeds() {
-    return library.loadFeeds();
-  }
+  const loadFeeds = () => library.loadFeeds(); // Loads the feeds and folders.
+  // A phone opens on the welcome while you follow no one, not on a home screen of empty lists (decision 0137); Back goes home.
+  $effect(() => void (firstVisit && untrack(() => phone && screenNow() === "home" && isList(route) && go(route))));
 
   $effect(() => {
     // device.dark: "Match device" follows the device's own switch while nine turtles is open.
@@ -591,8 +590,9 @@
   }
 
   async function added(feed: Feed) {
+    const stay = route.kind !== "add-feed" && !firstVisit; // Add a feed closed while still looking: the feed only joins the sidebar.
     await loadFeeds();
-    openFeed(feed.id);
+    if (!stay) openFeed(feed.id);
   }
 
   /**
@@ -709,7 +709,6 @@
     follow(event, { kind: "readers" });
   }
 
-  /** Edit feed's "Add a rule for this feed…": to Settings, where the new rule's sheet opens for the feed. */
   /**
    * Find new address moved a failing feed, from the line above its list or
    * from Edit feed (decision 0106): the feeds load again, so its line and its
@@ -736,7 +735,7 @@
     return movedFeed?.to === id ? movedFeed.from : id;
   }
 
-  function addRuleFor(feed: Feed) {
+  function addRuleFor(feed: Feed) { // Edit feed's "Add a rule for this feed…": Settings, with a new rule for the feed.
     ruleForFeed = feed.id;
     go({ kind: "settings", page: "rules" });
   }
@@ -999,7 +998,7 @@
 </script>
 
 {#snippet welcome(start: boolean)}
-  <Welcome {start} covered={sheet && route.kind === "add-feed"} bind:heading={headings.welcome} bind:field={headings.add} {follow} onAdded={added} onOpen={openFeed} />
+  <Welcome {start} covered={sheet && route.kind === "add-feed"} bind:heading={headings.welcome} bind:field={headings.add} {follow} onAdded={added} onOpen={openFeed} onImported={(message) => (go(home, { message }), loadFeeds())} />
 {/snippet}
 
 {#snippet listHead()}

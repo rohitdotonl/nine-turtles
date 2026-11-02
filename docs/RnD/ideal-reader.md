@@ -81,22 +81,7 @@ On their own blogs and each other's: Bear Blog's discover page, Mataroa,
 Pika, Micro.blog, Mastodon, blogrolls, webrings and small newsletters about
 the indie web. They find tools through posts from bloggers they trust.
 
-## Earlier marketing notes, to revisit
+## Marketing
 
-Written for the earlier ideal reader (25–26 October); still to be checked against the new one.
-
-### Free marketing tools discussed (2026-10-25)
-
-Starter packs (Rohit's favorite), feed finder, "Follow in nine turtles" button for blogs, public reading lists (opt-in, needs a spec change), feed health check for bloggers, moving from Feedly or Inoreader. Nothing built yet.
-
-### Marketing direction (Rohit, 2026-10-25)
-
-Rohit prefers marketing that compounds over time (search and free tools) over talking to people in forums one by one. Suggested order: feed finder plus "how to follow X by feed" guides (Substack, Medium, YouTube, Reddit), then starter packs, then the "Follow in nine turtles" button and feed health check, then a few deep essays for the ideal reader. Search takes 6 to 12 months to build, so start early and collect a waitlist meanwhile (Dodo rejects waitlist-only sites, so it must swap easily for real sign-up). One launch-day post (Hacker News, Product Hunt) is still worth it.
-
-### AI changes the picture (discussed 2026-10-25, Claude's read, not researched)
-
-AI answers in search and chat take clicks from simple how-to guides, so those are weaker. Stronger: tools people use (feed finder, health check), human taste (starter packs, personal writing), and being named by AI assistants (comes from mentions on "best RSS reader" lists, reviews, Reddit, plus a clear plain "what is nine turtles" page). Pitch idea: "a quiet place to read what real people write". Updated order: starter packs, feed finder and health check, a clear "what is nine turtles" page, then getting onto review lists.
-
-### Built (2026-10-26)
-
-Starter packs skeleton is live at nineturtles.app/packs/ (PR #110, decision 0100): five empty packs (Think more deeply, Do focused work, Live slowly, Curious minds, Newsletters out of your inbox), linked from the footer. Rohit will hand-pick the blogs; how to fill one in: website/src/packs/README.md.
+How to reach her, and the earlier marketing notes of 25–26 October, are
+in [`marketing.md`](marketing.md).

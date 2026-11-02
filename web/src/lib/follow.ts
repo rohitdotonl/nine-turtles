@@ -1,4 +1,4 @@
-// "Follow this person?" (SPEC section 3, decision 0132): a page shared to
+// "Follow this person?" (SPEC section 3, decision 0138): a page shared to
 // nine turtles (a share menu, a Shortcuts shortcut or a bookmark, decision
 // 0104) is one question, "Follow <name>?", and one press. This looks at the
 // page through the feed finder's lookup without following anything, names
@@ -15,7 +15,12 @@ export type Person = {
   name: string;
   /** Their website, if the feed names it. */
   site: string;
+  /** The titles of what they wrote lately, newest first: at most three. */
+  lately: string[];
 };
+
+/** Titles of recent writing shown under the question. */
+const LATELY = 3;
 
 /** What looking at a shared page found: the person, a problem to say, or nothing to say ("quiet"). */
 export type Looked = ({ kind: "found" } & Person) | { kind: "problem"; reason: Problem } | { kind: "quiet" };
@@ -45,11 +50,16 @@ export function readLooked(body: unknown): Looked {
     }));
     if (choices.length === 0) return { kind: "problem", reason: "no-feed" };
     const preview = isRecord(body.preview) ? body.preview : {};
+    const articles = Array.isArray(preview.articles) ? preview.articles.filter(isRecord) : [];
     return {
       kind: "found",
       choices,
       name: plain(preview.title) || plain(choices[0]?.title),
       site: plain(preview.site),
+      lately: articles
+        .map((article) => plain(article.title))
+        .filter(Boolean)
+        .slice(0, LATELY),
     };
   }
   const reason = PROBLEMS.find((problem) => problem === body.error);

@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { APPEARANCES, LOOKS, THEMES, isAppearance, isTheme, resolveMode } from "./themes";
 
 describe("themes", () => {
-  it("has the themes from DESIGN.md: Original (decision 0056) and Plain (decision 0063)", () => {
-    expect(THEMES).toEqual(["original", "plain"]);
-    expect(THEMES.map((theme) => LOOKS[theme].label)).toEqual(["Original", "Plain"]);
+  it("has the themes from DESIGN.md: Original (decision 0056), Plain (decision 0063) and the five after Braun's colors", () => {
+    expect(THEMES).toEqual(["original", "plain", "brushed", "anodised", "fountain-pen", "heather", "signal"]);
+    expect(THEMES.map((theme) => LOOKS[theme].label)).toEqual(["Original", "Plain", "Brushed", "Anodised", "Fountain pen", "Heather", "Signal"]);
   });
 
   it("recognises only known theme names and Appearance choices", () => {

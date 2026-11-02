@@ -4,7 +4,7 @@
 sheet, from Apple's Shortcuts app, and from any link.*
 
 *Since 1 November 2026 a shared page opens "Follow this person?" instead of
-Add a feed's field (decision 0132). The ways in, looking without following,
+Add a feed's field (decision 0138). The ways in, looking without following,
 and the rules below still stand.*
 
 ## Decision

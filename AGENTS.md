@@ -9,7 +9,7 @@ tell the owner which ones and how.
 A quiet, single-user reader for writing on the open web (RSS, Atom, JSON
 Feed). Finite, calm and quiet: the opposite of social media.
 Its name is **nine turtles**, always lowercase (renamed from slowfeed in October 2026, decisions 0056 and 0058). The program is `nine-turtles`, its settings `NINE_TURTLES_*`, the database `nine-turtles.sqlite` and the repository `rohitdotonl/nine-turtles`. The old name is gone from the code (decision 0124); nothing reads `SLOWFEED_*` settings, the old database file, cookie or saved preferences any more. The Render service and its address (slowfeed.onrender.com) and disk (`slowfeed-data`) keep the old name on purpose: renaming them gains nothing a reader sees, and the address is one other services rely on.
-**Tiebreaker:** does this make nine turtles feel more like a book, or more like a feed?
+**Tiebreaker:** the book question is retired (decision 0132). A new one is being tested in UI and UX trials before it's adopted (candidate: "a letter from someone, or a feed from something?"); until then, decide by the floors and the principles.
 **Design reference:** no outside app any more. Apple Books was dropped on 1 November 2026; nine turtles is getting its own design principles and design language, being written with the owner. Until then: the floors, then `docs/DESIGN.md` as it stands (DESIGN.md → "Design reference", decision 0131).
 
 ## Project facts
@@ -37,6 +37,7 @@ Its name is **nine turtles**, always lowercase (renamed from slowfeed in October
 8. **Never touch the live app or its data without telling the owner first.**
 9. **If unsure, ask instead of guessing.**
 10. **If a request conflicts with a principle, stop and say which one,** even when it's the owner's request.
+11. **Design comes first** (decision 0132): design is the most important thing in nine turtles. Be proactive about design: bring up anything broken or a better design you notice, even outside the ask. For design, UI and UX decisions, ask the owner whether to work locally on their Mac, where trying things is quicker, and offer choices, a safe one and a bold one, within the principles. Accessibility is never traded: if an idea conflicts with it, find another way.
 
 ### How a change happens
 
@@ -91,9 +92,12 @@ finished, `docs/PLAN.md` drops it into `docs/archive/plan-done.md`.
 - **Respect the publisher:** show only what the feed contains (never scrape), always credit and link the original, fetch politely, share the publisher's link, play media in the publisher's player; an audio file the feed names plays from the publisher's own address in a simple player (decision 0113).
 - **Never lose the reader's data or put them at risk:** always sanitize feed content, no secrets in code or GitHub, nothing deletes without undo, back up before any database structure change (nine turtles does this itself, decision 0076), and any change that could lose data is raised with the owner first. The owner chose three exceptions to undo, each backed by the nightly backups: unsubscribing and the yearly clean-up (both keep starred and collected articles), and deleting one's own account or all of one's data (which removes everything, decisions 0088 and 0117). Details: `docs/ENGINEERING.md` → "The floor".
 
-Ranked principles below the floors (higher wins). Design: reading first ›
-calm over engagement › clear at a glance › slow app, fast interface ›
-nothing moves unless you move it › power hidden, never missing › respect.
+Ranked principles below the floors (higher wins; decisions 0133, 0134).
+Design: nothing pulls › the writer comes first › clear at a glance ›
+forgiving › honest by default › cohesive › made by a person, to the last
+detail › instant and still › power is findable, never in the way › less,
+but better, and built to last. A principle is broken only on purpose, with its
+reason in DESIGN.md's Exceptions log.
 Engineering: the computer checks the work › boring and few › no vendor
 lock-in › fast by design › fail small, fail visibly › built to last ten
 years › written for the next agent.
@@ -102,7 +106,7 @@ years › written for the next agent.
 
 - **Never commit the owner's OPML file.** `*.opml` is ignored; test fixtures use made-up feeds.
 - No notifications, badges, gamification, animations or transitions. Ever. Lists end: older items load as you reach the bottom (decision 0074), but nothing pads a list.
-- The accent (ink blue in Original, the text color in Plain) marks only what's yours to look at: what's unread and what a search found (decisions 0037, 0057); where you are is a plain grey pill. Green marks only a filled star. Neither is ever a button, a link or a focus outline.
+- The accent (ink blue in Original, the text color in Plain, a Braun signal color in the five Braun themes) marks only what's yours to look at: what's unread and what a search found (decisions 0037, 0057); where you are is a plain grey pill. Green marks only a filled star. Neither is ever a button, a link or a focus outline.
 - Never fetch an article's web page. Autodiscovery fetches only the page the reader pastes, only when they add a feed, ask "Find new address", use the website's feed finder, or share a page into Add a feed (`docs/decisions/0016-adding-feeds.md`, decisions 0099 and 0104).
 - A feature isn't done until it has tests and the checks pass.
 - **Keep the code tidy:** before writing code, ask the six questions in `docs/ENGINEERING.md` → "Keeping the code tidy" (can it work without new code, is it already here…); small files, one concept each; one copy of each thing; delete what you replace in the same change. `scripts/check-tidy.mjs` checks the size and anything unused; the lessons behind it are in `docs/ENGINEERING.md` → "Keeping the code tidy".

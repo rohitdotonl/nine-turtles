@@ -1,9 +1,10 @@
 <!--
-  "Follow this person?" (SPEC section 3, decision 0132): what a page shared
+  "Follow this person?" (SPEC section 3, decision 0138): what a page shared
   to nine turtles opens (a share menu, a Shortcuts shortcut or a bookmark,
   decision 0104). One question, the sheet's title "Follow <name>?", and one
-  press. Under it, their site, so the reader knows who they're saying yes
-  to; nothing more, and no word of feeds or RSS.
+  press. Under it, their site and the titles of what they wrote lately, so
+  the reader knows who they're saying yes to; nothing more, and no word of
+  feeds or RSS.
 
   On opening it looks at the page, without following anything; only Follow
   follows (the site's own feed, the first one the page names). Not now,
@@ -92,6 +93,18 @@
       {#if looking}Looking…{:else if problem}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{problem}{:else if name}<span class="sr-only">Follow {name}?</span>{/if}
     </p>
   </div>
+
+  {#if person && person.lately.length > 0}
+    <!-- What they wrote lately, so the reader knows who they're saying yes to. Plain text: Follow is the one action here. -->
+    <section aria-labelledby="follow-lately" class="flex flex-col gap-1.5">
+      <h3 id="follow-lately" class="text-small text-ink-2">Lately</h3>
+      <ul class="flex flex-col gap-1 font-serif">
+        {#each person.lately as title, index (index)}
+          <li class="break-words">{title}</li>
+        {/each}
+      </ul>
+    </section>
+  {/if}
 
   {#if page}
     <div class="page-action">
