@@ -7,47 +7,47 @@ material to draw on. This is the one place for marketing: it replaces the
 marketing parts of the October research (deleted 1 November) and of
 [`strategy-notes.md`](strategy-notes.md).
 
-## The plan (decided 1 November 2026)
+## The plan (decided 2 November 2026)
 
-Rohit, 1 November: "I trust your judgment." So Claude's proposal is the
-plan. The longer reasoning is in the Claude Doc "Marketing: a proposal to
-argue with" (https://claude.ai/artifact/BD72V6WxPZ3QaEHg9dVjFB).
+**nine turtles is marketed only by things Rohit would do even if nine
+turtles didn't exist** (Rohit, 2 November: the rest "smell of
+marketing"). Each helps someone first; the app comes up only because it
+made the help possible. The Claude Doc "Marketing: the plan"
+(https://claude.ai/artifact/BD72V6WxPZ3QaEHg9dVjFB) shows the same list.
 
-**The idea:** market nine turtles by doing in public what it helps people
-do: read people and write back. Rohit is the face; rohit.onl is the home.
+1. **Write about making nine turtles on rohit.onl:** selected parts only
+   (a feature said no to and why, something fixed, what a reader asked).
+   Never who Rohit reads or what he wrote back: that's private.
+2. **Write back, for real:** to writers whose posts move him, about the
+   post. The app comes up only if they ask.
+3. **Fix feeds by hand:** when a blog's feed is broken, missing or shows
+   only summaries, write to the blogger with the exact setting to change.
+4. **Tell newsletter writers their newsletter has no web feed,** and how
+   to turn one on.
+5. **Fix it at the source:** when one platform's blogs share a feed
+   problem, write once to its makers (for example Herman at Bear Blog).
+6. **Thank the old blogs:** write to writers whose posts from years ago
+   still matter to him.
+7. **Answer honestly when people ask** how to follow blogs without social
+   media, naming several apps, free ones too.
+8. **A kind note when a blogger's feed breaks** (needs building; after
+   launch, only when Rohit says so): nine turtles tells the blogger how to
+   fix it, never who reads them.
+9. **Let the app's kindness be what people talk about:** easy leaving and
+   export, refunds with no questions, Rohit answers every email.
 
-**Now, before the design is done (no app needed):**
+**Never:** pitch in a personal email or community; ads, bought lists,
+growth tricks, drip emails, fake urgency; naming a rival company in copy;
+tracking visitors across sites.
 
-1. **A weekly short post on rohit.onl:** what he read, who he wrote back
-   to, a feature he said no to and why.
-2. **Write back to five small-web writers a week,** about their post. The
-   app comes up only if they ask.
-3. **"How I read the web" interviews every two weeks:** five questions to
-   a small-web writer; the guest shares it with their readers.
-4. **Draft the essay** ("the good part of the internet is still there").
-   Keep a plain list of people who write back with interest.
+**Considered and set aside (2 November):** the interview series, a
+following guide (bloggers now embed newsletter sign-ups, not "follow me"
+links), postcards, a letter-writing month, a yearly list of long-running
+blogs, thank-you codes, sponsoring tools, publishing a blogroll, a page for
+publishers linked from the app's name, tidying people's saved links, and
+quoting and linking as a tactic. How and when to launch is still open.
 
-**After the essay: the following guide.** A warm page on how to follow
-the people you like on the web (a better aboutfeeds.com), with a small
-"How to follow me" link bloggers can put on their sites. It's the part
-that compounds, answering Rohit's earlier wish for marketing that keeps
-working.
-
-**The launch, by gates, not a date:**
-
-1. When the new design and V1 are in: the first 100 by personal invite
-   (never scarcity or a queue), each welcomed by Rohit.
-2. When most still read after 4 weeks and price and Dodo are live: one
-   public day built on one essay. The same week: about 15 free listings
-   AI assistants read (AlternativeTo, SaaSHub, Slant), a plain facts page,
-   one honest "other readers" page, and Show HN on the side.
-3. Then the weekly habit, sign-ups by channel monthly, and a newsletter
-   test (Dense Discovery, or a free year for a mention).
-
-**Not doing:** Product Hunt, ads, a waitlist form (the site says "write to
-me"), X or Instagram, SEO how-to guides, anything aimed at power users.
-
-## Kept from the October research
+## Kept from the October research (material, not the plan)
 
 ### People to write to as a peer
 
