@@ -439,7 +439,7 @@ test("on a phone, the article's Star button and More's Mark unread work", async 
   await article(page).getByRole("button", { name: "Star" }).click();
   await article(page).getByRole("button", { name: "More actions" }).click();
   await page.getByRole("menuitem", { name: "Mark unread" }).click();
-  await article(page).getByRole("button", { name: `Back to Blog ${blog}` }).click();
+  await article(page).getByRole("button", { name: `Back to Blog ${blog}`, exact: true }).click();
   await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
   await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, Starred/);
 });

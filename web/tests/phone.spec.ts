@@ -125,7 +125,7 @@ test.describe("on a phone", () => {
     // More opens upwards, over the article, with Share (or Copy link), Mark unread and Add to collection….
     await toolbar(page).getByRole("button", { name: "More actions" }).click();
     const menu = page.getByRole("menu", { name: "More actions" });
-    await expect(menu.getByRole("menuitem")).toHaveText([/^\s*(Share|Copy link)\s*$/, /^\s*Mark unread/, /^\s*Add to collection/]);
+    await expect(menu.getByRole("menuitem")).toHaveText([/^\s*(Share|Copy link)\s*$/, /^\s*Mark unread/, /^\s*Add to collection/, /^\s*Write back/]);
     expect((await menu.boundingBox())!.y + (await menu.boundingBox())!.height).toBeLessThanOrEqual((await toolbar(page).boundingBox())!.y);
     await toolbar(page).getByRole("button", { name: "More actions" }).click();
     await expect(menu).toHaveCount(0);
@@ -324,7 +324,7 @@ test.describe("on a phone", () => {
     expect(lines.size).toBe("22px");
     expect((await title.boundingBox())!.width).toBeLessThanOrEqual(320);
     await page.getByRole("button", { name: /A year of reading slowly/ }).click();
-    const back = article(page).getByRole("button", { name: `Back to Blog ${name}` });
+    const back = article(page).getByRole("button", { name: `Back to Blog ${name}`, exact: true });
     await expect(back).toBeVisible();
     const box = (await back.boundingBox())!;
     expect(box.x + box.width).toBeLessThanOrEqual(320);

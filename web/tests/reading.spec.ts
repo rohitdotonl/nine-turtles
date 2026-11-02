@@ -148,7 +148,7 @@ test.describe("on a wide window", () => {
     await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
 
     // Credit: the source links to the publisher, with the author and time.
-    await expect(article(page).getByRole("link", { name: "Reading Room" })).toHaveAttribute("href", "https://reading-room.example/");
+    await expect(article(page).getByRole("link", { name: "Reading Room", exact: true })).toHaveAttribute("href", "https://reading-room.example/");
     await expect(article(page).getByText("Asha Rao")).toBeVisible();
     // Marked with its language, for screen readers.
     await expect(article(page).locator("article")).toHaveAttribute("lang", "en-gb");
@@ -237,7 +237,7 @@ test.describe("on a wide window", () => {
     await expect(more).toHaveAttribute("aria-haspopup", "menu");
     await more.click();
     const menu = page.getByRole("menu", { name: "More actions" });
-    await expect(menu.getByRole("menuitem")).toHaveText([/Copy link/, /Mark unread/, /Add to collection/]);
+    await expect(menu.getByRole("menuitem")).toHaveText([/Copy link/, /Mark unread/, /Add to collection/, /Write back/]);
     await expect(menu.getByRole("menuitem", { name: "Mark unread" })).toHaveAttribute("aria-keyshortcuts", "m");
     await page.keyboard.press("Escape");
     await expect(menu).toHaveCount(0);
@@ -630,9 +630,10 @@ test.describe("on a wide window", () => {
     expect(await link.evaluate((element) => element.getClientRects().length)).toBe(1);
     await expect(link).toHaveAttribute("href", "https://reading-room.example/first-page");
     await expect(link).toHaveAttribute("target", "_blank");
-    // It comes after the short closing line, and is the last thing in the article.
+    // It comes after the short closing line; only Write back follows it, the article's last word (SPEC section 37).
     expect(await note.evaluate((element) => element.previousElementSibling?.classList.contains("article-end"))).toBe(true);
-    expect(await note.evaluate((element) => element.nextElementSibling)).toBeNull();
+    expect(await note.evaluate((element) => element.nextElementSibling?.classList.contains("write-back"))).toBe(true);
+    expect(await note.evaluate((element) => element.nextElementSibling?.nextElementSibling ?? null)).toBeNull();
   });
 
   test("a big picture opens larger, alone on a dimmed sheet; Escape closes it and the keyboard is back on the picture (decision 0107)", async ({ page }) => {
