@@ -1401,7 +1401,7 @@
               {@render welcome(false)}
             </section>
           {:else if under.kind === "feed" && currentFeed && library.feeds && !missing && !searching.shown}
-            <PersonPage feed={currentFeed} {library} {listCount} {tipSeen} onEdit={() => go({ kind: "edit-feed", id: currentFeed!.id })} onJoined={(done) => go(under, done)} />
+            <PersonPage feed={currentFeed} {library} {listCount} {tipSeen} onEdit={() => go({ kind: "edit-feed", id: currentFeed!.id })} onJoined={(done, lead) => go({ kind: "feed", id: lead }, done)} />
           {:else}
             <EmptyReading {listCount} missing={missing !== undefined} {tipSeen} />
           {/if}
@@ -1478,7 +1478,7 @@
         onCancel={() => edited(false)}
         onUnsubscribe={() => unsubscribeFrom(currentFeed!)}
         {library}
-        onPeople={(done) => go({ kind: "feed", id: currentFeed!.id }, done)}
+        onPeople={(done, lead) => go({ kind: "feed", id: lead }, done)}
         onPlace={(id) => go({ kind: "edit-feed", id })}
         onAddRule={() => addRuleFor(currentFeed!)}
         onMoved={(after) => feedMoved(currentFeed!.id, after.id, () => headings[at])}

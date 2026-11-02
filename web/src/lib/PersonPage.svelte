@@ -34,7 +34,7 @@
     listCount: number;
     tipSeen: boolean;
     onEdit: () => void;
-    onJoined: (done: Notice) => void;
+    onJoined: (done: Notice, lead: number) => void;
   } = $props();
 
   let places = $derived(placesOf(feed, library.feeds ?? []));

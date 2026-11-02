@@ -10,7 +10,7 @@
   import { join, joinedNotice, notTheSame, sameAs, type Same } from "./people";
   import type { Feed } from "./shapes";
 
-  let { feed, name, library, onJoined }: { feed: Feed; name: string; library: LoadedLibrary; onJoined: (done: Notice) => void } = $props();
+  let { feed, name, library, onJoined }: { feed: Feed; name: string; library: LoadedLibrary; onJoined: (done: Notice, lead: number) => void } = $props();
 
   let same: Same | undefined = $state();
   let busy = $state(false);
@@ -34,7 +34,7 @@
     }
     const joinedName = same.name;
     await library.loadFeeds();
-    onJoined(joinedNotice(joinedName, before, () => library.loadFeeds()));
+    onJoined(joinedNotice(joinedName, before, () => library.loadFeeds()), library.rowOf(feed.id));
   }
 
   async function no() {

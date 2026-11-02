@@ -71,7 +71,7 @@
     onMoved: (feed: Sick) => void;
     library: LoadedLibrary;
     /** Places were joined or parted (SPEC section 36): their list, with "… · Undo". */
-    onPeople: (done: Notice) => void;
+    onPeople: (done: Notice, lead: number) => void;
     /** Another of the person's places, to edit its own settings. */
     onPlace: (id: number) => void;
   } = $props();
@@ -126,14 +126,12 @@
     }
     await library.loadFeeds();
     busy = false;
-    onPeople({
-      message: `${placeShownAs(feed)} is on its own again`,
-      undo: async () => {
-        const problem = await putBack(before);
-        await library.loadFeeds();
-        return problem;
-      },
-    });
+    const undo = async () => {
+      const problem = await putBack(before);
+      await library.loadFeeds();
+      return problem;
+    };
+    onPeople({ message: `${placeShownAs(feed)} is on its own again`, undo }, feed.id);
   }
 
   async function leave() {

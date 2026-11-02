@@ -13,7 +13,18 @@
   import { join, joinedNotice } from "./people";
   import type { Feed } from "./shapes";
 
-  let { feed, name, library, onJoined }: { feed: Feed; name: string; library: LoadedLibrary; onJoined: (done: Notice) => void } = $props();
+  let {
+    feed,
+    name,
+    library,
+    onJoined,
+  }: {
+    feed: Feed;
+    name: string;
+    library: LoadedLibrary;
+    /** Joined: the line with Undo, and the place the person's row now opens. */
+    onJoined: (done: Notice, lead: number) => void;
+  } = $props();
 
   let open = $state(false);
   let chosen = $state("");
@@ -32,7 +43,7 @@
       return;
     }
     await library.loadFeeds();
-    onJoined(joinedNotice(name, before, () => library.loadFeeds()));
+    onJoined(joinedNotice(name, before, () => library.loadFeeds()), library.rowOf(feed.id));
   }
 
   async function addChosen() {

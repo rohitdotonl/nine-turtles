@@ -44,6 +44,11 @@ export class LoadedLibrary {
     return { feeds: this.rows ?? [], folders: this.folders, collections: this.collections };
   }
 
+  /** The place a person's row opens, for any of their places: the place itself, for one on its own. */
+  rowOf(id: number): number {
+    return rowFor(id, this.rows ?? [])?.id ?? id;
+  }
+
   /** The place numbered `id` as the screen names it: under its person's name, if it has one. */
   shownAs(feed: Feed | undefined): Feed | undefined {
     const person = feed && personOf(feed, this.people);
@@ -177,7 +182,7 @@ export class LoadedLibrary {
     const { refusal, before, rules, searches } = await folderToPerson(folder.id);
     if (refusal) return refusal;
     await this.loadFeeds();
-    const lead = rowFor(inside[0] ?? 0, this.rows ?? [])?.id ?? inside[0] ?? 0;
+    const lead = this.rowOf(inside[0] ?? 0);
     return {
       lead,
       message: `${folder.name} is one person now`,
