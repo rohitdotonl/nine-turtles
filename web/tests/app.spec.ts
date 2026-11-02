@@ -13,7 +13,7 @@ async function openApp(page: Page, path = "/unread") {
 const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
 const list = (page: Page) => page.getByRole("region", { name: /^(Unread|Starred|All)$/ });
 // The reading area: an article, "Time to read something beautiful.", or the welcome on a nine turtles with no feeds.
-const readingArea = (page: Page) => page.getByRole("region", { name: /^(Article|A quiet place to read\.)$/ });
+const readingArea = (page: Page) => page.getByRole("region", { name: /^(Article|Hello\. Who would you like to read\?)$/ });
 const toggle = (page: Page) => page.getByRole("button", { name: "Sidebar" });
 
 test("a wide window shows three areas, a medium one two, a phone-narrow one one", async ({ page }) => {
@@ -104,7 +104,17 @@ test("the sidebar lists Unread, Starred, All and Recently read, with a grey pill
   await expect(page).toHaveURL(/\/starred$/);
   await expect(sidebar(page).getByRole("link", { name: "Starred" })).toHaveAttribute("aria-current", "page");
   await expect(unread).not.toHaveAttribute("aria-current", "page");
-  await expect(page.getByText("No starred articles yet.")).toBeVisible();
+  // An empty list (decision 0142): the fact in the serif, then how to start, quieter, both on the list's left edge.
+  const fact = page.getByText("Nothing starred yet.");
+  const how = page.getByText("Press the star on any article to keep it here.");
+  await expect(fact).toBeVisible();
+  await expect(fact).toHaveCSS("font-family", /Literata/);
+  await expect(how).toBeVisible();
+  await expect(fact).toHaveCSS("text-align", "start");
+  const [factBox, howBox, title] = await Promise.all([fact.boundingBox(), how.boundingBox(), page.locator("#list-heading").boundingBox()]);
+  expect(Math.abs(factBox!.x - howBox!.x)).toBeLessThan(1);
+  expect(Math.abs(factBox!.x - title!.x)).toBeLessThan(2);
+  expect(howBox!.y).toBeGreaterThan(factBox!.y + factBox!.height);
 });
 
 test("g then u, s or a goes to Unread, Starred or All; reload and Back keep your place", async ({ page }) => {

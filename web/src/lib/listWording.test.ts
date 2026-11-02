@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { emptyText, insteadOfList, missingFrom, NOT_FOUND, type Found } from "./listWording";
+import { emptyText, insteadOfList, missingFrom, nothingFound, NOT_FOUND, type Found } from "./listWording";
 
 /** Everything loaded, and the place the address names is one the reader has. */
 function found(changes: Partial<Found> = {}): Found {
@@ -68,10 +68,28 @@ describe("insteadOfList", () => {
 });
 
 describe("emptyText", () => {
-  it("says plainly what each empty list would hold", () => {
-    expect(emptyText({ kind: "view", view: "unread" })).toBe("Nothing unread.");
-    expect(emptyText({ kind: "view", view: "recent" })).toBe("Articles you open will show here.");
-    expect(emptyText({ kind: "feed", id: 1 })).toBe("This feed has no articles yet.");
-    expect(emptyText({ kind: "view", view: "all" })).toBe("No articles yet.");
+  it("says each empty list in one pattern, with how to start only where there's something to do", () => {
+    expect(emptyText({ kind: "view", view: "unread" })).toEqual({ fact: "Nothing unread." });
+    expect(emptyText({ kind: "view", view: "recent" })).toEqual({ fact: "Articles you open will show here." });
+    expect(emptyText({ kind: "folder", id: 2 })).toEqual({ fact: "Nothing in this folder yet." });
+    expect(emptyText({ kind: "view", view: "starred" })).toEqual({ fact: "Nothing starred yet.", how: "Press the star on any article to keep it here." });
+    expect(emptyText({ kind: "collection", id: 3 })).toEqual({ fact: "Nothing in this collection yet.", how: "Add an article from its More menu." });
+    expect(emptyText({ kind: "view", view: "all" })).toEqual({ fact: "No articles yet." });
+  });
+
+  it("says when an empty feed was last checked, and nothing more until it has been", () => {
+    const now = new Date(2026, 10, 2, 18, 0);
+    const today = new Date(2026, 10, 2, 14, 20).getTime() / 1000;
+    const earlier = new Date(2026, 9, 3, 9, 0).getTime() / 1000;
+    expect(emptyText({ kind: "feed", id: 1 }, today, now)).toEqual({ fact: "Nothing from this feed yet.", how: "Last checked today at 14:20." });
+    expect(emptyText({ kind: "feed", id: 1 }, earlier, now)).toEqual({ fact: "Nothing from this feed yet.", how: "Last checked on 3 Oct." });
+    expect(emptyText({ kind: "feed", id: 1 }, null, now)).toEqual({ fact: "Nothing from this feed yet." });
+  });
+});
+
+describe("nothingFound", () => {
+  it("says what a search looked for, and where", () => {
+    expect(nothingFound(" walking ", "Starred")).toEqual({ fact: "Nothing found for “walking” in Starred." });
+    expect(nothingFound("", "Unread")).toEqual({ fact: "Nothing found in Unread." });
   });
 });

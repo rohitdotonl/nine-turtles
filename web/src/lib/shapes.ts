@@ -19,6 +19,8 @@ export type Feed = {
    * page lists it as not working; null while it works (decision 0106).
    */
   failingSince?: number | null;
+  /** When it was last checked with an answer (seconds since 1970), for an empty feed's "Last checked…" (decision 0142). */
+  checkedAt?: number | null;
 } & FeedSettings;
 
 /**
@@ -148,6 +150,7 @@ export function toFeed(feed: Record<string, unknown>): Feed {
     openOnSite: feed.open_on_site === true,
     pausedAt: typeof feed.paused_at === "number" ? feed.paused_at : null,
     failingSince: typeof feed.failing_since === "number" ? feed.failing_since : null,
+    checkedAt: typeof feed.checked_at === "number" ? feed.checked_at : null,
   };
 }
 

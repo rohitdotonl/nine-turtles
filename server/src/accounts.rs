@@ -788,8 +788,8 @@ async fn confirm(State(state): State<AppState>, Json(form): Json<Confirm>) -> Re
             "Your nine turtles email was changed",
             format!(
                 "Hello,\n\nThe nine turtles account that used this address now signs in with \
-                 {email}. Emails about it go there from now on.\n\nIf you didn't make this change, \
-                 someone may know your password: tell whoever runs this nine turtles.{SIGN_OFF}"
+                 {email}. Emails about it go there from now on.\n\nIf you didn't make this change, someone \
+                 may know your password. Reply to this email and I'll help you get your account back.{SIGN_OFF}"
             ),
             "a note that an email changed",
         );

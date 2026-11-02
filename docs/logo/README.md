@@ -13,6 +13,8 @@ there are these drawings exported at 180, 192 and 512 pixels; the maskable
 one has the turtles at 75% so a circular crop keeps them whole.
 
 The browser-tab icon is a single turtle instead (decision 0078), since nine
-blur into stripes at 16 pixels: `web/public/icons/icon.svg` (it switches to
-night by itself) and `icon-32.png`, its 32-pixel copy for browsers that don't
-use the SVG.
+blur into stripes at 16 pixels: `web/public/icons/icon.svg` and `icon-32.png`,
+its 32-pixel copy for browsers that don't use the SVG. It is always a light
+turtle (#EFEFF1) filling most of a black rounded square (#141414), by day and
+by night, since a tab icon can't see the tab's color and a bare turtle could
+vanish on it (decision 0142).

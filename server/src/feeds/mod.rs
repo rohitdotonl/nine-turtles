@@ -61,6 +61,10 @@ struct FeedRow {
     /// as not working (`health::LISTED_AFTER` failures in a row), so its
     /// list can say so and offer Find new address (decision 0106).
     failing_since: Option<i64>,
+    /// When it was last checked with an answer, so an empty feed can say
+    /// "Last checked today at 14:20." (decision 0142). None for a newsletter,
+    /// which is never checked: its emails arrive by themselves.
+    checked_at: Option<i64>,
     /// The folders it's in, by number.
     #[sqlx(skip)]
     folders: Vec<i64>,
@@ -73,6 +77,7 @@ struct FeedRow {
 pub const FEEDS: &str = "SELECT feeds.id, subscriptions.title, feeds.site_url, subscriptions.river,
         subscriptions.check_at_most, subscriptions.open_on_site, subscriptions.paused_at,
         CASE WHEN feeds.failures >= 2 THEN feeds.failing_since END AS failing_since,
+        CASE WHEN feeds.url NOT LIKE 'newsletter:%' THEN feeds.fetched_at END AS checked_at,
         CASE WHEN subscriptions.river THEN 0 ELSE
             (SELECT COUNT(*) FROM entries WHERE entries.person_id = subscriptions.person_id
                  AND entries.feed_id = subscriptions.feed_id AND entries.read = 0)

@@ -60,8 +60,8 @@ what's live.
 - **The redrawn nine (D2)** is the logo wherever the name is: heavier, so the turtles stay turtles at small sizes. Beside the name it sits on the name's baseline, the name in Literata 600 (in the sidebar: the nine 28px tall, the name 23px, 9px apart). All nine turtles stay in the sidebar. (Being built)
 - **A single turtle** appears only in the browser-tab icon. (Live)
 - **The app icon:** a black tile `#141414` with the nine in light `#EFEFF1`, the same by day and by night. (Being built)
-- **The tab icon:** the app icon's black square, always, with one light turtle filling most of it, so it shows on any tab, light or dark. (Being built)
-- **The share picture** (the preview when someone shares a nineturtles.app link): a black tile 1200 by 630 with the nine (132px tall), "Read people. Write back." in Literata 600 in light ink, and "nineturtles.app" small in grey. Its description for screen readers: "nine turtles: Read people. Write back." (Being built)
+- **The tab icon:** the app icon's black square, always, with one light turtle filling most of it, so it shows on any tab, light or dark. (Live)
+- **The share picture** (the preview when someone shares a nineturtles.app link): a black tile 1200 by 630 with the nine (132px tall), "Read people. Write back." in Literata 600 in light ink, and "nineturtles.app" small in grey. Its description for screen readers: "nine turtles: Read people. Write back." (Live)
 
 ## The turtles' only job
 
@@ -80,17 +80,17 @@ sleeps, celebrates or stands for a feeling. No mascot.
 - "Open original" is an arrow with no box. AI assistants keep the robot.
 - A new icon follows the same rule. If Rohit dislikes one later, offer alternatives one at a time.
 
-## Empty screens and the ends of lists (Being built)
+## Empty screens and the ends of lists (Live, decision 0142)
 
-- **One shape for every empty list:** on the title's left edge, 48px under it, never centred. First the fact in Literata, in the second ink ("Nothing in this folder yet."). Then, only if there's something to do, how to do it in Atkinson, muted ("Add an article from its More menu."). A button only where one action is the obvious next step. No picture, no turtle, no icon.
+- **One shape for every empty list:** on the list's left edge, never centred. First the fact in Literata, in the second ink ("Nothing in this folder yet."). Then, only if there's something to do, how to do it in Atkinson, muted ("Add an article from its More menu."). A button only where one action is the obvious next step. No picture, no turtle, no icon.
 - **One pattern for the words:** "Nothing … yet." A feed says when it was last checked; a search says where it looked ("Nothing found for "walking" in Starred.").
 - **The end of a list:** Unread ends "That's everything for now."; every other list "That's everything."; search "No more results."
 - **The reading pane with nothing open:** one quiet line in Literata, at 40% of the pane's height.
 - **The welcome:** "Hello." then "Who would you like to read?"
 - **"Wrong turn?"** (the 404 page): everything on one left edge, "404 error" in sentence case, the turtle drawing unchanged.
-- Exact sizes: DESIGN.md Part 2, once built.
+- Exact sizes: `spec/06-item-list.md` for lists, DESIGN.md Part 2 for "Wrong turn?".
 
-## Emails (Being built)
+## Emails (Live, decision 0142)
 
 - **Plain text,** no pictures and no logo: the name is text.
 - **From** "nine turtles <hello@nineturtles.app>"; replies reach Rohit.

@@ -1,7 +1,7 @@
 {
   "name": "nine turtles",
   "short_name": "nine turtles",
-  "description": "A quiet place to read the web.",
+  "description": "Read people. Write back.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

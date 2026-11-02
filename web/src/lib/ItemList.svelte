@@ -10,7 +10,7 @@
   themselves, with a small grey "Loading…", and nothing above moves
   (decision 0074). For the keyboard and screen readers, a "Show older articles"
   button sits there too, hidden until it has the keyboard's place. At the
-  very end, a quiet caption: "You're all caught up." in Unread, "No more
+  very end, a quiet caption: "That's everything for now." in Unread, "No more
   results." after a search, and "That's everything." anywhere else. Choosing an article (a click, Enter, or j and k)
   selects it and the reading area shows it (SPEC section 7); the next one is
   fetched in advance.
@@ -69,7 +69,7 @@
   }: {
     source: Source;
     order: Order;
-    empty: string;
+    empty: { fact: string; how?: string };
     /** Searched words: words in titles starting with one are shown in bold (SPEC section 14). */
     bold?: string[];
     /** Something done just before arriving, with its Undo. */
@@ -745,7 +745,7 @@
 {/if}
 
 {#if loaded && articles.length === 0}
-  <p>{fromDevice ? NOTHING_KEPT_HERE : empty}</p>
+  <div class="list-empty"><p class="list-empty-fact">{fromDevice ? NOTHING_KEPT_HERE : empty.fact}</p>{#if !fromDevice && empty.how}<p class="list-empty-how">{empty.how}</p>{/if}</div>
 {:else if articles.length > 0}
   <ul class="item-list">
     {#each articles as article, index (article.id)}
@@ -840,8 +840,8 @@
       </button>
     </div>
   {:else if articles.length > 0}
-    <!-- A finite list says when it's finished (SPEC.md section 6): a quiet caption centred under the last row. -->
-    <p class="mt-5 text-center text-meta text-muted">{fromDevice ? END_OF_KEPT : endOfList(source)}</p>
+    <!-- A finite list says when it's finished (SPEC.md section 6): a quiet caption on the row titles' edge, with room under it so the list visibly stops (decision 0142). -->
+    <p class="list-end">{fromDevice ? END_OF_KEPT : endOfList(source)}</p>
   {/if}
 {/if}
 {#if problem}

@@ -154,7 +154,7 @@ test("a search starts where you are, marks the words it found, and Escape brings
   await page.getByRole("radio", { name: "Custom" }).check();
   await page.getByLabel("Published after").fill("2030-01-01");
   await expect(page.getByRole("button", { name: "Remove After 1 Jan 2030", exact: true })).toBeVisible();
-  await expect(page.getByText("Nothing found.")).toBeVisible();
+  await expect(page.getByText(/^Nothing found/)).toBeVisible();
   await page.getByRole("checkbox", { name: "Unread", exact: true }).press("Space");
   await expect(page.getByRole("button", { name: "Remove Unread", exact: true })).toBeVisible();
 
@@ -269,7 +269,7 @@ test("with nothing found, the reading area doesn't offer j", async ({ page }) =>
   await page.keyboard.press("/");
   await page.keyboard.type("zzyzxquux");
   await page.keyboard.press("Enter");
-  await expect(page.getByText("Nothing found.")).toBeVisible();
+  await expect(page.getByText(`Nothing found for “zzyzxquux” in Blog ${blog}.`)).toBeVisible();
   await expect(reading).toContainText("Time to read something beautiful.");
   await expect(reading).not.toContainText(/press j/i);
 });
