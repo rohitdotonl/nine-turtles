@@ -321,7 +321,7 @@ test("Settings: appearance, font, size and width apply at once and are remembere
   const look = page.getByRole("region", { name: "Look and feel" });
   const widths = (where: Locator) => where.locator(".setting-control").evaluateAll((all) => all.map((each) => Math.round(each.getBoundingClientRect().width)));
   const controls = [...(await widths(page.getByRole("region", { name: "Reading" }))), ...(await widths(look))];
-  expect(controls).toHaveLength(6);
+  expect(controls).toHaveLength(5);
   expect(new Set(controls).size).toBe(1);
   // Text size is a stepper, as in the Aa panel: one flat capsule, a small A and a large A at its ends
   // and the step's name between them, parted by hairlines, nothing raised, so it never reads as a

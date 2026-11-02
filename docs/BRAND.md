@@ -1,6 +1,6 @@
 # nine turtles: the brand sheet
 
-*Every brand decision on one page. Last updated: 2 November 2026 (decision 0141).*
+*Every brand decision on one page. Last updated: 2 November 2026 (decisions 0141, 0148).*
 
 **How to use this page.** Every change a reader can see (in the app, on the
 website, in an email, in a link preview) follows this page. This page is
@@ -39,7 +39,7 @@ what's live.
 ## Color
 
 - **Four themes**, each with a day and a night version: **Original**, **Plain**, **Fountain pen** (the warm one) and **Signal**. Readers on Brushed move to Original; readers on Anodised or Heather move to Fountain pen. (Live, decision 0145.)
-- **Each theme has one color, its accent:** the unread dot and the faint tone behind a search match, nothing else. Never a button, a link or a focus outline. (Live)
+- **Each theme has one color, its accent:** the unread dot (beside an article, and a smaller one at the end of a sidebar row with something new, decision 0148) and the faint tone behind a search match, nothing else. Never a button, a link or a focus outline. (Live)
 
   | Theme | Accent by day | Accent by night |
   |---|---|---|

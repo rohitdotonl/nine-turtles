@@ -54,7 +54,7 @@ export async function listFeeds(): Promise<Library> {
   return library;
 }
 
-/** A folder's unread count: its feeds' counts added up (each article is in one feed). */
+/** How much is unread in a folder: its feeds' unread added up (each article is in one feed). The sidebar shows only whether it's more than none. */
 export function folderUnread(folder: Folder, feeds: Feed[]): number {
   return feeds.filter((feed) => feed.folders.includes(folder.id)).reduce((sum, feed) => sum + feed.unread, 0);
 }
@@ -151,12 +151,6 @@ export async function feedFrequency(id: number): Promise<string | undefined> {
   } catch {
     return undefined;
   }
-}
-
-/** A feed's unread count as the sidebar shows it: nothing for none, "999+" above 999. */
-export function unreadLabel(count: number): string {
-  if (count <= 0) return "";
-  return count > 999 ? "999+" : String(count);
 }
 
 /**

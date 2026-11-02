@@ -12,8 +12,8 @@ V1, item 1). The page's look isn't final: it gets a refinement round.*
 - **One row, one page.** Each person is one row in the sidebar, under
   **People** (or in their folders), A to Z by their name. A place nobody has
   joined to another is a person with one place: its row looks exactly as
-  before. A person with several places has one row, with their name, its count
-  their places' counts added up, in every folder any of their places is in.
+  before. A person with several places has one row, with their name, and a dot
+  when any of their places has something unread, in every folder any of their places is in.
 - **Their list:** choosing the row lists everything they made, newest first
   (or as the reader sorts), one list across all their places
   (`/feeds/3`, any of their places' numbers). With two or more places, each

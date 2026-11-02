@@ -1,12 +1,12 @@
 <!--
   The signed-in app (SPEC sections 2 to 9, 14 to 16, 18 and 19): the sidebar
-  with its search, the folders and feeds and their unread counts, the item
+  with its search, the folders and feeds and their unread dots, the item
   list with the search field above it (its results take the list's place
   until Escape), and the reading area, side by side as the window's width allows, with
   adding a feed, editing feeds and folders, Settings and the `?` shortcut
   list. An article shown in the reading area counts as read. Nothing in it
   moves unless the reader moves it. In river mode (SPEC section 10) there's
-  no Unread view, no counts and no "Mark all as read"; it opens on All.
+  no Unread view, no dots and no "Mark all as read"; it opens on All.
 -->
 <script lang="ts">
   import Logo from "./Logo.svelte";
@@ -97,7 +97,7 @@
     onSignedOut: () => void;
   } = $props();
 
-  /** The reading mode, sort order, counts, when unread lets go and the hidden lists (settings.svelte.ts). */
+  /** The reading mode, sort order, when unread lets go and the hidden lists (settings.svelte.ts). */
   const settings = new ReadingSettings();
   let river = $derived(settings.mode === "river");
   /** Where the app opens: Unread in inbox mode, All in river mode. */
@@ -1091,7 +1091,7 @@
         <h1 class={["wordmark mr-auto font-serif font-semibold tracking-[-0.01em]", phone ? "text-xlarge" : "text-[1.375rem] leading-[1.35] text-ink-2"]} tabindex="-1" bind:this={wordmark}><Logo height={phone ? 34 : 27} inline />nine turtles</h1>
         {#if phone}
           <!--
-            The feeds screen's top bar (SPEC section 20): its unread numbers wait for this, as they wait for r.
+            The feeds screen's top bar (SPEC section 20): its unread dots wait for this, as they wait for r.
             An icon alone in a 44px target, so the large wordmark has the row to itself (decision 0041).
           -->
           <button type="button" onclick={loadFeeds} aria-label="Refresh" title="Refresh" class="btn-quiet btn-icon -mr-2.5"><Icon name="refresh" size={20} /></button>
@@ -1137,7 +1137,6 @@
           {follow}
           {phone}
           {river}
-          numbers={settings.counts === "shown"}
         />
       {/if}
       {#if library.feedsFailed}
@@ -1169,8 +1168,6 @@
           onSort={(next) => settings.changeSort(next)}
           mode={settings.mode}
           onMode={(next) => settings.changeMode(next)}
-          counts={settings.counts}
-          onCounts={(next) => settings.changeCounts(next)}
           letGo={settings.letGo}
           onLetGo={(next) => settings.changeLetGo(next)}
           hidden={settings.hidden}

@@ -6,7 +6,7 @@
   or Escape goes back.
 
   Its first page keeps only the everyday settings (decision 0120): Reading
-  (reading mode, unread counts, letting unread go, sort order, shared across
+  (reading mode, letting unread go, sort order, shared across
   the reader's devices) and Look and feel (Appearance and Text size, for this
   device). Everything else is a row ending in › that opens a page of its own
   in place of Settings, at /settings/<page> (`page`), with "‹ Settings" above
@@ -50,7 +50,7 @@
   import TextSize from "./TextSize.svelte";
   import { APPEARANCES, LOOKS, THEMES } from "./themes";
   import type { Feed, Folder } from "./shapes";
-  import type { Counts, LetGo, Order, ReadingMode } from "./reading";
+  import type { LetGo, Order, ReadingMode } from "./reading";
   import { SETTINGS_PAGES, type Hideable, type SettingsPage } from "./router";
   import { LINE_WIDTHS, READING_FONTS, type Preferences } from "./preferences";
   import { signOut } from "./session";
@@ -68,8 +68,6 @@
     onSort,
     mode,
     onMode,
-    counts,
-    onCounts,
     letGo,
     onLetGo,
     hidden,
@@ -107,9 +105,6 @@
     mode: ReadingMode;
     /** Saves a new reading mode; fails if it couldn't be saved. */
     onMode: (mode: ReadingMode) => Promise<void>;
-    /** Whether the sidebar shows unread counts (decision 0097). */
-    counts: Counts;
-    onCounts: (counts: Counts) => Promise<void>;
     /** When unread lets go by itself (decision 0097); unknown until the server answers. */
     letGo: LetGo | undefined;
     onLetGo: (letGo: LetGo) => Promise<void>;
@@ -162,11 +157,6 @@
   const MODE_CHOICES = [
     { value: "inbox", label: "Inbox" },
     { value: "river", label: "River" },
-  ] as const;
-
-  const COUNT_CHOICES = [
-    { value: "shown", label: "Show" },
-    { value: "hidden", label: "Hide" },
   ] as const;
 
   /** The lists the sidebar can leave out, as its rows name them. Unread, folders and feeds always show. */
@@ -278,15 +268,6 @@
       await onMode(next);
     } catch {
       sortMessage = "The reading mode couldn't be saved. Try again in a moment.";
-    }
-  }
-
-  async function chooseCounts(next: Counts) {
-    sortMessage = "";
-    try {
-      await onCounts(next);
-    } catch {
-      sortMessage = "That couldn't be saved. Try again in a moment.";
     }
   }
 
@@ -467,7 +448,7 @@
               <div class="setting-words">
                 <p id="mode-name" class="setting-name">Reading mode</p>
                 <p id="mode-hint" class="setting-hint">
-                  {mode === "inbox" ? "An Unread list, with counts of what's waiting." : "Everything flows past. No Unread list, no counts."}
+                  {mode === "inbox" ? "An Unread list, and a dot where something is new." : "Everything flows past. No Unread list, no dots."}
                 </p>
               </div>
             </div>
@@ -487,32 +468,8 @@
               {/each}
             </div>
           </div>
-          <!-- River mode has no Unread, so these two step aside there. -->
+          <!-- River mode has no Unread, so this steps aside there. -->
           {#if mode === "inbox"}
-            <div class="inset-row setting has-control">
-              <div class="setting-label">
-                {@render icon("nine-circle")}
-                <div class="setting-words">
-                  <p id="counts-name" class="setting-name">Unread counts</p>
-                  <p id="counts-hint" class="setting-hint">Hide keeps Unread, without the numbers.</p>
-                </div>
-              </div>
-              <div role="group" aria-labelledby="counts-name" aria-describedby="counts-hint" class="choices setting-control" style="--columns: 2">
-                {#each COUNT_CHOICES as choice (choice.value)}
-                  <label class="choice">
-                    <input
-                      type="radio"
-                      name="counts"
-                      value={choice.value}
-                      checked={counts === choice.value}
-                      disabled={sort === undefined}
-                      onchange={() => chooseCounts(choice.value)}
-                    />
-                    {choice.label}
-                  </label>
-                {/each}
-              </div>
-            </div>
             <div class="inset-row setting has-control">
               <div class="setting-label">
                 {@render icon("clock")}

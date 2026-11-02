@@ -268,7 +268,7 @@
               {river
                 ? "The whole app is in river mode for now (Settings › Reading)."
                 : flows
-                  ? "Its articles skip Unread and show no count."
+                  ? "Its articles skip Unread and show no dot."
                   : "New articles go to Unread."}
             </p>
           </div>

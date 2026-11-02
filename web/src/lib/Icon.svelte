@@ -7,7 +7,7 @@
 <script lang="ts" module>
   export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "clock" | "history" | "shelf" | "headphones" | "queue"
     // Settings' rows (decision 0120).
-    | "book" | "nine-circle" | "palette" | "a-plus" | "pen-nib" | "feed" | "heart-pulse" | "panel-dots" | "bookmark-plus" | "newspaper" | "plug" | "robot" | "key" | "people" | "card" | "envelope" | "trash";
+    | "book" | "palette" | "a-plus" | "pen-nib" | "feed" | "heart-pulse" | "panel-dots" | "bookmark-plus" | "newspaper" | "plug" | "robot" | "key" | "people" | "card" | "envelope" | "trash";
 </script>
 
 <script lang="ts">
@@ -70,8 +70,8 @@
     <path d="M3.75 10a6.25 6.25 0 1 0 1.83-4.42" />
     <path d="M3.75 3.25v3.5h3.5" />
     <path d="M10 6.75V10l2.25 1.5" />
-  {:else if name === "dot" || name === "nine-circle"}
-    <!-- Unread, and Settings › Unread counts: a ring with a filled centre. -->
+  {:else if name === "dot"}
+    <!-- Unread: a ring with a filled centre. -->
     <circle cx="10" cy="10" r="6.75" />
     <circle cx="10" cy="10" r="2.25" fill="currentColor" stroke="none" />
   {:else if name === "stack"}

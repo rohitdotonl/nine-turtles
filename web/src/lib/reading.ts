@@ -1,5 +1,5 @@
 // The reading settings shared across the reader's devices (SPEC section 18):
-// the sort order, the reading mode, unread counts, when unread lets go, the
+// the sort order, the reading mode, when unread lets go, the
 // reader's keys and the lists the sidebar hides, with this device's copies
 // so the app opens in them before the server answers.
 import { HIDEABLE, type Hideable } from "./router";
@@ -12,14 +12,12 @@ import { send } from "./saving";
 export type Order = "newest" | "oldest";
 
 /**
- * Inbox (things to get through: the Unread view, read styling and counts) or
+ * Inbox (things to get through: the Unread view, read styling and the
+ * sidebar's dots) or
  * river (things flowing past: none of those). Shared across the reader's
  * devices (SPEC section 10). Read state is recorded in both.
  */
 export type ReadingMode = "inbox" | "river";
-
-/** Whether the sidebar shows unread counts in inbox mode (decision 0097). Shared across the reader's devices. */
-export type Counts = "shown" | "hidden";
 
 /** How long unread waits before it lets go by itself (decision 0097): never, the default, or a week, two or a month. */
 export type LetGo = "never" | "week" | "two-weeks" | "month";
@@ -36,7 +34,6 @@ export function homeView(mode: ReadingMode): "unread" | "all" {
 export type Reading = {
   sort: Order;
   mode: ReadingMode;
-  counts: Counts;
   letGo: LetGo | undefined;
   keys: KeyMap;
   hidden: Hideable[];
@@ -44,10 +41,10 @@ export type Reading = {
 
 /**
  * The settings shared across the reader's devices: the sort order, the
- * reading mode, whether unread counts show, when unread lets go, the keys
+ * reading mode, when unread lets go, the keys
  * the reader chose and which lists the sidebar hides. Newest first if the
- * server can't say, the wait unknown, and the mode, counts, keys and hidden
- * lists this device last saw (inbox, shown, nine turtles' own keys, none,
+ * server can't say, the wait unknown, and the mode, keys and hidden
+ * lists this device last saw (inbox, nine turtles' own keys, none,
  * if none).
  */
 export async function loadSettings(): Promise<Reading> {
@@ -55,17 +52,15 @@ export async function loadSettings(): Promise<Reading> {
     const body = await getJson("/api/settings");
     const sort = isRecord(body) && body.sort === "oldest" ? "oldest" : "newest";
     const mode = isRecord(body) && body.mode === "river" ? "river" : "inbox";
-    const counts = isRecord(body) && body.counts === "hidden" ? "hidden" : "shown";
     const letGo = (isRecord(body) && LET_GO.find((value) => value === body.let_go)) || "never";
     const keys = keysFrom(isRecord(body) ? body.keys : undefined);
     const hidden = isRecord(body) ? hiddenFrom(body.hidden) : [];
     rememberMode(mode);
-    rememberCounts(counts);
     rememberKeys(keys);
     rememberHidden(hidden);
-    return { sort, mode, counts, letGo, keys, hidden };
+    return { sort, mode, letGo, keys, hidden };
   } catch {
-    return { sort: "newest", mode: lastMode(), counts: lastCounts(), letGo: undefined, keys: lastKeys(), hidden: lastHidden() };
+    return { sort: "newest", mode: lastMode(), letGo: undefined, keys: lastKeys(), hidden: lastHidden() };
   }
 }
 
@@ -128,24 +123,8 @@ export async function saveMode(mode: ReadingMode): Promise<void> {
   rememberMode(mode);
 }
 
-export async function saveCounts(counts: Counts): Promise<void> {
-  await send("/api/settings", { counts });
-  rememberCounts(counts);
-}
-
 export function saveLetGo(letGo: LetGo): Promise<void> {
   return send("/api/settings", { let_go: letGo });
-}
-
-const COUNTS_KEY = "nine-turtles.counts";
-
-/** Whether this device last saw the counts hidden, so they don't show for a moment before the server answers. */
-export function lastCounts(): Counts {
-  return deviceText(COUNTS_KEY) === "hidden" ? "hidden" : "shown";
-}
-
-function rememberCounts(counts: Counts) {
-  setDeviceText(COUNTS_KEY, counts);
 }
 
 const MODE_KEY = "nine-turtles.mode";
