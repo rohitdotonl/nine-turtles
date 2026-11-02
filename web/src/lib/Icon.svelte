@@ -5,7 +5,7 @@
   word beside an icon, or the label of an icon-only button, says what it does.
 -->
 <script lang="ts" module>
-  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "unread" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "clock" | "history" | "shelf" | "headphones" | "queue"
+  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "clock" | "history" | "shelf" | "headphones" | "queue"
     // Settings' rows (decision 0120).
     | "book" | "nine-circle" | "palette" | "a-plus" | "pen-nib" | "feed" | "heart-pulse" | "panel-dots" | "bookmark-plus" | "newspaper" | "plug" | "robot" | "key" | "people" | "card" | "envelope" | "trash";
 </script>
@@ -70,7 +70,7 @@
     <path d="M3.75 10a6.25 6.25 0 1 0 1.83-4.42" />
     <path d="M3.75 3.25v3.5h3.5" />
     <path d="M10 6.75V10l2.25 1.5" />
-  {:else if name === "dot" || name === "unread" || name === "nine-circle"}
+  {:else if name === "dot" || name === "nine-circle"}
     <!-- Unread, and Settings › Unread counts: a ring with a filled centre. -->
     <circle cx="10" cy="10" r="6.75" />
     <circle cx="10" cy="10" r="2.25" fill="currentColor" stroke="none" />
@@ -200,7 +200,7 @@
     <path d="M12.5 4.75a2.6 2.6 0 0 1 0 5" />
     <path d="M14.5 11.9a4.75 4.75 0 0 1 2.75 4.6" />
   {:else if name === "card"}
-    <!-- Settings › Your plan: a payment card with its chip and number. -->
+    <!-- Settings › Your plan: a payment card with its chip and number, line only. -->
     <rect x="2.75" y="4.75" width="14.5" height="10.5" rx="1.5" />
     <rect x="5" y="7.25" width="3.25" height="2.5" rx=".5" />
     <path d="M5 12.5h1.5M8.5 12.5h1.5M12 12.5h1.5" />
