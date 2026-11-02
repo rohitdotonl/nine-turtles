@@ -9,8 +9,8 @@
 - **V1 is what the headline "Read people. Write back." promises,** built one
   at a time, each only when the owner says so, each with its SPEC section
   first. The list and its order are in `docs/PLAN.md` → "V1".
-- **Musts:** people (one name over everything a person publishes, with a
-  page of their own; how it fits with folders is still being discussed), write back (opens the reader's own email app; nine turtles
+- **Musts:** people (one row and one page per person, over all the places
+  they publish; folders are groups of people; details in `docs/PLAN.md`), write back (opens the reader's own email app; nine turtles
   never sends or reads that email), no unread counts, and YouTube as a
   first-class citizen (YouTube's own feeds and player, never scraping).
 - **Shoulds:** the weekly email (off by default, turned on or off any time
