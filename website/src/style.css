@@ -135,15 +135,19 @@ a:focus-visible {
   text-decoration: none;
 }
 
-.wordmark {
-  gap: 10px;
+/* The logo stands on the name's baseline (BRAND.md → "The logo"): one line of
+   text 44px tall, so the touch target stays and the two share a baseline. */
+.bar a.wordmark {
+  display: inline-block;
+  line-height: 44px;
   font-family: var(--serif);
   font-size: 1.5rem;
   font-weight: 600;
 }
 
 .wordmark .logo {
-  flex: none;
+  margin-right: 9px;
+  vertical-align: baseline;
 }
 
 /* The name on the left; the places and the button together on the right. */

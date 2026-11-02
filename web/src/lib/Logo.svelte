@@ -1,25 +1,39 @@
 <!--
-  nine turtles' logo (DESIGN.md → "Name and signature", decision 0067): nine
-  small turtles seen from the side, the middle row a little to the right, in
-  the color of the text around it. It sits beside the name, which says it in
-  words, so screen readers skip it. The same drawing is in docs/logo/ and in
-  the website's top bar (website/src/_includes/base.njk): change all three together.
+  nine turtles' logo (docs/BRAND.md → "The logo", decision 0067):
+  the redrawn nine (D2), nine small turtles seen from the side in three rows
+  of three, the middle row a little to the right, heavy enough to stay turtles
+  at small sizes, in the color of the text around it. Its box ends at the
+  shells' feet, so beside the name (aligned to the baseline) the turtles stand
+  on the name's line. The name says it in words, so screen readers skip it.
+  The same heavy drawing is in the website's top bar
+  (website/src/_includes/base.njk): change both together. docs/logo/ holds the
+  large drawing for 64px and up (its README explains the two).
 -->
 <script lang="ts">
-  // Sized by height, a touch taller than the name's letters beside it
-  // (DESIGN.md → "Name and signature").
-  let { height }: { height: number } = $props();
+  // Sized by height: 27px beside the 22px name in the sidebar (BRAND.md).
+  // `inline` sets it in the name's line of text, its feet on the baseline and
+  // 9px before the name, as the website's top bar does.
+  let { height, inline = false }: { height: number; inline?: boolean } = $props();
+
+  // Where each turtle stands: three rows of three, the middle row shifted right.
+  const turtles = [
+    [9, 6], [35, 6], [61, 6],
+    [18, 25], [44, 25], [70, 25],
+    [9, 44], [35, 44], [61, 44],
+  ];
 </script>
 
 <svg
-  class="logo flex-none"
-  viewBox="7 16 86 68"
-  width={Math.round((height * 86) / 68)}
+  class={["logo flex-none", inline && "mr-[9px] inline align-baseline"]}
+  viewBox="0 0 82.9 47.5"
+  width={Math.round((height * 82.9) / 47.5)}
   height={height}
   aria-hidden="true"
   focusable="false"
 >
   <g fill="currentColor">
-    <g transform="translate(18.50 22.70) scale(1.15)"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></g><g transform="translate(46.10 22.70) scale(1.15)"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></g><g transform="translate(73.70 22.70) scale(1.15)"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></g><g transform="translate(24.50 50.30) scale(1.15)"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></g><g transform="translate(52.10 50.30) scale(1.15)"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></g><g transform="translate(79.70 50.30) scale(1.15)"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></g><g transform="translate(18.50 77.90) scale(1.15)"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></g><g transform="translate(46.10 77.90) scale(1.15)"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></g><g transform="translate(73.70 77.90) scale(1.15)"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/></g>
+    {#each turtles as [x, y] (`${x} ${y}`)}
+      <g transform="translate({x} {y})"><path d="M-9 3.5A7.5 9.5 0 0 1 6 3.5Z" /><circle cx="10" cy="-.6" r="2.9" /></g>
+    {/each}
   </g>
 </svg>
