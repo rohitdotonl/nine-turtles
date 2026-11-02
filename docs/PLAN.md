@@ -90,17 +90,18 @@ ones to discuss, then the pricing ones last, with prices and launch.
    saved with the account and shown only as totals in the owner report
    (decision 0130), never per reader.
 
-**To discuss with the owner:**
+**Decided with the owner (2 November 2026):**
 
-- **Tags.** Folders already work like Feedbin's tags (a feed can be in
-  several), so tags would mostly be a rename; collections already tag
-  articles.
-- **A kind note to bloggers whose feed breaks.** Suggested: start by hand.
-  The owner report lists feeds broken for over a week that at least 3
-  readers follow, with the reason and the blog's address, never who
+- **No tags: folders stay folders.** They already work like Feedbin's tags
+  (a person can be in several folders), and collections already label
+  articles. Pictures: https://claude.ai/artifact/8jqmkxsTabDuKAUWmq9RKY
+- **The note to bloggers whose feed breaks is written by hand.** The owner
+  report gets a list of feeds broken for over a week that at least 3
+  readers follow, with what's wrong and the blog's address, never who
   follows them; Rohit writes to the blogger himself
-  ([`RnD/marketing.md`](RnD/marketing.md), item 3). No automatic emails to
-  strangers.
+  ([`RnD/marketing.md`](RnD/marketing.md), items 3 and 8). nine turtles
+  never emails bloggers by itself. The list is built after launch, only
+  when the owner says so.
 
 **Last, with prices and launch** (there's no subscription to pause until
 payments are built for real):
