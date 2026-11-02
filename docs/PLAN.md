@@ -26,55 +26,89 @@ until the owner says so.
 | Work | Status | Where it's described |
 |---|---|---|
 | Live payments, after Dodo approves the live site | ⏳ The owner applies once the site, price and legal pages are final | SPEC section 29, decision 0094, `docs/operations/dodo-application.md` |
-| Positioning, ideal reader, brand, design language and principles, V1 features, marketing and pricing plans | 🟡 Being worked out with the owner (1 November 2026); no building until they're settled | `docs/RnD/business-plan.md`, `docs/RnD/ideal-reader.md`, decision 0131 |
+| Brand and design language, then the V1 features below, then 3 to 4 refinement rounds, then prices and launch | 🟡 Brand being built; the V1 list is settled (2 November 2026), each item starting only on the owner's word | `docs/RnD/business-plan.md`, `docs/RnD/ideal-reader.md`, decision 0131 |
 | The open questions (privacy policy and terms, prices, trial) | ⏳ The owner's answers | [`planning/questions.md`](planning/questions.md) |
 
-## Later: ideas the owner wants, not yet scheduled
+## V1: what gets built next, one at a time
 
-Things the owner has said yes to in principle, to build some day. Nothing
-here is planned yet; when one starts, it moves into the table above. (Other
-"not now" lists: SPEC → "Not built yet, and never", and the research notes in
-`docs/RnD/`, which are ideas only.)
+Settled with the owner on 2 November 2026 (decision 0140). Each item starts
+only when the owner says so, needs its SPEC section first, and is built and
+shipped one at a time, in this order: the musts, then the shoulds, then the
+ones to discuss, then the pricing ones last, with prices and launch.
 
-- **"How did you hear about nine turtles?"** (30 October 2026, from the
-  business plan, `docs/RnD/business-plan.md` sections 2 and 5): one
-  optional question at sign-up (a blog, a friend, a search, an AI
-  assistant, Reddit, other), counted together in the owner report, never
-  per reader. Needs a SPEC section before it's built.
-- **No unread counts** (1 November 2026, the owner's decision): remove the
-  numbers from the sidebar and folders entirely, and the Settings › Reading
-  row that hides them; the sidebar keeps a quiet sign that something is new,
-  a small dot with no number. Built in its own change with SPEC sections 5
-  and 18, ideally with the new design language.
-- **Decided with the owner on 1 November 2026** (from the ideal-reader
-  talk, `docs/RnD/ideal-reader.md`); each needs its SPEC section first:
-  - **A 30-day free trial, no card,** instead of 14 days (SPEC 29).
-  - **After a trial or plan ends,** feeds are still checked once a day,
-    but only for three months; then not until the reader comes back
-    (SPEC 29, 11). Nothing is ever deleted.
-  - **Pause instead of cancel:** a paying reader pauses, isn't charged,
-    and their paid time stops counting down; the app works as after a
-    trial until they resume. First check that Dodo can pause a plan.
-  - **A weekly email, opt-in:** plain text, once a week by default (twice
-    as an option): the people you follow, their titles and a line each,
-    never a count. Offered once at setup, easy to stop. An exception to
-    "no notifications" chosen by the owner; how it looks is still to
-    design.
-  - **YouTube and podcasts first-class.** Following a YouTube channel
-    leaves Shorts out by default, with a switch on the same screen to
-    include them (YouTube's own feeds, never scraping).
-  - **A blogroll to show:** the reader picks which feeds to share, as a
-    blogroll to put on their own site and, for readers without one, a
-    plain page on nine turtles. Off until turned on; never a profile,
-    follower count or activity.
-  - **Installing the app, said plainly:** one sentence on what an
-    installed web app is (its own icon and window; it updates itself
-    each time you open it), then the steps for your device.
-  - **Organising by people, folders and tags;** reply by email as a
-    headline feature.
-- **A browser extension** for adding feeds while browsing (27 October 2026,
-  from the reader comparison). Until then, the bookmark in Settings › Add
-  from anywhere does the same job on computers.
+**Must** (promised by the headline "Read people. Write back."):
+
+1. **Person pages.** The sidebar stays as it is: a feed already is a
+   person. A person's page shows everything they wrote, newest first,
+   their site and the address to write back to. A person's blog,
+   newsletter and channel can be joined under one name (optional).
+   Still open: whether joined feeds show as one row in the sidebar.
+2. **Write back.** A Write back button on every article opens the reader's
+   own email app with the writer's address and "Re: the title" filled in.
+   The address comes from a newsletter's sender or the feed itself; if
+   neither has one, the reader types it once and the person page keeps it.
+   nine turtles never sends or reads that email.
+3. **No unread counts.** Remove the numbers from the sidebar and folders,
+   and the Settings › Reading row that hides them; a small dot with no
+   number says something is new. Built with the new design language
+   (SPEC sections 5 and 18).
+4. **YouTube as a first-class citizen,** always through YouTube's own feeds
+   and player, never scraping: follow any YouTube link (channel, handle,
+   video, playlist); Shorts and live streams left out by default, each with
+   a switch on the same screen; playlists as feeds; bringing your YouTube
+   subscriptions from the file Google lets you download; a better video
+   page (the video's own picture before Play, the description's links,
+   timestamps as chapters); picking up where you stopped; no autoplay and
+   no other channels' videos at the end. YouTube's feeds hold only a
+   channel's latest 15 videos.
+
+**Should:**
+
+5. **A weekly email, opt-in:** plain text, once a week by default (twice
+   as an option): the people you follow, their titles and a line each,
+   never a count. Off by default; turned on or off any time in Settings.
+   The one exception to "no notifications" (decision 0140); how it looks is
+   still to design.
+6. **Installing the app, said plainly:** one sentence on what an installed
+   web app is (its own icon and window; it updates itself each time you
+   open it), then the steps for your device.
+7. **"How did you hear about nine turtles?"** One optional question at
+   sign-up (a blog, a friend, a search, an AI assistant, Reddit, other),
+   saved with the account and shown only as totals in the owner report
+   (decision 0130), never per reader.
+
+**To discuss with the owner:**
+
+- **Tags.** Folders already work like Feedbin's tags (a feed can be in
+  several), so tags would mostly be a rename; collections already tag
+  articles.
+- **A kind note to bloggers whose feed breaks.** Suggested: start by hand.
+  The owner report lists feeds broken for over a week that at least 3
+  readers follow, with the reason and the blog's address, never who
+  follows them; Rohit writes to the blogger himself
+  ([`RnD/marketing.md`](RnD/marketing.md), item 3). No automatic emails to
+  strangers.
+
+**Last, with prices and launch** (there's no subscription to pause until
+payments are built for real):
+
+- **A 30-day free trial, no card,** instead of 14 days (SPEC 29).
+- **After a trial or plan ends,** feeds are still checked once a day, but
+  only for three months; then not until the reader comes back (SPEC 29,
+  11). Nothing is ever deleted.
+- **Pause instead of cancel:** a paying reader pauses, isn't charged, and
+  their paid time stops counting down. First check that Dodo can pause a
+  plan; if not, cancelling in one press.
+
+**After launch:** a browser extension for adding feeds while browsing
+(until then, the bookmark in Settings › Add from anywhere does the same job
+on computers). The command menu and the every-state check
+([`RnD/design-principles.md`](RnD/design-principles.md)) are design work
+for the refinement rounds.
+
+**Done already:** "Follow this person?" when a page is shared (decision
+0138). **Dropped:** a blogroll to show (the owner, 2 November 2026: it
+feels like social media).
 
 ## How every piece of work ends
 

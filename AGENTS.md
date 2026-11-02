@@ -6,8 +6,9 @@ tell the owner which ones and how.
 
 ## What nine turtles is
 
-A quiet, single-user reader for writing on the open web (RSS, Atom, JSON
-Feed). Finite, calm and quiet: the opposite of social media.
+A reader for the small web: a quiet place to read the people worth knowing,
+and write back to them (RSS, Atom and JSON Feed underneath). Finite and
+calm: the opposite of social media.
 Its name is **nine turtles**, always lowercase (renamed from slowfeed in October 2026, decisions 0056 and 0058). The program is `nine-turtles`, its settings `NINE_TURTLES_*`, the database `nine-turtles.sqlite` and the repository `rohitdotonl/nine-turtles`. The old name is gone from the code (decision 0124); nothing reads `SLOWFEED_*` settings, the old database file, cookie or saved preferences any more. The Render service and its address (slowfeed.onrender.com) and disk (`slowfeed-data`) keep the old name on purpose: renaming them gains nothing a reader sees, and the address is one other services rely on.
 **Tiebreaker:** the book question is retired (decision 0132). A new one is being tested in UI and UX trials before it's adopted (candidate: "a letter from someone, or a feed from something?"); until then, decide by the floors and the principles.
 **Design reference:** no outside app any more. Apple Books was dropped on 1 November 2026; nine turtles is getting its own design principles and design language, being written with the owner. Until then: the floors, then `docs/DESIGN.md` as it stands (DESIGN.md → "Design reference", decision 0131). Every brand decision is on one page, `docs/BRAND.md` (part of DESIGN.md, decision 0139): every change a reader can see follows it.
@@ -106,7 +107,7 @@ years › written for the next agent.
 ## Hard rules worth repeating
 
 - **Never commit the owner's OPML file.** `*.opml` is ignored; test fixtures use made-up feeds.
-- No notifications, badges, gamification, animations or transitions. Ever. Lists end: older items load as you reach the bottom (decision 0074), but nothing pads a list.
+- No notifications, badges, gamification, animations or transitions. Ever. The one exception is the weekly email: chosen by the reader in Settings, plain text, off in one press (decision 0140). Lists end: older items load as you reach the bottom (decision 0074), but nothing pads a list.
 - The accent (ink blue in Original, the text color in Plain, a Braun signal color in the five Braun themes) marks only what's yours to look at: what's unread and what a search found (decisions 0037, 0057); where you are is a plain grey pill. Green marks only a filled star. Neither is ever a button, a link or a focus outline.
 - Never fetch an article's web page. Autodiscovery fetches only the page the reader pastes, only when they add a feed, ask "Find new address", use the website's feed finder, or share a page into Add a feed (`docs/decisions/0016-adding-feeds.md`, decisions 0099 and 0104).
 - A feature isn't done until it has tests and the checks pass.

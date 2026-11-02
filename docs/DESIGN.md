@@ -1,8 +1,8 @@
 # nine turtles: UI & UX design philosophy
 
-> **nine turtles is a quiet place to read the web: it shows you what's there, gets out of the way, and lets you finish.**
+> **nine turtles is a reader for the small web: a quiet place to read the people worth knowing, and write back to them.**
 
-*Last updated: 2 November 2026 (every brand decision on one page, the brand sheet `BRAND.md`, decision 0139; 1 November: five themes after Braun's colors, Brushed, Anodised, Fountain pen, Heather and Signal, their bright accent a mark held to 3 : 1, decision 0136; a critique checklist every change the reader sees passes, decision 0135; ten principles: forgiving and cohesive added, warm never cute, the three panes and the logo kept, decision 0134; our own ranked principles, "Nothing pulls" first, breaking a principle only on purpose and written down, and one system for spacing, type and names, decision 0133; design first, the book tiebreaker retired, a warmer voice with "I" from Rohit and never "we", honesty as a public promise, easter eggs found and never shown, and "no decoration that pretends", decision 0132; Apple Books dropped as the design reference, decision 0131; before that, 28 October: the article list's titles in the reading serif with more room around each row, decision 0128; less chrome: space instead of lines between the list's rows, spaced capitals for the sidebar's section names, folders' arrows at their rows' right end, a rule written as a sentence and a quieter Aa panel, decision 0123; simpler sign-in pages with names above their fields, a small Forgot? beside Password and the passkey as a quieter button, decision 0122; a shorter Settings, with a page of its own for each less everyday group, an icon on each row and a clearer hierarchy of names and descriptions, decision 0120; fixes from a design review, decision 0118: the chosen side of a segmented control held to 3 : 1, no ring on a title, Skip to articles, the podcast player's skip figures, Recently read's day headings, the search suggestions floating and the feed health page's cards; "Wrong turn?", the 404 page, and the footer's turtles moved to About, decision 0102; newsletters as feeds, decision 0091, with each email "opened" on arrival; starter feeds in the first-visit welcome, decision 0079; a logo of nine turtles, decision 0067; a second theme, Plain, with blue article links, and System serif, decision 0063; Apple Books as the design reference, decision 0059). Each change is recorded in `docs/decisions/`.*
+*Last updated: 2 November 2026 (a new mission line, "a reader for the small web", and the weekly email the one exception to "no notifications", decision 0140; every brand decision on one page, the brand sheet `BRAND.md`, decision 0139; 1 November: five themes after Braun's colors, Brushed, Anodised, Fountain pen, Heather and Signal, their bright accent a mark held to 3 : 1, decision 0136; a critique checklist every change the reader sees passes, decision 0135; ten principles: forgiving and cohesive added, warm never cute, the three panes and the logo kept, decision 0134; our own ranked principles, "Nothing pulls" first, breaking a principle only on purpose and written down, and one system for spacing, type and names, decision 0133; design first, the book tiebreaker retired, a warmer voice with "I" from Rohit and never "we", honesty as a public promise, easter eggs found and never shown, and "no decoration that pretends", decision 0132; Apple Books dropped as the design reference, decision 0131; before that, 28 October: the article list's titles in the reading serif with more room around each row, decision 0128; less chrome: space instead of lines between the list's rows, spaced capitals for the sidebar's section names, folders' arrows at their rows' right end, a rule written as a sentence and a quieter Aa panel, decision 0123; simpler sign-in pages with names above their fields, a small Forgot? beside Password and the passkey as a quieter button, decision 0122; a shorter Settings, with a page of its own for each less everyday group, an icon on each row and a clearer hierarchy of names and descriptions, decision 0120; fixes from a design review, decision 0118: the chosen side of a segmented control held to 3 : 1, no ring on a title, Skip to articles, the podcast player's skip figures, Recently read's day headings, the search suggestions floating and the feed health page's cards; "Wrong turn?", the 404 page, and the footer's turtles moved to About, decision 0102; newsletters as feeds, decision 0091, with each email "opened" on arrival; starter feeds in the first-visit welcome, decision 0079; a logo of nine turtles, decision 0067; a second theme, Plain, with blue article links, and System serif, decision 0063; Apple Books as the design reference, decision 0059). Each change is recorded in `docs/decisions/`.*
 
 ## Mission
 
@@ -12,7 +12,7 @@ Help people leave social media and return to reading the open web. Social media 
 
 ## What nine turtles is, and isn't
 
-**nine turtles is** a reader for writing published through RSS, Atom and JSON Feed. Each reader has their own feeds and reading; several readers can share one nine turtles without ever seeing each other's (approved by the owner for going multi-user, decision 0086).
+**nine turtles is** a reader for the small web: the writing people publish on their blogs, newsletters, channels and podcasts, read through RSS, Atom and JSON Feed. Each reader has their own feeds and reading; several readers can share one nine turtles without ever seeing each other's (approved by the owner for going multi-user, decision 0086).
 
 **nine turtles is not:**
 - **A read-later app:** it doesn't save arbitrary web pages.
@@ -170,13 +170,13 @@ As little design as possible: if removing something wouldn't make the task harde
 
 ### Never
 
-- Notifications of any kind
+- Notifications of any kind. The one exception is the weekly email: chosen by the reader in Settings, plain text, off in one press (principle 1, decision 0140)
 - Badges, streaks, reading stats or any gamification (no reading-time estimates, no "year in reading")
 - Algorithmic ranking ("for you"), or filling a list with anything you didn't subscribe to, so it never ends. (Older items loading as you reach the bottom of a list is allowed, decision 0074: the list still ends.)
 - In-app likes, comments or social features
 - Branded share buttons for specific platforms
 - Full-article scraping from publishers' websites
-- Rearranging what people have learned, once the look settles (see principle 5)
+- Rearranging what people have learned, once the look settles (see principle 3)
 - Decoration that pretends: glass, blur, gradients, fake depth, motion for delight; shadows except under things that float, as Apple draws them (see Visual language → Rules). The article's bars are solid, never see-through (decision 0040). Honest, handmade touches, such as a still drawing or a signature, are welcome at the edges, never in the reading pane (decision 0132)
 
 ---
@@ -360,5 +360,4 @@ A few small surprises, for the reader who looks (decision 0132): still (words or
 Ideas not built yet. Once one is built, it leaves this list; what it does is
 then in `docs/SPEC.md`, and the finished work in `docs/archive/plan-done.md`.
 
-- **Public reading list page:** an optional public list of some of your feeds (a modern blogroll) with one-click subscribe. No likes, no comments.
 - **Chinese and Japanese search.**

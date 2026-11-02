@@ -62,4 +62,4 @@ A few words used throughout:
 
 Not built yet: the ideas in `docs/DESIGN.md` → "V2 parking lot".
 
-Never: notifications, badges, streaks, reading stats, endless feeds padded with things you didn't follow, algorithmic ranking, likes or comments, platform share buttons, scraping full articles, decorative effects or animation.
+Never: notifications (the one exception is the weekly email the reader turns on in Settings, decision 0140), badges, streaks, reading stats, endless feeds padded with things you didn't follow, algorithmic ranking, likes or comments, platform share buttons, scraping full articles, decorative effects or animation.
