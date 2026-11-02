@@ -64,16 +64,14 @@ ones to discuss, then the pricing ones last, with prices and launch.
    and the Settings › Reading row that hides them; a small dot with no
    number says something is new. Built with the new design language
    (SPEC sections 5 and 18).
-4. **YouTube as a first-class citizen** (being discussed in its own
-   thread; this is the starting list), always through YouTube's own feeds
-   and player, never scraping: follow any YouTube link (channel, handle,
-   video, playlist); Shorts and live streams left out by default, each with
-   a switch on the same screen; playlists as feeds; bringing your YouTube
-   subscriptions from the file Google lets you download; a better video
-   page (the video's own picture before Play, the description's links,
-   timestamps as chapters); picking up where you stopped; no autoplay and
-   no other channels' videos at the end. YouTube's feeds hold only a
-   channel's latest 15 videos.
+4. **YouTube as a first-class citizen** (decision 0143), always through
+   YouTube's own feeds and player, never scraping: follow any YouTube link
+   (channel, handle, video, playlist); Shorts and live streams left out by
+   default, each with a switch on the feed's screen; bringing your YouTube
+   subscriptions from Google Takeout; a better video page (the grey Play box
+   with the title, no picture; chapters you can press; long descriptions
+   folded); picking up where you stopped; no autoplay and nothing at the end.
+   Videos sit in Unread with everything else and count as read once opened.
 
 **Should:**
 
