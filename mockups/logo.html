@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nine turtles logo</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Atkinson+Hyperlegible+Next:wght@400;600&display=swap">
+<style>
+/* Logo and app icon, part 3. Today's drawing beside the refined one at every size it's used. */
+:root { --bg: #f2f2f0; --ink: #141414; --ink2: #3c3c40; --muted: #5f5f64; --line: rgba(20,20,20,.12);
+  --lit: 'Literata', Georgia, serif; --atk: 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--atk); font-size: 17px; line-height: 1.55; }
+.wrap { max-width: 1160px; margin: 0 auto; padding: 56px max(16px, env(safe-area-inset-left, 0px)) 120px; display: grid; gap: 88px; }
+.intro { display: grid; gap: 12px; max-width: 700px; }
+h1, h2 { font-family: var(--lit); font-weight: 400; margin: 0; letter-spacing: -.01em; }
+h1 { font-size: 40px; line-height: 1.15; } h2 { font-size: 28px; line-height: 1.2; }
+h3 { font-size: 16px; font-weight: 600; margin: 0; }
+p { margin: 0; color: var(--ink2); max-width: 68ch; }
+section { display: grid; gap: 20px; }
+.cmp { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+.card { background: #fff; border-radius: 12px; box-shadow: 0 0 0 1px var(--line); padding: 22px; display: grid; gap: 18px; align-content: start; min-width: 0; }
+.card.pick { box-shadow: 0 0 0 2px var(--ink); }
+.tag { font-size: 14px; color: var(--muted); }
+.sizes { display: flex; align-items: flex-end; gap: 28px; flex-wrap: wrap; }
+.sizes figure { margin: 0; display: grid; gap: 8px; justify-items: start; }
+.sizes figcaption { font-size: 12.5px; color: var(--muted); }
+.lock { display: flex; align-items: baseline; font-family: var(--lit); font-weight: 600; color: var(--ink); }
+.side { background: #efeff1; border-radius: 10px; padding: 18px 16px; display: grid; gap: 10px; }
+.stack { display: grid; justify-items: center; font-family: var(--lit); font-weight: 600; font-size: 28px; padding: 24px 0; }
+.home { border-radius: 14px; padding: 26px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px 10px; justify-items: center; background: linear-gradient(160deg, #c9cfd7, #aeb6c1); }
+.home.dark { background: linear-gradient(160deg, #2a2d33, #16181c); }
+.home .ph { width: 48px; height: 48px; border-radius: 11px; background: rgba(255,255,255,.5); }
+.home.dark .ph { background: rgba(255,255,255,.12); }
+.home .ic { width: 48px; height: 48px; border-radius: 11px; display: grid; place-items: center; overflow: hidden; position: relative; }
+.big { width: 180px; height: 180px; border-radius: 41px; position: relative; overflow: hidden; }
+.tabs { display: flex; gap: 2px; background: #dedfe3; padding: 8px 8px 0; border-radius: 10px 10px 0 0; }
+.tab { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 8px 8px 0 0; font-size: 13px; background: #c9cbd0; color: #3c3c40; }
+.tab.on { background: #fff; color: #141414; }
+.tabs.dark { background: #2b2c30; } .tabs.dark .tab { background: #36373b; color: #bbb; } .tabs.dark .tab.on { background: #1d1e21; color: #eee; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="intro">
+    <h1>Logo and app icon</h1>
+    <p>Same idea, same nine turtles. The refined drawing gives each shell a little height (a dome, not a lid), a bigger head with a clear gap, rows closer together and a stronger shift in the middle row. That's what stops it turning into stripes when it's small. Today's drawing is on the left of each pair.</p>
+  </header>
+
+  <section>
+    <h2>The mark at every size</h2>
+    <div class="cmp">
+      <div class="card"><span class="tag">Today</span><div class="sizes" id="sz-old"></div></div>
+      <div class="card pick"><span class="tag">Refined (nine at 64 and up, a heavier nine from 24 to 63, one turtle under 24)</span><div class="sizes" id="sz-new"></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>With the name</h2>
+    <p>Today the frame around the turtles is mostly empty air, which is why the mark looks small and floating next to the name. The refined one is drawn to its edges and sits on the name's line. In the app's sidebar, where it's smallest, a single turtle walks into the name.</p>
+    <div class="cmp">
+      <div class="card"><span class="tag">Today</span><div id="lk-old" style="display:grid;gap:22px"></div></div>
+      <div class="card pick"><span class="tag">Refined</span><div id="lk-new" style="display:grid;gap:22px"></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>App icon</h2>
+    <p>On a real home screen among other icons, by day and by night. All one ink, as the brand is.</p>
+    <div class="cmp" id="icons"></div>
+  </section>
+
+  <section>
+    <h2>Browser tab</h2>
+    <p>One turtle, drawn on the pixel grid so it stays sharp at 16 pixels, and it switches to light in dark tabs.</p>
+    <div class="cmp">
+      <div class="card"><span class="tag">Today</span><div id="fav-old" style="display:grid;gap:10px"></div></div>
+      <div class="card pick"><span class="tag">Refined</span><div id="fav-new" style="display:grid;gap:10px"></div></div>
+    </div>
+  </section>
+</div>
+<script>
+// Today's drawing
+const OT = '<path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/>';
+const OP = [[18.5,22.7],[46.1,22.7],[73.7,22.7],[24.5,50.3],[52.1,50.3],[79.7,50.3],[18.5,77.9],[46.1,77.9],[73.7,77.9]];
+const oldMark = (h, ink='#141414') => `<svg height="${h}" width="${h}" viewBox="0 0 100 100" aria-hidden="true"><g fill="${ink}">${OP.map(p=>`<g transform="translate(${p[0]} ${p[1]}) scale(1.15)">${OT}</g>`).join('')}</g></svg>`;
+const oldOne = (h, ink='#141414') => `<svg height="${h}" width="${h}" viewBox="-11 -11 22 22" aria-hidden="true"><g fill="${ink}">${OT}</g></svg>`;
+// Refined: A (full nine), B (heavy nine), C (single)
+const A_T = '<path d="M-9 3.5 A7.5 9 0 0 1 6 3.5 Z"/><circle cx="9.4" cy="-0.4" r="2.4"/>';
+const B_T = '<path d="M-9 3.5 A7.5 9.5 0 0 1 6 3.5 Z"/><circle cx="10" cy="-0.6" r="2.9"/>';
+const A_P = [[9,5.5],[32.5,5.5],[56,5.5],[17,25.5],[40.5,25.5],[64,25.5],[9,45.5],[32.5,45.5],[56,45.5]];
+const B_P = [[9,6],[35,6],[61,6],[18,25],[44,25],[70,25],[9,44],[35,44],[61,44]];
+// tight boxes (ink only)
+const A_BOX = [0, 0, 75.8, 49], B_BOX = [0, 0, 82.9, 47.5];
+const nine = (kind, h, ink='#141414') => {
+  const [T, P, B] = kind === 'A' ? [A_T, A_P, A_BOX] : [B_T, B_P, B_BOX];
+  const w = h * B[2] / B[3];
+  return `<svg height="${h}" width="${w.toFixed(1)}" viewBox="${B.join(' ')}" aria-hidden="true"><g fill="${ink}">${P.map(p=>`<g transform="translate(${p[0]} ${p[1]})">${T}</g>`).join('')}</g></svg>`;
+};
+const newMark = (h, ink) => h >= 64 ? nine('A', h, ink) : nine('B', h, ink);
+const single = (h, ink='#141414') => `<svg height="${h}" width="${(h*16/6).toFixed(1)}" viewBox="0.6 4.6 15 6.8" aria-hidden="true"><g fill="${ink}"><path d="M1 11 A5 6 0 0 1 11 11 Z"/><circle cx="13.4" cy="8.6" r="1.6"/></g></svg>`;
+const fav16 = (ink) => `<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><g fill="${ink}"><path d="M1 11 A5 6 0 0 1 11 11 Z"/><circle cx="13.4" cy="8.6" r="1.6"/></g></svg>`;
+
+const sizes = [120, 64, 32, 23, 16];
+document.getElementById('sz-old').innerHTML = sizes.map(s => `<figure>${s <= 16 ? oldOne(s) : oldMark(s)}<figcaption>${s} px</figcaption></figure>`).join('');
+document.getElementById('sz-new').innerHTML = sizes.map(s => `<figure>${s < 24 ? single(s * 0.5) : newMark(s * 0.8)}<figcaption>${s} px</figcaption></figure>`).join('');
+
+// lockups
+const em = 22;
+document.getElementById('lk-old').innerHTML = `
+  <div class="lock" style="font-size:24px;gap:8px">${oldMark(28)}nine turtles</div>
+  <div class="side"><div class="lock" style="font-size:20px;gap:9px">${oldMark(23)}nine turtles</div><span style="font-size:14px;color:#3c3c40">Today</span></div>
+  <div class="stack">${oldMark(57)}nine turtles</div>`;
+document.getElementById('lk-new').innerHTML = `
+  <div class="lock" style="font-size:24px;gap:${(0.36*24).toFixed(0)}px">${nine('B', 0.8*24)}nine turtles</div>
+  <div class="side"><div class="lock" style="font-size:20px;gap:${(0.28*20).toFixed(0)}px">${single(0.56*20)}nine turtles</div><span style="font-size:14px;color:#3c3c40">Today</span></div>
+  <div class="stack" style="gap:${(0.45*28).toFixed(0)}px">${nine('B', 52)}<span>nine turtles</span></div>`;
+
+// app icons
+const tile = (bg, ink, frac, cx, cy, kind='B') => {
+  const B = kind === 'A' ? A_BOX : B_BOX; const size = 180;
+  const w = size * frac, h = w * B[3] / B[2];
+  return `<span style="position:absolute;left:${(cx*size - w/2).toFixed(1)}px;top:${(cy*size - h/2).toFixed(1)}px">${nine(kind, h, ink)}</span>`;
+};
+const icon = (o, bigSize) => {
+  const s = bigSize / 180;
+  return `<span style="position:relative;display:block;width:180px;height:180px;transform:scale(${s});transform-origin:0 0">${tile(o.bg, o.ink, o.frac, o.cx, o.cy)}</span>`;
+};
+const OPTS = [
+  {tag:'Safe', t:'Light grey tile, ink turtles', day:{bg:'#efeff1', ink:'#141414'}, night:{bg:'#141414', ink:'#efeff1'}, frac:.66, cx:.49, cy:.485, p:'Calm and familiar. It changes between day and night with the phone.'},
+  {tag:'Bold', t:'The herd, low on the tile', day:{bg:'#efeff1', ink:'#141414'}, night:{bg:'#141414', ink:'#efeff1'}, frac:.84, cx:.5, cy:.66, p:'Bigger and lower, with open space above. Striking at a glance, but busier at small sizes.'},
+  {tag:'My pick', pick:true, t:'Ink tile, light turtles, always', day:{bg:'#141414', ink:'#efeff1'}, night:{bg:'#141414', ink:'#efeff1'}, frac:.70, cx:.49, cy:.485, p:'Like a printed book\'s spine among colourful icons. The same by day and night, so it never jumps.'}
+];
+document.getElementById('icons').innerHTML = OPTS.map(o => `<div class="card${o.pick?' pick':''}"><span class="tag">${o.tag}</span><h3>${o.t}</h3>
+  <span class="big" style="background:${o.day.bg};box-shadow:0 0 0 1px #14141418">${icon({...o.day, frac:o.frac, cx:o.cx, cy:o.cy}, 180)}</span>
+  <div class="home">${[0,1,2,3,4,5,6,7].map(i => i===5 ? `<span class="ic" style="background:${o.day.bg}">${icon({...o.day, frac:o.frac, cx:o.cx, cy:o.cy}, 48)}</span>` : '<span class="ph"></span>').join('')}</div>
+  <div class="home dark">${[0,1,2,3,4,5,6,7].map(i => i===5 ? `<span class="ic" style="background:${o.night.bg};box-shadow:0 0 0 1px #ffffff1a">${icon({...o.night, frac:o.frac, cx:o.cx, cy:o.cy}, 48)}</span>` : '<span class="ph"></span>').join('')}</div>
+  <p>${o.p}</p></div>`).join('');
+
+// favicons
+const tabs = (fav, dark) => `<div class="tabs${dark?' dark':''}"><span class="tab">Mail</span><span class="tab on">${fav}nine turtles</span><span class="tab">A blog</span></div>`;
+document.getElementById('fav-old').innerHTML = tabs(oldOne(16,'#141414'), false) + tabs(oldOne(16,'#141414'), true);
+document.getElementById('fav-new').innerHTML = tabs(fav16('#141414'), false) + tabs(fav16('#efeff1'), true);
+</script>
+</body>
+</html>
