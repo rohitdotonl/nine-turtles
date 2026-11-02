@@ -18,7 +18,7 @@ body { font-family: var(--serif); font-size: 20px; line-height: 32px; -webkit-fo
 body::before { content: ""; position: fixed; left: 0; top: 0; bottom: 0; width: 248px; background: var(--side); }
 header.col { position: fixed; left: 32px; top: 0; width: 200px; margin: 0; display: block; padding-top: 32px; }
 header.col nav { flex-direction: column; gap: 0; margin-top: 32px; line-height: 32px; }
-@media (min-width: 1101px) { body main.col { padding-top: 352px; } body main.col, body footer.col { margin-left: calc(248px + (100vw - 248px - 488px) / 2); } }
+@media (min-width: 1101px) { body main.col { padding-top: 192px; } body main.col, body footer.col { margin-left: 376px; } }
 .lead { font-family: var(--sans); font-size: 19px; }
 @media (max-width: 1100px) { body::before { right: 0; bottom: auto; width: auto; height: 64px; } header.col { position: static; width: min(488px, 100% - 40px); margin: 0 auto; display: flex; align-items: baseline; height: 64px; padding-top: 16px; } header.col nav { flex-direction: row; gap: 24px; margin: 0 0 0 auto; } }
 .wm { display: inline-flex; align-items: baseline; gap: 8px; font-weight: 600; color: var(--ink); text-decoration: none; margin-right: auto; }
@@ -27,25 +27,26 @@ nav { display: flex; gap: 28px; font-family: var(--sans); font-size: 16px; }
 nav a { color: var(--ink2); text-decoration: none; }
 nav a:hover { text-decoration: underline; }
 main.col { padding-top: 256px; }
-main p { margin: 0 0 32px; }
+main > p { margin: 0 0 32px; }
 .lead { font-weight: 600; }
 .btn { display: inline-flex; align-items: center; height: 48px; padding: 0 24px; border-radius: 8px; background: var(--ink); color: var(--paper); font-family: var(--sans); font-weight: 600; font-size: 17px; text-decoration: none; }
 a:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
 @media (max-width: 700px) { main.col { padding-top: 128px; } }
 
 /* Whole page: sections 128px apart, each opened by a semibold sans line like the hero's lead. */
-main section { padding-top: 128px; }
-main section p { margin: 0 0 32px; }
-.h { font-family: var(--sans); font-weight: 600; font-size: 19px; margin: 0 0 32px; }
+main section { padding-top: 64px; }
+main section:first-of-type { padding-top: 128px; }
+main section p { margin: 0; }
+.h { font-family: var(--sans); font-weight: 600; font-size: 19px; margin: 0; }
 .soon { font-family: var(--sans); font-weight: 400; font-size: 16px; color: var(--ink2); margin-left: 8px; }
-figure.shot { margin: 128px 0 0; width: min(800px, calc(100vw - 248px - 64px)); margin-left: calc((488px - min(800px, calc(100vw - 248px - 64px))) / 2); }
+figure.shot { margin: 128px 0 0; width: min(800px, calc(100vw - 376px - 104px)); }
 figure.shot img { display: block; width: 100%; height: auto; border-radius: 8px; box-shadow: 0 0 0 1px #e3e3e6; }
 figure.shot .night { display: none; }
 @media (prefers-color-scheme: dark) { figure.shot .day { display: none; } figure.shot .night { display: block; } figure.shot img { box-shadow: 0 0 0 1px #2e2e30; } }
-figure.shot figcaption { width: 488px; margin: 16px auto 0; font-family: var(--sans); font-size: 16px; line-height: 24px; color: var(--ink2); }
+figure.shot figcaption { width: 488px; margin: 16px 0 0; font-family: var(--sans); font-size: 16px; line-height: 24px; color: var(--ink2); }
 .close { padding-top: 128px; }
 .close .note { font-family: var(--sans); font-size: 16px; color: var(--ink2); margin: 16px 0 0; }
-footer.col { padding: 128px 0 64px; display: flex; gap: 28px; flex-wrap: wrap; font-family: var(--sans); font-size: 16px; }
+footer.col { padding: 128px 0 96px; display: flex; gap: 28px; flex-wrap: wrap; font-family: var(--sans); font-size: 16px; }
 footer a { color: var(--ink2); text-decoration: none; }
 footer a:hover, .toc a:hover { text-decoration: underline; }
 .toc { list-style: none; margin: 32px 0 0 -10px; padding: 0; font-family: var(--sans); font-size: 16px; line-height: 24px; }
@@ -70,16 +71,17 @@ footer a:hover, .toc a:hover { text-decoration: underline; }
     </g></svg>nine turtles</a>
   <nav aria-label="Site"><a href="#">How it works</a><a href="#">Blog</a></nav>
   <ul class="toc" aria-label="On this page">
-    <li><a href="#read">Read people</a></li>
-    <li><a href="#write">Write back</a></li>
+    <li><a href="#people">People, not sources</a></li>
+    <li><a href="#write">Writing back</a></li>
+    <li><a href="#keep">You keep who you find</a></li>
     <li><a href="#ends">It ends</a></li>
     <li><a href="#between">Nobody in between</a></li>
-    <li><a href="#me">From me</a></li>
+    <li><a href="#me">Made by a person</a></li>
   </ul>
 </header>
 <main class="col" id="top">
   <p class="lead">Read people. Write back.</p>
-  <p>There are people online you'd like to know. Most of them have a blog, a newsletter or a channel. nine turtles keeps them in one quiet place, helps you write back to them, and ends when you've read what's there.</p>
+  <p>There are people online you'd like to know. Most of them have a blog, a newsletter or a channel. nine turtles keeps them in one quiet place, helps you write back to them, and ends when you've read what's there. No algorithm, no likes, no AI in between. Built on RSS, the open standard, so your list is always yours.</p>
   <a class="btn" href="#">Open the app</a>
 
   <figure class="shot">
@@ -88,34 +90,39 @@ footer a:hover, .toc a:hover { text-decoration: underline; }
     <figcaption>nine turtles on a computer, following made-up blogs for this picture.</figcaption>
   </figure>
 
-  <section id="read">
-    <p class="h">Read people.</p>
-    <p>Follow a person, not a platform: their blog, their newsletter in your own address, their videos and their podcast, all in one calm list. Soon, one page per person gathers all of them under their name.</p>
+  <section id="people">
+    <p class="h">People, not sources</p>
+    <p>A writer's blog, newsletter, videos and podcast, together under their name.</p>
   </section>
 
   <section id="write">
-    <p class="h">Write back.<span class="soon">Coming soon</span></p>
-    <p>Reading someone well makes you want to answer. Next, nine turtles will let you reply by email from the article, privately, from your own address.</p>
+    <p class="h">Writing back is built in</p>
+    <p>Reply by email from the article, privately.</p>
+  </section>
+
+  <section id="keep">
+    <p class="h">You keep who you find</p>
+    <p>Share any page from a blog into nine turtles and it asks, "Follow this person?"</p>
   </section>
 
   <section id="ends">
-    <p class="h">It ends.</p>
-    <p>No endless scroll, no counts, nothing to check. New writing waits quietly. When you've read what's there, the list says so, and you close it.</p>
+    <p class="h">It ends</p>
+    <p>No endless scroll, no counts, nothing to check.</p>
   </section>
 
   <section id="between">
-    <p class="h">Nobody in between.</p>
-    <p>No algorithm, no likes, and no AI ranking or rewriting what people wrote. Every article links back to where it was written. It's built on RSS, the open standard, so your list is always yours to take with you.</p>
+    <p class="h">Nobody in between</p>
+    <p>No algorithm, no AI rewriting or ranking, no likes. Export everything in one click.</p>
   </section>
 
   <section id="me">
-    <p class="h">From me.</p>
-    <p>I'm Rohit. I made nine turtles because the people I like reading are still writing, and I kept missing them in the scroll. I read in it every day. If something's wrong, or right, write to me.</p>
+    <p class="h">Made by a person you can write to</p>
+    <p>I'm Rohit. I made nine turtles, and I answer every email.</p>
   </section>
 
   <div class="close">
     <a class="btn" href="#">Open the app</a>
-    <p class="note">Free to try. No card needed.</p>
+    
   </div>
 </main>
 <footer class="col">
