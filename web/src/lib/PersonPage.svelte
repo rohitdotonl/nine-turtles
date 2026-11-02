@@ -3,9 +3,10 @@
   person's list until an article is opened. Their name; their places on the
   web, each by what it is (Blog, Video, Newsletter) with a link to the
   publisher's own site; since when the reader follows them; "Is this the same
-  person?" when nine turtles has clear evidence; Edit person (their name,
-  folders and rarer settings); and Add another place. Someone with one blog
-  gets the same page, with one place.
+  person?" when nine turtles has clear evidence; their email address, once
+  nine turtles knows it, for writing back (SPEC section 37); Edit person
+  (their name, email address, folders and rarer settings); and Add another
+  place. Someone with one blog gets the same page, with one place.
 
   The same quiet build as the rest of the reading area: Literata for the name,
   one left edge, the facts as a two-column list of muted names and plain
@@ -19,6 +20,7 @@
   import type { LoadedLibrary } from "./library.svelte";
   import { followingSince, PLACE_NAMES, placeShownAs, placesOf } from "./people";
   import type { Feed } from "./shapes";
+  import { addressFor, writeBackLink } from "./writeBack";
 
   let {
     feed,
@@ -40,6 +42,7 @@
   let places = $derived(placesOf(feed, library.feeds ?? []));
   let name = $derived(library.shownAs(feed)?.title ?? feed.title);
   let since = $derived(followingSince(places));
+  let address = $derived(addressFor(feed, library.feeds ?? []));
 </script>
 
 <section aria-label="Article" class="person-page flex min-w-0 flex-1 flex-col overflow-y-auto bg-paper">
@@ -58,6 +61,11 @@
             {/if}
           </dd>
         {/each}
+        {#if address}
+          <!-- Where Write back writes to: the reader's email app opens with it. -->
+          <dt>Email</dt>
+          <dd><a href={writeBackLink(address, "")} class="underline decoration-1 underline-offset-4">{address}</a></dd>
+        {/if}
         {#if since}
           <dt>Following</dt>
           <dd>{since}</dd>

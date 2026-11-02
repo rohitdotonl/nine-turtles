@@ -39,8 +39,8 @@ thread, in this order:
 3. **Four themes,** moving readers' saved theme over safely 🔨
 4. **Logo and icons:** the heavier sidebar logo, the black app icon, the tab icon 🔨
 5. **The final icon set** 🔨
-6. **People** (V1 item 1 below)
-7. **Write back** (V1 item 2)
+6. **People** (V1 item 1 below) ✅
+7. **Write back** (V1 item 2) ✅
 8. **No unread counts** (V1 item 3)
 9. **YouTube as a first-class citizen** (V1 item 4, decision 0143)
 10. **A weekly email** (V1 item 5)
@@ -66,7 +66,8 @@ milestone order above.
    page per person, whose places list as one. Decision 0146 lists the
    smaller choices made while the owner was away, for the refinement round;
    the person's page gets the address to write back with item 2.
-2. **Write back.** A Write back button on every article opens the reader's
+2. **Write back** ✅ built (SPEC section 37, decision 0147; its smaller
+   choices listed there for the refinement round). A Write back button on every article opens the reader's
    own email app with the writer's address and "Re: the title" filled in.
    The address comes from a newsletter's sender or the feed itself; if
    neither has one, the reader types it once and the person page keeps it.

@@ -64,6 +64,9 @@ pub struct Sender {
     pub title: String,
     /// The newsletter's website, for credit, when the email names one.
     pub site_url: Option<String>,
+    /// Where a reply reaches the writer (decision 0147): the email's
+    /// Reply-To, else its From address; none when that's a "no-reply" one.
+    pub email: Option<String>,
 }
 
 /// Phrases of a link to the email's own web page. Compared in lowercase.
@@ -188,9 +191,15 @@ pub fn parse(raw: &[u8]) -> Option<Newsletter> {
             domain.trim_start_matches("www.").to_owned()
         });
 
+    let reply_to = message
+        .reply_to()
+        .and_then(|list| list.first())
+        .and_then(|reply| reply.address())
+        .and_then(crate::write_back::worth_writing_to);
     Some(Newsletter {
         sender: Sender {
             key,
+            email: reply_to.or_else(|| crate::write_back::worth_writing_to(&address)),
             address,
             title: sender_title,
             site_url,
@@ -711,6 +720,7 @@ mod tests {
                 address: "slowgarden@substack.example.com".into(),
                 title: "The slow garden".into(),
                 site_url: Some("https://slowgarden.example.com/archive".into()),
+                email: Some("slowgarden@substack.example.com".into()),
             }
         );
         let article = &email.article;
@@ -961,5 +971,33 @@ mod tests {
         assert!(parse(b"<rss><channel></channel></rss>").is_none());
         // No sender: there's no feed to file it under.
         assert!(parse(b"Subject: Hello\r\n\r\nNo sender here\r\n").is_none());
+    }
+
+    #[test]
+    fn a_reply_reaches_the_reply_to_address_never_a_no_reply_one() {
+        let email = |headers: &str| {
+            let raw = format!("{headers}\r\nSubject: Hello\r\n\r\nHi there\r\n");
+            parse(raw.as_bytes()).unwrap().sender.email
+        };
+        assert_eq!(
+            email("From: Alpha <news@mail.alpha.example>\r\nReply-To: Alpha <alpha@alpha.example>")
+                .as_deref(),
+            Some("alpha@alpha.example")
+        );
+        assert_eq!(
+            email("From: Alpha <alpha@alpha.example>").as_deref(),
+            Some("alpha@alpha.example")
+        );
+        assert_eq!(
+            email(
+                "From: Alpha <no-reply@mail.alpha.example>\r\nReply-To: noreply@mail.alpha.example"
+            ),
+            None
+        );
+        assert_eq!(
+            email("From: Alpha <alpha@alpha.example>\r\nReply-To: noreply@mail.alpha.example")
+                .as_deref(),
+            Some("alpha@alpha.example")
+        );
     }
 }

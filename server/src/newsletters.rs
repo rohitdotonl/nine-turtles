@@ -402,8 +402,8 @@ async fn file(
             }
             let id: i64 = sqlx::query_scalar(
                 "INSERT INTO feeds (url, url_key, title, site_url, language, added_at, fetched_at,
-                     next_check_at, newsletter_of)
-                 VALUES (?1, ?1, ?2, ?3, ?4, ?5, ?5, ?6, ?7) RETURNING id",
+                     next_check_at, newsletter_of, email)
+                 VALUES (?1, ?1, ?2, ?3, ?4, ?5, ?5, ?6, ?7, ?8) RETURNING id",
             )
             .bind(&url)
             .bind(&email.sender.title)
@@ -413,6 +413,7 @@ async fn file(
             // Never due: a newsletter is never fetched.
             .bind(i64::MAX)
             .bind(person)
+            .bind(&email.sender.email)
             .fetch_one(&mut *transaction)
             .await?;
             subscribe(&mut transaction, person, id, &email.sender.title, now).await?;
@@ -432,6 +433,14 @@ async fn file(
         now,
     )
     .await?;
+    // Where to write back, from its first email that gives one (decision
+    // 0147): as with one-click unsubscribe below, nothing proves an email is
+    // from the sender it names, so a later one can't swap the address.
+    sqlx::query("UPDATE feeds SET email = COALESCE(email, ?) WHERE id = ?")
+        .bind(&email.sender.email)
+        .bind(feed)
+        .execute(&mut *transaction)
+        .await?;
     // The sender's one-click unsubscribe, from its first email that has
     // one: nothing proves an email is from the sender it names, so a later
     // one can't swap the address. An email kept means the reader follows

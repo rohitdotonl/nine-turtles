@@ -74,6 +74,10 @@ struct FeedRow {
     place: String,
     /// When the reader followed it, for the person's page's "Following since".
     added_at: i64,
+    /// Where to write back (decision 0147): the address the reader typed
+    /// for this person, and the one the feed or newsletter gives.
+    write_to: Option<String>,
+    email: Option<String>,
     /// The folders it's in, by number.
     #[sqlx(skip)]
     folders: Vec<i64>,
@@ -99,7 +103,8 @@ pub const FEEDS: &str = "SELECT feeds.id, subscriptions.title, feeds.site_url, s
         subscriptions.check_at_most, subscriptions.open_on_site, subscriptions.paused_at,
         CASE WHEN feeds.failures >= 2 THEN feeds.failing_since END AS failing_since,
         CASE WHEN feeds.url NOT LIKE 'newsletter:%' THEN feeds.fetched_at END AS checked_at,
-        subscriptions.writer_id AS person, subscriptions.added_at,
+        subscriptions.writer_id AS person, subscriptions.added_at, subscriptions.write_to,
+        feeds.email,
         CASE WHEN feeds.url LIKE 'newsletter:%' THEN 'newsletter'
              WHEN feeds.url LIKE '%youtube.com/feeds/%' THEN 'video' ELSE 'blog' END AS place,
         CASE WHEN subscriptions.river THEN 0 ELSE

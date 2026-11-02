@@ -1001,9 +1001,8 @@
     markAllRead: () => itemList?.markAllRead(),
     toggleFolder: (id) => sidebarFeeds?.toggleFolder(id),
     star: () => itemList?.toggleStar(),
-    collect: () => {
-      if (selected) openCollecting(selected);
-    },
+    collect: () => selected && openCollecting(selected),
+    writeBack: () => articleView?.startWriting(),
     markUnread: () => itemList?.markUnread(),
     undo: () => itemList?.undo(),
     refresh: () => itemList?.refresh(),
@@ -1376,7 +1375,7 @@
           {#if selected}
             <ArticleView
               bind:this={articleView}
-              article={selected}
+              article={selected} {library}
               toggles={phone || panes.list ? 0 : 1}
               bind:heading={articleHeading}
               bind:preferences

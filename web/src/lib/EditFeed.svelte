@@ -35,6 +35,7 @@
   import type { LoadedLibrary } from "./library.svelte";
   import { PLACE_NAMES, placeShownAs, placesOf, putBack, separate } from "./people";
   import { pausedSince } from "./times";
+  import { addressFor, keepAddress } from "./writeBack";
   import type { Sick } from "./health";
 
   let {
@@ -80,6 +81,9 @@
   let kind = $derived(PLACE_NAMES[feed.place ?? "blog"].toLowerCase());
   // The form starts from the person as they are now, once: their name, and every folder any of their places is in.
   let title = $state((() => library.shownAs(feed)?.title ?? feed.title)());
+  /** Where Write back writes to them (SPEC section 37): kept for the whole person, changed only if edited. */
+  const knownAddress = addressFor((() => feed)(), (() => library.feeds ?? [])()) ?? "";
+  let address = $state(knownAddress);
   let chosen: number[] = $state((() => [...new Set(placesOf(feed, library.feeds ?? []).flatMap((place) => place.folders))])());
   let newFolder = $state("");
   let flows = $state((() => feed.river)());
@@ -98,8 +102,9 @@
     busy = true;
     message = "";
     const refusal = await editFeed(feed.id, title, chosen, newFolder, { river: flows, check, openOnSite, paused });
+    const problem = refusal ? refused(refusal, "feed") : address.trim() !== knownAddress ? await keepAddress(feed.id, address) : undefined;
     busy = false;
-    if (refusal) message = refused(refusal, "feed");
+    if (problem) message = problem;
     else onSaved();
   }
 
@@ -171,6 +176,13 @@
         words, no number to chase. Its line is kept from the start, so nothing moves when the words arrive.
       -->
       <span id="feed-frequency" class="field-help mt-0">{frequency ? `${frequency}.` : " "}</span>
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label class="flex flex-col gap-1.5">
+        <span class="text-small text-ink-2">Email address</span>
+        <input bind:value={address} type="text" inputmode="email" autocomplete="off" autocapitalize="none" spellcheck="false" class="field" aria-describedby="person-address-help" />
+      </label>
+      <span id="person-address-help" class="field-help mt-0">Write back opens your own email app with this address.</span>
     </div>
 
     <!-- Their places on the web (SPEC section 36): what each is, each other place leading to its own settings. -->

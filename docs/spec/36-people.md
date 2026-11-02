@@ -31,8 +31,9 @@ V1, item 1). The page's look isn't final: it gets a refinement round.*
   place ("since March 2026", "since this month"). Under it: **Add another
   place**, **Edit person…**, and, while the list has something to open, how
   to open it (the same tip as the quiet line's, decision 0062). Searching in
-  their list shows the quiet line again. Writing back (V1 item 2) adds their
-  address here.
+  their list shows the quiet line again. Once nine turtles knows where to
+  write to them, an **Email** line between their places and Following holds
+  it (section 37).
 - **Add another place**, on the page and in Edit person, opens in place: a
   list of everyone else the reader follows ("Someone you already follow",
   then **Join**), and a field for the address of their blog, channel or
@@ -57,7 +58,8 @@ V1, item 1). The page's look isn't final: it gets a refinement round.*
   other way) and it's never asked about those places again.
 - **Edit person** (the list's More menu, `Shift+E`, or the page's **Edit person…**;
   the sheet at `/feeds/3/edit` that was Edit feed, SPEC section 15): **Name**
-  (the person's; for a place on its own, as before), then **Places**, each by
+  (the person's; for a place on its own, as before), then **Email address**
+  (where Write back writes to them, section 37), then **Places**, each by
   what it is and its name, with Add another place under them and, on a person
   with several, "Alpha's letters isn't the same person", which makes that
   place a person of its own again ("… is on its own again · Undo"). Each other
