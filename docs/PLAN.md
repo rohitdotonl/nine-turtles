@@ -26,15 +26,39 @@ until the owner says so.
 | Work | Status | Where it's described |
 |---|---|---|
 | Live payments, after Dodo approves the live site | ⏳ The owner applies once the site, price and legal pages are final | SPEC section 29, decision 0094, `docs/operations/dodo-application.md` |
-| Brand and design language, then the V1 features below, then 3 to 4 refinement rounds, then prices and launch | 🟡 Brand being built; the V1 list is settled (2 November 2026), each item starting only on the owner's word | `docs/RnD/business-plan.md`, `docs/RnD/ideal-reader.md`, decision 0131 |
+| The milestones to launch, below | 🔨 Brand steps being built (the owner's yes for steps 1 to 5, 2 November 2026) | This file, `docs/BRAND.md` |
 | The open questions (privacy policy and terms, prices, trial) | ⏳ The owner's answers | [`planning/questions.md`](planning/questions.md) |
 
-## V1: what gets built next, one at a time
+## Milestones to launch
 
-Settled with the owner on 2 November 2026 (decision 0140). Each item starts
-only when the owner says so, needs its SPEC section first, and is built and
-shipped one at a time, in this order: the musts, then the shoulds, then the
-ones to discuss, then the pricing ones last, with prices and launch.
+Agreed with the owner on 2 November 2026. One at a time, each in its own
+thread, in this order:
+
+1. **Typefaces** ✅ (decision 0141)
+2. **Colours:** the star in ink, oxblood for delete and errors ✅
+3. **Four themes,** moving readers' saved theme over safely 🔨
+4. **Logo and icons:** the heavier sidebar logo, the black app icon, the tab icon 🔨
+5. **The final icon set** 🔨
+6. **People** (V1 item 1 below)
+7. **Write back** (V1 item 2)
+8. **No unread counts** (V1 item 3)
+9. **YouTube as a first-class citizen** (V1 item 4, decision 0143)
+10. **A weekly email** (V1 item 5)
+11. **Installing the app, said plainly** (V1 item 6)
+12. **"How did you hear about nine turtles?"** (V1 item 7)
+13. **Three to four refinement rounds:** the owner uses the app, lists what
+    he dislikes (the theme picker first), and each round fixes it.
+14. **Prices and launch:** prices, the legal pages, the final website, live
+    payments with Dodo, and sign-up open.
+
+Steps 1 to 5 merge without asking (the owner, 2 November 2026); from step 6
+on, each starts only when the owner says so.
+
+## V1: what each milestone holds
+
+Settled with the owner on 2 November 2026 (decision 0140). Each item needs
+its SPEC section first and is built and shipped one at a time, in the
+milestone order above.
 
 **Must** (promised by the headline "Read people. Write back."):
 
@@ -95,16 +119,17 @@ ones to discuss, then the pricing ones last, with prices and launch.
 - **No tags: folders stay folders.** They already work like Feedbin's tags
   (a person can be in several folders), and collections already label
   articles. Pictures: https://claude.ai/artifact/8jqmkxsTabDuKAUWmq9RKY
-- **The note to bloggers whose feed breaks is written by hand.** The owner
-  report gets a list of feeds broken for over a week that at least 3
-  readers follow, with what's wrong and the blog's address, never who
-  follows them; Rohit writes to the blogger himself
+- **The note to bloggers whose feed breaks is written by hand**
   ([`RnD/marketing.md`](RnD/marketing.md), items 3 and 8). nine turtles
-  never emails bloggers by itself. The list is built after launch, only
-  when the owner says so.
+  never emails bloggers by itself.
 
-**Last, with prices and launch** (there's no subscription to pause until
-payments are built for real):
+## A separate list, outside the milestones
+
+Decided with the owner (2 November 2026), but not in the milestones above.
+Each starts only when the owner says so.
+
+**With prices** (there's no subscription to pause until payments are built
+for real):
 
 - **A 30-day free trial, no card,** instead of 14 days (SPEC 29).
 - **After a trial or plan ends,** feeds are still checked once a day, but
@@ -114,9 +139,15 @@ payments are built for real):
   their paid time stops counting down. First check that Dodo can pause a
   plan; if not, cancelling in one press.
 
-**After launch:** a browser extension for adding feeds while browsing
-(until then, the bookmark in Settings › Add from anywhere does the same job
-on computers). The command menu and the every-state check
+**After launch:**
+
+- **Broken feeds in the owner report:** feeds broken for over a week that
+  at least 3 readers follow, with what's wrong and the blog's address,
+  never who follows them, so Rohit can write to the blogger by hand.
+- **A browser extension** for adding feeds while browsing (until then, the
+  bookmark in Settings › Add from anywhere does the same job on computers).
+
+The command menu and the every-state check
 ([`RnD/design-principles.md`](RnD/design-principles.md)) are design work
 for the refinement rounds.
 
