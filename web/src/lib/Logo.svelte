@@ -10,8 +10,10 @@
   large drawing for 64px and up (its README explains the two).
 -->
 <script lang="ts">
-  // Sized by height: 28px beside the 23px name in the sidebar (BRAND.md).
-  let { height }: { height: number } = $props();
+  // Sized by height: 27px beside the 22px name in the sidebar (BRAND.md).
+  // `inline` sets it in the name's line of text, its feet on the baseline and
+  // 9px before the name, as the website's top bar does.
+  let { height, inline = false }: { height: number; inline?: boolean } = $props();
 
   // Where each turtle stands: three rows of three, the middle row shifted right.
   const turtles = [
@@ -22,7 +24,7 @@
 </script>
 
 <svg
-  class="logo flex-none"
+  class={["logo flex-none", inline && "mr-[9px] inline align-baseline"]}
   viewBox="0 0 82.9 47.5"
   width={Math.round((height * 82.9) / 47.5)}
   height={height}

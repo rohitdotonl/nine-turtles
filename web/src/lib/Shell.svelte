@@ -1073,9 +1073,9 @@
       the article's tools, in a band of the shared height. It never scrolls; the places below it do,
       with a faint line under it once they have.
     -->
-    <div class={["pane-bar gap-4", phone ? "pr-4 pl-5" : "pr-14 pl-5"]}>
+    <div class={["pane-bar gap-4", phone ? "pr-4 pl-5" : "pr-13 pl-5"]}>
         <!-- A name, not a control: never a Tab stop; the keyboard lands here only when the screen opens (decision 0041). -->
-        <h1 class={["wordmark mr-auto flex items-baseline gap-[9px] font-serif font-semibold tracking-[-0.01em]", phone ? "text-xlarge" : "text-[1.4375rem] leading-[1.35] text-ink-2"]} tabindex="-1" bind:this={wordmark}><Logo height={phone ? 34 : 28} />nine turtles</h1>
+        <h1 class={["wordmark mr-auto font-serif font-semibold tracking-[-0.01em]", phone ? "text-xlarge" : "text-[1.375rem] leading-[1.35] text-ink-2"]} tabindex="-1" bind:this={wordmark}><Logo height={phone ? 34 : 27} inline />nine turtles</h1>
         {#if phone}
           <!--
             The feeds screen's top bar (SPEC section 20): its unread numbers wait for this, as they wait for r.
