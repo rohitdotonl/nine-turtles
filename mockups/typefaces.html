@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nine turtles typefaces</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Atkinson+Hyperlegible+Next:wght@400;500;600&family=Atkinson+Hyperlegible+Mono&family=Alegreya:ital,wght@0,400;0,600;1,400;1,500&family=Alegreya+Sans:wght@400;500&family=JetBrains+Mono&display=swap">
+<style>
+/* Three typeface systems, each drawn as the real app at 1280 x 760 (scaled to fit), Original by day. */
+:root { --bg: #f2f2f0; --ink: #141414; --ink2: #3c3c40; --muted: #5f5f64; --line: rgba(20,20,20,.12);
+  --lit: 'Literata', Georgia, serif; --atk: 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, sans-serif;
+  --sys: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--atk); font-size: 17px; line-height: 1.55; }
+.wrap { max-width: 1200px; margin: 0 auto; padding: 56px max(16px, env(safe-area-inset-left, 0px)) 120px; display: grid; gap: 96px; }
+.intro { display: grid; gap: 12px; max-width: 680px; }
+h1, h2 { font-family: var(--lit); font-weight: 400; margin: 0; letter-spacing: -.01em; }
+h1 { font-size: 40px; line-height: 1.15; }
+h2 { font-size: 28px; line-height: 1.2; }
+p { margin: 0; color: var(--ink2); max-width: 66ch; }
+section { display: grid; gap: 20px; }
+.which { color: var(--muted); font-size: 15px; }
+.pick { border-top: 2px solid var(--ink); padding-top: 32px; }
+.board { position: relative; width: 100%; aspect-ratio: 1280 / 760; overflow: hidden; border-radius: 10px; box-shadow: 0 0 0 1px var(--line); background: #fff; }
+.art { position: absolute; left: 0; top: 0; width: 1280px; height: 760px; transform-origin: 0 0; }
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px 32px; }
+.notes div { display: grid; gap: 4px; }
+.notes b { font-weight: 600; }
+.notes p { font-size: 15.5px; }
+
+/* the app (Original, day). Each system sets --ui, --read, --mono, --wm-* */
+.appv { position: absolute; inset: 0; display: grid; grid-template-columns: 248px 400px 1fr; color: #141414; font-family: var(--ui); }
+.side { background: #efeff1; padding: 0 12px; border-right: 1px solid rgba(20,20,20,.09); }
+.list { background: #f7f7f7; padding: 0 16px; border-right: 1px solid rgba(20,20,20,.09); }
+.read { background: #fff; padding: 0 80px; overflow: hidden; }
+.top { height: 72px; display: flex; align-items: flex-end; padding-bottom: 14px; }
+.side .top { padding-left: 8px; gap: 9px; font-family: var(--wm-font); font-weight: var(--wm-weight); font-style: var(--wm-style, normal); letter-spacing: var(--wm-track); font-size: 20px; }
+.side .top svg { width: 27px; height: 21px; }
+.nav { display: grid; gap: 2px; margin-top: 12px; font-size: 15px; }
+.nav span { height: 34px; display: flex; align-items: center; padding: 0 10px; border-radius: 8px; }
+.nav .here { background: #dcdcdf; font-weight: 600; }
+.sec { margin: 22px 10px 6px; font-size: 13px; font-weight: 600; color: #5f5f64; }
+.list .top { font-family: var(--read); font-size: 26px; padding-left: 8px; letter-spacing: -.005em; }
+.rows { display: grid; gap: 4px; margin-top: 8px; }
+.row { display: grid; grid-template-columns: 24px 1fr; padding: 12px 12px 12px 0; border-radius: 10px; }
+.row.on { background: #e8e8e9; }
+.row i { width: 8px; height: 8px; border-radius: 50%; background: #2c4f8c; margin: 9px auto 0; }
+.row b { font-family: var(--read); font-size: var(--title-size, 18px); line-height: 26px; font-weight: 600; display: block; }
+.row.r b { font-weight: 400; color: #3c3c40; }
+.row small { font-size: 13px; color: #5f5f64; display: block; margin-top: 3px; }
+.end { font-family: var(--read); font-size: 16px; color: #5f5f64; margin: 36px 0 0 24px; }
+.read .top { justify-content: flex-end; gap: 22px; color: #5f5f64; font-size: 14px; }
+.t { font-family: var(--read); font-size: 38px; line-height: 46px; font-weight: 600; letter-spacing: -.01em; max-width: 640px; margin: 24px 0 0; color: #141414; }
+.by { font-size: 14px; color: #5f5f64; margin-top: 14px; }
+.by b { color: #141414; font-weight: 600; }
+.body { font-family: var(--read); font-size: var(--body-size, 20px); line-height: 33px; max-width: 640px; margin: 28px 0 0; color: #141414; }
+.code { font-family: var(--mono); font-size: 15px; line-height: 24px; background: #f3f3f4; border-radius: 8px; padding: 14px 16px; margin-top: 24px; max-width: 640px; color: #141414; }
+
+.s1 { --ui: var(--sys); --read: var(--lit); --mono: 'JetBrains Mono', ui-monospace, monospace; --wm-font: var(--lit); --wm-weight: 600; --wm-track: -.01em; }
+.s2 { --ui: 'Alegreya Sans', var(--sys); --read: 'Alegreya', Georgia, serif; --mono: 'JetBrains Mono', ui-monospace, monospace; --wm-font: 'Alegreya', serif; --wm-weight: 500; --wm-style: italic; --wm-track: 0; --body-size: 21.5px; --title-size: 19.5px; }
+.s2 .nav, .s2 .by { font-size: 16px; }
+.s3 { --ui: var(--atk); --read: var(--lit); --mono: 'Atkinson Hyperlegible Mono', ui-monospace, monospace; --wm-font: var(--lit); --wm-weight: 600; --wm-track: -.015em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="intro">
+    <h1>Typefaces</h1>
+    <p>Three type systems, each drawn as the real app (Original, by day) with the same words, so only the letters change. Today the app's buttons and menus use your Mac's own font, which is why it can look like Notes or Mail. The website you liked already uses Literata with Atkinson.</p>
+  </header>
+
+  <section>
+    <span class="which">1, the safe one</span><h2>Today, refined</h2>
+    <p>Literata for reading, your device's own font for the interface (San Francisco on a Mac), the wordmark in Literata.</p>
+    <div class="board"><div class="art s1" data-art></div></div>
+    <div class="notes">
+      <div><b>What changes</b><p>On a Mac, nothing. Elsewhere, Atkinson replaces Inter as the fallback.</p></div>
+      <div><b>Cost</b><p>About 110 KB lighter (Inter goes).</p></div>
+      <div><b>The catch</b><p>The app still looks like a different app on every device, and like none of them is nine turtles.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="which">2, the bold one</span><h2>One family, drawn by hand</h2>
+    <p>Alegreya and Alegreya Sans, a serif and a sans drawn as one family from a broad-nib pen. The wordmark in Alegreya italic.</p>
+    <div class="board"><div class="art s2" data-art></div></div>
+    <div class="notes">
+      <div><b>What changes</b><p>Everything: reading, interface and wordmark. The most "made by a person".</p></div>
+      <div><b>Cost</b><p>About 60 to 80 KB heavier, and the reading size must rise to about 21.5 pixels to read as well.</p></div>
+      <div><b>The catch</b><p>Its letters are smaller for their size, and its lively texture can tire over long essays.</p></div>
+    </div>
+  </section>
+
+  <section class="pick">
+    <span class="which">3, my pick</span><h2>Literata and Atkinson, everywhere</h2>
+    <p>Literata for everything someone wrote. Atkinson Hyperlegible Next for everything you press, on every device, plus its matching Mono for code. The wordmark stays in Literata: one serif word beside a sans interface.</p>
+    <div class="board"><div class="art s3" data-art></div></div>
+    <div class="notes">
+      <div><b>What changes</b><p>The app finally matches the website, and stops looking like a Mac utility. Reading text doesn't change.</p></div>
+      <div><b>Cost</b><p>About 60 to 100 KB lighter overall. Macs now download one small font they used to get free.</p></div>
+      <div><b>The catch</b><p>Atkinson is a little wider than San Francisco, so long names cut off a little sooner in the sidebar.</p></div>
+    </div>
+  </section>
+</div>
+<script>
+const T = '<path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z"/><circle cx="8.6" cy="0.6" r="2"/>';
+const P = [[18.5,22.7],[42.5,22.7],[66.5,22.7],[23.7,46.7],[47.7,46.7],[71.7,46.7],[18.5,70.7],[42.5,70.7],[66.5,70.7]];
+const mark = `<svg viewBox="9.5 18.7 72.8 55.5" aria-hidden="true"><g fill="currentColor">${P.map(p=>`<g transform="translate(${p[0]} ${p[1]})">${T}</g>`).join('')}</g></svg>`;
+const APP = `<div class="appv">
+  <div class="side"><div class="top">${mark}nine turtles</div>
+    <div class="nav"><span class="here">Today</span><span>Starred</span><span>All articles</span></div>
+    <div class="sec">People</div>
+    <div class="nav" style="margin-top:0"><span>Mira Okonkwo-Lind</span><span>Daniel Ferreira</span><span>Ines Halvorsen</span><span>Kenji Morrow</span><span>Priya Ramaswamy</span></div>
+  </div>
+  <div class="list"><div class="top">Today</div>
+    <div class="rows">
+      <div class="row on"><i></i><div><b>The year I stopped mending my bicycle myself</b><small>Mira Okonkwo-Lind</small></div></div>
+      <div class="row"><i></i><div><b>Notes from a slow week of sourdough</b><small>Ines Halvorsen</small></div></div>
+      <div class="row"><i></i><div><b>What the river sounded like in October</b><small>Kenji Morrow</small></div></div>
+      <div class="row r"><span></span><div><b>On keeping a commonplace book for ten years</b><small>Priya Ramaswamy</small></div></div>
+      <div class="row r"><span></span><div><b>Why I still write my newsletter by hand first</b><small>Daniel Ferreira</small></div></div>
+    </div>
+    <p class="end">That's everything for now.</p>
+  </div>
+  <div class="read"><div class="top"><span>Aa</span><span>Star</span><span>Write back</span></div>
+    <p class="t">The year I stopped mending my bicycle myself</p>
+    <p class="by"><b>Mira Okonkwo-Lind</b>, Hedgerow Notes, 28 October</p>
+    <p class="body">For eleven winters I kept a tin of spare spokes by the back door and a printed chart of tyre pressures taped inside the cupboard. This autumn I walked the bike to Tomasz's shop on Fenwick Road instead, and I learned more standing at his counter for twenty minutes than in all those evenings alone.</p>
+    <p class="code">tyre_pressure = 4.5  # bar, front; 0O 1lI</p>
+  </div>
+</div>`;
+document.querySelectorAll('[data-art]').forEach(a => a.innerHTML = APP);
+function fit() { document.querySelectorAll('[data-art]').forEach(a => a.style.transform = `scale(${a.parentElement.clientWidth / 1280})`); }
+fit(); addEventListener('resize', fit);
+</script>
+</body>
+</html>
