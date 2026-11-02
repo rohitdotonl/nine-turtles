@@ -94,7 +94,7 @@ words, and can look for a site's new feed address.
 
 On a phone, you move through one screen at a time: feeds, then articles,
 then the article. Add nine turtles to your home screen and it opens like an
-app of its own. Sharing an article shares the publisher's link, never ours.
+app of its own. Sharing an article shares the publisher's link, never one of nine turtles'.
 
 ## With the keyboard
 

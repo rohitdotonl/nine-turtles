@@ -8,7 +8,7 @@ permalink: /faq/
 <div class="faq">
 
 <p class="lede">
-  If your question isn't here, <a href="/contact/">write to us</a>.
+  If your question isn't here, <a href="/contact/">write to me</a>.
 </p>
 
 ## Can I use nine turtles today?

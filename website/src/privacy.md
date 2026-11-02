@@ -13,10 +13,10 @@ draft: This policy will be finished, and checked by someone qualified, before an
   is yours.
 </p>
 
-## Who we are
+## Who I am
 
-nine turtles is made by {{ site.maker }}. In this policy, "we" means the
-people who run nine turtles, and "you" means anyone who visits this
+nine turtles is made by {{ site.maker }}. In this policy, "I" means
+{{ site.maker }}, who runs nine turtles, and "you" means anyone who visits this
 website or uses the app. To ask anything about your data, write to
 <a href="mailto:{{ site.email }}">{{ site.email }}</a>.
 
@@ -36,7 +36,7 @@ website or uses the app. To ask anything about your data, write to
   you is kept, and the address isn't written down: the answer is only
   remembered, in memory, for half an hour, so the site isn't asked again.
   The publisher sees that nine turtles asked, not who you are.
-- **Email.** If you write to us, we keep your message and address only
+- **Email.** If you write to me, I keep your message and address only
   to reply, and delete them when they're no longer needed.
 
 ## The app (app.nineturtles.app)
@@ -56,9 +56,9 @@ needs to work:
 | The day you were last here (not the time), and when you joined | To check less often the feeds of readers who've been away a month; whoever runs nine turtles sees the day, never what you read |
 | Short-lived technical logs (times, errors, never what you read) | To keep the service running and secure |
 | Your plan: monthly or yearly, when it renews or ends, and Dodo Payments' reference numbers for it | To know whether you've paid, and to cancel it if you delete your account; whoever runs nine turtles sees which plan you're on, never what you paid or your card |
-| Payment details | Held by Dodo Payments, the company that takes payments, never by us |
+| Payment details | Held by Dodo Payments, the company that takes payments, never by me |
 
-We never sell your data, never show ads, never share what you read, and
+I never sell your data, never show ads, never share what you read, and
 never use your reading to train anyone's AI.
 
 ### Publishers and the web
@@ -73,7 +73,7 @@ never use your reading to train anyone's AI.
   privacy-enhanced player. Once you press Play, YouTube's own
   [privacy policy](https://policies.google.com/privacy) applies.
 
-## Companies that handle data for us
+## Companies that handle data for me
 
 | Company | What it does | Where |
 |---|---|---|
@@ -85,13 +85,13 @@ never use your reading to train anyone's AI.
 
 ## Your rights
 
-Wherever you live, you can ask us to show you what we hold about you,
+Wherever you live, you can ask me to show you what I hold about you,
 correct it, give you a copy, or delete it, and you can complain to your
 data protection authority. In the app you can already export your feeds
 (as OPML) and your starred articles (as JSON Feed) at any time. Deleting
 your account will delete everything in it.
 
-## How long we keep it
+## How long I keep it
 
 Your reading stays as long as you keep your account. When you delete it,
 it's gone from the live service straight away, and from any backups
