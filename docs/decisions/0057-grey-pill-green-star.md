@@ -5,7 +5,7 @@ uses them (a screenshot of GitHub's tabs and sidebar), tried side by side
 on the owner's own computer. Changes 0037 (the pill filled with the accent)
 and 0043 (the place's icon in the accent), and 0041's night pill.*
 
-*The green star was replaced by the ink star in 0142.*
+*The green star was replaced by the ink star in 0143.*
 
 **Why.** GitHub's pages are mostly grey and black, with a few small marks of
 color, each with one job. The owner tried a blue bar beside the place you're

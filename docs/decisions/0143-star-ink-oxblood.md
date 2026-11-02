@@ -1,4 +1,4 @@
-# 0142: The star in the ink; oxblood for delete and errors
+# 0143: The star in the ink; oxblood for delete and errors
 
 *2 November 2026. The owner chose this from the color mockups (brand sheet,
 step 2). Replaces the green star of 0057 and the muted red of DESIGN.md

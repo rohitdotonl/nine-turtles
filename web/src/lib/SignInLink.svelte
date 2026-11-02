@@ -84,7 +84,7 @@
   <div class="flex flex-col items-center text-center">
     <div class="mb-5"><Logo height={57} /></div>
     <h1 class="font-serif text-display">nine turtles</h1>
-    <p class="mt-3 font-serif text-large text-muted">A quiet place to read.</p>
+    <p class="mt-3 font-serif text-large text-muted">Read people. Write back.</p>
   </div>
   {#if choosing}
     <div class="flex w-full flex-col gap-3 sm:max-w-xs">

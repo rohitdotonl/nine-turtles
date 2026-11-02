@@ -46,3 +46,12 @@ export function pausedSince(at: number, now: Date = new Date()): string {
   if (sameDay) return "Paused today.";
   return `Paused on ${(date.getFullYear() === now.getFullYear() ? DAY : DAY_AND_YEAR).format(date)}.`;
 }
+
+/** An empty feed's second line (decision 0142): "Last checked today at 14:20.", or "Last checked on 3 Oct." */
+export function lastChecked(at: number, now: Date = new Date()): string {
+  const date = new Date(at * 1000);
+  const sameDay =
+    date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
+  if (sameDay) return `Last checked today at ${TIME.format(date)}.`;
+  return `Last checked on ${(date.getFullYear() === now.getFullYear() ? DAY : DAY_AND_YEAR).format(date)}.`;
+}

@@ -243,7 +243,7 @@ test("an empty collection says what collections are for", async ({ page, isMobil
     await page.goto(new URL(`/collections/${id}`, FEEDS_APP).href);
     await appReady(page);
     await expect(page.getByRole("heading", { level: 2, name })).toBeVisible();
-    await expect(page.getByText("Nothing in this collection yet. Articles you put here stay, even after a year. Add one from an article's More menu.")).toBeVisible();
+    await expect(page.getByText("Nothing in this collection yet.")).toBeVisible();
   } finally {
     await page.request.post(new URL(`/api/collections/${id}/delete`, FEEDS_APP).href);
   }

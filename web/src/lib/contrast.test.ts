@@ -97,7 +97,7 @@ describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
     }
   });
 
-  it("gives the star no color of its own: it's drawn in the ink (decision 0142)", () => {
+  it("gives the star no color of its own: it's drawn in the ink (decision 0143)", () => {
     expect(colors.star).toBeUndefined();
   });
 

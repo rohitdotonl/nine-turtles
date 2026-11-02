@@ -715,41 +715,43 @@ footer .links.small a {
 
 /* The 404 page, "Wrong turn?": eight turtles one way and one the other, big
    enough to see the joke at a glance, still on one line on a small phone. */
+/* "Wrong turn?" on one left edge, its parts grouped by their gaps: 16 / 48 / 20 / 24 (decision 0142). */
 .wrong-turn {
   display: grid;
-  justify-items: center;
-  gap: 2.5rem;
+  justify-items: start;
+  max-width: 38.5rem;
   margin-block: 5rem;
-  text-align: center;
+  text-align: left;
 }
 
 .wrong-turn .words {
   display: grid;
-  justify-items: center;
-  gap: 1.5rem;
+  justify-items: start;
+  gap: 1rem;
+  margin-top: 1.25rem;
 }
 
 .wrong-turn p {
-  max-width: 30rem;
+  max-width: 32.5rem;
   margin: 0;
   color: var(--ink-2);
   font-family: var(--serif);
   font-size: 1.25rem;
-  line-height: 1.6;
+  line-height: 2rem;
 }
 
 .wrong-turn .code {
   color: var(--muted);
   font-family: var(--sans);
-  font-size: 0.8125rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 0.875rem;
+  font-weight: 500;
 }
 
 .wrong-turn .turtles {
   display: flex;
   align-items: flex-end;
   gap: clamp(4px, 1.2vw, 10px);
+  margin-top: 1rem;
   padding-block: 0.5rem;
   color: var(--ink);
 }
@@ -768,7 +770,7 @@ footer .links.small a {
 }
 
 .wrong-turn h1 {
-  margin: 0;
+  margin: 3rem 0 0;
 }
 
 .wrong-turn .signed {

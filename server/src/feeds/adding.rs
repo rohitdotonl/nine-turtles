@@ -289,6 +289,7 @@ async fn follow(
         open_on_site: false,
         paused_at: None,
         failing_since: None,
+        checked_at: Some(now),
         folders: Vec::new(),
     })
 }

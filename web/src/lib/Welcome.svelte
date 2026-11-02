@@ -40,7 +40,7 @@
 
 <div class="flex w-full max-w-[26.25rem] flex-col gap-6">
   <div class={start ? "text-left" : "text-center"}>
-    <h2 id="welcome-heading" tabindex="-1" bind:this={heading} class="font-serif text-xlarge font-semibold tracking-[-0.01em]">A quiet place to read.</h2>
+    <h2 id="welcome-heading" tabindex="-1" bind:this={heading} class="font-serif text-xlarge font-semibold tracking-[-0.01em]">Hello. <span class="block text-balance">Who would you like to read?</span></h2>
     <p class="mt-3 text-ink-2">Follow the websites you like, and read what they publish here, at your own pace.</p>
     <!-- For someone who has never used feeds: what they are, and a few to start with, in a sheet (decision 0079). -->
     <a href="/new-to-feeds" onclick={(event) => follow(event, { kind: "new-to-feeds" })} class="text-link mt-1">New to feeds? Start here</a>

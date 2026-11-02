@@ -38,11 +38,23 @@ ones to discuss, then the pricing ones last, with prices and launch.
 
 **Must** (promised by the headline "Read people. Write back."):
 
-1. **People.** One name over everything a person publishes (their blog,
-   channel, newsletter), with a page of their own: everything they wrote,
-   newest first, their sites and the address to write back to. How a
-   person fits with feeds and folders in the sidebar is still being
-   discussed with the owner.
+1. **People** (shape agreed with the owner, 2 November 2026; the page's
+   look isn't final). A person is one human with one or more places on
+   the web (blog, channel, newsletter); a folder is a group of people.
+   - **One row, one page:** each person is one row in the sidebar.
+     Opening it lists everything they made, newest first, labelled Blog
+     or Video, and the reading pane shows their page (name, places,
+     address to write back, following since) until an article is opened.
+     Someone with one blog looks as today.
+   - **Joining places:** on the person's page ("Add another place"), or
+     by ticking "This is one person" on a folder that holds one person's
+     feeds. nine turtles asks "Is this the same person?" only on clear
+     evidence (their site links the other place), never joins by itself.
+   - **Easy to understand:** readers learn only "person" and "folder";
+     the word "feed" leaves these screens; managing a person moves from
+     Edit feed onto their page, with rare settings behind More. Tried as
+     a clickable mockup with a few people before it's built.
+   - Pictures: https://claude.ai/artifact/N6VBtfpfGavgN8Dz7bPyFS
 2. **Write back.** A Write back button on every article opens the reader's
    own email app with the writer's address and "Re: the title" filled in.
    The address comes from a newsletter's sender or the feed itself; if

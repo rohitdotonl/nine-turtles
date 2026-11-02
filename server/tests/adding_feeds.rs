@@ -203,9 +203,12 @@ async fn a_websites_home_page_finds_its_feed_and_the_articles_appear() {
     assert_eq!(status, StatusCode::CREATED, "{body}");
     assert_eq!(body["feed"]["title"], "Quiet Notes");
     assert_eq!(body["feed"]["site_url"], "https://quiet.example/");
+    // Just checked, so an empty feed could say "Last checked today at …" (decision 0142).
+    assert!(body["feed"]["checked_at"].is_i64(), "{body}");
 
     let feeds = reader.get("/api/feeds").await;
     assert_eq!(feeds["feeds"].as_array().unwrap().len(), 1);
+    assert!(feeds["feeds"][0]["checked_at"].is_i64(), "{feeds}");
     // Newest first; the article listed twice is stored once.
     assert_eq!(
         reader.titles("/api/articles").await,

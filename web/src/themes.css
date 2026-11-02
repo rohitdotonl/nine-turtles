@@ -8,7 +8,7 @@
 
   --tint-list and --tint-sidebar are the selection pill's fill: a neutral
   grey, the text color mixed into the list or sidebar (8% by day, 12% by
-  night), with no color (decision 0057). The star has no color of its own: it is drawn in --ink, filled when starred (decision 0142). --danger is oxblood, for what removes something and for errors.
+  night), with no color (decision 0057). The star has no color of its own: it is drawn in --ink, filled when starred (decision 0143). --danger is oxblood, for what removes something and for errors.
   contrast.test.ts recomputes each and checks every text color on it.
 
   --surface-raised is what floats over the page: the sheets, the shortcut
