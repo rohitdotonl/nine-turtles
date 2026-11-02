@@ -1,4 +1,4 @@
-# 0143: YouTube as a first-class citizen
+# 0144: YouTube as a first-class citizen
 
 *2 November 2026. Settled with the owner in the YouTube thread, after the
 V1 list (decision 0140) named it a must. Nothing is built yet; this is what

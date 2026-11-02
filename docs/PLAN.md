@@ -64,7 +64,7 @@ ones to discuss, then the pricing ones last, with prices and launch.
    and the Settings › Reading row that hides them; a small dot with no
    number says something is new. Built with the new design language
    (SPEC sections 5 and 18).
-4. **YouTube as a first-class citizen** (decision 0143), always through
+4. **YouTube as a first-class citizen** (decision 0144), always through
    YouTube's own feeds and player, never scraping: follow any YouTube link
    (channel, handle, video, playlist); Shorts and live streams left out by
    default, each with a switch on the feed's screen; bringing your YouTube
