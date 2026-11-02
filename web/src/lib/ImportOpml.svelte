@@ -4,12 +4,23 @@
   and says plainly what it did (in `lines`, which Settings shows under the
   group); the feeds' articles then arrive in the background over the next few
   minutes. "Export OPML" downloads every feed and folder as an OPML file.
+  In the welcome (`link`), only the way in, as a text link that opens the file chooser at once.
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
   import { importMessage, importOpml } from "./importing";
 
-  let { onImported, lines = $bindable([]) }: { onImported: () => void; lines?: string[] } = $props();
+  let {
+    onImported,
+    lines = $bindable([]),
+    link,
+  }: {
+    /** A list was read; `lines` say what came of it, and `added` how many feeds came in. */
+    onImported: (lines: string[], added: number) => void;
+    lines?: string[];
+    /** In the welcome: only the way in, as a text link with these words (no Settings rows, no Export). */
+    link?: string;
+  } = $props();
 
   let picker: HTMLInputElement | undefined = $state();
   let busy = $state(false);
@@ -27,7 +38,7 @@
       return;
     }
     lines = importMessage(result);
-    onImported();
+    onImported(lines, result.added);
   }
 </script>
 
@@ -45,7 +56,11 @@
   quiet glyph that says it acts (decision 0042): › where something opens, a
   tray where a file is saved.
 -->
-<button type="button" aria-disabled={busy} onclick={() => !busy && picker?.click()} class="inset-row inset-action"
-  >Import OPML…<span class="row-glyph"><Icon name="chevron-right" size={18} /></span></button
->
-<a href="/api/opml" download class="inset-row inset-action">Export OPML<span class="row-glyph"><Icon name="download" size={18} /></span></a>
+{#if link}
+  <button type="button" aria-disabled={busy} onclick={() => !busy && picker?.click()} class="text-link">{link}</button>
+{:else}
+  <button type="button" aria-disabled={busy} onclick={() => !busy && picker?.click()} class="inset-row inset-action"
+    >Import OPML…<span class="row-glyph"><Icon name="chevron-right" size={18} /></span></button
+  >
+  <a href="/api/opml" download class="inset-row inset-action">Export OPML<span class="row-glyph"><Icon name="download" size={18} /></span></a>
+{/if}

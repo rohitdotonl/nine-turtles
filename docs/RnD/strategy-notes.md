@@ -1,7 +1,7 @@
 # Making nine turtles a business: the owner's strategy notes (26 October 2026)
 
 Rohit's own notes after reading the October research (`business-research.md`,
-`playbook.html`, now in `docs/archive/rnd-2026-10/`), rewritten and put in order. They are a working plan, not
+`playbook.html`, now in `docs/archive/rnd-2026-10/`; its marketing parts are in `marketing.md`), rewritten and put in order. They are a working plan, not
 decisions: anything here that changes the app, the website or
 `docs/DESIGN.md` still goes through the usual process.
 
@@ -93,109 +93,12 @@ Right now the website looks too polished, too much like every SaaS.
 5. Getting articles onto a Kindle or Kobo.
 6. AI everywhere.
 
-## 6. Get named by AI assistants
+## 6–14. Marketing
 
-This needs a whole effort of its own, and it may be the most important lever
-for revenue.
-
-- **Learn how assistants choose what to mention,** and how to raise the
-  chances of being mentioned.
-- **A research bot every three days** that looks for new ways to get
-  mentioned by AI and for new search practices in the age of AI.
-- **A plain facts page and honest comparison pages.** One page of quotable
-  facts (what it is, who makes it, the price, what it does and doesn't do),
-  plus short, dated "nine turtles or Feedbin / Feedly / Inoreader / Reeder /
-  NetNewsWire / Readwise / Current?" pages that say when the other app is
-  the better choice. AI engines lift sentences from clear, structured,
-  recently updated pages; comparison and "alternative" pages are also among
-  the few kinds still winning clicks in Google; and honesty about a rival
-  being better is rare and builds trust. A good example:
-  [Feeder's best RSS readers page](https://feeder.co/knowledge-base/rss-basics/best-rss-readers/).
-- **Let the AI search robots in.** Allow OpenAI's, Perplexity's and
-  Anthropic's robots in the website's robots file; add standard structured
-  data labels (what kind of thing each page is: the app, the company, the
-  FAQ); verify the site with Google and Bing. One founder found Cloudflare
-  silently blocking the robots he wanted.
-- **Check AI visibility once a month, by hand.** About 20 questions ("calm
-  RSS reader", "Feedly alternative without AI", "read newsletters outside my
-  inbox", "follow blogs without social media", "Pocket alternative") asked
-  in ChatGPT, Claude, Perplexity, Gemini and Google's AI Mode. Note whether
-  nine turtles is named and which pages are cited; those pages become next
-  month's outreach list.
-- **Add "an AI assistant"** to the "how did you hear about us?" question,
-  since much AI traffic arrives without a label.
-- **A nine turtles connector for ChatGPT and Claude:** a small "MCP server"
-  so someone can say "add this blog to nine turtles" or "what's unread?"
-  inside ChatGPT or Claude. ChatGPT's app directory accepts outside apps; it
-  needs a public server, sign-in, privacy and terms pages and a short video.
-
-## 7. Search (SEO)
-
-- **Make a complete SEO strategy.** The research says AI answers have taken
-  over much of old search, and that what still wins is tools, comparison
-  and "alternative" pages, searches for our own name, and pages with a real
-  point of view. I'm not sure about this yet.
-- **The usual method still matters:** get mentioned and linked by people,
-  blogs and lists.
-- **Technical basics:**
-  - a sitemap;
-  - a feed for the website's own blog;
-  - a "don't index" tag on app.nineturtles.app and slowfeed.onrender.com, so
-    they don't compete with the website;
-  - Google Search Console and Bing Webmaster Tools.
-
-## 8. Timely: "Reddit is ending RSS: what to do"
-
-Publish before **13 November 2026**, when Reddit's feeds stop.
-
-## 9. Launches and listings
-
-- **Flagship essay on rohit.onl.**
-- **Show HN, Product Hunt and similar places.** Learn from the best
-  launches first.
-- **Free listings that last:** AlternativeTo, SaaSHub, Slant, Peerlist, the
-  Indie Hackers product page, the GitHub lists. About 15 relevant ones, not
-  a 100-directory spam sweep.
-- **Optional:** a Microsoft Store listing through PWABuilder is cheap. Skip
-  the Apple App Store for now: its search is dominated by Reeder,
-  NetNewsWire and Feedly, and this audience finds tools through people.
-  Being a sync option inside those apps is the better route (section 12).
-
-## 10. Free tools
-
-1. Feed finder.
-2. YouTube subscriptions to a feed file.
-3. Export tidy-up and blogroll maker.
-4. "See your blog as a book".
-5. More to come.
-
-## 11. Newsletters
-
-Newsletters are a big thing; get as much from them as possible.
-
-- **As a feature:** read newsletters outside the inbox, the first step in.
-- **As a channel, a $500 test:** sponsor 4 to 8 tiny slow-living
-  newsletters, each with its own link. Dense Discovery (about 38,000
-  design-minded readers, classified ads from $89, next slots January 2027)
-  is one candidate; Reletter lists many smaller ones.
-- **Even better:** swap a free year for a mention.
-
-## 12. nine turtles as a sync service
-
-Feedbin grew by being the sync service inside other apps. Be one too.
-
-## 13. Be known in the small, independent web
-
-- **Make friends with the founders** of Bear Blog (Herman), Micro.blog
-  (Manton Reece), Buttondown, omg.lol, Ghost and Kagi Small Web, and look
-  for a mutual deal.
-- **"How I read the web" interviews** with writers our readers admire. A
-  blog or newsletter series, like the "How I blog" kind of series.
-
-## 14. Projects to look at
-
-- [powRSS](https://powrss.com/)
-- [LettRSS](https://lettrss.com/)
+Moved to [`marketing.md`](marketing.md) on 1 November 2026 (AI assistants,
+search, launches and listings, free tools, newsletters, sync, the small
+web, projects to look at). The Reddit page was let go (business plan,
+section 0).
 
 ## 15. Kept for later: beating the incumbents
 

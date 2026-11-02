@@ -35,21 +35,29 @@ idea here that changes the app needs the owner's yes first.
 ## The ideal reader (changed 1 November 2026)
 
 - [`ideal-reader.md`](ideal-reader.md): who nine turtles is for (people who write on the small web), where to
-  find them, and the first marketing directions.
+  find them.
+
+## Marketing (started 1 November 2026)
+
+- [`marketing.md`](marketing.md): how nine turtles finds its readers. The
+  plan (decided 1 November) and everything still
+  useful from the October marketing research.
 
 ## The owner's strategy notes (26 October 2026)
 
 - [`strategy-notes.md`](strategy-notes.md): Rohit's own plan after reading
   the research, organised: what viable means, positioning, price, the
-  one-person business, AI mentions, search, launches, tools, newsletters,
-  partners, and firm noes.
+  one-person business, and firm noes (its marketing parts moved to
+  `marketing.md`).
 
 ## Business and marketing research (25 October 2026): archived
 
 Written for the earlier ideal reader, so it moved to
 [`../archive/rnd-2026-10/`](../archive/rnd-2026-10/) on 1 November 2026
-(the summary, the playbook, the idea bank, post ideas, outreach lists and
-the 19 working notes). Agents read it only when Rohit asks. Once the
+(the summary, the playbook and the working notes). Its marketing-only
+parts (idea bank, post ideas, outreach lists, notes 01, 02, 07, 09–11, 15,
+16) were deleted on 1 November 2026, after what was still useful went into
+[`marketing.md`](marketing.md). Agents read the rest only when Rohit asks. Once the
 business plan, positioning, brand and V1 are settled, anything still
 useful gets pulled into those documents and the archive is deleted.
 

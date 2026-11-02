@@ -116,3 +116,4 @@ repository's history.
 | [0134](0134-ten-principles.md) | Ten ranked principles (forgiving and cohesive added; clear answers before you ask; instant shows changes live; beauty a goal; less but better and light); "useful" and "challenges the status quo" as feature checks; warm, never cute; three panes and the logo kept |
 | [0135](0135-critique-checklist.md) | Twelve critique questions (from the owner's design field guide) every change the reader sees answers before its pull request; the full review checks them |
 | [0136](0136-braun-themes.md) | Five themes after Braun's colors (Brushed, Anodised, Fountain pen, Heather, Signal); their bright accent, only the unread dot, held to 3 : 1 |
+| [0137](0137-following-loop-defaults.md) | Small defaults from the loop walk-through: a phone opens on the welcome while you follow no one; the welcome's "Bring your list from another app…" opens the file chooser at once; Move to… starts with nothing chosen |

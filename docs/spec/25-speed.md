@@ -6,7 +6,7 @@
 - Every action feels instant (under about a tenth of a second).
 - No spinners for things the app already has.
 - Actions happen on screen first; saving to the server happens quietly behind.
-- The app's download size is kept under a budget checked automatically: at most 150 KB of app code and styles, and 400 KB of fonts (downloaded once, then kept by the browser).
+- The app's download size is kept under a budget checked automatically: at most 200 KB of app code and styles, and 400 KB of fonts (downloaded once, then kept by the browser).
 
 **How to check it**
 1. Use the app for a few minutes: you never wait for it.

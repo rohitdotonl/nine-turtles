@@ -820,8 +820,8 @@ test("a tab left open across an update opens the new version at the next place i
 
 test("on a phone, Back after an update opens the new version one step back", async ({ page, isMobile }) => {
   test.skip(!isMobile, "the phone layout only");
-  // A phone opens on the feeds, its home screen.
-  await openApp(page, "/");
+  // A phone opens on the feeds, its home screen (on a nine turtles that follows some: with none, it opens on the welcome).
+  await openApp(page, new URL("/", FEEDS_APP).href);
   await sidebar(page).getByRole("link", { name: /^Starred/ }).click();
   await expect(page).toHaveURL(/\/starred$/);
   await expect(list(page)).toBeVisible();
