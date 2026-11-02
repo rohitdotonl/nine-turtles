@@ -25,10 +25,10 @@ export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy({
     "../web/public/fonts/literata-400-latin.woff2": "fonts/literata-400-latin.woff2",
     "../web/public/fonts/literata-600-latin.woff2": "fonts/literata-600-latin.woff2",
-    "../web/public/fonts/inter-400-latin.woff2": "fonts/inter-400-latin.woff2",
-    "../web/public/fonts/inter-600-latin.woff2": "fonts/inter-600-latin.woff2",
+    "../web/public/fonts/atkinson-hyperlegible-next-400-latin.woff2": "fonts/atkinson-hyperlegible-next-400-latin.woff2",
+    "../web/public/fonts/atkinson-hyperlegible-next-600-latin.woff2": "fonts/atkinson-hyperlegible-next-600-latin.woff2",
     "../web/public/fonts/OFL-Literata.txt": "fonts/OFL-Literata.txt",
-    "../web/public/fonts/OFL-Inter.txt": "fonts/OFL-Inter.txt",
+    "../web/public/fonts/OFL-Atkinson-Hyperlegible-Next.txt": "fonts/OFL-Atkinson-Hyperlegible-Next.txt",
     "../web/public/icons/icon.svg": "icons/icon.svg",
     "../web/public/icons/icon-32.png": "icons/icon-32.png",
     "../web/public/icons/apple-touch-icon.png": "icons/apple-touch-icon.png",

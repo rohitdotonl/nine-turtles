@@ -5,3 +5,4 @@
 - The "Atkinson" reading font is now the newer Atkinson Hyperlegible Next. If you chose it, you keep it.
 - Literata stays for articles, list titles and the name.
 - The fonts the app downloads shrank from about 339 KB to about 210 KB.
+- The website (nineturtles.app) uses Atkinson Hyperlegible Next too, instead of Inter.
