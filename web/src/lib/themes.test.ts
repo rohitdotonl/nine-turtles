@@ -1,10 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { APPEARANCES, LOOKS, THEMES, isAppearance, isTheme, resolveMode } from "./themes";
+import { APPEARANCES, LOOKS, THEMES, isAppearance, isTheme, resolveMode, savedTheme } from "./themes";
 
 describe("themes", () => {
-  it("has the themes from DESIGN.md: Original (decision 0056), Plain (decision 0063) and the five after Braun's colors", () => {
-    expect(THEMES).toEqual(["original", "plain", "brushed", "anodised", "fountain-pen", "heather", "signal"]);
-    expect(THEMES.map((theme) => LOOKS[theme].label)).toEqual(["Original", "Plain", "Brushed", "Anodised", "Fountain pen", "Heather", "Signal"]);
+  it("has the four themes from DESIGN.md: Original, Plain, Fountain pen and Signal (decision 0145)", () => {
+    expect(THEMES).toEqual(["original", "plain", "fountain-pen", "signal"]);
+    expect(THEMES.map((theme) => LOOKS[theme].label)).toEqual(["Original", "Plain", "Fountain pen", "Signal"]);
+  });
+
+  it("moves a reader on a retired theme to its successor, so nobody lands on a missing theme", () => {
+    expect(savedTheme("brushed")).toBe("original");
+    expect(savedTheme("anodised")).toBe("fountain-pen");
+    expect(savedTheme("heather")).toBe("fountain-pen");
+    for (const theme of THEMES) expect(savedTheme(theme)).toBe(theme);
+    expect(savedTheme("calm")).toBe("original");
+    expect(savedTheme("constructor")).toBe("original");
+    expect(savedTheme(undefined)).toBe("original");
   });
 
   it("recognises only known theme names and Appearance choices", () => {
