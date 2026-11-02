@@ -301,10 +301,9 @@
   /** Keeps the copies for reading offline up to date, in the reader's own order. */
   const keeper = new Keeper(() => void keepUpToDate(settings.sort ?? "newest", settings.mode));
 
-  /** Loads the feeds and folders. */
-  function loadFeeds() {
-    return library.loadFeeds();
-  }
+  const loadFeeds = () => library.loadFeeds(); // Loads the feeds and folders.
+  // A phone opens on the welcome while you follow no one, not on a home screen of empty lists (decision 0137); Back goes home.
+  $effect(() => void (firstVisit && untrack(() => phone && screenNow() === "home" && isList(route) && go(route))));
 
   $effect(() => {
     // device.dark: "Match device" follows the device's own switch while nine turtles is open.
@@ -1002,7 +1001,7 @@
 </script>
 
 {#snippet welcome(start: boolean)}
-  <Welcome {start} covered={sheet && route.kind === "add-feed"} bind:heading={headings.welcome} bind:field={headings.add} {follow} onAdded={added} onOpen={openFeed} />
+  <Welcome {start} covered={sheet && route.kind === "add-feed"} bind:heading={headings.welcome} bind:field={headings.add} {follow} onAdded={added} onOpen={openFeed} onImported={(message) => (go(home, { message }), loadFeeds())} />
 {/snippet}
 
 {#snippet listHead()}

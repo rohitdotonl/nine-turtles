@@ -7,6 +7,7 @@
 -->
 <script lang="ts">
   import AddFeed from "./AddFeed.svelte";
+  import ImportOpml from "./ImportOpml.svelte";
   import type { Feed } from "./shapes";
   import type { Route } from "./router";
 
@@ -18,6 +19,7 @@
     follow,
     onAdded,
     onOpen,
+    onImported,
   }: {
     start: boolean;
     covered: boolean;
@@ -27,7 +29,13 @@
     follow: (event: MouseEvent, next: Route) => void;
     onAdded: (feed: Feed) => void;
     onOpen: (id: number) => void;
+    /** A list from another app brought feeds in: the welcome gives way, and `message` says what came. */
+    onImported: (message: string) => void;
   } = $props();
+
+  /** What importing said, while the welcome stays (nothing came in, or the file wasn't a list). */
+  let importLines: string[] = $state([]);
+  const BRING = "Bring your list from another app…";
 </script>
 
 <div class="flex w-full max-w-[26.25rem] flex-col gap-6">
@@ -42,11 +50,16 @@
       Importing sits just under the field, centred as everything here is (on a phone, on the
       screen's margin), as the other way in (decisions 0045, 0048): a link in the text color,
       underlined as the article's note links are, with no side padding so its words line up
-      with the heading's, in a 44px-tall target (decision 0055). It opens Settings › Your data.
+      with the heading's, in a 44px-tall target (decision 0055). It opens the device's file
+      chooser at once (decision 0137); what came in is said on the list that follows, and a
+      file that brought nothing is said here, under it.
     -->
     <AddFeed bind:field feeds={[]} {onAdded} {onOpen} {start}>
       {#snippet alternative()}
-        <a href="/settings/data" onclick={(event) => follow(event, { kind: "settings", page: "data" })} class="text-link">Import an OPML file…</a>
+        <ImportOpml link={BRING} bind:lines={importLines} onImported={(lines, added) => added > 0 && onImported(lines.join(" "))} />
+        <div role="status" class={["flex flex-col gap-1 text-small text-ink-2", importLines.length === 0 && "sr-only"]}>
+          {#each importLines as line, index (index)}<p>{line}</p>{/each}
+        </div>
       {/snippet}
     </AddFeed>
   {:else}
@@ -61,7 +74,7 @@
         <span class="btn-primary rounded-lg">Add feed</span>
       </div>
       <div class="flex min-h-[5.8rem] flex-col items-center">
-        <span class="text-link">Import an OPML file…</span>
+        <span class="text-link">{BRING}</span>
       </div>
     </div>
   {/if}

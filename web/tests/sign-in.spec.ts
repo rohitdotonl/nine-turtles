@@ -58,7 +58,7 @@ test("sign-in is one centred column, at the phone's one 20px margin, each field 
   expect((await page.getByRole("link", { name: "Sign up" }).boundingBox())!.height).toBeGreaterThanOrEqual(44);
 });
 
-test("the logo stands above the name on sign-in and before it in the sidebar, hidden from screen readers", async ({ page }) => {
+test("the logo stands above the name on sign-in and before it in the sidebar, hidden from screen readers", async ({ page, isMobile }) => {
   await page.goto("/");
   await appReady(page);
   // Sign-in: the nine turtles above the wordmark (decision 0067).
@@ -70,6 +70,11 @@ test("the logo stands above the name on sign-in and before it in the sidebar, hi
 
   // The sidebar: the logo inside the wordmark, before the words, which alone name it.
   await signIn(page);
+  // A phone that follows no one opens on the welcome (decision 0137); Escape goes back to the feeds, where the wordmark is.
+  if (isMobile) {
+    await expect(page.getByRole("heading", { level: 2, name: "A quiet place to read." })).toBeVisible();
+    await page.keyboard.press("Escape");
+  }
   const wordmark = page.getByRole("heading", { level: 1 });
   await expect(wordmark).toHaveText("nine turtles");
   const sidebarLogo = wordmark.locator("svg.logo");
@@ -134,7 +139,7 @@ test("while signing in, the button says it's busy and a second press sends nothi
   expect(requests).toBe(1);
 });
 
-test("sign in with the keyboard, stay signed in, sign out", async ({ page, isMobile }) => {
+test("sign in with the keyboard, stay signed in, sign out", async ({ page }) => {
   await page.goto("/");
   await appReady(page);
   // The email field has the keyboard's place: the email, then Tab on to the password.
@@ -144,9 +149,8 @@ test("sign in with the keyboard, stay signed in, sign out", async ({ page, isMob
   await page.keyboard.press("Enter");
   await expect(page.locator("#sidebar")).toBeAttached();
   // The keyboard's place moves to the new screen's heading: what there is to read (here, with no
-  // feeds yet, the welcome's), or on a phone's feeds screen its name (decision 0118).
-  if (isMobile) await expect(page.getByRole("heading", { level: 1, name: "nine turtles" })).toBeFocused();
-  else await expect(page.getByRole("heading", { level: 2, name: "A quiet place to read." })).toBeFocused();
+  // feeds yet, the welcome's, which a phone opens on too; decisions 0118, 0137).
+  await expect(page.getByRole("heading", { level: 2, name: "A quiet place to read." })).toBeFocused();
 
   // Still signed in after closing and reopening (a reload, here).
   await page.reload();
@@ -156,6 +160,8 @@ test("sign in with the keyboard, stay signed in, sign out", async ({ page, isMob
   // Sign out (in Settings) using only the keyboard.
   // A phone-narrow window shows one area at a time; Escape goes back to the feeds and Settings.
   if (!(await page.locator("#sidebar").isVisible())) await page.keyboard.press("Escape");
+  // Back to the feeds may load the page again (its step was made before the reload): wait for it.
+  await expect(page.locator("#sidebar")).toBeVisible();
   await tabTo(page, page.getByRole("link", { name: "Settings" }));
   await page.keyboard.press("Enter");
   await expect(page.getByText(/^Version /)).toBeVisible();
