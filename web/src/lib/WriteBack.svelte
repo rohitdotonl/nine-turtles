@@ -8,9 +8,11 @@
 
   When nine turtles doesn't know their address (neither their feed nor its
   articles' text gives one), the button opens a small box in place, as Add a
-  source does: "Find it on their site" (their website, in a new tab: nine
-  turtles itself fetches nothing), one field to paste it in, Write back and
-  Not now. The address is kept for the person (their page
+  source does, and nine turtles looks on their site once for it (decision
+  0168: their home page and one contact or about page, by the server, never
+  twice for the same writer). What it finds fills in the field for the reader
+  to check; else "Find it on their site" (their website, in a new tab), one
+  field to paste it in, Write back and Not now. The address is kept for the person (their page
   shows it, Edit on their page changes it), so it's asked for once. The email app
   opens at once, while the address is being kept.
 
@@ -23,7 +25,7 @@
   import type { LoadedLibrary } from "./library.svelte";
   import { firstNameOf, placesOf } from "./people";
   import type { Article } from "./shapes";
-  import { addressFor, keepAddress, looksLikeAddress, siteOf, writeBackLink } from "./writeBack";
+  import { addressFor, keepAddress, lookOnTheirSite, looksLikeAddress, siteOf, writeBackLink } from "./writeBack";
 
   let { article, library }: { article: Article; library: LoadedLibrary } = $props();
 
@@ -33,9 +35,14 @@
   let site = $derived(siteOf(place, article.link));
 
   let asking = $state(false);
+  /** Looking on their site for the address, what it found, that it found none, or couldn't look. */
+  let looked: "looking" | "found" | "none" | "couldn't" | undefined = $state();
+  let found = $state("");
+  let typed = $state("");
+  /** The found address is still what's in the field: once the reader changes it, the box is as before. */
+  let showingFound = $derived(looked === "found" && typed.trim() === found);
   let busy = $state(false);
   let written: HTMLAnchorElement | undefined = $state();
-  let typed = $state("");
   let message = $state("");
   let field: HTMLInputElement | undefined = $state();
   let opener: HTMLButtonElement | undefined = $state();
@@ -44,6 +51,7 @@
   $effect(() => {
     void article.id;
     asking = false;
+    looked = undefined;
     typed = "";
     message = "";
   });
@@ -58,10 +66,28 @@
     asking = true;
     await tick();
     field?.focus();
+    if (!site) return;
+    looked = "looking";
+    const asked = article.id;
+    const answer = await lookOnTheirSite(place.id);
+    // The reader may have moved on or closed the box meanwhile.
+    if (asked !== article.id || !asking) return;
+    if (!answer.looked) {
+      looked = "couldn't";
+    } else if (!answer.address) {
+      looked = "none";
+    } else if (typed.trim()) {
+      // They typed one meanwhile: theirs stays, and the line claims nothing.
+      looked = undefined;
+    } else {
+      found = typed = answer.address;
+      looked = "found";
+    }
   }
 
   async function notNow() {
     asking = false;
+    looked = undefined;
     message = "";
     await tick();
     opener?.focus();
@@ -88,6 +114,7 @@
     await library.loadFeeds();
     busy = false;
     asking = false;
+    looked = undefined;
     typed = "";
     // The keyboard stays where it was: on Write back, now a link to the email app.
     await tick();
@@ -101,9 +128,12 @@
       <form class="ask flex flex-col gap-4" aria-labelledby="write-back-title" onsubmit={write}>
         <div class="flex flex-col gap-1">
           <p id="write-back-title" class="text-base font-semibold text-ink">Write back to {name}</p>
-          <p class="text-small text-ink-2">nine turtles doesn't have their address yet. {#if site}Writers often give it on an About or Contact page; paste it here once and it's kept.{:else}Paste it here once and it's kept.{/if}</p>
+          <p class="text-small text-ink-2" aria-live="polite">
+            {#if looked === "looking"}Looking on their site…{:else if showingFound}Found on their site. Check it, then press Write back.{:else if looked === "none"}nine turtles looked on their site and didn't find an address. Paste it here once and it's kept.{:else if looked === "couldn't"}nine turtles couldn't look on their site just now. Paste it here once and it's kept.{:else}nine turtles doesn't have their address yet. Paste it here once and it's kept.{/if}
+          </p>
         </div>
-        {#if site}
+        {#if site && !showingFound}
+          <!-- Left out once an address is filled in: it would only add a choice. -->
           <a class="btn self-start" href={site} target="_blank" rel="noopener noreferrer"><Icon name="open" size={16} />Find it on their site<span class="sr-only"> (opens in a new tab)</span></a>
         {/if}
         <div class="flex flex-col gap-1.5">

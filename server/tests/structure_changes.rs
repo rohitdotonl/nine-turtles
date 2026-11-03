@@ -2371,3 +2371,54 @@ async fn calling_people_by_their_names_keeps_every_name_the_reader_gave() {
         expected.map(|name| (name.to_owned(), false)).to_vec()
     );
 }
+
+#[tokio::test]
+async fn looking_on_writers_sites_keeps_every_feed_and_address_and_has_looked_nowhere() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just after people by their names (structure change 35):
+    // a feed giving its own address, and one the reader typed an address for.
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(35, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO feeds (id, url, url_key, title, added_at, email)
+         VALUES (1, 'u', 'u', 'Garden', 1, 'hal@garden.example'), (2, 'v', 'v', 'Shed', 1, NULL)",
+        "INSERT INTO subscriptions (person_id, feed_id, title, added_at, write_to)
+         VALUES (1, 1, 'Garden', 1, NULL), (1, 2, 'Shed', 1, 'ivy@example.org')",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let feeds: Vec<(Option<String>, Option<i64>, Option<String>)> =
+        sqlx::query_as("SELECT email, site_looked_at, site_email FROM feeds ORDER BY id")
+            .fetch_all(&db)
+            .await
+            .unwrap();
+    assert_eq!(
+        feeds,
+        [
+            (Some("hal@garden.example".to_owned()), None, None),
+            (None, None, None)
+        ]
+    );
+    let typed: Vec<Option<String>> =
+        sqlx::query_scalar("SELECT write_to FROM subscriptions ORDER BY feed_id")
+            .fetch_all(&db)
+            .await
+            .unwrap();
+    assert_eq!(typed, [None, Some("ivy@example.org".to_owned())]);
+}

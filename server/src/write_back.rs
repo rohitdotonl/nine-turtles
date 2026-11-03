@@ -9,7 +9,8 @@
 //! An address made only to send from ("no-reply") is never kept. And the
 //! reader's own (`subscriptions.write_to`), typed once when neither had one,
 //! or in Edit on their page: it wins, and is kept on every place of the person, so
-//! it stays with them.
+//! it stays with them. When neither is known, the writer's own site is
+//! looked on once, when the reader asks (`site`, decision 0168).
 
 use axum::{
     Json, Router,
@@ -27,8 +28,12 @@ use crate::{
     refused,
 };
 
+mod site;
+
 pub fn routes() -> Router<AppState> {
-    Router::new().route("/api/feeds/{id}/write-to", post(set_address))
+    Router::new()
+        .route("/api/feeds/{id}/write-to", post(set_address))
+        .merge(site::routes())
 }
 
 /// The longest address there is (RFC 5321's path limit, less its brackets).

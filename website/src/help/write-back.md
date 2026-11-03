@@ -27,9 +27,14 @@ related: [one-person-several-places, share-an-article, newsletters]
 
 Many writers put their email address in their feed, or a "Reply by email"
 link at the end of each post, and nine turtles finds it there. When it
-can't, it asks. Press **Find it on their site** to open their website in a
-new tab (the address is often on an About or Contact page), copy it, and
-paste it into **Their email address**. Then press **Write back**.
+can't, it looks once on their website, on its home page and its contact or
+about page, while the box says "Looking on their site…".
+
+- **If it finds an address,** it fills it in for you. Check it's theirs,
+  then press **Write back**.
+- **If it doesn't,** press **Find it on their site** to open their website
+  in a new tab, copy the address, and paste it into **Their email address**.
+  Then press **Write back**.
 
 nine turtles remembers it for that person, so you're asked only once. Their
 page shows it under **Email**; to change it, press **Edit**
@@ -39,6 +44,9 @@ there and change **Email address**.
 
 - nine turtles never sends the email or sees it. It's between you and them,
   from your own email account.
+- nine turtles visits a writer's site for their address only when you press
+  Write back, and only once for each writer. It never visits their
+  articles' pages.
 - Addresses you type are yours alone: nobody else who reads that person sees
   them.
 - For a newsletter, the reply goes to the address its emails come from.

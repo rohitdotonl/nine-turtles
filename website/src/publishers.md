@@ -46,6 +46,12 @@ never pretends to be a browser.
   copy what the feed left out. It reads a page of yours only when someone
   adds your site or looks for its feed, and then only to find the feeds
   that page links to.
+- **It looks for your email address once, if a reader asks.** When a
+  reader presses Write back to reply to you and your feed gives no
+  address, nine turtles reads your home page and one contact or about page
+  it links to, once, to find it. It never does this again for your site,
+  however many readers press it. To be sure readers find the right
+  address, put it in your feed or on your contact page.
 
 ## When something goes wrong
 

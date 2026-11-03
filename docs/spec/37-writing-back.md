@@ -31,7 +31,7 @@ V1, item 2). Its look gets a refinement round.*
   sign-off). Any other address in an article may be someone else's, so it's
   never used. A magazine whose articles name or link several gives none, and
   a website's `webMaster` never counts. Only what the feed brought is read:
-  finding an address fetches nothing. A newsletter gives its Reply-To address, else
+  finding an address in the feed fetches nothing. A newsletter gives its Reply-To address, else
   its From address, from its first email that has one (a later email can't
   swap it). An address made only to send from ("no-reply", "donotreply",
   bounce and mailer addresses) is never used. A feed's address arrives with
@@ -39,12 +39,21 @@ V1, item 2). Its look gets a refinement round.*
   email.
 - **When nine turtles doesn't know it,** Write back opens a quiet bordered
   box in place, as + Add a source does: "Write back to Alpha", and one
-  short line, "nine turtles doesn't have their address yet. Writers often
-  give it on an About or Contact page; paste it here once and it's kept.";
-  then **Find it on their site** (an everyday button that opens their
+  short line. While nine turtles looks on their site (below) it says
+  "Looking on their site…", in plain words with nothing moving. When it
+  finds an address, it fills it into the field and says "Found on their
+  site. Check it, then press Write back."; the reader checks it and presses
+  Write back to keep it (a page can show someone else's address too). When
+  it finds none, "nine turtles looked on their site and didn't find an
+  address. Paste it here once and it's kept." When it couldn't look (their
+  site didn't answer, or nine turtles can't be reached), "nine turtles
+  couldn't look on their site just now. Paste it here once and it's kept."
+  Once the reader changes a found address, the box is as before. With no website known it
+  doesn't look, and says "nine turtles doesn't have their address yet.
+  Paste it here once and it's kept."; then **Find it on their site** (an everyday button that opens their
   website, the one their feed names or else their article's home page, in a
-  new tab; left out, with the line's middle, when nine turtles knows
-  neither), **Their email address**, **Write back** and **Not now**, and
+  new tab; left out when nine turtles knows
+  neither, and once an address found there is filled in), **Their email address**, **Write back** and **Not now**, and
   under them, quietly, "Sends from your own email. nine turtles never reads
   it." The
   keyboard starts on the field; Not now puts it back on the button.
@@ -53,6 +62,22 @@ V1, item 2). Its look gets a refinement round.*
   at once and keeps the address for the person, on every source of theirs,
   so you're asked once; from then on Write back opens your email app
   straight away.
+- **Looking on their site** (decision 0168, the second floor's one visit
+  for Write back): only when the reader presses Write back and no address is
+  known, nine turtles' server visits the writer's site, the one their feed
+  names (else their newest article's home page, never the article): the
+  home page, and, if it gives no address, the one contact page it links to
+  on the same site (else an about page): a link whose words are just
+  "Contact", "About me" and the like, or whose short address is `/contact`
+  or `/about`, never a post's ("About time"). An address counts when it's an
+  email link, or written out on the page; one at the site's own name wins,
+  else the page's only one; several others give none, and a blog host's own
+  address never counts as the writer's. It takes at most 8
+  seconds, after which the box asks. It's done once for the writer, for
+  everyone who follows them: pressing Write back again answers from what was
+  found, or not found, without visiting. A site that didn't answer isn't
+  counted, so a later press tries again; one that answered with an error
+  or asked nine turtles to slow down is counted, and never asked again.
 - **Their page** (section 36) shows it as **Email**, under their sources,
   as a link that opens your email app; it's left out while
   nine turtles doesn't know it. Edit (on their page) has an **Email address**
@@ -65,7 +90,8 @@ V1, item 2). Its look gets a refinement round.*
 **How to check it**
 1. Follow a blog whose feed names no address (most WordPress blogs). Open an
    article and scroll to its end: **Write back to …**. Press it: the box
-   asks for their address. Type "someone at home" and press Write back: it
+   says "Looking on their site…", then either fills in the address it found
+   there or says it didn't find one. Type "someone at home" and press Write back: it
    says it doesn't look like an email address, keeping what you typed.
 2. Type a real address and press Write back: your email app opens with it
    and "Re: " and the title. Back in nine turtles, the button now shows the
@@ -84,3 +110,8 @@ V1, item 2). Its look gets a refinement round.*
    email app at once, with no question, and their page shows the address.
 7. On a computer, open an article and press `w`: the same as pressing
    Write back.
+8. Follow a blog whose contact page shows the writer's email but whose feed
+   doesn't: press Write back; the field fills with the address and the line
+   says "Found on their site. Check it, then press Write back." Press Not
+   now and Write back again: the same address appears at once (nothing is
+   visited twice).

@@ -115,6 +115,9 @@ pub struct AppState {
     /// Feeds just looked at for a reader choosing among a site's several
     /// (`lookup`), so following the chosen one needn't fetch it again.
     pub looked: Arc<lookup::Recent>,
+    /// The feeds whose writer's site Write back is looking on right now
+    /// (`write_back::site`), so two presses make one visit.
+    pub site_visits: Arc<std::sync::Mutex<std::collections::HashSet<i64>>>,
     pub wrong_passwords: Arc<AtomicU64>,
     /// Seconds since 1970 (UTC) when this run of nine turtles started.
     pub started_at: i64,
@@ -200,6 +203,7 @@ pub async fn state(config: Config) -> Result<AppState, String> {
         sign_ups: Arc::default(),
         finder: Arc::default(),
         looked: Arc::default(),
+        site_visits: Arc::default(),
         wrong_passwords: Arc::default(),
         started_at: now(),
         last_round: Arc::default(),
