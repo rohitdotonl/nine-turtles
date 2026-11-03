@@ -809,6 +809,10 @@ footer .links.small a {
     padding-inline: 20px;
     max-width: calc(40rem + 40px);
   }
+  .front + footer {
+    padding-inline: 0;
+    max-width: 40rem;
+  }
 }
 .front {
   padding-top: 7.5rem;
@@ -840,7 +844,7 @@ footer .links.small a {
   font-weight: 600;
   line-height: 1;
 }
-.quiet {
+.front .signature .quiet {
   display: block;
   margin-top: 8px;
   color: var(--muted);

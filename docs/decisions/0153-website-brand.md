@@ -1,5 +1,8 @@
 # 0153: The website wears the brand
 
+*Partly replaced by [0169](0169-front-page-letter.md): the front page is
+Rohit's letter, with no band and its own sizes. The rest stands.*
+
 *3 November 2026. Rohit chose the direction ("G set as C") on 2 November
 while trying mockups on his Mac, and said yes to building the full front
 page on 3 November.*

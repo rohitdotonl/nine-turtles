@@ -144,9 +144,10 @@ claiming one address. The Help pages are in
 `website/src/help/`, one file each, grouped by the list in
 `website/src/_data/helpGroups.json` (SPEC section 40). The contact address, the app's address
 and the code's address are written once, in `website/src/_data/site.json`.
-The pictures of the app in `website/src/images/` were taken from the app's
-own screenshot set, which follows only made-up blogs; take new ones when
-the app's look changes. The privacy policy, terms, pricing and refunds pages are drafts until the
+`website/src/images/` holds only the share picture; the front page's
+picture of reading, highlighting and writing back is drawn in HTML in
+`website/src/index.md`, and shows only what the app does today (decision
+0169). The privacy policy, terms, pricing and refunds pages are drafts until the
 open question in `docs/planning/questions.md` is settled; Dodo Payments
 checks all of them, with contact, before approving payments (decision 0083).
 

@@ -5,7 +5,7 @@ description: Why I made nine turtles, what it is, and who makes it.
 permalink: /about/
 ---
 
-<!-- Rohit's story (the owner's review, step 1b; decision 0166), a draft in his voice that he edits himself. -->
+<!-- Rohit's story (the owner's review, step 1b; decision 0166), a draft in his voice that he edits himself. The front page's letter (website/src/index.md, decision 0169) tells it shorter: change both together. -->
 
 <p class="lede">
   Years ago, a social network introduced me to strangers. Through its little

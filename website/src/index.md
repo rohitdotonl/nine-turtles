@@ -4,7 +4,7 @@ front: true
 description: "A letter from Rohit, who makes nine turtles: a quiet place to read the people worth knowing, and to write back to them."
 ---
 
-<!-- The front page is Rohit's letter (decision 0169; BRAND.md → "The website"; DESIGN.md → "The website's front page"). His story, in his voice, a draft he edits himself. The picture shows only what Write back does today (SPEC section 37). -->
+<!-- The front page is Rohit's letter (decision 0169; BRAND.md → "The website"; DESIGN.md → "The website's front page"). His story, in his voice, a draft he edits himself; the longer telling is on About (website/src/about.md): change both together. The picture shows only what Write back does today (SPEC section 37). -->
 
 <h1 class="hello">Hello,</h1>
 
@@ -42,7 +42,7 @@ description: "A letter from Rohit, who makes nine turtles: a quiet place to read
   </div>
 </div>
 
-<p>It ends when you've read what's there, and there's nothing to check. It's built on RSS, the open standard, so your list is always yours, and you can take everything with you in one click.</p>
+<p>It ends when you've read what's there, and there's nothing to check. It's built on RSS, the open standard, so your list is always yours, and you can take it, and everything you kept, with you.</p>
 
 <p>You can start reading today. When I set a price, it will be on the <a href="/pricing/">Pricing</a> page before anyone pays. That's what will keep nine turtles running, and keep it mine to answer for.</p>
 

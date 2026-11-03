@@ -14,7 +14,7 @@ letter you can answer shows what nine turtles is about before anyone signs up.
 
 - **The front page is a signed letter from Rohit:** "Hello,", his story, what
   nine turtles is (one line set large), a picture of reading, highlighting
-  and writing back, what it costs, signed "Rohit", then "Start reading" and
+  and writing back, how it will be paid for, signed "Rohit", then "Start reading" and
   "P.S. Write back to me". The words are a draft he edits himself.
 - **For this page only,** decision 0153's one 20px text size and the grey
   band go: the page has the name and the website's places along its top, one
