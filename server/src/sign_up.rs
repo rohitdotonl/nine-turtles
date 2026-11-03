@@ -73,7 +73,17 @@ pub fn routes() -> Router<AppState> {
 struct SignUp {
     email: String,
     password: String,
+    /// "How did you hear about nine turtles?" (decision 0155): one of
+    /// `HEARD_ABOUT`, or nothing when the reader chose not to say.
+    #[serde(default)]
+    heard_about: Option<String>,
 }
+
+/// The answers "How did you hear about nine turtles?" offers, as they're
+/// kept: a blog, a friend, a search, an AI assistant, Reddit, somewhere
+/// else. Only their totals are ever shown (the owner report). A waiting
+/// sign-up keeps the answer with its link until the account is made.
+pub const HEARD_ABOUT: &[&str] = &["blog", "friend", "search", "ai", "reddit", "other"];
 
 /// Signs up: emails a link that makes the account (202, `sent_to`), or,
 /// without the email settings, makes it at once and signs this device in
@@ -87,6 +97,11 @@ async fn sign_up(State(state): State<AppState>, Json(form): Json<SignUp>) -> Res
     if let Some(refusal) = password_problem(&form.password) {
         return refusal;
     }
+    // An answer the page doesn't offer is kept as no answer, never refused:
+    // the question is optional, so it never stands between anyone and an account.
+    let heard_about = form
+        .heard_about
+        .filter(|answer| HEARD_ABOUT.contains(&answer.as_str()));
     // One sign-up at a time: each scramble takes about 19 MB of memory, so
     // many at once could use up the server's. Held until this one is
     // decided, so the hour's count below can't be raced past either.
@@ -119,7 +134,7 @@ async fn sign_up(State(state): State<AppState>, Json(form): Json<SignUp>) -> Res
     };
 
     let Some(mailer) = state.mailer.clone() else {
-        let made = make_account(&state.db, &email, &line, None).await;
+        let made = make_account(&state.db, &email, &line, None, heard_about.as_deref()).await;
         drop(tries);
         return match made {
             Ok(Ok(person)) => match remember_device(&state.db, person).await {
@@ -146,7 +161,7 @@ async fn sign_up(State(state): State<AppState>, Json(form): Json<SignUp>) -> Res
         Ok(true) => return refused(StatusCode::CONFLICT, "already"),
         Err(error) => return database_problem("finding a reader", &error),
     }
-    let ticket = match wait_for_confirming(&state.db, &email, &line).await {
+    let ticket = match wait_for_confirming(&state.db, &email, &line, heard_about.as_deref()).await {
         Ok(Some(ticket)) => ticket,
         // Past the address's emails for the hour, or one went less than a
         // minute ago: kept, but not emailed. The link already sent works
@@ -183,6 +198,7 @@ async fn wait_for_confirming(
     db: &SqlitePool,
     email: &str,
     line: &str,
+    heard_about: Option<&str>,
 ) -> Result<Option<String>, sqlx::Error> {
     let ticket = match new_token() {
         Ok(ticket) => ticket,
@@ -199,8 +215,9 @@ async fn wait_for_confirming(
     let emailed = this_hour < EMAILS_PER_ADDRESS_PER_HOUR && !lately;
     sqlx::query(
         "INSERT INTO email_links
-             (purpose, person_id, email, password_hash, token_hash, created_at, expires_at, emailed)
-         VALUES ('sign-up', NULL, ?, ?, ?, ?, ?, ?)",
+             (purpose, person_id, email, password_hash, token_hash, created_at, expires_at, emailed,
+              heard_about)
+         VALUES ('sign-up', NULL, ?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(email)
     .bind(line)
@@ -208,6 +225,7 @@ async fn wait_for_confirming(
     .bind(now)
     .bind(now + CONFIRM_LIFETIME)
     .bind(emailed)
+    .bind(heard_about)
     .execute(&mut *transaction)
     .await?;
     transaction.commit().await?;
@@ -220,8 +238,9 @@ struct Finish {
     password: String,
 }
 
-/// A waiting sign-up: its line in `email_links` and the scrambled password.
-type Waiting = (i64, String);
+/// A waiting sign-up: its line in `email_links`, the scrambled password and
+/// the answer to "How did you hear about nine turtles?".
+type Waiting = (i64, String, Option<String>);
 
 /// Follows a sign-up's link with the password chosen at sign-up: makes the
 /// account, its address confirmed, and signs this device in. The ticket
@@ -253,7 +272,7 @@ async fn finish_sign_up(State(state): State<AppState>, Json(form): Json<Finish>)
         return wait_response(wait);
     }
     let waiting: Result<Vec<Waiting>, sqlx::Error> = sqlx::query_as(
-        "SELECT id, password_hash FROM email_links
+        "SELECT id, password_hash, heard_about FROM email_links
          WHERE purpose = 'sign-up' AND email = ? AND used = 0 AND expires_at > ?
          ORDER BY created_at DESC, id DESC LIMIT ?",
     )
@@ -267,10 +286,10 @@ async fn finish_sign_up(State(state): State<AppState>, Json(form): Json<Finish>)
         Err(error) => return database_problem("finding a sign-up link", &error),
     };
     let mut chosen = None;
-    for (id, line) in waiting {
+    for (id, line, heard_about) in waiting {
         match check_password(&state, &account, form.password.clone(), Some(line.clone())).await {
             Some(true) => {
-                chosen = Some((id, line));
+                chosen = Some((id, line, heard_about));
                 break;
             }
             Some(false) => {}
@@ -278,7 +297,7 @@ async fn finish_sign_up(State(state): State<AppState>, Json(form): Json<Finish>)
         }
     }
     let mut limiters = state.limiter.lock().await;
-    let Some((id, line)) = chosen else {
+    let Some((id, line, heard_about)) = chosen else {
         if let Some(wait) = limiters.wait(&account, std::time::Instant::now()) {
             return wait_response(wait);
         }
@@ -300,7 +319,7 @@ async fn finish_sign_up(State(state): State<AppState>, Json(form): Json<Finish>)
         Ok(_) => return refused(StatusCode::GONE, "expired"),
         Err(error) => return database_problem("making an account", &error),
     }
-    match finish(&mut transaction, &email, &line).await {
+    match finish(&mut transaction, &email, &line, heard_about.as_deref()).await {
         Ok(Ok(person)) => match transaction.commit().await {
             Ok(()) => signed_in_as(&state.db, person, json!({ "done": "signed-up" })).await,
             Err(error) => database_problem("making an account", &error),
@@ -328,14 +347,19 @@ async fn finish(
     transaction: &mut SqliteConnection,
     email: &str,
     line: &str,
+    heard_about: Option<&str>,
 ) -> Result<Result<i64, Response>, sqlx::Error> {
-    let made = make_account(&mut *transaction, email, line, Some(now())).await?;
+    let made = make_account(&mut *transaction, email, line, Some(now()), heard_about).await?;
     if made.is_ok() {
-        // Any other link waiting for this address can't make a second account.
-        sqlx::query("UPDATE email_links SET used = 1 WHERE purpose = 'sign-up' AND email = ?")
-            .bind(email)
-            .execute(&mut *transaction)
-            .await?;
+        // Any other link waiting for this address can't make a second account,
+        // and no copy of an answer is left behind once the account holds it.
+        sqlx::query(
+            "UPDATE email_links SET used = 1, heard_about = NULL
+             WHERE purpose = 'sign-up' AND email = ?",
+        )
+        .bind(email)
+        .execute(&mut *transaction)
+        .await?;
     }
     Ok(made)
 }
@@ -348,11 +372,12 @@ async fn make_account<'c>(
     email: &str,
     line: &str,
     confirmed_at: Option<i64>,
+    heard_about: Option<&str>,
 ) -> Result<Result<i64, Response>, sqlx::Error> {
     let now = now();
     let made: Result<Option<i64>, sqlx::Error> = sqlx::query_scalar(
-        "INSERT INTO people (owner, email, password_hash, created_at, email_confirmed_at)
-         SELECT 0, ?, ?, ?, ?
+        "INSERT INTO people (owner, email, password_hash, created_at, email_confirmed_at, heard_about)
+         SELECT 0, ?, ?, ?, ?, ?
          WHERE (SELECT COUNT(*) FROM people WHERE owner = 0 AND created_at > ?) < ?
          RETURNING id",
     )
@@ -360,6 +385,7 @@ async fn make_account<'c>(
     .bind(line)
     .bind(now)
     .bind(confirmed_at)
+    .bind(heard_about)
     .bind(now - 60 * 60)
     .bind(SIGN_UPS_PER_HOUR)
     .fetch_optional(connection)

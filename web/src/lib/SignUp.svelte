@@ -2,7 +2,8 @@
   The sign-up page (/sign-up, SPEC section 1, decisions 0122 and 0154), open
   to anyone: built as the sign-in page is, one centred column of "Email",
   "Password" (each named above its field, "At least 12 characters." under the
-  password), Sign up, and "Have an account? Sign in". Signing up emails a
+  password), the optional "How did you hear about nine turtles?" (decision
+  0155), Sign up, and "Have an account? Sign in". Signing up emails a
   link that finishes it: the form gives way to "Check your email", as
   Forgot? does, with a quiet Send again and a way back to the form. (Where
   nine turtles can't send email, the account is made at once and the
@@ -13,12 +14,14 @@
   import Logo from "./Logo.svelte";
   import Icon from "./Icon.svelte";
   import SendAgain from "./SendAgain.svelte";
-  import { PASSWORD_MINIMUM, explainSignUp, signUp } from "./readers";
+  import { HEARD_ABOUT, PASSWORD_MINIMUM, explainSignUp, signUp, type HeardAbout } from "./readers";
 
   let { onSignedIn }: { onSignedIn: () => void } = $props();
 
   let email = $state("");
   let password = $state("");
+  /** Empty is "Rather not say". */
+  let heardAbout: HeardAbout | "" = $state("");
   let message = $state("");
   /** Which field the message is about, so it alone is marked. */
   let refusedField: "email" | "password" | undefined = $state();
@@ -32,7 +35,7 @@
     event.preventDefault();
     if (busy || email.trim() === "" || password === "") return;
     busy = true;
-    const result = await signUp(email.trim(), password);
+    const result = await signUp(email.trim(), password, heardAbout || undefined);
     busy = false;
     if (result.ok && result.sentTo) {
       sent = result.sentTo;
@@ -59,7 +62,7 @@
 
   /** "Send again", a minute after: the same sign-up again, said shortly. */
   async function signUpAgain(): Promise<string> {
-    const result = await signUp(sent, password);
+    const result = await signUp(sent, password, heardAbout || undefined);
     return result.ok ? "Another link is on its way." : explainSignUp(result);
   }
 
@@ -131,6 +134,17 @@
         class="field"
       />
       <p id="sign-up-help" class="field-help mt-0">At least {PASSWORD_MINIMUM} characters.</p>
+    </div>
+    <!-- One optional question (decision 0155): a plain list, "Rather not say" until something is chosen. -->
+    <div class="flex flex-col gap-1.5 pt-3">
+      <label for="heard-about" class="text-small text-ink-2">How did you hear about nine turtles?</label>
+      <select id="heard-about" name="heard-about" bind:value={heardAbout} aria-describedby="heard-about-help" class="field">
+        <option value="">Rather not say</option>
+        {#each HEARD_ABOUT as answer (answer.value)}
+          <option value={answer.value}>{answer.words}</option>
+        {/each}
+      </select>
+      <p id="heard-about-help" class="field-help mt-0">Optional. Only ever counted, never shown with your name.</p>
     </div>
     <!-- Room for a message kept at the column's foot, as on sign-in (decision 0045), so a message moves only what's under it. -->
     <div class="flex min-h-[10.5rem] flex-col gap-3">
