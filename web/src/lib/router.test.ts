@@ -14,6 +14,7 @@ describe("addresses", () => {
     expect(parse("/settings/readers")).toEqual({ kind: "settings", page: "readers" });
     expect(parse("/settings/rules")).toEqual({ kind: "settings", page: "rules" });
     expect(parse("/settings/add-from-anywhere/")).toEqual({ kind: "settings", page: "add-from-anywhere" });
+    expect(parse("/settings/install")).toEqual({ kind: "settings", page: "install" });
     expect(parse("/add-feed")).toEqual({ kind: "add-feed" });
     expect(parse("/new-to-feeds")).toEqual({ kind: "new-to-feeds" });
     expect(parse("/feeds/12")).toEqual({ kind: "feed", id: 12 });

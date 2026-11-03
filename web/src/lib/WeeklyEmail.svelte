@@ -3,9 +3,8 @@
   thing nine turtles sends that the reader didn't just ask for, so it's off
   until they choose Weekly or Twice a week here. A row like the Reading
   group's: its icon, name and what it does, then a segmented control. Shown
-  only while nine turtles can send email and the reader has an address.
-  The first choice emails that address a Start link; until it's pressed the
-  line under the name says so.
+  only while nine turtles can send email and the reader has an address; it
+  goes only to a confirmed one (decision 0154).
   Why a choice wasn't saved goes to `onProblem`, said under the group.
 -->
 <script lang="ts">
@@ -16,11 +15,9 @@
 
   /** Unknown until the server answers, so the choices wait rather than show Off. */
   let often: Often | undefined = $state();
-  /** Waiting for Start to be pressed in the email sent to the reader's address. */
-  let waiting = $state(false);
 
   loadOften().then(
-    (answer) => ({ often, waiting } = answer),
+    (answer) => (often = answer),
     () => onProblem("The weekly email's setting couldn't be read. Check your connection and try again."),
   );
 
@@ -29,10 +26,10 @@
     often = next;
     onProblem("");
     const saved = await saveOften(next);
-    if ("refusal" in saved) {
+    if (typeof saved === "object") {
       often = before;
       onProblem(explainOften(saved.refusal));
-    } else ({ often, waiting } = saved);
+    } else often = saved;
   }
 </script>
 
@@ -41,7 +38,7 @@
     <span class="setting-icon" aria-hidden="true"><Icon name="envelope" size={18} /></span>
     <div class="setting-words">
       <p id="weekly-name" class="setting-name">Weekly email</p>
-      <p id="weekly-hint" class="setting-hint">{oftenHint(often, waiting)}</p>
+      <p id="weekly-hint" class="setting-hint">{oftenHint(often)}</p>
     </div>
   </div>
   <div role="group" aria-labelledby="weekly-name" aria-describedby="weekly-hint" class="choices setting-control" style="--columns: 3">

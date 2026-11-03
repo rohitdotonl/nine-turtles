@@ -15,12 +15,11 @@ refinement round.*
   A to Z, at most 30 people and three titles each, a line and the
   publisher's link under each title, and "The rest is in nine turtles."
   when cut. Never a count. Nothing new: nothing sent.
-- **Started from the address:** sign-up never checks an address (decision
-  0115), so the first time it's turned on for an address, one email asks
-  the reader to press Start there, and nothing else goes to it until they
-  do. Without this, anyone could sign up with a stranger's address and
-  send them weekly mail, written by feeds they choose, from
-  hello@nineturtles.app (found by the second-agent review).
+- **Only to a confirmed address** (`people.email_confirmed_at`, decision
+  0154). The second-agent review found that sign-up didn't check
+  addresses, so anyone could have had weekly mail signed by Rohit sent to
+  a stranger; the owner chose to confirm addresses at sign-up (3 November
+  2026), so this needs no step of its own.
 - Off in one press: a stop link to a page with one button, working signed
   out. Its ticket is kept only as a scramble; the last ten emails' links
   work, and one that no longer does says so rather than claim it stopped.
@@ -41,12 +40,7 @@ refinement round.*
    the app isn't repeated.
 7. "The rest is in nine turtles." when the email is cut short, flat rather
    than "waiting for you".
-8. The Start email's words: "You chose the weekly email in nine turtles. To
-   start it at this address, open this link and press Start", then "If it
-   wasn't you, ignore this email: nothing is sent to this address unless
-   Start is pressed." It works once, for a week; while it waits unanswered,
-   no other goes to that address for a week.
-9. The publisher's link under each title, rather than links into nine
+8. The publisher's link under each title, rather than links into nine
    turtles: the reader can open the writing straight away, and the
    publisher is credited and linked (the floor).
 

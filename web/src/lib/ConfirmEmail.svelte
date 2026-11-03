@@ -3,8 +3,8 @@
   18, decision 0088): a reader's new address. Nothing happens until the
   reader presses Confirm email, so a mail program that opens links to check
   them can't use the link up first. The changed address is then said, with
-  Continue. A link that has run out says so calmly. (Open sign-up once
-  confirmed new accounts here too; since decision 0115 it needs no email.)
+  Continue. A link that has run out says so calmly. (A new account's link
+  opens FinishSignUp instead, decision 0154.)
 -->
 <script lang="ts">
   import Logo from "./Logo.svelte";

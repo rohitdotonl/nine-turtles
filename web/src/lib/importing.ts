@@ -7,8 +7,11 @@ import { PLAN_ENDED } from "./feeds";
 /** What an OPML import did. */
 export type ImportSummary = { added: number; already: number; foldersAdded: number; unreadable: string[] };
 
-/** Imports an OPML file's feeds and folders. A string is a problem, said plainly. */
-export async function importOpml(file: File): Promise<ImportSummary | string> {
+/**
+ * Imports an OPML file's feeds and folders, or (`youtube`) the subscriptions.csv Google Takeout gives for
+ * YouTube, each channel as its feed (decision 0144). A string is a problem, said plainly.
+ */
+export async function importOpml(file: File, youtube = false): Promise<ImportSummary | string> {
   let response: Response;
   try {
     response = await api("/api/opml", {
@@ -29,7 +32,9 @@ export async function importOpml(file: File): Promise<ImportSummary | string> {
       unreadable: Array.isArray(summary.unreadable) ? summary.unreadable.map(String) : [],
     };
   }
-  if (isRecord(body) && body.error === "not-opml") return "That file doesn't look like an OPML file.";
+  if (isRecord(body) && body.error === "not-opml") {
+    return youtube ? "That file doesn't look like subscriptions.csv from Google Takeout." : "That file doesn't look like an OPML file.";
+  }
   if (isRecord(body) && body.error === "plan-ended") return PLAN_ENDED;
   if (isRecord(body) && body.error === "too-many") {
     return tooManyToImport(Number(body.following ?? 0), Number(body.adding ?? 0), Number(body.most ?? 1000));

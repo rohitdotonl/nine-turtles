@@ -127,17 +127,12 @@ question, start from that shelf, and trim here first if writing slips.
 
 **Already done:**
 
-- [`business-research.md`](../archive/rnd-2026-10/business-research.md): the summary, rivals,
-  prices, the ranked shortlist.
-- [`playbook.html`](../archive/rnd-2026-10/playbook.html): the full report.
-- [`research-2026-10/`](../archive/rnd-2026-10/research-2026-10/): the remaining working notes with
-  sources. The most useful here: 03 (pain points), 04 (rivals and
-  positioning), 14 (Hacker News pain points), 19 (founder playbooks).
+- The October research (25 October 2026). Its findings that still hold
+  are below and in "Rohit's strategy notes" at the end of this file; the
+  rest was written for an earlier positioning and was deleted on
+  3 November 2026 (it stays in the repository's history).
 - [`reader-comparison.html`](reader-comparison.html): Feedbin, Miniflux,
   NetNewsWire and FreshRSS compared with nine turtles.
-- [`strategy-notes.md`](strategy-notes.md): Rohit's own conclusions,
-  including the firm noes (no donations, no AI summaries, no lifetime
-  deals).
 - [`research-notes-2026-11.md`](research-notes-2026-11.md): Rohit's own
   notes of 1 November 2026 (rivals, inspiration sites, readers' words,
   feature and marketing ideas), put in order.
@@ -155,6 +150,51 @@ What the research already found:
   year; Current is $9.99 once.
 - **The gap:** nobody combines web-first, finite, book-like reading,
   newsletters and a fair lasting price.
+- **Communities:** e-ink readers are a real group (r/kobo 134k,
+  r/RemarkableTablet 103k, r/eink 101k, r/Onyx_Boox 70k in October 2026);
+  Pocket's Kobo link died in 2025 and Instapaper made Send-to-Kindle
+  paid-only in February 2026. In India, r/Indianbooks has about 441k
+  members and Cubbon Reads (silent reading, 300+ people, about 60
+  chapters) is a natural partner.
+- **Newsletters:** 62% of newsletter readers don't read most of what they
+  get (Pew, 2026); overload is a heavy subscriber's problem. Meco charges
+  $35–40 a year; Mailbrew was bought in 2025.
+
+**Rivals (as of October 2026).** Small products beat giants by refusing
+the giant's game: HEY, Kagi, Glass and Pinboard each have a price that's a
+statement and features they proudly don't have.
+
+| Rival | Where it's going | The opening for nine turtles |
+|---|---|---|
+| **Current** (Terry Godier) | Articles fade after hours to a week. $9.99 once, Apple only, web "planned". Syncs with iCloud, Feedbin, Miniflux and, since July 2026, Feedly. | The closest rival, and proof calm reading gets press. Differ on: any device, people you write back to, newsletters, a full service. |
+| **Feedly** | Toward threat and market intelligence for companies; ads in the free tier. | "nine turtles is for one person." |
+| **Inoreader** | Power users, teams, AI; nearly doubled its price in 2024. | One plan, one price. |
+| **Readwise Reader** | Everything: highlights, PDFs, video, AI. Grew after Pocket closed. | Calm, and people rather than a pile. |
+| **Feedbin** | Solo, honest, paid ($7 a month or $70 a year), open source; powers several apps. | The most respected peer. Compete on feeling and design, not features. Admire it in public. |
+| **NetNewsWire, Reeder** | Excellent, Apple only. | Not rivals: nine turtles syncs with them. |
+| **Micro.blog** (Manton Reece) | Building a reader whose items "fade" (February 2026). | Calm reading is a small movement; be its friendliest member. |
+
+Sources: [TechCrunch on Current](https://www.techcrunch.com/2026/02/19/current-is-a-new-rss-reader-thats-more-like-a-river-than-an-inbox/),
+[Current](https://terrygodier.com/current),
+[PricingSaaS on Inoreader](https://pricingsaas.com/companies/inoreader),
+[Pinboard's pricing](https://blog.pinboard.in/2014/12/new_pricing_policy/).
+
+**Readers' own words that fit the positioning** (Hacker News, October
+2026; check the exact wording on the page before quoting in public):
+
+- "I decided to quit most social media, so without RSS I would miss stuff I actually care about." ([sph](https://news.ycombinator.com/item?id=45460544))
+- "Algorithms trap you in doomscrolling but RSS and the Fediverse can give you back control of your attention." ([macstainless](https://news.ycombinator.com/item?id=46721126))
+- "I am revisiting rss as a means to escape social media algorithms and doomscrolling." ([dmtroyer](https://news.ycombinator.com/item?id=43804361))
+- "I've never downloaded TikTok but I subscribe to two users via my RSS reader" ([forsythe_](https://news.ycombinator.com/item?id=32333261))
+- "I miss my RSS reader." ([wmeredith](https://news.ycombinator.com/item?id=47304959))
+- "there's no fighting for my attention with notifications or unread counters" ([seba_dos1](https://news.ycombinator.com/item?id=45632857))
+- "RSS is a human-respecting interface, because you don't miss anything if you don't read it for a month." ([gen220](https://news.ycombinator.com/item?id=29933945))
+- "paid service from a bootstrapped company, kind of ensures it won't randomly kill the product." ([HN](https://news.ycombinator.com/item?id=44064933))
+- "it does one job and it does it impeccably." ([gpjt, on NewsBlur](https://news.ycombinator.com/item?id=42758211))
+
+More readers' words, from Reddit, are in
+[`research-notes-2026-11.md`](research-notes-2026-11.md) → "Reddit
+comments, word for word".
 
 **Rohit's to-do:**
 
@@ -482,9 +522,8 @@ SPEC section first.
 **Status:** 🟡 the payments are built; the price and trial are open
 questions (`docs/planning/questions.md`).
 
-**Already done:** the research suggestion in
-[`business-research.md`](../archive/rnd-2026-10/business-research.md) → "Suggested price" and
-[`strategy-notes.md`](strategy-notes.md) → "Pricing". Built today: one
+**Already done:** the research suggestion in section 2 → "Claude says"
+(the price, trial, founding price and India price). Built today: one
 plan, monthly or yearly; a **14-day** trial with no card; after the trial
 you can still read everything you have, but you can't add feeds.
 Platform: the web app installs on phones, so one Dodo payment flow serves
@@ -636,12 +675,11 @@ this file, with the numbers and what you decided.
 
 ## Rohit's other to-dos from the research
 
-Things only Rohit can do, from
-[`business-research.md`](../archive/rnd-2026-10/business-research.md) → "Research only Rohit can
-do". Tick them here.
+Things only Rohit can do, from the October research. Tick them here.
 
 - [ ] Ask ChatGPT, Perplexity, Gemini and Claude the key questions from
-      your own accounts, monthly (strategy notes, section 6).
+      your own accounts, monthly (`marketing.md` → "Being named by AI
+      assistants").
 - [ ] Check in Dodo's dashboard or with support: discount codes, regional
       prices, gifts, affiliates, pausing a plan, fees.
 - [ ] An accountant: GST on exports, the LUT, income tax via a merchant of
@@ -653,3 +691,60 @@ do". Tick them here.
 - [ ] Ask three small newsletters for their rates.
 - [ ] Decide which personal details you're comfortable sharing publicly.
 - [ ] List the people you already know who might read or share it.
+
+---
+
+## Rohit's strategy notes (26 October 2026)
+
+Rohit's own notes after reading the October research, moved here from
+their own file on 3 November 2026. Positioning was replaced on 1 November
+([`positioning.md`](positioning.md)), pricing is in sections 2 and 6, and
+marketing is in [`marketing.md`](marketing.md).
+
+### Firm noes
+
+- **No donations.** nine turtles is a paid service, not a charity.
+- **No AI summaries,** or any AI that rewrites or ranks what writers wrote.
+- **No lifetime deals.**
+- **Don't say publicly whether AI agents helped build nine turtles.**
+
+### What "viable" means
+
+Hold one long session to answer, in writing:
+
+- **What do I expect?** A number of paying readers, a monthly income, a
+  timeline, and how many hours a week I'll give it (section 2 has the
+  first answers).
+- **How do I make that close to certain,** if not in the short term then
+  in the long term? Which bets compound (search, AI mentions, friendships,
+  free tools, a body of writing) and which are one-off spikes (launches)?
+- **Keep in mind:** search alone won't make nine turtles sustainable in
+  year one. The essay, the launches, the lists and the partners carry the
+  early weight; search and AI mentions carry the later years.
+- **What one person can do now:** AI gives a single founder a market
+  researcher, a marketer, an R&D team, a tech team and a copywriter. Plan
+  as if those roles exist.
+
+### The one-person, independent, underdog business
+
+- **Break the SaaS pattern on the website.** No usual template; Basecamp
+  ignores the zeitgeist with long, written home pages.
+- **Show, in many places, that this is one person.** The goal isn't only
+  trust: people root for it and want to be part of it.
+- **What one person can do that big players can't:** dominate a small
+  niche they can't be bothered with; have a distinct taste; write a blog
+  that sounds like a person; say no to features. Bear Blog's founder
+  refuses most requests, and the product stays simple and cheap to
+  support. Simplicity is retention.
+- **Make free public goods,** like Kagi's Small Web.
+
+### Customer research
+
+- **Reddit** tells us which features to add and which tools to make. It
+  blocks our researchers, so Rohit reads it himself (first pass done
+  1 November, in [`research-notes-2026-11.md`](research-notes-2026-11.md)).
+- **A research helper** that goes through Reddit and X, if that's possible.
+- **Hacker News is open to agents:** send one to dig further into readers'
+  pains.
+- **Forums:** list the communities about RSS, feeds and the slow web,
+  starting with BazQux's.

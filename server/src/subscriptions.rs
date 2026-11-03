@@ -9,7 +9,8 @@
 //! (they join the file's folders). A feed another reader already follows
 //! isn't stored twice: the reader gets their own subscription to it, its
 //! articles so far counted as read. Exporting writes each feed the reader
-//! follows under every folder of theirs it's in.
+//! follows under every folder of theirs it's in. The subscriptions file
+//! Google Takeout gives for YouTube is read here too (`youtube::takeout`).
 
 use std::collections::HashMap;
 
@@ -99,7 +100,8 @@ async fn import(
     State(state): State<AppState>,
     text: String,
 ) -> Response {
-    let Some(listed) = read(&text) else {
+    // Google Takeout's YouTube subscriptions come the same way (decision 0144).
+    let Some(listed) = read(&text).or_else(|| crate::youtube::takeout::read(&text)) else {
         return (
             StatusCode::BAD_REQUEST,
             Json(json!({ "error": "not-opml" })),

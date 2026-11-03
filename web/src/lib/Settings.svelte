@@ -13,9 +13,10 @@
   its title; Escape goes back too, and the keyboard returns to the row:
   Font, theme and line width; Your library (Your feeds and Feed health,
   pages of their own, then Show in the sidebar and Your data); More
-  (Keyboard on a screen with keys, Add from anywhere, Rules, Newsletters
-  while nine turtles takes them, Other apps, Connected assistants, Passkeys
-  where they work); Your nine turtles (Readers, the owner only); and Account
+  (Keyboard on a screen with keys, Add from anywhere, Install the app, Rules,
+  Newsletters while nine turtles takes them, Other apps, Connected
+  assistants, Passkeys where they work); Your nine turtles (Readers, the
+  owner only); and Account
   (Your plan while nine turtles takes payments, Email with Change…, Weekly
   email, Sign out, Delete data… and, for everyone but the owner, Delete account…).
 
@@ -23,11 +24,9 @@
   lined up with the first line of its name, and a setting's description
   sits straight under its name (S1, decision 0120).
 
-  The groups' own components: AddAnywhere (decision 0104), Rules and the
-  rule editor (SPEC section 27), Newsletters (SPEC section 28), OtherApps
-  (SPEC section 26), Assistants (SPEC section 33), Readers (decision 0087),
-  Plan (decision 0094), Passkeys (decision 0109), ChangeEmail and
-  DeleteAccount (decisions 0088 and 0117).
+  The groups' own components, each saying where it's described: AddAnywhere,
+  InstallApp, Rules and RuleEditor, Newsletters, OtherApps, Assistants,
+  Readers, Plan, Passkeys, ChangeEmail and DeleteAccount.
 -->
 <script lang="ts">
   import { edge } from "./edge";
@@ -37,6 +36,7 @@
   import DeleteAccount from "./DeleteAccount.svelte";
   import Icon, { type IconName } from "./Icon.svelte";
   import ImportOpml from "./ImportOpml.svelte";
+  import InstallApp from "./InstallApp.svelte";
   import ImportStars from "./ImportStars.svelte";
   import Newsletters from "./Newsletters.svelte";
   import OtherApps from "./OtherApps.svelte";
@@ -579,6 +579,7 @@
           <!-- Only on a screen with a keyboard: there's nothing to press on a touch screen (decision 0110). -->
           {@render pageRow("keyboard", "/settings/keyboard", SETTINGS_PAGES.keyboard, "keyboard", open("keyboard"), undefined, "keyboard-hint")}
           {@render pageRow("add-from-anywhere", "/settings/add-from-anywhere", SETTINGS_PAGES["add-from-anywhere"], "bookmark-plus", open("add-from-anywhere"))}
+          {@render pageRow("install", "/settings/install", SETTINGS_PAGES.install, "phone", open("install"))}
           {@render pageRow("rules", "/settings/rules", SETTINGS_PAGES.rules, "sliders", open("rules"))}
           {#if newslettersOn}
             {@render pageRow("newsletters", "/settings/newsletters", SETTINGS_PAGES.newsletters, "newspaper", open("newsletters"))}
@@ -660,12 +661,7 @@
       {:else if page === "font"}
       <section aria-labelledby="settings-heading">
         <div class="inset-group">
-          <!--
-            A short passage set as articles will be, the group's first row, before
-            the controls, as Apple Books keeps its sample inside the themes panel:
-            its words start on the rows' words, 16px in, and a hairline parts it
-            from the rows below (decision 0055). A row, never a card inside a card.
-          -->
+          <!-- A passage set as articles will be: the group's first row, 16px in, a hairline below; never a card in a card (decision 0055). -->
           <figure class="inset-row reading-sample" style:--sample-share={`${(LINE_WIDTHS[preferences.lineWidth].ch / LINE_WIDTHS.wide.ch) * 100}%`}>
             <figcaption class="sr-only">Preview</figcaption>
             <p>
@@ -775,6 +771,8 @@
       </section>
       {:else if page === "add-from-anywhere"}
         <AddAnywhere />
+      {:else if page === "install"}
+        <InstallApp />
       {:else if page === "rules"}
         <Rules
           bind:this={rulesPanel}
@@ -852,11 +850,7 @@
     font-weight: 400;
     line-height: 1.6;
   }
-  /*
-    The sample's row is narrower than any line width, so the true measure would never show here.
-    Its lines take the same share of the row as the chosen width is of Wide, so Narrow, Medium and
-    Wide visibly differ.
-  */
+  /* The row is narrower than any line width, so the sample's lines take the chosen width's share of Wide. */
   .reading-sample p {
     max-width: min(var(--reading-measure), var(--sample-share, 100%));
   }

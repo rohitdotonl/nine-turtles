@@ -803,12 +803,21 @@ test.describe("on a wide window", () => {
   });
 
   test("a YouTube video plays in YouTube's own player, and nothing loads from YouTube until Play is pressed", async ({ page }) => {
-    // Stand in for YouTube's player, so the test never leaves this computer.
+    // Stand in for YouTube's player, so the test never leaves this computer. Asked to talk, it says it's
+    // paused at 4:00 of 10:00, or, started from there, that it ended.
     const asked: string[] = [];
     await page.route(/youtube/, (route) => {
       asked.push(route.request().url());
-      return route.fulfill({ contentType: "text/html", body: "<p>YouTube's player</p>" });
+      const say = (info: string) => `<p>YouTube's player</p><script>
+        addEventListener("message", () => parent.postMessage(JSON.stringify(${info}), "*"));
+      </script>`;
+      const ended = route.request().url().includes("start=240");
+      return route.fulfill({
+        contentType: "text/html",
+        body: say(ended ? `{ event: "onStateChange", info: 0 }` : `{ event: "infoDelivery", info: { currentTime: 240, duration: 600, playerState: 2 } }`),
+      });
     });
+    const PLAYER = /^https:\/\/www\.youtube-nocookie\.com\/embed\/AAAAAAAAAAA\?autoplay=1&rel=0&enablejsapi=1&origin=/;
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto(new URL("/all", FEEDS_APP).href);
     await appReady(page);
@@ -817,10 +826,21 @@ test.describe("on a wide window", () => {
     await page.goto(new URL(`/feeds/${id}`, page.url()).href);
     await row(page, "A river at dawn").click();
 
-    // The video's description from the feed is its text, under a quiet Play button.
+    // The video's description from the feed is its text, under a quiet Play button with its title in it.
     const play = article(page).getByRole("button", { name: "Play video: A river at dawn, for an hour" });
     await expect(play).toBeVisible();
+    await expect(play).toContainText("A river at dawn, for an hour");
     await expect(article(page).getByText("Nothing happens, slowly.")).toBeVisible();
+    // Its chapters are buttons; its long description is folded after the first paragraph.
+    const chapters = article(page).getByRole("list", { name: "Chapters" });
+    await expect(chapters.getByRole("button")).toHaveText([/^0:00\s*First light$/, /^4:00\s*The heron$/, /^41:30\s*Mist lifts$/]);
+    await expect(chapters.getByRole("button", { name: "4:00 The heron" })).toBeVisible();
+    await expect(article(page).getByText("Filmed on one still morning", { exact: false })).toBeHidden();
+    const unfold = article(page).getByRole("button", { name: "Show the full description" });
+    await expect(unfold).toHaveAttribute("aria-expanded", "false");
+    await unfold.press("Enter");
+    await expect(article(page).getByText("Filmed on one still morning", { exact: false })).toBeVisible();
+    await expect(article(page).getByRole("button", { name: "Show less" })).toHaveAttribute("aria-expanded", "true");
     const box = await play.boundingBox();
     expect(Math.round((box!.width / box!.height) * 9)).toBe(16);
     expect(asked).toEqual([]);
@@ -828,14 +848,15 @@ test.describe("on a wide window", () => {
     // Pressed, YouTube's privacy-enhanced player takes the button's place and the keyboard.
     await play.press("Enter");
     const player = article(page).locator("iframe");
-    await expect(player).toHaveAttribute("src", "https://www.youtube-nocookie.com/embed/AAAAAAAAAAA?autoplay=1&rel=0");
+    await expect(player).toHaveAttribute("src", PLAYER);
     await expect(player).toHaveAttribute("title", "YouTube video: A river at dawn, for an hour");
     await expect(player).toBeFocused();
     // Sandboxed, and told only nine turtles' address, never the article's.
     await expect(player).toHaveAttribute("referrerpolicy", "strict-origin");
     await expect(player).toHaveAttribute("sandbox", "allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox");
     await expect(page.frameLocator("iframe").getByText("YouTube's player")).toBeVisible();
-    expect(asked).toEqual(["https://www.youtube-nocookie.com/embed/AAAAAAAAAAA?autoplay=1&rel=0"]);
+    expect(asked).toHaveLength(1);
+    expect(asked[0]).toMatch(PLAYER);
     expect(Math.round((await player.boundingBox())!.height)).toBe(Math.round(box!.height));
 
     // A video with no description is just the video, never "no text in its feed".
@@ -850,6 +871,22 @@ test.describe("on a wide window", () => {
     await rain.focus();
     await page.keyboard.press(" ");
     await expect(article(page).locator("iframe")).toBeFocused();
+
+    // Back to the first video: it picks up where the player said it stopped, and closes when it ends.
+    await row(page, "A river at dawn").click();
+    const resume = article(page).getByRole("button", { name: "Resume from 4:00: A river at dawn, for an hour" });
+    await expect(resume).toContainText("Resume from 4:00");
+    await resume.click();
+    await expect(article(page).locator("iframe")).toHaveAttribute("src", /&start=240&/);
+    const again = article(page).getByRole("button", { name: "Play video: A river at dawn, for an hour" });
+    await expect(again).toBeFocused();
+    await expect(article(page).locator("iframe")).toHaveCount(0);
+
+    // A chapter, from the keyboard alone, plays the video from there (and this stand-in ends it there).
+    await article(page).getByRole("list", { name: "Chapters" }).getByRole("button", { name: "4:00 The heron" }).focus();
+    await page.keyboard.press("Enter");
+    await expect(article(page).locator("iframe")).toHaveAttribute("src", /&start=240&/);
+    await expect(again).toBeFocused();
   });
 });
 

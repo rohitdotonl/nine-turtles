@@ -120,6 +120,14 @@ async fn press(base: &str, which: &str, ticket: &str) -> StatusCode {
     .0
 }
 
+/// The owner's address as signing up confirms it (decision 0154).
+async fn confirmed(state: &nine_turtles::AppState) {
+    sqlx::query("UPDATE people SET email_confirmed_at = unixepoch() WHERE id = 1")
+        .execute(&state.db)
+        .await
+        .unwrap();
+}
+
 async fn send(state: &nine_turtles::AppState, at: i64) -> usize {
     let mailer = state.mailer.clone().unwrap();
     nine_turtles::weekly::send_due(&state.db, &mailer, at)
@@ -131,6 +139,7 @@ async fn send(state: &nine_turtles::AppState, at: i64) -> usize {
 async fn the_weekly_email_names_the_people_with_something_new_and_stops_in_one_press() {
     let (base, state, outbox) = common::start_with_mail(common::config()).await;
     let cookie = common::signed_in(&base).await;
+    confirmed(&state).await;
     let db = &state.db;
     let mail = || common::emails_to(&outbox, common::OWNER_EMAIL);
 
@@ -141,28 +150,8 @@ async fn the_weekly_email_names_the_people_with_something_new_and_stops_in_one_p
     arrives(db, 1, alpha, "On walking", at - 86_400, false).await;
     assert_eq!(send(&state, at).await, 0);
 
-    let answer = choose(&base, &cookie, "weekly").await;
-    assert_eq!(answer["waiting"], true, "{answer}");
-    assert_eq!(often(&base, &cookie).await, "weekly");
-    // Nothing goes to an address until its Start link is pressed: sign-up never checks one.
-    assert_eq!(send(&state, at).await, 0);
-    assert_eq!(mail().len(), 1);
-    assert_eq!(mail()[0].subject, "Start your weekly email");
-    // Off and on again sends no second Start email within the hour.
-    choose(&base, &cookie, "off").await;
     choose(&base, &cookie, "weekly").await;
-    assert_eq!(mail().len(), 1);
-    let (page, start) = common::newest_link(&outbox, common::OWNER_EMAIL);
-    assert_eq!(page, "/weekly-email/start");
-    assert_eq!(
-        press(&base, "start", "not-a-ticket").await,
-        StatusCode::NOT_FOUND
-    );
-    assert_eq!(press(&base, "start", &start).await, StatusCode::OK);
-    // Once only.
-    assert_eq!(press(&base, "start", &start).await, StatusCode::NOT_FOUND);
-    assert_eq!(choose(&base, &cookie, "weekly").await["waiting"], false);
-    assert_eq!(mail().len(), 1);
+    assert_eq!(often(&base, &cookie).await, "weekly");
 
     // Beta wrote three things, one already read; Gamma nothing new but a muted one.
     let beta = follows(db, 1, "Beta").await;
@@ -191,9 +180,9 @@ async fn the_weekly_email_names_the_people_with_something_new_and_stops_in_one_p
 
     assert_eq!(send(&state, at).await, 1);
     let sent = mail();
-    assert_eq!(sent.len(), 2);
-    assert_eq!(sent[1].subject, "New from the people you read");
-    let body = &sent[1].body;
+    assert_eq!(sent.len(), 1);
+    assert_eq!(sent[0].subject, "New from the people you read");
+    let body = &sent[0].body;
     for expected in [
         "Here's what the people you read wrote this week.",
         "Alpha\n\n  On walking\n  The first line of On walking.\n  https://writer.example/On-walking\n",
@@ -223,7 +212,7 @@ async fn the_weekly_email_names_the_people_with_something_new_and_stops_in_one_p
     // Never twice for the same morning, and nothing when nothing is new.
     assert_eq!(send(&state, at + 60).await, 0);
     assert_eq!(send(&state, at + WEEK).await, 0);
-    assert_eq!(mail().len(), 2);
+    assert_eq!(mail().len(), 1);
 
     // The stop link works signed out, from any device, and only for its own ticket.
     let stop = body
@@ -242,8 +231,8 @@ async fn the_weekly_email_names_the_people_with_something_new_and_stops_in_one_p
     assert_eq!(often(&base, &cookie).await, "weekly");
     assert_eq!(press(&base, "stop", &ticket).await, StatusCode::OK);
     assert_eq!(often(&base, &cookie).await, "off");
-    // Turned on again (no new Start needed), the spent link says so rather than claim to stop it.
-    assert_eq!(choose(&base, &cookie, "weekly").await["waiting"], false);
+    // Turned on again, the spent link says so rather than claim to stop it.
+    choose(&base, &cookie, "weekly").await;
     assert_eq!(press(&base, "stop", &ticket).await, StatusCode::NOT_FOUND);
     assert_eq!(often(&base, &cookie).await, "weekly");
     choose(&base, &cookie, "off").await;
@@ -267,6 +256,7 @@ async fn it_needs_email_to_be_turned_on_and_turns_off_from_settings() {
 
     let (base, state, _) = common::start_with_mail(common::config()).await;
     let cookie = common::signed_in(&base).await;
+    confirmed(&state).await;
     let (_, no_address) = common::another_reader(&state).await;
     let (status, answer) = post(
         &base,
@@ -282,53 +272,39 @@ async fn it_needs_email_to_be_turned_on_and_turns_off_from_settings() {
     assert_eq!(often(&base, &cookie).await, "twice");
     choose(&base, &cookie, "off").await;
     assert_eq!(often(&base, &cookie).await, "off");
-    // Only the Start email's own rows are kept, so Off and on can't send another within the hour.
-    let mut left: Vec<String> =
-        sqlx::query_scalar("SELECT name FROM person_settings WHERE name LIKE 'weekly%'")
-            .fetch_all(&state.db)
+    let left: i64 =
+        sqlx::query_scalar("SELECT count(*) FROM person_settings WHERE name LIKE 'weekly%'")
+            .fetch_one(&state.db)
             .await
             .unwrap();
-    left.sort();
-    assert_eq!(left, ["weekly_start", "weekly_start_at", "weekly_start_to"]);
+    assert_eq!(left, 0);
 }
 
 #[tokio::test]
-async fn a_changed_email_waits_for_start_again_and_is_asked_only_once() {
+async fn it_goes_only_to_a_confirmed_address() {
     let (base, state, outbox) = common::start_with_mail(common::config()).await;
     let cookie = common::signed_in(&base).await;
+    confirmed(&state).await;
     let at = nine_turtles::now() + 8 * 86_400;
     let alpha = follows(&state.db, 1, "Alpha").await;
     arrives(&state.db, 1, alpha, "On walking", at - 86_400, false).await;
     choose(&base, &cookie, "weekly").await;
-    let (_, first) = common::newest_link(&outbox, common::OWNER_EMAIL);
 
-    // The address changes (as a confirmed change of email does) before Start is pressed.
-    let moved = "moved@example.com";
-    sqlx::query("UPDATE people SET email = ? WHERE id = 1")
-        .bind(moved)
+    // An address nobody confirmed (as an account made without email settings has) can't turn it on,
+    // and one that loses its confirmation gets nothing.
+    sqlx::query("UPDATE people SET email_confirmed_at = NULL WHERE id = 1")
         .execute(&state.db)
         .await
         .unwrap();
-    assert_eq!(choose(&base, &cookie, "weekly").await["waiting"], true);
-    // The old address's link can't start it for the new one.
-    assert_eq!(press(&base, "start", &first).await, StatusCode::NOT_FOUND);
-    // The background round asks the new address once, and nothing else goes there.
+    let (status, answer) = post(
+        &base,
+        Some(&cookie),
+        "/api/weekly-email",
+        json!({ "often": "twice" }),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CONFLICT);
+    assert_eq!(answer["error"], "unconfirmed");
     assert_eq!(send(&state, at).await, 0);
-    assert_eq!(send(&state, at + 60).await, 0);
-    let asked = common::emails_to(&outbox, moved);
-    assert_eq!(asked.len(), 1, "{asked:?}");
-    assert_eq!(asked[0].subject, "Start your weekly email");
-    // Off and on again within the week sends no second one to the same address.
-    choose(&base, &cookie, "off").await;
-    choose(&base, &cookie, "weekly").await;
-    assert_eq!(common::emails_to(&outbox, moved).len(), 1);
-
-    let (_, second) = common::newest_link(&outbox, moved);
-    assert_eq!(press(&base, "start", &second).await, StatusCode::OK);
-    arrives(&state.db, 1, alpha, "Later", at + WEEK - 86_400, false).await;
-    assert_eq!(send(&state, at + WEEK).await, 1);
-    assert_eq!(
-        common::emails_to(&outbox, moved).last().unwrap().subject,
-        "New from the people you read"
-    );
+    assert!(common::emails_to(&outbox, common::OWNER_EMAIL).is_empty());
 }

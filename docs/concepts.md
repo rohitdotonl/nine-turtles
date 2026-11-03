@@ -79,6 +79,8 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Google Reader format (starred exports)
 - Starter feeds
 - Podcasts, enclosures and `itunes:duration`
+- YouTube channel and playlist feeds, Shorts and live streams lists, Google Takeout
+- postMessage (talking to an embedded player)
 - Feed autodiscovery
 - Feed finder (the website's free tool)
 - Starter packs (the website's hand-picked blogs; not the app's starter feeds)

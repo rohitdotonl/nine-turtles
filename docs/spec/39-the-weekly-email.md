@@ -14,18 +14,13 @@ V1, item 5; decision 0140). Its look gets a refinement round.*
   group's. The line under its name says what it is and when it comes. It
   shows only while nine turtles can send email and the reader has an email
   address; it follows the reader to every device.
-- **Started from the address itself:** the first time it's turned on for an
-  address, one email goes there, "Start your weekly email", with a link to a
-  page with one button, **Start the weekly email**. Until it's pressed,
-  nothing more is sent there, and the line under Weekly email says "Waiting
-  for you: press Start in the email sent to your address." (Sign-up never
-  checks an address, decision 0115, so this keeps anyone from sending it to
-  someone else.) The link works once, for a week. While one waits
-  unanswered, no other goes to that address for a week, however often the
-  reader switches Off and on; at most one goes to any address an hour.
-  After a change of email, the new address is asked once, by itself, within
-  the hour, and the weekly email waits for its Start. Turning it off and on
-  again for an address already started needs no Start.
+- **Only to a confirmed address** (decision 0154): signing up confirms
+  it, and so do confirming a changed email and signing in with an emailed
+  link. An account made while nine turtles couldn't send email has none, so
+  choosing Weekly there says "The weekly email goes only to a confirmed
+  address. Signing in once with an emailed link (Forgot? on the sign-in
+  page) confirms yours." This keeps anyone from having it sent to someone
+  else.
 - **When it comes:** Weekly is Saturday at 08:00, the reader's time; Twice a
   week is Wednesday and Saturday at 08:00. "The reader's time" is the
   device's clock when they chose, so after a move or a summer-time change it
@@ -62,9 +57,8 @@ V1, item 5; decision 0140). Its look gets a refinement round.*
 
 **How to check it**
 1. In Settings › Account, under Email, Weekly email shows Off. Choose
-   Weekly: the line under it asks you to press Start in the email just
-   sent. Open that email, press Start the weekly email: Settings now says
-   Saturday mornings, on every device you're signed in on.
+   Weekly: the line under it says Saturday mornings. Reload: it still says
+   Weekly, on every device you're signed in on.
 2. Follow someone who writes often and leave a few of their articles
    unread. On Saturday morning an email comes with their name, their
    titles, a line each and links, and no number anywhere.

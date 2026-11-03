@@ -2,8 +2,8 @@
   Decides between the sign-in page, the sign-up page (/sign-up, open
   to anyone, decision 0115), the pages an
   emailed link opens (/reset-password and /confirm-email, decision 0088;
-  /sign-in-link, decision 0096; /weekly-email and /weekly-email/start, which
-  stop and start the weekly email, decision 0150), the page where an AI assistant asks to
+  /sign-in-link, decision 0096; /finish-sign-up, decision 0154; /weekly-email, which
+  stops the weekly email, decision 0150), the page where an AI assistant asks to
   connect (/oauth/authorize, shown once signed in; signed out, sign-in
   comes first and the address, with its query, stays) and
   the signed-in screen, or "Wrong turn?" for an address it doesn't know. Until the server has answered, nothing is shown, so
@@ -18,13 +18,15 @@
   import SignUp from "./lib/SignUp.svelte";
   import ResetPassword from "./lib/ResetPassword.svelte";
   import ConfirmEmail from "./lib/ConfirmEmail.svelte";
+  import FinishSignUp from "./lib/FinishSignUp.svelte";
   import SignInLink from "./lib/SignInLink.svelte";
-  import WeeklyEmailLink from "./lib/WeeklyEmailLink.svelte";
-  import { WEEKLY_PAGE, WEEKLY_START_PAGE } from "./lib/weekly";
+  import WeeklyEmailStop from "./lib/WeeklyEmailStop.svelte";
+  import { WEEKLY_PAGE } from "./lib/weekly";
   import ConnectAssistant from "./lib/ConnectAssistant.svelte";
   import { CONNECT_PAGE } from "./lib/assistants";
   import NotFound from "./lib/NotFound.svelte";
   import { knownPath } from "./lib/router";
+  import { FINISH_SIGN_UP_PAGE } from "./lib/readers";
   import { CONFIRM_PAGE, RESET_PAGE, SIGN_IN_LINK_PAGE } from "./lib/accounts";
   import { currentSession, deviceReader, noteReader, readerChanged, type Session } from "./lib/session";
   import { noteTabReader } from "./lib/updates.svelte";
@@ -93,10 +95,12 @@
   <ResetPassword onSignedIn={check} />
 {:else if session && path === CONFIRM_PAGE}
   <ConfirmEmail onSignedIn={check} />
+{:else if session && path === FINISH_SIGN_UP_PAGE}
+  <FinishSignUp onSignedIn={check} />
 {:else if session && path === SIGN_IN_LINK_PAGE}
   <SignInLink onSignedIn={check} />
-{:else if session && (path === WEEKLY_PAGE || path === WEEKLY_START_PAGE)}
-  <WeeklyEmailLink which={path === WEEKLY_PAGE ? "stop" : "start"} onDone={check} />
+{:else if session && path === WEEKLY_PAGE}
+  <WeeklyEmailStop onDone={check} />
 {:else if session?.signedIn && path === CONNECT_PAGE}
   <ConnectAssistant onSignedOut={signedOut} />
 {:else if session?.signedIn && !knownPath(path)}

@@ -6,14 +6,13 @@ describe("the weekly email's words", () => {
     expect(oftenHint("weekly")).toMatch(/^Saturday mornings/);
     expect(oftenHint("twice")).toMatch(/^Wednesday and Saturday mornings/);
     expect(oftenHint("off")).toMatch(/^The people you read/);
-    expect(oftenHint("weekly", true)).toMatch(/press Start/);
-    expect(oftenHint("off", true)).not.toMatch(/press Start/);
     for (const often of ["off", "weekly", "twice"] as const) expect(oftenHint(often)).not.toMatch(/\d/);
   });
 
   it("say why a choice wasn't saved", () => {
     expect(explainOften("no-email")).toMatch(/send email/);
     expect(explainOften("no-address")).toMatch(/email address/);
+    expect(explainOften("unconfirmed")).toMatch(/confirmed address/);
     expect(explainOften("trouble")).toMatch(/try again/);
   });
 

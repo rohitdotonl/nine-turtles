@@ -381,7 +381,7 @@ async fn store_delivery(
     let parsed = Url::parse(&subscription.topic)
         .ok()
         .and_then(|topic| feed::parse(body, &topic));
-    let Some(parsed) = parsed.filter(|parsed| !parsed.articles.is_empty()) else {
+    let Some(mut parsed) = parsed.filter(|parsed| !parsed.articles.is_empty()) else {
         // Never sooner than 30 minutes after the last check (or the hour or
         // day the reader chose in Edit feed), however often a hub says so:
         // the publisher is still asked politely.
@@ -398,6 +398,15 @@ async fn store_delivery(
         .await?;
         return Ok(());
     };
+    // A YouTube channel's Shorts and live streams (decision 0144).
+    // By the feed's own address: a hub may name it differently.
+    let address: Option<String> = sqlx::query_scalar("SELECT url FROM feeds WHERE id = ?")
+        .bind(subscription.feed_id)
+        .fetch_optional(&state.db)
+        .await?;
+    if let Some(url) = address.and_then(|address| Url::parse(&address).ok()) {
+        crate::youtube::sorting::sort(state, &url, &mut parsed).await;
+    }
     // As in `checking::worked`: take the right to write first, and store
     // nothing if the reader unsubscribed in the meantime.
     let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;

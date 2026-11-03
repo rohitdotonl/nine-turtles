@@ -193,8 +193,10 @@ pub async fn check(state: &AppState, feed_id: i64, now: i64) -> Result<(), sqlx:
     };
     match fetch::check(&state.http, &url, state.config.local_feeds_allowed, &known).await {
         Ok(Answer::Changed(fetched)) => match feed::parse(&fetched.body, &fetched.final_url) {
-            Some(parsed) => {
+            Some(mut parsed) => {
                 let lasting = fetched.lasting_url.clone();
+                // A YouTube channel's Shorts and live streams (decision 0144).
+                crate::youtube::sorting::sort(state, &lasting, &mut parsed).await;
                 worked(
                     state,
                     feed_id,

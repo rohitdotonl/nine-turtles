@@ -5,9 +5,9 @@
   word beside an icon, or the label of an icon-only button, says what it does.
 -->
 <script lang="ts" module>
-  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "clock" | "history" | "shelf" | "headphones" | "queue"
+  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "clock" | "history" | "shelf" | "headphones" | "video" | "queue"
     // Settings' rows (decision 0120).
-    | "book" | "palette" | "a-plus" | "pen-nib" | "feed" | "heart-pulse" | "panel-dots" | "bookmark-plus" | "newspaper" | "plug" | "robot" | "key" | "people" | "card" | "envelope" | "trash";
+    | "book" | "palette" | "a-plus" | "pen-nib" | "feed" | "heart-pulse" | "panel-dots" | "bookmark-plus" | "phone" | "newspaper" | "plug" | "robot" | "key" | "people" | "card" | "envelope" | "trash";
 </script>
 
 <script lang="ts">
@@ -124,6 +124,10 @@
     <path d="M4.25 12v-1.5a5.75 5.75 0 0 1 11.5 0V12" />
     <rect x="3" y="11.25" width="3.75" height="5.75" rx="1.1" fill="currentColor" stroke="none" />
     <rect x="13.25" y="11.25" width="3.75" height="5.75" rx="1.1" fill="currentColor" stroke="none" />
+  {:else if name === "video"}
+    <!-- A YouTube video (decision 0144): a screen with a play mark, line only, as plain signs are. -->
+    <rect x="2.75" y="4.25" width="14.5" height="11.5" rx="2" />
+    <path d="M8.5 7.6v4.8l4-2.4Z" />
   {:else if name === "queue"}
     <!-- Up Next (decision 0113): three lines of a list, the first led by a small play mark. -->
     <path d="M3.5 5 7.5 7.5 3.5 10Z" fill="currentColor" />
@@ -172,6 +176,10 @@
     <!-- Settings › Add from anywhere: a solid bookmark and a plus. -->
     <path d="M4 3.25h6.5v13.25L7.25 14 4 16.5Z" fill="currentColor" stroke="none" />
     <path d="M14.25 7.25v5.5M11.5 10h5.5" />
+  {:else if name === "phone"}
+    <!-- Settings › Install the app: a phone, line only, with its home bar. -->
+    <rect x="5.5" y="2.75" width="9" height="14.5" rx="2" />
+    <path d="M8.75 14.5h2.5" />
   {:else if name === "newspaper"}
     <!-- Settings › Newsletters: a newspaper page with a solid picture. -->
     <rect x="3" y="3.25" width="14" height="13.5" rx="1" />

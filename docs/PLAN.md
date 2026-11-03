@@ -42,9 +42,9 @@ thread, in this order:
 6. **People** (V1 item 1 below) ✅
 7. **Write back** (V1 item 2) ✅
 8. **No unread counts** (V1 item 3) ✅
-9. **YouTube as a first-class citizen** (V1 item 4, decision 0143)
+9. **YouTube as a first-class citizen** (V1 item 4) ✅
 10. **A weekly email** (V1 item 5) ✅
-11. **Installing the app, said plainly** (V1 item 6)
+11. **Installing the app, said plainly** (V1 item 6) ✅
 12. **"How did you hear about nine turtles?"** (V1 item 7)
 13. **Three to four refinement rounds:** the owner uses the app, lists what
     he dislikes (the theme picker first), and each round fixes it.
@@ -77,7 +77,9 @@ milestone order above.
    shows no numbers; a small dot in the accent at a row's end says
    something is new, and the Settings › Reading row that hid the numbers is
    gone.
-4. **YouTube as a first-class citizen** (decision 0144), always through
+4. **YouTube as a first-class citizen** ✅ built (SPEC section 38,
+   decisions 0144 and 0149; its smaller choices listed in 0149 for the
+   refinement round, and speed and captions still to try), always through
    YouTube's own feeds and player, never scraping: follow any YouTube link
    (channel, handle, video, playlist); Shorts and live streams left out by
    default, each with a switch on the feed's screen; bringing your YouTube
@@ -94,9 +96,10 @@ milestone order above.
    reader's time; the people with something unread, their titles, a line
    and the publisher's link each, never a count; nothing new, nothing sent;
    off in one press from the link at its foot.
-6. **Installing the app, said plainly:** one sentence on what an installed
-   web app is (its own icon and window; it updates itself each time you
-   open it), then the steps for your device.
+6. **Installing the app, said plainly** ✅ built (SPEC section 20, decision
+   0151; its smaller choices listed there for the refinement round):
+   Settings › Install the app says in one sentence what an installed web app
+   is, then the steps for your device, then a line for each of the others.
 7. **"How did you hear about nine turtles?"** One optional question at
    sign-up (a blog, a friend, a search, an AI assistant, Reddit, other),
    saved with the account and shown only as totals in the owner report

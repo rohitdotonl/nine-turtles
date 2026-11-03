@@ -26,6 +26,7 @@ pub mod checking;
 pub mod cleanup;
 pub mod collections;
 pub mod config;
+pub mod confirm_email;
 pub mod dates;
 pub mod db;
 pub mod discover;
@@ -56,6 +57,7 @@ pub mod saved_searches;
 pub mod search;
 pub mod security;
 pub mod settings;
+pub mod sign_up;
 pub mod star_import;
 pub mod starred;
 pub mod status;
@@ -67,6 +69,7 @@ pub mod websub;
 pub mod weekly;
 pub mod write_back;
 pub mod writers;
+pub mod youtube;
 
 use std::sync::{
     Arc,
@@ -104,7 +107,7 @@ pub struct AppState {
     pub password_checks: Arc<auth::PasswordChecks>,
     /// Sign-up tries in the last hour. Held while a new reader's password is
     /// scrambled, so sign-ups go one at a time.
-    pub sign_ups: Arc<Mutex<people::SignUpTries>>,
+    pub sign_ups: Arc<Mutex<sign_up::SignUpTries>>,
     /// The website's feed finder: its remembered answers and its limits.
     pub finder: Arc<finder::Finder>,
     pub wrong_passwords: Arc<AtomicU64>,
@@ -231,6 +234,8 @@ pub fn router(state: AppState) -> Router {
         .merge(podcasts::routes())
         .merge(frequency::routes())
         .merge(people::routes())
+        .merge(sign_up::routes())
+        .merge(confirm_email::routes())
         .merge(payments::routes())
         .merge(rules::routes())
         .merge(search::routes())

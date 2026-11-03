@@ -35,10 +35,10 @@ const CEILINGS = {
   "web/src/app.css": 1789,
   "web/src/lib/Shell.svelte": 1513,
   "server/src/greader.rs": 1004,
-  "web/src/lib/ItemList.svelte": 954,
+  "web/src/lib/ItemList.svelte": 947,
   "server/src/assistants.rs": 948,
-  "server/src/accounts.rs": 934,
-  "web/src/lib/Settings.svelte": 869,
+  "server/src/accounts.rs": 872,
+  "web/src/lib/Settings.svelte": 863,
   "server/src/payments.rs": 841,
   "server/src/auth.rs": 819,
 };
