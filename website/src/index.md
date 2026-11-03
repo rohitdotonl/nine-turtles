@@ -52,7 +52,7 @@ contents:
 
 <section id="me" aria-labelledby="me-h">
   <h2 id="me-h">Made by a person you can write to</h2>
-  <p>I'm Rohit. I made nine turtles, and I answer every email.</p>
+  <p>Write to <a href="mailto:{{ site.email }}">{{ site.email }}</a>. Every message is read by a person, not a bot.</p>
 </section>
 
 <p class="close"><a class="button" href="{{ site.app }}">Open the app</a></p>

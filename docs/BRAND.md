@@ -70,7 +70,7 @@ what's live.
 The turtle is the logo's drawing, nothing else. It never acts, speaks,
 sleeps, celebrates or stands for a feeling. No mascot.
 
-- **May appear:** the logo (sidebar, sign-in, website top bar, app icon, tab icon), the share picture, and the two drawings that already exist, unchanged: "Wrong turn?" (the 404 page) and the end of the About page.
+- **May appear:** the logo (sidebar, sign-in, the website's band, app icon, tab icon), the share picture, and the two drawings that already exist, unchanged: "Wrong turn?" (the 404 page) and the end of the About page.
 - **Never:** empty lists, the end of a list, the reading pane, emails, buttons, loading, errors, confirmations, settings, or any new drawing that tells a story.
 - **When it appears:** the logo's own drawing, at most once per screen, still, in the page's ink, and skipped by screen readers, because the words beside it say it.
 

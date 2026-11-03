@@ -20,6 +20,10 @@ built: BRAND.md said it needed his yes first.
   project files): one 20px text size, the headline, the settled paragraph,
   the app's picture, the six points from `RnD/positioning.md`, and "Open the
   app" twice. "On this page" in the band lists the six points.
+- **The last point's line** is the Contact page's own ("Write to hello@…
+  Every message is read by a person, not a bot."), not the mockup's "I'm
+  Rohit. I made nine turtles, and I answer every email.": that line was
+  written by an agent and isn't settled copy. Rohit can swap it in.
 - **Left out from the mockup:** the grey pill that followed the section
   being read (it needed a script, and DESIGN.md says the pill reads as
   buttons on the website). The old points, "What it will never do" and
