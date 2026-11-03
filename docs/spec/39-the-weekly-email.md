@@ -18,10 +18,14 @@ V1, item 5; decision 0140). Its look gets a refinement round.*
   address, one email goes there, "Start your weekly email", with a link to a
   page with one button, **Start the weekly email**. Until it's pressed,
   nothing more is sent there, and the line under Weekly email says "Waiting
-  for you: press Start in the email just sent to your address." (Sign-up
-  never checks an address, decision 0115, so this keeps anyone from sending
-  it to someone else.) At most one such email an hour; a changed email needs
-  Start again; turning it off and on again for the same address doesn't.
+  for you: press Start in the email sent to your address." (Sign-up never
+  checks an address, decision 0115, so this keeps anyone from sending it to
+  someone else.) The link works once, for a week. While one waits
+  unanswered, no other goes to that address for a week, however often the
+  reader switches Off and on; at most one goes to any address an hour.
+  After a change of email, the new address is asked once, by itself, within
+  the hour, and the weekly email waits for its Start. Turning it off and on
+  again for an address already started needs no Start.
 - **When it comes:** Weekly is Saturday at 08:00, the reader's time; Twice a
   week is Wednesday and Saturday at 08:00. "The reader's time" is the
   device's clock when they chose, so after a move or a summer-time change it

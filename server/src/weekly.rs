@@ -20,9 +20,10 @@
 //! `weekly_stop` (the BLAKE2s scrambles of the last few stop links' tickets,
 //! as hex; a ticket itself is only ever in its email), which turning it off
 //! removes; and, kept when it's off, `weekly_start` (the scramble of the
-//! Start link's ticket, until it's pressed), `weekly_address` (the address
-//! whose Start was pressed) and `weekly_start_at` (when the last Start email
-//! went, so switching Off and on can't send them more than once an hour).
+//! Start link's ticket, until it's pressed), `weekly_start_to` (the address
+//! it went to), `weekly_start_at` (when it went, so switching Off and on
+//! can't send another for a week, or within the hour to a new address) and
+//! `weekly_address` (the address whose Start was pressed).
 
 use std::{collections::HashMap, time::Duration};
 
@@ -51,8 +52,11 @@ mod letter;
 pub const STOP_PAGE: &str = "/weekly-email";
 /// The page the Start link opens (`/weekly-email/start#ticket=…`).
 pub const START_PAGE: &str = "/weekly-email/start";
-/// At most one Start email an hour for each reader.
+/// At most one Start email an hour for each reader…
 const START_EVERY: i64 = 3600;
+/// …and while one to the same address waits unanswered, none for a week,
+/// which is also how long its link works.
+const START_LASTS: i64 = 7 * 86_400;
 /// How often nine turtles looks for readers whose email is due.
 const LOOK_EVERY: Duration = Duration::from_secs(10 * 60);
 /// The hour, where the reader is, the email goes out.
@@ -211,7 +215,7 @@ async fn change(
     let done = async {
         turn_on(&state.db, person, change.often, offset).await?;
         if let Some(mailer) = &state.mailer {
-            ask_to_start(&state.db, mailer, person, &address).await?;
+            ask_to_start(&state.db, mailer, person, &address, now()).await?;
         }
         answer(&state.db, person).await
     };
@@ -221,13 +225,15 @@ async fn change(
     }
 }
 
-/// Emails `address` a Start link, unless Start was already pressed for it or
-/// one went in the last hour.
+/// Emails `address` a Start link, unless Start was already pressed for it,
+/// one to it waits unanswered from the last week, or any went in the last
+/// hour.
 async fn ask_to_start(
     db: &SqlitePool,
     mailer: &Mailer,
     person: i64,
     address: &str,
+    at: i64,
 ) -> Result<(), sqlx::Error> {
     if started(db, person).await? {
         return Ok(());
@@ -235,7 +241,11 @@ async fn ask_to_start(
     let last = setting(db, person, "weekly_start_at")
         .await?
         .and_then(|at| at.parse::<i64>().ok());
-    if last.is_some_and(|last| now() - last < START_EVERY) {
+    let same = setting(db, person, "weekly_start_to")
+        .await?
+        .is_some_and(|to| to.eq_ignore_ascii_case(address));
+    let wait = if same { START_LASTS } else { START_EVERY };
+    if last.is_some_and(|last| at - last < wait) {
         return Ok(());
     }
     let ticket = match new_token() {
@@ -248,11 +258,13 @@ async fn ask_to_start(
         }
     };
     put(db, person, "weekly_start", &hex(&scramble(&ticket))).await?;
-    put(db, person, "weekly_start_at", &now().to_string()).await?;
+    put(db, person, "weekly_start_at", &at.to_string()).await?;
+    put(db, person, "weekly_start_to", address).await?;
     let body = format!(
         "You chose the weekly email in nine turtles. To start it at this address, \
          open this link and press Start:\n{}\n\n\
-         If it wasn't you, ignore this email: nothing more will come.{}",
+         If it wasn't you, ignore this email: nothing is sent to this address unless \
+         Start is pressed.{}",
         mailer.link(START_PAGE, &ticket),
         crate::email::SIGN_OFF
     );
@@ -336,21 +348,36 @@ async fn stop(State(state): State<AppState>, Json(form): Json<Ticket>) -> Respon
     }
 }
 
-/// The Start link's page, pressed: the reader's address as it is now may
-/// get the weekly email. Works signed out, once.
+/// The Start link's page, pressed: the address it went to may get the
+/// weekly email, if it's still the reader's. Works signed out, once, for a
+/// week.
 async fn start(State(state): State<AppState>, Json(form): Json<Ticket>) -> Response {
     let done = async {
         let Some(person) = whose(&state.db, "weekly_start", &form.ticket).await? else {
             return Ok(false);
         };
-        sqlx::query(
+        let sent = setting(&state.db, person, "weekly_start_at")
+            .await?
+            .and_then(|at| at.parse::<i64>().ok());
+        if sent.is_none_or(|sent| now() - sent > START_LASTS) {
+            return Ok(false);
+        }
+        let kept = sqlx::query(
             "INSERT INTO person_settings (person_id, name, value)
-             SELECT id, 'weekly_address', email FROM people WHERE id = ? AND email IS NOT NULL
+             SELECT people.id, 'weekly_address', people.email
+             FROM people JOIN person_settings AS sent ON sent.person_id = people.id
+                 AND sent.name = 'weekly_start_to' AND sent.value = people.email COLLATE NOCASE
+             WHERE people.id = ?
              ON CONFLICT (person_id, name) DO UPDATE SET value = excluded.value",
         )
         .bind(person)
         .execute(&state.db)
-        .await?;
+        .await?
+        .rows_affected();
+        // The address it went to is no longer the reader's: it starts nothing.
+        if kept == 0 {
+            return Ok(false);
+        }
         sqlx::query("DELETE FROM person_settings WHERE person_id = ? AND name = 'weekly_start'")
             .bind(person)
             .execute(&state.db)
@@ -389,6 +416,8 @@ struct Chosen {
     stop: String,
     /// Whether Start was pressed for this address.
     started: bool,
+    /// Whether a Start email ever went to this address.
+    asked: bool,
 }
 
 /// Sends the email to each reader it's due for at `at`, and answers how
@@ -423,6 +452,9 @@ pub async fn send_due(db: &SqlitePool, mailer: &Mailer, at: i64) -> Result<usize
             started: values
                 .get("weekly_address")
                 .is_some_and(|started| started.eq_ignore_ascii_case(&address)),
+            asked: values
+                .get("weekly_start_to")
+                .is_some_and(|to| to.eq_ignore_ascii_case(&address)),
             address,
         };
         // One reader's trouble never keeps the others' emails back.
@@ -445,6 +477,11 @@ async fn send_one(
         return Ok(false);
     };
     if !chosen.started {
+        // An address never asked (the reader's email changed since): ask it
+        // once now. One already asked is never asked again from here.
+        if !chosen.asked {
+            ask_to_start(db, mailer, chosen.person, &chosen.address, at).await?;
+        }
         return Ok(false);
     }
     if due <= chosen.since.max(chosen.sent_at.unwrap_or(i64::MIN)) {

@@ -43,7 +43,9 @@ refinement round.*
    than "waiting for you".
 8. The Start email's words: "You chose the weekly email in nine turtles. To
    start it at this address, open this link and press Start", then "If it
-   wasn't you, ignore this email: nothing more will come."
+   wasn't you, ignore this email: nothing is sent to this address unless
+   Start is pressed." It works once, for a week; while it waits unanswered,
+   no other goes to that address for a week.
 9. The publisher's link under each title, rather than links into nine
    turtles: the reader can open the writing straight away, and the
    publisher is credited and linked (the floor).

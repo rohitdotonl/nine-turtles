@@ -404,9 +404,9 @@ test("the weekly email is off until chosen in Settings, starts from its email, a
   await page.keyboard.press("ArrowRight");
   await expect(weekly.getByRole("radio", { name: "Weekly", exact: true })).toBeChecked();
   // Nothing goes to an address until it's started from there.
-  await expect(page.getByText("press Start in the email just sent")).toBeVisible();
+  await expect(page.getByText("press Start in the email sent to your address")).toBeVisible();
   const { mail, link } = await newestMail(email, "Start your weekly email");
-  expect(mail.body).toContain("nothing more will come");
+  expect(mail.body).toContain("nothing is sent to this address unless Start is pressed");
   // It follows the reader: the server keeps it.
   await page.reload();
   await expect(page.getByRole("group", { name: "Weekly email" }).getByRole("radio", { name: "Weekly", exact: true })).toBeChecked();

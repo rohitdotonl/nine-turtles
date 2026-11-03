@@ -159,6 +159,8 @@ async fn the_weekly_email_names_the_people_with_something_new_and_stops_in_one_p
         StatusCode::NOT_FOUND
     );
     assert_eq!(press(&base, "start", &start).await, StatusCode::OK);
+    // Once only.
+    assert_eq!(press(&base, "start", &start).await, StatusCode::NOT_FOUND);
     assert_eq!(choose(&base, &cookie, "weekly").await["waiting"], false);
     assert_eq!(mail().len(), 1);
 
@@ -287,5 +289,46 @@ async fn it_needs_email_to_be_turned_on_and_turns_off_from_settings() {
             .await
             .unwrap();
     left.sort();
-    assert_eq!(left, ["weekly_start", "weekly_start_at"]);
+    assert_eq!(left, ["weekly_start", "weekly_start_at", "weekly_start_to"]);
+}
+
+#[tokio::test]
+async fn a_changed_email_waits_for_start_again_and_is_asked_only_once() {
+    let (base, state, outbox) = common::start_with_mail(common::config()).await;
+    let cookie = common::signed_in(&base).await;
+    let at = nine_turtles::now() + 8 * 86_400;
+    let alpha = follows(&state.db, 1, "Alpha").await;
+    arrives(&state.db, 1, alpha, "On walking", at - 86_400, false).await;
+    choose(&base, &cookie, "weekly").await;
+    let (_, first) = common::newest_link(&outbox, common::OWNER_EMAIL);
+
+    // The address changes (as a confirmed change of email does) before Start is pressed.
+    let moved = "moved@example.com";
+    sqlx::query("UPDATE people SET email = ? WHERE id = 1")
+        .bind(moved)
+        .execute(&state.db)
+        .await
+        .unwrap();
+    assert_eq!(choose(&base, &cookie, "weekly").await["waiting"], true);
+    // The old address's link can't start it for the new one.
+    assert_eq!(press(&base, "start", &first).await, StatusCode::NOT_FOUND);
+    // The background round asks the new address once, and nothing else goes there.
+    assert_eq!(send(&state, at).await, 0);
+    assert_eq!(send(&state, at + 60).await, 0);
+    let asked = common::emails_to(&outbox, moved);
+    assert_eq!(asked.len(), 1, "{asked:?}");
+    assert_eq!(asked[0].subject, "Start your weekly email");
+    // Off and on again within the week sends no second one to the same address.
+    choose(&base, &cookie, "off").await;
+    choose(&base, &cookie, "weekly").await;
+    assert_eq!(common::emails_to(&outbox, moved).len(), 1);
+
+    let (_, second) = common::newest_link(&outbox, moved);
+    assert_eq!(press(&base, "start", &second).await, StatusCode::OK);
+    arrives(&state.db, 1, alpha, "Later", at + WEEK - 86_400, false).await;
+    assert_eq!(send(&state, at + WEEK).await, 1);
+    assert_eq!(
+        common::emails_to(&outbox, moved).last().unwrap().subject,
+        "New from the people you read"
+    );
 }

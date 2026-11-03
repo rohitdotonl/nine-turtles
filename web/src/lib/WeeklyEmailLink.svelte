@@ -28,8 +28,8 @@
       help: "Press Start to get the weekly email at this address.",
       button: "Start the weekly email",
       busy: "Starting…",
-      done: "The weekly email will come to this address. You can stop it from any of them, or in Settings.",
-      unknown: "This link no longer works: it was already used. Choose the weekly email again in Settings for a new one.",
+      done: "The weekly email will come to this address. Each one ends with a link that stops it.",
+      unknown: "This link no longer works: it was already used, or is more than a week old. Choose the weekly email again in Settings for a new one.",
     },
   } as const;
   const words = $derived(WORDS[which]);

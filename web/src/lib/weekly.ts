@@ -23,7 +23,7 @@ export type Weekly = { often: Often; waiting: boolean };
 
 /** What the row says under its name, for each choice. */
 export function oftenHint(often: Often | undefined, waiting = false): string {
-  if (waiting && often !== "off") return "Waiting for you: press Start in the email just sent to your address.";
+  if (waiting && often !== "off") return "Waiting for you: press Start in the email sent to your address.";
   if (often === "weekly") return "Saturday mornings: who wrote, their titles and a line each. Plain text.";
   if (often === "twice") return "Wednesday and Saturday mornings: who wrote, their titles and a line each. Plain text.";
   return "The people you read, their titles and a line each, in one plain email.";
