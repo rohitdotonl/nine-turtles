@@ -132,3 +132,37 @@ async fn while_the_address_is_confirmed_the_answer_waits_with_its_link() {
         Some("search")
     );
 }
+
+#[tokio::test]
+async fn the_link_finished_keeps_its_own_answer_and_leaves_no_copy() {
+    let (base, state, outbox) = common::start_with_mail(common::config()).await;
+    let stranger = "someone else's password, typed first";
+    let first =
+        json!({ "email": "ana@example.com", "password": stranger, "heard_about": "reddit" });
+    assert_eq!(sign_up(&base, first).await, StatusCode::ACCEPTED);
+    let (_, ticket) = common::newest_link(&outbox, "ana@example.com");
+    // Within the minute no new email goes, but this sign-up waits too; the
+    // link already sent finishes whichever password is typed.
+    let mine =
+        json!({ "email": "ana@example.com", "password": READER_PASSWORD, "heard_about": "friend" });
+    assert_eq!(sign_up(&base, mine).await, StatusCode::ACCEPTED);
+
+    let finished = Client::new()
+        .post(format!("{base}/api/sign-up/finish"))
+        .header("content-type", "application/json")
+        .body(json!({ "ticket": ticket, "password": READER_PASSWORD }).to_string())
+        .send()
+        .await
+        .unwrap();
+    assert!(finished.status().is_success(), "{}", finished.status());
+    assert_eq!(
+        answer_of(&state, "ana@example.com").await.as_deref(),
+        Some("friend")
+    );
+    let copies: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM email_links WHERE heard_about IS NOT NULL")
+            .fetch_one(&state.db)
+            .await
+            .unwrap();
+    assert_eq!(copies, 0);
+}

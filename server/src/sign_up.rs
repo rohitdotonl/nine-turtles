@@ -351,11 +351,15 @@ async fn finish(
 ) -> Result<Result<i64, Response>, sqlx::Error> {
     let made = make_account(&mut *transaction, email, line, Some(now()), heard_about).await?;
     if made.is_ok() {
-        // Any other link waiting for this address can't make a second account.
-        sqlx::query("UPDATE email_links SET used = 1 WHERE purpose = 'sign-up' AND email = ?")
-            .bind(email)
-            .execute(&mut *transaction)
-            .await?;
+        // Any other link waiting for this address can't make a second account,
+        // and no copy of an answer is left behind once the account holds it.
+        sqlx::query(
+            "UPDATE email_links SET used = 1, heard_about = NULL
+             WHERE purpose = 'sign-up' AND email = ?",
+        )
+        .bind(email)
+        .execute(&mut *transaction)
+        .await?;
     }
     Ok(made)
 }

@@ -50,7 +50,7 @@ describe("the sign-up page's messages", () => {
 
 describe("how did you hear about nine turtles?", () => {
   it("offers the answers the server keeps, each said in plain words", () => {
-    // The same list as `HEARD_ABOUT` in server/src/people.rs, in its order.
+    // The same list as `HEARD_ABOUT` in server/src/sign_up.rs, in its order.
     expect(HEARD_ABOUT.map((answer) => answer.value)).toEqual(["blog", "friend", "search", "ai", "reddit", "other"]);
     for (const answer of HEARD_ABOUT) expect(answer.words).toMatch(/^[A-Z][a-z]* ?[A-Za-z ]*$/);
   });
