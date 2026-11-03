@@ -217,11 +217,16 @@ pub const ACCOUNT_TABLES: &[&str] = &[
 /// Empties reader `person`'s account, in one step: all or nothing. Every
 /// feed they follow is let go as unsubscribing lets it go, stars and
 /// collections included, then the `DATA_TABLES` are emptied of their lines.
-/// They stay signed in, with everything else of their account. Works for
-/// the owner too (decision 0117).
+/// Their answer to "How did you hear about nine turtles?" goes too. They
+/// stay signed in, with everything else of their account. Works for the
+/// owner too (decision 0117).
 pub async fn delete_data(db: &SqlitePool, person: i64) -> Result<(), sqlx::Error> {
     let mut transaction = db.begin_with("BEGIN IMMEDIATE").await?;
     let_go(&mut transaction, person, true).await?;
+    sqlx::query("UPDATE people SET heard_about = NULL WHERE id = ?")
+        .bind(person)
+        .execute(&mut *transaction)
+        .await?;
     transaction.commit().await
 }
 
@@ -325,7 +330,16 @@ async fn list(SignedIn(person): SignedIn, State(state): State<AppState>) -> Resp
 struct SignUp {
     email: String,
     password: String,
+    /// "How did you hear about nine turtles?" (decision 0155): one of
+    /// `HEARD_ABOUT`, or nothing when the reader chose not to say.
+    #[serde(default)]
+    heard_about: Option<String>,
 }
+
+/// The answers "How did you hear about nine turtles?" offers, as they're
+/// kept: a blog, a friend, a search, an AI assistant, Reddit, somewhere
+/// else. Only their totals are ever shown (the owner report).
+pub const HEARD_ABOUT: &[&str] = &["blog", "friend", "search", "ai", "reddit", "other"];
 
 /// Makes an account with an email and a password, at once, and signs this
 /// device in. No email is sent and no invite is needed (decision 0115).
@@ -340,6 +354,11 @@ async fn sign_up(State(state): State<AppState>, Json(form): Json<SignUp>) -> Res
     if form.password.len() > crate::password::MAXIMUM_LENGTH {
         return refused(StatusCode::BAD_REQUEST, "password-long");
     }
+    // An answer the page doesn't offer is kept as no answer, never refused:
+    // the question is optional, so it never stands between anyone and an account.
+    let heard_about = form
+        .heard_about
+        .filter(|answer| HEARD_ABOUT.contains(&answer.as_str()));
     // One sign-up at a time: each scramble takes about 19 MB of memory, so
     // many at once could use up the server's. Held until this one is
     // decided, so the hour's count below can't be raced past either.
@@ -374,14 +393,15 @@ async fn sign_up(State(state): State<AppState>, Json(form): Json<SignUp>) -> Res
     // The hour's count is checked again as the account is made, so two
     // sign-ups at once can't both slip past it.
     let made: Result<Option<i64>, sqlx::Error> = sqlx::query_scalar(
-        "INSERT INTO people (owner, email, password_hash, created_at)
-         SELECT 0, ?, ?, ?
+        "INSERT INTO people (owner, email, password_hash, created_at, heard_about)
+         SELECT 0, ?, ?, ?, ?
          WHERE (SELECT COUNT(*) FROM people WHERE owner = 0 AND created_at > ?) < ?
          RETURNING id",
     )
     .bind(&email)
     .bind(&line)
     .bind(now())
+    .bind(heard_about)
     .bind(hour_ago)
     .bind(SIGN_UPS_PER_HOUR)
     .fetch_optional(&state.db)

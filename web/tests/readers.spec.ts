@@ -25,7 +25,13 @@ test("anyone can sign up from the sign-in page, and the owner sees them", async 
   await expect(joining.getByRole("status")).toHaveText("Choose a password of at least 12 characters.");
   await expect(joining.getByLabel("Password")).toHaveAttribute("aria-invalid", "true");
   await joining.getByLabel("Password").fill(READER_PASSWORD);
-  await joining.keyboard.press("Enter");
+  // One optional question (decision 0155): "Rather not say" until chosen.
+  const heardAbout = joining.getByLabel("How did you hear about nine turtles?");
+  await expect(heardAbout).toHaveValue("");
+  await heardAbout.selectOption({ label: "A friend" });
+  const sent = joining.waitForRequest("**/api/sign-up");
+  await joining.getByRole("button", { name: "Sign up" }).click();
+  expect((await sent).postDataJSON()).toMatchObject({ email, heard_about: "friend" });
   await expect(joining.locator("#sidebar")).toBeAttached();
   // The new reader arrives in nine turtles, and isn't the owner: no Readers in their Settings.
   expect(new URL(joining.url()).pathname).not.toBe("/sign-up");

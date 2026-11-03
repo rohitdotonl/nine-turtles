@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { explainSignUp, plausibleEmail, type SignUpResult } from "./readers";
+import { HEARD_ABOUT, explainSignUp, plausibleEmail, type SignUpResult } from "./readers";
 
 describe("email addresses", () => {
   it("are checked as the server checks them", () => {
@@ -33,5 +33,13 @@ describe("the sign-up page's messages", () => {
       expect(message.endsWith(".")).toBe(true);
     }
     expect(explainSignUp({ ok: false, reason: "password-short" })).toBe("Choose a password of at least 12 characters.");
+  });
+});
+
+describe("how did you hear about nine turtles?", () => {
+  it("offers the answers the server keeps, each said in plain words", () => {
+    // The same list as `HEARD_ABOUT` in server/src/people.rs, in its order.
+    expect(HEARD_ABOUT.map((answer) => answer.value)).toEqual(["blog", "friend", "search", "ai", "reddit", "other"]);
+    for (const answer of HEARD_ABOUT) expect(answer.words).toMatch(/^[A-Z][a-z]* ?[A-Za-z ]*$/);
   });
 });
