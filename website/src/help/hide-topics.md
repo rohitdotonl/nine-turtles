@@ -21,7 +21,7 @@ related: [put-people-in-folders, search-everything, newsletters]
    - the **word or phrase** to look for, and whether in **its title** or
      **its title or text**;
    - **by** an author, if you like;
-   - **from** everyone, a folder, or particular people;
+   - **from** everyone, one folder, or one person;
    - **then** what to do: **mute it**, **star it** or **mark it as read**.
 3. Press **Save**.
 

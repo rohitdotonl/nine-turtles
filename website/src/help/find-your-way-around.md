@@ -24,7 +24,7 @@ From the top:
   articles you opened).
 - **Up Next**, while it holds a podcast episode, then your **Saved
   searches** and **Collections**.
-- **Folders**, then **People**: everyone you follow, A to Z.
+- **Folders**, then **People**: everyone who isn't in a folder, A to Z.
 - At the foot: **Add feed**, **Keys** and **Settings**.
 
 A small dot at the end of a row means something there is new. There are no
@@ -54,7 +54,7 @@ Next. A long article opens where you stopped last time.
 ## New articles wait for you
 
 The list never changes while you look at it. When new articles have arrived,
-a note at the bottom says **New articles**. Press <kbd>R</KBD>, or **Show**
+a note at the bottom says **New articles**. Press <kbd>R</kbd>, or **Show**
 on a phone, to bring them in. Opening the app always shows the latest.
 
 ## Make room to read

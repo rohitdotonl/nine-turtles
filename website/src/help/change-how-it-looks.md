@@ -37,6 +37,6 @@ Open **Settings**. Under **Look and feel**:
 ## Good to know
 
 - These are kept on each device, so your phone and your computer can differ.
-- A theme's one color marks only what's new to you: the dot beside an
-  unread article.
+- A theme's one color marks only what's yours to look at: the dot beside an
+  unread article, and what a search found.
 - To choose what's in the sidebar, see **Settings › Show in the sidebar**.

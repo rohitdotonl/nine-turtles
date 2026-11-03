@@ -32,6 +32,7 @@ the same thing.
 Many readers, including Inoreader, Feedly, Feedbin, The Old Reader and
 FreshRSS, can export starred or saved articles as a JSON file. In **Settings
 › Your data**, press **Import starred articles…** and choose that file.
+Pocket's export isn't one nine turtles can read.
 
 ## Bring your YouTube subscriptions
 
@@ -45,4 +46,3 @@ Your data**, press **Import YouTube subscriptions…** and choose the
 - If the file puts folders inside folders, each feed goes into the folder
   closest to it.
 - If the file has lines nine turtles can't read, it tells you which.
-- Pocket's export isn't supported.

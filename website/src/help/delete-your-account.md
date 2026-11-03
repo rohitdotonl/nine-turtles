@@ -36,5 +36,4 @@ stay.
 - Changed your mind before pressing? **Cancel** (or <kbd>Esc</kbd>) keeps
   everything.
 - It's gone from nine turtles at once. Copies stay for a while in the
-  nightly backups, which only I can reach; the
-  <a href="/privacy/">privacy policy</a> says how long.
+  backups; the <a href="/privacy/">privacy policy</a> says how long.

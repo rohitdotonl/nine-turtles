@@ -52,7 +52,7 @@ A few words used throughout:
 | 28 | [Newsletters as feeds](spec/28-newsletters-as-feeds.md) |
 | 29 | [Paying for nine turtles](spec/29-paying-for-nine-turtles.md) |
 | 30 | [The feed finder (on the website)](spec/30-the-feed-finder.md) |
-| 31 | [Starter packs (on the website)](spec/31-starter-packs.md) |
+| 31 | *Retired: starter packs, removed from the website (decision 0158)* |
 | 32 | [Reading offline](spec/32-reading-offline.md) |
 | 33 | [Connecting your own AI assistant (MCP)](spec/33-ai-assistants-mcp.md) |
 | 34 | [Collections](spec/34-collections.md) |

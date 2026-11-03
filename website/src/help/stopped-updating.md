@@ -39,8 +39,9 @@ worked since 12 October.", with a button to find its new address.
 
 - Something is listed only after two failed checks in a row, so a site
   that's down for a moment doesn't worry you.
-- After three weeks of not working, nine turtles checks it once a day, in
-  case it comes back.
+- One that keeps failing is checked less often, and after a while (a week
+  if the site says it's gone, three weeks otherwise) once a day, in case it
+  comes back.
 - How often nine turtles checks depends on how often someone writes: from
   every half hour to once a day. When a site asks it to slow down, it does.
 - Quiet isn't broken: some people write once a year. **Settings › Your

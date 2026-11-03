@@ -15,7 +15,7 @@ related: [inbox-or-river, star-an-article, find-your-way-around]
 
 ## Mark one article unread
 
-Open it, then press <kbd>M</KBD>, or choose **More › Mark unread**. It gets
+Open it, then press <kbd>M</kbd>, or choose **More › Mark unread**. It gets
 its dot back and waits in Unread again.
 
 ## Mark a whole list as read
@@ -37,7 +37,7 @@ The same menu also has:
 ## Undo
 
 After any of these, a note at the bottom of the list says what happened,
-with an **Undo** button. Press it, or <kbd>U</KBD>, to put things back as
+with an **Undo** button. Press it, or <kbd>U</kbd>, to put things back as
 they were.
 
 Undo stays until you do something else that can be undone, or leave the list.

@@ -84,7 +84,7 @@ Your keys follow you to every device. <kbd>Enter</kbd>, <kbd>Esc</kbd>,
 
 ## Good to know
 
-- On a Mac, the app shows Shift as ⇧.
+- The app shows Shift as ⇧.
 - In the <a href="/help/inbox-or-river/">river</a>, the keys for unread
   articles and marking all as read are left out.
 - Search has its own shortcuts, such as <code>is:starred</code>: see

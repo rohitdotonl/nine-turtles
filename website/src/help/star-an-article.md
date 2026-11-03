@@ -16,16 +16,16 @@ related: [keep-articles-in-collections, download-everything, mark-read-or-unread
 ## Star an article
 
 Open the article and press **Star** in the bar across its top (on a phone,
-the bar at the bottom), or press <kbd>S</KBD>. The star fills in. Press it
+the bar at the bottom), or press <kbd>S</kbd>. The star fills in. Press it
 again to take the star off.
 
 ## Find your starred articles
 
-Choose **Starred** in the sidebar, or press <kbd>G</KBD> then <kbd>S</KBD>.
+Choose **Starred** in the sidebar, or press <kbd>G</kbd> then <kbd>S</kbd>.
 
 ## Good to know
 
-- Took a star off by mistake? Press <kbd>U</KBD> or **Undo**.
+- Took a star off by mistake? Press <kbd>U</kbd> or **Undo**.
 - A star and a collection are separate: starring doesn't add an article to a
   collection, and adding it to one doesn't star it. Use a star for "keep
   this", and collections to sort what you keep.

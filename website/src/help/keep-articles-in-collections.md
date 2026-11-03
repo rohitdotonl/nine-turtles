@@ -16,7 +16,7 @@ related: [star-an-article, search-everything, download-everything]
 ## Add an article to a collection
 
 1. Open the article.
-2. Choose **More › Add to collection…** (or press <kbd>L</KBD>).
+2. Choose **More › Add to collection…** (or press <kbd>L</kbd>).
 3. Tick the collections it belongs on. To start a new one, type its name in
    **New collection…**
 4. Press **Save**.

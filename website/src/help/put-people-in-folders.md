@@ -46,5 +46,5 @@ Deleting a folder never unfollows anyone: they simply leave the folder.
 
 - Folders start closed in the sidebar. Press a folder's arrow to show the
   people in it; each device remembers which you opened.
-- A folder can be read in the river while the rest is an inbox. See
-  <a href="/help/inbox-or-river/">Inbox or river</a>.
+- Someone in a folder is listed in the folder, not under **People**, which
+  holds everyone who isn't in one.

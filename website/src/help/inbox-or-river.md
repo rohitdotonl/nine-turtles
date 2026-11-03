@@ -45,5 +45,5 @@ their own list, in All, in their folders and in search.
 
 - nine turtles still remembers what you've read while you're in the river,
   so nothing is lost when you switch back to the inbox.
-- In the river, **Mark unread** (<kbd>M</KBD>) still works, but marking a
+- In the river, **Mark unread** (<kbd>M</kbd>) still works, but marking a
   whole list as read is left out: there's nothing to clear.
