@@ -48,7 +48,7 @@ what's live.
   | Fountain pen | old-ink brown `#8C5500` | `#DCAA6A` |
   | Signal | violet `#6953A0` | `#B8A8EE` |
 
-  Fountain pen's and Signal's retuned dots are being built; until then they are burnt orange and indigo (`web/src/themes.css`).
+  (Live: Fountain pen's brown and Signal's violet replaced burnt orange and indigo on 3 November 2026.)
 
 - **The dot is never green or red** (green and red are the colors most often confused). (Live)
 - **The star** is drawn in the theme's own ink: filled when starred, an outline when not. Green retired. (Live, decision 0143)
