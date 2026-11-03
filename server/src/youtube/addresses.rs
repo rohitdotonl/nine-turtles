@@ -91,6 +91,16 @@ pub fn is_feed(url: &Url) -> bool {
         && url.path() == "/feeds/videos.xml"
 }
 
+/// Whether a "not found" or server error from this address is worth asking
+/// again (decision 0159): any YouTube feed except a channel's Shorts and live
+/// lists, which truly don't exist for a channel without Shorts or streams.
+pub fn asks_again(url: &Url) -> bool {
+    is_feed(url)
+        && !url.query_pairs().any(|(name, list)| {
+            name == "playlist_id" && (list.starts_with("UUSH") || list.starts_with("UULV"))
+        })
+}
+
 /// The channel whose feed this is, if it's a channel's feed (not a
 /// playlist's, and not on any other site).
 pub fn channel_of_feed(url: &Url) -> Option<String> {
@@ -221,6 +231,19 @@ mod tests {
         ] {
             assert_eq!(link(&url(other)), Link::Other, "{other}");
         }
+    }
+
+    #[test]
+    fn youtube_feeds_are_asked_again_but_not_the_shorts_and_live_lists() {
+        let ted = "UCAuUUnT6oDeKwE6v1NGQxug";
+        assert!(asks_again(&url(&channel_feed(ted))));
+        assert!(asks_again(&url(&playlist_feed(
+            "PLOGi5-fAu8bH_VvkaV7xn5lFpQ5vbqiCo"
+        ))));
+        assert!(!asks_again(&url(&shorts_feed(ted))));
+        assert!(!asks_again(&url(&live_feed(ted))));
+        assert!(!asks_again(&url("https://www.youtube.com/@TED")));
+        assert!(!asks_again(&url("https://example.com/feeds/videos.xml")));
     }
 
     #[test]

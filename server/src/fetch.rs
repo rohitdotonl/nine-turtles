@@ -170,7 +170,7 @@ pub async fn check(
     local_allowed: bool,
     known: &Known<'_>,
 ) -> Result<Answer, FetchError> {
-    let tries = if crate::youtube::addresses::is_feed(url) {
+    let tries = if crate::youtube::addresses::asks_again(url) {
         YOUTUBE_TRIES
     } else {
         1
@@ -519,18 +519,6 @@ mod tests {
             .await;
             assert_eq!((got, asked.get()), (Err(answer), 1));
         }
-
-        // Only YouTube's feeds are asked more than once.
-        let url = |text: &str| Url::parse(text).unwrap();
-        assert!(crate::youtube::addresses::is_feed(&url(
-            "https://www.youtube.com/feeds/videos.xml?channel_id=UCAuUUnT6oDeKwE6v1NGQxug"
-        )));
-        assert!(!crate::youtube::addresses::is_feed(&url(
-            "https://www.youtube.com/@TED"
-        )));
-        assert!(!crate::youtube::addresses::is_feed(&url(
-            "https://example.com/feeds/videos.xml"
-        )));
     }
 
     #[test]

@@ -15,11 +15,19 @@ just landed on a bad answer, and TED-Ed happened not to.
 **Decision.** A YouTube feed address alone is asked up to four times, a
 second apart, while it answers 404 or a server error (5xx); any other
 answer (the feed, "nothing new", "slow down", refused, too big, another
-status) stands at once. It lives in `fetch::check`, so adding a channel,
-the regular checks and the Shorts and live lists all get it. Four asks
-make a wrong "not found" rare (about 1 in 16 at today's rate) and cost
-YouTube at most three extra small requests. Other publishers are asked
-once, as before: a 404 from them is usually true.
+status) stands at once. It lives in `fetch::check`
+(`youtube::addresses::asks_again` says which addresses), so adding a
+channel or playlist, the regular checks, feed health's Retry and the
+website's feed finder all get it. Four asks make a wrong "not found" rare
+(about 1 in 16 at today's rate) and cost YouTube at most three extra small
+requests per feed; adding or Retry may take a few seconds longer. Other
+publishers are asked once, as before: a 404 from them is usually true.
+
+**Except the Shorts and live lists** (`UUSH…`, `UULV…`, read by
+`youtube::sorting`): a channel without Shorts or streams has no such list,
+so its "not found" is usually true, and asking four times would only cost
+YouTube requests. They are asked once; when one fails, nothing is sorted
+out, as before.
 
 **Not done:** treating YouTube's 404 differently in feed health. With the
 asks again, a failed check is rare; if one still fails, the usual backoff
