@@ -31,13 +31,29 @@ export type SignUpResult =
   | { ok: true; sentTo?: string }
   | { ok: false; reason: "email" | "password-short" | "password-long" | "already" | "too-many" | "unreachable" };
 
-export async function signUp(email: string, password: string): Promise<SignUpResult> {
+/**
+ * The answers to "How did you hear about nine turtles?" (decision 0155), in
+ * the order the sign-up page lists them, each with the value the server
+ * keeps. Choosing none is "Rather not say", and nothing is kept.
+ */
+export const HEARD_ABOUT = [
+  { value: "blog", words: "A blog" },
+  { value: "friend", words: "A friend" },
+  { value: "search", words: "A search" },
+  { value: "ai", words: "An AI assistant" },
+  { value: "reddit", words: "Reddit" },
+  { value: "other", words: "Somewhere else" },
+] as const;
+
+export type HeardAbout = (typeof HEARD_ABOUT)[number]["value"];
+
+export async function signUp(email: string, password: string, heardAbout?: HeardAbout): Promise<SignUpResult> {
   let response: Response;
   try {
     response = await api("/api/sign-up", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, heard_about: heardAbout ?? null }),
     });
   } catch {
     return { ok: false, reason: "unreachable" };

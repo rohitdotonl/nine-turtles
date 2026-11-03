@@ -41,7 +41,10 @@ one, it answers 401; without the setting, 404.
       "before_change": { "count": 3, "newest": "before-change/2026-10-28T120000Z-before-change-28.sqlite", "bytes": 150000000 }
     }
   },
-  "readers": { "total": 12, "joined_last_30_days": 3, "here_last_30_days": 9 },
+  "readers": {
+    "total": 12, "joined_last_30_days": 3, "here_last_30_days": 9,
+    "heard_about": { "blog": 4, "friend": 2, "search": 1, "ai": 0, "reddit": 1, "other": 0, "no_answer": 4 }
+  },
   "feeds": { "followed": 340, "resting": 20, "failing": 4 },
   "articles": 51000,
   "payments": {
@@ -64,6 +67,11 @@ one, it answers 401; without the setting, 404.
   ends (`trial-ends`) in the next 30 days. A day already past isn't listed,
   even while a plan is still paid in its few days of grace. While payments are off, everyone
   is free and the list is empty.
+- `heard_about` counts the answers to "How did you hear about nine
+  turtles?" at sign-up (decision 0155, SPEC section 41): `ai` is an AI
+  assistant, `other` is "Somewhere else", and `no_answer` is everyone who
+  chose "Rather not say" or joined before it was asked (the owner too).
+  Every answer is listed, even at 0. Only these totals, never whose.
 - `here_last_30_days` can be up to a day behind: nine turtles notes that a
   reader was here at most once a day.
 

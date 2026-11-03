@@ -103,7 +103,7 @@ milestone order above.
 7. **"How did you hear about nine turtles?"** One optional question at
    sign-up (a blog, a friend, a search, an AI assistant, Reddit, other),
    saved with the account and shown only as totals in the owner report
-   (decision 0130), never per reader.
+   (decision 0130), never per reader. Built: SPEC section 41, decision 0155.
 
 **Decided with the owner (2 November 2026):**
 

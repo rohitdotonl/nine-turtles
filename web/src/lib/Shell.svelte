@@ -307,8 +307,8 @@
   const keeper = new Keeper(() => void keepUpToDate(settings.sort ?? "newest", settings.mode));
 
   const loadFeeds = () => library.loadFeeds(); // Loads the feeds and folders.
-  // A phone opens on the welcome while you follow no one, not on a home screen of empty lists (decision 0137); Back goes home.
-  $effect(() => void (firstVisit && untrack(() => phone && screenNow() === "home" && isList(route) && go(route))));
+  // A phone opens on the welcome while you follow no one (decision 0137); Back goes home. Only on opening: feeds arriving after a move change nothing.
+  $effect(() => void (firstVisit && untrack(() => !layout.moved && phone && screenNow() === "home" && isList(route) && go(route))));
 
   $effect(() => {
     // device.dark: "Match device" follows the device's own switch while nine turtles is open.

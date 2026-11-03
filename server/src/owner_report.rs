@@ -6,8 +6,9 @@
 //!
 //! Counts and dates only: when the last backups were taken and how many are
 //! kept, how many readers there are and how many were here lately, how many
-//! pay, and the days plans renew or end in the next 30 days. Never a name,
-//! an email, a reader's number, or anything about what anyone reads.
+//! pay, how readers heard about nine turtles (totals only, decision 0155),
+//! and the days plans renew or end in the next 30 days. Never a name, an
+//! email, a reader's number, or anything about what anyone reads.
 
 use axum::{
     Json, Router,
@@ -74,6 +75,10 @@ async fn report(State(state): State<AppState>, headers: HeaderMap) -> Response {
         Ok(found) => found,
         Err(error) => return database_problem("gathering the owner report", &error),
     };
+    let heard_about = match heard_about(&state.db).await {
+        Ok(heard_about) => heard_about,
+        Err(error) => return database_problem("counting how readers heard of us", &error),
+    };
 
     let mut paying = Paying::default();
     let mut coming_up = Vec::new();
@@ -137,6 +142,7 @@ async fn report(State(state): State<AppState>, headers: HeaderMap) -> Response {
                     .iter()
                     .filter(|reader| reader.last_here > now - LATELY)
                     .count(),
+                "heard_about": heard_about,
             },
             "feeds": {
                 "followed": totals.feeds,
@@ -153,4 +159,30 @@ async fn report(State(state): State<AppState>, headers: HeaderMap) -> Response {
         })),
     )
         .into_response()
+}
+
+/// How many readers gave each answer to "How did you hear about nine
+/// turtles?", every answer named even at 0, and `no_answer` for those who
+/// chose not to say (and everyone who joined before it was asked). Totals
+/// only: never whose answer is whose.
+async fn heard_about(db: &sqlx::SqlitePool) -> Result<serde_json::Value, sqlx::Error> {
+    let counted: Vec<(Option<String>, i64)> =
+        sqlx::query_as("SELECT heard_about, COUNT(*) FROM people GROUP BY heard_about")
+            .fetch_all(db)
+            .await?;
+    let mut totals = serde_json::Map::new();
+    for answer in crate::sign_up::HEARD_ABOUT
+        .iter()
+        .copied()
+        .chain(["no_answer"])
+    {
+        totals.insert(answer.to_owned(), json!(0));
+    }
+    for (answer, count) in counted {
+        totals.insert(
+            answer.unwrap_or_else(|| "no_answer".to_owned()),
+            json!(count),
+        );
+    }
+    Ok(serde_json::Value::Object(totals))
 }
