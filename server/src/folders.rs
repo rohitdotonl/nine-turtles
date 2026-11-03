@@ -27,7 +27,7 @@ use sqlx::SqliteConnection;
 use crate::{
     AppState,
     auth::{SignedIn, database_problem},
-    checking::{DAY, HOUR},
+    checking::DAY,
     feeds::{follow_again, follows, refresh_shared},
     now, rules,
 };
@@ -133,7 +133,6 @@ struct EditFeed {
 enum Check {
     /// On its own rhythm, as every feed is by default.
     Automatic,
-    Hourly,
     Daily,
 }
 
@@ -142,7 +141,6 @@ impl Check {
     const fn at_most(self) -> i64 {
         match self {
             Self::Automatic => 0,
-            Self::Hourly => HOUR,
             Self::Daily => DAY,
         }
     }

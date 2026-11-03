@@ -9,12 +9,6 @@ October 2026; it is in the repository's history.*
 
 ## Still open
 
-- **Edit feed's "Hourly" now does what "Automatic" does** (3 November
-  2026, decision 0161). Feeds are now checked at most once an hour, so
-  "Check for new articles: Automatic · Hourly · Daily" has a choice that
-  changes nothing. Suggested: drop Hourly (feeds set to it become
-  Automatic), leaving "Automatic · Daily". Or keep it as it is.
-
 - **How many articles an app may fetch at once** (27 October 2026, from
   the code survey). Reeder, NetNewsWire and other apps can ask for up to
   10,000 full articles in one request, which can use tens of MB of memory

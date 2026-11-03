@@ -1,6 +1,6 @@
 # 0082: Settings for each feed
 
-*October 2026.*
+*October 2026. "At most Hourly" was removed on 3 November 2026 (decision 0162).*
 
 **Decision.** Edit feed gains three settings for one feed, chosen by the
 owner on 25 October 2026: its reading mode (Inbox or River), how often it's

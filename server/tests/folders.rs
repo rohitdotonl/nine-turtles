@@ -742,14 +742,17 @@ async fn each_feed_keeps_its_own_reading_mode_check_and_website_settings() {
         (json!(false), json!(0), json!(false))
     );
     assert_eq!(reader.titles("view=unread").await.len(), 6);
-    // An unknown choice is refused.
-    let (status, _) = reader
-        .post(
-            &format!("/api/feeds/{alpha}"),
-            json!({ "title": "Alpha blog", "folders": [], "check": "weekly" }),
-        )
-        .await;
-    assert!(status.is_client_error());
+    // An unknown choice is refused, and so is "hourly", no longer offered
+    // (decision 0162).
+    for choice in ["weekly", "hourly"] {
+        let (status, _) = reader
+            .post(
+                &format!("/api/feeds/{alpha}"),
+                json!({ "title": "Alpha blog", "folders": [], "check": choice }),
+            )
+            .await;
+        assert!(status.is_client_error(), "{choice}");
+    }
 }
 
 #[tokio::test]
