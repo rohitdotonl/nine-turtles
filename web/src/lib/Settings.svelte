@@ -16,8 +16,8 @@
   (Keyboard on a screen with keys, Add from anywhere, Rules, Newsletters
   while nine turtles takes them, Other apps, Connected assistants, Passkeys
   where they work); Your nine turtles (Readers, the owner only); and Account
-  (Your plan while nine turtles takes payments, Email with Change…, Sign
-  out, Delete data… and, for everyone but the owner, Delete account…).
+  (Your plan while nine turtles takes payments, Email with Change…, Weekly
+  email, Sign out, Delete data… and, for everyone but the owner, Delete account…).
 
   Each row on the first page has its icon at the left, in the muted grey,
   lined up with the first line of its name, and a setting's description
@@ -33,6 +33,7 @@
   import { edge } from "./edge";
   import AddAnywhere from "./AddAnywhere.svelte";
   import ChangeEmail from "./ChangeEmail.svelte";
+  import WeeklyEmail from "./WeeklyEmail.svelte";
   import DeleteAccount from "./DeleteAccount.svelte";
   import Icon, { type IconName } from "./Icon.svelte";
   import ImportOpml from "./ImportOpml.svelte";
@@ -627,10 +628,8 @@
               >
             {/if}
           </div>
-          <!--
-            In the text color, not the destructive red: signing out removes
-            nothing, and red in nine turtles means something goes (decision 0042).
-          -->
+          {#if emailSending && email}<WeeklyEmail onProblem={(text) => (message = text)} />{/if}
+          <!-- In the text color, not oxblood: signing out removes nothing, and oxblood means something goes (decision 0042). -->
           <button type="button" onclick={leave} class="inset-row inset-action setting"
             ><span class="setting-label">{@render icon("sign-out")}<span class="setting-name">Sign out</span></span></button
           >

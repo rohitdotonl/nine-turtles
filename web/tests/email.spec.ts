@@ -391,3 +391,34 @@ test("choosing a password after the hour has run out says so, and the keyboard g
   await laptop.context().close();
   await context.close();
 });
+
+test("the weekly email is off until chosen in Settings, and its stop page turns it off in one press", async ({ browser }, testInfo) => {
+  // SPEC section 39 (decision 0150).
+  const email = `weekly-${testInfo.project.name}-${Date.now()}@example.com`;
+  const page = await newReader(browser, email);
+  await page.goto("/settings");
+  const weekly = page.getByRole("group", { name: "Weekly email" });
+  await expect(weekly.getByRole("radio", { name: "Off" })).toBeChecked();
+  await weekly.getByText("Weekly", { exact: true }).click();
+  await expect(weekly.getByRole("radio", { name: "Weekly", exact: true })).toBeChecked();
+  await expect(page.getByText("Saturday mornings:")).toBeVisible();
+  // It follows the reader: the server keeps it.
+  await page.reload();
+  await expect(page.getByRole("group", { name: "Weekly email" }).getByRole("radio", { name: "Weekly", exact: true })).toBeChecked();
+
+  // The stop page does nothing until Stop is pressed; it answers the same for any ticket.
+  await page.goto("/weekly-email#ticket=not-a-real-one");
+  await expect(page).toHaveURL(/\/weekly-email$/);
+  await expect(page.getByRole("button", { name: "Stop the weekly email" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("The weekly email is off.")).toBeVisible();
+  await page.getByRole("link", { name: "Open nine turtles" }).click();
+  await expect(page.locator("#sidebar")).toBeAttached();
+
+  // Off from Settings, too.
+  await page.goto("/settings");
+  await page.getByRole("group", { name: "Weekly email" }).getByText("Off", { exact: true }).click();
+  await page.reload();
+  await expect(page.getByRole("group", { name: "Weekly email" }).getByRole("radio", { name: "Off" })).toBeChecked();
+  await page.context().close();
+});

@@ -102,6 +102,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Newsletters as feeds
 - People and places (a person's blog, channel and newsletter as one)
 - Write back (a `mailto:` link that opens the reader's own email app)
+- The weekly email (the one email a reader chooses; its stop link)
 - Raw email (RFC 5322 and MIME)
 - Mailing list headers (`List-Id`, `List-Unsubscribe`)
 - One-click unsubscribe (RFC 8058)

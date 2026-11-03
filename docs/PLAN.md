@@ -43,7 +43,7 @@ thread, in this order:
 7. **Write back** (V1 item 2) ✅
 8. **No unread counts** (V1 item 3) ✅
 9. **YouTube as a first-class citizen** (V1 item 4, decision 0143)
-10. **A weekly email** (V1 item 5)
+10. **A weekly email** (V1 item 5) ✅
 11. **Installing the app, said plainly** (V1 item 6)
 12. **"How did you hear about nine turtles?"** (V1 item 7)
 13. **Three to four refinement rounds:** the owner uses the app, lists what
@@ -88,11 +88,12 @@ milestone order above.
 
 **Should:**
 
-5. **A weekly email, opt-in:** plain text, once a week by default (twice
-   as an option): the people you follow, their titles and a line each,
-   never a count. Off by default; turned on or off any time in Settings.
-   The one exception to "no notifications" (decision 0140); how it looks is
-   still to design.
+5. **A weekly email, opt-in** ✅ built (SPEC section 39, decision 0150; its
+   smaller choices listed there for the refinement round): Off, Weekly or
+   Twice a week in Settings › Account; Saturday (and Wednesday) at 08:00 the
+   reader's time; the people with something unread, their titles, a line
+   and the publisher's link each, never a count; nothing new, nothing sent;
+   off in one press from the link at its foot.
 6. **Installing the app, said plainly:** one sentence on what an installed
    web app is (its own icon and window; it updates itself each time you
    open it), then the steps for your device.
