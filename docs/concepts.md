@@ -89,6 +89,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Polling
 - WebSub (hubs, leases and signatures)
 - Conditional requests (ETag, Last-Modified)
+- Cache-Control (max-age)
 - User-Agent
 - Rate limiting and `Retry-After`
 - Exponential backoff
