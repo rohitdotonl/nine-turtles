@@ -34,7 +34,7 @@
   import WriteBack from "./WriteBack.svelte";
   import type { LoadedLibrary } from "./library.svelte";
   import type { Snippet } from "svelte";
-  import { youtubeVideo } from "./youtube";
+  import { chapters, foldable, youtubeVideo } from "./youtube";
   import { addToUpNext, player, removeFromUpNext } from "./player.svelte";
   import type { Preferences } from "./preferences";
   import type { Article, FullArticle } from "./shapes";
@@ -112,6 +112,10 @@
     void arrivals;
     return articleNow(article.id);
   });
+
+  /** A long video description shows its first paragraph, the rest behind "Show the full description" (decision 0144). */
+  let unfoldedFor: number | undefined = $state();
+  let folded = $derived(unfoldedFor !== article.id && video !== undefined && foldable(full?.content));
 
   /** Phones get the system's share sheet; computers get Copy link (SPEC section 21). */
   const sharing =
@@ -455,7 +459,13 @@
         <p class="article-note mt-6" lang="en">The video plays here when you're back online.</p>
       {:else if video}
         {#key article.id}
-          <YouTubePlayer {video} title={article.title || "Untitled"} />
+          <YouTubePlayer
+            id={article.id}
+            {video}
+            title={article.title || "Untitled"}
+            tall={full?.videoKind === "short" || article.link?.includes("/shorts/")}
+            chapters={chapters(full?.content)}
+          />
         {/key}
       {/if}
       {#if episode && connection.offline && !(player.current?.article.id === article.id)}
@@ -470,7 +480,12 @@
       {#if full}
         {#if full.content}
           <!-- Cleaned by nine turtles before it was stored (server/src/feed/clean.rs). -->
-          <div bind:this={text} class="article-text" dir="auto">{@html full.content}</div>
+          <div bind:this={text} id="article-text" class={["article-text", folded && "folded"]} dir="auto">{@html full.content}</div>
+          {#if video && foldable(full.content)}
+            <button type="button" class="text-link" aria-expanded={!folded} aria-controls="article-text" lang="en" onclick={() => (unfoldedFor = folded ? article.id : undefined)}
+              >{folded ? "Show the full description" : "Show less"}</button
+            >
+          {/if}
           <!-- The last page: a short rule, so the article ends rather than stops. -->
           <hr aria-hidden="true" class="article-end" />
         {:else if full.summary}
@@ -599,5 +614,9 @@
   /* Only the arrow fades: the keyboard's outline, if it lands here, stays solid. */
   .toolbar > [aria-disabled="true"] > svg {
     opacity: 0.35;
+  }
+  /* A long video description, folded: its first paragraph only, until "Show the full description" (decision 0144). */
+  .folded > :global(:not(:first-child)) {
+    display: none;
   }
 </style>

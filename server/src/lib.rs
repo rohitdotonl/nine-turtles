@@ -66,6 +66,7 @@ pub mod unread;
 pub mod websub;
 pub mod write_back;
 pub mod writers;
+pub mod youtube;
 
 use std::sync::{
     Arc,

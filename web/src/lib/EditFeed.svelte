@@ -9,7 +9,8 @@
   Built as "Edit feed" was: the name, the folders as a
   checklist ending in a "New folder…" row, its own settings (reading mode,
   how often it's checked, opening on the website), a shortcut to add a rule
-  for the feed (SPEC section 27), and Unsubscribe. A feed that isn't working
+  for the feed (SPEC section 27), and Unsubscribe. A YouTube channel also
+  has "Include Shorts" and "Include live streams", both off (decision 0144). A feed that isn't working
   says so at the top, with Find new address (decision 0106), which moves it
   at once rather than on Save. Saving
   changes them all together; Cancel or Escape goes back to the feed unchanged.
@@ -90,6 +91,9 @@
   let check: Check = $state((() => feed.check)());
   let openOnSite = $state((() => feed.openOnSite)());
   let paused = $state((() => feed.pausedAt != null)());
+  /** A YouTube channel's Shorts and live streams, left out unless switched on (decision 0144). */
+  let shorts = $state((() => feed.shorts === true)());
+  let liveStreams = $state((() => feed.liveStreams === true)());
   let busy = $state(false);
   let message = $state("");
   /** How often the feed posts, in plain words (decision 0105), once the server says. */
@@ -107,7 +111,13 @@
       return;
     }
     busy = true;
-    const refusal = await editFeed(feed.id, title, chosen, newFolder, { river: flows, check, openOnSite, paused });
+    const refusal = await editFeed(feed.id, title, chosen, newFolder, {
+      river: flows,
+      check,
+      openOnSite,
+      paused,
+      ...(feed.sortsVideos ? { shorts, liveStreams } : {}),
+    });
     const problem = refusal ? refused(refusal, "feed") : newAddress ? await keepAddress(feed.id, address) : undefined;
     busy = false;
     if (problem) message = problem;
@@ -309,6 +319,25 @@
           </span>
           <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
         </label>
+        {#if feed.sortsVideos}
+          <!-- A YouTube channel (decision 0144): both off by default, sorted by lists YouTube keeps for each channel. -->
+          <label class="inset-row check-row setting">
+            <input type="checkbox" bind:checked={shorts} aria-describedby="feed-shorts-hint" />
+            <span class="setting-words">
+              <span class="setting-name">Include Shorts</span>
+              <span id="feed-shorts-hint" class="setting-hint">YouTube's short, upright videos. Sorted by YouTube's own lists, so one may slip through now and then.</span>
+            </span>
+            <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
+          </label>
+          <label class="inset-row check-row setting">
+            <input type="checkbox" bind:checked={liveStreams} aria-describedby="feed-live-hint" />
+            <span class="setting-words">
+              <span class="setting-name">Include live streams</span>
+              <span id="feed-live-hint" class="setting-hint">Streams, and their recordings once they end.</span>
+            </span>
+            <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
+          </label>
+        {/if}
         <label class="inset-row check-row setting">
           <input type="checkbox" bind:checked={paused} aria-describedby="feed-pause-hint" />
           <span class="setting-words">

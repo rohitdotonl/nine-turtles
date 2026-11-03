@@ -47,6 +47,9 @@ pub struct FullArticle {
     pub episode_bytes: Option<i64>,
     pub episode_seconds: Option<i64>,
     pub episode_artwork: Option<String>,
+    /// A YouTube Short ("short") or live stream ("live"), for the shape of
+    /// its player (decision 0144); null for anything else.
+    pub video_kind: Option<String>,
 }
 
 /// Only an article the reader has (an entry of theirs); any other is not
@@ -154,7 +157,7 @@ pub(crate) async fn full_articles(
                  COALESCE(articles.language, feeds.language) AS language,
                  entries.sort_at AS at, entries.read, entries.starred,
                  articles.episode_url, articles.episode_type, articles.episode_bytes,
-                 articles.episode_seconds, articles.episode_artwork",
+                 articles.episode_seconds, articles.episode_artwork, articles.video_kind",
         from_entries!(),
         "? AND entries.article_id IN (SELECT value FROM json_each(?))"
     ))

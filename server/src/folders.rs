@@ -120,6 +120,11 @@ struct EditFeed {
     open_on_site: Option<bool>,
     #[serde(default)]
     paused: Option<bool>,
+    /// A YouTube channel's Shorts and live streams (decision 0144).
+    #[serde(default)]
+    shorts: Option<bool>,
+    #[serde(default)]
+    live_streams: Option<bool>,
 }
 
 /// How often the reader allows a feed to be checked in the background.
@@ -174,17 +179,51 @@ async fn edit_feed(
             return Ok(None);
         }
         crate::writers::rename_place(&mut transaction, person, id, &title).await?;
+        // The switches as they were, so only one just turned on brings anything in.
+        let before: (bool, bool) = sqlx::query_as(
+            "SELECT shorts, live_streams FROM subscriptions WHERE person_id = ? AND feed_id = ?",
+        )
+        .bind(person)
+        .bind(id)
+        .fetch_one(&mut *transaction)
+        .await?;
         sqlx::query(
             "UPDATE subscriptions SET river = COALESCE(?, river),
                  open_on_site = COALESCE(?, open_on_site),
-                 check_at_most = COALESCE(?, check_at_most)
+                 check_at_most = COALESCE(?, check_at_most),
+                 shorts = COALESCE(?, shorts),
+                 live_streams = COALESCE(?, live_streams)
              WHERE person_id = ? AND feed_id = ?",
         )
         .bind(form.river)
         .bind(form.open_on_site)
         .bind(form.check.map(Check::at_most))
+        .bind(form.shorts)
+        .bind(form.live_streams)
         .bind(person)
         .bind(id)
+        .execute(&mut *transaction)
+        .await?;
+        // Switched on: that kind's videos stored since the reader followed
+        // the channel join its list, as read, so nothing piles up in
+        // Unread (an entry they already had, or one the clean-up removed
+        // long ago, is left as it is). Switched off: only new ones are
+        // left out; the ones already here stay.
+        sqlx::query(
+            "INSERT OR IGNORE INTO entries (person_id, article_id, feed_id, sort_at, read)
+             SELECT subscriptions.person_id, articles.id, articles.feed_id, articles.sort_at, 1
+             FROM articles JOIN subscriptions ON subscriptions.feed_id = articles.feed_id
+             WHERE subscriptions.person_id = ? AND articles.feed_id = ?
+                 AND articles.received_at >= subscriptions.added_at
+                 AND ((articles.video_kind = 'short' AND ? AND NOT ?)
+                      OR (articles.video_kind = 'live' AND ? AND NOT ?))",
+        )
+        .bind(person)
+        .bind(id)
+        .bind(form.shorts == Some(true))
+        .bind(before.0)
+        .bind(form.live_streams == Some(true))
+        .bind(before.1)
         .execute(&mut *transaction)
         .await?;
         if form.check.is_some() {

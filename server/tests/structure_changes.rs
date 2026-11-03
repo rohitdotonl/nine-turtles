@@ -1961,3 +1961,60 @@ async fn adding_people_keeps_every_feed_on_its_own_with_its_name_and_folder() {
             .unwrap();
     assert_eq!(alone, 2);
 }
+
+#[tokio::test]
+async fn adding_youtube_sorting_keeps_every_article_and_entry_and_leaves_nothing_out() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just after writing back (structure change 29): a YouTube
+    // channel the owner follows, with two videos, one read and starred.
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(29, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO feeds (id, url, url_key, title, added_at)
+         VALUES (1, 'https://www.youtube.com/feeds/videos.xml?channel_id=UCa', 'y', 'Walks', 1)",
+        "INSERT INTO subscriptions (person_id, feed_id, title, added_at) VALUES (1, 1, 'Walks', 1)",
+        "INSERT INTO articles (id, feed_id, fingerprint, title, received_at, sort_at)
+         VALUES (1, 1, 'a', 'A', 1, 1), (2, 1, 'b', 'B', 2, 2)",
+        "INSERT INTO entries (person_id, article_id, feed_id, sort_at, read, starred)
+         VALUES (1, 1, 1, 1, 1, 1), (1, 2, 1, 2, 0, 0)",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let articles: Vec<(i64, Option<String>)> =
+        sqlx::query_as("SELECT id, video_kind FROM articles ORDER BY id")
+            .fetch_all(&db)
+            .await
+            .unwrap();
+    assert_eq!(articles, [(1, None), (2, None)]);
+    let entries: Vec<(i64, bool, bool)> =
+        sqlx::query_as("SELECT article_id, read, starred FROM entries ORDER BY article_id")
+            .fetch_all(&db)
+            .await
+            .unwrap();
+    assert_eq!(entries, [(1, true, true), (2, false, false)]);
+    let switches: (bool, bool) = sqlx::query_as("SELECT shorts, live_streams FROM subscriptions")
+        .fetch_one(&db)
+        .await
+        .unwrap();
+    assert_eq!(switches, (false, false));
+    let odd = sqlx::query("UPDATE articles SET video_kind = 'cat' WHERE id = 1")
+        .execute(&db)
+        .await;
+    assert!(odd.is_err());
+}

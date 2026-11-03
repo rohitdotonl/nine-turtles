@@ -59,6 +59,7 @@ A few words used throughout:
 | 35 | [Podcasts](spec/35-podcasts.md) |
 | 36 | [People](spec/36-people.md) |
 | 37 | [Writing back](spec/37-writing-back.md) |
+| 38 | [YouTube](spec/38-youtube.md) |
 
 ## Not built yet, and never
 

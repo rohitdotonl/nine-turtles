@@ -32,7 +32,13 @@ export type Feed = {
   /** Where to write back (decision 0147): the address the reader typed for the person, and the one this place gives. */
   writeTo?: string | null;
   email?: string | null;
-} & FeedSettings;
+  /** A YouTube channel's feed, whose Shorts and live streams are sorted out (decision 0144). */
+  sortsVideos?: boolean;
+} & FeedSettings &
+  VideoSettings;
+
+/** A YouTube channel's own switches (decision 0144): Shorts and live streams are left out unless switched on. */
+export type VideoSettings = { shorts?: boolean; liveStreams?: boolean };
 
 /**
  * A feed's own settings, chosen in Edit feed (SPEC section 15): it flows
@@ -102,6 +108,8 @@ export type FullArticle = Article & {
   language: string | null;
   /** Its audio file, if it's a podcast's episode (SPEC section 35): played from the publisher's own address. */
   audio?: Episode | null;
+  /** A YouTube Short plays in a tall box (decision 0144); a live stream or any other video in a wide one. */
+  videoKind?: "short" | "live" | null;
 };
 
 /**
@@ -156,6 +164,7 @@ export function toFullArticle(article: Record<string, unknown>): FullArticle {
     summary: text(article.summary),
     language: text(article.language),
     audio: episodeFrom(article),
+    videoKind: article.video_kind === "short" || article.video_kind === "live" ? article.video_kind : null,
   };
 }
 
@@ -181,6 +190,9 @@ export function toFeed(feed: Record<string, unknown>): Feed {
     addedAt: typeof feed.added_at === "number" ? feed.added_at : undefined,
     writeTo: text(feed.write_to),
     email: text(feed.email),
+    sortsVideos: feed.sorts_videos === true,
+    shorts: feed.shorts === true,
+    liveStreams: feed.live_streams === true,
   };
 }
 

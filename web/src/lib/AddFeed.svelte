@@ -14,13 +14,16 @@
   feed" sits beside the field.
 
   A shared page's address opens "Follow this person?" instead
-  (FollowPerson.svelte, decision 0138).
+  (FollowPerson.svelte, decision 0138). A YouTube video's address asks
+  whether to follow its channel, and a playlist's whether to follow the
+  whole channel or only the playlist (decision 0144), the same way.
 -->
 <script lang="ts">
   import type { Snippet } from "svelte";
   import Icon from "./Icon.svelte";
   import type { Feed } from "./shapes";
   import { addFeed, explain, type Choice } from "./feeds";
+  import { question } from "./youtube";
 
   let {
     field = $bindable(),
@@ -112,7 +115,7 @@
         choices = result.choices;
         chosen = result.choices[0]?.url ?? "";
         choicesFor = text;
-        message = "This site offers more than one feed. Choose one:";
+        message = result.asks ? question(result.asks, result.maker ?? "") : "This site offers more than one feed. Choose one:";
         break;
       case "already":
         alreadyId = result.feedId;

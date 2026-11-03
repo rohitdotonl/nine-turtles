@@ -4,6 +4,19 @@
 use super::LATEST;
 use crate::{AppState, checking, feed, fetch::Fetched, folders, rules, search};
 
+/// Whether a reader gets an entry for an article, by their subscription's
+/// switches: a YouTube Short or live stream only if they switched it on
+/// for that channel (decision 0144); everything else always. Every query
+/// that gives readers entries for a feed's articles says this.
+/// (A macro, so the queries stay fixed strings.)
+macro_rules! shown {
+    () => {
+        "(articles.video_kind IS NULL
+          OR (articles.video_kind = 'short' AND subscriptions.shorts)
+          OR (articles.video_kind = 'live' AND subscriptions.live_streams))"
+    };
+}
+
 /// Undo for unsubscribing: the reader's subscription comes back as it was,
 /// if it isn't cleared yet, and a feed nobody else followed meanwhile is
 /// checked again soon. Answers whether it came back.
@@ -77,7 +90,8 @@ pub async fn subscribe(
          ON CONFLICT (person_id, feed_id) DO UPDATE SET
              title = excluded.title, added_at = excluded.added_at, unsubscribed_at = NULL,
              cleared = 0, river = 0, check_at_most = 0, open_on_site = 0,
-             paused_at = NULL, writer_id = NULL, same_asked = 0, write_to = NULL",
+             paused_at = NULL, writer_id = NULL, same_asked = 0, write_to = NULL,
+             shorts = 0, live_streams = 0",
     )
     .bind(person)
     .bind(feed_id)
@@ -101,11 +115,15 @@ pub async fn enter_stored(
 ) -> Result<(), sqlx::Error> {
     let mut unread = Vec::new();
     for article in fresh {
-        let entered: Option<i64> = sqlx::query_scalar(
+        let entered: Option<i64> = sqlx::query_scalar(concat!(
             "INSERT OR IGNORE INTO entries (person_id, article_id, feed_id, sort_at)
-             SELECT ?, id, feed_id, sort_at FROM articles WHERE feed_id = ? AND fingerprint = ?
-             RETURNING article_id",
-        )
+             SELECT subscriptions.person_id, articles.id, articles.feed_id, articles.sort_at
+             FROM articles JOIN subscriptions ON subscriptions.feed_id = articles.feed_id
+             WHERE subscriptions.person_id = ? AND articles.feed_id = ?
+                 AND articles.fingerprint = ? AND ",
+            shown!(),
+            " RETURNING article_id"
+        ))
         .bind(person)
         .bind(feed_id)
         .bind(&article.fingerprint)
@@ -124,10 +142,13 @@ pub async fn enter_read(
     person: i64,
     feed_id: i64,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query(
+    sqlx::query(concat!(
         "INSERT OR IGNORE INTO entries (person_id, article_id, feed_id, sort_at, read)
-         SELECT ?, id, feed_id, sort_at, 1 FROM articles WHERE feed_id = ?",
-    )
+         SELECT subscriptions.person_id, articles.id, articles.feed_id, articles.sort_at, 1
+         FROM articles JOIN subscriptions ON subscriptions.feed_id = articles.feed_id
+         WHERE subscriptions.person_id = ? AND articles.feed_id = ? AND ",
+        shown!()
+    ))
     .bind(person)
     .bind(feed_id)
     .execute(connection)
@@ -315,7 +336,9 @@ pub async fn make_room(
 /// removed (`cleanup`). Every reader whose subscription isn't
 /// cleared (including one waiting for Undo) gets an entry for each new one,
 /// unread (or already read, for a reader who paused the feed; SPEC section
-/// 15), and each reader's rules then act on theirs (SPEC section 27).
+/// 15), and each reader's rules then act on theirs (SPEC section 27). A
+/// YouTube Short or live stream is entered only for readers who switched
+/// it on (`shown!`). A video keeps the kind it was first stored with.
 pub async fn store_articles(
     connection: &mut sqlx::SqliteConnection,
     feed_id: i64,
@@ -351,11 +374,12 @@ pub async fn store_articles(
         let stored: Option<i64> = sqlx::query_scalar(
             "INSERT INTO articles (id, feed_id, fingerprint, title, link, author, content,
                  summary, language, published_at, received_at, sort_at,
-                 episode_url, episode_type, episode_bytes, episode_seconds, episode_artwork)
+                 episode_url, episode_type, episode_bytes, episode_seconds, episode_artwork,
+                 video_kind)
              VALUES (1 + MAX(COALESCE((SELECT MAX(id) FROM articles), 0),
                      COALESCE((SELECT CAST(value AS INTEGER) FROM settings
                                WHERE name = 'articles_high_water'), 0)),
-                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON CONFLICT (feed_id, fingerprint) DO UPDATE SET
                  title = excluded.title, link = excluded.link, author = excluded.author,
                  content = excluded.content, summary = excluded.summary,
@@ -391,6 +415,7 @@ pub async fn store_articles(
         .bind(episode.and_then(|episode| episode.bytes))
         .bind(episode.and_then(|episode| episode.seconds))
         .bind(episode.and_then(|episode| episode.artwork.as_ref()))
+        .bind(article.video_kind.map(feed::VideoKind::as_str))
         .fetch_optional(&mut *connection)
         .await?;
         // New, or edited since: the search index gets its words.
@@ -405,13 +430,14 @@ pub async fn store_articles(
             .await?;
         }
     }
-    sqlx::query(
+    sqlx::query(concat!(
         "INSERT OR IGNORE INTO entries (person_id, article_id, feed_id, sort_at, read)
          SELECT subscriptions.person_id, articles.id, articles.feed_id, articles.sort_at,
              subscriptions.paused_at IS NOT NULL
          FROM articles JOIN subscriptions ON subscriptions.feed_id = articles.feed_id
-         WHERE articles.feed_id = ? AND articles.id > ? AND subscriptions.cleared = 0",
-    )
+         WHERE articles.feed_id = ? AND articles.id > ? AND subscriptions.cleared = 0 AND ",
+        shown!()
+    ))
     .bind(feed_id)
     .bind(before)
     .execute(&mut *connection)

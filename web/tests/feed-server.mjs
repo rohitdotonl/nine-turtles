@@ -116,7 +116,11 @@ const videos = `<?xml version="1.0" encoding="UTF-8"?>
 <media:group><media:content url="https://www.youtube.com/v/AAAAAAAAAAA?version=3" type="application/x-shockwave-flash" width="640" height="390"/><media:title>A river at dawn, for an hour</media:title>
 <media:description>Nothing happens, slowly.
 
-Filmed on one still morning.</media:description></media:group></entry>
+0:00 First light
+4:00 The heron
+41:30 Mist lifts
+
+Filmed on one still morning, from a folding stool on the bank, with the camera on a stone and nothing moved for the whole hour. The heron arrived at four minutes and stayed until the mist lifted, which is the only thing that happens, and it happens slowly. Thank you for sitting with it.</media:description></media:group></entry>
 <entry><id>yt:video:BBBBBBBBBBB</id><yt:videoId>BBBBBBBBBBB</yt:videoId><title>Rain on a tin roof</title>
 <link rel="alternate" href="https://www.youtube.com/watch?v=BBBBBBBBBBB"/><published>${new Date(NEWEST - DAY).toISOString()}</published>
 <media:group><media:content url="https://www.youtube.com/v/BBBBBBBBBBB?version=3" type="application/x-shockwave-flash" width="640" height="390"/><media:title>Rain on a tin roof</media:title></media:group></entry>
