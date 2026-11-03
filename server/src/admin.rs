@@ -113,7 +113,7 @@ pub async fn following(
 /// turtles, or another app synced), noted at most once a day. If they were
 /// away, the feeds they follow that are working are due at once, unless a
 /// follower asked for fewer checks (Edit feed), the feed was checked in the
-/// last 30 minutes, or a WebSub hub delivers its new articles (its checks are
+/// last hour, or a WebSub hub delivers its new articles (its checks are
 /// only the twice-a-day backup, decision 0069): the background checks then take them a few at a
 /// time, as always.
 pub async fn here(db: &SqlitePool, person: i64, now: i64) -> Result<(), sqlx::Error> {
@@ -151,7 +151,7 @@ pub async fn here(db: &SqlitePool, person: i64, now: i64) -> Result<(), sqlx::Er
 /// Reader `person`'s feeds that are working are due again soon, as when
 /// they come back after being away (`here`) or their plan starts again
 /// (`payments`), unless a follower asked for fewer checks, the feed was
-/// checked in the last 30 minutes, or a WebSub hub delivers its articles.
+/// checked in the last hour, or a WebSub hub delivers its articles.
 pub(crate) async fn due_again(
     connection: &mut sqlx::SqliteConnection,
     person: i64,

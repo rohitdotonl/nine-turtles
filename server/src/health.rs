@@ -235,7 +235,7 @@ async fn retry(
 }
 
 /// Whether Retry may ask the publisher now: a working feed only when it
-/// wasn't fetched in the last half hour (as background checking waits), and
+/// wasn't fetched in the last hour (as background checking waits), and
 /// any feed at most once every `RETRY_GAP`, whoever presses it. Claims the
 /// try, so two presses at once ask only once.
 fn may_ask(state: &AppState, feed: &Entry, now: i64) -> bool {

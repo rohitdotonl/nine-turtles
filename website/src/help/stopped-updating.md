@@ -43,6 +43,6 @@ worked since 12 October.", with a button to find its new address.
   if the site says it's gone, three weeks otherwise) once a day, in case it
   comes back.
 - How often nine turtles checks depends on how often someone writes: from
-  every half hour to once a day. When a site asks it to slow down, it does.
+  once an hour to once a day. When a site asks it to slow down, it does.
 - Quiet isn't broken: some people write once a year. **Settings › Your
   feeds** can show who's been quiet for six months or a year.
