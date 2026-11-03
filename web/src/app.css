@@ -1253,10 +1253,6 @@ textarea {
   .keyboard-hint {
     display: none;
   }
-  /* Settings › More's Keyboard row is its group's first: the row after it then has no hairline above. */
-  .inset-row.keyboard-hint + .inset-row::before {
-    content: none;
-  }
 }
 /* What a touch screen says instead of a key hint. */
 @media not ((hover: none) and (pointer: coarse)) {

@@ -1,5 +1,5 @@
 // Small settings this device keeps for itself, in the browser's local
-// storage: the chosen keys, open folders, widths, playback speed and the
+// storage: open folders, widths, playback speed and the
 // like. A private window or a browser with storage turned off may refuse;
 // then nothing is kept and each setting falls back to its default, while
 // anything the server keeps still decides.

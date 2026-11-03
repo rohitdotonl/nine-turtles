@@ -32,7 +32,7 @@ const LIMIT = 800;
 // a file by concept is the way down (docs/ENGINEERING.md → "Keeping the code
 // tidy").
 const CEILINGS = {
-  "web/src/app.css": 1789,
+  "web/src/app.css": 1785,
   "web/src/lib/Shell.svelte": 1493,
   "server/src/greader.rs": 1004,
   "web/src/lib/ItemList.svelte": 947,

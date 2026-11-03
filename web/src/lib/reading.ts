@@ -55,6 +55,8 @@ export async function loadSettings(): Promise<Reading> {
     const hidden = isRecord(body) ? hiddenFrom(body.hidden) : [];
     rememberMode(mode);
     rememberHidden(hidden);
+    // The copy of a reader's own keys this device once kept (decision 0110) is no longer read (decision 0170).
+    setDeviceText("nine-turtles.keys", null);
     return { sort, mode, letGo, keysReset, hidden };
   } catch {
     return { sort: "newest", mode: lastMode(), letGo: undefined, keysReset: false, hidden: lastHidden() };
