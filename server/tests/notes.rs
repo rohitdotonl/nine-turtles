@@ -1,4 +1,4 @@
-//! Notes and highlights (SPEC section 42, decision 0161), tested against a
+//! Notes and highlights (SPEC section 42, decision 0162), tested against a
 //! real running nine turtles and a made-up publisher: highlighting, notes on
 //! articles and people (with what Undo needs), the Notes list, search, the
 //! export, the wall between readers, and what unsubscribing keeps or

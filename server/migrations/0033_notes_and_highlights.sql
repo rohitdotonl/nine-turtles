@@ -1,4 +1,4 @@
--- Notes and highlights (SPEC section 42, decision 0161): a private note on
+-- Notes and highlights (SPEC section 42, decision 0162): a private note on
 -- each person, and highlights and notes on articles, each reader's alone.
 --
 -- This change only adds a table and two columns, empty for everything

@@ -73,7 +73,7 @@ pub struct Before {
     /// brings it back too.
     #[serde(default)]
     pub write_to: Option<String>,
-    /// The reader's note on them (decision 0161), so Undo brings it back too.
+    /// The reader's note on them (decision 0162), so Undo brings it back too.
     #[serde(default)]
     pub note: Option<String>,
 }
@@ -228,7 +228,7 @@ pub async fn join(
             .await?
         }
     };
-    // Their notes become one, on every place (decision 0161).
+    // Their notes become one, on every place (decision 0162).
     let notes: Vec<Option<String>> = before.iter().map(|place| place.note.clone()).collect();
     sqlx::query(
         "UPDATE subscriptions SET writer_id = ?, same_asked = 1, note = ?

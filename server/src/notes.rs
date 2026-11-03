@@ -1,4 +1,4 @@
-//! Notes and highlights (SPEC section 42, decision 0161): the reader's
+//! Notes and highlights (SPEC section 42, decision 0162): the reader's
 //! highlights on articles, each with an optional note; one note on a whole
 //! article; and one note on each person. Each reader's alone: other readers,
 //! other apps and the weekly email never see them; the reader's own AI

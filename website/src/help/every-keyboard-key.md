@@ -34,6 +34,8 @@ related: [find-your-way-around, search-everything, change-how-it-looks]
 | <kbd>S</kbd> | Star or unstar |
 | <kbd>L</kbd> | Add to collection |
 | <kbd>W</kbd> | Write back |
+| <kbd>H</kbd> | Highlight the words you've chosen |
+| <kbd>Shift</kbd> <kbd>H</kbd> | Write a note on the words you've chosen, or on the whole article |
 | <kbd>Esc</kbd> | Back, or close |
 
 ## Getting around

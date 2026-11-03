@@ -18,6 +18,8 @@
   | `s` | Star / unstar |
   | `l` | Add to collection (the open or selected article; section 34) |
   | `w` | Write back to whoever wrote the open or selected article (section 37) |
+  | `h` | Highlight the words chosen in the open article (section 42) |
+  | `Shift+H` | Write a note on the words chosen, or on the whole open article (section 42) |
   | `m` | Mark current item unread |
   | `Shift+A` | Mark all as read |
   | `Shift+O` | Mark older as read |

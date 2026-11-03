@@ -28,6 +28,8 @@ Search starts in the list you're in, shown as a small label such as
 - A word also finds longer words that start with it: "walk" finds "walking".
 - Words in "quotation marks" must appear together, in that order.
 - Articles whose titles match come first.
+- Your highlights and notes are searched too: a result found by them says
+  "Highlighted" or "Your note".
 
 ## Narrow it down
 
@@ -41,6 +43,7 @@ Or type a filter with your words:
 |---|---|
 | <code>is:unread</code> | only unread articles |
 | <code>is:starred</code> | only starred articles |
+| <code>is:noted</code> | only articles you highlighted or wrote a note on |
 | <code>feed:alpha</code> | only articles from one person or site |
 | <code>folder:cooking</code> | only articles in one folder |
 | <code>in:recipes</code> | only articles in one collection |

@@ -153,7 +153,7 @@ pub struct Search {
     pub unread: bool,
     #[serde(default)]
     pub starred: bool,
-    /// Only articles the reader highlighted or wrote a note on (decision 0161).
+    /// Only articles the reader highlighted or wrote a note on (decision 0162).
     #[serde(default)]
     pub notes: bool,
     /// Only articles from this time on, and only those before `until`
@@ -232,7 +232,7 @@ pub struct Hit {
     /// when nothing but filters was searched.
     pub excerpt: Option<Vec<Piece>>,
     /// Where the excerpt came from when it's the reader's own words, not the
-    /// article's: "highlight" or "note" (decision 0161).
+    /// article's: "highlight" or "note" (decision 0162).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub excerpt_from: Option<&'static str>,
 }

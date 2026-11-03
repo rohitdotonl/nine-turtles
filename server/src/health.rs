@@ -670,7 +670,7 @@ async fn carry_entries_over(
                 .bind(article)
                 .execute(&mut *connection)
                 .await?;
-            // Their highlights and notes go with it too (decision 0161).
+            // Their highlights and notes go with it too (decision 0162).
             sqlx::query(
                 "UPDATE OR IGNORE notes SET article_id = ?3 WHERE person_id = ?1 AND article_id = ?2",
             )

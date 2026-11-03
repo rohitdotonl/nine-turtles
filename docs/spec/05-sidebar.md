@@ -4,7 +4,7 @@
 
 **What it does**
 - Fixed order, top to bottom:
-  1. **Unread · Starred · All · Recently read**
+  1. **Unread · Starred · Notes · All · Recently read** (Notes once there's a highlight or note, section 42)
   2. **Saved searches**, alphabetically, once there is one (section 14)
   3. **Collections**, alphabetically, once there is one (section 34)
   4. **Folders**, alphabetically

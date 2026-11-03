@@ -576,7 +576,7 @@ pub async fn clear(
     .await?;
     // An article on any of their collections stays, as a starred one does
     // (decision 0108), and so does one they highlighted or wrote a note on
-    // (decision 0161), unless they chose to remove those too.
+    // (decision 0162), unless they chose to remove those too.
     crate::notes::drop_kept(&mut *connection, person, id).await?;
     sqlx::query(
         "DELETE FROM entries WHERE person_id = ?1 AND feed_id = ?2 AND starred = 0
