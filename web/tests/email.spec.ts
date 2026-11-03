@@ -4,7 +4,7 @@ import { MAILBOX, MAIL_APP, OWNER_EMAIL, TEST_PASSWORD } from "../playwright.con
 // SPEC sections 1 and 18 (decision 0088): what email makes possible, against
 // a nine turtles that sends its emails to a made-up mail server on this
 // computer (tests/mail-server.mjs). Sign-up (which confirms the address by
-// an emailed link first, decision 0151), "Forgot your password?", "Email me a sign-in link" (decision 0096),
+// an emailed link first, decision 0154), "Forgot your password?", "Email me a sign-in link" (decision 0096),
 // changing an email and deleting an account. Each
 // test uses addresses of its own, so the two window sizes never meet.
 
@@ -29,7 +29,7 @@ async function newestMail(to: string, subject: string, count = 1): Promise<{ mai
   return { mail, link: url ? url.replace(MAIL_APP, "") : "" };
 }
 
-/** Signs up, in a browser of its own, and follows the emailed link that makes the account (decision 0151). */
+/** Signs up, in a browser of its own, and follows the emailed link that makes the account (decision 0154). */
 async function newReader(browser: Browser, email: string): Promise<Page> {
   const context = await browser.newContext({ baseURL: MAIL_APP });
   const page = await context.newPage();
@@ -69,7 +69,7 @@ test("anyone can sign up by confirming their email, with only the keyboard", asy
   await page.keyboard.press("Tab");
   await page.keyboard.type(READER_PASSWORD);
   await page.keyboard.press("Enter");
-  // Nothing is made yet: "Check your email" takes the form's place, and the keyboard goes to it (decision 0151).
+  // Nothing is made yet: "Check your email" takes the form's place, and the keyboard goes to it (decision 0154).
   await expect(page.getByRole("heading", { name: "Check your email" })).toBeFocused();
   await expect(page.getByText(`A link is on its way to ${email}.`)).toBeVisible();
   await expect(page.getByText("Didn't get it? Look in your spam folder.")).toBeVisible();

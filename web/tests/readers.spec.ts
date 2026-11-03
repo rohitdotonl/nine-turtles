@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { OWNER_EMAIL } from "../playwright.config";
 import { appReady, signIn } from "./screens";
 
-// SPEC sections 1 and 18 (decisions 0087 and 0151): the owner's Readers in
+// SPEC sections 1 and 18 (decisions 0087 and 0154): the owner's Readers in
 // Settings, and joining from the sign-up page, which is open to anyone. This
 // nine turtles can't send email, so sign-up makes the account at once; the
 // emailed link that confirms an address is tested in email.spec.ts.

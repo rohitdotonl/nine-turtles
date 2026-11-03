@@ -594,7 +594,7 @@ async fn use_sign_in_link(State(state): State<AppState>, Json(form): Json<UseSig
         Ok(None) => return refused(StatusCode::GONE, "expired"),
         Err(error) => return database_problem("using a sign-in link", &error),
     };
-    // The link reached the address, so it's confirmed (decision 0151).
+    // The link reached the address, so it's confirmed (decision 0154).
     if let Err(error) = people::mark_confirmed(&state.db, person, &email).await {
         return database_problem("confirming an email", &error);
     }

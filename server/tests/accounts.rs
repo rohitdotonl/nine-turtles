@@ -75,7 +75,7 @@ async fn open_app() -> (String, nine_turtles::AppState, Outbox, String) {
 }
 
 /// Signs up and follows the link emailed to confirm the address (decision
-/// 0151): answers the new reader's cookie.
+/// 0154): answers the new reader's cookie.
 async fn open_reader(base: &str, outbox: &Outbox, email: &str) -> String {
     let asked = post(
         base,

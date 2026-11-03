@@ -1,4 +1,4 @@
-# 0151: Confirm the email address at sign-up
+# 0154: Confirm the email address at sign-up
 
 *3 November 2026. The owner's choice, in their own words: "Confirm at
 sign-up". Replaces decision 0115's "no email to confirm the address"; the

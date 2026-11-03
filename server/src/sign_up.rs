@@ -1,4 +1,4 @@
-//! How new readers join (SPEC section 1, decision 0151, which replaced
+//! How new readers join (SPEC section 1, decision 0154, which replaced
 //! decision 0115's "no email at sign-up").
 //!
 //! Anyone can sign up with an email and a password, with no invite. While

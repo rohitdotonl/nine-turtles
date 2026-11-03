@@ -1,4 +1,4 @@
-//! Signing up confirms the address first (SPEC section 1, decision 0151):
+//! Signing up confirms the address first (SPEC section 1, decision 0154):
 //! the account is made only when the link emailed to it is followed, tested
 //! against a real running nine turtles whose emails land in an outbox.
 

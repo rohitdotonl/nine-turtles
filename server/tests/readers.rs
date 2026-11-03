@@ -57,7 +57,7 @@ async fn session(base: &str, cookie: &str) -> Value {
 }
 
 /// Signs up as the sign-up page does. Without the email settings the account
-/// is made at once (decision 0151).
+/// is made at once (decision 0154).
 async fn sign_up(base: &str, email: &str, password: &str) -> Response {
     post(
         base,

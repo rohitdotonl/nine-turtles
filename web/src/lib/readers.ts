@@ -1,5 +1,5 @@
 // The readers of this nine turtles, and how new ones join (SPEC sections 1
-// and 18, decisions 0087 and 0151). The owner sees everyone's email and when
+// and 18, decisions 0087 and 0154). The owner sees everyone's email and when
 // they joined (never what they read) and sets their own email. Sign-up is
 // always open, and confirms the address by an emailed link first; the
 // sign-up page itself uses `signUp`.

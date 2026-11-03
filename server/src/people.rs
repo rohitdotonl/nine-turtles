@@ -1,5 +1,5 @@
 //! The readers of one nine turtles (SPEC sections 1 and 18, decision 0087).
-//! How new ones join is `sign_up` (decision 0151).
+//! How new ones join is `sign_up` (decision 0154).
 //!
 //! The owner (reader 1) sees who has an account (their email and when they
 //! joined, never anything they read) and sets the email they sign in with.
@@ -330,7 +330,7 @@ pub fn plausible_email(email: &str) -> bool {
 }
 
 /// Marks reader `person`'s address confirmed, if it's still `email` and
-/// wasn't already: a link sent to it was followed (decision 0151).
+/// wasn't already: a link sent to it was followed (decision 0154).
 pub(crate) async fn mark_confirmed(
     db: &SqlitePool,
     person: i64,

@@ -293,7 +293,7 @@ async fn session(State(state): State<AppState>, headers: HeaderMap) -> Response 
     let hash = scramble(&token);
     let now = now();
 
-    // Whose device, last used, owner or not, email, and confirmed (decision 0151).
+    // Whose device, last used, owner or not, email, and confirmed (decision 0154).
     type Found = (i64, i64, bool, Option<String>, bool);
     let found: Result<Option<Found>, sqlx::Error> = sqlx::query_as(
         "SELECT sessions.person_id, sessions.last_used_at, people.owner, people.email, people.email_confirmed_at IS NOT NULL

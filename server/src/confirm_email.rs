@@ -1,5 +1,5 @@
 //! Following a link that confirms an address (SPEC sections 1 and 18,
-//! decisions 0088 and 0151): a new account's, which makes the account, or a
+//! decisions 0088 and 0154): a new account's, which makes the account, or a
 //! changed one's, which moves the reader to it. The page a link opens is
 //! `CONFIRM_PAGE` (`/confirm-email`); the links are made in `sign_up` and
 //! `accounts`.
@@ -38,7 +38,7 @@ struct Confirm {
 type Claimed = (Option<i64>, String, Option<String>);
 
 /// Follows a link that confirms an address. A sign-up's makes the account,
-/// with its address confirmed, and signs this device in (decision 0151). A
+/// with its address confirmed, and signs this device in (decision 0154). A
 /// changed address's moves the reader to it now, and the old address is told.
 async fn confirm(State(state): State<AppState>, Json(form): Json<Confirm>) -> Response {
     let hash = scramble(form.ticket.trim());

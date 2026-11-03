@@ -1,6 +1,6 @@
 <!--
   The page a confirmation link opens (/confirm-email#ticket=…, SPEC sections
-  1 and 18, decisions 0088 and 0151): a new account's address, or a reader's
+  1 and 18, decisions 0088 and 0154): a new account's address, or a reader's
   new address. Nothing happens until the reader presses Confirm email, so a
   mail program that opens links to check them can't use the link up first.
   A new account is then made and this device signed in ("You're signed up",

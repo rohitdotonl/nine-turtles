@@ -1,6 +1,6 @@
 # 0115: Sign-up always open
 
-> **Partly replaced by [0151](0151-confirm-email-at-sign-up.md):** sign-up
+> **Partly replaced by [0154](0154-confirm-email-at-sign-up.md):** sign-up
 > emails a link that confirms the address, and only following it makes the
 > account. Sign-up stays open to anyone, with no switch or invite.
 

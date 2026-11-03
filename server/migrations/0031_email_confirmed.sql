@@ -1,4 +1,4 @@
--- Confirming an address at sign-up (SPEC section 1, decision 0151, which
+-- Confirming an address at sign-up (SPEC section 1, decision 0154, which
 -- replaced decision 0115's "no email at sign-up").
 --
 -- Each reader's address now says whether, and when, it was confirmed by a
