@@ -39,6 +39,24 @@ never see the cause.
   field: it's that the moment to write is short, and anything that breaks
   it loses the letter. That's what to fix.
 
+### Ask why until you reach people
+
+A line in the friction log is usually about a button. The real problem is
+usually about a person. So don't stop at the first answer: keep asking
+"why?" until the answer is about what a person felt or lost, not about
+the screen.
+
+- "I gave up writing to Kev." **Why?** It asked for his email.
+- **Why did that stop me?** I didn't know it, and finding it meant leaving
+  the essay.
+- **Why does that matter?** The feeling that made me want to write faded
+  while I searched.
+
+The real problem isn't a missing field: the moment you want to write is
+short, and anything that interrupts it loses the letter. Fix that, and
+many button-level frictions disappear together. Fix only the button, and
+the next one appears.
+
 ### Once a week: decide (one sitting, Friday)
 
 1. **Group the week's lines.** The same friction three times is a real
