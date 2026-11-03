@@ -63,10 +63,12 @@
   let what = $derived([feed.kind === "publication" ? "A publication" : "A person", folderNames.length > 0 ? `in ${folderNames.join(", ")}` : "", since ? `following ${since}` : ""].filter(Boolean).join(" · "));
   let source = $derived(route.kind === "edit-source" ? places.find((place) => place.id === route.source) : undefined);
   const about = $derived({ kind: "about", id: feed.id } as const);
+  // Its own name for screen readers, never the same as their list's beside it (which is their name alone).
+  let label = $derived(route.kind === "about" ? `About ${name}` : route.kind === "edit-feed" ? `Edit ${name}` : `Source settings for ${name}`);
   const joined = (done: Notice, lead: number) => go({ kind: "feed", id: lead }, done);
 </script>
 
-<section aria-label={name} class={["who-page flex min-w-0 flex-1 flex-col overflow-y-auto bg-paper", phone ? "px-5 pt-3 pb-10" : "px-10 pt-[10vh] pb-16"]}>
+<section aria-label={label} class={["who-page flex min-w-0 flex-1 flex-col overflow-y-auto bg-paper", phone ? "px-5 pt-3 pb-10" : "px-10 pt-[10vh] pb-16"]}>
   <div class="flex w-full max-w-[36rem] flex-col gap-6">
     {#if phone && route.kind === "about"}
       <button type="button" onclick={() => go({ kind: "feed", id: feed.id })} class="btn-quiet nav-back -ml-2 self-start text-ink-2"><Icon name="back" size={22} />{name}</button>

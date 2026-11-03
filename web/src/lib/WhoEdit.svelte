@@ -150,9 +150,9 @@
           <ul class="inset-group" aria-labelledby="{formId}-sources">
             {#each places as each (each.id)}
               <li>
-                <button type="button" class="inset-row w-full gap-3 text-left" onclick={() => onSource(each.id)}>
+                <button type="button" class="inset-row w-full gap-3 text-left" aria-label="{PLACE_NAMES[each.place ?? "blog"]} {placeShownAs(each)}: its settings" onclick={() => onSource(each.id)}>
                   <span class="w-24 shrink-0 text-muted">{PLACE_NAMES[each.place ?? "blog"]}</span>
-                  <span class="min-w-0 flex-1 break-words">{placeShownAs(each)}<span class="sr-only">: its settings</span></span>
+                  <span class="min-w-0 flex-1 break-words">{placeShownAs(each)}</span>
                   <span aria-hidden="true" class="shrink-0 text-muted"><Icon name="chevron-right" size={16} /></span>
                 </button>
               </li>

@@ -203,7 +203,7 @@ export function refusalMessage(refusal: HealthRefusal, doing: "retry" | "find" |
     case "already":
       return "You already follow that feed.";
     case "kept-stars":
-      return "You followed the feed at that address before, and its starred articles are kept under it. Add it again with Add feed instead, then unsubscribe from this one.";
+      return "You followed the feed at that address before, and its starred articles are kept under it. Add it again with + Add instead, then unsubscribe from this one.";
     case "no-feed":
       return doing === "find"
         ? "The site doesn't name another feed. You could try again another day, or unsubscribe."

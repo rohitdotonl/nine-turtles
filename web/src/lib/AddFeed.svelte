@@ -74,10 +74,12 @@
   let whoGroup: HTMLElement | undefined = $state();
   /** Closed (Escape, Cancel, a press outside) while still looking or before Done: the feed is followed all the same. */
   let closed = false;
+  /** Done was pressed: closing while its answer is kept doesn't add it a second time. */
+  let answering = false;
   onDestroy(() => {
     closed = true;
     // Followed but not yet answered: it joins the sidebar with nine turtles' guess, which Edit can change.
-    if (asking) onAdded(asking);
+    if (asking && !answering) onAdded(asking);
   });
 
   /** In a sheet or on its page: the field's name above it, and Add feed at the foot rather than beside the field. */
@@ -155,6 +157,7 @@
     const feed = asking;
     if (!feed || busy) return;
     busy = true;
+    answering = true;
     const refusal = who === feed.kind ? undefined : await editFeed(feed.id, { kind: who });
     busy = false;
     asking = undefined;

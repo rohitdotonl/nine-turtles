@@ -2116,7 +2116,8 @@ async fn adding_publications_keeps_every_feed_person_and_folder_and_guesses_noth
 
     let db = nine_turtles::db::open(&data_dir).await.unwrap();
     // Every feed is still followed, with its name and person, and nothing is guessed yet.
-    let followed: Vec<(i64, String, Option<i64>, Option<String>, Option<String>)> = sqlx::query_as(
+    type Followed = (i64, String, Option<i64>, Option<String>, Option<String>);
+    let followed: Vec<Followed> = sqlx::query_as(
         "SELECT feed_id, title, writer_id, kind, place FROM subscriptions ORDER BY feed_id",
     )
     .fetch_all(&db)

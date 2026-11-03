@@ -11,8 +11,8 @@ const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" }
 const line = (page: Page) => page.getByRole("status").filter({ hasText: /\S/ }).first();
 /** The list's More (…) button; "About …" and Edit folder are in its menu (decision 0038). */
 const more = (page: Page) => page.getByRole("button", { name: "More", exact: true });
-/** Their page, beside the list: the region of their name that isn't the list (which is named for them too). */
-const whoPage = (page: Page, name: string) => page.getByRole("region", { name, exact: true }).filter({ hasNot: page.locator("#list-heading") });
+/** Their page or its Edit, beside the list: "About Alpha" or "Edit Alpha" to screen readers, never the list's own name. */
+const whoPage = (page: Page, name: string) => page.getByRole("region", { name: new RegExp(`^(About|Edit) ${name}$`) });
 
 async function openEdit(page: Page, name: "Edit folder") {
   await more(page).click();

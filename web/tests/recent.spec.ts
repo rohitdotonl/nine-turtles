@@ -22,7 +22,8 @@ test("Recently read lists what was opened, newest first, and can be hidden from 
   const id = await follow(page, `${FEED_SITE}/blog/${blog}/`);
   await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
   await appReady(page);
-  const rows = page.getByRole("button", { name: new RegExp(`Blog ${blog}`) });
+  // The list's rows (its title, their name, is a button too).
+  const rows = page.getByRole("listitem").getByRole("button", { name: new RegExp(`Blog ${blog}`) });
   await expect(rows.first()).toBeVisible();
 
   // Open the newest, then the next one.

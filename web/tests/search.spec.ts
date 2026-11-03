@@ -30,7 +30,8 @@ async function start(page: Page, addresses: string[]): Promise<number[]> {
 async function open(page: Page, path: string, name: string) {
   await page.goto(new URL(path, FEEDS_APP).href);
   await appReady(page);
-  await expect(heading(page)).toHaveText(name);
+  // A person's list title is their name, a button ending in a "›" that screen readers don't hear.
+  await expect(heading(page)).toHaveAccessibleName(name);
   await expect(field(page)).toBeVisible();
 }
 

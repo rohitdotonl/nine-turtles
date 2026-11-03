@@ -10,8 +10,8 @@ import { appReady, follow, signIn } from "./screens";
 // since every test shares the one nine turtles that has feeds.
 
 const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
-/** Their page, beside the list: the region of their name that isn't the list (which is named for them too). */
-const page_ = (page: Page, name: string) => page.getByRole("region", { name, exact: true }).filter({ hasNot: page.locator("#list-heading") });
+/** Their page or its Edit, beside the list: "About Alpha" or "Edit Alpha" to screen readers, never the list's own name. */
+const page_ = (page: Page, name: string) => page.getByRole("region", { name: new RegExp(`^(About|Edit) ${name}$`) });
 const line = (page: Page) => page.getByRole("status").filter({ hasText: /\S/ }).first();
 const rowsNamed = (page: Page, name: string) => sidebar(page).getByRole("link", { name: new RegExp(`^${name}`) });
 

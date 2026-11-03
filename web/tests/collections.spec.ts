@@ -27,7 +27,7 @@ test("articles go on a collection by l and by the menu; it opens, and deleting i
   const id = await follow(page, `${FEED_SITE}/blog/${blog}/`);
   await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
   await appReady(page);
-  await expect(page.getByRole("button", { name: new RegExp(`Blog ${blog}`) }).first()).toBeVisible();
+  await expect(page.getByRole("listitem").getByRole("button", { name: new RegExp(`Blog ${blog}`) }).first()).toBeVisible();
 
   // j opens the newest; l opens the sheet for it.
   await page.keyboard.press("j");

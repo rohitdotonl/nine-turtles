@@ -92,8 +92,8 @@ test.describe("on a wide window", () => {
   test("j shows an article cleaned and restyled, and j and k move through the list", async ({ page }) => {
     await openRoom(page);
     const room = page.url();
-    // Beside a person's list, their page (SPEC section 36), with the same first-time tip under it.
-    await expect(article(page)).toHaveClass(/person-page/);
+    // Beside a person's list, the same quiet line as everywhere (their page opens by their name, SPEC section 36), with the first-time tip under it.
+    await expect(article(page).locator(".reading-empty")).toBeVisible();
     await expect(article(page).locator(".shortcut-tip")).toContainText("to open the first article, or");
     // Everywhere else, one quiet line in the middle of the paper (decision 0053): serif, muted grey,
     // never the accent; screen readers also hear, since the list has articles to open, how to open one.

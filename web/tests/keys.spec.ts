@@ -40,7 +40,7 @@ async function openBlog(page: Page): Promise<number> {
   const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
   await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
   await appReady(page);
-  await expect(page.getByRole("button", { name: new RegExp(`Blog ${name}`) }).first()).toBeVisible();
+  await expect(page.getByRole("listitem").getByRole("button", { name: new RegExp(`Blog ${name}`) }).first()).toBeVisible();
   return id;
 }
 

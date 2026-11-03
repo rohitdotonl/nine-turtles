@@ -108,9 +108,9 @@ test("a failing feed says so above its list, and Find its new address moves it w
   await expect(page.getByRole("button", { name: "Find new address", exact: true })).toBeVisible();
   // Escape turns Edit back into their page, and again goes back to their list.
   await page.keyboard.press("Escape");
-  await expect(page).toHaveURL(new RegExp(`/people/${id}/about$`));
+  await expect(page).toHaveURL(new RegExp(`/(people|publications)/${id}/about$`));
   await page.keyboard.press("Escape");
-  await expect(page).toHaveURL(new RegExp(`/people/${id}$`));
+  await expect(page).toHaveURL(new RegExp(`/(people|publications)/${id}$`));
 
   const list = page.locator("#list-pane");
   await expect(list.getByText(/^This feed hasn't worked since (earlier today|\d+ \w+)\. Find its new address$/)).toBeVisible();
@@ -266,7 +266,7 @@ test("moving a feed to a new number (others follow the old address) keeps Edit a
   await nameField.fill("Typed before the move");
   await page.getByRole("button", { name: "Find new address", exact: true }).click();
   await page.getByRole("button", { name: "Use it" }).click();
-  await expect(page).toHaveURL(new RegExp(`/people/${other}/edit$`));
+  await expect(page).toHaveURL(new RegExp(`/(people|publications)/${other}/edit$`));
   await expect(page.getByRole("status").filter({ hasText: "It now reads from its new address and works again." })).toBeVisible();
   await expect(nameField).toHaveValue("Typed before the move");
 });

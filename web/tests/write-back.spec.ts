@@ -9,8 +9,8 @@ import { appReady, follow, signIn } from "./screens";
 // test shares the one nine turtles that has feeds.
 
 const pane = (page: Page) => page.getByRole("region", { name: "Article" });
-/** Their page, beside the list: the region of their name that isn't the list (which is named for them too). */
-const whoPage = (page: Page, name: string) => page.getByRole("region", { name, exact: true }).filter({ hasNot: page.locator("#list-heading") });
+/** Their page or its Edit, beside the list: "About Alpha" or "Edit Alpha" to screen readers, never the list's own name. */
+const whoPage = (page: Page, name: string) => page.getByRole("region", { name: new RegExp(`^(About|Edit) ${name}$`) });
 
 test.skip(({ isMobile }) => isMobile, "the person's page stands in the wide window's reading pane");
 
