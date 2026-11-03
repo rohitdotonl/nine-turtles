@@ -76,12 +76,16 @@ export function looksLikeAddress(text: string): boolean {
  * The address the writer's own site gives, if it gives one (decision 0168):
  * nine turtles' server looks once on their home page and one contact or
  * about page, only because the reader pressed Write back, and never twice for
- * the same writer. Undefined when it found none, or couldn't look.
+ * the same writer. `looked` is false when it couldn't look just now (their
+ * site didn't answer, it's already looking, or nine turtles can't be reached).
  */
-export async function lookOnTheirSite(feed: number): Promise<string | undefined> {
+export async function lookOnTheirSite(feed: number): Promise<{ address?: string; looked: boolean }> {
   const { answer } = await sendChange(`/api/feeds/${feed}/look-for-address`, {}, []);
   const address = answer?.address;
-  return typeof address === "string" && looksLikeAddress(address) ? address : undefined;
+  return {
+    address: typeof address === "string" && looksLikeAddress(address) ? address : undefined,
+    looked: answer?.looked === true,
+  };
 }
 
 /** Why an address wasn't kept, in the reader's words; undefined once it was. */

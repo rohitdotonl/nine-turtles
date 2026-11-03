@@ -21,6 +21,8 @@
 //                      one video with a description and one without
 //   /visits            how often each address here was asked for, so tests
 //                      can prove the tracking image is never loaded
+//   /writer/NAME/      a writer's home page, linking a contact page with
+//                      their address; /writer/NAME/feed.xml names none
 //   /blog/NAME/        a home page for a blog called NAME, naming its feed
 //                      (and its comments feed too, if NAME starts with
 //                      "two-"); tests that add a feed use their own NAME,
@@ -440,6 +442,15 @@ createServer((request, response) => {
     const name = hindi[1];
     if (hindi[2]) return xml(kavita(`Kavita ${name}`, `https://${name}.example/`));
     return html(page(`Kavita ${name}`, [[`Kavita ${name}`, `/hindi/${name}/feed.xml`]]));
+  }
+
+  // A writer whose feed gives no address but whose contact page does (Write back, decision 0168).
+  const writer = path.match(/^\/writer\/([a-z0-9-]+)\/(feed\.xml|contact)?$/);
+  if (writer) {
+    const name = writer[1];
+    if (writer[2] === "feed.xml") return xml(rss(`Writer ${name}`, `http://${request.headers.host}/writer/${name}/`, 1));
+    if (writer[2] === "contact") return html(`<!doctype html><title>Contact</title><p>Write to me: <a href="mailto:${name}@${name}.example">${name}@${name}.example</a></p>`);
+    return html(`<!doctype html><title>Writer ${name}</title><a href="/writer/${name}/contact">Contact</a>`);
   }
 
   const blog = path.match(/^\/blog\/([a-z0-9-]+)\/(feed\.xml|new\.xml|comments\.xml)?$/);

@@ -35,8 +35,8 @@ test("Write back asks once for an address, keeps it on their page, then opens th
   await page.keyboard.press("Enter");
   const field = pane(page).getByRole("textbox", { name: "Their email address" });
   await expect(field).toBeFocused();
-  // nine turtles looks on their site once; this made-up one can't be reached, so it asks.
-  await expect(pane(page)).toContainText("nine turtles looked on their site and didn't find an address.");
+  // nine turtles tries to look on their site; this made-up one can't be reached, and it says so.
+  await expect(pane(page)).toContainText("nine turtles couldn't look on their site just now.");
   await expect(field).toHaveValue("");
   // Their site, to find the address on, opens in a new tab.
   const site = pane(page).getByRole("link", { name: "Find it on their site (opens in a new tab)" });
@@ -79,4 +79,27 @@ test("Write back asks once for an address, keeps it on their page, then opens th
   await page.getByRole("button", { name: "Done" }).click();
   await expect(page).toHaveURL(new RegExp(`/people/${id}/about$`));
   await expect(about.getByRole("link", { name: "ivy@letters.example" })).toBeVisible();
+});
+
+test("Write back fills in the address it finds on their site, for the reader to check", async ({ page }) => {
+  const name = `wbsite${test.info().workerIndex}x${Date.now()}`;
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  const id = await follow(page, `${FEED_SITE}/writer/${name}/feed.xml`);
+  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await appReady(page);
+  await page.locator(".item-row").first().click();
+  await pane(page).getByRole("button", { name: /^Write back to/ }).click();
+  const field = pane(page).getByRole("textbox", { name: "Their email address" });
+  await expect(pane(page)).toContainText("Found on their site. Check it, then press Write back.");
+  await expect(field).toHaveValue(`${name}@${name}.example`);
+  // The address is there, so the button to go and find it isn't.
+  const site = pane(page).getByRole("link", { name: "Find it on their site (opens in a new tab)" });
+  await expect(site).toHaveCount(0);
+  // Changed, the box is as before.
+  await field.fill("someone@else.example");
+  await expect(site).toBeVisible();
+  await expect(pane(page)).not.toContainText("Found on their site.");
 });

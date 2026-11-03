@@ -35,11 +35,14 @@
   let site = $derived(siteOf(place, article.link));
 
   let asking = $state(false);
-  /** Looking on their site for the address, what it found, or that it found none. */
-  let looked: "looking" | "found" | "none" | undefined = $state();
+  /** Looking on their site for the address, what it found, that it found none, or couldn't look. */
+  let looked: "looking" | "found" | "none" | "couldn't" | undefined = $state();
+  let found = $state("");
+  let typed = $state("");
+  /** The found address is still what's in the field: once the reader changes it, the box is as before. */
+  let showingFound = $derived(looked === "found" && typed.trim() === found);
   let busy = $state(false);
   let written: HTMLAnchorElement | undefined = $state();
-  let typed = $state("");
   let message = $state("");
   let field: HTMLInputElement | undefined = $state();
   let opener: HTMLButtonElement | undefined = $state();
@@ -66,14 +69,19 @@
     if (!site) return;
     looked = "looking";
     const asked = article.id;
-    const found = await lookOnTheirSite(place.id);
-    // The reader may have moved on, closed the box or typed it meanwhile.
+    const answer = await lookOnTheirSite(place.id);
+    // The reader may have moved on or closed the box meanwhile.
     if (asked !== article.id || !asking) return;
-    if (found && !typed.trim()) {
-      typed = found;
-      looked = "found";
-    } else {
+    if (!answer.looked) {
+      looked = "couldn't";
+    } else if (!answer.address) {
       looked = "none";
+    } else if (typed.trim()) {
+      // They typed one meanwhile: theirs stays, and the line claims nothing.
+      looked = undefined;
+    } else {
+      found = typed = answer.address;
+      looked = "found";
     }
   }
 
@@ -121,10 +129,10 @@
         <div class="flex flex-col gap-1">
           <p id="write-back-title" class="text-base font-semibold text-ink">Write back to {name}</p>
           <p class="text-small text-ink-2" aria-live="polite">
-            {#if looked === "looking"}Looking on their site…{:else if looked === "found"}Found on their site. Check it, then press Write back.{:else if looked === "none"}nine turtles looked on their site and didn't find an address. Paste it here once and it's kept.{:else}nine turtles doesn't have their address yet. Paste it here once and it's kept.{/if}
+            {#if looked === "looking"}Looking on their site…{:else if showingFound}Found on their site. Check it, then press Write back.{:else if looked === "none"}nine turtles looked on their site and didn't find an address. Paste it here once and it's kept.{:else if looked === "couldn't"}nine turtles couldn't look on their site just now. Paste it here once and it's kept.{:else}nine turtles doesn't have their address yet. Paste it here once and it's kept.{/if}
           </p>
         </div>
-        {#if site && looked !== "found"}
+        {#if site && !showingFound}
           <!-- Left out once an address is filled in: it would only add a choice. -->
           <a class="btn self-start" href={site} target="_blank" rel="noopener noreferrer"><Icon name="open" size={16} />Find it on their site<span class="sr-only"> (opens in a new tab)</span></a>
         {/if}

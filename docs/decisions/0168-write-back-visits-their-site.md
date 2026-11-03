@@ -44,8 +44,13 @@ about the rules"), so this is a new wording, not an Exceptions log entry
 - **Never twice for the same writer:** what was found, or that nothing was,
   is kept on the feed (structure change 36: `feeds.site_looked_at`,
   `feeds.site_email`), for everyone who follows it, and for every place of
-  the reader's person. A site that didn't answer in time isn't counted, so a
-  later press tries again.
+  the reader's person, once the visit is over. A site that didn't answer in
+  time isn't counted, so a later press tries again, and the box says nine
+  turtles couldn't look ("honest by default"); a site that answered with an
+  error or "slow down" is counted, and never asked again.
+- Only a link whose whole words name a contact or about page ("Contact",
+  "About me"), or a short address such as `/contact`, counts: a post called
+  "About time" is never taken for one.
 - The publishers' page (nineturtles.app/publishers) says so.
 
 **Also changed to match:** `AGENTS.md`'s "Never fetch an article's web page"

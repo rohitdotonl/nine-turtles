@@ -45,7 +45,10 @@ V1, item 2). Its look gets a refinement round.*
   site. Check it, then press Write back."; the reader checks it and presses
   Write back to keep it (a page can show someone else's address too). When
   it finds none, "nine turtles looked on their site and didn't find an
-  address. Paste it here once and it's kept." With no website known it
+  address. Paste it here once and it's kept." When it couldn't look (their
+  site didn't answer, or nine turtles can't be reached), "nine turtles
+  couldn't look on their site just now. Paste it here once and it's kept."
+  Once the reader changes a found address, the box is as before. With no website known it
   doesn't look, and says "nine turtles doesn't have their address yet.
   Paste it here once and it's kept."; then **Find it on their site** (an everyday button that opens their
   website, the one their feed names or else their article's home page, in a
@@ -64,13 +67,17 @@ V1, item 2). Its look gets a refinement round.*
   known, nine turtles' server visits the writer's site, the one their feed
   names (else their newest article's home page, never the article): the
   home page, and, if it gives no address, the one contact page it links to
-  on the same site (else an about page). An address counts when it's an
+  on the same site (else an about page): a link whose words are just
+  "Contact", "About me" and the like, or whose short address is `/contact`
+  or `/about`, never a post's ("About time"). An address counts when it's an
   email link, or written out on the page; one at the site's own name wins,
-  else the page's only one; several others give none. It takes at most 8
+  else the page's only one; several others give none, and a blog host's own
+  address never counts as the writer's. It takes at most 8
   seconds, after which the box asks. It's done once for the writer, for
   everyone who follows them: pressing Write back again answers from what was
   found, or not found, without visiting. A site that didn't answer isn't
-  counted, so a later press tries again.
+  counted, so a later press tries again; one that answered with an error
+  or asked nine turtles to slow down is counted, and never asked again.
 - **Their page** (section 36) shows it as **Email**, under their sources,
   as a link that opens your email app; it's left out while
   nine turtles doesn't know it. Edit (on their page) has an **Email address**

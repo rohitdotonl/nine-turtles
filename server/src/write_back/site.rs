@@ -7,8 +7,9 @@
 //! page it links to. Never an article's page, never in the background, and
 //! never twice for the same writer: what was found, or that nothing was, is
 //! kept on the feed (`feeds.site_looked_at`, `site_email`), for everyone who
-//! follows it. A site that doesn't answer in time isn't counted as looked,
-//! so a later press can try again.
+//! follows it, once the visit is over. A site that doesn't answer in time
+//! isn't counted as looked, so a later press can try again; one that answers
+//! with an error (or "slow down") is, and is never asked again.
 //!
 //! What's found only fills in the reader's field: they check it and press
 //! Write back themselves, since a page can show someone else's address too.
@@ -55,7 +56,8 @@ struct Place {
 }
 
 /// `POST /api/feeds/3/look-for-address`: the address the writer's site
-/// gives, for the person place 3 belongs to, as `{"address": … or null}`.
+/// gives, for the person place 3 belongs to, as `{"address": … or null,
+/// "looked": whether nine turtles looked}`.
 /// Visits their site only if no place of theirs was looked on before.
 /// Refused as `not-found` when the reader doesn't follow place 3.
 async fn look(
@@ -87,49 +89,71 @@ async fn look(
     };
     // Never twice for the same writer: any of their places looked on before answers.
     if places.iter().any(|place| place.site_looked_at.is_some()) {
-        return answer(places.into_iter().find_map(|place| place.site_email));
+        return answer(places.into_iter().find_map(|place| place.site_email), true);
     }
     let Some(home) = home_of(place) else {
-        return answer(None);
+        return answer(None, false);
     };
     let place = place.id;
-    // Claimed first, so two presses at once still make one visit.
-    let claimed = sqlx::query(
-        "UPDATE feeds SET site_looked_at = ?1 WHERE id = ?2 AND site_looked_at IS NULL",
-    )
-    .bind(crate::now())
-    .bind(place)
-    .execute(&state.db)
-    .await;
-    match claimed {
-        Ok(done) if done.rows_affected() == 0 => return answer(None),
-        Ok(_) => {}
-        Err(error) => return database_problem("noting a visit to a writer's site", &error),
+    // One visit at a time for a feed: a second press meanwhile is told nine turtles hasn't looked yet.
+    if !state
+        .site_visits
+        .lock()
+        .is_ok_and(|mut visiting| visiting.insert(place))
+    {
+        return answer(None, false);
     }
-    let local = state.config.local_feeds_allowed;
-    let visited = tokio::time::timeout(LOOKING_FOR, visit(&state.http, &home, local)).await;
-    let kept = match visited {
-        Ok(Ok(found)) => sqlx::query("UPDATE feeds SET site_email = ?1 WHERE id = ?2")
-            .bind(&found)
+    // In a task of its own, so a reader leaving mid-visit doesn't cut it short.
+    let (db, http, local) = (
+        state.db.clone(),
+        state.http.clone(),
+        state.config.local_feeds_allowed,
+    );
+    let visits = state.site_visits.clone();
+    let task = tokio::spawn(async move {
+        let visited = tokio::time::timeout(LOOKING_FOR, visit(&http, &home, local)).await;
+        let found = match visited {
+            Ok(Ok(found)) => Some(found),
+            // Their site answered, but with an error or "slow down": looked, nothing found.
+            Ok(Err(
+                FetchError::Status(_)
+                | FetchError::TooBig
+                | FetchError::SlowDown(_)
+                | FetchError::NotAllowed,
+            )) => Some(None),
+            // It didn't answer, or not in time: not looked, so a later press tries again.
+            Ok(Err(FetchError::Unreachable)) | Err(_) => None,
+        };
+        // Kept only once the visit is over, so a visit cut off by a restart counts as never made.
+        let kept = match &found {
+            Some(address) => sqlx::query(
+                "UPDATE feeds SET site_looked_at = ?1, site_email = ?2 WHERE id = ?3 AND site_looked_at IS NULL",
+            )
+            .bind(crate::now())
+            .bind(address)
             .bind(place)
-            .execute(&state.db)
+            .execute(&db)
             .await
-            .map(|_| found),
-        // Their site didn't answer, or not in time: not looked, so a later press tries again.
-        Ok(Err(_)) | Err(_) => sqlx::query("UPDATE feeds SET site_looked_at = NULL WHERE id = ?1")
-            .bind(place)
-            .execute(&state.db)
-            .await
-            .map(|_| None),
-    };
-    match kept {
-        Ok(found) => answer(found),
-        Err(error) => database_problem("keeping what a writer's site gave", &error),
+            .map(|_| ()),
+            None => Ok(()),
+        };
+        if let Ok(mut visiting) = visits.lock() {
+            visiting.remove(&place);
+        }
+        kept.map(|()| found)
+    });
+    match task.await {
+        Ok(Ok(Some(found))) => answer(found, true),
+        Ok(Ok(None)) => answer(None, false),
+        Ok(Err(error)) => database_problem("keeping what a writer's site gave", &error),
+        Err(_) => answer(None, false),
     }
 }
 
-fn answer(address: Option<String>) -> Response {
-    Json(json!({ "address": address })).into_response()
+/// What the site gave, and whether nine turtles has looked there at all
+/// (it hasn't while another visit is under way, or when the site didn't answer).
+fn answer(address: Option<String>, looked: bool) -> Response {
+    Json(json!({ "address": address, "looked": looked })).into_response()
 }
 
 /// Where the writer's site starts: the site their feed names, else the home
@@ -282,7 +306,9 @@ fn unhide(hex: &str) -> Option<String> {
 }
 
 /// The writer's address among a page's: one at their own site's name wins
-/// ("hal@hal.example" on hal.example); else the page's only one. Several
+/// ("hal@hal.example" on hal.example or blog.hal.example, never a platform's
+/// own on a blog it hosts, as "support@" a host's name is on
+/// "hal.host.example"); else the page's only one. Several
 /// others may be anyone's, so none is chosen.
 fn choose(addresses: &[String], site: &Url) -> Option<String> {
     let host = bare(site.host_str().unwrap_or_default());
@@ -290,7 +316,7 @@ fn choose(addresses: &[String], site: &Url) -> Option<String> {
         .iter()
         .find(|address| {
             let domain = bare(address.rsplit('@').next().unwrap_or_default());
-            !domain.is_empty() && (host == domain || host.ends_with(&format!(".{domain}")))
+            !domain.is_empty() && (host == domain || host == format!("blog.{domain}"))
         })
         .or_else(|| (addresses.len() == 1).then(|| &addresses[0]))
         .cloned()
@@ -341,16 +367,37 @@ fn next_page(document: &Html, at: &Url) -> Option<Url> {
             .collect::<Vec<_>>()
             .join(" ")
             .to_lowercase();
-        let path = url
+        // A post's own address is deeper ("/2026/about-face"), so only a short one counts.
+        let parts: Vec<&str> = url
             .path()
-            .trim_end_matches('/')
-            .rsplit('/')
-            .next()
-            .unwrap_or_default()
-            .to_lowercase();
+            .split('/')
+            .filter(|part| !part.is_empty())
+            .collect();
+        // Counted from the home page's own place, for a site that lives inside a bigger one.
+        let home = at.path().split('/').filter(|part| !part.is_empty()).count();
+        let below = if url.path().starts_with(at.path()) {
+            parts.len().saturating_sub(home)
+        } else {
+            parts.len()
+        };
+        let path = match parts.as_slice() {
+            [.., last] if below <= 2 => last
+                .trim_end_matches(".html")
+                .trim_end_matches(".php")
+                .to_lowercase(),
+            _ => String::new(),
+        };
+        // Whole words only: "About me" is an about page, "About time" a post.
         let says = |list: &[&str]| {
-            list.iter()
-                .any(|said| words.starts_with(said) || path.starts_with(&said.replace(' ', "-")))
+            list.iter().any(|said| {
+                let dashed = said.replace(' ', "-");
+                [String::new(), " me".to_owned(), " us".to_owned()]
+                    .iter()
+                    .any(|end| {
+                        words == format!("{said}{end}")
+                            || path == format!("{dashed}{}", end.replace(' ', "-"))
+                    })
+            })
         };
         if says(CONTACT) {
             return Some(url);
@@ -405,6 +452,12 @@ mod tests {
         assert_eq!(choose(&mine, &site).as_deref(), Some("hal@hal.example"));
         let others = ["a@one.example".to_owned(), "b@two.example".to_owned()];
         assert_eq!(choose(&others, &site), None);
+        let hosted = Url::parse("https://hal.host.example/").unwrap();
+        let platform = [
+            "support@host.example".to_owned(),
+            "hal@hal.example".to_owned(),
+        ];
+        assert_eq!(choose(&platform, &hosted), None);
         let one = ["hal.writes@gmail.example".to_owned()];
         assert_eq!(
             choose(&one, &site).as_deref(),
