@@ -511,6 +511,17 @@ async fn follow_elsewhere(
     .bind(new)
     .execute(&mut *transaction)
     .await?;
+    // A YouTube channel's Shorts and live streams ticks go along too (decision 0144).
+    sqlx::query(
+        "UPDATE subscriptions SET (shorts, live_streams) =
+             (SELECT shorts, live_streams FROM subscriptions WHERE person_id = ?1 AND feed_id = ?2)
+         WHERE person_id = ?1 AND feed_id = ?3",
+    )
+    .bind(person)
+    .bind(old)
+    .bind(new)
+    .execute(&mut *transaction)
+    .await?;
     refresh_shared(&mut *transaction, new).await?;
     sqlx::query(
         "INSERT OR IGNORE INTO feed_folders (folder_id, feed_id)

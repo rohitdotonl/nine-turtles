@@ -7,13 +7,14 @@ import { keepLibrary, keptLibrary } from "./offline";
 import { getJson, isRecord, sendChange } from "./http";
 import { deviceJson, setDeviceText } from "./device";
 import { saved } from "./saving";
-import { toFeed, toPerson, type Feed, type FeedSettings, type Folder, type Library } from "./shapes";
+import { toFeed, toPerson, type Feed, type FeedSettings, type Folder, type Library, type VideoSettings } from "./shapes";
 
 export type Choice = { title: string; url: string };
 
 export type AddResult =
   | { kind: "added"; feed: Feed }
-  | { kind: "choose"; choices: Choice[] }
+  /** Several feeds to choose from; for a YouTube video or playlist, `asks` which and `maker` names its channel (decision 0144). */
+  | { kind: "choose"; choices: Choice[]; asks?: "video" | "playlist"; maker?: string }
   | { kind: "already"; feedId: number }
   | { kind: "problem"; reason: Problem };
 
@@ -192,7 +193,8 @@ export async function addFeed(address: string): Promise<AddResult> {
       title: String(choice.title ?? ""),
       url: String(choice.url ?? ""),
     }));
-    return { kind: "choose", choices };
+    const asks = body.asks === "video" || body.asks === "playlist" ? body.asks : undefined;
+    return { kind: "choose", choices, ...(asks ? { asks, maker: String(body.maker ?? "") } : {}) };
   }
   if (body.error === "already" && typeof body.feed_id === "number") return { kind: "already", feedId: body.feed_id };
   const reason = PROBLEMS.find((problem) => problem === body.error) ?? "trouble";
@@ -230,7 +232,7 @@ export async function editFeed(
   title: string,
   folders: number[],
   newFolder: string,
-  settings: FeedSettings & { paused: boolean },
+  settings: FeedSettings & VideoSettings & { paused: boolean },
 ): Promise<Refusal | undefined> {
   return (
     await change(`/api/feeds/${id}`, {
@@ -241,6 +243,8 @@ export async function editFeed(
       check: settings.check,
       open_on_site: settings.openOnSite,
       paused: settings.paused,
+      shorts: settings.shorts,
+      live_streams: settings.liveStreams,
     })
   ).refusal;
 }

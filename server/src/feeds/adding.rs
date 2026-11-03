@@ -22,6 +22,10 @@ use crate::{
     discover, feed,
     fetch::{self, FetchError, Fetched},
     log, now, websub,
+    youtube::{
+        self,
+        addresses::{Link, channel_feed},
+    },
 };
 
 #[derive(Deserialize)]
@@ -105,6 +109,16 @@ pub(super) async fn add_feed(
                 .collect();
             Json(json!({ "choices": choices })).into_response()
         }
+        Ok(Added::Ask(question)) => Json(json!({
+            "asks": question.asks,
+            "maker": question.maker,
+            "choices": question
+                .choices
+                .iter()
+                .map(|found| json!({ "title": found.title, "url": found.url.as_str() }))
+                .collect::<Vec<_>>(),
+        }))
+        .into_response(),
         Err(not_added) => not_added.into_response(),
     }
 }
@@ -113,10 +127,26 @@ enum Added {
     Feed(Box<FeedRow>),
     /// The page names several feeds; the reader picks one.
     Choices(Vec<discover::Found>),
+    /// A YouTube video or playlist: follow its channel, or the playlist?
+    Ask(youtube::Question),
 }
 
 async fn add(state: &AppState, person: i64, address: &str) -> Result<Added, NotAdded> {
     let url = parse_address(address).ok_or(NotAdded::NotAnAddress)?;
+    // Any YouTube link follows its maker (decision 0144): a channel's
+    // address is its feed; a video or a playlist asks first.
+    let url = match youtube::addresses::link(&url) {
+        Link::Channel(channel) => {
+            Url::parse(&channel_feed(&channel)).map_err(|_| NotAdded::NotAnAddress)?
+        }
+        link @ (Link::Video(_) | Link::Playlist { .. }) => {
+            return match youtube::ask(state, &url, link).await? {
+                Some(question) => Ok(Added::Ask(question)),
+                None => Err(NotAdded::NoFeed),
+            };
+        }
+        Link::Other => url,
+    };
     // A feed an assistant unsubscribed from is kept 30 days (SPEC section
     // 33): adding it again brings it back whole, as Bring back does, rather
     // than starting it afresh.
@@ -178,10 +208,12 @@ pub async fn add_for_app(state: &AppState, person: i64, address: &str) -> Result
         Ok(Added::Feed(feed)) => return Ok(feed.id),
         Err(NotAdded::Already(id)) => return Ok(id),
         Err(not_added) => return Err(not_added),
-        Ok(Added::Choices(choices)) => match choices.into_iter().next() {
-            Some(first) => first.url,
-            None => return Err(NotAdded::NoFeed),
-        },
+        Ok(Added::Choices(choices) | Added::Ask(youtube::Question { choices, .. })) => {
+            match choices.into_iter().next() {
+                Some(first) => first.url,
+                None => return Err(NotAdded::NoFeed),
+            }
+        }
     };
     if let Some(id) = bring_back(state, person, &address, false).await? {
         return Ok(id);
@@ -189,7 +221,7 @@ pub async fn add_for_app(state: &AppState, person: i64, address: &str) -> Result
     match add(state, person, address.as_str()).await {
         Ok(Added::Feed(feed)) => Ok(feed.id),
         Err(NotAdded::Already(id)) => Ok(id),
-        Ok(Added::Choices(_)) => Err(NotAdded::NoFeed),
+        Ok(Added::Choices(_) | Added::Ask(_)) => Err(NotAdded::NoFeed),
         Err(not_added) => Err(not_added),
     }
 }
@@ -243,8 +275,9 @@ async fn follow(
     state: &AppState,
     person: i64,
     fetched: &Fetched,
-    parsed: feed::ParsedFeed,
+    mut parsed: feed::ParsedFeed,
 ) -> Result<FeedRow, NotAdded> {
+    youtube::sorting::sort(state, &fetched.lasting_url, &mut parsed).await;
     let now = now();
     let hub = parsed.hub.clone();
     let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
@@ -296,6 +329,9 @@ async fn follow(
         checked_at: Some(now),
         person: None,
         place: super::place_of(fetched.lasting_url.as_str()).to_owned(),
+        sorts_videos: youtube::addresses::channel_of_feed(&fetched.lasting_url).is_some(),
+        shorts: false,
+        live_streams: false,
         added_at: now,
         write_to: None,
         email: parsed.email,
