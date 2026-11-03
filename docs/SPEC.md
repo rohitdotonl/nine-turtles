@@ -60,6 +60,7 @@ A few words used throughout:
 | 36 | [People](spec/36-people.md) |
 | 37 | [Writing back](spec/37-writing-back.md) |
 | 38 | [YouTube](spec/38-youtube.md) |
+| 41 | ["How did you hear about nine turtles?"](spec/41-how-did-you-hear.md) |
 
 ## Not built yet, and never
 

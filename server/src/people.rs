@@ -198,11 +198,16 @@ pub const ACCOUNT_TABLES: &[&str] = &[
 /// Empties reader `person`'s account, in one step: all or nothing. Every
 /// feed they follow is let go as unsubscribing lets it go, stars and
 /// collections included, then the `DATA_TABLES` are emptied of their lines.
-/// They stay signed in, with everything else of their account. Works for
-/// the owner too (decision 0117).
+/// Their answer to "How did you hear about nine turtles?" goes too. They
+/// stay signed in, with everything else of their account. Works for the
+/// owner too (decision 0117).
 pub async fn delete_data(db: &SqlitePool, person: i64) -> Result<(), sqlx::Error> {
     let mut transaction = db.begin_with("BEGIN IMMEDIATE").await?;
     let_go(&mut transaction, person, true).await?;
+    sqlx::query("UPDATE people SET heard_about = NULL WHERE id = ?")
+        .bind(person)
+        .execute(&mut *transaction)
+        .await?;
     transaction.commit().await
 }
 
