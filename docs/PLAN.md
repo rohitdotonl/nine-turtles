@@ -36,7 +36,7 @@ thread, in this order:
 
 1. **Typefaces** ✅ (decision 0141)
 2. **Colours:** the star in ink, oxblood for delete and errors ✅
-3. **Four themes,** moving readers' saved theme over safely 🔨
+3. **Four themes,** moving readers' saved theme over safely ✅ (decision 0145). Superseded: the owner chose (3 November 2026) themes named by the page they give, such as White, Paper and Night, in place of these four. Built only when he says go, as step 10 of the owner's review plan.
 4. **Logo and icons:** the heavier sidebar logo, the black app icon, the tab icon 🔨
 5. **The final icon set** 🔨
 6. **People** (V1 item 1 below) ✅
@@ -50,7 +50,7 @@ thread, in this order:
 14. **A feed finder that tries a few more places** (V1 item 9) ✅
 15. **Choosing between several feeds, made easy** (V1 item 10) ✅
 16. **Three to four refinement rounds:** the owner uses the app, lists what
-    he dislikes (the theme picker first), and each round fixes it.
+    he dislikes, and each round fixes it. (The theme picker is replaced by the new themes above.)
 17. **Prices and launch:** prices, the legal pages, the final website, live
     payments with Dodo, and sign-up open.
 
