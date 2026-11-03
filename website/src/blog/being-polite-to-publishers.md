@@ -13,7 +13,7 @@ have.
 
 Some sites publish ten times a day; some publish twice a year. nine
 turtles notices which is which, and checks often where it's worth it and
-rarely where it isn't: never more than every 30 minutes, and at least once
+rarely where it isn't: never more than once an hour, and at least once
 a day. Checks are spread out over time, never all at once.
 
 ## Asking "anything new?"
@@ -40,8 +40,9 @@ reach, like the one at app.nineturtles.app.)
 
 ## Saying who it is
 
-Every request names itself as nine turtles, with its version, so a
-publisher looking at their logs knows exactly who came by.
+Every request names itself as nine turtles, with its version and a link
+to [a page for publishers](/publishers/), so a publisher looking at their
+logs knows exactly who came by and how it behaves.
 
 ## Only the feed, never the page
 

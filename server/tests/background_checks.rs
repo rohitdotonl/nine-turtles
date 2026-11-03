@@ -34,6 +34,9 @@ struct Site {
     trouble: Option<(StatusCode, Option<String>)>,
     /// /moving.xml has moved to /new-home.xml for good.
     moved: bool,
+    /// Requests being answered right now, and the most there ever were.
+    answering: u32,
+    most_at_once: u32,
     requests: Vec<Request>,
 }
 
@@ -69,7 +72,15 @@ async fn serve(State(site): State<Shared>, uri: Uri, headers: HeaderMap) -> Resp
             .and_then(|value: &header::HeaderValue| value.to_str().ok())
             .map(str::to_owned)
     };
+    // Each answer takes a moment, so overlapping requests would show.
+    {
+        let mut site = site.lock().unwrap();
+        site.answering += 1;
+        site.most_at_once = site.most_at_once.max(site.answering);
+    }
+    tokio::time::sleep(std::time::Duration::from_millis(20)).await;
     let mut site = site.lock().unwrap();
+    site.answering -= 1;
     let path = uri.path().to_owned();
     site.requests.push(Request {
         path: path.clone(),
@@ -94,6 +105,15 @@ async fn serve(State(site): State<Shared>, uri: Uri, headers: HeaderMap) -> Resp
     }
     if path == "/daily.xml" {
         return rss(&site, "Daily", 3, DAY, None);
+    }
+    if path == "/cached.xml" {
+        // "The same for three hours", on a feed that posts hourly.
+        let mut response = rss(&site, "Cached", site.articles, HOUR, None);
+        response.headers_mut().insert(
+            header::CACHE_CONTROL,
+            "public, max-age=10800".parse().unwrap(),
+        );
+        return response;
     }
     let known = path.starts_with("/many/")
         || ["/grow.xml", "/flaky.xml", "/moving.xml", "/new-home.xml"].contains(&path.as_str());
@@ -332,13 +352,13 @@ async fn new_articles_arrive_on_their_own_and_the_list_waits_to_be_asked() {
 }
 
 #[tokio::test]
-async fn each_feed_is_checked_on_its_own_rhythm_never_more_than_every_half_hour() {
+async fn each_feed_is_checked_on_its_own_rhythm_never_more_than_hourly() {
     let reader = Reader::new().await;
     let hourly = reader.follow("/grow.xml").await;
     let daily = reader.follow("/daily.xml").await;
     let added = nine_turtles::now();
 
-    // An article every hour: every 30 minutes. Every day: about twice a day.
+    // An article every hour: every hour. Every day: about twice a day.
     assert_eq!(
         reader.feed_column(hourly, "check_every").await,
         Some(SHORTEST_WAIT)
@@ -357,11 +377,25 @@ async fn each_feed_is_checked_on_its_own_rhythm_never_more_than_every_half_hour(
     let asked = reader.requests().len();
     assert_eq!(reader.round(added + 10 * MINUTE).await, 0);
     assert_eq!(reader.requests().len(), asked);
-    // An hour later, only the hourly feed is.
-    assert_eq!(reader.round(added + HOUR).await, 1);
+    // An hour later (and the nudge of up to a tenth), only the hourly feed is.
+    let hour_on = added + HOUR + 7 * MINUTE;
+    assert_eq!(reader.round(hour_on).await, 1);
     assert_eq!(reader.requests().last().unwrap().path, "/grow.xml");
     // And the round just done doesn't make it due again at once.
-    assert_eq!(reader.round(added + HOUR + MINUTE).await, 0);
+    assert_eq!(reader.round(hour_on + MINUTE).await, 0);
+}
+
+#[tokio::test]
+async fn a_publisher_who_says_how_long_its_feed_stays_the_same_is_believed() {
+    let reader = Reader::new().await;
+    let cached = reader.follow("/cached.xml").await;
+    // An hourly feed would be asked again within the hour; this one said
+    // three hours, so it waits three.
+    let at = nine_turtles::now() + HOUR + 7 * MINUTE;
+    assert_eq!(reader.round(at).await, 1);
+    let next = reader.feed_column(cached, "next_check_at").await.unwrap();
+    assert!(next >= at + 3 * HOUR, "{}", next - at);
+    assert!(next <= at + 3 * HOUR + 20 * MINUTE, "{}", next - at);
 }
 
 #[tokio::test]
@@ -375,6 +409,8 @@ async fn checks_are_spread_out_never_all_at_once() {
     assert_eq!(reader.round(later).await, 20);
     assert_eq!(reader.round(later).await, 5);
     assert_eq!(reader.round(later).await, 0);
+    // They're all on one site, so they took turns: one request at a time.
+    assert_eq!(reader.published.lock().unwrap().most_at_once, 1);
     // Feeds added together drift apart.
     let times: std::collections::HashSet<i64> =
         sqlx::query_scalar("SELECT next_check_at FROM feeds")
@@ -423,7 +459,7 @@ async fn a_failing_feed_is_tried_less_and_less_and_never_holds_up_the_others() {
     let working = reader.follow("/many/1.xml").await;
     reader.change(|site| site.trouble = Some((StatusCode::INTERNAL_SERVER_ERROR, None)));
 
-    // Each failure in a row doubles the wait (from the feed's 30 minutes), up to a day.
+    // Each failure in a row doubles the wait (from the feed's hour), up to a day.
     let mut at = nine_turtles::now() + DAY;
     let mut waits = Vec::new();
     for _ in 0..7 {
@@ -434,7 +470,7 @@ async fn a_failing_feed_is_tried_less_and_less_and_never_holds_up_the_others() {
     }
     assert_eq!(
         waits,
-        [HOUR, 2 * HOUR, 4 * HOUR, 8 * HOUR, 16 * HOUR, DAY, DAY]
+        [2 * HOUR, 4 * HOUR, 8 * HOUR, 16 * HOUR, DAY, DAY, DAY]
     );
     assert_eq!(reader.feed_column(flaky, "failures").await, Some(7));
     // The working feed was checked all along.

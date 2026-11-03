@@ -70,7 +70,7 @@ another reader as an OPML file. ([What's a feed?](/new-to-feeds/))
 ## Keeping up with publishers, politely
 
 nine turtles checks each feed on its own rhythm: often for sites that
-publish a lot, rarely for quiet ones, never more than every 30 minutes. It
+publish a lot, rarely for quiet ones, never more than once an hour. It
 tells each site what it already has, so an unchanged feed costs them almost
 nothing, and when a site asks it to slow down, it does. Sites that announce
 new posts the moment they publish (through a standard called WebSub) are

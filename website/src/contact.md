@@ -27,7 +27,8 @@ serious one. Please write, and say what you use to read.
 
 If you publish a feed and would like nine turtles to treat it differently,
 for example to check it less often, write to me. nine turtles identifies
-itself to every site it checks as `nine-turtles`, followed by its version.
+itself to every site it checks as `nine-turtles`, followed by its version
+and a link to [how it treats publishers](/publishers/).
 
 ## Privacy and security
 

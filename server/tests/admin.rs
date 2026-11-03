@@ -268,7 +268,7 @@ async fn feeds_whose_followers_are_all_away_are_checked_once_a_day_until_one_com
     // While the reader is around, an hourly blog is checked often.
     let now = nine_turtles::now();
     checking::check(&state, feed, now).await.unwrap();
-    assert!(due_in(&state, feed, now).await <= HOUR);
+    assert!(due_in(&state, feed, now).await < 2 * HOUR);
 
     // Away for a month: once a day.
     last_seen(&state, reader, 31 * DAY).await;
@@ -287,7 +287,7 @@ async fn feeds_whose_followers_are_all_away_are_checked_once_a_day_until_one_com
     admin::here(&state.db, reader, now).await.unwrap();
     assert!(due_in(&state, feed, now).await <= 0);
     checking::check(&state, feed, now).await.unwrap();
-    assert!(due_in(&state, feed, now).await <= HOUR);
+    assert!(due_in(&state, feed, now).await < 2 * HOUR);
 
     // Another follower who's around keeps it checked often, whoever is away.
     last_seen(&state, reader, 31 * DAY).await;
@@ -302,7 +302,7 @@ async fn feeds_whose_followers_are_all_away_are_checked_once_a_day_until_one_com
     .await;
     assert_eq!(status, StatusCode::CREATED);
     checking::check(&state, feed, now).await.unwrap();
-    assert!(due_in(&state, feed, now).await <= HOUR);
+    assert!(due_in(&state, feed, now).await < 2 * HOUR);
 }
 
 #[tokio::test]

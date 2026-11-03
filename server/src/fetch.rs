@@ -12,7 +12,8 @@
 //!   that leads somewhere private is refused too.
 //! - When checking a feed again, it says what it already has (ETag and
 //!   Last-Modified), so an unchanged feed costs the publisher almost nothing,
-//!   and it listens when a publisher asks it to slow down.
+//!   and it listens when a publisher asks it to slow down, or says how long
+//!   its feed stays the same (`Cache-Control: max-age`).
 
 use std::{
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
@@ -26,11 +27,12 @@ use reqwest::{
     redirect,
 };
 
-/// How nine turtles introduces itself to every website.
+/// How nine turtles introduces itself to every website: its name, version
+/// and the page that tells publishers how it behaves (`website/src/publishers.md`).
 pub const USER_AGENT: &str = concat!(
     "nine-turtles/",
     env!("CARGO_PKG_VERSION"),
-    " (+https://nineturtles.app)"
+    " (+https://nineturtles.app/publishers/)"
 );
 /// The longest nine turtles waits for one download, start to finish.
 const TIME_LIMIT: Duration = Duration::from_secs(20);
@@ -56,6 +58,9 @@ pub struct Fetched {
     pub body: Vec<u8>,
     pub etag: Option<String>,
     pub last_modified: Option<String>,
+    /// How long the publisher says this answer stays the same, in seconds
+    /// (`fresh_for`).
+    pub fresh_for: Option<i64>,
 }
 
 /// What nine turtles already has of a feed, from the publisher's last answer.
@@ -69,9 +74,10 @@ pub struct Known<'a> {
 #[derive(Debug)]
 pub enum Answer {
     Changed(Fetched),
-    /// "Nothing new" (304). `lasting_url` is as in [`Fetched`].
+    /// "Nothing new" (304). `lasting_url` and `fresh_for` are as in [`Fetched`].
     Unchanged {
         lasting_url: Url,
+        fresh_for: Option<i64>,
     },
 }
 
@@ -251,9 +257,11 @@ async fn check_once(
             current = next;
             continue;
         }
+        let fresh = fresh_for(response.headers());
         if status == StatusCode::NOT_MODIFIED {
             return Ok(Answer::Unchanged {
                 lasting_url: lasting,
+                fresh_for: fresh,
             });
         }
         let retry_after = response
@@ -288,9 +296,35 @@ async fn check_once(
             body,
             etag,
             last_modified,
+            fresh_for: fresh,
         }));
     }
     Err(FetchError::Unreachable)
+}
+
+/// How long the publisher says its answer stays the same, from
+/// `Cache-Control: max-age=…`, in seconds. Nothing when it doesn't say, or
+/// says not to keep the answer (`no-store`, `no-cache`), which only means
+/// "ask again" and never "ask sooner".
+pub fn fresh_for(headers: &HeaderMap) -> Option<i64> {
+    let mut max_age = None;
+    for value in headers.get_all(header::CACHE_CONTROL) {
+        let Ok(value) = value.to_str() else { continue };
+        for part in value.split(',') {
+            let part = part.trim().to_ascii_lowercase();
+            if part == "no-store" || part == "no-cache" {
+                return None;
+            }
+            if let Some(seconds) = part.strip_prefix("max-age=") {
+                max_age = seconds
+                    .trim_matches('"')
+                    .parse::<i64>()
+                    .ok()
+                    .filter(|s| *s >= 0);
+            }
+        }
+    }
+    max_age
 }
 
 /// A `Retry-After` answer as seconds from `now`: either a number of seconds
@@ -519,6 +553,24 @@ mod tests {
             .await;
             assert_eq!((got, asked.get()), (Err(answer), 1));
         }
+    }
+
+    #[test]
+    fn the_publishers_max_age_is_read_and_no_cache_means_nothing() {
+        let headers = |values: &[&str]| {
+            let mut map = HeaderMap::new();
+            for value in values {
+                map.append(header::CACHE_CONTROL, HeaderValue::from_str(value).unwrap());
+            }
+            map
+        };
+        assert_eq!(fresh_for(&headers(&["public, max-age=7200"])), Some(7200));
+        assert_eq!(fresh_for(&headers(&["Max-Age=\"600\""])), Some(600));
+        assert_eq!(fresh_for(&headers(&["public", "max-age=60"])), Some(60));
+        assert_eq!(fresh_for(&headers(&["max-age=3600, no-cache"])), None);
+        assert_eq!(fresh_for(&headers(&["no-store"])), None);
+        assert_eq!(fresh_for(&headers(&["max-age=soon"])), None);
+        assert_eq!(fresh_for(&headers(&[])), None);
     }
 
     #[test]
