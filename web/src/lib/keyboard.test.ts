@@ -154,6 +154,7 @@ describe("keyboard shortcuts", () => {
       "g then f",
       "g then ,",
       "Shift+J",
+      "i",
       "/",
       "[",
       "]",

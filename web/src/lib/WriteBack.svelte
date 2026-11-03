@@ -6,9 +6,9 @@
   sends or reads that email.
 
   When nine turtles doesn't know their address (their feed gives none), the
-  button opens a small box in place, as Add another place does: one field for
+  button opens a small box in place, as Add a source does: one field for
   it, Write back and Not now. The address is kept for the person (their page
-  shows it, Edit person changes it), so it's asked for once. The email app
+  shows it, Edit on their page changes it), so it's asked for once. The email app
   opens at once, while the address is being kept.
 
   The More menu's "Write back" and its key (`w`) do the same (`start`).
@@ -155,7 +155,7 @@
     font-size: var(--text-meta);
     overflow-wrap: anywhere;
   }
-  /* The same quiet bordered box as Add another place, across the text column. */
+  /* The same quiet bordered box as Add a source, across the text column. */
   .ask {
     align-self: stretch;
     padding: 1rem 1.125rem;

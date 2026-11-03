@@ -36,8 +36,8 @@ A few sign-up forms don't accept a plus sign; use the plain address there.
 
 ## Stop a newsletter
 
-Unfollow it as you would anyone: **More › Edit person…**, then
-**Unsubscribe**. Once the ten minutes to undo have passed, nine turtles
+Unfollow it as you would anyone: open its page, press **Edit**, then
+**Unsubscribe from …**. Once the ten minutes to undo have passed, nine turtles
 also tells the sender to stop, where the newsletter allows it. If it
 doesn't, use the unsubscribe link at the bottom of one of its emails.
 

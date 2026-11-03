@@ -104,27 +104,27 @@ pub async fn folder_named(
 
 #[derive(Deserialize)]
 struct EditFeed {
-    title: String,
-    /// Every folder the feed should be in; it leaves any other.
-    folders: Vec<i64>,
+    /// The person's name (the place's own, for one on its own); left as it
+    /// is when absent, as a source's own settings leave it (decision 0163).
+    title: Option<String>,
+    /// Every folder the feed should be in; it leaves any other. Left as they
+    /// are when absent.
+    folders: Option<Vec<i64>>,
     /// A folder to create (or find by name) and put the feed in too.
-    #[serde(default)]
     new_folder: Option<String>,
-    /// Its settings (SPEC section 15). Each is left as it is when absent, so
-    /// a tab opened before they existed can't reset them.
-    #[serde(default)]
+    /// Its settings (SPEC section 15). Each, like everything here, is left as
+    /// it is when absent (serde reads a missing `Option` as `None`), so a tab
+    /// opened before they existed can't reset them.
     river: Option<bool>,
-    #[serde(default)]
     check: Option<Check>,
-    #[serde(default)]
     open_on_site: Option<bool>,
-    #[serde(default)]
     paused: Option<bool>,
     /// A YouTube channel's Shorts and live streams (decision 0144).
-    #[serde(default)]
     shorts: Option<bool>,
-    #[serde(default)]
     live_streams: Option<bool>,
+    /// Person or publication, and what kind of source it is (decision 0163).
+    kind: Option<crate::writers::kind::Kind>,
+    place: Option<crate::writers::kind::Place>,
 }
 
 /// How often the reader allows a feed to be checked in the background.
@@ -149,10 +149,10 @@ impl Check {
 /// How many of the articles a feed brought while it was paused go back to
 /// Unread when the reader unpauses it: only the newest few, so nothing piles
 /// up (SPEC section 15). The number is also written in SPEC section 15 and
-/// in Edit feed's helper line (`web/src/lib/EditFeed.svelte`).
+/// in a source's settings (`web/src/lib/SourceFields.svelte`).
 pub const BACK_FROM_PAUSE: i64 = 3;
 
-/// "Edit person": a place's name, folders and settings, saved together or not
+/// Edit (on their page) and a source's settings: a place's name, folders and settings, saved together or not
 /// at all. On a place of a person with others, the name is the person's and
 /// the folders are all their places' (`writers`).
 async fn edit_feed(
@@ -161,8 +161,12 @@ async fn edit_feed(
     Path(id): Path<i64>,
     Json(form): Json<EditFeed>,
 ) -> Response {
-    let Some(title) = clean_name(&form.title) else {
-        return problem(StatusCode::BAD_REQUEST, "no-name");
+    let title = match form.title.as_deref() {
+        None => None,
+        Some(title) => match clean_name(title) {
+            Some(title) => Some(title),
+            None => return problem(StatusCode::BAD_REQUEST, "no-name"),
+        },
     };
     let new_folder = match form.new_folder.as_deref().map(str::trim) {
         None | Some("") => None,
@@ -176,7 +180,9 @@ async fn edit_feed(
         if !follows(&mut transaction, person, id).await? {
             return Ok(None);
         }
-        crate::writers::rename_place(&mut transaction, person, id, &title).await?;
+        if let Some(title) = &title {
+            crate::writers::rename_place(&mut transaction, person, id, title).await?;
+        }
         // The switches as they were, so only one just turned on brings anything in.
         let before: (bool, bool) = sqlx::query_as(
             "SELECT shorts, live_streams FROM subscriptions WHERE person_id = ? AND feed_id = ?",
@@ -190,7 +196,8 @@ async fn edit_feed(
                  open_on_site = COALESCE(?, open_on_site),
                  check_at_most = COALESCE(?, check_at_most),
                  shorts = COALESCE(?, shorts),
-                 live_streams = COALESCE(?, live_streams)
+                 live_streams = COALESCE(?, live_streams),
+                 kind = COALESCE(?, kind), place = COALESCE(?, place)
              WHERE person_id = ? AND feed_id = ?",
         )
         .bind(form.river)
@@ -198,6 +205,8 @@ async fn edit_feed(
         .bind(form.check.map(Check::at_most))
         .bind(form.shorts)
         .bind(form.live_streams)
+        .bind(form.kind.map(crate::writers::kind::Kind::name))
+        .bind(form.place.map(crate::writers::kind::Place::name))
         .bind(person)
         .bind(id)
         .execute(&mut *transaction)
@@ -238,11 +247,12 @@ async fn edit_feed(
             .execute(&mut *transaction)
             .await?;
         }
-        let mut folders = form.folders.clone();
-        if let Some(name) = &new_folder {
-            folders.push(folder_named(&mut transaction, person, name).await?.0);
+        if let Some(mut folders) = form.folders.clone() {
+            if let Some(name) = &new_folder {
+                folders.push(folder_named(&mut transaction, person, name).await?.0);
+            }
+            crate::writers::file_places(&mut transaction, person, id, &folders).await?;
         }
-        crate::writers::file_places(&mut transaction, person, id, &folders).await?;
         // After the folders, so rules for folders act on the ones just saved.
         if let Some(paused) = form.paused {
             set_paused(&mut transaction, person, id, paused, now()).await?;
@@ -574,7 +584,7 @@ pub async fn clear(
     .await?;
     // An article on any of their collections stays, as a starred one does
     // (decision 0108), and so does one they highlighted or wrote a note on
-    // (decision 0163), unless they chose to remove those too.
+    // (decision 0164), unless they chose to remove those too.
     crate::notes::drop_kept(&mut *connection, person, id).await?;
     sqlx::query(
         "DELETE FROM entries WHERE person_id = ?1 AND feed_id = ?2 AND starred = 0

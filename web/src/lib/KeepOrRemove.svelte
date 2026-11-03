@@ -1,6 +1,6 @@
 <!--
   Unsubscribing from a place where the reader kept something (SPEC section
-  42): it asks, in place of Edit feed's foot, whether what they kept stays.
+  42): it asks, in place of Edit's Unsubscribe, whether what they kept stays.
   "Keep them" leaves their starred and marked articles, and their note on
   the person, where they are (Starred, Notes, search); "Remove them too"
   removes those as well. Either can be undone straight afterwards, as any

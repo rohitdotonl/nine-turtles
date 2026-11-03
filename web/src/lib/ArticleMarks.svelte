@@ -347,7 +347,7 @@
     font-size: var(--text-small);
   }
   /*
-    A highlight in the text: soft pencil (decision 0163), a faint tone of the
+    A highlight in the text: soft pencil (decision 0164), a faint tone of the
     ink behind the words and a fine line under them, in every theme; the
     page's own colors, never a new one, and never color alone (the line).
   */

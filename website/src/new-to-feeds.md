@@ -60,10 +60,12 @@ The web is full of personal sites worth following. A few ways to find them:
 
 ## Starting in nine turtles
 
-1. Press **Add feed** and paste a website's address.
+1. Press **+ Add** and paste a website's address.
 2. If the site offers more than one feed (say, articles and comments),
    choose the one you want.
-3. Its newest articles appear in your list. Read, star the ones worth
+3. Say whether it's **Someone** (a person) or **Something** (a publication,
+   such as a magazine). nine turtles has already guessed.
+4. Its newest articles appear in your list. Read, star the ones worth
    keeping, and close it when you're done.
 
 nine turtles checks your feeds on its own from then on, politely, and new

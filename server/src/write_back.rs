@@ -8,7 +8,7 @@
 //! (`from_feed`), or a newsletter's Reply-To or From address (`newsletter`).
 //! An address made only to send from ("no-reply") is never kept. And the
 //! reader's own (`subscriptions.write_to`), typed once when neither had one,
-//! or in Edit person: it wins, and is kept on every place of the person, so
+//! or in Edit on their page: it wins, and is kept on every place of the person, so
 //! it stays with them.
 
 use axum::{

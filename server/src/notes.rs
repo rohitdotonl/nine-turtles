@@ -1,4 +1,4 @@
-//! Notes and highlights (SPEC section 42, decision 0163): the reader's
+//! Notes and highlights (SPEC section 42, decision 0164): the reader's
 //! highlights on articles, each with an optional note; one note on a whole
 //! article; and one note on each person. Each reader's alone: other readers,
 //! other apps and the weekly email never see them; the reader's own AI
@@ -7,7 +7,7 @@
 //! A highlighted or noted article is kept forever, like a starred one: the
 //! yearly clean-up and unsubscribing leave its entry (`cleanup`,
 //! `folders::clear`), and the database refuses to delete an entry a note
-//! still points at (structure change 33). Unsubscribing can remove them
+//! still points at (structure change 34). Unsubscribing can remove them
 //! instead, when the reader chooses to (`drop_kept`).
 //!
 //! A highlight is stored as the words marked, as plain text, with a few
@@ -366,13 +366,19 @@ pub async fn kept_by(
     person: i64,
     feed: i64,
 ) -> Result<Option<Kept>, sqlx::Error> {
+    // Every place of the person's at once, as "Unsubscribe from …" leaves them all.
     let found: Option<(i64, i64, bool)> = sqlx::query_as(
-        "SELECT
-             (SELECT COUNT(*) FROM entries WHERE person_id = ?1 AND feed_id = ?2 AND starred = 1),
+        "WITH places AS (
+             SELECT feed_id, note FROM subscriptions
+             WHERE person_id = ?1 AND unsubscribed_at IS NULL AND (feed_id = ?2 OR writer_id =
+                 (SELECT writer_id FROM subscriptions WHERE person_id = ?1 AND feed_id = ?2)))
+         SELECT
+             (SELECT COUNT(*) FROM entries WHERE person_id = ?1 AND starred = 1
+                  AND feed_id IN (SELECT feed_id FROM places)),
              (SELECT COUNT(DISTINCT notes.article_id) FROM notes JOIN entries
                   ON entries.person_id = notes.person_id AND entries.article_id = notes.article_id
-              WHERE notes.person_id = ?1 AND entries.feed_id = ?2),
-             note IS NOT NULL
+              WHERE notes.person_id = ?1 AND entries.feed_id IN (SELECT feed_id FROM places)),
+             EXISTS (SELECT 1 FROM places WHERE note IS NOT NULL)
          FROM subscriptions WHERE person_id = ?1 AND feed_id = ?2 AND unsubscribed_at IS NULL",
     )
     .bind(person)

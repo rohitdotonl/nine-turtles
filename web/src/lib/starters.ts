@@ -65,5 +65,5 @@ export function startProblem(failed: readonly Starter[]): string {
 export function partlyAdded(failed: readonly Starter[]): string {
   const names = failed.map((starter) => starter.name);
   const list = names.length < 2 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
-  return `Couldn't add ${list}. Try again later from Add feed.`;
+  return `Couldn't add ${list}. Try again later from + Add.`;
 }

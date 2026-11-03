@@ -90,7 +90,7 @@ pub async fn subscribe(
          ON CONFLICT (person_id, feed_id) DO UPDATE SET
              title = excluded.title, added_at = excluded.added_at, unsubscribed_at = NULL,
              cleared = 0, river = 0, check_at_most = 0, open_on_site = 0,
-             paused_at = NULL, writer_id = NULL, same_asked = 0, write_to = NULL,
+             paused_at = NULL, writer_id = NULL, kind = NULL, place = NULL, write_to = NULL,
              shorts = 0, live_streams = 0, drop_kept = 0",
     )
     .bind(person)

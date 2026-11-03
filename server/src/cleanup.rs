@@ -2,7 +2,7 @@
 //! has starred is removed a year after nine turtles first received it, read
 //! or not. A starred one stays forever, and so does one on any of the
 //! reader's collections (decision 0108) or one they highlighted or wrote a
-//! note on (decision 0163).
+//! note on (decision 0164).
 //!
 //! It runs just after each night's backup is safely stored (`backup::run`),
 //! so whatever it removes is still in that night's copy; without backups it

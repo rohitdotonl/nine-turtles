@@ -64,6 +64,6 @@ Some sites don't have one.
 <h2>Then what?</h2>
 
 Paste the feed's address into any feed reader. In nine turtles it goes in
-**Add feed**. New to all this? [Start here](/new-to-feeds/).
+**+ Add**. New to all this? [Start here](/new-to-feeds/).
 
 <script src="/feed-finder.js?v={{ finderVersion }}" defer></script>

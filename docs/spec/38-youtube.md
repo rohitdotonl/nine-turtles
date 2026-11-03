@@ -10,7 +10,7 @@ YouTube account, no Google key, and no reading YouTube's pages beyond the one
 you paste.
 
 **What it does**
-- **Any YouTube link follows its maker,** pasted into Add a feed (section 3):
+- **Any YouTube link follows its maker,** pasted into + Add (section 3):
   - a channel's address (`youtube.com/channel/UC…`) follows it at once, by its
     feed, without reading the page; an `@handle` or `/c/` address reads that
     one page to find its feed, as any website does;
@@ -23,8 +23,8 @@ you paste.
     feed (a mix made for you, Watch later, a private one) follows the video's
     channel instead, when there's a video.
   The feed is named for the channel (or the playlist), never "YouTube".
-- **Shorts and live streams are left out by default.** Edit person (section
-  15) has two more ticks for a YouTube channel: **Include Shorts** and
+- **Shorts and live streams are left out by default.** A YouTube channel's settings (section
+  36) have two more ticks: **Include Shorts** and
   **Include live streams** (streams, and their recordings once they end),
   both off. Turned on, the ones already stored join the channel's list, as
   read, and new ones arrive unread; turned off, new ones are left out and the
@@ -91,11 +91,11 @@ remembers whether captions are on; Safari may forget that if nine turtles
 goes unused for a while (decision 0156).
 
 **How to check it**
-1. In Add a feed, paste a YouTube video's address: it asks "This video is by
-   … Follow …?" with the channel; Add feed follows the channel, named for it.
+1. In + Add, paste a YouTube video's address: it asks "This video is by
+   … Follow …?" with the channel; Add follows the channel, named for it.
 2. Paste a playlist's address: it offers all of the channel's videos (chosen)
    or only the playlist.
-3. Open a channel's Edit person: Include Shorts and Include live streams are
+3. Open a channel's settings (Edit on its page): Include Shorts and Include live streams are
    there, both off. A new Short from that channel doesn't arrive in Unread.
 4. In Google Takeout, export YouTube's subscriptions; in Settings › Your
    data, choose Import YouTube subscriptions… and pick `subscriptions.csv`:

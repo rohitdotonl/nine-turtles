@@ -29,15 +29,15 @@ V1, item 5; decision 0140). Its look gets a refinement round.*
 - **What it says** ("New from the people you read", from nine turtles,
   signed by Rohit like every email, BRAND.md → Emails): "Here's what the
   people you read wrote this week." (twice a week, "since Wednesday" or
-  "since Saturday"); then each person with something unread that arrived
+  "since Saturday"); then each person or publication with something unread that arrived
   since the last one (never more than a week back), by name, A to Z (a
-  person with several places is one, section 36). Under each name, their
+  person with several sources is one, section 36). Under each name, their
   newest titles, at most three, each with the first line of its words, cut
   at about 140 characters, and the publisher's own link. At most 30 people.
   When there's more than it shows, one line: "The rest is in nine
   turtles." **Never a count:** no number of articles, people or days.
 - **Nothing new, nothing sent.** Articles already read, muted (section 27)
-  or from places the reader no longer follows never appear.
+  or from sources the reader no longer follows never appear.
 - **Plain text,** no pictures, no tracking, no logo. Its only links are the
   publishers' own, nine turtles' front page, and the stop link.
 - **Off in one press:** the email ends "You turned this email on in

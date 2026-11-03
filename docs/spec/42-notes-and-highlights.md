@@ -1,7 +1,7 @@
 # 42. Notes and highlights
 
 *Part of the spec ([index](../SPEC.md)). `docs/DESIGN.md` takes precedence.
-V1 item 8 (`docs/PLAN.md`), decision 0163.*
+V1 item 8 (`docs/PLAN.md`), decision 0164.*
 
 Private marks of the reader's own: words highlighted in an article, a note
 on a highlight, a note on the whole article, and a note on each person.
@@ -112,7 +112,7 @@ to other apps (section 22) or counted anywhere.
    shows; turn it on, and the line goes.
 6. On a person's page, Add a note…, then type a word of it in the sidebar's
    find field: the person is found.
-7. Edit feed › Unsubscribe on that place: it asks what to do with what you
+7. Their page › Edit › Unsubscribe: it asks what to do with what you
    saved. Choose Keep them: Notes still lists the article.
 8. Settings › Your data › Export notes and highlights: a Markdown file with
    all of it.

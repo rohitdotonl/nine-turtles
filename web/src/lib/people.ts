@@ -6,14 +6,13 @@
 // "feed" about them.
 //
 // A person's row stands for all their places: it links to their first place
-// (`/feeds/3`), whose list the server widens to all of them, and its count is
+// (`/people/3`), whose list the server widens to all of them, and its count is
 // their places' counts added up.
 
 import { change, plainSourceName, refused, type Notice } from "./feeds";
-import { getJson } from "./http";
 import type { Article, Feed, Person, PlaceKind } from "./shapes";
 
-export const PLACE_NAMES: Record<PlaceKind, string> = { blog: "Blog", video: "Video", newsletter: "Newsletter" };
+export const PLACE_NAMES: Record<PlaceKind, string> = { blog: "Blog", video: "Video", newsletter: "Newsletter", podcast: "Podcast" };
 
 /** A place before a join or a separation, as the server answers it, for Undo. */
 type Before = { feed: number; writer: number | null; name: string | null; folders: number[]; write_to: string | null };
@@ -119,11 +118,18 @@ export function placeLabels(places: Feed[]): OneSource {
   return (article) => (article.episode ? "Podcast" : PLACE_NAMES[places.find((place) => place.id === article.feedId)?.place ?? "blog"]);
 }
 
-/** Joins places into one person: "Add another place", or a yes to "Is this the same person?". */
-export async function join(feeds: number[], name?: string): Promise<{ refusal?: string; before: Before[] }> {
-  const { refusal, answer } = await change("/api/writers/join", name === undefined ? { feeds } : { feeds, name });
+/** Joins places into one person ("+ Add a source"), in exactly `folders` when the reader chose them. */
+export async function join(feeds: number[], name?: string, folders?: number[]): Promise<{ refusal?: string; before: Before[] }> {
+  const { refusal, answer } = await change("/api/writers/join", { feeds, ...(name === undefined ? {} : { name }), ...(folders === undefined ? {} : { folders }) });
   if (refusal) return { refusal: refused(refusal, "feed"), before: [] };
   return { before: befores(answer?.before) };
+}
+
+/** "Unsubscribe from Alpha…": every source of theirs at once. Answers the places left, for Undo. */
+export async function unsubscribeAll(feed: number, removeKept = false): Promise<{ refusal?: string; left: number[] }> {
+  const { refusal, answer } = await change("/api/writers/unsubscribe", { feed, ...(removeKept ? { remove_kept: true } : {}) });
+  if (refusal) return { refusal: refused(refusal, "feed"), left: [] };
+  return { left: Array.isArray(answer?.feeds) ? answer.feeds.map(Number) : [] };
 }
 
 /** Undo for a join or a separation. */
@@ -132,7 +138,7 @@ export async function putBack(before: Before[]): Promise<string | undefined> {
   return refusal ? refused(refusal, "feed") : undefined;
 }
 
-/** "Not the same person": one place leaves its person. */
+/** "Take out of Alpha": one source leaves its person, and stands on its own. */
 export async function separate(feed: number): Promise<{ refusal?: string; before: Before[] }> {
   const { refusal, answer } = await change("/api/writers/separate", { feed });
   if (refusal) return { refusal: refused(refusal, "feed"), before: [] };
@@ -145,28 +151,6 @@ export async function folderToPerson(folder: number): Promise<{ refusal?: string
   const numbers = (list: unknown) => (Array.isArray(list) ? list.map(Number) : []);
   if (refusal) return { refusal: refused(refusal, "folder"), before: [], rules: [], searches: [] };
   return { before: befores(answer?.before), rules: numbers(answer?.rules), searches: numbers(answer?.searches) };
-}
-
-/** The one place nine turtles would ask about, if any: "Is this the same person as …?" (decision 0146). */
-export type Same = { feed: number; name: string };
-
-export async function sameAs(feed: number): Promise<Same | undefined> {
-  try {
-    const body = await getJson(`/api/writers/same?feed=${feed}`);
-    const same = typeof body === "object" && body !== null ? (body as { same?: unknown }).same : undefined;
-    if (typeof same !== "object" || same === null) return undefined;
-    const { feed: other, name } = same as Record<string, unknown>;
-    return typeof other === "number" && typeof name === "string" ? { feed: other, name } : undefined;
-  } catch {
-    // Without a connection nine turtles simply doesn't ask.
-    return undefined;
-  }
-}
-
-/** A no to "Is this the same person?": neither place is asked about again. */
-export async function notTheSame(feeds: number[]): Promise<string | undefined> {
-  const { refusal } = await change("/api/writers/same/no", { feeds });
-  return refusal ? refused(refusal, "feed") : undefined;
 }
 
 function befores(list: unknown): Before[] {

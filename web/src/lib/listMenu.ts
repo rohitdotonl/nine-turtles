@@ -28,6 +28,8 @@ export type MenuScene = {
   savedSearch?: number;
   collection?: Collection;
   feed?: number;
+  /** The person's or publication's name, for "About Alpha". */
+  feedName?: string;
   folder?: number;
 };
 
@@ -119,7 +121,8 @@ export function listMenu(scene: MenuScene, hands: MenuHands): MenuGroup[] {
     return groups;
   }
   const { feed, folder } = scene;
-  if (feed !== undefined) groups.push({ items: [{ label: "Edit person…", shortcut: key("edit-place"), onSelect: () => hands.go({ kind: "edit-feed", id: feed }) }] });
+  // The way to their page (and from it, Edit), the same words for a person and a publication (decision 0163).
+  if (feed !== undefined) groups.push({ items: [{ label: `About ${scene.feedName ?? "them"}`, shortcut: key("about"), onSelect: () => hands.go({ kind: "about", id: feed }) }] });
   else if (folder !== undefined) groups.push({ items: [{ label: "Edit folder…", shortcut: key("edit-place"), onSelect: () => hands.go({ kind: "edit-folder", id: folder }) }] });
   return groups;
 }

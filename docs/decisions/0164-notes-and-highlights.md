@@ -1,4 +1,4 @@
-# 0163: Notes and highlights
+# 0164: Notes and highlights
 
 *3 November 2026. V1 item 8 (`docs/PLAN.md`), shaped with the owner from
 high-fidelity mockups; SPEC section 42.*

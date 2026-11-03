@@ -68,7 +68,12 @@ milestone order above.
 1. **People** ✅ built (SPEC section 36, decision 0146): one row and one
    page per person, whose places list as one. Decision 0146 lists the
    smaller choices made while the owner was away, for the refinement round;
-   the person's page gets the address to write back with item 2.
+   the person's page gets the address to write back with item 2. Its
+   refinement, **people and publications** (decision 0164, agreed with the
+   owner on 3 November 2026), is built: People and Publications in the
+   sidebar, one page for both with Edit on it, + Add, + Add a source, Take
+   out and Unsubscribe from everyone's sources with Undo, and "Is this the
+   same person?" removed.
 2. **Write back** ✅ built (SPEC section 37, decision 0147; its smaller
    choices listed there for the refinement round). A Write back button on every article opens the reader's
    own email app with the writer's address and "Re: the title" filled in.
@@ -115,7 +120,7 @@ milestone order above.
    where you met, when you last wrote), and highlights and notes on
    articles. Search finds them, filtered by person, and Your data exports
    them as Markdown. Yours alone; nothing about them is ever public. Built,
-   being tried by the owner: SPEC section 42, decision 0163.
+   being tried by the owner: SPEC section 42, decision 0164.
 9. **A feed finder that tries a few more places:** when the pasted page
    names no feed, also try the site's home page and a short list of the
    usual feed addresses (`/feed`, `/rss`, `/index.xml` and the like). Still

@@ -2,13 +2,14 @@ import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
 import { appReady, follow, signIn, tabTo } from "./screens";
 
-// SPEC section 42 (decision 0163), "How to check it", in a browser: words
+// SPEC section 42 (decision 0164), "How to check it", in a browser: words
 // chosen in an article are highlighted from the small menu beside them, a
 // note is written on the whole article with Shift+H, both show at the
 // article's end and stay after a reload; Notes appears in the sidebar and
 // lists the article with its highlight; search finds it by the note's words;
 // without a connection a highlight is still made, with the quiet line until
-// it's sent; and unsubscribing asks whether to keep what was saved.
+// it's sent; a person's page takes a note on them; and unsubscribing asks
+// whether to keep what was saved.
 
 const article = (page: Page) => page.getByRole("region", { name: "Article" });
 const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
@@ -126,14 +127,22 @@ test("unsubscribing asks whether to keep what was saved", async ({ page, isMobil
   await page.getByRole("menuitem", { name: /Highlight/ }).click();
   await expect(article(page).locator("mark.highlight")).toHaveCount(1);
 
-  await page.goto(new URL(`/feeds/${id}/edit`, FEEDS_APP).href);
+  // Their page has a private note of the reader's own.
+  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await appReady(page);
+  await page.getByRole("button", { name: "Add a note…" }).click();
+  await page.getByRole("textbox", { name: `A note on Blog ${blog}` }).fill("Met at the spring fair");
+  await page.getByRole("button", { name: "Save" }).click();
+  await expect(page.getByText("Met at the spring fair")).toBeVisible();
+
+  await page.goto(new URL(`/people/${id}/edit`, FEEDS_APP).href);
   await appReady(page);
   const unsubscribe = page.getByRole("button", { name: `Unsubscribe from Blog ${blog}` });
   await tabTo(page, unsubscribe);
   await page.keyboard.press("Enter");
   const question = page.getByRole("group", { name: `Keep what you saved from Blog ${blog}?` });
   await expect(question).toBeVisible();
-  await expect(question).toContainText("You highlighted or noted 1 of their articles.");
+  await expect(question).toContainText("You highlighted or noted 1 of their articles and wrote a note on them.");
   await expect(question.getByRole("button", { name: "Keep them" })).toBeFocused();
   await question.getByRole("button", { name: "Keep them" }).click();
   await expect(page.getByText(`Unsubscribed from Blog ${blog}`)).toBeVisible();

@@ -19,11 +19,10 @@
   import FollowPerson from "./FollowPerson.svelte";
   import ArticleView from "./ArticleView.svelte";
   import CheatSheet from "./CheatSheet.svelte";
-  import EditFeed from "./EditFeed.svelte";
   import EditFolder from "./EditFolder.svelte";
   import EmptyReading from "./EmptyReading.svelte";
-  import PersonPage from "./PersonPage.svelte";
-  import { placeLabels, placesOf, placesWatch } from "./people";
+  import WhoPage from "./WhoPage.svelte";
+  import { placeLabels, placesOf, placesWatch, rowFor } from "./people";
   import FailingLine from "./FailingLine.svelte";
   import EditSearch from "./EditSearch.svelte";
   import AddToCollection from "./AddToCollection.svelte";
@@ -55,7 +54,7 @@
   import { currentWidth, LIST_MIN, ScreenLayout, watchWidth } from "./layout.svelte";
   import { apply, load, save } from "./preferences";
   import { device } from "./appearance.svelte";
-  import { nameFor, parentOf, parse, pathFor, titleFor, type Route } from "./router";
+  import { nameFor, parentOf, parse, pathFor, placeAddressesBy, titleFor, type Route } from "./router";
   import { sharedAddress } from "./share";
   import { followTitle } from "./follow";
   import { scopeFor, scopeName, searchParams, searchedTerms } from "./search";
@@ -70,7 +69,7 @@
   import { moveArticle, nextFeed, type ArticleMove } from "./moving";
   import { isFirstVisit, newToFeedsGivesWay, welcomeFor } from "./firstVisit";
   import { startingStep, stepOf, type Screen } from "./steps";
-  import { homeFor, isList, isOver, moveTo, Opener, opensFromHere, Steps, underSheet } from "./navigation";
+  import { homeFor, isList, isOver, isWho, moveTo, Opener, opensFromHere, Steps, underSheet } from "./navigation";
   import { Keeper, keepUpToDate } from "./offline";
   import NowPlaying from "./NowPlaying.svelte";
   import { loadQueue, player } from "./player.svelte";
@@ -226,8 +225,16 @@
   /** The list's identity: a new one is loaded when it changes. */
 
   let currentFeed = $derived.by(() => {
-    const place = under.kind === "feed" ? under : route;
-    return place.kind === "feed" || place.kind === "edit-feed" ? library.feeds?.find((feed) => feed.id === place.id) : undefined;
+    const place = isWho(route) ? route : under;
+    return place.kind === "feed" || isWho(place) ? library.feeds?.find((feed) => feed.id === place.id) : undefined;
+  });
+  /** A person's or publication's page, Edit or source settings is showing (decision 0163): the reading area's, or on a phone the list's place. */
+  let whoShown = $derived(isWho(route) && currentFeed !== undefined && library.feeds !== undefined);
+  // Their addresses say person or publication (decision 0163); an old /feeds/ address is tidied to its new one.
+  $effect(() => {
+    const rows = library.rows;
+    placeAddressesBy((id) => rowFor(id, rows ?? [])?.kind === "publication");
+    if (rows && (route.kind === "feed" || isWho(route)) && location.pathname !== pathFor(route)) untrack(() => history.replaceState(history.state, "", pathFor(route)));
   });
   /** The places of the person on screen (SPEC section 36): just the place, for one on its own. */
   let currentPlaces = $derived(currentFeed && library.feeds ? placesOf(currentFeed, library.feeds) : []);
@@ -249,7 +256,6 @@
   let editing = $derived(
     (route.kind === "save-search" && searching.saving !== undefined) ||
       (route.kind === "edit-search" && currentSearch !== undefined) ||
-      (route.kind === "edit-feed" && currentFeed !== undefined) ||
       (route.kind === "edit-folder" && currentFolder !== undefined),
   );
   /** A sheet is actually showing (an edit address for a feed, folder or saved search you don't have shows none). */
@@ -299,7 +305,7 @@
   let listFound = $state("");
   /** Add a feed or "New to feeds?" is open (the `task` snippet draws them), and its title. */
   let tasking = $derived(route.kind === "add-feed" || (route.kind === "new-to-feeds" && firstVisit));
-  let taskTitle = $derived(route.kind === "add-feed" ? (shared ? followTitle(sharedName) : "Add a feed") : "New to feeds?");
+  let taskTitle = $derived(route.kind === "add-feed" ? (shared ? followTitle(sharedName) : "Add a person or publication") : "New to feeds?");
   /** The list's heading (`listHeading.ts`). */
   let headingText = $derived(headingFor({ under, placeName, missing, results: searching.shown?.scope, names: library.names }));
 
@@ -359,6 +365,7 @@
       savedSearch: under.kind === "search" ? currentSearch?.id : undefined,
       collection: currentCollection,
       feed: currentFeed?.id,
+      feedName: placeName,
       folder: currentFolder?.id,
     };
   }
@@ -616,20 +623,18 @@
     else go(home, note);
   }
 
-  /** Back from an edit page, saved or not, to the feed or folder. */
+  /** Back from Edit folder, saved or not, to the folder. */
   async function edited(saved: boolean) {
-    const id = route.kind === "edit-feed" ? route.id : undefined;
-    const pausedBefore = library.feeds?.find((feed) => feed.id === id)?.pausedAt != null;
     if (saved) await loadFeeds();
-    // Unpausing a feed puts its newest few back in Unread (SPEC section 15): the list under
-    // the sheet shows them unread at once, as the reader's own Save asked.
-    const unpaused = pausedBefore && library.feeds?.find((feed) => feed.id === id)?.pausedAt == null;
-    if (unpaused) queueMicrotask(() => void itemList?.refresh());
     // On a phone the edit page is a step on from its list: go back that step.
     if (phone && steps.cameFrom("list")) steps.goBack();
     else if (sheetShown) steps.closeSheet();
-    else if (route.kind === "edit-feed") openFeed(route.id);
     else if (route.kind === "edit-folder") go({ kind: "folder", id: route.id });
+  }
+
+  /** Escape on a person's page goes back to their list; on Edit, to the page; on a source's settings, to Edit. */
+  function whoBack() {
+    if (isWho(route)) go({ kind: route.kind === "about" ? "feed" : route.kind === "edit-feed" ? "about" : "edit-feed", id: route.id });
   }
 
   /** Back from "Save search" or "Edit saved search", saved or not. A new saved search opens. */
@@ -736,7 +741,7 @@
   async function feedMoved(before: number, after: number, heading: () => HTMLHeadingElement | undefined) {
     if (after !== before) movedFeed = { from: before, to: after };
     await library.loadFeeds(() => {
-      if (after !== before) go(route.kind === "edit-feed" ? { kind: "edit-feed", id: after } : { kind: "feed", id: after });
+      if (after !== before) go(isWho(route) ? { kind: route.kind === "about" ? "about" : "edit-feed", id: library.rowOf(after) } : { kind: "feed", id: after });
     });
     await tick();
     heading()?.focus();
@@ -952,7 +957,8 @@
   function escape() {
     if (parentOf(route)) closeHealth();
     else if (route.kind === "settings" || route.kind === "add-feed" || route.kind === "new-to-feeds") closePage();
-    else if (route.kind === "edit-feed" || route.kind === "edit-folder") edited(false);
+    else if (route.kind === "edit-folder") edited(false);
+    else if (isWho(route)) whoBack();
     else if (route.kind === "save-search" || route.kind === "edit-search") searchSaved();
     else if (reading || (selected && inArticle())) backToList();
     else if (route.kind === "search" ? tweaked || document.activeElement?.closest("search") : searching.open || document.activeElement?.closest("search"))
@@ -1023,6 +1029,7 @@
     onSearch={toggleSearch}
     menu={() => listMenu(menuScene(), menuHands)}
     bind:heading={headings.list}
+    onAbout={currentFeed && under.kind === "feed" && !searching.shown && !missing ? () => go({ kind: "about", id: currentFeed!.id }) : undefined}
   />
 {/snippet}
 
@@ -1211,6 +1218,8 @@
         <ReadersPage bind:heading={headings.readers} onClose={closeHealth} besideToggle={!phone && !panes.sidebar} />
       {:else if !sheet && editing}
         {@render editor(false)}
+      {:else if whoShown && phone}
+        {@render who()}
       {:else if !sheet && tasking}
         <!-- Keyed as the sheet is, so one task following the other gets a fresh page. -->
         {#key route.kind}
@@ -1224,7 +1233,7 @@
             <div class="page-sheet-card">
               <PageHead title={taskTitle} bind:heading={headings.list} besideToggle={false} onClose={closePage} closeLabel="Close" />
               <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
-                <!-- 20px under the top line as Settings is: Add a feed's line on what to paste, the field, then Add feed the full width at the screen's foot. -->
+                <!-- 20px under the top line as Settings is: + Add's line on what to paste, the field, then Add the full width at the screen's foot. -->
                 <div class="mx-auto flex w-full max-w-xl flex-1 flex-col gap-5">
                   {@render task(false)}
                 </div>
@@ -1369,7 +1378,9 @@
         {#if panes.article}
           <!-- The reading area; with the list hidden, the list's button waits at the start of its top line. -->
           <div class="flex min-w-0 flex-1">
-          {#if selected}
+          {#if whoShown && !phone}
+            {@render who()}
+          {:else if selected}
             <ArticleView
               bind:this={articleView}
               article={selected} {library}
@@ -1396,8 +1407,6 @@
             <section aria-labelledby="welcome-heading" class="flex min-w-0 flex-1 flex-col items-center justify-center bg-paper px-5 pb-[12vh] md:px-10">
               {@render welcome(false)}
             </section>
-          {:else if under.kind === "feed" && currentFeed && library.feeds && !missing && !searching.shown}
-            <PersonPage feed={currentFeed} {library} {listCount} {tipSeen} onEdit={() => go({ kind: "edit-feed", id: currentFeed!.id })} onJoined={(done, lead) => go({ kind: "feed", id: lead }, done)} />
           {:else}
             <EmptyReading {listCount} missing={missing !== undefined} {tipSeen} />
           {/if}
@@ -1457,30 +1466,20 @@
   {/if}
 {/snippet}
 
+<!-- A person's or publication's page, Edit or source settings (decision 0163): beside their list, or on a phone in its place. -->
+{#snippet who()}
+  {#if isWho(route) && currentFeed}
+    {#key editKey(currentFeed.id)}
+      <WhoPage route={route} feed={currentFeed} {library} {river} {phone} bind:heading={headings.who} {go} onUnsubscribe={(removeKept) => unsubscribeFrom(currentFeed!, removeKept)} onAddRule={addRuleFor} onMoved={(source, after) => feedMoved(source.id, after.id, () => headings.who)} onSaved={() => itemList?.refresh()} />
+    {/key}
+  {/if}
+{/snippet}
+
 <!-- The edit screens, drawn once for both places: a sheet over the screen, or on a phone a page in the list's place. -->
 {#snippet editor(inSheet: boolean)}
   {@const at = inSheet ? "sheet" : "list"}
   {@const besideToggle = !inSheet && !phone && !panes.sidebar}
-  {#if route.kind === "edit-feed" && currentFeed}
-    {#key editKey(currentFeed.id)}
-      <EditFeed
-        sheet={inSheet}
-        feed={currentFeed}
-        folders={library.folders}
-        bind:heading={headings[at]}
-        {besideToggle}
-        {river}
-        onSaved={() => edited(true)}
-        onCancel={() => edited(false)}
-        onUnsubscribe={(removeKept) => unsubscribeFrom(currentFeed!, removeKept)}
-        {library}
-        onPeople={(done, lead) => go({ kind: "feed", id: lead }, done)}
-        onPlace={(id) => go({ kind: "edit-feed", id })}
-        onAddRule={() => addRuleFor(currentFeed!)}
-        onMoved={(after) => feedMoved(currentFeed!.id, after.id, () => headings[at])}
-      />
-    {/key}
-  {:else if route.kind === "edit-folder" && currentFolder}
+  {#if route.kind === "edit-folder" && currentFolder}
     {#key currentFolder.id}
       <EditFolder
         sheet={inSheet}

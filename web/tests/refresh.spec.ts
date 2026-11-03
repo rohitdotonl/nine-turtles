@@ -18,7 +18,7 @@ async function openBlog(page: Page): Promise<string> {
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
-  await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
   await appReady(page);
   await expect(row(page, NEWEST)).toBeVisible();
   return name;
@@ -83,7 +83,7 @@ test("on a phone, the note offers Show, which shows new items; Refresh in the Mo
   await expect(show).toHaveCount(0);
   // Refresh is in the list's More (…) menu, the same as r.
   await page.getByRole("button", { name: "More", exact: true }).click();
-  await page.getByRole("menuitem", { name: "Refresh" }).click();
+  await page.getByRole("menuitem", { name: "Refresh", exact: true }).click();
   await expect(row(page, NEW_ARTICLE)).toBeVisible();
 });
 
