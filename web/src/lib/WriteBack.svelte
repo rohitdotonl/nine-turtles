@@ -101,7 +101,7 @@
       <form class="ask flex flex-col gap-4" aria-labelledby="write-back-title" onsubmit={write}>
         <div class="flex flex-col gap-1">
           <p id="write-back-title" class="text-base font-semibold text-ink">Write back to {name}</p>
-          <p class="text-small text-ink-2">nine turtles doesn't know their email address yet. {#if site}Many writers give it on their site, often on an About or Contact page.{" "}{/if}Paste it here once and it's kept on their page. Your own email app sends what you write; nine turtles never sends or reads it.</p>
+          <p class="text-small text-ink-2">nine turtles doesn't have their address yet. {#if site}Writers often give it on an About or Contact page; paste it here once and it's kept.{:else}Paste it here once and it's kept.{/if}</p>
         </div>
         {#if site}
           <a class="btn self-start" href={site} target="_blank" rel="noopener noreferrer"><Icon name="open" size={16} />Find it on their site<span class="sr-only"> (opens in a new tab)</span></a>
@@ -129,6 +129,7 @@
           <button type="submit" class="btn-primary" aria-disabled={busy}>Write back</button>
           <button type="button" class="btn-quiet" onclick={notNow}>Not now</button>
         </div>
+        <p class="text-small text-ink-2">Sends from your own email. nine turtles never reads it.</p>
       </form>
     {:else if address}
       <a class="btn" bind:this={written} href={writeBackLink(address, article.title)}>Write back to {name}</a>

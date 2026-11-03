@@ -38,14 +38,15 @@ V1, item 2). Its look gets a refinement round.*
   the next new article nine turtles fetches; a newsletter's with its next
   email.
 - **When nine turtles doesn't know it,** Write back opens a quiet bordered
-  box in place, as + Add a source does: "Write back to Alpha", a line
-  saying nine turtles doesn't know their address yet, that many writers
-  give it on their site (often an About or Contact page), that it's kept on
-  their page once pasted, and that your own email app sends what you write;
+  box in place, as + Add a source does: "Write back to Alpha", and one
+  short line, "nine turtles doesn't have their address yet. Writers often
+  give it on an About or Contact page; paste it here once and it's kept.";
   then **Find it on their site** (an everyday button that opens their
   website, the one their feed names or else their article's home page, in a
-  new tab; left out, with the line about it, when nine turtles knows
-  neither), **Their email address**, **Write back** and **Not now**. The
+  new tab; left out, with the line's middle, when nine turtles knows
+  neither), **Their email address**, **Write back** and **Not now**, and
+  under them, quietly, "Sends from your own email. nine turtles never reads
+  it." The
   keyboard starts on the field; Not now puts it back on the button.
   Something that isn't one address ("ivy at home", two addresses) is refused
   in oxblood words, keeping what you typed. Write back opens your email app
