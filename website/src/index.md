@@ -42,7 +42,7 @@ description: "A letter from Rohit, who makes nine turtles: a quiet place to read
   </div>
 </div>
 
-<p>It ends when you've read what's there, and there's nothing to check. It's built on RSS, the open standard, so your list is always yours, and you can take it, and everything you kept, with you.</p>
+<p>It ends when you've read what's there, and there's nothing to check. It's built on RSS, the open standard, so your list is always yours, and everything you keep goes with you if you leave.</p>
 
 <p>You can start reading today. When I set a price, it will be on the <a href="/pricing/">Pricing</a> page before anyone pays. That's what will keep nine turtles running, and keep it mine to answer for.</p>
 
