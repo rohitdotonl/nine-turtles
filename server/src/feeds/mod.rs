@@ -151,10 +151,11 @@ async fn list_feeds(SignedIn(person): SignedIn, State(state): State<AppState>) -
             .bind(person)
             .fetch_all(&mut *transaction)
             .await?;
-        let notes: bool = sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM notes WHERE person_id = ?)")
-            .bind(person)
-            .fetch_one(&mut *transaction)
-            .await?;
+        let notes: bool =
+            sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM notes WHERE person_id = ?)")
+                .bind(person)
+                .fetch_one(&mut *transaction)
+                .await?;
         transaction.commit().await?;
         let mut by_feed = std::collections::HashMap::<i64, Vec<i64>>::new();
         for (feed, folder) in memberships {
