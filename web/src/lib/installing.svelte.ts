@@ -28,11 +28,21 @@ export function listenForInstall(): void {
   });
 }
 
-/** Shows the browser's own Install dialog; the offer can be used once either way. */
-export async function install(): Promise<void> {
+/**
+ * Shows the browser's own Install dialog and says what the reader chose; the
+ * offer can be used once either way. "failed" when the browser refuses to show it.
+ */
+export async function install(): Promise<"accepted" | "dismissed" | "failed"> {
   const offer = installing.offer;
-  if (!offer) return;
-  installing.offer = undefined;
-  await offer.prompt();
-  if ((await offer.userChoice).outcome === "accepted") installing.justInstalled = true;
+  if (!offer) return "failed";
+  try {
+    await offer.prompt();
+    const { outcome } = await offer.userChoice;
+    if (outcome === "accepted") installing.justInstalled = true;
+    return outcome;
+  } catch {
+    return "failed";
+  } finally {
+    installing.offer = undefined;
+  }
 }

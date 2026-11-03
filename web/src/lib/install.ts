@@ -49,12 +49,12 @@ export const GUIDES: Record<Device, Guide> = {
       "If it isn't there, open the menu (⋮), then Cast, save and share, then Install page as app.",
       "Click Install.",
     ],
-    foot: "nine turtles opens in its own window, from your Dock, Start menu or apps.",
+    foot: "nine turtles opens in its own window, from your apps.",
   },
   edge: {
     where: "computer, in Edge",
     steps: ["Open the menu (…) at the top right, then Apps, then Install this site as an app.", "Click Install."],
-    foot: "nine turtles opens in its own window, from your Start menu, taskbar or apps.",
+    foot: "nine turtles opens in its own window, from your apps.",
   },
   firefox: {
     where: "computer, in Firefox",

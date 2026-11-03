@@ -225,6 +225,7 @@ export const SCREENS: Screen[] = [
   { name: "settings", path: "/settings", signedIn: true, library: true },
   // One of Settings' own pages (decision 0120): the sample, Theme, Reading font and Line width.
   { name: "settings-font", path: "/settings/font", signedIn: true, library: true },
+  { name: "settings-install", path: "/settings/install", signedIn: true, library: true },
   {
     // Settings › Connected assistants with one assistant and a feed it unsubscribed from
     // (SPEC section 33). The list is answered here, so no feed is really unsubscribed.

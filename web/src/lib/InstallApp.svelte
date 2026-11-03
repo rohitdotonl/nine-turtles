@@ -6,6 +6,7 @@
   other devices. In the installed app itself it says so instead of the steps.
 -->
 <script lang="ts">
+  import { tick } from "svelte";
   import Icon from "./Icon.svelte";
   import { GUIDES, deviceOf, otherDevices } from "./install";
   import { install, installing, runningInstalled } from "./installing.svelte";
@@ -13,6 +14,19 @@
   const device = deviceOf(navigator);
   const guide = GUIDES[device];
   const here = runningInstalled();
+  /** What came of pressing Install nine turtles, when it didn't install. */
+  let message = $state("");
+  const said = $derived(installing.justInstalled ? "Installed. Open nine turtles from its icon." : message);
+  /** Where the keyboard goes once the pressed button is gone. */
+  let answer: HTMLParagraphElement | undefined = $state();
+
+  async function press() {
+    const outcome = await install();
+    if (outcome === "dismissed") message = "Not installed. The steps below still work, any time.";
+    if (outcome === "failed") message = "Your browser didn't open its Install. Follow the steps below instead.";
+    await tick();
+    answer?.focus();
+  }
 </script>
 
 <section aria-labelledby="install-heading" class="flex flex-col gap-8">
@@ -24,20 +38,18 @@
 
   <div>
     <h4 class="inset-head">{here || installing.justInstalled ? "This device" : `On this ${guide.where}`}</h4>
+    <!-- Always here, so screen readers hear it the moment it's filled in. -->
+    <p bind:this={answer} tabindex="-1" role="status" class={said ? "inset-group inset-row done" : "sr-only"}>
+      {#if installing.justInstalled}<span class="text-muted"><Icon name="check" size={18} /></span>{/if}<span class="min-w-0">{said}</span>
+    </p>
     {#if here}
       <p class="inset-group inset-row done">
         <span class="text-muted"><Icon name="check" size={18} /></span><span class="min-w-0">You're using the installed app now.</span>
       </p>
-    {:else if installing.justInstalled}
-      <p class="inset-group inset-row done" role="status">
-        <span class="text-muted"><Icon name="check" size={18} /></span><span class="min-w-0"
-          >Installed. Open nine turtles from its icon.</span
-        >
-      </p>
-    {:else}
+    {:else if !installing.justInstalled}
       {#if installing.offer}
-        <div class="inset-group install-offer">
-          <button type="button" class="inset-row inset-action" onclick={install}>Install nine turtles</button>
+        <div class="inset-group">
+          <button type="button" class="inset-row inset-action" onclick={press}>Install nine turtles</button>
         </div>
         <p class="inset-foot">Your browser asks once more before it installs. Or, step by step:</p>
       {/if}
@@ -80,6 +92,10 @@
   }
   .done {
     align-items: center;
+    margin-bottom: 0.5rem;
+  }
+  .done:last-child {
+    margin-bottom: 0;
   }
   .number {
     flex: none;

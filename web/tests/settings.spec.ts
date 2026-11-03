@@ -188,24 +188,39 @@ test("Install the app says what an installed app is, then the steps for this dev
   const phone = testInfo.project.name === "phone";
   await expect(page.getByRole("heading", { level: 4, name: phone ? "On this Android phone" : "On this computer, in Chrome" })).toBeVisible();
   const install = page.locator('section[aria-labelledby="install-heading"]');
-  const steps = install.getByRole("list").first().getByRole("listitem");
+  // The numbered steps are the page's one ordered list.
+  const steps = install.locator("ol").getByRole("listitem");
   await expect(steps).toHaveCount(3);
   await expect(steps.last()).toHaveText(phone ? "3Tap Install." : "3Click Install.");
-  const others = install.getByRole("list").last().getByRole("listitem");
+  const others = install.locator("ul").getByRole("listitem");
   await expect(others).toHaveCount(3);
   await expect(others.first()).toContainText("iPhone and iPad");
 
   // When the browser offers to install, one press shows its own dialog, and the page then says it's done.
-  await page.evaluate(() => {
-    const offer = Object.assign(new Event("beforeinstallprompt", { cancelable: true }), {
-      prompt: async () => {},
-      userChoice: Promise.resolve({ outcome: "accepted" }),
-    });
-    dispatchEvent(offer);
-  });
-  await page.getByRole("button", { name: "Install nine turtles" }).click();
-  await expect(page.getByRole("status").filter({ hasText: "Installed. Open nine turtles from its icon." })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Install nine turtles" })).toHaveCount(0);
+  const offer = (outcome: string) =>
+    page.evaluate((outcome) => {
+      const event = Object.assign(new Event("beforeinstallprompt", { cancelable: true }), {
+        prompt: async () => {},
+        userChoice: Promise.resolve({ outcome }),
+      });
+      dispatchEvent(event);
+    }, outcome);
+  // Said no: the button goes (the browser offers once), the page says so, and the keyboard lands on those words.
+  await offer("dismissed");
+  const button = page.getByRole("button", { name: "Install nine turtles" });
+  await button.focus();
+  await page.keyboard.press("Enter");
+  const answer = page.getByRole("status").filter({ hasText: "Not installed. The steps below still work, any time." });
+  await expect(answer).toBeFocused();
+  await expect(button).toHaveCount(0);
+  await expect(steps).toHaveCount(3);
+  // Said yes, by keyboard too: the steps give way to "Installed."
+  await offer("accepted");
+  await button.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("status").filter({ hasText: "Installed. Open nine turtles from its icon." })).toBeFocused();
+  await expect(button).toHaveCount(0);
+  await expect(steps).toHaveCount(0);
 });
 
 test("in the installed app, Install the app says it's installed instead of the steps", async ({ page }) => {
