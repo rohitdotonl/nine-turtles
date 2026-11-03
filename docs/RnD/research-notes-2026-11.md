@@ -20,9 +20,10 @@ is decided.
 
 Done on 3 November 2026 by a research agent: the findings, with sources and
 how sure each estimate is, are in
-[`research-errands-2026-11.md`](research-errands-2026-11.md). Still to check
-by hand: Feedbro's Chrome install count, how zacusca filters, and how big
-the Mastodon, Lemmy and Bluesky feed communities really are.
+[`research-errands-2026-11.md`](research-errands-2026-11.md). Rohit kept
+only its parts on Bubbles, NewsBlur popular, communities and new uses of
+RSS. Still to check by hand: how big the Mastodon, Lemmy and Bluesky feed
+communities really are.
 
 ## 2. Rivals and tools to study
 

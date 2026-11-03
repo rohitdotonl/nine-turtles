@@ -20,9 +20,9 @@ idea here that changes the app needs the owner's yes first.
   left is still open: rivals to study,
   website inspiration and readers' own words.
 - [`research-errands-2026-11.md`](research-errands-2026-11.md): the notes'
-  research errands, answered by a research agent on 3 November 2026
-  (Feedbro, feed-tool traffic, Play Store readers, communities, new uses
-  of RSS). Estimates are marked with how sure they are.
+  research errands, answered by a research agent on 3 November 2026:
+  Bubbles and NewsBlur popular, feed-reader communities, new uses of RSS,
+  and what it means for nine turtles.
 
 ## Positioning (decided 1 November 2026)
 
