@@ -174,8 +174,12 @@ export class ScreenLayout {
     if (this.width === "medium" && this.panes.sidebar) this.sidebarChoice = "hidden";
   }
 
+  /** The reader has gone somewhere since the screen opened (every move passes through `showHome`). */
+  moved = false;
+
   /** On a phone, shows the feeds (the home screen) or whatever was chosen in their place. Elsewhere nothing changes. */
   showHome(home: boolean) {
+    this.moved = true;
     if (this.phone) this.sidebarChoice = home ? "shown" : "hidden";
   }
 
