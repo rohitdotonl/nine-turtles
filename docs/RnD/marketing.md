@@ -5,7 +5,8 @@ building on [`positioning.md`](positioning.md) and
 [`ideal-reader.md`](ideal-reader.md). The plan below is decided; the rest is
 material to draw on. This is the one place for marketing: it replaces the
 marketing parts of the October research (deleted 1 November) and of
-[`strategy-notes.md`](strategy-notes.md).
+Rohit's strategy notes (now in [`business-plan.md`](business-plan.md) →
+"Rohit's strategy notes").
 
 ## The plan (decided 2 November 2026)
 
@@ -156,7 +157,7 @@ Precedent: Derek Sivers' CD Baby email.
 
 ### What limits the research
 
-- **AI in the making:** the firm no in `strategy-notes.md` rules out the
+- **AI in the making:** the firm no in `business-plan.md` → "Firm noes" rules out the
   research's "built with agents" essay and the podcasts and pitches that
   went with it.
 - **All rights reserved** (decision 0129): directories that need open
