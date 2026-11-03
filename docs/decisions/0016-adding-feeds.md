@@ -11,6 +11,8 @@ never guesses other addresses (`/feed`, `/rss.xml`). It's still never done in
 the background, and still never for an article's text. `AGENTS.md` and
 `ENGINEERING.md` were reworded to match. (Since 27 October 2026, a page the
 reader shares into nine turtles counts as pasted too: decisions 0104 and 0138.)
+(Since 3 November 2026, a pasted page naming no feed also tries a few usual
+places, so "never guesses other addresses" no longer holds: decision 0163.)
 
 **Removing a feed stays in Milestone 9,** as planned (the owner's choice).
 Removing needs an undo, which Milestone 9 builds; test feeds added before

@@ -8,6 +8,8 @@ import { appReady, follow, signIn, tabTo } from "./screens";
 
 const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
 const field = (page: Page) => page.getByLabel("Paste a website or feed URL");
+// The made-up publisher asked for as localhost: a site with no feed anywhere (tests/feed-server.mjs).
+const NO_FEED_SITE = FEED_SITE.replace("127.0.0.1", "localhost");
 
 async function openApp(page: Page, path: string, base = FEEDS_APP) {
   await page.setViewportSize({ width: 1280, height: 800 });
@@ -356,6 +358,9 @@ test("a site with several feeds offers a choice", async ({ page }) => {
   // A choice of one: radio buttons, the first chosen, each row ending in a round mark that shows
   // the choice by its dot, never by a tint alone (decision 0049).
   const choices = page.getByRole("radiogroup", { name: "Feeds on this site" });
+  // Each row says what's inside (its newest title, how often it posts) and its address as a person says it (decision 0163).
+  await expect(choices).toContainText("/blog/");
+  await expect(choices).not.toContainText("http://");
   const [first, comments] = [choices.getByRole("radio").first(), choices.getByRole("radio", { name: /^Comments/ })];
   await expect(first).toBeChecked();
   await expect(comments).not.toBeChecked();
@@ -371,9 +376,9 @@ test("a site with several feeds offers a choice", async ({ page }) => {
 
 test("a page without a feed gets a calm, plain message", async ({ page }) => {
   await openApp(page, "/add-feed");
-  await field(page).fill(`${FEED_SITE}/plain/`);
+  await field(page).fill(`${NO_FEED_SITE}/plain/`);
   await page.keyboard.press("Enter");
-  await expect(page.locator("#feed-address-status")).toHaveText("This site doesn't seem to offer a feed. Try the feed's own address, or the site's home page.");
+  await expect(page.locator("#feed-address-status")).toHaveText("This site doesn't seem to offer a feed, on this page or in the usual places. If you know the feed's own address, paste that.");
   // The field is marked as refused, for screen readers and by its red edge.
   await expect(field(page)).toHaveAttribute("aria-invalid", "true");
   // While the keyboard is in it, the focus line takes the edge's place: one line, never a red edge inside a ring (decision 0042).
@@ -404,12 +409,12 @@ test("changing the address after a choice of feeds takes the old choices away", 
   await expect(field(page)).toHaveAttribute("aria-invalid", "true");
   await page.unroute("**/api/feeds");
   // They belong to the old address: typing another one clears them and all that was said, red edge included, and Add feed looks again.
-  await field(page).fill(`${FEED_SITE}/plain/`);
+  await field(page).fill(`${NO_FEED_SITE}/plain/`);
   await expect(choices).toHaveCount(0);
   await expect(page.locator("#feed-address-status")).toHaveText("");
   await expect(field(page)).not.toHaveAttribute("aria-invalid", "true");
   await page.keyboard.press("Enter");
-  await expect(page.locator("#feed-address-status")).toHaveText("This site doesn't seem to offer a feed. Try the feed's own address, or the site's home page.");
+  await expect(page.locator("#feed-address-status")).toHaveText("This site doesn't seem to offer a feed, on this page or in the usual places. If you know the feed's own address, paste that.");
 });
 
 test("without a connection, adding says so without marking the address as wrong", async ({ page, context }) => {

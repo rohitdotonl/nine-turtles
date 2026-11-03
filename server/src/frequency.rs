@@ -181,6 +181,28 @@ pub fn words(posting: Posting, now: i64) -> String {
     }
 }
 
+/// How often a feed nine turtles hasn't stored posts, from the dates its
+/// articles give (a site's several feeds, when the reader chooses one,
+/// SPEC section 3); `None` if none is dated. A date in the future counts as
+/// now, as it does for stored articles.
+pub fn of_dates(dates: impl Iterator<Item = i64>, now: i64) -> Option<String> {
+    let dates: Vec<i64> = dates.map(|date| date.min(now)).collect();
+    let posting = Posting {
+        newest: Some(*dates.iter().max()?),
+        oldest: dates.iter().min().copied(),
+        some: i64::try_from(dates.len()).unwrap_or(i64::MAX).min(FEWEST),
+        recent: i64::try_from(
+            dates
+                .iter()
+                .filter(|date| **date > now - WINDOW_DAYS * DAY)
+                .count(),
+        )
+        .unwrap_or(i64::MAX),
+        added: now,
+    };
+    Some(words(posting, now))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -280,5 +302,21 @@ mod tests {
         assert_eq!(empty(130), "Hasn't posted in 4 months");
         // Emptied by the yearly clean-up: nothing arrived in the last year.
         assert_eq!(empty(900), "Hasn't posted in over a year");
+    }
+
+    #[test]
+    fn a_feed_not_stored_is_told_from_its_dates() {
+        let week = 7 * DAY;
+        let dates = (0..26).map(|weeks| NOW - weeks * week / 2);
+        assert_eq!(
+            of_dates(dates, NOW).as_deref(),
+            Some("Posts about twice a week")
+        );
+        assert_eq!(of_dates(std::iter::empty(), NOW), None);
+        let old = [NOW - 400 * DAY, NOW - 500 * DAY, NOW - 600 * DAY];
+        assert_eq!(
+            of_dates(old.into_iter(), NOW).as_deref(),
+            Some("Hasn't posted in over a year")
+        );
     }
 }

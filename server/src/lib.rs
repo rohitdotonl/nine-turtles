@@ -41,6 +41,7 @@ pub mod frequency;
 pub mod greader;
 pub mod health;
 pub mod log;
+pub mod lookup;
 pub mod marks;
 pub mod mcp;
 pub mod newsletter;
@@ -110,6 +111,9 @@ pub struct AppState {
     pub sign_ups: Arc<Mutex<sign_up::SignUpTries>>,
     /// The website's feed finder: its remembered answers and its limits.
     pub finder: Arc<finder::Finder>,
+    /// Feeds just looked at for a reader choosing among a site's several
+    /// (`lookup`), so following the chosen one needn't fetch it again.
+    pub looked: Arc<lookup::Recent>,
     pub wrong_passwords: Arc<AtomicU64>,
     /// Seconds since 1970 (UTC) when this run of nine turtles started.
     pub started_at: i64,
@@ -194,6 +198,7 @@ pub async fn state(config: Config) -> Result<AppState, String> {
         password_checks: Arc::default(),
         sign_ups: Arc::default(),
         finder: Arc::default(),
+        looked: Arc::default(),
         wrong_passwords: Arc::default(),
         started_at: now(),
         last_round: Arc::default(),

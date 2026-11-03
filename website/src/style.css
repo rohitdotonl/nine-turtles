@@ -496,15 +496,24 @@ h1 + .byline {
 .feed-title {
   font-weight: 600;
 }
+.feed-about {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.feed-latest {
+  font-family: var(--serif);
+  color: var(--ink-2);
+}
+.feed-posting,
 .feed-url {
-  grid-column: 1;
   color: var(--ink-2);
   font-size: 0.875rem;
   overflow-wrap: anywhere;
 }
 .feed-list .copy {
   grid-column: 2;
-  grid-row: 1 / span 2;
 }
 .preview {
   margin: 0;

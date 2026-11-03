@@ -6,7 +6,10 @@
 //   /                  Quiet Notes' home page, naming /feed.xml (60 articles)
 //   /garden/           Garden Letters' home page, naming /garden.xml
 //   /two/              a page naming two feeds, so the reader chooses
-//   /plain/            a page naming no feed
+//   /plain/            a page naming no feed. Asked for as localhost (not
+//                      127.0.0.1), it is the only page there: the site's
+//                      home page and the usual feed addresses aren't there,
+//                      so nine turtles finds no feed anywhere (decision 0163)
 //   /reading/          Reading Room's home page, naming /reading.xml: one
 //                      full article (headings, a quote, code, a table, an
 //                      image and a tracking image), one summary only, and
@@ -352,6 +355,11 @@ createServer((request, response) => {
   const html = (body) => send("text/html; charset=utf-8", body);
   const xml = (body) => send("application/rss+xml", body);
 
+  if (request.headers.host?.startsWith("localhost")) {
+    if (path === "/plain/") return html(page("Just a page", []));
+    response.writeHead(404);
+    return response.end();
+  }
   if (path === "/") return html(page("Quiet Notes", [["Quiet Notes", "/feed.xml"]]));
   if (path === "/feed.xml") return xml(rss("Quiet Notes", "https://quiet-notes.example/", 60));
   if (path === "/garden/") return html(page("Garden Letters", [["Garden Letters", "/garden.xml"]]));

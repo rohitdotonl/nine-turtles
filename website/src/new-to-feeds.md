@@ -62,7 +62,8 @@ The web is full of personal sites worth following. A few ways to find them:
 
 1. Press **Add feed** and paste a website's address.
 2. If the site offers more than one feed (say, articles and comments),
-   choose the one you want.
+   choose the one you want: each shows its newest title and how often it
+   posts.
 3. Its newest articles appear in your list. Read, star the ones worth
    keeping, and close it when you're done.
 

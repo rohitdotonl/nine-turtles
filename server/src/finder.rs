@@ -2,10 +2,10 @@
 //! signed in or not, gives the address of a site and gets back the feeds the
 //! page names, with the newest few titles of the first one.
 //!
-//! It follows the same rules as adding a feed (decision 0016): it fetches the
-//! one page given, reads the `<link rel="alternate">` lines it names, and
-//! never guesses other addresses or fetches an article's page. It then
-//! fetches the first feed once, for the preview.
+//! It looks exactly as adding a feed does (`lookup`, decisions 0016 and
+//! 0163): the page given, a few usual places if it names no feed, and each
+//! of a site's several feeds once, never an article's page. The first feed
+//! gives the preview.
 //!
 //! Nothing about who asked is kept or written to the log. An answer is
 //! remembered in memory for half an hour (a failure for five minutes), and
@@ -33,7 +33,10 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tokio::sync::Semaphore;
 
-use crate::{AppState, discover, feed, feeds, fetch};
+use crate::{
+    AppState, feed, feeds, fetch,
+    lookup::{self, Choice, Looked, NotFound},
+};
 
 /// The website, the only other site whose pages a browser lets read the
 /// finder's answers ("cross-origin resource sharing"). This stops other
@@ -50,8 +53,9 @@ const PER_MINUTE: usize = 60;
 const REMEMBERED_FOR: Duration = Duration::from_secs(30 * 60);
 const FAILURE_REMEMBERED_FOR: Duration = Duration::from_secs(5 * 60);
 const REMEMBERED_MOST: usize = 500;
-/// Lookups that may fetch from one site (its host name) in `REMEMBERED_FOR`,
-/// each fetching at most two files (the page and its first feed).
+/// Lookups that may fetch from one site (its host name) in `REMEMBERED_FOR`.
+/// Each fetches the page, then at most ten other places if it names no feed
+/// and at most ten feeds if it names several, one at a time; most fetch two.
 const PER_SITE: usize = 6;
 /// The longest article title shown in the preview.
 const LONGEST_TITLE: usize = 300;
@@ -180,6 +184,10 @@ pub struct Found {
 struct FeedLink {
     title: String,
     url: String,
+    /// How often it posts, when the site has several (`lookup`).
+    posting: Option<String>,
+    /// Its newest title, when the site has several.
+    latest: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -287,39 +295,55 @@ fn answered(answer: Answer) -> Result<Found, Problem> {
     }
 }
 
-/// Fetches the page given and, if it's a web page naming feeds, the first
-/// of them, for the preview.
+/// Looks the address up as Add feed does (`lookup`): a feed is its own
+/// answer; for a site with several, each is looked at once, and the first
+/// gives the preview.
 async fn look(state: &AppState, url: &Url) -> Result<Answer, Problem> {
-    let local = state.config.local_feeds_allowed;
-    let fetched = fetch::get(&state.http, url, local).await?;
-
-    if let Some(parsed) = feed::parse(&fetched.body, &fetched.final_url) {
-        // The address given is a feed itself.
-        let link = FeedLink {
-            title: parsed.title.chars().take(LONGEST_TITLE).collect(),
-            url: fetched.lasting_url.to_string(),
-        };
-        return Ok(Answer::Found(Found {
-            feeds: vec![link],
-            preview: Some(preview(parsed)),
-        }));
-    }
-
-    let page = String::from_utf8_lossy(&fetched.body);
-    let found = discover::feeds_in(&page, &fetched.final_url);
-    let Some(first) = found.first() else {
-        return Ok(Answer::Problem(Problem::NoFeed));
+    let choices = match lookup::look(state, url, true).await {
+        Ok(Looked::Feed(fetched, parsed)) => {
+            let link = FeedLink {
+                title: parsed.title.chars().take(LONGEST_TITLE).collect(),
+                url: fetched.lasting_url.to_string(),
+                posting: None,
+                latest: None,
+            };
+            return Ok(Answer::Found(Found {
+                feeds: vec![link],
+                preview: Some(preview(*parsed)),
+            }));
+        }
+        Ok(Looked::Feeds(choices)) => choices,
+        Err(NotFound::NoFeed) => return Ok(Answer::Problem(Problem::NoFeed)),
+        Err(NotFound::Fetch(error)) => return Err(error.into()),
     };
     // A preview that can't be made isn't a failure: the addresses still help.
-    let preview = match fetch::get(&state.http, &first.url, local).await {
-        Ok(fetched) => feed::parse(&fetched.body, &fetched.final_url).map(preview),
-        Err(_) => None,
+    let preview = match choices.first() {
+        Some(Choice {
+            fetched: Some(fetched),
+            ..
+        }) => feed::parse(&fetched.body, &fetched.final_url).map(preview),
+        Some(first) => match fetch::get(
+            &state.http,
+            &first.found.url,
+            state.config.local_feeds_allowed,
+        )
+        .await
+        {
+            Ok(fetched) => feed::parse(&fetched.body, &fetched.final_url).map(preview),
+            Err(_) => None,
+        },
+        None => None,
     };
-    let feeds = found
+    let feeds = choices
         .into_iter()
-        .map(|found| FeedLink {
-            title: found.title,
-            url: found.url.to_string(),
+        .map(|choice| {
+            let inside = choice.inside.unwrap_or_default();
+            FeedLink {
+                title: choice.found.title,
+                url: choice.found.url.to_string(),
+                posting: inside.posting,
+                latest: inside.latest,
+            }
         })
         .collect();
     Ok(Answer::Found(Found { feeds, preview }))
