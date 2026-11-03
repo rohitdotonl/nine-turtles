@@ -179,6 +179,14 @@ async fn edit_feed(
             return Ok(None);
         }
         crate::writers::rename_place(&mut transaction, person, id, &title).await?;
+        // The switches as they were, so only one just turned on brings anything in.
+        let before: (bool, bool) = sqlx::query_as(
+            "SELECT shorts, live_streams FROM subscriptions WHERE person_id = ? AND feed_id = ?",
+        )
+        .bind(person)
+        .bind(id)
+        .fetch_one(&mut *transaction)
+        .await?;
         sqlx::query(
             "UPDATE subscriptions SET river = COALESCE(?, river),
                  open_on_site = COALESCE(?, open_on_site),
@@ -196,12 +204,28 @@ async fn edit_feed(
         .bind(id)
         .execute(&mut *transaction)
         .await?;
-        // Switched on: the ones already stored join the feed's list, as
-        // read, so nothing piles up in Unread. Switched off: only new ones
-        // are left out; the ones already here stay.
-        if form.shorts == Some(true) || form.live_streams == Some(true) {
-            crate::feeds::enter_read(&mut transaction, person, id).await?;
-        }
+        // Switched on: that kind's videos stored since the reader followed
+        // the channel join its list, as read, so nothing piles up in
+        // Unread (an entry they already had, or one the clean-up removed
+        // long ago, is left as it is). Switched off: only new ones are
+        // left out; the ones already here stay.
+        sqlx::query(
+            "INSERT OR IGNORE INTO entries (person_id, article_id, feed_id, sort_at, read)
+             SELECT subscriptions.person_id, articles.id, articles.feed_id, articles.sort_at, 1
+             FROM articles JOIN subscriptions ON subscriptions.feed_id = articles.feed_id
+             WHERE subscriptions.person_id = ? AND articles.feed_id = ?
+                 AND articles.received_at >= subscriptions.added_at
+                 AND ((articles.video_kind = 'short' AND ? AND NOT ?)
+                      OR (articles.video_kind = 'live' AND ? AND NOT ?))",
+        )
+        .bind(person)
+        .bind(id)
+        .bind(form.shorts == Some(true))
+        .bind(before.0)
+        .bind(form.live_streams == Some(true))
+        .bind(before.1)
+        .execute(&mut *transaction)
+        .await?;
         if form.check.is_some() {
             // The feed is checked as often as its most eager follower
             // allows. A longer wait applies at once: the next check moves

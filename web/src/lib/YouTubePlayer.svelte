@@ -20,8 +20,8 @@
   button: pressed, the video plays from there.
 -->
 <script lang="ts">
-  import { onDestroy } from "svelte";
-  import { clock, devicePlace, resumeFrom, savePlace, SAVE_EVERY_MS, serverPlace, spoken } from "./podcasts";
+  import { onDestroy, tick } from "svelte";
+  import { clock, devicePlace, resumeFrom, savePlace, SAVE_EVERY_MS, serverPlace } from "./podcasts";
   import { PLAYER_ORIGIN, playerAddress, playerNews, toPlayer, type Chapter } from "./youtube";
 
   let {
@@ -42,6 +42,7 @@
 
   let playing = $state(false);
   let frame: HTMLIFrameElement | undefined = $state();
+  let box: HTMLButtonElement | undefined = $state();
   /** Where the player starts: where you stopped, or a chapter you pressed. */
   let start = $state(0);
   /** Where you stopped last time, for "Resume from 4:00"; 0 to start at the beginning. */
@@ -55,11 +56,14 @@
   let duration: number | null = null;
   let heard = false;
   let lastSaved = 0;
+  /** The player's last state: its regular time updates don't repeat it. */
+  let playerState: "playing" | "paused" | "ended" | undefined;
 
   function play(from = resume) {
     start = from;
     time = from;
     heard = false;
+    playerState = undefined;
     playing = true;
   }
 
@@ -89,12 +93,16 @@
     heard = true;
     if (news.time !== undefined) time = news.time;
     if (news.duration !== undefined) duration = news.duration;
-    if (news.state === "ended") {
-      // The video ends when it ends: back to the still box, from the start next time.
+    const changed = news.state !== undefined && news.state !== playerState;
+    if (news.state) playerState = news.state;
+    if (playerState === "ended") {
+      // The video ends when it ends: back to the still box, from the start next time, with the keyboard on it.
       keep(true);
       resume = 0;
       playing = false;
-    } else if (news.state === "paused" || (news.state === "playing" && Date.now() - lastSaved >= SAVE_EVERY_MS)) {
+      playerState = undefined;
+      void tick().then(() => box?.focus());
+    } else if ((changed && playerState === "paused") || (playerState === "playing" && Date.now() - lastSaved >= SAVE_EVERY_MS)) {
       keep();
     }
   }
@@ -103,8 +111,9 @@
     if (!playing || !frame) return;
     frame.focus();
     window.addEventListener("message", listen);
-    // The player answers only once it's ready: ask it to talk as it loads, and again until it does.
-    const asking = window.setInterval(() => (heard ? window.clearInterval(asking) : send(toPlayer("listening"))), 250);
+    // The player answers only once it's ready: ask it to talk as it loads, and again until it does (for ten seconds at most).
+    let asked = 0;
+    const asking = window.setInterval(() => (heard || ++asked > 40 ? window.clearInterval(asking) : send(toPlayer("listening"))), 250);
     return () => {
       window.clearInterval(asking);
       window.removeEventListener("message", listen);
@@ -135,10 +144,12 @@
       sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox"
     ></iframe>
   {:else}
+    <!-- Named by its visible words first, so voice control finds it by what it says. -->
     <button
+      bind:this={box}
       type="button"
       class="video-play"
-      aria-label={resume > 0 ? `Resume video from ${spoken(resume)}: ${title}` : `Play video: ${title}`}
+      aria-label={resume > 0 ? `Resume from ${clock(resume)}: ${title}` : `Play video: ${title}`}
       onclick={() => play()}
     >
       <span class="video-title" aria-hidden="true">{title}</span>
@@ -156,7 +167,7 @@
   <ol class="chapters" aria-label="Chapters">
     {#each chapters as chapter (chapter.at)}
       <li>
-        <button type="button" class="chapter" aria-label="Play from {spoken(chapter.at)}: {chapter.title}" onclick={() => jump(chapter.at)}>
+        <button type="button" class="chapter" onclick={() => jump(chapter.at)}>
           <span class="chapter-time">{clock(chapter.at)}</span>
           <span>{chapter.title}</span>
         </button>
@@ -166,20 +177,21 @@
 {/if}
 
 <style>
+  /* The shape is the box's and the player's own, so large text can make the box taller rather than cut its words. */
   .video {
     margin-top: 1.75em;
-    aspect-ratio: 16 / 9;
     width: 100%;
+    --shape: 16 / 9;
   }
   /* A Short stands up, no wider than a phone's screen, so its whole height fits on a computer too. */
   .video.tall {
-    aspect-ratio: 9 / 16;
     width: min(100%, 20rem);
+    --shape: 9 / 16;
   }
   .video > :global(*) {
     display: block;
     width: 100%;
-    height: 100%;
+    aspect-ratio: var(--shape);
     border: 0;
     border-radius: 8px;
   }
@@ -200,7 +212,6 @@
     font-family: var(--font-sans);
     font-size: var(--text-ui);
     cursor: pointer;
-    overflow: hidden;
   }
   .video-play:hover {
     background-color: color-mix(in srgb, var(--ink) 10%, transparent);
@@ -208,7 +219,7 @@
   .video-title {
     max-width: 22ch;
     font-family: var(--font-serif);
-    font-size: clamp(1.1rem, 3.4vw, 1.5rem);
+    font-size: var(--text-large);
     font-weight: 600;
     line-height: 1.2;
     text-align: center;

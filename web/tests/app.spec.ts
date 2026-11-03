@@ -757,6 +757,7 @@ test("Settings is one centred column of grouped lists; its rows that act or open
   for (const row of [
     page.getByRole("button", { name: "Import OPML" }),
     page.getByRole("link", { name: "Export OPML" }),
+    page.getByRole("button", { name: "Import YouTube subscriptions" }),
     page.getByRole("button", { name: "Import starred articles" }),
     page.getByRole("link", { name: "Export starred articles" }),
   ]) {
@@ -769,6 +770,16 @@ test("Settings is one centred column of grouped lists; its rows that act or open
   }
   // Import opens something, so it ends in "…".
   await expect(page.getByRole("button", { name: "Import OPML" })).toHaveText("Import OPML…");
+  // Google Takeout's YouTube subscriptions come in through the same import (decision 0144); a line that
+  // isn't a channel is named, and nothing is fetched from YouTube.
+  await expect(page.getByRole("button", { name: "Import YouTube subscriptions" })).toHaveText("Import YouTube subscriptions…");
+  await page.locator('input[accept=".csv,text/csv"]').evaluate((input: HTMLInputElement) => {
+    const chosen = new DataTransfer();
+    chosen.items.add(new File(["Channel Id,Channel Url,Channel Title\nnot-a-channel,,Walks\n"], "subscriptions.csv", { type: "text/csv" }));
+    input.files = chosen.files;
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  await expect(data.getByText("1 line couldn't be read: Walks.")).toBeVisible();
 
   // The preview passage is the first row of Font, theme and line width's group, its words on the rows' words (decision 0055).
   await page.goto("/settings/font");

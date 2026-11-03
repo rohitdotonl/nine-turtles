@@ -211,6 +211,32 @@ async fn a_video_keeps_where_you_stopped_on_any_device() {
     let kept = ask(&base, &owner, &format!("/api/episodes/{id}/progress")).await;
     assert_eq!(kept["progress"]["position"], 240.0);
     assert_eq!(kept["progress"]["finished"], false);
+
+    // A blog post that only mentions YouTube in its address keeps no place.
+    let mut post = video("post", "zzzzzzzzzzz", None);
+    post.link = Some("https://blog.example/my-youtube-setup".to_owned());
+    let mut transaction = state.db.begin().await.unwrap();
+    nine_turtles::feeds::store_articles(&mut transaction, feed, &[post], nine_turtles::now())
+        .await
+        .unwrap();
+    transaction.commit().await.unwrap();
+    let page = ask(&base, &owner, &format!("/api/articles?feed={feed}")).await;
+    let post = page["articles"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|article| article["title"] == "post")
+        .unwrap()["id"]
+        .as_i64()
+        .unwrap();
+    let (status, _) = send(
+        &base,
+        &owner,
+        &format!("/api/episodes/{post}/progress"),
+        json!({ "position": 10.0 }),
+    )
+    .await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
 }
 
 #[tokio::test]

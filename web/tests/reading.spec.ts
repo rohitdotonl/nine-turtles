@@ -834,11 +834,11 @@ test.describe("on a wide window", () => {
     // Its chapters are buttons; its long description is folded after the first paragraph.
     const chapters = article(page).getByRole("list", { name: "Chapters" });
     await expect(chapters.getByRole("button")).toHaveText([/^0:00\s*First light$/, /^4:00\s*The heron$/, /^41:30\s*Mist lifts$/]);
-    await expect(chapters.getByRole("button", { name: "Play from 4 minutes: The heron" })).toBeVisible();
+    await expect(chapters.getByRole("button", { name: "4:00 The heron" })).toBeVisible();
     await expect(article(page).getByText("Filmed on one still morning", { exact: false })).toBeHidden();
     const unfold = article(page).getByRole("button", { name: "Show the full description" });
     await expect(unfold).toHaveAttribute("aria-expanded", "false");
-    await unfold.click();
+    await unfold.press("Enter");
     await expect(article(page).getByText("Filmed on one still morning", { exact: false })).toBeVisible();
     await expect(article(page).getByRole("button", { name: "Show less" })).toHaveAttribute("aria-expanded", "true");
     const box = await play.boundingBox();
@@ -874,12 +874,19 @@ test.describe("on a wide window", () => {
 
     // Back to the first video: it picks up where the player said it stopped, and closes when it ends.
     await row(page, "A river at dawn").click();
-    const resume = article(page).getByRole("button", { name: "Resume video from 4 minutes: A river at dawn, for an hour" });
+    const resume = article(page).getByRole("button", { name: "Resume from 4:00: A river at dawn, for an hour" });
     await expect(resume).toContainText("Resume from 4:00");
     await resume.click();
     await expect(article(page).locator("iframe")).toHaveAttribute("src", /&start=240&/);
-    await expect(article(page).getByRole("button", { name: "Play video: A river at dawn, for an hour" })).toBeVisible();
+    const again = article(page).getByRole("button", { name: "Play video: A river at dawn, for an hour" });
+    await expect(again).toBeFocused();
     await expect(article(page).locator("iframe")).toHaveCount(0);
+
+    // A chapter, from the keyboard alone, plays the video from there (and this stand-in ends it there).
+    await article(page).getByRole("list", { name: "Chapters" }).getByRole("button", { name: "4:00 The heron" }).focus();
+    await page.keyboard.press("Enter");
+    await expect(article(page).locator("iframe")).toHaveAttribute("src", /&start=240&/);
+    await expect(again).toBeFocused();
   });
 });
 

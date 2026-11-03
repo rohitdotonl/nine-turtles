@@ -44,8 +44,9 @@ you paste.
   readers hear "Video"). A video counts as read once opened, the same rule as
   every article.
 - **The video page** (section 7): under the byline, the grey Play box with
-  the video's title set large in it (the reading face, semibold, centred, up
-  to four lines), then a round Play mark and **Play video**. Still nothing
+  the video's title set large in it (the reading face, semibold, the large
+  size, centred, up to four lines; with large text the box grows taller
+  rather than cut its words), then a round Play mark and **Play video**. Still nothing
   loads from YouTube until it's pressed (decision 0072). A Short's box stands
   up (9 : 16, at most 20rem wide); every other video's is 16 : 9.
 - **Chapters you can press:** when the description lists at least two times,
@@ -53,7 +54,8 @@ you paste.
   ("0:00 First light", "The heron – 4:00"), they're listed under the box as
   **Chapters**, each a 44px row with its time (underlined, in figures of one
   width) and name. Pressing one plays the video from there, or moves the
-  playing video there. Screen readers hear "Play from 4 minutes: The heron".
+  playing video there. Each is named by what it shows ("4:00 The heron"), so
+  voice control finds it.
 - **A long description is folded:** when it has more than one paragraph and
   the rest add more than 280 characters, only its first paragraph shows,
   followed by **Show the full description**, which shows the rest and
@@ -63,10 +65,11 @@ you paste.
   YouTube's player tells the page its time, which is kept every 15 seconds,
   on pause and on leaving the video (on the server for each reader, and on
   this device). Next time the box says **Resume from 4:00** (screen readers:
-  "Resume video from 4 minutes: {title}") and plays from there.
+  "Resume from 4:00: {title}") and plays from there.
 - **The video ends when it ends:** nothing plays by itself, and when a video
   finishes the player closes back to the still box, so YouTube's grid of
-  other videos never shows; the next press starts it from the beginning.
+  other videos never shows, and the keyboard is back on the box; the next
+  press starts it from the beginning.
 
 **Never built** (decision 0144): YouTube's recommendations, trending or
 search; view, like or subscriber counts; YouTube comments; downloading or

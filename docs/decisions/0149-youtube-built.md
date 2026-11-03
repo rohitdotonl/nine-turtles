@@ -37,7 +37,8 @@ reader sees.*
 - **Where you stopped in a video is kept as a podcast episode's place is**
   (`episode_progress`, decision 0113): the same server route, the same device
   copy and the same "newer place wins" rule, now allowed for any article
-  whose link is on YouTube. No new table.
+  whose link is a YouTube video (`youtube_video!` in `podcasts.rs`: a
+  watch, Short, live or `youtu.be` address). No new table.
 - **Talking to YouTube's player without loading YouTube's script.** The page
   doesn't load YouTube's player library (the Content Security Policy
   wouldn't allow it, and it isn't needed): the player is opened with
@@ -46,7 +47,11 @@ reader sees.*
   `youtube-nocookie.com` and from that frame. Seeking a chapter is the
   player's own `seekTo` command (`web/src/lib/youtube.ts`).
 - **The video ends when it ends.** When the player says it ended, the frame
-  is removed and the still box comes back. YouTube's terms for embedded
+  is removed and the still box comes back, with the keyboard on it. The
+  player's regular time messages don't repeat its state, so the page
+  remembers the last one it heard; the place is saved every 15 seconds while
+  it plays, on pause and on leaving. If the player never answers, the page
+  stops asking after ten seconds. YouTube's terms for embedded
   players forbid changing or hiding the player's own parts while it plays;
   closing the frame afterwards changes nothing inside it, so it's allowed.
   `rel=0` stays, for the moment before it closes.
@@ -60,9 +65,12 @@ reader sees.*
 
 **Choices made while the owner was away** (each easy to reverse):
 
-1. **The Play box's words:** the title set large (the reading face,
-   semibold, centred, at most four lines), then a 40px round mark beside
-   "Play video", or "Resume from 4:00" when there's a place to resume.
+1. **The Play box's words:** the title set large (the reading face at the
+   large size, semibold, centred, at most four lines; the box grows taller
+   with large text rather than cut its words), then a 40px round mark beside
+   "Play video", or "Resume from 4:00" when there's a place to resume. Each
+   button is named by its visible words first ("Resume from 4:00: {title}",
+   a chapter's "4:00 The heron"), so voice control finds it.
 2. **The list row's mark:** a small line-drawn screen with a play mark, after
    the date, as a podcast episode's headphones are (a new icon, `video`).
 3. **Chapters need at least two times, each later than the one before;**
@@ -70,9 +78,10 @@ reader sees.*
    doesn't, so a description starting at 0:30 still gets chapters.
 4. **Folding:** after the first paragraph, only when the rest is longer than
    280 characters; the button stays as "Show less" once opened.
-5. **Turning Shorts or live streams on** brings the ones already stored in
-   as read, so Unread doesn't suddenly fill; turning them off leaves the
-   ones already there.
+5. **Turning Shorts or live streams on** brings in that kind's videos stored
+   since the reader followed the channel, as read, so Unread doesn't
+   suddenly fill; turning them off leaves the ones already there. Find new
+   address keeps both ticks.
 6. **Importing YouTube subscriptions** is its own row in Settings › Your
    data, under Export OPML, rather than a second kind of file in "Import
    OPML…".

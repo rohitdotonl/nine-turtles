@@ -37,6 +37,18 @@ use crate::{
     marks::now_ms,
 };
 
+/// An article whose link is a YouTube video, as YouTube's feeds write
+/// one (decision 0149): it keeps a place too, as an episode does.
+/// (A macro, so the queries stay fixed strings.)
+macro_rules! youtube_video {
+    () => {
+        "articles.link LIKE 'https://www.youtube.com/watch?v=%'
+         OR articles.link LIKE 'https://www.youtube.com/shorts/%'
+         OR articles.link LIKE 'https://www.youtube.com/live/%'
+         OR articles.link LIKE 'https://youtu.be/%'"
+    };
+}
+
 /// The most episodes one reader's Up Next holds.
 pub const MOST_UP_NEXT: usize = 200;
 
@@ -116,17 +128,17 @@ async fn save_progress(
     }
     let now = now_ms();
     let at = form.at.map_or(now, |at| at.min(now));
-    let saved = sqlx::query(
+    let saved = sqlx::query(concat!(
         "INSERT INTO episode_progress (person_id, article_id, position, duration, finished, saved_at)
          SELECT entries.person_id, entries.article_id, ?3, ?4, ?5, ?6
          FROM entries JOIN articles ON articles.id = entries.article_id
          WHERE entries.person_id = ?1 AND entries.article_id = ?2
-             AND (articles.episode_url IS NOT NULL OR articles.link LIKE '%youtu%')
+             AND (articles.episode_url IS NOT NULL OR " , youtube_video!(), ")
          ON CONFLICT (person_id, article_id) DO UPDATE SET
              position = excluded.position, duration = excluded.duration,
              finished = excluded.finished, saved_at = excluded.saved_at
-         WHERE excluded.saved_at >= episode_progress.saved_at",
-    )
+         WHERE excluded.saved_at >= episode_progress.saved_at"
+    ))
     .bind(person)
     .bind(id)
     .bind(form.position)
@@ -147,11 +159,13 @@ async fn save_progress(
 
 /// Whether article `id` is an episode or a video reader `person` has.
 async fn is_episode_of(db: &sqlx::SqlitePool, person: i64, id: i64) -> Result<bool, sqlx::Error> {
-    sqlx::query_scalar(
+    sqlx::query_scalar(concat!(
         "SELECT EXISTS (SELECT 1 FROM entries JOIN articles ON articles.id = entries.article_id
              WHERE entries.person_id = ? AND entries.article_id = ?
-                 AND (articles.episode_url IS NOT NULL OR articles.link LIKE '%youtu%'))",
-    )
+                 AND (articles.episode_url IS NOT NULL OR ",
+        youtube_video!(),
+        "))"
+    ))
     .bind(person)
     .bind(id)
     .fetch_one(db)
