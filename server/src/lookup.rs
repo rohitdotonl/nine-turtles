@@ -118,13 +118,19 @@ pub async fn look(state: &AppState, url: &Url, inside: bool) -> Result<Looked, N
     let page = String::from_utf8_lossy(&fetched.body);
     let mut found = discover::feeds_in(&page, &fetched.final_url);
     if found.is_empty() {
-        match elsewhere(state, &fetched.final_url).await {
+        match elsewhere(state, &fetched.final_url).await? {
             Some(Elsewhere::Feed(fetched, parsed)) => return Ok(Looked::Feed(fetched, parsed)),
             Some(Elsewhere::Named(named)) => found = named,
             None => return Err(NotFound::NoFeed),
         }
     }
-    if !inside || found.len() == 1 {
+    // One feed named: it's fetched here, once, whoever asked.
+    if let [only] = found.as_slice() {
+        let fetched = fetch::get(&state.http, &only.url, local).await?;
+        let parsed = feed::parse(&fetched.body, &fetched.final_url).ok_or(NotFound::NoFeed)?;
+        return Ok(Looked::Feed(Box::new(fetched), Box::new(parsed)));
+    }
+    if !inside {
         return Ok(Looked::Feeds(
             found.into_iter().map(Choice::named).collect(),
         ));
@@ -151,27 +157,28 @@ enum Elsewhere {
 
 /// Tries the other places for a page naming no feed, in order, one at a
 /// time. A site that asks to slow down, or stops answering, isn't asked
-/// again; an address that isn't there (or isn't a feed) moves on to the next.
-async fn elsewhere(state: &AppState, page: &Url) -> Option<Elsewhere> {
+/// again, and the reader is told so ("try again later"), not "no feed"; an
+/// address that isn't there (or isn't a feed) moves on to the next.
+async fn elsewhere(state: &AppState, page: &Url) -> Result<Option<Elsewhere>, FetchError> {
     let local = state.config.local_feeds_allowed;
     for place in places(page) {
         let fetched = match fetch::get(&state.http, &place, local).await {
             Ok(fetched) => fetched,
-            Err(FetchError::SlowDown(_) | FetchError::Unreachable) => return None,
+            Err(error @ (FetchError::SlowDown(_) | FetchError::Unreachable)) => return Err(error),
             Err(_) => continue,
         };
         if let Some(parsed) = feed::parse(&fetched.body, &fetched.final_url) {
-            return Some(Elsewhere::Feed(Box::new(fetched), Box::new(parsed)));
+            return Ok(Some(Elsewhere::Feed(Box::new(fetched), Box::new(parsed))));
         }
         if place.path() == "/" {
             let named =
                 discover::feeds_in(&String::from_utf8_lossy(&fetched.body), &fetched.final_url);
             if !named.is_empty() {
-                return Some(Elsewhere::Named(named));
+                return Ok(Some(Elsewhere::Named(named)));
             }
         }
     }
-    None
+    Ok(None)
 }
 
 /// The places tried for a page naming no feed, in order: the usual
@@ -241,6 +248,11 @@ async fn look_inside(state: &AppState, found: Vec<discover::Found>) -> Vec<Choic
             continue;
         }
         seen.push(newest);
+        // Only a small feed is held on to for following (and the first,
+        // which the website's finder previews): a site's ten large feeds
+        // mustn't fill the server's memory.
+        let fetched =
+            (choices.is_empty() || fetched.body.len() <= KEPT_LARGEST).then(|| Box::new(fetched));
         let inside = Inside {
             posting: frequency::of_dates(
                 parsed
@@ -254,21 +266,23 @@ async fn look_inside(state: &AppState, found: Vec<discover::Found>) -> Vec<Choic
         choices.push(Choice {
             found,
             inside: Some(inside),
-            fetched: Some(Box::new(fetched)),
+            fetched,
         });
     }
     choices
 }
 
-/// The links of a feed's three newest posts, sorted, to tell two formats of
-/// the same feed apart from two different feeds.
+/// The links of a feed's ten newest posts, sorted, to tell two formats of
+/// the same feed apart from two different feeds. Ten, not fewer, so a topic
+/// feed whose few newest posts are also the main feed's isn't taken for a
+/// repeat.
 fn newest_links(parsed: &feed::ParsedFeed) -> Vec<String> {
     let mut articles: Vec<&feed::ParsedArticle> = parsed.articles.iter().collect();
     articles.sort_by_key(|article| std::cmp::Reverse(article.published_at));
     let mut links: Vec<String> = articles
         .into_iter()
         .filter_map(|article| article.link.clone())
-        .take(3)
+        .take(10)
         .collect();
     links.sort();
     links
@@ -284,11 +298,15 @@ fn newest_title(parsed: &feed::ParsedFeed) -> Option<String> {
 }
 
 /// A feed's address as a person says it: `maralind.example/feed`, without
-/// `https://`, `www.` or a closing `/`.
+/// `https://`, `www.` or a closing `/` (a port, if any, is kept).
 pub fn said(url: &Url) -> String {
     let host = url.host_str().unwrap_or_default();
     let host = host.strip_prefix("www.").unwrap_or(host);
-    let mut said = format!("{host}{}", url.path().trim_end_matches('/'));
+    let port = url
+        .port()
+        .map(|port| format!(":{port}"))
+        .unwrap_or_default();
+    let mut said = format!("{host}{port}{}", url.path().trim_end_matches('/'));
     if let Some(query) = url.query() {
         said.push('?');
         said.push_str(query);
@@ -303,9 +321,12 @@ pub struct Recent {
     kept: Mutex<HashMap<String, (Instant, Fetched)>>,
 }
 
-/// How long a looked-at feed is kept, and how many are.
+/// How long a looked-at feed is kept; the largest feed kept, and how much
+/// is kept in all, so the memory it takes stays small (the server has
+/// about 512 MB).
 const KEPT_FOR: Duration = Duration::from_secs(10 * 60);
-const KEPT_MOST: usize = 100;
+const KEPT_LARGEST: usize = 1024 * 1024;
+const KEPT_IN_ALL: usize = 16 * 1024 * 1024;
 
 impl Recent {
     /// Keeps `fetched`, the feed at `url`.
@@ -315,7 +336,8 @@ impl Recent {
         };
         let now = Instant::now();
         kept.retain(|_, (at, _)| now.saturating_duration_since(*at) < KEPT_FOR);
-        if kept.len() >= KEPT_MOST {
+        let held: usize = kept.values().map(|(_, fetched)| fetched.body.len()).sum();
+        if fetched.body.len() > KEPT_LARGEST || held + fetched.body.len() > KEPT_IN_ALL {
             return;
         }
         kept.insert(url.as_str().to_owned(), (now, fetched));
@@ -366,7 +388,6 @@ mod tests {
             ["https://medium.com/@someone/feed", "https://medium.com/"]
         );
         assert_eq!(places.len(), MOST_TRIED);
-        assert!(places.len() <= MOST_TRIED);
     }
 
     #[test]
@@ -389,5 +410,6 @@ mod tests {
             "example.com?feed=rss2"
         );
         assert_eq!(said("https://example.com/"), "example.com");
+        assert_eq!(said("http://localhost:8081/feed"), "localhost:8081/feed");
     }
 }

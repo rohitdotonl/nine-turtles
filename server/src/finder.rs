@@ -316,23 +316,14 @@ async fn look(state: &AppState, url: &Url) -> Result<Answer, Problem> {
         Err(NotFound::NoFeed) => return Ok(Answer::Problem(Problem::NoFeed)),
         Err(NotFound::Fetch(error)) => return Err(error.into()),
     };
-    // A preview that can't be made isn't a failure: the addresses still help.
+    // The first feed, looked at already, gives the preview; nothing is
+    // fetched again for it.
     let preview = match choices.first() {
         Some(Choice {
             fetched: Some(fetched),
             ..
         }) => feed::parse(&fetched.body, &fetched.final_url).map(preview),
-        Some(first) => match fetch::get(
-            &state.http,
-            &first.found.url,
-            state.config.local_feeds_allowed,
-        )
-        .await
-        {
-            Ok(fetched) => feed::parse(&fetched.body, &fetched.final_url).map(preview),
-            Err(_) => None,
-        },
-        None => None,
+        _ => None,
     };
     let feeds = choices
         .into_iter()

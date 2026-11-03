@@ -28,7 +28,12 @@ async fn site(routes: &[(&'static str, &'static str, String)]) -> (String, Visit
         let (kind, body) = (*kind, body.clone());
         app = app.route(
             path,
-            get(move || async move { ([(header::CONTENT_TYPE, kind)], body).into_response() }),
+            get(move || async move {
+                if kind == SLOW_DOWN {
+                    return StatusCode::TOO_MANY_REQUESTS.into_response();
+                }
+                ([(header::CONTENT_TYPE, kind)], body).into_response()
+            }),
         );
     }
     let app = app
@@ -52,6 +57,8 @@ async fn visit(
 const HTML: &str = "text/html";
 const RSS: &str = "application/rss+xml";
 const ATOM: &str = "application/atom+xml";
+/// Not a kind: the site answers "too many requests, slow down".
+const SLOW_DOWN: &str = "slow down";
 
 fn page(links: &str) -> String {
     format!("<html><head><title>A page</title>{links}</head><body>Hello.</body></html>")
@@ -247,4 +254,18 @@ async fn a_site_left_with_one_feed_follows_it_without_asking() {
     assert_eq!(status, StatusCode::CREATED, "{body}");
     assert_eq!(body["feed"]["title"], "Mara Lind");
     assert_eq!(*visits.lock().unwrap(), ["/", "/feed", "/atom"]);
+}
+
+#[tokio::test]
+async fn a_site_that_asks_to_slow_down_isnt_asked_again_or_called_feedless() {
+    let (base, visits) = site(&[
+        ("/about/", HTML, page("")),
+        ("/about/feed", SLOW_DOWN, String::new()),
+        ("/feed", RSS, feed("Mara Lind", POSTS)),
+    ])
+    .await;
+    let reader = Reader::new().await;
+    let (status, body) = reader.add(&format!("{base}/about/")).await;
+    assert_eq!(status, StatusCode::BAD_GATEWAY, "{body}");
+    assert_eq!(*visits.lock().unwrap(), ["/about/", "/about/feed"]);
 }

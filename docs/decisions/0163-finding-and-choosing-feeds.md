@@ -17,7 +17,8 @@ one at a time, stopping at the first feed:
    `/blog-feed.xml` (Wix) and `/feeds/posts/default` (Blogger).
 
 At most ten addresses besides the page. A site that asks to slow down or
-stops answering isn't asked again. It is still only when someone asks, once,
+stops answering isn't asked again, and the reader is told it didn't answer,
+not that it has no feed. It is still only when someone asks, once,
 never in the background and never an article's page. This replaces decision
 0016's "never guesses other addresses".
 
@@ -25,10 +26,18 @@ never in the background and never an article's page. This replaces decision
 most ten, at most 12 seconds in all), and each row shows the feed's newest
 title and how often it posts (`frequency::of_dates`, the words of Edit
 feed). A feed that isn't there or isn't a feed is left out, and so is one
-whose three newest links match a feed above it (the same posts as RSS and
+whose ten newest links match a feed above it (the same posts as RSS and
 Atom). A site left with one feed follows it without asking. The feeds just
-fetched are kept in memory for ten minutes (`lookup::Recent`, at most 100),
-so following the chosen one doesn't ask the publisher again.
+fetched are kept in memory for ten minutes (`lookup::Recent`: only feeds of
+1 MB or less, 16 MB in all), so following the chosen one doesn't ask the
+publisher again. How often a busy feed posts is told from its own few days
+when it holds five posts or more, instead of "too new to tell".
+
+**How many requests a lookup makes,** at most: a feed pasted, 1. A page
+naming one feed, 2. A page naming several, 1 plus one for each (at most
+11). A page naming none, 1 plus up to 10 more places, then any the home
+page names. The website's finder previews the first feed from the copy
+already fetched, with no request of its own.
 
 **One lookup for everything that finds feeds:** Add feed, "Follow this
 person?" and the website's feed finder. Other apps (`greader`, assistants)

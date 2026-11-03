@@ -20,7 +20,7 @@ use crate::{
     AppState, admin,
     auth::{SignedIn, database_problem},
     feed,
-    fetch::{self, FetchError, Fetched},
+    fetch::{FetchError, Fetched},
     log,
     lookup::{self, Looked, NotFound},
     now, websub,
@@ -208,19 +208,6 @@ async fn add(
             follow(state, person, &fetched, *parsed).await?,
         ))),
         Looked::Feeds(mut choices) => {
-            if let [only] = choices.as_slice()
-                && only.inside.is_none()
-            {
-                let url = only.found.url.clone();
-                already_followed(state, person, &url).await?;
-                let local = state.config.local_feeds_allowed;
-                let fetched = fetch::get(&state.http, &url, local).await?;
-                let parsed =
-                    feed::parse(&fetched.body, &fetched.final_url).ok_or(NotAdded::NoFeed)?;
-                return Ok(Added::Feed(Box::new(
-                    follow(state, person, &fetched, parsed).await?,
-                )));
-            }
             for choice in &mut choices {
                 if let Some(fetched) = choice.fetched.take() {
                     state.looked.keep(&choice.found.url, *fetched);

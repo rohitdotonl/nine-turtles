@@ -37,6 +37,8 @@ pub const WINDOW_DAYS: i64 = 90;
 /// Less history than this, or fewer articles than `FEWEST`, is too new to tell.
 const SHORTEST_DAYS: i64 = 14;
 const FEWEST: i64 = 3;
+/// How many dated posts tell a feed's pace from less than two weeks.
+const SHORT_SPAN_FEWEST: usize = 5;
 
 pub fn routes() -> Router<AppState> {
     Router::new().route("/api/feeds/{id}/frequency", get(read))
@@ -158,8 +160,13 @@ pub fn words(posting: Posting, now: i64) -> String {
     if posting.some < FEWEST || history < SHORTEST_DAYS * DAY {
         return "Too new to tell".to_owned();
     }
+    rate(posting.recent, history)
+}
+
+/// How often `posts` over `history` seconds is, in words.
+fn rate(posts: i64, history: i64) -> String {
     // Per day, in hundredths, so the rounding stays in whole numbers.
-    let per_day = posting.recent * DAY * 100 / history;
+    let per_day = posts * DAY * 100 / history.max(1);
     let per_week = per_day * 7;
     let per_month = per_day * 30;
     // Rounded to the nearest whole number, from hundredths.
@@ -200,6 +207,12 @@ pub fn of_dates(dates: impl Iterator<Item = i64>, now: i64) -> Option<String> {
         .unwrap_or(i64::MAX),
         added: now,
     };
+    // A busy feed holds only its last few days: enough posts tell its pace
+    // from that span alone, where a stored feed would wait two weeks.
+    let span = now - posting.oldest.unwrap_or(now);
+    if dates.len() >= SHORT_SPAN_FEWEST && span < SHORTEST_DAYS * DAY {
+        return Some(rate(posting.recent, span.max(DAY)));
+    }
     Some(words(posting, now))
 }
 
@@ -318,5 +331,8 @@ mod tests {
             of_dates(old.into_iter(), NOW).as_deref(),
             Some("Hasn't posted in over a year")
         );
+        // A busy feed holding only its last few days isn't "too new".
+        let busy = (0..20).map(|hours| NOW - hours * DAY / 4);
+        assert_eq!(of_dates(busy, NOW).as_deref(), Some("Posts about 4 a day"));
     }
 }
