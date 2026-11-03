@@ -23,9 +23,11 @@ never pretends to be a browser.
 - **Once per feed, however many people follow it.** A hundred readers
   following your feed still means one check.
 - **On your feed's own rhythm:** often if you post often, rarely if you
-  don't. Never more than once an hour, and at least once a day.
+  don't. Its regular checks come never more than once an hour, and at
+  least once a day. (A reader adding your feed, or pressing Retry on a
+  feed that isn't working, asks once, straight away.)
 - **Your `Cache-Control` is respected.** If your feed says `max-age`, the
-  next check waits at least that long, up to a day.
+  next regular check waits at least that long, up to a day.
 - **One request to your site at a time.** If several of its feeds are due,
   they take turns. Sites that share a host (like every blog on one
   platform) take turns too.

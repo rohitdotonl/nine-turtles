@@ -3,8 +3,8 @@
 *Part of the spec ([index](../SPEC.md)). `docs/DESIGN.md` takes precedence.*
 
 **What it does**
-- The server checks feeds in the background, each on its own rhythm: often for frequent publishers, rarely for quiet blogs. Never more often than once an hour, and at least once a day (decision 0160).
-- If the publisher says how long its feed stays the same (`Cache-Control: max-age`), the next check waits at least that long, up to a day.
+- The server checks feeds in the background, each on its own rhythm: often for frequent publishers, rarely for quiet blogs. Never more often than once an hour, and at least once a day (decision 0161).
+- If the publisher says how long its feed stays the same (`Cache-Control: max-age`), the next regular check waits at least that long, up to a day. Two things can still bring it forward to an hour after the last check, since the value isn't stored: the publisher's own WebSub hub announcing a change, and a reader coming back after a month away.
 - Two feeds on the same site are never checked at the same moment: they take turns. Sites that share a host (every blog on one platform, like Bear Blog) take turns too.
 - Checks are spread out over time, never all at once.
 - It tells the publisher what it already has (using "ETag" and "Last-Modified", standard web labels), so unchanged feeds cost them almost nothing.

@@ -1,4 +1,4 @@
-# 0160: An even politer feed checker
+# 0161: An even politer feed checker
 
 *3 November 2026. The owner asked whether any publisher blocks nine
 turtles' feed checker, whether it follows the usual standards, and how it
@@ -22,6 +22,9 @@ readers follow it, and never visits article pages.
    next check wait at least that long, up to a day (`fetch::fresh_for`), so
    the "at least once a day" rule still holds. `no-cache` and `no-store`
    mean "ask again", never "ask sooner", so they count as saying nothing.
+   The value isn't stored (no structure change), so an empty WebSub
+   announcement or a reader back after a month away can still bring a
+   check forward to an hour after the last one, as before.
 3. **One site at a time:** within a round, two feeds on the same site are
    never fetched at once; the later one waits for the earlier
    (`checking::site`). The site is the host's last two parts, so every blog
@@ -39,4 +42,4 @@ feed someone chose to follow, which robots.txt isn't meant for, and the
 two failing sites whose robots.txt says "Disallow: /" were gone anyway.
 
 **Left for the owner.** With an hour as the minimum, Edit feed's "Hourly"
-now does the same as "Automatic" for busy feeds.
+now does the same as "Automatic" for busy feeds (`docs/planning/questions.md`).
