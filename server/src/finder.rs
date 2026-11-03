@@ -3,7 +3,7 @@
 //! page names, with the newest few titles of the first one.
 //!
 //! It looks exactly as adding a feed does (`lookup`, decisions 0016 and
-//! 0163): the page given, a few usual places if it names no feed, and each
+//! 0165): the page given, a few usual places if it names no feed, and each
 //! of a site's several feeds once, never an article's page. The first feed
 //! gives the preview.
 //!

@@ -3,7 +3,7 @@
 //! `<link rel="alternate" type="application/rss+xml" href="/feed">`.
 //!
 //! This reads one page; `lookup` decides which pages are read, and when
-//! (docs/decisions/0016-adding-feeds.md and 0163).
+//! (docs/decisions/0016-adding-feeds.md and 0165).
 
 use reqwest::Url;
 use scraper::{Html, Selector};

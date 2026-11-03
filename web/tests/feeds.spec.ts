@@ -358,7 +358,7 @@ test("a site with several feeds offers a choice", async ({ page }) => {
   // A choice of one: radio buttons, the first chosen, each row ending in a round mark that shows
   // the choice by its dot, never by a tint alone (decision 0049).
   const choices = page.getByRole("radiogroup", { name: "Feeds on this site" });
-  // Each row says what's inside (its newest title, how often it posts) and its address as a person says it (decision 0163).
+  // Each row says what's inside (its newest title, how often it posts) and its address as a person says it (decision 0165).
   await expect(choices).toContainText("On keeping a commonplace book (3)");
   await expect(choices).toContainText("/blog/");
   await expect(choices).not.toContainText("http://");

@@ -1,5 +1,5 @@
 //! Finding a feed in a few more places, and choosing among a site's several
-//! (SPEC section 3, decision 0163), tested against a real running nine
+//! (SPEC section 3, decision 0165), tested against a real running nine
 //! turtles and made-up publishers' websites that write down every address
 //! asked for.
 

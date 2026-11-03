@@ -118,11 +118,11 @@ milestone order above.
    SPEC section and shape are agreed with the owner first.
 9. **A feed finder that tries a few more places** ✅ when the pasted page
    names no feed, the usual address under it, the site's home page and the
-   usual feed addresses. Built: SPEC sections 3 and 30, decision 0163.
+   usual feed addresses. Built: SPEC sections 3 and 30, decision 0165.
 10. **Choosing between several feeds, made easy** ✅ each feed shows its
     newest title and how often it posts; repeats are left out, and a site
     left with one is followed straight away. Built: SPEC section 3,
-    decision 0163.
+    decision 0165.
 
 **Decided with the owner (2 November 2026):**
 

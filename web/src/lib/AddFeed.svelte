@@ -211,7 +211,7 @@
         move the choice, and Add feed adds it (decision 0049). Each row says
         what nine turtles saw inside the feed: its newest title in the reading
         serif, then how often it posts and its address as a person says it
-        (decision 0163). In a sheet a long list scrolls inside itself, so
+        (decision 0165). In a sheet a long list scrolls inside itself, so
         Cancel and Add feed never leave the window.
       -->
       <div role="radiogroup" aria-label="Feeds on this site" aria-describedby="feed-address-status" class={["inset-group mb-2 self-stretch text-left", !page && "choices-scroll"]}>

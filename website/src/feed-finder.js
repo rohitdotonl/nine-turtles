@@ -91,7 +91,7 @@ function show(answer) {
     copy.addEventListener("click", () => copyAddress(feed.url, address));
     const about = element("span", "feed-about");
     about.append(element("span", "feed-title", feed.title));
-    // For a site with several, what the app saw inside each (decision 0163).
+    // For a site with several, what the app saw inside each (decision 0165).
     if (feed.latest) about.append(element("span", "feed-latest", feed.latest));
     if (feed.posting) about.append(element("span", "feed-posting", feed.posting));
     about.append(address);

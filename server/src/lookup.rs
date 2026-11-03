@@ -1,6 +1,6 @@
 //! Finding a site's feeds: the one lookup Add a feed, "Follow this person?"
 //! and the website's feed finder share (SPEC sections 3 and 30, decisions
-//! 0016 and 0163).
+//! 0016 and 0165).
 //!
 //! It fetches the address the reader gave. A feed is its own answer; a web
 //! page is read for the feeds it names (`discover`). If the page names none,

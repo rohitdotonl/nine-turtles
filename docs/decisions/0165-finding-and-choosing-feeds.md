@@ -1,4 +1,4 @@
-# 0163: Finding a feed in a few more places, and choosing among several
+# 0165: Finding a feed in a few more places, and choosing among several
 
 *3 November 2026. V1 items 9 and 10 (decision 0160), shown to the owner as
 clickable copies of the real screen before building.*
