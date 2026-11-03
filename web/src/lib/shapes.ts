@@ -47,8 +47,8 @@ export type VideoSettings = { shorts?: boolean; liveStreams?: boolean };
  */
 export type FeedSettings = { river: boolean; check: Check; openOnSite: boolean };
 
-/** How often a feed is checked in the background: on its own rhythm, or at most hourly or daily. */
-export type Check = "automatic" | "hourly" | "daily";
+/** How often a feed is checked in the background: on its own rhythm, or at most daily. */
+export type Check = "automatic" | "daily";
 
 export type Folder = { id: number; name: string };
 
@@ -196,9 +196,9 @@ export function toFeed(feed: Record<string, unknown>): Feed {
   };
 }
 
-/** The server keeps the shortest wait in seconds: 0, an hour or a day. */
+/** The server keeps the shortest wait in seconds: 0 or a day. An hour,
+ * from when Edit feed offered "Hourly" (decision 0162), is Automatic now. */
 export function checkFrom(seconds: number): Check {
   if (seconds >= 24 * 60 * 60) return "daily";
-  if (seconds >= 60 * 60) return "hourly";
   return "automatic";
 }

@@ -130,7 +130,6 @@
   ];
   const CHECK_CHOICES: { value: Check; label: string }[] = [
     { value: "automatic", label: "Automatic" },
-    { value: "hourly", label: "Hourly" },
     { value: "daily", label: "Daily" },
   ];
 
@@ -295,14 +294,10 @@
           <div class="setting-words setting-label">
             <p id="feed-check-name" class="setting-name">Check for new articles</p>
             <p id="feed-check-hint" class="setting-hint">
-              {check === "hourly"
-                ? "No more often than once an hour."
-                : check === "daily"
-                  ? "No more often than once a day."
-                  : "As often as it usually posts."}
+              {check === "daily" ? "No more often than once a day." : "As often as it usually posts."}
             </p>
           </div>
-          <div role="group" aria-labelledby="feed-check-name" aria-describedby="feed-check-hint" class="choices setting-control" style="--columns: 3">
+          <div role="group" aria-labelledby="feed-check-name" aria-describedby="feed-check-hint" class="choices setting-control" style="--columns: 2">
             {#each CHECK_CHOICES as choice (choice.value)}
               <label class="choice">
                 <input type="radio" name="feed-check" value={choice.value} bind:group={check} />

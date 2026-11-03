@@ -42,4 +42,4 @@ feed someone chose to follow, which robots.txt isn't meant for, and the
 two failing sites whose robots.txt says "Disallow: /" were gone anyway.
 
 **Left for the owner.** With an hour as the minimum, Edit feed's "Hourly"
-now does the same as "Automatic" for busy feeds (`docs/planning/questions.md`).
+now does the same as "Automatic" for busy feeds. The owner chose to remove it (decision 0162).
