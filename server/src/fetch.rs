@@ -75,7 +75,7 @@ pub enum Answer {
     },
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FetchError {
     /// The address points somewhere nine turtles never visits (a private network,
     /// this computer, or not a web address at all).
@@ -154,9 +154,56 @@ pub async fn post_form(
     Ok(response.status().as_u16())
 }
 
+/// How many times a YouTube feed is asked for before its answer stands,
+/// and how long to wait between asks. YouTube's feeds answer about half of
+/// all requests with "not found" or a server error, for every channel, and
+/// the next ask a second later often works (tried 3 November 2026,
+/// decision 0159). Asking up to four times makes a wrong "not found" rare.
+const YOUTUBE_TRIES: u32 = 4;
+const YOUTUBE_PAUSE: Duration = Duration::from_secs(1);
+
 /// Downloads a feed again, telling the publisher what nine turtles already has,
 /// so an unchanged feed can answer "nothing new" in a few bytes.
 pub async fn check(
+    client: &Client,
+    url: &Url,
+    local_allowed: bool,
+    known: &Known<'_>,
+) -> Result<Answer, FetchError> {
+    let tries = if crate::youtube::addresses::asks_again(url) {
+        YOUTUBE_TRIES
+    } else {
+        1
+    };
+    again_while_flaky(tries, YOUTUBE_PAUSE, || {
+        check_once(client, url, local_allowed, known)
+    })
+    .await
+}
+
+/// Runs `attempt` up to `tries` times, `pause` apart, while it answers "not
+/// found" or a server error; any other answer stands at once.
+async fn again_while_flaky<T, F, Fut>(
+    tries: u32,
+    pause: Duration,
+    mut attempt: F,
+) -> Result<T, FetchError>
+where
+    F: FnMut() -> Fut,
+    Fut: Future<Output = Result<T, FetchError>>,
+{
+    let mut left = tries.max(1);
+    loop {
+        let answer = attempt().await;
+        left -= 1;
+        if left == 0 || !matches!(answer, Err(FetchError::Status(404 | 500..=599))) {
+            return answer;
+        }
+        tokio::time::sleep(pause).await;
+    }
+}
+
+async fn check_once(
     client: &Client,
     url: &Url,
     local_allowed: bool,
@@ -428,6 +475,51 @@ fn embedded_v4(ip: Ipv6Addr) -> Option<Ipv4Addr> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn a_flaky_answer_is_asked_again_and_any_other_stands() {
+        use std::cell::Cell;
+        let asked = Cell::new(0);
+        // Not found, a server error, then the feed: the feed wins on the third ask.
+        let answers = [
+            Err(FetchError::Status(404)),
+            Err(FetchError::Status(500)),
+            Ok(7),
+        ];
+        let got = again_while_flaky(4, Duration::ZERO, || {
+            asked.set(asked.get() + 1);
+            let answer = answers[asked.get() - 1].clone();
+            async move { answer }
+        })
+        .await;
+        assert_eq!((got, asked.get()), (Ok(7), 3));
+
+        // Never anything but "not found": the last answer stands after four asks.
+        asked.set(0);
+        let got: Result<u8, _> = again_while_flaky(4, Duration::ZERO, || {
+            asked.set(asked.get() + 1);
+            async { Err(FetchError::Status(404)) }
+        })
+        .await;
+        assert_eq!((got, asked.get()), (Err(FetchError::Status(404)), 4));
+
+        // Anything else (refused, too big, a 403, "slow down") isn't asked again.
+        for answer in [
+            FetchError::NotAllowed,
+            FetchError::TooBig,
+            FetchError::Status(403),
+            FetchError::SlowDown(None),
+        ] {
+            asked.set(0);
+            let got: Result<u8, _> = again_while_flaky(4, Duration::ZERO, || {
+                asked.set(asked.get() + 1);
+                let answer = answer.clone();
+                async move { Err(answer) }
+            })
+            .await;
+            assert_eq!((got, asked.get()), (Err(answer), 1));
+        }
+    }
 
     #[test]
     fn private_and_special_addresses_are_never_visited() {
