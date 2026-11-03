@@ -53,12 +53,11 @@ doesn't pull, such as names instead of numbers.
 
 ## Still open, decided only after mockups
 
-- The new tiebreaker (candidate: "a letter from someone, or a feed from
-  something?").
+- The new tiebreaker (its candidate is in `docs/DESIGN.md`).
 - The brand idea (candidate: "letters from people": warm, personal,
   correspondence).
-- Colors (how many, for what, as few as possible), typography (character
-  without hurting readability), the accent.
-- The turtles' role in the app (the logo itself stays as it is).
-- The weekly opt-in email's exact shape, and how far nine turtles helps a
-  reader leave social media without preaching.
+- How far nine turtles helps a reader leave social media without
+  preaching.
+
+Decided since, and kept elsewhere: colors, typefaces, the accent and the
+turtles' role (`docs/BRAND.md`), and the weekly email (SPEC section 39).

@@ -53,13 +53,6 @@ stands between you and your first payment. December suits a launch:
 people make new-year resolutions about phones and reading, and the
 research suggests a "gift a year" idea for December (decision needed).
 
-**Claude says (timely):** Reddit's feeds stop on **13 November 2026**.
-The research ranks a "Reddit is ending RSS: what to do" page third on its
-shortlist, and that chance is gone once the date passes. If you want it, it
-has to be written in the next two weeks. Your call: do it, or let it go.
-
-**Rohit's call (30 October 2026):** let it go. The website isn't ready for public traffic, and a new site wouldn't rank in two weeks anyway.
-
 ---
 
 ## Ongoing habits (daily)
@@ -93,9 +86,9 @@ Rohit's plan:
 - **A starting shelf, most useful first:** *Calm Technology* (Amber Case),
   which is nine turtles' philosophy as a book; *The Design of Everyday
   Things* (Don Norman); *Don't Make Me Think* (Steve Krug); *Laws of UX*
-  (Jon Yablonski, also a free website); Apple's Human Interface Guidelines,
-  since Apple Books is the design reference; and `docs/DESIGN.md` Part 1,
-  which are nine turtles' own principles.
+  (Jon Yablonski, also a free website); Apple's Human Interface
+  Guidelines; and `docs/DESIGN.md` Part 1, which are nine turtles' own
+  principles.
 - **Watch the total.** Use, tools and reading now come to 2.5 hours a day
   before any marketing. Fine for full time, but if writing slips, this is
   where to trim.
@@ -201,8 +194,6 @@ own words".
 - [x] Read Reddit yourself (it blocked our researchers): r/rss. Copy real
       readers' sentences into a "their words" list. Done 1 November 2026:
       [`research-notes-2026-11.md`](research-notes-2026-11.md).
-- [ ] Write the shortlist: two or three positionings, each as *who +
-      problem + why nine turtles*.
 - [ ] **Use the best apps yourself** (added 30 October 2026), strictly
       45 minutes each, by 12 November. Start a fresh account in each.
       - *Feed readers (rivals):* Feedbin, Inoreader, Feedly, Reeder,
@@ -337,11 +328,9 @@ Plus one early warning, not a target: **is the core loop healthy?**
     activation (feeds and articles read in the first day), and anything
     "this week", because the app records *that* an article is read, not
     *when*.
-  - **Needs a new feature** (a SPEC change): sign-ups **by channel**. The
-    simplest version is one optional question at sign-up, "How did you hear
-    about nine turtles?" (a blog, a friend, a search, an AI assistant,
-    Reddit, other). The research says to include "an AI assistant", since
-    that traffic arrives without a label.
+  - **Built:** sign-ups **by channel**, from the optional question at
+    sign-up, "How did you hear about nine turtles?" (SPEC section 41,
+    decision 0155), shown as totals in the owner report.
 - **Don't add Plausible or Umami.** The website's privacy page promises
   "No cookies, no analytics, no tracking. This website doesn't count
   visitors". That promise is also marketing. So measure **trial → paid**,
@@ -353,14 +342,11 @@ Plus one early warning, not a target: **is the core loop healthy?**
   reward the wrong thing. Options:
   - **A. Read something this week:** % of paying readers who read at least
     one article in the last 7 days. Simple and fair to light readers.
-  - **B. Finished this week:** % who reached "You're all caught up" at
-    least once in the last 7 days. It measures the promise itself
-    ("finished"), so it's the natural pick if you own that word.
-  - **C. Weeks in a row:** how many of the last 4 weeks a reader read
+  - **B. Weeks in a row:** how many of the last 4 weeks a reader read
     something. Better at warning early, but harder to explain.
 
   Claude's suggestion: **A**, now that the positioning is "read people,
-  write back" rather than "a reader that ends". Either is counted as a number for everyone together,
+  write back". Either is counted as a number for everyone together,
   never per person.
 
 **Rohit's call (30 October 2026):** the core-loop measure is parked until positioning is chosen; don't spend time on it before then.
@@ -426,19 +412,12 @@ read other people's blogs closely. Reach them on their own blogs, blogrolls
 and the small-web places they gather. The positioning is in [`positioning.md`](positioning.md) (decided
 1 November).
 
-**Rohit's to-do:**
-
-- [ ] **Who** exactly: ______
-- [ ] **Why** they'd pick nine turtles: ______
-- [ ] **Where** you can reliably reach them: ______
+Who, why and where are answered in [`ideal-reader.md`](ideal-reader.md);
+the channel is the marketing plan in [`marketing.md`](marketing.md)
+(decided 2 November 2026).
 
 **Claude says:**
 
-- **Pick one channel you can work every week,** not five. For this reader,
-  my order: (1) your own writing, an essay series on rohit.onl and the blog;
-  (2) small newsletters about the indie web (the $500 test, or a
-  free year swapped for a mention); (3) being named on "best RSS reader"
-  lists and by AI assistants. Search pays off in year two.
 - **Being the face (Rohit, 30 October 2026: yes, like Herman for Bear
   Blog).** What follows: a personal blog that sounds like you, at a steady
   pace; an About page with your face and story; saying no to features in
@@ -482,22 +461,8 @@ newsletters as feeds (SPEC 28), syncing with Reeder and NetNewsWire
 (SPEC 26), offline reading, collections, podcasts, AI assistants (MCP), and
 exporting or deleting all your data.
 
-**Starter packs:** the five pages exist on the website (SPEC 31, decision
-0100) but are still empty, waiting for Rohit to pick the blogs. They were
-put on hold, not dropped.
-
-**Rohit's to-do:**
-
-- [ ] Fill in at least two starter packs before launch.
-
 **Claude says:**
 
-- **Starter packs are the answer to "an empty reader is a dead reader".**
-  Your ideal reader arrives with no list of blogs. Fill two first:
-  *Newsletters, out of your inbox* (it matches the way in) and *Think more
-  deeply*, with 8–10 blogs each. Each blog needs one line in your words on
-  why it's worth reading: that's your taste, and nobody can copy it. You
-  could also ask the agent for 30 candidates per pack, and you choose.
 - **Paid value, said plainly:** one calm list you finish; newsletters out
   of the inbox; book-like reading; works on any device and with Reeder and
   NetNewsWire; your data always leaves with you.
@@ -505,13 +470,9 @@ put on hold, not dropped.
   engagement tricks, no AI rewriting or ranking what writers wrote, no
   ads, full export, no lock-in. Add: *no unread counts as debt* and *no
   notifications, ever*.
-- **One addition before launch:** the "How did you hear about us?"
-  question (section 2). Everything else waits for real readers.
-
-**Rohit's call (30 October 2026):** yes to "How did you hear about us?",
-asked at the right step (one optional question at sign-up). It's listed in
-`docs/PLAN.md` → "Later"; building it needs its own start from Rohit and a
-SPEC section first.
+**Rohit's call (2 November 2026):** the V1 list is in `docs/PLAN.md`
+(decision 0140), including "How did you hear about nine turtles?" (built,
+decision 0155).
 
 **Conclusion:** _______________________________________________
 
@@ -589,7 +550,7 @@ Rohit's plan leans on channels that compound and that run without him:
 - **Search:** pages for the chosen positioning's searches.
 - **Free tools that bring people in:** feed finder (built), YouTube
   subscriptions to a feed file, export tidy-up, "see
-  your blog as a book", public starter packs.
+  your blog as a book".
 - **Moments worth sharing,** for word of mouth.
 - Track sign-ups by channel; cut what doesn't work.
 
@@ -604,10 +565,6 @@ useful from the October research.
   partner (Reeder). Search and AI mentions carry the later years. So:
   flagship essay + Show HN with a demo + 10–15 good listings + a few small
   newsletters, then search pages every week after.
-- **The first reader-facing addition I'd push for after launch:** the
-  honest comparison pages ("nine turtles or Feedbin?"), because they help
-  both Google and AI assistants, and saying when the other app is better
-  builds trust.
 
 **Rohit's call:**
 
@@ -636,8 +593,6 @@ feedback is always optional. From lightest to heaviest:
    multi-screen flows, no automatic discounts.
 4. **One personal email a few days after cancelling,** plain text, from
    Rohit: thanks, one question, no reply needed. Sent once.
-5. ~~**A check-in before they leave:** when a paying reader stops reading
-   for 2+ weeks, one personal note.~~ Dropped (Rohit, 30 October 2026).
 
 Rohit's draft rollout: launch with 1 + 3, plus the OPML export right on the
 cancel screen; add 4 once readers arrive.
@@ -650,16 +605,6 @@ cancel screen; add 4 once readers arrive.
   **Export your feeds** right next to **Billing and cancelling** in
   Settings, and ask the question in option 4's email instead. Whether Dodo
   can pause a plan is still to check.
-- **Drop option 5, or keep it strictly by hand and rare.** DESIGN.md's
-  second principle says nine turtles "never tries to bring you back or
-  keep you longer". A message triggered by someone *not* reading is
-  exactly what that rules out, even if it's kind. Reading less can mean
-  the app is working. If you want a version of it: one personal email to
-  each paying reader around day 60 ("how is it going?"), the same for
-  everyone, whatever they've read.
-
-**Rohit's call (30 October 2026):** option 5 (the note after 2 weeks without reading) is dropped.
-
 ---
 
 ## 10. Review loop
