@@ -151,11 +151,10 @@ async fn a_page_naming_nothing_tries_the_home_page_then_the_usual_addresses() {
         [
             "/about/",
             "/about/feed",
-            "/about/rss",
             "/",
             "/feed",
-            "/rss",
             "/feed.xml",
+            "/rss",
             "/rss.xml"
         ]
     );
