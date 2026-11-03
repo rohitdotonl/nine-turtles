@@ -15,7 +15,7 @@ related: [follow-someone, listen-to-podcasts, one-person-several-places]
 
 ## Follow a channel
 
-1. Press **Add feed**.
+1. Press **+ Add**.
 2. Paste the address of the channel, or of any video of theirs. For a video,
    nine turtles asks whether to follow the channel that made it. For a
    playlist, it asks whether you'd like the whole channel or only the
@@ -43,8 +43,9 @@ player remembers whether you like captions.
 ## Good to know
 
 - Shorts and live streams are left out. To include them for a channel,
-  choose the channel, then **More › Edit person…**, and turn on **Include
-  Shorts** or **Include live streams**.
+  open the channel's page, press **Edit** (and › beside the channel, if
+  it's one of several sources), and turn on **Include Shorts** or
+  **Include live streams**.
 - Nothing plays by itself, and when a video ends the player closes. YouTube's
   suggestions never appear.
 - Videos play from YouTube's privacy-enhanced address

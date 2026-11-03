@@ -384,7 +384,7 @@ test.describe("on a wide window", () => {
     const text = article(page).locator(".article-text");
     await text.locator("sup").getByRole("link", { name: "1" }).click();
     await expect(text.getByText("1. Written in Python, a long time ago.")).toBeFocused();
-    await expect(page).toHaveURL(/\/feeds\/[0-9]+$/);
+    await expect(page).toHaveURL(/\/people\/[0-9]+$/);
     expect(page.context().pages()).toHaveLength(1);
   });
 
@@ -754,7 +754,7 @@ test.describe("on a wide window", () => {
     await signIn(page);
     // Quiet Notes has 60 articles: far more than one window holds.
     const id = await follow(page, `${FEED_SITE}/`);
-    await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
+    await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
     await expect(page.getByRole("button", { name: /\(\d+\)/ }).nth(30)).toBeAttached();
 
     const fillsWindow = () =>
@@ -823,7 +823,7 @@ test.describe("on a wide window", () => {
     await appReady(page);
     await signIn(page);
     const id = await follow(page, `${FEED_SITE}/videos/`);
-    await page.goto(new URL(`/feeds/${id}`, page.url()).href);
+    await page.goto(new URL(`/people/${id}`, page.url()).href);
     await row(page, "A river at dawn").click();
 
     // The video's description from the feed is its text, under a quiet Play button with its title in it.
@@ -918,7 +918,7 @@ test.describe("on a wide window", () => {
     await appReady(page);
     await signIn(page);
     const id = await follow(page, `${FEED_SITE}/videos/`);
-    await page.goto(new URL(`/feeds/${id}`, page.url()).href);
+    await page.goto(new URL(`/people/${id}`, page.url()).href);
 
     // The first video plays at YouTube's own 1×, which isn't taken as a choice; choosing 1.5× in its menu is kept.
     await row(page, "A river at dawn").click();

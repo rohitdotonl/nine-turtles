@@ -1,9 +1,9 @@
 ---
 title: Unfollow someone
-description: Stop following a person, a blog, a channel or a newsletter, and what's kept when you do.
+description: Stop following a person or a publication, and what's kept when you do.
 groupId: keeping-things-tidy
 order: 3
-spec: 15 and 23
+spec: 15, 23 and 36
 updated: 2026-11-03
 related: [put-people-in-folders, star-an-article, keep-articles-in-collections]
 ---
@@ -15,16 +15,18 @@ related: [put-people-in-folders, star-an-article, keep-articles-in-collections]
 
 ## Unfollow
 
-1. Choose the person in the sidebar.
-2. Choose **More › Edit person…** (or press <kbd>Shift</kbd> <kbd>E</kbd>).
-3. Press **Unsubscribe**.
+1. Choose them in the sidebar, and open their page: press their name at
+   the top of their list, or press <kbd>I</kbd>.
+2. Press **Edit** (or press <kbd>Shift</kbd> <kbd>E</kbd>).
+3. Press **Unsubscribe from …** at the foot.
 
 nine turtles says "Unsubscribed from …" with **Undo**. Undo brings them
 back exactly as they were, with what you'd read and their folders. It lasts
 ten minutes, or until you do something else.
 
-If the person has several places (a blog and a channel, say), Unsubscribe
-stops only the one whose settings are open; the rest stay.
+If they have several sources (a blog and a channel, say), Unsubscribe leaves
+them all. To let go of one source only, press › beside it in Edit, then
+**Take out of …**, and unsubscribe from that one.
 
 ## Unfollow many at once
 

@@ -4,7 +4,7 @@ import { appReady, follow, settingsSaved, signIn, tabTo } from "./screens";
 
 // SPEC sections 5, 15 and 18 (decision 0105), "How to check it", done by a
 // browser: Recently read, hiding it from the sidebar in Settings, and how
-// often a feed posts in Edit feed. One test, on a wide window only: which
+// often a feed posts in Edit. One test, on a wide window only: which
 // lists the sidebar shows is the reader's own setting, shared by every test
 // signed in as them, so hiding one must not overlap another test's look at it.
 
@@ -20,7 +20,7 @@ test("Recently read lists what was opened, newest first, and can be hidden from 
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${blog}/`);
-  await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
   await appReady(page);
   const rows = page.getByRole("button", { name: new RegExp(`Blog ${blog}`) });
   await expect(rows.first()).toBeVisible();
@@ -47,10 +47,10 @@ test("Recently read lists what was opened, newest first, and can be hidden from 
   await expect(page.locator("#list-pane").getByRole("heading", { level: 3, name: "Today" })).toHaveCount(1);
   await expect(days.first()).toHaveCSS("font-weight", "600");
 
-  // Edit feed says how often the feed posts, in words, under its name.
-  await page.goto(new URL(`/feeds/${id}/edit`, FEEDS_APP).href);
+  // Edit says how often the feed posts, in words, under its kind of source.
+  await page.goto(new URL(`/people/${id}/edit`, FEEDS_APP).href);
   await appReady(page);
-  await expect(page.locator("#feed-frequency")).toHaveText(/^(Posts about|Posts less|Hasn't posted in|Too new to tell)/);
+  await expect(page.getByText(/^(Posts about|Posts less|Hasn't posted in|Too new to tell)/)).toBeVisible();
   await page.keyboard.press("Escape");
 
   // Settings › Show in the sidebar: untick Recently read, and it leaves the sidebar.

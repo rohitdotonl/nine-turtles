@@ -5,8 +5,9 @@
   Unread, Starred and All have theirs, and no dot. Collections follow the
   same way, each with a small shelf of books (SPEC section 34). Then folders A to Z, each
   with a small dot when any of its feeds has something unread, and a button that
-  shows or hides the feeds in it, then the feeds in no folder, A to Z. A
-  feed in two folders is listed under both. Which folders are open is
+  shows or hides the people and publications in it, then those in no
+  folder, A to Z, under two headings: People, then Publications (decision
+  0160). One in two folders is listed under both. Which folders are open is
   remembered on this device.
 
   As in a Mac source list (decision 0041), a folder's show-or-hide arrow
@@ -90,6 +91,9 @@
   let searching = $derived(search.trim() !== "");
   let found = $derived(findByName({ feeds, folders }, search));
   let loose = $derived(feeds.filter((feed) => feed.folders.length === 0));
+  /** Someone or something (decision 0160): the rows in no folder, under two headings. */
+  let people = $derived(loose.filter((feed) => feed.kind !== "publication"));
+  let publications = $derived(loose.filter((feed) => feed.kind === "publication"));
 
   function isHere(place: Route): boolean {
     // The phone's feeds screen shows no selection: you're at the root, not in a place.
@@ -122,7 +126,7 @@
 <!-- A person's row (SPEC section 36): one per person, however many places they have; it's where you are on any of them. -->
 {#snippet feedRow(feed: Feed)}
   {@const place: Route = { kind: "feed", id: feed.id }}
-  {@const here = !phone && route.kind === "feed" && (feed.places ?? [feed.id]).includes(route.id)}
+  {@const here = !phone && (route.kind === "feed" || route.kind === "about" || route.kind === "edit-feed" || route.kind === "edit-source") && (feed.places ?? [feed.id]).includes(route.id)}
   <li>
     <a
       href={pathFor(place)}
@@ -206,7 +210,7 @@
 {#if searching}
   <h2 class="sr-only">Found by name</h2>
   {#if found.folders.length === 0 && found.feeds.length === 0}
-    <p class="px-4 pt-4 text-small">No person or folder has that in their name.</p>
+    <p class="px-4 pt-4 text-small">Nothing in the sidebar has that in its name.</p>
   {:else}
     <ul class="mt-4">
       {#each found.folders as folder (folder.id)}
@@ -258,8 +262,8 @@
                 type="button"
                 aria-expanded={shown}
                 aria-controls={`folder-${folder.id}`}
-                aria-label={`People in ${folder.name}`}
-                title={shown ? "Hide people" : "Show people"}
+                aria-label={`What's in ${folder.name}`}
+                title={shown ? "Hide what's in it" : "Show what's in it"}
                 onclick={() => toggle(folder.id)}
                 class="disclosure absolute inset-y-0 right-0 flex w-9 pointer-coarse:w-11 items-center justify-center rounded-md text-muted"
               >
@@ -286,10 +290,18 @@
       {/each}
     </ul>
   {/if}
-  {#if loose.length > 0}
+  {#if people.length > 0}
     <h2 class="sidebar-section">People</h2>
     <ul>
-      {#each loose as feed (feed.id)}
+      {#each people as feed (feed.id)}
+        {@render feedRow(feed)}
+      {/each}
+    </ul>
+  {/if}
+  {#if publications.length > 0}
+    <h2 class="sidebar-section">Publications</h2>
+    <ul>
+      {#each publications as feed (feed.id)}
         {@render feedRow(feed)}
       {/each}
     </ul>

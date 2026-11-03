@@ -169,6 +169,8 @@ describe("carryOut", () => {
     expect(run({ kind: "edit-place" }, scene({ folder: 3 }))).toEqual([["go", { kind: "edit-folder", id: 3 }]]);
     expect(run({ kind: "edit-place" }, scene({ feed: 9, searching: true }))).toEqual([]);
     expect(run({ kind: "edit-place" }, scene())).toEqual([]);
+    expect(run({ kind: "about" }, scene({ feed: 9 }))).toEqual([["go", { kind: "about", id: 9 }]]);
+    expect(run({ kind: "about" }, scene({ folder: 3 }))).toEqual([]);
   });
 
   it("refreshes and undoes only on a list", () => {

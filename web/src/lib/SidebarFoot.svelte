@@ -1,6 +1,7 @@
 <!--
   The sidebar's foot: always at the very bottom, outside the scrolling list,
-  so it never moves. Add feed and Keys (the shortcut list), each an icon and
+  so it never moves. "+ Add" (screen readers hear "Add a person or
+  publication", decision 0160) and Keys (the shortcut list), each an icon and
   a word, so they read as two buttons, not one phrase (decisions 0062, 0064),
   then Settings as an icon, the way a Mac app keeps its tools at the foot of
   the sidebar. In a sidebar narrowed below 15rem, Keys keeps only its icon.
@@ -27,9 +28,11 @@
 <div class="@container flex shrink-0 items-center gap-1 border-t border-ink/10 py-1.5 pr-3">
   <!-- An action, not a place: it never shows the "where you are" bar. -->
   <a
-    href="/add-feed"
+    href="/add"
+    aria-label="Add a person or publication"
+    title="Add a person or publication (a)"
     onclick={(event) => follow(event, { kind: "add-feed" })}
-    class="btn-quiet ml-1.5 min-w-0 flex-1 justify-start gap-2.5 pl-[14px] text-small text-ink-2 @max-[15rem]:ml-0 @max-[15rem]:gap-1.5 @max-[15rem]:pr-1.5 @max-[15rem]:pl-1.5"><Icon name="plus" size={16} />Add feed</a
+    class="btn-quiet ml-1.5 min-w-0 flex-1 justify-start gap-2.5 pl-[14px] text-small text-ink-2 @max-[15rem]:ml-0 @max-[15rem]:gap-1.5 @max-[15rem]:pr-1.5 @max-[15rem]:pl-1.5"><Icon name="plus" size={16} />Add</a
   >
   {#if !phone}
     <!-- Filled in a neutral ink tone while the shortcut list is open (never the accent: this is a button, not a place), and it says it opens a dialog (decision 0054). -->

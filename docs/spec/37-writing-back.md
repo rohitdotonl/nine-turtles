@@ -18,8 +18,8 @@ V1, item 2). Its look gets a refinement round.*
   it, or your inbox; it only makes the `mailto:` link your device opens. The
   body is left empty for you.
 - **Where the address comes from,** first match wins: the address you typed
-  for the person; the one the article's own place gives; the one another of
-  their places gives. A feed gives its author's address (an Atom or JSON
+  for the person; the one the article's own source gives; the one another of
+  their sources gives. A feed gives its author's address (an Atom or JSON
   Feed author, an RSS feed's `managingEditor`, a podcast's owner), or, when
   every article that names an author's address names the same one, that; a
   magazine whose articles name several gives none, and a website's
@@ -30,21 +30,21 @@ V1, item 2). Its look gets a refinement round.*
   the next new article nine turtles fetches; a newsletter's with its next
   email.
 - **When nine turtles doesn't know it,** Write back opens a quiet bordered
-  box in place, as Add another place does: "Write back to Alpha", a line
+  box in place, as + Add a source does: "Write back to Alpha", a line
   saying nine turtles doesn't know their address yet, that it's kept on
   their page once typed, and that your own email app sends what you write;
   then **Their email address**, **Write back** and **Not now**. The
   keyboard starts on the field; Not now puts it back on the button.
   Something that isn't one address ("ivy at home", two addresses) is refused
   in oxblood words, keeping what you typed. Write back opens your email app
-  at once and keeps the address for the person, on every place of theirs,
+  at once and keeps the address for the person, on every source of theirs,
   so you're asked once; from then on Write back opens your email app
   straight away.
-- **Their page** (section 36) shows it as **Email**, between their places
-  and Following, as a link that opens your email app; it's left out while
-  nine turtles doesn't know it. **Edit person** has an **Email address**
+- **Their page** (section 36) shows it as **Email**, under their sources,
+  as a link that opens your email app; it's left out while
+  nine turtles doesn't know it. Edit (on their page) has an **Email address**
   field under the name ("Write back opens your own email app with this
-  address."): change it and Save to write somewhere else; empty it to go
+  address."): change it and press Done to write somewhere else; empty it to go
   back to what their feed gives, if anything.
 - Each reader's addresses are theirs alone. The address a feed gives is the
   same for everyone who follows it, as its name is.
@@ -58,9 +58,9 @@ V1, item 2). Its look gets a refinement round.*
    and "Re: " and the title. Back in nine turtles, the button now shows the
    address under it; open another of their articles and press it: the email
    app opens straight away.
-3. Open their page (choose their row with no article open): **Email** shows
-   the address. Open Edit person: the field has it; change it and Save; the
-   page shows the new one.
+3. Open their page (press their name at the top of their list): **Email**
+   shows the address. Press Edit: the field has it; change it and press
+   Done; the page shows the new one.
 4. Follow a blog whose feed names its author's email (many Atom feeds, and
    RSS feeds with `managingEditor`), or a newsletter: Write back opens your
    email app at once, with no question, and their page shows the address.

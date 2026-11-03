@@ -38,7 +38,7 @@ async function signedIn(page: Page) {
 async function openBlog(page: Page): Promise<number> {
   const name = `rekey-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
-  await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
   await appReady(page);
   await expect(page.getByRole("button", { name: new RegExp(`Blog ${name}`) }).first()).toBeVisible();
   return id;
@@ -187,13 +187,13 @@ test.describe("on a wide window", () => {
     await page.goto(new URL("/all", FEEDS_APP).href);
     await appReady(page);
     // Once the sidebar has the feeds (the blog, in no folder, among them).
-    await expect(page.getByRole("navigation", { name: "Sidebar" }).locator(`a[href="/feeds/${blog}"]`)).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Sidebar" }).locator(`a[href="/people/${blog}"]`)).toBeVisible();
     await page.keyboard.press("Shift+J");
-    await expect(page).toHaveURL(/\/feeds\/\d+$/);
+    await expect(page).toHaveURL(/\/people\/\d+$/);
     const first = page.url();
     await page.keyboard.press("Shift+J");
     await expect(page).not.toHaveURL(first);
-    await expect(page).toHaveURL(/\/feeds\/\d+$/);
+    await expect(page).toHaveURL(/\/people\/\d+$/);
     await page.keyboard.press("Shift+K");
     await expect(page).toHaveURL(first);
 

@@ -7,7 +7,7 @@ import { keepLibrary, keptLibrary } from "./offline";
 import { getJson, isRecord, sendChange } from "./http";
 import { deviceJson, setDeviceText } from "./device";
 import { saved } from "./saving";
-import { toFeed, toPerson, type Feed, type FeedSettings, type Folder, type Library, type VideoSettings } from "./shapes";
+import { toFeed, toPerson, type Feed, type FeedSettings, type Folder, type Library, type PlaceKind, type VideoSettings, type WhoKind } from "./shapes";
 
 export type Choice = { title: string; url: string };
 
@@ -226,27 +226,21 @@ export async function change(path: string, body: unknown): Promise<{ refusal?: R
   return sendChange(path, body, ["no-name", "already", "too-late"]);
 }
 
-/** "Edit feed": its name and folders; `newFolder` (if any) is created and chosen too. */
-export async function editFeed(
-  id: number,
-  title: string,
-  folders: number[],
-  newFolder: string,
-  settings: FeedSettings & VideoSettings & { paused: boolean },
-): Promise<Refusal | undefined> {
-  return (
-    await change(`/api/feeds/${id}`, {
-      title,
-      folders,
-      new_folder: newFolder,
-      river: settings.river,
-      check: settings.check,
-      open_on_site: settings.openOnSite,
-      paused: settings.paused,
-      shorts: settings.shorts,
-      live_streams: settings.liveStreams,
-    })
-  ).refusal;
+/** What Edit and a source's settings change (decision 0160); anything left out stays as it is. */
+export type FeedChanges = Partial<FeedSettings & VideoSettings> & {
+  title?: string;
+  folders?: number[];
+  /** A folder to make and choose too. */
+  newFolder?: string;
+  paused?: boolean;
+  kind?: WhoKind;
+  place?: PlaceKind;
+};
+
+/** Saves Edit's or a source's settings: only what's given changes. */
+export async function editFeed(id: number, changes: FeedChanges): Promise<Refusal | undefined> {
+  const { newFolder, openOnSite, liveStreams, ...rest } = changes;
+  return (await change(`/api/feeds/${id}`, { ...rest, new_folder: newFolder, open_on_site: openOnSite, live_streams: liveStreams })).refusal;
 }
 
 export async function unsubscribe(id: number): Promise<Refusal | undefined> {

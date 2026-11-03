@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HELP_URL, SETTINGS_PAGES, helpPage, inSettings, knownPath, parentOf, parse, pathFor, rowFor, titleFor, type SettingsPage } from "./router";
+import { HELP_URL, SETTINGS_PAGES, helpPage, inSettings, knownPath, parentOf, parse, pathFor, placeAddressesBy, rowFor, titleFor, type SettingsPage } from "./router";
 
 describe("addresses", () => {
   it("gives each fixed view and Settings its own address", () => {
@@ -20,6 +20,11 @@ describe("addresses", () => {
     expect(parse("/feeds/12")).toEqual({ kind: "feed", id: 12 });
     expect(parse("/folders/4")).toEqual({ kind: "folder", id: 4 });
     expect(parse("/feeds/12/edit")).toEqual({ kind: "edit-feed", id: 12 });
+    expect(parse("/people/12")).toEqual({ kind: "feed", id: 12 });
+    expect(parse("/publications/7/")).toEqual({ kind: "feed", id: 7 });
+    expect(parse("/people/12/about")).toEqual({ kind: "about", id: 12 });
+    expect(parse("/publications/7/edit")).toEqual({ kind: "edit-feed", id: 7 });
+    expect(parse("/people/12/sources/34")).toEqual({ kind: "edit-source", id: 12, source: 34 });
     expect(parse("/folders/4/edit/")).toEqual({ kind: "edit-folder", id: 4 });
     expect(parse("/searches/7")).toEqual({ kind: "search", id: 7 });
     expect(parse("/searches/7/edit")).toEqual({ kind: "edit-search", id: 7 });
@@ -31,6 +36,8 @@ describe("addresses", () => {
     expect(parse("/feeds/0")).toEqual({ kind: "view", view: "unread" });
     expect(parse("/feeds/abc")).toEqual({ kind: "view", view: "unread" });
     expect(parse("/feeds/12/more")).toEqual({ kind: "view", view: "unread" });
+    expect(parse("/people/12/sources/0")).toEqual({ kind: "view", view: "unread" });
+    expect(parse("/publication/7")).toEqual({ kind: "view", view: "unread" });
     expect(parse("/folders/x/edit")).toEqual({ kind: "view", view: "unread" });
   });
 
@@ -61,9 +68,14 @@ describe("addresses", () => {
     expect(pathFor({ kind: "settings", page: "font" })).toBe("/settings/font");
     expect(titleFor({ kind: "settings", page: "font" })).toBe("Font, theme and line width · nine turtles");
     expect(titleFor({ kind: "readers" })).toBe("All readers · nine turtles");
-    expect(pathFor({ kind: "feed", id: 3 })).toBe("/feeds/3");
+    expect(pathFor({ kind: "feed", id: 3 })).toBe("/people/3");
+    expect(pathFor({ kind: "about", id: 3 })).toBe("/people/3/about");
+    expect(pathFor({ kind: "edit-source", id: 3, source: 9 })).toBe("/people/3/sources/9");
+    expect(titleFor({ kind: "about", id: 3 }, "Alpha")).toBe("Alpha · nine turtles");
     expect(titleFor({ kind: "feed", id: 3 }, "Quiet Notes")).toBe("Quiet Notes · nine turtles");
-    expect(titleFor({ kind: "add-feed" })).toBe("Add a feed · nine turtles");
+    expect(titleFor({ kind: "add-feed" })).toBe("Add a person or publication · nine turtles");
+    expect(pathFor({ kind: "add-feed" })).toBe("/add");
+    expect(parse("/add")).toEqual({ kind: "add-feed" });
     expect(titleFor({ kind: "new-to-feeds" })).toBe("New to feeds? · nine turtles");
     expect(pathFor({ kind: "edit-folder", id: 4 })).toBe("/folders/4/edit");
     expect(pathFor({ kind: "search", id: 7 })).toBe("/searches/7");
@@ -72,7 +84,18 @@ describe("addresses", () => {
     expect(titleFor({ kind: "search", id: 7 }, "Climate")).toBe("Climate · nine turtles");
     expect(titleFor({ kind: "save-search" })).toBe("Save search · nine turtles");
     expect(titleFor({ kind: "folder", id: 4 }, "Tech")).toBe("Tech · nine turtles");
-    expect(titleFor({ kind: "edit-feed", id: 3 })).toBe("Edit person · nine turtles");
+    expect(titleFor({ kind: "edit-feed", id: 3 }, "Alpha")).toBe("Edit Alpha · nine turtles");
+  });
+
+  it("gives a publication's places their own addresses once the sidebar says which it is (decision 0160)", () => {
+    placeAddressesBy((id) => id === 7);
+    try {
+      expect(pathFor({ kind: "feed", id: 7 })).toBe("/publications/7");
+      expect(pathFor({ kind: "edit-feed", id: 7 })).toBe("/publications/7/edit");
+      expect(pathFor({ kind: "feed", id: 3 })).toBe("/people/3");
+    } finally {
+      placeAddressesBy(() => false);
+    }
   });
 
   it("gives each of Settings' own pages an address that comes back to it (decision 0120)", () => {

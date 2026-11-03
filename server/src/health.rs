@@ -468,21 +468,25 @@ async fn follow_elsewhere(
     parsed: &feed::ParsedFeed,
     now: i64,
 ) -> Result<Result<(i64, bool), Response>, sqlx::Error> {
-    let (title, river, check_at_most, open_on_site, paused_at, writer): (
+    // The reader's own choices go along: their name, settings, person, and person or publication.
+    type Kept = (
         String,
         bool,
         i64,
         bool,
         Option<i64>,
         Option<i64>,
-    ) = sqlx::query_as(
-        "SELECT title, river, check_at_most, open_on_site, paused_at, writer_id FROM subscriptions
-             WHERE person_id = ? AND feed_id = ?",
-    )
-    .bind(person)
-    .bind(old)
-    .fetch_one(&mut *transaction)
-    .await?;
+        Option<String>,
+    );
+    let (title, river, check_at_most, open_on_site, paused_at, writer, kind): Kept =
+        sqlx::query_as(
+            "SELECT title, river, check_at_most, open_on_site, paused_at, writer_id, kind
+             FROM subscriptions WHERE person_id = ? AND feed_id = ?",
+        )
+        .bind(person)
+        .bind(old)
+        .fetch_one(&mut *transaction)
+        .await?;
     let (new, fresh) = match follow_in(
         &mut *transaction,
         state,
@@ -499,7 +503,7 @@ async fn follow_elsewhere(
     };
     sqlx::query(
         "UPDATE subscriptions SET river = ?, check_at_most = ?, open_on_site = ?, paused_at = ?,
-             writer_id = ?, same_asked = 1
+             writer_id = ?, kind = ?
          WHERE person_id = ? AND feed_id = ?",
     )
     .bind(river)
@@ -507,6 +511,7 @@ async fn follow_elsewhere(
     .bind(open_on_site)
     .bind(paused_at)
     .bind(writer)
+    .bind(kind)
     .bind(person)
     .bind(new)
     .execute(&mut *transaction)

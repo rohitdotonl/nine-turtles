@@ -19,7 +19,15 @@ export function isList(place: Route): boolean {
 
 /** The short tasks that open over a place: a sheet on a computer, a screen of their own on a phone. */
 export function isOver(place: Route): boolean {
-  return ["add-feed", "new-to-feeds", "edit-feed", "edit-folder", "save-search", "edit-search"].includes(place.kind);
+  return ["add-feed", "new-to-feeds", "edit-folder", "save-search", "edit-search"].includes(place.kind);
+}
+
+/**
+ * A person's or publication's page, its Edit, or one source's settings (decision 0160): on a computer
+ * in the reading area, beside their list; on a phone, a screen of its own in the list's place.
+ */
+export function isWho(place: Route): place is Extract<Route, { kind: "about" | "edit-feed" | "edit-source" }> {
+  return place.kind === "about" || place.kind === "edit-feed" || place.kind === "edit-source";
 }
 
 /** River mode has no Unread view: its address (and "/") leads to All. */
@@ -34,8 +42,8 @@ export function homeFor(place: Route, mode: ReadingMode): Route {
  * last list you were on.
  */
 export function underSheet(route: Route, lastPlace: Route, phone: boolean): Route {
+  if (!phone && isWho(route)) return { kind: "feed", id: route.id };
   if (phone || !isOver(route)) return route;
-  if (route.kind === "edit-feed") return { kind: "feed", id: route.id };
   if (route.kind === "edit-folder") return { kind: "folder", id: route.id };
   if (route.kind === "edit-search") return { kind: "search", id: route.id };
   return lastPlace;
@@ -61,7 +69,10 @@ export type Move = {
 export function moveTo(here: Here, next: Route): Move {
   const { route, under, phone } = here;
   const same = pathFor(route) === pathFor(next);
-  const keepsArticle = same || (!phone && ((isOver(next) && !isOver(route)) || (isOver(route) && pathFor(next) === pathFor(under))));
+  // A person's page, Edit and source settings sit beside their list, which stays, as does its article.
+  const whoUnder = (place: Route) => (isWho(place) ? pathFor({ kind: "feed", id: place.id }) : pathFor(place));
+  const besideList = !phone && (isWho(next) || isWho(route)) && whoUnder(next) === whoUnder(route);
+  const keepsArticle = same || besideList || (!phone && ((isOver(next) && !isOver(route)) || (isOver(route) && pathFor(next) === pathFor(under))));
   const sheet = (place: Route) => !phone && isOver(place);
   const parent = parentOf(route);
   return {

@@ -18,7 +18,7 @@ async function openBlog(page: Page): Promise<string> {
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
-  await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
   await appReady(page);
   await expect(row(page, NEWEST)).toBeVisible();
   return name;

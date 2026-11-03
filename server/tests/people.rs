@@ -1,8 +1,8 @@
-//! People (SPEC section 36): joining places into one person, their one
-//! list, "Is this the same person?", "This is one person" on a folder, and
-//! Undo for each, tested against a real running nine turtles and a made-up
-//! publisher. Alpha has a blog and a newsletter on one website; Beta is
-//! someone else.
+//! People and publications (SPEC section 36): joining places into one
+//! person, their one list, a person or publication for each place, "This is
+//! one person" on a folder, and Undo for each, tested against a real running
+//! nine turtles and a made-up publisher. Alpha has a blog and a newsletter
+//! on one website; Beta is someone else; the Gazette has several writers.
 
 mod common;
 
@@ -33,12 +33,19 @@ fn feed(file: &str) -> Response {
         "alpha-news.xml" => ("Alpha's letters", "https://www.alpha.example/news", 2),
         "beta.xml" => ("Beta's notebook", "https://beta.example/", 3),
         "gamma.xml" => ("Gamma's pictures", "https://gamma.example/", 4),
+        "gazette.xml" => ("The Gazette", "https://gazette.example/", 5),
         _ => return StatusCode::NOT_FOUND.into_response(),
     };
     let items: String = (1..=3)
         .map(|number| {
+            // The Gazette's articles each have a writer of their own.
+            let by = if file == "gazette.xml" {
+                format!("<dc:creator>Writer {number}</dc:creator>")
+            } else {
+                String::new()
+            };
             format!(
-                "<item><title>{title} {number}</title><guid>{file}-{number}</guid>\
+                "<item><title>{title} {number}</title><guid>{file}-{number}</guid>{by}\
                  <pubDate>{number}{day} Jan 2026 12:00:00 GMT</pubDate></item>"
             )
         })
@@ -46,7 +53,7 @@ fn feed(file: &str) -> Response {
     (
         [(header::CONTENT_TYPE, "application/rss+xml")],
         format!(
-            r#"<?xml version="1.0"?><rss version="2.0"><channel><title>{title}</title>
+            r#"<?xml version="1.0"?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/"><channel><title>{title}</title>
             <link>{site}</link>{items}</channel></rss>"#
         ),
     )
@@ -127,6 +134,18 @@ impl Reader {
                 (person["name"].as_str().unwrap().to_owned(), places)
             })
             .collect()
+    }
+
+    /// One followed feed, as the sidebar has it.
+    async fn feed(&self, id: i64) -> Value {
+        let listed = self.get("/api/feeds").await;
+        listed["feeds"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|each| each["id"].as_i64() == Some(id))
+            .unwrap()
+            .clone()
     }
 
     /// One feed's folders, by number.
@@ -320,29 +339,122 @@ async fn adding_another_place_to_a_person_and_separating_it_again() {
 }
 
 #[tokio::test]
-async fn nine_turtles_asks_once_about_two_places_on_one_website() {
+async fn each_place_is_a_person_or_a_publication_and_the_reader_can_change_it() {
+    let (reader, _state) = Reader::new().await;
+    // Guessed as it's added: one blog of someone's own, and a paper with several writers.
+    let (_, added) = reader
+        .post(
+            "/api/feeds",
+            json!({ "address": format!("{}/gazette.xml", reader.publisher) }),
+        )
+        .await;
+    assert_eq!(added["feed"]["kind"], "publication", "{added}");
+    assert_eq!(added["feed"]["place"], "blog");
+    let gazette = added["feed"]["id"].as_i64().unwrap();
+    let blog = reader.follow("alpha.xml").await;
+    assert_eq!(reader.feed(blog).await["kind"], "person");
+    // The reader changes their minds, and corrects what kind of source it is, without touching its name or folders.
+    let (status, _) = reader
+        .post(
+            &format!("/api/feeds/{gazette}"),
+            json!({ "kind": "person", "place": "newsletter" }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    let changed = reader.feed(gazette).await;
+    assert_eq!(changed["kind"], "person");
+    assert_eq!(changed["place"], "newsletter");
+    assert_eq!(changed["title"], "The Gazette");
+    // A place joined to someone is always a person's; taken out, it's guessed afresh.
+    let (_, _) = reader
+        .post(
+            &format!("/api/feeds/{gazette}"),
+            json!({ "kind": "publication" }),
+        )
+        .await;
+    reader
+        .post("/api/writers/join", json!({ "feeds": [blog, gazette] }))
+        .await;
+    assert_eq!(reader.feed(gazette).await["kind"], "person");
+    reader
+        .post("/api/writers/separate", json!({ "feed": gazette }))
+        .await;
+    assert_eq!(reader.feed(gazette).await["kind"], "publication");
+}
+
+#[tokio::test]
+async fn joining_puts_every_source_in_the_folders_the_reader_chose() {
+    let (reader, _state) = Reader::new().await;
+    let blog = reader.follow("alpha.xml").await;
+    let letters = reader.follow("alpha-news.xml").await;
+    let (_, friends) = reader
+        .post(
+            "/api/folders",
+            json!({ "name": "Friends", "feeds": [blog] }),
+        )
+        .await;
+    let (_, news) = reader
+        .post(
+            "/api/folders",
+            json!({ "name": "News", "feeds": [letters] }),
+        )
+        .await;
+    let friends = friends["folder"]["id"].as_i64().unwrap();
+    let news = news["folder"]["id"].as_i64().unwrap();
+    let (status, joined) = reader
+        .post(
+            "/api/writers/join",
+            json!({ "feeds": [blog, letters], "folders": [friends] }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK, "{joined}");
+    assert_eq!(reader.folders_of(blog).await, [friends]);
+    assert_eq!(reader.folders_of(letters).await, [friends]);
+    // Undo puts each back in its own folder.
+    reader
+        .post(
+            "/api/writers/put-back",
+            json!({ "before": joined["before"] }),
+        )
+        .await;
+    assert_eq!(reader.folders_of(letters).await, [news]);
+}
+
+#[tokio::test]
+async fn unsubscribing_from_a_person_leaves_every_source_and_undo_brings_them_back() {
     let (reader, _state) = Reader::new().await;
     let blog = reader.follow("alpha.xml").await;
     let letters = reader.follow("alpha-news.xml").await;
     let beta = reader.follow("beta.xml").await;
-    let same = reader
-        .get(&format!("/api/writers/same?feed={letters}"))
+    reader
+        .post(
+            "/api/writers/join",
+            json!({ "feeds": [blog, letters], "name": "Alpha" }),
+        )
         .await;
-    assert_eq!(same["same"]["feed"].as_i64(), Some(blog), "{same}");
-    assert_eq!(same["same"]["name"], "Alpha's blog");
-    // Someone on another website is no one's double.
-    let none = reader.get(&format!("/api/writers/same?feed={beta}")).await;
-    assert!(none["same"].is_null(), "{none}");
-    // No: neither is asked about again, and nothing was joined.
-    let (status, _) = reader
-        .post("/api/writers/same/no", json!({ "feeds": [letters, blog] }))
+    let (status, left) = reader
+        .post("/api/writers/unsubscribe", json!({ "feed": letters }))
         .await;
-    assert_eq!(status, StatusCode::NO_CONTENT);
-    for feed in [letters, blog] {
-        let asked = reader.get(&format!("/api/writers/same?feed={feed}")).await;
-        assert!(asked["same"].is_null(), "{asked}");
+    assert_eq!(status, StatusCode::OK, "{left}");
+    assert_eq!(left["feeds"], json!([blog, letters]));
+    let listed = reader.get("/api/feeds").await;
+    let ids: Vec<i64> = listed["feeds"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|feed| feed["id"].as_i64().unwrap())
+        .collect();
+    assert_eq!(ids, [beta]);
+    for feed in [blog, letters] {
+        let (status, _) = reader
+            .post(&format!("/api/feeds/{feed}/resubscribe"), json!({}))
+            .await;
+        assert_eq!(status, StatusCode::NO_CONTENT);
     }
-    assert!(reader.people().await.is_empty());
+    assert_eq!(
+        reader.people().await,
+        [("Alpha".to_owned(), vec![blog, letters])]
+    );
 }
 
 #[tokio::test]

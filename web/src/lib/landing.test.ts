@@ -26,7 +26,7 @@ function stubPage() {
 
 /** Each heading as its own spot, named for where it is. */
 const headings = Object.fromEntries(
-  ["list", "sheet", "welcome", "settings", "health", "yourFeeds", "muted", "readers", "add"].map((name) => [name, new Spot(name)]),
+  ["list", "sheet", "welcome", "settings", "health", "yourFeeds", "muted", "readers", "who", "add"].map((name) => [name, new Spot(name)]),
 ) as unknown as Headings;
 
 const computer: LandingScene = { phone: false, sheetShown: false, welcome: false };
@@ -53,10 +53,16 @@ describe("where the keyboard lands", () => {
 
   it("lands on a sheet's heading, except Save search, which starts in its name field", () => {
     const sheet = { ...computer, sheetShown: true };
-    expect(landing({ kind: "edit-feed", id: 7 }, sheet)).toBe("sheet");
+    expect(landing({ kind: "edit-folder", id: 7 }, sheet)).toBe("sheet");
     expect(landing({ kind: "save-search" }, sheet)).toBeUndefined();
     // On a phone it's a page, with the list's heading.
     expect(landing({ kind: "save-search" })).toBe("list");
+  });
+
+  it("lands on a person's page, Edit or source settings heading (decision 0160)", () => {
+    expect(landing({ kind: "about", id: 7 })).toBe("who");
+    expect(landing({ kind: "edit-feed", id: 7 })).toBe("who");
+    expect(landing({ kind: "edit-source", id: 7, source: 8 }, { ...computer, phone: true })).toBe("who");
   });
 
   it("lands on New to feeds' heading: the sheet's on a computer, the page's on a phone", () => {

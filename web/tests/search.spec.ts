@@ -176,7 +176,7 @@ test("a search starts where you are, marks the words it found, and Escape brings
 test("Mark all as read marks only the results, and u undoes it", async ({ page }) => {
   const name = unique("marked");
   const [id] = await start(page, [`${FEED_SITE}/blog/${name}/`]);
-  await open(page, `/feeds/${id}`, `Blog ${name}`);
+  await open(page, `/people/${id}`, `Blog ${name}`);
   const count = (unread: number) =>
     page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: `Blog ${name} unread` }).and(page.locator(`[data-unread="${unread}"]`));
   await expect(count(3)).toBeVisible();
@@ -197,7 +197,7 @@ test("Mark all as read marks only the results, and u undoes it", async ({ page }
 test("Hindi words are found whole", async ({ page }) => {
   const name = unique("kavita");
   const [id] = await start(page, [`${FEED_SITE}/hindi/${name}/`]);
-  await open(page, `/feeds/${id}`, `Kavita ${name}`);
+  await open(page, `/people/${id}`, `Kavita ${name}`);
   await page.keyboard.press("/");
   await page.keyboard.type("किताबें");
   await page.keyboard.press("Enter");
@@ -212,7 +212,7 @@ test("Hindi words are found whole", async ({ page }) => {
 test("each result shows its text around the match under the title, and × clears the field", async ({ page, isMobile }) => {
   const blog = unique("excerpt");
   const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
-  await open(page, `/feeds/${id}`, `Blog ${blog}`);
+  await open(page, `/people/${id}`, `Blog ${blog}`);
   await page.keyboard.press("/");
   // No × until there's something to clear.
   await expect(page.getByRole("button", { name: "Clear search" })).toHaveCount(0);
@@ -263,7 +263,7 @@ test("each result shows its text around the match under the title, and × clears
 test("with nothing found, the reading area doesn't offer j", async ({ page }) => {
   const blog = unique("nothing");
   const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
-  await open(page, `/feeds/${id}`, `Blog ${blog}`);
+  await open(page, `/people/${id}`, `Blog ${blog}`);
   const reading = page.getByRole("region", { name: "Article" });
   await expect(reading).toContainText(/press j/i);
   await page.keyboard.press("/");
@@ -277,7 +277,7 @@ test("with nothing found, the reading area doesn't offer j", async ({ page }) =>
 test("with many filters the search box wraps, and no chip slides under the options button", async ({ page }) => {
   const blog = unique("chips");
   const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
-  await open(page, `/feeds/${id}`, `Blog ${blog}`);
+  await open(page, `/people/${id}`, `Blog ${blog}`);
   // With an article open, the list is at its narrowest.
   await heading(page).focus();
   await page.keyboard.press("j");
@@ -296,7 +296,7 @@ test("with many filters the search box wraps, and no chip slides under the optio
 test("the search options float over the list; Escape closes them first, then the search", async ({ page }) => {
   const blog = unique("options");
   const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
-  await open(page, `/feeds/${id}`, `Blog ${blog}`);
+  await open(page, `/people/${id}`, `Blog ${blog}`);
   await field(page).focus();
   const button = page.getByRole("button", { name: "Search options" });
   await button.click();
@@ -328,7 +328,7 @@ test("the search options float over the list; Escape closes them first, then the
 test("with only the keyboard: a search is saved, opened from the sidebar, renamed, and deleted with Undo", async ({ page }) => {
   const blog = unique("saved");
   const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
-  await open(page, `/feeds/${id}`, `Blog ${blog}`);
+  await open(page, `/people/${id}`, `Blog ${blog}`);
   await heading(page).focus();
   const sidebar = page.getByRole("navigation", { name: "Sidebar" });
   const more = page.getByRole("button", { name: "More", exact: true });

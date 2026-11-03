@@ -51,7 +51,7 @@ test("a fresh nine turtles shows the welcome in the reading area: the paste fiel
   const reading = page.getByRole("region", { name: "Hello. Who would you like to read?" });
   await expect(reading.getByRole("heading", { level: 2, name: "Hello. Who would you like to read?" })).toBeVisible();
   await expect(reading.getByLabel("Paste a website or feed URL")).toBeVisible();
-  await expect(reading.getByRole("button", { name: "Add feed" })).toBeVisible();
+  await expect(reading.getByRole("button", { name: "Add", exact: true })).toBeVisible();
   await expect(page.getByText("Nothing here yet.")).toHaveCount(0);
   await expect(sidebar(page).getByRole("searchbox", { name: "Find a person or folder" })).toHaveCount(0);
   await expect(page.getByText("Time to read something beautiful.")).toHaveCount(0);
@@ -71,7 +71,7 @@ test("a fresh nine turtles shows the welcome in the reading area: the paste fiel
   // "Bring your list from another app…", an underlined link in the text color just under the field and
   // centred under it, 44px tall to touch (decisions 0045, 0048, 0055), opens the file chooser at once (decision 0137).
   const importLink = reading.getByRole("button", { name: "Bring your list from another app…" });
-  const [fieldBox, importBox, addBox] = await Promise.all([field(page).boundingBox(), importLink.boundingBox(), reading.getByRole("button", { name: "Add feed" }).boundingBox()]);
+  const [fieldBox, importBox, addBox] = await Promise.all([field(page).boundingBox(), importLink.boundingBox(), reading.getByRole("button", { name: "Add", exact: true }).boundingBox()]);
   expect(importBox!.y - (fieldBox!.y + fieldBox!.height)).toBeLessThanOrEqual(12);
   expect(importBox!.height).toBeGreaterThanOrEqual(44);
   await expect(importLink).toHaveCSS("text-decoration-line", "underline");
@@ -92,11 +92,11 @@ test("a fresh nine turtles shows the welcome in the reading area: the paste fiel
   await expect(reading.getByRole("status").filter({ hasText: "No new" })).toHaveText("No new feeds were added.");
   await expect(importLink).toBeFocused();
   await expect(reading.getByRole("heading", { level: 2, name: "Hello. Who would you like to read?" })).toBeVisible();
-  await expect(sidebar(page).getByRole("link", { name: "Add feed" })).toBeVisible();
+  await expect(sidebar(page).getByRole("link", { name: "Add a person or publication" })).toBeVisible();
 });
 
-test("the welcome stays still under the Add a feed sheet", async ({ page, isMobile }) => {
-  test.skip(isMobile, "on a phone, Add a feed is a screen of its own");
+test("the welcome stays still under the Add sheet", async ({ page, isMobile }) => {
+  test.skip(isMobile, "on a phone, Add is a screen of its own");
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/unread");
   await appReady(page);
@@ -106,7 +106,7 @@ test("the welcome stays still under the Add a feed sheet", async ({ page, isMobi
   const before = await shape();
   // Nothing behind the sheet moves as it opens or closes (decision 0048): the welcome keeps its shape under the dim.
   await page.keyboard.press("a");
-  const sheet = page.getByRole("dialog", { name: "Add a feed" });
+  const sheet = page.getByRole("dialog", { name: "Add a person or publication" });
   await expect(sheet.getByLabel("Paste a website or feed URL")).toBeFocused();
   expect(await shape()).toEqual(before);
   // The page has one field of that name: the sheet's.
@@ -303,17 +303,29 @@ test("on a phone, New to feeds? is a page sheet with its X and the main action a
   await expect(page.getByRole("heading", { level: 2, name: "Hello. Who would you like to read?" })).toBeVisible();
 });
 
-test("a, a website's address and Enter add its feed, and its articles appear", async ({ page }) => {
+test("a, a website's address and Enter follow it, someone or something is asked, and its articles appear", async ({ page }) => {
   await openApp(page, "/all");
   const name = newBlog();
   await page.keyboard.press("a");
-  await expect(page).toHaveURL(/\/add-feed$/);
+  await expect(page).toHaveURL(/\/add$/);
   await expect(field(page)).toBeFocused();
 
   await page.keyboard.type(`${FEED_SITE}/blog/${name}/`);
   await page.keyboard.press("Enter");
 
-  await expect(page).toHaveURL(/\/feeds\/[0-9]+$/);
+  // Followed: then one question, with nine turtles' guess chosen and the keyboard on it (decision 0160).
+  const asked = page.getByRole("group", { name: `Is Blog ${name} someone or something?` });
+  await expect(asked).toBeVisible();
+  await expect(asked.getByRole("radio", { name: /^Someone/ })).toBeChecked();
+  await expect(asked.getByRole("radio", { name: /^Someone/ })).toBeFocused();
+  await expect(page.getByRole("button", { name: "Done" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Cancel" })).toHaveCount(0);
+  // Its list opens only once Done is pressed.
+  await expect(page).toHaveURL(/\/add$/);
+  await tabTo(page, page.getByRole("button", { name: "Done" }));
+  await page.keyboard.press("Enter");
+
+  await expect(page).toHaveURL(/\/people\/[0-9]+$/);
   await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeFocused();
   await expect(page).toHaveTitle(`Blog ${name} · nine turtles`);
   const link = sidebar(page).getByRole("link", { name: `Blog ${name}` });
@@ -334,13 +346,17 @@ test("a feed's own address works, and adding it twice says it's already there", 
   await openApp(page, "/add-feed");
   const name = newBlog();
   await field(page).fill(`${FEED_SITE}/blog/${name}/feed.xml`);
-  await page.getByRole("button", { name: "Add feed" }).click();
+  await page.getByRole("button", { name: "Add", exact: true }).click();
+  // Something, this time: it opens at a publication's address, under Publications.
+  await page.getByRole("radio", { name: /^Something/ }).check();
+  await page.getByRole("button", { name: "Done" }).click();
   await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeVisible();
+  await expect(page).toHaveURL(/\/publications\/[0-9]+$/);
 
-  await sidebar(page).getByRole("link", { name: "Add feed" }).click();
+  await sidebar(page).getByRole("link", { name: "Add a person or publication" }).click();
   await field(page).fill(`${FEED_SITE}/blog/${name}/`);
   await page.keyboard.press("Enter");
-  await expect(page.locator("#feed-address-status")).toHaveText("You already follow this feed.");
+  await expect(page.locator("#feed-address-status")).toHaveText("You already follow this.");
   await expect(sidebar(page).getByRole("link", { name: `Blog ${name}` })).toHaveCount(1);
 
   await page.getByRole("link", { name: `Go to Blog ${name}` }).click();
@@ -364,8 +380,9 @@ test("a site with several feeds offers a choice", async ({ page }) => {
   expect(await dot(first)).not.toBe("rgba(0, 0, 0, 0)");
   await comments.check();
   await expect(first).not.toBeChecked();
-  // Add feed adds the one chosen.
-  await page.getByRole("button", { name: "Add feed", exact: true }).click();
+  // Add adds the one chosen, then asks someone or something.
+  await page.getByRole("button", { name: "Add", exact: true }).click();
+  await page.getByRole("button", { name: "Done" }).click();
   await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}: comments` })).toBeVisible();
 });
 
@@ -399,11 +416,11 @@ test("changing the address after a choice of feeds takes the old choices away", 
   await page.route("**/api/feeds", (route) =>
     route.request().method() === "POST" ? route.fulfill({ status: 422, json: { error: "not-found" } }) : route.continue(),
   );
-  await page.getByRole("button", { name: "Add feed", exact: true }).click();
+  await page.getByRole("button", { name: "Add", exact: true }).click();
   await expect(page.locator("#feed-address-status")).toHaveText("Nothing was found at that address.");
   await expect(field(page)).toHaveAttribute("aria-invalid", "true");
   await page.unroute("**/api/feeds");
-  // They belong to the old address: typing another one clears them and all that was said, red edge included, and Add feed looks again.
+  // They belong to the old address: typing another one clears them and all that was said, red edge included, and Add looks again.
   await field(page).fill(`${FEED_SITE}/plain/`);
   await expect(choices).toHaveCount(0);
   await expect(page.locator("#feed-address-status")).toHaveText("");
@@ -436,7 +453,7 @@ test("Escape while nine turtles is still looking leaves you where you were, with
   await page.keyboard.press("a");
   await field(page).fill(`${FEED_SITE}/blog/${name}/`);
   await page.keyboard.press("Enter");
-  await expect(page.locator("#feed-address-status")).toHaveText("Looking for a feed…");
+  await expect(page.locator("#feed-address-status")).toHaveText("Looking…");
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(/\/all$/);
   answer();
@@ -444,7 +461,7 @@ test("Escape while nine turtles is still looking leaves you where you were, with
   await expect(page).toHaveURL(/\/all$/);
 });
 
-test("Escape leaves Add a feed for the list you were on", async ({ page }) => {
+test("Escape leaves Add for the list you were on", async ({ page }) => {
   await openApp(page, "/all");
   await page.keyboard.press("a");
   await expect(field(page)).toBeFocused();
@@ -486,13 +503,20 @@ test("with only the keyboard: choose one of several feeds, then go back to it fr
   await page.keyboard.press("Enter");
   await expect(page.locator("#feed-address-status")).toHaveText("This site offers more than one feed. Choose one:");
 
-  // Tab reaches the chosen feed (the first); an arrow key moves the choice; Add feed adds it.
+  // Tab reaches the chosen feed (the first); an arrow key moves the choice; Add adds it.
   await page.keyboard.press("Tab");
   await expect(page.getByRole("radio").first()).toBeFocused();
   await page.keyboard.press("ArrowDown");
   await expect(page.getByRole("radio", { name: /^Comments/ })).toBeChecked();
-  await tabTo(page, page.getByRole("button", { name: "Add feed", exact: true }));
+  await tabTo(page, page.getByRole("button", { name: "Add", exact: true }));
   await page.keyboard.press("Enter");
+  // Someone or something: an arrow key changes the answer, and Done opens it.
+  await expect(page.getByRole("radio", { name: /^Someone/ })).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await expect(page.getByRole("radio", { name: /^Something/ })).toBeChecked();
+  await tabTo(page, page.getByRole("button", { name: "Done" }));
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/publications\/[0-9]+$/);
   const heading = page.getByRole("heading", { level: 2, name: `Blog ${name}: comments` });
   await expect(heading).toBeFocused();
 
@@ -513,7 +537,7 @@ test("with only the keyboard: 'Go to' a feed you already follow", async ({ page 
   await page.keyboard.press("a");
   await page.keyboard.type(`${FEED_SITE}/blog/${name}/feed.xml`);
   await page.keyboard.press("Enter");
-  await expect(page.locator("#feed-address-status")).toHaveText("You already follow this feed.");
+  await expect(page.locator("#feed-address-status")).toHaveText("You already follow this.");
   await tabTo(page, page.getByRole("link", { name: /^Go to / }));
   await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeFocused();
@@ -575,7 +599,7 @@ test("a shared page asks \"Follow <name>?\", but follows only on Follow", async 
   await page.goto(new URL(`/add-feed?url=${encodeURIComponent(address)}`, FEEDS_APP).href);
   await appReady(page);
   await signIn(page);
-  await expect(page).toHaveURL(/\/add-feed$/);
+  await expect(page).toHaveURL(/\/add$/);
   const title = page.getByRole("heading", { name: `Follow Blog ${name}?` });
   await expect(title).toBeVisible();
   await expect(page).toHaveTitle(`Follow Blog ${name}? · nine turtles`);
@@ -597,7 +621,7 @@ test("a shared page asks \"Follow <name>?\", but follows only on Follow", async 
     await tabTo(page, page.getByRole("button", { name: "Follow", exact: true }), 5);
     await page.keyboard.press("Enter");
   }
-  await expect(page).toHaveURL(/\/feeds\/[0-9]+$/);
+  await expect(page).toHaveURL(/\/people\/[0-9]+$/);
   expect(await followed(page)).toContain(name);
 });
 
@@ -620,7 +644,7 @@ test("a share menu's text with the address inside it works too, and Escape follo
   await expect(sheet).toHaveCount(0);
   await expect(sidebar(page).getByRole("link", { name: `Blog ${name}` })).toHaveCount(0);
   expect(await followed(page)).not.toContain(name);
-  // The shared address was for that one opening: Add a feed opens empty again.
+  // The shared address was for that one opening: Add opens empty again.
   await page.keyboard.press("a");
   await expect(field(page)).toHaveValue("");
 });
@@ -644,7 +668,7 @@ test("Follow on someone already followed takes you to them", async ({ page, isMo
   await appReady(page);
   const sheet = page.getByRole("dialog", { name: `Follow Blog ${name}?` });
   await sheet.getByRole("button", { name: "Follow", exact: true }).click();
-  await expect(page).toHaveURL(new RegExp(`/feeds/${id}$`));
+  await expect(page).toHaveURL(new RegExp(`/people/${id}$`));
 });
 
 test("Settings gives the bookmark and the Shortcuts address, built from this nine turtles' own address", async ({ page }) => {

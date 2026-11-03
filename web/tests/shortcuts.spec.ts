@@ -28,7 +28,7 @@ async function signedIn(page: Page, height = 800) {
 async function openBlog(page: Page, many = false): Promise<string> {
   const name = `${many ? "many" : "keys"}-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
-  await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
   await appReady(page);
   await expect(page.getByRole("button", { name: new RegExp(`Blog ${name}`) }).first()).toBeVisible();
   return name;
@@ -209,7 +209,7 @@ test.describe("on a wide window", () => {
     await page.request.post(new URL(`/api/feeds/${feed}`, FEEDS_APP).href, { data: { title: `Blog ${blog}`, folders: [], new_folder: folder } });
     await page.reload();
     await appReady(page);
-    const toggle = sidebar(page).getByRole("button", { name: `People in ${folder}` });
+    const toggle = sidebar(page).getByRole("button", { name: `What's in ${folder}` });
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
 
     // In the feed: e unfolds its folder, and folds it again.
@@ -218,10 +218,14 @@ test.describe("on a wide window", () => {
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
     await page.keyboard.press("e");
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
-    // Shift+E edits the feed; Escape goes back.
+    // Shift+E opens Edit for them, beside their list; Escape goes back to their page, and again to the list.
     await page.keyboard.press("Shift+E");
-    await expect(page.getByRole("heading", { level: 2, name: "Edit person" })).toBeFocused();
+    await expect(page.getByRole("heading", { level: 2, name: `Edit Blog ${blog}` })).toBeFocused();
+    await expect(page).toHaveURL(/\/people\/\d+\/edit$/);
     await page.keyboard.press("Escape");
+    await expect(page).toHaveURL(/\/people\/\d+\/about$/);
+    await page.keyboard.press("Escape");
+    await expect(page).toHaveURL(/\/people\/\d+$/);
     await expect(page.getByRole("heading", { level: 2, name: `Blog ${blog}` })).toBeVisible();
 
     // In the folder: e folds and unfolds it; Shift+E edits it.

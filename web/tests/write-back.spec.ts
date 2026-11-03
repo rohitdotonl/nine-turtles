@@ -9,6 +9,8 @@ import { appReady, follow, signIn } from "./screens";
 // test shares the one nine turtles that has feeds.
 
 const pane = (page: Page) => page.getByRole("region", { name: "Article" });
+/** Their page, beside the list: the region of their name that isn't the list (which is named for them too). */
+const whoPage = (page: Page, name: string) => page.getByRole("region", { name, exact: true }).filter({ hasNot: page.locator("#list-heading") });
 
 test.skip(({ isMobile }) => isMobile, "the person's page stands in the wide window's reading pane");
 
@@ -19,10 +21,13 @@ test("Write back asks once for an address, keeps it on their page, then opens th
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
-  await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   // Nothing known yet: their page has no address.
-  await expect(pane(page)).not.toContainText("Email");
+  await expect(whoPage(page, `Blog ${name}`).getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeVisible();
+  await expect(whoPage(page, `Blog ${name}`)).not.toContainText("Email");
+  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await appReady(page);
 
   await page.locator(".item-row").first().click();
   const start = pane(page).getByRole("button", { name: `Write back to Blog ${name}` });
@@ -55,14 +60,16 @@ test("Write back asks once for an address, keeps it on their page, then opens th
   await expect(page.getByRole("menuitem", { name: /Write back/ })).toBeVisible();
   await page.keyboard.press("Escape");
 
-  // Their page keeps it, and Edit person can change it.
-  await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
+  // Their page keeps it, and Edit can change it.
+  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
   await appReady(page);
-  await expect(pane(page).getByRole("link", { name: "ivy@ivy.example" })).toHaveAttribute("href", "mailto:ivy@ivy.example");
-  await pane(page).getByRole("button", { name: "Edit person…" }).click();
+  const about = whoPage(page, `Blog ${name}`);
+  await expect(about.getByRole("link", { name: "ivy@ivy.example" })).toHaveAttribute("href", "mailto:ivy@ivy.example");
+  await about.getByRole("button", { name: `Edit Blog ${name}` }).click();
   const edit = page.getByRole("textbox", { name: "Email address" });
   await expect(edit).toHaveValue("ivy@ivy.example");
   await edit.fill("ivy@letters.example");
-  await page.getByRole("button", { name: "Save" }).click();
-  await expect(pane(page).getByRole("link", { name: "ivy@letters.example" })).toBeVisible();
+  await page.getByRole("button", { name: "Done" }).click();
+  await expect(page).toHaveURL(new RegExp(`/people/${id}/about$`));
+  await expect(about.getByRole("link", { name: "ivy@letters.example" })).toBeVisible();
 });

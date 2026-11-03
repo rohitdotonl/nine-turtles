@@ -103,6 +103,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - MCP (Model Context Protocol) and AI assistants
 - Newsletters as feeds
 - People and places (a person's blog, channel and newsletter as one)
+- People and publications (someone or something, and the guess between them)
 - Write back (a `mailto:` link that opens the reader's own email app)
 - The weekly email (the one email a reader chooses; its stop link)
 - Raw email (RFC 5322 and MIME)
@@ -174,7 +175,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Stepping through articles and feeds with the keyboard (`moving.ts`)
 - Where the keyboard lands on arriving somewhere (`landing.ts`)
 - The sidebar's fixed lists: Unread, Starred, All, Recently read and Up Next, which show, and Up Next's row staying while it empties (`SidebarViews.svelte`)
-- The sidebar's foot: Add feed, Keys and Settings, always at the bottom of the sidebar (`SidebarFoot.svelte`)
+- The sidebar's foot: + Add, Keys and Settings, always at the bottom of the sidebar (`SidebarFoot.svelte`)
 
 ## Data and the database
 

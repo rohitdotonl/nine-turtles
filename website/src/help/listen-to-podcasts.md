@@ -15,7 +15,7 @@ related: [follow-someone, watch-youtube-videos, find-your-way-around]
 
 ## Follow a podcast
 
-Press **Add feed** and paste the podcast's website, or the feed address it
+Press **+ Add** and paste the podcast's website, or the feed address it
 gives. See <a href="/help/follow-someone/">Follow someone from their
 website's address</a>. Episodes show headphones and their length in the list.
 

@@ -25,7 +25,7 @@ test("articles go on a collection by l and by the menu; it opens, and deleting i
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${blog}/`);
-  await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
   await appReady(page);
   await expect(page.getByRole("button", { name: new RegExp(`Blog ${blog}`) }).first()).toBeVisible();
 
@@ -75,8 +75,8 @@ test("articles go on a collection by l and by the menu; it opens, and deleting i
   const shelf = Number(/\/collections\/(\d+)$/.exec(page.url())?.[1]);
   await expect(page.getByRole("heading", { level: 2, name })).toBeVisible();
   await expect(link).toHaveAttribute("aria-current", "page");
-  // The list's rows, not the article's Write back button, which names the blog too.
-  const rows = page.getByRole("button", { name: new RegExp(`^(?!Write back)[^]*Blog ${blog}`) });
+  // The list's rows, not the article's Write back button nor the list's title (their name, a button too), which name the blog as well.
+  const rows = page.getByRole("listitem").getByRole("button", { name: new RegExp(`^(?!Write back)[^]*Blog ${blog}`) });
   await expect(rows).toHaveCount(2);
   await expect(rows.nth(0)).toHaveAccessibleName(new RegExp(NEWEST.replace(/[()]/g, "\\$&")));
   await expect(rows.nth(1)).toHaveAccessibleName(new RegExp(MIDDLE.replace(/[()]/g, "\\$&")));
@@ -158,7 +158,7 @@ test("articles go on a collection by l and by the menu; it opens, and deleting i
   const again = page.url();
 
   // Its articles are still in their feed.
-  await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
   await appReady(page);
   await expect(rows).toHaveCount(3);
 
@@ -198,10 +198,10 @@ test("on a phone, Add to collection is the same small sheet over the article, an
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${blog}/`);
-  await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
   await appReady(page);
-  // The list's rows, not the article's Write back button, which names the blog too.
-  const rows = page.getByRole("button", { name: new RegExp(`^(?!Write back)[^]*Blog ${blog}`) });
+  // The list's rows, not the article's Write back button nor the list's title (their name, a button too), which name the blog as well.
+  const rows = page.getByRole("listitem").getByRole("button", { name: new RegExp(`^(?!Write back)[^]*Blog ${blog}`) });
   await rows.first().tap();
   await expect(article(page).getByRole("heading", { name: NEWEST })).toBeVisible();
 

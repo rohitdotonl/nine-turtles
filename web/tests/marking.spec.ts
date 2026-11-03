@@ -28,7 +28,7 @@ async function openBlog(page: Page, width = 1280): Promise<string> {
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
-  await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
   await appReady(page);
   await expect(row(page, name, NEWEST)).toBeVisible();
   return name;
@@ -182,14 +182,14 @@ test.describe("on a wide window", () => {
     // The sort order is a one-of-two choice, ticked where it is now.
     await expect(menu.getByRole("menuitemradio", { name: "Newest first" })).toHaveAttribute("aria-checked", "true");
     await expect(menu.getByRole("menuitemradio", { name: "Oldest first" })).toHaveAttribute("aria-checked", "false");
-    // Then Refresh (its key shown beside it), the sort order, and Edit feed last (decision 0038).
+    // Then Refresh (its key shown beside it), the sort order, and "About …" last (decision 0038).
     await page.keyboard.press("ArrowDown");
     await expect(menu.getByRole("menuitem", { name: "Refresh" })).toBeFocused();
     await expect(menu.getByRole("menuitem", { name: "Refresh" })).toHaveAttribute("aria-keyshortcuts", "r");
     await page.keyboard.press("ArrowDown");
     await expect(menu.getByRole("menuitemradio", { name: "Newest first" })).toBeFocused();
     await page.keyboard.press("End");
-    await expect(menu.getByRole("menuitem", { name: "Edit person" })).toBeFocused();
+    await expect(menu.getByRole("menuitem", { name: /^About / })).toBeFocused();
     await page.keyboard.press("ArrowUp");
     await expect(menu.getByRole("menuitemradio", { name: "Oldest first" })).toBeFocused();
     await page.keyboard.press("End");
@@ -526,7 +526,7 @@ test("river mode: no Unread view, no dots, no read styling, and it opens on All"
   await expect(page.getByText(/Marked \d+ items? as read/)).toHaveCount(0);
   await page.keyboard.press("g");
   await page.keyboard.press("u");
-  await expect(page).toHaveURL(/\/feeds\/\d+$/);
+  await expect(page).toHaveURL(/\/people\/\d+$/);
   await page.goto(new URL("/", FEEDS_APP).href);
   await appReady(page);
   await expect(page).toHaveURL(/\/all$/);

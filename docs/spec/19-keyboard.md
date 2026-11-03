@@ -10,39 +10,40 @@
   | `j` / `k` | Next / previous item |
   | `n` / `Shift+N` | Next / previous unread item, passing over read ones |
   | `Home` / `End` | First / last article in the list (End: the last one loaded so far) |
-  | `Shift+J` / `Shift+K` | Next / previous feed, in the sidebar's order |
   | `Enter` / `o` | Open item |
   | `Space` / `Shift+Space` | Scroll the open article down / up one screen |
   | `v` | Open original |
   | `c` | Copy the open article's link |
+  | `+` / `-` | Text size while reading |
   | `s` | Star / unstar |
   | `l` | Add to collection (the open or selected article; section 34) |
   | `w` | Write back to whoever wrote the open or selected article (section 37) |
+  | `Esc` | Back / close |
+  | `g` then `u` / `s` / `a` | Go to Unread / Starred / All (also when Starred or All is hidden from the sidebar) |
+  | `g` then `r` | Go to Recently read (also when it's hidden from the sidebar) |
+  | `g` then `f` | Go to Your feeds (Settings › Your library) |
+  | `g` then `,` | Go to Settings |
+  | `Shift+J` / `Shift+K` | Next / previous in the sidebar |
+  | `i` | About this person or publication (their page, section 36) |
+  | `/` | Search |
+  | `[` | Show / hide sidebar |
+  | `]` | Show / hide article list |
+  | `\` | Full-screen reading (hide sidebar and list) |
+  | `e` | Fold / unfold the folder you're in, in the sidebar |
   | `m` | Mark current item unread |
   | `Shift+A` | Mark all as read |
   | `Shift+O` | Mark older as read |
   | `u` | Undo |
   | `r` | Show new articles |
-  | `/` | Search |
-  | `a` | Add feed |
-  | `g` then `u` / `s` / `a` | Go to Unread / Starred / All (also when Starred or All is hidden from the sidebar) |
-  | `g` then `f` | Go to Your feeds (Settings › Your library) |
-  | `g` then `,` | Go to Settings |
-  | `g` then `r` | Go to Recently read (also when it's hidden from the sidebar) |
-  | `e` | Fold / unfold the folder you're in, in the sidebar |
-  | `Shift+E` | Edit the feed or folder you're in |
-  | `[` | Show / hide sidebar |
-  | `]` | Show / hide article list |
-  | `\` | Full-screen reading (hide sidebar and list) |
-  | `+` / `-` | Text size while reading |
-  | `Esc` | Back / close |
+  | `Shift+E` | Edit this person, publication or folder |
+  | `a` | Add a person or publication |
   | `?` | Shortcut cheat sheet |
 
 - **Space** (decision 0103) moves the open article on by one screen, at once, never gliding, keeping a few lines of the last screen in view; `Shift+Space` moves it back. It works wherever the keyboard's place is (the article, its row in the list, a link in the sidebar) while an article is open, except on a control that takes Space itself (a button, a tick box, a switch, a menu, a field), where Space presses that control as always. At the end of the article it simply stops: it never opens the next one. With no article open, Space is the browser's own.
 - **`n` / `Shift+N`** (decision 0103) choose the next / previous unread article listed, passing over read ones, and show it as `j` / `k` do; with none left that way, nothing happens. Like `j`, they never load more of the list on their own.
-- **`Shift+O`** marks every article older than the chosen one as read, with Undo (section 8). **`e`** folds or unfolds, in the sidebar, the folder you're viewing (or the first folder of the feed you're viewing). **`Shift+E`** opens Edit person or Edit folder for the person or folder you're viewing. **`c`** copies the open article's link to the original, as More › Copy link does, and the top bar says "Link copied.".
+- **`Shift+O`** marks every article older than the chosen one as read, with Undo (section 8). **`e`** folds or unfolds, in the sidebar, the folder you're viewing (or the first folder of the person or publication you're viewing). **`Shift+E`** opens Edit for the person or publication you're viewing (on their page, section 36), or Edit folder for the folder. **`i`** (decision 0160, in Getting around after `Shift+J` / `Shift+K`) opens the page of the person or publication whose list you're in. **`c`** copies the open article's link to the original, as More › Copy link does, and the top bar says "Link copied.".
 - `n`, `Shift+N` and `Shift+O` (like Go to Unread and Mark all as read) do nothing in river mode, and the cheat sheet leaves them out there.
-- **`Shift+J` / `Shift+K`** (decision 0110) go to the next / previous feed in the sidebar's order: folders A to Z, each with its feeds while it's open, then the feeds in no folder. A folded folder's feeds are passed over; a feed in two folders counts once, where it's first listed. Folders, saved searches and Unread, Starred and All aren't stops: from a folder, `Shift+J` goes to the first feed after the folder's row; from Unread, Starred, All or a saved search, `Shift+J` goes to the first feed and `Shift+K` does nothing. At either end nothing happens. On a phone every folder counts as open. They work from a list, not from Settings or a sheet.
+- **`Shift+J` / `Shift+K`** (decision 0110; "Next / previous in the sidebar") go to the next / previous person or publication in the sidebar's order: folders A to Z, each with what's in it while it's open, then People, then Publications. A folded folder's feeds are passed over; a feed in two folders counts once, where it's first listed. Folders, saved searches and Unread, Starred and All aren't stops: from a folder, `Shift+J` goes to the first feed after the folder's row; from Unread, Starred, All or a saved search, `Shift+J` goes to the first feed and `Shift+K` does nothing. At either end nothing happens. On a phone every folder counts as open. They work from a list, not from Settings or a sheet.
 - **`Home` / `End`** (decision 0110) choose the first / last article listed and show it, as `j` / `k` do. `End` goes to the last article loaded so far; it never loads more itself. They work only while a list is in view: in the open article (the keyboard anywhere in it, or the list hidden with `]`, or on a phone) they scroll the article to its top or end as usual, and on a page that isn't a list (Settings, Your feeds, Feed health, Muted, Readers) they scroll that page. On a field, a row of choices or a menu, Home and End stay that control's own.
 - **`g` then `f`** opens Your feeds and **`g` then `,`** opens Settings, from anywhere outside a field. **`g` then `r`** opens Recently read.
 - **Keys of your own** (decision 0110): the `?` list only lists, until you press **Change keys…**, a quiet underlined link at the right of its foot line (only on a screen with a keyboard), or **Settings › Keyboard › Change keys…**. Before Change keys…, on every screen, **Help** opens the website's "Every keyboard key" page in a new tab (section 40). The same sheet then shows "Change keys" as its title and a line saying how it works, and every key that can change becomes a button around its key cap (44px to press); the search filters step aside. Press one: it says "Press the new key…" in its place, and screen readers hear "Press the new key that stars and unstars. Escape cancels." The next key you press, with Shift if you hold it, becomes its key ("X now stars and unstars."). Shift, Ctrl, Option or ⌘ on its own keeps it waiting; Escape cancels ("Not changed."); Tab leaves without changing anything. A key that can't be used says why under the row, in plain words, and it keeps waiting: Enter ("presses buttons and opens articles"), `?` ("always opens this list"), `g` alone ("starts the Go to keys"), keys held with ⌘, Ctrl or Option ("belong to the browser"), and anything other than one character, Space, Home or End. A key another shortcut has is asked about under the row: "Shift+O already marks older as read. Use it here instead?" with **Cancel** and **Use it** (the keyboard goes to Use it; Escape is Cancel). Use it gives the key here and leaves the other with **No key** ("Nothing marks older as read now."). Each changed key has a quiet **Reset** link after it, back to nine turtles' own key (asked about the same way if another has taken it). The sheet's foot, always in view, has **Reset all keys** at the left and **Done** at the right; Done goes back to the plain list with the keyboard on Change keys…. Escape still closes the sheet. Enter, Escape, `?` and the `g then …` keys can't change, and show as plain caps. Each change is saved at once, for your account, so your keys follow you to every device you sign in on (and work offline, from this device's copy, which signing out forgets). A shortcut left with no key shows "No key" in the list. The keys you chose are the ones everything shows: the cheat sheet, tooltips, the More menus and the welcome tip. Each reader's keys are their own.
@@ -65,7 +66,7 @@
 6. In a feed, read the first two articles with `j` `j`, go back with `k` and press `n`: the third is chosen, the read one passed over.
 7. Choose an article halfway down a long list and press `Shift+O`: everything below it turns grey and the note says "Marked … articles as read" with Undo. Press `u`: they're unread again.
 8. With an article open, press `c`: "Link copied." shows in the top bar, and pasting gives the publisher's address.
-9. In a feed inside a folder, press `e`: the folder folds in the sidebar; again, it unfolds. Press `Shift+E`: Edit person opens.
+9. In a feed inside a folder, press `e`: the folder folds in the sidebar; again, it unfolds. Press `Shift+E`: their page opens in Edit. Press `i`: their page opens.
 10. In All, press `Shift+J`: the first feed in the sidebar opens; again, the next; `Shift+K` goes back. Fold a folder and its feeds are passed over. In a feed, `End` chooses the last article loaded and `Home` the first. Open an article and press `End`: it scrolls to the article's end, and the same article stays chosen. On Settings, `End` scrolls the page. `g` then `f` opens Your feeds; `g` then `,` opens Settings.
 11. Press `?`, then Tab to **Change keys…** and press Enter. Tab to the key of "Star / unstar", press Enter, then `x`: it now shows X. Press Done, then Escape. With an article open, `x` stars it, `s` does nothing, and the star's tooltip says "Star (X)". Open the app on another device or browser, signed in as you: `x` stars there too.
 12. In Change keys, give "Star / unstar" `Shift+O`: it asks "Shift+O already marks older as read. Use it here instead?". Press Use it: "Mark older as read" shows No key. Press **Reset all keys**: every key is back as it was. Try Enter or `?`: it says why that key can't be used.

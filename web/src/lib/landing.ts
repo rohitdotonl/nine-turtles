@@ -16,6 +16,8 @@ export interface Headings {
   yourFeeds?: HTMLHeadingElement;
   muted?: HTMLHeadingElement;
   readers?: HTMLHeadingElement;
+  /** A person's or publication's page, Edit or source settings (decision 0160). */
+  who?: HTMLHeadingElement;
   add?: HTMLInputElement;
 }
 
@@ -41,6 +43,7 @@ export function landingFor(place: Route, headings: Headings, scene: LandingScene
   if (place.kind === "muted") return headings.muted;
   if (place.kind === "readers") return headings.readers;
   if (place.kind === "add-feed") return headings.add;
+  if (place.kind === "about" || place.kind === "edit-feed" || place.kind === "edit-source") return headings.who;
   if (place.kind === "new-to-feeds") return scene.phone ? headings.list : headings.sheet;
   // "Save search" starts in its name field, which the sheet gives the keyboard itself.
   if (scene.sheetShown) return place.kind === "save-search" ? undefined : headings.sheet;

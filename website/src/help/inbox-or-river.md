@@ -33,10 +33,11 @@ for busy sites you only skim.
 
 You can keep the inbox for most people and let a busy one flow past.
 
-1. Choose the person in the sidebar.
-2. Open the list's **More** menu and choose **Edit person…**
-   (or press <kbd>Shift</kbd> <kbd>E</kbd>).
-3. Under **Reading mode**, choose **River**.
+1. Choose the person in the sidebar, and press their name at the top of
+   their list to open their page.
+2. Press **Edit** (or press <kbd>Shift</kbd> <kbd>E</kbd>). If they have
+   several sources, press › beside the one you'd like.
+3. Under **Reading mode**, choose **River**, then press **Done**.
 
 Their articles then skip Unread and never get a dot. You still find them in
 their own list, in All, in their folders and in search.

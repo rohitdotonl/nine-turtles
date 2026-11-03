@@ -13,7 +13,7 @@ number; "SPEC section 28" means the file numbered 28. Read only the sections
 your change touches.
 
 A few words used throughout:
-- **Feed:** the file a website publishes listing its latest writing (RSS, Atom or JSON Feed). On screen, readers see people and their places instead (section 36).
+- **Feed:** the file a website publishes listing its latest writing (RSS, Atom or JSON Feed). On screen, readers see people and publications and their sources instead (section 36).
 - **Item / article:** one piece of writing from a feed.
 - **Pane:** one of the side-by-side columns on screen (feeds, items, article).
 - **Vim keys:** single-letter keyboard shortcuts such as `j` and `k`, named after a classic text editor.
@@ -57,7 +57,7 @@ A few words used throughout:
 | 33 | [Connecting your own AI assistant (MCP)](spec/33-ai-assistants-mcp.md) |
 | 34 | [Collections](spec/34-collections.md) |
 | 35 | [Podcasts](spec/35-podcasts.md) |
-| 36 | [People](spec/36-people.md) |
+| 36 | [People and publications](spec/36-people.md) |
 | 37 | [Writing back](spec/37-writing-back.md) |
 | 38 | [YouTube](spec/38-youtube.md) |
 | 39 | [The weekly email](spec/39-the-weekly-email.md) |

@@ -9,7 +9,9 @@ export type Route =
   | { kind: "view"; view: View }
   | { kind: "feed"; id: number }
   | { kind: "folder"; id: number }
+  | { kind: "about"; id: number }
   | { kind: "edit-feed"; id: number }
+  | { kind: "edit-source"; id: number; source: number }
   | { kind: "edit-folder"; id: number }
   | { kind: "search"; id: number }
   | { kind: "edit-search"; id: number }
@@ -62,6 +64,21 @@ export const VIEW_NAMES: Record<View, string> = { unread: "Unread", starred: "St
 export const HIDEABLE = ["starred", "all", "recent", "searches", "collections", "upnext"] as const;
 export type Hideable = (typeof HIDEABLE)[number];
 
+/**
+ * Whether the person or publication whose row opens at feed `id` is a publication (decision 0160):
+ * their addresses start /publications/ rather than /people/. Shell answers it once the sidebar has
+ * loaded; until then everyone is at /people/, and the old /feeds/ addresses still open.
+ */
+let publication: (id: number) => boolean = () => false;
+export function placeAddressesBy(isPublication: (id: number) => boolean) {
+  publication = isPublication;
+}
+
+/** "/people/12" or "/publications/7": where a person's or publication's places are. */
+function whoPath(id: number): string {
+  return `/${publication(id) ? "publications" : "people"}/${id}`;
+}
+
 /** The place an address points to. Anything unknown opens Unread. */
 export function parse(path: string): Route {
   const name = path.replace(/^\/+|\/+$/g, "");
@@ -72,19 +89,22 @@ export function parse(path: string): Route {
   if (name === "settings/readers/all") return { kind: "readers" };
   const page = name.startsWith("settings/") ? settingsPage(name.slice("settings/".length)) : undefined;
   if (page) return { kind: "settings", page };
-  if (name === "add-feed") return { kind: "add-feed" };
+  if (name === "add" || name === "add-feed") return { kind: "add-feed" };
   if (name === "new-to-feeds") return { kind: "new-to-feeds" };
   if (name === "searches/new") return { kind: "save-search" };
   const saved = name.match(/^searches\/([1-9][0-9]{0,15})(\/edit)?$/);
   if (saved) return saved[2] ? { kind: "edit-search", id: Number(saved[1]) } : { kind: "search", id: Number(saved[1]) };
   const collection = name.match(/^collections\/([1-9][0-9]{0,15})$/);
   if (collection) return { kind: "collection", id: Number(collection[1]) };
-  const place = name.match(/^(feeds|folders)\/([1-9][0-9]{0,15})(\/edit)?$/);
-  if (place) {
-    const id = Number(place[2]);
-    if (place[1] === "feeds") return place[3] ? { kind: "edit-feed", id } : { kind: "feed", id };
-    return place[3] ? { kind: "edit-folder", id } : { kind: "folder", id };
+  // A person or publication (decision 0160): their list, page, Edit, and one source's settings. The old /feeds/ addresses still open.
+  const who = name.match(/^(feeds|people|publications)\/([1-9][0-9]{0,15})(\/edit|\/about|\/sources\/([1-9][0-9]{0,15}))?$/);
+  if (who) {
+    const id = Number(who[2]);
+    if (who[4]) return { kind: "edit-source", id, source: Number(who[4]) };
+    return who[3] === "/edit" ? { kind: "edit-feed", id } : who[3] === "/about" ? { kind: "about", id } : { kind: "feed", id };
   }
+  const folder = name.match(/^folders\/([1-9][0-9]{0,15})(\/edit)?$/);
+  if (folder) return folder[2] ? { kind: "edit-folder", id: Number(folder[1]) } : { kind: "folder", id: Number(folder[1]) };
   if ((VIEWS as readonly string[]).includes(name)) return { kind: "view", view: name as View };
   return { kind: "view", view: "unread" };
 }
@@ -110,15 +130,19 @@ export function pathFor(route: Route): string {
     case "readers":
       return "/settings/readers/all";
     case "add-feed":
-      return "/add-feed";
+      return "/add";
     case "new-to-feeds":
       return "/new-to-feeds";
     case "feed":
-      return `/feeds/${route.id}`;
+      return whoPath(route.id);
+    case "about":
+      return `${whoPath(route.id)}/about`;
+    case "edit-feed":
+      return `${whoPath(route.id)}/edit`;
+    case "edit-source":
+      return `${whoPath(route.id)}/sources/${route.source}`;
     case "folder":
       return `/folders/${route.id}`;
-    case "edit-feed":
-      return `/feeds/${route.id}/edit`;
     case "edit-folder":
       return `/folders/${route.id}/edit`;
     case "search":
@@ -148,15 +172,18 @@ export function nameFor(route: Route, placeName?: string): string {
     case "readers":
       return "All readers";
     case "add-feed":
-      return "Add a feed";
+      return "Add a person or publication";
     case "new-to-feeds":
       return "New to feeds?";
     case "feed":
-      return placeName || "Feed";
+    case "about":
+      return placeName || "Someone";
     case "folder":
       return placeName || "Folder";
     case "edit-feed":
-      return "Edit person";
+      return `Edit ${placeName || "someone"}`;
+    case "edit-source":
+      return "Source settings";
     case "edit-folder":
       return "Edit folder";
     case "search":

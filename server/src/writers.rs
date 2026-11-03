@@ -1,20 +1,19 @@
-//! People (SPEC section 36, decision 0146): a person is one human with one
-//! or more places on the web (a blog, a channel, a newsletter). In the code
-//! they're "writers", because the readers are already `people`; on screen
-//! they're always "people", and the word "feed" stays off their screens.
+//! People (SPEC section 36, decisions 0146 and 0160): a person is one human
+//! with one or more sources on the web (a blog, a channel, a newsletter). In
+//! the code they're "writers", because the readers are already `people`, and
+//! a source is a "place"; on screen the word "feed" stays off their screens.
 //!
 //! A place the reader hasn't joined to another has no writer: it's a person
-//! with one place, and looks as it always did. Joining places ("Add another
-//! place" on the person's page, a yes to "Is this the same person?", or
-//! "This is one person" on a folder) makes a writer, or adds to one, and
-//! puts every place of the person in the same folders. Each join, and each
-//! "Not the same person", answers what the places were like before, so the
-//! screen's Undo can put them back (`put_back`).
+//! or a publication with one source (`writers/kind.rs` guesses which).
+//! Joining places ("+ Add a source" on the person's page, or "This is one
+//! person" on a folder) makes a writer, or adds to one, and puts every place
+//! of the person in the same folders. Each join, and each "Take out of …",
+//! answers what the places were like before, so the screen's Undo can put
+//! them back (`put_back`).
 //!
 //! A person's list is any of their places' lists: `GET /api/articles?feed=3`
 //! for a place of a person with two or more places lists all of them
-//! (`widen`). nine turtles never joins places by itself: it only asks, once,
-//! when two places are on the same website (`writers/same.rs`).
+//! (`widen`). nine turtles never joins places by itself.
 
 use axum::{
     Json, Router,
@@ -35,7 +34,7 @@ use crate::{
     now, refused,
 };
 
-mod same;
+pub mod kind;
 
 pub fn routes() -> Router<AppState> {
     Router::new()
@@ -43,7 +42,7 @@ pub fn routes() -> Router<AppState> {
         .route("/api/writers/put-back", post(put_places_back))
         .route("/api/writers/separate", post(separate_place))
         .route("/api/folders/{id}/person", post(folder_to_person))
-        .merge(same::routes())
+        .route("/api/writers/unsubscribe", post(unsubscribe_person))
 }
 
 /// The people the reader has joined places into, A to Z, each with at least
@@ -148,7 +147,8 @@ async fn before_of(
 /// other place of the people they already belong to. The person is the
 /// first of those people, renamed to `name` if one is given; with none, a
 /// new person called `name`, or the first place's name. Every place ends up
-/// in every folder any of them was in, and is never asked about again.
+/// in exactly `folders` when given (the reader's answer when the places were
+/// in different folders), or else in every folder any of them was in.
 /// Answers the person and what the places were like before; `None` when
 /// the reader follows none of `feeds`.
 pub async fn join(
@@ -156,6 +156,7 @@ pub async fn join(
     person: i64,
     feeds: &[i64],
     name: Option<&str>,
+    folders: Option<&[i64]>,
 ) -> Result<Option<(i64, Vec<Before>)>, sqlx::Error> {
     let given = before_of(connection, person, feeds).await?;
     // The person first named, in the reader's order.
@@ -219,7 +220,7 @@ pub async fn join(
         }
     };
     sqlx::query(
-        "UPDATE subscriptions SET writer_id = ?, same_asked = 1
+        "UPDATE subscriptions SET writer_id = ?
          WHERE person_id = ? AND feed_id IN (SELECT value FROM json_each(?))",
     )
     .bind(writer)
@@ -227,20 +228,26 @@ pub async fn join(
     .bind(ids(&places))
     .execute(&mut *connection)
     .await?;
-    let mut folders: Vec<i64> = before
-        .iter()
-        .flat_map(|place| place.folders.clone())
-        .collect();
-    folders.sort_unstable();
-    folders.dedup();
-    sqlx::query(
-        "INSERT OR IGNORE INTO feed_folders (folder_id, feed_id)
-         SELECT folder.value, place.value FROM json_each(?) AS folder, json_each(?) AS place",
-    )
-    .bind(ids(&folders))
-    .bind(ids(&places))
-    .execute(&mut *connection)
-    .await?;
+    if let Some(chosen) = folders {
+        for &place in &places {
+            folders::file_in(connection, person, place, chosen).await?;
+        }
+    } else {
+        let mut every: Vec<i64> = before
+            .iter()
+            .flat_map(|place| place.folders.clone())
+            .collect();
+        every.sort_unstable();
+        every.dedup();
+        sqlx::query(
+            "INSERT OR IGNORE INTO feed_folders (folder_id, feed_id)
+             SELECT folder.value, place.value FROM json_each(?) AS folder, json_each(?) AS place",
+        )
+        .bind(ids(&every))
+        .bind(ids(&places))
+        .execute(&mut *connection)
+        .await?;
+    }
     // The people merged into this one have no place left; Undo brings them back by name.
     forget_empty(connection, person).await?;
     Ok(Some((writer, before)))
@@ -377,9 +384,12 @@ struct JoinForm {
     feeds: Vec<i64>,
     #[serde(default)]
     name: Option<String>,
+    /// The folders they all go in, when the reader was asked.
+    #[serde(default)]
+    folders: Option<Vec<i64>>,
 }
 
-/// "Add another place" and a yes to "Is this the same person?".
+/// "+ Add a source": someone the reader follows, or an address followed then and there.
 async fn join_places(
     SignedIn(person): SignedIn,
     State(state): State<AppState>,
@@ -394,7 +404,14 @@ async fn join_places(
     };
     let joined = async {
         let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
-        let joined = join(&mut transaction, person, &form.feeds, name.as_deref()).await?;
+        let joined = join(
+            &mut transaction,
+            person,
+            &form.feeds,
+            name.as_deref(),
+            form.folders.as_deref(),
+        )
+        .await?;
         transaction.commit().await?;
         Ok::<_, sqlx::Error>(joined)
     }
@@ -435,8 +452,8 @@ struct PlaceForm {
     feed: i64,
 }
 
-/// "Not the same person": one place leaves its person and stands on its own
-/// again, in the folders it's in. Only a person with another place left can
+/// "Take out of …": one place leaves its person and stands on its own
+/// again, in the folders it's in, a person or publication as guessed afresh. Only a person with another place left can
 /// lose one. Answers what it was like before, for Undo.
 async fn separate_place(
     SignedIn(person): SignedIn,
@@ -452,7 +469,7 @@ async fn separate_place(
         // The address typed for the person was theirs, not this place's
         // (decision 0147); Undo brings it back.
         sqlx::query(
-            "UPDATE subscriptions SET writer_id = NULL, same_asked = 1, write_to = NULL
+            "UPDATE subscriptions SET writer_id = NULL, kind = NULL, write_to = NULL
              WHERE person_id = ? AND feed_id = ?",
         )
         .bind(person)
@@ -515,7 +532,8 @@ async fn folder_to_person(
         let (Some(name), false) = (name, places.is_empty()) else {
             return Ok(None);
         };
-        let Some((writer, before)) = join(&mut transaction, person, &places, Some(&name)).await?
+        let Some((writer, before)) =
+            join(&mut transaction, person, &places, Some(&name), None).await?
         else {
             return Ok(None);
         };
@@ -535,5 +553,38 @@ async fn folder_to_person(
         Ok(Some(answer)) => Json(answer).into_response(),
         Ok(None) => StatusCode::NOT_FOUND.into_response(),
         Err(error) => database_problem("making a folder one person", &error),
+    }
+}
+
+/// "Unsubscribe from Alpha…": every source of the person the place belongs
+/// to (just the place, for one on its own), together, so Undo brings them
+/// all back. Answers the places unsubscribed from.
+async fn unsubscribe_person(
+    SignedIn(person): SignedIn,
+    State(state): State<AppState>,
+    Json(form): Json<PlaceForm>,
+) -> Response {
+    let left = async {
+        folders::clear_unsubscribed(&state.db, Some(person), i64::MAX).await?;
+        let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
+        let places: Vec<i64> = sqlx::query_scalar(
+            "SELECT feed_id FROM subscriptions
+             WHERE person_id = ?1 AND unsubscribed_at IS NULL AND (feed_id = ?2 OR writer_id =
+                 (SELECT writer_id FROM subscriptions WHERE person_id = ?1 AND feed_id = ?2))
+             ORDER BY feed_id",
+        )
+        .bind(person)
+        .bind(form.feed)
+        .fetch_all(&mut *transaction)
+        .await?;
+        folders::hide(&mut transaction, person, &places, now()).await?;
+        transaction.commit().await?;
+        Ok::<_, sqlx::Error>(places)
+    }
+    .await;
+    match left {
+        Ok(places) if places.is_empty() => StatusCode::NOT_FOUND.into_response(),
+        Ok(places) => Json(json!({ "feeds": places })).into_response(),
+        Err(error) => database_problem("unsubscribing from a person", &error),
     }
 }
