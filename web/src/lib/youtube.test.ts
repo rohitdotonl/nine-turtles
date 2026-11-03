@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { chapters, foldable, playerAddress, playerNews, question, toPlayer, youtubeVideo } from "./youtube";
+import { chapters, foldable, playerAddress, playerNews, question, toPlayer, videoSpeed, youtubeVideo } from "./youtube";
 
 describe("which articles are YouTube videos", () => {
   it("finds the video in every kind of YouTube address", () => {
@@ -52,6 +52,19 @@ describe("talking to YouTube's player", () => {
     });
     expect(playerNews(JSON.stringify({ event: "onStateChange", info: 0 }))).toEqual({ state: "ended" });
     expect(playerNews(JSON.stringify({ event: "infoDelivery", info: { volume: 100 } }))).toEqual({});
+  });
+
+  it("reads its speed, and only a speed it can play at", () => {
+    expect(playerNews(JSON.stringify({ event: "infoDelivery", info: { playbackRate: 1.5 } }))).toEqual({ rate: 1.5 });
+    expect(playerNews(JSON.stringify({ event: "onPlaybackRateChange", info: 2 }))).toEqual({ rate: 2 });
+    expect(playerNews(JSON.stringify({ event: "onPlaybackRateChange", info: 0 }))).toEqual({});
+    expect(playerNews(JSON.stringify({ event: "infoDelivery", info: { playbackRate: 99 } }))).toEqual({});
+  });
+
+  it("plays at the speed this device keeps, or at 1×", () => {
+    expect(videoSpeed("1.5")).toBe(1.5);
+    expect(videoSpeed("0.25")).toBe(0.25);
+    for (const kept of [null, "", "fast", "0", "-1", "9"]) expect(videoSpeed(kept)).toBe(1);
     for (const other of ["not json", JSON.stringify({ event: "onReady" }), { event: "infoDelivery" }, null]) {
       expect(playerNews(other)).toBeUndefined();
     }
