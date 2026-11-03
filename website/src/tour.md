@@ -1,7 +1,7 @@
 ---
 layout: page.njk
 title: A tour
-description: Everything nine turtles does, from reading and search to keyboard shortcuts, phones, and syncing with other apps.
+description: Everything nine turtles does, from reading and search to keyboard shortcuts and phones.
 permalink: /tour/
 ---
 
@@ -103,12 +103,6 @@ Every action works with Tab, Enter and Escape. On top of that, single keys
 move you through your reading: `j` and `k` for the next and previous
 article, `s` to star, `m` to mark unread, `v` to open the original, `/` to
 search. Press `?` at any time to see them all.
-
-## With the apps you already use
-
-If you like reading in Reeder or NetNewsWire, they can use nine turtles to
-keep your feeds, folders, read articles and stars in step, through the same
-"Google Reader" connection that FreshRSS and Miniflux offer.
 
 ## Your data stays yours
 

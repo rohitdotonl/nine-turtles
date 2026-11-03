@@ -13,8 +13,9 @@ permalink: /faq/
 
 ## Can I use nine turtles today?
 
-Not yet for everyone. A version you can simply sign up for is planned, and
-the [blog](/blog/) will say when it opens.
+Yes. Anyone can make an account with an email address and a password.
+nine turtles first emails you a link to confirm the address.
+[Open the app]({{ site.app }}).
 
 ## What will it cost?
 
@@ -34,20 +35,16 @@ were published.
 
 ## Does it send notifications?
 
-Never. nine turtles doesn't try to bring you back. New articles wait
-quietly for the next time you open it.
+No. nine turtles doesn't try to bring you back. New articles wait
+quietly for the next time you open it. The one exception is a
+[weekly email](/help/weekly-email/), if you choose it in Settings: plain
+text, and off in one press.
 
 ## Can I bring my feeds from another reader?
 
 Yes. Almost every feed reader can export what you follow as an OPML file,
 and nine turtles imports it in one go, folders and all. It exports the same
 way, so you can always leave.
-
-## Does it work with Reeder or NetNewsWire?
-
-Yes. They can use nine turtles to keep your feeds, read articles and stars
-in step, through the "Google Reader" connection that FreshRSS and Miniflux
-also offer.
 
 ## Why do some articles show only a summary?
 
@@ -64,10 +61,11 @@ down whenever a site asks.
 
 ## Can I read newsletters or podcasts?
 
-Newsletters that publish a feed (most on Substack and Ghost do) work like
-any other site. nine turtles doesn't offer an email address for
-newsletters. Podcasts appear as a link to the episode, and YouTube videos
-play in YouTube's own player.
+Yes. nine turtles gives you a private email address for newsletters, so
+each one arrives here instead of your inbox
+([how](/help/newsletters/)). Podcast episodes play right in nine turtles,
+from the podcast's own address ([how](/help/listen-to-podcasts/)), and
+YouTube videos play in YouTube's own player.
 
 ## Does it work on my phone?
 

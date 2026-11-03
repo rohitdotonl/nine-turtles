@@ -19,6 +19,11 @@ export default function (eleventyConfig) {
   const finder = readFileSync(new URL("./src/feed-finder.js", import.meta.url));
   eleventyConfig.addGlobalData("finderVersion", createHash("sha256").update(finder).digest("hex").slice(0, 10));
 
+  // The blog is hidden until Rohit writes in it at least once a month (the
+  // owner's review, 3 November 2026). Its posts stay here, ready to return:
+  // remove this line, and the blog's links in base.njk, to bring it back.
+  eleventyConfig.ignores.add("src/blog/**");
+
   eleventyConfig.addPassthroughCopy({ "src/style.css": "style.css" });
   eleventyConfig.addPassthroughCopy({ "src/feed-finder.js": "feed-finder.js" });
   eleventyConfig.addPassthroughCopy({ "src/images": "images" });

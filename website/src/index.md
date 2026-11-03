@@ -15,12 +15,12 @@ contents:
 
 <h1 class="lead">Read people. Write back.</h1>
 
-<p>There are people online you'd like to know. Most of them have a blog, a newsletter or a channel. nine turtles keeps them in one quiet place, helps you write back to them, and ends when you've read what's there. No algorithm, no likes, no AI in between. Built on RSS, the open standard, so your list is always yours.</p>
+<p>There are people online you'd like to know. Most of them have a blog, a newsletter or a channel. nine turtles keeps them in one quiet place, helps you write back to them, and ends when you've read what's there. No algorithm, and no AI rewriting or ranking what people write. Built on RSS, the open standard, so your list is always yours.</p>
 
 <p><a class="button" href="{{ site.app }}">Open the app</a></p>
 
 <figure class="shot">
-  <img class="day" src="/images/app-light.webp" width="1600" height="1000" alt="nine turtles on a computer, by day. On the left, a sidebar with Unread, Starred and All, two folders and three blogs. In the middle, the blog Reading Room's three articles, the last line saying That's everything. On the right, the article The pleasure of a slow letter, by Asha Rao, set in a calm serif on white paper, with a quotation and a drawing of a river." />
+  <img class="day" src="/images/app-light.webp" width="1600" height="1000" alt="nine turtles on a computer, by day. On the left, a sidebar with Unread, Starred, All and Recently read, two folders and three people. In the middle, Reading Room's three articles, the last line saying That's everything. On the right, the article The pleasure of a slow letter, by Asha Rao, set in a calm serif on white paper, with a quotation and a drawing of a river." />
   <img class="night" src="/images/app-dark.webp" width="1600" height="1000" alt="nine turtles on a computer, by night: the same sidebar, list and article, in light text on near-black." />
   <figcaption>nine turtles on a computer, following made-up blogs for this picture.</figcaption>
 </figure>

@@ -39,8 +39,7 @@ everything else and are never traded away:
 
 After those: reading comes first, calm over engagement, clear at a glance,
 a slow app with a fast interface, nothing moves unless you move it, power
-that's hidden but never missing, and respect for your time. Its look takes
-its lead from Apple Books.
+that's hidden but never missing, and respect for your time.
 
 ## The name
 
@@ -52,8 +51,7 @@ reading.
 
 nine turtles is made by [{{ site.maker }}]({{ site.makerSite }}), who wanted
 a calmer way to read the web. It started as
-"slowfeed" on 22 October 2026 and took its own name two days later. The
-[blog](/blog/) follows along.
+"slowfeed" on 22 October 2026 and took its own name two days later.
 
 Questions, ideas or problems are always welcome: [get in touch](/contact/).
 
