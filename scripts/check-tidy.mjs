@@ -38,7 +38,7 @@ const CEILINGS = {
   "web/src/lib/ItemList.svelte": 947,
   "server/src/assistants.rs": 948,
   "server/src/accounts.rs": 934,
-  "web/src/lib/Settings.svelte": 870,
+  "web/src/lib/Settings.svelte": 864,
   "server/src/payments.rs": 841,
   "server/src/auth.rs": 819,
 };
