@@ -1,11 +1,10 @@
 <!--
-  The page a confirmation link opens (/confirm-email#ticket=…, SPEC sections
-  1 and 18, decisions 0088 and 0154): a new account's address, or a reader's
-  new address. Nothing happens until the reader presses Confirm email, so a
-  mail program that opens links to check them can't use the link up first.
-  A new account is then made and this device signed in ("You're signed up",
-  with Open nine turtles); a changed address is said, with Continue. A link
-  that has run out says so calmly.
+  The page a confirmation link opens (/confirm-email#ticket=…, SPEC section
+  18, decision 0088): a reader's new address. Nothing happens until the
+  reader presses Confirm email, so a mail program that opens links to check
+  them can't use the link up first. The changed address is then said, with
+  Continue. A link that has run out says so calmly. (Open sign-up once
+  confirmed new accounts here too; since decision 0115 it needs no email.)
 -->
 <script lang="ts">
   import Logo from "./Logo.svelte";
@@ -23,8 +22,6 @@
   let spent = $state((() => ticket === "")());
   /** The reader's new address, once it has changed. */
   let changedTo = $state("");
-  /** The new account is made and this device signed in. */
-  let signedUp = $state(false);
   let busy = $state(false);
 
   async function confirm() {
@@ -34,8 +31,7 @@
     busy = false;
     if (typeof result === "object") {
       history.replaceState(null, "", "/confirm-email");
-      if (result.done === "signed-up") signedUp = true;
-      else changedTo = result.email;
+      changedTo = result.email;
       return;
     }
     message = explainLink(result, "confirm");
@@ -57,11 +53,7 @@
     <p class="mt-3 font-serif text-large text-muted">Confirm your email.</p>
   </div>
   <div class="flex w-full flex-col items-center gap-3 text-center sm:max-w-xs">
-    {#if signedUp}
-      <p role="status">You're signed up, and signed in on this device.</p>
-      <!-- svelte-ignore a11y_autofocus: the only thing to do now. -->
-      <a href="/" onclick={leave} autofocus class="btn-primary rounded-lg">Open nine turtles</a>
-    {:else if changedTo}
+    {#if changedTo}
       <p role="status">Your email is now <span class="font-semibold">{changedTo}</span>. Sign in with it from now on.</p>
       <!-- svelte-ignore a11y_autofocus: the only thing to do now. -->
       <a href="/" onclick={leave} autofocus class="btn rounded-lg">Continue</a>

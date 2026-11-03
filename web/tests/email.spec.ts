@@ -40,6 +40,7 @@ async function newReader(browser: Browser, email: string): Promise<Page> {
   await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
   const { link } = await newestMail(email, "Confirm your email for nine turtles");
   await page.goto(link);
+  await page.getByLabel("Password").fill(READER_PASSWORD);
   await page.getByRole("button", { name: "Confirm email" }).click();
   await page.getByRole("link", { name: "Open nine turtles" }).click();
   await expect(page.locator("#sidebar")).toBeAttached();
@@ -73,17 +74,33 @@ test("anyone can sign up by confirming their email, with only the keyboard", asy
   await expect(page.getByRole("heading", { name: "Check your email" })).toBeFocused();
   await expect(page.getByText(`A link is on its way to ${email}.`)).toBeVisible();
   await expect(page.getByText("Didn't get it? Look in your spam folder.")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Use another email" })).toBeVisible();
   expect((await page.evaluate(async () => (await fetch("/api/session")).json())).signed_in).toBe(false);
+  // Send again within the minute sends nothing and says so.
+  await page.getByRole("button", { name: "Send again" }).click();
+  await expect(page.getByText("The link went less than a minute ago.", { exact: false })).toBeVisible();
+  // Use another email returns to the form with the email kept and the keyboard in it.
+  await page.getByRole("link", { name: "Use another email" }).click();
+  await expect(page.getByLabel("Email")).toBeFocused();
+  await expect(page.getByLabel("Email")).toHaveValue(email);
+  await page.keyboard.press("Tab");
+  await page.keyboard.type(READER_PASSWORD);
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { name: "Check your email" })).toBeFocused();
 
-  // The email's link opens a page with one button, so a mail program checking links can't use it up.
+  // The email's link opens a page that asks for the password chosen, so only whoever signed up can finish it.
   const { mail, link } = await newestMail(email, "Confirm your email for nine turtles");
   expect(mail.body).toContain("24 hours");
-  expect(link).toMatch(/^\/confirm-email#ticket=/);
+  expect(link).toMatch(/^\/finish-sign-up#ticket=/);
   await page.goto(link);
-  await expect(page.getByRole("button", { name: "Confirm email" })).toBeFocused();
+  await expect(page.getByLabel("Password")).toBeFocused();
+  await page.keyboard.type("not the password at all");
   await page.keyboard.press("Enter");
-  await expect(page.getByText("You're signed up, and signed in on this device.")).toBeVisible();
+  await expect(page.getByText("That isn't the password you chose when you signed up.")).toBeVisible();
+  await expect(page.getByLabel("Password")).toHaveAttribute("aria-invalid", "true");
+  await page.keyboard.type(READER_PASSWORD);
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { name: "You're signed up" })).toBeFocused();
+  await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Open nine turtles" })).toBeFocused();
   await page.keyboard.press("Enter");
   // In nine turtles, signed in as the new reader, their address confirmed.

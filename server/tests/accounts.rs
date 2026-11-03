@@ -87,12 +87,12 @@ async fn open_reader(base: &str, outbox: &Outbox, email: &str) -> String {
     assert_eq!(asked.status(), StatusCode::ACCEPTED);
     assert!(asked.headers().get("set-cookie").is_none());
     let (page, ticket) = newest_link(outbox, email);
-    assert_eq!(page, "/confirm-email");
+    assert_eq!(page, "/finish-sign-up");
     let made = post(
         base,
-        "/api/email/confirm",
+        "/api/sign-up/finish",
         None,
-        json!({ "ticket": ticket }),
+        json!({ "ticket": ticket, "password": READER_PASSWORD }),
     )
     .await;
     assert_eq!(made.status(), StatusCode::OK);
@@ -290,8 +290,6 @@ async fn pressing_send_link_twice_sends_one_email() {
     assert_eq!(emails_to(&outbox, email).len(), before + 2);
 }
 
-/// Moves every link a minute (and a second) into the past, as if a minute
-/// had passed, while staying within the hour the counts look back.
 /// The link that confirmed a new reader's address is left out of what a
 /// test counts (it is one of the address's emails for the hour).
 async fn sign_up_link_forgotten(db: &sqlx::SqlitePool) {
@@ -301,6 +299,8 @@ async fn sign_up_link_forgotten(db: &sqlx::SqlitePool) {
         .unwrap();
 }
 
+/// Moves every link a minute (and a second) into the past, as if a minute
+/// had passed, while staying within the hour the counts look back.
 async fn a_minute_passes(db: &sqlx::SqlitePool) {
     sqlx::query("UPDATE email_links SET created_at = created_at - 61")
         .execute(db)
@@ -1736,9 +1736,9 @@ async fn sign_up_password_link_and_reset_set_the_same_locked_cookie_for_a_year()
     let (_, ticket) = newest_link(&outbox, email);
     let made = post(
         &base,
-        "/api/email/confirm",
+        "/api/sign-up/finish",
         None,
-        json!({ "ticket": ticket }),
+        json!({ "ticket": ticket, "password": READER_PASSWORD }),
     )
     .await;
     assert_eq!(made.status(), StatusCode::OK);

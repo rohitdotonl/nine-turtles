@@ -6,6 +6,7 @@
 
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
+import { duration } from "./session";
 
 export type Person = { id: number; email: string | null; owner: boolean; createdAt: number };
 
@@ -72,6 +73,55 @@ export function explainSignUp(result: Exclude<SignUpResult, { ok: true }>): stri
       return "That email already has an account. Sign in instead.";
     case "too-many":
       return "Many people have signed up in the last hour. Try again later.";
+    case "unreachable":
+      return "nine turtles can't be reached right now. Try again in a moment.";
+  }
+}
+
+/** The page a sign-up's emailed link opens. */
+export const FINISH_SIGN_UP_PAGE = "/finish-sign-up";
+
+export type FinishResult =
+  | { ok: true }
+  | { ok: false; reason: "wrong-password" | "expired" | "already" | "too-many" | "unreachable" }
+  | { ok: false; reason: "wait"; waitSeconds: number };
+
+/** Follows a sign-up's link with the password chosen at sign-up: the account is made and this device signed in. */
+export async function finishSignUp(ticket: string, password: string): Promise<FinishResult> {
+  let response: Response;
+  try {
+    response = await api("/api/sign-up/finish", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ ticket, password }),
+    });
+  } catch {
+    return { ok: false, reason: "unreachable" };
+  }
+  if (response.ok) return { ok: true };
+  const body: unknown = await response.json().catch(() => null);
+  const error = isRecord(body) ? body.error : undefined;
+  if (error === "wait") {
+    return { ok: false, reason: "wait", waitSeconds: isRecord(body) && typeof body.wait_seconds === "number" ? body.wait_seconds : 60 };
+  }
+  return error === "wrong-password" || error === "expired" || error === "already" || error === "too-many"
+    ? { ok: false, reason: error }
+    : { ok: false, reason: "unreachable" };
+}
+
+/** What the page a sign-up's link opens says when it didn't work. Plain and calm. */
+export function explainFinish(result: Exclude<FinishResult, { ok: true }>): string {
+  switch (result.reason) {
+    case "wrong-password":
+      return "That isn't the password you chose when you signed up.";
+    case "wait":
+      return `Too many wrong tries. Try again in ${duration(result.waitSeconds)}.`;
+    case "expired":
+      return "This link has expired or was already used. Sign up again for a new one.";
+    case "already":
+      return "That email already has an account. Sign in instead.";
+    case "too-many":
+      return "Many people have signed up in the last hour. Try this link again later.";
     case "unreachable":
       return "nine turtles can't be reached right now. Try again in a moment.";
   }

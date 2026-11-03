@@ -43,12 +43,13 @@ async fn sign_in(base: &str, email: &str, password: &str) -> Response {
     .await
 }
 
-async fn confirm(base: &str, ticket: &str) -> Response {
+/// Follows a sign-up's link, typing `password`.
+async fn finish(base: &str, ticket: &str, password: &str) -> Response {
     post(
         base,
-        "/api/email/confirm",
+        "/api/sign-up/finish",
         None,
-        json!({ "ticket": ticket }),
+        json!({ "ticket": ticket, "password": password }),
     )
     .await
 }
@@ -112,10 +113,16 @@ async fn the_account_is_made_only_when_the_emailed_link_is_followed() {
     assert!(sent[0].body.contains("24 hours"));
     assert!(sent[0].body.contains("If you didn't sign up"));
     let (page, ticket) = newest_link(&outbox, email);
-    assert_eq!(page, "/confirm-email");
+    assert_eq!(page, "/finish-sign-up");
 
-    // Following it makes the account, confirmed, and signs this device in.
-    let made = confirm(&base, &ticket).await;
+    // A wrong password makes nothing, and the link keeps working.
+    let wrong = finish(&base, &ticket, OTHER_PASSWORD).await;
+    assert_eq!(wrong.status(), StatusCode::UNAUTHORIZED);
+    assert_eq!(error_of(wrong).await, "wrong-password");
+
+    // With the password chosen at sign-up, it makes the account, confirmed,
+    // and signs this device in.
+    let made = finish(&base, &ticket, PASSWORD).await;
     assert_eq!(made.status(), StatusCode::OK);
     let cookie = cookie_from(&made);
     let body = json_of(made).await;
@@ -131,16 +138,18 @@ async fn the_account_is_made_only_when_the_emailed_link_is_followed() {
     );
 
     // The link works once.
-    let again = confirm(&base, &ticket).await;
+    let again = finish(&base, &ticket, PASSWORD).await;
     assert_eq!(again.status(), StatusCode::GONE);
     assert_eq!(error_of(again).await, "expired");
 }
 
 #[tokio::test]
-async fn only_the_newest_link_for_an_address_makes_the_account() {
+async fn a_strangers_later_sign_up_cant_hand_over_the_strangers_password() {
     let (base, state, outbox) = start_with_mail(common::config()).await;
     let email = "sam@example.com";
 
+    // The address's owner signs up; a minute later a stranger signs up
+    // with the same address and a password of their own.
     assert_eq!(
         sign_up(&base, email, PASSWORD).await.status(),
         StatusCode::ACCEPTED
@@ -154,16 +163,53 @@ async fn only_the_newest_link_for_an_address_makes_the_account() {
     let (_, second) = newest_link(&outbox, email);
     assert_ne!(first, second);
 
-    assert_eq!(confirm(&base, &first).await.status(), StatusCode::GONE);
-    assert_eq!(confirm(&base, &second).await.status(), StatusCode::OK);
-    // The password is the one the newest sign-up chose.
+    // The owner opens the newest email (the stranger's) and types their own
+    // password: the account is theirs, with their password.
     assert_eq!(
-        sign_in(&base, email, PASSWORD).await.status(),
-        StatusCode::UNAUTHORIZED
+        finish(&base, &second, PASSWORD).await.status(),
+        StatusCode::OK
     );
     assert_eq!(
         sign_in(&base, email, OTHER_PASSWORD).await.status(),
+        StatusCode::UNAUTHORIZED
+    );
+    assert_eq!(
+        sign_in(&base, email, PASSWORD).await.status(),
         StatusCode::NO_CONTENT
+    );
+    // Every other waiting link for the address is spent.
+    assert_eq!(
+        finish(&base, &first, PASSWORD).await.status(),
+        StatusCode::GONE
+    );
+}
+
+#[tokio::test]
+async fn when_the_hours_accounts_are_made_the_same_link_works_later() {
+    let (base, state, outbox) = start_with_mail(common::config()).await;
+    let email = "later@example.com";
+    sign_up(&base, email, PASSWORD).await;
+    let (_, ticket) = newest_link(&outbox, email);
+    // Twenty accounts made in the last hour.
+    for number in 0..nine_turtles::sign_up::SIGN_UPS_PER_HOUR {
+        sqlx::query("INSERT INTO people (owner, email, created_at) VALUES (0, ?, ?)")
+            .bind(format!("someone{number}@example.com"))
+            .bind(nine_turtles::now())
+            .execute(&state.db)
+            .await
+            .unwrap();
+    }
+    let full = finish(&base, &ticket, PASSWORD).await;
+    assert_eq!(full.status(), StatusCode::TOO_MANY_REQUESTS);
+    assert_eq!(error_of(full).await, "too-many");
+    // An hour on, the same link makes the account.
+    sqlx::query("UPDATE people SET created_at = created_at - 3601 WHERE owner = 0")
+        .execute(&state.db)
+        .await
+        .unwrap();
+    assert_eq!(
+        finish(&base, &ticket, PASSWORD).await.status(),
+        StatusCode::OK
     );
 }
 
@@ -189,7 +235,7 @@ async fn a_link_for_an_address_that_got_an_account_meanwhile_makes_nothing() {
         .execute(&state.db)
         .await
         .unwrap();
-    let late = confirm(&base, &ticket).await;
+    let late = finish(&base, &ticket, PASSWORD).await;
     assert_eq!(late.status(), StatusCode::CONFLICT);
     assert_eq!(error_of(late).await, "already");
     // The late link's password never signs in.
@@ -263,4 +309,29 @@ async fn a_sign_in_link_confirms_an_address_from_before() {
     .await;
     assert_eq!(used.status(), StatusCode::OK);
     assert_eq!(session(&base, &cookie).await["email_confirmed"], true);
+}
+
+#[tokio::test]
+async fn following_a_changed_address_link_confirms_it() {
+    let (base, _, outbox) = start_with_mail(common::config()).await;
+    let owner = signed_in(&base).await;
+    let changed = post(
+        &base,
+        "/api/people/me/email/change",
+        Some(&owner),
+        json!({ "email": "moved@example.com", "password": common::PASSWORD }),
+    )
+    .await;
+    assert_eq!(changed.status(), StatusCode::ACCEPTED);
+    assert_eq!(session(&base, &owner).await["email_confirmed"], false);
+    let (_, ticket) = newest_link(&outbox, "moved@example.com");
+    let confirmed = post(
+        &base,
+        "/api/email/confirm",
+        None,
+        json!({ "ticket": ticket }),
+    )
+    .await;
+    assert_eq!(confirmed.status(), StatusCode::OK);
+    assert_eq!(session(&base, &owner).await["email_confirmed"], true);
 }

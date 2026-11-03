@@ -107,17 +107,15 @@ export async function resetPassword(ticket: string, password: string): Promise<L
   return linkResult(await errorOf(response));
 }
 
-/** A followed link: a new account made (this device signed in), or the reader's email changed. */
-export type Confirmed = { done: "signed-up" } | { done: "changed"; email: string };
+export type Confirmed = { email: string };
 
-/** Follows a confirmation link: it makes a new account, or changes the reader's email to the one it went to. */
+/** Follows a confirmation link: the reader's email changes to the one it went to. */
 export async function confirmEmail(ticket: string): Promise<Confirmed | Exclude<LinkResult, "ok">> {
   const response = await send("/api/email/confirm", { ticket });
   if (!response) return "unreachable";
   if (response.ok) {
     const body: unknown = await response.json().catch(() => null);
-    if (isRecord(body) && body.done === "signed-up") return { done: "signed-up" };
-    return { done: "changed", email: isRecord(body) && typeof body.email === "string" ? body.email : "" };
+    return { email: isRecord(body) && typeof body.email === "string" ? body.email : "" };
   }
   const result = linkResult(await errorOf(response));
   return result === "ok" ? "unreachable" : result;
@@ -128,7 +126,7 @@ export function explainLink(result: Exclude<LinkResult, "ok">, page: "reset" | "
   switch (result) {
     case "expired":
       return page === "confirm"
-        ? "This link has expired or was already used. Sign up again, or change your email again in Settings, for a new one."
+        ? "This link has expired or was already used. Change your email again in Settings for a new one."
         : "This link has expired or was already used. Ask for a new one from the sign-in page.";
     case "already":
       return "That email already has an account. Sign in instead.";

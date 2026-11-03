@@ -4,10 +4,12 @@
 //! Anyone can sign up with an email and a password, with no invite. While
 //! nine turtles can send email, nothing is made yet: the scrambled password
 //! waits in a `sign-up` link (`email_links`), and a link goes to the
-//! address. Only following it makes the account, marks its address
-//! confirmed and signs that device in (`finish`, called by
-//! `accounts::confirm`), so nobody can make an account with an address that
-//! isn't theirs. Without the email settings (a nine turtles on someone's
+//! address. Only following it and typing the password chosen at sign-up
+//! makes the account, marks its address confirmed and signs that device in
+//! (`finish_sign_up`). The link proves the address is theirs; the password
+//! says which waiting sign-up is theirs, so a stranger who signs up with
+//! the same address can't hand them an account with the stranger's
+//! password. Without the email settings (a nine turtles on someone's
 //! own computer) the account is made at once, as before, with its address
 //! not confirmed.
 //!
@@ -39,9 +41,12 @@ use crate::{
     AppState,
     accounts::{
         CONFIRM_LIFETIME, EMAILS_PER_ADDRESS_PER_HOUR, Purpose, emailed_lately, emails_to_address,
-        password_problem, tidy_links_in,
+        password_problem, signed_in_as, tidy_links_in,
     },
-    auth::{database_problem, new_token, remember_device, scramble, session_cookie},
+    auth::{
+        Account, check_password, count_try, database_problem, new_token, remember_device, scramble,
+        session_cookie, wait_response,
+    },
     email::SIGN_OFF,
     log, now,
     people::{is_taken, plausible_email, too_many},
@@ -51,8 +56,13 @@ use crate::{
 /// New accounts allowed in any hour, for the whole app.
 pub const SIGN_UPS_PER_HOUR: i64 = 20;
 
+/// The page a sign-up's link opens.
+pub const FINISH_PAGE: &str = "/finish-sign-up";
+
 pub fn routes() -> Router<AppState> {
-    Router::new().route("/api/sign-up", post(sign_up))
+    Router::new()
+        .route("/api/sign-up", post(sign_up))
+        .route("/api/sign-up/finish", post(finish_sign_up))
 }
 
 #[derive(Deserialize)]
@@ -140,13 +150,13 @@ async fn sign_up(State(state): State<AppState>, Json(form): Json<SignUp>) -> Res
         Err(error) => return database_problem("making an email link", &error),
     };
     drop(tries);
-    let link = mailer.link(crate::accounts::CONFIRM_PAGE, &ticket);
+    let link = mailer.link(FINISH_PAGE, &ticket);
     mailer.send_later(
         &email,
         "Confirm your email for nine turtles",
         format!(
-            "Hello,\n\nTo finish signing up for nine turtles, open this link and press Confirm \
-             email:\n\n{link}\n\nIt works once, for the next 24 hours. If you didn't sign up, \
+            "Hello,\n\nTo finish signing up for nine turtles, open this link and type the \
+             password you chose:\n\n{link}\n\nIt works once, for the next 24 hours. If you didn't sign up, \
              ignore this email and no account is made.{SIGN_OFF}"
         ),
         "a link to confirm a new account",
@@ -161,9 +171,8 @@ fn sent(email: &str) -> Response {
 /// Saves a waiting sign-up, behind SQLite's one writer at a time, keeping
 /// to the limits every emailed link keeps: answers its ticket, or nothing
 /// when the address has had its emails for the hour or a sign-up link less
-/// than a minute ago. Only the newest link for an address works: those
-/// before it are spent, so a second sign-up (with another password) can't
-/// be finished by an older link.
+/// than a minute ago. Earlier waiting sign-ups for the address stay: which
+/// one is finished is decided by the password typed (`finish_sign_up`).
 async fn wait_for_confirming(
     db: &SqlitePool,
     email: &str,
@@ -185,10 +194,6 @@ async fn wait_for_confirming(
         transaction.commit().await?;
         return Ok(None);
     }
-    sqlx::query("UPDATE email_links SET used = 1 WHERE purpose = 'sign-up' AND email = ?")
-        .bind(email)
-        .execute(&mut *transaction)
-        .await?;
     sqlx::query(
         "INSERT INTO email_links
              (purpose, person_id, email, password_hash, token_hash, created_at, expires_at)
@@ -205,12 +210,116 @@ async fn wait_for_confirming(
     Ok(Some(ticket))
 }
 
-/// Makes the account a followed sign-up link was waiting for, inside the
-/// transaction that spent the link, with its address confirmed. Answers the
-/// new reader, or why not: "already" (the address has an account now: the
-/// link stays spent) or "too-many" (the hour's accounts are made: the caller
-/// rolls back, so the same link works later).
-pub(crate) async fn finish(
+#[derive(Deserialize)]
+struct Finish {
+    ticket: String,
+    password: String,
+}
+
+/// A waiting sign-up: its line in `email_links` and the scrambled password.
+type Waiting = (i64, String);
+
+/// Follows a sign-up's link with the password chosen at sign-up: makes the
+/// account, its address confirmed, and signs this device in. The ticket
+/// shows the address is the reader's; the password picks which of the
+/// address's waiting sign-ups is theirs (there can be a stranger's too).
+/// The password is checked as sign-in checks it: the same bounded line and
+/// the same count of wrong tries for the address.
+async fn finish_sign_up(State(state): State<AppState>, Json(form): Json<Finish>) -> Response {
+    let now = now();
+    let email: Result<Option<String>, sqlx::Error> = sqlx::query_scalar(
+        "SELECT email FROM email_links
+         WHERE token_hash = ? AND purpose = 'sign-up' AND used = 0 AND expires_at > ?",
+    )
+    .bind(&scramble(form.ticket.trim())[..])
+    .bind(now)
+    .fetch_optional(&state.db)
+    .await;
+    let email = match email {
+        Ok(Some(email)) => email,
+        Ok(None) => return refused(StatusCode::GONE, "expired"),
+        Err(error) => return database_problem("finding a sign-up link", &error),
+    };
+    let account = Account::named(Some(&email));
+    let wrong = || refused(StatusCode::UNAUTHORIZED, "wrong-password");
+    if form.password.len() > crate::password::MAXIMUM_LENGTH {
+        return wrong();
+    }
+    if let Some(wait) = count_try(&state, &account).await {
+        return wait_response(wait);
+    }
+    let waiting: Result<Vec<Waiting>, sqlx::Error> = sqlx::query_as(
+        "SELECT id, password_hash FROM email_links
+         WHERE purpose = 'sign-up' AND email = ? AND used = 0 AND expires_at > ?
+         ORDER BY created_at DESC",
+    )
+    .bind(&email)
+    .bind(now)
+    .fetch_all(&state.db)
+    .await;
+    let waiting = match waiting {
+        Ok(waiting) => waiting,
+        Err(error) => return database_problem("finding a sign-up link", &error),
+    };
+    let mut chosen = None;
+    for (id, line) in waiting {
+        match check_password(&state, &account, form.password.clone(), Some(line.clone())).await {
+            Some(true) => {
+                chosen = Some((id, line));
+                break;
+            }
+            Some(false) => {}
+            None => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
+        }
+    }
+    let mut limiters = state.limiter.lock().await;
+    let Some((id, line)) = chosen else {
+        if let Some(wait) = limiters.wait(&account, std::time::Instant::now()) {
+            return wait_response(wait);
+        }
+        return wrong();
+    };
+    limiters.right(&account);
+    drop(limiters);
+
+    let mut transaction = match state.db.begin().await {
+        Ok(transaction) => transaction,
+        Err(error) => return database_problem("making an account", &error),
+    };
+    let claimed = sqlx::query("UPDATE email_links SET used = 1 WHERE id = ? AND used = 0")
+        .bind(id)
+        .execute(&mut *transaction)
+        .await;
+    match claimed {
+        Ok(done) if done.rows_affected() == 1 => {}
+        Ok(_) => return refused(StatusCode::GONE, "expired"),
+        Err(error) => return database_problem("making an account", &error),
+    }
+    match finish(&mut transaction, &email, &line).await {
+        Ok(Ok(person)) => match transaction.commit().await {
+            Ok(()) => signed_in_as(&state.db, person, json!({ "done": "signed-up" })).await,
+            Err(error) => database_problem("making an account", &error),
+        },
+        // The address has an account now: the link stays spent.
+        Ok(Err(refusal)) if refusal.status() == StatusCode::CONFLICT => {
+            match transaction.commit().await {
+                Ok(()) => refusal,
+                Err(error) => database_problem("making an account", &error),
+            }
+        }
+        // The hour's accounts are made: nothing is kept (the transaction is
+        // dropped, so it's undone), and the same link works later.
+        Ok(Err(refusal)) => refusal,
+        Err(error) => database_problem("making an account", &error),
+    }
+}
+
+/// Makes the account a waiting sign-up was for, inside the transaction that
+/// spent its link, with its address confirmed. Answers the new reader, or
+/// why not: "already" (the address has an account now) or "too-many" (the
+/// hour's accounts are made: the caller drops the transaction, so the same
+/// link works later).
+async fn finish(
     transaction: &mut SqliteConnection,
     email: &str,
     line: &str,

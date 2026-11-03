@@ -1,8 +1,7 @@
-//! Following a link that confirms an address (SPEC sections 1 and 18,
-//! decisions 0088 and 0154): a new account's, which makes the account, or a
-//! changed one's, which moves the reader to it. The page a link opens is
-//! `CONFIRM_PAGE` (`/confirm-email`); the links are made in `sign_up` and
-//! `accounts`.
+//! Following a link that confirms a changed address (SPEC section 18,
+//! decisions 0088 and 0154): the reader moves to it, and it counts as
+//! confirmed. The page the link opens is `CONFIRM_PAGE` (`/confirm-email`);
+//! the link is made in `accounts`. (A new account's link is `sign_up`'s.)
 
 use axum::{
     Json, Router,
@@ -16,7 +15,6 @@ use serde_json::json;
 
 use crate::{
     AppState,
-    accounts::signed_in_as,
     auth::{database_problem, scramble},
     email::SIGN_OFF,
     now,
@@ -33,50 +31,26 @@ struct Confirm {
     ticket: String,
 }
 
-/// A followed confirmation link: whose it is (none for a sign-up), the
-/// address, and a sign-up's scrambled password.
-type Claimed = (Option<i64>, String, Option<String>);
-
-/// Follows a link that confirms an address. A sign-up's makes the account,
-/// with its address confirmed, and signs this device in (decision 0154). A
-/// changed address's moves the reader to it now, and the old address is told.
+/// Follows a link that confirms a changed address: the reader's email
+/// changes now, confirmed, and the old address is told.
 async fn confirm(State(state): State<AppState>, Json(form): Json<Confirm>) -> Response {
     let hash = scramble(form.ticket.trim());
     let mut transaction = match state.db.begin().await {
         Ok(transaction) => transaction,
         Err(error) => return database_problem("confirming an email", &error),
     };
-    let claimed: Result<Option<Claimed>, sqlx::Error> = sqlx::query_as(
+    let claimed: Result<Option<(i64, String)>, sqlx::Error> = sqlx::query_as(
         "UPDATE email_links SET used = 1
-             WHERE token_hash = ? AND purpose IN ('change', 'sign-up') AND used = 0
-                 AND expires_at > ?
-             RETURNING person_id, email, password_hash",
+             WHERE token_hash = ? AND purpose = 'change' AND used = 0 AND expires_at > ?
+             RETURNING person_id, email",
     )
     .bind(&hash[..])
     .bind(now())
     .fetch_optional(&mut *transaction)
     .await;
     let (person, email) = match claimed {
-        Ok(Some((Some(person), email, _))) => (person, email),
-        Ok(Some((None, email, Some(line)))) => {
-            return match crate::sign_up::finish(&mut transaction, &email, &line).await {
-                Ok(Ok(person)) => match transaction.commit().await {
-                    Ok(()) => signed_in_as(&state.db, person, json!({ "done": "signed-up" })).await,
-                    Err(error) => database_problem("making an account", &error),
-                },
-                // The address has an account now: the link stays spent.
-                Ok(Err(refusal)) if refusal.status() == StatusCode::CONFLICT => {
-                    match transaction.commit().await {
-                        Ok(()) => refusal,
-                        Err(error) => database_problem("making an account", &error),
-                    }
-                }
-                // The hour's accounts are made: nothing is kept, so the link works later.
-                Ok(Err(refusal)) => refusal,
-                Err(error) => database_problem("making an account", &error),
-            };
-        }
-        Ok(_) => return refused(StatusCode::GONE, "expired"),
+        Ok(Some(claimed)) => claimed,
+        Ok(None) => return refused(StatusCode::GONE, "expired"),
         Err(error) => return database_problem("confirming an email", &error),
     };
     let old: Result<Option<Option<String>>, sqlx::Error> =

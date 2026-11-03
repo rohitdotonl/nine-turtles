@@ -1,5 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { explainSignUp, plausibleEmail, type SignUpResult } from "./readers";
+import { explainFinish, explainSignUp, plausibleEmail, type FinishResult, type SignUpResult } from "./readers";
+
+describe("finishing a sign-up", () => {
+  it("says calmly what went wrong", () => {
+    expect(explainFinish({ ok: false, reason: "wrong-password" })).toBe("That isn't the password you chose when you signed up.");
+    expect(explainFinish({ ok: false, reason: "wait", waitSeconds: 120 })).toBe("Too many wrong tries. Try again in 2 minutes.");
+    for (const reason of ["expired", "already", "too-many", "unreachable"] as const) {
+      const message = explainFinish({ ok: false, reason } as Exclude<FinishResult, { ok: true }>);
+      expect(message).not.toBe("");
+      expect(message).not.toMatch(/!/);
+    }
+  });
+});
 
 describe("email addresses", () => {
   it("are checked as the server checks them", () => {

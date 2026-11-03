@@ -2,9 +2,8 @@
 -- replaced decision 0115's "no email at sign-up").
 --
 -- Each reader's address now says whether, and when, it was confirmed by a
--- link sent to it. Readers who signed up before this start with their
--- address not confirmed (empty); following a link sent to their address
--- confirms it. Nothing else about them changes.
+-- link sent to it. Readers who already have an address count as confirmed
+-- from now (the owner's choice): nothing about them changes.
 --
 -- A sign-up waits for its link again, as before decision 0115: the account
 -- doesn't exist yet, so its address and scrambled password wait in
@@ -16,6 +15,7 @@
 -- When a link sent to the reader's email was followed: at sign-up, by a
 -- sign-in link, or on moving to a new address. Empty while it isn't.
 ALTER TABLE people ADD COLUMN email_confirmed_at INTEGER;
+UPDATE people SET email_confirmed_at = unixepoch() WHERE email IS NOT NULL;
 
 CREATE TABLE email_links_new (
     id INTEGER PRIMARY KEY,
