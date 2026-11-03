@@ -2224,3 +2224,116 @@ async fn adding_notes_keeps_every_subscription_and_entry_and_notes_nothing() {
     .await;
     assert!(empty.is_err());
 }
+
+#[tokio::test]
+async fn calling_people_by_their_names_keeps_every_name_the_reader_gave() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just after notes and highlights (structure change 34):
+    // 1. a blog whose every article is Tomas Berg's, under the blog's title;
+    // 2. the same kind of blog the reader renamed "My friend Tomas";
+    // 3. a publication by one writer; 4. a blog by two writers;
+    // 5. a blog with one unsigned article; 6. a blog signed "admin".
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(34, &old)
+        .await
+        .unwrap();
+    let blogs = [
+        (
+            1,
+            "Notes from Tomas",
+            "Notes from Tomas",
+            "person",
+            ["Tomas Berg", "tomas berg"],
+        ),
+        (
+            2,
+            "Notes from Tomas",
+            "My friend Tomas",
+            "person",
+            ["Tomas Berg", "Tomas Berg"],
+        ),
+        (
+            3,
+            "The Gazette",
+            "The Gazette",
+            "publication",
+            ["Asha Rao", "Asha Rao"],
+        ),
+        (
+            4,
+            "Two of us",
+            "Two of us",
+            "person",
+            ["Asha Rao", "Kai Ostrander"],
+        ),
+        (5, "Half signed", "Half signed", "person", ["Asha Rao", ""]),
+        (6, "Site", "Site", "person", ["admin", "admin"]),
+    ];
+    for (id, feed_title, title, kind, authors) in blogs {
+        sqlx::query(
+            "INSERT INTO feeds (id, url, url_key, title, added_at) VALUES (?1, ?1, ?1, ?2, 1)",
+        )
+        .bind(id)
+        .bind(feed_title)
+        .execute(&old)
+        .await
+        .unwrap();
+        sqlx::query(
+            "INSERT INTO subscriptions (person_id, feed_id, title, added_at, kind)
+             VALUES (1, ?, ?, 1, ?)",
+        )
+        .bind(id)
+        .bind(title)
+        .bind(kind)
+        .execute(&old)
+        .await
+        .unwrap();
+        for (number, author) in authors.iter().enumerate() {
+            sqlx::query(
+                "INSERT INTO articles (feed_id, fingerprint, title, author, received_at, sort_at)
+                 VALUES (?, ?, 'A', ?, 1, 1)",
+            )
+            .bind(id)
+            .bind(format!("{id}-{number}"))
+            .bind(author)
+            .execute(&old)
+            .await
+            .unwrap();
+        }
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let names: Vec<String> = sqlx::query_scalar("SELECT title FROM subscriptions ORDER BY feed_id")
+        .fetch_all(&db)
+        .await
+        .unwrap();
+    assert_eq!(
+        names,
+        [
+            "Tomas Berg",
+            "My friend Tomas",
+            "The Gazette",
+            "Two of us",
+            "Half signed",
+            "Site"
+        ]
+    );
+    let kept: (i64, i64) =
+        sqlx::query_as("SELECT (SELECT COUNT(*) FROM feeds), (SELECT COUNT(*) FROM articles)")
+            .fetch_one(&db)
+            .await
+            .unwrap();
+    assert_eq!(kept, (6, 12));
+}

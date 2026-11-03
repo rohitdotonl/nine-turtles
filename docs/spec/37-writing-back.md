@@ -7,7 +7,9 @@ V1, item 2). Its look gets a refinement round.*
 **What it does**
 - **Write back on every article** of someone you follow: at the article's
   end, under its closing rule (and under "Read on …" for a summary), one
-  centred button, **Write back to Alpha** (the person's name, section 36),
+  centred button, **Write back to Tomas** (a person by their first name
+  when their name is their own, as "Tomas Berg" is, rather than a blog's
+  title, which is said whole: "Write back to Notes from Tomas"; section 36),
   with the address it writes to under it in small muted type. It's also in
   the article's More menu (**Write back**) and on the keyboard, **`w`**
   (section 19). An article of a place you no longer follow (one kept only

@@ -15,8 +15,9 @@ related: [one-person-several-places, share-an-article, newsletters]
 
 ## Write back
 
-1. Read to the end of the article and press **Write back to Alpha** (with
-   their name). You can also choose **More › Write back**, or press
+1. Read to the end of the article and press **Write back to Tomas** (with
+   their first name, or the blog's whole name when nine turtles doesn't know
+   theirs). You can also choose **More › Write back**, or press
    <kbd>W</kbd>.
 2. Your own email app opens with their address, and a subject line of
    "Re:" and the article's title.

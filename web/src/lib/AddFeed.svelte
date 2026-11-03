@@ -68,7 +68,7 @@
   /** The address the choices were found at: Add adds the chosen one while the field still holds it. */
   let choicesFor = $state("");
   let alreadyId: number | undefined = $state();
-  /** Just added: "someone or something?", with nine turtles' guess chosen (decision 0163), before it opens. */
+  /** Just added: "someone you might write to?", with nine turtles' guess chosen (decision 0163), before it opens. */
   let asking: Feed | undefined = $state();
   let who: WhoKind = $state("person");
   let whoGroup: HTMLElement | undefined = $state();
@@ -158,12 +158,14 @@
     if (!feed || busy) return;
     busy = true;
     answering = true;
-    // Always kept, so a later guess never overrides what they answered.
-    const refusal = await editFeed(feed.id, { kind: who });
+    // Always kept, so a later guess never overrides what they answered. A publication goes by
+    // its own title, not the one author's name nine turtles gave the person it guessed.
+    const title = who === "publication" && feed.siteTitle && feed.siteTitle !== feed.title ? feed.siteTitle : undefined;
+    const refusal = await editFeed(feed.id, { kind: who, ...(title ? { title } : {}) });
     busy = false;
     asking = undefined;
     // The guess stands if the answer couldn't be kept; Edit can change it later.
-    onAdded(refusal ? feed : { ...feed, kind: who });
+    onAdded(refusal ? feed : { ...feed, kind: who, ...(title ? { title } : {}) });
   }
 
   function submit(event: SubmitEvent) {
@@ -271,18 +273,21 @@
     {/if}
 
     {#if asking}
-      <!-- Someone or something (decision 0163): a choice of one, drawn as the choice among feeds is, with the guess chosen. -->
+      <!--
+        A person or a publication (decision 0163, owner's plan step 2), asked as what it means here:
+        someone you might write to. A choice of one, drawn as the choice among feeds is, with the guess chosen.
+      -->
       <fieldset bind:this={whoGroup} class="mb-2 flex flex-col gap-1.5 self-stretch text-left">
-        <legend class="mb-1.5 text-ink">Is {asking.title} someone or something?</legend>
+        <legend class="mb-1.5 text-ink">Is {asking.title} someone you might write to?</legend>
         <div class="inset-group">
           <label class="inset-row check-row flex-nowrap">
             <input type="radio" name="feed-who" value="person" bind:group={who} />
-            <span class="flex min-w-0 flex-col py-1"><span>Someone</span><span class="text-small text-muted">A person: listed under People</span></span>
+            <span class="flex min-w-0 flex-col py-1"><span>Yes, a person</span><span class="text-small text-muted">Listed under People</span></span>
             <span aria-hidden="true" class="radio-mark shrink-0"></span>
           </label>
           <label class="inset-row check-row flex-nowrap">
             <input type="radio" name="feed-who" value="publication" bind:group={who} />
-            <span class="flex min-w-0 flex-col py-1"><span>Something</span><span class="text-small text-muted">A publication: listed under Publications</span></span>
+            <span class="flex min-w-0 flex-col py-1"><span>No, a publication</span><span class="text-small text-muted">Listed under Publications</span></span>
             <span aria-hidden="true" class="radio-mark shrink-0"></span>
           </label>
         </div>

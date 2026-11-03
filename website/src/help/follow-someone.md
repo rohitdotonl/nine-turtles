@@ -19,9 +19,13 @@ related: [bring-your-feeds, one-person-several-places, put-people-in-folders]
 2. Paste the address of their website, such as <code>example.com</code>.
    You can leave off the <code>https://</code>.
 3. Press **Add**.
-4. nine turtles asks whether it's **Someone** (a person) or **Something** (a
-   publication, such as a magazine), with its guess already chosen. Press
-   **Done**.
+4. nine turtles asks whether they're someone you might write to: **Yes, a
+   person** or **No, a publication** (such as a magazine), with its guess
+   already chosen. Press **Done**.
+
+When a blog signs every article with one writer's name, nine turtles calls
+them by that name, with the blog's title under it on their page. Want a
+different name? Change it in **Edit** on their page; yours always stays.
 
 They appear in your sidebar under **People** or **Publications**, and their
 newest articles are ready to read. From now on, new ones arrive by

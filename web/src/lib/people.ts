@@ -102,6 +102,17 @@ export function placeShownAs(place: Feed): string {
 }
 
 /**
+ * What Write back calls someone (owner's plan, step 2): a person by their first name ("Tomas" for
+ * Tomas Berg), when their name is their own rather than a blog's title; anyone else by their whole name.
+ */
+export function firstNameOf(name: string, places: Feed[]): string {
+  const words = name.trim().split(/\s+/);
+  const theirOwn = places.every((place) => place.kind !== "publication" && place.siteTitle?.toLowerCase() !== name.trim().toLowerCase());
+  const aName = words.length >= 2 && words.length <= 4 && words.every((word) => /^\p{Lu}[\p{L}'’-]*$/u.test(word));
+  return theirOwn && aName && words[0] ? words[0] : name;
+}
+
+/**
  * How a list's rows credit each article: `false` by its maker's name (a person's or a place's);
  * `true` not at all (one place's own list, which says who in its title); or, in the list of a
  * person with several places, by the place each came from ("Blog", "Video").

@@ -2,7 +2,8 @@
 //! person, their one list, a person or publication for each place, "This is
 //! one person" on a folder, and Undo for each, tested against a real running
 //! nine turtles and a made-up publisher. Alpha has a blog and a newsletter
-//! on one website; Beta is someone else; the Gazette has several writers.
+//! on one website; Beta is someone else; the Gazette has several writers;
+//! Tomas Berg signs every article of his blog, "Notes from Tomas".
 
 mod common;
 
@@ -34,15 +35,16 @@ fn feed(file: &str) -> Response {
         "beta.xml" => ("Beta's notebook", "https://beta.example/", 3),
         "gamma.xml" => ("Gamma's pictures", "https://gamma.example/", 4),
         "gazette.xml" => ("The Gazette", "https://gazette.example/", 5),
+        "tomas.xml" => ("Notes from Tomas", "https://tomas.example/", 6),
         _ => return StatusCode::NOT_FOUND.into_response(),
     };
     let items: String = (1..=3)
         .map(|number| {
-            // The Gazette's articles each have a writer of their own.
-            let by = if file == "gazette.xml" {
-                format!("<dc:creator>Writer {number}</dc:creator>")
-            } else {
-                String::new()
+            // The Gazette's articles each have a writer of their own; Tomas signs all of his.
+            let by = match file {
+                "gazette.xml" => format!("<dc:creator>Writer {number}</dc:creator>"),
+                "tomas.xml" => "<dc:creator>Tomas Berg</dc:creator>".to_owned(),
+                _ => String::new(),
             };
             format!(
                 "<item><title>{title} {number}</title><guid>{file}-{number}</guid>{by}\
@@ -380,6 +382,35 @@ async fn each_place_is_a_person_or_a_publication_and_the_reader_can_change_it() 
         .post("/api/writers/separate", json!({ "feed": gazette }))
         .await;
     assert_eq!(reader.feed(gazette).await["kind"], "publication");
+}
+
+#[tokio::test]
+async fn a_person_whose_feed_names_one_author_is_called_by_that_name() {
+    let (reader, _state) = Reader::new().await;
+    let (_, added) = reader
+        .post(
+            "/api/feeds",
+            json!({ "address": format!("{}/tomas.xml", reader.publisher) }),
+        )
+        .await;
+    // Called by his name, with the blog's own title beside it for his page.
+    assert_eq!(added["feed"]["kind"], "person", "{added}");
+    assert_eq!(added["feed"]["title"], "Tomas Berg");
+    assert_eq!(added["feed"]["site_title"], "Notes from Tomas");
+    let tomas = added["feed"]["id"].as_i64().unwrap();
+    let listed = reader.feed(tomas).await;
+    assert_eq!(listed["title"], "Tomas Berg");
+    assert_eq!(listed["site_title"], "Notes from Tomas");
+    // A blog that signs nothing keeps its title; so does one with several writers.
+    let blog = reader.follow("alpha.xml").await;
+    assert_eq!(reader.feed(blog).await["title"], "Alpha's blog");
+    let gazette = reader.follow("gazette.xml").await;
+    assert_eq!(reader.feed(gazette).await["title"], "The Gazette");
+    // A name the reader gives stays, the next time the sidebar loads too.
+    reader
+        .post(&format!("/api/feeds/{tomas}"), json!({ "title": "Tom" }))
+        .await;
+    assert_eq!(reader.feed(tomas).await["title"], "Tom");
 }
 
 #[tokio::test]

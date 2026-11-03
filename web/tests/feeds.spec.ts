@@ -305,7 +305,7 @@ test("on a phone, New to feeds? is a page sheet with its X and the main action a
   await expect(page.getByRole("heading", { level: 2, name: "Hello. Who would you like to read?" })).toBeVisible();
 });
 
-test("a, a website's address and Enter follow it, someone or something is asked, and its articles appear", async ({ page }) => {
+test("a, a website's address and Enter follow it, someone you might write to is asked, and its articles appear", async ({ page }) => {
   await openApp(page, "/all");
   const name = newBlog();
   await page.keyboard.press("a");
@@ -316,10 +316,10 @@ test("a, a website's address and Enter follow it, someone or something is asked,
   await page.keyboard.press("Enter");
 
   // Followed: then one question, with nine turtles' guess chosen and the keyboard on it (decision 0163).
-  const asked = page.getByRole("group", { name: `Is Blog ${name} someone or something?` });
+  const asked = page.getByRole("group", { name: `Is Blog ${name} someone you might write to?` });
   await expect(asked).toBeVisible();
-  await expect(asked.getByRole("radio", { name: /^Someone/ })).toBeChecked();
-  await expect(asked.getByRole("radio", { name: /^Someone/ })).toBeFocused();
+  await expect(asked.getByRole("radio", { name: /^Yes, a person/ })).toBeChecked();
+  await expect(asked.getByRole("radio", { name: /^Yes, a person/ })).toBeFocused();
   await expect(page.getByRole("button", { name: "Done" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Cancel" })).toHaveCount(0);
   // Its list opens only once Done is pressed.
@@ -349,8 +349,8 @@ test("a feed's own address works, and adding it twice says it's already there", 
   const name = newBlog();
   await field(page).fill(`${FEED_SITE}/blog/${name}/feed.xml`);
   await page.getByRole("button", { name: "Add", exact: true }).click();
-  // Something, this time: it opens at a publication's address, under Publications.
-  await page.getByRole("radio", { name: /^Something/ }).check();
+  // A publication, this time: it opens at a publication's address, under Publications.
+  await page.getByRole("radio", { name: /^No, a publication/ }).check();
   await page.getByRole("button", { name: "Done" }).click();
   await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeVisible();
   await expect(page).toHaveURL(/\/publications\/[0-9]+$/);
@@ -386,7 +386,7 @@ test("a site with several feeds offers a choice", async ({ page }) => {
   expect(await dot(first)).not.toBe("rgba(0, 0, 0, 0)");
   await comments.check();
   await expect(first).not.toBeChecked();
-  // Add adds the one chosen, then asks someone or something.
+  // Add adds the one chosen, then asks whether it is someone you might write to.
   await page.getByRole("button", { name: "Add", exact: true }).click();
   await page.getByRole("button", { name: "Done" }).click();
   await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}: comments` })).toBeVisible();
@@ -516,10 +516,10 @@ test("with only the keyboard: choose one of several feeds, then go back to it fr
   await expect(page.getByRole("radio", { name: /^Comments/ })).toBeChecked();
   await tabTo(page, page.getByRole("button", { name: "Add", exact: true }));
   await page.keyboard.press("Enter");
-  // Someone or something: an arrow key changes the answer, and Done opens it.
-  await expect(page.getByRole("radio", { name: /^Someone/ })).toBeFocused();
+  // A person or a publication: an arrow key changes the answer, and Done opens it.
+  await expect(page.getByRole("radio", { name: /^Yes, a person/ })).toBeFocused();
   await page.keyboard.press("ArrowDown");
-  await expect(page.getByRole("radio", { name: /^Something/ })).toBeChecked();
+  await expect(page.getByRole("radio", { name: /^No, a publication/ })).toBeChecked();
   await tabTo(page, page.getByRole("button", { name: "Done" }));
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/publications\/[0-9]+$/);

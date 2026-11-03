@@ -14,12 +14,12 @@ related: [put-people-in-folders, write-back, unfollow-someone]
   one row in your sidebar, with everything they make in one list.
 </p>
 
-## Someone or something
+## A person or a publication
 
-Everyone you follow is either a **person** (someone) or a **publication**
-(something, such as a magazine). The sidebar lists them under **People** and
+Everyone you follow is either a **person** (someone you might write to) or a
+**publication** (such as a magazine). The sidebar lists them under **People** and
 **Publications**. nine turtles makes a guess when you follow them, and asks
-"someone or something?" with its guess already chosen. Got it wrong? Change
+"Is … someone you might write to?" with its guess already chosen. Got it wrong? Change
 **This is** in Edit (below).
 
 ## Their page

@@ -32,13 +32,25 @@ PLAN.md → V1, item 1.*
     together (janedoe.com, "Jane Doe");
   - still unclear: a person.
 
-  When adding through **+ Add** (section 3), the reader is asked "someone or
-  something?", with the guess already chosen. They can change it later in
+  When adding through **+ Add** (section 3), the reader is asked "Is Tomas
+  Berg someone you might write to?" (**Yes, a person** or **No, a
+  publication**), with the guess already chosen. They can change it later in
   Edit (for one source only, and not for the last source left of someone
   joined, who stays a person). Feeds followed before this change get their
   guess the next time the sidebar loads; an imported feed gets it once
   nine turtles has checked it for the first time, so the guess sees its
   writers.
+- **Called by their name** (owner's plan, step 2). When a source on its
+  own is first guessed a person and every one of its articles is signed by
+  the same one author (in any capitalisation), the person is called by that
+  name, as the feed writes it ("Tomas Berg", not his blog's title "Notes
+  from Tomas"). A role or placeholder ("admin", "editor", "staff" and the
+  like) is never taken for a name. When the feed doesn't name one author,
+  the blog's title stays, and Edit fixes the rest. A name the reader gave in
+  Edit always wins: nine turtles only renames a person still called by
+  their feed's own title, once, when it first guesses them (people followed
+  before this change were renamed the same way, once). An Atom feed that
+  names its author once, for all its entries, signs each of them.
 - **Their list:** choosing the row lists everything they made, newest first
   (or as the reader sorts), one list across all their sources (`/people/12`
   or `/publications/7`). With two or more sources, each row says which source
@@ -53,7 +65,9 @@ PLAN.md → V1, item 1.*
   list ("Alpha ›"), by **About Alpha** in the list's More menu, or by the
   `i` key. On a computer it opens in the reading area beside their list,
   where an article would; on a phone it's a screen of its own, with ‹ back to
-  their list. It shows their name with an **Edit** button beside it, a muted
+  their list. It shows their name with an **Edit** button beside it; for one
+  source whose own title isn't their name, that title under it, in the
+  reading serif ("Notes from Tomas" under Tomas Berg); a muted
   line ("A person · in Friends · following since March 2026"), their sources,
   each by its kind (Blog, Video, Newsletter, Podcast) with a link to the
   publisher's own site (a blog by its website, "alpha.example"; a channel or
@@ -114,7 +128,10 @@ PLAN.md → V1, item 1.*
 
 **How to check it**
 1. Follow a blog by one person and a site with several writers: the blog is
-   under **People**, the site under **Publications**.
+   under **People**, the site under **Publications**. A blog that signs every
+   article with one author's name is called by that name, and its page shows
+   the blog's title under it; Write back at an article's end says "Write
+   back to" and their first name.
 2. Press a person's name at the top of their list: their page opens beside
    the list (on a phone, as its own screen), with the muted line and their
    sources.

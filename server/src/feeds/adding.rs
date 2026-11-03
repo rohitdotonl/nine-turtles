@@ -335,14 +335,16 @@ async fn follow(
     .bind(feed_id)
     .fetch_one(&mut *transaction)
     .await?;
-    // Person or publication, and what kind of source: guessed now, for Add's choice (decision 0163).
+    // Person or publication, what kind of source, and a person's own name:
+    // guessed now, for Add's choice (decision 0163).
     crate::writers::kind::fill(&mut transaction, person, Some(feed_id)).await?;
-    let (kind, place): (String, String) =
-        sqlx::query_as("SELECT kind, place FROM subscriptions WHERE person_id = ? AND feed_id = ?")
-            .bind(person)
-            .bind(feed_id)
-            .fetch_one(&mut *transaction)
-            .await?;
+    let (kind, place, title): (String, String, String) = sqlx::query_as(
+        "SELECT kind, place, title FROM subscriptions WHERE person_id = ? AND feed_id = ?",
+    )
+    .bind(person)
+    .bind(feed_id)
+    .fetch_one(&mut *transaction)
+    .await?;
     transaction.commit().await?;
     // Signing up with the feed's hub, if it has one, needn't hold up adding
     // it. A feed others already follow has its checks and its hub.
@@ -352,7 +354,8 @@ async fn follow(
 
     Ok(FeedRow {
         id: feed_id,
-        title: parsed.title,
+        title,
+        site_title: parsed.title,
         site_url: parsed.site_url,
         unread,
         river: false,

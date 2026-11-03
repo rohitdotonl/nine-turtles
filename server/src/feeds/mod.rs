@@ -45,7 +45,12 @@ pub fn routes() -> Router<AppState> {
 #[derive(Serialize, sqlx::FromRow)]
 struct FeedRow {
     id: i64,
+    /// The reader's name for it: a person's own name, once nine turtles or
+    /// the reader gives it.
     title: String,
+    /// The feed's own title (a blog's), shown under a person's name when
+    /// the two differ (owner's plan, step 2).
+    site_title: String,
     site_url: Option<String>,
     /// How many of its articles are unread, for the sidebar's muted count;
     /// none for a feed that flows past.
@@ -97,7 +102,7 @@ struct FeedRow {
 /// their unread count, counted from the `entries_unread_by_feed` index alone
 /// (tests/speed.rs checks this). A feed that flows past (`river`) counts
 /// nothing. Takes the reader.
-pub const FEEDS: &str = "SELECT feeds.id, subscriptions.title, feeds.site_url, subscriptions.river,
+pub const FEEDS: &str = "SELECT feeds.id, subscriptions.title, feeds.title AS site_title, feeds.site_url, subscriptions.river,
         subscriptions.check_at_most, subscriptions.open_on_site, subscriptions.paused_at,
         CASE WHEN feeds.failures >= 2 THEN feeds.failing_since END AS failing_since,
         CASE WHEN feeds.url NOT LIKE 'newsletter:%' THEN feeds.fetched_at END AS checked_at,

@@ -6,7 +6,10 @@ import { episodeFrom, type Episode } from "./podcasts";
 
 export type Feed = {
   id: number;
+  /** The reader's name for it: a person's own name, when the feed names one author or the reader gave one. */
   title: string;
+  /** The feed's own title (a blog's), shown under a person's name when the two differ. */
+  siteTitle?: string;
   siteUrl: string | null;
   /** How many of its articles are unread (none for a feed that flows past). */
   unread: number;
@@ -219,6 +222,7 @@ export function toFeed(feed: Record<string, unknown>): Feed {
   return {
     id: Number(feed.id),
     title: String(feed.title ?? ""),
+    siteTitle: text(feed.site_title) ?? undefined,
     siteUrl: text(feed.site_url),
     unread: Number(feed.unread ?? 0),
     folders: Array.isArray(feed.folders) ? feed.folders.map(Number) : [],

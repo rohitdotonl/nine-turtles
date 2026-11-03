@@ -5,7 +5,8 @@
   to their list. Opened by their name at the top of the list, "About …" in
   the list's More menu, or the i key.
 
-  Visiting: their name in Literata with an Edit button beside it, a muted line
+  Visiting: their name in Literata with an Edit button beside it, their
+  blog's own title under it when that isn't their name (one source), a muted line
   saying what they are (a person or a publication), their folders and since
   when the reader follows them, then their sources, each by what it is (Blog,
   Video, Newsletter, Podcast) with a link to the publisher's own site, and
@@ -61,6 +62,11 @@
   let places = $derived(placesOf(feed, library.feeds ?? []));
   let name = $derived(library.shownAs(feed)?.title ?? feed.title);
   let since = $derived(followingSince(places));
+  /** One source whose own title isn't their name ("Notes from Tomas" under Tomas Berg): it shows under the name. */
+  let ownTitle = $derived.by(() => {
+    const title = places.length === 1 ? places[0]?.siteTitle : undefined;
+    return title && title.toLowerCase() !== name.toLowerCase() ? title : undefined;
+  });
   let address = $derived(addressFor(feed, library.feeds ?? []));
   let folderNames = $derived(library.folders.filter((folder) => places.some((place) => place.folders.includes(folder.id))).map((folder) => folder.name));
   let what = $derived([feed.kind === "publication" ? "A publication" : "A person", folderNames.length > 0 ? `in ${folderNames.join(", ")}` : "", since ? `following ${since}` : ""].filter(Boolean).join(" · "));
@@ -111,6 +117,7 @@
           <h2 bind:this={heading} tabindex="-1" class="min-w-0 font-serif text-xlarge font-semibold break-words text-ink">{name}</h2>
           <button type="button" class="btn shrink-0" aria-label="Edit {name}" onclick={() => go({ kind: "edit-feed", id: feed.id })}>Edit</button>
         </div>
+        {#if ownTitle}<p class="-mt-1 font-serif text-large break-words text-ink-2">{ownTitle}</p>{/if}
         <p class="text-small text-muted">{what}</p>
       </div>
       <div class="flex flex-col gap-2">

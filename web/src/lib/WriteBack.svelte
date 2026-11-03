@@ -1,7 +1,8 @@
 <!--
   Write back (SPEC section 37, decision 0147): at the end of every article of
   someone the reader follows, under its closing rule, one button, "Write back
-  to Alpha", with the address it writes to under it. It opens the reader's own
+  to Tomas" (a person by their first name, `firstNameOf`), with the address
+  it writes to under it. It opens the reader's own
   email app with the address and "Re: the title" filled in; nine turtles never
   sends or reads that email.
 
@@ -18,13 +19,14 @@
   import Icon from "./Icon.svelte";
   import { plainSourceName } from "./feeds";
   import type { LoadedLibrary } from "./library.svelte";
+  import { firstNameOf, placesOf } from "./people";
   import type { Article } from "./shapes";
   import { addressFor, keepAddress, looksLikeAddress, writeBackLink } from "./writeBack";
 
   let { article, library }: { article: Article; library: LoadedLibrary } = $props();
 
   let place = $derived(library.feeds?.find((feed) => feed.id === article.feedId));
-  let name = $derived(plainSourceName(library.shownAs(place)?.title ?? article.feedTitle));
+  let name = $derived(firstNameOf(plainSourceName(library.shownAs(place)?.title ?? article.feedTitle), place ? placesOf(place, library.feeds ?? []) : []));
   let address = $derived(place && addressFor(place, library.feeds ?? []));
 
   let asking = $state(false);

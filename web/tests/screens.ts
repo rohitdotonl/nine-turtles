@@ -471,16 +471,17 @@ const shelf = (blog: string) => `${FEED_SITE}/shelf/${blog}/feed.xml`;
 /**
  * What the library screens follow: blogs a real reader might, two of them in
  * folders, so the pictures on a pull request look like nine turtles in use.
+ * Each blog by one writer goes by that writer's name.
  */
-const LIBRARY: { address: string; title: string; folder?: string }[] = [
-  { address: shelf("field-notes"), title: "Field Notes", folder: "Outdoors" },
-  { address: shelf("garden-letters"), title: "Garden Letters", folder: "Outdoors" },
-  { address: shelf("low-tide"), title: "Low Tide", folder: "Outdoors" },
-  { address: shelf("the-margins"), title: "The Margins" },
-  { address: `${FEED_SITE}/reading.xml`, title: "Reading Room" },
-  { address: shelf("slow-code"), title: "Slow Code" },
-  { address: shelf("small-kitchen"), title: "Small Kitchen", folder: "Making" },
-  { address: shelf("workbench"), title: "Workbench", folder: "Making" },
+const LIBRARY: { address: string; folder?: string }[] = [
+  { address: shelf("field-notes"), folder: "Outdoors" },
+  { address: shelf("garden-letters"), folder: "Outdoors" },
+  { address: shelf("low-tide"), folder: "Outdoors" },
+  { address: shelf("the-margins") },
+  { address: `${FEED_SITE}/reading.xml` },
+  { address: shelf("slow-code") },
+  { address: shelf("small-kitchen"), folder: "Making" },
+  { address: shelf("workbench"), folder: "Making" },
 ];
 
 /**
@@ -493,11 +494,11 @@ export function libraryApp(): string {
 
 /** Follows the whole library, each blog in its folder. Doing it twice is fine. */
 async function followLibrary(page: Page): Promise<void> {
-  for (const { address, title, folder } of LIBRARY) {
+  for (const { address, folder } of LIBRARY) {
     const id = await follow(page, address);
     if (!folder) continue;
     const saved = await page.request.post(new URL(`/api/feeds/${id}`, page.url()).href, {
-      data: { title, folders: [], new_folder: folder },
+      data: { folders: [], new_folder: folder },
     });
     expect(saved.ok()).toBe(true);
   }

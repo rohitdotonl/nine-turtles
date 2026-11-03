@@ -12,6 +12,11 @@
 //!    the feed's own name matches (NASA at nasa.gov) is a publication.
 //! 3. Still unclear: a person, since nine turtles is for people worth
 //!    knowing. The reader sees the guess when adding and can change it.
+//!
+//! A person is called by their name (owner's plan, step 2): when every
+//! article is signed by the same one author, that's what the person is called,
+//! not the blog's title ("Tomas Berg", not "Notes from Tomas"). A name the
+//! reader gave them stays.
 
 use serde::Deserialize;
 use sqlx::SqliteConnection;
@@ -109,6 +114,47 @@ pub fn kind_from(authors: &[String], url: &str, site: Option<&str>, title: &str)
     }
 }
 
+/// Names a blog gives its articles that are a role or a placeholder, never
+/// someone's name ("admin" on a WordPress blog).
+const NOT_NAMES: &[&str] = &[
+    "admin",
+    "administrator",
+    "anonymous",
+    "author",
+    "editor",
+    "editors",
+    "guest",
+    "root",
+    "staff",
+    "team",
+    "unknown",
+    "user",
+    "webmaster",
+];
+
+/// The one author every named article is by, when there is exactly one
+/// and it's a person's name: what a person is called. Written as the feed
+/// writes it, newest first, and capitalised if any article capitalises it.
+pub fn one_author(authors: &[String]) -> Option<String> {
+    let names: Vec<&str> = authors
+        .iter()
+        .map(|name| name.trim())
+        .filter(|name| !name.is_empty())
+        .collect();
+    let first = *names.first()?;
+    if names.iter().any(|other| !other.eq_ignore_ascii_case(first)) {
+        return None;
+    }
+    let name = names
+        .iter()
+        .find(|name| name.starts_with(char::is_uppercase))
+        .unwrap_or(&first);
+    let plain = !NOT_NAMES.contains(&name.to_lowercase().as_str())
+        && name.chars().count() <= 60
+        && !name.contains(['@', '/', ':']);
+    plain.then(|| (*name).to_owned())
+}
+
 /// What kind of source a place is: a newsletter, a video channel (YouTube's
 /// feeds), a podcast (any episode), or a blog.
 pub fn place_from(url: &str, has_episodes: bool) -> &'static str {
@@ -156,16 +202,18 @@ fn names_the_site(host: &str, title: &str) -> bool {
 /// source kind yet, once it has been fetched: an imported feed waits for its
 /// first check, so the guess sees its authors and episodes. `only` is a feed
 /// just added, whose articles were stored then, so it's guessed at once. Their choices
-/// stay as they made them.
+/// stay as they made them. A place first guessed a person whose articles
+/// are all by one named author is called by that name, unless the reader already named
+/// it something other than the feed's title.
 pub async fn fill(
     connection: &mut SqliteConnection,
     person: i64,
     only: Option<i64>,
 ) -> Result<(), sqlx::Error> {
-    type Waiting = (i64, String, Option<String>, String, bool);
+    type Waiting = (i64, String, Option<String>, String, bool, bool);
     let waiting: Vec<Waiting> = sqlx::query_as(
         "SELECT feeds.id, feeds.url, feeds.site_url, subscriptions.title,
-             EXISTS (SELECT 1 FROM articles WHERE articles.feed_id = feeds.id
+             subscriptions.kind IS NULL, EXISTS (SELECT 1 FROM articles WHERE articles.feed_id = feeds.id
                  AND articles.episode_url IS NOT NULL)
          FROM subscriptions JOIN feeds ON feeds.id = subscriptions.feed_id
          WHERE subscriptions.person_id = ?1 AND subscriptions.unsubscribed_at IS NULL
@@ -177,24 +225,48 @@ pub async fn fill(
     .bind(only)
     .fetch_all(&mut *connection)
     .await?;
-    for (feed, url, site, title, has_episodes) in waiting {
+    for (feed, url, site, title, unguessed, has_episodes) in waiting {
         let authors: Vec<String> = sqlx::query_scalar(
-            "SELECT DISTINCT lower(trim(author)) FROM articles
-             WHERE feed_id = ? AND trim(COALESCE(author, '')) != '' LIMIT 3",
+            "SELECT trim(author) FROM articles
+             WHERE feed_id = ? AND trim(COALESCE(author, '')) != ''
+             GROUP BY trim(author) ORDER BY MAX(id) DESC LIMIT 10",
         )
         .bind(feed)
         .fetch_all(&mut *connection)
         .await?;
+        let kind = kind_from(&authors, &url, site.as_deref(), &title);
         sqlx::query(
             "UPDATE subscriptions SET kind = COALESCE(kind, ?), place = COALESCE(place, ?)
              WHERE person_id = ? AND feed_id = ?",
         )
-        .bind(kind_from(&authors, &url, site.as_deref(), &title))
+        .bind(kind)
         .bind(place_from(&url, has_episodes))
         .bind(person)
         .bind(feed)
         .execute(&mut *connection)
         .await?;
+        // Named only when every article is theirs: one unsigned article may be someone else's.
+        let all_signed: bool = sqlx::query_scalar(
+            "SELECT NOT EXISTS (SELECT 1 FROM articles
+                 WHERE feed_id = ? AND trim(COALESCE(author, '')) = '')",
+        )
+        .bind(feed)
+        .fetch_one(&mut *connection)
+        .await?;
+        if let (true, true, "person", Some(name)) =
+            (unguessed, all_signed, kind, one_author(&authors))
+        {
+            sqlx::query(
+                "UPDATE subscriptions SET title = ?
+                 WHERE person_id = ? AND feed_id = ? AND writer_id IS NULL
+                     AND title = (SELECT title FROM feeds WHERE feeds.id = subscriptions.feed_id)",
+            )
+            .bind(name)
+            .bind(person)
+            .bind(feed)
+            .execute(&mut *connection)
+            .await?;
+        }
     }
     Ok(())
 }
@@ -218,6 +290,19 @@ mod tests {
             kind_from(&names(&["Jane", "Kai"]), url, None, "Example"),
             "publication"
         );
+    }
+
+    #[test]
+    fn a_person_is_called_by_their_one_name_as_the_feed_writes_it() {
+        assert_eq!(
+            one_author(&names(&["tomas berg", "Tomas Berg"])).as_deref(),
+            Some("Tomas Berg")
+        );
+        assert_eq!(one_author(&names(&["Tomas Berg", "Asha Rao"])), None);
+        assert_eq!(one_author(&names(&[])), None);
+        // A role or a placeholder is no one's name.
+        assert_eq!(one_author(&names(&["admin"])), None);
+        assert_eq!(one_author(&names(&["Staff"])), None);
     }
 
     #[test]
