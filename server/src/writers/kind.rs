@@ -154,7 +154,8 @@ fn names_the_site(host: &str, title: &str) -> bool {
 
 /// Guesses, and keeps, each of the reader's places that has no kind or no
 /// source kind yet, once it has been fetched: an imported feed waits for its
-/// first check, so the guess sees its authors and episodes. Their choices
+/// first check, so the guess sees its authors and episodes. `only` is a feed
+/// just added, whose articles were stored then, so it's guessed at once. Their choices
 /// stay as they made them.
 pub async fn fill(
     connection: &mut SqliteConnection,
@@ -169,7 +170,7 @@ pub async fn fill(
          FROM subscriptions JOIN feeds ON feeds.id = subscriptions.feed_id
          WHERE subscriptions.person_id = ?1 AND subscriptions.unsubscribed_at IS NULL
              AND (subscriptions.kind IS NULL OR subscriptions.place IS NULL)
-             AND feeds.fetched_at IS NOT NULL
+             AND (feeds.fetched_at IS NOT NULL OR ?2 IS NOT NULL)
              AND (?2 IS NULL OR feeds.id = ?2)",
     )
     .bind(person)

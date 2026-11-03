@@ -152,7 +152,7 @@ impl Check {
 /// in a source's settings (`web/src/lib/SourceFields.svelte`).
 pub const BACK_FROM_PAUSE: i64 = 3;
 
-/// "Edit person": a place's name, folders and settings, saved together or not
+/// Edit (on their page) and a source's settings: a place's name, folders and settings, saved together or not
 /// at all. On a place of a person with others, the name is the person's and
 /// the folders are all their places' (`writers`).
 async fn edit_feed(

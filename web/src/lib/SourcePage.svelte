@@ -56,7 +56,7 @@
     if (busy) return;
     busy = true;
     message = "";
-    const refusal = await editFeed(source.id, { place, river: flows, check, openOnSite, paused, ...(source.sortsVideos ? { shorts, liveStreams } : {}) });
+    const refusal = await editFeed(source.id, { ...(place !== start.place ? { place } : {}), river: flows, check, openOnSite, paused, ...(source.sortsVideos ? { shorts, liveStreams } : {}) });
     if (!refusal) await library.loadFeeds();
     busy = false;
     if (refusal) message = refused(refusal, "feed");

@@ -26,6 +26,16 @@ async function openHome(page: Page) {
 test.describe("on a phone", () => {
   test.skip(({ isMobile }) => !isMobile, "the phone layout only");
 
+  test("a page, Edit or source settings address for someone not followed says so, rather than showing another list", async ({ page }) => {
+    await openHome(page);
+    for (const path of ["/people/999999/about", "/people/999999/edit", "/people/999999/sources/999998"]) {
+      await page.goto(new URL(path, FEEDS_APP).href);
+      await appReady(page);
+      await expect(page.getByRole("heading", { level: 2, name: "Not found" })).toBeVisible();
+      await expect(page.getByText("You don't follow anyone at this address.")).toBeVisible();
+    }
+  });
+
   test("Feeds → Items → Article, each with a back arrow saying where it goes", async ({ page }) => {
     await openHome(page);
     // The feeds screen is home: Refresh at the top, Settings at the bottom, no sidebar toggle.

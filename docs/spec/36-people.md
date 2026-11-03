@@ -105,7 +105,7 @@ PLAN.md → V1, item 1.*
   for the page, `…/edit` for Edit, `/people/12/sources/34` for a source's
   settings. Old `/feeds/12` and `/feeds/12/edit` addresses still open, and
   the address bar is tidied to the new one. An address for someone the
-  reader doesn't follow says so plainly.
+  reader doesn't follow says so plainly, on a computer and a phone alike: "Not found", and "You don't follow anyone at this address. It may have been an old one."
 - **Unsubscribing** from a person leaves every source of theirs (Undo brings
   them all back). To leave one source only, take it out first. Following a
   source again later starts it afresh, on its own. Find new address keeps the

@@ -47,8 +47,8 @@
   >
     {#if onAbout}
       <!-- The heading's name stays theirs alone; what the button does is its description. The full 44px tall, to touch. -->
-      <button type="button" onclick={onAbout} title="About {text} (i)" aria-describedby="list-heading-about" class="list-title-link min-h-11 max-w-full truncate text-left"
-        >{text}<span aria-hidden="true" class="ml-1.5 font-normal text-muted">›</span></button
+      <button type="button" onclick={onAbout} title="About {text} (i)" aria-describedby="list-heading-about" class="list-title-link inline-flex min-h-11 max-w-full items-center text-left"
+        ><span class="truncate">{text}</span><span aria-hidden="true" class="ml-1.5 shrink-0 font-normal text-muted">›</span></button
       >
     {:else}
       {text}
@@ -75,6 +75,10 @@
     letter-spacing: inherit;
     color: inherit;
     border-radius: 0.375rem;
+  }
+  /* Its ring drawn inside: the heading cuts off anything outside its box (a long name is truncated). */
+  .list-title-link:focus-visible {
+    outline-offset: -2px;
   }
   .list-title-link:hover {
     text-decoration: underline;

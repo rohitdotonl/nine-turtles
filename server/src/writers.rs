@@ -331,7 +331,7 @@ async fn writer_of(
     .flatten())
 }
 
-/// Edit person's name: the person's, for a place joined to others; the
+/// Edit's name (on their page): the person's, for a place joined to others; the
 /// place's own otherwise. The name is already cleaned (`clean_name`).
 pub async fn rename_place(
     connection: &mut SqliteConnection,
@@ -353,7 +353,7 @@ pub async fn rename_place(
     }
 }
 
-/// Edit person's folders: every place of the person goes in exactly these.
+/// Edit's folders: every place of the person goes in exactly these.
 pub async fn file_places(
     connection: &mut SqliteConnection,
     person: i64,

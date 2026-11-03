@@ -638,23 +638,32 @@ async fn an_imported_feed_is_guessed_once_it_has_been_fetched() {
         .fetch_one(&state.db)
         .await
         .unwrap();
-    // The sidebar loads before its first check: nothing is kept as a guess
-    // yet, so its writers, once seen, make it a publication.
-    reader.get("/api/feeds").await;
-    let fetched: Option<i64> = sqlx::query_scalar("SELECT fetched_at FROM feeds WHERE id = ?")
+    // As if the sidebar loads before its first check (the import may already
+    // have checked it): nothing is kept as a guess yet, so its writers, once
+    // seen, make it a publication.
+    sqlx::query("UPDATE feeds SET fetched_at = NULL WHERE id = ?")
         .bind(gazette)
-        .fetch_one(&state.db)
+        .execute(&state.db)
         .await
         .unwrap();
-    if fetched.is_none() {
-        let kept: Option<String> =
-            sqlx::query_scalar("SELECT kind FROM subscriptions WHERE feed_id = ?")
-                .bind(gazette)
-                .fetch_one(&state.db)
-                .await
-                .unwrap();
-        assert_eq!(kept, None, "guessed before it was fetched");
-    }
+    sqlx::query("UPDATE subscriptions SET kind = NULL, place = NULL WHERE feed_id = ?")
+        .bind(gazette)
+        .execute(&state.db)
+        .await
+        .unwrap();
+    sqlx::query("DELETE FROM articles WHERE feed_id = ?")
+        .bind(gazette)
+        .execute(&state.db)
+        .await
+        .unwrap();
+    reader.get("/api/feeds").await;
+    let kept: Option<String> =
+        sqlx::query_scalar("SELECT kind FROM subscriptions WHERE feed_id = ?")
+            .bind(gazette)
+            .fetch_one(&state.db)
+            .await
+            .unwrap();
+    assert_eq!(kept, None, "guessed before it was fetched");
     nine_turtles::checking::check(&state, gazette, nine_turtles::now())
         .await
         .unwrap();

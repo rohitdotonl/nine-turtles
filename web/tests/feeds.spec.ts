@@ -571,8 +571,8 @@ test("with only the keyboard: Tab reaches Show older articles, and the keyboard'
 
 test("an address for a feed you don't follow says so", async ({ page }) => {
   await openApp(page, "/feeds/999999");
-  await expect(page.getByRole("heading", { level: 2, name: "Feed not found" })).toBeVisible();
-  await expect(page.getByText("You don't follow this feed.")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Not found" })).toBeVisible();
+  await expect(page.getByText("You don't follow anyone at this address.")).toBeVisible();
 });
 
 // Adding from elsewhere (SPEC section 3, decisions 0104 and 0138): a share menu, an Apple

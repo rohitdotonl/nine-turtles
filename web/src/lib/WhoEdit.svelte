@@ -91,8 +91,10 @@
       title,
       folders: chosen,
       newFolder,
-      ...(chooses ? { kind: who } : {}),
-      ...(one ? { place, river: flows, check, openOnSite, paused, ...(feed.sortsVideos ? { shorts, liveStreams } : {}) } : {}),
+      // Kept only when changed, so a stand-in shown before the first check is never stored as their choice.
+      ...(chooses && who !== start.kind ? { kind: who } : {}),
+      ...(one && place !== start.place ? { place } : {}),
+      ...(one ? { river: flows, check, openOnSite, paused, ...(feed.sortsVideos ? { shorts, liveStreams } : {}) } : {}),
     });
     const problem = refusal ? refused(refusal, "feed") : newAddress ? await keepAddress(feed.id, address) : undefined;
     // Saved even if the address then failed: the sidebar shows what was kept.
