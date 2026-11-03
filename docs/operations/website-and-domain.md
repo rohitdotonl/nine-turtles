@@ -138,7 +138,9 @@ gone from the band and footer) until Rohit writes in it at least once a
 month; its posts stay, ready to return. Old addresses (the tour, Questions, the
 blog and its posts, `/docs`) send readers on to their new places, from one
 list in `website/src/_data/redirects.json` (decision 0166); add a line there
-whenever a page goes, so no saved link breaks. The Help pages are in
+whenever a page goes, so no saved link breaks. Bringing the blog back means
+removing its `/blog/` lines there too, or the build fails on two pages
+claiming one address. The Help pages are in
 `website/src/help/`, one file each, grouped by the list in
 `website/src/_data/helpGroups.json` (SPEC section 40). The contact address, the app's address
 and the code's address are written once, in `website/src/_data/site.json`.

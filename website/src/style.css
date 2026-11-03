@@ -852,11 +852,6 @@ footer .links.small a {
   margin: 0;
   padding-top: 8rem;
 }
-/* The line under the last button, pointing to Help. */
-.front .more {
-  margin: 0;
-  padding-top: 2rem;
-}
 .front + footer {
   margin-top: 8rem;
 }

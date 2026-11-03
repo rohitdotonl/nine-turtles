@@ -3,7 +3,9 @@ title: Questions people ask
 description: What nine turtles does and doesn't do, from recommendations and notifications to privacy and the sites you follow.
 groupId: getting-started
 order: 6
-spec: 40
+# The sections its answers explain: Help, fetching, newsletters, podcasts,
+# phones, accessibility, OPML, YouTube, writing back, the weekly email.
+spec: [40, 11, 28, 35, 20, 22, 16, 38, 37, 39]
 updated: 2026-11-03
 related: [bring-your-feeds, install-the-app, write-back]
 ---

@@ -4,7 +4,7 @@ title: Pricing
 description: What nine turtles will cost, what you get, and how paying works.
 permalink: /pricing/
 updated: 2026-11-03
-draft: Prices aren't set yet. This page will show them before anyone can sign up or pay for nine turtles. Until then, the parts marked "to be decided" are placeholders.
+draft: Prices aren't set yet. This page will show them before anyone pays for nine turtles. Until then, the parts marked "to be decided" are placeholders.
 ---
 
 <p class="lede">

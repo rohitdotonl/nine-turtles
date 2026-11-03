@@ -56,5 +56,3 @@ contents:
 </section>
 
 <p class="close"><a class="button" href="{{ site.app }}">Open the app</a></p>
-
-<p class="more">How each part works, one short page each, is in <a href="/help/">Help</a>.</p>

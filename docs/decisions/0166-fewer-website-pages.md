@@ -7,8 +7,8 @@ plan the same day.*
 ## Decision
 
 - **The tour ("How it works") and Questions (FAQ) go.** What the tour said
-  is in Help, one page per feature, and the front page now ends by pointing
-  there. Questions' price answers ("Can I use it today?", "What will it
+  is in Help, one page per feature; the front page stays as it is, ending
+  on its button (Help is in the band and footer). Questions' price answers ("Can I use it today?", "What will it
   cost?") move to Pricing; the rest become one Help page, **Questions people
   ask** (`/help/questions/`), with the tour's lines on polite fetching and
   accessibility.
