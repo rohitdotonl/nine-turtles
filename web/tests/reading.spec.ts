@@ -888,6 +888,59 @@ test.describe("on a wide window", () => {
     await expect(article(page).locator("iframe")).toHaveAttribute("src", /&start=240&/);
     await expect(again).toBeFocused();
   });
+
+  test("a YouTube video plays at the speed last chosen in one (decision 0156)", async ({ page }) => {
+    // Stand in for YouTube's player: it plays at 1× until told otherwise, says its speed when asked to talk
+    // and when it changes, keeps every command it's sent, and `choose(rate)` is the reader using its own menu.
+    await page.route(/youtube/, (route) =>
+      route.fulfill({
+        contentType: "text/html",
+        body: `<p>YouTube's player</p><script>
+          let rate = 1;
+          window.commands = [];
+          const say = (message) => parent.postMessage(JSON.stringify(message), "*");
+          window.choose = (to) => { rate = to; say({ event: "onPlaybackRateChange", info: rate }); };
+          addEventListener("message", (event) => {
+            const message = JSON.parse(event.data);
+            if (message.event === "listening") say({ event: "infoDelivery", info: { currentTime: 0, duration: 600, playerState: 1, playbackRate: rate } });
+            if (message.event === "command") {
+              window.commands.push(message.func + " " + JSON.stringify(message.args));
+              if (message.func === "setPlaybackRate") window.choose(message.args[0]);
+            }
+          });
+        </script>`,
+      }),
+    );
+    const kept = () => page.evaluate(() => localStorage.getItem("nine-turtles.video-speed"));
+    const player = async () => (await article(page).locator("iframe").elementHandle())!.contentFrame();
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(new URL("/all", FEEDS_APP).href);
+    await appReady(page);
+    await signIn(page);
+    const id = await follow(page, `${FEED_SITE}/videos/`);
+    await page.goto(new URL(`/feeds/${id}`, page.url()).href);
+
+    // The first video plays at YouTube's own 1×, which isn't taken as a choice; choosing 1.5× in its menu is kept.
+    await row(page, "A river at dawn").click();
+    await article(page).getByRole("button", { name: /^(Play video|Resume from [\d:]+): A river at dawn, for an hour$/ }).press("Enter");
+    const first = (await player())!;
+    await expect.poll(() => first.evaluate(() => (window as unknown as { commands: string[] }).commands)).toContain('addEventListener ["onPlaybackRateChange"]');
+    expect(await first.evaluate(() => (window as unknown as { commands: string[] }).commands)).not.toContainEqual(expect.stringMatching(/^setPlaybackRate/));
+    expect(await kept()).toBeNull();
+    await first.evaluate(() => (window as unknown as { choose: (rate: number) => void }).choose(1.5));
+    await expect.poll(kept).toBe("1.5");
+
+    // (The test before may have left a place in either video.) The next video, played from the keyboard, is given 1.5×, and its starting 1× doesn't undo the choice.
+    await row(page, "Rain on a tin roof").click();
+    await article(page).getByRole("button", { name: /^(Play video|Resume from [\d:]+): Rain on a tin roof$/ }).press(" ");
+    const next = (await player())!;
+    await expect.poll(() => next.evaluate(() => (window as unknown as { commands: string[] }).commands)).toContain("setPlaybackRate [1.5]");
+    expect(await kept()).toBe("1.5");
+
+    // Back to 1× forgets it.
+    await next.evaluate(() => (window as unknown as { choose: (rate: number) => void }).choose(1));
+    await expect.poll(kept).toBeNull();
+  });
 });
 
 test("on a phone, an article fills the screen and the back button returns to the list", async ({ page, isMobile }) => {

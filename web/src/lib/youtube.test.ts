@@ -52,6 +52,9 @@ describe("talking to YouTube's player", () => {
     });
     expect(playerNews(JSON.stringify({ event: "onStateChange", info: 0 }))).toEqual({ state: "ended" });
     expect(playerNews(JSON.stringify({ event: "infoDelivery", info: { volume: 100 } }))).toEqual({});
+    for (const other of ["not json", JSON.stringify({ event: "onReady" }), { event: "infoDelivery" }, null]) {
+      expect(playerNews(other)).toBeUndefined();
+    }
   });
 
   it("reads its speed, and only a speed it can play at", () => {
@@ -65,9 +68,6 @@ describe("talking to YouTube's player", () => {
     expect(videoSpeed("1.5")).toBe(1.5);
     expect(videoSpeed("0.25")).toBe(0.25);
     for (const kept of [null, "", "fast", "0", "-1", "9"]) expect(videoSpeed(kept)).toBe(1);
-    for (const other of ["not json", JSON.stringify({ event: "onReady" }), { event: "infoDelivery" }, null]) {
-      expect(playerNews(other)).toBeUndefined();
-    }
   });
 
   it("asks it to listen, and to seek", () => {
