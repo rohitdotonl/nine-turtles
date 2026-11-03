@@ -134,8 +134,8 @@ question, start from that shelf, and trim here first if writing slips.
 - [`reader-comparison.html`](reader-comparison.html): Feedbin, Miniflux,
   NetNewsWire and FreshRSS compared with nine turtles.
 - [`research-notes-2026-11.md`](research-notes-2026-11.md): Rohit's own
-  notes of 1 November 2026 (rivals, inspiration sites, readers' words,
-  feature and marketing ideas), put in order.
+  notes of 1 November 2026, cut on 3 November to what's still open
+  (rivals, website inspiration, readers' words, research errands).
 
 What the research already found:
 
@@ -193,8 +193,8 @@ Sources: [TechCrunch on Current](https://www.techcrunch.com/2026/02/19/current-i
 - "it does one job and it does it impeccably." ([gpjt, on NewsBlur](https://news.ycombinator.com/item?id=42758211))
 
 More readers' words, from Reddit, are in
-[`research-notes-2026-11.md`](research-notes-2026-11.md) → "Reddit
-comments, word for word".
+[`research-notes-2026-11.md`](research-notes-2026-11.md) → "Readers'
+own words".
 
 **Rohit's to-do:**
 
