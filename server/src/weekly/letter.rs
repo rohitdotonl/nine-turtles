@@ -61,7 +61,7 @@ pub fn compose(people: &[Person], since: &str, home: &str, stop: &str) -> String
             .iter()
             .any(|person| person.articles.len() > MOST_TITLES)
     {
-        body.push_str("\nThere's more waiting in nine turtles.\n");
+        body.push_str("\nThe rest is in nine turtles.\n");
     }
     body.push_str(&format!(
         "\nRead them in nine turtles: {home}\n\n\
@@ -155,10 +155,7 @@ mod tests {
             body.contains("Post 3") && !body.contains("Post 4"),
             "{body}"
         );
-        assert!(
-            body.contains("There's more waiting in nine turtles."),
-            "{body}"
-        );
+        assert!(body.contains("The rest is in nine turtles."), "{body}");
         assert!(
             !body.contains('6') && !body.contains("9 "),
             "no count: {body}"

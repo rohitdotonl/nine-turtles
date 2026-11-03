@@ -5,7 +5,9 @@ describe("the weekly email's words", () => {
   it("say when it comes for each choice, and never a count", () => {
     expect(oftenHint("weekly")).toMatch(/^Saturday mornings/);
     expect(oftenHint("twice")).toMatch(/^Wednesday and Saturday mornings/);
-    expect(oftenHint("off")).toMatch(/Off until you turn it on/);
+    expect(oftenHint("off")).toMatch(/^The people you read/);
+    expect(oftenHint("weekly", true)).toMatch(/press Start/);
+    expect(oftenHint("off", true)).not.toMatch(/press Start/);
     for (const often of ["off", "weekly", "twice"] as const) expect(oftenHint(often)).not.toMatch(/\d/);
   });
 

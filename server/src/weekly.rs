@@ -8,12 +8,21 @@
 //! read since the last one, their titles and a line each (`letter`), never a
 //! count. When there's nothing new, nothing is sent.
 //!
-//! Its state is a few `person_settings` rows, so turning it off removes them
-//! all: `weekly` ("weekly" or "twice"), `weekly_offset` (the reader's minutes
-//! ahead of UTC, from their browser when they chose), `weekly_since` (when
-//! they chose), `weekly_sent_at` (the last time nine turtles looked for
-//! them) and `weekly_stop` (the BLAKE2s scrambles of the last few stop
-//! links' tickets, as hex; a ticket itself is only ever in its email).
+//! Sign-up never checks an address (decision 0115), so before the first one
+//! goes to an address, nine turtles emails it once asking the reader to press
+//! Start; until then nothing is sent there. A stranger can't use it to send
+//! someone mail they never asked for.
+//!
+//! Its state is a few `person_settings` rows: `weekly` ("weekly" or
+//! "twice"), `weekly_offset` (the reader's minutes ahead of UTC, from their
+//! browser when they chose), `weekly_since` (when they chose),
+//! `weekly_sent_at` (the last time nine turtles looked for them),
+//! `weekly_stop` (the BLAKE2s scrambles of the last few stop links' tickets,
+//! as hex; a ticket itself is only ever in its email), which turning it off
+//! removes; and, kept when it's off, `weekly_start` (the scramble of the
+//! Start link's ticket, until it's pressed), `weekly_address` (the address
+//! whose Start was pressed) and `weekly_start_at` (when the last Start email
+//! went, so switching Off and on can't send them more than once an hour).
 
 use std::{collections::HashMap, time::Duration};
 
@@ -40,6 +49,10 @@ mod letter;
 
 /// The page the stop link opens (`/weekly-email#ticket=…`).
 pub const STOP_PAGE: &str = "/weekly-email";
+/// The page the Start link opens (`/weekly-email/start#ticket=…`).
+pub const START_PAGE: &str = "/weekly-email/start";
+/// At most one Start email an hour for each reader.
+const START_EVERY: i64 = 3600;
 /// How often nine turtles looks for readers whose email is due.
 const LOOK_EVERY: Duration = Duration::from_secs(10 * 60);
 /// The hour, where the reader is, the email goes out.
@@ -58,6 +71,7 @@ pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/api/weekly-email", get(read).post(change))
         .route("/api/weekly-email/stop", post(stop))
+        .route("/api/weekly-email/start", post(start))
 }
 
 /// How often the email comes.
@@ -134,11 +148,29 @@ async fn setting(db: &SqlitePool, person: i64, name: &str) -> Result<Option<Stri
         .await
 }
 
+/// How often it comes, and whether it's waiting for Start to be pressed.
+async fn answer(db: &SqlitePool, person: i64) -> Result<Response, sqlx::Error> {
+    let often = Often::from_stored(setting(db, person, "weekly").await?.as_deref());
+    let waiting = often != Often::Off && !started(db, person).await?;
+    Ok(Json(json!({ "often": often.stored(), "waiting": waiting })).into_response())
+}
+
+/// Whether Start was pressed for the reader's address as it is now.
+async fn started(db: &SqlitePool, person: i64) -> Result<bool, sqlx::Error> {
+    let started: Option<bool> = sqlx::query_scalar(
+        "SELECT people.email = person_settings.value COLLATE NOCASE
+         FROM people JOIN person_settings ON person_settings.person_id = people.id
+         WHERE people.id = ? AND person_settings.name = 'weekly_address'",
+    )
+    .bind(person)
+    .fetch_optional(db)
+    .await?;
+    Ok(started == Some(true))
+}
+
 async fn read(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
-    match setting(&state.db, person, "weekly").await {
-        Ok(often) => {
-            Json(json!({ "often": Often::from_stored(often.as_deref()).stored() })).into_response()
-        }
+    match answer(&state.db, person).await {
+        Ok(response) => response,
         Err(error) => database_problem("reading the weekly email", &error),
     }
 }
@@ -170,16 +202,81 @@ async fn change(
             .bind(person)
             .fetch_optional(&state.db)
             .await;
-    match address {
-        Ok(Some(Some(_))) => {}
+    let address = match address {
+        Ok(Some(Some(address))) => address,
         Ok(_) => return refused(StatusCode::CONFLICT, "no-address"),
         Err(error) => return database_problem("reading an email", &error),
-    }
+    };
     let offset = change.offset.clamp(-MOST_OFFSET, MOST_OFFSET);
-    match turn_on(&state.db, person, change.often, offset).await {
-        Ok(()) => Json(json!({ "often": change.often.stored() })).into_response(),
+    let done = async {
+        turn_on(&state.db, person, change.often, offset).await?;
+        if let Some(mailer) = &state.mailer {
+            ask_to_start(&state.db, mailer, person, &address).await?;
+        }
+        answer(&state.db, person).await
+    };
+    match done.await {
+        Ok(response) => response,
         Err(error) => database_problem("turning the weekly email on", &error),
     }
+}
+
+/// Emails `address` a Start link, unless Start was already pressed for it or
+/// one went in the last hour.
+async fn ask_to_start(
+    db: &SqlitePool,
+    mailer: &Mailer,
+    person: i64,
+    address: &str,
+) -> Result<(), sqlx::Error> {
+    if started(db, person).await? {
+        return Ok(());
+    }
+    let last = setting(db, person, "weekly_start_at")
+        .await?
+        .and_then(|at| at.parse::<i64>().ok());
+    if last.is_some_and(|last| now() - last < START_EVERY) {
+        return Ok(());
+    }
+    let ticket = match new_token() {
+        Ok(ticket) => ticket,
+        Err(error) => {
+            log::problem(&format!(
+                "couldn't make a ticket to start the weekly email: {error}"
+            ));
+            return Ok(());
+        }
+    };
+    put(db, person, "weekly_start", &hex(&scramble(&ticket))).await?;
+    put(db, person, "weekly_start_at", &now().to_string()).await?;
+    let body = format!(
+        "You chose the weekly email in nine turtles. To start it at this address, \
+         open this link and press Start:\n{}\n\n\
+         If it wasn't you, ignore this email: nothing more will come.{}",
+        mailer.link(START_PAGE, &ticket),
+        crate::email::SIGN_OFF
+    );
+    mailer.send_later(
+        address,
+        "Start your weekly email",
+        body,
+        "a weekly email's Start link",
+    );
+    Ok(())
+}
+
+/// Saves one of the reader's `person_settings` rows.
+async fn put(db: &SqlitePool, person: i64, name: &str, value: &str) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "INSERT INTO person_settings (person_id, name, value) VALUES (?, ?, ?)
+         ON CONFLICT (person_id, name) DO UPDATE SET value = excluded.value",
+    )
+    .bind(person)
+    .bind(name)
+    .bind(value)
+    .execute(db)
+    .await
+    .map(|_| ())
 }
 
 async fn turn_on(
@@ -188,23 +285,9 @@ async fn turn_on(
     often: Often,
     offset: i64,
 ) -> Result<(), sqlx::Error> {
-    let mut transaction = db.begin().await?;
-    for (name, value) in [
-        ("weekly", often.stored().to_owned()),
-        ("weekly_offset", offset.to_string()),
-        ("weekly_since", now().to_string()),
-    ] {
-        sqlx::query(
-            "INSERT INTO person_settings (person_id, name, value) VALUES (?, ?, ?)
-             ON CONFLICT (person_id, name) DO UPDATE SET value = excluded.value",
-        )
-        .bind(person)
-        .bind(name)
-        .bind(value)
-        .execute(&mut *transaction)
-        .await?;
-    }
-    transaction.commit().await
+    put(db, person, "weekly", often.stored()).await?;
+    put(db, person, "weekly_offset", &offset.to_string()).await?;
+    put(db, person, "weekly_since", &now().to_string()).await
 }
 
 async fn turn_off(db: &SqlitePool, person: i64) -> Result<(), sqlx::Error> {
@@ -219,30 +302,65 @@ async fn turn_off(db: &SqlitePool, person: i64) -> Result<(), sqlx::Error> {
 }
 
 #[derive(Deserialize)]
-struct Stop {
+struct Ticket {
     ticket: String,
 }
 
-/// The stop link's page, pressed: the email is off for whoever's ticket it
-/// is. Answers the same whether or not the ticket was one, and works signed
-/// out, from any device.
-async fn stop(State(state): State<AppState>, Json(form): Json<Stop>) -> Response {
-    let stop = hex(&scramble(form.ticket.trim()));
-    let whose: Result<Option<i64>, _> = sqlx::query_scalar(
-        "SELECT person_id FROM person_settings
-         WHERE name = 'weekly_stop' AND instr(value, ?) > 0",
+/// Whose ticket this is, among the `name` rows' scrambles.
+async fn whose(db: &SqlitePool, name: &str, ticket: &str) -> Result<Option<i64>, sqlx::Error> {
+    sqlx::query_scalar(
+        "SELECT person_id FROM person_settings WHERE name = ? AND instr(value, ?) > 0",
     )
-    .bind(&stop)
-    .fetch_optional(&state.db)
-    .await;
-    let done = match whose {
-        Ok(Some(person)) => turn_off(&state.db, person).await,
-        Ok(None) => Ok(()),
-        Err(error) => Err(error),
+    .bind(name)
+    .bind(hex(&scramble(ticket.trim())))
+    .fetch_optional(db)
+    .await
+}
+
+/// The stop link's page, pressed: the email is off for whoever's ticket it
+/// is. Works signed out, from any device. A ticket that's no longer one (an
+/// older email's, or the email was already off) is said plainly, so the
+/// page never claims it stopped something it didn't (a 256-bit ticket can't
+/// be guessed, so saying so gives nothing away).
+async fn stop(State(state): State<AppState>, Json(form): Json<Ticket>) -> Response {
+    let done = async {
+        let Some(person) = whose(&state.db, "weekly_stop", &form.ticket).await? else {
+            return Ok(false);
+        };
+        turn_off(&state.db, person).await.map(|()| true)
     };
-    match done {
-        Ok(()) => Json(json!({ "often": "off" })).into_response(),
+    match done.await {
+        Ok(true) => Json(json!({ "often": "off" })).into_response(),
+        Ok(false) => refused(StatusCode::NOT_FOUND, "unknown"),
         Err(error) => database_problem("stopping the weekly email", &error),
+    }
+}
+
+/// The Start link's page, pressed: the reader's address as it is now may
+/// get the weekly email. Works signed out, once.
+async fn start(State(state): State<AppState>, Json(form): Json<Ticket>) -> Response {
+    let done = async {
+        let Some(person) = whose(&state.db, "weekly_start", &form.ticket).await? else {
+            return Ok(false);
+        };
+        sqlx::query(
+            "INSERT INTO person_settings (person_id, name, value)
+             SELECT id, 'weekly_address', email FROM people WHERE id = ? AND email IS NOT NULL
+             ON CONFLICT (person_id, name) DO UPDATE SET value = excluded.value",
+        )
+        .bind(person)
+        .execute(&state.db)
+        .await?;
+        sqlx::query("DELETE FROM person_settings WHERE person_id = ? AND name = 'weekly_start'")
+            .bind(person)
+            .execute(&state.db)
+            .await?;
+        Ok::<_, sqlx::Error>(true)
+    };
+    match done.await {
+        Ok(true) => Json(json!({ "started": true })).into_response(),
+        Ok(false) => refused(StatusCode::NOT_FOUND, "unknown"),
+        Err(error) => database_problem("starting the weekly email", &error),
     }
 }
 
@@ -269,6 +387,8 @@ struct Chosen {
     since: i64,
     sent_at: Option<i64>,
     stop: String,
+    /// Whether Start was pressed for this address.
+    started: bool,
 }
 
 /// Sends the email to each reader it's due for at `at`, and answers how
@@ -295,15 +415,21 @@ pub async fn send_due(db: &SqlitePool, mailer: &Mailer, at: i64) -> Result<usize
         let number = |name: &str| values.get(name).and_then(|value| value.parse::<i64>().ok());
         let chosen = Chosen {
             person,
-            address,
             often: Often::from_stored(values.get("weekly").map(String::as_str)),
             offset: number("weekly_offset").unwrap_or(0),
             since: number("weekly_since").unwrap_or(at),
             sent_at: number("weekly_sent_at"),
             stop: values.get("weekly_stop").cloned().unwrap_or_default(),
+            started: values
+                .get("weekly_address")
+                .is_some_and(|started| started.eq_ignore_ascii_case(&address)),
+            address,
         };
-        if send_one(db, mailer, &chosen, at).await? {
-            sent += 1;
+        // One reader's trouble never keeps the others' emails back.
+        match send_one(db, mailer, &chosen, at).await {
+            Ok(true) => sent += 1,
+            Ok(false) => {}
+            Err(error) => log::problem(&format!("couldn't send a weekly email: {error}")),
         }
     }
     Ok(sent)
@@ -318,19 +444,15 @@ async fn send_one(
     let Some(due) = latest_due(chosen.often, chosen.offset, at) else {
         return Ok(false);
     };
+    if !chosen.started {
+        return Ok(false);
+    }
     if due <= chosen.since.max(chosen.sent_at.unwrap_or(i64::MIN)) {
         return Ok(false);
     }
     // What arrived since the last look, and never more than a week back.
     let from = chosen.sent_at.unwrap_or(at - WEEK).max(at - WEEK);
-    sqlx::query(
-        "INSERT INTO person_settings (person_id, name, value) VALUES (?, 'weekly_sent_at', ?)
-         ON CONFLICT (person_id, name) DO UPDATE SET value = excluded.value",
-    )
-    .bind(chosen.person)
-    .bind(at.to_string())
-    .execute(db)
-    .await?;
+    put(db, chosen.person, "weekly_sent_at", &at.to_string()).await?;
     let people = new_since(db, chosen.person, from).await?;
     if people.is_empty() {
         return Ok(false);
@@ -370,15 +492,7 @@ async fn keep_stop(db: &SqlitePool, chosen: &Chosen, ticket: &str) -> Result<(),
         )
         .take(STOP_LINKS_KEPT)
         .collect();
-    sqlx::query(
-        "INSERT INTO person_settings (person_id, name, value) VALUES (?, 'weekly_stop', ?)
-         ON CONFLICT (person_id, name) DO UPDATE SET value = excluded.value",
-    )
-    .bind(chosen.person)
-    .bind(kept.join(","))
-    .execute(db)
-    .await
-    .map(|_| ())
+    put(db, chosen.person, "weekly_stop", &kept.join(",")).await
 }
 
 /// The people with something unread that arrived after `from`, by name,
