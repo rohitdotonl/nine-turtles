@@ -8,7 +8,7 @@ use std::sync::LazyLock;
 use serde_json::{Value, json};
 
 use super::{LONGEST_ADDRESS, MOST_AT_ONCE};
-use crate::{folders, rules};
+use crate::{folders, notes, rules};
 
 /// Every tool, built once.
 static ALL: LazyLock<Vec<Value>> = LazyLock::new(list);
@@ -256,6 +256,70 @@ fn list() -> Vec<Value> {
             changing(false, true),
         ),
         tool(
+            "read_notes",
+            "Read notes and highlights",
+            "Everything the reader wrote: their note on each person, and their highlights and notes \
+             on articles, as Markdown, people A to Z. Only the reader and their assistant see these.",
+            json!({}),
+            &[],
+            reading(),
+        ),
+        tool(
+            "add_highlight",
+            "Highlight words",
+            "Highlights words in an article, with an optional note, as the reader would. The words \
+             must be in the article's text exactly as open_article gives it.",
+            json!({
+                "article_id": { "type": "integer" },
+                "words": { "type": "string", "maxLength": notes::LONGEST_QUOTE },
+                "note": { "type": "string", "maxLength": notes::LONGEST_NOTE },
+            }),
+            &["article_id", "words"],
+            changing(false, false),
+        ),
+        tool(
+            "edit_highlight",
+            "Change a highlight's note",
+            "Sets a highlight's note (highlight_id from open_article); an empty note takes it off.",
+            json!({
+                "highlight_id": { "type": "integer" },
+                "note": { "type": "string", "maxLength": notes::LONGEST_NOTE },
+            }),
+            &["highlight_id", "note"],
+            changing(false, true),
+        ),
+        tool(
+            "remove_highlight",
+            "Remove a highlight",
+            "Removes a highlight and its note. Answers what it was, so add_highlight can put it back.",
+            json!({ "highlight_id": { "type": "integer" } }),
+            &["highlight_id"],
+            changing(true, true),
+        ),
+        tool(
+            "set_article_note",
+            "Write a note on an article",
+            "Sets the reader's note on a whole article; an empty note removes it. Answers the note before.",
+            json!({
+                "article_id": { "type": "integer" },
+                "note": { "type": "string", "maxLength": notes::LONGEST_NOTE },
+            }),
+            &["article_id", "note"],
+            changing(false, true),
+        ),
+        tool(
+            "set_person_note",
+            "Write a note on a person",
+            "Sets the reader's note on the person a feed belongs to (on every place of theirs); \
+             an empty note removes it. Answers the note before.",
+            json!({
+                "feed_id": feed_id,
+                "note": { "type": "string", "maxLength": notes::LONGEST_NOTE },
+            }),
+            &["feed_id", "note"],
+            changing(false, true),
+        ),
+        tool(
             "export_feed_list",
             "Export the feed list",
             "The reader's feeds as an OPML file (the standard list every feed reader can import), folders included.",
@@ -273,7 +337,7 @@ mod tests {
     #[test]
     fn every_tool_has_a_name_schema_and_hints() {
         let tools = all();
-        assert_eq!(tools.len(), 20);
+        assert_eq!(tools.len(), 26);
         for tool in tools {
             assert!(tool["name"].as_str().is_some_and(|name| !name.is_empty()));
             assert_eq!(tool["inputSchema"]["type"], "object");

@@ -15,7 +15,7 @@
 
 use axum::{
     Json, Router,
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::StatusCode,
     response::{IntoResponse, Response},
     routing::post,
@@ -361,13 +361,36 @@ async fn set_paused(
     rules::apply_to(connection, person, id, &back).await
 }
 
-/// Unsubscribes on the screen (Undo comes back through `resubscribe`).
+/// Whether unsubscribing removes what the reader kept too (SPEC section 42).
+#[derive(Deserialize)]
+struct Removing {
+    #[serde(default)]
+    remove_kept: bool,
+}
+
+/// Unsubscribes on the screen (Undo comes back through `resubscribe`). With
+/// `remove_kept`, its starred and marked articles and the note on the
+/// person go too, once it's cleared for good (`notes::drop_kept`).
 async fn unsubscribe(
     SignedIn(person): SignedIn,
     State(state): State<AppState>,
     Path(id): Path<i64>,
+    Query(removing): Query<Removing>,
 ) -> Response {
-    match leave(&state.db, person, id, now(), Leaving::Screen).await {
+    let left = async {
+        let left = leave(&state.db, person, id, now(), Leaving::Screen).await?;
+        if left && removing.remove_kept {
+            sqlx::query(
+                "UPDATE subscriptions SET drop_kept = 1 WHERE person_id = ? AND feed_id = ?",
+            )
+            .bind(person)
+            .bind(id)
+            .execute(&state.db)
+            .await?;
+        }
+        Ok::<bool, sqlx::Error>(left)
+    };
+    match left.await {
         Ok(false) => StatusCode::NOT_FOUND.into_response(),
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Err(error) => database_problem("unsubscribing", &error),
@@ -543,17 +566,24 @@ pub async fn clear(
              JOIN articles ON articles.id = entries.article_id
          WHERE entries.person_id = ?1 AND entries.feed_id = ?2 AND entries.starred = 0
              AND articles.feed_id != ?2 AND NOT EXISTS (SELECT 1 FROM collection_articles AS kept
-                 WHERE kept.person_id = ?1 AND kept.article_id = entries.article_id)",
+                 WHERE kept.person_id = ?1 AND kept.article_id = entries.article_id)
+             AND NOT EXISTS (SELECT 1 FROM notes
+                 WHERE notes.person_id = ?1 AND notes.article_id = entries.article_id)",
     )
     .bind(person)
     .bind(id)
     .fetch_all(&mut *connection)
     .await?;
-    // An article on any of their collections stays, as a starred one does (decision 0108).
+    // An article on any of their collections stays, as a starred one does
+    // (decision 0108), and so does one they highlighted or wrote a note on
+    // (decision 0161), unless they chose to remove those too.
+    crate::notes::drop_kept(&mut *connection, person, id).await?;
     sqlx::query(
         "DELETE FROM entries WHERE person_id = ?1 AND feed_id = ?2 AND starred = 0
          AND NOT EXISTS (SELECT 1 FROM collection_articles AS kept
-             WHERE kept.person_id = ?1 AND kept.article_id = entries.article_id)",
+             WHERE kept.person_id = ?1 AND kept.article_id = entries.article_id)
+         AND NOT EXISTS (SELECT 1 FROM notes
+             WHERE notes.person_id = ?1 AND notes.article_id = entries.article_id)",
     )
     .bind(person)
     .bind(id)
@@ -564,7 +594,7 @@ pub async fn clear(
     rules::place_gone_for(connection, person, id).await?;
     crate::saved_searches::forget(&mut *connection, person, "feed", id).await?;
     sqlx::query(
-        "DELETE FROM subscriptions WHERE person_id = ?1 AND feed_id = ?2
+        "DELETE FROM subscriptions WHERE person_id = ?1 AND feed_id = ?2 AND note IS NULL
          AND NOT EXISTS (SELECT 1 FROM entries WHERE person_id = ?1 AND feed_id = ?2)",
     )
     .bind(person)

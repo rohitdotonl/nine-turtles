@@ -978,7 +978,7 @@ async fn every_tool_listed_is_one_nine_turtles_can_do() {
         .then_read()
         .await;
     let tools = listed["result"]["tools"].as_array().unwrap();
-    assert_eq!(tools.len(), 20);
+    assert_eq!(tools.len(), 26);
     // With no arguments a tool may refuse them, but it's never unknown.
     for listed in tools {
         let name = listed["name"].as_str().unwrap();
@@ -1081,4 +1081,85 @@ async fn two_codes_swapped_at_once_keep_one_line_in_settings() {
         1,
         "{listed}"
     );
+}
+
+#[tokio::test]
+async fn an_assistant_highlights_and_writes_notes_for_the_reader() {
+    let base = common::start(common::config()).await;
+    let cookie = common::signed_in(&base).await;
+    let (_, added) = post_json(
+        &base,
+        "/api/feeds",
+        Some(&cookie),
+        &json!({ "address": publisher("Quiet Garden").await }),
+    )
+    .await;
+    let feed = added["feed"]["id"].as_i64().unwrap();
+    let (_, page) = get_json(&base, &format!("/api/articles?feed={feed}"), &cookie).await;
+    let article = page["articles"][0]["id"].as_i64().unwrap();
+    let (_, made) = post_json(&base, "/api/assistants/key", Some(&cookie), &json!({})).await;
+    let key = made["key"].as_str().unwrap();
+
+    // Words not in the text are refused; words in it are highlighted.
+    let (_, error) = tool(
+        &base,
+        key,
+        "add_highlight",
+        json!({ "article_id": article, "words": "tomatoes" }),
+    )
+    .await;
+    assert!(error);
+    let (said, error) = tool(
+        &base,
+        key,
+        "add_highlight",
+        json!({ "article_id": article, "words": "Words about  gardens", "note": "Lovely" }),
+    )
+    .await;
+    assert!(!error, "{said}");
+    let highlight = said["highlight_id"].as_i64().unwrap();
+    let (said, _) = tool(
+        &base,
+        key,
+        "set_article_note",
+        json!({ "article_id": article, "note": "Read again" }),
+    )
+    .await;
+    assert_eq!(said["note_before"], Value::Null);
+    let (_, error) = tool(
+        &base,
+        key,
+        "set_person_note",
+        json!({ "feed_id": feed, "note": "Grows roses" }),
+    )
+    .await;
+    assert!(!error);
+
+    // Opening the article shows them; read_notes has all of it.
+    let (opened, _) = tool(&base, key, "open_article", json!({ "article_id": article })).await;
+    assert_eq!(
+        opened["yours"]["highlights"][0]["words"],
+        "Words about gardens"
+    );
+    assert_eq!(opened["yours"]["your_note"], "Read again");
+    let (notes, _) = tool(&base, key, "read_notes", json!({})).await;
+    let text = notes["text"].as_str().unwrap();
+    assert!(
+        text.contains("Grows roses")
+            && text.contains("> Words about gardens")
+            && text.contains("Note: Lovely"),
+        "{text}"
+    );
+
+    // Removing a highlight answers what it was.
+    let (said, _) = tool(
+        &base,
+        key,
+        "remove_highlight",
+        json!({ "highlight_id": highlight }),
+    )
+    .await;
+    assert_eq!(said["removed"]["note"], "Lovely");
+    let (_, opened) = get_json(&base, &format!("/api/articles/{article}"), &cookie).await;
+    assert_eq!(opened["article"]["notes"].as_array().unwrap().len(), 1);
 }

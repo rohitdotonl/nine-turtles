@@ -83,6 +83,8 @@ struct FeedRow {
     /// for this person, and the one the feed or newsletter gives.
     write_to: Option<String>,
     email: Option<String>,
+    /// The reader's note on the person (decision 0161).
+    note: Option<String>,
     /// The folders it's in, by number.
     #[sqlx(skip)]
     folders: Vec<i64>,
@@ -109,7 +111,7 @@ pub const FEEDS: &str = "SELECT feeds.id, subscriptions.title, feeds.site_url, s
         CASE WHEN feeds.failures >= 2 THEN feeds.failing_since END AS failing_since,
         CASE WHEN feeds.url NOT LIKE 'newsletter:%' THEN feeds.fetched_at END AS checked_at,
         subscriptions.writer_id AS person, subscriptions.added_at, subscriptions.write_to,
-        feeds.email, subscriptions.shorts, subscriptions.live_streams,
+        subscriptions.note, feeds.email, subscriptions.shorts, subscriptions.live_streams,
         feeds.url LIKE '%youtube.com/feeds/videos.xml?channel_id=%' AS sorts_videos,
         CASE WHEN feeds.url LIKE 'newsletter:%' THEN 'newsletter'
              WHEN feeds.url LIKE '%youtube.com/feeds/%' THEN 'video' ELSE 'blog' END AS place,

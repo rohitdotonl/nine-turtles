@@ -27,7 +27,7 @@ pub async fn follow_again(
     now: i64,
 ) -> Result<bool, sqlx::Error> {
     let back = sqlx::query(
-        "UPDATE subscriptions SET unsubscribed_at = NULL, kept_until = NULL
+        "UPDATE subscriptions SET unsubscribed_at = NULL, kept_until = NULL, drop_kept = 0
          WHERE person_id = ? AND feed_id = ? AND unsubscribed_at IS NOT NULL AND cleared = 0",
     )
     .bind(person)
@@ -91,7 +91,7 @@ pub async fn subscribe(
              title = excluded.title, added_at = excluded.added_at, unsubscribed_at = NULL,
              cleared = 0, river = 0, check_at_most = 0, open_on_site = 0,
              paused_at = NULL, writer_id = NULL, same_asked = 0, write_to = NULL,
-             shorts = 0, live_streams = 0",
+             shorts = 0, live_streams = 0, drop_kept = 0",
     )
     .bind(person)
     .bind(feed_id)

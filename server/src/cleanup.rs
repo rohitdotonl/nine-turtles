@@ -1,7 +1,8 @@
 //! The yearly clean-up (SPEC section 23, decision 0089): an article nobody
 //! has starred is removed a year after nine turtles first received it, read
 //! or not. A starred one stays forever, and so does one on any of the
-//! reader's collections (decision 0108).
+//! reader's collections (decision 0108) or one they highlighted or wrote a
+//! note on (decision 0161).
 //!
 //! It runs just after each night's backup is safely stored (`backup::run`),
 //! so whatever it removes is still in that night's copy; without backups it
@@ -48,6 +49,9 @@ pub async fn run(db: &SqlitePool, at: i64) -> Result<Removed, sqlx::Error> {
                      AND NOT EXISTS (SELECT 1 FROM collection_articles AS kept
                          WHERE kept.person_id = entries.person_id
                              AND kept.article_id = entries.article_id)
+                     AND NOT EXISTS (SELECT 1 FROM notes
+                         WHERE notes.person_id = entries.person_id
+                             AND notes.article_id = entries.article_id)
                  LIMIT ?)",
         )
         .bind(before)
@@ -91,11 +95,11 @@ pub async fn run(db: &SqlitePool, at: i64) -> Result<Removed, sqlx::Error> {
                 .await?;
         }
         // A reader who unsubscribed kept the feed's line only for their
-        // starred articles; once none is left it goes, as `folders::clear`
-        // would have done. Then a feed nobody follows any more whose last
+        // starred articles and their note on the person; once neither is
+        // left it goes, as `folders::clear` would have done. Then a feed nobody follows any more whose last
         // article just went goes too, as unsubscribing would have done.
         let gone: Vec<i64> = sqlx::query_scalar(
-            "DELETE FROM subscriptions WHERE cleared = 1
+            "DELETE FROM subscriptions WHERE cleared = 1 AND note IS NULL
              AND NOT EXISTS (SELECT 1 FROM entries WHERE entries.person_id = subscriptions.person_id
                              AND entries.feed_id = subscriptions.feed_id)
              RETURNING feed_id",

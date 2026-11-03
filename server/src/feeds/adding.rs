@@ -335,6 +335,7 @@ async fn follow(
         added_at: now,
         write_to: None,
         email: parsed.email,
+        note: None,
         folders: Vec::new(),
     })
 }

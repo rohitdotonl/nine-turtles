@@ -27,6 +27,7 @@
 //! the work.
 
 mod changing;
+mod notes;
 mod reading;
 mod tools;
 
@@ -208,6 +209,12 @@ async fn call(state: &AppState, person: i64, name: &str, given: Value) -> Answer
         "add_rule" => changing::add_rule(state, person, arguments(given)?).await,
         "delete_rule" => changing::delete_rule(state, person, arguments(given)?).await,
         "unsubscribe_feed" => changing::unsubscribe(state, person, arguments(given)?).await,
+        "read_notes" => notes::read_notes(state, person).await,
+        "add_highlight" => notes::add_highlight(state, person, arguments(given)?).await,
+        "edit_highlight" => notes::edit_highlight(state, person, arguments(given)?).await,
+        "remove_highlight" => notes::remove_highlight(state, person, arguments(given)?).await,
+        "set_article_note" => notes::set_article_note(state, person, arguments(given)?).await,
+        "set_person_note" => notes::set_person_note(state, person, arguments(given)?).await,
         "resubscribe_feed" => changing::resubscribe(state, person, arguments(given)?).await,
         "export_feed_list" => match subscriptions::opml_for(&state.db, person).await {
             Ok(Some(file)) => Ok(json!({ "format": "OPML", "file": file })),

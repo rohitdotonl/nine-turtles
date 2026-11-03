@@ -2080,3 +2080,78 @@ async fn confirming_addresses_keeps_every_reader_and_link_and_confirms_every_add
     .await
     .unwrap();
 }
+
+#[tokio::test]
+async fn adding_notes_keeps_every_subscription_and_entry_and_notes_nothing() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just after "How did you hear" (structure change 32): one
+    // feed the owner follows, with a starred article and a read one.
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(32, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO feeds (id, url, url_key, title, added_at) VALUES (1, 'u', 'u', 'Garden', 1)",
+        "INSERT INTO subscriptions (person_id, feed_id, title, added_at, write_to)
+         VALUES (1, 1, 'Garden', 1, 'ivy@example.org')",
+        "INSERT INTO articles (id, feed_id, fingerprint, title, received_at, sort_at)
+         VALUES (1, 1, 'a', 'A', 1, 1), (2, 1, 'b', 'B', 2, 2)",
+        "INSERT INTO entries (person_id, article_id, feed_id, sort_at, read, starred)
+         VALUES (1, 1, 1, 1, 0, 1), (1, 2, 1, 2, 1, 0)",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let entries: Vec<(i64, bool, bool)> =
+        sqlx::query_as("SELECT article_id, read, starred FROM entries ORDER BY article_id")
+            .fetch_all(&db)
+            .await
+            .unwrap();
+    assert_eq!(entries, [(1, false, true), (2, true, false)]);
+    let place: (String, Option<String>, Option<String>, bool) = sqlx::query_as(
+        "SELECT title, write_to, note, drop_kept FROM subscriptions WHERE feed_id = 1",
+    )
+    .fetch_one(&db)
+    .await
+    .unwrap();
+    assert_eq!(
+        place,
+        (
+            "Garden".to_owned(),
+            Some("ivy@example.org".to_owned()),
+            None,
+            false
+        )
+    );
+    let notes: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM notes")
+        .fetch_one(&db)
+        .await
+        .unwrap();
+    assert_eq!(notes, 0);
+    // A note must point at one of its reader's entries, and say something.
+    let stray = sqlx::query(
+        "INSERT INTO notes (person_id, article_id, note, made_at, changed_at) VALUES (1, 99, 'x', 0, 0)",
+    )
+    .execute(&db)
+    .await;
+    assert!(stray.is_err());
+    let empty = sqlx::query(
+        "INSERT INTO notes (person_id, article_id, made_at, changed_at) VALUES (1, 1, 0, 0)",
+    )
+    .execute(&db)
+    .await;
+    assert!(empty.is_err());
+}

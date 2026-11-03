@@ -79,6 +79,8 @@ pub const PER_READER_TABLES: &[(&str, &str)] = &[
         "DELETE FROM collection_articles WHERE person_id = ?",
     ),
     ("collections", "DELETE FROM collections WHERE person_id = ?"),
+    // Their highlights and notes point at entries too (decision 0161).
+    ("notes", "DELETE FROM notes WHERE person_id = ?"),
     // Where they stopped in episodes, and their Up Next (decision 0113):
     // they'd go with the entries anyway, but are named, like every table
     // with a reader's lines.
@@ -171,6 +173,7 @@ pub async fn delete(db: &SqlitePool, person: i64) -> Result<(), sqlx::Error> {
 pub const DATA_TABLES: &[&str] = &[
     "collection_articles",
     "collections",
+    "notes",
     "episode_progress",
     "up_next",
     "entries",
@@ -231,11 +234,15 @@ async fn let_go(
     .bind(keep_account)
     .fetch_all(&mut *connection)
     .await?;
-    // Nothing of theirs is kept now: no star, and no collection, holds an entry back.
-    sqlx::query("DELETE FROM collection_articles WHERE person_id = ?")
+    // Nothing of theirs is kept now: no star, no collection and no note holds an entry back.
+    for kept in ["collection_articles", "notes"] {
+        sqlx::query(sqlx::AssertSqlSafe(format!(
+            "DELETE FROM {kept} WHERE person_id = ?"
+        )))
         .bind(person)
         .execute(&mut *connection)
         .await?;
+    }
     sqlx::query("UPDATE entries SET starred = 0 WHERE person_id = ?")
         .bind(person)
         .execute(&mut *connection)
