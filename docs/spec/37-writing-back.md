@@ -50,7 +50,7 @@ V1, item 2). Its look gets a refinement round.*
   Paste it here once and it's kept."; then **Find it on their site** (an everyday button that opens their
   website, the one their feed names or else their article's home page, in a
   new tab; left out when nine turtles knows
-  neither), **Their email address**, **Write back** and **Not now**, and
+  neither, and once an address found there is filled in), **Their email address**, **Write back** and **Not now**, and
   under them, quietly, "Sends from your own email. nine turtles never reads
   it." The
   keyboard starts on the field; Not now puts it back on the button.

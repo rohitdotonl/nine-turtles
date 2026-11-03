@@ -124,7 +124,8 @@
             {#if looked === "looking"}Looking on their site…{:else if looked === "found"}Found on their site. Check it, then press Write back.{:else if looked === "none"}nine turtles looked on their site and didn't find an address. Paste it here once and it's kept.{:else}nine turtles doesn't have their address yet. Paste it here once and it's kept.{/if}
           </p>
         </div>
-        {#if site}
+        {#if site && looked !== "found"}
+          <!-- Left out once an address is filled in: it would only add a choice. -->
           <a class="btn self-start" href={site} target="_blank" rel="noopener noreferrer"><Icon name="open" size={16} />Find it on their site<span class="sr-only"> (opens in a new tab)</span></a>
         {/if}
         <div class="flex flex-col gap-1.5">
