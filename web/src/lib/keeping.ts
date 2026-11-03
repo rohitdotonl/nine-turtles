@@ -24,7 +24,7 @@ export function keptAny(kept: Kept): boolean {
 
 /** In plain words: "You starred 3 of their articles, highlighted or noted 1 and wrote a note on them." */
 export function keptWords(kept: Kept): string {
-  const articles = (n: number, first: boolean) => (first ? `${n} of their article${n === 1 ? "" : "s"}` : String(n));
+  const articles = (n: number, first: boolean) => (first ? `${n} of their articles` : String(n));
   const parts: string[] = [];
   if (kept.starred > 0) parts.push(`starred ${articles(kept.starred, true)}`);
   if (kept.marked > 0) parts.push(`highlighted or noted ${articles(kept.marked, parts.length === 0)}`);

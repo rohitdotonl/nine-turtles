@@ -237,7 +237,7 @@ test.describe("on a wide window", () => {
     await expect(more).toHaveAttribute("aria-haspopup", "menu");
     await more.click();
     const menu = page.getByRole("menu", { name: "More actions" });
-    await expect(menu.getByRole("menuitem")).toHaveText([/Copy link/, /Mark unread/, /Add to collection/, /Write back/]);
+    await expect(menu.getByRole("menuitem")).toHaveText([/Copy link/, /Mark unread/, /Add to collection/, /Add a note/, /Write back/]);
     await expect(menu.getByRole("menuitem", { name: "Mark unread" })).toHaveAttribute("aria-keyshortcuts", "m");
     await page.keyboard.press("Escape");
     await expect(menu).toHaveCount(0);

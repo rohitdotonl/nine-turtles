@@ -538,7 +538,7 @@
       {#if full}
         <!-- The article's last word is the reader's: their highlights and note (SPEC section 42), then writing back to whoever wrote it (SPEC section 37). -->
         {#key full.id}
-          <ArticleMarks bind:this={marks} {article} {full} {text} phone={phone !== undefined} {media} />
+          <ArticleMarks bind:this={marks} {article} {full} {text} phone={phone !== undefined} {media} say={(words) => (copied = words)} />
         {/key}
         <WriteBack bind:this={writeBack} {article} {library} />
       {/if}

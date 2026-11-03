@@ -31,6 +31,7 @@
     text,
     phone = false,
     media,
+    say,
   }: {
     article: Article;
     full: FullArticle;
@@ -39,6 +40,8 @@
     phone?: boolean;
     /** A video's or episode's player, when it has one: where it's playing (null when it isn't), and going back to a time. */
     media?: { now: () => number | null; jump: (seconds: number) => void };
+    /** Says what was done in the reading area's top bar ("Highlighted."), as Copy link does. */
+    say: (words: string) => void;
   } = $props();
 
   // Each article has its own: the reading area makes this anew for each article it opens.
@@ -65,7 +68,6 @@
   let menu: { anchor: DOMRect; quote?: Quote; highlight?: Note; writing: boolean; from?: Element | null } | undefined = $state();
   /** "Highlight removed · Undo", until something else is done. */
   let removed: Note | undefined = $state();
-  let said = $state("");
 
   /** The words chosen in the article now, if any. */
   function chosen(): { quote: Quote; anchor: DOMRect } | undefined {
@@ -124,7 +126,7 @@
     getSelection()?.removeAllRanges();
     menu = undefined;
     await marks.highlight(quote);
-    said = "Highlighted.";
+    say("Highlighted.");
   }
 
   async function saveNote(note: string) {
@@ -136,7 +138,7 @@
       getSelection()?.removeAllRanges();
       await marks.highlight(open.quote, note.trim() || null);
     }
-    said = "Note saved.";
+    say("Note saved.");
   }
 
   async function copy(highlight: Note) {
@@ -144,23 +146,23 @@
     const credit = [article.feedTitle, article.link].filter(Boolean).join(" · ");
     try {
       await navigator.clipboard.writeText(`“${highlight.quote}”\n${credit}`);
-      said = "Copied.";
+      say("Copied.");
     } catch {
-      said = "It couldn't be copied.";
+      say("It couldn't be copied.");
     }
   }
 
   async function remove(highlight: Note) {
     close();
     removed = await marks.remove(highlight.id);
-    said = "";
+    say("");
   }
 
   async function undo() {
     const was = removed;
     removed = undefined;
     if (was) await marks.restore(was);
-    said = "Highlight put back.";
+    say("Highlight put back.");
   }
 
   /** Shows a highlight in the text, from the list at the article's end. */
@@ -201,7 +203,7 @@
     event.preventDefault();
     editingArticle = false;
     await marks.setArticleNote(draft);
-    said = draft.trim() ? "Note saved." : "Note removed.";
+    say(draft.trim() ? "Note saved." : "Note removed.");
     await tick();
     editButton?.focus();
   }
@@ -256,8 +258,6 @@
   </section>
 {/if}
 
-<!-- Said to screen readers as it happens; seen in the line at the foot only when there's something to do or know. -->
-<p role="status" class="sr-only">{said}</p>
 {#if marks.waits || removed}
   <div class="foot floating" lang="en">
     {#if removed}

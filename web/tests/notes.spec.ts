@@ -125,7 +125,7 @@ test("unsubscribing asks whether to keep what was saved", async ({ page, isMobil
   await page.keyboard.press("Enter");
   const question = page.getByRole("group", { name: `Keep what you saved from Blog ${blog}?` });
   await expect(question).toBeVisible();
-  await expect(question).toContainText("You highlighted or noted 1 of their article.");
+  await expect(question).toContainText("You highlighted or noted 1 of their articles.");
   await expect(question.getByRole("button", { name: "Keep them" })).toBeFocused();
   await question.getByRole("button", { name: "Keep them" }).click();
   await expect(page.getByText(`Unsubscribed from Blog ${blog}`)).toBeVisible();
