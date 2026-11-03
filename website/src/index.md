@@ -15,7 +15,7 @@ contents:
 
 <h1 class="lead">Read people. Write back.</h1>
 
-<p>There are people online you'd like to know. Most of them have a blog, a newsletter or a channel. nine turtles keeps them in one quiet place, helps you write back to them, and ends when you've read what's there. No algorithm, and no AI rewriting or ranking what people write. Built on RSS, the open standard, so your list is always yours.</p>
+<p>There are people online you'd like to know. Most of them have a blog, a newsletter or a channel. nine turtles keeps them in one quiet place, helps you write back to them, and ends when you've read what's there. Built on RSS, the open standard, so your list is always yours.</p>
 
 <p><a class="button" href="{{ site.app }}">Open the app</a></p>
 
@@ -47,7 +47,7 @@ contents:
 
 <section id="between" aria-labelledby="between-h">
   <h2 id="between-h">Nobody in between</h2>
-  <p>No algorithm, no AI rewriting or ranking, no likes. Export everything in one click.</p>
+  <p>No algorithm, no likes, and no AI rewriting or ranking what people write. Export everything in one click.</p>
 </section>
 
 <section id="me" aria-labelledby="me-h">

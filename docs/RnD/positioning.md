@@ -18,8 +18,7 @@ The words will change; the shape is decided.
 > There are people online you'd like to know. Most of them have a blog, a
 > newsletter or a channel. nine turtles keeps them in one quiet place,
 > helps you write back to them, and ends when you've read what's there.
-> No algorithm, and no AI rewriting or ranking what people write. Built
-> on RSS, the open standard, so your list is always yours.
+> Built on RSS, the open standard, so your list is always yours.
 
 - **Headline:** "Read people. Write back." (Rohit, 2 November 2026; it
   replaced "The good part of the internet, in one quiet place."). The
