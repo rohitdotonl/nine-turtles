@@ -123,7 +123,7 @@ describe("typed filters", () => {
       "Write the date as YYYY-MM-DD, like after:2026-10-23.",
     );
     expect(takeFilters({ ...all, words: "after:2026-02-30" }, library, true).problem).toBeDefined();
-    expect(takeFilters({ ...all, words: "is:read" }, library, true).problem).toBe("is: can be is:unread or is:starred.");
+    expect(takeFilters({ ...all, words: "is:read" }, library, true).problem).toBe("is: can be is:unread, is:starred or is:noted.");
   });
 });
 
@@ -160,7 +160,7 @@ describe("suggestions as you type", () => {
   });
 
   it("offer whole filters once one is begun", () => {
-    expect(suggestions("is:", library).map((each) => each.label)).toEqual(["is:unread", "is:starred"]);
+    expect(suggestions("is:", library).map((each) => each.label)).toEqual(["is:unread", "is:starred", "is:noted"]);
     expect(suggestions("is:s", library).map((each) => each.label)).toEqual(["is:starred"]);
     expect(suggestions("feed:garden", library).map((each) => each.label)).toEqual([
       "feed:Garden Notes",

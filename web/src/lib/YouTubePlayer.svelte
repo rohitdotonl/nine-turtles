@@ -86,8 +86,13 @@
     savePlace(id, done ? (duration ?? time) : time, duration, done);
   }
 
-  /** A chapter pressed: the player moves there, or starts there. */
-  function jump(at: number) {
+  /** Where the video is, in seconds, once it plays here; null before (a note starts with it, SPEC section 42). */
+  export function now(): number | null {
+    return playing && heard ? time : null;
+  }
+
+  /** A chapter pressed, or a time in a note: the player moves there, or starts there. */
+  export function jump(at: number) {
     if (playing && heard) {
       send(toPlayer("command", "seekTo", [at, true]));
       send(toPlayer("command", "playVideo"));

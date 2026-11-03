@@ -138,8 +138,8 @@ export class LoadedLibrary {
   }
 
   /** Unsubscribes: "Unsubscribed from … · Undo". */
-  async unsubscribe(feed: Feed): Promise<Removed> {
-    const refusal = await unsubscribe(feed.id);
+  async unsubscribe(feed: Feed, removeKept = false): Promise<Removed> {
+    const refusal = await unsubscribe(feed.id, removeKept);
     if (refusal) return refused(refusal, "feed");
     await this.loadFeeds();
     return {

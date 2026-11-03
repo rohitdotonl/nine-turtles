@@ -1,0 +1,230 @@
+// Notes and highlights (SPEC section 42): the reader's highlights on the
+// open article, their note on the whole of it, and how each change reaches
+// the server. Without a connection a change is kept on this device and sent
+// once the connection is back, in the order it was made; until then the
+// article says so in one quiet line (OFFLINE_LINE). A highlight made offline
+// has a number below 0 until the server gives it its own.
+
+import { isRecord, sendChange } from "./http";
+import { connection, whenBack } from "./connection.svelte";
+import { deviceJson, setDeviceText } from "./device";
+import { currentTabReader } from "./updates.svelte";
+import { toNote, type FullArticle, type Note } from "./shapes";
+
+export const OFFLINE_LINE = "You're offline. This is saved on this device only, and reaches your account once you're back online.";
+
+/** The longest note the server keeps (server/src/notes.rs → LONGEST_NOTE). */
+export const LONGEST_NOTE = 5000;
+
+/** The words a new highlight holds: the quote, and a little of the text either side of it. */
+export type Quote = { quote: string; before: string; after: string };
+
+/** A change made without a connection, waiting on this device to be sent. */
+export type Waiting =
+  | ({ kind: "highlight"; article: number; id: number; note: string | null; madeAt: number } & Quote)
+  | { kind: "change"; article: number; id: number; note: string | null }
+  | { kind: "remove"; article: number; id: number }
+  | { kind: "article-note"; article: number; note: string | null };
+
+/** Whether the reader has highlighted or written a note on anything: the sidebar's Notes shows from then on. */
+export const noted = $state({ any: false });
+
+/** Changes still waiting, oldest first (kept for each reader, on this device). */
+export const waiting: { list: Waiting[] } = $state({ list: [] });
+
+function key(): string {
+  return `nine-turtles.notes-waiting.${currentTabReader() ?? "me"}`;
+}
+
+/** Reads what's waiting from this device; anything unreadable is left out. */
+export function loadWaiting(): void {
+  const saved = deviceJson(key());
+  waiting.list = Array.isArray(saved) ? saved.filter((each): each is Waiting => isRecord(each) && typeof each.kind === "string") : [];
+}
+
+function save() {
+  setDeviceText(key(), waiting.list.length > 0 ? JSON.stringify(waiting.list) : null);
+}
+
+/**
+ * Adds a change to those waiting, folded into what's already there: a note
+ * changed on a highlight made offline goes into that highlight, a highlight
+ * made and removed offline is simply gone, and a later note replaces an
+ * earlier one, so only what's needed is sent.
+ */
+export function folded(list: Waiting[], change: Waiting): Waiting[] {
+  if (change.kind === "change" && change.id < 0)
+    return list.map((each) => (each.kind === "highlight" && each.id === change.id ? { ...each, note: change.note } : each));
+  if (change.kind === "remove" && change.id < 0) return list.filter((each) => !(each.kind === "highlight" && each.id === change.id));
+  if (change.kind === "change" || change.kind === "remove")
+    return [...list.filter((each) => !(each.kind === "change" && each.id === change.id)), change];
+  if (change.kind === "article-note")
+    return [...list.filter((each) => !(each.kind === "article-note" && each.article === change.article)), change];
+  return [...list, change];
+}
+
+/** The article's notes as the server sent them, with the changes still waiting on this device made to them. */
+export function withWaiting(notes: Note[], article: number, list: Waiting[]): Note[] {
+  let now = [...notes];
+  for (const change of list) {
+    if (change.article !== article) continue;
+    if (change.kind === "highlight") now.push({ id: change.id, quote: change.quote, before: change.before, after: change.after, note: change.note, madeAt: change.madeAt });
+    if (change.kind === "change") now = now.map((each) => (each.id === change.id ? { ...each, note: change.note } : each));
+    if (change.kind === "remove") now = now.filter((each) => each.id !== change.id);
+    if (change.kind === "article-note") {
+      const whole = now.find((each) => each.quote === null);
+      now = now.filter((each) => each.quote !== null);
+      if (change.note) now.push({ id: whole?.id ?? 0, quote: null, before: "", after: "", note: change.note, madeAt: whole?.madeAt ?? 0 });
+    }
+  }
+  return now;
+}
+
+/** What a change asks the server: where, and with what. */
+function request(change: Waiting): [string, unknown] {
+  switch (change.kind) {
+    case "highlight":
+      return [`/api/articles/${change.article}/highlights`, { quote: change.quote, before: change.before, after: change.after, note: change.note }];
+    case "change":
+      return [`/api/highlights/${change.id}`, { note: change.note ?? "" }];
+    case "remove":
+      return [`/api/highlights/${change.id}/delete`, {}];
+    case "article-note":
+      return [`/api/articles/${change.article}/note`, { note: change.note ?? "" }];
+  }
+}
+
+/**
+ * Sends one change. "offline" when there's no connection (it should wait);
+ * otherwise the server's answer, or undefined when it wasn't taken (an
+ * article or highlight that's gone): nothing to keep waiting for.
+ */
+async function send(change: Waiting): Promise<Record<string, unknown> | "offline" | undefined> {
+  if (connection.offline) return "offline";
+  const [path, body] = request(change);
+  const { answer, refusal } = await sendChange(path, body, ["too-long", "no-quote"]);
+  if (refusal === "trouble" && connection.offline) return "offline";
+  return refusal ? undefined : answer;
+}
+
+let sending = false;
+
+/** Sends the waiting changes in order, stopping if the connection goes again. A highlight made offline takes the server's number. */
+export async function sendWaiting(): Promise<void> {
+  if (sending) return;
+  sending = true;
+  try {
+    while (waiting.list.length > 0 && !connection.offline) {
+      const change = waiting.list[0]!;
+      const answer = await send(change);
+      if (answer === "offline") break;
+      const made = change.kind === "highlight" && isRecord(answer?.highlight) ? toNote(answer.highlight) : undefined;
+      waiting.list = waiting.list.slice(1);
+      save();
+      if (made && change.kind === "highlight") renumbered.get(change.article)?.(change.id, made.id);
+    }
+  } finally {
+    sending = false;
+  }
+}
+
+/** The open article's Marks, told when a highlight made offline gets its number. */
+const renumbered = new Map<number, (was: number, now: number) => void>();
+
+whenBack(() => void sendWaiting());
+
+let temporary = 0;
+
+/**
+ * One article's highlights and note, as the reading area shows them, and
+ * the reader's changes to them. Each change shows at once; it's sent to the
+ * server, or kept on this device to send later.
+ */
+export class Marks {
+  notes: Note[] = $state([]);
+  private full: FullArticle;
+
+  constructor(full: FullArticle) {
+    this.full = full;
+    loadWaiting();
+    this.notes = withWaiting(full.notes ?? [], full.id, waiting.list);
+    renumbered.set(full.id, (was, now) => this.keep(this.notes.map((each) => (each.id === was ? { ...each, id: now } : each))));
+  }
+
+  /** This article has changes still waiting on this device. */
+  get waits(): boolean {
+    return waiting.list.some((each) => each.article === this.full.id);
+  }
+
+  /** The highlights, in the order they were made. */
+  get highlights(): Note[] {
+    return this.notes.filter((each) => each.quote !== null);
+  }
+
+  /** The note on the whole article, if there is one. */
+  get articleNote(): Note | undefined {
+    return this.notes.find((each) => each.quote === null);
+  }
+
+  /** Stops listening for new numbers (another article opened). */
+  close() {
+    renumbered.delete(this.full.id);
+  }
+
+  private keep(notes: Note[]) {
+    this.notes = notes;
+    // The article's loaded copy shows the same when it's opened again.
+    this.full.notes = notes;
+  }
+
+  /** Sends a change, or keeps it on this device. Answers the server's answer, if it was sent. */
+  private async change(change: Waiting): Promise<Record<string, unknown> | undefined> {
+    const answer = waiting.list.length > 0 ? "offline" : await send(change);
+    if (answer !== "offline") return answer;
+    waiting.list = folded(waiting.list, change);
+    save();
+    // Online, behind changes that were waiting: they're sent now, this one after them.
+    if (!connection.offline) void sendWaiting();
+    return undefined;
+  }
+
+  /** Highlights the words; answers the new highlight. */
+  async highlight(quote: Quote, note: string | null = null): Promise<Note> {
+    const made: Note = { id: -(Date.now() + ++temporary), ...quote, note, madeAt: Math.floor(Date.now() / 1000) };
+    this.keep([...this.notes, made]);
+    noted.any = true;
+    const answer = await this.change({ kind: "highlight", article: this.full.id, ...made, ...quote });
+    const saved = isRecord(answer?.highlight) ? toNote(answer.highlight) : undefined;
+    if (saved) this.keep(this.notes.map((each) => (each.id === made.id ? saved : each)));
+    return saved ?? made;
+  }
+
+  /** Changes a highlight's note; an empty one takes it off. */
+  async setNote(id: number, note: string | null) {
+    const clean = note?.trim() || null;
+    this.keep(this.notes.map((each) => (each.id === id ? { ...each, note: clean } : each)));
+    await this.change({ kind: "change", article: this.full.id, id, note: clean });
+  }
+
+  /** Removes a highlight (and its note). Answers it, for Undo. */
+  async remove(id: number): Promise<Note | undefined> {
+    const was = this.notes.find((each) => each.id === id);
+    if (!was) return undefined;
+    this.keep(this.notes.filter((each) => each.id !== id));
+    await this.change({ kind: "remove", article: this.full.id, id });
+    return was;
+  }
+
+  /** Undo for a removed highlight: it's made again, with its note. */
+  async restore(was: Note) {
+    if (was.quote !== null) await this.highlight({ quote: was.quote, before: was.before, after: was.after }, was.note);
+  }
+
+  /** Sets the note on the whole article; an empty one removes it. */
+  async setArticleNote(note: string | null) {
+    const clean = note?.trim() || null;
+    if (clean) noted.any = true;
+    this.keep(withWaiting(this.notes, this.full.id, [{ kind: "article-note", article: this.full.id, note: clean }]));
+    await this.change({ kind: "article-note", article: this.full.id, note: clean });
+  }
+}

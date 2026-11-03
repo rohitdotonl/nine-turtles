@@ -62,8 +62,8 @@ export type KeyHands = {
   toggleFolder(id: number): void;
   star(): void;
   collect(): void;
-  /** Write back to whoever wrote the article (SPEC section 37). */
-  writeBack(): void;
+  /** In the open article: write back to whoever wrote it (SPEC section 37), highlight the words chosen, or write a note (SPEC section 42). */
+  inArticle(what: "write-back" | "highlight" | "note"): void;
   markUnread(): void;
   undo(): void;
   refresh(): void;
@@ -171,7 +171,9 @@ export function carryOut(action: Action, scene: KeyScene, hands: KeyHands) {
       if (scene.selected && scene.onList) hands.collect();
       break;
     case "write-back":
-      if (scene.selected && scene.article && scene.onList) hands.writeBack();
+    case "highlight":
+    case "note":
+      if (scene.selected && scene.article && scene.onList) hands.inArticle(action.kind);
       break;
     case "mark-unread":
       if (scene.selected && scene.onList) hands.markUnread();

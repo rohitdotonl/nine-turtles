@@ -25,6 +25,7 @@
   the full width at the screen's foot, at least 32px below it.
 -->
 <script lang="ts">
+  import { tick } from "svelte";
   import FailingLine from "./FailingLine.svelte";
   import Icon from "./Icon.svelte";
   import PageHead from "./PageHead.svelte";
@@ -38,6 +39,8 @@
   import { pausedSince } from "./times";
   import { addressFor, keepAddress, looksLikeAddress } from "./writeBack";
   import type { Sick } from "./health";
+  import KeepOrRemove from "./KeepOrRemove.svelte";
+  import { keptAny, keptFrom, type Kept } from "./keeping";
 
   let {
     feed,
@@ -66,7 +69,8 @@
     river?: boolean;
     onSaved: () => void;
     onCancel: () => void;
-    onUnsubscribe: () => Promise<string | undefined>;
+    /** `removeKept`: what the reader starred or marked there goes too (SPEC section 42). */
+    onUnsubscribe: (removeKept: boolean) => Promise<string | undefined>;
     /** "Add a rule for this feed…": Settings, with a new rule for it (SPEC section 27). */
     onAddRule: () => void;
     /** Find new address moved the feed (decision 0106). */
@@ -155,13 +159,32 @@
     onPeople({ message: `${placeShownAs(feed)} is on its own again`, undo }, feed.id);
   }
 
-  async function leave() {
+  /** What the reader kept there, while Unsubscribe asks whether to keep it (SPEC section 42). */
+  let asking: Kept | undefined = $state();
+  let unsubscribeButton: HTMLButtonElement | undefined = $state();
+
+  async function leave(removeKept?: boolean) {
     if (busy) return;
     busy = true;
     message = "";
-    const problem = await onUnsubscribe();
+    if (removeKept === undefined) {
+      const kept = await keptFrom(feed.id);
+      if (keptAny(kept)) {
+        busy = false;
+        asking = kept;
+        return;
+      }
+    }
+    const problem = await onUnsubscribe(removeKept ?? false);
     busy = false;
+    asking = undefined;
     if (problem) message = problem;
+  }
+
+  async function keepAsking() {
+    asking = undefined;
+    await tick();
+    unsubscribeButton?.focus();
   }
 </script>
 
@@ -170,12 +193,13 @@
     type="button"
     aria-disabled={busy}
     aria-describedby="unsubscribe-help"
-    title="Stops following {places.length > 1 ? `this ${kind}` : 'them'} and removes the articles; starred ones stay. You can undo it straight afterwards."
+    title="Stops following {places.length > 1 ? `this ${kind}` : 'them'} and removes the articles; you choose whether starred and noted ones stay. You can undo it straight afterwards."
     aria-label="Unsubscribe from {feed.title}"
-    onclick={leave}
+    bind:this={unsubscribeButton}
+    onclick={() => leave()}
     class={look}>Unsubscribe</button
   >
-  <span id="unsubscribe-help" class="sr-only">Removes its articles; starred ones stay. You can undo it straight afterwards.</span>
+  <span id="unsubscribe-help" class="sr-only">Removes its articles; you choose whether starred and noted ones stay. You can undo it straight afterwards.</span>
 {/snippet}
 
 {#snippet form()}
@@ -362,7 +386,9 @@
       {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
     </p>
 
-    {#if sheet}
+    {#if asking}
+      <KeepOrRemove name={feed.title} kept={asking} {busy} onChoose={(removeKept) => leave(removeKept)} onCancel={keepAsking} />
+    {:else if sheet}
       <!-- One row at the foot: Unsubscribe at the far left, then Cancel and Save at the right end. -->
       <div class="sheet-actions">
         {@render unsubscribe("btn-danger")}

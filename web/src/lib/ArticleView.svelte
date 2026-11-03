@@ -32,10 +32,11 @@
   import YouTubePlayer from "./YouTubePlayer.svelte";
   import EpisodePlayer from "./EpisodePlayer.svelte";
   import WriteBack from "./WriteBack.svelte";
+  import ArticleMarks from "./ArticleMarks.svelte";
   import type { LoadedLibrary } from "./library.svelte";
   import type { Snippet } from "svelte";
   import { chapters, foldable, youtubeVideo } from "./youtube";
-  import { addToUpNext, player, removeFromUpNext } from "./player.svelte";
+  import { addToUpNext, player, removeFromUpNext, seek } from "./player.svelte";
   import type { Preferences } from "./preferences";
   import type { Article, FullArticle } from "./shapes";
   import { articleNow, readArticle } from "./articles";
@@ -124,6 +125,16 @@
   /** A podcast's episode (SPEC section 35): its audio, played from the publisher's own address. Copies kept before podcasts have none. */
   let episode = $derived(full?.audio ?? null);
   let queued = $derived(player.upNext?.includes(article.id) ?? false);
+  /** The reader's highlights and note (SPEC section 42), and the video's player, whose time a note can start with. */
+  let marks: ArticleMarks | undefined = $state();
+  let youtube: YouTubePlayer | undefined = $state();
+  let media = $derived(
+    video && youtube
+      ? { now: () => youtube?.now() ?? null, jump: (at: number) => youtube?.jump(at) }
+      : episode
+        ? { now: () => (player.current?.article.id === article.id ? player.position : null), jump: (at: number) => player.current?.article.id === article.id && seek(at) }
+        : undefined,
+  );
 
   /** The article's less frequent actions, behind More (…): sharing its link, marking it unread, its collections, and, for an episode, Up Next. */
   let more: MenuGroup[] = $derived([
@@ -132,7 +143,8 @@
         ...(article.link ? [{ label: sharing ? "Share" : "Copy link", shortcut: phone || sharing ? undefined : currentKey("copy-link"), onSelect: share }] : []),
         { label: "Mark unread", shortcut: phone ? undefined : currentKey("mark-unread"), onSelect: onMarkUnread },
         { label: "Add to collection…", shortcut: phone ? undefined : currentKey("collect"), onSelect: onCollect },
-        ...(followed && full ? [{ label: "Write back", shortcut: phone ? undefined : currentKey("write-back"), onSelect: startWriting }] : []),
+        ...(full ? [{ label: "Add a note…", shortcut: phone ? undefined : currentKey("note"), onSelect: () => act("note") }] : []),
+        ...(followed && full ? [{ label: "Write back", shortcut: phone ? undefined : currentKey("write-back"), onSelect: () => act("write-back") }] : []),
         ...(episode && player.upNext !== null
           ? [
               queued
@@ -336,9 +348,15 @@
     }
   }
 
-  /** `w`, and Write back in More: the reader's email app, or the box asking for the writer's address. */
-  export function startWriting() {
-    void writeBack?.start();
+  /**
+   * `w`, and Write back in More: the reader's email app, or the box asking
+   * for the writer's address. `h`: the words chosen are highlighted.
+   * Shift+H, and Add a note… in More: a note on them, or on the whole article (SPEC section 42).
+   */
+  export function act(what: "write-back" | "highlight" | "note") {
+    if (what === "write-back") void writeBack?.start();
+    else if (what === "highlight") marks?.highlight();
+    else marks?.note();
   }
 
   /**
@@ -460,6 +478,7 @@
       {:else if video}
         {#key article.id}
           <YouTubePlayer
+            bind:this={youtube}
             id={article.id}
             {video}
             title={article.title || "Untitled"}
@@ -480,7 +499,10 @@
       {#if full}
         {#if full.content}
           <!-- Cleaned by nine turtles before it was stored (server/src/feed/clean.rs). -->
-          <div bind:this={text} id="article-text" class={["article-text", folded && "folded"]} dir="auto">{@html full.content}</div>
+          <!-- Made anew for each article: highlights are drawn into it (ArticleMarks). -->
+          {#key full.id}
+            <div bind:this={text} id="article-text" class={["article-text", folded && "folded"]} dir="auto">{@html full.content}</div>
+          {/key}
           {#if video && foldable(full.content)}
             <button type="button" class="text-link" aria-expanded={!folded} aria-controls="article-text" lang="en" onclick={() => (unfoldedFor = folded ? article.id : undefined)}
               >{folded ? "Show the full description" : "Show less"}</button
@@ -489,7 +511,9 @@
           <!-- The last page: a short rule, so the article ends rather than stops. -->
           <hr aria-hidden="true" class="article-end" />
         {:else if full.summary}
-          <div bind:this={text} class="article-text" dir="auto">{@html full.summary}</div>
+          {#key full.id}
+            <div bind:this={text} class="article-text" dir="auto">{@html full.summary}</div>
+          {/key}
           <hr aria-hidden="true" class="article-end" />
           <!--
             End matter, under the closing rule as in a book: where the rest of it is. The sentence, then the
@@ -512,7 +536,10 @@
         <p class="mt-6" lang="en">{connection.offline ? NOT_KEPT : "This article couldn't be loaded. Try again in a moment."}</p>
       {/if}
       {#if full}
-        <!-- The article's last word is the reader's: write back to whoever wrote it (SPEC section 37). -->
+        <!-- The article's last word is the reader's: their highlights and note (SPEC section 42), then writing back to whoever wrote it (SPEC section 37). -->
+        {#key full.id}
+          <ArticleMarks bind:this={marks} {article} {full} {text} phone={phone !== undefined} {media} />
+        {/key}
         <WriteBack bind:this={writeBack} {article} {library} />
       {/if}
     </article>

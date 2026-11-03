@@ -89,6 +89,7 @@ export function toQuery(value: unknown): Query {
     scope: toScope(query.scope),
     unread: query.unread === true,
     starred: query.starred === true,
+    ...(query.noted === true ? { noted: true } : {}),
     after: day("after"),
     before: day("before"),
   };

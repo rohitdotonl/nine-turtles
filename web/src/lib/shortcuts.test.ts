@@ -51,7 +51,7 @@ function hands(next?: Route) {
     toggleFolder: note("toggleFolder"),
     star: note("star"),
     collect: note("collect"),
-    writeBack: note("writeBack"),
+    inArticle: note("inArticle"),
     markUnread: note("markUnread"),
     undo: note("undo"),
     refresh: note("refresh"),
@@ -151,7 +151,9 @@ describe("carryOut", () => {
   });
 
   it("writes back about the chosen article only with it in view", () => {
-    expect(run({ kind: "write-back" }, scene())).toEqual([["writeBack"]]);
+    expect(run({ kind: "write-back" }, scene())).toEqual([["inArticle", "write-back"]]);
+    expect(run({ kind: "highlight" }, scene())).toEqual([["inArticle", "highlight"]]);
+    expect(run({ kind: "note" }, scene({ article: false }))).toEqual([]);
     expect(run({ kind: "write-back" }, scene({ selected: false }))).toEqual([]);
     expect(run({ kind: "write-back" }, scene({ article: false }))).toEqual([]);
     expect(run({ kind: "write-back" }, scene({ onList: false }))).toEqual([]);

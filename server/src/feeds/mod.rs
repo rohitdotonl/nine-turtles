@@ -123,8 +123,9 @@ pub const FEEDS: &str = "SELECT feeds.id, subscriptions.title, feeds.site_url, s
      WHERE subscriptions.person_id = ? AND subscriptions.unsubscribed_at IS NULL
      ORDER BY subscriptions.title COLLATE NOCASE, feeds.id";
 
-/// The sidebar's feeds, folders and people.
-type Sidebar = (Vec<FeedRow>, Vec<Folder>, Vec<Writer>);
+/// The sidebar's feeds, folders and people, and whether the reader has
+/// highlighted or written a note on anything (its Notes row, SPEC section 42).
+type Sidebar = (Vec<FeedRow>, Vec<Folder>, Vec<Writer>, bool);
 
 /// Every followed feed, alphabetically, with its unread count and folders,
 /// every folder, alphabetically (SPEC section 5), and the people places
@@ -150,6 +151,10 @@ async fn list_feeds(SignedIn(person): SignedIn, State(state): State<AppState>) -
             .bind(person)
             .fetch_all(&mut *transaction)
             .await?;
+        let notes: bool = sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM notes WHERE person_id = ?)")
+            .bind(person)
+            .fetch_one(&mut *transaction)
+            .await?;
         transaction.commit().await?;
         let mut by_feed = std::collections::HashMap::<i64, Vec<i64>>::new();
         for (feed, folder) in memberships {
@@ -158,12 +163,13 @@ async fn list_feeds(SignedIn(person): SignedIn, State(state): State<AppState>) -
         for feed in &mut feeds {
             feed.folders = by_feed.remove(&feed.id).unwrap_or_default();
         }
-        Ok((feeds, folders, people))
+        Ok((feeds, folders, people, notes))
     }
     .await;
     match listed {
-        Ok((feeds, folders, people)) => {
-            Json(json!({ "feeds": feeds, "folders": folders, "people": people })).into_response()
+        Ok((feeds, folders, people, notes)) => {
+            Json(json!({ "feeds": feeds, "folders": folders, "people": people, "notes": notes }))
+                .into_response()
         }
         Err(error) => database_problem("listing feeds", &error),
     }

@@ -32,6 +32,8 @@ export type Feed = {
   /** Where to write back (decision 0147): the address the reader typed for the person, and the one this place gives. */
   writeTo?: string | null;
   email?: string | null;
+  /** The reader's private note on the person (SPEC section 42), the same on each of their places. */
+  note?: string | null;
   /** A YouTube channel's feed, whose Shorts and live streams are sorted out (decision 0144). */
   sortsVideos?: boolean;
 } & FeedSettings &
@@ -110,7 +112,28 @@ export type FullArticle = Article & {
   audio?: Episode | null;
   /** A YouTube Short plays in a tall box (decision 0144); a live stream or any other video in a wide one. */
   videoKind?: "short" | "live" | null;
+  /** The reader's highlights on it and their note on the whole of it (SPEC section 42), oldest first; none in copies kept before them. */
+  notes?: Note[];
 };
+
+/**
+ * One of the reader's highlights (with `quote`, the words they marked, and a
+ * little text either side to find the place), or, with no `quote`, their
+ * note on the whole article. `id` is below 0 while it waits on this device
+ * to reach the server (notes.svelte.ts).
+ */
+export type Note = { id: number; quote: string | null; before: string; after: string; note: string | null; madeAt: number };
+
+export function toNote(note: Record<string, unknown>): Note {
+  return {
+    id: Number(note.id),
+    quote: text(note.quote),
+    before: String(note.before ?? ""),
+    after: String(note.after ?? ""),
+    note: text(note.note),
+    madeAt: Number(note.made_at ?? 0),
+  };
+}
 
 /**
  * One page of the item list. `next` is where the next page starts, or null
@@ -142,12 +165,25 @@ export function toArticle(article: Record<string, unknown>): Article {
     read: article.read === true,
     starred: article.starred === true,
     muted: article.muted === true,
-    ...(Array.isArray(article.excerpt) ? { excerpt: toExcerpt(article.excerpt) } : {}),
+    ...excerptOf(article),
     ...(typeof article.opened === "number" ? { opened: article.opened } : {}),
     ...(article.episode === true || typeof article.episode_url === "string"
       ? { episode: true, episodeSeconds: typeof article.episode_seconds === "number" ? article.episode_seconds : null }
       : {}),
   };
+}
+
+/**
+ * A row's line of text: a search result's excerpt, said to come from the
+ * reader's highlight or note when it does; in the Notes list, the reader's
+ * first highlight, else their note (SPEC section 42).
+ */
+function excerptOf(article: Record<string, unknown>): { excerpt?: ExcerptPiece[] } {
+  const from = article.excerpt_from === "highlight" ? "Highlighted · " : article.excerpt_from === "note" ? "Your note · " : "";
+  if (Array.isArray(article.excerpt)) return { excerpt: [...(from ? [{ text: from, match: false }] : []), ...toExcerpt(article.excerpt)] };
+  if (typeof article.highlighted === "string") return { excerpt: [{ text: `Highlighted · ${article.highlighted}`, match: false }] };
+  if (typeof article.noted === "string") return { excerpt: [{ text: `Your note · ${article.noted}`, match: false }] };
+  return {};
 }
 
 /** Only well-formed pieces, each kept as text. */
@@ -165,6 +201,7 @@ export function toFullArticle(article: Record<string, unknown>): FullArticle {
     language: text(article.language),
     audio: episodeFrom(article),
     videoKind: article.video_kind === "short" || article.video_kind === "live" ? article.video_kind : null,
+    notes: Array.isArray(article.notes) ? article.notes.filter(isRecord).map(toNote) : [],
   };
 }
 
@@ -190,6 +227,7 @@ export function toFeed(feed: Record<string, unknown>): Feed {
     addedAt: typeof feed.added_at === "number" ? feed.added_at : undefined,
     writeTo: text(feed.write_to),
     email: text(feed.email),
+    note: text(feed.note),
     sortsVideos: feed.sorts_videos === true,
     shorts: feed.shorts === true,
     liveStreams: feed.live_streams === true,

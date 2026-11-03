@@ -1,6 +1,7 @@
 // The reader's feeds and folders (SPEC sections 3, 5, 7 and 15): the
 // sidebar's list, adding a feed, editing, unsubscribing and folder changes,
 // and the words the screens say about them.
+import { noted } from "./notes.svelte";
 import { api } from "./updates.svelte";
 import { noConnection } from "./connection.svelte";
 import { keepLibrary, keptLibrary } from "./offline";
@@ -52,6 +53,7 @@ export async function listFeeds(): Promise<Library> {
     people: people.filter(isRecord).map(toPerson),
   };
   keepLibrary(library);
+  if (isRecord(body) && body.notes === true) noted.any = true;
   return library;
 }
 
@@ -69,7 +71,8 @@ export function findByName(library: Library, typed: string): Library {
   if (!wanted) return library;
   return {
     folders: library.folders.filter((folder) => fold(folder.name).includes(wanted)),
-    feeds: library.feeds.filter((feed) => fold(feed.title).includes(wanted)),
+    // A person is found by the reader's note on them too (SPEC section 42).
+    feeds: library.feeds.filter((feed) => fold(feed.title).includes(wanted) || fold(feed.note ?? "").includes(wanted)),
   };
 }
 
@@ -249,8 +252,9 @@ export async function editFeed(
   ).refusal;
 }
 
-export async function unsubscribe(id: number): Promise<Refusal | undefined> {
-  return (await change(`/api/feeds/${id}/unsubscribe`, {})).refusal;
+/** Unsubscribes; `removeKept` removes the articles the reader starred or marked there, and their note on the person, too (SPEC section 42). */
+export async function unsubscribe(id: number, removeKept = false): Promise<Refusal | undefined> {
+  return (await change(`/api/feeds/${id}/unsubscribe${removeKept ? "?remove_kept=true" : ""}`, {})).refusal;
 }
 
 /** Undo for unsubscribing. "too-late" once the feed was cleared for good. */

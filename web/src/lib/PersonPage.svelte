@@ -4,7 +4,8 @@
   web, each by what it is (Blog, Video, Newsletter) with a link to the
   publisher's own site; since when the reader follows them; "Is this the same
   person?" when nine turtles has clear evidence; their email address, once
-  nine turtles knows it, for writing back (SPEC section 37); Edit person
+  nine turtles knows it, for writing back (SPEC section 37); the reader's
+  private note on them (SPEC section 42); Edit person
   (their name, email address, folders and rarer settings); and Add another
   place. Someone with one blog gets the same page, with one place.
 
@@ -14,6 +15,7 @@
 -->
 <script lang="ts">
   import AddPlace from "./AddPlace.svelte";
+  import PersonNote from "./PersonNote.svelte";
   import ReadingTip from "./ReadingTip.svelte";
   import SamePerson from "./SamePerson.svelte";
   import type { Notice } from "./feeds";
@@ -72,6 +74,9 @@
         {/if}
       </dl>
     </div>
+    {#if places[0]}
+      <PersonNote place={places[0].id} note={places.find((each) => each.note)?.note ?? null} {name} {library} />
+    {/if}
     <SamePerson {feed} {name} {library} {onJoined} />
     <div class="flex flex-col gap-3">
       <AddPlace {feed} {name} {library} {onJoined} />

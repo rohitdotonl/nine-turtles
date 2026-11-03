@@ -675,8 +675,8 @@
   }
 
   /** Unsubscribes, then shows Unread (All in river mode) with "Unsubscribed from … · Undo". */
-  async function unsubscribeFrom(feed: Feed): Promise<string | undefined> {
-    const done = await library.unsubscribe(feed);
+  async function unsubscribeFrom(feed: Feed, removeKept = false): Promise<string | undefined> {
+    const done = await library.unsubscribe(feed, removeKept);
     if (typeof done === "string") return done;
     go(home, done);
     return undefined;
@@ -1002,7 +1002,7 @@
     toggleFolder: (id) => sidebarFeeds?.toggleFolder(id),
     star: () => itemList?.toggleStar(),
     collect: () => selected && openCollecting(selected),
-    writeBack: () => articleView?.startWriting(),
+    inArticle: (what) => articleView?.act(what),
     markUnread: () => itemList?.markUnread(),
     undo: () => itemList?.undo(),
     refresh: () => itemList?.refresh(),
@@ -1472,7 +1472,7 @@
         {river}
         onSaved={() => edited(true)}
         onCancel={() => edited(false)}
-        onUnsubscribe={() => unsubscribeFrom(currentFeed!)}
+        onUnsubscribe={(removeKept) => unsubscribeFrom(currentFeed!, removeKept)}
         {library}
         onPeople={(done, lead) => go({ kind: "feed", id: lead }, done)}
         onPlace={(id) => go({ kind: "edit-feed", id })}

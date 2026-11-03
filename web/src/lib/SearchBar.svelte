@@ -414,16 +414,13 @@
       <div role="separator" class="mx-2 my-1.5 h-px bg-ink/10"></div>
       <fieldset class="min-w-0">
         <legend class="menu-head">Show only</legend>
-        <label class="menu-row">
-          <input type="checkbox" checked={query.unread} onchange={(event) => onChange({ ...query, unread: event.currentTarget.checked }, true)} />
-          <span class="menu-check"><Icon name="check" size={16} /></span>
-          <span class="flex-1">Unread</span>
-        </label>
-        <label class="menu-row">
-          <input type="checkbox" checked={query.starred} onchange={(event) => onChange({ ...query, starred: event.currentTarget.checked }, true)} />
-          <span class="menu-check"><Icon name="check" size={16} /></span>
-          <span class="flex-1">Starred</span>
-        </label>
+        {#each [["unread", "Unread"], ["starred", "Starred"], ["noted", "With notes"]] as const as [key, label] (key)}
+          <label class="menu-row">
+            <input type="checkbox" checked={query[key] === true} onchange={(event) => onChange({ ...query, [key]: event.currentTarget.checked }, true)} />
+            <span class="menu-check"><Icon name="check" size={16} /></span>
+            <span class="flex-1">{label}</span>
+          </label>
+        {/each}
       </fieldset>
       <div role="separator" class="mx-2 my-1.5 h-px bg-ink/10"></div>
       <fieldset class="min-w-0">
