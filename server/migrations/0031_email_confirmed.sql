@@ -35,14 +35,16 @@ CREATE TABLE email_links_new (
     created_at INTEGER NOT NULL,
     expires_at INTEGER NOT NULL,
     used INTEGER NOT NULL DEFAULT 0 CHECK (used IN (0, 1)),
-    -- 0 only for a 'change' try to an address another reader has: nothing
-    -- is emailed and it's spent at once, but it counts towards the reader's
+    -- 0 for a 'change' try to an address another reader has: nothing is
+    -- emailed and it's spent at once, but it counts towards the reader's
     -- changes in the hour, so the answer never tells the address is taken.
+    -- 0 too for a sign-up past its address's emails (or within a minute of
+    -- the last): kept, so a link already sent finishes it with this password.
     -- Only emailed lines count towards an address's emails in the hour.
     emailed INTEGER NOT NULL DEFAULT 1 CHECK (emailed IN (0, 1)),
     CHECK ((purpose = 'sign-up') = (person_id IS NULL)),
     CHECK ((purpose = 'sign-up') = (password_hash IS NOT NULL)),
-    CHECK (emailed = 1 OR (purpose = 'change' AND used = 1))
+    CHECK (emailed = 1 OR (purpose = 'change' AND used = 1) OR purpose = 'sign-up')
 ) STRICT;
 INSERT INTO email_links_new
         (id, purpose, person_id, email, token_hash, created_at, expires_at, used, emailed)

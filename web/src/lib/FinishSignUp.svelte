@@ -1,13 +1,14 @@
 <!--
   The page a sign-up's emailed link opens (/finish-sign-up#ticket=…, SPEC
-  section 1, decision 0154). Built like sign-in: "Type the password you
-  chose to finish signing up.", Password (named above its field) and Confirm
-  email. The link shows the address is the reader's; the password shows the
+  section 1, decision 0154). Built like sign-in: Password (named above its
+  field, "The one you chose when you signed up." under it), Confirm email,
+  and a quiet "Forgot it? Sign up again". The link shows the address is the reader's; the password shows the
   sign-up is theirs, so a stranger who signed up with the same address
   can't hand them an account with the stranger's password. Nothing happens
   until the reader presses Confirm email, so a mail program checking links
   can't use the link up. Then "You're signed up", with Open nine turtles. A
-  link that has run out says so calmly.
+  link that has run out says so calmly, and the keyboard goes to what it
+  says.
 -->
 <script lang="ts">
   import { tick } from "svelte";
@@ -31,6 +32,7 @@
   let signedUp = $state(false);
   let busy = $state(false);
   let doneHeading: HTMLHeadingElement | undefined = $state();
+  let spentMessage: HTMLParagraphElement | undefined = $state();
 
   async function submit(event: SubmitEvent) {
     event.preventDefault();
@@ -48,6 +50,14 @@
     refused = result.reason === "wrong-password" || result.reason === "wait";
     spent = result.reason === "expired" || result.reason === "already";
     password = "";
+    // The form is gone: the keyboard (and a screen reader) goes to why.
+    if (spent) tick().then(() => spentMessage?.focus());
+  }
+
+  function signUpAgain(event: MouseEvent) {
+    event.preventDefault();
+    history.replaceState(null, "", "/sign-up");
+    onSignedIn();
   }
 
   function leave(event: MouseEvent) {
@@ -71,7 +81,7 @@
     </div>
   {:else if spent}
     <div class="flex w-full flex-col items-center gap-3 text-center sm:max-w-xs">
-      <p role="status">{message || explainFinish({ ok: false, reason: "expired" })}</p>
+      <p bind:this={spentMessage} tabindex="-1">{message || explainFinish({ ok: false, reason: "expired" })}</p>
       <a href="/" onclick={leave} class="btn rounded-lg">Sign in</a>
     </div>
   {:else}
@@ -99,6 +109,7 @@
           {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
         </p>
         <button type="submit" aria-disabled={busy} class="btn-primary rounded-lg">Confirm email</button>
+        <p class="text-center text-small">Forgot it? <a href="/sign-up" onclick={signUpAgain} class="text-link">Sign up again</a></p>
       </div>
     </form>
   {/if}

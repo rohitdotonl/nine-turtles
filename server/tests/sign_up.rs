@@ -335,3 +335,45 @@ async fn following_a_changed_address_link_confirms_it() {
     assert_eq!(confirmed.status(), StatusCode::OK);
     assert_eq!(session(&base, &owner).await["email_confirmed"], true);
 }
+
+#[tokio::test]
+async fn signing_up_again_within_the_minute_keeps_the_new_password_for_the_link_sent() {
+    let (base, _, outbox) = start_with_mail(common::config()).await;
+    let email = "retyped@example.com";
+    sign_up(&base, email, PASSWORD).await;
+    // Back to the form, a new password, at once: no second email, the same answer.
+    let again = sign_up(&base, email, OTHER_PASSWORD).await;
+    assert_eq!(again.status(), StatusCode::ACCEPTED);
+    assert_eq!(emails_to(&outbox, email).len(), 1);
+    // The one link sent finishes it with the newer password.
+    let (_, ticket) = newest_link(&outbox, email);
+    assert_eq!(
+        finish(&base, &ticket, OTHER_PASSWORD).await.status(),
+        StatusCode::OK
+    );
+    assert_eq!(
+        sign_in(&base, email, OTHER_PASSWORD).await.status(),
+        StatusCode::NO_CONTENT
+    );
+}
+
+#[tokio::test]
+async fn wrong_passwords_on_the_link_are_slowed_down_as_sign_in_does() {
+    let (base, _, outbox) = start_with_mail(common::config()).await;
+    let email = "guess@example.com";
+    sign_up(&base, email, PASSWORD).await;
+    let (_, ticket) = newest_link(&outbox, email);
+    // A password too long to be anyone's is refused at once.
+    let long = finish(&base, &ticket, &"a".repeat(2000)).await;
+    assert_eq!(long.status(), StatusCode::UNAUTHORIZED);
+    let mut last = StatusCode::OK;
+    for _ in 0..6 {
+        last = finish(&base, &ticket, "not the password at all")
+            .await
+            .status();
+    }
+    assert_eq!(last, StatusCode::TOO_MANY_REQUESTS);
+    let waiting = finish(&base, &ticket, PASSWORD).await;
+    assert_eq!(waiting.status(), StatusCode::TOO_MANY_REQUESTS);
+    assert_eq!(error_of(waiting).await, "wait");
+}

@@ -55,6 +55,10 @@ use crate::{
 
 /// New accounts allowed in any hour, for the whole app.
 pub const SIGN_UPS_PER_HOUR: i64 = 20;
+/// Finishing a sign-up checks the password against at most this many of
+/// the address's waiting sign-ups, the newest, so one wrong try costs at
+/// most this many checks on sign-in's shared line.
+pub const WAITING_PER_ADDRESS: i64 = 3;
 
 /// The page a sign-up's link opens.
 pub const FINISH_PAGE: &str = "/finish-sign-up";
@@ -145,7 +149,8 @@ async fn sign_up(State(state): State<AppState>, Json(form): Json<SignUp>) -> Res
     let ticket = match wait_for_confirming(&state.db, &email, &line).await {
         Ok(Some(ticket)) => ticket,
         // Past the address's emails for the hour, or one went less than a
-        // minute ago: answered the same, and nothing is sent.
+        // minute ago: kept, but not emailed. The link already sent works
+        // with this password too, so the answer is the same.
         Ok(None) => return sent(&email),
         Err(error) => return database_problem("making an email link", &error),
     };
@@ -169,10 +174,11 @@ fn sent(email: &str) -> Response {
 }
 
 /// Saves a waiting sign-up, behind SQLite's one writer at a time, keeping
-/// to the limits every emailed link keeps: answers its ticket, or nothing
-/// when the address has had its emails for the hour or a sign-up link less
-/// than a minute ago. Earlier waiting sign-ups for the address stay: which
-/// one is finished is decided by the password typed (`finish_sign_up`).
+/// to the limits every emailed link keeps: answers its ticket to email, or
+/// nothing when the address has had its emails for the hour or a sign-up
+/// link less than a minute ago (then it's kept with `emailed = 0`, so a link
+/// already sent finishes it). Which waiting sign-up a link finishes is
+/// decided by the password typed (`finish_sign_up`).
 async fn wait_for_confirming(
     db: &SqlitePool,
     email: &str,
@@ -190,24 +196,22 @@ async fn wait_for_confirming(
     tidy_links_in(&mut transaction, now).await?;
     let this_hour = emails_to_address(&mut transaction, email, now - 60 * 60).await?;
     let lately = emailed_lately(&mut transaction, Purpose::SignUp, email, now).await?;
-    if this_hour >= EMAILS_PER_ADDRESS_PER_HOUR || lately {
-        transaction.commit().await?;
-        return Ok(None);
-    }
+    let emailed = this_hour < EMAILS_PER_ADDRESS_PER_HOUR && !lately;
     sqlx::query(
         "INSERT INTO email_links
-             (purpose, person_id, email, password_hash, token_hash, created_at, expires_at)
-         VALUES ('sign-up', NULL, ?, ?, ?, ?, ?)",
+             (purpose, person_id, email, password_hash, token_hash, created_at, expires_at, emailed)
+         VALUES ('sign-up', NULL, ?, ?, ?, ?, ?, ?)",
     )
     .bind(email)
     .bind(line)
     .bind(&scramble(&ticket)[..])
     .bind(now)
     .bind(now + CONFIRM_LIFETIME)
+    .bind(emailed)
     .execute(&mut *transaction)
     .await?;
     transaction.commit().await?;
-    Ok(Some(ticket))
+    Ok(emailed.then_some(ticket))
 }
 
 #[derive(Deserialize)]
@@ -251,10 +255,11 @@ async fn finish_sign_up(State(state): State<AppState>, Json(form): Json<Finish>)
     let waiting: Result<Vec<Waiting>, sqlx::Error> = sqlx::query_as(
         "SELECT id, password_hash FROM email_links
          WHERE purpose = 'sign-up' AND email = ? AND used = 0 AND expires_at > ?
-         ORDER BY created_at DESC",
+         ORDER BY created_at DESC, id DESC LIMIT ?",
     )
     .bind(&email)
     .bind(now)
+    .bind(WAITING_PER_ADDRESS)
     .fetch_all(&state.db)
     .await;
     let waiting = match waiting {

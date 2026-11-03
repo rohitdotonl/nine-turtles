@@ -107,6 +107,11 @@ test("anyone can sign up by confirming their email, with only the keyboard", asy
   await expect(page.locator("#sidebar")).toBeAttached();
   const session = await page.evaluate(async () => (await fetch("/api/session")).json());
   expect(session).toMatchObject({ signed_in: true, owner: false, email, email_confirmed: true });
+  // The same link again: the form gives way to why, and the keyboard goes there.
+  await page.goto(link);
+  await page.getByLabel("Password").fill(READER_PASSWORD);
+  await page.getByRole("button", { name: "Confirm email" }).click();
+  await expect(page.getByText("This link has expired or was already used. Sign up again for a new one.")).toBeFocused();
   await context.close();
 });
 
