@@ -1,0 +1,10 @@
+[
+  { "from": "/docs/", "to": "/help/", "title": "Help", "why": "/docs is an old habit for help pages; the website calls them Help (decision 0157)." },
+  { "from": "/tour/", "to": "/help/", "title": "Help", "why": "The tour's parts live in Help now, one page each (decision 0166)." },
+  { "from": "/faq/", "to": "/help/questions/", "title": "Questions people ask", "why": "Questions moved into Help, and the price answers into Pricing (decision 0166)." },
+  { "from": "/blog/", "to": "/about/", "title": "About", "why": "The blog is hidden until Rohit writes in it monthly; the story is on About (decision 0166)." },
+  { "from": "/blog/introducing-nine-turtles/", "to": "/about/", "title": "About", "why": "A hidden blog post (decision 0166)." },
+  { "from": "/blog/four-days-in-the-open/", "to": "/about/", "title": "About", "why": "A hidden blog post (decision 0166)." },
+  { "from": "/blog/being-polite-to-publishers/", "to": "/about/", "title": "About", "why": "A hidden blog post (decision 0166)." },
+  { "from": "/blog/what-we-left-out/", "to": "/about/", "title": "About", "why": "A hidden blog post (decision 0166)." }
+]

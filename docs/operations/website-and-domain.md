@@ -130,12 +130,15 @@ from hello@ too, that needs an email service, which is still to be chosen
 ## What the website says, and where
 
 Every page is a plain text file in `website/src/`: the home page
-(`index.md`), the tour, "New to feeds?", questions (`faq.md`), about,
+(`index.md`), "New to feeds?", about (Rohit's story, his to edit),
 contact, accessibility, privacy, terms, pricing and refunds, and the blog's posts in
 `website/src/blog/`, one file each. The blog is hidden for now (one line in
 `website/eleventy.config.js` leaves it out of the build, and its links are
 gone from the band and footer) until Rohit writes in it at least once a
-month; its posts stay, ready to return. The Help pages are in
+month; its posts stay, ready to return. Old addresses (the tour, Questions, the
+blog and its posts, `/docs`) send readers on to their new places, from one
+list in `website/src/_data/redirects.json` (decision 0166); add a line there
+whenever a page goes, so no saved link breaks. The Help pages are in
 `website/src/help/`, one file each, grouped by the list in
 `website/src/_data/helpGroups.json` (SPEC section 40). The contact address, the app's address
 and the code's address are written once, in `website/src/_data/site.json`.

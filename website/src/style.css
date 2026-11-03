@@ -350,44 +350,16 @@ h1 + .byline {
   text-align: center;
 }
 /* The day picture by day, the night picture by night. */
-.shot .night,
-.shot-pair .night {
+.shot .night {
   display: none;
 }
 @media (prefers-color-scheme: dark) {
-  .shot .day,
-  .shot-pair .day {
+  .shot .day {
     display: none;
   }
-  .shot .night,
-  .shot-pair .night {
+  .shot .night {
     display: block;
   }
-}
-
-/* Two phone pictures side by side. */
-.phones {
-  display: flex;
-  justify-content: center;
-  gap: 24px;
-  margin: 2.5rem 0;
-}
-.phones img {
-  display: block;
-  width: min(100%, 260px);
-  height: auto;
-  border: 1px solid var(--line);
-  border-radius: 24px;
-}
-.phones figure {
-  margin: 0;
-  flex: 0 1 260px;
-}
-
-/* A question and its answer. */
-.faq h2 {
-  margin-top: 2.5rem;
-  font-size: 1.25rem;
 }
 
 /* The feed finder (SPEC section 30): one field and its button, as the app
@@ -879,6 +851,11 @@ footer .links.small a {
 .front .close {
   margin: 0;
   padding-top: 8rem;
+}
+/* The line under the last button, pointing to Help. */
+.front .more {
+  margin: 0;
+  padding-top: 2rem;
 }
 .front + footer {
   margin-top: 8rem;

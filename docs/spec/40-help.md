@@ -12,7 +12,9 @@ Decision 0157.*
   Start with this three-minute page." Then five groups, each a heading and a
   plain list of links (a hairline between rows, each row 48px tall): Getting
   started, Reading, Keeping things tidy, Bringing more in, You and your
-  account. A page's place in its group is its `order`.
+  account. A page's place in its group is its `order`. Getting started ends
+  with **Questions people ask** (what nine turtles does and doesn't do; the
+  website's old Questions page, decision 0166).
 - **A page:** "Help › its group" above the title (both links), the title as
   a reader asks it ("Find out why someone stopped updating"), "Last updated"
   and the date, a lede a step larger, then steps and short sections, "Good
@@ -20,10 +22,12 @@ Decision 0157.*
   not right, or not what you needed? Tell me and I'll fix it." Buttons and
   places are named in bold, exactly as the app names them; keys are drawn as
   keys. No screenshots.
-- **Where it's linked from:** the website's band (How it works, Help, Open
-  the app) and its footer; the foot of Settings ("Help", opening a new
+- **Where it's linked from:** the website's band (Help, Open the app), its
+  footer and the front page's last line; the foot of Settings ("Help", opening a new
   tab); the keyboard shortcuts sheet's foot ("Help", to the keys page).
-- **`/docs`** sends readers on to `/help`.
+- **Old addresses** send readers on (`website/src/_data/redirects.json`):
+  `/docs` and the old tour (`/tour`) to `/help`, the old Questions (`/faq`)
+  to Questions people ask.
 - **Each page names the SPEC section it explains** in its front matter
   (`spec`). Changing what a reader sees means changing its Help page too, in
   the same pull request.
@@ -35,4 +39,5 @@ Decision 0157.*
 3. In the app, open Settings and scroll to the foot: **Help** opens the
    index in a new tab. Press `?`: **Help** at the sheet's foot opens "Every
    keyboard key".
-4. Open nineturtles.app/docs: it lands on Help.
+4. Open nineturtles.app/docs and nineturtles.app/tour: each lands on Help;
+   nineturtles.app/faq lands on Questions people ask.
