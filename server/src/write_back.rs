@@ -153,6 +153,15 @@ const WRITE_TO_ME: [&str; 11] = [
     "say hello",
 ];
 
+/// Whether a link's words start with `phrase` as a whole word: "Reply by
+/// email" says "reply", but "Replying to Beta" and "Beta's reply" don't, as
+/// a link to someone else's address might read.
+fn says(words: &str, phrase: &str) -> bool {
+    words
+        .strip_prefix(phrase)
+        .is_some_and(|rest| !rest.starts_with(char::is_alphanumeric))
+}
+
 /// The addresses the articles' own text gives for writing to the writer
 /// (SPEC section 37): a `mailto:` link that says it's for replying (its
 /// subject starts "Re:", or its words are "Reply by email", "Email me" and
@@ -177,7 +186,8 @@ fn in_text(feed: &Feed) -> Vec<String> {
                     .map(|summary| summary.content.as_str()),
             );
         let mut here = Vec::new();
-        for html in text {
+        // Most articles link no address at all: skip reading them.
+        for html in text.filter(|html| html.to_ascii_lowercase().contains("mailto:")) {
             for link in scraper::Html::parse_fragment(html).select(&links) {
                 let href = link.value().attr("href").unwrap_or_default().trim();
                 if !href
@@ -186,19 +196,21 @@ fn in_text(feed: &Feed) -> Vec<String> {
                 {
                     continue;
                 }
-                let Some(found) = worth_writing_to(href) else {
+                // One address however it's capitalised, so a sign-off
+                // written two ways still counts as one.
+                let Some(found) = worth_writing_to(href).map(|found| found.to_lowercase()) else {
                     continue;
                 };
                 let query = href
                     .split_once('?')
                     .map(|(_, query)| query.to_lowercase())
                     .unwrap_or_default();
-                let words = link.text().collect::<String>().to_lowercase();
+                let words = link.text().collect::<String>().trim().to_lowercase();
                 let says_reply = query.split('&').any(|part| {
                     part.strip_prefix("subject=").is_some_and(|subject| {
                         subject.starts_with("re:") || subject.starts_with("re%3a")
                     })
-                }) || WRITE_TO_ME.iter().any(|said| words.contains(said));
+                }) || WRITE_TO_ME.iter().any(|said| says(&words, said));
                 if says_reply {
                     replies.push(found.clone());
                 }
@@ -412,7 +424,7 @@ mod tests {
             r#"<p>Words.</p><p><a href="mailto:Alpha@Example.org?subject=Re:%20One">Reply by email</a></p>"#,
             "<p>More words.</p>",
         ]);
-        assert_eq!(from_feed(&feed).as_deref(), Some("Alpha@example.org"));
+        assert_eq!(from_feed(&feed).as_deref(), Some("alpha@example.org"));
         let by_its_words =
             rss(&[r#"<p>Thoughts? <a href="mailto:alpha@example.org">Email me</a>.</p>"#]);
         assert_eq!(
@@ -438,12 +450,26 @@ mod tests {
     }
 
     #[test]
+    fn a_sign_off_written_two_ways_is_one_address() {
+        let feed = rss(&[
+            r#"<a href="mailto:Alpha@example.org">Alpha@example.org</a>"#,
+            r#"<a href="mailto:alpha@EXAMPLE.org">alpha@example.org</a>"#,
+            r#"<a href="mailto:alpha@example.org">Reply by email</a>"#,
+        ]);
+        assert_eq!(from_feed(&feed).as_deref(), Some("alpha@example.org"));
+    }
+
+    #[test]
     fn someone_elses_address_in_one_article_gives_nothing() {
         let feed = rss(&[
             r#"<p>My friend <a href="mailto:beta@example.org">Beta</a> fixes bikes.</p>"#,
             "<p>Two.</p>",
         ]);
         assert_eq!(from_feed(&feed), None);
+        let words_inside = rss(&[
+            r#"<p><a href="mailto:beta@example.org">Beta's reply</a>, and <a href="mailto:beta@example.org?subject=Hi">Replying to Beta</a></p>"#,
+        ]);
+        assert_eq!(from_feed(&words_inside), None);
         let a_plain_address = rss(&["<p>Write to alpha@example.org</p>"]);
         assert_eq!(from_feed(&a_plain_address), None);
     }
