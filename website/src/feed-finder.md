@@ -29,9 +29,11 @@ permalink: /feed-finder/
 <h2>What it looks at</h2>
 
 Most sites name their feed in a hidden line of their pages. The finder reads
-the one page you give it, once, and the first feed it names, to show you its
-newest titles. It never guesses addresses or visits the site's articles, so it
-only finds what the publisher chose to share.
+the page you give it, once. If that page names no feed, it tries the site's
+home page and the few addresses where feeds usually live (such as
+<code>/feed</code>), one at a time. It then looks inside each feed it found,
+once, to show you its newest titles and how often it posts. It never visits
+the site's articles.
 
 Nothing about you is kept: no address you look up is written down. Each
 answer is remembered for half an hour, and any one site is looked at only a

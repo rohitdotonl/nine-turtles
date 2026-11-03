@@ -37,6 +37,8 @@ pub const WINDOW_DAYS: i64 = 90;
 /// Less history than this, or fewer articles than `FEWEST`, is too new to tell.
 const SHORTEST_DAYS: i64 = 14;
 const FEWEST: i64 = 3;
+/// How many dated posts tell a feed's pace from less than two weeks.
+const SHORT_SPAN_FEWEST: usize = 5;
 
 pub fn routes() -> Router<AppState> {
     Router::new().route("/api/feeds/{id}/frequency", get(read))
@@ -158,8 +160,13 @@ pub fn words(posting: Posting, now: i64) -> String {
     if posting.some < FEWEST || history < SHORTEST_DAYS * DAY {
         return "Too new to tell".to_owned();
     }
+    rate(posting.recent, history)
+}
+
+/// How often `posts` over `history` seconds is, in words.
+fn rate(posts: i64, history: i64) -> String {
     // Per day, in hundredths, so the rounding stays in whole numbers.
-    let per_day = posting.recent * DAY * 100 / history;
+    let per_day = posts * DAY * 100 / history.max(1);
     let per_week = per_day * 7;
     let per_month = per_day * 30;
     // Rounded to the nearest whole number, from hundredths.
@@ -179,6 +186,34 @@ pub fn words(posting: Posting, now: i64) -> String {
     } else {
         "Posts less than once a month".to_owned()
     }
+}
+
+/// How often a feed nine turtles hasn't stored posts, from the dates its
+/// articles give (a site's several feeds, when the reader chooses one,
+/// SPEC section 3); `None` if none is dated. A date in the future counts as
+/// now, as it does for stored articles.
+pub fn of_dates(dates: impl Iterator<Item = i64>, now: i64) -> Option<String> {
+    let dates: Vec<i64> = dates.map(|date| date.min(now)).collect();
+    let posting = Posting {
+        newest: Some(*dates.iter().max()?),
+        oldest: dates.iter().min().copied(),
+        some: i64::try_from(dates.len()).unwrap_or(i64::MAX).min(FEWEST),
+        recent: i64::try_from(
+            dates
+                .iter()
+                .filter(|date| **date > now - WINDOW_DAYS * DAY)
+                .count(),
+        )
+        .unwrap_or(i64::MAX),
+        added: now,
+    };
+    // A busy feed holds only its last few days: enough posts tell its pace
+    // from that span alone, where a stored feed would wait two weeks.
+    let span = now - posting.oldest.unwrap_or(now);
+    if dates.len() >= SHORT_SPAN_FEWEST && span < SHORTEST_DAYS * DAY {
+        return Some(rate(posting.recent, span.max(DAY)));
+    }
+    Some(words(posting, now))
 }
 
 #[cfg(test)]
@@ -280,5 +315,24 @@ mod tests {
         assert_eq!(empty(130), "Hasn't posted in 4 months");
         // Emptied by the yearly clean-up: nothing arrived in the last year.
         assert_eq!(empty(900), "Hasn't posted in over a year");
+    }
+
+    #[test]
+    fn a_feed_not_stored_is_told_from_its_dates() {
+        let week = 7 * DAY;
+        let dates = (0..26).map(|weeks| NOW - weeks * week / 2);
+        assert_eq!(
+            of_dates(dates, NOW).as_deref(),
+            Some("Posts about twice a week")
+        );
+        assert_eq!(of_dates(std::iter::empty(), NOW), None);
+        let old = [NOW - 400 * DAY, NOW - 500 * DAY, NOW - 600 * DAY];
+        assert_eq!(
+            of_dates(old.into_iter(), NOW).as_deref(),
+            Some("Hasn't posted in over a year")
+        );
+        // A busy feed holding only its last few days isn't "too new".
+        let busy = (0..20).map(|hours| NOW - hours * DAY / 4);
+        assert_eq!(of_dates(busy, NOW).as_deref(), Some("Posts about 4 a day"));
     }
 }

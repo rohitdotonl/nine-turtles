@@ -46,9 +46,9 @@ thread, in this order:
 10. **A weekly email** (V1 item 5) ✅
 11. **Installing the app, said plainly** (V1 item 6) ✅
 12. **"How did you hear about nine turtles?"** (V1 item 7) ✅
-13. **Notes and highlights** (V1 item 8) 🔨
-14. **A feed finder that tries a few more places** (V1 item 9) ⬜
-15. **Choosing between several feeds, made easy** (V1 item 10) ⬜
+13. **Notes and highlights** (V1 item 8) ✅
+14. **A feed finder that tries a few more places** (V1 item 9) ✅
+15. **Choosing between several feeds, made easy** (V1 item 10) ✅
 16. **Three to four refinement rounds:** the owner uses the app, lists what
     he dislikes (the theme picker first), and each round fixes it.
 17. **Prices and launch:** prices, the legal pages, the final website, live
@@ -116,20 +116,18 @@ milestone order above.
 
 **Added by the owner (3 November 2026, decision 0160):**
 
-8. **Notes and highlights:** a private note on each person (on their page:
+8. **Notes and highlights** ✅ a private note on each person (on their page:
    where you met, when you last wrote), and highlights and notes on
    articles. Search finds them, filtered by person, and Your data exports
-   them as Markdown. Yours alone; nothing about them is ever public. Built,
-   being tried by the owner: SPEC section 42, decision 0164.
-9. **A feed finder that tries a few more places:** when the pasted page
-   names no feed, also try the site's home page and a short list of the
-   usual feed addresses (`/feed`, `/rss`, `/index.xml` and the like). Still
-   only when the reader asks, once, never in the background, never an
-   article's page. Decision 0016 and AGENTS.md's rule change when it's built.
-10. **Choosing between several feeds, made easy:** when a site has more
-    than one, show each one's last few titles and how often it posts, so
-    the reader can tell which one they want (today: names and addresses
-    only, SPEC section 3).
+   them as Markdown. Yours alone; nothing about them is ever public. Built:
+   SPEC section 42, decision 0164.
+9. **A feed finder that tries a few more places** ✅ when the pasted page
+   names no feed, the usual address under it, the site's home page and the
+   usual feed addresses. Built: SPEC sections 3 and 30, decision 0165.
+10. **Choosing between several feeds, made easy** ✅ each feed shows its
+    newest title and how often it posts; repeats are left out, and a site
+    left with one is followed straight away. Built: SPEC section 3,
+    decision 0165.
 
 **Decided with the owner (2 November 2026):**
 

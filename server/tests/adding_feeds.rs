@@ -16,8 +16,9 @@ use axum::{
 use reqwest::Client;
 use serde_json::Value;
 
-/// A made-up blog: a home page naming one feed, a page naming two, a page
-/// naming none, a feed that moved, a long feed and a huge file.
+/// A made-up blog: a home page naming one feed, a page naming two, a feed
+/// that moved, a long feed and a huge file. (A page naming none is in
+/// tests/finding_feeds.rs.)
 async fn publisher() -> (String, Arc<Mutex<Vec<String>>>) {
     let visitors: Arc<Mutex<Vec<String>>> = Arc::default();
 
@@ -40,7 +41,6 @@ async fn publisher() -> (String, Arc<Mutex<Vec<String>>>) {
                 </head></html>"#)
             }),
         )
-        .route("/plain/", get(|| async { html("<html><body>Just a page.</body></html>") }))
         .route("/comments.atom", get(atom))
         .route("/moved.xml", get(|| async { Redirect::permanent("/comments.atom") }))
         .route(
@@ -279,11 +279,6 @@ async fn problems_get_a_plain_reason_not_an_error_code() {
     let reader = Reader::new().await;
 
     for (address, status, reason) in [
-        (
-            format!("{site}/plain/"),
-            StatusCode::UNPROCESSABLE_ENTITY,
-            "no-feed",
-        ),
         (
             format!("{site}/gone.xml"),
             StatusCode::BAD_GATEWAY,

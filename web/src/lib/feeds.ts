@@ -10,7 +10,11 @@ import { deviceJson, setDeviceText } from "./device";
 import { saved } from "./saving";
 import { toFeed, toPerson, type Feed, type FeedSettings, type Folder, type Library, type PlaceKind, type VideoSettings, type WhoKind } from "./shapes";
 
-export type Choice = { title: string; url: string };
+/**
+ * One of a site's feeds (SPEC section 3): its name and address, and, when nine turtles looked inside it, how
+ * often it posts and its newest title. `place` is the address as a person says it ("maralind.example/feed").
+ */
+export type Choice = { title: string; url: string; place?: string; posting?: string; latest?: string };
 
 export type AddResult =
   | { kind: "added"; feed: Feed }
@@ -195,6 +199,9 @@ export async function addFeed(address: string): Promise<AddResult> {
     const choices = body.choices.filter(isRecord).map((choice) => ({
       title: String(choice.title ?? ""),
       url: String(choice.url ?? ""),
+      ...(typeof choice.place === "string" ? { place: choice.place } : {}),
+      ...(typeof choice.posting === "string" ? { posting: choice.posting } : {}),
+      ...(typeof choice.latest === "string" ? { latest: choice.latest } : {}),
     }));
     const asks = body.asks === "video" || body.asks === "playlist" ? body.asks : undefined;
     return { kind: "choose", choices, ...(asks ? { asks, maker: String(body.maker ?? "") } : {}) };
@@ -307,7 +314,7 @@ export function explain(reason: Problem): string {
     case "too-big":
       return "That file is too big to be a feed.";
     case "no-feed":
-      return "This site doesn't seem to offer a feed. Try the feed's own address, or the site's home page.";
+      return "This site doesn't seem to offer a feed, on this page or in the usual places. If you know the feed's own address, paste that.";
     case "too-many":
       return "You follow 1,000 feeds, as many as one reader can. Unsubscribe from one to add another.";
     case "plan-ended":
