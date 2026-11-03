@@ -7,7 +7,7 @@
 <script lang="ts" module>
   export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "clock" | "history" | "shelf" | "headphones" | "queue"
     // Settings' rows (decision 0120).
-    | "book" | "palette" | "a-plus" | "pen-nib" | "feed" | "heart-pulse" | "panel-dots" | "bookmark-plus" | "newspaper" | "plug" | "robot" | "key" | "people" | "card" | "envelope" | "trash";
+    | "book" | "palette" | "a-plus" | "pen-nib" | "feed" | "heart-pulse" | "panel-dots" | "bookmark-plus" | "phone" | "newspaper" | "plug" | "robot" | "key" | "people" | "card" | "envelope" | "trash";
 </script>
 
 <script lang="ts">
@@ -172,6 +172,10 @@
     <!-- Settings › Add from anywhere: a solid bookmark and a plus. -->
     <path d="M4 3.25h6.5v13.25L7.25 14 4 16.5Z" fill="currentColor" stroke="none" />
     <path d="M14.25 7.25v5.5M11.5 10h5.5" />
+  {:else if name === "phone"}
+    <!-- Settings › Install the app: a phone, line only, with its home bar. -->
+    <rect x="5.5" y="2.75" width="9" height="14.5" rx="2" />
+    <path d="M8.75 14.5h2.5" />
   {:else if name === "newspaper"}
     <!-- Settings › Newsletters: a newspaper page with a solid picture. -->
     <rect x="3" y="3.25" width="14" height="13.5" rx="1" />

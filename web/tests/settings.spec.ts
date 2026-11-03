@@ -27,7 +27,7 @@ test("Settings' first page keeps the everyday settings, and the rest are rows th
   // Theme, font and line width are one page further in.
   await expect(page.getByRole("group", { name: "Theme" })).toHaveCount(0);
   const rows = page.locator("[data-settings-row]");
-  const expected = ["font", "feeds", "feed-health", "sidebar", "data", ...(phone ? [] : ["keyboard"]), "add-from-anywhere", "rules", "newsletters", "other-apps", "assistants", "readers"];
+  const expected = ["font", "feeds", "feed-health", "sidebar", "data", ...(phone ? [] : ["keyboard"]), "add-from-anywhere", "install", "rules", "newsletters", "other-apps", "assistants", "readers"];
   const shown = await rows.evaluateAll((all) => all.filter((row) => (row as HTMLElement).offsetParent !== null).map((row) => (row as HTMLElement).dataset.settingsRow));
   expect(shown).toEqual(expected);
   // No Sign-up row: sign-up is always open (decision 0115).
@@ -176,4 +176,41 @@ test("a setting's description sits straight under its name, and group names are 
   expect(h!.y - (n!.y + n!.height)).toBeLessThan(6);
   await expect(page.getByRole("group", { name: "Reading mode" })).toHaveAccessibleDescription(/Unread list|flows past/);
   await expect(page.locator("#reading-heading")).toHaveCSS("text-transform", "uppercase");
+});
+
+test("Install the app says what an installed app is, then the steps for this device", async ({ page }, testInfo) => {
+  await openSettings(page);
+  await page.getByRole("link", { name: "Install the app", exact: true }).click();
+  await expect(page).toHaveURL(/\/settings\/install$/);
+  await expect(page.getByRole("heading", { level: 2, name: "Install the app" })).toBeVisible();
+  await expect(page.getByText("It updates itself each time you open it.", { exact: false })).toBeVisible();
+  // Desktop Chrome and the Pixel each get their own steps, numbered, and the other devices one line each.
+  const phone = testInfo.project.name === "phone";
+  await expect(page.getByRole("heading", { level: 4, name: phone ? "On this Android phone" : "On this computer, in Chrome" })).toBeVisible();
+  const install = page.locator('section[aria-labelledby="install-heading"]');
+  const steps = install.getByRole("list").first().getByRole("listitem");
+  await expect(steps).toHaveCount(3);
+  await expect(steps.last()).toHaveText(phone ? "3Tap Install." : "3Click Install.");
+  const others = install.getByRole("list").last().getByRole("listitem");
+  await expect(others).toHaveCount(3);
+  await expect(others.first()).toContainText("iPhone and iPad");
+
+  // When the browser offers to install, one press shows its own dialog, and the page then says it's done.
+  await page.evaluate(() => {
+    const offer = Object.assign(new Event("beforeinstallprompt", { cancelable: true }), {
+      prompt: async () => {},
+      userChoice: Promise.resolve({ outcome: "accepted" }),
+    });
+    dispatchEvent(offer);
+  });
+  await page.getByRole("button", { name: "Install nine turtles" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Installed. Open nine turtles from its icon." })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Install nine turtles" })).toHaveCount(0);
+});
+
+test("in the installed app, Install the app says it's installed instead of the steps", async ({ page }) => {
+  await page.addInitScript(() => Object.defineProperty(navigator, "standalone", { value: true }));
+  await openSettings(page, "/settings/install");
+  await expect(page.getByText("You're using the installed app now.")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 4, name: "On other devices" })).toBeVisible();
 });

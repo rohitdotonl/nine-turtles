@@ -33,6 +33,7 @@ export const SETTINGS_PAGES = {
   data: "Your data",
   keyboard: "Keyboard",
   "add-from-anywhere": "Add from anywhere",
+  install: "Install the app",
   rules: "Rules",
   newsletters: "Newsletters",
   "other-apps": "Other apps",
