@@ -34,6 +34,7 @@
   import WriteBack from "./WriteBack.svelte";
   import ArticleMarks from "./ArticleMarks.svelte";
   import type { LoadedLibrary } from "./library.svelte";
+  import { siteName } from "./people";
   import type { Snippet } from "svelte";
   import { chapters, foldable, youtubeVideo } from "./youtube";
   import { addToUpNext, player, removeFromUpNext, seek } from "./player.svelte";
@@ -113,6 +114,10 @@
     void arrivals;
     return articleNow(article.id);
   });
+  /** Where "Read on …" goes, by the site's own name ("Garden Letters", not the person's), else its address. */
+  let site = $derived(library.feeds?.find((feed) => feed.id === article.feedId)?.siteTitle ?? siteName(full?.siteUrl ?? null) ?? article.feedTitle);
+  /** The author, unless they're who the byline already names (Hal Brennan, once). */
+  let author = $derived(full?.author && full.author.trim().toLowerCase() !== article.feedTitle.trim().toLowerCase() ? full.author : undefined);
 
   /** A long video description shows its first paragraph, the rest behind "Show the full description" (decision 0144). */
   let unfoldedFor: number | undefined = $state();
@@ -468,7 +473,7 @@
         {:else}
           <span class="publisher">{article.feedTitle}</span>
         {/if}
-        {#if full?.author}· {full.author}{/if}
+        {#if author}· {author}{/if}
         · <time datetime={new Date(article.at * 1000).toISOString()}>{when(article.at)}</time>
       </p>
 
@@ -524,7 +529,7 @@
           -->
           <p class="article-note" lang="en">
             <span>This feed shares only a summary.</span>{#if article.link}{" "}<a href={article.link} target="_blank" rel="noopener noreferrer"
-                >{episode ? "Read the episode page on" : "Read on"} {article.feedTitle}<span aria-hidden="true">&nbsp;›</span></a
+                >{episode ? "Read the episode page on" : "Read on"} {site}<span aria-hidden="true">&nbsp;›</span></a
               >{/if}
           </p>
         {:else if video || episode}

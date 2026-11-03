@@ -291,12 +291,15 @@ async fn worked(
     let (every, etag, last_modified) = match changed {
         Some((fetched, parsed)) => {
             store_articles(&mut transaction, feed_id, &parsed.articles, now).await?;
-            // Where to write back, as the feed says now (decision 0147).
-            sqlx::query("UPDATE feeds SET email = ? WHERE id = ?")
+            // Where to write back, and the feed's own title, as the feed says now
+            // (decisions 0147 and 0167); then its followers still waiting for a name get one.
+            sqlx::query("UPDATE feeds SET email = ?, title = ? WHERE id = ?")
                 .bind(&parsed.email)
+                .bind(&parsed.title)
                 .bind(feed_id)
                 .execute(&mut *transaction)
                 .await?;
+            crate::writers::kind::name_by_author(&mut transaction, feed_id, None).await?;
             (
                 rhythm(parsed, now),
                 fetched.etag.clone(),

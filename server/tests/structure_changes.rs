@@ -2224,3 +2224,150 @@ async fn adding_notes_keeps_every_subscription_and_entry_and_notes_nothing() {
     .await;
     assert!(empty.is_err());
 }
+
+#[tokio::test]
+async fn calling_people_by_their_names_keeps_every_name_the_reader_gave() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just after notes and highlights (structure change 34):
+    // 1. a blog whose every article is Tomas Berg's, under the blog's title;
+    // 2. the same kind of blog the reader renamed "My friend Tomas";
+    // 3. a publication by one writer; 4. a blog by two writers;
+    // 5. a blog with one unsigned article; 6. a blog signed "admin";
+    // 7. Tomas's blog joined into a person the reader named "Tomas".
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(34, &old)
+        .await
+        .unwrap();
+    sqlx::query("INSERT INTO writers (id, person_id, name, created_at) VALUES (1, 1, 'Tomas', 1)")
+        .execute(&old)
+        .await
+        .unwrap();
+    let blogs = [
+        (
+            1,
+            "Notes from Tomas",
+            "person",
+            None,
+            ["Tomas Berg", "tomas berg"],
+        ),
+        (
+            2,
+            "My friend Tomas",
+            "person",
+            None,
+            ["Tomas Berg", "Tomas Berg"],
+        ),
+        (
+            3,
+            "The Gazette",
+            "publication",
+            None,
+            ["Asha Rao", "Asha Rao"],
+        ),
+        (
+            4,
+            "Two of us",
+            "person",
+            None,
+            ["Asha Rao", "Kai Ostrander"],
+        ),
+        (5, "Half signed", "person", None, ["Asha Rao", ""]),
+        (6, "Site", "person", None, ["admin", "admin"]),
+        (
+            7,
+            "Notes from Tomas",
+            "person",
+            Some(1),
+            ["Tomas Berg", "Tomas Berg"],
+        ),
+    ];
+    for (id, title, kind, writer, authors) in blogs {
+        // The publisher's own title is the reader's, except where the reader renamed it.
+        let feed_title = if id == 2 { "Notes from Tomas" } else { title };
+        sqlx::query(
+            "INSERT INTO feeds (id, url, url_key, title, added_at) VALUES (?1, ?1, ?1, ?2, 1)",
+        )
+        .bind(id)
+        .bind(feed_title)
+        .execute(&old)
+        .await
+        .unwrap();
+        sqlx::query(
+            "INSERT INTO subscriptions (person_id, feed_id, title, added_at, kind, writer_id)
+             VALUES (1, ?, ?, 1, ?, ?)",
+        )
+        .bind(id)
+        .bind(title)
+        .bind(kind)
+        .bind(writer)
+        .execute(&old)
+        .await
+        .unwrap();
+        for (number, author) in authors.iter().enumerate() {
+            sqlx::query(
+                "INSERT INTO articles (feed_id, fingerprint, title, author, received_at, sort_at)
+                 VALUES (?, ?, 'A', ?, 1, 1)",
+            )
+            .bind(id)
+            .bind(format!("{id}-{number}"))
+            .bind(author)
+            .execute(&old)
+            .await
+            .unwrap();
+        }
+    }
+    old.close().await;
+
+    // Nothing is renamed by the change itself; people on their own wait for their feed's next check.
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let waiting: Vec<(String, bool)> =
+        sqlx::query_as("SELECT title, name_pending FROM subscriptions ORDER BY feed_id")
+            .fetch_all(&db)
+            .await
+            .unwrap();
+    let pending: Vec<bool> = waiting.iter().map(|(_, pending)| *pending).collect();
+    assert_eq!(pending, [true, true, false, true, true, true, false]);
+    let kept: (i64, i64) =
+        sqlx::query_as("SELECT (SELECT COUNT(*) FROM feeds), (SELECT COUNT(*) FROM articles)")
+            .fetch_one(&db)
+            .await
+            .unwrap();
+    assert_eq!(kept, (7, 14));
+
+    // At the check: only the person still called by their blog's own title takes the author's name.
+    let mut connection = db.acquire().await.unwrap();
+    for feed in 1..=7 {
+        nine_turtles::writers::kind::name_by_author(&mut connection, feed, None)
+            .await
+            .unwrap();
+    }
+    let names: Vec<(String, bool)> =
+        sqlx::query_as("SELECT title, name_pending FROM subscriptions ORDER BY feed_id")
+            .fetch_all(&mut *connection)
+            .await
+            .unwrap();
+    let expected = [
+        "Tomas Berg",
+        "My friend Tomas",
+        "The Gazette",
+        "Two of us",
+        "Half signed",
+        "Site",
+        "Notes from Tomas",
+    ];
+    assert_eq!(
+        names,
+        expected.map(|name| (name.to_owned(), false)).to_vec()
+    );
+}

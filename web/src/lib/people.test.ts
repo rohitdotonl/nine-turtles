@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Article, Feed } from "./shapes";
-import { followingSince, placeLabels, placeShownAs, placesOf, placesWatch, rowFor, rowsOf, siteName, sourceOf } from "./people";
+import { firstNameOf, followingSince, placeLabels, placeShownAs, placesOf, placesWatch, rowFor, rowsOf, siteName, sourceOf } from "./people";
 
 function place(id: number, title: string, more: Partial<Feed> = {}): Feed {
   return { id, title, siteUrl: null, unread: 0, folders: [], river: false, check: "automatic", openOnSite: false, person: null, place: "blog", addedAt: id, ...more };
@@ -78,5 +78,22 @@ describe("a person's list on screen", () => {
     expect(changed(3, 2)).toBe(false);
     expect(changed(4, 1)).toBe(false);
     expect(changed(4, 1)).toBe(false);
+  });
+});
+
+describe("what Write back calls someone", () => {
+  const tomas = place(1, "Tomas Berg", { siteTitle: "Notes from Tomas", kind: "person" });
+
+  it("is a person's first name, when their name is their own", () => {
+    expect(firstNameOf("Tomas Berg", [tomas])).toBe("Tomas");
+    expect(firstNameOf("Ana María López-Ruiz", [tomas])).toBe("Ana");
+  });
+
+  it("is the whole name when it's a blog's title, a publication's, one word or not a name", () => {
+    expect(firstNameOf("Notes From Tomas", [place(2, "Notes From Tomas", { siteTitle: "Notes From Tomas" })])).toBe("Notes From Tomas");
+    expect(firstNameOf("Tomas Berg", [{ ...tomas, kind: "publication" }])).toBe("Tomas Berg");
+    expect(firstNameOf("Alpha", [tomas])).toBe("Alpha");
+    expect(firstNameOf("the morning paper", [tomas])).toBe("the morning paper");
+    expect(firstNameOf("Field Notes 2026", [tomas])).toBe("Field Notes 2026");
   });
 });

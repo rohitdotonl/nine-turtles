@@ -183,9 +183,11 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
                 fingerprint: fingerprint(&entry.id, link.as_ref(), &title, published),
                 title,
                 link: link.map(without_tracking).map(String::from),
+                // An Atom feed may name its author once, for every entry.
                 author: entry
                     .authors
                     .first()
+                    .or_else(|| feed.authors.first())
                     .and_then(|person| person.name.as_deref())
                     .and_then(author_name),
                 content,
@@ -509,6 +511,19 @@ mod tests {
         );
         assert_eq!(author_name("a@b.example"), None);
         assert_eq!(author_name("  "), None);
+    }
+
+    #[test]
+    fn an_atom_feeds_one_author_signs_every_entry_that_names_none() {
+        let atom = br#"<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom">
+<title>Notes from Tomas</title><id>urn:t</id><updated>2026-01-01T00:00:00Z</updated>
+<author><name>Tomas Berg</name></author>
+<entry><title>One</title><id>urn:1</id><updated>2026-01-01T00:00:00Z</updated></entry>
+<entry><title>Two</title><id>urn:2</id><updated>2026-01-01T00:00:00Z</updated>
+<author><name>A guest</name></author></entry></feed>"#;
+        let feed = parse(atom, &url("https://example.com/atom.xml")).unwrap();
+        let authors: Vec<_> = feed.articles.iter().map(|a| a.author.as_deref()).collect();
+        assert_eq!(authors, [Some("Tomas Berg"), Some("A guest")]);
     }
 
     #[test]
