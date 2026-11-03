@@ -1,76 +1,58 @@
 ---
 layout: base.njk
-description: nine turtles is a quiet reader for the blogs and sites you follow. No notifications, no badges, no endless scrolling. You read what you came for, and close it.
+front: true
+description: "Read people. Write back. There are people online you'd like to know. Most of them have a blog, a newsletter or a channel."
+contents:
+  - [people, "People, not sources"]
+  - [write, "Writing back"]
+  - [keep, "You keep who you find"]
+  - [ends, "It ends"]
+  - [between, "Nobody in between"]
+  - [me, "Made by a person"]
 ---
 
-<div class="hero">
+<!-- The front page (BRAND.md → "The website"; DESIGN.md → "The website's front page"): one text size, one left edge, the settled positioning copy word for word (docs/RnD/positioning.md). -->
 
-# A quiet place to read the web
+<h1 class="lead">Read people. Write back.</h1>
 
-<p class="lede">
-  The blogs and sites you follow, set out like the pages of a book.
-  No notifications, no endless scrolling. Read what you came for, then close it.
-</p>
+<p>There are people online you'd like to know. Most of them have a blog, a newsletter or a channel. nine turtles keeps them in one quiet place, helps you write back to them, and ends when you've read what's there. No algorithm, no likes, no AI in between. Built on RSS, the open standard, so your list is always yours.</p>
 
-<div class="actions">
-  <a class="main" href="/tour/">Take the tour</a>
-  <a href="/new-to-feeds/">New to feeds? Start here</a>
-</div>
-
-</div>
+<p><a class="button" href="{{ site.app }}">Open the app</a></p>
 
 <figure class="shot">
   <img class="day" src="/images/app-light.webp" width="1600" height="1000" alt="nine turtles on a computer, by day. On the left, a sidebar with Unread, Starred and All, two folders and three blogs. In the middle, the blog Reading Room's three articles, the last line saying That's everything. On the right, the article The pleasure of a slow letter, by Asha Rao, set in a calm serif on white paper, with a quotation and a drawing of a river." />
   <img class="night" src="/images/app-dark.webp" width="1600" height="1000" alt="nine turtles on a computer, by night: the same sidebar, list and article, in light text on near-black." />
-  <figcaption>nine turtles on a computer, following only made-up blogs for this picture. It changes with your device's day or night setting.</figcaption>
+  <figcaption>nine turtles on a computer, following made-up blogs for this picture.</figcaption>
 </figure>
 
-## Why another reader
+<section id="people" aria-labelledby="people-h">
+  <h2 id="people-h">People, not sources</h2>
+  <p>A writer's blog, newsletter, videos and podcast, together under their name.</p>
+</section>
 
-Social media is endless and built to keep you there. The open web is still
-full of good writing, and most sites offer a feed: a small file listing
-what's new. nine turtles reads those feeds and gives you somewhere calm to
-read them.
+<section id="write" aria-labelledby="write-h">
+  <h2 id="write-h">Writing back is built in</h2>
+  <p>Reply by email from the article, privately.</p>
+</section>
 
-<ul class="points">
-  <li>
-    <h3>Reads like a book</h3>
-    <p>A typeface made for long reading, generous margins, and your choice of size and font. By day or by night.</p>
-  </li>
-  <li>
-    <h3>It ends</h3>
-    <p>Your unread list is finite. When it's empty, you're done.</p>
-  </li>
-  <li>
-    <h3>Nothing moves unless you move it</h3>
-    <p>New articles wait quietly until you refresh. No pop-ups, no counters.</p>
-  </li>
-  <li>
-    <h3>Respects the people who write</h3>
-    <p>It shows what each feed shares, always links the original, and checks feeds politely.</p>
-  </li>
-  <li>
-    <h3>Stays yours</h3>
-    <p>Bring your feeds in and take them out as a standard OPML file. Nothing locks you in.</p>
-  </li>
-  <li>
-    <h3>Works everywhere</h3>
-    <p>On a computer, tablet or phone, and with apps like Reeder and NetNewsWire.</p>
-  </li>
-</ul>
+<section id="keep" aria-labelledby="keep-h">
+  <h2 id="keep-h">You keep who you find</h2>
+  <p>Share any page from a blog into nine turtles and it asks, "Follow this person?"</p>
+</section>
 
-## What it will never do
+<section id="ends" aria-labelledby="ends-h">
+  <h2 id="ends-h">It ends</h2>
+  <p>No endless scroll, no counts, nothing to check.</p>
+</section>
 
-<div class="never">
+<section id="between" aria-labelledby="between-h">
+  <h2 id="between-h">Nobody in between</h2>
+  <p>No algorithm, no AI rewriting or ranking, no likes. Export everything in one click.</p>
+</section>
 
-- Notifications, badges or streaks
-- Infinite scroll, or an algorithm choosing for you
-- Likes, comments or followers
-- Ads, or tracking what you read
+<section id="me" aria-labelledby="me-h">
+  <h2 id="me-h">Made by a person you can write to</h2>
+  <p>I'm Rohit. I made nine turtles, and I answer every email.</p>
+</section>
 
-</div>
-
-## Where it stands
-
-nine turtles is new. The reader is finished and used every day; a version you
-can sign up for is coming. [The tour](/tour/) shows everything it does.
+<p class="close"><a class="button" href="{{ site.app }}">Open the app</a></p>

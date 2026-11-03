@@ -1,0 +1,29 @@
+# 0153: The website wears the brand
+
+*3 November 2026. Rohit chose the direction ("G set as C") on 2 November
+while trying mockups on his Mac, and said yes to building the full front
+page on 3 November.*
+
+**Why.** Tonight's brand work reached the website only in small ways (the
+interface typeface, the heavier logo, the tab icon and the share picture),
+so the website looked the same. The front page Rohit had tried was never
+built: BRAND.md said it needed his yes first.
+
+**Decision.**
+
+- **Every page** has the app's grey sidebar band on a computer, with the
+  logo beside the name at the app sidebar's sizes (27px and 22px) and the
+  website's places under it; a grey bar across the top on a tablet or
+  phone. The text and the footer share one left edge, 128px right of the
+  band. The footer's links sit on that edge instead of centred.
+- **The front page** is the mockup Rohit saw (`brand/home-full.html` in the
+  project files): one 20px text size, the headline, the settled paragraph,
+  the app's picture, the six points from `RnD/positioning.md`, and "Open the
+  app" twice. "On this page" in the band lists the six points.
+- **Left out from the mockup:** the grey pill that followed the section
+  being read (it needed a script, and DESIGN.md says the pill reads as
+  buttons on the website). The old points, "What it will never do" and
+  "Where it stands" go; the tour still says all of it.
+- **The website check** now counts only links on screen, so the front
+  page's "On this page" links, hidden on a phone, aren't expected to take
+  the keyboard there. Every link that shows is still checked.
