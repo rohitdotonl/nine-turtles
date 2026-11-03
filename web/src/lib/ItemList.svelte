@@ -44,7 +44,7 @@
   import { prefetch } from "./articles";
   import { dayHeading, when } from "./times";
   import { hugEllipsis } from "./hug";
-  import { length } from "./podcasts";
+  import RowKind from "./RowKind.svelte";
   import { boldParts } from "./search";
   import { OTHER_READER_MESSAGE, STRANDED_MESSAGE, updates } from "./updates.svelte";
   import { connection } from "./connection.svelte";
@@ -805,10 +805,8 @@
           <span class={["row-meta mt-2 text-[0.75rem] tracking-[0.06em]", current ? "text-muted" : "text-[color:var(--faint)]"]}>
             <span class={oneFeed === true ? "sr-only" : "row-feed"}><span class="row-feed-name" use:hugEllipsis={sourceOf(article, oneFeed)}>{sourceOf(article, oneFeed)}</span>&nbsp;·</span>
             <time datetime={new Date(article.at * 1000).toISOString()} class="row-date">{when(article.at)}</time>
-            {#if article.episode}
-              <!-- A podcast's episode (SPEC section 35): a small headphones mark in the line's own ink, and its length. -->
-              <span class="row-episode">·&nbsp;<Icon name="headphones" size={13} /><span class="sr-only">Episode</span>{#if article.episodeSeconds}&nbsp;{length(article.episodeSeconds)}{/if}</span>
-            {/if}
+            <!-- A podcast's episode or a YouTube video says so, in the line's own ink (RowKind.svelte). -->
+            <RowKind {article} />
             {#if article.muted}
               <!-- Only search (and Starred) list a muted article; the word says why it waits in no other list (SPEC section 27). -->
               <span class="row-muted">· Muted</span>
@@ -938,13 +936,8 @@
   }
   .row-date,
   .row-muted,
-  .row-episode,
   .row-star {
     flex: none;
-  }
-  .row-episode {
-    display: flex;
-    align-items: center;
   }
   .row-star {
     display: flex;

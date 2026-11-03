@@ -1,8 +1,9 @@
 # 0144: YouTube as a first-class citizen
 
 *2 November 2026. Settled with the owner in the YouTube thread, after the
-V1 list (decision 0140) named it a must. Nothing is built yet; this is what
-will be built when the owner says so.*
+V1 list (decision 0140) named it a must. Built on 3 November 2026: how, and
+the one change to item 2 (which of YouTube's lists sorts out Shorts), is in
+decision 0149; what the reader sees is SPEC section 38.*
 
 **Decision.** A YouTube channel is treated as a person who makes videos, not
 as YouTube the platform. Everything uses only YouTube's own public feeds and

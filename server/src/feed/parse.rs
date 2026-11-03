@@ -43,6 +43,27 @@ pub struct ParsedArticle {
     /// The audio file attached to it, if it's a podcast's episode (SPEC
     /// section 35). Only the publisher's address is kept, never the file.
     pub episode: Option<Episode>,
+    /// A YouTube Short or live stream, once `youtube::sorting` has found it
+    /// in YouTube's lists; none for any other video or article.
+    pub video_kind: Option<VideoKind>,
+}
+
+/// A YouTube video that isn't an ordinary one (decision 0144): each reader
+/// leaves these out unless they switch them on, feed by feed.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum VideoKind {
+    Short,
+    Live,
+}
+
+impl VideoKind {
+    /// As `articles.video_kind` stores it.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Short => "short",
+            Self::Live => "live",
+        }
+    }
 }
 
 /// A podcast episode's audio file, as its feed describes it (decision 0113).
@@ -172,6 +193,7 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
                 language: entry.language.or_else(|| feed.language.clone()),
                 published_at: published,
                 episode,
+                video_kind: None,
             }
         })
         .collect();

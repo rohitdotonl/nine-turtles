@@ -22,6 +22,7 @@ fn article(fingerprint: &str) -> ParsedArticle {
         language: None,
         published_at: None,
         episode: None,
+        video_kind: None,
     }
 }
 

@@ -120,6 +120,11 @@ struct EditFeed {
     open_on_site: Option<bool>,
     #[serde(default)]
     paused: Option<bool>,
+    /// A YouTube channel's Shorts and live streams (decision 0144).
+    #[serde(default)]
+    shorts: Option<bool>,
+    #[serde(default)]
+    live_streams: Option<bool>,
 }
 
 /// How often the reader allows a feed to be checked in the background.
@@ -177,16 +182,26 @@ async fn edit_feed(
         sqlx::query(
             "UPDATE subscriptions SET river = COALESCE(?, river),
                  open_on_site = COALESCE(?, open_on_site),
-                 check_at_most = COALESCE(?, check_at_most)
+                 check_at_most = COALESCE(?, check_at_most),
+                 shorts = COALESCE(?, shorts),
+                 live_streams = COALESCE(?, live_streams)
              WHERE person_id = ? AND feed_id = ?",
         )
         .bind(form.river)
         .bind(form.open_on_site)
         .bind(form.check.map(Check::at_most))
+        .bind(form.shorts)
+        .bind(form.live_streams)
         .bind(person)
         .bind(id)
         .execute(&mut *transaction)
         .await?;
+        // Switched on: the ones already stored join the feed's list, as
+        // read, so nothing piles up in Unread. Switched off: only new ones
+        // are left out; the ones already here stay.
+        if form.shorts == Some(true) || form.live_streams == Some(true) {
+            crate::feeds::enter_read(&mut transaction, person, id).await?;
+        }
         if form.check.is_some() {
             // The feed is checked as often as its most eager follower
             // allows. A longer wait applies at once: the next check moves

@@ -6,7 +6,9 @@
 //! address (the publisher floor). The server only keeps, per reader, a
 //! position in seconds (`episode_progress`) and an order (`up_next`), both
 //! tied to the reader's own entry for the article (structure change 24), so
-//! they go with it when the entry goes.
+//! they go with it when the entry goes. A YouTube video's place is kept the
+//! same way (decision 0144): any article whose link is on YouTube may have
+//! one, so a video picks up where you stopped, on any device.
 //!
 //! - `GET /api/episodes/{id}/progress`: where the reader stopped, or null.
 //! - `POST /api/episodes/{id}/progress` `{position, duration, finished, at}`:
@@ -98,8 +100,8 @@ struct Saving {
     at: Option<i64>,
 }
 
-/// Keeps where the reader stopped. Only an episode they have (an entry of
-/// theirs that is an episode); any other is not found. A save older than
+/// Keeps where the reader stopped. Only an episode or a video they have (an
+/// entry of theirs); any other is not found. A save older than
 /// the one kept changes nothing, so a late save from another device never
 /// takes the reader back.
 async fn save_progress(
@@ -119,7 +121,7 @@ async fn save_progress(
          SELECT entries.person_id, entries.article_id, ?3, ?4, ?5, ?6
          FROM entries JOIN articles ON articles.id = entries.article_id
          WHERE entries.person_id = ?1 AND entries.article_id = ?2
-             AND articles.episode_url IS NOT NULL
+             AND (articles.episode_url IS NOT NULL OR articles.link LIKE '%youtu%')
          ON CONFLICT (person_id, article_id) DO UPDATE SET
              position = excluded.position, duration = excluded.duration,
              finished = excluded.finished, saved_at = excluded.saved_at
@@ -143,12 +145,12 @@ async fn save_progress(
     }
 }
 
-/// Whether article `id` is an episode reader `person` has.
+/// Whether article `id` is an episode or a video reader `person` has.
 async fn is_episode_of(db: &sqlx::SqlitePool, person: i64, id: i64) -> Result<bool, sqlx::Error> {
     sqlx::query_scalar(
         "SELECT EXISTS (SELECT 1 FROM entries JOIN articles ON articles.id = entries.article_id
              WHERE entries.person_id = ? AND entries.article_id = ?
-                 AND articles.episode_url IS NOT NULL)",
+                 AND (articles.episode_url IS NOT NULL OR articles.link LIKE '%youtu%'))",
     )
     .bind(person)
     .bind(id)

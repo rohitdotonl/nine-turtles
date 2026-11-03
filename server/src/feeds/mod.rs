@@ -74,6 +74,11 @@ struct FeedRow {
     place: String,
     /// When the reader followed it, for the person's page's "Following since".
     added_at: i64,
+    /// A YouTube channel's feed, whose Shorts and live streams are sorted
+    /// out (decision 0144), and whether the reader switched each on.
+    sorts_videos: bool,
+    shorts: bool,
+    live_streams: bool,
     /// Where to write back (decision 0147): the address the reader typed
     /// for this person, and the one the feed or newsletter gives.
     write_to: Option<String>,
@@ -104,7 +109,8 @@ pub const FEEDS: &str = "SELECT feeds.id, subscriptions.title, feeds.site_url, s
         CASE WHEN feeds.failures >= 2 THEN feeds.failing_since END AS failing_since,
         CASE WHEN feeds.url NOT LIKE 'newsletter:%' THEN feeds.fetched_at END AS checked_at,
         subscriptions.writer_id AS person, subscriptions.added_at, subscriptions.write_to,
-        feeds.email,
+        feeds.email, subscriptions.shorts, subscriptions.live_streams,
+        feeds.url LIKE '%youtube.com/feeds/videos.xml?channel_id=%' AS sorts_videos,
         CASE WHEN feeds.url LIKE 'newsletter:%' THEN 'newsletter'
              WHEN feeds.url LIKE '%youtube.com/feeds/%' THEN 'video' ELSE 'blog' END AS place,
         CASE WHEN subscriptions.river THEN 0 ELSE

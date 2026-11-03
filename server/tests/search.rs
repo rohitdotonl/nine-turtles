@@ -344,6 +344,7 @@ async fn results_come_fifty_at_a_time() {
             language: None,
             published_at: Some(day(10) + number),
             episode: None,
+            video_kind: None,
         })
         .collect();
     nine_turtles::feeds::store_articles(&mut connection, reader.garden, &articles, day(20))
@@ -408,6 +409,7 @@ async fn the_index_follows_edits_deletions_and_earlier_articles() {
         language: None,
         published_at: Some(day(9)),
         episode: None,
+        video_kind: None,
     };
     let mut connection = db.acquire().await.unwrap();
     nine_turtles::feeds::store_articles(&mut connection, reader.garden, &[edited], day(20))

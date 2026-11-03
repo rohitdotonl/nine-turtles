@@ -216,6 +216,7 @@ pub fn parse(raw: &[u8]) -> Option<Newsletter> {
                 .filter(|tag| !tag.is_empty()),
             published_at: published,
             episode: None,
+            video_kind: None,
         },
         unsubscribe: header("List-Unsubscribe")
             .as_deref()
