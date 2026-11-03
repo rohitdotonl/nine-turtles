@@ -153,6 +153,15 @@ impl Mailer {
         url.to_string()
     }
 
+    /// nine turtles' own front page, such as `https://app.nineturtles.app/`.
+    pub fn home(&self) -> String {
+        let mut url = self.base.clone();
+        url.set_path("/");
+        url.set_query(None);
+        url.set_fragment(None);
+        url.to_string()
+    }
+
     /// Sends one plain-text email behind the answer. `what` names it in the
     /// log if it fails ("a password link"); the address never goes there.
     pub fn send_later(&self, to: &str, subject: &str, body: String, what: &'static str) {

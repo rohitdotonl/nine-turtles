@@ -66,6 +66,7 @@ pub mod subscriptions;
 pub mod tidy;
 pub mod unread;
 pub mod websub;
+pub mod weekly;
 pub mod write_back;
 pub mod writers;
 pub mod youtube;
@@ -249,6 +250,7 @@ pub fn router(state: AppState) -> Router {
         .merge(websub::routes())
         .merge(writers::routes())
         .merge(write_back::routes())
+        .merge(weekly::routes())
         .merge(newsletters::routes())
         .merge(assets::routes())
         .with_state(state);

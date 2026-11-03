@@ -98,6 +98,7 @@ sleeps, celebrates or stands for a feeling. No mascot.
 - **Plain text,** no pictures and no logo: the name is text.
 - **From** "nine turtles <hello@nineturtles.app>"; replies reach Rohit.
 - **Signed** on two lines: "Rohit", then "nine turtles".
+- The weekly email (the one a reader chooses, SPEC section 39) follows the same rules: plain text, signed by Rohit, never a count.
 - The "your email was changed" note ends: "Reply to this email and I'll help you get your account back."
 
 ## The website
