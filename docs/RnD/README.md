@@ -8,7 +8,8 @@ idea here that changes the app needs the owner's yes first.
 
 - [`business-plan.md`](business-plan.md): the one plan for making nine
   turtles a sustainable business. Rohit's draft, with what's done, what
-  he still has to do and Claude's comments for him to accept or overrule.
+  he still has to do and Claude's comments for him to accept or overrule,
+  plus his strategy notes and what still holds from the October research.
   Start here; the files below are its research.
 
 ## Rohit's research notes (1 November 2026)
@@ -43,23 +44,14 @@ idea here that changes the app needs the owner's yes first.
   plan (decided 1 November) and everything still
   useful from the October marketing research.
 
-## The owner's strategy notes (26 October 2026)
+## The October research: folded in and deleted
 
-- [`strategy-notes.md`](strategy-notes.md): Rohit's own plan after reading
-  the research, organised: what viable means, positioning, price, the
-  one-person business, and firm noes (its marketing parts moved to
-  `marketing.md`).
-
-## Business and marketing research (25 October 2026): archived
-
-Written for the earlier ideal reader, so it moved to
-[`../archive/rnd-2026-10/`](../archive/rnd-2026-10/) on 1 November 2026
-(the summary, the playbook and the working notes). Its marketing-only
-parts (idea bank, post ideas, outreach lists, notes 01, 02, 07, 09–11, 15,
-16) were deleted on 1 November 2026, after what was still useful went into
-[`marketing.md`](marketing.md). Agents read the rest only when Rohit asks. Once the
-business plan, positioning, brand and V1 are settled, anything still
-useful gets pulled into those documents and the archive is deleted.
+The business and marketing research of 25 October 2026 and Rohit's
+strategy notes of 26 October were written for an earlier positioning
+("a reader that ends"). What still held went into
+[`business-plan.md`](business-plan.md) (section 1, and "Rohit's strategy
+notes" at its end) and [`marketing.md`](marketing.md); the rest was
+deleted on 3 November 2026. It stays in the repository's history.
 
 ## Reading another reader's code (26 October 2026)
 

@@ -44,7 +44,7 @@ thread, in this order:
 8. **No unread counts** (V1 item 3) ✅
 9. **YouTube as a first-class citizen** (V1 item 4) ✅
 10. **A weekly email** (V1 item 5)
-11. **Installing the app, said plainly** (V1 item 6)
+11. **Installing the app, said plainly** (V1 item 6) ✅
 12. **"How did you hear about nine turtles?"** (V1 item 7)
 13. **Three to four refinement rounds:** the owner uses the app, lists what
     he dislikes (the theme picker first), and each round fixes it.
@@ -95,9 +95,10 @@ milestone order above.
    never a count. Off by default; turned on or off any time in Settings.
    The one exception to "no notifications" (decision 0140); how it looks is
    still to design.
-6. **Installing the app, said plainly:** one sentence on what an installed
-   web app is (its own icon and window; it updates itself each time you
-   open it), then the steps for your device.
+6. **Installing the app, said plainly** ✅ built (SPEC section 20, decision
+   0151; its smaller choices listed there for the refinement round):
+   Settings › Install the app says in one sentence what an installed web app
+   is, then the steps for your device, then a line for each of the others.
 7. **"How did you hear about nine turtles?"** One optional question at
    sign-up (a blog, a friend, a search, an AI assistant, Reddit, other),
    saved with the account and shown only as totals in the owner report
