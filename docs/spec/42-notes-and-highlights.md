@@ -12,6 +12,10 @@ to other apps (section 22) or counted anywhere.
 - Choosing words in an article's text (with the mouse, a finger, or the
   keyboard where the browser allows it) opens a small menu beside them:
   **Highlight** (its key, `h`) and **Add a note…**.
+- Right after highlighting, a small menu beside the words says
+  **Highlighted**, with **Add a note…** (the note box opens there) and
+  **Done** (the owner, 3 November 2026: a new reader shouldn't have to find
+  the note at the article's end).
 - A highlight is drawn in soft pencil: a faint tone of the ink behind the
   words and a fine line under them, in every theme, never a color of its
   own. One with a note ends in a small page icon.

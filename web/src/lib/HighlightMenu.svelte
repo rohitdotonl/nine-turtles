@@ -17,6 +17,7 @@
   let {
     anchor,
     highlight,
+    fresh = false,
     writing = $bindable(false),
     phone = false,
     startTime,
@@ -31,6 +32,8 @@
     anchor: DOMRect;
     /** The highlight pressed; none for words just chosen. */
     highlight?: Note;
+    /** The highlight was just made: the menu says so, and offers a note on it, or Done. */
+    fresh?: boolean;
     /** Writing its note. */
     writing?: boolean;
     phone?: boolean;
@@ -133,7 +136,9 @@
       </div>
     </form>
   {:else}
-    {#if highlight?.note}
+    {#if fresh}
+      <p class="text-small text-ink-2 menu-note">Highlighted</p>
+    {:else if highlight?.note}
       <div class="text-small menu-note"><NoteText note={highlight.note} {jump} /></div>
     {/if}
     {#if !highlight}
@@ -142,7 +147,9 @@
       >
     {/if}
     <button type="button" role="menuitem" class="menu-item" onclick={() => void write()}>{highlight?.note ? "Edit note" : "Add a note…"}</button>
-    {#if highlight}
+    {#if fresh}
+      <button type="button" role="menuitem" class="menu-item" onclick={() => onClose(true)}>Done</button>
+    {:else if highlight}
       <button type="button" role="menuitem" class="menu-item" onclick={onCopy}>Copy</button>
       <button type="button" role="menuitem" class="menu-item text-danger" onclick={onRemove}>Remove highlight</button>
     {/if}

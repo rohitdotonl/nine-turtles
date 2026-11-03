@@ -17,6 +17,8 @@ related: [star-an-article, search-everything, download-everything]
 
 1. In an article, choose a few words, as you would to copy them.
 2. Press **Highlight** in the small menu beside them, or press <kbd>H</kbd>.
+3. The menu says **Highlighted**. Press **Add a note…** to write a note on
+   the words there and then, or **Done**.
 
 To write a note on them instead, press **Add a note…** (or
 <kbd>Shift</kbd> <kbd>H</kbd>), type it and press **Save**.

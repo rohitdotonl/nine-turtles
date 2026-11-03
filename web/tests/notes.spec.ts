@@ -55,6 +55,12 @@ test("highlights and a note stay with the article, and Notes and search find the
   await choose(page, "made-up summary");
   await page.getByRole("menu", { name: "Chosen words" }).getByRole("menuitem", { name: /Highlight/ }).click();
   await expect(article(page).locator("mark.highlight")).toHaveText("made-up summary");
+  // A small menu beside it says so, and offers a note there and then; Done closes it.
+  const fresh = page.getByRole("menu", { name: "Highlight" });
+  await expect(fresh).toContainText("Highlighted");
+  await expect(fresh.getByRole("menuitem", { name: "Add a note…" })).toBeFocused();
+  await fresh.getByRole("menuitem", { name: "Done" }).click();
+  await expect(fresh).toHaveCount(0);
   const ends = article(page).getByRole("list", { name: "Your highlights" });
   await expect(ends.getByRole("button", { name: "made-up summary", exact: true })).toBeVisible();
 

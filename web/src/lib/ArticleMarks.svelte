@@ -65,7 +65,7 @@
   });
 
   /** The small menu: for words just chosen, or for a highlight pressed. */
-  let menu: { anchor: DOMRect; quote?: Quote; highlight?: Note; writing: boolean; from?: Element | null } | undefined = $state();
+  let menu: { anchor: DOMRect; quote?: Quote; highlight?: Note; fresh?: boolean; writing: boolean; from?: Element | null } | undefined = $state();
   /** "Highlight removed · Undo", until something else is done. */
   let removed: Note | undefined = $state();
 
@@ -123,10 +123,15 @@
   async function highlightChosen(quote: Quote | undefined = menu?.quote ?? chosen()?.quote) {
     if (!quote) return;
     removed = undefined;
+    const from = document.activeElement;
     getSelection()?.removeAllRanges();
     menu = undefined;
-    await marks.highlight(quote);
+    const made = await marks.highlight(quote);
     say("Highlighted.");
+    // A small menu beside the new highlight says so, and offers a note on it there and then, or Done.
+    await tick();
+    const at = text?.querySelector(`[data-highlight="${made.id}"]`);
+    if (at) menu = { anchor: at.getBoundingClientRect(), highlight: made, fresh: true, writing: false, from };
   }
 
   async function saveNote(note: string) {
@@ -272,6 +277,7 @@
   <HighlightMenu
     anchor={menu.anchor}
     highlight={menu.highlight}
+    fresh={menu.fresh}
     bind:writing={menu.writing}
     {phone}
     {startTime}
