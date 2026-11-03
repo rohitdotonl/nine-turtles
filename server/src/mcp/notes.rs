@@ -1,5 +1,5 @@
 //! The reader's notes and highlights for their own assistant (SPEC sections
-//! 33 and 42, decision 0162): it can read them, highlight words, and write
+//! 33 and 42, decision 0163): it can read them, highlight words, and write
 //! or change notes, through the same functions the screen uses (`notes`).
 //! Removing a highlight answers what it was, so the assistant can put it
 //! back.

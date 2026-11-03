@@ -538,7 +538,7 @@ test("with only the keyboard: a feed set to river, daily and the website leaves 
   await page.keyboard.press("ArrowRight");
   await expect(sheet.getByRole("radio", { name: "River" })).toBeChecked();
   await tabTo(page, sheet.getByRole("radio", { name: "Automatic" }));
-  await page.keyboard.press("ArrowRight");
+  // Two choices since "Hourly" went (decision 0162): one step to Daily.
   await page.keyboard.press("ArrowRight");
   await expect(sheet.getByRole("radio", { name: "Daily" })).toBeChecked();
   await tabTo(page, sheet.getByRole("checkbox", { name: "Open articles on the website" }));

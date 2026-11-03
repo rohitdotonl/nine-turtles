@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
 import { appReady, follow, signIn, tabTo } from "./screens";
 
-// SPEC section 42 (decision 0162), "How to check it", in a browser: words
+// SPEC section 42 (decision 0163), "How to check it", in a browser: words
 // chosen in an article are highlighted from the small menu beside them, a
 // note is written on the whole article with Shift+H, both show at the
 // article's end and stay after a reload; Notes appears in the sidebar and

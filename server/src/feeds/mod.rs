@@ -83,7 +83,7 @@ struct FeedRow {
     /// for this person, and the one the feed or newsletter gives.
     write_to: Option<String>,
     email: Option<String>,
-    /// The reader's note on the person (decision 0162).
+    /// The reader's note on the person (decision 0163).
     note: Option<String>,
     /// The folders it's in, by number.
     #[sqlx(skip)]

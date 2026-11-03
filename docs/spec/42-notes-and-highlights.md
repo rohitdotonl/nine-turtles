@@ -1,7 +1,7 @@
 # 42. Notes and highlights
 
 *Part of the spec ([index](../SPEC.md)). `docs/DESIGN.md` takes precedence.
-V1 item 8 (`docs/PLAN.md`), decision 0162.*
+V1 item 8 (`docs/PLAN.md`), decision 0163.*
 
 Private marks of the reader's own: words highlighted in an article, a note
 on a highlight, a note on the whole article, and a note on each person.

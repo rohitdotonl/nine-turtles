@@ -311,7 +311,8 @@ async fn worked(
     };
     // While a hub delivers new articles, this check is only the backup:
     // at most twice a day (decision 0069).
-    // "Check at most hourly" or "daily", chosen in Edit feed, is the
+    // "Check at most daily", chosen in Edit feed (or an hour stored from
+    // the old "Hourly", decision 0162, the same as Automatic now), is the
     // shortest rhythm, nudged only upwards so it's never sooner. A day is
     // also the longest wait, so a daily feed waits exactly a day: daily
     // feeds still drift apart, since each was last checked at its own time.

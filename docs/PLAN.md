@@ -115,7 +115,7 @@ milestone order above.
    where you met, when you last wrote), and highlights and notes on
    articles. Search finds them, filtered by person, and Your data exports
    them as Markdown. Yours alone; nothing about them is ever public. Built,
-   being tried by the owner: SPEC section 42, decision 0162.
+   being tried by the owner: SPEC section 42, decision 0163.
 9. **A feed finder that tries a few more places:** when the pasted page
    names no feed, also try the site's home page and a short list of the
    usual feed addresses (`/feed`, `/rss`, `/index.xml` and the like). Still

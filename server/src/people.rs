@@ -79,7 +79,7 @@ pub const PER_READER_TABLES: &[(&str, &str)] = &[
         "DELETE FROM collection_articles WHERE person_id = ?",
     ),
     ("collections", "DELETE FROM collections WHERE person_id = ?"),
-    // Their highlights and notes point at entries too (decision 0162).
+    // Their highlights and notes point at entries too (decision 0163).
     ("notes", "DELETE FROM notes WHERE person_id = ?"),
     // Where they stopped in episodes, and their Up Next (decision 0113):
     // they'd go with the entries anyway, but are named, like every table
