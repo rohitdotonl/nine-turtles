@@ -77,8 +77,10 @@ milestone order above.
 2. **Write back** ✅ built (SPEC section 37, decision 0147; its smaller
    choices listed there for the refinement round). A Write back button on every article opens the reader's
    own email app with the writer's address and "Re: the title" filled in.
-   The address comes from a newsletter's sender or the feed itself; if
-   neither has one, the reader types it once and the person page keeps it.
+   The address comes from a newsletter's sender, the feed itself or a
+   "Reply by email" link in its posts; if none has one, the reader finds it
+   on their site ("Find it on their site") and pastes it once, and the
+   person page keeps it.
    nine turtles never sends or reads that email.
 3. **No unread counts** ✅ built (SPEC sections 5 and 18, decision 0148; its
    smaller choices listed there for the refinement round). The sidebar

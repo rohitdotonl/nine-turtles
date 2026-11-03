@@ -35,6 +35,10 @@ test("Write back asks once for an address, keeps it on their page, then opens th
   await page.keyboard.press("Enter");
   const field = pane(page).getByRole("textbox", { name: "Their email address" });
   await expect(field).toBeFocused();
+  // Their site, to find the address on, opens in a new tab: nine turtles fetches nothing.
+  const site = pane(page).getByRole("link", { name: "Find it on their site (opens in a new tab)" });
+  await expect(site).toHaveAttribute("href", /^https?:\/\//);
+  await expect(site).toHaveAttribute("target", "_blank");
 
   // Something that isn't an address is refused, in words, keeping what was typed.
   await field.fill("ivy at home");
