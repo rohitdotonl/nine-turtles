@@ -16,6 +16,8 @@ const NEWEST = "On keeping a commonplace book (3)";
 
 /** Chooses `words` in the open article's text, as a reader does with the mouse. */
 async function choose(page: Page, words: string): Promise<void> {
+  // The heading shows before the article's text arrives: wait for the words themselves.
+  await expect(page.locator(".article-text")).toContainText(words);
   await page.evaluate((wanted) => {
     const text = document.querySelector(".article-text")!;
     const walker = document.createTreeWalker(text, NodeFilter.SHOW_TEXT);
