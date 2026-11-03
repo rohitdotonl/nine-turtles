@@ -13,6 +13,7 @@
 <script lang="ts">
   import { tick } from "svelte";
   import Icon from "./Icon.svelte";
+  import { helpPage } from "./router";
   import {
     SHORTCUT_GROUPS,
     bindingNamed,
@@ -445,7 +446,10 @@
         -->
         <div class="mt-4 flex flex-wrap items-center justify-between gap-x-4">
           <p class="text-meta text-muted">Tab, Enter and Escape always work too. Shortcuts don't fire while you're typing in a field.</p>
-          <button type="button" bind:this={changeButton} onclick={startEditing} class="text-link keyboard-hint">Change keys…</button>
+          <span class="flex gap-x-4">
+            <a href={helpPage("every-keyboard-key")} target="_blank" rel="noopener" class="text-link">Help<span class="sr-only"> with keys (on the nine turtles website)</span></a>
+            <button type="button" bind:this={changeButton} onclick={startEditing} class="text-link keyboard-hint">Change keys…</button>
+          </span>
         </div>
       {/if}
     </div>

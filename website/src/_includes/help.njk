@@ -1,0 +1,22 @@
+---
+layout: base.njk
+---
+{#- One Help page (decision 0157): where it sits, its title, when it was last
+    checked against the app, then the page, then its related pages. Each
+    page's front matter names its group (_data/helpGroups.json), its place in
+    the group (order), the SPEC section it explains (spec) and its related
+    pages by their file names (related). -#}
+{%- set group = helpGroups | where("id", groupId) | first %}
+<nav class="kicker" aria-label="Breadcrumb"><a href="/help/">Help</a> › <a href="/help/#{{ group.id }}">{{ group.title }}</a></nav>
+<h1>{{ title }}</h1>
+<p class="byline">Last updated <time datetime="{{ updated | isoDate }}">{{ updated | readableDate }}</time></p>
+{{ content | safe }}
+{%- if related %}
+<p class="related">Related:
+  {%- for slug in related %}
+  {%- set other = collections.help | where("fileSlug", slug) | first %}
+  <a href="{{ other.url }}">{{ other.data.title }}</a>{% if not loop.last %} ·{% endif %}
+  {%- endfor %}
+</p>
+{%- endif %}
+<p class="byline">Something here not right, or not what you needed? <a href="/contact/">Tell me</a> and I'll fix it.</p>

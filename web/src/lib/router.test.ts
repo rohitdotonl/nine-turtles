@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SETTINGS_PAGES, inSettings, knownPath, parentOf, parse, pathFor, rowFor, titleFor, type SettingsPage } from "./router";
+import { HELP_URL, SETTINGS_PAGES, helpPage, inSettings, knownPath, parentOf, parse, pathFor, rowFor, titleFor, type SettingsPage } from "./router";
 
 describe("addresses", () => {
   it("gives each fixed view and Settings its own address", () => {
@@ -103,5 +103,12 @@ describe("Settings' pages", () => {
     expect(inSettings({ kind: "settings" })).toBe(true);
     expect(inSettings({ kind: "muted" })).toBe(true);
     expect(inSettings({ kind: "add-feed" })).toBe(false);
+  });
+});
+
+describe("the Help pages' addresses (decision 0157)", () => {
+  it("points at the website's Help, and one page by its file name", () => {
+    expect(HELP_URL).toBe("https://nineturtles.app/help/");
+    expect(helpPage("every-keyboard-key")).toBe("https://nineturtles.app/help/every-keyboard-key/");
   });
 });

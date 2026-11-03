@@ -606,6 +606,59 @@ h1 + .byline {
   margin: 0;
 }
 
+/* Help (decision 0157). The index is a book's table of contents: one plain
+   list per group, a hairline between rows, each row a 48px target. A page
+   ends with its related pages, under a hairline, in the interface face. */
+.help-group h2 {
+  margin: 2.5rem 0 0.5rem;
+  font-size: 1.25rem;
+}
+.help-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+.help-list li {
+  margin: 0;
+  border-bottom: 1px solid var(--line);
+}
+.help-list a {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 6px 0;
+  text-decoration: none;
+}
+.help-list a:hover {
+  text-decoration: underline;
+}
+.related {
+  margin-top: 2.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+  color: var(--ink-2);
+  font-family: var(--sans);
+  font-size: 0.9375rem;
+}
+.related a {
+  display: inline-block;
+  padding: 10px 0;
+}
+/* A key, as the app's keys sheet draws one. */
+kbd {
+  display: inline-block;
+  min-width: 1.6em;
+  padding: 0 0.35em;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--tone);
+  font-family: var(--sans);
+  font-size: 0.85em;
+  line-height: 1.5;
+  text-align: center;
+}
+
 /* A short table, for the privacy policy's list of companies. */
 table {
   width: 100%;

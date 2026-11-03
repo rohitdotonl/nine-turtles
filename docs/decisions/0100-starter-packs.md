@@ -1,5 +1,7 @@
 # 0100: Starter packs on the website
 
+*Replaced by 0158: the starter packs were removed on 3 November 2026.*
+
 *26 October 2026. From the marketing plan, part of the owner's plan for 100
 to 200 readers (decision 0086). The owner asked for the pages to be live
 now, empty, and will choose the blogs himself.*
@@ -16,7 +18,7 @@ now, empty, and will choose the blogs himself.*
 - **Respect the publisher:** each blog is named as its writer names it and
   linked to its own website; the pack shows nothing from the feed itself.
 - **Taking a pack anywhere:** a pack with blogs offers an OPML file built
-  from the same list (`website/src/packs-opml.njk`), which works in nine
+  from the same list (`packs-opml.njk`, removed with decision 0158), which works in nine
   turtles (Settings → Your data → Import OPML…, into a folder named after
   the pack) or any other reader. An empty pack offers none.
 - **Checked like every page:** `scripts/check.sh website` builds a made-up

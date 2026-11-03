@@ -3,7 +3,7 @@ layout: page.njk
 title: Privacy policy
 description: What nine turtles and this website know about you, why, who else handles it, and how to have it removed.
 permalink: /privacy/
-updated: 2026-10-26
+updated: 2026-11-03
 draft: This policy will be finished, and checked by someone qualified, before anyone can sign up for nine turtles. The parts that depend on an email service and other details still to settle are marked "to be decided" until those are chosen.
 ---
 
@@ -95,8 +95,14 @@ your account will delete everything in it.
 ## How long I keep it
 
 Your reading stays as long as you keep your account. When you delete it,
-it's gone from the live service straight away, and from any backups
-within 30 days (to be confirmed once backups are set up).
+it's gone from the live service straight away.
+
+Copies of nine turtles are kept as backups, so nothing is lost if something
+goes wrong: each night's copy for 30 days, the first copy of each month
+for a year, and the last ten copies taken just before an update changes
+how nine turtles stores things. Your data leaves each copy when it's
+replaced by a newer one. Backups are only ever used to put nine turtles
+back as it was.
 
 ## Changes to this policy
 

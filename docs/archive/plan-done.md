@@ -492,3 +492,9 @@ milestone must pass the automatic checks for them, every feature comes with
 keyboard-only tests, and each milestone that changes screens includes a
 5-minute checklist you can follow yourself. Milestones 13 and 14 add
 the phone-specific parts and a final human pass.
+
+## Help pages for readers ✅
+
+Built 3 November 2026, once V1 was finished (the owner's plan of 27
+October, decision 0157, SPEC section 40): 29 pages at nineturtles.app/help
+in five groups, linked from the website, Settings and the keys sheet.
