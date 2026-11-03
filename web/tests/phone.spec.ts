@@ -313,11 +313,13 @@ test.describe("on a phone", () => {
     // this narrow it steps down from 24px to 22px (decision 0041).
     const title = page.locator("#list-heading");
     await expect(title).toHaveAttribute("title", `Blog ${name}`);
-    // A person's or publication's name is the button to their page (decision 0163): that is what's cut short.
+    // A person's or publication's name is the button to their page (decision 0163): its name is what's
+    // cut short, and the › after it stays.
     const lines = await title.evaluate((element) => {
-      const name = element.querySelector("button") ?? element;
+      const button = element.querySelector("button") ?? element;
+      const name = button.querySelector(".truncate") ?? button;
       return {
-        height: name.getBoundingClientRect().height,
+        height: button.getBoundingClientRect().height,
         line: parseFloat(getComputedStyle(element).lineHeight),
         cut: name.scrollWidth > name.clientWidth,
         overflow: getComputedStyle(name).textOverflow,
