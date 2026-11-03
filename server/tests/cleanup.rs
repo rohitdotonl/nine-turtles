@@ -219,6 +219,35 @@ async fn an_article_on_a_collection_is_kept_like_a_starred_one_for_its_reader_on
 }
 
 #[tokio::test]
+async fn a_highlighted_or_noted_article_is_kept_like_a_starred_one_for_its_reader_only() {
+    let (_, state) = common::start_with_state(common::config()).await;
+    let (other, _) = common::another_reader(&state).await;
+    let garden = feed(&state, "garden", &[1, other]).await;
+    receive(&state, garden, &["kept", "gone"], 400).await;
+    sqlx::query(
+        "INSERT INTO notes (person_id, article_id, quote, note, made_at, changed_at)
+         SELECT 1, id, 'warm soup', NULL, 0, 0 FROM articles WHERE fingerprint = 'kept'",
+    )
+    .execute(&state.db)
+    .await
+    .unwrap();
+
+    cleanup::run(&state.db, NOW).await.unwrap();
+    assert_eq!(articles(&state).await, ["kept"]);
+    assert_eq!(entries(&state, 1).await, ["kept"]);
+    // The other reader's line for it goes: a highlight keeps it only for its reader.
+    assert!(entries(&state, other).await.is_empty());
+
+    // Once the highlight is removed, the next night removes the article.
+    sqlx::query("DELETE FROM notes")
+        .execute(&state.db)
+        .await
+        .unwrap();
+    cleanup::run(&state.db, NOW + DAY).await.unwrap();
+    assert!(articles(&state).await.is_empty());
+}
+
+#[tokio::test]
 async fn article_numbers_freed_by_the_clean_up_are_never_given_again() {
     let (_, state) = common::start_with_state(common::config()).await;
     let garden = feed(&state, "garden", &[1]).await;

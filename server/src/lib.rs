@@ -46,6 +46,7 @@ pub mod marks;
 pub mod mcp;
 pub mod newsletter;
 pub mod newsletters;
+pub mod notes;
 pub mod owner_report;
 pub mod passkeys;
 pub mod password;
@@ -257,6 +258,7 @@ pub fn router(state: AppState) -> Router {
         .merge(write_back::routes())
         .merge(weekly::routes())
         .merge(newsletters::routes())
+        .merge(notes::routes())
         .merge(assets::routes())
         .with_state(state);
     security::apply(router)

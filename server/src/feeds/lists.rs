@@ -38,6 +38,9 @@ pub enum List {
     /// The articles on one of the reader's collections (`collections`),
     /// muted ones and those of feeds since left included, as in Starred.
     Collection(i64),
+    /// The articles the reader highlighted or wrote a note on (SPEC section
+    /// 42), muted ones and those of feeds since left included, as in Starred.
+    Notes,
 }
 
 /// The list's order: the reader's "Sort" setting (SPEC section 18).
@@ -66,6 +69,7 @@ impl List {
             (None, None, None, View::All) => Some(Self::All),
             (None, None, None, View::Unread) => Some(Self::Unread),
             (None, None, None, View::Starred) => Some(Self::Starred),
+            (None, None, None, View::Notes) => Some(Self::Notes),
             (None, None, None, View::Recent | View::Upnext) => None,
         }
     }
@@ -78,6 +82,8 @@ pub(crate) enum View {
     All,
     Unread,
     Starred,
+    /// Notes: the articles the reader highlighted or wrote a note on.
+    Notes,
     /// Recently read: the last 50 articles the reader opened (`recent`).
     Recent,
     /// Up Next: the episodes the reader lined up, in their order (`podcasts`).
@@ -128,6 +134,14 @@ pub struct ArticleRow {
     #[sqlx(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub opened: Option<i64>,
+    /// Only in Notes: the reader's first highlight on it, and their note on
+    /// the whole article, which the list shows under the title.
+    #[sqlx(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub highlighted: Option<String>,
+    #[sqlx(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub noted: Option<String>,
 }
 
 /// Writes an article's link without its tracking tags (`ArticleRow`).
@@ -220,8 +234,8 @@ pub const fn new_sql(list: List) -> Option<&'static str> {
             "+entries.muted = 0 AND +entries.feed_id IN (SELECT feed_id FROM subscriptions
                   WHERE writer_id = ? AND person_id = ?)"
         )),
-        // Nothing arrives starred, or on a collection.
-        List::Starred | List::Collection(_) => None,
+        // Nothing arrives starred, on a collection or with a note.
+        List::Starred | List::Collection(_) | List::Notes => None,
     }
 }
 
@@ -348,6 +362,40 @@ macro_rules! collection_query {
     };
 }
 
+/// The Notes list: the reader's highlighted or noted articles, read through
+/// their notes (a short list, like a collection's), then each one's entry,
+/// sorted on the spot. Takes the reader, then the cursor and the limit.
+macro_rules! notes_query {
+    ($past:literal, $order:literal) => {
+        concat!(
+            "SELECT entries.article_id AS id, entries.feed_id, COALESCE(writers.name, subscriptions.title) AS feed_title,
+                    articles.title, articles.link, entries.sort_at AS at,
+                    entries.read, entries.starred, entries.muted,
+                    articles.episode_url IS NOT NULL AS episode, articles.episode_seconds,
+                    (SELECT quote FROM notes AS first WHERE first.person_id = entries.person_id
+                         AND first.article_id = entries.article_id AND first.quote IS NOT NULL
+                     ORDER BY first.made_at, first.id LIMIT 1) AS highlighted,
+                    (SELECT note FROM notes AS whole WHERE whole.person_id = entries.person_id
+                         AND whole.article_id = entries.article_id AND whole.quote IS NULL) AS noted
+             FROM (SELECT DISTINCT person_id, article_id FROM notes WHERE person_id = ?) AS marked
+                 CROSS JOIN entries ON entries.person_id = marked.person_id
+                     AND entries.article_id = marked.article_id
+                 CROSS JOIN articles ON articles.id = entries.article_id
+                 CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
+                     AND subscriptions.feed_id = entries.feed_id
+                 LEFT JOIN writers ON writers.id = subscriptions.writer_id
+             WHERE (entries.sort_at, entries.article_id) ",
+            $past,
+            " (?, ?)
+             ORDER BY entries.sort_at ",
+            $order,
+            ", entries.article_id ",
+            $order,
+            " LIMIT ?"
+        )
+    };
+}
+
 /// The question for a list in an order. Every question takes the reader
 /// first; a feed's or folder's then its ID, and a folder's the reader again
 /// (it must be theirs); every question then takes the cursor (time, id) and
@@ -414,6 +462,8 @@ pub const fn list_sql(list: List, order: Order) -> &'static str {
         ),
         (List::Collection(_), Order::Newest) => collection_query!("<", "DESC"),
         (List::Collection(_), Order::Oldest) => collection_query!(">", "ASC"),
+        (List::Notes, Order::Newest) => notes_query!("<", "DESC"),
+        (List::Notes, Order::Oldest) => notes_query!(">", "ASC"),
     }
 }
 

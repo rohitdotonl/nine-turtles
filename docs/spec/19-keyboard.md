@@ -18,6 +18,8 @@
   | `s` | Star / unstar |
   | `l` | Add to collection (the open or selected article; section 34) |
   | `w` | Write back to whoever wrote the open or selected article (section 37) |
+  | `h` | Highlight the words chosen in the open article (section 42) |
+  | `Shift+H` | Write a note on the words chosen, or on the whole open article (section 42) |
   | `Esc` | Back / close |
   | `g` then `u` / `s` / `a` | Go to Unread / Starred / All (also when Starred or All is hidden from the sidebar) |
   | `g` then `r` | Go to Recently read (also when it's hidden from the sidebar) |

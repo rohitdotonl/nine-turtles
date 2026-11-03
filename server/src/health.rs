@@ -678,6 +678,15 @@ async fn carry_entries_over(
                 .bind(article)
                 .execute(&mut *connection)
                 .await?;
+            // Their highlights and notes go with it too (decision 0164).
+            sqlx::query(
+                "UPDATE OR IGNORE notes SET article_id = ?3 WHERE person_id = ?1 AND article_id = ?2",
+            )
+            .bind(person)
+            .bind(article)
+            .bind(copy)
+            .execute(&mut *connection)
+            .await?;
             // Where they stopped in an episode, and its place in Up Next, go
             // with it too (decision 0113); what the old line keeps goes with it.
             for table in ["episode_progress", "up_next"] {

@@ -680,8 +680,8 @@
   }
 
   /** Unsubscribes, then shows Unread (All in river mode) with "Unsubscribed from … · Undo". */
-  async function unsubscribeFrom(feed: Feed): Promise<string | undefined> {
-    const done = await library.unsubscribe(feed);
+  async function unsubscribeFrom(feed: Feed, removeKept = false): Promise<string | undefined> {
+    const done = await library.unsubscribe(feed, removeKept);
     if (typeof done === "string") return done;
     go(home, done);
     return undefined;
@@ -1008,7 +1008,7 @@
     toggleFolder: (id) => sidebarFeeds?.toggleFolder(id),
     star: () => itemList?.toggleStar(),
     collect: () => selected && openCollecting(selected),
-    writeBack: () => articleView?.startWriting(),
+    inArticle: (what) => articleView?.act(what),
     markUnread: () => itemList?.markUnread(),
     undo: () => itemList?.undo(),
     refresh: () => itemList?.refresh(),
@@ -1470,7 +1470,7 @@
 {#snippet who()}
   {#if isWho(route) && currentFeed}
     {#key editKey(currentFeed.id)}
-      <WhoPage route={route} feed={currentFeed} {library} {river} {phone} bind:heading={headings.who} {go} onUnsubscribe={() => unsubscribeFrom(currentFeed!)} onAddRule={addRuleFor} onMoved={(source, after) => feedMoved(source.id, after.id, () => headings.who)} onSaved={() => itemList?.refresh()} />
+      <WhoPage route={route} feed={currentFeed} {library} {river} {phone} bind:heading={headings.who} {go} onUnsubscribe={(removeKept) => unsubscribeFrom(currentFeed!, removeKept)} onAddRule={addRuleFor} onMoved={(source, after) => feedMoved(source.id, after.id, () => headings.who)} onSaved={() => itemList?.refresh()} />
     {/key}
   {/if}
 {/snippet}

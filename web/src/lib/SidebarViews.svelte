@@ -1,12 +1,13 @@
 <!--
-  The sidebar's fixed lists: Unread, Starred, All, Recently read and Up Next
+  The sidebar's fixed lists: Unread, Starred, Notes, All, Recently read and Up Next
   (SPEC section 5), each with a small sign in the icon column. River mode has
   no Unread, and a list the reader hid steps aside, except All in river mode,
   where it's home (as Unread, which can't be hidden, is in inbox mode).
 
   Up Next shows only while it holds an episode (decision 0113); once emptied
   it stays until the reader next goes somewhere, so nothing moves up under
-  them.
+  them. Notes shows once the reader has highlighted or written a note on
+  something (SPEC section 42).
 
   On a phone the feeds screen is the root of a stack: nothing is selected
   there, and each row leads on with a chevron (decision 0041).
@@ -15,6 +16,7 @@
   import { untrack } from "svelte";
   import Icon from "./Icon.svelte";
   import { player } from "./player.svelte";
+  import { noted } from "./notes.svelte";
   import { VIEWS, VIEW_NAMES, pathFor, type Hideable, type Route } from "./router";
 
   let {
@@ -33,7 +35,7 @@
     hidden: Hideable[];
   } = $props();
 
-  const ICONS = { unread: "dot", starred: "star", all: "stack", recent: "history", upnext: "queue" } as const;
+  const ICONS = { unread: "dot", starred: "star", notes: "note", all: "stack", recent: "history", upnext: "queue" } as const;
 
   /** Up Next's row, once shown, stays while it empties, until the reader next goes somewhere. */
   let upNextStays = $state(false);
@@ -50,7 +52,8 @@
       (view) =>
         !(river && view === "unread") &&
         !((hidden as string[]).includes(view) && !(river && view === "all")) &&
-        !(view === "upnext" && !player.upNext?.length && !upNextStays),
+        !(view === "upnext" && !player.upNext?.length && !upNextStays) &&
+        !(view === "notes" && !noted.any),
     ),
   );
 </script>

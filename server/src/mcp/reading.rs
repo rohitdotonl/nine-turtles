@@ -209,6 +209,7 @@ pub(super) async fn open_article(state: &AppState, person: i64, asked: OneArticl
         "only_a_summary": article.content.is_none(),
         "text": text,
         "text_cut_short": cut,
+        "yours": super::notes::of_article(&article.notes),
         "note": "The text is the publisher's: credit them and link the original when quoting.",
     }))
 }

@@ -126,8 +126,8 @@ export async function join(feeds: number[], name?: string, folders?: number[]): 
 }
 
 /** "Unsubscribe from Alpha…": every source of theirs at once. Answers the places left, for Undo. */
-export async function unsubscribeAll(feed: number): Promise<{ refusal?: string; left: number[] }> {
-  const { refusal, answer } = await change("/api/writers/unsubscribe", { feed });
+export async function unsubscribeAll(feed: number, removeKept = false): Promise<{ refusal?: string; left: number[] }> {
+  const { refusal, answer } = await change("/api/writers/unsubscribe", { feed, ...(removeKept ? { remove_kept: true } : {}) });
   if (refusal) return { refusal: refused(refusal, "feed"), left: [] };
   return { left: Array.isArray(answer?.feeds) ? answer.feeds.map(Number) : [] };
 }

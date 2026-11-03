@@ -23,6 +23,8 @@ export type Query = {
   scope: Scope;
   unread: boolean;
   starred: boolean;
+  /** Only articles the reader highlighted or wrote a note on (SPEC section 42). */
+  noted?: boolean;
   after: string;
   before: string;
 };
@@ -33,7 +35,7 @@ export type Query = {
  * filter, is how it's written in the field (`is:unread`), kept for its
  * tooltip and for screen readers (decision 0048).
  */
-export type Chip = { key: "scope" | "unread" | "starred" | "after" | "before"; label: string; typed?: string };
+export type Chip = { key: "scope" | "unread" | "starred" | "noted" | "after" | "before"; label: string; typed?: string };
 
 const CHIP_DAY = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
@@ -59,7 +61,7 @@ export function emptyQuery(route: Route): Query {
 
 /** Is there anything to search for? The scope alone isn't a search. */
 export function isSearching(query: Query): boolean {
-  return searchParams(query).q !== undefined || query.unread || query.starred || query.after !== "" || query.before !== "";
+  return searchParams(query).q !== undefined || query.unread || query.starred || query.noted === true || query.after !== "" || query.before !== "";
 }
 
 export function scopeName(scope: Scope, library: Library): string {
@@ -88,6 +90,7 @@ export function chipsFor(query: Query, library: Library): Chip[] {
   if (query.scope.kind !== "all") chips.push({ key: "scope", label: `in: ${scopeName(query.scope, library)}` });
   if (query.unread) chips.push({ key: "unread", label: "Unread", typed: "is:unread" });
   if (query.starred) chips.push({ key: "starred", label: "Starred", typed: "is:starred" });
+  if (query.noted) chips.push({ key: "noted", label: "With notes", typed: "is:noted" });
   if (query.after) chips.push({ key: "after", label: `After ${dayInWords(query.after)}`, typed: `after:${query.after}` });
   if (query.before) chips.push({ key: "before", label: `Before ${dayInWords(query.before)}`, typed: `before:${query.before}` });
   return chips;
@@ -100,6 +103,7 @@ export function withoutChip(query: Query, key: Chip["key"]): Query {
       return { ...query, scope: { kind: "all" } };
     case "unread":
     case "starred":
+    case "noted":
       return { ...query, [key]: false };
     case "after":
     case "before":
@@ -139,6 +143,7 @@ export function searchParams(query: Query): Record<string, string> {
   if (scope.kind === "collection") params.collection = String(scope.id);
   if (query.unread || (scope.kind === "view" && scope.view === "unread")) params.unread = "true";
   if (query.starred || (scope.kind === "view" && scope.view === "starred")) params.starred = "true";
+  if (query.noted) params.notes = "true";
   if (isDate(query.after)) params.since = String(startOf(query.after, 1));
   if (isDate(query.before)) params.until = String(startOf(query.before));
   return params;
@@ -175,7 +180,8 @@ function apply(query: Query, key: Key, value: string, library: Library): Query |
     case "is":
       if (plain === "unread") return { ...query, unread: true };
       if (plain === "starred") return { ...query, starred: true };
-      return "is: can be is:unread or is:starred.";
+      if (plain === "noted") return { ...query, noted: true };
+      return "is: can be is:unread, is:starred or is:noted.";
     case "feed": {
       const feed = byName<Feed>(library.feeds, (each) => each.title, plain);
       return feed ? { ...query, scope: { kind: "feed", id: feed.id } } : `No feed matches “${plain}”.`;
@@ -249,7 +255,7 @@ export function suggestions(words: string, library: Library): Suggestion[] {
     const value = fold((filter[2] ?? "").replace(/^"/, ""));
     switch (key) {
       case "is":
-        return (["unread", "starred"] as const)
+        return (["unread", "starred", "noted"] as const)
           .filter((what) => what.startsWith(value))
           .map((what) => ({ label: `is:${what}`, query: (query: Query) => ({ ...query, [what]: true }) }));
       case "feed":

@@ -203,6 +203,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Readers (accounts) and the `people` table
 - Subscriptions and entries (each reader's feeds and marks)
 - Collections (the reader's own shelves of articles) and tags (in JSON Feed)
+- Highlights and notes (anchoring words by their text, not a position) and Markdown
 - Episode progress and Up Next (each reader's place in an episode, and their queue)
 - Admin page (the owner's Readers page) and usage limits (fair-use quotas)
 

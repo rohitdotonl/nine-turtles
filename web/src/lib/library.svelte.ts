@@ -138,9 +138,9 @@ export class LoadedLibrary {
   }
 
   /** Unsubscribes from a person or publication: every source of theirs at once, with Undo bringing them all back. */
-  async unsubscribe(feed: Feed): Promise<Removed> {
+  async unsubscribe(feed: Feed, removeKept = false): Promise<Removed> {
     const name = this.shownAs(feed)?.title ?? feed.title;
-    const { refusal, left } = await unsubscribeAll(feed.id);
+    const { refusal, left } = await unsubscribeAll(feed.id, removeKept);
     if (refusal) return refusal;
     await this.loadFeeds();
     return {

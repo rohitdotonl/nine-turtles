@@ -297,6 +297,10 @@ test("unsubscribe, then Undo: the feed is back with its read history; a star out
   await expect(line(page)).toHaveText("Starred");
   await editWho(page, `Blog ${other}`);
   await page.getByRole("button", { name: `Unsubscribe from Blog ${other}` }).click();
+  // With a star there, it asks first whether to keep it (SPEC section 42).
+  const keep = page.getByRole("group", { name: `Keep what you saved from Blog ${other}?` });
+  await expect(keep).toContainText("You starred 1 of their articles.");
+  await keep.getByRole("button", { name: "Keep them" }).click();
   await expect(line(page)).toHaveText(`Unsubscribed from Blog ${other}`);
   // Other tests star articles too, so look through every page of Starred.
   const starredFrom: string[] = [];

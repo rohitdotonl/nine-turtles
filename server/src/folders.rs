@@ -543,6 +543,8 @@ pub async fn clear(
     if claimed.rows_affected() == 0 {
         return Ok(false);
     }
+    // First, so what they chose to remove too is let go with the rest (SPEC section 42).
+    crate::notes::drop_kept(&mut *connection, person, id).await?;
     // Entries carried over to a new address (`health::follow_elsewhere`)
     // hold articles stored under the old feed: once they go, that feed may
     // need letting go too.
@@ -551,17 +553,23 @@ pub async fn clear(
              JOIN articles ON articles.id = entries.article_id
          WHERE entries.person_id = ?1 AND entries.feed_id = ?2 AND entries.starred = 0
              AND articles.feed_id != ?2 AND NOT EXISTS (SELECT 1 FROM collection_articles AS kept
-                 WHERE kept.person_id = ?1 AND kept.article_id = entries.article_id)",
+                 WHERE kept.person_id = ?1 AND kept.article_id = entries.article_id)
+             AND NOT EXISTS (SELECT 1 FROM notes
+                 WHERE notes.person_id = ?1 AND notes.article_id = entries.article_id)",
     )
     .bind(person)
     .bind(id)
     .fetch_all(&mut *connection)
     .await?;
-    // An article on any of their collections stays, as a starred one does (decision 0108).
+    // An article on any of their collections stays, as a starred one does
+    // (decision 0108), and so does one they highlighted or wrote a note on
+    // (decision 0164), unless they chose to remove those too.
     sqlx::query(
         "DELETE FROM entries WHERE person_id = ?1 AND feed_id = ?2 AND starred = 0
          AND NOT EXISTS (SELECT 1 FROM collection_articles AS kept
-             WHERE kept.person_id = ?1 AND kept.article_id = entries.article_id)",
+             WHERE kept.person_id = ?1 AND kept.article_id = entries.article_id)
+         AND NOT EXISTS (SELECT 1 FROM notes
+             WHERE notes.person_id = ?1 AND notes.article_id = entries.article_id)",
     )
     .bind(person)
     .bind(id)
@@ -572,7 +580,7 @@ pub async fn clear(
     rules::place_gone_for(connection, person, id).await?;
     crate::saved_searches::forget(&mut *connection, person, "feed", id).await?;
     sqlx::query(
-        "DELETE FROM subscriptions WHERE person_id = ?1 AND feed_id = ?2
+        "DELETE FROM subscriptions WHERE person_id = ?1 AND feed_id = ?2 AND note IS NULL
          AND NOT EXISTS (SELECT 1 FROM entries WHERE person_id = ?1 AND feed_id = ?2)",
     )
     .bind(person)

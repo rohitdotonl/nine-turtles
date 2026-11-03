@@ -9,14 +9,19 @@
   settings, with "+ Add a source" under them; or, for one source, that
   source's settings right here, as it has no other. Then the folders (one
   list for all their sources), and Unsubscribe in red words at the foot,
-  which leaves every source of theirs at once, with Undo on the next screen.
+  which leaves every source of theirs at once, with Undo on the next screen;
+  when the reader kept something of theirs, it first asks whether that stays
+  (KeepOrRemove, SPEC section 42).
 -->
 <script lang="ts">
+  import { tick } from "svelte";
   import AddPlace from "./AddPlace.svelte";
   import Icon from "./Icon.svelte";
+  import KeepOrRemove from "./KeepOrRemove.svelte";
   import SourceFields from "./SourceFields.svelte";
   import { editFeed, refused, type Notice } from "./feeds";
   import type { Sick } from "./health";
+  import { keptAny, keptFrom, type Kept } from "./keeping";
   import type { LoadedLibrary } from "./library.svelte";
   import { PLACE_NAMES, placeShownAs, placesOf } from "./people";
   import type { Check, Feed, Folder, PlaceKind, WhoKind } from "./shapes";
@@ -45,7 +50,8 @@
     onDone: (saved: boolean) => void;
     /** One of a person's sources, to open its own settings. */
     onSource: (id: number) => void;
-    onUnsubscribe: () => Promise<string | undefined>;
+    /** `removeKept`: what the reader starred or marked of theirs goes too (SPEC section 42). */
+    onUnsubscribe: (removeKept: boolean) => Promise<string | undefined>;
     /** Sources were joined: their list, with "… · Undo". */
     onPeople: (done: Notice, lead: number) => void;
     onAddRule: () => void;
@@ -104,13 +110,32 @@
     else onDone(true);
   }
 
-  async function leave() {
+  /** What the reader kept of theirs, while Unsubscribe asks whether to keep it (SPEC section 42). */
+  let asking: Kept | undefined = $state();
+  let leaveButton: HTMLButtonElement | undefined = $state();
+
+  /** Unsubscribes; with something kept, asks first whether it stays (`removeKept` is the answer). */
+  async function leave(removeKept?: boolean) {
     if (busy) return;
     busy = true;
     message = "";
-    const problem = await onUnsubscribe();
+    if (removeKept === undefined) {
+      const kept = await keptFrom(feed.id);
+      if (keptAny(kept)) {
+        busy = false;
+        asking = kept;
+        return;
+      }
+    }
+    const problem = await onUnsubscribe(removeKept ?? false);
     busy = false;
     if (problem) message = problem;
+  }
+
+  async function keepAsking() {
+    asking = undefined;
+    await tick();
+    leaveButton?.focus();
   }
 </script>
 
@@ -199,17 +224,22 @@
       {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
     </p>
 
+    {#if asking}
+      <KeepOrRemove {name} kept={asking} {busy} onChoose={(removeKept) => leave(removeKept)} onCancel={keepAsking} />
+    {:else}
     <div class="inset-group">
       <button
         type="button"
+        bind:this={leaveButton}
         aria-disabled={busy}
         aria-describedby="{formId}-leave"
-        title="Stops following {one ? 'them' : 'every source of theirs'} and removes the articles; starred ones stay. You can undo it straight afterwards."
-        onclick={leave}
+        title="Stops following {one ? 'them' : 'every source of theirs'} and removes the articles; what you starred, highlighted or noted can stay. You can undo it straight afterwards."
+        onclick={() => leave()}
         class="inset-row inset-action font-semibold text-danger">Unsubscribe from {name}</button
       >
     </div>
-    <span id="{formId}-leave" class="sr-only">Removes their articles; starred ones stay. You can undo it straight afterwards.</span>
+    {/if}
+    <span id="{formId}-leave" class="sr-only">Removes their articles; what you starred, highlighted or noted can stay. You can undo it straight afterwards.</span>
   </form>
 </div>
 

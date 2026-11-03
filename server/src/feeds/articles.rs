@@ -50,6 +50,9 @@ pub struct FullArticle {
     /// A YouTube Short ("short") or live stream ("live"), for the shape of
     /// its player (decision 0144); null for anything else.
     pub video_kind: Option<String>,
+    /// The reader's highlights and note on it (SPEC section 42), in the order made.
+    #[sqlx(skip)]
+    pub notes: Vec<crate::notes::Note>,
 }
 
 /// Only an article the reader has (an entry of theirs); any other is not
@@ -162,10 +165,13 @@ pub(crate) async fn full_articles(
         "? AND entries.article_id IN (SELECT value FROM json_each(?))"
     ))
     .bind(person)
-    .bind(ids)
+    .bind(&ids)
     .fetch_all(&state.db)
     .await?;
+    let found: Vec<i64> = articles.iter().map(|article| article.id).collect();
+    let mut notes = crate::notes::of_articles(&state.db, person, &found).await?;
     for article in &mut articles {
+        article.notes = notes.remove(&article.id).unwrap_or_default();
         article.content = article.content.take().map(|html| stored_html(&html));
         article.summary = article.summary.take().map(|html| stored_html(&html));
         article.link = article.link.take().map(|link| stored_link(&link));

@@ -250,6 +250,15 @@ pub const fn read_past_sql(list: List, side: Side) -> &'static str {
                  WHERE collection_id = ?5 AND person_id = ?1)",
             ">"
         ),
+        // Notes lists muted articles and those of feeds left, as Starred does.
+        (List::Notes, Side::Older) => read_past_query!(
+            "article_id IN (SELECT article_id FROM notes WHERE person_id = ?1)",
+            "<"
+        ),
+        (List::Notes, Side::Newer) => read_past_query!(
+            "article_id IN (SELECT article_id FROM notes WHERE person_id = ?1)",
+            ">"
+        ),
     }
 }
 

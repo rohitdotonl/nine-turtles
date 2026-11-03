@@ -46,7 +46,7 @@ thread, in this order:
 10. **A weekly email** (V1 item 5) ✅
 11. **Installing the app, said plainly** (V1 item 6) ✅
 12. **"How did you hear about nine turtles?"** (V1 item 7) ✅
-13. **Notes and highlights** (V1 item 8) ⬜
+13. **Notes and highlights** (V1 item 8) ✅
 14. **A feed finder that tries a few more places** (V1 item 9) ✅
 15. **Choosing between several feeds, made easy** (V1 item 10) ✅
 16. **Three to four refinement rounds:** the owner uses the app, lists what
@@ -116,11 +116,11 @@ milestone order above.
 
 **Added by the owner (3 November 2026, decision 0160):**
 
-8. **Notes and highlights:** a private note on each person (on their page:
+8. **Notes and highlights** ✅ a private note on each person (on their page:
    where you met, when you last wrote), and highlights and notes on
    articles. Search finds them, filtered by person, and Your data exports
-   them as Markdown. Yours alone; nothing about them is ever public. Its
-   SPEC section and shape are agreed with the owner first.
+   them as Markdown. Yours alone; nothing about them is ever public. Built:
+   SPEC section 42, decision 0164.
 9. **A feed finder that tries a few more places** ✅ when the pasted page
    names no feed, the usual address under it, the site's home page and the
    usual feed addresses. Built: SPEC sections 3 and 30, decision 0165.

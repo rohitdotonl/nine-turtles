@@ -24,6 +24,9 @@ Open **Settings › Your data** and press any of these:
   you've since unfollowed.
 - **Export collections:** every article in your collections, each marked
   with its collections' names, as a JSON Feed file.
+- **Export notes and highlights:** your notes on people, and every article
+  you highlighted or wrote a note on, with a link to the original, as one
+  Markdown file any notes app can open.
 
 ## Good to know
 
@@ -31,4 +34,5 @@ Open **Settings › Your data** and press any of these:
 - Newsletters aren't in the OPML file: they arrive by email, not from a
   feed.
 - nine turtles keeps articles you haven't starred or collected for a year
-  after they arrived. Starred and collected articles are kept for good.
+  after they arrived. Starred, collected and highlighted articles are kept
+  for good.

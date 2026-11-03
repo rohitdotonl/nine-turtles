@@ -79,6 +79,7 @@ export function emptyText(place: Route, checkedAt: number | null = null, now: Da
   if (place.kind === "folder") return { fact: "Nothing in this folder yet." };
   if (place.kind === "view" && place.view === "unread") return { fact: "Nothing unread." };
   if (place.kind === "view" && place.view === "starred") return { fact: "Nothing starred yet.", how: "Press the star on any article to keep it here." };
+  if (place.kind === "view" && place.view === "notes") return { fact: "No notes yet.", how: "Choose words in any article to highlight them, or add a note from its More menu." };
   if (place.kind === "view" && place.view === "recent") return { fact: "Articles you open will show here." };
   if (place.kind === "view" && place.view === "upnext") return { fact: "Nothing in Up Next.", how: "Add an episode from its More menu." };
   if (place.kind === "collection") return { fact: "Nothing in this collection yet.", how: "Add an article from its More menu." };

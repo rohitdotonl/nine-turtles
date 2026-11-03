@@ -72,6 +72,9 @@ pub struct Before {
     /// brings it back too.
     #[serde(default)]
     pub write_to: Option<String>,
+    /// The reader's note on them (decision 0164), so Undo brings it back too.
+    #[serde(default)]
+    pub note: Option<String>,
 }
 
 /// A place's list becomes its person's when they have two or more places
@@ -106,11 +109,17 @@ async fn before_of(
     person: i64,
     feeds: &[i64],
 ) -> Result<Vec<Before>, sqlx::Error> {
-    // Each place: its feed, person, that person's name and the address typed for it.
-    type Place = (i64, Option<i64>, Option<String>, Option<String>);
+    // Each place: its feed, person, that person's name, the address typed for it and the note.
+    type Place = (
+        i64,
+        Option<i64>,
+        Option<String>,
+        Option<String>,
+        Option<String>,
+    );
     let places: Vec<Place> = sqlx::query_as(
         "SELECT subscriptions.feed_id, subscriptions.writer_id, writers.name,
-             subscriptions.write_to FROM subscriptions
+             subscriptions.write_to, subscriptions.note FROM subscriptions
          LEFT JOIN writers ON writers.id = subscriptions.writer_id
          WHERE subscriptions.person_id = ? AND subscriptions.unsubscribed_at IS NULL
              AND subscriptions.feed_id IN (SELECT value FROM json_each(?))
@@ -121,7 +130,7 @@ async fn before_of(
     .fetch_all(&mut *connection)
     .await?;
     let mut before = Vec::with_capacity(places.len());
-    for (feed, writer, name, write_to) in places {
+    for (feed, writer, name, write_to, note) in places {
         let folders: Vec<i64> = sqlx::query_scalar(
             "SELECT feed_folders.folder_id FROM feed_folders
              JOIN folders ON folders.id = feed_folders.folder_id
@@ -138,6 +147,7 @@ async fn before_of(
             name,
             folders,
             write_to,
+            note,
         });
     }
     Ok(before)
@@ -219,11 +229,14 @@ pub async fn join(
             .await?
         }
     };
+    // Their notes become one, on every place (decision 0164).
+    let notes: Vec<Option<String>> = before.iter().map(|place| place.note.clone()).collect();
     sqlx::query(
-        "UPDATE subscriptions SET writer_id = ?
+        "UPDATE subscriptions SET writer_id = ?, note = ?
          WHERE person_id = ? AND feed_id IN (SELECT value FROM json_each(?))",
     )
     .bind(writer)
+    .bind(crate::notes::joined(&notes))
     .bind(person)
     .bind(ids(&places))
     .execute(&mut *connection)
@@ -280,7 +293,7 @@ pub async fn put_back(
         }
         let changed = sqlx::query(
             "UPDATE subscriptions SET writer_id =
-                 (SELECT id FROM writers WHERE id = ?1 AND person_id = ?2), write_to = ?4
+                 (SELECT id FROM writers WHERE id = ?1 AND person_id = ?2), write_to = ?4, note = ?5
              WHERE person_id = ?2 AND feed_id = ?3 AND unsubscribed_at IS NULL",
         )
         .bind(place.writer)
@@ -292,6 +305,12 @@ pub async fn put_back(
                 .write_to
                 .as_deref()
                 .and_then(crate::write_back::address),
+        )
+        .bind(
+            place
+                .note
+                .as_deref()
+                .and_then(|note| crate::notes::clean_note(note).ok().flatten()),
         )
         .execute(&mut *connection)
         .await?;
@@ -452,6 +471,16 @@ struct PlaceForm {
     feed: i64,
 }
 
+/// "Unsubscribe from …": with `remove_kept`, what the reader starred or
+/// marked in every place of theirs, and the note on the person, go too once
+/// it's cleared for good (SPEC section 42, `notes::drop_kept`).
+#[derive(Deserialize)]
+struct LeavingForm {
+    feed: i64,
+    #[serde(default)]
+    remove_kept: bool,
+}
+
 /// "Take out of …": one place leaves its person and stands on its own
 /// again, in the folders it's in, a person or publication as guessed afresh. Only a person with another place left can
 /// lose one. Answers what it was like before, for Undo.
@@ -562,7 +591,7 @@ async fn folder_to_person(
 async fn unsubscribe_person(
     SignedIn(person): SignedIn,
     State(state): State<AppState>,
-    Json(form): Json<PlaceForm>,
+    Json(form): Json<LeavingForm>,
 ) -> Response {
     let left = async {
         folders::clear_unsubscribed(&state.db, Some(person), i64::MAX).await?;
@@ -578,6 +607,9 @@ async fn unsubscribe_person(
         .fetch_all(&mut *transaction)
         .await?;
         folders::hide(&mut transaction, person, &places, now()).await?;
+        if form.remove_kept {
+            crate::notes::drop_later(&mut transaction, person, &places).await?;
+        }
         transaction.commit().await?;
         Ok::<_, sqlx::Error>(places)
     }

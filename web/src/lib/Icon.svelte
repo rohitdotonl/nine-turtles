@@ -5,7 +5,7 @@
   word beside an icon, or the label of an icon-only button, says what it does.
 -->
 <script lang="ts" module>
-  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "clock" | "history" | "shelf" | "headphones" | "video" | "queue"
+  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "clock" | "history" | "shelf" | "headphones" | "video" | "queue" | "note"
     // Settings' rows (decision 0120).
     | "book" | "palette" | "a-plus" | "pen-nib" | "feed" | "heart-pulse" | "panel-dots" | "bookmark-plus" | "phone" | "newspaper" | "plug" | "robot" | "key" | "people" | "card" | "envelope" | "trash";
 </script>
@@ -216,6 +216,10 @@
     <!-- Settings › Account › Email: an envelope. -->
     <rect x="3.25" y="4.75" width="13.5" height="10.5" rx="1.5" />
     <path d="m3.75 5.5 6.25 5 6.25-5" />
+  {:else if name === "note"}
+    <!-- Notes (SPEC section 42): a page with a folded corner and two lines of writing. -->
+    <path d="M4.75 3.25h7.5l3 3v10.5h-10.5z" />
+    <path d="M7.5 10h5M7.5 13h3.5" />
   {:else if name === "trash"}
     <!-- Settings › Account › Delete data and Delete account: a bin. -->
     <path d="M3.75 5.75h12.5M8 5.75V4.25a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5v1.5" />

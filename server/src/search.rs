@@ -153,6 +153,9 @@ pub struct Search {
     pub unread: bool,
     #[serde(default)]
     pub starred: bool,
+    /// Only articles the reader highlighted or wrote a note on (decision 0164).
+    #[serde(default)]
+    pub notes: bool,
     /// Only articles from this time on, and only those before `until`
     /// (seconds since 1970; the screen works out the reader's days).
     pub since: Option<i64>,
@@ -176,6 +179,7 @@ impl Search {
             && self.collection.is_none()
             && !self.unread
             && !self.starred
+            && !self.notes
             && self.since.is_none()
             && self.until.is_none()
             && self.author.is_none()
@@ -227,6 +231,10 @@ pub struct Hit {
     /// Null when no searched word is in the text (only in the title), or
     /// when nothing but filters was searched.
     pub excerpt: Option<Vec<Piece>>,
+    /// Where the excerpt came from when it's the reader's own words, not the
+    /// article's: "highlight" or "note" (decision 0164).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub excerpt_from: Option<&'static str>,
 }
 
 /// A piece of an excerpt: plain text, and whether it's a searched word.
@@ -408,6 +416,44 @@ fn parse_cursor(text: &str) -> Option<(bool, i64, i64)> {
     parts.next().is_none().then_some((in_title, at, id))
 }
 
+/// The reader's articles with a highlight or note holding every searched
+/// word, each at the start of one of its words, as articles are searched
+/// (SPEC section 42). They're the reader's own few, so they're read and
+/// matched here, with accents and capitals in any language folded alike.
+async fn noted_matching(
+    db: &sqlx::SqlitePool,
+    person: i64,
+    typed: &str,
+) -> Result<Vec<i64>, sqlx::Error> {
+    let searched = searched_words(typed);
+    if searched.is_empty() {
+        return Ok(Vec::new());
+    }
+    let notes: Vec<(i64, String)> = sqlx::query_as(
+        "SELECT article_id, COALESCE(quote, '') || ' ' || COALESCE(note, '') FROM notes
+         WHERE person_id = ?",
+    )
+    .bind(person)
+    .fetch_all(db)
+    .await?;
+    let mut found: Vec<i64> = notes
+        .into_iter()
+        .filter(|(_, text)| {
+            let words: Vec<String> = word_spans(text)
+                .into_iter()
+                .map(|(start, end)| fold(&text[start..end]))
+                .collect();
+            searched
+                .iter()
+                .all(|term| words.iter().any(|word| word.starts_with(term.as_str())))
+        })
+        .map(|(article, _)| article)
+        .collect();
+    found.sort_unstable();
+    found.dedup();
+    Ok(found)
+}
+
 /// One page of results, and where the next starts (null at the end).
 pub async fn find(
     db: &sqlx::SqlitePool,
@@ -442,12 +488,21 @@ pub async fn find(
             "entries.article_id IN (SELECT rowid FROM articles_search WHERE articles_search MATCH ",
         );
         query.push_bind(format!("{{title}} : ({words})"));
+        // Articles whose words match, and those whose highlights or notes
+        // hold every searched word (the reader's own few, read directly).
         query.push(
-            ") AS in_title FROM articles_search CROSS JOIN entries
-                 ON entries.person_id = ",
+            ") AS in_title FROM (SELECT rowid AS article_id FROM articles_search
+                 WHERE articles_search MATCH ",
         );
+        query.push_bind(words.clone());
+        query.push(" UNION SELECT value FROM json_each(");
+        query.push_bind(
+            serde_json::to_string(&noted_matching(db, person, &search.q).await?)
+                .unwrap_or_else(|_| "[]".to_owned()),
+        );
+        query.push(")) AS matched CROSS JOIN entries ON entries.person_id = ");
         query.push_bind(person);
-        query.push(" AND entries.article_id = articles_search.rowid ");
+        query.push(" AND entries.article_id = matched.article_id ");
     } else {
         query.push("0 AS in_title FROM entries ");
     }
@@ -468,11 +523,9 @@ pub async fn find(
          OR entries.article_id IN (SELECT article_id FROM collection_articles WHERE person_id = ",
     );
     query.push_bind(person);
+    query.push(") OR entries.article_id IN (SELECT article_id FROM notes WHERE person_id = ");
+    query.push_bind(person);
     query.push("))");
-    if let Some(words) = &words {
-        query.push(" AND articles_search MATCH ");
-        query.push_bind(words.clone());
-    }
     if let Some(feed) = search.feed {
         // A place of a person with others looks in all of theirs (SPEC section 36).
         query.push(" AND entries.feed_id IN (SELECT feed_id FROM subscriptions WHERE person_id = ");
@@ -516,6 +569,11 @@ pub async fn find(
     }
     if search.starred {
         query.push(" AND entries.starred = 1");
+    }
+    if search.notes {
+        query.push(" AND entries.article_id IN (SELECT article_id FROM notes WHERE person_id = ");
+        query.push_bind(person);
+        query.push(")");
     }
     if let Some(since) = search.since {
         query.push(" AND entries.sort_at >= ");
@@ -586,6 +644,8 @@ pub async fn find(
         None
     };
     let searched = searched_words(&search.q);
+    let ids: Vec<i64> = found.iter().map(|each| each.article.id).collect();
+    let mut notes = crate::notes::of_articles(db, person, &ids).await?;
     // Reading up to fifty articles' HTML for excerpts is steady CPU work, so it
     // runs off the threads that answer requests.
     let results = tokio::task::spawn_blocking(move || {
@@ -597,9 +657,31 @@ pub async fn find(
                     Some(html) if !searched.is_empty() => excerpt(&plain_words(html), &searched),
                     _ => None,
                 };
+                // Found by the reader's own words: the excerpt is those.
+                let mut mine = || {
+                    let notes = notes.remove(&each.article.id)?;
+                    notes.iter().find_map(|note| {
+                        let (text, from) = match &note.quote {
+                            Some(quote) => (
+                                format!("{quote} {}", note.note.as_deref().unwrap_or("")),
+                                "highlight",
+                            ),
+                            None => (note.note.clone().unwrap_or_default(), "note"),
+                        };
+                        Some((self::excerpt(&text, &searched)?, from))
+                    })
+                };
+                let (excerpt, excerpt_from) = match excerpt {
+                    Some(found) => (Some(found), None),
+                    None if !searched.is_empty() => {
+                        mine().map_or((None, None), |(found, from)| (Some(found), Some(from)))
+                    }
+                    None => (None, None),
+                };
                 Hit {
                     article: each.article,
                     excerpt,
+                    excerpt_from,
                 }
             })
             .collect::<Vec<_>>()

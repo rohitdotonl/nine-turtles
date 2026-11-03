@@ -9,12 +9,14 @@
   saying what they are (a person or a publication), their folders and since
   when the reader follows them, then their sources, each by what it is (Blog,
   Video, Newsletter, Podcast) with a link to the publisher's own site, and
-  the email address Write back writes to, once nine turtles knows it. No
+  the email address Write back writes to, once nine turtles knows it, and
+  the reader's private note on them (SPEC section 42). No
   picture and no color. Edit turns the same page into its settings
   (WhoEdit), and a person's source opens its own settings (SourcePage).
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
+  import PersonNote from "./PersonNote.svelte";
   import SourcePage from "./SourcePage.svelte";
   import WhoEdit from "./WhoEdit.svelte";
   import type { Notice } from "./feeds";
@@ -46,7 +48,8 @@
     phone?: boolean;
     heading?: HTMLHeadingElement;
     go: (next: Route, notice?: Notice) => void;
-    onUnsubscribe: () => Promise<string | undefined>;
+    /** `removeKept`: what the reader starred or marked of theirs goes too (SPEC section 42). */
+    onUnsubscribe: (removeKept: boolean) => Promise<string | undefined>;
     /** "Add a rule…" for one source. */
     onAddRule: (source: Feed) => void;
     /** Find new address moved a source. */
@@ -130,6 +133,8 @@
           {/if}
         </dl>
       </div>
+      <!-- The reader's private note on them (SPEC section 42). -->
+      <PersonNote place={feed.id} note={places.find((each) => each.note)?.note ?? null} {name} {library} />
     {/if}
   </div>
 </section>
