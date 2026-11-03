@@ -27,8 +27,8 @@
   </head>
   <body{% if front %} class="front-page"{% endif %}>
     <a class="skip" href="#main">Skip to the text</a>
-    <!-- The band (BRAND.md → "The website", "G set as C"): the app's grey sidebar, 248px wide, on a computer; a grey bar across the top on a tablet or phone. -->
-    <header class="band">
+    <!-- The band (BRAND.md → "The website", "G set as C"): the app's grey sidebar, 248px wide, on a computer; a grey bar across the top on a tablet or phone. The front page, Rohit's letter, has no band: the same name and places sit along its top (decision 0169). -->
+    <header class="{% if front %}top{% else %}band{% endif %}">
       <!-- The logo, the redrawn nine (decision 0067, docs/BRAND.md), in the text color, standing on the name's baseline, at the app sidebar's sizes (27px beside a 22px name). The same heavy drawing is in web/src/lib/Logo.svelte: change both together (docs/logo/README.md explains the large one). -->
       <a class="wordmark" href="/"><svg class="logo" viewBox="0 0 82.9 47.5" width="47" height="27" aria-hidden="true" focusable="false"><g fill="currentColor"><g transform="translate(9 6)"><path d="M-9 3.5A7.5 9.5 0 0 1 6 3.5Z"/><circle cx="10" cy="-.6" r="2.9"/></g><g transform="translate(35 6)"><path d="M-9 3.5A7.5 9.5 0 0 1 6 3.5Z"/><circle cx="10" cy="-.6" r="2.9"/></g><g transform="translate(61 6)"><path d="M-9 3.5A7.5 9.5 0 0 1 6 3.5Z"/><circle cx="10" cy="-.6" r="2.9"/></g><g transform="translate(18 25)"><path d="M-9 3.5A7.5 9.5 0 0 1 6 3.5Z"/><circle cx="10" cy="-.6" r="2.9"/></g><g transform="translate(44 25)"><path d="M-9 3.5A7.5 9.5 0 0 1 6 3.5Z"/><circle cx="10" cy="-.6" r="2.9"/></g><g transform="translate(70 25)"><path d="M-9 3.5A7.5 9.5 0 0 1 6 3.5Z"/><circle cx="10" cy="-.6" r="2.9"/></g><g transform="translate(9 44)"><path d="M-9 3.5A7.5 9.5 0 0 1 6 3.5Z"/><circle cx="10" cy="-.6" r="2.9"/></g><g transform="translate(35 44)"><path d="M-9 3.5A7.5 9.5 0 0 1 6 3.5Z"/><circle cx="10" cy="-.6" r="2.9"/></g><g transform="translate(61 44)"><path d="M-9 3.5A7.5 9.5 0 0 1 6 3.5Z"/><circle cx="10" cy="-.6" r="2.9"/></g></g></svg>{{ site.name }}</a>
       {%- set nav = [["/help/", "Help"]] %}
@@ -40,15 +40,6 @@
           <li><a href="{{ site.app }}">Open the app</a></li>
         </ul>
       </nav>
-      {%- if contents %}
-      <nav class="contents" aria-label="On this page">
-        <ul>
-          {%- for item in contents %}
-          <li><a href="#{{ item[0] }}">{{ item[1] }}</a></li>
-          {%- endfor %}
-        </ul>
-      </nav>
-      {%- endif %}
     </header>
     <main id="main"{% if front %} class="front"{% endif %}>
       {{ content | safe }}

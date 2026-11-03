@@ -118,8 +118,8 @@ a:focus-visible {
 }
 
 /* The band (BRAND.md → "The website", "G set as C"): the app's grey sidebar
-   on a computer, holding the name, the website's places and, on the front
-   page, what's on the page; a grey bar across the top on a tablet or phone. */
+   on a computer, holding the name and the website's places; a grey bar
+   across the top on a tablet or phone. */
 .band {
   background: var(--band);
   font-family: var(--sans);
@@ -180,18 +180,9 @@ a:focus-visible {
   .places {
     margin-top: 32px;
   }
-  .contents {
-    margin-top: 32px;
-    padding-top: 24px;
-    border-top: 1px solid var(--line);
-  }
-  .contents a {
-    color: var(--muted);
-  }
 }
 
-/* On a tablet or phone: the name on the left, the places on the right, and
-   what's on the page left out (the page itself says it). */
+/* On a tablet or phone: the name on the left, the places on the right. */
 @media (max-width: 1100px) {
   .band {
     display: flex;
@@ -208,9 +199,6 @@ a:focus-visible {
     display: flex;
     flex-wrap: wrap;
     column-gap: 24px;
-  }
-  .contents {
-    display: none;
   }
 }
 
@@ -317,49 +305,6 @@ h1 + .byline {
   min-height: 48px;
   font-family: var(--sans);
   font-size: 1.0625rem;
-}
-
-/* A picture of the app, wider than the text where there's room: centred on
-   a tablet or phone, from the column's left edge on a computer. */
-.shot {
-  margin: 2.5rem auto;
-  width: min(60rem, 100vw - 40px);
-  margin-left: calc(50% - min(30rem, 50vw - 20px));
-}
-@media (min-width: 1101px) {
-  .shot {
-    width: min(50rem, 100vw - 416px);
-    margin-left: 0;
-  }
-  figure.shot figcaption {
-    text-align: left;
-  }
-}
-.shot img {
-  display: block;
-  width: 100%;
-  height: auto;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-}
-.shot figcaption {
-  margin-top: 12px;
-  color: var(--muted);
-  font-family: var(--sans);
-  font-size: 0.875rem;
-  text-align: center;
-}
-/* The day picture by day, the night picture by night. */
-.shot .night {
-  display: none;
-}
-@media (prefers-color-scheme: dark) {
-  .shot .day {
-    display: none;
-  }
-  .shot .night {
-    display: block;
-  }
 }
 
 /* The feed finder (SPEC section 30): one field and its button, as the app
@@ -810,74 +755,214 @@ footer .links.small a {
   }
 }
 
-/* The front page (DESIGN.md → "The website's front page"): one text size,
-   20px on a 32px line, in a column 488px wide; the headline and each
-   section's name in the interface face, semibold; sections 64px apart. */
-.front {
-  max-width: calc(30.5rem + 40px);
-  font-size: 1.25rem;
-  line-height: 2rem;
-}
-.front p {
-  margin: 0 0 2rem;
-}
-.front .lead,
-.front h2 {
-  margin: 0;
+
+/* The front page is Rohit's letter (decision 0169; DESIGN.md → "The website's
+   front page"): no band; the name and places along the top, then one centred
+   column, 640px wide, with its own sizes: "Hello," large, the letter at 21px,
+   one line set large, and the signature. */
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 24px;
+  max-width: calc(40rem + 40px);
+  margin: 0 auto;
+  padding: 20px 20px 0;
   font-family: var(--sans);
-  font-size: 1.25rem;
-  line-height: 2rem;
-  letter-spacing: 0;
+  font-size: 1rem;
 }
-.front .lead {
-  padding-top: 12rem;
-}
-.front .shot {
-  margin-top: 8rem;
-  margin-bottom: 0;
-}
-.front .shot figcaption {
-  line-height: 1.5;
-}
-.front section {
-  padding-top: 4rem;
-}
-.front section:first-of-type {
-  padding-top: 8rem;
-}
-.front section p {
+.top ul {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 24px;
   margin: 0;
+  padding: 0;
+  list-style: none;
 }
-.front .close {
-  margin: 0;
-  padding-top: 8rem;
+.top li + li,
+.top .places {
+  margin-top: 0;
 }
-.front + footer {
-  margin-top: 8rem;
+.top a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--ink-2);
+  text-decoration: none;
+}
+.top a:hover {
+  text-decoration: underline;
+}
+.top a.wordmark {
+  display: block;
+  margin-right: auto;
+  line-height: 44px;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 1.375rem;
+  font-weight: 600;
 }
 @media (min-width: 1101px) {
-  .front {
-    max-width: 30.5rem;
+  main.front,
+  .front + footer {
+    margin-left: auto;
+    padding-inline: 20px;
+    max-width: calc(40rem + 40px);
   }
 }
-@media (max-width: 1100px) {
-  .front .lead {
-    padding-top: 8rem;
-  }
-  /* The bar's name on the front page's narrower column's edge. */
-  .front-page .band {
-    padding-inline: max(20px, calc(50% - 15.25rem));
+.front {
+  padding-top: 7.5rem;
+}
+.front .hello {
+  margin: 0 0 2.5rem;
+  font-size: 4rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.front p {
+  margin: 0 0 1.5rem;
+  font-size: 1.3125rem;
+  line-height: 1.65;
+}
+.front .big {
+  margin: 2.5rem 0;
+  font-size: 1.875rem;
+  line-height: 1.3;
+  font-weight: 600;
+  text-wrap: pretty;
+}
+.front .signature {
+  margin-top: 2.5rem;
+}
+.front .signature .name {
+  display: block;
+  font-size: 2.125rem;
+  font-weight: 600;
+  line-height: 1;
+}
+.quiet {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.45;
+}
+.front .letter-end {
+  margin-top: 3.5rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--line);
+}
+.front .letter-end p {
+  margin: 0 0 1rem;
+}
+.front .ps {
+  color: var(--ink-2);
+  font-size: 1.125rem;
+}
+.front + footer {
+  margin-top: 4rem;
+}
+
+/* The picture: read, highlight, write back, drawn as the app draws them
+   (the highlight in pencil, Write back an everyday button with the address
+   under it, then the reader's own email app). Wider than the letter where
+   there's room. */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 3rem 0;
+  font-family: var(--sans);
+}
+@media (min-width: 900px) {
+  .steps {
+    width: min(60rem, 100vw - 64px);
+    margin-left: calc(50% - min(30rem, 50vw - 32px));
   }
 }
 @media (max-width: 760px) {
-  .front .lead {
+  .steps {
+    grid-template-columns: 1fr;
+  }
+}
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 18px 18px 20px;
+  background: var(--tone);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.panel .step {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.panel .title {
+  font-family: var(--serif);
+  font-size: 1.1875rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.panel .by {
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+.panel .centre {
+  align-self: center;
+  margin-top: -6px;
+}
+.panel .text {
+  color: var(--ink-2);
+  font-family: var(--serif);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+.panel mark {
+  color: var(--ink);
+  background-color: color-mix(in srgb, var(--ink) 9%, transparent);
+  box-shadow: inset 0 -1.5px 0 color-mix(in srgb, var(--ink) 45%, transparent);
+  border-radius: 2px;
+}
+.panel .writeback {
+  align-self: center;
+  padding: 8px 14px;
+  border: 1px solid var(--ink-2);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.panel .mail {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.panel .field {
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+@media (max-width: 760px) {
+  .front {
     padding-top: 4rem;
   }
-  .front .shot {
-    margin-top: 4rem;
+  .front .hello {
+    font-size: 3rem;
   }
-  .front section:first-of-type,
-  .front .close {
-    padding-top: 4rem;
+  .front p {
+    font-size: 1.1875rem;
+  }
+  .front .big {
+    font-size: 1.5625rem;
   }
 }

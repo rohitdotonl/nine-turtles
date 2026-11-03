@@ -22,10 +22,10 @@ what's live.
 ## Name and words
 
 - **The name** is *nine turtles*, always lowercase, even at the start of a sentence. At nineturtles.app. (Live)
-- **The headline** is "Read people. Write back." (Live: the website's front page, the sign-in pages and the share picture.)
-- **The first line under it:** "There are people online you'd like to know. Most of them have a blog, a newsletter or a channel." The rest of the paragraph and the website's points are in [`RnD/positioning.md`](RnD/positioning.md), used word for word. (Live on the website's front page; its six points are there as a heading and one line each.)
+- **The headline** is "Read people. Write back." (Live: the sign-in pages and the share picture. The website's front page is Rohit's letter instead, decision 0169.)
+- **The first line under it:** "There are people online you'd like to know. Most of them have a blog, a newsletter or a channel." The rest of the paragraph and the website's points are in [`RnD/positioning.md`](RnD/positioning.md), used word for word. (The source for the brand's words; the front page no longer uses them, decision 0169.)
 - **Who speaks:** "I" when Rohit speaks (website, emails, About, the 404 page). Never "we". The app itself speaks without a pronoun. Details: DESIGN.md → "Voice". (Live)
-- **How it sounds:** warm, never cute. True, specific facts, never invented feelings. No stories or metaphors (letters, fountain pens) told about the brand: it wins on craft. (Live)
+- **How it sounds:** warm, never cute. True, specific facts, never invented feelings. No stories or metaphors (letters, fountain pens) told about the brand: it wins on craft. One exception: the website's front page is Rohit's own letter, his true story in his voice, signed, ending "P.S. Write back to me" (decision 0169). Nothing else takes a letter's form. (Live)
 - **Marketing copy** isn't written fresh by an agent: use settled copy word for word, and ask Rohit before adding any. (Live)
 
 ## Typefaces (Live, decision 0141)
@@ -103,8 +103,8 @@ sleeps, celebrates or stands for a feeling. No mascot.
 
 ## The website
 
-- **Look:** the same as the app: ink only, Literata and Atkinson, one left edge, generous space. The app's grey sidebar band on every page (the direction Rohit chose, "G set as C"), with the logo beside the name at the app sidebar's sizes; a grey bar across the top on a tablet or phone. One text size for the front page (20px). (Live, decision 0153; sizes in DESIGN.md Part 2.)
-- **Copy:** the settled positioning copy, word for word (above, under "Name and words").
+- **Look:** the same as the app: ink only, Literata and Atkinson, one left edge, generous space. The app's grey sidebar band on every page but the front page (the direction Rohit chose, "G set as C"), with the logo beside the name at the app sidebar's sizes; a grey bar across the top on a tablet or phone. (Live, decision 0153.) The front page is a letter: one centred column with the name and places along its top, and its own larger sizes ("Hello," large, the letter at 21px, one line set large) in place of 0153's one 20px size there. (Live, decision 0169; sizes in DESIGN.md Part 2.)
+- **Copy:** the settled positioning copy, word for word (above, under "Name and words"); the front page is Rohit's letter, a draft he edits himself (decision 0169).
 
 ## Where the details live
 

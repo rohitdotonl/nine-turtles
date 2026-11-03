@@ -1,58 +1,54 @@
 ---
 layout: base.njk
 front: true
-description: "Read people. Write back. There are people online you'd like to know. Most of them have a blog, a newsletter or a channel."
-contents:
-  - [people, "People, not sources"]
-  - [write, "Writing back"]
-  - [keep, "You keep who you find"]
-  - [ends, "It ends"]
-  - [between, "Nobody in between"]
-  - [me, "Made by a person"]
+description: "A letter from Rohit, who makes nine turtles: a quiet place to read the people worth knowing, and to write back to them."
 ---
 
-<!-- The front page (BRAND.md → "The website"; DESIGN.md → "The website's front page"): one text size, one left edge, the settled positioning copy word for word (docs/RnD/positioning.md). -->
+<!-- The front page is Rohit's letter (decision 0169; BRAND.md → "The website"; DESIGN.md → "The website's front page"). His story, in his voice, a draft he edits himself. The picture shows only what Write back does today (SPEC section 37). -->
 
-<h1 class="lead">Read people. Write back.</h1>
+<h1 class="hello">Hello,</h1>
 
-<p>There are people online you'd like to know. Most of them have a blog, a newsletter or a channel. nine turtles keeps them in one quiet place, helps you write back to them, and ends when you've read what's there. Built on RSS, the open standard, so your list is always yours.</p>
+<p>years ago, a social network introduced me to strangers. Some of them became friends I still have today. It did something simple: it showed me people, and let us talk.</p>
 
-<p><a class="button" href="{{ site.app }}">Open the app</a></p>
+<p>The big platforms don't do that any more. They're built to keep you scrolling, and they take far more than they give back.</p>
 
-<figure class="shot">
-  <img class="day" src="/images/app-light.webp" width="1600" height="1000" alt="nine turtles on a computer, by day. On the left, a sidebar with Unread, Starred, All and Recently read, two folders and three people. In the middle, Reading Room's three articles, the last line saying That's everything. On the right, the article The pleasure of a slow letter, by Asha Rao, set in a calm serif on white paper, with a quotation and a drawing of a river." />
-  <img class="night" src="/images/app-dark.webp" width="1600" height="1000" alt="nine turtles on a computer, by night: the same sidebar, list and article, in light text on near-black." />
-  <figcaption>nine turtles on a computer, following made-up blogs for this picture.</figcaption>
-</figure>
+<p>I write on my own website. Now and then, an email arrives from someone I've never met, in another country, about something I wrote and something they lived. Every time, I get that old feeling back. The internet can still give you new friends. It just needs a little help.</p>
 
-<section id="people" aria-labelledby="people-h">
-  <h2 id="people-h">People, not sources</h2>
-  <p>A writer's blog, newsletter, videos and podcast, together under their name.</p>
-</section>
+<p class="big">So I made nine turtles: a quiet place to read the people worth knowing, and to write back to them.</p>
 
-<section id="write" aria-labelledby="write-h">
-  <h2 id="write-h">Writing back is built in</h2>
-  <p>Reply by email from the article, privately.</p>
-</section>
+<p>You follow the people whose writing you love: their blogs, newsletters, videos and podcasts, together under their names. You read them without an algorithm, likes or counts. When a line stays with you, you highlight it and write back to them, from your own email.</p>
 
-<section id="keep" aria-labelledby="keep-h">
-  <h2 id="keep-h">You keep who you find</h2>
-  <p>Share any page from a blog into nine turtles and it asks, "Follow this person?"</p>
-</section>
+<div class="steps" role="img" aria-label="Three steps in nine turtles. Read: the essay The pleasure of a slow letter, by Asha Rao. Highlight: a line from it, marked in pencil. Write back: the button Write back to Asha, with her address under it, opens your own email app, addressed to her, with the subject Re: The pleasure of a slow letter, and your words.">
+  <div class="panel">
+    <span class="step">Read</span>
+    <span class="title">The pleasure of a slow letter</span>
+    <span class="by">Asha Rao · 20 Oct</span>
+    <span class="text">Most of what I read now arrives instantly and leaves just as fast.</span>
+  </div>
+  <div class="panel">
+    <span class="step">Highlight</span>
+    <span class="text"><mark>The point of reading slowly is not to read less. It is to let what you read stay.</mark></span>
+  </div>
+  <div class="panel">
+    <span class="step">Write back</span>
+    <span class="writeback">Write back to Asha</span>
+    <span class="by centre">asha@asharao.example</span>
+    <span class="mail">
+      <span class="field">To: asha@asharao.example</span>
+      <span class="field">Re: The pleasure of a slow letter</span>
+      <span class="text">This line stayed with me all week…</span>
+    </span>
+    <span class="by">In your own email app</span>
+  </div>
+</div>
 
-<section id="ends" aria-labelledby="ends-h">
-  <h2 id="ends-h">It ends</h2>
-  <p>No endless scroll, no counts, nothing to check.</p>
-</section>
+<p>It ends when you've read what's there, and there's nothing to check. It's built on RSS, the open standard, so your list is always yours, and you can take everything with you in one click.</p>
 
-<section id="between" aria-labelledby="between-h">
-  <h2 id="between-h">Nobody in between</h2>
-  <p>No algorithm, no likes, and no AI rewriting or ranking what people write. Export everything in one click.</p>
-</section>
+<p>You can start reading today. When I set a price, it will be on the <a href="/pricing/">Pricing</a> page before anyone pays. That's what will keep nine turtles running, and keep it mine to answer for.</p>
 
-<section id="me" aria-labelledby="me-h">
-  <h2 id="me-h">Made by a person you can write to</h2>
-  <p>Write to <a href="mailto:{{ site.email }}">{{ site.email }}</a>. Every message is read by a person, not a bot.</p>
-</section>
+<p class="signature"><span class="name">{{ site.maker }}</span><span class="quiet">I make nine turtles, and I read every email myself.</span></p>
 
-<p class="close"><a class="button" href="{{ site.app }}">Open the app</a></p>
+<div class="letter-end">
+  <p><a class="button" href="{{ site.app }}">Start reading</a></p>
+  <p class="ps">P.S. Write back to me: <a href="mailto:{{ site.email }}">{{ site.email }}</a>. That's the whole idea.</p>
+</div>
