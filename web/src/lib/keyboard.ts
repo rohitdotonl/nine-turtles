@@ -5,10 +5,9 @@
 // it, which group it sits in, and each of its keys with the action that key
 // does (decision 0103). The key reader and the `?` cheat sheet are both made
 // from it, so a key can't work without being listed, or be listed without
-// working. The table holds the keys nine turtles starts with; the reader may
-// give a key another one, or none (decision 0110). Those choices are a
-// KeyMap, and `resolve` lays them over the table, so the key reader, the
-// cheat sheet, tooltips and menus all still come from one place.
+// working. Tooltips and menus read their keys from it too. The keys are the
+// same for every reader: choosing keys of your own (decision 0110) was
+// removed in step 5 of the owner's review.
 import type { View } from "./router";
 
 export type Action =
@@ -70,35 +69,29 @@ export const SHORTCUT_GROUPS = ["Reading", "Getting around", "Tidying up", "Anyw
 export type ShortcutGroup = (typeof SHORTCUT_GROUPS)[number];
 
 /**
- * One key of a shortcut: its name, kept when the key changes ("star"), the
- * key as the cheat sheet prints it ("j", "Shift+A", "Space", "g then u"; ""
- * once the reader has left it with no key), and what it does. A fixed key
- * can't be changed: Enter, Escape, `?` and the `g then …` keys (decision 0110).
+ * One key of a shortcut: its name ("star"), the key as the cheat sheet
+ * prints it ("j", "Shift+A", "Space", "g then u"), and what it does.
  */
-export type Binding = { id: string; key: string; does: Action; fixed: boolean };
+export type Binding = { id: string; key: string; does: Action };
 
-/** A key that does the same as another and isn't printed (`=` is the + key without Shift), only while that one keeps its own key. */
-type Unlisted = { key: string; does: Action; follows: string };
+/** A key that does the same as another and isn't printed (`=` is the + key without Shift). */
+type Unlisted = { key: string; does: Action };
 
 export type Shortcut = {
   /** What it does, in the cheat sheet's words. */
   action: string;
   group: ShortcutGroup;
-  /** Its keys, as the cheat sheet prints them, in order; none once the reader has taken them all away. */
+  /** Its keys, as the cheat sheet prints them, in order. */
   keys: string[];
   /** Each of its keys, with what it does. */
   bindings: readonly Binding[];
   unlisted: readonly Unlisted[];
 };
 
-/** Keys that stay as they are and can't be given to anything else (decision 0110). */
-const FIXED = ["Enter", "Esc", "?"];
-
 type Entry = [id: string, key: string, does: Action];
 
 function shortcut(group: ShortcutGroup, action: string, entries: Entry[], unlisted: Unlisted[] = []): Shortcut {
-  // Two presses (g then u), Enter, Escape and ? stay as they are.
-  const bindings = entries.map(([id, key, does]) => ({ id, key, does, fixed: key.includes(" then ") || FIXED.includes(key) }));
+  const bindings = entries.map(([id, key, does]) => ({ id, key, does }));
   return { action, group, keys: entries.map(([, key]) => key), bindings, unlisted };
 }
 
@@ -133,7 +126,7 @@ export const SHORTCUTS: Shortcut[] = [
       ["text-larger", "+", { kind: "text-size", step: 1 }],
       ["text-smaller", "-", { kind: "text-size", step: -1 }],
     ],
-    [{ key: "=", does: { kind: "text-size", step: 1 }, follows: "text-larger" }],
+    [{ key: "=", does: { kind: "text-size", step: 1 } }],
   ),
   shortcut("Reading", "Star / unstar", [["star", "s", { kind: "star" }]]),
   shortcut("Reading", "Add to collection", [["collect", "l", { kind: "collect" }]]),
@@ -169,110 +162,22 @@ export const SHORTCUTS: Shortcut[] = [
   shortcut("Anywhere", "This list of shortcuts", [["cheat-sheet", "?", { kind: "cheat-sheet" }]]),
 ];
 
-/**
- * The keys the reader chose (decision 0110), by binding name: `{ star: "x" }`,
- * or "" for one left with no key. Only changed keys are kept; the rest are
- * the table's. Saved for the reader's account, so they follow them to every device.
- */
-export type KeyMap = Record<string, string>;
-
 const BINDINGS = new Map(SHORTCUTS.flatMap((each) => each.bindings.map((binding) => [binding.id, binding] as const)));
 
-/** A binding as nine turtles starts, by its name. */
-export function bindingNamed(id: string): Binding | undefined {
-  return BINDINGS.get(id);
-}
-
-/** The reader's key for a binding: their choice, if it's one that can change, or the table's. */
-function chosen(binding: Binding, custom: KeyMap): string {
-  if (binding.fixed || !Object.hasOwn(custom, binding.id)) return binding.key;
-  return custom[binding.id] ?? binding.key;
-}
-
-/** The table with the reader's keys laid over it. */
-export function resolve(custom: KeyMap = {}): Shortcut[] {
-  const resolved = SHORTCUTS.map((each) => {
-    const bindings = each.bindings.map((binding) => ({ ...binding, key: chosen(binding, custom) }));
-    return { ...each, bindings, keys: bindings.map((binding) => binding.key).filter((key) => key !== "") };
-  });
-  // `=` stands in for + only while + is still the + key, and nothing else has been given `=`.
-  const taken = new Set(resolved.flatMap((each) => each.keys));
-  return resolved.map((each) => ({
-    ...each,
-    unlisted: each.unlisted.filter((extra) => !taken.has(extra.key) && each.bindings.find((binding) => binding.id === extra.follows)?.key === BINDINGS.get(extra.follows)?.key),
-  }));
-}
-
-/** The key a menu or tooltip shows for an action, if it has one: `keyFor("star")` is "s". */
-export function keyFor(kind: Action["kind"], custom: KeyMap = {}): string | undefined {
-  for (const each of resolve(custom)) for (const binding of each.bindings) if (binding.does.kind === kind && binding.key !== "") return binding.key;
+/** The key a menu or tooltip shows for an action: `keyFor("star")` is "s". */
+export function keyFor(kind: Action["kind"]): string | undefined {
+  for (const each of SHORTCUTS) for (const binding of each.bindings) if (binding.does.kind === kind) return binding.key;
   return undefined;
 }
 
-/** The key of one binding, by its name ("text-smaller"), if it has one. */
-export function keyOf(id: string, custom: KeyMap = {}): string | undefined {
-  const binding = BINDINGS.get(id);
-  return binding ? chosen(binding, custom) || undefined : undefined;
+/** The key of one binding, by its name ("text-smaller"). */
+export function keyOf(id: string): string | undefined {
+  return BINDINGS.get(id)?.key;
 }
 
-/** Whether the reader has given a binding a key other than its own (or none). */
-export function isChanged(id: string, custom: KeyMap): boolean {
-  const binding = BINDINGS.get(id);
-  return binding !== undefined && chosen(binding, custom) !== binding.key;
-}
-
-/**
- * The binding that has a key now, other than `id` itself: the one a new key
- * would be taken from. Fixed keys can't be chosen, so they never come up.
- */
-export function holderOf(key: string, custom: KeyMap, id?: string): Binding | undefined {
-  for (const each of resolve(custom)) for (const binding of each.bindings) if (binding.key === key && binding.id !== id) return binding;
-  return undefined;
-}
-
-/**
- * Gives a binding a key: its own again (a reset) or a new one. Whatever had
- * that key is left with none, so one key never does two things; the reader
- * has already been asked (decision 0110). Only keys that differ from the
- * table's are kept.
- */
-export function rebind(custom: KeyMap, id: string, key: string): KeyMap {
-  const binding = BINDINGS.get(id);
-  if (!binding || binding.fixed) return custom;
-  const next: KeyMap = { ...custom };
-  const holder = holderOf(key, custom, id);
-  if (holder) next[holder.id] = "";
-  next[id] = key;
-  for (const [name, value] of Object.entries(next)) if (BINDINGS.get(name)?.key === value) delete next[name];
-  return next;
-}
-
-/** Keys pressed on their own that never become a key: Shift, Ctrl and the rest are only held with another. */
-const MODIFIERS = ["Shift", "Control", "Alt", "AltGraph", "Meta", "OS", "Super", "Hyper", "CapsLock", "Fn", "FnLock", "NumLock", "ScrollLock", "Symbol", "SymbolLock", "Dead", "Unidentified", "Process"];
-
-/** Keys other than one character that can be chosen: they do nothing else in nine turtles. */
-const NAMED = ["Home", "End"];
-
-/**
- * What the next press means while a key is being chosen (decision 0110): a
- * key, as the cheat sheet prints it; a plain sentence saying why that one
- * can't be used; or nothing, for Shift and the like on their own, which
- * keep it waiting. Escape (cancel) and Tab (leave) are the caller's.
- */
-export function chooseKey(press: KeyPress): { key: string } | { refused: string } | undefined {
-  if (MODIFIERS.includes(press.key)) return undefined;
-  if (press.ctrlKey || press.metaKey || press.altKey) return { refused: "Keys held with ⌘, Ctrl or Option belong to the browser. Choose another key." };
-  if (press.key === "Enter") return { refused: "Enter presses buttons and opens articles, so it stays as it is. Choose another key." };
-  if (press.key === "?") return { refused: "? always opens this list, so it stays as it is. Choose another key." };
-  // Caps Lock changes a letter's case, not which key it is: G without Shift is g.
-  if (press.key.toLowerCase() === "g" && !press.shiftKey) return { refused: "G starts the Go to keys (G then U and the rest), so it can't be used alone. Choose another key." };
-  if (press.key === " ") return { key: press.shiftKey ? "Shift+Space" : "Space" };
-  if (NAMED.includes(press.key) && !press.shiftKey) return { key: press.key };
-  if ([...press.key].length === 1 && press.key.trim() !== "") {
-    if (/^[a-z]$/i.test(press.key)) return { key: press.shiftKey ? `Shift+${press.key.toUpperCase()}` : press.key.toLowerCase() };
-    return { key: press.key };
-  }
-  return { refused: "That key can't be used for a shortcut. Choose a letter, a number, a sign, Space, Home or End." };
+/** A button's tooltip with its key: "Star (S)". */
+export function tip(label: string, id: string): string {
+  return withKey(label, keyOf(id));
 }
 
 /**
@@ -298,13 +203,12 @@ function nameOf(press: KeyPress): string {
 
 type Tables = { single: Map<string, Action>; sequences: Map<string, Map<string, Action>> };
 
-/** Every key the reader answers, by its name in a key press; two-press keys under their first press. */
-function tablesFor(custom: KeyMap): Tables {
+/** Every key nine turtles answers, by its name in a key press; two-press keys under their first press. */
+function makeTables(): Tables {
   const single = new Map<string, Action>();
   const sequences = new Map<string, Map<string, Action>>();
-  for (const each of resolve(custom)) {
+  for (const each of SHORTCUTS) {
     for (const { key, does } of [...each.bindings, ...each.unlisted]) {
-      if (key === "") continue;
       const presses = key.split(" then ");
       if (presses.length === 2) {
         const [first, second] = presses.map(pressName) as [string, string];
@@ -320,25 +224,18 @@ function tablesFor(custom: KeyMap): Tables {
 /** How long after `g` the second key still counts, in milliseconds. */
 export const SEQUENCE_MS = 1500;
 
+const TABLES = makeTables();
+
 /**
  * Remembers a pending `g` between key presses. `now` is passed in so tests
- * don't depend on the clock; `keys` gives the reader's keys as they are at
- * each press (decision 0110).
+ * don't depend on the clock.
  */
-export function createKeyReader(keys: () => KeyMap = () => ({})) {
+export function createKeyReader() {
   let pending: { first: string; since: number } | undefined;
-  // Made again only when the reader's keys change.
-  let made: { from: string; tables: Tables } | undefined;
-  const tables = (): Tables => {
-    const custom = keys();
-    const from = JSON.stringify(custom);
-    if (made?.from !== from) made = { from, tables: tablesFor(custom) };
-    return made.tables;
-  };
 
   return function read(press: KeyPress, now: number): Action | undefined {
     if (press.isComposing) return undefined;
-    const { single, sequences } = tables();
+    const { single, sequences } = TABLES;
     // Escape always works, even in a field: it's how you leave one.
     if (press.key === "Escape") {
       pending = undefined;
@@ -417,9 +314,9 @@ function notInRiver(each: Shortcut): boolean {
   return each.bindings.some(({ does }) => NOT_IN_RIVER.includes(does.kind) || (does.kind === "go" && does.view === "unread"));
 }
 
-/** The shortcuts the cheat sheet lists, with the reader's keys: those that work in this reading mode. */
-export function shortcutsFor(river: boolean, custom: KeyMap = {}): Shortcut[] {
-  return resolve(custom).filter((each) => !(river && notInRiver(each)));
+/** The shortcuts the cheat sheet lists: those that work in this reading mode. */
+export function shortcutsFor(river: boolean): Shortcut[] {
+  return SHORTCUTS.filter((each) => !(river && notInRiver(each)));
 }
 
 /**
@@ -455,17 +352,6 @@ export function keyCap(press: string): { cap: string; spoken?: string } {
   return { cap: press };
 }
 
-/** A key in plain words, for a sentence or a screen reader: "Shift+O", "G then U", "S". */
-export function keyWords(key: string): string {
-  return key
-    .split(" then ")
-    .map((press) => {
-      const cap = keyCap(press);
-      return cap.spoken ? cap.spoken.replace(" ", "+") : cap.cap === "−" ? "-" : cap.cap;
-    })
-    .join(" then ");
-}
-
 /**
  * A button's tooltip with its key, as SPEC section 19 has it (decision
  * 0064): "Star (S)", "Hide the sidebar ( [ )"; with no key, the name alone.
@@ -474,42 +360,4 @@ export function withKey(label: string, key: string | undefined): string {
   if (!key) return label;
   const cap = keyCap(key).cap;
   return /^[[\]\\]$/.test(cap) ? `${label} ( ${cap} )` : `${label} (${cap})`;
-}
-
-/** What each key that can change does, as the end of a sentence: "Shift+O already marks older as read." */
-const DOES: Record<string, string> = {
-  "next-article": "goes to the next article",
-  "previous-article": "goes to the previous article",
-  "next-unread": "goes to the next unread article",
-  "previous-unread": "goes to the previous unread article",
-  "first-article": "goes to the first article",
-  "last-article": "goes to the last article",
-  open: "opens the article",
-  "page-down": "scrolls down a screen",
-  "page-up": "scrolls up a screen",
-  "open-original": "opens the original",
-  "copy-link": "copies the article's link",
-  "text-larger": "makes the text larger",
-  "text-smaller": "makes the text smaller",
-  star: "stars and unstars",
-  "next-feed": "goes to the next one in the sidebar",
-  "previous-feed": "goes to the previous one in the sidebar",
-  about: "opens the page about them",
-  search: "searches",
-  "toggle-sidebar": "shows and hides the sidebar",
-  "toggle-list": "shows and hides the article list",
-  "toggle-both": "turns full-screen reading on and off",
-  "toggle-folder": "folds and unfolds the folder",
-  "mark-unread": "marks unread",
-  "mark-all-read": "marks all as read",
-  "mark-older-read": "marks older as read",
-  undo: "undoes",
-  refresh: "shows new articles",
-  "edit-place": "edits the person, publication or folder",
-  "add-feed": "adds a person or publication",
-};
-
-/** What a key does, for a sentence: "marks older as read". */
-export function doesWords(id: string): string {
-  return DOES[id] ?? `does ${SHORTCUTS.find((each) => each.bindings.some((binding) => binding.id === id))?.action.toLowerCase() ?? "something else"}`;
 }

@@ -1,53 +1,36 @@
 <!--
   The `?` shortcut list (SPEC section 19). A native dialog: it keeps the
   keyboard inside while open, and Escape closes it. Shortcuts for features
-  that don't exist yet aren't listed.
-
-  It only lists, until the reader presses Change keys… at its foot (or
-  Settings › Keyboard opens it that way): then, in the same sheet, each key
-  that can change becomes a button. Pressing one waits for the next key;
-  a key another shortcut has is offered with Use it / Cancel, and the other
-  is left with no key. Every change is saved at once, for the reader's
-  account (decision 0110).
+  that don't exist yet aren't listed. It only lists: choosing keys of your
+  own (decision 0110) was removed in step 5 of the owner's review. A reader
+  who had chosen some is told once, at its foot, that they're back to these.
 -->
 <script lang="ts">
-  import { tick } from "svelte";
+  import { untrack } from "svelte";
   import Icon from "./Icon.svelte";
   import { helpPage } from "./router";
-  import {
-    SHORTCUT_GROUPS,
-    bindingNamed,
-    chooseKey,
-    doesWords,
-    holderOf,
-    isChanged,
-    keyCap,
-    keyOf,
-    keyWords,
-    rebind,
-    shortcutMatches,
-    shortcutsFor,
-    type Binding,
-    type KeyMap,
-  } from "./keyboard";
-  import { chooseKeys, keys } from "./keys.svelte";
+  import { SHORTCUT_GROUPS, keyCap, shortcutMatches, shortcutsFor } from "./keyboard";
 
   let {
     open = $bindable(),
     river = false,
-    editing = $bindable(false),
+    keysReset = false,
+    onKeysSeen,
   }: {
     open: boolean;
-    /** River mode: Go to Unread and Mark all as read aren't listed (while changing keys, everything is). */
+    /** River mode: Go to Unread and Mark all as read aren't listed. */
     river?: boolean;
-    /** Changing keys (decision 0110): each key that can change is a button. */
-    editing?: boolean;
+    /** The reader had keys of their own, now back to these, and hasn't been told. */
+    keysReset?: boolean;
+    /** The foot has told them: it isn't said again. */
+    onKeysSeen?: () => void;
   } = $props();
 
   let dialog: HTMLDialogElement | undefined = $state();
   let heading: HTMLHeadingElement | undefined = $state();
   let list: HTMLDivElement | undefined = $state();
-  let changeButton: HTMLButtonElement | undefined = $state();
+  /** Said at the foot while this list is open, once told. */
+  let telling = $state(false);
   /** The list has scrolled under the title: a hairline parts them. */
   let scrolled = $state(false);
   /** More of the list lies below what's shown: a hairline marks the foot's edge, so a row cut there reads as scrolling, not clipping. */
@@ -70,8 +53,7 @@
 
   /**
    * The groups in each of the three columns; the search filters close the
-   * last. Three since decision 0110 added keys: two no longer fit an
-   * 800px-tall window.
+   * last. Three, so the list fits an 800px-tall window.
    */
   const COLUMNS: (typeof SHORTCUT_GROUPS)[number][][] = [["Reading"], ["Getting around", "Anywhere"], ["Tidying up"]];
 
@@ -79,156 +61,13 @@
   let find = $state("");
   let field: HTMLInputElement | undefined = $state();
   const wanted = $derived(find.trim().toLowerCase());
-  // While changing keys every shortcut is listed, river mode or not, so any key can be set.
-  const shown = $derived(shortcutsFor(river && !editing, keys.chosen).filter((each) => shortcutMatches(each, find)));
-  const filtersShown = $derived(editing ? [] : FILTERS.filter(([filter, meaning]) => wanted === "" || filter.includes(wanted) || meaning.toLowerCase().includes(wanted)));
+  const shown = $derived(shortcutsFor(river).filter((each) => shortcutMatches(each, find)));
+  const filtersShown = $derived(FILTERS.filter(([filter, meaning]) => wanted === "" || filter.includes(wanted) || meaning.toLowerCase().includes(wanted)));
   const nothing = $derived(shown.length === 0 && filtersShown.length === 0);
-  const changedAny = $derived(Object.keys(keys.chosen).some((id) => isChanged(id, keys.chosen)));
   $effect(() => {
     void find;
-    void editing;
     measure();
   });
-
-  /** The key waiting to be pressed for a binding, by its name. */
-  let waiting: string | undefined = $state();
-  /** A key another binding has, offered to this one: Use it or Cancel. */
-  let asking: { id: string; key: string; holder: Binding } | undefined = $state();
-  /** Why the key just pressed can't be used, under the row that waits. */
-  let problem: { id: string; text: string } | undefined = $state();
-  /** What screen readers hear about each step. */
-  let said = $state("");
-
-  /** A sentence about a key, starting with a capital: "Shift+O already marks older as read." */
-  const capital = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
-
-  function say(text: string) {
-    // The same words twice are still heard: empty the line first.
-    said = "";
-    void tick().then(() => (said = text));
-  }
-
-  async function focusBinding(id: string) {
-    await tick();
-    dialog?.querySelector<HTMLElement>(`[data-binding="${id}"]`)?.focus();
-  }
-
-  function startEditing() {
-    editing = true;
-    say("Changing keys. Choose a key to change it; Done when you've finished.");
-    void tick().then(() => dialog?.querySelector<HTMLElement>("[data-binding]")?.focus());
-  }
-
-  function stopEditing() {
-    clearPending();
-    editing = false;
-    say("");
-    void tick().then(() => changeButton?.focus());
-  }
-
-  function clearPending() {
-    waiting = undefined;
-    asking = undefined;
-    problem = undefined;
-  }
-
-  /** A key's button pressed: wait for the new key, or stop waiting if it was. */
-  function choose(id: string) {
-    if (waiting === id) {
-      clearPending();
-      say("Not changed.");
-      return;
-    }
-    asking = undefined;
-    problem = undefined;
-    waiting = id;
-    say(`Press the new key that ${doesWords(id)}. Escape cancels.`);
-  }
-
-  /** The next key pressed while one waits: it becomes the key, or says why it can't. */
-  function pressedWhileWaiting(event: KeyboardEvent) {
-    if (asking && event.key === "Escape") {
-      event.preventDefault();
-      event.stopPropagation();
-      cancelAsking();
-      return;
-    }
-    const id = waiting;
-    if (!id) return;
-    // Tab leaves for the next control, as it always does; nothing changes.
-    if (event.key === "Tab") {
-      clearPending();
-      say("Not changed.");
-      return;
-    }
-    event.preventDefault();
-    event.stopPropagation();
-    if (event.key === "Escape") {
-      clearPending();
-      say("Not changed.");
-      return;
-    }
-    const answer = chooseKey(event);
-    if (!answer) return;
-    if ("refused" in answer) {
-      problem = { id, text: answer.refused };
-      say(answer.refused);
-      return;
-    }
-    offer(id, answer.key);
-  }
-
-  /** A key for a binding: given at once, or, if another binding has it, asked about first. */
-  function offer(id: string, key: string) {
-    waiting = undefined;
-    problem = undefined;
-    if (keyOf(id, keys.chosen) === key) {
-      say(`Not changed: it's ${keyWords(key)} already.`);
-      return;
-    }
-    const holder = holderOf(key, keys.chosen, id);
-    if (holder) {
-      asking = { id, key, holder };
-      say(`${keyWords(key)} already ${doesWords(holder.id)}. Use it here instead?`);
-      void tick().then(() => dialog?.querySelector<HTMLElement>("[data-use-it]")?.focus());
-      return;
-    }
-    give(id, key);
-  }
-
-  function give(id: string, key: string) {
-    const holder = holderOf(key, keys.chosen, id);
-    asking = undefined;
-    // "X now stars and unstars. Nothing marks older as read now."
-    save(rebind(keys.chosen, id, key), `${keyWords(key)} now ${doesWords(id)}.${holder ? ` Nothing ${doesWords(holder.id)} now.` : ""}`);
-    void focusBinding(id);
-  }
-
-  function cancelAsking() {
-    const id = asking?.id;
-    asking = undefined;
-    say("Not changed.");
-    if (id) void focusBinding(id);
-  }
-
-  /** Saves the keys at once; if they can't be saved they go back, and the list says so. */
-  function save(next: KeyMap, done: string) {
-    say(done);
-    chooseKeys(next).catch(() => say("Your keys couldn't be saved. Try again in a moment."));
-  }
-
-  /** A binding's Reset: its own key again, asked about first if another binding has it now. */
-  function reset(id: string) {
-    const own = bindingNamed(id)?.key ?? "";
-    clearPending();
-    offer(id, own);
-  }
-
-  function resetAll() {
-    if (!changedAny) return;
-    clearPending();
-    save({}, "Every key is back as it was.");
-  }
 
   /**
    * Escape empties the find field first, wherever the keyboard is in the list, and puts the keyboard
@@ -236,7 +75,6 @@
    * the field, starts a find: no need to Tab there first.
    */
   function typed(event: KeyboardEvent) {
-    if (waiting || asking) return;
     if (event.key === "Escape" && find !== "") {
       event.preventDefault();
       find = "";
@@ -256,21 +94,21 @@
       // own, since it can't be pressed (app.css; decision 0042).
       heading?.focus();
       measure();
-      if (editing) say("Changing keys. Choose a key to change it; Done when you've finished.");
     }
     if (!open && dialog?.open) dialog.close();
     if (!open) {
       find = "";
-      editing = false;
-      clearPending();
+      telling = false;
     }
   });
 
-  /** What a key's button is called, for screen readers: what it does and its key now. */
-  function buttonName(binding: Binding): string {
-    if (waiting === binding.id) return `Press the new key that ${doesWords(binding.id)}`;
-    return `Change the key that ${doesWords(binding.id)}, now ${binding.key ? keyWords(binding.key) : "no key"}`;
-  }
+  // Told while the list is open, even if the reader's settings arrive after it opened.
+  $effect(() => {
+    if (open && keysReset) {
+      telling = true;
+      untrack(() => onKeysSeen?.());
+    }
+  });
 </script>
 
 <!--
@@ -299,11 +137,6 @@
   bind:this={dialog}
   aria-labelledby="shortcuts-heading"
   onclose={() => (open = false)}
-  oncancel={(event) => {
-    // Escape while a key is awaited or a question is open answers that, never closes the list.
-    if (waiting || asking) event.preventDefault();
-  }}
-  onkeydowncapture={pressedWhileWaiting}
   onkeydown={typed}
   class="shortcuts floating dimmed m-auto w-[min(52rem,calc(100vw-2rem))] overflow-hidden p-0 text-ink"
 >
@@ -314,7 +147,7 @@
       the field takes a line of its own under them (decision 0062).
     -->
     <div class={["shortcuts-head grid shrink-0 items-center gap-x-4 border-b pr-4 pl-6", scrolled ? "border-ink/10" : "border-transparent"]}>
-      <h2 id="shortcuts-heading" tabindex="-1" bind:this={heading} class="sheet-title [grid-area:title]">{editing ? "Change keys" : "Keyboard shortcuts"}</h2>
+      <h2 id="shortcuts-heading" tabindex="-1" bind:this={heading} class="sheet-title [grid-area:title]">Keyboard shortcuts</h2>
       <div class="relative [grid-area:find]">
         <span class="pointer-events-none absolute top-0 left-3 flex h-(--search-height) w-4 items-center justify-center text-muted"><Icon name="search" size={14} /></span>
         <label for="shortcut-find" class="sr-only">Find a shortcut</label>
@@ -333,8 +166,6 @@
       <button type="button" onclick={() => (open = false)} aria-label="Close" title="Close (Esc)" class="btn-quiet btn-icon [grid-area:close]"><Icon name="close" size={18} /></button>
     </div>
     <p id="shortcut-count" role="status" class="sr-only">{wanted === "" ? "" : nothing ? "No shortcut matches." : `${shown.length + filtersShown.length} found.`}</p>
-    <!-- Each step of changing a key, for screen readers: waiting, refused, asked, changed (decision 0110). -->
-    <p role="status" class="sr-only" data-testid="keys-said">{said}</p>
     <!-- A Tab stop of its own, so the list can be scrolled with the keyboard (axe: scrollable-region-focusable). -->
     <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
     <div
@@ -348,14 +179,11 @@
       <!--
         Three columns on a wide screen (two on a medium one), each its own stack, so a short
         group never leaves a hole beside a long one: reading; getting around and anywhere;
-        tidying up and the search filters (decisions 0049, 0110). On a narrow screen they
+        tidying up and the search filters (decision 0049). On a narrow screen they
         stack in that order.
       -->
       {#if nothing}
         <p class="py-6 text-center text-small text-muted">No shortcut matches “{find.trim()}”.</p>
-      {/if}
-      {#if editing}
-        <p class="mb-3 text-small text-ink-2">Choose a key to change it, then press the new one. Enter, Escape, ? and the G keys stay as they are.</p>
       {/if}
       <div class="grid gap-x-10 gap-y-6 md:grid-cols-2 lg:grid-cols-3">
         {#each COLUMNS as column, side (side)}
@@ -367,54 +195,15 @@
                 <table class="w-full text-left text-small">
                   <tbody>
                     {#each shown.filter((each) => each.group === group) as shortcut (shortcut.action)}
-                      {@const pending = shortcut.bindings.find((binding) => binding.id === waiting || binding.id === asking?.id || binding.id === problem?.id)}
-                      <tr class={["border-ink/[0.07]", pending ? "" : "border-b last:border-0"]}>
-                        <td class={["pr-4 align-middle", editing ? "py-0.5" : "py-[3px]"]}>{shortcut.action}</td>
+                      <tr class="border-b border-ink/[0.07] last:border-0">
+                        <td class="py-[3px] pr-4 align-middle">{shortcut.action}</td>
                         <!-- Each shortcut stays whole; on a narrow phone the alternatives wrap at the slashes. -->
-                        <td class={["text-right align-middle whitespace-nowrap", editing ? "py-0.5" : "py-[3px]"]}>
-                          {#if editing}
-                            {#each shortcut.bindings as binding, index (binding.id)}{#if index > 0}<span class="text-muted">{" / "}</span>{/if}{#if binding.fixed}<span
-                                  class="inline-flex min-h-11 items-center px-1">{@render caps(binding.key)}</span
-                                >{:else}<button
-                                  type="button"
-                                  data-binding={binding.id}
-                                  aria-label={buttonName(binding)}
-                                  onclick={() => choose(binding.id)}
-                                  class={["key-choice", waiting === binding.id && "key-choice-waiting"]}
-                                  >{#if waiting === binding.id}Press the new key…{:else if binding.key}{@render caps(binding.key)}{:else}<span class="text-muted"
-                                      >No key</span
-                                    >{/if}</button
-                                >{#if isChanged(binding.id, keys.chosen)}<button
-                                    type="button"
-                                    onclick={() => reset(binding.id)}
-                                    aria-label={`Reset the key that ${doesWords(binding.id)} to ${keyWords(bindingNamed(binding.id)?.key ?? "")}`}
-                                    class="text-link ml-1 px-1 text-meta">Reset</button
-                                  >{/if}{/if}{/each}
-                          {:else if shortcut.keys.length === 0}
-                            <span class="text-muted">No key</span>
-                          {:else}
-                            {#each shortcut.keys as key, index (key)}{#if index > 0}{" "}{/if}<span class="whitespace-nowrap"
-                                >{#if index > 0}<span class="text-muted">{"/ "}</span>{/if}{@render caps(key)}</span
-                              >{/each}
-                          {/if}
+                        <td class="py-[3px] text-right align-middle whitespace-nowrap">
+                          {#each shortcut.keys as key, index (key)}{#if index > 0}{" "}{/if}<span class="whitespace-nowrap"
+                              >{#if index > 0}<span class="text-muted">{"/ "}</span>{/if}{@render caps(key)}</span
+                            >{/each}
                         </td>
                       </tr>
-                      {#if editing && pending}
-                        <!-- In place, under the row: why that key can't be used, or whether to take it from another shortcut. -->
-                        <tr class="border-b border-ink/[0.07] last:border-0">
-                          <td colspan="2" class="pb-2 text-right">
-                            {#if asking && asking.id === pending.id}
-                              <p class="text-small text-ink-2">{capital(`${keyWords(asking.key)} already ${doesWords(asking.holder.id)}.`)} Use it here instead?</p>
-                              <div class="mt-1 flex justify-end gap-3">
-                                <button type="button" onclick={cancelAsking} class="btn text-small">Cancel</button>
-                                <button type="button" data-use-it onclick={() => asking && give(asking.id, asking.key)} class="btn-primary text-small">Use it</button>
-                              </div>
-                            {:else if problem && problem.id === pending.id}
-                              <p class="text-small text-ink-2">{problem.text}</p>
-                            {/if}
-                          </td>
-                        </tr>
-                      {/if}
                     {/each}
                   </tbody>
                 </table>
@@ -439,27 +228,19 @@
           </div>
         {/each}
       </div>
-      {#if !editing}
-        <!--
-          A footer under both columns, the full width, so it never ends one column early or lands mid-list on a phone (decision 0052).
-          Change keys… is the quiet way in to choosing keys: words, never a button that shouts (decision 0110).
-        -->
-        <div class="mt-4 flex flex-wrap items-center justify-between gap-x-4">
-          <p class="text-meta text-muted">Tab, Enter and Escape always work too. Shortcuts don't fire while you're typing in a field.</p>
-          <span class="flex gap-x-4">
-            <a href={helpPage("every-keyboard-key")} target="_blank" rel="noopener" class="text-link">Help<span class="sr-only"> with keys (on the nine turtles website)</span></a>
-            <button type="button" bind:this={changeButton} onclick={startEditing} class="text-link keyboard-hint">Change keys…</button>
-          </span>
-        </div>
-      {/if}
-    </div>
-    {#if editing}
-      <!-- While changing keys, the sheet's own row of actions, always in view: Reset all keys at the left, Done at the right. -->
-      <div class="sheet-actions shrink-0 justify-between px-6 pt-4">
-        <button type="button" onclick={resetAll} aria-disabled={!changedAny} class={["btn", !changedAny && "text-muted"]}>Reset all keys</button>
-        <button type="button" onclick={stopEditing} class="btn-primary">Done</button>
+      <!-- A footer under both columns, the full width, so it never ends one column early or lands mid-list on a phone (decision 0052). -->
+      <div class="mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <p class="text-meta text-muted">Tab, Enter and Escape always work too. Shortcuts don't fire while you're typing in a field.</p>
+        <a href={helpPage("every-keyboard-key")} target="_blank" rel="noopener" class="text-link">Help<span class="sr-only"> with keys (on the nine turtles website)</span></a>
+        {#if telling}
+          <!-- Said once, to a reader who had chosen keys of their own (step 5 of the owner's review). -->
+          <p class="w-full text-meta text-ink-2" data-testid="keys-reset">
+            You can't choose your own keys any more, so every shortcut is back to the key shown here. If you miss it, write to
+            <a href="mailto:hello@nineturtles.app" class="text-link">hello@nineturtles.app</a>.
+          </p>
+        {/if}
       </div>
-    {/if}
+    </div>
   </div>
 </dialog>
 
@@ -522,40 +303,11 @@
       min-height: 4rem;
     }
   }
-  /* Wide enough for three columns: the card widens to hold them, still 32px clear of the window's sides (decision 0110). */
+  /* Wide enough for three columns: the card widens to hold them, still 32px clear of the window's sides. */
   @media (width >= 64rem) {
     .shortcuts {
       width: min(72rem, 100vw - 4rem);
     }
-  }
-  /*
-    While changing keys (decision 0110), a key that can change is a button
-    around its cap: 44px to press, with no edge of its own (the cap is the
-    edge), a faint tone under the pointer as every quiet button has. Waiting
-    for a key, it says so in words on the same faint tone, so where the
-    next key goes is plain without color.
-  */
-  .key-choice {
-    display: inline-flex;
-    min-width: 2.75rem;
-    min-height: 2.75rem;
-    align-items: center;
-    justify-content: center;
-    gap: 0.25rem;
-    padding-inline: 0.375rem;
-    border-radius: 0.375rem;
-    cursor: pointer;
-    touch-action: manipulation;
-  }
-  @media (hover: hover) {
-    .key-choice:hover {
-      background-color: var(--hover);
-    }
-  }
-  .key-choice-waiting {
-    padding-inline: 0.625rem;
-    background-color: var(--tone);
-    color: var(--ink);
   }
   /* The list's own Tab stop rings just inside its edge, so the card's edge never clips the outline. */
   .shortcut-region:focus-visible {

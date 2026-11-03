@@ -16,7 +16,7 @@ export type MenuScene = {
   river: boolean;
   /** A search's results are showing. */
   searching: boolean;
-  /** The list is Recently read or Up Next (each in its own order). */
+  /** The list is Recently read (in its own order). */
   ownOrder: boolean;
   /** The list is Unread itself. */
   unread: boolean;
@@ -65,7 +65,6 @@ export function listMenu(scene: MenuScene, hands: MenuHands): MenuGroup[] {
   const key = hands.shortcut;
   const refresh = { label: "Refresh", shortcut: key("refresh"), onSelect: () => hands.refresh() };
   // Recently read is in the order opened, and what's in it was read already: only Refresh applies.
-  // So is Up Next, in the reader's own order (decision 0113).
   if (!scene.searching && scene.ownOrder) return [{ items: [refresh] }];
   // Shift+O marks what's older: below the chosen article when newest first, above it when oldest first (decision 0103).
   // In search results, ordered by how well they match, older goes by date, so neither row shows the key.

@@ -4,21 +4,15 @@ import { feedNextTo } from "./feeds";
 import {
   SEQUENCE_MS,
   SHORTCUTS,
-  chooseKey,
   createKeyReader,
-  doesWords,
-  holderOf,
-  isChanged,
   keyCap,
   keyFor,
   keyOf,
-  keyWords,
   pressName,
-  rebind,
   shortcutMatches,
   shortcutsFor,
+  tip,
   withKey,
-  type KeyMap,
   type KeyPress,
 } from "./keyboard";
 
@@ -112,11 +106,6 @@ describe("keyboard shortcuts", () => {
     expect(read(press("a", { shiftKey: true }), 0)).toEqual({ kind: "mark-all-read" });
     read(press("G", { shiftKey: false }), 0);
     expect(read(press("U", { shiftKey: false }), 10)).toEqual({ kind: "go", view: "unread" });
-    expect(chooseKey(press("X", { shiftKey: false }))).toEqual({ key: "x" });
-    expect(chooseKey(press("x", { shiftKey: true }))).toEqual({ key: "Shift+X" });
-    // G starts the Go to keys, Caps Lock or not; Shift+G is free to choose.
-    expect(chooseKey(press("G", { shiftKey: false }))).toHaveProperty("refused");
-    expect(chooseKey(press("g", { shiftKey: true }))).toEqual({ key: "Shift+G" });
   });
 
   it("leaves keys alone while a word is being composed (Chinese, Japanese and the like)", () => {
@@ -206,23 +195,7 @@ describe("keyboard shortcuts", () => {
  * pressed, alone and after `g`; any that does something must be listed,
  * and every listed key must do what its row says.
  */
-/**
- * The owner's check (decision 0103): the keys that work and the keys the
- * cheat sheet lists can never drift apart. Every key a keyboard can type is
- * pressed, alone and after `g`; any that does something must be listed,
- * and every listed key must do what its row says. It must hold with the
- * reader's own keys too (decision 0110): a few sets of changed keys are tried.
- */
-const CUSTOM: [string, KeyMap][] = [
-  ["nine turtles' own keys", {}],
-  ["star moved to x", { star: "x" }],
-  ["Shift+O taken by star, mark older left with no key", { star: "Shift+O", "mark-older-read": "" }],
-  ["+ moved to ], so = no longer stands in, and the list key left with none", { "text-larger": "]", "toggle-list": "" }],
-  ["Space and Home swapped with letters", { "page-down": "q", "first-article": "Space", "next-article": "Home", "previous-article": "" }],
-  ["= given to undo", { undo: "=" }],
-];
-
-describe.each(CUSTOM)("the cheat sheet and the keys agree: %s", (_, custom) => {
+describe("the cheat sheet and the keys agree", () => {
   const OTHER_KEYS = ["Enter", "Escape", "Tab", "Backspace", "Delete", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End", "PageUp", "PageDown"];
   const presses: KeyPress[] = [
     ...Array.from({ length: 126 - 32 }, (_, index) => press(String.fromCharCode(33 + index))),
@@ -231,7 +204,7 @@ describe.each(CUSTOM)("the cheat sheet and the keys agree: %s", (_, custom) => {
     ...OTHER_KEYS.map((key) => press(key)),
   ].filter((each) => each.key.length > 0 && each.key !== "\u007f");
   const spelled = (each: KeyPress) => (each.key === " " ? (each.shiftKey ? "Shift+ " : " ") : each.key);
-  const reader = () => createKeyReader(() => custom);
+  const reader = () => createKeyReader();
 
   /** Every key the reader answers, as presses, alone or as the second after a first press that waits. */
   function answered(): { keys: string; does: unknown }[] {
@@ -256,14 +229,14 @@ describe.each(CUSTOM)("the cheat sheet and the keys agree: %s", (_, custom) => {
     return found;
   }
 
-  const sheet = shortcutsFor(false, custom);
+  const sheet = shortcutsFor(false);
   const listed = sheet.flatMap((each) =>
-    each.bindings.filter(({ key }) => key !== "").map(({ key, does }) => ({ keys: key.split(" then ").map(pressName).join(" then "), does })),
+    each.bindings.map(({ key, does }) => ({ keys: key.split(" then ").map(pressName).join(" then "), does })),
   );
   const unlisted = sheet.flatMap((each) => each.unlisted.map((extra) => pressName(extra.key)));
 
-  it("lists every key that does something (only = stands in for +, unprinted, while + is the + key)", () => {
-    expect(unlisted).toEqual(custom["text-larger"] || custom.undo === "=" ? [] : ["="]);
+  it("lists every key that does something (only = stands in for +, unprinted)", () => {
+    expect(unlisted).toEqual(["="]);
     const missing = answered().filter((each) => !listed.some((entry) => entry.keys === each.keys) && !unlisted.includes(each.keys));
     expect(missing).toEqual([]);
   });
@@ -273,14 +246,9 @@ describe.each(CUSTOM)("the cheat sheet and the keys agree: %s", (_, custom) => {
     for (const entry of listed) expect(found.find((each) => each.keys === entry.keys)?.does, entry.keys).toEqual(entry.does);
   });
 
-  it("prints each row's keys as the reader chose them, and never one key twice", () => {
+  it("never prints one key twice", () => {
     const printed = sheet.flatMap((each) => each.keys);
     expect(new Set(printed).size).toBe(printed.length);
-    for (const [id, key] of Object.entries(custom)) {
-      const row = sheet.find((each) => each.bindings.some((binding) => binding.id === id));
-      expect(row?.bindings.find((binding) => binding.id === id)?.key).toBe(key);
-      if (key === "") expect(row?.keys).not.toContain(keyOf(id));
-    }
   });
 });
 
@@ -290,81 +258,15 @@ describe("keys printed as words", () => {
     expect(keyCap("Shift+Space")).toEqual({ cap: "⇧Space", spoken: "Shift Space" });
   });
 
-  it("says keys in plain words for sentences and tooltips", () => {
-    expect(keyWords("Shift+O")).toBe("Shift+O");
-    expect(keyWords("s")).toBe("S");
-    expect(keyWords("g then u")).toBe("G then U");
-    expect(keyWords("-")).toBe("-");
+  it("gives menus and tooltips their keys", () => {
+    expect(keyFor("star")).toBe("s");
+    expect(keyOf("text-smaller")).toBe("-");
+    expect(keyOf("no-such-key")).toBeUndefined();
+    expect(tip("Star", "star")).toBe("Star (S)");
     expect(withKey("Star", "s")).toBe("Star (S)");
     expect(withKey("Star", undefined)).toBe("Star");
     expect(withKey("Hide the sidebar", "[")).toBe("Hide the sidebar ( [ )");
     expect(withKey("Smaller text", "-")).toBe("Smaller text (−)");
-  });
-});
-
-/** Choosing keys (decision 0110): what a press becomes, and what happens to the key it was. */
-describe("choosing keys", () => {
-  it("turns a press into a key as the cheat sheet prints it", () => {
-    expect(chooseKey(press("x"))).toEqual({ key: "x" });
-    expect(chooseKey(press("X", { shiftKey: true }))).toEqual({ key: "Shift+X" });
-    expect(chooseKey(press("!", { shiftKey: true }))).toEqual({ key: "!" });
-    expect(chooseKey(press(" "))).toEqual({ key: "Space" });
-    expect(chooseKey(press(" ", { shiftKey: true }))).toEqual({ key: "Shift+Space" });
-    expect(chooseKey(press("Home"))).toEqual({ key: "Home" });
-    expect(chooseKey(press("5"))).toEqual({ key: "5" });
-  });
-
-  it("keeps waiting while only Shift, Ctrl, Option or ⌘ is pressed", () => {
-    for (const key of ["Shift", "Control", "Alt", "Meta", "CapsLock"]) expect(chooseKey(press(key))).toBeUndefined();
-  });
-
-  it("refuses keys that can't be shortcuts, saying why", () => {
-    for (const refused of [
-      press("Enter"),
-      press("?"),
-      press("g"),
-      press("Tab"),
-      press("ArrowDown"),
-      press("F5"),
-      press("Home", { shiftKey: true }),
-      press("s", { metaKey: true }),
-      press("s", { ctrlKey: true }),
-      press("s", { altKey: true }),
-    ]) {
-      const answer = chooseKey(refused);
-      expect(answer && "refused" in answer && answer.refused.length > 0, refused.key).toBe(true);
-    }
-  });
-
-  it("gives a key that's free at once, keeping only what differs from nine turtles' own", () => {
-    expect(holderOf("x", {}, "star")).toBeUndefined();
-    const moved = rebind({}, "star", "x");
-    expect(moved).toEqual({ star: "x" });
-    expect(keyOf("star", moved)).toBe("x");
-    expect(isChanged("star", moved)).toBe(true);
-    // Back to its own key: nothing is kept.
-    expect(rebind(moved, "star", "s")).toEqual({});
-  });
-
-  it("takes a key from the shortcut that had it, which is left with no key", () => {
-    expect(holderOf("Shift+O", {}, "star")?.id).toBe("mark-older-read");
-    expect(`${keyWords("Shift+O")} already ${doesWords("mark-older-read")}.`).toBe("Shift+O already marks older as read.");
-    const taken = rebind({}, "star", "Shift+O");
-    expect(taken).toEqual({ star: "Shift+O", "mark-older-read": "" });
-    expect(keyFor("mark-older-read", taken)).toBeUndefined();
-    expect(shortcutsFor(false, taken).find((each) => each.action === "Mark older as read")?.keys).toEqual([]);
-    expect(holderOf("Shift+O", taken, "mark-older-read")?.id).toBe("star");
-    expect(rebind(taken, "mark-older-read", "Shift+O")).toEqual({ star: "" });
-  });
-
-  it("never changes a fixed key", () => {
-    expect(rebind({}, "cheat-sheet", "x")).toEqual({});
-    expect(rebind({}, "go-unread", "x")).toEqual({});
-    expect(keyOf("escape", { escape: "x" })).toBe("Esc");
-  });
-
-  it("puts every key back with an empty set", () => {
-    expect(shortcutsFor(false, {})).toEqual(shortcutsFor(false));
   });
 });
 
@@ -420,17 +322,7 @@ describe("the new keys", () => {
     read(press("g"), 0);
     expect(read(press(","), 10)).toEqual({ kind: "go-to", path: "/settings" });
   });
-
-  it("follows the reader's keys as they change, without a new reader", () => {
-    let custom: KeyMap = {};
-    const read = createKeyReader(() => custom);
-    expect(read(press("s"), 0)).toEqual({ kind: "star" });
-    custom = { star: "x" };
-    expect(read(press("s"), 0)).toBeUndefined();
-    expect(read(press("x"), 0)).toEqual({ kind: "star" });
-  });
 });
-
 
 describe("finding a shortcut (decision 0062)", () => {
   const star = { keys: ["s"], action: "Star / unstar" };

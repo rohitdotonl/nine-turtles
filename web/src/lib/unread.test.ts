@@ -50,30 +50,27 @@ describe("the reading settings", () => {
   it("read the wait, with calm defaults for anything not understood", async () => {
     const stored = new Map<string, string>();
     vi.stubGlobal("localStorage", { getItem: (key: string) => stored.get(key) ?? null, setItem: (key: string, value: string) => stored.set(key, value) });
-    server({ sort: "oldest", mode: "inbox", let_go: "two-weeks", keys: { star: "x", odd: 3 } });
-    let { loadSettings, lastKeys } = await load();
-    expect(await loadSettings()).toEqual({ sort: "oldest", mode: "inbox", letGo: "two-weeks", keys: { star: "x" }, hidden: [] });
-    // This device remembers the reader's keys (decision 0110), so a changed key works from the first press.
-    expect(lastKeys()).toEqual({ star: "x" });
+    server({ sort: "oldest", mode: "inbox", let_go: "two-weeks", keys_reset: true });
+    let { loadSettings } = await load();
+    expect(await loadSettings()).toEqual({ sort: "oldest", mode: "inbox", letGo: "two-weeks", keysReset: true, hidden: [] });
 
     server({ sort: "newest", mode: "inbox", let_go: "someday" });
     ({ loadSettings } = await load());
-    expect(await loadSettings()).toEqual({ sort: "newest", mode: "inbox", letGo: "never", keys: {}, hidden: [] });
+    expect(await loadSettings()).toEqual({ sort: "newest", mode: "inbox", letGo: "never", keysReset: false, hidden: [] });
 
-    // Unreachable: the wait is unknown, so its choices wait rather than show Never; the keys are this device's.
-    stored.set("nine-turtles.keys", JSON.stringify({ star: "z" }));
+    // Unreachable: the wait is unknown, so its choices wait rather than show Never; nothing is said about keys.
     vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("Failed to fetch"); }));
     ({ loadSettings } = await load());
     const offline = await loadSettings();
     expect(offline.letGo).toBeUndefined();
-    expect(offline.keys).toEqual({ star: "z" });
+    expect(offline.keysReset).toBe(false);
   });
 
   it("save each setting on its own", async () => {
     const sent = server({});
-    const { saveLetGo, saveKeys } = await load();
+    const { saveLetGo, saveKeysSeen } = await load();
     await saveLetGo("month");
-    await saveKeys({ star: "x" });
-    expect(sent.map((each) => each.body)).toEqual([{ let_go: "month" }, { keys: { star: "x" } }]);
+    await saveKeysSeen();
+    expect(sent.map((each) => each.body)).toEqual([{ let_go: "month" }, { keys_seen: true }]);
   });
 });

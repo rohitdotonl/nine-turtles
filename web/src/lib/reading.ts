@@ -1,9 +1,8 @@
 // The reading settings shared across the reader's devices (SPEC section 18):
-// the sort order, the reading mode, when unread lets go, the
-// reader's keys and the lists the sidebar hides, with this device's copies
-// so the app opens in them before the server answers.
+// the sort order, the reading mode, when unread lets go and the lists the
+// sidebar hides, with this device's copies so the app opens in them before
+// the server answers.
 import { HIDEABLE, type Hideable } from "./router";
-import type { KeyMap } from "./keyboard";
 import { getJson, isRecord } from "./http";
 import { deviceJson, deviceText, setDeviceText } from "./device";
 import { send } from "./saving";
@@ -35,17 +34,16 @@ export type Reading = {
   sort: Order;
   mode: ReadingMode;
   letGo: LetGo | undefined;
-  keys: KeyMap;
+  /** The reader had keys of their own, now back to nine turtles' (step 5 of the owner's review), and hasn't been told. */
+  keysReset: boolean;
   hidden: Hideable[];
 };
 
 /**
  * The settings shared across the reader's devices: the sort order, the
- * reading mode, when unread lets go, the keys
- * the reader chose and which lists the sidebar hides. Newest first if the
- * server can't say, the wait unknown, and the mode, keys and hidden
- * lists this device last saw (inbox, nine turtles' own keys, none,
- * if none).
+ * reading mode, when unread lets go and which lists the sidebar hides.
+ * Newest first if the server can't say, the wait unknown, and the mode and
+ * hidden lists this device last saw (inbox and none, if none).
  */
 export async function loadSettings(): Promise<Reading> {
   try {
@@ -53,38 +51,19 @@ export async function loadSettings(): Promise<Reading> {
     const sort = isRecord(body) && body.sort === "oldest" ? "oldest" : "newest";
     const mode = isRecord(body) && body.mode === "river" ? "river" : "inbox";
     const letGo = (isRecord(body) && LET_GO.find((value) => value === body.let_go)) || "never";
-    const keys = keysFrom(isRecord(body) ? body.keys : undefined);
+    const keysReset = isRecord(body) && body.keys_reset === true;
     const hidden = isRecord(body) ? hiddenFrom(body.hidden) : [];
     rememberMode(mode);
-    rememberKeys(keys);
     rememberHidden(hidden);
-    return { sort, mode, letGo, keys, hidden };
+    return { sort, mode, letGo, keysReset, hidden };
   } catch {
-    return { sort: "newest", mode: lastMode(), letGo: undefined, keys: lastKeys(), hidden: lastHidden() };
+    return { sort: "newest", mode: lastMode(), letGo: undefined, keysReset: false, hidden: lastHidden() };
   }
 }
 
-/** The reader's keys, from the server or this device's copy: names and keys only, anything else left out. */
-function keysFrom(value: unknown): KeyMap {
-  if (!isRecord(value)) return {};
-  return Object.fromEntries(Object.entries(value).filter((entry): entry is [string, string] => typeof entry[1] === "string"));
-}
-
-/** Saves the reader's keys, all of them at once (decision 0110): `{}` puts every key back. */
-export async function saveKeys(keys: KeyMap): Promise<void> {
-  await send("/api/settings", { keys });
-  rememberKeys(keys);
-}
-const KEYS_KEY = "nine-turtles.keys";
-
-/** The keys this device last saw, so a changed key works from the first press, before the server answers, and offline. */
-export function lastKeys(): KeyMap {
-  return keysFrom(deviceJson(KEYS_KEY));
-}
-
-/** Signed out: this device forgets the keys, so whoever signs in next starts from their own (or nine turtles'). */
-export function forgetKeys() {
-  setDeviceText(KEYS_KEY, null);
+/** The reader has been told their own keys are gone: the server removes them, and doesn't tell again. */
+export function saveKeysSeen(): Promise<void> {
+  return send("/api/settings", { keys_seen: true });
 }
 
 /** The hidden lists named, in one order; anything else is left out. */
@@ -108,10 +87,6 @@ export function lastHidden(): Hideable[] {
 
 function rememberHidden(hidden: Hideable[]) {
   setDeviceText(HIDDEN_KEY, JSON.stringify(hidden));
-}
-
-function rememberKeys(keys: KeyMap) {
-  setDeviceText(KEYS_KEY, JSON.stringify(keys));
 }
 
 export function saveSort(sort: Order): Promise<void> {

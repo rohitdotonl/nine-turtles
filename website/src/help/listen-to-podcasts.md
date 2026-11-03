@@ -1,6 +1,6 @@
 ---
 title: Listen to podcasts
-description: Follow a podcast, play its episodes as you read, and line up what plays next in Up Next.
+description: Follow a podcast, play its episodes as you read, and pick up where you left off.
 groupId: reading
 order: 8
 spec: 35
@@ -37,14 +37,7 @@ go back to it, or **Close the player** to stop.
 
 Your place is saved as you listen, and on your other devices too. When
 you're within the last 30 seconds, the episode counts as finished and is
-marked read.
-
-## Up Next
-
-To line up episodes, open one and choose **More › Add to Up Next**. The next
-one starts by itself when the one playing ends. **Up Next** in the sidebar
-lists them; in the player, **Move up**, **Move down** and **Remove** change
-the order.
+marked read. When an episode ends, nothing else starts by itself.
 
 ## Good to know
 

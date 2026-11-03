@@ -1,5 +1,5 @@
 // Podcasts (SPEC section 35, decision 0113): the times the player shows,
-// where to carry on from, and Up Next's order, kept apart from the screen so
+// and where to carry on from, kept apart from the screen so
 // they can be tested; and talking to the server about them.
 //
 // nine turtles never fetches or keeps an episode's audio: the browser's own
@@ -100,28 +100,6 @@ export function speedLabel(rate: number): string {
   return `${rate}×`;
 }
 
-// ---- Up Next's order (the server keeps it; these make the new one) -----
-
-/** Up Next with `id` at its end (where it was, if it's there already). */
-export function added(order: number[], id: number): number[] {
-  return order.includes(id) ? order : [...order, id];
-}
-
-/** Up Next without `id`. */
-export function removed(order: number[], id: number): number[] {
-  return order.filter((each) => each !== id);
-}
-
-/** Up Next with `id` one place earlier (-1) or later (1); unchanged at either end. */
-export function moved(order: number[], id: number, step: -1 | 1): number[] {
-  const from = order.indexOf(id);
-  const to = from + step;
-  if (from === -1 || to < 0 || to >= order.length) return order;
-  const next = order.filter((each) => each !== id);
-  next.splice(to, 0, id);
-  return next;
-}
-
 // ---- This device's own copy of each place --------------------------------
 
 const PLACES_KEY = "nine-turtles.episode-places";
@@ -187,30 +165,6 @@ export function savePlace(id: number, position: number, duration: number | null,
     keepalive: true,
   }).catch(() => undefined);
   return place;
-}
-
-/** The reader's Up Next, in order; undefined if it can't be asked just now. */
-export async function loadUpNext(): Promise<number[] | undefined> {
-  try {
-    const response = await api("/api/up-next", { cache: "no-store" });
-    if (!response.ok) return undefined;
-    const body: unknown = await response.json();
-    return isRecord(body) && Array.isArray(body.articles) ? body.articles.map(Number) : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-/** Saves Up Next's new order; answers the order the server kept. */
-export async function saveUpNext(order: number[]): Promise<number[]> {
-  const response = await api("/api/up-next", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ articles: order }),
-  });
-  if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
-  const body: unknown = await response.json();
-  return isRecord(body) && Array.isArray(body.articles) ? body.articles.map(Number) : order;
 }
 
 /** An article's episode, from the server's answer (or a copy kept on this device), if it has one. */

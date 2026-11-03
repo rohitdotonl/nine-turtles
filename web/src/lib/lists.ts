@@ -10,7 +10,6 @@ import {
   COLLECTIONS_NEED_CONNECTION,
   NeedsConnection,
   RECENT_NEEDS_CONNECTION,
-  UP_NEXT_NEEDS_CONNECTION,
   keptPage,
   markSent,
   useFetchers,
@@ -37,8 +36,6 @@ export async function listArticles(source: Source, order: Order, after: string |
   } catch (problem) {
     // Recently read isn't kept on the device: it says plainly that it needs a connection.
     if (noConnection(problem) && "view" in source && source.view === "recent") throw new NeedsConnection(RECENT_NEEDS_CONNECTION);
-    // Nor is Up Next (decision 0113).
-    if (noConnection(problem) && "view" in source && source.view === "upnext") throw new NeedsConnection(UP_NEXT_NEEDS_CONNECTION);
     // Nor are collections (decision 0108).
     if (noConnection(problem) && "collection" in source) throw new NeedsConnection(COLLECTIONS_NEED_CONNECTION);
     // A kept list comes whole, so there's never a next page of it to add.

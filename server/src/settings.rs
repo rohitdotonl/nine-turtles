@@ -1,8 +1,13 @@
 //! Each reader's settings shared across their devices (SPEC section 18): the
 //! sort order, the reading mode, inbox or river (SPEC section 10), when
-//! unread lets go by itself (`unread`, decision 0097), the keys the reader chose for shortcuts (`keys`, decision 0110),
-//! and which lists the sidebar shows (`hidden`, decision 0105). Reader
-//! controls such as the theme belong to each device and stay in its browser.
+//! unread lets go by itself (`unread`, decision 0097) and which lists the
+//! sidebar shows (`hidden`, decision 0105). Reader controls such as the theme
+//! belong to each device and stay in its browser.
+//!
+//! Readers could once give shortcuts keys of their own (decision 0110, removed
+//! in step 5 of the owner's review). A reader who had is told once, at the
+//! foot of the `?` list, that the keys are back to nine turtles' own
+//! (`keys_reset`); seeing it removes the old keys (`keys_seen`).
 
 use axum::{
     Json, Router,
@@ -12,7 +17,6 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use sqlx::SqlitePool;
-use std::collections::BTreeMap;
 
 use crate::{
     AppState,
@@ -68,18 +72,15 @@ enum Hideable {
     Recent,
     Searches,
     Collections,
-    /// Up Next (decision 0113): shown only while it holds an episode.
-    Upnext,
 }
 
 impl Hideable {
-    const EVERY: [Self; 6] = [
+    const EVERY: [Self; 5] = [
         Self::Starred,
         Self::All,
         Self::Recent,
         Self::Searches,
         Self::Collections,
-        Self::Upnext,
     ];
 
     const fn stored(self) -> &'static str {
@@ -89,7 +90,6 @@ impl Hideable {
             Self::Recent => "recent",
             Self::Searches => "searches",
             Self::Collections => "collections",
-            Self::Upnext => "upnext",
         }
     }
 }
@@ -119,34 +119,11 @@ struct Settings {
     sort: Order,
     mode: Mode,
     let_go: LetGo,
-    /// The shortcuts given another key, by the shortcut's name ("star"), each
-    /// with its key as the cheat sheet prints it ("x", "Shift+X"), or "" for
-    /// none. Only changed shortcuts are here; the rest keep their own keys.
-    keys: Keys,
+    /// The reader had given shortcuts keys of their own, which are back to
+    /// nine turtles' own now, and hasn't been told yet.
+    keys_reset: bool,
     /// The lists the sidebar leaves out; none by default.
     hidden: Vec<Hideable>,
-}
-
-/// The reader's own keys (decision 0110). The browser decides what each name
-/// and key means; here they're only checked for size, so a later version's
-/// names come through untouched.
-type Keys = BTreeMap<String, String>;
-
-/// No more than this many changed keys: there are about forty shortcuts.
-const MOST_KEYS: usize = 100;
-
-/// Whether chosen keys are of a sensible size: short names of lowercase
-/// letters and dashes, each key a few characters at most.
-fn keys_fit(keys: &Keys) -> bool {
-    keys.len() <= MOST_KEYS
-        && keys.iter().all(|(name, key)| {
-            (1..=40).contains(&name.len())
-                && name
-                    .bytes()
-                    .all(|byte| byte.is_ascii_lowercase() || byte == b'-')
-                && key.chars().count() <= 20
-                && !key.chars().any(char::is_control)
-        })
 }
 
 /// A change: only the settings named are saved, so a tab from before river
@@ -156,8 +133,9 @@ struct Change {
     sort: Option<Order>,
     mode: Option<Mode>,
     let_go: Option<LetGo>,
-    /// All the reader's chosen keys at once; `{}` puts every key back.
-    keys: Option<Keys>,
+    /// The reader has been told their own keys are gone: the old ones are removed.
+    #[serde(default)]
+    keys_seen: bool,
     hidden: Option<Vec<Hideable>>,
 }
 
@@ -189,16 +167,14 @@ async fn load(db: &SqlitePool, person: i64) -> Result<Settings, sqlx::Error> {
         Some("month") => LetGo::Month,
         _ => LetGo::Never,
     };
-    let keys = value("keys")
-        .and_then(|saved| serde_json::from_str::<Keys>(saved).ok())
-        .filter(keys_fit)
-        .unwrap_or_default();
+    // `{}` was what Reset all keys left: nothing changed, nothing to tell.
+    let keys_reset = value("keys").is_some_and(|saved| saved.trim() != "{}");
     let hidden = hidden_from(value("hidden"));
     Ok(Settings {
         sort,
         mode,
         let_go,
-        keys,
+        keys_reset,
         hidden,
     })
 }
@@ -215,16 +191,6 @@ async fn change(
     State(state): State<AppState>,
     Json(change): Json<Change>,
 ) -> Response {
-    if change.keys.as_ref().is_some_and(|keys| !keys_fit(keys)) {
-        return (
-            axum::http::StatusCode::BAD_REQUEST,
-            "Those keys can't be saved.",
-        )
-            .into_response();
-    }
-    let keys = change
-        .keys
-        .map(|keys| serde_json::to_string(&keys).unwrap_or_else(|_| "{}".to_owned()));
     let sort = change.sort.map(|sort| match sort {
         Order::Newest => "newest",
         Order::Oldest => "oldest",
@@ -241,7 +207,6 @@ async fn change(
             ("sort", sort),
             ("mode", mode),
             ("let_go", let_go),
-            ("keys", keys.as_deref()),
             ("hidden", hidden.as_deref()),
         ] {
             if let Some(value) = value {
@@ -255,6 +220,12 @@ async fn change(
                 .execute(&mut *transaction)
                 .await?;
             }
+        }
+        if change.keys_seen {
+            sqlx::query("DELETE FROM person_settings WHERE person_id = ? AND name = 'keys'")
+                .bind(person)
+                .execute(&mut *transaction)
+                .await?;
         }
         // When the wait was chosen: nothing lets go until it has stood a
         // minute (`unread::let_go`), so passing a shorter one on the way

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { added, clock, episodeFrom, finished, left, length, moved, nextSpeed, removed, resumeFrom, speedLabel, spoken, type Place } from "./podcasts";
+import { clock, episodeFrom, finished, left, length, nextSpeed, resumeFrom, speedLabel, spoken, type Place } from "./podcasts";
 
 describe("the player's times (SPEC section 35)", () => {
   it("shows times as a clock does, in whole seconds", () => {
@@ -66,26 +66,6 @@ describe("carrying on where the reader stopped", () => {
     expect(finished(1770, 1800)).toBe(true);
     expect(finished(1769, 1800)).toBe(false);
     expect(finished(10, null)).toBe(false);
-  });
-});
-
-describe("Up Next's order", () => {
-  it("adds at the end, once", () => {
-    expect(added([1, 2], 3)).toEqual([1, 2, 3]);
-    expect(added([1, 2], 1)).toEqual([1, 2]);
-  });
-
-  it("removes", () => {
-    expect(removed([1, 2, 3], 2)).toEqual([1, 3]);
-    expect(removed([1], 9)).toEqual([1]);
-  });
-
-  it("moves one place up or down, and stays put at either end", () => {
-    expect(moved([1, 2, 3], 2, -1)).toEqual([2, 1, 3]);
-    expect(moved([1, 2, 3], 2, 1)).toEqual([1, 3, 2]);
-    expect(moved([1, 2, 3], 1, -1)).toEqual([1, 2, 3]);
-    expect(moved([1, 2, 3], 3, 1)).toEqual([1, 2, 3]);
-    expect(moved([1, 2, 3], 9, 1)).toEqual([1, 2, 3]);
   });
 });
 

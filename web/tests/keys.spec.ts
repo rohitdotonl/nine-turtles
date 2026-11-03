@@ -2,29 +2,25 @@ import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
 import { appReady, follow, openReadingRoom, signIn, tabTo } from "./screens";
 
-// Keys of the reader's own (decision 0110, SPEC section 19), done with the
-// keyboard alone, and the keys that came with it: Home and End, Shift+J and
-// Shift+K, g then f and g then ,. Every test uses the one owner's account,
-// so this page's settings are answered here and never saved: one test's
-// keys can't change another's.
+// The `?` list's foot (SPEC section 19), done with the keyboard alone, and
+// the keys Home and End, Shift+J and Shift+K, g then f and g then ,. Every
+// test uses the one owner's account, so the settings that say a reader once
+// had keys of their own are answered here and never saved.
 
 const article = (page: Page) => page.getByRole("region", { name: "Article" });
-const sheet = (page: Page) => page.getByRole("dialog", { name: /Keyboard shortcuts|Change keys/ });
-const shortcutList = (page: Page) => sheet(page).getByRole("region", { name: "Shortcuts" });
-const said = (page: Page) => page.getByTestId("keys-said");
-const binding = (page: Page, id: string) => sheet(page).locator(`[data-binding="${id}"]`);
+const sheet = (page: Page) => page.getByRole("dialog", { name: "Keyboard shortcuts" });
 
-/** Answers this page's settings itself, keeping the keys it's sent; returns what was last saved. */
-async function keepSettingsHere(page: Page): Promise<{ keys: Record<string, string> }> {
-  const saved = { keys: {} as Record<string, string> };
+/** Answers this page's settings itself, as for a reader who had keys of their own; counts the "seen" it's sent. */
+async function keysWereChanged(page: Page): Promise<{ seen: number }> {
+  const told = { seen: 0 };
   await page.route("**/api/settings", (route) => {
     if (route.request().method() === "POST") {
-      const body = JSON.parse(route.request().postData() ?? "{}") as { keys?: Record<string, string> };
-      if (body.keys) saved.keys = body.keys;
+      const body = JSON.parse(route.request().postData() ?? "{}") as { keys_seen?: boolean };
+      if (body.keys_seen) told.seen++;
     }
-    return route.fulfill({ json: { sort: "newest", mode: "inbox", counts: "shown", let_go: "never", keys: saved.keys } });
+    return route.fulfill({ json: { sort: "newest", mode: "inbox", let_go: "never", keys_reset: told.seen === 0, hidden: [] } });
   });
-  return saved;
+  return told;
 }
 
 async function signedIn(page: Page) {
@@ -48,19 +44,10 @@ function row(page: Page, number: number) {
   return page.getByRole("button", { name: new RegExp(`\\(${number}\\)`) });
 }
 
-/** Opens the shortcut list with ?, and Change keys… at its foot, by keyboard alone. */
-async function changeKeys(page: Page) {
-  await page.keyboard.press("?");
-  await expect(sheet(page)).toBeVisible();
-  await tabTo(page, sheet(page).getByRole("button", { name: "Change keys…" }));
-  await page.keyboard.press("Enter");
-  await expect(sheet(page).getByRole("heading", { name: "Change keys" })).toBeVisible();
-}
-
 test.describe("on a wide window", () => {
   test.skip(({ isMobile }) => isMobile, "keys are for a keyboard");
 
-  test("the list's foot links to Help's keys page, just before Change keys…, by the keyboard alone", async ({ page }) => {
+  test("the list's foot links to Help's keys page, by the keyboard alone, and has no way to change keys", async ({ page }) => {
     // SPEC sections 19 and 40 (decision 0157).
     await signedIn(page);
     await page.keyboard.press("?");
@@ -70,109 +57,29 @@ test.describe("on a wide window", () => {
     await expect(help).toHaveAttribute("target", "_blank");
     expect((await help.boundingBox())!.height).toBeGreaterThanOrEqual(44);
     await tabTo(page, help);
-    await page.keyboard.press("Tab");
-    await expect(sheet(page).getByRole("button", { name: "Change keys…" })).toBeFocused();
+    await expect(help).toBeFocused();
+    await expect(sheet(page).getByRole("button", { name: /Change keys/ })).toHaveCount(0);
+    await expect(sheet(page).getByTestId("keys-reset")).toHaveCount(0);
   });
 
-  test("star moves to x with the keyboard alone, and x stars everywhere the key shows", async ({ page }) => {
-    const saved = await keepSettingsHere(page);
+  test("a reader who had keys of their own is told once, at the list's foot, that they're back to these", async ({ page }) => {
+    const told = await keysWereChanged(page);
     await signedIn(page);
-    await openBlog(page);
-    await page.keyboard.press("j");
-
-    await changeKeys(page);
-    // The keyboard is on the first key that can change.
-    await expect(binding(page, "next-article")).toBeFocused();
-    await tabTo(page, binding(page, "star"));
-    await expect(binding(page, "star")).toHaveAccessibleName("Change the key that stars and unstars, now S");
-    await page.keyboard.press("Enter");
-    await expect(binding(page, "star")).toHaveText("Press the new key…");
-    await expect(said(page)).toHaveText("Press the new key that stars and unstars. Escape cancels.");
-    // Shift alone keeps it waiting; a key that can't be used says why, and it still waits.
-    await page.keyboard.press("Shift");
-    await page.keyboard.press("Enter");
-    await expect(shortcutList(page).getByText(/^Enter presses buttons and opens articles/)).toBeVisible();
-    await page.keyboard.press("x");
-    await expect(said(page)).toHaveText("X now stars and unstars.");
-    await expect(binding(page, "star")).toHaveAccessibleName("Change the key that stars and unstars, now X");
-    await expect(binding(page, "star")).toBeFocused();
-    await expect(sheet(page).getByRole("button", { name: "Reset the key that stars and unstars to S" })).toBeVisible();
-    await expect.poll(() => saved.keys).toEqual({ star: "x" });
-
-    await tabTo(page, sheet(page).getByRole("button", { name: "Done" }));
-    await page.keyboard.press("Enter");
-    await expect(sheet(page).getByRole("heading", { name: "Keyboard shortcuts" })).toBeVisible();
-    await expect(sheet(page).getByRole("button", { name: "Change keys…" })).toBeFocused();
-    // The list shows X now.
-    await expect(sheet(page).getByRole("row", { name: /Star \/ unstar/ })).toContainText("X");
+    await page.keyboard.press("?");
+    await expect(sheet(page).getByTestId("keys-reset")).toHaveText("You can't choose your own keys any more, so every shortcut is back to the key shown here. If you miss it, write to hello@nineturtles.app.");
+    await expect.poll(() => told.seen).toBe(1);
     await page.keyboard.press("Escape");
     await expect(sheet(page)).toBeHidden();
-
-    const star = article(page).getByRole("button", { name: "Star" });
-    await expect(star).toHaveAttribute("aria-pressed", "false");
-    await expect(star).toHaveAttribute("title", "Star (X)");
-    // s does nothing now; x stars.
-    await page.keyboard.press("s");
-    await expect(star).toHaveAttribute("aria-pressed", "false");
-    await page.keyboard.press("x");
-    await expect(star).toHaveAttribute("aria-pressed", "true");
-    await expect(star).toHaveAttribute("title", "Starred (X)");
-    await page.keyboard.press("x");
-    await expect(star).toHaveAttribute("aria-pressed", "false");
-
-    // After a reload the keys are still the reader's.
+    await page.keyboard.press("?");
+    await expect(sheet(page)).toBeVisible();
+    await expect(sheet(page).getByTestId("keys-reset")).toHaveCount(0);
+    // Nor on coming back.
+    await page.keyboard.press("Escape");
     await page.reload();
     await appReady(page);
     await page.keyboard.press("?");
-    await expect(sheet(page).getByRole("row", { name: /Star \/ unstar/ })).toContainText("X");
-  });
-
-  test("a key another shortcut has is asked about first, and the other is left with no key; Reset all puts every key back", async ({ page }) => {
-    const saved = await keepSettingsHere(page);
-    await signedIn(page);
-    await openBlog(page);
-    await changeKeys(page);
-
-    await tabTo(page, binding(page, "star"));
-    await page.keyboard.press("Enter");
-    await page.keyboard.press("Shift+O");
-    const question = shortcutList(page).getByText("Shift+O already marks older as read. Use it here instead?");
-    await expect(question).toBeVisible();
-    await expect(said(page)).toHaveText("Shift+O already marks older as read. Use it here instead?");
-    await expect(sheet(page).getByRole("button", { name: "Use it" })).toBeFocused();
-    // Escape answers the question, never closes the list.
-    await page.keyboard.press("Escape");
-    await expect(question).toBeHidden();
     await expect(sheet(page)).toBeVisible();
-    await expect(said(page)).toHaveText("Not changed.");
-    await expect(binding(page, "star")).toBeFocused();
-    await expect.poll(() => saved.keys).toEqual({});
-
-    await page.keyboard.press("Enter");
-    await page.keyboard.press("Shift+O");
-    await page.keyboard.press("Enter");
-    await expect(said(page)).toHaveText("Shift+O now stars and unstars. Nothing marks older as read now.");
-    await expect(binding(page, "mark-older-read")).toHaveText("No key");
-    await expect(binding(page, "star")).toBeFocused();
-    await expect.poll(() => saved.keys).toEqual({ star: "Shift+O", "mark-older-read": "" });
-
-    // Reset all keys, at the sheet's foot.
-    await tabTo(page, sheet(page).getByRole("button", { name: "Reset all keys" }));
-    await page.keyboard.press("Enter");
-    await expect(said(page)).toHaveText("Every key is back as it was.");
-    await expect(binding(page, "star")).toHaveAccessibleName("Change the key that stars and unstars, now S");
-    await expect(binding(page, "mark-older-read")).toHaveAccessibleName("Change the key that marks older as read, now Shift+O");
-    await expect.poll(() => saved.keys).toEqual({});
-
-    // Keys that stay as they are aren't buttons at all.
-    await expect(binding(page, "cheat-sheet")).toHaveCount(0);
-    await expect(binding(page, "go-unread")).toHaveCount(0);
-    // Settings › Keyboard opens the same list, ready to change keys.
-    await page.keyboard.press("Escape");
-    await page.goto(new URL("/settings/keyboard", FEEDS_APP).href);
-    await appReady(page);
-    await page.getByRole("button", { name: "Change keys…" }).click();
-    await expect(sheet(page).getByRole("heading", { name: "Change keys" })).toBeVisible();
+    await expect(sheet(page).getByTestId("keys-reset")).toHaveCount(0);
   });
 
   test("Home and End choose the first and last article; Shift+J and Shift+K move between feeds; g then f and g then , go to Your feeds and Settings", async ({ page }) => {
@@ -203,34 +110,6 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("g");
     await page.keyboard.press(",");
     await expect(page).toHaveURL(/\/settings$/);
-  });
-
-  test("a key of your own works without a connection, from this device's copy; signing out forgets it", async ({ page, context }) => {
-    const saved = await keepSettingsHere(page);
-    saved.keys = { star: "x" };
-    await signedIn(page);
-    await openBlog(page);
-    await expect.poll(() => page.evaluate(() => localStorage.getItem("nine-turtles.keys"))).toBe(JSON.stringify({ star: "x" }));
-    await page.keyboard.press("j");
-    const star = article(page).getByRole("button", { name: "Star" });
-    await expect(star).toHaveAttribute("title", "Star (X)");
-
-    await context.setOffline(true);
-    await page.keyboard.press("x");
-    await expect(star).toHaveAttribute("aria-pressed", "true");
-    await page.keyboard.press("s");
-    await expect(star).toHaveAttribute("aria-pressed", "true");
-    await page.keyboard.press("x");
-    await expect(star).toHaveAttribute("aria-pressed", "false");
-    await context.setOffline(false);
-    await page.evaluate(() => dispatchEvent(new Event("online")));
-
-    // Signing out: the next reader on this browser starts from nine turtles' own keys.
-    await page.goto(new URL("/settings", FEEDS_APP).href);
-    await appReady(page);
-    await page.getByRole("button", { name: "Sign out" }).click();
-    await expect(page.getByLabel("Password", { exact: true })).toBeVisible();
-    expect(await page.evaluate(() => localStorage.getItem("nine-turtles.keys"))).toBeNull();
   });
 
   test("Home and End keep their usual job in the open article and on a page that isn't a list", async ({ page }) => {

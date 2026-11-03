@@ -11,7 +11,7 @@
 -->
 <script lang="ts">
   import { TEXT_SIZES } from "./preferences";
-  import { tip } from "./keys.svelte";
+  import { tip } from "./keyboard";
 
   let {
     size = $bindable(),

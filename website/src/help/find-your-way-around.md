@@ -22,8 +22,7 @@ From the top:
   sidebar. <kbd>Esc</kbd> empties it.
 - **Unread**, **Starred**, **All** and **Recently read** (the last 50
   articles you opened).
-- **Up Next**, while it holds a podcast episode, then your **Saved
-  searches** and **Collections**.
+- Your **Saved searches** and **Collections**.
 - **Folders**, then **People** and **Publications**: everyone who isn't in
   a folder, A to Z. Someone with a blog and a channel has one row.
 - At the foot: **+ Add**, **Keys** and **Settings**.

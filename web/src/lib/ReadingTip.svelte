@@ -5,14 +5,13 @@
   the list." Under the reading area's quiet line (`floating`), or at the foot of a person's page.
 -->
 <script lang="ts">
-  import { keyCap } from "./keyboard";
-  import { currentKeyOf } from "./keys.svelte";
+  import { keyCap, keyOf } from "./keyboard";
 
   let { tipSeen, floating = false }: { tipSeen: boolean; floating?: boolean } = $props();
 
-  // The reader's own key for the next article, if they kept one (decision 0110).
-  let first = $derived(currentKeyOf("next-article"));
-  let cap = $derived(first ? keyCap(first) : undefined);
+  // The key for the next article.
+  const first = keyOf("next-article");
+  const cap = first ? keyCap(first) : undefined;
 </script>
 
 {#if tipSeen}

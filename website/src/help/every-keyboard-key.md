@@ -1,6 +1,6 @@
 ---
 title: Every keyboard key
-description: Read, move around and tidy up without a mouse. Every key nine turtles knows, and how to change them.
+description: Read, move around and tidy up without a mouse. Every key nine turtles knows.
 groupId: you-and-your-account
 order: 2
 spec: 19
@@ -74,20 +74,10 @@ related: [find-your-way-around, search-everything, change-how-it-looks]
 | <kbd>A</kbd> | Add a person or publication |
 | <kbd>?</kbd> | This list of keys |
 
-## Change a key
-
-1. Press <kbd>?</kbd>, then **Change keys…** (or open **Settings ›
-   Keyboard**).
-2. Press the button of the key you'd like to change, then the new key.
-3. Press **Done**.
-
-**Reset** beside a key puts it back; **Reset all keys** puts them all back.
-Your keys follow you to every device. <kbd>Enter</kbd>, <kbd>Esc</kbd>,
-<kbd>?</kbd> and the keys after <kbd>G</kbd> can't be changed.
-
 ## Good to know
 
 - The app shows Shift as ⇧.
+- The keys are the same for everyone, and can't be changed.
 - In the <a href="/help/inbox-or-river/">river</a>, the keys for unread
   articles and marking all as read are left out.
 - Search has its own shortcuts, such as <code>is:starred</code>: see

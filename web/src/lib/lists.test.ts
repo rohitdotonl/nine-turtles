@@ -12,7 +12,7 @@ describe("mark all as read", () => {
 describe("the end of a list", () => {
   it("says \"for now\" only in Unread; other lists simply end, and a search runs out of results", () => {
     expect(endOfList({ view: "unread" })).toBe("That's everything for now.");
-    for (const view of ["starred", "all", "recent", "upnext"] as const) expect(endOfList({ view })).toBe("That's everything.");
+    for (const view of ["starred", "all", "recent"] as const) expect(endOfList({ view })).toBe("That's everything.");
     expect(endOfList({ feed: 1 })).toBe("That's everything.");
     expect(endOfList({ folder: 2 })).toBe("That's everything.");
     expect(endOfList({ collection: 3 })).toBe("That's everything.");

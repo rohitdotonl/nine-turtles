@@ -37,7 +37,7 @@
   import { siteName } from "./people";
   import type { Snippet } from "svelte";
   import { chapters, foldable, youtubeVideo } from "./youtube";
-  import { addToUpNext, player, removeFromUpNext, seek } from "./player.svelte";
+  import { player, seek } from "./player.svelte";
   import type { Preferences } from "./preferences";
   import type { Article, FullArticle } from "./shapes";
   import { articleNow, readArticle } from "./articles";
@@ -47,7 +47,7 @@
   import { EPISODE_OFFLINE, NOT_KEPT } from "./offline";
   import PictureSheet from "./PictureSheet.svelte";
   import { OPENABLE, markPicture } from "./pictures";
-  import { currentKey, tip } from "./keys.svelte";
+  import { keyFor, tip } from "./keyboard";
 
   let {
     article,
@@ -129,7 +129,6 @@
 
   /** A podcast's episode (SPEC section 35): its audio, played from the publisher's own address. Copies kept before podcasts have none. */
   let episode = $derived(full?.audio ?? null);
-  let queued = $derived(player.upNext?.includes(article.id) ?? false);
   /** The reader's highlights and note (SPEC section 42), and the video's player, whose time a note can start with. */
   let marks: ArticleMarks | undefined = $state();
   let youtube: YouTubePlayer | undefined = $state();
@@ -141,31 +140,18 @@
         : undefined,
   );
 
-  /** The article's less frequent actions, behind More (…): sharing its link, marking it unread, its collections, and, for an episode, Up Next. */
+  /** The article's less frequent actions, behind More (…): sharing its link, marking it unread, and its collections. */
   let more: MenuGroup[] = $derived([
     {
       items: [
-        ...(article.link ? [{ label: sharing ? "Share" : "Copy link", shortcut: phone || sharing ? undefined : currentKey("copy-link"), onSelect: share }] : []),
-        { label: "Mark unread", shortcut: phone ? undefined : currentKey("mark-unread"), onSelect: onMarkUnread },
-        { label: "Add to collection…", shortcut: phone ? undefined : currentKey("collect"), onSelect: onCollect },
-        ...(full ? [{ label: "Add a note…", shortcut: phone ? undefined : currentKey("note"), onSelect: () => act("note") }] : []),
-        ...(followed && full ? [{ label: "Write back", shortcut: phone ? undefined : currentKey("write-back"), onSelect: () => act("write-back") }] : []),
-        ...(episode && player.upNext !== null
-          ? [
-              queued
-                ? { label: "Remove from Up Next", onSelect: () => void upNext(false) }
-                : { label: "Add to Up Next", onSelect: () => void upNext(true) },
-            ]
-          : []),
+        ...(article.link ? [{ label: sharing ? "Share" : "Copy link", shortcut: phone || sharing ? undefined : keyFor("copy-link"), onSelect: share }] : []),
+        { label: "Mark unread", shortcut: phone ? undefined : keyFor("mark-unread"), onSelect: onMarkUnread },
+        { label: "Add to collection…", shortcut: phone ? undefined : keyFor("collect"), onSelect: onCollect },
+        ...(full ? [{ label: "Add a note…", shortcut: phone ? undefined : keyFor("note"), onSelect: () => act("note") }] : []),
+        ...(followed && full ? [{ label: "Write back", shortcut: phone ? undefined : keyFor("write-back"), onSelect: () => act("write-back") }] : []),
       ],
     },
   ]);
-
-  /** Adds the episode to Up Next, or takes it off, and says so quietly. */
-  async function upNext(add: boolean) {
-    const done = add ? await addToUpNext(article.id) : await removeFromUpNext(article.id);
-    copied = done ? (add ? "Added to Up Next." : "Removed from Up Next.") : "Up Next couldn't be changed. Try again in a moment.";
-  }
 
   // Your place, like a bookmark (decision 0060). Only the reader's own
   // scrolling moves it: opening an article, or putting it back at its
