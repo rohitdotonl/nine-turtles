@@ -132,7 +132,9 @@ from hello@ too, that needs an email service, which is still to be chosen
 Every page is a plain text file in `website/src/`: the home page
 (`index.md`), the tour, "New to feeds?", questions (`faq.md`), about,
 contact, accessibility, privacy, terms, pricing and refunds, and the blog's posts in
-`website/src/blog/`, one file each. The starter packs are in
+`website/src/blog/`, one file each. The Help pages are in
+`website/src/help/`, one file each, grouped by the list in
+`website/src/_data/helpGroups.json` (SPEC section 40). The starter packs are in
 `website/src/packs/`, one file each; how to fill one in is in that folder's
 `README.md`. The contact address, the app's address
 and the code's address are written once, in `website/src/_data/site.json`.

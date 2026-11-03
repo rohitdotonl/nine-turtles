@@ -61,6 +61,7 @@ A few words used throughout:
 | 37 | [Writing back](spec/37-writing-back.md) |
 | 38 | [YouTube](spec/38-youtube.md) |
 | 39 | [The weekly email](spec/39-the-weekly-email.md) |
+| 40 | [Help (on the website)](spec/40-help.md) |
 | 41 | ["How did you hear about nine turtles?"](spec/41-how-did-you-hear.md) |
 
 ## Not built yet, and never

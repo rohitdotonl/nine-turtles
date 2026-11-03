@@ -1,0 +1,24 @@
+---
+layout: page.njk
+title: Help
+description: Short answers to "how do I…" in nine turtles, one page each.
+permalink: /help/
+---
+{#- The Help index (decision 0157): a book's table of contents, one plain
+    list per group, in the order _data/helpGroups.json gives. Each page's
+    place in its group is its front matter's "order". -#}
+<p class="lede">
+  Short answers to "how do I…", one page each. If what you need isn't here,
+  <a href="/contact/">write to me</a> and I'll add it.
+</p>
+<p>New to feeds? <a href="/new-to-feeds/">Start with this three-minute page</a>.</p>
+{%- for group in helpGroups %}
+<section class="help-group" aria-labelledby="{{ group.id }}">
+  <h2 id="{{ group.id }}">{{ group.title }}</h2>
+  <ul class="help-list">
+    {%- for item in collections.help | where("data.groupId", group.id) | sort(false, false, "data.order") %}
+    <li><a href="{{ item.url }}">{{ item.data.title }}</a></li>
+    {%- endfor %}
+  </ul>
+</section>
+{%- endfor %}

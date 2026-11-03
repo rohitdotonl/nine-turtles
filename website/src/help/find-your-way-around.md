@@ -1,0 +1,70 @@
+---
+title: Find your way around
+description: The sidebar, the list of articles and the reading pane, and how new articles arrive without moving anything under you.
+groupId: getting-started
+order: 5
+spec: 4, 5, 6 and 13
+updated: 2026-11-03
+related: [mark-read-or-unread, inbox-or-river, every-keyboard-key]
+---
+
+<p class="lede">
+  nine turtles has three parts: the sidebar on the left, the list of articles
+  in the middle, and the article you're reading on the right. On a phone you
+  see one at a time.
+</p>
+
+## The sidebar
+
+From the top:
+
+- **Find a person or folder**: type a few letters of a name to narrow the
+  sidebar. <kbd>Esc</kbd> empties it.
+- **Unread**, **Starred**, **All** and **Recently read** (the last 50
+  articles you opened).
+- **Up Next**, while it holds a podcast episode, then your **Saved
+  searches** and **Collections**.
+- **Folders**, then **People**: everyone you follow, A to Z.
+- At the foot: **Add feed**, **Keys** and **Settings**.
+
+A small dot at the end of a row means something there is new. There are no
+numbers: you never have a pile to clear.
+
+You can hide the lists you don't use in **Settings › Show in the sidebar**.
+Unread, folders and people always stay.
+
+## The list of articles
+
+Choose anything in the sidebar and its articles appear, newest first. Unread
+articles are in bolder type with a dot beside them. A star means you starred
+it, headphones mean a podcast episode, and a small screen means a video.
+Older articles load as you reach the bottom, and every list ends: Unread
+with "That's everything for now."
+
+The list's **More** menu (the three dots) holds what you can do to the whole
+list: mark it all as read, refresh it, or sort it oldest first.
+
+## Reading
+
+Choose an article and it opens on the right. Across its top are **Open
+original** (the publisher's own page), **Aa** (how the text looks), **Star**
+and **More**. On a phone they're in the bar at the bottom, with Previous and
+Next. A long article opens where you stopped last time.
+
+## New articles wait for you
+
+The list never changes while you look at it. When new articles have arrived,
+a note at the bottom says **New articles**. Press <kbd>R</KBD>, or **Show**
+on a phone, to bring them in. Opening the app always shows the latest.
+
+## Make room to read
+
+On a computer, <kbd>[</kbd> hides or shows the sidebar, <kbd>]</kbd> the
+list, and <kbd>\</kbd> both at once, for full-screen reading. You can also
+drag the edge between two parts to make one wider; double-click the edge to
+put it back.
+
+## Good to know
+
+- On a smaller window, the parts take turns: <kbd>Esc</kbd> goes back one.
+- Everything is in A to Z order. Nothing can be dragged into a different order.

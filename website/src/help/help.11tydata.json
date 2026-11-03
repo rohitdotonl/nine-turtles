@@ -1,0 +1,5 @@
+{
+  "layout": "help.njk",
+  "tags": "help",
+  "permalink": "/help/{{ page.fileSlug }}/"
+}

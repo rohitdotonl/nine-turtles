@@ -52,7 +52,7 @@
   import { APPEARANCES, LOOKS, THEMES } from "./themes";
   import type { Feed, Folder } from "./shapes";
   import type { LetGo, Order, ReadingMode } from "./reading";
-  import { SETTINGS_PAGES, type Hideable, type SettingsPage } from "./router";
+  import { HELP_URL, SETTINGS_PAGES, type Hideable, type SettingsPage } from "./router";
   import { LINE_WIDTHS, READING_FONTS, type Preferences } from "./preferences";
   import { signOut } from "./session";
   import { updates } from "./updates.svelte";
@@ -656,7 +656,7 @@
             you were last here and, once there are plans, which plan you're on. Never which feeds or what you read.
           </p>
         {/if}
-        <p class="inset-foot" translate="no">Version {version}</p>
+        <p class="inset-foot"><a href={HELP_URL} target="_blank" rel="noopener" class="text-link">Help<span class="sr-only"> (on the nine turtles website)</span></a><span translate="no"> · Version {version}</span></p>
       </section>
       {:else if page === "font"}
       <section aria-labelledby="settings-heading">

@@ -23,6 +23,11 @@ export type Route =
   | { kind: "muted" }
   | { kind: "readers" };
 
+/** The Help pages on the website (decision 0157), linked from Settings and the keys sheet. */
+export const HELP_URL = "https://nineturtles.app/help/";
+/** One Help page by its file name in website/src/help/, such as "every-keyboard-key". */
+export const helpPage = (name: string) => `${HELP_URL}${name}/`;
+
 /**
  * Settings' own pages (decision 0120): each opens in place of Settings from a row ending in ›, at
  * /settings/<its name>, with "‹ Settings" to go back. The values are their titles.

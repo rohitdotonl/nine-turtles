@@ -38,8 +38,22 @@ const types = {
 };
 
 // Every page the website has, and the page shown for an address it doesn't.
-const pages = readdirSync(site, { recursive: true })
-  .filter((file) => file.endsWith("index.html"))
+// A page that only sends the browser on to another (an old address, such as
+// /docs for /help, decision 0157) isn't a page to read: it's checked only
+// for leading to a page that exists.
+const files = readdirSync(site, { recursive: true }).filter((file) => file.endsWith("index.html"));
+const onwards = /<meta http-equiv="refresh" content="0; url=([^"]+)"/;
+const redirectProblems = [];
+const isRedirect = (file) => {
+  const target = readFileSync(join(site, file), "utf8").match(onwards)?.[1];
+  if (target === undefined) return false;
+  if (!statSync(join(site, target, "index.html"), { throwIfNoEntry: false })) {
+    redirectProblems.push(`/${file}: sends readers on to ${target}, which doesn't exist`);
+  }
+  return true;
+};
+const pages = files
+  .filter((file) => !isRedirect(file))
   .map((file) => "/" + file.replace(/index\.html$/, "").split("\\").join("/"))
   .concat("/404.html");
 
@@ -59,7 +73,7 @@ const server = createServer((request, response) => {
 await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
 const base = `http://127.0.0.1:${server.address().port}`;
 
-const problems = [];
+const problems = [...redirectProblems];
 const browser = await chromium.launch({ executablePath: process.env.NINE_TURTLES_CHROMIUM || undefined });
 try {
   for (const colorScheme of ["light", "dark"]) {

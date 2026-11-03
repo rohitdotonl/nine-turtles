@@ -51,6 +51,13 @@ export default function (eleventyConfig) {
     html.replace(/(href|src)="\/(?!\/)/g, `$1="${base}/`),
   );
 
+  // The items in a list whose field (a dotted path, like "data.groupId")
+  // equals a value: how the Help pages find their group, their related
+  // pages and each group's pages (decision 0157).
+  eleventyConfig.addFilter("where", (list, path, value) =>
+    list.filter((item) => path.split(".").reduce((field, key) => field?.[key], item) === value),
+  );
+
   // For the checks only (scripts/check.sh), never on the live website: a
   // made-up pack with blogs, so the list and its download get checked
   // before any real pack has blogs (decision 0100).

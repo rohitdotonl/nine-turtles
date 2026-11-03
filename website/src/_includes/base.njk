@@ -32,11 +32,11 @@
     <header class="band">
       <!-- The logo, the redrawn nine (decision 0067, docs/BRAND.md), in the text color, standing on the name's baseline, at the app sidebar's sizes (27px beside a 22px name). The same heavy drawing is in web/src/lib/Logo.svelte: change both together (docs/logo/README.md explains the large one). -->
       <a class="wordmark" href="/"><svg class="logo" viewBox="0 0 82.9 47.5" width="47" height="27" aria-hidden="true" focusable="false"><g fill="currentColor"><g transform="translate(9 6)"><path d="M-9 3.5A7.5 9.5 0 0 1 6 3.5Z"/><circle cx="10" cy="-.6" r="2.9"/></g><g transform="translate(35 6)"><path d="M-9 3.5A7.5 9.5 0 0 1 6 3.5Z"/><circle cx="10" cy="-.6" r="2.9"/></g><g transform="translate(61 6)"><path d="M-9 3.5A7.5 9.5 0 0 1 6 3.5Z"/><circle cx="10" cy="-.6" r="2.9"/></g><g transform="translate(18 25)"><path d="M-9 3.5A7.5 9.5 0 0 1 6 3.5Z"/><circle cx="10" cy="-.6" r="2.9"/></g><g transform="translate(44 25)"><path d="M-9 3.5A7.5 9.5 0 0 1 6 3.5Z"/><circle cx="10" cy="-.6" r="2.9"/></g><g transform="translate(70 25)"><path d="M-9 3.5A7.5 9.5 0 0 1 6 3.5Z"/><circle cx="10" cy="-.6" r="2.9"/></g><g transform="translate(9 44)"><path d="M-9 3.5A7.5 9.5 0 0 1 6 3.5Z"/><circle cx="10" cy="-.6" r="2.9"/></g><g transform="translate(35 44)"><path d="M-9 3.5A7.5 9.5 0 0 1 6 3.5Z"/><circle cx="10" cy="-.6" r="2.9"/></g><g transform="translate(61 44)"><path d="M-9 3.5A7.5 9.5 0 0 1 6 3.5Z"/><circle cx="10" cy="-.6" r="2.9"/></g></g></svg>{{ site.name }}</a>
-      {%- set nav = [["/tour/", "How it works"], ["/blog/", "Blog"]] %}
+      {%- set nav = [["/tour/", "How it works"], ["/help/", "Help"], ["/blog/", "Blog"]] %}
       <nav class="places" aria-label="The website">
         <ul>
           {%- for item in nav %}
-          <li><a href="{{ item[0] }}"{% if page.url == item[0] or (item[0] == "/blog/" and layout == "post.njk") %} aria-current="{% if page.url == item[0] %}page{% else %}true{% endif %}"{% endif %}>{{ item[1] }}</a></li>
+          <li><a href="{{ item[0] }}"{% if page.url == item[0] or (item[0] == "/blog/" and layout == "post.njk") or (item[0] == "/help/" and layout == "help.njk") %} aria-current="{% if page.url == item[0] %}page{% else %}true{% endif %}"{% endif %}>{{ item[1] }}</a></li>
           {%- endfor %}
           <li><a href="{{ site.app }}">Open the app</a></li>
         </ul>
@@ -59,6 +59,7 @@
       <nav class="links" aria-label="More about nine turtles">
         <ul>
           <li><a href="/tour/">A tour</a></li>
+          <li><a href="/help/">Help</a></li>
           <li><a href="/new-to-feeds/">New to feeds?</a></li>
           <li><a href="/feed-finder/">Feed finder</a></li>
           <li><a href="/packs/">Starter packs</a></li>
