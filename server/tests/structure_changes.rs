@@ -2018,3 +2018,65 @@ async fn adding_youtube_sorting_keeps_every_article_and_entry_and_leaves_nothing
         .await;
     assert!(odd.is_err());
 }
+
+#[tokio::test]
+async fn confirming_addresses_keeps_every_reader_and_link_and_confirms_every_address() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just after YouTube (structure change 30): the owner and a
+    // reader with an email, one reader without, and two emailed links.
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(30, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "UPDATE people SET email = 'owner@example.com' WHERE id = 1",
+        "INSERT INTO people (id, owner, email, password_hash, created_at)
+         VALUES (2, 0, 'mira@example.com', 'line', 5), (3, 0, NULL, NULL, 6)",
+        "INSERT INTO email_links (purpose, person_id, email, token_hash, created_at, expires_at)
+         VALUES ('sign-in', 2, 'mira@example.com', x'01', 1, 2),
+                ('change', 1, 'new@example.com', x'02', 1, 2)",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    // Everyone with an address counts as confirmed (the owner's choice).
+    let people: Vec<(i64, bool)> =
+        sqlx::query_as("SELECT id, email_confirmed_at IS NOT NULL FROM people ORDER BY id")
+            .fetch_all(&db)
+            .await
+            .unwrap();
+    assert_eq!(people, [(1, true), (2, true), (3, false)]);
+    let links: Vec<(String, Option<i64>)> =
+        sqlx::query_as("SELECT purpose, person_id FROM email_links ORDER BY token_hash")
+            .fetch_all(&db)
+            .await
+            .unwrap();
+    assert_eq!(
+        links,
+        [
+            ("sign-in".to_owned(), Some(2)),
+            ("change".to_owned(), Some(1))
+        ]
+    );
+    // A waiting sign-up may now be kept, with no reader and its password.
+    sqlx::query(
+        "INSERT INTO email_links (purpose, email, password_hash, token_hash, created_at, expires_at)
+         VALUES ('sign-up', 'kai@example.com', 'line', x'03', 1, 2)",
+    )
+    .execute(&db)
+    .await
+    .unwrap();
+}

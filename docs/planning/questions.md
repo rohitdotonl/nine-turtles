@@ -20,7 +20,7 @@ October 2026; it is in the repository's history.*
   wait on: the prices, the email service for sign-in and receipts,
   where Render keeps the data, the business details and the law that
   applies, the minimum age, and how long backups keep deleted data. Sign-up
-  is now open to anyone (decision 0115), so someone qualified should read
+  is now open to anyone (decisions 0115 and 0154), so someone qualified should read
   both soon.
 
 - **Payments, built in test mode** (26 October 2026, decision 0094). Each
