@@ -47,6 +47,7 @@ related: [find-your-way-around, search-everything, change-how-it-looks]
 | <kbd>G</kbd> then <kbd>F</kbd> | Go to Your feeds |
 | <kbd>G</kbd> then <kbd>,</kbd> | Go to Settings |
 | <kbd>Shift</kbd> <kbd>J</kbd> / <kbd>Shift</kbd> <kbd>K</kbd> | Next / previous in the sidebar |
+| <kbd>I</kbd> | About this person or publication: their page |
 | <kbd>/</kbd> | Search |
 | <kbd>[</kbd> | Show or hide the sidebar |
 | <kbd>]</kbd> | Show or hide the list of articles |
@@ -62,13 +63,13 @@ related: [find-your-way-around, search-everything, change-how-it-looks]
 | <kbd>Shift</kbd> <kbd>O</kbd> | Mark older as read |
 | <kbd>U</kbd> | Undo |
 | <kbd>R</kbd> | Show new articles |
-| <kbd>Shift</kbd> <kbd>E</kbd> | Edit this person or folder |
+| <kbd>Shift</kbd> <kbd>E</kbd> | Edit this person, publication or folder |
 
 ## Anywhere
 
 | Key | What it does |
 |---|---|
-| <kbd>A</kbd> | Add feed |
+| <kbd>A</kbd> | Add a person or publication |
 | <kbd>?</kbd> | This list of keys |
 
 ## Change a key

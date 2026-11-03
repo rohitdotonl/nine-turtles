@@ -52,7 +52,10 @@ describe("insteadOfList", () => {
   });
 
   it("says why a missing place shows no list, with its own heading", () => {
-    expect(insteadOfList({ kind: "feed", id: 1 }, found({ feed: false }))).toBe("You don't follow this feed. It may have been an old address.");
+    expect(insteadOfList({ kind: "feed", id: 1 }, found({ feed: false }))).toBe("You don't follow anyone at this address. It may have been an old one.");
+    // Their page, Edit and a source's settings too, so a phone never falls back to another list (SPEC section 36).
+    for (const place of [{ kind: "about", id: 1 }, { kind: "edit-feed", id: 1 }, { kind: "edit-source", id: 1, source: 2 }] as const)
+      expect(insteadOfList(place, found({ feed: false }))).toBe("You don't follow anyone at this address. It may have been an old one.");
     expect(insteadOfList({ kind: "folder", id: 1 }, found({ folder: false }))).toBe("There's no folder here. It may have been deleted or renamed.");
     expect(insteadOfList({ kind: "search", id: 1 }, found({ search: false }))).toBe("There's no saved search here. It may have been deleted.");
     expect(insteadOfList({ kind: "collection", id: 1 }, found({ collection: false }))).toBe("There's no collection here. It may have been deleted.");

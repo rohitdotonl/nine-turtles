@@ -28,8 +28,8 @@ related: [put-people-in-folders, search-everything, newsletters]
 If unread articles you already have match, nine turtles offers to do the
 same to them. **Undo** puts them back.
 
-To make a rule for one person, choose **More › Edit person…**, then **Add a
-rule…**
+To make a rule for one person, open their page and press **Edit**, then
+**Add a rule…** (with several sources, press › beside one first).
 
 ## What each one does
 

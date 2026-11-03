@@ -81,7 +81,7 @@ export const SCREENS: Screen[] = [
     },
   },
   { name: "first-visit", path: "/unread", signedIn: true },
-  { name: "add-feed", path: "/add-feed", signedIn: true },
+  { name: "add-feed", path: "/add", signedIn: true },
   { name: "new-to-feeds", path: "/new-to-feeds", signedIn: true },
   {
     name: "articles",
@@ -94,7 +94,7 @@ export const SCREENS: Screen[] = [
   },
   {
     name: "add-feed-choice",
-    path: "/add-feed",
+    path: "/add",
     signedIn: true,
     library: true,
     open: async (page) => {
@@ -143,7 +143,7 @@ export const SCREENS: Screen[] = [
       const copy = libraryApp() === FEEDS_APP ? `marks-${Date.now()}/` : "";
       const id = await follow(page, `${FEED_SITE}/shelf/the-margins/${copy}feed.xml`);
       await unmark(page, id);
-      await page.goto(new URL(`/feeds/${id}`, page.url()).href);
+      await page.goto(new URL(`/people/${id}`, page.url()).href);
       await appReady(page);
       await expect(page.getByRole("button", { name: /On reading the same book twice/ })).toBeVisible();
       await page.keyboard.press("j");
@@ -176,9 +176,9 @@ export const SCREENS: Screen[] = [
     library: true,
     open: async (page) => {
       const id = await follow(page, shelf("garden-letters"));
-      await page.goto(new URL(`/feeds/${id}/edit`, page.url()).href);
+      await page.goto(new URL(`/people/${id}/edit`, page.url()).href);
       await appReady(page);
-      await expect(page.getByRole("heading", { level: 2, name: "Edit person" })).toBeVisible();
+      await expect(page.getByRole("heading", { level: 2, name: /^Edit / })).toBeVisible();
     },
   },
   {
@@ -547,7 +547,7 @@ export async function follow(page: Page, address: string): Promise<number> {
 export async function openReadingRoom(page: Page, { unread = false } = {}): Promise<void> {
   const id = await follow(page, `${FEED_SITE}/reading/`);
   if (unread) await unmark(page, id);
-  await page.goto(new URL(`/feeds/${id}`, page.url()).href);
+  await page.goto(new URL(`/people/${id}`, page.url()).href);
   await appReady(page);
   await expect(page.getByRole("button", { name: /The pleasure of a slow letter/ })).toBeVisible();
 }

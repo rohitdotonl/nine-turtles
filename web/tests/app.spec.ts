@@ -495,23 +495,23 @@ test("nothing scrolls underneath the Sidebar button", async ({ page }) => {
   await expect(scroller).not.toHaveAttribute("data-scrolled");
 });
 
-test("Add a feed opens as a sheet over the list you were on: a serif title, one row of actions, and Escape or a press outside closes it", async ({ page, isMobile }) => {
-  test.skip(isMobile, "on a phone, Add a feed is a screen of its own");
+test("Add a person or publication opens as a sheet over the list you were on: a serif title, one row of actions, and Escape or a press outside closes it", async ({ page, isMobile }) => {
+  test.skip(isMobile, "on a phone, Add is a screen of its own");
   await openApp(page);
   await page.keyboard.press("a");
-  const sheet = page.getByRole("dialog", { name: "Add a feed" });
+  const sheet = page.getByRole("dialog", { name: "Add a person or publication" });
   await expect(sheet).toBeVisible();
   await expect(sheet.getByLabel("Paste a website or feed URL")).toBeFocused();
   // Every title speaks in one voice: the sheet's is the same serif, size and weight as the list's (decision 0042).
-  const heading = sheet.getByRole("heading", { level: 2, name: "Add a feed" });
+  const heading = sheet.getByRole("heading", { level: 2, name: "Add a person or publication" });
   expect(await heading.evaluate((element) => getComputedStyle(element).fontFamily)).toContain("Literata");
   await expect(heading).toHaveCSS("font-size", "24px");
   await expect(heading).toHaveCSS("font-weight", "600");
-  // The field takes the full width; Cancel, then Add feed at the right end, in one row at the foot.
+  // The field takes the full width; Cancel, then Add at the right end, in one row at the foot.
   const [field, cancel, add, card] = await Promise.all([
     sheet.getByLabel("Paste a website or feed URL").boundingBox(),
     sheet.getByRole("button", { name: "Cancel" }).boundingBox(),
-    sheet.getByRole("button", { name: "Add feed" }).boundingBox(),
+    sheet.getByRole("button", { name: "Add", exact: true }).boundingBox(),
     sheet.boundingBox(),
   ]);
   expect(field!.width).toBeGreaterThan(card!.width - 2 * 24 - 4);
@@ -519,7 +519,7 @@ test("Add a feed opens as a sheet over the list you were on: a serif title, one 
   expect(cancel!.x + cancel!.width).toBeLessThanOrEqual(add!.x);
   expect(add!.y).toBeGreaterThan(field!.y + field!.height);
   expect(Math.abs(card!.x + card!.width - 24 - (add!.x + add!.width))).toBeLessThan(2);
-  // 20px of room above the row and 12px between its buttons; Cancel has no edge, so only Add feed has weight.
+  // 20px of room above the row and 12px between its buttons; Cancel has no edge, so only Add has weight.
   expect(Math.round(add!.y - (field!.y + field!.height))).toBe(20);
   expect(Math.round(add!.x - (cancel!.x + cancel!.width))).toBe(12);
   await expect(sheet.getByRole("button", { name: "Cancel" })).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
@@ -542,8 +542,8 @@ test("Add a feed opens as a sheet over the list you were on: a serif title, one 
   expect((await sheet.boundingBox())!.y).toBe(top);
   await sheet.getByRole("button", { name: "Cancel" }).click();
   await expect(sheet).toHaveCount(0);
-  // Add feed is an action, so it never shows the "where you are" bar.
-  await expect(sidebar(page).getByRole("link", { name: "Add feed" })).not.toHaveAttribute("aria-current");
+  // Add is an action, so it never shows the "where you are" bar.
+  await expect(sidebar(page).getByRole("link", { name: "Add a person or publication" })).not.toHaveAttribute("aria-current");
 });
 
 test("the chrome never advertises shortcuts: no hint under the list, with the sidebar shown or hidden; ? still opens them", async ({ page, isMobile }) => {
@@ -605,12 +605,15 @@ test("on a computer a 1px line parts the sidebar, the list and the reading pane 
   await expect(page.locator(".list-pane")).toHaveCSS("border-right-width", "1px");
 });
 
-test("the sidebar ends with Add feed, then Keys (icon and word) and Settings as an icon; its toggle says what it does", async ({ page, isMobile }) => {
+test("the sidebar ends with Add, then Keys (icon and word) and Settings as an icon; its toggle says what it does", async ({ page, isMobile }) => {
   test.skip(isMobile, "The phone has its own screens and no sidebar toggle.");
   await page.setViewportSize({ width: 1440, height: 900 });
   await openApp(page);
   const box = async (locator: Locator) => (await locator.boundingBox())!;
-  const add = await box(sidebar(page).getByRole("link", { name: "Add feed" }));
+  // It says "Add" and screen readers hear what it adds (decision 0163).
+  await expect(sidebar(page).getByRole("link", { name: "Add a person or publication" })).toHaveText("Add");
+  await expect(sidebar(page).getByRole("link", { name: "Add a person or publication" })).toHaveAttribute("href", "/add");
+  const add = await box(sidebar(page).getByRole("link", { name: "Add a person or publication" }));
   const keys = sidebar(page).getByRole("button", { name: "Keyboard shortcuts" });
   const settings = sidebar(page).getByRole("link", { name: "Settings" });
   const all = await box(sidebar(page).getByRole("link", { name: "All" }));
@@ -621,10 +624,10 @@ test("the sidebar ends with Add feed, then Keys (icon and word) and Settings as 
     expect(Math.min(each.width, each.height)).toBeGreaterThanOrEqual(44);
   }
   expect(add.x + add.width).toBeLessThanOrEqual(k.x + 1);
-  // Keys says what it is in a word beside its icon, as Add feed does, and both show whole (decisions 0062, 0064).
+  // Keys says what it is in a word beside its icon, as Add does, and both show whole (decisions 0062, 0064).
   await expect(keys).toContainText("Keys");
   await expect(keys.locator("svg")).toHaveCount(1);
-  for (const each of [sidebar(page).getByRole("link", { name: "Add feed" }), keys]) {
+  for (const each of [sidebar(page).getByRole("link", { name: "Add a person or publication" }), keys]) {
     expect(await each.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
   }
   expect(k.x + k.width).toBeLessThanOrEqual(set.x + 1);
@@ -658,7 +661,7 @@ test("in a sidebar narrowed below 15rem, Keys keeps only its icon and stays a fu
   await expect(keys.getByText("Keys")).toBeHidden();
   const box = (await keys.boundingBox())!;
   expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
-  const add = sidebar(page).getByRole("link", { name: "Add feed" });
+  const add = sidebar(page).getByRole("link", { name: "Add a person or publication" });
   expect(await add.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
 });
 

@@ -1921,19 +1921,18 @@ async fn adding_people_keeps_every_feed_on_its_own_with_its_name_and_folder() {
     old.close().await;
 
     let db = nine_turtles::db::open(&data_dir).await.unwrap();
-    // Every feed is still followed, with its own name, on its own, and not
-    // yet asked about; the folder keeps its feed.
-    let followed: Vec<(i64, String, Option<i64>, i64)> = sqlx::query_as(
-        "SELECT feed_id, title, writer_id, same_asked FROM subscriptions ORDER BY feed_id",
-    )
-    .fetch_all(&db)
-    .await
-    .unwrap();
+    // Every feed is still followed, with its own name, on its own; the
+    // folder keeps its feed.
+    let followed: Vec<(i64, String, Option<i64>)> =
+        sqlx::query_as("SELECT feed_id, title, writer_id FROM subscriptions ORDER BY feed_id")
+            .fetch_all(&db)
+            .await
+            .unwrap();
     assert_eq!(
         followed,
         [
-            (1, "My garden".to_owned(), None, 0),
-            (2, "Radio".to_owned(), None, 0)
+            (1, "My garden".to_owned(), None),
+            (2, "Radio".to_owned(), None)
         ]
     );
     let filed: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM feed_folders")
@@ -2079,4 +2078,74 @@ async fn confirming_addresses_keeps_every_reader_and_link_and_confirms_every_add
     .execute(&db)
     .await
     .unwrap();
+}
+
+#[tokio::test]
+async fn adding_publications_keeps_every_feed_person_and_folder_and_guesses_nothing_yet() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just before people and publications (structure change
+    // 32): two feeds followed, joined into one person, one in a folder, and
+    // asked about once.
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(32, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO feeds (id, url, url_key, title, added_at)
+         VALUES (1, 'a', 'a', 'Garden', 1), (2, 'b', 'b', 'Radio', 1)",
+        "INSERT INTO writers (id, person_id, name, created_at) VALUES (1, 1, 'Kai', 1)",
+        "INSERT INTO subscriptions (person_id, feed_id, title, added_at, writer_id, same_asked)
+         VALUES (1, 1, 'My garden', 1, 1, 1), (1, 2, 'Radio', 2, 1, 0)",
+        "INSERT INTO folders (id, person_id, name) VALUES (1, 1, 'Friends')",
+        "INSERT INTO feed_folders (folder_id, feed_id) VALUES (1, 1)",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    // Every feed is still followed, with its name and person, and nothing is guessed yet.
+    type Followed = (i64, String, Option<i64>, Option<String>, Option<String>);
+    let followed: Vec<Followed> = sqlx::query_as(
+        "SELECT feed_id, title, writer_id, kind, place FROM subscriptions ORDER BY feed_id",
+    )
+    .fetch_all(&db)
+    .await
+    .unwrap();
+    assert_eq!(
+        followed,
+        [
+            (1, "My garden".to_owned(), Some(1), None, None),
+            (2, "Radio".to_owned(), Some(1), None, None)
+        ]
+    );
+    let filed: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM feed_folders")
+        .fetch_one(&db)
+        .await
+        .unwrap();
+    assert_eq!(filed, 1);
+    // Only a person or a publication, and only the four kinds of source.
+    assert!(
+        sqlx::query("UPDATE subscriptions SET kind = 'band'")
+            .execute(&db)
+            .await
+            .is_err()
+    );
+    assert!(
+        sqlx::query("UPDATE subscriptions SET place = 'radio'")
+            .execute(&db)
+            .await
+            .is_err()
+    );
 }

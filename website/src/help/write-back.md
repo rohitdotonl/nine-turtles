@@ -30,8 +30,8 @@ it. When it can't, it asks: type the address into **Their email address**
 back**.
 
 nine turtles remembers it for that person, so you're asked only once. Their
-page shows it under **Email**; to change it, choose **More › Edit person…**
-and edit **Email address**.
+page shows it under **Email**; to change it, press **Edit**
+there and change **Email address**.
 
 ## Good to know
 

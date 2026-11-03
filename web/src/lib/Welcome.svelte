@@ -1,6 +1,6 @@
 <!--
   The welcome, before the first feed (SPEC section 2): a title in the reading serif, one
-  sentence, a wide field with Add feed, and importing a list of feeds as a quiet second way in,
+  sentence, a wide field with Add, and importing a list of feeds as a quiet second way in,
   all in one centred 420px column, like Apple Books' empty library: one message, one action.
   On a phone (`start`) it's left-aligned on the screen's 20px margin instead (decision 0052).
   With the Add a feed sheet open over it (`covered`), the sheet has the only field.
@@ -71,7 +71,7 @@
     <div inert aria-hidden="true" class="flex flex-col gap-1.5">
       <div class="welcome-row flex gap-2">
         <span class="field flex min-w-0 flex-1 items-center overflow-hidden whitespace-nowrap text-muted"><span class="welcome-hint">Paste a website or feed URL</span></span>
-        <span class="btn-primary rounded-lg">Add feed</span>
+        <span class="btn-primary rounded-lg">Add</span>
       </div>
       <div class="flex min-h-[5.8rem] flex-col items-center">
         <span class="text-link">{BRING}</span>

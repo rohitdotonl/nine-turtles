@@ -7,11 +7,11 @@
 // One is made for each signed-in screen (Shell.svelte), never shared, so
 // nothing of one reader's is left for the next to see.
 
-import { createFolder, deleteFolder, listFeeds, refused, resubscribe, unsubscribe, type Notice } from "./feeds";
+import { createFolder, deleteFolder, listFeeds, refused, resubscribe, type Notice } from "./feeds";
 import { newestAnswer } from "./inorder";
 import { deleteSaved, listSaved, refusedSaving, saveSearch, type SavedSearch } from "./saved";
 import { byName as collectionOrder, deleteCollection, listCollections, makeCollection, refusedCollection, type Collection } from "./collections";
-import { folderToPerson, personOf, putBack, rowFor, rowsOf } from "./people";
+import { folderToPerson, personOf, putBack, rowFor, rowsOf, unsubscribeAll } from "./people";
 import type { Feed, Folder, Library, Person } from "./shapes";
 
 /** A removal was made, with its line and Undo; or a sentence saying why it wasn't. */
@@ -137,18 +137,23 @@ export class LoadedLibrary {
     this.collections = this.collections.map((each) => (each.id === id ? { ...each, name } : each)).sort(collectionOrder);
   }
 
-  /** Unsubscribes: "Unsubscribed from … · Undo". */
+  /** Unsubscribes from a person or publication: every source of theirs at once, with Undo bringing them all back. */
   async unsubscribe(feed: Feed): Promise<Removed> {
-    const refusal = await unsubscribe(feed.id);
-    if (refusal) return refused(refusal, "feed");
+    const name = this.shownAs(feed)?.title ?? feed.title;
+    const { refusal, left } = await unsubscribeAll(feed.id);
+    if (refusal) return refusal;
     await this.loadFeeds();
     return {
-      message: `Unsubscribed from ${feed.title}`,
+      message: `Unsubscribed from ${name}`,
       undo: async () => {
-        const problem = await resubscribe(feed.id);
-        if (problem) return refused(problem, "feed");
+        let problem;
+        for (const id of left) {
+          problem = await resubscribe(id);
+          if (problem) break;
+        }
+        // Whatever came back shows, even when one couldn't.
         await this.loadFeeds();
-        return undefined;
+        return problem ? refused(problem, "feed") : undefined;
       },
     };
   }

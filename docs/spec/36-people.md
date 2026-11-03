@@ -1,73 +1,98 @@
-# 36. People
+# 36. People and publications
 
 *Part of the spec ([index](../SPEC.md)). `docs/DESIGN.md` takes precedence.
-Decision 0146; the shape agreed with the owner on 2 November 2026 (PLAN.md →
-V1, item 1). The page's look isn't final: it gets a refinement round.*
+Decision 0146 made people; decision 0163 (agreed with the owner on 3
+November 2026) added publications, one page for both, and Edit on that page.
+PLAN.md → V1, item 1.*
 
 **What it does**
-- **A person is one human with one or more places on the web:** a blog, a
-  YouTube channel, a newsletter. A **folder** is a group of people. Readers
-  learn only these two words: on the sidebar, a person's page and Edit person,
-  nine turtles never says "feed".
-- **One row, one page.** Each person is one row in the sidebar, under
-  **People** (or in their folders), A to Z by their name. A place nobody has
-  joined to another is a person with one place: its row looks exactly as
-  before. A person with several places has one row, with their name, and a dot
-  when any of their places has something unread, in every folder any of their places is in.
+- **Someone or something.** Everything a reader follows is either a
+  **person** (someone) or a **publication** (something, such as a magazine
+  or NASA's picture of the day). A person has one or more **sources**: a
+  blog, a YouTube channel, a newsletter, a podcast. A **folder** is a group
+  of people and publications. On these screens nine turtles never says
+  "feed"; the word stays only in technical spots (Feed health, importing or
+  exporting a feed list).
+- **Two headings.** In the sidebar, rows not in a folder sit under
+  **People**, then **Publications**, each A to Z by name. Folders hold
+  both. "Publications" names that sidebar heading only: a person's blog or
+  channel is never called a publication. A person with several sources has
+  one row, with their name, and a dot when any source has something unread,
+  in every folder any of their sources is in.
+- **Which is which.** A source joined to others is always a person. For a
+  source on its own, nine turtles guesses once, from the feed alone (it never
+  fetches a page to find out):
+  - one author name on its articles: a person; several names: a publication;
+  - no names: a place of someone's own on a site many people share (a
+    Substack, Medium, a YouTube channel, a Bluesky account and the like): a
+    person;
+  - a site whose own name is a whole word of the feed's title (NASA at
+    apod.nasa.gov, "NASA Picture of the Day"): a publication, unless the title
+    says it's someone's ("Alpha's blog") or the site's address is a name run
+    together (janedoe.com, "Jane Doe");
+  - still unclear: a person.
+
+  When adding through **+ Add** (section 3), the reader is asked "someone or
+  something?", with the guess already chosen. They can change it later in
+  Edit (for one source only, and not for the last source left of someone
+  joined, who stays a person). Feeds followed before this change get their
+  guess the next time the sidebar loads; an imported feed gets it once
+  nine turtles has checked it for the first time, so the guess sees its
+  writers.
 - **Their list:** choosing the row lists everything they made, newest first
-  (or as the reader sorts), one list across all their places
-  (`/feeds/3`, any of their places' numbers). With two or more places, each
-  row says which place it came from in place of their name: **Blog**,
-  **Video**, **Newsletter**, or **Podcast** for an episode. Everywhere else
-  (Unread, All, Starred, search, Recently read, the article's own line) an
-  article is credited to the person by their name. Mark all as read, "new
-  articles", search in their list and reading offline all cover every place.
-- **Their page:** on a window with the reading area, until an article is
-  opened, it shows their page instead of the quiet line: their name (Literata,
-  28px), then their places as a two-column list, each by what it is (Blog,
-  Video, Newsletter, in the muted grey) with a link to the publisher's own site
-  (a blog by its website, "alpha.example"; a channel or newsletter by its own
-  name), then **Following** since the month the reader followed their first
-  place ("since March 2026", "since this month"). Under it: **Add another
-  place**, **Edit person…**, and, while the list has something to open, how
-  to open it (the same tip as the quiet line's, decision 0062). Searching in
-  their list shows the quiet line again. Once nine turtles knows where to
-  write to them, an **Email** line between their places and Following holds
-  it (section 37).
-- **Add another place**, on the page and in Edit person, opens in place: a
-  list of everyone else the reader follows ("Someone you already follow",
-  then **Join**), and a field for the address of their blog, channel or
-  newsletter (**Follow and join**: followed as Add a feed would, then joined;
-  a site offering several feeds gives its first). Either way their list opens
-  with "Alpha is one person now · Undo". Undo puts every place back as it was,
-  with its own folders and each person under the name they had; a place
-  followed just then by Follow and join is unfollowed again. The keyboard
-  starts on the first field, and Not now puts it back on the button.
-- **Joining** puts every place of the person in every folder any of them was
-  in; the person keeps the name they had, or, for two places on their own,
-  takes the first one's (the place the reader started from). Places of two
-  people joined become one person.
-- **"Is this the same person?"** nine turtles never joins places by itself.
-  It asks, once per place, only on clear evidence: two places the reader
-  follows on the same website of their own (`alpha.example` and
-  `www.alpha.example/news`), never on a site many people share (YouTube,
-  Substack, Medium, GitHub and the like). The question sits on the person's
-  page, a quiet bordered box: "Is Alpha's letters the same person as Alpha's
-  blog?", "Their places are on the same website.", then **Yes, they're one
-  person** and **No**. Yes joins them, with Undo; No (or joining them any
-  other way) and it's never asked about those places again.
-- **Edit person** (the list's More menu, `Shift+E`, or the page's **Edit person…**;
-  the sheet at `/feeds/3/edit` that was Edit feed, SPEC section 15): **Name**
-  (the person's; for a place on its own, as before), then **Email address**
-  (where Write back writes to them, section 37), then **Places**, each by
-  what it is and its name, with Add another place under them and, on a person
-  with several, "Alpha's letters isn't the same person", which makes that
-  place a person of its own again ("… is on its own again · Undo"). Each other
-  place has **Its settings**, which opens the sheet on that place. Then the
-  **Folders** (one list for all their places: saving puts every place in
-  exactly those), then this place's own **Settings** ("Settings for this
-  blog" on a person with several), Add a rule…, and Unsubscribe (from this
-  place only; its tooltip says so).
+  (or as the reader sorts), one list across all their sources (`/people/12`
+  or `/publications/7`). With two or more sources, each row says which source
+  it came from in place of their name: **Blog**, **Video**, **Newsletter**,
+  or **Podcast**. Everywhere else (Unread, All, Starred, search, Recently
+  read, the article's own line) an article is credited by their name. Mark
+  all as read, "new articles", search in their list and reading offline all
+  cover every source. Beside a list, the reading area shows the quiet line
+  ("Time to read something beautiful."), as it does for every list.
+- **Their page,** the same for a person and a publication
+  (`/people/12/about`): opened by pressing their name at the top of their
+  list ("Alpha ›"), by **About Alpha** in the list's More menu, or by the
+  `i` key. On a computer it opens in the reading area beside their list,
+  where an article would; on a phone it's a screen of its own, with ‹ back to
+  their list. It shows their name with an **Edit** button beside it, a muted
+  line ("A person · in Friends · following since March 2026"), their sources,
+  each by its kind (Blog, Video, Newsletter, Podcast) with a link to the
+  publisher's own site (a blog by its website, "alpha.example"; a channel or
+  newsletter by its own name), and, once nine turtles knows where to write
+  to them, an **Email** line (section 37).
+- **Edit** (`/people/12/edit`; `Shift+E` opens it directly) turns the same
+  page into their settings. **Done** saves and turns it back; **Cancel** or
+  Escape turns it back unchanged. Top to bottom:
+  - **Name** and **Email address** (where Write back writes to them,
+    section 37);
+  - for one source, **This is: A person / A publication**;
+  - for a person, their **Sources**, each a row whose › opens that source's
+    own settings, and **+ Add a source** under them;
+  - for one source, its settings right here in Edit (as below);
+  - **Folders** (one list for all their sources: Done puts every source in
+    exactly those);
+  - at the foot, **Unsubscribe from Alpha** in red words, which leaves every
+    source of theirs at once, with Undo.
+- **A source's settings** (`/people/12/sources/34`, from Edit's ›): its
+  **kind** (read from the feed: a newsletter, a YouTube channel is Video, a
+  feed with any episode is Podcast, anything else Blog; the reader can
+  correct it), reading mode, how often to check, open on the website,
+  YouTube's Include Shorts and Include live streams (section 38), Pause for a
+  while, **Add a rule…** (section 27), **Find new address** while it's
+  failing (section 17), and at the foot **Take out of Alpha**: it becomes a
+  person or publication of its own, guessed afresh, with Undo. Done saves
+  and goes back to Edit.
+- **+ Add a source** opens in place: choose someone already followed, or
+  paste the address of their blog, channel or newsletter (followed as + Add
+  would). If the address offers several feeds, the choices show first. If
+  the two being joined are in different folders, it asks which folders to
+  keep, all ticked to begin with. Either way they become one person, and
+  their list opens with "Alpha is one person now · Undo". Undo puts every
+  source back as it was, with its own folders and each under the name it
+  had; a source followed just then is unfollowed again. The person keeps
+  the name they had, or, for two sources on their own, takes the first one's
+  (the one the reader started from).
+- **nine turtles never joins sources by itself, and never asks.** Only the
+  reader joins them (decision 0163 removed "Is this the same person?").
 - **A folder can become a person:** Edit folder has a tick box row, **This
   is one person** ("Everything in it becomes one row, "Alpha", with one page.
   The folder goes; you can undo it straight afterwards."). Saving with it
@@ -76,26 +101,34 @@ V1, item 1). The page's look isn't final: it gets a refinement round.*
   saved searches wait, as when a folder is deleted, section 15), and opens
   the person's list with "Alpha is one person now · Undo", which makes the
   folder again with everything in it, its rules and its saved searches.
-- **Unsubscribing** from a place leaves the person with their other places;
-  following it again later starts it afresh, on its own. A person whose places
-  are all gone leaves the sidebar. Find new address keeps the place in its
-  person. Each reader's people are theirs alone.
+- **Addresses:** `/people/12` and `/publications/7` for a list, `…/about`
+  for the page, `…/edit` for Edit, `/people/12/sources/34` for a source's
+  settings. Old `/feeds/12` and `/feeds/12/edit` addresses still open, and
+  the address bar is tidied to the new one. An address for someone the
+  reader doesn't follow says so plainly, on a computer and a phone alike: "Not found", and "You don't follow anyone at this address. It may have been an old one."
+- **Unsubscribing** from a person leaves every source of theirs (Undo brings
+  them all back). To leave one source only, take it out first. Following a
+  source again later starts it afresh, on its own. Find new address keeps the
+  source in its person. Each reader's people and publications are theirs
+  alone.
 
 **How to check it**
-1. Follow two blogs on one website (a blog and its newsletter page). Open the
-   second: its page asks "Is … the same person as …?". Press **Yes, they're
-   one person**: one row, both lists in one, each row labelled Blog. Press
-   Undo: two rows again.
-2. On a person's page, press **Add another place**, choose someone you follow
-   and press **Join**: one row with both their names' articles, labelled by
-   place. Open Edit person: both places are listed, with "Its settings" on the
-   other one.
-3. In Edit person, rename them and tick a folder, then Save: the row has the
-   new name, in that folder, and Unread credits their articles to that name.
-4. In Edit person on a person with two places, press "… isn't the same
-   person": two rows again. Undo joins them back.
-5. Make a folder holding two places, open Edit folder, tick **This is one
+1. Follow a blog by one person and a site with several writers: the blog is
+   under **People**, the site under **Publications**.
+2. Press a person's name at the top of their list: their page opens beside
+   the list (on a phone, as its own screen), with the muted line and their
+   sources.
+3. Press **Edit**, change **This is** to A publication, press **Done**: the
+   row moves under Publications.
+4. In Edit, press **+ Add a source** and choose someone in another folder:
+   it asks which folders, all ticked. Join: one row, both lists in one, each
+   row labelled by kind. Undo: two rows again.
+5. In Edit on that person, press › on a source, then **Take out of …**: two
+   rows again. Undo joins them back.
+6. Press **Unsubscribe from …** on a person with two sources: the row goes.
+   Undo: it's back with both.
+7. Make a folder holding two sources, open Edit folder, tick **This is one
    person** and Save: the folder is gone, one row with its name. Undo: the
    folder is back with both.
-6. Follow a blog on its own: its row and list look as before; its page shows
-   one place and since when.
+8. Visit an old `/feeds/N` address: the list opens and the address bar shows
+   `/people/N` or `/publications/N`.

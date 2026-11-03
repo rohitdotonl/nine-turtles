@@ -13,6 +13,7 @@ const server = vi.hoisted(() => ({
   listCollections: vi.fn(),
   deleteCollection: vi.fn(),
   makeCollection: vi.fn(),
+  unsubscribeAll: vi.fn(),
 }));
 
 vi.mock("./feeds", async (actual) => ({
@@ -22,6 +23,10 @@ vi.mock("./feeds", async (actual) => ({
   resubscribe: server.resubscribe,
   deleteFolder: server.deleteFolder,
   createFolder: server.createFolder,
+}));
+vi.mock("./people", async (actual) => ({
+  ...(await actual<typeof import("./people")>()),
+  unsubscribeAll: server.unsubscribeAll,
 }));
 vi.mock("./saved", async (actual) => ({
   ...(await actual<typeof import("./saved")>()),
@@ -60,7 +65,7 @@ describe("the reader's library", () => {
     const before = later<{ feeds: Feed[]; folders: Folder[] }>();
     const after = later<{ feeds: Feed[]; folders: Folder[] }>();
     server.listFeeds.mockReturnValueOnce(before.promise).mockReturnValueOnce(after.promise);
-    server.unsubscribe.mockResolvedValue(undefined);
+    server.unsubscribeAll.mockResolvedValue({ left: [1] });
     const library = new LoadedLibrary();
 
     const first = library.loadFeeds();
@@ -104,11 +109,11 @@ describe("the reader's library", () => {
   });
 
   it("says why a removal or its Undo wasn't made", async () => {
-    server.unsubscribe.mockResolvedValueOnce("gone");
+    server.unsubscribeAll.mockResolvedValueOnce({ refusal: "You don't follow them any more.", left: [] });
     const library = new LoadedLibrary();
     expect(typeof (await library.unsubscribe(feed(1)))).toBe("string");
 
-    server.unsubscribe.mockResolvedValueOnce(undefined);
+    server.unsubscribeAll.mockResolvedValueOnce({ left: [1] });
     server.listFeeds.mockResolvedValue({ feeds: [], folders: [] });
     server.resubscribe.mockResolvedValueOnce("trouble");
     const done = await library.unsubscribe(feed(1));

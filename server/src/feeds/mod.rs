@@ -69,9 +69,12 @@ struct FeedRow {
     /// The person it's one place of, when the reader joined it to others
     /// (`writers`); none for a place on its own.
     person: Option<i64>,
-    /// What kind of place it is, for the person's page and their list's
-    /// labels (SPEC section 36): "blog", "video" or "newsletter".
+    /// What kind of source it is, for the person's page and their list's
+    /// labels (SPEC section 36): "blog", "video", "newsletter" or "podcast".
     place: String,
+    /// "person" or "publication" (decision 0163): always a person for a
+    /// place joined to others.
+    kind: String,
     /// When the reader followed it, for the person's page's "Following since".
     added_at: i64,
     /// A YouTube channel's feed, whose Shorts and live streams are sorted
@@ -88,18 +91,6 @@ struct FeedRow {
     folders: Vec<i64>,
 }
 
-/// What kind of place a feed is, from its address alone (decision 0146):
-/// newsletter, video (YouTube's feeds) or blog. `FEEDS` says the same in SQL.
-pub fn place_of(url: &str) -> &'static str {
-    if url.starts_with("newsletter:") {
-        "newsletter"
-    } else if url.contains("youtube.com/feeds/") {
-        "video"
-    } else {
-        "blog"
-    }
-}
-
 /// Each feed a reader follows, with their name for it, their settings and
 /// their unread count, counted from the `entries_unread_by_feed` index alone
 /// (tests/speed.rs checks this). A feed that flows past (`river`) counts
@@ -111,8 +102,10 @@ pub const FEEDS: &str = "SELECT feeds.id, subscriptions.title, feeds.site_url, s
         subscriptions.writer_id AS person, subscriptions.added_at, subscriptions.write_to,
         feeds.email, subscriptions.shorts, subscriptions.live_streams,
         feeds.url LIKE '%youtube.com/feeds/videos.xml?channel_id=%' AS sorts_videos,
-        CASE WHEN feeds.url LIKE 'newsletter:%' THEN 'newsletter'
-             WHEN feeds.url LIKE '%youtube.com/feeds/%' THEN 'video' ELSE 'blog' END AS place,
+        COALESCE(subscriptions.place, CASE WHEN feeds.url LIKE 'newsletter:%' THEN 'newsletter'
+             WHEN feeds.url LIKE '%youtube.com/feeds/%' THEN 'video' ELSE 'blog' END) AS place,
+        CASE WHEN subscriptions.writer_id IS NOT NULL THEN 'person'
+             ELSE COALESCE(subscriptions.kind, 'person') END AS kind,
         CASE WHEN subscriptions.river THEN 0 ELSE
             (SELECT COUNT(*) FROM entries WHERE entries.person_id = subscriptions.person_id
                  AND entries.feed_id = subscriptions.feed_id AND entries.read = 0)
@@ -130,6 +123,10 @@ type Sidebar = (Vec<FeedRow>, Vec<Folder>, Vec<Writer>);
 async fn list_feeds(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
     let listed: Result<Sidebar, sqlx::Error> = async {
         let mut connection = state.db.acquire().await?;
+        // Each place not yet guessed a person or publication is, once (decision 0163).
+        let mut guessing = sqlx::Connection::begin(&mut *connection).await?;
+        crate::writers::kind::fill(&mut guessing, person, None).await?;
+        guessing.commit().await?;
         // One snapshot, so the feeds, folders and memberships agree.
         let mut transaction = sqlx::Connection::begin(&mut *connection).await?;
         let mut feeds: Vec<FeedRow> = sqlx::query_as(FEEDS)

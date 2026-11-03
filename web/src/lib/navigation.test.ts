@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { homeFor, isList, isOver, moveTo, Opener, opensFromHere, stepFor, Steps, underSheet, type Browser, type Here } from "./navigation";
+import { homeFor, isList, isOver, isWho, moveTo, Opener, opensFromHere, stepFor, Steps, underSheet, type Browser, type Here } from "./navigation";
 import type { Route } from "./router";
 
 const unread: Route = { kind: "view", view: "unread" };
@@ -7,6 +7,7 @@ const all: Route = { kind: "view", view: "all" };
 const feed: Route = { kind: "feed", id: 7 };
 const addFeed: Route = { kind: "add-feed" };
 const editFeed: Route = { kind: "edit-feed", id: 7 };
+const about: Route = { kind: "about", id: 7 };
 const settings: Route = { kind: "settings" };
 const health: Route = { kind: "feed-health" };
 
@@ -20,8 +21,10 @@ describe("places", () => {
     const lists: Route[] = [unread, feed, { kind: "folder", id: 1 }, { kind: "search", id: 2 }, { kind: "collection", id: 3 }];
     expect(lists.every(isList)).toBe(true);
     expect(isList(settings) || isList(addFeed)).toBe(false);
-    expect(isOver(addFeed) && isOver(editFeed) && isOver({ kind: "save-search" })).toBe(true);
-    expect(isOver(settings) || isOver(feed)).toBe(false);
+    expect(isOver(addFeed) && isOver({ kind: "edit-folder", id: 2 }) && isOver({ kind: "save-search" })).toBe(true);
+    expect(isOver(settings) || isOver(feed) || isOver(editFeed)).toBe(false);
+    expect(isWho(about) && isWho(editFeed) && isWho({ kind: "edit-source", id: 7, source: 8 })).toBe(true);
+    expect(isWho(feed) || isWho(addFeed)).toBe(false);
   });
 
   it("leads Unread to All in river mode, and nothing else", () => {
@@ -31,7 +34,10 @@ describe("places", () => {
   });
 
   it("shows under a sheet the thing edited, or the last list", () => {
+    // A person's page and Edit sit beside their list on a computer; on a phone they're screens of their own.
     expect(underSheet(editFeed, unread, false)).toEqual(feed);
+    expect(underSheet(about, unread, false)).toEqual(feed);
+    expect(underSheet(about, unread, true)).toBe(about);
     expect(underSheet({ kind: "edit-folder", id: 2 }, unread, false)).toEqual({ kind: "folder", id: 2 });
     expect(underSheet({ kind: "edit-search", id: 3 }, unread, false)).toEqual({ kind: "search", id: 3 });
     expect(underSheet(addFeed, feed, false)).toBe(feed);
@@ -48,7 +54,13 @@ describe("moveTo", () => {
 
   it("closes a sheet back to the place under it, keeping its article", () => {
     expect(moveTo(here(addFeed, feed), feed)).toEqual({ keepsArticle: true, sameScreen: true, opening: false, closing: true, returnRow: undefined });
-    expect(moveTo(here(editFeed), feed)).toMatchObject({ keepsArticle: true, closing: true });
+    expect(moveTo(here(editFeed, feed), feed)).toMatchObject({ keepsArticle: true, closing: false });
+  });
+
+  it("keeps the list and its article beside a person's page, Edit and source settings", () => {
+    expect(moveTo(here(feed), about)).toMatchObject({ keepsArticle: true, opening: false });
+    expect(moveTo(here(about, feed), editFeed)).toMatchObject({ keepsArticle: true });
+    expect(moveTo(here(about, feed), unread)).toMatchObject({ keepsArticle: false });
   });
 
   it("closes a sheet elsewhere: the article goes", () => {
@@ -125,17 +137,17 @@ describe("Opener", () => {
 describe("stepFor", () => {
   it("adds a step when the address or the screen changes, and none when both stay", () => {
     expect(stepFor(feed, "list", "/", false)).toEqual({ screen: "list", back: "list", fromParent: false });
-    expect(stepFor(settings, "list", "/feeds/7", false)).toEqual({ screen: "page", back: "list", fromParent: false });
+    expect(stepFor(settings, "list", "/people/7", false)).toEqual({ screen: "page", back: "list", fromParent: false });
     expect(stepFor(health, "page", "/settings", true)).toEqual({ screen: "page", back: "page", fromParent: true });
     // The same place, from the article (a phone) or the feeds (home): back to its list is a step.
-    expect(stepFor(feed, "article", "/feeds/7", false)).toEqual({ screen: "list", back: "article", fromParent: false });
-    expect(stepFor(feed, "list", "/feeds/7", false)).toBeUndefined();
+    expect(stepFor(feed, "article", "/people/7", false)).toEqual({ screen: "list", back: "article", fromParent: false });
+    expect(stepFor(feed, "list", "/people/7", false)).toBeUndefined();
   });
 });
 
 describe("Steps", () => {
   /** A browser history that records what's asked of it, and the screen's hands. */
-  function made(state: unknown = null, path = "/feeds/7") {
+  function made(state: unknown = null, path = "/people/7") {
     const asked: string[] = [];
     const browser: Browser = {
       get state() {
@@ -159,14 +171,14 @@ describe("Steps", () => {
     // Arrived straight from a link or a reload: nothing before it to go back to.
     const straight = made({ screen: "list" });
     straight.steps.back("home");
-    expect(straight.asked).toEqual(['replace /feeds/7 {"screen":"home"}', "arrive home"]);
+    expect(straight.asked).toEqual(['replace /people/7 {"screen":"home"}', "arrive home"]);
   });
 
   it("closes a sheet opened with a step by stepping back, so Back doesn't reopen it", () => {
     const { steps, asked } = made({ screen: "list" });
     steps.goTo(addFeed, "list", false, true);
     steps.closeSheet();
-    expect(asked).toEqual(['push /add-feed {"screen":"page","back":"list","fromParent":false}', "back"]);
+    expect(asked).toEqual(['push /add {"screen":"page","back":"list","fromParent":false}', "back"]);
   });
 
   it("closes a sheet with no step of its own by going to the place under it", () => {
@@ -176,7 +188,7 @@ describe("Steps", () => {
     forward.steps.closeSheet();
     expect(forward.asked).toEqual(["go under"]);
     // Opened where the address and screen didn't change: no step was added.
-    const inPlace = made({ screen: "page", back: "list" }, "/add-feed");
+    const inPlace = made({ screen: "page", back: "list" }, "/add");
     inPlace.steps.goTo(addFeed, "page", false, true);
     inPlace.steps.closeSheet();
     expect(inPlace.asked).toEqual(["go under"]);
@@ -185,7 +197,7 @@ describe("Steps", () => {
   it("opens an article on a phone as a step on from its list", () => {
     const { steps, asked } = made({ screen: "list" });
     steps.openArticle();
-    expect(asked).toEqual(['push /feeds/7 {"screen":"article","back":"list"}']);
+    expect(asked).toEqual(['push /people/7 {"screen":"article","back":"list"}']);
     expect(steps.cameFrom("list")).toBe(true);
     steps.goBack();
     expect(asked.at(-1)).toBe("back");
