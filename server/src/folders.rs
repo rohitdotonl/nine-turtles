@@ -15,7 +15,7 @@
 
 use axum::{
     Json, Router,
-    extract::{Path, Query, State},
+    extract::{Path, State},
     http::StatusCode,
     response::{IntoResponse, Response},
     routing::post,
@@ -369,36 +369,13 @@ async fn set_paused(
     rules::apply_to(connection, person, id, &back).await
 }
 
-/// Whether unsubscribing removes what the reader kept too (SPEC section 42).
-#[derive(Deserialize)]
-struct Removing {
-    #[serde(default)]
-    remove_kept: bool,
-}
-
-/// Unsubscribes on the screen (Undo comes back through `resubscribe`). With
-/// `remove_kept`, its starred and marked articles and the note on the
-/// person go too, once it's cleared for good (`notes::drop_kept`).
+/// Unsubscribes on the screen (Undo comes back through `resubscribe`).
 async fn unsubscribe(
     SignedIn(person): SignedIn,
     State(state): State<AppState>,
     Path(id): Path<i64>,
-    Query(removing): Query<Removing>,
 ) -> Response {
-    let left = async {
-        let left = leave(&state.db, person, id, now(), Leaving::Screen).await?;
-        if left && removing.remove_kept {
-            sqlx::query(
-                "UPDATE subscriptions SET drop_kept = 1 WHERE person_id = ? AND feed_id = ?",
-            )
-            .bind(person)
-            .bind(id)
-            .execute(&state.db)
-            .await?;
-        }
-        Ok::<bool, sqlx::Error>(left)
-    };
-    match left.await {
+    match leave(&state.db, person, id, now(), Leaving::Screen).await {
         Ok(false) => StatusCode::NOT_FOUND.into_response(),
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Err(error) => database_problem("unsubscribing", &error),
@@ -566,6 +543,8 @@ pub async fn clear(
     if claimed.rows_affected() == 0 {
         return Ok(false);
     }
+    // First, so what they chose to remove too is let go with the rest (SPEC section 42).
+    crate::notes::drop_kept(&mut *connection, person, id).await?;
     // Entries carried over to a new address (`health::follow_elsewhere`)
     // hold articles stored under the old feed: once they go, that feed may
     // need letting go too.
@@ -585,7 +564,6 @@ pub async fn clear(
     // An article on any of their collections stays, as a starred one does
     // (decision 0108), and so does one they highlighted or wrote a note on
     // (decision 0164), unless they chose to remove those too.
-    crate::notes::drop_kept(&mut *connection, person, id).await?;
     sqlx::query(
         "DELETE FROM entries WHERE person_id = ?1 AND feed_id = ?2 AND starred = 0
          AND NOT EXISTS (SELECT 1 FROM collection_articles AS kept

@@ -36,7 +36,8 @@ to other apps (section 22) or counted anywhere.
 **At the article's end**
 - Under the closing rule, above Write back (section 37): **Your
   highlights**, each quote with its note, **Edit note** (or **Add a
-  note…**) and **Remove**; pressing a quote shows it in the text. Then
+  note…**), **Copy** and **Remove**; pressing a quote shows it in the text.
+  Remove puts the keyboard on Undo. Then
   **Your note**, the reader's note on the whole article, with **Edit note**.
 - The More menu's **Add a note…** (and Shift+H) opens the note box there:
   "A note on this article", "Only you see it. Search finds it, and Your
@@ -48,6 +49,9 @@ to other apps (section 22) or counted anywhere.
   a note on such an article is a button that takes the player back there.
 
 **Without a connection** (section 32)
+- With a connection, a change the server won't take (a note too long, an
+  article gone) goes back to how it was, and the top bar says why in plain
+  words; nothing is lost without a word.
 - Highlights and notes are still made and shown at once. They're kept on
   this device and sent, in order, as soon as the connection is back. Until
   then one quiet line stays at the article's foot: "You're offline. This is

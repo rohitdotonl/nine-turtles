@@ -67,6 +67,20 @@ test("highlights and a note stay with the article, and Notes and search find the
   const ends = article(page).getByRole("list", { name: "Your highlights" });
   await expect(ends.getByRole("button", { name: "made-up summary", exact: true })).toBeVisible();
 
+  // h highlights the words chosen, from the keyboard.
+  await choose(page, "for article");
+  await page.keyboard.press("h");
+  await expect(article(page).locator("mark.highlight")).toHaveCount(2);
+  await page.keyboard.press("Escape");
+  // Its Copy and Remove are at the end too; Remove puts the keyboard on Undo, which brings it back.
+  await expect(ends.getByRole("button", { name: "Copy “for article”" })).toBeVisible();
+  await ends.getByRole("button", { name: "Remove highlight “for article”" }).click();
+  await expect(article(page).locator("mark.highlight")).toHaveCount(1);
+  const undo = page.getByRole("button", { name: "Undo" });
+  await expect(undo).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(article(page).locator("mark.highlight")).toHaveCount(2);
+
   // Shift+H with nothing chosen: a note on the whole article, at its end.
   await page.getByRole("heading", { name: NEWEST }).focus();
   await page.keyboard.press("Shift+H");
@@ -80,7 +94,7 @@ test("highlights and a note stay with the article, and Notes and search find the
   await page.reload();
   await appReady(page);
   await page.getByRole("button", { name: new RegExp(NEWEST.replace(/[()]/g, "\\$&")) }).first().click();
-  await expect(article(page).locator("mark.highlight")).toHaveText("made-up summary");
+  await expect(article(page).locator("mark.highlight")).toHaveCount(2);
   await expect(article(page).getByText("Ask about the hedgerow survey")).toBeVisible();
   const notes = sidebar(page).getByRole("link", { name: "Notes", exact: true });
   await expect(notes).toBeVisible();
@@ -146,4 +160,26 @@ test("unsubscribing asks whether to keep what was saved", async ({ page, isMobil
   await expect(question.getByRole("button", { name: "Keep them" })).toBeFocused();
   await question.getByRole("button", { name: "Keep them" }).click();
   await expect(page.getByText(`Unsubscribed from Blog ${blog}`)).toBeVisible();
+});
+
+test("Remove them too leaves them, with Undo", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the same question on a phone");
+  const blog = `notes-remove-${test.info().workerIndex}-${Date.now()}`;
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  const id = await openNewest(page, blog);
+  await choose(page, "made-up summary");
+  await page.getByRole("menuitem", { name: /Highlight/ }).click();
+  await expect(article(page).locator("mark.highlight")).toHaveCount(1);
+
+  await page.goto(new URL(`/people/${id}/edit`, FEEDS_APP).href);
+  await appReady(page);
+  await page.getByRole("button", { name: `Unsubscribe from Blog ${blog}` }).click();
+  const question = page.getByRole("group", { name: `Keep what you saved from Blog ${blog}?` });
+  const asked = page.waitForRequest((request) => request.url().endsWith("/api/writers/unsubscribe") && request.postDataJSON()?.remove_kept === true);
+  await question.getByRole("button", { name: "Remove them too" }).click();
+  await asked;
+  await expect(page.getByText(`Unsubscribed from Blog ${blog}`)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Undo" })).toBeVisible();
 });

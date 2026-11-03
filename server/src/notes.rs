@@ -392,6 +392,25 @@ pub async fn kept_by(
     }))
 }
 
+/// Unsubscribing with "Remove them too": what the reader kept from these
+/// places goes once the unsubscribe is cleared for good (`drop_kept`); Undo
+/// before then brings it all back (`feeds::store::follow_again`).
+pub async fn drop_later(
+    connection: &mut SqliteConnection,
+    person: i64,
+    feeds: &[i64],
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "UPDATE subscriptions SET drop_kept = 1
+         WHERE person_id = ? AND feed_id IN (SELECT value FROM json_each(?))",
+    )
+    .bind(person)
+    .bind(serde_json::to_string(feeds).unwrap_or_else(|_| "[]".to_owned()))
+    .execute(&mut *connection)
+    .await?;
+    Ok(())
+}
+
 /// When an unsubscribe is cleared for good and the reader chose to remove
 /// what they kept (`subscriptions.drop_kept`): their highlights and notes on
 /// the place's articles and their note on the person go, and its articles

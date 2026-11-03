@@ -94,17 +94,28 @@ function request(change: Waiting): [string, unknown] {
   }
 }
 
+/** What the server answered a change: what it made, or why it didn't take it. */
+type Sent = { answer?: Record<string, unknown>; refusal?: string };
+
 /**
  * Sends one change. "offline" when there's no connection (it should wait);
- * otherwise the server's answer, or undefined when it wasn't taken (an
- * article or highlight that's gone): nothing to keep waiting for.
+ * otherwise the server's answer, or why it wasn't taken (too long, an
+ * article or highlight that's gone, a problem on the server).
  */
-async function send(change: Waiting): Promise<Record<string, unknown> | "offline" | undefined> {
+async function send(change: Waiting): Promise<Sent | "offline"> {
   if (connection.offline) return "offline";
   const [path, body] = request(change);
   const { answer, refusal } = await sendChange(path, body, ["too-long", "no-quote"]);
   if (refusal === "trouble" && connection.offline) return "offline";
-  return refusal ? undefined : answer;
+  return { answer, refusal };
+}
+
+/** Why a change wasn't kept, in plain words (shown, never silently dropped). */
+export function notKept(refusal: string): string {
+  if (refusal === "too-long") return "That note is longer than a note can be. Make it shorter.";
+  if (refusal === "no-quote") return "Those words couldn't be highlighted. Choose fewer.";
+  if (refusal === "gone") return "That article or highlight is no longer here, so it couldn't be saved.";
+  return "That couldn't be saved. Try again in a moment.";
 }
 
 let sending = false;
@@ -116,9 +127,10 @@ export async function sendWaiting(): Promise<void> {
   try {
     while (waiting.list.length > 0 && !connection.offline) {
       const change = waiting.list[0]!;
-      const answer = await send(change);
-      if (answer === "offline") break;
-      const made = change.kind === "highlight" && isRecord(answer?.highlight) ? toNote(answer.highlight) : undefined;
+      const sent = await send(change);
+      if (sent === "offline") break;
+      // One the server won't take (an article gone meanwhile) isn't sent again; the article shows the account's own once reopened.
+      const made = change.kind === "highlight" && isRecord(sent.answer?.highlight) ? toNote(sent.answer.highlight) : undefined;
       waiting.list = waiting.list.slice(1);
       save();
       if (made && change.kind === "highlight") renumbered.get(change.article)?.(change.id, made.id);
@@ -177,54 +189,70 @@ export class Marks {
     this.full.notes = notes;
   }
 
-  /** Sends a change, or keeps it on this device. Answers the server's answer, if it was sent. */
-  private async change(change: Waiting): Promise<Record<string, unknown> | undefined> {
-    const answer = waiting.list.length > 0 ? "offline" : await send(change);
-    if (answer !== "offline") return answer;
-    waiting.list = folded(waiting.list, change);
-    save();
-    // Online, behind changes that were waiting: they're sent now, this one after them.
-    if (!connection.offline) void sendWaiting();
-    return undefined;
+  /**
+   * Sends a change, or keeps it on this device. If the server won't take
+   * it, what was shown goes back to how it was (`before`) and the answer
+   * says why, in plain words, for the reader to see.
+   */
+  private async change(change: Waiting, before: Note[]): Promise<Sent> {
+    const sent = waiting.list.length > 0 ? "offline" : await send(change);
+    if (sent === "offline") {
+      waiting.list = folded(waiting.list, change);
+      save();
+      // Online, behind changes that were waiting: they're sent now, this one after them.
+      if (!connection.offline) void sendWaiting();
+      return {};
+    }
+    if (sent.refusal) {
+      this.keep(before);
+      return { refusal: notKept(sent.refusal) };
+    }
+    return sent;
   }
 
-  /** Highlights the words; answers the new highlight. */
-  async highlight(quote: Quote, note: string | null = null): Promise<Note> {
+  /** Highlights the words; answers the new highlight, or why it couldn't be kept. */
+  async highlight(quote: Quote, note: string | null = null): Promise<{ made?: Note; problem?: string }> {
+    const before = this.notes;
     const made: Note = { id: -(Date.now() + ++temporary), ...quote, note, madeAt: Math.floor(Date.now() / 1000) };
     this.keep([...this.notes, made]);
     noted.any = true;
-    const answer = await this.change({ kind: "highlight", article: this.full.id, ...made, ...quote });
+    const { answer, refusal } = await this.change({ kind: "highlight", article: this.full.id, ...made, ...quote }, before);
+    if (refusal) return { problem: refusal };
     const saved = isRecord(answer?.highlight) ? toNote(answer.highlight) : undefined;
     if (saved) this.keep(this.notes.map((each) => (each.id === made.id ? saved : each)));
-    return saved ?? made;
+    return { made: saved ?? made };
   }
 
-  /** Changes a highlight's note; an empty one takes it off. */
-  async setNote(id: number, note: string | null) {
+  /** Changes a highlight's note; an empty one takes it off. Answers why, if it couldn't be kept. */
+  async setNote(id: number, note: string | null): Promise<string | undefined> {
+    const before = this.notes;
     const clean = note?.trim() || null;
     this.keep(this.notes.map((each) => (each.id === id ? { ...each, note: clean } : each)));
-    await this.change({ kind: "change", article: this.full.id, id, note: clean });
+    return (await this.change({ kind: "change", article: this.full.id, id, note: clean }, before)).refusal;
   }
 
-  /** Removes a highlight (and its note). Answers it, for Undo. */
-  async remove(id: number): Promise<Note | undefined> {
+  /** Removes a highlight (and its note). Answers it, for Undo, or why it couldn't be removed. */
+  async remove(id: number): Promise<{ was?: Note; problem?: string }> {
+    const before = this.notes;
     const was = this.notes.find((each) => each.id === id);
-    if (!was) return undefined;
+    if (!was) return {};
     this.keep(this.notes.filter((each) => each.id !== id));
-    await this.change({ kind: "remove", article: this.full.id, id });
-    return was;
+    const { refusal } = await this.change({ kind: "remove", article: this.full.id, id }, before);
+    return refusal ? { problem: refusal } : { was };
   }
 
-  /** Undo for a removed highlight: it's made again, with its note. */
-  async restore(was: Note) {
-    if (was.quote !== null) await this.highlight({ quote: was.quote, before: was.before, after: was.after }, was.note);
+  /** Undo for a removed highlight: it's made again, with its note. Answers why, if it couldn't be. */
+  async restore(was: Note): Promise<string | undefined> {
+    if (was.quote === null) return undefined;
+    return (await this.highlight({ quote: was.quote, before: was.before, after: was.after }, was.note)).problem;
   }
 
-  /** Sets the note on the whole article; an empty one removes it. */
-  async setArticleNote(note: string | null) {
+  /** Sets the note on the whole article; an empty one removes it. Answers why, if it couldn't be kept. */
+  async setArticleNote(note: string | null): Promise<string | undefined> {
+    const before = this.notes;
     const clean = note?.trim() || null;
     if (clean) noted.any = true;
     this.keep(withWaiting(this.notes, this.full.id, [{ kind: "article-note", article: this.full.id, note: clean }]));
-    await this.change({ kind: "article-note", article: this.full.id, note: clean });
+    return (await this.change({ kind: "article-note", article: this.full.id, note: clean }, before)).refusal;
   }
 }

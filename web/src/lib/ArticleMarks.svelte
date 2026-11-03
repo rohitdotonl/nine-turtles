@@ -7,7 +7,7 @@
   Edit note, Copy, Remove highlight, with Undo).
 
   At the article's end, above Write back: "Your highlights", each quote with
-  its note (a quote no longer in the article says so, and stays), then "Your
+  its note, Edit note, Copy and Remove (a quote no longer in the article says so, and stays), then "Your
   note", the reader's note on the whole article, written in a box in place.
   The More menu's "Add a note…" and Shift+H open that box; h highlights the
   words chosen. On a video or a podcast's episode a new note starts with the
@@ -126,8 +126,9 @@
     const from = document.activeElement;
     getSelection()?.removeAllRanges();
     menu = undefined;
-    const made = await marks.highlight(quote);
-    say("Highlighted.");
+    const { made, problem } = await marks.highlight(quote);
+    say(problem ?? "Highlighted.");
+    if (!made) return;
     // A small menu beside the new highlight says so, and offers a note on it there and then, or Done.
     await tick();
     const at = text?.querySelector(`[data-highlight="${made.id}"]`);
@@ -138,12 +139,13 @@
     const open = menu;
     menu = undefined;
     if (!open) return;
-    if (open.highlight) await marks.setNote(open.highlight.id, note);
+    let problem: string | undefined;
+    if (open.highlight) problem = await marks.setNote(open.highlight.id, note);
     else if (open.quote) {
       getSelection()?.removeAllRanges();
-      await marks.highlight(open.quote, note.trim() || null);
+      problem = (await marks.highlight(open.quote, note.trim() || null)).problem;
     }
-    say("Note saved.");
+    say(problem ?? "Note saved.");
   }
 
   async function copy(highlight: Note) {
@@ -159,16 +161,26 @@
 
   async function remove(highlight: Note) {
     close();
-    removed = await marks.remove(highlight.id);
-    say("");
+    const { was, problem } = await marks.remove(highlight.id);
+    removed = was;
+    say(problem ?? "Highlight removed.");
+    // Its buttons are gone: the keyboard goes to Undo.
+    await tick();
+    undoButton?.focus({ preventScroll: true });
   }
 
   async function undo() {
     const was = removed;
     removed = undefined;
-    if (was) await marks.restore(was);
-    say("Highlight put back.");
+    if (was) say((await marks.restore(was)) ?? "Highlight put back.");
   }
+
+  // Without a connection, the quiet line at the foot is said once as well, for a screen reader.
+  let saidOffline = false;
+  $effect(() => {
+    if (marks.waits && !saidOffline) say(OFFLINE_LINE);
+    saidOffline = marks.waits;
+  });
 
   /** Shows a highlight in the text, from the list at the article's end. */
   function show(highlight: Note) {
@@ -181,10 +193,14 @@
   let draft = $state("");
   let box: HTMLTextAreaElement | undefined = $state();
   let editButton: HTMLButtonElement | undefined = $state();
+  let undoButton: HTMLButtonElement | undefined = $state();
+  /** Where the keyboard was before the note box opened, for when Edit note is gone (the note emptied). */
+  let noteFrom: Element | null = null;
 
   /** "Add a note…" (More, Shift+H with nothing chosen): the box at the article's end, ready to type in. */
   export async function writeArticleNote() {
     draft = marks.articleNote?.note ?? startTime() ?? "";
+    noteFrom = document.activeElement;
     editingArticle = true;
     await tick();
     box?.scrollIntoView({ block: "center" });
@@ -207,16 +223,21 @@
   async function saveArticleNote(event: SubmitEvent) {
     event.preventDefault();
     editingArticle = false;
-    await marks.setArticleNote(draft);
-    say(draft.trim() ? "Note saved." : "Note removed.");
-    await tick();
-    editButton?.focus();
+    const problem = await marks.setArticleNote(draft);
+    say(problem ?? (draft.trim() ? "Note saved." : "Note removed."));
+    await giveBack();
   }
 
   async function notNow() {
     editingArticle = false;
+    await giveBack();
+  }
+
+  /** The keyboard goes to Edit note, or, with no note left, back where it was. */
+  async function giveBack() {
     await tick();
-    editButton?.focus();
+    const to = editButton ?? (noteFrom instanceof HTMLElement && noteFrom.isConnected ? noteFrom : undefined);
+    to?.focus({ preventScroll: true });
   }
 </script>
 
@@ -239,6 +260,7 @@
               <button type="button" class="btn-quiet" aria-label="{each.note ? 'Edit note' : 'Add a note'} on “{each.quote}”" onclick={(event) => (menu = { anchor: event.currentTarget.getBoundingClientRect(), highlight: each, writing: true, from: event.currentTarget })}
                 >{each.note ? "Edit note" : "Add a note…"}</button
               >
+              <button type="button" class="btn-quiet" aria-label="Copy “{each.quote}”" onclick={() => copy(each)}>Copy</button>
               <button type="button" class="btn-quiet" aria-label="Remove highlight “{each.quote}”" onclick={() => remove(each)}>Remove</button>
             </div>
           </li>
@@ -267,7 +289,7 @@
   <div class="foot floating" lang="en">
     {#if removed}
       <p>Highlight removed</p>
-      <button type="button" class="btn-quiet" onclick={undo}>Undo</button>
+      <button type="button" class="btn-quiet" bind:this={undoButton} onclick={undo}>Undo</button>
     {/if}
     {#if marks.waits}<p class="text-ink-2">{OFFLINE_LINE}</p>{/if}
   </div>

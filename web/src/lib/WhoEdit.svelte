@@ -233,13 +233,13 @@
         bind:this={leaveButton}
         aria-disabled={busy}
         aria-describedby="{formId}-leave"
-        title="Stops following {one ? 'them' : 'every source of theirs'} and removes the articles; starred ones stay. You can undo it straight afterwards."
+        title="Stops following {one ? 'them' : 'every source of theirs'} and removes the articles; what you starred, highlighted or noted can stay. You can undo it straight afterwards."
         onclick={() => leave()}
         class="inset-row inset-action font-semibold text-danger">Unsubscribe from {name}</button
       >
     </div>
     {/if}
-    <span id="{formId}-leave" class="sr-only">Removes their articles; starred ones stay. You can undo it straight afterwards.</span>
+    <span id="{formId}-leave" class="sr-only">Removes their articles; what you starred, highlighted or noted can stay. You can undo it straight afterwards.</span>
   </form>
 </div>
 

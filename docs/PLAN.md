@@ -69,7 +69,7 @@ milestone order above.
    page per person, whose places list as one. Decision 0146 lists the
    smaller choices made while the owner was away, for the refinement round;
    the person's page gets the address to write back with item 2. Its
-   refinement, **people and publications** (decision 0164, agreed with the
+   refinement, **people and publications** (decision 0163, agreed with the
    owner on 3 November 2026), is built: People and Publications in the
    sidebar, one page for both with Edit on it, + Add, + Add a source, Take
    out and Unsubscribe from everyone's sources with Undo, and "Is this the

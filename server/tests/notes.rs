@@ -164,6 +164,25 @@ async fn highlights_and_notes_are_kept_listed_found_and_exported() {
     assert_eq!(found["articles"][0]["excerpt_from"], "note");
     let (_, found) = ask(&base, &cookie, "/api/search?notes=true").await;
     assert_eq!(titles(&found), ["Soup 2", "Soup 4"]);
+    // Accents and capitals in any language match as in articles, at a word's start only.
+    send(
+        &base,
+        &cookie,
+        &path,
+        json!({ "note": "Grandma's, Café Ölmühle" }),
+    )
+    .await;
+    let (_, found) = ask(&base, &cookie, "/api/search?q=cafe%20OLMU").await;
+    assert_eq!(titles(&found), ["Soup 4"]);
+    let (_, found) = ask(&base, &cookie, "/api/search?q=muhle").await;
+    assert_eq!(titles(&found), Vec::<String>::new());
+    send(
+        &base,
+        &cookie,
+        &path,
+        json!({ "note": "Grandma's, with barley" }),
+    )
+    .await;
 
     // A note on the person, shown with the sidebar's list.
     let (status, _) = send(
@@ -344,8 +363,8 @@ async fn unsubscribing_keeps_what_was_marked_unless_asked_to_remove_it() {
     let (status, _) = send(
         &base,
         &other,
-        &format!("/api/feeds/{again}/unsubscribe?remove_kept=true"),
-        json!({}),
+        "/api/writers/unsubscribe",
+        json!({ "feed": again, "remove_kept": true }),
     )
     .await;
     assert!(status.is_success());
@@ -359,13 +378,14 @@ async fn unsubscribing_keeps_what_was_marked_unless_asked_to_remove_it() {
     .await;
     let (_, kept) = ask(&base, &other, &format!("/api/feeds/{again}/kept")).await;
     assert_eq!(kept["marked"], 1);
-    send(
+    let (status, _) = send(
         &base,
         &other,
-        &format!("/api/feeds/{again}/unsubscribe?remove_kept=true"),
-        json!({}),
+        "/api/writers/unsubscribe",
+        json!({ "feed": again, "remove_kept": true }),
     )
     .await;
+    assert!(status.is_success());
     nine_turtles::folders::clear_unsubscribed(&state.db, Some(other_id), i64::MAX)
         .await
         .unwrap();

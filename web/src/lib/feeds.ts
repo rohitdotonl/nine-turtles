@@ -246,9 +246,8 @@ export async function editFeed(id: number, changes: FeedChanges): Promise<Refusa
   return (await change(`/api/feeds/${id}`, { ...rest, new_folder: newFolder, open_on_site: openOnSite, live_streams: liveStreams })).refusal;
 }
 
-/** Unsubscribes; `removeKept` removes the articles the reader starred or marked there, and their note on the person, too (SPEC section 42). */
-export async function unsubscribe(id: number, removeKept = false): Promise<Refusal | undefined> {
-  return (await change(`/api/feeds/${id}/unsubscribe${removeKept ? "?remove_kept=true" : ""}`, {})).refusal;
+export async function unsubscribe(id: number): Promise<Refusal | undefined> {
+  return (await change(`/api/feeds/${id}/unsubscribe`, {})).refusal;
 }
 
 /** Undo for unsubscribing. "too-late" once the feed was cleared for good. */

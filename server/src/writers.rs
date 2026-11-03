@@ -608,14 +608,7 @@ async fn unsubscribe_person(
         .await?;
         folders::hide(&mut transaction, person, &places, now()).await?;
         if form.remove_kept {
-            sqlx::query(
-                "UPDATE subscriptions SET drop_kept = 1
-                 WHERE person_id = ? AND feed_id IN (SELECT value FROM json_each(?))",
-            )
-            .bind(person)
-            .bind(serde_json::to_string(&places).unwrap_or_else(|_| "[]".to_owned()))
-            .execute(&mut *transaction)
-            .await?;
+            crate::notes::drop_later(&mut transaction, person, &places).await?;
         }
         transaction.commit().await?;
         Ok::<_, sqlx::Error>(places)

@@ -416,6 +416,44 @@ fn parse_cursor(text: &str) -> Option<(bool, i64, i64)> {
     parts.next().is_none().then_some((in_title, at, id))
 }
 
+/// The reader's articles with a highlight or note holding every searched
+/// word, each at the start of one of its words, as articles are searched
+/// (SPEC section 42). They're the reader's own few, so they're read and
+/// matched here, with accents and capitals in any language folded alike.
+async fn noted_matching(
+    db: &sqlx::SqlitePool,
+    person: i64,
+    typed: &str,
+) -> Result<Vec<i64>, sqlx::Error> {
+    let searched = searched_words(typed);
+    if searched.is_empty() {
+        return Ok(Vec::new());
+    }
+    let notes: Vec<(i64, String)> = sqlx::query_as(
+        "SELECT article_id, COALESCE(quote, '') || ' ' || COALESCE(note, '') FROM notes
+         WHERE person_id = ?",
+    )
+    .bind(person)
+    .fetch_all(db)
+    .await?;
+    let mut found: Vec<i64> = notes
+        .into_iter()
+        .filter(|(_, text)| {
+            let words: Vec<String> = word_spans(text)
+                .into_iter()
+                .map(|(start, end)| fold(&text[start..end]))
+                .collect();
+            searched
+                .iter()
+                .all(|term| words.iter().any(|word| word.starts_with(term.as_str())))
+        })
+        .map(|(article, _)| article)
+        .collect();
+    found.sort_unstable();
+    found.dedup();
+    Ok(found)
+}
+
 /// One page of results, and where the next starts (null at the end).
 pub async fn find(
     db: &sqlx::SqlitePool,
@@ -457,14 +495,12 @@ pub async fn find(
                  WHERE articles_search MATCH ",
         );
         query.push_bind(words.clone());
-        query.push(" UNION SELECT article_id FROM notes WHERE person_id = ");
-        query.push_bind(person);
-        for word in searched_words(&search.q) {
-            query.push(" AND instr(lower(COALESCE(quote, '') || ' ' || COALESCE(note, '')), ");
-            query.push_bind(word);
-            query.push(") > 0");
-        }
-        query.push(") AS matched CROSS JOIN entries ON entries.person_id = ");
+        query.push(" UNION SELECT value FROM json_each(");
+        query.push_bind(
+            serde_json::to_string(&noted_matching(db, person, &search.q).await?)
+                .unwrap_or_else(|_| "[]".to_owned()),
+        );
+        query.push(")) AS matched CROSS JOIN entries ON entries.person_id = ");
         query.push_bind(person);
         query.push(" AND entries.article_id = matched.article_id ");
     } else {

@@ -72,7 +72,7 @@ struct FeedRow {
     /// What kind of source it is, for the person's page and their list's
     /// labels (SPEC section 36): "blog", "video", "newsletter" or "podcast".
     place: String,
-    /// "person" or "publication" (decision 0164): always a person for a
+    /// "person" or "publication" (decision 0163): always a person for a
     /// place joined to others.
     kind: String,
     /// When the reader followed it, for the person's page's "Following since".
@@ -126,7 +126,7 @@ type Sidebar = (Vec<FeedRow>, Vec<Folder>, Vec<Writer>, bool);
 async fn list_feeds(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
     let listed: Result<Sidebar, sqlx::Error> = async {
         let mut connection = state.db.acquire().await?;
-        // Each place not yet guessed a person or publication is, once (decision 0164).
+        // Each place not yet guessed a person or publication is, once (decision 0163).
         let mut guessing = sqlx::Connection::begin(&mut *connection).await?;
         crate::writers::kind::fill(&mut guessing, person, None).await?;
         guessing.commit().await?;
