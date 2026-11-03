@@ -83,7 +83,9 @@ Data API.
 **Known limits, said plainly where they show:** each YouTube feed holds only
 a channel's latest 15 videos; the feeds carry no video length; when YouTube's
 feeds fail for a while, nine turtles tries again as with any feed (feed
-health says so). YouTube's own player remembers whether captions are on;
+health says so). YouTube's feeds often answer "not found" by mistake, so
+nine turtles asks again, up to four times a second apart, before believing
+it (decision 0159); following a channel such as @TED then works first time. YouTube's own player remembers whether captions are on;
 Safari may forget that if nine turtles goes unused for a while (decision
 0156).
 

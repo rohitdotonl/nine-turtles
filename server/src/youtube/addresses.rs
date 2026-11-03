@@ -84,11 +84,17 @@ pub fn playlist_feed(list: &str) -> String {
     format!("https://www.youtube.com/feeds/videos.xml?playlist_id={list}")
 }
 
+/// Whether this is one of YouTube's feeds (a channel's or a playlist's).
+pub fn is_feed(url: &Url) -> bool {
+    url.host_str()
+        .is_some_and(|host| host.trim_start_matches("www.") == "youtube.com")
+        && url.path() == "/feeds/videos.xml"
+}
+
 /// The channel whose feed this is, if it's a channel's feed (not a
 /// playlist's, and not on any other site).
 pub fn channel_of_feed(url: &Url) -> Option<String> {
-    let host = url.host_str()?.trim_start_matches("www.");
-    if host != "youtube.com" || url.path() != "/feeds/videos.xml" {
+    if !is_feed(url) {
         return None;
     }
     url.query_pairs()
