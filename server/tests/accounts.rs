@@ -74,19 +74,32 @@ async fn open_app() -> (String, nine_turtles::AppState, Outbox, String) {
     (base, state, outbox, owner)
 }
 
-/// Signs up (made at once, no email sent, decision 0115): answers the new
-/// reader's cookie.
+/// Signs up and follows the link emailed to confirm the address (decision
+/// 0154): answers the new reader's cookie.
 async fn open_reader(base: &str, outbox: &Outbox, email: &str) -> String {
-    let made = post(
+    let asked = post(
         base,
         "/api/sign-up",
         None,
         json!({ "email": email, "password": READER_PASSWORD }),
     )
     .await;
-    assert_eq!(made.status(), StatusCode::NO_CONTENT);
-    assert!(emails_to(outbox, email).is_empty());
-    cookie_from(&made)
+    assert_eq!(asked.status(), StatusCode::ACCEPTED);
+    assert!(asked.headers().get("set-cookie").is_none());
+    let (page, ticket) = newest_link(outbox, email);
+    assert_eq!(page, "/finish-sign-up");
+    let made = post(
+        base,
+        "/api/sign-up/finish",
+        None,
+        json!({ "ticket": ticket, "password": READER_PASSWORD }),
+    )
+    .await;
+    assert_eq!(made.status(), StatusCode::OK);
+    let cookie = cookie_from(&made);
+    // The sign-up email is left out of what each test counts afterwards.
+    outbox.lock().unwrap().clear();
+    cookie
 }
 
 #[tokio::test]
@@ -237,6 +250,7 @@ async fn at_most_three_emails_go_to_one_address_in_an_hour() {
     let (base, state, outbox, _) = open_app().await;
     let email = "tam@example.com";
     open_reader(&base, &outbox, email).await;
+    sign_up_link_forgotten(&state.db).await;
     // Three reset emails, a minute apart, then nothing, though the answer
     // never changes.
     for _ in 0..5 {
@@ -274,6 +288,15 @@ async fn pressing_send_link_twice_sends_one_email() {
     a_minute_passes(&state.db).await;
     assert_eq!(forgot().await.status(), StatusCode::ACCEPTED);
     assert_eq!(emails_to(&outbox, email).len(), before + 2);
+}
+
+/// The link that confirmed a new reader's address is left out of what a
+/// test counts (it is one of the address's emails for the hour).
+async fn sign_up_link_forgotten(db: &sqlx::SqlitePool) {
+    sqlx::query("DELETE FROM email_links WHERE purpose = 'sign-up'")
+        .execute(db)
+        .await
+        .unwrap();
 }
 
 /// Moves every link a minute (and a second) into the past, as if a minute
@@ -1321,6 +1344,7 @@ async fn a_new_password_setting_wins_over_one_set_by_email() {
 async fn emailed_links_past_their_time_are_tidied_by_background_checking() {
     let (base, state, outbox, _) = open_app().await;
     open_reader(&base, &outbox, "later@example.com").await;
+    sign_up_link_forgotten(&state.db).await;
     let changed = post(
         &base,
         "/api/password/forgot",
@@ -1420,6 +1444,7 @@ async fn a_sign_in_link_lasts_fifteen_minutes_and_still_counts_for_the_hour() {
     let (base, state, outbox, _) = open_app().await;
     let email = "lena@example.com";
     open_reader(&base, &outbox, email).await;
+    sign_up_link_forgotten(&state.db).await;
     ask_sign_in_link(&base, email).await;
     let (_, ticket) = newest_link(&outbox, email);
     // Sixteen minutes later.
@@ -1553,6 +1578,7 @@ async fn after_a_sign_in_link_a_new_password_can_be_chosen_once() {
     let (base, state, outbox, _) = open_app().await;
     let email = "wren@example.com";
     let laptop = open_reader(&base, &outbox, email).await;
+    sign_up_link_forgotten(&state.db).await;
     ask_sign_in_link(&base, email).await;
     let (_, ticket) = newest_link(&outbox, email);
     assert!(
@@ -1698,15 +1724,24 @@ async fn sign_up_password_link_and_reset_set_the_same_locked_cookie_for_a_year()
     let (base, _, outbox, _) = open_app().await;
     let email = "ines@example.com";
 
-    // Signing up.
-    let made = post(
+    // Signing up: the link that confirms the address signs this device in.
+    let asked = post(
         &base,
         "/api/sign-up",
         None,
         json!({ "email": email, "password": READER_PASSWORD }),
     )
     .await;
-    assert_eq!(made.status(), StatusCode::NO_CONTENT);
+    assert_eq!(asked.status(), StatusCode::ACCEPTED);
+    let (_, ticket) = newest_link(&outbox, email);
+    let made = post(
+        &base,
+        "/api/sign-up/finish",
+        None,
+        json!({ "ticket": ticket, "password": READER_PASSWORD }),
+    )
+    .await;
+    assert_eq!(made.status(), StatusCode::OK);
     assert_lasting_and_locked(&made);
 
     // A password.
