@@ -79,7 +79,8 @@ milestone order above.
    gone.
 4. **YouTube as a first-class citizen** ✅ built (SPEC section 38,
    decisions 0144 and 0149; its smaller choices listed in 0149 for the
-   refinement round, and speed and captions still to try), always through
+   refinement round; a video's speed carries over and YouTube keeps
+   captions itself, decision 0156), always through
    YouTube's own feeds and player, never scraping: follow any YouTube link
    (channel, handle, video, playlist); Shorts and live streams left out by
    default, each with a switch on the feed's screen; bringing your YouTube

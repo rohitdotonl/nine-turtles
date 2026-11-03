@@ -44,8 +44,8 @@ export function playerAddress(video: string, start = 0, origin = ""): string {
   return `${PLAYER_ORIGIN}/embed/${video}?autoplay=1&rel=0&enablejsapi=1${from}${page}`;
 }
 
-/** What YouTube's player said in a message to the page: its time, its length, and whether it's playing, paused or ended. */
-export type PlayerNews = { time?: number; duration?: number; state?: "playing" | "paused" | "ended" };
+/** What YouTube's player said in a message to the page: its time, its length, its speed, and whether it's playing, paused or ended. */
+export type PlayerNews = { time?: number; duration?: number; rate?: number; state?: "playing" | "paused" | "ended" };
 
 const STATES: Record<number, PlayerNews["state"]> = { 0: "ended", 1: "playing", 2: "paused" };
 
@@ -60,13 +60,34 @@ export function playerNews(data: unknown): PlayerNews | undefined {
   if (typeof message !== "object" || message === null) return undefined;
   const { event, info } = message as { event?: unknown; info?: unknown };
   if (event === "onStateChange" && typeof info === "number") return { state: STATES[info] };
+  if (event === "onPlaybackRateChange") return typeof info === "number" && isVideoSpeed(info) ? { rate: info } : {};
   if ((event !== "infoDelivery" && event !== "initialDelivery") || typeof info !== "object" || info === null) return undefined;
-  const { currentTime, duration, playerState } = info as Record<string, unknown>;
+  const { currentTime, duration, playbackRate, playerState } = info as Record<string, unknown>;
   return {
     ...(typeof currentTime === "number" ? { time: currentTime } : {}),
     ...(typeof duration === "number" && duration > 0 ? { duration } : {}),
+    ...(typeof playbackRate === "number" && isVideoSpeed(playbackRate) ? { rate: playbackRate } : {}),
     ...(typeof playerState === "number" && STATES[playerState] ? { state: STATES[playerState] } : {}),
   };
+}
+
+/**
+ * YouTube's player doesn't carry a chosen speed from one video to the next
+ * (tried in real browsers, decision 0156), though it does remember
+ * captions. So this device remembers the speed last chosen in it, apart
+ * from a podcast's, and gives it to each video as it starts.
+ */
+export const VIDEO_SPEED_KEY = "nine-turtles.video-speed";
+
+/** A speed YouTube's player can play at: from a quarter to four times. */
+function isVideoSpeed(rate: number): boolean {
+  return Number.isFinite(rate) && rate >= 0.25 && rate <= 4;
+}
+
+/** The video speed this device keeps (its text), or 1 when none or nothing usable is kept. */
+export function videoSpeed(kept: string | null): number {
+  const rate = Number(kept);
+  return kept !== null && isVideoSpeed(rate) ? rate : 1;
 }
 
 /** A message to the player: start listening to it, or a command such as seeking. */

@@ -16,13 +16,17 @@
   ends the player closes back to the still box, so YouTube's grid of other
   videos never shows, and the place is forgotten. Nothing plays by itself.
 
+  It plays at the speed last chosen in a video on this device: YouTube's
+  player remembers captions by itself, but not speed (decision 0156).
+
   Under it, the chapters its description lists (decision 0144), each a
   button: pressed, the video plays from there.
 -->
 <script lang="ts">
   import { onDestroy, tick } from "svelte";
   import { clock, devicePlace, resumeFrom, savePlace, SAVE_EVERY_MS, serverPlace } from "./podcasts";
-  import { PLAYER_ORIGIN, playerAddress, playerNews, toPlayer, type Chapter } from "./youtube";
+  import { deviceText, setDeviceText } from "./device";
+  import { PLAYER_ORIGIN, playerAddress, playerNews, toPlayer, VIDEO_SPEED_KEY, videoSpeed, type Chapter } from "./youtube";
 
   let {
     id,
@@ -58,12 +62,17 @@
   let lastSaved = 0;
   /** The player's last state: its regular time updates don't repeat it. */
   let playerState: "playing" | "paused" | "ended" | undefined;
+  /** The speed this video should play at, and whether the player has taken it: until then, the player's own 1× is not a choice. */
+  let speed = 1;
+  let speedTaken = true;
 
   function play(from = resume) {
     start = from;
     time = from;
     heard = false;
     playerState = undefined;
+    speed = videoSpeed(deviceText(VIDEO_SPEED_KEY));
+    speedTaken = speed === 1;
     playing = true;
   }
 
@@ -86,15 +95,37 @@
     } else play(at);
   }
 
+  function giveSpeed() {
+    send(toPlayer("command", "setPlaybackRate", [speed]));
+  }
+
+  /** The player's speed: until it has taken this device's, ask again; after, a change is the reader's, kept for the next video. */
+  function heardSpeed(rate: number) {
+    if (!speedTaken) {
+      if (rate === speed) speedTaken = true;
+      else giveSpeed();
+    } else if (rate !== speed) {
+      speed = rate;
+      setDeviceText(VIDEO_SPEED_KEY, rate === 1 ? null : String(rate));
+    }
+  }
+
   function listen(event: MessageEvent) {
     if (event.origin !== PLAYER_ORIGIN || !frame || event.source !== frame.contentWindow) return;
     const news = playerNews(event.data);
     if (!news) return;
+    if (!heard) {
+      send(toPlayer("command", "addEventListener", ["onPlaybackRateChange"]));
+      if (!speedTaken) giveSpeed();
+    }
     heard = true;
+    if (news.rate !== undefined) heardSpeed(news.rate);
     if (news.time !== undefined) time = news.time;
     if (news.duration !== undefined) duration = news.duration;
     const changed = news.state !== undefined && news.state !== playerState;
     if (news.state) playerState = news.state;
+    // An advert before the video plays at its own speed: give the video this device's once it starts.
+    if (changed && playerState === "playing" && !speedTaken) giveSpeed();
     if (playerState === "ended") {
       // The video ends when it ends: back to the still box, from the start next time, with the keyboard on it.
       keep(true);

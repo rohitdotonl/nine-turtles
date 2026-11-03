@@ -66,6 +66,10 @@ you paste.
   on pause and on leaving the video (on the server for each reader, and on
   this device). Next time the box says **Resume from 4:00** (screen readers:
   "Resume from 4:00: {title}") and plays from there.
+- **Your speed carries over** (decision 0156): a speed chosen in YouTube's
+  own menu (say 1.5×) is what the next video plays at, on this device;
+  choosing 1× goes back. nine turtles adds no control of its own. Captions
+  need nothing: YouTube's player remembers whether you turned them on.
 - **The video ends when it ends:** nothing plays by itself, and when a video
   finishes the player closes back to the still box, so YouTube's grid of
   other videos never shows, and the keyboard is back on the box; the next
@@ -79,8 +83,9 @@ Data API.
 **Known limits, said plainly where they show:** each YouTube feed holds only
 a channel's latest 15 videos; the feeds carry no video length; when YouTube's
 feeds fail for a while, nine turtles tries again as with any feed (feed
-health says so). Whether YouTube's player remembers speed and captions by
-itself is still to be tried in real browsers (decision 0144, item 7).
+health says so). YouTube's own player remembers whether captions are on;
+Safari may forget that if nine turtles goes unused for a while (decision
+0156).
 
 **How to check it**
 1. In Add a feed, paste a YouTube video's address: it asks "This video is by
@@ -98,3 +103,6 @@ itself is still to be tried in real browsers (decision 0144, item 7).
    Resume from …. Let a video end: the player closes back to the box.
 6. A video with a long description shows its first paragraph and Show the
    full description.
+7. Play a video, choose 1.5× in the player's settings, then open another
+   video and press Play: it plays at 1.5×. Turn captions off in one video:
+   the next one plays without them.

@@ -61,7 +61,8 @@ reader sees.*
   The CSV is read by a few lines of code, not a library.
 - **Speed and captions remembered** (decision 0144, item 7) is not built:
   it needs a test in real browsers against YouTube's real player, which the
-  building agent couldn't reach. It waits for the refinement round.
+  building agent couldn't reach. It waits for the refinement round. (Done:
+  speed is remembered, captions are YouTube's own, decision 0156.)
 
 **Choices made while the owner was away** (each easy to reverse):
 
