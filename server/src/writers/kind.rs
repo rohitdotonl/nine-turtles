@@ -202,9 +202,8 @@ fn names_the_site(host: &str, title: &str) -> bool {
 /// source kind yet, once it has been fetched: an imported feed waits for its
 /// first check, so the guess sees its authors and episodes. `only` is a feed
 /// just added, whose articles were stored then, so it's guessed at once. Their choices
-/// stay as they made them. A place first guessed a person whose articles
-/// are all by one named author is called by that name, unless the reader already named
-/// it something other than the feed's title.
+/// stay as they made them. A place first guessed a person is called by its
+/// one author's name (`name_by_author`).
 pub async fn fill(
     connection: &mut SqliteConnection,
     person: i64,
@@ -245,28 +244,70 @@ pub async fn fill(
         .bind(feed)
         .execute(&mut *connection)
         .await?;
-        // Named only when every article is theirs: one unsigned article may be someone else's.
-        let all_signed: bool = sqlx::query_scalar(
-            "SELECT NOT EXISTS (SELECT 1 FROM articles
-                 WHERE feed_id = ? AND trim(COALESCE(author, '')) = '')",
+        if unguessed && kind == "person" {
+            name_by_author(connection, feed, Some(person)).await?;
+        }
+    }
+    Ok(())
+}
+
+/// Calls a place's followers by its one author's name (owner's plan, step 2),
+/// where they still call it by the feed's own title, as the publisher last
+/// gave it, so a name the reader gave or brought from another app stays.
+/// `who` is one reader whose place was just guessed a person; `None` is
+/// every follower still waiting for a name since structure change 35
+/// (`name_pending`), at the feed's check, once its title is fresh.
+/// Named only when every article is signed by that one name: an unsigned
+/// one may be someone else's.
+pub async fn name_by_author(
+    connection: &mut SqliteConnection,
+    feed: i64,
+    who: Option<i64>,
+) -> Result<(), sqlx::Error> {
+    let waiting: bool = sqlx::query_scalar(
+        "SELECT EXISTS (SELECT 1 FROM subscriptions WHERE feed_id = ?1
+             AND (person_id = ?2 OR (?2 IS NULL AND name_pending)))",
+    )
+    .bind(feed)
+    .bind(who)
+    .fetch_one(&mut *connection)
+    .await?;
+    if !waiting {
+        return Ok(());
+    }
+    let authors: Vec<String> = sqlx::query_scalar(
+        "SELECT trim(author) FROM articles
+         WHERE feed_id = ? AND trim(COALESCE(author, '')) != ''
+         GROUP BY trim(author) ORDER BY MAX(id) DESC LIMIT 10",
+    )
+    .bind(feed)
+    .fetch_all(&mut *connection)
+    .await?;
+    let all_signed: bool = sqlx::query_scalar(
+        "SELECT NOT EXISTS (SELECT 1 FROM articles
+             WHERE feed_id = ? AND trim(COALESCE(author, '')) = '')",
+    )
+    .bind(feed)
+    .fetch_one(&mut *connection)
+    .await?;
+    if let (true, Some(name)) = (all_signed, one_author(&authors)) {
+        sqlx::query(
+            "UPDATE subscriptions SET title = ?1
+             WHERE feed_id = ?2 AND (person_id = ?3 OR (?3 IS NULL AND name_pending))
+                 AND writer_id IS NULL AND kind = 'person'
+                 AND title = (SELECT title FROM feeds WHERE feeds.id = subscriptions.feed_id)",
         )
+        .bind(name)
         .bind(feed)
-        .fetch_one(&mut *connection)
+        .bind(who)
+        .execute(&mut *connection)
         .await?;
-        if let (true, true, "person", Some(name)) =
-            (unguessed, all_signed, kind, one_author(&authors))
-        {
-            sqlx::query(
-                "UPDATE subscriptions SET title = ?
-                 WHERE person_id = ? AND feed_id = ? AND writer_id IS NULL
-                     AND title = (SELECT title FROM feeds WHERE feeds.id = subscriptions.feed_id)",
-            )
-            .bind(name)
-            .bind(person)
+    }
+    if who.is_none() {
+        sqlx::query("UPDATE subscriptions SET name_pending = 0 WHERE feed_id = ?")
             .bind(feed)
             .execute(&mut *connection)
             .await?;
-        }
     }
     Ok(())
 }

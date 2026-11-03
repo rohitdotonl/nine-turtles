@@ -46,11 +46,17 @@ PLAN.md → V1, item 1.*
   name, as the feed writes it ("Tomas Berg", not his blog's title "Notes
   from Tomas"). A role or placeholder ("admin", "editor", "staff" and the
   like) is never taken for a name. When the feed doesn't name one author,
-  the blog's title stays, and Edit fixes the rest. A name the reader gave in
-  Edit always wins: nine turtles only renames a person still called by
-  their feed's own title, once, when it first guesses them (people followed
-  before this change were renamed the same way, once). An Atom feed that
-  names its author once, for all its entries, signs each of them.
+  the blog's title stays, and Edit fixes the rest. A name the reader gave (in
+  Edit, or in the app they imported from) always wins: nine turtles only renames a person still called by
+  their feed's own title (as the publisher last gave it, never a name brought
+  from another app), once, when it first guesses them; people followed
+  before this change are renamed the same way, once, at their feed's next
+  check. An Atom feed that names its author once, for all its entries, signs
+  each of them, so it counts as one author for the person-or-publication
+  guess too (an organisation named as a feed's only author is guessed a
+  person, and Edit fixes it). Only "No, a publication" in the question after
+  adding gives back the feed's title; changing **This is** in Edit later
+  keeps whatever name it has.
 - **Their list:** choosing the row lists everything they made, newest first
   (or as the reader sorts), one list across all their sources (`/people/12`
   or `/publications/7`). With two or more sources, each row says which source

@@ -700,3 +700,43 @@ async fn an_imported_feed_is_guessed_once_it_has_been_fetched() {
         .unwrap();
     assert_eq!(reader.feed(gazette).await["kind"], "publication");
 }
+
+#[tokio::test]
+async fn an_imported_person_is_named_after_their_first_check_unless_the_reader_named_them() {
+    let (reader, state) = Reader::new().await;
+    // One feed under its own title; the same kind of feed under a name the reader gave in another app.
+    let file = format!(
+        r#"<?xml version="1.0"?><opml version="2.0"><body>
+        <outline type="rss" text="Notes from Tomas" xmlUrl="{0}/tomas.xml"/>
+        <outline type="rss" text="My old friend" xmlUrl="{0}/tomas.xml?again"/></body></opml>"#,
+        reader.publisher
+    );
+    let response = Client::new()
+        .post(format!("{}/api/opml", reader.base))
+        .header("cookie", &reader.cookie)
+        .header("sec-fetch-site", "same-origin")
+        .header("content-type", "text/x-opml")
+        .body(file)
+        .send()
+        .await
+        .unwrap();
+    assert!(response.status().is_success(), "{}", response.status());
+    let feeds: Vec<i64> = sqlx::query_scalar("SELECT id FROM feeds ORDER BY id")
+        .fetch_all(&state.db)
+        .await
+        .unwrap();
+    for feed in &feeds {
+        nine_turtles::checking::check(&state, *feed, nine_turtles::now())
+            .await
+            .unwrap();
+    }
+    let mut names = Vec::new();
+    for feed in &feeds {
+        let listed = reader.feed(*feed).await;
+        // The publisher's own title, fresh from the check, never the reader's label.
+        assert_eq!(listed["site_title"], "Notes from Tomas");
+        names.push(listed["title"].as_str().unwrap().to_owned());
+    }
+    names.sort();
+    assert_eq!(names, ["My old friend", "Tomas Berg"]);
+}

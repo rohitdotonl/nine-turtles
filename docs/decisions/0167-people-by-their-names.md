@@ -18,15 +18,22 @@ and Write back said "Write back to Notes from Tomas".*
   is enough to leave the title alone (it may be someone else's), as is a
   role such as "admin". An Atom feed's one author signs its entries too.
 - **A name the reader gave always wins.** nine turtles renames only a
-  person still called by their feed's own title, and only once; a joined
+  person still called by their feed's own title, as the publisher last gave
+  it (`feeds.title`, now refreshed at every changed check, so a label from
+  an imported feed list never counts as the publisher's, and one reader's
+  label never reaches another), and only once; a joined
   person keeps the name the reader chose. Answering "No, a publication"
   gives it back the feed's title.
 - **Write back calls a person by their first name** ("Write back to
   Tomas") when their name is their own: two to four capitalised words that
   aren't a blog's title. Anything else is said whole.
-- **People already followed** were renamed the same way, once, by
-  structure change 35, which changes only names (no structure), and only
-  where the reader hadn't given one.
+- **People already followed** are renamed the same way, once, at their
+  feed's next check, when its title is fresh: structure change 35 adds
+  `subscriptions.name_pending` to mark them, and the check clears it.
+- **Also in this change:** an article's byline names the author only when
+  that isn't the name already shown ("Hal Brennan · 19 Oct"), and "Read on
+  …" names the site by its own title ("Read on Garden Letters") or its
+  address.
 
 ## Why
 
