@@ -56,8 +56,7 @@ We never name a company in copy: the enemy is a behaviour.
 2. **Writing back is built in:** reply by email from the article,
    privately. No "Sent from nine turtles" line, ever (Rohit, 1 November).
 3. **You keep who you find:** share any page from a blog into nine turtles
-   and it asks "Follow this person?" (Rohit asked for this to be built,
-   1 November). Nothing is saved as a link.
+   and it asks "Follow this person?" (built, decision 0138). Nothing is saved as a link.
 4. **It ends:** no endless scroll, no counts, nothing to check.
 5. **Nobody in between:** no algorithm, no AI rewriting or ranking, no
    likes; export everything in one click.

@@ -89,16 +89,9 @@ Never with a pitch.
 
 ### Ideas that build "write back"
 
-- **Letter-writing month (February):** invite readers to write back to one
-  writer they read.
-- **"Your feed is broken" letters** to bloggers whose feed fails, counted
-  across readers and never saying who reads what.
 - **"Support this writer" links** from the feed's own payment link (needs
   a spec change).
-- **Sponsor** NetNewsWire, Kill the Newsletter or JSON Feed on GitHub
-  Sponsors ($5–10 a month).
-- **Posts:** "Letters to a Young Blogger" (after Rilke), "Still Here: blogs that have published for 20 years" (the blogs
-  named tend to share it).
+- **Posts:** "Letters to a Young Blogger" (after Rilke).
 
 ### Founder precedents worth quoting
 
@@ -118,9 +111,9 @@ Never with a pitch.
 
 ### Welcoming the first 100
 
-A short welcome note in Rohit's voice, then a handwritten postcard from
-India (about $150 for 100), asking each for one sentence he may quote.
-Precedent: Derek Sivers' CD Baby email.
+A short welcome note in Rohit's voice, asking each for one sentence he may
+quote. Precedent: Derek Sivers' CD Baby email. (Postcards were set aside,
+2 November 2026.)
 
 ### Newsletters
 
@@ -142,7 +135,6 @@ Precedent: Derek Sivers' CD Baby email.
   "Feedly alternative without AI", "follow blogs without social media",
   "read newsletters outside my inbox") in ChatGPT, Claude, Perplexity,
   Gemini and Google's AI Mode. Pages they cite become next month's list.
-- **Add "an AI assistant"** to "how did you hear about us?".
 
 ### Website basics
 
