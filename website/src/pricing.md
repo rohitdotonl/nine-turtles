@@ -3,8 +3,8 @@ layout: page.njk
 title: Pricing
 description: What nine turtles will cost, what you get, and how paying works.
 permalink: /pricing/
-updated: 2026-10-25
-draft: Prices aren't set yet. This page will show them before anyone can sign up or pay for nine turtles. Until then, the parts marked "to be decided" are placeholders.
+updated: 2026-11-03
+draft: Prices aren't set yet. This page will show them before anyone pays for nine turtles. Until then, the parts marked "to be decided" are placeholders.
 ---
 
 <p class="lede">
@@ -26,7 +26,7 @@ draft: Prices aren't set yet. This page will show them before anyone can sign up
   through their RSS, Atom or JSON feeds.
 - The app on the web, installable on your phone, tablet and computer.
 - Search, stars, folders, reading settings and exports of everything you
-  put in (see the [tour](/tour/)).
+  put in (each one explained in [Help](/help/)).
 - No ads, no tracking, and nothing sold or shared. More in the
   [privacy policy](/privacy/).
 
@@ -42,6 +42,19 @@ cancel. You can cancel yourself at any time, in the app, without having to
 ask anyone. How cancelling and refunds work is on the
 [refunds and cancelling](/refunds/) page.
 
-## Questions
+## Can I use nine turtles today?
 
-Write to <a href="mailto:{{ site.email }}">{{ site.email }}</a>.
+Yes. Anyone can make an account with an email address and a password.
+nine turtles first emails you a link to confirm the address.
+[Open the app]({{ site.app }}).
+
+## What will it cost?
+
+That isn't decided yet. When it is, the price will be written plainly on
+this page, with no hidden extras.
+
+## Anything else?
+
+Write to <a href="mailto:{{ site.email }}">{{ site.email }}</a>. Other
+questions, from notifications to privacy, are answered in
+[Help](/help/questions/).

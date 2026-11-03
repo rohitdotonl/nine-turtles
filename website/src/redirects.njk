@@ -1,0 +1,22 @@
+---
+pagination:
+  data: redirects
+  size: 1
+  alias: move
+permalink: "{{ move.from }}"
+eleventyExcludeFromCollections: true
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ move.title }} · nine turtles</title>
+    <!-- An old address, sent on to its new place so no saved link breaks. {{ move.why }} GitHub Pages can't redirect, so this page does. The list is _data/redirects.json. -->
+    <meta http-equiv="refresh" content="0; url={{ move.to }}" />
+    <link rel="canonical" href="https://nineturtles.app{{ move.to }}" />
+  </head>
+  <body>
+    <main><p><a href="{{ move.to }}">This page has moved: {{ move.title }} is here.</a></p></main>
+  </body>
+</html>

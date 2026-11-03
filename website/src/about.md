@@ -1,59 +1,56 @@
 ---
 layout: page.njk
 title: About nine turtles
-description: Why nine turtles exists, the rules it's built by, and who makes it.
+description: Why I made nine turtles, what it is, and who makes it.
 permalink: /about/
 ---
 
+<!-- Rohit's story (the owner's review, step 1b; decision 0166), a draft in his voice that he edits himself. -->
+
 <p class="lede">
-  nine turtles exists to help people leave social media behind and come
-  back to reading the open web: finite, calm and quiet, where social media
-  is infinite, urgent and attention-grabbing.
+  Years ago, a social network introduced me to strangers. Through its little
+  features, I got talking to people I'd never have met, and some of them
+  became lifelong friends. Technology can do that. It can help you find
+  people.
 </p>
 
-## Why it exists
+The big platforms don't do that any more. Their algorithms are built for
+something else now. I can still meet someone new on them, but they take a
+thousand times more than they give back.
 
-Some of the best writing anywhere is on people's own websites: essays,
-notes, letters, recipes, research, the slow work of people who care about
-a subject. It's free to read and nobody owns it. But it's easy to lose
-among feeds designed to keep you scrolling.
+I have a personal website. Sometimes a kind email arrives from a stranger
+in another country. They found me on Bear Blog's discover page, found my
+email on my contact page, and wrote about something I'd written and
+something they'd lived: sometimes the same as me, sometimes not. Each time,
+I get that feeling back: maybe technology can still give me new friends.
 
-Feed readers have solved this for twenty years. Many have also slowly
-taken on the habits of the apps they replaced: counters, badges, unread
-numbers in red, "catch up" pressure. nine turtles goes the other way. It
-treats your reading list like a book you're in the middle of, not an inbox
-to clear before you're allowed to rest.
+But there was nothing between us that helped. They had to find me, find my
+address, and decide to write. Those emails are where nine turtles began. I
+wanted something that helps people meet the strangers worth knowing,
+through what they write, and write back.
 
-## How it's made
+## What it is
 
-nine turtles follows a short, written philosophy that settles every
-question about what it does and how it looks. Two rules come before
-everything else and are never traded away:
-
-- **Everyone can read here.** Strong contrast, never color alone, a
-  keyboard for everything, a screen reader for everything, and respect for
-  your device's own settings. ([Accessibility](/accessibility/))
-- **Respect the publisher.** Show only what the feed shares, always credit
-  and link the original, check feeds politely, and play videos in the
-  publisher's own player.
-
-After those: reading comes first, calm over engagement, clear at a glance,
-a slow app with a fast interface, nothing moves unless you move it, power
-that's hidden but never missing, and respect for your time.
+nine turtles is a quiet place to read the people whose writing you love:
+their blogs, newsletters, videos and podcasts, under their names. No
+algorithm, no likes, no counts. It ends when you've read what's there. When
+something moves you, you write back from your own email. nine turtles never
+sends or reads it.
 
 ## The name
 
-The logo is nine small turtles, in three rows of three. Turtles are slow
-and steady and in no hurry, which suits a reader made for unhurried
-reading.
+Turtles are slow, and the social web is fast. I wanted a name you'd
+remember, and I suspect you asked "why nine?". That's how you'll remember
+it. The logo is nine small turtles, in three rows of three.
 
 ## Who makes it
 
-nine turtles is made by [{{ site.maker }}]({{ site.makerSite }}), who wanted
-a calmer way to read the web. It started as
-"slowfeed" on 22 October 2026 and took its own name two days later.
+I'm [{{ site.maker }}]({{ site.makerSite }}). I make nine turtles on my own,
+and I read every email myself:
+<a href="mailto:{{ site.email }}">{{ site.email }}</a>.
 
-Questions, ideas or problems are always welcome: [get in touch](/contact/).
+I design nine turtles and decide what it does; AI agents write its code, in
+the open, where anyone can read it.
 
 <!-- Nine turtles in single file (the logo's turtle, docs/logo/): seven ahead and two a few steps behind, drawn still (DESIGN.md, "The About page's end"). The line under them says it in words, so screen readers skip the drawing. -->
 <div class="walk">

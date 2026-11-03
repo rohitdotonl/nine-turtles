@@ -21,7 +21,8 @@ export default function (eleventyConfig) {
 
   // The blog is hidden until Rohit writes in it at least once a month (the
   // owner's review, 3 November 2026). Its posts stay here, ready to return:
-  // remove this line, and the blog's links in base.njk, to bring it back.
+  // remove this line, the blog's links in base.njk, and the /blog/ lines in
+  // _data/redirects.json (they'd claim the blog's addresses), to bring it back.
   eleventyConfig.ignores.add("src/blog/**");
 
   eleventyConfig.addPassthroughCopy({ "src/style.css": "style.css" });
