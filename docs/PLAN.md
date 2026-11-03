@@ -47,9 +47,11 @@ thread, in this order:
 11. **Installing the app, said plainly** (V1 item 6) ✅
 12. **"How did you hear about nine turtles?"** (V1 item 7) ✅
 13. **Notes and highlights** (V1 item 8) ⬜
-14. **Three to four refinement rounds:** the owner uses the app, lists what
+14. **A feed finder that tries a few more places** (V1 item 9) ⬜
+15. **Choosing between several feeds, made easy** (V1 item 10) ⬜
+16. **Three to four refinement rounds:** the owner uses the app, lists what
     he dislikes (the theme picker first), and each round fixes it.
-15. **Prices and launch:** prices, the legal pages, the final website, live
+17. **Prices and launch:** prices, the legal pages, the final website, live
     payments with Dodo, and sign-up open.
 
 Steps 1 to 5 merge without asking (the owner, 2 November 2026); from step 6
@@ -114,6 +116,15 @@ milestone order above.
    articles. Search finds them, filtered by person, and Your data exports
    them as Markdown. Yours alone; nothing about them is ever public. Its
    SPEC section and shape are agreed with the owner first.
+9. **A feed finder that tries a few more places:** when the pasted page
+   names no feed, also try the site's home page and a short list of the
+   usual feed addresses (`/feed`, `/rss`, `/index.xml` and the like). Still
+   only when the reader asks, once, never in the background, never an
+   article's page. Decision 0016 and AGENTS.md's rule change when it's built.
+10. **Choosing between several feeds, made easy:** when a site has more
+    than one, show each one's last few titles and how often it posts, so
+    the reader can tell which one they want (today: names and addresses
+    only, SPEC section 3).
 
 **Decided with the owner (2 November 2026):**
 
@@ -147,19 +158,6 @@ for real):
   never who follows them, so Rohit can write to the blogger by hand.
 - **A browser extension** for adding feeds while browsing (until then, the
   bookmark in Settings › Add from anywhere does the same job on computers).
-
-**Adding feeds, agreed with the owner (3 November 2026, decision 0160),
-not yet scheduled:**
-
-- **A feed finder that tries a few more places:** when the pasted page
-  names no feed, also try the site's home page and a short list of the
-  usual feed addresses (`/feed`, `/rss`, `/index.xml` and the like). Still
-  only when the reader asks, once, never in the background, never an
-  article's page. Decision 0016 and AGENTS.md's rule change when it's built.
-- **Choosing between several feeds, made easy:** when a site has more than
-  one, show each one's last few titles and how often it posts, so the
-  reader can tell which one they want (today: names and addresses only,
-  SPEC section 3).
 
 **To discuss for V2** (from the research notes, decision 0160; nothing
 agreed yet):

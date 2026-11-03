@@ -13,7 +13,8 @@ research notes of 1 November (`docs/RnD/research-notes-2026-11.md`).*
 - **In V1: notes and highlights.** A private note on each person, and
   highlights and notes on articles, found by search and exported with Your
   data (`docs/PLAN.md` → V1, item 8). Its SPEC section comes first.
-- **Agreed, not yet scheduled** (`docs/PLAN.md` → "A separate list"):
+- **Also in V1, built next** (the owner, 3 November 2026; `docs/PLAN.md` →
+  V1, items 9 and 10):
   - The feed finder tries a few more places when the pasted page names no
     feed: the site's home page and the usual feed addresses. Still only
     when the reader asks, once. This will change decision 0016's "never
@@ -21,13 +22,14 @@ research notes of 1 November (`docs/RnD/research-notes-2026-11.md`).*
   - When a site has several feeds, each shows its last few titles and how
     often it posts, so the reader can choose.
 - **Dropped:** batched delivery (new posts at set times), the check-up page
-  (people who haven't posted in a while), Kindle (for now), and the ideas
+  (people who haven't posted in a while), Kindle (for now), text to speech
+  (device read-aloud already works), and the ideas
   already settled by People, Write back and No unread counts.
 - **Parked for V2 discussion:** the smaller ideas of the notes' section 7
   (`docs/PLAN.md` → "To discuss for V2").
 - **The research notes were cut** to what's still open: website
-  inspiration, rivals to study, readers' own words, research errands and
-  text to speech. Marketing ideas not yet discussed moved to
+  inspiration, rivals to study, readers' own words and research errands
+  (given to a research agent, 3 November 2026). Marketing ideas not yet discussed moved to
   `docs/RnD/marketing.md`.
 
 ## Why

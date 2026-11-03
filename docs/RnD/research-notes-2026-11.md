@@ -9,41 +9,35 @@ is decided.
 
 **Contents**
 
-1. [Open: text to speech](#1-open-text-to-speech)
-2. [Research errands](#2-research-errands)
-3. [Rivals and tools to study](#3-rivals-and-tools-to-study)
-4. [Website inspiration](#4-website-inspiration)
-5. [Readers' own words](#5-readers-own-words)
+1. [Research errands](#1-research-errands)
+2. [Rivals and tools to study](#2-rivals-and-tools-to-study)
+3. [Website inspiration](#3-website-inspiration)
+4. [Readers' own words](#4-readers-own-words)
 
 ---
 
-## 1. Open: text to speech
+## 1. Research errands
 
-Is it needed, and who needs it? Being discussed with Rohit (3 November
-2026). Kindle was dropped for now.
+Given to a research agent on 3 November 2026; its findings come back here. Each links to its material below.
 
-## 2. Research errands
-
-Not started. Each links to its material below.
-
-- [ ] Feedbro's earnings and traffic (section 3).
+- [ ] Feedbro's earnings and traffic (section 2).
 - [ ] Traffic to RSS-tool websites: Inoreader's tools, rssgizmos and others
-      (section 3).
+      (section 2).
 - [ ] How feedfry-style products earn, and whether they matter to us
-      (section 3).
+      (section 2).
 - [ ] What rssguard, feedspot, bubbles.town and NewsBlur's "popular" are
-      (section 3).
-- [ ] What zacusca does, in depth (section 3).
-- [ ] Is diffbot/rss-anything useful (section 3)?
+      (section 2).
+- [ ] What zacusca does, in depth (section 2).
+- [ ] Is diffbot/rss-anything useful (section 2)?
 - [ ] Which feed reader apps rank well on the Android Play Store?
 - [ ] Check nine turtles' newsletters against the newsletter-to-feed
-      comment (section 5): non-issues filtered out, codes, double opt-in,
+      comment (section 4): non-issues filtered out, codes, double opt-in,
       one-click unsubscribe, replies.
 - [ ] Are there feed-reader communities on Mastodon, Lemmy and Bluesky?
-- [ ] Other ways to use RSS's extensibility, beyond MCP (section 5, "A
+- [ ] Other ways to use RSS's extensibility, beyond MCP (section 4, "A
       new way to read feeds").
 
-## 3. Rivals and tools to study
+## 2. Rivals and tools to study
 
 ### The real competitors
 
@@ -51,7 +45,7 @@ Not started. Each links to its material below.
   helpful features. Their landing pages are good.
 - **deadsimplerss** is also good.
 - **[sift.li](https://sift.li/)**: a legit competitor worth keeping an eye on.
-- **Inoreader and Feedly**: big, but corporate in feel (see section 4).
+- **Inoreader and Feedly**: big, but corporate in feel (see section 3).
 
 ### Interesting takes on RSS
 
@@ -81,7 +75,7 @@ Not started. Each links to its material below.
 - [rssguard](https://github.com/martinrotter/rssguard): what is this?
 - [feedspot.com](https://www.feedspot.com/): what is this?
 
-## 4. Website inspiration
+## 3. Website inspiration
 
 For the final website (milestone "Prices and launch", `docs/PLAN.md`).
 
@@ -104,7 +98,7 @@ For the final website (milestone "Prices and launch", `docs/PLAN.md`).
 - Kagi's branding is good. They also do things like Kagi News and Kagi Small
   Web.
 
-## 5. Readers' own words
+## 4. Readers' own words
 
 ### Too much to read, and the guilt of unread
 

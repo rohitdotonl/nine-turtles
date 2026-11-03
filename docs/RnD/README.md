@@ -17,7 +17,7 @@ idea here that changes the app needs the owner's yes first.
 - [`research-notes-2026-11.md`](research-notes-2026-11.md): Rohit's own
   notes from r/rss, rival apps and the small web. His answers to their
   questions (3 November 2026, decision 0160) went into `docs/PLAN.md`; what's
-  left is still open: text to speech, research errands, rivals to study,
+  left is still open: research errands, rivals to study,
   website inspiration and readers' own words.
 
 ## Positioning (decided 1 November 2026)
