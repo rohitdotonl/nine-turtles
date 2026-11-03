@@ -12,6 +12,12 @@ idea here that changes the app needs the owner's yes first.
   plus his strategy notes and what still holds from the October research.
   Start here; the files below are its research.
 
+## The owner's review (3 November 2026)
+
+- [`steve-jobs.md`](steve-jobs.md): how to improve nine turtles every
+  week (use it daily, decide weekly, see it fresh monthly), and Rohit's
+  to-do list from the review.
+
 ## Rohit's research notes (1 November 2026)
 
 - [`research-notes-2026-11.md`](research-notes-2026-11.md): Rohit's own
