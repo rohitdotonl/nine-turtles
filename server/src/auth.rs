@@ -293,10 +293,10 @@ async fn session(State(state): State<AppState>, headers: HeaderMap) -> Response 
     let hash = scramble(&token);
     let now = now();
 
-    // Whose device, when it was last used, owner or not, and their email.
-    type Found = (i64, i64, bool, Option<String>);
+    // Whose device, last used, owner or not, email, and confirmed (decision 0151).
+    type Found = (i64, i64, bool, Option<String>, bool);
     let found: Result<Option<Found>, sqlx::Error> = sqlx::query_as(
-        "SELECT sessions.person_id, sessions.last_used_at, people.owner, people.email
+        "SELECT sessions.person_id, sessions.last_used_at, people.owner, people.email, people.email_confirmed_at IS NOT NULL
          FROM sessions JOIN people ON people.id = sessions.person_id
          WHERE sessions.token_hash = ? AND sessions.expires_at > ?",
     )
@@ -304,15 +304,14 @@ async fn session(State(state): State<AppState>, headers: HeaderMap) -> Response 
     .bind(now)
     .fetch_optional(&state.db)
     .await;
-    let (person, last_used, owner, email) = match found {
+    let (person, last_used, owner, email, email_confirmed) = match found {
         Ok(Some(found)) => found,
         Ok(None) => return signed_out(&state).await,
         Err(error) => return database_problem("checking a sign-in", &error),
     };
 
-    // Whether this is the owner (who alone sees Settings › Readers), the
-    // email they sign in with, if they have one, and whether nine turtles can
-    // send email (to change that email, decision 0088).
+    // Owner or not (who alone sees Settings › Readers), their email and whether
+    // it's confirmed, and whether nine turtles can send email (decision 0088).
     let body = Json(json!({
         "signed_in": true,
         // Whose device it is, so the web app never hands one reader's
@@ -321,6 +320,7 @@ async fn session(State(state): State<AppState>, headers: HeaderMap) -> Response 
         "version": crate::VERSION,
         "owner": owner,
         "email": email,
+        "email_confirmed": email_confirmed,
         "email_sending": state.mailer.is_some(),
         "passkeys": state.passkeys.origin(),
     }));

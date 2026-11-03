@@ -1,7 +1,8 @@
 // The readers of this nine turtles, and how new ones join (SPEC sections 1
-// and 18, decisions 0087 and 0115). The owner sees everyone's email and when
+// and 18, decisions 0087 and 0151). The owner sees everyone's email and when
 // they joined (never what they read) and sets their own email. Sign-up is
-// always open; the sign-up page itself uses `signUp`.
+// always open, and confirms the address by an emailed link first; the
+// sign-up page itself uses `signUp`.
 
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
@@ -25,7 +26,8 @@ export async function listPeople(): Promise<Person[]> {
 }
 
 export type SignUpResult =
-  | { ok: true }
+  /** `sentTo`: a link went there to finish; without it, the account was made and this device signed in. */
+  | { ok: true; sentTo?: string }
   | { ok: false; reason: "email" | "password-short" | "password-long" | "already" | "too-many" | "unreachable" };
 
 export async function signUp(email: string, password: string): Promise<SignUpResult> {
@@ -38,6 +40,10 @@ export async function signUp(email: string, password: string): Promise<SignUpRes
     });
   } catch {
     return { ok: false, reason: "unreachable" };
+  }
+  if (response.status === 202) {
+    const body: unknown = await response.json().catch(() => null);
+    return { ok: true, sentTo: isRecord(body) && typeof body.sent_to === "string" ? body.sent_to : email };
   }
   if (response.ok) return { ok: true };
   const error = await errorOf(response);

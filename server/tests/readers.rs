@@ -56,7 +56,8 @@ async fn session(base: &str, cookie: &str) -> Value {
         .unwrap()
 }
 
-/// Signs up as the sign-up page does: anyone can, at once (decision 0115).
+/// Signs up as the sign-up page does. Without the email settings the account
+/// is made at once (decision 0151).
 async fn sign_up(base: &str, email: &str, password: &str) -> Response {
     post(
         base,
@@ -224,7 +225,7 @@ async fn an_email_already_used_is_refused_and_so_are_poor_details() {
 async fn no_more_than_twenty_accounts_are_made_in_an_hour() {
     let (base, state) = common::start_with_state(common::config()).await;
     common::signed_in(&base).await;
-    for number in 0..nine_turtles::people::SIGN_UPS_PER_HOUR {
+    for number in 0..nine_turtles::sign_up::SIGN_UPS_PER_HOUR {
         sqlx::query("INSERT INTO people (email, created_at) VALUES (?, unixepoch())")
             .bind(format!("{number}@example.com"))
             .execute(&state.db)
@@ -262,7 +263,7 @@ async fn tries_with_a_taken_email_count_towards_the_hours_twenty() {
     // Eighteen more tries this hour (one account is made already).
     {
         let mut tries = state.sign_ups.lock().await;
-        for _ in 0..nine_turtles::people::SIGN_UPS_PER_HOUR - 2 {
+        for _ in 0..nine_turtles::sign_up::SIGN_UPS_PER_HOUR - 2 {
             assert!(tries.try_one(std::time::Instant::now()));
         }
     }
@@ -286,7 +287,7 @@ async fn sign_ups_sent_together_go_one_at_a_time_and_stop_at_twenty() {
     common::signed_in(&base).await;
     {
         let mut tries = state.sign_ups.lock().await;
-        for _ in 0..nine_turtles::people::SIGN_UPS_PER_HOUR - 2 {
+        for _ in 0..nine_turtles::sign_up::SIGN_UPS_PER_HOUR - 2 {
             assert!(tries.try_one(std::time::Instant::now()));
         }
     }

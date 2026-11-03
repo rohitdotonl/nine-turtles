@@ -3,8 +3,8 @@ import { MAILBOX, MAIL_APP, OWNER_EMAIL, TEST_PASSWORD } from "../playwright.con
 
 // SPEC sections 1 and 18 (decision 0088): what email makes possible, against
 // a nine turtles that sends its emails to a made-up mail server on this
-// computer (tests/mail-server.mjs). Sign-up (which sends none, decision
-// 0115), "Forgot your password?", "Email me a sign-in link" (decision 0096),
+// computer (tests/mail-server.mjs). Sign-up (which confirms the address by
+// an emailed link first, decision 0151), "Forgot your password?", "Email me a sign-in link" (decision 0096),
 // changing an email and deleting an account. Each
 // test uses addresses of its own, so the two window sizes never meet.
 
@@ -29,7 +29,7 @@ async function newestMail(to: string, subject: string, count = 1): Promise<{ mai
   return { mail, link: url ? url.replace(MAIL_APP, "") : "" };
 }
 
-/** Signs up, in a browser of its own: the account is made at once (decision 0115). */
+/** Signs up, in a browser of its own, and follows the emailed link that makes the account (decision 0151). */
 async function newReader(browser: Browser, email: string): Promise<Page> {
   const context = await browser.newContext({ baseURL: MAIL_APP });
   const page = await context.newPage();
@@ -37,11 +37,16 @@ async function newReader(browser: Browser, email: string): Promise<Page> {
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(READER_PASSWORD);
   await page.getByRole("button", { name: "Sign up" }).click();
+  await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
+  const { link } = await newestMail(email, "Confirm your email for nine turtles");
+  await page.goto(link);
+  await page.getByRole("button", { name: "Confirm email" }).click();
+  await page.getByRole("link", { name: "Open nine turtles" }).click();
   await expect(page.locator("#sidebar")).toBeAttached();
   return page;
 }
 
-test("anyone can sign up at once and with no email, with only the keyboard", async ({ browser }, testInfo) => {
+test("anyone can sign up by confirming their email, with only the keyboard", async ({ browser }, testInfo) => {
   const context = await browser.newContext({ baseURL: MAIL_APP });
   const page = await context.newPage();
   await page.goto("/");
@@ -58,20 +63,33 @@ test("anyone can sign up at once and with no email, with only the keyboard", asy
   await expect(page.getByText("At least 12 characters.")).toBeVisible();
   await expect(page.getByText("Have an account?")).toBeVisible();
   await expect(page.getByRole("link", { name: "Sign in" })).toBeVisible();
-  // No confirmation email, so no "Check your email" after signing up (decision 0115).
 
   const email = `open-${testInfo.project.name}-${Date.now()}@example.com`;
   await page.keyboard.type(email);
   await page.keyboard.press("Tab");
   await page.keyboard.type(READER_PASSWORD);
   await page.keyboard.press("Enter");
-  // In nine turtles at once, signed in as the new reader.
+  // Nothing is made yet: "Check your email" takes the form's place, and the keyboard goes to it (decision 0151).
+  await expect(page.getByRole("heading", { name: "Check your email" })).toBeFocused();
+  await expect(page.getByText(`A link is on its way to ${email}.`)).toBeVisible();
+  await expect(page.getByText("Didn't get it? Look in your spam folder.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Use another email" })).toBeVisible();
+  expect((await page.evaluate(async () => (await fetch("/api/session")).json())).signed_in).toBe(false);
+
+  // The email's link opens a page with one button, so a mail program checking links can't use it up.
+  const { mail, link } = await newestMail(email, "Confirm your email for nine turtles");
+  expect(mail.body).toContain("24 hours");
+  expect(link).toMatch(/^\/confirm-email#ticket=/);
+  await page.goto(link);
+  await expect(page.getByRole("button", { name: "Confirm email" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("You're signed up, and signed in on this device.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Open nine turtles" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  // In nine turtles, signed in as the new reader, their address confirmed.
   await expect(page.locator("#sidebar")).toBeAttached();
   const session = await page.evaluate(async () => (await fetch("/api/session")).json());
-  expect(session).toMatchObject({ signed_in: true, owner: false, email });
-  // And no email went to them.
-  const mail = (await (await fetch(`${MAILBOX}/mail?to=${encodeURIComponent(email)}`)).json()) as Mail[];
-  expect(mail).toEqual([]);
+  expect(session).toMatchObject({ signed_in: true, owner: false, email, email_confirmed: true });
   await context.close();
 });
 

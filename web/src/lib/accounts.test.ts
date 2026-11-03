@@ -56,6 +56,6 @@ describe("the messages about email", () => {
 
   it("send the reader back the right way when a link has run out", () => {
     expect(explainLink("expired", "reset")).toContain("sign-in page");
-    expect(explainLink("expired", "confirm")).toContain("Change your email again");
+    expect(explainLink("expired", "confirm")).toContain("Sign up again, or change your email again");
   });
 });

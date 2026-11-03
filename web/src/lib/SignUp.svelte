@@ -1,14 +1,18 @@
 <!--
-  The sign-up page (/sign-up, SPEC section 1, decisions 0115 and 0122), open
+  The sign-up page (/sign-up, SPEC section 1, decisions 0122 and 0151), open
   to anyone: built as the sign-in page is, one centred column of "Email",
   "Password" (each named above its field, "At least 12 characters." under the
-  password), Sign up, and "Have an account? Sign in". On success the account
-  is made at once, with no email sent, this device is signed in and the
-  reader arrives in nine turtles.
+  password), Sign up, and "Have an account? Sign in". Signing up emails a
+  link that finishes it: the form gives way to "Check your email", as
+  Forgot? does, with a quiet Send again and a way back to the form. (Where
+  nine turtles can't send email, the account is made at once and the
+  reader arrives in nine turtles.)
 -->
 <script lang="ts">
+  import { tick } from "svelte";
   import Logo from "./Logo.svelte";
   import Icon from "./Icon.svelte";
+  import SendAgain from "./SendAgain.svelte";
   import { PASSWORD_MINIMUM, explainSignUp, signUp } from "./readers";
 
   let { onSignedIn }: { onSignedIn: () => void } = $props();
@@ -19,6 +23,10 @@
   /** Which field the message is about, so it alone is marked. */
   let refusedField: "email" | "password" | undefined = $state();
   let busy = $state(false);
+  /** Where the link to finish went: the form gives way to "Check your email". */
+  let sent = $state("");
+  let sentHeading: HTMLHeadingElement | undefined = $state();
+  let emailField: HTMLInputElement | undefined = $state();
 
   async function submit(event: SubmitEvent) {
     event.preventDefault();
@@ -26,6 +34,14 @@
     busy = true;
     const result = await signUp(email.trim(), password);
     busy = false;
+    if (result.ok && result.sentTo) {
+      sent = result.sentTo;
+      message = "";
+      refusedField = undefined;
+      // The form and its button are gone: the keyboard goes to what replaced them.
+      tick().then(() => sentHeading?.focus());
+      return;
+    }
     if (result.ok) {
       // The app lives at the site's root.
       history.replaceState(null, "", "/");
@@ -41,6 +57,20 @@
           : undefined;
   }
 
+  /** "Send again", a minute after: the same sign-up again, said shortly. */
+  async function signUpAgain(): Promise<string> {
+    const result = await signUp(sent, password);
+    return result.ok ? "Another link is on its way." : explainSignUp(result);
+  }
+
+  /** Back to the form, the email kept, to fix a mistyped address. */
+  function back(event: MouseEvent) {
+    event.preventDefault();
+    sent = "";
+    password = "";
+    tick().then(() => emailField?.focus());
+  }
+
   function signIn(event: MouseEvent) {
     event.preventDefault();
     history.replaceState(null, "", "/");
@@ -54,6 +84,17 @@
     <h1 class="font-serif text-display">nine turtles</h1>
     <p class="mt-3 font-serif text-large text-muted">Read people. Write back.</p>
   </div>
+  {#if sent}
+    <!-- Said once, in the text color: where the link went and how long it works. -->
+    <div class="flex w-full flex-col items-stretch gap-3 text-center sm:max-w-xs">
+      <h2 bind:this={sentHeading} tabindex="-1" class="font-semibold">Check your email</h2>
+      <p role="status" class="break-words">
+        A link is on its way to <span class="font-semibold">{sent}</span>. Open it to finish signing up. It works once, within 24 hours.
+      </p>
+      <SendAgain onSend={signUpAgain} />
+      <a href="/sign-up" class="btn rounded-lg" onclick={back}>Use another email</a>
+    </div>
+  {:else}
   <form class="flex w-full flex-col gap-3 sm:max-w-xs" onsubmit={submit}>
     <div class="flex flex-col gap-1.5">
       <label for="email" class="text-small text-ink-2">Email</label>
@@ -68,6 +109,7 @@
         spellcheck="false"
         required
         autofocus
+        bind:this={emailField}
         bind:value={email}
         aria-describedby="sign-up-message"
         aria-invalid={refusedField === "email" ? "true" : undefined}
@@ -99,4 +141,5 @@
       <p class="text-center text-small">Have an account? <a href="/" onclick={signIn} class="text-link">Sign in</a></p>
     </div>
   </form>
+  {/if}
 </main>
