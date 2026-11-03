@@ -94,7 +94,9 @@ try {
         if (first.text !== "Skip to the text" || !first.onScreen) {
           problems.push(`${path} (${colorScheme}, ${device}): the first Tab doesn't show "Skip to the text"`);
         }
-        const stops = await page.locator("a, input, button").count();
+        // Only the ones on screen: the front page's "On this page" links are
+        // left out on a phone, so they're no stop there.
+        const stops = await page.evaluate(() => [...document.querySelectorAll("a, input, button")].filter((el) => el.checkVisibility()).length);
         for (let index = 1; index < stops; index++) {
           await page.keyboard.press("Tab");
           const ring = await page.evaluate(() => {

@@ -437,6 +437,28 @@ test("at 200% zoom nothing overlaps and everything still works", async ({ page }
   expect(await overflow()).toBe(false);
 });
 
+test("on a phone, feeds that arrive late never take you away from the home screen you went back to", async ({ page }) => {
+  // The 200% zoom test above sometimes lost the sidebar this way: the feeds
+  // arrived just after Escape, and a phone following no one moved on to the welcome.
+  await page.setViewportSize({ width: 640, height: 400 });
+  let release = () => {};
+  const held = new Promise<void>((resolve) => (release = resolve));
+  await page.route("**/api/feeds", async (route) => {
+    if (route.request().method() === "GET") await held;
+    await route.continue();
+  });
+  await openApp(page, "/starred");
+  await expect(page.getByRole("heading", { level: 2, name: "Starred" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(sidebar(page)).toBeVisible();
+  const feedsArrived = page.waitForResponse("**/api/feeds");
+  release();
+  await feedsArrived;
+  await page.evaluate(() => new Promise(requestAnimationFrame));
+  await expect(sidebar(page)).toBeVisible();
+  await expect(sidebar(page).getByRole("link", { name: "Settings" })).toBeVisible();
+});
+
 test("every font comes from nine turtles itself", async ({ page }) => {
   const fontOrigins: string[] = [];
   page.on("request", (request) => {

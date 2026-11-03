@@ -40,7 +40,7 @@ use crate::{
     config::PasswordSetting,
     email::SIGN_OFF,
     log, now,
-    people::{self, is_taken, plausible_email, too_many},
+    people::{self, plausible_email, too_many},
     refused,
 };
 
@@ -57,6 +57,8 @@ pub const EMAILS_PER_ADDRESS_PER_HOUR: i64 = 3;
 /// in this many seconds: a second press of Send link within it is answered
 /// the same, and sends nothing.
 pub const EMAIL_GAP: i64 = 60;
+/// The page a link to confirm an address opens.
+pub const CONFIRM_PAGE: &str = "/confirm-email";
 
 pub fn routes() -> Router<AppState> {
     Router::new()
@@ -64,7 +66,6 @@ pub fn routes() -> Router<AppState> {
         .route("/api/password/reset", post(reset))
         .route("/api/sign-in/link", post(ask_sign_in_link))
         .route("/api/sign-in/link/use", post(use_sign_in_link))
-        .route("/api/email/confirm", post(confirm))
         .route("/api/people/me/email/change", post(change_email))
         .route("/api/people/me/delete", post(delete_me))
         .route("/api/people/me/data/delete", post(delete_my_data))
@@ -76,6 +77,8 @@ pub enum Purpose {
     Reset,
     Change,
     SignIn,
+    /// A new account, waiting for its address to be confirmed (`sign_up`).
+    SignUp,
 }
 
 impl Purpose {
@@ -84,6 +87,7 @@ impl Purpose {
             Self::Reset => "reset",
             Self::Change => "change",
             Self::SignIn => "sign-in",
+            Self::SignUp => "sign-up",
         }
     }
 }
@@ -91,7 +95,7 @@ impl Purpose {
 /// How many emails went to `email` (however it's capitalised) in the last
 /// hour. Read inside the transaction that saves a link, so requests sent
 /// together can't race past the hour's share.
-async fn emails_to_address(
+pub(crate) async fn emails_to_address(
     transaction: &mut sqlx::SqliteConnection,
     email: &str,
     hour_ago: i64,
@@ -108,7 +112,7 @@ async fn emails_to_address(
 
 /// Whether a link for `purpose` was emailed to `email` within the last
 /// `EMAIL_GAP` seconds.
-async fn emailed_lately(
+pub(crate) async fn emailed_lately(
     transaction: &mut sqlx::SqliteConnection,
     purpose: Purpose,
     email: &str,
@@ -188,7 +192,7 @@ pub(crate) async fn make_link(
     let lifetime = match purpose {
         Purpose::Reset => RESET_LIFETIME,
         Purpose::SignIn => SIGN_IN_LIFETIME,
-        Purpose::Change => CONFIRM_LIFETIME,
+        Purpose::Change | Purpose::SignUp => CONFIRM_LIFETIME,
     };
     let mut transaction = db.begin_with("BEGIN IMMEDIATE").await?;
     tidy_links_in(&mut transaction, now).await?;
@@ -263,7 +267,7 @@ pub async fn tidy_links(db: &SqlitePool, now: i64) -> Result<(), sqlx::Error> {
     tidy_links_in(&mut connection, now).await
 }
 
-async fn tidy_links_in(
+pub(crate) async fn tidy_links_in(
     connection: &mut sqlx::SqliteConnection,
     now: i64,
 ) -> Result<(), sqlx::Error> {
@@ -590,6 +594,10 @@ async fn use_sign_in_link(State(state): State<AppState>, Json(form): Json<UseSig
         Ok(None) => return refused(StatusCode::GONE, "expired"),
         Err(error) => return database_problem("using a sign-in link", &error),
     };
+    // The link reached the address, so it's confirmed (decision 0154).
+    if let Err(error) = people::mark_confirmed(&state.db, person, &email).await {
+        return database_problem("confirming an email", &error);
+    }
     let body = match state.password_choices.offer(person, &email, now()) {
         Some(ticket) => json!({ "done": "signed-in", "password_ticket": ticket }),
         // Signed in all the same, with no choice of a new password here.
@@ -696,7 +704,11 @@ async fn still_has<'c>(
 }
 
 /// Signs this device in for `person` and answers `body` with its cookie.
-async fn signed_in_as(db: &SqlitePool, person: i64, body: serde_json::Value) -> Response {
+pub(crate) async fn signed_in_as(
+    db: &SqlitePool,
+    person: i64,
+    body: serde_json::Value,
+) -> Response {
     match remember_device(db, person).await {
         Ok(Some(token)) => (
             StatusCode::OK,
@@ -722,80 +734,6 @@ pub(crate) fn password_problem(password: &str) -> Option<Response> {
 
 /// A reader's email, own scrambled password, and whether they're the owner.
 type SigningIn = (Option<String>, Option<String>, bool);
-
-#[derive(Deserialize)]
-struct Confirm {
-    ticket: String,
-}
-
-/// Follows a link that confirms a changed address: the reader's email
-/// changes now, and the old address is told. (Links that once confirmed an
-/// Open sign-up, before decision 0115, no longer work.)
-async fn confirm(State(state): State<AppState>, Json(form): Json<Confirm>) -> Response {
-    let hash = scramble(form.ticket.trim());
-    let mut transaction = match state.db.begin().await {
-        Ok(transaction) => transaction,
-        Err(error) => return database_problem("confirming an email", &error),
-    };
-    let claimed: Result<Option<(i64, String)>, sqlx::Error> = sqlx::query_as(
-        "UPDATE email_links SET used = 1
-             WHERE token_hash = ? AND purpose = 'change' AND used = 0 AND expires_at > ?
-             RETURNING person_id, email",
-    )
-    .bind(&hash[..])
-    .bind(now())
-    .fetch_optional(&mut *transaction)
-    .await;
-    let (person, email) = match claimed {
-        Ok(Some(claimed)) => claimed,
-        Ok(None) => return refused(StatusCode::GONE, "expired"),
-        Err(error) => return database_problem("confirming an email", &error),
-    };
-    let old: Result<Option<Option<String>>, sqlx::Error> =
-        sqlx::query_scalar("SELECT email FROM people WHERE id = ?")
-            .bind(person)
-            .fetch_optional(&mut *transaction)
-            .await;
-    let old = match old {
-        Ok(Some(old)) => old,
-        Ok(None) => return refused(StatusCode::GONE, "expired"),
-        Err(error) => return database_problem("changing an email", &error),
-    };
-    let changed = sqlx::query("UPDATE people SET email = ? WHERE id = ?")
-        .bind(&email)
-        .bind(person)
-        .execute(&mut *transaction)
-        .await;
-    match changed {
-        Ok(_) => {}
-        Err(error) if is_taken(&error) => {
-            return match transaction.commit().await {
-                Ok(()) => refused(StatusCode::CONFLICT, "already"),
-                Err(error) => database_problem("changing an email", &error),
-            };
-        }
-        Err(error) => return database_problem("changing an email", &error),
-    }
-    if let Err(error) = transaction.commit().await {
-        return database_problem("changing an email", &error);
-    }
-    if let (Some(mailer), Some(old)) = (
-        &state.mailer,
-        old.filter(|old| !old.eq_ignore_ascii_case(&email)),
-    ) {
-        mailer.send_later(
-            &old,
-            "Your nine turtles email was changed",
-            format!(
-                "Hello,\n\nThe nine turtles account that used this address now signs in with \
-                 {email}. Emails about it go there from now on.\n\nIf you didn't make this change, someone \
-                 may know your password. Reply to this email and I'll help you get your account back.{SIGN_OFF}"
-            ),
-            "a note that an email changed",
-        );
-    }
-    Json(json!({ "done": "changed", "email": email })).into_response()
-}
 
 #[derive(Deserialize)]
 struct ChangeEmail {
@@ -874,7 +812,7 @@ async fn change_email(
         Ok(Made::NoTicket) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
         Err(error) => return database_problem("making an email link", &error),
     };
-    let link = mailer.link("/confirm-email", &ticket);
+    let link = mailer.link(CONFIRM_PAGE, &ticket);
     mailer.send_later(
         &email,
         "Confirm your new email for nine turtles",

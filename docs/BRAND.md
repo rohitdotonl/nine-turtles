@@ -1,6 +1,6 @@
 # nine turtles: the brand sheet
 
-*Every brand decision on one page. Last updated: 2 November 2026 (decisions 0141, 0148).*
+*Every brand decision on one page. Last updated: 3 November 2026 (decisions 0141, 0148, 0153).*
 
 **How to use this page.** Every change a reader can see (in the app, on the
 website, in an email, in a link preview) follows this page. This page is
@@ -22,8 +22,8 @@ what's live.
 ## Name and words
 
 - **The name** is *nine turtles*, always lowercase, even at the start of a sentence. At nineturtles.app. (Live)
-- **The headline** is "Read people. Write back." (Being built: the website still shows an older one.)
-- **The first line under it:** "There are people online you'd like to know. Most of them have a blog, a newsletter or a channel." The rest of the paragraph and the website's points are in [`RnD/positioning.md`](RnD/positioning.md), used word for word. (Being built)
+- **The headline** is "Read people. Write back." (Live: the website's front page, the sign-in pages and the share picture.)
+- **The first line under it:** "There are people online you'd like to know. Most of them have a blog, a newsletter or a channel." The rest of the paragraph and the website's points are in [`RnD/positioning.md`](RnD/positioning.md), used word for word. (Live on the website's front page; its six points are there as a heading and one line each.)
 - **Who speaks:** "I" when Rohit speaks (website, emails, About, the 404 page). Never "we". The app itself speaks without a pronoun. Details: DESIGN.md → "Voice". (Live)
 - **How it sounds:** warm, never cute. True, specific facts, never invented feelings. No stories or metaphors (letters, fountain pens) told about the brand: it wins on craft. (Live)
 - **Marketing copy** isn't written fresh by an agent: use settled copy word for word, and ask Rohit before adding any. (Live)
@@ -53,7 +53,7 @@ what's live.
 - **The dot is never green or red** (green and red are the colors most often confused). (Live)
 - **The star** is drawn in the theme's own ink: filled when starred, an outline when not. Green retired. (Live, decision 0143)
 - **Delete and errors** are oxblood, `#8C2F39` by day and `#E39AA4` by night, always with words that say what. (Live, decision 0143)
-- **No brand color outside the app.** The website, icons and share picture use ink only: near-black `#141414` and light `#EFEFF1`. The reader's theme color is theirs, not the brand's. (Being built)
+- **No brand color outside the app.** The website, icons and share picture use ink only: near-black `#141414` and light `#EFEFF1`. The reader's theme color is theirs, not the brand's. (Live)
 - **No more colors.** A new feature uses ink strengths, the greys, the one accent and oxblood. Tags and folders get names, never colors. (Live)
 
 ## The logo
@@ -70,7 +70,7 @@ what's live.
 The turtle is the logo's drawing, nothing else. It never acts, speaks,
 sleeps, celebrates or stands for a feeling. No mascot.
 
-- **May appear:** the logo (sidebar, sign-in, website top bar, app icon, tab icon), the share picture, and the two drawings that already exist, unchanged: "Wrong turn?" (the 404 page) and the end of the About page.
+- **May appear:** the logo (sidebar, sign-in, the website's band, app icon, tab icon), the share picture, and the two drawings that already exist, unchanged: "Wrong turn?" (the 404 page) and the end of the About page.
 - **Never:** empty lists, the end of a list, the reading pane, emails, buttons, loading, errors, confirmations, settings, or any new drawing that tells a story.
 - **When it appears:** the logo's own drawing, at most once per screen, still, in the page's ink, and skipped by screen readers, because the words beside it say it.
 
@@ -102,7 +102,7 @@ sleeps, celebrates or stands for a feeling. No mascot.
 
 ## The website
 
-- **Look:** the same as the app: ink only, Literata and Atkinson, one left edge, generous space. One text size for the front page (20px), the logo beside the name in the top bar, and the app's grey sidebar band (the direction Rohit chose, "G set as C"). The full front page still needs Rohit's yes before it's built.
+- **Look:** the same as the app: ink only, Literata and Atkinson, one left edge, generous space. The app's grey sidebar band on every page (the direction Rohit chose, "G set as C"), with the logo beside the name at the app sidebar's sizes; a grey bar across the top on a tablet or phone. One text size for the front page (20px). (Live, decision 0153; sizes in DESIGN.md Part 2.)
 - **Copy:** the settled positioning copy, word for word (above, under "Name and words").
 
 ## Where the details live

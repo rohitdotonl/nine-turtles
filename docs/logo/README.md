@@ -7,7 +7,7 @@ row a little to the right (decision 0067), redrawn heavier in November 2026
 There are two weights of the same drawing:
 
 - **Heavy (24 to 63 pixels tall):** the logo beside the name, in the app
-  (`web/src/lib/Logo.svelte`) and the website's top bar
+  (`web/src/lib/Logo.svelte`) and the website's band
   (`website/src/_includes/base.njk`). Its box ends at the shells' feet, so it
   stands on the name's baseline.
 - **Large (64 pixels and up):** a slightly lighter drawing for big sizes:

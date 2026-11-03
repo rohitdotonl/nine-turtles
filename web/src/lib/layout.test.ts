@@ -66,6 +66,13 @@ describe("the screen's layout", () => {
     expect(layout.panes).toEqual({ sidebar: true, list: false, article: false });
   });
 
+  it("knows whether the reader has moved since the screen opened", () => {
+    const layout = new ScreenLayout("narrow", 400, () => false, true);
+    expect(layout.moved).toBe(false);
+    layout.showHome(true);
+    expect(layout.moved).toBe(true);
+  });
+
   it("toggles the sidebar and the list, saying whether each hid", () => {
     const layout = new ScreenLayout("wide", 1400, () => false, true);
     expect(layout.toggleSidebar()).toBe(true);
