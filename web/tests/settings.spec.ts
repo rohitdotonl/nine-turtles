@@ -229,3 +229,14 @@ test("in the installed app, Install the app says it's installed instead of the s
   await expect(page.getByText("You're using the installed app now.")).toBeVisible();
   await expect(page.getByRole("heading", { level: 4, name: "On other devices" })).toBeVisible();
 });
+
+test("the foot of Settings links to Help on the website, in a tab of its own, reached by the keyboard", async ({ page }) => {
+  // SPEC sections 18 and 40 (decision 0157).
+  await openSettings(page);
+  const help = page.getByRole("link", { name: "Help (on the nine turtles website)" });
+  await expect(help).toHaveAttribute("href", "https://nineturtles.app/help/");
+  await expect(help).toHaveAttribute("target", "_blank");
+  expect((await help.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  await tabTo(page, help);
+  await expect(help).toBeFocused();
+});

@@ -68,6 +68,7 @@ finished, `docs/PLAN.md` drops it into `docs/archive/plan-done.md`.
 |---|---|
 | The brand (name, words, typefaces, colors, logo, icons, turtles, emails' voice) | `docs/BRAND.md` (a new brand decision only with the owner's yes) |
 | What the reader sees or how a feature behaves | its section in `docs/spec/` (a new feature gets a new numbered file, listed in `docs/SPEC.md`); `docs/DESIGN.md` Part 2 when the look changes (Part 1 only with the owner's approval) |
+| Anything a reader does or sees in the app | its page in `website/src/help/` (each names its SPEC section in `spec`), and its `updated` date (decision 0157) |
 | A technical rule or choice | `docs/ENGINEERING.md` + a short note in `docs/decisions/` |
 | Libraries | `docs/libraries.md` |
 | Milestone progress | `docs/PLAN.md` (open and next work only; finished work moves to `docs/archive/plan-done.md`) |

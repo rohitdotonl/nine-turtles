@@ -45,7 +45,7 @@ thread, in this order:
 9. **YouTube as a first-class citizen** (V1 item 4) ✅
 10. **A weekly email** (V1 item 5) ✅
 11. **Installing the app, said plainly** (V1 item 6) ✅
-12. **"How did you hear about nine turtles?"** (V1 item 7)
+12. **"How did you hear about nine turtles?"** (V1 item 7) ✅
 13. **Three to four refinement rounds:** the owner uses the app, lists what
     he dislikes (the theme picker first), and each round fixes it.
 14. **Prices and launch:** prices, the legal pages, the final website, live
@@ -101,7 +101,7 @@ milestone order above.
    0151; its smaller choices listed there for the refinement round):
    Settings › Install the app says in one sentence what an installed web app
    is, then the steps for your device, then a line for each of the others.
-7. **"How did you hear about nine turtles?"** One optional question at
+7. **"How did you hear about nine turtles?"** ✅ One optional question at
    sign-up (a blog, a friend, a search, an AI assistant, Reddit, other),
    saved with the account and shown only as totals in the owner report
    (decision 0130), never per reader. Built: SPEC section 41, decision 0155.

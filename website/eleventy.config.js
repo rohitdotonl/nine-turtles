@@ -51,30 +51,13 @@ export default function (eleventyConfig) {
     html.replace(/(href|src)="\/(?!\/)/g, `$1="${base}/`),
   );
 
-  // For the checks only (scripts/check.sh), never on the live website: a
-  // made-up pack with blogs, so the list and its download get checked
-  // before any real pack has blogs (decision 0100).
-  if (process.env.NINE_TURTLES_TEST_PACK) {
-    eleventyConfig.addTemplate("packs/test-pack.md", "", {
-      title: "Test pack",
-      description: "Made-up blogs, for the checks only.",
-      order: 99,
-      blogs: [
-        { name: "Quiet & Slow <Notes>", site: "https://quiet.example/", feed: "https://quiet.example/feed.xml", why: "Made up, with \"marks\" to escape." },
-        { name: "Plain Pages", site: "https://plain.example/", feed: "https://plain.example/atom.xml", why: "Also made up." },
-      ],
-    });
-  }
+  // The items in a list whose field (a dotted path, like "data.groupId")
+  // equals a value: how the Help pages find their group, their related
+  // pages and each group's pages (decision 0157).
+  eleventyConfig.addFilter("where", (list, path, value) =>
+    list.filter((item) => path.split(".").reduce((field, key) => field?.[key], item) === value),
+  );
 
-  // Starter packs (src/packs/), in the order each pack names.
-  eleventyConfig.addCollection("packs", (collections) =>
-    collections.getFilteredByGlob("src/packs/*.md").sort((a, b) => a.data.order - b.data.order),
-  );
-  // Only a pack with blogs gets a download (src/packs-opml.njk).
-  eleventyConfig.addCollection("packsWithBlogs", (collections) =>
-    collections.getFilteredByGlob("src/packs/*.md").filter((pack) => pack.data.blogs?.length),
-  );
-  eleventyConfig.ignores.add("src/packs/README.md");
 
   return {
     dir: { input: "src", output: "_site" },

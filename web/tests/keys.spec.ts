@@ -60,6 +60,20 @@ async function changeKeys(page: Page) {
 test.describe("on a wide window", () => {
   test.skip(({ isMobile }) => isMobile, "keys are for a keyboard");
 
+  test("the list's foot links to Help's keys page, just before Change keys…, by the keyboard alone", async ({ page }) => {
+    // SPEC sections 19 and 40 (decision 0157).
+    await signedIn(page);
+    await page.keyboard.press("?");
+    await expect(sheet(page)).toBeVisible();
+    const help = sheet(page).getByRole("link", { name: "Help with keys (on the nine turtles website)" });
+    await expect(help).toHaveAttribute("href", "https://nineturtles.app/help/every-keyboard-key/");
+    await expect(help).toHaveAttribute("target", "_blank");
+    expect((await help.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    await tabTo(page, help);
+    await page.keyboard.press("Tab");
+    await expect(sheet(page).getByRole("button", { name: "Change keys…" })).toBeFocused();
+  });
+
   test("star moves to x with the keyboard alone, and x stars everywhere the key shows", async ({ page }) => {
     const saved = await keepSettingsHere(page);
     await signedIn(page);
