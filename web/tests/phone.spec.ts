@@ -26,6 +26,16 @@ async function openHome(page: Page) {
 test.describe("on a phone", () => {
   test.skip(({ isMobile }) => !isMobile, "the phone layout only");
 
+  test("a page, Edit or source settings address for someone not followed says so, rather than showing another list", async ({ page }) => {
+    await openHome(page);
+    for (const path of ["/people/999999/about", "/people/999999/edit", "/people/999999/sources/999998"]) {
+      await page.goto(new URL(path, FEEDS_APP).href);
+      await appReady(page);
+      await expect(page.getByRole("heading", { level: 2, name: "Not found" })).toBeVisible();
+      await expect(page.getByText("You don't follow anyone at this address.")).toBeVisible();
+    }
+  });
+
   test("Feeds → Items → Article, each with a back arrow saying where it goes", async ({ page }) => {
     await openHome(page);
     // The feeds screen is home: Refresh at the top, Settings at the bottom, no sidebar toggle.
@@ -53,7 +63,7 @@ test.describe("on a phone", () => {
     await expect(list(page).getByRole("heading", { level: 2, name: "Reading Room" })).toBeVisible();
     await expect(list(page).getByRole("button", { name: "Back to Feeds" })).toBeVisible();
     const listBack = (await list(page).getByRole("button", { name: "Back to Feeds" }).locator("svg").boundingBox())!;
-    // One quiet More (…) beside the list's title; Refresh and Edit feed are in its menu (decision 0038).
+    // One quiet More (…) beside the list's title; Refresh and "About …" are in its menu (decision 0038).
     const more = list(page).getByRole("button", { name: "More", exact: true });
     await expect(more).toBeVisible();
     await expect(page.getByRole("button", { name: "Refresh", exact: true })).toHaveCount(0);
@@ -61,7 +71,7 @@ test.describe("on a phone", () => {
     expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
     await more.click();
     await expect(page.getByRole("menuitem", { name: "Refresh" })).toBeVisible();
-    await expect(page.getByRole("menuitem", { name: "Edit person" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "About Reading Room" })).toBeVisible();
     await more.click();
     await expect(page.getByRole("menu")).toHaveCount(0);
 
@@ -258,37 +268,31 @@ test.describe("on a phone", () => {
     await expect(page.getByRole("heading", { level: 2, name: "Settings" })).toBeHidden();
   });
 
-  test("Close on Edit feed goes back to the list, and back again doesn't reopen it", async ({ page }) => {
+  test("their page is a screen of its own, with ‹ back to their list; Edit turns it into its settings and Cancel back", async ({ page }) => {
     await openHome(page);
     await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
     await list(page).getByRole("button", { name: "More", exact: true }).click();
-    await page.getByRole("menuitem", { name: "Edit person" }).click();
-    // The phone sheet's one build (decision 0052): an X beside the title and no Cancel; its first
-    // field starts 20px under the top line, as Settings' first group does.
-    const heading = page.getByRole("heading", { level: 2, name: "Edit person" });
-    await expect(heading).toBeVisible();
-    await expect(page.getByRole("button", { name: "Cancel" })).toHaveCount(0);
-    const bar = (await page.locator(".pane-bar").filter({ has: heading }).boundingBox())!;
-    const name = (await page.getByText("Name", { exact: true }).boundingBox())!;
-    expect(name.y - (bar.y + bar.height)).toBeLessThanOrEqual(24);
-    // Save takes the full width, and Unsubscribe sits in a group of its own at least 32px above it
-    // once the form is scrolled to its end (the feed's settings make it taller than a phone).
-    await page.locator(".page-sheet .scroller").evaluate((element) => (element.scrollTop = element.scrollHeight));
-    const save = (await page.getByRole("button", { name: "Save" }).boundingBox())!;
-    const unsubscribe = (await page.getByRole("button", { name: /^Unsubscribe/ }).boundingBox())!;
-    expect(save.width).toBeGreaterThan(page.viewportSize()!.width - 48);
-    expect(save.y - (unsubscribe.y + unsubscribe.height)).toBeGreaterThanOrEqual(32);
-    // An iOS page sheet (decision 0055): 10px of the dimmed screen shows above it, its top corners are
-    // 12px, and its groups are cards in a different tone from the sheet's grouped ground.
-    const card = page.locator(".page-sheet-card");
-    expect(Math.abs((await card.boundingBox())!.y - 10)).toBeLessThan(1.5);
-    await expect(card).toHaveCSS("border-top-left-radius", "12px");
-    const tone = (locator: typeof card) => locator.evaluate((element) => getComputedStyle(element).backgroundColor);
-    expect(await tone(card.locator(".inset-group").last())).not.toBe(await tone(card));
-    await page.getByRole("button", { name: "Close" }).click();
+    await page.getByRole("menuitem", { name: "About Reading Room" }).click();
+    await expect(page).toHaveURL(/\/about$/);
+    // In the list's place, its back button saying where it goes.
+    await expect(page.getByRole("heading", { level: 2, name: "Reading Room", exact: true })).toBeVisible();
+    await expect(page.locator(".item-row")).toHaveCount(0);
+    const back = page.getByRole("button", { name: "Reading Room", exact: true });
+    await expect(back).toBeVisible();
+    expect((await back.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+
+    await page.getByRole("button", { name: "Edit Reading Room" }).click();
+    await expect(page.getByRole("heading", { level: 2, name: "Edit Reading Room" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Done" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Unsubscribe from Reading Room" })).toBeAttached();
+    // Nothing runs off the side of the phone.
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await expect(page).toHaveURL(/\/about$/);
+
+    await back.click();
     await expect(list(page).getByRole("heading", { level: 2, name: "Reading Room" })).toBeVisible();
-    await page.goBack();
-    await expect(sidebar(page)).toBeVisible();
+    await expect(page.locator(".item-row").first()).toBeVisible();
   });
 
   test("a long feed name is cut short on one line in the list's title and in the back button, never running off the screen", async ({ page }) => {
@@ -303,21 +307,28 @@ test.describe("on a phone", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
     const settings = (await sidebar(page).getByRole("link", { name: "Settings" }).boundingBox())!;
     expect(settings.x + settings.width).toBeLessThanOrEqual(320);
-    await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
+    await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
     await appReady(page);
     // The list's title is one line that ends in "…", with the whole name as its tooltip; in a pane
     // this narrow it steps down from 24px to 22px (decision 0041).
     const title = page.locator("#list-heading");
     await expect(title).toHaveAttribute("title", `Blog ${name}`);
-    const lines = await title.evaluate((element) => ({
-      height: element.getBoundingClientRect().height,
-      line: parseFloat(getComputedStyle(element).lineHeight),
-      cut: element.scrollWidth > element.clientWidth,
-      overflow: getComputedStyle(element).textOverflow,
-      wrap: getComputedStyle(element).whiteSpace,
-      size: getComputedStyle(element).fontSize,
-    }));
-    expect(lines.height).toBeLessThan(lines.line * 1.5);
+    // A person's or publication's name is the button to their page (decision 0163): its name is what's
+    // cut short, and the › after it stays.
+    const lines = await title.evaluate((element) => {
+      const button = element.querySelector("button") ?? element;
+      const name = button.querySelector(".truncate") ?? button;
+      return {
+        height: button.getBoundingClientRect().height,
+        line: parseFloat(getComputedStyle(element).lineHeight),
+        cut: name.scrollWidth > name.clientWidth,
+        overflow: getComputedStyle(name).textOverflow,
+        wrap: getComputedStyle(name).whiteSpace,
+        size: getComputedStyle(element).fontSize,
+      };
+    });
+    // One line (a 44px button to touch, never two lines of text).
+    expect(lines.height).toBeLessThan(Math.max(44, lines.line * 1.5) + 1);
     expect(lines.cut).toBe(true);
     expect(lines.overflow).toBe("ellipsis");
     expect(lines.wrap).toBe("nowrap");
@@ -370,12 +381,11 @@ test.describe("on a phone", () => {
     const name = `foldered-${Date.now()}`;
     const folder = `Shelf ${Date.now()}`;
     const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
-    await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
+    await page.goto(new URL(`/people/${id}/edit`, FEEDS_APP).href);
     await appReady(page);
-    await page.getByRole("button", { name: "More", exact: true }).click();
-    await page.getByRole("menuitem", { name: "Edit person" }).click();
     await page.getByLabel("New folder").fill(folder);
-    await page.getByRole("button", { name: "Save" }).click();
+    await page.getByRole("button", { name: "Done" }).click();
+    await expect(page).toHaveURL(/\/about$/);
     await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeVisible();
 
     await page.goto(new URL("/", FEEDS_APP).href);
@@ -383,7 +393,7 @@ test.describe("on a phone", () => {
     const folderLink = sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) });
     await expect(folderLink).toBeVisible();
     // One chevron per row: no show-or-hide arrow, so the folder's feeds are simply there (decision 0043).
-    await expect(sidebar(page).getByRole("button", { name: `People in ${folder}` })).toHaveCount(0);
+    await expect(sidebar(page).getByRole("button", { name: `What's in ${folder}` })).toHaveCount(0);
     await expect(sidebar(page).locator("[aria-expanded]")).toHaveCount(0);
     const feedLink = sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${name}`) });
     await expect(feedLink).toBeVisible();
@@ -404,7 +414,7 @@ test.describe("on a phone", () => {
     await expect(page.getByRole("heading", { level: 2, name: folder })).toBeVisible();
   });
 
-  test("every screen keeps one 20px margin (the list's 28px dot gutter aside): the article, Settings and Add feed", async ({ page }) => {
+  test("every screen keeps one 20px margin (the list's 28px dot gutter aside): the article, Settings and Add", async ({ page }) => {
     await openHome(page);
     /** How far a thing's first line of words starts from the screen's left edge. */
     const textStart = (locator: ReturnType<Page["locator"]>) =>
@@ -452,10 +462,10 @@ test.describe("on a phone", () => {
     expect(Math.abs((await textStart(page.locator(".reading-sample p"))) - 36)).toBeLessThan(1.5);
     near20((await page.locator(".inset-group").first().boundingBox())!.x);
 
-    // Add feed: its title and the line under it.
-    await page.goto(new URL("/add-feed", FEEDS_APP).href);
+    // Add: its title and the line under it.
+    await page.goto(new URL("/add", FEEDS_APP).href);
     await appReady(page);
-    const add = page.getByRole("heading", { level: 2, name: "Add a feed" });
+    const add = page.getByRole("heading", { level: 2, name: "Add a person or publication" });
     await expect(add).toBeVisible();
     near20(await textStart(add));
     near20(await textStart(page.getByText(/finds the feed/).first()));
@@ -488,7 +498,7 @@ test.describe("on a phone", () => {
     await expect(page.locator("#list-heading")).toHaveText("Results in Reading Room");
     // It never goes away on its own, so nothing moves under a finger: emptied, it stays.
     await field.fill("");
-    await expect(page.locator("#list-heading")).toHaveText("Reading Room");
+    await expect(page.locator("#list-heading")).toHaveAttribute("title", "Reading Room");
     await page.locator("#list-heading").focus();
     await expect(field).toBeVisible();
     // The button again, with nothing searched, puts it away.
@@ -593,7 +603,7 @@ test("a tab left open across an update is told to reload, switches on the next m
   await signIn(page);
   // The feed's own list: in All, other tests' articles can fill the first 50.
   const id = await follow(page, `${FEED_SITE}/reading/`);
-  await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
   await appReady(page);
 
   // A newer nine turtles that doesn't understand this tab's way of starring.

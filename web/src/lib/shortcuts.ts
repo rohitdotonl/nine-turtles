@@ -158,6 +158,9 @@ export function carryOut(action: Action, scene: KeyScene, hands: KeyHands) {
       if (scene.onList && scene.sidebar && folder !== undefined) hands.toggleFolder(folder);
       break;
     }
+    case "about":
+      if (scene.onList && !scene.searching && scene.feed !== undefined) hands.go({ kind: "about", id: scene.feed });
+      break;
     case "edit-place":
       if (scene.onList && !scene.searching) {
         if (scene.feed !== undefined) hands.go({ kind: "edit-feed", id: scene.feed });

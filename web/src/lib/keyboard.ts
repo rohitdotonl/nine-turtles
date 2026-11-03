@@ -42,6 +42,7 @@ export type Action =
   | { kind: "refresh" }
   | { kind: "toggle-folder" }
   | { kind: "edit-place" }
+  | { kind: "about" }
   | { kind: "text-size"; step: 1 | -1 };
 
 export type KeyPress = {
@@ -142,10 +143,11 @@ export const SHORTCUTS: Shortcut[] = [
   shortcut("Getting around", "Go to Recently read", [["go-recent", "g then r", { kind: "go-to", path: "/recent" }]]),
   shortcut("Getting around", "Go to Your feeds", [["go-feeds", "g then f", { kind: "go-to", path: "/settings/feeds" }]]),
   shortcut("Getting around", "Go to Settings", [["go-settings", "g then ,", { kind: "go-to", path: "/settings" }]]),
-  shortcut("Getting around", "Next / previous feed", [
+  shortcut("Getting around", "Next / previous in the sidebar", [
     ["next-feed", "Shift+J", { kind: "move-feed", step: 1 }],
     ["previous-feed", "Shift+K", { kind: "move-feed", step: -1 }],
   ]),
+  shortcut("Getting around", "About this person or publication", [["about", "i", { kind: "about" }]]),
   shortcut("Getting around", "Search", [["search", "/", { kind: "search" }]]),
   shortcut("Getting around", "Show / hide sidebar", [["toggle-sidebar", "[", { kind: "toggle-sidebar" }]]),
   shortcut("Getting around", "Show / hide article list", [["toggle-list", "]", { kind: "toggle-list" }]]),
@@ -156,8 +158,8 @@ export const SHORTCUTS: Shortcut[] = [
   shortcut("Tidying up", "Mark older as read", [["mark-older-read", "Shift+O", { kind: "mark-older-read" }]]),
   shortcut("Tidying up", "Undo", [["undo", "u", { kind: "undo" }]]),
   shortcut("Tidying up", "Show new articles", [["refresh", "r", { kind: "refresh" }]]),
-  shortcut("Tidying up", "Edit this person or folder", [["edit-place", "Shift+E", { kind: "edit-place" }]]),
-  shortcut("Anywhere", "Add feed", [["add-feed", "a", { kind: "add-feed" }]]),
+  shortcut("Tidying up", "Edit this person, publication or folder", [["edit-place", "Shift+E", { kind: "edit-place" }]]),
+  shortcut("Anywhere", "Add a person or publication", [["add-feed", "a", { kind: "add-feed" }]]),
   shortcut("Anywhere", "This list of shortcuts", [["cheat-sheet", "?", { kind: "cheat-sheet" }]]),
 ];
 
@@ -484,8 +486,9 @@ const DOES: Record<string, string> = {
   "text-larger": "makes the text larger",
   "text-smaller": "makes the text smaller",
   star: "stars and unstars",
-  "next-feed": "goes to the next feed",
-  "previous-feed": "goes to the previous feed",
+  "next-feed": "goes to the next one in the sidebar",
+  "previous-feed": "goes to the previous one in the sidebar",
+  about: "opens the page about them",
   search: "searches",
   "toggle-sidebar": "shows and hides the sidebar",
   "toggle-list": "shows and hides the article list",
@@ -496,8 +499,8 @@ const DOES: Record<string, string> = {
   "mark-older-read": "marks older as read",
   undo: "undoes",
   refresh: "shows new articles",
-  "edit-place": "edits the feed or folder",
-  "add-feed": "adds a feed",
+  "edit-place": "edits the person, publication or folder",
+  "add-feed": "adds a person or publication",
 };
 
 /** What a key does, for a sentence: "marks older as read". */

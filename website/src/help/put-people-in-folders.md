@@ -9,18 +9,18 @@ related: [one-person-several-places, unfollow-someone, hide-topics]
 ---
 
 <p class="lede">
-  A folder is a group of people: Friends, Cooking, Read at the weekend.
+  A folder is a group of people and publications: Friends, Cooking, Read at the weekend.
   Someone can be in more than one.
 </p>
 
 ## Put one person in a folder
 
-1. Choose the person in the sidebar.
-2. Open the list's **More** menu and choose **Edit person…** (or press
-   <kbd>Shift</kbd> <kbd>E</kbd>).
+1. Choose the person in the sidebar, and press their name at the top of
+   their list to open their page.
+2. Press **Edit** (or press <kbd>Shift</kbd> <kbd>E</kbd>).
 3. Under **Folders**, tick the folders they belong in. To make a new one,
    type its name in **New folder…**
-4. Press **Save**.
+4. Press **Done**.
 
 There's no "new folder" button in the sidebar: a folder is made when you put
 someone in it.
@@ -46,5 +46,6 @@ Deleting a folder never unfollows anyone: they simply leave the folder.
 
 - Folders start closed in the sidebar. Press a folder's arrow to show the
   people in it; each device remembers which you opened.
-- Someone in a folder is listed in the folder, not under **People**, which
-  holds everyone who isn't in one.
+- Someone in a folder is listed in the folder, not under **People** or
+  **Publications**, which hold everyone who isn't in one.
+- A folder can hold people and publications alike.

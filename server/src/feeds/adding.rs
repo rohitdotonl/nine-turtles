@@ -335,6 +335,14 @@ async fn follow(
     .bind(feed_id)
     .fetch_one(&mut *transaction)
     .await?;
+    // Person or publication, and what kind of source: guessed now, for Add's choice (decision 0163).
+    crate::writers::kind::fill(&mut transaction, person, Some(feed_id)).await?;
+    let (kind, place): (String, String) =
+        sqlx::query_as("SELECT kind, place FROM subscriptions WHERE person_id = ? AND feed_id = ?")
+            .bind(person)
+            .bind(feed_id)
+            .fetch_one(&mut *transaction)
+            .await?;
     transaction.commit().await?;
     // Signing up with the feed's hub, if it has one, needn't hold up adding
     // it. A feed others already follow has its checks and its hub.
@@ -354,7 +362,8 @@ async fn follow(
         failing_since: None,
         checked_at: Some(now),
         person: None,
-        place: super::place_of(fetched.lasting_url.as_str()).to_owned(),
+        place,
+        kind,
         sorts_videos: youtube::addresses::channel_of_feed(&fetched.lasting_url).is_some(),
         shorts: false,
         live_streams: false,

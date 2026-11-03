@@ -24,14 +24,15 @@ From the top:
   articles you opened).
 - **Up Next**, while it holds a podcast episode, then your **Saved
   searches** and **Collections**.
-- **Folders**, then **People**: everyone who isn't in a folder, A to Z.
-- At the foot: **Add feed**, **Keys** and **Settings**.
+- **Folders**, then **People** and **Publications**: everyone who isn't in
+  a folder, A to Z. Someone with a blog and a channel has one row.
+- At the foot: **+ Add**, **Keys** and **Settings**.
 
 A small dot at the end of a row means something there is new. There are no
 numbers: you never have a pile to clear.
 
 You can hide the lists you don't use in **Settings › Show in the sidebar**.
-Unread, folders and people always stay.
+Unread, folders, people and publications always stay.
 
 ## The list of articles
 
@@ -42,7 +43,9 @@ Older articles load as you reach the bottom, and every list ends: Unread
 with "That's everything for now."
 
 The list's **More** menu (the three dots) holds what you can do to the whole
-list: mark it all as read, refresh it, or sort it oldest first.
+list: mark it all as read, refresh it, or sort it oldest first. In a
+person's or publication's list it also has **About …**, their page, which
+opens too when you press their name at the top of the list.
 
 ## Reading
 

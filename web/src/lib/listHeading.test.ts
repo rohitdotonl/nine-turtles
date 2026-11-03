@@ -33,7 +33,7 @@ describe("headingFor", () => {
   it("names a view, or a place by its own name", () => {
     expect(headingFor(scene())).toBe("All");
     expect(headingFor(scene({ under: { kind: "feed", id: 3 }, placeName: "Quiet Notes" }))).toBe("Quiet Notes");
-    expect(headingFor(scene({ under: { kind: "feed", id: 3 } }))).toBe("Feed");
+    expect(headingFor(scene({ under: { kind: "feed", id: 3 } }))).toBe("Someone");
   });
 
   it("says a place the reader doesn't have isn't found, even while results show", () => {

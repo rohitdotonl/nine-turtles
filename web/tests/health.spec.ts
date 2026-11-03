@@ -102,12 +102,15 @@ test("a failing feed says so above its list, and Find its new address moves it w
   // Two failed checks, as the health page needs before it lists a feed.
   await expect.poll(failingSince, { timeout: 30_000 }).not.toBeNull();
 
-  // Edit feed offers it too, only while the feed is failing.
-  await page.goto(new URL(`/feeds/${id}/edit`, FEEDS_APP).href);
+  // Edit offers it too, only while the feed is failing.
+  await page.goto(new URL(`/people/${id}/edit`, FEEDS_APP).href);
   await appReady(page);
   await expect(page.getByRole("button", { name: "Find new address", exact: true })).toBeVisible();
+  // Escape turns Edit back into their page, and again goes back to their list.
   await page.keyboard.press("Escape");
-  await expect(page).toHaveURL(new RegExp(`/feeds/${id}$`));
+  await expect(page).toHaveURL(new RegExp(`/(people|publications)/${id}/about$`));
+  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(new RegExp(`/(people|publications)/${id}$`));
 
   const list = page.locator("#list-pane");
   await expect(list.getByText(/^This feed hasn't worked since (earlier today|\d+ \w+)\. Find its new address$/)).toBeVisible();
@@ -202,7 +205,7 @@ async function failing(page: Page, name: string, how: "move" | "break"): Promise
 test("when the site names several feeds, the list's line offers a choice; when it names none, it says so", async ({ page }) => {
   const several = `moving-two-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const id = await failing(page, several, "move");
-  await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
   await appReady(page);
   const list = page.locator("#list-pane");
   await list.getByRole("button", { name: "Find its new address" }).click();
@@ -216,10 +219,10 @@ test("when the site names several feeds, the list's line offers a choice; when i
   await expect(choice).toHaveCount(0);
   await expect(list.getByRole("button", { name: "Find its new address" })).toBeFocused();
 
-  // A feed whose site names nothing new: one plain sentence, in Edit feed too.
+  // A feed whose site names nothing new: one plain sentence, in Edit too.
   const none = `moving-gone-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const gone = await failing(page, none, "break");
-  await page.goto(new URL(`/feeds/${gone}/edit`, FEEDS_APP).href);
+  await page.goto(new URL(`/people/${gone}/edit`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("button", { name: "Find new address", exact: true }).click();
   await expect(page.getByRole("status").filter({ hasText: /^The site doesn't name another feed/ })).toBeVisible();
@@ -227,10 +230,10 @@ test("when the site names several feeds, the list's line offers a choice; when i
   await expect(page.getByRole("button", { name: "Use it" })).toHaveCount(0);
 });
 
-test("Edit feed moves a failing feed at once, says so, and keeps what was typed", async ({ page }) => {
+test("Edit moves a failing feed at once, says so, and keeps what was typed", async ({ page }) => {
   const name = `moving-edit-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const id = await failing(page, name, "move");
-  await page.goto(new URL(`/feeds/${id}/edit`, FEEDS_APP).href);
+  await page.goto(new URL(`/people/${id}/edit`, FEEDS_APP).href);
   await appReady(page);
   const nameField = page.getByRole("textbox", { name: "Name" });
   await nameField.fill(`Renamed ${name}`);
@@ -244,7 +247,7 @@ test("Edit feed moves a failing feed at once, says so, and keeps what was typed"
   expect(feed.failing_since ?? null).toBeNull();
 });
 
-test("moving a feed to a new number (others follow the old address) keeps Edit feed and its confirmation", async ({ page }) => {
+test("moving a feed to a new number (others follow the old address) keeps Edit and its confirmation", async ({ page }) => {
   // The new number only comes when another reader follows the old address;
   // here the server's answer is changed to another of this reader's feeds, to
   // stand in for it.
@@ -257,13 +260,13 @@ test("moving a feed to a new number (others follow the old address) keeps Edit f
     const feed = health.feeds.find((each: { id: number }) => each.id === other);
     await route.fulfill({ json: { feed: { ...feed, state: "working", failing_since: null } } });
   });
-  await page.goto(new URL(`/feeds/${id}/edit`, FEEDS_APP).href);
+  await page.goto(new URL(`/people/${id}/edit`, FEEDS_APP).href);
   await appReady(page);
   const nameField = page.getByRole("textbox", { name: "Name" });
   await nameField.fill("Typed before the move");
   await page.getByRole("button", { name: "Find new address", exact: true }).click();
   await page.getByRole("button", { name: "Use it" }).click();
-  await expect(page).toHaveURL(new RegExp(`/feeds/${other}/edit$`));
+  await expect(page).toHaveURL(new RegExp(`/(people|publications)/${other}/edit$`));
   await expect(page.getByRole("status").filter({ hasText: "It now reads from its new address and works again." })).toBeVisible();
   await expect(nameField).toHaveValue("Typed before the move");
 });

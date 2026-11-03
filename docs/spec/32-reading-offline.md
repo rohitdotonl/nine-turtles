@@ -23,7 +23,7 @@
 1. Open nine turtles online and wait a minute. Switch on airplane mode.
 2. Open Unread and Starred: the line says "Offline. Showing the articles saved on this device." and your articles are there. Open one: its words are there, with a short line where each image was.
 3. Read one, star another, mark one unread. Nothing complains.
-4. Try search, Add feed, Settings and Refresh: each says it needs a connection.
+4. Try search, + Add, Settings and Refresh: each says it needs a connection.
 5. Close nine turtles and open it again, still in airplane mode: it opens with the same articles.
 6. Switch airplane mode off. On another device (or after a reload), the marks from step 3 are there.
 7. Sign out, then switch airplane mode on and open nine turtles: it says it can't be reached, because the copies are gone.

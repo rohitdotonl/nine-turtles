@@ -23,8 +23,10 @@ export type Feed = {
   checkedAt?: number | null;
   /** The person it's one place of, when the reader joined it to others (SPEC section 36); null on its own. */
   person?: number | null;
-  /** What kind of place it is: a blog, a YouTube channel or a newsletter. */
+  /** What kind of source it is: a blog, a video channel, a newsletter or a podcast. */
   place?: PlaceKind;
+  /** Someone or something (decision 0163): a place joined to others is always a person's. */
+  kind?: WhoKind;
   /** When the reader followed it (seconds since 1970), for "Following since". */
   addedAt?: number;
   /** Only on a sidebar row standing for a person (`people.ts` → `rowsOf`): their places' numbers. */
@@ -55,8 +57,12 @@ export type Folder = { id: number; name: string };
 /** A person the reader joined places into (SPEC section 36): their name, as the reader calls them. */
 export type Person = { id: number; name: string };
 
-/** What a place is, for a person's page and the labels in their list. */
-export type PlaceKind = "blog" | "video" | "newsletter";
+/** What a source is, for a person's page and the labels in their list. */
+export type PlaceKind = "blog" | "video" | "newsletter" | "podcast";
+export const PLACE_KINDS: PlaceKind[] = ["blog", "video", "newsletter", "podcast"];
+
+/** Someone or something you follow (decision 0163). */
+export type WhoKind = "person" | "publication";
 
 export function toPerson(person: Record<string, unknown>): Person {
   return { id: Number(person.id), name: String(person.name ?? "") };
@@ -186,7 +192,8 @@ export function toFeed(feed: Record<string, unknown>): Feed {
     failingSince: typeof feed.failing_since === "number" ? feed.failing_since : null,
     checkedAt: typeof feed.checked_at === "number" ? feed.checked_at : null,
     person: typeof feed.person === "number" ? feed.person : null,
-    place: feed.place === "video" || feed.place === "newsletter" ? feed.place : "blog",
+    place: PLACE_KINDS.find((kind) => kind === feed.place) ?? "blog",
+    kind: feed.kind === "publication" ? "publication" : "person",
     addedAt: typeof feed.added_at === "number" ? feed.added_at : undefined,
     writeTo: text(feed.write_to),
     email: text(feed.email),

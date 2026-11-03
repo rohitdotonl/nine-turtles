@@ -33,7 +33,8 @@ export type Missing = "feed" | "folder" | "search" | "collection";
  */
 export function missingFrom(place: Route, found: Found): Missing | undefined {
   if (!found.feeds) return undefined;
-  if ((place.kind === "feed" || place.kind === "edit-feed") && !found.feed) return "feed";
+  // A person's or publication's list, page, Edit or source settings (SPEC section 36).
+  if (["feed", "about", "edit-feed", "edit-source"].includes(place.kind) && !found.feed) return "feed";
   if ((place.kind === "folder" || place.kind === "edit-folder") && !found.folder) return "folder";
   if ((place.kind === "search" || place.kind === "edit-search") && found.searchesLoaded && !found.searchesFailed && !found.search) return "search";
   if (place.kind === "collection" && found.collectionsLoaded && !found.collectionsFailed && !found.collection) return "collection";
@@ -42,7 +43,7 @@ export function missingFrom(place: Route, found: Found): Missing | undefined {
 
 /** The list's heading for a place the reader doesn't have. */
 export const NOT_FOUND: Record<Missing, string> = {
-  feed: "Feed not found",
+  feed: "Not found",
   folder: "Folder not found",
   search: "Saved search not found",
   collection: "Collection not found",
@@ -50,7 +51,7 @@ export const NOT_FOUND: Record<Missing, string> = {
 
 /** The line under that heading, saying why. */
 const NOT_HERE: Record<Missing, string> = {
-  feed: "You don't follow this feed. It may have been an old address.",
+  feed: "You don't follow anyone at this address. It may have been an old one.",
   folder: "There's no folder here. It may have been deleted or renamed.",
   search: "There's no saved search here. It may have been deleted.",
   collection: "There's no collection here. It may have been deleted.",

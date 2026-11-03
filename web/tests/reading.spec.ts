@@ -92,8 +92,8 @@ test.describe("on a wide window", () => {
   test("j shows an article cleaned and restyled, and j and k move through the list", async ({ page }) => {
     await openRoom(page);
     const room = page.url();
-    // Beside a person's list, their page (SPEC section 36), with the same first-time tip under it.
-    await expect(article(page)).toHaveClass(/person-page/);
+    // Beside a person's list, the same quiet line as everywhere (their page opens by their name, SPEC section 36), with the first-time tip under it.
+    await expect(article(page).locator(".reading-empty")).toBeVisible();
     await expect(article(page).locator(".shortcut-tip")).toContainText("to open the first article, or");
     // Everywhere else, one quiet line in the middle of the paper (decision 0053): serif, muted grey,
     // never the accent; screen readers also hear, since the list has articles to open, how to open one.
@@ -384,7 +384,7 @@ test.describe("on a wide window", () => {
     const text = article(page).locator(".article-text");
     await text.locator("sup").getByRole("link", { name: "1" }).click();
     await expect(text.getByText("1. Written in Python, a long time ago.")).toBeFocused();
-    await expect(page).toHaveURL(/\/feeds\/[0-9]+$/);
+    await expect(page).toHaveURL(/\/people\/[0-9]+$/);
     expect(page.context().pages()).toHaveLength(1);
   });
 
@@ -754,7 +754,7 @@ test.describe("on a wide window", () => {
     await signIn(page);
     // Quiet Notes has 60 articles: far more than one window holds.
     const id = await follow(page, `${FEED_SITE}/`);
-    await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
+    await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
     await expect(page.getByRole("button", { name: /\(\d+\)/ }).nth(30)).toBeAttached();
 
     const fillsWindow = () =>
@@ -823,7 +823,7 @@ test.describe("on a wide window", () => {
     await appReady(page);
     await signIn(page);
     const id = await follow(page, `${FEED_SITE}/videos/`);
-    await page.goto(new URL(`/feeds/${id}`, page.url()).href);
+    await page.goto(new URL(`/people/${id}`, page.url()).href);
     await row(page, "A river at dawn").click();
 
     // The video's description from the feed is its text, under a quiet Play button with its title in it.
@@ -918,7 +918,7 @@ test.describe("on a wide window", () => {
     await appReady(page);
     await signIn(page);
     const id = await follow(page, `${FEED_SITE}/videos/`);
-    await page.goto(new URL(`/feeds/${id}`, page.url()).href);
+    await page.goto(new URL(`/people/${id}`, page.url()).href);
 
     // The first video plays at YouTube's own 1×, which isn't taken as a choice; choosing 1.5× in its menu is kept.
     await row(page, "A river at dawn").click();
