@@ -3,14 +3,17 @@
 //! reader comes back.
 //!
 //! - Every feed has its own rhythm (`rhythm`): half the time it usually
-//!   takes to publish, never less than 30 minutes and never more than a day.
+//!   takes to publish, never less than an hour and never more than a day.
 //!   A blog that has gone quiet is checked once a day.
 //! - Every 30 seconds a round looks at the feeds whose time has come, at
 //!   most 20, four at a time, so checks are spread out and never all at once.
-//!   Each wait is nudged by up to a tenth at random, so feeds added together
-//!   drift apart.
+//!   Two feeds on the same site are never checked at once (`site`): the
+//!   second waits for the first. Each wait is nudged by up to a tenth at
+//!   random, so feeds added together drift apart.
 //! - Each check says what nine turtles already has (`fetch::check`), so an
-//!   unchanged feed costs the publisher a few bytes.
+//!   unchanged feed costs the publisher a few bytes. When the publisher says
+//!   how long its feed stays the same (`Cache-Control: max-age`), the next
+//!   check waits at least that long, up to a day.
 //! - A failing feed waits twice as long after each failure in a row, up to a
 //!   day, and never holds up another feed. A publisher who asks nine turtles to
 //!   slow down gets at least the wait they asked for.
@@ -21,7 +24,11 @@
 //! The screen doesn't change when articles arrive: it says "New items" and
 //! waits for the reader (`feeds::new_articles`).
 
-use std::{sync::atomic::Ordering, time::Duration};
+use std::{
+    collections::{HashMap, VecDeque},
+    sync::atomic::Ordering,
+    time::Duration,
+};
 
 use reqwest::Url;
 use serde::Serialize;
@@ -39,7 +46,7 @@ pub const MINUTE: i64 = 60;
 pub const HOUR: i64 = 60 * MINUTE;
 pub const DAY: i64 = 24 * HOUR;
 /// Never more often than this (SPEC section 11).
-pub const SHORTEST_WAIT: i64 = 30 * MINUTE;
+pub const SHORTEST_WAIT: i64 = HOUR;
 /// At least once a day, working or failing.
 pub const LONGEST_WAIT: i64 = DAY;
 /// For a feed that gives no dates: a few times a day.
@@ -58,9 +65,10 @@ const ROUND_EVERY: Duration = Duration::from_secs(30);
 const PER_ROUND: i64 = 20;
 const AT_ONCE: usize = 4;
 
-/// The feeds whose time has come, the longest-waiting first, from the
-/// `feeds_due` index (tests/speed.rs checks this).
-pub const DUE: &str = "SELECT id FROM feeds WHERE next_check_at <= ? AND unsubscribed_at IS NULL
+/// The feeds whose time has come (id, then address), the longest-waiting
+/// first, from the `feeds_due` index (tests/speed.rs checks this).
+pub const DUE: &str =
+    "SELECT id, url FROM feeds WHERE next_check_at <= ? AND unsubscribed_at IS NULL
          AND newsletter_of IS NULL
      ORDER BY next_check_at, id LIMIT ?";
 
@@ -83,8 +91,8 @@ pub async fn run(state: AppState) {
     }
 }
 
-/// Checks the feeds due at `now`: at most 20, four at a time. Returns how
-/// many were checked. First, feeds unsubscribed long enough ago that Undo
+/// Checks the feeds due at `now`: at most 20, four at a time, never two on
+/// the same site at once. Returns how many were checked. First, feeds unsubscribed long enough ago that Undo
 /// is no longer offered are cleared for good (`folders::clear_unsubscribed`),
 /// newsletter senders are told of those unsubscribes in the background
 /// (`newsletters::tell_senders`), emailed links past their time are
@@ -107,30 +115,69 @@ pub async fn round(state: &AppState, now: i64) -> Result<usize, sqlx::Error> {
     // Unread that has waited longer than its reader allows lets go.
     crate::unread::let_go(&state.db, now).await?;
     websub::renew(state, now).await?;
-    let due: Vec<i64> = sqlx::query_scalar(DUE)
+    let due: Vec<(i64, String)> = sqlx::query_as(DUE)
         .bind(now)
         .bind(PER_ROUND)
         .fetch_all(&state.db)
         .await?;
     let count = due.len();
-    let mut waiting = due.into_iter();
+    let mut waiting: VecDeque<(i64, String)> =
+        due.into_iter().map(|(id, url)| (id, site(&url))).collect();
+    // The site each running check is visiting.
+    let mut busy = HashMap::new();
     let mut checks = JoinSet::new();
     loop {
         while checks.len() < AT_ONCE {
-            let Some(id) = waiting.next() else { break };
+            // The longest-waiting feed whose site isn't being visited already.
+            let Some(next) = waiting
+                .iter()
+                .position(|(_, site)| !busy.values().any(|busy| busy == site))
+            else {
+                break;
+            };
+            let Some((id, site)) = waiting.remove(next) else {
+                break;
+            };
             let state = state.clone();
-            checks.spawn(async move { (id, check(&state, id, now).await) });
+            let task = checks.spawn(async move { (id, check(&state, id, now).await) });
+            busy.insert(task.id(), site);
         }
-        match checks.join_next().await {
+        match checks.join_next_with_id().await {
             None => break,
-            Some(Ok((_, Ok(())))) => {}
-            Some(Ok((id, Err(error)))) => log::problem(&format!(
-                "database error while checking feed {id} in the background: {error}"
-            )),
-            Some(Err(error)) => log::problem(&format!("a background check stopped: {error}")),
+            Some(Ok((task, (id, answer)))) => {
+                busy.remove(&task);
+                if let Err(error) = answer {
+                    log::problem(&format!(
+                        "database error while checking feed {id} in the background: {error}"
+                    ));
+                }
+            }
+            Some(Err(error)) => {
+                busy.remove(&error.id());
+                log::problem(&format!("a background check stopped: {error}"));
+            }
         }
     }
     Ok(count)
+}
+
+/// Which site an address is on, so two of its feeds are never checked at
+/// once: the last two parts of its name (`bearblog.dev` for every Bear
+/// blog), or the whole of a numeric address. A name like `example.co.uk`
+/// shares `co.uk` with other sites, which only means they take turns.
+pub fn site(url: &str) -> String {
+    let Some(host) = Url::parse(url)
+        .ok()
+        .and_then(|url| url.host_str().map(str::to_owned))
+    else {
+        return url.to_owned();
+    };
+    if host.starts_with('[') || host.parse::<std::net::IpAddr>().is_ok() {
+        return host;
+    }
+    let mut parts: Vec<&str> = host.trim_end_matches('.').rsplit('.').take(2).collect();
+    parts.reverse();
+    parts.join(".")
 }
 
 #[derive(sqlx::FromRow)]
@@ -195,6 +242,7 @@ pub async fn check(state: &AppState, feed_id: i64, now: i64) -> Result<(), sqlx:
         Ok(Answer::Changed(fetched)) => match feed::parse(&fetched.body, &fetched.final_url) {
             Some(mut parsed) => {
                 let lasting = fetched.lasting_url.clone();
+                let fresh_for = fetched.fresh_for;
                 // A YouTube channel's Shorts and live streams (decision 0144).
                 crate::youtube::sorting::sort(state, &lasting, &mut parsed).await;
                 worked(
@@ -203,6 +251,7 @@ pub async fn check(state: &AppState, feed_id: i64, now: i64) -> Result<(), sqlx:
                     &feed,
                     &lasting,
                     Some((&fetched, &parsed)),
+                    fresh_for,
                     now,
                 )
                 .await?;
@@ -210,22 +259,25 @@ pub async fn check(state: &AppState, feed_id: i64, now: i64) -> Result<(), sqlx:
             }
             None => failed(state, feed_id, &feed, Failure::NotAFeed, now).await,
         },
-        Ok(Answer::Unchanged { lasting_url }) => {
-            worked(state, feed_id, &feed, &lasting_url, None, now).await
-        }
+        Ok(Answer::Unchanged {
+            lasting_url,
+            fresh_for,
+        }) => worked(state, feed_id, &feed, &lasting_url, None, fresh_for, now).await,
         Err(error) => failed(state, feed_id, &feed, Failure::Fetch(error), now).await,
     }
 }
 
 /// The feed answered: store what's new, remember what the publisher said,
-/// and set the next check by the feed's rhythm. `changed` is empty when the
-/// publisher said "nothing new".
+/// and set the next check by the feed's rhythm, or later if the publisher
+/// said how long its feed stays the same (`fresh_for`, obeyed up to a day).
+/// `changed` is empty when the publisher said "nothing new".
 async fn worked(
     state: &AppState,
     feed_id: i64,
     feed: &Due,
     lasting_url: &Url,
     changed: Option<(&Fetched, &ParsedFeed)>,
+    fresh_for: Option<i64>,
     now: i64,
 ) -> Result<(), sqlx::Error> {
     // IMMEDIATE: take the right to write from the start, waiting for any
@@ -259,14 +311,18 @@ async fn worked(
     };
     // While a hub delivers new articles, this check is only the backup:
     // at most twice a day (decision 0069).
-    // "Check at most hourly" or "daily", chosen in Edit feed, is the
+    // "Check at most daily", chosen in Edit feed (or an hour stored from
+    // the old "Hourly", decision 0162, the same as Automatic now), is the
     // shortest rhythm, nudged only upwards so it's never sooner. A day is
     // also the longest wait, so a daily feed waits exactly a day: daily
     // feeds still drift apart, since each was last checked at its own time.
     let mut next = if state.config.test_check_seconds.is_some() {
         wait(state, every)
     } else {
-        wait(state, every.max(feed.check_at_most)).max(feed.check_at_most)
+        wait(state, every.max(feed.check_at_most))
+            .max(feed.check_at_most)
+            // The publisher's own "the same for this long", never past a day.
+            .max(fresh_for.unwrap_or(0).min(LONGEST_WAIT))
     };
     if state.config.test_check_seconds.is_none()
         && websub::delivering(&state.db, feed_id, now).await?
@@ -364,7 +420,7 @@ async fn failed(
 
 /// How long to wait between checks of a working feed: half the time it
 /// usually takes between articles, or since its newest one if that's longer
-/// (a blog gone quiet), between 30 minutes and a day. Judged from the ten
+/// (a blog gone quiet), between an hour and a day. Judged from the ten
 /// newest dated articles; a feed with no dates gets a few times a day.
 pub fn rhythm(feed: &ParsedFeed, now: i64) -> i64 {
     rhythm_from(
@@ -471,7 +527,7 @@ mod tests {
 
     #[test]
     fn each_feed_is_checked_on_its_own_rhythm() {
-        // Every hour: as often as allowed, every 30 minutes.
+        // Every hour: as often as allowed, every hour.
         assert_eq!(rhythm_from(every(HOUR, 10), NOW), SHORTEST_WAIT);
         // Once a day: twice a day.
         assert_eq!(rhythm_from(every(DAY, 10), NOW), 12 * HOUR);
@@ -498,6 +554,7 @@ mod tests {
     #[test]
     fn a_failing_feed_waits_twice_as_long_each_time_up_to_a_day() {
         assert_eq!(backoff(HOUR, 1), 2 * HOUR);
+        assert_eq!(backoff(HOUR / 2, 1), 2 * HOUR);
         assert_eq!(backoff(HOUR, 2), 4 * HOUR);
         assert_eq!(backoff(HOUR, 4), 16 * HOUR);
         assert_eq!(backoff(HOUR, 5), DAY);
@@ -505,6 +562,24 @@ mod tests {
         assert_eq!(backoff(12 * HOUR, 1), DAY);
         // Never less than the shortest wait, even if the stored rhythm were odd.
         assert_eq!(backoff(0, 1), 2 * SHORTEST_WAIT);
+    }
+
+    #[test]
+    fn feeds_on_the_same_site_take_turns() {
+        assert_eq!(site("https://basic.bearblog.dev/feed/"), "bearblog.dev");
+        assert_eq!(
+            site("https://crissequeira.bearblog.dev/feed/"),
+            "bearblog.dev"
+        );
+        assert_eq!(site("https://www.example.com/rss"), "example.com");
+        assert_eq!(site("https://example.com/rss"), "example.com");
+        assert_eq!(
+            site("https://thoughts.uncountable.uk/feed/"),
+            "uncountable.uk"
+        );
+        assert_eq!(site("http://192.0.2.7:8080/feed"), "192.0.2.7");
+        assert_eq!(site("http://[2001:db8::1]/feed"), "[2001:db8::1]");
+        assert_eq!(site("localhost"), "localhost");
     }
 
     #[test]

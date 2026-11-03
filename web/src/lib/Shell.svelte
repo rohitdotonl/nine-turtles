@@ -228,9 +228,9 @@
     const place = isWho(route) ? route : under;
     return place.kind === "feed" || isWho(place) ? library.feeds?.find((feed) => feed.id === place.id) : undefined;
   });
-  /** A person's or publication's page, Edit or source settings is showing (decision 0160): the reading area's, or on a phone the list's place. */
+  /** A person's or publication's page, Edit or source settings is showing (decision 0163): the reading area's, or on a phone the list's place. */
   let whoShown = $derived(isWho(route) && currentFeed !== undefined && library.feeds !== undefined);
-  // Their addresses say person or publication (decision 0160); an old /feeds/ address is tidied to its new one.
+  // Their addresses say person or publication (decision 0163); an old /feeds/ address is tidied to its new one.
   $effect(() => {
     const rows = library.rows;
     placeAddressesBy((id) => rowFor(id, rows ?? [])?.kind === "publication");
@@ -1233,7 +1233,7 @@
             <div class="page-sheet-card">
               <PageHead title={taskTitle} bind:heading={headings.list} besideToggle={false} onClose={closePage} closeLabel="Close" />
               <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
-                <!-- 20px under the top line as Settings is: Add a feed's line on what to paste, the field, then Add feed the full width at the screen's foot. -->
+                <!-- 20px under the top line as Settings is: + Add's line on what to paste, the field, then Add the full width at the screen's foot. -->
                 <div class="mx-auto flex w-full max-w-xl flex-1 flex-col gap-5">
                   {@render task(false)}
                 </div>
@@ -1466,7 +1466,7 @@
   {/if}
 {/snippet}
 
-<!-- A person's or publication's page, Edit or source settings (decision 0160): beside their list, or on a phone in its place. -->
+<!-- A person's or publication's page, Edit or source settings (decision 0163): beside their list, or on a phone in its place. -->
 {#snippet who()}
   {#if isWho(route) && currentFeed}
     {#key editKey(currentFeed.id)}

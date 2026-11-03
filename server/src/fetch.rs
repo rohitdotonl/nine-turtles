@@ -12,7 +12,8 @@
 //!   that leads somewhere private is refused too.
 //! - When checking a feed again, it says what it already has (ETag and
 //!   Last-Modified), so an unchanged feed costs the publisher almost nothing,
-//!   and it listens when a publisher asks it to slow down.
+//!   and it listens when a publisher asks it to slow down, or says how long
+//!   its feed stays the same (`Cache-Control: max-age`).
 
 use std::{
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
@@ -26,11 +27,12 @@ use reqwest::{
     redirect,
 };
 
-/// How nine turtles introduces itself to every website.
+/// How nine turtles introduces itself to every website: its name, version
+/// and the page that tells publishers how it behaves (`website/src/publishers.md`).
 pub const USER_AGENT: &str = concat!(
     "nine-turtles/",
     env!("CARGO_PKG_VERSION"),
-    " (+https://nineturtles.app)"
+    " (+https://nineturtles.app/publishers/)"
 );
 /// The longest nine turtles waits for one download, start to finish.
 const TIME_LIMIT: Duration = Duration::from_secs(20);
@@ -56,6 +58,9 @@ pub struct Fetched {
     pub body: Vec<u8>,
     pub etag: Option<String>,
     pub last_modified: Option<String>,
+    /// How long the publisher says this answer stays the same, in seconds
+    /// (`fresh_for`).
+    pub fresh_for: Option<i64>,
 }
 
 /// What nine turtles already has of a feed, from the publisher's last answer.
@@ -69,13 +74,14 @@ pub struct Known<'a> {
 #[derive(Debug)]
 pub enum Answer {
     Changed(Fetched),
-    /// "Nothing new" (304). `lasting_url` is as in [`Fetched`].
+    /// "Nothing new" (304). `lasting_url` and `fresh_for` are as in [`Fetched`].
     Unchanged {
         lasting_url: Url,
+        fresh_for: Option<i64>,
     },
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FetchError {
     /// The address points somewhere nine turtles never visits (a private network,
     /// this computer, or not a web address at all).
@@ -154,9 +160,56 @@ pub async fn post_form(
     Ok(response.status().as_u16())
 }
 
+/// How many times a YouTube feed is asked for before its answer stands,
+/// and how long to wait between asks. YouTube's feeds answer about half of
+/// all requests with "not found" or a server error, for every channel, and
+/// the next ask a second later often works (tried 3 November 2026,
+/// decision 0159). Asking up to four times makes a wrong "not found" rare.
+const YOUTUBE_TRIES: u32 = 4;
+const YOUTUBE_PAUSE: Duration = Duration::from_secs(1);
+
 /// Downloads a feed again, telling the publisher what nine turtles already has,
 /// so an unchanged feed can answer "nothing new" in a few bytes.
 pub async fn check(
+    client: &Client,
+    url: &Url,
+    local_allowed: bool,
+    known: &Known<'_>,
+) -> Result<Answer, FetchError> {
+    let tries = if crate::youtube::addresses::asks_again(url) {
+        YOUTUBE_TRIES
+    } else {
+        1
+    };
+    again_while_flaky(tries, YOUTUBE_PAUSE, || {
+        check_once(client, url, local_allowed, known)
+    })
+    .await
+}
+
+/// Runs `attempt` up to `tries` times, `pause` apart, while it answers "not
+/// found" or a server error; any other answer stands at once.
+async fn again_while_flaky<T, F, Fut>(
+    tries: u32,
+    pause: Duration,
+    mut attempt: F,
+) -> Result<T, FetchError>
+where
+    F: FnMut() -> Fut,
+    Fut: Future<Output = Result<T, FetchError>>,
+{
+    let mut left = tries.max(1);
+    loop {
+        let answer = attempt().await;
+        left -= 1;
+        if left == 0 || !matches!(answer, Err(FetchError::Status(404 | 500..=599))) {
+            return answer;
+        }
+        tokio::time::sleep(pause).await;
+    }
+}
+
+async fn check_once(
     client: &Client,
     url: &Url,
     local_allowed: bool,
@@ -204,9 +257,11 @@ pub async fn check(
             current = next;
             continue;
         }
+        let fresh = fresh_for(response.headers());
         if status == StatusCode::NOT_MODIFIED {
             return Ok(Answer::Unchanged {
                 lasting_url: lasting,
+                fresh_for: fresh,
             });
         }
         let retry_after = response
@@ -241,9 +296,35 @@ pub async fn check(
             body,
             etag,
             last_modified,
+            fresh_for: fresh,
         }));
     }
     Err(FetchError::Unreachable)
+}
+
+/// How long the publisher says its answer stays the same, from
+/// `Cache-Control: max-age=…`, in seconds. Nothing when it doesn't say, or
+/// says not to keep the answer (`no-store`, `no-cache`), which only means
+/// "ask again" and never "ask sooner".
+pub fn fresh_for(headers: &HeaderMap) -> Option<i64> {
+    let mut max_age = None;
+    for value in headers.get_all(header::CACHE_CONTROL) {
+        let Ok(value) = value.to_str() else { continue };
+        for part in value.split(',') {
+            let part = part.trim().to_ascii_lowercase();
+            if part == "no-store" || part == "no-cache" {
+                return None;
+            }
+            if let Some(seconds) = part.strip_prefix("max-age=") {
+                max_age = seconds
+                    .trim_matches('"')
+                    .parse::<i64>()
+                    .ok()
+                    .filter(|s| *s >= 0);
+            }
+        }
+    }
+    max_age
 }
 
 /// A `Retry-After` answer as seconds from `now`: either a number of seconds
@@ -428,6 +509,69 @@ fn embedded_v4(ip: Ipv6Addr) -> Option<Ipv4Addr> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn a_flaky_answer_is_asked_again_and_any_other_stands() {
+        use std::cell::Cell;
+        let asked = Cell::new(0);
+        // Not found, a server error, then the feed: the feed wins on the third ask.
+        let answers = [
+            Err(FetchError::Status(404)),
+            Err(FetchError::Status(500)),
+            Ok(7),
+        ];
+        let got = again_while_flaky(4, Duration::ZERO, || {
+            asked.set(asked.get() + 1);
+            let answer = answers[asked.get() - 1].clone();
+            async move { answer }
+        })
+        .await;
+        assert_eq!((got, asked.get()), (Ok(7), 3));
+
+        // Never anything but "not found": the last answer stands after four asks.
+        asked.set(0);
+        let got: Result<u8, _> = again_while_flaky(4, Duration::ZERO, || {
+            asked.set(asked.get() + 1);
+            async { Err(FetchError::Status(404)) }
+        })
+        .await;
+        assert_eq!((got, asked.get()), (Err(FetchError::Status(404)), 4));
+
+        // Anything else (refused, too big, a 403, "slow down") isn't asked again.
+        for answer in [
+            FetchError::NotAllowed,
+            FetchError::TooBig,
+            FetchError::Status(403),
+            FetchError::SlowDown(None),
+        ] {
+            asked.set(0);
+            let got: Result<u8, _> = again_while_flaky(4, Duration::ZERO, || {
+                asked.set(asked.get() + 1);
+                let answer = answer.clone();
+                async move { Err(answer) }
+            })
+            .await;
+            assert_eq!((got, asked.get()), (Err(answer), 1));
+        }
+    }
+
+    #[test]
+    fn the_publishers_max_age_is_read_and_no_cache_means_nothing() {
+        let headers = |values: &[&str]| {
+            let mut map = HeaderMap::new();
+            for value in values {
+                map.append(header::CACHE_CONTROL, HeaderValue::from_str(value).unwrap());
+            }
+            map
+        };
+        assert_eq!(fresh_for(&headers(&["public, max-age=7200"])), Some(7200));
+        assert_eq!(fresh_for(&headers(&["Max-Age=\"600\""])), Some(600));
+        assert_eq!(fresh_for(&headers(&["public", "max-age=60"])), Some(60));
+        assert_eq!(fresh_for(&headers(&["max-age=3600, no-cache"])), None);
+        assert_eq!(fresh_for(&headers(&["no-store"])), None);
+        assert_eq!(fresh_for(&headers(&["max-age=soon"])), None);
+        assert_eq!(fresh_for(&headers(&[])), None);
+    }
 
     #[test]
     fn private_and_special_addresses_are_never_visited() {

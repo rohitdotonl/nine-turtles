@@ -137,7 +137,6 @@ export class LoadedLibrary {
     this.collections = this.collections.map((each) => (each.id === id ? { ...each, name } : each)).sort(collectionOrder);
   }
 
-  /** Unsubscribes: "Unsubscribed from … · Undo". */
   /** Unsubscribes from a person or publication: every source of theirs at once, with Undo bringing them all back. */
   async unsubscribe(feed: Feed): Promise<Removed> {
     const name = this.shownAs(feed)?.title ?? feed.title;
@@ -147,12 +146,14 @@ export class LoadedLibrary {
     return {
       message: `Unsubscribed from ${name}`,
       undo: async () => {
+        let problem;
         for (const id of left) {
-          const problem = await resubscribe(id);
-          if (problem) return refused(problem, "feed");
+          problem = await resubscribe(id);
+          if (problem) break;
         }
+        // Whatever came back shows, even when one couldn't.
         await this.loadFeeds();
-        return undefined;
+        return problem ? refused(problem, "feed") : undefined;
       },
     };
   }

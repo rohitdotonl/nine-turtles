@@ -1,4 +1,4 @@
-# 0160: People and publications
+# 0163: People and publications
 
 *3 November 2026. Agreed with the owner, Rohit. Refines decision 0146
 (people); the refinement round PLAN.md → V1, item 1 asked for. SPEC

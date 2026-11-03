@@ -25,7 +25,7 @@ export type Feed = {
   person?: number | null;
   /** What kind of source it is: a blog, a video channel, a newsletter or a podcast. */
   place?: PlaceKind;
-  /** Someone or something (decision 0160): a place joined to others is always a person's. */
+  /** Someone or something (decision 0163): a place joined to others is always a person's. */
   kind?: WhoKind;
   /** When the reader followed it (seconds since 1970), for "Following since". */
   addedAt?: number;
@@ -49,8 +49,8 @@ export type VideoSettings = { shorts?: boolean; liveStreams?: boolean };
  */
 export type FeedSettings = { river: boolean; check: Check; openOnSite: boolean };
 
-/** How often a feed is checked in the background: on its own rhythm, or at most hourly or daily. */
-export type Check = "automatic" | "hourly" | "daily";
+/** How often a feed is checked in the background: on its own rhythm, or at most daily. */
+export type Check = "automatic" | "daily";
 
 export type Folder = { id: number; name: string };
 
@@ -61,7 +61,7 @@ export type Person = { id: number; name: string };
 export type PlaceKind = "blog" | "video" | "newsletter" | "podcast";
 export const PLACE_KINDS: PlaceKind[] = ["blog", "video", "newsletter", "podcast"];
 
-/** Someone or something you follow (decision 0160). */
+/** Someone or something you follow (decision 0163). */
 export type WhoKind = "person" | "publication";
 
 export function toPerson(person: Record<string, unknown>): Person {
@@ -203,9 +203,9 @@ export function toFeed(feed: Record<string, unknown>): Feed {
   };
 }
 
-/** The server keeps the shortest wait in seconds: 0, an hour or a day. */
+/** The server keeps the shortest wait in seconds: 0 or a day. An hour,
+ * from when Edit feed offered "Hourly" (decision 0162), is Automatic now. */
 export function checkFrom(seconds: number): Check {
   if (seconds >= 24 * 60 * 60) return "daily";
-  if (seconds >= 60 * 60) return "hourly";
   return "automatic";
 }

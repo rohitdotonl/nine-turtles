@@ -65,7 +65,7 @@ export const HIDEABLE = ["starred", "all", "recent", "searches", "collections", 
 export type Hideable = (typeof HIDEABLE)[number];
 
 /**
- * Whether the person or publication whose row opens at feed `id` is a publication (decision 0160):
+ * Whether the person or publication whose row opens at feed `id` is a publication (decision 0163):
  * their addresses start /publications/ rather than /people/. Shell answers it once the sidebar has
  * loaded; until then everyone is at /people/, and the old /feeds/ addresses still open.
  */
@@ -96,7 +96,7 @@ export function parse(path: string): Route {
   if (saved) return saved[2] ? { kind: "edit-search", id: Number(saved[1]) } : { kind: "search", id: Number(saved[1]) };
   const collection = name.match(/^collections\/([1-9][0-9]{0,15})$/);
   if (collection) return { kind: "collection", id: Number(collection[1]) };
-  // A person or publication (decision 0160): their list, page, Edit, and one source's settings. The old /feeds/ addresses still open.
+  // A person or publication (decision 0163): their list, page, Edit, and one source's settings. The old /feeds/ addresses still open.
   const who = name.match(/^(feeds|people|publications)\/([1-9][0-9]{0,15})(\/edit|\/about|\/sources\/([1-9][0-9]{0,15}))?$/);
   if (who) {
     const id = Number(who[2]);

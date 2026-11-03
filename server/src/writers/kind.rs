@@ -1,4 +1,4 @@
-//! Person or publication (SPEC section 36, decision 0160): everything a
+//! Person or publication (SPEC section 36, decision 0163): everything a
 //! reader follows is someone or something. A place joined to others is
 //! always a person's; for a place on its own nine turtles guesses once, from
 //! the feed alone (never fetching a page), and the reader can change it. It
@@ -153,7 +153,9 @@ fn names_the_site(host: &str, title: &str) -> bool {
 }
 
 /// Guesses, and keeps, each of the reader's places that has no kind or no
-/// source kind yet. Their choices stay as they made them.
+/// source kind yet, once it has been fetched: an imported feed waits for its
+/// first check, so the guess sees its authors and episodes. Their choices
+/// stay as they made them.
 pub async fn fill(
     connection: &mut SqliteConnection,
     person: i64,
@@ -167,6 +169,7 @@ pub async fn fill(
          FROM subscriptions JOIN feeds ON feeds.id = subscriptions.feed_id
          WHERE subscriptions.person_id = ?1 AND subscriptions.unsubscribed_at IS NULL
              AND (subscriptions.kind IS NULL OR subscriptions.place IS NULL)
+             AND feeds.fetched_at IS NOT NULL
              AND (?2 IS NULL OR feeds.id = ?2)",
     )
     .bind(person)
@@ -175,8 +178,8 @@ pub async fn fill(
     .await?;
     for (feed, url, site, title, has_episodes) in waiting {
         let authors: Vec<String> = sqlx::query_scalar(
-            "SELECT DISTINCT author FROM articles
-             WHERE feed_id = ? AND author IS NOT NULL AND author != '' LIMIT 3",
+            "SELECT DISTINCT lower(trim(author)) FROM articles
+             WHERE feed_id = ? AND trim(COALESCE(author, '')) != '' LIMIT 3",
         )
         .bind(feed)
         .fetch_all(&mut *connection)

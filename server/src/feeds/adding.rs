@@ -309,7 +309,7 @@ async fn follow(
     .bind(feed_id)
     .fetch_one(&mut *transaction)
     .await?;
-    // Person or publication, and what kind of source: guessed now, for Add's choice (decision 0160).
+    // Person or publication, and what kind of source: guessed now, for Add's choice (decision 0163).
     crate::writers::kind::fill(&mut transaction, person, Some(feed_id)).await?;
     let (kind, place): (String, String) =
         sqlx::query_as("SELECT kind, place FROM subscriptions WHERE person_id = ? AND feed_id = ?")

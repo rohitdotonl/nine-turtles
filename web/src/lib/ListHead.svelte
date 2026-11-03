@@ -5,7 +5,7 @@
   steps down from 24px to 22px. Beside it, one quiet More (…) button, as Apple Books has one
   per collection (decision 0038): Mark all as read, Refresh, the sort order, and "About …" or
   Edit folder in a person's, publication's or folder's own list (SPEC section 6). A person's or
-  publication's name is itself the way to their page, a button ending in › (decision 0160).
+  publication's name is itself the way to their page, a button ending in › (decision 0163).
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";

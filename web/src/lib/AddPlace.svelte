@@ -1,5 +1,5 @@
 <!--
-  "+ Add a source" (SPEC section 36, decision 0160): one more source for this
+  "+ Add a source" (SPEC section 36, decision 0163): one more source for this
   person, by choosing someone the reader already follows, or by pasting the
   address of their blog, channel or newsletter (followed then and there, as
   Add would). An address offering several shows them first, to choose one.

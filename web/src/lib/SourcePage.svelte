@@ -1,5 +1,5 @@
 <!--
-  One source's own settings (SPEC section 36, decision 0160), opened from a
+  One source's own settings (SPEC section 36, decision 0163), opened from a
   person's Edit by the source's ›: what kind of source it is, its settings
   (SourceFields), and, at the foot, "Take out of Alpha", which makes it a
   person or publication of its own, with Undo on the next screen. Done saves

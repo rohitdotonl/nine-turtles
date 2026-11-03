@@ -1,5 +1,5 @@
 <!--
-  One source's own settings (SPEC section 36, decision 0160): in a
+  One source's own settings (SPEC section 36, decision 0163): in a
   publication's Edit, under its name, and on a person's source's own page.
   A source that isn't working says so first, with Find new address (decision
   0106), which moves it at once. Then what kind of source it is (read from the
@@ -54,7 +54,6 @@
   ];
   const CHECK_CHOICES: { value: Check; label: string }[] = [
     { value: "automatic", label: "Automatic" },
-    { value: "hourly", label: "Hourly" },
     { value: "daily", label: "Daily" },
   ];
   const id = $props.id();
@@ -102,10 +101,10 @@
       <div class="setting-words setting-label">
         <p id="{id}-check" class="setting-name">Check for new articles</p>
         <p id="{id}-check-hint" class="setting-hint">
-          {check === "hourly" ? "No more often than once an hour." : check === "daily" ? "No more often than once a day." : "As often as it usually posts."}
+          {check === "daily" ? "No more often than once a day." : "As often as it usually posts."}
         </p>
       </div>
-      <div role="group" aria-labelledby="{id}-check" aria-describedby="{id}-check-hint" class="choices setting-control" style="--columns: 3">
+      <div role="group" aria-labelledby="{id}-check" aria-describedby="{id}-check-hint" class="choices setting-control" style="--columns: 2">
         {#each CHECK_CHOICES as choice (choice.value)}
           <label class="choice">
             <input type="radio" name="{id}-check" value={choice.value} bind:group={check} />

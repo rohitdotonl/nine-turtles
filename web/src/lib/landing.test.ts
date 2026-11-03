@@ -59,7 +59,7 @@ describe("where the keyboard lands", () => {
     expect(landing({ kind: "save-search" })).toBe("list");
   });
 
-  it("lands on a person's page, Edit or source settings heading (decision 0160)", () => {
+  it("lands on a person's page, Edit or source settings heading (decision 0163)", () => {
     expect(landing({ kind: "about", id: 7 })).toBe("who");
     expect(landing({ kind: "edit-feed", id: 7 })).toBe("who");
     expect(landing({ kind: "edit-source", id: 7, source: 8 }, { ...computer, phone: true })).toBe("who");

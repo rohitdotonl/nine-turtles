@@ -23,7 +23,7 @@ export function isOver(place: Route): boolean {
 }
 
 /**
- * A person's or publication's page, its Edit, or one source's settings (decision 0160): on a computer
+ * A person's or publication's page, its Edit, or one source's settings (decision 0163): on a computer
  * in the reading area, beside their list; on a phone, a screen of its own in the list's place.
  */
 export function isWho(place: Route): place is Extract<Route, { kind: "about" | "edit-feed" | "edit-source" }> {

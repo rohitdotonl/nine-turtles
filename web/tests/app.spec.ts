@@ -610,7 +610,7 @@ test("the sidebar ends with Add, then Keys (icon and word) and Settings as an ic
   await page.setViewportSize({ width: 1440, height: 900 });
   await openApp(page);
   const box = async (locator: Locator) => (await locator.boundingBox())!;
-  // It says "Add" and screen readers hear what it adds (decision 0160).
+  // It says "Add" and screen readers hear what it adds (decision 0163).
   await expect(sidebar(page).getByRole("link", { name: "Add a person or publication" })).toHaveText("Add");
   await expect(sidebar(page).getByRole("link", { name: "Add a person or publication" })).toHaveAttribute("href", "/add");
   const add = await box(sidebar(page).getByRole("link", { name: "Add a person or publication" }));

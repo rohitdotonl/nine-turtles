@@ -1,15 +1,15 @@
 <!--
   The add-a-feed field (SPEC sections 2 and 3): the welcome on a fresh
-  nine turtles, and the "+ Add feed" sheet. It takes a feed's address or a
+  nine turtles, and the "+ Add" sheet. It takes a feed's address or a
   website's; nine turtles finds the feed. Several feeds become a choice of one,
   drawn as a list with a round mark on each, the first one chosen, which
-  Add feed then adds (decision 0049); problems
+  Add then adds (decision 0049); problems
   are said in plain words. While nine turtles looks, a line of text says so: no
   spinner.
 
-  In a sheet the field takes the full width and "Add feed" sits in the foot
+  In a sheet the field takes the full width and "Add" sits in the foot
   row beside Cancel. On a phone's page, the phone sheet's one build (decision
-  0052): no Cancel (the X beside the title is the way out) and "Add feed"
+  0052): no Cancel (the X beside the title is the way out) and "Add"
   the full width at the screen's foot. In the welcome, with no Cancel, "Add
   feed" sits beside the field.
 
@@ -42,9 +42,9 @@
     feeds: Feed[];
     onAdded: (feed: Feed) => void;
     onOpen: (feedId: number) => void;
-    /** In a sheet or its page: Cancel, beside Add feed in one row at the foot. */
+    /** In a sheet or its page: Cancel, beside Add in one row at the foot. */
     onCancel?: () => void;
-    /** On a phone's page: no Cancel, and Add feed the full width at the screen's foot. */
+    /** On a phone's page: no Cancel, and Add the full width at the screen's foot. */
     page?: boolean;
     /** The welcome on a phone: left-aligned on the screen's margin, not centred (decision 0052). */
     start?: boolean;
@@ -65,10 +65,10 @@
   let choices: Choice[] = $state([]);
   /** The feed chosen among several, by its address: the first one offered, until another is picked. */
   let chosen = $state("");
-  /** The address the choices were found at: Add feed adds the chosen one while the field still holds it. */
+  /** The address the choices were found at: Add adds the chosen one while the field still holds it. */
   let choicesFor = $state("");
   let alreadyId: number | undefined = $state();
-  /** Just added: "someone or something?", with nine turtles' guess chosen (decision 0160), before it opens. */
+  /** Just added: "someone or something?", with nine turtles' guess chosen (decision 0163), before it opens. */
   let asking: Feed | undefined = $state();
   let who: WhoKind = $state("person");
   let whoGroup: HTMLElement | undefined = $state();
@@ -82,7 +82,7 @@
     if (asking && !answering) onAdded(asking);
   });
 
-  /** In a sheet or on its page: the field's name above it, and Add feed at the foot rather than beside the field. */
+  /** In a sheet or on its page: the field's name above it, and Add at the foot rather than beside the field. */
   let framed = $derived(onCancel !== undefined || page);
   /** Several feeds were found: the line above them is their label. */
   let choosing = $derived(choices.length > 0 && !busy);
@@ -94,7 +94,7 @@
 
   /**
    * The address was changed after several feeds were offered: they belong to the old one, so they go with
-   * everything said about them (a problem's red edge, "Go to …"), and Add feed looks again.
+   * everything said about them (a problem's red edge, "Go to …"), and Add looks again.
    */
   function edited() {
     if (choices.length > 0 && address !== choicesFor) {
@@ -107,7 +107,7 @@
   }
 
   // The choices stay on screen while the chosen one is being added, so a
-  // choice that fails can be swapped for another. Add feed says it's busy
+  // choice that fails can be swapped for another. Add says it's busy
   // with `aria-disabled` rather than `disabled`, which would drop the
   // keyboard's place on it.
   async function add(text: string, fromChoices = false) {
@@ -152,13 +152,14 @@
     }
   }
 
-  /** Done: their answer is kept (only if it isn't the guess), and they open. */
+  /** Done: their answer is kept, and they open. */
   async function answered() {
     const feed = asking;
     if (!feed || busy) return;
     busy = true;
     answering = true;
-    const refusal = who === feed.kind ? undefined : await editFeed(feed.id, { kind: who });
+    // Always kept, so a later guess never overrides what they answered.
+    const refusal = await editFeed(feed.id, { kind: who });
     busy = false;
     asking = undefined;
     // The guess stands if the answer couldn't be kept; Edit can change it later.
@@ -248,7 +249,7 @@
         so the chosen one shows by its mark, never by a tint alone. Round,
         because only one can be added (a square tick box says "any of these",
         decision 0045). Real radio buttons lie under the rows: the arrow keys
-        move the choice, and Add feed adds it (decision 0049).
+        move the choice, and Add adds it (decision 0049).
       -->
       <div role="radiogroup" aria-label="Feeds on this site" aria-describedby="feed-address-status" class="inset-group mb-2 self-stretch text-left">
         {#each choices as choice (choice.url)}
@@ -265,7 +266,7 @@
     {/if}
 
     {#if asking}
-      <!-- Someone or something (decision 0160): a choice of one, drawn as the choice among feeds is, with the guess chosen. -->
+      <!-- Someone or something (decision 0163): a choice of one, drawn as the choice among feeds is, with the guess chosen. -->
       <fieldset bind:this={whoGroup} class="mb-2 flex flex-col gap-1.5 self-stretch text-left">
         <legend class="mb-1.5 text-ink">Is {asking.title} someone or something?</legend>
         <div class="inset-group">
@@ -302,12 +303,12 @@
   </div>
 
   {#if page}
-    <!-- On a phone: Add feed the full width at the screen's foot; the X beside the title leaves. -->
+    <!-- On a phone: Add the full width at the screen's foot; the X beside the title leaves. -->
     <div class="page-action">
       <button type="submit" aria-disabled={busy} class="btn-primary">{asking ? "Done" : "Add"}</button>
     </div>
   {:else if onCancel}
-    <!-- The sheet's one row of actions, 20px under what's above it (with the form's 6px gap): Cancel, then Add feed at the right end. -->
+    <!-- The sheet's one row of actions, 20px under what's above it (with the form's 6px gap): Cancel, then Add at the right end. -->
     <div class="sheet-actions mt-3.5">
       {#if !asking}<button type="button" onclick={onCancel} class="btn">Cancel</button>{/if}
       <button type="submit" aria-disabled={busy} class="btn-primary">{asking ? "Done" : "Add"}</button>

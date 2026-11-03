@@ -19,7 +19,7 @@ async function openEdit(page: Page, name: "Edit folder") {
   await page.getByRole("menuitem", { name }).click();
 }
 
-/** Edit for the person or publication whose list is open (decision 0160): More › About …, then Edit on their page. */
+/** Edit for the person or publication whose list is open (decision 0163): More › About …, then Edit on their page. */
 async function editWho(page: Page, name: string) {
   await more(page).click();
   await page.getByRole("menuitem", { name: `About ${name}` }).click();
@@ -541,7 +541,7 @@ test("with only the keyboard: a feed set to river, daily and the website leaves 
   await page.keyboard.press("ArrowRight");
   await expect(sheet.getByRole("radio", { name: "River" })).toBeChecked();
   await tabTo(page, sheet.getByRole("radio", { name: "Automatic" }));
-  await page.keyboard.press("ArrowRight");
+  // Two choices since "Hourly" went (decision 0162): one step to Daily.
   await page.keyboard.press("ArrowRight");
   await expect(sheet.getByRole("radio", { name: "Daily" })).toBeChecked();
   await tabTo(page, sheet.getByRole("checkbox", { name: "Open articles on the website" }));

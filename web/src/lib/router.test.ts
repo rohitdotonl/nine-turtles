@@ -87,7 +87,7 @@ describe("addresses", () => {
     expect(titleFor({ kind: "edit-feed", id: 3 }, "Alpha")).toBe("Edit Alpha · nine turtles");
   });
 
-  it("gives a publication's places their own addresses once the sidebar says which it is (decision 0160)", () => {
+  it("gives a publication's places their own addresses once the sidebar says which it is (decision 0163)", () => {
     placeAddressesBy((id) => id === 7);
     try {
       expect(pathFor({ kind: "feed", id: 7 })).toBe("/publications/7");

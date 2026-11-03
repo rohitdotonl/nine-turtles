@@ -89,16 +89,9 @@ Never with a pitch.
 
 ### Ideas that build "write back"
 
-- **Letter-writing month (February):** invite readers to write back to one
-  writer they read.
-- **"Your feed is broken" letters** to bloggers whose feed fails, counted
-  across readers and never saying who reads what.
 - **"Support this writer" links** from the feed's own payment link (needs
   a spec change).
-- **Sponsor** NetNewsWire, Kill the Newsletter or JSON Feed on GitHub
-  Sponsors ($5–10 a month).
-- **Posts:** "Letters to a Young Blogger" (after Rilke), "Still Here: blogs that have published for 20 years" (the blogs
-  named tend to share it).
+- **Posts:** "Letters to a Young Blogger" (after Rilke).
 
 ### Founder precedents worth quoting
 
@@ -118,9 +111,9 @@ Never with a pitch.
 
 ### Welcoming the first 100
 
-A short welcome note in Rohit's voice, then a handwritten postcard from
-India (about $150 for 100), asking each for one sentence he may quote.
-Precedent: Derek Sivers' CD Baby email.
+A short welcome note in Rohit's voice, asking each for one sentence he may
+quote. Precedent: Derek Sivers' CD Baby email. (Postcards were set aside,
+2 November 2026.)
 
 ### Newsletters
 
@@ -142,7 +135,6 @@ Precedent: Derek Sivers' CD Baby email.
   "Feedly alternative without AI", "follow blogs without social media",
   "read newsletters outside my inbox") in ChatGPT, Claude, Perplexity,
   Gemini and Google's AI Mode. Pages they cite become next month's list.
-- **Add "an AI assistant"** to "how did you hear about us?".
 
 ### Website basics
 
@@ -155,6 +147,35 @@ Precedent: Derek Sivers' CD Baby email.
   Peerlist, Indie Hackers), not a 100-directory sweep. Skip the Apple App
   Store for now.
 
+### Ideas from Rohit's notes, not yet discussed
+
+Moved here from the research notes on 3 November 2026 (decision 0160).
+Each would be written by Rohit, to help people first (the plan above).
+
+- **How careful readers use a feed reader:** a cornerstone post on
+  rohit.onl with practices even veterans miss, like
+  [RSS tricks](https://george.hotell.ing/2025/01/07/rss-tricks/). For
+  example: three folders, *every day* (never miss), *leisure* (when there's
+  time to explore) and *binge* (read everything when there's lots of time);
+  and letting news go after a few days but never a person's writing
+  ("Let unread go after", SPEC section 18).
+- **A far better [aboutfeeds.com](https://aboutfeeds.com/):** what feeds
+  are, for people who've never heard of them. nine turtles named at the
+  end, or not at all.
+- **A hand-picked page of good writing about RSS** (such as
+  [iheartrss.com](https://iheartrss.com/) and
+  [twowavesandadot.blog](https://twowavesandadot.blog/)) and of tools built
+  around it.
+- **Communities:** r/rss has many paying readers, no active moderators and
+  no sister subreddit for readers; its most liked post (279 likes, 425
+  shares or saves) is about leaving social media for RSS. Launching a
+  finished product there can earn on day one. Never to pitch (the plan's
+  "Never").
+- **Benchmarks after V1:** an agent writes a report like
+  [Lighthouse's feed reader deep dive](https://lighthouseapp.io/blog/feed-reader-deep-dive):
+  where nine turtles leads and where it lags. Every lag should be a
+  conscious choice.
+
 ### What limits the research
 
 - **AI in the making:** the firm no in `business-plan.md` → "Firm noes" rules out the
@@ -163,9 +184,6 @@ Precedent: Derek Sivers' CD Baby email.
 - **All rights reserved** (decision 0129): directories that need open
   source (awesome-selfhosted, OpenAlternative, switching.software) and
   "open code" trust lines don't apply.
-- **Starter packs were dropped,** but their empty skeleton is still live
-  at nineturtles.app/packs/ (decision 0100). To remove or reuse when the
-  website is redone.
 - **Places to find blogs** (from Rohit's notes): Bill Dietrich's feed
   list, Pagecord spotlight, powRSS editor picks, the list of blog
   aggregators at bstn.info; projects to look at: powRSS, LettRSS.

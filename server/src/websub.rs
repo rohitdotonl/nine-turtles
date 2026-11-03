@@ -370,7 +370,7 @@ async fn deliver(
 
 /// Stores the delivered articles. A delivery that isn't a feed (some hubs
 /// only say "it changed") makes the feed due for a check in the next round
-/// (or 30 minutes after its last one), which costs the publisher one
+/// (or an hour after its last one), which costs the publisher one
 /// ordinary check. A failing feed keeps its longer wait.
 async fn store_delivery(
     state: &AppState,
@@ -382,8 +382,8 @@ async fn store_delivery(
         .ok()
         .and_then(|topic| feed::parse(body, &topic));
     let Some(mut parsed) = parsed.filter(|parsed| !parsed.articles.is_empty()) else {
-        // Never sooner than 30 minutes after the last check (or the hour or
-        // day the reader chose in Edit feed), however often a hub says so:
+        // Never sooner than an hour after the last check (or the longer
+        // wait the reader chose in Edit feed), however often a hub says so:
         // the publisher is still asked politely.
         // A feed that is failing, or was told to slow down, keeps its wait.
         sqlx::query(

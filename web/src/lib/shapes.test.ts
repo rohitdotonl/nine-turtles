@@ -23,7 +23,8 @@ describe("search excerpts", () => {
 describe("each feed's own settings", () => {
   it("reads how often a feed may be checked from the server's shortest wait", () => {
     expect(checkFrom(0)).toBe("automatic");
-    expect(checkFrom(60 * 60)).toBe("hourly");
+    // "Hourly", no longer offered, does what Automatic does (decision 0162).
+    expect(checkFrom(60 * 60)).toBe("automatic");
     expect(checkFrom(24 * 60 * 60)).toBe("daily");
   });
 });

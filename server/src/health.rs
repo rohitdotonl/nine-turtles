@@ -235,7 +235,7 @@ async fn retry(
 }
 
 /// Whether Retry may ask the publisher now: a working feed only when it
-/// wasn't fetched in the last half hour (as background checking waits), and
+/// wasn't fetched in the last hour (as background checking waits), and
 /// any feed at most once every `RETRY_GAP`, whoever presses it. Claims the
 /// try, so two presses at once ask only once.
 fn may_ask(state: &AppState, feed: &Entry, now: i64) -> bool {
@@ -468,7 +468,8 @@ async fn follow_elsewhere(
     parsed: &feed::ParsedFeed,
     now: i64,
 ) -> Result<Result<(i64, bool), Response>, sqlx::Error> {
-    // The reader's own choices go along: their name, settings, person, and person or publication.
+    // The reader's own choices go along: their name, settings, person, person
+    // or publication, and the kind of source.
     type Kept = (
         String,
         bool,
@@ -477,10 +478,11 @@ async fn follow_elsewhere(
         Option<i64>,
         Option<i64>,
         Option<String>,
+        Option<String>,
     );
-    let (title, river, check_at_most, open_on_site, paused_at, writer, kind): Kept =
+    let (title, river, check_at_most, open_on_site, paused_at, writer, kind, place): Kept =
         sqlx::query_as(
-            "SELECT title, river, check_at_most, open_on_site, paused_at, writer_id, kind
+            "SELECT title, river, check_at_most, open_on_site, paused_at, writer_id, kind, place
              FROM subscriptions WHERE person_id = ? AND feed_id = ?",
         )
         .bind(person)
@@ -503,7 +505,7 @@ async fn follow_elsewhere(
     };
     sqlx::query(
         "UPDATE subscriptions SET river = ?, check_at_most = ?, open_on_site = ?, paused_at = ?,
-             writer_id = ?, kind = ?
+             writer_id = ?, kind = ?, place = ?
          WHERE person_id = ? AND feed_id = ?",
     )
     .bind(river)
@@ -512,6 +514,7 @@ async fn follow_elsewhere(
     .bind(paused_at)
     .bind(writer)
     .bind(kind)
+    .bind(place)
     .bind(person)
     .bind(new)
     .execute(&mut *transaction)

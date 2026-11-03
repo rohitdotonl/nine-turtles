@@ -16,7 +16,7 @@ export interface Headings {
   yourFeeds?: HTMLHeadingElement;
   muted?: HTMLHeadingElement;
   readers?: HTMLHeadingElement;
-  /** A person's or publication's page, Edit or source settings (decision 0160). */
+  /** A person's or publication's page, Edit or source settings (decision 0163). */
   who?: HTMLHeadingElement;
   add?: HTMLInputElement;
 }

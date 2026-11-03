@@ -1,4 +1,4 @@
--- People and publications (SPEC section 36, decision 0160): everything a
+-- People and publications (SPEC section 36, decision 0163): everything a
 -- reader follows is either someone (a person) or something (a publication),
 -- and the sidebar lists them under two headings. A place joined to others
 -- is always a person's; for a place on its own, nine turtles guesses from

@@ -615,3 +615,48 @@ async fn undo_gives_people_back_the_names_and_places_a_join_took() {
         ]
     );
 }
+
+#[tokio::test]
+async fn an_imported_feed_is_guessed_once_it_has_been_fetched() {
+    let (reader, state) = Reader::new().await;
+    let file = format!(
+        r#"<?xml version="1.0"?><opml version="2.0"><body>
+        <outline type="rss" text="The Gazette" xmlUrl="{}/gazette.xml"/></body></opml>"#,
+        reader.publisher
+    );
+    let response = Client::new()
+        .post(format!("{}/api/opml", reader.base))
+        .header("cookie", &reader.cookie)
+        .header("sec-fetch-site", "same-origin")
+        .header("content-type", "text/x-opml")
+        .body(file)
+        .send()
+        .await
+        .unwrap();
+    assert!(response.status().is_success(), "{}", response.status());
+    let gazette: i64 = sqlx::query_scalar("SELECT id FROM feeds WHERE url LIKE '%gazette.xml'")
+        .fetch_one(&state.db)
+        .await
+        .unwrap();
+    // The sidebar loads before its first check: nothing is kept as a guess
+    // yet, so its writers, once seen, make it a publication.
+    reader.get("/api/feeds").await;
+    let fetched: Option<i64> = sqlx::query_scalar("SELECT fetched_at FROM feeds WHERE id = ?")
+        .bind(gazette)
+        .fetch_one(&state.db)
+        .await
+        .unwrap();
+    if fetched.is_none() {
+        let kept: Option<String> =
+            sqlx::query_scalar("SELECT kind FROM subscriptions WHERE feed_id = ?")
+                .bind(gazette)
+                .fetch_one(&state.db)
+                .await
+                .unwrap();
+        assert_eq!(kept, None, "guessed before it was fetched");
+    }
+    nine_turtles::checking::check(&state, gazette, nine_turtles::now())
+        .await
+        .unwrap();
+    assert_eq!(reader.feed(gazette).await["kind"], "publication");
+}

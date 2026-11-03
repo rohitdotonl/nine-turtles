@@ -27,7 +27,7 @@ use sqlx::SqliteConnection;
 use crate::{
     AppState,
     auth::{SignedIn, database_problem},
-    checking::{DAY, HOUR},
+    checking::DAY,
     feeds::{follow_again, follows, refresh_shared},
     now, rules,
 };
@@ -105,7 +105,7 @@ pub async fn folder_named(
 #[derive(Deserialize)]
 struct EditFeed {
     /// The person's name (the place's own, for one on its own); left as it
-    /// is when absent, as a source's own settings leave it (decision 0160).
+    /// is when absent, as a source's own settings leave it (decision 0163).
     title: Option<String>,
     /// Every folder the feed should be in; it leaves any other. Left as they
     /// are when absent.
@@ -122,7 +122,7 @@ struct EditFeed {
     /// A YouTube channel's Shorts and live streams (decision 0144).
     shorts: Option<bool>,
     live_streams: Option<bool>,
-    /// Person or publication, and what kind of source it is (decision 0160).
+    /// Person or publication, and what kind of source it is (decision 0163).
     kind: Option<crate::writers::kind::Kind>,
     place: Option<crate::writers::kind::Place>,
 }
@@ -133,7 +133,6 @@ struct EditFeed {
 enum Check {
     /// On its own rhythm, as every feed is by default.
     Automatic,
-    Hourly,
     Daily,
 }
 
@@ -142,7 +141,6 @@ impl Check {
     const fn at_most(self) -> i64 {
         match self {
             Self::Automatic => 0,
-            Self::Hourly => HOUR,
             Self::Daily => DAY,
         }
     }
@@ -151,7 +149,7 @@ impl Check {
 /// How many of the articles a feed brought while it was paused go back to
 /// Unread when the reader unpauses it: only the newest few, so nothing piles
 /// up (SPEC section 15). The number is also written in SPEC section 15 and
-/// in Edit feed's helper line (`web/src/lib/EditFeed.svelte`).
+/// in a source's settings (`web/src/lib/SourceFields.svelte`).
 pub const BACK_FROM_PAUSE: i64 = 3;
 
 /// "Edit person": a place's name, folders and settings, saved together or not

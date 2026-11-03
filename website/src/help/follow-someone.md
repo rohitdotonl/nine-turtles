@@ -63,6 +63,9 @@ nine turtles asks "Follow…?" first, and follows only when you say so.
 - **"This site doesn't seem to offer a feed."** Some sites don't have one.
   Try the site's home page, or look for a link marked RSS, Atom or Feed.
   The <a href="/feed-finder/">feed finder</a> can look for you, too.
+  If a site has no feed at all, a service that makes feeds from websites
+  (such as RSS Bridge or OpenRSS) can give you one: paste the address it
+  gives you, and nine turtles follows it like any other.
 - **"That site didn't answer."** It may be down for a moment. Try again
   later.
 

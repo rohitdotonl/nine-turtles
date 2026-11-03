@@ -1,7 +1,7 @@
 # 36. People and publications
 
 *Part of the spec ([index](../SPEC.md)). `docs/DESIGN.md` takes precedence.
-Decision 0146 made people; decision 0160 (agreed with the owner on 3
+Decision 0146 made people; decision 0163 (agreed with the owner on 3
 November 2026) added publications, one page for both, and Edit on that page.
 PLAN.md → V1, item 1.*
 
@@ -34,8 +34,11 @@ PLAN.md → V1, item 1.*
 
   When adding through **+ Add** (section 3), the reader is asked "someone or
   something?", with the guess already chosen. They can change it later in
-  Edit (for one source only). Feeds followed before this change get their
-  guess the next time the sidebar loads.
+  Edit (for one source only, and not for the last source left of someone
+  joined, who stays a person). Feeds followed before this change get their
+  guess the next time the sidebar loads; an imported feed gets it once
+  nine turtles has checked it for the first time, so the guess sees its
+  writers.
 - **Their list:** choosing the row lists everything they made, newest first
   (or as the reader sorts), one list across all their sources (`/people/12`
   or `/publications/7`). With two or more sources, each row says which source
@@ -89,7 +92,7 @@ PLAN.md → V1, item 1.*
   the name they had, or, for two sources on their own, takes the first one's
   (the one the reader started from).
 - **nine turtles never joins sources by itself, and never asks.** Only the
-  reader joins them (decision 0160 removed "Is this the same person?").
+  reader joins them (decision 0163 removed "Is this the same person?").
 - **A folder can become a person:** Edit folder has a tick box row, **This
   is one person** ("Everything in it becomes one row, "Alpha", with one page.
   The folder goes; you can undo it straight afterwards."). Saving with it

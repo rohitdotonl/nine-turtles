@@ -226,7 +226,7 @@ export async function change(path: string, body: unknown): Promise<{ refusal?: R
   return sendChange(path, body, ["no-name", "already", "too-late"]);
 }
 
-/** What Edit and a source's settings change (decision 0160); anything left out stays as it is. */
+/** What Edit and a source's settings change (decision 0163); anything left out stays as it is. */
 export type FeedChanges = Partial<FeedSettings & VideoSettings> & {
   title?: string;
   folders?: number[];

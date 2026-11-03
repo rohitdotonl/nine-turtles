@@ -1,5 +1,5 @@
 <!--
-  Edit (SPEC section 36, decision 0160): a person's or publication's page,
+  Edit (SPEC section 36, decision 0163): a person's or publication's page,
   turned into its settings in place by its Edit button, the same for both.
   Done saves and turns it back; Cancel or Escape turns it back unchanged.
 
@@ -55,6 +55,8 @@
   const formId = $props.id();
   let places = $derived(placesOf(feed, library.feeds ?? []));
   let one = $derived(places.length === 1);
+  // A last source still joined to someone (the others left elsewhere) is theirs: always a person, so no choice to offer.
+  let chooses = $derived(one && feed.person == null);
   let name = $derived(library.shownAs(feed)?.title ?? feed.title);
   // The form starts from them as they are now, once.
   const start = (() => feed)();
@@ -89,10 +91,12 @@
       title,
       folders: chosen,
       newFolder,
-      ...(one ? { kind: who, place, river: flows, check, openOnSite, paused, ...(feed.sortsVideos ? { shorts, liveStreams } : {}) } : {}),
+      ...(chooses ? { kind: who } : {}),
+      ...(one ? { place, river: flows, check, openOnSite, paused, ...(feed.sortsVideos ? { shorts, liveStreams } : {}) } : {}),
     });
     const problem = refusal ? refused(refusal, "feed") : newAddress ? await keepAddress(feed.id, address) : undefined;
-    if (!problem) await library.loadFeeds();
+    // Saved even if the address then failed: the sidebar shows what was kept.
+    if (!refusal) await library.loadFeeds();
     busy = false;
     if (problem) message = problem;
     else onDone(true);
@@ -130,8 +134,8 @@
       <span id="{formId}-address" class="field-help mt-0">Write back opens your own email app with this address.</span>
     </div>
 
-    {#if one}
-      <!-- Someone or something (decision 0160): a choice of two, as Settings draws one. -->
+    {#if chooses}
+      <!-- Someone or something (decision 0163): a choice of two, as Settings draws one. -->
       <fieldset class="flex min-w-0 flex-col gap-1.5">
         <legend class="mb-1.5 text-small text-ink-2">This is</legend>
         <div class="choices" style="--columns: 2">

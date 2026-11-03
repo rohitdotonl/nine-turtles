@@ -27,7 +27,7 @@ pub struct Config {
     /// Only the browser tests set it, to serve made-up feeds; never on Render.
     pub local_feeds_allowed: bool,
     /// Checks every feed this many seconds apart, ignoring its rhythm and
-    /// the 30-minute minimum, so a browser test needn't wait half an hour.
+    /// the one-hour minimum, so a browser test needn't wait an hour.
     /// Only honored together with `local_feeds_allowed`, so it can never
     /// make the live app impolite to real publishers.
     pub test_check_seconds: Option<i64>,

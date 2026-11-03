@@ -313,7 +313,7 @@ test("a, a website's address and Enter follow it, someone or something is asked,
   await page.keyboard.type(`${FEED_SITE}/blog/${name}/`);
   await page.keyboard.press("Enter");
 
-  // Followed: then one question, with nine turtles' guess chosen and the keyboard on it (decision 0160).
+  // Followed: then one question, with nine turtles' guess chosen and the keyboard on it (decision 0163).
   const asked = page.getByRole("group", { name: `Is Blog ${name} someone or something?` });
   await expect(asked).toBeVisible();
   await expect(asked.getByRole("radio", { name: /^Someone/ })).toBeChecked();

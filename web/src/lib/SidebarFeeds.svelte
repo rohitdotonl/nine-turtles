@@ -7,7 +7,7 @@
   with a small dot when any of its feeds has something unread, and a button that
   shows or hides the people and publications in it, then those in no
   folder, A to Z, under two headings: People, then Publications (decision
-  0160). One in two folders is listed under both. Which folders are open is
+  0163). One in two folders is listed under both. Which folders are open is
   remembered on this device.
 
   As in a Mac source list (decision 0041), a folder's show-or-hide arrow
@@ -91,7 +91,7 @@
   let searching = $derived(search.trim() !== "");
   let found = $derived(findByName({ feeds, folders }, search));
   let loose = $derived(feeds.filter((feed) => feed.folders.length === 0));
-  /** Someone or something (decision 0160): the rows in no folder, under two headings. */
+  /** Someone or something (decision 0163): the rows in no folder, under two headings. */
   let people = $derived(loose.filter((feed) => feed.kind !== "publication"));
   let publications = $derived(loose.filter((feed) => feed.kind === "publication"));
 

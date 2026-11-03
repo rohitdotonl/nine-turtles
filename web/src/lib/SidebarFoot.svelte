@@ -1,7 +1,7 @@
 <!--
   The sidebar's foot: always at the very bottom, outside the scrolling list,
   so it never moves. "+ Add" (screen readers hear "Add a person or
-  publication", decision 0160) and Keys (the shortcut list), each an icon and
+  publication", decision 0163) and Keys (the shortcut list), each an icon and
   a word, so they read as two buttons, not one phrase (decisions 0062, 0064),
   then Settings as an icon, the way a Mac app keeps its tools at the foot of
   the sidebar. In a sidebar narrowed below 15rem, Keys keeps only its icon.

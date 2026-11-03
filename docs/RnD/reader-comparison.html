@@ -44,7 +44,7 @@ footer{font:14px var(--sans);color:var(--muted);margin-top:3rem}
 <nav aria-label="Sections"><div class="in"><a href="#start">Start here</a><a href="#first">What to look at first</a><a href="#feedbin">Feedbin</a><a href="#miniflux">Miniflux</a><a href="#nnw">NetNewsWire</a><a href="#freshrss">FreshRSS</a><a href="#decisions">Bigger decisions</a><a href="#noes">Clear noes</a><a href="#limits">Limits</a></div></nav>
 <main class="wrap">
 <h1>How other feed readers compare with nine turtles</h1>
-<p class="src">Research notes, 26 October 2026. Nothing here is decided and nothing was built.</p>
+<p class="src">Research notes, 26 October 2026. Built since (3 November 2026): Recently read (F2, B7), podcasts (F6), more themes (F9), the bookmarklet and the share sheet (F15, C8), hiding lists (F27), passkeys (B6), collections in place of labels (D1) and syncing with other apps (C11). The rest is still only ideas.</p>
 
 <section id="start"><h2>Start here</h2>
 <p>You asked what four well-known feed readers do that nine turtles does not, and where they do the same thing better. I read the public source code of <strong>Feedbin</strong>, <strong>Miniflux</strong>, <strong>NetNewsWire</strong> and <strong>FreshRSS</strong> and compared them with our own <code>docs/SPEC.md</code>.</p>
@@ -624,7 +624,7 @@ footer{font:14px var(--sans);color:var(--muted);margin-top:3rem}
 
 <section id="decisions"><h2>Bigger decisions for you</h2>
 <p>None of these is urgent. Each changes what nine turtles is, so they are yours to weigh.</p>
-<ul class="list"><li><strong>A picture proxy</strong> <span class="who">(Feedbin, Miniflux B3)</span><br>Pictures currently load from the publisher&#x27;s own servers, so they can see when and from where you read. A proxy would hide that. The cost is bandwidth and storage on our single small server, and it is a larger piece of work. A decision for the owner.</li><li><strong>Podcasts</strong> <span class="who">(Feedbin F6)</span><br>A whole area nine turtles has skipped. Nothing urgent, but it is the largest gap against Feedbin.</li><li><strong>Showing what an edited article changed</strong> <span class="who">(Feedbin F3)</span><br>A book-like touch (an erratum) that grows the database.</li><li><strong>Labels or collections</strong> <span class="who">(FreshRSS D1)</span><br>A way to file articles beyond stars. The one feature here that changes how people organise.</li><li><strong>Passkey sign-in</strong> <span class="who">(Miniflux B6)</span><br>Already in the &quot;Not in V1&quot; list. A timing question.</li><li><strong>A warmer, paper-toned theme</strong> <span class="who">(Feedbin F9, NetNewsWire C5)</span><br>A pure taste call.</li></ul></section>
+<ul class="list"><li><strong>A picture proxy</strong> <span class="who">(Feedbin, Miniflux B3)</span><br>Pictures currently load from the publisher&#x27;s own servers, so they can see when and from where you read. A proxy would hide that. The cost is bandwidth and storage on our single small server, and it is a larger piece of work. A decision for the owner.</li><li><strong>Showing what an edited article changed</strong> <span class="who">(Feedbin F3)</span><br>A book-like touch (an erratum) that grows the database.</li><li><strong>A warmer, paper-toned theme</strong> <span class="who">(Feedbin F9, NetNewsWire C5)</span><br>A pure taste call.</li></ul></section>
 
 <section id="noes"><h2>Clear noes</h2>
 <p>All four apps do some of these. Each breaks a rule we set, so the sensible answer is to say no on purpose:</p>
