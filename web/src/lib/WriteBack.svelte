@@ -6,9 +6,11 @@
   email app with the address and "Re: the title" filled in; nine turtles never
   sends or reads that email.
 
-  When nine turtles doesn't know their address (their feed gives none), the
-  button opens a small box in place, as Add a source does: one field for
-  it, Write back and Not now. The address is kept for the person (their page
+  When nine turtles doesn't know their address (neither their feed nor its
+  articles' text gives one), the button opens a small box in place, as Add a
+  source does: "Find it on their site" (their website, in a new tab: nine
+  turtles itself fetches nothing), one field to paste it in, Write back and
+  Not now. The address is kept for the person (their page
   shows it, Edit on their page changes it), so it's asked for once. The email app
   opens at once, while the address is being kept.
 
@@ -21,13 +23,14 @@
   import type { LoadedLibrary } from "./library.svelte";
   import { firstNameOf, placesOf } from "./people";
   import type { Article } from "./shapes";
-  import { addressFor, keepAddress, looksLikeAddress, writeBackLink } from "./writeBack";
+  import { addressFor, keepAddress, looksLikeAddress, siteOf, writeBackLink } from "./writeBack";
 
   let { article, library }: { article: Article; library: LoadedLibrary } = $props();
 
   let place = $derived(library.feeds?.find((feed) => feed.id === article.feedId));
   let name = $derived(firstNameOf(plainSourceName(library.shownAs(place)?.title ?? article.feedTitle), place ? placesOf(place, library.feeds ?? []) : []));
   let address = $derived(place && addressFor(place, library.feeds ?? []));
+  let site = $derived(siteOf(place, article.link));
 
   let asking = $state(false);
   let busy = $state(false);
@@ -98,8 +101,11 @@
       <form class="ask flex flex-col gap-4" aria-labelledby="write-back-title" onsubmit={write}>
         <div class="flex flex-col gap-1">
           <p id="write-back-title" class="text-base font-semibold text-ink">Write back to {name}</p>
-          <p class="text-small text-ink-2">nine turtles doesn't know their email address yet. Type it once and it's kept on their page. Your own email app sends what you write; nine turtles never sends or reads it.</p>
+          <p class="text-small text-ink-2">nine turtles doesn't know their email address yet. {#if site}Many writers give it on their site, often on an About or Contact page.{" "}{/if}Paste it here once and it's kept on their page. Your own email app sends what you write; nine turtles never sends or reads it.</p>
         </div>
+        {#if site}
+          <a class="btn self-start" href={site} target="_blank" rel="noopener noreferrer"><Icon name="open" size={16} />Find it on their site<span class="sr-only"> (opens in a new tab)</span></a>
+        {/if}
         <div class="flex flex-col gap-1.5">
           <label for="write-back-address" class="text-small text-ink-2">Their email address</label>
           <input

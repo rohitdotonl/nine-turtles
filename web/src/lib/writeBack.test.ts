@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Feed } from "./shapes";
-import { addressFor, looksLikeAddress, replySubject, writeBackLink } from "./writeBack";
+import { addressFor, looksLikeAddress, replySubject, siteOf, writeBackLink } from "./writeBack";
 
 function place(id: number, changes: Partial<Feed> = {}): Feed {
   return { id, title: `Place ${id}`, siteUrl: null, unread: 0, folders: [], river: false, check: "automatic", openOnSite: false, ...changes };
@@ -36,5 +36,12 @@ describe("writing back", () => {
     for (const wrong of ["", "alpha", "alpha@", "@alpha.example", "alpha@alpha", "al pha@alpha.example", "a@b.example, c@d.example", "a@@b.example", ".alpha@x.org", "alpha.@x.org", `${"a".repeat(65)}@x.org`, "alpha@-x.org", "alpha@x-.org", "a@b.example@c.example"]) {
       expect(looksLikeAddress(wrong), wrong).toBe(false);
     }
+  });
+
+  it("finds their site from the feed, else from the article's own home page", () => {
+    expect(siteOf({ siteUrl: "https://alpha.example/blog/" }, "https://other.example/one")).toBe("https://alpha.example/blog/");
+    expect(siteOf({ siteUrl: null }, "https://alpha.example/2026/11/one?ref=feed")).toBe("https://alpha.example/");
+    expect(siteOf({ siteUrl: "javascript:alert(1)" }, null)).toBeUndefined();
+    expect(siteOf(undefined, "not a link")).toBeUndefined();
   });
 });

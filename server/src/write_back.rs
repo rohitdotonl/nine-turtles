@@ -4,8 +4,8 @@
 //! email.
 //!
 //! The address comes from two places. The publisher's, kept on the feed for
-//! everyone who follows it (`feeds.email`): a feed's own author or editor
-//! (`from_feed`), or a newsletter's Reply-To or From address (`newsletter`).
+//! everyone who follows it (`feeds.email`): a feed's own author or editor,
+//! or a "Reply by email" link in its articles' text (`from_feed`), or a newsletter's Reply-To or From address (`newsletter`).
 //! An address made only to send from ("no-reply") is never kept. And the
 //! reader's own (`subscriptions.write_to`), typed once when neither had one,
 //! or in Edit on their page: it wins, and is kept on every place of the person, so
@@ -106,9 +106,11 @@ fn of_person(person: &Person) -> Option<String> {
 /// The address a feed gives for writing to its writer: the feed's author
 /// (Atom, JSON Feed), its editor (RSS `managingEditor`) or a podcast's owner
 /// (`itunes:owner`); else, when its articles name an author's address and
-/// all name the same one, that. A feed whose articles name several (a
-/// magazine) gives none: nine turtles can't tell whose is whose. The site's
-/// webmaster is never used: they run the website, they didn't write it.
+/// all name the same one, that; else, when no article names one, the one
+/// the articles' own text gives (`in_text`). A feed whose articles name
+/// several (a magazine) gives none: nine turtles can't tell whose is whose.
+/// The site's webmaster is never used: they run the website, they didn't
+/// write it.
 pub fn from_feed(feed: &Feed) -> Option<String> {
     let editors = feed
         .contributors
@@ -117,12 +119,104 @@ pub fn from_feed(feed: &Feed) -> Option<String> {
     if let Some(found) = feed.authors.iter().chain(editors).find_map(of_person) {
         return Some(found);
     }
-    let mut found = feed
+    let mut named = feed
         .entries
         .iter()
-        .flat_map(|entry| entry.authors.iter().filter_map(of_person));
+        .flat_map(|entry| entry.authors.iter().filter_map(of_person))
+        .peekable();
+    if named.peek().is_some() {
+        return only_one(named);
+    }
+    only_one(in_text(feed).into_iter())
+}
+
+/// The one address in `found`, or none when there are several (a magazine's
+/// writers): nine turtles can't tell whose is whose.
+fn only_one(mut found: impl Iterator<Item = String>) -> Option<String> {
     let first = found.next()?;
     found.all(|other| other == first).then_some(first)
+}
+
+/// What a link's words say when it's for writing to the writer: "Reply by
+/// email", "Email me", "Get in touch" and the like.
+const WRITE_TO_ME: [&str; 11] = [
+    "reply",
+    "respond",
+    "write back",
+    "write to me",
+    "email me",
+    "e-mail me",
+    "mail me",
+    "contact me",
+    "get in touch",
+    "say hi",
+    "say hello",
+];
+
+/// The addresses the articles' own text gives for writing to the writer
+/// (SPEC section 37): a `mailto:` link that says it's for replying (its
+/// subject starts "Re:", or its words are "Reply by email", "Email me" and
+/// the like), or a `mailto:` link to the same address in two or more
+/// articles, as a sign-off at each one's end is. Any other address in an
+/// article's text may be someone else's, so it's left alone. Only what the
+/// feed brought is read: nothing is fetched.
+fn in_text(feed: &Feed) -> Vec<String> {
+    let links = scraper::Selector::parse("a[href]").expect("a fixed, valid selector");
+    let mut replies = Vec::new();
+    let mut in_articles: Vec<Vec<String>> = Vec::new();
+    for entry in &feed.entries {
+        let text = entry
+            .content
+            .as_ref()
+            .and_then(|content| content.body.as_deref())
+            .into_iter()
+            .chain(
+                entry
+                    .summary
+                    .as_ref()
+                    .map(|summary| summary.content.as_str()),
+            );
+        let mut here = Vec::new();
+        for html in text {
+            for link in scraper::Html::parse_fragment(html).select(&links) {
+                let href = link.value().attr("href").unwrap_or_default().trim();
+                if !href
+                    .get(..7)
+                    .is_some_and(|start| start.eq_ignore_ascii_case("mailto:"))
+                {
+                    continue;
+                }
+                let Some(found) = worth_writing_to(href) else {
+                    continue;
+                };
+                let query = href
+                    .split_once('?')
+                    .map(|(_, query)| query.to_lowercase())
+                    .unwrap_or_default();
+                let words = link.text().collect::<String>().to_lowercase();
+                let says_reply = query.split('&').any(|part| {
+                    part.strip_prefix("subject=").is_some_and(|subject| {
+                        subject.starts_with("re:") || subject.starts_with("re%3a")
+                    })
+                }) || WRITE_TO_ME.iter().any(|said| words.contains(said));
+                if says_reply {
+                    replies.push(found.clone());
+                }
+                if !here.contains(&found) {
+                    here.push(found);
+                }
+            }
+        }
+        in_articles.push(here);
+    }
+    let all: Vec<&String> = in_articles.iter().flatten().collect();
+    let signed: Vec<String> = all
+        .iter()
+        .filter(|found| all.iter().filter(|other| other == found).count() >= 2)
+        .map(|found| (*found).clone())
+        .collect();
+    replies.extend(signed);
+    replies
 }
 
 #[derive(Deserialize)]
@@ -295,6 +389,85 @@ mod tests {
             <item><title>Two</title><author>beta@example.org</author></item></channel></rss>"#,
         );
         assert_eq!(from_feed(&magazine), None);
+    }
+
+    fn rss(items: &[&str]) -> Feed {
+        let items: String = items
+            .iter()
+            .enumerate()
+            .map(|(n, html)| {
+                format!(
+                    "<item><title>{n}</title><description><![CDATA[{html}]]></description></item>"
+                )
+            })
+            .collect();
+        parsed(&format!(
+            r#"<rss version="2.0"><channel><title>Alpha</title>{items}</channel></rss>"#
+        ))
+    }
+
+    #[test]
+    fn a_reply_by_email_link_in_an_article_gives_its_address() {
+        let feed = rss(&[
+            r#"<p>Words.</p><p><a href="mailto:Alpha@Example.org?subject=Re:%20One">Reply by email</a></p>"#,
+            "<p>More words.</p>",
+        ]);
+        assert_eq!(from_feed(&feed).as_deref(), Some("Alpha@example.org"));
+        let by_its_words =
+            rss(&[r#"<p>Thoughts? <a href="mailto:alpha@example.org">Email me</a>.</p>"#]);
+        assert_eq!(
+            from_feed(&by_its_words).as_deref(),
+            Some("alpha@example.org")
+        );
+        let by_its_subject = rss(&[
+            r#"<a href="MAILTO:alpha@example.org?subject=re%3A%20One">alpha@example.org</a>"#,
+        ]);
+        assert_eq!(
+            from_feed(&by_its_subject).as_deref(),
+            Some("alpha@example.org")
+        );
+    }
+
+    #[test]
+    fn a_sign_off_in_two_articles_gives_its_address() {
+        let feed = rss(&[
+            r#"<p>One.</p><p>— <a href="mailto:alpha@example.org">alpha@example.org</a></p>"#,
+            r#"<p>Two.</p><p>— <a href="mailto:alpha@example.org">alpha@example.org</a></p>"#,
+        ]);
+        assert_eq!(from_feed(&feed).as_deref(), Some("alpha@example.org"));
+    }
+
+    #[test]
+    fn someone_elses_address_in_one_article_gives_nothing() {
+        let feed = rss(&[
+            r#"<p>My friend <a href="mailto:beta@example.org">Beta</a> fixes bikes.</p>"#,
+            "<p>Two.</p>",
+        ]);
+        assert_eq!(from_feed(&feed), None);
+        let a_plain_address = rss(&["<p>Write to alpha@example.org</p>"]);
+        assert_eq!(from_feed(&a_plain_address), None);
+    }
+
+    #[test]
+    fn articles_replying_to_several_addresses_give_none() {
+        let feed = rss(&[
+            r#"<a href="mailto:alpha@example.org">Reply by email</a>"#,
+            r#"<a href="mailto:beta@example.org">Reply by email</a>"#,
+        ]);
+        assert_eq!(from_feed(&feed), None);
+        let no_reply = rss(&[r#"<a href="mailto:noreply@example.org">Reply by email</a>"#]);
+        assert_eq!(from_feed(&no_reply), None);
+    }
+
+    #[test]
+    fn the_feeds_own_address_wins_over_its_articles_text() {
+        let feed = parsed(
+            r#"<rss version="2.0"><channel><title>Alpha</title>
+            <managingEditor>alpha@example.org (Alpha)</managingEditor>
+            <item><title>One</title><description><![CDATA[<a href="mailto:other@example.org">Reply by email</a>]]></description></item>
+            </channel></rss>"#,
+        );
+        assert_eq!(from_feed(&feed).as_deref(), Some("alpha@example.org"));
     }
 
     #[test]

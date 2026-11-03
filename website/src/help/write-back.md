@@ -25,10 +25,11 @@ related: [one-person-several-places, share-an-article, newsletters]
 
 ## When nine turtles doesn't know their address
 
-Many writers put their email address in their feed, and nine turtles finds
-it. When it can't, it asks: type the address into **Their email address**
-(you'll often find it on their website's About page), then press **Write
-back**.
+Many writers put their email address in their feed, or a "Reply by email"
+link at the end of each post, and nine turtles finds it there. When it
+can't, it asks. Press **Find it on their site** to open their website in a
+new tab (the address is often on an About or Contact page), copy it, and
+paste it into **Their email address**. Then press **Write back**.
 
 nine turtles remembers it for that person, so you're asked only once. Their
 page shows it under **Email**; to change it, press **Edit**

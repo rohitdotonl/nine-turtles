@@ -17,6 +17,28 @@ export function addressFor(feed: Feed, feeds: Feed[]): string | undefined {
   return places.find((place) => place.writeTo)?.writeTo ?? feed.email ?? places.find((place) => place.email)?.email ?? undefined;
 }
 
+/**
+ * The writer's website, for finding their address there: the site their feed
+ * names, else the home page of the article's own. Undefined when there's
+ * neither (a newsletter, often), or it isn't a web page.
+ */
+export function siteOf(feed: Pick<Feed, "siteUrl"> | undefined, articleLink: string | null | undefined): string | undefined {
+  const site = webPage(feed?.siteUrl);
+  if (site) return site.href;
+  const article = webPage(articleLink);
+  return article && `${article.origin}/`;
+}
+
+function webPage(address: string | null | undefined): URL | undefined {
+  if (!address) return undefined;
+  try {
+    const url = new URL(address);
+    return url.protocol === "http:" || url.protocol === "https:" ? url : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /** "Re: " and the title, once: a title that already starts with "Re:" keeps its own. */
 export function replySubject(title: string): string {
   const plain = title.trim();
