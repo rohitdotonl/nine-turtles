@@ -29,7 +29,8 @@ research notes of 1 November (`docs/RnD/research-notes-2026-11.md`).*
   (`docs/PLAN.md` → "To discuss for V2").
 - **The research notes were cut** to what's still open: website
   inspiration, rivals to study, readers' own words and research errands
-  (given to a research agent, 3 November 2026). Marketing ideas not yet discussed moved to
+  (answered by a research agent the same day,
+  `docs/RnD/research-errands-2026-11.md`). Marketing ideas not yet discussed moved to
   `docs/RnD/marketing.md`.
 
 ## Why

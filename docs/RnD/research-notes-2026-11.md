@@ -18,24 +18,11 @@ is decided.
 
 ## 1. Research errands
 
-Given to a research agent on 3 November 2026; its findings come back here. Each links to its material below.
-
-- [ ] Feedbro's earnings and traffic (section 2).
-- [ ] Traffic to RSS-tool websites: Inoreader's tools, rssgizmos and others
-      (section 2).
-- [ ] How feedfry-style products earn, and whether they matter to us
-      (section 2).
-- [ ] What rssguard, feedspot, bubbles.town and NewsBlur's "popular" are
-      (section 2).
-- [ ] What zacusca does, in depth (section 2).
-- [ ] Is diffbot/rss-anything useful (section 2)?
-- [ ] Which feed reader apps rank well on the Android Play Store?
-- [ ] Check nine turtles' newsletters against the newsletter-to-feed
-      comment (section 4): non-issues filtered out, codes, double opt-in,
-      one-click unsubscribe, replies.
-- [ ] Are there feed-reader communities on Mastodon, Lemmy and Bluesky?
-- [ ] Other ways to use RSS's extensibility, beyond MCP (section 4, "A
-      new way to read feeds").
+Done on 3 November 2026 by a research agent: the findings, with sources and
+how sure each estimate is, are in
+[`research-errands-2026-11.md`](research-errands-2026-11.md). Still to check
+by hand: Feedbro's Chrome install count, how zacusca filters, and how big
+the Mastodon, Lemmy and Bluesky feed communities really are.
 
 ## 2. Rivals and tools to study
 
