@@ -28,7 +28,9 @@ newest articles are ready to read. From now on, new ones arrive by
 themselves.
 
 If the site offers more than one feed, such as one for everything and one
-per topic, nine turtles lists them: choose one and press **Add**.
+per topic, nine turtles lists them, each with its newest title and how often
+it posts, so you can tell them apart: choose one and press **Add**. A feed
+that only repeats another in a different format isn't listed.
 
 Already follow their blog, and now want their channel too? Add it from
 their page instead, with **+ Add a source**: see
@@ -60,9 +62,10 @@ nine turtles asks "Follow…?" first, and follows only when you say so.
 
 ## If it doesn't work
 
-- **"This site doesn't seem to offer a feed."** Some sites don't have one.
-  Try the site's home page, or look for a link marked RSS, Atom or Feed.
-  The <a href="/feed-finder/">feed finder</a> can look for you, too.
+- **"This site doesn't seem to offer a feed."** nine turtles has already
+  looked on the page, the site's home page and the usual feed addresses.
+  Some sites don't have one. Look on the site for a link marked RSS, Atom or
+  Feed, and paste that.
   If a site has no feed at all, a service that makes feeds from websites
   (such as RSS Bridge or OpenRSS) can give you one: paste the address it
   gives you, and nine turtles follows it like any other.

@@ -10,7 +10,7 @@ describe("the add field's messages", () => {
       expect(message).not.toMatch(/!|error|[0-9]{3}/i);
       expect(message.endsWith(".")).toBe(true);
     }
-    expect(explain("no-feed")).toBe("This site doesn't seem to offer a feed. Try the feed's own address, or the site's home page.");
+    expect(explain("no-feed")).toBe("This site doesn't seem to offer a feed, on this page or in the usual places. If you know the feed's own address, paste that.");
     // The one number shown is the limit itself.
     expect(explain("too-many")).toBe("You follow 1,000 feeds, as many as one reader can. Unsubscribe from one to add another.");
   });

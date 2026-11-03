@@ -1,6 +1,7 @@
 // The feed finder (SPEC section 30, decision 0099). Sends the address typed
-// to the app's finder (app.nineturtles.app/api/find-feeds), which reads the
-// page and the first feed it names, and shows what came back. No cookies or
+// to the app's finder (app.nineturtles.app/api/find-feeds), which looks as
+// Add feed does (the page, a few usual places, each feed a site names), and
+// shows what came back. No cookies or
 // referrer go with the question, and nothing is stored in the browser.
 // Without this script the form still sends the address in the page's own
 // address (?address=…), which this script reads when the page opens, so the
@@ -20,7 +21,7 @@ const problems = {
   unreachable: "That site didn't answer. Check the address, or try again later.",
   "not-found": "That site says the page isn't there. Check the address, or try the site's home page.",
   "too-big": "That page is too large to look through. Try the site's home page.",
-  "no-feed": "That page doesn't name a feed. Try the site's home page, or look on the site for a link called RSS, Atom or Feed. Some sites don't have one.",
+  "no-feed": "No feed was found on that page or in the usual places. Look on the site for a link called RSS, Atom or Feed. Some sites don't have one.",
   busy: "The finder is busy just now. Try again in a minute.",
   "site-busy": "That site has been looked up a lot just now. Try again in half an hour.",
 };
@@ -88,7 +89,13 @@ function show(answer) {
     copy.type = "button";
     copy.setAttribute("aria-label", `Copy address of ${feed.title}`);
     copy.addEventListener("click", () => copyAddress(feed.url, address));
-    item.append(element("span", "feed-title", feed.title), address, copy);
+    const about = element("span", "feed-about");
+    about.append(element("span", "feed-title", feed.title));
+    // For a site with several, what the app saw inside each (decision 0165).
+    if (feed.latest) about.append(element("span", "feed-latest", feed.latest));
+    if (feed.posting) about.append(element("span", "feed-posting", feed.posting));
+    about.append(address);
+    item.append(about, copy);
     list.append(item);
   }
   found.append(element("h2", null, count === 1 ? "Its feed" : "Its feeds"), list);

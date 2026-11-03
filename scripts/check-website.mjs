@@ -193,7 +193,7 @@ try {
       status: document.querySelector(".finder-status").textContent,
       left: document.querySelectorAll(".feed-url").length,
     }));
-    if (!after.status.startsWith("That page doesn't name a feed") || after.left !== 0) {
+    if (!after.status.startsWith("No feed was found") || after.left !== 0) {
       problems.push(`${where}: a page without a feed shows "${after.status}" and ${after.left} address(es)`);
     }
 

@@ -249,15 +249,20 @@
         so the chosen one shows by its mark, never by a tint alone. Round,
         because only one can be added (a square tick box says "any of these",
         decision 0045). Real radio buttons lie under the rows: the arrow keys
-        move the choice, and Add adds it (decision 0049).
+        move the choice, and Add adds it (decision 0049). Each row says
+        what nine turtles saw inside the feed: its newest title in the reading
+        serif, then how often it posts and its address as a person says it
+        (decision 0165). In a sheet a long list scrolls inside itself, so
+        Cancel and Add never leave the window.
       -->
-      <div role="radiogroup" aria-label="Feeds on this site" aria-describedby="feed-address-status" class="inset-group mb-2 self-stretch text-left">
+      <div role="radiogroup" aria-label="Feeds on this site" aria-describedby="feed-address-status" class={["inset-group mb-2 self-stretch text-left", !page && "choices-scroll"]}>
         {#each choices as choice (choice.url)}
           <label class="inset-row check-row flex-nowrap">
             <input type="radio" name="feed-choice" value={choice.url} bind:group={chosen} />
-            <span class="flex min-w-0 flex-col py-1">
+            <span class="flex min-w-0 flex-col py-2.5">
               <span class="break-words">{choice.title}</span>
-              <span class="text-small break-all text-muted">{choice.url}</span>
+              {#if choice.latest}<span class="mt-0.5 font-serif break-words text-ink-2">{choice.latest}</span>{/if}
+              <span class="mt-0.5 text-small break-all text-muted">{[choice.posting, choice.place ?? choice.url].filter(Boolean).join(" · ")}</span>
             </span>
             <span aria-hidden="true" class="radio-mark shrink-0"></span>
           </label>
@@ -315,3 +320,11 @@
     </div>
   {/if}
 </form>
+
+<style>
+  /* What's above the list (title, words, field) takes about 37rem; the list keeps at least two rows. */
+  .choices-scroll {
+    max-height: max(10rem, calc(100dvh - 37rem));
+    overflow-y: auto;
+  }
+</style>

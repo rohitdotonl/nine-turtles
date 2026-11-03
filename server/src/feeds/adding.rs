@@ -19,9 +19,11 @@ use super::{FEEDS, FeedRow, Followed, follow_again, follow_in, followed_at, wait
 use crate::{
     AppState, admin,
     auth::{SignedIn, database_problem},
-    discover, feed,
-    fetch::{self, FetchError, Fetched},
-    log, now, websub,
+    feed,
+    fetch::{FetchError, Fetched},
+    log,
+    lookup::{self, Looked, NotFound},
+    now, websub,
     youtube::{
         self,
         addresses::{Link, channel_feed},
@@ -86,6 +88,15 @@ impl From<FetchError> for NotAdded {
     }
 }
 
+impl From<NotFound> for NotAdded {
+    fn from(not_found: NotFound) -> Self {
+        match not_found {
+            NotFound::Fetch(error) => error.into(),
+            NotFound::NoFeed => Self::NoFeed,
+        }
+    }
+}
+
 impl From<sqlx::Error> for NotAdded {
     fn from(error: sqlx::Error) -> Self {
         database_problem("adding a feed", &error);
@@ -98,15 +109,12 @@ pub(super) async fn add_feed(
     State(state): State<AppState>,
     Json(form): Json<AddFeed>,
 ) -> Response {
-    match add(&state, person, &form.address).await {
+    match add(&state, person, &form.address, true).await {
         Ok(Added::Feed(feed)) => {
             (StatusCode::CREATED, Json(json!({ "feed": feed }))).into_response()
         }
         Ok(Added::Choices(choices)) => {
-            let choices: Vec<_> = choices
-                .into_iter()
-                .map(|found| json!({ "title": found.title, "url": found.url.as_str() }))
-                .collect();
+            let choices: Vec<_> = choices.iter().map(choice_json).collect();
             Json(json!({ "choices": choices })).into_response()
         }
         Ok(Added::Ask(question)) => Json(json!({
@@ -123,15 +131,34 @@ pub(super) async fn add_feed(
     }
 }
 
+/// One of a site's feeds as the screen shows it (SPEC section 3).
+fn choice_json(choice: &lookup::Choice) -> serde_json::Value {
+    let inside = choice.inside.as_ref();
+    json!({
+        "title": choice.found.title,
+        "url": choice.found.url.as_str(),
+        "place": lookup::said(&choice.found.url),
+        "posting": inside.and_then(|inside| inside.posting.as_deref()),
+        "latest": inside.and_then(|inside| inside.latest.as_deref()),
+    })
+}
+
 enum Added {
     Feed(Box<FeedRow>),
-    /// The page names several feeds; the reader picks one.
-    Choices(Vec<discover::Found>),
+    /// The site offers several feeds; the reader picks one.
+    Choices(Vec<lookup::Choice>),
     /// A YouTube video or playlist: follow its channel, or the playlist?
     Ask(youtube::Question),
 }
 
-async fn add(state: &AppState, person: i64, address: &str) -> Result<Added, NotAdded> {
+/// With `inside`, a site's several feeds are each looked at (`lookup`), for
+/// the reader to choose; other apps follow the first without looking.
+async fn add(
+    state: &AppState,
+    person: i64,
+    address: &str,
+    inside: bool,
+) -> Result<Added, NotAdded> {
     let url = parse_address(address).ok_or(NotAdded::NotAnAddress)?;
     // Any YouTube link follows its maker (decision 0144): a channel's
     // address is its feed; a video or a playlist asks first.
@@ -168,29 +195,26 @@ async fn add(state: &AppState, person: i64, address: &str) -> Result<Added, NotA
     if !admin::room_for_one_more(&mut *state.db.acquire().await?, person).await? {
         return Err(NotAdded::TooMany);
     }
-    let local = state.config.local_feeds_allowed;
-    let fetched = fetch::get(&state.http, &url, local).await?;
-
-    if let Some(parsed) = feed::parse(&fetched.body, &fetched.final_url) {
+    // The feed chosen among a site's several was looked at just now.
+    if let Some(fetched) = state.looked.take(&url)
+        && let Some(parsed) = feed::parse(&fetched.body, &fetched.final_url)
+    {
         return Ok(Added::Feed(Box::new(
             follow(state, person, &fetched, parsed).await?,
         )));
     }
-
-    // Not a feed, so a web page: look for the feeds it names.
-    let page = String::from_utf8_lossy(&fetched.body);
-    let found = discover::feeds_in(&page, &fetched.final_url);
-    match found.as_slice() {
-        [] => Err(NotAdded::NoFeed),
-        [only] => {
-            already_followed(state, person, &only.url).await?;
-            let fetched = fetch::get(&state.http, &only.url, local).await?;
-            let parsed = feed::parse(&fetched.body, &fetched.final_url).ok_or(NotAdded::NoFeed)?;
-            Ok(Added::Feed(Box::new(
-                follow(state, person, &fetched, parsed).await?,
-            )))
+    match lookup::look(state, &url, inside).await? {
+        Looked::Feed(fetched, parsed) => Ok(Added::Feed(Box::new(
+            follow(state, person, &fetched, *parsed).await?,
+        ))),
+        Looked::Feeds(mut choices) => {
+            for choice in &mut choices {
+                if let Some(fetched) = choice.fetched.take() {
+                    state.looked.keep(&choice.found.url, *fetched);
+                }
+            }
+            Ok(Added::Choices(choices))
         }
-        _ => Ok(Added::Choices(found)),
     }
 }
 
@@ -204,21 +228,23 @@ pub async fn add_for_app(state: &AppState, person: i64, address: &str) -> Result
     if let Some(id) = bring_back(state, person, &url, false).await? {
         return Ok(id);
     }
-    let address = match add(state, person, url.as_str()).await {
+    let address = match add(state, person, url.as_str(), false).await {
         Ok(Added::Feed(feed)) => return Ok(feed.id),
         Err(NotAdded::Already(id)) => return Ok(id),
         Err(not_added) => return Err(not_added),
-        Ok(Added::Choices(choices) | Added::Ask(youtube::Question { choices, .. })) => {
-            match choices.into_iter().next() {
-                Some(first) => first.url,
-                None => return Err(NotAdded::NoFeed),
-            }
-        }
+        Ok(Added::Choices(choices)) => match choices.into_iter().next() {
+            Some(first) => first.found.url,
+            None => return Err(NotAdded::NoFeed),
+        },
+        Ok(Added::Ask(youtube::Question { choices, .. })) => match choices.into_iter().next() {
+            Some(first) => first.url,
+            None => return Err(NotAdded::NoFeed),
+        },
     };
     if let Some(id) = bring_back(state, person, &address, false).await? {
         return Ok(id);
     }
-    match add(state, person, address.as_str()).await {
+    match add(state, person, address.as_str(), false).await {
         Ok(Added::Feed(feed)) => Ok(feed.id),
         Err(NotAdded::Already(id)) => Ok(id),
         Ok(Added::Choices(_) | Added::Ask(_)) => Err(NotAdded::NoFeed),

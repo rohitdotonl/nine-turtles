@@ -31,6 +31,7 @@ async fn publisher() -> (String, Arc<Mutex<Vec<String>>>) {
         )
         .route("/plain/", get(|| async { html("<html><body>Just a page.</body></html>") }))
         .route("/feed.xml", get(|| async { feed() }))
+        .route("/comments.atom", get(|| async { comments() }))
         .fallback(|| async { StatusCode::NOT_FOUND })
         .layer(axum::middleware::from_fn_with_state(visited.clone(), note_visit));
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -73,6 +74,17 @@ fn feed() -> impl IntoResponse {
             r#"<?xml version="1.0"?><rss version="2.0"><channel><title>Quiet Notes</title>
             <link>https://quiet.example/</link>{items}</channel></rss>"#
         ),
+    )
+}
+
+/// The site's comments: another feed, with other posts.
+fn comments() -> impl IntoResponse {
+    (
+        [(header::CONTENT_TYPE, "application/atom+xml")],
+        r#"<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><title>Comments</title>
+        <id>urn:comments</id><updated>2026-01-08T00:00:00Z</updated>
+        <entry><title>A comment</title><id>urn:c1</id><updated>2026-01-08T00:00:00Z</updated>
+        <link href="https://quiet.example/c1"/></entry></feed>"#,
     )
 }
 
@@ -137,15 +149,21 @@ async fn a_page_gives_its_feeds_and_the_newest_titles_of_the_first() {
     assert_eq!(preview["articles"][0]["link"], Value::Null);
     assert_eq!(preview["articles"][1]["link"], "https://quiet.example/6");
 
-    // Only the page given and its first feed were fetched: never the
-    // second feed, a post, or a guessed address.
-    assert_eq!(*visited.lock().unwrap(), ["/", "/feed.xml"]);
+    // Each feed says what it posted last.
+    assert_eq!(body["feeds"][0]["latest"], "Post 7");
+    assert_eq!(body["feeds"][1]["latest"], "A comment");
+    // The page and each of its feeds, once each: never a post, and the
+    // first feed isn't fetched again for the preview.
+    assert_eq!(
+        *visited.lock().unwrap(),
+        ["/", "/feed.xml", "/comments.atom"]
+    );
 
     // Asked again, the answer is remembered: the publisher isn't visited.
     let (status, _, again) = find(&base, &format!("{site}/")).await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(again, body);
-    assert_eq!(visited.lock().unwrap().len(), 2);
+    assert_eq!(visited.lock().unwrap().len(), 3);
 }
 
 #[tokio::test]
@@ -166,12 +184,18 @@ async fn problems_are_answered_in_words_the_website_knows() {
     let base = common::start(common::config()).await;
     let (site, visited) = publisher().await;
 
+    // A page naming no feed tries the usual places under it, then the
+    // home page, which names two (a page naming nothing anywhere is in
+    // tests/finding_feeds.rs).
     let (status, allowed, body) = find(&base, &format!("{site}/plain/")).await;
-    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
+    assert_eq!(status, StatusCode::OK);
     assert_eq!(allowed.as_deref(), Some("https://nineturtles.app"));
-    assert_eq!(body["error"], "no-feed");
-    // Nothing else on the site was tried.
-    assert_eq!(*visited.lock().unwrap(), ["/plain/"]);
+    assert_eq!(body["feeds"].as_array().unwrap().len(), 2);
+    assert_eq!(
+        visited.lock().unwrap()[..3],
+        ["/plain/", "/plain/feed", "/"]
+    );
+    visited.lock().unwrap().clear();
 
     let (status, _, body) = find(&base, &format!("{site}/gone/")).await;
     assert_eq!(status, StatusCode::BAD_GATEWAY);
@@ -179,7 +203,7 @@ async fn problems_are_answered_in_words_the_website_knows() {
     // A failure is remembered for a while too: asking again doesn't visit.
     let (_, _, again) = find(&base, &format!("{site}/gone/")).await;
     assert_eq!(again["error"], "not-found");
-    assert_eq!(*visited.lock().unwrap(), ["/plain/", "/gone/"]);
+    assert_eq!(*visited.lock().unwrap(), ["/gone/"]);
 
     let (status, _, body) = find(&base, "not an address").await;
     assert_eq!(status, StatusCode::BAD_REQUEST);
