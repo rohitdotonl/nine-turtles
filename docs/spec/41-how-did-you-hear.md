@@ -13,7 +13,9 @@ V1 item 7 (`docs/PLAN.md`), decision 0155.*
 - Leaving it at Rather not say signs up exactly as before. The answer never
   stops anyone signing up: an answer the page doesn't offer is kept as no
   answer.
-- The answer is kept with the account. Nobody who signed up before it was
+- The answer is kept with the account. While the address waits to be
+  confirmed (section 1, decision 0154), it waits with the emailed link, and
+  following the link keeps it; Send again sends it again too. Nobody who signed up before it was
   asked has one, and there's no way to answer later: it's asked once.
 - **Only totals are ever shown**, in the owner report (decision 0130,
   `docs/operations/owner-report.md`): how many readers gave each answer, and

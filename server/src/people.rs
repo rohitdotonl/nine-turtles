@@ -1,41 +1,26 @@
-//! The readers of one nine turtles, and how new ones join (SPEC sections 1
-//! and 18, decisions 0087 and 0115).
+//! The readers of one nine turtles (SPEC sections 1 and 18, decision 0087).
+//! How new ones join is `sign_up` (decision 0154).
 //!
 //! The owner (reader 1) sees who has an account (their email and when they
 //! joined, never anything they read) and sets the email they sign in with.
-//! Sign-up is always open: anyone can make an account with an email and a
-//! password, at once, with no email sent and no invite (decision 0115).
-//!
-//! At most `SIGN_UPS_PER_HOUR` sign-up tries are taken in any hour, for the
-//! whole app, counting tries with an email that's already taken as well as
-//! new accounts, and at most as many accounts are made: behind the host's
-//! proxy nine turtles can't reliably tell one place from another. Sign-ups
-//! go one at a time, because scrambling each password takes about 19 MB of
-//! memory and so the hour's count can't be raced past.
 //!
 //! A reader's account is deleted by `delete`, which names every table that
 //! holds a reader's things.
 
-use std::{
-    collections::VecDeque,
-    time::{Duration, Instant},
-};
-
 use axum::{
     Json, Router,
     extract::State,
-    http::{StatusCode, header},
+    http::StatusCode,
     response::{IntoResponse, Response},
-    routing::{get, post},
+    routing::get,
 };
-use serde::Deserialize;
 use serde_json::json;
 use sqlx::SqlitePool;
 
 use crate::{
     AppState,
-    auth::{SignedIn, database_problem, remember_device, session_cookie},
-    log, now, refused,
+    auth::{SignedIn, database_problem},
+    refused,
 };
 
 /// A new reader's password: at least this many characters, the same as the
@@ -43,13 +28,9 @@ use crate::{
 pub const READER_PASSWORD_MINIMUM: usize = crate::password::MINIMUM_LENGTH;
 /// The longest an email address can be (the internet's own rule).
 pub const EMAIL_MAXIMUM: usize = 254;
-/// New accounts allowed in any hour, for the whole app.
-pub const SIGN_UPS_PER_HOUR: i64 = 20;
 
 pub fn routes() -> Router<AppState> {
-    Router::new()
-        .route("/api/people", get(list))
-        .route("/api/sign-up", post(sign_up))
+    Router::new().route("/api/people", get(list))
 }
 
 /// One reader as the owner sees them: number, email, owner or not, joined.
@@ -326,142 +307,6 @@ async fn list(SignedIn(person): SignedIn, State(state): State<AppState>) -> Resp
     .await
 }
 
-#[derive(Deserialize)]
-struct SignUp {
-    email: String,
-    password: String,
-    /// "How did you hear about nine turtles?" (decision 0155): one of
-    /// `HEARD_ABOUT`, or nothing when the reader chose not to say.
-    #[serde(default)]
-    heard_about: Option<String>,
-}
-
-/// The answers "How did you hear about nine turtles?" offers, as they're
-/// kept: a blog, a friend, a search, an AI assistant, Reddit, somewhere
-/// else. Only their totals are ever shown (the owner report).
-pub const HEARD_ABOUT: &[&str] = &["blog", "friend", "search", "ai", "reddit", "other"];
-
-/// Makes an account with an email and a password, at once, and signs this
-/// device in. No email is sent and no invite is needed (decision 0115).
-async fn sign_up(State(state): State<AppState>, Json(form): Json<SignUp>) -> Response {
-    let email = form.email.trim().to_owned();
-    if !plausible_email(&email) {
-        return refused(StatusCode::BAD_REQUEST, "email");
-    }
-    if form.password.chars().count() < READER_PASSWORD_MINIMUM {
-        return refused(StatusCode::BAD_REQUEST, "password-short");
-    }
-    if form.password.len() > crate::password::MAXIMUM_LENGTH {
-        return refused(StatusCode::BAD_REQUEST, "password-long");
-    }
-    // An answer the page doesn't offer is kept as no answer, never refused:
-    // the question is optional, so it never stands between anyone and an account.
-    let heard_about = form
-        .heard_about
-        .filter(|answer| HEARD_ABOUT.contains(&answer.as_str()));
-    // One sign-up at a time: each scramble takes about 19 MB of memory, so
-    // many at once could use up the server's. Held until this one is
-    // decided, so the hour's count below can't be raced past either.
-    let mut tries = state.sign_ups.lock().await;
-    let hour_ago = now() - 60 * 60;
-    match recent_sign_ups(&state.db, hour_ago).await {
-        Ok(count) if count >= SIGN_UPS_PER_HOUR => return too_many(),
-        Ok(_) => {}
-        Err(error) => return database_problem("counting sign-ups", &error),
-    }
-    // Every try that gets this far counts, even one whose email turns out
-    // to be taken, so nobody can make the server scramble endlessly.
-    if !tries.try_one(Instant::now()) {
-        return too_many();
-    }
-
-    let password = form.password;
-    let line = match tokio::task::spawn_blocking(move || crate::password::hash(&password)).await {
-        Ok(Ok(line)) => line,
-        Ok(Err(error)) => {
-            log::problem(&error);
-            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
-        }
-        Err(error) => {
-            log::problem(&format!(
-                "couldn't scramble a new reader's password: {error}"
-            ));
-            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
-        }
-    };
-
-    // The hour's count is checked again as the account is made, so two
-    // sign-ups at once can't both slip past it.
-    let made: Result<Option<i64>, sqlx::Error> = sqlx::query_scalar(
-        "INSERT INTO people (owner, email, password_hash, created_at, heard_about)
-         SELECT 0, ?, ?, ?, ?
-         WHERE (SELECT COUNT(*) FROM people WHERE owner = 0 AND created_at > ?) < ?
-         RETURNING id",
-    )
-    .bind(&email)
-    .bind(&line)
-    .bind(now())
-    .bind(heard_about)
-    .bind(hour_ago)
-    .bind(SIGN_UPS_PER_HOUR)
-    .fetch_optional(&state.db)
-    .await;
-    let person = match made {
-        Ok(Some(person)) => person,
-        Ok(None) => return too_many(),
-        Err(error) if is_taken(&error) => return refused(StatusCode::CONFLICT, "already"),
-        Err(error) => return database_problem("making an account", &error),
-    };
-    drop(tries);
-
-    match remember_device(&state.db, person).await {
-        Ok(Some(token)) => (
-            StatusCode::NO_CONTENT,
-            [(header::SET_COOKIE, session_cookie(&token))],
-        )
-            .into_response(),
-        Ok(None) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
-        Err(error) => database_problem("signing in a new reader", &error),
-    }
-}
-
-/// The sign-up tries of the last hour that got as far as scrambling a
-/// password, made or not, kept in memory. With the accounts made in the
-/// last hour (in the database, so a restart doesn't forget them), it keeps
-/// sign-up to `SIGN_UPS_PER_HOUR` in any hour.
-#[derive(Debug, Default)]
-pub struct SignUpTries {
-    recent: VecDeque<Instant>,
-}
-
-impl SignUpTries {
-    /// Counts a try at `now`, or answers false (and counts nothing) if the
-    /// hour's tries are used up.
-    pub fn try_one(&mut self, now: Instant) -> bool {
-        while self
-            .recent
-            .front()
-            .is_some_and(|tried| now.saturating_duration_since(*tried) >= HOUR)
-        {
-            self.recent.pop_front();
-        }
-        if self.recent.len() >= SIGN_UPS_PER_HOUR as usize {
-            return false;
-        }
-        self.recent.push_back(now);
-        true
-    }
-}
-
-const HOUR: Duration = Duration::from_secs(60 * 60);
-
-pub(crate) async fn recent_sign_ups(db: &SqlitePool, since: i64) -> Result<i64, sqlx::Error> {
-    sqlx::query_scalar("SELECT COUNT(*) FROM people WHERE owner = 0 AND created_at > ?")
-        .bind(since)
-        .fetch_one(db)
-        .await
-}
-
 /// A bare address: one @ with something on each side, at most 254
 /// characters, and nothing that could make it more than an address (no
 /// name before it, no `<` `>`, quotes, commas, semicolons, colons,
@@ -487,6 +332,25 @@ pub fn plausible_email(email: &str) -> bool {
                 )
         })
         && crate::email::address(email).is_some()
+}
+
+/// Marks reader `person`'s address confirmed, if it's still `email` and
+/// wasn't already: a link sent to it was followed (decision 0154).
+pub(crate) async fn mark_confirmed(
+    db: &SqlitePool,
+    person: i64,
+    email: &str,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "UPDATE people SET email_confirmed_at = ?
+         WHERE id = ? AND email = ? COLLATE NOCASE AND email_confirmed_at IS NULL",
+    )
+    .bind(crate::now())
+    .bind(person)
+    .bind(email)
+    .execute(db)
+    .await
+    .map(|_| ())
 }
 
 pub(crate) fn is_taken(error: &sqlx::Error) -> bool {

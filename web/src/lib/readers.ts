@@ -1,10 +1,12 @@
 // The readers of this nine turtles, and how new ones join (SPEC sections 1
-// and 18, decisions 0087 and 0115). The owner sees everyone's email and when
+// and 18, decisions 0087 and 0154). The owner sees everyone's email and when
 // they joined (never what they read) and sets their own email. Sign-up is
-// always open; the sign-up page itself uses `signUp`.
+// always open, and confirms the address by an emailed link first; the
+// sign-up page itself uses `signUp`.
 
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
+import { duration } from "./session";
 
 export type Person = { id: number; email: string | null; owner: boolean; createdAt: number };
 
@@ -25,7 +27,8 @@ export async function listPeople(): Promise<Person[]> {
 }
 
 export type SignUpResult =
-  | { ok: true }
+  /** `sentTo`: a link went there to finish; without it, the account was made and this device signed in. */
+  | { ok: true; sentTo?: string }
   | { ok: false; reason: "email" | "password-short" | "password-long" | "already" | "too-many" | "unreachable" };
 
 /**
@@ -55,6 +58,10 @@ export async function signUp(email: string, password: string, heardAbout?: Heard
   } catch {
     return { ok: false, reason: "unreachable" };
   }
+  if (response.status === 202) {
+    const body: unknown = await response.json().catch(() => null);
+    return { ok: true, sentTo: isRecord(body) && typeof body.sent_to === "string" ? body.sent_to : email };
+  }
   if (response.ok) return { ok: true };
   const error = await errorOf(response);
   switch (error) {
@@ -82,6 +89,55 @@ export function explainSignUp(result: Exclude<SignUpResult, { ok: true }>): stri
       return "That email already has an account. Sign in instead.";
     case "too-many":
       return "Many people have signed up in the last hour. Try again later.";
+    case "unreachable":
+      return "nine turtles can't be reached right now. Try again in a moment.";
+  }
+}
+
+/** The page a sign-up's emailed link opens. */
+export const FINISH_SIGN_UP_PAGE = "/finish-sign-up";
+
+export type FinishResult =
+  | { ok: true }
+  | { ok: false; reason: "wrong-password" | "expired" | "already" | "too-many" | "unreachable" }
+  | { ok: false; reason: "wait"; waitSeconds: number };
+
+/** Follows a sign-up's link with the password chosen at sign-up: the account is made and this device signed in. */
+export async function finishSignUp(ticket: string, password: string): Promise<FinishResult> {
+  let response: Response;
+  try {
+    response = await api("/api/sign-up/finish", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ ticket, password }),
+    });
+  } catch {
+    return { ok: false, reason: "unreachable" };
+  }
+  if (response.ok) return { ok: true };
+  const body: unknown = await response.json().catch(() => null);
+  const error = isRecord(body) ? body.error : undefined;
+  if (error === "wait") {
+    return { ok: false, reason: "wait", waitSeconds: isRecord(body) && typeof body.wait_seconds === "number" ? body.wait_seconds : 60 };
+  }
+  return error === "wrong-password" || error === "expired" || error === "already" || error === "too-many"
+    ? { ok: false, reason: error }
+    : { ok: false, reason: "unreachable" };
+}
+
+/** What the page a sign-up's link opens says when it didn't work. Plain and calm. */
+export function explainFinish(result: Exclude<FinishResult, { ok: true }>): string {
+  switch (result.reason) {
+    case "wrong-password":
+      return "That isn't the password you chose when you signed up.";
+    case "wait":
+      return `Too many wrong tries. Try again in ${duration(result.waitSeconds)}.`;
+    case "expired":
+      return "This link has expired or was already used. Sign up again for a new one.";
+    case "already":
+      return "That email already has an account. Sign in instead.";
+    case "too-many":
+      return "Many people have signed up in the last hour. Try this link again later.";
     case "unreachable":
       return "nine turtles can't be reached right now. Try again in a moment.";
   }

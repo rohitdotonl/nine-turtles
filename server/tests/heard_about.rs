@@ -110,3 +110,25 @@ async fn deleting_ones_data_takes_the_answer_too() {
         .unwrap();
     assert_eq!(answer_of(&state, "ana@example.com").await, None);
 }
+
+#[tokio::test]
+async fn while_the_address_is_confirmed_the_answer_waits_with_its_link() {
+    let (base, state, outbox) = common::start_with_mail(common::config()).await;
+    let body =
+        json!({ "email": "ana@example.com", "password": READER_PASSWORD, "heard_about": "search" });
+    assert_eq!(sign_up(&base, body).await, StatusCode::ACCEPTED);
+    let (_, ticket) = common::newest_link(&outbox, "ana@example.com");
+
+    let finished = Client::new()
+        .post(format!("{base}/api/sign-up/finish"))
+        .header("content-type", "application/json")
+        .body(json!({ "ticket": ticket, "password": READER_PASSWORD }).to_string())
+        .send()
+        .await
+        .unwrap();
+    assert!(finished.status().is_success(), "{}", finished.status());
+    assert_eq!(
+        answer_of(&state, "ana@example.com").await.as_deref(),
+        Some("search")
+    );
+}

@@ -13,6 +13,9 @@ refinement round.*
   search, An AI assistant, Reddit, Somewhere else (SPEC section 41).
 - The answer is kept with the account, in one new column on `people`
   (`heard_about`, migration 0032); no answer is kept as nothing at all.
+  While the address waits to be confirmed (decision 0154), the answer waits
+  with the sign-up's link (the same column on `email_links`), and the link
+  that makes the account carries it over.
 - It's shown only as totals, in the owner report's `readers.heard_about`
   (decision 0130): every answer named, even at 0, and `no_answer`. Never
   per reader, so it's not on the Readers page or given to AI assistants.

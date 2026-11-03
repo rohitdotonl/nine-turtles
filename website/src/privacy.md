@@ -49,7 +49,7 @@ needs to work:
 
 | What | Why |
 |---|---|
-| Your email address | To sign you in, reset your password and send receipts |
+| Your email address | To check it's yours when you sign up (until you confirm it, it's kept with your scrambled password for at most a day, and no account exists), to sign you in, reset your password and send receipts |
 | Your password, scrambled so it can't be read back (a "hash") | To sign you in |
 | The feeds and folders you follow, the articles they bring, what you've read and starred, and your settings | To be your reader: this is the service |
 | A sign-in cookie on each device you use | To keep you signed in; it's the only cookie, and it never tracks you anywhere else |

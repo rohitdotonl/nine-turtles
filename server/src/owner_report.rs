@@ -171,7 +171,7 @@ async fn heard_about(db: &sqlx::SqlitePool) -> Result<serde_json::Value, sqlx::E
             .fetch_all(db)
             .await?;
     let mut totals = serde_json::Map::new();
-    for answer in crate::people::HEARD_ABOUT
+    for answer in crate::sign_up::HEARD_ABOUT
         .iter()
         .copied()
         .chain(["no_answer"])
