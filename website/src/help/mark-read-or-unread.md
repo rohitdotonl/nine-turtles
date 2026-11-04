@@ -29,9 +29,9 @@ you're looking at are marked: anything that arrived since stays unread.
 
 ## Undo
 
-After any of these, a note at the bottom of the list says what happened,
-with an **Undo** button. Press it, or <kbd>U</kbd>, to put things back as
-they were.
+After you mark or star something, a note at the bottom of the list says
+what happened, with an **Undo** button. Press it, or <kbd>U</kbd>, to put
+things back as they were.
 
 Undo stays until you do something else that can be undone, or leave the list.
 It works for marking read and unread, starring, unfollowing someone and

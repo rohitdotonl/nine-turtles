@@ -696,18 +696,9 @@ async fn search(
     State(state): State<AppState>,
     Query(search): Query<Search>,
 ) -> Response {
-    // Asked before searching: the newest article's number when the results
-    // were found, as every list's first page says.
-    let latest: i64 = match sqlx::query_scalar(crate::feeds::LATEST)
-        .fetch_one(&state.db)
-        .await
-    {
-        Ok(latest) => latest,
-        Err(error) => return database_problem("searching", &error),
-    };
     match find(&state.db, person, &search).await {
         Ok(Some((articles, next))) => {
-            Json(json!({ "articles": articles, "next": next, "latest": latest })).into_response()
+            Json(json!({ "articles": articles, "next": next })).into_response()
         }
         Ok(None) => StatusCode::BAD_REQUEST.into_response(),
         Err(error) => database_problem("searching", &error),
