@@ -18,7 +18,7 @@ export type WelcomeScene = {
   /** A reading area shows beside the list. */
   article: boolean;
   phone: boolean;
-  /** The address names a feed, folder, saved search or collection the reader doesn't have. */
+  /** The address names a feed or folder the reader doesn't have. */
   missing: boolean;
 };
 

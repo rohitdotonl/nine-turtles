@@ -10,7 +10,7 @@ use axum::{Router, http::header, response::IntoResponse, routing::get};
 use reqwest::{Client, StatusCode};
 use serde_json::{Value, json};
 
-/// A made-up blog whose feed has 5 posts, one a day up to yesterday, about soup (the same as in collections.rs).
+/// A made-up blog whose feed has 5 posts, one a day up to yesterday, about soup.
 async fn publisher() -> String {
     let app = Router::new().route("/feed.xml", get(|| async { feed() }));
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();

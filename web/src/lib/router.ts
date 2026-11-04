@@ -2,7 +2,7 @@
 // were and the browser's Back button works. No library: the browser's own
 // history does the work.
 
-export const VIEWS = ["unread", "starred", "notes", "all", "recent"] as const;
+export const VIEWS = ["unread", "starred", "notes", "all"] as const;
 export type View = (typeof VIEWS)[number];
 
 export type Route =
@@ -13,10 +13,6 @@ export type Route =
   | { kind: "edit-feed"; id: number }
   | { kind: "edit-source"; id: number; source: number }
   | { kind: "edit-folder"; id: number }
-  | { kind: "search"; id: number }
-  | { kind: "edit-search"; id: number }
-  | { kind: "collection"; id: number }
-  | { kind: "save-search" }
   | { kind: "add-feed" }
   | { kind: "new-to-feeds" }
   | { kind: "settings"; page?: SettingsPage }
@@ -54,13 +50,13 @@ function settingsPage(name: string): SettingsPage | undefined {
   return Object.hasOwn(SETTINGS_PAGES, name) ? (name as SettingsPage) : undefined;
 }
 
-export const VIEW_NAMES: Record<View, string> = { unread: "Unread", starred: "Starred", notes: "Notes", all: "All", recent: "Recently read" };
+export const VIEW_NAMES: Record<View, string> = { unread: "Unread", starred: "Starred", notes: "Notes", all: "All" };
 
 /**
- * The lists a reader can hide from the sidebar (Settings › Show in the sidebar, decisions 0105 and 0108). Unread, folders
+ * The lists a reader can hide from the sidebar (Settings › Show in the sidebar, decisions 0105 and 0174). Unread, folders
  * and feeds always show; Notes only once the reader has highlighted or written a note on something (SPEC section 42).
  */
-export const HIDEABLE = ["starred", "notes", "all", "recent", "searches", "collections"] as const;
+export const HIDEABLE = ["starred", "notes", "all"] as const;
 export type Hideable = (typeof HIDEABLE)[number];
 
 /**
@@ -92,11 +88,6 @@ export function parse(path: string): Route {
   if (page) return { kind: "settings", page };
   if (name === "add" || name === "add-feed") return { kind: "add-feed" };
   if (name === "new-to-feeds") return { kind: "new-to-feeds" };
-  if (name === "searches/new") return { kind: "save-search" };
-  const saved = name.match(/^searches\/([1-9][0-9]{0,15})(\/edit)?$/);
-  if (saved) return saved[2] ? { kind: "edit-search", id: Number(saved[1]) } : { kind: "search", id: Number(saved[1]) };
-  const collection = name.match(/^collections\/([1-9][0-9]{0,15})$/);
-  if (collection) return { kind: "collection", id: Number(collection[1]) };
   // A person or publication (decision 0163): their list, page, Edit, and one source's settings. The old /feeds/ addresses still open.
   const who = name.match(/^(feeds|people|publications)\/([1-9][0-9]{0,15})(\/edit|\/about|\/sources\/([1-9][0-9]{0,15}))?$/);
   if (who) {
@@ -146,20 +137,12 @@ export function pathFor(route: Route): string {
       return `/folders/${route.id}`;
     case "edit-folder":
       return `/folders/${route.id}/edit`;
-    case "search":
-      return `/searches/${route.id}`;
-    case "edit-search":
-      return `/searches/${route.id}/edit`;
-    case "save-search":
-      return "/searches/new";
-    case "collection":
-      return `/collections/${route.id}`;
     case "view":
       return `/${route.view}`;
   }
 }
 
-/** A place's name, as its heading shows it. A feed's, folder's, saved search's or collection's name comes from it. */
+/** A place's name, as its heading shows it. A feed's or folder's name comes from it. */
 export function nameFor(route: Route, placeName?: string): string {
   switch (route.kind) {
     case "settings":
@@ -187,14 +170,6 @@ export function nameFor(route: Route, placeName?: string): string {
       return "Source settings";
     case "edit-folder":
       return "Edit folder";
-    case "search":
-      return placeName || "Saved search";
-    case "edit-search":
-      return "Edit saved search";
-    case "save-search":
-      return "Save search";
-    case "collection":
-      return placeName || "Collection";
     case "view":
       return VIEW_NAMES[route.view];
   }

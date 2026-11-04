@@ -46,8 +46,8 @@ export function savedInOrder<T>(save: (value: T) => Promise<T | void>, show: (va
 }
 
 /**
- * Loads something that may be asked for again before it arrives (the feeds,
- * saved searches, collections). Every caller gets the answer to the newest ask:
+ * Loads something that may be asked for again before it arrives (the feeds).
+ * Every caller gets the answer to the newest ask:
  * one started earlier waits for it rather than handing back an older list, which
  * could, say, briefly put an unsubscribed feed back in the sidebar.
  */

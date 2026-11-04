@@ -45,12 +45,10 @@ pub(super) struct FeedEdit {
 pub(super) struct FolderName {
     folder_id: Option<i64>,
     name: Option<String>,
-    /// For create_folder: feeds to put in it, and saved searches to point
-    /// at it again, as delete_folder answered them (its undo).
+    /// For create_folder: feeds to put in it, as delete_folder answered
+    /// them (its undo).
     #[serde(default)]
     feed_ids: Vec<i64>,
-    #[serde(default)]
-    search_ids: Vec<i64>,
 }
 
 #[derive(Deserialize)]
@@ -211,14 +209,7 @@ pub(super) async fn folder(state: &AppState, person: i64, tool: &str, asked: Fol
             ("create_folder", _, Some(name)) => {
                 let (id, new) = folders::folder_named(&mut transaction, person, &name).await?;
                 // Only feeds the reader follows, as the screen's Undo does.
-                folders::put_back(
-                    &mut transaction,
-                    person,
-                    id,
-                    &asked.feed_ids,
-                    &asked.search_ids,
-                )
-                .await?;
+                folders::put_back(&mut transaction, person, id, &asked.feed_ids).await?;
                 Ok(json!({ "done": true, "folder_id": id, "already_there": !new }))
             }
             ("rename_folder", Some(id), Some(name)) => {
@@ -235,8 +226,7 @@ pub(super) async fn folder(state: &AppState, person: i64, tool: &str, asked: Fol
                         "done": true,
                         "removed": gone.name,
                         "feed_ids": gone.feeds,
-                        "search_ids": gone.searches,
-                        "undo": "create_folder with this name, feed_ids and search_ids puts it back as it was",
+                        "undo": "create_folder with this name and feed_ids puts it back as it was",
                     })),
                     None => Err("The reader has no folder with that id.".to_owned()),
                 }

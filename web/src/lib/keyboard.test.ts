@@ -86,7 +86,8 @@ describe("keyboard shortcuts", () => {
   it("stars with s, marks unread with m, marks all as read with Shift+A and undoes with u", () => {
     const read = createKeyReader();
     expect(read(press("s"), 0)).toEqual({ kind: "star" });
-    expect(read(press("l"), 0)).toEqual({ kind: "collect" });
+    // l added an article to a collection; collections are gone (decision 0174).
+    expect(read(press("l"), 0)).toBeUndefined();
     expect(read(press("m"), 0)).toEqual({ kind: "mark-unread" });
     expect(read(press("A"), 0)).toEqual({ kind: "mark-all-read" });
     expect(read(press("u"), 0)).toEqual({ kind: "undo" });
@@ -121,7 +122,7 @@ describe("keyboard shortcuts", () => {
   });
 
   it("lists every shortcut in SPEC.md in the cheat sheet", () => {
-    expect(SHORTCUTS).toHaveLength(33);
+    expect(SHORTCUTS).toHaveLength(31);
     expect(SHORTCUTS.map((shortcut) => shortcut.keys[0])).toEqual([
       "j",
       "n",
@@ -132,14 +133,12 @@ describe("keyboard shortcuts", () => {
       "c",
       "+",
       "s",
-      "l",
       "w",
       "h",
       "Esc",
       "g then u",
       "g then s",
       "g then a",
-      "g then r",
       "g then f",
       "g then ,",
       "Shift+J",

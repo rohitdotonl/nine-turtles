@@ -10,17 +10,15 @@ import { nameFor, type Route } from "./router";
 import { resultsTitle, type Scope } from "./search";
 import type { Library } from "./shapes";
 
-/** The feed, folder, saved search or collection the address names, those the reader has. */
+/** The feed or folder the address names, if the reader has it. */
 export type Places = {
   feed?: { title: string };
   folder?: { name: string };
-  search?: { name: string };
-  collection?: { name: string };
 };
 
 /** The place's own name, for the heading, the tab's title and the phone's Back button. */
 export function placeNameOf(places: Places): string | undefined {
-  return places.feed?.title ?? places.folder?.name ?? places.search?.name ?? places.collection?.name;
+  return places.feed?.title ?? places.folder?.name;
 }
 
 /** What the screen knows when naming the list. */
@@ -32,16 +30,13 @@ export type HeadingScene = {
   missing: Missing | undefined;
   /** Where the search whose results show looks, if results show. */
   results: Scope | undefined;
-  /** Feeds, folders and collections, to name where a search looks. */
+  /** Feeds and folders, to name where a search looks. */
   names: Library;
 };
 
-/**
- * The list's heading. A missing place says so first. Results show their own
- * heading, except on a saved search, which keeps its name.
- */
+/** The list's heading. A missing place says so first; results show their own heading. */
 export function headingFor(scene: HeadingScene): string {
   if (scene.missing) return NOT_FOUND[scene.missing];
-  if (scene.results && scene.under.kind !== "search") return resultsTitle(scene.results, scene.names);
+  if (scene.results) return resultsTitle(scene.results, scene.names);
   return nameFor(scene.under, scene.placeName);
 }

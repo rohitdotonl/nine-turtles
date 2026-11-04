@@ -414,8 +414,7 @@ pub async fn drop_later(
 /// When an unsubscribe is cleared for good and the reader chose to remove
 /// what they kept (`subscriptions.drop_kept`): their highlights and notes on
 /// the place's articles and their note on the person go, and its articles
-/// are unstarred, so `folders::clear` then removes them with the rest. Its
-/// collected articles stay: a collection is a shelf of its own.
+/// are unstarred, so `folders::clear` then removes them with the rest.
 pub async fn drop_kept(
     connection: &mut SqliteConnection,
     person: i64,

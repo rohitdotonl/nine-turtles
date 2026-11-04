@@ -7,6 +7,26 @@ mod common;
 
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 
+/// Opens the database and brings it up to structure change `version` only,
+/// for a test whose tables a later change removed (structure change 40,
+/// decision 0174, deleted collections, saved searches, Up Next and opening
+/// times, and the rules step 8 switched off).
+async fn upgraded_to(data_dir: &std::path::Path, version: i64) -> sqlx::SqlitePool {
+    let db = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(data_dir))
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(version, &db)
+        .await
+        .unwrap();
+    db
+}
+
 #[tokio::test]
 async fn adding_read_state_and_stars_keeps_every_feed_article_and_sign_in() {
     let data_dir = common::config().data_dir;
@@ -488,7 +508,7 @@ async fn adding_saved_searches_keeps_every_feed_folder_article_and_mark() {
     }
     old.close().await;
 
-    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let db = upgraded_to(&data_dir, 39).await;
     let count = |sql: &'static str| sqlx::query_scalar::<_, i64>(sql).fetch_one(&db);
     assert_eq!(count("SELECT COUNT(*) FROM feeds").await.unwrap(), 10);
     assert_eq!(count("SELECT COUNT(*) FROM folders").await.unwrap(), 2);
@@ -730,7 +750,7 @@ async fn giving_things_an_owner_makes_everything_the_owners_and_loses_nothing() 
     }
     old.close().await;
 
-    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let db = upgraded_to(&data_dir, 39).await;
     let count = |sql: &'static str| sqlx::query_scalar::<_, i64>(sql).fetch_one(&db);
     // One reader, the owner.
     assert_eq!(
@@ -1074,7 +1094,6 @@ async fn giving_each_reader_their_own_feeds_and_marks_keeps_every_one_as_the_own
         ("SELECT COUNT(*) FROM feed_folders", 2),
         ("SELECT COUNT(*) FROM websub", 1),
         ("SELECT COUNT(*) FROM rules WHERE feed_id = 1", 1),
-        ("SELECT COUNT(*) FROM saved_searches", 1),
     ] {
         assert_eq!(
             sqlx::query_scalar::<_, i64>(sql)
@@ -1554,7 +1573,7 @@ async fn remembering_what_was_opened_keeps_every_mark_and_opens_nothing() {
     }
     old.close().await;
 
-    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let db = upgraded_to(&data_dir, 39).await;
     let entries: Vec<(i64, bool, bool, i64, i64, Option<i64>)> = sqlx::query_as(
         "SELECT article_id, read, starred, read_marked_at, starred_marked_at, opened_at
          FROM entries ORDER BY article_id",
@@ -1600,7 +1619,7 @@ async fn adding_collections_keeps_every_entry_and_starts_with_none() {
     }
     old.close().await;
 
-    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let db = upgraded_to(&data_dir, 39).await;
     let entries: Vec<(i64, bool, bool, Option<i64>)> = sqlx::query_as(
         "SELECT article_id, read, starred, opened_at FROM entries ORDER BY article_id",
     )
@@ -1664,7 +1683,7 @@ async fn adding_podcasts_keeps_every_article_and_entry_and_makes_none_an_episode
     }
     old.close().await;
 
-    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let db = upgraded_to(&data_dir, 39).await;
     let articles: Vec<(i64, String, Option<String>)> =
         sqlx::query_as("SELECT id, title, episode_url FROM articles ORDER BY id")
             .fetch_all(&db)
@@ -2631,7 +2650,7 @@ async fn hiding_articles_about_keeps_every_rule_and_spreads_a_folders_rule_to_it
     }
     old.close().await;
 
-    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let db = upgraded_to(&data_dir, 39).await;
     type Line = (
         String,
         bool,
@@ -2685,4 +2704,108 @@ async fn hiding_articles_about_keeps_every_rule_and_spreads_a_folders_rule_to_it
         .await
         .unwrap();
     assert_eq!(pairs, 3);
+}
+
+#[tokio::test]
+async fn keeping_starred_deletes_what_is_gone_and_leaves_every_mark() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just after "Hide articles about…" (structure change 39).
+    // Reader 1 has three articles: one on the collection Soup, one starred
+    // and on Soup too, and one on no collection. Reader 2 has the first
+    // article too, on no collection of theirs. Reader 1 has a saved search,
+    // an opened article, an Up Next line, old keys and settings, and four
+    // rules: one that runs and three switched off in step 8.
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(39, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO people (id, owner, email, created_at) VALUES (2, 0, 'kai@example.com', 1)",
+        "INSERT INTO feeds (id, url, url_key, title, added_at) VALUES (1, 'u', 'u', 'Radio', 1)",
+        "INSERT INTO subscriptions (person_id, feed_id, title, added_at)
+         VALUES (1, 1, 'Radio', 1), (2, 1, 'Radio', 1)",
+        "INSERT INTO articles (id, feed_id, fingerprint, title, received_at, sort_at)
+         VALUES (1, 1, 'a', 'A', 1, 1), (2, 1, 'b', 'B', 2, 2), (3, 1, 'c', 'C', 3, 3)",
+        "INSERT INTO entries (person_id, article_id, feed_id, sort_at, read, starred,
+             starred_marked_at)
+         VALUES (1, 1, 1, 1, 1, 0, 0), (1, 2, 1, 2, 0, 1, 7), (1, 3, 1, 3, 0, 0, 0),
+                (2, 1, 1, 1, 0, 0, 0)",
+        "INSERT INTO collections (id, person_id, name, created_at) VALUES (1, 1, 'Soup', 0)",
+        "INSERT INTO collection_articles (collection_id, person_id, article_id, added_at)
+         VALUES (1, 1, 1, 0), (1, 1, 2, 0)",
+        "INSERT INTO saved_searches (person_id, name, query, created_at)
+         VALUES (1, 'Walks', '{\"words\":\"walking\"}', 0)",
+        "UPDATE entries SET opened_at = 5 WHERE person_id = 1 AND article_id = 3",
+        "INSERT INTO up_next (person_id, article_id, place) VALUES (1, 3, 1)",
+        "INSERT INTO person_settings (person_id, name, value)
+         VALUES (1, 'keys', '{\"star\":\"x\"}'), (1, 'mode', 'river'), (1, 'counts', 'off'),
+                (1, 'sort', 'oldest')",
+        "INSERT INTO rules (id, person_id, words, author, folder_id, action, created_at)
+         VALUES (1, 1, 'Sponsored', '', NULL, 'mute', 0), (2, 1, '', 'Ann', NULL, 'mute', 0),
+                (3, 1, 'Soup', '', 9, 'mute', 0), (4, 1, 'Soup', '', NULL, 'star', 0)",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let entries: Vec<(i64, i64, bool, bool, bool)> = sqlx::query_as(
+        "SELECT person_id, article_id, read, starred, starred_marked_at > 1000000000000
+         FROM entries ORDER BY person_id, article_id",
+    )
+    .fetch_all(&db)
+    .await
+    .unwrap();
+    assert_eq!(
+        entries,
+        [
+            // On Soup: as it was (nothing is carried over, the owner, 4 November 2026).
+            (1, 1, true, false, false),
+            // Already starred: as it was, its star's time too.
+            (1, 2, false, true, false),
+            // On no collection: unstarred, as it was.
+            (1, 3, false, false, false),
+            // Another reader's line for it: theirs, unstarred.
+            (2, 1, false, false, false),
+        ]
+    );
+    // Collections, saved searches, Up Next and opening times are gone.
+    let tables: Vec<String> = sqlx::query_scalar(
+        "SELECT name FROM sqlite_schema WHERE name IN
+             ('collections', 'collection_articles', 'saved_searches', 'up_next', 'entries_opened')",
+    )
+    .fetch_all(&db)
+    .await
+    .unwrap();
+    assert!(tables.is_empty(), "{tables:?}");
+    let opened: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM pragma_table_info('entries') WHERE name = 'opened_at'",
+    )
+    .fetch_one(&db)
+    .await
+    .unwrap();
+    assert_eq!(opened, 0);
+    // Only the rule that runs is left, and only the settings still read.
+    let rules: Vec<i64> = sqlx::query_scalar("SELECT id FROM rules ORDER BY id")
+        .fetch_all(&db)
+        .await
+        .unwrap();
+    assert_eq!(rules, [1]);
+    let settings: Vec<String> =
+        sqlx::query_scalar("SELECT name FROM person_settings WHERE person_id = 1 ORDER BY name")
+            .fetch_all(&db)
+            .await
+            .unwrap();
+    assert_eq!(settings, ["sort"]);
 }

@@ -4,8 +4,8 @@ description: Star the articles you want to keep or come back to. Starred article
 groupId: reading
 order: 3
 spec: 9
-updated: 2026-11-03
-related: [keep-articles-in-collections, download-everything, mark-read-or-unread]
+updated: 2026-11-04
+related: [search-everything, download-everything, mark-read-or-unread]
 ---
 
 <p class="lede">
@@ -26,8 +26,6 @@ Choose **Starred** in the sidebar, or press <kbd>G</kbd> then <kbd>S</kbd>.
 ## Good to know
 
 - Took a star off by mistake? Press <kbd>U</kbd> or **Undo**.
-- A star and a collection are separate: starring doesn't add an article to a
-  collection, and adding it to one doesn't star it. Use a star for "keep
-  this", and collections to sort what you keep.
+- Starred is the one place to keep articles.
 - Starred articles can be read without a connection: each device keeps the
   newest 200.

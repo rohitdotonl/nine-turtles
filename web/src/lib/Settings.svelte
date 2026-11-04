@@ -151,9 +151,6 @@
     { value: "starred", label: "Starred" },
     { value: "notes", label: "Notes" },
     { value: "all", label: "All" },
-    { value: "recent", label: "Recently read" },
-    { value: "searches", label: "Saved searches" },
-    { value: "collections", label: "Collections" },
   ];
 
   let sidebarMessage = $state("");
@@ -674,7 +671,7 @@
           {@render keepSwitch()}
           <ImportOpml {onImported} bind:lines={importLines} />
           <ImportStars {onImported} bind:lines={importLines} />
-          {#each [["/api/starred/export", "Export starred articles"], ["/api/collections/export", "Export collections"], ["/api/notes/export", "Export notes and highlights"]] as [href, label] (href)}
+          {#each [["/api/starred/export", "Export starred articles"], ["/api/notes/export", "Export notes and highlights"]] as [href, label] (href)}
             <a {href} download class="inset-row inset-action">{label}<span class="row-glyph"><Icon name="download" size={18} /></span></a>
           {/each}
         </div>
@@ -687,8 +684,7 @@
         <p class="inset-foot">
           OPML is the file feed readers use to move your feeds and folders between apps; export one now and then, and
           keep it somewhere safe. Starred articles are saved as a JSON Feed file, which other feed readers can open,
-          with each article's text, its original link and the feed it came from; collections the same way, each
-          article tagged with its collections' names. Notes and highlights are saved as one Markdown file. To bring your stars over from
+          with each article's text, its original link and the feed it came from. Notes and highlights are saved as one Markdown file. To bring your stars over from
           Inoreader, Feedly, Feedbin or another feed reader, import the JSON file it exports them in.
         </p>
       </section>

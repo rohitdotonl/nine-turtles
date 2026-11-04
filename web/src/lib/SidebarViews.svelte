@@ -1,6 +1,6 @@
 <!--
-  The sidebar's fixed lists: Unread, Starred, Notes, All, Recently read
-  (SPEC section 5), each with a small sign in the icon column. With Unread off
+  The sidebar's fixed lists: Unread, Starred, Notes and All (SPEC
+  section 5), each with a small sign in the icon column. With Unread off
   there's no Unread, and a list the reader hid steps aside, except All with Unread off,
   where it's home (as Unread, which can't be hidden, is otherwise).
 
@@ -31,7 +31,7 @@
     hidden: Hideable[];
   } = $props();
 
-  const ICONS = { unread: "dot", starred: "star", notes: "note", all: "stack", recent: "history" } as const;
+  const ICONS = { unread: "dot", starred: "star", notes: "note", all: "stack" } as const;
 
   let views = $derived(
     VIEWS.filter(

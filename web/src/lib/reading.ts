@@ -22,8 +22,6 @@ export type Reading = {
    * none of those. Read state is recorded either way (SPEC section 10).
    */
   unread: boolean;
-  /** The reader had keys of their own, now back to nine turtles' (step 5 of the owner's review), and hasn't been told. */
-  keysReset: boolean;
   hidden: Hideable[];
 };
 
@@ -37,21 +35,15 @@ export async function loadSettings(): Promise<Reading> {
     const body = await getJson("/api/settings");
     const sort = isRecord(body) && body.sort === "oldest" ? "oldest" : "newest";
     const unread = !(isRecord(body) && body.unread === false);
-    const keysReset = isRecord(body) && body.keys_reset === true;
     const hidden = isRecord(body) ? hiddenFrom(body.hidden) : [];
     rememberUnread(unread);
     rememberHidden(hidden);
     // The copy of a reader's own keys this device once kept (decision 0110) is no longer read (decision 0170).
     setDeviceText("nine-turtles.keys", null);
-    return { sort, unread, keysReset, hidden };
+    return { sort, unread, hidden };
   } catch {
-    return { sort: "newest", unread: lastUnread(), keysReset: false, hidden: lastHidden() };
+    return { sort: "newest", unread: lastUnread(), hidden: lastHidden() };
   }
-}
-
-/** The reader has been told their own keys are gone: the server removes them, and doesn't tell again. */
-export function saveKeysSeen(): Promise<void> {
-  return send("/api/settings", { keys_seen: true });
 }
 
 /** The hidden lists named, in one order; anything else is left out. */

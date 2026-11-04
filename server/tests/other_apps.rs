@@ -586,16 +586,15 @@ async fn apps_follow_unfollow_rename_and_file_feeds() {
 }
 
 #[tokio::test]
-async fn an_app_deleting_a_folder_leaves_rules_and_its_searches_as_the_screen_does() {
+async fn an_app_deleting_a_folder_leaves_rules_as_the_screen_does() {
     let owner = Owner::new().await;
-    let (status, made) = owner
+    let (status, _) = owner
         .post(
             "/api/folders",
             &json!({ "name": "Garden", "feeds": [owner.feed] }),
         )
         .await;
     assert_eq!(status, StatusCode::CREATED);
-    let folder = made["folder"]["id"].as_i64().unwrap();
     let (status, _) = owner
         .post(
             "/api/rules",
@@ -603,13 +602,6 @@ async fn an_app_deleting_a_folder_leaves_rules_and_its_searches_as_the_screen_do
         )
         .await;
     assert_eq!(status, StatusCode::OK);
-    let (status, _) = owner
-        .post(
-            "/api/saved-searches",
-            &json!({ "name": "Roses", "query": { "words": "roses", "scope": { "kind": "folder", "id": folder } } }),
-        )
-        .await;
-    assert_eq!(status, StatusCode::CREATED);
     let app = App::sign_in(&owner.base, &owner.make_app_password().await)
         .await
         .unwrap();
@@ -619,12 +611,10 @@ async fn an_app_deleting_a_folder_leaves_rules_and_its_searches_as_the_screen_do
         .await;
     assert_eq!(status, StatusCode::OK);
 
-    // The rule, for someone, carries on; the search looks in no folder.
+    // The rule, for someone, carries on.
     let rule = &owner.get("/api/rules").await["rules"][0];
     assert_eq!(rule["place_gone"], false);
     assert_eq!(rule["feed_id"], owner.feed);
-    let search = &owner.get("/api/saved-searches").await["searches"][0];
-    assert_eq!(search["query"]["scope"]["id"], 0);
 }
 
 #[tokio::test]

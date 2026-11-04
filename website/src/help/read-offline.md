@@ -33,8 +33,7 @@ undo, as usual. Everything you do is sent as soon as you're back online.
 
 ## What needs a connection
 
-Search, adding someone new, Settings, refreshing, Recently read and
-collections.
+Search, adding someone new, Settings, refreshing and the Notes list.
 
 ## Good to know
 

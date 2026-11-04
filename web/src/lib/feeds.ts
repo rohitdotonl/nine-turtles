@@ -89,10 +89,9 @@ function fold(text: string): string {
  * the place you're in, in the sidebar's order: folders A to Z, each with its
  * feeds while it's open, then the feeds in no folder. Feeds in a folded
  * folder are passed over, as you can't see them; a feed in two folders
- * counts once, where it's first listed. Folders, saved searches and Unread,
- * Starred and All aren't stops: from a folder the next feed is the first
- * listed after it, and from the places above the folders (Unread, Starred,
- * All, a saved search) Shift+J goes to the first feed and Shift+K to none.
+ * counts once, where it's first listed. Folders and Unread, Starred and All
+ * aren't stops: from a folder the next feed is the first listed after it,
+ * and from the places above the folders (Unread, Starred, All) Shift+J goes to the first feed and Shift+K to none.
  * At either end nothing happens: the list ends.
  */
 export function feedNextTo(library: Library, open: number[], here: { kind: string; id?: number }, step: 1 | -1): number | undefined {
@@ -266,16 +265,14 @@ export async function renameFolder(id: number, name: string): Promise<Refusal | 
   return (await change(`/api/folders/${id}`, { name })).refusal;
 }
 
-/** Deletes a folder. Answers the saved searches that looked in it, for Undo to hand back. */
-export async function deleteFolder(id: number): Promise<{ refusal?: Refusal; searches: number[] }> {
-  const { refusal, answer } = await change(`/api/folders/${id}/delete`, {});
-  const numbers = (list: unknown) => (Array.isArray(list) ? list.map(Number) : []);
-  return { refusal, searches: numbers(answer?.searches) };
+/** Deletes a folder (never its feeds). */
+export async function deleteFolder(id: number): Promise<Refusal | undefined> {
+  return (await change(`/api/folders/${id}/delete`, {})).refusal;
 }
 
-/** Creates a folder with these feeds (and saved searches) in it: Undo for deleting one. */
-export async function createFolder(name: string, feeds: number[], searches: number[] = []): Promise<Refusal | undefined> {
-  return (await change("/api/folders", { name, feeds, searches })).refusal;
+/** Creates a folder with these feeds in it: Undo for deleting one. */
+export async function createFolder(name: string, feeds: number[]): Promise<Refusal | undefined> {
+  return (await change("/api/folders", { name, feeds })).refusal;
 }
 
 /** What an edit page says when a change wasn't made. */

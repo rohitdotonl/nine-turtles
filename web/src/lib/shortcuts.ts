@@ -14,12 +14,10 @@ import { parse, type Route } from "./router";
 export type KeyScene = {
   /** Unread off: there's no Unread view and nothing to mark as read by hand. */
   unreadOff: boolean;
-  /** An article list is the place (a view, feed, folder, search or collection), not a page or sheet. */
+  /** An article list is the place (a view, feed or folder), not a page or sheet. */
   onList: boolean;
   /** A search's results are showing. */
   searching: boolean;
-  /** Recently read, in its own order, with no search showing: its menu has no marks. */
-  ownOrder: boolean;
   /** Which panes are in view, and whether the article has the whole screen. */
   sidebar: boolean;
   list: boolean;
@@ -60,7 +58,6 @@ export type KeyHands = {
   markAllRead(): void;
   toggleFolder(id: number): void;
   star(): void;
-  collect(): void;
   /** In the open article: write back to whoever wrote it (SPEC section 37), highlight the words chosen, or write a note (SPEC section 42). */
   inArticle(what: "write-back" | "highlight" | "note"): void;
   markUnread(): void;
@@ -84,11 +81,11 @@ export function keyIsOurs(action: Action, key: string, scene: KeyScene): boolean
 
 /**
  * Mark all as read works where the list's More menu offers it:
- * not with Unread off, not in Recently read, and only with the list
+ * not with Unread off, and only with the list
  * or its article in view.
  */
 function canMarkAll(scene: KeyScene): boolean {
-  return !scene.unreadOff && scene.onList && !scene.ownOrder && (scene.list || scene.article || scene.reading);
+  return !scene.unreadOff && scene.onList && (scene.list || scene.article || scene.reading);
 }
 
 /** Does what a shortcut means here, or nothing where it doesn't apply. */
@@ -165,9 +162,6 @@ export function carryOut(action: Action, scene: KeyScene, hands: KeyHands) {
       break;
     case "star":
       if (scene.selected && scene.onList) hands.star();
-      break;
-    case "collect":
-      if (scene.selected && scene.onList) hands.collect();
       break;
     case "write-back":
     case "highlight":

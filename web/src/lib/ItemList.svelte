@@ -38,10 +38,10 @@
   import type { Order } from "./reading";
   import { firstShowing, type Notice } from "./feeds";
   import { sourceOf, type OneSource } from "./people";
-  import { endOfList, listArticles, markedAllMessage, newItemsMessage, newItemsWaiting, noteOpened } from "./lists";
+  import { endOfList, listArticles, markedAllMessage, newItemsMessage, newItemsWaiting } from "./lists";
   import { markRead, markStarred } from "./saving";
   import { prefetch } from "./articles";
-  import { dayHeading, when } from "./times";
+  import { when } from "./times";
   import { hugEllipsis } from "./hug";
   import RowKind from "./RowKind.svelte";
   import { boldParts } from "./search";
@@ -152,19 +152,6 @@
 
   let selectedIndex = $derived(selected ? articles.findIndex((article) => article.id === selected?.id) : -1);
 
-  /**
-   * Recently read only: a quiet heading where the day each was opened
-   * changes ("Today", "Yesterday", "Monday", "12 October"; SPEC section 5),
-   * worked out against the moment the list loaded, so they never change
-   * while it's on screen.
-   */
-  let loadedAt = $state(new Date());
-  let days = $derived(
-    "view" in source && source.view === "recent"
-      ? articles.map((article) => (article.opened === undefined ? "" : dayHeading(article.opened, loadedAt)))
-      : [],
-  );
-
   async function load(after: string | null) {
     if (busy) return;
     busy = true;
@@ -176,7 +163,6 @@
     try {
       const page = await listArticles(source, order, after);
       articles = after === null ? page.articles : [...articles, ...page.articles];
-      if (after === null) loadedAt = new Date();
       next = page.next;
       if (after === null) {
         latest = page.latest;
@@ -234,7 +220,6 @@
         Object.assign(old, fresh);
         return old;
       });
-      loadedAt = new Date();
       next = page.next;
       latest = page.latest;
       topLoads++;
@@ -460,22 +445,6 @@
     actions++;
   }
 
-  /**
-   * Something undoable done elsewhere (a Save in "Add to collection" that
-   * took the article off a collection): the line says what, and Undo calls
-   * `reverse`, saying its problem if it couldn't.
-   */
-  export function offer(message: string, reverse: () => Promise<string | undefined>) {
-    did(message, () => {
-      reverse().then(
-        (problem) => {
-          if (problem) say(problem);
-        },
-        () => say(UNDO_FAILED),
-      );
-    });
-  }
-
   /** A failed save is dealt with: its message goes, back to the last action's Undo if it's still there. */
   function settled() {
     line = undoLast ? undoMessage : "";
@@ -488,9 +457,8 @@
    */
   let spoken = $state("");
 
-  /** The reading area showed this article: it counts as read (not an undoable action), and joins Recently read. */
+  /** The reading area showed this article: it counts as read (not an undoable action). */
   export function shown(article: Article) {
-    noteOpened(article.id);
     if (article.read) return;
     setRead([article], true, "An article couldn't be marked as read. It's still unread.");
     // Said at once, like everything on screen (SPEC section 25); if saving
@@ -586,10 +554,6 @@
     {#each articles as article, index (article.id)}
       {@const current = index === selectedIndex}
       <li>
-        {#if days[index] && days[index] !== days[index - 1]}
-          <!-- Recently read's day heading: small, semibold and muted, as the sidebar's section names are. -->
-          <h3 class="list-day">{days[index]}</h3>
-        {/if}
         <!-- Only one row is a Tab stop (the selected one, or the first); the others are reached with j, k or the arrows. -->
         <button
           type="button"

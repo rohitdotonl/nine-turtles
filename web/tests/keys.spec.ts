@@ -3,25 +3,10 @@ import { FEED_SITE, FEEDS_APP } from "../playwright.config";
 import { appReady, follow, openReadingRoom, signIn, tabTo } from "./screens";
 
 // The `?` list's foot (SPEC section 19), done with the keyboard alone, and
-// the keys Home and End, Shift+J and Shift+K, g then f and g then ,. Every
-// test uses the one owner's account, so the settings that say a reader once
-// had keys of their own are answered here and never saved.
+// the keys Home and End, Shift+J and Shift+K, g then f and g then ,.
 
 const article = (page: Page) => page.getByRole("region", { name: "Article" });
 const sheet = (page: Page) => page.getByRole("dialog", { name: "Keyboard shortcuts" });
-
-/** Answers this page's settings itself, as for a reader who had keys of their own; counts the "seen" it's sent. */
-async function keysWereChanged(page: Page): Promise<{ seen: number }> {
-  const told = { seen: 0 };
-  await page.route("**/api/settings", (route) => {
-    if (route.request().method() === "POST") {
-      const body = JSON.parse(route.request().postData() ?? "{}") as { keys_seen?: boolean };
-      if (body.keys_seen) told.seen++;
-    }
-    return route.fulfill({ json: { sort: "newest", unread: true, keys_reset: told.seen === 0, hidden: [] } });
-  });
-  return told;
-}
 
 async function signedIn(page: Page) {
   await page.setViewportSize({ width: 1280, height: 800 });
@@ -59,34 +44,12 @@ test.describe("on a wide window", () => {
     await tabTo(page, help);
     await expect(help).toBeFocused();
     await expect(sheet(page).getByRole("button", { name: /Change keys/ })).toHaveCount(0);
-    await expect(sheet(page).getByTestId("keys-reset")).toHaveCount(0);
-  });
-
-  test("a reader who had keys of their own is told once, at the list's foot, that they're back to these", async ({ page }) => {
-    const told = await keysWereChanged(page);
-    await signedIn(page);
-    await page.keyboard.press("?");
-    await expect(sheet(page).getByTestId("keys-reset")).toHaveText("You can't choose your own keys any more, so every shortcut is back to the key shown here. If you miss it, write to hello@nineturtles.app.");
-    await expect.poll(() => told.seen).toBe(1);
-    await page.keyboard.press("Escape");
-    await expect(sheet(page)).toBeHidden();
-    // The dialog says it closed a moment after it's hidden: until then, ? is still the open list's.
-    await expect(async () => {
-      await page.keyboard.press("?");
-      await expect(sheet(page)).toBeVisible({ timeout: 500 });
-    }).toPass();
-    await expect(sheet(page).getByTestId("keys-reset")).toHaveCount(0);
-    // Nor on coming back.
-    await page.keyboard.press("Escape");
-    await page.reload();
-    await appReady(page);
-    await page.keyboard.press("?");
-    await expect(sheet(page)).toBeVisible();
-    await expect(sheet(page).getByTestId("keys-reset")).toHaveCount(0);
   });
 
   test("Home and End choose the first and last article; Shift+J and Shift+K move between feeds; g then f and g then , go to Your feeds and Settings", async ({ page }) => {
     await signedIn(page);
+    // Two of this test's own, so the sidebar has a next person whatever else it holds.
+    await openBlog(page);
     const blog = await openBlog(page);
     await page.keyboard.press("End");
     await expect(row(page, 1)).toHaveAttribute("aria-current", "true");
@@ -103,7 +66,8 @@ test.describe("on a wide window", () => {
     const first = page.url();
     await page.keyboard.press("Shift+J");
     await expect(page).not.toHaveURL(first);
-    await expect(page).toHaveURL(/\/people\/\d+$/);
+    // The next row may be a person or a publication, whatever other tests followed meanwhile.
+    await expect(page).toHaveURL(/\/(people|publications)\/\d+$/);
     await page.keyboard.press("Shift+K");
     await expect(page).toHaveURL(first);
 

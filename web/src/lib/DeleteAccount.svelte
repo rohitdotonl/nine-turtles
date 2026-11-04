@@ -14,8 +14,8 @@
 
   With `data`, it is "Delete your data?" instead (decision 0117), opened by
   every reader, the owner too: the same downloads first, then Delete data,
-  which empties the account (feeds, folders, articles, stars, collections,
-  saved searches, rules) for good and keeps the reader signed in. This
+  which empties the account (feeds, folders, articles, stars, notes,
+  rules) for good and keeps the reader signed in. This
   device's saved copies go too, and the app starts again, empty.
 -->
 <script lang="ts">
@@ -86,10 +86,10 @@
   <div class={["flex flex-col gap-5", !sheet && "flex-1"]}>
     <p id="delete-account-help">
       {#if data}
-        Your feeds, folders, read and starred articles, collections, saved searches and rules go for good. This can't
+        Your feeds, folders, read and starred articles, notes and rules go for good. This can't
         be undone. Your account stays: you stay signed in, with the same email, password and settings.
       {:else}
-        Your feeds, folders, read and starred articles, collections, saved searches, rules, app password and passkeys go
+        Your feeds, folders, read and starred articles, notes, rules, app password and passkeys go
         for good, along with your email and password. This can't be undone.
       {/if}
     </p>
@@ -102,12 +102,9 @@
         <a href="/api/starred/export" download class="inset-row inset-action"
           >Export starred articles<span class="row-glyph"><Icon name="download" size={18} /></span></a
         >
-        <a href="/api/collections/export" download class="inset-row inset-action"
-          >Export collections<span class="row-glyph"><Icon name="download" size={18} /></span></a
-        >
       </div>
       <p class="field-help">
-        Your feeds and folders as an OPML file, and your starred articles and collections as JSON Feed files.
+        Your feeds and folders as an OPML file, and your starred articles as a JSON Feed file.
       </p>
     </div>
     <p role="status" class={["flex items-start gap-1.5 text-small text-danger", !message && "sr-only"]}>

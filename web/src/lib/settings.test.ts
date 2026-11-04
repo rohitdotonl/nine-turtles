@@ -6,7 +6,6 @@ const server = vi.hoisted(() => ({
   saveUnread: vi.fn(),
   saveSort: vi.fn(),
   saveHidden: vi.fn(),
-  saveKeysSeen: vi.fn(),
 }));
 
 vi.mock("./reading", async (actual) => ({
@@ -27,11 +26,11 @@ function later<T>() {
   return { promise, resolve, reject };
 }
 
-const ON_THE_SERVER: Reading = { sort: "oldest", unread: false, keysReset: true, hidden: ["recent"] };
+const ON_THE_SERVER: Reading = { sort: "oldest", unread: false, hidden: ["all"] };
 
 beforeEach(() => {
   vi.clearAllMocks();
-  for (const save of [server.saveUnread, server.saveSort, server.saveHidden, server.saveKeysSeen]) save.mockResolvedValue(undefined);
+  for (const save of [server.saveUnread, server.saveSort, server.saveHidden]) save.mockResolvedValue(undefined);
 });
 
 describe("the reading settings", () => {
@@ -40,18 +39,7 @@ describe("the reading settings", () => {
     const settings = new ReadingSettings();
     expect(settings.sort).toBeUndefined();
     await settings.load();
-    expect([settings.unread, settings.sort, settings.hidden]).toEqual([false, "oldest", ["recent"]]);
-    expect(settings.keysReset).toBe(true);
-  });
-
-  it("tell the reader once that their own keys are gone, on every device", async () => {
-    server.loadSettings.mockResolvedValue(ON_THE_SERVER);
-    const settings = new ReadingSettings();
-    await settings.load();
-    settings.keysSeen();
-    settings.keysSeen();
-    expect(settings.keysReset).toBe(false);
-    expect(server.saveKeysSeen).toHaveBeenCalledTimes(1);
+    expect([settings.unread, settings.sort, settings.hidden]).toEqual([false, "oldest", ["all"]]);
   });
 
   it("keep a change the reader made while the first answer was on its way", async () => {
@@ -86,7 +74,7 @@ describe("the reading settings", () => {
     saving.reject(new Error("offline"));
     await expect(hiding).rejects.toThrow("not saved");
     expect(settings.unread).toBe(false);
-    expect(settings.hidden).toEqual(["recent"]);
+    expect(settings.hidden).toEqual(["all"]);
   });
 
   it("show a change at once, and go back to what the server has when it can't be saved", async () => {

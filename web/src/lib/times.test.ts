@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dayHeading, pausedSince, when } from "./times";
+import { pausedSince, when } from "./times";
 
 describe("article times", () => {
   const now = new Date(2026, 9, 23, 18, 0);
@@ -19,20 +19,3 @@ describe("article times", () => {
   });
 });
 
-describe("Recently read's day headings", () => {
-  // Tuesday 27 October 2026, mid-afternoon, on this computer's clock.
-  const now = new Date(2026, 9, 27, 15, 30);
-  const at = (year: number, month: number, day: number, hour = 12) => new Date(year, month, day, hour).getTime() / 1000;
-  it("say Today and Yesterday, then the weekday for the last week, then the date", () => {
-    expect(dayHeading(at(2026, 9, 27, 0), now)).toBe("Today");
-    expect(dayHeading(at(2026, 9, 26, 23), now)).toBe("Yesterday");
-    expect(dayHeading(at(2026, 9, 26, 0), now)).toBe("Yesterday");
-    expect(dayHeading(at(2026, 9, 25), now)).toBe("Sunday");
-    expect(dayHeading(at(2026, 9, 21), now)).toBe("Wednesday");
-    expect(dayHeading(at(2026, 9, 20), now)).toBe("20 October");
-    expect(dayHeading(at(2025, 11, 31), now)).toBe("31 December 2025");
-  });
-  it("count a time a moment ahead of this device's clock as today", () => {
-    expect(dayHeading(now.getTime() / 1000 + 60, now)).toBe("Today");
-  });
-});

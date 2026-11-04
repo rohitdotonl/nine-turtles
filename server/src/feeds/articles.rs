@@ -118,7 +118,7 @@ pub(super) async fn read_several(
 /// article, its feed and the reader's subscription to it (whose title is
 /// their name for the feed). Followed by the reader. Every list that shows
 /// articles with their text uses it: the reading area, sync apps
-/// (`greader`) and the starred and collections exports.
+/// (`greader`) and the starred export.
 macro_rules! from_entries {
     () => {
         " FROM entries CROSS JOIN articles ON articles.id = entries.article_id

@@ -20,8 +20,8 @@
 //! unhiding it (or marking it unread) brings it back, unread.
 //!
 //! Rules from before step 8 that had an author, starred or marked read, or
-//! applied to a folder are kept in the database but never shown or run
-//! (`RULES` reads only the others): what they did stays done.
+//! applied to a folder were deleted by structure change 40 (decision 0174);
+//! what they did stays done. `RULES` still reads only the kind made now.
 
 use std::collections::HashSet;
 

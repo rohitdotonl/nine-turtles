@@ -24,9 +24,6 @@
   import WhoPage from "./WhoPage.svelte";
   import { placeLabels, placesOf, placesWatch, rowFor } from "./people";
   import FailingLine from "./FailingLine.svelte";
-  import EditSearch from "./EditSearch.svelte";
-  import AddToCollection from "./AddToCollection.svelte";
-  import RenameCollection from "./RenameCollection.svelte";
   import ItemList from "./ItemList.svelte";
   import PageHead from "./PageHead.svelte";
   import Sheet from "./Sheet.svelte";
@@ -57,9 +54,6 @@
   import { sharedAddress } from "./share";
   import { followTitle } from "./follow";
   import { scopeFor, scopeName, searchParams, searchedTerms } from "./search";
-  import { sameQuery, type SavedSearch } from "./saved";
-  import type { Collection, CollectionChange } from "./collections";
-  import { CollectionSheets } from "./collecting.svelte";
   import { Searching } from "./searching.svelte";
   import { LoadedLibrary } from "./library.svelte";
   import { emptyText, insteadOfList, missingFrom, nothingFound, type Found } from "./listWording";
@@ -100,8 +94,7 @@
   /** Where the app opens: Unread, or All with Unread off. */
   let home: Route = $derived({ kind: "view", view: homeView(settings.unread) });
   const parsed = parse(location.pathname);
-  // "Save search" saves the search on screen: an address alone has none, so it opens the app's home.
-  const asked: Route = parsed.kind === "save-search" ? { kind: "view", view: "unread" } : parsed;
+  const asked: Route = parsed;
   /** The address was "/", Unread or unknown: the app's home, which depends on whether Unread is on. */
   const openedHome = asked.kind === "view" && asked.view === "unread";
   const start = homeFor(asked, untrack(() => settings.unread));
@@ -127,12 +120,8 @@
       history.replaceState(history.state, "", pathFor(next));
     });
   });
-  /** The feeds, folders, saved searches and collections (library.svelte.ts). A saved search opened from its address (or its Edit address) runs once it's known. */
-  const library = new LoadedLibrary(() => {
-    if (under.kind === "search" && !searching.shown && currentSearch) resetSearch();
-  });
-  /** "Add to collection" and a collection's "Rename…" (collecting.svelte.ts, decision 0108). */
-  const collectionSheets = new CollectionSheets();
+  /** The feeds and folders (library.svelte.ts). */
+  const library = new LoadedLibrary();
   /** What's typed in the sidebar search. */
   let search = $state("");
   /** What the next list's line says on arrival (after unsubscribing or deleting a folder). */
@@ -191,8 +180,8 @@
   let listToggle: HTMLButtonElement | undefined = $state();
 
   /**
-   * On a window wide enough for the list, the short tasks (adding a feed, editing, saving a
-   * search, "New to feeds?"; `isOver`) open as a sheet over the place you were, which stays in view.
+   * On a window wide enough for the list, the short tasks (adding a feed, editing a folder,
+   * "New to feeds?"; `isOver`) open as a sheet over the place you were, which stays in view.
    */
   let sheet = $derived(!phone && isOver(route));
   /** Where the list and article come from: under a sheet, the place it opened over (navigation.ts). */
@@ -210,11 +199,7 @@
       ? { feed: under.id }
       : under.kind === "folder"
         ? { folder: under.id }
-        : under.kind === "collection"
-          ? { collection: under.id }
-          : under.kind === "search"
-            ? { view: "all" }
-            : { view: under.kind === "view" ? under.view : homeView(settings.unread) },
+        : { view: under.kind === "view" ? under.view : homeView(settings.unread) },
   );
   /** The list's identity: a new one is loaded when it changes. */
 
@@ -241,37 +226,20 @@
       ? library.folders.find((folder) => folder.id === place.id)
       : undefined;
   });
-  let currentSearch = $derived.by(() => {
-    const place = under.kind === "search" ? under : route;
-    return place.kind === "search" || place.kind === "edit-search" ? library.searches.find((search) => search.id === place.id) : undefined;
-  });
-  let currentCollection = $derived(under.kind === "collection" ? library.collections.find((each) => each.id === under.id) : undefined);
-  /** An edit screen whose feed, folder or saved search is found: `editor` draws it, as a sheet or (on a phone) a page. */
-  let editing = $derived(
-    (route.kind === "save-search" && searching.saving !== undefined) ||
-      (route.kind === "edit-search" && currentSearch !== undefined) ||
-      (route.kind === "edit-folder" && currentFolder !== undefined),
-  );
-  /** A sheet is actually showing (an edit address for a feed, folder or saved search you don't have shows none). */
+  /** An edit screen whose folder is found: `editor` draws it, as a sheet or (on a phone) a page. */
+  let editing = $derived(route.kind === "edit-folder" && currentFolder !== undefined);
+  /** A sheet is actually showing (an edit address for a folder you don't have shows none). */
   let sheetShown = $derived(sheet && (route.kind === "add-feed" || route.kind === "new-to-feeds" || editing));
-  /** The feed's, folder's or saved search's name, for the heading and the tab's title. */
   let listKey = $derived(`${pathFor(under)} ${settings.sort} ${searching.shown ? JSON.stringify(searchParams(searching.shown)) : ""}`);
-  let placeName = $derived(placeNameOf({ feed: library.shownAs(currentFeed), folder: currentFolder, search: currentSearch, collection: currentCollection }));
-  /** On a saved search, the search field no longer holds what was saved: Escape puts it back. */
-  let tweaked = $derived(route.kind === "search" && currentSearch !== undefined && !sameQuery(searching.query, currentSearch.query));
+  /** The feed's or folder's name, for the heading and the tab's title. */
+  let placeName = $derived(placeNameOf({ feed: library.shownAs(currentFeed), folder: currentFolder }));
   /** What the screen has found for the place on screen, for the words an empty or missing place shows. */
   let found: Found = $derived({
     feeds: library.feeds !== undefined,
     feed: currentFeed !== undefined,
     folder: currentFolder !== undefined,
-    search: currentSearch !== undefined,
-    collection: currentCollection !== undefined,
-    searchesLoaded: library.searchesLoaded,
-    searchesFailed: library.searchesFailed,
-    collectionsLoaded: library.collectionsLoaded,
-    collectionsFailed: library.collectionsFailed,
   });
-  /** A feed, folder, saved search or collection address that names none you have. */
+  /** A feed or folder address that names none you have. */
   let missing = $derived(missingFrom(under, found));
   /** The line the list area shows instead of a list, if any. */
   let listInstead = $derived(insteadOfList(under, found));
@@ -352,10 +320,7 @@
     return {
       unreadOff,
       searching: searching.shown !== undefined,
-      ownOrder: under.kind === "view" && under.view === "recent",
       sort: settings.sort,
-      savedSearch: under.kind === "search" ? currentSearch?.id : undefined,
-      collection: currentCollection,
       feed: currentFeed?.id,
       feedName: placeName,
       folder: currentFolder?.id,
@@ -369,10 +334,7 @@
     refresh: () => itemList?.refresh(),
     changeSort: (next) => settings.changeSort(next),
     say: (message) => itemList?.say(message),
-    holdSearch: () => searching.holdForSaving(),
     go: (place) => go(place),
-    renameCollection: (collection) => collectionSheets.rename(collection, document.activeElement),
-    deleteCollection: (collection) => void removeCollection(collection),
   };
 
   onMount(() => {
@@ -402,12 +364,7 @@
 
     // The browser's Back and Forward, and on phones the system back gesture.
     const back = () => {
-      let next = parse(location.pathname);
-      // Back to "Save search" after it was used: there's nothing to save now, so the place it was over.
-      if (next.kind === "save-search" && !searching.saving) {
-        next = lastPlace;
-        history.replaceState(history.state, "", pathFor(next));
-      }
+      const next = parse(location.pathname);
       // Back or Forward onto a page opened from its parent: closing it is a step back again.
       cameFromSettings = stepOf(history.state)?.fromParent === true;
       const move = moveTo({ route, under, phone }, next);
@@ -460,8 +417,6 @@
         if (now && now !== opening && (at === opening || at === document.body || at === null)) now.focus();
       });
     });
-    library.loadSearches();
-    library.loadCollections();
     void settings.load().then(() => {
       keeper.now();
       // This device last saw Unread off, but it's on now (changed on
@@ -577,8 +532,6 @@
     // A feed or folder added elsewhere (another tab, another device) isn't in the list yet.
     if (next.kind === "feed" && !library.feeds?.some((feed) => feed.id === next.id)) loadFeeds();
     if (next.kind === "folder" && !library.folders.some((folder) => folder.id === next.id)) loadFeeds();
-    if (next.kind === "search" && !library.searches.some((search) => search.id === next.id)) library.loadSearches();
-    if (next.kind === "collection" && !library.collections.some((collection) => collection.id === next.id)) library.loadCollections();
     // On a phone-narrow window the sidebar is the home screen; choosing a
     // place shows it instead.
     layout.showHome(false);
@@ -623,48 +576,6 @@
   /** Escape on a person's page goes back to their list; on Edit, to the page; on a source's settings, to Edit. */
   function whoBack() {
     if (isWho(route)) go({ kind: route.kind === "about" ? "feed" : route.kind === "edit-feed" ? "about" : "edit-feed", id: route.id });
-  }
-
-  /** Back from "Save search" or "Edit saved search", saved or not. A new saved search opens. */
-  function searchSaved(saved?: SavedSearch) {
-    // Used: Back to "Save search" later finds nothing to save, and opens the place it was over.
-    searching.saving = undefined;
-    if (saved) library.searchSaved(saved);
-    if (saved && route.kind === "save-search") {
-      go({ kind: "search", id: saved.id });
-      return;
-    }
-    if (phone && steps.cameFrom("list")) steps.goBack();
-    else if (sheetShown) steps.closeSheet();
-    else if (route.kind === "edit-search") go({ kind: "search", id: route.id });
-    else go(lastPlace);
-  }
-
-  /** Deletes a saved search (never an article), then shows Unread (All with Unread off) with "Deleted … · Undo". */
-  async function deleteSearch(saved: SavedSearch): Promise<string | undefined> {
-    const done = await library.deleteSearch(saved);
-    if (typeof done === "string") return done;
-    searching.saving = undefined;
-    go(home, done);
-    return undefined;
-  }
-
-  /** "Add to collection…" or l: the sheet of the reader's collections for this article (decision 0108). */
-  function openCollecting(article: Article) {
-    collectionSheets.collect(article, document.activeElement);
-  }
-
-  /** "Add to collection" closed: a Save that took the article off a collection says so in the list's line, with Undo. */
-  function collectingClosed(change?: CollectionChange) {
-    const line = collectionSheets.closedCollecting(change, library.collections);
-    if (line) itemList?.offer(line.message, line.undo);
-  }
-
-  /** Deletes a collection (never an article), then shows Unread (All with Unread off) with "Deleted … · Undo". */
-  async function removeCollection(collection: Collection) {
-    const done = await library.deleteCollection(collection);
-    if (typeof done === "string") itemList?.say(done);
-    else go(home, done);
   }
 
   /** Unsubscribes, then shows Unread (All with Unread off) with "Unsubscribed from … · Undo". */
@@ -898,15 +809,9 @@
     itemList?.focusSelected();
   }
 
-  /** Search starts afresh, limited to where you are; on a saved search, as it was saved. */
+  /** Search starts afresh, limited to where you are. */
   function resetSearch() {
-    searching.reset(route, savedHere());
-  }
-
-  /** The saved search that runs here. `under`: the saved search under its Edit sheet runs too. */
-  function savedHere(): SavedSearch | undefined {
-    const place = under;
-    return place.kind === "search" ? library.searches.find((search) => search.id === place.id) : undefined;
+    searching.reset(route);
   }
 
   /** `/`: into the search field, from wherever you are; Escape comes back here. */
@@ -926,7 +831,7 @@
 
   /** Escape: search closes, the place's own list returns, and the keyboard goes back where it was. */
   function closeSearch() {
-    const back = searching.close(route, savedHere());
+    const back = searching.close(route);
     queueMicrotask(() => {
       if (back instanceof HTMLElement && back.isConnected && back !== document.body) back.focus();
       else headings.list?.focus();
@@ -938,10 +843,8 @@
     else if (route.kind === "settings" || route.kind === "add-feed" || route.kind === "new-to-feeds") closePage();
     else if (route.kind === "edit-folder") edited(false);
     else if (isWho(route)) whoBack();
-    else if (route.kind === "save-search" || route.kind === "edit-search") searchSaved();
     else if (reading || (selected && inArticle())) backToList();
-    else if (route.kind === "search" ? tweaked || document.activeElement?.closest("search") : searching.open || document.activeElement?.closest("search"))
-      closeSearch();
+    else if (searching.open || document.activeElement?.closest("search")) closeSearch();
     else if (phone && !panes.sidebar) steps.back("home");
   }
 
@@ -951,7 +854,6 @@
       unreadOff,
       onList: isList(route),
       searching: searching.shown !== undefined,
-      ownOrder: route.kind === "view" && route.view === "recent" && !searching.shown,
       sidebar: panes.sidebar,
       list: panes.list,
       article: panes.article,
@@ -985,7 +887,6 @@
     markAllRead: () => itemList?.markAllRead(),
     toggleFolder: (id) => sidebarFeeds?.toggleFolder(id),
     star: () => itemList?.toggleStar(),
-    collect: () => selected && openCollecting(selected),
     inArticle: (what) => articleView?.act(what),
     markUnread: () => itemList?.markUnread(),
     undo: () => itemList?.undo(),
@@ -1115,8 +1016,6 @@
           bind:this={sidebarFeeds}
           feeds={library.rows ?? []}
           folders={library.folders}
-          searches={settings.hidden.includes("searches") ? [] : library.searches}
-          collections={settings.hidden.includes("collections") ? [] : library.collections}
           {route}
           {search}
           {follow}
@@ -1293,7 +1192,7 @@
           <!-- A column, so the floating note can sit at the pane's foot even under a short list. -->
           <div use:edge class="scroller relative flex min-h-0 flex-1 scroll-pb-20 flex-col overflow-y-auto pt-2 pr-[var(--list-end)] pb-6 pl-[var(--list-start)]">
             {#if library.feeds && library.feeds.length > 0 && !missing && (!phone || searching.open)}
-              <SearchBar bind:this={searchBar} query={searching.query} feeds={library.rows ?? []} folders={library.folders} collections={library.collections} here={scopeFor(under)} found={listFound} {unreadOff} onChange={(next, now) => searching.changed(next, now)} />
+              <SearchBar bind:this={searchBar} query={searching.query} feeds={library.rows ?? []} folders={library.folders} here={scopeFor(under)} found={listFound} {unreadOff} onChange={(next, now) => searching.changed(next, now)} />
             {/if}
             {#if listInstead}
               <p class="mt-4">{listInstead}</p>
@@ -1308,7 +1207,7 @@
               -->
               <!-- The list's 28px dot gutter (decision 0054) is for rows: the welcome steps back out to the 20px margin. -->
               <div class={phone ? "mt-[5.5rem] ml-[calc(1.25rem-var(--list-start))] flex" : "mt-8 flex justify-center"}>{@render welcome(phone)}</div>
-            {:else if library.feeds !== undefined && settings.sort !== undefined && (under.kind !== "search" || library.searchesLoaded) && (under.kind !== "collection" || library.collectionsLoaded)}
+            {:else if library.feeds !== undefined && settings.sort !== undefined}
               {#if under.kind === "feed" && !searching.shown && currentFeed}
                 <!-- A feed that isn't working says so above its list, with Find new address (decision 0106). -->
                 <FailingLine
@@ -1358,7 +1257,6 @@
               bind:preferences
               onStar={() => itemList?.toggleStar()}
               onMarkUnread={() => itemList?.markUnread()}
-              onCollect={() => openCollecting(selected!)}
               onHide={hideFrom}
               beforeToolbar={nowPlayingAboveToolbar}
               phone={phone
@@ -1395,22 +1293,7 @@
   <NowPlaying onOpen={openEpisode} bottom={false} stepAside />
 {/snippet}
 
-<CheatSheet bind:open={cheatSheetOpen} {unreadOff} keysReset={settings.keysReset} onKeysSeen={() => settings.keysSeen()} />
-
-{#if collectionSheets.collecting}
-  <AddToCollection article={collectionSheets.collecting} collections={library.collections} onMade={(made) => library.collectionMade(made)} onClose={collectingClosed} />
-{:else if collectionSheets.renaming}
-  {#key collectionSheets.renaming.id}
-    <RenameCollection
-      collection={collectionSheets.renaming}
-      onSaved={(name) => {
-        if (collectionSheets.renaming) library.collectionRenamed(collectionSheets.renaming.id, name);
-        collectionSheets.closed();
-      }}
-      onCancel={() => collectionSheets.closed()}
-    />
-  {/key}
-{/if}
+<CheatSheet bind:open={cheatSheetOpen} {unreadOff} />
 
 {#if sheet && tasking}
   <!-- Keyed so one task following the other opens a fresh sheet: the keyboard lands again and no form state lingers. -->
@@ -1460,22 +1343,6 @@
         onCancel={() => edited(false)}
         onDelete={() => deleteThis(currentFolder!)}
         onPerson={(name) => personFrom({ ...currentFolder!, name })}
-      />
-    {/key}
-  {:else if route.kind === "save-search" && searching.saving}
-    <EditSearch sheet={inSheet} query={searching.saving} library={library.names} bind:heading={headings[at]} {besideToggle} onSaved={searchSaved} onCancel={() => searchSaved()} />
-  {:else if route.kind === "edit-search" && currentSearch}
-    {#key currentSearch.id}
-      <EditSearch
-        sheet={inSheet}
-        saved={currentSearch}
-        query={searching.saving ?? currentSearch.query}
-        library={library.names}
-        bind:heading={headings[at]}
-        {besideToggle}
-        onSaved={searchSaved}
-        onCancel={() => searchSaved()}
-        onDelete={() => deleteSearch(currentSearch!)}
       />
     {/key}
   {/if}

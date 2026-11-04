@@ -4,7 +4,7 @@ description: The sidebar, the list of articles and the reading pane, and how new
 groupId: getting-started
 order: 5
 spec: 4, 5, 6 and 13
-updated: 2026-11-03
+updated: 2026-11-04
 related: [mark-read-or-unread, unread-on-or-off, every-keyboard-key]
 ---
 
@@ -20,9 +20,8 @@ From the top:
 
 - **Find a person or folder**: type a few letters of a name to narrow the
   sidebar. <kbd>Esc</kbd> empties it.
-- **Unread**, **Starred**, **All** and **Recently read** (the last 50
-  articles you opened).
-- Your **Saved searches** and **Collections**.
+- **Unread**, **Starred**, **Notes** (once you've highlighted something)
+  and **All**.
 - **Folders**, then **People** and **Publications**: everyone who isn't in
   a folder, A to Z. Someone with a blog and a channel has one row.
 - At the foot: **+ Add**, **Keys** and **Settings**.

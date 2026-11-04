@@ -328,7 +328,7 @@ test("Delete data empties the account and keeps the reader signed in", async ({ 
   await expect(sure.getByRole("heading", { name: "Delete your data?" })).toBeFocused();
   // The downloads first.
   await expect(sure.getByRole("link", { name: "Export OPML" })).toHaveAttribute("href", "/api/opml");
-  await expect(sure.getByRole("link", { name: "Export collections" })).toHaveAttribute("href", "/api/collections/export");
+  await expect(sure.getByRole("link", { name: "Export starred articles" })).toHaveAttribute("href", "/api/starred/export");
   // Escape keeps everything.
   await page.keyboard.press("Escape");
   await expect(sure).toHaveCount(0);
@@ -337,8 +337,8 @@ test("Delete data empties the account and keeps the reader signed in", async ({ 
 
   await page.keyboard.press("Enter");
   await expect(sure.getByRole("heading", { name: "Delete your data?" })).toBeFocused();
-  // Past the three downloads to Delete data, with only the keyboard.
-  for (let step = 0; step < 4; step += 1) await page.keyboard.press("Tab");
+  // Past the two downloads to Delete data, with only the keyboard.
+  for (let step = 0; step < 3; step += 1) await page.keyboard.press("Tab");
   await expect(sure.getByRole("button", { name: "Delete data" })).toBeFocused();
   await page.keyboard.press("Enter");
   // The app starts again at its start, empty, still signed in.
