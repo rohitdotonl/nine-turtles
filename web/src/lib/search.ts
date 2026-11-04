@@ -65,7 +65,7 @@ export function scopeName(scope: Scope, library: Library): string {
   }
 }
 
-/** The list's title while it shows search results (SPEC section 14): "Results in All", or "Results in Tech". */
+/** The list's title while it shows search results (SPEC section 14): "Results in All articles", or "Results in Tech". */
 export function resultsTitle(scope: Scope, library: Library): string {
   return `Results in ${scope.kind === "all" ? "All articles" : scopeName(scope, library)}`;
 }

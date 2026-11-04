@@ -648,7 +648,7 @@
           {/each}
         </div>
         <p id="sidebar-help" class="inset-foot">
-          Unread, your folders and your feeds always show{unread ? "" : ", and so does All while Unread is off"}. A list you
+          Unread, your folders and your feeds always show{unread ? "" : ", and so does All articles while Unread is off"}. A list you
           hide still opens from its address and its keys. These apply on all your devices.
         </p>
         <p role="status" class={["inset-foot text-danger", !sidebarMessage && "sr-only"]}>{sidebarMessage}</p>

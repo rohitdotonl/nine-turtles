@@ -18,7 +18,7 @@ test("Recently read is gone, and Edit says how often a feed posts", async ({ pag
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${blog}/`);
 
-  // Unread, Starred and All are the sidebar's lists; Recently read is gone (decision 0174).
+  // Unread, Starred and All articles are the sidebar's lists; Recently read is gone (decision 0174).
   await expect(sidebar(page).getByRole("link", { name: "All articles", exact: true })).toBeVisible();
   await expect(sidebar(page).getByRole("link", { name: "Recently read", exact: true })).toHaveCount(0);
 
@@ -35,7 +35,7 @@ test("Recently read is gone, and Edit says how often a feed posts", async ({ pag
 // The other lists, by keyboard alone. This page's settings are answered here
 // rather than saved, so hiding Starred and All never reaches another test
 // signed in as the same reader.
-test("Starred and All can be hidden by keyboard, and their keys still work", async ({ page, isMobile }) => {
+test("Starred and All articles can be hidden by keyboard, and their keys still work", async ({ page, isMobile }) => {
   test.skip(isMobile, "the tick boxes are worked by keyboard, and g s / g a are a keyboard's");
   let hidden: string[] = [];
   let unread = true;

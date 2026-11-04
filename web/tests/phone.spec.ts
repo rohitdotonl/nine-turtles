@@ -355,7 +355,7 @@ test.describe("on a phone", () => {
     await mine.click();
     await toolbar(page).getByRole("button", { name: "Star" }).click();
     await expect(toolbar(page).getByRole("button", { name: "Star" })).toHaveAttribute("aria-pressed", "true");
-    await article(page).getByRole("button", { name: "Back to All" }).click();
+    await article(page).getByRole("button", { name: "Back to All articles" }).click();
     const meta = mine.locator(".row-meta");
     const shape = await meta.evaluate((element) => {
       const name = element.querySelector(".row-feed-name")!;

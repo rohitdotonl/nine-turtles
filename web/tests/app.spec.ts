@@ -70,7 +70,7 @@ test("its button hides and shows the sidebar; its button sits on the sidebar, th
 });
 
 
-test("the sidebar lists Unread, Starred and All, with a grey pill marking where you are", async ({ page }) => {
+test("the sidebar lists Unread, Starred and All articles, with a grey pill marking where you are", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await openApp(page);
   const links = sidebar(page).getByRole("list").getByRole("link");
@@ -120,6 +120,8 @@ test("the sidebar lists Unread, Starred and All, with a grey pill marking where 
   await expect(page).toHaveURL(/\/starred$/);
   await expect(sidebar(page).getByRole("link", { name: "Starred" })).toHaveAttribute("aria-current", "page");
   await expect(unread).not.toHaveAttribute("aria-current", "page");
+  // Where you are is the grey pill, so Starred's star stays an outline: filled only ever means starred (decision 0182).
+  await expect(sidebar(page).getByRole("link", { name: "Starred" }).locator("svg path")).toHaveAttribute("fill", "none");
   // An empty list (decision 0142): the fact in the serif, then how to start, quieter, both on the list's left edge.
   const fact = page.getByText("Nothing starred yet.");
   const how = page.getByText("Press the star on any article to keep it here.");
