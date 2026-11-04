@@ -12,7 +12,8 @@
 //! any one site is looked up at most `PER_SITE` times in half an hour
 //! however its address is written, with limits on how many lookups run at
 //! once and in a minute, so the finder can't be used to make nine turtles
-//! hammer a site or itself. The page's feeds are capped by `discover`
+//! hammer a site or itself. The blog checkup (`checkup`) runs under the
+//! same memory and limits (`guarded`). The page's feeds are capped by `discover`
 //! (`MOST_FEEDS`), so a page can't make an answer huge.
 
 use std::{
@@ -81,7 +82,7 @@ struct Inner {
 impl Answer {
     const fn lasts(&self) -> Duration {
         match self {
-            Self::Found(_) | Self::Problem(Problem::NoFeed) => REMEMBERED_FOR,
+            Self::Found(_) | Self::Checked(_) | Self::Problem(Problem::NoFeed) => REMEMBERED_FOR,
             Self::Problem(_) => FAILURE_REMEMBERED_FOR,
         }
     }
@@ -209,14 +210,16 @@ struct Article {
 
 /// The publisher's answer: worth remembering for a while either way.
 #[derive(Clone, Debug)]
-enum Answer {
+pub(crate) enum Answer {
     Found(Found),
+    /// The blog checkup's (`checkup`).
+    Checked(Box<crate::checkup::Checkup>),
     Problem(Problem),
 }
 
 /// Why nothing was found, in words the website turns into a sentence.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Problem {
+pub(crate) enum Problem {
     NotAnAddress,
     NotAllowed,
     Unreachable,
@@ -242,7 +245,22 @@ impl From<fetch::FetchError> for Problem {
 }
 
 async fn find_feeds(State(state): State<AppState>, Query(asked): Query<Asked>) -> Response {
-    let mut response = match find(&state, &asked.address).await {
+    let state = &state;
+    let answer = guarded(state, "", &asked.address, |url| async move {
+        look(state, &url).await.unwrap_or_else(Answer::Problem)
+    })
+    .await;
+    for_website(match answer {
+        Ok(Answer::Found(found)) => Ok(found),
+        Ok(Answer::Problem(problem)) | Err(problem) => Err(problem),
+        Ok(Answer::Checked(_)) => Err(Problem::Busy),
+    })
+}
+
+/// The answer as the website reads it: found, or a problem's name with its
+/// status; readable only from the website's own pages.
+pub(crate) fn for_website(answer: Result<impl Serialize, Problem>) -> Response {
+    let mut response = match answer {
         Ok(found) => Json(found).into_response(),
         Err(problem) => {
             let (status, error) = match problem {
@@ -267,32 +285,36 @@ async fn find_feeds(State(state): State<AppState>, Query(asked): Query<Asked>) -
     response
 }
 
-async fn find(state: &AppState, address: &str) -> Result<Found, Problem> {
+/// Runs one of the website's lookups of `address` under the finder's memory
+/// and limits, shared by the feed finder and the blog checkup: a fresh
+/// answer is given again without asking the site; otherwise `work` runs only
+/// if a place is free and the site hasn't been looked up `PER_SITE` times
+/// lately, and its answer is remembered. `kind` keeps each tool's answers
+/// apart.
+pub(crate) async fn guarded<Work, Done>(
+    state: &AppState,
+    kind: &str,
+    address: &str,
+    work: Work,
+) -> Result<Answer, Problem>
+where
+    Work: FnOnce(Url) -> Done,
+    Done: Future<Output = Answer>,
+{
     let url = feeds::parse_address(address).ok_or(Problem::NotAnAddress)?;
     let finder = &state.finder;
-    let key = url.as_str().to_owned();
+    let key = format!("{kind}{url}");
     if let Some(answer) = finder.remembered(&key, Instant::now()) {
-        return answered(answer);
+        return Ok(answer);
     }
     let Ok(_slot) = finder.fetching.try_acquire() else {
         return Err(Problem::Busy);
     };
     let site = url.host_str().unwrap_or_default().to_ascii_lowercase();
     finder.try_one(&site, Instant::now())?;
-
-    let answer = match look(state, &url).await {
-        Ok(answer) => answer,
-        Err(problem) => Answer::Problem(problem),
-    };
+    let answer = work(url).await;
     finder.remember(key, answer.clone(), Instant::now());
-    answered(answer)
-}
-
-fn answered(answer: Answer) -> Result<Found, Problem> {
-    match answer {
-        Answer::Found(found) => Ok(found),
-        Answer::Problem(problem) => Err(problem),
-    }
+    Ok(answer)
 }
 
 /// Looks the address up as Add feed does (`lookup`): a feed is its own

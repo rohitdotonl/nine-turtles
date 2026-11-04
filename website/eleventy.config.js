@@ -15,9 +15,11 @@ export default function (eleventyConfig) {
   const styles = readFileSync(new URL("./src/style.css", import.meta.url));
   eleventyConfig.addGlobalData("stylesVersion", createHash("sha256").update(styles).digest("hex").slice(0, 10));
 
-  // The same for the feed finder's script.
+  // The same for the feed finder's and the blog checkup's scripts.
   const finder = readFileSync(new URL("./src/feed-finder.js", import.meta.url));
   eleventyConfig.addGlobalData("finderVersion", createHash("sha256").update(finder).digest("hex").slice(0, 10));
+  const checkup = readFileSync(new URL("./src/blog-checkup.js", import.meta.url));
+  eleventyConfig.addGlobalData("checkupVersion", createHash("sha256").update(checkup).digest("hex").slice(0, 10));
 
   // The blog is hidden until Rohit writes in it at least once a month (the
   // owner's review, 3 November 2026). Its posts stay here, ready to return:
@@ -27,6 +29,7 @@ export default function (eleventyConfig) {
 
   eleventyConfig.addPassthroughCopy({ "src/style.css": "style.css" });
   eleventyConfig.addPassthroughCopy({ "src/feed-finder.js": "feed-finder.js" });
+  eleventyConfig.addPassthroughCopy({ "src/blog-checkup.js": "blog-checkup.js" });
   eleventyConfig.addPassthroughCopy({ "src/images": "images" });
   eleventyConfig.addPassthroughCopy({
     "../web/public/fonts/literata-400-latin.woff2": "fonts/literata-400-latin.woff2",

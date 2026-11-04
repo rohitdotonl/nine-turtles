@@ -486,6 +486,52 @@ h1 + .byline {
   font-weight: 600;
 }
 
+/* The blog checkup (SPEC section 43): each check a heading and one line,
+   "Yes." or "Not yet." in words, then the fixes, the blog's platform first
+   and the others under "Using something else?". */
+.check {
+  margin: 0;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+}
+.check h3 {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 1.0625rem;
+}
+.check .said {
+  margin: 6px 0 0;
+  overflow-wrap: anywhere;
+}
+.fixes {
+  margin-top: 12px;
+  padding: 4px 16px;
+  border-radius: 8px;
+  background: var(--tone);
+}
+.fixes h4 {
+  margin: 12px 0 0;
+  font-family: var(--sans);
+  font-size: 0.9375rem;
+}
+.fixes p {
+  margin: 6px 0 12px;
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+.fixes summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  font-family: var(--sans);
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+.fixes summary:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
 /* The blog's list of posts. */
 .posts {
   margin: 2rem 0 0;

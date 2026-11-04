@@ -110,8 +110,14 @@ impl From<FetchError> for NotFound {
 /// at, and a site left with one is answered as that feed; without it (other
 /// apps, which follow the first feed anyway), they're only named.
 pub async fn look(state: &AppState, url: &Url, inside: bool) -> Result<Looked, NotFound> {
+    let fetched = fetch::get(&state.http, url, state.config.local_feeds_allowed).await?;
+    look_at(state, fetched, inside).await
+}
+
+/// As `look`, for a page already fetched (the blog checkup reads it too, so
+/// it's fetched once).
+pub async fn look_at(state: &AppState, fetched: Fetched, inside: bool) -> Result<Looked, NotFound> {
     let local = state.config.local_feeds_allowed;
-    let fetched = fetch::get(&state.http, url, local).await?;
     if let Some(parsed) = feed::parse(&fetched.body, &fetched.final_url) {
         return Ok(Looked::Feed(Box::new(fetched), Box::new(parsed)));
     }

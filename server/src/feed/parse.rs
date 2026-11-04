@@ -81,15 +81,22 @@ pub struct Episode {
     pub artwork: Option<String>,
 }
 
-/// Reads a feed file. `None` means it isn't a feed (often a web page).
-pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
+/// Reads a feed file as it is, before nine turtles makes articles of it
+/// (the blog checkup reads its authors and generator). `None` means it
+/// isn't a feed (often a web page).
+pub fn raw(body: &[u8], feed_url: &Url) -> Option<feed_rs::model::Feed> {
     // An empty ID means "the feed gave none", so nine turtles' own fingerprint
     // rules decide, rather than feed-rs's made-up one.
     let parser = feed_rs::parser::Builder::new()
         .base_uri(Some(feed_url.as_str()))
         .id_generator(|_, _, _| String::new())
         .build();
-    let feed = parser.parse(with_itunes_kept(body).as_ref()).ok()?;
+    parser.parse(with_itunes_kept(body).as_ref()).ok()
+}
+
+/// Reads a feed file. `None` means it isn't a feed (often a web page).
+pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
+    let feed = raw(body, feed_url)?;
 
     let site_url = feed
         .links
