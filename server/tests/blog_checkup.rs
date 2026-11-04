@@ -100,12 +100,11 @@ async fn a_blog_with_only_a_contact_page_is_enough_and_each_page_is_visited_once
     assert_eq!(status, StatusCode::OK);
     assert_eq!(allowed.as_deref(), Some("https://nineturtles.app"));
     assert_eq!(body["feed"]["title"], "Notes");
-    assert_eq!(body["feed"]["posts"], 2);
     assert_eq!(body["name"], "Hal Berg");
     assert_eq!(body["email_in_feed"], Value::Null);
     assert_eq!(body["reply_in_posts"], Value::Null);
     assert_eq!(body["contact_page"], format!("{site}/contact/"));
-    assert_eq!(body["address_on_site"], "hal@hal.example");
+    assert_eq!(body["address_on_site"], true);
     assert_eq!(body["platform"], "wordpress");
     // The page given was the home page: fetched once, never an article.
     assert_eq!(*visited.lock().unwrap(), ["/", "/feed.xml", "/contact/"]);
@@ -125,7 +124,7 @@ async fn an_address_on_the_home_page_means_the_contact_page_is_not_fetched() {
     let (status, _, body) = check(&base, &format!("{site}/")).await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(body["contact_page"], format!("{site}/contact/"));
-    assert_eq!(body["address_on_site"], "hal@hal.example");
+    assert_eq!(body["address_on_site"], true);
     assert_eq!(*visited.lock().unwrap(), ["/", "/feed.xml"]);
 }
 
@@ -135,4 +134,28 @@ async fn something_that_isnt_an_address_is_refused() {
     let (status, _, body) = check(&base, "not an address").await;
     assert_eq!(status, StatusCode::BAD_REQUEST);
     assert_eq!(body["error"], "not-an-address");
+}
+
+#[tokio::test]
+async fn the_feed_finder_and_the_checkup_keep_their_answers_apart() {
+    let base = common::start(common::config()).await;
+    let (site, _) = blog(false).await;
+    let mut url = reqwest::Url::parse(&format!("{base}/api/find-feeds")).unwrap();
+    url.query_pairs_mut()
+        .append_pair("address", &format!("{site}/"));
+    let found: Value =
+        serde_json::from_slice(&reqwest::get(url).await.unwrap().bytes().await.unwrap()).unwrap();
+    assert!(found["feeds"].is_array());
+    let (status, _, checked) = check(&base, &format!("{site}/")).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(checked["feed"]["title"], "Notes");
+}
+
+#[tokio::test]
+async fn a_site_that_isnt_there_is_said_plainly() {
+    let base = common::start(common::config()).await;
+    let (site, _) = blog(false).await;
+    let (status, _, body) = check(&base, &format!("{site}/gone")).await;
+    assert_eq!(status, StatusCode::BAD_GATEWAY);
+    assert_eq!(body["error"], "not-found");
 }

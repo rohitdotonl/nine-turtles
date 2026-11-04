@@ -26,7 +26,8 @@ const problems = {
 };
 
 // The platforms whose fixes the page holds; the rest are "your own site".
-const own = { microblog: "own", hugo: "own", jekyll: "own", eleventy: "own" };
+// Micro.blog has none of its own, so all are shown for it.
+const own = { hugo: "own", jekyll: "own", eleventy: "own" };
 
 form.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -83,10 +84,10 @@ function show(answer) {
     : [feed ? "Your feed doesn't name its writer, so readers see only your blog's title." : "With no feed, readers can't see your name."], platform);
 
   let contactSaid;
-  if (contact && site) contactSaid = [`Found `, link(contact), `, and your address `, code(site), ` on your site.`];
+  if (contact && site) contactSaid = [`Found `, link(contact), `, and an email address on your site.`];
   else if (contact) contactSaid = [`Found `, link(contact), `. It shows no email address, so readers can use it, but nine turtles' Write back can't fill in your address from it.`];
-  else if (site) contactSaid = [`Your home page shows your address, `, code(site), `. That's enough; a contact page makes it easier to find.`];
-  else if (!answer.site_looked) contactSaid = ["Your site didn't answer when the checkup looked for a contact page. Try again later."];
+  else if (site) contactSaid = ["Your home page shows an email address. That's enough; a contact page makes it easier to find."];
+  else if (!answer.site_looked) contactSaid = ["Your site didn't answer when the checkup looked for a contact page. Try again in a few minutes."];
   else contactSaid = ["Your home page links no contact or about page, and shows no email address."];
   const unknown = !answer.site_looked && !contact && !site;
   verdict("contact", Boolean(contact || site), contactSaid, platform, unknown ? "Couldn't look." : null);
@@ -106,6 +107,7 @@ function show(answer) {
   const write = Boolean(contact || site || answer.email_in_feed || reply);
   say(
     follow && write ? "Readers can follow you and write to you."
+    : follow && unknown ? "Readers can follow you. Your site didn't answer, so the checkup couldn't look for a contact page."
     : follow ? "Readers can follow you. A way to write to you is missing."
     : write ? "Readers can write to you, but can't follow you yet: no feed was found."
     : "Readers can't follow you or write to you yet. The fixes are below.",

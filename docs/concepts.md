@@ -83,6 +83,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - postMessage (talking to an embedded player)
 - Feed autodiscovery
 - Feed finder (the website's free tool)
+- Blog checkup (the website's free tool for writers)
 - Help (the website's pages for readers, nineturtles.app/help)
 - Bookmarklet
 - HTML parsing (scraper)

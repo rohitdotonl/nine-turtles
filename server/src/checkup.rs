@@ -53,10 +53,12 @@ pub struct Checkup {
     pub several_in_feed: bool,
     /// The address a "Reply by email" link in the posts gives.
     pub reply_in_posts: Option<String>,
-    /// The contact (or about) page the home page links to, and the
-    /// address the home page or that page shows.
+    /// The contact (or about) page the home page links to, and whether the
+    /// home page or that page shows an email address. Only whether: the
+    /// writer knows their own, and the checkup mustn't hand out addresses a
+    /// site hid from bots.
     pub contact_page: Option<String>,
-    pub address_on_site: Option<String>,
+    pub address_on_site: bool,
     /// Whether the site could be looked at for a contact page.
     pub site_looked: bool,
     /// Which blog platform it seems to be, for showing its fixes first.
@@ -70,7 +72,6 @@ pub struct Checkup {
 pub struct FeedSeen {
     pub title: String,
     pub url: String,
-    pub posts: usize,
     /// Its newest post's date, seconds since 1970 (UTC).
     pub newest: Option<i64>,
 }
@@ -105,6 +106,7 @@ async fn check(State(state): State<AppState>, Query(asked): Query<Asked>) -> Res
     finder::for_website(match answer {
         Ok(Answer::Checked(checkup)) => Ok(*checkup),
         Ok(Answer::Problem(problem)) | Err(problem) => Err(problem),
+        // Never: the checkup's answers are kept apart from the finder's.
         Ok(Answer::Found(_)) => Err(Problem::Busy),
     })
 }
@@ -121,8 +123,7 @@ async fn look(state: &AppState, url: &Url) -> Result<Checkup, Problem> {
         Ok(Looked::Feed(fetched, _)) => read_feed(&fetched),
         Ok(Looked::Feeds(choices)) => choices
             .into_iter()
-            .next()
-            .and_then(|choice| choice.fetched)
+            .find_map(|choice| choice.fetched)
             .map(|fetched| read_feed(&fetched))
             .unwrap_or_default(),
         Err(NotFound::NoFeed) => Checkup::default(),
@@ -136,7 +137,7 @@ async fn look(state: &AppState, url: &Url) -> Result<Checkup, Problem> {
     if let Ok(seen) = tokio::time::timeout(LOOKING_FOR, visit(state, &home, page)).await {
         checkup.site_looked = seen.looked;
         checkup.contact_page = seen.contact.map(String::from);
-        checkup.address_on_site = seen.address;
+        checkup.address_on_site = seen.address.is_some();
         checkup.platform = checkup.platform.or(seen.platform);
     }
     checkup.platform = checkup.platform.or_else(|| platform_of_host(&home));
@@ -158,7 +159,6 @@ fn read_feed(fetched: &Fetched) -> Checkup {
         feed: parsed.as_ref().map(|parsed| FeedSeen {
             title: parsed.title.chars().take(LONGEST).collect(),
             url: fetched.lasting_url.to_string(),
-            posts: parsed.articles.len(),
             newest: parsed.articles.iter().filter_map(|a| a.published_at).max(),
         }),
         name: name_in(&raw),
@@ -184,10 +184,14 @@ fn name_in(feed: &Feed) -> Option<String> {
         .map(|title| title.content.trim().to_lowercase());
     let named = |name: &Option<String>| {
         let name = name.as_deref()?.trim();
-        // An RSS editor is written "hal@hal.example (Hal Berg)".
+        // An RSS editor is written "hal@hal.example (Hal Berg)" (read as
+        // the name "(Hal Berg)"); a name such as "Hal Berg (he/him)" keeps
+        // its brackets.
         let name = match name.split_once('(') {
-            Some((_, inside)) => inside.trim_end_matches(')').trim(),
-            None => name,
+            Some((before, inside)) if before.contains('@') || before.trim().is_empty() => {
+                inside.trim_end_matches(')').trim()
+            }
+            _ => name,
         };
         (!name.is_empty()
             && !name.contains('@')
@@ -275,11 +279,15 @@ fn home_of(feed_site: Option<&str>, given: Option<&Url>, asked: &Url) -> Url {
         })
 }
 
-/// The same page, whether or not its address ends in `/`.
+/// The same page, whether or not its address ends in `/` or starts `www.`.
 fn same_page(one: &Url, other: &Url) -> bool {
     let bare = |url: &Url| {
         let mut url = url.clone();
         url.set_fragment(None);
+        if let Some(bare) = url.host_str().and_then(|host| host.strip_prefix("www.")) {
+            let bare = bare.to_owned();
+            url.set_host(Some(&bare)).ok();
+        }
         url.as_str().trim_end_matches('/').to_owned()
     };
     bare(one) == bare(other)
@@ -356,7 +364,7 @@ mod tests {
             </feed>"#,
         );
         let feed = checkup.feed.as_ref().unwrap();
-        assert_eq!((feed.title.as_str(), feed.posts), ("Notes", 1));
+        assert_eq!(feed.title, "Notes");
         assert_eq!(checkup.name.as_deref(), Some("Hal Berg"));
         assert_eq!(checkup.email_in_feed.as_deref(), Some("hal@hal.example"));
         assert_eq!(checkup.reply_in_posts.as_deref(), Some("hal@hal.example"));
@@ -387,6 +395,11 @@ mod tests {
         );
         assert_eq!(checkup.name.as_deref(), Some("Hal Berg"));
         assert_eq!(checkup.email_in_feed.as_deref(), Some("hal@hal.example"));
+        let brackets = feed_from(
+            r#"<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><title>Notes</title>
+            <author><name>Hal Berg (he/him)</name></author></feed>"#,
+        );
+        assert_eq!(brackets.name.as_deref(), Some("Hal Berg (he/him)"));
     }
 
     #[test]

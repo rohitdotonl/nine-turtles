@@ -56,7 +56,8 @@ const FAILURE_REMEMBERED_FOR: Duration = Duration::from_secs(5 * 60);
 const REMEMBERED_MOST: usize = 500;
 /// Lookups that may fetch from one site (its host name) in `REMEMBERED_FOR`.
 /// Each fetches the page, then at most ten other places if it names no feed
-/// and at most ten feeds if it names several, one at a time; most fetch two.
+/// and at most ten feeds if it names several, one at a time; most fetch two
+/// (the blog checkup, up to two more: the home page and one contact page).
 const PER_SITE: usize = 6;
 /// The longest article title shown in the preview.
 const LONGEST_TITLE: usize = 300;
@@ -80,8 +81,10 @@ struct Inner {
 }
 
 impl Answer {
-    const fn lasts(&self) -> Duration {
+    fn lasts(&self) -> Duration {
         match self {
+            // A checkup whose site didn't answer is a failure for its contact page.
+            Self::Checked(checkup) if !checkup.site_looked => FAILURE_REMEMBERED_FOR,
             Self::Found(_) | Self::Checked(_) | Self::Problem(Problem::NoFeed) => REMEMBERED_FOR,
             Self::Problem(_) => FAILURE_REMEMBERED_FOR,
         }
@@ -253,6 +256,7 @@ async fn find_feeds(State(state): State<AppState>, Query(asked): Query<Asked>) -
     for_website(match answer {
         Ok(Answer::Found(found)) => Ok(found),
         Ok(Answer::Problem(problem)) | Err(problem) => Err(problem),
+        // Never: the finder's answers are kept apart from the checkup's.
         Ok(Answer::Checked(_)) => Err(Problem::Busy),
     })
 }
