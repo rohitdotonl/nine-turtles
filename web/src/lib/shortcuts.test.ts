@@ -4,10 +4,10 @@ import { TEXT_SIZES } from "./preferences";
 import type { Route } from "./router";
 import { carryOut, keyIsOurs, type KeyHands, type KeyScene } from "./shortcuts";
 
-/** A computer's three panes, Unread in inbox mode, an article chosen and drawn. */
+/** A computer's three panes, Unread on, an article chosen and drawn. */
 function scene(changes: Partial<KeyScene> = {}): KeyScene {
   return {
-    river: false,
+    unreadOff: false,
     onList: true,
     searching: false,
     ownOrder: false,
@@ -92,10 +92,10 @@ describe("keyIsOurs", () => {
 });
 
 describe("carryOut", () => {
-  it("does nothing for g u in river mode, which has no Unread", () => {
-    expect(run({ kind: "go", view: "unread" }, scene({ river: true }))).toEqual([]);
-    expect(run({ kind: "go", view: "starred" }, scene({ river: true }))).toEqual([["go", { kind: "view", view: "starred" }]]);
-    expect(run({ kind: "move-unread", step: 1 }, scene({ river: true }))).toEqual([]);
+  it("does nothing for g u with Unread off, which has no Unread", () => {
+    expect(run({ kind: "go", view: "unread" }, scene({ unreadOff: true }))).toEqual([]);
+    expect(run({ kind: "go", view: "starred" }, scene({ unreadOff: true }))).toEqual([["go", { kind: "view", view: "starred" }]]);
+    expect(run({ kind: "move-unread", step: 1 }, scene({ unreadOff: true }))).toEqual([]);
     expect(run({ kind: "move-unread", step: -1 }, scene())).toEqual([["move", "moveUnread", -1]]);
   });
 
@@ -114,7 +114,7 @@ describe("carryOut", () => {
     const all: Action = { kind: "mark-all-read" };
     expect(run(all, scene())).toEqual([["markAllRead"]]);
     expect(run(all, scene({ selected: false }))).toEqual([["markAllRead"]]);
-    expect(run(all, scene({ river: true }))).toEqual([]);
+    expect(run(all, scene({ unreadOff: true }))).toEqual([]);
     expect(run(all, scene({ ownOrder: true }))).toEqual([]);
     expect(run(all, scene({ onList: false }))).toEqual([]);
     expect(run(all, scene({ list: false, article: false }))).toEqual([]);

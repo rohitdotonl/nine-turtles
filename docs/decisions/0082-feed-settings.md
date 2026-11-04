@@ -32,3 +32,5 @@ Power is hidden, never missing: every setting sits in Edit feed, and a feed
 nobody touches behaves exactly as before.
 
 **Revisit if** the owner wants a feed's mode chosen while adding it.
+
+*A feed's own reading mode (Inbox · River) was removed by decision 0172 (4 November 2026); its other settings stay.*

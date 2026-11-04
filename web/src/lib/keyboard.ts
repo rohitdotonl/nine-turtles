@@ -302,19 +302,19 @@ function isTyping(target: EventTarget | null): boolean {
 }
 
 /**
- * What river mode has no use for (SPEC section 10): there's no Unread view,
+ * What has no use with Unread off (SPEC section 10): there's no Unread view,
  * and no read state to mark or move by.
  */
-const NOT_IN_RIVER: Action["kind"][] = ["mark-all-read", "move-unread"];
+const NEEDS_UNREAD: Action["kind"][] = ["mark-all-read", "move-unread"];
 
-/** Whether a shortcut does nothing in river mode. */
-function notInRiver(each: Shortcut): boolean {
-  return each.bindings.some(({ does }) => NOT_IN_RIVER.includes(does.kind) || (does.kind === "go" && does.view === "unread"));
+/** Whether a shortcut does nothing with Unread off. */
+function needsUnread(each: Shortcut): boolean {
+  return each.bindings.some(({ does }) => NEEDS_UNREAD.includes(does.kind) || (does.kind === "go" && does.view === "unread"));
 }
 
 /** The shortcuts the cheat sheet lists: those that work in this reading mode. */
-export function shortcutsFor(river: boolean): Shortcut[] {
-  return SHORTCUTS.filter((each) => !(river && notInRiver(each)));
+export function shortcutsFor(unreadOff: boolean): Shortcut[] {
+  return SHORTCUTS.filter((each) => !(unreadOff && needsUnread(each)));
 }
 
 /**

@@ -3,7 +3,7 @@ import type { Article, Feed } from "./shapes";
 import { firstNameOf, followingSince, placeLabels, placeShownAs, placesOf, placesWatch, rowFor, rowsOf, siteName, sourceOf } from "./people";
 
 function place(id: number, title: string, more: Partial<Feed> = {}): Feed {
-  return { id, title, siteUrl: null, unread: 0, folders: [], river: false, check: "automatic", openOnSite: false, person: null, place: "blog", addedAt: id, ...more };
+  return { id, title, siteUrl: null, unread: 0, folders: [], check: "automatic", openOnSite: false, person: null, place: "blog", addedAt: id, ...more };
 }
 
 function article(feedId: number, more: Partial<Article> = {}): Article {

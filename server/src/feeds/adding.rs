@@ -358,7 +358,6 @@ async fn follow(
         site_title: parsed.title,
         site_url: parsed.site_url,
         unread,
-        river: false,
         check_at_most: 0,
         open_on_site: false,
         paused_at: None,

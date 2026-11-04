@@ -4,7 +4,7 @@
   A source that isn't working says so first, with Find new address (decision
   0106), which moves it at once. Then what kind of source it is (read from the
   feed, and the reader corrects it), then the settings a grouped list as in
-  Settings: reading mode, how often it's checked, opening on the website, a
+  Settings: how often it's checked, opening on the website, a
   YouTube channel's Shorts and live streams (both off, decision 0144), and
   pausing; then a shortcut to add a rule for it (SPEC section 27).
 
@@ -21,9 +21,7 @@
 
   let {
     feed,
-    river = false,
     place = $bindable(),
-    flows = $bindable(),
     check = $bindable(),
     openOnSite = $bindable(),
     paused = $bindable(),
@@ -33,10 +31,7 @@
     onMoved,
   }: {
     feed: Feed;
-    /** The whole app is in river mode, so every source flows past whatever this one says. */
-    river?: boolean;
     place: PlaceKind;
-    flows: boolean;
     check: Check;
     openOnSite: boolean;
     paused: boolean;
@@ -48,10 +43,6 @@
     onMoved: (feed: Sick) => void;
   } = $props();
 
-  const MODE_CHOICES = [
-    { value: false, label: "Inbox" },
-    { value: true, label: "River" },
-  ];
   const CHECK_CHOICES: { value: Check; label: string }[] = [
     { value: "automatic", label: "Automatic" },
     { value: "daily", label: "Daily" },
@@ -81,22 +72,6 @@
   <span class="text-small text-ink-2" id="{id}-settings">Settings</span>
   <!-- Each setting's name with a short description straight under it, as in Settings (S1, decision 0120). -->
   <div class="inset-group" role="group" aria-labelledby="{id}-settings">
-    <div class="inset-row setting has-control">
-      <div class="setting-words setting-label">
-        <p id="{id}-mode" class="setting-name">Reading mode</p>
-        <p id="{id}-mode-hint" class="setting-hint">
-          {river ? "The whole app is in river mode for now (Settings › Reading)." : flows ? "Its articles skip Unread and show no dot." : "New articles go to Unread."}
-        </p>
-      </div>
-      <div role="group" aria-labelledby="{id}-mode" aria-describedby="{id}-mode-hint" class="choices setting-control" style="--columns: 2">
-        {#each MODE_CHOICES as choice (choice.label)}
-          <label class="choice">
-            <input type="radio" name="{id}-mode" value={choice.value} bind:group={flows} />
-            {choice.label}
-          </label>
-        {/each}
-      </div>
-    </div>
     <div class="inset-row setting has-control">
       <div class="setting-words setting-label">
         <p id="{id}-check" class="setting-name">Check for new articles</p>

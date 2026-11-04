@@ -11,7 +11,7 @@ export type Feed = {
   /** The feed's own title (a blog's), shown under a person's name when the two differ. */
   siteTitle?: string;
   siteUrl: string | null;
-  /** How many of its articles are unread (none for a feed that flows past). */
+  /** How many of its articles are unread. */
   unread: number;
   /** The folders it's in, by number. */
   folders: number[];
@@ -48,11 +48,11 @@ export type Feed = {
 export type VideoSettings = { shorts?: boolean; liveStreams?: boolean };
 
 /**
- * A feed's own settings, chosen in Edit feed (SPEC section 15): it flows
- * past as in river mode (no Unread, no count), how often it may be checked,
- * and whether opening one of its articles opens the publisher's page.
+ * A feed's own settings, chosen in Edit feed (SPEC section 15): how often it
+ * may be checked, and whether opening one of its articles opens the
+ * publisher's page.
  */
-export type FeedSettings = { river: boolean; check: Check; openOnSite: boolean };
+export type FeedSettings = { check: Check; openOnSite: boolean };
 
 /** How often a feed is checked in the background: on its own rhythm, or at most daily. */
 export type Check = "automatic" | "daily";
@@ -226,7 +226,6 @@ export function toFeed(feed: Record<string, unknown>): Feed {
     siteUrl: text(feed.site_url),
     unread: Number(feed.unread ?? 0),
     folders: Array.isArray(feed.folders) ? feed.folders.map(Number) : [],
-    river: feed.river === true,
     check: checkFrom(Number(feed.check_at_most ?? 0)),
     openOnSite: feed.open_on_site === true,
     pausedAt: typeof feed.paused_at === "number" ? feed.paused_at : null,

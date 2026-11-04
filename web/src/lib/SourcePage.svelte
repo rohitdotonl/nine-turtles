@@ -18,7 +18,6 @@
     source,
     name,
     library,
-    river = false,
     heading = $bindable(),
     onDone,
     onPeople,
@@ -29,7 +28,6 @@
     /** The person's name, for "Take out of Alpha". */
     name: string;
     library: LoadedLibrary;
-    river?: boolean;
     heading?: HTMLHeadingElement;
     /** Back to the person's Edit, saved or not. */
     onDone: (saved: boolean) => void;
@@ -42,7 +40,6 @@
   const formId = $props.id();
   const start = (() => source)();
   let place: PlaceKind = $state(start.place ?? "blog");
-  let flows = $state(start.river);
   let check: Check = $state(start.check);
   let openOnSite = $state(start.openOnSite);
   let paused = $state(start.pausedAt != null);
@@ -56,7 +53,7 @@
     if (busy) return;
     busy = true;
     message = "";
-    const refusal = await editFeed(source.id, { ...(place !== start.place ? { place } : {}), river: flows, check, openOnSite, paused, ...(source.sortsVideos ? { shorts, liveStreams } : {}) });
+    const refusal = await editFeed(source.id, { ...(place !== start.place ? { place } : {}), check, openOnSite, paused, ...(source.sortsVideos ? { shorts, liveStreams } : {}) });
     if (!refusal) await library.loadFeeds();
     busy = false;
     if (refusal) message = refused(refusal, "feed");
@@ -99,7 +96,7 @@
   </div>
 
   <form id={formId} onsubmit={save} class="flex flex-col gap-5">
-    <SourceFields feed={source} {river} bind:place bind:flows bind:check bind:openOnSite bind:paused bind:shorts bind:liveStreams {onAddRule} {onMoved} />
+    <SourceFields feed={source} bind:place bind:check bind:openOnSite bind:paused bind:shorts bind:liveStreams {onAddRule} {onMoved} />
 
     <p role="status" class={["flex items-start gap-1.5 text-small text-danger", !message && "sr-only"]}>
       {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}

@@ -1,5 +1,5 @@
 // The reading settings shared across the reader's devices (SPEC section 18):
-// the sort order, the reading mode and the lists the sidebar hides, with this device's copies so the app opens in them before
+// the sort order, whether Unread is on and the lists the sidebar hides, with this device's copies so the app opens in them before
 // the server answers.
 import { HIDEABLE, type Hideable } from "./router";
 import { getJson, isRecord } from "./http";
@@ -9,47 +9,43 @@ import { send } from "./saving";
 /** The reader's sort order, shared across their devices (SPEC section 18). */
 export type Order = "newest" | "oldest";
 
-/**
- * Inbox (things to get through: the Unread view, read styling and the
- * sidebar's dots) or
- * river (things flowing past: none of those). Shared across the reader's
- * devices (SPEC section 10). Read state is recorded in both.
- */
-export type ReadingMode = "inbox" | "river";
-
-/** Where the app opens, and where "/" leads: Unread in inbox mode, All in river mode. */
-export function homeView(mode: ReadingMode): "unread" | "all" {
-  return mode === "river" ? "all" : "unread";
+/** Where the app opens, and where "/" leads: Unread, or All with Unread off (SPEC section 10). */
+export function homeView(unread: boolean): "unread" | "all" {
+  return unread ? "unread" : "all";
 }
 
 /** The settings shared across the reader's devices (SPEC section 18). */
 export type Reading = {
   sort: Order;
-  mode: ReadingMode;
+  /**
+   * Unread on: the Unread list, read styling and the sidebar's dots. Off:
+   * none of those. Read state is recorded either way (SPEC section 10).
+   */
+  unread: boolean;
   /** The reader had keys of their own, now back to nine turtles' (step 5 of the owner's review), and hasn't been told. */
   keysReset: boolean;
   hidden: Hideable[];
 };
 
 /**
- * The settings shared across the reader's devices: the sort order, the
- * reading mode and which lists the sidebar hides. Newest first if the
- * server can't say, and the mode and hidden lists this device last saw (inbox and none, if none).
+ * The settings shared across the reader's devices: the sort order, whether
+ * Unread is on and which lists the sidebar hides. Newest first if the
+ * server can't say, and Unread and the hidden lists as this device last saw them (on and none, if none).
  */
 export async function loadSettings(): Promise<Reading> {
   try {
     const body = await getJson("/api/settings");
     const sort = isRecord(body) && body.sort === "oldest" ? "oldest" : "newest";
-    const mode = isRecord(body) && body.mode === "river" ? "river" : "inbox";
+    const unread = !(isRecord(body) && body.unread === false);
     const keysReset = isRecord(body) && body.keys_reset === true;
     const hidden = isRecord(body) ? hiddenFrom(body.hidden) : [];
-    rememberMode(mode);
+    rememberUnread(unread);
     rememberHidden(hidden);
     // The copy of a reader's own keys this device once kept (decision 0110) is no longer read (decision 0170).
     setDeviceText("nine-turtles.keys", null);
-    return { sort, mode, keysReset, hidden };
+    return { sort, unread, keysReset, hidden };
   } catch {
-    return { sort: "newest", mode: lastMode(), keysReset: false, hidden: lastHidden() };
+    return { sort: "newest", unread: lastUnread(), keysReset: false, hidden: lastHidden() };
   }
 }
 
@@ -85,22 +81,24 @@ export function saveSort(sort: Order): Promise<void> {
   return send("/api/settings", { sort });
 }
 
-export async function saveMode(mode: ReadingMode): Promise<void> {
-  await send("/api/settings", { mode });
-  rememberMode(mode);
+export async function saveUnread(unread: boolean): Promise<void> {
+  await send("/api/settings", { unread });
+  rememberUnread(unread);
 }
 
-const MODE_KEY = "nine-turtles.mode";
+const UNREAD_KEY = "nine-turtles.unread";
 
 /**
- * The reading mode this device last saw, so the app opens in it before the
- * server answers instead of showing Unread for a moment. The server's answer
- * decides.
+ * Whether Unread was on when this device last saw, so the app opens as it
+ * was before the server answers instead of showing Unread for a moment. The
+ * server's answer decides.
  */
-export function lastMode(): ReadingMode {
-  return deviceText(MODE_KEY) === "river" ? "river" : "inbox";
+export function lastUnread(): boolean {
+  return deviceText(UNREAD_KEY) !== "off";
 }
 
-function rememberMode(mode: ReadingMode) {
-  setDeviceText(MODE_KEY, mode);
+function rememberUnread(unread: boolean) {
+  setDeviceText(UNREAD_KEY, unread ? "on" : "off");
+  // What this device kept when the choice was called inbox or river is no longer read (decision 0172).
+  setDeviceText("nine-turtles.mode", null);
 }

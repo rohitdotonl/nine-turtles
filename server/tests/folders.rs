@@ -625,30 +625,24 @@ async fn article_numbers_freed_by_unsubscribing_are_never_given_again() {
 }
 
 #[tokio::test]
-async fn each_feed_keeps_its_own_reading_mode_check_and_website_settings() {
+async fn each_feed_keeps_its_own_check_and_website_settings() {
     let reader = Reader::new().await;
-    let beta = reader.follow("beta").await;
+    reader.follow("beta").await;
     let alpha = reader.follow("alpha").await;
-    let latest_beta = *reader
-        .article_ids(&format!("feed={beta}"))
-        .await
-        .iter()
-        .max()
-        .unwrap();
 
     // Every feed starts as every feed behaves.
     let listed = reader.get("/api/feeds").await;
     for feed in listed["feeds"].as_array().unwrap() {
-        assert_eq!(feed["river"], false);
+        assert!(feed.get("river").is_none());
         assert_eq!(feed["check_at_most"], 0);
         assert_eq!(feed["open_on_site"], false);
     }
 
-    // Alpha flows past, is checked at most daily, and opens on its website.
+    // Alpha is checked at most daily, and opens on its website.
     let (status, _) = reader
         .post(
             &format!("/api/feeds/{alpha}"),
-            json!({ "title": "Alpha blog", "folders": [], "river": true, "check": "daily",
+            json!({ "title": "Alpha blog", "folders": [], "check": "daily",
                     "open_on_site": true }),
         )
         .await;
@@ -661,47 +655,10 @@ async fn each_feed_keeps_its_own_reading_mode_check_and_website_settings() {
             .find(|feed| feed["id"] == alpha)
             .unwrap()
             .clone();
-        (
-            feed["river"].clone(),
-            feed["check_at_most"].clone(),
-            feed["open_on_site"].clone(),
-        )
+        (feed["check_at_most"].clone(), feed["open_on_site"].clone())
     };
     let listed = reader.get("/api/feeds").await;
-    assert_eq!(
-        settings(&listed),
-        (json!(true), json!(checking::DAY), json!(true))
-    );
-    // It counts nothing and leaves Unread, but its own list keeps everything.
-    assert_eq!(
-        reader.sidebar().await.0,
-        vec![row("Alpha blog", 0, &[]), row("Beta blog", 3, &[])]
-    );
-    assert_eq!(
-        reader.titles("view=unread").await,
-        vec!["Beta blog post 3", "Beta blog post 2", "Beta blog post 1"]
-    );
-    assert_eq!(reader.titles(&format!("feed={alpha}")).await.len(), 3);
-    assert_eq!(reader.titles("view=all").await.len(), 6);
-    // Searching only unread articles leaves it out too.
-    let found = reader.get("/api/search?unread=true").await;
-    let found: Vec<&str> = found["articles"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|article| article["title"].as_str().unwrap())
-        .collect();
-    assert_eq!(found.len(), 3, "{found:?}");
-    assert!(
-        found.iter().all(|title| title.starts_with("Beta")),
-        "{found:?}"
-    );
-    // Its articles arriving don't count as new for Unread, only for All.
-    for (view, new) in [("unread", false), ("all", true)] {
-        let path = format!("/api/articles/new?view={view}&since={latest_beta}");
-        assert_eq!(reader.get(&path).await["new"], json!(new), "{view}");
-    }
-
+    assert_eq!(settings(&listed), (json!(checking::DAY), json!(true)));
     // "At most daily" moves its next check to a day after the last, and
     // keeps it there after a check.
     let schedule = || {
@@ -726,20 +683,20 @@ async fn each_feed_keeps_its_own_reading_mode_check_and_website_settings() {
         .await;
     assert_eq!(
         settings(&reader.get("/api/feeds").await),
-        (json!(true), json!(checking::DAY), json!(true))
+        (json!(checking::DAY), json!(true))
     );
 
-    // Back to inbox, automatic, and opening in nine turtles.
+    // Back to automatic, and opening in nine turtles.
     reader
         .post(
             &format!("/api/feeds/{alpha}"),
-            json!({ "title": "Alpha blog", "folders": [], "river": false, "check": "automatic",
+            json!({ "title": "Alpha blog", "folders": [], "check": "automatic",
                     "open_on_site": false }),
         )
         .await;
     assert_eq!(
         settings(&reader.get("/api/feeds").await),
-        (json!(false), json!(0), json!(false))
+        (json!(0), json!(false))
     );
     assert_eq!(reader.titles("view=unread").await.len(), 6);
     // An unknown choice is refused, and so is "hourly", no longer offered

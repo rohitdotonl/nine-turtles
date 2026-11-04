@@ -559,13 +559,7 @@ pub async fn find(
         query.push(")");
     }
     if search.unread {
-        // A feed that flows past is never in Unread (SPEC section 10).
-        query.push(
-            " AND entries.read = 0 AND entries.feed_id NOT IN
-                 (SELECT feed_id FROM subscriptions WHERE river = 1 AND person_id = ",
-        );
-        query.push_bind(person);
-        query.push(")");
+        query.push(" AND entries.read = 0");
     }
     if search.starred {
         query.push(" AND entries.starred = 1");

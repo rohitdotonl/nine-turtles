@@ -338,7 +338,7 @@ describe.each(Object.entries(SELECTORS))(
   },
 );
 
-// A segmented choice's chosen side (Inbox / River, Light / Dark…, in
+// A segmented choice's chosen side (Light / Dark…, in
 // Settings, Edit feed and the Aa panel) must stand at 3 : 1 against the rest
 // of the control, WCAG's non-text contrast (the first floor): by day a thin
 // edge of the softened text color around the page-toned tile, by night the

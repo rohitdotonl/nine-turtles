@@ -6,7 +6,7 @@
   or Escape goes back.
 
   Its first page keeps only the everyday settings (decision 0120): Reading
-  (reading mode, letting unread go, sort order, shared across
+  (Unread on or off and sort order, shared across
   the reader's devices) and Look and feel (Appearance and Text size, for this
   device). Everything else is a row ending in › that opens a page of its own
   in place of Settings, at /settings/<page> (`page`), with "‹ Settings" above
@@ -51,7 +51,7 @@
   import TextSize from "./TextSize.svelte";
   import { APPEARANCES, LOOKS, THEMES } from "./themes";
   import type { Feed, Folder } from "./shapes";
-  import type { Order, ReadingMode } from "./reading";
+  import type { Order } from "./reading";
   import { HELP_URL, SETTINGS_PAGES, type Hideable, type SettingsPage } from "./router";
   import { LINE_WIDTHS, READING_FONTS, type Preferences } from "./preferences";
   import { signOut } from "./session";
@@ -67,8 +67,8 @@
     preferences = $bindable(),
     sort,
     onSort,
-    mode,
-    onMode,
+    unread,
+    onUnread,
     hidden,
     onHidden,
     heading = $bindable(),
@@ -99,10 +99,10 @@
     sort: Order | undefined;
     /** Saves a new sort order; fails if it couldn't be saved. */
     onSort: (sort: Order) => Promise<void>;
-    /** Inbox or river (SPEC section 10). */
-    mode: ReadingMode;
-    /** Saves a new reading mode; fails if it couldn't be saved. */
-    onMode: (mode: ReadingMode) => Promise<void>;
+    /** Whether Unread is on (SPEC section 10). */
+    unread: boolean;
+    /** Switches Unread on or off; fails if it couldn't be saved. */
+    onUnread: (unread: boolean) => Promise<void>;
     /** The lists the sidebar leaves out (decision 0105). */
     hidden: Hideable[];
     onHidden: (hidden: Hideable[]) => Promise<void>;
@@ -145,11 +145,6 @@
   const SORT_CHOICES = [
     { value: "newest", label: "Newest first" },
     { value: "oldest", label: "Oldest first" },
-  ] as const;
-
-  const MODE_CHOICES = [
-    { value: "inbox", label: "Inbox" },
-    { value: "river", label: "River" },
   ] as const;
 
   /** The lists the sidebar can leave out, as its rows name them. Unread, folders and feeds always show. */
@@ -247,12 +242,12 @@
   /** What the last import (OPML or starred articles) did, in plain words. */
   let importLines: string[] = $state([]);
 
-  async function chooseMode(next: ReadingMode) {
+  async function chooseUnread(next: boolean) {
     sortMessage = "";
     try {
-      await onMode(next);
+      await onUnread(next);
     } catch {
-      sortMessage = "The reading mode couldn't be saved. Try again in a moment.";
+      sortMessage = "Unread couldn't be switched. Try again in a moment.";
     }
   }
 
@@ -418,31 +413,29 @@
       <section aria-labelledby="reading-heading">
         <h3 id="reading-heading" class="settings-head">Reading</h3>
         <div class="inset-group">
-          <div class="inset-row setting has-control">
+          <!-- One switch (decision 0172): Unread on is the Unread list, read styling and dots; off, none of them. -->
+          <div class="inset-row setting">
             <div class="setting-label">
               {@render icon("book")}
               <div class="setting-words">
-                <p id="mode-name" class="setting-name">Reading mode</p>
-                <p id="mode-hint" class="setting-hint">
-                  {mode === "inbox" ? "An Unread list, and a dot where something is new." : "Everything flows past. No Unread list, no dots."}
+                <p id="unread-name" class="setting-name" aria-hidden="true">Unread</p>
+                <p id="unread-hint" class="setting-hint">
+                  {unread ? "An Unread list, and a dot where something is new." : "No Unread list and no dots. What you've read is still remembered."}
                 </p>
               </div>
             </div>
-            <div role="group" aria-labelledby="mode-name" aria-describedby="mode-hint" class="choices setting-control" style="--columns: 2">
-              {#each MODE_CHOICES as choice (choice.value)}
-                <label class="choice">
-                  <input
-                    type="radio"
-                    name="mode"
-                    value={choice.value}
-                    checked={mode === choice.value}
-                    disabled={sort === undefined}
-                    onchange={() => chooseMode(choice.value)}
-                  />
-                  {choice.label}
-                </label>
-              {/each}
-            </div>
+            <label class="switch-target -my-2 -mr-2">
+              <input
+                type="checkbox"
+                role="switch"
+                class="switch"
+                aria-label="Unread"
+                aria-describedby="unread-hint"
+                checked={unread}
+                disabled={sort === undefined}
+                onchange={(event) => chooseUnread(event.currentTarget.checked)}
+              />
+            </label>
           </div>
           <div class="inset-row setting has-control">
             <div class="setting-label">
@@ -672,7 +665,7 @@
           {/each}
         </div>
         <p id="sidebar-help" class="inset-foot">
-          Unread, your folders and your feeds always show{mode === "river" ? ", and so does All in river mode" : ""}. A list you
+          Unread, your folders and your feeds always show{unread ? "" : ", and so does All while Unread is off"}. A list you
           hide still opens from its address and its keys. These apply on all your devices.
         </p>
         <p role="status" class={["inset-foot text-danger", !sidebarMessage && "sr-only"]}>{sidebarMessage}</p>

@@ -472,7 +472,6 @@ async fn follow_elsewhere(
     // or publication, and the kind of source.
     type Kept = (
         String,
-        bool,
         i64,
         bool,
         Option<i64>,
@@ -480,9 +479,9 @@ async fn follow_elsewhere(
         Option<String>,
         Option<String>,
     );
-    let (title, river, check_at_most, open_on_site, paused_at, writer, kind, place): Kept =
+    let (title, check_at_most, open_on_site, paused_at, writer, kind, place): Kept =
         sqlx::query_as(
-            "SELECT title, river, check_at_most, open_on_site, paused_at, writer_id, kind, place
+            "SELECT title, check_at_most, open_on_site, paused_at, writer_id, kind, place
              FROM subscriptions WHERE person_id = ? AND feed_id = ?",
         )
         .bind(person)
@@ -504,11 +503,10 @@ async fn follow_elsewhere(
         Followed::Already(_) => return Ok(Err(refused(StatusCode::CONFLICT, "already"))),
     };
     sqlx::query(
-        "UPDATE subscriptions SET river = ?, check_at_most = ?, open_on_site = ?, paused_at = ?,
+        "UPDATE subscriptions SET check_at_most = ?, open_on_site = ?, paused_at = ?,
              writer_id = ?, kind = ?, place = ?
          WHERE person_id = ? AND feed_id = ?",
     )
-    .bind(river)
     .bind(check_at_most)
     .bind(open_on_site)
     .bind(paused_at)

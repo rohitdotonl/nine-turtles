@@ -118,8 +118,7 @@ export class LoadedLibrary {
   unreadChanged(feedId: number, change: number) {
     this.#countChanges++;
     const feed = this.feeds?.find((each) => each.id === feedId);
-    // A feed that flows past counts nothing.
-    if (feed && !feed.river) feed.unread = Math.max(0, feed.unread + change);
+    if (feed) feed.unread = Math.max(0, feed.unread + change);
   }
 
   /** A saved search was made or changed: it takes its place A to Z. */

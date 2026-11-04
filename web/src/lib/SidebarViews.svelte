@@ -1,8 +1,8 @@
 <!--
   The sidebar's fixed lists: Unread, Starred, Notes, All, Recently read
-  (SPEC section 5), each with a small sign in the icon column. River mode has
-  no Unread, and a list the reader hid steps aside, except All in river mode,
-  where it's home (as Unread, which can't be hidden, is in inbox mode).
+  (SPEC section 5), each with a small sign in the icon column. With Unread off
+  there's no Unread, and a list the reader hid steps aside, except All with Unread off,
+  where it's home (as Unread, which can't be hidden, is otherwise).
 
   Notes shows once the reader has highlighted or written a note on
   something (SPEC section 42).
@@ -19,14 +19,14 @@
     route,
     follow,
     phone,
-    river,
+    unreadOff,
     hidden,
   }: {
     route: Route;
     follow: (event: MouseEvent, next: Route) => void;
     /** The phone's feeds screen: no selection, and a chevron on every row. */
     phone: boolean;
-    river: boolean;
+    unreadOff: boolean;
     /** The lists the reader hid in Settings › Reading. */
     hidden: Hideable[];
   } = $props();
@@ -36,8 +36,8 @@
   let views = $derived(
     VIEWS.filter(
       (view) =>
-        !(river && view === "unread") &&
-        !((hidden as string[]).includes(view) && !(river && view === "all")) &&
+        !(unreadOff && view === "unread") &&
+        !((hidden as string[]).includes(view) && !(unreadOff && view === "all")) &&
         !(view === "notes" && !noted.any),
     ),
   );

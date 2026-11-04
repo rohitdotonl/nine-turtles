@@ -1,6 +1,6 @@
 // Reading offline (SPEC section 32, decision 0101). While nine turtles can be
 // reached, it quietly keeps a copy of the reader's first 200 unread articles
-// (in their sort order; in river mode, the first 200 of All) and their newest
+// (in their sort order; with Unread off, the first 200 of All) and their newest
 // 200 starred ones on this device, words only: each image is a short note
 // that it shows once the device is back online. Without a connection, Unread,
 // Starred, All, feeds and folders list those copies, articles open from them,
@@ -18,7 +18,7 @@
 
 import { placesOf } from "./people";
 import type { Article, FullArticle, Library, Page, Source } from "./shapes";
-import type { Order, ReadingMode } from "./reading";
+import { homeView, type Order } from "./reading";
 import { currentTabReader } from "./updates.svelte";
 import { deviceText, setDeviceText } from "./device";
 import { whenBack } from "./connection.svelte";
@@ -82,7 +82,7 @@ export class NeedsConnection extends Error {}
 
 /**
  * Which articles to keep: the first `KEEP_UNREAD` of the reader's list (Unread,
- * or All in river mode) and the first `KEEP_STARRED` starred ones, each once.
+ * or All with Unread off) and the first `KEEP_STARRED` starred ones, each once.
  */
 export function toKeep(first: Article[], starred: Article[]): Map<number, { row: Article; first: boolean }> {
   const keep = new Map<number, { row: Article; first: boolean }>();
@@ -114,7 +114,7 @@ function feedsOf(source: Source, library: Library | undefined): Set<number> | un
 
 /**
  * A list as it shows without a connection, from the kept articles, in the
- * reader's order. Unread shows those still unread (in river mode it's All
+ * reader's order. Unread shows those still unread (with Unread off it's All
  * that was kept), Starred the starred ones, everything else what's kept.
  * Search can't be done here.
  */
@@ -163,7 +163,7 @@ export function countsAfter(library: Library, before: Map<number, Kept>, changed
   if (change.size === 0) return library;
   return {
     ...library,
-    feeds: library.feeds.map((feed) => (change.has(feed.id) && !feed.river ? { ...feed, unread: Math.max(0, feed.unread + (change.get(feed.id) ?? 0)) } : feed)),
+    feeds: library.feeds.map((feed) => (change.has(feed.id) ? { ...feed, unread: Math.max(0, feed.unread + (change.get(feed.id) ?? 0)) } : feed)),
   };
 }
 
@@ -427,13 +427,13 @@ export async function sendWaiting(): Promise<void> {
 
 /**
  * Brings the copies up to date: sends waiting marks, asks for the reader's
- * first 200 unread (or All, in river mode) and newest 200 starred, lets go
+ * first 200 unread (or All, with Unread off) and newest 200 starred, lets go
  * of copies no longer among them, and fetches the missing ones a few at a
  * time. Only one round runs at once; one asked for meanwhile waits for it.
  */
-export function keepUpToDate(order: Order, mode: ReadingMode): Promise<void> {
+export function keepUpToDate(order: Order, unread: boolean): Promise<void> {
   if (!keeping() || !fetchers) return Promise.resolve();
-  running ??= round(fetchers, order, mode).finally(() => (running = undefined));
+  running ??= round(fetchers, order, unread).finally(() => (running = undefined));
   return running;
 }
 
@@ -449,12 +449,12 @@ async function firstOf(list: Fetchers["list"], source: Source, order: Order, mos
   return rows.slice(0, most);
 }
 
-async function round(using: Fetchers, order: Order, mode: ReadingMode): Promise<void> {
+async function round(using: Fetchers, order: Order, unread: boolean): Promise<void> {
   const mine = generation;
   const still = () => mine === generation && keeping();
   try {
     await sendWaiting();
-    const first = await firstOf(using.list, { view: mode === "river" ? "all" : "unread" }, order, KEEP_UNREAD);
+    const first = await firstOf(using.list, { view: homeView(unread) }, order, KEEP_UNREAD);
     const starred = await firstOf(using.list, { view: "starred" }, "newest", KEEP_STARRED);
     if (!still()) return;
     const keep = toKeep(first, starred);

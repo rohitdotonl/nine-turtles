@@ -94,14 +94,14 @@ test("Recently read lists what was opened, newest first, and can be hidden from 
 test("Starred, All and Saved searches can be hidden by keyboard, and their keys still work", async ({ page, isMobile }) => {
   test.skip(isMobile, "the tick boxes are worked by keyboard, and g s / g a are a keyboard's");
   let hidden: string[] = [];
-  let mode = "inbox";
+  let unread = true;
   await page.route("**/api/settings", async (route) => {
     if (route.request().method() === "POST") {
       const sent = route.request().postDataJSON() as { hidden?: string[] };
       if (sent.hidden) hidden = sent.hidden;
     }
     const real = await (await page.request.get(route.request().url())).json();
-    await route.fulfill({ json: { ...real, hidden, mode } });
+    await route.fulfill({ json: { ...real, hidden, unread } });
   });
   await page.route("**/api/saved-searches", (route) =>
     route.fulfill({
@@ -152,8 +152,8 @@ test("Starred, All and Saved searches can be hidden by keyboard, and their keys 
   await expect(page).toHaveURL(/\/all$/);
   await expect(page.getByRole("heading", { level: 2, name: "All" })).toBeVisible();
 
-  // In river mode All is home, so it shows even though it's hidden.
-  mode = "river";
+  // With Unread off All is home, so it shows even though it's hidden.
+  unread = false;
   await page.reload();
   await appReady(page);
   await expect(nav.getByRole("link", { name: "All", exact: true })).toBeVisible();

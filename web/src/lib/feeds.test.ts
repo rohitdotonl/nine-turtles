@@ -32,7 +32,7 @@ describe("folders and the sidebar search", () => {
     siteUrl: null,
     unread,
     folders,
-    river: false,
+   
     check: "automatic",
     openOnSite: false,
   });

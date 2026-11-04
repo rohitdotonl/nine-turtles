@@ -17,9 +17,9 @@ import {
 
 const library: Library = {
   feeds: [
-    { id: 1, title: "Garden Notes", siteUrl: null, unread: 0, folders: [7], river: false, check: "automatic", openOnSite: false },
-    { id: 2, title: "Gardening Weekly", siteUrl: null, unread: 0, folders: [], river: false, check: "automatic", openOnSite: false },
-    { id: 3, title: "हिंदी कविता", siteUrl: null, unread: 0, folders: [], river: false, check: "automatic", openOnSite: false },
+    { id: 1, title: "Garden Notes", siteUrl: null, unread: 0, folders: [7], check: "automatic", openOnSite: false },
+    { id: 2, title: "Gardening Weekly", siteUrl: null, unread: 0, folders: [], check: "automatic", openOnSite: false },
+    { id: 3, title: "हिंदी कविता", siteUrl: null, unread: 0, folders: [], check: "automatic", openOnSite: false },
   ],
   folders: [{ id: 7, name: "Tech" }],
   collections: [

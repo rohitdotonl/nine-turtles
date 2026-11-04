@@ -20,7 +20,8 @@ test("Settings' first page keeps the everyday settings, and the rest are rows th
   const groups = page.locator('section[aria-labelledby="settings-heading"] h3');
   await expect(groups).toHaveText(["Reading", "Look and feel", "Your library", "More", /^Your nine turtles/, "Account"]);
   // Reading and Look and feel hold their controls on the page itself.
-  for (const name of ["Reading mode", "Sort order", "Appearance"])
+  await expect(page.getByRole("switch", { name: "Unread", exact: true })).toBeVisible();
+  for (const name of ["Sort order", "Appearance"])
     await expect(page.getByRole("group", { name, exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Smaller text" })).toBeVisible();
   // Theme, font and line width are one page further in.
@@ -66,7 +67,7 @@ test("each row's icon sits on the centre of its name's first line", async ({ pag
         return { row: name.textContent, off: Math.abs(svg.top + svg.height / 2 - (line.top + line.height / 2)) };
       }),
   );
-  // Rows with a description under the name (Reading mode, Email) and rows without one.
+  // Rows with a description under the name (Unread, Email) and rows without one.
   expect(offsets.length).toBeGreaterThan(15);
   for (const { row, off } of offsets) expect(off, row ?? "").toBeLessThanOrEqual(1);
 });
@@ -166,14 +167,14 @@ test("Readers is only the owner's", async ({ browser, page }, testInfo) => {
 test("a setting's description sits straight under its name, and group names are small capitals", async ({ page }) => {
   await openSettings(page);
   // Settings' Reading rows: the description straight under the name, smaller and muted.
-  const name = page.locator("#mode-name");
-  const hint = page.locator("#mode-hint");
+  const name = page.locator("#unread-name");
+  const hint = page.locator("#unread-hint");
   await expect(name).toHaveCSS("font-weight", "500");
   await expect(hint).toHaveCSS("line-height", /^\d+(\.\d+)?px$/);
   const [n, h] = [await name.boundingBox(), await hint.boundingBox()];
   expect(h!.y).toBeGreaterThanOrEqual(n!.y + n!.height - 1);
   expect(h!.y - (n!.y + n!.height)).toBeLessThan(6);
-  await expect(page.getByRole("group", { name: "Reading mode" })).toHaveAccessibleDescription(/Unread list|flows past/);
+  await expect(page.getByRole("switch", { name: "Unread" })).toHaveAccessibleDescription(/Unread list/);
   await expect(page.locator("#reading-heading")).toHaveCSS("text-transform", "uppercase");
 });
 

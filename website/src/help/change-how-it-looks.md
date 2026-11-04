@@ -5,7 +5,7 @@ groupId: you-and-your-account
 order: 1
 spec: 18
 updated: 2026-11-03
-related: [every-keyboard-key, find-your-way-around, inbox-or-river]
+related: [every-keyboard-key, find-your-way-around, unread-on-or-off]
 ---
 
 <p class="lede">

@@ -3,7 +3,7 @@ import type { Reading } from "./reading";
 
 const server = vi.hoisted(() => ({
   loadSettings: vi.fn(),
-  saveMode: vi.fn(),
+  saveUnread: vi.fn(),
   saveSort: vi.fn(),
   saveHidden: vi.fn(),
   saveKeysSeen: vi.fn(),
@@ -27,11 +27,11 @@ function later<T>() {
   return { promise, resolve, reject };
 }
 
-const ON_THE_SERVER: Reading = { sort: "oldest", mode: "river", keysReset: true, hidden: ["recent"] };
+const ON_THE_SERVER: Reading = { sort: "oldest", unread: false, keysReset: true, hidden: ["recent"] };
 
 beforeEach(() => {
   vi.clearAllMocks();
-  for (const save of [server.saveMode, server.saveSort, server.saveHidden, server.saveKeysSeen]) save.mockResolvedValue(undefined);
+  for (const save of [server.saveUnread, server.saveSort, server.saveHidden, server.saveKeysSeen]) save.mockResolvedValue(undefined);
 });
 
 describe("the reading settings", () => {
@@ -40,7 +40,7 @@ describe("the reading settings", () => {
     const settings = new ReadingSettings();
     expect(settings.sort).toBeUndefined();
     await settings.load();
-    expect([settings.mode, settings.sort, settings.hidden]).toEqual(["river", "oldest", ["recent"]]);
+    expect([settings.unread, settings.sort, settings.hidden]).toEqual([false, "oldest", ["recent"]]);
     expect(settings.keysReset).toBe(true);
   });
 
@@ -59,11 +59,11 @@ describe("the reading settings", () => {
     server.loadSettings.mockReturnValue(answer.promise);
     const settings = new ReadingSettings();
     const loading = settings.load();
-    await settings.changeMode("inbox");
+    await settings.changeUnread(true);
     await settings.changeHidden(["starred"]);
     answer.resolve(ON_THE_SERVER);
     await loading;
-    expect(settings.mode).toBe("inbox");
+    expect(settings.unread).toBe(true);
     expect(settings.hidden).toEqual(["starred"]);
     // The ones left alone take the server's word.
     expect(settings.sort).toBe("oldest");
@@ -72,11 +72,11 @@ describe("the reading settings", () => {
   it("show the server's answer after all when the change made while it was on its way couldn't be saved", async () => {
     const answer = later<Reading>();
     server.loadSettings.mockReturnValue(answer.promise);
-    server.saveMode.mockRejectedValue(new Error("offline"));
+    server.saveUnread.mockRejectedValue(new Error("offline"));
     const settings = new ReadingSettings();
     const loading = settings.load();
     // One fails before the answer arrives, the other after.
-    await expect(settings.changeMode("inbox")).rejects.toThrow("not saved");
+    await expect(settings.changeUnread(true)).rejects.toThrow("not saved");
     const saving = later<void>();
     server.saveHidden.mockReturnValue(saving.promise);
     const hiding = settings.changeHidden(["starred"]);
@@ -85,7 +85,7 @@ describe("the reading settings", () => {
     expect(settings.hidden).toEqual(["starred"]);
     saving.reject(new Error("offline"));
     await expect(hiding).rejects.toThrow("not saved");
-    expect(settings.mode).toBe("river");
+    expect(settings.unread).toBe(false);
     expect(settings.hidden).toEqual(["recent"]);
   });
 

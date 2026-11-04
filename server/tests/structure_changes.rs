@@ -586,13 +586,11 @@ async fn adding_feed_settings_keeps_every_feed_as_it_was() {
         count("SELECT SUM(next_check_at) FROM feeds").await.unwrap(),
         10 * 1000 + 55
     );
-    // Every feed behaves as before: inbox, its own rhythm, read in nine turtles.
+    // Every feed behaves as before: its own rhythm, read in nine turtles.
     assert_eq!(
-        count(
-            "SELECT COUNT(*) FROM subscriptions WHERE river = 0 AND check_at_most = 0 AND open_on_site = 0"
-        )
-        .await
-        .unwrap(),
+        count("SELECT COUNT(*) FROM subscriptions WHERE check_at_most = 0 AND open_on_site = 0")
+            .await
+            .unwrap(),
         10
     );
 }
@@ -759,8 +757,9 @@ async fn giving_things_an_owner_makes_everything_the_owners_and_loses_nothing() 
     assert_eq!(
         settings,
         [
-            (1, "mode".to_owned(), "river".to_owned()),
-            (1, "sort".to_owned(), "oldest".to_owned())
+            (1, "sort".to_owned(), "oldest".to_owned()),
+            // River became Unread off (structure change 38).
+            (1, "unread".to_owned(), "off".to_owned())
         ]
     );
     let app: (i64, String, i64) =
@@ -1000,8 +999,18 @@ async fn giving_each_reader_their_own_feeds_and_marks_keeps_every_one_as_the_own
     let count = |sql: &'static str| sqlx::query_scalar::<_, i64>(sql).fetch_one(db);
 
     // Every article is still there, once, and is the owner's with exactly
-    // the marks it had.
+    // the marks it had, except that feed 1 flowed past (river), so its
+    // articles were counted as read when that went (structure change 38).
     assert_eq!(count("SELECT COUNT(*) FROM articles").await.unwrap(), 122);
+    let before: Vec<Marks> = before
+        .into_iter()
+        .map(|mut marks| {
+            if marks.1 == 1 {
+                marks.3 = true;
+            }
+            marks
+        })
+        .collect();
     let after: Vec<Marks> = sqlx::query_as(
         "SELECT article_id, feed_id, sort_at, read, starred, muted FROM entries
          WHERE person_id = 1 ORDER BY article_id",
@@ -1014,10 +1023,10 @@ async fn giving_each_reader_their_own_feeds_and_marks_keeps_every_one_as_the_own
 
     // Every feed line is the owner's subscription, with its name, settings
     // and unsubscribing exactly as they were.
-    type Subscription = (i64, String, i64, Option<i64>, bool, bool, i64, bool);
+    // (Feed 1 flowed past, which went in structure change 38.)
+    type Subscription = (i64, String, i64, Option<i64>, bool, i64, bool);
     let subscriptions: Vec<Subscription> = sqlx::query_as(
-        "SELECT feed_id, title, added_at, unsubscribed_at, cleared, river, check_at_most,
-             open_on_site
+        "SELECT feed_id, title, added_at, unsubscribed_at, cleared, check_at_most, open_on_site
          FROM subscriptions WHERE person_id = 1 ORDER BY feed_id",
     )
     .fetch_all(db)
@@ -1026,39 +1035,20 @@ async fn giving_each_reader_their_own_feeds_and_marks_keeps_every_one_as_the_own
     assert_eq!(
         subscriptions,
         [
-            (
-                1,
-                "My renamed blog".into(),
-                10,
-                None,
-                false,
-                true,
-                3600,
-                true
-            ),
-            (2, "Blog 2".into(), 20, None, false, false, 0, false),
-            (3, "Blog 3".into(), 30, None, false, false, 86_400, false),
-            (
-                4,
-                "Just left".into(),
-                40,
-                Some(now - 60),
-                false,
-                false,
-                0,
-                true
-            ),
+            (1, "My renamed blog".into(), 10, None, false, 3600, true),
+            (2, "Blog 2".into(), 20, None, false, 0, false),
+            (3, "Blog 3".into(), 30, None, false, 86_400, false),
+            (4, "Just left".into(), 40, Some(now - 60), false, 0, true),
             (
                 5,
                 "Cleared, stars kept".into(),
                 50,
                 Some(now - 86_400),
                 true,
-                false,
                 0,
                 false
             ),
-            (6, "Nothing yet".into(), 60, None, false, false, 0, false),
+            (6, "Nothing yet".into(), 60, None, false, 0, false),
         ]
     );
     // What background checking reads stays as it was.
@@ -1168,7 +1158,6 @@ async fn giving_each_reader_their_own_feeds_and_marks_keeps_every_one_as_the_own
         names,
         ["Blog 2", "Blog 3", "My renamed blog", "Nothing yet"]
     );
-    assert_eq!(feeds[2]["river"], true);
     assert_eq!(feeds[2]["unread"], 0);
     assert_eq!(feeds[0]["unread"], 15 - 3);
     let starred = get("/api/articles?view=starred").await["articles"].clone();
@@ -2502,4 +2491,94 @@ async fn ending_let_unread_go_marks_only_what_it_was_already_letting_go() {
     .await
     .unwrap();
     assert_eq!(settings, [(1, "sort".to_owned(), "oldest".to_owned())]);
+}
+
+#[tokio::test]
+async fn unread_on_or_off_keeps_every_choice_and_marks_only_what_flowed_past() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just after ending "Let unread go" (structure change 37):
+    // reader 1 reads as an inbox with one feed set to flow past (river);
+    // reader 2 chose river for the whole app. Each has unread, read and
+    // starred articles.
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(37, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO people (id, owner, email, created_at) VALUES (2, 0, 'kai@example.com', 1)",
+        "INSERT INTO feeds (id, url, url_key, title, added_at)
+         VALUES (1, 'u', 'u', 'Garden', 1), (2, 'v', 'v', 'Shed', 1)",
+        "INSERT INTO subscriptions (person_id, feed_id, title, added_at, river, open_on_site)
+         VALUES (1, 1, 'Garden', 1, 0, 1), (1, 2, 'Shed', 1, 1, 0), (2, 2, 'Shed', 1, 0, 0)",
+        "INSERT INTO articles (id, feed_id, fingerprint, title, received_at, sort_at)
+         VALUES (1, 1, 'a', 'Rose', 1, 1), (2, 2, 'b', 'Spade', 1, 2), (3, 2, 'c', 'Rake', 1, 3)",
+        "INSERT INTO entries (person_id, article_id, feed_id, sort_at, read, starred)
+         VALUES (1, 1, 1, 1, 0, 0), (1, 2, 2, 2, 0, 1), (1, 3, 2, 3, 1, 0),
+                (2, 2, 2, 2, 0, 0), (2, 3, 2, 3, 0, 1)",
+        "INSERT INTO person_settings (person_id, name, value)
+         VALUES (1, 'mode', 'inbox'), (1, 'sort', 'oldest'), (2, 'mode', 'river')",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let entries: Vec<(i64, i64, bool, bool)> = sqlx::query_as(
+        "SELECT person_id, article_id, read, starred FROM entries ORDER BY person_id, article_id",
+    )
+    .fetch_all(&db)
+    .await
+    .unwrap();
+    assert_eq!(
+        entries,
+        [
+            // Reader 1: the feed that flowed past has nothing unread now
+            // (its star stays); the other feed is untouched.
+            (1, 1, false, false),
+            (1, 2, true, true),
+            (1, 3, true, false),
+            // Reader 2 follows the same feed as an ordinary one: untouched.
+            (2, 2, false, false),
+            (2, 3, false, true),
+        ]
+    );
+    // River became Unread off; inbox needs nothing stored.
+    let settings: Vec<(i64, String, String)> = sqlx::query_as(
+        "SELECT person_id, name, value FROM person_settings ORDER BY person_id, name",
+    )
+    .fetch_all(&db)
+    .await
+    .unwrap();
+    assert_eq!(
+        settings,
+        [
+            (1, "sort".to_owned(), "oldest".to_owned()),
+            (2, "unread".to_owned(), "off".to_owned())
+        ]
+    );
+    // The column is gone; every other setting of each feed stays.
+    let columns: Vec<String> =
+        sqlx::query_scalar("SELECT name FROM pragma_table_info('subscriptions')")
+            .fetch_all(&db)
+            .await
+            .unwrap();
+    assert!(!columns.iter().any(|column| column == "river"));
+    let open: Vec<(i64, i64, bool)> = sqlx::query_as(
+        "SELECT person_id, feed_id, open_on_site FROM subscriptions ORDER BY person_id, feed_id",
+    )
+    .fetch_all(&db)
+    .await
+    .unwrap();
+    assert_eq!(open, [(1, 1, true), (1, 2, false), (2, 2, false)]);
 }

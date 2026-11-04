@@ -115,7 +115,6 @@ struct EditFeed {
     /// Its settings (SPEC section 15). Each, like everything here, is left as
     /// it is when absent (serde reads a missing `Option` as `None`), so a tab
     /// opened before they existed can't reset them.
-    river: Option<bool>,
     check: Option<Check>,
     open_on_site: Option<bool>,
     paused: Option<bool>,
@@ -192,15 +191,13 @@ async fn edit_feed(
         .fetch_one(&mut *transaction)
         .await?;
         sqlx::query(
-            "UPDATE subscriptions SET river = COALESCE(?, river),
-                 open_on_site = COALESCE(?, open_on_site),
+            "UPDATE subscriptions SET open_on_site = COALESCE(?, open_on_site),
                  check_at_most = COALESCE(?, check_at_most),
                  shorts = COALESCE(?, shorts),
                  live_streams = COALESCE(?, live_streams),
                  kind = COALESCE(?, kind), place = COALESCE(?, place)
              WHERE person_id = ? AND feed_id = ?",
         )
-        .bind(form.river)
         .bind(form.open_on_site)
         .bind(form.check.map(Check::at_most))
         .bind(form.shorts)

@@ -15,8 +15,8 @@ related: [install-the-app, star-an-article, mark-read-or-unread]
 
 ## What's kept
 
-- The first 200 articles in your Unread (or in All, if you read
-  <a href="/help/inbox-or-river/">in the river</a>).
+- The first 200 articles in your Unread (or in All, if you've switched
+  <a href="/help/unread-on-or-off/">Unread off</a>).
 - Your newest 200 starred articles.
 
 Only the words are kept. Pictures, videos and podcast episodes show a line
