@@ -404,7 +404,7 @@ async fn failed(
         "UPDATE feeds SET failures = ?, failing_since = COALESCE(failing_since, ?),
              missing_since = CASE WHEN ? THEN COALESCE(missing_since, ?) END,
              problem = ?, next_check_at = ?
-         WHERE id = ?",
+         WHERE id = ? AND url = ?",
     )
     .bind(failures)
     .bind(now)
@@ -413,6 +413,9 @@ async fn failed(
     .bind(word)
     .bind(now + next)
     .bind(feed_id)
+    // Moved to a new address while the old one was being tried (Find new
+    // address): the old address failing says nothing about the feed now.
+    .bind(&feed.url)
     .execute(&state.db)
     .await?;
     Ok(())
