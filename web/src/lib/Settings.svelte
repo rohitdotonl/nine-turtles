@@ -150,7 +150,7 @@
   const SIDEBAR_LISTS: { value: Hideable; label: string }[] = [
     { value: "starred", label: "Starred" },
     { value: "notes", label: "Notes" },
-    { value: "all", label: "All" },
+    { value: "all", label: "All articles" },
   ];
 
   let sidebarMessage = $state("");

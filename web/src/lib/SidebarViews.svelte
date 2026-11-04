@@ -31,7 +31,7 @@
     hidden: Hideable[];
   } = $props();
 
-  const ICONS = { unread: "dot", starred: "star", notes: "note", all: "stack" } as const;
+  const ICONS = { unread: "dot", starred: "star", notes: "note", all: "layers" } as const;
 
   let views = $derived(sidebarViews(unreadOff, hidden, noted.any));
 </script>
@@ -48,8 +48,8 @@
           "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-2.5 pr-3.5 pl-3 text-ui pointer-fine:text-small",
           current ? "font-semibold text-ink" : "text-ink-2",
         ]}
-        ><span class={current ? "text-ink" : "text-muted"}><Icon name={ICONS[view]} size={16} filled={view === "starred" && current} /></span
-        ><span class="min-w-0 flex-1">{VIEW_NAMES[view]}</span>{#if phone}<span class="-mr-1 shrink-0 text-muted"><Icon name="chevron-right" size={16} /></span>{/if}</a
+        ><span class={current ? "text-ink" : "text-muted"}><Icon name={ICONS[view]} size={16} /></span
+        ><span class="min-w-0 flex-1">{VIEW_NAMES[view]}</span>{#if phone}<span class="-mr-1 shrink-0 text-muted"><Icon name="chevron-right" size={18} /></span>{/if}</a
       >
     </li>
   {/each}

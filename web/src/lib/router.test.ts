@@ -55,7 +55,7 @@ describe("addresses", () => {
   it("turns a place back into its address and title", () => {
     expect(pathFor({ kind: "view", view: "starred" })).toBe("/starred");
     expect(pathFor({ kind: "settings" })).toBe("/settings");
-    expect(titleFor({ kind: "view", view: "all" })).toBe("All · nine turtles");
+    expect(titleFor({ kind: "view", view: "all" })).toBe("All articles · nine turtles");
     expect(titleFor({ kind: "settings" })).toBe("Settings · nine turtles");
     expect(pathFor({ kind: "feed-health" })).toBe("/settings/feed-health");
     expect(titleFor({ kind: "feed-health" })).toBe("Feed health · nine turtles");

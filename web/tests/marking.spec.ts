@@ -504,7 +504,7 @@ test("Unread off: no Unread view, no dots, no read styling, and it opens on All"
   );
   const name = await openBlog(page);
 
-  await expect(sidebar(page).getByRole("link", { name: "All", exact: true })).toBeVisible();
+  await expect(sidebar(page).getByRole("link", { name: "All articles", exact: true })).toBeVisible();
   await expect(sidebar(page).getByRole("link", { name: "Unread", exact: true })).toHaveCount(0);
   await expect(feedLink(page, name)).not.toContainText("unread");
   await expect(row(page, name, NEWEST)).not.toContainText("unread");
@@ -533,7 +533,7 @@ test("Unread off: no Unread view, no dots, no read styling, and it opens on All"
   await page.goto(new URL("/unread", FEEDS_APP).href);
   await appReady(page);
   await expect(page).toHaveURL(/\/all$/);
-  await expect(page.getByRole("heading", { name: "All", level: 2 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "All articles", level: 2 })).toBeVisible();
 
   // Unread back on in Settings: Unread and the dots return, and what was read shows as read.
   await page.goto(new URL("/settings", FEEDS_APP).href);

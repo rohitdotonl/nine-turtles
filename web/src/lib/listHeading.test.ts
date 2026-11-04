@@ -27,7 +27,7 @@ describe("placeNameOf", () => {
 
 describe("headingFor", () => {
   it("names a view, or a place by its own name", () => {
-    expect(headingFor(scene())).toBe("All");
+    expect(headingFor(scene())).toBe("All articles");
     expect(headingFor(scene({ under: { kind: "feed", id: 3 }, placeName: "Quiet Notes" }))).toBe("Quiet Notes");
     expect(headingFor(scene({ under: { kind: "feed", id: 3 } }))).toBe("Someone");
   });
@@ -38,7 +38,7 @@ describe("headingFor", () => {
   });
 
   it("names where a search's results come from", () => {
-    expect(headingFor(scene({ results: { kind: "all" } }))).toBe("Results in All");
+    expect(headingFor(scene({ results: { kind: "all" } }))).toBe("Results in All articles");
     expect(headingFor(scene({ results: { kind: "folder", id: 4 } }))).toBe("Results in Essays");
   });
 });

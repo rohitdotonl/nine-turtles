@@ -98,7 +98,7 @@
 <div class="episode" role="group" aria-label="Episode player" use:watch={article.id}>
   <div class="episode-controls">
     <button type="button" class="episode-button" aria-label="Back {BACK_SECONDS} seconds" title="Back {BACK_SECONDS} seconds" onclick={() => goTo(position - BACK_SECONDS)}>
-      <svg aria-hidden="true" width="30" height="30" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"
+      <svg aria-hidden="true" width="30" height="30" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
         ><path d="M4.25 10a5.75 5.75 0 1 0 1.7-4.08" /><path d="M4 3.5v3h3" /><text x="10" y="12.9" text-anchor="middle" font-size="7.5" font-weight="600" stroke="none" fill="currentColor" font-family="system-ui, sans-serif">15</text></svg
       >
     </button>
@@ -111,7 +111,7 @@
       {/if}
     </button>
     <button type="button" class="episode-button" aria-label="Forward {FORWARD_SECONDS} seconds" title="Forward {FORWARD_SECONDS} seconds" onclick={() => goTo(position + FORWARD_SECONDS)}>
-      <svg aria-hidden="true" width="30" height="30" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"
+      <svg aria-hidden="true" width="30" height="30" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
         ><path d="M15.75 10a5.75 5.75 0 1 1-1.7-4.08" /><path d="M16 3.5v3h-3" /><text x="10" y="12.9" text-anchor="middle" font-size="7.5" font-weight="600" stroke="none" fill="currentColor" font-family="system-ui, sans-serif">30</text></svg
       >
     </button>

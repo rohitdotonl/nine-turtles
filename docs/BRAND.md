@@ -82,7 +82,7 @@ A glance at an icon tells the reader, without doubt, what it's for.
 4. **Simple, not empty.** One object, plus at most one sign that pins down its meaning. Drop decoration, keep meaning. *The card loses its chip and digits; the heart keeps its beat; the keyboard keeps its keys; the eye keeps its pupil, or it stops being an eye.*
 5. **Outlines for shapes, solid only for tiny marks.** A shape big enough for its inside to show is an outline; a mark too small to outline stays solid. *The heart, the bookmark and the readers' heads are outlines; the palette's paint, the unread dot, More's three dots, the feed's dot, the alert's dot, the keyboard's keys and the headphones' ear cups are solid.* Plain signs (close, back, search, plus, check) are never solid.
 6. **Judged at real size.** Every icon is chosen at 18px on White, Paper and Night, never only enlarged.
-7. **One hand.** A thin 1.5px line on a 20px grid, round ends and corners.
+7. **One hand.** A thin 1.5px line on a 20px grid, round ends and corners, the players' buttons too. One size per role: a row's › is always 18px.
 
 "View original" is an arrow with no box. A new icon follows these rules; if Rohit dislikes one later, offer three versions side by side at real size.
 

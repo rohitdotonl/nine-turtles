@@ -349,7 +349,7 @@ test.describe("on a phone", () => {
     await follow(page, `${FEED_SITE}/blog/${name}/`);
     await page.goto(new URL("/all", FEEDS_APP).href);
     await appReady(page);
-    const all = page.getByRole("region", { name: "All" });
+    const all = page.getByRole("region", { name: "All articles" });
     const mine = all.getByRole("button", { name: new RegExp(`On keeping a commonplace book.*Blog ${name}`) });
     // Star it, so the row's meta line carries the star too.
     await mine.click();
