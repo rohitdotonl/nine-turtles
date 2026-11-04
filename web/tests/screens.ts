@@ -467,14 +467,11 @@ async function unmark(page: Page, feed: number): Promise<void> {
   }
 }
 
-/** One theme's day or night version, as "fountain-pen-dark". */
-export type Variant = Theme;
-
 /** Every page (White, Paper, Night), each checked and photographed. */
-export const THEMES: Variant[] = [...THEME_NAMES];
+export const THEMES: Theme[] = [...THEME_NAMES];
 
 // Each page's color (themes.ts, checked against themes.css), used to prove the page took effect.
-function background(theme: Variant): string {
+function background(theme: Theme): string {
   const hex = LOOKS[theme].page;
   return `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(", ")})`;
 }
@@ -540,13 +537,13 @@ export function settingsSaved(page: Page): Promise<unknown> {
 }
 
 /** Chooses a page the way Settings saves it, before the page loads. */
-export async function chooseTheme(page: Page, theme: Variant): Promise<void> {
+export async function chooseTheme(page: Page, theme: Theme): Promise<void> {
   await page.addInitScript((chosen) => {
     localStorage.setItem("nine-turtles.preferences", JSON.stringify(chosen));
   }, { page: theme });
 }
 
-export async function openScreen(page: Page, screen: Screen, theme: Variant): Promise<void> {
+export async function openScreen(page: Page, screen: Screen, theme: Theme): Promise<void> {
   await chooseTheme(page, theme);
   await page.goto(screen.library ? new URL(screen.path, libraryApp()).href : screen.path);
   await appReady(page);

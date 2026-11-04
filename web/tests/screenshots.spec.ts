@@ -1,5 +1,6 @@
 import { test } from "@playwright/test";
-import { SCREENS, THEMES, openScreen, type Variant } from "./screens";
+import type { Theme } from "../src/lib/themes";
+import { SCREENS, THEMES, openScreen } from "./screens";
 
 // Photographs every screen on White and Night, the pages Match device shows
 // by day and by night (and the main ones on Paper) so the owner can see each change.
@@ -10,7 +11,7 @@ import { SCREENS, THEMES, openScreen, type Variant } from "./screens";
 // Paper is photographed on the main screens, Settings and a
 // sheet only, to keep the pull request's pictures to a size the owner can
 // look through.
-const EVERY_SCREEN: Variant[] = ["white", "night"];
+const EVERY_SCREEN: Theme[] = ["white", "night"];
 const MAIN_SCREENS = ["articles", "article", "settings", "edit-feed"];
 
 for (const screen of SCREENS) {
