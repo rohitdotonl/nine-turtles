@@ -348,7 +348,9 @@ test("Settings: appearance, font, size and width apply at once and are remembere
   await expect(look.locator(".sizes")).toHaveCSS("border-radius", "10px");
   await expect(larger).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect(larger).toHaveCSS("box-shadow", "none");
-  await expect(larger).not.toHaveCSS("border-left-color", "rgba(0, 0, 0, 0)");
+  // The hairline before the large A is the name's own straight right edge, not the rounded cell's.
+  await expect(look.getByRole("status")).not.toHaveCSS("border-right-color", "rgba(0, 0, 0, 0)");
+  await expect(larger).toHaveCSS("border-left-color", "rgba(0, 0, 0, 0)");
   expect(largerBox!.x - (smallerBox!.x + smallerBox!.width)).toBeGreaterThan(80);
   for (let step = 0; step < 3; step++) await larger.click();
   await expect(look.getByRole("status")).toHaveText("Largest");

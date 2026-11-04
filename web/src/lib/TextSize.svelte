@@ -109,9 +109,9 @@
     tone of the text color, the cells' own height, so the capsule's 4px rim
     stays clear of them.
   */
-  .step + .sizes-name,
-  .sizes-name + .step {
-    border-left: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  /* Both hairlines are the name's own edges, so each is straight: a rounded cell's edge would curve. */
+  .step + .sizes-name {
+    border-inline: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
   }
   .step + .sizes-name {
     align-self: stretch;
