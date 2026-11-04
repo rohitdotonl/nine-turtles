@@ -26,7 +26,7 @@ pub struct FullArticle {
     /// The publisher's website, so the source is credited with a link.
     pub site_url: Option<String>,
     pub title: String,
-    /// The original article: "Open original" and Copy link go here.
+    /// The original article: "View original" and Copy link go here.
     pub link: Option<String>,
     pub author: Option<String>,
     /// The article's text, already cleaned (feed/clean.rs). Null when the feed

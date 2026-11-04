@@ -34,12 +34,8 @@ async function openBlog(page: Page, many = false): Promise<string> {
   return name;
 }
 
-function row(page: Page, number: number) {
-  return page.getByRole("button", { name: new RegExp(`\\(${number}\\)`) });
-}
-
 test.describe("on a wide window", () => {
-  test.skip(({ isMobile }) => isMobile, "Space, n and c are for a keyboard");
+  test.skip(({ isMobile }) => isMobile, "Space and c are for a keyboard");
 
   test("Space scrolls the open article a screen at a time and stops at its end; Shift+Space goes back; a button keeps its Space", async ({ page }) => {
     await signedIn(page, 420);
@@ -96,24 +92,6 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("Escape");
   });
 
-  test("n moves to the next unread article, passing read ones; Shift+N to the previous unread one", async ({ page }) => {
-    await signedIn(page);
-    await openBlog(page);
-    // j shows the newest and then the middle one: both read now.
-    await page.keyboard.press("j");
-    await page.keyboard.press("j");
-    await page.keyboard.press("k");
-    await expect(row(page, 3)).toHaveAttribute("aria-current", "true");
-    await expect(row(page, 2)).not.toHaveAccessibleName(/, unread/);
-
-    await page.keyboard.press("n");
-    await expect(row(page, 1)).toHaveAttribute("aria-current", "true");
-    await expect(article(page).locator(".article-title")).toHaveText(/\(1\)/);
-    // Nothing unread above any more: Shift+N stays where it is.
-    await page.keyboard.press("Shift+N");
-    await expect(row(page, 1)).toHaveAttribute("aria-current", "true");
-  });
-
   test("Shift+O does nothing, and More marks only all as read (decision 0171)", async ({ page }) => {
     await signedIn(page);
     const blog = await openBlog(page, true);
@@ -131,7 +109,8 @@ test.describe("on a wide window", () => {
     await expect(page.getByRole("menuitem", { name: /above as read|below as read|Catch me up/ })).toHaveCount(0);
   });
 
-  test("e folds and unfolds the folder you're in, or your feed's; Shift+E edits the feed or folder", async ({ page }) => {
+
+  test("e expands and folds the folder you're in, or your feed's", async ({ page }) => {
     await signedIn(page);
     const blog = await openBlog(page);
     const folder = `Keys-${test.info().workerIndex}-${Date.now()}`;
@@ -143,24 +122,14 @@ test.describe("on a wide window", () => {
     const toggle = sidebar(page).getByRole("button", { name: `What's in ${folder}` });
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
 
-    // In the feed: e unfolds its folder, and folds it again.
+    // In the feed: e expands its folder, and folds it again.
     await page.locator("#list-heading").focus();
     await page.keyboard.press("e");
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
     await page.keyboard.press("e");
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
-    // Shift+E opens Edit for them, beside their list; Escape goes back to their page, and again to the list.
-    await page.keyboard.press("Shift+E");
-    await expect(page.getByRole("heading", { level: 2, name: `Edit Blog ${blog}` })).toBeFocused();
-    await expect(page).toHaveURL(/\/people\/\d+\/edit$/);
-    await page.keyboard.press("Escape");
-    await expect(page).toHaveURL(/\/people\/\d+\/about$/);
-    await page.keyboard.press("Escape");
-    await expect(page).toHaveURL(/\/people\/\d+$/);
-    await expect(page.getByRole("heading", { level: 2, name: `Blog ${blog}` })).toBeVisible();
 
-    // In the folder: e folds and unfolds it; Shift+E edits it.
-    // Choosing a closed folder opens it (decision 0123).
+    // In the folder: the same. Choosing a closed folder opens it (decision 0123).
     await sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) }).click();
     await expect(page.getByRole("heading", { level: 2, name: folder })).toBeFocused();
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
@@ -168,9 +137,17 @@ test.describe("on a wide window", () => {
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
     await page.keyboard.press("e");
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
-    await page.keyboard.press("Shift+E");
-    await expect(page.getByRole("heading", { level: 2, name: "Edit folder" })).toBeFocused();
-    await page.keyboard.press("Escape");
-    await expect(page.getByRole("heading", { level: 2, name: folder })).toBeVisible();
+
+    // Shift+J from an expanded folder goes to the first person in it; from a collapsed one, past them.
+    const inFolder = new RegExp(`/(people|publications)/${feed}$`);
+    await page.keyboard.press("Shift+J");
+    await expect(page).toHaveURL(inFolder);
+    await page.keyboard.press("Shift+K");
+    await expect(page.getByRole("heading", { level: 2, name: folder })).toBeFocused();
+    await page.keyboard.press("e");
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await page.keyboard.press("Shift+J");
+    await expect(page.getByRole("heading", { level: 2, name: folder })).toHaveCount(0);
+    await expect(page).not.toHaveURL(inFolder);
   });
 });

@@ -1,4 +1,4 @@
-# 0180: Icon rules: clear at a glance, one meaning each, outlines for shapes
+# 0181: Icon rules: clear at a glance, one meaning each, outlines for shapes
 
 *4 November 2026.*
 

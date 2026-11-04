@@ -1,10 +1,10 @@
 ---
 title: Search everything you've read
-description: Find any article from the people you follow, narrow it by person, folder or date, and keep a search in the sidebar.
+description: Find any article from the people you follow, and narrow it by person, folder or date.
 groupId: reading
 order: 5
 spec: 14
-updated: 2026-11-04
+updated: 2026-11-05
 related: [star-an-article, every-keyboard-key, find-your-way-around]
 ---
 
@@ -34,22 +34,9 @@ Search starts in the list you're in, shown as a small label such as
 ## Narrow it down
 
 Press **Search options** (the sliders beside the field) to choose where to
-look, to show only unread or starred articles, or to pick a time: the past
+look, to show only unread or starred articles or those with your notes, or
+to pick a time: the past
 week, the past month, or dates of your own.
-
-Or type a filter with your words:
-
-| Type | To find |
-|---|---|
-| <code>is:unread</code> | only unread articles |
-| <code>is:starred</code> | only starred articles |
-| <code>is:noted</code> | only articles you highlighted or wrote a note on |
-| <code>feed:alpha</code> | only articles from one person or site |
-| <code>folder:cooking</code> | only articles in one folder |
-| <code>after:2026-01-31</code> | articles from after a day |
-| <code>before:2026-03-01</code> | articles from before a day |
-
-Put a name with spaces in quotation marks: <code>folder:"long reads"</code>.
 
 ## Good to know
 

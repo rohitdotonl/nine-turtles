@@ -4,7 +4,7 @@ description: Group the people you follow into folders, such as Friends or Cookin
 groupId: keeping-things-tidy
 order: 1
 spec: 15
-updated: 2026-11-03
+updated: 2026-11-05
 related: [one-person-several-places, unfollow-someone, hide-topics]
 ---
 
@@ -17,7 +17,7 @@ related: [one-person-several-places, unfollow-someone, hide-topics]
 
 1. Choose the person in the sidebar, and press their name at the top of
    their list to open their page.
-2. Press **Edit** (or press <kbd>Shift</kbd> <kbd>E</kbd>).
+2. Press **Edit**.
 3. Under **Folders**, tick the folders they belong in. To make a new one,
    type its name in **New folder…**
 4. Press **Done**.

@@ -1,16 +1,13 @@
 <!--
   The search field (SPEC section 14), above the item list. A search icon and
   a tuning (sliders) icon sit together. What's searched shows as chips inside
-  the field: where you are to begin with (`in: Tech`), then any filter typed
-  (`is:starred`, shown in plain words as "Starred") or picked in the Search
-  options popover. Each chip has a
+  the field: where you are to begin with (`in: Tech`), then anything picked in
+  the Search options popover. Each chip has a
   button that removes it; Backspace in an empty field removes the last one.
   The panel and the chips always match, since both show the same `query`.
 
-  While typing, filters are suggested in a small panel floating under the
-  field, over the list, so the results never move (↓ and ↑ choose, Enter
-  takes one). Enter searches straight away; otherwise the search follows a
-  moment after typing stops. Tab moves from the field into the open panel.
+  Enter searches straight away; otherwise the search follows a moment after
+  typing stops. Tab moves from the field into the open panel.
   Escape is the app's: it closes search and returns you to where you were.
 -->
 <script lang="ts">
@@ -18,15 +15,11 @@
   import type { Feed, Folder } from "./shapes";
   import {
     chipsFor,
-    replaceLastWord,
     scopeName,
-    suggestions as suggestionsFor,
-    takeFilters,
     withoutChip,
     type Chip,
     type Query,
     type Scope,
-    type Suggestion,
   } from "./search";
 
   let {
@@ -55,10 +48,6 @@
   let panel: HTMLDivElement | undefined = $state();
   let optionsButton: HTMLButtonElement | undefined = $state();
   let panelOpen = $state(false);
-  let problem = $state("");
-  let active = $state(-1);
-  /** Suggestions are offered only while the reader types in the field. */
-  let offering = $state(false);
 
   let library = $derived({ feeds, folders });
   let chips = $derived(chipsFor(query, library));
@@ -85,39 +74,17 @@
    */
   let resting = $derived(!inside && !panelOpen && query.words.trim() === "" && chips.length === 1 && chips[0]?.key === "scope");
   let shownChips = $derived(resting ? [] : chips);
-  let offered: Suggestion[] = $derived(offering ? suggestionsFor(query.words, library) : []);
 
   export function focus() {
     field?.focus();
   }
 
   function typed(event: Event) {
-    const words = (event.currentTarget as HTMLInputElement).value;
-    const result = takeFilters({ ...query, words }, library, false);
-    problem = result.problem ?? "";
-    offering = true;
-    active = -1;
-    // A filter that just became a chip searches at once; plain words after a pause.
-    const tookFilter = JSON.stringify(chipsFor(result.query, library)) !== JSON.stringify(chips);
-    onChange(result.query, tookFilter);
-  }
-
-  function choose(suggestion: Suggestion) {
-    if ("text" in suggestion) {
-      onChange({ ...query, words: replaceLastWord(query.words, suggestion.text) }, false);
-    } else {
-      onChange(suggestion.query({ ...query, words: replaceLastWord(query.words, "").trimEnd() }), true);
-      problem = "";
-    }
-    active = -1;
-    field?.focus();
+    onChange({ ...query, words: (event.currentTarget as HTMLInputElement).value }, false);
   }
 
   /** The × in the field: the typed words go, and the search follows at once. */
   function clear() {
-    problem = "";
-    offering = false;
-    active = -1;
     onChange({ ...query, words: "" }, true);
     field?.focus();
   }
@@ -128,23 +95,9 @@
   }
 
   function keydown(event: KeyboardEvent) {
-    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      if (offered.length === 0) return;
+    if (event.key === "Enter") {
       event.preventDefault();
-      const step = event.key === "ArrowDown" ? 1 : -1;
-      active = (active + step + offered.length + 1) % (offered.length + 1);
-      if (active === offered.length) active = -1;
-    } else if (event.key === "Enter") {
-      event.preventDefault();
-      const suggestion = offered[active];
-      if (suggestion) {
-        choose(suggestion);
-        return;
-      }
-      const result = takeFilters(query, library, true);
-      problem = result.problem ?? "";
-      offering = false;
-      onChange(result.query, true);
+      onChange({ ...query, words: query.words.trim() }, true);
     } else if (event.key === "Tab" && !event.shiftKey && panelOpen) {
       // Tab moves from the field into the options, onto the place being searched.
       const first = panel?.querySelector<HTMLElement>('input[name="search-in"]:checked') ?? panel?.querySelector<HTMLElement>("input, select");
@@ -268,10 +221,9 @@
     <div class={["flex min-w-0 flex-1 items-center gap-1", chips.length > 2 && "flex-wrap"]}>
       {#each shownChips as chip (chip.key)}
         <span class={["chip my-1.5 flex min-w-0 shrink items-center rounded-md bg-[var(--tone)] pl-2 text-small whitespace-nowrap", chips.length > 2 ? "max-w-full" : "max-w-[60%]"]}>
-          <!-- Plain words, as the options menu names the filter; how it's typed is its tooltip and its description (decision 0048). -->
-          <span class="min-w-0 truncate" title={chip.typed ?? chip.label}>{chip.label}</span>
-          {#if chip.typed}<span id="chip-typed-{chip.key}" hidden>{chip.typed}</span>{/if}
-          <button type="button" aria-label="Remove {chip.label}" aria-describedby={chip.typed ? `chip-typed-${chip.key}` : undefined} onclick={() => remove(chip)} class="-my-2.5 -mr-2 -ml-1 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center">
+          <!-- Plain words, as the options menu names the filter. -->
+          <span class="min-w-0 truncate" title={chip.label}>{chip.label}</span>
+          <button type="button" aria-label="Remove {chip.label}" onclick={() => remove(chip)} class="-my-2.5 -mr-2 -ml-1 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center">
             <Icon name="close" size={14} />
           </button>
         </span>
@@ -281,16 +233,9 @@
         id="search-field"
         bind:this={field}
         type="text"
-        role="combobox"
-        aria-autocomplete="list"
-        aria-expanded={offered.length > 0}
-        aria-controls="search-suggestions"
-        aria-activedescendant={active >= 0 ? `search-suggestion-${active}` : undefined}
-        aria-describedby="search-problem"
         value={query.words}
         oninput={typed}
         onkeydown={keydown}
-        onblur={() => (offering = false)}
         placeholder={shownChips.length > 0 ? "" : "Search"}
         autocomplete="off"
         spellcheck="false"
@@ -459,41 +404,7 @@
         </div>
       {/if}
     </div>
-    <!--
-      The suggestions as you type (is:, feed: and the rest): a small panel floating over the list, in
-      the family of the search options, so the results under it never move. Still a listbox the
-      field controls: ↓ and ↑ choose (aria-activedescendant), Enter takes one, and screen readers
-      hear each as it's chosen. The chosen one has a bar at its start in the text color and a
-      tone behind it, never the accent.
-    -->
-    <ul
-      id="search-suggestions"
-      role="listbox"
-      aria-label="Suggestions"
-      hidden={offered.length === 0}
-      class="floating search-suggestions absolute top-full left-0 z-30 mt-1 w-full max-w-[24rem] cursor-default p-1.5"
-    >
-      {#each offered as suggestion, index (suggestion.label)}
-        <!-- Chosen with the mouse on press, before the field loses the keyboard's place. -->
-        <li
-          id="search-suggestion-{index}"
-          role="option"
-          aria-selected={index === active}
-          onmousedown={(event) => {
-            event.preventDefault();
-            choose(suggestion);
-          }}
-          class={["flex min-h-11 items-center rounded-md border-l-4 px-3 font-mono text-small", index === active ? "border-ink bg-[var(--tone)]" : "border-transparent"]}
-        >
-          {suggestion.label}
-        </li>
-      {/each}
-    </ul>
   </div>
-
-
-  <p id="search-problem" role="status" class="mt-1 text-small empty:sr-only">{problem}</p>
-
 </search>
 
 <style>

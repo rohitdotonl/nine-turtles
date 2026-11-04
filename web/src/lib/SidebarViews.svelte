@@ -13,7 +13,7 @@
 <script lang="ts">
   import Icon from "./Icon.svelte";
   import { noted } from "./notes.svelte";
-  import { VIEWS, VIEW_NAMES, pathFor, type Hideable, type Route } from "./router";
+  import { sidebarViews, VIEW_NAMES, pathFor, type Hideable, type Route } from "./router";
 
   let {
     route,
@@ -33,14 +33,7 @@
 
   const ICONS = { unread: "dot", starred: "star", notes: "note", all: "stack" } as const;
 
-  let views = $derived(
-    VIEWS.filter(
-      (view) =>
-        !(unreadOff && view === "unread") &&
-        !((hidden as string[]).includes(view) && !(unreadOff && view === "all")) &&
-        !(view === "notes" && !noted.any),
-    ),
-  );
+  let views = $derived(sidebarViews(unreadOff, hidden, noted.any));
 </script>
 
 <ul>

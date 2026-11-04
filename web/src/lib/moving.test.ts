@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { moveArticle, nextFeed, type ArticleMove, type MoveScene, type MovingList } from "./moving";
+import { moveArticle, nextInSidebar, type ArticleMove, type MoveScene, type MovingList } from "./moving";
 import type { Route } from "./router";
 import type { Feed } from "./shapes";
 
@@ -13,16 +13,14 @@ function moved(to: ArticleMove, step: 1 | -1, on: MoveScene, moves = true) {
   const asked: string[] = [];
   const list: MovingList = {
     move: (step) => (asked.push(`move ${step}`), moves),
-    moveUnread: (step) => (asked.push(`unread ${step}`), moves),
     moveToEnd: (step) => (asked.push(`end ${step}`), moves),
   };
   return { focus: moveArticle(list, to, step, on), asked };
 }
 
 describe("moveArticle", () => {
-  it("asks the list for the next, the next unread or the end", () => {
+  it("asks the list for the next or the end", () => {
     expect(moved("move", 1, scene()).asked).toEqual(["move 1"]);
-    expect(moved("moveUnread", -1, scene()).asked).toEqual(["unread -1"]);
     expect(moved("moveToEnd", 1, scene()).asked).toEqual(["end 1"]);
   });
 
@@ -54,28 +52,33 @@ describe("moveArticle", () => {
   });
 });
 
-describe("nextFeed", () => {
+describe("nextInSidebar", () => {
   const feed = (id: number, folders: number[] = []) => ({ id, folders }) as unknown as Feed;
   // Essays (folder 1) holds feed 10; feed 20 is in no folder.
   const library = { feeds: [feed(10, [1]), feed(20)], folders: [{ id: 1, name: "Essays" }] };
+  const views = ["unread", "all"] as const;
   const all: Route = { kind: "view", view: "all" };
 
-  it("goes to the feed after or before, in the sidebar's order", () => {
-    expect(nextFeed(library, false, [1], all, 1)).toEqual({ kind: "feed", id: 10 });
-    expect(nextFeed(library, false, [1], { kind: "feed", id: 10 }, 1)).toEqual({ kind: "feed", id: 20 });
-    expect(nextFeed(library, false, [1], { kind: "feed", id: 20 }, -1)).toEqual({ kind: "feed", id: 10 });
+  it("goes to the row after or before, in the sidebar's order, lists and folders included", () => {
+    expect(nextInSidebar(library, views, false, [1], { kind: "view", view: "unread" }, 1)).toEqual(all);
+    expect(nextInSidebar(library, views, false, [1], all, 1)).toEqual({ kind: "folder", id: 1 });
+    expect(nextInSidebar(library, views, false, [1], { kind: "folder", id: 1 }, 1)).toEqual({ kind: "feed", id: 10 });
+    expect(nextInSidebar(library, views, false, [1], { kind: "feed", id: 10 }, 1)).toEqual({ kind: "feed", id: 20 });
+    expect(nextInSidebar(library, views, false, [1], { kind: "feed", id: 20 }, -1)).toEqual({ kind: "feed", id: 10 });
+    expect(nextInSidebar(library, views, false, [1], { kind: "folder", id: 1 }, -1)).toEqual(all);
   });
 
   it("passes over a folded folder's feeds", () => {
-    expect(nextFeed(library, false, [], all, 1)).toEqual({ kind: "feed", id: 20 });
+    expect(nextInSidebar(library, views, false, [], { kind: "folder", id: 1 }, 1)).toEqual({ kind: "feed", id: 20 });
   });
 
   it("counts every folder as open on a phone", () => {
-    expect(nextFeed(library, true, [], all, 1)).toEqual({ kind: "feed", id: 10 });
+    expect(nextInSidebar(library, views, true, [], { kind: "folder", id: 1 }, 1)).toEqual({ kind: "feed", id: 10 });
   });
 
-  it("goes nowhere at the end, or before the feeds have loaded", () => {
-    expect(nextFeed(library, false, [1], { kind: "feed", id: 20 }, 1)).toBeUndefined();
-    expect(nextFeed({ ...library, feeds: undefined }, false, [1], all, 1)).toBeUndefined();
+  it("goes nowhere at either end, or before the feeds have loaded", () => {
+    expect(nextInSidebar(library, views, false, [1], { kind: "feed", id: 20 }, 1)).toBeUndefined();
+    expect(nextInSidebar(library, views, false, [1], { kind: "view", view: "unread" }, -1)).toBeUndefined();
+    expect(nextInSidebar({ ...library, feeds: undefined }, views, false, [1], all, 1)).toBeUndefined();
   });
 });

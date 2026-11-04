@@ -58,8 +58,13 @@
     return open;
   }
 
+  function toggle(id: number) {
+    open = open.includes(id) ? open.filter((each) => each !== id) : [...open, id];
+    saveOpenFolders(open);
+  }
+
   /**
-   * `e`: folds or unfolds a folder, as its arrow does (decision 0103). If the
+   * `e`: expands or collapses a folder, as its arrow does (decision 0103). If the
    * keyboard's place was on one of the feeds it hides, it moves to the
    * folder's own row rather than being lost.
    */
@@ -68,11 +73,6 @@
     const inside = document.getElementById(`folder-${id}`)?.contains(document.activeElement) ?? false;
     toggle(id);
     if (inside) queueMicrotask(() => document.querySelector<HTMLElement>(`[data-folder-link="${id}"]`)?.focus());
-  }
-
-  function toggle(id: number) {
-    open = open.includes(id) ? open.filter((each) => each !== id) : [...open, id];
-    saveOpenFolders(open);
   }
 
   let searching = $derived(search.trim() !== "");

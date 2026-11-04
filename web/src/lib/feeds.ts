@@ -1,6 +1,7 @@
 // The reader's feeds and folders (SPEC sections 3, 5, 7 and 15): the
 // sidebar's list, adding a feed, editing, unsubscribing and folder changes,
 // and the words the screens say about them.
+import type { Route, View } from "./router";
 import { noted } from "./notes.svelte";
 import { api } from "./updates.svelte";
 import { noConnection } from "./connection.svelte";
@@ -84,43 +85,43 @@ function fold(text: string): string {
   return text.normalize("NFKD").replace(/\p{M}/gu, "").toLocaleLowerCase();
 }
 
+/** One row of the sidebar, as a place to go. */
+export type SidebarRow = { kind: "view"; view: View } | { kind: "feed" | "folder"; id: number };
+
 /**
- * Shift+J and Shift+K (decision 0110): the feed after (1) or before (-1)
- * the place you're in, in the sidebar's order: folders A to Z, each with its
- * feeds while it's open, then the feeds in no folder. Feeds in a folded
- * folder are passed over, as you can't see them; a feed in two folders
- * counts once, where it's first listed. Folders and Unread, Starred and All
- * aren't stops: from a folder the next feed is the first listed after it,
- * and from the places above the folders (Unread, Starred, All) Shift+J goes to the first feed and Shift+K to none.
- * At either end nothing happens: the list ends.
+ * Shift+J and Shift+K (decisions 0110, 0180): the row after (1) or before (-1)
+ * the place you're in, top to bottom as the sidebar shows them: its lists
+ * (Unread, Starred, Notes, All), then folders A to Z, each with its feeds while
+ * it's open, then the people and then the publications in no folder. A folded folder's feeds are passed
+ * over, as you can't see them, so the next press goes on to the next folder. A
+ * feed in two folders counts once, where it's first listed. At either end
+ * nothing happens: the list ends.
  */
-export function feedNextTo(library: Library, open: number[], here: { kind: string; id?: number }, step: 1 | -1): number | undefined {
-  const rows: ({ folder: number } | { feed: number })[] = [];
+export function sidebarRowNextTo(library: Library, views: readonly View[], open: number[], here: Route, step: 1 | -1): SidebarRow | undefined {
+  const rows: SidebarRow[] = views.map((view) => ({ kind: "view", view }));
   const seen = new Set<number>();
   for (const folder of library.folders) {
-    rows.push({ folder: folder.id });
+    rows.push({ kind: "folder", id: folder.id });
     if (!open.includes(folder.id)) continue;
     for (const feed of library.feeds) {
       if (!feed.folders.includes(folder.id) || seen.has(feed.id)) continue;
       seen.add(feed.id);
-      rows.push({ feed: feed.id });
+      rows.push({ kind: "feed", id: feed.id });
     }
   }
-  for (const feed of library.feeds) if (feed.folders.length === 0 && !seen.has(feed.id)) rows.push({ feed: feed.id });
+  const loose = library.feeds.filter((feed) => feed.folders.length === 0 && !seen.has(feed.id));
+  for (const feed of [...loose.filter((each) => each.kind !== "publication"), ...loose.filter((each) => each.kind === "publication")]) rows.push({ kind: "feed", id: feed.id });
 
   let at = -1;
-  if (here.kind === "feed") {
-    at = rows.findIndex((row) => "feed" in row && row.feed === here.id);
+  if (here.kind === "view") at = rows.findIndex((row) => row.kind === "view" && row.view === here.view);
+  else if (here.kind === "feed") {
+    at = rows.findIndex((row) => row.kind === "feed" && row.id === here.id);
     // A feed in a folded folder: from that folder's row.
     const feed = library.feeds.find((each) => each.id === here.id);
-    if (at === -1 && feed) at = rows.findIndex((row) => "folder" in row && feed.folders.includes(row.folder));
-  } else if (here.kind === "folder") at = rows.findIndex((row) => "folder" in row && row.folder === here.id);
+    if (at === -1 && feed) at = rows.findIndex((row) => row.kind === "folder" && feed.folders.includes(row.id));
+  } else if (here.kind === "folder") at = rows.findIndex((row) => row.kind === "folder" && row.id === here.id);
 
-  for (let index = at + step; index >= 0 && index < rows.length; index += step) {
-    const row = rows[index]!;
-    if ("feed" in row) return row.feed;
-  }
-  return undefined;
+  return rows[at + step];
 }
 
 const OPEN_KEY = "nine-turtles.open-folders";

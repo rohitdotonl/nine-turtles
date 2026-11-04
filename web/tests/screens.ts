@@ -112,7 +112,7 @@ export const SCREENS: Screen[] = [
       // Unread again where the screenshots have a nine turtles to themselves,
       // so every picture of it starts the same.
       await openReadingRoom(page, { unread: libraryApp() !== FEEDS_APP });
-      await page.keyboard.press("o");
+      await page.keyboard.press("Enter");
       await expect(page.getByRole("heading", { level: 2, name: "The pleasure of a slow letter" })).toBeFocused();
       await expect(page.locator('img[alt="A river drawn as three blue lines"]')).toBeVisible();
     },
@@ -125,7 +125,7 @@ export const SCREENS: Screen[] = [
     library: true,
     open: async (page) => {
       await openReadingRoom(page, { unread: libraryApp() !== FEEDS_APP });
-      await page.keyboard.press("o");
+      await page.keyboard.press("Enter");
       await expect(page.getByRole("heading", { level: 2, name: "The pleasure of a slow letter" })).toBeFocused();
       await page.getByRole("button", { name: "Reading appearance" }).first().click();
       await expect(page.getByRole("dialog", { name: "Reading appearance" })).toBeVisible();
@@ -191,14 +191,12 @@ export const SCREENS: Screen[] = [
       await expect(page.getByRole("region", { name: "All" }).getByRole("listitem").first()).toBeVisible();
       await page.keyboard.press("/");
       await expect(page.locator("#search-field")).toBeFocused();
-      await page.keyboard.type("reading is:");
+      await page.keyboard.type("reading");
       await expect(page.locator("#list-heading")).toHaveText("Results in All");
-      // A filter suggested as it's typed becomes a chip; the options panel shows it too.
-      await expect(page.getByRole("option", { name: "is:unread" })).toBeVisible();
-      await page.keyboard.type("unread ");
-      await expect(page.getByRole("button", { name: "Remove Unread", exact: true })).toBeVisible();
+      // A choice in the options becomes a chip.
       await page.getByRole("button", { name: "Search options" }).click();
-      await expect(page.getByRole("checkbox", { name: "Unread", exact: true })).toBeChecked();
+      await page.getByRole("checkbox", { name: "Unread", exact: true }).check();
+      await expect(page.getByRole("button", { name: "Remove Unread", exact: true })).toBeVisible();
       await expect(page.getByRole("region", { name: /^Results in / }).locator("mark").first()).toBeVisible();
     },
   },

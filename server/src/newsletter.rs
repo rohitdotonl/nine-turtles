@@ -18,7 +18,7 @@
 //! - images attached inside the email (`cid:`), invisible tracking images
 //!   and empty spacer cells go;
 //! - tracking parts of links (`utm_…` and friends) are taken off;
-//! - the "View in browser" link becomes the article's "Open original", so
+//! - the "View in browser" link becomes the article's "View original", so
 //!   it isn't repeated at the top of the text.
 //!
 //! Nothing is fetched to show it: what the email contains is all nine

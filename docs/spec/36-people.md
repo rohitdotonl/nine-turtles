@@ -68,7 +68,7 @@ PLAN.md → V1, item 1.*
   ("Time to read something beautiful."), as it does for every list.
 - **Their page,** the same for a person and a publication
   (`/people/12/about`): opened by pressing their name at the top of their
-  list ("Alpha ›"), by **About Alpha** in the list's More menu, or by the
+  list ("Alpha ›"), by **Info about Alpha** in the list's More menu, or by the
   `i` key. On a computer it opens in the reading area beside their list,
   where an article would; on a phone it's a screen of its own, with ‹ back to
   their list. It shows their name with an **Edit** button beside it; for one
@@ -81,7 +81,7 @@ PLAN.md → V1, item 1.*
   to them, an **Email** line (section 37). At its foot, a quiet link,
   **Hide articles about…**, opens Settings › Hiding with a new rule for
   them (section 27).
-- **Edit** (`/people/12/edit`; `Shift+E` opens it directly) turns the same
+- **Edit** (`/people/12/edit`) turns the same
   page into their settings. **Done** saves and turns it back; **Cancel** or
   Escape turns it back unchanged. Top to bottom:
   - **Name** and **Email address** (where Write back writes to them,

@@ -1,6 +1,6 @@
 # nine turtles: the brand sheet
 
-*Every brand decision on one page. Last updated: 4 November 2026 (decisions 0141, 0148, 0153, 0176, 0180).*
+*Every brand decision on one page. Last updated: 4 November 2026 (decisions 0141, 0148, 0153, 0176, 0181).*
 
 **How to use this page.** Every change a reader can see (in the app, on the
 website, in an email, in a link preview) follows this page. This page is
@@ -72,7 +72,7 @@ sleeps, celebrates or stands for a feeling. No mascot.
 - **Never:** empty lists, the end of a list, the reading pane, emails, buttons, loading, errors, confirmations, settings, or any new drawing that tells a story.
 - **When it appears:** the logo's own drawing, at most once per screen, still, in the page's ink, and skipped by screen readers, because the words beside it say it.
 
-## Icons (Live, decision 0180)
+## Icons (Live, decision 0181)
 
 A glance at an icon tells the reader, without doubt, what it's for.
 
@@ -84,7 +84,7 @@ A glance at an icon tells the reader, without doubt, what it's for.
 6. **Judged at real size.** Every icon is chosen at 18px on White, Paper and Night, never only enlarged.
 7. **One hand.** A thin 1.5px line on a 20px grid, round ends and corners.
 
-"Open original" is an arrow with no box. A new icon follows these rules; if Rohit dislikes one later, offer three versions side by side at real size.
+"View original" is an arrow with no box. A new icon follows these rules; if Rohit dislikes one later, offer three versions side by side at real size.
 
 ## Empty screens and the ends of lists (Live, decision 0142)
 
