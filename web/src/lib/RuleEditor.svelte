@@ -151,7 +151,7 @@
       />
       from
       <span class="blank-pick"
-        ><select bind:value={who} aria-label="From" aria-invalid={who === ""} class="blank" style:width={blankWidth(whoChoice(who, people))}>
+        ><select bind:value={who} aria-label="From" aria-invalid={who === ""} class="blank" style:width={blankWidth(whoChoice(who, people), 2)}>
           {#if who === ""}<option value="" disabled>choose someone…</option>{/if}
           <option value="all">everyone</option>
           {#each people as person (person.id)}
