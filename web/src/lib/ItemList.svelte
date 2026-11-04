@@ -2,9 +2,8 @@
   The item list (SPEC sections 6, 8 and 9): each article's title, with its
   source and time in quiet small text below. No images, no site icons.
   Unread titles are full strength and semibold, read ones muted and regular,
-  starred ones carry a small star: each state shows without color too. In
-  river mode (SPEC section 10) every title looks the same, read or not, and
-  so does every title from a feed set to flow past in Edit feed.
+  starred ones carry a small star: each state shows without color too. With
+  Unread off (SPEC section 10) every title looks the same, read or not.
 
   It shows 50; when you reach the bottom, the next 50 load below by
   themselves, with a small grey "Loading…", and nothing above moves
@@ -62,8 +61,7 @@
     onRefresh,
     results = false,
     oneFeed = false,
-    river = false,
-    flowing = new Set(),
+    unreadOff = false,
     count = $bindable(0),
     found = $bindable(""),
   }: {
@@ -85,10 +83,8 @@
     results?: boolean;
     /** One person's list: rows don't repeat their name, or say which place each is from (`people.ts` → `sourceOf`). */
     oneFeed?: OneSource;
-    /** River mode (SPEC section 10): every row looks the same, read or not; read state is still recorded. */
-    river?: boolean;
-    /** Feeds set to flow past in Edit feed (SPEC section 15): their rows look as in river mode. */
-    flowing?: Set<number>;
+    /** Unread off (SPEC section 10): every row looks the same, read or not; read state is still recorded. */
+    unreadOff?: boolean;
     /** How many articles are listed, for the empty reading area's hint. */
     count?: number;
     /** What the line above search results says ("28 results"): empty until they load, and when this isn't a search. */
@@ -589,7 +585,6 @@
   <ul class="item-list">
     {#each articles as article, index (article.id)}
       {@const current = index === selectedIndex}
-      {@const flows = river || flowing.has(article.feedId)}
       <li>
         {#if days[index] && days[index] !== days[index - 1]}
           <!-- Recently read's day heading: small, semibold and muted, as the sidebar's section names are. -->
@@ -613,13 +608,13 @@
           ]}
         >
           <!-- Unread: an accent dot in the gutter beside the title, and a semibold title, so it shows without color. -->
-          {#if !article.read && !flows}<span aria-hidden="true" class="unread-dot"></span>{/if}
-          <!-- Unread: full ink, semibold. Read: the second ink, regular. The selected row is never the quietest. In river mode every title is full ink, regular. -->
+          {#if !article.read && !unreadOff}<span aria-hidden="true" class="unread-dot"></span>{/if}
+          <!-- Unread: full ink, semibold. Read: the second ink, regular. The selected row is never the quietest. With Unread off every title is full ink, regular. -->
           <!-- In the reading serif; with a mouse, clearly larger (19px) than the interface text, so the title leads its row (app.css .item-row). -->
-          <span class={["title block font-serif text-(length:--row-title-size) leading-(--row-title-line)", flows ? "text-ink" : !article.read ? "font-semibold text-ink" : current ? "text-ink" : "text-ink-2"]}
+          <span class={["title block font-serif text-(length:--row-title-size) leading-(--row-title-line)", unreadOff ? "text-ink" : !article.read ? "font-semibold text-ink" : current ? "text-ink" : "text-ink-2"]}
             >{#each boldParts(article.title || "Untitled", bold) as part, partIndex (partIndex)}{#if part.bold}<mark class="match"
                   >{part.text}</mark
-                >{:else}{part.text}{/if}{/each}{#if !article.read && !flows}<span class="sr-only">, unread</span>{/if}</span
+                >{:else}{part.text}{/if}{/each}{#if !article.read && !unreadOff}<span class="sr-only">, unread</span>{/if}</span
           >
           {#if article.excerpt && article.excerpt.length > 0}
             <!--

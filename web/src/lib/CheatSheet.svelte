@@ -13,13 +13,13 @@
 
   let {
     open = $bindable(),
-    river = false,
+    unreadOff = false,
     keysReset = false,
     onKeysSeen,
   }: {
     open: boolean;
-    /** River mode: Go to Unread and Mark all as read aren't listed. */
-    river?: boolean;
+    /** Unread off: Go to Unread and Mark all as read aren't listed. */
+    unreadOff?: boolean;
     /** The reader had keys of their own, now back to these, and hasn't been told. */
     keysReset?: boolean;
     /** The foot has told them: it isn't said again. */
@@ -61,7 +61,7 @@
   let find = $state("");
   let field: HTMLInputElement | undefined = $state();
   const wanted = $derived(find.trim().toLowerCase());
-  const shown = $derived(shortcutsFor(river).filter((each) => shortcutMatches(each, find)));
+  const shown = $derived(shortcutsFor(unreadOff).filter((each) => shortcutMatches(each, find)));
   const filtersShown = $derived(FILTERS.filter(([filter, meaning]) => wanted === "" || filter.includes(wanted) || meaning.toLowerCase().includes(wanted)));
   const nothing = $derived(shown.length === 0 && filtersShown.length === 0);
   $effect(() => {

@@ -5,7 +5,7 @@
   until Escape), and the reading area, side by side as the window's width allows, with
   adding a feed, editing feeds and folders, Settings and the `?` shortcut
   list. An article shown in the reading area counts as read. Nothing in it
-  moves unless the reader moves it. In river mode (SPEC section 10) there's
+  moves unless the reader moves it. With Unread off (SPEC section 10) there's
   no Unread view, no dots and no "Mark all as read"; it opens on All.
 -->
 <script lang="ts">
@@ -94,20 +94,20 @@
     onSignedOut: () => void;
   } = $props();
 
-  /** The reading mode, sort order, when unread lets go and the hidden lists (settings.svelte.ts). */
+  /** Whether Unread is on, the sort order and the hidden lists (reading-settings.svelte.ts). */
   const settings = new ReadingSettings();
-  let river = $derived(settings.mode === "river");
-  /** Where the app opens: Unread in inbox mode, All in river mode. */
-  let home: Route = $derived({ kind: "view", view: homeView(settings.mode) });
+  let unreadOff = $derived(!settings.unread);
+  /** Where the app opens: Unread, or All with Unread off. */
+  let home: Route = $derived({ kind: "view", view: homeView(settings.unread) });
   const parsed = parse(location.pathname);
   // "Save search" saves the search on screen: an address alone has none, so it opens the app's home.
   const asked: Route = parsed.kind === "save-search" ? { kind: "view", view: "unread" } : parsed;
-  /** The address was "/", Unread or unknown: the app's home, which depends on the mode. */
+  /** The address was "/", Unread or unknown: the app's home, which depends on whether Unread is on. */
   const openedHome = asked.kind === "view" && asked.view === "unread";
-  const start = homeFor(asked, untrack(() => settings.mode));
+  const start = homeFor(asked, untrack(() => settings.unread));
   let route: Route = $state(start);
   /** Where Escape and "Close settings" go back to: the last list you were on. */
-  let lastPlace: Route = $state(isList(start) ? start : { kind: "view", view: homeView(untrack(() => settings.mode)) });
+  let lastPlace: Route = $state(isList(start) ? start : { kind: "view", view: homeView(untrack(() => settings.unread)) });
   /** A page shared here (/add-feed?url=…, decisions 0104, 0138), read before the address is tidied, for
    * "Follow this person?" (`sharedName`: who it's by); leaving clears it, so Add a feed opens empty after. */
   let shared = $state(parsed.kind === "add-feed" ? sharedAddress(location.search) : "");
@@ -116,14 +116,14 @@
     if (route.kind !== "add-feed") untrack(() => (shared = ""));
   });
 
-  // Switching to river mode (here, or on another device before this one
+  // Switching to Unread off (here, or on another device before this one
   // heard) while on Unread moves you to All, in place: no new history step.
   $effect(() => {
-    const next = homeFor(route, settings.mode);
+    const next = homeFor(route, settings.unread);
     if (next === route) return;
     untrack(() => {
       route = next;
-      if (isList(lastPlace)) lastPlace = homeFor(lastPlace, settings.mode);
+      if (isList(lastPlace)) lastPlace = homeFor(lastPlace, settings.unread);
       history.replaceState(history.state, "", pathFor(next));
     });
   });
@@ -131,8 +131,6 @@
   const library = new LoadedLibrary(() => {
     if (under.kind === "search" && !searching.shown && currentSearch) resetSearch();
   });
-  /** Feeds set to flow past in Edit feed: no count, and their rows look as in river mode (SPEC section 15). */
-  let flowing = $derived(new Set((library.feeds ?? []).filter((feed) => feed.river).map((feed) => feed.id)));
   /** "Add to collection" and a collection's "Rename…" (collecting.svelte.ts, decision 0108). */
   const collectionSheets = new CollectionSheets();
   /** What's typed in the sidebar search. */
@@ -216,7 +214,7 @@
           ? { collection: under.id }
           : under.kind === "search"
             ? { view: "all" }
-            : { view: under.kind === "view" ? under.view : homeView(settings.mode) },
+            : { view: under.kind === "view" ? under.view : homeView(settings.unread) },
   );
   /** The list's identity: a new one is loaded when it changes. */
 
@@ -306,7 +304,7 @@
   let headingText = $derived(headingFor({ under, placeName, missing, results: searching.shown?.scope, names: library.names }));
 
   /** Keeps the copies for reading offline up to date, in the reader's own order. */
-  const keeper = new Keeper(() => void keepUpToDate(settings.sort ?? "newest", settings.mode));
+  const keeper = new Keeper(() => void keepUpToDate(settings.sort ?? "newest", settings.unread));
 
   const loadFeeds = () => library.loadFeeds(); // Loads the feeds and folders.
   // A phone opens on the welcome while you follow no one (decision 0137); Back goes home. Only on opening: feeds arriving after a move change nothing.
@@ -352,7 +350,7 @@
   /** The list as its More menu sees it, each time the menu is drawn (`listMenu.ts`). */
   function menuScene(): MenuScene {
     return {
-      river,
+      unreadOff,
       searching: searching.shown !== undefined,
       ownOrder: under.kind === "view" && under.view === "recent",
       sort: settings.sort,
@@ -378,7 +376,7 @@
   };
 
   onMount(() => {
-    // "/" and unknown addresses open Unread (All in river mode); the address bar says so.
+    // "/" and unknown addresses open Unread (All with Unread off); the address bar says so.
     history.replaceState(firstStep, "", pathFor(route));
 
     // Arriving here by switching to a new version: the screen is as the
@@ -466,9 +464,9 @@
     library.loadCollections();
     void settings.load().then(() => {
       keeper.now();
-      // This device last saw river mode, but it's inbox now (changed on
+      // This device last saw Unread off, but it's on now (changed on
       // another device): an untouched home opens on Unread after all.
-      if (openedHome && pathFor(route) === pathFor(start) && settings.mode === "inbox" && !(route.kind === "view" && route.view === "unread")) {
+      if (openedHome && pathFor(route) === pathFor(start) && settings.unread && !(route.kind === "view" && route.view === "unread")) {
         route = { kind: "view", view: "unread" };
         lastPlace = route;
         history.replaceState(history.state, "", pathFor(route));
@@ -642,7 +640,7 @@
     else go(lastPlace);
   }
 
-  /** Deletes a saved search (never an article), then shows Unread (All in river mode) with "Deleted … · Undo". */
+  /** Deletes a saved search (never an article), then shows Unread (All with Unread off) with "Deleted … · Undo". */
   async function deleteSearch(saved: SavedSearch): Promise<string | undefined> {
     const done = await library.deleteSearch(saved);
     if (typeof done === "string") return done;
@@ -662,14 +660,14 @@
     if (line) itemList?.offer(line.message, line.undo);
   }
 
-  /** Deletes a collection (never an article), then shows Unread (All in river mode) with "Deleted … · Undo". */
+  /** Deletes a collection (never an article), then shows Unread (All with Unread off) with "Deleted … · Undo". */
   async function removeCollection(collection: Collection) {
     const done = await library.deleteCollection(collection);
     if (typeof done === "string") itemList?.say(done);
     else go(home, done);
   }
 
-  /** Unsubscribes, then shows Unread (All in river mode) with "Unsubscribed from … · Undo". */
+  /** Unsubscribes, then shows Unread (All with Unread off) with "Unsubscribed from … · Undo". */
   async function unsubscribeFrom(feed: Feed, removeKept = false): Promise<string | undefined> {
     const done = await library.unsubscribe(feed, removeKept);
     if (typeof done === "string") return done;
@@ -677,7 +675,7 @@
     return undefined;
   }
 
-  /** Deletes a folder (never its feeds), then shows Unread (All in river mode) with "Deleted … · Undo". */
+  /** Deletes a folder (never its feeds), then shows Unread (All with Unread off) with "Deleted … · Undo". */
   async function deleteThis(folder: Folder): Promise<string | undefined> {
     const done = await library.deleteFolder(folder);
     if (typeof done === "string") return done;
@@ -950,7 +948,7 @@
   /** The screen as a shortcut sees it, at the moment of the press (`shortcuts.ts`). */
   function keyScene(): KeyScene {
     return {
-      river,
+      unreadOff,
       onList: isList(route),
       searching: searching.shown !== undefined,
       ownOrder: route.kind === "view" && route.view === "recent" && !searching.shown,
@@ -1111,7 +1109,7 @@
         />
       </div>
       {/if}
-      <SidebarViews {route} {follow} {phone} {river} hidden={settings.hidden} />
+      <SidebarViews {route} {follow} {phone} {unreadOff} hidden={settings.hidden} />
       {#if library.feeds}
         <SidebarFeeds
           bind:this={sidebarFeeds}
@@ -1123,7 +1121,7 @@
           {search}
           {follow}
           {phone}
-          {river}
+          {unreadOff}
         />
       {/if}
       {#if library.feedsFailed}
@@ -1153,8 +1151,8 @@
           bind:preferences
           sort={settings.sort}
           onSort={(next) => settings.changeSort(next)}
-          mode={settings.mode}
-          onMode={(next) => settings.changeMode(next)}
+          unread={settings.unread}
+          onUnread={(next) => settings.changeUnread(next)}
           hidden={settings.hidden}
           onHidden={(next) => settings.changeHidden(next)}
           bind:heading={headings.settings}
@@ -1296,7 +1294,7 @@
           <!-- A column, so the floating note can sit at the pane's foot even under a short list. -->
           <div use:edge class="scroller relative flex min-h-0 flex-1 scroll-pb-20 flex-col overflow-y-auto pt-2 pr-[var(--list-end)] pb-6 pl-[var(--list-start)]">
             {#if library.feeds && library.feeds.length > 0 && !missing && (!phone || searching.open)}
-              <SearchBar bind:this={searchBar} query={searching.query} feeds={library.rows ?? []} folders={library.folders} collections={library.collections} here={scopeFor(under)} found={listFound} {river} onChange={(next, now) => searching.changed(next, now)} />
+              <SearchBar bind:this={searchBar} query={searching.query} feeds={library.rows ?? []} folders={library.folders} collections={library.collections} here={scopeFor(under)} found={listFound} {unreadOff} onChange={(next, now) => searching.changed(next, now)} />
             {/if}
             {#if listInstead}
               <p class="mt-4">{listInstead}</p>
@@ -1339,8 +1337,7 @@
                   }}
                   results={searching.shown !== undefined}
                   oneFeed={under.kind === "feed" && !searching.shown && placeLabels(currentPlaces)}
-                  {river}
-                  {flowing}
+                  {unreadOff}
                   bind:count={listCount}
                   bind:found={listFound}
                 />
@@ -1398,7 +1395,7 @@
   <NowPlaying onOpen={openEpisode} bottom={false} stepAside />
 {/snippet}
 
-<CheatSheet bind:open={cheatSheetOpen} {river} keysReset={settings.keysReset} onKeysSeen={() => settings.keysSeen()} />
+<CheatSheet bind:open={cheatSheetOpen} {unreadOff} keysReset={settings.keysReset} onKeysSeen={() => settings.keysSeen()} />
 
 {#if collectionSheets.collecting}
   <AddToCollection article={collectionSheets.collecting} collections={library.collections} onMade={(made) => library.collectionMade(made)} onClose={collectingClosed} />
@@ -1443,7 +1440,7 @@
 {#snippet who()}
   {#if isWho(route) && currentFeed}
     {#key editKey(currentFeed.id)}
-      <WhoPage route={route} feed={currentFeed} {library} {river} {phone} bind:heading={headings.who} {go} onUnsubscribe={(removeKept) => unsubscribeFrom(currentFeed!, removeKept)} onAddRule={addRuleFor} onMoved={(source, after) => feedMoved(source.id, after.id, () => headings.who)} onSaved={() => itemList?.refresh()} />
+      <WhoPage route={route} feed={currentFeed} {library} {phone} bind:heading={headings.who} {go} onUnsubscribe={(removeKept) => unsubscribeFrom(currentFeed!, removeKept)} onAddRule={addRuleFor} onMoved={(source, after) => feedMoved(source.id, after.id, () => headings.who)} onSaved={() => itemList?.refresh()} />
     {/key}
   {/if}
 {/snippet}

@@ -1,5 +1,5 @@
 //! Each reader's settings shared across their devices (SPEC section 18): the
-//! sort order, the reading mode, inbox or river (SPEC section 10), and
+//! sort order, whether Unread is on (SPEC section 10), and
 //! which lists the sidebar shows (`hidden`, decision 0105). Reader controls such as the theme
 //! belong to each device and stay in its browser.
 //!
@@ -25,16 +25,6 @@ use crate::{
 
 pub fn routes() -> Router<AppState> {
     Router::new().route("/api/settings", get(read).post(change))
-}
-
-/// Inbox (things to get through, the default) or river (things flowing past,
-/// with no unread view, styling or dots). Read state is recorded in both.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, Deserialize, Serialize)]
-#[serde(rename_all = "lowercase")]
-enum Mode {
-    #[default]
-    Inbox,
-    River,
 }
 
 /// A list the reader can hide from the sidebar (Settings › Show in the sidebar). Unread,
@@ -93,7 +83,10 @@ fn hidden_stored(hidden: &[Hideable]) -> String {
 struct Settings {
     /// Newest or oldest first.
     sort: Order,
-    mode: Mode,
+    /// Unread on (the Unread list, read styling and dots, the default) or
+    /// off (none of those). Read state is recorded either way. Nothing
+    /// stored means on.
+    unread: bool,
     /// The reader had given shortcuts keys of their own, which are back to
     /// nine turtles' own now, and hasn't been told yet.
     keys_reset: bool,
@@ -101,12 +94,12 @@ struct Settings {
     hidden: Vec<Hideable>,
 }
 
-/// A change: only the settings named are saved, so a tab from before river
-/// mode that changes the sort order leaves the mode as it was.
+/// A change: only the settings named are saved, so a tab that changes the
+/// sort order leaves Unread as it was.
 #[derive(Deserialize)]
 struct Change {
     sort: Option<Order>,
-    mode: Option<Mode>,
+    unread: Option<bool>,
     /// The reader has been told their own keys are gone: the old ones are removed.
     #[serde(default)]
     keys_seen: bool,
@@ -116,7 +109,7 @@ struct Change {
 async fn load(db: &SqlitePool, person: i64) -> Result<Settings, sqlx::Error> {
     let rows: Vec<(String, String)> = sqlx::query_as(
         "SELECT name, value FROM person_settings
-         WHERE person_id = ? AND name IN ('sort', 'mode', 'keys', 'hidden')",
+         WHERE person_id = ? AND name IN ('sort', 'unread', 'keys', 'hidden')",
     )
     .bind(person)
     .fetch_all(db)
@@ -131,16 +124,13 @@ async fn load(db: &SqlitePool, person: i64) -> Result<Settings, sqlx::Error> {
         Some("oldest") => Order::Oldest,
         _ => Order::Newest,
     };
-    let mode = match value("mode") {
-        Some("river") => Mode::River,
-        _ => Mode::Inbox,
-    };
+    let unread = value("unread") != Some("off");
     // `{}` was what Reset all keys left: nothing changed, nothing to tell.
     let keys_reset = value("keys").is_some_and(|saved| saved.trim() != "{}");
     let hidden = hidden_from(value("hidden"));
     Ok(Settings {
         sort,
-        mode,
+        unread,
         keys_reset,
         hidden,
     })
@@ -162,16 +152,13 @@ async fn change(
         Order::Newest => "newest",
         Order::Oldest => "oldest",
     });
-    let mode = change.mode.map(|mode| match mode {
-        Mode::Inbox => "inbox",
-        Mode::River => "river",
-    });
+    let unread = change.unread.map(|on| if on { "on" } else { "off" });
     let hidden = change.hidden.as_deref().map(hidden_stored);
     let saved = async {
         let mut transaction = state.db.begin().await?;
         for (name, value) in [
             ("sort", sort),
-            ("mode", mode),
+            ("unread", unread),
             ("hidden", hidden.as_deref()),
         ] {
             if let Some(value) = value {

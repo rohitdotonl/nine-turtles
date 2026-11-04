@@ -27,7 +27,7 @@
   whose name contains it takes their place (saved searches and collections aren't in it:
   the find field is for feeds and folders, DESIGN.md → Exceptions log).
 
-  In river mode (SPEC section 10) there are no dots.
+  With Unread off (SPEC section 10) there are no dots.
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
@@ -46,7 +46,7 @@
     search,
     follow,
     phone = false,
-    river = false,
+    unreadOff = false,
   }: {
     feeds: Feed[];
     folders: Folder[];
@@ -60,8 +60,8 @@
     follow: (event: MouseEvent, next: Route) => void;
     /** The phone's feeds screen: no selection, and a chevron on every row. */
     phone?: boolean;
-    /** River mode: no unread dots. */
-    river?: boolean;
+    /** Unread off: no unread dots. */
+    unreadOff?: boolean;
   } = $props();
 
   let open: number[] = $state(savedOpenFolders());
@@ -108,14 +108,14 @@
   Screen readers hear "unread" after the name, never a number.
 -->
 {#snippet dot(unread: number)}
-  {#if !river && unread > 0}<span aria-hidden="true" class="unread-dot sidebar-dot"></span>{/if}
+  {#if !unreadOff && unread > 0}<span aria-hidden="true" class="unread-dot sidebar-dot"></span>{/if}
 {/snippet}
 
 <!-- "unread" sits inside the name, so screen readers hear "Alpha unread", never a number. -->
 {#snippet name(text: string, unread = 0)}
   <!-- Devanagari a touch larger, so it sits level with Latin names (decision 0041). -->
   <span class={["min-w-0 flex-1 truncate", inDevanagari(text) && "devanagari"]}
-    >{text}{#if !river && unread > 0}<span class="sr-only"> unread</span>{/if}</span
+    >{text}{#if !unreadOff && unread > 0}<span class="sr-only"> unread</span>{/if}</span
   >
 {/snippet}
 
@@ -133,7 +133,7 @@
       aria-current={here ? "page" : undefined}
       onclick={(event) => follow(event, place)}
       title={feed.title}
-      data-unread={river ? undefined : feed.unread}
+      data-unread={unreadOff ? undefined : feed.unread}
       class={[
         "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-3 pr-3.5 text-ui pointer-fine:text-small",
         // Every feed's name starts on the sidebar's one name edge, in a folder or not (decision 0123).
@@ -200,7 +200,7 @@
       if (does !== "fold") follow(event, place);
     }}
     data-folder-link={folder.id}
-    data-unread={river ? undefined : folderUnread(folder, feeds)}
+    data-unread={unreadOff ? undefined : folderUnread(folder, feeds)}
     title={folder.name}
     class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center rounded-md pr-3.5 text-ui pointer-fine:text-small", padded ? "gap-3 pl-[38px]" : "gap-3 pl-3", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
     >{@render name(folder.name, folderUnread(folder, feeds))}<span class="folder-dot flex shrink-0">{@render dot(folderUnread(folder, feeds))}</span>{@render leadsOn()}</a

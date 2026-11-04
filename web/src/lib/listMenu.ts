@@ -12,8 +12,8 @@ import type { Route } from "./router";
 
 /** The list as it is when its More menu is drawn. */
 export type MenuScene = {
-  /** River mode: there's no Unread view and nothing to mark as read by hand. */
-  river: boolean;
+  /** Unread off: there's no Unread view and nothing to mark as read by hand. */
+  unreadOff: boolean;
   /** A search's results are showing. */
   searching: boolean;
   /** The list is Recently read (in its own order). */
@@ -62,7 +62,7 @@ export function listMenu(scene: MenuScene, hands: MenuHands): MenuGroup[] {
   const groups: MenuGroup[] = [
     {
       items: [
-        ...(scene.river ? [] : [{ label: "Mark all as read", shortcut: key("mark-all-read"), onSelect: () => hands.markAllRead() }]),
+        ...(scene.unreadOff ? [] : [{ label: "Mark all as read", shortcut: key("mark-all-read"), onSelect: () => hands.markAllRead() }]),
         ...(scene.searching ? [] : [refresh]),
       ],
     },

@@ -523,7 +523,7 @@ test.describe("on a touch screen beside the list", () => {
   });
 });
 
-test("with only the keyboard: a feed set to river, daily and the website leaves Unread and opens on its site", async ({ page }) => {
+test("with only the keyboard: a feed set to daily and the website opens on its site", async ({ page }) => {
   const blog = unique("flow");
   const flowingName = `Blog ${blog}`;
   const [flowing] = await openBlogs(page, [blog, unique("stay")]);
@@ -537,13 +537,11 @@ test("with only the keyboard: a feed set to river, daily and the website leaves 
 
   await editWhoByKeys(page, flowingName);
   const sheet = whoPage(page, flowingName);
-  // Every setting starts as every feed behaves.
-  await expect(sheet.getByRole("radio", { name: "Inbox" })).toBeChecked();
+  // Every setting starts as every feed behaves, and there's no reading mode of its own (decision 0172).
+  await expect(sheet.getByRole("radio", { name: "Inbox" })).toHaveCount(0);
+  await expect(sheet.getByRole("radio", { name: "River" })).toHaveCount(0);
   await expect(sheet.getByRole("radio", { name: "Automatic" })).toBeChecked();
   await expect(sheet.getByRole("checkbox", { name: "Open articles on the website" })).not.toBeChecked();
-  await tabTo(page, sheet.getByRole("radio", { name: "Inbox" }));
-  await page.keyboard.press("ArrowRight");
-  await expect(sheet.getByRole("radio", { name: "River" })).toBeChecked();
   await tabTo(page, sheet.getByRole("radio", { name: "Automatic" }));
   // Two choices since "Hourly" went (decision 0162): one step to Daily.
   await page.keyboard.press("ArrowRight");
@@ -554,24 +552,14 @@ test("with only the keyboard: a feed set to river, daily and the website leaves 
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/people\/[0-9]+\/about$/);
 
-  // No count beside it, and every row of its list looks read-alike, with no "unread".
-  await expect(sidebar(page).getByRole("link", { name: flowingName, exact: true })).toBeVisible();
-  await expect(page.getByRole("list").getByText(", unread")).toHaveCount(0);
-
   // Enter on one of its articles opens the publisher's page; the summary stays beside the list.
   await page.keyboard.press("j");
   await page.keyboard.press("Enter");
   await expect(page.locator("body")).toHaveAttribute("data-opened", /^https?:\/\//);
 
-  // Its articles aren't in Unread; the other blog's are.
-  await page.goto(new URL("/unread", FEEDS_APP).href);
-  await appReady(page);
-  await expect(page.getByRole("button", { name: new RegExp(`${flowingName}`) })).toHaveCount(0);
-
-  // Edit remembers all three.
+  // Edit remembers both.
   await page.goto(new URL(`/people/${flowing}/edit`, FEEDS_APP).href);
   await appReady(page);
-  await expect(sheet.getByRole("radio", { name: "River" })).toBeChecked();
   await expect(sheet.getByRole("radio", { name: "Daily" })).toBeChecked();
   await expect(sheet.getByRole("checkbox", { name: "Open articles on the website" })).toBeChecked();
 });

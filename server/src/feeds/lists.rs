@@ -216,7 +216,7 @@ macro_rules! new_query {
 pub const fn new_sql(list: List) -> Option<&'static str> {
     match list {
         List::All => Some(new_query!("+entries.muted = 0")),
-        List::Unread => Some(new_query!("+entries.read = 0 AND subscriptions.river = 0")),
+        List::Unread => Some(new_query!("+entries.read = 0")),
         List::Feed(_) => Some(new_query!("+entries.muted = 0 AND +entries.feed_id = ?")),
         List::Folder(_) => Some(new_query!(
             "+entries.muted = 0 AND +entries.feed_id IN (SELECT feed_id FROM feed_folders
@@ -292,8 +292,7 @@ fn parse_cursor(text: &str) -> Option<(i64, i64)> {
 /// them all on the spot).
 ///
 /// Unread and All leave out feeds the reader has unsubscribed from; Starred
-/// keeps their starred articles (SPEC section 15). Unread also leaves out
-/// feeds that flow past (`river`, set in Edit feed). Only Starred shows muted
+/// keeps their starred articles (SPEC section 15). Only Starred shows muted
 /// articles (muted ones are read, so never in Unread; SPEC section 27).
 macro_rules! list_query {
     ($filter:literal, $past:literal, $order:literal) => {
@@ -405,14 +404,12 @@ pub const fn list_sql(list: List, order: Order) -> &'static str {
             "ASC"
         ),
         (List::Unread, Order::Newest) => list_query!(
-            "entries.read = 0 AND subscriptions.unsubscribed_at IS NULL
-                 AND subscriptions.river = 0 AND",
+            "entries.read = 0 AND subscriptions.unsubscribed_at IS NULL AND",
             "<",
             "DESC"
         ),
         (List::Unread, Order::Oldest) => list_query!(
-            "entries.read = 0 AND subscriptions.unsubscribed_at IS NULL
-                 AND subscriptions.river = 0 AND",
+            "entries.read = 0 AND subscriptions.unsubscribed_at IS NULL AND",
             ">",
             "ASC"
         ),

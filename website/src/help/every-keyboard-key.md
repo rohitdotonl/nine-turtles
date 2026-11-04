@@ -77,7 +77,7 @@ related: [find-your-way-around, search-everything, change-how-it-looks]
 
 - The app shows Shift as ⇧.
 - The keys are the same for everyone, and can't be changed.
-- In the <a href="/help/inbox-or-river/">river</a>, the keys for unread
+- With <a href="/help/unread-on-or-off/">Unread off</a>, the keys for unread
   articles and marking all as read are left out.
 - Search has its own shortcuts, such as <code>is:starred</code>: see
   <a href="/help/search-everything/">Search everything</a>.

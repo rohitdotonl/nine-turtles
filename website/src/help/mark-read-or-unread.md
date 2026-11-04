@@ -5,7 +5,7 @@ groupId: reading
 order: 2
 spec: 8
 updated: 2026-11-04
-related: [inbox-or-river, star-an-article, find-your-way-around]
+related: [unread-on-or-off, star-an-article, find-your-way-around]
 ---
 
 <p class="lede">

@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { listMenu, type MenuHands, type MenuScene } from "./listMenu";
 import type { MenuGroup } from "./MoreMenu.svelte";
 
-/** A list in inbox mode, newest first. */
+/** A list with Unread on, newest first. */
 function scene(changes: Partial<MenuScene> = {}): MenuScene {
-  return { river: false, searching: false, ownOrder: false, sort: "newest", ...changes };
+  return { unreadOff: false, searching: false, ownOrder: false, sort: "newest", ...changes };
 }
 
 /** Hands that write down what they were asked to do; `failSort` makes saving the sort order fail. */
@@ -59,8 +59,8 @@ describe("the list's More menu", () => {
     expect(rows(groups, 1).map((item) => item.checked)).toEqual([true, false]);
   });
 
-  it("has no marking in river mode", () => {
-    expect(labels(listMenu(scene({ river: true }), hands().given))[0]).toEqual(["Refresh"]);
+  it("has no marking with Unread off", () => {
+    expect(labels(listMenu(scene({ unreadOff: true }), hands().given))[0]).toEqual(["Refresh"]);
     expect(labels(listMenu(scene({ feed: 3 }), hands().given))).toEqual([
       ["Mark all as read", "Refresh"],
       ["Newest first", "Oldest first"],

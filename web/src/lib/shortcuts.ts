@@ -12,8 +12,8 @@ import { parse, type Route } from "./router";
 
 /** The signed-in screen as it is when a key is pressed. */
 export type KeyScene = {
-  /** River mode: there's no Unread view and nothing to mark as read by hand. */
-  river: boolean;
+  /** Unread off: there's no Unread view and nothing to mark as read by hand. */
+  unreadOff: boolean;
   /** An article list is the place (a view, feed, folder, search or collection), not a page or sheet. */
   onList: boolean;
   /** A search's results are showing. */
@@ -84,11 +84,11 @@ export function keyIsOurs(action: Action, key: string, scene: KeyScene): boolean
 
 /**
  * Mark all as read works where the list's More menu offers it:
- * not in river mode, not in Recently read, and only with the list
+ * not with Unread off, not in Recently read, and only with the list
  * or its article in view.
  */
 function canMarkAll(scene: KeyScene): boolean {
-  return !scene.river && scene.onList && !scene.ownOrder && (scene.list || scene.article || scene.reading);
+  return !scene.unreadOff && scene.onList && !scene.ownOrder && (scene.list || scene.article || scene.reading);
 }
 
 /** Does what a shortcut means here, or nothing where it doesn't apply. */
@@ -107,8 +107,8 @@ export function carryOut(action: Action, scene: KeyScene, hands: KeyHands) {
       hands.toggleBoth();
       break;
     case "go":
-      // g u does nothing in river mode: there's no Unread view.
-      if (!(scene.river && action.view === "unread")) hands.go({ kind: "view", view: action.view });
+      // g u does nothing with Unread off: there's no Unread view.
+      if (!(scene.unreadOff && action.view === "unread")) hands.go({ kind: "view", view: action.view });
       break;
     case "go-to":
       hands.go(parse(action.path));
@@ -134,7 +134,7 @@ export function carryOut(action: Action, scene: KeyScene, hands: KeyHands) {
       hands.move("move", action.step);
       break;
     case "move-unread":
-      if (!scene.river) hands.move("moveUnread", action.step);
+      if (!scene.unreadOff) hands.move("moveUnread", action.step);
       break;
     case "open":
       hands.open();

@@ -4,7 +4,7 @@ description: Each person and publication has a page of their own. When someone h
 groupId: keeping-things-tidy
 order: 2
 spec: 36
-updated: 2026-11-03
+updated: 2026-11-04
 related: [put-people-in-folders, write-back, unfollow-someone]
 ---
 
@@ -65,7 +65,7 @@ nine turtles never joins anyone by itself, and never asks: only you do.
 
 ## A source's own settings
 
-In Edit, press › beside a source. There you choose its kind, inbox or river,
+In Edit, press › beside a source. There you choose its kind,
 how often to check, whether articles open on their website, and pausing for
 a while. With one source, these settings are in Edit itself.
 

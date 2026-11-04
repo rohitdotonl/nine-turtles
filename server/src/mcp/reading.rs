@@ -214,18 +214,16 @@ pub(super) async fn open_article(state: &AppState, person: i64, asked: OneArticl
     }))
 }
 
-pub(super) type FeedLine = (i64, String, String, Option<String>, bool, Option<i64>, i64);
+pub(super) type FeedLine = (i64, String, String, Option<String>, Option<i64>, i64);
 
 pub(super) async fn list_feeds(state: &AppState, person: i64) -> Answer {
     let gathered = async {
         let mut transaction = state.db.begin().await?;
         let feeds: Vec<FeedLine> = sqlx::query_as(
-            "SELECT feeds.id, subscriptions.title, feeds.url, feeds.site_url, subscriptions.river,
+            "SELECT feeds.id, subscriptions.title, feeds.url, feeds.site_url,
                  subscriptions.paused_at,
-                 CASE WHEN subscriptions.river THEN 0 ELSE
-                     (SELECT COUNT(*) FROM entries WHERE entries.person_id = subscriptions.person_id
-                          AND entries.feed_id = subscriptions.feed_id AND entries.read = 0)
-                 END
+                 (SELECT COUNT(*) FROM entries WHERE entries.person_id = subscriptions.person_id
+                      AND entries.feed_id = subscriptions.feed_id AND entries.read = 0)
              FROM subscriptions JOIN feeds ON feeds.id = subscriptions.feed_id
              WHERE subscriptions.person_id = ? AND subscriptions.unsubscribed_at IS NULL
              ORDER BY subscriptions.title COLLATE NOCASE, feeds.id",
@@ -266,7 +264,7 @@ pub(super) async fn list_feeds(state: &AppState, person: i64) -> Answer {
     }
     let feeds: Vec<Value> = feeds
         .iter()
-        .map(|(id, title, url, site, river, paused, unread)| {
+        .map(|(id, title, url, site, paused, unread)| {
             json!({
                 "id": id,
                 "name": title,
@@ -274,7 +272,6 @@ pub(super) async fn list_feeds(state: &AppState, person: i64) -> Answer {
                 "website": site,
                 "folders": in_folders.get(id).cloned().unwrap_or_default(),
                 "unread": unread,
-                "flows_past": river,
                 "paused": paused.is_some(),
             })
         })

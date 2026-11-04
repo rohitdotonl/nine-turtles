@@ -24,3 +24,5 @@ regular), as a book's contents do.
 
 **Revisit if** per-feed modes (DESIGN.md parking lot) are built: the setting
 would move to each feed.
+
+*Renamed by decision 0172 (4 November 2026): river mode is now Settings › Reading › Unread switched off; its behavior is unchanged.*

@@ -27,10 +27,10 @@ describe("places", () => {
     expect(isWho(feed) || isWho(addFeed)).toBe(false);
   });
 
-  it("leads Unread to All in river mode, and nothing else", () => {
-    expect(homeFor(unread, "river")).toEqual(all);
-    expect(homeFor(unread, "inbox")).toBe(unread);
-    expect(homeFor(feed, "river")).toBe(feed);
+  it("leads Unread to All with Unread off, and nothing else", () => {
+    expect(homeFor(unread, false)).toEqual(all);
+    expect(homeFor(unread, true)).toBe(unread);
+    expect(homeFor(feed, false)).toBe(feed);
   });
 
   it("shows under a sheet the thing edited, or the last list", () => {

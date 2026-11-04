@@ -52,13 +52,11 @@ struct FeedRow {
     /// the two differ (owner's plan, step 2).
     site_title: String,
     site_url: Option<String>,
-    /// How many of its articles are unread, for the sidebar's muted count;
-    /// none for a feed that flows past.
+    /// How many of its articles are unread, for the sidebar's dots.
     unread: i64,
-    /// Its settings from Edit feed (SPEC section 15): it flows past as in
-    /// river mode, the shortest wait between checks (seconds, 0 for its own
-    /// rhythm), and whether its articles open on the publisher's site.
-    river: bool,
+    /// Its settings from Edit feed (SPEC section 15): the shortest wait
+    /// between checks (seconds, 0 for its own rhythm), and whether its
+    /// articles open on the publisher's site.
     check_at_most: i64,
     open_on_site: bool,
     /// When the reader paused it, if it's paused.
@@ -100,9 +98,9 @@ struct FeedRow {
 
 /// Each feed a reader follows, with their name for it, their settings and
 /// their unread count, counted from the `entries_unread_by_feed` index alone
-/// (tests/speed.rs checks this). A feed that flows past (`river`) counts
-/// nothing. Takes the reader.
-pub const FEEDS: &str = "SELECT feeds.id, subscriptions.title, feeds.title AS site_title, feeds.site_url, subscriptions.river,
+/// (tests/speed.rs checks this). Takes the reader.
+pub const FEEDS: &str =
+    "SELECT feeds.id, subscriptions.title, feeds.title AS site_title, feeds.site_url,
         subscriptions.check_at_most, subscriptions.open_on_site, subscriptions.paused_at,
         CASE WHEN feeds.failures >= 2 THEN feeds.failing_since END AS failing_since,
         CASE WHEN feeds.url NOT LIKE 'newsletter:%' THEN feeds.fetched_at END AS checked_at,
@@ -113,10 +111,8 @@ pub const FEEDS: &str = "SELECT feeds.id, subscriptions.title, feeds.title AS si
              WHEN feeds.url LIKE '%youtube.com/feeds/%' THEN 'video' ELSE 'blog' END) AS place,
         CASE WHEN subscriptions.writer_id IS NOT NULL THEN 'person'
              ELSE COALESCE(subscriptions.kind, 'person') END AS kind,
-        CASE WHEN subscriptions.river THEN 0 ELSE
-            (SELECT COUNT(*) FROM entries WHERE entries.person_id = subscriptions.person_id
-                 AND entries.feed_id = subscriptions.feed_id AND entries.read = 0)
-        END AS unread
+        (SELECT COUNT(*) FROM entries WHERE entries.person_id = subscriptions.person_id
+             AND entries.feed_id = subscriptions.feed_id AND entries.read = 0) AS unread
      FROM subscriptions JOIN feeds ON feeds.id = subscriptions.feed_id
      WHERE subscriptions.person_id = ? AND subscriptions.unsubscribed_at IS NULL
      ORDER BY subscriptions.title COLLATE NOCASE, feeds.id";

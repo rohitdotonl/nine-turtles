@@ -3,7 +3,7 @@ import type { Feed } from "./shapes";
 import { addressFor, looksLikeAddress, replySubject, siteOf, writeBackLink } from "./writeBack";
 
 function place(id: number, changes: Partial<Feed> = {}): Feed {
-  return { id, title: `Place ${id}`, siteUrl: null, unread: 0, folders: [], river: false, check: "automatic", openOnSite: false, ...changes };
+  return { id, title: `Place ${id}`, siteUrl: null, unread: 0, folders: [], check: "automatic", openOnSite: false, ...changes };
 }
 
 describe("writing back", () => {

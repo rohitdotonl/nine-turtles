@@ -348,16 +348,16 @@ describe("finding a shortcut (decision 0062)", () => {
   });
 });
 
-describe("the cheat sheet in river mode", () => {
+describe("the cheat sheet with Unread off", () => {
   it("leaves out Go to Unread, Mark all as read and the unread moves, and keeps the rest", () => {
-    const inbox = shortcutsFor(false).map((each) => each.action);
-    const river = shortcutsFor(true).map((each) => each.action);
+    const on = shortcutsFor(false).map((each) => each.action);
+    const off = shortcutsFor(true).map((each) => each.action);
     const unreadOnly = ["Go to Unread", "Mark all as read", "Next / previous unread article"];
     for (const action of unreadOnly) {
-      expect(inbox).toContain(action);
-      expect(river).not.toContain(action);
+      expect(on).toContain(action);
+      expect(off).not.toContain(action);
     }
-    expect(river).toContain("Mark unread");
-    expect(river.length).toBe(inbox.length - unreadOnly.length);
+    expect(off).toContain("Mark unread");
+    expect(off.length).toBe(on.length - unreadOnly.length);
   });
 });

@@ -95,7 +95,7 @@ PLAN.md → V1, item 1.*
 - **A source's settings** (`/people/12/sources/34`, from Edit's ›): its
   **kind** (read from the feed: a newsletter, a YouTube channel is Video, a
   feed with any episode is Podcast, anything else Blog; the reader can
-  correct it), reading mode, how often to check, open on the website,
+  correct it), how often to check, open on the website,
   YouTube's Include Shorts and Include live streams (section 38), Pause for a
   while, **Add a rule…** (section 27), **Find new address** while it's
   failing (section 17), and at the foot **Take out of Alpha**: it becomes a

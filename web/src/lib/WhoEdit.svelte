@@ -31,7 +31,6 @@
     feed,
     folders,
     library,
-    river = false,
     heading = $bindable(),
     onDone,
     onSource,
@@ -44,7 +43,6 @@
     feed: Feed;
     folders: Folder[];
     library: LoadedLibrary;
-    river?: boolean;
     heading?: HTMLHeadingElement;
     /** Back to their page, saved or not. */
     onDone: (saved: boolean) => void;
@@ -73,7 +71,6 @@
   let chosen: number[] = $state((() => [...new Set(placesOf(start, library.feeds ?? []).flatMap((place) => place.folders))])());
   let newFolder = $state("");
   let place: PlaceKind = $state(start.place ?? "blog");
-  let flows = $state(start.river);
   let check: Check = $state(start.check);
   let openOnSite = $state(start.openOnSite);
   let paused = $state(start.pausedAt != null);
@@ -100,7 +97,7 @@
       // Kept only when changed, so a stand-in shown before the first check is never stored as their choice.
       ...(chooses && who !== start.kind ? { kind: who } : {}),
       ...(one && place !== start.place ? { place } : {}),
-      ...(one ? { river: flows, check, openOnSite, paused, ...(feed.sortsVideos ? { shorts, liveStreams } : {}) } : {}),
+      ...(one ? { check, openOnSite, paused, ...(feed.sortsVideos ? { shorts, liveStreams } : {}) } : {}),
     });
     const problem = refusal ? refused(refusal, "feed") : newAddress ? await keepAddress(feed.id, address) : undefined;
     // Saved even if the address then failed: the sidebar shows what was kept.
@@ -197,7 +194,7 @@
     {/if}
 
     {#if one}
-      <SourceFields {feed} {river} bind:place bind:flows bind:check bind:openOnSite bind:paused bind:shorts bind:liveStreams {onAddRule} {onMoved} />
+      <SourceFields {feed} bind:place bind:check bind:openOnSite bind:paused bind:shorts bind:liveStreams {onAddRule} {onMoved} />
     {/if}
 
     <fieldset class="flex min-w-0 flex-col gap-1.5">

@@ -9,7 +9,6 @@
 // opens and when Back lands somewhere it leads on from.
 
 import { parentOf, pathFor, rowFor, type Route } from "./router";
-import type { ReadingMode } from "./reading";
 import { stepOf, type Screen, type Step } from "./steps";
 
 /** A place that shows a list of articles: a view, a feed, a folder, a saved search or a collection. */
@@ -30,9 +29,9 @@ export function isWho(place: Route): place is Extract<Route, { kind: "about" | "
   return place.kind === "about" || place.kind === "edit-feed" || place.kind === "edit-source";
 }
 
-/** River mode has no Unread view: its address (and "/") leads to All. */
-export function homeFor(place: Route, mode: ReadingMode): Route {
-  return mode === "river" && place.kind === "view" && place.view === "unread" ? { kind: "view", view: "all" } : place;
+/** With Unread off there's no Unread view: its address (and "/") leads to All. */
+export function homeFor(place: Route, unread: boolean): Route {
+  return !unread && place.kind === "view" && place.view === "unread" ? { kind: "view", view: "all" } : place;
 }
 
 /**

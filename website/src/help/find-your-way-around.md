@@ -5,7 +5,7 @@ groupId: getting-started
 order: 5
 spec: 4, 5, 6 and 13
 updated: 2026-11-03
-related: [mark-read-or-unread, inbox-or-river, every-keyboard-key]
+related: [mark-read-or-unread, unread-on-or-off, every-keyboard-key]
 ---
 
 <p class="lede">

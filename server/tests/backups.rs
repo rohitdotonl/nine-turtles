@@ -539,14 +539,14 @@ async fn the_change_to_each_readers_own_marks_is_backed_up_and_its_copy_restores
         "{stored:?}"
     );
     let marks = "SELECT entries.person_id, articles.title, entries.read, entries.starred,
-                     entries.muted, subscriptions.title, subscriptions.river,
+                     entries.muted, subscriptions.title,
                      subscriptions.open_on_site, subscriptions.check_at_most,
                      subscriptions.unsubscribed_at IS NOT NULL
                  FROM entries JOIN articles ON articles.id = entries.article_id
                  JOIN subscriptions ON subscriptions.person_id = entries.person_id
                      AND subscriptions.feed_id = entries.feed_id
                  ORDER BY articles.id";
-    type Line = (i64, String, bool, bool, bool, String, bool, bool, i64, bool);
+    type Line = (i64, String, bool, bool, bool, String, bool, i64, bool);
     let live: Vec<Line> = sqlx::query_as(marks).fetch_all(&changed.db).await.unwrap();
 
     // A new host restores that copy; nine turtles changes it as it starts.
@@ -556,7 +556,7 @@ async fn the_change_to_each_readers_own_marks_is_backed_up_and_its_copy_restores
     let restored = nine_turtles::state(fresh).await.unwrap();
     let again: Vec<Line> = sqlx::query_as(marks).fetch_all(&restored.db).await.unwrap();
     assert_eq!(again, live);
-    let line = |title: &str, read, starred, muted, feed: &str, river, open, every, left| {
+    let line = |title: &str, read, starred, muted, feed: &str, open, every, left| {
         (
             1,
             title.to_owned(),
@@ -564,7 +564,6 @@ async fn the_change_to_each_readers_own_marks_is_backed_up_and_its_copy_restores
             starred,
             muted,
             feed.to_owned(),
-            river,
             open,
             every,
             left,
@@ -573,16 +572,12 @@ async fn the_change_to_each_readers_own_marks_is_backed_up_and_its_copy_restores
     assert_eq!(
         again,
         [
-            line(
-                "Read", true, false, false, "Renamed", true, true, 3600, false
-            ),
-            line(
-                "Starred", false, true, false, "Renamed", true, true, 3600, false
-            ),
-            line(
-                "Muted", true, false, true, "Renamed", true, true, 3600, false
-            ),
-            line("Waiting", false, true, false, "Kept", false, false, 0, true),
+            line("Read", true, false, false, "Renamed", true, 3600, false),
+            // Its feed flowed past (river), so it was counted as read when
+            // that went (structure change 38).
+            line("Starred", true, true, false, "Renamed", true, 3600, false),
+            line("Muted", true, false, true, "Renamed", true, 3600, false),
+            line("Waiting", false, true, false, "Kept", false, 0, true),
         ]
     );
 }

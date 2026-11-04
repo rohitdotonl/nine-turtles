@@ -22,11 +22,11 @@ afterEach(() => {
 describe("settings kept on this device", () => {
   it("keeps, reads and forgets a value", () => {
     vi.stubGlobal("localStorage", storage());
-    expect(deviceText("nine-turtles.mode")).toBeNull();
-    setDeviceText("nine-turtles.mode", "river");
-    expect(deviceText("nine-turtles.mode")).toBe("river");
-    setDeviceText("nine-turtles.mode", null);
-    expect(deviceText("nine-turtles.mode")).toBeNull();
+    expect(deviceText("nine-turtles.unread")).toBeNull();
+    setDeviceText("nine-turtles.unread", "off");
+    expect(deviceText("nine-turtles.unread")).toBe("off");
+    setDeviceText("nine-turtles.unread", null);
+    expect(deviceText("nine-turtles.unread")).toBeNull();
   });
 
   it("reads JSON, and nothing from text that isn't JSON", () => {
@@ -47,7 +47,7 @@ describe("settings kept on this device", () => {
       throw new DOMException("full", "QuotaExceededError");
     };
     vi.stubGlobal("localStorage", refusing);
-    expect(deviceText("nine-turtles.mode")).toBeNull();
-    expect(() => setDeviceText("nine-turtles.mode", "river")).not.toThrow();
+    expect(deviceText("nine-turtles.unread")).toBeNull();
+    expect(() => setDeviceText("nine-turtles.unread", "off")).not.toThrow();
   });
 });

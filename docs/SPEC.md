@@ -31,7 +31,7 @@ A few words used throughout:
 | 7 | [Reading an article](spec/07-reading-an-article.md) |
 | 8 | [Read state, marking unread, "mark all as read", undo](spec/08-read-state-and-undo.md) |
 | 9 | [Star](spec/09-star.md) |
-| 10 | [Reading modes: inbox and river](spec/10-reading-modes.md) |
+| 10 | [Unread, on or off](spec/10-reading-modes.md) |
 | 11 | [Background fetching (being polite to publishers)](spec/11-background-fetching.md) |
 | 12 | [WebSub (instant updates from publishers who offer it)](spec/12-websub.md) |
 | 13 | [Refresh: the view waits for you](spec/13-refresh.md) |

@@ -260,25 +260,25 @@ async fn settings_are_each_readers_own() {
     let (status, _) = owner
         .post(
             "/api/settings",
-            json!({ "sort": "oldest", "mode": "river", "hidden": [] }),
+            json!({ "sort": "oldest", "unread": false, "hidden": [] }),
         )
         .await;
     assert_eq!(status, StatusCode::OK);
 
     assert_eq!(
         other.get("/api/settings").await,
-        json!({ "sort": "newest", "mode": "inbox", "keys_reset": false, "hidden": [] })
+        json!({ "sort": "newest", "unread": true, "keys_reset": false, "hidden": [] })
     );
     let (_, changed) = other
         .post("/api/settings", json!({ "sort": "newest" }))
         .await;
     assert_eq!(
         changed,
-        json!({ "sort": "newest", "mode": "inbox", "keys_reset": false, "hidden": [] })
+        json!({ "sort": "newest", "unread": true, "keys_reset": false, "hidden": [] })
     );
     assert_eq!(
         owner.get("/api/settings").await,
-        json!({ "sort": "oldest", "mode": "river", "keys_reset": false, "hidden": [] })
+        json!({ "sort": "oldest", "unread": false, "keys_reset": false, "hidden": [] })
     );
 }
 
@@ -777,19 +777,17 @@ async fn each_reader_marks_names_and_sets_up_a_shared_feed_alone() {
     let (status, _) = other
         .post(
             &format!("/api/feeds/{feed}"),
-            json!({ "title": "Their garden", "folders": [], "river": true,
+            json!({ "title": "Their garden", "folders": [],
                     "check": "daily", "open_on_site": true }),
         )
         .await;
     assert_eq!(status, StatusCode::NO_CONTENT);
     let mine = &owner.get("/api/feeds").await["feeds"][0];
     assert_eq!(mine["title"], "Garden notes");
-    assert_eq!(mine["river"], false);
     assert_eq!(mine["check_at_most"], 0);
     assert_eq!(mine["open_on_site"], false);
     let theirs = &other.get("/api/feeds").await["feeds"][0];
     assert_eq!(theirs["title"], "Their garden");
-    assert_eq!(theirs["river"], true);
     assert_eq!(theirs["check_at_most"], 86_400);
     // The feed is checked as often as the owner allows: its own rhythm.
     assert_eq!(count(&state, "SELECT check_at_most FROM feeds").await, 0);
@@ -802,7 +800,14 @@ async fn each_reader_marks_names_and_sets_up_a_shared_feed_alone() {
         other.get("/api/articles?view=all").await["articles"][0]["feed_title"],
         "Their garden"
     );
-    // A feed that flows past leaves only their Unread.
+    // Marking read leaves only their Unread.
+    let (status, _) = other
+        .post(
+            "/api/articles/read",
+            json!({ "ids": [second, third], "read": true }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK);
     assert_eq!(owner.ids("view=unread").await, [second, third]);
     assert!(other.ids("view=unread").await.is_empty());
 
@@ -912,7 +917,7 @@ async fn a_reader_sees_and_changes_nothing_of_a_feed_they_dont_follow() {
     let (status, _) = other
         .post(
             &format!("/api/feeds/{feed}"),
-            json!({ "title": "Mine", "folders": [], "river": true }),
+            json!({ "title": "Mine", "folders": [], "open_on_site": true }),
         )
         .await;
     assert_eq!(status, StatusCode::NOT_FOUND);
@@ -1009,7 +1014,7 @@ async fn a_reader_sees_and_changes_nothing_of_a_feed_they_dont_follow() {
     assert_eq!(mine["title"], "Garden notes");
     assert_eq!(mine["unread"], 3);
     assert_eq!(mine["folders"], json!([]));
-    assert_eq!(mine["river"], false);
+    assert_eq!(mine["open_on_site"], false);
     assert_eq!(
         owner.marks("view=all").await,
         [
@@ -1490,7 +1495,7 @@ async fn a_new_address_for_a_shared_feed_moves_only_the_reader_who_chose_it() {
     let (status, _) = other
         .post(
             &format!("/api/feeds/{feed}"),
-            json!({ "title": "Their garden", "folders": [folder], "river": true,
+            json!({ "title": "Their garden", "folders": [folder],
                     "check": "daily", "open_on_site": true }),
         )
         .await;
@@ -1532,7 +1537,6 @@ async fn a_new_address_for_a_shared_feed_moves_only_the_reader_who_chose_it() {
     assert_eq!(theirs["id"], new_feed);
     // Their name, settings and folder came along.
     assert_eq!(theirs["title"], "Their garden");
-    assert_eq!(theirs["river"], true);
     assert_eq!(theirs["check_at_most"], 86_400);
     assert_eq!(theirs["open_on_site"], true);
     assert_eq!(theirs["folders"], json!([folder]));

@@ -1,5 +1,5 @@
 // The reading settings as the signed-in screen holds them (SPEC section 18):
-// the reading mode, the sort order and the lists the sidebar hides. Each shows this device's last copy until the
+// whether Unread is on, the sort order and the lists the sidebar hides. Each shows this device's last copy until the
 // server answers, and each change shows at once and saves in the order made,
 // so an earlier save that fails never rolls the screen back past a later one.
 // The settings page itself is Settings.svelte; reading.ts talks to the server.
@@ -7,16 +7,16 @@
 // One is made for each signed-in screen (Shell.svelte), never shared, so
 // nothing of one reader's is left for the next to see.
 
-import { lastHidden, lastMode, loadSettings, saveHidden, saveKeysSeen, saveMode, saveSort, type Order, type Reading, type ReadingMode } from "./reading";
+import { lastHidden, lastUnread, loadSettings, saveHidden, saveKeysSeen, saveSort, saveUnread, type Order, type Reading } from "./reading";
 import { savedInOrder } from "./inorder";
 import type { Hideable } from "./router";
 
-const SETTINGS = ["mode", "sort", "hidden"] as const;
+const SETTINGS = ["unread", "sort", "hidden"] as const;
 type Setting = (typeof SETTINGS)[number];
 
 export class ReadingSettings {
-  /** Inbox or river, shared across the reader's devices; this device's last word until the server answers. */
-  mode: ReadingMode = $state(lastMode());
+  /** Whether Unread is on (SPEC section 10), shared across the reader's devices; this device's last word until the server answers. */
+  unread: boolean = $state(lastUnread());
   /** The reader's sort order, shared across their devices; unknown until the server answers. */
   sort: Order | undefined = $state();
   /** The lists the sidebar leaves out (Settings › Show in the sidebar, decision 0105); they still open by address and keys. */
@@ -33,7 +33,7 @@ export class ReadingSettings {
   #changed = new Set<Setting>();
   #saved = new Set<Setting>();
 
-  #modeSaves = savedInOrder(this.#saving("mode", saveMode), (next: ReadingMode) => (this.mode = next));
+  #unreadSaves = savedInOrder(this.#saving("unread", saveUnread), (next: boolean) => (this.unread = next));
   #sortSaves = savedInOrder<Order | undefined>(
     this.#saving("sort", (next) => saveSort(next as Order)),
     (next) => (this.sort = next),
@@ -64,8 +64,8 @@ export class ReadingSettings {
   // Each change shows at once; its promise rejects with "not saved" when the
   // newest change couldn't be saved, and the screen is back as the server has it.
 
-  changeMode(next: ReadingMode): Promise<void> {
-    return this.#change("mode", this.#modeSaves(next, this.mode));
+  changeUnread(next: boolean): Promise<void> {
+    return this.#change("unread", this.#unreadSaves(next, this.unread));
   }
 
   changeSort(next: Order): Promise<void> {
@@ -98,7 +98,7 @@ export class ReadingSettings {
   }
 
   #show(setting: Setting, answer: Reading) {
-    if (setting === "mode") this.mode = answer.mode;
+    if (setting === "unread") this.unread = answer.unread;
     else if (setting === "sort") this.sort = answer.sort;
     else this.hidden = answer.hidden;
   }

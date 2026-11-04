@@ -136,7 +136,7 @@
     <circle cx="10" cy="10" r="1.25" fill="currentColor" stroke="none" />
     <circle cx="15.5" cy="10" r="1.25" fill="currentColor" stroke="none" />
   {:else if name === "book"}
-    <!-- Settings › Reading mode: an open book. -->
+    <!-- Settings › Reading › Unread: an open book. -->
     <path d="M10 5.5c-1.5-1.2-3.5-1.75-6.25-1.75v11c2.75 0 4.75.55 6.25 1.75 1.5-1.2 3.5-1.75 6.25-1.75v-11C13.5 3.75 11.5 4.3 10 5.5Z" />
     <path d="M10 5.5v11" />
   {:else if name === "palette"}

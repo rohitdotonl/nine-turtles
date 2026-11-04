@@ -491,16 +491,16 @@ test("Settings: the sort order is saved for every device", async ({ page, isMobi
   await saved;
 });
 
-test("river mode: no Unread view, no dots, no read styling, and it opens on All", async ({ page, isMobile }) => {
+test("Unread off: no Unread view, no dots, no read styling, and it opens on All", async ({ page, isMobile }) => {
   test.skip(isMobile, "the same on every width");
   // The setting is shared by every test using this nine turtles, so this
-  // page alone is told it's in river mode, and its changes aren't saved.
-  let mode = "river";
+  // page alone is told Unread is off, and its changes aren't saved.
+  let unread = false;
   await page.route("**/api/settings", (route) =>
     route.request().method() === "POST"
-      ? ((mode = JSON.parse(route.request().postData() ?? "{}").mode ?? mode),
-        route.fulfill({ json: { sort: "newest", mode } }))
-      : route.fulfill({ json: { sort: "newest", mode } }),
+      ? ((unread = JSON.parse(route.request().postData() ?? "{}").unread ?? unread),
+        route.fulfill({ json: { sort: "newest", unread } }))
+      : route.fulfill({ json: { sort: "newest", unread } }),
   );
   const name = await openBlog(page);
 
@@ -535,27 +535,29 @@ test("river mode: no Unread view, no dots, no read styling, and it opens on All"
   await expect(page).toHaveURL(/\/all$/);
   await expect(page.getByRole("heading", { name: "All", level: 2 })).toBeVisible();
 
-  // Back to inbox in Settings: Unread and the counts return, and what was read shows as read.
+  // Unread back on in Settings: Unread and the dots return, and what was read shows as read.
   await page.goto(new URL("/settings", FEEDS_APP).href);
   await appReady(page);
   const reading = page.getByRole("region", { name: "Reading" });
-  await expect(reading.getByRole("radio", { name: "River" })).toBeChecked();
-  // With only the keyboard: Tab to the choice, an arrow key changes it.
-  await tabTo(page, reading.getByRole("radio", { name: "River" }));
-  await page.keyboard.press("ArrowLeft");
-  await expect(reading.getByRole("radio", { name: "Inbox" })).toBeChecked();
+  const unreadSwitch = reading.getByRole("switch", { name: "Unread" });
+  await expect(unreadSwitch).not.toBeChecked();
+  await expect(reading.getByRole("radio", { name: /Inbox|River/ })).toHaveCount(0);
+  // With only the keyboard: Tab to the switch, Space turns it on.
+  await tabTo(page, unreadSwitch);
+  await page.keyboard.press("Space");
+  await expect(unreadSwitch).toBeChecked();
   await expect(sidebar(page).getByRole("link", { name: "Unread", exact: true })).toBeVisible();
   await feedLink(page, name).click();
   await expect(row(page, name, MIDDLE)).toContainText("unread");
   await expect(row(page, name, NEWEST)).not.toContainText("unread");
 });
 
-test("the server's reading mode decides where the app opens", async ({ page, isMobile }) => {
+test("the server's Unread switch decides where the app opens", async ({ page, isMobile }) => {
   test.skip(isMobile, "the same on every width");
   await page.setViewportSize({ width: 1280, height: 800 });
-  // This device last saw inbox mode; the server says river (changed on another device).
-  let mode = "river";
-  await page.route("**/api/settings", (route) => route.fulfill({ json: { sort: "newest", mode } }));
+  // This device last saw Unread on; the server says off (changed on another device).
+  let unread = false;
+  await page.route("**/api/settings", (route) => route.fulfill({ json: { sort: "newest", unread } }));
   await page.goto(new URL("/unread", FEEDS_APP).href);
   await appReady(page);
   await signIn(page);
@@ -564,8 +566,8 @@ test("the server's reading mode decides where the app opens", async ({ page, isM
   await appReady(page);
   await expect(page).toHaveURL(/\/all$/);
 
-  // Now it remembers river; the server says inbox again: "/" opens Unread after all.
-  mode = "inbox";
+  // Now it remembers off; the server says on again: "/" opens Unread after all.
+  unread = true;
   await page.goto(new URL("/", FEEDS_APP).href);
   await appReady(page);
   await expect(page).toHaveURL(/\/unread$/);
@@ -576,7 +578,7 @@ test("Settings: no unread counts to show or hide, and no letting unread go", asy
   test.skip(isMobile, "the same on every width");
   // Shared by every test using this nine turtles, so this page alone is
   // told about its settings, and its changes aren't saved.
-  let settings: Record<string, string> = { sort: "newest", mode: "inbox" };
+  let settings: Record<string, string | boolean> = { sort: "newest", unread: true };
   await page.route("**/api/settings", (route) => {
     if (route.request().method() === "POST") settings = { ...settings, ...JSON.parse(route.request().postData() ?? "{}") };
     return route.fulfill({ json: settings });
@@ -602,9 +604,9 @@ test("Settings: no unread counts to show or hide, and no letting unread go", asy
   await expect(reading.getByRole("radio", { name: "1 week" })).toHaveCount(0);
   await expect(reading).toContainText("An Unread list, and a dot where something is new.");
 
-  // River mode: the sidebar has no dots.
-  await reading.getByRole("radio", { name: "River" }).check();
-  await expect(reading).toContainText("Everything flows past. No Unread list, no dots.");
+  // Unread off: the sidebar has no dots.
+  await reading.getByRole("switch", { name: "Unread" }).click();
+  await expect(reading).toContainText("No Unread list and no dots. What you've read is still remembered.");
   await expect(feedLink(page, name)).toHaveAccessibleName(`Blog ${name}`);
   await expect(sidebar(page).locator(".sidebar-dot")).toHaveCount(0);
 });

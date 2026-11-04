@@ -32,7 +32,6 @@
     route,
     feed,
     library,
-    river = false,
     phone = false,
     heading = $bindable(),
     go,
@@ -45,7 +44,6 @@
     /** Their row's place: the one their address and list open at. */
     feed: Feed;
     library: LoadedLibrary;
-    river?: boolean;
     phone?: boolean;
     heading?: HTMLHeadingElement;
     go: (next: Route, notice?: Notice) => void;
@@ -87,7 +85,6 @@
         {feed}
         folders={library.folders}
         {library}
-        {river}
         bind:heading
         onDone={(saved) => (saved && onSaved(), go(about))}
         onSource={(id) => go({ kind: "edit-source", id: feed.id, source: id })}
@@ -102,7 +99,6 @@
           {source}
           {name}
           {library}
-          {river}
           bind:heading
           onDone={(saved) => (saved && onSaved(), go({ kind: "edit-feed", id: feed.id }))}
           onPeople={(done, lead) => joined(done, library.rowOf(lead))}
