@@ -532,8 +532,8 @@ export async function appReady(page: Page): Promise<void> {
  * reload or a new page: otherwise the page can load before the save lands
  * and still show the old choice.
  */
-export function settingsSaved(page: Page): Promise<unknown> {
-  return page.waitForResponse((response) => response.url().endsWith("/api/settings") && response.request().method() === "POST" && response.ok());
+export function settingsSaved(page: Page, address = "/api/settings"): Promise<unknown> {
+  return page.waitForResponse((response) => response.url().endsWith(address) && response.request().method() === "POST" && response.ok());
 }
 
 /** Chooses a page the way Settings saves it, before the page loads. */

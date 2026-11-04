@@ -26,6 +26,8 @@ struct Site {
     busy: bool,
     /// Every path asked for.
     asked: Vec<String>,
+    /// /old.xml waits for this before answering (with one more post, unless gone).
+    hold_old: Option<tokio::sync::oneshot::Receiver<()>>,
 }
 
 type Shared = Arc<Mutex<Site>>;
@@ -40,9 +42,24 @@ async fn publisher() -> (String, Shared) {
 }
 
 async fn serve(State(site): State<Shared>, uri: Uri) -> Response {
-    let mut site = site.lock().unwrap();
     let path = uri.path().to_owned();
-    site.asked.push(path.clone());
+    let held = {
+        let mut site = site.lock().unwrap();
+        site.asked.push(path.clone());
+        if path == "/old.xml" {
+            site.hold_old.take()
+        } else {
+            None
+        }
+    };
+    if let Some(release) = held {
+        let _ = release.await;
+        // Still there: with a post published meanwhile.
+        if !site.lock().unwrap().old_gone {
+            return rss("Old name", &["one", "two", "three", "late"]);
+        }
+    }
+    let site = site.lock().unwrap();
     match path.as_str() {
         // The home page names the feed's new address, and one already followed.
         "/" => (
@@ -387,6 +404,77 @@ async fn find_new_address_offers_the_sites_feeds_and_moving_keeps_everything() {
         )
         .await;
     assert_eq!(refused["error"], "no-feed", "{status}");
+}
+
+#[tokio::test]
+async fn a_check_of_the_old_address_finishing_after_a_move_doesnt_undo_it() {
+    let reader = Reader::new().await;
+    let old = reader.follow("/old.xml").await;
+    reader.change(|site| site.old_gone = true);
+    let now = nine_turtles::now();
+    reader.check(old, now).await;
+    reader.check(old, now + HOUR).await;
+    assert_eq!(reader.listed().await.len(), 1);
+
+    // A check is still waiting on the old address when the reader moves the feed.
+    let (release, held) = tokio::sync::oneshot::channel();
+    reader.change(|site| site.hold_old = Some(held));
+    let state = reader.state.clone();
+    let checking = tokio::spawn(async move { checking::check(&state, old, now + 2 * HOUR).await });
+    tokio::time::timeout(std::time::Duration::from_secs(10), async {
+        while reader.published.lock().unwrap().hold_old.is_some() {
+            tokio::task::yield_now().await;
+        }
+    })
+    .await
+    .expect("the check asks for the old address");
+    let (status, moved) = reader
+        .post(
+            &format!("/api/health/{old}/address"),
+            json!({ "url": format!("{}/new.xml", reader.site) }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK, "{moved}");
+    release.send(()).unwrap();
+    checking.await.unwrap().unwrap();
+    // The old address failing once more doesn't put the moved feed back.
+    assert!(reader.listed().await.is_empty());
+}
+
+#[tokio::test]
+async fn a_working_check_of_the_old_address_finishing_after_a_move_changes_nothing() {
+    let reader = Reader::new().await;
+    let old = reader.follow("/old.xml").await;
+    let (release, held) = tokio::sync::oneshot::channel();
+    reader.change(|site| site.hold_old = Some(held));
+    let state = reader.state.clone();
+    let now = nine_turtles::now();
+    let checking = tokio::spawn(async move { checking::check(&state, old, now).await });
+    tokio::time::timeout(std::time::Duration::from_secs(10), async {
+        while reader.published.lock().unwrap().hold_old.is_some() {
+            tokio::task::yield_now().await;
+        }
+    })
+    .await
+    .expect("the check asks for the old address");
+    let (status, moved) = reader
+        .post(
+            &format!("/api/health/{old}/address"),
+            json!({ "url": format!("{}/other.xml", reader.site) }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK, "{moved}");
+    release.send(()).unwrap();
+    checking.await.unwrap().unwrap();
+    // What the old address said isn't stored on the moved feed.
+    let articles = reader.get(&format!("/api/articles?feed={old}")).await;
+    let titles: Vec<&str> = articles["articles"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|article| article["title"].as_str().unwrap())
+        .collect();
+    assert!(!titles.contains(&"late"), "{titles:?}");
 }
 
 #[tokio::test]
