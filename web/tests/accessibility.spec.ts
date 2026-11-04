@@ -7,7 +7,7 @@ import { SCREENS, THEMES, appReady, openScreen } from "./screens";
 // 0114): together they are the longest file by far.
 test.describe.configure({ mode: "parallel" });
 
-// The first design floor: every screen, in every theme by day and by night, passes the automatic
+// The first design floor: every screen, on every page (White, Paper and Night), passes the automatic
 // WCAG checks (including color contrast) at desktop and phone width.
 for (const screen of SCREENS) {
   for (const theme of THEMES) {
@@ -23,7 +23,7 @@ for (const screen of SCREENS) {
   }
 }
 
-// The default: nothing chosen, so Original, by day or by night as the device is set.
+// The default: nothing chosen, so Match device: White by day, Night by night.
 for (const colorScheme of ["light", "dark"] as const) {
   test(`following the device's ${colorScheme} setting passes the accessibility checks`, async ({ page }) => {
     await page.emulateMedia({ colorScheme });

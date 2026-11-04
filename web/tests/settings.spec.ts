@@ -21,11 +21,11 @@ test("Settings' first page keeps the everyday settings, and the rest are rows th
   await expect(groups).toHaveText(["Reading", "Look and feel", "Your library", "More", /^Your nine turtles/, "Account"]);
   // Reading and Look and feel hold their controls on the page itself.
   await expect(page.getByRole("switch", { name: "Unread", exact: true })).toBeVisible();
-  for (const name of ["Sort order", "Appearance"])
+  for (const name of ["Sort order", "Page"])
     await expect(page.getByRole("group", { name, exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Smaller text" })).toBeVisible();
-  // Theme, font and line width are one page further in.
-  await expect(page.getByRole("group", { name: "Theme" })).toHaveCount(0);
+  // Font and line width are one page further in.
+  await expect(page.getByRole("group", { name: "Reading font" })).toHaveCount(0);
   const rows = page.locator("[data-settings-row]");
   const expected = ["font", "feeds", "feed-health", "sidebar", "data", "add-from-anywhere", "install", "hiding", "newsletters", "other-apps", "assistants", "readers"];
   const shown = await rows.evaluateAll((all) => all.filter((row) => (row as HTMLElement).offsetParent !== null).map((row) => (row as HTMLElement).dataset.settingsRow));
@@ -107,13 +107,13 @@ test("a row opens its own page at its own address; ‹ Settings, Escape and Back
 
   // An address opens its page straight away, and ‹ Settings still goes back.
   await page.goto("/settings/font");
-  await expect(page.getByRole("heading", { level: 2, name: "Font, theme and line width" })).toBeVisible();
-  await expect(page.getByRole("group", { name: "Theme" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Font and line width" })).toBeVisible();
+  await expect(page.getByRole("group", { name: "Theme" })).toHaveCount(0);
   await expect(page.getByRole("group", { name: "Reading font" })).toBeVisible();
   await expect(page.getByRole("group", { name: "Line width" })).toBeVisible();
   await page.getByRole("button", { name: "Back to Settings" }).click();
   await expect(page).toHaveURL(/\/settings$/);
-  await expect(page.getByRole("link", { name: /^Font, theme and line width/ })).toBeFocused();
+  await expect(page.getByRole("link", { name: /^Font and line width/ })).toBeFocused();
 
   // Feed health keeps its X; it and Escape go back to its row too.
   await page.getByRole("link", { name: "Feed health", exact: true }).click();

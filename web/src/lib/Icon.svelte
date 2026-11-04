@@ -129,13 +129,13 @@
     <path d="M10 5.5c-1.5-1.2-3.5-1.75-6.25-1.75v11c2.75 0 4.75.55 6.25 1.75 1.5-1.2 3.5-1.75 6.25-1.75v-11C13.5 3.75 11.5 4.3 10 5.5Z" />
     <path d="M10 5.5v11" />
   {:else if name === "palette"}
-    <!-- Settings › Appearance: a painter's palette with three solid dabs of paint. -->
+    <!-- Settings › Page: a painter's palette with three solid dabs of paint. -->
     <path d="M10.25 3.5C5.9 3.5 2.75 6.3 2.75 9.9c0 3.7 3.1 6.6 7 6.6 1.3 0 1.9-.75 1.7-1.65-.25-1.25.55-2.1 1.85-2.1h1.45c1.85 0 3-1.15 3-3.05 0-3.6-3.1-6.2-7.5-6.2Z" />
     <circle cx="6.6" cy="8.9" r="1.3" fill="currentColor" stroke="none" />
     <circle cx="9.9" cy="6.6" r="1.3" fill="currentColor" stroke="none" />
     <circle cx="13.3" cy="8" r="1.3" fill="currentColor" stroke="none" />
   {:else if name === "pen-nib"}
-    <!-- Settings › Font, theme and line width: a pen's nib. -->
+    <!-- Settings › Font and line width: a pen's nib. -->
     <path d="M10 16.25 5.25 11.5 7 4.75h6l1.75 6.75Z" />
     <path d="M10 16.25V10" />
     <circle cx="10" cy="9.25" r="1" />

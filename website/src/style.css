@@ -1,6 +1,6 @@
 /*
-  The website wears the app's Original theme (web/src/app.css): the same
-  paper, inks and fonts, by day and by night. Like the app, it never moves:
+  The website wears the app's White page by day and its Night page by night
+  (web/src/app.css): the same paper, inks and fonts. Like the app, it never moves:
   no animations or transitions (the motion check reads this file too).
 */
 

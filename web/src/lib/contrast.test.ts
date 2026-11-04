@@ -7,8 +7,7 @@ import themesCss from "../themes.css?raw";
 import html from "../../index.html?raw";
 import ruleEditor from "./RuleEditor.svelte?raw";
 import readingPanel from "./ReadingPanel.svelte?raw";
-import { BAR_COLORS } from "./preferences";
-import { LOOKS, THEMES as THEME_NAMES, type Mode } from "./themes";
+import { LOOKS, THEMES as THEME_NAMES } from "./themes";
 
 // The themes' colors (themes.css) and everything drawn with them (app.css).
 const css = themesCss + appCss;
@@ -33,20 +32,18 @@ function contrast(a: string, b: string): number {
   return (light! + 0.05) / (dark! + 0.05);
 }
 
-// The theme's day and night versions (decision 0056), by name ("original dark"),
-// and the night version a dark device gets before nine turtles' script runs.
-const MODES: Mode[] = ["light", "dark"];
+// The pages (decision 0176), by name ("paper"), and the night page a dark
+// device gets before nine turtles' script runs.
 const SELECTORS: Record<string, string> = {
-  ...Object.fromEntries(
-    THEME_NAMES.flatMap((name) => MODES.map((mode) => [`${name} ${mode}`, `:root[data-theme="${name}"][data-mode="${mode}"]`])),
-  ),
+  ...Object.fromEntries(THEME_NAMES.map((name) => [name, `:root[data-theme="${name}"][data-mode="${LOOKS[name].mode}"]`])),
   "device dark": ":root:not([data-mode])",
 };
 const THEMES: Record<string, Record<string, string>> = Object.fromEntries(
   Object.entries(SELECTORS).map(([name, selector]) => [name, theme(selector)]),
 );
 const BACKGROUNDS = ["paper", "list", "sidebar", "tint-list", "tint-sidebar"];
-const BRAUN = ["fountain-pen", "signal"];
+// Paper's accent, old-ink brown, is a mark held to 3 : 1 (DESIGN.md → Exceptions log, decision 0176).
+const MARK_ACCENT = ["paper"];
 
 describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
   it("defines every color", () => {
@@ -84,10 +81,9 @@ describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
     expect(contrast(colors.danger!, colors.list!)).toBeGreaterThanOrEqual(4.5);
   });
 
-  // The Braun themes' accent is a bright signal color, drawn only as the
-  // unread dot and a search's faint tone, never as text, so it's held to the
-  // 3 : 1 for marks below instead (the owner's choice, 1 November 2026).
-  it.runIf(!BRAUN.some((name) => _name.startsWith(name)))("has the accent at AAA (7 : 1) on the reading area", () => {
+  // Paper's accent is drawn only as the unread dot and a search's faint tone,
+  // never as text, so it's held to the 3 : 1 for marks below instead.
+  it.runIf(!MARK_ACCENT.includes(_name))("has the accent at AAA (7 : 1) on the reading area", () => {
     expect(contrast(colors.accent!, colors.paper!)).toBeGreaterThanOrEqual(7);
   });
 
@@ -429,28 +425,19 @@ describe.each(Object.entries(THEMES))("the %s theme's raised surface", (_name, c
   });
 });
 
-it("covers every theme by day and by night", () => {
-  expect(Object.keys(THEMES)).toHaveLength(THEME_NAMES.length * 2 + 1);
+it("covers every page, and the night page before the script runs", () => {
+  expect(Object.keys(THEMES)).toHaveLength(THEME_NAMES.length + 1);
 });
 
-it("before nine turtles' script runs, a page is Original: by day, or by night on a dark device", () => {
-  expect(THEMES["device dark"]).toEqual(THEMES["original dark"]);
-  expect(theme(":root,")).toEqual(THEMES["original light"]);
+it("before nine turtles' script runs, a page is White, or Night on a dark device", () => {
+  expect(THEMES["device dark"]).toEqual(THEMES.night);
+  expect(theme(":root,")).toEqual(THEMES.white);
 });
 
-it("each theme's page color in themes.ts matches themes.css, by day and by night", () => {
-  for (const name of THEME_NAMES) {
-    for (const mode of MODES) expect(LOOKS[name][mode].page, `${name} ${mode}`).toBe(THEMES[`${name} ${mode}`]!.paper);
-  }
-});
-
-it("the browser bar uses each version's own background", () => {
-  for (const [name, colors] of Object.entries(BAR_COLORS)) {
-    for (const mode of MODES) expect(colors[mode].toLowerCase(), `${name} ${mode}`).toBe(THEMES[`${name} ${mode}`]!.paper);
-  }
-  // index.html's light and dark bars, before the script runs: Original's.
-  expect(html).toContain(`content="${BAR_COLORS.original.light}" media="(prefers-color-scheme: light)"`);
-  expect(html).toContain(`content="${BAR_COLORS.original.dark}" media="(prefers-color-scheme: dark)"`);
+it("each page's color in themes.ts matches themes.css, and the browser bar starts on White's and Night's", () => {
+  for (const name of THEME_NAMES) expect(LOOKS[name].page, name).toBe(THEMES[name]!.paper);
+  expect(html).toContain(`content="${LOOKS.white.page.toUpperCase()}" media="(prefers-color-scheme: light)"`);
+  expect(html).toContain(`content="${LOOKS.night.page.toUpperCase()}" media="(prefers-color-scheme: dark)"`);
 });
 
 describe("the summary-only note's link underline", () => {
@@ -469,22 +456,6 @@ describe("the summary-only note's link underline", () => {
 
   it("covers every theme", () => {
     expect(Object.keys(THEMES).length).toBeGreaterThanOrEqual(THEME_NAMES.length);
-  });
-});
-
-// Plain's links are the browser's own blue, purple once visited (decision 0063): article text, so AAA.
-describe.each(["plain light", "plain dark"])("the %s theme's article links", (name) => {
-  const colors = THEMES[name]!;
-
-  it("are at AAA (7 : 1) on the reading area, visited or not", () => {
-    expect(colors.link, "link").toMatch(/^#/);
-    expect(colors["link-visited"], "link-visited").toMatch(/^#/);
-    expect(contrast(colors.link!, colors.paper!)).toBeGreaterThanOrEqual(7);
-    expect(contrast(colors["link-visited"]!, colors.paper!)).toBeGreaterThanOrEqual(7);
-  });
-
-  it("never share the accent's color, so blue means only a link", () => {
-    expect(colors.accent).not.toBe(colors.link);
   });
 });
 

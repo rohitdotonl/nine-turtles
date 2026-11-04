@@ -1,6 +1,6 @@
 import { expect, test, type APIRequestContext, type Locator, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP, OWNER_EMAIL, TEST_PASSWORD } from "../playwright.config";
-import { LOOKS, THEMES as THEME_NAMES, type Mode, type Theme } from "../src/lib/themes";
+import { LOOKS, THEMES as THEME_NAMES, type Theme } from "../src/lib/themes";
 
 // Every screen of nine turtles. Each new screen is added here, so it is
 // automatically checked for accessibility and photographed for the owner.
@@ -467,22 +467,12 @@ async function unmark(page: Page, feed: number): Promise<void> {
   }
 }
 
-/** One theme's day or night version, as "fountain-pen-dark". */
-export type Variant = `${Theme}-${Mode}`;
+/** Every page (White, Paper, Night), each checked and photographed. */
+export const THEMES: Theme[] = [...THEME_NAMES];
 
-/** Every theme by day and by night, each checked and photographed. */
-export const THEMES: Variant[] = THEME_NAMES.flatMap((theme) => (["light", "dark"] as const).map((mode) => `${theme}-${mode}` as const));
-
-function parts(variant: Variant): [Theme, Mode] {
-  // Split at the last hyphen: a theme's own name may have one ("fountain-pen").
-  const at = variant.lastIndexOf("-");
-  return [variant.slice(0, at) as Theme, variant.slice(at + 1) as Mode];
-}
-
-// Each version's reading background (themes.ts, checked against themes.css), used to prove the theme took effect.
-function background(variant: Variant): string {
-  const [theme, mode] = parts(variant);
-  const hex = LOOKS[theme][mode].page;
+// Each page's color (themes.ts, checked against themes.css), used to prove the page took effect.
+function background(theme: Theme): string {
+  const hex = LOOKS[theme].page;
   return `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(", ")})`;
 }
 
@@ -546,15 +536,14 @@ export function settingsSaved(page: Page): Promise<unknown> {
   return page.waitForResponse((response) => response.url().endsWith("/api/settings") && response.request().method() === "POST" && response.ok());
 }
 
-/** Chooses a theme and its day or night version the way Settings saves them, before the page loads. */
-export async function chooseTheme(page: Page, variant: Variant): Promise<void> {
-  const [theme, appearance] = parts(variant);
+/** Chooses a page the way Settings saves it, before the page loads. */
+export async function chooseTheme(page: Page, theme: Theme): Promise<void> {
   await page.addInitScript((chosen) => {
     localStorage.setItem("nine-turtles.preferences", JSON.stringify(chosen));
-  }, { theme, appearance });
+  }, { page: theme });
 }
 
-export async function openScreen(page: Page, screen: Screen, theme: Variant): Promise<void> {
+export async function openScreen(page: Page, screen: Screen, theme: Theme): Promise<void> {
   await chooseTheme(page, theme);
   await page.goto(screen.library ? new URL(screen.path, libraryApp()).href : screen.path);
   await appReady(page);

@@ -1,6 +1,6 @@
 # nine turtles: the brand sheet
 
-*Every brand decision on one page. Last updated: 3 November 2026 (decisions 0141, 0148, 0153).*
+*Every brand decision on one page. Last updated: 4 November 2026 (decisions 0141, 0148, 0153, 0176).*
 
 **How to use this page.** Every change a reader can see (in the app, on the
 website, in an email, in a link preview) follows this page. This page is
@@ -38,22 +38,20 @@ what's live.
 
 ## Color
 
-- **Four themes**, each with a day and a night version: **Original**, **Plain**, **Fountain pen** (the warm one) and **Signal**. Readers on Brushed move to Original; readers on Anodised or Heather move to Fountain pen. (Live, decision 0145.)
-- **Each theme has one color, its accent:** the unread dot (beside an article, and a smaller one at the end of a sidebar row with something new, decision 0148) and the faint tone behind a search match, nothing else. Never a button, a link or a focus outline. (Live)
+- **Themes are named by the page they give** (Live, decision 0176): one setting, **Page**, with **White**, **Paper** (warm cream) and **Night**, and **Match device** (the default), which shows White by day and Night by night. There are no separate day and night versions and no Appearance setting.
+- **Each page has one color, its accent:** the unread dot (beside an article, and a smaller one at the end of a sidebar row with something new, decision 0148) and the faint tone behind a search match, nothing else. Never a button, a link or a focus outline. (Live)
 
-  | Theme | Accent by day | Accent by night |
-  |---|---|---|
-  | Original | ink blue `#2C4F8C` | `#94B2E6` |
-  | Plain | the text color | the text color |
-  | Fountain pen | old-ink brown `#8C5500` | `#DCAA6A` |
-  | Signal | violet `#6953A0` | `#B8A8EE` |
+  | Page | Page color | Words | Accent |
+  |---|---|---|---|
+  | White | `#FFFFFF` | `#141414` | ink blue `#2C4F8C` |
+  | Paper | `#F7F3EA` | `#1F1A14` | old-ink brown `#8C5500` (a mark, held to 3 : 1) |
+  | Night | `#121212` | `#E8E8E8` | pale blue `#94B2E6` |
 
-  (Live: Fountain pen's brown and Signal's violet replaced burnt orange and indigo on 3 November 2026.)
-
+- **Links in articles** are the text's own color, underlined, on every page. (Live)
 - **The dot is never green or red** (green and red are the colors most often confused). (Live)
-- **The star** is drawn in the theme's own ink: filled when starred, an outline when not. Green retired. (Live, decision 0143)
+- **The star** is drawn in the page's own ink: filled when starred, an outline when not. Green retired. (Live, decision 0143)
 - **Delete and errors** are oxblood, `#8C2F39` by day and `#E39AA4` by night, always with words that say what. (Live, decision 0143)
-- **No brand color outside the app.** The website, icons and share picture use ink only: near-black `#141414` and light `#EFEFF1`. The reader's theme color is theirs, not the brand's. (Live)
+- **No brand color outside the app.** The website, icons and share picture use ink only: near-black `#141414` and light `#EFEFF1`. The reader's page color is theirs, not the brand's. (Live)
 - **No more colors.** A new feature uses ink strengths, the greys, the one accent and oxblood. Tags and folders get names, never colors. (Live)
 
 ## The logo
@@ -77,7 +75,7 @@ sleeps, celebrates or stands for a feeling. No mascot.
 ## Icons (Live)
 
 - **A thin line everywhere** (1.5px on a 20px grid): today's set, tidied.
-- **One solid part only where the real object has one:** the palette (Appearance), the heart with a pulse (Feed health), the bookmark (Add from anywhere), Newsletters, Readers, the shelf (To read slowly), and the headphones (Field recordings). The card (Plan) stays line only, with its chip and number drawn in.
+- **One solid part only where the real object has one:** the palette (Page), the heart with a pulse (Feed health), the bookmark (Add from anywhere), Newsletters, Readers, the shelf (To read slowly), and the headphones (Field recordings). The card (Plan) stays line only, with its chip and number drawn in.
 - **Small dots stay solid** where a line would be too thin to see: the unread dot, More's three dots, the feed's dot, the alert's dot, and the keyboard's keys. These are part of the locked set, not a breach of the rule above.
 - **Never solid on plain signs** (close, back, search, plus, check and the like).
 - "Open original" is an arrow with no box. AI assistants keep the robot.

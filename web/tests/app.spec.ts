@@ -288,18 +288,27 @@ test("Settings: appearance, font, size and width apply at once and are remembere
   await expect(page).toHaveURL(/\/settings$/);
   await expect(page.getByRole("heading", { level: 2, name: "Settings" })).toBeFocused();
 
-  // Original, matching the device until another Appearance is chosen (decision 0056); Plain is the other theme (decision 0063).
+  // Match device until another page is chosen: White by day, Night by night (decision 0176).
   await expect(page.locator("label.tile")).toHaveCount(0);
+  const pages = page.getByRole("group", { name: "Page" }).getByRole("radio");
+  await expect(pages).toHaveCount(4);
   await expect(page.getByLabel("Match device")).toBeChecked();
-  await page.getByLabel("Light", { exact: true }).check();
+  await page.getByLabel("White", { exact: true }).check();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "white");
   await expect(page.locator("body")).toHaveCSS("background-color", "rgb(255, 255, 255)");
-  // The phone's bar above the page follows the version showing too.
+  // The phone's bar above the page follows the page showing too.
   const bars = page.locator('meta[name="theme-color"]');
   await expect(bars).toHaveCount(2);
   await expect(bars.nth(0)).toHaveAttribute("content", "#FFFFFF");
   await expect(bars.nth(1)).toHaveAttribute("content", "#FFFFFF");
-  // Appearance: Dark shows the night version.
-  await page.getByLabel("Dark", { exact: true }).check();
+  // Paper: the warm page, its warm-black words.
+  await page.getByLabel("Paper", { exact: true }).check();
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(247, 243, 234)");
+  await expect(page.locator("body")).toHaveCSS("color", "rgb(31, 26, 20)");
+  await expect(bars.nth(0)).toHaveAttribute("content", "#F7F3EA");
+  // Night.
+  await page.getByLabel("Night", { exact: true }).check();
+  await expect(page.locator("html")).toHaveAttribute("data-mode", "dark");
   await expect(page.locator("body")).toHaveCSS("background-color", "rgb(18, 18, 18)");
   await expect(bars.nth(0)).toHaveAttribute("content", "#121212");
   // Match device follows the device, and switches with it while nine turtles is open.
@@ -311,16 +320,17 @@ test("Settings: appearance, font, size and width apply at once and are remembere
   await page.emulateMedia({ colorScheme: "light" });
   await expect(page.locator("body")).toHaveCSS("background-color", "rgb(255, 255, 255)");
   // Arrow keys move between choices, as with any radio buttons.
-  await page.getByLabel("Light", { exact: true }).focus();
+  await page.getByLabel("White", { exact: true }).check();
+  await page.getByLabel("White", { exact: true }).focus();
   await page.keyboard.press("ArrowRight");
-  await expect(page.getByLabel("Dark", { exact: true })).toBeChecked();
+  await expect(page.getByLabel("Paper", { exact: true })).toBeChecked();
   await page.keyboard.press("ArrowLeft");
-  await expect(page.getByLabel("Light", { exact: true })).toBeChecked();
+  await expect(page.getByLabel("White", { exact: true })).toBeChecked();
   // Each row's control sits at its right end, and every control is the same width.
   const look = page.getByRole("region", { name: "Look and feel" });
   const widths = (where: Locator) => where.locator(".setting-control").evaluateAll((all) => all.map((each) => Math.round(each.getBoundingClientRect().width)));
   const controls = [...(await widths(page.getByRole("region", { name: "Reading" }))), ...(await widths(look))];
-  // Sort order, Appearance and Text size (Unread is a switch, decision 0172).
+  // Sort order, Page and Text size (Unread is a switch, decision 0172).
   expect(controls).toHaveLength(3);
   expect(new Set(controls).size).toBe(1);
   // Text size is a stepper, as in the Aa panel: one flat capsule, a small A and a large A at its ends
@@ -338,19 +348,20 @@ test("Settings: appearance, font, size and width apply at once and are remembere
   await expect(look.locator(".sizes")).toHaveCSS("border-radius", "10px");
   await expect(larger).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect(larger).toHaveCSS("box-shadow", "none");
-  await expect(larger).not.toHaveCSS("border-left-color", "rgba(0, 0, 0, 0)");
+  // The hairline before the large A is the name's own straight right edge, not the rounded cell's.
+  await expect(look.getByRole("status")).not.toHaveCSS("border-right-color", "rgba(0, 0, 0, 0)");
+  await expect(larger).toHaveCSS("border-left-color", "rgba(0, 0, 0, 0)");
   expect(largerBox!.x - (smallerBox!.x + smallerBox!.width)).toBeGreaterThan(80);
   for (let step = 0; step < 3; step++) await larger.click();
   await expect(look.getByRole("status")).toHaveText("Largest");
   await expect(larger).toHaveAttribute("aria-disabled", "true");
 
-  // Theme, font and line width are a page of their own (decision 0120), its row showing the font.
-  const fontRow = look.getByRole("link", { name: /^Font, theme and line width/ });
+  // Font and line width are a page of their own (decision 0120), its row showing the font; the page is no longer there (decision 0176).
+  const fontRow = look.getByRole("link", { name: /^Font and line width/ });
   await expect(fontRow).toContainText("Literata");
   await fontRow.click();
   await expect(page).toHaveURL(/\/settings\/font$/);
-  await expect(page.getByRole("group", { name: "Theme" }).getByRole("radio")).toHaveCount(4);
-  await expect(page.getByRole("radio", { name: "Original" })).toBeChecked();
+  await expect(page.getByRole("group", { name: "Theme" })).toHaveCount(0);
   // Font and line width are segmented controls: the chosen one is raised (a small shadow) and semibold, and by day
   // a thin edge sets it at 3 : 1 against the rest of the control (decision 0118).
   await expect(page.locator("label.choice").filter({ hasText: "Medium" })).toHaveCSS("font-weight", "600");
@@ -359,7 +370,7 @@ test("Settings: appearance, font, size and width apply at once and are remembere
   await expect(page.locator("label.choice").filter({ hasText: "Medium" })).not.toHaveCSS("box-shadow", "none");
   await expect(page.locator("label.choice").filter({ hasText: "Wide" })).toHaveCSS("font-weight", "400");
   const pageControls = await page.locator(".setting-control").evaluateAll((all) => all.map((each) => Math.round(each.getBoundingClientRect().width)));
-  expect(pageControls).toHaveLength(3);
+  expect(pageControls).toHaveLength(2);
   expect(new Set([...pageControls, ...controls]).size).toBe(1);
 
   const sample = page.locator(".reading-sample");
@@ -370,17 +381,6 @@ test("Settings: appearance, font, size and width apply at once and are remembere
   await expect(sample).toHaveCSS("font-family", /^ui-serif/);
   await page.getByLabel("Atkinson Hyperlegible").check();
   await expect(sample).toHaveCSS("font-family", /^"Atkinson Hyperlegible Next"/);
-  // Plain: rohit.onl's bare look, black on white by day, and back to Original (decision 0063).
-  await page.getByRole("radio", { name: "Plain" }).check();
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "plain");
-  await expect(page.locator("body")).toHaveCSS("color", "rgb(0, 0, 0)");
-  // A Braun theme by keyboard: the arrow moves from Plain to Fountain pen, and the page and the phone's bar follow (decisions 0136, 0145).
-  await page.getByRole("radio", { name: "Plain" }).press("ArrowRight");
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "fountain-pen");
-  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(250, 250, 248)");
-  await expect(page.locator('meta[name="theme-color"]').first()).toHaveAttribute("content", "#FAFAF8");
-  await page.getByRole("radio", { name: "Original" }).check();
-  await expect(page.locator("body")).toHaveCSS("color", "rgb(20, 20, 20)");
   await page.getByLabel("Narrow").check();
 
   await page.reload();
@@ -391,29 +391,30 @@ test("Settings: appearance, font, size and width apply at once and are remembere
   // Escape goes back to Settings, where the rest was remembered too.
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(/\/settings$/);
-  await expect(page.getByLabel("Light", { exact: true })).toBeChecked();
+  await expect(page.getByLabel("White", { exact: true })).toBeChecked();
   await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("status")).toHaveText("Largest");
-  await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("link", { name: /^Font, theme and line width/ })).toContainText("Atkinson");
+  await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("link", { name: /^Font and line width/ })).toContainText("Atkinson");
 
   // Escape closes Settings and returns to where you were.
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(/\/unread$/);
 });
 
-test("a chosen Appearance stays, whatever the device's light or dark setting", async ({ page }) => {
-  await chooseTheme(page, "original-light");
+test("a chosen page stays, whatever the device's light or dark setting", async ({ page }) => {
+  await chooseTheme(page, "paper");
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/");
   await appReady(page);
-  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  await expect(page.locator("html")).toHaveAttribute("data-mode", "light");
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(247, 243, 234)");
 });
 
-test("a removed theme opens as Original, keeping its Appearance", async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("nine-turtles.preferences", JSON.stringify({ theme: "calm", appearance: "dark" })));
+test("a choice from before the pages opens as Match device", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("nine-turtles.preferences", JSON.stringify({ theme: "fountain-pen", appearance: "light" })));
+  await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/");
   await appReady(page);
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "original");
-  await expect(page.locator("html")).toHaveAttribute("data-mode", "dark");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "night");
 });
 
 test("at 200% zoom nothing overlaps and everything still works", async ({ page }) => {
@@ -806,12 +807,12 @@ test("Settings is one centred column of grouped lists; its rows that act or open
   });
   await expect(data.getByText("1 line couldn't be read: Walks.")).toBeVisible();
 
-  // The preview passage is the first row of Font, theme and line width's group, its words on the rows' words (decision 0055).
+  // The preview passage is the first row of Font and line width's group, its words on the rows' words (decision 0055).
   await page.goto("/settings/font");
   const sampleRow = page.locator(".reading-sample");
   expect(await sampleRow.evaluate((element) => element.closest(".inset-group") !== null && element.parentElement?.firstElementChild === element)).toBe(true);
-  const [sampleText, themeName] = await Promise.all([sampleRow.locator("p").boundingBox(), page.getByText("Theme", { exact: true }).boundingBox()]);
-  expect(Math.abs(sampleText!.x - themeName!.x)).toBeLessThan(1.5);
+  const [sampleText, fontName] = await Promise.all([sampleRow.locator("p").boundingBox(), page.getByText("Reading font", { exact: true }).boundingBox()]);
+  expect(Math.abs(sampleText!.x - fontName!.x)).toBeLessThan(1.5);
 });
 
 /** Makes the server's answers to /api/session say a newer version is live, then brings the tab back into view. */

@@ -65,7 +65,7 @@ describe("addresses", () => {
     expect(titleFor({ kind: "muted" })).toBe("Hidden articles · nine turtles");
     expect(pathFor({ kind: "readers" })).toBe("/settings/readers/all");
     expect(pathFor({ kind: "settings", page: "font" })).toBe("/settings/font");
-    expect(titleFor({ kind: "settings", page: "font" })).toBe("Font, theme and line width · nine turtles");
+    expect(titleFor({ kind: "settings", page: "font" })).toBe("Font and line width · nine turtles");
     expect(titleFor({ kind: "readers" })).toBe("All readers · nine turtles");
     expect(pathFor({ kind: "feed", id: 3 })).toBe("/people/3");
     expect(pathFor({ kind: "about", id: 3 })).toBe("/people/3/about");

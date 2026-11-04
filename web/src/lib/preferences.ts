@@ -2,7 +2,7 @@
 // device, not to the reader's account: a phone and a laptop often want
 // different sizes. So they're kept in the browser's own storage, and nothing
 // is lost if that storage is unavailable: nine turtles simply uses the defaults.
-import { LOOKS, THEMES, isAppearance, resolveMode, savedTheme, type Appearance, type Mode, type Theme } from "./themes";
+import { LOOKS, isPage, showing, type Page } from "./themes";
 import { deviceStorage } from "./device";
 import { isRecord } from "./http";
 
@@ -10,9 +10,8 @@ export type ReadingFont = "literata" | "atkinson" | "system-serif";
 export type LineWidth = "narrow" | "medium" | "wide";
 
 export type Preferences = {
-  theme: Theme;
-  /** Day, night, or as the device is set (decision 0046). */
-  appearance: Appearance;
+  /** The page: White, Paper, Night, or Match device (decision 0176). */
+  page: Page;
   readingFont: ReadingFont;
   /** A step in TEXT_SIZES. `+` and `-` move through the same steps (Milestone 6). */
   textSize: number;
@@ -49,7 +48,7 @@ function isReadingFont(value: unknown): value is ReadingFont {
   return typeof value === "string" && Object.hasOwn(READING_FONTS, value);
 }
 
-export const DEFAULTS: Preferences = { theme: "original", appearance: "auto", readingFont: "literata", textSize: 2, lineWidth: "medium" };
+export const DEFAULTS: Preferences = { page: "auto", readingFont: "literata", textSize: 2, lineWidth: "medium" };
 
 const KEY = "nine-turtles.preferences";
 
@@ -64,8 +63,7 @@ export function load(storage: Pick<Storage, "getItem"> | undefined = deviceStora
   }
   const s = isRecord(saved) ? saved : {};
   return {
-    theme: savedTheme(s.theme),
-    appearance: isAppearance(s.appearance) ? s.appearance : DEFAULTS.appearance,
+    page: isPage(s.page) ? s.page : DEFAULTS.page,
     readingFont: isReadingFont(s.readingFont) ? s.readingFont : DEFAULTS.readingFont,
     textSize:
       typeof s.textSize === "number" && Number.isInteger(s.textSize) && s.textSize >= 0 && s.textSize < TEXT_SIZES.length
@@ -94,29 +92,20 @@ export function deviceIsDark(): boolean {
 
 /**
  * Puts the preferences into effect on the page (see app.css). `deviceDark`
- * decides the version for "Match device"; appearance.svelte.ts keeps it up
+ * decides the page for "Match device"; appearance.svelte.ts keeps it up
  * to date when the device switches.
  */
 export function apply(preferences: Preferences, root: HTMLElement = document.documentElement, deviceDark = deviceIsDark()): void {
-  const mode: Mode = resolveMode(preferences.appearance, deviceDark);
-  root.dataset.theme = preferences.theme;
-  root.dataset.mode = mode;
+  const theme = showing(preferences.page, deviceDark);
+  root.dataset.theme = theme;
+  root.dataset.mode = LOOKS[theme].mode;
   const font = READING_FONTS[preferences.readingFont];
   root.style.setProperty("--reading-font", font.family);
   root.style.setProperty("--reading-size", `${TEXT_SIZES[preferences.textSize]?.rem ?? 1.25}rem`);
   root.style.setProperty("--reading-measure", `${LINE_WIDTHS[preferences.lineWidth].ch}ch`);
-  // The phone's own bar above the page takes the showing version's background
-  // too (index.html starts with Original's, by day and by night).
+  // The phone's own bar above the page takes the showing page's color too
+  // (index.html starts with White's by day and Night's by night).
   for (const meta of root.ownerDocument?.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]') ?? []) {
-    meta.content = BAR_COLORS[preferences.theme][mode];
+    meta.content = LOOKS[theme].page.toUpperCase();
   }
 }
-
-/**
- * The theme's reading background by day and by night (DESIGN.md → "Color"),
- * for the browser's bar. contrast.test.ts checks they match app.css and
- * index.html.
- */
-export const BAR_COLORS = Object.fromEntries(
-  THEMES.map((theme) => [theme, { light: LOOKS[theme].light.page.toUpperCase(), dark: LOOKS[theme].dark.page.toUpperCase() }]),
-) as Record<Theme, Record<Mode, string>>;

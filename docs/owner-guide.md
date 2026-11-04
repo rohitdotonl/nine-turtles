@@ -125,14 +125,14 @@ to work breaks, a test notices.
 the tests, plus:
 - the code builds without errors;
 - formatting and "lint" (a tool that spots likely mistakes and sloppy code);
-- accessibility and contrast on every screen, in every theme;
+- accessibility and contrast on every screen, on every page (White, Paper and Night);
 - no animations;
 - the download size budget;
 - only approved libraries;
 - search finds Hindi words whole.
 
 **Screenshots.** Each pull request gets a comment called "Screenshots"
-showing every screen in the first three themes (and the main screens in the others), at desktop and phone width. It's
+showing every screen on White and Night (and the main screens on Paper), at desktop and phone width. It's
 updated each time the agent pushes a change. It's the quickest way to see
 what a change looks like without trying it.
 

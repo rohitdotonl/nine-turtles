@@ -3,7 +3,7 @@ layout: page.njk
 title: Accessibility
 description: How nine turtles makes sure everyone can read, and how to tell me when something falls short.
 permalink: /accessibility/
-updated: 2026-10-25
+updated: 2026-11-04
 ---
 
 <p class="lede">
@@ -19,8 +19,8 @@ The app and this website aim to meet the
 at level AA, and go further where reading is concerned:
 
 - **Contrast.** Every piece of text meets AA contrast, including the quiet
-  grey of dates and counts. Article text meets the stricter AAA level, in
-  every theme, by day and by night.
+  grey of dates and counts. Article text meets the stricter AAA level, on
+  every page: White, Paper and Night.
 - **Never color alone.** Every state has a second sign: an unread article
   has a dot and a heavier title, a search match is underlined as well as
   shaded, a problem is described in words.
